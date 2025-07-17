@@ -42,7 +42,7 @@ export class Tls14030CRUComponent extends BasicCruPageComponent<Garantee_Ticket>
         tlt_no: [{ value: null as string | null, disabled: true }], // 專櫃編號 read only          讀取 TLTTALENT 專櫃主檔
         tlt_name: [{ value: null as string | null, disabled: true }], // 專櫃名稱
 
-        ticket_type: ['1', [Validators.required, Validators.maxLength(1)]], // 保證票型態 "1=準時開業保證票 2=施工保證票 3=契約屆滿保證票"
+        ticket_type: [{ value: null as string | null, disabled: true }], // 保證票型態 "1=準時開業保證票 2=施工保證票 3=契約屆滿保證票"
         ticket_no: ['', [Validators.required, Validators.maxLength(20)]], // 票據編號 手動輸入
         ticket_kind: [null, [Validators.maxLength(1)]], // 票據種類 非必填但有限制長度 "1=本票 2=支票 3=行銀保證函 9=其他"
         ticket_amount: [null as number | null, [Validators.required, Validators.min(0), Validators.maxLength(10)]], // 保證票金額 整數金額 "讀取 TLTTALENT 專櫃主檔相對的保證金金額"
@@ -58,6 +58,7 @@ export class Tls14030CRUComponent extends BasicCruPageComponent<Garantee_Ticket>
       });
 
       private skipTalentChange = false; //是否更新編號的旗標
+      private skipTicketTypeChange = false;
 
       storageOptions: apiOption[] = [];
       allquery: Garantee_Ticket[] = [];
@@ -112,10 +113,15 @@ export class Tls14030CRUComponent extends BasicCruPageComponent<Garantee_Ticket>
         });
 
         // ⭐ 監聽 ticket_type 變更 重新寫入保證票金額
-        this.dataForm.get('ticket_type')?.valueChanges.subscribe((type) => {
+        this.dataForm.get('ticket_type')?.valueChanges.subscribe(() => {
+          if (this.skipTicketTypeChange || this.dataForm.get('ticket_type')?.disabled) {
+            this.skipTicketTypeChange = false; // ✅ 重置旗標，防止卡住
+            return;
+          }
+
           const talentId = this.dataForm.get('talent_id')?.value;
           if (talentId) {
-            this.loadTLTTALENTDetail(talentId); // 重新依照型態寫入金額
+            this.loadTLTTALENTDetail(talentId);
           }
         });
       }
@@ -191,31 +197,60 @@ export class Tls14030CRUComponent extends BasicCruPageComponent<Garantee_Ticket>
             this.tls14030Service.getTLTTALENT(requestBody).subscribe((response) => {
             const data: TLTTALENT = response.Data;
 
-
             if (data) {
-              this.skipTalentChange = true;
-
-              const ticketType = this.dataForm.get('ticket_type')?.value;
+              let ticketType: string | null = null;
               let ticketAmount: number | null = null;
 
-              switch (ticketType) {
-                case '1': // 準時開業保證票
-                  ticketAmount = data.open_fees ?? null;
-                  break;
-                case '2': // 施工保證票
-                  ticketAmount = data.construct_fees ?? null;
-                  break;
-                case '3': // 契約屆滿保證票
-                  ticketAmount = data.expiration_fees ?? null;
-                  break;
+              // 根據哪個保證票金額不為 0，自動選擇對應的型態與金額
+              if (data.open_fees && data.open_fees !== 0) {
+                ticketType = '1';
+                ticketAmount = data.open_fees;
+              } else if (data.construct_fees && data.construct_fees !== 0) {
+                ticketType = '2';
+                ticketAmount = data.construct_fees;
+              } else if (data.expiration_fees && data.expiration_fees !== 0) {
+                ticketType = '3';
+                ticketAmount = data.expiration_fees;
+              } else {
+                // 預設維持目前的 ticket_type 和 ticket_amount
+                ticketType = this.dataForm.get('ticket_type')?.value ?? null;
+                switch (ticketType) {
+                  case '1':
+                    ticketAmount = data.open_fees ?? null;
+                    break;
+                  case '2':
+                    ticketAmount = data.construct_fees ?? null;
+                    break;
+                  case '3':
+                    ticketAmount = data.expiration_fees ?? null;
+                    break;
+                }
               }
 
+              this.skipTalentChange = true;
+              this.skipTicketTypeChange = true;
+
+              //金額都是0就開放下拉
+              if(data.open_fees == 0 && data.construct_fees == 0 && data.expiration_fees == 0){
+                this.dataForm.get('ticket_type')?.enable();
+              }else{
+                this.dataForm.get('ticket_type')?.disable();
+              }
+
+              // ⭐ patch 完立刻關閉旗標（不要用 setTimeout）
+              this.skipTalentChange = false;
+              this.skipTicketTypeChange = true;
+
               this.dataForm.patchValue({
+                ticket_type: ticketType,
+                ticket_amount: ticketAmount,
                 ticket_remarks: data.ticket_remarks || '',
                 tlt_name: data.tlt_name || '',
                 tlt_no: data.tlt_no || '',
-                ticket_amount: ticketAmount,
               });
+
+              // ⭐ patchValue 完後再放開旗標（這裡不建議 setTimeout，會更不穩）
+              this.skipTicketTypeChange = false;
 
               this.messageService.infoBubble('已經依照合約編號進行變更');
               console.log('偵測到合約編號變更', data);
