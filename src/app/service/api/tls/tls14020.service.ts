@@ -33,4 +33,10 @@ export class TLS14020Service {
       catchError((error) => this.errorHandler.handleError(error))
     );
   }
+  downloadContractLog(data: any): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/downloadContractLog`, data).pipe(
+      tap(response => console.log('查詢結果:', response)),
+      catchError((error) => this.errorHandler.handleError(error))
+    );
+  }
 }

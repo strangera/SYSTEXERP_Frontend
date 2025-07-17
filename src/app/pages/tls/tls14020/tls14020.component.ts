@@ -121,7 +121,7 @@ export class TLS14020Component extends BasicQueryPageComponent<ContractItem> imp
     rece_yn: [],
     pos_yn: [],
     cash_yn: [],
-    ...createPaginationConfig([{ field: 'contract_no', order: 0 }]),
+    ...createPaginationConfig([{ field: 'contract_no', order: 1 }]),
   });
   // 查詢的table參數
   data: ContractItem[] = [];
@@ -370,6 +370,7 @@ export class TLS14020Component extends BasicQueryPageComponent<ContractItem> imp
     this.tls14020Service.queryContractLog(data).subscribe({
       next: (response: any) => {
         if (response.Status === '0000') {
+          console.log('開窗查詢結果', response.Data);
           this.dialogData = response.Data || [];
           this.dialogTotalRecords = response.TotalCount || response.Data.length;
           // this.queryStateService.setQueryState(this.ProgNo, frm.value); // 儲存查詢條件（成功查詢後）
@@ -447,6 +448,20 @@ export class TLS14020Component extends BasicQueryPageComponent<ContractItem> imp
       console.error('下載檔案失敗:', error);
       this.messageService.errorBox('下載檔案失敗');
     }
+  }
+
+  // 下載以往列印過的契約書
+  downloadContractLog(data: any): void {
+    this.tls14020Service.downloadContractLog(data).subscribe({
+      next: (response: any) => {
+        this.downloadFile(response.Data.FileData, response.Data.FileName);
+      },
+      error: (error) => {
+        console.error('下載檔案失敗:', error);
+        // 可選：顯示錯誤提示給用戶
+        alert('下載檔案失敗，請稍後再試');
+      }
+    });
   }
 
   onClearForm() {
