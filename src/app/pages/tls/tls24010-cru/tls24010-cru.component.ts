@@ -1,10 +1,8 @@
-//!!! 交易稅別 選應稅 商品明細一定要有一筆為應稅 卡控
-//!!! 零稅的話 商品明細全部的稅別顯示免稅
 import { InputTextComponent } from './../../../shared/componentkit/input-text/input-text.component';
-import { AfterViewInit, ChangeDetectorRef, Component, OnInit, ViewChild } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
-import { POS5007Data, POS5008Data, TLS24010Data, Tls24010Service } from '../../../service/api/tls/tls24010.service';
+import { TLS24010Data, Tls24010Service } from '../../../service/api/tls/tls24010.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { PanelModule } from 'primeng/panel';
@@ -15,28 +13,24 @@ import { TranslateModule } from '@ngx-translate/core';
 import { InputTextareaComponent } from "../../../shared/componentkit/input-textarea/input-textarea.component";
 import { RadiobuttonYNComponent } from '../../../shared/componentkit/radiobutton-yn/radiobutton-yn.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { DropDownListService, IDropdownItem, POS2004Item, TLTTALENT_CHARGEData } from '../../../service/utility/dropDownList.service';
+import { DropDownListService, IDropdownItem } from '../../../service/utility/dropDownList.service';
 import { ValidationService } from '../../../shared/service/validation.service';
 import { untilDestroyed } from '@ngneat/until-destroy';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { CRD_TypeOptions, POS5007Columns, POS5007Columns2, POS5008Columns, TXN_GUI_CarrTypeOptions, txnStatusOptions, txnTaxTypeOptions, txnTaxTypeOptions2 } from './tls24010-cru.model';
-import { Column } from '../../../shared/componentkit/table/table.model';
+import { TXN_GUI_CarrTypeOptions, txnStatusOptions } from './tls24010-cru.model';
 import { DividerModule } from 'primeng/divider';
 import { TableModule } from 'primeng/table';
 import { InputNumberModule } from 'primeng/inputnumber';
 import { InputTextModule } from 'primeng/inputtext';
 import { DropdownModule } from 'primeng/dropdown';
-import { SystemOptionsService } from '../../../service/system/sys1000.service';
-import { SystemOption } from '../../../shared/models/sys/sys1000.model';
+import { Tls24010Pos5008Component } from './tls24010-pos5008/tls24010-pos5008.component';
+import { Tls24010Pos5007Component } from './tls24010-pos5007/tls24010-pos5007.component';
 @Component({
   selector: 'app-tls24010-cru',
   templateUrl: './tls24010-cru.component.html',
   standalone: true,
-  imports: [MenubarComponent, ButtonComponent, PanelModule, FormsModule, ReactiveFormsModule, CalendarComponent, InputNumberComponent, NgIf, TranslateModule, InputTextComponent, InputTextareaComponent, RadiobuttonYNComponent, DropdownComponent, TableComponent, DividerModule, TableModule, InputNumberModule, InputTextModule, DropdownModule],
+  imports: [MenubarComponent, ButtonComponent, PanelModule, FormsModule, ReactiveFormsModule, CalendarComponent, InputNumberComponent, NgIf, TranslateModule, InputTextComponent, InputTextareaComponent, RadiobuttonYNComponent, DropdownComponent, DividerModule, TableModule, InputNumberModule, InputTextModule, DropdownModule, Tls24010Pos5008Component, Tls24010Pos5007Component],
 })
-export class TLS24010CRUComponent extends BasicCruPageComponent<TLS24010Data | unknown> implements OnInit, AfterViewInit {
-  // 定義tableComponent
-  @ViewChild('POS5007Table') POS5007Table!: TableComponent;
+export class TLS24010CRUComponent extends BasicCruPageComponent<TLS24010Data | unknown> implements OnInit {
   TXN_GUIPaper?: string; // 補登類別 補原機台='E' 手開二聯式發票='2'
   TLT_Name?: string; //專櫃名稱
   store_way?: string // 1為專櫃 2=自營
@@ -71,28 +65,14 @@ export class TLS24010CRUComponent extends BasicCruPageComponent<TLS24010Data | u
   });
   USR_NoOptions: IDropdownItem[] = []; //下拉選單 收銀員編號
   txnStatusOptions = txnStatusOptions //下拉選單 交易型態
-  txnTaxTypeOptions = txnTaxTypeOptions2 //下拉選單 交易稅別
   TXN_GUI_CarrTypeOptions = TXN_GUI_CarrTypeOptions;//下拉選單 電子載具種類
-  CRD_TypeOptions = CRD_TypeOptions; //下拉選單 信用卡別
-  PAY_TypeOptions: IDropdownItem[] = []; //下拉選單 付款別
-  sys_typeOptions: SystemOption[] = []; // 下拉選單 分期數
-  POS2004Options: POS2004Item[] = []; //下拉選單 商品資料
-  tlt_idOptions: TLTTALENT_CHARGEData[] = []; //下拉選單 類別
-  POS5007Data: POS5007Data[] = [];
-  POS5007SelectedItems: POS5007Data[] = [];
-  POS5007Columns: Column[] = POS5007Columns;
-  POS5008Data: POS5008Data[] = [];
-  POS5008SelectedItems: POS5008Data[] = [];
-  POS5008Columns: Column[] = POS5008Columns;
   constructor(
     private readonly dropDownListService: DropDownListService,
     private readonly validationService: ValidationService,
     private readonly tls24010Service: Tls24010Service,
-    private readonly cdr: ChangeDetectorRef,
   ) { super(); }
   ngOnInit(): void {
     this.initializePage('TLS24010', this.dataForm);
-    // 新增的話帶入 銷售日期、收銀機編號、專櫃編號
     if (this.isFormCreateable && this.rowdata) {
       const rowDataTyped = this.rowdata as TLS24010Data;
       this.dataForm.patchValue({
@@ -105,51 +85,11 @@ export class TLS24010CRUComponent extends BasicCruPageComponent<TLS24010Data | u
       this.talent_id = rowDataTyped.talent_id;
       this.TXN_GUIPaper = rowDataTyped.TXN_GUIPaper
     }
-    this.initializeOptions();
-    this.listenForChanges();
-  }
-  ngAfterViewInit(): void {
-    if (this.POS5007Table && this.isFormCreateable) {
-      this.POS5007Table.insertRow(); // 自動開啟一行商品明細
-      this.cdr.detectChanges(); // 確保在初始化後檢測變更
-    }
-  }
-  initializeOptions() {
     // 查詢收銀員設定檔(POS2001)
     this.dropDownListService.queryPOS2001_DropDownList().pipe(untilDestroyed(this)).subscribe((data) => {
       this.USR_NoOptions = data.Data.map((item) => ({ ...item, label: `${item.No} - ${item.Name}` }));
     });
-    switch (this.store_way) {
-      case '1':// 自營櫃位
-        {
-          this.POS5007Columns = POS5007Columns;
-          const TLT_No = this.dataForm.get('TLT_No')?.value as string;
-          this.dropDownListService.queryPOS2004_DropDownList(TLT_No).pipe(untilDestroyed(this)).subscribe((data) => {
-            this.POS2004Options = data.Data;
-            this.POS5007Columns[0].options = this.POS2004Options;
-          })
-          this.dropDownListService.queryTLTTALENT_CHARGE_DropDownList(this.talent_id).pipe(untilDestroyed(this)).subscribe((data) => {
-            this.tlt_idOptions = data.Data.map((item) => ({ ...item, label: `${item.tlt_id} - ${item.tlt_id_desc}` }));
-            this.POS5007Columns[7].options = this.tlt_idOptions;
-          })
-          break;
-        }
-      case '2':// 專櫃櫃位
-        this.POS5007Columns = POS5007Columns2;
-        break;
-      default: break;
-    }
-    //TODO: 5. 再去取 TLTTALENT_CHARGEM.CAG_TAXTYPE 專櫃抽成主檔
-    //TODO: 6. 再去取 讀取TLTTALENT_CHARGED.CAG_BARCODE 專櫃抽成主檔
-    //--付款明細------------------------------------------------------
-    this.dropDownListService.queryPOS1006_DropDownList().pipe(untilDestroyed(this)).subscribe((res) => {
-      this.PAY_TypeOptions = res.Data.map((item) => ({ ...item, label: item.Name }));
-      this.POS5008Data = res.Data.map((item, index) => {
-        return { ID: index, PAY_Type: item.No }
-      });
-      this.sys_typeOptions = SystemOptionsService.getOptions('T111');
-      //!!! 欄位所以都是用PAY_Type欄位判斷，後續前端處理
-    });
+    this.listenForChanges();
   }
   listenForChanges() {
     // 監聽 零稅 的變化
@@ -158,11 +98,9 @@ export class TLS24010CRUComponent extends BasicCruPageComponent<TLS24010Data | u
       if (begNoValue === 'Y') {
         this.dataForm.get('TXN_TaxFreeCertNo')?.setValidators([Validators.required, Validators.maxLength(10)]);
         this.dataForm.get('TXN_TaxFreeCertNo')?.enable();
-        this.txnTaxTypeOptions = txnTaxTypeOptions;
       } else {
         this.dataForm.get('TXN_TaxFreeCertNo')?.clearValidators();
         this.dataForm.get('TXN_TaxFreeCertNo')?.disable();
-        this.txnTaxTypeOptions = txnTaxTypeOptions2;
       }
     })
     // 監聽 電子載具種類 的變化
@@ -199,20 +137,18 @@ export class TLS24010CRUComponent extends BasicCruPageComponent<TLS24010Data | u
     });
   }
   // 計算 單價小計金額 與 單價銷售金額
-  onPOS5007DataChange(event: POS5007Data[]) {
-    this.POS5007Data = event.map((item) => {
-      return {
-        ...item,
-        TXN_Amt: item.TXN_Qty * item.PLU_SalePrc,
-        TXN_SaleAmt: item.TXN_Qty * item.PLU_SalePrc - item.TXN_Disc,
-      };
-    });
-  }
-  trackByRow = (index: number, item: POS5007Data) => { return item?.id || index; }
+  // onPOS5007DataChange(event: POS5007Data[]) {
+  //   this.POS5007Data = event.map((item) => {
+  //     return {
+  //       ...item,
+  //       TXN_Amt: item.TXN_Qty * item.PLU_SalePrc,
+  //       TXN_SaleAmt: item.TXN_Qty * item.PLU_SalePrc - item.TXN_Disc,
+  //     };
+  //   });
+  // }
 
   onSubmit(frm: FormGroup) {
     console.log(frm.value);
-
     this.handleSubmit(frm, () => {
 
     });

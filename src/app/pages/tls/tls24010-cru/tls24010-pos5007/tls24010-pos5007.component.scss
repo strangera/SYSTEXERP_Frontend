@@ -1,0 +1,16 @@
+::ng-deep {
+  .tls24010-pos5007 .p-datatable-header {
+    background: transparent;
+    border: none;
+    padding: 0 !important;
+    .button-group {
+      .p-button {
+        width: 35px !important;
+        height: 35px !important;
+      }
+    }
+    .p-button-icon {
+      font-size: 1.5em;
+    }
+  }
+}
