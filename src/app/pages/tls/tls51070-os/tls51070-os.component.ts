@@ -55,7 +55,7 @@ export class Tls51070OsComponent extends BasicQueryPageComponent<Label>
   state = window.history.state; // 接收標頭
 
   // 查詢 標籤檔定加入欄位
-  queryLabelForm = this.formBuilder.group({
+  queryForm = this.formBuilder.group({
     PLU_MagNo: ['', [Validators.maxLength(20)]], // 商品管理碼
     PLU_No: ['', [Validators.maxLength(20)]], // 國際條碼
     PLU_OrgPLUNo: ['', [Validators.maxLength(20)]], // 廠商貨號
@@ -91,7 +91,7 @@ export class Tls51070OsComponent extends BasicQueryPageComponent<Label>
       { field: 'PLU_OrgPLUNo', header: '廠商貨號', editable: false, type: 'text' },
       { field: 'PLU_No', header: '國際條碼', editable: false, type: 'text' },
     ];
-  
+
     // 展開式表格的載入狀態
     expandlabelLoading = false;
 
@@ -136,14 +136,14 @@ export class Tls51070OsComponent extends BasicQueryPageComponent<Label>
       //---變價歷程---
       { field: 'MAM_Date', header: '變價日期', visible: true,  format: formatDate},
       { field: 'MAM_NO', header: '變價單號', visible: true },
-  
+
       { field: 'PLU_SalePrc', header: '變價前售價', visible: true, format: formatAmount },
       { field: 'MAM_UnitPrc', header: '變價後售價', visible: true, format: formatAmount },
 
       { field: 'PLU_OrderPrc', header: '變價前進價', visible: true, format: formatAmount },
       { field: 'MAM_OrderPrc', header: '變價後進價', visible: true, format: formatAmount },
     ];
-  
+
     // 展開式表格的載入狀態
     expandpriceLoading = false;
 
@@ -169,7 +169,7 @@ export class Tls51070OsComponent extends BasicQueryPageComponent<Label>
     // ✅ 監聽欄位變化，進行查詢但不加到清單
     const watchFields = ['PLU_MagNo', 'PLU_No', 'PLU_OrgPLUNo'];
     watchFields.forEach(field => {
-      this.queryLabelForm.get(field)?.valueChanges.pipe(debounceTime(300)).subscribe(() => {
+      this.queryForm.get(field)?.valueChanges.pipe(debounceTime(300)).subscribe(() => {
         if (this.hasAnySearchInput()) {
           this.previewLabel();
         }else {
@@ -180,8 +180,8 @@ export class Tls51070OsComponent extends BasicQueryPageComponent<Label>
   }
 
   onSubmitLabel(frm: FormGroup) {
-    if (this.queryLabelForm.invalid) {
-      if (this.queryLabelForm.errors?.['atLeastOneRequired']) {
+    if (this.queryForm.invalid) {
+      if (this.queryForm.errors?.['atLeastOneRequired']) {
         this.messageService.errorBubble('請至少填寫「商品管理碼」、「國際條碼」或「廠商貨號」其中一項');
       }
       return;
@@ -291,12 +291,12 @@ export class Tls51070OsComponent extends BasicQueryPageComponent<Label>
 
         // 釋放資源
         window.URL.revokeObjectURL(url);
-    });     
+    });
   }
 
   //預覽標籤檔
   previewLabel() {
-    const frm = this.queryLabelForm;
+    const frm = this.queryForm;
     if (frm.invalid || !this.hasAnySearchInput()) return;
 
     this.tls51070Service.getLabelTLS51070(frm.value).subscribe({
@@ -360,7 +360,7 @@ export class Tls51070OsComponent extends BasicQueryPageComponent<Label>
 
   // 標籤檢查(三者其中之一不為空才執行)
   hasAnySearchInput(): boolean {
-  const form = this.queryLabelForm;
+  const form = this.queryForm;
   return !!form.get('PLU_MagNo')?.value?.trim() ||
          !!form.get('PLU_No')?.value?.trim() ||
          !!form.get('PLU_OrgPLUNo')?.value?.trim();

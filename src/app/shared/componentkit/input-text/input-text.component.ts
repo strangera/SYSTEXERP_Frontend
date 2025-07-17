@@ -30,6 +30,7 @@ export class InputTextComponent extends BasicKitComponent implements OnInit {
   @Input() showButton = false;
   @Input() buttonLabel = '';
   @Input() buttonLoading = false;
+  @Input() copyControl = new FormControl();
   @Output() clickButton = new EventEmitter<any>();
   private destroy$ = new Subject<void>();
 
@@ -48,6 +49,11 @@ export class InputTextComponent extends BasicKitComponent implements OnInit {
         this.placeholder = undefined;
       } else {
         this.updateControlState(this.control); // 假設 updateControlState 會處理 placeholder
+      }
+    });
+    this.control.valueChanges.pipe(takeUntil(this.destroy$)).subscribe(() => {
+      if (this.copyControl) {
+        this.copyControl.setValue(this.control.value, { emitEvent: false });
       }
     });
   }

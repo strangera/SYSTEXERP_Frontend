@@ -36,48 +36,44 @@
           <app-radiobutton-yn class="flex-1" controlName="TXN_VIP" label="零稅" [control]="dataForm.controls.TXN_VIP"
             [submitted]="submitted" />
         </div>
-        <!-- 交易稅別 → POS5006.TXN_TaxType -->
-        <app-dropdown class="col-12 md:col-6 lg:col-3" label="交易稅別" [control]="dataForm.controls.TXN_TaxType"
-          [submitted]="submitted" [options]="txnTaxTypeOptions" optionLabel="label" optionValue="value" />
         <!-- 免稅卡零稅卡號 → POS5006.TXN_MemCard -->
         <app-input-text class="col-12 md:col-6 lg:col-3" label="免稅卡零稅卡號" [control]="dataForm.controls.TXN_TaxFreeCertNo"
           [submitted]="submitted" />
-        <!-- 交易狀態 → POS5006.TXN_Status -->
-        <app-dropdown class=" col-12 md:col-6 lg:col-3" label="交易狀態" [control]="dataForm.controls.TXN_Status"
+        <!-- 交易型態 → POS5006.TXN_Status -->
+        <app-dropdown class=" col-12 md:col-6 lg:col-3" label="交易型態" [control]="dataForm.controls.TXN_Status"
           [submitted]="submitted" [options]="txnStatusOptions" optionLabel="label" optionValue="value" />
         <!-- 發票字軌 → POS5006.GUI_Track -->
         <app-input-text class="col-12 md:col-6 lg:col-3" label="發票字軌" [control]="dataForm.controls.GUI_Track"
           [submitted]="submitted" />
         <!-- 起始發票號碼 → POS5006.TXN_GUIBegNo -->
-        <app-input-text-range class="col-12 md:col-6 lg:col-3" startLabel="起始發票號碼" endLabel="結束發票號碼"
-          [startControl]="dataForm.controls.TXN_GUIBegNo" [endControl]="dataForm.controls.TXN_GUIEndNo"
-          [submitted]="submitted" [errorForGroup]="true" />
-        <!-- 發票號碼張數 → POS5006.TXN_GUICnt -->
-        <app-input-number class="col-12 md:col-6 lg:col-3" label="發票號碼張數" [control]="dataForm.controls.TXN_GUICnt"
-          [submitted]="submitted" [max]="999999" [useGrouping]="false" suffix="張" />
+        <app-input-text class="col-12 md:col-6 lg:col-3" label="發票號碼" [control]="dataForm.controls.TXN_GUIBegNo"
+          [copyControl]="dataForm.controls.TXN_GUIEndNo" [submitted]="submitted" [errorForGroup]="true" />
+        <!-- 交易筆數 → POS5006.TXN_GUICnt 發票號碼張數 -->
+        <app-input-number class="col-12 md:col-6 lg:col-3" label="交易筆數" [control]="dataForm.controls.TXN_GUICnt"
+          [submitted]="submitted" [max]="999999" [useGrouping]="false" />
         <!-- 會員編號 → POS5006.TXN_MemCard -->
         <app-input-text class="col-12 md:col-6 lg:col-3" label="會員編號" [control]="dataForm.controls.TXN_MemCard"
           [submitted]="submitted" />
         <!-- 客戶統一編號 → POS5006.TXN_Uniform -->
         <app-input-text class=" col-12 md:col-6 lg:col-3" label="客戶統一編號" [control]="dataForm.controls.TXN_Uniform"
           [submitted]="submitted" />
-        <!-- 交易筆數 → POS5006.TXN_CustCnt -->
-        <app-input-number class="col-12 md:col-6 lg:col-3" label="交易筆數" [control]="dataForm.controls.TXN_CustCnt"
-          [submitted]="submitted" [max]="9999" [useGrouping]="false" />
         <!-- 銷售時段 → POS5006.TXN_Time -->
         <app-calendar class="col-12 md:col-6 lg:col-3" label="銷售時段" [control]="dataForm.controls.TXN_Time"
           [submitted]="submitted" calendarType="timeOne" />
+      </div>
+      <div class="grid p-fluid" *ngIf="TXN_GUIPaper === 'E'">
+        <p-divider type="solid" class="col-12" />
         <!-- 電子載具種類 → POS5006.TXN_GUI_CarrType -->
-        <app-dropdown class="col-12 md:col-6 lg:col-3" label="電子載具種類" [control]="dataForm.controls.TXN_GUI_CarrType"
+        <app-dropdown class="col-12 md:col-6 lg:col-3" label="電子發票載具種類" [control]="dataForm.controls.TXN_GUI_CarrType"
           [submitted]="submitted" [options]="TXN_GUI_CarrTypeOptions" optionLabel="label" optionValue="value" />
         <!-- 電子發票載具卡號 → POS5006.TXN_GUIVehicle -->
         <app-input-text class="col-12 md:col-6 lg:col-3" label="電子發票載具卡號" [control]="dataForm.controls.TXN_GUIVehicle"
           [submitted]="submitted" />
-        <!-- 載具編號隠碼 → POS5006.TXN_GUI_CarrId -->
-        <app-input-text class="col-12 md:col-6 lg:col-3" label="載具編號隱碼" [control]="dataForm.controls.TXN_GUI_CarrId"
-          [submitted]="submitted" />
         <!-- 載具編號顯碼 → POS5006.TXN_GUI_CarrIdEx -->
         <app-input-text class="col-12 md:col-6 lg:col-3" label="載具編號顯碼" [control]="dataForm.controls.TXN_GUI_CarrIdEx"
+          [submitted]="submitted" />
+        <!-- 載具編號隠碼 → POS5006.TXN_GUI_CarrId -->
+        <app-input-text class="col-12 md:col-6 lg:col-3" label="載具編號隱碼" [control]="dataForm.controls.TXN_GUI_CarrId"
           [submitted]="submitted" />
         <!-- 電子發票防葦隨機碼 → POS5006.TXN_GUIRemark -->
         <app-input-text class="col-12 md:col-6 lg:col-3" label="電子發票防偽隨機碼" [control]="dataForm.controls.TXN_GUIRemark"
@@ -103,11 +99,53 @@
         </app-table>
       </div>
       <div class="grid p-fluid card">
-        <app-table class="col-12" title="支付工具" tableKey="POS5008Table" dataKey="id" [data]="POS5008Data"
-          [columns]="POS5008Columns" [showCheckBox]="true" [selectedItems]="POS5008SelectedItems"
-          (selectionChange)="POS5008SelectedItems = $event" [showManage]="false" [loading]="loading"
-          [showInsert]="false" [showDelete]="false">
-        </app-table>
+        <p-divider align="left" type="solid" styleClass="pb-2" class="col-12">
+          <span class="text-center text-xl font-bold text-primary">支付工具</span>
+        </p-divider>
+        <p-table [value]="POS5008Data" [(selection)]="POS5008SelectedItems" class="col-12" dataKey="ID"
+          [rowTrackBy]="trackByRow" [resizableColumns]="true"
+          styleClass="p-datatable-sm p-datatable-striped p-datatable-gridlines" paginatorDropdownAppendTo="body">
+          <ng-template pTemplate="header" let-columns>
+            <tr>
+              <th class="w-1rem">序號</th>
+              <th class="w-1rem"><p-tableHeaderCheckbox /></th>
+              <th class="text-center">付款別</th>
+              <th class="text-center">金額</th>
+              <th class="text-center">信用卡別</th>
+              <th class="text-center">信用卡卡號/券號/應收付款對象</th>
+              <th class="text-center">分期數</th>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="body" let-rowIndex="rowIndex" let-rowData>
+            <tr style="height:35px">
+              <td class="text-center">{{ rowIndex + 1 }}</td>
+              <td><p-tableCheckbox [pSelectableRow]="rowData" [value]="rowData" /></td>
+              <td class="text-center" style="text-overflow: ellipsis">
+                <p-dropdown [(ngModel)]="rowData.PAY_Type" [ngModelOptions]="{ standalone: true }" styleClass="w-full"
+                  placeholder="請選擇付款別" [options]="PAY_TypeOptions" optionLabel="label" optionValue="No" appendTo="body"
+                  [disabled]="false" [filter]="true" />
+              </td>
+              <td>
+                <p-inputNumber class="w-full min-w-max" [(ngModel)]="rowData.TXN_PayAmt" placeholder="請輸入金額"
+                  [ngModelOptions]="{ standalone: true }" [disabled]="false" mode="decimal" />
+              </td>
+              <td>
+                <p-dropdown [(ngModel)]="rowData.CRD_Type" [ngModelOptions]="{ standalone: true }" styleClass="w-full"
+                  placeholder="請選擇信用卡別" [options]="CRD_TypeOptions" optionLabel="label" optionValue="value"
+                  appendTo="body" [disabled]="false" [filter]="true" />
+              </td>
+              <td>
+                <input pInputText class="w-full min-w-max" [(ngModel)]="rowData.CRD_No_TXN_CouponNo_TXN_PayDesc"
+                  placeholder="請輸入信用卡卡號/券號/應收付款對象" [ngModelOptions]="{ standalone: true }" [disabled]=" false" />
+              </td>
+              <td>
+                <p-dropdown [(ngModel)]="rowData.PTERM_No" [ngModelOptions]="{ standalone: true }" styleClass="w-full"
+                  placeholder="請選擇分期數" [options]="sys_typeOptions" optionLabel="SYS_Name" optionValue="SYS_Code"
+                  appendTo="body" [disabled]="false" [filter]="true" />
+              </td>
+            </tr>
+          </ng-template>
+        </p-table>
       </div>
       <div *ngIf="!isFormReadable" class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
         <app-button btnType="cancel" [form]="dataForm" />

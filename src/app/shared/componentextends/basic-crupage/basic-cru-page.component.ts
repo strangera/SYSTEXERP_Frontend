@@ -89,10 +89,11 @@ export class BasicCruPageComponent<T> {
   handleSubmit(frm: FormGroup | null, callback: () => void) {
     this.messageService.blockUi();
     this.submitted = true;
-
+    this.loading = true;
     if (frm?.invalid) {
       this.logValidationErrors(frm);
       this.messageService.errorBubble('表單驗證失敗，請檢查輸入資料', '表單驗證失敗');
+      this.loading = false;
       return;
     }
 

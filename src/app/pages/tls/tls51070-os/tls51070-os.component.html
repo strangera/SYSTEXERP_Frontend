@@ -14,16 +14,16 @@
       <!-- 標籤檔 -->
       <ng-container *ngIf="state.destination === 'label'">
         <form
-        [formGroup]="queryLabelForm"
-        id="queryLabelForm"
-        (ngSubmit)="onSubmitLabel(queryLabelForm)"
+        [formGroup]="queryForm"
+        id="queryForm"
+        (ngSubmit)="onSubmitLabel(queryForm)"
       >
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-text
               label="商品管理碼"
               controlName="PLU_MagNo"
-              [control]="queryLabelForm.controls.PLU_MagNo"
+              [control]="queryForm.controls.PLU_MagNo"
               [submitted]="submitted"
             ></app-input-text>
           </div>
@@ -31,7 +31,7 @@
             <app-input-text
               label="國際條碼"
               controlName="PLU_No"
-              [control]="queryLabelForm.controls.PLU_No"
+              [control]="queryForm.controls.PLU_No"
               [submitted]="submitted"
             ></app-input-text>
           </div>
@@ -39,7 +39,7 @@
             <app-input-text
               label="廠商貨號"
               controlName="PLU_OrgPLUNo"
-              [control]="queryLabelForm.controls.PLU_OrgPLUNo"
+              [control]="queryForm.controls.PLU_OrgPLUNo"
               [submitted]="submitted"
             ></app-input-text>
           </div>
@@ -49,7 +49,7 @@
             <app-input-number
               label="標籤數量"
               controlName="Label_Qty"
-              [control]="queryLabelForm.controls.Label_Qty"
+              [control]="queryForm.controls.Label_Qty"
               [submitted]="submitted"
             ></app-input-number>
           </div>
@@ -169,4 +169,3 @@
   </div>
   </div>
 </ng-container>
-
