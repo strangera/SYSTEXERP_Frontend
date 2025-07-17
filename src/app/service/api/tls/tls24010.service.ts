@@ -26,7 +26,8 @@ export interface TLS24010Data {
   TLT_No: string; // 專櫃編號
   TLT_Name: string; // 專櫃名稱
   TXN_Mode: string; // 交易型態
-  store_way?: string;
+  store_way?: string; // 櫃位類型
+  talent_id?: number; // 專櫃合約編號
   TXN_GUIPaper: string; // 補登類別
 }
 
@@ -35,7 +36,7 @@ export interface POS5007Data {
   PLU_MagNo: string; // 商品編號
   PLU_No: string; // 國際條碼
   TXN_Qty: number;// 數量
-  PLU_FixPrc: number; // 單價金額
+  PLU_SalePrc: number; // 單價金額
   TXN_Amt: number; // 單價小計金額
   TXN_Disc: number; // 單價折扣讓金額
   TXN_SaleAmt: number; // 單價銷售金額

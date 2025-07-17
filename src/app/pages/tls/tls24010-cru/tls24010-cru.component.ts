@@ -15,7 +15,7 @@ import { TranslateModule } from '@ngx-translate/core';
 import { InputTextareaComponent } from "../../../shared/componentkit/input-textarea/input-textarea.component";
 import { RadiobuttonYNComponent } from '../../../shared/componentkit/radiobutton-yn/radiobutton-yn.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { DropDownListService, IDropdownItem } from '../../../service/utility/dropDownList.service';
+import { DropDownListService, IDropdownItem, POS2004Item, TLTTALENT_CHARGEData } from '../../../service/utility/dropDownList.service';
 import { ValidationService } from '../../../shared/service/validation.service';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
@@ -37,8 +37,10 @@ import { SystemOption } from '../../../shared/models/sys/sys1000.model';
 export class TLS24010CRUComponent extends BasicCruPageComponent<TLS24010Data | unknown> implements OnInit, AfterViewInit {
   // 定義tableComponent
   @ViewChild('POS5007Table') POS5007Table!: TableComponent;
-  store_way?: string // 1為專櫃 2=自營
   TXN_GUIPaper?: string; // 補登類別 補原機台='E' 手開二聯式發票='2'
+  TLT_Name?: string; //專櫃名稱
+  store_way?: string // 1為專櫃 2=自營
+  talent_id?: number; //專櫃編號
   dataForm = this.formBuilder.nonNullable.group({
     TXN_Date: [{ value: '', disabled: true }],           //disabled 銷售日期
     ECR_No: [{ value: '', disabled: true }],             //disabled 收銀機號 pos1002.ecr_no
@@ -47,14 +49,14 @@ export class TLS24010CRUComponent extends BasicCruPageComponent<TLS24010Data | u
     TXN_Desc: ['', [Validators.maxLength(20)]],                           //備註
     USR_No: ['8888888', [Validators.required, Validators.maxLength(16)]], //收銀員編號POS2001.USR_No
     TXN_Status: ['N'],                                                    //交易狀態 (一般交易=N, 退貨交易=E, 作廢交易=D)
-    TXN_VIP: ['N'], //零稅 是/否,YN。若為y，TXN_TaxType變成2
+    TXN_VIP: ['N', [Validators.required]], //零稅 是/否,YN。若為y，TXN_TaxType變成2
     TXN_PreOrder: ['N', [Validators.required]], //預售 是/否
     TXN_Mode: [{ value: 'P', disabled: true }], //交易模式 固定為P=事後登錄 (隱藏)
     TXN_Uniform: ['', [Validators.maxLength(8)]], //客戶統一編號 可以為空
     GUI_Track: ['', [Validators.required, Validators.maxLength(2), Validators.minLength(2), this.validationService.guiTrackValidator]], //發票字軌
     TXN_GUIBegNo: ['', [Validators.required, Validators.maxLength(8), Validators.minLength(8)]], //起始發票號碼
     TXN_GUIEndNo: ['', [Validators.maxLength(8), Validators.minLength(8)]], //結束發票號碼
-    TXN_GUICnt: [{ value: 1, disabled: true }], //發票號碼張數
+    TXN_CustCnt: [1, [Validators.required, Validators.min(1), Validators.max(9999)]], //來客數
     TXN_MemCard: ['', [Validators.maxLength(30)]], //會員編號，若有資料需要串接環友
     TXN_TaxFreeCertNo: [{ value: null, disabled: true }], // 免稅卡零稅卡號= 免稅證證號 欄位
     TXN_Time: [null], //銷售時段
@@ -74,6 +76,8 @@ export class TLS24010CRUComponent extends BasicCruPageComponent<TLS24010Data | u
   CRD_TypeOptions = CRD_TypeOptions; //下拉選單 信用卡別
   PAY_TypeOptions: IDropdownItem[] = []; //下拉選單 付款別
   sys_typeOptions: SystemOption[] = []; // 下拉選單 分期數
+  POS2004Options: POS2004Item[] = []; //下拉選單 商品資料
+  tlt_idOptions: TLTTALENT_CHARGEData[] = []; //下拉選單 類別
   POS5007Data: POS5007Data[] = [];
   POS5007SelectedItems: POS5007Data[] = [];
   POS5007Columns: Column[] = POS5007Columns;
@@ -96,7 +100,9 @@ export class TLS24010CRUComponent extends BasicCruPageComponent<TLS24010Data | u
         ECR_No: rowDataTyped.ECR_No,
         TLT_No: rowDataTyped.TLT_No,
       });
+      this.TLT_Name = rowDataTyped.TLT_Name;
       this.store_way = rowDataTyped.store_way;
+      this.talent_id = rowDataTyped.talent_id;
       this.TXN_GUIPaper = rowDataTyped.TXN_GUIPaper
     }
     this.initializeOptions();
@@ -112,25 +118,37 @@ export class TLS24010CRUComponent extends BasicCruPageComponent<TLS24010Data | u
     // 查詢收銀員設定檔(POS2001)
     this.dropDownListService.queryPOS2001_DropDownList().pipe(untilDestroyed(this)).subscribe((data) => {
       this.USR_NoOptions = data.Data.map((item) => ({ ...item, label: `${item.No} - ${item.Name}` }));
-      switch (this.store_way) {
-        case '1': this.POS5007Columns = POS5007Columns; break;// 自營櫃位
-        case '2': this.POS5007Columns = POS5007Columns2; break;// 專櫃櫃位
-        default: break;
-      }
-      //TODO: 3. 若為自營櫃位時, 讀取POS2004.PLU_MAGNO
-      //TODO: 3. 若為專櫃櫃位時, 用TLT_No去拿商品
-      //TODO: 4. TLT_ID 類別的部分，應該是用TLT_NO去打API取得TLT_ID的下拉選單
-      //TODO: 5. 再去取 TLTTALENT_CHARGEM.CAG_TAXTYPE 專櫃抽成主檔
-      //TODO: 6. 再去取 讀取TLTTALENT_CHARGED.CAG_BARCODE 專櫃抽成主檔
-      //--付款明細------------------------------------------------------
-      this.dropDownListService.queryPOS1006_DropDownList().pipe(untilDestroyed(this)).subscribe((res) => {
-        this.PAY_TypeOptions = res.Data.map((item) => ({ ...item, label: item.Name }));
-        this.POS5008Data = res.Data.map((item, index) => {
-          return { ID: index, PAY_Type: item.No }
-        });
-        this.sys_typeOptions = SystemOptionsService.getOptions('T111');
-        //!!! 欄位所以都是用PAY_Type欄位判斷，後續前端處理
+    });
+    switch (this.store_way) {
+      case '1':// 自營櫃位
+        {
+          this.POS5007Columns = POS5007Columns;
+          const TLT_No = this.dataForm.get('TLT_No')?.value as string;
+          this.dropDownListService.queryPOS2004_DropDownList(TLT_No).pipe(untilDestroyed(this)).subscribe((data) => {
+            this.POS2004Options = data.Data;
+            this.POS5007Columns[0].options = this.POS2004Options;
+          })
+          this.dropDownListService.queryTLTTALENT_CHARGE_DropDownList(this.talent_id).pipe(untilDestroyed(this)).subscribe((data) => {
+            this.tlt_idOptions = data.Data.map((item) => ({ ...item, label: `${item.tlt_id} - ${item.tlt_id_desc}` }));
+            this.POS5007Columns[7].options = this.tlt_idOptions;
+          })
+          break;
+        }
+      case '2':// 專櫃櫃位
+        this.POS5007Columns = POS5007Columns2;
+        break;
+      default: break;
+    }
+    //TODO: 5. 再去取 TLTTALENT_CHARGEM.CAG_TAXTYPE 專櫃抽成主檔
+    //TODO: 6. 再去取 讀取TLTTALENT_CHARGED.CAG_BARCODE 專櫃抽成主檔
+    //--付款明細------------------------------------------------------
+    this.dropDownListService.queryPOS1006_DropDownList().pipe(untilDestroyed(this)).subscribe((res) => {
+      this.PAY_TypeOptions = res.Data.map((item) => ({ ...item, label: item.Name }));
+      this.POS5008Data = res.Data.map((item, index) => {
+        return { ID: index, PAY_Type: item.No }
       });
+      this.sys_typeOptions = SystemOptionsService.getOptions('T111');
+      //!!! 欄位所以都是用PAY_Type欄位判斷，後續前端處理
     });
   }
   listenForChanges() {
@@ -185,12 +203,12 @@ export class TLS24010CRUComponent extends BasicCruPageComponent<TLS24010Data | u
     this.POS5007Data = event.map((item) => {
       return {
         ...item,
-        TXN_Amt: item.TXN_Qty * item.PLU_FixPrc,
-        TXN_SaleAmt: item.TXN_Qty * item.PLU_FixPrc - item.TXN_Disc,
+        TXN_Amt: item.TXN_Qty * item.PLU_SalePrc,
+        TXN_SaleAmt: item.TXN_Qty * item.PLU_SalePrc - item.TXN_Disc,
       };
     });
   }
-  trackByRow = (index: number, item: any) => { return item?.['id'] || index; }
+  trackByRow = (index: number, item: POS5007Data) => { return item?.id || index; }
 
   onSubmit(frm: FormGroup) {
     console.log(frm.value);

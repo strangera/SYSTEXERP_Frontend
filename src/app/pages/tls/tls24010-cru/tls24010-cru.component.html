@@ -48,9 +48,9 @@
         <!-- 起始發票號碼 → POS5006.TXN_GUIBegNo -->
         <app-input-text class="col-12 md:col-6 lg:col-3" label="發票號碼" [control]="dataForm.controls.TXN_GUIBegNo"
           [copyControl]="dataForm.controls.TXN_GUIEndNo" [submitted]="submitted" [errorForGroup]="true" />
-        <!-- 交易筆數 → POS5006.TXN_GUICnt 發票號碼張數 -->
-        <app-input-number class="col-12 md:col-6 lg:col-3" label="交易筆數" [control]="dataForm.controls.TXN_GUICnt"
-          [submitted]="submitted" [max]="999999" [useGrouping]="false" />
+        <!-- 交易筆數 → POS5006.TXN_CustCnt 來客數 -->
+        <app-input-number class="col-12 md:col-6 lg:col-3" label="交易筆數" [control]="dataForm.controls.TXN_CustCnt"
+          [submitted]="submitted" [max]="9999" [useGrouping]="false" />
         <!-- 會員編號 → POS5006.TXN_MemCard -->
         <app-input-text class="col-12 md:col-6 lg:col-3" label="會員編號" [control]="dataForm.controls.TXN_MemCard"
           [submitted]="submitted" />
@@ -80,11 +80,11 @@
           [submitted]="submitted" />
         <!-- 紙本發票列印狀態 → POS5006.TXN_PrintTimes -->
         <app-dropdown class="col-12 md:col-6 lg:col-3" label="紙本發票列印狀態" [control]="dataForm.controls.TXN_PrintTimes"
-          [submitted]="submitted" [options]="[{label:'否',value:0},{label:'是',value:1}]" optionLabel="label"
+          [submitted]="submitted" [options]="[{label:'是',value:1},{label:'否',value:0}]" optionLabel="label"
           optionValue="value" />
         <!-- 發票捐贈狀態 → POS5006.TXN_GUI_Donate -->
         <app-dropdown class="col-12 md:col-6 lg:col-3" label="發票捐贈狀態" [control]="dataForm.controls.TXN_GUI_Donate"
-          [submitted]="submitted" [options]="[{label:'否',value:'N'},{label:'是',value:'Y'}]" optionLabel="label"
+          [submitted]="submitted" [options]="[{label:'是',value:'Y'},{label:'否',value:'N'}]" optionLabel="label"
           optionValue="value" />
         <!-- 捐贈社福團體代碼 → POS5006.TXN_GUILoveCode -->
         <app-input-text class="col-12 md:col-6 lg:col-3" label="捐贈社福團體代碼" [control]="dataForm.controls.TXN_GUILoveCode"
@@ -94,8 +94,9 @@
       <div class="grid p-fluid card">
         <app-table #POS5007Table class="col-12" title="銷售商品" tableKey="POS5007Table" dataKey="id" [data]="POS5007Data"
           [columns]="POS5007Columns" [showCheckBox]="true" [selectedItems]="POS5007SelectedItems"
-          (selectionChange)="POS5007SelectedItems = $event" [showDetail]="false" [showEdit]="false" [showRowEdit]="true"
-          [loading]="loading" [showInsert]="true" [insertRowData]="true" (dataChange)="onPOS5007DataChange($event)">
+          [showReportMode]="false" (selectionChange)="POS5007SelectedItems = $event" [showDetail]="false"
+          [showEdit]="false" [showRowEdit]="true" [loading]="loading" [showInsert]="true" [insertRowData]="true"
+          (dataChange)="onPOS5007DataChange($event)">
         </app-table>
       </div>
       <div class="grid p-fluid card">
@@ -123,16 +124,17 @@
               <td class="text-center" style="text-overflow: ellipsis">
                 <p-dropdown [(ngModel)]="rowData.PAY_Type" [ngModelOptions]="{ standalone: true }" styleClass="w-full"
                   placeholder="請選擇付款別" [options]="PAY_TypeOptions" optionLabel="label" optionValue="No" appendTo="body"
-                  [disabled]="false" [filter]="true" />
+                  [disabled]="true" [filter]="true" />
               </td>
               <td>
                 <p-inputNumber class="w-full min-w-max" [(ngModel)]="rowData.TXN_PayAmt" placeholder="請輸入金額"
                   [ngModelOptions]="{ standalone: true }" [disabled]="false" mode="decimal" />
               </td>
               <td>
-                <p-dropdown [(ngModel)]="rowData.CRD_Type" [ngModelOptions]="{ standalone: true }" styleClass="w-full"
-                  placeholder="請選擇信用卡別" [options]="CRD_TypeOptions" optionLabel="label" optionValue="value"
-                  appendTo="body" [disabled]="false" [filter]="true" />
+                <p-dropdown *ngIf="rowData.PAY_Type === '0'" [(ngModel)]="rowData.CRD_Type"
+                  [ngModelOptions]="{ standalone: true }" styleClass="w-full" placeholder="請選擇信用卡別"
+                  [options]="CRD_TypeOptions" optionLabel="label" optionValue="value" appendTo="body" [disabled]="false"
+                  [filter]="true" />
               </td>
               <td>
                 <input pInputText class="w-full min-w-max" [(ngModel)]="rowData.CRD_No_TXN_CouponNo_TXN_PayDesc"
