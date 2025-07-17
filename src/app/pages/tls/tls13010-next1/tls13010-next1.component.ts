@@ -166,9 +166,10 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
     {
       field: 'tpy_type',
       header: '單位',
-      type: 'text',
+      type: 'dropdown',
       editable: true,
-      width: '70px'
+      width: '70px',
+      options: TLS13010_DROPDOWN_OPTIONS.tpyTypeOption,
     },
     {
       field: 'tpy_unitamt',
@@ -450,9 +451,10 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
     {
       field: 'tpy_type',
       header: '單位',
-      type: 'text',
+      type: 'dropdown',
       editable: true,
-      width: '70px'
+      options: TLS13010_DROPDOWN_OPTIONS.tpyTypeOption,
+      autoWidth: true,
     },
     {
       field: 'tpy_rate',
@@ -525,9 +527,10 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
     {
       field: 'tpy_type',
       header: '單位',
-      type: 'text',
+      type: 'dropdown',
       editable: true,
-      width: '70px'
+      options: TLS13010_DROPDOWN_OPTIONS.tpyTypeOption,
+      autoWidth: true,
     },
     {
       field: 'tpy_rate',
