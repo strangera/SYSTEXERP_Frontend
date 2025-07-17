@@ -67,16 +67,16 @@ export class Tls24010Pos5007Component implements OnInit {
   insertRow(): void {
     this.POS5007Data.push({
       id: this.index + 1,
-      PLU_MagNo: '',
-      PLU_No: '',
+      PLU_MagNo: undefined,
+      PLU_No: undefined,
       TXN_Qty: 0,
       PLU_SalePrc: 0,
       TXN_Amt: 0,
       TXN_Disc: 0,
       TXN_SaleAmt: 0,
-      TLT_ID: '',
-      PLU_TaxType: '',
-      TXN_DiscCode: '',
+      TLT_ID: undefined,
+      PLU_TaxType: undefined,
+      TXN_DiscCode: undefined,
     });
     this.index++;
   }
@@ -84,5 +84,16 @@ export class Tls24010Pos5007Component implements OnInit {
   deleteRow(rowData: POS5007Data[]): void {
     this.POS5007Data = this.POS5007Data.filter(item => !rowData.includes(item));
     this.POS5007SelectedItems = this.POS5007SelectedItems.filter(item => !rowData.includes(item));
+  }
+
+  onInput(event: POS5007Data) {
+    event.TXN_Amt = (event.TXN_Qty || 0) * (event.PLU_SalePrc || 0);
+    event.TXN_SaleAmt = event.TXN_Amt - (event.TXN_Disc || 0);
+  }
+  onChangeTLT_ID(rowData: POS5007Data) {
+    const item = this.tlt_idOptions.find((item) => item.tlt_id === rowData.TLT_ID);
+    rowData.PLU_TaxType = item?.cag_taxtype;
+    rowData.TXN_DiscCode = item?.cag_barcode;
+    rowData.TXN_DiscCode_Name = item?.cag_barcode_name;
   }
 }

@@ -33,22 +33,23 @@ export interface TLS24010Data {
 
 export interface POS5007Data {
   id: number; // 唯一識別碼
-  PLU_MagNo: string; // 商品編號
-  PLU_No: string; // 國際條碼
-  TXN_Qty: number;// 數量
-  PLU_SalePrc: number; // 單價金額
-  TXN_Amt: number; // 單價小計金額
-  TXN_Disc: number; // 單價折扣讓金額
-  TXN_SaleAmt: number; // 單價銷售金額
-  TLT_ID: string; // 類別
-  PLU_TaxType: string; // 稅別
-  TXN_DiscCode: string; // 折扣別
+  PLU_MagNo?: string; // 商品編號
+  PLU_No?: string; // 國際條碼
+  TXN_Qty?: number;// 數量
+  PLU_SalePrc?: number; // 單價金額
+  TXN_Amt?: number; // 單價小計金額
+  TXN_Disc?: number; // 單價折扣讓金額
+  TXN_SaleAmt?: number; // 單價銷售金額
+  TLT_ID?: string; // 類別
+  PLU_TaxType?: string; // 稅別
+  TXN_DiscCode?: string; // 折扣別
+  TXN_DiscCode_Name?: string; // 折扣名稱
 }
 
 export interface POS5008Data {
   id?: number; // 唯一識別碼
-  PAY_No: string; // 付款編號
-  PAY_Name: string; // 付款名稱
+  PAY_No?: string; // 付款編號
+  PAY_Name?: string; // 付款名稱
   PAY_Type?: string; // 付款別
   TXN_PayAmt?: number; // 付款金額
   CRD_Type?: string; // 信用卡別

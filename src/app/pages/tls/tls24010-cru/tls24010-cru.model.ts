@@ -31,8 +31,8 @@ export const POS5008Columns: Column[] = [
   { field: 'PAY_Type', header: '付款別', },// 付款別型態，POS1006.PAY_Type
   { field: 'TXN_PayAmt', header: '金額', type: 'inputNumber' },
   { field: 'CRD_Type', header: '信用卡別', type: 'dropdown' }, // 付款信用卡卡別，V=VISA、M=MASTER、J=JCB、A=AE、D=DINVER、S=銀聯卡、O=其他
-  { // 若不是信用卡的話, 該欄位的值就放在券號欄位
-    // 若是信用卡的話, 該欄位的值就放在付款卡號欄位
+  { // 若不是信用卡的話, 該欄位的值就放在券號欄位 不是0的話
+    // 若是信用卡的話, 該欄位的值就放在付款卡號欄位 若是0的話
     // 若POS1006.PAY_Type = A 應收帳款時,  該欄位的值就放在付款註記欄位
     field: 'CRD_No_TXN_CouponNo_TXN_PayDesc',
     header: '信用卡卡號/券號/應收付款對象',

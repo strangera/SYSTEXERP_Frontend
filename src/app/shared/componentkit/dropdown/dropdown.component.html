@@ -7,7 +7,7 @@
   [optionValue]="optionValue" [showClear]="true" [ngClass]="{'ng-dirty ng-invalid': submitted && control.errors}"
   [dropdownIcon]="control.disabled ? 'hidden' : 'pi pi-angle-down'" (onChange)="onDropdownChange($event)"
   dataKey="optionValue" [filter]="true" appendTo="body" (onLazyLoad)="onLazyLoad($event)" [virtualScroll]="true"
-  [virtualScrollItemSize]="34">
+  [virtualScrollItemSize]="34" [resetFilterOnHide]="true">
 </p-dropdown>
 
 <app-control-messages [onerror]="submitted" [control]="control"></app-control-messages>

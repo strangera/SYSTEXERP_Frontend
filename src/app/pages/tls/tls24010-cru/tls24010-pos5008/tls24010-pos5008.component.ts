@@ -28,6 +28,7 @@ import { SystemOptionsService } from '../../../../service/system/sys1000.service
     FormsModule
   ],
   templateUrl: './tls24010-pos5008.component.html',
+  styleUrls: ['./tls24010-pos5008.component.scss']
 })
 export class Tls24010Pos5008Component implements OnInit {
   POS5008Data: POS5008Data[] = [];
@@ -49,5 +50,20 @@ export class Tls24010Pos5008Component implements OnInit {
       });
       this.sys_typeOptions = SystemOptionsService.getOptions('T111');
     });
+  }
+  getPlaceholder(payType: string): string {
+    switch (payType) {
+      case '0': return '請輸入信用卡卡號';
+      case 'A': return '請輸入應收付款對象';
+      default: return '請輸入券號';
+    }
+  }
+
+  getMaxLength(payType: string): number {
+    switch (payType) {
+      case '0': return 20; // CRD_No
+      case 'A': return 100; // TXN_PayDesc
+      default: return 50; // TXN_CouponNo
+    }
   }
 }
