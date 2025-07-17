@@ -667,6 +667,16 @@ export class DataCleaner {
     const toDelete: CleanFareItem[] = [];
 
     rawItems.forEach(item => {
+      // 🎯 修正：先處理刪除狀態，再處理其他狀態
+      if (item._status === 'deleted') {
+        // 刪除的項目：只要有有效 ID 就可以刪除，不管是否被勾選
+        if (this.hasValidId(item.id)) {
+          toDelete.push({ id: Number(item.id) } as CleanFareItem);
+        }
+        return; // 刪除項目處理完畢，不需要進一步處理
+      }
+
+      // 🎯 修正：只有被勾選的項目才處理新增/修改
       if (!item.is_selected) return;
 
       const cleanItem: CleanFareItem = {
@@ -697,17 +707,11 @@ export class DataCleaner {
         case 'modified':
           toUpdate.push(cleanItem);
           break;
-        case 'deleted':
-          if (this.hasValidId(item.id)) {
-            toDelete.push({ id: Number(item.id) } as CleanFareItem);
-          }
-          break;
       }
     });
 
     return { toInsert, toUpdate, toDelete };
   }
-
   /**
    * 🎯 修正：清理抽成設定資料以配合後端
    */

@@ -1301,6 +1301,8 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
     });
 
     const { newData } = event;
+
+    // A類型特殊處理：自動設定結束日期等於開始日期
     if (capType === 'A' && newData.tpy_bdate) {
       newData.tpy_edate = newData.tpy_bdate;
       console.log(`✅ A類型自動設定 tpy_edate = tpy_bdate: ${newData.tpy_edate}`);
@@ -1323,12 +1325,13 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
 
     // 🔥 強制檢查是否有變更
     const hasChanges = this.hasDataChanges(newData);
-    const originallySelected = newData._originalSelected || false;
+    // 🎯 直接用 data_source 判斷是否為合約原有項目
+    const isContractExisting = newData.data_source === 'CONTRACT_EXISTING';
 
     // 🎯 狀態邏輯判定
     if (newData.is_selected) {
       // ✅ 被勾選
-      if (originallySelected) {
+      if (isContractExisting) {
         // 原本就存在於合約的項目
         if (newData._status === 'deleted') {
           // 從刪除狀態恢復
@@ -1351,7 +1354,7 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
       }
     } else {
       // ❌ 取消勾選
-      if (originallySelected) {
+      if (isContractExisting) {
         // 原本存在於合約的項目 → 刪除
         newData._status = 'deleted';
         console.log(`❌ 項目 ${newData.cap_item} 取消勾選，狀態: → deleted`);
@@ -1406,11 +1409,12 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
     console.log(`🔄 ${capType} 類型項目選擇狀態改變`);
 
     this.fareData[capType].forEach(item => {
-      const originallySelected = item._originalSelected || false;
+      // 🎯 直接用 data_source 判斷是否為合約原有項目
+      const isContractExisting = item.data_source === 'CONTRACT_EXISTING';
 
       if (item.is_selected) {
         // ✅ 被勾選
-        if (originallySelected) {
+        if (isContractExisting) {
           // 原本就存在於合約的項目
           if (item._status === 'deleted') {
             // 從刪除狀態恢復
@@ -1433,7 +1437,7 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
         }
       } else {
         // ❌ 取消勾選
-        if (originallySelected) {
+        if (isContractExisting) {
           // 原本存在於合約的項目 → 刪除
           item._status = 'deleted';
           console.log(`❌ 項目 ${item.cap_item} 取消勾選，狀態: → deleted`);
