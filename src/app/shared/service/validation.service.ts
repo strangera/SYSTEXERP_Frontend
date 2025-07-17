@@ -54,6 +54,11 @@ export class ValidationService {
 
     // ====NA=====
     // 長度最限不得超過10個長度，且為必填，否則顯示錯誤訊息="{對應欄位名稱}為必填"。"
+
+    if (typeof control.value !== 'string') {
+      return { invalidId: true };
+    }
+
     if (control.value !== null) {
       if (!control.value.match(/^[A-Za-z][12]\d{8}$/)) {
         return { invalidIdn: true };

@@ -1,3 +1,4 @@
+import { ValidationService } from './../../../shared/service/validation.service';
 // --Commonly used imports--
 import { Component, OnInit, } from '@angular/core';
 import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
@@ -117,7 +118,9 @@ export class TLS12010CRUComponent extends BasicCruPageComponent<Potential_Custom
       {No: '123',Name:'張三',Label: '123-張三'}
     ];
     // ----------------------------------------------------------------
-    constructor(private tls12010Service: Tls12010Service) {
+    constructor(
+      private validationService: ValidationService,
+      private tls12010Service: Tls12010Service) {
       super(); // 呼叫父類建構子
     }
   
@@ -130,7 +133,26 @@ export class TLS12010CRUComponent extends BasicCruPageComponent<Potential_Custom
       this.dataForm.get('cus_type')?.valueChanges.subscribe(value => {
         this.onCusTypeChange(value);
       });
-  
+
+      // 在統邊模式(cus_type == '1')時，觀察 廠商統一編號 下拉 （cus_type) 改變
+      this.dataForm.get('cus_uniform_id')?.valueChanges.subscribe(value => {
+      if (this.dataForm.get('cus_type')?.value === '1') {
+        // 找到 cus_uniform_Option 中符合的項目
+        const match = this.cus_uniform_Option.find(opt => opt.No === value);
+
+        if (match) {
+          // 自動帶入名稱
+          this.dataForm.get('VEN_Name')?.disable();
+          this.dataForm.get('VEN_Name')?.setValue(match.Label ? (match.Label.split('/')[1] || '') : '');
+        } else {
+          // 若找不到對應選項，清空 VEN_Name，並跳出警告
+          this.dataForm.get('VEN_Name')?.setValue('');
+          // this.messageService.errorBubble('無該廠商名稱資料');
+        }
+      }
+    });
+
+      
       console.log('讀取資料', this.dataForm.value);
     }
   
@@ -199,8 +221,8 @@ export class TLS12010CRUComponent extends BasicCruPageComponent<Potential_Custom
         // 查 統編
         this.tls12010Service.queryPOS2013_DropDownList({}).subscribe((response) => {
           this.cus_uniform_Option = response.Data.map((item: any) => ({
-            No: item.VEN_No, // 統編代碼
-            Label: item.VEN_No + '/' + item.Name, // 組合成顯示用的Label
+            No: item.No, // 統編代碼
+            Label: item.No + '/' + item.Name, // 組合成顯示用的Label
           }));
           console.log('統編代號:', response.Data);
         });
@@ -210,12 +232,84 @@ export class TLS12010CRUComponent extends BasicCruPageComponent<Potential_Custom
             No: item.No, // 經營方式 代碼
             Label: item.No + '/' + item.Name, // 組合成顯示用的Label
           }));
-          console.log('經營方式代號:', response.Data);
+          console.log('經營方式代號:', this.business_type_Option);
         });
     }
 
-    // 廠商類型 radio button 檢核
+    // 廠商類型 radio button 連動的驗證器變化
     onCusTypeChange(type: string): void {
-      // console.log('變更為',type);
+      const cus_uniform_id = this.dataForm.get('cus_uniform_id');
+      const VEN_Name = this.dataForm.get('VEN_Name');
+      const VEN_EngName = this.dataForm.get('VEN_EngName');
+
+      if (!cus_uniform_id || !VEN_Name || !VEN_EngName) return;
+
+      switch (type) {
+        case '1': // 統編
+          cus_uniform_id.setValidators([Validators.required, Validators.maxLength(16)]);
+          VEN_Name.setValidators([Validators.required, Validators.maxLength(100)]);
+          VEN_EngName.setValidators([Validators.maxLength(100)]);
+
+          //內容重設
+          cus_uniform_id.enable();
+          VEN_Name.enable();
+
+          cus_uniform_id.setValue('');
+          VEN_Name.setValue('');
+          VEN_EngName.setValue('');
+
+          break;
+
+        case '2': // 身份證字號
+          cus_uniform_id.setValidators([
+            Validators.required,
+            Validators.maxLength(10),
+            (control) => this.validationService.identityValidator(control) // 套用 身份證字號 驗證
+          ]);
+          VEN_Name.setValidators([Validators.required, Validators.maxLength(100)]);
+          VEN_EngName.setValidators([Validators.maxLength(100)]);
+
+          //內容重設
+          cus_uniform_id.enable();
+          VEN_Name.enable();
+
+          cus_uniform_id.setValue('');
+          VEN_Name.setValue('');
+          VEN_EngName.setValue('');
+
+          break;
+
+        case '3': // 員工ID
+          { cus_uniform_id.setValidators([
+            Validators.required,
+            Validators.maxLength(16),
+          ]);
+          VEN_Name.setValidators([Validators.required, Validators.maxLength(100)]);
+          VEN_EngName.setValidators([Validators.maxLength(100)]);
+
+          // VEN_Name 直接套用token的 tblUser.user_name 給員工ID
+          const userNo = this.authService.getUserInfo()?.user_No ?? ''
+          const userName = this.authService.getUserInfo()?.user_Name ?? ''
+          if(userNo && userName){ //有用戶名不允許編輯
+            // console.log('用戶資料',userNo,"/", userName);
+            cus_uniform_id.disable();
+            cus_uniform_id.setValue(userNo);
+            VEN_Name.disable();
+            VEN_Name.setValue(userName);
+
+            VEN_EngName.setValue('');
+          }else{
+            this.messageService.errorBubble('錯誤: 無法取得用戶資訊');
+          }
+          break; }
+        default:
+          console.log('error');
+          break;  
+      }
+
+      // 重設狀態並更新驗證器
+      cus_uniform_id.updateValueAndValidity();
+      VEN_Name.updateValueAndValidity();
+      VEN_EngName.updateValueAndValidity();
     }
 }

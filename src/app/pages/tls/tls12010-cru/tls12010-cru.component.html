@@ -20,14 +20,21 @@
                     <app-radiobutton label="廠商類型" groupname="cus_type" [control]="dataForm.controls.cus_type"
                         [options]="cus_type_Option" [submitted]="submitted" />
                 </div>
+                <div class="col-12 md:col-6 lg:col-4">
+                <!-- 判斷 cus_type 是否為 '1' 來決定顯示哪個欄位 -->
+                <ng-container *ngIf="dataForm.get('cus_type')?.value === '1'; else textInput">
+                    <app-dropdown label="廠商統一編號/身分證/員工ID" controlName="cus_uniform_id" [options]="cus_uniform_Option" optionLabel="Label"
+                                optionValue="No" [control]="dataForm.controls.cus_uniform_id" [submitted]="submitted"></app-dropdown>
+                </ng-container>
+
+                <!-- 當 cus_type 不是 '1' 時顯示文字輸入框 -->
+                <ng-template #textInput>
+                    <app-input-text label="廠商統一編號/身分證/員工ID" controlName="cus_uniform_id" [control]="dataForm.controls.cus_uniform_id"
+                                    [submitted]="submitted"></app-input-text>
+                </ng-template>
+                </div>
             </div>
             <div class="grid p-fluid">
-                <div class="col-12 md:col-6 lg:col-4">
-                    <!-- <app-dropdown label="廠商統一編號" controlName="cus_uniform_id" [options]="cus_uniform_Option" optionLabel="Label"
-                    optionValue="No" [control]="dataForm.controls.cus_uniform_id" [submitted]="submitted"></app-dropdown> -->
-                    <app-input-text label="廠商統一編號" controlName="cus_uniform_id" [control]="dataForm.controls.cus_uniform_id"
-                        [submitted]="submitted"></app-input-text>
-                </div>
                 <div class="col-12 md:col-6 lg:col-4">
                     <app-input-text label="廠商名稱(中文)" controlName="VEN_Name" [control]="dataForm.controls.VEN_Name"
                     [submitted]="submitted"></app-input-text>

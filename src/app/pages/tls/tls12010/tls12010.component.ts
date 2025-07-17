@@ -247,8 +247,8 @@ export class TLS12010Component extends BasicQueryPageComponent<Potential_Custome
         // 查 統編
         this.tls12010Service.queryPOS2013_DropDownList({}).subscribe((response) => {
           this.cus_uniform_Option = response.Data.map((item: any) => ({
-            No: item.VEN_No, // 統編代碼
-            Label: item.VEN_No + '/' + item.Name, // 組合成顯示用的Label
+            No: item.No, // 統編代碼
+            Label: item.No + '/' + item.Name, // 組合成顯示用的Label
           }));
           console.log('統編代號:', response.Data);
         });
