@@ -39,7 +39,7 @@ export class FIN12030Component extends BasicQpageComponent implements OnInit {
     onedatemm: [], // 申報年月
     invoiceType: [], // 發票類別
     wordTrack: ['', [Validators.maxLength(2)]], // 字軌
-    registerID: [], // 收銀機代號
+    registerID: [], // 收銀機號
     serialInvoice: [, [Validators.maxLength(8)]], // 發票號碼
     startserialInvoice: [, [this.validationService.numberValidator, Validators.maxLength(8)]], // 發票號碼(起)
     endserialInvoice: [, [this.validationService.numberValidator, Validators.maxLength(8)]], // 發票號碼(迄)

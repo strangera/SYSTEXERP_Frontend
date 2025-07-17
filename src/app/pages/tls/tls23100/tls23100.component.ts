@@ -48,7 +48,7 @@ export class TLS23100Component extends BasicQueryPageComponent<any> {
   totalRecords = 0;
 
   columns: any[] = [
-    { field: 'ECR_No', header: '收銀機代號', visible: true },
+    { field: 'ECR_No', header: '收銀機號', visible: true },
     { field: 'TXN_No', header: '交易序號', visible: true },
     { field: 'tlt_no', header: '專櫃編號', visible: true, style: 'text-left' },
     { field: 'tlt_name', header: '櫃位名稱', visible: true, style: 'text-left' },

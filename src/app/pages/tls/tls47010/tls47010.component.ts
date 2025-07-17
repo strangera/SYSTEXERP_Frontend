@@ -1,171 +1,107 @@
-import { DataTypeService } from './../../../service/basic/data-type.service';
-import { FloorService } from './../../../service/basic/floor.service';
 import { Component } from '@angular/core';
-import { FormBuilder, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { NavigationExtras, Router } from '@angular/router';
-// Permissions
-import { FunsrightInfo, PermissionsInfo } from '../../../shared/models/system/funsrightInfo';
-// Shared
-import { AuthService } from '../../../service/system/auth.service';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-
-import { ValidationService } from '../../../shared/service/validation.service';
-import { CounterCodeService } from '../../../service/basic/counter-code.service';
+import {
+  FormGroup,
+  FormsModule,
+  ReactiveFormsModule,
+  Validators,
+} from '@angular/forms';
+import { AccordionModule } from 'primeng/accordion';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { AccordionModule } from 'primeng/accordion';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { TranslateModule } from '@ngx-translate/core';
+import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
+import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
+import { DataTypeService } from '../../../service/basic/data-type.service';
+import { TLS47010Service } from '../../../service/api/tls/tls47010.service'; // ✅ 你需要新增此 service
 
-// 2.4.7.1  資料下傳收銀機作業
+
 @Component({
-    selector: 'app-tls47010',
-    templateUrl: './tls47010.component.html',
-    styleUrl: './tls47010.component.scss',
-    standalone: true,
-    imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, DropdownComponent, MultiSelectComponent, TableComponent, TranslateModule]
+  selector: 'app-tls47010',
+  templateUrl: './tls47010.component.html',
+  styleUrls: ['./tls47010.component.scss'],
+  standalone: true,
+  imports: [
+    MenubarComponent,
+    ButtonComponent,
+    AccordionModule,
+    FormsModule,
+    ReactiveFormsModule,
+    MultiSelectComponent,
+    TranslateModule,
+  ],
 })
-export class TLS47010Component {
-  ProgNo: string = '240025';
-  // 權限
-  funInfo?: FunsrightInfo;
-
-  // 查詢
-  // ----------------------------------------------------------------
-  loading: boolean = false;
-  submitted: boolean = false;
-  queryForm = this.formBuilder.group({
-    registerID: [, [Validators.required]], // DropDown
-    counterID: [, [Validators.required]], // DropDown
-    dataType: [[] as number[], [Validators.required]], // MultiSelect
-  });
-  // 表格
-  // ----------------------------------------------------------------
-  data: any[] = [
-    //{ contactPerson: 'A先生', contactDate: '2024-08-08', UID: '123' ,industryType: '停車管理', category: '專櫃。意向書',version: 1, rentNumber: 1, progress: '未審核'},
-    //{ contactPerson: 'B先生', contactDate: '2024-08-09', UID: '456' ,industryType: '停車管理', category: '專櫃。意向書',version: 1, rentNumber: 2, progress: '已審核'},
-    //{ contactPerson: 'C先生', contactDate: '2024-08-10', UID: '789' ,industryType: '停車管理', category: '專櫃。意向書',version: 1, rentNumber: 3, progress: '未審核'},
-    // 其他資料
-  ];
-  filteredData: any[] = [...this.data];
-  columns: any[] = [
-    { field: 'contactPerson', header: 'Line1', visible: true },
-    { field: 'contactDate', header: 'Line2', visible: true },
-    { field: 'UID', header: 'Line3', visible: true },
-    { field: 'industryType', header: 'Line4', visible: true },
-    { field: 'category', header: 'Line5	', visible: true },
-    // 其他欄位
-  ];
-  // ----------------------------------------------------------------
-  counterIDOptions: any[] = [];
-  registerIDOptions: any[] = [];
+export class TLS47010Component extends BasicQueryPageComponent<any> {
+  ECRNoOptions: any[] = []; // 收銀機號下拉選單
   dataTypeOptions: any[] = [];
 
+  queryForm = this.formBuilder.group({
+    ECR_No: [[], Validators.required],
+    dataType: [[], Validators.required],
+    ...createPaginationConfig([]),
+  });
+
   constructor(
-    private router: Router,
-    private formBuilder: FormBuilder,
-    private messageService: NotificationService,
-    private authService: AuthService,
-    private validationService: ValidationService,
-    private floorService: FloorService,
-    private counterCodeService: CounterCodeService,
     private dataTypeService: DataTypeService,
+    private tls47010Service: TLS47010Service,
   ) {
+    super();
   }
 
   ngOnInit(): void {
-    //
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
-    // ----------------------------------------------------------------
-    this.counterCodeService.getCounterCodes().subscribe(data => {
-      this.counterIDOptions = data;
-    });
-    // ----------------------------------------------------------------
-    this.floorService.getFloors().subscribe(data => {
-      this.registerIDOptions = data;
-    });
-    // ----------------------------------------------------------------
-    this.dataTypeService.getSystemTypes().subscribe(data => {
-      this.dataTypeOptions = data;
+    this.initializePage('TLS47010', '/tls/tls47010cru', this.queryForm);
 
-      // 全選填入
-      // let allSystemValues = this.dataTypeOptions.map(system => system.value);
-      // this.queryForm.patchValue({
-      //   dataType: allSystemValues
-      // });
+    this.tls47010Service.ECROptions({}).subscribe((res) => {
+      this.ECRNoOptions =
+        res?.Data?.map((x: any) => ({
+          label: `${x.ECR_No} - ${x.ECR_Name} - ${x.ECR_Status}`,
+          value: x.ECR_No,
+        })) || [];
+    });
+
+    this.dataTypeService.getDataOptions().subscribe((res) => {
+      this.dataTypeOptions = res.map((x: any) => ({
+        label: `${x.TBL_Name} - ${x.TBL_Remark}`,
+        value: x.TBL_Name,
+      }));
     });
   }
 
-  // 權限
-  // ----------------------------------------------------------------
-  canQuery(): boolean {
-    return true;
+  onClearForm(): void {
+    this.queryForm.reset();
   }
-  canAdd(): boolean {
-    return true;
-  }
-  canEdit(): boolean {
-    return true;
-  }
-  // ----------------------------------------------------------------
-  onSubmit(frm: FormGroup) {
-    console.log(frm.value);
-    this.submitted = true;
-    this.loading = true;
-    this.messageService.blockUi();
+ onDownload(): void {
+  const formValue = this.queryForm.value;
 
-    if (frm.valid && this.canQuery()) {
-      // 提交邏輯
-      // Service
-      // this.xxxService.queryMachine(frm.value as xxxInterface)
-      //  .subscribe((response: any) => {
-      //    this.rows = response.xxx;
-      // });
-    }
+  const DEFTBL_List = formValue.dataType || []; // 資料類別（對應 TBL_Name）
+  const POS1002_List = formValue.ECR_No || [];  // 收銀機號（對應 ECR_No）
 
-    this.loading = false;
-    this.messageService.unblockUi();
+  if (!DEFTBL_List.length || !POS1002_List.length) {
+    this.messageService.warnBubble('請選擇收銀機號與資料類別');
+    return;
   }
 
-  onSubmitQuery(frm: FormGroup) {
-    // 查詢邏輯
-    this.onSubmit(frm);
-  }
+  const payload = {
+    DEFTBL_List,
+    POS1002_List,
+  };
 
-  onClearForm() {
-    this.queryForm.reset();  // 重置表單
-  }
-  // ----------------------------------------------------------------
-  onCreate() {
-    if (this.canAdd()) {
-      this.navigateWithState(CRUDStatus.Create);
-    }
-  }
+  this.loading = true;
+  this.messageService.blockUi();
 
-  onEdit(data: any) {
-    if (this.canEdit()) {
-      this.navigateWithState(CRUDStatus.Edit, data);
-    }
-  }
+  this.tls47010Service.insertTLS47010(payload).subscribe({
+    next: () => {
+      this.messageService.successBubble('下傳成功');
+    },
+    error: () => {
+      this.messageService.errorBubble('下傳失敗');
+    },
+    complete: () => {
+      this.loading = false;
+      this.messageService.unblockUi();
+    },
+  });
+}
 
-  onDetail(data: any) {
-    console.log(data);
-    this.navigateWithState(CRUDStatus.Read, data);
-  }
-
-  navigateWithState(crudstatus: CRUDStatus, rowdata?: any) {
-    let extras: NavigationExtras = {
-      state: {
-        crudstatus: crudstatus,
-        rowdata: rowdata,
-      },
-    };
-
-    console.log(crudstatus);
-
-    this.router.navigate(['/TLS2000/TLS47010CRU'], extras);
-  }
 }

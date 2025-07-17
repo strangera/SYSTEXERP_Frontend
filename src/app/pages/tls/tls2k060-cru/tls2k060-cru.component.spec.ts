@@ -1,6 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { TLS2K060CRUComponent } from './tls2-k060-cru.component';
+import { TLS2K060CRUComponent } from './tls2k060-cru.component';
 
 describe('TLS2K060CRUComponent', () => {
   let component: TLS2K060CRUComponent;
@@ -10,7 +10,7 @@ describe('TLS2K060CRUComponent', () => {
     await TestBed.configureTestingModule({
       imports: [TLS2K060CRUComponent]
     })
-    .compileComponents();
+      .compileComponents();
 
     fixture = TestBed.createComponent(TLS2K060CRUComponent);
     component = fixture.componentInstance;

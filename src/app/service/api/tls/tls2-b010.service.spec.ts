@@ -1,13 +1,13 @@
 import { TestBed } from '@angular/core/testing';
 
-import { Tls14030Service } from './tls14030.service';
+import { TLS2B010Service } from './tls2-b010.service';
 
-describe('Tls14030Service', () => {
-  let service: Tls14030Service;
+describe('TLS2B010Service', () => {
+  let service: TLS2B010Service;
 
   beforeEach(() => {
     TestBed.configureTestingModule({});
-    service = TestBed.inject(Tls14030Service);
+    service = TestBed.inject(TLS2B010Service);
   });
 
   it('should be created', () => {

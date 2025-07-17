@@ -1,17 +1,21 @@
 import { Component, Input, OnInit, forwardRef } from '@angular/core';
-import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormControl, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { BasicKitComponent } from '../../componentextends/basic-kit/basic-kit.component';
 import { InputTextModule } from 'primeng/inputtext';
 import { DropdownModule } from 'primeng/dropdown';
+import { NgIf } from '@angular/common';
 
 @Component({
     selector: 'app-query-year-month',
     templateUrl: './query-year-month.component.html',
     styleUrls: ['./query-year-month.component.scss'],
     standalone: true,
-    imports: [FormsModule, InputTextModule, ReactiveFormsModule, DropdownModule]
+    imports: [FormsModule, InputTextModule, ReactiveFormsModule, DropdownModule,NgIf]
 })
 export class QueryYearMonthComponent extends BasicKitComponent implements OnInit {
+get isControlRequired(): boolean {
+  return this.control?.hasValidator?.(Validators.required) ?? false;
+}
   @Input() label = '交易年月';
   @Input() submitted = false;
   @Input() control!: FormControl;

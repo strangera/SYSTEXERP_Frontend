@@ -17,7 +17,7 @@ import { CalendarComponent } from '../../../shared/componentkit/calendar/calenda
 import { QueryYearMonthComponent } from '../../../shared/componentkit/query-year-month/query-year-month.component';
 import { NgIf } from '@angular/common';
 import { TranslateModule } from '@ngx-translate/core';
-import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
+import { CounterNameService } from '../../../service/basic/counter-name.service';
 
 @Component({
   selector: 'app-fin13060-cru',
@@ -49,16 +49,14 @@ export class FIN13060CRUComponent
     { label: '營業用', value: '營業用' },
     { label: '共同使用', value: '共同使用' },
   ];
-  PUR_VoucherTypeOptions: any[] = [
-    {
-      value: '23',
-      label: '三聯式、電子計算機及三聯式收銀機統一發票之進貨退出或折讓證明單',
-    },
-    {
-      value: '24',
-      label: '二聯式收銀機統一發票及載有稅額之其他憑證之進貨退出或折讓證明單',
-    },
-  ];
+PUR_VoucherTypeOptions: any[] = [
+  { value: '31', label: '銷項三聯式、電子計算機統一發票' },
+  { value: '32', label: '銷項二聯式、二聯式收銀機統一發票' },
+  { value: '35', label: '銷項三聯式收銀機統一發票及一般稅額計算之電子發票' },
+  { value: '36', label: '銷項免用統一發票' },
+  { value: '37', label: '特種稅額之銷項憑證' },
+];
+
   deductOptions = [
     { label: '代表進項可扣抵之進貨及費用', value: 'A' },
     { label: '代表進項可扣抵之固定資產', value: 'B' },
@@ -81,8 +79,27 @@ export class FIN13060CRUComponent
     { label: '應稅', value: '1' },
     { label: '零稅', value: '2' },
   ];
+   CounterOptions: any[] = [];
 
-  constructor(private fin13060Service: FIN13060Service) {
+   BuyerUniCodeOptions = [
+  { value: '00000000', label: '南紡流通服務台' },
+  { value: '00000000-2', label: '南紡流通服務台' },
+  { value: '00000000-3', label: '南紡流通' },
+  { value: '00000000-4', label: '停管管理' },
+  { value: '00000000-5', label: '南紡流通停管管理' },
+  { value: '00000000-7', label: '停管管理' },
+  { value: '00000000-8', label: '測試' },
+  { value: '00852492-1', label: '佳達旅運行' },
+  { value: '01052878-1', label: '財團法人臺業文教基金會' },
+  { value: '01508949-1', label: '財團法人聯合信用卡處理中心' },
+];
+  AssetNoteOptions = [
+    { label: '固定資產', value: '0' },
+    { label: '土地', value: '1' },
+  ];
+
+
+  constructor(private fin13060Service: FIN13060Service, private counterNameService: CounterNameService,) {
     super();
   }
 
@@ -108,6 +125,13 @@ export class FIN13060CRUComponent
     Note: [''],
     System_ID: [''],
     remark: [''],
+    VendorCode: [''],
+    TLT_No: [''],
+    SellerUniCode: [{ value: '', disabled: true }, Validators.required],
+
+    BuyerUniCode: ['', Validators.required],
+    AssetNote: [''],
+
   });
 
   detailRows: any[] = [];
@@ -115,6 +139,15 @@ export class FIN13060CRUComponent
   ngOnInit(): void {
     this.initializePage('FIN13060', this.dataForm);
     this.updateDisabledState();
+     this.counterNameService.getCounters().subscribe((res) => {
+      this.CounterOptions =
+        res?.map((x: any) => ({
+          label: x.label, // 給 table 用
+          formLabel: `${x.value} - ${x.label}`, // 給下拉選單用
+          value: x.value,
+        })) || [];
+    });
+    this.dataForm.get('SellerUniCode')?.disable(); // ← 補這行
   }
 
   private updateDisabledState(): void {

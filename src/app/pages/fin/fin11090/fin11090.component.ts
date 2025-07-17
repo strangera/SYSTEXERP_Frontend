@@ -35,7 +35,7 @@ export class FIN11090Component extends BasicQueryPageComponent<FIN11090Data> imp
     { field: 'invoice_date', header: '發票日期', visible: true },
     { field: 'prefix', header: '字軌', visible: false },
     { field: 'invoice_no', header: '發票號碼', visible: true },
-    { field: 'cashier_no', header: '收銀機代號', visible: true },
+    { field: 'cashier_no', header: '收銀機號', visible: true },
     { field: 'txn_seq', header: '交易序號', visible: true },
     { field: 'invoice_amt', header: '交易金額', visible: true }
   ];

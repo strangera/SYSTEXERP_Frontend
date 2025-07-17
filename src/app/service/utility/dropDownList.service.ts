@@ -11,6 +11,7 @@ export interface IDropdownItem {
   ShortName?: string;
   VEN_No?: string;
   HOS_No?: string;
+  store_way?: string
   label?: string; // 用於顯示的標籤
 }
 
@@ -289,5 +290,14 @@ export class DropDownListService {
   // 查詢POS2013廠商資料表下拉選單
   queryPOS2013_DropDownList(params: IPOS2013Request = {}): Observable<ApiResponse<IDropdownItem[]>> {
     return this.http.post<ApiResponse<IDropdownItem[]>>(`${this.apiUrl}/queryPOS2013_DropDownList`, params);
+  }
+
+  // 查詢專櫃主檔(TLTTALENT)資料表下拉選單(依照契約日期取得合約資料)
+  queryTLTTALENT_ByContractDate_DropDownList(tlt_contract_date: string): Observable<ApiResponse<IDropdownItem[]>> {
+    return this.http.post<ApiResponse<IDropdownItem[]>>(`${this.apiUrl}/queryTLTTALENT_ByContractDate_DropDownList`, { tlt_contract_date });
+  }
+  // 查詢付款別(POS1006)資料表下拉選單
+  queryPOS1006_DropDownList(): Observable<ApiResponse<IDropdownItem[]>> {
+    return this.http.post<ApiResponse<IDropdownItem[]>>(`${this.apiUrl}/queryPOS1006_DropDownList`, {});
   }
 }

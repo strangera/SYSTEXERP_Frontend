@@ -4,10 +4,10 @@
          style="flex: 1">
       <app-menubar [ProgNo]="ProgNo"></app-menubar>
     </div>
-    <div *appHasPermission="addPermission">
+    <!-- <div *appHasPermission="addPermission"> -->
+    <div>
       <app-button btnType="create"
-                  (click)="onCreate()"
-                  class="col"></app-button>
+                  (click)="onCreate()"></app-button>
     </div>
   </div>
   <p-accordion>
@@ -20,74 +20,64 @@
             (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select label="管別"
-                              controlName="sys3800s"
-                              [options]="tls26010Service.sys3800List()"
-                              optionLabel="label"
-                              optionValue="value"
-                              [control]="queryForm.controls.SYS3800s"
-                              [submitted]="submitted"></app-multi-select>
-            <app-multi-select label="樓層"
-                              controlName="sys3900s"
-                              [options]="tls26010Service.sys3900List()"
-                              optionLabel="label"
-                              optionValue="value"
-                              [control]="queryForm.controls.SYS3900s"
-                              [submitted]="submitted"></app-multi-select>
-            <app-multi-select label="收銀機號"
-                              controlName="ecrs"
-                              [options]="tls26010Service.preorderECRList()"
-                              optionLabel="label"
-                              optionValue="value"
-                              [control]="queryForm.controls.ECR_Nos"
-                              [submitted]="submitted"></app-multi-select>
-            <app-multi-select label="專櫃編號"
-                              controlName="tlts"
-                              [options]="tls26010Service.TLTTALENTList()"
-                              optionLabel="label"
-                              optionValue="value"
-                              [control]="queryForm.controls.tlt_nos"
-                              [submitted]="submitted"></app-multi-select>
-            <!-- <app-dropdown label="收銀機號"
-                          controlName="cashierCode"
-                          [options]="ECRNoOptions"
+            <app-dropdown label="館別"
+                          controlName="sys3800"
+                          [options]="tls26010Service.sys3800List()"
                           optionLabel="label"
                           optionValue="value"
-                          [control]="queryForm.controls.cashierCode"
+                          [control]="queryForm.controls.sys3800"
                           [submitted]="submitted"></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="專櫃"
-                          controlName="counterName"
-                          [options]="counterCodeOptions"
+            <app-dropdown label="樓層"
+                          controlName="sys3900"
+                          [options]="tls26010Service.sys3900List()"
                           optionLabel="label"
                           optionValue="value"
-                          [control]="queryForm.controls.counterName"
+                          [control]="queryForm.controls.sys3900"
                           [submitted]="submitted"></app-dropdown>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-multi-select label="收銀機號"
+                              controlName="ecrNos"
+                              [options]="tls26010Service.preorderECRList()"
+                              optionLabel="label"
+                              optionValue="value"
+                              [control]="queryForm.controls.ecrNos"
+                              [submitted]="submitted"></app-multi-select>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-multi-select label="專櫃編號"
+                              controlName="tltNos"
+                              [options]="tls26010Service.TLTTALENTList()"
+                              optionLabel="label"
+                              optionValue="value"
+                              [control]="queryForm.controls.tltNos"
+                              [submitted]="submitted"></app-multi-select>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-calendar-range calendarType="dateRange"
                                 label="起始日期"
-                                [startControl]="queryForm.controls.startDate"
-                                [endControl]="queryForm.controls.endDate"
+                                [startControl]="queryForm.controls.podSdateS"
+                                [endControl]="queryForm.controls.podSdateE"
                                 [submitted]="submitted"></app-calendar-range>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-calendar-range calendarType="dateRange"
                                 label="截止日期"
-                                [startControl]="queryForm.controls.endDate"
-                                [endControl]="queryForm.controls.endDate"
-                                [submitted]="submitted"></app-calendar-range> -->
+                                [startControl]="queryForm.controls.podEdateS"
+                                [endControl]="queryForm.controls.podEdateE"
+                                [submitted]="submitted"></app-calendar-range>
           </div>
         </div>
       </form>
       <div>
         <div class="grid justify-content-end">
-          <!-- <app-button btnType="clear"
-                      (onClick)="onClearForm()"></app-button>
+          <app-button btnType="clear"
+                      (click)="onClearForm()"></app-button>
           <app-button btnType="query"
-                      (onClick)="onSubmitQuery(queryForm)"
-                      [loading]="loading"></app-button> -->
+                      (click)="onSubmitQuery(queryForm)"
+                      [loading]="loading"></app-button>
         </div>
       </div>
     </p-accordionTab>
@@ -97,7 +87,7 @@
 <div class="card">
   <div class="col-12">
     <app-table [showCheckBox]="true"
-               [data]="[]"
+               [data]="tls26010Service.TLS26010List()"
                [columns]="columns"
                (edit)="onEdit($event)"
                (detail)="onDetail($event)"></app-table>

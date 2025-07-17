@@ -22,7 +22,7 @@
       >
         <div class="grid p-fluid">
           <!-- 左欄 -->
-          <div class="col-12 md:col-6 lg:col-4">
+          <!-- <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown
               label="發票格式"
               controlName="PUR_VoucherType"
@@ -32,7 +32,7 @@
               [control]="queryForm.controls.PUR_VoucherType"
               [submitted]="submitted"
             ></app-dropdown>
-          </div>
+          </div> -->
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-text
               label="字軌"
@@ -65,6 +65,7 @@
               [onlyOddMonths]="true"
             ></app-query-year-month>
           </div>
+
           <div class="col-12 md:col-6 lg:col-4">
             <app-query-year-month
               label="申報年月"
@@ -74,11 +75,47 @@
             ></app-query-year-month>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
+            <app-multi-select
+              label="專櫃編號"
+              controlName="TLT_No"
+              [options]="CounterOptions"
+              optionLabel="formLabel"
+              optionValue="value"
+              [control]="queryForm.controls.TLT_No"
+              [submitted]="submitted"
+            ></app-multi-select>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
             <app-input-text
-              label="廠商編號(統一編號)"
-              [control]="queryForm.controls.UniCode"
+              label="廠客代號"
+              [control]="queryForm.controls.VendorCode"
               [submitted]="submitted"
             ></app-input-text>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-text
+              label="銷售人統一編號"
+              [control]="queryForm.controls.SellerUniCode"
+              [submitted]="submitted"
+            ></app-input-text>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-text
+              label="買受人統一編號"
+              [control]="queryForm.controls.BuyerUniCode"
+              [submitted]="submitted"
+            ></app-input-text>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown
+              label="發票格式"
+              controlName="PUR_VoucherType"
+              [options]="PUR_VoucherTypeOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.PUR_VoucherType"
+              [submitted]="submitted"
+            ></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-text-range
@@ -87,6 +124,17 @@
               [endControl]="queryForm.controls.AmountEnd"
               [submitted]="submitted"
             ></app-input-text-range>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-multi-select
+              label="課稅別"
+              controlName="PUR_TaxType"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.PUR_TaxType"
+              [options]="taxTypeOptions"
+              [submitted]="submitted"
+            ></app-multi-select>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-text-range
@@ -98,55 +146,13 @@
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-text-range
-              label="發票稅額"
+              label="稅額"
               [startControl]="queryForm.controls.TaxStart"
               [endControl]="queryForm.controls.TaxEnd"
               [submitted]="submitted"
             ></app-input-text-range>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select
-              label="發票用途"
-              [control]="queryForm.controls.Invoice_Purpose"
-              [options]="invoicePurposeOptions"
-              optionLabel="label"
-              optionValue="value"
-              [submitted]="submitted"
-            ></app-multi-select>
-          </div>
-               <div class="col-12 md:col-6 lg:col-4">
-          <app-multi-select
-            label="課稅別"
-            controlName="PUR_TaxType"
-            optionLabel="label"
-            optionValue="value"
-            [control]="queryForm.controls.PUR_TaxType"
-            [options]="taxTypeOptions"
-            [submitted]="submitted"
-          ></app-multi-select>
-        </div>
-
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select
-              label="扣抵代號"
-              [control]="queryForm.controls.Deduct_Flag"
-              [options]="deductOptions"
-              optionLabel="label"
-              optionValue="value"
-              [submitted]="submitted"
-            ></app-multi-select>
-          </div>
-               <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select
-              label="類別區分"
-              [control]="queryForm.controls.Category"
-              [options]="typeOptions"
-              optionLabel="label"
-              optionValue="value"
-              [submitted]="submitted"
-            ></app-multi-select>
-          </div>
-                    <div class="col-12 md:col-6 lg:col-4">
             <app-input-text-range
               label="憑證單號"
               [startControl]="queryForm.controls.Source_Doc_NoStart"
@@ -162,33 +168,37 @@
               [submitted]="submitted"
             ></app-input-text-range>
           </div>
-                   <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text-range
-              label="彙總張數"
-              [startControl]="queryForm.controls.SerialStart"
-              [endControl]="queryForm.controls.SerialEnd"
-              [submitted]="submitted"
-            ></app-input-text-range>
-          </div>
-                 <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
-              label="彙加註記"
-              [control]="queryForm.controls.Note"
-              [submitted]="submitted"
-            ></app-input-text>
-          </div>
+
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
+            <app-multi-select
               label="系統別"
               [control]="queryForm.controls.System_ID"
+              [options]="System_IDOptions"
+              optionLabel="label"
+              optionValue="value"
+              [submitted]="submitted"
+            ></app-multi-select>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-multi-select
+              label="資產註記"
+              [control]="queryForm.controls.AssetNote"
+              [options]="AssetNoteOptions"
+              optionLabel="label"
+              optionValue="value"
+              [submitted]="submitted"
+            ></app-multi-select>
+          </div>
+
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-text
+              label="備註"
+              controlName="remark"
+              [control]="queryForm.controls.remark"
               [submitted]="submitted"
             ></app-input-text>
           </div>
-                 <div class="col-12 md:col-6 lg:col-4">
-              <app-input-text label="備註" controlName="remark" [control]="queryForm.controls.remark"
-                [submitted]="submitted"></app-input-text>
-            </div>
-          <div class="col-12 md:col-6 lg:col-4">
+          <!-- <div class="col-12 md:col-6 lg:col-4">
             <app-input-text
               label="建檔人員"
               [control]="queryForm.controls.Create_User"
@@ -205,10 +215,6 @@
             ></app-calendar-range>
           </div>
 
-
-     
- 
-   
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-text
               label="修改人員"
@@ -224,7 +230,7 @@
               [endControl]="queryForm.controls.Update_DateEnd"
               [submitted]="submitted"
             ></app-calendar-range>
-          </div>
+          </div> -->
         </div>
 
         <div

@@ -11,7 +11,7 @@ export interface FIN12020QueryRequest extends BaseQueryRequest {
   invoice_no?: string;                  // 發票號碼
   invoice_no_start?: string;            // 發票號碼(起)
   invoice_no_end?: string;              // 發票號碼(迄)
-  cashier_no?: string;                  // 收銀機代號
+  cashier_no?: string;                  // 收銀機號
   invoice_status?: string;              // 發票狀態
   usage_type?: string;                  // 使用別
 }

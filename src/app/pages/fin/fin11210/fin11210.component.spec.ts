@@ -1,18 +1,18 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { Fin11210Component } from './fin11210.component';
+import { FIN11210Component } from './fin11210.component';
 
-describe('Fin11210Component', () => {
-  let component: Fin11210Component;
-  let fixture: ComponentFixture<Fin11210Component>;
+describe('FIN11210Component', () => {
+  let component: FIN11210Component;
+  let fixture: ComponentFixture<FIN11210Component>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [Fin11210Component]
+      imports: [FIN11210Component]
     })
     .compileComponents();
 
-    fixture = TestBed.createComponent(Fin11210Component);
+    fixture = TestBed.createComponent(FIN11210Component);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

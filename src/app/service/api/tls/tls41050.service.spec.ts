@@ -1,13 +1,13 @@
 import { TestBed } from '@angular/core/testing';
 
-import { CommonService } from './common.service';
+import { Tls41050Service } from './tls41050.service';
 
-describe('CommonService', () => {
-  let service: CommonService;
+describe('Tls41050Service', () => {
+  let service: Tls41050Service;
 
   beforeEach(() => {
     TestBed.configureTestingModule({});
-    service = TestBed.inject(CommonService);
+    service = TestBed.inject(Tls41050Service);
   });
 
   it('should be created', () => {

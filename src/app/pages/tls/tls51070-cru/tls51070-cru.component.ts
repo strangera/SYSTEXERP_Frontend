@@ -1,3 +1,4 @@
+import { ValidationService } from './../../../shared/service/validation.service';
 import { CRUDStatus } from './../../../shared/models/system/CRUDstatus';
 import { v4 as uuidv4 } from 'uuid'; // 引入 uuidv4
 import { UntilDestroy } from '@ngneat/until-destroy';
@@ -71,7 +72,7 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
     PLU_OrgPLUNo: ['', [Validators.maxLength(30)]], // 廠商貨號 --廠商自編碼 廠商貨號 
     // PLU_No: ['', [Validators.maxLength(20)]], // 國際條碼 可選擇帶入PLU_MagNo，新增模式以外加上 必填
     PLU_No: [{ value: '由多筆國際條碼的第一筆自動新增', disabled: true }], // 國際條碼 由輸入的POS2005內容帶入
-    PLU_MinOrder: [1, [Validators.maxLength(8)]], // 最小訂購量 ---預設1，採購時，輸入的採購量必需為最小訂購量的倍數。
+    PLU_MinOrder: [1, [Validators.maxLength(8), Validators.max(99999999)]], // 最小訂購量 ---預設1，採購時，輸入的採購量必需為最小訂購量的倍數。
     PLU_Lable: ['', [Validators.maxLength(50)]], // 標籤名稱
 
     CAT_LNo: ['', [Validators.required, Validators.maxLength(6)]], // 大分類代碼 POS2003
@@ -87,12 +88,12 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
     PLU_TaxType: ['1', [Validators.required, Validators.maxLength(1)]], // 售價稅別:0免稅,1應稅 預設 1應稅
     PLU_Type: ['1', [Validators.required, Validators.maxLength(2)]], // 商品類別:1一般商品,8專櫃,CC:專櫃商品 ,SC:特殊條碼
 
-    PLU_BoxQty: [1, [Validators.maxLength(4)]], // 包裝入數(裝箱入數) / --南紡 包裝入數
-    PLU_Length: [0, [Validators.maxLength(10)]], //長度cm
-    PLU_Weight: [0, [Validators.maxLength(10)]], //重量(g)
-    PLU_Height: [0, [Validators.maxLength(10)]], //高度(cm)
-    PLU_Volume: [0, [Validators.maxLength(10)]], //容量(ml)
-    PLU_Width: [0, [Validators.maxLength(10)]], //寬度(cm)
+    PLU_BoxQty: [1, [Validators.maxLength(4),Validators.min(0), Validators.max(9999)]], // 包裝入數(裝箱入數) / --南紡 包裝入數
+    PLU_Length: [0, [Validators.maxLength(10),Validators.min(0), Validators.max(9999999999)]], //長度cm
+    PLU_Weight: [0, [Validators.maxLength(10),Validators.min(0), Validators.max(9999999999)]], //重量(g)
+    PLU_Height: [0, [Validators.maxLength(10),Validators.min(0), Validators.max(9999999999)]], //高度(cm)
+    PLU_Volume: [0, [Validators.maxLength(10),Validators.min(0), Validators.max(9999999999)]], //容量(ml)
+    PLU_Width: [0, [Validators.maxLength(10),Validators.min(0), Validators.max(9999999999)]], //寬度(cm)
 
     // 商品規格(二) 顯示畫面
     PLU_Reserve2: ['', [Validators.maxLength(400)]], // 規格說明

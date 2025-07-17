@@ -21,30 +21,31 @@ import { TranslateModule } from '@ngx-translate/core';
 
 // 交易補登作業
 @Component({
-    selector: 'app-tls24010',
-    templateUrl: './tls24010.component.html',
-    standalone: true,
-    imports: [
-        MenubarComponent,
-        ButtonComponent,
-        AccordionModule,
-        FormsModule,
-        ReactiveFormsModule,
-        RadiobuttonComponent,
-        CalendarComponent,
-        DropdownComponent,
-        InputNumberComponent,
-        TableComponent,
-        MenuModule,
-        TranslateModule,
-    ],
+  selector: 'app-tls24010',
+  templateUrl: './tls24010.component.html',
+  standalone: true,
+  imports: [
+    MenubarComponent,
+    ButtonComponent,
+    AccordionModule,
+    FormsModule,
+    ReactiveFormsModule,
+    RadiobuttonComponent,
+    CalendarComponent,
+    DropdownComponent,
+    InputNumberComponent,
+    TableComponent,
+    MenuModule,
+    TranslateModule,
+  ],
 })
 export class TLS24010Component extends BasicQueryPageComponent<TLS24010Data> implements OnInit {
-  queryForm = this.formBuilder.group({
-    TXN_GUIPaper: ['', [Validators.required]],/*補登類別 → TXN_GUIPaper */
+  queryForm = this.formBuilder.nonNullable.group({
+    TXN_GUIPaper: ['E', [Validators.required]],/*補登類別 → TXN_GUIPaper */
     TXN_Date: [new Date(), [Validators.required]],    /*銷售日期 → POS5006.TXN_Date */
-    ECR_No: [''], /*收銀機號 → ECR_No */
-    TLT_No: [''], /*櫃編 → TLT_No */
+    ECR_No: ['', [Validators.required]], /*收銀機號 → ECR_No */
+    TLT_No: ['', [Validators.required]], /*櫃編 → TLT_No */
+    store_way: ['', [Validators.required]], /*櫃位類型 → store_way */
     TXN_No: [null as number | null, [Validators.maxLength(8), Validators.max(99999999)]],  /*交易序號 → TXN_No */
     ...createPaginationConfig([{ field: 'TXN_Date', order: -1 }]), // 分頁和排序參數
   });
@@ -61,8 +62,8 @@ export class TLS24010Component extends BasicQueryPageComponent<TLS24010Data> imp
     { label: '事後登錄', value: 'P' },
   ];
   ECR_NoOptions: { No: string, Name: string, label: string }[] = [];
-  TLT_NoOptions: { No: string, Name: string, label: string }[] = [];
-  data: TLS24010Data[] = [{ TXN_Date: '2025-07-10T16:15:33.560Z', ECR_No: '000011', TXN_No: '12345678', TLT_No: '001', TLT_Name: '專櫃A', TXN_Mode: 'R' }];
+  TLT_NoOptions: { No: string, Name: string, label: string, store_way?: string }[] = [];
+  data: TLS24010Data[] = [];
   columns: Column[] = [
     { field: 'TXN_Date', header: '銷售日期', visible: true, format: formatDate },
     { field: 'ECR_No', header: '收銀機號', visible: true },
@@ -83,11 +84,22 @@ export class TLS24010Component extends BasicQueryPageComponent<TLS24010Data> imp
     this.dropDownList.queryPOS1002_DropDownList().pipe(untilDestroyed(this)).subscribe(options => {
       this.ECR_NoOptions = options.Data.map(item => ({ ...item, label: `${item.No} - ${item.Name}` }));
     });
+    this.dropDownList.queryTLTTALENT_ByContractDate_DropDownList(this.today.toISOString().split('T')[0]).pipe(untilDestroyed(this)).subscribe(options => {
+      this.TLT_NoOptions = options.Data.map(item => ({ ...item, label: `${item.No} - ${item.Name}` }));
+    });
+    this.queryForm.get('TLT_No')?.valueChanges.pipe(untilDestroyed(this)).subscribe(value => {
+      if (value) {
+        const selectedOption = this.TLT_NoOptions.find(option => option.No === value)?.store_way;
+        if (selectedOption) {
+          this.queryForm.get('store_way')?.setValue(selectedOption);
+        }
+      }
+    });
   }
 
   onSubmit(frm: FormGroup): void {
     this.handleSubmit(frm, () => {
-      this.tls24010Service.queryTLS24010(frm.value).pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(res => {
+      this.tls24010Service.queryTLS24010(frm.getRawValue()).pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(res => {
         this.data = res.Data;
         this.totalRecords = res.TotalCount;
         this.queryStateService.setQueryState(this.ProgNo, frm.value);
@@ -108,5 +120,10 @@ export class TLS24010Component extends BasicQueryPageComponent<TLS24010Data> imp
     if (this.menu && event) {
       this.menu.toggle(event);
     }
+  }
+  onCreateData(): void {
+    this.submitted = true;
+    if (!this.queryForm.valid) { return; }
+    this.onCreate(this.queryForm.value);
   }
 }

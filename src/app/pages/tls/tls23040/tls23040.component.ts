@@ -87,7 +87,7 @@ export class TLS23040Component extends BasicQueryPageComponent<any> {
           : `${d.getFullYear()}/${(d.getMonth() + 1).toString().padStart(2, '0')}/${d.getDate().toString().padStart(2, '0')}`;
       },
     },
-    { field: 'ECR_No', header: '收銀機代號', visible: true },
+    { field: 'ECR_No', header: '收銀機號', visible: true },
     { field: 'TXN_No', header: '交易序號', visible: true },
     { field: 'tlt_no', header: '專櫃編號', visible: true },
     {
@@ -144,7 +144,7 @@ export class TLS23040Component extends BasicQueryPageComponent<any> {
           : `${d.getFullYear()}/${(d.getMonth() + 1).toString().padStart(2, '0')}/${d.getDate().toString().padStart(2, '0')}`;
       },
     },
-    { field: 'ORG_ECR_No', header: '原收銀機代號', visible: true },
+    { field: 'ORG_ECR_No', header: '原收銀機號', visible: true },
     { field: 'ORG_TXN_No', header: '原交易序號', visible: true },
     { field: 'TXN_MemCard', header: '會員卡號', visible: true },
     {
@@ -333,7 +333,7 @@ export class TLS23040Component extends BasicQueryPageComponent<any> {
       if (firstECR) {
         queryFormValue.ECR_No = firstECR;
       } else {
-        this.messageService.warnBubble('付款別報表需選擇收銀機代號');
+        this.messageService.warnBubble('付款別報表需選擇收銀機號');
         this.loading = false;
         this.messageService.unblockUi();
         return;

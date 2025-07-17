@@ -86,7 +86,7 @@ export class TLS23040CRUComponent extends BasicCruPageComponent<any> {
       case 'ByPaymentType':
         return [
           { header: '銷售日期', field: 'TXN_Date', format: (val: string) => this.formatDate(val) },
-          { field: 'ECR_No', header: '收銀機代號', visible: true },
+          { field: 'ECR_No', header: '收銀機號', visible: true },
           { field: 'TXN_No', header: '交易序號', visible: true },
           { header: '專櫃編號', field: 'tlt_no' },
           { header: '櫃位名稱', field: 'tlt_name', style: 'text-left' },
@@ -119,7 +119,7 @@ export class TLS23040CRUComponent extends BasicCruPageComponent<any> {
                 : `${d.getFullYear()}/${(d.getMonth() + 1).toString().padStart(2, '0')}/${d.getDate().toString().padStart(2, '0')}`;
             }
           },
-          { field: 'ECR_No', header: '收銀機代號', visible: true },
+          { field: 'ECR_No', header: '收銀機號', visible: true },
           { field: 'TXN_No', header: '交易序號', visible: true },
           { field: 'tlt_no', header: '專櫃編號', visible: true },
           { field: 'tlt_name', header: '櫃位名稱', visible: true, style: 'text-left' },
@@ -170,7 +170,7 @@ export class TLS23040CRUComponent extends BasicCruPageComponent<any> {
                 : `${d.getFullYear()}/${(d.getMonth() + 1).toString().padStart(2, '0')}/${d.getDate().toString().padStart(2, '0')}`;
             }
           },
-          { field: 'ORG_ECR_No', header: '原收銀機代號', visible: true },
+          { field: 'ORG_ECR_No', header: '原收銀機號', visible: true },
           { field: 'ORG_TXN_No', header: '原交易序號', visible: true },
           { field: 'TXN_MemCard', header: '會員卡號', visible: true },
           {
@@ -196,7 +196,7 @@ export class TLS23040CRUComponent extends BasicCruPageComponent<any> {
                 : `${d.getFullYear()}/${(d.getMonth() + 1).toString().padStart(2, '0')}/${d.getDate().toString().padStart(2, '0')}`;
             }
           },
-          { field: 'ECR_No', header: '收銀機代號', visible: true },
+          { field: 'ECR_No', header: '收銀機號', visible: true },
           { field: 'TXN_No', header: '交易序號', visible: true },
           { field: 'tlt_no', header: '專櫃編號', visible: true },
           { field: 'tlt_name', header: '櫃位名稱', visible: true, style: 'text-left' },

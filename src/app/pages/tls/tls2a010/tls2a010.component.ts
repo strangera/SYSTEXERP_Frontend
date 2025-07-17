@@ -60,7 +60,7 @@ export class TLS2A010Component {
   ];
   filteredData: any[] = [...this.data];
   columns: any[] = [
-    { field: 'cashRegisterCode', header: '收銀機代號', visible: true },
+    { field: 'cashRegisterCode', header: '收銀機號', visible: true },
     { field: 'specialCounter', header: '專櫃', visible: true },
     { field: 'generalReceiptAmount', header: '條碼紙/貨收據金額', visible: true },
     { field: 'medicalReceiptAmount', header: '條碼醫療/貨收據金額', visible: true },

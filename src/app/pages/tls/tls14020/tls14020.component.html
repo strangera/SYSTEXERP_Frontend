@@ -18,14 +18,12 @@
       >
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-number
-              [useGrouping]="false"
+            <app-input-text
               label="合約編號"
               controlName="contract_no"
               [control]="queryForm.controls.contract_no"
               [submitted]="submitted"
-              maxlength="8"
-            ></app-input-number>
+            ></app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-multi-select
@@ -39,13 +37,12 @@
             ></app-multi-select>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-number
-              [useGrouping]="false"
+            <app-input-text
               label="專櫃編號"
               controlName="tlt_no"
               [control]="queryForm.controls.tlt_no"
               [submitted]="submitted"
-            ></app-input-number>
+            ></app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-text
