@@ -14,6 +14,7 @@ import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-ra
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
+import { Column } from '../../../shared/componentkit/table/table.model';
 
 @Component({
   selector: 'app-tls26010',
@@ -43,57 +44,54 @@ export class TLS26010Component extends BasicQueryPageComponent<any> {
   private tltNosSignal = toSignal(this.queryForm.get('tltNos')!.valueChanges);
 
   // 日期監聽與驗證
-  private dateValidationSignal = toSignal(
-    combineLatest([
-      this.queryForm.get('podSdateS')!.valueChanges,
-      this.queryForm.get('podSdateE')!.valueChanges,
-      this.queryForm.get('podEdateS')!.valueChanges,
-      this.queryForm.get('podEdateE')!.valueChanges
-    ]).pipe(
-      map(([podSdateS, podSdateE, podEdateS, podEdateE]) => {
-        const hasAnyDate = podSdateS || podSdateE || podEdateS || podEdateE;
-        if (!hasAnyDate) return { isValid: true, dates: { podSdateS, podSdateE, podEdateS, podEdateE } };
+  private dateValidationSignal = toSignal(combineLatest([
+    this.queryForm.get('podSdateS')!.valueChanges,
+    this.queryForm.get('podSdateE')!.valueChanges,
+    this.queryForm.get('podEdateS')!.valueChanges,
+    this.queryForm.get('podEdateE')!.valueChanges
+  ]).pipe(
+    map(([podSdateS, podSdateE, podEdateS, podEdateE]) => {
+      const hasAnyDate = podSdateS || podSdateE || podEdateS || podEdateE;
+      if (!hasAnyDate) return { isValid: true, dates: { podSdateS, podSdateE, podEdateS, podEdateE } };
 
-        let isValid = true;
+      let isValid = true;
 
-        // 檢查起始日期範圍
-        if (podSdateS && podSdateE) {
-          const start = new Date(podSdateS);
-          const end = new Date(podSdateE);
-          if (start > end) isValid = false;
-        }
+      // 檢查起始日期範圍
+      if (podSdateS && podSdateE) {
+        const start = new Date(podSdateS);
+        const end = new Date(podSdateE);
+        if (start > end) isValid = false;
+      }
 
-        // 檢查截止日期範圍
-        if (podEdateS && podEdateE) {
-          const start = new Date(podEdateS);
-          const end = new Date(podEdateE);
-          if (start > end) isValid = false;
-        }
+      // 檢查截止日期範圍
+      if (podEdateS && podEdateE) {
+        const start = new Date(podEdateS);
+        const end = new Date(podEdateE);
+        if (start > end) isValid = false;
+      }
 
-        // 檢查跨範圍邏輯
-        if (podSdateE && podEdateS) {
-          const podEnd = new Date(podSdateE);
-          const edateStart = new Date(podEdateS);
-          if (podEnd > edateStart) isValid = false;
-        }
+      // 檢查跨範圍邏輯
+      if (podSdateE && podEdateS) {
+        const podEnd = new Date(podSdateE);
+        const edateStart = new Date(podEdateS);
+        if (podEnd > edateStart) isValid = false;
+      }
 
-        return { isValid, dates: { podSdateS, podSdateE, podEdateS, podEdateE } };
-      })
-    ),
-    { initialValue: { isValid: true, dates: { podSdateS: '', podSdateE: '', podEdateS: '', podEdateE: '' } } }
-  );
+      return { isValid, dates: { podSdateS, podSdateE, podEdateS, podEdateE } };
+    })
+  ), { initialValue: { isValid: true, dates: { podSdateS: '', podSdateE: '', podEdateS: '', podEdateE: '' } } });
 
-  // 管別與樓層 effect
+  // 監聽館別及樓層變化
   readonly dependentDataEffect = effect(() => {
     const building_no = this.sys3800Signal();
     const floor_no = this.sys3900Signal();
     this.queryForm.patchValue({ ecrNos: [], tltNos: [] });
 
-    if (building_no && floor_no) {
+    if (floor_no) {
       this.tls26010Service.loadPreorderECRList(this.queryPreorderECRList());
       this.tls26010Service.loadTLTTALENT(this.queryTLTTALENT());
     }
-  }, { allowSignalWrites: true });
+  }, { allowSignalWrites: !0 });
 
   // API queries
   private queryPreorderECRList = computed<PreorderECRListQuery>(() => ({
@@ -121,12 +119,14 @@ export class TLS26010Component extends BasicQueryPageComponent<any> {
     };
   });
 
-  columns: { field: string; header: string; visible: boolean; }[] = [
-    { field: 'cashRegisterNumber', header: '收銀機代碼', visible: true },
-    { field: 'counterNumber', header: '專櫃編號', visible: true },
-    { field: 'counterName', header: '櫃位名稱', visible: true },
-    { field: 'startDate', header: '起始日期', visible: true },
-    { field: 'endDate', header: '截止日期', visible: true },
+  columns: Column[] = [
+    { field: 'pod_no', header: '預售活動編號', visible: true },
+    { field: 'pod_desc', header: '活動名稱', visible: true },
+    { field: 'pod_sdate', header: '活動起始日期', visible: true },
+    { field: 'pod_edate', header: '活動終止日期', visible: true },
+    { field: 'pod_status', header: '核准狀態', visible: true },
+    { field: 'approved_usr_name', header: '核准人員', visible: true },
+    { field: 'approved_date', header: '核准日期', visible: true },
   ];
 
   constructor(public tls26010Service: TLS26010Service) {
@@ -135,7 +135,6 @@ export class TLS26010Component extends BasicQueryPageComponent<any> {
 
   ngOnInit(): void {
     this.initializePage('TLS26010', '/TLS/TLS26010CRU', this.queryForm, this.onSubmit.bind(this));
-    this.funInfo = this.authService.getUserPermissions('220035');
 
     // 只載入館別和樓層的下拉選單資料
     this.tls26010Service.loadSYS3800({});
@@ -160,7 +159,8 @@ export class TLS26010Component extends BasicQueryPageComponent<any> {
   };
 
   onSubmitQuery(frm: FormGroup): void {
-    if (!this.queryForm.value.ecrNos?.length || !this.queryForm.value.tltNos?.length) return;
+    const dateValidation = this.dateValidationSignal();
+    if (!this.sys3900Signal()?.length && dateValidation.isValid) return;
     // 查詢邏輯
     this.onSubmit(frm);
   };
@@ -168,56 +168,10 @@ export class TLS26010Component extends BasicQueryPageComponent<any> {
   onSubmit(frm: FormGroup): void {
     this.handleSubmit(frm, () => {
       if (frm.valid && this.canQuery()) {
-        const ecrNos = this.ecrNosSignal();
-        const tltNos = this.tltNosSignal();
-        const dateValidation = this.dateValidationSignal();
-
-        console.log(`main query:`, [ecrNos, tltNos, dateValidation]);
-        // 必要欄位有值且日期驗證通過時才執行查詢
-        if (ecrNos?.length && tltNos?.length && dateValidation.isValid)
-          this.tls26010Service.loadTLS26010(this.queryTLS26010());
+        this.tls26010Service.loadTLS26010(this.queryTLS26010());
       }
       this.loading = false;
       this.messageService.blockUi();
     });
-  }
-
-  override onCreate(): void {
-    if (this.canAdd()) {
-      let extras: NavigationExtras = {
-        state: {
-          crudstatus: 'Create',
-          queryform: this.queryForm,
-        },
-        skipLocationChange: true,
-      };
-      this.router.navigate(['TLS2000/TLS26010CRU'], extras);
-    }
-  }
-
-  override onEdit(data: any): void {
-    if (this.canEdit()) {
-      let extras: NavigationExtras = {
-        state: {
-          crudstatus: 'Edit',
-          rowdata: data,
-          queryform: this.queryForm,
-        },
-        skipLocationChange: true,
-      };
-      this.router.navigate(['TLS2000/TLS26010CRU'], extras);
-    }
-  }
-
-  override onDetail(data: any): void {
-    let extras: NavigationExtras = {
-      state: {
-        crudstatus: 'Read',
-        rowdata: data,
-        queryform: this.queryForm,
-      },
-      skipLocationChange: true,
-    };
-    this.router.navigate(['TLS2000/TLS26010CRU'], extras);
   }
 }

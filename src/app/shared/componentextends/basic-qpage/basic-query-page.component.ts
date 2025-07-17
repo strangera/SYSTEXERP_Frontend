@@ -13,9 +13,11 @@ import { LazyLoadEvent } from '../../componentkit/table/table.model';
 import { UntilDestroy } from '@ngneat/until-destroy';
 import { ConfirmationService } from 'primeng/api';
 @UntilDestroy()
-export class BasicQueryPageComponent<T> {
+export abstract class BasicQueryPageComponent<T> {
   ProgNo = '';
   cruPage = '';
+
+  abstract queryForm: FormGroup; // 查詢表單
 
   user?: UserInfo | null; // 使用者資訊
   funInfo?: FunsrightInfo; // 權限
@@ -31,6 +33,10 @@ export class BasicQueryPageComponent<T> {
   language = navigator.language;
   loading = false;
   submitted = false;
+
+  // 初始化方法
+  abstract ngOnInit(): void;
+
   // 初始化頁面
   initializePage(progNo: string, cruPage?: string, queryForm?: FormGroup, onSubmit?: (form: FormGroup) => void) {
     this.ProgNo = progNo; // 程式編號
