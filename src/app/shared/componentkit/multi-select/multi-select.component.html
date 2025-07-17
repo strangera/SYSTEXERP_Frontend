@@ -3,7 +3,7 @@
 </label>
 <p-multiSelect #multiSelect [id]="controlName" [options]="options" [optionLabel]="optionLabel"
   [optionValue]="optionValue" [formControl]="control" [ngClass]="{'ng-dirty ng-invalid': submitted && control.errors}"
-  [showToggleAll]="true" placeholder="全部" [variant]="variant" (onLazyLoad)="onLazyLoad($event)" [virtualScroll]="true"
+  [showToggleAll]="true" placeholder="請選擇" [variant]="variant" (onLazyLoad)="onLazyLoad($event)" [virtualScroll]="true"
   [virtualScrollItemSize]="34">
 </p-multiSelect>
 <app-control-messages [onerror]="submitted" [control]="control"></app-control-messages>
