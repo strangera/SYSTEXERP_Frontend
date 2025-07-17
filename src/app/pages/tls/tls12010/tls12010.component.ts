@@ -1,3 +1,4 @@
+import { Label } from './../tls51070-os/tls51070-os.component';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
@@ -93,13 +94,7 @@ export class TLS12010Component extends BasicQueryPageComponent<Potential_Custome
         {value: '3', label: '員工ID'}
       ];
   
-      business_type_Option: option[] = [ // 經營方式(SYS1000.T117)（長度1，1=生產者、2=代理商、3=經銷商、4=其它）
-        {value: '1', label: '生產者'},
-        {value: '2', label: '代理商'},
-        {value: '3', label: '經銷商'},
-        {value: '4', label: '其它'}
-      ]
-  
+      business_type_Option: apiOption[] = []; // 經營方式(SYS1000.T117)（長度1，1=生產者、2=代理商、3=經銷商、4=其它）
       bus_type_Option: apiOption[] = []; // 業種-大分類代碼
       tlt_name_Option: apiOption[] = []; // 品牌
       cus_uniform_Option: apiOption[] = []; // 廠商統一編號(pos2013)
@@ -129,7 +124,7 @@ export class TLS12010Component extends BasicQueryPageComponent<Potential_Custome
         { field: 'VEN_Addr', header: '公司通訊地址', visible: true },
         { field: 'VEN_PersonInCharge', header: '公司負責人', visible: true },
         { field: 'business_type', header: '經營方式', visible: true, format: (value: string) =>
-          this.business_type_Option.find((option) => option.value === value)?.label || value
+          this.business_type_Option.find((option) => option.No === value)?.Label || value
         },
         { field: 'demanded_area', header: '需求面積', visible: true },
         { field: 'country_of_origin', header: '商品出產地', visible: true },
@@ -256,6 +251,14 @@ export class TLS12010Component extends BasicQueryPageComponent<Potential_Custome
             Label: item.VEN_No + '/' + item.Name, // 組合成顯示用的Label
           }));
           console.log('統編代號:', response.Data);
+        });
+        // 查 經營方式
+         this.tls12010Service.querySYS1000_DropDownList({"SYS_Type": 'T117'}).subscribe((response) => {
+          this.business_type_Option = response.Data.map((item: any) => ({
+            No: item.No, // 經營方式 代碼
+            Label: item.No + '/' + item.Name, // 組合成顯示用的Label
+          }));
+          console.log('經營方式代號:', response.Data);
         });
       }
 }

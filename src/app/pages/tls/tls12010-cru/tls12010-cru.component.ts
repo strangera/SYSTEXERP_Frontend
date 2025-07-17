@@ -109,13 +109,7 @@ export class TLS12010CRUComponent extends BasicCruPageComponent<Potential_Custom
       {value: '3', label: '員工ID'}
     ];
   
-    business_type_Option: option[] = [ // 經營方式(SYS1000.T117)（長度1，1=生產者、2=代理商、3=經銷商、4=其它）
-      {value: '1', label: '生產者'},
-      {value: '2', label: '代理商'},
-      {value: '3', label: '經銷商'},
-      {value: '4', label: '其它'}
-    ]
-  
+    business_type_Option: apiOption[] = []; // 經營方式(SYS1000.T117)（長度1，1=生產者、2=代理商、3=經銷商、4=其它）
     bus_type_Option: apiOption[] = []; // 業種-大分類代碼
     tlt_name_Option: apiOption[] = []; //品牌
     cus_uniform_Option: apiOption[] = []; // 廠商統一編號(pos2013)
@@ -209,11 +203,19 @@ export class TLS12010CRUComponent extends BasicCruPageComponent<Potential_Custom
             Label: item.VEN_No + '/' + item.Name, // 組合成顯示用的Label
           }));
           console.log('統編代號:', response.Data);
-        });  
+        });
+        // 查 經營方式
+         this.tls12010Service.querySYS1000_DropDownList({"SYS_Type": 'T117'}).subscribe((response) => {
+          this.business_type_Option = response.Data.map((item: any) => ({
+            No: item.No, // 經營方式 代碼
+            Label: item.No + '/' + item.Name, // 組合成顯示用的Label
+          }));
+          console.log('經營方式代號:', response.Data);
+        });
     }
 
     // 廠商類型 radio button 檢核
     onCusTypeChange(type: string): void {
-      console.log('變更為',type);
+      // console.log('變更為',type);
     }
 }
