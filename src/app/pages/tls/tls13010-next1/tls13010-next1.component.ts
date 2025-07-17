@@ -195,9 +195,10 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
     {
       field: 'org_id',
       header: '組織',
-      type: 'text',
+      type: 'dropdown',
       editable: true,
-      autoWidth: true
+      width: '90px',
+      options: []
     },
     {
       field: 'gui_flag',
@@ -390,10 +391,10 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
     {
       field: 'org_id',
       header: '組織',
-      type: 'text',
+      type: 'dropdown',
       editable: true,
-      minWidth: '70px',
-      flex: 1
+      width: '90px',
+      options: []
     },
     {
       field: 'gui_flag',
@@ -545,11 +546,7 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
       type: 'dropdown',
       editable: true,
       width: '90px',
-      options: [
-        { label: '102220', value: '102220' },
-        { label: '102221', value: '102221' },
-        { label: '102222', value: '102222' }
-      ]
+      options: []
     },
     {
       field: 'gui_flag',
