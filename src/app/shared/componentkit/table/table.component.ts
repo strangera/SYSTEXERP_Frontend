@@ -25,6 +25,7 @@ import { CheckboxModule } from 'primeng/checkbox';
 import { SkeletonModule } from 'primeng/skeleton';
 import { TableExpansionComponent } from './table-expansion/table-expansion.component';
 import { TableExportComponent } from './table-export/table-export.component';
+import { BlockUIModule } from 'primeng/blockui';
 @Component({
   selector: 'app-table',
   templateUrl: './table.component.html',
@@ -55,6 +56,7 @@ import { TableExportComponent } from './table-export/table-export.component';
     TableExpansionComponent,
     TableExportComponent,
     DatePipe,
+    BlockUIModule
   ],
 })
 export class TableComponent extends BasicPrintDataComponent implements OnInit, OnChanges, OnDestroy {
@@ -70,6 +72,7 @@ export class TableComponent extends BasicPrintDataComponent implements OnInit, O
   @Input() data: any[] = [];                                                    // table 資料 (必填)
   @Output() dataChange = new EventEmitter<any[]>();                             // table 資料改變 (事件)
   @Input() loading = false;                                                     // 是否顯示 loading
+  @Input() disabled = false;                                                    // 是否禁用 table
 
   // select 選擇Row相關
   @Input() showCheckBox = false;                                                // 是否顯示 checkbox
@@ -296,6 +299,7 @@ export class TableComponent extends BasicPrintDataComponent implements OnInit, O
   onSelectionChange(event: any) {
     const selected = Array.isArray(event) ? event : event ? [event] : [];
     this.selectedItems = selected.filter((item: any) => this.isRowSelectable(item));
+    console.log('🔍 DEBUG onSelectionChange:', this.selectedItems);
     this.selectionChange.emit(this.selectedItems);
   }
   // (欄位是Dropdown使用): 獲取Dropdown的選項，支持function加入或直接給List

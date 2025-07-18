@@ -14,6 +14,8 @@ import { RadiobuttonYNComponent } from '../../../shared/componentkit/radiobutton
 import { EditorTextComponent } from '../../../shared/componentkit/editor-text/editor-text.component';
 import { finalize } from 'rxjs';
 import { untilDestroyed } from '@ngneat/until-destroy';
+import { Base64Service } from '../../../shared/service/base64.service';
+import { TableRowUnSelectEvent } from 'primeng/table';
 
 @Component({
   selector: 'app-tls21030-cru',
@@ -38,9 +40,9 @@ export class TLS21030CRUComponent extends BasicCruPageComponent<TLS21030Data> im
     money_type: [null, Validators.required],       // 結帳方式
     term_no: [1, Validators.required],       // 帳次
     rece_yn: [null, Validators.required],        // 是否使用業主發票
-    bill_remark1: [],           // 說明1
-    bill_remark2: [],           // 說明2
-    bill_remark3: [],           // 說明3
+    bill_remark1: [''],           // 說明1
+    bill_remark2: [''],           // 說明2
+    bill_remark3: [''],           // 說明3
     ...createPaginationConfig([{ field: 'talent_id', order: 1 }]), // 分頁和排序參數
   });
   totalRecords = 0;
@@ -67,23 +69,27 @@ export class TLS21030CRUComponent extends BasicCruPageComponent<TLS21030Data> im
   ngOnInit(): void {
     this.initializePage('TLS21030', this.dataForm);
     if (!this.isFormCreateable) {
-      const body = {
-        BILL_NOTES_id: this.rowdata?.id,
-      }
+      this.onQuery(this.dataForm);
       this.loading = true;
-      this.tls21030Service.queryTLS21030Detail(body).pipe(finalize(() => this.loading = false)).pipe(untilDestroyed(this)).subscribe(res => {
-        this.data = res.Data;
-        this.totalRecords = res.TotalCount;
+      this.tls21030Service.queryTLS21030Detail({ BILL_NOTES_id: this.rowdata?.id }).pipe(finalize(() => this.loading = false)).pipe(untilDestroyed(this)).subscribe(res => {
+        this.selectedRows = res.Data;
       });
     }
   }
+  onUnSelect(event: TableRowUnSelectEvent) {
+    this.selectedRows = this.selectedRows.filter(x => x.talent_id.toString() !== event.data.talent_id.toString());
+  }
   onQuery(frm: FormGroup) {
-    this.handleSubmit(frm, () => {
-      this.tls21030Service.queryTLTTALENT_By_money_type(frm.value).pipe(finalize(() => this.loading = false)).pipe(untilDestroyed(this)).subscribe(res => {
-        this.data = res.Data;
-        this.totalRecords = res.TotalCount;
-      });
-    })
+    this.submitted = true;
+    this.loading = true;
+    if (frm?.invalid) {
+      this.loading = false;
+      return;
+    }
+    this.tls21030Service.queryTLTTALENT_By_money_type(frm.getRawValue()).pipe(finalize(() => this.loading = false)).pipe(untilDestroyed(this)).subscribe(res => {
+      this.data = res.Data;
+      this.totalRecords = res.TotalCount;
+    });
   }
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
@@ -101,6 +107,9 @@ export class TLS21030CRUComponent extends BasicCruPageComponent<TLS21030Data> im
       const body = {
         ...frm.value,
         ID: this.rowdata?.id || undefined,
+        bill_remark1: Base64Service.encode(frm.value.bill_remark1),
+        bill_remark2: Base64Service.encode(frm.value.bill_remark2),
+        bill_remark3: Base64Service.encode(frm.value.bill_remark3),
         TALTALENT_BILL_NOTES_DETAILDetails: this.selectedRows
       }
       const serviceCall = this.isFormCreateable

@@ -15,7 +15,7 @@
         <div class="grid p-fluid">
           <!-- 銷售日期 → POS5006.SalesDate -->
           <app-calendar class="col-12 md:col-6" label="銷售日期" [control]="queryForm.controls.TXN_Date"
-            [submitted]="submitted" [maxDate]="today"></app-calendar>
+            [submitted]="submitted" [maxDate]="today" (calendarEvent)="onDateSelect($event)"></app-calendar>
           <!-- 收銀機號 → POS5006.ECR_No -->
           <app-dropdown class="col-12 md:col-6" label="收銀機號" [control]="queryForm.controls.ECR_No"
             [submitted]="submitted" [options]="ECR_NoOptions" optionLabel="label" optionValue="No" />

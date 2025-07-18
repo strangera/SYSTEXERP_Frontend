@@ -29,12 +29,13 @@
             [submitted]="submitted" />
         </div>
       </div>
-      <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+      <div class="grid justify-content-end gap-2 m-0 mt-2 pt-3" *ngIf="!isFormReadable">
         <app-button label="查詢專櫃" (click)="onQuery(dataForm)" [loading]="loading" icon='pi pi-search'></app-button>
       </div>
-      <app-table title="新增專櫃" dataKey="talent_id" [data]="data" [columns]="columns" [showCheckBox]="isFormCreateable"
-        (selectionChange)="selectedRows = $event" [selectedItems]="selectedRows" [showManage]="false"
-        [loading]="loading" [multiSortMeta]="[{ field: 'talent_id', order: 1 }]" [totalRecords]="totalRecords"
+      <app-table title="專櫃清單" dataKey="talent_id" [data]="data" [columns]="columns" [showCheckBox]="true"
+        (selectionChange)="selectedRows = $event" (unSelect)="onUnSelect($event)" [selectedItems]="selectedRows"
+        [showManage]="false" [disabled]="isFormReadable" [loading]="loading"
+        [multiSortMeta]="[{ field: 'talent_id', order: 1 }]" [totalRecords]="totalRecords"
         (lazyLoadData)="onLazyLoadData($event, dataForm); onQuery(dataForm)" [lazy]="true" [showCaption]="false" />
       <div *ngIf="!isFormReadable" class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
         <app-button btnType="cancel" [form]="dataForm" (clickEvent)="resetTable()"></app-button>
