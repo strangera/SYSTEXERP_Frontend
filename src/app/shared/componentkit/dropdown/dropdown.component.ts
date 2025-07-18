@@ -25,6 +25,8 @@ export class DropdownComponent extends BasicKitComponent implements OnInit, OnCh
   @Input() control = new FormControl();
   @Input() submitted = false; // 檢查欄位是否標準
   @Input() loading = true; // 載入狀態
+  @Input() showLabel = true;
+  @Input() showErrorMessage = true;
   destroy$ = new Subject<void>(); // 銷毀訂閱
   // 選項
   @Output() changeEvent = new EventEmitter<DropdownChangeEvent>();
@@ -57,6 +59,11 @@ export class DropdownComponent extends BasicKitComponent implements OnInit, OnCh
     // 🆕 當 control 變化時，檢查並轉換初始值
     if (changes['control'] && changes['control'].currentValue) {
       this.convertEmptyStringToNull(this.control.value);
+    }
+    if (changes['submitted']?.currentValue === true) {
+      this.updateControlState(this.control);
+      this.control.markAsTouched();
+      this.control.updateValueAndValidity({ emitEvent: false });
     }
   }
 

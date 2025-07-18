@@ -49,6 +49,7 @@ export interface POS5007Data {
 }
 
 export interface POS5008Data {
+  ID?: number;
   id?: number; // 唯一識別碼
   PAY_No?: string; // 付款編號
   PAY_Name?: string; // 付款名稱
@@ -59,6 +60,7 @@ export interface POS5008Data {
   CRD_No?: string,
   TXN_CouponNo?: string,
   TXN_PayDesc?: string,
+  selected?: boolean
 }
 
 export interface InsertTLS24010Payload {
