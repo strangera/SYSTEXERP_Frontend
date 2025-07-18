@@ -36,38 +36,38 @@
       <td class="text-center">{{ rowIndex + 1 }}</td>
       <td><p-tableCheckbox [pSelectableRow]="rowData" [value]="rowData" /></td>
       <td>
-        <p-dropdown *ngIf="store_way === '1'" [(ngModel)]="rowData.PLU_MagNo" styleClass="w-full" placeholder="請選擇商品"
-          [options]="POS2004Options" optionLabel="PLU_Name" optionValue="PLU_MagNo" [filter]="true" appendTo="body"
-          [showClear]="true" />
-        {{ store_way === '2'? rowData.PLU_MagNo:undefined }}
+        <p-dropdown *ngIf="store_way === '2'" [(ngModel)]="rowData.PLU_MagNo" styleClass="w-full" placeholder="請選擇商品"
+          [options]="POS2004Options" optionLabel="PLU_Name" [filter]="true" appendTo="body" [showClear]="true"
+          [virtualScroll]="true" [virtualScrollItemSize]="34" (onChange)="onChangePLU_MagNo(rowData)" />
+        {{ store_way === '1'? rowData.PLU_MagNo:undefined }}
       </td>
       <td class="text-center">
         {{ store_way === '2'? rowData.PLU_Name:undefined }}
       </td>
       <td class="text-center">
-        <p-inputNumber *ngIf="store_way === '2'" class="w-8rem" [(ngModel)]="rowData.TXN_Qty" placeholder="請輸入數量" />
-        {{ store_way === '1'? rowData.TXN_Qty:undefined }}
+        <p-inputNumber class="w-8rem" [(ngModel)]="rowData.TXN_Qty" placeholder="請輸入數量" (onInput)="onInput(rowData)" />
       </td>
-      <td>
-        <p-inputNumber class="w-full min-w-max" [(ngModel)]="rowData.PLU_SalePrc" placeholder="請輸入單價金額"
-          (onInput)="onInput(rowData)" [disabled]="!rowData.PLU_MagNo" />
+      <td class="text-right">
+        <p-inputNumber *ngIf="store_way === '1'" class="w-full min-w-max" [(ngModel)]="rowData.PLU_SalePrc"
+          placeholder="請輸入單價金額" (onInput)="onInput(rowData)" [disabled]="!rowData.PLU_MagNo" />
+        $ {{ store_way === '2'? rowData.PLU_SalePrc:undefined }}
       </td>
       <td class="text-right">
         $ {{ rowData.TXN_Amt }}
       </td>
       <td class="text-right">
-        <p-inputNumber *ngIf="store_way === '1'" class="w-10rem" [(ngModel)]="rowData.TXN_Disc" placeholder="請輸入單價折扣讓金額"
+        <p-inputNumber *ngIf="store_way === '2'" class="w-10rem" [(ngModel)]="rowData.TXN_Disc" placeholder="請輸入單價折扣讓金額"
           (onInput)="onInput(rowData)" [disabled]="!rowData.PLU_MagNo" />
-        {{ store_way === '2'? rowData.TXN_Disc:undefined }}
+        {{ store_way === '1'? rowData.TXN_Disc:undefined }}
       </td>
       <td class="text-right">
         $ {{ rowData.TXN_SaleAmt }}
       </td>
       <td>
-        <p-dropdown *ngIf="store_way === '1'" [(ngModel)]="rowData.TLT_ID" styleClass="w-full" placeholder="請選擇類別"
+        <p-dropdown *ngIf="store_way === '2'" [(ngModel)]="rowData.TLT_ID" styleClass="w-full" placeholder="請選擇類別"
           [options]="tlt_idOptions" optionLabel="tlt_id_desc" optionValue="tlt_id" [filter]="true" appendTo="body"
           [showClear]="true" [resetFilterOnHide]="true" (onChange)="onChangeTLT_ID(rowData)" />
-        {{ store_way === '2'? rowData.TLT_ID:undefined }}
+        {{ store_way === '1'? rowData.TLT_ID:undefined }}
       </td>
       <td>
         {{ rowData.PLU_TaxType === '0' ? '免稅' : '應稅' }}

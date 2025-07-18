@@ -136,4 +136,12 @@ export class TLS24010Component extends BasicQueryPageComponent<TLS24010Data> imp
     if (!this.queryForm.valid) { return; }
     this.onCreate(this.queryForm.value);
   }
+
+  onDateSelect(event: Date): void {
+    console.log('event', event);
+    this.queryForm.get('TXN_Date')?.setValue(event);
+    this.dropDownList.queryTLTTALENT_ByContractDate_DropDownList(event.toISOString().split('T')[0]).pipe(untilDestroyed(this)).subscribe(options => {
+      this.TLT_NoOptions = options.Data.map(item => ({ ...item, label: `${item.No} - ${item.Name}` }));
+    });
+  }
 }

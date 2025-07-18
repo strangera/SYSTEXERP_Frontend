@@ -23,8 +23,9 @@
       </div>
       <hr />
       <div class="grid p-fluid">
-        <!-- 備註 → POS5006.TXN_Desc -->
-        <app-input-textarea class="col-12" label="備註" [control]="dataForm.controls.TXN_Desc" [submitted]="submitted" />
+        <!-- 備註 → POS5006.TXN_Remark -->
+        <app-input-textarea class="col-12" label="備註" [control]="dataForm.controls.TXN_Remark"
+          [submitted]="submitted" />
         <!-- 收銀員編號 → POS2001.USR_No -->
         <app-dropdown class="col-12 md:col-6 lg:col-3" label="收銀員編號" [control]="dataForm.controls.USR_No"
           [submitted]="submitted" [options]="USR_NoOptions" optionLabel="label" optionValue="No" />

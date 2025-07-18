@@ -44,7 +44,7 @@ export class Tls24010Pos5007Component implements OnInit {
   ) { }
   ngOnInit(): void {
     switch (this.store_way) {
-      case '1':// 自營櫃位
+      case '2':// 自營櫃位
         {
           if (this.TLT_No) {
             this.dropDownListService.queryPOS2004_DropDownList(this.TLT_No).pipe(untilDestroyed(this)).subscribe((data) => {
@@ -56,7 +56,7 @@ export class Tls24010Pos5007Component implements OnInit {
           })
           break;
         }
-      case '2':// 專櫃櫃位
+      case '1':// 專櫃櫃位
         break;
       default: break;
     }
@@ -95,5 +95,10 @@ export class Tls24010Pos5007Component implements OnInit {
     rowData.PLU_TaxType = item?.cag_taxtype;
     rowData.TXN_DiscCode = item?.cag_barcode;
     rowData.TXN_DiscCode_Name = item?.cag_barcode_name;
+  }
+  onChangePLU_MagNo(rowData: POS5007Data) {
+    const show = rowData.PLU_MagNo as POS2004Item
+    rowData.PLU_Name = show.PLU_Name;
+    rowData.PLU_SalePrc = show.PLU_SalePrc;
   }
 }
