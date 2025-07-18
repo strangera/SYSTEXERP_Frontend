@@ -53,6 +53,16 @@ export interface Potential_Customer {
   CanDel?: boolean;  //能否刪除(僅顯示)
 }
 
+export interface POS2013{
+  No: string,
+  Name: string,
+  ShortName: string,
+  VEN_No: string,
+  VEN_EngName: string,
+
+  Label: string,
+}
+
 // 2.1.2.1 潛在客戶資料維護
 @Component({
     selector: 'app-tls12010',
@@ -65,9 +75,9 @@ export class TLS12010Component extends BasicQueryPageComponent<Potential_Custome
     // 查詢
       queryForm = this.formBuilder.group({
         // Potential_Customer 潛在客戶主檔
-        CRT_Date_start: [null],  // 建立日期_起始日
-        CRT_Date_end: [null],  // 建立日期_終止日
-        contact_USR_No: ['', [Validators.maxLength(16)]],  // 接洽人員代碼/名稱 -- 之後會用dropdown*
+        CreatedDateStart: [null],  // 建立日期_起始日
+        CreatedDateEnd: [null],  // 建立日期_終止日
+        contact_USR_Name: ['', [Validators.maxLength(16)]],  // 接洽人員代碼/名稱 -- 之後會用dropdown*
         cus_uniform_id: ['', [Validators.maxLength(16)]], // 廠商統一編號 --這邊要請後端更新 pos2013.ven_uniform 的下拉 *
         // /*若廠商類型為1=統編, 為廠商統編 (pos2013.ven_uniform) */
 	         /*若廠商 類型為2=身份證字號, 進行身份證檢查碼檢查 */
@@ -97,7 +107,7 @@ export class TLS12010Component extends BasicQueryPageComponent<Potential_Custome
       business_type_Option: apiOption[] = []; // 經營方式(SYS1000.T117)（長度1，1=生產者、2=代理商、3=經銷商、4=其它）
       bus_type_Option: apiOption[] = []; // 業種-大分類代碼
       tlt_name_Option: apiOption[] = []; // 品牌
-      cus_uniform_Option: apiOption[] = []; // 廠商統一編號(pos2013) -- 等候端提供 (必須包含No、Name、EName)
+      cus_uniform_Option: POS2013[] = []; // 廠商統一編號(pos2013) -- 等候端提供 (必須包含No、Name、EName)
       contact_USR_Option: apiOption[] = [  // 接洽人員代碼/名稱 -- 等候端提供
         {No: '123',Name:'張三',Label: '123-張三'}
       ];
@@ -153,25 +163,25 @@ export class TLS12010Component extends BasicQueryPageComponent<Potential_Custome
       onSubmit(frm: FormGroup) {
         console.log('查詢條件',frm.value);
         this.handleSubmit(frm, () => {
-          // this.tls41050Service.queryTLS41050(frm.value).subscribe({
-          //   next: (response) => {
-          //     if (response.Status === '0000') {
-          //       this.data = response.Data || [];
-          //       console.log('Result', this.data);
-          //       this.totalRecords = response.TotalCount || response.Data.length;
-          //       this.queryStateService.setQueryState(this.ProgNo, frm.value);
-          //     } else {
-          //       console.error('API error:', response.Status, response.Message);
-          //     }
-          //     this.loading = false;
-          //     this.messageService.unblockUi();
-          //   },
-          //   error: (err: string) => {
-          //     console.error('API error:', err);
-          //     this.loading = false;
-          //     this.messageService.unblockUi();
-          //   },
-          // });
+          this.tls12010Service.queryTLS12010(frm.value).subscribe({
+            next: (response) => {
+              if (response.Status === '0000') {
+                this.data = response.Data || [];
+                console.log('Result', this.data);
+                this.totalRecords = response.TotalCount || response.Data.length;
+                this.queryStateService.setQueryState(this.ProgNo, frm.value);
+              } else {
+                console.error('API error:', response.Status, response.Message);
+              }
+              this.loading = false;
+              this.messageService.unblockUi();
+            },
+            error: (err: string) => {
+              console.error('API error:', err);
+              this.loading = false;
+              this.messageService.unblockUi();
+            },
+          });
         });
       }
 
@@ -245,12 +255,32 @@ export class TLS12010Component extends BasicQueryPageComponent<Potential_Custome
           console.log('品牌代號:', this.tlt_name_Option);
         });
         // 查 統編
-        this.tls12010Service.queryPOS2013_DropDownList({}).subscribe((response) => {
-          this.cus_uniform_Option = response.Data.map((item: any) => ({
-            No: item.No, // 統編代碼
-            Label: item.No + '/' + item.Name, // 組合成顯示用的Label
+        this.tls12010Service.queryPOS2013_DropDownList({"VEN_Flag": '1'}).subscribe((response) => {
+          // 去除重複的 No，只保留第一筆
+          const uniqueMap = new Map<string, any>();
+          response.Data.forEach((item: any) => {
+            if (!uniqueMap.has(item.No)) {
+              uniqueMap.set(item.No, item);
+            }
+          });
+
+          // 建立 dropdown options
+          this.cus_uniform_Option = Array.from(uniqueMap.values()).map((item: any) => ({
+            No: item.No,
+            Name: item.Name,
+            ShortName: item.ShortName,
+            VEN_No: item.VEN_No,
+            VEN_EngName: item.VEN_EngName,
+            Label: item.No + '/' + item.Name,
           }));
-          console.log('統編代號:', response.Data);
+
+          console.log('統編代號(去重):', this.cus_uniform_Option);
+
+          // this.cus_uniform_Option = response.Data.map((item: any) => ({
+          //   No: item.No, // 統編代碼
+          //   Label: item.No + '/' + item.Name, // 組合成顯示用的Label
+          // }));
+          // console.log('統編代號:', response.Data);
         });
         // 查 經營方式
          this.tls12010Service.querySYS1000_DropDownList({"SYS_Type": 'T117'}).subscribe((response) => {
@@ -258,7 +288,7 @@ export class TLS12010Component extends BasicQueryPageComponent<Potential_Custome
             No: item.No, // 經營方式 代碼
             Label: item.No + '/' + item.Name, // 組合成顯示用的Label
           }));
-          console.log('經營方式代號:', response.Data);
+          console.log('經營方式代號:', this.business_type_Option);
         });
       }
 }

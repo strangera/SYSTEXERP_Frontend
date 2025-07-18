@@ -8,9 +8,13 @@ import { environment } from '../../../../environments/environment';
 })
 export class Tls12010Service {
   // Potential_Customer 潛在客戶主檔
-  apiUrl: string = environment.ApiUrl + '/TLS0000/TLS5000';
-  constructor(private http: HttpClient) { }
+  apiUrl: string = environment.ApiUrl + '/TLS0000/TLS1000';
+  constructor(private http: HttpClient) {}
 
+  // 查詢 Potential_Customer 資料表
+  queryTLS12010(body: any): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/queryTLS12010`, body);
+  }
   // --- dropDown ---
 
   // 查詢 大分類(業種)設定檔
