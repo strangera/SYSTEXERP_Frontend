@@ -23,8 +23,9 @@
           [disabled]="true" />
       </td>
       <td>
-        <p-inputNumber [(ngModel)]="rowData.TXN_PayAmt" name="txnPayAmt" [min]="0" [max]="9999999999.9999"
-          [maxFractionDigits]="4" [minFractionDigits]="0" mode="decimal" required placeholder="請輸入金額" />
+        <p-inputNumber styleClass="w-full min-w-max" [(ngModel)]="rowData.TXN_PayAmt" name="txnPayAmt" [min]="0"
+          [max]="9999999999.9999" [maxFractionDigits]="4" [minFractionDigits]="0" mode="decimal" required
+          placeholder="請輸入金額" />
       </td>
       <td>
         <p-dropdown *ngIf="rowData.PAY_Type === '0'" [(ngModel)]="rowData.CRD_Type" styleClass="w-full"
@@ -32,12 +33,16 @@
           [disabled]="rowData.PAY_Type === '0' ? false : true" [filter]="true" [showClear]="true" />
       </td>
       <td>
-        <input pInputText class="w-full min-w-max" [(ngModel)]="rowData.CRD_No_TXN_CouponNo_TXN_PayDesc"
-          [placeholder]="getPlaceholder(rowData.PAY_Type)" [attr.maxLength]="getMaxLength(rowData.PAY_Type)"
-          [required]="true" />
+        <input *ngIf="rowData.PAY_Type === '0'" pInputText class="w-full min-w-max" [(ngModel)]="rowData.CRD_No"
+          placeholder="請輸入信用卡卡號" maxLength="20" [required]="rowData.PAY_Type === '0'" />
+        <input *ngIf="rowData.PAY_Type !== '0' && rowData.PAY_Type !== 'A'" pInputText class="w-full min-w-max"
+          [(ngModel)]="rowData.TXN_CouponNo" placeholder="請輸入券號" maxLength="50"
+          [required]="rowData.PAY_Type !== '0' && rowData.PAY_Type !== 'A'" />
+        <input *ngIf="rowData.PAY_Type === 'A'" pInputText class="w-full min-w-max" [(ngModel)]="rowData.TXN_PayDesc"
+          placeholder="請輸入應收付款對象" maxLength="100" [required]="rowData.PAY_Type === 'A'" />
       </td>
       <td>
-        <p-dropdown *ngIf="rowData.PAY_Type === '0'" [(ngModel)]="rowData.PTERM_No" styleClass="w-full"
+        <p-dropdown *ngIf="rowData.PAY_Type === '0'" [(ngModel)]="rowData.TERM_No" styleClass="w-full"
           placeholder="請選擇分期數" [options]="sys_typeOptions" optionLabel="SYS_Name" optionValue="SYS_Code" appendTo="body"
           [disabled]="rowData.PAY_Type === '0' ? false : true" [filter]="true" [showClear]="true" />
       </td>

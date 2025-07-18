@@ -24,7 +24,7 @@
       <th class="text-center">數量</th>
       <th class="text-center">單價金額</th>
       <th class="text-center">單價小計金額</th>
-      <th class="text-center">單價折扣讓金額</th>
+      <th class="text-center">單價折扣讓金額(負數)</th>
       <th class="text-center">單價銷售金額</th>
       <th class="text-center">類別</th>
       <th class="text-center">稅別</th>
@@ -37,15 +37,27 @@
       <td><p-tableCheckbox [pSelectableRow]="rowData" [value]="rowData" /></td>
       <td>
         <p-dropdown *ngIf="store_way === '2'" [(ngModel)]="rowData.PLU_MagNo" styleClass="w-full" placeholder="請選擇商品"
-          [options]="POS2004Options" optionLabel="PLU_Name" [filter]="true" appendTo="body" [showClear]="true"
-          [virtualScroll]="true" [virtualScrollItemSize]="34" (onChange)="onChangePLU_MagNo(rowData)" />
+          [options]="POS2004Options" optionLabel="PLU_MagNo" [filter]="true" appendTo="body" [showClear]="true"
+          [virtualScroll]="true" [virtualScrollItemSize]="34" (onChange)="onChangePLU_MagNo(rowData)">
+          <ng-template pTemplate="selectedItem">
+            <div class="flex align-items-center gap-2" *ngIf="rowData.PLU_MagNo">
+              <div>{{ rowData.PLU_MagNo.PLU_MagNo }}</div>
+            </div>
+          </ng-template>
+          <ng-template let-rowData pTemplate="item">
+            <div class="flex align-items-center gap-2">
+              <div>{{ rowData.label }}</div>
+            </div>
+          </ng-template>
+        </p-dropdown>
         {{ store_way === '1'? rowData.PLU_MagNo:undefined }}
       </td>
       <td class="text-center">
         {{ store_way === '2'? rowData.PLU_Name:undefined }}
       </td>
       <td class="text-center">
-        <p-inputNumber class="w-8rem" [(ngModel)]="rowData.TXN_Qty" placeholder="請輸入數量" (onInput)="onInput(rowData)" />
+        <p-inputNumber class="w-8rem" [(ngModel)]="rowData.TXN_Qty" placeholder="請輸入數量" (onInput)="onInput(rowData)"
+          [disabled]="!rowData.PLU_MagNo" />
       </td>
       <td class="text-right">
         <p-inputNumber *ngIf="store_way === '1'" class="w-full min-w-max" [(ngModel)]="rowData.PLU_SalePrc"
@@ -69,10 +81,12 @@
           [showClear]="true" [resetFilterOnHide]="true" (onChange)="onChangeTLT_ID(rowData)" />
         {{ store_way === '1'? rowData.TLT_ID:undefined }}
       </td>
-      <td>
-        {{ rowData.PLU_TaxType === '0' ? '免稅' : '應稅' }}
+      <td class="text-center">
+        <span *ngIf="rowData.PLU_TaxType === '0' || rowData.PLU_TaxType === '1'">
+          {{ rowData.PLU_TaxType === '0' ? '免稅' : '應稅' }}
+        </span>
       </td>
-      <td>
+      <td class="text-center">
         {{ rowData.TXN_DiscCode_Name }}
       </td>
     </tr>

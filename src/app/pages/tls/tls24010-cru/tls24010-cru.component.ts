@@ -24,7 +24,7 @@ import { InputTextModule } from 'primeng/inputtext';
 import { DropdownModule } from 'primeng/dropdown';
 import { Tls24010Pos5008Component } from './tls24010-pos5008/tls24010-pos5008.component';
 import { Tls24010Pos5007Component } from './tls24010-pos5007/tls24010-pos5007.component';
-import { tap } from 'rxjs';
+import { finalize, tap } from 'rxjs';
 @Component({
   selector: 'app-tls24010-cru',
   templateUrl: './tls24010-cru.component.html',
@@ -33,7 +33,7 @@ import { tap } from 'rxjs';
 })
 export class TLS24010CRUComponent extends BasicCruPageComponent<TLS24010Data | unknown> implements OnInit {
   @ViewChild(Tls24010Pos5007Component) pos5007Comp?: Tls24010Pos5007Component;
-  @ViewChild(Tls24010Pos5007Component) pos5008Comp?: Tls24010Pos5007Component;
+  @ViewChild(Tls24010Pos5008Component) pos5008Comp?: Tls24010Pos5008Component;
   TXN_GUIPaper?: string; // 補登類別 補原機台='E' 手開二聯式發票='2'
   TLT_Name?: string; //專櫃名稱
   store_way?: string // 1為專櫃 2=自營
@@ -55,7 +55,7 @@ export class TLS24010CRUComponent extends BasicCruPageComponent<TLS24010Data | u
     TXN_CustCnt: [1, [Validators.required, Validators.min(1), Validators.max(9999)]], //來客數
     TXN_MemCard: ['', [Validators.maxLength(30)]], //會員編號，若有資料需要串接環友
     TXN_Uniform: ['', [Validators.maxLength(8)]], //客戶統一編號 可以為空
-    TXN_Time: [null], //銷售時段
+    TXN_Time: [null, [Validators.required]], //銷售時段
     TXN_GUI_CarrType: [''], //電子載具種類=電子發票載具類別 悠遊載具卡=1K0001、手機條碼=3J0002、自然人憑證=CQ0001、一卡通載具=1H0001、信用卡載具=EK0002、#=取消載具
     TXN_GUIVehicle: [{ value: null, disabled: true }, [Validators.maxLength(20)]], //電子發票載具卡號 若有值則 TXN_GUI_CarrType 固定為3J0002，TXN_GUI_CarrId與TXN_GUI_CarrIdEx內容與此欄位相同
     TXN_GUI_CarrIdEx: [{ value: null, disabled: true }, [Validators.maxLength(64)]], //電子發票載具ID顯碼
@@ -151,18 +151,29 @@ export class TLS24010CRUComponent extends BasicCruPageComponent<TLS24010Data | u
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
       const pos5007Data = this.pos5007Comp?.POS5007Data ?? [];
-      const pos5008Data = this.pos5008Comp?.POS5007SelectedItems ?? [];
+      const pos5008Data = this.pos5008Comp?.POS5008SelectedItems ?? [];
       const body = {
         Store_way: this.store_way,
         ...frm.getRawValue(),
-        POS5007Data: pos5007Data,
-        POS5008Data: pos5008Data
+        POS5007_INFO: pos5007Data.map((item) => {
+          if (typeof item.PLU_MagNo === 'object' && item.PLU_MagNo !== null) {
+            return {
+              ...item,
+              PLU_MagNo: item.PLU_MagNo.PLU_MagNo,
+              PLU_No: item.PLU_MagNo.PLU_No
+            };
+          }
+          return item;
+        }),
+        POS5008_INFO: pos5008Data.map((item) => {
+          return {
+            ...item,
+          };
+        }),
       }
-      console.log('body', body);
-
-      // this.tls24010Service.insertTLS24010(frm.getRawValue()).pipe(untilDestroyed(this)).subscribe((res) => {
-      //   console.log(res);
-      // });
+      this.tls24010Service.insertTLS24010(body).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe((res) => {
+        console.log(res);
+      });
     });
   }
 }

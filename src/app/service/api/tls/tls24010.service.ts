@@ -56,6 +56,9 @@ export interface POS5008Data {
   TXN_PayAmt?: number; // 付款金額
   CRD_Type?: string; // 信用卡別
   TERM_No?: string; // 期別
+  CRD_No?: string,
+  TXN_CouponNo?: string,
+  TXN_PayDesc?: string,
 }
 
 export interface InsertTLS24010Payload {

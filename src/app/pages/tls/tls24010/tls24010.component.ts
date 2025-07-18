@@ -44,7 +44,7 @@ export class TLS24010Component extends BasicQueryPageComponent<TLS24010Data> imp
     TXN_GUIPaper: ['E', [Validators.required]],/*補登類別 → TXN_GUIPaper */
     TXN_Date: [new Date(), [Validators.required]],    /*銷售日期 → POS5006.TXN_Date */
     ECR_No: ['', [Validators.required]], /*收銀機號 → ECR_No */
-    TLT_No: ['', [Validators.required]], /*櫃編 → TLT_No */
+    TLT_No: ['008974', [Validators.required]], /*櫃編 → TLT_No */
     TLT_Name: ['', [Validators.required]], /*櫃名 → TLT_Name */
     store_way: ['', [Validators.required]], /*櫃位類型 → store_way */
     talent_id: [0, [Validators.required]], /*專櫃代號 → talent_id */

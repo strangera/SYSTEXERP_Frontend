@@ -48,7 +48,7 @@ export class Tls24010Pos5007Component implements OnInit {
         {
           if (this.TLT_No) {
             this.dropDownListService.queryPOS2004_DropDownList(this.TLT_No).pipe(untilDestroyed(this)).subscribe((data) => {
-              this.POS2004Options = data.Data;
+              this.POS2004Options = data.Data.map((item) => ({ ...item, label: `${item.PLU_MagNo} - ${item.PLU_Name}` }));
             })
           }
           this.dropDownListService.queryTLTTALENT_CHARGE_DropDownList(this.talent_id).pipe(untilDestroyed(this)).subscribe((data) => {
@@ -88,7 +88,7 @@ export class Tls24010Pos5007Component implements OnInit {
 
   onInput(event: POS5007Data) {
     event.TXN_Amt = (event.TXN_Qty || 0) * (event.PLU_SalePrc || 0);
-    event.TXN_SaleAmt = event.TXN_Amt - (event.TXN_Disc || 0);
+    event.TXN_SaleAmt = event.TXN_Amt + (event.TXN_Disc || 0);
   }
   onChangeTLT_ID(rowData: POS5007Data) {
     const item = this.tlt_idOptions.find((item) => item.tlt_id === rowData.TLT_ID);
@@ -97,6 +97,11 @@ export class Tls24010Pos5007Component implements OnInit {
     rowData.TXN_DiscCode_Name = item?.cag_barcode_name;
   }
   onChangePLU_MagNo(rowData: POS5007Data) {
+    if (!rowData.PLU_MagNo) {
+      rowData.PLU_Name = undefined;
+      rowData.PLU_SalePrc = undefined;
+      return;
+    }
     const show = rowData.PLU_MagNo as POS2004Item
     rowData.PLU_Name = show.PLU_Name;
     rowData.PLU_SalePrc = show.PLU_SalePrc;
