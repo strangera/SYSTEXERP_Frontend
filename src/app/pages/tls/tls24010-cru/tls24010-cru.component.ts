@@ -50,7 +50,7 @@ export class TLS24010CRUComponent extends BasicCruPageComponent<TLS24010Data | u
     TXN_TaxFreeCertNo: [{ value: null, disabled: true }], // 免稅卡零稅卡號= 免稅證證號 欄位
     TXN_Status: ['N'],                                                    //交易狀態 (一般交易=N, 退貨交易=E, 作廢交易=D)
     GUI_Track: ['', [Validators.required, Validators.maxLength(2), Validators.minLength(2), this.validationService.guiTrackValidator]], //發票字軌
-    TXN_GUIBegNo: ['', [Validators.required, Validators.maxLength(8), Validators.minLength(8)]], //起始發票號碼
+    TXN_GUIBegNo: ['', [Validators.required, Validators.maxLength(8), Validators.minLength(8), this.validationService.numberValidator]], //起始發票號碼
     TXN_GUIEndNo: ['', [Validators.maxLength(8), Validators.minLength(8)]], //結束發票號碼
     TXN_CustCnt: [1, [Validators.required, Validators.min(1), Validators.max(9999)]], //來客數
     TXN_MemCard: ['', [Validators.maxLength(30)]], //會員編號，若有資料需要串接環友

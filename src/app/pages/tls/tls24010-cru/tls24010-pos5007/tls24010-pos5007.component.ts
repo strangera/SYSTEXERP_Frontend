@@ -1,4 +1,4 @@
-import { NgIf } from '@angular/common';
+import { DecimalPipe, NgIf } from '@angular/common';
 import { Component, Input, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
@@ -22,7 +22,8 @@ import { ButtonModule } from 'primeng/button';
     DropdownModule,
     NgIf,
     FormsModule,
-    ButtonModule
+    ButtonModule,
+    DecimalPipe
   ],
   templateUrl: './tls24010-pos5007.component.html',
   styleUrls: ['./tls24010-pos5007.component.scss']
@@ -60,15 +61,14 @@ export class Tls24010Pos5007Component implements OnInit {
         break;
       default: break;
     }
-    //TODO: 5. 再去取 TLTTALENT_CHARGEM.CAG_TAXTYPE 專櫃抽成主檔
-    //TODO: 6. 再去取 讀取TLTTALENT_CHARGED.CAG_BARCODE 專櫃抽成主檔
   }
 
   insertRow(): void {
     this.POS5007Data.push({
       id: this.index + 1,
-      PLU_MagNo: undefined,
-      PLU_No: undefined,
+      PLU_MagNo: this.store_way === '1' ? this.TLT_No : undefined,
+      PLU_No: this.store_way === '1' ? this.TLT_No : undefined,
+      PLU_Name: this.store_way === '1' ? this.TLT_Name : undefined,
       TXN_Qty: 0,
       PLU_SalePrc: 0,
       TXN_Amt: 0,
