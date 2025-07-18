@@ -768,3 +768,27 @@
     font-size: 1rem !important;
   }
 }
+:host ::ng-deep {
+  .p-datatable {
+    // 🎯 確保固定操作欄位在偶數行也有正確背景色
+    .p-datatable-tbody > tr:nth-child(even) {
+      td[style*="sticky"] {
+        background-color: #eef2ff !important;
+      }
+    }
+
+    // 🎯 確保固定操作欄位在懸停時有正確背景色
+    .p-datatable-tbody > tr:hover {
+      td[style*="sticky"] {
+        background-color: #e3f2fd !important;
+      }
+    }
+
+    // 🎯 確保固定操作欄位在選中行有正確背景色
+    .p-datatable-tbody > tr.p-highlight {
+      td[style*="sticky"] {
+        background-color: #c5e4fc !important;
+      }
+    }
+  }
+}

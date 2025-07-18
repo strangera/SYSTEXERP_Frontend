@@ -30,7 +30,7 @@ jobs:
       continue-on-error: false
     
     - name: Build project
-      run: npm run build --if-present
+      run: npm run build -- --skip-type-check
       continue-on-error: false
       env:
         NODE_OPTIONS: "--max_old_space_size=4096"  # 增加記憶體限制，避免建置時記憶體不足

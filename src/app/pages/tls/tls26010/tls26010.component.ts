@@ -2,26 +2,42 @@ import { Component, computed, effect } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 // 共用服務
-import { NavigationExtras } from '@angular/router';
+import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { AccordionModule } from 'primeng/accordion';
-import { combineLatest, map } from 'rxjs';
-import { PreorderECRListQuery, TLS26010Query, TLS26010Service, TLTTALENTQuery } from '../../../service/api/tls/tls26010.service';
+import { FileSelectEvent, FileUpload, FileUploadModule } from 'primeng/fileupload';
+import { catchError, combineLatest, EMPTY, map, take } from 'rxjs';
+import { environment } from '../../../../environments/environment';
+import { ApprovalStatus, PreorderECRListQuery, TLS26010Data, TLS26010Query, TLS26010Service, TLTTALENTQuery } from '../../../service/api/tls/tls26010.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
+import { TableExpansionComponent } from '../../../shared/componentkit/table/table-expansion/table-expansion.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { Column } from '../../../shared/componentkit/table/table.model';
+import { AddButton, Column } from '../../../shared/componentkit/table/table.model';
 
 @Component({
   selector: 'app-tls26010',
   templateUrl: './tls26010.component.html',
   styleUrls: ['./tls26010.component.scss'],
   standalone: true,
-  imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, MultiSelectComponent, DropdownComponent, CalendarRangeComponent, TableComponent, TranslateModule]
+  imports: [
+    AccordionModule,
+    FormsModule,
+    ReactiveFormsModule,
+    TranslateModule,
+    FileUploadModule,
+    MenubarComponent,
+    ButtonComponent,
+    MultiSelectComponent,
+    DropdownComponent,
+    CalendarRangeComponent,
+    TableComponent,
+    TableExpansionComponent,
+  ]
 })
 export class TLS26010Component extends BasicQueryPageComponent<any> {
 
@@ -36,6 +52,21 @@ export class TLS26010Component extends BasicQueryPageComponent<any> {
     podEdateS: [''], // 截止日期(起)
     podEdateE: [''], // 截止日期(迄)
   });
+
+  selectedItems: TLS26010Data[] = [];
+
+  addButton: AddButton[] = [
+    {
+      label: '核准', icon: 'pi pi-check-circle text-green-500',
+      action: (rowData: TLS26010Data) => this.tls26010Service.loadApproval(rowData),
+      disabled: (rowData: TLS26010Data) => rowData.pod_status !== ApprovalStatus.未核准,
+    },
+    {
+      label: '反核准', icon: 'pi pi-undo text-orange-500',
+      action: (rowData: TLS26010Data) => this.tls26010Service.loadApproval(rowData),
+      disabled: (rowData: TLS26010Data) => rowData.pod_status !== ApprovalStatus.已核准,
+    },
+  ];
 
   // 監聽用
   private sys3800Signal = toSignal(this.queryForm.get('sys3800')!.valueChanges);
@@ -96,13 +127,13 @@ export class TLS26010Component extends BasicQueryPageComponent<any> {
   // API queries
   private queryPreorderECRList = computed<PreorderECRListQuery>(() => ({
     data_type: '2',
-    building_no: this.sys3800Signal() || '',
-    floor_no: this.sys3900Signal() || '',
+    SYS3800s: [{ building_no: this.sys3800Signal() || '' }],
+    SYS3900s: [{ floor_no: this.sys3900Signal() || '' }],
   }));
 
   private queryTLTTALENT = computed<TLTTALENTQuery>(() => ({
-    building_no: this.sys3800Signal() || '',
-    floor_no: this.sys3900Signal() || '',
+    SYS3800s: [{ building_no: this.sys3800Signal() || '' }],
+    SYS3900s: [{ floor_no: this.sys3900Signal() || '' }],
   }));
 
   private queryTLS26010 = computed<TLS26010Query>(() => {
@@ -110,8 +141,8 @@ export class TLS26010Component extends BasicQueryPageComponent<any> {
     const dates = dateValidation.dates;
 
     return {
-      ECR_No: Array.from(this.ecrNosSignal() || []),
-      tlt_no: Array.from(this.tltNosSignal() || []),
+      ECR_Nos: Array.from(this.ecrNosSignal() || []),
+      tlt_nos: Array.from(this.tltNosSignal() || []),
       pod_sdate_S: dates.podSdateS || '',
       pod_sdate_E: dates.podSdateE || '',
       pod_edate_S: dates.podEdateS || '',
@@ -124,9 +155,16 @@ export class TLS26010Component extends BasicQueryPageComponent<any> {
     { field: 'pod_desc', header: '活動名稱', visible: true },
     { field: 'pod_sdate', header: '活動起始日期', visible: true },
     { field: 'pod_edate', header: '活動終止日期', visible: true },
-    { field: 'pod_status', header: '核准狀態', visible: true },
+    { field: 'pod_status', header: '核准狀態', visible: true, format: this.approvalStatus.bind(this) },
     { field: 'approved_usr_name', header: '核准人員', visible: true },
     { field: 'approved_date', header: '核准日期', visible: true },
+  ];
+
+  subColumns: Column[] = [
+    { field: 'ECR_No', header: '收銀機號', visible: true },
+    { field: 'ECR_Name', header: '收銀機名稱', visible: true },
+    { field: 'tlt_no', header: '專櫃編號', visible: true },
+    { field: 'tlt_name', header: '專櫃名稱', visible: true },
   ];
 
   constructor(public tls26010Service: TLS26010Service) {
@@ -139,6 +177,15 @@ export class TLS26010Component extends BasicQueryPageComponent<any> {
     // 只載入館別和樓層的下拉選單資料
     this.tls26010Service.loadSYS3800({});
     this.tls26010Service.loadSYS3900({});
+  };
+
+  approvalStatus(status: ApprovalStatus): string {
+    switch (status) {
+      case ApprovalStatus.未核准: return '未核准';
+      case ApprovalStatus.已核准: return '已核准';
+      case ApprovalStatus.刪除: return '刪除';
+      default: return '未知狀態';
+    }
   };
 
   canQuery(): boolean {
@@ -155,7 +202,6 @@ export class TLS26010Component extends BasicQueryPageComponent<any> {
 
   onClearForm(): void {
     this.queryForm.reset();
-    this.tls26010Service.clearData();
   };
 
   onSubmitQuery(frm: FormGroup): void {
@@ -167,11 +213,28 @@ export class TLS26010Component extends BasicQueryPageComponent<any> {
 
   onSubmit(frm: FormGroup): void {
     this.handleSubmit(frm, () => {
-      if (frm.valid && this.canQuery()) {
-        this.tls26010Service.loadTLS26010(this.queryTLS26010());
-      }
+      frm.valid && this.canQuery() && this.tls26010Service.loadTLS26010(this.queryTLS26010());
       this.loading = false;
       this.messageService.blockUi();
     });
+  }
+
+  override onEdit(data: TLS26010Data): void {
+    if (this.canPerformAction('30')) { // '修改' 的 function_code 是 "30"
+
+    }
+  }
+
+  onFileUpload(event: FileSelectEvent): void {
+    const file = event.files[0];
+    this.tls26010Service.updateTLS26010(file);
+  }
+
+  onDelete(data: TLS26010Data[]): void {
+    if (!this.canEdit()) return;
+    for (const item of data) {
+      if (item.pod_status !== ApprovalStatus.未核准) continue;
+      this.tls26010Service.deleteTLS26010(item);
+    }
   }
 }
