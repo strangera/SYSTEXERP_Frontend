@@ -23,8 +23,8 @@
             <app-dropdown label="館別"
                           controlName="sys3800"
                           [options]="tls26010Service.sys3800List()"
-                          optionLabel="label"
-                          optionValue="value"
+                          optionLabel="Name"
+                          optionValue="No"
                           [control]="queryForm.controls.sys3800"
                           [submitted]="submitted"></app-dropdown>
           </div>
@@ -32,26 +32,26 @@
             <app-dropdown label="樓層"
                           controlName="sys3900"
                           [options]="tls26010Service.sys3900List()"
-                          optionLabel="label"
-                          optionValue="value"
+                          optionLabel="Name"
+                          optionValue="No"
                           [control]="queryForm.controls.sys3900"
                           [submitted]="submitted"></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-multi-select label="收銀機號"
                               controlName="ecrNos"
-                              [options]="tls26010Service.preorderECRList()"
-                              optionLabel="label"
-                              optionValue="value"
+                              [options]="tls26010Service.ECRList()"
+                              optionLabel="Name"
+                              optionValue="No"
                               [control]="queryForm.controls.ecrNos"
                               [submitted]="submitted"></app-multi-select>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-multi-select label="專櫃編號"
                               controlName="tltNos"
-                              [options]="tls26010Service.TLTTALENTList()"
-                              optionLabel="label"
-                              optionValue="value"
+                              [options]="tls26010Service.TLTList()"
+                              optionLabel="Name"
+                              optionValue="No"
                               [control]="queryForm.controls.tltNos"
                               [submitted]="submitted"></app-multi-select>
           </div>
@@ -87,8 +87,12 @@
 <div class="card">
   <div class="col-12">
     <app-table [showCheckBox]="true"
+               [tableKey]="'TLS26010'"
+               [dataKey]="'pod_no'"
                [data]="tls26010Service.TLS26010List()"
                [columns]="columns"
+               [addButton]="addButton"
+               (delete)="onDelete($event)"
                (edit)="onEdit($event)"
                (detail)="onDetail($event)"></app-table>
   </div>
