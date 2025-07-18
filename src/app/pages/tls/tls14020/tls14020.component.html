@@ -238,7 +238,7 @@
             <app-multi-select
               label="櫃別"
               controlName="tlt_kind_List"
-              [options]="counterCategoryOptions"
+              [options]="tltKindOptions"
               optionLabel="label"
               optionValue="value"
               [control]="queryForm.controls.tlt_kind_List"
@@ -271,7 +271,7 @@
             <app-multi-select
               label="結帳方式"
               controlName="money_type_List"
-              [options]="settlementMethodOptions"
+              [options]="moneyTypeOptions"
               optionLabel="label"
               optionValue="value"
               [control]="queryForm.controls.money_type_List"
@@ -293,7 +293,7 @@
             <app-multi-select
               label="配合方式"
               controlName="store_way_List"
-              [options]="cooperationMethodOptions"
+              [options]="storeWayMethodOptions"
               optionLabel="label"
               optionValue="value"
               [control]="queryForm.controls.store_way_List"

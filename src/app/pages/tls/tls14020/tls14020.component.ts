@@ -183,12 +183,12 @@ export class TLS14020Component extends BasicQueryPageComponent<ContractItem> imp
   operationStatusOptions: any[] = [];
   commissionCalculationOptions: any[] = [];
   businessType: any[] = [];
-  counterCategoryOptions: any[] = [];
+  tltKindOptions: any[] = [];
   decorationMethodOptions: any[] = [];
   commissionTypeOptions: any[] = [];
-  settlementMethodOptions: any[] = [];
+  moneyTypeOptions: any[] = [];
   paymentMethodOptions: any[] = [];
-  cooperationMethodOptions: any[] = [];
+  storeWayMethodOptions: any[] = [];
   issueOwnerInvoiceOptions: any[] = [];
   useOwnerCashRegisterOptions: any[] = [];
   ownerCashCollectionOptions: any[] = [];
@@ -286,51 +286,35 @@ export class TLS14020Component extends BasicQueryPageComponent<ContractItem> imp
         console.error('載入 Location 選項失敗:', error);
       }
     });
-    // 合約狀態
-    this.contractStatusService.getContractStatuses().subscribe({
-      next: (data) => this.contractStatusOptions = data.filter(item => item.value !== 3),
-      error: (err) => console.warn('載入合約狀態選項失敗:', err)
-    });
     //洽談者
-    // this.negotiatorService.getNegotiatorOptions().subscribe({
-    //   next: (response: any[]) => {
-    //     this.negotiatorOptions = response;
-    //     console.log('洽談者選項載入完成:', this.negotiatorOptions.length);
-    //   },
-    //   error: (error) => {
-    //     console.error('載入洽談者選項失敗:', error);
-    //     this.negotiatorOptions = [];
-    //   }
-    // });
-    // 結帳方式
-    this.settlementMethodService.getSettlementMethods().subscribe({
-      next: (data) => this.settlementMethodOptions = data,
-      error: (err) => console.warn('載入結帳方式選項失敗:', err)
+    this.negotiatorService.getNegotiatorOptions().subscribe({
+      next: (response: any[]) => {
+        this.negotiatorOptions = response;
+        console.log('洽談者選項載入完成:', this.negotiatorOptions.length);
+      },
+      error: (error) => {
+        console.error('載入洽談者選項失敗:', error);
+        this.negotiatorOptions = [];
+      }
     });
-    // 付款方式
-    this.paymentMethodService.getPaymentMethods().subscribe({
-      next: (data) => this.paymentMethodOptions = data,
-      error: (err) => console.warn('載入付款方式選項失敗:', err)
-    });
-    // 配合方式
-    this.cooperationMethodService.getCooperationMethods().subscribe({
-      next: (data) => this.cooperationMethodOptions = data,
-      error: (err) => console.warn('載入配合方式選項失敗:', err)
-    });
-    // 櫃別
-    this.counterCategoryService.getCounterCategories().subscribe({
-      next: (data) => this.counterCategoryOptions = data.filter(item => item.value !== 3 && item.value !== 4),
-      error: (err) => console.warn('載入櫃別選項失敗:', err)
-    });
+    // 合約狀態
+    this.contractStatusOptions = [...TLS13010_DROPDOWN_OPTIONS.approveStatusOptions].filter(item => item.value !== '3');
     // 營運狀況
-    this.operationStatusOptions = [...TLS13010_DROPDOWN_OPTIONS.openflagStatus]
+    this.operationStatusOptions = [...TLS13010_DROPDOWN_OPTIONS.openflagStatus];
     // 抽成額計算方式
     this.commissionCalculationOptions = [...TLS13010_DROPDOWN_OPTIONS.commCompType];
-    console.log('抽成額計算方式', this.commissionCalculationOptions);
-    // 抽成別
-    this.commissionTypeOptions = [...TLS13010_DROPDOWN_OPTIONS.tltTermType];
+    // 櫃別
+    this.tltKindOptions = [...TLS13010_DROPDOWN_OPTIONS.tltKind].filter(item => item.value !== '3' && item.value !== '4');
     // 裝潢方式
     this.decorationMethodOptions = [...TLS13010_DROPDOWN_OPTIONS.decorationType];
+    // 抽成別
+    this.commissionTypeOptions = [...TLS13010_DROPDOWN_OPTIONS.tltTermType];
+    // 結帳方式
+    this.moneyTypeOptions = [...TLS13010_DROPDOWN_OPTIONS.moneyType];
+    // 付款方式
+    this.paymentMethodOptions = [...TLS13010_DROPDOWN_OPTIONS.paytype];
+    // 配合方式
+    this.storeWayMethodOptions = [...TLS13010_DROPDOWN_OPTIONS.storeWay];
     // 是否開立業主發票、是否使用業主收銀機、是否為業主收現
     this.whetherOptions = [...TLS13010_DROPDOWN_OPTIONS.yesNo];
   }
