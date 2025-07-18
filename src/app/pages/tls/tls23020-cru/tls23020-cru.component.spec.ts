@@ -1,18 +1,18 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { Tls23020CruComponent } from './tls23020-cru.component';
+import { TLS23020CRUComponent } from './tls23020-cru.component';
 
 describe('Tls23020CruComponent', () => {
-  let component: Tls23020CruComponent;
-  let fixture: ComponentFixture<Tls23020CruComponent>;
+  let component: TLS23020CRUComponent;
+  let fixture: ComponentFixture<TLS23020CRUComponent>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [Tls23020CruComponent]
+      imports: [TLS23020CRUComponent]
     })
-    .compileComponents();
+      .compileComponents();
 
-    fixture = TestBed.createComponent(Tls23020CruComponent);
+    fixture = TestBed.createComponent(TLS23020CRUComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

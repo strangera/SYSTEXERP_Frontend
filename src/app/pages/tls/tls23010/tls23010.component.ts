@@ -1,5 +1,10 @@
 import { Component } from '@angular/core';
-import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import {
+  FormGroup,
+  Validators,
+  FormsModule,
+  ReactiveFormsModule,
+} from '@angular/forms';
 import { StatusFlagService } from '../../../service/basic/status-flag.service';
 import { WhetherService } from '../../../service/basic/whether.service';
 import { TXN_SubtypeService } from '../../../service/basic/TXN_Subtype.service';
@@ -43,28 +48,28 @@ const now = new Date();
 
 //型態別報表
 @Component({
-    selector: 'app-tls23010',
-    templateUrl: './tls23010.component.html',
-    styleUrls: ['./tls23010.component.scss'],
-    standalone: true,
-    imports: [
-        MenubarComponent,
-        AccordionModule,
-        FormsModule,
-        ReactiveFormsModule,
-        CalendarRangeQuickComponent,
-        MultiSelectComponent,
-        InputNumberRangeComponent,
-        InputTextComponent,
-        DropdownComponent,
-        InputTextModule,
-        ButtonComponent,
-        DialogModule,
-        RadioButtonModule,
-        PrimeTemplate,
-        ButtonDirective,
-        TranslateModule,
-    ],
+  selector: 'app-tls23010',
+  templateUrl: './tls23010.component.html',
+  styleUrls: ['./tls23010.component.scss'],
+  standalone: true,
+  imports: [
+    MenubarComponent,
+    AccordionModule,
+    FormsModule,
+    ReactiveFormsModule,
+    CalendarRangeQuickComponent,
+    MultiSelectComponent,
+    InputNumberRangeComponent,
+    InputTextComponent,
+    DropdownComponent,
+    InputTextModule,
+    ButtonComponent,
+    DialogModule,
+    RadioButtonModule,
+    PrimeTemplate,
+    ButtonDirective,
+    TranslateModule,
+  ],
 })
 export class TLS23010Component extends BasicQueryPageComponent<any> {
   displayMode: 'Detail' | 'Summary' = 'Detail'; // 預設顯示明細報表
@@ -76,8 +81,7 @@ export class TLS23010Component extends BasicQueryPageComponent<any> {
 
   queryForm = this.formBuilder.group({
     TXN_DateStart: [new Date('2020-01-01'), [Validators.required]],
-    TXN_DateEnd: [new Date(), [Validators.required]],
-
+    TXN_DateEnd: [new Date('2020-01-16'), [Validators.required]],
     ECR_No: [[]], // ✅ 收銀機號 → 陣列
     TXN_No_Start: [null], // 交易序號(起)
     TXN_No_End: [null], // 交易序號(迄)
@@ -86,7 +90,6 @@ export class TLS23010Component extends BasicQueryPageComponent<any> {
     TXN_GUIEndNo: [''], // 發票結束號碼
     TXN_Status: [[]], // ✅ 狀態 → 陣列
     TXN_FlagStatus: [[]], // ✅ 狀態旗標 → 陣列
-
     USR_No: [''], // 收銀員編號
     TXN_PreOrderNo: [''], // 預售/訂金編號
     TXN_PkngUID: [''], // 停車卡號

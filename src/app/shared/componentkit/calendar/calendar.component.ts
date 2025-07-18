@@ -7,11 +7,11 @@ import { PrimeTemplate } from 'primeng/api';
 import { ControlMessagesComponent } from '../../component/control-messages/control-messages.component';
 
 @Component({
-    selector: 'app-calendar',
-    templateUrl: './calendar.component.html',
-    styleUrl: './calendar.component.scss',
-    standalone: true,
-    imports: [NgIf, CalendarModule, FormsModule, ReactiveFormsModule, NgClass, PrimeTemplate, ControlMessagesComponent]
+  selector: 'app-calendar',
+  templateUrl: './calendar.component.html',
+  styleUrl: './calendar.component.scss',
+  standalone: true,
+  imports: [NgIf, CalendarModule, FormsModule, ReactiveFormsModule, NgClass, PrimeTemplate, ControlMessagesComponent]
 })
 export class CalendarComponent extends BasicKitComponent implements OnInit {
   // 📌 基本設置
@@ -35,7 +35,7 @@ export class CalendarComponent extends BasicKitComponent implements OnInit {
   @Input() disabled = false;
   @Input() disabledDates: Date[] = [];
 
-  @Output() calendarEvent = new EventEmitter<Event>();
+  @Output() calendarEvent = new EventEmitter<any>();
   @Output() monthChangeEvent = new EventEmitter<CalendarMonthChangeEvent>();
   @Output() yearChangeEvent = new EventEmitter<CalendarYearChangeEvent>();
 
@@ -44,12 +44,12 @@ export class CalendarComponent extends BasicKitComponent implements OnInit {
   }
 
   private readonly calendarConfig = {
-    timeOne:      { timeOnly: true, showTime: true, showSeconds: false, dateFormat: undefined, view: 'date',  placeholder: '請選擇時間' },
-    dateOne:      { timeOnly: false, showTime: false, showSeconds: false, dateFormat: 'yy/mm/dd', view: 'date',  placeholder: '請選擇日期' },
-    dateTimeOne:  { timeOnly: false, showTime: true, showSeconds: true, dateFormat: 'yy/mm/dd', view: 'date',  placeholder: '請選擇日期時間' },
+    timeOne: { timeOnly: true, showTime: true, showSeconds: false, dateFormat: undefined, view: 'date', placeholder: '請選擇時間' },
+    dateOne: { timeOnly: false, showTime: false, showSeconds: false, dateFormat: 'yy/mm/dd', view: 'date', placeholder: '請選擇日期' },
+    dateTimeOne: { timeOnly: false, showTime: true, showSeconds: true, dateFormat: 'yy/mm/dd', view: 'date', placeholder: '請選擇日期時間' },
     dateMonthOne: { timeOnly: false, showTime: false, showSeconds: false, dateFormat: 'yy/mm', view: 'month', placeholder: '請選擇月份' },
-    dateYearOne:  { timeOnly: false, showTime: false, showSeconds: false, dateFormat: 'yy',     view: 'year',  placeholder: '請選擇年份' },
-    oddMonthOne:  { timeOnly: false, showTime: false, showSeconds: false, dateFormat: 'yy/mm',  view: 'month', placeholder: '請選擇奇數月份' }
+    dateYearOne: { timeOnly: false, showTime: false, showSeconds: false, dateFormat: 'yy', view: 'year', placeholder: '請選擇年份' },
+    oddMonthOne: { timeOnly: false, showTime: false, showSeconds: false, dateFormat: 'yy/mm', view: 'month', placeholder: '請選擇奇數月份' }
   };
 
   ngOnInit() {
@@ -83,7 +83,7 @@ export class CalendarComponent extends BasicKitComponent implements OnInit {
   }
 
   onClose() {
-    this.calendarEvent.emit(event);
+    this.calendarEvent.emit(this.control.value);
   }
 
   onCalendarMonthChange(event: CalendarMonthChangeEvent): void {

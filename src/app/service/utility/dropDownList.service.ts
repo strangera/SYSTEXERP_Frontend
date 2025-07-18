@@ -11,6 +11,9 @@ export interface IDropdownItem {
   ShortName?: string;
   VEN_No?: string;
   HOS_No?: string;
+  store_way?: string;
+  talent_id?: number;
+  PAY_Type?: string;
   label?: string; // 用於顯示的標籤
 }
 
@@ -87,6 +90,20 @@ export interface IPOS2013Request {
   VEN_Flag?: string;
 }
 
+export interface POS2004Item {
+  PLU_MagNo: string;
+  PLU_No: string;
+  PLU_Name: string;
+  PLU_SalePrc: number
+}
+
+export interface TLTTALENT_CHARGEData {
+  tlt_id: string,
+  tlt_id_desc: string,
+  cag_taxtype: string,
+  cag_barcode: string,
+  cag_barcode_name: string
+}
 
 @Injectable({
   providedIn: 'root'
@@ -290,4 +307,22 @@ export class DropDownListService {
   queryPOS2013_DropDownList(params: IPOS2013Request = {}): Observable<ApiResponse<IDropdownItem[]>> {
     return this.http.post<ApiResponse<IDropdownItem[]>>(`${this.apiUrl}/queryPOS2013_DropDownList`, params);
   }
+
+  // 查詢專櫃主檔(TLTTALENT)資料表下拉選單(依照契約日期取得合約資料)
+  queryTLTTALENT_ByContractDate_DropDownList(tlt_contract_date: string): Observable<ApiResponse<IDropdownItem[]>> {
+    return this.http.post<ApiResponse<IDropdownItem[]>>(`${this.apiUrl}/queryTLTTALENT_ByContractDate_DropDownList`, { tlt_contract_date });
+  }
+  // 查詢付款別(POS1006)資料表下拉選單
+  queryPOS1006_DropDownList(): Observable<ApiResponse<IDropdownItem[]>> {
+    return this.http.post<ApiResponse<IDropdownItem[]>>(`${this.apiUrl}/queryPOS1006_DropDownList`, {});
+  }
+  // 查詢商品資料(POS2004)資料表下拉選單
+  queryPOS2004_DropDownList(TLT_NO: string): Observable<ApiResponse<POS2004Item[]>> {
+    return this.http.post<ApiResponse<POS2004Item[]>>(`${this.apiUrl}/queryPOS2004_DropDownList`, { TLT_NO });
+  }
+  // 查詢專櫃抽成主檔(TLTTALENT_CHARGE)資料表下拉選單
+  queryTLTTALENT_CHARGE_DropDownList(talent_id?: number): Observable<ApiResponse<TLTTALENT_CHARGEData[]>> {
+    return this.http.post<ApiResponse<TLTTALENT_CHARGEData[]>>(`${this.apiUrl}/queryTLTTALENT_CHARGE_DropDownList`, { talent_id });
+  }
+
 }

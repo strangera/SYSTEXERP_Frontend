@@ -62,12 +62,17 @@ export class TLS23120Component extends BasicQueryPageComponent<any> {
   ];
 
   organizationOptions: any[] = [];
-  regionOptions: any[] = [];
+  
   bus_typeOptions: any[] = [];
   businessTypeCodeOptions: any[] = [];
+
   whetherOptions: any[] = [];
+
   floorOptions: any[] = [];
-  BUILDING_NO_Options: any[] = [];
+  regionOptions: any[] = [];
+BUILDING_NO_Options: any[] = [];
+
+  
   OrganizationCodeOptions: any[] = [];
   CounterOptions: any[] = [];
   WhetherOptions = [
@@ -77,13 +82,15 @@ export class TLS23120Component extends BasicQueryPageComponent<any> {
 
   constructor(
     private tls23120Service: TLS23120Service,
-    private regionService: RegionService,
+   
     private businessTypeCodeService: BusinessTypeCodeService,
     private organizationNumberService: OrganizationNumberService,
     private whetherService: WhetherService,
-    private floorService: FloorService,
+   
     private counterNameService: CounterNameService,
     private bigCategoryCodeService: BigCategoryCodeService,
+     private floorService: FloorService,
+     private regionService: RegionService,
     private tls11010Service: Tls11010Service
   ) {
     super();
@@ -95,10 +102,11 @@ export class TLS23120Component extends BasicQueryPageComponent<any> {
     this.organizationNumberService.getOrganizationNumbers().subscribe(data => this.organizationOptions = data);
     this.regionService.getRegionOptions().subscribe(data => this.regionOptions = data);
     this.floorService.getFloors().subscribe(data => this.floorOptions = data);
+    this.tls11010Service.getBuildingOptions().subscribe(data => this.BUILDING_NO_Options = data);
     this.businessTypeCodeService.getBusinessTypeCodes().subscribe(data => this.businessTypeCodeOptions = data);
     this.whetherService.getWhetherOptions().subscribe(data => this.whetherOptions = data);
     this.bigCategoryCodeService.getSystemTypes().subscribe(data => this.bus_typeOptions = data);
-    this.tls11010Service.getBuildingOptions().subscribe(data => this.BUILDING_NO_Options = data);
+    
     this.tls11010Service.getOrgOptions().subscribe(res => {
       this.OrganizationCodeOptions = res?.map(x => ({ label: x.label, formLabel: `${x.value} - ${x.label}`, value: x.value })) || [];
     });

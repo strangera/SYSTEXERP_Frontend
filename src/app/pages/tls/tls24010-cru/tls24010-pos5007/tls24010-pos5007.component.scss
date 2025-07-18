@@ -1,0 +1,37 @@
+:host ::ng-deep {
+  &::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: #ffffff;
+    border: 5px solid #ffffff;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: #9f9f9f;
+    border-radius: 12px;
+    border: 2px solid #eaeaea;
+  }
+
+  &::-webkit-scrollbar-thumb:hover {
+    background: #cccccc;
+  }
+  .tls24010-pos5007 {
+    .p-datatable-header {
+      background: transparent;
+      border: none;
+      padding: 0 !important;
+      .button-group {
+        .p-button {
+          width: 35px !important;
+          height: 35px !important;
+        }
+      }
+      .p-button-icon {
+        font-size: 1.5em;
+      }
+    }
+  }
+}

@@ -28,7 +28,7 @@ export class Tls14040Component extends BasicQueryPageComponent<Garantee_Ticket> 
     queryForm = this.formBuilder.group({
       // id: [{ value: null, disabled: true }], // read only
       tlt_noList: [[]], // 專櫃編號
-      tlt_name: [''], // 專櫃名稱
+      tlt_name: [{ value: '', disabled: true }], // 專櫃名稱
       location_noList: [[]], // 位置
   
       area_noList: [[]], // 區域
@@ -57,34 +57,6 @@ export class Tls14040Component extends BasicQueryPageComponent<Garantee_Ticket> 
     totalRecords = 0;// 分頁和排序參數 // 排序需要
   
     data: Garantee_Ticket[] = [];// 表格數據和篩選數據
-    // columns: Column[] = [// 表格欄位定義
-    //   { field: 'tlt_no', header: '專櫃編號', visible: true },
-    //   { field: 'tlt_name', header: '專櫃名稱', visible: true },
-    //   { field: 'ven_uniform', header: '廠商統一編號', visible: true },
-    //   { field: 'VEN_Name', header: '廠商名稱', visible: true },
-    //   { field: 'ticket_type', header: '保證票型態', visible: true,
-    //     format: (value: string) =>
-    //       this.ticket_typeOption.find((option) => option.value === value)?.label ||
-    //       value
-    //    },
-    //   { field: 'ticket_no', header: '票據編號', visible: true },
-    //   { field: 'ticket_kind', header: '票據種類', visible: true,
-    //     format: (value: string) =>
-    //       this.ticket_kindOption.find((option) => option.value === value)?.label ||
-    //       value },
-    //   { field: 'ticket_amount', header: '保證票金額', visible: true },
-    //   { field: 'expiry_date', header: '票據到期日期', visible: true, format: (value: string) => value ? new Date(value).toLocaleDateString() : '' },
-    //   { field: 'get_ticket_status', header: '票據收票狀態', visible: true,
-    //     format: (value: string) =>
-    //       this.get_ticket_statusOption.find((option) => option.value === value)?.label ||
-    //       value
-    //    },
-    //   { field: 'get_date', header: '繳票日期', visible: true, format: (value: string) => value ? new Date(value).toLocaleDateString() : '' },
-    //   { field: 'return_date', header: '退票日期', visible: true, format: (value: string) => value ? new Date(value).toLocaleDateString() : '' },
-    //   { field: 'close_date', header: '封存日期', visible: true, format: (value: string) => value ? new Date(value).toLocaleDateString() : '' },
-    //   { field: 'ticket_remarks', header: '保證票摘要-合約主檔', visible: true },
-    //   { field: 'remark', header: '備註', visible: true },
-    // ];
 
     columns: Column[] = [// 表格欄位定義
       { field: 'tlt_no', header: '專櫃編號', visible: true },
@@ -103,10 +75,7 @@ export class Tls14040Component extends BasicQueryPageComponent<Garantee_Ticket> 
     ];
     selectedItems: Garantee_Ticket[] = [];// 多選項目
   
-    tlt_noListOption: option[] = [
-      { value: '000517', label: '000517' },
-    ]; //專櫃編號列表
-  
+    tlt_noListOption: apiOption[] = []; //專櫃編號列表
     locationOption: apiOption[] = []; //位置編號
     areaOption: apiOption[] = []; //區域
     floorOption: apiOption[] = []; //樓層
@@ -163,13 +132,15 @@ export class Tls14040Component extends BasicQueryPageComponent<Garantee_Ticket> 
     }
     // 提交查詢：處理表單並呼叫查詢 API
     onSubmit(frm: FormGroup): void {
-      this.handleSubmit(frm, () => {
-        this.tls14030Service.exportTLS14030(frm.value).subscribe({
+      const formValue = frm.getRawValue();
+      formValue.tlt_name = '';
+      this.handleSubmit(formValue, () => {
+        this.tls14030Service.exportTLS14030(formValue).subscribe({
           next: (response) => {
             if (response.Status === '0000') {
               this.data = response.Data || [];
               this.totalRecords = response.TotalCount || response.Data.length; // 排序需要
-              this.queryStateService.setQueryState(this.ProgNo, frm.value);
+              this.queryStateService.setQueryState(this.ProgNo, formValue);
             }
             this.loading = false;
             this.messageService.unblockUi();
@@ -292,12 +263,11 @@ export class Tls14040Component extends BasicQueryPageComponent<Garantee_Ticket> 
           .queryTLTTALENT_DropDownList({})
           .subscribe((response) => {
             this.tlt_noListOption = response.Data.map((item: apiOption) => ({
-              value: item.No,
-              label: item.Name,
+              No: item.No,
+              Label: item.No+'-'+item.Name,
             }));
   
-            console.log('tlt_noListOption:', this.orgOption);
-          });      
-  
+            console.log('專櫃編號:', response.Data);
+          });
     }
 }

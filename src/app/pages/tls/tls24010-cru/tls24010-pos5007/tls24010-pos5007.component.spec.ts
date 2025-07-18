@@ -1,18 +1,18 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { FIN11090Component } from './fin11090.component';
+import { Tls24010Pos5007Component } from './tls24010-pos5007.component';
 
-describe('FIN11090Component', () => {
-  let component: FIN11090Component;
-  let fixture: ComponentFixture<FIN11090Component>;
+describe('Tls24010Pos5007Component', () => {
+  let component: Tls24010Pos5007Component;
+  let fixture: ComponentFixture<Tls24010Pos5007Component>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [FIN11090Component]
+      imports: [Tls24010Pos5007Component]
     })
     .compileComponents();
 
-    fixture = TestBed.createComponent(FIN11090Component);
+    fixture = TestBed.createComponent(Tls24010Pos5007Component);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

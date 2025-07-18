@@ -93,7 +93,7 @@
 <div class="card">
   <app-table dataKey="id" [data]="data" [columns]="columns" (detail)="onDetail($event)" (edit)="onEdit($event)"
     [showCheckBox]="true" (selectionChange)="selectedItems = $event" [selectedItems]="selectedItems"
-    [multiSortMeta]="[{ field: 'ECR_No', order: 1 }]" [totalRecords]="totalRecords"
+    [multiSortMeta]="[{ field: 'ECR_No', order: 1 }]" [totalRecords]="totalRecords" [addButton]="addButton"
     (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [lazy]="true" [loading]="loading">
   </app-table>
 </div>

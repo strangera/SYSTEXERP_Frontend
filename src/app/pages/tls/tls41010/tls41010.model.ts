@@ -190,7 +190,7 @@ export interface TLS41010Data {
 
 
 export interface TLS41010Item {
-   ECR_TmplNo?: string;
+  ECR_TmplNo?: string;
   ECR_No: string;
   id: number;
   ECR_TmplDesc: string;
@@ -296,6 +296,12 @@ export interface TLS41010Item {
   ECR_Device9Com: number | null;
   ECR_Device10Name: string | null;
   ECR_Device10Com: number | null;
+  CRT_USR_No?: string;
+  CRT_USR_Name?: string;
+  CRT_Date?: string | null;
+  UPD_USR_No?: string;
+  UPD_USR_Name?: string;
+  UPD_Date?: string | null;
 }
 
 
