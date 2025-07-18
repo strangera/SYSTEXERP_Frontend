@@ -112,7 +112,7 @@ export class Tls14030CRUComponent extends BasicCruPageComponent<Garantee_Ticket>
         });
 
         // ⭐ 監聽 ticket_type 變更 重新寫入保證票金額
-        this.dataForm.get('ticket_type')?.valueChanges.subscribe((type) => {
+        this.dataForm.get('ticket_type')?.valueChanges.subscribe(() => {
           const talentId = this.dataForm.get('talent_id')?.value;
           if (talentId) {
             this.loadTLTTALENTDetail(talentId); // 重新依照型態寫入金額
@@ -186,42 +186,32 @@ export class Tls14030CRUComponent extends BasicCruPageComponent<Garantee_Ticket>
       // 讀取主檔變更候更新的選項
       loadTLTTALENTDetail(talent_id: number) {
         {
-          const requestBody = {'talent_id': talent_id };
-          if(talent_id){
-            this.tls14030Service.getTLTTALENT(requestBody).subscribe((response) => {
+          if (!talent_id) return;
+
+          this.tls14030Service.getTLTTALENT({ talent_id }).subscribe((response) => {
             const data: TLTTALENT = response.Data;
+            if (!data) return;
 
+            const ticketType = this.dataForm.get('ticket_type')?.value;
+            let ticketAmount: number | null = null;
 
-            if (data) {
-              this.skipTalentChange = true;
-
-              const ticketType = this.dataForm.get('ticket_type')?.value;
-              let ticketAmount: number | null = null;
-
-              switch (ticketType) {
-                case '1': // 準時開業保證票
-                  ticketAmount = data.open_fees ?? null;
-                  break;
-                case '2': // 施工保證票
-                  ticketAmount = data.construct_fees ?? null;
-                  break;
-                case '3': // 契約屆滿保證票
-                  ticketAmount = data.expiration_fees ?? null;
-                  break;
-              }
-
-              this.dataForm.patchValue({
-                ticket_remarks: data.ticket_remarks || '',
-                tlt_name: data.tlt_name || '',
-                tlt_no: data.tlt_no || '',
-                ticket_amount: ticketAmount,
-              });
-
-              this.messageService.infoBubble('已經依照合約編號進行變更');
-              console.log('偵測到合約編號變更', data);
+            switch (ticketType) {
+              case '1': ticketAmount = data.open_fees ?? null; break;
+              case '2': ticketAmount = data.construct_fees ?? null; break;
+              case '3': ticketAmount = data.expiration_fees ?? null; break;
             }
+
+            // ✅ 設定值時關掉事件觸發，避免無限觸發 valueChanges
+            this.dataForm.patchValue({
+              ticket_remarks: data.ticket_remarks || '',
+              tlt_name: data.tlt_name || '',
+              tlt_no: data.tlt_no || '',
+              ticket_amount: ticketAmount,
+            }, { emitEvent: false });
+
+            this.messageService.infoBubble('已經依照合約編號進行變更');
+            console.log('偵測到合約編號變更', data);
           });
-          }
         }
       }
 }

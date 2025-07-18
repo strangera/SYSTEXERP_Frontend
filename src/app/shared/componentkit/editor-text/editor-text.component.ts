@@ -6,11 +6,11 @@ import { editorModules, validateHtmlContent } from './editor.model';
 import { NgIf } from '@angular/common';
 import { ControlMessagesComponent } from '../../component/control-messages/control-messages.component';
 @Component({
-    selector: 'app-editor-text',
-    templateUrl: './editor-text.component.html',
-    styleUrl: './editor-text.component.scss',
-    standalone: true,
-    imports: [NgIf, EditorModule, FormsModule, ReactiveFormsModule, ControlMessagesComponent]
+  selector: 'app-editor-text',
+  templateUrl: './editor-text.component.html',
+  styleUrl: './editor-text.component.scss',
+  standalone: true,
+  imports: [NgIf, EditorModule, FormsModule, ReactiveFormsModule, ControlMessagesComponent]
 })
 export class EditorTextComponent extends BasicKitComponent implements OnInit {
   @Input() label = '';
@@ -32,6 +32,7 @@ export class EditorTextComponent extends BasicKitComponent implements OnInit {
     validateHtmlContent(this.control.value, this.control);
     // 因為輸入後再全空會有剩下html標籤，所以把他刪掉
     this.control.valueChanges.subscribe((value) => {
+      if (!value) return;
       const isOnlyHtmlTags = /^<[^>]+>(<\/[^>]+>)*$/.test(value.trim());
       if (isOnlyHtmlTags) {
         this.control.setValue('');

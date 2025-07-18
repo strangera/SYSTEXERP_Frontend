@@ -12,16 +12,16 @@
             <app-multi-select
               label="專櫃編號"
               [options]="tlt_noListOption"
-              optionLabel="label"
-              optionValue="value"
+              optionLabel="Label"
+              optionValue="No"
               [control]="queryForm.controls.tlt_noList"
               [submitted]="submitted"
             ></app-multi-select>
           </div>
-          <div class="col-12 md:col-6 lg:col-4">
+          <!-- <div class="col-12 md:col-6 lg:col-4">
             <app-input-text label="專櫃名稱" controlName="tlt_name" [control]="queryForm.controls.tlt_name"
               [submitted]="submitted"></app-input-text>
-          </div>
+          </div> -->
           <div class="col-12 md:col-6 lg:col-4">
             <app-multi-select
               label="位置編號"
@@ -38,7 +38,7 @@
             <app-multi-select
               label="區域"
               [options]="areaOption"
-              optionLabel="Label"
+              optionLabel="Name"
               optionValue="No"
               [control]="queryForm.controls.area_noList"
               [submitted]="submitted"
@@ -48,7 +48,7 @@
             <app-multi-select
               label="樓層"
               [options]="floorOption"
-              optionLabel="Label"
+              optionLabel="Name"
               optionValue="No"
               [control]="queryForm.controls.tlt_floorList"
               [submitted]="submitted"
@@ -56,7 +56,7 @@
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-multi-select
-              label="大分類"
+              label="大分類代碼/名稱"
               [options]="bus_typeOption"
               optionLabel="Label"
               optionValue="No"
@@ -116,43 +116,6 @@
             ></app-multi-select>
           </div>
         </div>
-
-        <!-- <div class="grid p-fluid"> -->
-          
-          <!-- <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select
-              label="票據收票狀態"
-              [options]="get_ticket_statusOption"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.approve_statusList"
-              [submitted]="submitted"
-            ></app-multi-select>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select
-              label="保證票型態"
-              [options]="ticket_typeOption"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.ticket_type_List"
-              [submitted]="submitted"
-            ></app-multi-select>
-          </div> -->
-        <!-- </div> -->
-
-        <!-- <div class="grid p-fluid">
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select
-              label="票據種類"
-              [options]="ticket_kindOption"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.ticket_kind_List"
-              [submitted]="submitted"
-            ></app-multi-select>
-          </div>
-        </div> -->
         
         <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
           <app-button btnType="clear"></app-button>
@@ -163,12 +126,6 @@
   </p-accordion>
 </div>
 <div class="card">
-  <!-- <app-table tableKey="TLS14040" [data]="data" [columns]="columns" (edit)="onEdit($event)" (detail)="onDetail($event)"
-    [selectedItems]="selectedItems" (selectionChange)="selectedItems = $event" (delete)="onDelete($event)"
-    [showCheckBox]="true" dataKey="id" [multiSortMeta]="[{ field: 'tlt_no', order: 1 }]" [totalRecords]="totalRecords"
-    (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [lazy]="true"
-    [isRowSelectable]="isRowSelectable" [loading]="loading"></app-table> -->
-
      <app-report-table-group 
       [columns]="columns"
       [data]="data"

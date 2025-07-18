@@ -1,7 +1,7 @@
-import { FunsrightInfo, PermissionsInfo } from '../../models/system/funsrightInfo';
 import { CRUDStatus } from '../../models/system/CRUDstatus';
+import { FunsrightInfo, PermissionsInfo } from '../../models/system/funsrightInfo';
 
-export class BasicCrupageComponent {
+export abstract class BasicCrupageComponent {
   // Page No
   // ----------------------------------------------------------------
   ProgNo = '900001';
@@ -27,10 +27,10 @@ export class BasicCrupageComponent {
   }
   // ----------------------------------------------------------------
   canAdd(): boolean {
-    return true
+    return true;
   }
 
   canEdit(): boolean {
-    return true
+    return true;
   }
 }

@@ -73,11 +73,13 @@ export class BasicKitComponent {
       placeholderParts.push('必填');
     }
 
-    if (this.maxLength) {
+    if (this.maxLength && this.minLength && this.maxLength === this.minLength) {
+      placeholderParts.push(`必須為${this.minLength}個字`);
+    } else if (this.maxLength) {
       placeholderParts.push(`最多${this.maxLength}個字`);
-    }
-    if (this.minLength) {
+    } else if (this.minLength) {
       placeholderParts.push(`最少${this.minLength}個字`);
+
     }
 
     // 如果是數字placeholder

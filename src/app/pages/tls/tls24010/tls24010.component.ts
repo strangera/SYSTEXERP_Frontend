@@ -44,8 +44,10 @@ export class TLS24010Component extends BasicQueryPageComponent<TLS24010Data> imp
     TXN_GUIPaper: ['E', [Validators.required]],/*補登類別 → TXN_GUIPaper */
     TXN_Date: [new Date(), [Validators.required]],    /*銷售日期 → POS5006.TXN_Date */
     ECR_No: ['', [Validators.required]], /*收銀機號 → ECR_No */
-    TLT_No: ['', [Validators.required]], /*櫃編 → TLT_No */
-    store_way: ['', [Validators.required]], /*櫃位類型 → store_way */
+    TLT_No: ['008974', [Validators.required]], /*櫃編 → TLT_No */
+    TLT_Name: [''], /*櫃名 → TLT_Name */
+    store_way: [''], /*櫃位類型 → store_way */
+    talent_id: [0], /*專櫃代號 → talent_id */
     TXN_No: [null as number | null, [Validators.maxLength(8), Validators.max(99999999)]],  /*交易序號 → TXN_No */
     ...createPaginationConfig([{ field: 'TXN_Date', order: -1 }]), // 分頁和排序參數
   });
@@ -62,7 +64,7 @@ export class TLS24010Component extends BasicQueryPageComponent<TLS24010Data> imp
     { label: '事後登錄', value: 'P' },
   ];
   ECR_NoOptions: { No: string, Name: string, label: string }[] = [];
-  TLT_NoOptions: { No: string, Name: string, label: string, store_way?: string }[] = [];
+  TLT_NoOptions: { No: string, Name: string, label: string, store_way?: string, talent_id?: number }[] = [];
   data: TLS24010Data[] = [];
   columns: Column[] = [
     { field: 'TXN_Date', header: '銷售日期', visible: true, format: formatDate },
@@ -89,9 +91,17 @@ export class TLS24010Component extends BasicQueryPageComponent<TLS24010Data> imp
     });
     this.queryForm.get('TLT_No')?.valueChanges.pipe(untilDestroyed(this)).subscribe(value => {
       if (value) {
-        const selectedOption = this.TLT_NoOptions.find(option => option.No === value)?.store_way;
-        if (selectedOption) {
-          this.queryForm.get('store_way')?.setValue(selectedOption);
+        const store_way = this.TLT_NoOptions.find(option => option.No === value)?.store_way;
+        if (store_way) {
+          this.queryForm.get('store_way')?.setValue(store_way);
+        }
+        const TLT_Name = this.TLT_NoOptions.find(option => option.No === value)?.Name;
+        if (TLT_Name) {
+          this.queryForm.get('TLT_Name')?.setValue(TLT_Name);
+        }
+        const talent_id = this.TLT_NoOptions.find(option => option.No === value)?.talent_id;
+        if (talent_id) {
+          this.queryForm.get('talent_id')?.setValue(talent_id);
         }
       }
     });
@@ -122,8 +132,16 @@ export class TLS24010Component extends BasicQueryPageComponent<TLS24010Data> imp
     }
   }
   onCreateData(): void {
+    console.log(this.queryForm.value);
     this.submitted = true;
     if (!this.queryForm.valid) { return; }
     this.onCreate(this.queryForm.value);
+  }
+
+  onDateSelect(event: Date): void {
+    this.queryForm.get('TXN_Date')?.setValue(event);
+    this.dropDownList.queryTLTTALENT_ByContractDate_DropDownList(event.toISOString().split('T')[0]).pipe(untilDestroyed(this)).subscribe(options => {
+      this.TLT_NoOptions = options.Data.map(item => ({ ...item, label: `${item.No} - ${item.Name}` }));
+    });
   }
 }

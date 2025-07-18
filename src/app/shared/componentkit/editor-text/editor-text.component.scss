@@ -1,10 +1,13 @@
-::ng-deep .editor-text {
+::ng-deep {
   .ng-invalid.ng-dirty > * {
     border-color: #f44336 !important;
   }
 
   .p-editor-toolbar {
     display: none;
+  }
+  .ql-disabled .ql-editor {
+    background-color: #e9ecef !important;
   }
 }
 

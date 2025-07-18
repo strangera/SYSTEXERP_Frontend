@@ -1,10 +1,14 @@
 <label [for]="controlName">{{ label }}
   <span *ngIf="isRequired" class="required">*</span>
 </label>
-<p-editor class="editor-text" [id]="controlName" [formControl]="control" [style]="{ height: '300px' }"
+<p-editor *ngIf="!control.disabled" [id]="controlName" [formControl]="control" [style]="{ height: '300px' }"
   [styleClass]="submitted && control.errors|| control.touched && control.errors ? 'ng-invalid ng-dirty' : ''"
   (onTextChange)="onTextChange($event)" (onInit)="onInit($event)" [readonly]="control.disabled"
   [placeholder]="control.disabled ? '' : placeholder" [modules]="modules">
+</p-editor>
+<p-editor *ngIf="control.disabled" [id]="controlName" [formControl]="control" [style]="{ height: '300px' }"
+  [styleClass]="submitted && control.errors|| control.touched && control.errors ? 'ng-invalid ng-dirty' : ''"
+  [readonly]="control.disabled" [placeholder]="control.disabled ? '' : placeholder" [modules]="{}">
 </p-editor>
 
 <app-control-messages [onerror]="submitted || (control.touched && control.invalid)"
