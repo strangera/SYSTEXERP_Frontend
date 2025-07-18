@@ -1,271 +1,105 @@
-import { Component } from '@angular/core';
-import { FormBuilder, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { NavigationExtras, Router } from '@angular/router';
-// 權限相關
-import {
-  FunsrightInfo,
-  PermissionsInfo,
-} from '../../../shared/models/system/funsrightInfo';
-// 共用服務
-import { AuthService } from '../../../service/system/auth.service';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-import { BusinessTypeCodeService } from '../../../service/basic/business-type-code-service.service';
-import { FloorService } from '../../../service/basic/floor.service';
-
-import { ValidationService } from '../../../shared/service/validation.service';
+import { Component, OnInit } from '@angular/core';
+import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { finalize } from 'rxjs';
+import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
+import { createPaginationConfig, Column } from '../../../shared/componentkit/table/table.model';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { AccordionModule } from 'primeng/accordion';
-import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { AccordionModule } from 'primeng/accordion';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { TranslateModule } from '@ngx-translate/core';
-
-const now = new Date();
+import { InputTextRangeComponent } from '../../../shared/componentkit/input-text-range/input-text-range.component';
+import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
+import { MultiSelectComponent } from "../../../shared/componentkit/multi-select/multi-select.component";
+import { TLS26030Data, TLS26030Service, TLS26030QueryRequest } from '@service/api/tls/tls26030.service';
 
 @Component({
   selector: 'app-tls26030',
   templateUrl: './tls26030.component.html',
-  styleUrls: ['./tls26030.component.scss'],
+  styleUrl: './tls26030.component.scss',
   standalone: true,
-  imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarRangeComponent, InputTextComponent, DropdownComponent, ButtonComponent, TableComponent, TranslateModule]
+  imports: [
+    MenubarComponent,
+    ButtonComponent,
+    AccordionModule,
+    FormsModule,
+    ReactiveFormsModule,
+    CalendarRangeComponent,
+    MultiSelectComponent,
+    TableComponent,
+    TranslateModule,
+    InputTextRangeComponent,
+  ]
 })
-export class TLS26030Component {
-
-  ProgNo: string = '220037';
-
-  // 權限變數
-  funInfo?: FunsrightInfo;
-
-
-
-
-  // 查詢表單
-  loading: boolean = false;
-  submitted: boolean = false;
+export class TLS26030Component extends BasicQueryPageComponent<TLS26030Data> implements OnInit {
   queryForm = this.formBuilder.group({
-    saleDateStart: [now, [Validators.required]], // 銷售日期起
-    saleDateEnd: [now, [Validators.required]],   // 銷售日期迄
-    cashierCode: [],  // 收銀機號
-    counterCode: [],  // 專櫃編號
-    businessTypeCode: [],  // 大分類
-    machineStats: [],  // 依機台統計
+    saleDateFrom: [''],        // 銷售日期(起)
+    saleDateTo: [''],          // 銷售日期(訖)
+    storeCodeFrom: [''],       // 館別(起)
+    storeCodeTo: [''],         // 館別(訖)
+    organizationName: [''],    // 組織名稱
+    floor: [''],               // 樓層
+    ...createPaginationConfig([{ field: 'saleDate', order: 1 }])
   });
 
-  // 下拉選單選項
-  businessTypeCodeOptions: any[] = [];
-  floorOptions: any[] = [];
+  totalRecords = 0;
+  data: TLS26030Data[] = [];
+  selectedItems: TLS26030Data[] = [];
 
-  // 表格資料
-  // 表格資料
-  data: any[] = [
-    { salesDate: '2019/03/23', cashRegisterCode: '000431', transactionSerial: '001829', counterCodeName: '000043 / Ann by asin', preSaleAmount: '3,066', recognitionAmount: '0', recognitionBatch: '20190328001', saleStatus: '預售結帳', returnMachineDate: '', returnMachineCode: '', returnMachineSerial: '', accountDate: '2019/03/28', accountMachineCode: '000431', accountSerial: 'P00001' },
-    { salesDate: '2019/03/23', cashRegisterCode: '000431', transactionSerial: '001890', counterCodeName: '000043 / Ann by asin', preSaleAmount: '4,742', recognitionAmount: '0', recognitionBatch: '20190328001', saleStatus: '預售結帳', returnMachineDate: '', returnMachineCode: '', returnMachineSerial: '', accountDate: '2019/03/28', accountMachineCode: '000431', accountSerial: 'P00002' },
-    { salesDate: '2019/03/23', cashRegisterCode: '000431', transactionSerial: '001892', counterCodeName: '000043 / Ann by asin', preSaleAmount: '2,980', recognitionAmount: '0', recognitionBatch: '20190328001', saleStatus: '預售結帳', returnMachineDate: '', returnMachineCode: '', returnMachineSerial: '', accountDate: '2019/03/28', accountMachineCode: '000431', accountSerial: 'P00003' },
-    { salesDate: '2019/03/23', cashRegisterCode: '000431', transactionSerial: '001893', counterCodeName: '000043 / Ann by asin', preSaleAmount: '2,780', recognitionAmount: '0', recognitionBatch: '20190328001', saleStatus: '預售結帳', returnMachineDate: '', returnMachineCode: '', returnMachineSerial: '', accountDate: '2019/03/28', accountMachineCode: '000431', accountSerial: 'P00004' },
-    { salesDate: '2019/03/23', cashRegisterCode: '000431', transactionSerial: '001895', counterCodeName: '000043 / Ann by asin', preSaleAmount: '2,680', recognitionAmount: '0', recognitionBatch: '20190328001', saleStatus: '預售結帳', returnMachineDate: '', returnMachineCode: '', returnMachineSerial: '', accountDate: '2019/03/28', accountMachineCode: '000431', accountSerial: 'P00005' },
-    { salesDate: '2019/03/23', cashRegisterCode: '000431', transactionSerial: 'P00001', counterCodeName: '000043 / Ann by asin', preSaleAmount: '0', recognitionAmount: '3,066', recognitionBatch: '20190328001', saleStatus: '預售結帳', returnMachineDate: '', returnMachineCode: '', returnMachineSerial: '', accountDate: '2019/03/28', accountMachineCode: '000431', accountSerial: 'P00006' },
-    { salesDate: '2019/03/23', cashRegisterCode: '000431', transactionSerial: 'P00002', counterCodeName: '000043 / Ann by asin', preSaleAmount: '0', recognitionAmount: '4,742', recognitionBatch: '20190328001', saleStatus: '預售結帳', returnMachineDate: '', returnMachineCode: '', returnMachineSerial: '', accountDate: '2019/03/28', accountMachineCode: '000431', accountSerial: 'P00007' },
-    { salesDate: '2019/03/23', cashRegisterCode: '000431', transactionSerial: 'P00006', counterCodeName: '000043 / Ann by asin', preSaleAmount: '0', recognitionAmount: '2,780', recognitionBatch: '20190328001', saleStatus: '預售結帳', returnMachineDate: '', returnMachineCode: '', returnMachineSerial: '', accountDate: '2019/03/28', accountMachineCode: '000431', accountSerial: 'P00008' },
-    { salesDate: '2019/03/23', cashRegisterCode: '000431', transactionSerial: 'P00006', counterCodeName: '000043 / Ann by asin', preSaleAmount: '0', recognitionAmount: '2,680', recognitionBatch: '20190328001', saleStatus: '預售結帳', returnMachineDate: '', returnMachineCode: '', returnMachineSerial: '', accountDate: '2019/03/28', accountMachineCode: '000431', accountSerial: 'P00009' },
-    { salesDate: '2019/03/23', cashRegisterCode: '000701', transactionSerial: '002530', counterCodeName: '000070 / Yankee Candle', preSaleAmount: '1,200', recognitionAmount: '0', recognitionBatch: '20190328001', saleStatus: '預售結帳', returnMachineDate: '', returnMachineCode: '', returnMachineSerial: '', accountDate: '2019/03/28', accountMachineCode: '000701', accountSerial: 'P00001' },
-    { salesDate: '2019/03/23', cashRegisterCode: '000701', transactionSerial: '002531', counterCodeName: '000070 / Yankee Candle', preSaleAmount: '1,259', recognitionAmount: '0', recognitionBatch: '20190328001', saleStatus: '預售結帳', returnMachineDate: '', returnMachineCode: '', returnMachineSerial: '', accountDate: '2019/03/28', accountMachineCode: '000701', accountSerial: 'P00002' },
-    { salesDate: '2019/03/23', cashRegisterCode: '000431', transactionSerial: '001890', counterCodeName: '000043 / Ann by asin', preSaleAmount: '4,742', recognitionAmount: '0', recognitionBatch: '20190328001', saleStatus: '預售結帳', returnMachineDate: '', returnMachineCode: '', returnMachineSerial: '', accountDate: '2019/03/28', accountMachineCode: '000431', accountSerial: 'P00002' },
-    { salesDate: '2019/03/23', cashRegisterCode: '000431', transactionSerial: '001892', counterCodeName: '000043 / Ann by asin', preSaleAmount: '2,980', recognitionAmount: '0', recognitionBatch: '20190328001', saleStatus: '預售結帳', returnMachineDate: '', returnMachineCode: '', returnMachineSerial: '', accountDate: '2019/03/28', accountMachineCode: '000431', accountSerial: 'P00003' },
-    { salesDate: '2019/03/23', cashRegisterCode: '000431', transactionSerial: '001893', counterCodeName: '000043 / Ann by asin', preSaleAmount: '2,780', recognitionAmount: '0', recognitionBatch: '20190328001', saleStatus: '預售結帳', returnMachineDate: '', returnMachineCode: '', returnMachineSerial: '', accountDate: '2019/03/28', accountMachineCode: '000431', accountSerial: 'P00004' },
-    { salesDate: '2019/03/23', cashRegisterCode: '000431', transactionSerial: '001895', counterCodeName: '000043 / Ann by asin', preSaleAmount: '2,680', recognitionAmount: '0', recognitionBatch: '20190328001', saleStatus: '預售結帳', returnMachineDate: '', returnMachineCode: '', returnMachineSerial: '', accountDate: '2019/03/28', accountMachineCode: '000431', accountSerial: 'P00005' },
-    { salesDate: '2019/03/23', cashRegisterCode: '000431', transactionSerial: 'P00001', counterCodeName: '000043 / Ann by asin', preSaleAmount: '0', recognitionAmount: '3,066', recognitionBatch: '20190328001', saleStatus: '預售結帳', returnMachineDate: '', returnMachineCode: '', returnMachineSerial: '', accountDate: '2019/03/28', accountMachineCode: '000431', accountSerial: 'P00006' },
-    { salesDate: '2019/03/23', cashRegisterCode: '000431', transactionSerial: 'P00002', counterCodeName: '000043 / Ann by asin', preSaleAmount: '0', recognitionAmount: '4,742', recognitionBatch: '20190328001', saleStatus: '預售結帳', returnMachineDate: '', returnMachineCode: '', returnMachineSerial: '', accountDate: '2019/03/28', accountMachineCode: '000431', accountSerial: 'P00007' },
-    { salesDate: '2019/03/23', cashRegisterCode: '000431', transactionSerial: 'P00006', counterCodeName: '000043 / Ann by asin', preSaleAmount: '0', recognitionAmount: '2,780', recognitionBatch: '20190328001', saleStatus: '預售結帳', returnMachineDate: '', returnMachineCode: '', returnMachineSerial: '', accountDate: '2019/03/28', accountMachineCode: '000431', accountSerial: 'P00008' },
-    { salesDate: '2019/03/23', cashRegisterCode: '000431', transactionSerial: 'P00006', counterCodeName: '000043 / Ann by asin', preSaleAmount: '0', recognitionAmount: '2,680', recognitionBatch: '20190328001', saleStatus: '預售結帳', returnMachineDate: '', returnMachineCode: '', returnMachineSerial: '', accountDate: '2019/03/28', accountMachineCode: '000431', accountSerial: 'P00009' },
-    { salesDate: '2019/03/23', cashRegisterCode: '000701', transactionSerial: '002530', counterCodeName: '000070 / Yankee Candle', preSaleAmount: '1,200', recognitionAmount: '0', recognitionBatch: '20190328001', saleStatus: '預售結帳', returnMachineDate: '', returnMachineCode: '', returnMachineSerial: '', accountDate: '2019/03/28', accountMachineCode: '000701', accountSerial: 'P00001' },
-    { salesDate: '2019/03/23', cashRegisterCode: '000701', transactionSerial: '002531', counterCodeName: '000070 / Yankee Candle', preSaleAmount: '1,259', recognitionAmount: '0', recognitionBatch: '20190328001', saleStatus: '預售結帳', returnMachineDate: '', returnMachineCode: '', returnMachineSerial: '', accountDate: '2019/03/28', accountMachineCode: '000701', accountSerial: 'P00002' },
-    { salesDate: '2019/03/23', cashRegisterCode: '000431', transactionSerial: '001890', counterCodeName: '000043 / Ann by asin', preSaleAmount: '4,742', recognitionAmount: '0', recognitionBatch: '20190328001', saleStatus: '預售結帳', returnMachineDate: '', returnMachineCode: '', returnMachineSerial: '', accountDate: '2019/03/28', accountMachineCode: '000431', accountSerial: 'P00002' },
-    { salesDate: '2019/03/23', cashRegisterCode: '000431', transactionSerial: '001892', counterCodeName: '000043 / Ann by asin', preSaleAmount: '2,980', recognitionAmount: '0', recognitionBatch: '20190328001', saleStatus: '預售結帳', returnMachineDate: '', returnMachineCode: '', returnMachineSerial: '', accountDate: '2019/03/28', accountMachineCode: '000431', accountSerial: 'P00003' },
-    { salesDate: '2019/03/23', cashRegisterCode: '000431', transactionSerial: '001893', counterCodeName: '000043 / Ann by asin', preSaleAmount: '2,780', recognitionAmount: '0', recognitionBatch: '20190328001', saleStatus: '預售結帳', returnMachineDate: '', returnMachineCode: '', returnMachineSerial: '', accountDate: '2019/03/28', accountMachineCode: '000431', accountSerial: 'P00004' },
-    { salesDate: '2019/03/23', cashRegisterCode: '000431', transactionSerial: '001895', counterCodeName: '000043 / Ann by asin', preSaleAmount: '2,680', recognitionAmount: '0', recognitionBatch: '20190328001', saleStatus: '預售結帳', returnMachineDate: '', returnMachineCode: '', returnMachineSerial: '', accountDate: '2019/03/28', accountMachineCode: '000431', accountSerial: 'P00005' },
-    { salesDate: '2019/03/23', cashRegisterCode: '000431', transactionSerial: 'P00001', counterCodeName: '000043 / Ann by asin', preSaleAmount: '0', recognitionAmount: '3,066', recognitionBatch: '20190328001', saleStatus: '預售結帳', returnMachineDate: '', returnMachineCode: '', returnMachineSerial: '', accountDate: '2019/03/28', accountMachineCode: '000431', accountSerial: 'P00006' },
-    { salesDate: '2019/03/23', cashRegisterCode: '000431', transactionSerial: 'P00002', counterCodeName: '000043 / Ann by asin', preSaleAmount: '0', recognitionAmount: '4,742', recognitionBatch: '20190328001', saleStatus: '預售結帳', returnMachineDate: '', returnMachineCode: '', returnMachineSerial: '', accountDate: '2019/03/28', accountMachineCode: '000431', accountSerial: 'P00007' },
-    { salesDate: '2019/03/23', cashRegisterCode: '000431', transactionSerial: 'P00006', counterCodeName: '000043 / Ann by asin', preSaleAmount: '0', recognitionAmount: '2,780', recognitionBatch: '20190328001', saleStatus: '預售結帳', returnMachineDate: '', returnMachineCode: '', returnMachineSerial: '', accountDate: '2019/03/28', accountMachineCode: '000431', accountSerial: 'P00008' },
-    { salesDate: '2019/03/23', cashRegisterCode: '000431', transactionSerial: 'P00006', counterCodeName: '000043 / Ann by asin', preSaleAmount: '0', recognitionAmount: '2,680', recognitionBatch: '20190328001', saleStatus: '預售結帳', returnMachineDate: '', returnMachineCode: '', returnMachineSerial: '', accountDate: '2019/03/28', accountMachineCode: '000431', accountSerial: 'P00009' },
-    { salesDate: '2019/03/23', cashRegisterCode: '000701', transactionSerial: '002530', counterCodeName: '000070 / Yankee Candle', preSaleAmount: '1,200', recognitionAmount: '0', recognitionBatch: '20190328001', saleStatus: '預售結帳', returnMachineDate: '', returnMachineCode: '', returnMachineSerial: '', accountDate: '2019/03/28', accountMachineCode: '000701', accountSerial: 'P00001' },
-    { salesDate: '2019/03/23', cashRegisterCode: '000701', transactionSerial: '002531', counterCodeName: '000070 / Yankee Candle', preSaleAmount: '1,259', recognitionAmount: '0', recognitionBatch: '20190328001', saleStatus: '預售結帳', returnMachineDate: '', returnMachineCode: '', returnMachineSerial: '', accountDate: '2019/03/28', accountMachineCode: '000701', accountSerial: 'P00002' },
-    { salesDate: '2019/03/23', cashRegisterCode: '000431', transactionSerial: '001890', counterCodeName: '000043 / Ann by asin', preSaleAmount: '4,742', recognitionAmount: '0', recognitionBatch: '20190328001', saleStatus: '預售結帳', returnMachineDate: '', returnMachineCode: '', returnMachineSerial: '', accountDate: '2019/03/28', accountMachineCode: '000431', accountSerial: 'P00002' },
-    { salesDate: '2019/03/23', cashRegisterCode: '000431', transactionSerial: '001892', counterCodeName: '000043 / Ann by asin', preSaleAmount: '2,980', recognitionAmount: '0', recognitionBatch: '20190328001', saleStatus: '預售結帳', returnMachineDate: '', returnMachineCode: '', returnMachineSerial: '', accountDate: '2019/03/28', accountMachineCode: '000431', accountSerial: 'P00003' },
-    { salesDate: '2019/03/23', cashRegisterCode: '000431', transactionSerial: '001893', counterCodeName: '000043 / Ann by asin', preSaleAmount: '2,780', recognitionAmount: '0', recognitionBatch: '20190328001', saleStatus: '預售結帳', returnMachineDate: '', returnMachineCode: '', returnMachineSerial: '', accountDate: '2019/03/28', accountMachineCode: '000431', accountSerial: 'P00004' },
-    { salesDate: '2019/03/23', cashRegisterCode: '000431', transactionSerial: '001895', counterCodeName: '000043 / Ann by asin', preSaleAmount: '2,680', recognitionAmount: '0', recognitionBatch: '20190328001', saleStatus: '預售結帳', returnMachineDate: '', returnMachineCode: '', returnMachineSerial: '', accountDate: '2019/03/28', accountMachineCode: '000431', accountSerial: 'P00005' },
-    { salesDate: '2019/03/23', cashRegisterCode: '000431', transactionSerial: 'P00001', counterCodeName: '000043 / Ann by asin', preSaleAmount: '0', recognitionAmount: '3,066', recognitionBatch: '20190328001', saleStatus: '預售結帳', returnMachineDate: '', returnMachineCode: '', returnMachineSerial: '', accountDate: '2019/03/28', accountMachineCode: '000431', accountSerial: 'P00006' },
-    { salesDate: '2019/03/23', cashRegisterCode: '000431', transactionSerial: 'P00002', counterCodeName: '000043 / Ann by asin', preSaleAmount: '0', recognitionAmount: '4,742', recognitionBatch: '20190328001', saleStatus: '預售結帳', returnMachineDate: '', returnMachineCode: '', returnMachineSerial: '', accountDate: '2019/03/28', accountMachineCode: '000431', accountSerial: 'P00007' },
-    { salesDate: '2019/03/23', cashRegisterCode: '000431', transactionSerial: 'P00006', counterCodeName: '000043 / Ann by asin', preSaleAmount: '0', recognitionAmount: '2,780', recognitionBatch: '20190328001', saleStatus: '預售結帳', returnMachineDate: '', returnMachineCode: '', returnMachineSerial: '', accountDate: '2019/03/28', accountMachineCode: '000431', accountSerial: 'P00008' },
-    { salesDate: '2019/03/23', cashRegisterCode: '000431', transactionSerial: 'P00006', counterCodeName: '000043 / Ann by asin', preSaleAmount: '0', recognitionAmount: '2,680', recognitionBatch: '20190328001', saleStatus: '預售結帳', returnMachineDate: '', returnMachineCode: '', returnMachineSerial: '', accountDate: '2019/03/28', accountMachineCode: '000431', accountSerial: 'P00009' },
-    { salesDate: '2019/03/23', cashRegisterCode: '000701', transactionSerial: '002530', counterCodeName: '000070 / Yankee Candle', preSaleAmount: '1,200', recognitionAmount: '0', recognitionBatch: '20190328001', saleStatus: '預售結帳', returnMachineDate: '', returnMachineCode: '', returnMachineSerial: '', accountDate: '2019/03/28', accountMachineCode: '000701', accountSerial: 'P00001' },
-    { salesDate: '2019/03/23', cashRegisterCode: '000701', transactionSerial: '002531', counterCodeName: '000070 / Yankee Candle', preSaleAmount: '1,259', recognitionAmount: '0', recognitionBatch: '20190328001', saleStatus: '預售結帳', returnMachineDate: '', returnMachineCode: '', returnMachineSerial: '', accountDate: '2019/03/28', accountMachineCode: '000701', accountSerial: 'P00002' },
-    { salesDate: '2019/03/23', cashRegisterCode: '000431', transactionSerial: '001890', counterCodeName: '000043 / Ann by asin', preSaleAmount: '4,742', recognitionAmount: '0', recognitionBatch: '20190328001', saleStatus: '預售結帳', returnMachineDate: '', returnMachineCode: '', returnMachineSerial: '', accountDate: '2019/03/28', accountMachineCode: '000431', accountSerial: 'P00002' },
-    { salesDate: '2019/03/23', cashRegisterCode: '000431', transactionSerial: '001892', counterCodeName: '000043 / Ann by asin', preSaleAmount: '2,980', recognitionAmount: '0', recognitionBatch: '20190328001', saleStatus: '預售結帳', returnMachineDate: '', returnMachineCode: '', returnMachineSerial: '', accountDate: '2019/03/28', accountMachineCode: '000431', accountSerial: 'P00003' },
-    { salesDate: '2019/03/23', cashRegisterCode: '000431', transactionSerial: '001893', counterCodeName: '000043 / Ann by asin', preSaleAmount: '2,780', recognitionAmount: '0', recognitionBatch: '20190328001', saleStatus: '預售結帳', returnMachineDate: '', returnMachineCode: '', returnMachineSerial: '', accountDate: '2019/03/28', accountMachineCode: '000431', accountSerial: 'P00004' },
-    { salesDate: '2019/03/23', cashRegisterCode: '000431', transactionSerial: '001895', counterCodeName: '000043 / Ann by asin', preSaleAmount: '2,680', recognitionAmount: '0', recognitionBatch: '20190328001', saleStatus: '預售結帳', returnMachineDate: '', returnMachineCode: '', returnMachineSerial: '', accountDate: '2019/03/28', accountMachineCode: '000431', accountSerial: 'P00005' },
-    { salesDate: '2019/03/23', cashRegisterCode: '000431', transactionSerial: 'P00001', counterCodeName: '000043 / Ann by asin', preSaleAmount: '0', recognitionAmount: '3,066', recognitionBatch: '20190328001', saleStatus: '預售結帳', returnMachineDate: '', returnMachineCode: '', returnMachineSerial: '', accountDate: '2019/03/28', accountMachineCode: '000431', accountSerial: 'P00006' },
-    { salesDate: '2019/03/23', cashRegisterCode: '000431', transactionSerial: 'P00002', counterCodeName: '000043 / Ann by asin', preSaleAmount: '0', recognitionAmount: '4,742', recognitionBatch: '20190328001', saleStatus: '預售結帳', returnMachineDate: '', returnMachineCode: '', returnMachineSerial: '', accountDate: '2019/03/28', accountMachineCode: '000431', accountSerial: 'P00007' },
-    { salesDate: '2019/03/23', cashRegisterCode: '000431', transactionSerial: 'P00006', counterCodeName: '000043 / Ann by asin', preSaleAmount: '0', recognitionAmount: '2,780', recognitionBatch: '20190328001', saleStatus: '預售結帳', returnMachineDate: '', returnMachineCode: '', returnMachineSerial: '', accountDate: '2019/03/28', accountMachineCode: '000431', accountSerial: 'P00008' },
-    { salesDate: '2019/03/23', cashRegisterCode: '000431', transactionSerial: 'P00006', counterCodeName: '000043 / Ann by asin', preSaleAmount: '0', recognitionAmount: '2,680', recognitionBatch: '20190328001', saleStatus: '預售結帳', returnMachineDate: '', returnMachineCode: '', returnMachineSerial: '', accountDate: '2019/03/28', accountMachineCode: '000431', accountSerial: 'P00009' },
-    { salesDate: '2019/03/23', cashRegisterCode: '000701', transactionSerial: '002530', counterCodeName: '000070 / Yankee Candle', preSaleAmount: '1,200', recognitionAmount: '0', recognitionBatch: '20190328001', saleStatus: '預售結帳', returnMachineDate: '', returnMachineCode: '', returnMachineSerial: '', accountDate: '2019/03/28', accountMachineCode: '000701', accountSerial: 'P00001' },
-    { salesDate: '2019/03/23', cashRegisterCode: '000701', transactionSerial: '002531', counterCodeName: '000070 / Yankee Candle', preSaleAmount: '1,259', recognitionAmount: '0', recognitionBatch: '20190328001', saleStatus: '預售結帳', returnMachineDate: '', returnMachineCode: '', returnMachineSerial: '', accountDate: '2019/03/28', accountMachineCode: '000701', accountSerial: 'P00002' },
-    { salesDate: '2019/03/23', cashRegisterCode: '000431', transactionSerial: '001890', counterCodeName: '000043 / Ann by asin', preSaleAmount: '4,742', recognitionAmount: '0', recognitionBatch: '20190328001', saleStatus: '預售結帳', returnMachineDate: '', returnMachineCode: '', returnMachineSerial: '', accountDate: '2019/03/28', accountMachineCode: '000431', accountSerial: 'P00002' },
-    { salesDate: '2019/03/23', cashRegisterCode: '000431', transactionSerial: '001892', counterCodeName: '000043 / Ann by asin', preSaleAmount: '2,980', recognitionAmount: '0', recognitionBatch: '20190328001', saleStatus: '預售結帳', returnMachineDate: '', returnMachineCode: '', returnMachineSerial: '', accountDate: '2019/03/28', accountMachineCode: '000431', accountSerial: 'P00003' },
-    { salesDate: '2019/03/23', cashRegisterCode: '000431', transactionSerial: '001893', counterCodeName: '000043 / Ann by asin', preSaleAmount: '2,780', recognitionAmount: '0', recognitionBatch: '20190328001', saleStatus: '預售結帳', returnMachineDate: '', returnMachineCode: '', returnMachineSerial: '', accountDate: '2019/03/28', accountMachineCode: '000431', accountSerial: 'P00004' },
-    { salesDate: '2019/03/23', cashRegisterCode: '000431', transactionSerial: '001895', counterCodeName: '000043 / Ann by asin', preSaleAmount: '2,680', recognitionAmount: '0', recognitionBatch: '20190328001', saleStatus: '預售結帳', returnMachineDate: '', returnMachineCode: '', returnMachineSerial: '', accountDate: '2019/03/28', accountMachineCode: '000431', accountSerial: 'P00005' },
-    { salesDate: '2019/03/23', cashRegisterCode: '000431', transactionSerial: 'P00001', counterCodeName: '000043 / Ann by asin', preSaleAmount: '0', recognitionAmount: '3,066', recognitionBatch: '20190328001', saleStatus: '預售結帳', returnMachineDate: '', returnMachineCode: '', returnMachineSerial: '', accountDate: '2019/03/28', accountMachineCode: '000431', accountSerial: 'P00006' },
-    { salesDate: '2019/03/23', cashRegisterCode: '000431', transactionSerial: 'P00002', counterCodeName: '000043 / Ann by asin', preSaleAmount: '0', recognitionAmount: '4,742', recognitionBatch: '20190328001', saleStatus: '預售結帳', returnMachineDate: '', returnMachineCode: '', returnMachineSerial: '', accountDate: '2019/03/28', accountMachineCode: '000431', accountSerial: 'P00007' },
-    { salesDate: '2019/03/23', cashRegisterCode: '000431', transactionSerial: 'P00006', counterCodeName: '000043 / Ann by asin', preSaleAmount: '0', recognitionAmount: '2,780', recognitionBatch: '20190328001', saleStatus: '預售結帳', returnMachineDate: '', returnMachineCode: '', returnMachineSerial: '', accountDate: '2019/03/28', accountMachineCode: '000431', accountSerial: 'P00008' },
-    { salesDate: '2019/03/23', cashRegisterCode: '000431', transactionSerial: 'P00006', counterCodeName: '000043 / Ann by asin', preSaleAmount: '0', recognitionAmount: '2,680', recognitionBatch: '20190328001', saleStatus: '預售結帳', returnMachineDate: '', returnMachineCode: '', returnMachineSerial: '', accountDate: '2019/03/28', accountMachineCode: '000431', accountSerial: 'P00009' },
-    { salesDate: '2019/03/23', cashRegisterCode: '000701', transactionSerial: '002530', counterCodeName: '000070 / Yankee Candle', preSaleAmount: '1,200', recognitionAmount: '0', recognitionBatch: '20190328001', saleStatus: '預售結帳', returnMachineDate: '', returnMachineCode: '', returnMachineSerial: '', accountDate: '2019/03/28', accountMachineCode: '000701', accountSerial: 'P00001' },
-    { salesDate: '2019/03/23', cashRegisterCode: '000701', transactionSerial: '002531', counterCodeName: '000070 / Yankee Candle', preSaleAmount: '1,259', recognitionAmount: '0', recognitionBatch: '20190328001', saleStatus: '預售結帳', returnMachineDate: '', returnMachineCode: '', returnMachineSerial: '', accountDate: '2019/03/28', accountMachineCode: '000701', accountSerial: 'P00002' },
-    { salesDate: '2019/03/23', cashRegisterCode: '000431', transactionSerial: '001890', counterCodeName: '000043 / Ann by asin', preSaleAmount: '4,742', recognitionAmount: '0', recognitionBatch: '20190328001', saleStatus: '預售結帳', returnMachineDate: '', returnMachineCode: '', returnMachineSerial: '', accountDate: '2019/03/28', accountMachineCode: '000431', accountSerial: 'P00002' },
-    { salesDate: '2019/03/23', cashRegisterCode: '000431', transactionSerial: '001892', counterCodeName: '000043 / Ann by asin', preSaleAmount: '2,980', recognitionAmount: '0', recognitionBatch: '20190328001', saleStatus: '預售結帳', returnMachineDate: '', returnMachineCode: '', returnMachineSerial: '', accountDate: '2019/03/28', accountMachineCode: '000431', accountSerial: 'P00003' },
-    { salesDate: '2019/03/23', cashRegisterCode: '000431', transactionSerial: '001893', counterCodeName: '000043 / Ann by asin', preSaleAmount: '2,780', recognitionAmount: '0', recognitionBatch: '20190328001', saleStatus: '預售結帳', returnMachineDate: '', returnMachineCode: '', returnMachineSerial: '', accountDate: '2019/03/28', accountMachineCode: '000431', accountSerial: 'P00004' },
-    { salesDate: '2019/03/23', cashRegisterCode: '000431', transactionSerial: '001895', counterCodeName: '000043 / Ann by asin', preSaleAmount: '2,680', recognitionAmount: '0', recognitionBatch: '20190328001', saleStatus: '預售結帳', returnMachineDate: '', returnMachineCode: '', returnMachineSerial: '', accountDate: '2019/03/28', accountMachineCode: '000431', accountSerial: 'P00005' },
-    { salesDate: '2019/03/23', cashRegisterCode: '000431', transactionSerial: 'P00001', counterCodeName: '000043 / Ann by asin', preSaleAmount: '0', recognitionAmount: '3,066', recognitionBatch: '20190328001', saleStatus: '預售結帳', returnMachineDate: '', returnMachineCode: '', returnMachineSerial: '', accountDate: '2019/03/28', accountMachineCode: '000431', accountSerial: 'P00006' },
-    { salesDate: '2019/03/23', cashRegisterCode: '000431', transactionSerial: 'P00002', counterCodeName: '000043 / Ann by asin', preSaleAmount: '0', recognitionAmount: '4,742', recognitionBatch: '20190328001', saleStatus: '預售結帳', returnMachineDate: '', returnMachineCode: '', returnMachineSerial: '', accountDate: '2019/03/28', accountMachineCode: '000431', accountSerial: 'P00007' },
-    { salesDate: '2019/03/23', cashRegisterCode: '000431', transactionSerial: 'P00006', counterCodeName: '000043 / Ann by asin', preSaleAmount: '0', recognitionAmount: '2,780', recognitionBatch: '20190328001', saleStatus: '預售結帳', returnMachineDate: '', returnMachineCode: '', returnMachineSerial: '', accountDate: '2019/03/28', accountMachineCode: '000431', accountSerial: 'P00008' },
-    { salesDate: '2019/03/23', cashRegisterCode: '000431', transactionSerial: 'P00006', counterCodeName: '000043 / Ann by asin', preSaleAmount: '0', recognitionAmount: '2,680', recognitionBatch: '20190328001', saleStatus: '預售結帳', returnMachineDate: '', returnMachineCode: '', returnMachineSerial: '', accountDate: '2019/03/28', accountMachineCode: '000431', accountSerial: 'P00009' },
-    { salesDate: '2019/03/23', cashRegisterCode: '000701', transactionSerial: '002530', counterCodeName: '000070 / Yankee Candle', preSaleAmount: '1,200', recognitionAmount: '0', recognitionBatch: '20190328001', saleStatus: '預售結帳', returnMachineDate: '', returnMachineCode: '', returnMachineSerial: '', accountDate: '2019/03/28', accountMachineCode: '000701', accountSerial: 'P00001' },
-    { salesDate: '2019/03/23', cashRegisterCode: '000701', transactionSerial: '002531', counterCodeName: '000070 / Yankee Candle', preSaleAmount: '1,259', recognitionAmount: '0', recognitionBatch: '20190328001', saleStatus: '預售結帳', returnMachineDate: '', returnMachineCode: '', returnMachineSerial: '', accountDate: '2019/03/28', accountMachineCode: '000701', accountSerial: 'P00002' },
-    { salesDate: '2019/03/23', cashRegisterCode: '000431', transactionSerial: '001890', counterCodeName: '000043 / Ann by asin', preSaleAmount: '4,742', recognitionAmount: '0', recognitionBatch: '20190328001', saleStatus: '預售結帳', returnMachineDate: '', returnMachineCode: '', returnMachineSerial: '', accountDate: '2019/03/28', accountMachineCode: '000431', accountSerial: 'P00002' },
-    { salesDate: '2019/03/23', cashRegisterCode: '000431', transactionSerial: '001892', counterCodeName: '000043 / Ann by asin', preSaleAmount: '2,980', recognitionAmount: '0', recognitionBatch: '20190328001', saleStatus: '預售結帳', returnMachineDate: '', returnMachineCode: '', returnMachineSerial: '', accountDate: '2019/03/28', accountMachineCode: '000431', accountSerial: 'P00003' },
-    { salesDate: '2019/03/23', cashRegisterCode: '000431', transactionSerial: '001893', counterCodeName: '000043 / Ann by asin', preSaleAmount: '2,780', recognitionAmount: '0', recognitionBatch: '20190328001', saleStatus: '預售結帳', returnMachineDate: '', returnMachineCode: '', returnMachineSerial: '', accountDate: '2019/03/28', accountMachineCode: '000431', accountSerial: 'P00004' },
-    { salesDate: '2019/03/23', cashRegisterCode: '000431', transactionSerial: '001895', counterCodeName: '000043 / Ann by asin', preSaleAmount: '2,680', recognitionAmount: '0', recognitionBatch: '20190328001', saleStatus: '預售結帳', returnMachineDate: '', returnMachineCode: '', returnMachineSerial: '', accountDate: '2019/03/28', accountMachineCode: '000431', accountSerial: 'P00005' },
-    { salesDate: '2019/03/23', cashRegisterCode: '000431', transactionSerial: 'P00001', counterCodeName: '000043 / Ann by asin', preSaleAmount: '0', recognitionAmount: '3,066', recognitionBatch: '20190328001', saleStatus: '預售結帳', returnMachineDate: '', returnMachineCode: '', returnMachineSerial: '', accountDate: '2019/03/28', accountMachineCode: '000431', accountSerial: 'P00006' },
-    { salesDate: '2019/03/23', cashRegisterCode: '000431', transactionSerial: 'P00002', counterCodeName: '000043 / Ann by asin', preSaleAmount: '0', recognitionAmount: '4,742', recognitionBatch: '20190328001', saleStatus: '預售結帳', returnMachineDate: '', returnMachineCode: '', returnMachineSerial: '', accountDate: '2019/03/28', accountMachineCode: '000431', accountSerial: 'P00007' },
-    { salesDate: '2019/03/23', cashRegisterCode: '000431', transactionSerial: 'P00006', counterCodeName: '000043 / Ann by asin', preSaleAmount: '0', recognitionAmount: '2,780', recognitionBatch: '20190328001', saleStatus: '預售結帳', returnMachineDate: '', returnMachineCode: '', returnMachineSerial: '', accountDate: '2019/03/28', accountMachineCode: '000431', accountSerial: 'P00008' },
-    { salesDate: '2019/03/23', cashRegisterCode: '000431', transactionSerial: 'P00006', counterCodeName: '000043 / Ann by asin', preSaleAmount: '0', recognitionAmount: '2,680', recognitionBatch: '20190328001', saleStatus: '預售結帳', returnMachineDate: '', returnMachineCode: '', returnMachineSerial: '', accountDate: '2019/03/28', accountMachineCode: '000431', accountSerial: 'P00009' },
-    { salesDate: '2019/03/23', cashRegisterCode: '000701', transactionSerial: '002530', counterCodeName: '000070 / Yankee Candle', preSaleAmount: '1,200', recognitionAmount: '0', recognitionBatch: '20190328001', saleStatus: '預售結帳', returnMachineDate: '', returnMachineCode: '', returnMachineSerial: '', accountDate: '2019/03/28', accountMachineCode: '000701', accountSerial: 'P00001' },
-    { salesDate: '2019/03/23', cashRegisterCode: '000701', transactionSerial: '002531', counterCodeName: '000070 / Yankee Candle', preSaleAmount: '1,259', recognitionAmount: '0', recognitionBatch: '20190328001', saleStatus: '預售結帳', returnMachineDate: '', returnMachineCode: '', returnMachineSerial: '', accountDate: '2019/03/28', accountMachineCode: '000701', accountSerial: 'P00002' },
-    { salesDate: '2019/03/23', cashRegisterCode: '000431', transactionSerial: '001890', counterCodeName: '000043 / Ann by asin', preSaleAmount: '4,742', recognitionAmount: '0', recognitionBatch: '20190328001', saleStatus: '預售結帳', returnMachineDate: '', returnMachineCode: '', returnMachineSerial: '', accountDate: '2019/03/28', accountMachineCode: '000431', accountSerial: 'P00002' },
-    { salesDate: '2019/03/23', cashRegisterCode: '000431', transactionSerial: '001892', counterCodeName: '000043 / Ann by asin', preSaleAmount: '2,980', recognitionAmount: '0', recognitionBatch: '20190328001', saleStatus: '預售結帳', returnMachineDate: '', returnMachineCode: '', returnMachineSerial: '', accountDate: '2019/03/28', accountMachineCode: '000431', accountSerial: 'P00003' },
-    { salesDate: '2019/03/23', cashRegisterCode: '000431', transactionSerial: '001893', counterCodeName: '000043 / Ann by asin', preSaleAmount: '2,780', recognitionAmount: '0', recognitionBatch: '20190328001', saleStatus: '預售結帳', returnMachineDate: '', returnMachineCode: '', returnMachineSerial: '', accountDate: '2019/03/28', accountMachineCode: '000431', accountSerial: 'P00004' },
-    { salesDate: '2019/03/23', cashRegisterCode: '000431', transactionSerial: '001895', counterCodeName: '000043 / Ann by asin', preSaleAmount: '2,680', recognitionAmount: '0', recognitionBatch: '20190328001', saleStatus: '預售結帳', returnMachineDate: '', returnMachineCode: '', returnMachineSerial: '', accountDate: '2019/03/28', accountMachineCode: '000431', accountSerial: 'P00005' },
-    { salesDate: '2019/03/23', cashRegisterCode: '000431', transactionSerial: 'P00001', counterCodeName: '000043 / Ann by asin', preSaleAmount: '0', recognitionAmount: '3,066', recognitionBatch: '20190328001', saleStatus: '預售結帳', returnMachineDate: '', returnMachineCode: '', returnMachineSerial: '', accountDate: '2019/03/28', accountMachineCode: '000431', accountSerial: 'P00006' },
-    { salesDate: '2019/03/23', cashRegisterCode: '000431', transactionSerial: 'P00002', counterCodeName: '000043 / Ann by asin', preSaleAmount: '0', recognitionAmount: '4,742', recognitionBatch: '20190328001', saleStatus: '預售結帳', returnMachineDate: '', returnMachineCode: '', returnMachineSerial: '', accountDate: '2019/03/28', accountMachineCode: '000431', accountSerial: 'P00007' },
-    { salesDate: '2019/03/23', cashRegisterCode: '000431', transactionSerial: 'P00006', counterCodeName: '000043 / Ann by asin', preSaleAmount: '0', recognitionAmount: '2,780', recognitionBatch: '20190328001', saleStatus: '預售結帳', returnMachineDate: '', returnMachineCode: '', returnMachineSerial: '', accountDate: '2019/03/28', accountMachineCode: '000431', accountSerial: 'P00008' },
-    { salesDate: '2019/03/23', cashRegisterCode: '000431', transactionSerial: 'P00006', counterCodeName: '000043 / Ann by asin', preSaleAmount: '0', recognitionAmount: '2,680', recognitionBatch: '20190328001', saleStatus: '預售結帳', returnMachineDate: '', returnMachineCode: '', returnMachineSerial: '', accountDate: '2019/03/28', accountMachineCode: '000431', accountSerial: 'P00009' },
-    { salesDate: '2019/03/23', cashRegisterCode: '000701', transactionSerial: '002530', counterCodeName: '000070 / Yankee Candle', preSaleAmount: '1,200', recognitionAmount: '0', recognitionBatch: '20190328001', saleStatus: '預售結帳', returnMachineDate: '', returnMachineCode: '', returnMachineSerial: '', accountDate: '2019/03/28', accountMachineCode: '000701', accountSerial: 'P00001' },
-    { salesDate: '2019/03/23', cashRegisterCode: '000701', transactionSerial: '002531', counterCodeName: '000070 / Yankee Candle', preSaleAmount: '1,259', recognitionAmount: '0', recognitionBatch: '20190328001', saleStatus: '預售結帳', returnMachineDate: '', returnMachineCode: '', returnMachineSerial: '', accountDate: '2019/03/28', accountMachineCode: '000701', accountSerial: 'P00002' },
-    { salesDate: '2019/03/23', cashRegisterCode: '000701', transactionSerial: '002532', counterCodeName: '000070 / Yankee Candle', preSaleAmount: '598', recognitionAmount: '0', recognitionBatch: '20190328001', saleStatus: '預售結帳', returnMachineDate: '', returnMachineCode: '', returnMachineSerial: '', accountDate: '2019/03/28', accountMachineCode: '000701', accountSerial: 'P00003' }
+  columns: Column[] = [
+    { field: 'saleDate', header: '銷售日期', visible: true },
+    { field: 'hall', header: '館別', visible: true },
+    { field: 'organizationName', header: '組織名稱', visible: true },
+    { field: 'posMachineNo', header: 'POS機號', visible: true },
+    { field: 'transactionNo', header: '交易序號', visible: true },
+    { field: 'counterCode', header: '專櫃編號', visible: true },
+    { field: 'locationCode', header: '位置編號', visible: true },
+    { field: 'fieldName', header: '櫃位名稱', visible: true },
+    { field: 'preOrderAmount', header: '預售金額', visible: true },
+    { field: 'recognizedAmount', header: '認列金額', visible: true },
+    { field: 'recognitionBatchNo', header: '認列批號', visible: true },
+    { field: 'preOrderStatus', header: '預售狀態', visible: true },
+    { field: 'voidOrReturnDate', header: '作廢/退貨日期', visible: true },
+    { field: 'voidOrReturnMachineNo', header: '作廢/退貨機號', visible: true },
+    { field: 'voidOrReturnSerialNo', header: '作廢/退貨序號', visible: true },
+    { field: 'settlementDate', header: '結帳日期', visible: true },
+    { field: 'settlementMachineNo', header: '結帳機號', visible: true },
+    { field: 'settlementSerialNo', header: '結帳序號', visible: true }
   ];
 
-  filteredData: any[] = [...this.data];
-
-  columns: any[] = [
-    { field: 'salesDate', header: '銷售日期', visible: true },
-    { field: 'cashRegisterCode', header: '收銀機號', visible: true },
-    { field: 'transactionSerial', header: '交易序號', visible: true },
-    { field: 'counterCodeName', header: '專櫃編號/名稱', visible: true },
-    { field: 'preSaleAmount', header: '預售金額', visible: true },
-    { field: 'recognitionAmount', header: '認列金額', visible: true },
-    { field: 'recognitionBatch', header: '認列批號', visible: true },
-    { field: 'saleStatus', header: '銷售狀態', visible: true },
-    { field: 'returnMachineDate', header: '作廢/退貨日期', visible: true },
-    { field: 'returnMachineCode', header: '作廢/退貨機號', visible: true },
-    { field: 'returnMachineSerial', header: '作廢/退貨序號', visible: true },
-    { field: 'accountDate', header: '結帳日期', visible: true },
-    { field: 'accountMachineCode', header: '結帳機號', visible: true },
-    { field: 'accountSerial', header: '結帳序號', visible: true }
+  orgOptions = [
+    { Name: '總公司', No: '1' },
+    { Name: '分公司', No: '2' }
   ];
 
+  floorOptions = [
+    { Name: '一樓', No: '1' },
+    { Name: '二樓', No: '2' },
+    { Name: '三樓', No: '3' }
+  ];
 
   constructor(
-    private router: Router,
-    private formBuilder: FormBuilder,
-    private messageService: NotificationService,
-    private authService: AuthService,
-    private businessTypeCodeService: BusinessTypeCodeService,  // 大分類 service
-    private floorService: FloorService,  // 依機台統計 service
-  ) { }
+    private tls26030Service: TLS26030Service
+  ) {
+    super();
+  }
 
   ngOnInit(): void {
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
-
-    this.businessTypeCodeService.getBusinessTypeCodes().subscribe((data) => {
-      this.businessTypeCodeOptions = data;
-    });
-
-    this.floorService.getFloors().subscribe((data) => {
-      this.floorOptions = data;
-    });
-  }
-
-  canQuery(): boolean {
-    return true;
-  }
-
-  canAdd(): boolean {
-    return true;
-  }
-
-  canEdit(): boolean {
-    return true;
+    this.initializePage('TLS26030', 'tls/tls26030', this.queryForm, (form) => this.onSubmit(form));
   }
 
   onSubmit(frm: FormGroup) {
-    console.log(frm.value);
-    this.submitted = true;
-    this.loading = true;
-    this.messageService.blockUi();
-
-    if (frm.valid && this.canQuery()) {
-      // 提交邏輯
-    }
-
-    this.loading = false;
-    this.messageService.unblockUi();
-  }
-
-  onSubmitQuery(frm: FormGroup) {
-    // 查詢邏輯
-    this.onSubmit(frm);
-  }
-
-  onClearForm() {
-    this.queryForm.reset();  // 重置表單
-  }
-
-  onCreate() {
-    if (this.canAdd()) {
-      let extras: NavigationExtras = {
-        state: {
-          crudstatus: 'Create',
-          queryform: this.queryForm,
-        },
-        skipLocationChange: true,
-      };
-      this.router.navigate(['/demoCRU'], extras);
-    }
-  }
-
-  onEdit(data: any) {
-    if (this.canEdit()) {
-      let extras: NavigationExtras = {
-        state: {
-          crudstatus: 'Edit',
-          rowdata: data,
-          queryform: this.queryForm,
-        },
-        skipLocationChange: true,
-      };
-      this.router.navigate(['/demoCRU'], extras);
-    }
-  }
-
-  onDetail(data: any) {
-    let extras: NavigationExtras = {
-      state: {
-        crudstatus: 'Read',
-        rowdata: data,
-        queryform: this.queryForm,
-      },
-      skipLocationChange: true,
+    const queryRequest: TLS26030QueryRequest = {
+      ...frm.value
     };
-    this.router.navigate(['/demoCRU'], extras);
+    this.handleSubmit(frm, () => {
+      this.tls26030Service.queryTLS26030(queryRequest)
+        .pipe(finalize(() => this.loading = false))
+        .subscribe(response => {
+          this.data = response.Data;
+          this.totalRecords = response.TotalCount;
+          this.queryStateService.setQueryState(this.ProgNo, frm.getRawValue());
+        });
+    });
   }
 }
