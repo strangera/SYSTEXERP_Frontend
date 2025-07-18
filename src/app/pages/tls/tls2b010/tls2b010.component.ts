@@ -8,16 +8,12 @@ import {
 import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { CahserTypeService } from '../../../service/basic/cahser-type.service';
-import { ReimbursementYypeService } from '../../../service/basic/reimbursement-yype.service';
 import { CashShowupByService } from '../../../service/basic/cash-showup-by.service';
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-import { ValidationService } from '../../../shared/service/validation.service';
-
 // UI Imports
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { AccordionModule } from 'primeng/accordion';
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
-import { InputNumberRangeComponent } from '../../../shared/componentkit/input-number-range/input-number-range.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
 import { RadiobuttonComponent } from '../../../shared/componentkit/radiobutton/radiobutton.component';
@@ -28,6 +24,7 @@ import { ECRNoService } from '../../../service/basic/ECRNo.service';
 import { CounterNameService } from '../../../service/basic/counter-name.service';
 import { Tls11010Service } from '../../../service/api/tls/tls11010.service';
 import { FloorService } from '../../../service/basic/floor.service';
+import { DecimalPipe } from '@angular/common';
 
 @Component({
   selector: 'app-tls2b010',
@@ -52,14 +49,12 @@ export class TLS2B010Component extends BasicQueryPageComponent<any> {
   ECRNoOptions: any[] = []; // 收銀機號下拉選單
   data: any[] = [];
   cahserTypeOptions: any[] = [];
-
   CashShowupByOptions: any[] = [];
   selectedItems: any[] = [];
   totalRecords = 0;
   CounterOptions: any[] = []; // 專櫃選項
   BUILDING_NO_Options: any[] = [];
   floorOptions: any[] = [];
-
   columns: any[] = [
     {
       field: 'tlt_building',
@@ -68,9 +63,10 @@ export class TLS2B010Component extends BasicQueryPageComponent<any> {
       format: (value: any) =>
         this.getLabelFromOptions(value, this.BUILDING_NO_Options),
     },
-    { field: 'floor_desc', header: '樓層', visible: true },
-    { field: 'tlt_no', header: '專櫃編號', visible: true },
-    { field: 'tlt_name', header: '櫃位名稱', visible: true },
+    { field: 'tlt_building', header: '館別', visible: true },
+     {field: 'tlt_floor', header: '樓層', visible: true },
+    { field: 'tlt_no', header: '收銀機號', visible: true },
+    { field: 'tlt_name', header: '收銀員編號/姓名', visible: true },
     { field: 'PAY_NAME', header: '付款別', visible: true },
     { field: 'systemTotal', header: '系統帳', visible: true },
     { field: 'category', header: '溢欠差異(自我報帳-系統帳)', visible: true },
@@ -87,8 +83,10 @@ export class TLS2B010Component extends BasicQueryPageComponent<any> {
     cashShowUp: [],
     tlt_building: [],
     tlt_floor: [],
+    DecimalPipe,
     ...createPaginationConfig([{ field: 'TXN_Date', order: 1 }]),
   });
+  
 
   constructor(
     private cahserTypeService: CahserTypeService,

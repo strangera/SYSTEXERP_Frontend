@@ -1,4 +1,4 @@
-import { NgIf } from '@angular/common';
+import { DecimalPipe, NgIf } from '@angular/common';
 import { Component, Input, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
@@ -22,7 +22,8 @@ import { ButtonModule } from 'primeng/button';
     DropdownModule,
     NgIf,
     FormsModule,
-    ButtonModule
+    ButtonModule,
+    DecimalPipe
   ],
   templateUrl: './tls24010-pos5007.component.html',
   styleUrls: ['./tls24010-pos5007.component.scss']
@@ -44,11 +45,11 @@ export class Tls24010Pos5007Component implements OnInit {
   ) { }
   ngOnInit(): void {
     switch (this.store_way) {
-      case '1':// 自營櫃位
+      case '2':// 自營櫃位
         {
           if (this.TLT_No) {
             this.dropDownListService.queryPOS2004_DropDownList(this.TLT_No).pipe(untilDestroyed(this)).subscribe((data) => {
-              this.POS2004Options = data.Data;
+              this.POS2004Options = data.Data.map((item) => ({ ...item, label: `${item.PLU_MagNo} - ${item.PLU_Name}` }));
             })
           }
           this.dropDownListService.queryTLTTALENT_CHARGE_DropDownList(this.talent_id).pipe(untilDestroyed(this)).subscribe((data) => {
@@ -56,19 +57,18 @@ export class Tls24010Pos5007Component implements OnInit {
           })
           break;
         }
-      case '2':// 專櫃櫃位
+      case '1':// 專櫃櫃位
         break;
       default: break;
     }
-    //TODO: 5. 再去取 TLTTALENT_CHARGEM.CAG_TAXTYPE 專櫃抽成主檔
-    //TODO: 6. 再去取 讀取TLTTALENT_CHARGED.CAG_BARCODE 專櫃抽成主檔
   }
 
   insertRow(): void {
     this.POS5007Data.push({
       id: this.index + 1,
-      PLU_MagNo: undefined,
-      PLU_No: undefined,
+      PLU_MagNo: this.store_way === '1' ? this.TLT_No : undefined,
+      PLU_No: this.store_way === '1' ? this.TLT_No : undefined,
+      PLU_Name: this.store_way === '1' ? this.TLT_Name : undefined,
       TXN_Qty: 0,
       PLU_SalePrc: 0,
       TXN_Amt: 0,
@@ -88,12 +88,22 @@ export class Tls24010Pos5007Component implements OnInit {
 
   onInput(event: POS5007Data) {
     event.TXN_Amt = (event.TXN_Qty || 0) * (event.PLU_SalePrc || 0);
-    event.TXN_SaleAmt = event.TXN_Amt - (event.TXN_Disc || 0);
+    event.TXN_SaleAmt = event.TXN_Amt + (event.TXN_Disc || 0);
   }
   onChangeTLT_ID(rowData: POS5007Data) {
     const item = this.tlt_idOptions.find((item) => item.tlt_id === rowData.TLT_ID);
     rowData.PLU_TaxType = item?.cag_taxtype;
     rowData.TXN_DiscCode = item?.cag_barcode;
     rowData.TXN_DiscCode_Name = item?.cag_barcode_name;
+  }
+  onChangePLU_MagNo(rowData: POS5007Data) {
+    if (!rowData.PLU_MagNo) {
+      rowData.PLU_Name = undefined;
+      rowData.PLU_SalePrc = undefined;
+      return;
+    }
+    const show = rowData.PLU_MagNo as POS2004Item
+    rowData.PLU_Name = show.PLU_Name;
+    rowData.PLU_SalePrc = show.PLU_SalePrc;
   }
 }
