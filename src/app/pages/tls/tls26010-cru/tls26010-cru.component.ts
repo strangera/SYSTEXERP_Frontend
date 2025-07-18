@@ -1,10 +1,10 @@
 import { NgIf } from '@angular/common';
-import { Component, OnInit, signal, ViewEncapsulation, } from '@angular/core';
+import { Component, OnInit, signal } from '@angular/core';
 import { FormArray, FormBuilder, FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
-import { NavigationExtras, Router } from '@angular/router';
+import { Router } from '@angular/router';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { PanelModule } from 'primeng/panel';
-import { TLS26010cru, TLS26010Query, TLS26010Service } from '../../../service/api/tls/tls26010.service';
+import { TLS26010Data, TLS26010Service } from '../../../service/api/tls/tls26010.service';
 import { AuthService } from '../../../service/system/auth.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
@@ -42,7 +42,7 @@ export class TLS26010CRUComponent extends BasicCrupageComponent implements OnIni
 
   public CRUDStatus = CRUDStatus;
 
-  private rowDataSignal = signal<TLS26010cru>({} as TLS26010cru); // 用於存儲表格資料
+  private rowDataSignal = signal<TLS26010Data>({} as TLS26010Data); // 用於存儲表格資料
 
   // 表格資料
   columns: any[] = [

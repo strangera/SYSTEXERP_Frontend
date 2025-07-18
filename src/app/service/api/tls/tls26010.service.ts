@@ -1,7 +1,8 @@
 import { HttpClient } from '@angular/common/http';
 import { computed, Injectable, signal } from '@angular/core';
-import { catchError, finalize, of, take, tap } from 'rxjs';
+import { catchError, EMPTY, finalize, of, take, tap } from 'rxjs';
 import { environment } from '../../../../environments/environment';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { BaseQueryResponse } from '../../../shared/models/api/base-api.interface';
 import { ErrorHandlerService } from '../../system/error-handler.service';
 
@@ -71,12 +72,12 @@ export interface TLS26010 {
   approved_date: string | null;
 }
 
-export interface TLS26010cru {
+export interface TLS26010Data {
   pod_no: string;
   pod_desc: string;
   pod_sdate: string;
   pod_edate: string;
-  pod_status: ApprovalStatus;
+  pod_status: '0' | '1' | '9';
   approved_usr_name: string;
   approved_date: string | null;
 }
@@ -86,16 +87,6 @@ const mock = !0;
 @Injectable({ providedIn: 'root' })
 export class TLS26010Service {
   apiUrl: string = environment.ApiUrl;
-
-  private approvalStatus = (status: string): ApprovalStatus => {
-    // 0 = '未核准'
-    // 1 = '已核准'
-    // 9 = '刪除'
-    return status === '0'
-      ? ApprovalStatus.未核准 : status === '1'
-        ? ApprovalStatus.已核准 : status === '9'
-          ? ApprovalStatus.刪除 : ApprovalStatus.未核准;
-  };
 
   public approvalData = signal<ApprovalStatus>(ApprovalStatus.未核准);
 
@@ -148,14 +139,14 @@ export class TLS26010Service {
   //   return Array.from(res.values());
   // });
   public TLS26010List = computed(() => {
-    const res = new Map<string, TLS26010cru>();
+    const res = new Map<string, TLS26010Data>();
     for (const item of this.TLS26010Data()) {
       for (const data of item.Data) res.set(data.pod_no, {
         pod_no: data.pod_no,
         pod_desc: data.pod_desc,
         pod_sdate: data.pod_sdate,
         pod_edate: data.pod_edate,
-        pod_status: this.approvalStatus(item.pod_status) as ApprovalStatus,
+        pod_status: item.pod_status,
         approved_usr_name: item.approved_usr_name,
         approved_date: item.approved_date
       });
@@ -166,9 +157,10 @@ export class TLS26010Service {
   constructor(
     private http: HttpClient,
     private errorHandler: ErrorHandlerService,
+    private messageService: NotificationService,
   ) { }
 
-  // 取得館別
+  /** 取得館別 */
   loadSYS3800(query: any): void {
     if (this.sys3800Loading) return void (this.sys3800Loading = !1);
     this.sys3800Loading = !0;
@@ -183,7 +175,7 @@ export class TLS26010Service {
     ).subscribe();
   }
 
-  // 取得樓層
+  /** 取得樓層 */
   loadSYS3900(query: any): void {
     if (this.sys3900Loading) return void (this.sys3900Loading = !1);
     this.sys3900Loading = !0;
@@ -198,7 +190,7 @@ export class TLS26010Service {
     ).subscribe();
   }
 
-  // 取得收銀機號
+  /** 取得收銀機號 */
   loadPreorderECRList(query: PreorderECRListQuery): void {
     if (this.preorderECRLoading) return void (this.preorderECRLoading = !1);
     this.preorderECRLoading = !0;
@@ -237,7 +229,7 @@ export class TLS26010Service {
     ).subscribe();
   }
 
-  // 取得專櫃編號
+  /** 取得專櫃編號 */
   loadTLTTALENT(query: TLTTALENTQuery): void {
     if (this.TLTTALENTLoading) return void (this.TLTTALENTLoading = !1);
     this.TLTTALENTLoading = !0;
@@ -255,7 +247,7 @@ export class TLS26010Service {
     ).subscribe();
   }
 
-  // 查詢預購活動檔期
+  /** 查詢預購活動檔期 */
   loadTLS26010(query: TLS26010Query): void {
     if (this.TLS26010Loading) return void (this.TLS26010Loading = !1);
     this.TLS26010Loading = !0;
@@ -323,7 +315,8 @@ export class TLS26010Service {
     ).subscribe();
   }
 
-  loadApproval(data: TLS26010cru): void {
+  /** 核准或反核准預購活動 */
+  loadApproval(data: TLS26010Data): void {
     if (this.approvalStatusLoading) return void (this.approvalStatusLoading = !1);
     this.approvalStatusLoading = !0;
     const id = data.pod_no;
@@ -343,7 +336,38 @@ export class TLS26010Service {
       ).subscribe();
   }
 
-  deleteTLS26010(data: TLS26010cru): void {
+  /** 上傳 */
+  updateTLS26010(file: File): void {
+    const formData = new FormData();
+    formData.append('file', file);
+    this.http.post<any>(`${this.apiUrl}/importTLS26010`, formData).pipe(
+      take(1),
+      catchError(() => { this.messageService.errorBubble('檔案上傳失敗，請稍後再試'); return EMPTY; }),
+    ).subscribe(res => {
+      const data: any = res?.Data;
+      const cb = (item: any) => {
+        if (item.ErrorFilePath) {
+          // 有錯誤檔：顯示錯誤提示
+          this.messageService.errorBubble(`部分資料匯入失敗，請下載錯誤檔檢查`);
+          // 自動下載錯誤檔
+          this.downloadErrorFile(item.ErrorFilePath);
+        } else {
+          // 沒有錯誤檔：顯示成功筆數
+          this.messageService.infoBubble(`匯入成功，筆數：${item.SuccessCount}`);
+        }
+      };
+      if (!Array.isArray(data)) cb(data);
+      else for (const item of data) { cb(item); }
+    });
+  }
+
+  /** 下載錯誤檔 */
+  downloadErrorFile(filePath: string) {
+    window.open(`${environment.ApiUrl}/${filePath}`, '_blank');
+  }
+
+  /** 刪除預購活動 */
+  deleteTLS26010(data: TLS26010Data): void {
     if (this.TLS26010Loading) return void (this.TLS26010Loading = !1);
     this.TLS26010Loading = !0;
     const id = data.pod_no;
@@ -388,9 +412,4 @@ export class TLS26010Service {
   }
 
   // insertTLS26010
-  // updateTLS26010
-  // deleteTLS26010
-  // approvalTLS26010
-  // disapprovalTLS26010
-  // importTLS26010
 }

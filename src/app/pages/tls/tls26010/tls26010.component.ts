@@ -2,10 +2,13 @@ import { Component, computed, effect } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 // 共用服務
+import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { AccordionModule } from 'primeng/accordion';
-import { combineLatest, map } from 'rxjs';
-import { ApprovalStatus, PreorderECRListQuery, TLS26010cru, TLS26010Query, TLS26010Service, TLTTALENTQuery } from '../../../service/api/tls/tls26010.service';
+import { FileSelectEvent, FileUpload, FileUploadModule } from 'primeng/fileupload';
+import { catchError, combineLatest, EMPTY, map, take } from 'rxjs';
+import { environment } from '../../../../environments/environment';
+import { ApprovalStatus, PreorderECRListQuery, TLS26010Data, TLS26010Query, TLS26010Service, TLTTALENTQuery } from '../../../service/api/tls/tls26010.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
@@ -26,6 +29,7 @@ import { AddButton, Column } from '../../../shared/componentkit/table/table.mode
     FormsModule,
     ReactiveFormsModule,
     TranslateModule,
+    FileUploadModule,
     MenubarComponent,
     ButtonComponent,
     MultiSelectComponent,
@@ -49,16 +53,18 @@ export class TLS26010Component extends BasicQueryPageComponent<any> {
     podEdateE: [''], // 截止日期(迄)
   });
 
+  selectedItems: TLS26010Data[] = [];
+
   addButton: AddButton[] = [
     {
       label: '核准', icon: 'pi pi-check-circle text-green-500',
-      action: (rowData: TLS26010cru) => this.tls26010Service.loadApproval(rowData),
-      disabled: (rowData: TLS26010cru) => rowData.pod_status !== ApprovalStatus.未核准,
+      action: (rowData: TLS26010Data) => this.tls26010Service.loadApproval(rowData),
+      disabled: (rowData: TLS26010Data) => rowData.pod_status !== ApprovalStatus.未核准,
     },
     {
       label: '反核准', icon: 'pi pi-undo text-orange-500',
-      action: (rowData: TLS26010cru) => this.tls26010Service.loadApproval(rowData),
-      disabled: (rowData: TLS26010cru) => rowData.pod_status !== ApprovalStatus.已核准,
+      action: (rowData: TLS26010Data) => this.tls26010Service.loadApproval(rowData),
+      disabled: (rowData: TLS26010Data) => rowData.pod_status !== ApprovalStatus.已核准,
     },
   ];
 
@@ -149,9 +155,16 @@ export class TLS26010Component extends BasicQueryPageComponent<any> {
     { field: 'pod_desc', header: '活動名稱', visible: true },
     { field: 'pod_sdate', header: '活動起始日期', visible: true },
     { field: 'pod_edate', header: '活動終止日期', visible: true },
-    { field: 'pod_status', header: '核准狀態', visible: true },
+    { field: 'pod_status', header: '核准狀態', visible: true, format: this.approvalStatus.bind(this) },
     { field: 'approved_usr_name', header: '核准人員', visible: true },
     { field: 'approved_date', header: '核准日期', visible: true },
+  ];
+
+  subColumns: Column[] = [
+    { field: 'ECR_No', header: '收銀機號', visible: true },
+    { field: 'ECR_Name', header: '收銀機名稱', visible: true },
+    { field: 'tlt_no', header: '專櫃編號', visible: true },
+    { field: 'tlt_name', header: '專櫃名稱', visible: true },
   ];
 
   constructor(public tls26010Service: TLS26010Service) {
@@ -164,6 +177,15 @@ export class TLS26010Component extends BasicQueryPageComponent<any> {
     // 只載入館別和樓層的下拉選單資料
     this.tls26010Service.loadSYS3800({});
     this.tls26010Service.loadSYS3900({});
+  };
+
+  approvalStatus(status: ApprovalStatus): string {
+    switch (status) {
+      case ApprovalStatus.未核准: return '未核准';
+      case ApprovalStatus.已核准: return '已核准';
+      case ApprovalStatus.刪除: return '刪除';
+      default: return '未知狀態';
+    }
   };
 
   canQuery(): boolean {
@@ -197,7 +219,18 @@ export class TLS26010Component extends BasicQueryPageComponent<any> {
     });
   }
 
-  onDelete(data: TLS26010cru[]): void {
+  override onEdit(data: TLS26010Data): void {
+    if (this.canPerformAction('30')) { // '修改' 的 function_code 是 "30"
+
+    }
+  }
+
+  onFileUpload(event: FileSelectEvent): void {
+    const file = event.files[0];
+    this.tls26010Service.updateTLS26010(file);
+  }
+
+  onDelete(data: TLS26010Data[]): void {
     if (!this.canEdit()) return;
     for (const item of data) {
       if (item.pod_status !== ApprovalStatus.未核准) continue;

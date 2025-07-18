@@ -1,11 +1,17 @@
 <div class="card">
   <div class="grid align-items-center">
-    <div class="col"
-         style="flex: 1">
+    <div class="col">
       <app-menubar [ProgNo]="ProgNo"></app-menubar>
     </div>
-    <!-- <div *appHasPermission="addPermission"> -->
-    <div>
+    <div class="flex gap-2">
+      <p-fileUpload #fileUpload
+                    mode="basic"
+                    chooseIcon="pi pi-upload"
+                    class="p-button p-button-sm"
+                    accept=".xlsx, .xls, .csv"
+                    (onSelect)="onFileUpload($event);fileUpload.clear()"
+                    [auto]="true"
+                    chooseLabel="匯入EXCEL" />
       <app-button btnType="create"
                   (click)="onCreate()"></app-button>
     </div>
@@ -87,11 +93,13 @@
 <div class="card">
   <div class="col-12">
     <app-table [showCheckBox]="true"
+               [data]="tls26010Service.TLS26010List()"
                [tableKey]="'TLS26010'"
                [dataKey]="'pod_no'"
-               [data]="tls26010Service.TLS26010List()"
                [columns]="columns"
                [addButton]="addButton"
+               [selectedItems]="selectedItems"
+               (selectionChange)="selectedItems = $event"
                (delete)="onDelete($event)"
                (edit)="onEdit($event)"
                (detail)="onDetail($event)"></app-table>
