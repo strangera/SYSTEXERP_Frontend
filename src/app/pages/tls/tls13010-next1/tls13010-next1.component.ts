@@ -14,6 +14,7 @@ import { ButtonComponent } from '../../../shared/componentkit/button/button.comp
 import { NgIf, NgFor } from '@angular/common';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { AccordionModule } from 'primeng/accordion';
+import { LocationOptionsService } from '../../../service/api/dropdownservice/location-options.service';
 
 // 介面定義
 interface CategoryItem {
@@ -34,6 +35,8 @@ interface CategoryItem {
 })
 export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> implements OnInit, OnDestroy {
 
+  // 組織table下拉
+  orgOptions: any[] = [];
   private subscriptions: Subscription[] = [];
   private routerSubscription: any;
 
@@ -578,6 +581,7 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
   constructor(
     private tls13010Service: TLS13010Service,
     private contractFlowService: ContractFlowService,
+    private locationOptionsService: LocationOptionsService,
     public override router: Router
   ) {
     super();
@@ -587,6 +591,7 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
     console.log('TLS13010Next1Component 初始化開始');
     this.initializeDataStructure();
     this.initializePage('TLS13010', this.dataForm);
+    this.loadOrgOptions();
     this.loadWorkflowData();
     this.routerSubscription = this.router.events
       .pipe(filter(event => event instanceof NavigationEnd))
@@ -638,6 +643,63 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
       console.warn('❌ 沒有工作流程資料，重導向到前一步');
       this.router.navigate(['account/tls/tls13010cru']);
     }
+  }
+
+
+  private loadOrgOptions(): void {
+    console.log('🔄 開始載入組織選項...');
+
+    const subscription = this.locationOptionsService.getOrgOptions().subscribe({
+      next: (options) => {
+        console.log('✅ 組織選項載入成功:', options);
+        this.orgOptions = options;
+
+        // 🎯 更新各類型欄位定義的組織選項
+        this.updateOrgOptionsInColumns();
+      },
+      error: (error) => {
+        console.error('❌ 載入組織選項失敗:', error);
+        this.messageService.warnBubble('載入組織選項失敗');
+        this.orgOptions = [];
+      }
+    });
+
+    this.subscriptions.push(subscription);
+  }
+
+  // 🎯 新增：更新各類型欄位定義中的組織選項
+  private updateOrgOptionsInColumns(): void {
+    console.log('🔄 更新欄位定義中的組織選項...');
+
+    // 更新 A 類型的組織選項
+    const aOrgColumn = this.deductionAColumns.find(col => col.field === 'org_id');
+    if (aOrgColumn) {
+      aOrgColumn.options = [...this.orgOptions];
+      console.log('✅ 已更新 A 類型 org_id 選項');
+    }
+
+    // 更新 C 類型的組織選項
+    const cOrgColumn = this.deductionCColumns.find(col => col.field === 'org_id');
+    if (cOrgColumn) {
+      cOrgColumn.options = [...this.orgOptions];
+      console.log('✅ 已更新 C 類型 org_id 選項');
+    }
+
+    // 更新 D 類型的組織選項
+    const dOrgColumn = this.deductionDColumns.find(col => col.field === 'org_id');
+    if (dOrgColumn) {
+      dOrgColumn.options = [...this.orgOptions];
+      console.log('✅ 已更新 D 類型 org_id 選項');
+    }
+
+    // 更新 E 類型的組織選項
+    const eOrgColumn = this.deductionEColumns.find(col => col.field === 'org_id');
+    if (eOrgColumn) {
+      eOrgColumn.options = [...this.orgOptions];
+      console.log('✅ 已更新 E 類型 org_id 選項');
+    }
+
+    console.log('🎯 所有類型的組織選項更新完成');
   }
 
   private prepareContractInfoDisplay(): void {
