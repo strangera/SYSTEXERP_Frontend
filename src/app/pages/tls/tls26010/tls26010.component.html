@@ -93,12 +93,18 @@
 <div class="card">
   <div class="col-12">
     <app-table [showCheckBox]="true"
+               [showEdit]="false"
+               [showDetail]="false"
                [data]="tls26010Service.TLS26010List()"
                [tableKey]="'TLS26010'"
                [dataKey]="'pod_no'"
                [columns]="columns"
                [addButton]="addButton"
                [selectedItems]="selectedItems"
+               [showRowEdit]="canPerformAction('30')"
+               (rowEditInit)="onRowEditInit($event)"
+               (rowEditSave)="onRowEditSave($event)"
+               (rowEditCancel)="onRowEditCancel($event)"
                (selectionChange)="selectedItems = $event"
                (delete)="onDelete($event)"
                (edit)="onEdit($event)"

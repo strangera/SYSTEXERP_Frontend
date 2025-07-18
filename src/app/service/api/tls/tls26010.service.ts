@@ -2,85 +2,10 @@ import { HttpClient } from '@angular/common/http';
 import { computed, Injectable, signal } from '@angular/core';
 import { catchError, EMPTY, finalize, of, take, tap } from 'rxjs';
 import { environment } from '../../../../environments/environment';
+import { ApprovalStatus, PreorderECRListQuery, TLS26010, TLS26010Data, TLS26010Payload, TLS26010Query, TLTTALENTQuery } from '../../../pages/tls/tls26010/tls26010.model';
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-import { BaseQueryResponse } from '../../../shared/models/api/base-api.interface';
+import { BaseQueryResponse, DropdownOption } from '../../../shared/models/api/base-api.interface';
 import { ErrorHandlerService } from '../../system/error-handler.service';
-
-interface Data {
-  No: string;
-  Name: string;
-}
-
-interface ECROption {
-  ECR_No: string;
-  ECR_Name: string;
-}
-
-interface TLTOption {
-  tlt_no: string;
-  tlt_name: string;
-}
-
-
-export const enum ApprovalStatus {
-  未核准 = '0',
-  已核准 = '1',
-  刪除 = '9',
-}
-
-/**
- * @description
- * data_type: 1: 讀取收銀機主檔中統收機台, 2: 讀取預購活動主檔中的收銀機台
- * SYS3800s: 館別編號
- * SYS3900s: 樓層編號
- */
-export interface PreorderECRListQuery {
-  data_type: string;
-  SYS3800s: { building_no: string; }[];
-  SYS3900s: { floor_no: string; }[];
-}
-
-/**
- * @description
- * data_type: 1: 讀取收銀機主檔中統收機台, 2: 讀取預購活動主檔中的收銀機台
- * SYS3800s: 館別編號
- * SYS3900s: 樓層編號
- */
-export interface TLTTALENTQuery {
-  SYS3800s: { building_no: string; }[];
-  SYS3900s: { floor_no: string; }[];
-}
-
-export interface TLS26010Query {
-  ECR_Nos: string[];
-  tlt_nos: string[];
-  pod_sdate_S: string;
-  pod_sdate_E: string;
-  pod_edate_S: string;
-  pod_edate_E: string;
-}
-
-export interface TLS26010 {
-  Data: {
-    pod_no: string;
-    pod_desc: string;
-    pod_sdate: string;
-    pod_edate: string;
-  }[];
-  pod_status: '0' | '1' | '9';
-  approved_usr_name: string;
-  approved_date: string | null;
-}
-
-export interface TLS26010Data {
-  pod_no: string;
-  pod_desc: string;
-  pod_sdate: string;
-  pod_edate: string;
-  pod_status: '0' | '1' | '9';
-  approved_usr_name: string;
-  approved_date: string | null;
-}
 
 const mock = !0;
 
@@ -91,36 +16,36 @@ export class TLS26010Service {
   public approvalData = signal<ApprovalStatus>(ApprovalStatus.未核准);
 
   // 儲存資料
-  private sys3800Data = signal<Data[]>([]);
-  private sys3900Data = signal<Data[]>([]);
-  private preorderECRData = signal<Data[]>([]);
-  private TLTTALENTData = signal<Data[]>([]);
+  private sys3800Data = signal<DropdownOption[]>([]);
+  private sys3900Data = signal<DropdownOption[]>([]);
+  private preorderECRData = signal<DropdownOption[]>([]);
+  private TLTTALENTData = signal<DropdownOption[]>([]);
   private TLS26010Data = signal<TLS26010[]>([]);
 
   private sys3800Loading = !1;
   private sys3900Loading = !1;
   private preorderECRLoading = !1;
   private TLTTALENTLoading = !1;
-  private TLS26010Loading = !1;
+  private TableLoading = !1;
   private approvalStatusLoading = !1;
 
   public sys3800List = computed(() => {
-    const res = new Map<string, Data>();
+    const res = new Map<string, DropdownOption>();
     for (const item of this.sys3800Data()) res.set(item.No, item);
     return Array.from(res.values());
   });
   public sys3900List = computed(() => {
-    const res = new Map<string, Data>();
+    const res = new Map<string, DropdownOption>();
     for (const item of this.sys3900Data()) res.set(item.No, item);
     return Array.from(res.values());
   });
   public ECRList = computed(() => {
-    const res = new Map<string, Data>();
+    const res = new Map<string, DropdownOption>();
     for (const item of this.preorderECRData()) res.set(item.No, item);
     return Array.from(res.values());
   });
   public TLTList = computed(() => {
-    const res = new Map<string, Data>();
+    const res = new Map<string, DropdownOption>();
     for (const item of this.TLTTALENTData()) res.set(item.No, item);
     return Array.from(res.values());
   });
@@ -164,7 +89,7 @@ export class TLS26010Service {
   loadSYS3800(query: any): void {
     if (this.sys3800Loading) return void (this.sys3800Loading = !1);
     this.sys3800Loading = !0;
-    this.http.post<BaseQueryResponse<Data>>(`${this.apiUrl}/querySYS3800_DropDownList`, query).pipe(
+    this.http.post<BaseQueryResponse<DropdownOption>>(`${this.apiUrl}/querySYS3800_DropDownList`, query).pipe(
       take(1),
       tap(response => this.sys3800Data.set(response.Data)),
       catchError(error => this.errorHandler.handleError(error)),
@@ -179,7 +104,7 @@ export class TLS26010Service {
   loadSYS3900(query: any): void {
     if (this.sys3900Loading) return void (this.sys3900Loading = !1);
     this.sys3900Loading = !0;
-    this.http.post<BaseQueryResponse<Data>>(`${this.apiUrl}/querySYS3900_DropDownList`, query).pipe(
+    this.http.post<BaseQueryResponse<DropdownOption>>(`${this.apiUrl}/querySYS3900_DropDownList`, query).pipe(
       take(1),
       tap(response => this.sys3900Data.set(response.Data)),
       catchError(error => this.errorHandler.handleError(error)),
@@ -194,7 +119,7 @@ export class TLS26010Service {
   loadPreorderECRList(query: PreorderECRListQuery): void {
     if (this.preorderECRLoading) return void (this.preorderECRLoading = !1);
     this.preorderECRLoading = !0;
-    const mockData: BaseQueryResponse<Data> = {
+    const mockData: BaseQueryResponse<DropdownOption> = {
       Error: void 0,
       Message: "成功",
       Meta: {
@@ -215,7 +140,7 @@ export class TLS26010Service {
 
     const api = mock
       ? of(mockData)
-      : this.http.post<BaseQueryResponse<Data>>(`${this.apiUrl}/queryPreorderECR_List`, query);
+      : this.http.post<BaseQueryResponse<DropdownOption>>(`${this.apiUrl}/queryPreorderECR_List`, query);
 
     api.pipe(
       take(1),
@@ -235,7 +160,7 @@ export class TLS26010Service {
     this.TLTTALENTLoading = !0;
     // if (query.building_no === '' && query.floor_no === '') return void (this.TLTTALENTLoading = !1);
 
-    this.http.post<BaseQueryResponse<Data>>(`${this.apiUrl}/queryTLTTALENT_DropDownList`, query).pipe(
+    this.http.post<BaseQueryResponse<DropdownOption>>(`${this.apiUrl}/queryTLTTALENT_DropDownList`, query).pipe(
       take(1),
       tap(() => this.TLTTALENTData.set([])),
       tap(response => this.TLTTALENTData.set(response.Data)),
@@ -249,8 +174,8 @@ export class TLS26010Service {
 
   /** 查詢預購活動檔期 */
   loadTLS26010(query: TLS26010Query): void {
-    if (this.TLS26010Loading) return void (this.TLS26010Loading = !1);
-    this.TLS26010Loading = !0;
+    if (this.TableLoading) return void (this.TableLoading = !1);
+    this.TableLoading = !0;
     const mockData: BaseQueryResponse<TLS26010> = {
       Error: void 0,
       Message: "成功",
@@ -309,7 +234,7 @@ export class TLS26010Service {
       tap(response => this.TLS26010Data.set(response.Data)),
       catchError(error => this.errorHandler.handleError(error)),
       finalize(() => {
-        this.TLS26010Loading = !1;
+        this.TableLoading = !1;
         console.log('預購活動檔期查詢結果:', this.TLS26010Data());
       })
     ).subscribe();
@@ -336,8 +261,69 @@ export class TLS26010Service {
       ).subscribe();
   }
 
+  /** 新增預購活動 */
+  insertTLS26010(payload: TLS26010Payload): void {
+    if (this.TableLoading) return void (this.TableLoading = !1);
+    this.TableLoading = !0;
+
+    this.http.post<BaseQueryResponse<any>>(`${this.apiUrl}/insertTLS26010`, payload).pipe(
+      take(1),
+      tap(() => { }),
+      catchError(error => this.errorHandler.handleError(error)),
+      finalize(() => {
+        this.TableLoading = !1;
+        console.log('新增結果:', this.TLS26010Data());
+      })
+    ).subscribe();
+  }
+
+  /** 更新預購活動 */
+  updateTLS26010(data: TLS26010Data): void {
+    if (this.TableLoading) return void (this.TableLoading = !1);
+    this.TableLoading = !0;
+
+    // 構建更新的數據負載
+    const updatePayload = {
+      pod_no: data.pod_no,
+      pod_desc: data.pod_desc,
+      pod_sdate: data.pod_sdate,
+      pod_edate: data.pod_edate,
+      // 可以根據需要添加更多字段
+    };
+
+    this.http.post<BaseQueryResponse<any>>(`${this.apiUrl}/updateTLS26010`, updatePayload).pipe(
+      take(1),
+      tap((response) => {
+        if (response.Status === 'Success') {
+          // 更新本地數據
+          this.TLS26010Data.update(currentData => {
+            const index = currentData.findIndex(item => item.Data?.[0]?.pod_no === data.pod_no);
+            if (index !== -1) {
+              // 更新找到的項目
+              if (currentData[index].Data && currentData[index].Data[0]) {
+                currentData[index].Data[0] = { ...currentData[index].Data[0], ...updatePayload };
+              }
+            }
+            return [...currentData];
+          });
+          this.messageService.successBubble('更新成功');
+        } else {
+          this.messageService.errorBubble('更新失敗: ' + response.Message);
+        }
+      }),
+      catchError(error => {
+        this.messageService.errorBubble('更新失敗，請稍後再試');
+        return this.errorHandler.handleError(error);
+      }),
+      finalize(() => {
+        this.TableLoading = !1;
+        console.log('更新結果:', this.TLS26010Data());
+      })
+    ).subscribe();
+  }
+
   /** 上傳 */
-  updateTLS26010(file: File): void {
+  importTLS26010(file: File): void {
     const formData = new FormData();
     formData.append('file', file);
     this.http.post<any>(`${this.apiUrl}/importTLS26010`, formData).pipe(
@@ -368,8 +354,8 @@ export class TLS26010Service {
 
   /** 刪除預購活動 */
   deleteTLS26010(data: TLS26010Data): void {
-    if (this.TLS26010Loading) return void (this.TLS26010Loading = !1);
-    this.TLS26010Loading = !0;
+    if (this.TableLoading) return void (this.TableLoading = !1);
+    this.TableLoading = !0;
     const id = data.pod_no;
     const api = mock
       ? of(<BaseQueryResponse<any>>{
@@ -391,7 +377,7 @@ export class TLS26010Service {
       }),
       catchError(error => this.errorHandler.handleError(error)),
       finalize(() => {
-        this.TLS26010Loading = !1;
+        this.TableLoading = !1;
         console.log('刪除結果:', this.TLS26010Data());
       })
     ).subscribe();
@@ -410,6 +396,4 @@ export class TLS26010Service {
     this.TLTTALENTData.set([]);
     this.TLS26010Data.set([]);
   }
-
-  // insertTLS26010
 }

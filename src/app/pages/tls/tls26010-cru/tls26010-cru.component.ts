@@ -4,7 +4,7 @@ import { FormArray, FormBuilder, FormControl, FormGroup, FormsModule, ReactiveFo
 import { Router } from '@angular/router';
 import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { PanelModule } from 'primeng/panel';
-import { TLS26010Data, TLS26010Service } from '../../../service/api/tls/tls26010.service';
+import { TLS26010Service } from '../../../service/api/tls/tls26010.service';
 import { AuthService } from '../../../service/system/auth.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
@@ -15,6 +15,7 @@ import { InputTextComponent } from '../../../shared/componentkit/input-text/inpu
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
+import { TLS26010Data } from '../tls26010/tls26010.model';
 // 預購活動檔期設定
 @Component({
   selector: 'app-tls26010-cru',
