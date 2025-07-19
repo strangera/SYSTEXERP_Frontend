@@ -634,15 +634,17 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionItem>
 
     switch (commissionType) {
       case '1':
-        return this.fixedRentItems.filter(item => item._status === 'new').length;
+        return this.displayFixedRentItems.filter(item => item._status === 'new').length;
       case '2':
-        return this.baseRentHigherItems.filter(item => item._status === 'new').length;
+        return this.displayBaseRentHigherItems.filter(item => item._status === 'new').length;
+      case '3':
+        return this.displayGeneralCommissionItems.filter(item => item._status === 'new').length;
       case '4':
-        return this.baseCommissionItems.filter(item => item._status === 'new').length;
+        return this.displayBaseCommissionItems.filter(item => item._status === 'new').length;
       case '5':
-        return this.graduatedItems.filter(item => item._status === 'new').length;
+        return this.displayGraduatedItems.filter(item => item._status === 'new').length;
       case '6':
-        return this.baseTierItems.filter(item => item._status === 'new').length;
+        return this.displayBaseTierItems.filter(item => item._status === 'new').length;
       default:
         return 0;
     }
@@ -654,16 +656,17 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionItem>
 
     switch (commissionType) {
       case '1':
-        return this.fixedRentItems.filter(item => item._status !== 'deleted').length;
+        return this.displayFixedRentItems.length;
       case '2':
-        return this.baseRentHigherItems.filter(item => item._status !== 'deleted').length;
-
+        return this.displayBaseRentHigherItems.length;
+      case '3':
+        return this.displayGeneralCommissionItems.length;
       case '4':
-        return this.baseCommissionItems.filter(item => item._status !== 'deleted').length;
+        return this.displayBaseCommissionItems.length;
       case '5':
-        return this.graduatedItems.filter(item => item._status !== 'deleted').length;
+        return this.displayGraduatedItems.length;
       case '6':
-        return this.baseTierItems.filter(item => item._status !== 'deleted').length;
+        return this.displayBaseTierItems.length;
       default:
         return 0;
     }
@@ -776,7 +779,7 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionItem>
       return;
     }
 
-    // 🎯 檢查是否包含來自 Next2 的唯讀資料
+    // 檢查是否包含來自 Next2 的唯讀資料
     const hasReadonlyItems = selectedItems.some(item => item._fromNext2 && item._readonly);
     if (hasReadonlyItems) {
       this.notificationService.warnBubble('無法刪除來自抽成設定的資料');
@@ -786,16 +789,25 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionItem>
     if (confirm(`確定要刪除選取的 ${selectedItems.length} 個項目嗎？`)) {
       selectedItems.forEach(item => {
         if (item._status === 'new') {
+          // 新增項目：直接從陣列移除（不需要傳給後端）
           this.removeItemFromArray(item, type);
+          console.log(`🗑️ 移除新增項目 ${item.id || 'temp'} 從陣列`);
         } else {
+          // 🎯 關鍵修正：現有項目只標記刪除，保留在陣列中！
           item._status = 'deleted';
+          console.log(`🗑️ 標記項目 ${item.id} 為刪除狀態，保留在陣列中傳給後端`);
+          // ❌ 重要：不要調用 removeItemFromArray(item, type);
         }
       });
 
       this.saveConditionDataToWorkflow();
       this.notificationService.successBubble(`已刪除 ${selectedItems.length} 個項目`);
+
+      // 🎯 強制更新畫面
+      this.cdr.detectChanges();
     }
   }
+
 
   private removeItemFromArray(item: any, type: string): void {
     switch (type) {
@@ -824,15 +836,16 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionItem>
 
   // 🎯 儲存條件設定到工作流程
   private saveConditionDataToWorkflow(): void {
+    // 🎯 重要：包含所有項目（包括標記為刪除的）
     const allConditionItems: ConditionItem[] = [
-      ...this.fixedRentItems,
+      ...this.fixedRentItems,        // 包含 _status: 'deleted' 的項目
       ...this.baseRentHigherItems.map(item => ({
         ...item,
-        // 🎯 ⭐ 重要：確保所有重要屬性都被保存
         _fromNext2: item._fromNext2 || false,
         _status: item._status || 'original',
         _readonly: item._readonly || false
       })),
+      ...this.generalCommissionItems,
       ...this.baseCommissionItems,
       ...this.graduatedItems,
       ...this.baseTierItems
@@ -841,33 +854,27 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionItem>
     console.log('💾 Next3 儲存條件設定資料到工作流程');
     console.log('📊 儲存資料統計:', {
       總項目數: allConditionItems.length,
-      底租抽成取高者: this.baseRentHigherItems.length,
+      顯示項目數: this.getConditionItemCount(),
+      刪除項目數: this.getDeletedItemCount(),
+      底租抽成取高者總數: this.baseRentHigherItems.length,
+      底租抽成取高者顯示數: this.displayBaseRentHigherItems.length,
       來自Next2的項目: this.baseRentHigherItems.filter(item => item._fromNext2).length,
       已修改的項目: this.baseRentHigherItems.filter(item => item._status === 'modified').length,
-      新增的項目: this.baseRentHigherItems.filter(item => item._status === 'new').length
+      新增的項目: this.baseRentHigherItems.filter(item => item._status === 'new').length,
+      刪除的項目: this.baseRentHigherItems.filter(item => item._status === 'deleted').length
     });
 
     try {
       this.contractFlowService.saveStep4Data(allConditionItems);
 
-      // 🎯 ⭐ 重要：詳細驗證儲存結果
+      // 🎯 驗證儲存結果
       const savedData = this.contractFlowService.getStepData(WorkflowStep.CONDITION);
       if (Array.isArray(savedData)) {
         console.log('✅ 儲存驗證 - 暫存資料項目數:', savedData.length);
-
-        // 🎯 檢查關鍵屬性是否保存完整
-        const baseRentHigherInSaved = savedData.filter(item =>
-          'base_rent' in item && 'cag_charge_rate' in item
-        );
-
-        console.log('📊 暫存中的底租抽成取高者:', {
-          數量: baseRentHigherInSaved.length,
-          來自Next2: baseRentHigherInSaved.filter(item => (item as any)._fromNext2).length,
-          已修改: baseRentHigherInSaved.filter(item => (item as any)._status === 'modified').length
-        });
+        console.log('✅ 其中刪除項目數:', savedData.filter(item => (item as any)._status === 'deleted').length);
       }
 
-      console.log('✅ 已儲存條件設定資料到工作流程');
+      console.log('✅ 已儲存條件設定資料到工作流程（包含刪除項目）');
     } catch (error) {
       console.error('❌ Next3 儲存條件設定資料失敗:', error);
       this.notificationService.errorBubble('儲存條件設定資料失敗');
@@ -938,6 +945,21 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionItem>
 
       console.log('🚀 Next3: 最終送出的完整 JSON:');
       console.log(JSON.stringify(cleanSubmitData, null, 2));
+
+      if (cleanSubmitData.commissionTypeChange?.HasChanged) {
+        const changeInfo = cleanSubmitData.commissionTypeChange;
+        const originalName = this.getTermTypeName(changeInfo.OriginalTermType);
+        const newName = this.getTermTypeName(changeInfo.NewTermType);
+
+        const warningDetails = this.generateClearWarningDetails(changeInfo.ClearOperations);
+        const warningMessage = `⚠️ 抽成別已變更：${originalName} → ${newName}\n\n將清除以下資料：\n${warningDetails}\n\n確定要繼續送出嗎？`;
+
+        if (!confirm(warningMessage)) {
+          this.loading = false;
+          this.notificationService.unblockUi();
+          return;
+        }
+      }
 
       // 🎯 驗證資料
       const validation = this.contractFlowService.validateCleanSubmitData(cleanSubmitData);
@@ -1568,5 +1590,76 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionItem>
     const jsonString = JSON.stringify(cleanData, null, 2);
     console.log('🧹 清理後 JSON:', jsonString);
     return jsonString;
+  }
+
+  private getTermTypeName(termType: string): string {
+    switch (termType) {
+      case '1': return '固定租金';
+      case '2': return '底租抽成取高者';
+      case '3': return '一般抽成';
+      case '4': return '包底抽成';
+      case '5': return '階梯式抽成';
+      case '6': return '包底加階梯';
+      default: return `未知類型(${termType})`;
+    }
+  }
+
+  // 🎯 新增：生成清除警告詳細資訊
+  private generateClearWarningDetails(clearOps: any): string {
+    const details: string[] = [];
+
+    if (clearOps.clearRentDetails) details.push('• 租金設定');
+    if (clearOps.clearCommissionMasters) details.push('• 抽成主檔');
+    if (clearOps.clearChargedDetails) details.push('• 抽成明細');
+    if (clearOps.clearLimitDetails) details.push('• 包底設定');
+    if (clearOps.clearLevelDetails) details.push('• 階梯設定');
+
+    return details.length > 0 ? details.join('\n') : '• 無需清除資料';
+  }
+
+  getDeletedItemCount(): number {
+    const commissionType = this.contractInfoData[0]?.tlt_term_type;
+
+    switch (commissionType) {
+      case '1':
+        return this.fixedRentItems.filter(item => item._status === 'deleted').length;
+      case '2':
+        return this.baseRentHigherItems.filter(item => item._status === 'deleted').length;
+      case '3':
+        return this.generalCommissionItems.filter(item => item._status === 'deleted').length;
+      case '4':
+        return this.baseCommissionItems.filter(item => item._status === 'deleted').length;
+      case '5':
+        return this.graduatedItems.filter(item => item._status === 'deleted').length;
+      case '6':
+        return this.baseTierItems.filter(item => item._status === 'deleted').length;
+      default:
+        return 0;
+    }
+  }
+
+  // 🎯 2. 新增：取得顯示用的資料（過濾掉已刪除的項目）
+  get displayFixedRentItems(): FixedRentCondition[] {
+    return this.fixedRentItems.filter(item => item._status !== 'deleted');
+  }
+
+  get displayBaseRentHigherItems(): BaseRentHigherCondition[] {
+    return this.baseRentHigherItems.filter(item => item._status !== 'deleted');
+  }
+
+  get displayGeneralCommissionItems(): GeneralCommissionCondition[] {
+    return this.generalCommissionItems.filter(item => item._status !== 'deleted');
+  }
+
+  get displayBaseCommissionItems(): BaseCommissionCondition[] {
+    return this.baseCommissionItems.filter(item => item._status !== 'deleted');
+  }
+
+  get displayGraduatedItems(): GraduatedCommissionCondition[] {
+    return this.graduatedItems.filter(item => item._status !== 'deleted');
+  }
+
+  get displayBaseTierItems(): BaseTierCondition[] {
+    return this.baseTierItems.filter(item => item._status !== 'deleted');
   }
 }

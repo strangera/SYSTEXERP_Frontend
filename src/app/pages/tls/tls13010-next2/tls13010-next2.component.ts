@@ -2219,6 +2219,17 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
       console.log('🚀 Next2: 最終送出的完整 JSON:');
       console.log(JSON.stringify(cleanSubmitData, null, 2));
 
+      if (cleanSubmitData.commissionTypeChange?.HasChanged) {
+        const changeInfo = cleanSubmitData.commissionTypeChange;
+        const warningMessage = `⚠️ 抽成別已變更：${this.getTermTypeName(changeInfo.OriginalTermType)} → ${this.getTermTypeName(changeInfo.NewTermType)}\n原有條件設定將被清除。`;
+
+        if (!confirm(`${warningMessage}\n\n確定要繼續送出嗎？`)) {
+          this.loading = false;
+          this.notificationService.unblockUi();
+          return;
+        }
+      }
+
       // 🎯 驗證資料
       const validation = this.contractFlowService.validateCleanSubmitData(cleanSubmitData);
 
@@ -2343,38 +2354,15 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
     return Array.isArray(step2Data) ? step2Data.filter(item => item._status !== 'deleted').length : 0;
   }
 
-  private validateNext3DataConsistency(): boolean {
-    const commissionType = this.currentCommissionType;
-
-    if (commissionType !== '2') {
-      return true; // 非底租抽成取高者不需檢查
+  private getTermTypeName(termType: string): string {
+    switch (termType) {
+      case '1': return '固定租金';
+      case '2': return '底租抽成取高者';
+      case '3': return '一般抽成';
+      case '4': return '包底抽成';
+      case '5': return '階梯式抽成';
+      case '6': return '包底加階梯';
+      default: return `未知類型(${termType})`;
     }
-
-    // 🎯 正確：計算 Next2 外層表格的有效項目數量
-    const next2MainItemsCount = this.commissionData.filter(item =>
-      item._status !== 'deleted'
-    ).length;
-
-    // 🎯 從 Next3 取得條件設定資料
-    const next3Data = this.contractFlowService.getStepData(WorkflowStep.CONDITION);
-    const next3ItemsCount = Array.isArray(next3Data) ?
-      next3Data.filter(item => (item as any)._status !== 'deleted').length : 0;
-
-    console.log('🔍 Next2 送出前數量一致性檢查:', {
-      next2MainItemsCount,     // Next2 外層表格項目數
-      next3ItemsCount,         // Next3 條件設定項目數
-      isConsistent: next2MainItemsCount === next3ItemsCount
-    });
-
-    if (next2MainItemsCount !== next3ItemsCount) {
-      this.notificationService.errorBubble(
-        `資料不一致：抽成設定有 ${next2MainItemsCount} 個項目，` +
-        `但條件設定有 ${next3ItemsCount} 個項目。請檢查資料後再送出。`
-      );
-      return false;
-    }
-
-    return true;
   }
-
 }
