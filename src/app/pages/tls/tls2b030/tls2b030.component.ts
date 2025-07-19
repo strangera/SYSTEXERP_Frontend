@@ -1,17 +1,12 @@
-import { FloorService } from './../../../service/basic/floor.service';
-import { CahserTypeService } from './../../../service/basic/cahser-type.service';
 import { Component } from '@angular/core';
-import { FormBuilder, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { NavigationExtras, Router } from '@angular/router';
-// Permissions
-import { FunsrightInfo, PermissionsInfo } from '../../../shared/models/system/funsrightInfo';
-// Shared
-import { AuthService } from '../../../service/system/auth.service';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-
-import { ValidationService } from '../../../shared/service/validation.service';
-import { RegionService } from '../../../service/basic/region-code.service';
+import {
+  FormGroup,
+  Validators,
+  FormsModule,
+  ReactiveFormsModule,
+} from '@angular/forms';
+import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
+import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { AccordionModule } from 'primeng/accordion';
 import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
@@ -23,198 +18,466 @@ import { CheckboxModule } from 'primeng/checkbox';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { TranslateModule } from '@ngx-translate/core';
+import { TLS2B030Service } from '../../../service/api/tls/tls2-b030.service';
+import { CahserTypeService } from '../../../service/basic/cahser-type.service';
+import { RegionService } from '../../../service/basic/region-code.service';
+import { FloorService } from '../../../service/basic/floor.service';
+import { ValidationService } from '../../../shared/service/validation.service';
+import { Tls11010Service } from '../../../service/api/tls/tls11010.service';
 
 @Component({
-    selector: 'app-tls2b030',
-    templateUrl: './tls2b030.component.html',
-    styleUrl: './tls2b030.component.scss',
-    standalone: true,
-    imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarRangeComponent, CalendarComponent, InputNumberRangeComponent, MultiSelectComponent, DropdownComponent, CheckboxModule, ButtonComponent, TableComponent, TranslateModule]
+  selector: 'app-tls2b030',
+  templateUrl: './tls2b030.component.html',
+  styleUrl: './tls2b030.component.scss',
+  standalone: true,
+  imports: [
+    MenubarComponent,
+    AccordionModule,
+    FormsModule,
+    ReactiveFormsModule,
+    CalendarRangeComponent,
+    CalendarComponent,
+    InputNumberRangeComponent,
+    MultiSelectComponent,
+    DropdownComponent,
+    CheckboxModule,
+    ButtonComponent,
+    TableComponent,
+    TranslateModule,
+  ],
 })
-export class TLS2B030Component {
-  ProgNo: string = '220057';
-  // 權限
-  funInfo?: FunsrightInfo;
-
-  // 查詢
-  // ----------------------------------------------------------------
-  loading: boolean = false;
-  submitted: boolean = false;
+export class TLS2B030Component extends BasicQueryPageComponent<any> {
+ 
   queryForm = this.formBuilder.group({
-    onedatemm: [], // 銷售年月-月報表
-    startdate: [], // 銷售日期-日報表
-    enddate: [], // 銷售日期-日報表
-    cahserStart: [, [Validators.max(999999), this.validationService.numberValidator]], // 收銀機代號
-    cahserEnd: [, [Validators.max(999999), this.validationService.numberValidator]], // 收銀機代號
-    counterStart: [, [Validators.max(999999), this.validationService.numberValidator]], // 專櫃編號
-    counterEnd: [, [Validators.max(999999), this.validationService.numberValidator]], // 專櫃編號
-    regionCode: [[] as number[]], // 區域代號
-    cahserType: [[] as number[]], // 收銀類別
-    floor: [], // 樓層
-    onlyShowOverflow: [,], // 僅顯示溢欠
-    usagecount: [0, [Validators.required]], // 次數限制 (0 不限制)
+   
+    onedatemm: [],
+    startdate: [],
+    enddate: [],
+    cahserStart: [
+      ,
+      [Validators.max(999999), this.validationService.numberValidator],
+    ],
+    cahserEnd: [
+      ,
+      [Validators.max(999999), this.validationService.numberValidator],
+    ],
+    counterStart: [
+      ,
+      [Validators.max(999999), this.validationService.numberValidator],
+    ],
+    counterEnd: [
+      ,
+      [Validators.max(999999), this.validationService.numberValidator],
+    ],
+    regionCode: [[]],
+    cahserType: [[]],
+
+    onlyShowOverflow: [],
+    tlt_building: [],
+    tlt_floor: [],
+    area_no: [],
+    usagecount: [0, [Validators.required]],
+    ...createPaginationConfig([{ field: 'onedatemm', order: 1 }]),
   });
-  // 表格
-  // ----------------------------------------------------------------
-  data: any[] = [
-    // { contactPerson: 'A先生', contactDate: '2024-08-08', UID: '123' ,industryType: '停車管理', category: '專櫃。意向書',version: 1, rentNumber: 1, progress: '未審核'},
-    // { contactPerson: 'B先生', contactDate: '2024-08-09', UID: '456' ,industryType: '停車管理', category: '專櫃。意向書',version: 1, rentNumber: 2, progress: '已審核'},
-    // { contactPerson: 'C先生', contactDate: '2024-08-10', UID: '789' ,industryType: '停車管理', category: '專櫃。意向書',version: 1, rentNumber: 3, progress: '未審核'},
-    // 其他資料
-  ];
-  filteredData: any[] = [...this.data];
-  columns: any[] = [
-    { field: 'contactPerson', header: '收銀機代號', visible: true },
-    { field: 'contactDate', header: '專櫃編號', visible: true },
-    { field: 'UID', header: '櫃位名稱', visible: true },
-    { field: 'industryType', header: '現金', visible: true },
-    { field: 'category', header: '信用卡', visible: true },
-    { field: 'version', header: '一卡通', visible: true },
-    { field: 'rentNumber', header: '禮券', visible: true },
-    { field: 'col1', header: '商品提貨單', visible: true },
-    { field: 'col2', header: '感熱紙抵用券', visible: true },
-    { field: 'col3', header: '商品抵用券', visible: true },
-    { field: 'col4', header: '貴賓提貨單(應收帳款)', visible: true },
-    { field: 'col5', header: '外來禮券(抵用券)', visible: true },
-    { field: 'col6', header: '外來提貨單(抵用券)', visible: true },
-    { field: 'col7', header: '活動券(自營)', visible: true },
-    { field: 'col8', header: '折價券', visible: true },
-    { field: 'col9', header: '現抵', visible: true },
-    { field: 'col10', header: '禮券餘代卡', visible: true },
-    { field: 'col11', header: '提貨單餘代卡', visible: true },
-    { field: 'col12', header: '會員折抵', visible: true },
-    { field: 'col13', header: 'LINE PAY', visible: true },
-    { field: 'col14', header: 'APP抵用券', visible: true },
-    { field: 'col15', header: 'APP提貨單', visible: true },
-    { field: 'col16', header: '總金額', visible: true },
-    // 其他欄位
-  ];
-  // ----------------------------------------------------------------
+
+  data: any[] = [];
+  totalRecords = 0;
+  selectedItems: any[] = [];
+
+  floorOptions: any[] = [];
+  regionOptions: any[] = [];
+  BUILDING_NO_Options: any[] = [];
+  subtotalFields: string[] = [];
+
+
+
+  // 下拉選項
   cahserTypeOptions: any[] = [];
   areaCodeOptions: any[] = [];
-  floorOptions: any[] = [];
 
   constructor(
-    private router: Router,
-    private formBuilder: FormBuilder,
-    private messageService: NotificationService,
-    private authService: AuthService,
-    private validationService: ValidationService,
+    private tls2b030Service: TLS2B030Service,
     private cahserTypeService: CahserTypeService,
-    private RegionService: RegionService,
     private floorService: FloorService,
+    private regionService: RegionService,
+    private tls11010Service: Tls11010Service,
+    private validationService: ValidationService,
   ) {
+    super();
   }
 
   ngOnInit(): void {
-    //
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
-    //
-    this.floorService.getFloors().subscribe(data => {
-      this.floorOptions = data;
-    });
-    //
-    this.cahserTypeService.getSystemTypes().subscribe(data => {
-      this.cahserTypeOptions = data;
+    this.initializePage(
+      'TLS2B030',
+      '/TLS2000/TLS2B030CRU',
+      this.queryForm,
+      (form) => this.onSubmit(form),
+    );
 
-      // 全選填入
-      // let allSystemValues = this.cahserTypeOptions.map(system => system.value);
-      // this.queryForm.patchValue({
-      //   cahserType: allSystemValues
-      // });
-    });
-    //
-    this.RegionService.getRegionOptions().subscribe(data => {
-      this.areaCodeOptions = data;
-
-      // 全選填入
-      // let allSystemValues = this.areaCodeOptions.map(system => system.value);
-      // this.queryForm.patchValue({
-      //   regionCode: allSystemValues
-      // });
-    });
+    this.cahserTypeService
+      .getSystemTypes()
+      .subscribe((res) => (this.cahserTypeOptions = res));
+    this.regionService
+      .getRegionOptions()
+      .subscribe((data) => (this.regionOptions = data));
+    this.floorService
+      .getFloors()
+      .subscribe((data) => (this.floorOptions = data));
+    this.tls11010Service
+      .getBuildingOptions()
+      .subscribe((data) => (this.BUILDING_NO_Options = data));
+        // 加入 subtotalFields 計算（只排除文字欄位）
+  const textFields = ['ECR_No', 'tlt_no', 'tlt_name'];
+  this.subtotalFields = this.columns
+    .filter(col => !textFields.includes(col.field))
+    .map(col => col.field);
   }
 
-  canQuery(): boolean {
-    return true;
-  }
+  onSubmit(form: FormGroup): void {
+    this.handleSubmit(form, () => {
+      const payload = { ...form.value };
+      Object.keys(payload).forEach((key) => {
+        if (typeof payload[key] === 'string') {
+          payload[key] = payload[key].trim() || null;
+        }
+      });
 
-  canAdd(): boolean {
-    return true;
-  }
+      this.loading = true;
+      this.messageService.blockUi();
 
-  canEdit(): boolean {
-    return true;
-  }
-
-  onSubmit(frm: FormGroup) {
-    console.log(frm.value);
-    this.submitted = true;
-    this.loading = true;
-    this.messageService.blockUi();
-
-    if (frm.valid && this.canQuery()) {
-      // 提交邏輯
-      // Service
-      // this.xxxService.queryMachine(frm.value as xxxInterface)
-      //  .subscribe((response: any) => {
-      //    this.rows = response.xxx;
-      // });
-    }
-
-    this.loading = false;
-    this.messageService.unblockUi();
-  }
-
-  onSubmitQuery(frm: FormGroup) {
-    // 查詢邏輯
-    this.onSubmit(frm);
-  }
-
-  onClearForm() {
-    this.queryForm.reset();  // 重置表單
-  }
-
-  onCreate() {
-    if (this.canAdd()) {
-      let extras: NavigationExtras = {
-        state: {
-          crudstatus: CRUDStatus.Create,
-          queryform: this.queryForm,
+      this.tls2b030Service.queryTLS2B030(payload).subscribe({
+        next: (res) => {
+          this.data = res.Data ?? [];
+          this.totalRecords = res.TotalCount ?? this.data.length;
+          this.queryStateService.setQueryState(this.ProgNo, payload);
+          this.messageService.successBubble('查詢成功');
         },
-        skipLocationChange: true
-      };
-
-      //console.log("extra", extras);
-      this.router.navigate(['/TLS2000/TLS2B030CRU'], extras);
-    }
-  }
-
-  onEdit(data: any) {
-    if (this.canEdit()) {
-      let extras: NavigationExtras = {
-        state: {
-          crudstatus: CRUDStatus.Edit,
-          rowdata: data,
-          queryform: this.queryForm,
+        error: () => {
+          this.messageService.errorBubble('查詢失敗');
         },
-        skipLocationChange: true
-      };
-
-      this.router.navigate(['/TLS2000/TLS2B030CRU'], extras);
-    }
+        complete: () => {
+          this.loading = false;
+          this.messageService.unblockUi();
+        },
+      });
+    });
   }
 
-  onDetail(data: any) {
-    let extras: NavigationExtras = {
-      state: {
-        crudstatus: CRUDStatus.Read,
-        rowdata: data,
-        queryform: this.queryForm,
-      },
-      skipLocationChange: true
-    };
-
-    this.router.navigate(['/TLS2000/TLS2B030CRU'], extras);
+  moneyFormat(value: number): string {
+    return value != null ? value.toLocaleString('en-US') : '0'; // ✅ 使用美式格式
   }
+  onClearForm(): void {
+    this.queryForm.reset();
+  }
+   columns: any[] = [
+    { field: 'ECR_No', header: '收銀機號', visible: true },
+    { field: 'tlt_no', header: '專櫃編號', visible: true },
+    {
+      field: 'tlt_name',
+      header: '櫃位名稱',
+      visible: true,
+      style: 'text-left',
+    },
+    {
+      field: 'TXN_TotPayAmt',
+      header: '總金額',
+      visible: true,
+      style: 'text-right',
+      format: this.moneyFormat,
+    },
+    {
+      field: 'TXN_PayAmt10',
+      header: '現金',
+      visible: true,
+      style: 'text-right',
+      format: this.moneyFormat,
+    },
+    {
+      field: 'TXN_PayAmt41',
+      header: '聯合連線',
+      visible: true,
+      style: 'text-right',
+      format: this.moneyFormat,
+    },
+    {
+      field: 'TXN_PayAmt42',
+      header: '聯合離線',
+      visible: true,
+      style: 'text-right',
+      format: this.moneyFormat,
+    },
+    {
+      field: 'TXN_PayAmt12',
+      header: '聯合紅利',
+      visible: true,
+      style: 'text-right',
+      format: this.moneyFormat,
+    },
+    {
+      field: 'TXN_PayAmt81',
+      header: '[信用卡]中信停車場',
+      visible: true,
+      style: 'text-right',
+      format: this.moneyFormat,
+    },
+    {
+      field: 'TXN_PayAmt43',
+      header: '中信連線',
+      visible: true,
+      style: 'text-right',
+      format: this.moneyFormat,
+    },
+    {
+      field: 'TXN_PayAmt44',
+      header: '中信離線',
+      visible: true,
+      style: 'text-right',
+      format: this.moneyFormat,
+    },
+    {
+      field: 'TXN_PayAmt14',
+      header: '中信紅利',
+      visible: true,
+      style: 'text-right',
+      format: this.moneyFormat,
+    },
+    {
+      field: 'TXN_PayAmt82',
+      header: '[一卡通]停車場',
+      visible: true,
+      style: 'text-right',
+      format: this.moneyFormat,
+    },
+    {
+      field: 'TXN_PayAmt52',
+      header: '一卡通',
+      visible: true,
+      style: 'text-right',
+      format: this.moneyFormat,
+    },
+    {
+      field: 'TXN_PayAmt20',
+      header: '禮券',
+      visible: true,
+      style: 'text-right',
+      format: this.moneyFormat,
+    },
+    {
+      field: 'TXN_PayAmt62',
+      header: '商品提貨單',
+      visible: true,
+      style: 'text-right',
+      format: this.moneyFormat,
+    },
+    {
+      field: 'TXN_PayAmt77',
+      header: '感熱紙抵用券',
+      visible: true,
+      style: 'text-right',
+      format: this.moneyFormat,
+    },
+    {
+      field: 'TXN_PayAmt71',
+      header: '商品抵用券',
+      visible: true,
+      style: 'text-right',
+      format: this.moneyFormat,
+    },
+    {
+      field: 'TXN_PayAmt30',
+      header: '貴賓提貨單(應收帳款)',
+      visible: true,
+      style: 'text-right',
+      format: this.moneyFormat,
+    },
+    {
+      field: 'TXN_PayAmt73',
+      header: '外來禮券(抵用券)',
+      visible: true,
+      style: 'text-right',
+      format: this.moneyFormat,
+    },
+    {
+      field: 'TXN_PayAmt72',
+      header: '外來提貨單(抵用券)',
+      visible: true,
+      style: 'text-right',
+      format: this.moneyFormat,
+    },
+    {
+      field: 'TXN_PayAmt74',
+      header: '活動券(自營)',
+      visible: true,
+      style: 'text-right',
+      format: this.moneyFormat,
+    },
+    {
+      field: 'TXN_PayAmt75',
+      header: '折價券',
+      visible: true,
+      style: 'text-right',
+      format: this.moneyFormat,
+    },
+    {
+      field: 'TXN_PayAmt76',
+      header: '現抵',
+      visible: true,
+      style: 'text-right',
+      format: this.moneyFormat,
+    },
+    {
+      field: 'TXN_PayAmt24',
+      header: '禮券餘額代卡',
+      visible: true,
+      style: 'text-right',
+      format: this.moneyFormat,
+    },
+    {
+      field: 'TXN_PayAmt25',
+      header: '提貨單餘代卡',
+      visible: true,
+      style: 'text-right',
+      format: this.moneyFormat,
+    },
+    {
+      field: 'TXN_PayAmt07',
+      header: '會員折抵',
+      visible: true,
+      style: 'text-right',
+      format: this.moneyFormat,
+    },
+    {
+      field: 'TXN_PayAmt55',
+      header: 'LINE Pay',
+      visible: true,
+      style: 'text-right',
+      format: this.moneyFormat,
+    },
+    {
+      field: 'TXN_PayAmt83',
+      header: '[LINE Pay]停車場',
+      visible: true,
+      style: 'text-right',
+      format: this.moneyFormat,
+    },
+    {
+      field: 'TXN_PayAmt78',
+      header: 'APP抵用券',
+      visible: true,
+      style: 'text-right',
+      format: this.moneyFormat,
+    },
+    {
+      field: 'TXN_PayAmt79',
+      header: 'APP提貨單',
+      visible: true,
+      style: 'text-right',
+      format: this.moneyFormat,
+    },
+    {
+      field: 'TXN_PayAmt21',
+      header: 'APP禮券',
+      visible: true,
+      style: 'text-right',
+      format: this.moneyFormat,
+    },
+    {
+      field: 'TXN_PayAmt53',
+      header: '悠遊卡',
+      visible: true,
+      style: 'text-right',
+      format: this.moneyFormat,
+    },
+    {
+      field: 'TXN_PayAmt56',
+      header: '一卡通錢包',
+      visible: true,
+      style: 'text-right',
+      format: this.moneyFormat,
+    },
+    {
+      field: 'TXN_PayAmt57',
+      header: '台灣Pay',
+      visible: true,
+      style: 'text-right',
+      format: this.moneyFormat,
+    },
+    {
+      field: 'TXN_PayAmt58',
+      header: '南紡錢包',
+      visible: true,
+      style: 'text-right',
+      format: this.moneyFormat,
+    },
+    {
+      field: 'TXN_PayAmt59',
+      header: '即享券',
+      visible: true,
+      style: 'text-right',
+      format: this.moneyFormat,
+    },
+    {
+      field: 'TXN_PayAmt60',
+      header: '喜客券',
+      visible: true,
+      style: 'text-right',
+      format: this.moneyFormat,
+    },
+    {
+      field: 'TXN_PayAmt22',
+      header: '[外來提貨單]高夢',
+      visible: true,
+      style: 'text-right',
+      format: this.moneyFormat,
+    },
+    {
+      field: 'TXN_PayAmt23',
+      header: '[外來禮券]高夢',
+      visible: true,
+      style: 'text-right',
+      format: this.moneyFormat,
+    },
+    {
+      field: 'PreSale_Received',
+      header: '預售訂金',
+      visible: true,
+      style: 'text-right',
+      format: this.moneyFormat,
+    },
+    {
+      field: 'PreSale_Checkout',
+      header: '預售實收結帳',
+      visible: true,
+      style: 'text-right',
+      format: this.moneyFormat,
+    },
+    {
+      field: 'TXN_OverAmt',
+      header: '溢收金額',
+      visible: true,
+      style: 'text-right',
+      format: this.moneyFormat,
+    },
+    {
+      field: 'TXN_ReturnAmt',
+      header: '退貨金額',
+      visible: true,
+      style: 'text-right',
+      format: this.moneyFormat,
+    },
+    {
+      field: 'TXN_ExchangeAmt',
+      header: '換貨金額',
+      visible: true,
+      style: 'text-right',
+      format: this.moneyFormat,
+    },
+    {
+      field: 'TXN_CancelAmt',
+      header: '作廢金額',
+      visible: true,
+      style: 'text-right',
+      format: this.moneyFormat,
+    },
+  ];
 }

@@ -12,27 +12,22 @@
   [data]="data"
   [subtotalFields]="
     displayMode === 'Detail'
-      ? ['TXN_TotGUI', 'TXN_TotSaleAmt', 'TXN_TotPayAmt']
-      : ['TXN_TotSaleAmt', 'TXN_TotNet', 'TXN_TotTax', 'Pre_TotSaleAmt', 'TXN_TotTax']
+      ? ['PLU_SalePrc', 'TXN_Net', 'TXN_Tax','TXN_Disc']
+      : ['TXN_TotSaleAmt', 'TXN_TotNet', 'Pre_TotSaleAmt', 'Pre_TotNet', 'Pre_TotTax']
   "
-  [groupByField]="displayMode === 'Summary' ? 'tlt_name' : null"
-  [groupByLabel]="'櫃位名稱'"
-  [enableGrouping]="displayMode === 'Summary'"
-  [defaultMergedView]="displayMode === 'Detail'"
-  
-  [reportTitle]="
-    displayMode === 'Detail'
-      ? '折扣別明細表'
-      : '折扣別彙總表'
-  "
+  [groupByField]="displayMode === 'Summary' ? 'tlt_name' : 'TXN_No'"
+  [groupByLabel]="displayMode === 'Summary' ? '櫃位名稱' : '交易序號'"
+  [enableGrouping]="true"
+  [defaultMergedView]="false"
+  [reportTitle]="displayMode === 'Detail' ? '折扣別報表' : '折扣別報表'"
   [currentPage]="1"
   [dateStart]="dateStart"
   [dateEnd]="dateEnd"
   [printedAt]="printedAt"
-  [showTotalOnly]="true"
- 
+  [showTotalOnly]="false"
   [showExpandColumn]="false"
-  [allowMergeToggle]="false"
+  [allowMergeToggle]="true"
+  [showGroupedBody]="true"
 ></app-report-table-group>
 
 

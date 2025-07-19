@@ -1,13 +1,13 @@
 import { TestBed } from '@angular/core/testing';
 
-import { TXNStatusService } from './txn-status.service';
+import { TxnStatusService } from './txn-status.service';
 
-describe('TXNStatusService', () => {
-  let service: TXNStatusService;
+describe('TxnStatusService', () => {
+  let service: TxnStatusService;
 
   beforeEach(() => {
     TestBed.configureTestingModule({});
-    service = TestBed.inject(TXNStatusService);
+    service = TestBed.inject(TxnStatusService);
   });
 
   it('should be created', () => {

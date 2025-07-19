@@ -89,7 +89,7 @@ export class TLS23090Component extends BasicQueryPageComponent<any> {
 
   columns: any[] = [
     { field: 'TXN_Date', header: '銷售日期', visible: true },
-    { field: 'ECR_No', header: '收銀機代號', visible: true },
+    { field: 'ECR_No', header: '收銀機號', visible: true },
     { field: 'TXN_No', header: '交易序號', visible: true },
     { field: 'tlt_no', header: '專櫃編號', visible: true, style: 'text-left' },
     {

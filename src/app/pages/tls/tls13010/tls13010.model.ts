@@ -172,6 +172,13 @@ export interface CleanFareItem {
   tpy_totalamt?: number;
   gui_flag?: string;
   org_id?: string;
+
+  day_account?: string;
+  interval?: number;
+  down_payment?: number;
+  period_nos?: number;
+  tpy_1stamt?: number;
+  tpy_rate?: number;
 }
 
 /**
@@ -660,6 +667,16 @@ export class DataCleaner {
     const toDelete: CleanFareItem[] = [];
 
     rawItems.forEach(item => {
+      // 🎯 修正：先處理刪除狀態，再處理其他狀態
+      if (item._status === 'deleted') {
+        // 刪除的項目：只要有有效 ID 就可以刪除，不管是否被勾選
+        if (this.hasValidId(item.id)) {
+          toDelete.push({ id: Number(item.id) } as CleanFareItem);
+        }
+        return; // 刪除項目處理完畢，不需要進一步處理
+      }
+
+      // 🎯 修正：只有被勾選的項目才處理新增/修改
       if (!item.is_selected) return;
 
       const cleanItem: CleanFareItem = {
@@ -674,7 +691,13 @@ export class DataCleaner {
         tpy_amount: this.parseNumber(item.tpy_amount),
         tpy_totalamt: this.parseNumber(item.tpy_totalamt),
         gui_flag: item.gui_flag,
-        org_id: item.org_id
+        org_id: item.org_id,
+        day_account: item.day_account,
+        interval: this.parseNumber(item.interval),
+        down_payment: this.parseNumber(item.down_payment),
+        period_nos: this.parseNumber(item.period_nos),
+        tpy_1stamt: this.parseNumber(item.tpy_1stamt),
+        tpy_rate: this.parseNumber(item.tpy_rate)
       };
 
       switch (item._status) {
@@ -684,17 +707,11 @@ export class DataCleaner {
         case 'modified':
           toUpdate.push(cleanItem);
           break;
-        case 'deleted':
-          if (this.hasValidId(item.id)) {
-            toDelete.push({ id: Number(item.id) } as CleanFareItem);
-          }
-          break;
       }
     });
 
     return { toInsert, toUpdate, toDelete };
   }
-
   /**
    * 🎯 修正：清理抽成設定資料以配合後端
    */

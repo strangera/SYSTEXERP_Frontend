@@ -24,27 +24,27 @@ import { TranslateModule } from '@ngx-translate/core';
 
 // 2.5.2.1  採購單維護作業 CRU
 @Component({
-    selector: 'app-tls52010-cru',
-    templateUrl: './tls52010-cru.component.html',
-    standalone: true,
-    imports: [
-        MenubarComponent,
-        ButtonComponent,
-        PanelModule,
-        FormsModule,
-        ReactiveFormsModule,
-        InputTextComponent,
-        DropdownComponent,
-        NgClass,
-        NgIf,
-        InputNumberComponent,
-        CalendarComponent,
-        InputTextareaComponent,
-        TableComponent,
-        DialogComponent,
-        DropdownTableComponent,
-        TranslateModule,
-    ],
+  selector: 'app-tls52010-cru',
+  templateUrl: './tls52010-cru.component.html',
+  standalone: true,
+  imports: [
+    MenubarComponent,
+    ButtonComponent,
+    PanelModule,
+    FormsModule,
+    ReactiveFormsModule,
+    InputTextComponent,
+    DropdownComponent,
+    NgClass,
+    NgIf,
+    InputNumberComponent,
+    CalendarComponent,
+    InputTextareaComponent,
+    TableComponent,
+    DialogComponent,
+    DropdownTableComponent,
+    TranslateModule,
+  ],
 })
 export class TLS52010CRUComponent extends BasicCruPageComponent<ITLS52010Data> implements OnInit {
   // === 表單群組 (與 POS2016 欄位對應) ===
@@ -266,8 +266,7 @@ export class TLS52010CRUComponent extends BasicCruPageComponent<ITLS52010Data> i
     this.selectedItems = [];
     this.calculateTotals();
   }
-  onDelete(selectedRows: IPOS2004DetailData[]) {
-    this.data = this.data.filter(row => !selectedRows.includes(row));
+  onDelete() {
     this.calculateTotals();
   }
   isRowSelectable(event: IPOS2004DetailData): boolean {

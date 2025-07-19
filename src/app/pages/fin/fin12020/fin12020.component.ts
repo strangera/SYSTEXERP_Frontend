@@ -32,7 +32,7 @@ export class FIN12020Component extends BasicQueryPageComponent<FIN12020Data> imp
     invoice_no: ['', [Validators.maxLength(8)]], // 發票號碼
     invoice_no_start: [''], // 發票號碼(起)
     invoice_no_end: [''], // 發票號碼(迄)
-    cashier_no: [''], // 收銀機代號
+    cashier_no: [''], // 收銀機號
     invoice_status: [''], // 發票狀態
     usage_type: [''], // 使用別
     ...createPaginationConfig([{ field: 'invoice_month', order: -1 }]), // 分頁和排序參數

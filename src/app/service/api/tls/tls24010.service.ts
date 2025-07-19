@@ -3,13 +3,21 @@ import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment'; // 請確認你的 environment 路徑是否正確
 import { ApiResponse } from '../../system/auth.service'; // 請確認你的 ApiResponse 介面路徑是否正確
+import { POS2004Item } from '../../utility/dropDownList.service';
 
 export interface TLS24010Request {
   TXN_GUIPaper: string; // 補登類別
   TXN_Date: string; // 銷售日期
   ECR_No?: string; // 收銀機號
   TLT_No?: string; // 專櫃編號
-  TXN_No?: string; // 交易序號
+  TXN_No?: number; // 交易序號
+}
+
+export interface TLS24010DetailRequest {
+  SYS_StoreNo: string; // 店號,
+  TXN_Date: string; // 銷售日期,
+  ECR_No: string, // 收銀機號,
+  TXN_No: number, // 交易序號,
 }
 
 export interface TLS24010Data {
@@ -19,22 +27,120 @@ export interface TLS24010Data {
   TLT_No: string; // 專櫃編號
   TLT_Name: string; // 專櫃名稱
   TXN_Mode: string; // 交易型態
+  store_way?: string; // 櫃位類型
+  talent_id?: number; // 專櫃合約編號
+  TXN_GUIPaper: string; // 補登類別
+}
+
+export interface POS5007Data {
+  id: number; // 唯一識別碼
+  PLU_MagNo?: string | POS2004Item; // 商品編號
+  PLU_No?: string; // 國際條碼
+  PLU_Name?: string; // 商品名稱
+  TXN_Qty?: number;// 數量
+  PLU_SalePrc?: number; // 單價金額
+  TXN_Amt?: number; // 單價小計金額
+  TXN_Disc?: number; // 單價折扣讓金額
+  TXN_SaleAmt?: number; // 單價銷售金額
+  TLT_ID?: string; // 類別
+  PLU_TaxType?: string; // 稅別
+  TXN_DiscCode?: string; // 折扣別
+  TXN_DiscCode_Name?: string; // 折扣名稱
+}
+
+export interface POS5008Data {
+  ID?: number;
+  id?: number; // 唯一識別碼
+  PAY_No?: string; // 付款編號
+  PAY_Name?: string; // 付款名稱
+  PAY_Type?: string; // 付款別
+  TXN_PayAmt?: number; // 付款金額
+  CRD_Type?: string; // 信用卡別
+  TERM_No?: string; // 期別
+  CRD_No?: string,
+  TXN_CouponNo?: string,
+  TXN_PayDesc?: string,
+  selected?: boolean
+}
+
+export interface InsertTLS24010Payload {
+  Store_way: string; // store_way
+  TXN_Date: string;
+  ECR_No: string;
+  TLT_No: string;
+  TXN_Remark: string;
+  USR_No: string;
+  TXN_PreOrder: string;
+  TXN_VIP: string;
+  TXN_TaxFreeCertNo: string;
+  TXN_Status: string;
+  GUI_Track: string;
+  TXN_GUIBegNo: string;
+  TXN_GUIEndNo: string;
+  TXN_CustCnt: number;
+  TXN_MemCard: string;
+  TXN_Uniform: string;
+  TXN_Time: string;
+  TXN_GUI_CarrType: string;
+  TXN_GUIVehicle: string;
+  TXN_GUI_CarrIdEx: string;
+  TXN_GUI_CarrId: string;
+  TXN_GUIRemark: string;
+  TXN_PrintTimes: number;
+  TXN_GUILoveCode: string;
+  POS5007_INFO: {
+    PLU_MagNo: string;
+    PLU_No: string;
+    TXN_Qty: number;
+    PLU_SalePrc: number;
+    TXN_Disc: number;
+    TXN_SaleAmt: number;
+    tlt_id: string;
+    PLU_TaxType: string;
+    TXN_DiscCode: string;
+  }[];
+  POS5008_INFO: {
+    PAY_No: string;
+    TXN_PayAmt: number;
+    CRD_Type: string;
+    CRD_No: string;
+    TXN_CouponNo: string;
+    TXN_PayDesc: string;
+    TERM_No: number;
+  }[];
 }
 
 @Injectable({
   providedIn: 'root',
 })
 export class Tls24010Service {
-  private apiUrl: string = environment.ApiUrl + '/TLS0000/TLS5000';
+  private apiUrl: string = environment.ApiUrl + '/TLS0000/TLS2000';
 
   constructor(private http: HttpClient) { }
 
   /**
-   * 查詢 POS2008M (商品促銷主檔) 資料表
+   * 查詢 POS2006 資料表
    * @param params 查詢條件
    * @returns 包含 ITLS24010Data 陣列的 API 響應
    */
   queryTLS24010(params: TLS24010Request): Observable<ApiResponse<TLS24010Data[]>> {
     return this.http.post<ApiResponse<TLS24010Data[]>>(`${this.apiUrl}/queryTLS24010`, params);
   }
+  /**
+   * 查詢 POS2007 POS2008 資料表
+   * @param params 查詢條件
+   * @returns 包含 ITLS24010Data 陣列的 API 響應
+   */
+  queryTLS24010_Detail(params: TLS24010DetailRequest): Observable<ApiResponse<any[]>> {
+    return this.http.post<ApiResponse<any[]>>(`${this.apiUrl}/queryTLS24010_Detail`, params);
+  }
+  /**
+ * 新增 POS5006、POS5007、POS5008 資料
+ * @param payload 請參考 Swagger insertTLS24010 API 格式
+ * @returns 成功訊息或錯誤訊息
+ */
+  insertTLS24010(payload: InsertTLS24010Payload): Observable<ApiResponse<any>> {
+    return this.http.post<ApiResponse<any>>(`${this.apiUrl}/insertTLS24010`, payload);
+  }
+
 }

@@ -4,6 +4,15 @@ import { catchError, Observable, tap, map, throwError, forkJoin, of } from 'rxjs
 import { environment } from '../../../../environments/environment';
 import { ErrorHandlerService } from '../../system/error-handler.service';
 
+export interface MiddleCategoryItem {
+  value: string;        // 中分類代碼
+  label: string;        // 中分類顯示名稱 (代碼 - 名稱)
+  CAT_LNo: string;      // 大分類代碼
+  CAT_LName: string;    // 大分類名稱
+  CAT_MNo: string;      // 中分類代碼 (和value相同，但更明確)
+  CAT_MName: string;    // 中分類名稱
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -18,21 +27,20 @@ export class Tls51020DropDownService {
   ) { }
 
   // 🆕 新增：支援多個大分類代碼查詢中分類（後端直接支援陣列）
-  getSystemTypesByMultipleCatLNo(catLNoArray: string[]): Observable<{ value: string, label: string }[]> {
+  getSystemTypesByMultipleCatLNo(catLNoArray: string[]): Observable<MiddleCategoryItem[]> {
     if (!catLNoArray || catLNoArray.length === 0) {
-      return of([]); // 返回空陣列
+      return of([]);
     }
 
-    // 直接傳送陣列給後端 API
     const params = {
       id: 0,
       No: '',
       Name: '',
-      CAT_LNo: catLNoArray // 直接傳遞大分類代碼陣列
+      CAT_LNo: catLNoArray
     };
 
     return this.http.post<any>(this.queryApiUrl, params).pipe(
-      tap(data => console.debug('queryTLS51020_DropDownList (multiple) response', data)),
+      tap(data => console.debug('queryTLS51020_DropDownList (with big category) response', data)),
       map(response => {
         if (!response || typeof response !== 'object') {
           throw new Error('無效的 API 回傳格式');
@@ -41,18 +49,23 @@ export class Tls51020DropDownService {
         if (!Array.isArray(data)) {
           throw new Error('API 回傳的 Data 不是陣列');
         }
+
+        // 🔧 修改：回傳更完整的資訊
         return data.map((item: any) => ({
-          value: item.No || '',
-          label: `${item.No || ''} - ${item.Name || ''}`
+          value: item.No || '',                                    // 中分類代碼
+          label: `${item.No || ''} - ${item.Name || ''}`,         // 原始格式：001 - 彩妝品
+          CAT_LNo: item.CAT_LNo || '',                            // 大分類代碼
+          CAT_LName: item.CAT_LName || '',                        // 大分類名稱
+          CAT_MNo: item.No || '',                                 // 中分類代碼 (明確欄位)
+          CAT_MName: item.Name || ''                              // 中分類名稱 (明確欄位)
         }));
       }),
       catchError((error: HttpErrorResponse | Error) => {
         console.error('getSystemTypesByMultipleCatLNo error:', error);
-        return of([]); // 發生錯誤時返回空陣列
+        return of([]);
       })
     );
   }
-
   // 🔄 原有方法（保持單一大分類查詢功能）
   getSystemTypesByCatLNo(catLNo: string): Observable<{ value: string, label: string }[]> {
     const params = {

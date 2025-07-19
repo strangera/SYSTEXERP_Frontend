@@ -44,7 +44,7 @@ export class TLS28030Component {
   submitted: boolean = false;
   queryForm = this.formBuilder.group({
     bagBarcode: [],  // 袋子條碼
-    cashierCode: [],  // 收銀機代號
+    cashierCode: [],  // 收銀機號
     counterCode: [],  // 專櫃編號
     startAccountDate: [now],  // 入帳日開始
     endAccountDate: [now],  // 入帳日結束

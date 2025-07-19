@@ -54,7 +54,9 @@ export class TLS41020CRUComponent
     EDC_No: ['', [Validators.required, Validators.maxLength(10)]],
     EDC_BegDate: ['', Validators.required],
     EDC_EndDate: ['', Validators.required],
-    EDC_Status: ['', Validators.required],
+    EDC_Status1: ['', Validators.required],
+    EDC_Status2: [''],
+    EDC_Status3: [''],
     EDC_IP1: [
       '',
       [
@@ -105,6 +107,9 @@ export class TLS41020CRUComponent
         'EDC_Status',
         'ECR_TLT_No',
         'ECR_TLT_Name',
+        'EDC_Status1',
+        'EDC_Status2',
+        'EDC_Status3',
         'EDC_IP1',
         'EDC_IP2',
         'EDC_IP3',
@@ -155,8 +160,8 @@ export class TLS41020CRUComponent
                 this.dataForm.reset();
               },
               error: () => {
-                // ✅ 所有錯誤統一顯示成收銀機代號重複
-                this.messageService.errorBubble('新增失敗：收銀機代號重複');
+                // ✅ 所有錯誤統一顯示成收銀機號重複
+                this.messageService.errorBubble('新增失敗：收銀機號重複');
               },
             });
           }

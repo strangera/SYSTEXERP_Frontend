@@ -10,18 +10,18 @@
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
             <app-multi-select
-              label="專櫃編號"
+              label="專櫃編號/名稱"
               [options]="tlt_noListOption"
-              optionLabel="label"
-              optionValue="value"
+              optionLabel="Label"
+              optionValue="No"
               [control]="queryForm.controls.tlt_noList"
               [submitted]="submitted"
             ></app-multi-select>  
           </div>
-          <div class="col-12 md:col-6 lg:col-4">
+          <!-- <div class="col-12 md:col-6 lg:col-4">
             <app-input-text label="專櫃名稱" controlName="tlt_name" [control]="queryForm.controls.tlt_name"
               [submitted]="submitted"></app-input-text>
-          </div>
+          </div> -->
           <div class="col-12 md:col-6 lg:col-4">
             <app-multi-select
               label="位置編號"
@@ -38,7 +38,7 @@
             <app-multi-select
               label="區域"
               [options]="areaOption"
-              optionLabel="Label"
+              optionLabel="Name"
               optionValue="No"
               [control]="queryForm.controls.area_noList"
               [submitted]="submitted"
@@ -48,7 +48,7 @@
             <app-multi-select
               label="樓層"
               [options]="floorOption"
-              optionLabel="Label"
+              optionLabel="Name"
               optionValue="No"
               [control]="queryForm.controls.tlt_floorList"
               [submitted]="submitted"
@@ -56,7 +56,7 @@
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-multi-select
-              label="大分類"
+              label="大分類代碼/名稱"
               [options]="bus_typeOption"
               optionLabel="Label"
               optionValue="No"
@@ -74,9 +74,9 @@
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-multi-select
-              label="組織別"
+              label="組織代碼/名稱"
               [options]="orgOption"
-              optionLabel="Name"
+              optionLabel="Label"
               optionValue="No"
               [control]="queryForm.controls.org_idList"
               [submitted]="submitted"

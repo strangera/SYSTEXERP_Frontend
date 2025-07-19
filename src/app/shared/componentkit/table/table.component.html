@@ -3,6 +3,7 @@
     {{ title }}
   </span>
 </p-divider>
+<p-blockUI [target]="dt" [blocked]="disabled"></p-blockUI>
 <p-table
   #dt
   [value]="data"

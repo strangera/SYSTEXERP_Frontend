@@ -51,11 +51,40 @@
           ></app-query-year-month>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
+          <app-dropdown
+            label="專櫃編號"
+            controlName="TLT_No"
+            [options]="CounterOptions"
+            optionLabel="formLabel"
+            optionValue="value"
+            [control]="dataForm.controls.TLT_No"
+            [submitted]="submitted"
+          ></app-dropdown>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
           <app-input-text
-            label="廠商編號(統一編號)"
-            [control]="dataForm.controls.UniCode"
+            label="廠客代號"
+            [control]="dataForm.controls.VendorCode"
             [submitted]="submitted"
           ></app-input-text>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text
+            label="銷售人統一編號"
+            [control]="dataForm.controls.SellerUniCode"
+            [submitted]="submitted"
+          ></app-input-text>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-dropdown
+            label="買受人統一編號"
+            controlName="BuyerUniCode"
+            [options]="BuyerUniCodeOptions"
+            optionLabel="label"
+            optionValue="value"
+            [control]="dataForm.controls.BuyerUniCode"
+            [submitted]="submitted"
+          ></app-dropdown>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
           <app-input-text
@@ -72,23 +101,6 @@
           ></app-input-text>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text
-            label="發票稅額"
-            [control]="dataForm.controls.Tax"
-            [submitted]="submitted"
-          ></app-input-text>
-        </div>
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-dropdown
-            label="發票用途"
-            [control]="dataForm.controls.Invoice_Purpose"
-            [options]="invoicePurposeOptions"
-            optionLabel="label"
-            optionValue="value"
-            [submitted]="submitted"
-          ></app-dropdown>
-        </div>
-        <div class="col-12 md:col-6 lg:col-4">
           <app-dropdown
             label="課稅別"
             controlName="PUR_TaxType"
@@ -98,6 +110,28 @@
             [options]="taxTypeOptions"
             [submitted]="submitted"
           ></app-dropdown>
+        </div>
+
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text
+            label="發票稅額"
+            [control]="dataForm.controls.Tax"
+            [submitted]="submitted"
+          ></app-input-text>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text
+            label="憑證單號"
+            [control]="dataForm.controls.Source_Doc_No"
+            [submitted]="submitted"
+          ></app-input-text>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text
+            label="傳票編號"
+            [control]="dataForm.controls.Voucher_No"
+            [submitted]="submitted"
+          ></app-input-text>
         </div>
 
         <div class="col-12 md:col-6 lg:col-4">
@@ -121,32 +155,14 @@
           ></app-dropdown>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text
-            label="憑證單號"
-            [control]="dataForm.controls.Source_Doc_No"
+          <app-dropdown
+            label="資產註記"
+            [control]="dataForm.controls.AssetNote"
+            [options]="AssetNoteOptions"
+            optionLabel="label"
+            optionValue="value"
             [submitted]="submitted"
-          ></app-input-text>
-        </div>
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text
-            label="傳票編號"
-            [control]="dataForm.controls.Voucher_No"
-            [submitted]="submitted"
-          ></app-input-text>
-        </div>
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text
-            label="彙總張數"
-            [control]="dataForm.controls.Serial"
-            [submitted]="submitted"
-          ></app-input-text>
-        </div>
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text
-            label="彙加註記"
-            [control]="dataForm.controls.Note"
-            [submitted]="submitted"
-          ></app-input-text>
+          ></app-dropdown>
         </div>
 
         <div class="col-12 md:col-6 lg:col-4">

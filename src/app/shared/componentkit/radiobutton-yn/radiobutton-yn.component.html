@@ -8,7 +8,7 @@
   <div class="flex flex-wrap gap-3 p-2">
     <div *ngFor="let option of ynOptions" class="flex align-items-center">
       <p-radioButton [inputId]="controlName + option.value" [name]="controlName" [value]="option.value"
-        [formControl]="control" [disabled]="disabled" [ngClass]="{'ng-dirty ng-invalid': submitted && control.errors}"
+        [formControl]="control" [ngClass]="{'ng-dirty ng-invalid': submitted && control.errors}"
         [attr.aria-label]="label + ' ' + option.label" [title]="label + ' ' + option.label"></p-radioButton>
       <label [for]="controlName + option.value" class="ml-2">
         {{ option.label }}

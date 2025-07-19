@@ -23,44 +23,82 @@
       </div>
       <hr />
       <div class="grid p-fluid">
-        <!-- 備註 → POS5006.TXN_Desc -->
-        <app-input-textarea class="col-12" label="備註" [control]="dataForm.controls.TXN_Desc" [submitted]="submitted" />
+        <!-- 備註 → POS5006.TXN_Remark -->
+        <app-input-textarea class="col-12" label="備註" [control]="dataForm.controls.TXN_Remark"
+          [submitted]="submitted" />
         <!-- 收銀員編號 → POS2001.USR_No -->
         <app-dropdown class="col-12 md:col-6 lg:col-3" label="收銀員編號" [control]="dataForm.controls.USR_No"
           [submitted]="submitted" [options]="USR_NoOptions" optionLabel="label" optionValue="No" />
-        <!-- 交易狀態 → POS5006.TXN_Status -->
-        <app-dropdown class=" col-12 md:col-6 lg:col-3" label="交易狀態" [control]="dataForm.controls.TXN_Status"
-          [submitted]="submitted" [options]="txnStatusOptions" optionLabel="label" optionValue="value" />
         <div class="flex col-12 md:col-6 lg:col-3">
-          <!-- 零稅 → POS5006.TXN_VIP -->
-          <app-radiobutton-yn class="flex-1" controlName="TXN_VIP" label="零稅" [control]="dataForm.controls.TXN_VIP"
-            [submitted]="submitted" />
           <!-- 預售 → POS5006.TXN_PreOrder -->
           <app-radiobutton-yn class="flex-1" controlName="TXN_PreOrder" label="預售"
             [control]="dataForm.controls.TXN_PreOrder" [submitted]="submitted" />
+          <!-- 零稅 → POS5006.TXN_VIP -->
+          <app-radiobutton-yn class="flex-1" controlName="TXN_VIP" label="零稅" [control]="dataForm.controls.TXN_VIP"
+            [submitted]="submitted" />
         </div>
-        <!-- 交易稅別 → POS5006.TXN_TaxType -->
-        <app-dropdown class="col-12 md:col-6 lg:col-3" label="交易稅別" [control]="dataForm.controls.TXN_TaxType"
-          [submitted]="submitted" [options]="txnTaxTypeOptions" optionLabel="label" optionValue="value" />
-        <!-- 客戶統一編號 → POS5006.TXN_Uniform -->
-        <app-input-text class=" col-12 md:col-6 lg:col-3" label="客戶統一編號" [control]="dataForm.controls.TXN_Uniform"
+        <!-- 免稅卡零稅卡號 → POS5006.TXN_MemCard -->
+        <app-input-text class="col-12 md:col-6 lg:col-3" label="免稅卡零稅卡號" [control]="dataForm.controls.TXN_TaxFreeCertNo"
           [submitted]="submitted" />
+        <!-- 交易型態 → POS5006.TXN_Status -->
+        <app-dropdown class=" col-12 md:col-6 lg:col-3" label="交易型態" [control]="dataForm.controls.TXN_Status"
+          [submitted]="submitted" [options]="txnStatusOptions" optionLabel="label" optionValue="value" />
         <!-- 發票字軌 → POS5006.GUI_Track -->
         <app-input-text class="col-12 md:col-6 lg:col-3" label="發票字軌" [control]="dataForm.controls.GUI_Track"
           [submitted]="submitted" />
         <!-- 起始發票號碼 → POS5006.TXN_GUIBegNo -->
-        <app-input-text-range class="col-12 md:col-6 lg:col-3" startLabel="起始發票號碼" endLabel="結束發票號碼"
-          [startControl]="dataForm.controls.TXN_GUIBegNo" [endControl]="dataForm.controls.TXN_GUIEndNo"
-          [submitted]="submitted" [errorForGroup]="true" />
-        <!-- 發票號碼張數 → POS5006.TXN_GUICnt -->
-        <app-input-number class="col-12 md:col-6 lg:col-3" label="發票號碼張數" [control]="dataForm.controls.TXN_GUICnt"
-          [submitted]="submitted" [max]="999999" [useGrouping]="false" suffix="張" />
+        <app-input-text class="col-12 md:col-6 lg:col-3" label="發票號碼" [control]="dataForm.controls.TXN_GUIBegNo"
+          [copyControl]="dataForm.controls.TXN_GUIEndNo" [submitted]="submitted" [errorForGroup]="true" />
+        <!-- 交易筆數 → POS5006.TXN_CustCnt 來客數 -->
+        <app-input-number class="col-12 md:col-6 lg:col-3" label="交易筆數" [control]="dataForm.controls.TXN_CustCnt"
+          [submitted]="submitted" [max]="9999" [useGrouping]="false" />
         <!-- 會員編號 → POS5006.TXN_MemCard -->
         <app-input-text class="col-12 md:col-6 lg:col-3" label="會員編號" [control]="dataForm.controls.TXN_MemCard"
           [submitted]="submitted" />
-        <!-- 免稅卡零稅卡號 → POS5006.TXN_MemCard -->
-        <app-input-text class="col-12 md:col-6 lg:col-3" label="免稅卡零稅卡號" [control]="dataForm.controls.TXN_TaxFreeCertNo"
+        <!-- 客戶統一編號 → POS5006.TXN_Uniform -->
+        <app-input-text class=" col-12 md:col-6 lg:col-3" label="客戶統一編號" [control]="dataForm.controls.TXN_Uniform"
           [submitted]="submitted" />
+        <!-- 銷售時段 → POS5006.TXN_Time -->
+        <app-calendar class="col-12 md:col-6 lg:col-3" label="銷售時段" [control]="dataForm.controls.TXN_Time"
+          [submitted]="submitted" calendarType="timeOne" />
+      </div>
+      <div class="grid p-fluid" *ngIf="TXN_GUIPaper === 'E'">
+        <p-divider type="solid" class="col-12" />
+        <!-- 電子載具種類 → POS5006.TXN_GUI_CarrType -->
+        <app-dropdown class="col-12 md:col-6 lg:col-3" label="電子發票載具種類" [control]="dataForm.controls.TXN_GUI_CarrType"
+          [submitted]="submitted" [options]="TXN_GUI_CarrTypeOptions" optionLabel="label" optionValue="value" />
+        <!-- 電子發票載具卡號 → POS5006.TXN_GUIVehicle -->
+        <app-input-text class="col-12 md:col-6 lg:col-3" label="電子發票載具卡號" [control]="dataForm.controls.TXN_GUIVehicle"
+          [submitted]="submitted" />
+        <!-- 載具編號顯碼 → POS5006.TXN_GUI_CarrIdEx -->
+        <app-input-text class="col-12 md:col-6 lg:col-3" label="載具編號顯碼" [control]="dataForm.controls.TXN_GUI_CarrIdEx"
+          [submitted]="submitted" />
+        <!-- 載具編號隠碼 → POS5006.TXN_GUI_CarrId -->
+        <app-input-text class="col-12 md:col-6 lg:col-3" label="載具編號隱碼" [control]="dataForm.controls.TXN_GUI_CarrId"
+          [submitted]="submitted" />
+        <!-- 電子發票防葦隨機碼 → POS5006.TXN_GUIRemark -->
+        <app-input-text class="col-12 md:col-6 lg:col-3" label="電子發票防偽隨機碼" [control]="dataForm.controls.TXN_GUIRemark"
+          [submitted]="submitted" />
+        <!-- 紙本發票列印狀態 → POS5006.TXN_PrintTimes -->
+        <app-dropdown class="col-12 md:col-6 lg:col-3" label="紙本發票列印狀態" [control]="dataForm.controls.TXN_PrintTimes"
+          [submitted]="submitted" [options]="[{label:'是',value:1},{label:'否',value:0}]" optionLabel="label"
+          optionValue="value" />
+        <!-- 發票捐贈狀態 → POS5006.TXN_GUI_Donate -->
+        <app-dropdown class="col-12 md:col-6 lg:col-3" label="發票捐贈狀態" [control]="dataForm.controls.TXN_GUI_Donate"
+          [submitted]="submitted" [options]="[{label:'是',value:'Y'},{label:'否',value:'N'}]" optionLabel="label"
+          optionValue="value" />
+        <!-- 捐贈社福團體代碼 → POS5006.TXN_GUILoveCode -->
+        <app-input-text class="col-12 md:col-6 lg:col-3" label="捐贈社福團體代碼" [control]="dataForm.controls.TXN_GUILoveCode"
+          [submitted]="submitted" />
+      </div>
+      <hr />
+      <div class="grid p-fluid card">
+        <app-tls24010-pos5007 class="col-12" [TXN_GUIPaper]="TXN_GUIPaper" [TLT_Name]="TLT_Name" [store_way]="store_way"
+          [talent_id]="talent_id" [TLT_No]="this.dataForm.get('TLT_No')?.value"
+          [submitted]="submitted"></app-tls24010-pos5007>
+      </div>
+      <div class="grid p-fluid card">
+        <app-tls24010-pos5008 class="col-12" [submitted]="submitted"></app-tls24010-pos5008>
       </div>
       <div *ngIf="!isFormReadable" class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
         <app-button btnType="cancel" [form]="dataForm" />

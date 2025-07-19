@@ -214,7 +214,6 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
   storeWayOptions = [...TLS13010_DROPDOWN_OPTIONS.storeWay];
   invoiceTypeOptions = [...TLS13010_DROPDOWN_OPTIONS.invoiceType];
   tltKindOptions = [...TLS13010_DROPDOWN_OPTIONS.tltKind];
-  openflagStatusOptions = [...TLS13010_DROPDOWN_OPTIONS.openflagStatus];
   overallStatusOptions = [...TLS13010_DROPDOWN_OPTIONS.overallStatus];
   depositTypeOptions = [...TLS13010_DROPDOWN_OPTIONS.depositType];
   tltTermTypeOptions = [...TLS13010_DROPDOWN_OPTIONS.tltTermType];
@@ -505,6 +504,7 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
       // 🎯 預設值
       tlt_term_type: '3', // 一般抽成
       comm_comp_type: '2', // 除稅
+      tlt_openflag: '9',
 
       // 🎯 其他預設值
       org_id: '',
@@ -572,6 +572,7 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
       paytype: queryData['paytype'] as string,
       invoice_type: queryData['invoice_type'] as string,
 
+      tlt_openflag: String(queryData['tlt_openflag'] || '').trim(),
       // 聯絡資訊
       email: queryData['email'] as string,
       invoice_email: queryData['invoice_email'] as string,

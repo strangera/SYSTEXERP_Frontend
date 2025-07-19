@@ -57,7 +57,7 @@ export class TLS2J040Component {
     return this.formBuilder.group({
       startdate: [, [Validators.required, Validators.required]], // 銷售日期
       enddate: [, [Validators.required, Validators.required]], // 銷售日期
-      registerID: [, [Validators.required, Validators.maxLength(6),]], // 收銀機代號
+      registerID: [, [Validators.required, Validators.maxLength(6),]], // 收銀機號
       transferID: [, [Validators.required, Validators.maxLength(6),]], // 交易流水號
       counterID: [, [Validators.required, Validators.maxLength(6),]], // 專櫃編號
       startserialticket: [, [Validators.required, this.validationService.numberValidator]], // 二聯發票號碼

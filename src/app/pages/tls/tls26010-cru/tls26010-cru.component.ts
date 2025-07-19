@@ -1,59 +1,59 @@
-import { Component, OnInit, ViewEncapsulation, } from '@angular/core';
-import { FormArray, FormBuilder, FormControl, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { NavigationExtras, Router } from '@angular/router';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-import { AuthService } from '../../../service/system/auth.service';
-import { TranslateService, TranslateModule } from '@ngx-translate/core';
-import { BasicCrupageComponent } from '../../../shared/componentextends/basic-crupage/basic-crupage.component';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { PanelModule } from 'primeng/panel';
-import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { NgIf } from '@angular/common';
+import { Component, OnInit, signal } from '@angular/core';
+import { FormArray, FormBuilder, FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { Router } from '@angular/router';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { PanelModule } from 'primeng/panel';
+import { TLS26010Service } from '../../../service/api/tls/tls26010.service';
+import { AuthService } from '../../../service/system/auth.service';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { NotificationService } from '../../../shared/component/notification-message/notification.service';
+import { BasicCrupageComponent } from '../../../shared/componentextends/basic-crupage/basic-crupage.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
+import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
+import { TLS26010Data } from '../tls26010/tls26010.model';
 // 預購活動檔期設定
 @Component({
   selector: 'app-tls26010-cru',
   templateUrl: './tls26010-cru.component.html',
   styleUrl: './tls26010-cru.component.scss',
   standalone: true,
-  imports: [MenubarComponent, PanelModule, FormsModule, ReactiveFormsModule, CalendarRangeComponent, ButtonComponent, NgIf, TableComponent, TranslateModule]
+  imports: [MenubarComponent, PanelModule, FormsModule, ReactiveFormsModule, CalendarRangeComponent, ButtonComponent, NgIf, TableComponent, TranslateModule, InputTextComponent, MultiSelectComponent]
 })
 export class TLS26010CRUComponent extends BasicCrupageComponent implements OnInit {
-  CashRegisterTypeItems: any[] = [
-    { label: '業主', value: '1' },
-    { label: '非業主', value: '2' },
-  ];
-  // ----------------------------------------------------------------
   dataForm = this.formBuilder.nonNullable.group({
-    name: ['', [Validators.required, Validators.minLength(5), Validators.maxLength(10)]],
-    age: ['', Validators.required],
-    email: ['', [Validators.maxLength(50), Validators.required]],
-    // ----------------------------------------------------------------
+    pod_no: ['', [Validators.required, Validators.maxLength(10)]], // 預售活動編號
+    pod_desc: ['', [Validators.required, Validators.maxLength(100)]], // 預售名稱
+    pod_sdate: [new Date(), Validators.required], // 活動日期(起)
+    pod_edate: [new Date(), Validators.required], // 活動日期(迄)
+    pod_status: ['未核准'], // 核准狀態
+    ECR_Nos: [[]], //收銀機清單
+    tlt_Nos: [[]], //專櫃清單
+    approved_usr_name: [''], // 核准人員
+    approved_date: [''], // 核准日期
+
     items: this.formBuilder.array([
       this.createItem()
     ]),
   });
-  // 表格資料
-  data: any[] = [{ 'cashRegisterNumber': '000081', 'counterNumber': '000008', 'counterName': 'CoCo 都可', 'isdelete': true }
 
-  ];
-  filteredData: any[] = [...this.data];
+  public CRUDStatus = CRUDStatus;
+
+  private rowDataSignal = signal<TLS26010Data>({} as TLS26010Data); // 用於存儲表格資料
+
+  // 表格資料
   columns: any[] = [
-    { field: 'cashRegisterNumber', header: '收銀機代號', visible: true },
-    { field: 'counterNumber', header: '專櫃編號', visible: true },
-    { field: 'counterName', header: '櫃位名稱', visible: true },
+    { field: 'ECR_No', header: '收銀機號', visible: true },
+    { field: 'ECR_Name', header: '收銀機名稱', visible: true },
   ];
-  // 表格資料
-  data2: any[] = [
-    { 'counterNumber': '000008', 'counterName': 'CoCo 都可', 'isdelete': true }
-  ];
-  filteredData2: any[] = [...this.data2];
+  // 表格資料2
   columns2: any[] = [
-
-    { field: 'counterNumber', header: '專櫃編號', visible: true },
-    { field: 'counterName', header: '櫃位名稱', visible: true },
+    { field: 'tlt_no', header: '專櫃編號', visible: true },
+    { field: 'tlt_name', header: '櫃位名稱', visible: true },
   ];
   // ----------------------------------------------------------------
   constructor(
@@ -62,13 +62,14 @@ export class TLS26010CRUComponent extends BasicCrupageComponent implements OnIni
     private messageService: NotificationService,
     private authService: AuthService,
     private translate: TranslateService,
+    public tls26010Service: TLS26010Service,
   ) {
     super();  // 呼叫父類建構子
   }
 
   ngOnInit(): void {
     // 初始化
-    this.ProgNo = '900001';
+    this.ProgNo = 'TLS26010';
     //
     // ----------------------------------------------------------------
     this.funInfo = this.authService.getUserPermissions(this.ProgNo);
@@ -79,30 +80,18 @@ export class TLS26010CRUComponent extends BasicCrupageComponent implements OnIni
       rowdata: any,
     };
 
-    switch (state.crudstatus) {
-      // 創建
-      case CRUDStatus.Create:
-        this.formTitle = 'create-conditions';
-        this.accordionTabCss = 'create-accordionTab';
-        this.crudstatus = CRUDStatus.Create;
-        this.showConfirm = this.canAdd();
-        break;
-      // 修改
-      case CRUDStatus.Edit:
-        this.formTitle = 'edit-conditions';
-        this.accordionTabCss = 'edit-accordionTab';
-        this.crudstatus = CRUDStatus.Edit;
-        this.showConfirm = this.canEdit();
-        this.Edit(state.rowdata);
-        break;
-      // 讀檔
-      case CRUDStatus.Read:
-        this.formTitle = 'display-conditions';
-        this.crudstatus = CRUDStatus.Read;
-        this.Read(state.rowdata);
-        break;
-    }
+    this.rowDataSignal.set(state?.rowdata!);
+    this.tls26010Service.approvalData.set(state?.rowdata?.pod_status || '未核准');
 
+    console.log(`init:`, [this.funInfo, state]);
+
+    this.tls26010Service.loadPreorderECRList({ data_type: '1', SYS3800s: [], SYS3900s: [] });
+    this.tls26010Service.loadTLTTALENT({ SYS3800s: [], SYS3900s: [] });
+
+    this.formTitle = 'create-conditions';
+    this.accordionTabCss = 'create-accordionTab';
+    this.crudstatus = CRUDStatus.Create;
+    this.showConfirm = this.canAdd();
     console.log(this.accordionTabCss);
   }
 
@@ -114,32 +103,20 @@ export class TLS26010CRUComponent extends BasicCrupageComponent implements OnIni
   getFormControl(index: number, controlName: string): FormControl {
     return this.items.at(index).get(controlName) as FormControl;
   }
+
   // ----------------------------------------------------------------
   createItem(): FormGroup {
     return this.formBuilder.group({
-      name: ['', [Validators.required, Validators.maxLength(14)]], // Input Text
-      CashRegisterType: ['1', Validators.required], // 收銀機型態
-      SalesDate: ['', Validators.required], // 銷售日期
-      CashRegisterCode: ['', Validators.required], // 收銀機代號
-      TransactionSerialNumber: ['', Validators.required], // 交易流水號
-      CounterNumber: ['', Validators.required], // 專櫃編號
-      TwoPartInvoiceNumberStart: ['', Validators.required], // 二聯發票號碼(起號)
-      TwoPartInvoiceNumberEnd: ['', Validators.required], // 二聯發票號碼(迄號)
-      TaxableAmount: ['', Validators.required], // 應稅金額
-      TaxFreeAmount: ['', Validators.required], // 免稅金額
+      pod_no: ['', [Validators.required, Validators.maxLength(14)]], // 預售活動編號
+      pod_desc: ['', [Validators.required, Validators.maxLength(50)]], // 預售名稱
+      pod_sdate: [new Date(), Validators.required], // 活動日期(起)
+      pod_edate: [new Date(), Validators.required], // 活動日期(迄)
+      pod_status: [''], // 核准狀態
+      ECR_Nos: [[]], //收銀機清單
+      tlt_Nos: [[]], //專櫃清單
+      approved_usr_name: [''], // 核准人員
+      approved_date: [''], // 核准日期
     });
-  }
-  onRemoveItem(index: number) {
-    this.items.removeAt(index);
-  }
-  // ----------------------------------------------------------------
-  Edit(rowdata: any) {
-    this.dataForm.patchValue(rowdata);
-  }
-
-  Read(rowdata: any) {
-    this.dataForm.patchValue(rowdata);
-    this.dataForm.disable();
   }
 
   onAddItem(): void {
@@ -182,30 +159,5 @@ export class TLS26010CRUComponent extends BasicCrupageComponent implements OnIni
 
   onCancel() {
     this.router.navigate(['/demo']);
-  }
-  onEdit(data: any) {
-    if (this.canEdit()) {
-      let extras: NavigationExtras = {
-        state: {
-          crudstatus: 'Edit',
-          rowdata: data,
-          queryform: this.dataForm,
-        },
-        skipLocationChange: true,
-      };
-      this.router.navigate(['TLS2000/TLS26010CRU'], extras);
-    }
-  }
-
-  onDetail(data: any) {
-    let extras: NavigationExtras = {
-      state: {
-        crudstatus: 'Read',
-        rowdata: data,
-        queryform: this.dataForm,
-      },
-      skipLocationChange: true,
-    };
-    this.router.navigate(['TLS2000/TLS26010CRU'], extras);
   }
 }
