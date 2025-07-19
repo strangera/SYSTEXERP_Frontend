@@ -28,6 +28,7 @@ import { TableComponent } from '../../../shared/componentkit/table/table.compone
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
 import { formatApproveStatus, formatCheckType, formatDecoType, formatMoneyType, formatOpenflagStatus, formatStoreWay, formatTltTermType } from '../tls13010/tls13010.constants';
 import { DialogComponent } from '../../../shared/componentkit/dialog/dialog.component';
+import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 
 interface ContractItem {
   id: string;
@@ -234,7 +235,7 @@ export class TLS14020Component extends BasicQueryPageComponent<ContractItem> imp
   }
 
   ngOnInit(): void {
-    this.initializePage('TLS14020', '/TLS/TLS14020cru', this.queryForm, (form) => this.onSubmit(form));
+    this.initializePage('TLS14020', '/TLS/TLS13010cru', this.queryForm, (form) => this.onSubmit(form));
     this.loadDropdownOptions(); // 載入下拉
   }
 
@@ -357,7 +358,6 @@ export class TLS14020Component extends BasicQueryPageComponent<ContractItem> imp
           console.log('開窗查詢結果', response.Data);
           this.dialogData = response.Data || [];
           this.dialogTotalRecords = response.TotalCount || response.Data.length;
-          // this.queryStateService.setQueryState(this.ProgNo, frm.value); // 儲存查詢條件（成功查詢後）
           if (this.data.length === 0) {
             console.log('查詢結果為空');
           }
@@ -387,7 +387,7 @@ export class TLS14020Component extends BasicQueryPageComponent<ContractItem> imp
           console.log('Word文檔生成成功', response);
         } else {
           console.error('生成Word文檔失敗:', response.Status, response.Message);
-          this.messageService.errorBox(response.Message || '生成文檔失敗');
+          this.messageService.errorBubble(response.Message || '生成文檔失敗');
         }
         this.loading = false;
         this.messageService.unblockUi();
@@ -396,7 +396,7 @@ export class TLS14020Component extends BasicQueryPageComponent<ContractItem> imp
         console.error('生成Word文檔錯誤:', err);
         this.loading = false;
         this.messageService.unblockUi();
-        this.messageService.errorBox('生成文檔失敗，請稍後再試');
+        this.messageService.errorBubble('生成文檔失敗，請稍後再試');
       }
     });
   }
@@ -430,7 +430,7 @@ export class TLS14020Component extends BasicQueryPageComponent<ContractItem> imp
       // 如果後端直接回傳blob或其他格式，可以在這裡處理
     } catch (error) {
       console.error('下載檔案失敗:', error);
-      this.messageService.errorBox('下載檔案失敗');
+      this.messageService.errorBubble('下載檔案失敗');
     }
   }
 
@@ -443,7 +443,8 @@ export class TLS14020Component extends BasicQueryPageComponent<ContractItem> imp
       error: (error) => {
         console.error('下載檔案失敗:', error);
         // 可選：顯示錯誤提示給用戶
-        alert('下載檔案失敗，請稍後再試');
+        // alert('下載檔案失敗，請稍後再試');
+        this.messageService.errorBubble('下載檔案失敗，請稍後再試');
       }
     });
   }
@@ -451,8 +452,30 @@ export class TLS14020Component extends BasicQueryPageComponent<ContractItem> imp
   onClearForm() {
     this.queryForm.reset();  // 重置表單
   }
-
-  // override onDetail(rowData: ContractItem): void {
-  //   this.onEdit(rowData);
-  // }
+  override onDetail(data: any) {
+    const item = {
+      talent_id: data.talent_id.toString(),
+      SortBy: [{ field: 'apply_no', order: 1 }],
+    };
+    this.apiService.queryTLS13010(item).subscribe({
+      next: (response: any) => {
+        if (response.Status === '0000') {
+          const rowData = response.Data || [];
+          console.log('查完資料', rowData);
+          if (rowData.length !== 0) {
+            this.navigateWithState(CRUDStatus.Read, rowData[0]);
+          }
+        } else {
+          this.messageService.errorBubble(`查詢失敗: ${response.Message || '未知錯誤'}`);
+        }
+      },
+      error: (err: any) => {
+        this.messageService.errorBubble('查詢失敗，請檢查網路連線或聯繫管理員');
+      },
+      complete: () => {
+        this.loading = false;
+        this.messageService.unblockUi();
+      }
+    });
+  }
 }
