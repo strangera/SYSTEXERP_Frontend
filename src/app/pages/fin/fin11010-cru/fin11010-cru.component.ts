@@ -1,8 +1,7 @@
 import { Component, OnInit, } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
-import { apiOption } from '../../../shared/models/sys/sysb000.module';
-import { Fin11010Service } from '../../../service/api/fin/fin11010.service';
+import { FIN11010Data, FIN11010InsertRequest, FIN11010Service, FIN11010UpdateRequest } from '../../../service/api/fin/fin11010.service';
 import { AddButton } from '../../../shared/componentkit/table/table.model';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
@@ -11,149 +10,173 @@ import { InputTextComponent } from '../../../shared/componentkit/input-text/inpu
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
+import { DropdownOption } from '../../../shared/models/api/base-api.interface';
+import { DatePipe, NgIf } from '@angular/common';
+import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
+import { finalize } from 'rxjs';
 
-// 定義設定狀態枚舉
-export enum SettingStatus {
-  未確認 = '未確認',
-  使用中 = '使用中',
-  已過期 = '已過期'
-}
-
-//1.1.1.1 營業人申報設定 CRU
 @Component({
-    selector: 'app-fin11010-cru',
-    templateUrl: './fin11010-cru.component.html',
-    styleUrl: './fin11010-cru.component.scss',
-    standalone: true,
-    imports: [MenubarComponent, ButtonComponent, PanelModule, FormsModule, ReactiveFormsModule, InputTextComponent, DropdownComponent, CalendarComponent, TableComponent]
+  selector: 'app-fin11010-cru',
+  templateUrl: './fin11010-cru.component.html',
+  styleUrl: './fin11010-cru.component.scss',
+  standalone: true,
+  imports: [NgIf, MenubarComponent, ButtonComponent, PanelModule, FormsModule, ReactiveFormsModule, InputTextComponent, DropdownComponent, CalendarComponent, TableComponent]
 })
-export class FIN11010CRUComponent extends BasicCruPageComponent<any> implements OnInit {
+export class FIN11010CRUComponent extends BasicCruPageComponent<FIN11010Data> implements OnInit {
   dataForm = this.formBuilder.nonNullable.group({
-    id: [null],
-    company_no: ['', [Validators.required, Validators.maxLength(8)]], // 公司代號(統一編號)
-    business_name: ['', [Validators.required, Validators.maxLength(60)]], // 營業人名稱
-    tax_no: ['', [Validators.required, Validators.maxLength(9)]], // 稅籍編號
-    owner_name: ['', [Validators.required, Validators.maxLength(12)]], // 負責人姓名
-    address: ['', [Validators.required]], // 營業地址
-    main_code: ['', [Validators.maxLength(8)]], // 總繳代號
-    total_company_no: ['', [Validators.maxLength(8)]], // 總公司統編
-    deduct_type: ['', Validators.required], // 是否採直接扣抵法
-    declare_method: ['', Validators.required], // 自行或委託辦理申報註記
-    agent_name: ['', [Validators.required, Validators.maxLength(12)]], // 代理申報人姓名
-    agent_phone: ['', Validators.required], // 代理申報人電話
-    agent_license_no: ['', [Validators.maxLength(50)]], // 代理申報人證書(登錄)字號
-    declare_month_start: [this.getCurrentMonth(), Validators.required], // 申報年月起
-    status: ['未確認'], // 狀態
+    id: [0], // 資料識別碼
+    mid: [0], // 中間識別碼
+
+    STO_Uniform: ['', [Validators.required, Validators.maxLength(8)]], // 公司代號(統一編號)
+    STO_TaxName: ['', [Validators.required, Validators.maxLength(60)]], // 營業人名稱
+    STO_TaxNo: ['', [Validators.required, Validators.maxLength(9)]], // 稅籍編號
+    STO_ManagerName: ['', [Validators.required, Validators.maxLength(12)]], // 負責人姓名
+    STO_Addr: ['', [Validators.required, Validators.maxLength(100)]], // 營業地址
+    REP_OrgCode: ['', [Validators.required]], // 總繳代號
+    STO_Direct: ['', Validators.required], // 是否採直接扣抵法
+    STO_HQUniform: ['', [Validators.maxLength(8)]], // 總公司統編
+    STO_ApplyFlag: ['', Validators.required], // 自行或委託辦理申報註記
+    STO_ApplyName: ['', [Validators.required, Validators.maxLength(12)]], // (代理)申報人姓名
+    STO_ApplyTEL: ['', [Validators.required, Validators.maxLength(15)]],
+    STO_ApplyID: ['', [Validators.maxLength(50)]], // 代理申報人證書(登錄)字號
+    REP_BegGUIYM: [this.getCurrentMonth(), Validators.required], // 申報年月起
+
+    // 其他可能需要的欄位（根據 FIN11010Data 介面）
+    STO_No: [''], // 門市編號
+    REP_EndGUIYM: [''], // 申報年月迄
+    STO_City: [''], // 城市
+    STO_PostCode: [''], // 郵遞區號
+    STO_AbbName: [''], // 簡稱
+    STO_Status: ['1'], // 狀態，預設為 '1'
+    STO_ApplyTEL_ext: [''], // 電話分機
+    STO_AreaCode: [''], // 區碼
+
+    // 系統欄位（通常不需要用戶輸入，由後端設定）
+    CRT_Date: [''], // 建立日期
+    CRT_USR_No: [''], // 建立人員編號
+    CRT_USR_Name: [''], // 建立人員姓名
+    UPD_Date: [''], // 更新日期
+    UPD_USR_No: [''], // 更新人員編號
+    UPD_USR_Name: [''], // 更新人員姓名
   });
 
-  mainCodeOptions: apiOption[] = [];
-  deductTypeOptions: apiOption[] = [
-    { No: 'Y', Name: '是', Label: '是' },
-    { No: 'N', Name: '否', Label: '否' }
-  ];
-  declareMethodOptions: apiOption[] = [
-    { No: 'A', Name: '自行申報', Label: '自行申報' },
-    { No: 'B', Name: '委託辦理', Label: '委託辦理' }
+  // 總繳代號選項
+  repOrgCodeOptions: DropdownOption[] = [
+    { No: '0', Name: '單一機構報繳' },
+    { No: '1', Name: '總機構彙總報繳' },
+    { No: '2', Name: '各單位(分支機構)分別申報' }
   ];
 
-  // 表格資料
-  recentlyCreatedData: any = null;
-
-  // 表格欄位
-  recentColumns = [
-    { field: 'company_no', header: '公司代號(統一編號)', visible: true },
-    { field: 'business_name', header: '營業人名稱', visible: true },
-    { field: 'tax_no', header: '稅籍編號', visible: true },
-    { field: 'owner_name', header: '負責人姓名', visible: true },
-    { field: 'address', header: '營業地址', visible: true },
-    { field: 'main_code', header: '總繳代號', visible: true },
-    { field: 'deduct_type', header: '是否採直接扣抵法', visible: true },
-    { field: 'total_company_no', header: '總公司統編', visible: true },
-    { field: 'declare_method', header: '自行或委託辦理申報註記', visible: true },
-    { field: 'agent_name', header: '(代理)申報人姓名', visible: true },
-    { field: 'agent_phone', header: '(代理)申報人電話', visible: true },
-    { field: 'agent_license_no', header: '代理申報人證書(登錄)字號', visible: true },
-    { field: 'declare_month_start', header: '申報年月起', visible: true },
-    { field: 'review_date', header: '審核日期', visible: true },
-    { field: 'reviewer', header: '審核人員', visible: true },
-    { field: 'setting_status', header: '設定狀態', visible: true }
+  // 是否採直接扣抵法選項
+  directDeductOptions: DropdownOption[] = [
+    { No: 'Y', Name: '是' },
+    { No: 'N', Name: '否' }
   ];
 
-  // 新增按鈕配置
-  addButton: AddButton[] = [
-    {
-      label: '審核',
-      icon: 'pi pi-check-circle text-green-500',
-      action: (rowData: any) => { this.onReview(rowData); },
-      disabled: (rowData: any) => rowData?.setting_status !== SettingStatus.未確認
-    },
-    {
-      label: '反審核',
-      icon: 'pi pi-undo text-orange-500',
-      action: (rowData: any) => { this.onUnreview(rowData); },
-      disabled: (rowData: any) => rowData?.setting_status !== SettingStatus.使用中
-    }
+  // 自行或委託辦理申報註記選項
+  applyFlagOptions: DropdownOption[] = [
+    { No: '1', Name: '本事業或關係企業職員申報(自行申報)' },
+    { No: '2', Name: '記帳及報稅代理業務人申報(委託申報)' }
   ];
 
-  constructor(private fin11010Service: Fin11010Service) {
+
+  constructor(private fin11010Service: FIN11010Service, private datePipe: DatePipe) {
     super();
   }
 
   ngOnInit(): void {
     this.initializePage('FIN11010', this.dataForm);
     if (this.crudstatus === 'Create') {
-      this.fin11010Service.getLatestSetting().subscribe(r => {
+      this.fin11010Service.getFIN11010PreviousData().subscribe(res => {
         // 填入資料，指定狀態與申報年月起
-        if (r) {
-          this.dataForm.patchValue(r);
-          // 以下欄位設不可編輯
-          this.setReadOnlyFields();
+        if (res) {
+          this.dataForm.patchValue(res.Data);
+          this.setFieldFormat(this.dataForm);
         }
       });
-
-      // 載入最近新增的資料
-      this.fin11010Service.getLatestSetting().subscribe((data) => {
-        this.recentlyCreatedData = data;
-      });
     }
-    this.loadOptions();
+    this.setReadOnlyFields();
+    this.setFieldFormat(this.dataForm);
   }
 
-  onSubmit(frm: FormGroup) {
-    this.messageService.blockUi();
-    this.submitted = true;
-    if (this.dataForm.invalid) {
-      this.messageService.unblockUi();
-      return;
-    }
-    const formValue = frm.getRawValue();
-    if (this.crudstatus === 'Create') {
-      this.fin11010Service.insertFIN11010(formValue).subscribe(() => {
-        this.messageService.successBubble('新增成功');
-        this.dataForm.reset();
-      });
-    }
-    this.messageService.unblockUi();
-    this.submitted = false;
-  }
-
-  loadOptions() {
-    this.fin11010Service.getMainCodeOptions().subscribe((response) => {
-      this.mainCodeOptions = response.Data.map((item: apiOption) => ({
-        No: item.No,
-        Name: item.Name,
-        Label: `${item.No}-${item.Name}`,
-      }));
+  onSubmit(form: FormGroup): void {
+    const formValue = form.getRawValue();
+    this.handleSubmit(form, () => {
+      switch (this.crudstatus) {
+        case CRUDStatus.Create:
+          if (this.canAdd()) {
+            const rb: FIN11010InsertRequest = {
+              STO_Uniform: formValue.STO_Uniform,
+              STO_TaxName: formValue.STO_TaxName,
+              STO_TaxNo: formValue.STO_TaxNo,
+              STO_ManagerName: formValue.STO_ManagerName,
+              STO_AbbName: formValue.STO_AbbName,
+              STO_City: formValue.STO_City,
+              STO_PostCode: formValue.STO_PostCode,
+              STO_Addr: formValue.STO_Addr,
+              REP_OrgCode: formValue.REP_OrgCode,
+              STO_Direct: formValue.STO_Direct,
+              STO_HQUniform: formValue.STO_HQUniform,
+              // STO_ApplyFlag: formValue.STO_ApplyFlag, FIXME: 這裡新增資料帶入時為空
+              STO_ApplyFlag: "1",
+              STO_ApplyName: formValue.STO_ApplyName,
+              STO_ApplyTEL: formValue.STO_ApplyTEL,
+              STO_ApplyTEL_ext: formValue.STO_ApplyTEL_ext,
+              STO_AreaCode: formValue.STO_AreaCode,
+              STO_ApplyID: formValue.STO_ApplyID,
+              REP_BegGUIYM: this.datePipe.transform(formValue.REP_BegGUIYM, 'yyyyMM') ?? ''
+            };
+            this.fin11010Service.insertFIN11010(rb)
+              .pipe(finalize(() => this.loading = false))
+              .subscribe(() => {
+                this.messageService.successBubble('新增成功');
+                this.dataForm.reset();
+              });
+          }
+          break;
+        case CRUDStatus.Edit:
+          if (this.canEdit()) {
+            const rb: FIN11010UpdateRequest = {
+              id: formValue.id,
+              STO_Uniform: formValue.STO_Uniform,
+              STO_TaxName: formValue.STO_TaxName,
+              STO_TaxNo: formValue.STO_TaxNo,
+              STO_ManagerName: formValue.STO_ManagerName,
+              STO_AbbName: formValue.STO_AbbName,
+              STO_City: formValue.STO_City,
+              STO_PostCode: formValue.STO_PostCode,
+              STO_Addr: formValue.STO_Addr,
+              REP_OrgCode: formValue.REP_OrgCode,
+              STO_Direct: formValue.STO_Direct,
+              STO_HQUniform: formValue.STO_HQUniform,
+              STO_ApplyFlag: formValue.STO_ApplyFlag,
+              STO_ApplyName: formValue.STO_ApplyName,
+              STO_ApplyTEL: formValue.STO_ApplyTEL,
+              STO_ApplyTEL_ext: formValue.STO_ApplyTEL_ext,
+              STO_AreaCode: formValue.STO_AreaCode,
+              STO_ApplyID: formValue.STO_ApplyID,
+              REP_BegGUIYM: this.datePipe.transform(formValue.REP_BegGUIYM, 'yyyyMM') ?? ''
+            };
+            this.fin11010Service.updateFIN11010(rb)
+              .pipe(finalize(() => this.loading = false))
+              .subscribe(() => {
+                this.messageService.successBubble('更新成功');
+                this.onCancel();
+              });
+          }
+          break;
+      }
     });
   }
 
+
   setReadOnlyFields() {
-    this.dataForm.get('company_no')?.disable();
-    this.dataForm.get('business_name')?.disable();
-    this.dataForm.get('tax_no')?.disable();
-    this.dataForm.get('main_code')?.disable();
-    this.dataForm.get('declare_method')?.disable();
-    this.dataForm.get('main_code')?.disable();
+    // [公司代號(統編)、營業人名稱、稅籍編號、總繳代號、自行或委託辦理申報註記]欄位不能修改；
+    this.dataForm.get('STO_Uniform')?.disable();
+    this.dataForm.get('STO_TaxName')?.disable();
+    this.dataForm.get('STO_TaxNo')?.disable();
+    this.dataForm.get('REP_OrgCode')?.disable();
+    this.dataForm.get('STO_ApplyFlag')?.disable();
   }
 
   getCurrentMonth(): string {
@@ -163,49 +186,11 @@ export class FIN11010CRUComponent extends BasicCruPageComponent<any> implements 
     return `${year}-${month}`;
   }
 
-  // 審核功能
-  onReview(data: any) {
-    this.messageService.confirm({
-      header: '是否執行審核',
-      accept: () => {
-        this.messageService.blockUi();
-        this.fin11010Service.reviewFIN11010(data.id).subscribe((response) => {
-          if (response.Status === '0000') {
-            this.messageService.successBubble(response.Message);
-            // 更新表格資料
-            if (this.recentlyCreatedData) {
-              this.recentlyCreatedData = {
-                ...this.recentlyCreatedData,
-                ...response.Data
-              };
-            }
-          }
-          this.messageService.unblockUi();
-        });
-      }
-    });
+  setFieldFormat(form: FormGroup) {
+    // 設定日期格式
+    const year = form.get('REP_BegGUIYM')?.value.substring(0, 4);
+    const month = form.get('REP_BegGUIYM')?.value.substring(4, 6);
+    this.dataForm.get('REP_BegGUIYM')?.setValue(`${year}/${month}`);
   }
 
-  // 反審核功能
-  onUnreview(data: any) {
-    this.messageService.confirm({
-      header: '是否執行反審核',
-      accept: () => {
-        this.messageService.blockUi();
-        this.fin11010Service.unreviewFIN11010(data.id).subscribe((response) => {
-          if (response.Status === '0000') {
-            this.messageService.successBubble(response.Message);
-            // 更新表格資料
-            if (this.recentlyCreatedData) {
-              this.recentlyCreatedData = {
-                ...this.recentlyCreatedData,
-                ...response.Data
-              };
-            }
-          }
-          this.messageService.unblockUi();
-        });
-      }
-    });
-  }
 }

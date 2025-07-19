@@ -1,14 +1,11 @@
 import { Component, computed, effect } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
-// 共用服務
-import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
 import { AccordionModule } from 'primeng/accordion';
-import { FileSelectEvent, FileUpload, FileUploadModule } from 'primeng/fileupload';
-import { catchError, combineLatest, EMPTY, map, take } from 'rxjs';
-import { environment } from '../../../../environments/environment';
-import { ApprovalStatus, PreorderECRListQuery, TLS26010Data, TLS26010Query, TLS26010Service, TLTTALENTQuery } from '../../../service/api/tls/tls26010.service';
+import { FileSelectEvent, FileUploadModule } from 'primeng/fileupload';
+import { combineLatest, map } from 'rxjs';
+import { TLS26010Service } from '../../../service/api/tls/tls26010.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
@@ -17,7 +14,8 @@ import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdow
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
 import { TableExpansionComponent } from '../../../shared/componentkit/table/table-expansion/table-expansion.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { AddButton, Column } from '../../../shared/componentkit/table/table.model';
+import { AddButton, Column, RowEditSaveEvent } from '../../../shared/componentkit/table/table.model';
+import { ApprovalStatus, PreorderECRListQuery, TLS26010Data, TLS26010Query, TLTTALENTQuery } from './tls26010.model';
 
 @Component({
   selector: 'app-tls26010',
@@ -152,9 +150,9 @@ export class TLS26010Component extends BasicQueryPageComponent<any> {
 
   columns: Column[] = [
     { field: 'pod_no', header: '預售活動編號', visible: true },
-    { field: 'pod_desc', header: '活動名稱', visible: true },
-    { field: 'pod_sdate', header: '活動起始日期', visible: true },
-    { field: 'pod_edate', header: '活動終止日期', visible: true },
+    { field: 'pod_desc', header: '活動名稱', visible: true, type: 'input' },
+    { field: 'pod_sdate', header: '活動起始日期', visible: true, type: 'date' },
+    { field: 'pod_edate', header: '活動終止日期', visible: true, type: 'date' },
     { field: 'pod_status', header: '核准狀態', visible: true, format: this.approvalStatus.bind(this) },
     { field: 'approved_usr_name', header: '核准人員', visible: true },
     { field: 'approved_date', header: '核准日期', visible: true },
@@ -177,6 +175,9 @@ export class TLS26010Component extends BasicQueryPageComponent<any> {
     // 只載入館別和樓層的下拉選單資料
     this.tls26010Service.loadSYS3800({});
     this.tls26010Service.loadSYS3900({});
+
+    // 僅供測試
+    this.tls26010Service.loadTLS26010(this.queryTLS26010());
   };
 
   approvalStatus(status: ApprovalStatus): string {
@@ -221,15 +222,54 @@ export class TLS26010Component extends BasicQueryPageComponent<any> {
 
   override onEdit(data: TLS26010Data): void {
     if (this.canPerformAction('30')) { // '修改' 的 function_code 是 "30"
-
+      this.tls26010Service.updateTLS26010(data);
     }
   }
 
-  onFileUpload(event: FileSelectEvent): void {
-    const file = event.files[0];
-    this.tls26010Service.updateTLS26010(file);
+  /** 行內編輯初始化 */
+  onRowEditInit(rowData: TLS26010Data): void {
+    console.log(`行內編輯:`, rowData);
+    if (rowData.pod_status === ApprovalStatus.已核准) return;
   }
 
+  /** 確認編輯 */
+  onRowEditSave(event: RowEditSaveEvent): void {
+    console.log(`保存編輯:`, event);
+    const { oldData, newData } = event;
+
+    // 驗證必填欄位
+    if (!newData.pod_desc || !newData.pod_sdate || !newData.pod_edate) {
+      this.messageService.errorBubble('請填寫完整的活動資訊');
+      return;
+    }
+
+    // 驗證日期邏輯
+    if (new Date(newData.pod_sdate) >= new Date(newData.pod_edate)) {
+      this.messageService.errorBubble('活動起始日期必須早於截止日期');
+      return;
+    }
+
+    // 檢查權限
+    if (this.canPerformAction('30')) {
+      this.tls26010Service.updateTLS26010(newData);
+      this.messageService.successBubble('活動資訊已更新');
+    } else {
+      this.messageService.errorBubble('沒有編輯權限');
+    }
+  }
+
+  /** 取消編輯 */
+  onRowEditCancel(rowData: TLS26010Data): void {
+    console.log(`取消編輯:`, rowData);
+  }
+
+  /** 處理文件上傳事件 */
+  onFileUpload(event: FileSelectEvent): void {
+    const file = event.files[0];
+    this.tls26010Service.importTLS26010(file);
+  }
+
+  /** 刪除選中的活動 */
   onDelete(data: TLS26010Data[]): void {
     if (!this.canEdit()) return;
     for (const item of data) {

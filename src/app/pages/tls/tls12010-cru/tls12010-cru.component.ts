@@ -54,6 +54,16 @@ export interface Potential_Customer {
   UPD_USR_Name?: string; // 變更人員姓名
 }
 
+export interface POS2013{
+  No: string,
+  Name: string,
+  ShortName: string,
+  VEN_No: string,
+  VEN_EngName: string,
+
+  Label: string,
+}
+
 // 2.1.2.1 潛在客戶資料維護CRU
 @Component({
     selector: 'app-tls12010-cru',
@@ -114,7 +124,7 @@ export class TLS12010CRUComponent extends BasicCruPageComponent<Potential_Custom
     business_type_Option: apiOption[] = []; // 經營方式(SYS1000.T117)（長度1，1=生產者、2=代理商、3=經銷商、4=其它）
     bus_type_Option: apiOption[] = []; // 業種-大分類代碼
     tlt_name_Option: apiOption[] = []; //品牌
-    cus_uniform_Option: apiOption[] = []; // 廠商統一編號(pos2013)  -- 等候端提供 (必須包含No、Name、EName)
+    cus_uniform_Option: POS2013[] = []; // 廠商統一編號(pos2013)  -- 等候端提供 (必須包含No、Name、EName)
     contact_USR_Option: apiOption[] = [  // 接洽人員代碼/名稱 -- 等候端提供
       {No: '123',Name:'張三',Label: '123-張三'}
     ];
@@ -144,10 +154,13 @@ export class TLS12010CRUComponent extends BasicCruPageComponent<Potential_Custom
         if (match) {
           // 自動帶入名稱
           this.dataForm.get('VEN_Name')?.disable();
-          this.dataForm.get('VEN_Name')?.setValue(match.Label ? (match.Label.split('/')[1] || '') : '');
+          this.dataForm.get('VEN_EngName')?.disable();
+          this.dataForm.get('VEN_Name')?.setValue(match.Name);
+          this.dataForm.get('VEN_EngName')?.setValue(match.VEN_EngName);
         } else {
           // 若找不到對應選項，清空 VEN_Name，並跳出警告
           this.dataForm.get('VEN_Name')?.setValue('');
+          this.dataForm.get('VEN_EngName')?.setValue('');
           // this.messageService.errorBubble('無該廠商名稱資料');
         }
       }
@@ -222,11 +235,25 @@ export class TLS12010CRUComponent extends BasicCruPageComponent<Potential_Custom
         });
         // 查 統編
         this.tls12010Service.queryPOS2013_DropDownList({}).subscribe((response) => {
-          this.cus_uniform_Option = response.Data.map((item: any) => ({
-            No: item.No, // 統編代碼
-            Label: item.No + '/' + item.Name, // 組合成顯示用的Label
+          // 去除重複的 No，只保留第一筆
+          const uniqueMap = new Map<string, any>();
+          response.Data.forEach((item: any) => {
+            if (!uniqueMap.has(item.No)) {
+              uniqueMap.set(item.No, item);
+            }
+          });
+
+          // 建立 dropdown options
+          this.cus_uniform_Option = Array.from(uniqueMap.values()).map((item: any) => ({
+            No: item.No,
+            Name: item.Name,
+            ShortName: item.ShortName,
+            VEN_No: item.VEN_No,
+            VEN_EngName: item.VEN_EngName,
+            Label: item.No + '/' + item.Name,
           }));
-          console.log('統編代號:', response.Data);
+
+          console.log('統編代號(去重):', this.cus_uniform_Option);
         });
         // 查 經營方式
          this.tls12010Service.querySYS1000_DropDownList({"SYS_Type": 'T117'}).subscribe((response) => {
@@ -255,6 +282,7 @@ export class TLS12010CRUComponent extends BasicCruPageComponent<Potential_Custom
           //內容重設
           cus_uniform_id.enable();
           VEN_Name.enable();
+          VEN_EngName.enable();
 
           cus_uniform_id.setValue('');
           VEN_Name.setValue('');
@@ -274,6 +302,7 @@ export class TLS12010CRUComponent extends BasicCruPageComponent<Potential_Custom
           //內容重設
           cus_uniform_id.enable();
           VEN_Name.enable();
+          VEN_EngName.enable();
 
           cus_uniform_id.setValue('');
           VEN_Name.setValue('');

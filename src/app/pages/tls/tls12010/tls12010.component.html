@@ -10,12 +10,12 @@
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
             <app-calendar-range-quick label="建檔日期"
-            [startControl]="queryForm.controls.CRT_Date_start" [endControl]="queryForm.controls.CRT_Date_end"
+            [startControl]="queryForm.controls.CreatedDateStart" [endControl]="queryForm.controls.CreatedDateEnd"
             [submitted]="submitted" />
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="接洽人員代碼/名稱" controlName="contact_USR_No" [options]="contact_USR_Option" optionLabel="Label"
-              optionValue="No" [control]="queryForm.controls.contact_USR_No" [submitted]="submitted"></app-dropdown>
+            <app-dropdown label="接洽人員代碼/名稱" controlName="contact_USR_Name" [options]="contact_USR_Option" optionLabel="Label"
+              optionValue="No" [control]="queryForm.controls.contact_USR_Name" [submitted]="submitted"></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown label="廠商統一編號" controlName="cus_uniform_id" [options]="cus_uniform_Option" optionLabel="Label"

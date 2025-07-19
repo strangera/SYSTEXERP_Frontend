@@ -34,6 +34,7 @@ export class Tls24010Pos5007Component implements OnInit {
   @Input() TLT_Name?: string//專櫃名稱
   @Input() store_way?: string// 1為專櫃 2=自營
   @Input() talent_id?: number//專櫃編號
+  @Input() submitted = false;
   index = 1
   POS5007Data: POS5007Data[] = [];
   POS5007SelectedItems: POS5007Data[] = [];
@@ -88,6 +89,9 @@ export class Tls24010Pos5007Component implements OnInit {
 
   onInput(event: POS5007Data) {
     event.TXN_Amt = (event.TXN_Qty || 0) * (event.PLU_SalePrc || 0);
+    if (event.TXN_Disc !== undefined && event.TXN_Disc > 0) {
+      event.TXN_Disc = -Math.abs(event.TXN_Disc);
+    }
     event.TXN_SaleAmt = event.TXN_Amt + (event.TXN_Disc || 0);
   }
   onChangeTLT_ID(rowData: POS5007Data) {

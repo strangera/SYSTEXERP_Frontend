@@ -13,6 +13,7 @@ import { InputNumberComponent } from '../../../shared/componentkit/input-number/
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { DatePipe, NgIf } from '@angular/common';
 import { ValidationService } from '../../../shared/service/validation.service';
+import { finalize } from 'rxjs';
 
 @Component({
   selector: 'app-fin13030-cru',
@@ -125,10 +126,12 @@ export class FIN13030CRUComponent extends BasicCruPageComponent<FIN13030Data> {
               INV_ZeroTax: this.zeroTaxGUIData.INV_ZeroTax,
               INV_SeqNo: this.zeroTaxGUIData.INV_SeqNo
             };
-            this.fin13030Service.insertFIN13030(rb).subscribe(() => {
-              this.messageService.successBubble('新增成功');
-              this.dataForm.reset();
-            });
+            this.fin13030Service.insertFIN13030(rb)
+              .pipe(finalize(() => this.loading = false))
+              .subscribe(() => {
+                this.messageService.successBubble('新增成功');
+                this.dataForm.reset();
+              });
           }
           break;
         case CRUDStatus.Edit:
@@ -159,10 +162,12 @@ export class FIN13030CRUComponent extends BasicCruPageComponent<FIN13030Data> {
             };
 
             console.log('更新成功rb:', rb);
-            this.fin13030Service.updateFIN13030(rb).subscribe(() => {
-              this.messageService.successBubble('更新成功');
-              this.onCancel();
-            });
+            this.fin13030Service.updateFIN13030(rb)
+              .pipe(finalize(() => this.loading = false))
+              .subscribe(() => {
+                this.messageService.successBubble('更新成功');
+                this.onCancel();
+              });
           }
           break;
       }

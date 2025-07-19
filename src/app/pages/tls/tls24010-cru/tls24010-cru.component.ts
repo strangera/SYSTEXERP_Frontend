@@ -116,7 +116,6 @@ export class TLS24010CRUComponent extends BasicCruPageComponent<TLS24010Data | u
     })
     // 監聽 電子載具種類 的變化
     txnGuiCarrTypeControl?.valueChanges.pipe(untilDestroyed(this), tap(() => { // 使用 tap 進行副作用操作
-      // 無論如何都先清空並禁用相關欄位
       txnGuiCarrIdExControl?.disable();
       txnGuiCarrIdControl?.setValue(null, { emitEvent: false });
       txnGuiCarrIdExControl?.setValue(null, { emitEvent: false });
@@ -150,6 +149,17 @@ export class TLS24010CRUComponent extends BasicCruPageComponent<TLS24010Data | u
   }
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
+      if (this.pos5008Comp?.POS5008SelectedItems.length === 0) {
+        this.messageService.errorBubble('請至少選擇一筆支付工具');
+        this.loading = false;
+        return
+      }
+      const childValid = this.pos5008Comp?.validate();
+      if (!childValid) {
+        this.messageService.errorBubble('支付工具資料不完整');
+        this.loading = false;
+        return;
+      }
       const pos5007Data = this.pos5007Comp?.POS5007Data ?? [];
       const pos5008Data = this.pos5008Comp?.POS5008SelectedItems ?? [];
       const body = {
@@ -166,9 +176,7 @@ export class TLS24010CRUComponent extends BasicCruPageComponent<TLS24010Data | u
           return item;
         }),
         POS5008_INFO: pos5008Data.map((item) => {
-          return {
-            ...item,
-          };
+          return { ...item };
         }),
       }
       this.tls24010Service.insertTLS24010(body).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe((res) => {
