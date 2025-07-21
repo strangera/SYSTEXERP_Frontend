@@ -40,8 +40,8 @@ export class FIN13030CRUComponent extends BasicCruPageComponent<FIN13030Data> {
     INV_GUIDate: ['', Validators.required], // 發票日期
     INV_YM: ['', Validators.required], // 資料所屬年月
     INV_DeclareYM: ['', Validators.required], // 申報年月
-    INV_Name: ['', [Validators.required, Validators.maxLength(50)]], // 買受人名稱
-    GoodsOrServicesName: ['', Validators.maxLength(20)], // 貨物或勞務名稱
+    INV_Name: ['', [Validators.required, Validators.maxLength(60)]], // 買受人名稱
+    GoodsOrServicesName: ['', Validators.maxLength(100)], // 貨物或勞務名稱
     GoodsQty: [0, [this.validationService.numberValidator]], // 貨物或勞務數量
     ExportMethod: ['', Validators.required], // 外銷方式
     INV_PassType: ['', Validators.required], // 通關方式註記
@@ -49,7 +49,7 @@ export class FIN13030CRUComponent extends BasicCruPageComponent<FIN13030Data> {
     INV_DocNo: ['', [Validators.maxLength(10)]], // 證明文件號碼
     NonCustomsExportAmt: [0, [this.validationService.numberValidator]], // 非經海關出口金額
     INV_ExportType: [''], // 出口報單類別
-    INV_ExportNo: ['', [Validators.maxLength(14)]], // 出口報單號碼
+    INV_ExportNo: ['', [Validators.maxLength(10)]], // 出口報單號碼
     CustomsExportAmt: [0, [this.validationService.numberValidator]], // 經海關出口金額
     ExportDate: ['', Validators.required], // 輸出或結匯日期
     INV_Remark: ['', Validators.maxLength(100)], // 備註
@@ -161,7 +161,6 @@ export class FIN13030CRUComponent extends BasicCruPageComponent<FIN13030Data> {
               INV_SeqNo: this.zeroTaxGUIData.INV_SeqNo
             };
 
-            console.log('更新成功rb:', rb);
             this.fin13030Service.updateFIN13030(rb)
               .pipe(finalize(() => this.loading = false))
               .subscribe(() => {
