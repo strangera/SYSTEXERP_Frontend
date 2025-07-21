@@ -25,6 +25,7 @@ import { DropdownModule } from 'primeng/dropdown';
 import { Tls24010Pos5008Component } from './tls24010-pos5008/tls24010-pos5008.component';
 import { Tls24010Pos5007Component } from './tls24010-pos5007/tls24010-pos5007.component';
 import { finalize, tap } from 'rxjs';
+import { formatTimeToHHMMSS } from '@shared/componentkit/table/table.model';
 @Component({
   selector: 'app-tls24010-cru',
   templateUrl: './tls24010-cru.component.html',
@@ -60,7 +61,7 @@ export class TLS24010CRUComponent extends BasicCruPageComponent<TLS24010Data | u
     TXN_GUIVehicle: [{ value: null, disabled: true }, [Validators.maxLength(20)]], //電子發票載具卡號 若有值則 TXN_GUI_CarrType 固定為3J0002，TXN_GUI_CarrId與TXN_GUI_CarrIdEx內容與此欄位相同
     TXN_GUI_CarrIdEx: [{ value: null, disabled: true }, [Validators.maxLength(64)]], //電子發票載具ID顯碼
     TXN_GUI_CarrId: [{ value: null, disabled: true }, [Validators.maxLength(64)]], //電子發票載具ID隱碼
-    TXN_GUIRemark: [{ value: null, disabled: true }], //電子發票防偽隨機碼 由系統依據自訂公式計算取得
+    TXN_GUIRemark: [{ value: '系統自動產生', disabled: true }], //電子發票防偽隨機碼 由系統依據自訂公式計算取得
     TXN_PrintTimes: [null], //紙本發票列印狀態(若列印電子發票紙本證明連則為1，其他則為0) 顯示 是/否
     TXN_GUI_Donate: ['N'], //發票捐贈狀態，Y=是、N=否
     TXN_GUILoveCode: [{ value: null, disabled: true }], //捐贈社福團體代碼，若TXN_GUI_Donate為Y，則必須輸入此欄位
@@ -161,10 +162,18 @@ export class TLS24010CRUComponent extends BasicCruPageComponent<TLS24010Data | u
         return;
       }
       const pos5007Data = this.pos5007Comp?.POS5007Data ?? [];
-      const pos5008Data = this.pos5008Comp?.POS5008SelectedItems ?? [];
+      const pos5008Data = this.pos5008Comp?.POS5008Data.map((item, i) => {
+        const formGroup = this.pos5008Comp?.posFormArrayControls[i];
+        return {
+          ...item,
+          ...formGroup?.getRawValue()
+        };
+      }).filter(item => item.selected) ?? [];
       const body = {
         Store_way: this.store_way,
+        TXN_GUIRemark: undefined,
         ...frm.getRawValue(),
+        TXN_Time: formatTimeToHHMMSS(frm.getRawValue().TXN_Time),
         POS5007_INFO: pos5007Data.map((item) => {
           if (typeof item.PLU_MagNo === 'object' && item.PLU_MagNo !== null) {
             return {
@@ -176,7 +185,15 @@ export class TLS24010CRUComponent extends BasicCruPageComponent<TLS24010Data | u
           return item;
         }),
         POS5008_INFO: pos5008Data.map((item) => {
-          return { ...item };
+          return {
+            PAY_No: item.PAY_No,
+            TXN_PayAmt: item.TXN_PayAmt,
+            CRD_Type: item.CRD_Type !== '' ? item.CRD_Type : undefined,
+            CRD_No: item.CRD_Type !== '' ? item.CRD_No : undefined,
+            TXN_CouponNo: item.TXN_CouponNo != '' ? item.TXN_CouponNo : undefined,
+            TXN_PayDesc: item.TXN_PayDesc != '' ? item.TXN_PayDesc : undefined,
+            TERM_No: item.TERM_No !== '' ? Number(item.TERM_No) : undefined
+          };
         }),
       }
       this.tls24010Service.insertTLS24010(body).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe((res) => {

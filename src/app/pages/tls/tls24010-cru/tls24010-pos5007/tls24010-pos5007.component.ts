@@ -45,6 +45,7 @@ export class Tls24010Pos5007Component implements OnInit {
     private readonly dropDownListService: DropDownListService,
   ) { }
   ngOnInit(): void {
+    console.log(this.store_way);
     switch (this.store_way) {
       case '2':// 自營櫃位
         {
