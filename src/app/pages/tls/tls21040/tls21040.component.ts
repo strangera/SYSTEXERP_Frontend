@@ -15,6 +15,7 @@ import { TranslateModule } from '@ngx-translate/core';
 import { TLS21040Data, Tls21040Service } from '@service/api/tls/tls21040.service';
 import { finalize } from 'rxjs';
 import { untilDestroyed } from '@ngneat/until-destroy';
+import { environment } from 'src/environments/environment';
 
 
 @Component({
@@ -98,13 +99,25 @@ export class TLS21040Component extends BasicQueryPageComponent<TLS21040Data> imp
       this.tls21040Service.queryTLS21040(frm.getRawValue()).pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe((res) => {
         this.data = res.Data.map(item => ({
           ...item,
-          Active_Date: item.Active_Date ? new Date(item.Active_Date) : null,
-          Disable_Date: item.Disable_Date ? new Date(item.Disable_Date) : null
+          Active_Date: this.parseYMD(item.Active_Date),
+          Disable_Date: this.parseYMD(item.Disable_Date)
         }));
         this.totalRecords = res.TotalCount;
         this.queryStateService.setQueryState(this.ProgNo, frm.getRawValue());
       })
     });
+  }
+  private parseYMD(ymd: string | Date | null): Date | null {
+    if (!ymd) return null;
+
+    const str = ymd.toString();
+    if (str.length !== 8) return null;
+
+    const year = +str.slice(0, 4);
+    const month = +str.slice(4, 6) - 1; // JS 月份從 0 開始
+    const day = +str.slice(6, 8);
+
+    return new Date(year, month, day);
   }
   onDelete(rows: TLS21040Data[]) {
     this.confirmationService.confirm({
@@ -135,7 +148,12 @@ export class TLS21040Component extends BasicQueryPageComponent<TLS21040Data> imp
   onImportExcel(event: FileSelectEvent): void {
     const file = event.files[0];
     this.tls21040Service.uploadTLS21040(file).subscribe(res => {
-      console.log(res);
+      if (res.Status === '0000') {
+        this.messageService.successBubble(res.Message);
+      } else {
+        this.messageService.errorBubble(res.Message);
+        window.open(environment.ApiUrl + res.Data.ErrorFilePath, '_blank');
+      }
     })
   }
 }

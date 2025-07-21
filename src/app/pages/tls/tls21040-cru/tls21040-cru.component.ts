@@ -41,6 +41,7 @@ export class TLS21040CRUComponent extends BasicCruPageComponent<TLS21040Data> im
     Active_Date: [null],
     Disable_Date: [null]
   });
+
   cardTypeOptions: { value: string, label: string }[] = [
     { value: 'V', label: 'VISA' },
     { value: 'M', label: 'MASTER' },
