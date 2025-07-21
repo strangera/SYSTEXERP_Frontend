@@ -55,7 +55,7 @@ export class FIN13030Component extends BasicQueryPageComponent<FIN13030Data> imp
     NonCustomsExportAmt_B: [0, [this.validationService.numberValidator]], // 非經海關出口金額_起
     NonCustomsExportAmt_E: [0, [this.validationService.numberValidator]], // 非經海關出口金額_迄
     INV_ExportType: [null], // 出口報單類別 (多選)
-    INV_ExportNo: ['', [Validators.maxLength(14)]], // 出口報單號碼
+    INV_ExportNo: ['', [Validators.maxLength(10)]], // 出口報單號碼
     CustomsExportAmt_B: [0, [this.validationService.numberValidator]], // 經海關出口金額_起
     CustomsExportAmt_E: [0, [this.validationService.numberValidator]], // 經海關出口金額_迄
     ExportDate_B: [null], // 輸出或結匯日期_起
@@ -78,7 +78,7 @@ export class FIN13030Component extends BasicQueryPageComponent<FIN13030Data> imp
     { field: 'INV_Uniform', header: '買受人統一編號', visible: true },
     { field: 'GoodsOrServicesName', header: '貨物或勞務名稱', visible: true },
     { field: 'GoodsQty', header: '貨物或勞務數量', visible: true },
-    { field: 'INV_PassType', header: '通關方式註記', visible: false, },
+    { field: 'INV_PassType', header: '通關方式註記', visible: false },
     { field: 'ExportMethod', header: '外銷方式', visible: true },
     { field: 'INV_DocName', header: '證明文件名稱', visible: true },
     { field: 'INV_DocNo', header: '證明文件號碼', visible: true },
@@ -88,7 +88,16 @@ export class FIN13030Component extends BasicQueryPageComponent<FIN13030Data> imp
     { field: 'CustomsExportAmt', header: '經海關出口金額', visible: true },
     { field: 'ExportDate', header: '輸出或結匯日期', visible: true },
     { field: 'INV_Remark', header: '備註', visible: true },
+
+    // 預設 hidden
+    { field: 'CRT_Date', header: '建立日期', visible: false },
+    { field: 'CRT_USR_No', header: '建立人員編號', visible: false },
+    { field: 'CRT_USR_Name', header: '建立人員姓名', visible: false },
+    { field: 'UPD_Date', header: '更新日期', visible: false },
+    { field: 'UPD_USR_No', header: '更新人員編號', visible: false },
+    { field: 'UPD_USR_Name', header: '更新人員姓名', visible: false },
   ];
+
 
   exportMethodOptions: DropdownOption[] = [];
   exportTypeOptions: DropdownOption[] = [];
@@ -143,7 +152,7 @@ export class FIN13030Component extends BasicQueryPageComponent<FIN13030Data> imp
         }).subscribe(() => {
           // 如果刪除成功，清除選擇的項目
           this.messageService.successBubble('刪除成功');
-          this.data = this.data.filter(item => !rowData.some(row => row.ID === item.ID));
+          this.onSubmit(this.queryForm);
         });
       }
     });
