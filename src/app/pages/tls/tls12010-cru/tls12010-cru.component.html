@@ -29,8 +29,11 @@
                 <div class="col-12 md:col-6 lg:col-4">
                 <!-- 判斷 cus_type 是否為 '1' 來決定顯示哪個欄位 -->
                 <ng-container *ngIf="dataForm.get('cus_type')?.value === '1'; else textInput">
-                    <app-dropdown label="廠商統一編號/身分證/員工ID" controlName="cus_uniform_id" [options]="cus_uniform_Option" optionLabel="Label"
-                                optionValue="No" [control]="dataForm.controls.cus_uniform_id" [submitted]="submitted"></app-dropdown>
+                    <!-- <app-dropdown label="廠商統一編號/身分證/員工ID" controlName="cus_uniform_id" [options]="cus_uniform_Option" optionLabel="Label"
+                                optionValue="No" [control]="dataForm.controls.cus_uniform_id" [submitted]="submitted"></app-dropdown> -->
+
+                    <app-dropdown label="廠商統一編號" controlName="cus_uniform_id" [options]="cus_uniform_Option" optionLabel="Label"
+                        optionValue="No" [control]="dataForm.controls.cus_uniform_id" [submitted]="submitted"></app-dropdown>
                 </ng-container>
 
                 <!-- 當 cus_type 不是 '1' 時顯示文字輸入框 -->
@@ -122,20 +125,23 @@
             </div><hr>
 
             <!-- 潛在客戶明細檔 -->
-             <div class="grid p-fluid">
-                <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-text label="其他商場" controlName="other_shop" [control]="dataForm.controls.other_shop"
-                    [submitted]="submitted"></app-input-text>
-                </div>
-                <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-number label="面積" controlName="shop_area"
-                    [control]="dataForm.controls.shop_area" [maxFractionDigits]="3" [submitted]="submitted" />
-                </div>
-                <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-number label="營業額" controlName="total_amt"
-                    [control]="dataForm.controls.total_amt" [submitted]="submitted" />
-                </div>
-            </div>
+            <ng-container>
+                <!-- 潛在客戶明細檔 Potential_Customer_Detail -->
+                <app-expandable-edit-table
+                    class="custom-table-red"
+                    [data]="potentialDetail"
+                    [mainColumns]="Potential_Customer_Detail_Columns"
+                    [showCheckBox]="false"
+                    [showPaginator]="false"
+                    [showAddButton]="false"
+                    [showBatchDelete]="false"
+                    [loading]="loading"
+                    [dataKey]="'id'"
+                    [readonly]="true"
+                    [detailKey]="''"
+                    [emptyMessage]="'沒有潛在客戶明細檔'"
+                ></app-expandable-edit-table>
+            </ng-container>
 
             <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
                 *ngIf="!isFormReadable">
