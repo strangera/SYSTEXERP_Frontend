@@ -38,6 +38,7 @@ import { CalendarComponent } from '../../../shared/componentkit/calendar/calenda
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
 import { CheckboxModule } from 'primeng/checkbox';
 import { InputTextareaComponent } from '../../../shared/componentkit/input-textarea/input-textarea.component';
+import { NgIf } from '@angular/common';
 
 @Component({
   selector: 'app-tls13010-cru',
@@ -45,6 +46,7 @@ import { InputTextareaComponent } from '../../../shared/componentkit/input-texta
   styleUrls: ['./tls13010-cru.component.scss'],
   standalone: true,
   imports: [
+    NgIf,
     MenubarComponent,
     ButtonComponent,
     AccordionModule,
@@ -1396,4 +1398,92 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
   private updateDisplayLocationData(): void {
     this.displayLocationData = this.locationData.filter(item => item._status !== 'deleted');
   }
+
+  onCommissionTypeChange(newValue: string): void {
+    if (!this.contractFlowService.isNewContractMode()) {
+      const originalData = this.contractFlowService.getCurrentData()?.queryRowData;
+      const originalCommissionType = originalData?.tlt_term_type?.toString().trim();
+
+      if (originalCommissionType && originalCommissionType !== newValue?.trim()) {
+        const originalName = this.getTermTypeName(originalCommissionType);
+        const newName = this.getTermTypeName(newValue);
+
+        // 🎯 生成具體的清除資訊
+        const clearOps = this.generateClearOperations(originalCommissionType);
+        const clearDetails = this.generateClearDetails(clearOps);
+
+        const warningMessage = `⚠️ 抽成別變更警告\n\n` +
+          `原始抽成別：${originalName}\n` +
+          `新抽成別：${newName}\n\n` +
+          `${clearDetails}\n\n` +
+          `請確認是否要繼續？`;
+
+        if (!confirm(warningMessage)) {
+          // 使用者取消，恢復原值
+          this.dataForm.patchValue({ tlt_term_type: originalCommissionType });
+          return;
+        } else {
+          // 使用者確認變更
+          this.messageService.warnBubble('抽成別已變更，相關條件設定將在送出時被清除');
+        }
+      }
+    }
+
+    // 儲存變更
+    this.saveToWorkflow();
+  }
+
+  private generateClearOperations(originalTermType: string): any {
+    return {
+      clearRentDetails: originalTermType === '1' || originalTermType === '2',
+      clearLimitDetails: originalTermType === '4' || originalTermType === '6',
+      clearLevelDetails: originalTermType === '5' || originalTermType === '6'
+    };
+  }
+
+
+  private generateClearDetails(clearOps: any): string {
+    const willClear: string[] = [];
+    const willKeep: string[] = ['抽成設定 (主檔、明細、年度業績、層級)'];
+
+    if (clearOps.clearRentDetails) willClear.push('租金設定');
+    if (clearOps.clearLimitDetails) willClear.push('包底設定');
+    if (clearOps.clearLevelDetails) willClear.push('階梯設定');
+
+    let message = '';
+
+    if (willClear.length > 0) {
+      message += `將清除：${willClear.join('、')}\n`;
+    } else {
+      message += `無需清除條件設定\n`;
+    }
+
+    message += `將保留：${willKeep.join('、')}`;
+
+    return message;
+  }
+
+  /**
+   * 🎯 新增：取得抽成別名稱
+   */
+  private getTermTypeName(termType: string): string {
+    const option = this.tltTermTypeOptions.find(opt => opt.value === termType);
+    return option ? option.label : `未知類型(${termType})`;
+  }
+
+  /**
+   * 檢查是否有抽成別變更
+   */
+  hasCommissionTypeChanged(): boolean {
+    if (this.contractFlowService.isNewContractMode()) {
+      return false;
+    }
+
+    const originalData = this.contractFlowService.getCurrentData()?.queryRowData;
+    const originalCommissionType = originalData?.tlt_term_type?.toString().trim();
+    const currentCommissionType = this.dataForm.get('tlt_term_type')?.value?.toString().trim();
+
+    return originalCommissionType !== currentCommissionType;
+  }
+
 }
