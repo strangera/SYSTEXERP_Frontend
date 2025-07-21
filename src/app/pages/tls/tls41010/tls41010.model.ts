@@ -1,5 +1,5 @@
 // import { formatDate, formatDateTime } from "../../../shared/componentkit/table/table.model";
-
+import { SystemOptionsService } from '../../../service/system/sys1000.service';
 import { Column, formatDateTime, formatTimeHHMM } from "../../../shared/componentkit/table/table.model";
 
 export const statusOptions = [
@@ -258,7 +258,9 @@ export const columns: Column[] = [
   { field: 'SYS_StoreNo', header: '收銀機所屬門市店號', visible: true },
   { field: 'ECR_No', header: '收銀機號', visible: true },
   { field: 'ECR_Name', header: '收銀機名稱', visible: true },
-  { field: 'ECR_Type', header: '機台類型', visible: true },
+  { field: 'ECR_Type', header: '機台類型', visible: true,
+    format: (value) => SystemOptionsService.getOptions('ECR_Type')?.find((v) => v.SYS_Code === value)?.SYS_Name || value
+  },
   { field: 'ECR_TLT_No', header: '機台所屬專櫃編號', visible: true },
   { field: 'ECR_TLT_Name', header: '機台所屬專櫃名稱', visible: true },
   { field: 'ECR_USR_No', header: '機台所屬收銀員', visible: true },
@@ -272,13 +274,17 @@ export const columns: Column[] = [
   { field: 'ECR_AreaNo', header: '區域', visible: true },
   { field: 'ECR_LocNo', header: '位置編號', visible: true },
   { field: 'HOS_No', header: '倉庫編號', visible: true },
-  { field: 'ECR_SAL_Type', header: '機台用途別', visible: true },
+  { field: 'ECR_SAL_Type', header: '機台用途別', visible: true,
+     format: (value) => SystemOptionsService.getOptions('ECR_SAL_Type')?.find((v) => v.SYS_Code === value)?.SYS_Name || value
+  },
   { field: 'ECR_ComName', header: '收銀機電腦名稱', visible: true },
   { field: 'ECR_IP', header: '收銀機網路IP', visible: true },
   { field: 'ECR_SrvIP', header: '收銀機後台主機IP', visible: true },
   { field: 'ECR_TmplNo', header: '周邊設定模版編號', visible: true },
   { field: 'ECR_SernoType', header: '交易序號模式', visible: true },
-  { field: 'ECR_GUI_Type', header: '發票使用類別', visible: true },
+  { field: 'ECR_GUI_Type', header: '發票使用類別', visible: true,
+    format: (value) => SystemOptionsService.getOptions('ECR_GUI_Type')?.find((v) => v.SYS_Code === value)?.SYS_Name || value
+  },
   { field: 'ECR_TimeTickInvl', header: '系統對時間隔(秒)', visible: true },
   { field: 'ECR_Interval', header: '上下傳異動檔間隔(秒)', visible: true },
   { field: 'ECR_MaxQty', header: '單筆交易數量上限', visible: true },
@@ -323,31 +329,67 @@ export const columns: Column[] = [
   { field: 'ECR_SettleHHNN', header: '清機提示時間-時分', visible: true, format: formatTimeHHMM },
   { field: 'ECR_KBLevel', header: '機台鍵盤等級', visible: true },
   { field: 'ECR_KBType', header: '鍵盤型態', visible: true },
-  { field: 'ECR_Scanner', header: '掃描器型態', visible: true },
-  { field: 'ECR_ScannerCom', header: '掃描器連接埠', visible: true },
+  { field: 'ECR_Scanner', header: '掃描器型態', visible: true ,
+    format: (value) => SystemOptionsService.getOptions('ECR_Scanner')?.find((v) => v.SYS_Code === value)?.SYS_Name || value
+  },
+  { field: 'ECR_ScannerCom', header: '掃描器連接埠', visible: true,
+    format: (value) => SystemOptionsService.getOptions('ECR_ScannerCom')?.find((v) => v.SYS_Code === value)?.SYS_Name || value
+   },
   { field: 'ECR_ScrType', header: '收銀畫面樣式', visible: true },
-  { field: 'ECR_CD', header: '客戶顯示器型態', visible: true },
-  { field: 'ECR_CDCom', header: '客戶顯示器連接埠', visible: true },
-  { field: 'ECR_ExtScr', header: '收銀外接顯示器名稱', visible: true },
-  { field: 'ECR_ExtScrCom', header: '收銀外接顯示器連接埠', visible: true },
-  { field: 'ECR_GUIPrn', header: '發票印表機型態', visible: true },
-  { field: 'ECR_GUICom', header: '發票印表機連接埠', visible: true },
-  { field: 'ECR_SlipPrn', header: '菜單印表機型態', visible: true },
-  { field: 'ECR_SlipPrnCom', header: '菜單印表機連接埠', visible: true },
-  { field: 'ECR_LablePrn', header: '標籤印表機型態', visible: true },
-  { field: 'ECR_LablePrnCom', header: '標籤印表機連接埠', visible: true },
-  { field: 'ECR_EDC', header: '信用卡刷卡機型態', visible: true },
-  { field: 'ECR_EDCCom', header: '信用卡刷卡機連接埠', visible: true },
-  { field: 'ECR_EDC2', header: '第二台信用卡刷卡機型態', visible: true },
-  { field: 'ECR_EDC2Com', header: '第二台信用卡刷卡機連接埠', visible: true },
+  { field: 'ECR_CD', header: '客戶顯示器型態', visible: true,
+    format: (value) => SystemOptionsService.getOptions('ECR_CD')?.find((v) => v.SYS_Code === value)?.SYS_Name || value
+   },
+  { field: 'ECR_CDCom', header: '客戶顯示器連接埠', visible: true,
+    format: (value) => SystemOptionsService.getOptions('ECR_CDCom')?.find((v) => v.SYS_Code === value)?.SYS_Name || value
+   },
+  { field: 'ECR_ExtScr', header: '收銀外接顯示器名稱', visible: true,
+    format: (value) => SystemOptionsService.getOptions('ECR_ExtScr')?.find((v) => v.SYS_Code === value)?.SYS_Name || value
+   },
+  { field: 'ECR_ExtScrCom', header: '收銀外接顯示器連接埠', visible: true,
+    format: (value) => SystemOptionsService.getOptions('ECR_ExtScrCom')?.find((v) => v.SYS_Code === value)?.SYS_Name || value
+   },
+  { field: 'ECR_GUIPrn', header: '發票印表機型態', visible: true,
+    format: (value) => SystemOptionsService.getOptions('ECR_GUIPrn')?.find((v) => v.SYS_Code === value)?.SYS_Name || value
+   },
+  { field: 'ECR_GUICom', header: '發票印表機連接埠', visible: true,
+    format: (value) => SystemOptionsService.getOptions('ECR_GUICom')?.find((v) => v.SYS_Code === value)?.SYS_Name || value
+   },
+  { field: 'ECR_SlipPrn', header: '菜單印表機型態', visible: true,
+    format: (value) => SystemOptionsService.getOptions('ECR_SlipPrn')?.find((v) => v.SYS_Code === value)?.SYS_Name || value
+   },
+  { field: 'ECR_SlipPrnCom', header: '菜單印表機連接埠', visible: true,
+    format: (value) => SystemOptionsService.getOptions('ECR_SlipPrnCom')?.find((v) => v.SYS_Code === value)?.SYS_Name || value
+   },
+  { field: 'ECR_LablePrn', header: '標籤印表機型態', visible: true,
+    format: (value) => SystemOptionsService.getOptions('ECR_LablePrn')?.find((v) => v.SYS_Code === value)?.SYS_Name || value
+   },
+  { field: 'ECR_LablePrnCom', header: '標籤印表機連接埠', visible: true,
+    format: (value) => SystemOptionsService.getOptions('ECR_LablePrnCom')?.find((v) => v.SYS_Code === value)?.SYS_Name || value
+   },
+  { field: 'ECR_EDC', header: '信用卡刷卡機型態', visible: true,
+    format: (value) => SystemOptionsService.getOptions('ECR_EDC')?.find((v) => v.SYS_Code === value)?.SYS_Name || value
+   },
+  { field: 'ECR_EDCCom', header: '信用卡刷卡機連接埠', visible: true,
+    format: (value) => SystemOptionsService.getOptions('ECR_EDCCom')?.find((v) => v.SYS_Code === value)?.SYS_Name || value
+  },
+  { field: 'ECR_EDC2', header: '第二台信用卡刷卡機型態', visible: true,
+    format: (value) => SystemOptionsService.getOptions('ECR_EDC2')?.find((v) => v.SYS_Code === value)?.SYS_Name || value
+   },
+  { field: 'ECR_EDC2Com', header: '第二台信用卡刷卡機連接埠', visible: true,
+    format: (value) => SystemOptionsService.getOptions('ECR_EDC2Com')?.find((v) => v.SYS_Code === value)?.SYS_Name || value
+   },
   { field: 'ECR_ElecSVCrdA', header: '悠遊卡', visible: true },
   { field: 'ECR_ElecSVCrdACom', header: '悠遊卡連接埠', visible: true },
   { field: 'ECR_ElecSVCrdB', header: '一卡通', visible: true },
   { field: 'ECR_ElecSVCrdBCom', header: '一卡通連接埠', visible: true },
   { field: 'ECR_ElecSVCrdC', header: '愛金卡', visible: true },
   { field: 'ECR_ElecSVCrdCCom', header: '愛金卡連接埠', visible: true },
-  { field: 'ECR_ElecPay', header: '電子支付', visible: true },
-  { field: 'ECR_ElecPayCom', header: '電子支付連接埠', visible: true },
+  { field: 'ECR_ElecPay', header: '電子支付', visible: true,
+    format: (value) => SystemOptionsService.getOptions('ECR_ElecPay')?.find((v) => v.SYS_Code === value)?.SYS_Name || value
+   },
+  { field: 'ECR_ElecPayCom', header: '電子支付連接埠', visible: true,
+    format: (value) => SystemOptionsService.getOptions('ECR_ElecPayCom')?.find((v) => v.SYS_Code === value)?.SYS_Name || value
+   },
   { field: 'ECR_Drawer', header: '錢櫃型態', visible: true },
   { field: 'ECR_DrawerCom', header: '錢櫃連接埠', visible: true },
   { field: 'CRT_Date', header: '建立日期', visible: true, format: formatDateTime },
