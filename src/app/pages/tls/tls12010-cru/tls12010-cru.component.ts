@@ -1,6 +1,7 @@
+import { map } from 'rxjs';
 import { ValidationService } from './../../../shared/service/validation.service';
 // --Commonly used imports--
-import { Component, OnInit, } from '@angular/core';
+import { Component, OnInit, ViewChild, } from '@angular/core';
 import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { TranslateModule } from '@ngx-translate/core';
@@ -21,6 +22,7 @@ import { BasicCruPageComponent } from '../../../shared/componentextends/basic-cr
 import { apiOption, option } from '../../../shared/models/sys/sysb000.module';
 import { Tls12010Service } from '../../../service/api/tls/tls12010.service';
 import { ColumnDef, ExpandableEditTableComponent } from '../../../shared/componentkit/expandable-edit-table/expandable-edit-table.component';
+import { Tls12010DetailService } from './tls12010-detail.service';
 
 export interface Potential_Customer {
   ID: number; // 主鍵，自動編號
@@ -61,7 +63,9 @@ export interface Potential_Customer_Detail {
   PC_id: number; // 潛在客戶ID (Potential_Customer 的 ID)
   other_shop: string; // 其他商場
   shop_area: number; // 面積 (小數，預設 0)
-  total_amt: number; // 營業額 (整數，預設 0)   
+  total_amt: number; // 營業額 (整數，預設 0)  
+
+  status: string; // 狀態 (新增: 'new', 編輯: 'edit', 刪除: 'delete')
 }
 
 export interface POS2013{
@@ -83,6 +87,7 @@ export interface POS2013{
     imports: [MenubarComponent, PanelModule, FormsModule, ReactiveFormsModule, CalendarComponent, DropdownComponent, RadiobuttonComponent, EditorTextComponent, ExpandableEditTableComponent,InputTextComponent, InputNumberComponent, EditorTextComponent, NgFor, ButtonDynamicallydeleteComponent, ButtonDynamicallyaddComponent, ButtonComponent, NgIf, TranslateModule]
 })
 export class TLS12010CRUComponent extends BasicCruPageComponent<Potential_Customer> implements OnInit {
+  @ViewChild('detailTable') detailTable!: ExpandableEditTableComponent;
   // ----------------------------------------------------------------
     dataForm = this.formBuilder.nonNullable.group({
         // Potential_Customer 潛在客戶主檔
@@ -128,9 +133,31 @@ export class TLS12010CRUComponent extends BasicCruPageComponent<Potential_Custom
         // { field: 'ID', header: '專櫃招募編號', type: 'number', editable: false, autoWidth: true },
         // { field: 'PC_id', header: 'potential_customer id', type: 'number', editable: false, autoWidth: true },
         { field: 'other_shop', header: '其他商場', type: 'text', editable: true, autoWidth: true },
-        { field: 'shop_area', header: '面積', type: 'number', editable: true, autoWidth: true },
-        { field: 'total_amt', header: '廠商名稱', type: 'number', editable: true, autoWidth: true }
+        { field: 'shop_area', header: '面積', type: 'number', allowDecimal: true, decimalPlaces: 3, editable: true, autoWidth: true },
+        { field: 'total_amt', header: '營業額', type: 'number', allowDecimal: true, editable: true, autoWidth: true }
     ];
+    // 預設新項目模板
+    defaultNewDetail: { PC_id: number | null; other_shop: string; shop_area: number; total_amt: number; status: string } = {
+      PC_id: null, // 潛在客戶ID (Potential_Customer 的 ID)
+      other_shop: '', // 其他商場
+      shop_area: 0, // 面積
+      total_amt: 0, // 營業額
+
+      status: 'new' // 新增狀態
+    };
+    // 預設 POS2005 新項目模板
+    createDefaultNew(PC_id: number) {
+      this.defaultNewDetail = {
+        PC_id: PC_id,
+        other_shop: '', // 其他商場
+        shop_area: 0, // 面積
+        total_amt: 0, // 營業額
+
+        status: 'new' // 新增狀態
+      };
+    }
+    // 展開式表格的載入狀態
+    expandDetailLoading = false;
     // ------
 
     //
@@ -150,7 +177,8 @@ export class TLS12010CRUComponent extends BasicCruPageComponent<Potential_Custom
     // ----------------------------------------------------------------
     constructor(
       private validationService: ValidationService,
-      private tls12010Service: Tls12010Service) {
+      private tls12010Service: Tls12010Service,
+      private tls12010DetailService: Tls12010DetailService) {
       super(); // 呼叫父類建構子
     }
   
@@ -161,6 +189,7 @@ export class TLS12010CRUComponent extends BasicCruPageComponent<Potential_Custom
       const PC_id = this.dataForm.get('ID')?.value;
       if(PC_id){
         this.loadDetailData(PC_id); // 讀取 明細檔(Potential_Customer_Detail)資料
+        this.createDefaultNew(PC_id); // 建立預設新項目模板(已經有PC_id)
       }else{
         console.warn('無法讀取明細資料，因為沒有提供PC_id');
       }
@@ -211,8 +240,14 @@ export class TLS12010CRUComponent extends BasicCruPageComponent<Potential_Custom
         case CRUDStatus.Create:
           if (this.canAdd()) {
             console.log('insert', frm.value);
-            // this.tls51080Service.insertTLS51080(formValue).subscribe(() => {
+            console.log('detail', this.potentialDetail);
+            // this.tls12010Service.insertTLS12010(formValue).subscribe(() => {
             //   this.messageService.successBubble('新增成功');
+            //   // this.onCancel(); // 儲存後，會清除資料留在原頁面，不返回列表
+            //   this.dataForm.reset(); // 重置表單
+            // });
+            // this.tls12010Service.insertTLS12010_Detail(formValue).subscribe(() => {
+            //   this.messageService.successBubble('新增明細成功');
             //   // this.onCancel(); // 儲存後，會清除資料留在原頁面，不返回列表
             //   this.dataForm.reset(); // 重置表單
             // });
@@ -221,8 +256,13 @@ export class TLS12010CRUComponent extends BasicCruPageComponent<Potential_Custom
         case CRUDStatus.Edit:
           if (this.canEdit()) {
             console.log('update', formValue);
-            // this.tls51080Service.updateTLS51080(formValue).subscribe(() => {
-            //   // this.messageService.successBubble('更新成功');
+            console.log('detail', this.potentialDetail);
+            // this.tls12010Service.updateTLS12010(formValue).subscribe(() => {
+            //   this.messageService.successBubble('更新成功');
+            //   this.onCancel(); // 儲存後，會返回列表
+            // });
+            // this.tls12010Service.updateTLS12010_Detail(formValue).subscribe(() => {
+            //   this.messageService.successBubble('更新明細成功');
             //   this.onCancel(); // 儲存後，會返回列表
             // });
           }
@@ -278,11 +318,14 @@ export class TLS12010CRUComponent extends BasicCruPageComponent<Potential_Custom
     }
 
     // 讀取明細資料
-    loadDetailData(PC_id: string) {
+    async loadDetailData(PC_id: string): Promise<void> {
       console.log('要求PC_id資料:', PC_id);
       this.tls12010Service.queryTLS12010_Detail({"PC_id": PC_id}).subscribe((response) => {
         if (response.Status === '0000') {
-          this.potentialDetail = response.Data;
+          this.potentialDetail = response.Data.map((item: any) => ({
+            ...item,
+            status: 'old', // 讀取明細狀態為 'old';
+          }));
           console.log('取得明細資料:', this.potentialDetail);
         } else {
           this.messageService.errorBubble(`讀取失敗: ${response.Message}`);
@@ -368,4 +411,28 @@ export class TLS12010CRUComponent extends BasicCruPageComponent<Potential_Custom
       VEN_Name.updateValueAndValidity();
       VEN_EngName.updateValueAndValidity();
     }
+
+    // ---明細檔操作---
+    //HTML 顯示的明細資料
+    get filteredDetail(): Potential_Customer_Detail[] {
+      return this.potentialDetail.filter(item => item.status !== 'deleted');
+    }
+    
+    //---Potential_Customer_Detail 表格編輯事件---
+    onRowSaveDetail(event: any) {
+      this.tls12010DetailService.handleRowSave(event);
+    }
+
+    onRowCancelDetail(event: any) {
+      this.tls12010DetailService.handleRowCancel(event);
+    }
+    // 新增 Potential_Customer_Detail
+    onAddPotentialCustomerDetail() {
+      this.tls12010DetailService.addPotentialCustomerDetail(this.potentialDetail, this.defaultNewDetail, this.detailTable);
+    }
+    // 批次刪除  Potential_Customer_Detail
+    onBatchDeleteDetail(selectedItems: Potential_Customer_Detail[]): void {
+      this.tls12010DetailService.deletePotentialCustomerDetail(selectedItems, this.potentialDetail, this.detailTable);
+    }      
+    
 }

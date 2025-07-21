@@ -125,23 +125,12 @@
             </div><hr>
 
             <!-- 潛在客戶明細檔 -->
-            <ng-container>
-                <!-- 潛在客戶明細檔 Potential_Customer_Detail -->
-                <app-expandable-edit-table
-                    class="custom-table-red"
-                    [data]="potentialDetail"
-                    [mainColumns]="Potential_Customer_Detail_Columns"
-                    [showCheckBox]="false"
-                    [showPaginator]="false"
-                    [showAddButton]="false"
-                    [showBatchDelete]="false"
-                    [loading]="loading"
-                    [dataKey]="'id'"
-                    [readonly]="true"
-                    [detailKey]="''"
-                    [emptyMessage]="'沒有潛在客戶明細檔'"
-                ></app-expandable-edit-table>
-            </ng-container>
+            <app-expandable-edit-table #detailTable title="潛在客戶明細檔" [mainColumns]="Potential_Customer_Detail_Columns" 
+            [data]="filteredDetail"
+            [loading]="expandDetailLoading" detailKey="" dataKey="ID" [showCheckBox]="true" [showPaginator]="false"
+            [showAddButton]="true" [showDetailTabs]="false" [showDetailAddButton]="false" [readonly]="crudstatus === 'Read'"
+            [defaultNewItem]="defaultNewDetail" (save)="onRowSaveDetail($event)" (cancel)="onRowCancelDetail($event)"
+            (batchDelete)="onBatchDeleteDetail($event)" (addMainItem)="onAddPotentialCustomerDetail()"></app-expandable-edit-table>
 
             <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
                 *ngIf="!isFormReadable">
