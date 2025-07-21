@@ -171,15 +171,23 @@ export class TLS24010CRUComponent extends BasicCruPageComponent<TLS24010Data | u
       }).filter(item => item.selected) ?? [];
       const body = {
         Store_way: this.store_way,
-        TXN_GUIRemark: undefined,
+        TXN_GUIPaper: this.TXN_GUIPaper,
         ...frm.getRawValue(),
+        TXN_GUIRemark: undefined,
+        TXN_No: this.isFormCreateable ? undefined : frm.getRawValue().TXN_No,
         TXN_Time: formatTimeToHHMMSS(frm.getRawValue().TXN_Time),
         POS5007_INFO: pos5007Data.map((item) => {
           if (typeof item.PLU_MagNo === 'object' && item.PLU_MagNo !== null) {
             return {
-              ...item,
               PLU_MagNo: item.PLU_MagNo.PLU_MagNo,
-              PLU_No: item.PLU_MagNo.PLU_No
+              PLU_No: item.PLU_MagNo.PLU_No,
+              TXN_Qty: item.TXN_Qty,
+              PLU_SalePrc: item.PLU_SalePrc,
+              TXN_Disc: item.TXN_Disc,
+              TXN_SaleAmt: item.TXN_SaleAmt,
+              tlt_id: item.TLT_ID,
+              PLU_TaxType: item.PLU_TaxType,
+              TXN_DiscCode: item.TXN_DiscCode
             };
           }
           return item;
@@ -202,3 +210,5 @@ export class TLS24010CRUComponent extends BasicCruPageComponent<TLS24010Data | u
     });
   }
 }
+
+
