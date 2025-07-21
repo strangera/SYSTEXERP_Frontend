@@ -1,173 +1,84 @@
-import { Component } from '@angular/core';
-import { FormBuilder, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { NavigationExtras, Router } from '@angular/router';
-// 權限相關
-import {
-  FunsrightInfo,
-  PermissionsInfo,
-} from '../../../shared/models/system/funsrightInfo';
-// 共用服務
-import { AuthService } from '../../../service/system/auth.service';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-import { FloorService } from '../../../service/basic/floor.service';
-
-import { ValidationService } from '../../../shared/service/validation.service';
+import { Component, OnInit } from '@angular/core';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { finalize } from 'rxjs';
+import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { AccordionModule } from 'primeng/accordion';
 import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
+import { AccordionModule } from 'primeng/accordion';
 import { TranslateModule } from '@ngx-translate/core';
-//預售管理作業
-const now = new Date();
+import { Column, createPaginationConfig } from '../../../shared/componentkit/table/table.model';
+import { TLS26040Data, TLS26040QueryRequest, TLS26040Service } from '../../../service/api/tls/tls26040.service';
 
 @Component({
-    selector: 'app-tls26040',
-    templateUrl: './tls26040.component.html',
-    styleUrls: ['./tls26040.component.scss'],
-    standalone: true,
-    imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarRangeComponent, InputTextComponent, TableComponent, TranslateModule]
+  selector: 'app-tls26040',
+  templateUrl: './tls26040.component.html',
+  styleUrl: './tls26040.component.scss',
+  standalone: true,
+  imports: [
+    MenubarComponent,
+    ButtonComponent,
+    AccordionModule,
+    FormsModule,
+    ReactiveFormsModule,
+    CalendarRangeComponent,
+    InputTextComponent,
+    TableComponent,
+    TranslateModule,
+  ]
 })
-export class TLS26040Component {
-
-  ProgNo: string = '220038';
-
-  // 權限變數
-  funInfo?: FunsrightInfo;
-
-
-
-
-  // 查詢表單
-  loading: boolean = false;
-  submitted: boolean = false;
+export class TLS26040Component extends BasicQueryPageComponent<TLS26040Data> implements OnInit {
   queryForm = this.formBuilder.group({
-    preSaleDateStart: [now, [Validators.required]], // 預售日期起
-    preSaleDateEnd: [now, [Validators.required]],   // 預售日期迄
-    checkoutDateStart: [now, [Validators.required]], // 結帳日期起
-    checkoutDateEnd: [now, [Validators.required]],   // 結帳日期迄
-    cashierCode: [],  // 收銀機機號
-    counterCode: [],  // 專櫃編號
-    batchNumber: [],  // 批號
+    preOrderDateFrom: ['', Validators.required],      // 預售日期(起)
+    preOrderDateTo: ['', Validators.required],        // 預售日期(訖)
+    settlementDateFrom: ['', Validators.required],    // 結帳日期(起)
+    settlementDateTo: ['', Validators.required],      // 結帳日期(訖)
+    receivingMachineNo: [''],                         // 收銀機號
+    counterCode: [''],                                // 專櫃編號
+    batchNo: [''],                                    // 批號
+    ...createPaginationConfig([{ field: 'ID', order: 1 }])
   });
 
-  // 下拉選單選項
-  floorOptions: any[] = [];
+  totalRecords = 0;
+  data: TLS26040Data[] = [];
+  selectedItems: TLS26040Data[] = [];
 
-  // 表格資料
-  data: any[] = [
-    { preSaleDate: '2015/04/16', accountDate: '2015/04/23', cashRegisterCode: '002301', categoryCode: '000230', batch: '20150423001', transactionSerial: '002351', amount: 1422, isdelete: true },
-    { preSaleDate: '2015/04/16', accountDate: '2015/04/23', cashRegisterCode: '003431', categoryCode: '000343', batch: '20150423001', transactionSerial: '001925', amount: 5175, isdelete: true },
-    { preSaleDate: '2015/04/16', accountDate: '2015/04/23', cashRegisterCode: '003431', categoryCode: '000343', batch: '20150423001', transactionSerial: '001926', amount: 1880, isdelete: true },
-    { preSaleDate: '2015/04/16', accountDate: '2015/04/23', cashRegisterCode: '000601', categoryCode: '000060', batch: '20150423001', transactionSerial: '000295', amount: 20462, isdelete: true },
-    { preSaleDate: '2015/04/16', accountDate: '2015/04/23', cashRegisterCode: '002351', categoryCode: '000235', batch: '20150423001', transactionSerial: '000307', amount: 2124, isdelete: true },
-    { preSaleDate: '2015/04/16', accountDate: '2015/04/23', cashRegisterCode: '002911', categoryCode: '000291', batch: '20150423001', transactionSerial: '000715', amount: 6792, isdelete: true },
-    { preSaleDate: '2015/04/16', accountDate: '2015/04/23', cashRegisterCode: '002311', categoryCode: '000231', batch: '20150423001', transactionSerial: '011248', amount: 1350, isdelete: true },
-    { preSaleDate: '2015/04/16', accountDate: '2015/04/23', cashRegisterCode: '002311', categoryCode: '000231', batch: '20150423001', transactionSerial: '011249', amount: 400, isdelete: true },
-    { preSaleDate: '2015/04/16', accountDate: '2015/04/23', cashRegisterCode: '000731', categoryCode: '000073', batch: '20150423001', transactionSerial: '001928', amount: 3411, isdelete: true }
-  ];
-  filteredData: any[] = [...this.data];
-  columns: any[] = [
-    { field: 'preSaleDate', header: '預售日期', visible: true },
-    { field: 'accountDate', header: '結帳日期', visible: true },
-    { field: 'cashRegisterCode', header: '收銀機號', visible: true },
-    { field: 'categoryCode', header: '櫃別編號', visible: true },
-    { field: 'batchNumber', header: '批號', visible: true },
-    { field: 'transactionSerial', header: '交易序號', visible: true },
+  columns: Column[] = [
+    { field: 'serialNo', header: '序號', visible: false },
+    { field: 'preOrderDate', header: '預售日期', visible: true },
+    { field: 'settlementDate', header: '結帳日期', visible: true },
+    { field: 'receivingMachineNo', header: '收銀機機號', visible: true },
+    { field: 'counterCode', header: '櫃別編號', visible: true },
+    { field: 'counterName', header: '櫃位名稱', visible: true },
+    { field: 'batchNo', header: '批號', visible: true },
+    { field: 'transactionNo', header: '交易序號', visible: true },
     { field: 'amount', header: '金額', visible: true }
   ];
 
   constructor(
-    private router: Router,
-    private formBuilder: FormBuilder,
-    private messageService: NotificationService,
-    private authService: AuthService,
-    private floorService: FloorService,  // 樓層 service
-  ) { }
+    private tls26040Service: TLS26040Service
+  ) {
+    super();
+  }
 
   ngOnInit(): void {
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
-
-    this.floorService.getFloors().subscribe((data) => {
-      this.floorOptions = data;
-    });
-  }
-
-  canQuery(): boolean {
-    return true;
-  }
-
-  canAdd(): boolean {
-    return true;
-  }
-
-  canEdit(): boolean {
-    return true;
+    this.initializePage('TLS26040', 'tls/tls26040cru', this.queryForm, (form) => this.onSubmit(form));
   }
 
   onSubmit(frm: FormGroup) {
-    console.log(frm.value);
-    this.submitted = true;
-    this.loading = true;
-    this.messageService.blockUi();
-
-    if (frm.valid && this.canQuery()) {
-      // 提交邏輯
-    }
-
-    this.loading = false;
-    this.messageService.unblockUi();
-  }
-
-  onSubmitQuery(frm: FormGroup) {
-    // 查詢邏輯
-    this.onSubmit(frm);
-  }
-
-  onClearForm() {
-    this.queryForm.reset();  // 重置表單
-  }
-
-  onCreate() {
-    if (this.canAdd()) {
-      let extras: NavigationExtras = {
-        state: {
-          crudstatus: 'Create',
-          queryform: this.queryForm,
-        },
-        skipLocationChange: true,
-      };
-      this.router.navigate(['TLS2000/TLS26040CRU'], extras);
-    }
-  }
-
-  onEdit(data: any) {
-    if (this.canEdit()) {
-      let extras: NavigationExtras = {
-        state: {
-          crudstatus: 'Edit',
-          rowdata: data,
-          queryform: this.queryForm,
-        },
-        skipLocationChange: true,
-      };
-      this.router.navigate(['TLS2000/TLS26040CRU'], extras);
-    }
-  }
-
-  onDetail(data: any) {
-    let extras: NavigationExtras = {
-      state: {
-        crudstatus: 'Read',
-        rowdata: data,
-        queryform: this.queryForm,
-      },
-      skipLocationChange: true,
+    const request: TLS26040QueryRequest = {
+      ...frm.value
     };
-    this.router.navigate(['TLS2000/TLS26040CRU'], extras);
-  }
-  onRE() {
-    this.router.navigate(['TLS2000/TLS26040MOD']);
+    this.handleSubmit(frm, () => {
+      this.tls26040Service.queryTLS26040(request)
+        .pipe(finalize(() => this.loading = false))
+        .subscribe(response => {
+          this.data = response.Data;
+          this.totalRecords = response.TotalCount;
+          this.queryStateService.setQueryState(this.ProgNo, frm.getRawValue());
+        });
+    });
   }
 }

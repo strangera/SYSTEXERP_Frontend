@@ -16,7 +16,8 @@ import {
   OVERALL_STATUS_OPTIONS,
   TLT_CTYPE_MTOTAL_OPTIONS,
   TPY_TYPE_OPTIONS,
-  CAG_TAXTYPE_OPTIONS
+  CAG_TAXTYPE_OPTIONS,
+  APPROVE_STATUS_OPTIONS
 } from './tls13010.constants';
 import { Sysb800DropdownService } from '../../../service/api/sys/sysb800-dropdown.service';
 import { LocationOptionsService } from '../../../service/api/dropdownservice/location-options.service';
@@ -55,6 +56,7 @@ export const TLS13010_DROPDOWN_OPTIONS = {
   tpyTypeOption: convertToDropdownOptions(TPY_TYPE_OPTIONS),
   cagTaxTypeOption: convertToDropdownOptions(CAG_TAXTYPE_OPTIONS),
   commCompType: convertToDropdownOptions(COMM_COMP_TYPE_OPTIONS),         // 抽成額計算方式
+  approveStatusOptions: convertToDropdownOptions(APPROVE_STATUS_OPTIONS),
   yesNo: [{ value: 'Y', label: '是' }, { value: 'N', label: '否' }],
   depositPayment: [
     { value: 1, label: '現金' },

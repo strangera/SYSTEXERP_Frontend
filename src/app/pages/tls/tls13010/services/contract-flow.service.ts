@@ -14,7 +14,9 @@ import {
   WorkflowStep,
   // 🎯 新增：導入清理後的資料模型
   CleanSubmitData,
-  DataCleaner
+  DataCleaner,
+  DataClearOperations,
+  CommissionTypeChangeInfo
 } from '../tls13010.model';
 
 @Injectable({
@@ -1152,5 +1154,91 @@ export class ContractFlowService {
       console.error('計算資料大小失敗:', error);
       return { original: 0, clean: 0, reduction: '0%' };
     }
+  }
+
+  /**
+ * 🎯 新增：檢測抽成別是否有變更
+ */
+  detectCommissionTypeChange(): CommissionTypeChangeInfo | null {
+    try {
+      // 取得原始資料的抽成別
+      const originalData = this.getCurrentData()?.queryRowData;
+      const originalCommissionType = originalData?.tlt_term_type?.toString().trim();
+
+      // 取得目前 Step1 的抽成別
+      const currentStep1Data = this.getStep1Data();
+      const currentCommissionType = currentStep1Data?.tlt_term_type?.toString().trim();
+
+      console.log('🔍 抽成別變更檢測:', {
+        originalCommissionType,
+        currentCommissionType,
+        hasChanged: originalCommissionType !== currentCommissionType
+      });
+
+      // 如果是新增模式，不需要變更檢測
+      if (this.isNewContractMode()) {
+        return null;
+      }
+
+      // 如果沒有變更，返回 null
+      if (originalCommissionType === currentCommissionType) {
+        return null;
+      }
+
+      // 有變更，建立變更資訊
+      return {
+        HasChanged: true,
+        OriginalTermType: originalCommissionType || '',
+        NewTermType: currentCommissionType || '',
+        ClearOperations: this.generateClearOperations(originalCommissionType || '')
+      };
+
+    } catch (error) {
+      console.error('❌ 檢測抽成別變更失敗:', error);
+      return null;
+    }
+  }
+
+  /**
+   * 🎯 新增：根據原抽成別生成清除操作
+   */
+  private generateClearOperations(originalTermType: string): DataClearOperations {
+    const clearOps: DataClearOperations = {
+      clearRentDetails: false,
+      clearCommissionMasters: false,
+      clearChargedDetails: false,
+      clearLimitDetails: false,
+      clearLevelDetails: false
+    };
+
+    switch (originalTermType) {
+      case '1': // 固定租金 -> 只清除租金條件
+        clearOps.clearRentDetails = true;
+        break;
+
+      case '2': // 底租抽成取高者 -> 只清除租金條件 (抽成設定保留)
+        clearOps.clearRentDetails = true;
+        break;
+
+      case '3': // 一般抽成 -> 無需清除條件設定
+        // 不需要清除任何條件設定
+        break;
+
+      case '4': // 包底抽成 -> 清除包底條件
+        clearOps.clearLimitDetails = true;
+        break;
+
+      case '5': // 階梯抽成 -> 清除階梯條件
+        clearOps.clearLevelDetails = true;
+        break;
+
+      case '6': // 包底加階梯 -> 清除包底 + 階梯條件
+        clearOps.clearLimitDetails = true;
+        clearOps.clearLevelDetails = true;
+        break;
+    }
+
+
+    return clearOps;
   }
 }

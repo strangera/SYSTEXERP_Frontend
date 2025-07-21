@@ -694,8 +694,8 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
           detailItems: [],
           _status: 'original',
 
-          mainStartDate: chargeSetting.cag_bdate ? new Date(chargeSetting.cag_bdate).toISOString().split('T')[0] : '',
-          mainEndDate: chargeSetting.cag_edate ? new Date(chargeSetting.cag_edate).toISOString().split('T')[0] : ''
+          mainStartDate: this.getContractStartDate(),
+          mainEndDate: this.getContractEndDate()
         };
 
         this.updateCommissionItemDetails(commissionItem);
@@ -817,8 +817,8 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
           detailItems: [],
           _status: 'original',
 
-          mainStartDate: chargeSetting.cag_bdate ? new Date(chargeSetting.cag_bdate).toISOString().split('T')[0] : '',
-          mainEndDate: chargeSetting.cag_edate ? new Date(chargeSetting.cag_edate).toISOString().split('T')[0] : ''
+          mainStartDate: this.getContractStartDate(),
+          mainEndDate: this.getContractEndDate()
         };
 
         this.updateCommissionItemDetails(commissionItem);
@@ -1297,7 +1297,9 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
       annualPerformanceItems: [],
       discountLevelItems: [],
       detailItems: [],
-      _status: 'new'
+      _status: 'new',
+      mainStartDate: this.getContractStartDate(),
+      mainEndDate: this.getContractEndDate()
     };
 
     this.commissionData = [...this.commissionData, newCommissionItem];
@@ -2219,6 +2221,17 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
       console.log('🚀 Next2: 最終送出的完整 JSON:');
       console.log(JSON.stringify(cleanSubmitData, null, 2));
 
+      if (cleanSubmitData.commissionTypeChange?.HasChanged) {
+        const changeInfo = cleanSubmitData.commissionTypeChange;
+        const warningMessage = `⚠️ 抽成別已變更：${this.getTermTypeName(changeInfo.OriginalTermType)} → ${this.getTermTypeName(changeInfo.NewTermType)}\n原有條件設定將被清除。`;
+
+        if (!confirm(`${warningMessage}\n\n確定要繼續送出嗎？`)) {
+          this.loading = false;
+          this.notificationService.unblockUi();
+          return;
+        }
+      }
+
       // 🎯 驗證資料
       const validation = this.contractFlowService.validateCleanSubmitData(cleanSubmitData);
 
@@ -2343,38 +2356,90 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
     return Array.isArray(step2Data) ? step2Data.filter(item => item._status !== 'deleted').length : 0;
   }
 
-  private validateNext3DataConsistency(): boolean {
-    const commissionType = this.currentCommissionType;
-
-    if (commissionType !== '2') {
-      return true; // 非底租抽成取高者不需檢查
+  private getTermTypeName(termType: string): string {
+    switch (termType) {
+      case '1': return '固定租金';
+      case '2': return '底租抽成取高者';
+      case '3': return '一般抽成';
+      case '4': return '包底抽成';
+      case '5': return '階梯式抽成';
+      case '6': return '包底加階梯';
+      default: return `未知類型(${termType})`;
     }
-
-    // 🎯 正確：計算 Next2 外層表格的有效項目數量
-    const next2MainItemsCount = this.commissionData.filter(item =>
-      item._status !== 'deleted'
-    ).length;
-
-    // 🎯 從 Next3 取得條件設定資料
-    const next3Data = this.contractFlowService.getStepData(WorkflowStep.CONDITION);
-    const next3ItemsCount = Array.isArray(next3Data) ?
-      next3Data.filter(item => (item as any)._status !== 'deleted').length : 0;
-
-    console.log('🔍 Next2 送出前數量一致性檢查:', {
-      next2MainItemsCount,     // Next2 外層表格項目數
-      next3ItemsCount,         // Next3 條件設定項目數
-      isConsistent: next2MainItemsCount === next3ItemsCount
-    });
-
-    if (next2MainItemsCount !== next3ItemsCount) {
-      this.notificationService.errorBubble(
-        `資料不一致：抽成設定有 ${next2MainItemsCount} 個項目，` +
-        `但條件設定有 ${next3ItemsCount} 個項目。請檢查資料後再送出。`
-      );
-      return false;
-    }
-
-    return true;
   }
 
+  private getContractStartDate(): string {
+    // 🎯 第一優先：從合約資訊表格取得（你上方顯示的 tlt_bdate）
+    if (this.contractInfoData && this.contractInfoData.length > 0) {
+      const startDate = this.contractInfoData[0].tlt_bdate;
+      if (startDate) {
+        console.log('📅 從合約資訊表格取得起始日:', startDate);
+        return typeof startDate === 'string' ? startDate : this.formatDateToString(startDate);
+      }
+    }
+
+    // 🎯 第二優先：從 Step1 暫存資料取得
+    const step1Data = this.contractFlowService.getStep1Data();
+    if (step1Data?.tlt_bdate) {
+      console.log('📅 從 Step1 取得起始日:', step1Data.tlt_bdate);
+      return typeof step1Data.tlt_bdate === 'string' ?
+        step1Data.tlt_bdate : this.formatDateToString(step1Data.tlt_bdate);
+    }
+
+    // 🎯 最後備援：今天日期
+    const today = new Date().toISOString().split('T')[0];
+    console.log('📅 使用預設起始日:', today);
+    return today;
+  }
+
+  private getContractEndDate(): string {
+    // 🎯 第一優先：從合約資訊表格取得（你上方顯示的 tlt_edate）
+    if (this.contractInfoData && this.contractInfoData.length > 0) {
+      const endDate = this.contractInfoData[0].tlt_edate;
+      if (endDate) {
+        console.log('📅 從合約資訊表格取得結束日:', endDate);
+        return typeof endDate === 'string' ? endDate : this.formatDateToString(endDate);
+      }
+    }
+
+    // 🎯 第二優先：從 Step1 暫存資料取得
+    const step1Data = this.contractFlowService.getStep1Data();
+    if (step1Data?.tlt_edate) {
+      console.log('📅 從 Step1 取得結束日:', step1Data.tlt_edate);
+      return typeof step1Data.tlt_edate === 'string' ?
+        step1Data.tlt_edate : this.formatDateToString(step1Data.tlt_edate);
+    }
+
+    // 🎯 最後備援：今天 + 1年
+    const nextYear = new Date();
+    nextYear.setFullYear(nextYear.getFullYear() + 1);
+    const nextYearStr = nextYear.toISOString().split('T')[0];
+    console.log('📅 使用預設結束日:', nextYearStr);
+    return nextYearStr;
+  }
+
+  private formatDateToString(date: any): string {
+    if (!date) return '';
+
+    try {
+      if (date instanceof Date) {
+        return date.toISOString().split('T')[0];
+      }
+
+      if (typeof date === 'string') {
+        // 如果已經是 YYYY-MM-DD 格式就直接回傳
+        if (/^\d{4}-\d{2}-\d{2}$/.test(date)) {
+          return date;
+        }
+
+        // 否則嘗試轉換
+        return new Date(date).toISOString().split('T')[0];
+      }
+
+      return new Date(date).toISOString().split('T')[0];
+    } catch (error) {
+      console.error('日期格式化失敗:', error, '原始日期:', date);
+      return new Date().toISOString().split('T')[0];
+    }
+  }
 }

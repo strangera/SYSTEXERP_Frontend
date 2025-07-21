@@ -30,6 +30,8 @@ export interface CleanSubmitData {
   commissions: CleanCommissions;
   conditions: CleanConditions;
   metadata: CleanMetadata;
+
+  commissionTypeChange?: CommissionTypeChangeInfo | null; //抽成別改別需要刪除用的
 }
 
 /**
@@ -1347,6 +1349,27 @@ export interface FinalData {
   deductionData: any[];
   commissionData: any[];
   conditionData: any[];
+}
+
+/**
+ * 抽成別變更資訊介面
+ */
+export interface CommissionTypeChangeInfo {
+  HasChanged: boolean;
+  OriginalTermType: string;
+  NewTermType: string;
+  ClearOperations: DataClearOperations;
+}
+
+/**
+ * 資料清除操作介面
+ */
+export interface DataClearOperations {
+  clearRentDetails: boolean;
+  clearCommissionMasters: boolean;
+  clearChargedDetails: boolean;
+  clearLimitDetails: boolean;
+  clearLevelDetails: boolean;
 }
 
 // ========== 6. 向後相容的工具類別（簡化版） ==========

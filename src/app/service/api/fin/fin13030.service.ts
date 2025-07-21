@@ -41,9 +41,8 @@ export interface FIN13030Data {
   INV_DeclareYM: string;              // 申報年月
   INV_SAL_Uniform: string;            // 銷售方統一編號
   INV_Uniform: string;                // 買受人統一編號
-  INV_Name: string;                   // 買受人名稱
   GoodsOrServicesName: string;        // 貨物或勞務名稱
-  GoodsQty: number;              // 貨物或勞務數量
+  GoodsQty: number;                   // 貨物或勞務數量
   ExportMethod: string;               // 外銷方式
   INV_DocName: string;                // 證明文件名稱
   INV_DocNo: string;                  // 證明文件編號
@@ -54,6 +53,13 @@ export interface FIN13030Data {
   ExportDate: string;                 // 輸出或結匯日期 (ISO字串)
   INV_Remark: string;                 // 備註
   INV_PassType: string;               // 通關方式註記
+  INV_Name: string;                   // 買受人名稱
+  CRT_Date: string;                   // 建立日期 (ISO字串)
+  CRT_USR_No: string;                 // 建立人員編號
+  CRT_USR_Name: string;               // 建立人員姓名
+  UPD_Date: string;                   // 更新日期 (ISO字串)
+  UPD_USR_No: string;                 // 更新人員編號
+  UPD_USR_Name: string;               // 更新人員姓名
 }
 
 // 取得零稅率發票 - 查詢參數
@@ -78,9 +84,9 @@ export interface FIN13030GetZeroTaxGUIResponse {
   INV_DeclareYM: string;       // 申報年月
   INV_Uniform: string;         // 買受人統一編號
   INV_Amt: number;             // 發票金額
-  INV_GUIType: string;         // 發票類別 FIXME: 缺少這個欄位
-  INV_ZeroTax: string;         // 零稅率註記 FIXME: 缺少這個欄位
-  INV_SeqNo: number;           // 序號 FIXME: 缺少這個欄位
+  INV_GUIType: string;         // 發票類別
+  INV_ZeroTax: string;         // 零稅率註記
+  INV_SeqNo: number;           // 序號
 }
 
 
@@ -170,6 +176,12 @@ export class FIN13030Service {
           INV_Remark: 'Sample Remark',
           INV_PassType: '1',
           INV_Name: 'Sample Buyer',
+          CRT_Date: '2023-10-01T00:00:00Z',
+          CRT_USR_No: 'USR001',
+          CRT_USR_Name: 'User One',
+          UPD_Date: '2023-10-01T00:00:00Z',
+          UPD_USR_No: 'USR001',
+          UPD_USR_Name: 'User One',
         }, {
           ID: 1,
           INV_GUINo: '87654321',
@@ -190,7 +202,13 @@ export class FIN13030Service {
           ExportDate: '2023-10-03T00:00:00Z',
           INV_Remark: 'Sample Remark 2',
           INV_PassType: '2',
-          INV_Name: 'Sample Buyer 2'
+          INV_Name: 'Sample Buyer 2',
+          CRT_Date: '2023-10-01T00:00:00Z',
+          CRT_USR_No: 'USR001',
+          CRT_USR_Name: 'User One',
+          UPD_Date: '2023-10-01T00:00:00Z',
+          UPD_USR_No: 'USR001',
+          UPD_USR_Name: 'User One',
         }],
         Status: '',
         Message: '',
