@@ -1,8 +1,8 @@
 import { HttpClient } from '@angular/common/http';
-import { computed, Injectable, signal } from '@angular/core';
-import { catchError, EMPTY, finalize, of, take, tap } from 'rxjs';
+import { computed, effect, Injectable, signal } from '@angular/core';
+import { catchError, EMPTY, finalize, Observable, of, take, tap } from 'rxjs';
 import { environment } from '../../../../environments/environment';
-import { ApprovalStatus, PreorderECRListQuery, TLS26010, TLS26010Data, TLS26010Payload, TLS26010Query, TLTTALENTQuery } from '../../../pages/tls/tls26010/tls26010.model';
+import { ApprovalStatus, mockPreorderECRList, mockQueryTLS26010, PreorderECRListQuery, TLS26010, TLS26010Data, TLS26010Payload, TLS26010Query, TLTTALENTQuery } from '../../../pages/tls/tls26010/tls26010.model';
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { BaseQueryResponse, DropdownOption } from '../../../shared/models/api/base-api.interface';
 import { ErrorHandlerService } from '../../system/error-handler.service';
@@ -29,6 +29,15 @@ export class TLS26010Service {
   private TableLoading = !1;
   private approvalStatusLoading = !1;
 
+  public approvalStatus(value: ApprovalStatus): string {
+    switch (value) {
+      case ApprovalStatus.未核准: return '未核准';
+      case ApprovalStatus.已核准: return '已核准';
+      case ApprovalStatus.刪除: return '刪除';
+      default: return value;
+    }
+  }
+
   public sys3800List = computed(() => {
     const res = new Map<string, DropdownOption>();
     for (const item of this.sys3800Data()) res.set(item.No, item);
@@ -39,16 +48,20 @@ export class TLS26010Service {
     for (const item of this.sys3900Data()) res.set(item.No, item);
     return Array.from(res.values());
   });
-  public ECRList = computed(() => {
-    const res = new Map<string, DropdownOption>();
-    for (const item of this.preorderECRData()) res.set(item.No, item);
-    return Array.from(res.values());
+  public ECRMap = new Map<string, DropdownOption>([]);
+  public TLTMap = new Map<string, DropdownOption>([]);
+
+  public get ECRList() { return Array.from(this.ECRMap.values()); };
+  public get TLTList() { return Array.from(this.TLTMap.values()); };
+
+  private ECRs = effect(() => {
+    for (const item of this.preorderECRData()) this.ECRMap.set(item.No, item);
   });
-  public TLTList = computed(() => {
-    const res = new Map<string, DropdownOption>();
-    for (const item of this.TLTTALENTData()) res.set(item.No, item);
-    return Array.from(res.values());
+
+  private TLTs = effect(() => {
+    for (const item of this.TLTTALENTData()) this.TLTMap.set(item.No, item);
   });
+
   // public ECRList = computed(() => {
   //   const res = new Map<string, ECROption>();
   //   for (const item of this.preorderECRData()) {
@@ -73,7 +86,7 @@ export class TLS26010Service {
         pod_edate: data.pod_edate,
         pod_status: item.pod_status,
         approved_usr_name: item.approved_usr_name,
-        approved_date: item.approved_date
+        approved_date: item.approved_date,
       });
     }
     return Array.from(res.values());
@@ -119,27 +132,9 @@ export class TLS26010Service {
   loadPreorderECRList(query: PreorderECRListQuery): void {
     if (this.preorderECRLoading) return void (this.preorderECRLoading = !1);
     this.preorderECRLoading = !0;
-    const mockData: BaseQueryResponse<DropdownOption> = {
-      Error: void 0,
-      Message: "成功",
-      Meta: {
-        Timestamp: "2025-01-20T10:00:00.0000000Z",
-        RequestId: "test-request-id-12345"
-      },
-      Status: "0000",
-      TotalCount: 3,
-      TotalPage: 1,
-      Data: [
-        { No: '000001', Name: '000001' },
-        { No: '000002', Name: '000002' },
-        { No: '000003', Name: '000003' },
-        { No: '000004', Name: '000004' },
-        { No: '000005', Name: '000005' }
-      ]
-    };
 
     const api = mock
-      ? of(mockData)
+      ? of(mockPreorderECRList)
       : this.http.post<BaseQueryResponse<DropdownOption>>(`${this.apiUrl}/queryPreorderECR_List`, query);
 
     api.pipe(
@@ -176,57 +171,9 @@ export class TLS26010Service {
   loadTLS26010(query: TLS26010Query): void {
     if (this.TableLoading) return void (this.TableLoading = !1);
     this.TableLoading = !0;
-    const mockData: BaseQueryResponse<TLS26010> = {
-      Error: void 0,
-      Message: "成功",
-      Meta: {
-        Timestamp: "2025-01-20T10:00:00.0000000Z",
-        RequestId: "test-request-id-12345"
-      },
-      Status: "0000",
-      TotalCount: 3,
-      TotalPage: 1,
-      Data: [
-        {
-          Data: [
-            { pod_no: 'TEST001', pod_desc: '測試預購活動1', pod_sdate: '2025-01-01', pod_edate: '2025-01-31' },
-            { pod_no: 'TEST002', pod_desc: '測試預購活動2', pod_sdate: '2025-02-01', pod_edate: '2025-02-28' }
-          ],
-          pod_status: '0',
-          approved_usr_name: '',
-          approved_date: null
-        },
-        {
-          Data: [
-            { pod_no: 'TEST003', pod_desc: '測試預購活動3', pod_sdate: '2025-03-01', pod_edate: '2025-03-31' }
-          ],
-          pod_status: '1',
-          approved_usr_name: '測試使用者B',
-          approved_date: '2025-01-20'
-        },
-        {
-          Data: [
-            { pod_no: 'TEST004', pod_desc: '測試預購活動4', pod_sdate: '2025-04-01', pod_edate: '2025-04-30' },
-            { pod_no: 'TEST005', pod_desc: '測試預購活動5', pod_sdate: '2025-05-01', pod_edate: '2025-05-31' },
-            { pod_no: 'TEST006', pod_desc: '測試預購活動6', pod_sdate: '2025-06-01', pod_edate: '2025-06-30' }
-          ],
-          pod_status: '1',
-          approved_usr_name: '測試使用者C',
-          approved_date: '2025-01-25'
-        },
-        {
-          Data: [
-            { pod_no: 'TEST007', pod_desc: '測試預購活動7', pod_sdate: '2025-07-01', pod_edate: '2025-07-31' }
-          ],
-          pod_status: '9',
-          approved_usr_name: '測試使用者D',
-          approved_date: '2025-01-30'
-        }
-      ]
-    };
 
     const api = mock
-      ? of(mockData)
+      ? of(mockQueryTLS26010)
       : this.http.post<BaseQueryResponse<TLS26010>>(`${this.apiUrl}/queryTLS26010`, query);
 
     api.pipe(
@@ -240,33 +187,12 @@ export class TLS26010Service {
     ).subscribe();
   }
 
-  /** 核准或反核准預購活動 */
-  loadApproval(data: TLS26010Data): void {
-    if (this.approvalStatusLoading) return void (this.approvalStatusLoading = !1);
-    this.approvalStatusLoading = !0;
-    const id = data.pod_no;
-
-    this.http.post<BaseQueryResponse<{ Status: ApprovalStatus; }>>(
-      `${this.apiUrl}${data.pod_status === ApprovalStatus.未核准 ? '/approvalTLS26010' : '/disapprovalTLS26010'}`,
-      { id }).pipe(
-        take(1),
-        tap(() => this.approvalData.set(ApprovalStatus.未核准)),
-        tap(response =>
-          this.approvalData.set(response['Status'] as ApprovalStatus || response.Data[0].Status)),
-        catchError(error => this.errorHandler.handleError(error)),
-        finalize(() => {
-          this.approvalStatusLoading = !1;
-          console.log('核准結果:', this.approvalData());
-        })
-      ).subscribe();
-  }
-
   /** 新增預購活動 */
-  insertTLS26010(payload: TLS26010Payload): void {
-    if (this.TableLoading) return void (this.TableLoading = !1);
+  insertTLS26010(payload: TLS26010Payload): Observable<BaseQueryResponse<any>> {
+    if (this.TableLoading) { this.TableLoading = !1; return of(); };
     this.TableLoading = !0;
 
-    this.http.post<BaseQueryResponse<any>>(`${this.apiUrl}/insertTLS26010`, payload).pipe(
+    return this.http.post<BaseQueryResponse<any>>(`${this.apiUrl}/insertTLS26010`, payload).pipe(
       take(1),
       tap(() => { }),
       catchError(error => this.errorHandler.handleError(error)),
@@ -274,24 +200,15 @@ export class TLS26010Service {
         this.TableLoading = !1;
         console.log('新增結果:', this.TLS26010Data());
       })
-    ).subscribe();
+    );
   }
 
   /** 更新預購活動 */
-  updateTLS26010(data: TLS26010Data): void {
-    if (this.TableLoading) return void (this.TableLoading = !1);
+  updateTLS26010(data: TLS26010Payload): Observable<BaseQueryResponse<any>> {
+    if (this.TableLoading) { this.TableLoading = !1; return of(); };
     this.TableLoading = !0;
 
-    // 構建更新的數據負載
-    const updatePayload = {
-      pod_no: data.pod_no,
-      pod_desc: data.pod_desc,
-      pod_sdate: data.pod_sdate,
-      pod_edate: data.pod_edate,
-      // 可以根據需要添加更多字段
-    };
-
-    this.http.post<BaseQueryResponse<any>>(`${this.apiUrl}/updateTLS26010`, updatePayload).pipe(
+    return this.http.post<BaseQueryResponse<any>>(`${this.apiUrl}/updateTLS26010`, data).pipe(
       take(1),
       tap((response) => {
         if (response.Status === 'Success') {
@@ -301,7 +218,7 @@ export class TLS26010Service {
             if (index !== -1) {
               // 更新找到的項目
               if (currentData[index].Data && currentData[index].Data[0]) {
-                currentData[index].Data[0] = { ...currentData[index].Data[0], ...updatePayload };
+                currentData[index].Data[0] = { ...currentData[index].Data[0], ...data };
               }
             }
             return [...currentData];
@@ -319,7 +236,7 @@ export class TLS26010Service {
         this.TableLoading = !1;
         console.log('更新結果:', this.TLS26010Data());
       })
-    ).subscribe();
+    );
   }
 
   /** 上傳 */
@@ -381,6 +298,27 @@ export class TLS26010Service {
         console.log('刪除結果:', this.TLS26010Data());
       })
     ).subscribe();
+  }
+
+  /** 核准或反核准預購活動 */
+  loadApproval(data: TLS26010Data): void {
+    if (this.approvalStatusLoading) return void (this.approvalStatusLoading = !1);
+    this.approvalStatusLoading = !0;
+    const id = data.pod_no;
+
+    this.http.post<BaseQueryResponse<{ Status: ApprovalStatus; }>>(
+      `${this.apiUrl}${data.pod_status === ApprovalStatus.未核准 ? '/approvalTLS26010' : '/disapprovalTLS26010'}`,
+      { id }).pipe(
+        take(1),
+        tap(() => this.approvalData.set(ApprovalStatus.未核准)),
+        tap(response =>
+          this.approvalData.set(response['Status'] as ApprovalStatus || response.Data[0].Status)),
+        catchError(error => this.errorHandler.handleError(error)),
+        finalize(() => {
+          this.approvalStatusLoading = !1;
+          console.log('核准結果:', this.approvalData());
+        })
+      ).subscribe();
   }
 
   ngOnDestroy(): void {

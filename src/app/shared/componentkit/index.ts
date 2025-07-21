@@ -1,6 +1,9 @@
 // Autocomplete
 export { AutoCompleteComponent } from './app-autocomplete/app-autocomplete.component';
 
+// Dynamic Table
+// export { AppDynamicTableComponent } from './app-dynamic-table/app-dynamic-table.component';
+
 // Button
 export { ButtonDynamicallyaddComponent } from './button-dynamicallyadd/button-dynamicallyadd.component';
 export { ButtonDynamicallydeleteComponent } from './button-dynamicallydelete/button-dynamicallydelete.component';
