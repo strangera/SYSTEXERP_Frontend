@@ -1,6 +1,6 @@
 // import { formatDate, formatDateTime } from "../../../shared/componentkit/table/table.model";
 
-import { Column, formatTimeHHMM } from "../../../shared/componentkit/table/table.model";
+import { Column, formatDateTime, formatTimeHHMM } from "../../../shared/componentkit/table/table.model";
 
 export const statusOptions = [
   { label: '啟用', value: 'A' },
@@ -128,7 +128,7 @@ export interface TLS41010Data {
   ECR_GUI_PeriodQty: number;
   ECR_GUI_MinQty: number;
   ECR_SettleDD: string;
-  ECR_SettleHHNN: string| Date | null;
+  ECR_SettleHHNN: string | Date | null;
   CRT_Date?: string | null;
   CRT_USR_No: string;
   CRT_USR_Name: string;
@@ -162,7 +162,7 @@ export interface TLS41010Item {
   ECR_ClerkEntry: string;
   ECR_ForceMember: string;
   ECR_SettleDD: string;
-  ECR_SettleHHNN: string| Date | null;
+  ECR_SettleHHNN: string | Date | null;
   ECR_VoidTxn: string;
   ECR_VoidRstDay: number;
   ECR_CreditNote: string;
@@ -340,8 +340,6 @@ export const columns: Column[] = [
   { field: 'ECR_EDCCom', header: '信用卡刷卡機連接埠', visible: true },
   { field: 'ECR_EDC2', header: '第二台信用卡刷卡機型態', visible: true },
   { field: 'ECR_EDC2Com', header: '第二台信用卡刷卡機連接埠', visible: true },
-  { field: 'ECR_EDC3', header: '第三台信用卡刷卡機型態', visible: true },
-  { field: 'ECR_EDC3Com', header: '第三台信用卡刷卡機連接埠', visible: true },
   { field: 'ECR_ElecSVCrdA', header: '悠遊卡', visible: true },
   { field: 'ECR_ElecSVCrdACom', header: '悠遊卡連接埠', visible: true },
   { field: 'ECR_ElecSVCrdB', header: '一卡通', visible: true },
@@ -352,30 +350,10 @@ export const columns: Column[] = [
   { field: 'ECR_ElecPayCom', header: '電子支付連接埠', visible: true },
   { field: 'ECR_Drawer', header: '錢櫃型態', visible: true },
   { field: 'ECR_DrawerCom', header: '錢櫃連接埠', visible: true },
-  { field: 'ECR_Device1Name', header: '週邊裝置1名稱', visible: true },
-  { field: 'ECR_Device1Com', header: '週邊裝置1連接埠', visible: true },
-  { field: 'ECR_Device2Name', header: '週邊裝置2名稱', visible: true },
-  { field: 'ECR_Device2Com', header: '週邊裝置2連接埠', visible: true },
-  { field: 'ECR_Device3Name', header: '週邊裝置3名稱', visible: true },
-  { field: 'ECR_Device3Com', header: '週邊裝置3連接埠', visible: true },
-  { field: 'ECR_Device4Name', header: '週邊裝置4名稱', visible: true },
-  { field: 'ECR_Device4Com', header: '週邊裝置4連接埠', visible: true },
-  { field: 'ECR_Device5Name', header: '週邊裝置5名稱', visible: true },
-  { field: 'ECR_Device5Com', header: '週邊裝置5連接埠', visible: true },
-  { field: 'ECR_Device6Name', header: '週邊裝置6名稱', visible: true },
-  { field: 'ECR_Device6Com', header: '週邊裝置6連接埠', visible: true },
-  { field: 'ECR_Device7Name', header: '週邊裝置7名稱', visible: true },
-  { field: 'ECR_Device7Com', header: '週邊裝置7連接埠', visible: true },
-  { field: 'ECR_Device8Name', header: '週邊裝置8名稱', visible: true },
-  { field: 'ECR_Device8Com', header: '週邊裝置8連接埠', visible: true },
-  { field: 'ECR_Device9Name', header: '週邊裝置9名稱', visible: true },
-  { field: 'ECR_Device9Com', header: '週邊裝置9連接埠', visible: true },
-  { field: 'ECR_Device10Name', header: '週邊裝置10名稱', visible: true },
-  { field: 'ECR_Device10Com', header: '週邊裝置10連接埠', visible: true },
-  { field: 'CRT_Date', header: '建立日期', visible: true },
+  { field: 'CRT_Date', header: '建立日期', visible: true, format: formatDateTime },
   { field: 'CRT_USR_No', header: '建立人員', visible: true },
   { field: 'CRT_USR_Name', header: '建立人員姓名', visible: true },
-  { field: 'UPD_Date', header: '變更日期', visible: true },
+  { field: 'UPD_Date', header: '變更日期', visible: true, format: formatDateTime },
   { field: 'UPD_USR_No', header: '變更人員', visible: true },
   { field: 'UPD_USR_Name', header: '變更人員姓名', visible: true },
 ]
