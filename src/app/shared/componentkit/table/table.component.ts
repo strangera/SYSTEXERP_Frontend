@@ -25,6 +25,7 @@ import { CheckboxModule } from 'primeng/checkbox';
 import { SkeletonModule } from 'primeng/skeleton';
 import { TableExpansionComponent } from './table-expansion/table-expansion.component';
 import { TableExportComponent } from './table-export/table-export.component';
+import { BlockUIModule } from 'primeng/blockui';
 @Component({
   selector: 'app-table',
   templateUrl: './table.component.html',
@@ -55,6 +56,7 @@ import { TableExportComponent } from './table-export/table-export.component';
     TableExpansionComponent,
     TableExportComponent,
     DatePipe,
+    BlockUIModule
   ],
 })
 export class TableComponent extends BasicPrintDataComponent implements OnInit, OnChanges, OnDestroy {
@@ -70,6 +72,7 @@ export class TableComponent extends BasicPrintDataComponent implements OnInit, O
   @Input() data: any[] = [];                                                    // table 資料 (必填)
   @Output() dataChange = new EventEmitter<any[]>();                             // table 資料改變 (事件)
   @Input() loading = false;                                                     // 是否顯示 loading
+  @Input() disabled = false;                                                    // 是否禁用 table
 
   // select 選擇Row相關
   @Input() showCheckBox = false;                                                // 是否顯示 checkbox
@@ -99,6 +102,7 @@ export class TableComponent extends BasicPrintDataComponent implements OnInit, O
   @Input() defaultInsertData: any = {};       // 預設新增資料 (可選，預設為所有資料為null)
   @Output() insert = new EventEmitter<any>(); // 新增事件
   @Input() insertDisabled = false;            // 新增按鈕是否禁用
+  @Input() deleteData = false;                // 預先刪除資料
   @Output() delete = new EventEmitter<any>(); // 刪除事件
   // expansion 收合展開
   @Input() expansionColumns: Column[] = [];  // 收合展開 欄位配置(expansion必需配置)
@@ -295,6 +299,7 @@ export class TableComponent extends BasicPrintDataComponent implements OnInit, O
   onSelectionChange(event: any) {
     const selected = Array.isArray(event) ? event : event ? [event] : [];
     this.selectedItems = selected.filter((item: any) => this.isRowSelectable(item));
+    console.log('🔍 DEBUG onSelectionChange:', this.selectedItems);
     this.selectionChange.emit(this.selectedItems);
   }
   // (欄位是Dropdown使用): 獲取Dropdown的選項，支持function加入或直接給List
@@ -326,8 +331,10 @@ export class TableComponent extends BasicPrintDataComponent implements OnInit, O
   // Delete 按鈕
   deleteRow(selectedItems: any) {
     this.delete.emit(selectedItems);
-    this.data = this.data.filter(item => !selectedItems.includes(item));
-    this.selectedItems = [];
+    if (this.deleteData) {
+      this.data = this.data.filter(item => !selectedItems.includes(item));
+      this.selectedItems = [];
+    }
   }
   onExportExcel() { this.exportExcel.emit(); }                      // 匯出Excel範本 事件
   onImportExcel(event: FileSelectEvent) {                           // 匯入Excel

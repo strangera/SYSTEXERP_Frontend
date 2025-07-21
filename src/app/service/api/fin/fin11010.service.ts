@@ -1,151 +1,140 @@
-// --- FIN11010 Model 定義 ---
-export interface FIN11010 {
-  row_no?: number;              // 序號
-  company_no?: string;          // 公司代號
-  business_name?: string;       // 營業人名稱
-  tax_no?: string;              // 營業人統編
-  tax_id?: string;              // 營業人統編 (舊欄位)
-  tax_name?: string;            // 營業人名稱 (舊欄位)
-  city_type?: string;           // 縣市別
-  address?: string;             // 營業地址
-  main_code?: string;           // 總繳代號
-  declare_method?: string;      // 申報方式
-  deduct_type?: string;         // 直接扣抵法(Y/N)
-  review_status?: string;       // 審核狀態(未確認/使用中/已過期)
-  declare_month_start?: string; // 申報年月起
-  declare_month_end?: string;   // 申報年月迄
-  review_date?: string;         // 審核日期
-  reviewer?: string;            // 審核人員
-  setting_status?: string;      // 設定狀態(未確認/使用中/已過期)
-}
-
-// 其餘 service 內容...
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
-import { apiOption } from '../../../shared/models/sys/sysb000.module';
+import { HttpClient } from '@angular/common/http';
+import { environment } from '../../../../environments/environment';
+import { BaseDeleteRequest, BaseQueryResponse } from '../../../shared/models/api/base-api.interface';
+
+// --- TDS1003 查詢參數 Model 定義 ---
+export interface FIN11010QueryRequest {
+  STO_Uniform?: string;         // 統一編號
+  STO_TaxName?: string;         // 稅籍名稱
+  STO_Addr?: string;            // 地址
+  REP_OrgCode?: string;         // 報表組織代碼
+  STO_StatusList?: string[];    // 狀態清單
+  REP_GUIYM_start?: string;     // 發票年月_起
+  REP_GUIYM_end?: string;       // 發票年月_迄
+}
+
+// --- TDS1003 回應資料 Model 定義 ---
+export interface FIN11010Data {
+  id: number;
+  mid: number;
+  STO_No: string;
+  STO_TaxNo: string;
+  REP_BegGUIYM: string;
+  REP_EndGUIYM: string;
+  STO_Uniform: string;
+  REP_OrgCode: string;
+  STO_HQUniform: string;
+  STO_TaxName: string;
+  STO_City: string;
+  STO_PostCode: string;
+  STO_Addr: string;
+  STO_ManagerName: string;
+  STO_AbbName: string;
+  STO_Status: string;
+  STO_ApplyFlag: string;
+  STO_Direct: string;
+  STO_ApplyName: string;
+  STO_ApplyID: string;
+  STO_ApplyTEL: string;
+  STO_ApplyTEL_ext: string;
+  STO_AreaCode: string;
+  CRT_Date: string;         // 建立日期 (ISO字串)
+  CRT_USR_No: string;
+  CRT_USR_Name: string;
+  UPD_Date: string;         // 更新日期 (ISO字串)
+  UPD_USR_No: string;
+  UPD_USR_Name: string;
+}
+
+// --- 新增 TDS1003 資料請求 Model ---
+export interface FIN11010InsertRequest {
+  STO_Uniform: string;
+  STO_TaxName: string;
+  STO_TaxNo: string;
+  STO_ManagerName: string;
+  STO_AbbName: string;
+  STO_City: string;
+  STO_PostCode: string;
+  STO_Addr: string;
+  REP_OrgCode: string;
+  STO_Direct: string;
+  STO_HQUniform: string;
+  STO_ApplyFlag: string;
+  STO_ApplyName: string;
+  STO_ApplyTEL: string;
+  STO_ApplyTEL_ext: string;
+  STO_AreaCode: string;
+  STO_ApplyID: string;
+  REP_BegGUIYM: string;
+}
+
+// --- 更新 TDS1003 資料請求 Model ---
+export interface FIN11010UpdateRequest {
+  id: number;
+  STO_Uniform: string;
+  STO_TaxName: string;
+  STO_TaxNo: string;
+  STO_ManagerName: string;
+  STO_AbbName: string;
+  STO_City: string;
+  STO_PostCode: string;
+  STO_Addr: string;
+  REP_OrgCode: string;
+  STO_Direct: string;
+  STO_HQUniform: string;
+  STO_ApplyFlag: string;
+  STO_ApplyName: string;
+  STO_ApplyTEL: string;
+  STO_ApplyTEL_ext: string;
+  STO_AreaCode: string;
+  STO_ApplyID: string;
+  REP_BegGUIYM: string;
+}
+
+// --- 狀態更新 TDS1003 資料請求 Model ---
+export interface FIN11010UpdateStatusRequest {
+  id: number;
+  REP_BegGUIYM: string;
+  STO_Status: string;
+}
 
 @Injectable({
   providedIn: 'root'
 })
-export class Fin11010Service {
-  // 查詢
-  queryFIN11010(params: any): Observable<any> {
-    // 回傳假資料
-    return new Observable((observer) => {
-      observer.next({
-        Data: [
-          {
-            row_no: 1,
-            company_no: 'C001',
-            business_name: '台灣科技股份有限公司',
-            tax_no: '12345678',
-            tax_id: '12345678',
-            tax_name: '台灣科技股份有限公司',
-            city_type: '台北市',
-            address: '信義路100號',
-            main_code: 'A',
-            declare_method: '網路申報',
-            deduct_type: 'Y',
-            review_status: '已審核',
-            declare_month_start: '2023-01',
-            declare_month_end: '2023-12',
-            review_date: '2024-01-15',
-            reviewer: '管理者',
-            setting_status: '使用中',
-          },
-        ],
-        Status: '0000',
-      });
-      observer.complete();
-    });
-  }
-  exportFIN11010(params: any): Observable<any> {
-    // 請依實際API實作
-    return new Observable();
+export class FIN11010Service {
+  private apiUrl = environment.ApiUrl + '/FIN0000/INV1000';
+
+  constructor(private http: HttpClient) { }
+
+  // 查詢 TDS1003 資料表
+  queryFIN11010(data: FIN11010QueryRequest): Observable<BaseQueryResponse<FIN11010Data>> {
+    return this.http.post<BaseQueryResponse<FIN11010Data>>(`${this.apiUrl}/queryFIN11010`, data);
   }
 
-  // 總繳代號
-  getMainCodeOptions(): Observable<{ Data: apiOption[] }> {
-    // 回傳假資料
-    return new Observable((observer) => {
-      observer.next({
-        Data: [
-          { No: 'A', Name: '總機A', Label: '總機A' },
-          { No: 'B', Name: '總機B', Label: '總機B' },
-        ]
-      });
-      observer.complete();
-    });
+  // 取得目前使用中的 TDS1003 資料
+  getFIN11010PreviousData(): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/getFIN11010PreviousData`, {});
   }
 
-  // 新增
-  insertFIN11010(body: any): Observable<any> {
-    // 模擬新增成功
-    return new Observable((observer) => {
-      observer.next({ Status: '0000', Message: '新增成功' });
-      observer.complete();
-    });
+  // 新增 TDS1003 資料
+  insertFIN11010(data: FIN11010InsertRequest): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/insertFIN11010`, data);
   }
 
-  // 取得最近一筆資料
-  getLatestSetting(): Observable<any> {
-    // 模擬取得最近一筆資料
-    return new Observable((observer) => {
-      observer.next({
-        company_no: 'C001',
-        owner_name: '王小明',
-        business_name: '台灣科技股份有限公司',
-        tax_no: '12345678',
-        tax_id: '12345678',
-        tax_name: '台灣科技股份有限公司',
-        city_type: '台北市',
-        address: '信義路100號',
-        main_code: 'A',
-        declare_method: 'A',
-        deduct_type: 'Y',
-        review_status: '未確認',
-        setting_status: '未確認',
-      });
-      observer.complete();
-    });
+  // 更新 TDS1003 資料表
+  updateFIN11010(data: FIN11010UpdateRequest): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/updateFIN11010`, data);
   }
 
-  // 審核功能
-  reviewFIN11010(id: any): Observable<any> {
-    // 模擬審核成功
-    return new Observable((observer) => {
-      const currentDate = new Date().toISOString().split('T')[0];
-      observer.next({
-        Status: '0000',
-        Message: '審核成功',
-        Data: {
-          review_date: currentDate,
-          reviewer: '管理者',
-          setting_status: '使用中',
-          review_status: '已審核'
-        }
-      });
-      observer.complete();
-    });
+  // 刪除 TDS1003 資料
+  deleteFIN11010(data: BaseDeleteRequest): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/deleteFIN11010`, data);
   }
 
-  // 反審核功能
-  unreviewFIN11010(id: any): Observable<any> {
-    // 模擬反審核成功
-    return new Observable((observer) => {
-      observer.next({
-        Status: '0000',
-        Message: '反審核成功',
-        Data: {
-          review_date: null,
-          reviewer: null,
-          setting_status: '未確認',
-          review_status: '未確認',
-          declare_month_end: null
-        }
-      });
-      observer.complete();
-    });
+  // 根據狀態更新 TDS1003 資料
+  updateStatusFIN11010(data: FIN11010UpdateStatusRequest): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/updateStatusFIN11010`, data);
   }
-
 }

@@ -1,13 +1,13 @@
 import { TestBed } from '@angular/core/testing';
 
-import { DeductionCategoryService } from './deduction.service';
+import { DeductionService } from './deduction.service';
 
-describe('DeductionCategoryService', () => {
-  let service: DeductionCategoryService;
+describe('DeductionService', () => {
+  let service: DeductionService;
 
   beforeEach(() => {
     TestBed.configureTestingModule({});
-    service = TestBed.inject(DeductionCategoryService);
+    service = TestBed.inject(DeductionService);
   });
 
   it('should be created', () => {

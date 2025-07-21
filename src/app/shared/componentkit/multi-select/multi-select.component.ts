@@ -34,6 +34,11 @@ export class MultiSelectComponent extends BasicKitComponent implements OnInit, O
   @Input() group = false; // 是否啟用分組
   @Input() optionGroupLabel = 'label'; // 分組的標籤欄位
   @Input() optionGroupChildren = 'items'; // 分組的子項目欄位
+  @Input() selectedItemsLabel?: string;
+  @Input() maxSelectedLabels = 3; // 預設值，可被覆寫
+  @Input() panelStyle: Record<string, any> = { width: '280px' }; // 預設寬度，可被覆寫
+
+
 
   ngOnInit(): void {
     this.ensureControl();

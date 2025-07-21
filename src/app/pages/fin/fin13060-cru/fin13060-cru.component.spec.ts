@@ -1,18 +1,18 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { Fin13060CruComponent } from './fin13060-cru.component';
+import { FIN13060CRUComponent } from './fin13060-cru.component';
 
-describe('Fin13060CruComponent', () => {
-  let component: Fin13060CruComponent;
-  let fixture: ComponentFixture<Fin13060CruComponent>;
+describe('FIN13060CRUComponent', () => {
+  let component: FIN13060CRUComponent;
+  let fixture: ComponentFixture<FIN13060CRUComponent>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [Fin13060CruComponent]
+      imports: [FIN13060CRUComponent]
     })
     .compileComponents();
 
-    fixture = TestBed.createComponent(Fin13060CruComponent);
+    fixture = TestBed.createComponent(FIN13060CRUComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

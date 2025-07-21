@@ -6,13 +6,14 @@ import { PdfService } from '../../../service/basic/pdf.service';
 import { Tls11010Service } from '../../../service/api/tls/tls11010.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ReportTableGroupComponent } from '../../../shared/componentkit/report-table-group/report-table-group.component';
+import { TableComponent } from '../../../shared/componentkit/table/table.component';
 type DisplayMode = 'Report' | 'SummaryReport';
 @Component({
-    selector: 'app-tls23030-cru',
-    templateUrl: './tls23030-cru.component.html',
-    styleUrl: './tls23030-cru.component.scss',
-    standalone: true,
-    imports: [MenubarComponent, ReportTableGroupComponent]
+  selector: 'app-tls23030-cru',
+  templateUrl: './tls23030-cru.component.html',
+  styleUrl: './tls23030-cru.component.scss',
+  standalone: true,
+  imports: [MenubarComponent, ReportTableGroupComponent,TableComponent],
 })
 export class TLS23030CRUComponent extends BasicCruPageComponent<any> {
   data: any[] = [];
@@ -20,9 +21,7 @@ export class TLS23030CRUComponent extends BasicCruPageComponent<any> {
   dateStart: string = '';
   dateEnd: string = '';
   pdfSummary: string[] = [];
- 
-  OrganizationCodeOptions: any[] = [
-  ];
+  OrganizationCodeOptions: any[] = [];
   displayMode: DisplayMode = 'Report';
   dataForm = this.formBuilder.nonNullable.group({});
 
@@ -32,16 +31,42 @@ export class TLS23030CRUComponent extends BasicCruPageComponent<any> {
     private tls11010Service: Tls11010Service,
   ) {
     super();
-    this.tls11010Service.getOrgOptions().subscribe(res => {
-      this.OrganizationCodeOptions = (res || []).map(x => ({
+    this.tls11010Service.getOrgOptions().subscribe((res) => {
+      this.OrganizationCodeOptions = (res || []).map((x) => ({
         label: x.label,
         formLabel: `${x.value} - ${x.label}`,
         value: x.value,
       }));
     });
   }
+  paymentSummary: any[] = [];
+
+private buildPaymentSummary(): void {
+  const map = new Map<string, number>();
+
+  for (const item of this.data) {
+    const key = item['PAY_NAME'] ?? '未分類';
+    const amt = parseFloat(item['TXN_PayAmt']) || 0;
+    map.set(key, (map.get(key) ?? 0) + amt);
+  }
+
+  this.paymentSummary = Array.from(map.entries()).map(([PAY_NAME, TXN_PayAmt]) => ({
+    PAY_NAME,
+    TXN_PayAmt,
+  }));
+}
+paymentSummaryColumns = [
+  { header: '付款別', field: 'PAY_NAME', style: 'text-left' },
+  {
+    header: '金額',
+    field: 'TXN_PayAmt',
+    style: 'text-right',
+    format: (val: number) => val?.toLocaleString() || '0',
+  },
+];
 
   async ngOnInit(): Promise<void> {
+    this.initializePage('TLS23030', this.dataForm);
     this.displayMode = 'SummaryReport'; // ✅ for testing
     const state = history.state;
     console.log('✅ Router 傳入的 state:', state);
@@ -56,46 +81,80 @@ export class TLS23030CRUComponent extends BasicCruPageComponent<any> {
       this.messageService.warnBubble('⚠️ 無資料可顯示，請重新查詢。');
     }
 
-    this.initializePage('TLS23030', this.dataForm);
+    
+      if (state?.data) {
+    this.data = state.data;
+    this.dateStart = state.queryFormValue?.TXN_DateStart || '';
+    this.dateEnd = state.queryFormValue?.TXN_DateEnd || '';
+    this.printedAt = new Date().toLocaleString('zh-TW');
+    this.displayMode = state.queryFormValue?.DisplayMode || 'Report';
+
+    // ⬇️ 加入付款別統計
+    const map = new Map<string, number>();
+    for (const row of this.data) {
+      const key = row['PAY_NAME'] ?? '未分類';
+      const val = parseFloat(row['TXN_PayAmt']) || 0;
+      map.set(key, (map.get(key) || 0) + val);
+    }
+
+    this.paymentSummary = Array.from(map.entries()).map(([PAY_NAME, TXN_PayAmt]) => ({
+      PAY_NAME,
+      TXN_PayAmt,
+    }));
+  } else {
+    this.messageService.warnBubble('⚠️ 無資料可顯示，請重新查詢。');
+  }
+
+  this.initializePage('TLS23030', this.dataForm);
   }
 
   get columns() {
     if (this.displayMode === 'SummaryReport') {
       return [
         {
-          header: '銷售日期', field: 'TXN_Date', format: (val: string) => {
+          header: '銷售日期',
+          field: 'TXN_Date',
+          format: (val: string) => {
             const date = new Date(val);
             return isNaN(date.getTime())
               ? val
               : `${date.getFullYear()}/${(date.getMonth() + 1).toString().padStart(2, '0')}/${date.getDate().toString().padStart(2, '0')}`;
-          }
+          },
         },
 
         { header: '專櫃編號', field: 'tlt_no' },
         { header: '櫃位名稱', field: 'tlt_name', style: 'text-left' },
         { header: '付款別', field: 'PAY_NAME', style: 'text-left' },
         {
-          header: '金額', field: 'TXN_PayAmt', style: 'text-right',
-          format: (val: number) => val?.toLocaleString() || '0'
+          header: '金額',
+          field: 'TXN_PayAmt',
+          style: 'text-right',
+          format: (val: number) => val?.toLocaleString() || '0',
         },
         {
-          field: 'TXN_TaxAlwnc', header: '備抵稅額', style: 'text-right',
-          format: (val: number) => val?.toLocaleString() || '0'
+          field: 'TXN_TaxAlwnc',
+          header: '備抵稅額',
+          style: 'text-right',
+          format: (val: number) => val?.toLocaleString() || '0',
         },
         {
-          field: 'org_id', header: '組織編號', style: 'text-right',
-          format: (val: number) => val?.toLocaleString() || '0'
-        }
+          field: 'org_id',
+          header: '組織編號',
+          style: 'text-right',
+          format: (val: number) => val?.toLocaleString() || '0',
+        },
       ];
     } else {
       return [
         {
-          header: '銷售日期', field: 'TXN_Date', format: (val: string) => {
+          header: '銷售日期',
+          field: 'TXN_Date',
+          format: (val: string) => {
             const date = new Date(val);
             return isNaN(date.getTime())
               ? val
               : `${date.getFullYear()}/${(date.getMonth() + 1).toString().padStart(2, '0')}/${date.getDate().toString().padStart(2, '0')}`;
-          }
+          },
         },
         { header: '收銀機號', field: 'ECR_No' },
         { header: '交易序號', field: 'TXN_No' },
@@ -104,12 +163,16 @@ export class TLS23030CRUComponent extends BasicCruPageComponent<any> {
         { header: '交易型態', field: 'TXN_Status' },
         { header: '付款別', field: 'PAY_NAME', style: 'text-left' },
         {
-          header: '金額', field: 'TXN_PayAmt', style: 'text-right',
-          format: (val: number) => val?.toLocaleString() || '0'
+          header: '金額',
+          field: 'TXN_PayAmt',
+          style: 'text-right',
+          format: (val: number) => val?.toLocaleString() || '0',
         },
         {
-          field: 'TXN_TaxAlwnc', header: '備抵稅額', style: 'text-right',
-          format: (val: number) => val?.toLocaleString() || '0'
+          field: 'TXN_TaxAlwnc',
+          header: '備抵稅額',
+          style: 'text-right',
+          format: (val: number) => val?.toLocaleString() || '0',
         },
         { header: '發票號碼', field: 'TXN_GUINo' },
         {
@@ -118,7 +181,9 @@ export class TLS23030CRUComponent extends BasicCruPageComponent<any> {
           format: (val: string) => {
             if (!val) return '';
             const valStr = typeof val === 'string' ? val : String(val ?? '');
-            const date = new Date(`1970-01-01T${valStr.length === 5 ? valStr : valStr.slice(0, 5)}`);
+            const date = new Date(
+              `1970-01-01T${valStr.length === 5 ? valStr : valStr.slice(0, 5)}`,
+            );
             if (!isNaN(date.getTime())) {
               const hh = date.getHours().toString().padStart(2, '0');
               const mm = date.getMinutes().toString().padStart(2, '0');
@@ -134,7 +199,7 @@ export class TLS23030CRUComponent extends BasicCruPageComponent<any> {
               return `${hh}:${mm}`;
             }
             return val;
-          }
+          },
         },
         { header: '信用卡類別', field: 'CRD_Type' },
         { header: '信用卡卡號/條碼', field: 'CRD_No' },
@@ -142,16 +207,22 @@ export class TLS23030CRUComponent extends BasicCruPageComponent<any> {
           field: 'IsHaveTERM_No',
           header: '是否分期',
           visible: true,
-          format: (val: any) => val === 'Y' ? '是' : val === 'N' ? '否' : val
+          format: (val: any) => (val === 'Y' ? '是' : val === 'N' ? '否' : val),
         },
         { header: '會員卡號', field: 'TXN_MemCard' },
         { field: 'org_id', header: '組織編號', visible: true },
-        { field: 'org_id', header: '組織名稱', visible: true, format: (val: any) => this.getLabelFromOptions(val, this.OrganizationCodeOptions) },
+        {
+          field: 'org_id',
+          header: '組織名稱',
+          visible: true,
+          format: (val: any) =>
+            this.getLabelFromOptions(val, this.OrganizationCodeOptions),
+        },
       ];
     }
   }
   getLabelFromOptions(value: any, options: any[]): string {
-    const found = options?.find(opt => String(opt.value) === String(value));
+    const found = options?.find((opt) => String(opt.value) === String(value));
     return found ? found.label : value;
   }
 
@@ -173,17 +244,20 @@ export class TLS23030CRUComponent extends BasicCruPageComponent<any> {
       printedAt: this.printedAt,
       columns,
       data: this.data,
-      subtotalFields: this.displayMode === 'SummaryReport' ? ['sum', 'TXN_Net', 'TXN_Tax'] : [],
+      subtotalFields:
+        this.displayMode === 'SummaryReport'
+          ? ['sum', 'TXN_Net', 'TXN_Tax']
+          : [],
       summaryText: [],
-      mergeTotalCols: this.displayMode === 'SummaryReport' ? 5 : 0
+      mergeTotalCols: this.displayMode === 'SummaryReport' ? 5 : 0,
     });
   }
 
   exportSummaryExcel(): void {
-    import('xlsx').then(xlsx => {
-      const exportData = this.data.map(row => {
+    import('xlsx').then((xlsx) => {
+      const exportData = this.data.map((row) => {
         const obj: any = {};
-        this.columns.forEach(col => {
+        this.columns.forEach((col) => {
           obj[col.header] = row[col.field];
         });
         return obj;
@@ -191,10 +265,21 @@ export class TLS23030CRUComponent extends BasicCruPageComponent<any> {
 
       const ws = xlsx.utils.json_to_sheet(exportData);
       const wb = xlsx.utils.book_new();
-      xlsx.utils.book_append_sheet(wb, ws, this.displayMode === 'SummaryReport' ? '銷售總額' : '交易明細');
+      xlsx.utils.book_append_sheet(
+        wb,
+        ws,
+        this.displayMode === 'SummaryReport' ? '銷售總額' : '交易明細',
+      );
       xlsx.writeFile(wb, `銷售報表_${new Date().toISOString()}.xlsx`);
     });
   }
-
-
-} 
+get extraPDFTables() {
+  return [
+    {
+      title: '付款別小計',
+      columns: this.paymentSummaryColumns,
+      data: this.paymentSummary,
+    },
+  ];
+}
+}

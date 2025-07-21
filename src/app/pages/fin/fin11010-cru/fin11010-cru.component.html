@@ -6,95 +6,59 @@
     <p-panel [header]="formTitle" class="line-height-3 m-0">
         <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
             <div class="grid p-fluid">
-                <div class="col-12 md:col-4">
-                    <app-input-text label="公司代號(統一編號)" controlName="company_no" [control]="dataForm.controls.company_no"
-                        [submitted]="submitted" placeholder="必填, 最長8個字申" required></app-input-text>
-                </div>
-                <div class="col-12 md:col-4">
-                    <app-input-text label="營業人名稱" controlName="business_name"
-                        [control]="dataForm.controls.business_name" [submitted]="submitted" placeholder="必填, 最長60個字申"
-                        required></app-input-text>
-                </div>
-                <div class="col-12 md:col-4">
-                    <app-input-text label="稅籍編號" controlName="tax_no" [control]="dataForm.controls.tax_no"
-                        [submitted]="submitted" placeholder="必填, 最長9個字申" required></app-input-text>
-                </div>
+                <app-input-text class="col-12 md:col-6 lg:col-4" label="公司代號(統一編號)" controlName="STO_Uniform"
+                    [control]="dataForm.controls.STO_Uniform" [submitted]="submitted"></app-input-text>
+                <app-input-text class="col-12 md:col-6 lg:col-4" label="營業人名稱" controlName="STO_TaxName"
+                    [control]="dataForm.controls.STO_TaxName" [submitted]="submitted"></app-input-text>
+                <app-input-text class="col-12 md:col-6 lg:col-4" label="稅籍編號" controlName="STO_TaxNo"
+                    [control]="dataForm.controls.STO_TaxNo" [submitted]="submitted"></app-input-text>
+                <app-input-text class="col-12 md:col-6 lg:col-4" label="負責人姓名" controlName="STO_ManagerName"
+                    [control]="dataForm.controls.STO_ManagerName" [submitted]="submitted"></app-input-text>
+
+                <app-input-text class="col-12 md:col-6 lg:col-4" label="營業地址" controlName="STO_Addr"
+                    [control]="dataForm.controls.STO_Addr" [submitted]="submitted"></app-input-text>
+
+                <app-dropdown class="col-12 md:col-6 lg:col-4" label="總繳代號" controlName="REP_OrgCode"
+                    [options]="repOrgCodeOptions" optionLabel="Name" optionValue="No"
+                    [control]="dataForm.controls.REP_OrgCode" [submitted]="submitted"></app-dropdown>
+
+                <app-dropdown class="col-12 md:col-6 lg:col-4" label="是否採直接扣抵法" controlName="STO_Direct"
+                    [options]="directDeductOptions" optionLabel="Name" optionValue="No"
+                    [control]="dataForm.controls.STO_Direct" [submitted]="submitted"></app-dropdown>
+
+                <app-input-text class="col-12 md:col-6 lg:col-4" label="總公司統編" controlName="STO_HQUniform"
+                    [control]="dataForm.controls.STO_HQUniform" [submitted]="submitted"></app-input-text>
+
+                <app-dropdown class="col-12 md:col-6 lg:col-4" label="自行或委託辦理申報註記" controlName="STO_ApplyFlag"
+                    [options]="applyFlagOptions" optionLabel="Name" optionValue="No"
+                    [control]="dataForm.controls.STO_ApplyFlag" [submitted]="submitted"></app-dropdown>
+
+                <app-input-text class="col-12 md:col-6 lg:col-4" label="(代理)申報人姓名" controlName="STO_ApplyName"
+                    [control]="dataForm.controls.STO_ApplyName" [submitted]="submitted"></app-input-text>
+
+                <app-input-text class="col-12 md:col-6 lg:col-4" label="(代理)申報人電話" controlName="STO_ApplyTEL"
+                    [control]="dataForm.controls.STO_ApplyTEL" [submitted]="submitted"></app-input-text>
+
+                <app-input-text class="col-12 md:col-6 lg:col-4" label="代理申報人證書(登錄)字號" controlName="STO_ApplyID"
+                    [control]="dataForm.controls.STO_ApplyID" [submitted]="submitted"></app-input-text>
+
+                <app-calendar class="col-12 md:col-6 lg:col-4" label="申報年月起" controlName="REP_BegGUIYM"
+                    [control]="dataForm.controls.REP_BegGUIYM" [submitted]="submitted"
+                    calendarType="dateMonthOne"></app-calendar>
+
             </div>
-            <div class="grid p-fluid">
-                <div class="col-12 md:col-4">
-                    <app-input-text label="負責人姓名" controlName="owner_name" [control]="dataForm.controls.owner_name"
-                        [submitted]="submitted" placeholder="必填, 最長12個字申" required></app-input-text>
-                </div>
-                <div class="col-12 md:col-4">
-                    <app-input-text label="營業地址" controlName="address" [control]="dataForm.controls.address"
-                        [submitted]="submitted" placeholder="台南縣東區東光里中華東路1段366號、398號7樓之1" required></app-input-text>
-                </div>
-                <div class="col-12 md:col-4">
-                    <app-dropdown label="總繳代號" controlName="main_code" [options]="mainCodeOptions" optionLabel="Label"
-                        optionValue="No" [control]="dataForm.controls.main_code" [submitted]="submitted" required
-                        placeholder="必填"></app-dropdown>
-                </div>
-            </div>
-            <div class="grid p-fluid">
-                <div class="col-12 md:col-4">
-                    <app-dropdown label="是否採直接扣抵法" controlName="deduct_type" [options]="deductTypeOptions"
-                        optionLabel="Label" optionValue="No" [control]="dataForm.controls.deduct_type"
-                        [submitted]="submitted" required placeholder="必填"></app-dropdown>
-                </div>
-                <div class="col-12 md:col-4">
-                    <app-input-text label="總公司統編" controlName="total_company_no"
-                        [control]="dataForm.controls.total_company_no" [submitted]="submitted"
-                        placeholder="最長8個字申"></app-input-text>
-                </div>
-                <div class="col-12 md:col-4">
-                    <app-dropdown label="自行或委託辦理申報註記" controlName="declare_method" [options]="declareMethodOptions"
-                        optionLabel="Label" optionValue="No" [control]="dataForm.controls.declare_method"
-                        [submitted]="submitted" required placeholder="必填"></app-dropdown>
-                </div>
-            </div>
-            <div class="grid p-fluid">
-                <div class="col-12 md:col-4">
-                    <app-input-text label="(代理)申報人姓名" controlName="agent_name" [control]="dataForm.controls.agent_name"
-                        [submitted]="submitted" placeholder="必填, 最長12個字申" required></app-input-text>
-                </div>
-                <div class="col-12 md:col-4">
-                    <app-input-text label="(代理)申報人電話" controlName="agent_phone"
-                        [control]="dataForm.controls.agent_phone" [submitted]="submitted" placeholder="06-2366222-6000"
-                        required></app-input-text>
-                </div>
-                <div class="col-12 md:col-4">
-                    <app-input-text label="代理申報人證書(登錄)字號" controlName="agent_license_no"
-                        [control]="dataForm.controls.agent_license_no" [submitted]="submitted"
-                        placeholder="最長50個字申"></app-input-text>
-                </div>
-            </div>
-            <div class="grid p-fluid">
-                <div class="col-12 md:col-4">
-                    <app-calendar label="申報年月起" controlName="declare_month_start"
-                        [control]="dataForm.controls.declare_month_start" [submitted]="submitted" placeholder="2024/10"
-                        calendarType="dateMonthOne"></app-calendar>
-                </div>
-            </div>
-            <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+            <div *ngIf="!isFormReadable"
+                class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
                 <app-button btnType="cancel" [form]="dataForm"></app-button>
-                <app-button btnType="submit"></app-button>
+                <app-button btnType="submit" [loading]="loading"></app-button>
             </div>
         </form>
     </p-panel>
+    <!-- 註解文字 -->
     <div>
         <ul>
             <li>請注意 :</li>
-            <li>1、代理申報人證書(登錄)字號 : 自行申報者免填，請填列完整年度及字號（例：097台財稅證字第0000001號） 。</li>
+            <li>1、代理申報人證書(登錄)字號 : 自行申報者免填，請填列完整年度及字號（例：097台財稅證字第0000001號）。</li>
         </ul>
     </div>
-</div>
-
-<!-- 新增的表格區塊，顯示剛剛新增的資料 -->
-<div class="card">
-    <p-panel header="審核" class="line-height-3 m-0">
-        <app-table tableKey="FIN11010_CRU_RECENT" [data]="[recentlyCreatedData]" [columns]="recentColumns"
-            [showDelete]="false" [showCheckBox]="false" [showPaginator]="false" [lazy]="false" [loading]="false"
-            [showReportMode]="false" [addButton]="addButton" [showEdit]="false" [showDetail]="false">
-        </app-table>
-    </p-panel>
 </div>

@@ -23,7 +23,22 @@
       "ES2022",
       "dom"
     ],
-    "incremental": true
+    "incremental": true,
+    "baseUrl": "./",
+    "paths": {
+      "@pages/ass/*": ["src/app/pages/ass/*"],
+      "@pages/base/*": ["src/app/pages/base/*"],
+      "@pages/cpm/*": ["src/app/pages/cpm/*"],
+      "@pages/fin/*": ["src/app/pages/fin/*"],
+      "@pages/sys/*": ["src/app/pages/sys/*"],
+      "@pages/tls/*": ["src/app/pages/tls/*"],
+      "@guards/*": ["src/app/guards/*"],
+      "@interceptors/*": ["src/app/interceptors/*"],
+      "@service/*": ["src/app/service/*"],
+      "@shared/*": ["src/app/shared/*"],
+      "@componentkit/*": ["src/app/shared/componentkit/*"],
+      "@utils/*": ["src/app/utils/*"]
+    }
   },
   "angularCompilerOptions": {
     "enableI18nLegacyMessageIdFormat": false,

@@ -71,11 +71,9 @@ export class TLS23020CRUComponent extends BasicCruPageComponent<any> {
       { field: 'tlt_name', header: '櫃位名稱' },
       { field: 'TXN_TotSaleAmt', header: '銷售金額', style: 'text-right', format: this.moneyFormat },
       { field: 'TXN_TotNet', header: '未稅金額', style: 'text-right', format: this.moneyFormat },
-     
-
-      { field: 'TXN_TotTax', header: '預購金額', style: 'text-right', format: this.moneyFormat },
-      { field: 'Pre_TotSaleAmt', header: '預購未稅', style: 'text-right', format: this.moneyFormat },
-      { field: 'TXN_TotTax', header: '預購稅額', style: 'text-right', format: this.moneyFormat },
+      { field: 'Pre_TotSaleAmt', header: '預購金額', style: 'text-right', format: this.moneyFormat },
+      { field: 'Pre_TotNet', header: '預購未稅', style: 'text-right', format: this.moneyFormat },
+      { field: 'Pre_TotTax', header: '預購稅額', style: 'text-right', format: this.moneyFormat },
       
     ];
   } else {
@@ -96,8 +94,6 @@ export class TLS23020CRUComponent extends BasicCruPageComponent<any> {
     { field: 'tlt_no', header: '專櫃編號', visible: true },
     { field: 'tlt_name', header: '櫃位名稱', visible: true, style: 'text-left' }, // 若無此欄位請移除
     { field: 'TXN_GUINo', header: '發票號碼', visible: true },
-
-
         {
           field: 'PLU_SalePrc', header: '單項售價', visible: true,
           style: 'text-right',
@@ -237,7 +233,7 @@ export class TLS23020CRUComponent extends BasicCruPageComponent<any> {
       if (Array.isArray(preloadedData) && preloadedData.length > 0) {
         this.data = preloadedData;
         this.generateSummaryTable();
-        this.generatePdfSummary();
+       
         this.loading = false;
         return; // ✅ 直接顯示資料，跳過查詢
       }
@@ -249,42 +245,14 @@ export class TLS23020CRUComponent extends BasicCruPageComponent<any> {
       ).subscribe((res) => {
         this.data = (res.Status === '0000' && Array.isArray(res.Data)) ? res.Data : [];
         this.generateSummaryTable();
-        this.generatePdfSummary();
+       
       });
     } else {
       this.loading = false;
     }
   }
-  generatePdfSummary(): void {
-    const getSum = (field: string): number =>
-      this.data.reduce((sum, row) => sum + (parseFloat(row[field]) || 0), 0);
 
-    const A = getSum('TXN_TotSaleAmt');
-    const B = getSum('TXN_TotPayAmt');
-    const C = getSum('TXN_TotOver');
-    const D = getSum('TXN_TotPayAmt');
-    const E = getSum('TXN_TotSaleAmt');
-    const F = getSum('TXN_TotPayAmt');
-    const G = getSum('TXN_TotDisc');
-    const H = getSum('TXN_TaxFreeCertNo');
 
-    const discountValue = A + B - C + E - G + H;
-    const paymentValue = A + B + D - F;
-
-    this.pdfSummary = [
-      `(A)發票金額 = ${A}`,
-      `(B)已開發票的支付工具 = ${B}`,
-      `(C)已開發票的支付工具溢收 = ${C}`,
-      `(D)訂金 = ${D}`,
-      `(E)訂金結帳金額 = ${E}`,
-      `(F)訂金結帳的訂金 = ${F}`,
-      `(G)預售 = ${G}`,
-      `(H)預售結帳金額 = ${H}`,
-      '=============================',
-      `折扣別(專櫃業績) = (A) + (B) - (C) + (E) - (G) + (H) = ${discountValue}`,
-      `付款別(支付工具) = (A) + (B) + (D) - (F) = ${paymentValue}`
-    ];
-  }
 
 
   formatDateToYMD(dateStr: string): string {

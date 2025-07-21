@@ -100,6 +100,9 @@ export interface ColumnDef {
   style?: string;
   options?: any[];
 
+  allowDecimal?: boolean;  // 是否允許小數點
+  decimalPlaces?: number;  // 小數位數，預設2位
+
   // 🎯 使用語義化的日期格式類型
   dateFormat?: DateFormatType;
   placeholder?: string;
@@ -119,11 +122,11 @@ export interface ColumnDef {
 }
 
 @Component({
-    selector: 'app-expandable-edit-table',
-    templateUrl: './expandable-edit-table.component.html',
-    styleUrls: ['./expandable-edit-table.component.scss'],
-    standalone: true,
-    imports: [NgIf, TableModule, NgClass, PrimeTemplate, ButtonDirective, Ripple, TooltipModule, NgFor, NgStyle, NgSwitch, NgSwitchCase, FormsModule, InputTextModule, InputNumberModule, DropdownModule, CheckboxModule, NgSwitchDefault, DialogModule, CalendarModule, DecimalPipe]
+  selector: 'app-expandable-edit-table',
+  templateUrl: './expandable-edit-table.component.html',
+  styleUrls: ['./expandable-edit-table.component.scss'],
+  standalone: true,
+  imports: [NgIf, TableModule, NgClass, PrimeTemplate, ButtonDirective, Ripple, TooltipModule, NgFor, NgStyle, NgSwitch, NgSwitchCase, FormsModule, InputTextModule, InputNumberModule, DropdownModule, CheckboxModule, NgSwitchDefault, DialogModule, CalendarModule, DecimalPipe]
 })
 export class ExpandableEditTableComponent implements OnInit, OnChanges {
   @ViewChild('dt') dt!: Table;
@@ -870,5 +873,79 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
 
   hasCaptionRightContent(): boolean {
     return this.captionRight?.nativeElement?.children.length > 0;
+  }
+
+  // 🎯 主表格表頭操作欄位樣式
+  getActionHeaderStyle(): any {
+    return {
+      position: 'sticky',
+      right: '0',
+      zIndex: '3',
+      // backgroundColor: 'var(--table-header-bg, #c7d2fe)', // 保持表頭背景色
+      width: '120px',
+      minWidth: '120px',
+      textAlign: 'center'
+    };
+  }
+
+  // 🎯 主表格表身操作欄位樣式
+  getActionBodyStyle(): any {
+    return {
+      position: 'sticky',
+      right: '0',
+      zIndex: '2',
+      backgroundColor: '#fff', // 表身背景色
+      width: '120px',
+      minWidth: '120px',
+      textAlign: 'center'
+    };
+  }
+
+  // 🎯 詳細資料表格表頭操作欄位樣式
+  getDetailActionHeaderStyle(): any {
+    return {
+      position: 'sticky',
+      right: '0',
+      zIndex: '3',
+      backgroundColor: '#4a69bd', // 詳細資料表頭背景色
+      width: '120px',
+      minWidth: '120px',
+      textAlign: 'center',
+      color: '#fff' // 白色文字
+    };
+  }
+
+  // 🎯 詳細資料表格表身操作欄位樣式
+  getDetailActionBodyStyle(): any {
+    return {
+      position: 'sticky',
+      right: '0',
+      zIndex: '2',
+      backgroundColor: '#f8f9fa', // 詳細資料表身背景色
+      width: '120px',
+      minWidth: '120px',
+      textAlign: 'center'
+    };
+  }
+
+  // 取得數字輸入的設定
+  getNumberInputConfig(col: ColumnDef): any {
+    if (col.allowDecimal) {
+      return {
+        mode: 'decimal',
+        minFractionDigits: 0,
+        maxFractionDigits: col.decimalPlaces || 2,
+        step: col.decimalPlaces === 1 ? 0.1 : 0.01,
+        useGrouping: false
+      };
+    }
+
+    return {
+      mode: 'decimal',
+      minFractionDigits: 0,
+      maxFractionDigits: 0,
+      step: 1,
+      useGrouping: false
+    };
   }
 }

@@ -3,6 +3,8 @@
     {{ title }}
   </span>
 </p-divider>
+<p-blockUI [target]="dt" [blocked]="disabled">
+</p-blockUI>
 <p-table #dt [value]="data" [columns]="selectedColumns" [(selection)]="selectedItems" sortMode="multiple"
   [selectionMode]="showCheckBox && IsPrint ? selectionMode : null" [dataKey]="dataKey" [rowTrackBy]="trackByRow"
   [resizableColumns]="true" [paginator]="showPaginator && IsPrint && !rowEditing && !loading" [scrollable]="scrollable"

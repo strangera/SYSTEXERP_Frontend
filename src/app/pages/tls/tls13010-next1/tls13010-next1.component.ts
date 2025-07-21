@@ -14,6 +14,7 @@ import { ButtonComponent } from '../../../shared/componentkit/button/button.comp
 import { NgIf, NgFor } from '@angular/common';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { AccordionModule } from 'primeng/accordion';
+import { LocationOptionsService } from '../../../service/api/dropdownservice/location-options.service';
 
 // 介面定義
 interface CategoryItem {
@@ -34,6 +35,8 @@ interface CategoryItem {
 })
 export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> implements OnInit, OnDestroy {
 
+  // 組織table下拉
+  orgOptions: any[] = [];
   private subscriptions: Subscription[] = [];
   private routerSubscription: any;
 
@@ -166,9 +169,10 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
     {
       field: 'tpy_type',
       header: '單位',
-      type: 'text',
+      type: 'dropdown',
       editable: true,
-      width: '70px'
+      width: '70px',
+      options: TLS13010_DROPDOWN_OPTIONS.tpyTypeOption,
     },
     {
       field: 'tpy_unitamt',
@@ -194,9 +198,10 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
     {
       field: 'org_id',
       header: '組織',
-      type: 'text',
+      type: 'dropdown',
       editable: true,
-      autoWidth: true
+      width: '90px',
+      options: []
     },
     {
       field: 'gui_flag',
@@ -389,10 +394,10 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
     {
       field: 'org_id',
       header: '組織',
-      type: 'text',
+      type: 'dropdown',
       editable: true,
-      minWidth: '70px',
-      flex: 1
+      width: '90px',
+      options: []
     },
     {
       field: 'gui_flag',
@@ -450,9 +455,10 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
     {
       field: 'tpy_type',
       header: '單位',
-      type: 'text',
+      type: 'dropdown',
       editable: true,
-      width: '70px'
+      options: TLS13010_DROPDOWN_OPTIONS.tpyTypeOption,
+      autoWidth: true,
     },
     {
       field: 'tpy_rate',
@@ -525,9 +531,10 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
     {
       field: 'tpy_type',
       header: '單位',
-      type: 'text',
+      type: 'dropdown',
       editable: true,
-      width: '70px'
+      options: TLS13010_DROPDOWN_OPTIONS.tpyTypeOption,
+      autoWidth: true,
     },
     {
       field: 'tpy_rate',
@@ -542,11 +549,7 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
       type: 'dropdown',
       editable: true,
       width: '90px',
-      options: [
-        { label: '102220', value: '102220' },
-        { label: '102221', value: '102221' },
-        { label: '102222', value: '102222' }
-      ]
+      options: []
     },
     {
       field: 'gui_flag',
@@ -578,6 +581,7 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
   constructor(
     private tls13010Service: TLS13010Service,
     private contractFlowService: ContractFlowService,
+    private locationOptionsService: LocationOptionsService,
     public override router: Router
   ) {
     super();
@@ -587,6 +591,7 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
     console.log('TLS13010Next1Component 初始化開始');
     this.initializeDataStructure();
     this.initializePage('TLS13010', this.dataForm);
+    this.loadOrgOptions();
     this.loadWorkflowData();
     this.routerSubscription = this.router.events
       .pipe(filter(event => event instanceof NavigationEnd))
@@ -638,6 +643,63 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
       console.warn('❌ 沒有工作流程資料，重導向到前一步');
       this.router.navigate(['account/tls/tls13010cru']);
     }
+  }
+
+
+  private loadOrgOptions(): void {
+    console.log('🔄 開始載入組織選項...');
+
+    const subscription = this.locationOptionsService.getOrgOptions().subscribe({
+      next: (options) => {
+        console.log('✅ 組織選項載入成功:', options);
+        this.orgOptions = options;
+
+        // 🎯 更新各類型欄位定義的組織選項
+        this.updateOrgOptionsInColumns();
+      },
+      error: (error) => {
+        console.error('❌ 載入組織選項失敗:', error);
+        this.messageService.warnBubble('載入組織選項失敗');
+        this.orgOptions = [];
+      }
+    });
+
+    this.subscriptions.push(subscription);
+  }
+
+  // 🎯 新增：更新各類型欄位定義中的組織選項
+  private updateOrgOptionsInColumns(): void {
+    console.log('🔄 更新欄位定義中的組織選項...');
+
+    // 更新 A 類型的組織選項
+    const aOrgColumn = this.deductionAColumns.find(col => col.field === 'org_id');
+    if (aOrgColumn) {
+      aOrgColumn.options = [...this.orgOptions];
+      console.log('✅ 已更新 A 類型 org_id 選項');
+    }
+
+    // 更新 C 類型的組織選項
+    const cOrgColumn = this.deductionCColumns.find(col => col.field === 'org_id');
+    if (cOrgColumn) {
+      cOrgColumn.options = [...this.orgOptions];
+      console.log('✅ 已更新 C 類型 org_id 選項');
+    }
+
+    // 更新 D 類型的組織選項
+    const dOrgColumn = this.deductionDColumns.find(col => col.field === 'org_id');
+    if (dOrgColumn) {
+      dOrgColumn.options = [...this.orgOptions];
+      console.log('✅ 已更新 D 類型 org_id 選項');
+    }
+
+    // 更新 E 類型的組織選項
+    const eOrgColumn = this.deductionEColumns.find(col => col.field === 'org_id');
+    if (eOrgColumn) {
+      eOrgColumn.options = [...this.orgOptions];
+      console.log('✅ 已更新 E 類型 org_id 選項');
+    }
+
+    console.log('🎯 所有類型的組織選項更新完成');
   }
 
   private prepareContractInfoDisplay(): void {
@@ -1085,15 +1147,8 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
 
   // ✅ 新增：清理扣款項目用於儲存
   private cleanFareItemForStorage(item: FareItem): FareItem {
-    // ❌ 原本的解構可能會遺漏重要欄位
-    const {
-      _originalData,
-      _originalSelected,
-      ...itemForStorage
-    } = item;
-
-    // ✅ 修正：明確保留所有業務欄位，特別是日期欄位
-    const cleanedItem = {
+    // 🎯 修正：明確列出所有業務欄位，避免遺漏
+    const cleanedItem: FareItem = {
       // 基本資訊
       id: item.id,
       cap_item: item.cap_item,
@@ -1101,12 +1156,12 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
       cap_type: item.cap_type,
       is_selected: item.is_selected,
       data_source: item.data_source,
+      talent_id: item.talent_id,
+      is_new_item: item.is_new_item,
 
-      // 🎯 重點：明確保留日期欄位
+      // 🎯 重點：明確保留所有日期和業務欄位
       tpy_bdate: item.tpy_bdate,
       tpy_edate: item.tpy_edate,
-
-      // 其他業務欄位
       tpy_type: item.tpy_type,
       tpy_qty: item.tpy_qty,
       tpy_unitamt: item.tpy_unitamt,
@@ -1116,38 +1171,39 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
       tpy_1stamt: item.tpy_1stamt,
       down_payment: item.down_payment,
       period_nos: item.period_nos,
+
+      // 🔥 關鍵修正：確保這兩個欄位被保留
       day_account: item.day_account,
       interval: item.interval,
+
       gui_flag: item.gui_flag,
       org_id: item.org_id,
 
       // 系統欄位
       _status: item._status,
+      _originalSelected: item._originalSelected,
+      _originalData: item._originalData,
 
-      // 其他可能的業務欄位
-      ...Object.keys(item).reduce((acc, key) => {
-        // 保留不在上述清單中的業務欄位（排除前端專用欄位）
-        if (!key.startsWith('_') || key === '_status') {
-          if (!['id', 'cap_item', 'cap_name', 'cap_type', 'is_selected',
-            'data_source', 'tpy_bdate', 'tpy_edate', 'tpy_type',
-            'tpy_qty', 'tpy_unitamt', 'tpy_amount', 'tpy_totalamt',
-            'tpy_rate', 'tpy_1stamt', 'down_payment', 'period_nos',
-            'day_account', 'interval', 'gui_flag', 'org_id', '_status'].includes(key)) {
-            acc[key] = item[key];
-          }
-        }
-        return acc;
-      }, {} as any)
+      // 🎯 新增：保留其他可能的業務欄位
+      cap_saletype: item.cap_saletype,
+      edc_bank: item.edc_bank,
+      instms_type: item.instms_type,
+      pay_no: item.pay_no,
+      is_commonly_used: item.is_commonly_used,
+      cap_tax_type: item.cap_tax_type,
+      acc_no: item.acc_no
     };
 
     console.log(`🔍 清理項目 ${item.cap_item}:`, {
-      原始tpy_bdate: item.tpy_bdate,
-      清理後tpy_bdate: cleanedItem.tpy_bdate,
-      原始tpy_edate: item.tpy_edate,
-      清理後tpy_edate: cleanedItem.tpy_edate
+      原始day_account: item.day_account,
+      清理後day_account: cleanedItem.day_account,
+      原始interval: item.interval,
+      清理後interval: cleanedItem.interval,
+      原始gui_flag: item.gui_flag,
+      清理後gui_flag: cleanedItem.gui_flag
     });
 
-    return cleanedItem as FareItem;
+    return cleanedItem;
   }
 
 
@@ -1285,46 +1341,107 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
       capType: capType,
       oldData: event.oldData,
       newData: event.newData,
-      // 🎯 特別檢查日期欄位
-      oldDates: {
+      // 🎯 特別檢查重要欄位
+      oldFields: {
         tpy_bdate: event.oldData?.tpy_bdate,
-        tpy_edate: event.oldData?.tpy_edate
+        tpy_edate: event.oldData?.tpy_edate,
+        day_account: event.oldData?.day_account,
+        interval: event.oldData?.interval,
+        tpy_type: event.oldData?.tpy_type,
+        gui_flag: event.oldData?.gui_flag,
+        org_id: event.oldData?.org_id
       },
-      newDates: {
+      newFields: {
         tpy_bdate: event.newData?.tpy_bdate,
-        tpy_edate: event.newData?.tpy_edate
+        tpy_edate: event.newData?.tpy_edate,
+        day_account: event.newData?.day_account,
+        interval: event.newData?.interval,
+        tpy_type: event.newData?.tpy_type,
+        gui_flag: event.newData?.gui_flag,
+        org_id: event.newData?.org_id
       }
     });
 
     const { newData } = event;
 
-    // 🎯 確保日期欄位被正確保存
-    if (!newData.tpy_bdate && event.oldData?.tpy_bdate) {
-      console.warn('⚠️ tpy_bdate 遺失，從舊資料復原:', event.oldData.tpy_bdate);
-      newData.tpy_bdate = event.oldData.tpy_bdate;
+    // A類型特殊處理：自動設定結束日期等於開始日期
+    if (capType === 'A' && newData.tpy_bdate) {
+      newData.tpy_edate = newData.tpy_bdate;
+      console.log(`✅ A類型自動設定 tpy_edate = tpy_bdate: ${newData.tpy_edate}`);
     }
 
-    if (!newData.tpy_edate && event.oldData?.tpy_edate) {
-      console.warn('⚠️ tpy_edate 遺失，從舊資料復原:', event.oldData.tpy_edate);
-      newData.tpy_edate = event.oldData.tpy_edate;
-    }
+    // 🎯 關鍵修正：確保所有重要欄位都被正確保存
+    const criticalFields = [
+      'tpy_bdate', 'tpy_edate', 'tpy_type', 'tpy_qty', 'tpy_unitamt',
+      'tpy_amount', 'tpy_totalamt', 'day_account', 'interval',
+      'down_payment', 'period_nos', 'tpy_1stamt', 'gui_flag',
+      'tpy_rate', 'org_id'
+    ];
+
+    criticalFields.forEach(field => {
+      if (!newData[field] && event.oldData?.[field] !== undefined && event.oldData?.[field] !== null) {
+        console.warn(`⚠️ ${field} 遺失，從舊資料復原:`, event.oldData[field]);
+        newData[field] = event.oldData[field];
+      }
+    });
 
     // 🔥 強制檢查是否有變更
     const hasChanges = this.hasDataChanges(newData);
-    const originallySelected = newData._originalSelected || false;
+    // 🎯 直接用 data_source 判斷是否為合約原有項目
+    const isContractExisting = newData.data_source === 'CONTRACT_EXISTING';
 
-    // ... 其餘狀態邏輯不變 ...
+    // 🎯 狀態邏輯判定
+    if (newData.is_selected) {
+      // ✅ 被勾選
+      if (isContractExisting) {
+        // 原本就存在於合約的項目
+        if (newData._status === 'deleted') {
+          // 從刪除狀態恢復
+          newData._status = hasChanges ? 'modified' : 'original';
+          console.log(`✅ 項目 ${newData.cap_item} 恢復勾選，狀態: deleted → ${newData._status}`);
+        } else {
+          // 檢查資料是否有變更
+          if (hasChanges) {
+            newData._status = 'modified';
+            console.log(`📝 項目 ${newData.cap_item} 資料已變更，狀態: → modified`);
+          } else {
+            newData._status = 'original';
+            console.log(`✅ 項目 ${newData.cap_item} 無變更，狀態: → original`);
+          }
+        }
+      } else {
+        // 原本不存在於合約的項目 → 新增
+        newData._status = 'new';
+        console.log(`✅ 項目 ${newData.cap_item} 勾選，狀態: 無 → new`);
+      }
+    } else {
+      // ❌ 取消勾選
+      if (isContractExisting) {
+        // 原本存在於合約的項目 → 刪除
+        newData._status = 'deleted';
+        console.log(`❌ 項目 ${newData.cap_item} 取消勾選，狀態: → deleted`);
+      } else {
+        // 原本不存在於合約的項目 → 回到無狀態
+        delete newData._status;
+        console.log(`❌ 項目 ${newData.cap_item} 取消勾選，狀態: new → 無狀態`);
+      }
+    }
 
     // 更新原始資料
     const originalIndex = this.originalFareData[capType].findIndex(item => item.id === newData.id);
     if (originalIndex > -1) {
-      // 🎯 確保更新時保留日期欄位
+      // 🎯 確保更新時保留所有欄位
       const updatedItem = {
         ...this.originalFareData[capType][originalIndex],
         ...newData,
-        // 明確保留日期欄位
+        // 明確保留關鍵欄位
         tpy_bdate: newData.tpy_bdate,
-        tpy_edate: newData.tpy_edate
+        tpy_edate: newData.tpy_edate,
+        day_account: newData.day_account,
+        interval: newData.interval,
+        tpy_type: newData.tpy_type,
+        gui_flag: newData.gui_flag,
+        org_id: newData.org_id
       };
 
       this.originalFareData[capType][originalIndex] = updatedItem;
@@ -1332,7 +1449,10 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
       console.log('📝 更新原始資料:', {
         項目: newData.cap_item,
         更新後tpy_bdate: updatedItem.tpy_bdate,
-        更新後tpy_edate: updatedItem.tpy_edate
+        更新後tpy_edate: updatedItem.tpy_edate,
+        更新後day_account: updatedItem.day_account,
+        更新後interval: updatedItem.interval,
+        更新後gui_flag: updatedItem.gui_flag
       });
     }
 
@@ -1351,11 +1471,12 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
     console.log(`🔄 ${capType} 類型項目選擇狀態改變`);
 
     this.fareData[capType].forEach(item => {
-      const originallySelected = item._originalSelected || false;
+      // 🎯 直接用 data_source 判斷是否為合約原有項目
+      const isContractExisting = item.data_source === 'CONTRACT_EXISTING';
 
       if (item.is_selected) {
         // ✅ 被勾選
-        if (originallySelected) {
+        if (isContractExisting) {
           // 原本就存在於合約的項目
           if (item._status === 'deleted') {
             // 從刪除狀態恢復
@@ -1378,7 +1499,7 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
         }
       } else {
         // ❌ 取消勾選
-        if (originallySelected) {
+        if (isContractExisting) {
           // 原本存在於合約的項目 → 刪除
           item._status = 'deleted';
           console.log(`❌ 項目 ${item.cap_item} 取消勾選，狀態: → deleted`);
@@ -1401,7 +1522,7 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
       return false;
     }
 
-    // 定義需要比較的欄位
+    // 🎯 擴充需要比較的欄位列表
     const editableFields = [
       'tpy_bdate', 'tpy_edate', 'tpy_type', 'tpy_qty', 'tpy_unitamt',
       'tpy_amount', 'tpy_totalamt', 'day_account', 'interval',
@@ -1420,7 +1541,9 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
       if (normalizedCurrent !== normalizedOriginal) {
         console.log(`📝 項目 ${item.cap_item} 欄位 ${field} 有變更:`, {
           原始: originalValue,
-          目前: currentValue
+          目前: currentValue,
+          標準化原始: normalizedOriginal,
+          標準化目前: normalizedCurrent
         });
         return true;
       }

@@ -88,7 +88,7 @@
         >
           {{ col.header }}
         </th>
-        <th *ngIf="!readonly" style="width: 8rem; text-align: center">操作</th>
+        <th *ngIf="!readonly" [ngStyle]="getActionHeaderStyle()">操作</th>
       </tr>
     </ng-template>
 
@@ -146,6 +146,15 @@
                 <p-inputNumber
                   *ngSwitchCase="'number'"
                   [(ngModel)]="rowData[col.field]"
+                  [minFractionDigits]="
+                    getNumberInputConfig(col).minFractionDigits
+                  "
+                  [maxFractionDigits]="
+                    getNumberInputConfig(col).maxFractionDigits
+                  "
+                  [step]="getNumberInputConfig(col).step"
+                  mode="decimal"
+                  [useGrouping]="false"
                 ></p-inputNumber>
 
                 <!-- 下拉選單 -->
@@ -276,7 +285,7 @@
         </td>
 
         <!-- 操作按鈕 -->
-        <td *ngIf="!readonly" style="text-align: center">
+        <td *ngIf="!readonly" [ngStyle]="getActionBodyStyle()">
           <div class="edit-buttons flex justify-content-center gap-2">
             <!-- 編輯按鈕 -->
             <button
@@ -411,7 +420,7 @@
                   >
                     {{ col.header }}
                   </th>
-                  <th *ngIf="!readonly" style="width: 8rem; text-align: center">
+                  <th *ngIf="!readonly" [ngStyle]="getActionHeaderStyle()">
                     操作
                   </th>
                 </tr>
@@ -470,6 +479,15 @@
                         <p-inputNumber
                           *ngSwitchCase="'number'"
                           [(ngModel)]="detailData[col.field]"
+                          [minFractionDigits]="
+                            getNumberInputConfig(col).minFractionDigits
+                          "
+                          [maxFractionDigits]="
+                            getNumberInputConfig(col).maxFractionDigits
+                          "
+                          [step]="getNumberInputConfig(col).step"
+                          mode="decimal"
+                          [useGrouping]="false"
                         ></p-inputNumber>
 
                         <!-- 下拉選單 -->
@@ -587,7 +605,7 @@
                   </td>
 
                   <!-- 詳細資料操作按鈕 -->
-                  <td *ngIf="!readonly" style="text-align: center">
+                  <td *ngIf="!readonly" [ngStyle]="getDetailActionBodyStyle()">
                     <div
                       class="detail-edit-buttons flex justify-content-center gap-2"
                     >
