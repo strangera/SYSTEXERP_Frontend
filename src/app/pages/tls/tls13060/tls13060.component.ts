@@ -19,22 +19,22 @@ import { TableComponent } from '../../../shared/componentkit/table/table.compone
 import { TranslateModule } from '@ngx-translate/core';
 
 @Component({
-    selector: 'app-tls13060',
-    templateUrl: './tls13060.component.html',
-    standalone: true,
-    imports: [
-        MenubarComponent,
-        AccordionModule,
-        FormsModule,
-        ReactiveFormsModule,
-        InputTextComponent,
-        MultiSelectComponent,
-        CalendarRangeComponent,
-        RadiobuttonYNComponent,
-        ButtonComponent,
-        TableComponent,
-        TranslateModule,
-    ],
+  selector: 'app-tls13060',
+  templateUrl: './tls13060.component.html',
+  standalone: true,
+  imports: [
+    MenubarComponent,
+    AccordionModule,
+    FormsModule,
+    ReactiveFormsModule,
+    InputTextComponent,
+    MultiSelectComponent,
+    CalendarRangeComponent,
+    RadiobuttonYNComponent,
+    ButtonComponent,
+    TableComponent,
+    TranslateModule,
+  ],
 })
 export class TLS13060Component extends BasicQueryPageComponent<TLS13060ResponseItem> implements OnInit {
   queryForm = this.formBuilder.group({
