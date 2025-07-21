@@ -10,6 +10,7 @@ import { TableModule } from 'primeng/table';
 import { DropDownListService, POS2004Item, TLTTALENT_CHARGEData } from '../../../../service/utility/dropDownList.service';
 import { POS5007Data } from '../../../../service/api/tls/tls24010.service';
 import { ButtonModule } from 'primeng/button';
+import { NotificationService } from '@shared/component/notification-message/notification.service';
 @UntilDestroy()
 @Component({
   selector: 'app-tls24010-pos5007',
@@ -34,7 +35,10 @@ export class Tls24010Pos5007Component implements OnInit {
   @Input() TLT_Name?: string//專櫃名稱
   @Input() store_way?: string// 1為專櫃 2=自營
   @Input() talent_id?: number//專櫃編號
-  @Input() submitted = false;
+  @Input() data: POS5007Data[] = []
+  @Input() isFormCreateable?: boolean
+  @Input() isFormEditable?: boolean
+  @Input() isFormReadable?: boolean
   index = 1
   POS5007Data: POS5007Data[] = [];
   POS5007SelectedItems: POS5007Data[] = [];
@@ -43,22 +47,28 @@ export class Tls24010Pos5007Component implements OnInit {
   trackByRow = (index: number, item: POS5007Data) => { return item?.id || index; }
   constructor(
     private readonly dropDownListService: DropDownListService,
-  ) { }
+    private readonly messageService: NotificationService
+  ) {
+  }
   ngOnInit(): void {
-    console.log(this.store_way);
+    if (this.data.length > 0 && !this.isFormCreateable) {
+      this.POS5007Data = [...this.data];
+    }
+    if (this.TLT_No) {
+      this.dropDownListService.queryPOS2004_DropDownList(this.TLT_No).pipe(untilDestroyed(this)).subscribe((data) => {
+        if (data.Data.length > 0) {
+          this.POS2004Options = data.Data.map((item) => ({ ...item, label: `${item.PLU_MagNo} - ${item.PLU_Name}` }));
+        } else {
+          this.messageService.errorBubble('此專櫃無銷售商品', '無法新增');
+        }
+      })
+    }
     switch (this.store_way) {
       case '2':// 自營櫃位
-        {
-          if (this.TLT_No) {
-            this.dropDownListService.queryPOS2004_DropDownList(this.TLT_No).pipe(untilDestroyed(this)).subscribe((data) => {
-              this.POS2004Options = data.Data.map((item) => ({ ...item, label: `${item.PLU_MagNo} - ${item.PLU_Name}` }));
-            })
-          }
-          this.dropDownListService.queryTLTTALENT_CHARGE_DropDownList(this.talent_id).pipe(untilDestroyed(this)).subscribe((data) => {
-            this.tlt_idOptions = data.Data.map((item) => ({ ...item, label: `${item.tlt_id} - ${item.tlt_id_desc}` }));
-          })
-          break;
-        }
+        this.dropDownListService.queryTLTTALENT_CHARGE_DropDownList(this.talent_id).pipe(untilDestroyed(this)).subscribe((data) => {
+          this.tlt_idOptions = data.Data.map((item) => ({ ...item, label: `${item.tlt_id} - ${item.tlt_id_desc}` }));
+        })
+        break;
       case '1':// 專櫃櫃位
         break;
       default: break;
@@ -68,8 +78,8 @@ export class Tls24010Pos5007Component implements OnInit {
   insertRow(): void {
     this.POS5007Data.push({
       id: this.index + 1,
-      PLU_MagNo: this.store_way === '1' ? this.TLT_No : undefined,
-      PLU_No: this.store_way === '1' ? this.TLT_No : undefined,
+      PLU_MagNo: this.store_way === '1' ? this.POS2004Options[0].PLU_MagNo : undefined,
+      PLU_No: this.store_way === '1' ? this.POS2004Options[0].PLU_No : undefined,
       PLU_Name: this.store_way === '1' ? this.TLT_Name : undefined,
       TXN_Qty: 0,
       PLU_SalePrc: 0,

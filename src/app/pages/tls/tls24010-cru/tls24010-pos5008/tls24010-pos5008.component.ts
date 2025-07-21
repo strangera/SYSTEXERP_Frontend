@@ -35,7 +35,11 @@ import { DropdownComponent } from '../../../../shared/componentkit/dropdown/drop
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class Tls24010Pos5008Component implements OnInit {
-  @Input() submitted = false;
+  @Input() data: POS5008Data[] = [];
+  @Input() isFormCreateable?: boolean
+  @Input() isFormEditable?: boolean
+  @Input() isFormReadable?: boolean
+  @Input() submitted?: boolean
   form?: FormGroup;
   POS5008FormArray?: FormArray;
   POS5008Data: POS5008Data[] = [];
@@ -57,6 +61,9 @@ export class Tls24010Pos5008Component implements OnInit {
     });
   }
   ngOnInit(): void {
+    if (this.data.length > 0 && !this.isFormCreateable) {
+      this.POS5008Data = [...this.data];
+    }
     //--付款明細------------------------------------------------------
     this.dropDownListService.queryPOS1006_DropDownList().pipe(untilDestroyed(this)).subscribe((res) => {
       this.PAY_TypeOptions = res.Data.map((item) => ({ ...item, label: item.Name }));
