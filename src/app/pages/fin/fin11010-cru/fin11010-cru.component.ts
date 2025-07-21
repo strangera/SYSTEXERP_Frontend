@@ -117,8 +117,7 @@ export class FIN11010CRUComponent extends BasicCruPageComponent<FIN11010Data> im
               REP_OrgCode: formValue.REP_OrgCode,
               STO_Direct: formValue.STO_Direct,
               STO_HQUniform: formValue.STO_HQUniform,
-              // STO_ApplyFlag: formValue.STO_ApplyFlag, FIXME: 這裡新增資料帶入時為空
-              STO_ApplyFlag: "1",
+              STO_ApplyFlag: formValue.STO_ApplyFlag,
               STO_ApplyName: formValue.STO_ApplyName,
               STO_ApplyTEL: formValue.STO_ApplyTEL,
               STO_ApplyTEL_ext: formValue.STO_ApplyTEL_ext,
