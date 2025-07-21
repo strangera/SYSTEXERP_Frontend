@@ -1,4 +1,4 @@
-<label [for]="controlName">{{ label }}
+<label [hidden]="!showLabel" [for]="controlName">{{ label }}
   <span *ngIf="isRequired" class="required">*</span>
 </label>
 <p-inputGroup id="input-number">
@@ -17,5 +17,5 @@
   </ng-template>
   <p-inputGroupAddon *ngIf="suffix">{{ suffix }}</p-inputGroupAddon>
 </p-inputGroup>
-<app-control-messages [onerror]="submitted || (control.touched && control.invalid)"
+<app-control-messages [hidden]="!showErrorMessage" [onerror]="submitted || (control.touched && control.invalid)"
   [control]="control"></app-control-messages>

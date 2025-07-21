@@ -9,37 +9,27 @@
       [headerStyleClass]="'query-accordionTab'">
       <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text label="營業人統編" controlName="tax_id" [control]="queryForm.controls.tax_id"
-              [submitted]="submitted" placeholder="最長8個字申"></app-input-text>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text label="營業人名稱" controlName="tax_name" [control]="queryForm.controls.tax_name"
-              [submitted]="submitted" placeholder="最長60個字申"></app-input-text>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text label="營業地址" controlName="address" [control]="queryForm.controls.address"
-              [submitted]="submitted" placeholder="最長100個字申"></app-input-text>
-          </div>
-
-        </div>
-        <div class="grid p-fluid">
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="總繳代號" controlName="main_code" [options]="mainCodeOptions" optionLabel="Label"
-              optionValue="No" [control]="queryForm.controls.main_code" [submitted]="submitted"
-              placeholder="各單位(分支機構)分別申報, 單一機構報總"></app-dropdown>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="審核狀態" controlName="review_status" [options]="reviewStatusOptions" optionLabel="Label"
-              optionValue="No" [control]="queryForm.controls.review_status" [submitted]="submitted"
-              placeholder="是, 否"></app-dropdown>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar-range calendarType="dateMonthRange" label="申報年月"
-              [startControl]="queryForm.controls.declare_month_start"
-              [endControl]="queryForm.controls.declare_month_end" [submitted]="submitted"></app-calendar-range>
-          </div>
-
+          <!-- 營業人統編 -->
+          <app-input-text class="col-12 md:col-6 lg:col-4" label="營業人統編" controlName="STO_Uniform"
+            [control]="queryForm.controls.STO_Uniform" [submitted]="submitted" placeholder="最長8個字"></app-input-text>
+          <!-- 營業人名稱 -->
+          <app-input-text class="col-12 md:col-6 lg:col-4" label="營業人名稱" controlName="STO_TaxName"
+            [control]="queryForm.controls.STO_TaxName" [submitted]="submitted" placeholder="最長60個字"></app-input-text>
+          <!-- 營業地址 -->
+          <app-input-text class="col-12 md:col-6 lg:col-4" label="營業地址" controlName="STO_Addr"
+            [control]="queryForm.controls.STO_Addr" [submitted]="submitted" placeholder="最長100個字"></app-input-text>
+          <!-- 總繳代號 -->
+          <app-multi-select class="col-12 md:col-6 lg:col-4" label="總繳代號" controlName="REP_OrgCode"
+            [options]="orgCodeOptions" optionLabel="Name" optionValue="No" [control]="queryForm.controls.REP_OrgCode"
+            [submitted]="submitted" placeholder="各單位(分支機構)分別申報, 單一機構報總"></app-multi-select>
+          <!-- 審核狀態 -->
+          <app-multi-select class="col-12 md:col-6 lg:col-4" label="審核狀態" controlName="STO_StatusList"
+            [options]="reviewStatusOptions" optionLabel="Name" optionValue="No"
+            [control]="queryForm.controls.STO_StatusList" [submitted]="submitted" placeholder="是, 否"></app-multi-select>
+          <!-- 申報年月起迄 -->
+          <app-calendar-range class="col-12 md:col-6 lg:col-4" calendarType="dateMonthRange" label="申報年月"
+            [startControl]="queryForm.controls.REP_GUIYM_start" [endControl]="queryForm.controls.REP_GUIYM_end"
+            [submitted]="submitted"></app-calendar-range>
         </div>
         <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
           <app-button btnType="clear"></app-button>
@@ -50,11 +40,10 @@
   </p-accordion>
 </div>
 <div class="card">
-  <div class="col-13">
-    <app-table tableKey="FIN11010" [data]="data" [columns]="columns" (edit)="onEdit($event)" (detail)="onDetail($event)"
-      [selectedItems]="selectedItems" (selectionChange)="selectedItems = $event" (delete)="onDelete($event)"
-      [showDelete]="false" [showCheckBox]="false" dataKey="id" [multiSortMeta]="[{ field: 'tax_id', order: 1 }]"
-      [totalRecords]="totalRecords" (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"
-      [lazy]="true" [loading]="loading" [isRowSelectable]="isRowSelectable" [showManage]="false"></app-table>
-  </div>
+  <app-table tableKey="FIN11010" [data]="data" [columns]="columns" (edit)="onEdit($event)" (detail)="onDetail($event)"
+    [selectedItems]="selectedItems" (selectionChange)="selectedItems = $event" [showDelete]="false"
+    [showCheckBox]="false" dataKey="id" [multiSortMeta]="[{ field: 'id', order: 1 }]" [totalRecords]="totalRecords"
+    (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [lazy]="true" [loading]="loading"
+    [addButton]="addButton" [buttonsLoading]="btnLoading" [editDisabled]="editDisabled">
+  </app-table>
 </div>

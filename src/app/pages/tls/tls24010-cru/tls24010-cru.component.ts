@@ -2,7 +2,7 @@ import { InputTextComponent } from './../../../shared/componentkit/input-text/in
 import { Component, OnInit, ViewChild } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
-import { TLS24010Data, Tls24010Service } from '../../../service/api/tls/tls24010.service';
+import { POS5007Data, POS5008Data, TLS24010Data, Tls24010Service } from '../../../service/api/tls/tls24010.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { PanelModule } from 'primeng/panel';
@@ -25,6 +25,7 @@ import { DropdownModule } from 'primeng/dropdown';
 import { Tls24010Pos5008Component } from './tls24010-pos5008/tls24010-pos5008.component';
 import { Tls24010Pos5007Component } from './tls24010-pos5007/tls24010-pos5007.component';
 import { finalize, tap } from 'rxjs';
+import { formatTimeToHHMMSS } from '@shared/componentkit/table/table.model';
 @Component({
   selector: 'app-tls24010-cru',
   templateUrl: './tls24010-cru.component.html',
@@ -38,6 +39,8 @@ export class TLS24010CRUComponent extends BasicCruPageComponent<TLS24010Data | u
   TLT_Name?: string; //專櫃名稱
   store_way?: string // 1為專櫃 2=自營
   talent_id?: number; //專櫃編號
+  PaymentDetailsList: POS5008Data[] = [];
+  ProductDetailList: POS5007Data[] = [];
   dataForm = this.formBuilder.nonNullable.group({
     TXN_Date: [{ value: '', disabled: true }],           //disabled 銷售日期
     ECR_No: [{ value: '', disabled: true }],             //disabled 收銀機號 pos1002.ecr_no
@@ -60,7 +63,7 @@ export class TLS24010CRUComponent extends BasicCruPageComponent<TLS24010Data | u
     TXN_GUIVehicle: [{ value: null, disabled: true }, [Validators.maxLength(20)]], //電子發票載具卡號 若有值則 TXN_GUI_CarrType 固定為3J0002，TXN_GUI_CarrId與TXN_GUI_CarrIdEx內容與此欄位相同
     TXN_GUI_CarrIdEx: [{ value: null, disabled: true }, [Validators.maxLength(64)]], //電子發票載具ID顯碼
     TXN_GUI_CarrId: [{ value: null, disabled: true }, [Validators.maxLength(64)]], //電子發票載具ID隱碼
-    TXN_GUIRemark: [{ value: null, disabled: true }], //電子發票防偽隨機碼 由系統依據自訂公式計算取得
+    TXN_GUIRemark: [{ value: '系統自動產生', disabled: true }], //電子發票防偽隨機碼 由系統依據自訂公式計算取得
     TXN_PrintTimes: [null], //紙本發票列印狀態(若列印電子發票紙本證明連則為1，其他則為0) 顯示 是/否
     TXN_GUI_Donate: ['N'], //發票捐贈狀態，Y=是、N=否
     TXN_GUILoveCode: [{ value: null, disabled: true }], //捐贈社福團體代碼，若TXN_GUI_Donate為Y，則必須輸入此欄位
@@ -75,8 +78,8 @@ export class TLS24010CRUComponent extends BasicCruPageComponent<TLS24010Data | u
   ) { super(); }
   ngOnInit(): void {
     this.initializePage('TLS24010', this.dataForm);
+    const rowDataTyped = this.rowdata as TLS24010Data;
     if (this.isFormCreateable && this.rowdata) {
-      const rowDataTyped = this.rowdata as TLS24010Data;
       this.dataForm.patchValue({
         TXN_Date: rowDataTyped.TXN_Date,
         ECR_No: rowDataTyped.ECR_No,
@@ -86,6 +89,19 @@ export class TLS24010CRUComponent extends BasicCruPageComponent<TLS24010Data | u
       this.store_way = rowDataTyped.store_way;
       this.talent_id = rowDataTyped.talent_id;
       this.TXN_GUIPaper = rowDataTyped.TXN_GUIPaper
+    }
+    if (!this.isFormCreateable) {
+      this.TXN_GUIPaper = rowDataTyped.TXN_GUIPaper
+      const body = {
+        SYS_StoreNo: this.authService.currentUserValue?.SYS_StoreNo ?? '',
+        TXN_Date: rowDataTyped.TXN_Date,
+        ECR_No: rowDataTyped.ECR_No,
+        TXN_No: Number(rowDataTyped.TXN_No),
+      }
+      this.tls24010Service.queryTLS24010_Detail(body).pipe(untilDestroyed(this)).subscribe((data) => {
+        this.ProductDetailList = data.Data[0].ProductDetailList;
+        this.PaymentDetailsList = data.Data[0].PaymentDetailsList;
+      })
     }
     // 查詢收銀員設定檔(POS2001)
     this.dropDownListService.queryPOS2001_DropDownList().pipe(untilDestroyed(this)).subscribe((data) => {
@@ -116,7 +132,6 @@ export class TLS24010CRUComponent extends BasicCruPageComponent<TLS24010Data | u
     })
     // 監聽 電子載具種類 的變化
     txnGuiCarrTypeControl?.valueChanges.pipe(untilDestroyed(this), tap(() => { // 使用 tap 進行副作用操作
-      // 無論如何都先清空並禁用相關欄位
       txnGuiCarrIdExControl?.disable();
       txnGuiCarrIdControl?.setValue(null, { emitEvent: false });
       txnGuiCarrIdExControl?.setValue(null, { emitEvent: false });
@@ -150,24 +165,57 @@ export class TLS24010CRUComponent extends BasicCruPageComponent<TLS24010Data | u
   }
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
+      if (this.pos5008Comp?.POS5008SelectedItems.length === 0) {
+        this.messageService.errorBubble('請至少選擇一筆支付工具');
+        this.loading = false;
+        return
+      }
+      const childValid = this.pos5008Comp?.validate();
+      if (!childValid) {
+        this.messageService.errorBubble('支付工具資料不完整');
+        this.loading = false;
+        return;
+      }
       const pos5007Data = this.pos5007Comp?.POS5007Data ?? [];
-      const pos5008Data = this.pos5008Comp?.POS5008SelectedItems ?? [];
+      const pos5008Data = this.pos5008Comp?.POS5008Data.map((item, i) => {
+        const formGroup = this.pos5008Comp?.posFormArrayControls[i];
+        return {
+          ...item,
+          ...formGroup?.getRawValue()
+        };
+      }).filter(item => item.selected) ?? [];
       const body = {
         Store_way: this.store_way,
+        TXN_GUIPaper: this.TXN_GUIPaper,
         ...frm.getRawValue(),
+        TXN_GUIRemark: undefined,
+        TXN_No: this.isFormCreateable ? undefined : frm.getRawValue().TXN_No,
+        TXN_Time: formatTimeToHHMMSS(frm.getRawValue().TXN_Time),
         POS5007_INFO: pos5007Data.map((item) => {
           if (typeof item.PLU_MagNo === 'object' && item.PLU_MagNo !== null) {
             return {
-              ...item,
               PLU_MagNo: item.PLU_MagNo.PLU_MagNo,
-              PLU_No: item.PLU_MagNo.PLU_No
+              PLU_No: item.PLU_MagNo.PLU_No,
+              TXN_Qty: item.TXN_Qty,
+              PLU_SalePrc: item.PLU_SalePrc,
+              TXN_Disc: item.TXN_Disc,
+              TXN_SaleAmt: item.TXN_SaleAmt,
+              tlt_id: item.TLT_ID,
+              PLU_TaxType: item.PLU_TaxType,
+              TXN_DiscCode: item.TXN_DiscCode
             };
           }
           return item;
         }),
         POS5008_INFO: pos5008Data.map((item) => {
           return {
-            ...item,
+            PAY_No: item.PAY_No,
+            TXN_PayAmt: item.TXN_PayAmt,
+            CRD_Type: item.CRD_Type !== '' ? item.CRD_Type : undefined,
+            CRD_No: item.CRD_Type !== '' ? item.CRD_No : undefined,
+            TXN_CouponNo: item.TXN_CouponNo != '' ? item.TXN_CouponNo : undefined,
+            TXN_PayDesc: item.TXN_PayDesc != '' ? item.TXN_PayDesc : undefined,
+            TERM_No: item.TERM_No !== '' ? Number(item.TERM_No) : undefined
           };
         }),
       }
@@ -177,3 +225,5 @@ export class TLS24010CRUComponent extends BasicCruPageComponent<TLS24010Data | u
     });
   }
 }
+
+

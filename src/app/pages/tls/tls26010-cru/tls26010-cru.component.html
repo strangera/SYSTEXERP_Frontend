@@ -1,41 +1,69 @@
 <div class="card">
   <div class="grid align-items-center">
-    <div class="col" style="flex: 1">
+    <div class="col"
+         style="flex: 1">
       <app-menubar [ProgNo]="ProgNo"></app-menubar>
     </div>
   </div>
-  <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
-    <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
+  <p-panel [header]="formTitle | translate"
+           class="line-height-3 m-0">
+    <form [formGroup]="dataForm"
+          id="dataForm"
+          (ngSubmit)="onSubmit(dataForm)">
       <div class="grid p-fluid">
         <div class="col-12 md:col-6 lg:col-4">
-          <app-calendar-range calendarType="dateRange" label="截止日期" [startControl]="dataForm.controls.age"
-            [endControl]="dataForm.controls.age" [submitted]="submitted">
+          <app-input-text label="預售活動編號"
+                          controlName="pod_no"
+                          [control]="dataForm.controls.pod_no"
+                          [submitted]="submitted">
+          </app-input-text>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text label="活動名稱"
+                          controlName="pod_desc"
+                          [control]="dataForm.controls.pod_desc"
+                          [submitted]="submitted">
+          </app-input-text>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-calendar-range calendarType="dateRange"
+                              label="活動日期"
+                              [startControl]="dataForm.controls.pod_sdate"
+                              [endControl]="dataForm.controls.pod_edate"
+                              [submitted]="submitted">
           </app-calendar-range>
         </div>
-
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text label="核准狀態"
+                          controlName="pod_status"
+                          [control]="dataForm.controls.pod_status"
+                          [disabled]="true">
+          </app-input-text>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text label="核准人員"
+                          controlName="approved_usr_name"
+                          [control]="dataForm.controls.approved_usr_name"
+                          [disabled]="true">
+          </app-input-text>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text label="核准日期"
+                          controlName="approved_date"
+                          [control]="dataForm.controls.approved_date"
+                          [disabled]="true">
+          </app-input-text>
+        </div>
       </div>
     </form>
     <div class="col pt-4">
       <div class="grid justify-content-end">
-        <app-button btnType="cancel" (click)="onCancel()"></app-button>
-        <app-button btnType="submit" (click)="submitForm(dataForm)" *ngIf="isFormEditable"></app-button>
+        <app-button btnType="cancel"
+                    (click)="onCancel()"></app-button>
+        <app-button btnType="submit"
+                    (click)="submitForm(dataForm)"
+                    *ngIf="isFormEditable"></app-button>
       </div>
     </div>
   </p-panel>
-</div>
-<app-button btnType="create" label="收銀機號查詢" icon="pi pi-search"></app-button>
-<div class="card">
-  <div class="col-12">
-    <app-table [showCheckBox]="true" [data]="data" [columns]="columns" (edit)="onEdit($event)"
-      (detail)="onDetail($event)">
-    </app-table>
-  </div>
-</div>
-<app-button btnType="create" label="專櫃編號查詢" icon="pi pi-search"></app-button>
-<div class="card">
-  <div class="col-12">
-    <app-table [showCheckBox]="true" [data]="data2" [columns]="columns2" (edit)="onEdit($event)"
-      (detail)="onDetail($event)">
-    </app-table>
-  </div>
 </div>

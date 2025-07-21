@@ -49,16 +49,18 @@ export interface POS5007Data {
 }
 
 export interface POS5008Data {
+  ID?: number;
   id?: number; // 唯一識別碼
-  PAY_No?: string; // 付款編號
+  PAY_No?: string; // 付款編號          // 傳給後端
   PAY_Name?: string; // 付款名稱
   PAY_Type?: string; // 付款別
-  TXN_PayAmt?: number; // 付款金額
-  CRD_Type?: string; // 信用卡別
-  TERM_No?: string; // 期別
-  CRD_No?: string,
-  TXN_CouponNo?: string,
-  TXN_PayDesc?: string,
+  TXN_PayAmt?: number; // 付款金額       // 傳給後端
+  CRD_Type?: string; // 信用卡別         // 傳給後端
+  CRD_No?: string,                      // 傳給後端
+  TXN_CouponNo?: string,               // 傳給後端
+  TXN_PayDesc?: string,               // 傳給後端
+  TERM_No?: string; // 期別              // 傳給後端
+  selected?: boolean
 }
 
 export interface InsertTLS24010Payload {

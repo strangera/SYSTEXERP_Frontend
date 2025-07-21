@@ -8,6 +8,7 @@ import { TLS41010Service } from '../../../service/api/tls/tls41010.service';
 import { TLS46020Service } from '../../../service/api/tls/tls46020.service';
 import { TLS41010Data, TLS41010Item } from '../tls41010/tls41010.model';
 import { untilDestroyed } from '@ngneat/until-destroy';
+import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { finalize } from 'rxjs';
 import {
   salTypeOptions,
@@ -49,9 +50,6 @@ import { Tls46010Service } from '../../../service/api/tls/tls46010.service';
   ],
 })
 export class TLS41010CRUComponent extends BasicCruPageComponent<TLS41010Data> implements OnInit {
-  isCopyMode = false;
-  copyForm!: FormGroup;
-
   dataForm = this.formBuilder.nonNullable.group({
     ECR_No: ['', [Validators.required, Validators.maxLength(10)]],
     ECR_Name: ['', [Validators.required, Validators.maxLength(20)]],
@@ -62,7 +60,7 @@ export class TLS41010CRUComponent extends BasicCruPageComponent<TLS41010Data> im
     ECR_LocNo: ['', [Validators.maxLength(10)]],
     ECR_USR_No: ['', [Validators.maxLength(8)]],
     ECR_USR_Name: ['', [Validators.maxLength(20)]],
-    ECR_Status: [''],
+    ECR_Status: ['A'],
     ECR_ActiveDate: [null],
     ECR_CloseDate: [null],
     ECR_ComName: ['', [Validators.maxLength(64)]],
@@ -111,7 +109,7 @@ export class TLS41010CRUComponent extends BasicCruPageComponent<TLS41010Data> im
     ECR_GUI_PeriodQty: [50, [Validators.min(0), Validators.max(99999999)]],
     ECR_GUI_MinQty: [50, [Validators.min(0), Validators.max(99999999)]],
     ECR_SettleDD: ['T', [Validators.required, Validators.maxLength(2)]],
-    ECR_SettleHHNN: ['', [Validators.required, Validators.maxLength(4)]],
+    ECR_SettleHHNN: [null, [Validators.required]],
     ECR_KBLevel: ['', [Validators.maxLength(6)]],
     ECR_KBType: ['', [Validators.maxLength(6)]],
     ECR_Scanner: ['', [Validators.maxLength(20)]],
@@ -178,6 +176,7 @@ export class TLS41010CRUComponent extends BasicCruPageComponent<TLS41010Data> im
   }
 
   ngOnInit(): void {
+    this.initializePage('TLS41010', this.dataForm);
     const disableFields = [
       'ECR_KBLevel',
       'ECR_KBType',
@@ -209,50 +208,30 @@ export class TLS41010CRUComponent extends BasicCruPageComponent<TLS41010Data> im
     disableFields.forEach(field => {
       this.dataForm.get(field)?.disable();
     });
-    this.copyForm = this.formBuilder.group({
-      sourceECR: ['', Validators.required],
-      targetECRs: ['', Validators.required],
-      isAllCopy: [false]
+
+    this.dropDownListService.queryPOS1002TML_DropDownList().subscribe(option => {
+      this.ECR_TmplNo_Option = option.Data;
     });
 
-    this.route.queryParams.subscribe(params => {
-      if (params['mode'] === 'copy') {
-        this.isCopyMode = true;
+    this.dropDownListService.queryPOS10015_DropDownList().subscribe(option => {
+      this.ECR_SrvIP_Option = option.Data.map(item => ({
+        ...item, label: `${item.No} ${item.Name}`,
+      }));
+    });
+    this.dataForm.get('ECR_TmplNo')?.valueChanges.subscribe((tmplNo) => {
+      if (tmplNo) {
+        this.callTLS46020Api(tmplNo);
       }
     });
-
-    if (!this.isCopyMode) {
-      this.initializePage('TLS41010', this.dataForm);
-      this.dropDownListService.queryPOS1002TML_DropDownList().subscribe(option => {
-        this.ECR_TmplNo_Option = option.Data;
-      });
-
-      this.dropDownListService.queryPOS10015_DropDownList().subscribe(option => {
-        this.ECR_SrvIP_Option = option.Data.map(item => ({
-          ...item, label: `${item.No} ${item.Name}`,
-        }));
-      });
-
-      this.dataForm.get('ECR_TmplNo')?.valueChanges.subscribe((tmplNo) => {
-        if (tmplNo) {
-          this.callTLS46020Api(tmplNo);
-        }
-      });
-
-      this.dataForm.get('ECR_Type')?.valueChanges.subscribe((value) => {
-        this.checkTltNoRequired(value);
-      });
-      this.checkTltNoRequired(this.dataForm.get('ECR_Type')?.value ?? '');
+    this.dataForm.get('ECR_Type')?.valueChanges.subscribe((value) => {
+      this.checkTltNoRequired(value);
+    });
+    this.checkTltNoRequired(this.dataForm.get('ECR_Type')?.value ?? '');
+    if (this.isFormCreateable) {
+      this.dataForm.get('ECR_No')?.setValue('');
+      this.dataForm.get('ECR_Status')?.setValue('A');
+      this.dataForm.get('ECR_Status')?.disable();
     }
-
-  }
-
-  onSubmitCopy(frm: FormGroup) {
-    if (frm.invalid) {
-      this.messageService.errorBubble('請完整填寫來源與目標收銀機號');
-      return;
-    }
-    console.log('Copy submit', frm.value);
   }
 
   callTLS46020Api(tmplNo: string) {
@@ -325,9 +304,17 @@ export class TLS41010CRUComponent extends BasicCruPageComponent<TLS41010Data> im
   private createBody(frm: FormGroup): TLS41010Item {
     const rawValue = frm.getRawValue();
     const storeNo = this.authService.currentUserValue?.SYS_StoreNo ?? '';
+    let settleHHNN: string | undefined = undefined;
+    if (rawValue.ECR_SettleHHNN) {
+      const date = new Date(rawValue.ECR_SettleHHNN);
+      const hh = String(date.getHours()).padStart(2, '0');
+      const mm = String(date.getMinutes()).padStart(2, '0');
+      settleHHNN = `${hh}${mm}`;
+    }
     return {
       ...rawValue,
       SYS_StoreNo: storeNo,
+
       ECR_Logo1: rawValue.ECR_Logo1 === null ? undefined : rawValue.ECR_Logo1,
       ECR_Logo2: rawValue.ECR_Logo2 === null ? undefined : rawValue.ECR_Logo2,
       ECR_Logo3: rawValue.ECR_Logo3 === null ? undefined : rawValue.ECR_Logo3,
@@ -337,6 +324,7 @@ export class TLS41010CRUComponent extends BasicCruPageComponent<TLS41010Data> im
       ECR_ActiveDate: rawValue.ECR_ActiveDate ?? undefined,
       CRT_Date: rawValue.CRT_Date ?? undefined,
       UPD_Date: rawValue.UPD_Date ?? undefined,
+      ECR_SettleHHNN: settleHHNN,
     } as TLS41010Item;
   }
 

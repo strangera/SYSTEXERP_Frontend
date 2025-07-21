@@ -315,6 +315,12 @@
               [control]="dataForm.controls.tlt_term_type"
               [submitted]="submitted"
             ></app-dropdown>
+            <small
+              class="block mt-1 text-orange-600 text-xs"
+              *ngIf="hasCommissionTypeChanged()"
+            >
+              ⚠️ 抽成別已變更，原有設定將在送出時被清除
+            </small>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown

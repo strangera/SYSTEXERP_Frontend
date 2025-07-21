@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Input, OnDestroy, OnInit, Output } from '@angular/core';
+import { Component, EventEmitter, Input, OnChanges, OnDestroy, OnInit, Output, SimpleChanges } from '@angular/core';
 import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { BasicKitComponent } from '../../componentextends/basic-kit/basic-kit.component';
 import { Subject, takeUntil } from 'rxjs';
@@ -9,22 +9,22 @@ import { InputGroupAddonModule } from 'primeng/inputgroupaddon';
 import { ControlMessagesComponent } from '../../component/control-messages/control-messages.component';
 
 @Component({
-    selector: 'app-input-number',
-    templateUrl: './input-number.component.html',
-    styleUrl: './input-number.component.scss',
-    standalone: true,
-    imports: [
-        NgIf,
-        InputGroupModule,
-        InputNumberModule,
-        FormsModule,
-        ReactiveFormsModule,
-        NgClass,
-        InputGroupAddonModule,
-        ControlMessagesComponent,
-    ],
+  selector: 'app-input-number',
+  templateUrl: './input-number.component.html',
+  styleUrl: './input-number.component.scss',
+  standalone: true,
+  imports: [
+    NgIf,
+    InputGroupModule,
+    InputNumberModule,
+    FormsModule,
+    ReactiveFormsModule,
+    NgClass,
+    InputGroupAddonModule,
+    ControlMessagesComponent,
+  ],
 })
-export class InputNumberComponent extends BasicKitComponent implements OnInit, OnDestroy {
+export class InputNumberComponent extends BasicKitComponent implements OnInit, OnChanges, OnDestroy {
   @Input() label = '';
   @Input() suffix: string | undefined | null = null;
   @Input() controlName = '';
@@ -41,6 +41,8 @@ export class InputNumberComponent extends BasicKitComponent implements OnInit, O
   @Input() incrementButtonClass = ''; // 增加按鈕樣式
   @Input() decrementButtonClass = ''; // 減少按鈕樣式
   @Input() customPlaceholder: string | undefined;
+  @Input() showLabel = true;
+  @Input() showErrorMessage = true;
   @Output() changeEvent = new EventEmitter<any>();
   @Output() blurEvent = new EventEmitter<any>();
   private destroy$ = new Subject<void>();
@@ -62,6 +64,13 @@ export class InputNumberComponent extends BasicKitComponent implements OnInit, O
       .subscribe(() => {
         this.updatePlaceholderState(); // 當狀態改變時重新評估 placeholder
       });
+  }
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['submitted']?.currentValue === true) {
+      this.updateControlState(this.control);
+      this.control.markAsTouched();
+      this.control.updateValueAndValidity({ emitEvent: false });
+    }
   }
 
   // 抽出邏輯到一個獨立的方法，方便重用

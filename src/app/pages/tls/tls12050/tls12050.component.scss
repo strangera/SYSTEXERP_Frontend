@@ -1,0 +1,11 @@
+:host ::ng-deep .ellipsis-multiselect .p-multiselect-label {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100%;
+}
+:host ::ng-deep .p-multiselect-panel .p-multiselect-items-wrapper {
+  min-width: 260px;
+}
+

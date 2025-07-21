@@ -1,6 +1,6 @@
-<label [for]="controlName" class="flex gap-1">
+<label [hidden]="!showLabel" [for]="controlName" class="flex gap-1">
   {{ label }}
-  <span *ngIf="isRequired" class="required">*</span>
+  <span *ngIf="isRequired" [hidden]="!showLabel" class="required">*</span>
   <ng-content select="header"></ng-content>
 </label>
 <div class="input-group">
@@ -16,5 +16,5 @@
   <app-button *ngIf="showButton" [label]="buttonLabel" (click)="onClick()" [loading]="buttonLoading"
     [styleClass]="'p-2'"></app-button>
 </div>
-<app-control-messages [onerror]="submitted || (control.touched && control.invalid)" [control]="control"
-  [errorForGroup]="errorForGroup"></app-control-messages>
+<app-control-messages [hidden]="!showErrorMessage" [onerror]="submitted || (control.touched && control.invalid)"
+  [control]="control" [errorForGroup]="errorForGroup"></app-control-messages>

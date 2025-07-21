@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
+import { Component, EventEmitter, Input, OnChanges, OnInit, Output, SimpleChanges } from '@angular/core';
 import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { BasicKitComponent } from '../../componentextends/basic-kit/basic-kit.component';
 import { Subject, takeUntil } from 'rxjs';
@@ -15,7 +15,7 @@ import { ControlMessagesComponent } from '../../component/control-messages/contr
   standalone: true,
   imports: [NgIf, FormsModule, InputTextModule, ReactiveFormsModule, NgClass, TooltipModule, ButtonComponent, ControlMessagesComponent]
 })
-export class InputTextComponent extends BasicKitComponent implements OnInit {
+export class InputTextComponent extends BasicKitComponent implements OnInit, OnChanges {
   @Input() label = '';
   @Input() controlName = '';
   @Input() control = new FormControl;
@@ -33,6 +33,9 @@ export class InputTextComponent extends BasicKitComponent implements OnInit {
   @Input() copyControl = new FormControl();
   @Output() clickButton = new EventEmitter<any>();
   private destroy$ = new Subject<void>();
+
+  @Input() showLabel = true;
+  @Input() showErrorMessage = true;
 
   ngOnInit(): void {
     if (this.disabled) {
@@ -56,6 +59,13 @@ export class InputTextComponent extends BasicKitComponent implements OnInit {
         this.copyControl.setValue(this.control.value, { emitEvent: false });
       }
     });
+  }
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['submitted']?.currentValue === true) {
+      this.updateControlState(this.control);
+      this.control.markAsTouched();
+      this.control.updateValueAndValidity({ emitEvent: false });
+    }
   }
   onClick(): void {
     this.clickButton.emit();

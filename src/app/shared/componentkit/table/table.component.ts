@@ -82,6 +82,7 @@ export class TableComponent extends BasicPrintDataComponent implements OnInit, O
   @Output() select = new EventEmitter<TableRowSelectEvent>();                   // 資料取消勾選(事件)
   @Output() unSelect = new EventEmitter<TableRowUnSelectEvent>();               // 資料取消勾選(事件)
   @Output() selectionChange = new EventEmitter<any>();                          // 資料勾選(事件)
+  @Output() itemClick = new EventEmitter<any>();                                // row資料點選(事件)
   // Sort 相關
   @Input() showSort = true;                                                     // 是否顯示排序
   @Input() multiSortMeta: SortMeta[] = [{ field: this.dataKey, order: 1 }];     // table 排序依據 (多重排序 {field欄位、order排序方向} )

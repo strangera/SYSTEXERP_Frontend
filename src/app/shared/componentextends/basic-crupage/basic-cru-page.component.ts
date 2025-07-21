@@ -70,6 +70,9 @@ export class BasicCruPageComponent<T> {
       case CRUDStatus.Create:
         this.formTitle = '新增資訊';
         this.crudstatus = CRUDStatus.Create;
+        if (state?.['rowdata']) {
+          form?.patchValue(state['rowdata']);
+        }
         break;
       case CRUDStatus.Edit:
         this.formTitle = '編輯資料';

@@ -1,233 +1,143 @@
-import { FloorService } from './../../../service/basic/floor.service';
-import { IndustryTypeService } from './../../../service/basic/industry-type.service';
-import { LocationService } from '../../../service/basic/location.service';
-import { VendorService } from '../../../service/basic/vendor.service';
-import { WillingnessLevelService } from './../../../service/basic/willingness-level.service';
-import { UserCodeService } from './../../../service/basic/user-code.service';
-// --Commonly used imports--
-import { Component, OnInit, } from '@angular/core';
-import { FormArray, FormBuilder, FormControl, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-import { AuthService } from '../../../service/system/auth.service';
-import { TranslateService, TranslateModule } from '@ngx-translate/core';
-import { BasicCrupageComponent } from '../../../shared/componentextends/basic-crupage/basic-crupage.component';
-import { ValidationService } from '../../../shared/service/validation.service';
+import { Component, OnInit } from '@angular/core';
+import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
+// import { TLS12020Service } from '../../../service/api/tls/tls12020.service';
+import { DropDownListService, IDropdownItem } from '../../../service/utility/dropDownList.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { PanelModule } from 'primeng/panel';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { AccordionModule } from 'primeng/accordion';
+import { TranslateModule } from '@ngx-translate/core';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
-import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
 import { EditorTextComponent } from '../../../shared/componentkit/editor-text/editor-text.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { NgIf } from '@angular/common';
+import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
+import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
+import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
+import { InputTextareaComponent } from '@shared/componentkit';
 
-// 2.1.2.2 專櫃訪談記錄維護CRU
+
+
+@UntilDestroy()
 @Component({
-    selector: 'app-tls12020-cru',
-    templateUrl: './tls12020-cru.component.html',
-    styleUrl: './tls12020-cru.component.scss',
-    standalone: true,
-    imports: [MenubarComponent, PanelModule, FormsModule, ReactiveFormsModule, DropdownComponent, InputTextComponent, CalendarComponent, InputNumberComponent, EditorTextComponent, ButtonComponent, NgIf, TranslateModule]
+  selector: 'app-tls12020-cru',
+  templateUrl: './tls12020-cru.component.html',
+  standalone: true,
+  imports: [
+    MenubarComponent,
+    ButtonComponent,
+    AccordionModule,
+    TranslateModule,
+    ReactiveFormsModule,
+    DropdownComponent,
+    InputTextComponent,
+    InputNumberComponent,
+    EditorTextComponent,
+    CalendarComponent,
+    InputTextareaComponent
+  ],
 })
-export class TLS12020CRUComponent extends BasicCrupageComponent implements OnInit {
-  positionNumberOptions: any[] = [];
-  vendorUIDOptions: any[] = [];
-  interviewerOptions: any[] = [];
-  willingnessLevelOptions: any[] = [];
-  industryCodeOptions: any[] = [];
-  floorOptions: any[] = [];
-  // ----------------------------------------------------------------
-  dataForm = this.formBuilder.nonNullable.group({
-    vendorUID: [, [Validators.required]], // 廠商統一編號
+export class TLS12020CRUComponent extends BasicCruPageComponent<any> implements OnInit {
+  dataForm = this.fb.nonNullable.group({
+    vendorUID: ['', [Validators.required]], // 廠商統一編號（必填）
     vendorCName: ['', [Validators.required, Validators.maxLength(60)]], // 廠商名稱(中文)
     vendorEName: ['', [Validators.maxLength(60)]], // 廠商名稱(英文)
     brand: ['', [Validators.maxLength(30)]], // 品牌
-    industryCode: [], // 大分類
-    contactPerson: ['', [Validators.required, Validators.maxLength(12)]], // 聯絡人
+    bus_type: ['', [Validators.required]], // 大分類（必填）
+    VEN_Boss: ['', [Validators.required, Validators.maxLength(12)]], // 聯絡人
+    VEN_BossTel: ['', [Validators.required, Validators.maxLength(18)]], // 聯絡人電話(O)
+    VEN_BossTitle: ['', [Validators.maxLength(15)]], // 聯絡人稱謂
+    VEN_BossMobile: ['', [Validators.maxLength(18)]], // 聯絡人手機
+    VEN_BossEmail: ['', [Validators.maxLength(60)]], // 聯絡人電子郵件
+    VEN_Addr: ['', [Validators.maxLength(100)]], // 公司地址
 
-    oContactPhone: [, [Validators.required, Validators.maxLength(18)]], // 聯絡人電話(O)
-    contactTitle: ['', [Validators.maxLength(20)]], // 聯絡人頭銜
-    fContactPhone: ['', [Validators.maxLength(18)]], // 聯絡人電話(F)
-    contactPhone: ['', [Validators.maxLength(15)]], // 聯絡人行動電話
-    contactEmail: ['', [Validators.maxLength(60)]], // 聯絡人電子郵件
-    companyAddress: ['', [Validators.maxLength(100)]], // 公司住址
+    contact_Date: [null, [Validators.required]], // 訪談日期（必填）
+    contact_Time: [null, [Validators.required]], // 訪談時間(24H)（必填）
 
-    interviewDate: [, [Validators.required]], // 訪談日期
-    interviewDate24: [, [Validators.required]], // 訪談時間(24H)
-    willingnessLevel: [, [Validators.required]], // 意願等級
-    floor: [], // 接洽樓層
-    locationNumber: [, [Validators.maxLength(60)]], // 接洽位置編號
+    willing_level: ['', [Validators.required]], // 意願等級（必填）
+    FLOOR_NO: ['', [Validators.required]], // 樓層編號（必填）
+    LOCATION_No: [null, [Validators.maxLength(60)]], // 擬洽位置編號
 
-    negotiationPoints: [,], // 洽談重點及交換資料記錄
-    remark: [,], // 備註
-    interviewer: [, [Validators.required]], // 訪談人員
-    // ----------------------------------------------------------------
-    items: this.formBuilder.array([
-      this.createItem()
-    ]),
+    contact_record: [''], // 洽談重點及洽談紀錄
+    contact_remarks: [''], // 備註
+
+    contact_USR_Name: ['', [Validators.required]], // 訪談人員（必填）
   });
-  // ----------------------------------------------------------------
+
+
+  // 下拉選單 options
+  vendorUIDOptions: IDropdownItem[] = [];
+  industryCodeOptions: IDropdownItem[] = [];
+  willinglevelOptions: IDropdownItem[] = [];
+  floorOptions: IDropdownItem[] = [];
+  interviewerOptions: IDropdownItem[] = [];
+  contact_USR_NameOptions: IDropdownItem[] = [];
+
   constructor(
-    private router: Router,
-    private formBuilder: FormBuilder,
-    private messageService: NotificationService,
-    private authService: AuthService,
-    private translate: TranslateService,
-    private validationService: ValidationService,
-
-    //----constructor replace---
-    private locationService: LocationService,
-    private vendorService: VendorService,
-    private userCodeService: UserCodeService,
-    private willingnessLevelService: WillingnessLevelService,
-    private industryTypeService: IndustryTypeService,
-    private floorService: FloorService,
+    private fb: FormBuilder,
+    private dropDownListService: DropDownListService,
+    // private tls12020Service: TLS12020Service
   ) {
-    super();  // 呼叫父類建構子
+    super();
   }
-
   ngOnInit(): void {
-    // 初始化
-    this.ProgNo = '210004';
-    //
-    // ----------------------------------------------------------------
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
-    //
-    this.locationService.getLocations().subscribe(data => {
-      this.positionNumberOptions = data;
-    });
-    //
-    this.vendorService.getVendors().subscribe(data => {
-      this.vendorUIDOptions = data;
-    });
-    //
-    this.userCodeService.getUserCode().subscribe(data => {
-      this.interviewerOptions = data;
-    });
-    //
-    this.willingnessLevelService.getSystemTypes().subscribe(data => {
-      this.willingnessLevelOptions = data;
-    });
-    //
-    this.industryTypeService.getSystemTypes().subscribe(data => {
-      this.industryCodeOptions = data;
-    });
-    //
-    this.floorService.getFloors().subscribe(data => {
-      this.floorOptions = data;
-    });
-    // ----------------------------------------------------------------
-    const state = this.router.lastSuccessfulNavigation?.extras.state as {
-      crudstatus: CRUDStatus,
-      rowdata: any,
-    };
+    this.initializePage('TLS12020', this.dataForm);
 
-    switch (state.crudstatus) {
-      // 創建
-      case CRUDStatus.Create:
-        this.formTitle = 'create-conditions';
-        this.crudstatus = CRUDStatus.Create;
-        this.showConfirm = this.canAdd();
-        break;
-      // 修改
-      case CRUDStatus.Edit:
-        this.formTitle = 'edit-conditions';
-        this.crudstatus = CRUDStatus.Edit;
-        this.showConfirm = this.canEdit();
-        this.Edit(state.rowdata);
-        break;
-      // 讀檔
-      case CRUDStatus.Read:
-        this.formTitle = 'display-conditions';
-        this.crudstatus = CRUDStatus.Read;
-        this.Read(state.rowdata);
-        break;
-    }
+    this.loadDropdownOptions();
+    //訪談人員api
+    this.dropDownListService.queryTBLUSER_DropDownList().pipe(untilDestroyed(this)).subscribe(res => {
+      this.contact_USR_NameOptions = res.Data;
+    });
+    //樓層API
+    this.dropDownListService.querySYS3900_DropDownList().pipe(untilDestroyed(this)).subscribe(res => {
+      this.floorOptions = res.Data.map(item => ({
+        ...item,
+        label: item.Name,  // 顯示名稱
+        value: item.No     // 實際值
+      }));
+    });
+    //大分類API
+    this.dropDownListService.queryPOS2003_DropDownList().pipe(untilDestroyed(this)).subscribe(res => {
+      this.industryCodeOptions = res.Data;
+    });
+    //統編API
+    this.dropDownListService.queryPOS2013_DropDownList().pipe(untilDestroyed(this)).subscribe(res => {
+      this.vendorUIDOptions = res.Data;
+    });
+
+    this.willinglevelOptions = [
+      { No: '?', Name: '?', label: '未確認' },
+      { No: 'A', Name: 'A', label: '交涉中(基本條件合意)' },
+      { No: 'B', Name: 'B', label: '交涉中(反應良好)' },
+      { No: 'C', Name: 'C', label: '交涉中(反應不好)' },
+      { No: 'D', Name: 'D', label: '保留' },
+      { No: 'F', Name: 'F', label: '無意進駐' },
+    ];
+
+
   }
 
-  // ----------------------------------------------------------------
-  get items(): FormArray {
-    return this.dataForm.get('items') as FormArray;
-  }
+  loadDropdownOptions() {
+    this.dropDownListService.queryTBLUSER_DropDownList().pipe(untilDestroyed(this)).subscribe(res => {
+      this.contact_USR_NameOptions = res.Data.map(item => ({
+        ...item,
+        label: item.Name,
+        value: item.No
+      }));
+    });
 
-  getFormControl(index: number, controlName: string): FormControl {
-    return this.items.at(index).get(controlName) as FormControl;
-  }
-  // ----------------------------------------------------------------
-  createItem(): FormGroup {
-    return this.formBuilder.group({
-      // name: ['', [Validators.required, Validators.maxLength(14)]], // Input Text
-      // CashRegisterType: ['1', Validators.required], // 收銀機型態
-      // SalesDate: ['', Validators.required], // 銷售日期
-      // CashRegisterCode: ['', Validators.required], // 收銀機號
-      // TransactionSerialNumber: ['', Validators.required], // 交易流水號
-      // CounterNumber: ['', Validators.required], // 專櫃編號
-      // TwoPartInvoiceNumberStart: ['', Validators.required], // 二聯發票號碼(起號)
-      // TwoPartInvoiceNumberEnd: ['', Validators.required], // 二聯發票號碼(迄號)
-      // TaxableAmount: ['', Validators.required], // 應稅金額
-      // TaxFreeAmount: ['', Validators.required], // 免稅金額
+    this.dropDownListService.querySYS3900_DropDownList().pipe(untilDestroyed(this)).subscribe(res => {
+      this.floorOptions = res.Data.map(item => ({
+        ...item,
+        label: item.Name,
+        value: item.No
+      }));
     });
   }
-  onRemoveItem(index: number) {
-    this.items.removeAt(index);
-  }
-  // ----------------------------------------------------------------
-  Edit(rowdata: any) {
-    this.dataForm.patchValue(rowdata);
-  }
 
-  Read(rowdata: any) {
-    this.dataForm.patchValue(rowdata);
-    this.dataForm.disable();
+  onSubmit() {
+    this.handleSubmit(this.dataForm, () => {
+      console.log('Form submitted successfully');
+    });
   }
 
-  onAddItem(): void {
-    this.items.push(this.createItem());
-  }
-
-  onSubmit(frm: FormGroup) {
-    this.messageService.blockUi();
-    this.submitted = true;
-
-    if (this.dataForm.invalid) {
-      this.messageService.errorBubble(this.translate.instant('form_error_message'));
-      this.messageService.unblockUi();
-      return;
-    }
-
-    switch (this.crudstatus) {
-      case CRUDStatus.Create:
-        if (this.canAdd()) {
-          // this.storeService.addMachine(frm.value as MachineForm).subscribe((response: any) => {
-          this.messageService.successBubble(this.translate.instant('success_message'));
-        }
-        break;
-      case CRUDStatus.Edit:
-        if (this.canEdit()) {
-          // this.storeService.updateMachine(frm.value as MachineForm).subscribe((response: any) => {
-          this.messageService.successBubble(this.translate.instant('updated-successfully'));
-        }
-        break;
-    }
-
-    this.messageService.unblockUi();
-    this.submitted = false;
-  }
-
-  submitForm(frm: FormGroup) {
-    // 查詢邏輯
-    this.onSubmit(frm);
-  }
-
-  onClearForm() {
-    this.dataForm.reset();  // 重置表單
-  }
-
-  onCancel() {
-    this.router.navigate(['/TLS1000/TLS12020']);
-  }
-  //-------------------------------------------------------------------------------------------------------------
-}
+};

@@ -1,199 +1,173 @@
-import { WillingnessLevelService } from './../../../service/basic/willingness-level.service';
-import { UserCodeService } from './../../../service/basic/user-code.service';
-import { Component } from '@angular/core';
-import { FormBuilder, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { NavigationExtras, Router } from '@angular/router';
-// Permissions
-import { FunsrightInfo, PermissionsInfo } from '../../../shared/models/system/funsrightInfo';
-// Shared
-import { AuthService } from '../../../service/system/auth.service';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 
-import { ValidationService } from '../../../shared/service/validation.service';
-import { LocationService } from '../../../service/basic/location.service';
-import { VendorService } from '../../../service/basic/vendor.service';
+import { Component, OnInit } from '@angular/core';
+import { untilDestroyed } from '@ngneat/until-destroy';
+import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
+import { DropDownListService, IDropdownItem } from '../../../service/utility/dropDownList.service';
+import { Column, createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { AccordionModule } from 'primeng/accordion';
+import { TranslateModule } from '@ngx-translate/core';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { TranslateModule } from '@ngx-translate/core';
+// import { TLS12020Service} from '../../../service/api/tls/tls12020.service';
+import { LocationOptionsService } from '../../../service/api/dropdownservice/location-options.service';
 
-// 2.1.2.2 專櫃訪談記錄維護
 @Component({
-    selector: 'app-tls12020',
-    templateUrl: './tls12020.component.html',
-    styleUrl: './tls12020.component.scss',
-    standalone: true,
-    imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, DropdownComponent, InputTextComponent, CalendarRangeComponent, TableComponent, TranslateModule]
-})
-export class TLS12020Component {
-  ProgNo: string = '210004';
-  // 權限
-  funInfo?: FunsrightInfo;
+  selector: 'app-tls12020',
+  templateUrl: './tls12020.component.html',
+  standalone: true,
+  imports: [
+    MenubarComponent,
+    ButtonComponent,
+    AccordionModule,
+    TranslateModule,
+    ReactiveFormsModule,
+    DropdownComponent,
+    InputTextComponent,
+    CalendarRangeComponent,
+    TableComponent,
 
-  // 查詢
-  // ----------------------------------------------------------------
-  loading: boolean = false;
-  submitted: boolean = false;
+
+  ],
+})
+export class TLS12020Component extends BasicQueryPageComponent<any> implements OnInit {
   queryForm = this.formBuilder.group({
-    positionNumber: [[] as number[]], // 位置編號
-    vendorUID: [[] as number[]], // 廠商統一編號
-    vendorCName: ['', [Validators.maxLength(60)]], // 廠商名稱(中文)
-    vendorEName: ['', [Validators.maxLength(60)]], // 廠商名稱(英文)
-    startdate: [], // 訪談日期
-    enddate: [], // 訪談日期
-    interviewer: [[] as number[]], // 訪談人員
-    willingnessLevel: [[] as number[]], // 意願等級
-    usagecount: [0, [Validators.required]], // 次數限制 (0 不限制)
+    ECR_LocNo: [''],
+    cus_uniform_id: [''],
+    ven_name: ['', Validators.maxLength(60)],
+    VEN_EngName: ['', Validators.maxLength(60)],
+    brand: [''],
+    create_store: [''],
+    contact_person: [''],
+    contact_phone: [''],
+    contact_Datestart: [null],
+    contact_Dateend: [null],
+    contact_time: [''],
+    contact_USR_Name: ['', [Validators.required]], // 訪談人員（必填）
+    willing_level: [''],
+    ...createPaginationConfig([{ field: 'ECR_LocNo', order: 1 }]),
   });
-  // 表格
-  // ----------------------------------------------------------------
-  data: any[] = [
-    // { location: '00000000', vendorUID: '123', vendorCName: '廠商1', vendorEName: 'vendor1',
-    //   brandCName: '品牌1', industryCode: '大分類代號', contactPerson: '林先生', contactPersonPhone: '123',
-    //   interviewDate: '2024-01-01', interviewDateTime: '11:20',interviewer: '訪談人員', willingnessLevel: 'a'},
-    // 其他資料
+
+
+  data: any[] = [];
+  columns: Column[] = [
+    { header: '位置編號', field: 'ECR_LocNo' },
+    { header: '廠商統一編號', field: 'cus_uniform_id' },
+    { header: '廠商名稱(中文)', field: 'ven_name' },
+    { header: '廠商名稱(英文)', field: 'VEN_EngName' },
+    { header: '品牌', field: 'brand' },
+    { header: '資料作成店', field: 'create_store' },
+    { header: '聯絡人', field: 'contact_person' },
+    { header: '聯絡人電話', field: 'contact_phone' },
+    { header: '訪談日期', field: 'contact_date' },
+    { header: '訪談時間', field: 'contact_time' },
+    { header: '訪談人員', field: 'contact_USR_Name' },
+    { header: '意願等級', field: 'willing_level' },
   ];
-  filteredData: any[] = [...this.data];
-  columns: any[] = [
-    { field: 'location', header: '位置編號', visible: true },
-    { field: 'vendorUID', header: '廠商統一編號', visible: true },
-    { field: 'vendorCName', header: '廠商名稱(中文)', visible: true },
-    { field: 'vendorEName', header: '廠商名稱(英文)', visible: true },
-    { field: 'brandCName', header: '品牌', visible: true },
-    { field: 'industryCode', header: '大分類代碼', visible: true },
-    { field: 'contactPerson', header: '聯絡人', visible: true },
-    { field: 'contactPersonPhone', header: '聯絡人電話', visible: true },
-    { field: 'interviewDate', header: '訪談日期', visible: true },
-    { field: 'interviewDateTime', header: '訪談時間', visible: true },
-    { field: 'interviewer', header: '訪談人員', visible: true },
-    { field: 'willingnessLevel', header: '意願等級', visible: true },
-    // 其他欄位
-  ];
-  // ----------------------------------------------------------------
-  positionNumberOptions: any[] = [];
-  vendorUIDOptions: any[] = [];
-  interviewerOptions: any[] = [];
-  willingnessLevelOptions: any[] = [];
+  selectedItems: any[] = [];
+  totalRecords = 0;
+  vendorUIDOptions: IDropdownItem[] = [];
+  contact_USR_NameOptions: IDropdownItem[] = [];
+  willinglevelOptions: IDropdownItem[] = [];
+  locationOptions: IDropdownItem[] = [];
+
 
   constructor(
-    private router: Router,
-    private formBuilder: FormBuilder,
-    private messageService: NotificationService,
-    private authService: AuthService,
-    private validationService: ValidationService,
-    private locationService: LocationService,
-    private vendorService: VendorService,
-    private userCodeService: UserCodeService,
-    private willingnessLevelService: WillingnessLevelService,
+    // private tls12020ervice: TLS12020Service,
+    private locationOptionsService: LocationOptionsService,
+    private dropDownListService: DropDownListService
   ) {
+    super();
   }
 
   ngOnInit(): void {
-    //
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
-    //
-    this.locationService.getLocations().subscribe(data => {
-      this.positionNumberOptions = data;
-    });
-    //
-    this.vendorService.getVendors().subscribe(data => {
-      this.vendorUIDOptions = data;
-    });
-    //
-    this.userCodeService.getUserCode().subscribe(data => {
-      this.interviewerOptions = data;
-    });
-    //
-    this.willingnessLevelService.getSystemTypes().subscribe(data => {
-      this.willingnessLevelOptions = data;
-    });
-  }
+    this.initializePage('TLS12020', 'TLS/TLS12020cru', this.queryForm, (form) => this.onSubmit(form));
+    this.loadDropdownOptions();
 
-  canQuery(): boolean {
-    return true;
-  }
+    this.dropDownListService.queryTBLUSER_DropDownList().pipe(untilDestroyed(this)).subscribe(res => {
+      this.contact_USR_NameOptions = res.Data;
+    });
 
-  canAdd(): boolean {
-    return true;
-  }
+    this.dropDownListService.queryPOS2002_DropDownList()
+      .pipe(untilDestroyed(this))
+      .subscribe(res => {
+        this.locationOptions = res.Data.map(item => ({
+          ...item,
+          value: item.No,
+          label: item.Name
+        }));
+      });
 
-  canEdit(): boolean {
-    return true;
+    this.dropDownListService.queryPOS2013_DropDownList().pipe(untilDestroyed(this)).subscribe(res => {
+      this.vendorUIDOptions = res.Data;
+    });
+    this.dropDownListService.queryTBLUSER_DropDownList().pipe(untilDestroyed(this)).subscribe(res => {
+      this.contact_USR_NameOptions = res.Data;
+    });
+    this.willinglevelOptions = [
+      { No: '?', Name: '?', label: '未確認' },
+      { No: 'A', Name: 'A', label: '交涉中(基本條件合意)' },
+      { No: 'B', Name: 'B', label: '交涉中(反應良好)' },
+      { No: 'C', Name: 'C', label: '交涉中(反應不好)' },
+      { No: 'D', Name: 'D', label: '保留' },
+      { No: 'F', Name: 'F', label: '無意進駐' },
+    ];
+
+
+  }
+  loadDropdownOptions() {
+    this.dropDownListService.queryTBLUSER_DropDownList().pipe(untilDestroyed(this)).subscribe(res => {
+      this.contact_USR_NameOptions = res.Data.map(item => ({
+        ...item,
+        label: item.Name,
+        value: item.No
+      }));
+    });
+
   }
 
   onSubmit(frm: FormGroup) {
-    console.log(frm.value);
-    this.submitted = true;
-    this.loading = true;
-    this.messageService.blockUi();
-
-    if (frm.valid && this.canQuery()) {
-      // 提交邏輯
-      // Service
-      // this.xxxService.queryMachine(frm.value as xxxInterface)
-      //  .subscribe((response: any) => {
-      //    this.rows = response.xxx;
-      // });
-    }
-
-    this.loading = false;
-    this.messageService.unblockUi();
+    // this.handleSubmit(frm, () => {
+    //   this.tls12020Service.queryTLS12020(frm.getRawValue())
+    //     .pipe(finalize(() => this.loading = false), untilDestroyed(this))
+    //     .subscribe((res) => {
+    //       this.data = res.Data;
+    //       this.totalRecords = res.TotalCount;
+    //       this.queryStateService.setQueryState(this.ProgNo, frm);
+    //     });
+    // });
   }
 
-  onSubmitQuery(frm: FormGroup) {
-    // 查詢邏輯
-    this.onSubmit(frm);
-  }
+  //   onCreate(data?: any) {
+  //     if (this.canPerformAction('20')) {
+  //       this.navigateWithState(CRUDStatus.Create, data);
+  //     }
+  //   }
 
-  onClearForm() {
-    this.queryForm.reset();  // 重置表單
-  }
+  //   onEdit(data: any) {
+  //     if (this.canPerformAction('30')) {
+  //       const newData = { ...data };
 
-  onCreate() {
-    if (this.canAdd()) {
-      let extras: NavigationExtras = {
-        state: {
-          crudstatus: CRUDStatus.Create,
-          queryform: this.queryForm,
-        },
-        skipLocationChange: true
-      };
 
-      //console.log("extra", extras);
-      this.router.navigate(['/TLS1000/TLS12020CRU'], extras);
-    }
-  }
+  //       this.navigateWithState(CRUDStatus.Edit, newData);
+  //     }
+  //   }
 
-  onEdit(data: any) {
-    if (this.canEdit()) {
-      let extras: NavigationExtras = {
-        state: {
-          crudstatus: CRUDStatus.Edit,
-          rowdata: data,
-          queryform: this.queryForm,
-        },
-        skipLocationChange: true
-      };
+  //   onDetail(data: any) {
+  //     if (this.canPerformAction('10')) {
+  //       this.navigateWithState(CRUDStatus.Read, data);
+  //     }
+  //   }
 
-      this.router.navigate(['/TLS1000/TLS12020CRU'], extras);
-    }
-  }
-
-  onDetail(data: any) {
-    let extras: NavigationExtras = {
-      state: {
-        crudstatus: CRUDStatus.Read,
-        rowdata: data,
-        queryform: this.queryForm,
-      },
-      skipLocationChange: true
-    };
-
-    this.router.navigate(['/TLS1000/TLS12020CRU'], extras);
-  }
+  //   onLazyLoadData(event: any, queryForm: FormGroup) {
+  //     queryForm.patchValue({
+  //       pageSize: event.pageSize,
+  //       pageIndex: event.pageIndex,
+  //       SortBy: event.SortBy
+  //     });
+  //   }
 }
