@@ -20,6 +20,9 @@
             class="col-12 md:col-6 lg:col-4"
             label="位置編號"
             controlName="ECR_LocNo"
+            [options]="locationOptions"
+            optionLabel="label"
+            optionValue="value"
             [control]="queryForm.controls.ECR_LocNo"
             [submitted]="submitted"
           ></app-dropdown>
@@ -28,7 +31,9 @@
             class="col-12 md:col-6 lg:col-4"
             label="廠商統一編號"
             controlName="cus_uniform_id"
-            [options]="uniformIDOptions"
+            optionLabel="Name"
+            optionValue="No"
+            [options]="vendorUIDOptions"
             [control]="queryForm.controls.cus_uniform_id"
             [submitted]="submitted"
           ></app-dropdown>
@@ -61,8 +66,8 @@
             label="訪談人員"
             controlName="contact_USR_Name"
             [options]="contact_USR_NameOptions"
-            optionLabel="label"
-            optionValue="value"
+            optionLabel="Name"
+            optionValue="No"
             [control]="queryForm.controls.contact_USR_Name"
             [submitted]="submitted"
           ></app-dropdown>
@@ -71,9 +76,9 @@
             class="col-12 md:col-6 lg:col-4"
             label="意願等級"
             controlName="willing_level"
-            [options]="willing_level_Options"
+            [options]="willinglevelOptions"
             optionLabel="label"
-            optionValue="value"
+            optionValue="No"
             [control]="queryForm.controls.willing_level"
             [submitted]="submitted"
           ></app-dropdown>
@@ -94,7 +99,6 @@
     dataKey="id"
     [data]="data"
     [columns]="columns"
-    (detail)="onDetail($event)"
     (edit)="onEdit($event)"
     [showCheckBox]="true"
     (selectionChange)="selectedItems = $event"
@@ -104,5 +108,7 @@
     (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"
     [lazy]="true"
     [loading]="loading"
+    [showPaginator]="true"
+    [showReportMode]="true"
   ></app-table>
 </div>

@@ -1,10 +1,11 @@
 
 import { Component, OnInit } from '@angular/core';
+import { untilDestroyed } from '@ngneat/until-destroy';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { DropDownListService, IDropdownItem } from '../../../service/utility/dropDownList.service';
 import { Column, createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { FormGroup, ReactiveFormsModule } from '@angular/forms';
+import { FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { AccordionModule } from 'primeng/accordion';
 import { TranslateModule } from '@ngx-translate/core';
@@ -37,8 +38,8 @@ export class TLS12020Component extends BasicQueryPageComponent<any> implements O
   queryForm = this.formBuilder.group({
     ECR_LocNo: [''],
     cus_uniform_id: [''],
-    ven_name: [''],
-    VEN_EngName: [''],
+    ven_name: ['', Validators.maxLength(60)],
+    VEN_EngName: ['', Validators.maxLength(60)],
     brand: [''],
     create_store: [''],
     contact_person: [''],
@@ -46,7 +47,7 @@ export class TLS12020Component extends BasicQueryPageComponent<any> implements O
     contact_Datestart: [null],
     contact_Dateend: [null],
     contact_time: [''],
-    contact_USR_Name: [''],
+    contact_USR_Name: ['', [Validators.required]], // 訪談人員（必填）
     willing_level: [''],
     ...createPaginationConfig([{ field: 'ECR_LocNo', order: 1 }]),
   });
@@ -69,9 +70,10 @@ export class TLS12020Component extends BasicQueryPageComponent<any> implements O
   ];
   selectedItems: any[] = [];
   totalRecords = 0;
-  uniformIDOptions: IDropdownItem[] = [];
+  vendorUIDOptions: IDropdownItem[] = [];
   contact_USR_NameOptions: IDropdownItem[] = [];
-  willing_level_Options: IDropdownItem[] = [];
+  willinglevelOptions: IDropdownItem[] = [];
+  locationOptions: IDropdownItem[] = [];
 
 
   constructor(
@@ -84,9 +86,48 @@ export class TLS12020Component extends BasicQueryPageComponent<any> implements O
 
   ngOnInit(): void {
     this.initializePage('TLS12020', 'TLS/TLS12020cru', this.queryForm, (form) => this.onSubmit(form));
+    this.loadDropdownOptions();
 
-    // 下拉選單資料
-    // this.loadDropdownOptions();
+    this.dropDownListService.queryTBLUSER_DropDownList().pipe(untilDestroyed(this)).subscribe(res => {
+      this.contact_USR_NameOptions = res.Data;
+    });
+
+    this.dropDownListService.queryPOS2002_DropDownList()
+      .pipe(untilDestroyed(this))
+      .subscribe(res => {
+        this.locationOptions = res.Data.map(item => ({
+          ...item,
+          value: item.No,
+          label: item.Name
+        }));
+      });
+
+    this.dropDownListService.queryPOS2013_DropDownList().pipe(untilDestroyed(this)).subscribe(res => {
+      this.vendorUIDOptions = res.Data;
+    });
+    this.dropDownListService.queryTBLUSER_DropDownList().pipe(untilDestroyed(this)).subscribe(res => {
+      this.contact_USR_NameOptions = res.Data;
+    });
+    this.willinglevelOptions = [
+      { No: '?', Name: '?', label: '未確認' },
+      { No: 'A', Name: 'A', label: '交涉中(基本條件合意)' },
+      { No: 'B', Name: 'B', label: '交涉中(反應良好)' },
+      { No: 'C', Name: 'C', label: '交涉中(反應不好)' },
+      { No: 'D', Name: 'D', label: '保留' },
+      { No: 'F', Name: 'F', label: '無意進駐' },
+    ];
+
+
+  }
+  loadDropdownOptions() {
+    this.dropDownListService.queryTBLUSER_DropDownList().pipe(untilDestroyed(this)).subscribe(res => {
+      this.contact_USR_NameOptions = res.Data.map(item => ({
+        ...item,
+        label: item.Name,
+        value: item.No
+      }));
+    });
+
   }
 
   onSubmit(frm: FormGroup) {

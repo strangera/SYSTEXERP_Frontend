@@ -1,7 +1,6 @@
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 // import { TLS12020Service } from '../../../service/api/tls/tls12020.service';
 import { DropDownListService, IDropdownItem } from '../../../service/utility/dropDownList.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
@@ -13,7 +12,9 @@ import { InputTextComponent } from '../../../shared/componentkit/input-text/inpu
 import { EditorTextComponent } from '../../../shared/componentkit/editor-text/editor-text.component';
 import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
-import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
+import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
+import { InputTextareaComponent } from '@shared/componentkit';
+
 
 
 @UntilDestroy()
@@ -32,35 +33,36 @@ import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-
     InputNumberComponent,
     EditorTextComponent,
     CalendarComponent,
-
+    InputTextareaComponent
   ],
 })
-export class TLS12020CRUComponent extends BasicQueryPageComponent<any> implements OnInit {
-  dataForm: FormGroup = this.fb.group({
-    vendorUID: ['', Validators.required],
-    vendorCName: ['', Validators.required],
-    vendorEName: [''],
-    brand: [''],
-    bus_type: [''],
-    VEN_Boss: [''],
-    VEN_BossTel: [''],
-    VEN_BossTitle: [''],
-    VEN_BossMobile: [''],
-    VEN_BossEmail: [''],
-    VEN_Addr: [''],
-    contact_Date: [null],
-    contact_Time: [null],
-    willing_level: [''],
-    FLOOR_NO: [''],
-    LOCATION_No: [null],
-    contact_record: [''],
-    contact_remarks: [''],
-    interviewer: [''],
+export class TLS12020CRUComponent extends BasicCruPageComponent<any> implements OnInit {
+  dataForm = this.fb.nonNullable.group({
+    vendorUID: ['', [Validators.required]], // 廠商統一編號（必填）
+    vendorCName: ['', [Validators.required, Validators.maxLength(60)]], // 廠商名稱(中文)
+    vendorEName: ['', [Validators.maxLength(60)]], // 廠商名稱(英文)
+    brand: ['', [Validators.maxLength(30)]], // 品牌
+    bus_type: ['', [Validators.required]], // 大分類（必填）
+    VEN_Boss: ['', [Validators.required, Validators.maxLength(12)]], // 聯絡人
+    VEN_BossTel: ['', [Validators.required, Validators.maxLength(18)]], // 聯絡人電話(O)
+    VEN_BossTitle: ['', [Validators.maxLength(15)]], // 聯絡人稱謂
+    VEN_BossMobile: ['', [Validators.maxLength(18)]], // 聯絡人手機
+    VEN_BossEmail: ['', [Validators.maxLength(60)]], // 聯絡人電子郵件
+    VEN_Addr: ['', [Validators.maxLength(100)]], // 公司地址
+
+    contact_Date: [null, [Validators.required]], // 訪談日期（必填）
+    contact_Time: [null, [Validators.required]], // 訪談時間(24H)（必填）
+
+    willing_level: ['', [Validators.required]], // 意願等級（必填）
+    FLOOR_NO: ['', [Validators.required]], // 樓層編號（必填）
+    LOCATION_No: [null, [Validators.maxLength(60)]], // 擬洽位置編號
+
+    contact_record: [''], // 洽談重點及洽談紀錄
+    contact_remarks: [''], // 備註
+
+    contact_USR_Name: ['', [Validators.required]], // 訪談人員（必填）
   });
 
-
-  isFormReadable = false;
-  formTitle = '訪談資料';
 
   // 下拉選單 options
   vendorUIDOptions: IDropdownItem[] = [];
@@ -68,94 +70,74 @@ export class TLS12020CRUComponent extends BasicQueryPageComponent<any> implement
   willinglevelOptions: IDropdownItem[] = [];
   floorOptions: IDropdownItem[] = [];
   interviewerOptions: IDropdownItem[] = [];
+  contact_USR_NameOptions: IDropdownItem[] = [];
 
   constructor(
     private fb: FormBuilder,
-    private dropDownListService: DropDownListService
+    private dropDownListService: DropDownListService,
+    // private tls12020Service: TLS12020Service
   ) {
     super();
   }
   ngOnInit(): void {
-    const state = history.state;
+    this.initializePage('TLS12020', this.dataForm);
 
-    // 訪談狀態處理
-    if (state?.crudstatus === CRUDStatus.Read) {
-      this.isFormReadable = true;
-      this.dataForm.disable();
-    }
-
-    if (state?.rowdata) {
-      this.dataForm.patchValue(state.rowdata);
-    }
-
-    // 初始化 options（可根據實際需求呼叫 service）
     this.loadDropdownOptions();
-  }
-
-  loadDropdownOptions() {
-    // Example: 呼叫 DropDown service
-    this.dropDownListService.queryVendorUIDOptions().pipe(untilDestroyed(this)).subscribe(res => {
+    //訪談人員api
+    this.dropDownListService.queryTBLUSER_DropDownList().pipe(untilDestroyed(this)).subscribe(res => {
+      this.contact_USR_NameOptions = res.Data;
+    });
+    //樓層API
+    this.dropDownListService.querySYS3900_DropDownList().pipe(untilDestroyed(this)).subscribe(res => {
+      this.floorOptions = res.Data.map(item => ({
+        ...item,
+        label: item.Name,  // 顯示名稱
+        value: item.No     // 實際值
+      }));
+    });
+    //大分類API
+    this.dropDownListService.queryPOS2003_DropDownList().pipe(untilDestroyed(this)).subscribe(res => {
+      this.industryCodeOptions = res.Data;
+    });
+    //統編API
+    this.dropDownListService.queryPOS2013_DropDownList().pipe(untilDestroyed(this)).subscribe(res => {
       this.vendorUIDOptions = res.Data;
     });
 
-    this.dropDownListService.queryIndustryOptions().pipe(untilDestroyed(this)).subscribe(res => {
-      this.industryCodeOptions = res.Data;
+    this.willinglevelOptions = [
+      { No: '?', Name: '?', label: '未確認' },
+      { No: 'A', Name: 'A', label: '交涉中(基本條件合意)' },
+      { No: 'B', Name: 'B', label: '交涉中(反應良好)' },
+      { No: 'C', Name: 'C', label: '交涉中(反應不好)' },
+      { No: 'D', Name: 'D', label: '保留' },
+      { No: 'F', Name: 'F', label: '無意進駐' },
+    ];
+
+
+  }
+
+  loadDropdownOptions() {
+    this.dropDownListService.queryTBLUSER_DropDownList().pipe(untilDestroyed(this)).subscribe(res => {
+      this.contact_USR_NameOptions = res.Data.map(item => ({
+        ...item,
+        label: item.Name,
+        value: item.No
+      }));
     });
 
-    this.dropDownListService.queryWillingLevelOptions().pipe(untilDestroyed(this)).subscribe(res => {
-      this.willinglevelOptions = res.Data;
-    });
-
-    this.dropDownListService.queryFloorOptions().pipe(untilDestroyed(this)).subscribe(res => {
-      this.floorOptions = res.Data;
-    });
-
-    this.dropDownListService.queryInterviewerOptions().pipe(untilDestroyed(this)).subscribe(res => {
-      this.interviewerOptions = res.Data;
+    this.dropDownListService.querySYS3900_DropDownList().pipe(untilDestroyed(this)).subscribe(res => {
+      this.floorOptions = res.Data.map(item => ({
+        ...item,
+        label: item.Name,
+        value: item.No
+      }));
     });
   }
 
-  onSubmit(frm: FormGroup) {
-    this.submitted = true;
-    if (frm.invalid) {
-      return;
-    }
-
-    this.loading = true;
-
-    const body = frm.getRawValue();
-
-    // 判斷是否為新增或修改，可根據需要決定要呼叫哪個 API
-    if (history.state?.crudstatus === CRUDStatus.Create) {
-      this.tls12020Service.createTLS12020(body)
-        .pipe(untilDestroyed(this))
-        .subscribe({
-          next: () => {
-            console.log('新增成功');
-            this.loading = false;
-          },
-          error: () => {
-            console.error('新增失敗');
-            this.loading = false;
-          }
-        });
-    } else if (history.state?.crudstatus === CRUDStatus.Edit) {
-      this.tls12020Service.updateTLS12020(body)
-        .pipe(untilDestroyed(this))
-        .subscribe({
-          next: () => {
-            console.log('更新成功');
-            this.loading = false;
-          },
-          error: () => {
-            console.error('更新失敗');
-            this.loading = false;
-          }
-        });
-    }
+  onSubmit() {
+    this.handleSubmit(this.dataForm, () => {
+      console.log('Form submitted successfully');
+    });
   }
 
-  onCancel() {
-    window.history.back();
-  }
-}
+};
