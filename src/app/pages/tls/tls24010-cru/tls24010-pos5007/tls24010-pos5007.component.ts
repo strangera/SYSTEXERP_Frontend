@@ -34,7 +34,10 @@ export class Tls24010Pos5007Component implements OnInit {
   @Input() TLT_Name?: string//專櫃名稱
   @Input() store_way?: string// 1為專櫃 2=自營
   @Input() talent_id?: number//專櫃編號
-  @Input() submitted = false;
+  @Input() data: POS5007Data[] = []
+  @Input() isFormCreateable?: boolean
+  @Input() isFormEditable?: boolean
+  @Input() isFormReadable?: boolean
   index = 1
   POS5007Data: POS5007Data[] = [];
   POS5007SelectedItems: POS5007Data[] = [];
@@ -43,9 +46,12 @@ export class Tls24010Pos5007Component implements OnInit {
   trackByRow = (index: number, item: POS5007Data) => { return item?.id || index; }
   constructor(
     private readonly dropDownListService: DropDownListService,
-  ) { }
+  ) {
+  }
   ngOnInit(): void {
-    console.log(this.store_way);
+    if (this.data.length > 0 && !this.isFormCreateable) {
+      this.POS5007Data = [...this.data];
+    }
     switch (this.store_way) {
       case '2':// 自營櫃位
         {

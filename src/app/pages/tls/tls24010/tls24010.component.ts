@@ -138,6 +138,13 @@ export class TLS24010Component extends BasicQueryPageComponent<TLS24010Data> imp
     this.onCreate(this.queryForm.value);
   }
 
+  onDetailData(rowdata: TLS24010Data): void {
+    this.onDetail({
+      ...rowdata,
+      TXN_GUIPaper: this.queryForm.value.TXN_GUIPaper || 'E'
+    });
+  }
+
   onDateSelect(event: Date): void {
     this.queryForm.get('TXN_Date')?.setValue(event);
     this.dropDownList.queryTLTTALENT_ByContractDate_DropDownList(event.toISOString().split('T')[0]).pipe(untilDestroyed(this)).subscribe(options => {

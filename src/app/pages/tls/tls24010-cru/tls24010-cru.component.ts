@@ -2,7 +2,7 @@ import { InputTextComponent } from './../../../shared/componentkit/input-text/in
 import { Component, OnInit, ViewChild } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
-import { TLS24010Data, Tls24010Service } from '../../../service/api/tls/tls24010.service';
+import { POS5007Data, POS5008Data, TLS24010Data, Tls24010Service } from '../../../service/api/tls/tls24010.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { PanelModule } from 'primeng/panel';
@@ -39,6 +39,8 @@ export class TLS24010CRUComponent extends BasicCruPageComponent<TLS24010Data | u
   TLT_Name?: string; //專櫃名稱
   store_way?: string // 1為專櫃 2=自營
   talent_id?: number; //專櫃編號
+  PaymentDetailsList: POS5008Data[] = [];
+  ProductDetailList: POS5007Data[] = [];
   dataForm = this.formBuilder.nonNullable.group({
     TXN_Date: [{ value: '', disabled: true }],           //disabled 銷售日期
     ECR_No: [{ value: '', disabled: true }],             //disabled 收銀機號 pos1002.ecr_no
@@ -76,8 +78,8 @@ export class TLS24010CRUComponent extends BasicCruPageComponent<TLS24010Data | u
   ) { super(); }
   ngOnInit(): void {
     this.initializePage('TLS24010', this.dataForm);
+    const rowDataTyped = this.rowdata as TLS24010Data;
     if (this.isFormCreateable && this.rowdata) {
-      const rowDataTyped = this.rowdata as TLS24010Data;
       this.dataForm.patchValue({
         TXN_Date: rowDataTyped.TXN_Date,
         ECR_No: rowDataTyped.ECR_No,
@@ -87,6 +89,19 @@ export class TLS24010CRUComponent extends BasicCruPageComponent<TLS24010Data | u
       this.store_way = rowDataTyped.store_way;
       this.talent_id = rowDataTyped.talent_id;
       this.TXN_GUIPaper = rowDataTyped.TXN_GUIPaper
+    }
+    if (!this.isFormCreateable) {
+      this.TXN_GUIPaper = rowDataTyped.TXN_GUIPaper
+      const body = {
+        SYS_StoreNo: this.authService.currentUserValue?.SYS_StoreNo ?? '',
+        TXN_Date: rowDataTyped.TXN_Date,
+        ECR_No: rowDataTyped.ECR_No,
+        TXN_No: Number(rowDataTyped.TXN_No),
+      }
+      this.tls24010Service.queryTLS24010_Detail(body).pipe(untilDestroyed(this)).subscribe((data) => {
+        this.ProductDetailList = data.Data[0].ProductDetailList;
+        this.PaymentDetailsList = data.Data[0].PaymentDetailsList;
+      })
     }
     // 查詢收銀員設定檔(POS2001)
     this.dropDownListService.queryPOS2001_DropDownList().pipe(untilDestroyed(this)).subscribe((data) => {
