@@ -1,90 +1,95 @@
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { finalize, map } from 'rxjs';
+import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { finalize } from 'rxjs';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { Column } from '../../../shared/componentkit/table/table.model';
+import { createPaginationConfig, Column } from '../../../shared/componentkit/table/table.model';
+import { TLS26020Data, TLS26020QueryRequest, TLS26020Service } from '../../../service/api/tls/tls26020.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { AccordionModule } from 'primeng/accordion';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { AccordionModule } from 'primeng/accordion';
+import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { TranslateModule } from '@ngx-translate/core';
-
+import { InputTextRangeComponent } from '../../../shared/componentkit/input-text-range/input-text-range.component';
+import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
+import { MultiSelectComponent } from "../../../shared/componentkit/multi-select/multi-select.component";
 
 @Component({
-    selector: 'app-tls26020',
-    templateUrl: './tls26020.component.html',
-    standalone: true,
-    imports: [
-        MenubarComponent,
-        AccordionModule,
-        FormsModule,
-        ReactiveFormsModule,
-        ButtonComponent,
-        TranslateModule,
-    ],
+  selector: 'app-tls26020',
+  templateUrl: './tls26020.component.html',
+  styleUrl: './tls26020.component.scss',
+  standalone: true,
+  imports: [
+    MenubarComponent,
+    ButtonComponent,
+    AccordionModule,
+    FormsModule,
+    ReactiveFormsModule,
+    TableComponent,
+    TranslateModule,
+    InputTextRangeComponent,
+    CalendarRangeComponent,
+    MultiSelectComponent
+  ]
 })
-export class TLS26020Component extends BasicQueryPageComponent<any> implements OnInit {
+export class TLS26020Component extends BasicQueryPageComponent<TLS26020Data> implements OnInit {
   queryForm = this.formBuilder.group({
-    saleDateStart: [null, Validators.required],
-    saleDateEnd: [null, Validators.required],
-    FLOOR_NO: [null],
-    tlt_building: [null],
-    org_id: [null]
+    saleDateFrom: [''],        // 銷售日期(起)
+    saleDateTo: [''],          // 銷售日期(訖)
+    storeCodeFrom: [''],       // 館別(起)
+    storeCodeTo: [''],         // 館別(訖)
+    organizationName: [''],    // 組織名稱
+    floor: [''],               // 樓層
+    ...createPaginationConfig([{ field: 'ID', order: 1 }])
   });
 
-  data: any[] = [];
   totalRecords = 0;
-  selectedItems: any[] = [];
-
-  floorOptions: { label: string; value: string }[] = [];
-  BUILDING_NO_Options: { label: string; value: string }[] = [];
-  OrganizationCodeOptions: { formLabel: string; value: string }[] = [];
+  data: TLS26020Data[] = [];
+  selectedItems: TLS26020Data[] = [];
 
   columns: Column[] = [
-    { field: 'LOCATION_No', header: '位置編號', visible: true },
-    { field: 'LOCATION_Name', header: '位置名稱', visible: true },
-    { field: 'LOCATION_Floor', header: '樓層', visible: true },
-    { field: 'LOCATION_Building', header: '館別', visible: true },
-    { field: 'org_id', header: '組織代碼', visible: true },
-    { field: 'org_name', header: '組織名稱', visible: true },
+    { field: 'storeCode', header: '館別', visible: true },
+    { field: 'organizationName', header: '組織名稱', visible: true },
+    { field: 'counterCode', header: '專櫃編號', visible: true },
+    { field: 'locationCode', header: '位置編號', visible: true },
+    { field: 'counterName', header: '櫃位名稱', visible: true },
+    { field: 'preorderAmount', header: '預售金額', visible: true },
+    { field: 'saleAmount', header: '銷售金額', visible: true },
+    { field: 'preorderAccum', header: '預售累積', visible: true }
+  ];
+
+  orgOptions = [
+    { Name: '總公司', No: '1' },
+    { Name: '分公司', No: '2' }
+  ];
+
+  floorOptions = [
+    { Name: '一樓', No: '1' },
+    { Name: '二樓', No: '2' },
+    { Name: '三樓', No: '3' }
   ];
 
   constructor(
-    // private dropDownListService: DropDownListService,
-    // private tls26020Service: Tls26020Service,
+    private tls26020Service: TLS26020Service
   ) {
     super();
   }
 
   ngOnInit(): void {
-    this.initializePage('TLS26020', 'TLS/TLS26020cru', this.queryForm, (form) => this.onSubmit(form));
-    // this.loadOptions();
+    this.initializePage('TLS26020', 'tls/tls26020', this.queryForm, (form) => this.onSubmit(form));
   }
 
-
-  onSubmit(form: FormGroup): void {
-    this.handleSubmit(form, () => {
-      const formValue = { ...form.value };
-      this.loading = true;
-      // this.tls26020Service.queryTLS26020(formValue).pipe(
-      //   finalize(() => (this.loading = false))
-      // ).subscribe({
-      //   next: (res: any) => {
-      //     this.data = res.Data;
-      //     this.totalRecords = res.TotalCount;
-      //     this.queryStateService.setQueryState(this.ProgNo, formValue);
-      //   },
-      // });
+  onSubmit(frm: FormGroup) {
+    const queryRequest: TLS26020QueryRequest = {
+      ...frm.value
+    };
+    this.handleSubmit(frm, () => {
+      this.tls26020Service.queryTLS26020(queryRequest)
+        .pipe(finalize(() => this.loading = false))
+        .subscribe(response => {
+          this.data = response.Data;
+          this.totalRecords = response.TotalCount
+          this.queryStateService.setQueryState(this.ProgNo, frm.getRawValue());
+        });
     });
   }
-
-  // onEdit(row: any): void {
-  //   console.log('編輯 row:', row);
-  // }
-
-  // onDetail(row: any): void {
-  //   console.log('查看 row:', row);
-  // }
-  // onDelete(rows: any[]): void {
-  //   console.log('刪除 rows:', rows);
-  // }
 }
