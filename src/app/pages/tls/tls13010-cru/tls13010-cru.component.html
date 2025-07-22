@@ -121,7 +121,7 @@
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown
-              label="組織代號"
+              label="組織代碼"
               controlName="org_id"
               [options]="tls13010DropdownService.orgOptions"
               optionLabel="label"
@@ -518,9 +518,12 @@
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown
-              label="目標營業額單位"
-              controlName="total_amt"
-              [control]="dataForm.controls.total_amt"
+              label="目標營業額單位(業主)"
+              controlName="total_amt_unit"
+              [options]="total_amt_unitOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="dataForm.controls.total_amt_unit"
               [submitted]="submitted"
             ></app-dropdown>
           </div>
@@ -534,9 +537,12 @@
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown
-              label="預估營業額(廠商)單位"
-              controlName="total_amt"
-              [control]="dataForm.controls.total_amt"
+              label="目標營業額單位(廠商)"
+              controlName="total_amt_vendor_unit"
+              [options]="total_amt_vendor_unit_options"
+              optionLabel="label"
+              optionValue="value"
+              [control]="dataForm.controls.total_amt_vendor_unit"
               [submitted]="submitted"
             ></app-dropdown>
           </div>
@@ -852,14 +858,23 @@
               [submitted]="submitted"
             ></app-input-text>
           </div>
-          <div class="col-12 md:col-6 lg:col-6">
+          <div class="col-12 md:col-6 lg:col-6 flex flex-column gap-3">
             <app-input-text
               label="郵寄地址"
               controlName="contact_addr"
               [control]="dataForm.controls.contact_addr"
               [submitted]="submitted"
             ></app-input-text>
+
+            <app-input-text
+              label="公司登記地址"
+              controlName="company_addr"
+              [control]="dataForm.controls.company_addr"
+              [submitted]="submitted"
+            ></app-input-text>
           </div>
+
+          <div class="col-12 md:col-6 lg:col-6"></div>
           <div class="col-12">
             <app-input-textarea
               label="備註"

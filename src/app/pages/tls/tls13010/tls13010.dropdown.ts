@@ -16,7 +16,9 @@ import {
   OVERALL_STATUS_OPTIONS,
   TLT_CTYPE_MTOTAL_OPTIONS,
   TPY_TYPE_OPTIONS,
-  CAG_TAXTYPE_OPTIONS
+  CAG_TAXTYPE_OPTIONS,
+  TOTAL_AMT_UNIT_OPTIONS,
+  TOTAL_AMT_VENDOR_UNIT_OPTIONS
 } from './tls13010.constants';
 import { Sysb800DropdownService } from '../../../service/api/sys/sysb800-dropdown.service';
 import { LocationOptionsService } from '../../../service/api/dropdownservice/location-options.service';
@@ -55,6 +57,8 @@ export const TLS13010_DROPDOWN_OPTIONS = {
   tpyTypeOption: convertToDropdownOptions(TPY_TYPE_OPTIONS),
   cagTaxTypeOption: convertToDropdownOptions(CAG_TAXTYPE_OPTIONS),
   commCompType: convertToDropdownOptions(COMM_COMP_TYPE_OPTIONS),         // 抽成額計算方式
+  total_amt_unit: convertToDropdownOptions(TOTAL_AMT_UNIT_OPTIONS), //目標營業額單位(業主)
+  total_amt_vendor_unit: convertToDropdownOptions(TOTAL_AMT_VENDOR_UNIT_OPTIONS),  //目標營業額單位(廠商)
   yesNo: [{ value: 'Y', label: '是' }, { value: 'N', label: '否' }],
   depositPayment: [
     { value: 1, label: '現金' },
@@ -300,7 +304,7 @@ export class TLS13010DropdownService {
   private initPOS2013Options(): void {
     if (this.loadingStates.pos2013) return;
 
-    this.vendorCategoryService.getVendorCategoryOptions("1").subscribe({
+    this.vendorCategoryService.getVendorCategoryNoNameOptions("1").subscribe({
       next: (response: any[]) => {
         this.pos2013Options = response;
         this.loadingStates.pos2013 = true;

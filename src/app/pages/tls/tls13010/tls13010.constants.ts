@@ -68,7 +68,7 @@ export const TLT_KIND_OPTIONS = {
 export const TLT_OPENFLAG_OPTIONS = {
   '0': '閉店/撤櫃',
   '1': '營業中',
-  '2': '合約結束',
+  '2': '已撤櫃',
   '9': '核准時合約尚未開始'
 } as const;
 
@@ -117,6 +117,21 @@ export const APPROVE_STATUS_OPTIONS = {
   '2': '已審核',
   '3': '已作廢',
 } as const;
+
+//目標營業額單位(業主)
+export const TOTAL_AMT_UNIT_OPTIONS = {
+  'M': '月',
+  'Y': '年',
+  'C': '檔期',
+} as const;
+
+//目標營業額單位(業主)
+export const TOTAL_AMT_VENDOR_UNIT_OPTIONS = {
+  'M': '月',
+  'Y': '年',
+  'C': '檔期',
+} as const;
+
 // ========== 格式化函數 ==========
 
 // 通用的多選格式化函數
@@ -198,6 +213,16 @@ export const formatTltCtypeMototal = (value: string): string => {
 // 合約狀態格式化
 export const formatApproveStatus = (value: string): string => {
   return formatSingleOption(value, APPROVE_STATUS_OPTIONS);
+};
+
+// 目標營業額單位(業主)
+export const formaTotalAmtUnit = (value: string): string => {
+  return formatSingleOption(value, TOTAL_AMT_UNIT_OPTIONS);
+};
+
+// 目標營業額單位(廠商)
+export const formaTotalAmtVendorUnit = (value: string): string => {
+  return formatSingleOption(value, TOTAL_AMT_VENDOR_UNIT_OPTIONS);
 };
 
 // ========== 數字格式化 ==========
