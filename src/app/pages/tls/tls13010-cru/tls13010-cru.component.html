@@ -822,6 +822,7 @@
               [submitted]="submitted"
               [forceSelection]="true"
               [searchMethod]="searchBankOptions.bind(this)"
+              [selectedOption]="selectedBankInfo"
               (selectEvent)="onBankSelect($event)"
               (unselectEvent)="onBankUnselect()"
             ></app-autocomplete>

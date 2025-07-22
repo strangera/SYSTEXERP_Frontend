@@ -475,6 +475,17 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
     // 載入表單資料
     this.dataForm.patchValue(savedFormData);
 
+    if (savedFormData.selectedBankInfo) {
+      console.log('🏦 恢復銀行選擇資訊:', savedFormData.selectedBankInfo);
+      this.selectedBankInfo = savedFormData.selectedBankInfo;
+    } else if (savedFormData.bank_id) {
+      // 🎯 備援邏輯：如果只有 bank_id，嘗試重建 selectedBankInfo
+      console.log('🔄 嘗試根據 bank_id 重建銀行資訊:', savedFormData.bank_id);
+      this.reconstructBankInfo(savedFormData.bank_id);
+    } else {
+      this.selectedBankInfo = null;
+    }
+
     // 載入分類資料
     if (savedFormData.bus_type) {
       setTimeout(() => {
@@ -500,6 +511,30 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
         this.locationData = [];
       }
     }
+  }
+
+  private reconstructBankInfo(bankId: string): void {
+    if (!bankId) {
+      this.selectedBankInfo = null;
+      return;
+    }
+
+    this.bankService.getBankOptions(bankId).subscribe({
+      next: (options) => {
+        // API 回傳：[{ label: "臺灣銀行營業部", value: "0040037" }]
+        const matchedBank = options.find(option => option.value === bankId);
+
+        if (matchedBank) {
+          // 🎯 重建完整格式
+          const fullText = `${matchedBank.value}${matchedBank.label}`;
+          this.selectedBankInfo = {
+            value: matchedBank.value,     // "0040037"
+            label: fullText,              // "0040037臺灣銀行營業部"
+            fullText: fullText            // "0040037臺灣銀行營業部"
+          };
+        }
+      }
+    });
   }
 
   private initializeEmptyForm(): void {
@@ -541,12 +576,11 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
       total_amt_unit: 'M', // 預設為月
       total_amt_vendor_unit: 'M', // 預設為月
       company_addr: '',
-      // 🎯 清空銀行資訊
-      selectedBankInfo: null
     });
 
     // 🎯 清空位置資料
     this.locationData = [];
+    this.selectedBankInfo = null;
 
     console.log('✅ 空表單初始化完成');
   }
@@ -629,6 +663,14 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
       total_amt_unit: queryData['total_amt_unit'] as string,
       total_amt_vendor_unit: queryData['total_amt_vendor_unit'] as string,
     });
+
+    const bankId = queryData['bank_id'] as string;
+    if (bankId) {
+      console.log('🏦 載入查詢結果的銀行資訊:', bankId);
+      this.reconstructBankInfo(bankId);
+    } else {
+      this.selectedBankInfo = null;
+    }
 
     const busType = queryData['bus_type'] as string;
     if (busType) {
@@ -777,7 +819,8 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
     // 🎯 準備位置資料
     const workflowData = {
       ...formData,
-      locationInfo: this.prepareLocationDataForSubmit()
+      locationInfo: this.prepareLocationDataForSubmit(),
+      selectedBankInfo: this.selectedBankInfo
     };
 
     const contractInfo = {
@@ -1342,15 +1385,37 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
 
   // ==========  銀行相關事件處理 ==========
   onBankSelect(selectedBank: AutoCompleteOption): void {
-    this.selectedBankInfo = selectedBank;
+    console.log('🏦 銀行選擇事件:', selectedBank);
+
+    // 🎯 確保 selectedBank 有完整的屬性
+    // AutoComplete 組件應該已經提供完整的 AutoCompleteOption 物件
+    this.selectedBankInfo = {
+      value: selectedBank.value,      // 例如: "0040037"
+      label: selectedBank.label,      // 例如: "臺灣銀行營業部"
+      fullText: selectedBank.fullText // 例如: "0040037臺灣銀行營業部"
+    };
+
     this.dataForm.patchValue({ bank_id: selectedBank.value });
+
+    // 🎯 立即儲存到工作流程
     this.saveToWorkflow();
+
+    console.log('✅ 銀行選擇完成並儲存:', {
+      bank_id: selectedBank.value,
+      selectedBankInfo: this.selectedBankInfo
+    });
   }
 
   onBankUnselect(): void {
+    console.log('🏦 銀行取消選擇');
+
     this.selectedBankInfo = null;
     this.dataForm.patchValue({ bank_id: '' });
+
+    // 🎯 立即儲存到工作流程
     this.saveToWorkflow();
+
+    console.log('✅ 銀行取消選擇並儲存');
   }
 
   searchBankOptions(searchKeyword: string): Observable<string[]> {
