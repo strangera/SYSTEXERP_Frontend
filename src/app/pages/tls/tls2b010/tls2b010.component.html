@@ -27,19 +27,51 @@
               [submitted]="submitted"></app-calendar>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select label="收銀機號" controlName="ECR_No" [options]="ECRNoOptions" optionLabel="label"
-              optionValue="value" [control]="queryForm.controls.ECR_No" [submitted]="submitted"></app-multi-select>
+            <app-multi-select
+              label="收銀機號"
+              controlName="ECR_No"
+              [options]="ECRNoOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.ECR_No_List"
+              [submitted]="submitted"
+            ></app-multi-select>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select label="專櫃編號" controlName="TLT_No" [options]="CounterOptions" optionLabel="formLabel"
-              optionValue="value" [control]="queryForm.controls.TLT_No" [submitted]="submitted"></app-multi-select>
+            <app-multi-select
+              label="專櫃編號"
+              controlName="TLT_No"
+              [options]="CounterOptions"
+              optionLabel="formLabel"
+              optionValue="value"
+              [control]="queryForm.controls.TLT_No_List"
+              [submitted]="submitted"
+            ></app-multi-select>
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="收銀機類型" controlName="cahserType" [options]="cahserTypeOptions" optionLabel="label"
-              optionValue="value" [control]="queryForm.controls.cahserType" [submitted]="submitted"></app-dropdown>
+            <app-dropdown
+              label="收銀機類型"
+              controlName="cahserType"
+              [options]="cahserTypeOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.ECR_Type"
+              [submitted]="submitted"
+            ></app-dropdown>
           </div>
-
+                      <div class="col-12 md:col-6 lg:col-4">
+                <app-multi-select
+                  label="顯示欄位"
+                  controlName="reimbursementType"
+                  [options]="reimbursementOptions"
+                  optionLabel="label"
+                  optionValue="value"
+                  [control]="queryForm.controls.reimbursementType"
+                  [submitted]="submitted"
+                  
+                ></app-multi-select>
+              </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-radiobutton label="顯示方式" groupname="systemtyperadio" [control]="queryForm.controls.cashShowUp"
               [options]="CashShowupByOptions" [submitted]="submitted"></app-radiobutton>
@@ -59,9 +91,9 @@
   <div class="mb-2 text-sm">
     銷售日期：
     {{
-    queryForm.controls.TXN_Date.value
-    ? (queryForm.controls.TXN_Date.value | date: 'yyyy/MM/dd')
-    : '未選擇'
+      queryForm.controls.TXN_Date.value
+        ? (queryForm.controls.TXN_Date.value | date: 'yyyy/MM/dd')
+        : '未選擇'
     }}
   </div>
   <div class="card">

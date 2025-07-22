@@ -1,12 +1,8 @@
 <div class="card">
-  <div class="grid align-items-center">
-    <div class="col" style="flex: 1">
-      <app-menubar [ProgNo]="ProgNo"></app-menubar>
-    </div>
-    <!-- <div *appHasPermission="addPermission">
-        <app-button btnType="create" (click)="onCreate()" class="col"></app-button>
-      </div> -->
+  <div class="flex gap-2 mb-2">
+    <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
   </div>
+
   <p-accordion>
     <p-accordionTab
       header="{{ 'query-conditions' | translate }}"
@@ -24,18 +20,18 @@
             <app-calendar
               calendarType="dateOne"
               label="銷售日期"
-              [control]="queryForm.controls.salesDate"
+              [control]="queryForm.controls.TXN_Date"
               [submitted]="submitted"
             ></app-calendar>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown
               label="樓層"
-              controlName="floor"
+              controlName="FLOOR_NO"
               [options]="floorOptions"
               optionLabel="label"
               optionValue="value"
-              [control]="queryForm.controls.floor"
+              [control]="queryForm.controls.FLOOR_NO"
               [submitted]="submitted"
             ></app-dropdown>
           </div>
@@ -43,19 +39,30 @@
             <app-input-number-range
               [useGrouping]="false"
               label="收銀機號"
-              [startControl]="queryForm.controls.cashRegisterNumberstartSerial"
-              [endControl]="queryForm.controls.cashRegisterNumberendSerial"
+              [startControl]="queryForm.controls.ECR_No_Start"
+              [endControl]="queryForm.controls.ECR_No_End"
               [submitted]="submitted"
             ></app-input-number-range>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown
               label="付款別"
-              controlName="paymentMethod"
+              controlName="PAY_NO"
               [options]="paymentToolOptions"
               optionLabel="label"
               optionValue="value"
-              [control]="queryForm.controls.paymentMethod"
+              [control]="queryForm.controls.PAY_NO"
+              [submitted]="submitted"
+            ></app-dropdown>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown
+              label="館別"
+              controlName="building_no"
+              [options]="buildingNoOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.building_no"
               [submitted]="submitted"
             ></app-dropdown>
           </div>
@@ -76,12 +83,20 @@
 </div>
 
 <div class="card">
-  <div class="col-12">
-    <app-table
-      [data]="data"
-      [columns]="columns"
-      (edit)="onEdit($event)"
-      (detail)="onDetail($event)"
-    ></app-table>
-  </div>
+  <app-table
+    dataKey="id"
+    [data]="data"
+    [columns]="columns"
+    (edit)="onEdit($event)"
+    [showCheckBox]="true"
+    (selectionChange)="selectedItems = $event"
+    [selectedItems]="selectedItems"
+    [multiSortMeta]="[{ field: 'ECR_No', order: 1 }]"
+    [totalRecords]="totalRecords"
+    (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"
+    [lazy]="true"
+    [loading]="loading"
+    [showPaginator]="true"
+    [showReportMode]="true"
+  ></app-table>
 </div>
