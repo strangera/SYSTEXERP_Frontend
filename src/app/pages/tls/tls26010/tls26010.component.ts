@@ -2,19 +2,15 @@ import { Component, computed, effect } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
+import { TLS26010Service } from '@service/api/tls/tls26010.service';
+import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
+import { ButtonComponent, CalendarRangeComponent, DropdownComponent, MultiSelectComponent, TableComponent } from '@shared/componentkit';
+import { TableExpansionComponent } from '@shared/componentkit/table/table-expansion/table-expansion.component';
+import { AddButton, Column } from '@shared/componentkit/table/table.model';
+import { MenubarComponent } from '@shared/index';
 import { AccordionModule } from 'primeng/accordion';
 import { FileSelectEvent, FileUploadModule } from 'primeng/fileupload';
 import { combineLatest, map } from 'rxjs';
-import { TLS26010Service } from '../../../service/api/tls/tls26010.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
-import { TableExpansionComponent } from '../../../shared/componentkit/table/table-expansion/table-expansion.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { AddButton, Column, RowEditSaveEvent } from '../../../shared/componentkit/table/table.model';
 import { ApprovalStatus, PreorderECRListQuery, TLS26010Data, TLS26010Query, TLTTALENTQuery } from './tls26010.model';
 
 @Component({
@@ -52,6 +48,8 @@ export class TLS26010Component extends BasicQueryPageComponent<any> {
   });
 
   selectedItems: TLS26010Data[] = [];
+
+  editDisabled = (rowData: TLS26010Data) => rowData.pod_status !== ApprovalStatus.未核准;
 
   addButton: AddButton[] = [
     {
@@ -112,7 +110,7 @@ export class TLS26010Component extends BasicQueryPageComponent<any> {
 
   // 監聽館別及樓層變化
   readonly dependentDataEffect = effect(() => {
-    const building_no = this.sys3800Signal();
+    this.sys3800Signal();
     const floor_no = this.sys3900Signal();
     this.queryForm.patchValue({ ecrNos: [], tltNos: [] });
 
@@ -150,10 +148,10 @@ export class TLS26010Component extends BasicQueryPageComponent<any> {
 
   columns: Column[] = [
     { field: 'pod_no', header: '預售活動編號', visible: true },
-    { field: 'pod_desc', header: '活動名稱', visible: true, type: 'input' },
-    { field: 'pod_sdate', header: '活動起始日期', visible: true, type: 'date' },
-    { field: 'pod_edate', header: '活動終止日期', visible: true, type: 'date' },
-    { field: 'pod_status', header: '核准狀態', visible: true, format: this.approvalStatus.bind(this) },
+    { field: 'pod_desc', header: '活動名稱', visible: true },
+    { field: 'pod_sdate', header: '活動起始日期', visible: true },
+    { field: 'pod_edate', header: '活動終止日期', visible: true },
+    { field: 'pod_status', header: '核准狀態', visible: true, format: this.tls26010Service.approvalStatus.bind(this) },
     { field: 'approved_usr_name', header: '核准人員', visible: true },
     { field: 'approved_date', header: '核准日期', visible: true },
   ];
@@ -178,15 +176,6 @@ export class TLS26010Component extends BasicQueryPageComponent<any> {
 
     // 僅供測試
     this.tls26010Service.loadTLS26010(this.queryTLS26010());
-  };
-
-  approvalStatus(status: ApprovalStatus): string {
-    switch (status) {
-      case ApprovalStatus.未核准: return '未核准';
-      case ApprovalStatus.已核准: return '已核准';
-      case ApprovalStatus.刪除: return '刪除';
-      default: return '未知狀態';
-    }
   };
 
   canQuery(): boolean {
@@ -220,49 +209,6 @@ export class TLS26010Component extends BasicQueryPageComponent<any> {
     });
   }
 
-  override onEdit(data: TLS26010Data): void {
-    if (this.canPerformAction('30')) { // '修改' 的 function_code 是 "30"
-      this.tls26010Service.updateTLS26010(data);
-    }
-  }
-
-  /** 行內編輯初始化 */
-  onRowEditInit(rowData: TLS26010Data): void {
-    console.log(`行內編輯:`, rowData);
-    if (rowData.pod_status === ApprovalStatus.已核准) return;
-  }
-
-  /** 確認編輯 */
-  onRowEditSave(event: RowEditSaveEvent): void {
-    console.log(`保存編輯:`, event);
-    const { oldData, newData } = event;
-
-    // 驗證必填欄位
-    if (!newData.pod_desc || !newData.pod_sdate || !newData.pod_edate) {
-      this.messageService.errorBubble('請填寫完整的活動資訊');
-      return;
-    }
-
-    // 驗證日期邏輯
-    if (new Date(newData.pod_sdate) >= new Date(newData.pod_edate)) {
-      this.messageService.errorBubble('活動起始日期必須早於截止日期');
-      return;
-    }
-
-    // 檢查權限
-    if (this.canPerformAction('30')) {
-      this.tls26010Service.updateTLS26010(newData);
-      this.messageService.successBubble('活動資訊已更新');
-    } else {
-      this.messageService.errorBubble('沒有編輯權限');
-    }
-  }
-
-  /** 取消編輯 */
-  onRowEditCancel(rowData: TLS26010Data): void {
-    console.log(`取消編輯:`, rowData);
-  }
-
   /** 處理文件上傳事件 */
   onFileUpload(event: FileSelectEvent): void {
     const file = event.files[0];
@@ -272,9 +218,16 @@ export class TLS26010Component extends BasicQueryPageComponent<any> {
   /** 刪除選中的活動 */
   onDelete(data: TLS26010Data[]): void {
     if (!this.canEdit()) return;
-    for (const item of data) {
-      if (item.pod_status !== ApprovalStatus.未核准) continue;
-      this.tls26010Service.deleteTLS26010(item);
-    }
+    this.confirmationService.confirm({
+      message: '是否確認刪除選中的預售活動?',
+      accept: () => {
+        for (const item of data) {
+          if (item.pod_status !== ApprovalStatus.未核准) continue;
+          this.tls26010Service.deleteTLS26010(item);
+        }
+        this.messageService.successBubble('刪除成功');
+      },
+      reject: () => this.messageService.infoBubble('已取消刪除')
+    });
   }
 }

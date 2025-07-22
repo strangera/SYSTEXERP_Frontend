@@ -1,3 +1,4 @@
+import { TOTAL_AMT_UNIT_OPTIONS } from './../tls13010/tls13010.constants';
 // tls13010-cru.component.ts (整理後版本 - 移除無用程式碼)
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
@@ -201,7 +202,9 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
     activity3: [false],
     activity4: [false],
     open_deposit: [''],
-
+    total_amt_unit: [''],
+    total_amt_vendor_unit: [''],
+    company_addr: [''],
     // 銀行 AutoComplete
     selectedBankInfo: null
   });
@@ -222,6 +225,10 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
   commCompTypeDropdown = [...TLS13010_DROPDOWN_OPTIONS.commCompType];
   tltopenflagOption = [...TLS13010_DROPDOWN_OPTIONS.openflagStatus];
   tltctypemtotalOption = [...TLS13010_DROPDOWN_OPTIONS.tltCtypeMtotal];
+
+  total_amt_unitOptions = [...TLS13010_DROPDOWN_OPTIONS.total_amt_unit];
+
+  total_amt_vendor_unit_options = [...TLS13010_DROPDOWN_OPTIONS.total_amt_vendor_unit];
 
   // ==========  API 載入的下拉選單選項 ==========
   vendorOptions: DropdownOption[] = [];
@@ -522,7 +529,9 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
       cash_yn: '',
       vip_yn: '',
       credit_card: '',
-
+      total_amt_unit: 'M', // 預設為月
+      total_amt_vendor_unit: 'M', // 預設為月
+      company_addr: '',
       // 🎯 清空銀行資訊
       selectedBankInfo: null
     });
@@ -586,6 +595,7 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
       contact_tel: queryData['contact_tel'] as string,
       contact_fax: queryData['contact_fax'] as string,
       contact_addr: queryData['contact_addr'] as string,
+      company_addr: queryData['company_addr'] as string,
       tlt_remark: queryData['tlt_remark'] as string,
 
       // 其他欄位
@@ -607,6 +617,8 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
       cap_saletype2: queryData['cap_saletype2'] as string,
       contact_USR_No: queryData['contact_USR_No'] as string,
       contact_USR_Name: queryData['contact_USR_Name'] as string,
+      total_amt_unit: queryData['total_amt_unit'] as string,
+      total_amt_vendor_unit: queryData['total_amt_vendor_unit'] as string,
     });
 
     this.loadBusinessClassifications(queryData['bus_type'] as string);
