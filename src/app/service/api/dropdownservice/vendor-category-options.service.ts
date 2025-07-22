@@ -30,4 +30,19 @@ export class VendorCategoryOptionsService {
         })) ?? [])
       );
   }
+
+  getVendorCategoryNoNameOptions(venFlag?: string): Observable<any[]> {
+    const requestBody = {
+      VEN_Flag: venFlag || ""
+    };
+
+    return this.http
+      .post<any>(`${this.apiUrl}/queryPOS2013_DropDownList`, requestBody)
+      .pipe(
+        map((res) => res?.Data?.map((x: any) => ({
+          label: `${x.No}`,  // 改這裡
+          value: x.No
+        })) ?? [])
+      );
+  }
 }

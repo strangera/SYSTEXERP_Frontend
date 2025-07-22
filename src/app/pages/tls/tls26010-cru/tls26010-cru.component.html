@@ -1,8 +1,11 @@
 <div class="card">
   <div class="grid align-items-center">
-    <div class="col"
-         style="flex: 1">
+    <div class="col">
       <app-menubar [ProgNo]="ProgNo"></app-menubar>
+    </div>
+    <div class="flex gap-2">
+      <app-button btnType="back"
+                  (click)="onCancel()"></app-button>
     </div>
   </div>
   <p-panel [header]="formTitle | translate"
@@ -12,10 +15,29 @@
           (ngSubmit)="onSubmit(dataForm)">
       <div class="grid p-fluid">
         <div class="col-12 md:col-6 lg:col-4">
+          <app-dropdown label="館別"
+                        controlName="sys3800"
+                        [options]="tls26010Service.sys3800List()"
+                        optionLabel="Name"
+                        optionValue="No"
+                        [control]="dataForm.controls.sys3800"
+                        [submitted]="submitted"></app-dropdown>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-dropdown label="樓層"
+                        controlName="sys3900"
+                        [options]="tls26010Service.sys3900List()"
+                        optionLabel="Name"
+                        optionValue="No"
+                        [control]="dataForm.controls.sys3900"
+                        [submitted]="submitted"></app-dropdown>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
           <app-input-text label="預售活動編號"
                           controlName="pod_no"
                           [control]="dataForm.controls.pod_no"
-                          [submitted]="submitted">
+                          [submitted]="submitted"
+                          [disabled]="true">
           </app-input-text>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
@@ -27,7 +49,7 @@
         </div>
         <div class="col-12 md:col-6 lg:col-4">
           <app-calendar-range calendarType="dateRange"
-                              label="活動日期"
+                              label="預售期間"
                               [startControl]="dataForm.controls.pod_sdate"
                               [endControl]="dataForm.controls.pod_edate"
                               [submitted]="submitted">
@@ -54,15 +76,34 @@
                           [disabled]="true">
           </app-input-text>
         </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-multi-select label="收銀機號"
+                            controlName="ECR_Nos"
+                            [options]="tls26010Service.ECRList"
+                            optionLabel="Name"
+                            optionValue="No"
+                            [control]="dataForm.controls.ECR_Nos"
+                            [submitted]="submitted"></app-multi-select>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-multi-select label="專櫃名稱"
+                            controlName="tlt_nos"
+                            [options]="tls26010Service.TLTList"
+                            optionLabel="Name"
+                            optionValue="No"
+                            [control]="dataForm.controls.tlt_nos"
+                            [submitted]="submitted"></app-multi-select>
+        </div>
       </div>
     </form>
     <div class="col pt-4">
       <div class="grid justify-content-end">
         <app-button btnType="cancel"
-                    (click)="onCancel()"></app-button>
+                    (click)="onCancel()"
+                    *ngIf="isFormCreateable || isFormEditable"></app-button>
         <app-button btnType="submit"
-                    (click)="submitForm(dataForm)"
-                    *ngIf="isFormEditable"></app-button>
+                    (click)="onSubmit(dataForm)"
+                    *ngIf="isFormEditable || isFormCreateable"></app-button>
       </div>
     </div>
   </p-panel>

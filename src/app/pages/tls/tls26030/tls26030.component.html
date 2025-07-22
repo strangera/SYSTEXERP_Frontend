@@ -1,99 +1,41 @@
 <div class="card">
-  <div class="grid align-items-center">
-    <div class="col" style="flex: 1">
-      <app-menubar [ProgNo]="ProgNo"></app-menubar>
-    </div>
-    <!-- <div *appHasPermission="addPermission">
-                    <app-button btnType="create" (click)="onCreate()" class="col"></app-button>
-                </div> -->
+  <div class="flex gap-2 mb-2">
+    <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
   </div>
   <p-accordion>
-    <p-accordionTab
-      header="{{ 'query-conditions' | translate }}"
-      [selected]="true"
-      class="line-height-3 m-0"
-      [headerStyleClass]="'query-accordionTab'"
-    >
-      <form
-        [formGroup]="queryForm"
-        id="queryForm"
-        (ngSubmit)="onSubmit(queryForm)"
-      >
+    <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'">
+      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar-range
-              calendarType="dateRange"
-              label="銷售日期"
-              [startControl]="queryForm.controls.saleDateStart"
-              [endControl]="queryForm.controls.saleDateEnd"
-              [submitted]="submitted"
-            ></app-calendar-range>
-          </div>
-
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
-              label="收銀機號"
-              controlName="cashierCode"
-              [control]="queryForm.controls.cashierCode"
-              [submitted]="submitted"
-            ></app-input-text>
-          </div>
-
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
-              label="專櫃編號"
-              controlName="counterCode"
-              [control]="queryForm.controls.counterCode"
-              [submitted]="submitted"
-            ></app-input-text>
-          </div>
-
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="大分類"
-              controlName="businessTypeCode"
-              [options]="businessTypeCodeOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.businessTypeCode"
-              [submitted]="submitted"
-            ></app-dropdown>
-          </div>
-
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="依機台統計"
-              controlName="machineStats"
-              [options]="floorOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.machineStats"
-              [submitted]="submitted"
-            ></app-dropdown>
-          </div>
+          <!-- 銷售日期起迄 -->
+          <app-calendar-range class="col-12 md:col-6 lg:col-4" label="銷售日期" calendarType="dateRange"
+            [startControl]="queryForm.controls.saleDateFrom" [endControl]="queryForm.controls.saleDateTo"
+            [submitted]="submitted"></app-calendar-range>
+          <!-- 館別(起訖) -->
+          <app-input-text-range class="col-12 md:col-6 lg:col-4" label="館別" controlName="storeCodeRange"
+            [startControl]="queryForm.controls.storeCodeFrom" [endControl]="queryForm.controls.storeCodeTo"
+            [submitted]="submitted" [errorForGroup]="true" />
+          <!-- 組織名稱 -->
+          <app-multi-select class="col-12 md:col-6 lg:col-4" label="組織名稱" controlName="organizationName"
+            [options]="orgOptions" optionLabel="Name" optionValue="No" [control]="queryForm.controls.organizationName"
+            [submitted]="submitted"></app-multi-select>
+          <!-- 樓層 -->
+          <app-multi-select class="col-12 md:col-6 lg:col-4" label="樓層" controlName="floor" [options]="floorOptions"
+            optionLabel="Name" optionValue="No" [control]="queryForm.controls.floor"
+            [submitted]="submitted"></app-multi-select>
+        </div>
+        <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+          <app-button btnType="clear"></app-button>
+          <app-button btnType="query" [loading]="loading"></app-button>
         </div>
       </form>
-      <div>
-        <div class="grid justify-content-end">
-          <app-button btnType="clear" (onClick)="onClearForm()"></app-button>
-          <app-button
-            btnType="query"
-            (onClick)="onSubmitQuery(queryForm)"
-            [loading]="loading"
-          ></app-button>
-        </div>
-      </div>
     </p-accordionTab>
   </p-accordion>
 </div>
-
 <div class="card">
-  <div class="col-12">
-    <app-table
-      [data]="data"
-      [columns]="columns"
-      (edit)="onEdit($event)"
-      (detail)="onDetail($event)"
-    ></app-table>
-  </div>
+  <app-table tableKey="TLS26030" [data]="data" [columns]="columns" [selectedItems]="selectedItems"
+    (selectionChange)="selectedItems = $event" dataKey="ID" [multiSortMeta]="[{ field: 'saleDate', order: 1 }]"
+    [totalRecords]="totalRecords" (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [lazy]="true"
+    [loading]="loading" [showManage]="false" [showDelete]="false">
+  </app-table>
 </div>

@@ -106,7 +106,7 @@
       [submitted]="submitted" />
     <app-dropdown (changeEvent)="onDialogChange2($event)" class="flex-1" label="目標收銀機號" controlName="Target_ECR_No"
       [control]="dialogQueryForm.controls.Target_ECR_No" [options]="dialogOptions" optionLabel="label"
-      optionValue="No" [submitted]="submitted" />
+      optionValue="No" [submitted]="submitted"></app-dropdown>
 
   </form>
   <span class="required" *ngIf="submitted && isValid">

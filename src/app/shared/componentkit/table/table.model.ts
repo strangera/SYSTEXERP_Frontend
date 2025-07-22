@@ -147,11 +147,19 @@ export const formatYYYYMM = (dateStr: string): string => {
 };
 
 // formatTimeHHMM 輸出為 HH:MM
-export const formatTimeHHMM = (value: string | number): string => {
+export const formatTimeHHMM = (value: string | number | Date): string => {
   if (!value) return '';
-  const strValue = String(value).padStart(4, '0'); // 確保是4位數字，不足補0
+
+  if (value instanceof Date) {
+    const hh = String(value.getHours()).padStart(2, '0');
+    const mm = String(value.getMinutes()).padStart(2, '0');
+    return `${hh}:${mm}`;
+  }
+
+  const strValue = String(value).padStart(4, '0'); // 確保是4位數，不足補0
   return `${strValue.substring(0, 2)}:${strValue.substring(2, 4)}`;
 };
+
 
 // 000,000,000
 export const formatAmount = (number: number | string): number => {
@@ -161,4 +169,24 @@ export const formatAmount = (number: number | string): number => {
 
 export const formatYN = (value: string): string => {
   return value === 'Y' ? '是' : '否';
+};
+
+export const formatTimeToHHMMSS = (date: Date): string => {
+  const hh = date.getHours().toString().padStart(2, '0');
+  const mm = date.getMinutes().toString().padStart(2, '0');
+  const ss = date.getSeconds().toString().padStart(2, '0');
+  return `${hh}:${mm}:${ss}`;
+}
+// formatDateToYYYYMMDD：輸出為 YYYYMMDD
+export const formatDateToYYYYMMDD = (value: string | Date): string => {
+  if (!value) return '';
+
+  const date = value instanceof Date ? value : new Date(value);
+  if (isNaN(date.getTime())) return '';
+
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+
+  return `${year}${month}${day}`;
 };

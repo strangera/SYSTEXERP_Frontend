@@ -44,25 +44,27 @@ import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-ra
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { TranslateModule } from '@ngx-translate/core';
+import { InputTextRangeComponent } from "@shared/componentkit";
 
 @Component({
-    selector: 'app-tls13010',
-    templateUrl: './tls13010.component.html',
-    styleUrl: './tls13010.component.scss',
-    standalone: true,
-    imports: [
-        MenubarComponent,
-        ButtonComponent,
-        FormsModule,
-        ReactiveFormsModule,
-        AccordionModule,
-        InputTextComponent,
-        MultiSelectComponent,
-        CalendarRangeComponent,
-        DropdownComponent,
-        TableComponent,
-        TranslateModule,
-    ],
+  selector: 'app-tls13010',
+  templateUrl: './tls13010.component.html',
+  styleUrl: './tls13010.component.scss',
+  standalone: true,
+  imports: [
+    MenubarComponent,
+    ButtonComponent,
+    FormsModule,
+    ReactiveFormsModule,
+    AccordionModule,
+    InputTextComponent,
+    MultiSelectComponent,
+    CalendarRangeComponent,
+    DropdownComponent,
+    TableComponent,
+    TranslateModule,
+    InputTextRangeComponent
+  ],
 })
 export class TLS13010Component extends BasicQueryPageComponent<ContractItem> implements OnInit {
 
@@ -133,6 +135,11 @@ export class TLS13010Component extends BasicQueryPageComponent<ContractItem> imp
     depositTypes: [[]],
     open_deposit: [[]],
     paymentMethods: [[]],
+    //版次區間
+    contract_subno_from: [],
+    contract_subno_to: [],
+    total_amt_unit: [''], // 目標營業額單位(業主)
+    total_amt_vendor_unit: [''], // 目標營業額單位(廠商)
 
     // 分頁配置
     ...createPaginationConfig([{ field: 'apply_no', order: 1 }])
@@ -163,15 +170,16 @@ export class TLS13010Component extends BasicQueryPageComponent<ContractItem> imp
     { field: 'money_type', header: '結帳方式', visible: true, format: formatMoneyType },
     { field: 'check_type', header: '對帳方式', visible: true, format: formatCheckType },
     { field: 'tlt_term_type', header: '抽成別', visible: true, format: formatTltTermType },
-    { field: 'comm_comp_type', header: '抽成額計算方式', visible: true, format: formatCommCompType },
+    // { field: 'comm_comp_type', header: '抽成額計算方式', visible: true, format: formatCommCompType },
     { field: 'store_way', header: '配合方式', visible: true, format: formatStoreWay },
     { field: 'rece_yn', header: '開立業主發票', visible: true, format: formatYN },
     { field: 'pos_yn', header: '使用業主收現', visible: true, format: formatYN },
     { field: 'cash_yn', header: '業主收現銀行', visible: true, format: formatYN },
     { field: 'contract_type', header: '合約種類', visible: true },
-    { field: 'overall_status', header: '營運狀態', visible: true, format: formatOpenflagStatus },
+    { field: 'approve_status', header: '合約狀態', visible: true },
     { field: 'source_type', header: '來源處', visible: true },
     { field: 'rental_count', header: '承租數', visible: true },
+    { field: 'tlt_openflag', header: '營運狀態', visible: true, format: formatOpenflagStatus },
   ];
 
   // ========== 下拉選單選項 ==========
@@ -192,15 +200,11 @@ export class TLS13010Component extends BasicQueryPageComponent<ContractItem> imp
   commCompTypeDropdown = [...TLS13010_DROPDOWN_OPTIONS.commCompType];
   tltopenflagOption = [...TLS13010_DROPDOWN_OPTIONS.openflagStatus];
   tltTermTypeOptions = [...TLS13010_DROPDOWN_OPTIONS.tltTermType];
-
-  // API 載入的選項
-  vendorOptions: any[] = [];
-  contractStatusOptions: any[] = [];
-  settlementMethodOptions: any[] = [];
-  paymentMethodOptions: any[] = [];
-  cooperationMethodOptions: any[] = [];
-  counterCategoryOptions: any[] = [];
   pos2013Options: any[] = [];
+  MONEY_TYPE_OPTIONS = [...TLS13010_DROPDOWN_OPTIONS.moneyType];
+  PAYTYPE_OPTIONS = [...TLS13010_DROPDOWN_OPTIONS.paytype];
+  STORE_WAY_OPTIONS = [...TLS13010_DROPDOWN_OPTIONS.storeWay];
+  APPROVE_STATUS_OPTIONS = [...TLS13010_DROPDOWN_OPTIONS.openflagStatus];
 
   constructor(
     public override router: Router,
@@ -221,7 +225,6 @@ export class TLS13010Component extends BasicQueryPageComponent<ContractItem> imp
     this.initializePage('TLS13010', 'account/tls/tls13010cru', this.queryForm, (form) => this.onSubmit(form));
     this.checkExistingWorkflow();
     this.funInfo = this.authService.getUserPermissions(this.ProgNo);
-    this.loadDropdownOptions();
     this.loadPOS2013Options();
   }
 
@@ -240,42 +243,6 @@ export class TLS13010Component extends BasicQueryPageComponent<ContractItem> imp
       // );
     }
   }
-
-  /**
-   * 載入下拉選單選項
-   */
-  private loadDropdownOptions(): void {
-    this.vendorService.getVendors().subscribe({
-      next: (data) => this.vendorOptions = data,
-      error: (err) => console.warn('載入廠商選項失敗:', err)
-    });
-
-    this.contractStatusService.getContractStatuses().subscribe({
-      next: (data) => this.contractStatusOptions = data,
-      error: (err) => console.warn('載入合約狀態選項失敗:', err)
-    });
-
-    this.settlementMethodService.getSettlementMethods().subscribe({
-      next: (data) => this.settlementMethodOptions = data,
-      error: (err) => console.warn('載入結帳方式選項失敗:', err)
-    });
-
-    this.paymentMethodService.getPaymentMethods().subscribe({
-      next: (data) => this.paymentMethodOptions = data,
-      error: (err) => console.warn('載入付款方式選項失敗:', err)
-    });
-
-    this.cooperationMethodService.getCooperationMethods().subscribe({
-      next: (data) => this.cooperationMethodOptions = data,
-      error: (err) => console.warn('載入配合方式選項失敗:', err)
-    });
-
-    this.counterCategoryService.getCounterCategories().subscribe({
-      next: (data) => this.counterCategoryOptions = data,
-      error: (err) => console.warn('載入櫃別選項失敗:', err)
-    });
-  }
-
   /**
    * 載入 POS2013 選項
    */

@@ -77,7 +77,7 @@ export class TLS12010Component extends BasicQueryPageComponent<Potential_Custome
         CreatedDateStart: [null],  // 建立日期_起始日
         CreatedDateEnd: [null],  // 建立日期_終止日
         contact_USR_Name: ['', [Validators.maxLength(16)]],  // 接洽人員代碼/名稱 -- 之後會用dropdown*
-        cus_uniform_id: ['', [Validators.maxLength(16)]], // 廠商統一編號 --這邊要請後端更新 pos2013.ven_uniform 的下拉 *
+        cus_uniform_id: [[], [Validators.maxLength(16)]], // 廠商統一編號 --這邊要請後端更新 pos2013.ven_uniform 的下拉 *
         // /*若廠商類型為1=統編, 為廠商統編 (pos2013.ven_uniform) */
 	         /*若廠商 類型為2=身份證字號, 進行身份證檢查碼檢查 */
 	         /*若廠商類型為3=員工ID, 檢查 tblUser.user_no */ 
@@ -87,7 +87,7 @@ export class TLS12010Component extends BasicQueryPageComponent<Potential_Custome
         VEN_EngName: ['', [Validators.maxLength(100)]], // 廠商名稱(英文)
         /*若廠商類型為2=身份證字號, 由使用者自行輸入 */
 	      /*若廠商類型為3=員工ID, 由使用者自行輸入 */
-        bus_type: ['', [Validators.maxLength(2)]], // 業種-大分類代碼(tltbustype)
+        bus_type: [[], [Validators.maxLength(2)]], // 業種-大分類代碼(tltbustype)
         tlt_name: ['', [Validators.maxLength(100)]],  // 品牌(專櫃名稱)
         tlt_EngName: ['', [Validators.maxLength(100)]], // 品牌英文(專櫃名稱)
         //分頁查詢
@@ -121,7 +121,9 @@ export class TLS12010Component extends BasicQueryPageComponent<Potential_Custome
         { field: 'cus_uniform_id', header: '廠商統一編號', visible: true },
         { field: 'VEN_Name', header: '廠商名稱', visible: true },
         { field: 'VEN_EngName', header: '廠商英文名稱', visible: true },
-        { field: 'bus_type', header: '大分類代碼', visible: true },
+        { field: 'bus_type', header: '大分類代碼', visible: true , format: (value: string) =>
+          this.bus_type_Option.find((option) => option.No === value)?.Label || value
+        },
         { field: 'tlt_name', header: '品牌（專櫃名稱）', visible: true },
         { field: 'tlt_EngName', header: '品牌英文名稱', visible: true },
         { field: 'VEN_Boss', header: '廠商聯絡人', visible: true },
@@ -206,11 +208,11 @@ export class TLS12010Component extends BasicQueryPageComponent<Potential_Custome
             return;
           }
     
-      
           // const deleteBody = {
           //   idList: idList, // 符合 API 的 idList 格式
           // };
-          // this.tls41050Service.deleteTLS51070(deleteBody).subscribe({
+          
+          // this.tls12010Service.deleteTLS12010(deleteBody).subscribe({
           //   next: (response) => {
           //     if (response.Status === '0000') {
           //       this.messageService.successBubble('選中項目刪除成功');
@@ -231,16 +233,15 @@ export class TLS12010Component extends BasicQueryPageComponent<Potential_Custome
           this.selectedItems = [];
         }
     
-      isRowSelectable(): boolean {
-        // return rowData.CanDel
-        return false; //不予許刪除
+      isRowSelectable(rowData: Potential_Customer): boolean {
+        return rowData.CanDel ?? false;
       }
   
       loadOptions(){
         // 查 大分類(專櫃)
         this.tls12010Service.queryTLTBUSTYPE_DropDownList({}).subscribe((response) => {
           this.bus_type_Option = response.Data.map((item: any) => ({
-            No: item.No, // 收銀機號
+            No: item.No, // 大分類(專櫃) 號
             Label: item.No + '/' + item.Name, // 組合成顯示用的Label
           }));
           console.log('大分類代號:', this.bus_type_Option);
@@ -274,12 +275,6 @@ export class TLS12010Component extends BasicQueryPageComponent<Potential_Custome
           }));
 
           console.log('統編代號(去重):', this.cus_uniform_Option);
-
-          // this.cus_uniform_Option = response.Data.map((item: any) => ({
-          //   No: item.No, // 統編代碼
-          //   Label: item.No + '/' + item.Name, // 組合成顯示用的Label
-          // }));
-          // console.log('統編代號:', response.Data);
         });
         // 查 經營方式
          this.tls12010Service.querySYS1000_DropDownList({"SYS_Type": 'T117'}).subscribe((response) => {

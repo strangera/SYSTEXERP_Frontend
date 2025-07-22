@@ -1,4 +1,3 @@
-import { ValidationService } from './../../../shared/service/validation.service';
 import { CRUDStatus } from './../../../shared/models/system/CRUDstatus';
 import { v4 as uuidv4 } from 'uuid'; // 引入 uuidv4
 import { UntilDestroy } from '@ngneat/until-destroy';

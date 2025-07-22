@@ -35,7 +35,11 @@ import { DropdownComponent } from '../../../../shared/componentkit/dropdown/drop
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class Tls24010Pos5008Component implements OnInit {
-  @Input() submitted = false;
+  @Input() data: POS5008Data[] = [];
+  @Input() isFormCreateable?: boolean
+  @Input() isFormEditable?: boolean
+  @Input() isFormReadable?: boolean
+  @Input() submitted?: boolean
   form?: FormGroup;
   POS5008FormArray?: FormArray;
   POS5008Data: POS5008Data[] = [];
@@ -57,11 +61,26 @@ export class Tls24010Pos5008Component implements OnInit {
     });
   }
   ngOnInit(): void {
+    if (this.data.length > 0 && !this.isFormCreateable) {
+      this.POS5008Data = [...this.data];
+    }
     //--付款明細------------------------------------------------------
     this.dropDownListService.queryPOS1006_DropDownList().pipe(untilDestroyed(this)).subscribe((res) => {
       this.PAY_TypeOptions = res.Data.map((item) => ({ ...item, label: item.Name }));
       const rows = res.Data.map((item, index) => {
-        const row: POS5008Data = { ID: index, PAY_No: item.No, PAY_Name: item.Name, PAY_Type: item.PAY_Type, selected: false };
+        const row: POS5008Data = {
+          ID: index,
+          PAY_No: item.No,
+          PAY_Name: item.Name,
+          TXN_PayAmt: 0,
+          CRD_Type: '',
+          CRD_No: '',
+          TXN_CouponNo: '',
+          TXN_PayDesc: '',
+          TERM_No: '',
+          PAY_Type: item.PAY_Type,
+          selected: false
+        };
         this.POS5008FormArray?.push(this.createRowForm(row));
         return row;
       });
@@ -73,6 +92,7 @@ export class Tls24010Pos5008Component implements OnInit {
   createRowForm(row: POS5008Data): FormGroup {
     return this.fb.group({
       PAY_Name: [{ value: row.PAY_Name, disabled: true }],
+      PAY_No: [{ value: row.PAY_No, disabled: true }],
       TXN_PayAmt: [null],
       CRD_Type: [''],
       CRD_No: ['', [Validators.maxLength(20)]],
@@ -98,15 +118,15 @@ export class Tls24010Pos5008Component implements OnInit {
     const formGroup = this.posFormArrayControls[rowIndex];
     // 通用驗證
     formGroup.get('TXN_PayAmt')?.setValidators([Validators.required, Validators.min(0)]);
-    formGroup.get('CRD_Type')?.setValidators([Validators.required]);
-    formGroup.get('TERM_No')?.setValidators([Validators.required]);
     // 條件驗證
     if (rowData.PAY_Type === '0') {
       formGroup.get('CRD_No')?.setValidators([Validators.required, Validators.maxLength(20)]);// 信用卡
+      formGroup.get('CRD_Type')?.setValidators([Validators.required]);
+      formGroup.get('TERM_No')?.setValidators([Validators.required]);
     } else if (rowData.PAY_Type === 'A') {
       formGroup.get('TXN_PayDesc')?.setValidators([Validators.required, Validators.maxLength(100)]);// 應收付款對象
     } else {
-      formGroup.get('TXN_CouponNo')?.setValidators([Validators.required, Validators.maxLength(50)]);// 其他券號
+      formGroup.get('TXN_CouponNo')?.setValidators([Validators.maxLength(50)]);// 其他券號
     }
     formGroup.updateValueAndValidity({ emitEvent: false });
     this.cdr.markForCheck();
