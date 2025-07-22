@@ -150,6 +150,7 @@ export class TableComponent extends BasicPrintDataComponent implements OnInit, O
   // 其他
   @Input() emptyMessage = '查無資料';                // table 無資料時顯示文字
   @Input() showDelete = true;                    // 是否顯示刪除按鈕
+  @Input() deleteIcon = 'pi pi-trash';          // 刪除按鈕圖示
   // 權限
   @Input() showSubtotal = false; // 是否顯示小計
   @Input() subtotalFields: string[] = []; // 要計算小計的欄位名稱

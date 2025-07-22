@@ -1,9 +1,8 @@
 import { Sys0110Service } from './../../../service/api/sys/sys0110.service';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-// Shared
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { apiOption, option, SYS1000, tblUser } from '../../../shared/models/sys/sysb000.module';
+import { apiOption, option, tblUser } from '../../../shared/models/sys/sysb000.module';
 import { Column, createPaginationConfig, formatDate, formatDateTime } from '../../../shared/componentkit/table/table.model';
 import { Sysb400Service } from '../../../service/api/sys/sysb400.service';
 import { UserData } from '../../../shared/models/sys/user.model';
@@ -16,24 +15,26 @@ import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/
 import { CalendarRangeQuickComponent } from '../../../shared/componentkit/calendar-range-quick/calendar-range-quick.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { TranslateModule } from '@ngx-translate/core';
+import { SystemOptionsService } from '@service/system/sys1000.service';
+import { SystemOption } from '@shared/models/sys/sys1000.model';
 
 // 4-2-1-1 使用者基本資料維護
 @Component({
-    selector: 'app-sys0110',
-    templateUrl: './sys0110.component.html',
-    standalone: true,
-    imports: [
-        MenubarComponent,
-        ButtonComponent,
-        AccordionModule,
-        FormsModule,
-        ReactiveFormsModule,
-        InputTextComponent,
-        MultiSelectComponent,
-        CalendarRangeQuickComponent,
-        TableComponent,
-        TranslateModule,
-    ],
+  selector: 'app-sys0110',
+  templateUrl: './sys0110.component.html',
+  standalone: true,
+  imports: [
+    MenubarComponent,
+    ButtonComponent,
+    AccordionModule,
+    FormsModule,
+    ReactiveFormsModule,
+    InputTextComponent,
+    MultiSelectComponent,
+    CalendarRangeQuickComponent,
+    TableComponent,
+    TranslateModule,
+  ],
 })
 
 export class SYS0110Component extends BasicQueryPageComponent<UserData> implements OnInit {
@@ -114,45 +115,21 @@ export class SYS0110Component extends BasicQueryPageComponent<UserData> implemen
 
   // 初始化下拉選單選項
   loadOptions() {
-    // *職稱代碼-SYS1000
-    this.sys0110Service.queryAllSystemCode({}).pipe(untilDestroyed(this)).subscribe((response) => {
-      this.titleOptions = response.Data
-        .filter((item: SYS1000) => item.SYS_Type === 'T103')
-        .map((item: SYS1000) => ({
-          No: item.SYS_Code,
-          Name: item.SYS_Name,
-          Label: item.SYS_Type + '-' + item.SYS_Code + '-' + item.SYS_Name,
-        }));
-      console.log('回應', this.titleOptions);
-    });
-
-    //建立組織下拉清單(SYS3100) 查詢全部
+    this.titleOptions = SystemOptionsService.getOptions('T103').map((item: SystemOption) => ({
+      No: item.SYS_Code,
+      Name: item.SYS_Name,
+      Label: item.SYS_Code + '-' + item.SYS_Name,
+    }));
     this.sysb400Service.querySYS3100_DropDownList({}).pipe(untilDestroyed(this)).subscribe((response) => {
-      this.SYS3100_Options = response.Data.map((item: any) => ({
-        No: item.No,
-        Name: item.Name,
-        Label: item.No + '-' + item.Name,
-      }));
+      this.SYS3100_Options = response.Data.map((item: any) => ({ ...item, Label: item.No + '-' + item.Name, }));
     });
-
-    this.userTypeOptions = [
-      // 使用者型態 1=公司內部人員(default) 2=專櫃人員 3=其他
-      { value: '1', label: '公司內部人員' },
-      { value: '2', label: '專櫃人員' },
-      { value: '3', label: '其他' },
-    ];
-
-    this.userStatusOptions = [
-      // 1=有效 2=停用
-      { value: '1', label: '有效' },
-      { value: '2', label: '停用' },
-    ];
+    this.userTypeOptions = [{ value: '1', label: '公司內部人員' }, { value: '2', label: '專櫃人員' }, { value: '3', label: '其他' },];
+    this.userStatusOptions = [{ value: '1', label: '有效' }, { value: '2', label: '停用' },];
   }
 
   // 提交查詢：處理表單並呼叫查詢 API
   onSubmit(frm: FormGroup): void {
     this.handleSubmit(frm, () => {
-      console.log('查詢表單', frm.value);
       this.sys0110Service.queryUser(frm.value).pipe(untilDestroyed(this)).subscribe({
         next: (response) => {
           if (response.Status === '0000') {
@@ -170,26 +147,26 @@ export class SYS0110Component extends BasicQueryPageComponent<UserData> implemen
   }
   // 刪除項目
   onDelete(data: tblUser | tblUser[]): void {
-    const items = Array.isArray(data) ? data : [data];
-    if (items.length === 0) return;
-    // 收集所有有效的 ID
-    const idList = items.filter((item) => item && item.id != null && item.id !== undefined).map((item) => item.id);
-    if (idList.length === 0) {
-      this.messageService.errorBubble('無法刪除：選中的項目缺少有效 ID');
-      console.log('項目', items);
-      return;
-    }
-    // 構建新的 requestBody 格式
-    const requestBody = {
-      ids: idList, // 符合 API 的 idList 格式
-    };
-    console.log('Delete body:', JSON.stringify(requestBody, null, 2));
-    // 調用 API
-    this.sys0110Service.deleteUser(requestBody).pipe(untilDestroyed(this)).subscribe({
-      next: (res) => { console.log(res); },
-      error: (err: string) => { console.error('API error:', err); },
-      complete: () => { this.onSubmit(this.queryForm); },
+    this.confirmationService.confirm({
+      header: '確定要停用選中的項目嗎？',
+      message: '此操作將停用選中的使用者帳號，請確認是否繼續。',
+      accept: () => {
+        const items = Array.isArray(data) ? data : [data];
+        if (items.length === 0) return;
+        // 收集所有有效的 ID
+        const idList = items.filter((item) => item && item.id != null && item.id !== undefined).map((item) => item.id);
+        if (idList.length === 0) {
+          this.messageService.errorBubble('無法刪除：選中的項目缺少有效 ID');
+          console.log('項目', items);
+          return;
+        }
+        this.sys0110Service.deleteUser({ ids: idList }).pipe(untilDestroyed(this)).subscribe({
+          next: (res) => { console.log(res); },
+          error: (err: string) => { console.error('API error:', err); },
+          complete: () => { this.onSubmit(this.queryForm); },
+        });
+        this.selectedItems = [];
+      }
     });
-    this.selectedItems = [];
   }
 }
