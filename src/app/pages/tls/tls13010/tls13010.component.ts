@@ -16,6 +16,7 @@ import {
   formatDecoType,
   formatMoneyType,
   formatOpenflagStatus,
+  formatApproveStatus,
 } from './tls13010.constants';
 
 // 下拉選單服務
@@ -176,7 +177,7 @@ export class TLS13010Component extends BasicQueryPageComponent<ContractItem> imp
     { field: 'pos_yn', header: '使用業主收現', visible: true, format: formatYN },
     { field: 'cash_yn', header: '業主收現銀行', visible: true, format: formatYN },
     { field: 'contract_type', header: '合約種類', visible: true },
-    { field: 'approve_status', header: '合約狀態', visible: true },
+    { field: 'approve_status', header: '合約狀態', visible: true, format: formatApproveStatus },
     { field: 'source_type', header: '來源處', visible: true },
     { field: 'rental_count', header: '承租數', visible: true },
     { field: 'tlt_openflag', header: '營運狀態', visible: true, format: formatOpenflagStatus },
@@ -204,7 +205,7 @@ export class TLS13010Component extends BasicQueryPageComponent<ContractItem> imp
   MONEY_TYPE_OPTIONS = [...TLS13010_DROPDOWN_OPTIONS.moneyType];
   PAYTYPE_OPTIONS = [...TLS13010_DROPDOWN_OPTIONS.paytype];
   STORE_WAY_OPTIONS = [...TLS13010_DROPDOWN_OPTIONS.storeWay];
-  APPROVE_STATUS_OPTIONS = [...TLS13010_DROPDOWN_OPTIONS.openflagStatus];
+  APPROVE_STATUS_OPTIONS = [...TLS13010_DROPDOWN_OPTIONS.approveStatusOptions];
 
   constructor(
     public override router: Router,
