@@ -9,43 +9,60 @@
       <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar-range-quick label="建檔日期"
+            <app-multi-select label="合約種類" controlName="contract_type" [options]="contact_type_Option" optionLabel="Label"
+              optionValue="No" [control]="queryForm.controls.contract_type" [submitted]="submitted"></app-multi-select>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-multi-select label="合約狀態" controlName="contract_status" [options]="contract_status_Option" optionLabel="Label"
+              optionValue="No" [control]="queryForm.controls.contract_status" [submitted]="submitted"></app-multi-select>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-calendar-range-quick label="接洽日期"
             [startControl]="queryForm.controls.CreatedDateStart" [endControl]="queryForm.controls.CreatedDateEnd"
             [submitted]="submitted" />
           </div>
+        </div>
+        <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <!-- <app-dropdown label="接洽人員代碼/名稱" controlName="contact_USR_Name" [options]="contact_USR_Option" optionLabel="Label"
-              optionValue="No" [control]="queryForm.controls.contact_USR_Name" [submitted]="submitted"></app-dropdown> -->
-              <app-input-text label="接洽人員代碼/名稱" controlName="contact_USR_Name" [control]="queryForm.controls.contact_USR_Name"
-              [submitted]="submitted"></app-input-text>
+              <app-multi-select label="接洽人員" controlName="contact_USR" [options]="contact_USR_Option" optionLabel="Label"
+              optionValue="No" [control]="queryForm.controls.contact_USR" [submitted]="submitted"></app-multi-select>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-multi-select label="廠商統一編號" controlName="cus_uniform_id" [options]="cus_uniform_Option" optionLabel="Label"
               optionValue="No" [control]="queryForm.controls.cus_uniform_id" [submitted]="submitted"></app-multi-select>
           </div>
-        </div>
-        <div class="grid p-fluid">
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text label="廠商名稱(中文)" controlName="VEN_Name" [control]="queryForm.controls.VEN_Name"
-              [submitted]="submitted"></app-input-text>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text label="廠商名稱(英文)" controlName="VEN_EngName" [control]="queryForm.controls.VEN_EngName"
-              [submitted]="submitted"></app-input-text>
-          </div>
-        </div>
-        <div class="grid p-fluid">
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="品牌" controlName="tlt_name" [options]="tlt_name_Option" optionLabel="Label"
-              optionValue="No" [control]="queryForm.controls.tlt_name" [submitted]="submitted"></app-dropdown>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text label="品牌英文" controlName="tlt_EngName" [control]="queryForm.controls.tlt_EngName"
-              [submitted]="submitted"></app-input-text>
-          </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-multi-select label="大分類" controlName="bus_type" [options]="bus_type_Option" optionLabel="Label"
               optionValue="No" [control]="queryForm.controls.bus_type" [submitted]="submitted"></app-multi-select>
+          </div>
+        </div>
+        <div class="grid p-fluid">
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-multi-select label="區域" controlName="area" [options]="area_Option" optionLabel="Label"
+              optionValue="No" [control]="queryForm.controls.area" [submitted]="submitted"></app-multi-select>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-multi-select label="樓層" controlName="floor" [options]="floor_Option" optionLabel="Label"
+              optionValue="No" [control]="queryForm.controls.floor" [submitted]="submitted"></app-multi-select>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-multi-select label="位置編號" controlName="location" [options]="location_Option" optionLabel="Label"
+              optionValue="No" [control]="queryForm.controls.location" [submitted]="submitted"></app-multi-select>
+          </div>
+        </div>
+        <div class="grid p-fluid">
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-text label="每行個數 " controlName="each_row" [control]="queryForm.controls.each_row"
+              [submitted]="submitted"></app-input-text>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-number-range label="版本編號"
+              [startControl]="queryForm.controls.version_start" [endControl]="queryForm.controls.version_end"
+              [submitted]="submitted" />
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-text label="專櫃編號 " controlName="counter" [control]="queryForm.controls.counter"
+              [submitted]="submitted"></app-input-text>
           </div>
         </div>
         <!-- <div> -->
