@@ -1,4 +1,3 @@
-import { map } from 'rxjs';
 import { ValidationService } from './../../../shared/service/validation.service';
 // --Commonly used imports--
 import { Component, OnInit, ViewChild, } from '@angular/core';
@@ -324,7 +323,7 @@ export class TLS12010CRUComponent extends BasicCruPageComponent<Potential_Custom
         if (response.Status === '0000') {
           this.potentialDetail = response.Data.map((item: any) => ({
             ...item,
-            status: 'old', // 讀取明細狀態為 'old';
+            status: 'original', // 有明細資料，讀取明細狀態設定為 'original';
           }));
           console.log('取得明細資料:', this.potentialDetail);
         } else {
@@ -432,7 +431,7 @@ export class TLS12010CRUComponent extends BasicCruPageComponent<Potential_Custom
     }
     // 批次刪除  Potential_Customer_Detail
     onBatchDeleteDetail(selectedItems: Potential_Customer_Detail[]): void {
-      this.tls12010DetailService.deletePotentialCustomerDetail(selectedItems, this.potentialDetail, this.detailTable);
+      this.tls12010DetailService.deletePotentialCustomerDetail(selectedItems, this.potentialDetail);
     }      
     
 }
