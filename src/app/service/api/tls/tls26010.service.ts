@@ -95,10 +95,9 @@ export class TLS26010Service {
   private fetchTLS26010List = effect(() => {
     const res = new Map<string, TLS26010Data>();
     const tlsData = this.TLS26010Data();
-    for (let i = 0; i < tlsData.length; i++) {
-      for (let j = 0; j < tlsData[i].Data.length; j++) {
-        const data = tlsData[i].Data[j];
-        const item = tlsData[i];
+    for (const item of tlsData) {
+      if (!item.Data || !item.Data.length) continue;
+      for (const data of item.Data) {
         if (res.has(data.pod_no)) continue;
         res.set(data.pod_no, {
           pod_no: data.pod_no,
