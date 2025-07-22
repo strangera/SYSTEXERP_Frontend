@@ -1,15 +1,13 @@
+
 import { Component, OnInit } from '@angular/core';
-import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { ValidationService } from '../../../shared/service/validation.service';
-import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { Column } from '../../../shared/componentkit/table/table.model';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { AccordionModule } from 'primeng/accordion';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
+import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
+import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
+import { ButtonComponent, CalendarComponent, DropdownComponent, TableComponent } from '@shared/componentkit';
+import { Column } from '@shared/componentkit/table/table.model';
+import { MenubarComponent } from '@shared/index';
+import { ValidationService } from '@shared/service/validation.service';
+import { AccordionModule } from 'primeng/accordion';
 
 // 資料模型：活動項目
 interface ActivityItem {
@@ -31,21 +29,21 @@ interface ActivityItem {
 }
 
 @Component({
-    selector: 'app-tls26080',
-    templateUrl: './tls26080.component.html',
-    styleUrl: './tls26080.component.scss',
-    standalone: true,
-    imports: [
-        MenubarComponent,
-        ButtonComponent,
-        AccordionModule,
-        FormsModule,
-        ReactiveFormsModule,
-        DropdownComponent,
-        CalendarComponent,
-        TableComponent,
-        TranslateModule,
-    ],
+  selector: 'app-tls26080',
+  templateUrl: './tls26080.component.html',
+  styleUrl: './tls26080.component.scss',
+  standalone: true,
+  imports: [
+    MenubarComponent,
+    ButtonComponent,
+    AccordionModule,
+    FormsModule,
+    ReactiveFormsModule,
+    DropdownComponent,
+    CalendarComponent,
+    TableComponent,
+    TranslateModule,
+  ],
 })
 export class TLS26080Component extends BasicQueryPageComponent<ActivityItem> implements OnInit {
   // 查詢表單

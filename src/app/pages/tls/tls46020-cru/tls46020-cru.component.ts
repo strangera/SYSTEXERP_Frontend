@@ -16,27 +16,28 @@ import { InputNumberComponent } from '../../../shared/componentkit/input-number/
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
 import { NgIf } from '@angular/common';
 import { TranslateModule } from '@ngx-translate/core';
+import { SystemOptionsService } from '@service/system/sys1000.service';
 
 // 2.4.6.2 POS環境變數維護作業 CRU
 @Component({
-    selector: 'app-tls46020-cru',
-    templateUrl: './tls46020-cru.component.html',
-    standalone: true,
-    imports: [
-        MenubarComponent,
-        ButtonComponent,
-        PanelModule,
-        FormsModule,
-        ReactiveFormsModule,
-        InputTextComponent,
-        CalendarRangeComponent,
-        DropdownComponent,
-        InputTextareaComponent,
-        InputNumberComponent,
-        CalendarComponent,
-        NgIf,
-        TranslateModule,
-    ],
+  selector: 'app-tls46020-cru',
+  templateUrl: './tls46020-cru.component.html',
+  standalone: true,
+  imports: [
+    MenubarComponent,
+    ButtonComponent,
+    PanelModule,
+    FormsModule,
+    ReactiveFormsModule,
+    InputTextComponent,
+    CalendarRangeComponent,
+    DropdownComponent,
+    InputTextareaComponent,
+    InputNumberComponent,
+    CalendarComponent,
+    NgIf,
+    TranslateModule,
+  ],
 })
 export class TLS46020CRUComponent extends BasicCruPageComponent<TLS46020Item> implements OnInit {
   dataForm = this.formBuilder.nonNullable.group({
@@ -102,69 +103,46 @@ export class TLS46020CRUComponent extends BasicCruPageComponent<TLS46020Item> im
     ECR_KBLevel: [null, [Validators.maxLength(6)]], // VARCHAR(06) NULL
     ECR_KBType: [null, [Validators.maxLength(6)]], // VARCHAR(06) NULL (原為 VARCHAR(2))
     ECR_Scanner: [null, [Validators.maxLength(20)]], // VARCHAR(20) NULL
-    ECR_ScannerCom: [null, [Validators.min(0), Validators.max(99)]], // DECIMAL(02) NULL
+    ECR_ScannerCom: [0, [Validators.min(0), Validators.max(99)]], // DECIMAL(02) NULL
     ECR_MSR: [null, [Validators.maxLength(20)]], // VARCHAR(20) NULL
-    ECR_MSRCom: [null, [Validators.min(0), Validators.max(99)]], // DECIMAL(02) NULL
+    ECR_MSRCom: [0, [Validators.min(0), Validators.max(99)]], // DECIMAL(02) NULL
 
     // 周邊設定 (顯示)
     ECR_ScrType: [null, [Validators.maxLength(20)]], // VARCHAR(20) NULL
     ECR_CD: [null, [Validators.maxLength(20)]], // VARCHAR(20) NULL
-    ECR_CDCom: [null, [Validators.min(0), Validators.max(99)]], // DECIMAL(02) NULL
+    ECR_CDCom: [0, [Validators.min(0), Validators.max(99)]], // DECIMAL(02) NULL
     ECR_ExtScr: [null, [Validators.maxLength(20)]], // VARCHAR(20) NULL
-    ECR_ExtScrCom: [null, [Validators.min(0), Validators.max(99)]], // DECIMAL(02) NULL
+    ECR_ExtScrCom: [0, [Validators.min(0), Validators.max(99)]], // DECIMAL(02) NULL
 
     // 周邊設定 (列印)
     ECR_GUIPrn: [null, [Validators.maxLength(20)]], // VARCHAR(20) NULL
-    ECR_GUICom: [null, [Validators.min(0), Validators.max(99)]], // DECIMAL(02) NULL
+    ECR_GUICom: [0, [Validators.min(0), Validators.max(99)]], // DECIMAL(02) NULL
     ECR_SlipPrn: [null, [Validators.maxLength(20)]], // VARCHAR(20) NULL
-    ECR_SlipPrnCom: [null, [Validators.min(0), Validators.max(99)]], // DECIMAL(02) NULL
+    ECR_SlipPrnCom: [0, [Validators.min(0), Validators.max(99)]], // DECIMAL(02) NULL
     ECR_OrderPrn: [null, [Validators.maxLength(20)]], // VARCHAR(20) NULL
-    ECR_OrderPrnCom: [null, [Validators.min(0), Validators.max(99)]], // DECIMAL(02) NULL
+    ECR_OrderPrnCom: [0, [Validators.min(0), Validators.max(99)]], // DECIMAL(02) NULL
     ECR_LablePrn: [null, [Validators.maxLength(20)]], // VARCHAR(20) NULL
-    ECR_LablePrnCom: [null, [Validators.min(0), Validators.max(99)]], // DECIMAL(02) NULL
+    ECR_LablePrnCom: [0, [Validators.min(0), Validators.max(99)]], // DECIMAL(02) NULL
 
     // 周邊設定 (信用卡)
     ECR_EDC: [null, [Validators.maxLength(20)]], // VARCHAR(20) NULL
-    ECR_EDCCom: [null, [Validators.min(0), Validators.max(99)]], // DECIMAL(02) NULL
+    ECR_EDCCom: [0, [Validators.min(0), Validators.max(99)]], // DECIMAL(02) NULL
     ECR_EDC2: [null, [Validators.maxLength(20)]], // VARCHAR(20) NULL
-    ECR_EDC2Com: [null, [Validators.min(0), Validators.max(99)]], // DECIMAL(02) NULL
-    ECR_EDC3: [null, [Validators.maxLength(20)]], // VARCHAR(20) NULL
-    ECR_EDC3Com: [null, [Validators.min(0), Validators.max(99)]], // DECIMAL(02) NULL
+    ECR_EDC2Com: [0, [Validators.min(0), Validators.max(99)]], // DECIMAL(02) NULL
 
     // 周邊設定 (電子票證、電子支付)
     ECR_ElecSVCrdA: [null, [Validators.maxLength(20)]], // VARCHAR(20) NULL
-    ECR_ElecSVCrdACom: [null, [Validators.min(0), Validators.max(99)]], // DECIMAL(02) NULL
+    ECR_ElecSVCrdACom: [0, [Validators.min(0), Validators.max(99)]], // DECIMAL(02) NULL
     ECR_ElecSVCrdB: [null, [Validators.maxLength(20)]], // VARCHAR(20) NULL
-    ECR_ElecSVCrdBCom: [null, [Validators.min(0), Validators.max(99)]], // DECIMAL(02) NULL
+    ECR_ElecSVCrdBCom: [0, [Validators.min(0), Validators.max(99)]], // DECIMAL(02) NULL
     ECR_ElecSVCrdC: [null, [Validators.maxLength(20)]], // VARCHAR(20) NULL
-    ECR_ElecSVCrdCCom: [null, [Validators.min(0), Validators.max(99)]], // DECIMAL(02) NULL
+    ECR_ElecSVCrdCCom: [0, [Validators.min(0), Validators.max(99)]], // DECIMAL(02) NULL
     ECR_ElecPay: [null, [Validators.maxLength(20)]], // VARCHAR(20) NULL
-    ECR_ElecPayCom: [null, [Validators.min(0), Validators.max(99)]], // DECIMAL(02) NULL
+    ECR_ElecPayCom: [0, [Validators.min(0), Validators.max(99)]], // DECIMAL(02) NULL
 
     // 周邊設定 (其他)
     ECR_Drawer: [null, [Validators.maxLength(20)]], // VARCHAR(20) NULL
-    ECR_DrawerCom: [null, [Validators.min(0), Validators.max(99)]], // DECIMAL(02) NULL
-    ECR_Device1Name: [null, [Validators.maxLength(20)]], // VARCHAR(20) NULL
-    ECR_Device1Com: [null, [Validators.min(0), Validators.max(99)]], // DECIMAL(02) NULL
-    ECR_Device2Name: [null, [Validators.maxLength(20)]], // VARCHAR(20) NULL
-    ECR_Device2Com: [null, [Validators.min(0), Validators.max(99)]], // DECIMAL(02) NULL
-    ECR_Device3Name: [null, [Validators.maxLength(20)]], // VARCHAR(20) NULL
-    ECR_Device3Com: [null, [Validators.min(0), Validators.max(99)]], // DECIMAL(02) NULL
-    ECR_Device4Name: [null, [Validators.maxLength(20)]], // VARCHAR(20) NULL
-    ECR_Device4Com: [null, [Validators.min(0), Validators.max(99)]], // DECIMAL(02) NULL
-    ECR_Device5Name: [null, [Validators.maxLength(20)]], // VARCHAR(20) NULL
-    ECR_Device5Com: [null, [Validators.min(0), Validators.max(99)]], // DECIMAL(02) NULL
-    ECR_Device6Name: [null, [Validators.maxLength(20)]], // VARCHAR(20) NULL
-    ECR_Device6Com: [null, [Validators.min(0), Validators.max(99)]], // DECIMAL(02) NULL
-    ECR_Device7Name: [null, [Validators.maxLength(20)]], // VARCHAR(20) NULL
-    ECR_Device7Com: [null, [Validators.min(0), Validators.max(99)]], // DECIMAL(02) NULL
-    ECR_Device8Name: [null, [Validators.maxLength(20)]], // VARCHAR(20) NULL
-    ECR_Device8Com: [null, [Validators.min(0), Validators.max(99)]], // DECIMAL(02) NULL
-    ECR_Device9Name: [null, [Validators.maxLength(20)]], // VARCHAR(20) NULL
-    ECR_Device9Com: [null, [Validators.min(0), Validators.max(99)]], // DECIMAL(02) NULL
-    ECR_Device10Name: [null, [Validators.maxLength(20)]], // VARCHAR(20) NULL
-    ECR_Device10Com: [null, [Validators.min(0), Validators.max(99)]], // DECIMAL(02) NULL
-
+    ECR_DrawerCom: [0, [Validators.min(0), Validators.max(99)]], // DECIMAL(02) NULL
     // 稽核欄位
     CRT_Date: [{ value: null, disabled: true }], // DATETIME NULL
     CRT_USR_No: [{ value: null, disabled: true }], // VARCHAR(16) NULL
@@ -178,6 +156,18 @@ export class TLS46020CRUComponent extends BasicCruPageComponent<TLS46020Item> im
   ECR_GUI_Type_Option = ECR_GUI_Type_Option;
   YN_Option = YN_Option;
   ECR_SettleDD_Option = ECR_SettleDD_Option;
+
+  ECR_Scanner_Option = SystemOptionsService.getOptions('ECR_Scanner');
+  ECR_MSR_Option = SystemOptionsService.getOptions('ECR_MSR');
+  ECR_CD_Option = SystemOptionsService.getOptions('ECR_CD');
+  ECR_ExtScr_Option = SystemOptionsService.getOptions('ECR_ExtScr');
+  ECR_GUIPrn_Option = SystemOptionsService.getOptions('ECR_GUIPrn');
+  ECR_SlipPrn_Option = SystemOptionsService.getOptions('ECR_SlipPrn');
+  ECR_OrderPrn_Option = SystemOptionsService.getOptions('ECR_OrderPrn');
+  ECR_LablePrn_Option = SystemOptionsService.getOptions('ECR_LablePrn');
+  ECR_EDC_Option = SystemOptionsService.getOptions('ECR_EDC');
+  ECR_EDC2_Option = SystemOptionsService.getOptions('ECR_EDC2');
+  ECR_ElecPay_Option = SystemOptionsService.getOptions('ECR_ElecPay');
 
   constructor(
     private tls46020Service: TLS46020Service,

@@ -112,7 +112,7 @@ export class TLS26010Component extends BasicQueryPageComponent<any> {
   readonly dependentDataEffect = effect(() => {
     this.sys3800Signal();
     const floor_no = this.sys3900Signal();
-    this.queryForm.patchValue({ ecrNos: [], tltNos: [] });
+    this.queryForm.patchValue({ ecrNos: [], tltNos: [] }, { emitEvent: false });
 
     if (floor_no) {
       this.tls26010Service.loadPreorderECRList(this.queryPreorderECRList());
