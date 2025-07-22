@@ -28,6 +28,8 @@ import { DecimalPipe } from '@angular/common';
 import { TLS2B010Service } from '../../../service/api/tls/tls2-b010.service';
 import { DatePipe } from '@angular/common';
 
+import { ReimbursementYypeService } from './../../../service/basic/reimbursement-yype.service';
+
 @Component({
   selector: 'app-tls2b010',
   templateUrl: './tls2b010.component.html',
@@ -58,6 +60,11 @@ export class TLS2B010Component extends BasicQueryPageComponent<any> {
   CounterOptions: any[] = []; // 專櫃選項
   BUILDING_NO_Options: any[] = [];
   floorOptions: any[] = [];
+  reimbursementOptions: any[] =    [
+    { value: 1, label: '系統帳', disabled: true },
+    { value: 2, label: '自我報帳' },
+    { value: 3, label: '實收帳' },
+  ];
 columns: any[] = [
 
  {
@@ -77,7 +84,7 @@ columns: any[] = [
     visible: true,
   },
     {
-    field: 'TLT_NO',
+    field: 'USR_No',
     header: '收銀員編號/姓名',
     visible: true,
   },
@@ -130,18 +137,26 @@ columns: any[] = [
 ];
 
 
-  queryForm = this.formBuilder.group({
-    TXN_Date: [null, [Validators.required]],
-    ECR_No: [], // 收銀機機號
-    TLT_No: [],
-    cahserType: [],
-    reimbursementType: [[], Validators.nullValidator],
-    cashShowUp: [],
-    tlt_building: [],
-    tlt_floor: [],
-    DecimalPipe,
-    ...createPaginationConfig([{ field: 'TXN_Date', order: 1 }]),
-  });
+queryForm = this.formBuilder.group({
+  TXN_Date: [null, [Validators.required]],    // 單日查詢（必填）
+  DateStart: [null],                          // 區間查詢（簡表用）
+  DateEnd: [null],
+
+  ECR_No_List: [[]],                          // 收銀機號（多選）
+  TLT_No_List: [[]],                          // 專櫃編號（多選）
+  ECR_Type: [null],                           // 收銀機類型（統收/自收）
+
+  tlt_building: [null],                       // 館別
+  tlt_floor: [null],                          // 樓層
+  area_no: [null],                            // 區域
+
+  reimbursementType: [[1], Validators.nullValidator], // 顯示欄位
+  cashShowUp: [null],                         // 顯示方式（radio）
+
+  ...createPaginationConfig([{ field: 'TXN_Date', order: 1 }]),
+});
+
+
   
   moneyFormat(value: number): string {
     return value != null ? value.toLocaleString('en-US') : '0'; // ✅ 使用美式格式
@@ -155,6 +170,7 @@ columns: any[] = [
     private counterNameService: CounterNameService,
     private tls11010Service: Tls11010Service,
     private floorService: FloorService,
+    
   ) {
     super();
   }
@@ -196,6 +212,7 @@ columns: any[] = [
     this.tls11010Service
       .getBuildingOptions()
       .subscribe((res) => (this.BUILDING_NO_Options = res));
+        
   }
 
  onSubmit(form: FormGroup): void {
