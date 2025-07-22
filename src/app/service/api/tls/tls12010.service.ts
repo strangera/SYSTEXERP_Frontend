@@ -15,6 +15,36 @@ export class Tls12010Service {
   queryTLS12010(body: any): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/queryTLS12010`, body);
   }
+
+  // 查詢 Potential_Customer_Detail資料表
+  queryTLS12010_Detail(body: any): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/queryTLS12010_Detail`, body);
+  }
+
+  // 新增 Potential_Customer 資料表
+  insertTLS12010(body: any): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/insertTLS12010`, body);
+  }
+
+  // 新增 Potential_Customer_Detail 資料表
+  insertTLS12010_Detail(body: any): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/insertTLS12010_Detail`, body);
+  }
+
+  // 更新 Potential_Customer 資料表
+  updateTLS12010(body: any): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/updateTLS12010`, body);
+  }
+
+  // 更新 Potential_Customer_Detail 資料表
+  updateTLS12010_Detail(body: any): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/updateTLS12010_Detail`, body);
+  }
+
+  // 刪除 Potential_Customer 資料表
+  deleteTLS12010(body: any): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/deleteTLS12010`, body);
+  }
   // --- dropDown ---
 
   // 查詢 大分類(業種)設定檔

@@ -57,8 +57,9 @@ export class FIN11010Component extends BasicQueryPageComponent<FIN11010Data> imp
   ];
 
   reviewStatusOptions = [
-    { No: 'Y', Name: '是' },
-    { No: 'N', Name: '否' }
+    { No: '0', Name: '未確認' },
+    { No: '1', Name: '使用中' },
+    { No: '2', Name: '已過期' }
   ];
 
   columns: Column[] = [
@@ -115,7 +116,6 @@ export class FIN11010Component extends BasicQueryPageComponent<FIN11010Data> imp
 
   ngOnInit(): void {
     this.initializePage('FIN11010', 'fin/fin11010cru', this.queryForm, (form) => this.onSubmit(form));
-    // 選項已直接於 component 屬性定義
   }
 
   onSubmit(frm: FormGroup) {
@@ -126,8 +126,8 @@ export class FIN11010Component extends BasicQueryPageComponent<FIN11010Data> imp
       this.fin11010Service.queryFIN11010(queryRequest)
         .pipe(finalize(() => this.loading = false))
         .subscribe(response => {
-          this.data = response.Data || [];
-          this.totalRecords = response.TotalCount || this.data.length;
+          this.data = response.Data;
+          this.totalRecords = response.TotalCount;
           this.queryStateService.setQueryState(this.ProgNo, frm.getRawValue());
         });
     });
@@ -170,7 +170,7 @@ export class FIN11010Component extends BasicQueryPageComponent<FIN11010Data> imp
         };
         this.fin11010Service.deleteFIN11010(req).subscribe(() => {
           this.messageService.successBubble('刪除成功');
-          this.data = this.data.filter(item => item.id !== rowData.id);
+          this.onSubmit(this.queryForm);
         });
       }
     });

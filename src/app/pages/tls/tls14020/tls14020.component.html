@@ -238,7 +238,7 @@
             <app-multi-select
               label="櫃別"
               controlName="tlt_kind_List"
-              [options]="counterCategoryOptions"
+              [options]="tltKindOptions"
               optionLabel="label"
               optionValue="value"
               [control]="queryForm.controls.tlt_kind_List"
@@ -271,7 +271,7 @@
             <app-multi-select
               label="結帳方式"
               controlName="money_type_List"
-              [options]="settlementMethodOptions"
+              [options]="moneyTypeOptions"
               optionLabel="label"
               optionValue="value"
               [control]="queryForm.controls.money_type_List"
@@ -293,7 +293,7 @@
             <app-multi-select
               label="配合方式"
               controlName="store_way_List"
-              [options]="cooperationMethodOptions"
+              [options]="storeWayMethodOptions"
               optionLabel="label"
               optionValue="value"
               [control]="queryForm.controls.store_way_List"
@@ -349,16 +349,16 @@
   <div class="col-12">
     <app-table
       tableKey="TLS14020"
+      dataKey="id"
       [data]="data"
       [columns]="columns"
-      (edit)="onEdit($event)"
-      [showEdit]="false"
+      (detail)="onDetail($event)"
       [selectedItems]="selectedItems"
       (selectionChange)="selectedItems = $event"
+      [showEdit]="false"
       [showCheckBox]="false"
       [showDelete]="false"
       [addButton]="addButton"
-      dataKey="id"
       [multiSortMeta]="[{ field: 'contract_no', order: 1 }]"
       [totalRecords]="totalRecords"
       [lazy]="true"
@@ -368,3 +368,25 @@
     <!-- (detail)="onDetail($event)" (delete)="onDelete($event)" -->
   </div>
 </div>
+<app-dialog
+  [visible]="dialogVisible"
+  header="顯示合約"
+  [showFooter]="false"
+  (visibleChange)="dialogVisible = $event"
+  height="60%"
+>
+  <app-table
+    tableKey="TLS14020DialogTable"
+    dataKey="id"
+    [data]="dialogData"
+    [columns]="dialogColumns"
+    [showReportMode]="false"
+    [showDelete]="false"
+    [showManage]="false"
+    [multiSortMeta]="[{ field: 'contract_filename', order: 1 }]"
+    [totalRecords]="dialogTotalRecords"
+    [showCaption]="false"
+    [loading]="dialogLoading"
+    (itemClick)="downloadContractLog($event)"
+  ></app-table>
+</app-dialog>

@@ -61,8 +61,8 @@ export class SYS0320Component extends BasicQueryPageComponent<UserData> implemen
     this.handleSubmit(frm, () => {
       this.sys0110Service.queryUser(frm.value).pipe(untilDestroyed(this)).subscribe({
         next: (response) => {
-          this.data = response.Data
-          this.totalRecords = response.TotalCount || response.Data.length;
+          this.data = response.Data || [];
+          this.totalRecords = response.TotalCount;
           this.queryStateService.setQueryState(this.ProgNo, frm.value);
           this.loading = false;
         },

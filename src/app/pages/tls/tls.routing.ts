@@ -467,18 +467,6 @@ export const tlsRoutes: Routes = [
   { path: 'tls2k050cru', loadComponent: () => import('./tls2k050-cru/tls2k050-cru.component').then(m => m.TLS2K050CRUComponent) },
   // 餘代卡查詢報表 CRU
   { path: 'tls2k060cru', loadComponent: () => import('./tls2k060-cru/tls2k060-cru.component').then(m => m.TLS2K060CRUComponent) },
-  // 對帳單備註維護作業 MOD
-  // { path: 'tls21030MOD', loadComponent: () => import('./tls21030-mod/tls21030-mod.component').then(m => m.Tls21030ModComponent) },
-  // 對帳單備註維護作業 MOD
-  // { path: 'tls21040MOD', loadComponent: () => import('./tls21040-mod/tls21040-mod.component').then(m => m.TLS21040ModComponent) },
-  // 商場違規類別維護作業 MOD
-  { path: 'tls25010MOD', loadComponent: () => import('./tls25010-mod/tls25010-mod.component').then(m => m.TLS25010ModComponent) },
-  // 商場違規項目維護作業 MOD
-  { path: 'tls25020MOD', loadComponent: () => import('./tls25020-mod/tls25020-mod.component').then(m => m.TLS25020ModComponent) },
-  // 商場違規扣款維護作業 MOD
-  { path: 'tls25030MOD', loadComponent: () => import('./tls25030-mod/tls25030-mod.component').then(m => m.TLS25030ModComponent) },
-  // 預售管理作業 MOD
-  { path: 'tls26040MOD', loadComponent: () => import('./tls26040-mod/tls26040-mod.component').then(m => m.TLS26040ModComponent) },
   // 即時業績查詢
   { path: 'tls31010', loadComponent: () => import('./tls31010/tls31010.component').then(m => m.TLS31010Component) },
   // 各樓層之營業報表

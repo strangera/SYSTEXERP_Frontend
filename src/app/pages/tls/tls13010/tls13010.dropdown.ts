@@ -16,6 +16,7 @@ import {
   OVERALL_STATUS_OPTIONS,
   TLT_CTYPE_MTOTAL_OPTIONS,
   TPY_TYPE_OPTIONS,
+  APPROVE_STATUS_OPTIONS,
   CAG_TAXTYPE_OPTIONS,
   TOTAL_AMT_UNIT_OPTIONS,
   TOTAL_AMT_VENDOR_UNIT_OPTIONS
@@ -57,6 +58,7 @@ export const TLS13010_DROPDOWN_OPTIONS = {
   tpyTypeOption: convertToDropdownOptions(TPY_TYPE_OPTIONS),
   cagTaxTypeOption: convertToDropdownOptions(CAG_TAXTYPE_OPTIONS),
   commCompType: convertToDropdownOptions(COMM_COMP_TYPE_OPTIONS),         // 抽成額計算方式
+  approveStatusOptions: convertToDropdownOptions(APPROVE_STATUS_OPTIONS),
   total_amt_unit: convertToDropdownOptions(TOTAL_AMT_UNIT_OPTIONS), //目標營業額單位(業主)
   total_amt_vendor_unit: convertToDropdownOptions(TOTAL_AMT_VENDOR_UNIT_OPTIONS),  //目標營業額單位(廠商)
   yesNo: [{ value: 'Y', label: '是' }, { value: 'N', label: '否' }],

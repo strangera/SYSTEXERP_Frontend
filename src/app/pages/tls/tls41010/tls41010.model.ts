@@ -1,6 +1,6 @@
 // import { formatDate, formatDateTime } from "../../../shared/componentkit/table/table.model";
 
-import { Column } from "../../../shared/componentkit/table/table.model";
+import { Column, formatTimeHHMM } from "../../../shared/componentkit/table/table.model";
 
 export const statusOptions = [
   { label: '啟用', value: 'A' },
@@ -128,58 +128,7 @@ export interface TLS41010Data {
   ECR_GUI_PeriodQty: number;
   ECR_GUI_MinQty: number;
   ECR_SettleDD: string;
-  ECR_SettleHHNN: string;
-  ECR_KBLevel: string | null;
-  ECR_KBType: string | null;
-  ECR_Scanner: string | null;
-  ECR_ScannerCom: number | null;
-  ECR_ScrType: string | null;
-  ECR_CD: string | null;
-  ECR_CDCom: number | null;
-  ECR_ExtScr: string | null;
-  ECR_ExtScrCom: number | null;
-  ECR_GUIPrn: string | null;
-  ECR_GUICom: number | null;
-  ECR_SlipPrn: string | null;
-  ECR_SlipPrnCom: number | null;
-  ECR_LablePrn: string | null;
-  ECR_LablePrnCom: number | null;
-  ECR_EDC: string | null;
-  ECR_EDCCom: number | null;
-  ECR_EDC2: string | null;
-  ECR_EDC2Com: number | null;
-  ECR_EDC3: string | null;
-  ECR_EDC3Com: number | null;
-  ECR_ElecSVCrdA: string | null;
-  ECR_ElecSVCrdACom: number | null;
-  ECR_ElecSVCrdB: string | null;
-  ECR_ElecSVCrdBCom: number | null;
-  ECR_ElecSVCrdC: string | null;
-  ECR_ElecSVCrdCCom: number | null;
-  ECR_ElecPay: string | null;
-  ECR_ElecPayCom: number | null;
-  ECR_Drawer: string | null;
-  ECR_DrawerCom: number | null;
-  ECR_Device1Name: string | null;
-  ECR_Device1Com: number | null;
-  ECR_Device2Name: string | null;
-  ECR_Device2Com: number | null;
-  ECR_Device3Name: string | null;
-  ECR_Device3Com: number | null;
-  ECR_Device4Name: string | null;
-  ECR_Device4Com: number | null;
-  ECR_Device5Name: string | null;
-  ECR_Device5Com: number | null;
-  ECR_Device6Name: string | null;
-  ECR_Device6Com: number | null;
-  ECR_Device7Name: string | null;
-  ECR_Device7Com: number | null;
-  ECR_Device8Name: string | null;
-  ECR_Device8Com: number | null;
-  ECR_Device9Name: string | null;
-  ECR_Device9Com: number | null;
-  ECR_Device10Name: string | null;
-  ECR_Device10Com: number | null;
+  ECR_SettleHHNN: string| Date | null;
   CRT_Date?: string | null;
   CRT_USR_No: string;
   CRT_USR_Name: string;
@@ -213,7 +162,7 @@ export interface TLS41010Item {
   ECR_ClerkEntry: string;
   ECR_ForceMember: string;
   ECR_SettleDD: string;
-  ECR_SettleHHNN: string;
+  ECR_SettleHHNN: string| Date | null;
   ECR_VoidTxn: string;
   ECR_VoidRstDay: number;
   ECR_CreditNote: string;
@@ -371,7 +320,7 @@ export const columns: Column[] = [
   { field: 'ECR_GUI_PeriodQty', header: '機台每期電子發票預設配號數量', visible: true },
   { field: 'ECR_GUI_MinQty', header: '機台電子發票最小安全存量', visible: true },
   { field: 'ECR_SettleDD', header: '清機提示日期', visible: true },
-  { field: 'ECR_SettleHHNN', header: '清機提示時間-時分', visible: true },
+  { field: 'ECR_SettleHHNN', header: '清機提示時間-時分', visible: true, format: formatTimeHHMM },
   { field: 'ECR_KBLevel', header: '機台鍵盤等級', visible: true },
   { field: 'ECR_KBType', header: '鍵盤型態', visible: true },
   { field: 'ECR_Scanner', header: '掃描器型態', visible: true },
