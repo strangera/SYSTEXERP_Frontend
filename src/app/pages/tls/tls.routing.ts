@@ -691,4 +691,10 @@ export const tlsRoutes: Routes = [
   { path: 'tls56070cru', loadComponent: () => import('./tls56070-cru/tls56070-cru.component').then(m => m.TLS56070CRUComponent) },
   // 同業調撥作業 CRU
   { path: 'tls56080cru', loadComponent: () => import('./tls56080-cru/tls56080-cru.component').then(m => m.TLS56080CRUComponent) },
+  // 組織預售業績總表
+  { path: 'tls26050', loadComponent: () => import('./tls26050/tls26050.component').then(m => m.TLS26050Component) },
+  // 中分類預售業績總表
+  { path: 'tls26060', loadComponent: () => import('./tls26060/tls26060.component').then(m => m.TLS26060Component) },
+  // 各櫃預售業績總表
+  { path: 'tls26070', loadComponent: () => import('./tls26070/tls26070.component').then(m => m.TLS26070Component) },
 ];
