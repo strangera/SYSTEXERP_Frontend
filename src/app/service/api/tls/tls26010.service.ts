@@ -14,6 +14,9 @@ export class TLS26010Service {
   apiUrl: string = environment.ApiUrl;
 
   public approvalData = signal<ApprovalStatus>(ApprovalStatus.未核准);
+  public ECRTableData = signal<ECRTableData[]>([]);
+  public TLTTableData = signal<TLTTALENTData[]>([]);
+  public TLS26010List = signal<TLS26010Data[]>([]);
 
   // 儲存資料
   private sys3800Data = signal<DropdownOption[]>([]);
@@ -48,25 +51,6 @@ export class TLS26010Service {
     for (const item of this.sys3900Data()) res.set(item.No, item);
     return Array.from(res.values());
   });
-  public ECRTableData = computed(() => {
-    const result: ECRTableData[] = [];
-    for (const item of this.preorderECRData()) {
-      // 找到對應的專櫃資料
-      const tltItem = this.TLTTALENTData().find(tlt => tlt.No === item.No);
-      result.push({
-        ECR_No: item.No,
-        tlt_no: tltItem?.No || '',
-        tlt_name: tltItem?.Name || item.Name || ''
-      });
-    }
-    return result;
-  });
-  public TLTTableData = computed(() => {
-    return this.TLTTALENTData().map(item => ({
-      tlt_no: item.No,
-      tlt_name: item.Name || ''
-    }));
-  });
 
   public ECRMap = new Map<string, DropdownOption>([]);
   public TLTMap = new Map<string, DropdownOption>([]);
@@ -84,35 +68,51 @@ export class TLS26010Service {
     for (const item of this.TLTTALENTData()) this.TLTMap.set(item.No, item);
   });
 
-  // public ECRList = computed(() => {
-  //   const res = new Map<string, ECROption>();
-  //   for (const item of this.preorderECRData()) {
-  //     res.set(item.No, { ECR_No: item.No, ECR_Name: item.Name || '' });
-  //   }
-  //   return Array.from(res.values());
-  // });
-  // public TLTList = computed(() => {
-  //   const res = new Map<string, TLTOption>();
-  //   for (const item of this.TLTTALENTData()) {
-  //     res.set(item.No, { tlt_no: item.No, tlt_name: item.Name || '' });
-  //   }
-  //   return Array.from(res.values());
-  // });
-  public TLS26010List = computed(() => {
-    const res = new Map<string, TLS26010Data>();
-    for (const item of this.TLS26010Data()) {
-      for (const data of item.Data) res.set(data.pod_no, {
-        pod_no: data.pod_no,
-        pod_desc: data.pod_desc,
-        pod_sdate: data.pod_sdate,
-        pod_edate: data.pod_edate,
-        pod_status: item.pod_status,
-        approved_usr_name: item.approved_usr_name,
-        approved_date: item.approved_date,
+  private fetchData = effect(() => {
+    const ecrTableData: ECRTableData[] = [];
+    const tltTableData: TLTTALENTData[] = [];
+    const ecrData = this.preorderECRData();
+    const tltData = this.TLTTALENTData();
+
+    // 用for loop改善效能並減少記憶體
+    for (const tltItem of tltData) tltTableData.push({
+      tlt_no: tltItem.No,
+      tlt_name: tltItem.Name || '',
+    });
+
+    for (const ecrItem of ecrData) {
+      for (const tltItem of tltData) ecrTableData.push({
+        ECR_No: ecrItem.No,
+        tlt_no: tltItem.No,
+        tlt_name: tltItem.Name || '',
       });
     }
-    return Array.from(res.values());
-  });
+
+    this.ECRTableData.set(ecrTableData);
+    this.TLTTableData.set(tltTableData);
+  }, { allowSignalWrites: true });
+
+  private fetchTLS26010List = effect(() => {
+    const res = new Map<string, TLS26010Data>();
+    const tlsData = this.TLS26010Data();
+    for (let i = 0; i < tlsData.length; i++) {
+      for (let j = 0; j < tlsData[i].Data.length; j++) {
+        const data = tlsData[i].Data[j];
+        const item = tlsData[i];
+        if (res.has(data.pod_no)) continue;
+        res.set(data.pod_no, {
+          pod_no: data.pod_no,
+          pod_desc: data.pod_desc,
+          pod_sdate: data.pod_sdate,
+          pod_edate: data.pod_edate,
+          pod_status: item.pod_status,
+          approved_usr_name: item.approved_usr_name,
+          approved_date: item.approved_date,
+        });
+      }
+    }
+    this.TLS26010List.set(Array.from(res.values()));
+  }, { allowSignalWrites: true });
 
   constructor(
     private http: HttpClient,

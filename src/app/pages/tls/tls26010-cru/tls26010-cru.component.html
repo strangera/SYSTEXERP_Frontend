@@ -110,20 +110,24 @@
 </div>
 <div class="card">
   <div class="col-12">
-    <app-table [showCheckBox]="!0"
-               [showEdit]="!1"
-               [showDetail]="!1"
-               [data]="ecrTableData()"
+    <app-table [showCheckBox]="true"
+               [showEdit]="false"
+               [showDetail]="false"
+               [showDelete]="false"
+               [showReportMode]="false"
+               [data]="tls26010Service.ECRTableData()"
                [columns]="columns">
     </app-table>
   </div>
 </div>
 <div class="card">
   <div class="col-12">
-    <app-table [showCheckBox]="!0"
-               [showEdit]="!1"
-               [showDetail]="!1"
-               [data]="tltTableData()"
+    <app-table [showCheckBox]="true"
+               [showEdit]="false"
+               [showDetail]="false"
+               [showDelete]="false"
+               [showReportMode]="false"
+               [data]="tls26010Service.TLTTableData()"
                [columns]="columns2">
     </app-table>
   </div>

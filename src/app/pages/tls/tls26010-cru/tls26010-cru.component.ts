@@ -6,6 +6,7 @@ import { TranslateModule } from '@ngx-translate/core';
 import { TLS26010Service } from '@service/api/tls/tls26010.service';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
 import { ButtonComponent, CalendarRangeComponent, DropdownComponent, InputTextComponent, MultiSelectComponent, TableComponent } from '@shared/componentkit';
+import { Column } from '@shared/componentkit/table/table.model';
 import { MenubarComponent } from '@shared/index';
 import { CRUDStatus } from '@shared/models/system/CRUDstatus';
 import { PanelModule } from 'primeng/panel';
@@ -53,16 +54,6 @@ export class TLS26010CRUComponent extends BasicCruPageComponent<TLS26010Data> im
   private sys3900Signal = toSignal(this.dataForm.get('sys3900')!.valueChanges);
   private rowDataSignal = signal<TLS26010Data>({} as TLS26010Data); // 用於存儲表格資料
 
-  // 使用 computed 來監聽 Service 資料變化
-  public ecrTableData = computed(() => this.tls26010Service.ECRTableData());
-  public tltTableData = computed(() => this.tls26010Service.TLTTableData());
-
-  // 監聽資料載入狀態
-  readonly dataLoadEffect = effect(() => {
-    console.log('ECR Table Data updated:', this.ecrTableData());
-    console.log('TLT Table Data updated:', this.tltTableData());
-  });
-
   // 監聽館別及樓層變化
   readonly dependentDataEffect = effect(() => {
     const building_no = this.sys3800Signal();
@@ -89,13 +80,13 @@ export class TLS26010CRUComponent extends BasicCruPageComponent<TLS26010Data> im
     SYS3900s: [{ floor_no: this.sys3900Signal() || '' }],
   }));
 
-  columns: any[] = [
+  columns: Column[] = [
     { field: 'ECR_No', header: '收銀機號', visible: true },
     { field: 'tlt_no', header: '專櫃編號', visible: true },
     { field: 'tlt_name', header: '櫃位名稱', visible: true },
   ];
 
-  columns2: any[] = [
+  columns2: Column[] = [
     { field: 'tlt_no', header: '專櫃編號', visible: true },
     { field: 'tlt_name', header: '櫃位名稱', visible: true },
   ];
@@ -112,7 +103,7 @@ export class TLS26010CRUComponent extends BasicCruPageComponent<TLS26010Data> im
       rowdata: any,
     };
 
-    console.log(`init:`, [this.funInfo, state]);
+    console.log(`init:`, [state]);
 
     this.tls26010Service.loadSYS3800({});
     this.tls26010Service.loadSYS3900({});
@@ -192,8 +183,8 @@ export class TLS26010CRUComponent extends BasicCruPageComponent<TLS26010Data> im
         pod_sdate: value.pod_sdate.toISOString().split('T')[0],
         pod_edate: value.pod_edate.toISOString().split('T')[0],
         pod_status: ApprovalStatus.未核准,
-        ECR_Nos: this.ecrTableData(),
-        tlt_nos: this.tltTableData(),
+        ECR_Nos: this.tls26010Service.ECRTableData(),
+        tlt_nos: this.tls26010Service.TLTTableData(),
       };
 
       console.log(`submit:`, [value, payload]);
