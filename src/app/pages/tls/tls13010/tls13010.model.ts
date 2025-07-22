@@ -284,6 +284,8 @@ export interface ContractDataStructure {
     lastModified: Date;
     version: number;
     _isNewContract: boolean;
+    _isViewMode: boolean;
+    _loadedFromAPI: boolean;
   };
 }
 

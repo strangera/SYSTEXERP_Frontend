@@ -298,6 +298,9 @@ export class TLS13010Component extends BasicQueryPageComponent<ContractItem> imp
   override onCreate(): void {
     console.log('🆕 開始新增流程，清空所有暫存資料');
 
+    // 確保不是檢視模式
+    this.contractFlowService.clearViewMode();
+
     // 1. 清空工作流程服務的所有暫存資料
     this.contractFlowService.clearTempData();
     console.log('✅ 已清空所有工作流程暫存資料');
@@ -363,6 +366,10 @@ export class TLS13010Component extends BasicQueryPageComponent<ContractItem> imp
    * 編輯功能
    */
   override onEdit(rowData: ContractItem): void {
+
+    // 確保不是檢視模式
+    this.contractFlowService.clearViewMode();
+
     // 統一使用 startWorkflow，內部會自動處理新資料或現有暫存
     this.contractFlowService.startWorkflow(rowData);
 
@@ -377,7 +384,15 @@ export class TLS13010Component extends BasicQueryPageComponent<ContractItem> imp
    * 詳細檢視功能
    */
   override onDetail(rowData: ContractItem): void {
-    this.onEdit(rowData);
+    console.log('🔍 開始檢視模式:', rowData);
+
+    // 設定為檢視模式
+    this.contractFlowService.startViewWorkflow(rowData);
+
+    // 導向 CRU 頁面（但會是唯讀模式）
+    this.router.navigate(['account/tls/tls13010cru']);
+
+    this.messageService.infoBubble('進入檢視模式，所有欄位為唯讀');
   }
 
   /**

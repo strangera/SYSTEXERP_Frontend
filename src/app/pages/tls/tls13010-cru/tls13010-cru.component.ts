@@ -65,6 +65,8 @@ import { NgIf } from '@angular/common';
 
 })
 export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> implements OnInit, OnDestroy {
+  isViewMode = false;
+  private viewModeSubscription?: Subscription;
   // 位置選項資料
   locationWithDetailsOptions: DropdownOption[] = [];
   displayLocationData: LocationItem[] = [];
@@ -268,6 +270,13 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
     this.initializePage('TLS13010', this.dataForm);
     this.funInfo = this.authService.getUserPermissions(this.ProgNo);
 
+    //關鍵：一定要在這裡設定檢視模式 UI 監聽
+    this.setupViewModeUI();
+
+
+    // 檢查 router state（在現有的 loadWorkflowData() 之前）
+    this.handleRouterState();
+
     // 載入下拉選單和位置選項
     this.loadDropdownOptions();
     this.loadLocationWithDetailsOptions();
@@ -280,6 +289,7 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
     // 設定監聽
     this.setupAutoSave();
     this.setupBusTypeListener();
+
 
     setTimeout(() => {
       this.validateWorkflowData();
@@ -296,6 +306,10 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
   }
 
   ngOnDestroy(): void {
+    // 🎯 新增：清理檢視模式訂閱
+    if (this.viewModeSubscription) {
+      this.viewModeSubscription.unsubscribe();
+    }
     this.subscriptions.forEach(sub => sub.unsubscribe());
   }
 
@@ -1003,6 +1017,11 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
   }
 
   onSubmitNext(): void {
+    if (this.isViewMode) {
+      // 檢視模式：直接進入下一步檢視
+      this.router.navigate(['account/tls/tls13010next1']);
+      return;
+    }
     console.log('🔍 CRU onSubmitNext 開始執行');
     console.log('📋 表單狀態:', {
       valid: this.dataForm.valid,
@@ -1035,6 +1054,10 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
   }
 
   override onCancel(): void {
+    if (this.isViewMode) {
+      this.exitViewMode();
+      return;
+    }
     if (this.dataForm.dirty) {
       if (confirm('是否要儲存目前的編輯內容？')) {
         this.saveToWorkflow();
@@ -1060,6 +1083,7 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
   // ==========  位置表格事件處理 ==========
 
   onAddLocationItem(): void {
+    if (this.isViewMode) return;
     console.log('➕ 新增位置項目');
     console.log('🔍 新增前狀態:', {
       總數: this.locationData.length,
@@ -1163,6 +1187,7 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
   }
 
   onBatchDeleteLocation(selectedItems: LocationItem[]): void {
+    if (this.isViewMode) return;
     console.log('🔥 刪除方法開始');
     console.log('📝 選中的項目:', selectedItems);
     console.log('📊 刪除前資料狀態:', {
@@ -1640,6 +1665,191 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
     if (currentBusClass && currentBusSClass && this.tls13010DropdownService.busSClassOptions.length === 0) {
       console.log('🔄 重新載入小分類選項');
       this.tls13010DropdownService.loadBusSClassOptions(busType, currentBusClass).subscribe();
+    }
+  }
+
+  /**
+   * 🎯 新增：處理 router state
+   */
+  private async handleRouterState(): Promise<void> {
+    try {
+      const navigation = this.router.getCurrentNavigation();
+      const routerState = navigation?.extras?.state;
+
+      console.log('🔍 檢查 router state:', routerState);
+
+      if (routerState && (routerState['mode'] || routerState['talentId'])) {
+        // 🎯 從其他程式跳轉進來
+        console.log('🚀 從其他程式跳轉，初始化工作流程');
+
+        const success = await this.contractFlowService.initializeFromRouterState(routerState);
+
+        if (success) {
+          console.log('✅ 工作流程初始化成功');
+
+          // 🎯 延遲一點再載入工作流程資料，確保初始化完成
+          setTimeout(() => {
+            this.loadWorkflowData();
+          }, 100);
+
+        } else {
+          console.error('❌ 工作流程初始化失敗');
+          this.messageService.errorBubble('載入資料失敗，請重新選擇要檢視的項目');
+          this.router.navigate(['account/tls/tls13010']);
+        }
+
+      } else {
+        // 🎯 正常流程：從查詢頁面進來，不做額外處理
+        console.log('📋 正常流程，將在後續載入工作流程資料');
+      }
+
+    } catch (error) {
+      console.error('❌ 處理 router state 失敗:', error);
+      this.messageService.errorBubble('初始化失敗，請重新操作');
+      this.router.navigate(['account/tls/tls13010']);
+    }
+  }
+
+  /**
+   * 🎯 新增：設定檢視模式 UI
+   */
+  private setupViewModeUI(): void {
+    console.log('🔧 設定檢視模式 UI 監聽');
+
+    // 🎯 先檢查當前狀態
+    const currentViewMode = this.contractFlowService.isViewMode();
+    console.log('📋 當前檢視模式狀態:', currentViewMode);
+
+    // 🎯 如果已經是檢視模式，立即設定
+    if (currentViewMode) {
+      this.isViewMode = true;
+      this.applyViewModeSettings(true);
+    }
+
+    // 🎯 訂閱後續變更
+    this.viewModeSubscription = this.contractFlowService.isViewMode$.subscribe(isViewMode => {
+      console.log('🔍 檢視模式變更:', isViewMode);
+      this.isViewMode = isViewMode;
+      this.applyViewModeSettings(isViewMode);
+    });
+  }
+
+  /**
+ * 🎯 新增：套用檢視模式設定
+ */
+  private applyViewModeSettings(isViewMode: boolean): void {
+    console.log('⚙️ 套用檢視模式設定:', isViewMode);
+
+    if (isViewMode) {
+      console.log('🔒 啟用檢視模式');
+      this.dataForm.disable(); // 表單自動全禁用
+
+      // 🎯 位置表格也設為唯讀
+      this.locationColumns = this.locationColumns.map(col => ({
+        ...col,
+        editable: false
+      }));
+
+    } else {
+      console.log('🔓 停用檢視模式');
+      this.dataForm.enable();  // 恢復可編輯
+
+      // 🎯 位置表格恢復可編輯
+      this.locationColumns = this.locationColumns.map(col => ({
+        ...col,
+        editable: true
+      }));
+
+      // 🎯 恢復某些欄位的原始禁用狀態
+      setTimeout(() => {
+        this.restoreOriginalFieldStates();
+      }, 50);
+    }
+  }
+
+  /**
+   * 🎯 新增：恢復欄位的原始狀態
+   */
+  private restoreOriginalFieldStates(): void {
+    console.log('🔄 恢復原始欄位狀態');
+
+    // 版次永遠禁用
+    this.dataForm.get('contract_subno')?.disable();
+
+    // 如果不是新增模式，某些欄位禁用
+    if (!this.contractFlowService.isNewContractMode()) {
+      const nonEditableFields = ['tlt_name', 'apply_no', 'tlt_no', 'VEN_Name'];
+      nonEditableFields.forEach(fieldName => {
+        const control = this.dataForm.get(fieldName);
+        if (control) {
+          control.disable();
+          console.log(`🔒 禁用欄位: ${fieldName}`);
+        }
+      });
+    }
+  }
+
+
+  /**
+   * 🎯 新增：設定表單為唯讀
+   */
+  private setFormReadonly(readonly: boolean): void {
+    if (readonly) {
+      this.dataForm.disable();
+      console.log('🔒 表單已設為唯讀');
+    } else {
+      this.dataForm.enable();
+      console.log('🔓 表單已設為可編輯');
+    }
+  }
+
+  /**
+   * 🎯 新增：設定位置表格為唯讀
+   */
+  private updateLocationTableReadonly(readonly: boolean): void {
+    this.locationColumns = this.locationColumns.map(col => ({
+      ...col,
+      editable: !readonly
+    }));
+  }
+
+  /**
+   * 🎯 新增：處理初始化失敗
+   */
+  private handleInitializationFailure(): void {
+    this.messageService.errorBubble('載入資料失敗，請重新選擇要檢視的項目');
+    this.router.navigate(['account/tls/tls13010']);
+  }
+
+  /**
+   * 🎯 新增：按鈕顯示控制
+   */
+  showEditButtons(): boolean {
+    return !this.isViewMode;
+  }
+
+  showViewButtons(): boolean {
+    return this.isViewMode;
+  }
+
+  /**
+   * 🎯 新增：退出檢視模式
+   */
+  exitViewMode(): void {
+    this.contractFlowService.clearViewMode();
+    this.router.navigate(['account/tls/tls13010']);
+    this.messageService.infoBubble('已退出檢視模式');
+  }
+
+  /**
+   * 🎯 新增：切換到編輯模式
+   */
+  switchToEditMode(): void {
+    if (confirm('確定要切換到編輯模式嗎？')) {
+      this.contractFlowService.clearViewMode();
+      this.setFormReadonly(false);
+      this.updateLocationTableReadonly(false);
+      this.messageService.infoBubble('已切換到編輯模式');
     }
   }
 }
