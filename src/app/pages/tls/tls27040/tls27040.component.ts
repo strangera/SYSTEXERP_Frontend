@@ -1,14 +1,6 @@
-import { Component } from '@angular/core';
-import { FormBuilder, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { NavigationExtras, Router } from '@angular/router';
-// Permissions
-import { FunsrightInfo, PermissionsInfo } from '../../../shared/models/system/funsrightInfo';
-// Shared
-import { AuthService } from '../../../service/system/auth.service';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-
+import { Component, OnInit } from '@angular/core';
+import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { ValidationService } from '../../../shared/service/validation.service';
-// Services for dropdowns
 import { SalesStatusService } from '../../../service/basic/sales-status.service';
 import { CardTypeService } from '../../../service/basic/card-type.service';
 import { CreditCardInputStatusService } from '../../../service/basic/credit-card-input-status.service';
@@ -16,7 +8,6 @@ import { InstallmentPeriodService } from '../../../service/basic/installment-per
 import { AcquiringBankService } from '../../../service/basic/acquiring-bank.service';
 import { QueryFilterService } from '../../../service/basic/query-filter.service';
 import { CreditCardTransactionTypeService } from '../../../service/basic/credit-card-transaction-type.service'; // Import for transaction type
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { AccordionModule } from 'primeng/accordion';
@@ -26,29 +17,15 @@ import { InputNumberRangeComponent } from '../../../shared/componentkit/input-nu
 import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { TranslateModule } from '@ngx-translate/core'; // Add this import as requested
-
-const now = new Date();
-
+import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
+import { Column } from '@shared/componentkit/table/table.model';
 @Component({
   selector: 'app-tls27040',
   templateUrl: './tls27040.component.html',
-  styleUrls: ['./tls27040.component.scss'],
   standalone: true,
   imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputTextComponent, DropdownComponent, InputNumberRangeComponent, CalendarRangeComponent, TableComponent, TranslateModule]
 })
-export class TLS27040Component {
-
-  // 程式編號
-  ProgNo: string = '220042';
-  // 權限變數
-  funInfo?: FunsrightInfo;
-
-
-
-
-  // 查詢表單
-  loading: boolean = false;
-  submitted: boolean = false;
+export class TLS27040Component extends BasicQueryPageComponent<any> implements OnInit {
   queryForm = this.formBuilder.group({
     cashierNumber: [],  // 收銀機號
     transactionNumber: [],  // 交易流水號
@@ -57,12 +34,12 @@ export class TLS27040Component {
     cardType: [],  // 卡別
     amountStart: [, [this.validationService.numberValidator]],  // 金額開始
     amountEnd: [, [this.validationService.numberValidator]],  // 金額結束
-    salesDateStart: [now],  // 銷售日期與時間開始
-    salesDateEnd: [now],  // 銷售日期與時間結束
+    salesDateStart: [],  // 銷售日期與時間開始
+    salesDateEnd: [],  // 銷售日期與時間結束
     cardNumber: [],  // 卡號
     edcNumber: [],  // EDC號碼
-    billingDateStart: [now],  // 請款日期開始
-    billingDateEnd: [now],  // 請款日期結束
+    billingDateStart: [],  // 請款日期開始
+    billingDateEnd: [],  // 請款日期結束
     transactionType: [],  // 交易類別
     inputStatus: [],  // 輸入狀態
     authorizationCode: [],  // 授權碼
@@ -70,13 +47,8 @@ export class TLS27040Component {
     acquiringBank: [],  // 收單銀行
     queryFilter: []  // 查詢篩選
   });
-
-  // 表格資料
-  data: any[] = [
-
-  ];
-  filteredData: any[] = [...this.data];
-  columns: any[] = [
+  data: any[] = [];
+  columns: Column[] = [
     { field: 'cashRegisterCode', header: '收銀機代碼', visible: true },
     { field: 'transactionFlowCode', header: '交易流水號', visible: true },
     { field: 'counterCode', header: '專櫃編號', visible: true },
@@ -100,9 +72,7 @@ export class TLS27040Component {
     { field: 'modifier', header: '修改者', visible: true },
     { field: 'modificationDate', header: '修改日期', visible: true },
   ];
-
-
-  // 下拉選單選項
+  totalRecords = 0;
   salesStatusOptions: any[] = [];
   cardTypeOptions: any[] = [];
   inputStatusOptions: any[] = [];
@@ -112,10 +82,6 @@ export class TLS27040Component {
   transactionTypeOptions: any[] = []; // For transaction type
 
   constructor(
-    private router: Router,
-    private formBuilder: FormBuilder,
-    private messageService: NotificationService,
-    private authService: AuthService,
     private validationService: ValidationService,
     private salesStatusService: SalesStatusService,
     private cardTypeService: CardTypeService,
@@ -124,12 +90,10 @@ export class TLS27040Component {
     private acquiringBankService: AcquiringBankService,
     private queryFilterService: QueryFilterService,
     private creditCardTransactionTypeService: CreditCardTransactionTypeService // Inject service for transaction type
-  ) { }
+  ) { super(); }
 
   ngOnInit(): void {
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
-
-    // Initialize dropdown options
+    this.initializePage('TLS27040', 'TLS/TLS27040cru', this.queryForm, (form) => this.onSubmit(form));
     this.salesStatusService.getSalesStatus().subscribe(data => {
       this.salesStatusOptions = data;
     });
@@ -152,78 +116,9 @@ export class TLS27040Component {
       this.transactionTypeOptions = data;
     });
   }
-
-  canQuery(): boolean {
-    return true;
-  }
-
-  canAdd(): boolean {
-    return true;
-  }
-
-  canEdit(): boolean {
-    return true;
-  }
-
   onSubmit(frm: FormGroup) {
-    console.log(frm.value);
-    this.submitted = true;
-    this.loading = true;
-    this.messageService.blockUi();
-
-    if (frm.valid && this.canQuery()) {
-      // 提交邏輯
-    }
-
-    this.loading = false;
-    this.messageService.unblockUi();
-  }
-
-  onSubmitQuery(frm: FormGroup) {
-    // 查詢邏輯
-    this.onSubmit(frm);
-  }
-
-  onClearForm() {
-    this.queryForm.reset();  // 重置表單
-  }
-
-  onCreate() {
-    if (this.canAdd()) {
-      let extras: NavigationExtras = {
-        state: {
-          crudstatus: CRUDStatus.Create,
-          queryform: this.queryForm
-        },
-        skipLocationChange: true
-      };
-      this.router.navigate(['TLS2000/TLS27040CRU'], extras);
-    }
-  }
-
-  onEdit(data: any) {
-    if (this.canEdit()) {
-      let extras: NavigationExtras = {
-        state: {
-          crudstatus: CRUDStatus.Edit,
-          rowdata: data,
-          queryform: this.queryForm
-        },
-        skipLocationChange: true
-      };
-      this.router.navigate(['/demoCRU'], extras);
-    }
-  }
-
-  onDetail(data: any) {
-    let extras: NavigationExtras = {
-      state: {
-        crudstatus: CRUDStatus.Read,
-        rowdata: data,
-        queryform: this.queryForm
-      },
-      skipLocationChange: true
-    };
-    this.router.navigate(['/demoCRU'], extras);
+    this.handleSubmit(frm, () => {
+      // Handle the form submission logic here
+    });
   }
 }

@@ -1,29 +1,28 @@
 <div class="card">
-    <div class="flex gap-2 mb-2">
-        <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
-        <app-button btnType="back" (click)="onCancel()"></app-button>
-    </div>
-    <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
-        <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
-            <div class="grid p-fluid">
-                <app-input-text class="col-12 md:col-6" label="資料型態" controlName="data_type"
-                    [control]="dataForm.controls.data_type" [submitted]="submitted" />
-                <app-input-text class="col-12 md:col-6" label="第一行資料" controlName="line1"
-                    [control]="dataForm.controls.line1" [submitted]="submitted" />
-                <app-input-text class="col-12 md:col-6" label="第二行資料" controlName="line2"
-                    [control]="dataForm.controls.line2" [submitted]="submitted" />
-                <app-input-text class="col-12 md:col-6" label="第三行資料" controlName="line3"
-                    [control]="dataForm.controls.line3" [submitted]="submitted" />
-                <app-input-text class="col-12 md:col-6" label="第四行資料" controlName="line4"
-                    [control]="dataForm.controls.line4" [submitted]="submitted" />
-                <app-input-text class="col-12 md:col-6" label="第五行資料" controlName="line5"
-                    [control]="dataForm.controls.line5" [submitted]="submitted" />
-            </div>
-            <div *ngIf="!isFormReadable"
-                class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
-                <app-button btnType="cancel" [form]="dataForm"></app-button>
-                <app-button btnType="submit" [loading]="loading"></app-button>
-            </div>
-        </form>
-    </p-panel>
+  <div class="flex gap-2 mb-2">
+    <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
+    <app-button btnType="back" (click)="onCancel()"></app-button>
+  </div>
+  <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
+    <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
+      <div class="grid p-fluid">
+        <app-input-text class="col-12 md:col-6" label="資料型態" controlName="data_type"
+          [control]="dataForm.controls.data_type" [submitted]="submitted" />
+        <app-input-text class="col-12 md:col-6" label="第一行資料" controlName="line1" [control]="dataForm.controls.line1"
+          [submitted]="submitted" />
+        <app-input-text class="col-12 md:col-6" label="第二行資料" controlName="line2" [control]="dataForm.controls.line2"
+          [submitted]="submitted" />
+        <app-input-text class="col-12 md:col-6" label="第三行資料" controlName="line3" [control]="dataForm.controls.line3"
+          [submitted]="submitted" />
+        <app-input-text class="col-12 md:col-6" label="第四行資料" controlName="line4" [control]="dataForm.controls.line4"
+          [submitted]="submitted" />
+        <app-input-text class="col-12 md:col-6" label="第五行資料" controlName="line5" [control]="dataForm.controls.line5"
+          [submitted]="submitted" />
+      </div>
+      <div *ngIf="!isFormReadable" class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+        <app-button btnType="cancel" [form]="dataForm"></app-button>
+        <app-button btnType="submit" [loading]="loading"></app-button>
+      </div>
+    </form>
+  </p-panel>
 </div>

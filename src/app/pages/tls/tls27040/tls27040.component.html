@@ -1,204 +1,68 @@
 <div class="card">
-  <div class="grid align-items-center">
-    <div class="col" style="flex: 1">
-      <app-menubar [ProgNo]="ProgNo"></app-menubar>
-    </div>
-    <div *appHasPermission="addPermission">
-      <app-button
-        btnType="create"
-        (click)="onCreate()"
-        class="col"
-      ></app-button>
-    </div>
+  <div class="flex gap-2 mb-2">
+    <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
+    <app-button btnType="create" (click)="onCreate()"></app-button>
   </div>
   <p-accordion>
-    <p-accordionTab
-      header="{{ 'query-conditions' | translate }}"
-      [selected]="true"
-      class="line-height-3 m-0"
-      [headerStyleClass]="'query-accordionTab'"
-    >
-      <form
-        [formGroup]="queryForm"
-        id="queryForm"
-        (ngSubmit)="onSubmit(queryForm)"
-      >
+    <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'">
+      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
-              label="收銀機號"
-              controlName="cashierNumber"
-              [control]="queryForm.controls.cashierNumber"
-              [submitted]="submitted"
-            ></app-input-text>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
-              label="交易流水號"
-              controlName="transactionNumber"
-              [control]="queryForm.controls.transactionNumber"
-              [submitted]="submitted"
-            ></app-input-text>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
-              label="專櫃編號"
-              controlName="counterNumber"
-              [control]="queryForm.controls.counterNumber"
-              [submitted]="submitted"
-            ></app-input-text>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="銷售狀況"
-              controlName="salesStatus"
-              [options]="salesStatusOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.salesStatus"
-              [submitted]="submitted"
-            ></app-dropdown>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="卡別"
-              controlName="cardType"
-              [options]="cardTypeOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.cardType"
-              [submitted]="submitted"
-            ></app-dropdown>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-number-range
-              [useGrouping]="false"
-              label="金額"
-              [startControl]="queryForm.controls.amountStart"
-              [endControl]="queryForm.controls.amountEnd"
-              [submitted]="submitted"
-            ></app-input-number-range>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar-range
-              calendarType="dateTimeRange"
-              label="銷售日期"
-              [startControl]="queryForm.controls.salesDateStart"
-              [endControl]="queryForm.controls.salesDateEnd"
-              [submitted]="submitted"
-            ></app-calendar-range>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
-              label="卡號"
-              controlName="cardNumber"
-              [control]="queryForm.controls.cardNumber"
-              [submitted]="submitted"
-            ></app-input-text>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
-              label="EDC號碼"
-              controlName="edcNumber"
-              [control]="queryForm.controls.edcNumber"
-              [submitted]="submitted"
-            ></app-input-text>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar-range
-              calendarType="dateRange"
-              label="請款日期"
-              [startControl]="queryForm.controls.billingDateStart"
-              [endControl]="queryForm.controls.billingDateEnd"
-              [submitted]="submitted"
-            ></app-calendar-range>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="交易類別"
-              controlName="transactionType"
-              [options]="transactionTypeOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.transactionType"
-              [submitted]="submitted"
-            ></app-dropdown>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="輸入狀態"
-              controlName="inputStatus"
-              [options]="inputStatusOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.inputStatus"
-              [submitted]="submitted"
-            ></app-dropdown>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
-              label="授權碼"
-              controlName="authorizationCode"
-              [control]="queryForm.controls.authorizationCode"
-              [submitted]="submitted"
-            ></app-input-text>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="分期期數"
-              controlName="installmentPeriod"
-              [options]="installmentPeriodOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.installmentPeriod"
-              [submitted]="submitted"
-            ></app-dropdown>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="收單銀行"
-              controlName="acquiringBank"
-              [options]="acquiringBankOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.acquiringBank"
-              [submitted]="submitted"
-            ></app-dropdown>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="查詢篩選"
-              controlName="queryFilter"
-              [options]="queryFilterOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.queryFilter"
-              [submitted]="submitted"
-            ></app-dropdown>
-          </div>
+
+          <app-input-text class="col-12 md:col-6 lg:col-4" label="收銀機號" controlName="cashierNumber"
+            [control]="queryForm.controls.cashierNumber" [submitted]="submitted"></app-input-text>
+          <app-input-text class="col-12 md:col-6 lg:col-4" label="交易流水號" controlName="transactionNumber"
+            [control]="queryForm.controls.transactionNumber" [submitted]="submitted"></app-input-text>
+          <app-input-text class="col-12 md:col-6 lg:col-4" label="專櫃編號" controlName="counterNumber"
+            [control]="queryForm.controls.counterNumber" [submitted]="submitted"></app-input-text>
+          <app-dropdown class="col-12 md:col-6 lg:col-4" label="銷售狀況" controlName="salesStatus"
+            [options]="salesStatusOptions" optionLabel="label" optionValue="value"
+            [control]="queryForm.controls.salesStatus" [submitted]="submitted"></app-dropdown>
+          <app-dropdown class="col-12 md:col-6 lg:col-4" label="卡別" controlName="cardType" [options]="cardTypeOptions"
+            optionLabel="label" optionValue="value" [control]="queryForm.controls.cardType"
+            [submitted]="submitted"></app-dropdown>
+          <app-input-number-range class="col-12 md:col-6 lg:col-4" [useGrouping]="false" label="金額"
+            [startControl]="queryForm.controls.amountStart" [endControl]="queryForm.controls.amountEnd"
+            [submitted]="submitted"></app-input-number-range>
+          <app-calendar-range class="col-12 md:col-6 lg:col-4" calendarType="dateTimeRange" label="銷售日期"
+            [startControl]="queryForm.controls.salesDateStart" [endControl]="queryForm.controls.salesDateEnd"
+            [submitted]="submitted"></app-calendar-range>
+          <app-input-text class="col-12 md:col-6 lg:col-4" label="卡號" controlName="cardNumber"
+            [control]="queryForm.controls.cardNumber" [submitted]="submitted"></app-input-text>
+          <app-input-text class="col-12 md:col-6 lg:col-4" label="EDC號碼" controlName="edcNumber"
+            [control]="queryForm.controls.edcNumber" [submitted]="submitted"></app-input-text>
+          <app-calendar-range class="col-12 md:col-6 lg:col-4" calendarType="dateRange" label="請款日期"
+            [startControl]="queryForm.controls.billingDateStart" [endControl]="queryForm.controls.billingDateEnd"
+            [submitted]="submitted"></app-calendar-range>
+          <app-dropdown class="col-12 md:col-6 lg:col-4" label="交易類別" controlName="transactionType"
+            [options]="transactionTypeOptions" optionLabel="label" optionValue="value"
+            [control]="queryForm.controls.transactionType" [submitted]="submitted"></app-dropdown>
+          <app-dropdown class="col-12 md:col-6 lg:col-4" label="輸入狀態" controlName="inputStatus"
+            [options]="inputStatusOptions" optionLabel="label" optionValue="value"
+            [control]="queryForm.controls.inputStatus" [submitted]="submitted"></app-dropdown>
+          <app-input-text class="col-12 md:col-6 lg:col-4" label="授權碼" controlName="authorizationCode"
+            [control]="queryForm.controls.authorizationCode" [submitted]="submitted"></app-input-text>
+          <app-dropdown class="col-12 md:col-6 lg:col-4" label="分期期數" controlName="installmentPeriod"
+            [options]="installmentPeriodOptions" optionLabel="label" optionValue="value"
+            [control]="queryForm.controls.installmentPeriod" [submitted]="submitted"></app-dropdown>
+          <app-dropdown class="col-12 md:col-6 lg:col-4" label="收單銀行" controlName="acquiringBank"
+            [options]="acquiringBankOptions" optionLabel="label" optionValue="value"
+            [control]="queryForm.controls.acquiringBank" [submitted]="submitted"></app-dropdown>
+          <app-dropdown class="col-12 md:col-6 lg:col-4" label="查詢篩選" controlName="queryFilter"
+            [options]="queryFilterOptions" optionLabel="label" optionValue="value"
+            [control]="queryForm.controls.queryFilter" [submitted]="submitted"></app-dropdown>
+        </div>
+        <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+          <app-button btnType="clear"></app-button>
+          <app-button btnType="query" [loading]="loading"></app-button>
         </div>
       </form>
-      <div>
-        <div class="grid justify-content-end">
-          <app-button btnType="clear" (onClick)="onClearForm()"></app-button>
-          <app-button
-            btnType="query"
-            (onClick)="onSubmitQuery(queryForm)"
-            [loading]="loading"
-          ></app-button>
-        </div>
-      </div>
     </p-accordionTab>
   </p-accordion>
 </div>
-
 <div class="card">
-  <div class="col-12">
-    <app-table
-      [data]="data"
-      [columns]="columns"
-      (edit)="onEdit($event)"
-      (detail)="onDetail($event)"
-    ></app-table>
-  </div>
+  <app-table dataKey="BNK_No" [data]="data" [columns]="columns" (edit)="onEdit($event)" (detail)="onDetail($event)"
+    [multiSortMeta]="[{ field: 'BNK_No', order: 1 }]" [totalRecords]="totalRecords"
+    (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [lazy]="true"
+    [loading]="loading"></app-table>
 </div>

@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewEncapsulation } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { FormArray, FormBuilder, FormControl, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
@@ -16,24 +16,24 @@ import { ButtonDynamicallyaddComponent } from '../../../shared/componentkit/butt
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 
 @Component({
-    selector: 'app-tls21020-cru',
-    templateUrl: './tls21020-cru.component.html',
-    styleUrls: ['./tls21020-cru.component.scss'],
-    standalone: true,
-    imports: [
-        MenubarComponent,
-        PanelModule,
-        FormsModule,
-        ReactiveFormsModule,
-        NgFor,
-        ButtonDynamicallydeleteComponent,
-        InputTextComponent,
-        DropdownComponent,
-        ButtonDynamicallyaddComponent,
-        ButtonComponent,
-        NgIf,
-        TranslateModule,
-    ],
+  selector: 'app-tls21020-cru',
+  templateUrl: './tls21020-cru.component.html',
+  styleUrls: ['./tls21020-cru.component.scss'],
+  standalone: true,
+  imports: [
+    MenubarComponent,
+    PanelModule,
+    FormsModule,
+    ReactiveFormsModule,
+    NgFor,
+    ButtonDynamicallydeleteComponent,
+    InputTextComponent,
+    DropdownComponent,
+    ButtonDynamicallyaddComponent,
+    ButtonComponent,
+    NgIf,
+    TranslateModule,
+  ],
 })
 export class TLS21020CRUComponent extends BasicCrupageComponent implements OnInit {
   CashRegisterTypeItems: any[] = [

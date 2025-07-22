@@ -11,19 +11,19 @@ import { TranslateModule } from '@ngx-translate/core';
 
 
 @Component({
-    selector: 'app-tls21020',
-    templateUrl: './tls21020.component.html',
-    standalone: true,
-    imports: [
-        MenubarComponent,
-        ButtonComponent,
-        AccordionModule,
-        FormsModule,
-        ReactiveFormsModule,
-        DropdownComponent,
-        TableComponent,
-        TranslateModule,
-    ],
+  selector: 'app-tls21020',
+  templateUrl: './tls21020.component.html',
+  standalone: true,
+  imports: [
+    MenubarComponent,
+    ButtonComponent,
+    AccordionModule,
+    FormsModule,
+    ReactiveFormsModule,
+    DropdownComponent,
+    TableComponent,
+    TranslateModule,
+  ],
 })
 export class TLS21020Component extends BasicQueryPageComponent<any> implements OnInit {
   queryForm = this.formBuilder.group({
