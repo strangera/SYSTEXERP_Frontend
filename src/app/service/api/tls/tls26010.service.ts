@@ -1,11 +1,11 @@
 import { HttpClient } from '@angular/common/http';
 import { computed, effect, Injectable, signal } from '@angular/core';
+import { ApprovalStatus, ECRTableData, mockPreorderECRList, mockQueryTLS26010, PreorderECRListQuery, TLS26010, TLS26010Data, TLS26010Payload, TLS26010Query, TLTTALENTData, TLTTALENTQuery } from '@pages/tls/tls26010/tls26010.model';
+import { ErrorHandlerService } from '@service/system/error-handler.service';
+import { NotificationService } from '@shared/component/notification-message/notification.service';
+import { BaseQueryResponse, DropdownOption } from '@shared/models/api/base-api.interface';
 import { catchError, EMPTY, finalize, Observable, of, take, tap } from 'rxjs';
-import { environment } from '../../../../environments/environment';
-import { ApprovalStatus, mockPreorderECRList, mockQueryTLS26010, PreorderECRListQuery, TLS26010, TLS26010Data, TLS26010Payload, TLS26010Query, TLTTALENTQuery } from '../../../pages/tls/tls26010/tls26010.model';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-import { BaseQueryResponse, DropdownOption } from '../../../shared/models/api/base-api.interface';
-import { ErrorHandlerService } from '../../system/error-handler.service';
+import { environment } from 'src/environments/environment';
 
 const mock = !0;
 
@@ -48,8 +48,30 @@ export class TLS26010Service {
     for (const item of this.sys3900Data()) res.set(item.No, item);
     return Array.from(res.values());
   });
+  public ECRTableData = computed(() => {
+    const result: ECRTableData[] = [];
+    for (const item of this.preorderECRData()) {
+      // 找到對應的專櫃資料
+      const tltItem = this.TLTTALENTData().find(tlt => tlt.No === item.No);
+      result.push({
+        ECR_No: item.No,
+        tlt_no: tltItem?.No || '',
+        tlt_name: tltItem?.Name || item.Name || ''
+      });
+    }
+    return result;
+  });
+  public TLTTableData = computed(() => {
+    return this.TLTTALENTData().map(item => ({
+      tlt_no: item.No,
+      tlt_name: item.Name || ''
+    }));
+  });
+
   public ECRMap = new Map<string, DropdownOption>([]);
   public TLTMap = new Map<string, DropdownOption>([]);
+  public ECRTableMap = new Map<string, ECRTableData>([]);
+  public TLTTableMap = new Map<string, TLTTALENTData>([]);
 
   public get ECRList() { return Array.from(this.ECRMap.values()); };
   public get TLTList() { return Array.from(this.TLTMap.values()); };

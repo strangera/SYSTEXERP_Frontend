@@ -108,3 +108,23 @@
     </div>
   </p-panel>
 </div>
+<div class="card">
+  <div class="col-12">
+    <app-table [showCheckBox]="!0"
+               [showEdit]="!1"
+               [showDetail]="!1"
+               [data]="ecrTableData()"
+               [columns]="columns">
+    </app-table>
+  </div>
+</div>
+<div class="card">
+  <div class="col-12">
+    <app-table [showCheckBox]="!0"
+               [showEdit]="!1"
+               [showDetail]="!1"
+               [data]="tltTableData()"
+               [columns]="columns2">
+    </app-table>
+  </div>
+</div>
