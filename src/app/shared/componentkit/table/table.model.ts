@@ -177,3 +177,16 @@ export const formatTimeToHHMMSS = (date: Date): string => {
   const ss = date.getSeconds().toString().padStart(2, '0');
   return `${hh}:${mm}:${ss}`;
 }
+// formatDateToYYYYMMDD：輸出為 YYYYMMDD
+export const formatDateToYYYYMMDD = (value: string | Date): string => {
+  if (!value) return '';
+
+  const date = value instanceof Date ? value : new Date(value);
+  if (isNaN(date.getTime())) return '';
+
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+
+  return `${year}${month}${day}`;
+};

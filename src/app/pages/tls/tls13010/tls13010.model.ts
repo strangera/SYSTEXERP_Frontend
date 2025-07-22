@@ -129,8 +129,11 @@ export interface CleanContractData {
   contact_tel?: string;
   contact_fax?: string;
   contact_addr?: string;
+  company_addr?: string;
   tlt_remark?: string;
   ticket_remarks?: string;
+  total_amt_unit?: string;        // 目標營業額單位(業主)
+  total_amt_vendor_unit?: string; // 目標營業額單位(廠商)
 
   // 位置資訊
   locationInfo: CleanLocationInfo[];
@@ -343,6 +346,7 @@ export interface ContractInfo {
   contact_tel?: string;
   contact_fax?: string;
   contact_addr?: string;
+  company_addr?: string;
   tlt_remark?: string;
   ticket_remarks?: string;
   tlt_kind?: string;
@@ -361,6 +365,9 @@ export interface ContractInfo {
   electric_flag?: string;
   gas_flag?: string;
   check_day?: string;
+
+  total_amt_unit?: string;        // 目標營業額單位(業主)
+  total_amt_vendor_unit?: string; // 目標營業額單位(廠商)
 }
 
 // 其他介面保持不變...
@@ -635,8 +642,11 @@ export class DataCleaner {
       contact_tel: rawData.contact_tel,
       contact_fax: rawData.contact_fax,
       contact_addr: rawData.contact_addr,
+      company_addr: rawData.company_addr,
       tlt_remark: rawData.tlt_remark,
       ticket_remarks: rawData.ticket_remarks,
+      total_amt_unit: rawData.total_amt_unit,
+      total_amt_vendor_unit: rawData.total_amt_vendor_unit,
 
       // 位置資訊
       locationInfo: this.cleanLocationInfo(rawData.locationInfo || [])
@@ -1324,6 +1334,9 @@ export interface ContractItem {
   source_type: string;
   rental_count: string;
   contract_type: string;
+
+  total_amt_unit: string;
+  total_amt_vendor_unit: string;
 }
 
 export interface CategoryItem {

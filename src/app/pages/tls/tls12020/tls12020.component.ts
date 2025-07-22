@@ -30,8 +30,6 @@ import { LocationOptionsService } from '../../../service/api/dropdownservice/loc
     InputTextComponent,
     CalendarRangeComponent,
     TableComponent,
-
-
   ],
 })
 export class TLS12020Component extends BasicQueryPageComponent<any> implements OnInit {
