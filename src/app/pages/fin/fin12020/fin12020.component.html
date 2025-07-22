@@ -9,31 +9,25 @@
       <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
           <app-calendar-range class="col-12 md:col-6 lg:col-8" label="發票年月區間" calendarType="dateMonthRange"
-            [startControl]="queryForm.controls.invoice_month_start" [endControl]="queryForm.controls.invoice_month_end"
+            [startControl]="queryForm.controls.GUI_YYMM_start" [endControl]="queryForm.controls.GUI_YYMM_end"
             [submitted]="submitted"></app-calendar-range>
-          <app-dropdown class="col-12 md:col-6 lg:col-4" label="發票類別" controlName="invoice_type"
+          <app-multi-select class="col-12 md:col-6 lg:col-4" label="發票類別" controlName="GUIPaperList"
             [options]="invoiceTypeOptions" optionLabel="label" optionValue="value"
-            [control]="queryForm.controls.invoice_type" [submitted]="submitted" placeholder="請選擇"></app-dropdown>
-        </div>
-        <div class="grid p-fluid">
-          <app-input-text class="col-12 md:col-6 lg:col-4" label="字軌" controlName="prefix"
-            [control]="queryForm.controls.prefix" [submitted]="submitted" placeholder="最長2個字串"></app-input-text>
-          <app-input-text class="col-12 md:col-6 lg:col-4" label="發票號碼" controlName="invoice_no"
-            [control]="queryForm.controls.invoice_no" [submitted]="submitted" placeholder="最長8個字串"></app-input-text>
+            [control]="queryForm.controls.GUIPaperList" [submitted]="submitted"></app-multi-select>
+          <app-input-text class="col-12 md:col-6 lg:col-4" label="字軌" controlName="GUI_TRACK"
+            [control]="queryForm.controls.GUI_TRACK" [submitted]="submitted"></app-input-text>
           <app-input-text-range class="col-12 md:col-6 lg:col-4" startLabel="發票起始號碼" endLabel="發票結束號碼"
-            [startControl]="queryForm.controls.invoice_no_start" [endControl]="queryForm.controls.invoice_no_end"
+            [startControl]="queryForm.controls.GUINo_start" [endControl]="queryForm.controls.GUINo_end"
             [submitted]="submitted" [errorForGroup]="true"></app-input-text-range>
-        </div>
-        <div class="grid p-fluid">
-          <app-dropdown class="col-12 md:col-6 lg:col-4" label="收銀機號" controlName="cashier_no"
+          <app-multi-select class="col-12 md:col-6 lg:col-4" label="收銀機號" controlName="ECR_NOList"
             [options]="cashierNoOptions" optionLabel="label" optionValue="value"
-            [control]="queryForm.controls.cashier_no" [submitted]="submitted" placeholder="請選擇"></app-dropdown>
-          <app-dropdown class="col-12 md:col-6 lg:col-4" label="發票狀態" controlName="invoice_status"
+            [control]="queryForm.controls.ECR_NOList" [submitted]="submitted"></app-multi-select>
+          <app-multi-select class="col-12 md:col-6 lg:col-4" label="發票狀態" controlName="GUI_StatusList"
             [options]="invoiceStatusOptions" optionLabel="label" optionValue="value"
-            [control]="queryForm.controls.invoice_status" [submitted]="submitted" placeholder="請選擇"></app-dropdown>
-          <app-dropdown class="col-12 md:col-6 lg:col-4" label="使用別" controlName="usage_type"
+            [control]="queryForm.controls.GUI_StatusList" [submitted]="submitted"></app-multi-select>
+          <app-multi-select class="col-12 md:col-6 lg:col-4" label="使用別" controlName="SAL_TypeList"
             [options]="usageTypeOptions" optionLabel="label" optionValue="value"
-            [control]="queryForm.controls.usage_type" [submitted]="submitted" placeholder="請選擇"></app-dropdown>
+            [control]="queryForm.controls.SAL_TypeList" [submitted]="submitted"></app-multi-select>
         </div>
         <div class="justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3" style="display: flex;">
           <app-button btnType="clear"></app-button>
@@ -43,9 +37,10 @@
     </p-accordionTab>
   </p-accordion>
 </div>
+
 <div class="card">
-  <app-table tableKey="FIN12020" dataKey="invoice_month" [data]="data" [columns]="columns" (edit)="onEdit($event)"
-    (detail)="onDetail($event)" [multiSortMeta]="[{ field: 'invoice_month', order: -1 }]" [totalRecords]="totalRecords"
+  <app-table tableKey="FIN12020" dataKey="ID" [data]="data" [columns]="columns" (edit)="onEdit($event)"
+    (detail)="onDetail($event)" [multiSortMeta]="[{ field: 'ID', order: -1 }]" [totalRecords]="totalRecords"
     (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [lazy]="true" [loading]="loading"
     [showDelete]="false" [selectedItems]="selectedItems" (selectionChange)="selectedItems = $event"
     [showManage]="false">
