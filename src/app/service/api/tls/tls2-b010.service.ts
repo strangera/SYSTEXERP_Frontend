@@ -22,4 +22,8 @@ export class TLS2B010Service {
       catchError((error) => this.errorHandler.handleError(error))  // ✅ 正確
     );
   }
+  getCloseDate(payload: any): Observable<any> {
+  return this.http.post<any>(`${this.apiUrl}/TLS0000/TLS2000/getCloseDate`, payload);
+}
+
 }

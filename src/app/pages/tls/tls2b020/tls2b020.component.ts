@@ -65,17 +65,18 @@ export class TLS2B020Component extends BasicQueryPageComponent<any> {
   selectedItems: any[] = [];
   columns: any[] = [];
 
-  // 查詢表單
+  
 // 查詢表單
 queryForm = this.formBuilder.group({
   tlt_building: [null],                            // 館別
   tlt_floor: [[]],                                 // 樓層（多選）
-  TXN_Date: [null, [Validators.required]],         // 銷售年月（yyyyMM）
-  USR_No: [[]],                                    // 收銀員代號清單
-  cashierDistinction: [1],                         // 收銀員區分
-  overflowStatus: [1],                             // 溢欠狀態
+  TXN_Date: [null, [Validators.required]],         // 銷售日期（應為 Date 類型）
+  USR_No: [[]],                                     // 收銀員代號清單（備用）
+  cashierDistinction: [1],                         // 收銀員區分（保留）
+  cashShowUp: [1],                                  // 顯示方式：1=全部, 2=金額不為0, 3=溢欠
   ...createPaginationConfig([{ field: 'TXN_Date', order: 1 }])
 });
+
 
 
 
