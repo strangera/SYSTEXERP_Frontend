@@ -44,15 +44,6 @@
           <div class="grid p-fluid">
             <div class="col-12 md:col-6 lg:col-4">
               <app-input-text
-                label="櫃位名稱"
-                controlName="tlt_name"
-                [control]="dataForm.controls.tlt_name"
-                [submitted]="submitted"
-                [disabled]="!isNewContractMode()"
-              ></app-input-text>
-            </div>
-            <div class="col-12 md:col-6 lg:col-4">
-              <app-input-text
                 label="專櫃招募編號"
                 controlName="apply_no"
                 [control]="dataForm.controls.apply_no"
@@ -85,6 +76,15 @@
                 label="廠商名稱"
                 controlName="VEN_Name"
                 [control]="dataForm.controls.VEN_Name"
+                [submitted]="submitted"
+                [disabled]="!isNewContractMode()"
+              ></app-input-text>
+            </div>
+            <div class="col-12 md:col-6 lg:col-4">
+              <app-input-text
+                label="櫃位名稱"
+                controlName="tlt_name"
+                [control]="dataForm.controls.tlt_name"
                 [submitted]="submitted"
                 [disabled]="!isNewContractMode()"
               ></app-input-text>
