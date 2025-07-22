@@ -74,8 +74,19 @@ export interface TLS26010Payload {
   pod_sdate: string;
   pod_edate: string;
   pod_status: '0';
-  ECR_Nos: { ECR_No: string, tlt_no: string, tlt_name: string; }[];
-  tlt_nos: { tlt_no: string, tlt_name: string; }[];
+  ECR_Nos: ECRTableData[];
+  tlt_nos: TLTTALENTData[];
+}
+
+export interface ECRTableData {
+  ECR_No: string,
+  tlt_no: string,
+  tlt_name: string;
+}
+
+export interface TLTTALENTData {
+  tlt_no: string,
+  tlt_name: string;
 }
 
 export const mockPreorderECRList: BaseQueryResponse<DropdownOption> = {

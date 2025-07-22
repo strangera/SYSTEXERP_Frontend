@@ -7,7 +7,6 @@ import {
 } from '@angular/forms';
 import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { CahserTypeService } from '../../../service/basic/cahser-type.service';
 import { CashShowupByService } from '../../../service/basic/cash-showup-by.service';
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 // UI Imports
@@ -27,6 +26,9 @@ import { FloorService } from '../../../service/basic/floor.service';
 import { DecimalPipe } from '@angular/common';
 import { TLS2B010Service } from '../../../service/api/tls/tls2-b010.service';
 import { DatePipe } from '@angular/common';
+import { finalize } from 'rxjs';
+
+import { ReimbursementYypeService } from './../../../service/basic/reimbursement-yype.service';
 
 @Component({
   selector: 'app-tls2b010',
@@ -47,17 +49,29 @@ import { DatePipe } from '@angular/common';
     TranslateModule,
     DatePipe
   ],
+  providers: [CashShowupByService]
 })
 export class TLS2B010Component extends BasicQueryPageComponent<any> {
   ECRNoOptions: any[] = []; // 收銀機號下拉選單
   data: any[] = [];
-  cahserTypeOptions: any[] = [];
+  closeDate: string = '查詢中...';
+ ECR_TypeOptions = [
+  { label: '全部', value: null },
+  { label: '統收', value: '1' },
+  { label: '自收', value: '2' }
+];
+
   CashShowupByOptions: any[] = [];
   selectedItems: any[] = [];
   totalRecords = 0;
   CounterOptions: any[] = []; // 專櫃選項
   BUILDING_NO_Options: any[] = [];
   floorOptions: any[] = [];
+  reimbursementOptions: any[] =    [
+    { value: 1, label: '系統帳', disabled: true },
+    { value: 2, label: '自我報帳' },
+    { value: 3, label: '實收帳' },
+  ];
 columns: any[] = [
 
  {
@@ -77,7 +91,7 @@ columns: any[] = [
     visible: true,
   },
     {
-    field: 'TLT_NO',
+    field: 'USR_No',
     header: '收銀員編號/姓名',
     visible: true,
   },
@@ -99,14 +113,14 @@ columns: any[] = [
 
   },
   {
-    field: 'BOOK_PayAmt',
+    field: 'SELF_PayAmt',
     header: '自我報帳',
     visible: true, style: 'text-right', format: this.moneyFormat
 
 
   },
     {
-    field: 'MOD_PayAmt',
+    field: 'SOVER_PayAmt',
     header: '溢欠差異(自我報帳 - 系統帳)',
     visible: false,
   },
@@ -130,24 +144,29 @@ columns: any[] = [
 ];
 
 
-  queryForm = this.formBuilder.group({
-    TXN_Date: [null, [Validators.required]],
-    ECR_No: [], // 收銀機機號
-    TLT_No: [],
-    cahserType: [],
-    reimbursementType: [[], Validators.nullValidator],
-    cashShowUp: [],
-    tlt_building: [],
-    tlt_floor: [],
-    DecimalPipe,
-    ...createPaginationConfig([{ field: 'TXN_Date', order: 1 }]),
-  });
+queryForm = this.formBuilder.group({
+  TXN_Date: [null, [Validators.required]],  // ✅ 銷售日期（單日，必填）
+  ECR_No_List: [[]],                        // ✅ 收銀機號（多選）
+  TLT_No_List: [[]],                        // ✅ 專櫃編號（多選）
+  tlt_building: [null],                    // ✅ 館別（單選）
+  tlt_floor: [[]],                          // ✅ 樓層（多選）
+  area_no: [null],                         // ✅ 區域
+  ECR_Type: [null],                        // ✅ 收銀機類型（單選）
+  cashShowUp: [1],                         // ✅ 顯示方式：1=全部, 2=金額不為0, 3=溢欠
+  reimbursementType: [[1], Validators.nullValidator], // ✅ 顯示欄位（多選）
+
+  // 🧾 分頁與排序
+  ...createPaginationConfig([{ field: 'TXN_Date', order: 1 }])
+});
+
+
+
   
   moneyFormat(value: number): string {
     return value != null ? value.toLocaleString('en-US') : '0'; // ✅ 使用美式格式
   }
   constructor(
-    private cahserTypeService: CahserTypeService,
+    
     private tls2B010Service:TLS2B010Service,
     private cashShowupByService: CashShowupByService,
     public override messageService: NotificationService,
@@ -155,6 +174,8 @@ columns: any[] = [
     private counterNameService: CounterNameService,
     private tls11010Service: Tls11010Service,
     private floorService: FloorService,
+    private  datePipe: DatePipe, // ✅ 加入這行
+    
   ) {
     super();
   }
@@ -183,9 +204,7 @@ columns: any[] = [
         })) || [];
     });
 
-    this.cahserTypeService.getSystemTypes().subscribe((data) => {
-      this.cahserTypeOptions = data;
-    });
+
 
     this.cashShowupByService.getSystemTypes().subscribe((data) => {
       this.CashShowupByOptions = data;
@@ -196,45 +215,106 @@ columns: any[] = [
     this.tls11010Service
       .getBuildingOptions()
       .subscribe((res) => (this.BUILDING_NO_Options = res));
+      this.queryForm.get('reimbursementType')?.valueChanges.subscribe(values => {
+  this.updateColumnVisibility(this.queryForm.get('reimbursementType')?.value ?? []);
+
+});
+
+// 預設執行一次，根據初始值
+this.updateColumnVisibility(this.queryForm.get('reimbursementType')?.value || []);
+
+
+
+
+        
+  }
+  updateColumnVisibility(selectedValues: number[]) {
+  const alwaysVisibleFields = ['tlt_building', 'tlt_floor', 'ECR_No', 'USR_No'];
+  const visibilityMap = new Set(alwaysVisibleFields);
+
+  if (selectedValues.includes(1)) {
+    visibilityMap.add('BOOK_PayAmt');
+  }
+  if (selectedValues.includes(2)) {
+    visibilityMap.add('SELF_PayAmt');
+    visibilityMap.add('SOVER_PayAmt');
+  }
+  if (selectedValues.includes(3)) {
+    visibilityMap.add('ACT_PayAmt');
+    visibilityMap.add('OVER_PayAmt');
   }
 
- onSubmit(form: FormGroup): void {
+  this.columns = this.columns.map(col => ({
+    ...col,
+    visible: visibilityMap.has(col.field)
+  }));
+}
+
+
+onSubmit(form: FormGroup): void {
   this.submitted = true;
+
   if (form.invalid) {
     this.messageService.warnBubble('請完整填寫查詢條件');
     return;
   }
 
+  // 將 payload 複製並清除空值
   const payload = { ...form.value };
+
   Object.keys(payload).forEach((key) => {
-    if (typeof payload[key] === 'string') {
-      payload[key] = payload[key].trim();
-      if (payload[key] === '') payload[key] = null;
+    const value = payload[key];
+
+    // 1. 字串清 trim 空白
+    if (typeof value === 'string') {
+      payload[key] = value.trim();
+      if (payload[key] === '') {
+        delete payload[key];
+      }
+    }
+
+    // 2. 空陣列刪除
+    if (Array.isArray(value) && value.length === 0) {
+      delete payload[key];
+    }
+
+    // 3. null 也刪除
+    if (value === null) {
+      delete payload[key];
     }
   });
+
+  // 4. 移除 UI 專用欄位（例如：reimbursementType）
+  delete payload['reimbursementType'];
 
   this.loading = true;
   this.messageService.blockUi();
 
-  this.tls2B010Service.queryTLS2B010(payload).subscribe({
-    next: (res) => {
-      if (res?.Status === '0000') {
-        this.data = res.Data || [];
-        this.totalRecords = res.TotalCount || 0;
-        this.queryStateService.setQueryState(this.ProgNo, payload);
-      } else {
-        this.messageService.errorBubble(res?.Message || '查詢失敗');
-      }
-    },
-    error: () => {
-      this.messageService.errorBubble('查詢失敗，請稍後再試');
-    },
-    complete: () => {
+  this.tls2B010Service.queryTLS2B010(payload)
+    .pipe(finalize(() => {
       this.loading = false;
       this.messageService.unblockUi();
-    }
-  });
+    }))
+    .subscribe({
+    next: (res) => {
+  if (res?.Status === '0000') {
+    const responseData = res.Data || {};
+    this.data = responseData.QueryData || []; // ✅ 這裡才是資料陣列
+    this.totalRecords = res.TotalCount || 0;
+    this.closeDate = responseData.LastCloseDate || '-';
+    this.queryStateService.setQueryState(this.ProgNo, payload);
+  } else {
+    this.messageService.errorBubble(res?.Message || '查詢失敗');
+  }
+},
+      error: () => {
+        this.messageService.errorBubble('查詢失敗，請稍後再試');
+      }
+    });
 }
+
+
+
 
 
   onClearForm(): void {

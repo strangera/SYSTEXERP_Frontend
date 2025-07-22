@@ -88,6 +88,13 @@ export class TLS41030Component extends BasicQueryPageComponent<POS2001> implemen
       { field: 'USR_TLT_Name', header: '收銀員所屬專櫃名稱', visible: true },
       { field: 'USR_OnJobDate', header: '啟用(到職)日期', visible: true, format: formatDate},
       { field: 'USR_QuitDate', header: '停用(離職)日期', visible: true, format: formatDate},
+
+      { field: 'CRT_Date', header: '建立日期', visible: false, format: formatDate  },
+      { field: 'CRT_USR_No', header: '建立人員代碼', visible: false },
+      { field: 'CRT_USR_Name', header: '建立人員姓名', visible: false },
+      { field: 'UPD_Date', header: '變更日期', visible: false, format: formatDate },
+      { field: 'UPD_USR_No', header: '變更人員代碼', visible: false },
+      { field: 'UPD_USR_Name', header: '變更人員姓名', visible: false }
     ];
   
     totalRecords = 0;
