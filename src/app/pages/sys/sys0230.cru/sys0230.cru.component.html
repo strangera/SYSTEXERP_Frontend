@@ -23,19 +23,27 @@
       <div class="card">
         <div class="col-13">
           <app-table tableKey="SYS0230CRU" [data]="roleUserData" [columns]="roleUserColumns" [showCheckBox]="true"
-            [showManage]="false" [showDelete]="false" dataKey="ID" [multiSortMeta]="[{ field: 'Match', order: -1 }]"
-            [selectedItems]="selectedRoleUserData" (selectionChange)="onUserSelectionChange($event)"
-            [loading]="loading"></app-table>
+            [showManage]="false" dataKey="ID" [multiSortMeta]="[{ field: 'Match', order: -1 }]"
+            [selectedItems]="selectedRoleUserData" (selectionChange)="selectedRoleUserData = $event"
+            [showReportMode]="false" [deleteData]="true" [showInsert]="true" (dataChange)="roleUserData = $event"
+            (insert)="dialogVisible = true" [disabled]="isFormReadable" [showCaption]="!isFormReadable"
+            [showCheckBox]="!isFormReadable"></app-table>
         </div>
       </div>
 
-      <div
-        class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
-        *ngIf="!isFormReadable"
-      >
+      <div class=" grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3" *ngIf="!isFormReadable">
         <app-button btnType="cancel" [form]="dataForm"></app-button>
-        <app-button btnType="submit"></app-button>
+        <app-button btnType="submit" [loading]="loading"></app-button>
       </div>
     </form>
   </p-panel>
 </div>
+
+<app-dialog [visible]="dialogVisible" header="選擇使用者" (visibleChange)="dialogVisible = $event" (save)="saveDialog()"
+  [disable]="selectedItemsDialog.length === 0">
+  <app-table tableKey="tls52030DialogTable" dataKey="ID" [showReportMode]="false" [data]="dialogData"
+    [columns]="dialogColumns" [showDelete]="false" [selectedItems]="selectedItemsDialog" [showCaption]="false"
+    (selectionChange)="selectedItemsDialog = $event" [showHeader]="false" [showManage]="false" [showCheckBox]="true"
+    [isRowSelectable]="isRowSelectable.bind(this)">
+  </app-table>
+</app-dialog>

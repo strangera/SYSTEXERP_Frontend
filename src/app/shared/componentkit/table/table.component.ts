@@ -335,6 +335,7 @@ export class TableComponent extends BasicPrintDataComponent implements OnInit, O
     this.delete.emit(selectedItems);
     if (this.deleteData) {
       this.data = this.data.filter(item => !selectedItems.includes(item));
+      this.dataChange.emit(this.data);
       this.selectedItems = [];
     }
   }
