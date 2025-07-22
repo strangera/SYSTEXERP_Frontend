@@ -184,7 +184,7 @@ export class TLS12010CRUComponent extends BasicCruPageComponent<Potential_Custom
     ngOnInit(): void {
       this.initializePage('TLS12010', this.dataForm);
       this.loadOptions();
-      // 確認有明細檔就顯示出來(key: "id")
+      // 確認有明細檔就顯示出來(key: "ID")
       const PC_id = this.dataForm.get('ID')?.value;
       if(PC_id){
         this.loadDetailData(PC_id); // 讀取 明細檔(Potential_Customer_Detail)資料
@@ -212,16 +212,16 @@ export class TLS12010CRUComponent extends BasicCruPageComponent<Potential_Custom
           this.dataForm.get('VEN_EngName')?.disable();
           this.dataForm.get('VEN_Name')?.setValue(match.Name);
           this.dataForm.get('VEN_EngName')?.setValue(match.VEN_EngName);
+
+          console.log('廠商名稱', this.dataForm.get('VEN_Name'));
         } else {
           // 若找不到對應選項，清空 VEN_Name，並跳出警告
           this.dataForm.get('VEN_Name')?.setValue('');
           this.dataForm.get('VEN_EngName')?.setValue('');
-          // this.messageService.errorBubble('無該廠商名稱資料');
+          this.messageService.errorBubble('無該廠商名稱資料');
         }
       }
     });
-
-      
       console.log('讀取資料', this.dataForm.value);
     }
   
@@ -235,35 +235,30 @@ export class TLS12010CRUComponent extends BasicCruPageComponent<Potential_Custom
       }
   
       const formValue = frm.getRawValue();
+      const body = {
+        ...formValue,
+        Detail: this.potentialDetail, // 將明細資料加入請求體
+      }
       switch (this.crudstatus) {
         case CRUDStatus.Create:
           if (this.canAdd()) {
-            console.log('insert', frm.value);
+            console.log('insert', body);
             console.log('detail', this.potentialDetail);
-            // this.tls12010Service.insertTLS12010(formValue).subscribe(() => {
-            //   this.messageService.successBubble('新增成功');
-            //   // this.onCancel(); // 儲存後，會清除資料留在原頁面，不返回列表
-            //   this.dataForm.reset(); // 重置表單
-            // });
-            // this.tls12010Service.insertTLS12010_Detail(formValue).subscribe(() => {
-            //   this.messageService.successBubble('新增明細成功');
-            //   // this.onCancel(); // 儲存後，會清除資料留在原頁面，不返回列表
-            //   this.dataForm.reset(); // 重置表單
-            // });
+            this.tls12010Service.insertTLS12010(formValue).subscribe(() => {
+              this.messageService.successBubble('新增成功');
+              // this.onCancel(); // 儲存後，會清除資料留在原頁面，不返回列表
+              this.dataForm.reset(); // 重置表單
+            });
           }
           break;
         case CRUDStatus.Edit:
           if (this.canEdit()) {
-            console.log('update', formValue);
+            console.log('update', body);
             console.log('detail', this.potentialDetail);
-            // this.tls12010Service.updateTLS12010(formValue).subscribe(() => {
-            //   this.messageService.successBubble('更新成功');
-            //   this.onCancel(); // 儲存後，會返回列表
-            // });
-            // this.tls12010Service.updateTLS12010_Detail(formValue).subscribe(() => {
-            //   this.messageService.successBubble('更新明細成功');
-            //   this.onCancel(); // 儲存後，會返回列表
-            // });
+            this.tls12010Service.updateTLS12010(formValue).subscribe(() => {
+              this.messageService.successBubble('更新成功');
+              this.onCancel(); // 儲存後，會返回列表
+            });
           }
           break;
       }
@@ -283,13 +278,22 @@ export class TLS12010CRUComponent extends BasicCruPageComponent<Potential_Custom
   
     // 讀取dopropdown選項
     loadOptions() {
-        // 查 經營方式
-         this.tls12010Service.querySYS1000_DropDownList({"SYS_Type": 'T117'}).subscribe((response) => {
-          this.business_type_Option = response.Data.map((item: any) => ({
-            No: item.No, // 經營方式 代碼
+        // 查 大分類(專櫃)
+        this.tls12010Service.queryTLTBUSTYPE_DropDownList({}).subscribe((response) => {
+          this.bus_type_Option = response.Data.map((item: any) => ({
+            No: item.No, // 大分類(專櫃) 號
             Label: item.No + '/' + item.Name, // 組合成顯示用的Label
           }));
-          console.log('經營方式代號:', this.business_type_Option);
+          console.log('大分類代號:', this.bus_type_Option);
+        });
+
+        // 查 品牌
+        this.tls12010Service.queryPLULOGO_DropDownList({}).subscribe((response) => {
+          this.tlt_name_Option = response.Data.map((item: any) => ({
+            No: item.No, // 專櫃主代碼
+            Label: item.No + '/' + item.Name, // 組合成顯示用的Label
+          }));
+          console.log('品牌代號:', this.tlt_name_Option);
         });
 
         // 查 統編
@@ -314,6 +318,17 @@ export class TLS12010CRUComponent extends BasicCruPageComponent<Potential_Custom
 
           console.log('統編代號(去重):', this.cus_uniform_Option);
         });
+
+        // 查 經營方式
+         this.tls12010Service.querySYS1000_DropDownList({"SYS_Type": 'T117'}).subscribe((response) => {
+          this.business_type_Option = response.Data.map((item: any) => ({
+            No: item.No, // 經營方式 代碼
+            Label: item.No + '/' + item.Name, // 組合成顯示用的Label
+          }));
+          console.log('經營方式代號:', this.business_type_Option);
+        });
+
+
     }
 
     // 讀取明細資料

@@ -26,19 +26,9 @@ export class Tls12010Service {
     return this.http.post<any>(`${this.apiUrl}/insertTLS12010`, body);
   }
 
-  // 新增 Potential_Customer_Detail 資料表
-  insertTLS12010_Detail(body: any): Observable<any> {
-    return this.http.post<any>(`${this.apiUrl}/insertTLS12010_Detail`, body);
-  }
-
   // 更新 Potential_Customer 資料表
   updateTLS12010(body: any): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/updateTLS12010`, body);
-  }
-
-  // 更新 Potential_Customer_Detail 資料表
-  updateTLS12010_Detail(body: any): Observable<any> {
-    return this.http.post<any>(`${this.apiUrl}/updateTLS12010_Detail`, body);
   }
 
   // 刪除 Potential_Customer 資料表
