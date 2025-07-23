@@ -595,10 +595,22 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
   }
 
   get visibleColumnsCount(): number {
-    return this.mainColumns.filter(col => !col.hidden).length +
-      (this.showCheckBox ? 1 : 0) +
-      (this.detailKey ? 1 : 0) +
-      1;
+    let count = 1; // 序號欄
+
+    // 勾選框欄（只在非 readonly 且啟用時計算）
+    if (this.showCheckBox && this.selectionMode === 'multiple' && !this.readonly) {
+      count += 1;
+    }
+
+    // 展開欄
+    if (this.detailKey) {
+      count += 1;
+    }
+
+    // 主要欄位數量（排除隱藏的）
+    count += this.mainColumns.filter(col => !col.hidden).length;
+
+    return count;
   }
 
   onPageChange(event: any) {
@@ -947,5 +959,25 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
       step: 1,
       useGrouping: false
     };
+  }
+
+  getExpandedColspan(): number {
+    let colspan = 1; // 序號欄
+
+    if (this.showCheckBox && this.selectionMode === 'multiple' && !this.readonly) {
+      colspan += 1;
+    }
+
+    if (this.detailKey) {
+      colspan += 1;
+    }
+
+    colspan += this.mainColumns.filter(col => !col.hidden).length;
+
+    if (!this.readonly) {
+      colspan += 1;
+    }
+
+    return colspan;
   }
 }

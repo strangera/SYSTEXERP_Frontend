@@ -404,11 +404,13 @@ export class TLS13010Component extends BasicQueryPageComponent<ContractItem> imp
   override onDetail(rowData: ContractItem): void {
     console.log('🔍 開始檢視模式:', rowData);
 
-    // 設定為檢視模式
+    // 🎯 先設定工作流程資料（這樣 URL 乾淨但資料有保存）
     this.contractFlowService.startViewWorkflow(rowData);
 
-    // 導向 CRU 頁面（但會是唯讀模式）
-    this.router.navigate(['account/tls/tls13010cru']);
+    // 🎯 關鍵：只在檢視模式時加上 mode=view 參數
+    this.router.navigate(['account/tls/tls13010cru'], {
+      queryParams: { mode: 'view' }  // 只加這一個參數
+    });
 
     this.messageService.infoBubble('進入檢視模式，所有欄位為唯讀');
   }

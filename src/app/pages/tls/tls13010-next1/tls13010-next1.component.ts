@@ -1,7 +1,7 @@
 import { ColumnDef, ExpandableEditTableComponent } from '../../../shared/componentkit/expandable-edit-table/expandable-edit-table.component';
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { FormGroup } from '@angular/forms';
-import { Router, NavigationEnd } from '@angular/router';
+import { Router, NavigationEnd, ActivatedRoute } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { filter } from 'rxjs/operators';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
@@ -34,6 +34,8 @@ interface CategoryItem {
   imports: [MenubarComponent, ButtonComponent, NgIf, ProgressSpinnerModule, AccordionModule, ExpandableEditTableComponent, NgFor]
 })
 export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> implements OnInit, OnDestroy {
+  //檢視模式用
+  isViewMode = false;
 
   // 組織table下拉
   orgOptions: any[] = [];
@@ -579,6 +581,7 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
   showMode: 'common' | 'all' = 'common';
 
   constructor(
+    private route: ActivatedRoute,
     private tls13010Service: TLS13010Service,
     private contractFlowService: ContractFlowService,
     private locationOptionsService: LocationOptionsService,
@@ -588,7 +591,7 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
   }
 
   ngOnInit(): void {
-    console.log('TLS13010Next1Component 初始化開始');
+    this.checkViewModeFromURL();
     this.initializeDataStructure();
     this.initializePage('TLS13010', this.dataForm);
     this.loadOrgOptions();
@@ -610,6 +613,23 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
       this.routerSubscription.unsubscribe();
     }
     this.subscriptions.forEach(sub => sub.unsubscribe());
+  }
+
+
+  /**
+     * 🎯 關鍵：從 URL 檢查是否為檢視模式
+     */
+  private checkViewModeFromURL(): void {
+    const queryParams = this.route.snapshot.queryParams;
+    const mode = queryParams['mode'];
+
+    if (mode === 'view') {
+      this.isViewMode = true;
+      this.contractFlowService.setViewMode(true);
+    } else {
+      this.isViewMode = false;
+      this.contractFlowService.setViewMode(false);
+    }
   }
 
   private loadWorkflowData(): void {
@@ -1599,6 +1619,13 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
 
   // 導航
   onSubmitNext(): void {
+    if (this.isViewMode) {
+      // 🎯 檢視模式：導航到 Next2 檢視模式
+      this.router.navigate(['account/tls/tls13010next2'], {
+        queryParams: { mode: 'view' }
+      });
+      return;
+    }
     this.saveFareDataToWorkflow();
 
     const hasSelectedItems = Object.keys(this.originalFareData).some(capType =>
@@ -1615,7 +1642,13 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
   }
 
   override onCancel(): void {
-    console.log('🔙 準備回到前一步...');
+    if (this.isViewMode) {
+      // 🎯 檢視模式：返回上一步檢視
+      this.router.navigate(['account/tls/tls13010cru'], {
+        queryParams: { mode: 'view' }
+      });
+      return;
+    }
     this.saveFareDataToWorkflow();
     this.router.navigate(['account/tls/tls13010cru']);
     // this.messageService.infoBubble('已返回合約資訊頁面');
@@ -1752,5 +1785,41 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
   // 取得已勾選模式按鈕文字
   getSelectedModeText(): string {
     return this.showOnlySelected ? '顯示全部項目' : '只顯示已勾選';
+  }
+
+  private updateColumnsReadonly(readonly: boolean): void {
+    console.log(`📋 設定表格欄位為${readonly ? '唯讀' : '可編輯'}模式`);
+
+    // 🎯 更新 A 類型（一次扣款）欄位
+    this.deductionAColumns = this.deductionAColumns.map(col => ({
+      ...col,
+      editable: readonly ? false : (col.field === 'is_selected' ? true : col.editable)
+    }));
+
+    // 🎯 更新 B 類型（每月扣款）欄位
+    this.deductionBColumns = this.deductionBColumns.map(col => ({
+      ...col,
+      editable: readonly ? false : (col.field === 'is_selected' ? true : col.editable)
+    }));
+
+    // 🎯 更新 C 類型（平均分攤）欄位
+    this.deductionCColumns = this.deductionCColumns.map(col => ({
+      ...col,
+      editable: readonly ? false : (col.field === 'is_selected' ? true : col.editable)
+    }));
+
+    // 🎯 更新 D 類型（比率分攤）欄位
+    this.deductionDColumns = this.deductionDColumns.map(col => ({
+      ...col,
+      editable: readonly ? false : (col.field === 'is_selected' ? true : col.editable)
+    }));
+
+    // 🎯 更新 E 類型（活動扣款）欄位
+    this.deductionEColumns = this.deductionEColumns.map(col => ({
+      ...col,
+      editable: readonly ? false : (col.field === 'is_selected' ? true : col.editable)
+    }));
+
+    console.log(`✅ 所有表格欄位已設為${readonly ? '唯讀' : '可編輯'}模式`);
   }
 }
