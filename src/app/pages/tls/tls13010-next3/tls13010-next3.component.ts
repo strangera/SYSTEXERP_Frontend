@@ -30,6 +30,7 @@ import { AccordionModule } from 'primeng/accordion';
 import { DialogModule } from 'primeng/dialog';
 import { PrimeTemplate } from 'primeng/api';
 import { Button } from 'primeng/button';
+import { ActivatedRoute } from '@angular/router';
 
 @Component({
   selector: 'app-tls13010-next3',
@@ -39,6 +40,9 @@ import { Button } from 'primeng/button';
   imports: [MenubarComponent, ButtonComponent, NgIf, ProgressSpinnerModule, AccordionModule, ExpandableEditTableComponent, DialogModule, PrimeTemplate, Button]
 })
 export class Tls13010Next3Component extends BasicCruPageComponent<ConditionItem> implements OnInit, OnDestroy {
+
+  isViewMode = false;
+  private viewModeSubscription?: Subscription;
 
   private discountOptions: any[] = [];
   private subscriptions: Subscription[] = [];
@@ -139,7 +143,8 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionItem>
     private tls13010Service: TLS13010Service,
     private notificationService: NotificationService,
     private cdr: ChangeDetectorRef,
-    private paperTypeService: LocationOptionsService
+    private paperTypeService: LocationOptionsService,
+    private route: ActivatedRoute
   ) {
     super();
     this.dataForm = this.formBuilder.group({});
@@ -152,6 +157,9 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionItem>
     this.loadDiscountOptions().then(() => {
       this.loadWorkflowData();
     });
+
+    // 設定檢視模式 UI 監聽
+    this.setupViewModeUI();
   }
 
   ngOnDestroy(): void {
@@ -162,6 +170,11 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionItem>
 
     // 清理訂閱
     this.subscriptions.forEach(sub => sub.unsubscribe());
+
+    // 🎯 新增：清理檢視模式訂閱
+    if (this.viewModeSubscription) {
+      this.viewModeSubscription.unsubscribe();
+    }
   }
 
   private loadWorkflowData(): void {
@@ -237,7 +250,8 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionItem>
     console.log('🔍 載入資料優先順序判定:', {
       commissionType: commissionType,
       isNewContract: this.contractFlowService.isNewContractMode(),
-      currentTalentId: this.currentTalentId
+      currentTalentId: this.currentTalentId,
+      isViewMode: this.isViewMode // 🎯 新增：檢視模式記錄
     });
 
     // 第一優先：檢查是否有 Next3 暫存資料
@@ -686,6 +700,11 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionItem>
 
   // 🎯 新增項目的方法
   onAddFixedRentItem(): void {
+
+    if (this.isViewMode) {
+      this.notificationService.infoBubble('檢視模式下無法新增項目');
+      return;
+    }
     const newItem = this.createFixedRentItem();
     this.fixedRentItems.push(newItem);
     this.saveConditionDataToWorkflow();
@@ -693,6 +712,10 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionItem>
   }
 
   onAddBaseRentHigherItem(): void {
+    if (this.isViewMode) {
+      this.notificationService.infoBubble('檢視模式下無法新增項目');
+      return;
+    }
     const newItem = this.createBaseRentHigherItem();
     this.baseRentHigherItems.push(newItem);
     this.saveConditionDataToWorkflow();
@@ -707,6 +730,11 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionItem>
   // }
 
   onAddBaseCommissionItem(): void {
+    if (this.isViewMode) {
+      this.notificationService.infoBubble('檢視模式下無法新增項目');
+      return;
+    }
+
     const newItem = this.createBaseCommissionItem();
     this.baseCommissionItems.push(newItem);
     this.saveConditionDataToWorkflow();
@@ -714,6 +742,11 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionItem>
   }
 
   onAddGraduatedItem(): void {
+    if (this.isViewMode) {
+      this.notificationService.infoBubble('檢視模式下無法新增項目');
+      return;
+    }
+
     const newItem = this.createGraduatedItem();
     this.graduatedItems.push(newItem);
     this.saveConditionDataToWorkflow();
@@ -721,6 +754,11 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionItem>
   }
 
   onAddBaseTierItem(): void {
+    if (this.isViewMode) {
+      this.notificationService.infoBubble('檢視模式下無法新增項目');
+      return;
+    }
+
     const newItem = this.createBaseTierItem();
     this.baseTierItems.push(newItem);
     this.saveConditionDataToWorkflow();
@@ -774,6 +812,10 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionItem>
 
   // 🎯 批次刪除處理
   onBatchDelete(selectedItems: any[], type: string): void {
+    if (this.isViewMode) {
+      this.notificationService.infoBubble('檢視模式下無法刪除項目');
+      return;
+    }
     if (!selectedItems || selectedItems.length === 0) {
       this.notificationService.warnBubble('請選擇要刪除的項目');
       return;
@@ -914,6 +956,11 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionItem>
 
   // 🎯 提交相關方法
   onSubmitNext(): void {
+    if (this.isViewMode) {
+      // 🎯 檢視模式：返回到列表頁面或上一頁
+      this.router.navigate(['account/tls/tls13010']);
+      return;
+    }
     this.saveConditionDataToWorkflow();
     this.showConfirmDialog = true;
   }
@@ -1187,6 +1234,14 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionItem>
 
   // 🎯 導航方法
   override onCancel(): void {
+    if (this.isViewMode) {
+      // 🎯 檢視模式：返回 Next2 檢視模式
+      this.router.navigate(['account/tls/tls13010next2'], {
+        queryParams: { mode: 'view' }
+      });
+      return;
+    }
+
     console.log('🔄 Next3 返回前一頁，先暫存資料');
     this.saveConditionDataToWorkflow();
     this.router.navigate(['account/tls/tls13010next2']);
@@ -1194,7 +1249,9 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionItem>
 
   onRealCancel(): void {
     if (confirm('確定要離開契約編輯流程嗎？所有暫存資料將會保留。')) {
-      this.saveConditionDataToWorkflow();
+      if (!this.isViewMode) {
+        this.saveConditionDataToWorkflow();
+      }
       this.router.navigate(['account/tls/tls13010']);
     }
   }
@@ -1661,5 +1718,64 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionItem>
 
   get displayBaseTierItems(): BaseTierCondition[] {
     return this.baseTierItems.filter(item => item._status !== 'deleted');
+  }
+
+  /**
+ * 🎯 新增：從 URL 檢查是否為檢視模式
+ */
+  private checkViewModeFromURL(): void {
+    const queryParams = this.route.snapshot.queryParams;
+    const mode = queryParams['mode'];
+
+    console.log('🔍 Next3 檢查 URL 參數:', { mode });
+
+    if (mode === 'view') {
+      console.log('🔒 Next3 URL 檢測到檢視模式');
+      this.isViewMode = true;
+      this.contractFlowService.setViewMode(true);
+    } else {
+      console.log('📝 Next3 URL 未檢測到檢視模式');
+      this.isViewMode = false;
+      this.contractFlowService.setViewMode(false);
+    }
+  }
+
+  /**
+   * 🎯 新增：設定檢視模式 UI
+   */
+  private setupViewModeUI(): void {
+    console.log('🔧 Next3 設定檢視模式 UI 監聽');
+
+    // 🎯 先檢查當前狀態
+    const currentViewMode = this.contractFlowService.isViewMode();
+    console.log('📋 Next3 當前檢視模式狀態:', currentViewMode);
+
+    // 🎯 如果已經是檢視模式，立即設定
+    if (currentViewMode) {
+      this.isViewMode = true;
+      this.applyViewModeSettings(true);
+    }
+
+    // 🎯 訂閱後續變更
+    this.viewModeSubscription = this.contractFlowService.isViewMode$.subscribe(isViewMode => {
+      console.log('🔍 Next3 檢視模式變更:', isViewMode);
+      this.isViewMode = isViewMode;
+      this.applyViewModeSettings(isViewMode);
+    });
+  }
+
+  /**
+   * 🎯 新增：套用檢視模式設定
+   */
+  private applyViewModeSettings(isViewMode: boolean): void {
+    console.log('⚙️ Next3 套用檢視模式設定:', isViewMode);
+
+    if (isViewMode) {
+      console.log('🔒 Next3 啟用檢視模式 - 表格將自動變為唯讀');
+    } else {
+      console.log('🔓 Next3 停用檢視模式 - 表格將恢復可編輯');
+    }
+
+    // 🎯 表格的 readonly 屬性會根據 isViewMode 自動處理
   }
 }
