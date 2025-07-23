@@ -12,3 +12,11 @@
   padding: 5px; /* 內部邊距，讓內容與邊框有距離 (可選) */
   align-items: flex-start; /* 確保行對齊的起點 */
 }
+
+::ng-deep .partialSelected > .p-checkbox-box {
+  border: 2px solid #ced4da !important;
+  background: #ffffff !important;
+  .p-checkbox-icon {
+    color: #6c757d !important;
+  }
+}
