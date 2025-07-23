@@ -2,11 +2,12 @@
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
+import { TLS26080Service } from '@service/api';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent, CalendarComponent, DropdownComponent, TableComponent } from '@shared/componentkit';
 import { Column } from '@shared/componentkit/table/table.model';
 import { MenubarComponent } from '@shared/index';
-import { ValidationService } from '@shared/service/validation.service';
+import { ValidationService } from '@shared/service';
 import { AccordionModule } from 'primeng/accordion';
 
 // 資料模型：活動項目
@@ -185,6 +186,7 @@ export class TLS26080Component extends BasicQueryPageComponent<ActivityItem> imp
 
   constructor(
     private validationService: ValidationService,
+    private tls26080Service: TLS26080Service
   ) {
     super();
   }
