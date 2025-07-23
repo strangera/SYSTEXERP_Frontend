@@ -4,7 +4,6 @@ import { Component, OnInit, ViewChild, } from '@angular/core';
 import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { TranslateModule } from '@ngx-translate/core';
-//
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { PanelModule } from 'primeng/panel';
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
@@ -143,8 +142,6 @@ export class TLS12010CRUComponent extends BasicCruPageComponent<Potential_Custom
     potentialDetail: Potential_Customer_Detail[] = [];
     //欄位資訊
     Potential_Customer_Detail_Columns: ColumnDef[] = [
-        // { field: 'ID', header: '專櫃招募編號', type: 'number', editable: false, autoWidth: true },
-        // { field: 'PC_id', header: 'potential_customer id', type: 'number', editable: false, autoWidth: true },
         { field: 'other_shop', header: '其他商場', type: 'text', editable: true, autoWidth: true },
         { field: 'shop_area', header: '面積', type: 'number', allowDecimal: true, decimalPlaces: 3, editable: true, autoWidth: true },
         { field: 'total_amt', header: '營業額', type: 'number', allowDecimal: true, editable: true, autoWidth: true }
@@ -259,16 +256,29 @@ export class TLS12010CRUComponent extends BasicCruPageComponent<Potential_Custom
         this.messageService.unblockUi();
         return;
       }
+
+      //將新的資料ID指定為null
+      const processedDetail = this.potentialDetail.map(item => {
+        // 刪除 key 為空字串的欄位
+        if ("" in item) {
+          delete item[""];
+        }
+
+        if (item.status === 'new') {
+          return { ...item, ID: null}; // 把新項目的 ID, PC_id 改為 null
+        }
+        return item; // 其他不變
+      });
   
       const formValue = frm.getRawValue();
       const body = {
         ...formValue,
-        Detail: this.potentialDetail, // 將明細資料加入請求體
+        Detail: processedDetail, // 將明細資料加入請求體
       }
       switch (this.crudstatus) {
         case CRUDStatus.Create:
           if (this.canAdd()) {
-            console.log('insert', body);
+            console.log('insert:', JSON.stringify(body, null, 2));
             console.log('detail', this.potentialDetail);
             this.tls12010Service.insertTLS12010(formValue).subscribe(() => {
               this.messageService.successBubble('新增成功');
@@ -279,7 +289,7 @@ export class TLS12010CRUComponent extends BasicCruPageComponent<Potential_Custom
           break;
         case CRUDStatus.Edit:
           if (this.canEdit()) {
-            console.log('update', body);
+            console.log('update:', JSON.stringify(body, null, 2));
             console.log('detail', this.potentialDetail);
             this.tls12010Service.updateTLS12010(formValue).subscribe(() => {
               this.messageService.successBubble('更新成功');
