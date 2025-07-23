@@ -29,6 +29,7 @@ import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { AccordionModule } from 'primeng/accordion';
 import { DialogModule } from 'primeng/dialog';
 import { ButtonDirective } from 'primeng/button';
+import { ActivatedRoute } from '@angular/router';
 
 @Component({
   selector: 'app-tls13010-next2',
@@ -39,6 +40,9 @@ import { ButtonDirective } from 'primeng/button';
 })
 export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> implements OnInit, OnDestroy {
   @ViewChild('expandedContent') expandedContentTemplate!: TemplateRef<any>;
+  //檢視頁面參數
+  isViewMode = false;
+  private viewModeSubscription?: Subscription;
 
   private subscriptions: Subscription[] = [];
   dataForm: FormGroup;
@@ -233,6 +237,7 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
     private contractFlowService: ContractFlowService,
     private tls13010Service: TLS13010Service,
     private paperTypeService: LocationOptionsService,
+    private route: ActivatedRoute,
   ) {
     super();
     this.dataForm = this.formBuilder.group({});
@@ -240,7 +245,9 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
   }
 
   ngOnInit(): void {
-    console.log('TLS13010Next2Component 初始化開始');
+
+    // 🎯 第一時間檢查 URL 參數
+    this.checkViewModeFromURL();
     this.initializePage('TLS13010', this.dataForm);
 
     this.loadDiscountOptions().then(() => {
@@ -253,6 +260,10 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
     this.subscriptions.forEach(sub => sub.unsubscribe());
   }
   private setupAutoSave(): void {
+    if (this.isViewMode) {
+      console.log('🔍 Next2 檢視模式，跳過自動儲存設定');
+      return;
+    }
     if (this.dataForm) {
       const formSubscription = this.dataForm.valueChanges.pipe(
         debounceTime(300),
@@ -264,7 +275,69 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
     }
   }
 
+  /**
+    * 🎯 新增：從 URL 檢查是否為檢視模式
+    */
+  private checkViewModeFromURL(): void {
+    const queryParams = this.route.snapshot.queryParams;
+    const mode = queryParams['mode'];
+
+    console.log('🔍 Next2 檢查 URL 參數:', { mode });
+
+    if (mode === 'view') {
+      console.log('🔒 Next2 URL 檢測到檢視模式');
+      this.isViewMode = true;
+      this.contractFlowService.setViewMode(true);
+    } else {
+      console.log('📝 Next2 URL 未檢測到檢視模式');
+      this.isViewMode = false;
+      this.contractFlowService.setViewMode(false);
+    }
+  }
+
+  /**
+  * 🎯 新增：設定檢視模式 UI
+  */
+  private setupViewModeUI(): void {
+    console.log('🔧 Next2 設定檢視模式 UI 監聽');
+
+    // 🎯 先檢查當前狀態
+    const currentViewMode = this.contractFlowService.isViewMode();
+    console.log('📋 Next2 當前檢視模式狀態:', currentViewMode);
+
+    // 🎯 如果已經是檢視模式，立即設定
+    if (currentViewMode) {
+      this.isViewMode = true;
+      this.applyViewModeSettings(true);
+    }
+
+    // 🎯 訂閱後續變更
+    this.viewModeSubscription = this.contractFlowService.isViewMode$.subscribe(isViewMode => {
+      console.log('🔍 Next2 檢視模式變更:', isViewMode);
+      this.isViewMode = isViewMode;
+      this.applyViewModeSettings(isViewMode);
+    });
+  }
+
+
+  private applyViewModeSettings(isViewMode: boolean): void {
+    console.log('⚙️ Next2 套用檢視模式設定:', isViewMode);
+
+    if (isViewMode) {
+      console.log('🔒 Next2 啟用檢視模式 - 表格將自動變為唯讀');
+    } else {
+      console.log('🔓 Next2 停用檢視模式 - 表格將恢復可編輯');
+    }
+
+    // 🎯 不需要手動更新欄位，readonly 屬性會自動處理所有事情
+  }
+
+
   private saveToWorkflow(): void {
+    if (this.isViewMode) {
+      console.log('🔍 Next2 檢視模式，跳過資料儲存');
+      return;
+    }
     if (this.hasCommissionChanges()) {
       Step3DataChangeTracker.setCurrentTalentId(this.currentTalentId);
       const processedData = this.prepareCommissionDataForSubmit();
@@ -1266,8 +1339,10 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
   }
 
   onAddCommissionItem(): void {
-    console.log('➕ 新增抽成項目');
-
+    if (this.isViewMode) {
+      this.notificationService.infoBubble('檢視模式下無法新增項目');
+      return;
+    }
     // 計算下一個抽成類別編號（最多到9）
     const existingItems = this.commissionData.filter(item => item._status !== 'deleted');
     const nextNumber = existingItems.length;
@@ -1312,7 +1387,10 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
 
 
   addDiscountSettingItem(item: CommissionItem): void {
-    console.log('➕ 新增折扣設定項目到項目:', item.id);
+    if (this.isViewMode) {
+      this.notificationService.infoBubble('檢視模式下無法新增明細項目');
+      return;
+    }
 
     // 🎯 確保陣列存在
     if (!item.discountSettingItems) {
@@ -1344,8 +1422,10 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
   }
 
   addAnnualPerformanceItem(item: CommissionItem): void {
-    console.log('➕ 新增年度業績項目到項目:', item.id);
-
+    if (this.isViewMode) {
+      this.notificationService.infoBubble('檢視模式下無法新增明細項目');
+      return;
+    }
     // 🎯 確保陣列存在
     if (!item.annualPerformanceItems) {
       item.annualPerformanceItems = [];
@@ -1376,8 +1456,10 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
   }
 
   addDiscountLevelItem(item: CommissionItem): void {
-    console.log('➕ 新增折扣層級項目到項目:', item.id);
-
+    if (this.isViewMode) {
+      this.notificationService.infoBubble('檢視模式下無法新增明細項目');
+      return;
+    }
     // 🎯 確保陣列存在
     if (!item.discountLevelItems) {
       item.discountLevelItems = [];
@@ -1934,6 +2016,10 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
   }
 
   onBatchDelete(selectedItems: any[]) {
+    if (this.isViewMode) {
+      this.notificationService.infoBubble('檢視模式下無法刪除項目');
+      return;
+    }
     if (confirm(`確定要刪除選取的 ${selectedItems.length} 個項目嗎？`)) {
       selectedItems.forEach(item => {
         if (item._status === 'new' || !this.hasItemId(item)) {
@@ -2111,6 +2197,13 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
 
   // 導航方法
   onSubmitNext(): void {
+    if (this.isViewMode) {
+      // 🎯 檢視模式：導航到 Next3 檢視模式
+      this.router.navigate(['account/tls/tls13010next3'], {
+        queryParams: { mode: 'view' }
+      });
+      return;
+    }
     // 儲存資料到工作流程
     this.saveCommissionDataToWorkflow();
 
@@ -2166,6 +2259,13 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
   }
 
   override onCancel(): void {
+    if (this.isViewMode) {
+      // 🎯 檢視模式：返回 Next1 檢視模式
+      this.router.navigate(['account/tls/tls13010next1'], {
+        queryParams: { mode: 'view' }
+      });
+      return;
+    }
     this.saveCommissionDataToWorkflow();
     this.router.navigate(['account/tls/tls13010next1']);
     // this.notificationService.infoBubble('已返回初始頁面、);、
@@ -2442,4 +2542,6 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
       return new Date().toISOString().split('T')[0];
     }
   }
+
+
 }

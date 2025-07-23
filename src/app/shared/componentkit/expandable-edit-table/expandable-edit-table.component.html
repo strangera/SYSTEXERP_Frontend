@@ -74,7 +74,7 @@
       <tr>
         <th style="width: 4rem; text-align: center">序號</th>
         <th
-          *ngIf="showCheckBox && selectionMode === 'multiple'"
+          *ngIf="showCheckBox && selectionMode === 'multiple' && !readonly"
           style="width: 4rem"
         >
           <p-tableHeaderCheckbox></p-tableHeaderCheckbox>
@@ -106,7 +106,7 @@
       >
         <td style="text-align: center">{{ ri + 1 }}</td>
 
-        <td *ngIf="showCheckBox && selectionMode === 'multiple'">
+        <td *ngIf="showCheckBox && selectionMode === 'multiple' && !readonly">
           <p-tableCheckbox [value]="rowData"></p-tableCheckbox>
         </td>
 
@@ -330,7 +330,7 @@
     <!-- 展開的詳細資料 -->
     <ng-template pTemplate="rowexpansion" let-rowData let-ri="rowIndex">
       <tr>
-        <td [attr.colspan]="visibleColumnsCount + (readonly ? 0 : 1)">
+        <td [attr.colspan]="getExpandedColspan()">
           <div class="expanded-detail p-3">
             <!-- 內層表格標題區域 -->
             <div
@@ -403,14 +403,14 @@
               [columns]="getDetailColumnsForTab(rowData)"
               [(selection)]="detailSelectedItems[rowData[dataKey]]"
               [dataKey]="dataKey"
-              selectionMode="multiple"
+              [selectionMode]="readonly ? null : 'multiple'"
               (selectionChange)="onDetailSelectionChange(rowData, $event)"
               styleClass="detail-table"
             >
               <ng-template pTemplate="header">
                 <tr>
                   <th style="width: 4rem; text-align: center">序號</th>
-                  <th style="width: 4rem; text-align: center">
+                  <th *ngIf="!readonly" style="width: 4rem; text-align: center">
                     <p-tableHeaderCheckbox></p-tableHeaderCheckbox>
                   </th>
                   <th
@@ -430,7 +430,10 @@
               <ng-template pTemplate="emptymessage">
                 <tr>
                   <td
-                    [attr.colspan]="getDetailColumnsForTab(rowData).length + 3"
+                    [attr.colspan]="
+                      getDetailColumnsForTab(rowData).length +
+                      (readonly ? 1 : 3)
+                    "
                     class="empty-message-cell"
                   >
                     <div class="empty-message-content">
@@ -452,7 +455,7 @@
                 <tr>
                   <td style="text-align: center">{{ di + 1 }}</td>
 
-                  <td style="text-align: center">
+                  <td *ngIf="!readonly" style="text-align: center">
                     <p-tableCheckbox [value]="detailData"></p-tableCheckbox>
                   </td>
 
@@ -659,10 +662,7 @@
     <!-- 無資料時顯示 -->
     <ng-template pTemplate="emptymessage">
       <tr>
-        <td
-          [attr.colspan]="visibleColumnsCount + (readonly ? 0 : 1)"
-          style="text-align: center"
-        >
+        <td [attr.colspan]="getExpandedColspan()" style="text-align: center">
           {{ emptyMessage }}
         </td>
       </tr>

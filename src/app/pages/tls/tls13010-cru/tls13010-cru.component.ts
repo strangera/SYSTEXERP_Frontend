@@ -2,7 +2,7 @@ import { TOTAL_AMT_UNIT_OPTIONS } from './../tls13010/tls13010.constants';
 // tls13010-cru.component.ts (整理後版本 - 移除無用程式碼)
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { distinctUntilChanged, map, Observable, Subscription, debounceTime } from 'rxjs';
 
 // 基礎組件
@@ -261,12 +261,16 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
     private bankService: BankOptionsService,
     private locationOptionsService: LocationOptionsService,
     private tls13010Service: TLS13010Service,
+    private route: ActivatedRoute,
   ) {
     super();
   }
 
   // ==========  生命週期方法 ==========
   ngOnInit(): void {
+    // 第一時間檢查 URL 參數 for 檢視模式
+    this.checkViewModeFromURL();
+
     this.initializePage('TLS13010', this.dataForm);
     this.funInfo = this.authService.getUserPermissions(this.ProgNo);
 
@@ -311,6 +315,31 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
       this.viewModeSubscription.unsubscribe();
     }
     this.subscriptions.forEach(sub => sub.unsubscribe());
+  }
+
+  /**
+   *從 URL 檢查是否為檢視模式
+   */
+  private checkViewModeFromURL(): void {
+    const queryParams = this.route.snapshot.queryParams;
+    const mode = queryParams['mode'];
+
+    console.log('🔍 檢查 URL 參數:', { mode });
+
+    if (mode === 'view') {
+      console.log('🔒 URL 檢測到檢視模式，設定為唯讀');
+      this.isViewMode = true;
+      this.contractFlowService.setViewMode(true);
+
+      // 🎯 立即設定表單為 disabled
+      setTimeout(() => {
+        this.setFormReadonly(true);
+      }, 0);
+    } else {
+      console.log('📝 URL 未檢測到檢視模式，設定為編輯模式');
+      this.isViewMode = false;
+      this.contractFlowService.setViewMode(false);
+    }
   }
 
   // ==========  資料載入方法 ==========
@@ -1018,40 +1047,23 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
 
   onSubmitNext(): void {
     if (this.isViewMode) {
-      // 檢視模式：直接進入下一步檢視
-      this.router.navigate(['account/tls/tls13010next1']);
+      // 🎯 檢視模式：導航到 Next1 檢視模式
+      this.router.navigate(['account/tls/tls13010next1'], {
+        queryParams: { mode: 'view' }  // 帶上檢視參數
+      });
       return;
     }
-    console.log('🔍 CRU onSubmitNext 開始執行');
-    console.log('📋 表單狀態:', {
-      valid: this.dataForm.valid,
-      mode: this.contractFlowService.isNewContractMode() ? '新增' : '編輯'
-    });
 
+    // 🎯 編輯模式的原有邏輯
     if (this.dataForm.valid) {
-      const formData = this.dataForm.getRawValue();
-      console.log('📋 表單資料:', {
-        talent_id: formData.talent_id,
-        apply_no: formData.apply_no,
-        tlt_name: formData.tlt_name
-      });
-
-      // 🎯 儲存到工作流程
       this.saveToWorkflow();
-
-      // 🎯 檢查工作流程狀態
-      const workflowStatus = this.contractFlowService.getCurrentStatus();
-      console.log('🚀 工作流程狀態:', workflowStatus);
-
-      // 🎯 導向下一步
-      console.log('🔄 導向 Next1');
-      this.router.navigate(['account/tls/tls13010next1']);
+      this.router.navigate(['account/tls/tls13010next1']);  // 編輯模式不帶參數
     } else {
-      console.warn('❌ 表單驗證失敗');
       this.messageService.warnBubble('請檢查必填欄位');
       this.markFormGroupTouched(this.dataForm);
     }
   }
+
 
   override onCancel(): void {
     if (this.isViewMode) {
@@ -1833,7 +1845,7 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
   }
 
   /**
-   * 🎯 新增：退出檢視模式
+   * 退出檢視模式
    */
   exitViewMode(): void {
     this.contractFlowService.clearViewMode();
@@ -1842,13 +1854,15 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
   }
 
   /**
-   * 🎯 新增：切換到編輯模式
+   * 切換到編輯模式（移除 URL 參數）
    */
   switchToEditMode(): void {
     if (confirm('確定要切換到編輯模式嗎？')) {
-      this.contractFlowService.clearViewMode();
-      this.setFormReadonly(false);
-      this.updateLocationTableReadonly(false);
+      // 🎯 移除 URL 參數，導航到乾淨的編輯頁面
+      this.router.navigate(['account/tls/tls13010cru'], {
+        queryParams: {}  // 清空參數
+      });
+
       this.messageService.infoBubble('已切換到編輯模式');
     }
   }
