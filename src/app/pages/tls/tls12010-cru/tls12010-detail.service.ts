@@ -32,9 +32,9 @@ export class Tls12010DetailService {
         console.log('取消主表格編輯:', event);
     }
 
-    //---POS2005特定操作---
+    //---PotentialCustomer 增加 ID ---
     generatePotentialCustomerDetailId(data: any[]): number {
-        const maxId = Math.max(...data.map(p => p.id), 0);
+        const maxId = Math.max(...data.map(p => p.ID), 0);
         return maxId + 1;
     }
 

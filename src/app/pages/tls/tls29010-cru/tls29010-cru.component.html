@@ -5,7 +5,7 @@
     </div>
     <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
         <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
-            <div class="grid p-fluid">
+            <!-- <div class="grid p-fluid">
                 <div class="col-12 md:col-6 lg:col-4">
                     <app-input-text label="店部編號" controlName="str_no" [control]="dataForm.controls.str_no"
                     [submitted]="submitted"></app-input-text>
@@ -38,7 +38,16 @@
                     <app-dropdown label="是否使用" controlName="use_flag" [options]="whetherOption" optionLabel="label"
                     optionValue="value" [control]="dataForm.controls.use_flag" [submitted]="submitted"></app-dropdown>
                 </div>
-            </div>
+            </div> -->
+            <hr>
+            <!-- 折扣別維護 -->
+            <app-expandable-edit-table #detailTable title="折扣別維護" [mainColumns]="Potential_Customer_Detail_Columns" 
+            [data]="filteredDetail"
+            [loading]="expandDetailLoading" detailKey="" dataKey="ID" [showCheckBox]="true" [showPaginator]="false"
+            [showAddButton]="true" [showDetailTabs]="false" [showDetailAddButton]="false" [readonly]="crudstatus === 'Read'"
+            [defaultNewItem]="defaultNewDetail" (save)="onRowSaveDetail($event)" (cancel)="onRowCancelDetail($event)"
+            (batchDelete)="onBatchDeleteDetail($event)" (addMainItem)="onAddPotentialCustomerDetail()"></app-expandable-edit-table>
+
 
             <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
                 *ngIf="!isFormReadable">
