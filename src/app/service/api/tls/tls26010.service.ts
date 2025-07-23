@@ -1,17 +1,18 @@
 import { HttpClient } from '@angular/common/http';
 import { computed, effect, Injectable, signal } from '@angular/core';
-import { ApprovalStatus, ECRTableData, mockPreorderECRList, mockQueryTLS26010, PreorderECRListQuery, TLS26010, TLS26010Data, TLS26010Payload, TLS26010Query, TLTTALENTData, TLTTALENTQuery } from '@pages/tls/tls26010/tls26010.model';
+import { ECRTableData, mockPreorderECRList, mockQueryTLS26010, PreorderECRListQuery, TLS26010, TLS26010Data, TLS26010Payload, TLS26010Query, TLTTALENTData, TLTTALENTQuery } from '@pages/tls/tls26010/tls26010.model';
 import { ErrorHandlerService } from '@service/system/error-handler.service';
 import { NotificationService } from '@shared/component/notification-message/notification.service';
+import { ApprovalStatus } from '@shared/models';
 import { BaseQueryResponse, DropdownOption } from '@shared/models/api/base-api.interface';
 import { catchError, EMPTY, finalize, Observable, of, take, tap } from 'rxjs';
 import { environment } from 'src/environments/environment';
 
 const mock = !0;
+const apiUrl: string = environment.ApiUrl;
 
 @Injectable({ providedIn: 'root' })
 export class TLS26010Service {
-  apiUrl: string = environment.ApiUrl;
 
   public approvalData = signal<ApprovalStatus>(ApprovalStatus.未核准);
   public ECRTableData = signal<ECRTableData[]>([]);
@@ -123,7 +124,7 @@ export class TLS26010Service {
   loadSYS3800(query: any): void {
     if (this.sys3800Loading) return void (this.sys3800Loading = !1);
     this.sys3800Loading = !0;
-    this.http.post<BaseQueryResponse<DropdownOption>>(`${this.apiUrl}/querySYS3800_DropDownList`, query).pipe(
+    this.http.post<BaseQueryResponse<DropdownOption>>(`${apiUrl}/querySYS3800_DropDownList`, query).pipe(
       take(1),
       tap(response => this.sys3800Data.set(response.Data)),
       catchError(error => this.errorHandler.handleError(error)),
@@ -138,7 +139,7 @@ export class TLS26010Service {
   loadSYS3900(query: any): void {
     if (this.sys3900Loading) return void (this.sys3900Loading = !1);
     this.sys3900Loading = !0;
-    this.http.post<BaseQueryResponse<DropdownOption>>(`${this.apiUrl}/querySYS3900_DropDownList`, query).pipe(
+    this.http.post<BaseQueryResponse<DropdownOption>>(`${apiUrl}/querySYS3900_DropDownList`, query).pipe(
       take(1),
       tap(response => this.sys3900Data.set(response.Data)),
       catchError(error => this.errorHandler.handleError(error)),
@@ -156,7 +157,7 @@ export class TLS26010Service {
 
     const api = mock
       ? of(mockPreorderECRList)
-      : this.http.post<BaseQueryResponse<DropdownOption>>(`${this.apiUrl}/queryPreorderECR_List`, query);
+      : this.http.post<BaseQueryResponse<DropdownOption>>(`${apiUrl}/queryPreorderECR_List`, query);
 
     api.pipe(
       take(1),
@@ -176,7 +177,7 @@ export class TLS26010Service {
     this.TLTTALENTLoading = !0;
     // if (query.building_no === '' && query.floor_no === '') return void (this.TLTTALENTLoading = !1);
 
-    this.http.post<BaseQueryResponse<DropdownOption>>(`${this.apiUrl}/queryTLTTALENT_DropDownList`, query).pipe(
+    this.http.post<BaseQueryResponse<DropdownOption>>(`${apiUrl}/queryTLTTALENT_DropDownList`, query).pipe(
       take(1),
       tap(() => this.TLTTALENTData.set([])),
       tap(response => this.TLTTALENTData.set(response.Data)),
@@ -195,7 +196,7 @@ export class TLS26010Service {
 
     const api = mock
       ? of(mockQueryTLS26010)
-      : this.http.post<BaseQueryResponse<TLS26010>>(`${this.apiUrl}/queryTLS26010`, query);
+      : this.http.post<BaseQueryResponse<TLS26010>>(`${apiUrl}/queryTLS26010`, query);
 
     api.pipe(
       take(1),
@@ -213,7 +214,7 @@ export class TLS26010Service {
     if (this.TableLoading) { this.TableLoading = !1; return of(); };
     this.TableLoading = !0;
 
-    return this.http.post<BaseQueryResponse<any>>(`${this.apiUrl}/insertTLS26010`, payload).pipe(
+    return this.http.post<BaseQueryResponse<any>>(`${apiUrl}/insertTLS26010`, payload).pipe(
       take(1),
       tap(() => { }),
       catchError(error => this.errorHandler.handleError(error)),
@@ -229,7 +230,7 @@ export class TLS26010Service {
     if (this.TableLoading) { this.TableLoading = !1; return of(); };
     this.TableLoading = !0;
 
-    return this.http.post<BaseQueryResponse<any>>(`${this.apiUrl}/updateTLS26010`, data).pipe(
+    return this.http.post<BaseQueryResponse<any>>(`${apiUrl}/updateTLS26010`, data).pipe(
       take(1),
       tap((response) => {
         if (response.Status === 'Success') {
@@ -264,7 +265,7 @@ export class TLS26010Service {
   importTLS26010(file: File): void {
     const formData = new FormData();
     formData.append('file', file);
-    this.http.post<any>(`${this.apiUrl}/importTLS26010`, formData).pipe(
+    this.http.post<any>(`${apiUrl}/importTLS26010`, formData).pipe(
       take(1),
       catchError(() => { this.messageService.errorBubble('檔案上傳失敗，請稍後再試'); return EMPTY; }),
     ).subscribe(res => {
@@ -302,7 +303,7 @@ export class TLS26010Service {
         Meta: { Timestamp: "2025-01-20T10:00:00.0000000Z", RequestId: "test-request-id-12345" },
         Status: "0000"
       })
-      : this.http.post<BaseQueryResponse<any>>(`${this.apiUrl}/deleteTLS26010`, { id });
+      : this.http.post<BaseQueryResponse<any>>(`${apiUrl}/deleteTLS26010`, { id });
 
     api.pipe(
       take(1),
@@ -328,7 +329,7 @@ export class TLS26010Service {
     const id = data.pod_no;
 
     this.http.post<BaseQueryResponse<{ Status: ApprovalStatus; }>>(
-      `${this.apiUrl}${data.pod_status === ApprovalStatus.未核准 ? '/approvalTLS26010' : '/disapprovalTLS26010'}`,
+      `${apiUrl}${data.pod_status === ApprovalStatus.未核准 ? '/approvalTLS26010' : '/disapprovalTLS26010'}`,
       { id }).pipe(
         take(1),
         tap(() => this.approvalData.set(ApprovalStatus.未核准)),
@@ -354,5 +355,14 @@ export class TLS26010Service {
     this.preorderECRData.set([]);
     this.TLTTALENTData.set([]);
     this.TLS26010Data.set([]);
+    this.TLS26010List.set([]);
+    this.ECRMap.clear();
+    this.TLTMap.clear();
+    this.ECRTableMap.clear();
+    this.TLTTableMap.clear();
+    this.ECRs.destroy();
+    this.TLTs.destroy();
+    this.fetchData.destroy();
+    this.fetchTLS26010List.destroy();
   }
 }
