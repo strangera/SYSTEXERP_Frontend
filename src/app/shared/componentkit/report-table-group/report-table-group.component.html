@@ -24,9 +24,7 @@
     <label class="text-sm">合併顯示</label>
   </div>
 
-  <div
-    class="flex items-center flex-wrap gap-2 w-full max-w-full md:max-w-screen-xl mx-auto px-2"
-  >
+
     <div class="flex items-center gap-2" *ngIf="mergedView">
       <button
         pButton
@@ -73,14 +71,15 @@
       class="p-button-sm p-button-secondary"
     ></button>
 
-    <button
-      pButton
-      type="button"
-      icon="pi pi-arrow-left"
-      label="回上頁"
-      class="p-button-sm p-button-secondary"
-      (click)="goBack()"
-    ></button>
+<button
+  *ngIf="showBackButton"
+  pButton
+  type="button"
+  icon="pi pi-arrow-left"
+  label="回上頁"
+  class="p-button-sm p-button-secondary"
+  (click)="goBack()"
+></button>
 
     <!-- ✅ 顯示資料列的開關 -->
     <div class="flex items-center gap-2" *ngIf="!mergedView">
@@ -131,17 +130,20 @@
 
         <!-- 群組資料表 -->
 
-        <p-table
-          [value]="group"
-          [columns]="selectedColumns"
-          [resizableColumns]="true"
-          [paginator]="false"
-          scrollable="true"
-          [style]="{ width: '100%' }"
-          [styleClass]="
+  <p-table
+    [value]="group"
+    [columns]="selectedColumns"
+    [resizableColumns]="true"
+    [paginator]="false"
+    scrollable="true"
+    scrollDirection="horizontal"
+    scrollHeight="auto"
+    [styleClass]="
             'p-datatable-sm p-datatable-striped p-datatable-gridlines'
           "
-        >
+    
+    
+  >
           <!-- 📌 表頭 -->
           <ng-template pTemplate="header">
             <tr>
@@ -225,11 +227,12 @@
             </tr>
           </ng-template>
         </p-table>
+
       </div>
       
    <!-- ✅ 所有群組結束後的總計列（嵌入在同一區塊內） -->
 <!-- ✅ 所有群組結束後的總計區塊（含表頭） -->
-<div class="report-table-wrapper mt-3 border-t pt-3">
+<div class="report-table-wrapper mt-3 border-t pt-3"  *ngIf="showGrandTotal">
   <p-table
     [value]="[{}]"
     [columns]="selectedColumns"
@@ -290,8 +293,7 @@
           [resizableColumns]="true"
           [paginator]="false"
           [customSort]="true"
-          scrollable="true"
-          scrollHeight="500px"
+                   scrollable="true"
           [style]="{ width: '100%' }"
           [scrollHeight]="'auto'"
           (sort)="onTableSort($event)"

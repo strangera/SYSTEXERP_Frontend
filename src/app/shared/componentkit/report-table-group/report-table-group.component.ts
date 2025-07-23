@@ -88,8 +88,10 @@ export class ReportTableGroupComponent implements OnInit {
 @Input() allowMergeToggle: boolean = false;             // 是否顯示合併顯示切換按鈕
 @Input() defaultMergedView: boolean = true;             // 預設是否合併為一大表
 @Input() enableGrouping: boolean = false;               // 是否啟用分組顯示
+@Input() showBackButton = true;
 
 @Input() rowExpandMode: 'single' | 'multiple' = 'multiple'; // 展開列模式
+@Input() showGrandTotal: boolean = false; // 預設不顯示
 
 // 📌 資料 getter / setter
 private _data: any[] = [];
