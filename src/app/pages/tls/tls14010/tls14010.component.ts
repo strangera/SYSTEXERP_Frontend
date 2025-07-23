@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { createPaginationConfig, Column } from '../../../shared/componentkit/table/table.model';
+import { createPaginationConfig, Column, formatDate } from '../../../shared/componentkit/table/table.model';
 import { apiOption, option } from '../../../shared/models/sys/sysb000.module';
 import { Tls14010Service } from '../../../service/api/tls/tls14010.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
@@ -100,6 +100,12 @@ export class TLS14010Component extends BasicQueryPageComponent<TLTContract>
     { field: 'apply_status', header: '合約狀態', visible: true, format: (value: string) => this.statusOptions.find((option) => option.value === value)?.label || value },
     { field: 'LocationText', header: '承租內容', visible: true },
     { field: 'tlt_openflag', header: '營運狀況', visible: true, format: (value: string) => this.tlt_openOptions.find((option) => option.value === value)?.label || value },
+    { field: 'CRT_Date', header: '建立日期', visible: false, format: formatDate  },
+    { field: 'CRT_USR_No', header: '建立人員代碼', visible: false },
+    { field: 'CRT_USR_Name', header: '建立人員姓名', visible: false },
+    { field: 'UPD_Date', header: '變更日期', visible: false, format: formatDate },
+    { field: 'UPD_USR_No', header: '變更人員代碼', visible: false },
+    { field: 'UPD_USR_Name', header: '變更人員姓名', visible: false }
   ];
 
   selectedItems: TLTContract[] = [];// 多選項目

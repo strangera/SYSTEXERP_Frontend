@@ -5,7 +5,6 @@ export { TLS11020Component } from './tls11020/tls11020.component';
 // TLS12
 export { TLS12010Component } from './tls12010/tls12010.component';
 export { TLS12020Component } from './tls12020/tls12020.component';
-export { TLS12030Component } from './tls12030/tls12030.component';
 export { TLS12040Component } from './tls12040/tls12040.component';
 export { TLS12050Component } from './tls12050/tls12050.component';
 export { TLS12060Component } from './tls12060/tls12060.component';
@@ -27,7 +26,6 @@ export { Tls14030Component } from './tls14030/tls14030.component';
 export { Tls14040Component } from './tls14040/tls14040.component';
 
 // TLS21
-export { TLS21010Component } from './tls21010/tls21010.component';
 export { TLS21020Component } from './tls21020/tls21020.component';
 export { TLS21030Component } from './tls21030/tls21030.component';
 export { TLS21040Component } from './tls21040/tls21040.component';
@@ -60,8 +58,6 @@ export { TLS24010Component } from './tls24010/tls24010.component';
 export { TLS24080Component } from './tls24080/tls24080.component';
 
 // TLS25
-export { TLS25010Component } from './tls25010/tls25010.component';
-export { TLS25020Component } from './tls25020/tls25020.component';
 export { TLS25030Component } from './tls25030/tls25030.component';
 
 // TLS26
@@ -79,10 +75,8 @@ export { TLS27040Component } from './tls27040/tls27040.component';
 export { TLS27050Component } from './tls27050/tls27050.component';
 
 // TLS28
-export { TLS28010Component } from './tls28010/tls28010.component';
 export { TLS28020Component } from './tls28020/tls28020.component';
 export { TLS28030Component } from './tls28030/tls28030.component';
-export { TLS28040Component } from './tls28040/tls28040.component';
 export { TLS28050Component } from './tls28050/tls28050.component';
 
 // TLS29
@@ -113,14 +107,11 @@ export { TLS2D020Component } from './tls2d020/tls2d020.component';
 export { TLS2D030Component } from './tls2d030/tls2d030.component';
 export { TLS2D040Component } from './tls2d040/tls2d040.component';
 export { TLS2D050Component } from './tls2d050/tls2d050.component';
-export { TLS2D060Component } from './tls2d060/tls2d060.component';
-export { TLS2D070Component } from './tls2d070/tls2d070.component';
 
 // TLS2E
 export { TLS2E010Component } from './tls2e010/tls2e010.component';
 export { TLS2E020Component } from './tls2e020/tls2e020.component';
 export { TLS2E030Component } from './tls2e030/tls2e030.component';
-export { TLS2E040Component } from './tls2e040/tls2e040.component';
 export { TLS2E050Component } from './tls2e050/tls2e050.component';
 export { TLS2E060Component } from './tls2e060/tls2e060.component';
 export { TLS2E070Component } from './tls2e070/tls2e070.component';
@@ -149,9 +140,6 @@ export { TLS2J010Component } from './tls2j010/tls2j010.component';
 export { TLS2J020Component } from './tls2j020/tls2j020.component';
 export { TLS2J030Component } from './tls2j030/tls2j030.component';
 export { TLS2J040Component } from './tls2j040/tls2j040.component';
-export { TLS2J050Component } from './tls2j050/tls2j050.component';
-export { TLS2J060Component } from './tls2j060/tls2j060.component';
-export { TLS2J070Component } from './tls2j070/tls2j070.component';
 
 // TLS2K
 export { TLS2K010Component } from './tls2k010/tls2k010.component';
@@ -186,7 +174,6 @@ export { TLS41020Component } from './tls41020/tls41020.component';
 export { TLS41030Component } from './tls41030/tls41030.component';
 export { TLS41040Component } from './tls41040/tls41040.component';
 export { TLS41050Component } from './tls41050/tls41050.component';
-export { TLS41060Component } from './tls41060/tls41060.component';
 
 // TLS42
 export { TLS42010Component } from './tls42010/tls42010.component';
@@ -211,10 +198,8 @@ export { TLS45030Component } from './tls45030/tls45030.component';
 // TLS46
 export { TLS46010Component } from './tls46010/tls46010.component';
 export { TLS46020Component } from './tls46020/tls46020.component';
-export { TLS46030Component } from './tls46030/tls46030.component';
 export { TLS46040Component } from './tls46040/tls46040.component';
 export { TLS46050Component } from './tls46050/tls46050.component';
-export { TLS46060Component } from './tls46060/tls46060.component';
 
 // TLS47
 export { TLS47010Component } from './tls47010/tls47010.component';
@@ -228,10 +213,7 @@ export { TLS51050Component } from './tls51050/tls51050.component';
 export { TLS51060Component } from './tls51060/tls51060.component';
 export { TLS51070Component } from './tls51070/tls51070.component';
 export { TLS51080Component } from './tls51080/tls51080.component';
-export { TLS51090Component } from './tls51090/tls51090.component';
-export { TLS51100Component } from './tls51100/tls51100.component';
 export { TLS51110Component } from './tls51110/tls51110.component';
-export { TLS51120Component } from './tls51120/tls51120.component';
 export { TLS51130Component } from './tls51130/tls51130.component';
 
 // TLS52
@@ -240,21 +222,14 @@ export { TLS52020Component } from './tls52020/tls52020.component';
 export { TLS52030Component } from './tls52030/tls52030.component';
 export { TLS52040Component } from './tls52040/tls52040.component';
 export { TLS52050Component } from './tls52050/tls52050.component';
-export { TLS52060Component } from './tls52060/tls52060.component';
-export { TLS52070Component } from './tls52070/tls52070.component';
 
 // TLS53
 export { TLS53010Component } from './tls53010/tls53010.component';
 export { TLS53020Component } from './tls53020/tls53020.component';
 export { TLS53030Component } from './tls53030/tls53030.component';
-export { TLS53040Component } from './tls53040/tls53040.component';
-
-// TLS54
-export { TLS54010Component } from './tls54010/tls54010.component';
 
 // TLS55
 export { TLS55010Component } from './tls55010/tls55010.component';
-export { TLS55020Component } from './tls55020/tls55020.component';
 export { TLS55030Component } from './tls55030/tls55030.component';
 export { TLS55040Component } from './tls55040/tls55040.component';
 export { TLS55050Component } from './tls55050/tls55050.component';

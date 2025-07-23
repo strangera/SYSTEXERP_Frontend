@@ -36,7 +36,7 @@
           [showDetail]="false" [showCheckBox]="true" [showInsert]="true" [showRowEdit]="true"
           (delete)="onDelete($event)" (selectionChange)="selectedRows = $event" [selectedItems]="selectedRows"
           [showCaption]="!isFormReadable" [showManage]="!isFormReadable" [showCheckBox]="!isFormReadable"
-          [insertRowData]="true" (dataChange)="data = $event"></app-table>
+          [insertRowData]="true" (dataChange)="data = $event" [showReportMode]="false"></app-table>
       </div>
       <!-- sys3700 -->
       <div class="grid p-fluid border-top-1 surface-border mt-2" *ngIf="!isFormCreateable">

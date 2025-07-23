@@ -9,6 +9,7 @@
   styleClass="bank-autocomplete"
   [id]="controlName"
   [(ngModel)]="selectedOption"
+  (ngModelChange)="onModelChange($event)"
   [suggestions]="filteredOptions"
   (completeMethod)="onSearch($event)"
   optionLabel="label"
@@ -20,19 +21,6 @@
   [disabled]="control.disabled"
   [minLength]="1"
 >
-  <!-- <ng-template let-option pTemplate="item">
-    <div class="autocomplete-item">
-      <div class="bank-info">
-        <div class="bank-single-line">
-          <span class="bank-code">
-            {{ option.bankCode }}-{{ option.branchCode }}
-          </span>
-          {{ option.bankName }} {{ option.branchName }}
-        </div>
-      </div>
-      <div class="full-code">{{ option.value }}</div>
-    </div>
-  </ng-template> -->
   <ng-template let-option pTemplate="item">
     <div class="autocomplete-item">
       <div class="bank-info">

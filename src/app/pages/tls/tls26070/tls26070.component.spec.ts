@@ -1,18 +1,18 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { BasicQpageComponent } from './basic-qpage.component';
+import { TLS26070Component } from './tls26070.component';
 
-describe('BasicQpageComponent', () => {
-  let component: BasicQpageComponent;
-  let fixture: ComponentFixture<BasicQpageComponent>;
+describe('TLS26070Component', () => {
+  let component: TLS26070Component;
+  let fixture: ComponentFixture<TLS26070Component>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [BasicQpageComponent]
+      imports: [TLS26070Component]
     })
     .compileComponents();
 
-    fixture = TestBed.createComponent(BasicQpageComponent);
+    fixture = TestBed.createComponent(TLS26070Component);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

@@ -1,17 +1,17 @@
 import { inject } from '@angular/core';
-import { ActivatedRoute, Router } from '@angular/router';
-import { AuthService } from '../../../service/system/auth.service';
-import { NotificationService } from '../../component/notification-message/notification.service';
 import { FormBuilder, FormGroup } from '@angular/forms';
-import { FunsrightInfo, PermissionsInfo } from '../../models/system/funsrightInfo';
-import { UserInfo } from '../../models/system/userInfo';
-import { CRUDStatus } from '../../models/system/CRUDstatus';
-import { CurrentPageService } from '../../../layout/app.menulist/current-page.service';
-import { LazyLoadEvent } from '../../componentkit/table/table.model';
+import { ActivatedRoute, Router } from '@angular/router';
 import { UntilDestroy } from '@ngneat/until-destroy';
 import { ConfirmationService } from 'primeng/api';
+import { CurrentPageService } from '../../../layout/app.menulist/current-page.service';
+import { AuthService } from '../../../service/system/auth.service';
+import { NotificationService } from '../../component/notification-message/notification.service';
+import { LazyLoadEvent } from '../../componentkit/table/table.model';
+import { CRUDStatus } from '../../models/system/CRUDstatus';
+import { FunsrightInfo, PermissionsInfo } from '../../models/system/funsrightInfo';
+import { UserInfo } from '../../models/system/userInfo';
 @UntilDestroy()
-export class BasicCruPageComponent<T> {
+export abstract class BasicCruPageComponent<T> {
   // Page No
   ProgNo = '';
   funInfo?: FunsrightInfo;

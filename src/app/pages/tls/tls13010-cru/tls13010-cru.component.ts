@@ -65,6 +65,8 @@ import { NgIf } from '@angular/common';
 
 })
 export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> implements OnInit, OnDestroy {
+  isViewMode = false;
+  private viewModeSubscription?: Subscription;
   // 位置選項資料
   locationWithDetailsOptions: DropdownOption[] = [];
   displayLocationData: LocationItem[] = [];
@@ -268,6 +270,13 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
     this.initializePage('TLS13010', this.dataForm);
     this.funInfo = this.authService.getUserPermissions(this.ProgNo);
 
+    //關鍵：一定要在這裡設定檢視模式 UI 監聽
+    this.setupViewModeUI();
+
+
+    // 檢查 router state（在現有的 loadWorkflowData() 之前）
+    this.handleRouterState();
+
     // 載入下拉選單和位置選項
     this.loadDropdownOptions();
     this.loadLocationWithDetailsOptions();
@@ -281,14 +290,26 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
     this.setupAutoSave();
     this.setupBusTypeListener();
 
-    // 延遲驗證（開發用）
+
     setTimeout(() => {
       this.validateWorkflowData();
-      this.updateDisplayLocationData(); // 移到這裡
-    }, 500); // 增加延遲時間
+      this.updateDisplayLocationData();
+
+      // 🎯 檢查並重新載入分類資料
+      const currentBusType = this.dataForm.get('bus_type')?.value;
+      if (currentBusType) {
+        console.log('🔄 重新確認分類資料載入');
+        this.ensureClassificationDataLoaded(currentBusType);
+      }
+    }, 500);
+
   }
 
   ngOnDestroy(): void {
+    // 🎯 新增：清理檢視模式訂閱
+    if (this.viewModeSubscription) {
+      this.viewModeSubscription.unsubscribe();
+    }
     this.subscriptions.forEach(sub => sub.unsubscribe());
   }
 
@@ -468,9 +489,22 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
     // 載入表單資料
     this.dataForm.patchValue(savedFormData);
 
+    if (savedFormData.selectedBankInfo) {
+      console.log('🏦 恢復銀行選擇資訊:', savedFormData.selectedBankInfo);
+      this.selectedBankInfo = savedFormData.selectedBankInfo;
+    } else if (savedFormData.bank_id) {
+      // 🎯 備援邏輯：如果只有 bank_id，嘗試重建 selectedBankInfo
+      console.log('🔄 嘗試根據 bank_id 重建銀行資訊:', savedFormData.bank_id);
+      this.reconstructBankInfo(savedFormData.bank_id);
+    } else {
+      this.selectedBankInfo = null;
+    }
+
     // 載入分類資料
     if (savedFormData.bus_type) {
-      this.loadBusinessClassifications(savedFormData.bus_type);
+      setTimeout(() => {
+        this.loadBusinessClassifications(savedFormData.bus_type);
+      }, 100);
     }
 
     // 🎯 改進位置資料載入邏輯
@@ -491,6 +525,30 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
         this.locationData = [];
       }
     }
+  }
+
+  private reconstructBankInfo(bankId: string): void {
+    if (!bankId) {
+      this.selectedBankInfo = null;
+      return;
+    }
+
+    this.bankService.getBankOptions(bankId).subscribe({
+      next: (options) => {
+        // API 回傳：[{ label: "臺灣銀行營業部", value: "0040037" }]
+        const matchedBank = options.find(option => option.value === bankId);
+
+        if (matchedBank) {
+          // 🎯 重建完整格式
+          const fullText = `${matchedBank.value}${matchedBank.label}`;
+          this.selectedBankInfo = {
+            value: matchedBank.value,     // "0040037"
+            label: fullText,              // "0040037臺灣銀行營業部"
+            fullText: fullText            // "0040037臺灣銀行營業部"
+          };
+        }
+      }
+    });
   }
 
   private initializeEmptyForm(): void {
@@ -532,12 +590,11 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
       total_amt_unit: 'M', // 預設為月
       total_amt_vendor_unit: 'M', // 預設為月
       company_addr: '',
-      // 🎯 清空銀行資訊
-      selectedBankInfo: null
     });
 
     // 🎯 清空位置資料
     this.locationData = [];
+    this.selectedBankInfo = null;
 
     console.log('✅ 空表單初始化完成');
   }
@@ -621,23 +678,83 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
       total_amt_vendor_unit: queryData['total_amt_vendor_unit'] as string,
     });
 
-    this.loadBusinessClassifications(queryData['bus_type'] as string);
+    const bankId = queryData['bank_id'] as string;
+    if (bankId) {
+      console.log('🏦 載入查詢結果的銀行資訊:', bankId);
+      this.reconstructBankInfo(bankId);
+    } else {
+      this.selectedBankInfo = null;
+    }
+
+    const busType = queryData['bus_type'] as string;
+    if (busType) {
+      // 延遲執行，確保表單值已設定
+      setTimeout(() => {
+        this.loadBusinessClassifications(busType);
+      }, 100);
+    }
   }
 
   private loadBusinessClassifications(busType: string | undefined): void {
-    if (busType) {
-      this.tls13010DropdownService.loadBusClassOptions(busType).subscribe({
-        next: (options: DropdownOption[]) => {
-          const currentBusClass = this.dataForm.get('bus_class')?.value;
-          const validBusClass = options.find(option => option.value === currentBusClass);
-          if (currentBusClass && !validBusClass) {
-            this.dataForm.get('bus_class')?.setValue('');
+    if (!busType) return;
+
+    const currentBusClass = this.dataForm.get('bus_class')?.value;
+    const currentBusSClass = this.dataForm.get('bus_sclass')?.value;
+
+    console.log('🔍 載入業務分類:', { busType, currentBusClass, currentBusSClass });
+
+    // 先載入中分類
+    this.tls13010DropdownService.loadBusClassOptions(busType).subscribe({
+      next: (busClassOptions: DropdownOption[]) => {
+        console.log('📋 中分類選項載入完成:', busClassOptions.length);
+
+        const validBusClass = busClassOptions.find(option => option.value === currentBusClass);
+
+        if (currentBusClass && validBusClass) {
+          console.log('✅ 中分類有效，載入小分類');
+          // 中分類有效，載入小分類
+          this.loadBusSClassWithValidation(busType, currentBusClass, currentBusSClass ?? undefined);
+        } else if (currentBusClass && !validBusClass) {
+          console.warn('❌ 中分類無效，清空相關欄位');
+          // 中分類無效，清空相關欄位
+          this.dataForm.get('bus_class')?.setValue('');
+          this.dataForm.get('bus_sclass')?.setValue('');
+        }
+        // 如果 currentBusClass 為空，保持原狀
+      },
+      error: (err) => {
+        console.error('載入中分類失敗:', err);
+        this.messageService.warnBubble('載入中分類選項失敗，請重新選擇大分類');
+      }
+    });
+  }
+
+  private loadBusSClassWithValidation(busType: string, busClass: string, currentBusSClass?: string): void {
+    console.log('🔍 載入小分類:', { busType, busClass, currentBusSClass });
+
+    this.tls13010DropdownService.loadBusSClassOptions(busType, busClass).subscribe({
+      next: (busSClassOptions: DropdownOption[]) => {
+        console.log('📋 小分類選項載入完成:', busSClassOptions.length);
+
+        if (currentBusSClass) {
+          const validBusSClass = busSClassOptions.find(option => option.value === currentBusSClass);
+
+          if (validBusSClass) {
+            console.log('✅ 小分類有效，保持原值');
+            // 小分類有效，確保表單值正確
+            this.dataForm.get('bus_sclass')?.setValue(currentBusSClass);
+          } else {
+            console.warn('❌ 小分類無效，清空欄位');
+            // 小分類無效，清空欄位
             this.dataForm.get('bus_sclass')?.setValue('');
           }
-        },
-        error: () => this.messageService.warnBubble('載入中分類選項失敗，請重新選擇大分類')
-      });
-    }
+        }
+      },
+      error: (err) => {
+        console.error('載入小分類失敗:', err);
+        this.messageService.warnBubble('載入小分類選項失敗');
+      }
+    });
   }
 
   // ==========  表單監聽與自動儲存 ==========
@@ -716,7 +833,8 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
     // 🎯 準備位置資料
     const workflowData = {
       ...formData,
-      locationInfo: this.prepareLocationDataForSubmit()
+      locationInfo: this.prepareLocationDataForSubmit(),
+      selectedBankInfo: this.selectedBankInfo
     };
 
     const contractInfo = {
@@ -899,6 +1017,11 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
   }
 
   onSubmitNext(): void {
+    if (this.isViewMode) {
+      // 檢視模式：直接進入下一步檢視
+      this.router.navigate(['account/tls/tls13010next1']);
+      return;
+    }
     console.log('🔍 CRU onSubmitNext 開始執行');
     console.log('📋 表單狀態:', {
       valid: this.dataForm.valid,
@@ -931,6 +1054,10 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
   }
 
   override onCancel(): void {
+    if (this.isViewMode) {
+      this.exitViewMode();
+      return;
+    }
     if (this.dataForm.dirty) {
       if (confirm('是否要儲存目前的編輯內容？')) {
         this.saveToWorkflow();
@@ -956,6 +1083,7 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
   // ==========  位置表格事件處理 ==========
 
   onAddLocationItem(): void {
+    if (this.isViewMode) return;
     console.log('➕ 新增位置項目');
     console.log('🔍 新增前狀態:', {
       總數: this.locationData.length,
@@ -1059,6 +1187,7 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
   }
 
   onBatchDeleteLocation(selectedItems: LocationItem[]): void {
+    if (this.isViewMode) return;
     console.log('🔥 刪除方法開始');
     console.log('📝 選中的項目:', selectedItems);
     console.log('📊 刪除前資料狀態:', {
@@ -1281,15 +1410,37 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
 
   // ==========  銀行相關事件處理 ==========
   onBankSelect(selectedBank: AutoCompleteOption): void {
-    this.selectedBankInfo = selectedBank;
+    console.log('🏦 銀行選擇事件:', selectedBank);
+
+    // 🎯 確保 selectedBank 有完整的屬性
+    // AutoComplete 組件應該已經提供完整的 AutoCompleteOption 物件
+    this.selectedBankInfo = {
+      value: selectedBank.value,      // 例如: "0040037"
+      label: selectedBank.label,      // 例如: "臺灣銀行營業部"
+      fullText: selectedBank.fullText // 例如: "0040037臺灣銀行營業部"
+    };
+
     this.dataForm.patchValue({ bank_id: selectedBank.value });
+
+    // 🎯 立即儲存到工作流程
     this.saveToWorkflow();
+
+    console.log('✅ 銀行選擇完成並儲存:', {
+      bank_id: selectedBank.value,
+      selectedBankInfo: this.selectedBankInfo
+    });
   }
 
   onBankUnselect(): void {
+    console.log('🏦 銀行取消選擇');
+
     this.selectedBankInfo = null;
     this.dataForm.patchValue({ bank_id: '' });
+
+    // 🎯 立即儲存到工作流程
     this.saveToWorkflow();
+
+    console.log('✅ 銀行取消選擇並儲存');
   }
 
   searchBankOptions(searchKeyword: string): Observable<string[]> {
@@ -1498,4 +1649,207 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
     return originalCommissionType !== currentCommissionType;
   }
 
+  private ensureClassificationDataLoaded(busType: string): void {
+    const currentBusClass = this.dataForm.get('bus_class')?.value;
+    const currentBusSClass = this.dataForm.get('bus_sclass')?.value;
+
+    console.log('🔍 確認分類資料:', { busType, currentBusClass, currentBusSClass });
+
+    // 檢查中分類選項是否已載入
+    if (currentBusClass && this.tls13010DropdownService.busClassOptions.length === 0) {
+      console.log('🔄 重新載入中分類選項');
+      this.tls13010DropdownService.loadBusClassOptions(busType).subscribe();
+    }
+
+    // 檢查小分類選項是否已載入
+    if (currentBusClass && currentBusSClass && this.tls13010DropdownService.busSClassOptions.length === 0) {
+      console.log('🔄 重新載入小分類選項');
+      this.tls13010DropdownService.loadBusSClassOptions(busType, currentBusClass).subscribe();
+    }
+  }
+
+  /**
+   * 🎯 新增：處理 router state
+   */
+  private async handleRouterState(): Promise<void> {
+    try {
+      const navigation = this.router.getCurrentNavigation();
+      const routerState = navigation?.extras?.state;
+
+      console.log('🔍 檢查 router state:', routerState);
+
+      if (routerState && (routerState['mode'] || routerState['talentId'])) {
+        // 🎯 從其他程式跳轉進來
+        console.log('🚀 從其他程式跳轉，初始化工作流程');
+
+        const success = await this.contractFlowService.initializeFromRouterState(routerState);
+
+        if (success) {
+          console.log('✅ 工作流程初始化成功');
+
+          // 🎯 延遲一點再載入工作流程資料，確保初始化完成
+          setTimeout(() => {
+            this.loadWorkflowData();
+          }, 100);
+
+        } else {
+          console.error('❌ 工作流程初始化失敗');
+          this.messageService.errorBubble('載入資料失敗，請重新選擇要檢視的項目');
+          this.router.navigate(['account/tls/tls13010']);
+        }
+
+      } else {
+        // 🎯 正常流程：從查詢頁面進來，不做額外處理
+        console.log('📋 正常流程，將在後續載入工作流程資料');
+      }
+
+    } catch (error) {
+      console.error('❌ 處理 router state 失敗:', error);
+      this.messageService.errorBubble('初始化失敗，請重新操作');
+      this.router.navigate(['account/tls/tls13010']);
+    }
+  }
+
+  /**
+   * 🎯 新增：設定檢視模式 UI
+   */
+  private setupViewModeUI(): void {
+    console.log('🔧 設定檢視模式 UI 監聽');
+
+    // 🎯 先檢查當前狀態
+    const currentViewMode = this.contractFlowService.isViewMode();
+    console.log('📋 當前檢視模式狀態:', currentViewMode);
+
+    // 🎯 如果已經是檢視模式，立即設定
+    if (currentViewMode) {
+      this.isViewMode = true;
+      this.applyViewModeSettings(true);
+    }
+
+    // 🎯 訂閱後續變更
+    this.viewModeSubscription = this.contractFlowService.isViewMode$.subscribe(isViewMode => {
+      console.log('🔍 檢視模式變更:', isViewMode);
+      this.isViewMode = isViewMode;
+      this.applyViewModeSettings(isViewMode);
+    });
+  }
+
+  /**
+ * 🎯 新增：套用檢視模式設定
+ */
+  private applyViewModeSettings(isViewMode: boolean): void {
+    console.log('⚙️ 套用檢視模式設定:', isViewMode);
+
+    if (isViewMode) {
+      console.log('🔒 啟用檢視模式');
+      this.dataForm.disable(); // 表單自動全禁用
+
+      // 🎯 位置表格也設為唯讀
+      this.locationColumns = this.locationColumns.map(col => ({
+        ...col,
+        editable: false
+      }));
+
+    } else {
+      console.log('🔓 停用檢視模式');
+      this.dataForm.enable();  // 恢復可編輯
+
+      // 🎯 位置表格恢復可編輯
+      this.locationColumns = this.locationColumns.map(col => ({
+        ...col,
+        editable: true
+      }));
+
+      // 🎯 恢復某些欄位的原始禁用狀態
+      setTimeout(() => {
+        this.restoreOriginalFieldStates();
+      }, 50);
+    }
+  }
+
+  /**
+   * 🎯 新增：恢復欄位的原始狀態
+   */
+  private restoreOriginalFieldStates(): void {
+    console.log('🔄 恢復原始欄位狀態');
+
+    // 版次永遠禁用
+    this.dataForm.get('contract_subno')?.disable();
+
+    // 如果不是新增模式，某些欄位禁用
+    if (!this.contractFlowService.isNewContractMode()) {
+      const nonEditableFields = ['tlt_name', 'apply_no', 'tlt_no', 'VEN_Name'];
+      nonEditableFields.forEach(fieldName => {
+        const control = this.dataForm.get(fieldName);
+        if (control) {
+          control.disable();
+          console.log(`🔒 禁用欄位: ${fieldName}`);
+        }
+      });
+    }
+  }
+
+
+  /**
+   * 🎯 新增：設定表單為唯讀
+   */
+  private setFormReadonly(readonly: boolean): void {
+    if (readonly) {
+      this.dataForm.disable();
+      console.log('🔒 表單已設為唯讀');
+    } else {
+      this.dataForm.enable();
+      console.log('🔓 表單已設為可編輯');
+    }
+  }
+
+  /**
+   * 🎯 新增：設定位置表格為唯讀
+   */
+  private updateLocationTableReadonly(readonly: boolean): void {
+    this.locationColumns = this.locationColumns.map(col => ({
+      ...col,
+      editable: !readonly
+    }));
+  }
+
+  /**
+   * 🎯 新增：處理初始化失敗
+   */
+  private handleInitializationFailure(): void {
+    this.messageService.errorBubble('載入資料失敗，請重新選擇要檢視的項目');
+    this.router.navigate(['account/tls/tls13010']);
+  }
+
+  /**
+   * 🎯 新增：按鈕顯示控制
+   */
+  showEditButtons(): boolean {
+    return !this.isViewMode;
+  }
+
+  showViewButtons(): boolean {
+    return this.isViewMode;
+  }
+
+  /**
+   * 🎯 新增：退出檢視模式
+   */
+  exitViewMode(): void {
+    this.contractFlowService.clearViewMode();
+    this.router.navigate(['account/tls/tls13010']);
+    this.messageService.infoBubble('已退出檢視模式');
+  }
+
+  /**
+   * 🎯 新增：切換到編輯模式
+   */
+  switchToEditMode(): void {
+    if (confirm('確定要切換到編輯模式嗎？')) {
+      this.contractFlowService.clearViewMode();
+      this.setFormReadonly(false);
+      this.updateLocationTableReadonly(false);
+      this.messageService.infoBubble('已切換到編輯模式');
+    }
+  }
 }
