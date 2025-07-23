@@ -8,10 +8,11 @@ import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/ba
 import { ButtonComponent, CalendarRangeComponent, DropdownComponent, InputTextComponent, MultiSelectComponent, TableComponent } from '@shared/componentkit';
 import { Column } from '@shared/componentkit/table/table.model';
 import { MenubarComponent } from '@shared/index';
+import { ApprovalStatus } from '@shared/models';
 import { CRUDStatus } from '@shared/models/system/CRUDstatus';
 import { PanelModule } from 'primeng/panel';
 import { finalize, tap } from 'rxjs';
-import { ApprovalStatus, PreorderECRListQuery, TLS26010Data, TLS26010Payload, TLTTALENTQuery } from '../tls26010/tls26010.model';
+import { PreorderECRListQuery, TLS26010Data, TLS26010Payload, TLTTALENTQuery } from '../tls26010/tls26010.model';
 
 // 預購活動檔期設定
 @Component({

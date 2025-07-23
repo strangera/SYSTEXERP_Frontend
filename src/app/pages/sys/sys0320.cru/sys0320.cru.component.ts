@@ -22,6 +22,7 @@ import { AccordionModule } from 'primeng/accordion';
 import { CheckboxModule } from 'primeng/checkbox';
 import { CdkVirtualScrollViewport, CdkFixedSizeVirtualScroll, CdkVirtualForOf } from '@angular/cdk/scrolling';
 import { TranslateModule } from '@ngx-translate/core';
+import { TriStateCheckboxModule } from 'primeng/tristatecheckbox';
 
 interface PrivilegeOutput {
   prog_no: string;
@@ -30,33 +31,34 @@ interface PrivilegeOutput {
 }
 // 4.2.3.2 使用者系統權限設定 CRU
 @Component({
-    selector: 'app-sys0320.cru',
-    templateUrl: './sys0320.cru.component.html',
-    styleUrls: ['./sys0320.cru.component.scss'],
-    changeDetection: ChangeDetectionStrategy.OnPush,
-    standalone: true,
-    imports: [
-        MenubarComponent,
-        ButtonComponent,
-        PanelModule,
-        FormsModule,
-        ReactiveFormsModule,
-        InputTextComponent,
-        NgIf,
-        ProgressSpinnerModule,
-        TabViewModule,
-        PrimeTemplate,
-        NgClass,
-        NgFor,
-        Button,
-        InputSwitchModule,
-        AccordionModule,
-        CheckboxModule,
-        CdkVirtualScrollViewport,
-        CdkFixedSizeVirtualScroll,
-        CdkVirtualForOf,
-        TranslateModule,
-    ],
+  selector: 'app-sys0320.cru',
+  templateUrl: './sys0320.cru.component.html',
+  styleUrls: ['./sys0320.cru.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  standalone: true,
+  imports: [
+    MenubarComponent,
+    ButtonComponent,
+    PanelModule,
+    FormsModule,
+    ReactiveFormsModule,
+    InputTextComponent,
+    NgIf,
+    ProgressSpinnerModule,
+    TabViewModule,
+    PrimeTemplate,
+    NgClass,
+    NgFor,
+    Button,
+    InputSwitchModule,
+    AccordionModule,
+    CheckboxModule,
+    CdkVirtualScrollViewport,
+    CdkFixedSizeVirtualScroll,
+    CdkVirtualForOf,
+    TranslateModule,
+    TriStateCheckboxModule,
+  ],
 })
 // 使用者系統權限設定 CRU
 export class SYS0320CRUComponent extends BasicCruPageComponent<UserData> implements OnInit {
@@ -126,6 +128,7 @@ export class SYS0320CRUComponent extends BasicCruPageComponent<UserData> impleme
     // 初始化 partialSelected 和 isOpen
     if (newNode.partialSelected === undefined) {
       newNode.partialSelected = false;
+      newNode.IsEnable = null;
     }
     // 為第二層節點（模組下的直接子節點）初始化 isOpen
     // 我們假設 `item` 是指模組的直接子節點，它們會有 `isOpen` 屬性
@@ -203,7 +206,7 @@ export class SYS0320CRUComponent extends BasicCruPageComponent<UserData> impleme
       // 根據子項的狀態更新當前節點
       if (totalSelectableItems === 0) {
         // 沒有任何可選項目，父節點應該是未勾選
-        node.IsEnable = false;
+        node.IsEnable = null;
         node.partialSelected = false;
       } else if (selectedItemsCount === totalSelectableItems) {
         // 所有可選項目都已選中，父節點完全勾選
@@ -215,7 +218,7 @@ export class SYS0320CRUComponent extends BasicCruPageComponent<UserData> impleme
         node.partialSelected = true;
       } else {
         // 沒有任何項目選中，父節點未勾選
-        node.IsEnable = false;
+        node.IsEnable = null;
         node.partialSelected = false;
       }
     }
@@ -250,10 +253,10 @@ export class SYS0320CRUComponent extends BasicCruPageComponent<UserData> impleme
     });
   }
   onNodeCheckboxChange(node: TreeNode, newValue: boolean) {
-    node.IsEnable = newValue; // 更新當前節點的 IsEnable
+    node.IsEnable = newValue === false ? null : newValue; // 更新當前節點的 IsEnable
 
     // 1. 向下聯動：如果當前節點被勾選/取消勾選，則其所有子節點和 actions 都應同步
-    this.cascadeDown(node, newValue);
+    this.cascadeDown(node, node.IsEnable);
 
     // 2. 向上聯動：從當前節點開始，向上更新所有父節點的 IsEnable 和 partialSelected
     this.cascadeUp(node);
@@ -293,12 +296,11 @@ export class SYS0320CRUComponent extends BasicCruPageComponent<UserData> impleme
       });
     }
 
-    // 根據子項的狀態更新父節點
     const oldParentIsEnable = parentNode.IsEnable;
     const oldParentPartialSelected = parentNode.partialSelected;
 
     if (totalSelectableChildrenAndActions === 0) {
-      parentNode.IsEnable = false;
+      parentNode.IsEnable = null;
       parentNode.partialSelected = false;
     } else if (selectedChildrenAndActionsCount === totalSelectableChildrenAndActions) {
       // 所有子項都已選中，父節點完全勾選
@@ -310,7 +312,7 @@ export class SYS0320CRUComponent extends BasicCruPageComponent<UserData> impleme
       parentNode.partialSelected = true;
     } else {
       // 沒有任何子項選中
-      parentNode.IsEnable = false;
+      parentNode.IsEnable = null;
       parentNode.partialSelected = false;
     }
 
@@ -320,7 +322,7 @@ export class SYS0320CRUComponent extends BasicCruPageComponent<UserData> impleme
     }
   }
 
-  private cascadeDown(node: TreeNode, enableValue: boolean) {
+  private cascadeDown(node: TreeNode, enableValue: boolean | null) {
     node.IsEnable = enableValue;
     node.partialSelected = false; // 當父節點明確勾選或取消勾選時，它不再是 partialSelected
 
@@ -331,14 +333,6 @@ export class SYS0320CRUComponent extends BasicCruPageComponent<UserData> impleme
       node.actions.forEach(action => this.cascadeDown(action, enableValue));
     }
   }
-
-  inputSwitchOpen(node: TreeNode): void {
-    if (node.partialSelected) {
-      return;
-    }
-    node.isOpen = !node.isOpen;
-  }
-
   onSubmit(): void {
     const privilegeList: PrivilegeOutput[] = [];
 
@@ -427,5 +421,9 @@ export class SYS0320CRUComponent extends BasicCruPageComponent<UserData> impleme
   }
   trackByFn(index: number, item: any): string {
     return item.id; // 假設每個 TreeNode 都有唯一的 'id'
+  }
+
+  getEnabledLength(node: TreeNode): number {
+    return node.children ? node.children.filter(child => child.IsEnable).length : 0;
   }
 }

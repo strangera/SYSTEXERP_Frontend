@@ -23,23 +23,23 @@ import { TableComponent } from '../../../shared/componentkit/table/table.compone
 import { TranslateModule } from '@ngx-translate/core';
 // 4-2-1-1使用者基本資料維護
 @Component({
-    selector: 'app-sys0110-cru',
-    templateUrl: './sys0110.cru.component.html',
-    standalone: true,
-    imports: [
-        MenubarComponent,
-        ButtonComponent,
-        PanelModule,
-        FormsModule,
-        ReactiveFormsModule,
-        InputTextComponent,
-        DropdownComponent,
-        CalendarRangeQuickComponent,
-        NgIf,
-        CalendarComponent,
-        TableComponent,
-        TranslateModule,
-    ],
+  selector: 'app-sys0110-cru',
+  templateUrl: './sys0110.cru.component.html',
+  standalone: true,
+  imports: [
+    MenubarComponent,
+    ButtonComponent,
+    PanelModule,
+    FormsModule,
+    ReactiveFormsModule,
+    InputTextComponent,
+    DropdownComponent,
+    CalendarRangeQuickComponent,
+    NgIf,
+    CalendarComponent,
+    TableComponent,
+    TranslateModule,
+  ],
 })
 export class SYS0110CRUComponent extends BasicCruPageComponent<UserInfo> implements OnInit {
   dataForm = this.formBuilder.nonNullable.group({
@@ -143,7 +143,7 @@ export class SYS0110CRUComponent extends BasicCruPageComponent<UserInfo> impleme
         .map((item: SYS1000) => ({
           No: item.SYS_Code,
           Name: item.SYS_Name,
-          Label: item.SYS_Type + '-' + item.SYS_Code + '-' + item.SYS_Name,
+          Label: item.SYS_Code + '-' + item.SYS_Name,
         })))
     );
 
@@ -196,12 +196,7 @@ export class SYS0110CRUComponent extends BasicCruPageComponent<UserInfo> impleme
         { value: '2', label: '專櫃人員' },
         { value: '3', label: '其他' },
       ];
-
-      // 現在所有選項都已準備好，可以安全地設定 columns
       this.columns = [
-        // { field: 'User_No', header: '使用者編號' },
-        // { field: 'SEQ_No', header: '序號' },
-        // { field: 'id', header: 'ID' },
         { field: 'Org_ID', header: '組織代碼', type: 'dropdown', options: this.SYS3100_Options, optionLabel: 'label', optionValue: 'value' },
         { field: 'Building_No', header: '館別代碼', type: 'dropdown', options: this.SYS3700_Options, optionLabel: 'label', optionValue: 'value' },
         { field: 'Floor_No', header: '樓層代碼', type: 'dropdown', options: this.SYS3800_Options, optionLabel: 'label', optionValue: 'value' },
@@ -213,13 +208,17 @@ export class SYS0110CRUComponent extends BasicCruPageComponent<UserInfo> impleme
     });
   }
   // 刪除資料的方法
-  onDelete(rows: any[]) { // 將參數從單一 'row' 改為 'rows' 陣列
+  onDelete(rows: UserSys3700Detail[]) { // 將參數從單一 'row' 改為 'rows' 陣列
     const idsToDelete = new Set(rows.map(item => item.ID)); // 取得所有要刪除的 ID
-    this.data = this.data.filter((item: any) => !idsToDelete.has(item.ID));
+    this.data = this.data.filter((item: UserSys3700Detail) => !idsToDelete.has(item.ID));
     this.selectedRows = [];
   }
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
+      if (this.data.some((item: UserSys3700Detail) => !item.Org_ID && !item.Building_No && !item.Floor_No && !item.Area_No && !item.TLT_No && !item.TLT_Kind && !item.BUS_Type)) {
+        this.messageService.errorBubble('請至少填寫一個組織代碼、館別代碼、樓層代碼、區域代碼、專櫃編號、專櫃類型或大分類代碼');
+        return;
+      }
       const today = new Date();
       const expireDate = new Date(today);
       expireDate.setDate(today.getDate() + 90);
@@ -228,7 +227,7 @@ export class SYS0110CRUComponent extends BasicCruPageComponent<UserInfo> impleme
         user_Password: this.isFormCreateable ? this.encrypt.getPassword(frm.value.user_No, frm.value.user_Password) : undefined,
         user_No: frm.get('user_No')?.value,
         USER_PwdExpireDate: expireDate.toISOString(),
-        sys3700: this.data.map((item: any) => ({
+        sys3700: this.data.map((item: UserSys3700Detail) => ({
           ...item,
           User_No: frm.get('user_No')?.value,
         })),
