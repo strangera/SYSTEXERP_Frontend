@@ -66,6 +66,6 @@
     (edit)="onEdit($event)" (detail)="onDetail($event)" [selectedItems]="selectedItems"
     (selectionChange)="selectedItems = $event" (delete)="onDelete($event)" [showCheckBox]="true" dataKey="id"
     [multiSortMeta]="[{ field: 'user_No', order: 1 }]" [totalRecords]="totalRecords"
-    (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [lazy]="true"
-    [loading]="loading"></app-table>
+    (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [lazy]="true" [loading]="loading"
+    deleteIcon="pi pi-ban"></app-table>
 </div>
