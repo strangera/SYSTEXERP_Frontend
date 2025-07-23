@@ -7,9 +7,10 @@
       [headerStyleClass]="'query-accordionTab'">
       <form [formGroup]="queryForm" id="queryForm">
         <div class="grid p-fluid">
-          <div>
-            <app-file-upload [uploadUrl]="uploadUrl" [fileType]="fileType"></app-file-upload>
-          </div>
+          <app-file-upload #fileUpload class="col-12" name="myFile" [accept]="allowedFileTypes" [multiple]="true"
+            chooseLabel="選擇 CSV 或 TXT 檔案" uploadLabel="上傳" cancelLabel="清除" [auto]="false" [customUpload]="true"
+            mode="advanced" (select)="files = $event.files" [loading]="loading"
+            (uploadHandler)="handleCustomUpload($event)"></app-file-upload>
         </div>
       </form>
     </p-accordionTab>
