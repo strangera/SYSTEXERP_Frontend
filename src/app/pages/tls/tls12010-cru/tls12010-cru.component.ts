@@ -63,7 +63,7 @@ export interface Potential_Customer_Detail {
   shop_area: number; // 面積 (小數，預設 0)
   total_amt: number; // 營業額 (整數，預設 0)  
 
-  status: string; // 狀態 (新增: 'new', 編輯: 'edit', 刪除: 'delete')
+  status: string; // 狀態 (原始: 'orginal', 新增: 'new', 編輯: 'modified', 刪除: 'deleted')
 }
 
 // 暫存廠商資料
@@ -280,7 +280,7 @@ export class TLS12010CRUComponent extends BasicCruPageComponent<Potential_Custom
           if (this.canAdd()) {
             console.log('insert:', JSON.stringify(body, null, 2));
             console.log('detail', this.potentialDetail);
-            this.tls12010Service.insertTLS12010(formValue).subscribe(() => {
+            this.tls12010Service.insertTLS12010(body).subscribe(() => {
               this.messageService.successBubble('新增成功');
               // this.onCancel(); // 儲存後，會清除資料留在原頁面，不返回列表
               this.dataForm.reset(); // 重置表單
@@ -291,7 +291,7 @@ export class TLS12010CRUComponent extends BasicCruPageComponent<Potential_Custom
           if (this.canEdit()) {
             console.log('update:', JSON.stringify(body, null, 2));
             console.log('detail', this.potentialDetail);
-            this.tls12010Service.updateTLS12010(formValue).subscribe(() => {
+            this.tls12010Service.updateTLS12010(body).subscribe(() => {
               this.messageService.successBubble('更新成功');
               this.onCancel(); // 儲存後，會返回列表
             });
