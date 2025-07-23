@@ -15,7 +15,7 @@ export { TLS13060Service } from './tls13060.service';
 // TLS14
 export { Tls14010Service } from './tls14010.service';
 export { TLS14020Service } from './tls14020.service';
-export { Tls14030Service } from './tls14030.service';
+// export { Tls14030Service } from './tls14030.service';
 
 // TLS2B
 export { TLS2B010Service } from './tls2-b010.service';
@@ -59,7 +59,7 @@ export { Tls29010Service } from './tls29010.service';
 // TLS41
 export { TLS41010Service } from './tls41010.service';
 export { TLS41020Service } from './tls41020.service';
-export { Tls41030Service } from './tls41030.service';
+// export { Tls41030Service } from './tls41030.service';
 export { Tls41050Service } from './tls41050.service';
 
 // TLS46
