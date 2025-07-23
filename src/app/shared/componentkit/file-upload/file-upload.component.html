@@ -1,12 +1,116 @@
-<div class="col">
-    <p-fileUpload url="uploadurl" [chooseLabel]="chooseLab" [uploadLabel]="uploadLab" [cancelLabel]="cancelLab" (onUpload)="onUpload($event)" [multiple]="false" [accept]="fileType" [maxFileSize]="fileszie" [uploadStyleClass]="'upload-style'" [cancelStyleClass]="'cancel-style'"
-        [removeStyleClass]="'remove-style'" [chooseStyleClass]="'choose-style'" [cancelLabel]="'清除'">
-        <ng-template pTemplate="content">
-            <ul *ngIf="uploadedFiles.length">
-                <li *ngFor="let file of uploadedFiles">
-                    {{ file.name }} - {{ file.size }} bytes
-                </li>
-            </ul>
-        </ng-template>
-    </p-fileUpload>
+<span *ngIf="label" class="text-lg font-semibold mb-2 text-700">{{ label }}</span>
+<div class="custom-file-upload p-4 border-round shadow-2 surface-card mx-auto my-2" style="max-width: 960px;">
+  <p-fileUpload #fileUpload [name]="name" [url]="url" [method]="method" [multiple]="multiple" [accept]="accept"
+    [disabled]="disabled" [auto]="auto" [withCredentials]="withCredentials" [maxFileSize]="maxFileSize"
+    [invalidFileSizeMessageSummary]="invalidFileSizeMessageSummary"
+    [invalidFileSizeMessageDetail]="invalidFileSizeMessageDetail"
+    [invalidFileTypeMessageSummary]="invalidFileTypeMessageSummary"
+    [invalidFileTypeMessageDetail]="invalidFileTypeMessageDetail"
+    [invalidFileLimitMessageDetail]="invalidFileLimitMessageDetail"
+    [invalidFileLimitMessageSummary]="invalidFileLimitMessageSummary" [style]="style" [styleClass]="styleClass"
+    [previewWidth]="previewWidth" [chooseLabel]="chooseLabel" [uploadLabel]="uploadLabel" [cancelLabel]="cancelLabel"
+    [chooseIcon]="chooseIcon" [uploadIcon]="uploadIcon" [cancelIcon]="cancelIcon" [showUploadButton]="showUploadButton"
+    [showCancelButton]="showCancelButton" [mode]="mode" [headers]="headers" [customUpload]="customUpload"
+    [fileLimit]="fileLimit" [uploadStyleClass]="uploadStyleClass" [cancelStyleClass]="cancelStyleClass"
+    [removeStyleClass]="removeStyleClass" [chooseStyleClass]="chooseStyleClass" (onUpload)="handleUpload($event)"
+    (onRemove)="handleRemove($event)" (onSelect)="handleSelect($event)" (onProgress)="handleProgress($event)"
+    (uploadHandler)="handleCustomUpload($event)" (onError)="handleError($event)"
+    (onRemoveUploadedFile)="handleRemoveUploadedFile($event)" (onBeforeUpload)="handleBeforeUpload($event)"
+    (onSend)="handleSend($event)">
+    <!-- Custom Header Template -->
+    <ng-template pTemplate="header" let-files let-chooseCallback="chooseCallback" let-uploadCallback="uploadCallback"
+      let-clearCallback="clearCallback">
+      <div
+        class="flex flex-wrap align-items-center justify-content-between gap-2 p-3 surface-0 border-bottom-1 surface-border border-round-top">
+        <div class="flex align-items-center gap-2">
+          <button type="button" (click)="chooseCallback()"
+            class="p-button p-component p-button-primary p-button-sm max-w-max">
+            <i [class]="chooseIcon || 'pi pi-plus'" class="mr-2"></i>
+            {{ chooseLabel || '選擇檔案' }}
+          </button>
+          <button *ngIf="showUploadButton" type="button" (click)="uploadCallback()"
+            [disabled]="!files || files.length === 0"
+            class="p-button p-component p-button-success p-button-sm max-w-max">
+            <i [class]="uploadIcon || 'pi pi-upload'" class="mr-2"></i>
+            {{ uploadLabel || '上傳' }}
+          </button>
+          <button *ngIf="showCancelButton" type="button" (click)="clearCallback()"
+            [disabled]="!files || files.length === 0"
+            class="p-button p-component p-button-danger p-button-sm max-w-max">
+            <i [class]="cancelIcon || 'pi pi-times'" class="mr-2"></i>
+            {{ cancelLabel || '取消' }}
+          </button>
+        </div>
+        <span class="text-sm text-600">
+          {{ files ? files.length : 0 }} 個檔案已選擇
+          <span *ngIf="maxFileSize"> (最大 {{ maxFileSize / 1000000 }} MB)</span>
+          <span *ngIf="fileLimit"> (最多 {{ fileLimit }} 個檔案)</span>
+        </span>
+      </div>
+    </ng-template>
+
+    <!-- Custom Content Template -->
+    <ng-template pTemplate="content" let-files let-uploadedFiles="uploadedFiles"
+      let-removeFileCallback="removeFileCallback" let-removeUploadedFileCallback="removeUploadedFileCallback">
+      <div *ngIf="files && files.length > 0" class="p-3 surface-0 border-round-bottom">
+        <div class="mb-3">
+          <h3 class="text-lg font-semibold mb-2 text-700">待上傳檔案:</h3>
+          <ul class="list-none p-0 m-0">
+            <li *ngFor="let file of files; let i = index"
+              class="flex align-items-center justify-content-between p-3 mb-2 bg-blue-50 border-round shadow-1">
+              <div class="flex align-items-center">
+                <i class="pi pi-file text-blue-600 mr-3 text-xl"></i>
+                <span class="text-800 font-medium">{{ file.name }}</span>
+                <span class="ml-3 text-sm text-600">({{ (file.size / 1024 / 1024).toFixed(2) }} MB)</span>
+              </div>
+              <button type="button" (click)="removeFileCallback(file, i)"
+                class="p-button p-button-text p-button-danger p-button-sm w-auto">
+                <i class="pi pi-trash text-lg"></i>
+              </button>
+            </li>
+          </ul>
+        </div>
+
+        <div *ngIf="uploadedFiles && uploadedFiles.length > 0" class="mb-3">
+          <h3 class="text-lg font-semibold mb-2 text-700">已上傳檔案:</h3>
+          <ul class="list-none p-0 m-0">
+            <li *ngFor="let file of uploadedFiles; let i = index"
+              class="flex align-items-center justify-content-between p-3 mb-2 bg-green-50 border-round shadow-1">
+              <div class="flex align-items-center">
+                <i class="pi pi-check-circle text-green-600 mr-3 text-xl"></i>
+                <span class="text-800 font-medium">{{ file.name }}</span>
+                <span class="ml-3 text-sm text-600">({{ (file.size / 1024 / 1024).toFixed(2) }} MB)</span>
+              </div>
+              <button type="button" (click)="removeUploadedFileCallback(i)"
+                class="p-button p-button-text p-button-danger p-button-sm w-auto">
+                <i class="pi pi-trash text-lg"></i>
+              </button>
+            </li>
+          </ul>
+        </div>
+
+        <div *ngIf="progress > 0 && progress < 100" class="mt-4">
+          <h3 class="text-lg font-semibold mb-2 text-700">上傳進度:</h3>
+          <div class="surface-200 border-round h-1rem">
+            <div class="bg-blue-500 h-full border-round" [style.width.%]="progress"></div>
+          </div>
+          <p class="text-center text-sm text-600 mt-1">{{ progress }}%</p>
+        </div>
+      </div>
+    </ng-template>
+    <ng-template pTemplate="file"> </ng-template>
+    <!-- Optional: Toolbar Template if needed for specific layout -->
+    <!-- <ng-template pTemplate="toolbar"> -->
+    <!-- Custom toolbar content here -->
+    <!-- </ng-template> -->
+
+    <!-- Optional: Empty Template for advanced mode when no files are selected -->
+    <ng-template pTemplate="empty">
+      <div
+        class="p-7 text-center text-500 border-2 border-dashed border-300 border-round surface-100 min-h-4rem flex align-items-center justify-content-center">
+        <p>拖曳檔案到此處或點擊「選擇檔案」按鈕。</p>
+      </div>
+    </ng-template>
+
+  </p-fileUpload>
 </div>

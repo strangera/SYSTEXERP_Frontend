@@ -33,15 +33,15 @@
     <div
       class="flex flex-column lg:flex-row justify-content-center lg:justify-content-between align-items-center flex-1 gap-2">
       <div class="flex flex-column lg:flex-row align-items-center gap-2">
-        <span class="text-2xl font-semibold"><i class="text-2xl pi pi-cloud-upload"></i> 上傳圖片</span>
+        <span class="text-2xl font-semibold"><i class="text-2xl pi pi-cloud-upload"></i> {{title}}</span>
         <span class="text-sm text-700 font-bold">{{fileUploadMessage}}</span>
       </div>
       <div class="flex gap-2 align-items-center lg:w-auto w-full justify-content-between">
-        <span class="text-lg text-700 font-bold">{{files.length}}/{{fileLimit}} 張</span>
-        <p-button label="選擇圖片" (onClick)="choose($event, chooseCallback)" icon="pi pi-images" [rounded]="true"
+        <span class="text-lg text-700 font-bold">{{files.length}}/{{fileLimit}} 個</span>
+        <p-button [label]="selectLabel" (onClick)="choose($event, chooseCallback)" icon="pi pi-images" [rounded]="true"
           [disabled]="files.length >= fileLimit" styleClass="py-1 px-2 m-0" />
         <p-button styleClass="w-2rem h-2rem" (onClick)="showDelete = !showDelete" icon="pi pi-trash" [rounded]="true"
-          severity="danger" [disabled]="files.length === 0" pTooltip="刪除圖片" [outlined]="!showDelete" />
+          severity="danger" [disabled]="files.length === 0" [pTooltip]="deleteTooltip" [outlined]="!showDelete" />
       </div>
     </div>
   </ng-template>
@@ -53,17 +53,18 @@
           <p-image role="presentation" [alt]="file.name" [src]="file.objectURL.changingThisBreaksApplicationSecurity"
             imageClass="object-cover w-full h-full" [imageStyle]="{'object-fit': 'cover'}" />
           <div *ngIf="showDelete" @slideInOut class="overflow-hidden w-full">
-            <p-button styleClass="w-full" icon="pi pi-times" label="立即刪除圖片"
+            <p-button styleClass="w-full" icon="pi pi-times" [label]="labelsRemoveFile"
               (onClick)="onRemoveFile($event, file, removeFileCallback, i)" severity="danger" />
           </div>
         </div>
+
       </div>
     </div>
   </ng-template>
   <ng-template pTemplate="empty">
     <div *ngIf="files.length === 0" class="flex align-items-center justify-content-center flex-column p-2">
-      <p class="m-2">請選擇要上傳的圖片</p>
-      <p class="text-sm text-500">最多可上傳 {{fileLimit}} 張</p>
+      <p class="m-2">{{emptyMessage}}</p>
+      <p class="text-sm text-500">最多可上傳 {{fileLimit}} 個</p>
     </div>
   </ng-template>
 </p-fileUpload>

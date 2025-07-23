@@ -8,13 +8,15 @@ import { FunsrightInfo } from '../../shared/models/system/funsrightInfo';
 import { AuthService } from '../../service/system/auth.service';
 import { NgFor, NgIf } from '@angular/common';
 import { AppMenuItemComponent } from './app-menu-item/app-menu-item.component';
+import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 
+@UntilDestroy()
 @Component({
-    selector: 'app-menulist',
-    templateUrl: './app.menulist.component.html',
-    styleUrls: ['./app.menulist.component.scss'],
-    standalone: true,
-    imports: [NgFor, NgIf, AppMenuItemComponent]
+  selector: 'app-menulist',
+  templateUrl: './app.menulist.component.html',
+  styleUrls: ['./app.menulist.component.scss'],
+  standalone: true,
+  imports: [NgFor, NgIf, AppMenuItemComponent]
 })
 export class AppMenulistComponent implements OnInit, OnDestroy {
   @Input() activeTopMenuProgNo: string | null = null; // 新增：接收來自頂部菜單的激活 prog_no
@@ -34,10 +36,13 @@ export class AppMenulistComponent implements OnInit, OnDestroy {
     this.menuUpdatedSubscription = this.authService.menuUpdated.subscribe((newData: FunsrightInfo[]) => {
       if (newData?.length > 0) {
         this.model = this.appMenulistService.buildMenuModel(newData);
+      } else {
+        this.authService.getFunRightsInfo().pipe(untilDestroyed(this)).subscribe();
       }
     });
     // 訂閱 currentPageProgNo 的變化
     this.currentPageProgNoSubscription = this.currentPageService.currentPageProgNo$.subscribe(progNo => {
+      console.log('Current Page ProgNo:', progNo);
       if (progNo) {
         this.setActiveItemByProgNo(progNo)
       } else {
