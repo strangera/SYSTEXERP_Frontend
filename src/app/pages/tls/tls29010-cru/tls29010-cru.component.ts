@@ -98,12 +98,13 @@ export class TLS29010CRUComponent extends BasicCruPageComponent<TALPORDERD_OPEND
   @ViewChild('detailTable') detailTable!: ExpandableEditTableComponent;
   // ----------------------------------------------------------------
       dataForm = this.formBuilder.nonNullable.group({
-        // TALPORDERD_OPENDisc 
-        // --專櫃活動設定主檔TALPORDERM (新增這四項 都要鎖定嗎) > 跟下面的其他欄位有連動關係嗎?--
+        // --專櫃活動設定主檔TALPORDERM (新增這四項 都要鎖定嗎)--
         id: [{ value: null, disabled: true }], // 自動產生，不允許編輯
         mid: [{ value: null, disabled: true }], // 自動產生，不允許編輯
-        str_no: ['', [Validators.required, Validators.maxLength(8)]],        // 店部編號
-        pod_no: ['', [Validators.required, Validators.maxLength(12)]],       // 活動編號
+        str_no: ['', [Validators.required, Validators.maxLength(8)]],   // 店部編號
+        pod_no: ['', [Validators.required, Validators.maxLength(12)]],  // 活動申請編號YYYYMMDDSSS(活動起始日期+流水號)
+
+        pod_type: ['', [Validators.required, Validators.maxLength(1)]], // 活動類型 //這邊只會有8的 /*8=期間開放折扣
         // ------
         talent_id: [null],                              // 合約編號系統 -- 這是哪來的
         tlt_id: [0, [Validators.required, Validators.maxLength(1), Validators.min(0),Validators.max(9)]], // 抽成類別(0-9) 送出時再轉成string
