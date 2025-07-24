@@ -60,7 +60,7 @@ import { CurrencyPipe } from '@angular/common'; // 若後續有使用 pipe 顯�
     ReportTableGroupComponent,
     DatePipe,
     NgIf,
-    DecimalPipe,
+   
     
   ],
   providers: [CashShowupByService],
@@ -255,37 +255,53 @@ onSubmit(form: FormGroup): void {
       ? this.tls2B010Service.simpleTLS2B010(payload) // ✅ 無 QueryData 層
       : this.tls2B010Service.queryTLS2B010(payload); // ✅ 有 QueryData 層
 
-  apiCall
-    .pipe(
-      finalize(() => {
-        this.loading = false;
-        this.messageService.unblockUi();
-      }),
-    )
-    .subscribe({
-      next: (res) => {
-        if (res?.Status === '0000') {
-          this.queryStateService.setQueryState(this.ProgNo, payload);
+ apiCall
+  .pipe(
+    finalize(() => {
+      this.loading = false;
+      this.messageService.unblockUi();
+    }),
+  )
+  .subscribe({
+    next: (res) => {
+      if (res?.Status === '0000') {
+        this.queryStateService.setQueryState(this.ProgNo, payload);
 
-          if (reporttype === 2) {
-            // ✅ 後端 Data 是陣列 (flattened)
-            this.simpleData = res.Data || [];
-            this.totalRecords = res.TotalCount || 0;
-          } else {
-            // ✅ 保留原本 QueryData 結構
-            const responseData = res.Data || {};
-            this.data = responseData.QueryData || [];
-            this.closeDate = responseData.LastCloseDate || '-';
-            this.totalRecords = res.TotalCount || 0;
-          }
+        if (reporttype === 2) {
+          // ✅ 後端回傳陣列，處理 sumOVER_PayAmt 欄位
+          const rawData = res.Data || [];
+
+          // 🔢 建立加總 Map
+          const grouped = new Map<string, number>();
+          rawData.forEach((row:any) => {
+            const key = row.ECR_No || '未指定';
+            const current = grouped.get(key) || 0;
+            const amt = parseFloat(row.OVER_PayAmt) || 0;
+            grouped.set(key, current + amt);
+          });
+
+          // 🧩 填入 sumOVER_PayAmt 欄位
+          this.simpleData = rawData.map((row:any) => ({
+            ...row,
+            sumOVER_PayAmt: grouped.get(row.ECR_No || '未指定') || 0,
+          }));
+
+          this.totalRecords = res.TotalCount || 0;
         } else {
-          this.messageService.errorBubble(res?.Message || '查詢失敗');
+          // ✅ 支付別溢欠明細表
+          const responseData = res.Data || {};
+          this.data = responseData.QueryData || [];
+          this.closeDate = responseData.LastCloseDate || '-';
+          this.totalRecords = res.TotalCount || 0;
         }
-      },
-      error: () => {
-        this.messageService.errorBubble('查詢失敗，請稍後再試');
-      },
-    });
+      } else {
+        this.messageService.errorBubble(res?.Message || '查詢失敗');
+      }
+    },
+    error: () => {
+      this.messageService.errorBubble('查詢失敗，請稍後再試');
+    },
+  });
 }
 
 
@@ -301,8 +317,6 @@ onSubmit(form: FormGroup): void {
     const found = options?.find((opt) => String(opt.value) === String(value));
     return found ? found.label : value;
   }
-
-
 
   columns: any[] = [
     {

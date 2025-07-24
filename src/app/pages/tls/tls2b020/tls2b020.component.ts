@@ -43,10 +43,10 @@ import { DecimalPipe, NgIf } from '@angular/common';
     RadiobuttonComponent,
     ButtonComponent,
     TableComponent,
-    DecimalPipe,
+    
     MultiSelectComponent,
     TranslateModule,
-    NgIf
+    
   ],
 })
 export class TLS2B020Component extends BasicQueryPageComponent<any> {
@@ -72,8 +72,8 @@ queryForm = this.formBuilder.group({
   tlt_floor: [[]],                                 // 樓層（多選）
   TXN_Date: [null, [Validators.required]],         // 銷售日期（應為 Date 類型）
   USR_No: [[]],                                     // 收銀員代號清單（備用）
-  cashierDistinction: [1],                         // 收銀員區分（保留）
-  cashShowUp: [1],                                  // 顯示方式：1=全部, 2=金額不為0, 3=溢欠
+  cashierDistinction: [null],                         // 收銀員區分（保留）
+  overflowStatus: [null],                                  // 顯示方式：null=全部, 2=溢款, 3=欠款
   ...createPaginationConfig([{ field: 'TXN_Date', order: 1 }])
 });
 
@@ -229,6 +229,24 @@ queryForm = this.formBuilder.group({
   moneyFormat(value: number): string {
     return value != null ? value.toLocaleString('en-US') : '0';
   }
+  get overflowStatusDisplay(): string {
+  const value = this.queryForm.get('overflowStatus')?.value;
+const overflowValue = Number(this.queryForm.get('overflowStatus')?.value ?? NaN);
+
+  if (overflowValue === 2)  {
+    return `欠收金額：${this.formatAmount(this.underpaidAmount)} 元`;
+  }else if (overflowValue === 3){
+    return `溢付金額：${this.formatAmount(this.overpaidAmount)} 元　欠收金額：${this.formatAmount(this.underpaidAmount)} 元`;
+  } else {
+    // 預設為全部 (value === 1)
+    return `溢付金額：${this.formatAmount(this.overpaidAmount)} 元`;
+  }
+}
+
+private formatAmount(value: number): string {
+  return value?.toLocaleString('zh-TW', { minimumFractionDigits: 0, maximumFractionDigits: 0 }) ?? '0';
+}
+
 
   onClearForm(): void {
     this.queryForm.reset();
