@@ -13,13 +13,13 @@
             </div>
             <div class="grid p-fluid">
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-text label="接洽人員代碼" controlName="contact_USR_No" [control]="dataForm.controls.contact_USR_No"
-                        [submitted]="submitted"></app-input-text>
+                    <app-dropdown label="接洽人員代碼/名稱" controlName="contact_USR_No" [options]="contact_USR_Option" optionLabel="Label"
+                        optionValue="No" [control]="dataForm.controls.contact_USR_No" [submitted]="submitted" (changeEvent)="onUSR_NoChange($event.value)"></app-dropdown>
                 </div>
-                <div class="col-12 md:col-6 lg:col-4">
+                <!-- <div class="col-12 md:col-6 lg:col-4">
                     <app-input-text label="接洽人員姓名" controlName="contact_USR_Name" [control]="dataForm.controls.contact_USR_Name"
                         [submitted]="submitted"></app-input-text>
-                </div>
+                </div> -->
             </div>
             <div class="grid p-fluid">
                 <div class="col-12 md:col-6 lg:col-4">
