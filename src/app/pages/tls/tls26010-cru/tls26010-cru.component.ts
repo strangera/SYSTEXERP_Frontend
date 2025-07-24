@@ -1,4 +1,3 @@
-
 import { NgIf } from '@angular/common';
 import { Component, computed, effect, OnInit, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
@@ -7,11 +6,13 @@ import { TranslateModule } from '@ngx-translate/core';
 import { TLS26010Service } from '@service/api/tls/tls26010.service';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
 import { ButtonComponent, CalendarRangeComponent, DropdownComponent, InputTextComponent, MultiSelectComponent, TableComponent } from '@shared/componentkit';
+import { Column } from '@shared/componentkit/table/table.model';
 import { MenubarComponent } from '@shared/index';
+import { ApprovalStatus } from '@shared/models';
 import { CRUDStatus } from '@shared/models/system/CRUDstatus';
 import { PanelModule } from 'primeng/panel';
 import { finalize, tap } from 'rxjs';
-import { ApprovalStatus, PreorderECRListQuery, TLS26010Data, TLS26010Payload, TLTTALENTQuery } from '../tls26010/tls26010.model';
+import { PreorderECRListQuery, TLS26010Data, TLS26010Payload, TLTTALENTQuery } from '../tls26010/tls26010.model';
 
 // 預購活動檔期設定
 @Component({
@@ -56,11 +57,13 @@ export class TLS26010CRUComponent extends BasicCruPageComponent<TLS26010Data> im
 
   // 監聽館別及樓層變化
   readonly dependentDataEffect = effect(() => {
-    this.sys3800Signal();
+    const building_no = this.sys3800Signal();
     const floor_no = this.sys3900Signal();
-    this.dataForm.patchValue({ ECR_Nos: [], tlt_nos: [] });
 
+    // 只有在用戶手動選擇樓層時才清空並重新載入
     if (floor_no) {
+      this.dataForm.patchValue({ ECR_Nos: [], tlt_nos: [] }, { emitEvent: false });
+
       this.tls26010Service.loadPreorderECRList(this.queryPreorderECRList());
       this.tls26010Service.loadTLTTALENT(this.queryTLTTALENT());
     }
@@ -78,6 +81,17 @@ export class TLS26010CRUComponent extends BasicCruPageComponent<TLS26010Data> im
     SYS3900s: [{ floor_no: this.sys3900Signal() || '' }],
   }));
 
+  columns: Column[] = [
+    { field: 'ECR_No', header: '收銀機號', visible: true },
+    { field: 'tlt_no', header: '專櫃編號', visible: true },
+    { field: 'tlt_name', header: '櫃位名稱', visible: true },
+  ];
+
+  columns2: Column[] = [
+    { field: 'tlt_no', header: '專櫃編號', visible: true },
+    { field: 'tlt_name', header: '櫃位名稱', visible: true },
+  ];
+
   constructor(public tls26010Service: TLS26010Service) {
     super();
   }
@@ -90,17 +104,55 @@ export class TLS26010CRUComponent extends BasicCruPageComponent<TLS26010Data> im
       rowdata: any,
     };
 
+    console.log(`init:`, [state]);
+
     this.tls26010Service.loadSYS3800({});
     this.tls26010Service.loadSYS3900({});
-    this.tls26010Service.loadPreorderECRList({ data_type: '1', SYS3800s: [], SYS3900s: [] });
-    this.tls26010Service.loadTLTTALENT({ SYS3800s: [], SYS3900s: [] });
 
-    if (this.isFormEditable) {
-      state.rowdata.pod_status = this.tls26010Service.approvalStatus(state.rowdata.pod_status);
-      this.tls26010Service.approvalData.set(state?.rowdata?.pod_status);
+    // 根據 state 中的樓層資料決定是否篩選
+    const rowData = state?.rowdata;
+    if (rowData?.sys3900) {
+      // 有樓層資料時，根據樓層篩選收銀機和專櫃
+      this.tls26010Service.loadPreorderECRList({
+        data_type: '2',
+        SYS3800s: [{ building_no: rowData.sys3800 || '' }],
+        SYS3900s: [{ floor_no: rowData.sys3900 }],
+      });
+      this.tls26010Service.loadTLTTALENT({
+        SYS3800s: [{ building_no: rowData.sys3800 || '' }],
+        SYS3900s: [{ floor_no: rowData.sys3900 }],
+      });
+
+      // 設定表單的館別和樓層值
+      this.dataForm.patchValue({
+        sys3800: rowData.sys3800 || '',
+        sys3900: rowData.sys3900
+      }, { emitEvent: false });
+    } else {
+      // 沒有樓層資料時，載入所有資料（不篩選）
+      this.tls26010Service.loadPreorderECRList({ data_type: '1', SYS3800s: [], SYS3900s: [] });
+      this.tls26010Service.loadTLTTALENT({ SYS3800s: [], SYS3900s: [] });
     }
 
-    this.rowDataSignal.set(state?.rowdata!);
+    if (this.isFormEditable && rowData) {
+      rowData.pod_status = this.tls26010Service.approvalStatus(rowData.pod_status);
+      this.tls26010Service.approvalData.set(rowData.pod_status);
+
+      // 載入既有的表單資料（編輯模式）
+      this.dataForm.patchValue({
+        pod_no: rowData.pod_no || '自動給號',
+        pod_desc: rowData.pod_desc || '',
+        pod_sdate: rowData.pod_sdate ? new Date(rowData.pod_sdate) : new Date(),
+        pod_edate: rowData.pod_edate ? new Date(rowData.pod_edate) : new Date(),
+        pod_status: rowData.pod_status || '未核准',
+        ECR_Nos: rowData.ECR_Nos || [],
+        tlt_nos: rowData.tlt_nos || [],
+        approved_usr_name: rowData.approved_usr_name || '',
+        approved_date: rowData.approved_date || '',
+      }, { emitEvent: false });
+    }
+
+    this.rowDataSignal.set(rowData || {} as TLS26010Data);
 
     console.log(`init:`, [this.funInfo, state]);
 
@@ -126,24 +178,14 @@ export class TLS26010CRUComponent extends BasicCruPageComponent<TLS26010Data> im
   onSubmit(frm: FormGroup): void {
     const value: TLS26010FormData = frm.value;
     this.handleSubmit(frm, () => {
-      let [tlts, ecrs]: any[][] = [[], []];
-      for (const no of value.tlt_nos) {
-        if (!this.tls26010Service.TLTMap.has(no)) continue;
-        const item = this.tls26010Service.TLTMap.get(no);
-        tlts.push({ tlt_no: item?.No, tlt_name: item?.Name });
-      }
-      for (const no of value.ECR_Nos) {
-        if (!this.tls26010Service.ECRMap.has(no)) continue;
-        for (const tlt of tlts) ecrs.push({ ECR_No: no, ...tlt });
-      }
 
       const payload: TLS26010Payload = {
         pod_desc: value.pod_desc,
         pod_sdate: value.pod_sdate.toISOString().split('T')[0],
         pod_edate: value.pod_edate.toISOString().split('T')[0],
         pod_status: ApprovalStatus.未核准,
-        ECR_Nos: ecrs,
-        tlt_nos: tlts,
+        ECR_Nos: this.tls26010Service.ECRTableData(),
+        tlt_nos: this.tls26010Service.TLTTableData(),
       };
 
       console.log(`submit:`, [value, payload]);

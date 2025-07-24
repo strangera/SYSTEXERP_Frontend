@@ -18,6 +18,7 @@ import {
   DataClearOperations,
   CommissionTypeChangeInfo
 } from '../tls13010.model';
+import { TLS13010Service } from '@service/api/tls/tls13010.service';
 
 @Injectable({
   providedIn: 'root'
@@ -43,7 +44,9 @@ export class ContractFlowService {
       createdAt: new Date(),
       lastModified: new Date(),
       version: 1,
-      _isNewContract: true
+      _isNewContract: true,
+      _isViewMode: false,
+      _loadedFromAPI: false
     }
   };
 
@@ -51,9 +54,10 @@ export class ContractFlowService {
   private workflowStatusSubject = new BehaviorSubject<WorkflowStatus>(this.initializeStatus());
   public workflowStatus$ = this.workflowStatusSubject.asObservable();
 
-  constructor(private http: HttpClient) {
+  constructor(private http: HttpClient, private tls13010Service: TLS13010Service) {
     this.loadFromStorage();
     this.setupAutoSave();
+
   }
 
   // ========== 🎯 新增：清理後的資料生成方法 ==========
@@ -269,7 +273,9 @@ export class ContractFlowService {
         createdAt: new Date(),
         lastModified: new Date(),
         version: 1,
-        _isNewContract: true
+        _isNewContract: true,
+        _isViewMode: false,
+        _loadedFromAPI: false
       }
     };
 
@@ -321,7 +327,9 @@ export class ContractFlowService {
           createdAt: new Date(),
           lastModified: new Date(),
           version: 1,
-          _isNewContract: false
+          _isNewContract: false,
+          _isViewMode: false,
+          _loadedFromAPI: false
         }
       };
 
@@ -340,6 +348,156 @@ export class ContractFlowService {
       contractId: contractId,
       talentId: queryRowData.talent_id
     });
+  }
+
+  // 檢視模式狀態管理
+  private isViewModeSubject = new BehaviorSubject<boolean>(false);
+  public isViewMode$ = this.isViewModeSubject.asObservable();
+  /**
+  * 設定檢視模式
+  */
+  setViewMode(isViewMode: boolean): void {
+    this.isViewModeSubject.next(isViewMode);
+    console.log('🔍 設定檢視模式:', isViewMode);
+  }
+
+
+  /**
+   * 🎯 新增：開始檢視工作流程
+   */
+  startViewWorkflow(queryRowData: any): void {
+    console.log('🔍 開始檢視工作流程:', queryRowData);
+
+    // 設定為檢視模式
+    this.setViewMode(true);
+
+    // 使用現有的編輯模式邏輯，但設定為唯讀
+    this.initializeEditContractWorkflow(queryRowData);
+  }
+
+
+  /**
+ * 取得當前是否為檢視模式
+ */
+  isViewMode(): boolean {
+    return this.isViewModeSubject.value;
+  }
+
+  /**
+ * 🎯 新增：從 router state 初始化工作流程
+ */
+  async initializeFromRouterState(routerState: any): Promise<boolean> {
+    try {
+      console.log('🚀 從 router state 初始化工作流程:', routerState);
+
+      const { mode, talentId, contractData, loadFromAPI } = routerState;
+
+      // 設定模式
+      if (mode === 'view') {
+        this.setViewMode(true);
+      } else {
+        this.setViewMode(false);
+      }
+
+      // 根據是否需要 API 載入決定初始化方式
+      if (loadFromAPI && talentId) {
+        // 需要從 API 載入
+        return await this.loadContractFromAPI(talentId, mode);
+      } else if (contractData) {
+        // 直接使用傳遞的資料
+        this.initializeFromContractData(contractData, mode);
+        return true;
+      }
+
+      return false;
+
+    } catch (error) {
+      console.error('❌ 從 router state 初始化失敗:', error);
+      return false;
+    }
+  }
+  /**
+   * 🎯 新增：清除檢視模式
+   */
+  clearViewMode(): void {
+    this.setViewMode(false);
+  }
+
+  /**
+   * 🎯 新增：從 API 載入合約資料
+   */
+  private async loadContractFromAPI(talentId: string, mode: string): Promise<boolean> {
+    try {
+      console.log('🔄 從 API 載入合約資料:', { talentId, mode });
+
+      // 🎯 使用現有的查詢 API （您需要注入 TLS13010Service）
+      const response = await this.tls13010Service.queryTLS13010({
+        talent_id: talentId
+        // 其他必要參數...
+      }).toPromise();
+
+      if (response?.Status === '0000' && response?.Data?.length > 0) {
+        const contractData = response.Data[0];
+        this.initializeFromContractData(contractData, mode);
+        return true;
+      }
+
+      return false;
+
+    } catch (error) {
+      console.error('❌ API 載入失敗:', error);
+      return false;
+    }
+  }
+
+  /**
+   * 從合約資料初始化工作流程
+   */
+  private initializeFromContractData(contractData: any, mode: string): void {
+    const contractId = contractData.talent_id || contractData.apply_no;
+    const isViewMode = mode === 'view';
+
+    // 標記資料來源
+    const enhancedContractData = {
+      ...contractData,
+      _isNewContract: false,
+      _isViewMode: isViewMode,
+      _loadedFromAPI: true
+    };
+
+    this.contractData = {
+      contractId: contractId,
+      queryRowData: enhancedContractData,
+      step1: null, // 會從 queryRowData 建立
+      step2: [],
+      step3: [],
+      step4: [],
+      step5: null,
+      dataToDelete: null,
+      unifiedCommissionData: null,
+      metadata: {
+        createdAt: new Date(),
+        lastModified: new Date(),
+        version: 1,
+        _isNewContract: false,
+        _isViewMode: isViewMode,
+        _loadedFromAPI: true
+      }
+    };
+
+    // 設定工作流程狀態
+    const workflowStatus: WorkflowStatus = {
+      currentStep: WorkflowStep.CONTRACT_INFO,
+      completedSteps: isViewMode ? [WorkflowStep.CONTRACT_INFO] : [],
+      canProceed: true,
+      contractId: contractId,
+      lastModified: new Date(),
+      isNewContract: false
+    };
+
+    this.workflowStatusSubject.next(workflowStatus);
+
+    console.log('✅ 工作流程初始化完成');
   }
 
   /**
@@ -653,7 +811,9 @@ export class ContractFlowService {
         createdAt: new Date(),
         lastModified: new Date(),
         version: 1,
-        _isNewContract: false
+        _isNewContract: false,
+        _isViewMode: false,
+        _loadedFromAPI: false
       }
     };
 

@@ -10,28 +10,28 @@ import { Button } from 'primeng/button';
 import { TooltipModule } from 'primeng/tooltip';
 
 @Component({
-    selector: 'app-img-upload',
-    templateUrl: './img-upload.component.html',
-    styleUrls: ['./img-upload.component.scss'],
-    changeDetection: ChangeDetectionStrategy.OnPush,
-    animations: [
-        trigger('slideInOut', [
-            transition(':enter', [
-                style({ opacity: 0, transform: 'translateY(-20px)' }), // 从上方开始
-                animate('100ms ease-out', style({ opacity: 1, transform: 'translateY(0)' })) // 平滑滑入
-            ]),
-            transition(':leave', [
-                animate('100ms ease-in', style({ opacity: 0, transform: 'translateY(-20px)' })) // 向上滑出并消失
-            ])
-        ])
-    ],
-    standalone: true,
-    imports: [NgIf, CarouselModule, PrimeTemplate, ImageModule, Button, FileUploadModule, TooltipModule, NgFor]
+  selector: 'app-img-upload',
+  templateUrl: './img-upload.component.html',
+  styleUrls: ['./img-upload.component.scss'],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  animations: [
+    trigger('slideInOut', [
+      transition(':enter', [
+        style({ opacity: 0, transform: 'translateY(-20px)' }), // 从上方开始
+        animate('100ms ease-out', style({ opacity: 1, transform: 'translateY(0)' })) // 平滑滑入
+      ]),
+      transition(':leave', [
+        animate('100ms ease-in', style({ opacity: 0, transform: 'translateY(-20px)' })) // 向上滑出并消失
+      ])
+    ])
+  ],
+  standalone: true,
+  imports: [NgIf, CarouselModule, PrimeTemplate, ImageModule, Button, FileUploadModule, TooltipModule, NgFor]
 })
 export class ImgUploadComponent implements AfterViewInit, OnInit {
   @ViewChild('fileUpload') fileUpload!: FileUpload;
-  @Input() multiple = true;
-  @Input() accept = 'image/*';
+  @Input() multiple = true;                                           // 可以多選
+  @Input() accept = 'image/*';                                        // csv, txt
   @Input() maxFileSize = 1024 * 1024; // 限制為 1MB (1048576 bytes)
   @Input() fileUploadMessage = `請上傳4:3比例的圖片(不符合將自動裁切)，大小限制 ${this.maxFileSize / (1024 * 1024)} MB/張`;
   @Input() fileLimit = 10;
@@ -39,6 +39,11 @@ export class ImgUploadComponent implements AfterViewInit, OnInit {
   @Input() images: any[] = [];
   @Input() disabled = false;
   @Input() showEdit = true;
+  @Input() title = '上傳圖片';
+  @Input() emptyMessage = '請選擇要上傳的圖片';
+  @Input() deleteTooltip = '刪除圖片';
+  @Input() selectLabel = '選擇圖片';
+  @Input() labelsRemoveFile = '立即刪除圖片';
   @Output() uploadFiles = new EventEmitter<File[]>();
   @Output() selectedFiles = new EventEmitter<File[]>();
   @Output() imagesChange = new EventEmitter<any>();
@@ -50,8 +55,8 @@ export class ImgUploadComponent implements AfterViewInit, OnInit {
   deleteImageList: string[] = [];
   readonly INVALID_FILE_SIZE_MESSAGE_SUMMARY = '檔案大小超過限制';
   readonly INVALID_FILE_SIZE_MESSAGE_DETAIL = '檔案大小超過限制';
-  readonly INVALID_FILE_LIMIT_MESSAGE_SUMMARY = `最多上傳 ${this.fileLimit} 張圖片`;
-  readonly INVALID_FILE_LIMIT_MESSAGE_DETAIL = `最多上傳 ${this.fileLimit} 張圖片`;
+  readonly INVALID_FILE_LIMIT_MESSAGE_SUMMARY = `最多上傳 ${this.fileLimit} 個文件`;
+  readonly INVALID_FILE_LIMIT_MESSAGE_DETAIL = `最多上傳 ${this.fileLimit} 個文件`;
   readonly INVALID_FILE_TYPE_MESSAGE_SUMMARY = '檔案格式錯誤';
   readonly INVALID_FILE_TYPE_MESSAGE_DETAIL = '檔案格式錯誤';
 
@@ -178,5 +183,25 @@ export class ImgUploadComponent implements AfterViewInit, OnInit {
     this.deleteImageList.push(image.IMG_File);
     this.imagesChange.emit(this.images);
     this.imagesDeleteChange.emit(this.deleteImageList);
+  }
+  getFileIconClass(filename: string): string {
+    const extension = filename.split('.').pop()?.toLowerCase();
+    switch (extension) {
+      case 'pdf':
+        return 'pi pi-file-pdf text-red-500';
+      case 'doc':
+      case 'docx':
+        return 'pi pi-file-word text-blue-500';
+      case 'xls':
+      case 'xlsx':
+        return 'pi pi-file-excel text-green-500';
+      case 'ppt':
+      case 'pptx':
+        return 'pi pi-file text-orange-500';
+      case 'txt':
+        return 'pi pi-file';
+      default:
+        return 'pi pi-file text-gray-400';
+    }
   }
 }

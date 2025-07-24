@@ -32,9 +32,9 @@ export class Tls12010DetailService {
         console.log('取消主表格編輯:', event);
     }
 
-    //---POS2005特定操作---
+    //---PotentialCustomer 增加 ID ---
     generatePotentialCustomerDetailId(data: any[]): number {
-        const maxId = Math.max(...data.map(p => p.id), 0);
+        const maxId = Math.max(...data.map(p => p.ID), 0);
         return maxId + 1;
     }
 
@@ -57,25 +57,18 @@ export class Tls12010DetailService {
         }, 0);
     }
 
-    deletePotentialCustomerDetail(selectedItems: any[], data: any[], messageService: any): void {
+    deletePotentialCustomerDetail(selectedItems: any[], data: any[]): void {
         if (confirm(`確定要刪除 ${selectedItems.length} 個其他商場項目嗎？`)) {
-            let deletedCount = 0;
-
             selectedItems.forEach(item => {
                 const index = data.findIndex(d => d.ID === item.ID);
                 if (index > -1) {
                     if (data[index].status === 'new') {
-                        // 新增的資料直接刪掉
                         data.splice(index, 1);
                     } else {
-                        // 舊資料標記為 deleted
                         data[index].status = 'deleted';
                     }
-                    deletedCount++;
                 }
             });
-
-            messageService.successBubble(`已刪除 ${deletedCount} 個位置項目`);
         }
     }
 }

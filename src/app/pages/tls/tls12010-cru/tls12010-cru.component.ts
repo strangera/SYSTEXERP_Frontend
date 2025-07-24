@@ -1,11 +1,9 @@
-import { map } from 'rxjs';
 import { ValidationService } from './../../../shared/service/validation.service';
 // --Commonly used imports--
 import { Component, OnInit, ViewChild, } from '@angular/core';
 import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { TranslateModule } from '@ngx-translate/core';
-//
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { PanelModule } from 'primeng/panel';
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
@@ -65,7 +63,14 @@ export interface Potential_Customer_Detail {
   shop_area: number; // 面積 (小數，預設 0)
   total_amt: number; // 營業額 (整數，預設 0)  
 
-  status: string; // 狀態 (新增: 'new', 編輯: 'edit', 刪除: 'delete')
+  status: string; // 狀態 (原始: 'orginal', 新增: 'new', 編輯: 'modified', 刪除: 'deleted')
+}
+
+// 暫存廠商資料
+export interface CachedVendorData {
+  cus_uniform_id: string;
+  VEN_Name: string;
+  VEN_EngName: string;
 }
 
 export interface POS2013{
@@ -88,6 +93,13 @@ export interface POS2013{
 })
 export class TLS12010CRUComponent extends BasicCruPageComponent<Potential_Customer> implements OnInit {
   @ViewChild('detailTable') detailTable!: ExpandableEditTableComponent;
+  //
+  private skipValueChanges = true;
+  private cachedVendorData: CachedVendorData = {
+    cus_uniform_id: '',
+    VEN_Name: '',
+    VEN_EngName: ''
+  };
   // ----------------------------------------------------------------
     dataForm = this.formBuilder.nonNullable.group({
         // Potential_Customer 潛在客戶主檔
@@ -130,8 +142,6 @@ export class TLS12010CRUComponent extends BasicCruPageComponent<Potential_Custom
     potentialDetail: Potential_Customer_Detail[] = [];
     //欄位資訊
     Potential_Customer_Detail_Columns: ColumnDef[] = [
-        // { field: 'ID', header: '專櫃招募編號', type: 'number', editable: false, autoWidth: true },
-        // { field: 'PC_id', header: 'potential_customer id', type: 'number', editable: false, autoWidth: true },
         { field: 'other_shop', header: '其他商場', type: 'text', editable: true, autoWidth: true },
         { field: 'shop_area', header: '面積', type: 'number', allowDecimal: true, decimalPlaces: 3, editable: true, autoWidth: true },
         { field: 'total_amt', header: '營業額', type: 'number', allowDecimal: true, editable: true, autoWidth: true }
@@ -185,45 +195,57 @@ export class TLS12010CRUComponent extends BasicCruPageComponent<Potential_Custom
     ngOnInit(): void {
       this.initializePage('TLS12010', this.dataForm);
       this.loadOptions();
-      // 確認有明細檔就顯示出來(key: "id")
+
       const PC_id = this.dataForm.get('ID')?.value;
-      if(PC_id){
-        this.loadDetailData(PC_id); // 讀取 明細檔(Potential_Customer_Detail)資料
-        this.createDefaultNew(PC_id); // 建立預設新項目模板(已經有PC_id)
-      }else{
+      if (PC_id) {
+        this.loadDetailData(PC_id);
+        this.createDefaultNew(PC_id);
+
+        //確認是否為統編，設定暫存資料給cachedVendorData
+       if (this.dataForm.get('cus_type')?.value === '1') {
+          this.cachedVendorData = {
+            cus_uniform_id: this.dataForm.get('cus_uniform_id')?.value || '',
+            VEN_Name: this.dataForm.get('VEN_Name')?.value || '',
+            VEN_EngName: this.dataForm.get('VEN_EngName')?.value || ''
+          };
+          console.log('暫存廠商資料:', this.cachedVendorData);
+        }
+      } else {
         console.warn('無法讀取明細資料，因為沒有提供PC_id');
       }
 
-      this.onCusTypeChange(this.dataForm.get('cus_type')?.value || '1'); // 廠商類型radio button的檢核
+       // ✅ 加入判斷，初始化時也跳過這個 onCusTypeChange
+      if (!this.skipValueChanges) {
+        this.onCusTypeChange(this.dataForm.get('cus_type')?.value || '1');
+      }
 
-      // 觀察 廠商類型（cus_type) 改變
+      // 訂閱 valueChanges
       this.dataForm.get('cus_type')?.valueChanges.subscribe(value => {
+        if (this.skipValueChanges) return;
         this.onCusTypeChange(value);
       });
 
-      // 在統邊模式(cus_type == '1')時，觀察 廠商統一編號 下拉 （cus_type) 改變
       this.dataForm.get('cus_uniform_id')?.valueChanges.subscribe(value => {
-      if (this.dataForm.get('cus_type')?.value === '1') {
-        // 找到 cus_uniform_Option 中符合的項目
-        const match = this.cus_uniform_Option.find(opt => opt.No === value);
-
-        if (match) {
-          // 自動帶入名稱
-          this.dataForm.get('VEN_Name')?.disable();
-          this.dataForm.get('VEN_EngName')?.disable();
-          this.dataForm.get('VEN_Name')?.setValue(match.Name);
-          this.dataForm.get('VEN_EngName')?.setValue(match.VEN_EngName);
-        } else {
-          // 若找不到對應選項，清空 VEN_Name，並跳出警告
-          this.dataForm.get('VEN_Name')?.setValue('');
-          this.dataForm.get('VEN_EngName')?.setValue('');
-          // this.messageService.errorBubble('無該廠商名稱資料');
+        if (this.skipValueChanges) return;
+        if (this.dataForm.get('cus_type')?.value === '1') {
+          const match = this.cus_uniform_Option.find(opt => opt.No === value);
+          if (match) {
+            this.dataForm.get('VEN_Name')?.disable();
+            this.dataForm.get('VEN_EngName')?.disable();
+            this.dataForm.get('VEN_Name')?.setValue(match.Name);
+            this.dataForm.get('VEN_EngName')?.setValue(match.VEN_EngName);
+          } else {
+            this.dataForm.get('VEN_Name')?.setValue('');
+            this.dataForm.get('VEN_EngName')?.setValue('');
+            // this.messageService.errorBubble('無該廠商名稱資料');
+          }
         }
-      }
-    });
+      });
 
-      
       console.log('讀取資料', this.dataForm.value);
+
+      // ✅ 最後設為 false，代表資料已匯入完成，之後就會開始觸發 valueChanges
+      this.skipValueChanges = false;
     }
   
     onSubmit(frm: FormGroup) {
@@ -234,37 +256,45 @@ export class TLS12010CRUComponent extends BasicCruPageComponent<Potential_Custom
         this.messageService.unblockUi();
         return;
       }
+
+      //將新的資料ID指定為null
+      const processedDetail = this.potentialDetail.map(item => {
+        // 刪除 key 為空字串的欄位
+        if ("" in item) {
+          delete item[""];
+        }
+
+        if (item.status === 'new') {
+          return { ...item, ID: null}; // 把新項目的 ID, PC_id 改為 null
+        }
+        return item; // 其他不變
+      });
   
       const formValue = frm.getRawValue();
+      const body = {
+        ...formValue,
+        Detail: processedDetail, // 將明細資料加入請求體
+      }
       switch (this.crudstatus) {
         case CRUDStatus.Create:
           if (this.canAdd()) {
-            console.log('insert', frm.value);
+            console.log('insert:', JSON.stringify(body, null, 2));
             console.log('detail', this.potentialDetail);
-            // this.tls12010Service.insertTLS12010(formValue).subscribe(() => {
-            //   this.messageService.successBubble('新增成功');
-            //   // this.onCancel(); // 儲存後，會清除資料留在原頁面，不返回列表
-            //   this.dataForm.reset(); // 重置表單
-            // });
-            // this.tls12010Service.insertTLS12010_Detail(formValue).subscribe(() => {
-            //   this.messageService.successBubble('新增明細成功');
-            //   // this.onCancel(); // 儲存後，會清除資料留在原頁面，不返回列表
-            //   this.dataForm.reset(); // 重置表單
-            // });
+            this.tls12010Service.insertTLS12010(body).subscribe(() => {
+              this.messageService.successBubble('新增成功');
+              // this.onCancel(); // 儲存後，會清除資料留在原頁面，不返回列表
+              this.dataForm.reset(); // 重置表單
+            });
           }
           break;
         case CRUDStatus.Edit:
           if (this.canEdit()) {
-            console.log('update', formValue);
+            console.log('update:', JSON.stringify(body, null, 2));
             console.log('detail', this.potentialDetail);
-            // this.tls12010Service.updateTLS12010(formValue).subscribe(() => {
-            //   this.messageService.successBubble('更新成功');
-            //   this.onCancel(); // 儲存後，會返回列表
-            // });
-            // this.tls12010Service.updateTLS12010_Detail(formValue).subscribe(() => {
-            //   this.messageService.successBubble('更新明細成功');
-            //   this.onCancel(); // 儲存後，會返回列表
-            // });
+            this.tls12010Service.updateTLS12010(body).subscribe(() => {
+              this.messageService.successBubble('更新成功');
+              this.onCancel(); // 儲存後，會返回列表
+            });
           }
           break;
       }
@@ -284,13 +314,22 @@ export class TLS12010CRUComponent extends BasicCruPageComponent<Potential_Custom
   
     // 讀取dopropdown選項
     loadOptions() {
-        // 查 經營方式
-         this.tls12010Service.querySYS1000_DropDownList({"SYS_Type": 'T117'}).subscribe((response) => {
-          this.business_type_Option = response.Data.map((item: any) => ({
-            No: item.No, // 經營方式 代碼
+        // 查 大分類(專櫃)
+        this.tls12010Service.queryTLTBUSTYPE_DropDownList({}).subscribe((response) => {
+          this.bus_type_Option = response.Data.map((item: any) => ({
+            No: item.No, // 大分類(專櫃) 號
             Label: item.No + '/' + item.Name, // 組合成顯示用的Label
           }));
-          console.log('經營方式代號:', this.business_type_Option);
+          console.log('大分類代號:', this.bus_type_Option);
+        });
+
+        // 查 品牌
+        this.tls12010Service.queryPLULOGO_DropDownList({}).subscribe((response) => {
+          this.tlt_name_Option = response.Data.map((item: any) => ({
+            No: item.No, // 專櫃主代碼
+            Label: item.No + '/' + item.Name, // 組合成顯示用的Label
+          }));
+          console.log('品牌代號:', this.tlt_name_Option);
         });
 
         // 查 統編
@@ -315,6 +354,17 @@ export class TLS12010CRUComponent extends BasicCruPageComponent<Potential_Custom
 
           console.log('統編代號(去重):', this.cus_uniform_Option);
         });
+
+        // 查 經營方式
+         this.tls12010Service.querySYS1000_DropDownList({"SYS_Type": 'T117'}).subscribe((response) => {
+          this.business_type_Option = response.Data.map((item: any) => ({
+            No: item.No, // 經營方式 代碼
+            Label: item.No + '/' + item.Name, // 組合成顯示用的Label
+          }));
+          console.log('經營方式代號:', this.business_type_Option);
+        });
+
+
     }
 
     // 讀取明細資料
@@ -324,7 +374,7 @@ export class TLS12010CRUComponent extends BasicCruPageComponent<Potential_Custom
         if (response.Status === '0000') {
           this.potentialDetail = response.Data.map((item: any) => ({
             ...item,
-            status: 'old', // 讀取明細狀態為 'old';
+            status: 'original', // 有明細資料，讀取明細狀態設定為 'original';
           }));
           console.log('取得明細資料:', this.potentialDetail);
         } else {
@@ -348,14 +398,16 @@ export class TLS12010CRUComponent extends BasicCruPageComponent<Potential_Custom
           VEN_EngName.setValidators([Validators.maxLength(100)]);
 
           //內容重設
-          cus_uniform_id.enable();
-          VEN_Name.enable();
-          VEN_EngName.enable();
-
-          cus_uniform_id.setValue('');
-          VEN_Name.setValue('');
-          VEN_EngName.setValue('');
-
+          // 如果有資料就設定為快取廠商資料
+          if (this.cachedVendorData.cus_uniform_id) {
+            cus_uniform_id.setValue(this.cachedVendorData.cus_uniform_id);
+            VEN_Name.setValue(this.cachedVendorData.VEN_Name);
+            VEN_EngName.setValue(this.cachedVendorData.VEN_EngName);
+          } else {
+            cus_uniform_id.setValue('');
+            VEN_Name.setValue('');
+            VEN_EngName.setValue('');
+          }
           break;
 
         case '2': // 身份證字號
@@ -432,7 +484,7 @@ export class TLS12010CRUComponent extends BasicCruPageComponent<Potential_Custom
     }
     // 批次刪除  Potential_Customer_Detail
     onBatchDeleteDetail(selectedItems: Potential_Customer_Detail[]): void {
-      this.tls12010DetailService.deletePotentialCustomerDetail(selectedItems, this.potentialDetail, this.detailTable);
+      this.tls12010DetailService.deletePotentialCustomerDetail(selectedItems, this.potentialDetail);
     }      
     
 }

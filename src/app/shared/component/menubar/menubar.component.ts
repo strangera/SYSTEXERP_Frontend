@@ -1,44 +1,39 @@
-import { Component, Input, OnDestroy, OnInit, ViewEncapsulation } from '@angular/core';
+import { Component, Input, OnInit } from '@angular/core';
 import { MenuItem, PrimeTemplate } from 'primeng/api';
-import { UserInfo } from '../../models/system/userInfo';
-import { Subscription } from 'rxjs';
 import { AuthService } from '../../../service/system/auth.service';
 import { FunsrightInfo } from '../../models/system/funsrightInfo';
 import { NotificationService } from '../notification-message/notification.service';
 import { BreadcrumbModule } from 'primeng/breadcrumb';
 import { RouterLink } from '@angular/router';
 import { NgIf } from '@angular/common';
+import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 
 interface Favorite {
   USER_No: string,
   PROG_No: string,
   FVT_SeqNo: number,
 }
+@UntilDestroy()
 @Component({
-    selector: 'app-menubar',
-    templateUrl: './menubar.component.html',
-    styleUrl: './menubar.component.scss',
-    encapsulation: ViewEncapsulation.None,
-    standalone: true,
-    imports: [
-        BreadcrumbModule,
-        PrimeTemplate,
-        RouterLink,
-        NgIf,
-    ],
+  selector: 'app-menubar',
+  templateUrl: './menubar.component.html',
+  styleUrl: './menubar.component.scss',
+  standalone: true,
+  imports: [
+    BreadcrumbModule,
+    PrimeTemplate,
+    RouterLink,
+    NgIf,
+  ],
 })
-export class MenubarComponent implements OnInit, OnDestroy {
+export class MenubarComponent implements OnInit {
   @Input() ProgNo = '';
   @Input() customBreadcrumbItems: MenuItem[] = [];
-  home?: { icon: string, routerLink: string };
+  home = { icon: 'pi pi-home', routerLink: '/account/dashboard' };
   breadcrumbItems: MenuItem[] = [];
   menu: string[] = [];
-
   isFavorite = false;
   // 使用者選單
-  private userSubscription: Subscription | undefined; // 使用者訂閱
-  data: UserInfo | null = null;              // 使用者資料
-  private menuUpdatedSubscription: Subscription | undefined;
   funRightsInfo: FunsrightInfo[] = []; // 功能權限資訊
 
   constructor(
@@ -47,22 +42,13 @@ export class MenubarComponent implements OnInit, OnDestroy {
   ) { }
 
   ngOnInit(): void {
-    this.home = { icon: 'pi pi-home', routerLink: '/account/dashboard' };
-    if (this.customBreadcrumbItems.length > 0) {
-      return;
-    }
+    if (this.customBreadcrumbItems.length > 0) { return; }
     this.breadcrumbItems = [];
-    this.userSubscription = this.authService.user.subscribe((userInfo: UserInfo | null) => {
-      this.data = userInfo;
-    });
-    this.menuUpdatedSubscription = this.authService.menuUpdated.subscribe((newData: FunsrightInfo[]) => {
-      this.funRightsInfo = [
-        { id: "", prog_No: "dashboard", prog_id: "", prog_name: "佈告欄", prog_up: "", module_no: "", sub_module_no: "", prog_ispage: "Y", prog_stopflag: "N", prog_sort: "" },
-        { id: "", prog_No: "900001", prog_id: "", prog_name: "範例", prog_up: "", module_no: "", sub_module_no: "", prog_ispage: "Y", prog_stopflag: "N", prog_sort: "" },
-        ...newData
-      ];
+    this.authService.menuUpdated.pipe(untilDestroyed(this)).subscribe((newData: FunsrightInfo[]) => {
+      this.funRightsInfo = [...newData];
+      this.menu = [];
+      this.breadcrumbItems = [];
       this.getMenuName(this.funRightsInfo, this.ProgNo);
-      this.isFavorite = this.checkIfFavorite(this.ProgNo); // 檢查是否已經加入我的最愛
       for (let i = this.menu.length - 1; i >= 0; i--) {
         if (this.menu[i]) {
           this.breadcrumbItems.push({
@@ -70,27 +56,28 @@ export class MenubarComponent implements OnInit, OnDestroy {
             command: i === 0 ? () => this.toggleFavorite() : undefined, // 只有第一個項目有 command
             isLast: i === 0 // 標記是否為最後一個 (因為我們是反向 push)
           });
+          this.breadcrumbItems = [...this.breadcrumbItems];
+          this.isFavorite = this.checkIfFavorite(this.ProgNo); // 檢查是否已經加入我的最愛
         }
       }
     });
   }
 
-  getMenuName(funs: FunsrightInfo[], progNo: string) {
-    const prog = funs.filter(x => x.prog_No == progNo);
-    if (prog.length > 0) {
-      if (prog[0].prog_up !== '') {
-        this.menu.push(prog[0].prog_name);
-        this.getMenuName(funs, prog[0].prog_up);
-      } else {
-        this.menu.push(prog[0].prog_name);
-      }
-    } else {
-      this.messageService.warnBubble(`此頁面尚未設定程式代號或在選單資料中找不到程式代號: ${progNo}`, '警告')
-    }
+  getMenuName(funs: FunsrightInfo[], progNo: string): void {
+    const prog = funs.find(x => x.prog_No === progNo);
+    if (!prog) { this.menu = ['未知頁面']; return; }
+    this.menu.push(prog.prog_name);
+    if (prog.prog_up) this.getMenuName(funs, prog.prog_up);
   }
 
   checkIfFavorite(progNo: string): boolean {
     const favorites: Favorite[] = JSON.parse(sessionStorage.getItem('Favorites') || '[]');
+    if (!favorites || favorites.length === 0) {
+      this.authService.getFavorites(this.authService.currentUserValue?.user_No).subscribe((response) => {
+        sessionStorage.setItem('Favorites', JSON.stringify(response.Data))
+        return response.Data.some((favorite: Favorite) => favorite.PROG_No === progNo);
+      });
+    };
     return favorites.some(favorite => favorite.PROG_No === progNo);
   }
 
@@ -98,7 +85,7 @@ export class MenubarComponent implements OnInit, OnDestroy {
     this.isFavorite = !this.isFavorite;
     const favorites: Favorite[] = JSON.parse(sessionStorage.getItem('Favorites') || '[]');
     if (this.isFavorite && !favorites.some(fav => fav.PROG_No === this.ProgNo)) {
-      const currentFavorite: Favorite = { PROG_No: this.ProgNo, USER_No: this.data?.user_No || '', FVT_SeqNo: favorites.length + 1 };
+      const currentFavorite: Favorite = { PROG_No: this.ProgNo, USER_No: this.authService.currentUserValue?.user_No || '', FVT_SeqNo: favorites.length + 1 };
       favorites.push(currentFavorite);
     } else {
       const index = favorites.findIndex(fav => fav.PROG_No === this.ProgNo);
@@ -113,10 +100,5 @@ export class MenubarComponent implements OnInit, OnDestroy {
         sessionStorage.setItem('Favorites', JSON.stringify(favorites));
       }, error: error => { console.error('Error fetching favorites:', error); }
     });
-  }
-
-  ngOnDestroy() {
-    this.userSubscription?.unsubscribe();
-    this.menuUpdatedSubscription?.unsubscribe();
   }
 }

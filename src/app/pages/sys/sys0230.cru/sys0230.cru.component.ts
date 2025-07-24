@@ -1,7 +1,6 @@
 import { Sys0230Service } from './../../../service/api/sys/sys0230.service';
 import { Component, OnInit } from '@angular/core';
-import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
+import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { tblUser } from '../../../shared/models/sys/sysb000.module';
 import { Column } from '../../../shared/componentkit/table/table.model';
@@ -12,6 +11,9 @@ import { InputTextComponent } from '../../../shared/componentkit/input-text/inpu
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { NgIf } from '@angular/common';
 import { TranslateModule } from '@ngx-translate/core';
+import { DialogComponent } from '@shared/componentkit';
+import { finalize } from 'rxjs';
+import { untilDestroyed } from '@ngneat/until-destroy';
 
 export interface UserOption {
   ID: string; // ID
@@ -22,51 +24,37 @@ export interface UserOption {
 
 // 4-2-2-2 角色之使用者設定維護
 @Component({
-    selector: 'app-sys0230.cru',
-    templateUrl: './sys0230.cru.component.html',
-    styleUrl: './sys0230.cru.component.scss',
-    standalone: true,
-    imports: [
-        MenubarComponent,
-        ButtonComponent,
-        PanelModule,
-        FormsModule,
-        ReactiveFormsModule,
-        InputTextComponent,
-        TableComponent,
-        NgIf,
-        TranslateModule,
-    ],
+  selector: 'app-sys0230.cru',
+  templateUrl: './sys0230.cru.component.html',
+  standalone: true,
+  imports: [
+    MenubarComponent,
+    ButtonComponent,
+    PanelModule,
+    FormsModule,
+    ReactiveFormsModule,
+    InputTextComponent,
+    TableComponent,
+    NgIf,
+    TranslateModule,
+    DialogComponent
+  ],
 })
 // 角色之使用者設定維護 CRU
 export class SYS0230CRUComponent extends BasicCruPageComponent<tblUser>
   implements OnInit {
-
-  // ----------------------------------------------------------------
   dataForm = this.formBuilder.nonNullable.group({
-    id: [], // ID
-    Role_No: ['', [Validators.required, Validators.maxLength(10)]], // 角色代號
-    Role_Name: ['', [Validators.required, Validators.maxLength(30)]], // 角色名稱
-    Description: ['', [Validators.maxLength(50)]], // 角色註記
+    Role_No: [{ value: '', disabled: true }], // 角色代號
+    Role_Name: [{ value: '', disabled: true }], // 角色名稱
+    Description: [{ value: '', disabled: true }], // 角色註記
   });
-
   roleUserData: UserOption[] = [];
-  whetherOptions: any[] = [
-    { value: true, label: '是' },
-    { value: false, label: '否' },
-  ];
-  // ----------------------------------------------------------------
   roleUserColumns: Column[] = [
-    {
-      field: 'Match', header: '是否配對', visible: true,
-      format: (value: boolean) =>
-        this.whetherOptions.find((option) => option.value === value)?.label ||
-        value,
-    },
     { field: 'User_No', header: '使用者代號', visible: true },
     { field: 'User_Name', header: '使用者名稱', visible: true },
   ]
   selectedRoleUserData: UserOption[] = []; // 選取的使用者資料
+  cloneRoleUserData: UserOption[] = []; // 用於儲存原始資料的副本
 
   constructor(
     private sys0230Service: Sys0230Service,
@@ -78,94 +66,46 @@ export class SYS0230CRUComponent extends BasicCruPageComponent<tblUser>
     this.initializePage('SYS0230', this.dataForm);
     this.loadOptions(this.dataForm.get('Role_No')?.value ?? ''); // 載入選項
   }
-  // ----------------------------------------------------------------
   // 載入 角色之使用者
   loadOptions(roleNo: string) {
-    console.log('需求:', roleNo);
-    this.sys0230Service.queryRoleUsers({ Role_No: roleNo }).subscribe({
-      next: (response) => {
-        if (response.Status === '0000') {
-          this.roleUserData = response.Data || [];
-
-          // 初始化被選中的資料（Match 為 true）
-          this.selectedRoleUserData = this.roleUserData.filter(user => user.Match === true);
-
-          // const user0900 = response.Data.find((u: UserOption) => u.User_No === '0900000001');
-          console.log('⏱ 原始 Match 值:', JSON.parse(JSON.stringify(this.selectedRoleUserData)));
-
-        } else {
-          console.error('API error:', response.Status, response.Message);
-        }
-        this.loading = false;
-        this.messageService.unblockUi();
-      },
-      error: (err: string) => {
-        console.error('API error:', err);
-        this.loading = false;
-        this.messageService.unblockUi();
-      },
+    this.sys0230Service.queryRoleUsers({ Role_No: roleNo }).subscribe((response) => {
+      this.dialogData = response.Data;
+      this.roleUserData = response.Data.filter((user: UserOption) => user.Match);
+      this.cloneRoleUserData = this.roleUserData; // 深拷貝
     });
   }
-
-  // ----------------------------------------------------------------
-  // 點擊時變更 match狀態
-  onUserSelectionChange(selectedItems: UserOption[]) {
-    // 先記錄目前選取的 ID
-    const selectedIds = selectedItems.map(item => item.ID);
-
-    // loop 所有 roleUserData 來更新 Match 狀態
-    this.roleUserData.forEach(user => {
-      // 如果該使用者目前是被選取中的，就設為 true
-      // 如果之前是 true 但現在沒被選，就變回 false
-      user.Match = selectedIds.includes(user.ID) ? true : false;
-    });
-
-    this.selectedRoleUserData = selectedItems;
-  }
-
-  // ----------------------------------------------------------------
   onSubmit(frm: FormGroup) {
     // 修改：使用父類的 handleSubmit 方法
     this.handleSubmit(frm, () => {
-      switch (this.crudstatus) {
-        case CRUDStatus.Create:
-          if (this.canAdd()) {
-            // this.sys0210Service.createRole(frm.value).subscribe(() => {
-            //   this.messageService.successBubble('新增成功');
-            //   this.onCancel(); // 新增成功後返回查詢頁面
-            // });
-          }
-          break;
-        case CRUDStatus.Edit:
-          if (this.canEdit()) {
-            // console.log('User資料', frm.value);
-            // console.log('變更後的清單', { RoleList: this.selectedRoleUserData.map(item => item.User_No) });
-            const requestBody = {
-              Role_No: frm.value.Role_No,
-              UserNoList: this.selectedRoleUserData
-                .filter(item => item.Match === true)
-                .map(item => item.User_No),
-              DeleteUserNoList: this.selectedRoleUserData
-                .filter(item => item.Match === false)
-                .map(item => item.User_No),
-            };
-
-            console.log('更新的請求內容', requestBody);
-            this.sys0230Service.updateRoleUsers(requestBody).subscribe(() => {
-              this.messageService.successBubble('更新成功');
-              this.onCancel(); // 更新成功後返回查詢頁面
-            });
-          }
-          break;
+      const requestBody = {
+        Role_No: frm.getRawValue().Role_No,
+        UserNoList: this.roleUserData.map(user => user.User_No),
+        DeleteUserNoList: this.cloneRoleUserData
+          .filter(user => !this.roleUserData.some(u => u.User_No === user.User_No))
+          .map(user => user.User_No),
       }
+      this.sys0230Service.updateRoleUsers(requestBody).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(() => {
+        this.messageService.successBubble('更新成功');
+        this.onCancel(); // 更新成功後返回查詢頁面
+      });
     });
   }
-
-  submitForm(frm: FormGroup) {
-    this.onSubmit(frm);
+  dialogVisible = false;
+  selectedItemsDialog: UserOption[] = [];
+  dialogData: UserOption[] = [];
+  dialogColumns: Column[] = [
+    { field: 'User_No', header: '使用者代號', visible: true },
+    { field: 'User_Name', header: '使用者名稱', visible: true },
+  ];
+  isRowSelectable(event: UserOption): boolean {
+    return !this.roleUserData || !this.roleUserData.some((item: UserOption) => item.ID === event.ID);
   }
-
-  onClearForm() {
-    this.dataForm.reset(); // 重置表單
+  // onDeleteRoleUser(selectedItems: UserOption[]) {
+  //   this.roleUserData = this.roleUserData.filter(row => !selectedItems.includes(row));
+  // }
+  saveDialog() {
+    this.dialogVisible = false;
+    this.roleUserData = [...this.roleUserData, ...this.selectedItemsDialog];
+    this.selectedItemsDialog = [];
   }
 }

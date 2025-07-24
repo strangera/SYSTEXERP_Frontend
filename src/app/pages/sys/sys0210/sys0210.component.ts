@@ -11,22 +11,24 @@ import { AccordionModule } from 'primeng/accordion';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { TranslateModule } from '@ngx-translate/core';
+import { untilDestroyed } from '@ngneat/until-destroy';
+import { finalize } from 'rxjs';
 
 @Component({
-    selector: 'app-sys0210',
-    templateUrl: './sys0210.component.html',
-    styleUrls: ['./sys0210.component.scss'],
-    standalone: true,
-    imports: [
-        MenubarComponent,
-        ButtonComponent,
-        AccordionModule,
-        FormsModule,
-        ReactiveFormsModule,
-        InputTextComponent,
-        TableComponent,
-        TranslateModule,
-    ],
+  selector: 'app-sys0210',
+  templateUrl: './sys0210.component.html',
+  styleUrls: ['./sys0210.component.scss'],
+  standalone: true,
+  imports: [
+    MenubarComponent,
+    ButtonComponent,
+    AccordionModule,
+    FormsModule,
+    ReactiveFormsModule,
+    InputTextComponent,
+    TableComponent,
+    TranslateModule,
+  ],
 })
 // 4-2-2-1角色基本資料維護
 export class SYS0210Component extends BasicQueryPageComponent<tblRole>
@@ -57,73 +59,33 @@ export class SYS0210Component extends BasicQueryPageComponent<tblRole>
 
   ngOnInit(): void {
     this.initializePage('SYS0210', 'SYS/SYS0210cru', this.queryForm, (form) => this.onSubmit(form));
-    // this.loadOptions();
   }
 
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
-      console.log('query condition', frm.value);
-      this.sys0210Service.queryRole(frm.value).subscribe({
-        next: (response) => {
-          console.log('回傳Role:', response.Data);
-          if (response.Status === '0000') {
-            this.data = response.Data || [];
-            this.totalRecords = response.TotalCount || response.Data.length;
-            this.queryStateService.setQueryState(this.ProgNo, frm.value);
-          } else {
-            console.error('API error:', response.Status, response.Message);
-          }
-          this.loading = false;
-          this.messageService.unblockUi();
-        },
-        error: (err: string) => {
-          console.error('API error:', err);
-          this.loading = false;
-          this.messageService.unblockUi();
-        },
-      });
+      this.sys0210Service.queryRole(frm.value)
+        .pipe(untilDestroyed(this), finalize(() => this.loading = false))
+        .subscribe((response) => {
+          this.data = response.Data || [];
+          this.totalRecords = response.TotalCount;
+          this.queryStateService.setQueryState(this.ProgNo, frm.value);
+        })
     });
   }
 
   // 刪除項目
-  onDelete(data: tblRole | tblRole[]): void {
-    console.log('Delete data:', JSON.stringify(data, null, 2));
-
-    const items = Array.isArray(data) ? data : [data];
-    if (items.length === 0) {
-      console.error('No items to delete');
-      this.messageService.errorBubble('無法刪除：沒有選中的項目');
-      return;
-    }
-
-    // 收集所有有效的 ID
-    const idList = items
-      .filter((item) => item && item.id != null && item.id !== undefined)
-      .map((item) => item.id);
-
-    const deleteBody = {
-      ids: idList, // 符合 API 的 idList 格式
-    };
-
-    console.log('Delete body:', JSON.stringify(deleteBody, null, 2));
-    this.sys0210Service.deleteRole(deleteBody).subscribe({
+  onDelete(data: tblRole[]): void {
+    const idList = data.map(row => row.id).filter(id => id !== undefined && id !== null && typeof id === 'number');
+    this.sys0210Service.deleteRole({ ids: idList }).subscribe({
       next: (response) => {
         if (response.Status === '0000') {
-          this.messageService.successBubble('選中項目刪除成功');
+          this.messageService.successBubble(response.Message);
+          this.onSubmit(this.queryForm);
         } else {
-          console.error('API error:', response.Status, response.Message);
-          this.messageService.errorBubble(`刪除失敗: ${response.Message}`);
+          this.messageService.errorBubble(response.Message);
         }
       },
-      error: (err: string) => {
-        console.error('API error:', err);
-        this.messageService.errorBubble('刪除失敗');
-      },
-      complete: () => {
-        this.onSubmit(this.queryForm);
-      },
     });
-
     this.selectedItems = [];
   }
 }

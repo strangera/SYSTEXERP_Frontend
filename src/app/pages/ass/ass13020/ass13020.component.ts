@@ -7,7 +7,7 @@ import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { ValidationService } from '../../../shared/service/validation.service';
 import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
-import { FileType, FileUploadComponent } from '../../../shared/componentkit/file-upload/file-upload.component';
+import { FileUploadComponent } from '../../../shared/componentkit/file-upload/file-upload.component';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { AccordionModule } from 'primeng/accordion';
@@ -18,11 +18,11 @@ import { TranslateModule } from '@ngx-translate/core';
 
 //3.1.3.2 資產轉入
 @Component({
-    selector: 'app-ass13020',
-    templateUrl: './ass13020.component.html',
-    styleUrl: './ass13020.component.scss',
-    standalone: true,
-    imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputTextComponent, FileUploadComponent, TableComponent, TranslateModule]
+  selector: 'app-ass13020',
+  templateUrl: './ass13020.component.html',
+  styleUrl: './ass13020.component.scss',
+  standalone: true,
+  imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputTextComponent, FileUploadComponent, TableComponent, TranslateModule]
 })
 export class ASS13020Component extends BasicQpageComponent implements OnInit {
   // Upload files

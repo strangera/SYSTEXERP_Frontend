@@ -152,7 +152,7 @@ export interface tblUser {
 
 //tblRole 使用者角色設定檔
 export interface tblRole {
-  'id': string;
+  'id': number;
   'Role_No': string;
   'Role_Name': string;
   'Description': string;

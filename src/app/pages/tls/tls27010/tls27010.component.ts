@@ -1,150 +1,56 @@
-import { Component } from '@angular/core';
-import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { NavigationExtras, Router } from '@angular/router';
-// 權限相關
-import {
-  FunsrightInfo,
-  PermissionsInfo,
-} from '../../../shared/models/system/funsrightInfo';
-// 共用服務
-import { AuthService } from '../../../service/system/auth.service';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-
-import { FileType, FileUploadComponent } from '../../../shared/componentkit/file-upload/file-upload.component';
+import { Component, OnInit, ViewChild } from '@angular/core';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { AccordionModule } from 'primeng/accordion';
 import { TranslateModule } from '@ngx-translate/core';
-
+import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
+import { FileUploadComponent } from '@shared/componentkit';
+import { FileUploadHandlerEvent } from 'primeng/fileupload';
+import { TLS27010Service } from '@service/api/tls/tls27010.service';
 @Component({
   selector: 'app-tls27010',
   templateUrl: './tls27010.component.html',
-  styleUrls: ['./tls27010.component.scss'],
   standalone: true,
-  imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, FileUploadComponent, TranslateModule]
+  imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, TranslateModule, FileUploadComponent],
 })
-export class TLS27010Component {
-
-  ProgNo: string = '220039';
-  fileType: FileType = FileType.PNG;
-  uploadUrl: string = 'https://www.primefaces.org/cdn/api/upload.php';
-
-  // 權限變數
-  funInfo?: FunsrightInfo;
-
-
-
-
-  // 查詢表單
-  loading: boolean = false;
-  submitted: boolean = false;
-  queryForm = this.formBuilder.group({
-    fileSelection: [],  // 選擇檔案
-  });
-
-  // 表格資料
-  data: any[] = [
-    { name: 'John', age: 25, email: 'john@example.com' },
-    { name: 'Jane', age: 30, email: 'jane@example.com' },
-  ];
-  filteredData: any[] = [...this.data];
-  columns: any[] = [
-    { field: 'name', header: 'Name', visible: true },
-    { field: 'age', header: 'Age', visible: true },
-    { field: 'email', header: 'Email', visible: true },
-  ];
-
+export class TLS27010Component extends BasicQueryPageComponent<unknown> implements OnInit {
+  @ViewChild(FileUploadComponent) fileUpload?: FileUploadComponent;
+  queryForm = this.formBuilder.group({});
+  files: File[] = [];
+  allowedFileTypes = '.csv,.txt';
   constructor(
-    private router: Router,
-    private formBuilder: FormBuilder,
-    private messageService: NotificationService,
-    private authService: AuthService,
-  ) { }
-
+    private tls27010Service: TLS27010Service,
+  ) { super() }
   ngOnInit(): void {
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
+    this.initializePage('TLS27010', 'tls/tls27010cru');
   }
+  handleCustomUpload(event: FileUploadHandlerEvent) {
+    if (event.files && event.files.length > 0) {
+      const clientIp = this.authService.getUserInfo()?.client_ip || '';
+      this.loading = true;
+      const renamedFiles: File[] = event.files.map(originalFile => {
+        const uniform = this.authService.currentUserValue?.STR_Uniform || '';
+        const date = new Date();
+        const year = date.getFullYear().toString().slice(-2); // Get last 2 digits
+        const month = (date.getMonth() + 1).toString().padStart(2, '0');
+        const day = date.getDate().toString().padStart(2, '0');
+        const formattedDate = `${year}${month}${day}`;
 
-  canQuery(): boolean {
-    return true;
-  }
+        const extension = originalFile.name.split('.').pop()?.toLowerCase(); // csv or txt
+        const newName = `TSCDM${uniform}_${formattedDate}.${extension}`;
 
-  canAdd(): boolean {
-    return true;
-  }
+        return new File([originalFile], newName, {
+          type: originalFile.type,
+          lastModified: originalFile.lastModified,
+        });
+      });
 
-  canEdit(): boolean {
-    return true;
-  }
-
-  onSubmit(frm: FormGroup) {
-    console.log(frm.value);
-    this.submitted = true;
-    this.loading = true;
-    this.messageService.blockUi();
-
-    if (frm.valid && this.canQuery()) {
-      // 提交邏輯
-    }
-
-    this.loading = false;
-    this.messageService.unblockUi();
-  }
-
-  onSubmitQuery(frm: FormGroup) {
-    // 查詢邏輯
-    this.onSubmit(frm);
-  }
-
-  onClearForm() {
-    this.queryForm.reset();  // 重置表單
-  }
-
-  onCreate() {
-    if (this.canAdd()) {
-      let extras: NavigationExtras = {
-        state: {
-          crudstatus: 'Create',
-          queryform: this.queryForm,
-        },
-        skipLocationChange: true,
-      };
-      this.router.navigate(['/demoCRU'], extras);
+      this.tls27010Service.uploadTLS27010(renamedFiles, clientIp).subscribe(response => {
+        this.loading = false;
+        this.messageService.successBubble(response.Message);
+        this.files = [];
+        this.fileUpload?.fileUpload?.clear();
+      });
     }
   }
-
-  onEdit(data: any) {
-    if (this.canEdit()) {
-      let extras: NavigationExtras = {
-        state: {
-          crudstatus: 'Edit',
-          rowdata: data,
-          queryform: this.queryForm,
-        },
-        skipLocationChange: true,
-      };
-      this.router.navigate(['/demoCRU'], extras);
-    }
-  }
-
-  onDetail(data: any) {
-    let extras: NavigationExtras = {
-      state: {
-        crudstatus: 'Read',
-        rowdata: data,
-        queryform: this.queryForm,
-      },
-      skipLocationChange: true,
-    };
-    this.router.navigate(['/demoCRU'], extras);
-  }
-
-  onFileSelected(event: any) {
-    const file = event.target.files[0];
-    if (file) {
-      // 處理檔案上傳邏輯
-      console.log('Selected file:', file);
-
-    }
-  }
-  onInput() { }
 }

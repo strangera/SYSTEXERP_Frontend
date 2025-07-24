@@ -1,5 +1,7 @@
 // tls13010.model.ts - 修正版，配合後端 CleanContractRequest 結構
 
+import { AutoCompleteOption } from "@shared/componentkit/app-autocomplete/app-autocomplete.component";
+
 // ========== 1. 保留原有的前端邏輯介面（不變） ==========
 export enum WorkflowStep {
   QUERY = 0,
@@ -282,6 +284,8 @@ export interface ContractDataStructure {
     lastModified: Date;
     version: number;
     _isNewContract: boolean;
+    _isViewMode: boolean;
+    _loadedFromAPI: boolean;
   };
 }
 
@@ -368,6 +372,8 @@ export interface ContractInfo {
 
   total_amt_unit?: string;        // 目標營業額單位(業主)
   total_amt_vendor_unit?: string; // 目標營業額單位(廠商)
+
+  selectedBankInfo?: AutoCompleteOption | null;
 }
 
 // 其他介面保持不變...

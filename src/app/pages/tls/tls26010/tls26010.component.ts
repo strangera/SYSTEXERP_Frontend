@@ -8,10 +8,11 @@ import { ButtonComponent, CalendarRangeComponent, DropdownComponent, MultiSelect
 import { TableExpansionComponent } from '@shared/componentkit/table/table-expansion/table-expansion.component';
 import { AddButton, Column } from '@shared/componentkit/table/table.model';
 import { MenubarComponent } from '@shared/index';
+import { ApprovalStatus } from '@shared/models';
 import { AccordionModule } from 'primeng/accordion';
 import { FileSelectEvent, FileUploadModule } from 'primeng/fileupload';
 import { combineLatest, map } from 'rxjs';
-import { ApprovalStatus, PreorderECRListQuery, TLS26010Data, TLS26010Query, TLTTALENTQuery } from './tls26010.model';
+import { PreorderECRListQuery, TLS26010Data, TLS26010Query, TLTTALENTQuery } from './tls26010.model';
 
 @Component({
   selector: 'app-tls26010',
@@ -54,12 +55,12 @@ export class TLS26010Component extends BasicQueryPageComponent<any> {
   addButton: AddButton[] = [
     {
       label: '核准', icon: 'pi pi-check-circle text-green-500',
-      action: (rowData: TLS26010Data) => this.tls26010Service.loadApproval(rowData),
+      action: (rowData: TLS26010Data) => this.service.loadApproval(rowData),
       disabled: (rowData: TLS26010Data) => rowData.pod_status !== ApprovalStatus.未核准,
     },
     {
       label: '反核准', icon: 'pi pi-undo text-orange-500',
-      action: (rowData: TLS26010Data) => this.tls26010Service.loadApproval(rowData),
+      action: (rowData: TLS26010Data) => this.service.loadApproval(rowData),
       disabled: (rowData: TLS26010Data) => rowData.pod_status !== ApprovalStatus.已核准,
     },
   ];
@@ -112,11 +113,11 @@ export class TLS26010Component extends BasicQueryPageComponent<any> {
   readonly dependentDataEffect = effect(() => {
     this.sys3800Signal();
     const floor_no = this.sys3900Signal();
-    this.queryForm.patchValue({ ecrNos: [], tltNos: [] });
+    this.queryForm.patchValue({ ecrNos: [], tltNos: [] }, { emitEvent: false });
 
     if (floor_no) {
-      this.tls26010Service.loadPreorderECRList(this.queryPreorderECRList());
-      this.tls26010Service.loadTLTTALENT(this.queryTLTTALENT());
+      this.service.loadPreorderECRList(this.queryPreorderECRList());
+      this.service.loadTLTTALENT(this.queryTLTTALENT());
     }
   }, { allowSignalWrites: !0 });
 
@@ -151,7 +152,7 @@ export class TLS26010Component extends BasicQueryPageComponent<any> {
     { field: 'pod_desc', header: '活動名稱', visible: true },
     { field: 'pod_sdate', header: '活動起始日期', visible: true },
     { field: 'pod_edate', header: '活動終止日期', visible: true },
-    { field: 'pod_status', header: '核准狀態', visible: true, format: this.tls26010Service.approvalStatus.bind(this) },
+    { field: 'pod_status', header: '核准狀態', visible: true, format: this.service.approvalStatus.bind(this) },
     { field: 'approved_usr_name', header: '核准人員', visible: true },
     { field: 'approved_date', header: '核准日期', visible: true },
   ];
@@ -163,7 +164,7 @@ export class TLS26010Component extends BasicQueryPageComponent<any> {
     { field: 'tlt_name', header: '專櫃名稱', visible: true },
   ];
 
-  constructor(public tls26010Service: TLS26010Service) {
+  constructor(public service: TLS26010Service) {
     super();
   }
 
@@ -171,11 +172,11 @@ export class TLS26010Component extends BasicQueryPageComponent<any> {
     this.initializePage('TLS26010', '/TLS/TLS26010CRU', this.queryForm, this.onSubmit.bind(this));
 
     // 只載入館別和樓層的下拉選單資料
-    this.tls26010Service.loadSYS3800({});
-    this.tls26010Service.loadSYS3900({});
+    this.service.loadSYS3800({});
+    this.service.loadSYS3900({});
 
     // 僅供測試
-    this.tls26010Service.loadTLS26010(this.queryTLS26010());
+    this.service.loadTLS26010(this.queryTLS26010());
   };
 
   canQuery(): boolean {
@@ -194,16 +195,16 @@ export class TLS26010Component extends BasicQueryPageComponent<any> {
     this.queryForm.reset();
   };
 
-  onSubmitQuery(frm: FormGroup): void {
+  onSubmitQuery(): void {
     const dateValidation = this.dateValidationSignal();
     if (!this.sys3900Signal()?.length && dateValidation.isValid) return;
     // 查詢邏輯
-    this.onSubmit(frm);
+    this.onSubmit(this.queryForm);
   };
 
   onSubmit(frm: FormGroup): void {
     this.handleSubmit(frm, () => {
-      frm.valid && this.canQuery() && this.tls26010Service.loadTLS26010(this.queryTLS26010());
+      frm.valid && this.canQuery() && this.service.loadTLS26010(this.queryTLS26010());
       this.loading = false;
       this.messageService.blockUi();
     });
@@ -212,7 +213,7 @@ export class TLS26010Component extends BasicQueryPageComponent<any> {
   /** 處理文件上傳事件 */
   onFileUpload(event: FileSelectEvent): void {
     const file = event.files[0];
-    this.tls26010Service.importTLS26010(file);
+    this.service.importTLS26010(file);
   }
 
   /** 刪除選中的活動 */
@@ -223,7 +224,7 @@ export class TLS26010Component extends BasicQueryPageComponent<any> {
       accept: () => {
         for (const item of data) {
           if (item.pod_status !== ApprovalStatus.未核准) continue;
-          this.tls26010Service.deleteTLS26010(item);
+          this.service.deleteTLS26010(item);
         }
         this.messageService.successBubble('刪除成功');
       },

@@ -10,7 +10,7 @@ import { NotificationService } from '../../../shared/component/notification-mess
 
 import { ValidationService } from '../../../shared/service/validation.service';
 //File
-import { FileType, FileUploadComponent } from '../../../shared/componentkit/file-upload/file-upload.component';
+import { FileUploadComponent } from '../../../shared/componentkit/file-upload/file-upload.component';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { AccordionModule } from 'primeng/accordion';
@@ -19,11 +19,11 @@ import { TranslateModule } from '@ngx-translate/core';
 
 // 2.2.16.1 專櫃預估業績轉入作業
 @Component({
-    selector: 'app-tls2g010',
-    templateUrl: './tls2g010.component.html',
-    styleUrl: './tls2g010.component.scss',
-    standalone: true,
-    imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, FileUploadComponent, InputTextComponent, TranslateModule]
+  selector: 'app-tls2g010',
+  templateUrl: './tls2g010.component.html',
+  styleUrl: './tls2g010.component.scss',
+  standalone: true,
+  imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, FileUploadComponent, InputTextComponent, TranslateModule]
 })
 export class TLS2G010Component {
   ProgNo: string = '220083';

@@ -46,7 +46,7 @@
             <app-calendar
               calendarType="dateMonthOne"
               label="銷售年/月"
-              [control]="queryForm.controls.onedatemm"
+              [control]="queryForm.controls.TXN_Date"
               [submitted]="submitted"
             ></app-calendar>
           </div>
@@ -61,8 +61,8 @@
               [submitted]="submitted"
             ></app-multi-select>
           </div>
-        </div>
-        <div class="grid p-fluid">
+      
+        
           <div class="col-12 md:col-6 lg:col-4">
             <app-radiobutton
               label="收銀員區分"
@@ -76,13 +76,13 @@
             <app-radiobutton
               label="溢欠狀態"
               groupname="overflowradio"
-              [control]="queryForm.controls.overflowStatus"
+              [control]="queryForm.controls.cashShowUp"
               [options]="overflowStatusOptions"
               [submitted]="submitted"
             ></app-radiobutton>
           </div>
         </div>
-      </form>
+      
       <h6>最近關帳日期:2020/2/9</h6>
 
       <div
@@ -91,7 +91,9 @@
         <app-button btnType="clear" (click)="onClearForm()"></app-button>
         <app-button btnType="query" [loading]="loading"></app-button>
       </div>
+      </form>
     </p-accordionTab>
+    
   </p-accordion>
 </div>
 

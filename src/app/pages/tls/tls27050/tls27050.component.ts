@@ -1,151 +1,51 @@
-import { Component } from '@angular/core';
-import { FormBuilder, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { NavigationExtras, Router } from '@angular/router';
-import { FunsrightInfo, PermissionsInfo } from '../../../shared/models/system/funsrightInfo';
-import { AuthService } from '../../../service/system/auth.service';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-
-import { ValidationService } from '../../../shared/service/validation.service';
-import { PaymentToolTypeService } from '../../../service/basic/payment-tool-type.service';
+import { Component, OnInit } from '@angular/core';
+import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { AccordionModule } from 'primeng/accordion';
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { TranslateModule } from '@ngx-translate/core';
-
-const now = new Date();
+import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
+import { Column } from '@shared/componentkit/table/table.model';
+import { DropDownListService, IDropdownItem } from '@service/utility/dropDownList.service';
+import { MultiSelectComponent } from '@shared/componentkit';
+import { ITLS27050Data, TLS27050Service } from '@service/api/tls/tls27050.service';
 
 @Component({
   selector: 'app-tls27050',
   templateUrl: './tls27050.component.html',
-  styleUrls: ['./tls27050.component.scss'],
   standalone: true,
-  imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarComponent, DropdownComponent, ButtonComponent, TableComponent, TranslateModule]
+  imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarComponent, MultiSelectComponent, ButtonComponent, TableComponent, TranslateModule]
 })
-export class TLS27050Component {
-  // 程式編號
-  ProgNo: string = '220043';
-
-  // 權限變數
-  funInfo?: FunsrightInfo;
-
-
-
-
-  // 查詢表單
-  loading: boolean = false;
-  submitted: boolean = false;
+export class TLS27050Component extends BasicQueryPageComponent<ITLS27050Data> implements OnInit {
   queryForm = this.formBuilder.group({
-    saleDate: [now, [Validators.required]], // 銷售日期
-    paymentToolType: [], // 支付工具別
+    saleDate: [, [Validators.required]], // 銷售日期
+    PAY_NOList: [], // 支付工具別
   });
-
-  // 表格資料
+  totalRecords = 0;
+  pos1006DropDownList: IDropdownItem[] = [];
   data: any[] = [
-
   ];
-  filteredData: any[] = [...this.data];
-  columns: any[] = [
+  columns: Column[] = [
     { field: 'paymentType', header: '支付別', visible: true },
     { field: 'barcodeNumber', header: 'Barcode NO.', visible: true },
     { field: 'cashRegisterStatus', header: '收銀機狀況', visible: true },
     { field: 'amount', header: '金額', visible: true },
   ];
-
-
-  // 下拉選單選項
-  paymentToolTypeOptions: any[] = [];
-
   constructor(
-    private router: Router,
-    private formBuilder: FormBuilder,
-    private messageService: NotificationService,
-    private authService: AuthService,
-    private validationService: ValidationService,
-    private paymentToolTypeService: PaymentToolTypeService
-  ) { }
+    private readonly dropDownListService: DropDownListService,
+    private readonly Tls27050Service: TLS27050Service,
+  ) { super(); }
 
   ngOnInit(): void {
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
-    this.paymentToolTypeService.getPaymentToolTypes().subscribe(data => {
-      this.paymentToolTypeOptions = data;
+    this.initializePage('TLS27050', 'TLS/TLS27050cru', this.queryForm, (form) => this.onSubmit(form));
+    this.dropDownListService.queryPOS1006_DropDownList().subscribe((res) => {
+      this.pos1006DropDownList = res.Data;
     });
   }
-
-  canQuery(): boolean {
-    return true;
-  }
-
-  canAdd(): boolean {
-    return true;
-  }
-
-  canEdit(): boolean {
-    return true;
-  }
-
   onSubmit(frm: FormGroup) {
-    console.log(frm.value);
-    this.submitted = true;
-    this.loading = true;
-    this.messageService.blockUi();
-
-    if (frm.valid && this.canQuery()) {
-      // 提交邏輯
-    }
-
-    this.loading = false;
-    this.messageService.unblockUi();
-  }
-
-  onSubmitQuery(frm: FormGroup) {
-    // 查詢邏輯
-    this.onSubmit(frm);
-  }
-
-  onClearForm() {
-    this.queryForm.reset();  // 重置表單
-  }
-
-  onCreate() {
-    if (this.canAdd()) {
-      let extras: NavigationExtras = {
-        state: {
-          crudstatus: CRUDStatus.Create,
-          queryform: this.queryForm,
-        },
-        skipLocationChange: true,
-      };
-      this.router.navigate(['/demoCRU'], extras);
-    }
-  }
-
-  onEdit(data: any) {
-    if (this.canEdit()) {
-      let extras: NavigationExtras = {
-        state: {
-          crudstatus: CRUDStatus.Edit,
-          rowdata: data,
-          queryform: this.queryForm,
-        },
-        skipLocationChange: true,
-      };
-      this.router.navigate(['/demoCRU'], extras);
-    }
-  }
-
-  onDetail(data: any) {
-    let extras: NavigationExtras = {
-      state: {
-        crudstatus: CRUDStatus.Read,
-        rowdata: data,
-        queryform: this.queryForm,
-      },
-      skipLocationChange: true,
-    };
-    this.router.navigate(['/demoCRU'], extras);
+    this.handleSubmit(frm, () => {
+    });
   }
 }

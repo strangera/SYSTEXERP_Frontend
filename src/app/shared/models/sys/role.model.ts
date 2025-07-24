@@ -14,7 +14,8 @@ export interface Role {
 export interface TreeNode {
   id: string;
   label: string;
-  IsEnable: boolean;
+  prog_id: string;
+  IsEnable: boolean | null;
   partialSelected?: boolean;
   isOpen?: boolean;
   children: TreeNode[];

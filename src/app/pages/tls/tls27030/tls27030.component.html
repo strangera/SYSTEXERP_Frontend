@@ -1,70 +1,32 @@
 <div class="card">
-  <div class="grid align-items-center">
-    <div class="col" style="flex: 1">
-      <app-menubar [ProgNo]="ProgNo"></app-menubar>
-    </div>
-    <!-- <div *appHasPermission="addPermission">
-      <app-button btnType="create" (click)="onCreate()" class="col"></app-button>
-    </div> -->
+  <div class="flex gap-2 mb-2">
+    <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
   </div>
   <p-accordion>
-    <p-accordionTab
-      header="{{ 'query-conditions' | translate }}"
-      [selected]="true"
-      class="line-height-3 m-0"
-      [headerStyleClass]="'query-accordionTab'"
-    >
-      <form
-        [formGroup]="queryForm"
-        id="queryForm"
-        (ngSubmit)="onSubmit(queryForm)"
-      >
+    <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'">
+      <form [formGroup]="queryForm" id="queryForm">
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <label for="fileInput1">[聯合]請款檔</label>
-            <app-file-upload
-              [uploadUrl]="uploadUrl"
-              [fileType]="fileType"
-            ></app-file-upload>
+            <app-file-upload #fileUpload1 label="[聯合]請款檔" class="col-12" name="NCML" accept=".dat" [multiple]="true"
+              chooseLabel="選擇 DAT 檔案" uploadLabel="上傳" cancelLabel="清除" [auto]="false" [customUpload]="true"
+              mode="advanced" (select)="files1 = $event.files" [loading]="loading"
+              (uploadHandler)="handleCustomUpload($event,'NCML')"></app-file-upload>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <label for="fileInput2">[中信]請款檔</label>
-            <app-file-upload
-              [uploadUrl]="uploadUrl"
-              [fileType]="fileType"
-            ></app-file-upload>
+            <app-file-upload #fileUpload2 label="[中信]請款檔" class="col-12" name="CTBC" accept=".txt" [multiple]="true"
+              chooseLabel="選擇 TXT 檔案" uploadLabel="上傳" cancelLabel="清除" [auto]="false" [customUpload]="true"
+              mode="advanced" (select)="files2 = $event.files" [loading]="loading"
+              (uploadHandler)="handleCustomUpload($event,'CTBC')"></app-file-upload>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <label for="fileInput3">[中信-停車場]請款檔</label>
-            <app-file-upload
-              [uploadUrl]="uploadUrl"
-              [fileType]="fileType"
-            ></app-file-upload>
+            <app-file-upload #fileUpload3 label="[中信-停車場]請款檔" class="col-12" name="CTBCPrk" accept=".xls,.xlsx"
+              [multiple]="true" chooseLabel="選擇 XLS 或 XLSX 檔案" uploadLabel="上傳" cancelLabel="清除" [auto]="false"
+              [customUpload]="true" mode="advanced" (select)="files3 = $event.files" [loading]="loading"
+              (uploadHandler)="handleCustomUpload($event,'CTBCPrk')"></app-file-upload>
           </div>
         </div>
       </form>
-      <div>
-        <div class="grid justify-content-end">
-          <app-button btnType="clear" (onClick)="onClearForm()"></app-button>
-          <app-button
-            btnType="query"
-            (onClick)="onSubmitQuery(queryForm)"
-            [loading]="loading"
-          ></app-button>
-        </div>
-      </div>
     </p-accordionTab>
   </p-accordion>
 </div>
-
-<!-- <div class="card">
-  <div class="col-12">
-    <app-table
-      [data]="data"
-      [columns]="columns"
-      (edit)="onEdit($event)"
-      (detail)="onDetail($event)"
-    >
-    </app-table>
-  </div>
-</div> -->
