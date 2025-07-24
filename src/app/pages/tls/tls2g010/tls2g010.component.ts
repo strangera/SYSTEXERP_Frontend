@@ -39,7 +39,7 @@ export class TLS2G010Component {
     usagecount: [0, [Validators.required]], // 次數限制 (0 不限制)
   });
   // Upload files
-  fileType: FileType = FileType.PNG;
+  fileType: string = '';
   uploadUrl: string = 'https://www.primefaces.org/cdn/api/upload.php';
   // 表格
   // ----------------------------------------------------------------

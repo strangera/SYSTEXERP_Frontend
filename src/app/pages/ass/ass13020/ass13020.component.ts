@@ -26,7 +26,7 @@ import { TranslateModule } from '@ngx-translate/core';
 })
 export class ASS13020Component extends BasicQpageComponent implements OnInit {
   // Upload files
-  fileType: FileType = FileType.PNG;
+  fileType: string = '';
   uploadUrl: string = 'https://www.primefaces.org/cdn/api/upload.php';
 
   //

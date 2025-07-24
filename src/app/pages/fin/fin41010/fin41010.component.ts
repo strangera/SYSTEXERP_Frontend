@@ -29,7 +29,7 @@ import { TranslateModule } from '@ngx-translate/core';
 })
 export class FIN41010Component extends BasicQpageComponent implements OnInit {
   // Upload files
-  fileType: FileType = FileType.PNG;
+  fileType: string = '';
   uploadUrl: string = 'https://www.primefaces.org/cdn/api/upload.php';
   queryForm = this.formBuilder.group({
     year: [, Validators.required],

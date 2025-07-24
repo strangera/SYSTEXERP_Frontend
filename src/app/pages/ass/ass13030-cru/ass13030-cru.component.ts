@@ -37,7 +37,7 @@ import { NgIf } from '@angular/common';
 })
 export class ASS13030CRUComponent extends BasicCrupageComponent implements OnInit {
   // Upload files
-  fileType: FileType = FileType.PNG;
+  fileType: string = '';
   uploadUrl: string = 'https://www.primefaces.org/cdn/api/upload.php';
 
   shareCodeOptions: any[] = [];

@@ -6,42 +6,23 @@
           <app-menubar [ProgNo]="ProgNo"></app-menubar>
         </div>
         <div *appHasPermission="addPermission">
-          <app-button
-            btnType="create"
-            label="資料轉入"
-            class="col"
-          ></app-button>
+          <app-button btnType="create" label="資料轉入" class="col"></app-button>
         </div>
       </div>
       <p-accordion>
-        <p-accordionTab
-          header="{{ 'query-conditions' | translate }}"
-          [selected]="true"
-          class="line-height-3 m-0"
-          [headerStyleClass]="'query-accordionTab'"
-        >
-          <form
-            [formGroup]="queryForm"
-            id="queryForm"
-            (ngSubmit)="onSubmit(queryForm)"
-          >
+        <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
+          [headerStyleClass]="'query-accordionTab'">
+          <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
             <h6>檔案名稱</h6>
             <div class="grid p-fluid">
               <div class="col-12 md:col-6 lg:col-4">
-                <app-file-upload
-                  [uploadUrl]="uploadUrl"
-                  [fileType]="fileType"
-                ></app-file-upload>
+                <app-file-upload></app-file-upload>
               </div>
             </div>
             <div class="grid p-fluid">
               <div class="col-12 md:col-6 lg:col-4">
-                <app-input-text
-                  label="工作表名稱"
-                  controlName="worksheetName"
-                  [control]="queryForm.controls.worksheetName"
-                  [submitted]="submitted"
-                >
+                <app-input-text label="工作表名稱" controlName="worksheetName" [control]="queryForm.controls.worksheetName"
+                  [submitted]="submitted">
                   >
                 </app-input-text>
               </div>
@@ -55,15 +36,8 @@
             </ul>
             <div>
               <div class="grid justify-content-end">
-                <app-button
-                  btnType="clear"
-                  (onClick)="onClearForm()"
-                ></app-button>
-                <app-button
-                  btnType="query"
-                  (onClick)="onSubmitQuery(queryForm)"
-                  [loading]="loading"
-                ></app-button>
+                <app-button btnType="clear" (onClick)="onClearForm()"></app-button>
+                <app-button btnType="query" (onClick)="onSubmitQuery(queryForm)" [loading]="loading"></app-button>
               </div>
             </div>
           </form>
