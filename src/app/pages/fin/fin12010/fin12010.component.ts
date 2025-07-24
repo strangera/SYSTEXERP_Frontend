@@ -57,7 +57,7 @@ export class FIN12010Component extends BasicQueryPageComponent<IFin12010Data> im
     { field: 'SAL_GUIBegNo', header: '發票起號', visible: true },
     { field: 'SAL_GUIEndNo', header: '發票迄號', visible: true },
     { field: 'SAL_LastUsedGUINo', header: '已使用的發票號', visible: true },
-    { field: 'SAL_Type', header: '發票用途', visible: true, format: value => this.usageTypeOptions.find(x => x.SYS_Code === value)?.SYS_Name || value }, // 修正為 '發票用途'
+    { field: 'SAL_Type', header: '使用別', visible: true, format: value => this.usageTypeOptions.find(x => x.SYS_Code === value)?.SYS_Name || value }, // 修正為 '發票用途'
     { field: 'GUI_DingType', header: '是否為丁種發票', visible: true, format: formatYN },
     { field: 'SAL_GUIBegMM', header: '起始月份', visible: false, format: formatDate },
     { field: 'SAL_GUIEndMM', header: '終止月份', visible: false, format: formatDate },

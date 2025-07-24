@@ -32,6 +32,7 @@ import { TableComponent } from '../../../shared/componentkit/table/table.compone
 import { AutoCompleteComponent } from '../../../shared/componentkit/app-autocomplete/app-autocomplete.component';
 import { TranslateModule } from '@ngx-translate/core';
 import { NgIf } from '@angular/common';
+import { DropdownRangeComponent } from '@shared/componentkit/dropdown-range/dropdown-range.component';
 // 定義欄位結構
 interface ColumnDef {
   field: string;
@@ -90,7 +91,8 @@ export interface IMG1001 {
     ExpandableEditTableComponent,
     AutoCompleteComponent,
     TranslateModule,
-    NgIf
+    NgIf,
+    DropdownRangeComponent
   ],
 })
 export class InputTableComponent extends BasicQueryPageComponent<any> implements OnInit {
@@ -141,6 +143,8 @@ export class InputTableComponent extends BasicQueryPageComponent<any> implements
   selectedBankInfo: any = null;
 
   queryForm = this.formBuilder.group({
+    dropdownRangeStart: [null, [Validators.required]],
+    dropdownRangeEnd: [null, [Validators.required]],
     dateRangeQuick1: [null, [Validators.required]],
     dateRangeQuick2: [null, [Validators.required]],
     dropdownTable: ['', [Validators.required]], // Multi Level
