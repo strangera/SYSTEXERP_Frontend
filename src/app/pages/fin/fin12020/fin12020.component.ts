@@ -88,9 +88,9 @@ export class FIN12020Component extends BasicQueryPageComponent<FIN12020Data> imp
   loadOptions() {
     // 取得發票類別選項
     this.invoiceTypeOptions = [
-      { label: '一般發票', value: '01' },
-      { label: '特種發票', value: '02' },
-      { label: '電子發票', value: '03' }
+      { label: '二聯式手開發票', value: '32' },
+      { label: '三聯式手開發票', value: '31' },
+      { label: '電子發票', value: '35' },
     ];
 
     // 取得收銀機號選項
@@ -100,15 +100,22 @@ export class FIN12020Component extends BasicQueryPageComponent<FIN12020Data> imp
 
     // 取得發票狀態選項
     this.invoiceStatusOptions = [
-      { label: '未使用', value: '0' },
-      { label: '已使用', value: '1' },
-      { label: '已作廢', value: '2' }
+      { label: '未使用', value: '00' },
+      { label: '使用中', value: '01' },
+      { label: '己用完', value: '02' },
+      { label: '暫停使用', value: '03' },
+      { label: '已鎖定', value: '04' }
     ];
 
     // 取得使用別選項
     this.usageTypeOptions = [
-      { label: '一般', value: '01' },
-      { label: '特殊', value: '02' }
+      { label: '租金', value: '01' },
+      { label: '其他收入', value: '02' },
+      { label: '抽成', value: '03' },
+      { label: '換開', value: '04' },
+      { label: '應付', value: '05' },
+      { label: '應收', value: '06' },
+      { label: '電子商務', value: '07' }
     ];
   }
 }
