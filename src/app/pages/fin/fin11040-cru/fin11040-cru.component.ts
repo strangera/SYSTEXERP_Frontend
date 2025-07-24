@@ -15,21 +15,21 @@ import { CalendarComponent } from '../../../shared/componentkit/calendar/calenda
 import { TranslateModule } from '@ngx-translate/core';
 //1.1.1.4 發票格式代號維護 CRU
 @Component({
-    selector: 'app-fin11040-cru',
-    templateUrl: './fin11040-cru.component.html',
-    standalone: true,
-    imports: [
-        MenubarComponent,
-        ButtonComponent,
-        PanelModule,
-        FormsModule,
-        ReactiveFormsModule,
-        InputTextComponent,
-        DropdownComponent,
-        NgIf,
-        CalendarComponent,
-        TranslateModule,
-    ],
+  selector: 'app-fin11040-cru',
+  templateUrl: './fin11040-cru.component.html',
+  standalone: true,
+  imports: [
+    MenubarComponent,
+    ButtonComponent,
+    PanelModule,
+    FormsModule,
+    ReactiveFormsModule,
+    InputTextComponent,
+    DropdownComponent,
+    NgIf,
+    CalendarComponent,
+    TranslateModule,
+  ],
 })
 export class FIN11040CRUComponent extends BasicCruPageComponent<TDS1008Data> implements OnInit {
   dataForm = this.formBuilder.nonNullable.group({
@@ -68,6 +68,7 @@ export class FIN11040CRUComponent extends BasicCruPageComponent<TDS1008Data> imp
             next: (res) => {
               this.dataForm.reset();
               console.log(res);
+              this.messageService.successBubble(res.Message);
             }
           });
       } else if (this.isFormEditable) {
@@ -78,6 +79,7 @@ export class FIN11040CRUComponent extends BasicCruPageComponent<TDS1008Data> imp
             next: (res) => {
               this.onCancel();
               console.log(res);
+              this.messageService.successBubble(res.Message);
             }
           });
       }

@@ -9,7 +9,7 @@
     </label>
     <p-inputGroup id="input-text-start">
       <input type="text" pInputText id="input-text-range" [formControl]="startControl" [placeholder]="placeholder"
-        [ngClass]="{'ng-dirty ng-invalid': submitted && startControl.errors}"
+        [ngClass]="{'ng-dirty ng-invalid': submitted && startControl.errors}" [maxlength]="maxLength"
         (onInputChange)="onStartInputChange($event)" (onBlur)="onStartBlur($event)" />
     </p-inputGroup>
     <app-control-messages [onerror]="submitted || (startControl.touched && startControl.invalid)"
@@ -24,6 +24,7 @@
     </label>
     <p-inputGroup id="input-text-end">
       <input type="text" pInputText id="input-text-range" [formControl]="endControl" [placeholder]="placeholder"
+        [maxlength]="maxLength"
         [ngClass]="{'ng-dirty ng-invalid': submitted && endControl.errors|| (this.errorForGroup && this.startControl.parent?.errors)}"
         (onInputChange)="onEndInputChange($event)" (onBlur)="onEndBlur($event)" />
     </p-inputGroup>

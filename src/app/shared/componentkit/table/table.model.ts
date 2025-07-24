@@ -190,3 +190,27 @@ export const formatDateToYYYYMMDD = (value: string | Date): string => {
 
   return `${year}${month}${day}`;
 };
+
+// 輸出YYYYMM格式的日期
+export const formatYYYYMMToDate = (value: string): Date | null => {
+  if (!value || !/^\d{6}$/.test(value)) return null;
+  const year = Number(value.substring(0, 4));
+  const month = Number(value.substring(4, 6)) - 1; // JS 月份從 0 開始
+  return new Date(year, month, 1);
+};
+
+// 將 "YYYYMM" 轉為 Date 物件
+export function convertYYYYMMToDate(yyyymm: string): Date | null {
+  if (!/^\d{6}$/.test(yyyymm)) return null;
+  const year = Number(yyyymm.substring(0, 4));
+  const month = Number(yyyymm.substring(4, 6)) - 1; // JS 月份從 0 開始
+  return new Date(year, month, 1);
+}
+
+// 將 Date 轉為 "YYYYMM" 物件
+export function convertDateToYYYYMM(date: Date): string {
+  if (!date) return '';
+  const year = date.getFullYear();
+  const month = (date.getMonth() + 1).toString().padStart(2, '0'); // 月份從 1 開始
+  return `${year}${month}`;
+}

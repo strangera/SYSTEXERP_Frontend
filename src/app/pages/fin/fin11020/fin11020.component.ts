@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { Column, createPaginationConfig } from '../../../shared/componentkit/table/table.model';
+import { Column, convertDateToYYYYMM, convertYYYYMMToDate, createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 import { columns, MainInvoiceData, subColumns } from './fin11020.model';
 import { Fin11020Service } from '../../../service/api/fin/fin11020.service';
 import { FileSelectEvent, FileUploadModule } from 'primeng/fileupload';
@@ -17,11 +17,11 @@ import { TranslateModule } from '@ngx-translate/core';
 
 //1.1.1.2 發票基本資料維護
 @Component({
-    selector: 'app-fin11020',
-    templateUrl: './fin11020.component.html',
-    styleUrls: ['./fin11020.component.scss'],
-    standalone: true,
-    imports: [MenubarComponent, FileUploadModule, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarRangeComponent, InputTextComponent, InputTextRangeComponent, TableComponent, TranslateModule]
+  selector: 'app-fin11020',
+  templateUrl: './fin11020.component.html',
+  styleUrls: ['./fin11020.component.scss'],
+  standalone: true,
+  imports: [MenubarComponent, FileUploadModule, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarRangeComponent, InputTextComponent, InputTextRangeComponent, TableComponent, TranslateModule]
 })
 export class FIN11020Component extends BasicQueryPageComponent<MainInvoiceData> implements OnInit {
   queryForm = this.formBuilder.group({
@@ -45,15 +45,26 @@ export class FIN11020Component extends BasicQueryPageComponent<MainInvoiceData> 
 
   ngOnInit(): void {
     this.initializePage('FIN11020', '/FIN/FIN11020cru', this.queryForm, (form) => this.onSubmit(form));
+    this.queryForm.get('GUI_YYMM_start')?.valueChanges.subscribe(value => {
+      const endDate = this.queryForm.get('GUI_YYMM_end')?.value;
+      if (value && (!endDate || endDate === '')) {
+        this.queryForm.get('GUI_YYMM_end')?.setValue(value);
+      }
+    });
   }
 
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
-      this.fin11020Service.queryFIN11020(frm.value).pipe(untilDestroyed(this)).subscribe({
+      const body = {
+        ...frm.value,
+        GUI_YYMM_start: convertDateToYYYYMM(frm.value.GUI_YYMM_start),
+        GUI_YYMM_end: convertDateToYYYYMM(frm.value.GUI_YYMM_end),
+      }
+      this.fin11020Service.queryFIN11020(body).pipe(untilDestroyed(this)).subscribe({
         next: (response) => {
           this.data = response.Data.map((item: MainInvoiceData) => ({
             ...item,
-            GUI_YYMM: this.convertYYYYMMToDate(item.GUI_YYMM)
+            GUI_YYMM: convertYYYYMMToDate(item.GUI_YYMM)
           }));
           this.totalRecords = response.TotalCount;
           this.queryStateService.setQueryState(this.ProgNo, frm.value);
@@ -63,15 +74,6 @@ export class FIN11020Component extends BasicQueryPageComponent<MainInvoiceData> 
       });
     });
   }
-
-  // 將 "YYYYMM" 轉為 Date 物件
-  private convertYYYYMMToDate(yyyymm: string): Date | null {
-    if (!/^\d{6}$/.test(yyyymm)) return null;
-    const year = Number(yyyymm.substring(0, 4));
-    const month = Number(yyyymm.substring(4, 6)) - 1; // JS 月份從 0 開始
-    return new Date(year, month, 1);
-  }
-
   onDelete(selectedRows: MainInvoiceData[]) {
     const ids = selectedRows.map(row => row.ID);
     this.fin11020Service.deleteFIN11020(ids).pipe(untilDestroyed(this)).subscribe({

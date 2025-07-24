@@ -15,31 +15,32 @@ import { InputTextComponent } from '../../../shared/componentkit/input-text/inpu
 import { InputTextRangeComponent } from '../../../shared/componentkit/input-text-range/input-text-range.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { TranslateModule } from '@ngx-translate/core';
+import { convertDateToYYYYMM } from '@shared/componentkit/table/table.model';
 
 //1.1.1.2 發票基本資料維護 CRU
 @Component({
-    selector: 'app-fin11020-cru',
-    templateUrl: './fin11020-cru.component.html',
-    standalone: true,
-    imports: [
-        MenubarComponent,
-        ButtonComponent,
-        PanelModule,
-        FormsModule,
-        ReactiveFormsModule,
-        CalendarComponent,
-        NgIf,
-        InputNumberComponent,
-        InputTextComponent,
-        InputTextRangeComponent,
-        DropdownComponent,
-        TranslateModule,
-    ],
+  selector: 'app-fin11020-cru',
+  templateUrl: './fin11020-cru.component.html',
+  standalone: true,
+  imports: [
+    MenubarComponent,
+    ButtonComponent,
+    PanelModule,
+    FormsModule,
+    ReactiveFormsModule,
+    CalendarComponent,
+    NgIf,
+    InputNumberComponent,
+    InputTextComponent,
+    InputTextRangeComponent,
+    DropdownComponent,
+    TranslateModule,
+  ],
 })
 export class FIN11020CRUComponent extends BasicCruPageComponent<MainInvoiceData> implements OnInit {
   dataForm = this.formBuilder.group({
     ID: [{ value: null, disabled: true }], // 主鍵ID
-    GUI_YYMM: [null, [Validators.required, this.validationService.oddMonthValidator]],                          // 發票年月
+    GUI_YYMM: [null],                          // 發票年月
     GUI_SerNo: [{ value: '', disabled: true }],                       // 序號
     GUI_Track: ['', [Validators.required, Validators.maxLength(2), Validators.minLength(2), this.validationService.guiTrackValidator]],  // 發票字軌
     GUI_BegNo: ['', [Validators.maxLength(8), Validators.minLength(8), Validators.required, this.validationService.guiBegNoValidator]], // 發票起始號碼
@@ -71,6 +72,9 @@ export class FIN11020CRUComponent extends BasicCruPageComponent<MainInvoiceData>
   }
   ngOnInit(): void {
     this.initializePage('FIN11020', this.dataForm);
+    if (this.isFormCreateable) {
+      this.dataForm.get('GUI_YYMM')?.setValidators([Validators.required, this.validationService.oddMonthValidator]);
+    }
     const totQtyValue = this.dataForm.get('GUI_TotQty')?.value;
     if (totQtyValue && totQtyValue !== 0) {
       const qty = Math.floor(totQtyValue / 50);
@@ -120,9 +124,14 @@ export class FIN11020CRUComponent extends BasicCruPageComponent<MainInvoiceData>
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
       this.loading = true;
+      const body = {
+        ...frm.value,
+        ID: this.isFormCreateable ? undefined : frm.get('ID')?.value ?? 0,
+        GUI_YYMM: convertDateToYYYYMM(frm.value.GUI_YYMM),
+      }
       const serviceCall = this.isFormCreateable
-        ? this.fin11020Service.insertFIN11020(this.buildInsertBody(frm))
-        : this.fin11020Service.updateFIN11020(this.buildUpdateBody(frm));
+        ? this.fin11020Service.insertFIN11020(body)
+        : this.fin11020Service.updateFIN11020(body);
       serviceCall.pipe(untilDestroyed(this)).subscribe({
         next: () => {
           this.loading = false;
@@ -133,28 +142,6 @@ export class FIN11020CRUComponent extends BasicCruPageComponent<MainInvoiceData>
       });
     });
   }
-
-  private buildInsertBody(frm: FormGroup): { GUI_YYMM: string; GUI_Track: string; GUI_BegNo: string; GUI_EndNo: string; } {
-    const guiDate: Date | null = frm.get('GUI_YYMM')?.value;
-    let guiYYMM = '';
-    if (guiDate instanceof Date && !isNaN(guiDate.getTime())) {
-      const year = guiDate.getFullYear();
-      const month = (guiDate.getMonth() + 1).toString().padStart(2, '0');
-      guiYYMM = `${year}${month}`;
-    }
-
-    return {
-      GUI_YYMM: guiYYMM,
-      GUI_Track: frm.get('GUI_Track')?.value,
-      GUI_BegNo: frm.get('GUI_BegNo')?.value,
-      GUI_EndNo: frm.get('GUI_EndNo')?.value
-    };
-  }
-
-  private buildUpdateBody(frm: FormGroup): { ID: number; GUI_YYMM: string; GUI_Track: string; GUI_BegNo: string; GUI_EndNo: string; } {
-    return { ID: this.dataForm.get('ID')?.value ?? 0, ...this.buildInsertBody(frm) };
-  }
-
   // 僅在 isFormCreateable 為 true 時才提供 minDate，否則回傳 null
   get minDate(): Date | undefined {
     if (this.isFormCreateable) {
