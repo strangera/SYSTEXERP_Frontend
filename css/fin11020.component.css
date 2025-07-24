@@ -1,0 +1,6 @@
+::ng-deep .fin11020 .p-fileupload {
+  height: 100%;
+}
+::ng-deep .fin11020 .p-fileupload .p-button.p-fileupload-choose {
+  height: 50px;
+}

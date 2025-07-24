@@ -1,0 +1,143 @@
+@charset "UTF-8";
+.p-menu .p-menuitem:not(.p-highlight):not(.p-disabled) > .p-menuitem-content:hover {
+  color: unset;
+  background: unset;
+}
+.p-menu li {
+  border-radius: 0.75rem !important;
+}
+.p-menu li a {
+  color: var(--text-color) !important; /* 使用你的文字顏色變數 */
+  /* 修改文字顏色為深灰色 */
+  border-radius: 0.75rem !important;
+}
+.p-menu li a:hover {
+  background-color: var(--primary-color) !important; /* 使用你的主要顏色變數 */
+  border-radius: 0.75rem !important;
+  color: var(--primary-color-text) !important; /* 使用你的主要文字顏色變數 */
+  /* Hover 時文字顏色改為白色，與背景形成對比 */
+}
+
+.layout-topbar {
+  padding: 0 1rem;
+  background-color: var(--surface-a);
+  border-bottom: 1px solid var(--surface-border); /* 增加底部邊框，使用你的邊框顏色變數 */
+}
+.layout-topbar .layout-topbar-logo {
+  width: 270px;
+  /* 可以根據你的 logo 背景色調整文字顏色，如果 logo 是淺色，可以考慮使用 --primary-color */
+}
+.layout-topbar .topbar-menu button {
+  font-weight: 600;
+  font-size: 1.3rem;
+  color: var(--text-color); /* 使用你的文字顏色變數 */
+  padding: 0.5rem 1rem; /* 增加一些內邊距 */
+  cursor: pointer;
+}
+.layout-topbar .topbar-menu .p-button.active-top-menu-item {
+  background-color: var(--blue-800); /* 使用你定義的藍色 800 作為 active 顏色，可根據喜好調整 */
+}
+.layout-topbar .topbar-menu .p-button.active-top-menu-item .p-button-label {
+  color: white;
+}
+.layout-topbar .topbar-menu .p-button .p-button-label {
+  font-weight: 500;
+  font-size: 15px;
+  color: var(--text-color); /* 使用你的文字顏色變數 */
+}
+.layout-topbar .layout-topbar-button {
+  margin-left: 0 !important;
+  padding: 0.5rem;
+  border-radius: var(--border-radius);
+  cursor: pointer;
+}
+.layout-topbar .layout-topbar-button.favorites {
+  border: 1px solid var(--surface-border);
+}
+.layout-topbar .layout-topbar-button:hover {
+  background-color: var(--surface-hover); /* 使用你的 hover 背景顏色變數 */
+  color: var(--text-color);
+}
+.layout-topbar .p-inputtext {
+  border-radius: var(--border-radius) !important;
+  background-color: var(--surface-a) !important;
+  border: 1px solid var(--surface-border);
+  color: var(--text-color) !important; /* 使用你的文字顏色變數 */
+}
+
+.p-overlaypanel-content .p-datatable .p-datatable-tbody > tr:nth-child(even) {
+  background: transparent !important;
+}
+
+.p-overlaypanel-content .p-datatable .p-datatable-tbody > tr.p-highlight {
+  background: var(--highlight-bg) !important; /* 使用你的 highlight 背景顏色變數 */
+  color: var(--highlight-text-color); /* 使用你的 highlight 文字顏色變數 */
+}
+
+.p-overlaypanel-content .p-datatable .p-datatable-tbody > tr > td {
+  border: 0;
+  padding: 0.5rem; /* 增加一些單元格內邊距 */
+}
+
+.p-overlaypanel-content .p-datatable .p-datatable-thead > tr > th {
+  padding-block: 0.5rem; /* 調整標題內邊距 */
+  background: var(--surface-c); /* 使用你的表面 C 顏色作為標題背景 */
+  border: 0;
+  font-weight: 600; /* 使標題文字加粗 */
+  color: var(--text-color-secondary); /* 使用你的次要文字顏色變數 */
+}
+
+.p-overlaypanel-content .p-datatable.p-datatable-hoverable-rows .p-datatable-tbody > tr:not(.p-highlight):hover {
+  background: var(--surface-hover) !important; /* 使用你的 hover 背景顏色變數 */
+  color: var(--text-color); /* 使用你的文字顏色變數 */
+}
+.p-overlaypanel-content .p-datatable.p-datatable-hoverable-rows .p-datatable-tbody > tr:not(.p-highlight):hover td {
+  border-radius: 0.75rem !important;
+}
+
+.p-overlaypanel-content .p-datatable.p-datatable-hoverable-rows .p-datatable-tbody > tr:not(.p-highlight):hover td {
+  border-radius: 0 !important;
+}
+
+.p-overlaypanel {
+  padding: 0.5rem;
+  background-color: var(--surface-overlay); /* 增加 overlay 面板背景色 */
+  border: 1px solid var(--surface-border); /* 增加 overlay 面板邊框 */
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* 增加一些陰影 */
+  border-radius: 0.5rem; /* 增加圓角 */
+}
+
+@media (max-width: 991px) {
+  .layout-topbar {
+    flex-wrap: wrap;
+    height: auto;
+    padding: 1rem;
+    padding-bottom: 0;
+  }
+  .layout-topbar .layout-topbar-logo {
+    width: auto;
+  }
+  .layout-topbar .topbar-menu {
+    order: 4;
+    width: 100%;
+    margin: 0; /* 增加一些上下 margin */
+    display: flex;
+    justify-content: space-around;
+  }
+  .layout-topbar .layout-topbar-menu .layout-topbar-button {
+    border-radius: var(--border-radius) !important;
+    margin-left: 0 !important;
+    width: auto; /* 讓按鈕根據內容自適應寬度 */
+    flex-grow: 1; /* 讓按鈕在可用空間中伸展 */
+  }
+  .layout-topbar .layout-topbar-button i {
+    margin-right: 0 !important;
+  }
+}
+.p-button.p-button-secondary.p-button-text:not(:disabled):hover,
+.p-buttonset.p-button-secondary > .p-button.p-button-text:not(:disabled):hover,
+.p-splitbutton.p-button-secondary > .p-button.p-button-text:not(:disabled):hover {
+  background: rgba(96, 125, 139, 0.4);
+  border-color: transparent;
+  color: #607d8b;
+}

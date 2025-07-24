@@ -1,0 +1,12 @@
+::ng-deep .custom-input-group .p-autocomplete-dd .p-autocomplete-dropdown {
+  border-top-left-radius: 3px;
+  border-bottom-left-radius: 3px;
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+}
+::ng-deep .custom-input-group .p-inputgroup-addon {
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+  border-top-right-radius: 3px;
+  border-bottom-right-radius: 3px;
+}

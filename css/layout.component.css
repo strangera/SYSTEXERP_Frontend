@@ -1,0 +1,55 @@
+@charset "UTF-8";
+.layout-wrapper {
+  background-color: var(--surface-b);
+}
+
+.search-form {
+  width: 100%;
+  display: flex;
+  align-items: center;
+}
+
+.search-input {
+  border-radius: 20px;
+  background-color: rgba(255, 255, 255, 0.1); /* Light Mode 下保持淺色 */
+  color: var(--sidebar-text-color); /* 使用側邊欄文字顏色，確保一致性 */
+  border: 1px solid rgba(255, 255, 255, 0.3); /* Light Mode 下保持淺色邊框 */
+  padding: 0.5rem 1rem;
+  transition: background-color 0.3s, border-color 0.3s;
+}
+.search-input::-moz-placeholder {
+  color: rgba(255, 255, 255, 0.7); /* Light Mode 下保持淺色 */
+}
+.search-input::placeholder {
+  color: rgba(255, 255, 255, 0.7); /* Light Mode 下保持淺色 */
+}
+.search-input:focus {
+  background-color: rgba(255, 255, 255, 0.2); /* Light Mode 下保持較淺的 focus 背景 */
+  border-color: var(--primary-color); /* 使用你的主要顏色作為 focus 邊框 */
+  outline: none;
+}
+
+.dark-theme .search-input {
+  background-color: rgba(255, 255, 255, 0.05); /* Dark Mode 下更深的淺色 */
+  color: var(--sidebar-text-color);
+  border-color: rgba(255, 255, 255, 0.15); /* Dark Mode 下更深的淺色邊框 */
+}
+.dark-theme .search-input::-moz-placeholder {
+  color: rgba(255, 255, 255, 0.5); /* Dark Mode 下更深的淺色 */
+}
+.dark-theme .search-input::placeholder {
+  color: rgba(255, 255, 255, 0.5); /* Dark Mode 下更深的淺色 */
+}
+.dark-theme .search-input:focus {
+  background-color: rgba(255, 255, 255, 0.1); /* Dark Mode 下更深的 focus 背景 */
+}
+.dark-theme ::ng-deep .layout-sidebar::-webkit-scrollbar-track {
+  background-color: transparent;
+}
+.dark-theme ::ng-deep .layout-sidebar::-webkit-scrollbar-thumb {
+  background: var(--gray-700); /* 使用一個深灰色作為滑塊，Dark Mode 看起來不錯 */
+  border-color: var(--sidebar-bg);
+}
+.dark-theme ::ng-deep .layout-sidebar::-webkit-scrollbar-thumb:hover {
+  background: var(--gray-600); /* 稍微淺一點的深灰色作為 hover */
+}

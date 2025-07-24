@@ -1,0 +1,6 @@
+::ng-deep .tls52050 .p-fileupload {
+  height: 100%;
+}
+::ng-deep .tls52050 .p-fileupload .p-button.p-fileupload-choose {
+  height: 50px;
+}

@@ -1,0 +1,9 @@
+.no-border {
+  border: none;
+  margin-bottom: 1rem;
+}
+
+.no-border legend {
+  font-weight: bold;
+  margin-bottom: 0.5rem;
+}

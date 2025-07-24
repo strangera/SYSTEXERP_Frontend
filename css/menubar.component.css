@@ -1,0 +1,46 @@
+@charset "UTF-8";
+.favorite-active {
+  /* 喜愛項目顯示為橙色 */
+}
+.favorite-active span.p-menuitem-icon.pi.pi-star.ng-star-inserted {
+  font-weight: bold;
+  font-size: larger;
+  color: red;
+}
+.favorite-active span.p-menuitem-text.ng-star-inserted {
+  font-weight: bold;
+}
+
+.p-breadcrumb {
+  background: var(--surface-a);
+  border: 1px solid var(--surface-border);
+  color: var(--text-color);
+}
+.p-breadcrumb a span {
+  color: var(--text-color) !important;
+}
+
+app-menubar {
+  overflow-x: auto;
+  width: 100%;
+  padding: 0rem !important;
+  white-space: nowrap !important;
+  flex-grow: 1;
+  flex-basis: 0;
+}
+
+/* 假設你有引入 tailwind 的 plugin 或自定義 scrollbar */
+.scrollbar-inner {
+  scrollbar-width: thin; /* Firefox */
+  scrollbar-color: rgba(0, 0, 0, 0.2) transparent;
+}
+
+/* WebKit */
+.scrollbar-inner::-webkit-scrollbar {
+  height: 6px;
+}
+
+.scrollbar-inner::-webkit-scrollbar-thumb {
+  background-color: rgba(0, 0, 0, 0.2);
+  border-radius: 4px;
+}

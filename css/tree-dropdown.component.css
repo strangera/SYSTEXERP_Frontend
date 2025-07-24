@@ -1,0 +1,10 @@
+@charset "UTF-8";
+::ng-deep .custom-panel .p-multiselect-items-wrapper {
+  max-height: 15rem;
+  overflow-y: auto;
+}
+
+.selected {
+  background-color: #e0f7fa; /* 背景顏色 */
+  color: #00796b; /* 文字顏色 */
+}

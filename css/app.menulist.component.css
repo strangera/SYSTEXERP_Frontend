@@ -1,0 +1,72 @@
+@charset "UTF-8";
+::ng-deep .layout-sidebar {
+  top: 6rem;
+  left: 1rem;
+  height: calc(100vh - 7rem);
+  background-color: var(--sidebar-bg);
+  border: 1px solid var(--sidebar-border-color);
+}
+::ng-deep .layout-sidebar .layout-sidebar-scroll-content {
+  background-color: var(--sidebar-bg);
+}
+::ng-deep .layout-sidebar i {
+  color: var(--sidebar-icon-color) !important;
+}
+::ng-deep .layout-sidebar ul a {
+  color: var(--sidebar-text-color);
+}
+::ng-deep .layout-sidebar ul a:hover {
+  color: var(--sidebar-text-color-hover);
+  background-color: var(--sidebar-item-bg-hover);
+  border-left: 1px solid var(--sidebar-text-color);
+}
+::ng-deep .layout-sidebar .layout-menu ul ul li a {
+  margin-left: 0 !important;
+}
+::ng-deep .layout-sidebar .selected > a {
+  color: #ffa500 !important;
+}
+::ng-deep .layout-sidebar .active-menuitem-bg > a {
+  background: rgba(72, 161, 249, 0.1607843137) !important;
+}
+::ng-deep .layout-sidebar .active-menuitem > a {
+  color: var(--sidebar-item-text-active);
+  border-left-color: var(--sidebar-item-text-active);
+  border-left-width: 2px; /* 設定邊框寬度 */
+  border-left-style: solid; /* 設定邊框樣式，例如 solid、dashed、dotted 等 */
+}
+::ng-deep .layout-sidebar .active-menuitem > a i {
+  color: var(--sidebar-item-text-active) !important;
+}
+::ng-deep .layout-sidebar .p-icon-field-right .p-input-icon:last-of-type {
+  right: 1rem;
+  color: var(--sidebar-icon-color);
+  cursor: pointer;
+  transition: color 0.3s;
+}
+::ng-deep .layout-sidebar .p-icon-field-right .p-input-icon:last-of-type:hover {
+  color: var(--sidebar-icon-color-hover);
+}
+::ng-deep .layout-sidebar::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::ng-deep .layout-sidebar::-webkit-scrollbar-track {
+  border-top-right-radius: 12px;
+  border-bottom-right-radius: 12px;
+  margin: 7px;
+  background-color: transparent; /* 讓 track 透明，顯示底層背景 */
+}
+::ng-deep .layout-sidebar::-webkit-scrollbar-thumb {
+  background: var(--gray-300); /* 使用一個淺灰色作為滑塊，Light Mode 看起來不錯 */
+  border-radius: 12px;
+  border: 2px solid var(--sidebar-bg); /* 使用側邊欄背景色作為邊框，使其更融入 */
+}
+::ng-deep .layout-sidebar::-webkit-scrollbar-thumb:hover {
+  background: var(--gray-400); /* 稍微深一點的灰色作為 hover */
+}
+::ng-deep .layout-sidebar .layout-sidebar-sticky {
+  background-color: var(--topbar-sticky-bg);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+}

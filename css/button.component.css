@@ -1,0 +1,7 @@
+::ng-deep #customButton .p-button {
+  border-radius: 3px;
+  padding: 1rem;
+}
+::ng-deep #customButton .p-button.p-button-outlined {
+  border: 1px solid var(--surface-border);
+}

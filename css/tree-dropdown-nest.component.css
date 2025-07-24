@@ -1,0 +1,10 @@
+@charset "UTF-8";
+.selectable-node {
+  color: black; /* 正常顏色 */
+}
+
+.unselectable-node {
+  color: red; /* 不可選灰色 */
+  /* 你也可以改背景色，或 cursor 樣式 */
+  cursor: not-allowed;
+}
