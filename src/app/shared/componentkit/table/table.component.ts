@@ -141,7 +141,7 @@ export class TableComponent extends BasicPrintDataComponent implements OnInit, O
   @Input() showPaginator = true;                    // 是否顯示 分頁器
   @Input() totalRecords = 0;                        // 記錄總數
   totalPages = 0;                                   // 共幾頁數
-  rows = 10;                                        // 每頁顯示的行數
+  rows = 10                                         // 每頁顯示的行數
   first = 0;                                        // 當前表格的起始索引
   pages: { label: string, value: number }[] = [];   // (右上)下拉選單 頁數選項
   selectedPage: number | null = 1;                  // (右上)下拉選單 當前選擇的頁數
@@ -173,6 +173,7 @@ export class TableComponent extends BasicPrintDataComponent implements OnInit, O
         this.funInfo = undefined;
       }
     });
+    this.rows = this.queryStateService.getQueryState(this.tableKey + 'rows')?.value ?? this.rows; // 取得分頁狀態
   }
   // 當 data 發生變化時，重置分頁與頁碼
   ngOnChanges(changes: SimpleChanges): void {
@@ -216,6 +217,8 @@ export class TableComponent extends BasicPrintDataComponent implements OnInit, O
   onPageChange(event: TablePageEvent) {
     this.first = event.first;   // 更新當前起始索引
     this.rows = event.rows;     // 更新每頁行數
+    this.queryStateService.setQueryState(this.tableKey + 'rows', this.rows); // 保存分頁狀態
+    console.log(this.rows);
     this.selectedPage = Math.ceil((event.first / event.rows) + 1); // 更新下拉選單中的頁碼
     this.calculateTotalPages();
   }

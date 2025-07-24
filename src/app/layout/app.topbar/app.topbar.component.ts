@@ -137,8 +137,6 @@ export class AppTopbarComponent implements OnInit, OnDestroy {
             return { ...item, icon: iconName };
           });
         this.initFavorites(); // 初始化最愛功能
-        console.log(this.topLevelMenuItems);
-
       }
     });
     // 當使用者更新時
