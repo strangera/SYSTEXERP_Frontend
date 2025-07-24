@@ -8,10 +8,10 @@
       <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
           <app-calendar class="col-12 md:col-6 lg:col-4" calendarType="dateOne" label="銷售日期"
-            [control]="queryForm.controls.saleDate" [submitted]="submitted"></app-calendar>
-          <app-multi-select class="col-12 md:col-6 lg:col-4" label="支付工具別" controlName="PAY_NOList"
+            [control]="queryForm.controls.TXN_Date" [submitted]="submitted"></app-calendar>
+          <app-multi-select class="col-12 md:col-6 lg:col-4" label="支付工具別" controlName="PAY_TypeList"
             [options]="pos1006DropDownList" optionLabel="Name" optionValue="No"
-            [control]="queryForm.controls.PAY_NOList" [submitted]="submitted"></app-multi-select>
+            [control]="queryForm.controls.PAY_TypeList" [submitted]="submitted"></app-multi-select>
         </div>
         <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
           <app-button btnType="clear"></app-button>
@@ -22,8 +22,8 @@
   </p-accordion>
 </div>
 <div class="card">
-  <app-table dataKey="BNK_No" [data]="data" [columns]="columns" (edit)="onEdit($event)" (detail)="onDetail($event)"
-    [multiSortMeta]="[{ field: 'BNK_No', order: 1 }]" [totalRecords]="totalRecords"
+  <app-table dataKey="id" [data]="data" [columns]="columns" (edit)="onEdit($event)" (detail)="onDetail($event)"
+    [multiSortMeta]="[{ field: 'id', order: 1 }]" [totalRecords]="totalRecords" [loading]="loading" [showDelete]="false"
     (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [lazy]="true"
-    [loading]="loading"></app-table>
+    [showManage]="false"></app-table>
 </div>
