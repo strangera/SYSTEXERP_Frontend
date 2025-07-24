@@ -20,7 +20,11 @@ registerLocaleData(zhHant, 'zh-Hant-TW');
 export interface ApiResponse<T> {
   Status: string;
   Data: T;
-  Error: null | ErrorResponse;
+  Error: {
+    Code: string;
+    Detail: string;
+    Message: string;
+  } | null;
   Meta: {
     Timestamp: string;
     RequestId: string;
@@ -29,13 +33,6 @@ export interface ApiResponse<T> {
   TotalCount: number;
   TotalPage: number;
 }
-
-interface ErrorResponse {
-  Code: string;
-  Detail: string;
-  Message: string;
-}
-
 @UntilDestroy()
 @Injectable({
   providedIn: 'root'
@@ -64,7 +61,6 @@ export class AuthService {
     const userStorage: any = this.getUserInfo();
     this.userSubject = new BehaviorSubject(userStorage);
     this.user = this.userSubject.asObservable();
-    // 檢查 sessionStorage 中是否有已儲存的權限資料
     const storedFunRightsInfo = sessionStorage.getItem('FunRightsInfo');
     if (storedFunRightsInfo) {
       const parsedFunRightsInfo = JSON.parse(storedFunRightsInfo) as FunsrightInfo[];
@@ -73,20 +69,15 @@ export class AuthService {
     this.jwtHelper = new JwtHelperService();
     const ipClient = new HttpClient(this.httpBackend);
     ipClient.get<{ ip: string }>('https://api.ipify.org/?format=json').pipe(map(res => res.ip),
-      catchError(err => {
-        console.warn('取得 IP 失敗，使用預設 IP');
-        return ['0.0.0.0']; // 回傳 observable
-      })
-    )
-      .subscribe(ip => {
-        this.client_ip = ip;
-        const userInfo = this.getUserInfo();
-        if (userInfo) {
-          userInfo.client_ip = this.client_ip;
-          this.userSubject.next(userInfo); // 更新 userSubject
-          localStorage.setItem('UserInfo', JSON.stringify(userInfo));
-        }
-      });
+      catchError(() => { return ['0.0.0.0']; })
+    ).subscribe(ip => {
+      this.client_ip = ip;
+      if (userStorage) {
+        userStorage.client_ip = this.client_ip;
+        this.userSubject.next(userStorage); // 更新 userSubject
+        localStorage.setItem('UserInfo', JSON.stringify(userStorage));
+      }
+    });
   }
   public get currentUserValue(): UserInfo | null {
     return this.userSubject.value; // 獲取存儲的 JWT Token

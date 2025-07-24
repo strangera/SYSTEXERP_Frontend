@@ -107,7 +107,7 @@ export class AppTopbarComponent implements OnInit, OnDestroy {
           ...item, label: `${item.prog_id} ${item.prog_name}` // 建立 label 屬性
         }));
         this.topLevelMenuItems = this.funRightsInfo
-          .filter(item => item.prog_up === '')
+          .filter(item => item.prog_up === '' && item.module_no !== '')
           .sort((a, b) => {
             const sortA = parseInt(a.prog_sort, 10);
             const sortB = parseInt(b.prog_sort, 10);

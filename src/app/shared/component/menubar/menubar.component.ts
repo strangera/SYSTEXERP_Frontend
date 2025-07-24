@@ -1,19 +1,19 @@
-import { Component, Input, OnDestroy, OnInit } from '@angular/core';
+import { Component, Input, OnInit } from '@angular/core';
 import { MenuItem, PrimeTemplate } from 'primeng/api';
-import { UserInfo } from '../../models/system/userInfo';
 import { AuthService } from '../../../service/system/auth.service';
 import { FunsrightInfo } from '../../models/system/funsrightInfo';
 import { NotificationService } from '../notification-message/notification.service';
 import { BreadcrumbModule } from 'primeng/breadcrumb';
 import { RouterLink } from '@angular/router';
 import { NgIf } from '@angular/common';
-import { untilDestroyed } from '@ngneat/until-destroy';
+import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 
 interface Favorite {
   USER_No: string,
   PROG_No: string,
   FVT_SeqNo: number,
 }
+@UntilDestroy()
 @Component({
   selector: 'app-menubar',
   templateUrl: './menubar.component.html',
@@ -29,7 +29,7 @@ interface Favorite {
 export class MenubarComponent implements OnInit {
   @Input() ProgNo = '';
   @Input() customBreadcrumbItems: MenuItem[] = [];
-  home?: { icon: string, routerLink: string };
+  home = { icon: 'pi pi-home', routerLink: '/account/dashboard' };
   breadcrumbItems: MenuItem[] = [];
   menu: string[] = [];
   isFavorite = false;
@@ -42,15 +42,12 @@ export class MenubarComponent implements OnInit {
   ) { }
 
   ngOnInit(): void {
-    this.home = { icon: 'pi pi-home', routerLink: '/account/dashboard' };
     if (this.customBreadcrumbItems.length > 0) { return; }
     this.breadcrumbItems = [];
     this.authService.menuUpdated.pipe(untilDestroyed(this)).subscribe((newData: FunsrightInfo[]) => {
-      this.funRightsInfo = [
-        { id: "", prog_No: "dashboard", prog_id: "", prog_name: "佈告欄", prog_up: "", module_no: "", sub_module_no: "", prog_ispage: "Y", prog_stopflag: "N", prog_sort: "" },
-        { id: "", prog_No: "900001", prog_id: "", prog_name: "範例", prog_up: "", module_no: "", sub_module_no: "", prog_ispage: "Y", prog_stopflag: "N", prog_sort: "" },
-        ...newData
-      ];
+      this.funRightsInfo = [...newData];
+      this.menu = [];
+      this.breadcrumbItems = [];
       this.getMenuName(this.funRightsInfo, this.ProgNo);
       for (let i = this.menu.length - 1; i >= 0; i--) {
         if (this.menu[i]) {
@@ -68,11 +65,10 @@ export class MenubarComponent implements OnInit {
 
   getMenuName(funs: FunsrightInfo[], progNo: string): void {
     const prog = funs.find(x => x.prog_No === progNo);
-    if (!prog) { this.menu.push('未知頁面'); return; }
+    if (!prog) { this.menu = ['未知頁面']; return; }
     this.menu.push(prog.prog_name);
     if (prog.prog_up) this.getMenuName(funs, prog.prog_up);
   }
-
 
   checkIfFavorite(progNo: string): boolean {
     const favorites: Favorite[] = JSON.parse(sessionStorage.getItem('Favorites') || '[]');
