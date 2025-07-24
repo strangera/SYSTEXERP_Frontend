@@ -97,7 +97,7 @@ export class TLS2A010Component extends BasicQueryPageComponent<any> implements O
   ];
 
   ngOnInit(): void {
-    this.initializePage('TLS2A010', 'TLS/TLS2A020cru', this.queryForm, (form) => this.onSubmit(form));
+    this.initializePage('TLS2A010', 'TLS/TLS2A010cru', this.queryForm, (form) => this.onSubmit(form));
     this.loadDropdownOptions();
 
     this.dropDownListService.querySYS3900_DropDownList().pipe(untilDestroyed(this)).subscribe(res => {

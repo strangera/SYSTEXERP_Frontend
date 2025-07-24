@@ -1,11 +1,14 @@
 import { Component, OnInit } from '@angular/core';
 import { Column } from '../../../shared/componentkit/table/table.model';
-import { ReactiveFormsModule } from '@angular/forms';
+import { ReactiveFormsModule, FormGroup, FormBuilder } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { ButtonComponent, MenubarComponent, TableComponent } from '@shared/index';
 import { AccordionModule } from 'primeng/accordion';
 import { TooltipModule } from 'primeng/tooltip';
+import { PanelModule } from 'primeng/panel';
+import { TLS2A010Data } from '../tls2a010/tls2a010.model';
+
 
 @Component({
   selector: 'app-tls2a010-cru',
@@ -14,23 +17,18 @@ import { TooltipModule } from 'primeng/tooltip';
   imports: [
     MenubarComponent,
     ButtonComponent,
+    PanelModule,
     AccordionModule,
     TranslateModule,
     ReactiveFormsModule,
     TableComponent,
-    TooltipModule
+    TooltipModule,
+
   ],
 })
 
-export class TLS2A010CRUComponent extends BasicCruPageComponent<ITLS2A010Data> implements OnInit {
+export class TLS2A010CRUComponent extends BasicCruPageComponent<TLS2A010Data> implements OnInit {
   columns: Column[] = [
-    {
-      field: 'isChecked',
-      header: '是否審核？',
-      type: 'checkbox',
-      label: '', // 不顯示文字
-    },
-
     { field: 'TXN_Date', header: '日期' },
     { field: 'ECR_No', header: '收銀機代號' },
     { field: 'TXN_No', header: '交易序號' },
@@ -51,26 +49,88 @@ export class TLS2A010CRUComponent extends BasicCruPageComponent<ITLS2A010Data> i
         { label: '其他異常', value: 4 }
       ],
       optionLabel: 'label',
-      optionValue: 'value',
-    },
+      optionValue: 'value'
+    }
+
+  ];
+  addButtons = [
     {
-      field: 'check_Remark',
-      header: '備註',
-      type: 'input'
+      label: '缺單審核',
+      icon: 'pi pi-exclamation-triangle',
+      action: (rowData: any) => this.onEdit(rowData),
+      disabled: (rowData: any) => rowData.isMissing !== 'Y'
     }
   ];
+  totalRecords = 0;
+  data: any[] = [];
+  dataForm!: FormGroup;
+  rowEditDisableFn = () => false;
+
+  onEdit(rowData: any): void {
+    // Implement the logic for editing the row data here
+    console.log('Editing row:', rowData);
+  }
 
 
-}
-constructor(
-
-) {
-  super();  // 呼叫父類建構子
-}
-ngOnInit(): void {
+  constructor(private fb: FormBuilder) {
+    super();
+    this.dataForm = this.fb.group({});
+  }
+  ngOnInit(): void {
     this.initializePage('TLS2A010', this.dataForm);
-}
 
-function constructor() {
-  throw new Error('Function not implemented.');
+    // 假資料
+    this.data = [
+      {
+        id: 1,
+        TXN_Date: '2025-07-24',
+        ECR_No: 'ECR001',
+        TXN_No: '000123',
+        TLT_NO: 'A01',
+        tlt_name: '貓咪飾品專櫃',
+        TXN_GUINo: 'AB12345678',
+        CRD_No: '****5678',
+        TXN_PayAmt: 1200,
+        check_status: 2, // 信用卡缺單
+        check_Remark: '缺收據'
+      },
+      {
+        id: 2,
+        TXN_Date: '2025-07-23',
+        ECR_No: 'ECR002',
+        TXN_No: '000124',
+        TLT_NO: 'A02',
+        tlt_name: '狗狗用品專櫃',
+        TXN_GUINo: 'CD87654321',
+        CRD_No: '****1234',
+        TXN_PayAmt: 980,
+        check_status: 1, // 已撥回
+        check_Remark: '已手動補登'
+      },
+      {
+        id: 3,
+        TXN_Date: '2025-07-22',
+        ECR_No: 'ECR003',
+        TXN_No: '000125',
+        TLT_NO: 'A03',
+        tlt_name: '鳥類玩具專櫃',
+        TXN_GUINo: 'EF56781234',
+        CRD_No: '****4321',
+        TXN_PayAmt: 500,
+        check_status: 3, // 信用卡未簽
+        check_Remark: '簽單遺失'
+      }
+    ];
+
+    this.totalRecords = this.data.length;
+  }
+
+  onSubmit(frm: FormGroup) {
+    if (frm.valid) {
+      // 處理表單提交邏輯
+    }
+  }
+  onFieldChange(event: any) {
+    console.log('欄位變更:', event);
+  }
 }
