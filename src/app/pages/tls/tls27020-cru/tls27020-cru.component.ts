@@ -9,7 +9,7 @@ import { ButtonComponent } from '../../../shared/componentkit/button/button.comp
 import { NgIf } from '@angular/common';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
 import { DropdownComponent, InputNumberComponent } from '@shared/componentkit';
-import { TLS27020Data, TLS27020Service } from '@service/api/tls/tls27020.service';
+import { InsertTLS27020, TLS27020Data, TLS27020Service, UpdateTLS27020 } from '@service/api/tls/tls27020.service';
 import { DropDownListService } from '@service/utility/dropDownList.service';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { combineLatest, distinctUntilChanged, filter, finalize } from 'rxjs';
@@ -29,7 +29,7 @@ export class TLS27020CRUComponent extends BasicCruPageComponent<TLS27020Data> im
     magneticCard: [''], // 磁卡編號 目前資料庫沒有
     ACT_PayAmt_ori: [{ value: '', disabled: true }], /*顯示用金額*/
     ACT_PayAmt: [null, [Validators.max(99999999.9999), Validators.required]], /*實際金額*/
-    MOD_PayAmt: [null, [Validators.max(99999999.9999), Validators.required]], /*修改金額*/
+    MOD_PayAmt: [null],
   });
   now = new Date();
   TLTTALENT_DropDownList: { No: string, Name: string, label: string }[] = [];
@@ -89,16 +89,37 @@ export class TLS27020CRUComponent extends BasicCruPageComponent<TLS27020Data> im
 
   onSubmit(frm: FormGroup): void {
     this.handleSubmit(frm, () => {
-      const body = {
-        SYS_StoreNo: this.authService.currentUserValue?.SYS_StoreNo,
-        ...frm.value,
-        ACT_PayAmt_ori: this.isFormCreateable ? undefined : frm.getRawValue().ACT_PayAmt_ori,
-        MOD_PayAmt: this.isFormCreateable ? undefined : frm.getRawValue().MOD_PayAmt,
-        magneticCard: undefined,
-      }
-      this.tLS27020Service.insertTLS27020(body).pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(res => {
-        this.messageService.successBubble(res.Message);
+      const serviceCall = this.isFormCreateable
+        ? this.tLS27020Service.insertTLS27020(this.createTLS27020(frm))
+        : this.tLS27020Service.updateTLS27020(this.updateTLS27020(frm));
+      serviceCall.pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe({
+        next: (res) => {
+          this.messageService.successBubble(res.Message);
+          if (this.isFormCreateable) {
+            this.dataForm.reset();
+          } else if (this.isFormEditable) {
+            this.onCancel();
+          }
+        },
       });
     });
+  }
+  createTLS27020(frm: FormGroup): InsertTLS27020 {
+    return {
+      SYS_StoreNo: this.authService.currentUserValue?.SYS_StoreNo,
+      ...frm.value,
+      ACT_PayAmt_ori: this.isFormCreateable ? undefined : frm.getRawValue().ACT_PayAmt_ori,
+      MOD_PayAmt: this.isFormCreateable ? undefined : frm.getRawValue().MOD_PayAmt,
+      magneticCard: undefined,
+    }
+  }
+  updateTLS27020(frm: FormGroup): UpdateTLS27020 {
+    return {
+      id: this.rowdata?.id ?? 0,
+      ACT_PayAmt_ori: this.rowdata?.ACT_PayAmt_ori ?? 0,
+      BOOK_PayAmt: this.rowdata?.BOOK_PayAmt ?? 0,
+      ACT_PayAmt: frm.getRawValue().ACT_PayAmt,
+      MOD_PayAmt: frm.getRawValue().MOD_PayAmt,
+    };
   }
 }
