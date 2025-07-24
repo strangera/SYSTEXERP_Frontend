@@ -43,7 +43,7 @@ export class TLS12020CRUComponent extends BasicCruPageComponent<any> implements 
     vendorEName: ['', [Validators.maxLength(60)]], // 廠商名稱(英文)
     brand: ['', [Validators.maxLength(30)]], // 品牌
     bus_type: ['', [Validators.required]], // 大分類（必填）
-    VEN_Boss: ['', [Validators.required, Validators.maxLength(12)]], // 聯絡人
+    VEN_Boss: ['', [Validators.required, Validators.maxLength(20)]], // 聯絡人
     VEN_BossTel: ['', [Validators.required, Validators.maxLength(18)]], // 聯絡人電話(O)
     VEN_BossTitle: ['', [Validators.maxLength(15)]], // 聯絡人稱謂
     VEN_BossMobile: ['', [Validators.maxLength(18)]], // 聯絡人手機
@@ -52,7 +52,7 @@ export class TLS12020CRUComponent extends BasicCruPageComponent<any> implements 
 
     contact_Date: [null, [Validators.required]], // 訪談日期（必填）
     contact_Time: [null, [Validators.required]], // 訪談時間(24H)（必填）
-
+    building_no: ['', [Validators.required]],
     willing_level: ['', [Validators.required]], // 意願等級（必填）
     FLOOR_NO: ['', [Validators.required]], // 樓層編號（必填）
     LOCATION_No: [null, [Validators.maxLength(60)]], // 擬洽位置編號
@@ -71,6 +71,8 @@ export class TLS12020CRUComponent extends BasicCruPageComponent<any> implements 
   floorOptions: IDropdownItem[] = [];
   interviewerOptions: IDropdownItem[] = [];
   contact_USR_NameOptions: IDropdownItem[] = [];
+  LOCATION_Options: IDropdownItem[] = [];
+  buildingNoOptions: IDropdownItem[] = [];
 
   constructor(
     private fb: FormBuilder,
@@ -99,9 +101,19 @@ export class TLS12020CRUComponent extends BasicCruPageComponent<any> implements 
     this.dropDownListService.queryPOS2003_DropDownList().pipe(untilDestroyed(this)).subscribe(res => {
       this.industryCodeOptions = res.Data;
     });
+    //館別
+    this.dropDownListService.querySYS3800_DropDownList().pipe(untilDestroyed(this)).subscribe(res => {
+      this.buildingNoOptions = res.Data.map(x => ({ label: x.Name, value: x.No, Name: x.Name, No: x.No }));
+    });
     //統編API
     this.dropDownListService.queryPOS2013_DropDownList().pipe(untilDestroyed(this)).subscribe(res => {
       this.vendorUIDOptions = res.Data;
+    });
+    //位置編號
+    this.dropDownListService.queryPOS2002_DropDownList().subscribe((res) => {
+      if (res?.Status === '0000') {
+        this.LOCATION_Options = res.Data || [];
+      }
     });
 
     this.willinglevelOptions = [
