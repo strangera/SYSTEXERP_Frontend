@@ -11,8 +11,8 @@ export const pagesRoutes: Routes = [
     children: [
       { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
       { path: 'dashboard', loadComponent: () => import('./base/dashboard/dashboard.component').then(m => m.DashboardComponent) },
-      // { path: 'demo', loadComponent: () => import('./base/demo/input.table.component').then(m => m.InputTableComponent) },
-      // { path: 'changepsw', loadComponent: () => import('./base/changepsw/changepsw.component').then(m => m.ChangepswComponent) },
+      { path: 'demo', loadComponent: () => import('./base/demo/input.table.component').then(m => m.InputTableComponent) },
+      { path: 'changepsw', loadComponent: () => import('./base/changepsw/changepsw.component').then(m => m.ChangepswComponent) },
       // 1. 財務會計系統 (FIN)
       { path: 'fin', loadChildren: () => import('./fin/fin.routing').then(m => m.finRoutes) },
       // 2. 銷售管理系統 (TLS)
