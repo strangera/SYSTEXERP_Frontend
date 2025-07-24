@@ -12,7 +12,7 @@ export class CashierDistinctionService {
   apiUrl: string = environment.ApiUrl;
   title: string = '收銀員區分';
   options: any[] = [
-    { value: 1, label: '全部' },
+    { value: null, label: '全部' },
     { value: 2, label: '集中' },
     { value: 3, label: '獨立' },
   ];

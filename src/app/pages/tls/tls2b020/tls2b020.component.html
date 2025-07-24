@@ -52,7 +52,7 @@
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-multi-select
-              label="收銀員號碼"
+              label="收銀員代號"
               controlName="USR_No"
               [options]="cashierOptions"
               optionLabel="formLabel"
@@ -76,7 +76,7 @@
             <app-radiobutton
               label="溢欠狀態"
               groupname="overflowradio"
-              [control]="queryForm.controls.cashShowUp"
+              [control]="queryForm.controls.overflowStatus"
               [options]="overflowStatusOptions"
               [submitted]="submitted"
             ></app-radiobutton>
@@ -118,16 +118,7 @@
   ></app-table>
 </div>
 <div class="flex justify-content-end gap-6 text-lg font-bold mt-3 pr-3">
-  <div *ngIf="queryForm.get('overflowStatus')?.value === 1">
-    溢付金額：{{ overpaidAmount | number: "1.0-0" }} 元
-  </div>
-  <div *ngIf="queryForm.get('overflowStatus')?.value === 2">
-    欠收金額：{{ underpaidAmount | number: "1.0-0" }} 元
-  </div>
-  <div *ngIf="queryForm.get('overflowStatus')?.value === 3">
-    溢付金額：{{ overpaidAmount | number: "1.0-0" }} 元　 欠收金額：{{
-      underpaidAmount | number: "1.0-0"
-    }}
-    元
-  </div>
+<div class="flex justify-content-end gap-6 text-lg font-bold mt-3 pr-3">
+  {{ overflowStatusDisplay }}
+</div>
 </div>
