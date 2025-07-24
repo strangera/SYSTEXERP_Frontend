@@ -305,8 +305,8 @@ export class TLS29010CRUComponent extends BasicCruPageComponent<TALPORDERD_OPEND
       }
 
     // ---主檔點選後的變更(僅顯新增模式)---
-    onPodDescChange(id: string): void {
-      const selectedActivity = this.activityList.find(act => act.pod_desc === id);
+    onPodDescChange(desc: string): void {
+      const selectedActivity = this.activityList.find(act => act.pod_desc === desc);
       console.log('主檔名稱',selectedActivity);
 
       if (selectedActivity) {

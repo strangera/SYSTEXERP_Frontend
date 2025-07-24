@@ -55,4 +55,8 @@ export class Tls12010Service {
   querySYS1000_DropDownList(body: any): Observable<any> {
     return this.http.post<any>(`${environment.ApiUrl}/querySYS1000_DropDownList`, body);
   }
+  // 查詢 潛在客戶
+  queryTLS12010_DropDownList(body: any): Observable<any> {
+    return this.http.post<any>(`${environment.ApiUrl}/queryTLS12010_DropDownList`, body);
+  }
 }
