@@ -3,7 +3,7 @@ import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angula
 // Shared
 import { tblRole } from '../../../shared/models/sys/sysb000.module';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { Column, createPaginationConfig } from '../../../shared/componentkit/table/table.model';
+import { Column, createPaginationConfig, formatDateTime } from '../../../shared/componentkit/table/table.model';
 import { Sys0210Service } from '../../../service/api/sys/sys0210.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
@@ -49,6 +49,12 @@ export class SYS0210Component extends BasicQueryPageComponent<tblRole>
     { field: 'Role_No', header: '角色代號', visible: true },
     { field: 'Role_Name', header: '角色名稱', visible: true },
     { field: 'Description', header: '角色註記', visible: true },
+    { field: 'CRT_Date', header: '建立日期', visible: true, format: formatDateTime },
+    { field: 'CRT_USR_No', header: '建立人員編號', visible: true },
+    { field: 'CRT_USR_Name', header: '建立人員名稱', visible: true },
+    { field: 'UPD_Date', header: '變更日期', visible: true, format: formatDateTime },
+    { field: 'UPD_USR_No', header: '變更員編號', visible: true },
+    { field: 'UPD_USR_Name', header: '變更人員名稱', visible: true },
   ];
   // 多選項目
   selectedItems: tblRole[] = [];

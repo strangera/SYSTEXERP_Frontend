@@ -51,7 +51,7 @@ export class SYS0110CRUComponent extends BasicCruPageComponent<UserInfo> impleme
     org_ID: ['', [Validators.required, Validators.maxLength(20)]], // 組織編號 (SYSB400_SYS3100)
     str_date: [null], // 帳號有效開始日期
     end_date: [null], // 帳號有效結束日期
-    status: ['', [Validators.required, Validators.maxLength(1)]], // 使用者狀態 1=有效 2=停用
+    status: ['1', [Validators.required, Validators.maxLength(1)]], // 使用者狀態 1=有效 2=停用
     user_type: ['', [Validators.required, Validators.maxLength(1)]], // 使用者型態 1=公司內部人員(default) 2=專櫃人員 3=其他
     user_email: ['', [Validators.email, Validators.maxLength(100)]], // 使用者email帳號
     TLT_No: ['', Validators.maxLength(12)], // 所屬專櫃編號
