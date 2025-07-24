@@ -7,10 +7,12 @@ import { ButtonComponent } from '../../../shared/componentkit/button/button.comp
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { TranslateModule } from '@ngx-translate/core';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
-import { Column } from '@shared/componentkit/table/table.model';
-import { DropDownListService, IDropdownItem } from '@service/utility/dropDownList.service';
+import { Column, createPaginationConfig } from '@shared/componentkit/table/table.model';
+import { IDropdownItem } from '@service/utility/dropDownList.service';
 import { MultiSelectComponent } from '@shared/componentkit';
 import { ITLS27050Data, TLS27050Service } from '@service/api/tls/tls27050.service';
+import { untilDestroyed } from '@ngneat/until-destroy';
+import { finalize } from 'rxjs';
 
 @Component({
   selector: 'app-tls27050',
@@ -20,32 +22,37 @@ import { ITLS27050Data, TLS27050Service } from '@service/api/tls/tls27050.servic
 })
 export class TLS27050Component extends BasicQueryPageComponent<ITLS27050Data> implements OnInit {
   queryForm = this.formBuilder.group({
-    saleDate: [, [Validators.required]], // 銷售日期
-    PAY_NOList: [], // 支付工具別
+    TXN_Date: [null, [Validators.required]], // 銷售日期
+    PAY_TypeList: [], // 支付工具別
+    ...createPaginationConfig([{ field: 'id', order: 1 }]), // 分頁和排序參數
   });
   totalRecords = 0;
-  pos1006DropDownList: IDropdownItem[] = [];
-  data: any[] = [
+  pos1006DropDownList: IDropdownItem[] = [
+    { No: '1', Name: '現金' },
+    { No: '0', Name: '信用卡' },
   ];
+  data: ITLS27050Data[] = [];
   columns: Column[] = [
-    { field: 'paymentType', header: '支付別', visible: true },
-    { field: 'barcodeNumber', header: 'Barcode NO.', visible: true },
-    { field: 'cashRegisterStatus', header: '收銀機狀況', visible: true },
-    { field: 'amount', header: '金額', visible: true },
+    { field: 'PAY_NO', header: '付款別編號' },
+    { field: 'PAY_Name', header: '付款別名稱' },
+    { field: 'TLT_NO', header: '專櫃編號' },
+    { field: 'ECR_No', header: '收銀機號' },
+    { field: 'ACT_PayAmt', header: '金額' }, // 實際金額(來自相關對帳檔)
   ];
   constructor(
-    private readonly dropDownListService: DropDownListService,
-    private readonly Tls27050Service: TLS27050Service,
+    private readonly tls27050Service: TLS27050Service,
   ) { super(); }
 
   ngOnInit(): void {
     this.initializePage('TLS27050', 'TLS/TLS27050cru', this.queryForm, (form) => this.onSubmit(form));
-    this.dropDownListService.queryPOS1006_DropDownList().subscribe((res) => {
-      this.pos1006DropDownList = res.Data;
-    });
   }
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
+      this.tls27050Service.queryTLS27050(frm.value).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe((res) => {
+        this.data = res.Data;
+        this.totalRecords = res.TotalCount;
+        this.queryStateService.setQueryState(this.ProgNo, this.queryForm.value);
+      });
     });
   }
 }

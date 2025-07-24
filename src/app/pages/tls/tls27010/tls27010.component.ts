@@ -7,6 +7,8 @@ import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/ba
 import { FileUploadComponent } from '@shared/componentkit';
 import { FileUploadHandlerEvent } from 'primeng/fileupload';
 import { TLS27010Service } from '@service/api/tls/tls27010.service';
+import { untilDestroyed } from '@ngneat/until-destroy';
+import { finalize } from 'rxjs';
 @Component({
   selector: 'app-tls27010',
   templateUrl: './tls27010.component.html',
@@ -45,7 +47,7 @@ export class TLS27010Component extends BasicQueryPageComponent<unknown> implemen
         });
       });
 
-      this.tls27010Service.uploadTLS27010(renamedFiles, clientIp).subscribe(response => {
+      this.tls27010Service.uploadTLS27010(renamedFiles, clientIp).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(response => {
         this.loading = false;
         this.messageService.successBubble(response.Message);
         this.files = [];

@@ -7,6 +7,8 @@ import { TranslateModule } from '@ngx-translate/core';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { FileUploadHandlerEvent } from 'primeng/fileupload';
 import { TLS27030Service } from '@service/api/tls/tls27030.service';
+import { finalize } from 'rxjs';
+import { untilDestroyed } from '@ngneat/until-destroy';
 @Component({
   selector: 'app-tls27030',
   templateUrl: './tls27030.component.html',
@@ -48,7 +50,7 @@ export class TLS27030Component extends BasicQueryPageComponent<unknown> implemen
         });
       });
 
-      this.tls27030Service.uploadTLS27030(renamedFiles, clientIp, type).subscribe(response => {
+      this.tls27030Service.uploadTLS27030(renamedFiles, clientIp, type).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(response => {
         this.loading = false;
         this.messageService.successBubble(response.Message);
         switch (type) {
