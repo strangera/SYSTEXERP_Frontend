@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { FIN12020Data, FIN12020QueryRequest, FIN12020Service } from '../../../service/api/fin/fin12020.service';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { Column, createPaginationConfig } from '../../../shared/componentkit/table/table.model';
+import { Column, createPaginationConfig, formatDate } from '../../../shared/componentkit/table/table.model';
 import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { finalize } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
@@ -40,7 +40,6 @@ export class FIN12020Component extends BasicQueryPageComponent<FIN12020Data> imp
   data: FIN12020Data[] = [];
   selectedItems: FIN12020Data[] = [];
 
-  // TODO: 格式化設定
   columns: Column[] = [
     { field: 'GUI_YYMM', header: '發票年月', visible: true },
     { field: 'ECR_NO', header: '機號', visible: true },
@@ -50,9 +49,11 @@ export class FIN12020Component extends BasicQueryPageComponent<FIN12020Data> imp
     { field: 'TOT_NOS', header: '全部張數', visible: true },
     { field: 'USED_NOS', header: '已用張數', visible: true },
     { field: 'FREE_NOS', header: '未用張數', visible: true },
-    { field: 'GUIPaper', header: '發票類別', visible: true },
-    { field: 'SAL_Type', header: '使用別', visible: true },
-    { field: 'CRT_Date', header: '建檔日期', visible: true },
+    {
+      field: 'GUIPaper', header: '發票類別', visible: true, format: (value: number) => this.invoiceTypeOptions.find(item => Number(item.value) === value)?.label || value
+    },
+    { field: 'SAL_Type', header: '使用別', visible: true, format: (value: string) => this.usageTypeOptions.find(item => item.value === value)?.label || value },
+    { field: 'CRT_Date', header: '建檔日期', visible: true, format: formatDate },
     { field: 'CRT_USR_No', header: '建檔人員', visible: true },
   ];
 
@@ -84,7 +85,6 @@ export class FIN12020Component extends BasicQueryPageComponent<FIN12020Data> imp
     });
   }
 
-  // TODO: 待確認
   loadOptions() {
     // 取得發票類別選項
     this.invoiceTypeOptions = [
