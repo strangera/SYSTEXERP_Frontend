@@ -59,7 +59,6 @@ export class FIN11040CRUComponent extends BasicCruPageComponent<TDS1008Data> imp
   }
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
-      this.loading = true;
       if (this.isFormCreateable) {
         const payload = this.buildInsertBody(frm);
         this.fin11040Service.insertFIN11040(payload)

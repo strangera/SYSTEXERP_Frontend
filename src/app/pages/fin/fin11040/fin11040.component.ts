@@ -12,19 +12,19 @@ import { InputTextComponent } from '../../../shared/componentkit/input-text/inpu
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { TranslateModule } from '@ngx-translate/core';
 @Component({
-    selector: 'app-fin11040',
-    templateUrl: './fin11040.component.html',
-    standalone: true,
-    imports: [
-        MenubarComponent,
-        ButtonComponent,
-        AccordionModule,
-        FormsModule,
-        ReactiveFormsModule,
-        InputTextComponent,
-        TableComponent,
-        TranslateModule,
-    ],
+  selector: 'app-fin11040',
+  templateUrl: './fin11040.component.html',
+  standalone: true,
+  imports: [
+    MenubarComponent,
+    ButtonComponent,
+    AccordionModule,
+    FormsModule,
+    ReactiveFormsModule,
+    InputTextComponent,
+    TableComponent,
+    TranslateModule,
+  ],
 })
 //1.1.1.4 銷項品項資料設定
 export class FIN11040Component extends BasicQueryPageComponent<TDS1008Data> implements OnInit {
@@ -63,12 +63,14 @@ export class FIN11040Component extends BasicQueryPageComponent<TDS1008Data> impl
 
   onDelete(selectedRows: TDS1008Data[]) {
     const idList = selectedRows.map(row => row.ID);
-    this.fin11040Service.deleteFIN11040({ idList }).pipe(untilDestroyed(this)).subscribe({
-      next: () => {
+    this.fin11040Service.deleteFIN11040({ idList }).pipe(untilDestroyed(this)).subscribe(res => {
+      if (res.Status === '0000') {
         this.onSubmit(this.queryForm);
         this.selectedRows = [];
-      },
-      error: () => { this.loading = false; },
+        this.messageService.successBubble(res.Message);
+      } else {
+        this.messageService.errorBubble(res.Message);
+      }
     });
   }
 }

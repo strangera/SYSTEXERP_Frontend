@@ -7,7 +7,7 @@
     <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
       <div class="grid p-fluid">
         <app-calendar class="col-12 md:col-6 lg:col-4" calendarType="dateMonthOne" label="發票年月"
-          [control]="dataForm.controls.SAL_GUIYYYYMM_Date" [submitted]="submitted" />
+          [control]="dataForm.controls.SAL_GUIYYYYMM_Date" [submitted]="submitted" [minDate]="minDate" />
         <app-input-text class="col-12 lg:col-6 xl:col-4" label="字軌" controlName="SAL_GUITrack"
           [control]="dataForm.controls.SAL_GUITrack" [submitted]="submitted" />
         <app-input-number class="col-12 md:col-6 lg:col-4" label="券數(1券=50張)" controlName="GUI_Qty"

@@ -2,7 +2,7 @@ import { Component, OnInit, } from '@angular/core';
 import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { Fin11030Service } from '../../../service/api/fin/fin11030.service';
-import { APS2001Data, SAL_GUIPaperOptions2 } from '../fin11030/fin11030.model';
+import { APS2001Data, SAL_GUIPaperOptions, SAL_GUIPaperOptions2 } from '../fin11030/fin11030.model';
 import { ValidationService } from '../../../shared/service/validation.service';
 import { finalize } from 'rxjs';
 import { untilDestroyed } from '@ngneat/until-destroy';
@@ -45,10 +45,12 @@ export class FIN11030CRUComponent extends BasicCruPageComponent<APS2001Data> imp
     SAL_GUIBegNo: ['', [Validators.maxLength(8), Validators.minLength(8), Validators.required, this.validationService.guiBegNoValidator]], // 發票起始號碼
     SAL_GUIEndNo: ['', [Validators.maxLength(8), Validators.minLength(8), Validators.required, this.validationService.guiEndNoValidator]], // 發票起始號碼
     SAL_GUIPaper: [null, [Validators.required]],
-    GUI_Qty: [0, [Validators.required, Validators.maxLength(8), Validators.max(99999999)]], // 券數
+    GUI_Qty: [null as null | number], // 券數
   }, { validators: this.validationService.guiNumberRangeValidator('SAL_GUIBegNo', 'SAL_GUIEndNo') });
 
-  SAL_GUIPaperOptions = SAL_GUIPaperOptions2
+  SAL_GUIPaperOptions = SAL_GUIPaperOptions
+  SAL_GUIPaperOptions2 = SAL_GUIPaperOptions2
+  minDate?: Date;
 
   constructor(
     private fin11030Service: Fin11030Service,
@@ -60,6 +62,7 @@ export class FIN11030CRUComponent extends BasicCruPageComponent<APS2001Data> imp
   ngOnInit(): void {
     this.initializePage('FIN11030', this.dataForm);
     if (this.isFormCreateable) {
+      this.minDate = this.setMinDate();
       this.dataForm.get('SAL_GUIYYYYMM')?.setValidators([Validators.required, this.validationService.oddMonthValidator]);
     }
     this.dataForm.get('SAL_GUIEndNo')?.valueChanges.pipe(untilDestroyed(this)).subscribe(endNoValue => {
@@ -137,13 +140,20 @@ export class FIN11030CRUComponent extends BasicCruPageComponent<APS2001Data> imp
     });
   }
 
-  // 僅在 isFormCreateable 為 true 時才提供 minDate，否則回傳 null
-  get minDate(): Date | undefined {
+  setMinDate(): Date | undefined {
     if (this.isFormCreateable) {
       const today = new Date();
-      const prevMonth = new Date(today.getFullYear(), today.getMonth() - 1, 1); // 前一個月的 1 號
-      return prevMonth;
+      const currentMonth = today.getMonth();
+      if ((currentMonth + 1) % 2 !== 0) {
+        return new Date(today.getFullYear(), currentMonth, 1);
+      } else {
+        return new Date(today.getFullYear(), currentMonth - 1, 1);
+      }
     }
     return undefined;
+  }
+
+  SAL_GUIPaperIs35(): boolean {
+    return this.rowdata?.SAL_GUIPaper === '35';
   }
 }

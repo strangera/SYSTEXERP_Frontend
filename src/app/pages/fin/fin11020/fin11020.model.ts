@@ -83,9 +83,12 @@ export const columns: Column[] = [
     format: (value: string) => guiTypeOptions.find(x => x.value === value)?.label || value
   }, // 發票類別 01=三聯式 02=二聯式 03=二聯式收銀機發票 04=特種稅額 05=電子計算機發票 06=三聯式收銀機發票 07=電子發票
   { field: 'GUI_File', header: '匯入檔案名稱', visible: true }, // 匯入檔案名稱
-  { field: 'CRT_Date', header: '建立日期', visible: true, format: formatDateTime }, // 建立日期
-  { field: 'CRT_USR_No', header: '建立人員', visible: true }, // 建立人員
-  { field: 'CRT_USR_Name', header: '建立人員姓名', visible: true }, // 建立人員姓名
+  { field: 'CRT_Date', header: '建立日期', visible: false, format: formatDateTime }, // 建立日期
+  { field: 'CRT_USR_No', header: '建立人員', visible: false }, // 建立人員
+  { field: 'CRT_USR_Name', header: '建立人員姓名', visible: false }, // 建立人員姓名
+  { field: 'CRT_Date', header: '變更日期', visible: false, format: formatDateTime }, // 變更日期
+  { field: 'CRT_USR_No', header: '變更人員', visible: false }, // 變更人員
+  { field: 'CRT_USR_Name', header: '變更人員姓名', visible: false }, // 變更人員姓名
 ];
 export const subColumns: Column[] = [
   { field: 'STO_No', header: '分店編號', visible: true }, // 分店編號

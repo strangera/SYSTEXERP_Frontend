@@ -16,6 +16,7 @@ import { InputTextRangeComponent } from '../../../shared/componentkit/input-text
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { TranslateModule } from '@ngx-translate/core';
 import { convertDateToYYYYMM } from '@shared/componentkit/table/table.model';
+import { finalize } from 'rxjs';
 
 //1.1.1.2 發票基本資料維護 CRU
 @Component({
@@ -40,7 +41,7 @@ import { convertDateToYYYYMM } from '@shared/componentkit/table/table.model';
 export class FIN11020CRUComponent extends BasicCruPageComponent<MainInvoiceData> implements OnInit {
   dataForm = this.formBuilder.group({
     ID: [{ value: null, disabled: true }], // 主鍵ID
-    GUI_YYMM: [null],                          // 發票年月
+    GUI_YYMM: [null, [Validators.required]],                          // 發票年月
     GUI_SerNo: [{ value: '', disabled: true }],                       // 序號
     GUI_Track: ['', [Validators.required, Validators.maxLength(2), Validators.minLength(2), this.validationService.guiTrackValidator]],  // 發票字軌
     GUI_BegNo: ['', [Validators.maxLength(8), Validators.minLength(8), Validators.required, this.validationService.guiBegNoValidator]], // 發票起始號碼
@@ -64,6 +65,7 @@ export class FIN11020CRUComponent extends BasicCruPageComponent<MainInvoiceData>
   }, { validators: this.validationService.guiNumberRangeValidator('GUI_BegNo', 'GUI_EndNo') });
   guiTypeOptions = guiTypeOptions     // 發票類別選項
   guiStatusOptions = guiStatusOptions;// 發票狀態選項
+  minDate?: Date;
   constructor(
     private validationService: ValidationService,
     private fin11020Service: Fin11020Service
@@ -73,6 +75,7 @@ export class FIN11020CRUComponent extends BasicCruPageComponent<MainInvoiceData>
   ngOnInit(): void {
     this.initializePage('FIN11020', this.dataForm);
     if (this.isFormCreateable) {
+      this.minDate = this.setMinDate();
       this.dataForm.get('GUI_YYMM')?.setValidators([Validators.required, this.validationService.oddMonthValidator]);
     }
     const totQtyValue = this.dataForm.get('GUI_TotQty')?.value;
@@ -132,24 +135,26 @@ export class FIN11020CRUComponent extends BasicCruPageComponent<MainInvoiceData>
       const serviceCall = this.isFormCreateable
         ? this.fin11020Service.insertFIN11020(body)
         : this.fin11020Service.updateFIN11020(body);
-      serviceCall.pipe(untilDestroyed(this)).subscribe({
-        next: () => {
-          this.loading = false;
-        },
-        error: () => {
-          this.loading = false;
-        },
+      serviceCall.pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(res => {
+        this.messageService.successBubble(res.Message);
+        if (this.isFormCreateable) {
+          this.dataForm.reset();
+        } else if (this.isFormEditable) {
+          this.onCancel();
+        }
       });
     });
   }
-  // 僅在 isFormCreateable 為 true 時才提供 minDate，否則回傳 null
-  get minDate(): Date | undefined {
+  setMinDate(): Date | undefined {
     if (this.isFormCreateable) {
       const today = new Date();
-      const prevMonth = new Date(today.getFullYear(), today.getMonth() - 1, 1); // 前一個月的 1 號
-      return prevMonth;
+      const currentMonth = today.getMonth();
+      if ((currentMonth + 1) % 2 !== 0) {
+        return new Date(today.getFullYear(), currentMonth, 1);
+      } else {
+        return new Date(today.getFullYear(), currentMonth - 1, 1);
+      }
     }
     return undefined;
   }
-
 }

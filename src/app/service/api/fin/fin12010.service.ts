@@ -17,7 +17,7 @@ export interface IQueryFin12010Request {
   SAL_GUITrack?: string;        // 發票字軌
   SAL_GUINo_start?: string;     // 發票號碼 (起始)
   SAL_GUINo_end?: string;       // 發票號碼 (結束)
-  SAL_GUIPaper?: string[];      // 發票類別 (字串陣列)
+  SAL_Type?: string[];      // 發票類別 (字串陣列)
 }
 
 /** APS2001 資料表的單筆資料介面 */

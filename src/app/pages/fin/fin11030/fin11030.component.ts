@@ -95,4 +95,8 @@ export class FIN11030Component extends BasicQueryPageComponent<APS2001Data> impl
       });
     });
   }
+
+  editDisabled(rowdata: APS2001Data) {
+    return rowdata.SAL_GUIPaper === '35' || (rowdata.SAL_LastUsedGUINo !== '' && rowdata.SAL_LastUsedGUINo !== null);
+  }
 }
