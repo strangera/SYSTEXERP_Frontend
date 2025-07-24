@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
-import { ButtonComponent, DropdownComponent, MenubarComponent, TableComponent, CalendarComponent, InputNumberRangeComponent } from '@shared/index';
+import { ButtonComponent, DropdownComponent, MenubarComponent, TableComponent, CalendarComponent, InputTextRangeComponent } from '@shared/index';
 import { AccordionModule } from 'primeng/accordion';
 import { DropDownListService, IDropdownItem } from 'src/app/service/utility/dropDownList.service';
 import { Column, createPaginationConfig } from 'src/app/shared/componentkit/table/table.model';
@@ -21,7 +21,7 @@ import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-
     DropdownComponent,
     CalendarComponent,
     TableComponent,
-    InputNumberRangeComponent,
+    InputTextRangeComponent,
   ],
 })
 export class TLS2A010Component extends BasicQueryPageComponent<any> implements OnInit {
@@ -35,90 +35,74 @@ export class TLS2A010Component extends BasicQueryPageComponent<any> implements O
     ...createPaginationConfig([{ field: 'ECR_No', order: 1 }]),
   });
 
-  // 下拉選單選項
   floorOptions: IDropdownItem[] = [];
   paymentToolOptions: IDropdownItem[] = [];
   contact_USR_NameOptions: IDropdownItem[] = [];
-
-  // 表格資料
+  buildingNoOptions: IDropdownItem[] = [];
+  payNoToTypeMap = new Map<string, string>();
+  selectedItems: any[] = [];
   data: any[] = [];
   totalRecords = 0;
-  selectedItems: any[] = [];
-  buildingNoOptions: IDropdownItem[] = [];
-
-
-  columns: Column[] = [
-    { header: '銷售日期', field: 'TXN_Date' },
-    { header: '樓層', field: 'FLOOR_NO' },
-    { header: '收銀機號', field: 'ECR_No' },
-    { header: '付款別', field: 'PAY_NO' },
-  ];
-
   constructor(
     private dropDownListService: DropDownListService,
   ) {
     super();
   }
+  columns: Column[] = [
+    { header: '銷售日期', field: 'TXN_Date' },
+    { header: '收銀機號', field: 'ECR_No' },
+    { header: '付款別', field: 'PAY_NO' },
+    { header: '專櫃編號', field: 'TLT_NO' },
+    { header: '電腦金額', field: 'BOOK_PayAmt' },
+    { header: '實際金額', field: 'ACT_PayAmt' },
+    { header: '溢短金額', field: 'OVER_PayAmt' },
+    { header: '修正後金額', field: 'MOD_PayAmt' },
+    {
+      header: '審核狀態',
+      field: 'check_status',
+      format: (v) => v === 'Y' ? '✅ 已審核' : v === 'N' ? '⛔ 未審核' : v
+    },
+    { header: '審核人員', field: 'check_usr_name' },
+    { header: '審核時間', field: 'check_date' },
+  ];
 
   ngOnInit(): void {
     this.initializePage('TLS2A010', 'TLS/TLS2A020cru', this.queryForm, (form) => this.onSubmit(form));
     this.loadDropdownOptions();
-    //樓層API
+
     this.dropDownListService.querySYS3900_DropDownList().pipe(untilDestroyed(this)).subscribe(res => {
-      this.floorOptions = res.Data.map(item => ({
-        ...item,
-        label: item.Name,  // 顯示名稱
-        value: item.No     // 實際值
-      }));
+      this.floorOptions = res.Data.map(item => ({ ...item, label: item.Name, value: item.No }));
     });
-    //館別API
+
     this.dropDownListService.querySYS3800_DropDownList().pipe(untilDestroyed(this)).subscribe(res => {
       this.buildingNoOptions = res.Data.map(x => ({ label: x.Name, value: x.No, Name: x.Name, No: x.No }));
     });
-    this.dropDownListService.queryPOS1006_DropDownList()
-      .pipe(untilDestroyed(this))
-      .subscribe(res => {
-        this.paymentToolOptions = res.Data.map(x => ({
+
+    this.dropDownListService.queryPOS1006_DropDownList().pipe(untilDestroyed(this)).subscribe(res => {
+      this.paymentToolOptions = res.Data.map(x => {
+        this.payNoToTypeMap.set(x.No ?? '', x.PAY_Type ?? '');
+        return {
           label: x.Name,
           value: x.No,
           Name: x.Name,
-          No: x.No
-        }));
+          No: x.No,
+        };
       });
+    });
+
   }
 
   loadDropdownOptions() {
     this.dropDownListService.queryTBLUSER_DropDownList().pipe(untilDestroyed(this)).subscribe(res => {
-      this.contact_USR_NameOptions = res.Data.map(item => ({
-        ...item,
-        label: item.Name,
-        value: item.No
-      }));
+      this.contact_USR_NameOptions = res.Data.map(item => ({ ...item, label: item.Name, value: item.No }));
     });
-
-  }
-
-  onSubmit(form: FormGroup): void {
-    this.submitted = true;
-    if (form.invalid) return;
-
-    form.getRawValue(); // Retrieve form data if needed in the future
-    this.loading = true;
-
-    // 假設你有對應的 service，可在此呼叫 API
-    // this.yourService.queryData(formData).pipe(
-    //   untilDestroyed(this),
-    //   finalize(() => this.loading = false)
-    // ).subscribe(res => {
-    //   this.data = res.Data;
-    //   this.totalRecords = res.TotalCount;
-    // });
   }
 
   onSubmitQuery(form: FormGroup): void {
     form.patchValue({ pageIndex: 1 }); // 重新查詢從第一頁開始
     this.onSubmit(form);
   }
+
 
   onClearForm(): void {
     this.queryForm.reset();
@@ -127,4 +111,23 @@ export class TLS2A010Component extends BasicQueryPageComponent<any> implements O
   }
 
 
+
+  onSubmit(form: FormGroup): void {
+    this.submitted = true;
+
+    if (form.invalid) {
+      console.warn('表單驗證未通過:', form.value);
+      return;
+    }
+
+    console.log('查詢條件:', form.getRawValue());
+    this.loading = true;
+    this.submitted = true;
+    if (form.invalid) return;
+
+    this.loading = true;
+
+
+
+  }
 }

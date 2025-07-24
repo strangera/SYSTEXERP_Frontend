@@ -20,7 +20,11 @@ registerLocaleData(zhHant, 'zh-Hant-TW');
 export interface ApiResponse<T> {
   Status: string;
   Data: T;
-  Error: null | ErrorResponse;
+  Error: {
+    Code: string;
+    Detail: string;
+    Message: string;
+  } | null;
   Meta: {
     Timestamp: string;
     RequestId: string;
@@ -29,13 +33,6 @@ export interface ApiResponse<T> {
   TotalCount: number;
   TotalPage: number;
 }
-
-interface ErrorResponse {
-  Code: string;
-  Detail: string;
-  Message: string;
-}
-
 @UntilDestroy()
 @Injectable({
   providedIn: 'root'
@@ -47,11 +44,10 @@ export class AuthService {
   public user: Observable<UserInfo | null>;
   private _menuUpdated = new BehaviorSubject<any[]>([]);
   menuUpdated = this._menuUpdated.asObservable();
+  private _sys1000 = new BehaviorSubject<any[]>([]);
+  sys1000 = this._sys1000.asObservable();
   private jwtHelper: JwtHelperService;
   private client_ip = '0.0.0.0';
-  updateMenu(newData: any[]): void {
-    this._menuUpdated.next(newData);
-  }
 
   constructor(
     private router: Router,
@@ -65,7 +61,6 @@ export class AuthService {
     const userStorage: any = this.getUserInfo();
     this.userSubject = new BehaviorSubject(userStorage);
     this.user = this.userSubject.asObservable();
-    // 檢查 sessionStorage 中是否有已儲存的權限資料
     const storedFunRightsInfo = sessionStorage.getItem('FunRightsInfo');
     if (storedFunRightsInfo) {
       const parsedFunRightsInfo = JSON.parse(storedFunRightsInfo) as FunsrightInfo[];
@@ -74,14 +69,15 @@ export class AuthService {
     this.jwtHelper = new JwtHelperService();
     const ipClient = new HttpClient(this.httpBackend);
     ipClient.get<{ ip: string }>('https://api.ipify.org/?format=json').pipe(map(res => res.ip),
-      catchError(err => {
-        console.warn('取得 IP 失敗，使用預設 IP');
-        return ['0.0.0.0']; // 回傳 observable
-      })
-    )
-      .subscribe(ip => {
-        this.client_ip = ip;
-      });
+      catchError(() => { return ['0.0.0.0']; })
+    ).subscribe(ip => {
+      this.client_ip = ip;
+      if (userStorage) {
+        userStorage.client_ip = this.client_ip;
+        this.userSubject.next(userStorage); // 更新 userSubject
+        localStorage.setItem('UserInfo', JSON.stringify(userStorage));
+      }
+    });
   }
   public get currentUserValue(): UserInfo | null {
     return this.userSubject.value; // 獲取存儲的 JWT Token
@@ -89,24 +85,11 @@ export class AuthService {
   isLoggedIn(): boolean {
     const user = this.currentUserValue; // 獲取當前用戶資訊
     if (user && user.AccessToken) {
-      // 使用 jwtHelper 判斷 Token 是否過期
       const isTokenExpired = this.jwtHelper.isTokenExpired(user.AccessToken);
-      if (isTokenExpired) {
-        console.warn('Access Token expired. User needs to re-login.');
-        // 如果 Token 過期，可以考慮在這裡直接執行登出操作
-        // 但更好的做法是在 HttpInterceptor 中集中處理 401 錯誤
-        // this.logout();
-        return false;
-      }
+      if (isTokenExpired) { return false; }
       return true; // Token 存在且未過期
     }
     return false; // 沒有用戶資訊或沒有 Token
-  }
-  // 獲取 Token 的方法，提供給 JwtModule 的 tokenGetter 使用
-  // 確保 JwtModule 可以正確獲取到 AccessToken
-  getToken(): string | null {
-    const user = this.currentUserValue;
-    return user ? user.AccessToken : null;
   }
   login(data: userLogin): Observable<ApiResponse<UserInfo>> {
     data.password = this.encrypt.getPassword(data.code as string, data.password as string);
@@ -150,7 +133,6 @@ export class AuthService {
         })
       ).pipe(untilDestroyed(this)).subscribe(); // 不需要 next 和 error 處理，因為主要登出邏輯已在前面執行
     }
-
     // 統一清除邏輯
     this.clearSessionAndLocalStorage();
   }
@@ -180,7 +162,12 @@ export class AuthService {
     return this.http.post<any>(`${this.apiUrl}/User/GetUserDashboard`, {}).pipe(
       map((response: any) => {
         sessionStorage.setItem('FunRightsInfo', JSON.stringify(response.Data.funright_info));
-        this._menuUpdated.next(response.Data.funright_info);
+        const funRightsInfo = [
+          { id: "", prog_No: "dashboard", prog_id: "", prog_name: "佈告欄", prog_up: "", module_no: "", sub_module_no: "", prog_ispage: "Y", prog_stopflag: "N", prog_sort: "" },
+          { id: "", prog_No: "900001", prog_id: "", prog_name: "範例", prog_up: "", module_no: "", sub_module_no: "", prog_ispage: "Y", prog_stopflag: "N", prog_sort: "" },
+          ...response.Data.funright_info
+        ];
+        this._menuUpdated.next(funRightsInfo);
         return response;
       }),
       catchError((error) => {
@@ -194,6 +181,7 @@ export class AuthService {
     return this.http.post<any>(`${this.apiUrl}/User/queryAllSystemCode`, {}).pipe(
       map((response: any) => {
         sessionStorage.setItem('SYS1000', JSON.stringify(response.Data));
+        this._sys1000.next(response.Data);
         return response;
       }),
       catchError((error) => {

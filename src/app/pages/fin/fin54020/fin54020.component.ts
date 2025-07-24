@@ -11,7 +11,7 @@ import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
 import { VendorService } from '../../../service/basic/vendor.service';
-import { FileType } from '../../../shared/componentkit/file-upload/file-upload.component';
+
 import { OrganizationNumberService } from '../../../service/basic/organization-number.service';
 import { AccountingaccountService } from '../../../service/basic/accountingaccount.service';
 import { UserCodeService } from '../../../service/basic/user-code.service';
@@ -47,7 +47,7 @@ import { TranslateModule } from '@ngx-translate/core';
 })
 export class FIN54020Component extends BasicQpageComponent implements OnInit {
   // Upload files
-  fileType: FileType = FileType.PNG;
+  fileType: string = '';
   uploadUrl: string = 'https://www.primefaces.org/cdn/api/upload.php';
   queryForm = this.formBuilder.group({
     startserialticket: [],

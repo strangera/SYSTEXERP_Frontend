@@ -9,7 +9,7 @@ import { BasicCrupageComponent } from '../../../shared/componentextends/basic-cr
 import { TranslateService, TranslateModule } from '@ngx-translate/core';
 import { UserCodeService } from '../../../service/basic/user-code.service';
 import { OrganizationNumberService } from '../../../service/basic/organization-number.service';
-import { FileType, FileUploadComponent } from '../../../shared/componentkit/file-upload/file-upload.component';
+import { FileUploadComponent } from '../../../shared/componentkit/file-upload/file-upload.component';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { PanelModule } from 'primeng/panel';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
@@ -17,16 +17,16 @@ import { NgIf } from '@angular/common';
 // Services
 
 @Component({
-    selector: 'app-ass22040-cru',
-    templateUrl: './ass22040-cru.component.html',
-    styleUrl: './ass22040-cru.component.scss',
-    standalone: true,
-    imports: [MenubarComponent, PanelModule, FormsModule, ReactiveFormsModule, FileUploadComponent, ButtonComponent, NgIf, TranslateModule]
+  selector: 'app-ass22040-cru',
+  templateUrl: './ass22040-cru.component.html',
+  styleUrl: './ass22040-cru.component.scss',
+  standalone: true,
+  imports: [MenubarComponent, PanelModule, FormsModule, ReactiveFormsModule, FileUploadComponent, ButtonComponent, NgIf, TranslateModule]
 })
 export class ASS22040CRUComponent
   extends BasicCrupageComponent
   implements OnInit {  // Upload files
-  fileType: FileType = FileType.PNG;
+  fileType: string = '';
   uploadUrl: string = 'https://www.primefaces.org/cdn/api/upload.php';
   //
   ngOnInit(): void {

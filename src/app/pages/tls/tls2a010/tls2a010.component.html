@@ -36,13 +36,12 @@
             ></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-number-range
-              [useGrouping]="false"
+            <app-input-text-range
               label="收銀機號"
               [startControl]="queryForm.controls.ECR_No_Start"
               [endControl]="queryForm.controls.ECR_No_End"
               [submitted]="submitted"
-            ></app-input-number-range>
+            ></app-input-text-range>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown

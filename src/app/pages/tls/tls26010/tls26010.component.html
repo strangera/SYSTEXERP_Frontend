@@ -28,7 +28,7 @@
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown label="館別"
                           controlName="sys3800"
-                          [options]="tls26010Service.sys3800List()"
+                          [options]="service.sys3800List()"
                           optionLabel="Name"
                           optionValue="No"
                           [control]="queryForm.controls.sys3800"
@@ -37,7 +37,7 @@
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown label="樓層"
                           controlName="sys3900"
-                          [options]="tls26010Service.sys3900List()"
+                          [options]="service.sys3900List()"
                           optionLabel="Name"
                           optionValue="No"
                           [control]="queryForm.controls.sys3900"
@@ -46,7 +46,7 @@
           <div class="col-12 md:col-6 lg:col-4">
             <app-multi-select label="收銀機號"
                               controlName="ecrNos"
-                              [options]="tls26010Service.ECRList"
+                              [options]="service.ECRList"
                               optionLabel="Name"
                               optionValue="No"
                               [control]="queryForm.controls.ecrNos"
@@ -55,7 +55,7 @@
           <div class="col-12 md:col-6 lg:col-4">
             <app-multi-select label="專櫃名稱"
                               controlName="tltNos"
-                              [options]="tls26010Service.TLTList"
+                              [options]="service.TLTList"
                               optionLabel="Name"
                               optionValue="No"
                               [control]="queryForm.controls.tltNos"
@@ -82,7 +82,7 @@
           <app-button btnType="clear"
                       (click)="onClearForm()"></app-button>
           <app-button btnType="query"
-                      (click)="onSubmitQuery(queryForm)"
+                      (click)="onSubmitQuery()"
                       [loading]="loading"></app-button>
         </div>
       </div>
@@ -94,7 +94,7 @@
   <div class="col-12">
     <app-table [showCheckBox]="true"
                [editDisabled]="editDisabled"
-               [data]="tls26010Service.TLS26010List()"
+               [data]="service.TLS26010List()"
                [tableKey]="'TLS26010'"
                [dataKey]="'pod_no'"
                [columns]="columns"

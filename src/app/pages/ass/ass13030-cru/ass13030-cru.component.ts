@@ -17,7 +17,7 @@ import { AssetStatusService } from '../../../service/basic/asset-status.service'
 import { AssetsTypeService } from '../../../service/basic/assets-type.service';
 import { NeedPayTicketService } from '../../../service/basic/need-pay-ticket.service';
 
-import { FileType, FileUploadComponent } from '../../../shared/componentkit/file-upload/file-upload.component';
+import { FileUploadComponent } from '../../../shared/componentkit/file-upload/file-upload.component';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { PanelModule } from 'primeng/panel';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
@@ -29,15 +29,15 @@ import { NgIf } from '@angular/common';
 
 //3.1.2.5 採購單驗收作業 CRU
 @Component({
-    selector: 'app-ass13030-cru',
-    templateUrl: './ass13030-cru.component.html',
-    styleUrl: './ass13030-cru.component.scss',
-    standalone: true,
-    imports: [MenubarComponent, PanelModule, FormsModule, ReactiveFormsModule, DropdownComponent, InputNumberComponent, FileUploadComponent, CalendarComponent, EditorTextComponent, ButtonComponent, NgIf, TranslateModule]
+  selector: 'app-ass13030-cru',
+  templateUrl: './ass13030-cru.component.html',
+  styleUrl: './ass13030-cru.component.scss',
+  standalone: true,
+  imports: [MenubarComponent, PanelModule, FormsModule, ReactiveFormsModule, DropdownComponent, InputNumberComponent, FileUploadComponent, CalendarComponent, EditorTextComponent, ButtonComponent, NgIf, TranslateModule]
 })
 export class ASS13030CRUComponent extends BasicCrupageComponent implements OnInit {
   // Upload files
-  fileType: FileType = FileType.PNG;
+  fileType: string = '';
   uploadUrl: string = 'https://www.primefaces.org/cdn/api/upload.php';
 
   shareCodeOptions: any[] = [];

@@ -18,8 +18,8 @@
               label="廠商統一編號"
               controlName="vendorUID"
               [options]="vendorUIDOptions"
-              optionLabel="Name"
-              optionValue="No"
+              optionLabel="VEN_No"
+              optionValue="VEN_No"
               [control]="dataForm.controls.vendorUID"
             ></app-dropdown>
           </div>
@@ -68,7 +68,7 @@
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-text
-              label="聯絡人"
+              label="廠商聯絡人"
               controlName="VEN_Boss"
               [control]="dataForm.controls.VEN_Boss"
               [submitted]="submitted"
@@ -94,16 +94,6 @@
               label="聯絡人頭銜"
               controlName="VEN_BossTitle"
               [control]="dataForm.controls.VEN_BossTitle"
-              [submitted]="submitted"
-            >
-              >
-            </app-input-text>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
-              label="聯絡人電話(F)"
-              controlName="VEN_BossTel"
-              [control]="dataForm.controls.VEN_BossTel"
               [submitted]="submitted"
             >
               >
@@ -174,6 +164,17 @@
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown
+              label="館別"
+              controlName="building_no"
+              [options]="buildingNoOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="dataForm.controls.building_no"
+              [submitted]="submitted"
+            ></app-dropdown>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown
               label="接洽樓層"
               controlName="FLOOR_NO"
               [options]="floorOptions"
@@ -184,35 +185,19 @@
             ></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-number
-              [useGrouping]="false"
+            <app-dropdown
               label="接洽位置編號"
               controlName="LOCATION_No"
+              [options]="LOCATION_Options"
+              optionLabel="Name"
+              optionValue="No"
               [control]="dataForm.controls.LOCATION_No"
               [submitted]="submitted"
-            ></app-input-number>
+            ></app-dropdown>
           </div>
         </div>
         <hr />
         <div class="grid p-fluid">
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-textarea
-              label="洽談重點及交換資料記錄"
-              controlName="contact_record"
-              [control]="dataForm.controls.contact_record"
-              [style]="{ height: '100px' }"
-              [submitted]="submitted"
-            ></app-input-textarea>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-textarea
-              label="備註"
-              controlName="contact_remarks"
-              [control]="dataForm.controls.contact_remarks"
-              [style]="{ height: '100px' }"
-              [submitted]="submitted"
-            ></app-input-textarea>
-          </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown
               label="訪談人員"
@@ -223,6 +208,28 @@
               [control]="dataForm.controls.contact_USR_Name"
               [submitted]="submitted"
             ></app-dropdown>
+          </div>
+        </div>
+        <div class="grid p-fluid">
+          <div class="col-12 md:col-12 lg:col-12">
+            <app-input-textarea
+              label="洽談重點及交換資料記錄"
+              controlName="contact_record"
+              [control]="dataForm.controls.contact_record"
+              [style]="{ height: '100px' }"
+              [submitted]="submitted"
+            ></app-input-textarea>
+          </div>
+        </div>
+        <div class="grid p-fluid">
+          <div class="col-12 md:col-12 lg:col-12">
+            <app-input-textarea
+              label="備註"
+              controlName="contact_remarks"
+              [control]="dataForm.controls.contact_remarks"
+              [style]="{ height: '100px' }"
+              [submitted]="submitted"
+            ></app-input-textarea>
           </div>
         </div>
         <div

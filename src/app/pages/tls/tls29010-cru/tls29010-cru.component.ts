@@ -1,5 +1,6 @@
+import { Tls29010DetailService } from './tls29010-detail.service';
 // --Commonly used imports--
-import { Component, OnInit, } from '@angular/core';
+import { Component, OnInit, ViewChild, } from '@angular/core';
 import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { TranslateModule } from '@ngx-translate/core';
@@ -19,8 +20,48 @@ import { ButtonComponent } from '../../../shared/componentkit/button/button.comp
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { apiOption,option } from '../../../shared/models/sys/sysb000.module';
 import { Tls29010Service } from '../../../service/api/tls/tls29010.service';
+import { ColumnDef, ExpandableEditTableComponent } from '@shared/componentkit/expandable-edit-table/expandable-edit-table.component';
 
-// TALPORDERD_OPENDisc
+// TALPORDERM (主檔)
+export interface TALPORDERM {
+  id: number; // identity(1,1) not null
+  mid: number; // DEFAULT 0 not null
+  str_no: string; // 店部編號
+  pod_no: string; // 活動申請編號YYYYMMDDSSS(活動起始日期+流水號)
+  pod_type: '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8'; 
+  // 活動類型:
+  // 1=預售 (只有預售才下到 pos)
+  // 2=滿千送百發行
+  // 3=滿千送百兌回
+  // 4=會員卡集點-銷售 (不用)
+  // 5=會員卡集點-點數 (不用)
+  // 6=全館消費滿額集點-銷售
+  // 7=全館消費滿額集點-點數
+  // 8=期間開放折扣
+
+  org_id?: string | null; // 組織-部門(SYS3100)
+  act_no?: string | null; // 活動編號(群組)
+  pod_desc?: string | null; // 活動名稱
+  pod_sdate: Date; // 活動起始日期
+  pod_edate: Date; // 活動終止日期
+  pod_busdate?: Date | null; // 活動正檔日期
+  cap_item?: string | null; // 扣款代碼
+  pod_status: '0' | '1' | '9'; 
+  // 0=未核准 1=已核准 9=刪除
+
+  approved_userno?: string | null; // 核准人員
+  approved_usr_name?: string | null; // 核准人員姓名
+  approved_date?: Date | null; // 核准日期
+
+  CRT_Date: string; // 建立日期 (ISO 字串格式: YYYY-MM-DD)
+  CRT_USR_No: string; // 建立人員代碼
+  CRT_USR_Name: string; // 建立人員姓名
+  UPD_Date: string; // 變更日期 (ISO 格式: YYYY-MM-DDTHH:mm:ss)
+  UPD_USR_No: string; // 變更人員代碼
+  UPD_USR_Name: string; // 變更人員姓名
+}
+
+// TALPORDERD_OPENDisc (明細檔)
 export interface TALPORDERD_OPENDisc {
   id: number; // 主鍵，自動編號
   mid: number; // 主鍵，自動編號
@@ -41,7 +82,7 @@ export interface TALPORDERD_OPENDisc {
   UPD_USR_No: string; // 變更人員代碼
   UPD_USR_Name: string; // 變更人員姓名
 
-  CanDel?: boolean;  //能否刪除(僅顯示)
+  status: string; // 狀態 (原始: 'orginal', 新增: 'new', 編輯: 'modified', 刪除: 'deleted')
 }
 
 @Component({
@@ -49,20 +90,21 @@ export interface TALPORDERD_OPENDisc {
   templateUrl: './tls29010-cru.component.html',
   styleUrl: './tls29010-cru.component.scss',
   standalone: true,
-  imports: [MenubarComponent, PanelModule, FormsModule, ReactiveFormsModule, CalendarComponent, DropdownComponent, RadiobuttonComponent, EditorTextComponent, InputTextComponent, InputNumberComponent, EditorTextComponent, NgFor, ButtonDynamicallydeleteComponent, ButtonDynamicallyaddComponent, ButtonComponent, NgIf, TranslateModule]
+  imports: [MenubarComponent, PanelModule, FormsModule, ReactiveFormsModule, ExpandableEditTableComponent, CalendarComponent, DropdownComponent, RadiobuttonComponent, EditorTextComponent, InputTextComponent, InputNumberComponent, EditorTextComponent, NgFor, ButtonDynamicallydeleteComponent, ButtonDynamicallyaddComponent, ButtonComponent, NgIf, TranslateModule]
 })
 
 // 2.2.9.1 折扣開放維護作業cru
 export class TLS29010CRUComponent extends BasicCruPageComponent<TALPORDERD_OPENDisc> implements OnInit{
-
+  @ViewChild('detailTable') detailTable!: ExpandableEditTableComponent;
   // ----------------------------------------------------------------
       dataForm = this.formBuilder.nonNullable.group({
-        // TALPORDERD_OPENDisc 
-        // --專櫃活動設定主檔TALPORDERM (新增這四項 都要鎖定嗎) > 跟下面的其他欄位有連動關係嗎?--
+        // --專櫃活動設定主檔TALPORDERM (新增這四項 都要鎖定嗎)--
         id: [{ value: null, disabled: true }], // 自動產生，不允許編輯
         mid: [{ value: null, disabled: true }], // 自動產生，不允許編輯
-        str_no: ['', [Validators.required, Validators.maxLength(8)]],        // 店部編號
-        pod_no: ['', [Validators.required, Validators.maxLength(12)]],       // 活動編號
+        str_no: ['', [Validators.required, Validators.maxLength(8)]],   // 店部編號
+        pod_no: ['', [Validators.required, Validators.maxLength(12)]],  // 活動申請編號YYYYMMDDSSS(活動起始日期+流水號)
+
+        pod_type: ['', [Validators.required, Validators.maxLength(1)]], // 活動類型 //這邊只會有8的 /*8=期間開放折扣
         // ------
         talent_id: [null],                              // 合約編號系統 -- 這是哪來的
         tlt_id: [0, [Validators.required, Validators.maxLength(1), Validators.min(0),Validators.max(9)]], // 抽成類別(0-9) 送出時再轉成string
@@ -78,8 +120,44 @@ export class TLS29010CRUComponent extends BasicCruPageComponent<TALPORDERD_OPEND
 
       tlt_No_Option: apiOption[] = [];  // 專櫃編號下拉
 
+      // ---Potential_Customer_Detail 潛在客戶其他資料明細檔---
+      potentialDetail: TALPORDERD_OPENDisc[] = [];
+      //欄位資訊
+      Potential_Customer_Detail_Columns: ColumnDef[] = [
+        { field: 'tlt_id', header: '折扣別', type: 'text', editable: true, autoWidth: true },
+        { field: 'pod_sdate', header: '合約起始日', type: 'date', editable: true, autoWidth: true },
+        { field: 'pod_edate', header: '合約終止日', type: 'date', editable: true, autoWidth: true },
+        { field: 'cag_barcode', header: '抽成率', type: 'number', allowDecimal: true, decimalPlaces: 3, editable: true, autoWidth: true },
+      ];
+      // 預設新項目模板
+      defaultNewDetail: { tlt_id: string; pod_sdate: Date | null; pod_edate: Date | null; cag_barcode: number; status: string } = {
+        tlt_id: '', // 折扣別
+        pod_sdate: null, // 合約起始日
+        pod_edate: null, // 合約終止日
+        cag_barcode: 0, // 折數條碼
+      
+        status: 'new' // 新增狀態
+      };
+      // 預設 POS2005 新項目模板
+      createDefaultNew(tlt_id: string) {
+        this.defaultNewDetail = {
+          tlt_id: tlt_id, // 折扣別
+          pod_sdate: null, // 合約起始日
+          pod_edate: null, // 合約終止日
+          cag_barcode: 0, // 折數條碼
+      
+          status: 'new' // 新增狀態
+        };
+      }
+      // 展開式表格的載入狀態
+      expandDetailLoading = false;
+      // ------
+
       // ----------------------------------------------------------------
-      constructor(private tls12010Service: Tls29010Service) {
+      constructor(
+        private tls12010Service: Tls29010Service,
+        private tls29010DetailService: Tls29010DetailService,
+      ) {
         super(); // 呼叫父類建構子
       }
     
@@ -147,4 +225,27 @@ export class TLS29010CRUComponent extends BasicCruPageComponent<TALPORDERD_OPEND
             console.log('專櫃編號 下拉:', response.Data);
           });
       }
+
+    // ---明細檔操作---
+    //HTML 顯示的明細資料
+    get filteredDetail(): TALPORDERD_OPENDisc[] {
+      return this.potentialDetail.filter(item => item.status !== 'deleted');
+    }
+    
+    //---Potential_Customer_Detail 表格編輯事件---
+    onRowSaveDetail(event: any) {
+      this.tls29010DetailService.handleRowSave(event);
+    }
+
+    onRowCancelDetail(event: any) {
+      this.tls29010DetailService.handleRowCancel(event);
+    }
+    // 新增 Potential_Customer_Detail
+    onAddPotentialCustomerDetail() {
+      this.tls29010DetailService.addPotentialCustomerDetail(this.potentialDetail, this.defaultNewDetail, this.detailTable);
+    }
+    // 批次刪除  Potential_Customer_Detail
+    onBatchDeleteDetail(selectedItems: TALPORDERD_OPENDisc[]): void {
+      this.tls29010DetailService.deletePotentialCustomerDetail(selectedItems, this.potentialDetail);
+    }            
 }
