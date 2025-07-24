@@ -27,6 +27,7 @@ export class DropdownComponent extends BasicKitComponent implements OnInit, OnCh
   @Input() loading = true; // 載入狀態
   @Input() showLabel = true;
   @Input() showErrorMessage = true;
+  @Input() templateLabel = ''; // 自訂 Label 模板
   destroy$ = new Subject<void>(); // 銷毀訂閱
   // 選項
   @Output() changeEvent = new EventEmitter<DropdownChangeEvent>();

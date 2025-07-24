@@ -8,16 +8,35 @@ export interface queryParams {
   TXN_Date: string,
   TLT_NOList: string[],
   ECR_NoList: string[],
-  BOOK_PayAmt: string
+  ACT_PayAmt: string
 }
 
 export interface TLS27020Data {
   id: number,
-  contract_no: string,
-  tlt_no: string,
-  tlt_name: string
+  TXN_Date: string,
+  ECR_No: string,
+  TLT_NO: string,
+  tlt_name: string,
+  BOOK_PayAmt: number,
+  ACT_PayAmt: number,
+  MOD_PayAmt: number,
+  mod_date: string,
+  crt_usr_name: string
 }
 
+export interface CheckValue {
+  SYS_StoreNo: string
+  TXN_Date: string
+  ECR_No: string
+}
+
+export interface InsertTLS27020 {
+  SYS_StoreNo: string,
+  TXN_Date: string,
+  ECR_No: string,
+  TLT_NO: string,
+  ACT_PayAmt: number,
+}
 
 @Injectable({
   providedIn: 'root'
@@ -32,11 +51,15 @@ export class TLS27020Service {
     return this.http.post<ApiResponse<TLS27020Data[]>>(`${this.apiUrl}/queryTLS27020`, queryParams);
   }
 
-  insertTLS27020(data: any): Observable<any> {
-    return this.http.post<any>(`${this.apiUrl}/insertTLS27020`, data);
+  insertTLS27020(data: InsertTLS27020): Observable<ApiResponse<number>> {
+    return this.http.post<ApiResponse<number>>(`${this.apiUrl}/insertTLS27020`, data);
   }
 
-  updateTLS27020(data: any): Observable<any> {
-    return this.http.put<any>(`${this.apiUrl}/updateTLS27020`, data);
+  updateTLS27020(data: InsertTLS27020): Observable<ApiResponse<number>> {
+    return this.http.put<ApiResponse<number>>(`${this.apiUrl}/updateTLS27020`, data);
+  }
+
+  queryIsExist(checkValue: CheckValue): Observable<ApiResponse<boolean>> {
+    return this.http.post<ApiResponse<boolean>>(`${this.apiUrl}/queryIsExist`, checkValue);
   }
 }

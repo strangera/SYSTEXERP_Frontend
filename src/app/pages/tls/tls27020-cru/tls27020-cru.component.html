@@ -6,27 +6,41 @@
   <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
     <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
       <div class="grid p-fluid">
+        <div class="col-12">
+          <span *ngIf="IsExist && isFormCreateable" class="p-error">銷售日期與收銀機號已存在，請重新輸入！</span>
+        </div>
         <!-- 銷售日期 -->
         <app-calendar class="col-12 md:col-6 lg:col-4" calendarType="dateOne" label="銷售日期"
-          [control]="dataForm.controls.saleDate" [submitted]="submitted"></app-calendar>
+          [control]="dataForm.controls.TXN_Date" [submitted]="submitted" [maxDate]="now"></app-calendar>
         <!-- 收銀機號 -->
-        <app-input-text class="col-12 md:col-6 lg:col-4" label="收銀機號" controlName="cashRegisterNumber"
-          [control]="dataForm.controls.cashRegisterNumber" [submitted]="submitted"></app-input-text>
-        <!-- 條碼 -->
-        <app-input-text class="col-12 md:col-6 lg:col-4" label="條碼" controlName="barcode"
-          [control]="dataForm.controls.barcode" [submitted]="submitted"></app-input-text>
+        <app-dropdown class="col-12 md:col-6 lg:col-4" label="收銀機號" controlName="ECR_No" [options]="ECR_NoOptions"
+          optionLabel="label" optionValue="No" [control]="dataForm.controls.ECR_No"
+          [submitted]="submitted"></app-dropdown>
+      </div>
+      <hr />
+      <div class="grid p-fluid">
         <!-- 磁卡編號 -->
-        <app-input-text class="col-12 md:col-6 lg:col-4" label="磁卡編號" controlName="magneticCardNumber"
-          [control]="dataForm.controls.magneticCardNumber" [submitted]="submitted"></app-input-text>
+        <app-input-text class="col-12 md:col-6 lg:col-4" label="磁卡編號" controlName="magneticCard"
+          [control]="dataForm.controls.magneticCard" [submitted]="submitted"></app-input-text>
+      </div>
+      <div class="grid p-fluid">
         <!-- 專櫃編號 -->
-        <app-input-text class="col-12 md:col-6 lg:col-4" label="專櫃編號" controlName="counterNumber"
-          [control]="dataForm.controls.counterNumber" [submitted]="submitted"></app-input-text>
+        <app-dropdown class="col-12 md:col-6 lg:col-4" label="專櫃編號" [control]="dataForm.controls.TLT_NO"
+          [submitted]="submitted" [options]="TLTTALENT_DropDownList" optionLabel="No" optionValue="No"
+          templateLabel="label"></app-dropdown>
         <!-- 櫃位名稱 -->
-        <app-input-text class="col-12 md:col-6 lg:col-4" label="櫃位名稱" controlName="counterName"
-          [control]="dataForm.controls.counterName" [submitted]="submitted"></app-input-text>
+        <app-input-text class="col-12 md:col-6 lg:col-4" label="櫃位名稱" controlName="TLT_Name"
+          [control]="dataForm.controls.TLT_Name" [submitted]="submitted"></app-input-text>
+      </div>
+      <hr />
+      <div class="grid p-fluid">
         <!-- 金額 -->
-        <app-input-text class="col-12 md:col-6 lg:col-4" label="金額" controlName="amount"
-          [control]="dataForm.controls.amount" [submitted]="submitted"></app-input-text>
+        <app-input-number *ngIf="!isFormCreateable" class="col-12 md:col-6 lg:col-4" label="金額"
+          controlName="ACT_PayAmt_ori" [control]="dataForm.controls.ACT_PayAmt_ori" [submitted]="submitted"
+          [max]="99999999" [maxFractionDigits]="4"></app-input-number>
+        <app-input-number *ngIf="!isFormReadable" class="col-12 md:col-6 lg:col-4" label="金額" controlName="ACT_PayAmt"
+          [control]="dataForm.controls.ACT_PayAmt" [submitted]="submitted" [max]="99999999"
+          [maxFractionDigits]="4"></app-input-number>
       </div>
       <div *ngIf="!isFormReadable" class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
         <app-button btnType="cancel" [form]="dataForm"></app-button>
