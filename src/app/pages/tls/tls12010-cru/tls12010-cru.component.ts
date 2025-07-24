@@ -181,9 +181,7 @@ export class TLS12010CRUComponent extends BasicCruPageComponent<Potential_Custom
     bus_type_Option: apiOption[] = []; // 業種-大分類代碼
     tlt_name_Option: apiOption[] = []; //品牌
     cus_uniform_Option: POS2013[] = []; // 廠商統一編號(pos2013)
-    contact_USR_Option: apiOption[] = [  // 接洽人員代碼/名稱 -- 等候端提供
-      {No: '123',Name:'張三',Label: '123-張三'}
-    ];
+    contact_USR_Option: apiOption[] = [];  // 接洽人員代碼/名稱
     // ----------------------------------------------------------------
     constructor(
       private validationService: ValidationService,
@@ -364,7 +362,15 @@ export class TLS12010CRUComponent extends BasicCruPageComponent<Potential_Custom
           console.log('經營方式代號:', this.business_type_Option);
         });
 
-
+        // 查詢 接待人員
+        this.tls12010Service.queryTLS12010_DropDownList({}).subscribe((response) => {
+          this.contact_USR_Option = response.Data.map((item: any) => ({
+            No: item.contact_USR_No, // 接待人員 代碼
+            Name: item.contact_USR_Name, // 接待人員 名稱
+            Label: item.contact_USR_No + '/' + item.contact_USR_Name, // 組合成顯示用的Label
+          }));
+          console.log('接待人員代號:', this.contact_USR_Option);
+        });
     }
 
     // 讀取明細資料
@@ -381,6 +387,18 @@ export class TLS12010CRUComponent extends BasicCruPageComponent<Potential_Custom
           this.messageService.errorBubble(`讀取失敗: ${response.Message}`);
         }
       });
+    }
+
+    //接待人員變化
+    onUSR_NoChange(id: string): void{
+      // contact_USR_Option 有對應的No 就將Name寫入 contact_USR_Name
+       const selectedUSR = this.contact_USR_Option.find(item => item.No === id);
+        if (selectedUSR) {
+          this.dataForm.get('contact_USR_Name')?.setValue(selectedUSR.Name);
+        } else {
+          // 若找不到，清空欄位或保留原值，看你的需求
+          this.dataForm.get('contact_USR_Name')?.setValue('');
+        }
     }
 
     // 廠商類型 radio button 連動的驗證器變化
