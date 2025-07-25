@@ -19,26 +19,64 @@
                     (changeEvent)="onPodDescChange($event.value)">
                     </app-dropdown>
                 </div>
-                
+            </div>
+            <div class="grid p-fluid">
                 <div class="col-12 md:col-6 lg:col-4">
                     <app-input-text label="活動編號" controlName="pod_no" [control]="dataForm.controls.pod_no"
                     [submitted]="submitted"></app-input-text>
                 </div>
-            </div>
-            <div class="grid p-fluid">
                 <div class="col-12 md:col-6 lg:col-4">
                     <app-calendar label="活動起始日" controlName="pod_sdate" [control]="dataForm.controls.pod_sdate"
                     [submitted]="submitted"></app-calendar>
                 </div>
-
                 <div class="col-12 md:col-6 lg:col-4">
                     <app-calendar label="活動終止日" controlName="pod_edate" [control]="dataForm.controls.pod_edate"
                     [submitted]="submitted"></app-calendar>
                 </div>
             </div>
             <hr>
+            <div class="grid p-fluid">
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-input-text label="店部編號" controlName="str_no" [control]="dataForm.controls.str_no" [submitted]="submitted"></app-input-text>
+                </div>
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-input-text label="活動類型" controlName="pod_type" [control]="dataForm.controls.pod_type" [submitted]="submitted"></app-input-text>
+                </div>
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-input-text label="部門代碼" controlName="org_id" [control]="dataForm.controls.org_id" [submitted]="submitted"></app-input-text>
+                </div>
+            </div>
+            <div class="grid p-fluid">
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-input-text label="扣款代碼" controlName="cap_item" [control]="dataForm.controls.cap_item" [submitted]="submitted"></app-input-text>
+                </div>
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-input-text label="活動群組編號" controlName="act_no" [control]="dataForm.controls.act_no" [submitted]="submitted"></app-input-text>
+                </div>
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-calendar label="活動正檔日" controlName="pod_busdate" [control]="dataForm.controls.pod_busdate" [submitted]="submitted"></app-calendar>
+                </div>
+            </div>
+            <div class="grid p-fluid">
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-input-text label="活動狀態" controlName="pod_status" [control]="dataForm.controls.pod_status" [submitted]="submitted"></app-input-text>
+                </div>
+            </div>
+            <!-- 核准人員 -->
+            <div class="grid p-fluid">
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-input-text label="核准人員編號" controlName="approved_userno" [control]="dataForm.controls.approved_userno" [submitted]="submitted"></app-input-text>
+                </div>
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-input-text label="核准人員姓名" controlName="approved_usr_name" [control]="dataForm.controls.approved_usr_name" [submitted]="submitted"></app-input-text>
+                </div>
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-calendar label="核准日期" controlName="approved_date" [control]="dataForm.controls.approved_date" [submitted]="submitted"></app-calendar>
+                </div>
+            </div>
+            <hr>
             <!-- 折扣別維護 -->
-            <app-expandable-edit-table #detailTable title="折扣別維護" [mainColumns]="Potential_Customer_Detail_Columns" 
+            <app-expandable-edit-table #detailTable title="折扣別明細" [mainColumns]="Potential_Customer_Detail_Columns" 
             [data]="filteredDetail"
             [loading]="expandDetailLoading" detailKey="" dataKey="ID" [showCheckBox]="true" [showPaginator]="false"
             [showAddButton]="true" [showDetailTabs]="false" [showDetailAddButton]="false" [readonly]="crudstatus === 'Read'"
