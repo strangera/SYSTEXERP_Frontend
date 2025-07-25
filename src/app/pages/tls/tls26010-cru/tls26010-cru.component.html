@@ -122,7 +122,8 @@
                       optionLabel="Name"
                       optionValue="No"
                       [control]="dataForm.controls.sys3800"
-                      [submitted]="submitted"></app-dropdown>
+                      [submitted]="submitted"
+                      (changeEvent)="dialogChange($event)"></app-dropdown>
       </div>
       <div class="col-12 md:col-6 lg:col-4">
         <app-dropdown label="樓層"
@@ -131,7 +132,8 @@
                       optionLabel="Name"
                       optionValue="No"
                       [control]="dataForm.controls.sys3900"
-                      [submitted]="submitted"></app-dropdown>
+                      [submitted]="submitted"
+                      (changeEvent)="dialogChange($event)"></app-dropdown>
       </div>
       <!-- <div class="col-12 md:col-6 lg:col-4">
           <app-dropdown label="區域"

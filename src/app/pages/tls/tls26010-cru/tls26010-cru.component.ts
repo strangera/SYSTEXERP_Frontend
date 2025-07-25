@@ -10,6 +10,7 @@ import { Column } from '@shared/componentkit/table/table.model';
 import { MenubarComponent } from '@shared/index';
 import { ApprovalStatus } from '@shared/models';
 import { CRUDStatus } from '@shared/models/system/CRUDstatus';
+import { DropdownChangeEvent } from 'primeng/dropdown';
 import { FileSelectEvent, FileUploadModule } from 'primeng/fileupload';
 import { PanelModule } from 'primeng/panel';
 import { combineLatest, finalize, tap } from 'rxjs';
@@ -218,6 +219,14 @@ export class TLS26010CRUComponent extends BasicCruPageComponent<TLS26010Data> im
     this.tltTableFiltered = this.service.TLTTableData()
       .filter(tlt => this.df.tlt_nos.value.includes(tlt.tlt_no));
   };
+
+  dialogChange(event: DropdownChangeEvent): void {
+    console.log(`dialogChange:`, [event]);
+    if (event && event.value?.lenth) {
+      if (this.dialogVisible() === 'ecr') this.df.ECR_Nos.patchValue([]);
+      if (this.dialogVisible() === 'tlt') this.df.tlt_nos.patchValue([]);
+    }
+  }
 
   saveDialog(frm: FormGroup): void {
     console.log(`saveDialog:`, [frm.value, this.dataForm.value]);
