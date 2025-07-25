@@ -18,7 +18,7 @@ import { CalendarComponent } from '../../../shared/componentkit/calendar/calenda
 import { CalendarRangeQuickComponent } from '../../../shared/componentkit/calendar-range-quick/calendar-range-quick.component';
 
 export interface Potential_Customer {
-  id: number; // 主鍵，自動編號
+  ID: number; // 主鍵，自動編號
 
   contact_USR_No: string; // 接洽人員代碼
   contact_USR_Name: string; // 接洽人員姓名
@@ -197,8 +197,8 @@ export class TLS12010Component extends BasicQueryPageComponent<Potential_Custome
       
           // 收集所有有效的 ID
           const idList = items
-            .filter((item) => item && item.id != null && item.id !== undefined)
-            .map((item) => item.id);
+            .filter((item) => item && item.ID != null && item.ID !== undefined)
+            .map((item) => item.ID);
       
           if (idList.length === 0) {
             console.error('No valid IDs to delete');
@@ -206,27 +206,29 @@ export class TLS12010Component extends BasicQueryPageComponent<Potential_Custome
             return;
           }
     
-          // const deleteBody = {
-          //   idList: idList, // 符合 API 的 idList 格式
-          // };
+          const deleteBody = {
+            idList: idList, // 符合 API 的 idList 格式
+          };
+
+          console.log('deleteBody',deleteBody);
           
-          // this.tls12010Service.deleteTLS12010(deleteBody).subscribe({
-          //   next: (response) => {
-          //     if (response.Status === '0000') {
-          //       this.messageService.successBubble('選中項目刪除成功');
-          //     } else {
-          //       console.error('API error:', response.Status, response.Message);
-          //       this.messageService.errorBubble(`刪除失敗: ${response.Message}`);
-          //     }
-          //   },
-          //   error: (err: string) => {
-          //     console.error('API error:', err);
-          //     this.messageService.errorBubble('刪除失敗');
-          //   },
-          //   complete: () => {
-          //     this.onSubmit(this.queryForm);
-          //   },
-          // });
+          this.tls12010Service.deleteTLS12010(deleteBody).subscribe({
+            next: (response) => {
+              if (response.Status === '0000') {
+                this.messageService.successBubble('選中項目刪除成功');
+              } else {
+                console.error('API error:', response.Status, response.Message);
+                this.messageService.errorBubble(`刪除失敗: ${response.Message}`);
+              }
+            },
+            error: (err: string) => {
+              console.error('API error:', err);
+              this.messageService.errorBubble('刪除失敗');
+            },
+            complete: () => {
+              this.onSubmit(this.queryForm);
+            },
+          });
       
           this.selectedItems = [];
         }
