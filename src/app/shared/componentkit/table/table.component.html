@@ -63,24 +63,63 @@
     </div>
   </ng-template>
   <ng-template pTemplate="header" let-columns>
-    <tr>
-      <th class="w-1rem">序號</th>
-      <th class="w-1rem" *ngIf="IsPrint && showCheckBox && !rowEditing && selectionMode === 'multiple'">
-        <p-tableHeaderCheckbox />
-      </th>
-      <th class="w-1rem" *ngIf="expansionDataKey && IsPrint">收合/展開</th>
-      <th *ngFor="let col of columns"
-        [pSortableColumn]="showSort && !rowEditing? col.sortField? col.sortField: col.field: undefined"
-        [pSortableColumnDisabled]="!showSort || rowEditing || col.showSort === false" pFrozenColumn
-        [frozen]="IsPrint && col.frozen" [alignFrozen]="col.alignFrozen ? col.alignFrozen : 'right'"
-        class="text-center">{{ col.header }}
-        <p-sortIcon *ngIf="showSort && !rowEditing && col.showSort !== false"
-          [field]="col.sortField ? col.sortField : col.field" />
-      </th>
-      <th [hidden]="!IsPrint || !showManage" class="w-1rem text-center" alignFrozen="right" pFrozenColumn
-        [frozen]="IsPrint">管理
-      </th>
-    </tr>
+    <ng-container *ngIf="columnGroup && columnGroup.length > 0">
+      <tr>
+        <th class="w-1rem" rowspan="2">序號</th>
+        <th class="w-1rem" rowspan="2" *ngIf="IsPrint && showCheckBox && !rowEditing && selectionMode === 'multiple'">
+          <p-tableHeaderCheckbox />
+        </th>
+        <th class="w-1rem" rowspan="2" *ngIf="expansionDataKey && IsPrint">收合/展開</th>
+
+        <!-- 群組表頭 -->
+        <ng-container *ngFor="let group of columnGroup">
+          <th [attr.colspan]="group.colspan" [class.text-center]="group.align === 'center'"
+            [class.text-left]="group.align === 'left'" [class.text-right]="group.align === 'right'">
+            {{ group.header }}
+          </th>
+        </ng-container>
+
+        <th [hidden]="!IsPrint || !showManage" rowspan="2" class="w-1rem text-center" alignFrozen="right" pFrozenColumn
+          [frozen]="IsPrint">
+          管理
+        </th>
+      </tr>
+
+      <!-- 第二層：實際欄位標題 -->
+      <tr>
+        <ng-container *ngFor="let col of columns">
+          <th *ngIf="!col.hidden" [pSortableColumn]="showSort && !rowEditing ? col.sortField ?? col.field : undefined"
+            [pSortableColumnDisabled]="!showSort || rowEditing || col.showSort === false" class="text-center"
+            pFrozenColumn [frozen]="IsPrint && col.frozen" [alignFrozen]="col.alignFrozen || 'right'">
+            {{ col.header }}
+            <p-sortIcon *ngIf="showSort && !rowEditing && col.showSort !== false"
+              [field]="col.sortField ?? col.field" />
+          </th>
+        </ng-container>
+      </tr>
+    </ng-container>
+
+    <!-- 非群組表頭 -->
+    <ng-container *ngIf="!columnGroup?.length">
+      <tr>
+        <th class="w-1rem">序號</th>
+        <th class="w-1rem" *ngIf="IsPrint && showCheckBox && !rowEditing && selectionMode === 'multiple'">
+          <p-tableHeaderCheckbox />
+        </th>
+        <th class="w-1rem" *ngIf="expansionDataKey && IsPrint">收合/展開</th>
+        <th *ngFor="let col of columns"
+          [pSortableColumn]="showSort && !rowEditing ? col.sortField ?? col.field : undefined"
+          [pSortableColumnDisabled]="!showSort || rowEditing || col.showSort === false" class="text-center"
+          pFrozenColumn [frozen]="IsPrint && col.frozen" [alignFrozen]="col.alignFrozen || 'right'">
+          {{ col.header }}
+          <p-sortIcon *ngIf="showSort && !rowEditing && col.showSort !== false" [field]="col.sortField ?? col.field" />
+        </th>
+        <th [hidden]="!IsPrint || !showManage" class="w-1rem text-center" alignFrozen="right" pFrozenColumn
+          [frozen]="IsPrint">
+          管理
+        </th>
+      </tr>
+    </ng-container>
   </ng-template>
   <ng-template pTemplate="body" let-rowIndex="rowIndex" let-rowData let-columns="columns" let-expanded="expanded"
     let-editing="editing" let-ri="rowIndex">

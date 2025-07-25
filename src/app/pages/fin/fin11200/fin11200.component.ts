@@ -4,7 +4,7 @@ import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-
 import { finalize } from 'rxjs';
 import { Fin11200Service } from '../../../service/api/fin/fin11200.service';
 import { columns, monthOptions, Pos1018 } from './fin11200.model';
-import { AddButton, Column } from '../../../shared/componentkit/table/table.model';
+import { AddButton, Column, convertYYYYMMToDate } from '../../../shared/componentkit/table/table.model';
 import { ECRNoService } from '../../../service/basic/ECRNo.service';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
@@ -85,7 +85,7 @@ export class FIN11200Component extends BasicQueryPageComponent<Pos1018> implemen
       this.fin11200Service.queryFIN11200(body).pipe(finalize(() => this.loading = false)).pipe(untilDestroyed(this)).subscribe((response) => {
         this.data = response.Data.map((item: Pos1018) => ({
           ...item,
-          guiYymm: this.convertYYYYMMToDate(item.GUI_YYMM)
+          GUI_YYMM: convertYYYYMMToDate(item.GUI_YYMM)
         }));
         this.totalRecords = response.TotalCount;
         this.queryStateService.setQueryState(this.ProgNo, frm.value);
@@ -99,14 +99,6 @@ export class FIN11200Component extends BasicQueryPageComponent<Pos1018> implemen
     const monthNum = Number(mmRaw);
     const month = !isNaN(monthNum) ? monthNum.toString().padStart(2, '0') : '';
     return year + month;
-  }
-
-  // 將 "YYYYMM" 轉為 Date 物件
-  private convertYYYYMMToDate(yyyymm: string): Date | null {
-    if (!/^\d{6}$/.test(yyyymm)) return null;
-    const year = Number(yyyymm.substring(0, 4));
-    const month = Number(yyyymm.substring(4, 6)) - 1; // JS 月份從 0 開始
-    return new Date(year, month, 1);
   }
   manageLoading = false;
   onStop(rowData: Pos1018) {

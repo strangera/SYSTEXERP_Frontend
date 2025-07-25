@@ -36,7 +36,7 @@
 </div>
 <div class="card">
   <app-table tableKey="TLS24010Table" dataKey="TXN_No" [data]="data" [columns]="columns" (detail)="onDetailData($event)"
-    [multiSortMeta]="[{ field: 'APPLY_Date', order: -1 }]" [totalRecords]="totalRecords"
+    [multiSortMeta]="[{ field: 'TXN_Date', order: -1 }]" [totalRecords]="totalRecords"
     (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [lazy]="true" [loading]="loading"
     [showDelete]="false" [addButton]="addButton" [showEdit]="false"></app-table>
 </div>

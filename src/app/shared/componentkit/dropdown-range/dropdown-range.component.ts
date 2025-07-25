@@ -47,7 +47,7 @@ export class DropdownRangeComponent extends BasicKitComponent implements OnInit 
 
   private handleControlState(control: FormControl) {
     if (!control.disabled) {
-      this.updateControlState(control);
+      this.updateControlState(this.startControl, this.endControl);
       if (!this.placeholder) {
         this.placeholder = '請選擇';
       }

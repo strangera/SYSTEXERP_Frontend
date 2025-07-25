@@ -118,8 +118,8 @@ export class TLS24010Component extends BasicQueryPageComponent<TLS24010Data> imp
   }
   @ViewChild('menu') menu?: Menu;
   items: MenuItem[] = [
-    { label: '專櫃編號修正', icon: 'pi pi-id-card', disabled: true },
-    { label: '折數修正及特價註記修正', icon: 'pi pi-percentage', disabled: false },
+    { label: '專櫃編號修正', icon: 'pi pi-id-card', disabled: false },
+    { label: '折扣別修正', icon: 'pi pi-percentage', disabled: false },
     { label: '抽成類別修正', icon: 'pi pi-tags', disabled: false },
     { label: '付款別修正', icon: 'pi pi-credit-card', disabled: false },
     { label: '發票修正', icon: 'pi pi-receipt', disabled: false },
@@ -132,9 +132,9 @@ export class TLS24010Component extends BasicQueryPageComponent<TLS24010Data> imp
     }
   }
   onCreateData(): void {
-    console.log(this.queryForm.value);
     this.submitted = true;
     if (!this.queryForm.valid) { return; }
+    this.queryStateService.setQueryState(this.ProgNo, this.queryForm.value);
     this.onCreate(this.queryForm.value);
   }
 

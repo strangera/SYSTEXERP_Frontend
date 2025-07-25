@@ -11,21 +11,21 @@ import { PrimeTemplate } from 'primeng/api';
 import { ControlMessagesComponent } from '../../component/control-messages/control-messages.component';
 
 @Component({
-    selector: 'app-calendar-range-quick',
-    templateUrl: './calendar-range-quick.component.html',
-    standalone: true,
-    imports: [
-        NgIf,
-        Button,
-        OverlayPanelModule,
-        SelectButtonModule,
-        FormsModule,
-        CalendarModule,
-        ReactiveFormsModule,
-        NgClass,
-        PrimeTemplate,
-        ControlMessagesComponent,
-    ],
+  selector: 'app-calendar-range-quick',
+  templateUrl: './calendar-range-quick.component.html',
+  standalone: true,
+  imports: [
+    NgIf,
+    Button,
+    OverlayPanelModule,
+    SelectButtonModule,
+    FormsModule,
+    CalendarModule,
+    ReactiveFormsModule,
+    NgClass,
+    PrimeTemplate,
+    ControlMessagesComponent,
+  ],
 })
 export class CalendarRangeQuickComponent extends BasicKitComponent implements OnInit {
   // 表單基本設置

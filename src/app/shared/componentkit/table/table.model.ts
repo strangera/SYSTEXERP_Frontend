@@ -32,6 +32,16 @@ export interface Column {
   alignFrozen?: string; // 凍結欄位對齊方式
 }
 
+export interface ColumnGroup {
+  colspan: number;
+  header: string;
+  align?: 'left' | 'center' | 'right';
+}
+
+export interface ColumnGroupRow {
+  columns: ColumnGroup[];
+}
+
 export interface LazyLoadEvent {
   pageIndex: number; // 當前頁碼
   pageSize: number; // 每頁顯示的數量

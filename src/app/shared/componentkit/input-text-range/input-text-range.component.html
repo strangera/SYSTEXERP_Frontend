@@ -23,7 +23,7 @@
       <span *ngIf="isRequired2" class="required">*</span>
     </label>
     <p-inputGroup id="input-text-end">
-      <input type="text" pInputText id="input-text-range" [formControl]="endControl" [placeholder]="placeholder"
+      <input type="text" pInputText id="input-text-range" [formControl]="endControl" [placeholder]="placeholder2"
         [maxlength]="maxLength"
         [ngClass]="{'ng-dirty ng-invalid': submitted && endControl.errors|| (this.errorForGroup && this.startControl.parent?.errors)}"
         (onInputChange)="onEndInputChange($event)" (onBlur)="onEndBlur($event)" />

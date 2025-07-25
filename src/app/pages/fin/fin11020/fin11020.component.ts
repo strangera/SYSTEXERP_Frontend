@@ -14,6 +14,7 @@ import { InputTextComponent } from '../../../shared/componentkit/input-text/inpu
 import { InputTextRangeComponent } from '../../../shared/componentkit/input-text-range/input-text-range.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { TranslateModule } from '@ngx-translate/core';
+import { ValidationService } from '@shared/service';
 
 //1.1.1.2 發票基本資料維護
 @Component({
@@ -28,17 +29,18 @@ export class FIN11020Component extends BasicQueryPageComponent<MainInvoiceData> 
     GUI_YYMM_start: [null, [Validators.required]], // 發票年月
     GUI_YYMM_end: [null, [Validators.required]], // 發票年月
     GUI_Track: ['', [Validators.maxLength(2)]], // 字軌
-    GUI_No_start: [null, [Validators.maxLength(8), Validators.max(99999999)]], // 發票號碼(起)
-    GUI_No_end: [null, [Validators.maxLength(8), Validators.max(99999999)]], // 發票號碼(迄)
+    GUI_No_start: [null, [Validators.maxLength(8), Validators.minLength(8), Validators.max(99999950)]], // 發票號碼(起)
+    GUI_No_end: [null, [Validators.maxLength(8), Validators.minLength(8), Validators.max(99999999)]], // 發票號碼(迄)
     ...createPaginationConfig([{ field: 'GUI_YYMM', order: 1 }]), // 分頁和排序參數
-  });
+  }, { validators: this.validationService.guiNumberRangeValidator('GUI_No_start', 'GUI_No_end') });
   totalRecords = 0;// 分頁和排序參數 // 排序需要
   data: MainInvoiceData[] = [];
   selectedRows: MainInvoiceData[] = [];
   columns: Column[] = columns;
   subColumns: Column[] = subColumns;
   constructor(
-    private fin11020Service: Fin11020Service
+    private fin11020Service: Fin11020Service,
+    private validationService: ValidationService
   ) {
     super(); // 呼叫父類建構子
   }

@@ -18,6 +18,7 @@ import { InputTextRangeComponent } from '../../../shared/componentkit/input-text
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { TranslateModule } from '@ngx-translate/core';
+import { ValidationService } from '@shared/service';
 
 @Component({
   selector: 'app-fin12010',
@@ -43,11 +44,11 @@ export class FIN12010Component extends BasicQueryPageComponent<IFin12010Data> im
     SAL_GUIYYYYMM_start: [null, [Validators.required]], // 發票年月
     SAL_GUIYYYYMM_end: [null, [Validators.required]], // 發票年月
     SAL_GUITrack: ['', [Validators.maxLength(2)]], // 字軌
-    SAL_GUINo_start: [null, [Validators.maxLength(8), Validators.max(99999999)]], // 發票號碼(起)
-    SAL_GUINo_end: [null, [Validators.maxLength(8), Validators.max(99999999)]], // 發票號碼(迄)
-    SAL_Type: [[]], // 使用別
+    SAL_GUINo_start: [null, [Validators.maxLength(8), Validators.minLength(8), Validators.max(99999950)]], // 發票號碼(起)
+    SAL_GUINo_end: [null, [Validators.maxLength(8), Validators.minLength(8), Validators.max(99999999)]], // 發票號碼(迄)
+    SAL_TypeList: [[]], // 使用別
     ...createPaginationConfig([{ field: 'SAL_GUIYYYYMM', order: 1 }]), // 分頁和排序參數
-  });
+  }, { validators: this.validationService.guiNumberRangeValidator('SAL_GUINo_start', 'SAL_GUINo_end') });
   totalRecords = 0;
   data: IFin12010Data[] = [];
   selectedItems: IFin12010Data[] = [];
@@ -81,6 +82,7 @@ export class FIN12010Component extends BasicQueryPageComponent<IFin12010Data> im
   SAL_GUIPaperOptions = SAL_GUIPaperOptions
   constructor(
     private fin12010Service: Fin12010Service,
+    private validationService: ValidationService
   ) { super(); }
 
   ngOnInit(): void {
