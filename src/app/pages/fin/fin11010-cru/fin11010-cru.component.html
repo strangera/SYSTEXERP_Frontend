@@ -39,13 +39,17 @@
                 <app-input-text class="col-12 md:col-6 lg:col-4" label="(代理)申報人電話" controlName="STO_ApplyTEL"
                     [control]="dataForm.controls.STO_ApplyTEL" [submitted]="submitted"></app-input-text>
 
+                <app-input-text class="col-12 md:col-6 lg:col-4" label="申報人分機" controlName="STO_ApplyTEL_ext"
+                    [control]="dataForm.controls.STO_ApplyTEL_ext" [submitted]="submitted"></app-input-text>
                 <app-input-text class="col-12 md:col-6 lg:col-4" label="代理申報人證書(登錄)字號" controlName="STO_ApplyID"
                     [control]="dataForm.controls.STO_ApplyID" [submitted]="submitted"></app-input-text>
 
                 <app-calendar class="col-12 md:col-6 lg:col-4" label="申報年月起" controlName="REP_BegGUIYM"
                     [control]="dataForm.controls.REP_BegGUIYM" [submitted]="submitted"
                     calendarType="dateMonthOne"></app-calendar>
-
+                <app-calendar class="col-12 md:col-6 lg:col-4" label="申報年月迄" controlName="REP_EndGUIYM"
+                    [control]="dataForm.controls.REP_EndGUIYM" [submitted]="submitted"
+                    calendarType="dateMonthOne"></app-calendar>
             </div>
             <div *ngIf="!isFormReadable"
                 class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">

@@ -1,15 +1,13 @@
 import { Component, OnInit, } from '@angular/core';
-import { FormBuilder, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { FIN11010Data, FIN11010InsertRequest, FIN11010Service, FIN11010UpdateRequest } from '../../../service/api/fin/fin11010.service';
-import { AddButton } from '../../../shared/componentkit/table/table.model';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { PanelModule } from 'primeng/panel';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { DropdownOption } from '../../../shared/models/api/base-api.interface';
 import { DatePipe, NgIf } from '@angular/common';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
@@ -20,7 +18,7 @@ import { finalize } from 'rxjs';
   templateUrl: './fin11010-cru.component.html',
   styleUrl: './fin11010-cru.component.scss',
   standalone: true,
-  imports: [NgIf, MenubarComponent, ButtonComponent, PanelModule, FormsModule, ReactiveFormsModule, InputTextComponent, DropdownComponent, CalendarComponent, TableComponent]
+  imports: [NgIf, MenubarComponent, ButtonComponent, PanelModule, FormsModule, ReactiveFormsModule, InputTextComponent, DropdownComponent, CalendarComponent]
 })
 export class FIN11010CRUComponent extends BasicCruPageComponent<FIN11010Data> implements OnInit {
   dataForm = this.formBuilder.nonNullable.group({
@@ -39,7 +37,7 @@ export class FIN11010CRUComponent extends BasicCruPageComponent<FIN11010Data> im
     STO_ApplyName: ['', [Validators.required, Validators.maxLength(12)]], // (代理)申報人姓名
     STO_ApplyTEL: ['', [Validators.required, Validators.maxLength(15)]],
     STO_ApplyID: ['', [Validators.maxLength(50)]], // 代理申報人證書(登錄)字號
-    REP_BegGUIYM: [this.getCurrentMonth(), Validators.required], // 申報年月起
+    REP_BegGUIYM: ['', Validators.required], // 申報年月起
 
     // 其他可能需要的欄位（根據 FIN11010Data 介面）
     STO_No: [''], // 門市編號
@@ -48,7 +46,7 @@ export class FIN11010CRUComponent extends BasicCruPageComponent<FIN11010Data> im
     STO_PostCode: [''], // 郵遞區號
     STO_AbbName: [''], // 簡稱
     STO_Status: ['1'], // 狀態，預設為 '1'
-    STO_ApplyTEL_ext: [''], // 電話分機
+    STO_ApplyTEL_ext: ['', [Validators.maxLength(5)]], // 電話分機
     STO_AreaCode: [''], // 區碼
 
     // 系統欄位（通常不需要用戶輸入，由後端設定）
@@ -90,13 +88,16 @@ export class FIN11010CRUComponent extends BasicCruPageComponent<FIN11010Data> im
       this.fin11010Service.getFIN11010PreviousData().subscribe(res => {
         // 填入資料，指定狀態與申報年月起
         if (res) {
-          this.dataForm.patchValue(res.Data);
-          this.setFieldFormat(this.dataForm);
+          this.dataForm.patchValue({
+            ...res.Data,
+            REP_BegGUIYM: res.Data.REP_BegGUIYM ? `${res.Data.REP_BegGUIYM.substring(0, 4)}/${res.Data.REP_BegGUIYM.substring(4, 6)}` : '',
+            REP_EndGUIYM: res.Data.REP_EndGUIYM ? `${res.Data.REP_EndGUIYM.substring(0, 4)}/${res.Data.REP_EndGUIYM.substring(4, 6)}` : ''
+          });
         }
       });
     }
+    this.setFieldFormat();
     this.setReadOnlyFields();
-    this.setFieldFormat(this.dataForm);
   }
 
   onSubmit(form: FormGroup): void {
@@ -123,7 +124,8 @@ export class FIN11010CRUComponent extends BasicCruPageComponent<FIN11010Data> im
               STO_ApplyTEL_ext: formValue.STO_ApplyTEL_ext,
               STO_AreaCode: formValue.STO_AreaCode,
               STO_ApplyID: formValue.STO_ApplyID,
-              REP_BegGUIYM: this.datePipe.transform(formValue.REP_BegGUIYM, 'yyyyMM') ?? ''
+              REP_BegGUIYM: this.datePipe.transform(formValue.REP_BegGUIYM, 'yyyyMM') ?? '',
+              REP_EndGUIYM: this.datePipe.transform(formValue.REP_EndGUIYM, 'yyyyMM') ?? ''
             };
             this.fin11010Service.insertFIN11010(rb)
               .pipe(finalize(() => this.loading = false))
@@ -154,7 +156,8 @@ export class FIN11010CRUComponent extends BasicCruPageComponent<FIN11010Data> im
               STO_ApplyTEL_ext: formValue.STO_ApplyTEL_ext,
               STO_AreaCode: formValue.STO_AreaCode,
               STO_ApplyID: formValue.STO_ApplyID,
-              REP_BegGUIYM: this.datePipe.transform(formValue.REP_BegGUIYM, 'yyyyMM') ?? ''
+              REP_BegGUIYM: this.datePipe.transform(formValue.REP_BegGUIYM, 'yyyyMM') ?? '',
+              REP_EndGUIYM: this.datePipe.transform(formValue.REP_EndGUIYM, 'yyyyMM') ?? ''
             };
             this.fin11010Service.updateFIN11010(rb)
               .pipe(finalize(() => this.loading = false))
@@ -178,18 +181,19 @@ export class FIN11010CRUComponent extends BasicCruPageComponent<FIN11010Data> im
     this.dataForm.get('STO_ApplyFlag')?.disable();
   }
 
-  getCurrentMonth(): string {
-    const date = new Date();
-    const year = date.getFullYear();
-    const month = (date.getMonth() + 1).toString().padStart(2, '0'); // 月份從0開始，所以要加1
-    return `${year}-${month}`;
-  }
-
-  setFieldFormat(form: FormGroup) {
+  setFieldFormat() {
     // 設定日期格式
-    const year = form.get('REP_BegGUIYM')?.value.substring(0, 4);
-    const month = form.get('REP_BegGUIYM')?.value.substring(4, 6);
-    this.dataForm.get('REP_BegGUIYM')?.setValue(`${year}/${month}`);
+    const year = this.dataForm.get('REP_BegGUIYM')?.value.substring(0, 4);
+    const month = this.dataForm.get('REP_BegGUIYM')?.value.substring(4, 6);
+    if (year && month) {
+      this.dataForm.get('REP_BegGUIYM')?.setValue(`${year}/${month}`);
+    }
+
+    const year2 = this.dataForm.get('REP_EndGUIYM')?.value.substring(0, 4);
+    const month2 = this.dataForm.get('REP_EndGUIYM')?.value.substring(4, 6);
+    if (year2 && month2) {
+      this.dataForm.get('REP_EndGUIYM')?.setValue(`${year2}/${month2}`);
+    }
   }
 
 }

@@ -9,7 +9,7 @@ export interface FIN11010QueryRequest {
   STO_Uniform?: string;         // 統一編號
   STO_TaxName?: string;         // 稅籍名稱
   STO_Addr?: string;            // 地址
-  REP_OrgCode?: string;         // 報表組織代碼
+  REP_OrgCodeList?: string[];   // 總繳代號
   STO_StatusList?: string[];    // 狀態清單
   REP_GUIYM_start?: string;     // 發票年月_起
   REP_GUIYM_end?: string;       // 發票年月_迄
@@ -64,10 +64,11 @@ export interface FIN11010InsertRequest {
   STO_ApplyFlag: string;
   STO_ApplyName: string;
   STO_ApplyTEL: string;
-  STO_ApplyTEL_ext: string;
+  STO_ApplyTEL_ext: string;      // 申報人分機
   STO_AreaCode: string;
   STO_ApplyID: string;
   REP_BegGUIYM: string;
+  REP_EndGUIYM: string;          // 申報年月迄
 }
 
 // --- 更新 TDS1003 資料請求 Model ---
@@ -91,6 +92,7 @@ export interface FIN11010UpdateRequest {
   STO_AreaCode: string;
   STO_ApplyID: string;
   REP_BegGUIYM: string;
+  REP_EndGUIYM: string;          // 申報年月迄
 }
 
 // --- 狀態更新 TDS1003 資料請求 Model ---

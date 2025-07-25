@@ -13,7 +13,7 @@ import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-ra
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { TranslateModule } from '@ngx-translate/core';
 import { BaseDeleteRequest } from '../../../shared/models/api/base-api.interface';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
+import { DatePipe } from '@angular/common';
 
 @Component({
   selector: 'app-fin11010',
@@ -38,7 +38,7 @@ export class FIN11010Component extends BasicQueryPageComponent<FIN11010Data> imp
     STO_Uniform: ['', [Validators.maxLength(8)]],           // 營業人統編
     STO_TaxName: ['', [Validators.maxLength(60)]],          // 營業人名稱
     STO_Addr: ['', [Validators.maxLength(100)]],            // 營業地址
-    REP_OrgCode: [''],                                      // 總繳代號
+    REP_OrgCodeList: [[]],                                  // 總繳代號
     STO_StatusList: [[]],                                   // 審核狀態 (多選)
     REP_GUIYM_start: [''],                                  // 申報年月(起)
     REP_GUIYM_end: [''],                                    // 申報年月(訖)
@@ -49,27 +49,59 @@ export class FIN11010Component extends BasicQueryPageComponent<FIN11010Data> imp
   data: FIN11010Data[] = [];
   selectedItems: FIN11010Data[] = [];
 
-  // 下拉選單選項定義
+  // #region 下拉選單選項定義
+  // 總繳代號選項
   orgCodeOptions = [
     { No: '0', Name: '單一機構報繳' },
     { No: '1', Name: '總機構彙總報繳' },
     { No: '2', Name: '各單位(分支機構)分別申報' }
   ];
 
+  // 審核狀態選項
   reviewStatusOptions = [
     { No: '0', Name: '未確認' },
     { No: '1', Name: '使用中' },
     { No: '2', Name: '已過期' }
   ];
 
+  // 縣市別選項
+  cityOptions = [
+    { No: 'A', Name: '台北市' },
+    { No: 'B', Name: '台中市' },
+    { No: 'C', Name: '基隆市' },
+    { No: 'D', Name: '台南市' },
+    { No: 'E', Name: '高雄市' },
+    { No: 'F', Name: '新北市' },
+    { No: 'G', Name: '宜蘭縣' },
+    { No: 'H', Name: '桃園縣' },
+    { No: 'I', Name: '嘉義市' },
+    { No: 'J', Name: '新竹縣' },
+    { No: 'K', Name: '苗栗縣' },
+    { No: 'L', Name: '台中縣' },
+    { No: 'M', Name: '南投縣' },
+    { No: 'N', Name: '彰化縣' },
+    { No: 'O', Name: '新竹市' },
+    { No: 'P', Name: '雲林縣' },
+    { No: 'Q', Name: '嘉義縣' },
+    { No: 'R', Name: '台南縣' },
+    { No: 'S', Name: '高雄縣' },
+    { No: 'T', Name: '屏東縣' },
+    { No: 'U', Name: '花蓮縣' },
+    { No: 'V', Name: '台東縣' },
+    { No: 'W', Name: '金門縣' },
+    { No: 'X', Name: '澎湖縣' },
+    { No: 'Z', Name: '連江縣' }
+  ];
+  // #endregion
+
   columns: Column[] = [
     { field: 'id', header: '序號', visible: false },
     { field: 'STO_Uniform', header: '營業人統編', visible: true },
     { field: 'STO_TaxName', header: '營業人名稱', visible: true },
-    { field: 'STO_City', header: '縣市別', visible: true },
+    { field: 'STO_City', header: '縣市別', visible: true, format: (value: string) => this.cityOptions.find(option => option.No === value)?.Name || value },
     { field: 'STO_Addr', header: '營業地址', visible: true },
-    { field: 'REP_OrgCode', header: '總繳代號', visible: true },
-    { field: 'STO_Direct', header: '直接扣抵法(Y/N)', visible: true },
+    { field: 'REP_OrgCode', header: '總繳代號', visible: true, format: (value: string) => this.orgCodeOptions.find(option => option.No === value)?.Name || value },
+    { field: 'STO_Direct', header: '直接扣抵法(Y/N)', visible: true, format: (value: string) => value === 'Y' ? '是' : '否' },
     {
       field: 'STO_Status',
       header: '審核狀態',
@@ -109,7 +141,8 @@ export class FIN11010Component extends BasicQueryPageComponent<FIN11010Data> imp
 
 
   constructor(
-    private fin11010Service: FIN11010Service // 請依實際Service型別替換
+    private fin11010Service: FIN11010Service,
+    private datePipe: DatePipe,
   ) {
     super();
   }
@@ -120,7 +153,10 @@ export class FIN11010Component extends BasicQueryPageComponent<FIN11010Data> imp
 
   onSubmit(frm: FormGroup) {
     const queryRequest: FIN11010QueryRequest = {
-      ...frm.value
+      ...frm.value,
+      // 年月格式處理
+      REP_GUIYM_start: frm.value.REP_GUIYM_start ? this.datePipe.transform(frm.value.REP_GUIYM_start, 'yyyyMM') : '',
+      REP_GUIYM_end: frm.value.REP_GUIYM_end ? this.datePipe.transform(frm.value.REP_GUIYM_end, 'yyyyMM') : '',
     };
     this.handleSubmit(frm, () => {
       this.fin11010Service.queryFIN11010(queryRequest)
