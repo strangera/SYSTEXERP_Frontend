@@ -9,49 +9,53 @@ import { MenubarComponent } from '../../../shared/component/menubar/menubar.comp
 import { AccordionModule } from 'primeng/accordion';
 import { CalendarRangeQuickComponent } from '../../../shared/componentkit/calendar-range-quick/calendar-range-quick.component';
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { RadiobuttonComponent } from '../../../shared/componentkit/radiobutton/radiobutton.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { TranslateModule } from '@ngx-translate/core';
-// import { LocationOptionsService } from '../../../service/API/dropdownservice/location-options.service';
+import { Tls22030Service } from '../../../service/api/tls/tls22030.service';
+import { DropdownComponent } from '@shared/componentkit';
+import { untilDestroyed } from '@ngneat/until-destroy';
+import { DropDownListService, IDropdownItem } from '../../../service/utility/dropDownList.service';
+import { HttpClient } from '@angular/common/http';
+import { environment } from '../../../../environments/environment';
+
+
 @Component({
-    selector: 'app-tls22030',
-    templateUrl: './tls22030.component.html',
-    standalone: true,
-    imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarRangeQuickComponent, MultiSelectComponent, InputTextComponent, RadiobuttonComponent, ButtonComponent, TableComponent, TranslateModule]
+  selector: 'app-tls22030',
+  templateUrl: './tls22030.component.html',
+  standalone: true,
+  imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarRangeQuickComponent, MultiSelectComponent, RadiobuttonComponent, ButtonComponent, TableComponent, DropdownComponent, TranslateModule],
 })
 
 export class TLS22030Component extends BasicQueryPageComponent<any> implements OnInit {
   queryForm = this.formBuilder.group({
-    ECR_No: [[]],
-    tlt_no: [''],
-    tlt_bdate_start: [null, Validators.required],
-    tlt_bdate_end: [null, Validators.required],
-    cashRegisterCode: [], // 收銀機編號
-    counterCode: [], // 專櫃編號
-    listZeroDifference: [1, []], // 差異為0是否列出
-    displayCondition: [1, []], // 顯示條件
-    radioOption: [null],
-    ...createPaginationConfig([{ field: 'paymentTool', order: 1 }])
+    ECR_No: [''],
+    TLT_NoList: [null],
+    TXN_DateStart: [null, Validators.required],
+    TXN_DateEnd: [null, Validators.required],
+    IsLossStatus: ['0000',], // 預設值為 '0000'，表示全部
+    ...createPaginationConfig([{ field: 'tlt_no', order: 1 }])
   });
-
+  totalRecords = 0;
+  tltNoOptions: IDropdownItem[] = [];
   data: any[] = [];
   ECRNoOptions: any[] = [];
   filteredData: any[] = [...this.data];
   columns: any[] = [
-    { field: 'transactionTotal', header: '總合', visible: true },
-    { field: 'counterCode', header: '專櫃編號', visible: true },
-    { field: 'counterName', header: '櫃位名稱', visible: true },
-    { field: 'date', header: '日期', visible: true },
-    { field: 'backendTransactionCode', header: '後台交易電腦', visible: true },
-    { field: 'backendTransactionDetails', header: '後台交易記錄', visible: true },
-    { field: 'frontendTransactionCode', header: '前台清機電腦', visible: true },
-    { field: 'frontendTransactionDetails', header: '前台清機記錄', visible: true },
-    { field: 'invoiceStartNumber', header: '發票號碼(起)', visible: true },
-    { field: 'invoiceEndNumber', header: '發票號碼(迄)', visible: true },
-    { field: 'isSameDay', header: '當日是否欠發', visible: true },
-    { field: 'isCrossDay', header: '跨日是否欠發', visible: true },
+
+    { field: 'TXN_Date', header: '日期', visible: true },
+    { field: 'tlt_no', header: '專櫃編號', visible: true },
+    { field: 'tlt_name', header: '櫃位名稱', visible: true },
+    { field: 'ECR_No', header: '後台交易電腦', visible: true },
+    { field: 'MIN_TXN_No', header: '後台交易起號', visible: true },
+    { field: 'MAX_TXN_No', header: '後台交易迄號', visible: true },
+    { field: 'SLE_TxnBegNo', header: '前台清機電腦', visible: true },
+    { field: 'SLE_TxnEndNo', header: '前台清機記錄', visible: true },
+    { field: 'SLE_GUIBegNo', header: '發票號碼(起)', visible: true },
+    { field: 'SLE_GUIEndNo', header: '發票號碼(迄)', visible: true },
+    { field: 'IsPerDayLoss', header: '當日是否欠發', visible: true },
+    { field: 'IsCrossDayLoss', header: '跨日是否欠發', visible: true },
   ];
 
 
@@ -61,7 +65,11 @@ export class TLS22030Component extends BasicQueryPageComponent<any> implements O
   constructor(
     private ECRNoService: ECRNoService,
     private whetherService: WhetherService,
-    private displayService: DisplayService
+    private displayService: DisplayService,
+    private tls22030Service: Tls22030Service,
+    private dropDownListService: DropDownListService,
+    private service: Tls22030Service, // Added service property
+    private http: HttpClient, // Inject HttpClient service
   ) {
     super();
   }
@@ -76,53 +84,83 @@ export class TLS22030Component extends BasicQueryPageComponent<any> implements O
     this.ECRNoService.getECRNo().subscribe((data) => {
       this.ECRNoOptions = data;
     });
-  }
-
-  canQuery(): boolean {
-    return true;
-  }
-
-  canAdd(): boolean {
-    return true;
-  }
-
-  canEdit(): boolean {
-    return true;
-  }
-
-  onSubmit(frm: FormGroup) {
-    this.handleSubmit(frm, () => {
-      // ✅ 假資料模擬
-      this.data = [
-        {
-          transactionTotal: 23000,
-          counterCode: 'A001',
-          counterName: '男裝專櫃',
-          date: '2025-06-26',
-          backendTransactionCode: 'TXB123',
-          backendTransactionDetails: '退款一筆、取消一筆',
-          frontendTransactionCode: 'TXF456',
-          frontendTransactionDetails: '現金銷售兩筆',
-          invoiceStartNumber: 'AA12345678',
-          invoiceEndNumber: 'AA12345680',
-          isSameDay: '否',
-          isCrossDay: '是',
-        },
-        {
-          transactionTotal: 15800,
-          counterCode: 'B002',
-          counterName: '化妝品專櫃',
-          date: '2025-06-25',
-          backendTransactionCode: 'TXB789',
-          backendTransactionDetails: '補登一筆',
-          frontendTransactionCode: 'TXF987',
-          frontendTransactionDetails: '發票開立正常',
-          invoiceStartNumber: 'BB98765432',
-          invoiceEndNumber: 'BB98765433',
-          isSameDay: '是',
-          isCrossDay: '否',
+    this.dropDownListService.queryTLTTALENT_DropDownList()
+      .pipe(untilDestroyed(this))
+      .subscribe(res => {
+        if (res && res.Data) {
+          this.tltNoOptions = res.Data.map(item => ({
+            label: `${item.No} ${item.Name}`,   // 假設 item 有 Name 欄位
+            value: item.No,     // 假設 item 有 No 欄位
+            No: item.No,        // 確保包含 No 屬性
+            Name: item.Name     // 確保包含 Name 屬性
+          }));
         }
-      ];
+      });
+
+
+  }
+
+  /** 處理文件上傳事件 */
+  onImportExcel(event: any): void {
+    const file = event.files[0];
+    if (!file) {
+      console.error('No file selected for import');
+      return;
+    }
+  }
+
+  onExportExcel(): void {
+    const condition = this.queryForm.getRawValue();  // ✅ 保證是純物件
+
+    const payload = {
+      query_condition: {
+        ServiceName: 'queryTLS22030',
+        Conditions: condition
+      },
+      report_title: 'TLS22030 序號異常報表',
+      file_name: `TLS22030_${new Date().toISOString().slice(0, 10)}`,
+      columns: this.columns.filter(c => c.visible),
+      config: {
+        print_reportTitle: 'Y',
+        print_reportTitle_per_page: 'N',
+        print_eject: 'Y',
+        print_field_title: 'Y',
+        print_field_title_per_page: 'N'
+      }
+    };
+
+    this.http.post(`${environment.ApiUrl}/exportExcel`, payload, {
+      responseType: 'blob'
+    }).subscribe({
+      next: (blob) => {
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${payload.file_name}.xlsx`;
+        a.click();
+      },
+      error: (err) => {
+        console.error('Excel 匯出失敗', err);
+      }
+    });
+  }
+
+
+  onSubmit(form: FormGroup): void {
+    this.handleSubmit(form, () => {
+      this.tls22030Service.queryTLS22030(form.value).subscribe({
+        next: (res) => {
+          this.data = res?.Data ?? [];
+          this.totalRecords = res?.TotalRecords;
+          this.loading = false;
+          this.queryStateService.setQueryState(this.ProgNo, this.queryForm.value);
+        },
+        error: (err) => {
+          console.error('TLS22030 查詢失敗', err);
+          this.loading = false;
+        }
+      });
+
     });
   }
 
