@@ -20,25 +20,25 @@ import { NgStyle } from '@angular/common';
 import { TranslateModule } from '@ngx-translate/core';
 
 @Component({
-    selector: 'app-fin11200',
-    templateUrl: './fin11200.component.html',
-    standalone: true,
-    imports: [
-        MenubarComponent,
-        ButtonComponent,
-        AccordionModule,
-        FormsModule,
-        ReactiveFormsModule,
-        CalendarComponent,
-        DropdownComponent,
-        MultiSelectComponent,
-        TableComponent,
-        Button,
-        TooltipModule,
-        ButtonDirective,
-        NgStyle,
-        TranslateModule,
-    ],
+  selector: 'app-fin11200',
+  templateUrl: './fin11200.component.html',
+  standalone: true,
+  imports: [
+    MenubarComponent,
+    ButtonComponent,
+    AccordionModule,
+    FormsModule,
+    ReactiveFormsModule,
+    CalendarComponent,
+    DropdownComponent,
+    MultiSelectComponent,
+    TableComponent,
+    Button,
+    TooltipModule,
+    ButtonDirective,
+    NgStyle,
+    TranslateModule,
+  ],
 })
 
 //FIN11100電子發票配號作業
@@ -54,9 +54,14 @@ export class FIN11200Component extends BasicQueryPageComponent<Pos1018> implemen
   data: Pos1018[] = [];
   selectedRows: Pos1018[] = [];
   columns: Column[] = columns;
-  addButton: AddButton[] = [{
-    label: '停用', icon: 'pi pi-ban text-red-500', action: (rowData: Pos1018) => { this.onStop(rowData); },
-  }]
+  addButton: AddButton[] = [
+    {
+      label: '停用',
+      icon: 'pi pi-ban text-red-500',
+      action: (rowData: Pos1018) => { this.onStop(rowData); },
+      disabled: (rowData: Pos1018) => rowData.GUI_Status === '02' || rowData.GUI_Status === '03' || rowData.GUI_Status === '00',
+    }
+  ]
   disabledMonthDates: Date[] = [];
 
   constructor(
@@ -103,6 +108,7 @@ export class FIN11200Component extends BasicQueryPageComponent<Pos1018> implemen
     const month = Number(yyyymm.substring(4, 6)) - 1; // JS 月份從 0 開始
     return new Date(year, month, 1);
   }
+  manageLoading = false;
   onStop(rowData: Pos1018) {
     const params = {
       ClosedDetail: {
@@ -112,7 +118,8 @@ export class FIN11200Component extends BasicQueryPageComponent<Pos1018> implemen
         SER_NOS: rowData.SER_NOS
       }
     }
-    this.fin11200Service.execProcClosed(params).pipe(finalize(() => this.loading = false)).pipe(untilDestroyed(this)).subscribe((response) => {
+    this.manageLoading = true;
+    this.fin11200Service.execProcClosed(params).pipe(finalize(() => this.manageLoading = false)).pipe(untilDestroyed(this)).subscribe((response) => {
       if (response.Status === "0000") {
         this.messageService.successBubble(response.Message);
         this.onSubmit(this.queryForm);
@@ -121,7 +128,7 @@ export class FIN11200Component extends BasicQueryPageComponent<Pos1018> implemen
       }
     });
   }
-
+  btnLoading = false;
   onUpload() {
     const params = {
       ExportDetails: this.selectedRows.map((item) => ({
@@ -131,11 +138,11 @@ export class FIN11200Component extends BasicQueryPageComponent<Pos1018> implemen
         SER_NOS: item.SER_NOS
       }))
     }
-    this.fin11200Service.execProcExport(params).pipe(finalize(() => this.loading = false)).pipe(untilDestroyed(this)).subscribe((response) => {
-      if (response.Status === "0000") {
-        this.messageService.successBubble(response.Message);
-        this.onSubmit(this.queryForm);
-      }
+    this.btnLoading = true;
+    this.fin11200Service.execProcExport(params).pipe(finalize(() => this.btnLoading = false), untilDestroyed(this)).subscribe((response) => {
+      this.messageService.successBubble(response.Message);
+      this.selectedRows = [];
+      this.onSubmit(this.queryForm);
     });
   }
 }

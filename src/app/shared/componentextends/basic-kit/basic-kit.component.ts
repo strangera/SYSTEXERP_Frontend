@@ -6,11 +6,14 @@ export class BasicKitComponent {
   isRequired2 = false; // 控制 * 顯示或隱藏
   maxLength: number | null = null; // 設定最長輸入數
   minLength: number | null = null; // 設定最短輸入數
+  maxValue: number | null = null; // 設定最大值
+  minValue: number | null = null; // 設定最小值
   isNumberOnly = false; // 檢查是否只能輸入數字
 
   updateControlState(control1: FormControl, control2?: FormControl) {
     this.checkRequiredValidator(control1, control2);
     this.checkIntLengthValidator(control1);
+    this.checkMinMaxValidator(control1);
     this.checkNumberValidator(control1); // 加入數字驗證檢查
     this.setPlaceholder(control1);
   }
@@ -40,6 +43,24 @@ export class BasicKitComponent {
     this.minLength = "minlength" in minLengthErrors ? minLengthErrors['minlength'].requiredLength : null;
   }
 
+  // 檢查是否有最大值和最小值限制
+  // ----------------------------------------------------------------
+  checkMinMaxValidator(control: AbstractControl): void {
+    const validator = control.validator;
+    if (!validator) {
+      this.maxValue = null;
+      this.minValue = null;
+      return;
+    }
+
+    // 傳入一個超過值來觸發驗證錯誤
+    const maxResult = validator(new FormControl(999999999));
+    this.maxValue = maxResult?.['max']?.max ?? null;
+
+    const minResult = validator(new FormControl(-999999999));
+    this.minValue = minResult?.['min']?.min ?? null;
+  }
+
   // 檢查是否為數字驗證器
   // ----------------------------------------------------------------
   checkNumberValidator(control: AbstractControl): void {
@@ -66,7 +87,6 @@ export class BasicKitComponent {
       return;
     }
 
-    this.placeholder = '請輸入...';
     const placeholderParts: string[] = [];
 
     if (control.hasValidator(Validators.required)) {
@@ -79,13 +99,22 @@ export class BasicKitComponent {
       placeholderParts.push(`最多${this.maxLength}個字`);
     } else if (this.minLength) {
       placeholderParts.push(`最少${this.minLength}個字`);
-
+    }
+    // 數值限制提示
+    if (this.minValue !== null && this.maxValue !== null && this.minValue === this.maxValue) {
+      placeholderParts.push(`必須為${this.minValue}`);
+    } else {
+      if (this.minValue !== null) {
+        placeholderParts.push(`最小值為${this.minValue}`);
+      }
+      if (this.maxValue !== null) {
+        placeholderParts.push(`最大值為${this.maxValue}`);
+      }
     }
 
-    // 如果是數字placeholder
+    // 如果是數字placeholder，優先顯示數字格式
     if (this.isNumberOnly) {
-      this.placeholder = '請輸入數字';
-      return;
+      placeholderParts.unshift('請輸入數字');
     }
 
     this.placeholder = placeholderParts.join(', ');

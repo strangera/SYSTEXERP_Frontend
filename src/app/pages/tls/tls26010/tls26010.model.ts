@@ -3,24 +3,13 @@ import { BaseQueryResponse, DropdownOption } from '@shared/models/api/base-api.i
 /**
  * @description
  * data_type: 1: 讀取收銀機主檔中統收機台, 2: 讀取預購活動主檔中的收銀機台
- * SYS3800s: 館別編號
- * SYS3900s: 樓層編號
+ * sdate: 起始日期
+ * edate: 結束日期
  */
-export interface PreorderECRListQuery {
-  data_type: string;
-  SYS3800s: { building_no: string; }[];
-  SYS3900s: { floor_no: string; }[];
-}
-
-/**
- * @description
- * data_type: 1: 讀取收銀機主檔中統收機台, 2: 讀取預購活動主檔中的收銀機台
- * SYS3800s: 館別編號
- * SYS3900s: 樓層編號
- */
-export interface TLTTALENTQuery {
-  SYS3800s: { building_no: string; }[];
-  SYS3900s: { floor_no: string; }[];
+export interface QueryPayload {
+  data_type?: string;
+  sdate: string;
+  edate: string;
 }
 
 export interface TLS26010Query {
@@ -34,14 +23,16 @@ export interface TLS26010Query {
 
 export interface TLS26010 {
   Data: {
+    build_no?: string;
+    floor_no?: string;
+    area_no?: string;
     pod_no: string;
     pod_desc: string;
     pod_sdate: string;
     pod_edate: string;
-    ECR_No?: string;
+    ECR_Nos?: string[];
+    tlt_nos?: string[];
     talent_id?: number;
-    tlt_no?: string;
-    tlt_name?: string;
   }[];
   pod_status: '0' | '1' | '9';
   approved_usr_name: string;
@@ -49,6 +40,9 @@ export interface TLS26010 {
 }
 
 export interface TLS26010Data {
+  build_no?: string;
+  floor_no?: string;
+  area_no?: string;
   pod_no: string;
   pod_desc: string;
   pod_sdate: string;
@@ -56,10 +50,9 @@ export interface TLS26010Data {
   pod_status: '0' | '1' | '9';
   approved_usr_name: string;
   approved_date: string | null;
-  ECR_No?: string;
+  ECR_Nos?: string[];
+  tlt_nos?: string[];
   talent_id?: number;
-  tlt_no?: string;
-  tlt_name?: string;
 }
 
 export interface TLS26010Payload {
@@ -68,18 +61,18 @@ export interface TLS26010Payload {
   pod_sdate: string;
   pod_edate: string;
   pod_status: '0';
-  ECR_Nos: ECRTableData[];
-  tlt_nos: TLTTALENTData[];
+  ECR_Nos?: string[];
+  tlt_nos?: string[];
 }
 
 export interface ECRTableData {
-  ECR_No: string,
-  tlt_no: string,
+  ECR_No: string;
+  tlt_no: string;
   tlt_name: string;
 }
 
 export interface TLTTALENTData {
-  tlt_no: string,
+  tlt_no: string;
   tlt_name: string;
 }
 
@@ -94,11 +87,11 @@ export const mockPreorderECRList: BaseQueryResponse<DropdownOption> = {
   TotalCount: 3,
   TotalPage: 1,
   Data: [
-    { No: '000001', Name: '000001' },
-    { No: '000002', Name: '000002' },
-    { No: '000003', Name: '000003' },
-    { No: '000004', Name: '000004' },
-    { No: '000005', Name: '000005' }
+    { No: '000001', Name: '01' },
+    { No: '000002', Name: '02' },
+    { No: '000003', Name: '03' },
+    { No: '000004', Name: '04' },
+    { No: '000005', Name: '05' }
   ]
 };
 
@@ -116,20 +109,21 @@ export const mockQueryTLS26010: BaseQueryResponse<TLS26010> = {
     {
       Data: [
         {
+          area_no: 'A',
           pod_no: 'TEST001',
           pod_desc: '測試預購活動1',
           pod_sdate: '2025-01-01',
           pod_edate: '2025-01-31',
+          ECR_Nos: ['000001'],
         },
         {
+          floor_no: '1F',
           pod_no: 'TEST002',
           pod_desc: '測試預購活動2',
           pod_sdate: '2025-02-01',
           pod_edate: '2025-02-28',
-          ECR_No: '000002',
-          talent_id: 2,
-          tlt_no: '000008',
-          tlt_name: 'CoCo 都可'
+          ECR_Nos: ['000001', '000002'],
+          tlt_nos: ['000008'],
         }
       ],
       pod_status: '0',
@@ -139,14 +133,13 @@ export const mockQueryTLS26010: BaseQueryResponse<TLS26010> = {
     {
       Data: [
         {
+          build_no: 'B1',
           pod_no: 'TEST003',
           pod_desc: '測試預購活動3',
           pod_sdate: '2025-03-01',
           pod_edate: '2025-03-31',
-          ECR_No: '000002',
-          talent_id: 2,
-          tlt_no: '000106',
-          tlt_name: '貝登堡'
+          ECR_Nos: ['000002'],
+          tlt_nos: ['000106'],
         }
       ],
       pod_status: '1',
@@ -160,30 +153,32 @@ export const mockQueryTLS26010: BaseQueryResponse<TLS26010> = {
           pod_desc: '測試預購活動4',
           pod_sdate: '2025-04-01',
           pod_edate: '2025-04-30',
-          ECR_No: '000003',
+          ECR_Nos: ['000003'],
+          tlt_nos: ['000215'],
           talent_id: 3,
-          tlt_no: 'Crocodile',
-          tlt_name: '000215',
         },
         {
+          build_no: 'B2',
+          floor_no: 'A2',
           pod_no: 'TEST005',
           pod_desc: '測試預購活動5',
           pod_sdate: '2025-05-01',
           pod_edate: '2025-05-31',
-          ECR_No: '000003',
+          ECR_Nos: ['000003'],
+          tlt_nos: ['00203'],
           talent_id: 3,
-          tlt_no: 'Stressless 思特萊斯',
-          tlt_name: '00203',
         },
         {
+          build_no: 'B3',
+          floor_no: '2F',
+          area_no: 'C',
           pod_no: 'TEST006',
           pod_desc: '測試預購活動6',
           pod_sdate: '2025-06-01',
           pod_edate: '2025-06-30',
-          ECR_No: '000003',
+          ECR_Nos: ['000003'],
+          tlt_nos: ['000204'],
           talent_id: 3,
-          tlt_no: '000204',
-          tlt_name: 'FREE / FREE LOHAS / GLUTTONS',
         }
       ],
       pod_status: '1',
@@ -197,10 +192,9 @@ export const mockQueryTLS26010: BaseQueryResponse<TLS26010> = {
           pod_desc: '測試預購活動7',
           pod_sdate: '2025-07-01',
           pod_edate: '2025-07-31',
-          ECR_No: '000004',
+          ECR_Nos: ['000004'],
+          tlt_nos: ['000507'],
           talent_id: 4,
-          tlt_no: '000507',
-          tlt_name: 'K&A/ itabella'
         }
       ],
       pod_status: '9',

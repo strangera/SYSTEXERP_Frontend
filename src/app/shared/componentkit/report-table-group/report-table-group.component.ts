@@ -333,11 +333,21 @@ set data(value: any[]) {
     return this._data.slice(0, this.rowsPerTable);
   }
 
-  getRowIndex(groupIndex: number, rowIndex: number): number {
-    return this.continuousRowNumber
-      ? groupIndex * this.rowsPerTable + rowIndex + 1
-      : rowIndex + 1;
+private rowIndexMap: Map<any, number> = new Map();
+
+getRowIndex(groupIndex: number, rowIndex: number): number {
+  if (!this.continuousRowNumber) {
+    return rowIndex + 1;
   }
+
+  // ✅ 計算從前面所有 group 加總的筆數
+  let totalIndex = 0;
+  for (let i = 0; i < groupIndex; i++) {
+    totalIndex += this.groupedData[i].length;
+  }
+
+  return totalIndex + rowIndex + 1;
+}
 
   printPage(): void {
     window.print();

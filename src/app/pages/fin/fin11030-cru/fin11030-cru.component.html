@@ -13,8 +13,12 @@
         <app-input-text-range class="col-12 md:col-6 lg:col-4" startLabel="發票起始號碼" endLabel="發票結束號碼"
           [startControl]="dataForm.controls.SAL_GUIBegNo" [endControl]="dataForm.controls.SAL_GUIEndNo"
           [submitted]="submitted" [errorForGroup]="true" />
-        <app-dropdown class="col-12 md:col-6 lg:col-4" label="發票類別" controlName="GUI_Type" optionLabel="label"
-          optionValue="value" [control]="dataForm.controls.SAL_GUIPaper" [options]="SAL_GUIPaperOptions" />
+        <app-dropdown *ngIf="!SAL_GUIPaperIs35()" class="col-12 md:col-6 lg:col-4" label="發票類別" controlName="GUI_Type"
+          optionLabel="label" optionValue="value" [control]="dataForm.controls.SAL_GUIPaper"
+          [options]="SAL_GUIPaperOptions2" [submitted]="submitted" />
+        <app-dropdown *ngIf="SAL_GUIPaperIs35()" class="col-12 md:col-6 lg:col-4" label="發票類別" controlName="GUI_Type"
+          optionLabel="label" optionValue="value" [control]="dataForm.controls.SAL_GUIPaper"
+          [options]="SAL_GUIPaperOptions" [submitted]="submitted" />
         <app-input-number class="col-12 md:col-6 lg:col-4" label="券數(1券=50張)" controlName="GUI_Qty"
           [control]="dataForm.controls.GUI_Qty" [max]="99999999" [useGrouping]="false" [submitted]="submitted" />
       </div>

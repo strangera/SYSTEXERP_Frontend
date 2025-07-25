@@ -9,15 +9,14 @@
       <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
           <app-calendar class="col-12 md:col-6 lg:col-4" calendarType="dateOne" label="銷售日期"
-            [control]="queryForm.controls.saleDate" [submitted]="submitted"></app-calendar>
-          <app-input-text class="col-12 md:col-6 lg:col-4" label="條碼" controlName="barcode"
-            [control]="queryForm.controls.barcode" [submitted]="submitted"></app-input-text>
-          <app-input-text class="col-12 md:col-6 lg:col-4" label="收銀機號" controlName="cashRegisterNumber"
-            [control]="queryForm.controls.cashRegisterNumber" [submitted]="submitted"></app-input-text>
-          <app-input-text class="col-12 md:col-6 lg:col-4" label="磁卡編號" controlName="magneticCardNumber"
-            [control]="queryForm.controls.magneticCardNumber" [submitted]="submitted"></app-input-text>
-          <app-input-text class="col-12 md:col-6 lg:col-4" label="金額" controlName="amount"
-            [control]="queryForm.controls.amount" [submitted]="submitted"></app-input-text>
+            [control]="queryForm.controls.TXN_Date" [submitted]="submitted" [maxDate]="now"></app-calendar>
+          <app-multi-select class="col-12 md:col-6 lg:col-4" label="專櫃編號/名稱" [control]="queryForm.controls.TLT_NOList"
+            [submitted]="submitted" [options]="TLTTALENT_DropDownList" optionLabel="label" optionValue="No" />
+          <app-multi-select class="col-12 md:col-6 lg:col-4" label="收銀機號/名稱" [control]="queryForm.controls.ECR_NoList"
+            [submitted]="submitted" [options]="ECR_NoOptions" optionLabel="label" optionValue="No" />
+          <app-input-number class="col-12 md:col-6 lg:col-4" label="金額" controlName="ACT_PayAmt"
+            [control]="queryForm.controls.ACT_PayAmt" [submitted]="submitted" [max]="99999999"
+            [maxFractionDigits]="4"></app-input-number>
         </div>
         <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
           <app-button btnType="clear"></app-button>
@@ -28,8 +27,8 @@
   </p-accordion>
 </div>
 <div class="card">
-  <app-table dataKey="BNK_No" [data]="data" [columns]="columns" (edit)="onEdit($event)" (detail)="onDetail($event)"
-    [multiSortMeta]="[{ field: 'BNK_No', order: 1 }]" [totalRecords]="totalRecords"
-    (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [lazy]="true"
-    [loading]="loading"></app-table>
+  <app-table dataKey="id" [data]="data" [columns]="columns" (edit)="onEdit($event)" (detail)="onDetail($event)"
+    [multiSortMeta]="[{ field: 'id', order: 1 }]" [totalRecords]="totalRecords"
+    (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [lazy]="true" [loading]="loading"
+    [showDelete]="false"></app-table>
 </div>

@@ -154,9 +154,9 @@
     ></app-table>
   </div>
   <div class="card" *ngIf="queryForm.controls.reporttype.value === 2">
-    <app-report-table-group
+<app-report-table-group
       [columns]="simplecolumns"
-      [data]="data"
+      [data]="simpleData"
       [subtotalFields]="[
         'BOOK_PayAmt',
         'SELF_PayAmt',
@@ -167,7 +167,6 @@
       [groupByField]="'ECR_No'"
       [groupByLabel]="'收銀機號'"
       [enableGrouping]="true"
-      
       [reportTitle]="'支付別溢欠簡表'"
        [defaultMergedView]="false"
       [currentPage]="1"
@@ -179,5 +178,10 @@
       [showBackButton]="false"
       [showGrandTotal]="false"
     ></app-report-table-group>
-  </div>
+
+
+
 </div>
+
+
+ 

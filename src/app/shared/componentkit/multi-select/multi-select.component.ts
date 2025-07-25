@@ -1,9 +1,9 @@
-import { Component, Input, OnChanges, OnInit, SimpleChanges, ViewChild } from '@angular/core';
+import { NgClass, NgIf } from '@angular/common';
+import { Component, Input, OnInit, ViewChild } from '@angular/core';
 import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { BasicKitComponent } from '../../componentextends/basic-kit/basic-kit.component';
 import { MultiSelect, MultiSelectLazyLoadEvent, MultiSelectModule } from 'primeng/multiselect';
-import { NgIf, NgClass } from '@angular/common';
 import { ControlMessagesComponent } from '../../component/control-messages/control-messages.component';
+import { BasicKitComponent } from '../../componentextends/basic-kit/basic-kit.component';
 
 @Component({
   selector: 'app-multi-select',
@@ -19,11 +19,12 @@ import { ControlMessagesComponent } from '../../component/control-messages/contr
     ControlMessagesComponent,
   ],
 })
-export class MultiSelectComponent extends BasicKitComponent implements OnInit, OnChanges {
+export class MultiSelectComponent extends BasicKitComponent implements OnInit {
   @ViewChild('multiSelect') multiSelect!: MultiSelect;
   @Input() label = '';
   @Input() controlName = '';
-  @Input() options: any[] = [];
+  @Input() set options(value: any[]) { if (value.length) this.loading = false; this._options = value; };
+  get options(): any[] { return this._options; }
   @Input() optionLabel = ''; // 資料的 Label
   @Input() optionValue = ''; // 資料的 Value
   @Input() control = new FormControl;
@@ -38,18 +39,12 @@ export class MultiSelectComponent extends BasicKitComponent implements OnInit, O
   @Input() maxSelectedLabels = 3; // 預設值，可被覆寫
   @Input() panelStyle: Record<string, any> = { width: '280px' }; // 預設寬度，可被覆寫
 
-
+  private _options: any[] = [];
 
   ngOnInit(): void {
     this.ensureControl();
     if (!this.control.disabled) {
       this.updateControlState(this.control);
-    }
-  }
-
-  ngOnChanges(changes: SimpleChanges): void {
-    if (changes['options'] && changes['options'].currentValue.length > 0) {
-      this.loading = false;
     }
   }
   onLazyLoad(event: MultiSelectLazyLoadEvent) {

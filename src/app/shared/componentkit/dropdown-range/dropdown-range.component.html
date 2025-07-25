@@ -1,0 +1,52 @@
+<label *ngIf="label !== ''" for="input-text-range" class="flex gap-1">
+  {{ label + '(起迄)' }}
+  <span *ngIf="isRequired" class="required">*</span>
+</label>
+<div class="grid p-fluid">
+  <div class="col pb-0">
+    <label *ngIf="startLabel" for="input-text-range">{{ startLabel }}
+      <span *ngIf="isRequired" class="required">*</span>
+    </label>
+    <p-inputGroup id="input-text-start">
+      <p-dropdown styleClass="w-full" [formControl]="startControl"
+        [placeholder]="startControl.disabled ? '' : placeholder" [options]="options" [optionLabel]="optionLabel"
+        [optionValue]="optionValue" [showClear]="true"
+        [ngClass]="{'ng-dirty ng-invalid': submitted && startControl.errors}"
+        [dropdownIcon]="startControl.disabled ? 'hidden' : 'pi pi-angle-down'" (onChange)="onDropdownChange($event)"
+        dataKey="optionValue" [filter]="true" appendTo="body" (onLazyLoad)="onLazyLoad($event)" [virtualScroll]="true"
+        [virtualScrollItemSize]="34" [resetFilterOnHide]="true">
+        <ng-template let-options pTemplate="item" *ngIf="templateLabel !== ''">
+          <div class="flex align-items-center gap-2">
+            <div>{{ options[templateLabel] }}</div>
+          </div>
+        </ng-template>
+      </p-dropdown>
+    </p-inputGroup>
+    <app-control-messages [onerror]="submitted || (startControl.touched && startControl.invalid)"
+      [control]="startControl"></app-control-messages>
+  </div>
+  <div class="flex" [ngClass]="startLabel ?'pt-4':''">
+    <span class="align-self-center text-center " [ngClass]="startLabel ?'pt-1':''">~</span>
+  </div>
+  <div class="col pb-0">
+    <label *ngIf="endLabel" for="input-text-range">{{ endLabel }}
+      <span *ngIf="isRequired2" class="required">*</span>
+    </label>
+    <p-inputGroup id="input-text-end">
+      <p-dropdown styleClass="w-full" [formControl]="endControl" [placeholder]="endControl.disabled ? '' : placeholder"
+        [options]="options" [optionLabel]="optionLabel" [optionValue]="optionValue" [showClear]="true"
+        [ngClass]="{'ng-dirty ng-invalid': submitted && endControl.errors}"
+        [dropdownIcon]="endControl.disabled ? 'hidden' : 'pi pi-angle-down'" (onChange)="onDropdownChange($event)"
+        dataKey="optionValue" [filter]="true" appendTo="body" (onLazyLoad)="onLazyLoad($event)" [virtualScroll]="true"
+        [virtualScrollItemSize]="34" [resetFilterOnHide]="true">
+        <ng-template let-options pTemplate="item" *ngIf="templateLabel !== ''">
+          <div class="flex align-items-center gap-2">
+            <div>{{ options[templateLabel] }}</div>
+          </div>
+        </ng-template>
+      </p-dropdown>
+    </p-inputGroup>
+    <app-control-messages [onerror]="submitted || (endControl.touched && endControl.invalid)" [control]="endControl"
+      [errorForGroup]='errorForGroup'></app-control-messages>
+  </div>
+</div>

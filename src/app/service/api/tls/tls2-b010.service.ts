@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { catchError, Observable, of, tap } from 'rxjs';
+import { catchError, Observable, tap } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import { ErrorHandlerService } from '../../system/error-handler.service';
 
@@ -10,20 +10,31 @@ import { ErrorHandlerService } from '../../system/error-handler.service';
 export class TLS2B010Service {
   apiUrl: string = environment.ApiUrl;
 
-
   constructor(
     private http: HttpClient,
     private errorHandler: ErrorHandlerService
-  ) { }
+  ) {}
 
+  // ✅ 查詢收銀員溢欠表(日) 詳細報表
   queryTLS2B010(query: any): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/TLS0000/TLS2000/queryTLS2B010`, query).pipe(
       tap(response => console.log('查詢結果:', response)),
-      catchError((error) => this.errorHandler.handleError(error))  // ✅ 正確
+      catchError(error => this.errorHandler.handleError(error))
     );
   }
-  getCloseDate(payload: any): Observable<any> {
-  return this.http.post<any>(`${this.apiUrl}/TLS0000/TLS2000/getCloseDate`, payload);
-}
 
+  // ✅ 查詢收銀員溢欠表(日) 簡表資料（群組後）
+  simpleTLS2B010(query: any): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/TLS0000/TLS2000/simpleTLS2B010`, query).pipe(
+      tap(response => console.log('簡表結果:', response)),
+      catchError(error => this.errorHandler.handleError(error))
+    );
+  }
+
+  // ✅ 取得最近關帳日期（如果你後端真的有這個 API）
+  getCloseDate(payload: any): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/TLS0000/TLS2000/getCloseDate`, payload).pipe(
+      catchError(error => this.errorHandler.handleError(error))
+    );
+  }
 }

@@ -20,22 +20,22 @@ import { TableComponent } from '../../../shared/componentkit/table/table.compone
 import { TranslateModule } from '@ngx-translate/core';
 
 @Component({
-    selector: 'app-fin12010',
-    templateUrl: './fin12010.component.html',
-    standalone: true,
-    imports: [
-        MenubarComponent,
-        ButtonComponent,
-        AccordionModule,
-        FormsModule,
-        ReactiveFormsModule,
-        CalendarRangeComponent,
-        InputTextComponent,
-        InputTextRangeComponent,
-        MultiSelectComponent,
-        TableComponent,
-        TranslateModule,
-    ],
+  selector: 'app-fin12010',
+  templateUrl: './fin12010.component.html',
+  standalone: true,
+  imports: [
+    MenubarComponent,
+    ButtonComponent,
+    AccordionModule,
+    FormsModule,
+    ReactiveFormsModule,
+    CalendarRangeComponent,
+    InputTextComponent,
+    InputTextRangeComponent,
+    MultiSelectComponent,
+    TableComponent,
+    TranslateModule,
+  ],
 })
 //1.1.2.1 電子式發票各系統配號維護
 export class FIN12010Component extends BasicQueryPageComponent<IFin12010Data> implements OnInit {
@@ -45,7 +45,7 @@ export class FIN12010Component extends BasicQueryPageComponent<IFin12010Data> im
     SAL_GUITrack: ['', [Validators.maxLength(2)]], // 字軌
     SAL_GUINo_start: [null, [Validators.maxLength(8), Validators.max(99999999)]], // 發票號碼(起)
     SAL_GUINo_end: [null, [Validators.maxLength(8), Validators.max(99999999)]], // 發票號碼(迄)
-    SAL_GUIPaper: [[]], // 使用別
+    SAL_Type: [[]], // 使用別
     ...createPaginationConfig([{ field: 'SAL_GUIYYYYMM', order: 1 }]), // 分頁和排序參數
   });
   totalRecords = 0;
@@ -57,7 +57,7 @@ export class FIN12010Component extends BasicQueryPageComponent<IFin12010Data> im
     { field: 'SAL_GUIBegNo', header: '發票起號', visible: true },
     { field: 'SAL_GUIEndNo', header: '發票迄號', visible: true },
     { field: 'SAL_LastUsedGUINo', header: '已使用的發票號', visible: true },
-    { field: 'SAL_Type', header: '發票用途', visible: true, format: value => this.usageTypeOptions.find(x => x.SYS_Code === value)?.SYS_Name || value }, // 修正為 '發票用途'
+    { field: 'SAL_Type', header: '使用別', visible: true, format: value => this.usageTypeOptions.find(x => x.SYS_Code === value)?.SYS_Name || value }, // 修正為 '發票用途'
     { field: 'GUI_DingType', header: '是否為丁種發票', visible: true, format: formatYN },
     { field: 'SAL_GUIBegMM', header: '起始月份', visible: false, format: formatDate },
     { field: 'SAL_GUIEndMM', header: '終止月份', visible: false, format: formatDate },

@@ -61,7 +61,7 @@ export const columns: Column[] = [
   { field: 'SAL_ZeroTaxAmt', header: '零稅金額', visible: false, format: formatAmount },
   { field: 'STR_Uniform', header: '統一編號', visible: false },
   { field: 'STO_No', header: '分店編號', visible: false },
-  { field: 'SAL_Type', header: '發票類別', visible: false },
+  // { field: 'SAL_Type', header: '發票類別', visible: false },
   { field: 'GUI_DingType', header: '是否為丁種發票', visible: true, format: formatYN },
   { field: 'CRT_Date', header: '建立日期', visible: false, format: formatDateTime },
   { field: 'CRT_USR_No', header: '建立人員代碼', visible: false },

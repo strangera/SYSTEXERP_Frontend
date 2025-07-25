@@ -20,29 +20,29 @@ import { TranslateModule } from '@ngx-translate/core';
 
 //1.1.2.1 電子式發票各系統配號維護
 @Component({
-    selector: 'app-fin12010-cru',
-    templateUrl: './fin12010-cru.component.html',
-    standalone: true,
-    imports: [
-        MenubarComponent,
-        ButtonComponent,
-        PanelModule,
-        FormsModule,
-        ReactiveFormsModule,
-        CalendarComponent,
-        InputTextComponent,
-        InputNumberComponent,
-        InputTextRangeComponent,
-        DropdownComponent,
-        NgIf,
-        TranslateModule,
-    ],
+  selector: 'app-fin12010-cru',
+  templateUrl: './fin12010-cru.component.html',
+  standalone: true,
+  imports: [
+    MenubarComponent,
+    ButtonComponent,
+    PanelModule,
+    FormsModule,
+    ReactiveFormsModule,
+    CalendarComponent,
+    InputTextComponent,
+    InputNumberComponent,
+    InputTextRangeComponent,
+    DropdownComponent,
+    NgIf,
+    TranslateModule,
+  ],
 })
 export class FIN12010CRUComponent extends BasicCruPageComponent<IFin12010Data> implements OnInit {
   dataForm = this.formBuilder.group({
-    SAL_GUIYYYYMM_Date: [null, [Validators.required, this.validationService.oddMonthValidator]],                          // 發票年月
+    SAL_GUIYYYYMM_Date: [null, [Validators.required]],                          // 發票年月
     SAL_GUITrack: ['', [Validators.required, Validators.maxLength(2), Validators.minLength(2), this.validationService.guiTrackValidator]],  // 發票字軌
-    GUI_Qty: [0, [Validators.required, Validators.maxLength(8), Validators.max(99999999)]], // 券數
+    GUI_Qty: [null as number | null], // 券數
     SAL_BlankCnt: [{ value: 0, disabled: true }],       // 發票張數
     SAL_GUIBegNo: ['', [Validators.maxLength(8), Validators.minLength(8), Validators.required, this.validationService.guiBegNoValidator]], // 發票起始號碼
     SAL_GUIEndNo: ['', [Validators.maxLength(8), Validators.minLength(8), Validators.required, this.validationService.guiEndNoValidator]], // 發票結束號碼
@@ -50,6 +50,7 @@ export class FIN12010CRUComponent extends BasicCruPageComponent<IFin12010Data> i
   }, { validators: this.validationService.guiNumberRangeValidator('SAL_GUIBegNo', 'SAL_GUIEndNo') });
   monthOptions = monthOptions;
   usageTypeOptions: SystemOption[] = SystemOptionsService.getOptions('T205');
+  minDate?: Date;
 
   constructor(
     private validationService: ValidationService,
@@ -60,6 +61,10 @@ export class FIN12010CRUComponent extends BasicCruPageComponent<IFin12010Data> i
 
   ngOnInit(): void {
     this.initializePage('FIN12010', this.dataForm);
+    if (this.isFormCreateable) {
+      this.minDate = this.setMinDate();
+      this.dataForm.get('SAL_GUIYYYYMM_Date')?.setValidators([Validators.required, this.validationService.oddMonthValidator]);
+    }
     if (!this.isFormCreateable) {
       this.dataForm.get('SAL_GUITrack')?.disable();
       this.dataForm.get('GUI_Qty')?.disable();
@@ -109,6 +114,18 @@ export class FIN12010CRUComponent extends BasicCruPageComponent<IFin12010Data> i
       }
     });
   }
+  setMinDate(): Date | undefined {
+    if (this.isFormCreateable) {
+      const today = new Date();
+      const currentMonth = today.getMonth();
+      if ((currentMonth + 1) % 2 !== 0) {
+        return new Date(today.getFullYear(), currentMonth, 1);
+      } else {
+        return new Date(today.getFullYear(), currentMonth - 1, 1);
+      }
+    }
+    return undefined;
+  }
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
       this.loading = true;
@@ -156,6 +173,4 @@ export class FIN12010CRUComponent extends BasicCruPageComponent<IFin12010Data> i
   } {
     return { id: this.rowdata?.id ?? 0, SAL_Type: frm.get('SAL_Type')?.value || '' };
   }
-
-
 }

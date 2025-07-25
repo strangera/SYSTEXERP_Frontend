@@ -22,6 +22,7 @@ import { CheckboxModule } from 'primeng/checkbox';
 import { CdkVirtualScrollViewport, CdkFixedSizeVirtualScroll, CdkVirtualForOf } from '@angular/cdk/scrolling';
 import { TranslateModule } from '@ngx-translate/core';
 import { TriStateCheckboxModule } from 'primeng/tristatecheckbox';
+import { finalize } from 'rxjs';
 
 interface PrivilegeOutput {
   prog_no: string;
@@ -399,16 +400,11 @@ export class SYS0310CRUComponent extends BasicCruPageComponent<Role> implements 
     };
     this.loading = true;
 
-    this.sys0230Service.updateRolePrivileges(body).pipe(untilDestroyed(this)).subscribe({
-      next: (response: ApiResponse<any>) => {
-        console.log('Update Role Privileges Response:', response);
-        this.messageService.successBubble('更新成功');
-        this.loading = false;
+    this.sys0230Service.updateRolePrivileges(body).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(res => {
+      this.messageService.successBubble(res.Message);
+      this.authService.getFunRightsInfo().pipe(untilDestroyed(this)).subscribe(() => {
         this.onCancel();
-      },
-      error: () => {
-        this.loading = false;
-      }
+      });
     });
   }
 
@@ -430,7 +426,7 @@ export class SYS0310CRUComponent extends BasicCruPageComponent<Role> implements 
         return 'pi pi-circle';
     }
   }
-  trackByFn(index: number, item: any): string {
+  trackByFn(index: number, item: TreeNode): string {
     return item.id; // 假設每個 TreeNode 都有唯一的 'id'
   }
   getEnabledLength(node: TreeNode): number {

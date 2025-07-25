@@ -32,12 +32,12 @@
   <app-table tableKey="fin11200" dataKey="ID" [data]="data" [columns]="columns" [showEdit]="false" [showDetail]="false"
     [showCheckBox]="true" [showDelete]="false" [multiSortMeta]="[{ field: 'id', order: 1 }]"
     [totalRecords]="totalRecords" (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [lazy]="true"
-    [loading]="loading" [addButton]="addButton" (selectionChange)="selectedRows = $event"
-    [selectedItems]="selectedRows">
+    [loading]="loading" [addButton]="addButton" (selectionChange)="selectedRows = $event" [selectedItems]="selectedRows"
+    [buttonsLoading]="manageLoading">
     <header>
       <p-button [ngStyle]="{ width: '35px', height: '35px' }" [style]="{ width: '35px', height: '35px' }" pTooltip="下傳"
         tooltipPosition="top" pButton icon="pi pi-upload" severity="success" class="p-button-rounded p-button-text"
-        [disabled]="selectedRows.length === 0" (click)="onUpload()" />
+        [disabled]="selectedRows.length === 0" (click)="onUpload()" [loading]="btnLoading" />
     </header>
   </app-table>
 </div>

@@ -33,15 +33,10 @@ export class CalendarComponent extends BasicKitComponent implements OnInit {
   @Input() minDate: Date | undefined | null;
   @Input() maxDate: Date | undefined | null;
   @Input() disabled = false;
-  @Input() disabledDates: Date[] = [];
 
   @Output() calendarEvent = new EventEmitter<any>();
   @Output() monthChangeEvent = new EventEmitter<CalendarMonthChangeEvent>();
   @Output() yearChangeEvent = new EventEmitter<CalendarYearChangeEvent>();
-
-  override updateControlState(control: FormControl) {
-    super.updateControlState(control);
-  }
 
   private readonly calendarConfig = {
     timeOne: { timeOnly: true, showTime: true, showSeconds: false, dateFormat: undefined, view: 'date', placeholder: '請選擇時間' },
@@ -65,10 +60,6 @@ export class CalendarComponent extends BasicKitComponent implements OnInit {
     if (this.control.value && typeof this.control.value === 'string') {
       this.control.setValue(new Date(this.control.value));
     }
-
-    if (this.calendarType === 'oddMonthOne') {
-      this.generateEvenMonthDisabledDates(new Date().getFullYear());
-    }
   }
 
   private configCalendar() {
@@ -84,42 +75,5 @@ export class CalendarComponent extends BasicKitComponent implements OnInit {
 
   onClose() {
     this.calendarEvent.emit(this.control.value);
-  }
-
-  onCalendarMonthChange(event: CalendarMonthChangeEvent): void {
-    const month = event.month ?? -1;
-    if (this.calendarType === 'oddMonthOne') {
-      const selectedMonth = month + 1;
-      if (selectedMonth % 2 === 0) {
-        this.control.setValue(null);
-        alert('只允許選擇奇數月份');
-        return;
-      }
-    }
-
-    this.monthChangeEvent.emit(event);
-  }
-
-  onCalendarYearChange(event: CalendarYearChangeEvent): void {
-    const year = event.year ?? new Date().getFullYear();
-    if (this.calendarType === 'oddMonthOne') {
-      this.generateEvenMonthDisabledDates(year);
-    }
-
-    this.yearChangeEvent.emit(event);
-  }
-
-  private generateEvenMonthDisabledDates(year: number) {
-    const disabled: Date[] = [];
-    const evenMonths = [1, 3, 5, 7, 9, 11]; // 偶數月 index（0-based）
-
-    for (const month of evenMonths) {
-      const daysInMonth = new Date(year, month + 1, 0).getDate();
-      for (let day = 1; day <= daysInMonth; day++) {
-        disabled.push(new Date(year, month, day));
-      }
-    }
-
-    this.disabledDates = disabled;
   }
 }

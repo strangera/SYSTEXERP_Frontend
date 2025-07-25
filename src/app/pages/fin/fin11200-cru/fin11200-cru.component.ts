@@ -19,22 +19,22 @@ import { InputTextComponent } from '../../../shared/componentkit/input-text/inpu
 import { TranslateModule } from '@ngx-translate/core';
 
 @Component({
-    selector: 'app-fin11200-cru',
-    templateUrl: './fin11200-cru.component.html',
-    standalone: true,
-    imports: [
-        MenubarComponent,
-        ButtonComponent,
-        PanelModule,
-        FormsModule,
-        ReactiveFormsModule,
-        CalendarComponent,
-        TableComponent,
-        NgIf,
-        DialogComponent,
-        InputTextComponent,
-        TranslateModule,
-    ],
+  selector: 'app-fin11200-cru',
+  templateUrl: './fin11200-cru.component.html',
+  standalone: true,
+  imports: [
+    MenubarComponent,
+    ButtonComponent,
+    PanelModule,
+    FormsModule,
+    ReactiveFormsModule,
+    CalendarComponent,
+    TableComponent,
+    NgIf,
+    DialogComponent,
+    InputTextComponent,
+    TranslateModule,
+  ],
 })
 export class FIN11200CRUComponent extends BasicCruPageComponent<Pos1018> implements OnInit {
   dataForm = this.formBuilder.group({
@@ -61,7 +61,9 @@ export class FIN11200CRUComponent extends BasicCruPageComponent<Pos1018> impleme
 
   ngOnInit(): void {
     this.initializePage('FIN11200', this.dataForm);
-    this.setMinDate();
+    if (this.isFormCreateable) {
+      this.minDate = this.setMinDate();
+    }
     this.eCRNoService.getPOS1002BillDropDownList().pipe(untilDestroyed(this)).subscribe(data => {
       const mappedData = data.Data.map((item: { No: string; Name: string }) => ({
         ECR_No: item.No,
@@ -71,12 +73,17 @@ export class FIN11200CRUComponent extends BasicCruPageComponent<Pos1018> impleme
       this.dialogData = mappedData;
     });
   }
-  setMinDate(): void {
-    const today = new Date();
-    const month = today.getMonth();
-    const year = today.getFullYear();
-    const periodStartMonth = month % 2 === 0 ? month : month - 1;
-    this.minDate = new Date(year, periodStartMonth, 1);
+  setMinDate(): Date | undefined {
+    if (this.isFormCreateable) {
+      const today = new Date();
+      const currentMonth = today.getMonth();
+      if ((currentMonth + 1) % 2 !== 0) {
+        return new Date(today.getFullYear(), currentMonth, 1);
+      } else {
+        return new Date(today.getFullYear(), currentMonth - 1, 1);
+      }
+    }
+    return undefined;
   }
 
   onSubmit(frm: FormGroup) {

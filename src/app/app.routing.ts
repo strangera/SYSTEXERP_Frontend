@@ -4,7 +4,7 @@ import { AuthGuard } from './guards/auth.guard';
 import { PublicGuard } from './guards/public.guard'; // 引入 PublicGuard
 
 export const routes: Routes = [
-  { path: '', redirectTo: 'sso/dashboard', pathMatch: 'full', },
+  { path: '', redirectTo: 'account', pathMatch: 'full', },
   {
     path: 'login',
     loadComponent: () => import('./pages/base/login/login.component').then(m => m.LoginComponent),

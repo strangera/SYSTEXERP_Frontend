@@ -10,6 +10,15 @@
           <b class="text-red-500 text-2xl">最新完成(可測試使用)</b>
         </p-divider>
         <p-divider align="left" type="solid">
+          <b class="text-primary">下拉範圍</b>
+        </p-divider>
+        <div class="grid p-fluid">
+          <app-dropdown-range class="col-12 md:col-6 lg:col-5" label="下拉範圍" controlName="dropdownRange"
+            [startControl]="queryForm.controls.dropdownRangeStart" [endControl]="queryForm.controls.dropdownRangeEnd"
+            [submitted]="submitted" [options]="systemTypeOptions" optionLabel="label" optionValue="value">
+          </app-dropdown-range>
+        </div>
+        <p-divider align="left" type="solid">
           <b class="text-primary">上傳圖片(新)</b>
         </p-divider>
         <div class="grid p-fluid">

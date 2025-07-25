@@ -10,9 +10,8 @@ import { AddButton, Column } from '@shared/componentkit/table/table.model';
 import { MenubarComponent } from '@shared/index';
 import { ApprovalStatus } from '@shared/models';
 import { AccordionModule } from 'primeng/accordion';
-import { FileSelectEvent, FileUploadModule } from 'primeng/fileupload';
 import { combineLatest, map } from 'rxjs';
-import { PreorderECRListQuery, TLS26010Data, TLS26010Query, TLTTALENTQuery } from './tls26010.model';
+import { QueryPayload, TLS26010Data, TLS26010Query } from './tls26010.model';
 
 @Component({
   selector: 'app-tls26010',
@@ -24,7 +23,6 @@ import { PreorderECRListQuery, TLS26010Data, TLS26010Query, TLTTALENTQuery } fro
     FormsModule,
     ReactiveFormsModule,
     TranslateModule,
-    FileUploadModule,
     MenubarComponent,
     ButtonComponent,
     MultiSelectComponent,
@@ -40,6 +38,7 @@ export class TLS26010Component extends BasicQueryPageComponent<any> {
   queryForm = this.formBuilder.group({
     sys3800: [''], // 館別
     sys3900: [''], // 樓層
+    sys3A00: [''], // 區域
     ecrNos: [[] as string[]], // 收銀機號
     tltNos: [[] as string[]], // 專櫃ID
     podSdateS: [''], // 起始日期(起)
@@ -66,17 +65,18 @@ export class TLS26010Component extends BasicQueryPageComponent<any> {
   ];
 
   // 監聽用
-  private sys3800Signal = toSignal(this.queryForm.get('sys3800')!.valueChanges);
-  private sys3900Signal = toSignal(this.queryForm.get('sys3900')!.valueChanges);
-  private ecrNosSignal = toSignal(this.queryForm.get('ecrNos')!.valueChanges);
-  private tltNosSignal = toSignal(this.queryForm.get('tltNos')!.valueChanges);
+  private sys3800Signal = toSignal(this.queryForm.controls.sys3800.valueChanges);
+  private sys3900Signal = toSignal(this.queryForm.controls.sys3900.valueChanges);
+  private sys3A00Signal = toSignal(this.queryForm.controls.sys3A00.valueChanges);
+  private ecrNosSignal = toSignal(this.queryForm.controls.ecrNos.valueChanges);
+  private tltNosSignal = toSignal(this.queryForm.controls.tltNos.valueChanges);
 
   // 日期監聽與驗證
   private dateValidationSignal = toSignal(combineLatest([
-    this.queryForm.get('podSdateS')!.valueChanges,
-    this.queryForm.get('podSdateE')!.valueChanges,
-    this.queryForm.get('podEdateS')!.valueChanges,
-    this.queryForm.get('podEdateE')!.valueChanges
+    this.queryForm.controls.podSdateS.valueChanges,
+    this.queryForm.controls.podSdateE.valueChanges,
+    this.queryForm.controls.podEdateS.valueChanges,
+    this.queryForm.controls.podEdateE.valueChanges
   ]).pipe(
     map(([podSdateS, podSdateE, podEdateS, podEdateE]) => {
       const hasAnyDate = podSdateS || podSdateE || podEdateS || podEdateE;
@@ -109,29 +109,33 @@ export class TLS26010Component extends BasicQueryPageComponent<any> {
     })
   ), { initialValue: { isValid: true, dates: { podSdateS: '', podSdateE: '', podEdateS: '', podEdateE: '' } } });
 
-  // 監聽館別及樓層變化
+  // 監聽館別及樓層及區域變化
   readonly dependentDataEffect = effect(() => {
-    this.sys3800Signal();
+    const build_no = this.sys3800Signal();
     const floor_no = this.sys3900Signal();
-    this.queryForm.patchValue({ ecrNos: [], tltNos: [] }, { emitEvent: false });
+    const area_no = this.sys3A00Signal();
 
     if (floor_no) {
-      this.service.loadPreorderECRList(this.queryPreorderECRList());
-      this.service.loadTLTTALENT(this.queryTLTTALENT());
+      this.queryForm.patchValue({ ecrNos: [], tltNos: [] }, { emitEvent: false });
+      this.service.loadPreorderECRList({ ...this.queryPayload(), data_type: '1' }).subscribe();
+      this.service.loadTLTTALENT(this.queryPayload()).subscribe();
     }
   }, { allowSignalWrites: !0 });
 
   // API queries
-  private queryPreorderECRList = computed<PreorderECRListQuery>(() => ({
-    data_type: '2',
-    SYS3800s: [{ building_no: this.sys3800Signal() || '' }],
-    SYS3900s: [{ floor_no: this.sys3900Signal() || '' }],
-  }));
+  private queryPayload = computed<QueryPayload>(() => {
+    const startDate = this.dateValidationSignal().dates.podSdateS;
+    const endDate = this.dateValidationSignal().dates.podEdateE;
+    const sys3800 = this.sys3800Signal();
+    const sys3900 = this.sys3900Signal();
 
-  private queryTLTTALENT = computed<TLTTALENTQuery>(() => ({
-    SYS3800s: [{ building_no: this.sys3800Signal() || '' }],
-    SYS3900s: [{ floor_no: this.sys3900Signal() || '' }],
-  }));
+    return {
+      building_no: sys3800 || '',
+      floor_no: sys3900 || '',
+      sdate: startDate || '',
+      edate: endDate || '',
+    };
+  });
 
   private queryTLS26010 = computed<TLS26010Query>(() => {
     const dateValidation = this.dateValidationSignal();
@@ -152,6 +156,7 @@ export class TLS26010Component extends BasicQueryPageComponent<any> {
     { field: 'pod_desc', header: '活動名稱', visible: true },
     { field: 'pod_sdate', header: '活動起始日期', visible: true },
     { field: 'pod_edate', header: '活動終止日期', visible: true },
+    { field: 'area_no', header: '區域', visible: true },
     { field: 'pod_status', header: '核准狀態', visible: true, format: this.service.approvalStatus.bind(this) },
     { field: 'approved_usr_name', header: '核准人員', visible: true },
     { field: 'approved_date', header: '核准日期', visible: true },
@@ -162,6 +167,7 @@ export class TLS26010Component extends BasicQueryPageComponent<any> {
     { field: 'ECR_Name', header: '收銀機名稱', visible: true },
     { field: 'tlt_no', header: '專櫃編號', visible: true },
     { field: 'tlt_name', header: '專櫃名稱', visible: true },
+    { field: 'area_no', header: '區域', visible: true },
   ];
 
   constructor(public service: TLS26010Service) {
@@ -171,9 +177,10 @@ export class TLS26010Component extends BasicQueryPageComponent<any> {
   ngOnInit(): void {
     this.initializePage('TLS26010', '/TLS/TLS26010CRU', this.queryForm, this.onSubmit.bind(this));
 
-    // 只載入館別和樓層的下拉選單資料
-    this.service.loadSYS3800({});
-    this.service.loadSYS3900({});
+    // 只載入館別和樓層及區域的下拉選單資料
+    this.service.loadSYS3800();
+    this.service.loadSYS3900();
+    this.service.loadSYS3A00();
 
     // 僅供測試
     this.service.loadTLS26010(this.queryTLS26010());
@@ -205,15 +212,7 @@ export class TLS26010Component extends BasicQueryPageComponent<any> {
   onSubmit(frm: FormGroup): void {
     this.handleSubmit(frm, () => {
       frm.valid && this.canQuery() && this.service.loadTLS26010(this.queryTLS26010());
-      this.loading = false;
-      this.messageService.blockUi();
     });
-  }
-
-  /** 處理文件上傳事件 */
-  onFileUpload(event: FileSelectEvent): void {
-    const file = event.files[0];
-    this.service.importTLS26010(file);
   }
 
   /** 刪除選中的活動 */

@@ -29,6 +29,14 @@ import { DatePipe } from '@angular/common';
 import { finalize } from 'rxjs';
 import { ReportTableGroupComponent } from '../../../shared/componentkit/report-table-group/report-table-group.component';
 import { ReimbursementYypeService } from './../../../service/basic/reimbursement-yype.service';
+import { TableModule } from 'primeng/table';
+import { PaginatorModule } from 'primeng/paginator';
+import { ButtonModule } from 'primeng/button';
+import { TooltipModule } from 'primeng/tooltip'; // 如需 tooltip 說明
+import { CurrencyPipe } from '@angular/common'; // 若後續有使用 pipe 顯示金額
+
+
+
 
 @Component({
   selector: 'app-tls2b010',
@@ -46,10 +54,14 @@ import { ReimbursementYypeService } from './../../../service/basic/reimbursement
     RadiobuttonComponent,
     ButtonComponent,
     TableComponent,
+    TableModule, // ✅ PrimeNG 原生 p-table 用於簡表
+    ButtonModule, // ✅ row expansion toggle 按鈕
     TranslateModule,
     ReportTableGroupComponent,
     DatePipe,
     NgIf,
+   
+    
   ],
   providers: [CashShowupByService],
 })
@@ -80,8 +92,7 @@ export class TLS2B010Component extends BasicQueryPageComponent<any> {
   ];
   printedAt: string = '';
   now = new Date(); // ✅ 用於 template
-
- 
+  simpleData: any[] = [];
 
   queryForm = this.formBuilder.group({
     TXN_Date: [null, [Validators.required]], // ✅ 銷售日期（單日，必填）
@@ -109,7 +120,7 @@ export class TLS2B010Component extends BasicQueryPageComponent<any> {
     private counterNameService: CounterNameService,
     private tls11010Service: Tls11010Service,
     private floorService: FloorService,
-    public  datePipe: DatePipe, // ✅ 加入這行
+    public datePipe: DatePipe, // ✅ 加入這行
   ) {
     super();
   }
@@ -191,74 +202,114 @@ export class TLS2B010Component extends BasicQueryPageComponent<any> {
     }));
   }
 
-  onSubmit(form: FormGroup): void {
-    this.submitted = true;
+onSubmit(form: FormGroup): void {
+  this.submitted = true;
 
-    if (form.invalid) {
-      this.messageService.warnBubble('請完整填寫查詢條件');
-      return;
-    }
-
-    // 將 payload 複製並清除空值
-    const payload = { ...form.value };
-
-    Object.keys(payload).forEach((key) => {
-      const value = payload[key];
-
-      // 1. 字串清 trim 空白
-      if (typeof value === 'string') {
-        payload[key] = value.trim();
-        if (payload[key] === '') {
-          delete payload[key];
-        }
-      }
-
-      // 2. 空陣列刪除
-      if (Array.isArray(value) && value.length === 0) {
-        delete payload[key];
-      }
-
-      // 3. null 也刪除
-      if (value === null) {
-        delete payload[key];
-      }
-    });
-
-    // 4. 移除 UI 專用欄位（例如：reimbursementType）
-    delete payload['reimbursementType'];
-
-    this.loading = true;
-    this.messageService.blockUi();
-
-    this.tls2B010Service
-      .queryTLS2B010(payload)
-      .pipe(
-        finalize(() => {
-          this.loading = false;
-          this.messageService.unblockUi();
-        }),
-      )
-      .subscribe({
-        next: (res) => {
-          if (res?.Status === '0000') {
-            const responseData = res.Data || {};
-            this.data = responseData.QueryData || []; // ✅ 這裡才是資料陣列
-            this.totalRecords = res.TotalCount || 0;
-            this.closeDate = responseData.LastCloseDate || '-';
-            this.queryStateService.setQueryState(this.ProgNo, payload);
-          } else {
-            this.messageService.errorBubble(res?.Message || '查詢失敗');
-          }
-        },
-        error: () => {
-          this.messageService.errorBubble('查詢失敗，請稍後再試');
-        },
-      });
+  if (form.invalid) {
+    this.messageService.warnBubble('請完整填寫查詢條件');
+    return;
   }
-get formattedTXNDate(): string {
-  const date = this.queryForm?.controls?.TXN_Date?.value;
-  return this.datePipe.transform(date, 'yyyy/MM/dd') || '';
+
+  const payload = { ...form.value };
+
+  // ✅ 加入店號（來自 localStorage）
+  const userInfo = localStorage.getItem('UserInfo');
+  if (userInfo) {
+    try {
+      const parsed = JSON.parse(userInfo);
+      if (parsed.SYS_StoreNo) {
+        payload['SYS_StoreNo'] = parsed.SYS_StoreNo;
+      }
+    } catch (err) {
+      console.error('❌ 解析 UserInfo 發生錯誤:', err);
+    }
+  }
+
+  // ✅ 清除空值、空陣列、空字串
+  Object.keys(payload).forEach((key) => {
+    const value = payload[key];
+    if (typeof value === 'string') {
+      payload[key] = value.trim();
+      if (payload[key] === '') {
+        delete payload[key];
+      }
+    }
+    if (Array.isArray(value) && value.length === 0) {
+      delete payload[key];
+    }
+    if (value === null || value === undefined) {
+      delete payload[key];
+    }
+  });
+
+  // ✅ 排除前端控制欄位
+  delete payload['reimbursementType'];
+
+  this.loading = true;
+  this.messageService.blockUi();
+
+  const reporttype = form.controls['reporttype'].value;
+
+  const apiCall =
+    reporttype === 2
+      ? this.tls2B010Service.simpleTLS2B010(payload) // ✅ 無 QueryData 層
+      : this.tls2B010Service.queryTLS2B010(payload); // ✅ 有 QueryData 層
+
+ apiCall
+  .pipe(
+    finalize(() => {
+      this.loading = false;
+      this.messageService.unblockUi();
+    }),
+  )
+  .subscribe({
+    next: (res) => {
+      if (res?.Status === '0000') {
+        this.queryStateService.setQueryState(this.ProgNo, payload);
+
+        if (reporttype === 2) {
+          // ✅ 後端回傳陣列，處理 sumOVER_PayAmt 欄位
+          const rawData = res.Data || [];
+
+          // 🔢 建立加總 Map
+          const grouped = new Map<string, number>();
+          rawData.forEach((row:any) => {
+            const key = row.ECR_No || '未指定';
+            const current = grouped.get(key) || 0;
+            const amt = parseFloat(row.OVER_PayAmt) || 0;
+            grouped.set(key, current + amt);
+          });
+
+          // 🧩 填入 sumOVER_PayAmt 欄位
+          this.simpleData = rawData.map((row:any) => ({
+            ...row,
+            sumOVER_PayAmt: grouped.get(row.ECR_No || '未指定') || 0,
+          }));
+
+          this.totalRecords = res.TotalCount || 0;
+        } else {
+          // ✅ 支付別溢欠明細表
+          const responseData = res.Data || {};
+          this.data = responseData.QueryData || [];
+          this.closeDate = responseData.LastCloseDate || '-';
+          this.totalRecords = res.TotalCount || 0;
+        }
+      } else {
+        this.messageService.errorBubble(res?.Message || '查詢失敗');
+      }
+    },
+    error: () => {
+      this.messageService.errorBubble('查詢失敗，請稍後再試');
+    },
+  });
 }
+
+
+
+  get formattedTXNDate(): string {
+    const date = this.queryForm?.controls?.TXN_Date?.value;
+    return this.datePipe.transform(date, 'yyyy/MM/dd') || '';
+  }
   onClearForm(): void {
     this.queryForm.reset();
   }
@@ -266,7 +317,8 @@ get formattedTXNDate(): string {
     const found = options?.find((opt) => String(opt.value) === String(value));
     return found ? found.label : value;
   }
-   columns: any[] = [
+
+  columns: any[] = [
     {
       field: 'tlt_building',
       header: '館別',
@@ -332,82 +384,75 @@ get formattedTXNDate(): string {
       format: this.moneyFormat,
     },
   ];
-   simplecolumns: any[] = [
- {
-  field: 'TXN_Date',
-  header: '銷售日期',
-  visible: true,
-  format: (value: any) => value ? new Date(value).toLocaleDateString('zh-TW', { year: 'numeric', month: '2-digit', day: '2-digit' }) : '',
-},
+  simplecolumns: any[] = [
     {
-      field: 'tlt_floor',
-      header: '樓層',
+      field: 'TXN_Date',
+      header: '銷售日期',
       visible: true,
+      format: (value: any) =>
+        value
+          ? new Date(value).toLocaleDateString('zh-TW', {
+              year: 'numeric',
+              month: '2-digit',
+              day: '2-digit',
+            })
+          : '',
     },
+    // {
+    //   field: 'tlt_floor',
+    //   header: '樓層',
+    //   visible: true,
+    // },
     {
       field: 'USR_No',
       header: '收銀員',
       visible: true,
     },
-        {
+    {
       field: 'USR_Name',
       header: '收銀員名稱',
       visible: true,
     },
-            {
+    {
       field: 'ECR_No',
       header: '收銀機號',
       visible: true,
     },
 
-         {
-     field: 'TLT_NO',
-     header: '專櫃編號',
+    {
+      field: 'TLT_NO',
+      header: '專櫃編號',
       visible: true,
-   },
-            {
-     field: 'TLT_NO',
-     header: '櫃位名稱',
+    },
+    {
+      field: 'TLT_Name',
+      header: '櫃位名稱',
       visible: true,
-   },
-    
+    },
+    {
+      field: 'sumOVER_PayAmt',
+      header: '溢欠總金額',
+      visible: true,
+      style: 'text-right',
+      format: this.moneyFormat,
+    },
     {
       field: 'PAY_NO',
-      header: '付款別',
+      header: '溢欠說明',
       visible: true,
-    },
-    {
-      field: 'BOOK_PayAmt',
-      header: '系統帳',
-      visible: true,
-      style: 'text-right',
-      format: this.moneyFormat,
-    },
-    {
-      field: 'SELF_PayAmt',
-      header: '自我報帳',
-      visible: true,
-      style: 'text-right',
-      format: this.moneyFormat,
-    },
-    {
-      field: 'SOVER_PayAmt',
-      header: '溢欠差異(自我報帳 - 系統帳)',
-      visible: false,
-    },
-    {
-      field: 'ACT_PayAmt',
-      header: '實收帳',
-      visible: true,
-      style: 'text-right',
-      format: this.moneyFormat,
     },
     {
       field: 'OVER_PayAmt',
-      header: '溢欠差異(實收 - 系統帳)',
+      header: '溢欠金額',
       visible: true,
       style: 'text-right',
       format: this.moneyFormat,
+    },
+
+    {
+      field: 'Remark',
+      header: '備註',
+      visible: false,
     },
   ];
 }
