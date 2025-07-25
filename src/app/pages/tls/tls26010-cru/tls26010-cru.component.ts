@@ -42,11 +42,10 @@ export class TLS26010CRUComponent extends BasicCruPageComponent<TLS26010Data> im
   public get isRead() { return this.crudstatus === CRUDStatus.Read; }
   public ecrTableFiltered: ECRTableData[] = [];
   public tltTableFiltered: TLTTALENTData[] = [];
-  public ECRDialogVisible = signal<boolean>(!1);
-  public TLTDialogVisible = signal<boolean>(!1);
+  public dialogVisible = signal<'ecr' | 'tlt' | null>(null);
   private dialogLoading = signal<boolean>(!1);
 
-  dataForm = this.formBuilder.nonNullable.group({
+  public dataForm = this.formBuilder.nonNullable.group({
     pod_no: ['自動給號'], // 預售活動編號
     pod_desc: ['', [Validators.required, Validators.maxLength(100)]], // 預售名稱
     pod_sdate: [new Date(), Validators.required], // 預售期間(起)
@@ -57,33 +56,29 @@ export class TLS26010CRUComponent extends BasicCruPageComponent<TLS26010Data> im
     sys3800: [''], // 館別
     sys3900: [[] as string[]], // 樓層
   });
+  private get df() { return this.dataForm.controls; }
 
-  private sys3800Signal = toSignal(this.dataForm.controls.sys3800.valueChanges);
-  private sys3900Signal = toSignal(this.dataForm.controls.sys3900.valueChanges);
-  private sdateSignal = toSignal(this.dataForm.controls.pod_sdate.valueChanges);
-  private edateSignal = toSignal(this.dataForm.controls.pod_edate.valueChanges);
+  private sys3800Signal = toSignal(this.df.sys3800.valueChanges);
+  private sys3900Signal = toSignal(this.df.sys3900.valueChanges);
+  private sdateSignal = toSignal(this.df.pod_sdate.valueChanges);
+  private edateSignal = toSignal(this.df.pod_edate.valueChanges);
 
   private dateCheck = effect(() => {
     const sdate = this.sdateSignal();
     const edate = this.edateSignal();
 
     if (sdate && edate && sdate > edate) {
-      this.dataForm.controls.pod_edate.setErrors({ dateError: true });
+      this.df.pod_edate.setErrors({ dateError: true });
       this.service.loadPreorderECRList({ ...this.queryPayload(), data_type: '1' }).subscribe();
     } else {
-      this.dataForm.controls.pod_edate.setErrors(null);
+      this.df.pod_edate.setErrors(null);
     }
   });
-  private ECRDialogEffect = effect(() => {
-    if (!this.ECRDialogVisible()) return;
-    this.service.loadPreorderECRList({ ...this.queryPayload(), data_type: '1' }).subscribe();
+  private DialogEffect = effect(() => {
+    console.log(`DialogEffect:`, [this.dataForm.value]);
+    if (this.dialogVisible() === 'ecr') this.service.loadPreorderECRList({ ...this.queryPayload(), data_type: '1' }).subscribe();
+    if (this.dialogVisible() === 'tlt') this.service.loadTLTTALENT(this.queryPayload()).subscribe();
   }, { allowSignalWrites: true });
-
-  private TLTDialogEffect = effect(() => {
-    if (!this.TLTDialogVisible()) return;
-    this.service.loadTLTTALENT(this.queryPayload()).subscribe();
-  }, { allowSignalWrites: true });
-
 
   // API queries
   private queryPayload = computed<QueryPayload>(() => {
@@ -93,8 +88,8 @@ export class TLS26010CRUComponent extends BasicCruPageComponent<TLS26010Data> im
     const sys3900 = this.sys3900Signal();
 
     // 確保日期值存在且為有效的 Date 物件
-    const startDate = sdate instanceof Date ? sdate : this.dataForm.controls.pod_sdate.value;
-    const endDate = edate instanceof Date ? edate : this.dataForm.controls.pod_edate.value;
+    const startDate = sdate instanceof Date ? sdate : this.df.pod_sdate.value;
+    const endDate = edate instanceof Date ? edate : this.df.pod_edate.value;
 
     return {
       building_no: sys3800 || '',
@@ -149,7 +144,6 @@ export class TLS26010CRUComponent extends BasicCruPageComponent<TLS26010Data> im
 
     if (this.isFormEditable && rowData) {
       rowData.pod_status = this.service.approvalStatus(rowData.pod_status);
-      console.log(`pod_status:`, [rowData.pod_status]);
 
       // 載入既有的表單資料（編輯模式）
       this.dataForm.patchValue({
@@ -173,7 +167,7 @@ export class TLS26010CRUComponent extends BasicCruPageComponent<TLS26010Data> im
       this.service.loadTLTTALENT(this.queryPayload()),
     ]).pipe(
       tap(() => { this.tableFilter(); }),
-      finalize(() => { console.log(`init:`, [this.funInfo, state]); }),
+      finalize(() => { console.log(`init:`, [this.funInfo, state, this.dataForm.value]); }),
     ).subscribe();
   }
 
@@ -218,24 +212,18 @@ export class TLS26010CRUComponent extends BasicCruPageComponent<TLS26010Data> im
   }
 
   private tableFilter(): void {
+    console.log(`table filter:`, [this.dataForm.value]);
     this.ecrTableFiltered = this.service.ECRTableData()
-      .filter(ecr => this.dataForm.controls.ECR_Nos.value.includes(ecr.ECR_No));
+      .filter(ecr => this.df.ECR_Nos.value.includes(ecr.ECR_No));
     this.tltTableFiltered = this.service.TLTTableData()
-      .filter(tlt => this.dataForm.controls.tlt_nos.value.includes(tlt.tlt_no));
+      .filter(tlt => this.df.tlt_nos.value.includes(tlt.tlt_no));
   };
 
-  saveDialog(frm: FormGroup) {
-    const df = this.dataForm.controls;
-
-    this.dataForm.patchValue({
-      ECR_Nos: df.ECR_Nos.value,
-      tlt_nos: df.tlt_nos.value,
-    });
+  saveDialog(frm: FormGroup): void {
+    console.log(`saveDialog:`, [frm.value, this.dataForm.value]);
     this.tableFilter();
+    this.dialogVisible.set(null);
     this.dialogLoading.set(!1);
-    this.ECRDialogVisible.set(!1);
-    this.TLTDialogVisible.set(!1);
-
 
     // this.handleSubmit(frm, () => {
     //   this.service.updateTLS26010({

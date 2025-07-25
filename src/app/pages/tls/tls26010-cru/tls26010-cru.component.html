@@ -64,7 +64,7 @@
     <div class="col-12 md:col-6 lg:col-4">
       <app-button btnType="create"
                   label="新增收銀機"
-                  (click)="ECRDialogVisible.set(!0); dataForm.reset(); submitted = false"></app-button>
+                  (click)="dialogVisible.set('ecr'); submitted = false"></app-button>
     </div>
   </div>
   <div class="col-12">
@@ -87,7 +87,7 @@
     <div class="col-12 md:col-6 lg:col-4">
       <app-button btnType="create"
                   label="新增專櫃"
-                  (click)="TLTDialogVisible.set(!0); dataForm.reset(); submitted = false"></app-button>
+                  (click)="dialogVisible.set('tlt'); submitted = false"></app-button>
     </div>
   </div>
   <div class="col-12">
@@ -108,10 +108,9 @@
   </div>
 </div>
 
-<!-- 新增收銀機 -->
-<app-dialog [visible]="ECRDialogVisible()"
-            header="新增收銀機"
-            (visibleChange)="ECRDialogVisible.set($event)"
+<app-dialog [visible]="dialogVisible() !== null"
+            [header]="dialogVisible() === 'ecr' ? '新增收銀機' : '新增專櫃'"
+            (visibleChange)="dialogVisible.set(null)"
             (save)="saveDialog(dataForm)"
             [height]="'50vh'">
   <form [formGroup]="dataForm">
@@ -144,55 +143,16 @@
                         [submitted]="submitted"></app-dropdown>
         </div> -->
       <div class="col-12 md:col-6 lg:col-4">
-        <app-multi-select label="收銀機號"
+        <app-multi-select *ngIf="dialogVisible() === 'ecr'"
+                          label="收銀機號"
                           controlName="ECR_Nos"
                           [options]="service.ECRList"
                           optionLabel="Name"
                           optionValue="No"
                           [control]="dataForm.controls.ECR_Nos"
                           [submitted]="submitted"></app-multi-select>
-      </div>
-    </div>
-  </form>
-</app-dialog>
-
-<!-- 新增專櫃 -->
-<app-dialog [visible]="TLTDialogVisible()"
-            header="新增專櫃"
-            (visibleChange)="TLTDialogVisible.set($event)"
-            (save)="saveDialog(dataForm)"
-            [height]="'50vh'">
-  <form [formGroup]="dataForm">
-    <div class="grid p-fluid">
-      <div class="col-12 md:col-6 lg:col-4">
-        <app-dropdown label="館別"
-                      controlName="sys3800"
-                      [options]="service.sys3800List()"
-                      optionLabel="Name"
-                      optionValue="No"
-                      [control]="dataForm.controls.sys3800"
-                      [submitted]="submitted"></app-dropdown>
-      </div>
-      <div class="col-12 md:col-6 lg:col-4">
-        <app-dropdown label="樓層"
-                      controlName="sys3900"
-                      [options]="service.sys3900List()"
-                      optionLabel="Name"
-                      optionValue="No"
-                      [control]="dataForm.controls.sys3900"
-                      [submitted]="submitted"></app-dropdown>
-      </div>
-      <!-- <div class="col-12 md:col-6 lg:col-4">
-          <app-dropdown label="區域"
-                        controlName="sys3A00"
-                        [options]="service.sys3A00List()"
-                        optionLabel="Name"
-                        optionValue="No"
-                        [control]="dataForm.controls.sys3A00"
-                        [submitted]="submitted"></app-dropdown>
-        </div> -->
-      <div class="col-12 md:col-6 lg:col-4">
-        <app-multi-select label="專櫃名稱"
+        <app-multi-select *ngIf="dialogVisible() === 'tlt'"
+                          label="專櫃名稱"
                           controlName="tlt_nos"
                           [options]="service.TLTList"
                           optionLabel="Name"
