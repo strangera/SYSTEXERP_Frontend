@@ -2,7 +2,7 @@
 import { Component, EventEmitter, Input, SimpleChanges, OnChanges, Output, ViewChild, OnDestroy, OnInit } from '@angular/core';
 import { Table, TableLazyLoadEvent, TablePageEvent, TableRowSelectEvent, TableRowUnSelectEvent, TableModule } from 'primeng/table';
 import { SortMeta, PrimeTemplate } from 'primeng/api';
-import { AddButton, Column, FieldChangeEvent, LazyLoadEvent, RowEditSaveEvent, toggleButtons, validateRowData } from './table.model';
+import { AddButton, Column, ColumnGroup, FieldChangeEvent, LazyLoadEvent, RowEditSaveEvent, toggleButtons, validateRowData } from './table.model';
 import { FileSelectEvent, FileUpload, FileUploadModule } from 'primeng/fileupload';
 import { NotificationService } from '../../component/notification-message/notification.service';
 import { QueryStateService } from '../../service/query-state.service';
@@ -68,6 +68,7 @@ export class TableComponent extends BasicPrintDataComponent implements OnInit, O
   @Input() apiUrl?: string;                                                     // table API URL (可選)
   @Input() title: string | undefined = undefined;                               // table 標題
   @Input() columns!: Column[];                                                  // table 欄位配置 (必填)
+  @Input() columnGroup?: ColumnGroup[];                                         // table 群組欄位
   selectedColumns!: Column[];                                                   // table 預設顯示欄位
   @Input() data: any[] = [];                                                    // table 資料 (必填)
   @Output() dataChange = new EventEmitter<any[]>();                             // table 資料改變 (事件)
