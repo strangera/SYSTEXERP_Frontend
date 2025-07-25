@@ -34,25 +34,23 @@ import { TLS26080Data } from './tls26080.model';
 export class TLS26080Component extends BasicQueryPageComponent<TLS26080Data> implements OnInit {
   // 查詢表單
   public queryForm = this.formBuilder.group({
-    pod_no: ['', Validators.maxLength(9)], // 活動單號
+    pod_no: ['', Validators.maxLength(10)], // 活動單號
+    pod_desc: ['', Validators.maxLength(100)], // 活動名稱
     pod_status: [ApprovalStatus.未核准], // 核准狀態
     org_id: [''], // 部門
-    cap_item: [[]], // 扣款項目
-    podSdateS: [''], // 起始日期(起)
-    podSdateE: [''], // 起始日期(迄)
-    podEdateS: [''], // 截止日期(起)
-    podEdateE: [''], // 截止日期(迄)
+    cap_item: [[]], // 扣款代碼
+    pod_sdate: [new Date()], // 起始日期(起)
+    pod_edate: [new Date()], // 起始日期(迄)
+    pod_busdate: [new Date()], // 活動正檔日期
   });
 
   public columns: Column[] = [
     { field: 'pod_no', header: '活動單號', visible: true },
-    { field: 'pod_name', header: '活動名稱', visible: true },
-    { field: 'org_id', header: '部門', visible: true },
-    { field: 'org_name', header: '部門名稱', visible: true },
-    { field: 'cap_no', header: '扣款編號', visible: true },
-    { field: 'cap_name', header: '扣款項目', visible: true },
+    { field: 'pod_desc', header: '活動名稱', visible: true },
     { field: 'pod_sdate', header: '活動期間(起日)', visible: true },
     { field: 'pod_edate', header: '活動期間(迄日)', visible: true },
+    { field: 'cap_item', header: '扣款代碼', visible: true },
+    { field: 'pod_type', header: '扣款名稱', visible: true },
     { field: 'pod_status', header: '狀態', visible: true, format: this.service.approvalStatus.bind(this) },
   ];
 
@@ -70,7 +68,7 @@ export class TLS26080Component extends BasicQueryPageComponent<TLS26080Data> imp
   }
 
   mocks(): void {
-    // 模擬資料`
+    // 模擬資料
     this.service.loadTLS26080({});
     this.totalRecords.set(this.data.length);
   }
@@ -87,6 +85,9 @@ export class TLS26080Component extends BasicQueryPageComponent<TLS26080Data> imp
     return true;
   }
 
+  editableStatus(rowData: TLS26080Data): boolean {
+    return rowData.pod_status === ApprovalStatus.刪除;
+  }
 
   onClearForm(): void {
     this.queryForm.reset();

@@ -1,7 +1,7 @@
 import { HttpClient } from '@angular/common/http';
-import { computed, effect, Injectable, signal } from '@angular/core';
-import { ECRTableData, mockQueryTLS26010, TLS26010, TLS26010Data, TLS26010Payload, TLS26010Query, TLTTALENTData } from '@pages/tls/tls26010/tls26010.model';
-import { mockQueryTLS26080, TLS26080Data, TLS26080Query } from '@pages/tls/tls26080/tls26080.model';
+import { effect, Injectable, signal } from '@angular/core';
+import { TLS26010Data } from '@pages/tls/tls26010/tls26010.model';
+import { CampainAccountingType, CampainAccountingTypes, mockQueryTLS26080, TLS26080Data, TLS26080Query } from '@pages/tls/tls26080/tls26080.model';
 import { ErrorHandlerService } from '@service/system/error-handler.service';
 import { NotificationService } from '@shared/component/notification-message/notification.service';
 import { ApprovalStatus } from '@shared/models';
@@ -23,7 +23,7 @@ export class TLS26080Service {
   private TableLoading = !1;
   private approvalStatusLoading = !1;
 
-  public approvalStatus(value: ApprovalStatus): string {
+  public approvalStatus(value: string): string {
     switch (value) {
       case ApprovalStatus.未核准: return '未核准';
       case ApprovalStatus.已核准: return '已核准';
@@ -42,23 +42,8 @@ export class TLS26080Service {
     this.TLS26080List.set(Array.from(res.values()));
   }, { allowSignalWrites: true });
 
-  public readonly departmentItems = signal<DropdownOption[]>([
-    { No: 'DEPT001', Name: '營運部' },
-    { No: 'DEPT002', Name: '行銷部' },
-    { No: 'DEPT003', Name: '財務部' },
-    { No: 'DEPT004', Name: '人事部' },
-    { No: 'DEPT005', Name: '資訊部' },
-  ]);
-  public readonly capItems = signal<DropdownOption[]>([
-    { No: '1', Name: '預售' },
-    { No: '2', Name: '滿千送百發行' },
-    { No: '3', Name: '滿千送百兌回' },
-    { No: '4', Name: '會員卡集點-銷售 (不用)' },
-    { No: '5', Name: '會員卡集點-點數 (不用)' },
-    { No: '6', Name: '全館消費滿額集點-銷售' },
-    { No: '7', Name: '全館消費滿額集點-點數' },
-    { No: '8', Name: '期間開放折扣' },
-  ]);
+  public readonly departmentItems = signal<DropdownOption[]>([]);
+  public readonly capItems = signal<DropdownOption[]>(Array.from(CampainAccountingType.values()));
   public readonly podStatusItems = signal<DropdownOption[]>([
     { No: ApprovalStatus.未核准, Name: '未核准' },
     { No: ApprovalStatus.已核准, Name: '已核准' },
@@ -76,23 +61,15 @@ export class TLS26080Service {
     this.TableLoading = !0;
 
     const api = mock
-      ? of(mockQueryTLS26080)
+      ? mockQueryTLS26080
       : this.http.post<BaseQueryResponse<TLS26080Data>>(`${apiUrl}/queryTLS26080`, query);
 
     api.pipe(
       take(1),
-      tap(response => this.TLS26080Data.set(response.Data.map(item => {
-        const match = item.org_id?.match(/^(.+)\(([^)]+)\)$/);
-        const [org_name, org_id] = match ? [match[1], match[2]] : ['', ''];
-        return {
-          ...item,
-          org_id,
-          org_name,
-          pod_name: item.pod_desc,
-          cap_no: item.pod_type,
-          cap_name: item.cap_item,
-        };
-      }))),
+      tap(response => this.TLS26080Data.set(response.Data.map(item => ({
+        ...item,
+        pod_type: CampainAccountingTypes[Number(item.pod_type)] || item.pod_type,
+      })))),
       catchError(error => this.errorHandler.handleError(error)),
       finalize(() => {
         this.TableLoading = !1;
