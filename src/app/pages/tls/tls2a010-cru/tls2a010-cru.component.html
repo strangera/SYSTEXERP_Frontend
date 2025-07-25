@@ -1,1 +1,39 @@
-<p>tls2a010-cru works!</p>
+<div class="card">
+  <div class="flex gap-2 mb-2">
+    <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
+    <app-button btnType="back" (click)="onCancel()" />
+  </div>
+
+  <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
+    <form
+      [formGroup]="dataForm"
+      id="dataFormForm"
+      (ngSubmit)="onSubmit(dataForm)"
+    >
+      <div class="card">
+        <app-table
+          dataKey="id"
+          [data]="data"
+          [columns]="columns"
+          [showCheckBox]="true"
+          [multiSortMeta]="[{ field: 'ECR_No', order: 1 }]"
+          [totalRecords]="totalRecords"
+          [lazy]="true"
+          [loading]="loading"
+          [showRowEdit]="true"
+          [showReportMode]="false"
+          [showEdit]="false"
+          [showDetail]="false"
+          [showDelete]="false"
+          (fieldChange)="onFieldChange($event)"
+        ></app-table>
+      </div>
+      <div
+        class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
+      >
+        <app-button btnType="cancel" [form]="dataForm"></app-button>
+        <app-button btnType="submit" [loading]="false" />
+      </div>
+    </form>
+  </p-panel>
+</div>
