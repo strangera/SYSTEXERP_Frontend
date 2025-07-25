@@ -15,12 +15,11 @@ const apiUrl: string = environment.ApiUrl;
 @Injectable({ providedIn: 'root' })
 export class TLS26010Service {
 
+  // 儲存資料
   public approvalData = signal<ApprovalStatus>(ApprovalStatus.未核准);
   public ECRTableData = signal<ECRTableData[]>([]);
   public TLTTableData = signal<TLTTALENTData[]>([]);
   public TLS26010List = signal<TLS26010Data[]>([]);
-
-  // 儲存資料
   private sys3800Data = signal<DropdownOption[]>([]);
   private sys3900Data = signal<DropdownOption[]>([]);
   private sys3A00Data = signal<DropdownOption[]>([]);
@@ -28,6 +27,7 @@ export class TLS26010Service {
   private TLTTALENTData = signal<DropdownOption[]>([]);
   private TLS26010Data = signal<TLS26010[]>([]);
 
+  // 讀取狀態
   private sys3800Loading = !1;
   private sys3900Loading = !1;
   private sys3A00Loading = !1;
@@ -38,6 +38,15 @@ export class TLS26010Service {
   private importLoading = !1;
   private downloadLoading = !1;
 
+  // 下拉選單資料
+  public ECRMap = new Map<string, DropdownOption>([]);
+  public TLTMap = new Map<string, DropdownOption>([]);
+  public ECRTableMap = new Map<string, ECRTableData>([]);
+  public TLTTableMap = new Map<string, TLTTALENTData>([]);
+
+  public get ECRList() { return Array.from(this.ECRMap.values()); };
+  public get TLTList() { return Array.from(this.TLTMap.values()); };
+
   public approvalStatus(value: string): string {
     switch (value) {
       case ApprovalStatus.未核准: return '未核准';
@@ -47,6 +56,7 @@ export class TLS26010Service {
     }
   }
 
+  // 取得館別、樓層、區域代碼等下拉選單資料，用 map 去重
   public sys3800List = computed(() => {
     const res = new Map<string, DropdownOption>();
     for (const item of this.sys3800Data()) res.set(item.No, item);
@@ -63,46 +73,37 @@ export class TLS26010Service {
     return Array.from(res.values());
   });
 
-  public ECRMap = new Map<string, DropdownOption>([]);
-  public TLTMap = new Map<string, DropdownOption>([]);
-  public ECRTableMap = new Map<string, ECRTableData>([]);
-  public TLTTableMap = new Map<string, TLTTALENTData>([]);
-
-  public get ECRList() { return Array.from(this.ECRMap.values()); };
-  public get TLTList() { return Array.from(this.TLTMap.values()); };
-
+  // 變化監聽
   private ECRs = effect(() => {
+    this.ECRMap.clear();
     for (const item of this.preorderECRData()) this.ECRMap.set(item.No, item);
   });
 
   private TLTs = effect(() => {
+    this.TLTMap.clear();
     for (const item of this.TLTTALENTData()) this.TLTMap.set(item.No, item);
   });
-
   private fetchData = effect(() => {
-    const ecrTableData: ECRTableData[] = [];
-    const tltTableData: TLTTALENTData[] = [];
     const ecrData = this.preorderECRData();
     const tltData = this.TLTTALENTData();
 
     // 用for loop改善效能並減少記憶體
-    for (const tltItem of tltData) tltTableData.push({
+    for (const tltItem of tltData) this.TLTTableMap.set(tltItem.No, {
       tlt_no: tltItem.No,
       tlt_name: tltItem.Name || '',
     });
 
     for (const ecrItem of ecrData) {
-      for (const tltItem of tltData) ecrTableData.push({
+      for (const tltItem of tltData) this.ECRTableMap.set(ecrItem.No + '/' + tltItem.No, {
         ECR_No: ecrItem.No,
         tlt_no: tltItem.No,
         tlt_name: tltItem.Name || '',
       });
     }
 
-    this.ECRTableData.set(ecrTableData);
-    this.TLTTableData.set(tltTableData);
+    this.ECRTableData.set(Array.from(this.ECRTableMap.values()));
+    this.TLTTableData.set(Array.from(this.TLTTableMap.values()));
   }, { allowSignalWrites: true });
-
   private fetchTLS26010List = effect(() => {
     const res = new Map<string, TLS26010Data>();
     const tlsData = this.TLS26010Data();
@@ -421,8 +422,8 @@ export class TLS26010Service {
     this.clearData();
   }
 
+  /** 清除所有資料 */
   clearData(): void {
-    // 清除 signal 資料
     this.sys3800Data.set([]);
     this.sys3900Data.set([]);
     this.preorderECRData.set([]);

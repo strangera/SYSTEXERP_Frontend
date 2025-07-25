@@ -1,43 +1,58 @@
 import { BaseQueryResponse } from '@shared/models';
+import { delay, Observable, of } from 'rxjs';
 
 export interface TLS26080Data {
-  // id: number;
-  // activityType: string;
-  // department: string;
-  // activityGroup: string;
-  // activityName: string;
-  // activityStartDate: string;
-  // activityEndDate: string;
-  // activityOfficialDate: string;
-  // CRT_Date?: string;
-  // CRT_USR_No?: string;
-  // CRT_USR_Name?: string;
-  // UPD_Date?: string;
-  // UPD_USR_No?: string;
-  // UPD_USR_Name?: string;
-  // CanDel: boolean;
-
-  str_no: string;
-  pod_no: string;
-  pod_type: string;
-  pod_status: '0' | '1' | '9';
-  pod_desc?: string;
-  org_id?: string;
-  cap_item?: string;
-  pod_sdate: string;
-  pod_edate: string;
-  approved_usrno?: string;
-  approved_usr_name?: string;
-  approved_date?: string;
+  id: number;                // 主鍵，自動編號
+  mid: number;               // 主檔關聯 ID
+  str_no: string;            // 店鋪編號
+  pod_no: string;            // 活動申請編號
+  pod_type: string;          // 活動類型 (1=預售, 2=滿千送百送百免回, ...)
+  org_id?: string;           // 組織部門 (SYS3100)
+  act_no?: string;           // 活動編號 (群組)
+  pod_desc?: string;         // 活動名稱
+  pod_sdate: string;         // 活動起始日期 (YYYY-MM-DD)
+  pod_edate: string;         // 活動終止日期 (YYYY-MM-DD)
+  pod_busdate?: string;      // 活動正檔日期
+  cap_item?: string;         // 扣款代碼 (APS1003.cap_type='E')
+  pod_status: string;        // 活動狀態 (0=未核準,1=已核準,9=刪除)
+  approved_userno?: string;  // 核准人員編號
+  approved_usr_name?: string;// 核准人員姓名
+  approved_date?: string;    // 核准日期 (datetime)
+  crt_date: string;          // 建立日期 (datetime)
+  crt_usr_no?: string;       // 建立人員編號
+  crt_usr_name?: string;     // 建立人員姓名
+  upd_date?: string;         // 變更日期 (datetime)
+  upd_usr_no?: string;       // 變更人員編號
+  upd_usr_name?: string;     // 變更人員姓名
 }
 
 export interface TLS26080Query {
 
 }
 
+export enum CampainAccountingTypes {
+  '預售' = 1,
+  '滿千送百發行' = 2,
+  '滿千送百兌回' = 3,
+  '會員卡集點-銷售' = 4,
+  '會員卡集點-點數' = 5,
+  '全館消費滿額集點-銷售' = 6,
+  '全館消費滿額集點-點數' = 7,
+  '期間開放折扣' = 8,
+}
 
+export const CampainAccountingType = new Map<string, { No: string; Name: string; }>([
+  ['預售', { No: '1', Name: CampainAccountingTypes[1] }],
+  ['滿千送百發行', { No: '2', Name: CampainAccountingTypes[2] }],
+  ['滿千送百兌回', { No: '3', Name: CampainAccountingTypes[3] }],
+  ['會員卡集點銷售', { No: '4', Name: CampainAccountingTypes[4] }],
+  ['會員卡集點點數', { No: '5', Name: CampainAccountingTypes[5] }],
+  ['全館消費滿額集點銷售', { No: '6', Name: CampainAccountingTypes[6] }],
+  ['全館消費滿額集點點數', { No: '7', Name: CampainAccountingTypes[7] }],
+  ['期間開放折扣', { No: '8', Name: CampainAccountingTypes[8] }],
+]);
 
-export const mockQueryTLS26080: BaseQueryResponse<TLS26080Data> = {
+export const mockQueryTLS26080: Observable<BaseQueryResponse<TLS26080Data>> = of({
   Error: void 0,
   Message: '成功',
   Meta: {
@@ -49,103 +64,400 @@ export const mockQueryTLS26080: BaseQueryResponse<TLS26080Data> = {
   TotalPage: 1,
   Data: [
     {
-      str_no: 'STR001',
-      pod_type: '預購',
-      pod_no: 'POD001',
-      pod_status: '0',
-      pod_desc: '2025年1月預購活動',
-      org_id: '營運部(DEPT001)',
-      cap_item: 'CA1',
-      pod_sdate: '2025-01-01',
-      pod_edate: '2025-01-31',
+      id: 1,
+      mid: 4521,
+      str_no: "S512",
+      pod_no: "POD2153",
+      pod_type: "2",
+      org_id: "SYS8342",
+      act_no: "ACT312",
+      pod_desc: "活動27",
+      pod_sdate: "2025-08-25",
+      pod_edate: "2025-12-10",
+      pod_busdate: "2025-09-02",
+      cap_item: "E12",
+      pod_status: "0",
+      crt_date: "2025-07-25 06:11:06",
+      crt_usr_no: "USR332",
+      crt_usr_name: "陳大同"
     },
     {
-      str_no: 'STR002',
-      pod_type: '滿千送百發行',
-      pod_no: 'POD002',
-      pod_status: '1',
-      cap_item: 'CA2',
-      pod_sdate: '2025-02-01',
-      pod_edate: '2025-02-28',
-      approved_usrno: 'USR001',
-      approved_usr_name: '張三',
-      approved_date: '2025-02-01',
+      id: 2,
+      mid: 6279,
+      str_no: "S228",
+      pod_no: "POD6291",
+      pod_type: "5",
+      org_id: "SYS1901",
+      act_no: "ACT441",
+      pod_desc: "活動11",
+      pod_sdate: "2025-09-15",
+      pod_edate: "2025-11-30",
+      pod_busdate: "2025-09-25",
+      cap_item: "E03",
+      pod_status: "0",
+      crt_date: "2025-07-25 06:11:06",
+      crt_usr_no: "USR144",
+      crt_usr_name: "王小明"
     },
     {
-      str_no: 'STR003',
-      pod_type: '滿千送百兌回',
-      pod_no: 'POD003',
-      pod_status: '9',
-      pod_desc: '2025年3月滿千送百兌回活動',
-      org_id: '財務部(DEPT003)',
-      cap_item: 'CA3',
-      pod_sdate: '2025-03-01',
-      pod_edate: '2025-03-31',
-      approved_usrno: 'USR002',
-      approved_usr_name: '李四',
-      approved_date: '2025-03-01',
+      id: 3,
+      mid: 3120,
+      str_no: "S441",
+      pod_no: "POD9982",
+      pod_type: "1",
+      org_id: "SYS5027",
+      act_no: "ACT107",
+      pod_desc: "活動33",
+      pod_sdate: "2025-09-08",
+      pod_edate: "2025-11-29",
+      pod_busdate: "2025-09-15",
+      cap_item: "E45",
+      pod_status: "0",
+      crt_date: "2025-07-25 06:11:06",
+      crt_usr_no: "USR511",
+      crt_usr_name: "李小華"
     },
     {
-      str_no: 'STR004',
-      pod_type: '會員卡集點-銷售',
-      pod_no: 'POD004',
-      pod_status: '0',
-      pod_desc: '2025年4月會員卡集點活動',
-      org_id: '人事部(DEPT004)',
-      cap_item: 'CA4',
-      pod_sdate: '2025-04-01',
-      pod_edate: '2025-04-30',
+      id: 4,
+      mid: 8711,
+      str_no: "S972",
+      pod_no: "POD3120",
+      pod_type: "3",
+      org_id: "SYS7619",
+      act_no: "ACT229",
+      pod_desc: "活動50",
+      pod_sdate: "2025-09-22",
+      pod_edate: "2025-12-10",
+      pod_busdate: "2025-09-30",
+      cap_item: "E88",
+      pod_status: "0",
+      crt_date: "2025-07-25 06:11:06",
+      crt_usr_no: "USR203",
+      crt_usr_name: "陳大同"
     },
     {
-      str_no: 'STR005',
-      pod_type: '會員卡集點-點數',
-      pod_no: 'POD005',
-      pod_status: '1',
-      pod_desc: '2025年5月會員卡集點活動',
-      cap_item: 'CA5',
-      pod_sdate: '2025-05-01',
-      pod_edate: '2025-05-31',
-      approved_usrno: 'USR004',
-      approved_usr_name: '趙六',
-      approved_date: '2025-05-01',
+      id: 5,
+      mid: 6452,
+      str_no: "S311",
+      pod_no: "POD5211",
+      pod_type: "4",
+      org_id: "SYS1123",
+      act_no: "ACT201",
+      pod_desc: "活動12",
+      pod_sdate: "2025-09-30",
+      pod_edate: "2025-12-10",
+      pod_busdate: "2025-10-05",
+      cap_item: "E07",
+      pod_status: "0",
+      crt_date: "2025-07-25 06:11:06",
+      crt_usr_no: "USR201",
+      crt_usr_name: "王小明",
+      upd_date: "2025-07-26 08:15:30",
+      upd_usr_no: "USR302",
+      upd_usr_name: "李小華"
     },
     {
-      str_no: 'STR006',
-      pod_type: '全館消費滿額集點-銷售',
-      pod_no: 'POD006',
-      pod_status: '0',
-      org_id: '營運部(DEPT001)',
-      cap_item: 'CA6',
-      pod_sdate: '2025-06-01',
-      pod_edate: '2025-06-30',
+      id: 6,
+      mid: 7320,
+      str_no: "S412",
+      pod_no: "POD7820",
+      pod_type: "6",
+      org_id: "SYS4521",
+      act_no: "ACT309",
+      pod_desc: "活動44",
+      pod_sdate: "2025-09-30",
+      pod_edate: "2025-12-15",
+      pod_busdate: "2025-10-05",
+      cap_item: "E55",
+      pod_status: "0",
+      crt_date: "2025-07-25 06:11:06",
+      crt_usr_no: "USR105",
+      crt_usr_name: "陳大同",
+      upd_date: "2025-07-26 09:40:12",
+      upd_usr_no: "USR400",
+      upd_usr_name: "陳大同"
     },
     {
-      str_no: 'STR007',
-      pod_type: '全館消費滿額集點-點數',
-      pod_no: 'POD007',
-      pod_status: '1',
-      pod_desc: '2025年7月全館消費滿額集點活動',
-      org_id: '行銷部(DEPT002)',
-      cap_item: 'CA7',
-      pod_sdate: '2025-07-01',
-      pod_edate: '2025-07-31',
-      approved_usrno: 'USR005',
-      approved_usr_name: '王五',
-      approved_date: '2025-07-01',
+      id: 7,
+      mid: 5012,
+      str_no: "S215",
+      pod_no: "POD3322",
+      pod_type: "2",
+      org_id: "SYS6670",
+      act_no: "ACT155",
+      pod_desc: "活動30",
+      pod_sdate: "2025-10-05",
+      pod_edate: "2025-12-18",
+      pod_busdate: "2025-10-10",
+      cap_item: "E23",
+      pod_status: "0",
+      crt_date: "2025-07-25 06:11:06",
+      crt_usr_no: "USR555",
+      crt_usr_name: "李小華",
+      upd_date: "2025-07-26 10:22:51",
+      upd_usr_no: "USR601",
+      upd_usr_name: "王小明"
     },
     {
-      str_no: 'STR008',
-      pod_type: '期間開放折扣',
-      pod_no: 'POD008',
-      pod_status: '9',
-      pod_desc: '2025年8月期間開放折扣活動',
-      org_id: '財務部(DEPT003)',
-      cap_item: 'CA8',
-      pod_sdate: '2025-08-01',
-      pod_edate: '2025-08-31',
-      approved_usrno: 'USR006',
-      approved_usr_name: '周七',
-      approved_date: '2025-08-01',
+      id: 8,
+      mid: 7221,
+      str_no: "S781",
+      pod_no: "POD8451",
+      pod_type: "3",
+      org_id: "SYS9821",
+      act_no: "ACT451",
+      pod_desc: "活動21",
+      pod_sdate: "2025-09-01",
+      pod_edate: "2025-12-05",
+      pod_busdate: "2025-09-10",
+      cap_item: "E11",
+      pod_status: "1",
+      crt_date: "2025-07-25 06:11:06",
+      crt_usr_no: "USR211",
+      crt_usr_name: "王小明",
+      approved_userno: "USR333",
+      approved_usr_name: "陳大同",
+      approved_date: "2025-07-26 11:10:05"
+    },
+    {
+      id: 9,
+      mid: 5314,
+      str_no: "S229",
+      pod_no: "POD5532",
+      pod_type: "5",
+      org_id: "SYS3150",
+      act_no: "ACT217",
+      pod_desc: "活動35",
+      pod_sdate: "2025-09-15",
+      pod_edate: "2025-12-01",
+      pod_busdate: "2025-09-25",
+      cap_item: "E44",
+      pod_status: "1",
+      crt_date: "2025-07-25 06:11:06",
+      crt_usr_no: "USR410",
+      crt_usr_name: "李小華",
+      approved_userno: "USR288",
+      approved_usr_name: "王小明",
+      approved_date: "2025-07-26 12:45:21"
+    },
+    {
+      id: 10,
+      mid: 8402,
+      str_no: "S541",
+      pod_no: "POD7122",
+      pod_type: "7",
+      org_id: "SYS7714",
+      act_no: "ACT310",
+      pod_desc: "活動49",
+      pod_sdate: "2025-09-10",
+      pod_edate: "2025-12-05",
+      pod_busdate: "2025-09-20",
+      cap_item: "E29",
+      pod_status: "1",
+      crt_date: "2025-07-25 06:11:06",
+      crt_usr_no: "USR521",
+      crt_usr_name: "陳大同",
+      approved_userno: "USR501",
+      approved_usr_name: "李小華",
+      approved_date: "2025-07-26 13:32:44"
+    },
+    {
+      id: 11,
+      mid: 3981,
+      str_no: "S652",
+      pod_no: "POD2144",
+      pod_type: "4",
+      org_id: "SYS1988",
+      act_no: "ACT109",
+      pod_desc: "活動18",
+      pod_sdate: "2025-09-20",
+      pod_edate: "2025-12-09",
+      pod_busdate: "2025-09-30",
+      cap_item: "E62",
+      pod_status: "1",
+      crt_date: "2025-07-25 06:11:06",
+      crt_usr_no: "USR302",
+      crt_usr_name: "王小明",
+      approved_userno: "USR722",
+      approved_usr_name: "陳大同",
+      approved_date: "2025-07-26 14:15:37"
+    },
+    {
+      id: 12,
+      mid: 6112,
+      str_no: "S377",
+      pod_no: "POD4821",
+      pod_type: "6",
+      org_id: "SYS4532",
+      act_no: "ACT118",
+      pod_desc: "活動59",
+      pod_sdate: "2025-09-28",
+      pod_edate: "2025-12-02",
+      pod_busdate: "2025-10-05",
+      cap_item: "E34",
+      pod_status: "9",
+      crt_date: "2025-07-25 06:11:06",
+      crt_usr_no: "USR420",
+      crt_usr_name: "李小華",
+      upd_date: "2025-07-26 15:25:40",
+      upd_usr_no: "USR602",
+      upd_usr_name: "王小明"
+    },
+    {
+      id: 13,
+      mid: 7944,
+      str_no: "S559",
+      pod_no: "POD7732",
+      pod_type: "2",
+      org_id: "SYS6821",
+      act_no: "ACT231",
+      pod_desc: "活動66",
+      pod_sdate: "2025-09-29",
+      pod_edate: "2025-12-07",
+      pod_busdate: "2025-10-08",
+      cap_item: "E59",
+      pod_status: "9",
+      crt_date: "2025-07-25 06:11:06",
+      crt_usr_no: "USR311",
+      crt_usr_name: "陳大同",
+      upd_date: "2025-07-26 16:03:12",
+      upd_usr_no: "USR775",
+      upd_usr_name: "李小華"
+    },
+    {
+      id: 14,
+      mid: 9021,
+      str_no: "S818",
+      pod_no: "POD9201",
+      pod_type: "1",
+      org_id: "SYS8123",
+      act_no: "ACT512",
+      pod_desc: "活動70",
+      pod_sdate: "2025-10-05",
+      pod_edate: "2025-12-15",
+      pod_busdate: "2025-10-15",
+      cap_item: "E77",
+      pod_status: "0",
+      crt_date: "2025-07-25 06:11:06",
+      crt_usr_no: "USR210",
+      crt_usr_name: "李小華"
+    },
+    {
+      id: 15,
+      mid: 6352,
+      str_no: "S901",
+      pod_no: "POD3152",
+      pod_type: "2",
+      org_id: "SYS1452",
+      act_no: "ACT231",
+      pod_desc: "活動74",
+      pod_sdate: "2025-10-12",
+      pod_edate: "2025-12-30",
+      pod_busdate: "2025-10-20",
+      cap_item: "E12",
+      pod_status: "0",
+      crt_date: "2025-07-25 06:11:06",
+      crt_usr_no: "USR110",
+      crt_usr_name: "陳大同"
+    },
+    {
+      id: 16,
+      mid: 4882,
+      str_no: "S502",
+      pod_no: "POD1781",
+      pod_type: "3",
+      org_id: "SYS2189",
+      act_no: "ACT319",
+      pod_desc: "活動82",
+      pod_sdate: "2025-10-18",
+      pod_edate: "2025-12-29",
+      pod_busdate: "2025-10-25",
+      cap_item: "E55",
+      pod_status: "0",
+      crt_date: "2025-07-25 06:11:06",
+      crt_usr_no: "USR501",
+      crt_usr_name: "王小明"
+    },
+    {
+      id: 17,
+      mid: 5203,
+      str_no: "S761",
+      pod_no: "POD9912",
+      pod_type: "7",
+      org_id: "SYS3562",
+      act_no: "ACT781",
+      pod_desc: "活動88",
+      pod_sdate: "2025-10-20",
+      pod_edate: "2025-12-31",
+      pod_busdate: "2025-10-28",
+      cap_item: "E21",
+      pod_status: "0",
+      crt_date: "2025-07-25 06:11:06",
+      crt_usr_no: "USR601",
+      crt_usr_name: "李小華"
+    },
+    {
+      id: 18,
+      mid: 4590,
+      str_no: "S623",
+      pod_no: "POD7100",
+      pod_type: "4",
+      org_id: "SYS7752",
+      act_no: "ACT552",
+      pod_desc: "活動93",
+      pod_sdate: "2025-10-22",
+      pod_edate: "2025-12-29",
+      pod_busdate: "2025-10-31",
+      cap_item: "E64",
+      pod_status: "1",
+      crt_date: "2025-07-25 06:11:06",
+      crt_usr_no: "USR777",
+      crt_usr_name: "陳大同",
+      approved_userno: "USR622",
+      approved_usr_name: "王小明",
+      approved_date: "2025-07-26 17:10:10"
+    },
+    {
+      id: 19,
+      mid: 8102,
+      str_no: "S420",
+      pod_no: "POD5400",
+      pod_type: "5",
+      org_id: "SYS2210",
+      act_no: "ACT199",
+      pod_desc: "活動97",
+      pod_sdate: "2025-10-25",
+      pod_edate: "2025-12-31",
+      pod_busdate: "2025-11-03",
+      cap_item: "E90",
+      pod_status: "9",
+      crt_date: "2025-07-25 06:11:06",
+      crt_usr_no: "USR850",
+      crt_usr_name: "陳大同",
+      upd_date: "2025-07-26 19:00:00",
+      upd_usr_no: "USR992",
+      upd_usr_name: "王小明"
+    },
+    {
+      id: 20,
+      mid: 7123,
+      str_no: "S330",
+      pod_no: "POD4509",
+      pod_type: "6",
+      org_id: "SYS3900",
+      act_no: "ACT600",
+      pod_desc: "活動100",
+      pod_sdate: "2025-10-28",
+      pod_edate: "2025-12-30",
+      pod_busdate: "2025-11-05",
+      cap_item: "E31",
+      pod_status: "9",
+      crt_date: "2025-07-25 06:11:06",
+      crt_usr_no: "USR321",
+      crt_usr_name: "王小明",
+      upd_date: "2025-07-26 20:15:25",
+      upd_usr_no: "USR210",
+      upd_usr_name: "李小華"
     },
   ]
-};
+}).pipe(delay(1000));
