@@ -113,6 +113,73 @@ export class TLS2B030Component extends BasicQueryPageComponent<any> {
       this.queryForm,
       (form) => this.onSubmit(form),
     );
+   this.queryForm = this.formBuilder.group(
+  {
+    onedatemm: [],
+    startdate: [],
+    enddate: [],
+    cahserStart: [
+      null,
+      [Validators.max(999999), this.validationService.numberValidator],
+    ],
+    cahserEnd: [
+      null,
+      [Validators.max(999999), this.validationService.numberValidator],
+    ],
+    counterStart: [
+      null,
+      [Validators.max(999999), this.validationService.numberValidator],
+    ],
+    counterEnd: [
+      null,
+      [Validators.max(999999), this.validationService.numberValidator],
+    ],
+    regionCode: [[]],
+    cahserType: [[]],
+    onlyShowOverflow: [],
+    tlt_building: [],
+    tlt_floor: [],
+    area_no: [],
+    usagecount: [0, [Validators.required]],
+    ...createPaginationConfig([{ field: 'onedatemm', order: 1 }]),
+  },
+  {
+    validators: this.atLeastOneDateValidator.bind(this),
+  }
+);
+this.queryForm.get('onedatemm')?.valueChanges.subscribe((val) => {
+  const startControl = this.queryForm.get('startdate');
+  const endControl = this.queryForm.get('enddate');
+
+  if (val) {
+    if (startControl?.enabled) startControl.disable({ emitEvent: false });
+    if (endControl?.enabled) endControl.disable({ emitEvent: false });
+  } else {
+    if (startControl?.disabled) startControl.enable({ emitEvent: false });
+    if (endControl?.disabled) endControl.enable({ emitEvent: false });
+  }
+});
+
+this.queryForm.get('startdate')?.valueChanges.subscribe((val) => {
+  const onedateControl = this.queryForm.get('onedatemm');
+
+  if (val) {
+    if (onedateControl?.enabled) onedateControl.disable({ emitEvent: false });
+  } else if (!this.queryForm.get('enddate')?.value) {
+    if (onedateControl?.disabled) onedateControl.enable({ emitEvent: false });
+  }
+});
+
+this.queryForm.get('enddate')?.valueChanges.subscribe((val) => {
+  const onedateControl = this.queryForm.get('onedatemm');
+
+  if (val) {
+    if (onedateControl?.enabled) onedateControl.disable({ emitEvent: false });
+  } else if (!this.queryForm.get('startdate')?.value) {
+    if (onedateControl?.disabled) onedateControl.enable({ emitEvent: false });
+  }
+});
+
 
     this.cahserTypeService
       .getSystemTypes()
@@ -166,318 +233,65 @@ export class TLS2B030Component extends BasicQueryPageComponent<any> {
   moneyFormat(value: number): string {
     return value != null ? value.toLocaleString('en-US') : '0'; // ✅ 使用美式格式
   }
-  onClearForm(): void {
-    this.queryForm.reset();
+onClearForm(): void {
+  this.queryForm.reset();
+  this.queryForm.get('startdate')?.enable({ emitEvent: false });
+  this.queryForm.get('enddate')?.enable({ emitEvent: false });
+  this.queryForm.get('onedatemm')?.enable({ emitEvent: false });
+}
+
+private atLeastOneDateValidator(group: FormGroup): { [key: string]: any } | null {
+  const start = group.get('startdate')?.value;
+  const end = group.get('enddate')?.value;
+  const month = group.get('onedatemm')?.value;
+
+  const isDateRangeFilled = !!start && !!end;
+  const isMonthFilled = !!month;
+
+  if (!isDateRangeFilled && !isMonthFilled) {
+    return { atLeastOneDateRequired: true };
   }
-   columns: any[] = [
-    { field: 'ECR_No', header: '收銀機號', visible: true },
-    { field: 'tlt_no', header: '專櫃編號', visible: true },
-    {
-      field: 'tlt_name',
-      header: '櫃位名稱',
-      visible: true,
-      style: 'text-left',
-    },
-    {
-      field: 'TXN_TotPayAmt',
-      header: '總金額',
-      visible: true,
-      style: 'text-right',
-      format: this.moneyFormat,
-    },
-    {
-      field: 'TXN_PayAmt10',
-      header: '現金',
-      visible: true,
-      style: 'text-right',
-      format: this.moneyFormat,
-    },
-    {
-      field: 'TXN_PayAmt41',
-      header: '聯合連線',
-      visible: true,
-      style: 'text-right',
-      format: this.moneyFormat,
-    },
-    {
-      field: 'TXN_PayAmt42',
-      header: '聯合離線',
-      visible: true,
-      style: 'text-right',
-      format: this.moneyFormat,
-    },
-    {
-      field: 'TXN_PayAmt12',
-      header: '聯合紅利',
-      visible: true,
-      style: 'text-right',
-      format: this.moneyFormat,
-    },
-    {
-      field: 'TXN_PayAmt81',
-      header: '[信用卡]中信停車場',
-      visible: true,
-      style: 'text-right',
-      format: this.moneyFormat,
-    },
-    {
-      field: 'TXN_PayAmt43',
-      header: '中信連線',
-      visible: true,
-      style: 'text-right',
-      format: this.moneyFormat,
-    },
-    {
-      field: 'TXN_PayAmt44',
-      header: '中信離線',
-      visible: true,
-      style: 'text-right',
-      format: this.moneyFormat,
-    },
-    {
-      field: 'TXN_PayAmt14',
-      header: '中信紅利',
-      visible: true,
-      style: 'text-right',
-      format: this.moneyFormat,
-    },
-    {
-      field: 'TXN_PayAmt82',
-      header: '[一卡通]停車場',
-      visible: true,
-      style: 'text-right',
-      format: this.moneyFormat,
-    },
-    {
-      field: 'TXN_PayAmt52',
-      header: '一卡通',
-      visible: true,
-      style: 'text-right',
-      format: this.moneyFormat,
-    },
-    {
-      field: 'TXN_PayAmt20',
-      header: '禮券',
-      visible: true,
-      style: 'text-right',
-      format: this.moneyFormat,
-    },
-    {
-      field: 'TXN_PayAmt62',
-      header: '商品提貨單',
-      visible: true,
-      style: 'text-right',
-      format: this.moneyFormat,
-    },
-    {
-      field: 'TXN_PayAmt77',
-      header: '感熱紙抵用券',
-      visible: true,
-      style: 'text-right',
-      format: this.moneyFormat,
-    },
-    {
-      field: 'TXN_PayAmt71',
-      header: '商品抵用券',
-      visible: true,
-      style: 'text-right',
-      format: this.moneyFormat,
-    },
-    {
-      field: 'TXN_PayAmt30',
-      header: '貴賓提貨單(應收帳款)',
-      visible: true,
-      style: 'text-right',
-      format: this.moneyFormat,
-    },
-    {
-      field: 'TXN_PayAmt73',
-      header: '外來禮券(抵用券)',
-      visible: true,
-      style: 'text-right',
-      format: this.moneyFormat,
-    },
-    {
-      field: 'TXN_PayAmt72',
-      header: '外來提貨單(抵用券)',
-      visible: true,
-      style: 'text-right',
-      format: this.moneyFormat,
-    },
-    {
-      field: 'TXN_PayAmt74',
-      header: '活動券(自營)',
-      visible: true,
-      style: 'text-right',
-      format: this.moneyFormat,
-    },
-    {
-      field: 'TXN_PayAmt75',
-      header: '折價券',
-      visible: true,
-      style: 'text-right',
-      format: this.moneyFormat,
-    },
-    {
-      field: 'TXN_PayAmt76',
-      header: '現抵',
-      visible: true,
-      style: 'text-right',
-      format: this.moneyFormat,
-    },
-    {
-      field: 'TXN_PayAmt24',
-      header: '禮券餘額代卡',
-      visible: true,
-      style: 'text-right',
-      format: this.moneyFormat,
-    },
-    {
-      field: 'TXN_PayAmt25',
-      header: '提貨單餘代卡',
-      visible: true,
-      style: 'text-right',
-      format: this.moneyFormat,
-    },
-    {
-      field: 'TXN_PayAmt07',
-      header: '會員折抵',
-      visible: true,
-      style: 'text-right',
-      format: this.moneyFormat,
-    },
-    {
-      field: 'TXN_PayAmt55',
-      header: 'LINE Pay',
-      visible: true,
-      style: 'text-right',
-      format: this.moneyFormat,
-    },
-    {
-      field: 'TXN_PayAmt83',
-      header: '[LINE Pay]停車場',
-      visible: true,
-      style: 'text-right',
-      format: this.moneyFormat,
-    },
-    {
-      field: 'TXN_PayAmt78',
-      header: 'APP抵用券',
-      visible: true,
-      style: 'text-right',
-      format: this.moneyFormat,
-    },
-    {
-      field: 'TXN_PayAmt79',
-      header: 'APP提貨單',
-      visible: true,
-      style: 'text-right',
-      format: this.moneyFormat,
-    },
-    {
-      field: 'TXN_PayAmt21',
-      header: 'APP禮券',
-      visible: true,
-      style: 'text-right',
-      format: this.moneyFormat,
-    },
-    {
-      field: 'TXN_PayAmt53',
-      header: '悠遊卡',
-      visible: true,
-      style: 'text-right',
-      format: this.moneyFormat,
-    },
-    {
-      field: 'TXN_PayAmt56',
-      header: '一卡通錢包',
-      visible: true,
-      style: 'text-right',
-      format: this.moneyFormat,
-    },
-    {
-      field: 'TXN_PayAmt57',
-      header: '台灣Pay',
-      visible: true,
-      style: 'text-right',
-      format: this.moneyFormat,
-    },
-    {
-      field: 'TXN_PayAmt58',
-      header: '南紡錢包',
-      visible: true,
-      style: 'text-right',
-      format: this.moneyFormat,
-    },
-    {
-      field: 'TXN_PayAmt59',
-      header: '即享券',
-      visible: true,
-      style: 'text-right',
-      format: this.moneyFormat,
-    },
-    {
-      field: 'TXN_PayAmt60',
-      header: '喜客券',
-      visible: true,
-      style: 'text-right',
-      format: this.moneyFormat,
-    },
-    {
-      field: 'TXN_PayAmt22',
-      header: '[外來提貨單]高夢',
-      visible: true,
-      style: 'text-right',
-      format: this.moneyFormat,
-    },
-    {
-      field: 'TXN_PayAmt23',
-      header: '[外來禮券]高夢',
-      visible: true,
-      style: 'text-right',
-      format: this.moneyFormat,
-    },
-    {
-      field: 'PreSale_Received',
-      header: '預售訂金',
-      visible: true,
-      style: 'text-right',
-      format: this.moneyFormat,
-    },
-    {
-      field: 'PreSale_Checkout',
-      header: '預售實收結帳',
-      visible: true,
-      style: 'text-right',
-      format: this.moneyFormat,
-    },
-    {
-      field: 'TXN_OverAmt',
-      header: '溢收金額',
-      visible: true,
-      style: 'text-right',
-      format: this.moneyFormat,
-    },
-    {
-      field: 'TXN_ReturnAmt',
-      header: '退貨金額',
-      visible: true,
-      style: 'text-right',
-      format: this.moneyFormat,
-    },
-    {
-      field: 'TXN_ExchangeAmt',
-      header: '換貨金額',
-      visible: true,
-      style: 'text-right',
-      format: this.moneyFormat,
-    },
-    {
-      field: 'TXN_CancelAmt',
-      header: '作廢金額',
-      visible: true,
-      style: 'text-right',
-      format: this.moneyFormat,
-    },
-  ];
+
+  if (isDateRangeFilled && isMonthFilled) {
+    return { onlyOneDateAllowed: true };
+  }
+
+  return null;
+}
+
+
+ columns: any[] = [
+  { field: 'ECR_No', header: '收銀機號', visible: true },
+  { field: 'tlt_no', header: '專櫃編號', visible: true },
+  { field: 'tlt_name', header: '櫃位名稱', visible: true, style: 'text-left' },
+  { field: 'Pay_Dif_10', header: '現金', visible: true, style: 'text-right', format: this.moneyFormat },
+  { field: 'Pay_Dif_41', header: '聯信連線', visible: true, style: 'text-right', format: this.moneyFormat },
+  { field: 'Pay_Dif_42', header: '聯信離線', visible: true, style: 'text-right', format: this.moneyFormat },
+  { field: 'Pay_Dif_12', header: '聯信紅利', visible: true, style: 'text-right', format: this.moneyFormat },
+   { field: 'Pay_Dif_81', header: '中信-停車場', visible: true, style: 'text-right', format: this.moneyFormat },
+   { field: 'Pay_Dif_43', header: '中信連線', visible: true, style: 'text-right', format: this.moneyFormat },
+   { field: 'Pay_Dif_44', header: '中信離線', visible: true, style: 'text-right', format: this.moneyFormat },
+   { field: 'Pay_Dif_14', header: '中信紅利', visible: true, style: 'text-right', format: this.moneyFormat },  
+   { field: 'Pay_Dif_82', header: '一卡通-停車場', visible: true, style: 'text-right', format: this.moneyFormat },
+   { field: 'Pay_Dif_52', header: '一卡通', visible: true, style: 'text-right', format: this.moneyFormat },
+   { field: 'Pay_Dif_20', header: '禮券', visible: true, style: 'text-right', format: this.moneyFormat },
+   { field: 'Pay_Dif_62', header: '商品提貨單', visible: true, style: 'text-right', format: this.moneyFormat },
+   { field: 'Pay_Dif_77', header: '感熱紙抵用券', visible: true, style: 'text-right', format: this.moneyFormat },
+   { field: 'Pay_Dif_71', header: '商品抵用券', visible: true, style: 'text-right', format: this.moneyFormat },
+   { field: 'Pay_Dif_30', header: '貴賓提貨單(應收帳款)', visible: true, style: 'text-right', format: this.moneyFormat },
+   { field: 'Pay_Dif_73', header: '外來禮券(抵用券)', visible: true, style: 'text-right', format: this.moneyFormat },
+   { field: 'Pay_Dif_72', header: '外來提貨單(抵用券)', visible: true, style: 'text-right', format: this.moneyFormat },
+   { field: 'Pay_Dif_74', header: '活動券(自營)', visible: true, style: 'text-right', format: this.moneyFormat },
+   { field: 'Pay_Dif_75', header: '折價券', visible: true, style: 'text-right', format: this.moneyFormat },
+   { field: 'Pay_Dif_76', header: '現抵', visible: true, style: 'text-right', format: this.moneyFormat },
+   { field: 'Pay_Dif_24', header: '禮券餘代卡', visible: true, style: 'text-right', format: this.moneyFormat },
+   { field: 'Pay_Dif_25', header: '提貨單餘代卡', visible: true, style: 'text-right', format: this.moneyFormat },
+   { field: 'Pay_Dif_07', header: '會員折抵', visible: true, style: 'text-right', format: this.moneyFormat },
+   { field: 'Pay_Dif_83', header: 'LINE Pay-停車場', visible: true, style: 'text-right', format: this.moneyFormat },
+   { field: 'Pay_Dif_55', header: 'LINE Pay', visible: true, style: 'text-right', format: this.moneyFormat },
+   { field: 'Pay_Dif_78', header: 'APP抵用券', visible: true, style: 'text-right', format: this.moneyFormat },
+   { field: 'Pay_Dif_79', header: 'APP提貨單', visible: true, style: 'text-right', format: this.moneyFormat },
+   { field: 'PPay_Dif_sum', header: '總金額', visible: true, style: 'text-right', format: this.moneyFormat },
+ 
+];
 }
