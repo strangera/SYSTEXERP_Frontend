@@ -14,6 +14,7 @@ import { TableComponent } from '../../../shared/componentkit/table/table.compone
 import { TranslateModule } from '@ngx-translate/core';
 import { ECRNoService } from '@service/basic/ECRNo.service';
 import { MultiSelectComponent } from '@shared/componentkit';
+import { DatePipe } from '@angular/common';
 
 @Component({
   selector: 'app-fin12020',
@@ -63,7 +64,10 @@ export class FIN12020Component extends BasicQueryPageComponent<FIN12020Data> imp
   invoiceStatusOptions: any[] = [];
   usageTypeOptions: any[] = [];
 
-  constructor(private fin12020Service: FIN12020Service, private ecrNoService: ECRNoService,
+  constructor(
+    private fin12020Service: FIN12020Service,
+    private ecrNoService: ECRNoService,
+    private datePipe: DatePipe
   ) {
     super();
   }
@@ -75,7 +79,12 @@ export class FIN12020Component extends BasicQueryPageComponent<FIN12020Data> imp
 
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
-      this.fin12020Service.queryFIN12020(frm.value)
+      this.fin12020Service.queryFIN12020(
+        {
+          ...frm.value,
+          GUI_YYMM_start: this.datePipe.transform(frm.value.GUI_YYMM_start, 'yyyyMM'),
+          GUI_YYMM_end: this.datePipe.transform(frm.value.GUI_YYMM_end, 'yyyyMM'),
+        })
         .pipe(finalize(() => this.loading = false))
         .subscribe(response => {
           this.data = response.Data;
@@ -103,8 +112,7 @@ export class FIN12020Component extends BasicQueryPageComponent<FIN12020Data> imp
       { label: '未使用', value: '00' },
       { label: '使用中', value: '01' },
       { label: '己用完', value: '02' },
-      { label: '暫停使用', value: '03' },
-      { label: '已鎖定', value: '04' }
+      { label: '停用', value: '03' },
     ];
 
     // 取得使用別選項
