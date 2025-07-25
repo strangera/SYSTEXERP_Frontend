@@ -167,20 +167,25 @@
       background-color: rgb(217 217 217 / 40%) !important;
     }
   }
-  .whitespace-pre-wrap {
-    white-space: pre-wrap; // 保留換行
-    overflow: hidden; // 隱藏溢出內容
-    text-overflow: ellipsis; // 使用省略號
-    display: -webkit-box; // 兼容Webkit內核瀏覽器
-    -webkit-line-clamp: 1; // 顯示的行數
+  .html-cell,
+  .html-cell * {
+    font-size: 14px !important;
+    line-height: 1.2 !important;
+    font-weight: normal !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    display: -webkit-inline-box;
+    -webkit-line-clamp: 1;
     line-clamp: 1;
-    -webkit-box-orient: vertical; // 垂直排列子元素
-    max-width: 100%; // 確保容器寬度固定
-    * {
-      padding: 0;
-      margin: 0;
-    }
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-height: 1.2em; /* 限制高度為一行 */
+    white-space: normal;
+    word-break: break-word;
+    max-width: 75px; /* 可選：限制寬度 */
   }
+
   .empty-message {
     position: absolute;
     left: 50%;

@@ -16,7 +16,7 @@
     <ng-template pTemplate="body" let-rowData let-columns="columns" let-rowIndex="rowIndex">
       <tr>
         <td class="text-center">{{ rowIndex + 1 }}</td>
-        <td *ngFor="let col of getFilterColumns(expansionColumns)" class="text-center" [ngClass]="col.style">
+        <td *ngFor="let col of getFilterColumns(expansionColumns)" class="text-center">
           <span *ngIf="rowData[col.field] !== undefined && rowData[col.field] !== null && !col.type">
             {{ col.format ? col.format(rowData[col.field]) : rowData[col.field] }}
           </span>

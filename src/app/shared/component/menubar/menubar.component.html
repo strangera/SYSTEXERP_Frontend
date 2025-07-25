@@ -4,10 +4,12 @@
       [model]="customBreadcrumbItems.length ? customBreadcrumbItems : breadcrumbItems" [home]="home">
       <ng-template pTemplate="item" let-item>
         <div class="cursor-pointer" [routerLink]="item.url">
-          <span class="text-sm font-semibold text-gray-700 dark:text-gray-200">
+          <span class="text-sm font-semibold text-gray-700 dark:text-gray-200"
+            [ngClass]="noProgNo ? 'text-red-500' : ''">
             {{ item.label }}
           </span>
-          <i *ngIf="item.isLast" [class]="isFavorite ? 'pi pi-star-fill text-yellow-400' : 'pi pi-star text-color'"></i>
+          <i *ngIf="item.isLast && !noProgNo"
+            [class]="isFavorite ? 'pi pi-star-fill text-yellow-400' : 'pi pi-star text-color'"></i>
         </div>
       </ng-template>
     </p-breadcrumb>
