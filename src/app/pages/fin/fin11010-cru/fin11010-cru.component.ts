@@ -125,7 +125,6 @@ export class FIN11010CRUComponent extends BasicCruPageComponent<FIN11010Data> im
               STO_AreaCode: formValue.STO_AreaCode,
               STO_ApplyID: formValue.STO_ApplyID,
               REP_BegGUIYM: this.datePipe.transform(formValue.REP_BegGUIYM, 'yyyyMM') ?? '',
-              REP_EndGUIYM: this.datePipe.transform(formValue.REP_EndGUIYM, 'yyyyMM') ?? ''
             };
             this.fin11010Service.insertFIN11010(rb)
               .pipe(finalize(() => this.loading = false))
@@ -157,7 +156,6 @@ export class FIN11010CRUComponent extends BasicCruPageComponent<FIN11010Data> im
               STO_AreaCode: formValue.STO_AreaCode,
               STO_ApplyID: formValue.STO_ApplyID,
               REP_BegGUIYM: this.datePipe.transform(formValue.REP_BegGUIYM, 'yyyyMM') ?? '',
-              REP_EndGUIYM: this.datePipe.transform(formValue.REP_EndGUIYM, 'yyyyMM') ?? ''
             };
             this.fin11010Service.updateFIN11010(rb)
               .pipe(finalize(() => this.loading = false))

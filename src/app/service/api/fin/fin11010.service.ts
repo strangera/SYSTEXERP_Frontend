@@ -68,7 +68,6 @@ export interface FIN11010InsertRequest {
   STO_AreaCode: string;
   STO_ApplyID: string;
   REP_BegGUIYM: string;
-  REP_EndGUIYM: string;          // 申報年月迄
 }
 
 // --- 更新 TDS1003 資料請求 Model ---
@@ -92,7 +91,6 @@ export interface FIN11010UpdateRequest {
   STO_AreaCode: string;
   STO_ApplyID: string;
   REP_BegGUIYM: string;
-  REP_EndGUIYM: string;          // 申報年月迄
 }
 
 // --- 狀態更新 TDS1003 資料請求 Model ---
