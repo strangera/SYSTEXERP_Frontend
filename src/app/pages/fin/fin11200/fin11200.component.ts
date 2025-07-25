@@ -4,7 +4,7 @@ import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-
 import { finalize } from 'rxjs';
 import { Fin11200Service } from '../../../service/api/fin/fin11200.service';
 import { columns, monthOptions, Pos1018 } from './fin11200.model';
-import { AddButton, Column, convertYYYYMMToDate } from '../../../shared/componentkit/table/table.model';
+import { AddButton, convertDateToYYYYMM, Column, convertYYYYMMToDate } from '../../../shared/componentkit/table/table.model';
 import { ECRNoService } from '../../../service/basic/ECRNo.service';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
@@ -78,7 +78,7 @@ export class FIN11200Component extends BasicQueryPageComponent<Pos1018> implemen
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
       const body = {
-        GUI_YYMM: this.convertDateToYYYYMM(frm),
+        GUI_YYMM: this.convertDateToYYYYMM2(frm),
         ECR_NoList: frm.get('ECR_No')?.value
       }
       console.log(body);
@@ -92,7 +92,7 @@ export class FIN11200Component extends BasicQueryPageComponent<Pos1018> implemen
       });
     });
   }
-  private convertDateToYYYYMM(frm: FormGroup): string {
+  private convertDateToYYYYMM2(frm: FormGroup): string {
     const yyDate: Date = frm.get('GUI_YY')?.value;
     const mmRaw = frm.get('GUI_MM')?.value;
     const year = yyDate instanceof Date ? yyDate.getFullYear().toString() : '';
@@ -106,8 +106,9 @@ export class FIN11200Component extends BasicQueryPageComponent<Pos1018> implemen
       ClosedDetail: {
         ID: rowData.ID,
         STO_No: rowData.STO_No,
-        GUI_YYMM: rowData.GUI_YYMM,
-        SER_NOS: rowData.SER_NOS
+        GUI_YYMM: convertDateToYYYYMM(new Date(rowData.GUI_YYMM)),
+        SER_NOS: rowData.SER_NOS,
+        ECR_No: rowData.ECR_No
       }
     }
     this.manageLoading = true;
@@ -126,7 +127,7 @@ export class FIN11200Component extends BasicQueryPageComponent<Pos1018> implemen
       ExportDetails: this.selectedRows.map((item) => ({
         ID: item.ID,
         STO_No: item.STO_No,
-        GUI_YYMM: item.GUI_YYMM,
+        GUI_YYMM: convertDateToYYYYMM(new Date(item.GUI_YYMM)),
         SER_NOS: item.SER_NOS,
         ECR_No: item.ECR_No
       }))
