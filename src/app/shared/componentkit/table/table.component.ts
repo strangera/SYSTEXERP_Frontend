@@ -10,7 +10,7 @@ import { BasicPrintDataComponent } from '../../componentextends/basic-print/basi
 import { CurrentPageService } from '../../../layout/app.menulist/current-page.service';
 import { Subject, takeUntil } from 'rxjs';
 import { FunsrightInfo } from '../../models/system/funsrightInfo';
-import { NgIf, NgClass, NgFor, NgStyle, DatePipe } from '@angular/common';
+import { NgIf, NgClass, NgFor, NgStyle } from '@angular/common';
 import { DividerModule } from 'primeng/divider';
 import { MultiSelectModule } from 'primeng/multiselect';
 import { TooltipModule } from 'primeng/tooltip';
@@ -26,6 +26,7 @@ import { SkeletonModule } from 'primeng/skeleton';
 import { TableExpansionComponent } from './table-expansion/table-expansion.component';
 import { TableExportComponent } from './table-export/table-export.component';
 import { BlockUIModule } from 'primeng/blockui';
+import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 @Component({
   selector: 'app-table',
   templateUrl: './table.component.html',
@@ -55,7 +56,6 @@ import { BlockUIModule } from 'primeng/blockui';
     SkeletonModule,
     TableExpansionComponent,
     TableExportComponent,
-    DatePipe,
     BlockUIModule
   ],
 })
@@ -93,6 +93,7 @@ export class TableComponent extends BasicPrintDataComponent implements OnInit, O
   @Output() rowEditSave = new EventEmitter<RowEditSaveEvent>();                 // Row 編輯保存事件
   @Output() rowEditCancel = new EventEmitter<any>();                            // Row 編輯取消事件
   @Input() rowEditDisabled: (rowData: any) => boolean | undefined = () => false;// Row禁止編輯條件
+  @Input() alwaysEdit = false;                                                  // 是否總是編輯
   // Header 相關
   @Input() showCaption = true;                                                  // 是否顯示 Caption
   // Header(左) 相關
@@ -154,8 +155,6 @@ export class TableComponent extends BasicPrintDataComponent implements OnInit, O
   // 權限
   @Input() showSubtotal = false; // 是否顯示小計
   @Input() subtotalFields: string[] = []; // 要計算小計的欄位名稱
-  // 小計
-
   private ngUnsubscribe = new Subject<void>();
   public funInfo: FunsrightInfo | undefined;
 
@@ -163,7 +162,7 @@ export class TableComponent extends BasicPrintDataComponent implements OnInit, O
     private readonly queryStateService: QueryStateService,
     private readonly messageService: NotificationService,
     private readonly currentPageService: CurrentPageService,
-
+    private sanitizer: DomSanitizer
   ) { super(); }
   ngOnInit(): void {
     this.currentPageService.currentPageProgNo$.pipe(takeUntil(this.ngUnsubscribe)).subscribe(progNo => {
@@ -366,5 +365,9 @@ export class TableComponent extends BasicPrintDataComponent implements OnInit, O
   }
   moneyFormat(value: number): string {
     return value != null ? value.toLocaleString('en-US') : '0';
+  }
+
+  sanitizeHtml(html: string): SafeHtml {
+    return this.sanitizer.bypassSecurityTrustHtml(html);
   }
 }
