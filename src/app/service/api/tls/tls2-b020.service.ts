@@ -22,4 +22,12 @@ export class TLS2B020Service {
       catchError((error) => this.errorHandler.handleError(error))  // ✅ 正確
     );
   }
+// ✅ 查詢最近關帳日
+  queryCloseDate(payload: any): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/TLS0000/TLS2000/queryCloseDate`, payload).pipe(
+      tap(response => console.log('查詢關帳日:', response)),
+      catchError((error) => this.errorHandler.handleError(error))
+    );
+  }
+
 }

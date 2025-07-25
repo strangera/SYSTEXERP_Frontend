@@ -55,14 +55,14 @@ export class TLS47010Component extends BasicQueryPageComponent<any> {
     this.tls47010Service.ECROptions({}).subscribe((res) => {
       this.ECRNoOptions =
         res?.Data?.map((x: any) => ({
-          label: `${x.ECR_No} - ${x.ECR_Name} - ${x.ECR_Status}`,
+          label: `${x.ECR_No} - ${x.ECR_Name}`,
           value: x.ECR_No,
         })) || [];
     });
 
     this.dataTypeService.getDataOptions().subscribe((res) => {
       this.dataTypeOptions = res.map((x: any) => ({
-        label: `${x.TBL_Name} - ${x.TBL_Remark}`,
+        label: `${x.TBL_Name}`,
         value: x.TBL_Name,
       }));
     });

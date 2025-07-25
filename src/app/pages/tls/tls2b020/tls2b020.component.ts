@@ -27,6 +27,7 @@ import { CashierService } from '../../../service/basic/cashier.service';
 import { Tls11010Service } from '../../../service/api/tls/tls11010.service';
 import { FloorService } from '../../../service/basic/floor.service';
 import { DecimalPipe, NgIf } from '@angular/common';
+import { forkJoin } from 'rxjs';
 
 @Component({
   selector: 'app-tls2b020',
@@ -59,6 +60,7 @@ export class TLS2B020Component extends BasicQueryPageComponent<any> {
   subtotalFields: string[] = [];
   overpaidAmount: number = 0; // 溢付金額（合計）
   underpaidAmount: number = 0; // 欠收金額（API回傳）
+  closeDate: string = '查詢中...';
     // 表格資料與欄位
   data: any[] = [];
   totalRecords = 0;
@@ -181,51 +183,65 @@ queryForm = this.formBuilder.group({
     ];
   }
 
-  onSubmit(form: FormGroup): void {
-    this.submitted = true;
+onSubmit(form: FormGroup): void {
+  this.submitted = true;
 
-    if (form.invalid) {
-      this.messageService.warnBubble('請完整填寫查詢條件');
-      return;
-    }
-
-    const payload = { ...form.value };
-    Object.keys(payload).forEach((key) => {
-      if (typeof payload[key] === 'string') {
-        payload[key] = payload[key].trim() || null;
-      }
-    });
-
-    // ⬇️ 加入動態產欄位邏輯
-    if (payload.onedatemm) {
-      const rawValue = payload.onedatemm;
-      const yyyymm =
-        typeof rawValue === 'string'
-          ? rawValue
-          : `${rawValue.getFullYear()}${(rawValue.getMonth() + 1).toString().padStart(2, '0')}`;
-      this.buildColumnsByMonth(yyyymm);
-    }
-
-    this.loading = true;
-    this.messageService.blockUi();
-
-    this.tls2b020Service.queryTLS2B020(payload).subscribe({
-      next: (res) => {
-        this.data = res?.Data ?? [];
-        this.totalRecords = res?.TotalCount ?? this.data.length;
-        this.queryStateService.setQueryState(this.ProgNo, payload);
-        this.messageService.successBubble('查詢成功');
-      },
-      error: () => {
-        this.messageService.errorBubble('查詢失敗');
-        this.loading = false;
-      },
-      complete: () => {
-        this.loading = false;
-        this.messageService.unblockUi();
-      },
-    });
+  if (form.invalid) {
+    this.messageService.warnBubble('請完整填寫查詢條件');
+    return;
   }
+
+  const payload = { ...form.value };
+  Object.keys(payload).forEach((key) => {
+    if (typeof payload[key] === 'string') {
+      payload[key] = payload[key].trim() || null;
+    }
+  });
+
+  // ⬇️ 依 TXN_Date 建立欄位
+  if (payload.TXN_Date) {
+    const rawValue = payload.TXN_Date;
+    const yyyymm =
+      typeof rawValue === 'string'
+        ? rawValue.substring(0, 7).replace('-', '')
+        : `${rawValue.getFullYear()}${(rawValue.getMonth() + 1)
+            .toString()
+            .padStart(2, '0')}`;
+    this.buildColumnsByMonth(yyyymm);
+  }
+
+  this.loading = true;
+  this.messageService.blockUi();
+
+  // ✅ 改為平行呼叫：主資料 + 關帳日
+  forkJoin({
+    reportData: this.tls2b020Service.queryTLS2B020(payload),
+    closeDateRes: this.tls2b020Service.queryCloseDate(payload),
+  }).subscribe({
+    next: ({ reportData, closeDateRes }) => {
+      this.data = reportData?.Data ?? [];
+      this.totalRecords = reportData?.TotalCount ?? this.data.length;
+
+      this.queryStateService.setQueryState(this.ProgNo, payload);
+
+      // ✅ 從 closeDateRes.Data 拿關帳日
+      this.closeDate = closeDateRes?.Data ?? '-';
+
+      this.messageService.successBubble('查詢成功');
+    },
+    error: () => {
+      this.messageService.errorBubble('查詢失敗，請稍後再試');
+      this.loading = false;
+    },
+    complete: () => {
+      this.loading = false;
+      this.messageService.unblockUi();
+    },
+  });
+}
+
+
+
   moneyFormat(value: number): string {
     return value != null ? value.toLocaleString('en-US') : '0';
   }
