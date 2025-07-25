@@ -47,8 +47,8 @@
                 <app-calendar class="col-12 md:col-6 lg:col-4" label="申報年月起" controlName="REP_BegGUIYM"
                     [control]="dataForm.controls.REP_BegGUIYM" [submitted]="submitted"
                     calendarType="dateMonthOne"></app-calendar>
-                <app-calendar class="col-12 md:col-6 lg:col-4" label="申報年月迄" controlName="REP_EndGUIYM"
-                    [control]="dataForm.controls.REP_EndGUIYM" [submitted]="submitted"
+                <app-calendar *ngIf="crudstatus === 'Read'" class="col-12 md:col-6 lg:col-4" label="申報年月迄"
+                    controlName="REP_EndGUIYM" [control]="dataForm.controls.REP_EndGUIYM" [submitted]="submitted"
                     calendarType="dateMonthOne"></app-calendar>
             </div>
             <div *ngIf="!isFormReadable"
