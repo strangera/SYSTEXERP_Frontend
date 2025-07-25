@@ -84,7 +84,6 @@
     dataKey="id"
     [data]="data"
     [columns]="columns"
-    (edit)="onEdit($event)"
     [showCheckBox]="true"
     (selectionChange)="selectedItems = $event"
     [selectedItems]="selectedItems"
@@ -94,8 +93,11 @@
     [lazy]="true"
     [loading]="loading"
     [showPaginator]="true"
-    [showReportMode]="true"
+    [showReportMode]="false"
     [addButton]="addButtons"
+    [showDelete]="false"
+    [showDetail]="false"
+    [showEdit]="false"
   >
     <header>
       <div class="flex align-items-center gap-2 text-sm font-bold">

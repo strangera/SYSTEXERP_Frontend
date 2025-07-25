@@ -152,6 +152,7 @@ export class TLS2A010Component extends BasicQueryPageComponent<any> implements O
     setTimeout(() => {
       this.data = [
         {
+          id: 1,
           TXN_Date: '2025-07-23',
           ECR_No: 'ECR001',
           PAY_NO: '信用卡',
@@ -168,6 +169,7 @@ export class TLS2A010Component extends BasicQueryPageComponent<any> implements O
           Settle_Date: '2025/07/25'
         },
         {
+          id: 2,
           TXN_Date: '2025-07-22',
           ECR_No: 'ECR002',
           PAY_NO: '信用卡',

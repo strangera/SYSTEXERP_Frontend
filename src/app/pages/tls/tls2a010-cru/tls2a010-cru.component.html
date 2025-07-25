@@ -1,7 +1,7 @@
 <div class="card">
   <div class="flex gap-2 mb-2">
     <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
-    <app-button btnType="back" (click)="onCancel()"></app-button>
+    <app-button btnType="back" (click)="onCancel()" />
   </div>
 
   <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
@@ -27,6 +27,12 @@
           [showDelete]="false"
           (fieldChange)="onFieldChange($event)"
         ></app-table>
+      </div>
+      <div
+        class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
+      >
+        <app-button btnType="cancel" [form]="dataForm"></app-button>
+        <app-button btnType="submit" [loading]="false" />
       </div>
     </form>
   </p-panel>

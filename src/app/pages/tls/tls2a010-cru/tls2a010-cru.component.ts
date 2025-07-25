@@ -1,4 +1,5 @@
 import { Component, OnInit } from '@angular/core';
+import { NgIf } from '@angular/common';
 import { Column } from '../../../shared/componentkit/table/table.model';
 import { ReactiveFormsModule, FormGroup, FormBuilder } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
@@ -23,6 +24,7 @@ import { TLS2A010Data } from '../tls2a010/tls2a010.model';
     ReactiveFormsModule,
     TableComponent,
     TooltipModule,
+    NgIf,
 
   ],
 })
@@ -36,7 +38,7 @@ export class TLS2A010CRUComponent extends BasicCruPageComponent<TLS2A010Data> im
     { field: 'tlt_name', header: '專櫃名稱' },
     { field: 'TXN_GUINo', header: '發票號碼' },
     { field: 'CRD_No', header: '付款卡號' },
-    { field: 'TXN_PayAmt', header: '付款金額', type: 'inputNumber' },
+    { field: 'TXN_PayAmt', header: '付款金額' },
 
     {
       field: 'check_status',
@@ -50,6 +52,26 @@ export class TLS2A010CRUComponent extends BasicCruPageComponent<TLS2A010Data> im
       ],
       optionLabel: 'label',
       optionValue: 'value'
+    },
+    {
+      field: 'Remark',
+      header: '備註',
+      type: 'input',
+      validate: [
+        (value: any) => {
+          // 若為空值就直接通過
+          if (value === null || value === undefined || value === '') {
+            return { isValid: true, errorMessage: [] };
+          }
+
+          const isValid = value.toString().length <= 10;
+          return {
+            isValid,
+            errorMessage: ['最多只能輸入 10 個字', '備註']
+          };
+        }
+      ]
+
     }
 
   ];
@@ -89,7 +111,7 @@ export class TLS2A010CRUComponent extends BasicCruPageComponent<TLS2A010Data> im
         TLT_NO: 'A01',
         tlt_name: '貓咪飾品專櫃',
         TXN_GUINo: 'AB12345678',
-        CRD_No: '****5678',
+        CRD_No: '12345678',
         TXN_PayAmt: 1200,
         check_status: 2, // 信用卡缺單
         check_Remark: '缺收據'
@@ -102,7 +124,7 @@ export class TLS2A010CRUComponent extends BasicCruPageComponent<TLS2A010Data> im
         TLT_NO: 'A02',
         tlt_name: '狗狗用品專櫃',
         TXN_GUINo: 'CD87654321',
-        CRD_No: '****1234',
+        CRD_No: '55551234',
         TXN_PayAmt: 980,
         check_status: 1, // 已撥回
         check_Remark: '已手動補登'
@@ -115,7 +137,7 @@ export class TLS2A010CRUComponent extends BasicCruPageComponent<TLS2A010Data> im
         TLT_NO: 'A03',
         tlt_name: '鳥類玩具專櫃',
         TXN_GUINo: 'EF56781234',
-        CRD_No: '****4321',
+        CRD_No: '12344321',
         TXN_PayAmt: 500,
         check_status: 3, // 信用卡未簽
         check_Remark: '簽單遺失'
@@ -126,11 +148,26 @@ export class TLS2A010CRUComponent extends BasicCruPageComponent<TLS2A010Data> im
   }
 
   onSubmit(frm: FormGroup) {
-    if (frm.valid) {
-      // 處理表單提交邏輯
-    }
+    this.handleSubmit(frm, () => {
+      this.loading = true;
+      //  next: (res) => {
+      //     this.messageService.successBubble(res.Message);
+      //     if (this.isFormCreateable) {
+      //       this.dataForm.reset();
+      //     } else if (this.isFormEditable) {
+      //       this.onCancel();
+      //     }
+      //   },
+        setTimeout(() => {
+          this.loading = false;
+          this.messageService.successBubble('提交成功');
+          this.onCancel();
+        }, 1000);
+    });
   }
   onFieldChange(event: any) {
     console.log('欄位變更:', event);
   }
+
 }
+
