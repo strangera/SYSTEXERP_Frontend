@@ -127,7 +127,8 @@ export class FIN11200Component extends BasicQueryPageComponent<Pos1018> implemen
         ID: item.ID,
         STO_No: item.STO_No,
         GUI_YYMM: item.GUI_YYMM,
-        SER_NOS: item.SER_NOS
+        SER_NOS: item.SER_NOS,
+        ECR_No: item.ECR_No
       }))
     }
     this.btnLoading = true;
