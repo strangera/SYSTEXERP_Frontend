@@ -13,12 +13,9 @@ export interface Column {
 
   disabled?: (value: any) => boolean;  // 是否禁用 (是否為禁用欄位)
 
-  style?: string; // styles
-  maxWidth?: string; // 最大寬度 max-w-{{ col.maxWidth }}
-
   validate?: ((value: string, rowData: any, data: any[], field: string, header: string) => { isValid: boolean, errorMessage: string[] })[]; // 驗證規則(如果是可輸入的欄位)
 
-  type?: 'input' | 'inputNumber' | 'dropdown' | 'button' | 'html' | 'checkbox' | 'date' | 'default'; // 欄位類型
+  type?: 'input' | 'inputNumber' | 'dropdown' | 'button' | 'html' | 'date' | 'default'; // 欄位類型
   prefix?: string;
   fractionDigits?: number;
   useGrouping?: boolean;

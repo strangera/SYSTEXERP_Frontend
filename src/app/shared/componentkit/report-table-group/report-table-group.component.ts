@@ -1,5 +1,4 @@
 import { Component, Input, OnInit, TemplateRef } from '@angular/core';
-import { Column } from '../table/table.model';
 import {
   Location,
   NgIf,
@@ -24,7 +23,37 @@ import { InputSwitchModule } from 'primeng/inputswitch';
 import { TableModule } from 'primeng/table';
 import { PrimeTemplate } from 'primeng/api';
 import { MultiSelectModule } from 'primeng/multiselect';
+interface Column {
+  field: string;     // 欄位名稱 (資料的欄位名稱)
+  header: string;    // 欄位標題 (顯示在表格上的標題)
+  visible?: boolean;  // 是否顯示 (可篩選欄位是否顯示？)
+  hidden?: boolean;  // 是否隱藏 (是否為無法篩選欄位)
+  format?: (value: any) => string | number | null; // 格式化(日期、時間...)
 
+  showSort?: boolean;
+  sortField?: string; // 排序欄位(預設為 field)
+
+  disabled?: (value: any) => boolean;  // 是否禁用 (是否為禁用欄位)
+  style?: string; // styles
+
+  validate?: ((value: string, rowData: any, data: any[], field: string, header: string) => { isValid: boolean, errorMessage: string[] })[]; // 驗證規則(如果是可輸入的欄位)
+
+  type?: 'input' | 'inputNumber' | 'dropdown' | 'button' | 'html' | 'date' | 'default'; // 欄位類型
+  prefix?: string;
+  fractionDigits?: number;
+  useGrouping?: boolean;
+
+  options?: any | ((rowData: any) => any); // 支持靜態數據或基於 rowData 生成
+  optionLabel?: string; // 下拉選單 optionLabel
+  optionValue?: string; // 下拉選單 optionValue
+
+  buttonLabel?: string; // 選擇按鈕 label
+  checkboxTrueLabel?: string; // checkbox 非編輯模式 true 顯示文字（適用於單一布林值）
+  checkboxFalseLabel?: string; // checkbox 非編輯模式 false 顯示文字（適用於單一布林值）
+  dateFormat?: string; // 日期格式（例如 'yy-mm-dd'，僅適用於 type='date'）
+  frozen?: boolean;  // 是否凍結 (是否為凍結欄位)
+  alignFrozen?: string; // 凍結欄位對齊方式
+}
 @Component({
   selector: 'app-report-table-group',
   templateUrl: './report-table-group.component.html',
@@ -48,72 +77,72 @@ import { MultiSelectModule } from 'primeng/multiselect';
   ],
 })
 export class ReportTableGroupComponent implements OnInit {
-// 📌 資料與欄位設定
-@Input() columns: Column[] = [];                        // 表格欄位定義
-@Input() dataKey = 'id';                                // 每筆資料的唯一識別鍵
-@Input() subtotalFields: string[] = [];                 // 小計欄位（需加總的欄位）
-@Input() detailColumns: Column[] = [];                  // 明細展開欄位（如 rowexpansion）
+  // 📌 資料與欄位設定
+  @Input() columns: Column[] = [];                        // 表格欄位定義
+  @Input() dataKey = 'id';                                // 每筆資料的唯一識別鍵
+  @Input() subtotalFields: string[] = [];                 // 小計欄位（需加總的欄位）
+  @Input() detailColumns: Column[] = [];                  // 明細展開欄位（如 rowexpansion）
 
-@Input() groupByField?: string | null = null;           // 分組依據欄位
-@Input() groupByLabel: string = '';                     // 分組顯示名稱
+  @Input() groupByField?: string | null = null;           // 分組依據欄位
+  @Input() groupByLabel: string = '';                     // 分組顯示名稱
 
-@Input() detailFieldKeys: string[] = [];                // 展開資料查詢用的欄位 key
-@Input() fetchDetailFn: (payload: any) => Promise<any[]> = async () => []; // 明細查詢方法
+  @Input() detailFieldKeys: string[] = [];                // 展開資料查詢用的欄位 key
+  @Input() fetchDetailFn: (payload: any) => Promise<any[]> = async () => []; // 明細查詢方法
 
-@Input() extraTablesForPDF: {                           // PDF 附加額外表格
-  title: string;
-  columns: { header: string; field: string; style?: string }[];
-  data: any[];
-}[] = [];
+  @Input() extraTablesForPDF: {                           // PDF 附加額外表格
+    title: string;
+    columns: { header: string; field: string; style?: string }[];
+    data: any[];
+  }[] = [];
 
-@Input() groupHeaderTemplate?: TemplateRef<any>;        // 自訂群組表頭 template
+  @Input() groupHeaderTemplate?: TemplateRef<any>;        // 自訂群組表頭 template
 
-// 📌 分頁與區間設定
-@Input() totalCount: number = 0;                        // 資料總筆數
-@Input() currentPage: number = 1;                       // 目前頁碼
-@Input() rowsPerTable = 1000;                           // 每表格顯示的最大列數
-@Input() dateStart: string = '';                        // 起始日期
-@Input() dateEnd: string = '';                          // 結束日期
-@Input() printedAt: string = '';                        // 列印時間
-@Input() dateRangeLabel: string = '資料區間';            // 日期區間標籤
-@Input() reportTitle: string = '報表';                  // 報表主標題
-@Input() pdfSummaryText: string[] = [];                 // PDF 額外摘要文字
+  // 📌 分頁與區間設定
+  @Input() totalCount: number = 0;                        // 資料總筆數
+  @Input() currentPage: number = 1;                       // 目前頁碼
+  @Input() rowsPerTable = 1000;                           // 每表格顯示的最大列數
+  @Input() dateStart: string = '';                        // 起始日期
+  @Input() dateEnd: string = '';                          // 結束日期
+  @Input() printedAt: string = '';                        // 列印時間
+  @Input() dateRangeLabel: string = '資料區間';            // 日期區間標籤
+  @Input() reportTitle: string = '報表';                  // 報表主標題
+  @Input() pdfSummaryText: string[] = [];                 // PDF 額外摘要文字
 
-// 📌 布林設定與顯示控制（集中管理開關類）
-@Input() showTotalOnly = false;                         // 是否只顯示小計/總計（不顯示資料列）
-@Input() continuousRowNumber = true;                    // 是否連續編號（false = 每組從 1 開始）
-@Input() showDateRangeLabel = true;                     // 是否顯示日期區間文字
-@Input() showGroupedBody: boolean = false;              // 是否預設展開群組資料列
-@Input() showExpandColumn: boolean = false;             // 是否顯示展開列圖示
-@Input() allowMergeToggle: boolean = false;             // 是否顯示合併顯示切換按鈕
-@Input() defaultMergedView: boolean = true;             // 預設是否合併為一大表
-@Input() enableGrouping: boolean = false;               // 是否啟用分組顯示
-@Input() showBackButton = true;
+  // 📌 布林設定與顯示控制（集中管理開關類）
+  @Input() showTotalOnly = false;                         // 是否只顯示小計/總計（不顯示資料列）
+  @Input() continuousRowNumber = true;                    // 是否連續編號（false = 每組從 1 開始）
+  @Input() showDateRangeLabel = true;                     // 是否顯示日期區間文字
+  @Input() showGroupedBody: boolean = false;              // 是否預設展開群組資料列
+  @Input() showExpandColumn: boolean = false;             // 是否顯示展開列圖示
+  @Input() allowMergeToggle: boolean = false;             // 是否顯示合併顯示切換按鈕
+  @Input() defaultMergedView: boolean = true;             // 預設是否合併為一大表
+  @Input() enableGrouping: boolean = false;               // 是否啟用分組顯示
+  @Input() showBackButton = true;
 
-@Input() rowExpandMode: 'single' | 'multiple' = 'multiple'; // 展開列模式
-@Input() showGrandTotal: boolean = false; // 預設不顯示
+  @Input() rowExpandMode: 'single' | 'multiple' = 'multiple'; // 展開列模式
+  @Input() showGrandTotal: boolean = false; // 預設不顯示
 
-// 📌 資料 getter / setter
-private _data: any[] = [];
+  // 📌 資料 getter / setter
+  private _data: any[] = [];
 
-@Input()
-set data(value: any[]) {
-  this._data = value;
-  this.groupBodyExpanded = {}; // ✅ 每次新資料時重設群組展開狀態
+  @Input()
+  set data(value: any[]) {
+    this._data = value;
+    this.groupBodyExpanded = {}; // ✅ 每次新資料時重設群組展開狀態
 
-  // ✅ 若有指定分組欄位，先依該欄位排序資料
-  if (this.groupByField) {
-    this._data = [...this._data].sort((a, b) => {
-      const valA = a[this.groupByField!];
-      const valB = b[this.groupByField!];
-      if (valA == null) return 1;
-      if (valB == null) return -1;
-      return String(valA).localeCompare(String(valB));
-    });
+    // ✅ 若有指定分組欄位，先依該欄位排序資料
+    if (this.groupByField) {
+      this._data = [...this._data].sort((a, b) => {
+        const valA = a[this.groupByField!];
+        const valB = b[this.groupByField!];
+        if (valA == null) return 1;
+        if (valB == null) return -1;
+        return String(valA).localeCompare(String(valB));
+      });
+    }
+
+    this.splitData(); // ✅ 資料設定後進行分組或切頁處理
   }
-
-  this.splitData(); // ✅ 資料設定後進行分組或切頁處理
-}
 
 
 
@@ -201,7 +230,7 @@ set data(value: any[]) {
   constructor(
     private location: Location,
     private cdr: ChangeDetectorRef,
-  ) {}
+  ) { }
 
   ngOnInit(): void {
     this.mergedView = this.defaultMergedView ?? false; // ✅ 沒傳入就 false
@@ -333,143 +362,143 @@ set data(value: any[]) {
     return this._data.slice(0, this.rowsPerTable);
   }
 
-private rowIndexMap: Map<any, number> = new Map();
+  private rowIndexMap: Map<any, number> = new Map();
 
-getRowIndex(groupIndex: number, rowIndex: number): number {
-  if (!this.continuousRowNumber) {
-    return rowIndex + 1;
+  getRowIndex(groupIndex: number, rowIndex: number): number {
+    if (!this.continuousRowNumber) {
+      return rowIndex + 1;
+    }
+
+    // ✅ 計算從前面所有 group 加總的筆數
+    let totalIndex = 0;
+    for (let i = 0; i < groupIndex; i++) {
+      totalIndex += this.groupedData[i].length;
+    }
+
+    return totalIndex + rowIndex + 1;
   }
-
-  // ✅ 計算從前面所有 group 加總的筆數
-  let totalIndex = 0;
-  for (let i = 0; i < groupIndex; i++) {
-    totalIndex += this.groupedData[i].length;
-  }
-
-  return totalIndex + rowIndex + 1;
-}
 
   printPage(): void {
     window.print();
   }
 
-exportPDF(orientation: 'p' | 'l' = 'p'): void {
-  const columnCount = this.selectedColumns.length;
-  const columnWidth = 80;
-  const customWidth = Math.max(595, columnCount * columnWidth);
+  exportPDF(orientation: 'p' | 'l' = 'p'): void {
+    const columnCount = this.selectedColumns.length;
+    const columnWidth = 80;
+    const customWidth = Math.max(595, columnCount * columnWidth);
 
-  const doc = new jsPDF({
-    orientation,
-    unit: 'pt',
-    format: [customWidth, 842],
-  });
+    const doc = new jsPDF({
+      orientation,
+      unit: 'pt',
+      format: [customWidth, 842],
+    });
 
-  const marginLeft = 40;
-  let currentY = 40;
-  const pageWidth = doc.internal.pageSize.getWidth();
-
-  doc.setFont('NotoSansTC');
-  doc.setFontSize(14);
-  doc.text(this.reportTitle, pageWidth / 2, currentY, { align: 'center' });
-  currentY += 20;
-
-  doc.setFontSize(10);
-  doc.text(
-    `${this.dateRangeLabel}：${formatDate(this.dateStart)} ~ ${formatDate(this.dateEnd)}`,
-    marginLeft,
-    currentY,
-  );
-  doc.text(`列印時間：${this.printedAt}`, pageWidth - marginLeft, currentY, {
-    align: 'right',
-  });
-  currentY += 10;
-
-  if (this.mergedView) {
-    this.exportMergedPDF(doc, currentY, marginLeft);
-  } else {
-    this.exportGroupedPDF(doc, currentY, marginLeft);
-  }
-
-  // ➕ 額外表格列印（如付款別小計）
-  if (this.extraTablesForPDF?.length) {
-  let y = (doc as any).lastAutoTable?.finalY || currentY + 20;
-
-  this.extraTablesForPDF.forEach((table, tableIndex) => {
-    // 每張表格間距 30pt
-    y += 30;
+    const marginLeft = 40;
+    let currentY = 40;
+    const pageWidth = doc.internal.pageSize.getWidth();
 
     doc.setFont('NotoSansTC');
-    doc.setFontSize(12);
-    doc.text(table.title, marginLeft, y);
-    y += 10;
+    doc.setFontSize(14);
+    doc.text(this.reportTitle, pageWidth / 2, currentY, { align: 'center' });
+    currentY += 20;
 
-    const headers = table.columns.map((c) => c.header);
-    const columnStyles: Record<number, any> = {};
-
-    table.columns.forEach((col, index) => {
-      if (col.style === 'text-left') columnStyles[index] = { halign: 'left' };
-      else if (col.style === 'text-right') columnStyles[index] = { halign: 'right' };
-      else columnStyles[index] = { halign: 'center' };
-    });
-
-    const body = (table.data || []).map((row) =>
-      table.columns.map((col) => {
-        const val = row[col.field];
-        return typeof val === 'number'
-          ? val.toLocaleString()
-          : val != null
-          ? String(val)
-          : '';
-      }),
+    doc.setFontSize(10);
+    doc.text(
+      `${this.dateRangeLabel}：${formatDate(this.dateStart)} ~ ${formatDate(this.dateEnd)}`,
+      marginLeft,
+      currentY,
     );
+    doc.text(`列印時間：${this.printedAt}`, pageWidth - marginLeft, currentY, {
+      align: 'right',
+    });
+    currentY += 10;
 
-    // ➕ 加入總計列（若有金額欄）
-    if (body.length > 0 && table.columns.some((col) => col.field === 'TXN_PayAmt')) {
-      const totalAmt = table.data.reduce(
-        (sum, row) => sum + (parseFloat(row['TXN_PayAmt']) || 0),
-        0,
-      );
-      const totalRow = table.columns.map((col, idx) => {
-        if (idx === 0) return '總計';
-        if (col.field === 'TXN_PayAmt') return totalAmt.toLocaleString();
-        return '';
-      });
-      body.push(totalRow);
+    if (this.mergedView) {
+      this.exportMergedPDF(doc, currentY, marginLeft);
+    } else {
+      this.exportGroupedPDF(doc, currentY, marginLeft);
     }
 
-    autoTable(doc, {
-      startY: y,
-      head: [headers],
-      body,
-      margin: { left: marginLeft, right: marginLeft },
-      styles: { font: 'NotoSansTC', fontSize: 9 },
-      columnStyles,
-      headStyles: {
-        font: 'NotoSansTC',
-        fontStyle: 'normal',
-        fontSize: 10,
-        fillColor: [230, 230, 250],
-        textColor: [0, 0, 0],
-        halign: 'center',
-      },
-      didParseCell(data) {
-        const raw = data?.row?.raw ?? [];
-        if (Array.isArray(raw) && raw[0] === '總計') {
-          data.cell.styles.fillColor = [255, 255, 200];
+    // ➕ 額外表格列印（如付款別小計）
+    if (this.extraTablesForPDF?.length) {
+      let y = (doc as any).lastAutoTable?.finalY || currentY + 20;
+
+      this.extraTablesForPDF.forEach((table, tableIndex) => {
+        // 每張表格間距 30pt
+        y += 30;
+
+        doc.setFont('NotoSansTC');
+        doc.setFontSize(12);
+        doc.text(table.title, marginLeft, y);
+        y += 10;
+
+        const headers = table.columns.map((c) => c.header);
+        const columnStyles: Record<number, any> = {};
+
+        table.columns.forEach((col, index) => {
+          if (col.style === 'text-left') columnStyles[index] = { halign: 'left' };
+          else if (col.style === 'text-right') columnStyles[index] = { halign: 'right' };
+          else columnStyles[index] = { halign: 'center' };
+        });
+
+        const body = (table.data || []).map((row) =>
+          table.columns.map((col) => {
+            const val = row[col.field];
+            return typeof val === 'number'
+              ? val.toLocaleString()
+              : val != null
+                ? String(val)
+                : '';
+          }),
+        );
+
+        // ➕ 加入總計列（若有金額欄）
+        if (body.length > 0 && table.columns.some((col) => col.field === 'TXN_PayAmt')) {
+          const totalAmt = table.data.reduce(
+            (sum, row) => sum + (parseFloat(row['TXN_PayAmt']) || 0),
+            0,
+          );
+          const totalRow = table.columns.map((col, idx) => {
+            if (idx === 0) return '總計';
+            if (col.field === 'TXN_PayAmt') return totalAmt.toLocaleString();
+            return '';
+          });
+          body.push(totalRow);
         }
-      },
-    });
 
-    // ✅ 更新下一張表格的 y 起始點
-    y = (doc as any).lastAutoTable.finalY || y + 50;
-  });
+        autoTable(doc, {
+          startY: y,
+          head: [headers],
+          body,
+          margin: { left: marginLeft, right: marginLeft },
+          styles: { font: 'NotoSansTC', fontSize: 9 },
+          columnStyles,
+          headStyles: {
+            font: 'NotoSansTC',
+            fontStyle: 'normal',
+            fontSize: 10,
+            fillColor: [230, 230, 250],
+            textColor: [0, 0, 0],
+            halign: 'center',
+          },
+          didParseCell(data) {
+            const raw = data?.row?.raw ?? [];
+            if (Array.isArray(raw) && raw[0] === '總計') {
+              data.cell.styles.fillColor = [255, 255, 200];
+            }
+          },
+        });
+
+        // ✅ 更新下一張表格的 y 起始點
+        y = (doc as any).lastAutoTable.finalY || y + 50;
+      });
 
 
+    }
+
+    doc.save(`報表_${new Date().toISOString()}.pdf`);
+    this.showPdfDialog = false;
   }
-
-  doc.save(`報表_${new Date().toISOString()}.pdf`);
-  this.showPdfDialog = false;
-}
 
   private exportMergedPDF(
     doc: jsPDF,
