@@ -41,11 +41,11 @@ export class FIN11030Component extends BasicQueryPageComponent<APS2001Data> impl
     SAL_GUIYYYYMM_start: [null, [Validators.required]],
     SAL_GUIYYYYMM_end: [null, [Validators.required]],
     SAL_GUITrack: ['', [Validators.maxLength(2)]],
-    SAL_GUINo_start: ['', [Validators.maxLength(8), Validators.minLength(8), this.validationService.guiBegNoValidator]],
-    SAL_GUINo_end: ['', [Validators.maxLength(8), Validators.minLength(8), this.validationService.guiBegNoValidator]],
+    SAL_GUINo_start: [null, [Validators.maxLength(8), Validators.minLength(8), Validators.max(99999950)]],
+    SAL_GUINo_end: [null, [Validators.maxLength(8), Validators.minLength(8), Validators.max(99999999)]],
     SAL_GUIPaper: [null],
     ...createPaginationConfig([{ field: 'id', order: 1 }]), // 分頁和排序參數
-  });
+  }, { validators: this.validationService.guiNumberRangeValidator('SAL_GUINo_start', 'SAL_GUINo_end') });
   totalRecords = 0;// 分頁和排序參數 // 排序需要
   SAL_GUIPaperOptions = SAL_GUIPaperOptions;     // 發票類別選項
   data: APS2001Data[] = [];

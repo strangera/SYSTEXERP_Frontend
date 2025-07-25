@@ -46,7 +46,7 @@
     <label *ngIf="endLabel" [for]="endControl">{{ endLabel }}
       <span *ngIf="isRequired" class="required">*</span>
     </label>
-    <p-calendar [formControl]="endControl" [placeholder]="endControl.disabled ? '' : placeholder" [timeOnly]="timeOnly"
+    <p-calendar [formControl]="endControl" [placeholder]="endControl.disabled ? '' : placeholder2" [timeOnly]="timeOnly"
       [showTime]="showTime" hourFormat="24" [dateFormat]="dateFormat" [view]="view" [iconDisplay]="'input'"
       [ngClass]="{'ng-invalid ng-dirty': submitted && endControl.errors}" [showIcon]="!endControl.disabled"
       [appendTo]="'body'" [minDate]="startControl.value">

@@ -4982,7 +4982,7 @@
   }
 
   .p-menu {
-    padding: 0.25rem 0;
+    padding: 0.5rem;
     background: #ffffff;
     color: #495057;
     border: 1px solid #dee2e6;
@@ -5049,6 +5049,7 @@
     background: #ffffff;
     border: 0 none;
     box-shadow: 0 2px 4px -1px rgba(0, 0, 0, 0.2), 0 4px 5px 0 rgba(0, 0, 0, 0.14), 0 1px 10px 0 rgba(0, 0, 0, 0.12);
+    border-radius: 0.75rem !important;
   }
   .p-menu .p-submenu-header {
     margin: 0;

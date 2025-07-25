@@ -7,12 +7,12 @@ import { InputTextModule } from 'primeng/inputtext';
 import { ControlMessagesComponent } from '../../component/control-messages/control-messages.component';
 
 @Component({
-    selector: 'app-input-text-range',
-    templateUrl: './input-text-range.component.html',
-    styleUrl: './input-text-range.component.scss',
-    changeDetection: ChangeDetectionStrategy.OnPush,
-    standalone: true,
-    imports: [NgIf, InputGroupModule, FormsModule, InputTextModule, ReactiveFormsModule, NgClass, ControlMessagesComponent]
+  selector: 'app-input-text-range',
+  templateUrl: './input-text-range.component.html',
+  styleUrl: './input-text-range.component.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  standalone: true,
+  imports: [NgIf, InputGroupModule, FormsModule, InputTextModule, ReactiveFormsModule, NgClass, ControlMessagesComponent]
 })
 export class InputTextRangeComponent extends BasicKitComponent implements OnInit {
   @Input() label = '';
@@ -32,7 +32,7 @@ export class InputTextRangeComponent extends BasicKitComponent implements OnInit
     if (this.startControl?.disabled && this.endControl?.disabled) {
       this.placeholder = '';
     } else {
-      this.updateControlState(this.startControl);
+      this.updateControlState(this.startControl, this.endControl);
     }
     // 監聽值的變化
     this.startControl.valueChanges.subscribe(value => {

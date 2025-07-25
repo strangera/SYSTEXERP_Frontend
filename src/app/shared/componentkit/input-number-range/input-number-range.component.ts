@@ -8,12 +8,12 @@ import { InputGroupAddonModule } from 'primeng/inputgroupaddon';
 import { ControlMessagesComponent } from '../../component/control-messages/control-messages.component';
 
 @Component({
-    selector: 'app-input-number-range',
-    templateUrl: './input-number-range.component.html',
-    styleUrl: './input-number-range.component.scss',
-    changeDetection: ChangeDetectionStrategy.OnPush,
-    standalone: true,
-    imports: [NgIf, InputGroupModule, InputNumberModule, FormsModule, ReactiveFormsModule, NgClass, InputGroupAddonModule, ControlMessagesComponent]
+  selector: 'app-input-number-range',
+  templateUrl: './input-number-range.component.html',
+  styleUrl: './input-number-range.component.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  standalone: true,
+  imports: [NgIf, InputGroupModule, InputNumberModule, FormsModule, ReactiveFormsModule, NgClass, InputGroupAddonModule, ControlMessagesComponent]
 })
 export class InputNumberRangeComponent extends BasicKitComponent implements OnInit {
   @Input() label = '';
@@ -43,7 +43,7 @@ export class InputNumberRangeComponent extends BasicKitComponent implements OnIn
     if (this.startControl?.disabled && this.endControl?.disabled) {
       this.placeholder = '';
     } else {
-      this.updateControlState(this.startControl);
+      this.updateControlState(this.startControl, this.endControl);
     }
     // 監聽值的變化
     this.startControl.valueChanges.subscribe(value => {

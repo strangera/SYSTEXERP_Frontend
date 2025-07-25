@@ -1,50 +1,43 @@
 import { AbstractControl, FormControl, Validators } from '@angular/forms';
 
 export class BasicKitComponent {
-  placeholder: string | undefined; // 顯示註解
-  isRequired = false; // 控制 * 顯示或隱藏
-  isRequired2 = false; // 控制 * 顯示或隱藏
-  maxLength: number | null = null; // 設定最長輸入數
-  minLength: number | null = null; // 設定最短輸入數
-  maxValue: number | null = null; // 設定最大值
-  minValue: number | null = null; // 設定最小值
-  isNumberOnly = false; // 檢查是否只能輸入數字
+  placeholder: string | undefined;
+  placeholder2: string | undefined;
+  isRequired = false;
+  isRequired2 = false;
+  maxLength: number | null = null;
+  minLength: number | null = null;
+  maxValue: number | null = null;
+  minValue: number | null = null;
+  isNumberOnly = false;
 
-  updateControlState(control1: FormControl, control2?: FormControl) {
-    this.checkRequiredValidator(control1, control2);
-    this.checkIntLengthValidator(control1);
-    this.checkMinMaxValidator(control1);
-    this.checkNumberValidator(control1); // 加入數字驗證檢查
-    this.setPlaceholder(control1);
+  updateControlState(...controls: FormControl[]) {
+    controls.forEach((control, index) => {
+      this.checkRequiredValidator(control, index);
+      this.checkIntLengthValidator(control);
+      this.checkMinMaxValidator(control);
+      this.checkNumberValidator(control);
+      this.setPlaceholder(control, index);
+    });
   }
 
-  // Required
-  // ----------------------------------------------------------------
-  // 檢查是否必填 - 單一欄位
-  checkRequiredValidator(control1: FormControl, control2?: FormControl): void {
-    this.isRequired = control1?.hasValidator(Validators.required) ?? false;
-    if (control2) {
-      this.isRequired2 = control2?.hasValidator(Validators.required) ?? false;
-    }
+  checkRequiredValidator(control: FormControl, index = 0): void {
+    const isRequired = control?.hasValidator(Validators.required) ?? false;
+    if (index === 0) this.isRequired = isRequired;
+    if (index === 1) this.isRequired2 = isRequired;
   }
 
-  // 檢查是否有長度限制
-  // ----------------------------------------------------------------
   checkIntLengthValidator(control: AbstractControl): void {
     const validator = control.validator;
-    if (validator === null) {
-      return;
-    }
-    // 檢查 maxLength
+    if (!validator) return;
+
     const maxLengthErrors = validator(new FormControl({ length: Infinity })) ?? {};
     this.maxLength = "maxlength" in maxLengthErrors ? maxLengthErrors['maxlength'].requiredLength : null;
-    // 檢查 minLength
+
     const minLengthErrors = validator(new FormControl('a')) ?? {};
     this.minLength = "minlength" in minLengthErrors ? minLengthErrors['minlength'].requiredLength : null;
   }
 
-  // 檢查是否有最大值和最小值限制
-  // ----------------------------------------------------------------
   checkMinMaxValidator(control: AbstractControl): void {
     const validator = control.validator;
     if (!validator) {
@@ -53,7 +46,6 @@ export class BasicKitComponent {
       return;
     }
 
-    // 傳入一個超過值來觸發驗證錯誤
     const maxResult = validator(new FormControl(999999999));
     this.maxValue = maxResult?.['max']?.max ?? null;
 
@@ -61,32 +53,18 @@ export class BasicKitComponent {
     this.minValue = minResult?.['min']?.min ?? null;
   }
 
-  // 檢查是否為數字驗證器
-  // ----------------------------------------------------------------
   checkNumberValidator(control: AbstractControl): void {
     const validator = control.validator;
-    if (validator === null) {
+    if (!validator) {
       this.isNumberOnly = false;
       return;
     }
 
-    // 檢查是否有 invalidNumber 錯誤
-    const invalidNumberErrors = validator(new FormControl('b')) ?? {};
-    if ("invalidNumber" in invalidNumberErrors) {
-      this.isNumberOnly = true;
-      return;
-    }
-
-    this.isNumberOnly = false;
+    const errors = validator(new FormControl('b')) ?? {};
+    this.isNumberOnly = 'invalidNumber' in errors;
   }
 
-  // Placeholder
-  // ----------------------------------------------------------------
-  setPlaceholder(control: FormControl) {
-    if (this.placeholder) {
-      return;
-    }
-
+  setPlaceholder(control: FormControl, index = 0): void {
     const placeholderParts: string[] = [];
 
     if (control.hasValidator(Validators.required)) {
@@ -100,7 +78,7 @@ export class BasicKitComponent {
     } else if (this.minLength) {
       placeholderParts.push(`最少${this.minLength}個字`);
     }
-    // 數值限制提示
+
     if (this.minValue !== null && this.maxValue !== null && this.minValue === this.maxValue) {
       placeholderParts.push(`必須為${this.minValue}`);
     } else {
@@ -112,12 +90,13 @@ export class BasicKitComponent {
       }
     }
 
-    // 如果是數字placeholder，優先顯示數字格式
     if (this.isNumberOnly) {
       placeholderParts.unshift('請輸入數字');
     }
 
-    this.placeholder = placeholderParts.join(', ');
+    const finalPlaceholder = placeholderParts.join(', ');
+    if (index === 0) this.placeholder = finalPlaceholder;
+    if (index === 1) this.placeholder2 = finalPlaceholder;
   }
 
   copyText(control: FormControl): void {
