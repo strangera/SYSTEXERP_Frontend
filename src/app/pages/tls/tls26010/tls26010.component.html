@@ -4,14 +4,6 @@
       <app-menubar [ProgNo]="ProgNo"></app-menubar>
     </div>
     <div class="flex gap-2">
-      <p-fileUpload #fileUpload
-                    mode="basic"
-                    chooseIcon="pi pi-upload"
-                    class="p-button p-button-sm"
-                    accept=".xlsx, .xls, .csv"
-                    (onSelect)="onFileUpload($event);fileUpload.clear()"
-                    [auto]="true"
-                    chooseLabel="匯入EXCEL" />
       <app-button btnType="create"
                   (click)="onCreate()"></app-button>
     </div>
@@ -44,6 +36,15 @@
                           [submitted]="submitted"></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown label="區域"
+                          controlName="sys3A00"
+                          [options]="service.sys3A00List()"
+                          optionLabel="Name"
+                          optionValue="No"
+                          [control]="queryForm.controls.sys3A00"
+                          [submitted]="submitted"></app-dropdown>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
             <app-multi-select label="收銀機號"
                               controlName="ecrNos"
                               [options]="service.ECRList"
@@ -61,6 +62,7 @@
                               [control]="queryForm.controls.tltNos"
                               [submitted]="submitted"></app-multi-select>
           </div>
+          <div class="lg:col-4 d-none"></div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-calendar-range calendarType="dateRange"
                                 label="起始日期"

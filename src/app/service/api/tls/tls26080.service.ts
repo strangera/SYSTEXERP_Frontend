@@ -15,11 +15,10 @@ const apiUrl: string = environment.ApiUrl;
 @Injectable({ providedIn: 'root' })
 export class TLS26080Service {
 
+  public TLS26080List = signal<TLS26080Data[]>([]);
   public approvalData = signal<ApprovalStatus>(ApprovalStatus.未核准);
-
   private TLS26080Data = signal<TLS26080Data[]>([]);
 
-  public TLS26080List = signal<TLS26080Data[]>([]);
 
   private TableLoading = !1;
   private approvalStatusLoading = !1;

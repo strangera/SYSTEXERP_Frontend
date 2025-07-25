@@ -1,10 +1,11 @@
 import { HttpClient } from '@angular/common/http';
 import { computed, effect, Injectable, signal } from '@angular/core';
-import { ECRTableData, mockPreorderECRList, mockQueryTLS26010, PreorderECRListQuery, TLS26010, TLS26010Data, TLS26010Payload, TLS26010Query, TLTTALENTData, TLTTALENTQuery } from '@pages/tls/tls26010/tls26010.model';
+import { ECRTableData, mockPreorderECRList, mockQueryTLS26010, QueryPayload, TLS26010, TLS26010Data, TLS26010Payload, TLS26010Query, TLTTALENTData } from '@pages/tls/tls26010/tls26010.model';
 import { ErrorHandlerService } from '@service/system/error-handler.service';
 import { NotificationService } from '@shared/component/notification-message/notification.service';
 import { ApprovalStatus } from '@shared/models';
 import { BaseQueryResponse, DropdownOption } from '@shared/models/api/base-api.interface';
+import saveAs from 'file-saver';
 import { catchError, EMPTY, finalize, Observable, of, take, tap } from 'rxjs';
 import { environment } from 'src/environments/environment';
 
@@ -22,18 +23,22 @@ export class TLS26010Service {
   // 儲存資料
   private sys3800Data = signal<DropdownOption[]>([]);
   private sys3900Data = signal<DropdownOption[]>([]);
+  private sys3A00Data = signal<DropdownOption[]>([]);
   private preorderECRData = signal<DropdownOption[]>([]);
   private TLTTALENTData = signal<DropdownOption[]>([]);
   private TLS26010Data = signal<TLS26010[]>([]);
 
   private sys3800Loading = !1;
   private sys3900Loading = !1;
+  private sys3A00Loading = !1;
   private preorderECRLoading = !1;
   private TLTTALENTLoading = !1;
   private TableLoading = !1;
   private approvalStatusLoading = !1;
+  private importLoading = !1;
+  private downloadLoading = !1;
 
-  public approvalStatus(value: ApprovalStatus): string {
+  public approvalStatus(value: string): string {
     switch (value) {
       case ApprovalStatus.未核准: return '未核准';
       case ApprovalStatus.已核准: return '已核准';
@@ -50,6 +55,11 @@ export class TLS26010Service {
   public sys3900List = computed(() => {
     const res = new Map<string, DropdownOption>();
     for (const item of this.sys3900Data()) res.set(item.No, item);
+    return Array.from(res.values());
+  });
+  public sys3A00List = computed(() => {
+    const res = new Map<string, DropdownOption>();
+    for (const item of this.sys3A00Data()) res.set(item.No, item);
     return Array.from(res.values());
   });
 
@@ -101,6 +111,12 @@ export class TLS26010Service {
       for (const data of item.Data) {
         if (res.has(data.pod_no)) continue;
         res.set(data.pod_no, {
+          ECR_Nos: data.ECR_Nos || [],
+          tlt_nos: data.tlt_nos || [],
+          talent_id: data.talent_id || 0,
+          build_no: data.build_no || '',
+          floor_no: data.floor_no || '',
+          area_no: data.area_no || '',
           pod_no: data.pod_no,
           pod_desc: data.pod_desc,
           pod_sdate: data.pod_sdate,
@@ -121,10 +137,10 @@ export class TLS26010Service {
   ) { }
 
   /** 取得館別 */
-  loadSYS3800(query: any): void {
+  loadSYS3800(): void {
     if (this.sys3800Loading) return void (this.sys3800Loading = !1);
     this.sys3800Loading = !0;
-    this.http.post<BaseQueryResponse<DropdownOption>>(`${apiUrl}/querySYS3800_DropDownList`, query).pipe(
+    this.http.post<BaseQueryResponse<DropdownOption>>(`${apiUrl}/querySYS3800_DropDownList`, {}).pipe(
       take(1),
       tap(response => this.sys3800Data.set(response.Data)),
       catchError(error => this.errorHandler.handleError(error)),
@@ -136,10 +152,10 @@ export class TLS26010Service {
   }
 
   /** 取得樓層 */
-  loadSYS3900(query: any): void {
+  loadSYS3900(): void {
     if (this.sys3900Loading) return void (this.sys3900Loading = !1);
     this.sys3900Loading = !0;
-    this.http.post<BaseQueryResponse<DropdownOption>>(`${apiUrl}/querySYS3900_DropDownList`, query).pipe(
+    this.http.post<BaseQueryResponse<DropdownOption>>(`${apiUrl}/querySYS3900_DropDownList`, {}).pipe(
       take(1),
       tap(response => this.sys3900Data.set(response.Data)),
       catchError(error => this.errorHandler.handleError(error)),
@@ -150,16 +166,32 @@ export class TLS26010Service {
     ).subscribe();
   }
 
+  /** 取得區域代碼 */
+  loadSYS3A00(): void {
+    if (this.sys3A00Loading) return void (this.sys3A00Loading = !1);
+    this.sys3A00Loading = !0;
+    this.http.post<any>(`${apiUrl}/querySYS3A00_DropDownList`, {}).pipe(
+      take(1),
+      tap(() => this.sys3A00Data.set([])),
+      tap(response => this.sys3A00Data.set(response.Data)),
+      catchError(error => this.errorHandler.handleError(error)),
+      finalize(() => {
+        this.sys3A00Loading = !1;
+        console.log('區域代碼查詢結果:', this.sys3A00Data());
+      })
+    ).subscribe();
+  }
+
   /** 取得收銀機號 */
-  loadPreorderECRList(query: PreorderECRListQuery): void {
-    if (this.preorderECRLoading) return void (this.preorderECRLoading = !1);
+  loadPreorderECRList(query: QueryPayload): Observable<any> {
+    if (this.preorderECRLoading) return of(void (this.preorderECRLoading = !1));
     this.preorderECRLoading = !0;
 
     const api = mock
       ? of(mockPreorderECRList)
       : this.http.post<BaseQueryResponse<DropdownOption>>(`${apiUrl}/queryPreorderECR_List`, query);
 
-    api.pipe(
+    return api.pipe(
       take(1),
       tap(() => this.preorderECRData.set([])),
       tap(response => this.preorderECRData.set(response.Data)),
@@ -168,16 +200,16 @@ export class TLS26010Service {
         this.preorderECRLoading = !1;
         console.log('收銀機號查詢結果:', this.preorderECRData());
       }),
-    ).subscribe();
+    );
   }
 
   /** 取得專櫃編號 */
-  loadTLTTALENT(query: TLTTALENTQuery): void {
-    if (this.TLTTALENTLoading) return void (this.TLTTALENTLoading = !1);
+  loadTLTTALENT(query: QueryPayload): Observable<any> {
+    if (this.TLTTALENTLoading) return of(void (this.TLTTALENTLoading = !1));
     this.TLTTALENTLoading = !0;
     // if (query.building_no === '' && query.floor_no === '') return void (this.TLTTALENTLoading = !1);
 
-    this.http.post<BaseQueryResponse<DropdownOption>>(`${apiUrl}/queryTLTTALENT_DropDownList`, query).pipe(
+    return this.http.post<BaseQueryResponse<DropdownOption>>(`${apiUrl}/queryTLTTALENT_DropDownList`, query).pipe(
       take(1),
       tap(() => this.TLTTALENTData.set([])),
       tap(response => this.TLTTALENTData.set(response.Data)),
@@ -186,7 +218,7 @@ export class TLS26010Service {
         this.TLTTALENTLoading = !1;
         console.log('專櫃編號查詢結果:', this.TLTTALENTData());
       })
-    ).subscribe();
+    );
   }
 
   /** 查詢預購活動檔期 */
@@ -263,32 +295,73 @@ export class TLS26010Service {
 
   /** 上傳 */
   importTLS26010(file: File): void {
+    if (this.importLoading) return void (this.importLoading = !1);
+    this.importLoading = !0;
+    if (!file) return void (this.importLoading = !1);
+    console.log(`file upload:`, [file]);
+    // if (file.size > 10 * 1024 * 1024) {
+    //   this.messageService.errorBubble('檔案大小超過限制，請選擇小於10MB的檔案');
+    //   this.importLoading = !1;
+    //   return;
+    // }
+    if (!file.name.endsWith('.xlsx') && !file.name.endsWith('.xls') && !file.name.endsWith('.csv')) {
+      this.messageService.errorBubble(`請上傳有效的 Excel 檔案`);
+      this.importLoading = !1;
+      return;
+    }
     const formData = new FormData();
     formData.append('file', file);
     this.http.post<any>(`${apiUrl}/importTLS26010`, formData).pipe(
       take(1),
+      tap(res => {
+        const data: any = res?.Data;
+        const cb = (item: any) => {
+          if (item.ErrorFilePath) {
+            // 有錯誤檔：顯示錯誤提示
+            this.messageService.errorBubble(`部分資料匯入失敗，請下載錯誤檔檢查`);
+            // 自動下載錯誤檔
+            this.downloadErrorFile(item.ErrorFilePath);
+          } else {
+            // 沒有錯誤檔：顯示成功筆數
+            this.messageService.infoBubble(`匯入成功，筆數：${item.SuccessCount}`);
+          }
+        };
+        if (!Array.isArray(data)) cb(data);
+        else for (const item of data) { cb(item); }
+      }),
       catchError(() => { this.messageService.errorBubble('檔案上傳失敗，請稍後再試'); return EMPTY; }),
-    ).subscribe(res => {
-      const data: any = res?.Data;
-      const cb = (item: any) => {
-        if (item.ErrorFilePath) {
-          // 有錯誤檔：顯示錯誤提示
-          this.messageService.errorBubble(`部分資料匯入失敗，請下載錯誤檔檢查`);
-          // 自動下載錯誤檔
-          this.downloadErrorFile(item.ErrorFilePath);
-        } else {
-          // 沒有錯誤檔：顯示成功筆數
-          this.messageService.infoBubble(`匯入成功，筆數：${item.SuccessCount}`);
-        }
-      };
-      if (!Array.isArray(data)) cb(data);
-      else for (const item of data) { cb(item); }
-    });
+      finalize(() => {
+        this.importLoading = !1;
+        console.log('上傳結果:', this.TLS26010Data());
+      }),
+    ).subscribe();
+  }
+
+  /** 下載範例檔 */
+  downloadTemplate(): void {
+    if (this.downloadLoading) return void (this.downloadLoading = !1);
+    this.downloadLoading = !0;
+    this.http.get(`${apiUrl}/downloadTLS26010Template`, { responseType: 'blob', })
+      .pipe(
+        take(1),
+        tap((res: Blob) => {
+          const blob = new Blob([res], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+          saveAs(blob, 'TLS26010_Template.xlsx');
+        }),
+        catchError(() => {
+          this.messageService.errorBubble('下載範例檔案失敗，請稍後再試');
+          return EMPTY;
+        }),
+        finalize(() => {
+          this.downloadLoading = !1;
+          console.log('下載範例檔結果:', this.TLS26010Data());
+        }),
+      ).subscribe();
   }
 
   /** 下載錯誤檔 */
   downloadErrorFile(filePath: string) {
-    window.open(`${environment.ApiUrl}/${filePath}`, '_blank');
+    window.open(`${apiUrl}/${filePath}`, '_blank');
   }
 
   /** 刪除預購活動 */
