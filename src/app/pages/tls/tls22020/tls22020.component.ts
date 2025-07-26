@@ -12,22 +12,26 @@ import { DropdownModule } from 'primeng/dropdown';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { TranslateModule } from '@ngx-translate/core';
+import { TLS22020Service } from '../../../service/api/tls/tls22020.service';
+import { DropdownComponent } from '@shared/componentkit';
+import { DropdownRangeComponent } from '@shared/componentkit/dropdown-range/dropdown-range.component';
 
 @Component({
-    templateUrl: './tls22020.component.html',
-    standalone: true,
-    imports: [
-        MenubarComponent,
-        AccordionModule,
-        FormsModule,
-        ReactiveFormsModule,
-        CalendarComponent,
-        MultiSelectComponent,
-        DropdownModule,
-        ButtonComponent,
-        TableComponent,
-        TranslateModule,
-    ],
+  templateUrl: './tls22020.component.html',
+  standalone: true,
+  imports: [
+    MenubarComponent,
+    AccordionModule,
+    FormsModule,
+    ReactiveFormsModule,
+    CalendarComponent,
+    MultiSelectComponent,
+    DropdownModule,
+    ButtonComponent,
+    TableComponent,
+    TranslateModule,
+    DropdownRangeComponent
+  ],
 })
 
 export class TLS22020Component extends BasicQueryPageComponent<any> implements OnInit {
@@ -35,6 +39,8 @@ export class TLS22020Component extends BasicQueryPageComponent<any> implements O
   queryForm = this.formBuilder.group({
     salesDate: [],
     ECR_No: [[]],
+    ECR_No_Start: [null],
+    ECR_No_End: [null],
     status1: [''],
     status2: [''],
     cashierStartCode: [[this.validationService.numberValidator]], // 收銀機號起
@@ -43,9 +49,8 @@ export class TLS22020Component extends BasicQueryPageComponent<any> implements O
     displayOptions: [1, []], // 顯示選項, radioButton
   });
   // 表格資料
-  data: any[] = [
-
-  ];
+  data: any[] = [];
+  ECRNoOptions: any[] = [];
   filteredData: any[] = [...this.data];
   columns: any[] = [
     { field: 'cashRegisterCode', header: '收銀機號', visible: true },
@@ -154,11 +159,13 @@ export class TLS22020Component extends BasicQueryPageComponent<any> implements O
     { label: '是', value: 'yes' },
     { label: '否', value: 'no' }
   ];
-  ECRNoOptions: any[] = [];
+
   constructor(
+
     private validationService: ValidationService,
     private whetherService: WhetherService,
-    private ECRNoService: ECRNoService
+    private ECRNoService: ECRNoService,
+    private tls22020Service: TLS22020Service,
   ) {
     super();
   }
@@ -166,113 +173,38 @@ export class TLS22020Component extends BasicQueryPageComponent<any> implements O
   ngOnInit(): void {
     this.initializePage('TLS22020', '/TLS/TLS22020cru', this.queryForm, (form) => this.onSubmit(form));
     this.funInfo = this.authService.getUserPermissions(this.ProgNo);
-    this.ECRNoService.getECRNo().subscribe((data) => {
-      this.ECRNoOptions = data;
-    });
+
     this.whetherService.getWhetherOptions().subscribe(data => {
       this.whetherOptions = data;
     });
-
-    // 👉 模擬假資料
-    this.data = [
-      {
-        cashRegisterCode: 'A001',
-        dedicatedLane: 'Y',
-        cashDetail: 10000,
-        cashZ: 10000,
-        cashDifference: 0,
-        jointCreditCardDetail: 2000,
-        jointCreditCardZ: 2000,
-        jointCreditCardDifference: 0,
-        chinaTrustParkingCardDetail: 500,
-        chinaTrustParkingCardZ: 500,
-        chinaTrustParkingCardDifference: 0,
-        chinaTrustCreditCardDetail: 3000,
-        chinaTrustCreditCardZ: 3000,
-        chinaTrustCreditCardDifference: 0,
-        ezCardParkingDetail: 0,
-        ezCardParkingZ: 0,
-        ezCardParkingDifference: 0,
-        ezCardDetail: 100,
-        ezCardZ: 100,
-        ezCardDifference: 0,
-        giftVoucherDetail: 800,
-        giftVoucherZ: 800,
-        giftVoucherDifference: 0,
-        goodsDeliveryNoteDetail: 0,
-        goodsDeliveryNoteZ: 0,
-        goodsDeliveryNoteDifference: 0,
-        thermalVoucherDetail: 0,
-        thermalVoucherZ: 0,
-        thermalVoucherDifference: 0,
-        productVoucherDetail: 0,
-        productVoucherZ: 0,
-        productVoucherDifference: 0,
-        awardDeliveryNoteDetail: 0,
-        awardDeliveryNoteZ: 0,
-        awardDeliveryNoteDifference: 0,
-        externalGiftVoucherDetail: 0,
-        externalGiftVoucherZ: 0,
-        externalGiftVoucherDifference: 0,
-        externalDeliveryNoteDetail: 0,
-        externalDeliveryNoteZ: 0,
-        externalDeliveryNoteDifference: 0,
-        activityVoucherDetail: 0,
-        activityVoucherZ: 0,
-        activityVoucherDifference: 0,
-        discountVoucherDetail: 0,
-        discountVoucherZ: 0,
-        discountVoucherDifference: 0,
-        cashCouponDetail: 0,
-        cashCouponZ: 0,
-        cashCouponDifference: 0,
-        giftCardBalanceDetail: 0,
-        giftCardBalanceZ: 0,
-        giftCardBalanceDifference: 0,
-        deliveryNoteWithCardDetail: 0,
-        deliveryNoteWithCardZ: 0,
-        deliveryNoteWithCardDifference: 0,
-        memberDiscountDetail: 0,
-        memberDiscountZ: 0,
-        memberDiscountDifference: 0,
-        linePayParkingDetail: 0,
-        linePayParkingZ: 0,
-        linePayParkingDifference: 0,
-        linePayDetail: 0,
-        linePayZ: 0,
-        linePayDifference: 0,
-        appVoucherDetail: 0,
-        appVoucherZ: 0,
-        appVoucherDifference: 0,
-        appDeliveryNoteDetail: 0,
-        appDeliveryNoteZ: 0,
-        appDeliveryNoteDifference: 0,
-        detailTotalAmount: 20000,
-        bAccountTotalAmount: 20000,
-        differenceAmount: 0
-      }
-    ];
-
-    this.filteredData = [...this.data];
+    this.ECRNoService.getECRNo().subscribe((data) => {
+      this.ECRNoOptions = data;
+    });
   }
 
+  onSubmit(form: FormGroup): void {
+    this.handleSubmit(form, () => {
+      this.loading = true;
+      this.tls22020Service.getReport({}).subscribe({
+        next: (res) => {
+          this.data = res.Data.map((item) => {
+            const row: any = {
+              cashRegisterCode: item.ECR_No,
+              dedicatedLane: item.tlt_name,
+            };
 
-  //   canQuery(): boolean {
-  //     return true;
-  //   }
 
-  //   canAdd(): boolean {
-  //     return true;
-  //   }
+            return row;
+          });
 
-  //   canEdit(): boolean {
-  //     return true;
-  //   }
-
-  onSubmit(frm: FormGroup) {
-    this.handleSubmit(frm, () => {
-      console.log(123);
-    })
+          this.filteredData = [...this.data];
+        },
+        complete: () => {
+          this.loading = false;
+        }
+      });
+    });
   }
+
 
 }

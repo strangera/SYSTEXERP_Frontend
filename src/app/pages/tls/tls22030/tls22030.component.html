@@ -91,7 +91,7 @@
       (exportExcel)="onExportExcel()"
       (importExcel)="onImportExcel($event)"
       [multiSortMeta]="[{ field: 'tlt_no', order: 1 }]"
-      [totalRecords]="totalRecords"
+      [totalRecords]="0"
       (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"
       [lazy]="true"
     ></app-table>
