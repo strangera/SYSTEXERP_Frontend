@@ -31,7 +31,7 @@ import { environment } from '../../../../environments/environment';
 export class TLS22030Component extends BasicQueryPageComponent<any> implements OnInit {
   queryForm = this.formBuilder.group({
     ECR_No: [''],
-    TLT_NoList: [null],
+    TLT_NoList: [[]],
     TXN_DateStart: [null, Validators.required],
     TXN_DateEnd: [null, Validators.required],
     IsLossStatus: ['0000',], // 預設值為 '0000'，表示全部
@@ -110,7 +110,7 @@ export class TLS22030Component extends BasicQueryPageComponent<any> implements O
   }
 
   onExportExcel(): void {
-    const condition = this.queryForm.getRawValue();  // ✅ 保證是純物件
+    const condition = this.queryForm.getRawValue();  // ''保證是純物件
 
     const payload = {
       query_condition: {
