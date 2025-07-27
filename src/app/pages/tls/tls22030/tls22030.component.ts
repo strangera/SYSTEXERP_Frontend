@@ -150,8 +150,8 @@ export class TLS22030Component extends BasicQueryPageComponent<any> implements O
     this.handleSubmit(form, () => {
       this.tls22030Service.queryTLS22030(form.value).subscribe({
         next: (res) => {
-          this.data = res?.Data ?? [];
-          this.totalRecords = res?.TotalRecords;
+          this.data = res.Data ?? [];
+          this.totalRecords = res.TotalCount;
           this.loading = false;
           this.queryStateService.setQueryState(this.ProgNo, this.queryForm.value);
         },
