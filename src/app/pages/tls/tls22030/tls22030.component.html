@@ -4,42 +4,73 @@
   </div>
 
   <p-accordion>
-    <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
-      [headerStyleClass]="'query-accordionTab'">
-
-      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
+    <p-accordionTab
+      header="{{ 'query-conditions' | translate }}"
+      [selected]="true"
+      class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'"
+    >
+      <form
+        [formGroup]="queryForm"
+        id="queryForm"
+        (ngSubmit)="onSubmit(queryForm)"
+      >
         <div class="grid p-fluid">
           <!-- 銷售日期 -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar-range-quick label="銷售日期" [startControl]="queryForm.controls.tlt_bdate_start"
-              [endControl]="queryForm.controls.tlt_bdate_end" [submitted]="submitted" />
+            <app-calendar-range-quick
+              label="銷售日期"
+              [startControl]="queryForm.controls.TXN_DateStart"
+              [endControl]="queryForm.controls.TXN_DateEnd"
+              [submitted]="submitted"
+            />
           </div>
 
           <!-- 收銀機號 -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select label="收銀機號" controlName="ECR_No" [options]="ECRNoOptions" optionLabel="label"
-              optionValue="value" [control]="queryForm.controls.ECR_No" [submitted]="submitted"></app-multi-select>
+            <app-dropdown
+              label="收銀機號"
+              controlName="ECR_No"
+              [options]="ECRNoOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.ECR_No"
+              [submitted]="submitted"
+            ></app-dropdown>
           </div>
 
           <!-- 專櫃編號 -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text label="專櫃編號" controlName="tlt_no" [control]="queryForm.controls.tlt_no"
-              [submitted]="submitted"></app-input-text>
+            <app-multi-select
+              label="專櫃編號"
+              controlName="TLT_NoList"
+              [control]="queryForm.controls.TLT_NoList"
+              [submitted]="submitted"
+              [options]="tltNoOptions"
+              optionLabel="label"
+              optionValue="value"
+            />
           </div>
 
           <!-- 顯示條件 -->
           <div class="col-12 lg:col-8">
-            <app-radiobutton label="顯示條件" groupname="radioOption" [control]="queryForm.controls.radioOption"
-              [submitted]="submitted" [options]="[
+            <app-radiobutton
+              label="顯示條件"
+              groupname="radioOption"
+              [control]="queryForm.controls.IsLossStatus"
+              [submitted]="submitted"
+              [options]="[
                 { value: 'ALL', label: '全部' },
                 { value: 'HAS_MISS', label: '有欠落' },
-                { value: 'NO_MISS', label: '無欠落' }
-              ]" (valueChange)="queryForm.controls.radioOption.setValue($event)">
-            </app-radiobutton>
+                { value: 'NO_MISS', label: '無欠落' },
+              ]"
+            ></app-radiobutton>
           </div>
         </div>
 
-        <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+        <div
+          class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
+        >
           <app-button btnType="clear"></app-button>
           <app-button btnType="query" [loading]="loading"></app-button>
         </div>
@@ -48,9 +79,21 @@
   </p-accordion>
 </div>
 
-
 <div class="card">
   <div class="col-12">
-    <app-table tableKey="TLS22030" [data]="data" [columns]="columns"></app-table>
+    <app-table
+      tableKey="TLS22030"
+      [data]="data"
+      [columns]="columns"
+      [showEdit]="false"
+      [showManage]="false"
+      [showDelete]="false"
+      (exportExcel)="onExportExcel()"
+      (importExcel)="onImportExcel($event)"
+      [multiSortMeta]="[{ field: 'tlt_no', order: 1 }]"
+      [totalRecords]="0"
+      (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"
+      [lazy]="true"
+    ></app-table>
   </div>
 </div>
