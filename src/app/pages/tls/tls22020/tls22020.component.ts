@@ -14,6 +14,7 @@ import { TableComponent } from '../../../shared/componentkit/table/table.compone
 import { TranslateModule } from '@ngx-translate/core';
 import { TLS22020Service } from '../../../service/api/tls/tls22020.service';
 import { DropdownRangeComponent } from '@shared/componentkit/dropdown-range/dropdown-range.component';
+import { createPaginationConfig } from '@shared/componentkit/table/table.model';
 
 @Component({
   templateUrl: './tls22020.component.html',
@@ -41,6 +42,7 @@ export class TLS22020Component extends BasicQueryPageComponent<any> implements O
     ECR_No_Start: [null],
     ECR_No_End: [null],
     status1: [null],
+    ...createPaginationConfig([{ field: 'ECR_No', order: 1 }]),
   });
   // 表格資料
   data: any[] = [];
@@ -48,9 +50,10 @@ export class TLS22020Component extends BasicQueryPageComponent<any> implements O
   columns: any[] = [
     { field: 'ECR_No', header: '收銀機號', visible: true },
     { field: 'tlt_no', header: '專櫃編號', visible: true },
-    { field: 'pay_NoDataList', header: '明細', visible: true},
-    { field: 'pay_NoDataList', header: 'Z表' , visible: true},
-    { field: 'pay_NoDataList', header: '差額' , visible: true},
+    { field: 'tlt_name', header: '專櫃名稱', visible: true },
+    // { field: 'pay_NoDataList', header: '明細', visible: true },
+    // { field: 'pay_NoDataList', header: 'Z表', visible: true },
+    // { field: 'pay_NoDataList', header: '差額', visible: true },
   ];
 
 
@@ -88,8 +91,12 @@ export class TLS22020Component extends BasicQueryPageComponent<any> implements O
   onSubmit(form: FormGroup): void {
     console.log('表單提交:', form.value);
     this.handleSubmit(form, () => {
-      console.log('送出查詢參數:', form.value);
-      this.tls22020Service.queryTLS22020(form.value).subscribe({
+      const params = {
+        ...form.value,
+        TXN_Date: form.value.TXN_Date.toLocaleDateString('en-CA'),
+      };
+      console.log('送出查詢參數:', params);
+      this.tls22020Service.queryTLS22020(params).subscribe({
         next: (res) => {
           this.data = res.Data ?? [];
           this.totalRecords = res.TotalCount;
