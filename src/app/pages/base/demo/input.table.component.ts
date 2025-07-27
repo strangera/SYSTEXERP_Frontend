@@ -177,6 +177,53 @@ export class InputTableComponent extends BasicQueryPageComponent<any> implements
     Month: [null, [Validators.required]], // Dropdown
 
   });
+  columns2 = [
+    { field: 'salesDate', header: '銷售日期', groupField: '111' },
+    { field: 'cashRegister', header: '收銀機號', groupField: '111' },
+    { field: 'transactionId', header: '交易序號' },
+    { field: 'originalCounter', header: '原專櫃', groupField: '222' },
+    { field: 'updatedCounter', header: '修正後專櫃', groupField: '222' }
+  ];
+
+  columnGroup = [
+    { field: '111', header: '銷售資訊' },
+    { field: '222', header: '專櫃資訊' }
+  ];
+
+  dataGroup = [
+    {
+      id: 1,
+      salesDate: '2024/01/01',
+      cashRegister: '001',
+      transactionId: 'TX123',
+      originalCounter: 'A',
+      updatedCounter: 'B'
+    },
+    {
+      id: 2,
+      salesDate: '2024/01/02',
+      cashRegister: '002',
+      transactionId: 'TX456',
+      originalCounter: 'C',
+      updatedCounter: 'D'
+    },
+    {
+      id: 3,
+      salesDate: '2024/01/03',
+      cashRegister: '003',
+      transactionId: 'TX789',
+      originalCounter: 'E',
+      updatedCounter: 'F'
+    },
+    {
+      id: 4,
+      salesDate: '2024/01/04',
+      cashRegister: '004',
+      transactionId: 'TX012',
+      originalCounter: 'G',
+      updatedCounter: 'H'
+    }
+  ];
   // 表格
   data: any[] = [
     {

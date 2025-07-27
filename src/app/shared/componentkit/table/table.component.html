@@ -51,8 +51,7 @@
         </div>
         <div *ngIf="showExcel" class="flex gap-2 align-items-center">
           <p-button *ngIf="showExcelExport" label="匯出excel範本" severity="success" [icon]="
-              exportExcelLoading ? 'pi pi-spin pi-spinner' : 'pi pi-file-export'
-            " (click)="onExportExcel()" />
+              exportExcelLoading ? 'pi pi-spin pi-spinner' : 'pi pi-file-export'" (click)="onExportExcel()" />
           <p-fileUpload *ngIf="showExcelImport" #fileUpload styleClass="p-button-info" mode="basic"
             chooseIcon="pi pi-file-import" accept="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
             severity="info" (onSelect)="onImportExcel($event)" [auto]="true" chooseLabel="Excel匯入" />
@@ -65,32 +64,44 @@
   <ng-template pTemplate="header" let-columns>
     <ng-container *ngIf="columnGroup && columnGroup.length > 0">
       <tr>
-        <th class="w-1rem" rowspan="2">序號</th>
-        <th class="w-1rem" rowspan="2" *ngIf="IsPrint && showCheckBox && !rowEditing && selectionMode === 'multiple'">
+        <th class="w-1rem group-header" rowspan="2">序號</th>
+        <th class="w-1rem group-header" rowspan="2"
+          *ngIf="IsPrint && showCheckBox && !rowEditing && selectionMode === 'multiple'">
           <p-tableHeaderCheckbox />
         </th>
-        <th class="w-1rem" rowspan="2" *ngIf="expansionDataKey && IsPrint">收合/展開</th>
-
-        <!-- 群組表頭 -->
-        <ng-container *ngFor="let group of columnGroup">
-          <th [attr.colspan]="group.colspan" [class.text-center]="group.align === 'center'"
-            [class.text-left]="group.align === 'left'" [class.text-right]="group.align === 'right'">
-            {{ group.header }}
-          </th>
+        <th class="w-1rem group-header" rowspan="2" *ngIf="expansionDataKey && IsPrint">收合/展開</th>
+        <ng-container *ngFor="let col of columns; let i = index">
+          <!-- 如果是第一次出現這個群組 -->
+          <ng-container *ngIf="shouldRenderGroupHeader(col, i, columns)">
+            <th [attr.colspan]="getColumnSpan(columns, col.groupField!)" [ngClass]="getGroupAlignClass(col.groupField!)"
+              class="group-header">
+              {{ getGroupHeader(col.groupField!) }}
+            </th>
+          </ng-container>
+          <!-- 如果是沒群組的欄位 -->
+          <ng-container *ngIf="!col.groupField">
+            <th *ngIf="!col.hidden" rowspan="2" class="text-center"
+              [pSortableColumn]="showSort && !rowEditing ? col.sortField ?? col.field : undefined"
+              [pSortableColumnDisabled]="!showSort || rowEditing || col.showSort === false" pFrozenColumn
+              [frozen]="IsPrint && !!col.frozen" [alignFrozen]="col.alignFrozen || 'right'">
+              {{ col.header }}
+              <p-sortIcon *ngIf="showSort && !rowEditing && col.showSort !== false"
+                [field]="col.sortField ?? col.field" />
+            </th>
+          </ng-container>
         </ng-container>
-
-        <th [hidden]="!IsPrint || !showManage" rowspan="2" class="w-1rem text-center" alignFrozen="right" pFrozenColumn
-          [frozen]="IsPrint">
+        <th [hidden]="!IsPrint || !showManage" rowspan="2" class="w-1rem text-center group-header" alignFrozen="right"
+          pFrozenColumn [frozen]="IsPrint">
           管理
         </th>
       </tr>
-
       <!-- 第二層：實際欄位標題 -->
       <tr>
         <ng-container *ngFor="let col of columns">
-          <th *ngIf="!col.hidden" [pSortableColumn]="showSort && !rowEditing ? col.sortField ?? col.field : undefined"
-            [pSortableColumnDisabled]="!showSort || rowEditing || col.showSort === false" class="text-center"
-            pFrozenColumn [frozen]="IsPrint && col.frozen" [alignFrozen]="col.alignFrozen || 'right'">
+          <th *ngIf="!col.hidden && col.groupField" class="text-center"
+            [pSortableColumn]="showSort && !rowEditing ? col.sortField ?? col.field : undefined"
+            [pSortableColumnDisabled]="!showSort || rowEditing || col.showSort === false" pFrozenColumn
+            [frozen]="IsPrint && !!col.frozen" [alignFrozen]="col.alignFrozen || 'right'">
             {{ col.header }}
             <p-sortIcon *ngIf="showSort && !rowEditing && col.showSort !== false"
               [field]="col.sortField ?? col.field" />
@@ -98,7 +109,6 @@
         </ng-container>
       </tr>
     </ng-container>
-
     <!-- 非群組表頭 -->
     <ng-container *ngIf="!columnGroup?.length">
       <tr>

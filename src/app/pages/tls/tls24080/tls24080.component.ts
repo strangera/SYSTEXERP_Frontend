@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { ReportTypeService } from '../../../service/basic/report-type.service'; // 報表型態 service
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { Column } from '../../../shared/componentkit/table/table.model';
+import { Column, ColumnGroup } from '../../../shared/componentkit/table/table.model';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { AccordionModule } from 'primeng/accordion';
 import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
@@ -38,7 +38,10 @@ export class TLS24080Component extends BasicQueryPageComponent<any> implements O
     reportType: [],  // 報表型態
   });
   reportTypeOptions: any[] = [];
-  data: any[] = [];
+  data: any[] = [
+    { salesDate: '2022/01/01', cashierCode: 'A', transactionSerial: '12345678', originalCounterName: 'A', previousCounterName: 'B', updatedCounterName: 'C', updateDate: '2022/01/01', updatedBy: 'A' },
+    { salesDate: '2022/01/01', cashierCode: 'A', transactionSerial: '12345678', originalCounterName: 'A', previousCounterName: 'B', updatedCounterName: 'C', updateDate: '2022/01/01', updatedBy: 'A' },
+  ];
   columns: Column[] = [
     { field: 'salesDate', header: '銷售日期', visible: true },
     { field: 'cashRegisterCode', header: '收銀機號', visible: true },
