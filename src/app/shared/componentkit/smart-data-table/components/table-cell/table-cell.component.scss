@@ -1,0 +1,328 @@
+// 改進的 table-cell.component.scss - 移植原版樣式並修復 z-index 問題
+
+:host {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+// ==================== 基礎輸入樣式 ====================
+
+.table-cell-input {
+  width: 100% !important;
+  border-radius: 4px;
+  border: 1px solid #d1d5db;
+  padding: 0.5rem;
+  font-size: 0.9rem;
+
+  &:focus {
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 1px #3b82f6;
+    outline: none;
+  }
+
+  &:disabled {
+    background-color: #f3f4f6;
+    color: #6b7280;
+    cursor: not-allowed;
+  }
+}
+
+// ==================== 🔧 關鍵修復：下拉選單 z-index 問題 ====================
+
+.table-cell-dropdown {
+  position: relative;
+  z-index: 20; // 確保編輯單元格有較高層級
+
+  :host ::ng-deep {
+    .p-dropdown {
+      width: 100% !important;
+      border: 1px solid #d1d5db;
+      position: relative;
+      z-index: 25; // 下拉選單控件層級
+
+      &:not(.p-disabled):hover {
+        border-color: #9ca3af;
+      }
+
+      &:not(.p-disabled).p-focus {
+        border-color: #3b82f6;
+        box-shadow: 0 0 0 1px #3b82f6;
+      }
+
+      // 🔧 關鍵修正：強制下拉面板到最高層級
+      .p-dropdown-panel {
+        z-index: 999999 !important;
+        position: fixed !important; // 使用 fixed 定位避免被父容器裁切
+        min-width: 200px;
+        max-height: 200px;
+        overflow-y: auto;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        border: 2px solid #3b82f6 !important; // 加強邊框以便識別
+        background: #ffffff !important;
+
+        .p-dropdown-items {
+          .p-dropdown-item {
+            padding: 0.5rem 0.75rem;
+            font-size: 0.9rem;
+            border-bottom: 1px solid #f8f9fa;
+
+            &:hover {
+              background-color: #e3f2fd;
+            }
+
+            &:last-child {
+              border-bottom: none;
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+// 🔧 全域下拉選單面板樣式 - 確保在任何地方都有最高優先級
+:host ::ng-deep {
+  // 直接針對 body 下的下拉面板
+  body .p-dropdown-panel,
+  .p-dropdown-panel {
+    z-index: 999999 !important;
+    position: fixed !important;
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2) !important;
+    border: 2px solid #3b82f6 !important;
+    background: #ffffff !important;
+  }
+
+  // PrimeNG 覆蓋層
+  .p-component-overlay {
+    z-index: 999999 !important;
+  }
+
+  // 當 appendTo="body" 時的處理
+  body > .p-dropdown-panel {
+    z-index: 999999 !important;
+  }
+}
+
+// ==================== 日期選擇器樣式 - 移植原版 ====================
+
+.date-selector-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  gap: 0.25rem;
+
+  .date-input {
+    flex-grow: 1;
+    padding-right: 0.25rem;
+  }
+
+  .date-picker-button {
+    width: 2rem !important;
+    height: 2rem !important;
+    padding: 0 !important;
+    flex-shrink: 0;
+    border-radius: 5px !important; // 🔧 匹配原版方形按鈕
+
+    &:hover {
+      background-color: #e3f2fd !important;
+    }
+  }
+}
+
+// 日期選擇器對話框樣式
+:host ::ng-deep {
+  .date-picker-dialog {
+    .p-dialog-content {
+      padding-bottom: 0;
+      overflow: visible !important;
+    }
+
+    .date-picker-container {
+      display: flex;
+      justify-content: center;
+      padding: 1rem;
+    }
+
+    .dialog-footer {
+      display: flex;
+      justify-content: flex-end;
+      gap: 0.5rem;
+    }
+
+    .p-datepicker {
+      min-width: 280px;
+      padding: 0.5rem;
+
+      table {
+        margin: 0.25rem 0;
+      }
+
+      th {
+        padding: 0.25rem;
+      }
+
+      td {
+        padding: 0.15rem;
+
+        > span {
+          width: 2rem;
+          height: 2rem;
+
+          &.p-highlight {
+            background: #3b82f6;
+            color: #ffffff;
+          }
+        }
+      }
+    }
+  }
+}
+
+// ==================== Checkbox 樣式 - 移植原版 ====================
+
+.checkbox-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  :host ::ng-deep {
+    .p-checkbox {
+      margin: 0 auto;
+
+      .p-checkbox-box {
+        border-radius: 3px;
+        transition: all 0.2s ease;
+
+        &.p-highlight {
+          background-color: #3b82f6;
+          border-color: #3b82f6;
+        }
+
+        &:hover {
+          border-color: #3b82f6;
+        }
+      }
+    }
+  }
+}
+
+// ==================== 數字輸入樣式 - 移植原版 ====================
+
+:host ::ng-deep {
+  .p-inputnumber {
+    width: 100% !important;
+
+    .p-inputnumber-input {
+      width: 100% !important;
+      border-radius: 4px;
+      border: 1px solid #d1d5db;
+      padding: 0.5rem;
+      font-size: 0.9rem;
+
+      &:focus {
+        border-color: #3b82f6;
+        box-shadow: 0 0 0 1px #3b82f6;
+        outline: none;
+      }
+    }
+
+    .p-inputnumber-button-group {
+      .p-button {
+        width: 1.5rem;
+        border-radius: 0;
+
+        &:first-child {
+          border-top-right-radius: 4px;
+        }
+
+        &:last-child {
+          border-bottom-right-radius: 4px;
+        }
+      }
+    }
+  }
+}
+
+// ==================== 響應式設計 ====================
+
+@media (max-width: 768px) {
+  .table-cell-input {
+    font-size: 0.85rem;
+    padding: 0.4rem;
+  }
+
+  .date-selector-wrapper {
+    .date-picker-button {
+      width: 1.8rem !important;
+      height: 1.8rem !important;
+    }
+  }
+
+  :host ::ng-deep {
+    .date-picker-dialog {
+      .p-dialog {
+        width: 90vw !important;
+        max-width: 350px;
+      }
+    }
+  }
+}
+
+// ==================== 錯誤狀態樣式 ====================
+
+.error {
+  .table-cell-input {
+    border-color: #ef4444 !important;
+    box-shadow: 0 0 0 1px #ef4444 !important;
+  }
+
+  :host ::ng-deep {
+    .p-dropdown .p-dropdown-trigger,
+    .p-inputnumber .p-inputnumber-input {
+      border-color: #ef4444 !important;
+    }
+  }
+}
+
+// ==================== 禁用狀態樣式 ====================
+
+:host.disabled {
+  .table-cell-input {
+    background-color: #f3f4f6;
+    color: #6b7280;
+    cursor: not-allowed;
+  }
+
+  :host ::ng-deep {
+    .p-dropdown,
+    .p-inputnumber,
+    .p-checkbox {
+      opacity: 0.6;
+      pointer-events: none;
+    }
+  }
+}
+
+// ==================== 焦點樣式 ====================
+
+:host.focused {
+  .table-cell-input {
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 1px #3b82f6;
+  }
+}
+
+// ==================== 🔧 編輯行的特殊處理 ====================
+
+:host-context(.editing-row) {
+  position: relative;
+  z-index: 15; // 確保編輯行的單元格有足夠的層級
+  overflow: visible !important;
+
+  .table-cell-dropdown {
+    z-index: 20;
+    overflow: visible !important;
+  }
+}
