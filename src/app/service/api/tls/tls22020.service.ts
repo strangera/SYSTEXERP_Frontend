@@ -2,10 +2,8 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { environment } from '../../../../environments/environment';
 
-export interface TLS22020Request {
-  // 如果有查詢條件，請補上欄位；目前為空
-}
 
 export interface TLS22020Response {
   Status: string;
@@ -43,11 +41,11 @@ export interface PayNoData {
   providedIn: 'root'
 })
 export class TLS22020Service {
-  private apiUrl = '/TLS0000/TLS2000/queryTLS22020';
+  apiUrl = `${environment.ApiUrl}/TLS0000/TLS2000`;
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient) { }
 
-  getReport(body: TLS22020Request): Observable<TLS22020Response> {
-    return this.http.post<TLS22020Response>(this.apiUrl, body);
+  queryTLS22020(data: any): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/queryTLS22020`, data);
   }
 }

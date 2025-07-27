@@ -103,10 +103,21 @@ export abstract class BasicQueryPageComponent<T> {
     if (queryForm.valid) {
       callback(); // 執行傳入的回調函數
     } else {
+      this.logValidationErrors(queryForm);
       this.loading = false;
     }
 
     this.messageService.unblockUi();
+  }
+  private logValidationErrors(form: FormGroup) {
+    Object.keys(form.controls).forEach(key => {
+      const controlErrors = form.get(key)?.errors;
+      if (controlErrors) {
+        Object.keys(controlErrors).forEach(errorKey => {
+          console.log(`控件 ${key} 的驗證錯誤: ${errorKey}, 錯誤值:`, controlErrors[errorKey]);
+        });
+      }
+    });
   }
   // 修改處理歷史查詢的方法
   handleQueryRestore(

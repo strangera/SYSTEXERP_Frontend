@@ -50,7 +50,7 @@
   <div class="col-12">
     <app-table tableKey="TLS22030" [data]="data" [columns]="columns" [showEdit]="false" [showManage]="false"
       [showDelete]="false" (exportExcel)="onExportExcel()" (importExcel)="onImportExcel($event)"
-      [multiSortMeta]="[{ field: 'tlt_no', order: 1 }]" [totalRecords]="0"
+      [multiSortMeta]="[{ field: 'tlt_no', order: 1 }]" [totalRecords]="totalRecords"
       (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [lazy]="true"></app-table>
   </div>
 </div>

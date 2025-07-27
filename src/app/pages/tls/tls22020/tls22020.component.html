@@ -21,7 +21,7 @@
               label="銷售日期"
               controlName="TXN_Date"
               calendarType="dateOne"
-              [control]="queryForm.controls.salesDate"
+              [control]="queryForm.controls.TXN_Date"
               [submitted]="submitted"
             ></app-calendar>
           </div>
@@ -69,6 +69,7 @@
       [data]="data"
       [columns]="columns"
       (onSubmit)="onSubmit(queryForm)"
+      [totalRecords]="totalRecords"
     ></app-table>
   </div>
 </div>
