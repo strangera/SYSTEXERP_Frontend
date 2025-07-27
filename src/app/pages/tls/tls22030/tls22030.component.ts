@@ -31,10 +31,10 @@ import { environment } from '../../../../environments/environment';
 export class TLS22030Component extends BasicQueryPageComponent<any> implements OnInit {
   queryForm = this.formBuilder.group({
     ECR_No: [''],
-    TLT_NoList: [[]],
+    TLT_NoList: [null],
     TXN_DateStart: [null, Validators.required],
     TXN_DateEnd: [null, Validators.required],
-    IsLossStatus: ['0000',], // 預設值為 '0000'，表示全部
+    IsLossStatus: [null], // 預設值為 '0000'，表示全部
     ...createPaginationConfig([{ field: 'tlt_no', order: 1 }])
   });
   totalRecords = 0;

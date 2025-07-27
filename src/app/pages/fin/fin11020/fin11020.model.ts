@@ -52,7 +52,7 @@ export const guiStatusOptions = [
   { label: '未使用', value: '00' },
   { label: '使用中', value: '01' },
   { label: '已用完', value: '02' },
-  { label: '暫停使用', value: '03' },
+  { label: '顯示停用', value: '03' },
 ];
 
 // GUI_Type 的選項
@@ -77,7 +77,7 @@ export const columns: Column[] = [
   {
     field: 'GUI_Status', header: '發票號碼狀態', visible: true,
     format: (value: string) => guiStatusOptions.find(x => x.value === value)?.label || value
-  }, // 發票號碼狀態，00=未使用、01=使用中、02=己用完、03=暫停使用
+  }, // 發票號碼狀態，00=未使用、01=使用中、02=己用完、03=顯示停用
   {
     field: 'GUI_Type', header: '發票類別', visible: true,
     format: (value: string) => guiTypeOptions.find(x => x.value === value)?.label || value
@@ -102,7 +102,7 @@ export const subColumns: Column[] = [
   {
     field: 'GUI_Status', header: '發票號碼狀態', visible: true,
     format: (value: string) => guiStatusOptions.find(x => x.value === value)?.label || value
-  }, // 發票號碼狀態 00=未使用 01=使用中 02=己用完 03=暫停使用
+  }, // 發票號碼狀態 00=未使用 01=使用中 02=己用完 03=顯示停用
   {
     field: 'GUI_ProcStatus', header: '是否完成上傳', visible: true,
     format: (value: string) => (value === 'Y' ? '是' : '否')
