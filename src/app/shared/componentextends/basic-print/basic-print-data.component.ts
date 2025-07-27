@@ -106,7 +106,7 @@ export class BasicPrintDataComponent {
     const body = {
       query_condition: {
         ServiceName: apiUrl ? `${apiUrl}` : `query${ProgNo}`,
-        Conditions: queryState
+        Conditions: queryState?.value
       },
       report_title: REPORT_TITLES[`query${ProgNo}`] || 'Report',
       columns: excelColumns,

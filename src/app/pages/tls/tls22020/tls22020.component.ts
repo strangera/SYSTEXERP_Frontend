@@ -101,7 +101,7 @@ export class TLS22020Component extends BasicQueryPageComponent<any> implements O
           this.data = res.Data ?? [];
           this.totalRecords = res.TotalCount;
           this.loading = false;
-          this.queryStateService.setQueryState(this.ProgNo, this.queryForm.value);
+          this.queryStateService.setQueryState(this.ProgNo, params);
         },
         error: (err) => {
           console.error('TLS22020 查詢失敗', err);
