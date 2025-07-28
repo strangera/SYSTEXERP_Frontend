@@ -1,27 +1,29 @@
 import { HttpClient } from '@angular/common/http';
 import { effect, Injectable, signal } from '@angular/core';
 import { TLS26010Data } from '@pages/tls/tls26010/tls26010.model';
-import { CampainAccountingType, CampainAccountingTypes, mockQueryTLS26080, TLS26080Data, TLS26080Query } from '@pages/tls/tls26080/tls26080.model';
+import { CampaignData, mockCampaignData } from '@pages/tls/tls26080-cru/ts26080-cru.model';
+import { CampaignAccountingType, CampaignAccountingTypes, mockQueryTLS26080, TLS26080Data, TLS26080Query } from '@pages/tls/tls26080/tls26080.model';
 import { ErrorHandlerService } from '@service/system/error-handler.service';
 import { NotificationService } from '@shared/component/notification-message/notification.service';
 import { ApprovalStatus } from '@shared/models';
 import { BaseQueryResponse, DropdownOption } from '@shared/models/api/base-api.interface';
-import { catchError, EMPTY, finalize, Observable, of, take, tap } from 'rxjs';
+import { catchError, EMPTY, finalize, of, take, tap } from 'rxjs';
 import { environment } from 'src/environments/environment';
 
-const mock = !0;
+const mock = !1;
 const apiUrl: string = environment.ApiUrl;
 
 @Injectable({ providedIn: 'root' })
 export class TLS26080Service {
 
-  public TLS26080List = signal<TLS26080Data[]>([]);
   public approvalData = signal<ApprovalStatus>(ApprovalStatus.未核准);
+  public TLS26080List = signal<TLS26080Data[]>([]);
+  public campaignData = signal<CampaignData>({} as CampaignData);
   private TLS26080Data = signal<TLS26080Data[]>([]);
 
-
-  private TableLoading = !1;
+  private tableLoading = !1;
   private approvalStatusLoading = !1;
+  private campaignLoading = !1;
 
   public approvalStatus(value: string): string {
     switch (value) {
@@ -43,7 +45,7 @@ export class TLS26080Service {
   }, { allowSignalWrites: true });
 
   public readonly departmentItems = signal<DropdownOption[]>([]);
-  public readonly capItems = signal<DropdownOption[]>(Array.from(CampainAccountingType.values()));
+  public readonly capItems = signal<DropdownOption[]>(Array.from(CampaignAccountingType.values()));
   public readonly podStatusItems = signal<DropdownOption[]>([
     { No: ApprovalStatus.未核准, Name: '未核准' },
     { No: ApprovalStatus.已核准, Name: '已核准' },
@@ -56,10 +58,10 @@ export class TLS26080Service {
     private messageService: NotificationService,
   ) { }
 
+  /** 查詢資料 */
   loadTLS26080(query: TLS26080Query): void {
-    if (this.TableLoading) return void (this.TableLoading = !1);
-    this.TableLoading = !0;
-
+    if (this.tableLoading) return void (this.tableLoading = !1);
+    this.tableLoading = !0;
     const api = mock
       ? mockQueryTLS26080
       : this.http.post<BaseQueryResponse<TLS26080Data>>(`${apiUrl}/queryTLS26080`, query);
@@ -68,13 +70,28 @@ export class TLS26080Service {
       take(1),
       tap(response => this.TLS26080Data.set(response.Data.map(item => ({
         ...item,
-        pod_type: CampainAccountingTypes[Number(item.pod_type)] || item.pod_type,
+        pod_type: CampaignAccountingTypes[Number(item.pod_type)] || item.pod_type,
       })))),
       catchError(error => this.errorHandler.handleError(error)),
       finalize(() => {
-        this.TableLoading = !1;
+        this.tableLoading = !1;
         console.log('查詢結果:', this.TLS26080Data());
       })
+    ).subscribe();
+  }
+
+  /** 查詢環友資料 */
+  loadCampaignData(query: any): void {
+    if (this.campaignLoading) return void (this.campaignLoading = !1);
+    this.campaignLoading = !0;
+    const api = mock
+      ? of(mockCampaignData)
+      : this.http.post<BaseQueryResponse<CampaignData>>(`${apiUrl}/queryCampaignData`, query);
+    api.pipe(
+      take(1),
+      tap(response => this.campaignData.set(response.Data[0] || {} as CampaignData)),
+      catchError(error => { this.errorHandler.handleError(error); return EMPTY; }),
+      finalize(() => { console.log('查詢環友資料:', this.campaignData()); })
     ).subscribe();
   }
 
