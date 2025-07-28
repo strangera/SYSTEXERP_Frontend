@@ -16,21 +16,8 @@
     </ng-container>
     <!-- <ng-container *ngIf="!isViewMode"> -->
     <ng-container>
-<<<<<<< HEAD
-      <app-button
-        btnType="back"
-        label="上一步"
-        (click)="onCancel()"
-      ></app-button>
-      <app-button
-        btnType="next"
-        label="下一步(代扣款)"
-        (click)="onSubmitNext()"
-      ></app-button>
-=======
       <app-button btnType="back" label="上一步" (click)="onCancel()"></app-button>
       <app-button btnType="next" label="下一步(代扣款)" (click)="onSubmitNext()"></app-button>
->>>>>>> Branch_main_NewSmartTable_ByBruce
       <app-button btnType="back" (click)="onCancel()"></app-button>
     </ng-container>
     <ng-container *ngIf="isViewMode">
@@ -44,22 +31,12 @@
         <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
           <div class="grid p-fluid">
             <div class="col-12 md:col-6 lg:col-4">
-<<<<<<< HEAD
-              <app-input-text
-                label="專櫃招募編號"
-                controlName="apply_no"
-                [control]="dataForm.controls.apply_no"
-                [submitted]="submitted"
-                [disabled]="!isNewContractMode()"
-              ></app-input-text>
-=======
               <app-input-text label="專櫃招募編號" controlName="apply_no" [control]="dataForm.controls.apply_no"
                 [submitted]="submitted" [disabled]="!isNewContractMode()"></app-input-text>
             </div>
             <div class="col-12 md:col-6 lg:col-4">
               <app-input-text label="專櫃編號" controlName="tlt_no" [control]="dataForm.controls.tlt_no"
                 [submitted]="submitted" [disabled]="!isNewContractMode()"></app-input-text>
->>>>>>> Branch_main_NewSmartTable_ByBruce
             </div>
             <div class="col-12 md:col-6 lg:col-4">
               <app-dropdown label="廠商統一編號" controlName="ven_uniform" [options]="pos2013Options" optionLabel="label"
@@ -74,27 +51,8 @@
                 [submitted]="submitted" [disabled]="!isNewContractMode()"></app-input-text>
             </div>
             <div class="col-12 md:col-6 lg:col-4">
-<<<<<<< HEAD
-              <app-input-text
-                label="櫃位名稱"
-                controlName="tlt_name"
-                [control]="dataForm.controls.tlt_name"
-                [submitted]="submitted"
-                [disabled]="!isNewContractMode()"
-              ></app-input-text>
-            </div>
-            <div class="col-12 md:col-6 lg:col-4">
-              <app-input-text
-                label="版次"
-                controlName="contract_subno"
-                [control]="dataForm.controls.contract_subno"
-                [submitted]="submitted"
-                [disabled]="true"
-              ></app-input-text>
-=======
               <app-input-text label="版次" controlName="contract_subno" [control]="dataForm.controls.contract_subno"
                 [submitted]="submitted" [disabled]="true"></app-input-text>
->>>>>>> Branch_main_NewSmartTable_ByBruce
             </div>
             <div class="col-12 md:col-6 lg:col-4">
               <app-dropdown label="營運狀況" controlName="tlt_openflag" [options]="tltopenflagOption" optionLabel="label"
