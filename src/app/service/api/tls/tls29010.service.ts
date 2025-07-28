@@ -14,5 +14,10 @@ export class Tls29010Service {
   // 查詢 專櫃編號
   queryTLTTALENT_Status_DropDownList(body: any): Observable<any> {
     return this.http.post<any>(`${environment.ApiUrl}/queryTLTTALENT_Status_DropDownList`, body);
-  }  
+  }
+
+  // 查詢 部門編號(SYS3100)
+  querySYS3100_DropDownList(body: any): Observable<any> {
+    return this.http.post<any>(`${environment.ApiUrl}/querySYS3100_DropDownList`, body);
+  }
 }

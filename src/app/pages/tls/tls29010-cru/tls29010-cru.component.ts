@@ -99,26 +99,27 @@ export class TLS29010CRUComponent extends BasicCruPageComponent<TALPORDERD_OPEND
   //主黨也可以新增
   // ----------------------------------------------------------------
       dataForm = this.formBuilder.group({
-        id: [{ value: null as string | null, disabled: true }], // 主鍵，自動編號
-        mid: [{ value: null as string | null, disabled: true }], // 主檔關聯 ID
+        id: [{value: null, disabled: true}], // 主鍵，自動編號
+        mid: [{value: null, disabled: true}], // 主檔關聯 ID
         str_no: ['', Validators.required], // 店部編號
         // --先選 專櫃活動設定主檔TALPORDERM--
         //欄位用這些就好
-        pod_no: [{ value: null as string | null, disabled: true }], // 活動申請編號 (YYYYMMDDSSS)
+        pod_no: [{value: null, disabled: true}], // 活動申請編號 (YYYYMMDDSSS)
         pod_type: ['', Validators.required], // 活動類型(1=預售, 2=滿千送百發行, 3=滿千送百兌回, 4~5=會員卡集點, 6~7=全館集點, 8=期間開放折扣)
         pod_desc: ['',[Validators.required, Validators.maxLength(100)]], // 活動名稱(新增時開放下拉選取) 抓 [TALPORDERD]
-        pod_sdate: [{ value: null as Date | null, disabled: true }], // 活動起始日 (Date)
-        pod_edate: [{ value: null as Date | null, disabled: true }], // 活動終止日 (Date)
+        pod_sdate: [{value: null, disabled: true}], // 活動起始日 (Date)
+        pod_edate: [{value: null, disabled: true}], // 活動終止日 (Date)
 
         org_id: [''], // 組織-部門(SYS3100)
         act_no: [''], // 活動編號(群組)
-        pod_busdate: [{ value: null as Date | null | undefined, disabled: false }], // 活動正檔日期
+        pod_busdate: [{value: null, disabled: true}], // 活動正檔日期
         cap_item: [''], // 扣款代碼
         pod_status: ['', Validators.required], // 活動狀態(0=未核准, 1=已核准, 9=刪除)
 
-        approved_userno: [''], // 核准人員編號
-        approved_usr_name: [''], // 核准人員姓名
-        approved_date: [{ value: null as Date | null | undefined, disabled: false }], // approved_date
+        // 核准不會再新增進行，先鎖起來
+        approved_userno: [{value: null, disabled: true}], // 核准人員編號
+        approved_usr_name: [{value: null, disabled: true}], // 核准人員姓名
+        approved_date: [{value: null, disabled: true}], // 核准日期
       });
     
       whetherOption: option[] = [ // 是否使用 Y/N
@@ -137,53 +138,26 @@ export class TLS29010CRUComponent extends BasicCruPageComponent<TALPORDERD_OPEND
         { label: '8 期間開放折扣', value: '8' }, //新增用這個
       ];
 
-      statusOptions = [
+      pod_status_Options = [
         { label: '未核准', value: '0' },
         { label: '已核准', value: '1' },
         { label: '刪除', value: '9' },
       ];
 
-    //   mockDetailDataOptions = [
-    //   {
-    //     talent_id: 1001,            // 合約編號系統（隱藏）
-    //     tlt_id: '2',                // 抽成類別
-    //     tlt_no: 'A001_新光三越信義A11', // 專櫃名稱（專櫃編號_專櫃名稱）
-    //     cag_barcode: '9折',        // 折數
-    //     cag_charge_rate: '10%',    // 抽成率
-    //     use_flag: 'Y',             // 是否使用
-    //   },
-    //   {
-    //     talent_id: 1002,
-    //     tlt_id: '3',
-    //     tlt_no: 'B002_統一時代百貨台北店',
-    //     cag_barcode: '85折',
-    //     cag_charge_rate: '12%',
-    //     use_flag: 'N',
-    //   },
-    //   {
-    //     talent_id: 1003,
-    //     tlt_id: '1',
-    //     tlt_no: 'C003_台中大遠百',
-    //     cag_barcode: '95折',
-    //     cag_charge_rate: '8%',
-    //     use_flag: 'Y',
-    //   }
-    // ];
-
-    mockDetailDataOptions = [
-      {
-        value: '1',
-        label: 'A001_新光三越信義A11', // 專櫃名稱（專櫃編號_專櫃名稱）
-      },
-      {
-        value: '2',
-        label: 'B002_統一時代百貨台北店',
-      },
-      {
-        value: '3',
-        label: 'C003_台中大遠百',
-      }
-    ];
+      mockDetailDataOptions = [
+        {
+          value: '1',
+          label: 'A001_新光三越信義A11', // 專櫃名稱（專櫃編號_專櫃名稱）
+        },
+        {
+          value: '2',
+          label: 'B002_統一時代百貨台北店',
+        },
+        {
+          value: '3',
+          label: 'C003_台中大遠百',
+        }
+      ];
 
       //測試用的主檔表單 (如果是編輯模式就只有一筆)
       activityList: any = [
@@ -234,9 +208,9 @@ export class TLS29010CRUComponent extends BasicCruPageComponent<TALPORDERD_OPEND
         tlt_no: '', // 抽成類別
         cag_barcode: 0, // 折數條碼 //依照專櫃編號 進行變動
         cag_charge_rate: 0, // 折數條碼 //依照專櫃編號 進行變動
-        use_flag: true, // 是否使用
+        use_flag: 'Y', // 是否使用
 
-        status: 'Y' // 新增狀態
+        status: 'new' // 新增狀態
       };
       // 預設 POS2005 新項目模板 (內容有需要變動時使用)
       // createDefaultNew() {
@@ -257,7 +231,7 @@ export class TLS29010CRUComponent extends BasicCruPageComponent<TALPORDERD_OPEND
 
       // ----------------------------------------------------------------
       constructor(
-        private tls12010Service: Tls29010Service,
+        private tls29010Service: Tls29010Service,
         private tls29010DetailService: Tls29010DetailService,
       ) {
         super(); // 呼叫父類建構子
@@ -281,17 +255,35 @@ export class TLS29010CRUComponent extends BasicCruPageComponent<TALPORDERD_OPEND
       onSubmit(frm: FormGroup) {
         this.messageService.blockUi();
         this.submitted = true;
-    
+
         if (this.dataForm.invalid) {
           this.messageService.unblockUi();
           return;
         }
+
+         //將新的資料ID指定為null
+        const processedDetail = this.potentialDetail.map(item => {
+          // 刪除 key 為空字串的欄位
+          if ("" in item) {
+            delete item[""];
+          }
+
+          if (item.status === 'new') {
+            return { ...item, ID: null}; // 把新項目的 ID, PC_id 改為 null
+          }
+          return item; // 其他不變
+        });
     
         const formValue = frm.getRawValue();
+        const body = {
+          ...formValue,
+          Detail: processedDetail, // 將明細資料加入請求體
+        }
+    
         switch (this.crudstatus) {
           case CRUDStatus.Create:
             if (this.canAdd()) {
-              console.log('insert', frm.value);
+              console.log('insert', body);
               // this.tls51080Service.insertTLS51080(formValue).subscribe(() => {
               //   this.messageService.successBubble('新增成功');
               //   // this.onCancel(); // 儲存後，會清除資料留在原頁面，不返回列表
@@ -301,7 +293,7 @@ export class TLS29010CRUComponent extends BasicCruPageComponent<TALPORDERD_OPEND
             break;
           case CRUDStatus.Edit:
             if (this.canEdit()) {
-              console.log('update', formValue);
+              console.log('update', body);
               // this.tls51080Service.updateTLS51080(formValue).subscribe(() => {
               //   // this.messageService.successBubble('更新成功');
               //   this.onCancel(); // 儲存後，會返回列表
@@ -324,7 +316,7 @@ export class TLS29010CRUComponent extends BasicCruPageComponent<TALPORDERD_OPEND
 
       loadOption(){
         // 專櫃編號
-        this.tls12010Service
+        this.tls29010Service
           .queryTLTTALENT_Status_DropDownList({})
           .subscribe((response) => {
             this.tlt_No_Option = response.Data.map((item: apiOption) => ({
@@ -334,6 +326,18 @@ export class TLS29010CRUComponent extends BasicCruPageComponent<TALPORDERD_OPEND
             }));
       
             console.log('專櫃編號 下拉:', response.Data);
+          });
+        // 部門編號(SYS3100)
+        this.tls29010Service
+          .querySYS3100_DropDownList({})
+          .subscribe((response) => {
+            this.orgOptions = response.Data.map((item: apiOption) => ({
+              No: item.No,
+              Name: item.Name,
+              Label: item.No + '-' + item.Name,
+            }));
+      
+            console.log('部門編號 下拉:', response.Data);
           });
       }
 
