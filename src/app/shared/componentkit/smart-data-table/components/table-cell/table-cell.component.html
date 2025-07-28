@@ -1,0 +1,170 @@
+<!-- 直接修復 - table-cell.component.html -->
+<!-- 🎯 完全複製原版的模板邏輯，確保編輯功能正常 -->
+
+<div class="table-cell-container">
+  <!-- 🎯 編輯模式 -->
+  <ng-container *ngIf="canEdit">
+    <ng-container [ngSwitch]="fieldType">
+      <!-- 文字輸入 -->
+      <input
+        *ngSwitchCase="'text'"
+        pInputText
+        type="text"
+        [(ngModel)]="internalValue"
+        (ngModelChange)="onValueChange($event)"
+        [placeholder]="column.placeholder || ''"
+        class="table-cell-input"
+      />
+
+      <!-- 數字輸入 -->
+      <p-inputNumber
+        *ngSwitchCase="'number'"
+        [(ngModel)]="internalValue"
+        (ngModelChange)="onValueChange($event)"
+        [minFractionDigits]="getNumberInputConfig().minFractionDigits"
+        [maxFractionDigits]="getNumberInputConfig().maxFractionDigits"
+        [step]="getNumberInputConfig().step"
+        [mode]="getNumberInputConfig().mode"
+        [useGrouping]="getNumberInputConfig().useGrouping"
+        class="table-cell-input"
+        [style]="{ width: '100%' }"
+      ></p-inputNumber>
+
+      <!-- 🔧 下拉選單 - 完全複製原版邏輯 -->
+      <p-dropdown
+        *ngSwitchCase="'dropdown'"
+        [options]="getFieldOptions()"
+        [(ngModel)]="internalValue"
+        (ngModelChange)="onDropdownChange($event)"
+        optionLabel="label"
+        optionValue="value"
+        [placeholder]="column.placeholder || '請選擇'"
+        [showClear]="true"
+        [filter]="getFieldOptions().length > 10"
+        filterMatchMode="contains"
+        appendTo="body"
+        [style]="{ width: '100%' }"
+        class="table-cell-input table-cell-dropdown"
+      ></p-dropdown>
+
+      <!-- 🔧 日期選擇 - 完全複製原版邏輯 -->
+      <div *ngSwitchCase="'date'" class="date-selector-wrapper">
+        <input
+          pInputText
+          type="text"
+          [ngModel]="getDateInputValue()"
+          (ngModelChange)="onDateInputChange($event)"
+          [placeholder]="getDatePlaceholder()"
+          class="date-input table-cell-input"
+        />
+        <button
+          pButton
+          pRipple
+          type="button"
+          icon="pi pi-calendar"
+          class="p-button-text p-button-sm p-button-rounded date-picker-button"
+          (click)="openDatePicker()"
+        ></button>
+      </div>
+
+      <!-- Checkbox 核取方塊 -->
+      <div *ngSwitchCase="'checkbox'" class="checkbox-wrapper">
+        <p-checkbox
+          [(ngModel)]="internalValue"
+          (ngModelChange)="onCheckboxChange($event)"
+          [binary]="true"
+        ></p-checkbox>
+      </div>
+
+      <!-- 預設文字輸入 -->
+      <input
+        *ngSwitchDefault
+        pInputText
+        type="text"
+        [(ngModel)]="internalValue"
+        (ngModelChange)="onValueChange($event)"
+        class="table-cell-input"
+      />
+    </ng-container>
+  </ng-container>
+
+  <!-- 🎯 顯示模式 - 完全複製原版邏輯 -->
+  <ng-container *ngIf="canDisplay">
+    <ng-container [ngSwitch]="fieldType">
+      <!-- 日期顯示 -->
+      <span *ngSwitchCase="'date'">
+        {{ getDateDisplayValue() }}
+      </span>
+
+      <!-- 數字顯示 -->
+      <span *ngSwitchCase="'number'">
+        {{ getNumberDisplayValue() }}
+      </span>
+
+      <!-- 下拉選單顯示 -->
+      <span *ngSwitchCase="'dropdown'">
+        {{ getDropdownDisplayText() }}
+      </span>
+
+      <!-- Checkbox 顯示 -->
+      <span *ngSwitchCase="'checkbox'" class="checkbox-wrapper">
+        <div class="p-checkbox p-component p-disabled">
+          <div
+            class="p-checkbox-box"
+            [ngClass]="{ 'p-highlight': getCheckboxValue() }"
+          >
+            <span
+              class="p-checkbox-icon pi pi-check"
+              *ngIf="getCheckboxValue()"
+            ></span>
+          </div>
+        </div>
+      </span>
+
+      <!-- 預設顯示 -->
+      <span *ngSwitchDefault>{{ getDisplayValue() }}</span>
+    </ng-container>
+  </ng-container>
+</div>
+
+<!-- 🔧 日期選擇器對話框 - 完全複製原版 -->
+<p-dialog
+  header="選擇日期"
+  [(visible)]="datePickerVisible"
+  [modal]="true"
+  [style]="{ width: '400px' }"
+  [contentStyle]="{ overflow: 'visible' }"
+  [draggable]="false"
+  [resizable]="false"
+  styleClass="date-picker-dialog"
+>
+  <div class="date-picker-container">
+    <p-calendar
+      [(ngModel)]="temporaryDate"
+      [inline]="true"
+      [showIcon]="false"
+      [showButtonBar]="true"
+    ></p-calendar>
+  </div>
+
+  <ng-template pTemplate="footer">
+    <div class="dialog-footer">
+      <button
+        pButton
+        pRipple
+        label="確認"
+        icon="pi pi-check"
+        class="p-button-text"
+        (click)="confirmDateSelection()"
+      ></button>
+      <button
+        pButton
+        pRipple
+        label="取消"
+        icon="pi pi-times"
+        class="p-button-text p-button-secondary"
+        (click)="cancelDateSelection()"
+      ></button>
+    </div>
+  </ng-template>
+</p-dialog>

@@ -1,0 +1,105 @@
+<!-- shared/componentkit/smart-data-table/components/table-header/table-header.component.html -->
+
+<div
+  *ngIf="shouldShowHeader"
+  [ngClass]="headerContainerClass"
+  class="flex justify-content-between align-items-center"
+>
+  <!-- 左側按鈕區域 -->
+  <div class="table-header-left flex gap-2 align-items-center">
+    <!-- 新增按鈕 -->
+    <button
+      *ngIf="showAddButton"
+      pButton
+      pRipple
+      type="button"
+      icon="pi pi-plus"
+      pTooltip="新增"
+      tooltipPosition="bottom"
+      [ngClass]="addButtonClass"
+      [disabled]="loading"
+      (click)="onAddClick()"
+      aria-label="新增項目"
+    ></button>
+
+    <!-- 批次刪除按鈕 -->
+    <button
+      *ngIf="showBatchDeleteButton"
+      pButton
+      pRipple
+      type="button"
+      icon="pi pi-trash"
+      [pTooltip]="
+        '批次刪除' + (selectedCount > 0 ? ' (' + selectedCount + ')' : '')
+      "
+      tooltipPosition="bottom"
+      [ngClass]="batchDeleteButtonClass"
+      [disabled]="isBatchDeleteDisabled"
+      (click)="onBatchDeleteClick()"
+      [attr.aria-label]="'批次刪除已選取的 ' + selectedCount + ' 個項目'"
+    ></button>
+
+    <!-- 自定義左側內容 -->
+    <ng-content select="[header-left]"></ng-content>
+  </div>
+
+  <!-- 右側按鈕區域 -->
+  <div class="table-header-right flex gap-2 align-items-center">
+    <!-- 重新整理按鈕（可選） -->
+    <button
+      *ngIf="config.showRefreshButton"
+      pButton
+      pRipple
+      type="button"
+      icon="pi pi-refresh"
+      pTooltip="重新整理"
+      tooltipPosition="bottom"
+      class="p-button-rounded p-button-outlined p-button-secondary"
+      [class.p-button-loading]="loading"
+      (click)="onRefreshClick()"
+      aria-label="重新整理資料"
+    ></button>
+
+    <!-- 展開/收合全部按鈕 -->
+    <button
+      *ngIf="showExpandButton"
+      pButton
+      pRipple
+      type="button"
+      [icon]="expandButtonIcon"
+      [label]="expandButtonLabel"
+      [ngClass]="expandButtonClass"
+      (click)="onExpandAllClick()"
+      [attr.aria-label]="expandButtonLabel"
+    ></button>
+
+    <!-- 自定義右側內容 -->
+    <ng-content select="[header-right]"></ng-content>
+  </div>
+</div>
+
+<!-- 載入狀態指示器（如果需要） -->
+<div *ngIf="loading && config.showLoadingIndicator" class="loading-indicator">
+  <i class="pi pi-spin pi-spinner"></i>
+  <span>載入中...</span>
+</div>
+
+<!-- 選取資訊提示（如果有選取項目） -->
+<div
+  *ngIf="selectedCount > 0 && config.showSelectionInfo"
+  class="selection-info"
+>
+  <i class="pi pi-info-circle"></i>
+  <span>已選取 {{ selectedCount }} 個項目</span>
+
+  <button
+    pButton
+    pRipple
+    type="button"
+    icon="pi pi-times"
+    class="p-button-text p-button-sm"
+    pTooltip="清除選取"
+    (click)="$event.stopPropagation(); selectedCount = 0"
+    aria-label="清除所有選取項目"
+  ></button>
+</div>

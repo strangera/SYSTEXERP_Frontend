@@ -156,6 +156,9 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
   @Input() detailColumnsMap: { [tabId: string]: ColumnDef[] } = {};
   @Input() showDetailBatchDelete: boolean = true;
 
+  //新增：自動編輯相關屬性
+  @Input() autoEditOnAdd: boolean = true; // 新增項目時是否自動進入編輯狀態
+
   detailSelectedTabs: { [key: string]: string } = {};
   detailSelectedItems: { [mainRowKey: string]: any[] } = {};
 
@@ -207,6 +210,8 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
     if (this.data) {
       this.totalRecords = this.data.length;
       this.initializeDetailArrays();
+
+      this.cleanupInvalidSelections();
 
       if (this.showDetailTabs) {
         this.data.forEach(item => {
@@ -437,28 +442,28 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
   }
 
   onAddMainItem() {
-    if (this.editingRow !== null || this.editingDetail !== null) {
-      console.warn('請先完成當前編輯操作');
-      return;
-    }
+    // 🚀 直接新增，不檢查編輯狀態
     this.addMainItem.emit();
+
+    // 🎯 如果啟用自動編輯，在新增後自動進入編輯狀態
+    if (this.autoEditOnAdd) {
+      setTimeout(() => {
+        const lastIndex = this.data.length - 1;
+        if (lastIndex >= 0) {
+          console.log('🔧 自動進入新增項目的編輯模式');
+          this.onRowEditInit(this.data[lastIndex], lastIndex);
+        }
+      }, 100);
+    }
   }
 
   onBatchDelete() {
-    // console.log('🔍 DEBUG 批次刪除檢查:');
-    // console.log('  selectedItems.length:', this.selectedItems.length);
-    // console.log('  editingRow:', this.editingRow);
-    // console.log('  editingDetail:', this.editingDetail);
-    // console.log('  selectedItems:', this.selectedItems);
-
     if (this.selectedItems.length === 0) {
       console.warn('請選擇要刪除的項目');
       return;
     }
-    if (this.editingRow !== null || this.editingDetail !== null) {
-      console.warn('請先完成當前編輯操作');
-      return;
-    }
+
+    // 🚀 直接刪除，讓使用者有最流暢的體驗
     this.batchDelete.emit([...this.selectedItems]);
   }
 
@@ -470,11 +475,8 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
       console.warn('請選擇要刪除的明細項目');
       return;
     }
-    if (this.editingRow !== null || this.editingDetail !== null) {
-      console.warn('請先完成當前編輯操作');
-      return;
-    }
 
+    // 🚀 直接刪除明細
     this.detailBatchDelete.emit({
       selectedDetails: [...selectedDetails],
       parentData: parentData,
@@ -661,13 +663,26 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
   }
 
   onAddDetailItem(parentData: any, rowIndex: number) {
-    if (this.editingRow !== null || this.editingDetail !== null) {
-      console.warn('請先完成當前編輯操作');
-      return;
-    }
+    // 🚀 直接新增明細，不檢查編輯狀態
     this.addDetailItem.emit(parentData);
-  }
 
+    // 🎯 如果啟用自動編輯，在新增後自動進入編輯狀態
+    if (this.autoEditOnAdd) {
+      setTimeout(() => {
+        const detailArray = parentData[this.detailKey];
+        if (detailArray && detailArray.length > 0) {
+          const lastDetailIndex = detailArray.length - 1;
+          console.log('🔧 自動進入新增詳細項目的編輯模式');
+          this.onDetailEditInit(
+            detailArray[lastDetailIndex],
+            parentData,
+            rowIndex,
+            lastDetailIndex
+          );
+        }
+      }, 100);
+    }
+  }
   onDetailTabChange(rowData: any, tabId: string) {
     const rowKey = rowData[this.dataKey];
     this.detailSelectedTabs[rowKey] = tabId;
@@ -979,5 +994,35 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
     }
 
     return colspan;
+  }
+
+  // 🎯 新增：檢查欄位是否可編輯的方法
+  isFieldEditable(column: ColumnDef, isEditing: boolean): boolean {
+    // 如果欄位設為不可編輯，則永遠不可編輯
+    if (column.editable === false) {
+      return false;
+    }
+
+    // 如果欄位設為可編輯或未設定，則根據當前編輯狀態決定
+    return isEditing && (column.editable === true || column.editable === undefined);
+  }
+
+  // 🎯 新增：檢查欄位是否應該顯示為輸入控件
+  shouldShowInputControl(column: ColumnDef, isEditing: boolean): boolean {
+    return this.isFieldEditable(column, isEditing);
+  }
+
+  // 🎯 新增：檢查欄位是否應該顯示為純文字
+  shouldShowDisplayOnly(column: ColumnDef, isEditing: boolean): boolean {
+    return !this.isFieldEditable(column, isEditing);
+  }
+
+  private cleanupInvalidSelections(): void {
+    // 清理主表格的無效選取
+    if (this.selectedItems.length > 0) {
+      this.selectedItems = this.selectedItems.filter(selectedItem => {
+        return this.data.some(dataItem => dataItem[this.dataKey] === selectedItem[this.dataKey]);
+      });
+    }
   }
 }

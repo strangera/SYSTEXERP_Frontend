@@ -40,6 +40,8 @@ import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/
 import { CheckboxModule } from 'primeng/checkbox';
 import { InputTextareaComponent } from '../../../shared/componentkit/input-textarea/input-textarea.component';
 import { NgIf } from '@angular/common';
+import { ButtonModule } from 'primeng/button';
+import { InputTextModule } from 'primeng/inputtext';
 
 @Component({
   selector: 'app-tls13010-cru',
@@ -61,6 +63,8 @@ import { NgIf } from '@angular/common';
     CheckboxModule,
     AutoCompleteComponent,
     InputTextareaComponent,
+    ButtonModule,
+    InputTextModule,
   ],
 
 })
@@ -201,12 +205,14 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
     tlt_openflag: [''],
     cap_saletype1: ['N'],
     cap_saletype2: ['N'],
+    cap_saletype3: ['N'],
+    cap_saletype4: ['N'],
     activity3: [false],
     activity4: [false],
     open_deposit: [''],
     total_amt_unit: [''],
     total_amt_vendor_unit: [''],
-    company_addr: [''],
+    company_register_address: [''],
     // 銀行 AutoComplete
     selectedBankInfo: null
   });
@@ -618,7 +624,6 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
       credit_card: '',
       total_amt_unit: 'M', // 預設為月
       total_amt_vendor_unit: 'M', // 預設為月
-      company_addr: '',
     });
 
     // 🎯 清空位置資料
@@ -681,7 +686,7 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
       contact_tel: queryData['contact_tel'] as string,
       contact_fax: queryData['contact_fax'] as string,
       contact_addr: queryData['contact_addr'] as string,
-      company_addr: queryData['company_addr'] as string,
+      company_register_address: queryData['company_register_address'] as string,
       tlt_remark: queryData['tlt_remark'] as string,
 
       // 其他欄位
@@ -701,6 +706,8 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
       ticket_remarks: queryData['ticket_remarks'] as string,
       cap_saletype1: queryData['cap_saletype1'] as string,
       cap_saletype2: queryData['cap_saletype2'] as string,
+      cap_saletype3: queryData['cap_saletype3'] as string,
+      cap_saletype4: queryData['cap_saletype4'] as string,
       contact_USR_No: queryData['contact_USR_No'] as string,
       contact_USR_Name: queryData['contact_USR_Name'] as string,
       total_amt_unit: queryData['total_amt_unit'] as string,
@@ -966,6 +973,10 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
       if (item._status === 'deleted' && item._isNew) {
         return false;  // 新增後又刪除的不需要提交
       }
+      if (!item.location_no || item.location_no.trim() === '') {
+        console.warn('過濾掉沒有位置編號的項目:', item);
+        return false;
+      }
       return true;
     });
 
@@ -1216,93 +1227,90 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
       this.messageService.warnBubble('請選擇要刪除的項目');
       return;
     }
+    // 過濾有效項目
+    const validItems = selectedItems.filter((item): item is LocationItem & { id: string } => {
+      if (!item.id) {
+        console.warn('⚠️ 發現沒有 ID 的項目:', item);
+        return false;
+      }
+      return true;
+    });
 
-    if (confirm(`確定要刪除 ${selectedItems.length} 個位置項目嗎？`)) {
-      // 過濾有效項目
-      const validItems = selectedItems.filter((item): item is LocationItem & { id: string } => {
-        if (!item.id) {
-          console.warn('⚠️ 發現沒有 ID 的項目:', item);
+    console.log('✅ 有效項目:', validItems.map(item => ({ id: item.id, status: item._status, isNew: item._isNew })));
+
+    if (validItems.length === 0) {
+      this.messageService.warnBubble('沒有有效的項目可以刪除');
+      return;
+    }
+
+    // 分類處理
+    const idsToRemove = new Set<string>();
+    const idsToMarkDeleted = new Set<string>();
+
+    validItems.forEach(item => {
+      const itemId = String(item.id);
+      if (item._status === 'new' || item._isNew) {
+        idsToRemove.add(itemId);
+        console.log(`🗑️ 新增項目將直接移除: ${itemId}`);
+      } else {
+        idsToMarkDeleted.add(itemId);
+        console.log(`🏷️ 既有項目將標記刪除: ${itemId}`);
+      }
+    });
+
+    console.log('📋 處理計畫:', {
+      直接移除: Array.from(idsToRemove),
+      標記刪除: Array.from(idsToMarkDeleted)
+    });
+
+    // 記錄舊資料長度
+    const oldLength = this.locationData.length;
+
+    // ✅ 處理資料
+    this.locationData = this.locationData
+      .filter(item => {
+        // 移除新增項目
+        if (item.id && idsToRemove.has(String(item.id))) {
+          console.log(`❌ 移除項目: ${item.id} (${item.location_no})`);
           return false;
         }
         return true;
-      });
-
-      console.log('✅ 有效項目:', validItems.map(item => ({ id: item.id, status: item._status, isNew: item._isNew })));
-
-      if (validItems.length === 0) {
-        this.messageService.warnBubble('沒有有效的項目可以刪除');
-        return;
-      }
-
-      // 分類處理
-      const idsToRemove = new Set<string>();
-      const idsToMarkDeleted = new Set<string>();
-
-      validItems.forEach(item => {
-        const itemId = String(item.id);
-        if (item._status === 'new' || item._isNew) {
-          idsToRemove.add(itemId);
-          console.log(`🗑️ 新增項目將直接移除: ${itemId}`);
-        } else {
-          idsToMarkDeleted.add(itemId);
-          console.log(`🏷️ 既有項目將標記刪除: ${itemId}`);
+      })
+      .map(item => {
+        // 標記既有項目為刪除
+        if (item.id && idsToMarkDeleted.has(String(item.id))) {
+          console.log(`🏷️ 標記刪除: ${item.id} (${item.location_no})`);
+          return { ...item, _status: 'deleted' as const };
         }
+        return item;
       });
 
-      console.log('📋 處理計畫:', {
-        直接移除: Array.from(idsToRemove),
-        標記刪除: Array.from(idsToMarkDeleted)
-      });
+    // 檢查結果
+    const newLength = this.locationData.length;
+    const displayLength = this.getDisplayLocationData().length;
 
-      // 記錄舊資料長度
-      const oldLength = this.locationData.length;
+    console.log('📊 刪除後資料狀態:', {
+      原長度: oldLength,
+      新長度: newLength,
+      顯示長度: displayLength,
+      移除數量: oldLength - newLength,
+      處理後資料: this.locationData.map(item => ({
+        id: item.id,
+        location_no: item.location_no,
+        status: item._status
+      })),
+      顯示資料: this.getDisplayLocationData().map(item => ({
+        id: item.id,
+        location_no: item.location_no
+      }))
+    });
+    this.displayLocationData = this.getDisplayLocationData();
 
-      // ✅ 處理資料
-      this.locationData = this.locationData
-        .filter(item => {
-          // 移除新增項目
-          if (item.id && idsToRemove.has(String(item.id))) {
-            console.log(`❌ 移除項目: ${item.id} (${item.location_no})`);
-            return false;
-          }
-          return true;
-        })
-        .map(item => {
-          // 標記既有項目為刪除
-          if (item.id && idsToMarkDeleted.has(String(item.id))) {
-            console.log(`🏷️ 標記刪除: ${item.id} (${item.location_no})`);
-            return { ...item, _status: 'deleted' as const };
-          }
-          return item;
-        });
+    // 儲存並顯示訊息
+    this.saveToWorkflow();
+    this.messageService.successBubble(`已刪除 ${validItems.length} 個位置項目`);
 
-      // 檢查結果
-      const newLength = this.locationData.length;
-      const displayLength = this.getDisplayLocationData().length;
-
-      console.log('📊 刪除後資料狀態:', {
-        原長度: oldLength,
-        新長度: newLength,
-        顯示長度: displayLength,
-        移除數量: oldLength - newLength,
-        處理後資料: this.locationData.map(item => ({
-          id: item.id,
-          location_no: item.location_no,
-          status: item._status
-        })),
-        顯示資料: this.getDisplayLocationData().map(item => ({
-          id: item.id,
-          location_no: item.location_no
-        }))
-      });
-      this.displayLocationData = this.getDisplayLocationData();
-
-      // 儲存並顯示訊息
-      this.saveToWorkflow();
-      this.messageService.successBubble(`已刪除 ${validItems.length} 個位置項目`);
-
-      console.log('✅ 刪除流程完成');
-    }
+    console.log('✅ 刪除流程完成');
   }
 
   // 位置表格編輯事件
@@ -1750,32 +1758,52 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
  * 🎯 新增：套用檢視模式設定
  */
   private applyViewModeSettings(isViewMode: boolean): void {
-    console.log('⚙️ 套用檢視模式設定:', isViewMode);
-
     if (isViewMode) {
-      console.log('🔒 啟用檢視模式');
-      this.dataForm.disable(); // 表單自動全禁用
-
-      // 🎯 位置表格也設為唯讀
+      // 🎯 檢視模式：所有欄位都不可編輯
       this.locationColumns = this.locationColumns.map(col => ({
         ...col,
         editable: false
       }));
-
     } else {
-      console.log('🔓 停用檢視模式');
-      this.dataForm.enable();  // 恢復可編輯
-
-      // 🎯 位置表格恢復可編輯
-      this.locationColumns = this.locationColumns.map(col => ({
-        ...col,
-        editable: true
-      }));
-
-      // 🎯 恢復某些欄位的原始禁用狀態
-      setTimeout(() => {
-        this.restoreOriginalFieldStates();
-      }, 50);
+      // 🎯 編輯模式：恢復原始的可編輯設定
+      this.locationColumns = [
+        {
+          field: 'location_no',
+          header: '位置編號',
+          type: 'dropdown',
+          editable: true,  // ✅ 位置編號可編輯
+          style: 'min-width: 150px',
+          options: this.locationColumns.find(col => col.field === 'location_no')?.options || []
+        },
+        {
+          field: 'building_desc',
+          header: '館別',
+          type: 'text',
+          editable: false,  // ✅ 館別不可編輯
+          style: 'min-width: 100px'
+        },
+        {
+          field: 'floor_desc',
+          header: '樓層',
+          type: 'text',
+          editable: false,  // ✅ 樓層不可編輯
+          style: 'min-width: 100px'
+        },
+        {
+          field: 'area_desc',
+          header: '區域',
+          type: 'text',
+          editable: false,  // ✅ 區域不可編輯
+          style: 'min-width: 100px'
+        },
+        {
+          field: 'tlt_space',
+          header: '營業坪數',
+          type: 'number',
+          editable: false,  // ✅ 營業坪數不可編輯
+          style: 'min-width: 120px'
+        }
+      ];
     }
   }
 
@@ -1865,5 +1893,65 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
 
       this.messageService.infoBubble('已切換到編輯模式');
     }
+  }
+
+  /**
+ * 🎯 新增：取得公司登記地址
+ */
+  getCompanyAddress(): string {
+    const address = this.dataForm.get('company_register_address')?.value;
+    return address?.trim() || '';
+  }
+
+  /**
+   * 🎯 新增：複製公司登記地址到郵寄地址
+   */
+  copyCompanyAddressToContact(): void {
+    const companyAddress = this.getCompanyAddress();
+
+    if (!companyAddress) {
+      this.messageService.warnBubble('公司登記地址為空，無法複製');
+      return;
+    }
+
+    // 檢查是否為檢視模式
+    if (this.isViewMode) {
+      this.messageService.warnBubble('檢視模式下無法修改資料');
+      return;
+    }
+
+    // // 檢查郵寄地址是否已有值
+    // const currentContactAddr = this.dataForm.get('contact_addr')?.value?.trim();
+    // if (currentContactAddr) {
+    //   if (!confirm('郵寄地址已有內容，確定要覆蓋嗎？')) {
+    //     return;
+    //   }
+    // }
+
+    // 複製地址
+    this.dataForm.patchValue({
+      contact_addr: companyAddress
+    });
+
+    // 標記欄位為已修改（觸發驗證樣式）
+    this.dataForm.get('contact_addr')?.markAsTouched();
+    this.dataForm.get('contact_addr')?.markAsDirty();
+
+    // 自動儲存
+    this.saveToWorkflow();
+
+    this.messageService.successBubble('已複製公司登記地址到郵寄地址');
+
+    console.log('📋 地址複製完成:', {
+      from: companyAddress,
+      to: this.dataForm.get('contact_addr')?.value
+    });
+  }
+
+  /**
+   * 🎯 新增：檢查按鈕是否可用
+   */
+  canCopyAddress(): boolean {
+    return !this.isViewMode && !!this.getCompanyAddress();
   }
 }

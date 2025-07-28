@@ -1,0 +1,126 @@
+<!-- 修復 smart-data-table.component.html -->
+<!-- 🔧 修復 currentState 錯誤，改用直接屬性 -->
+
+<div [ngClass]="tableContainerClass">
+  <!-- 表格標題 -->
+  <div *ngIf="title" class="smart-table-title">
+    <h3>{{ title }}</h3>
+  </div>
+
+  <!-- 表格工具列 -->
+  <app-table-header
+    [config]="mergedConfig"
+    [selectedCount]="selectedCount"
+    [isAllExpanded]="isAllExpanded"
+    [hasExpandableContent]="hasExpandableContent"
+    [readonly]="mergedConfig.readonly || false"
+    [loading]="mergedConfig.loading || false"
+    (addClick)="onAddMainItem()"
+    (batchDeleteClick)="onBatchDelete()"
+    (expandAllClick)="onExpandAll()"
+  >
+    <!-- 投影自定義工具列內容 -->
+    <ng-content select="[header-left]"></ng-content>
+    <ng-content select="[header-right]"></ng-content>
+  </app-table-header>
+
+  <!-- 主表格 -->
+  <app-main-table
+    [data]="data"
+    [columns]="columns"
+    [config]="mergedConfig"
+    [selectedItems]="selectedItems"
+    [expandedRows]="expandedRows"
+    [editingRowIndex]="editingRowIndex"
+    [loading]="mergedConfig.loading || false"
+    (selectionChange)="onSelectionChange($event)"
+    (rowSelect)="onRowSelect($event)"
+    (rowUnselect)="onRowUnselect($event)"
+    (rowExpand)="onRowExpand($event)"
+    (rowCollapse)="onRowCollapse($event)"
+    (rowEditStart)="onRowEditStart($event)"
+    (rowEditSave)="onRowEditSave($event)"
+    (rowEditCancel)="onRowEditCancel($event)"
+    (cellValueChange)="onCellValueChange($event)"
+  >
+    <!-- 詳細資料內容插槽 -->
+    <ng-template slot="detail" let-rowData let-rowIndex="rowIndex">
+      <!-- 如果有詳細資料欄位，顯示詳細資料表格 -->
+      <app-detail-table
+        *ngIf="
+          detailColumns.length > 0 ||
+          (showDetailTabs && detailTabOptions.length > 0)
+        "
+        [parentData]="rowData"
+        [parentIndex]="rowIndex"
+        [detailData]="getRowDetailData(rowData)"
+        [detailColumns]="getRowDetailColumns(rowData)"
+        [config]="mergedConfig"
+        [selectedDetailItems]="getRowDetailSelectedItems(rowData)"
+        [editingDetailIndex]="editingDetail?.detailIndex || null"
+        [loading]="mergedConfig.loading || false"
+        [showDetailTabs]="showDetailTabs"
+        [detailTabOptions]="detailTabOptions"
+        [currentTabId]="getRowDetailCurrentTab(rowData)"
+        [detailColumnsMap]="detailColumnsMap"
+        (detailSelectionChange)="onDetailSelectionChange(rowData, $event)"
+        (detailEditStart)="onDetailEditStart($event)"
+        (detailEditSave)="onDetailEditSave($event)"
+        (detailEditCancel)="onDetailEditCancel($event)"
+        (detailTabChange)="onDetailTabChange($event)"
+        (addDetailItem)="onAddDetailItem($event)"
+        (batchDeleteDetail)="onDetailBatchDelete($event)"
+        (detailCellValueChange)="onDetailCellValueChange($event)"
+      >
+        <!-- 投影詳細資料自定義內容 -->
+        <ng-content select="[detail-header-left]"></ng-content>
+        <ng-content select="[detail-header-right]"></ng-content>
+      </app-detail-table>
+
+      <!-- 如果有自定義展開模板 -->
+      <div *ngIf="expandedContentTemplate" class="custom-expanded-content">
+        <ng-container
+          [ngTemplateOutlet]="expandedContentTemplate"
+          [ngTemplateOutletContext]="{ $implicit: rowData, rowIndex: rowIndex }"
+        ></ng-container>
+      </div>
+
+      <!-- 如果沒有詳細資料也沒有自定義模板，顯示預設內容 -->
+      <div
+        *ngIf="
+          !detailColumns.length &&
+          !expandedContentTemplate &&
+          (!showDetailTabs || !detailTabOptions.length)
+        "
+        class="default-expanded-content"
+      >
+        <p class="no-detail-message">
+          <i class="pi pi-info-circle"></i>
+          目前沒有設定詳細資料內容
+        </p>
+
+        <!-- 顯示原始資料（開發時用） -->
+        <details class="raw-data-details">
+          <summary>查看原始資料</summary>
+          <pre class="raw-data-pre">{{ rowData | json }}</pre>
+        </details>
+      </div>
+    </ng-template>
+  </app-main-table>
+
+  <!-- 表格頁腳（如果需要） -->
+  <div *ngIf="mergedConfig.showFooter" class="smart-table-footer">
+    <ng-content select="[table-footer]"></ng-content>
+  </div>
+
+  <!-- 載入覆蓋層 -->
+  <div *ngIf="mergedConfig.loading" class="loading-overlay">
+    <div class="loading-content">
+      <i class="pi pi-spin pi-spinner loading-spinner"></i>
+      <span class="loading-text">載入中...</span>
+    </div>
+  </div>
+</div>
+
+<!-- 全域樣式容器（用於投影的元素） -->
+<ng-content></ng-content>
