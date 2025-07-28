@@ -9,7 +9,7 @@
       <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
 
-          <app-input-text class="col-12 md:col-6 lg:col-4" label="收銀機號" controlName="cashierNumber"
+          <!-- <app-input-text class="col-12 md:col-6 lg:col-4" label="收銀機號" controlName="cashierNumber"
             [control]="queryForm.controls.cashierNumber" [submitted]="submitted"></app-input-text>
           <app-input-text class="col-12 md:col-6 lg:col-4" label="交易流水號" controlName="transactionNumber"
             [control]="queryForm.controls.transactionNumber" [submitted]="submitted"></app-input-text>
@@ -50,7 +50,7 @@
             [control]="queryForm.controls.acquiringBank" [submitted]="submitted"></app-dropdown>
           <app-dropdown class="col-12 md:col-6 lg:col-4" label="查詢篩選" controlName="queryFilter"
             [options]="queryFilterOptions" optionLabel="label" optionValue="value"
-            [control]="queryForm.controls.queryFilter" [submitted]="submitted"></app-dropdown>
+            [control]="queryForm.controls.queryFilter" [submitted]="submitted"></app-dropdown> -->
         </div>
         <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
           <app-button btnType="clear"></app-button>

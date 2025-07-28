@@ -10,6 +10,7 @@ import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-
 import { Button } from 'primeng/button';
 import { NgStyle, NgIf } from '@angular/common';
 import { TooltipModule } from 'primeng/tooltip';
+import { DropdownRangeComponent } from '@shared/componentkit/dropdown-range/dropdown-range.component';
 
 
 @Component({
@@ -29,7 +30,8 @@ import { TooltipModule } from 'primeng/tooltip';
     Button,
     NgStyle,
     NgIf,
-    TooltipModule
+    TooltipModule,
+    DropdownRangeComponent
   ],
 })
 export class TLS2A010Component extends BasicQueryPageComponent<any> implements OnInit {
@@ -42,7 +44,8 @@ export class TLS2A010Component extends BasicQueryPageComponent<any> implements O
     PAY_NO: ['', Validators.required],
     building_no: [''],
     ...createPaginationConfig([{ field: 'ECR_No', order: 1 }]),
-  });
+  }, { validators: this.validateRangeStartBeforeEnd });
+
   ECR_Options: { label: string; value: string }[] = [];
   floorOptions: IDropdownItem[] = [];
   paymentToolOptions: IDropdownItem[] = [];
@@ -56,6 +59,7 @@ export class TLS2A010Component extends BasicQueryPageComponent<any> implements O
   PAY_NO = '';
   TXN_Date = '';
   todayDisplay = '';
+  systemTypeOptions: IDropdownItem[] = [];
   addButtons = [
     {
       label: '缺單審核',
@@ -74,6 +78,28 @@ export class TLS2A010Component extends BasicQueryPageComponent<any> implements O
   ) {
     super();
   }
+  validateRangeStartBeforeEnd(): Validators {
+    return (formGroup: FormGroup) => {
+      const start = formGroup.get('ECR_No_Start')?.value;
+      const end = formGroup.get('ECR_No_End')?.value;
+
+      if (start && end && start > end) {
+        formGroup.get('ECR_No_End')?.setErrors({ rangeInvalid: true });
+      } else {
+        const errors = formGroup.get('ECR_No_End')?.errors;
+        if (errors) {
+          delete errors['rangeInvalid'];
+          if (Object.keys(errors).length === 0) {
+            formGroup.get('ECR_No_End')?.setErrors(null);
+          }
+        }
+      }
+
+      return null;
+    };
+  }
+
+
   columns: Column[] = [
     { header: '收銀機代號', field: 'ECR_No' },
     { header: '專櫃編號', field: 'TLT_NO' },
@@ -119,6 +145,18 @@ export class TLS2A010Component extends BasicQueryPageComponent<any> implements O
         };
       });
     });
+    this.dropDownListService.queryPOS1002TML_DropDownList()
+      .pipe(untilDestroyed(this))
+      .subscribe(res => {
+        if (res && res.Data) {
+          this.systemTypeOptions = res.Data.map(item => ({
+            label: item.Name,
+            value: item.No,
+            Name: item.Name,
+            No: item.No
+          }));
+        }
+      });
     const today = new Date();
     const mm = today.getMonth() + 1; // 月份是從 0 開始的
     const dd = today.getDate();
@@ -126,6 +164,7 @@ export class TLS2A010Component extends BasicQueryPageComponent<any> implements O
 
 
   }
+
   get selectedCount(): number {
     return this.selectedItems?.length ?? 0;
   }

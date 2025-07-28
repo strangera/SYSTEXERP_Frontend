@@ -364,11 +364,44 @@ export class TableComponent extends BasicPrintDataComponent implements OnInit, O
 
     return result;
   }
-  moneyFormat(value: number): string {
-    return value != null ? value.toLocaleString('en-US') : '0';
-  }
-
   sanitizeHtml(html: string): SafeHtml {
     return this.sanitizer.bypassSecurityTrustHtml(html);
+  }
+
+  getColumnSpan(columns: Column[], groupField: string): number {
+    return columns.filter(col => col.groupField === groupField && col.visible !== false && col.hidden !== true).length;
+  }
+
+  getUngroupedColumns(columns: Column[], columnGroup: ColumnGroup[]): Column[] {
+    const groupFields = columnGroup.map(g => g.field);
+    return columns.filter(
+      col =>
+        (!col.groupField || !groupFields.includes(col.groupField)) &&
+        col.visible !== false &&
+        col.hidden !== true
+    );
+  }
+  shouldRenderGroupHeader(col: Column, index: number, columns: Column[]): boolean {
+    if (!col.groupField || col.hidden === true || col.visible === false) return false;
+    const currentGroup = col.groupField;
+    for (let i = 0; i < index; i++) {
+      const prev = columns[i]; // ✅ 只看這次 ngFor 的欄位
+      if (
+        prev.groupField === currentGroup &&
+        prev.visible !== false &&
+        prev.hidden !== true
+      ) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  getGroupHeader(groupField: string): string {
+    return this.columnGroup?.find(g => g.field === groupField)?.header ?? groupField;
+  }
+  getGroupAlignClass(groupField: string): string {
+    const align = this.columnGroup?.find(g => g.field === groupField)?.align;
+    return align ? 'text-' + align : 'text-center';
   }
 }
