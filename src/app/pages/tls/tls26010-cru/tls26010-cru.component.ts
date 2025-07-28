@@ -40,7 +40,6 @@ import { ECRTableData, QueryPayload, TLS26010Data, TLS26010Payload, TLTTALENTDat
 })
 export class TLS26010CRUComponent extends BasicCruPageComponent<TLS26010Data> implements OnInit {
   public CRUDStatus = CRUDStatus;
-  public get isRead() { return this.crudstatus === CRUDStatus.Read; }
   public ecrTableFiltered: ECRTableData[] = [];
   public tltTableFiltered: TLTTALENTData[] = [];
   public dialogVisible = signal<'ecr' | 'tlt' | null>(null);
@@ -51,6 +50,7 @@ export class TLS26010CRUComponent extends BasicCruPageComponent<TLS26010Data> im
     pod_desc: ['', [Validators.required, Validators.maxLength(100)]], // 預售名稱
     pod_sdate: [new Date(), Validators.required], // 預售期間(起)
     pod_edate: [new Date(), Validators.required], // 預售期間(迄)
+    pod_busdate: [new Date(), Validators.required], // 活動正檔日期
     pod_status: ['未核准'], // 核准狀態
     ECR_Nos: [[] as string[]], //收銀機清單
     tlt_nos: [[] as string[]], //專櫃清單
