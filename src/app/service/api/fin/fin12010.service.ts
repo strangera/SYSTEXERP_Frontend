@@ -23,7 +23,7 @@ export interface IQueryFin12010Request {
 /** APS2001 資料表的單筆資料介面 */
 export interface IFin12010Data {
   id: number;
-  SAL_GUIYYYYMM: string | null;  // 發票期別 (YYYYMM)
+  SAL_GUIYYYYMM: any;  // 發票期別 (YYYYMM)
   SAL_GUIBegMM: string;   // 發票開始月份 (MM)
   SAL_GUIEndMM: string;   // 發票結束月份 (MM)
   SAL_GUITrack: string;   // 發票字軌

@@ -38,7 +38,7 @@ import { TranslateModule } from '@ngx-translate/core';
 })
 export class FIN12010CRUComponent extends BasicCruPageComponent<IFin12010Data> implements OnInit {
   dataForm = this.formBuilder.nonNullable.group({
-    SAL_GUIYYYYMM_Date: [null as null | Date, [Validators.required]],// 發票年月
+    SAL_GUIYYYYMM: [null as null | Date, [Validators.required]],// 發票年月
     SAL_GUITrack: [{ value: null, disabled: true }, [Validators.required]],  // 發票字軌
     GUI_Qty: [{ value: null as number | null, disabled: true }, [Validators.required]], // 券數
     SAL_BlankCnt: [{ value: 0, disabled: true }],       // 發票張數
@@ -63,7 +63,7 @@ export class FIN12010CRUComponent extends BasicCruPageComponent<IFin12010Data> i
     this.initializePage('FIN12010', this.dataForm);
     if (this.isFormCreateable) {
       this.minDate = this.setMinDate();
-      this.dataForm.get('SAL_GUIYYYYMM_Date')?.setValidators([Validators.required, this.validationService.oddMonthValidator]);
+      this.dataForm.get('SAL_GUIYYYYMM')?.setValidators([Validators.required, this.validationService.oddMonthValidator]);
     } else {
       this.fetchGUITrackOptions();
       const totQtyValue = this.dataForm.get('SAL_BlankCnt')?.value;
@@ -71,12 +71,12 @@ export class FIN12010CRUComponent extends BasicCruPageComponent<IFin12010Data> i
         const qty = Math.floor(totQtyValue / 50);
         this.dataForm.get('GUI_Qty')?.setValue(qty);
       }
-      this.dataForm.get('SAL_GUIYYYYMM_Date')?.disable();
+      this.dataForm.get('SAL_GUIYYYYMM')?.disable();
       this.dataForm.get('SAL_GUITrack')?.disable();
       this.dataForm.get('GUI_Qty')?.disable();
     }
     // 監聽表單變化
-    this.dataForm.get('SAL_GUIYYYYMM_Date')?.valueChanges.subscribe(() => {
+    this.dataForm.get('SAL_GUIYYYYMM')?.valueChanges.subscribe(() => {
       this.dataForm.get('SAL_GUITrack')?.setValue(null); // 清除字軌選擇
       this.dataForm.get('SAL_GUIBegNo')?.setValue(''); // 清除起始號碼
       this.dataForm.get('SAL_GUIEndNo')?.setValue(''); // 清除結束號碼
@@ -102,7 +102,7 @@ export class FIN12010CRUComponent extends BasicCruPageComponent<IFin12010Data> i
   }
 
   private fetchGUITrackOptions(): void {
-    const guiDate: Date | null = this.dataForm.get('SAL_GUIYYYYMM_Date')?.value || null;
+    const guiDate: Date | null = this.dataForm.get('SAL_GUIYYYYMM')?.value || null;
     this.guiTrackOptions = []; // 清空字軌選項
     this.maxQty = 0; // 重置最大發票號碼
     if (guiDate instanceof Date && !isNaN(guiDate.getTime())) {
@@ -123,7 +123,7 @@ export class FIN12010CRUComponent extends BasicCruPageComponent<IFin12010Data> i
   }
   private fetchGUIBegEndNo(): void {
     if (!this.isFormCreateable) return; // 只有在可創建表單時才執行
-    const guiDate: Date | null = this.dataForm.get('SAL_GUIYYYYMM_Date')?.value || null;
+    const guiDate: Date | null = this.dataForm.get('SAL_GUIYYYYMM')?.value || null;
     const track: string = this.dataForm.get('SAL_GUITrack')?.value || '';
     const qty: number = this.dataForm.get('GUI_Qty')?.value || 0;
     this.dataForm.get('SAL_GUIBegNo')?.setValue(''); // 清除起始號碼
@@ -155,7 +155,7 @@ export class FIN12010CRUComponent extends BasicCruPageComponent<IFin12010Data> i
   }
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
-      const guiDate: Date | null = frm.get('SAL_GUIYYYYMM_Date')?.value;
+      const guiDate: Date | null = frm.get('SAL_GUIYYYYMM')?.value;
       let guiYYMM = '';
       if (guiDate instanceof Date && !isNaN(guiDate.getTime())) {
         const year = guiDate.getFullYear();
