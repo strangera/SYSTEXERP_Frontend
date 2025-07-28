@@ -47,7 +47,7 @@ export class FIN12010Component extends BasicQueryPageComponent<IFin12010Data> im
     SAL_GUINo_start: [null, [Validators.maxLength(8), Validators.minLength(8), Validators.max(99999950)]], // 發票號碼(起)
     SAL_GUINo_end: [null, [Validators.maxLength(8), Validators.minLength(8), Validators.max(99999999)]], // 發票號碼(迄)
     SAL_TypeList: [[]], // 使用別
-    ...createPaginationConfig([{ field: 'SAL_GUIYYYYMM', order: 1 }]), // 分頁和排序參數
+    ...createPaginationConfig([{ field: 'id', order: 1 }]), // 分頁和排序參數
   }, { validators: this.validationService.guiNumberRangeValidator('SAL_GUINo_start', 'SAL_GUINo_end') });
   totalRecords = 0;
   data: IFin12010Data[] = [];

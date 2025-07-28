@@ -29,7 +29,7 @@
 </div>
 <div class="card">
   <app-table tableKey="fin12010" dataKey="id" [data]="data" [columns]="columns" (edit)="onEdit($event)"
-    [showDetail]="false" [showCheckBox]="true" [multiSortMeta]="[{ field: 'SAL_GUIYYYYMM', order: 1 }]"
+    [showDetail]="false" [showCheckBox]="true" [multiSortMeta]="[{ field: 'id', order: 1 }]"
     [totalRecords]="totalRecords" (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [lazy]="true"
     [loading]="loading" (delete)="onDelete($event)" [selectedItems]="selectedItems"
     (selectionChange)="selectedItems = $event">

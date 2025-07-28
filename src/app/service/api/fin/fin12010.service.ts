@@ -60,7 +60,7 @@ export interface IInsertFin12010Request {
 
 /** 更新 APS2001 資料表介面 (updateFIN12010) */
 export interface IUpdateFin12010Request {
-  id: number;       // 記錄 ID (主鍵)
+  id?: number;       // 記錄 ID (主鍵)
   SAL_Type: string; // 銷售類型 (Swagger 中唯一可更新的欄位)
 }
 
@@ -114,5 +114,22 @@ export class Fin12010Service {
   deleteFIN12010(idList: number[]): Observable<ApiResponse<any>> {
     const body: IDeleteFin12010Request = { idList: idList };
     return this.http.post<ApiResponse<any>>(`${this.apiUrl}/deleteFIN12010`, body);
+  }
+  /**
+ * 查詢 POS1017 資料表 (GUI_Track)
+ * @param params 查詢條件 { GUI_YYMM: string }
+ * @returns 包含字軌字串陣列的 API 響應
+ */
+  queryPOS1017GUITrack(params: { GUI_YYMM: string }): Observable<ApiResponse<{ GUI_Track: string, MAX_GUINO: string; UnassignedQty: number }[]>> {
+    return this.http.post<ApiResponse<{ GUI_Track: string, MAX_GUINO: string; UnassignedQty: number }[]>>(`${this.apiUrl}/queryPOS1017GUITrack`, params);
+  }
+
+  /**
+   * 查詢 POS1017 資料表 (GUI_BegNo, GUI_EndNo)
+   * @param params 查詢條件 { GUI_YYMM: string, GUI_Track: string, AddRolls: number }
+   * @returns 包含 New_GUI_BegNo 和 New_GUI_EndNo 的 API 響應
+   */
+  queryPOS1017GUIBegNo_GUIEndNo(params: { GUI_YYMM: string; GUI_Track: string; AddRolls: number; }): Observable<ApiResponse<{ New_GUI_BegNo: string; New_GUI_EndNo: string; }>> {
+    return this.http.post<ApiResponse<{ New_GUI_BegNo: string; New_GUI_EndNo: string; }>>(`${this.apiUrl}/queryPOS1017GUIBegNo_GUIEndNo`, params);
   }
 }
