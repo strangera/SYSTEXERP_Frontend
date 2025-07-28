@@ -68,13 +68,18 @@ export class TableComponent extends BasicPrintDataComponent implements OnInit, O
   @Input() apiUrl?: string;                                                     // table API URL (可選)
   @Input() title: string | undefined = undefined;                               // table 標題
   @Input() columns!: Column[];                                                  // table 欄位配置 (必填)
-  @Input() columnGroup?: ColumnGroup[];                                         // table 群組欄位
   selectedColumns!: Column[];                                                   // table 預設顯示欄位
   @Input() data: any[] = [];                                                    // table 資料 (必填)
   @Output() dataChange = new EventEmitter<any[]>();                             // table 資料改變 (事件)
   @Input() loading = false;                                                     // 是否顯示 loading
   @Input() disabled = false;                                                    // 是否禁用 table
-
+  // 欄位群組
+  @Input() columnGroup?: ColumnGroup[];                                         // table 群組欄位
+  // 資料群組
+  @Input() groupRowsBy = '';                                                    // table 群組資料
+  groupedDataCache = new Map();                                                 // 用於緩存已分組的數據
+  @Input() showSubTotal = false;                                                // 是否顯示群組小計
+  @Input() showTotal = true;                                                    // 是否顯示總計
   // select 選擇Row相關
   @Input() showCheckBox = false;                                                // 是否顯示 checkbox
   @Input() selectionMode: 'multiple' | 'single' | null | undefined = 'multiple';// table 勾選 Mode (預設多選)
@@ -174,6 +179,8 @@ export class TableComponent extends BasicPrintDataComponent implements OnInit, O
       }
     });
     this.rows = this.queryStateService.getQueryState(this.tableKey + 'rows')?.value ?? this.rows; // 取得分頁狀態
+    this.showSubTotal = this.showSubTotal ? this.showSubTotal : this.columns.find(c => c.isSubTotal) !== undefined;
+    this.showTotal = this.showTotal ? this.showTotal : this.columns.find(c => c.isTotal) !== undefined;
   }
   // 當 data 發生變化時，重置分頁與頁碼
   ngOnChanges(changes: SimpleChanges): void {
@@ -403,5 +410,16 @@ export class TableComponent extends BasicPrintDataComponent implements OnInit, O
   getGroupAlignClass(groupField: string): string {
     const align = this.columnGroup?.find(g => g.field === groupField)?.align;
     return align ? 'text-' + align : 'text-center';
+  }
+  getGroupSubtotal(groupValue: any, field: string): number {
+    if (!this.groupedDataCache.has(groupValue)) {
+      const rows = this.data.filter(item => item[this.groupRowsBy] === groupValue);
+      this.groupedDataCache.set(groupValue, rows);
+    }
+    return this.groupedDataCache.get(groupValue).reduce((sum: number, row: any) => sum + (row[field] || 0), 0);
+  }
+  // 全表總計
+  getTotal(field: string): number {
+    return this.data.reduce((sum, row) => sum + (row[field] || 0), 0);
   }
 }

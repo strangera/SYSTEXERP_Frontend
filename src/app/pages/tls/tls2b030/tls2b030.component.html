@@ -25,18 +25,21 @@
             <app-calendar-range
               calendarType="dateRange"
               label="銷售日期-日報表*"
-              [startControl]="queryForm.controls.startdate"
-              [endControl]="queryForm.controls.enddate"
+              [startControl]="queryForm.controls.TXN_Date_Start"
+              [endControl]="queryForm.controls.TXN_Date_End"
               [submitted]="submitted"
+              
             ></app-calendar-range>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar
-              calendarType="dateMonthOne"
-              label="銷售年月-月報表*"
-              [control]="queryForm.controls.onedatemm"
-              [submitted]="submitted"
-            ></app-calendar>
+ <app-calendar
+  label="銷售年月-月報表"
+  controlName="TXN_YearMonth"               
+  [calendarType]="'dateMonthOne'"      
+  [control]="queryForm.controls.TXN_YearMonth"
+  [submitted]="submitted"
+  [isRequired]="true"                 
+></app-calendar>
           </div>
         </div>
         <hr />

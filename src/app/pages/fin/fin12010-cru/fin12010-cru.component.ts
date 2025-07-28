@@ -11,7 +11,6 @@ import { MenubarComponent } from '../../../shared/component/menubar/menubar.comp
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { PanelModule } from 'primeng/panel';
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
 import { InputTextRangeComponent } from '../../../shared/componentkit/input-text-range/input-text-range.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
@@ -30,7 +29,6 @@ import { TranslateModule } from '@ngx-translate/core';
     FormsModule,
     ReactiveFormsModule,
     CalendarComponent,
-    InputTextComponent,
     InputNumberComponent,
     InputTextRangeComponent,
     DropdownComponent,
@@ -39,18 +37,20 @@ import { TranslateModule } from '@ngx-translate/core';
   ],
 })
 export class FIN12010CRUComponent extends BasicCruPageComponent<IFin12010Data> implements OnInit {
-  dataForm = this.formBuilder.group({
-    SAL_GUIYYYYMM_Date: [null, [Validators.required]],                          // 發票年月
-    SAL_GUITrack: ['', [Validators.required, Validators.maxLength(2), Validators.minLength(2), this.validationService.guiTrackValidator]],  // 發票字軌
-    GUI_Qty: [null as number | null], // 券數
+  dataForm = this.formBuilder.nonNullable.group({
+    SAL_GUIYYYYMM: [null as null | Date, [Validators.required]],// 發票年月
+    SAL_GUITrack: [{ value: null, disabled: true }, [Validators.required]],  // 發票字軌
+    GUI_Qty: [{ value: null as number | null, disabled: true }, [Validators.required]], // 券數
     SAL_BlankCnt: [{ value: 0, disabled: true }],       // 發票張數
-    SAL_GUIBegNo: ['', [Validators.maxLength(8), Validators.minLength(8), Validators.required, this.validationService.guiBegNoValidator]], // 發票起始號碼
-    SAL_GUIEndNo: ['', [Validators.maxLength(8), Validators.minLength(8), Validators.required, this.validationService.guiEndNoValidator]], // 發票結束號碼
+    SAL_GUIBegNo: [{ value: '', disabled: true }], // 發票起始號碼
+    SAL_GUIEndNo: [{ value: '', disabled: true }], // 發票結束號碼
     SAL_Type: [null, [Validators.required]], // 使用別
-  }, { validators: this.validationService.guiNumberRangeValidator('SAL_GUIBegNo', 'SAL_GUIEndNo') });
+  });
   monthOptions = monthOptions;
   usageTypeOptions: SystemOption[] = SystemOptionsService.getOptions('T205');
   minDate?: Date;
+  guiTrackOptions: { GUI_Track: string; MAX_GUINO: string; UnassignedQty: number }[] = [];
+  maxQty = 0;
 
   constructor(
     private validationService: ValidationService,
@@ -63,56 +63,83 @@ export class FIN12010CRUComponent extends BasicCruPageComponent<IFin12010Data> i
     this.initializePage('FIN12010', this.dataForm);
     if (this.isFormCreateable) {
       this.minDate = this.setMinDate();
-      this.dataForm.get('SAL_GUIYYYYMM_Date')?.setValidators([Validators.required, this.validationService.oddMonthValidator]);
-    }
-    if (!this.isFormCreateable) {
+      this.dataForm.get('SAL_GUIYYYYMM')?.setValidators([Validators.required, this.validationService.oddMonthValidator]);
+    } else {
+      this.fetchGUITrackOptions();
+      const totQtyValue = this.dataForm.get('SAL_BlankCnt')?.value;
+      if (totQtyValue && totQtyValue !== 0) {
+        const qty = Math.floor(totQtyValue / 50);
+        this.dataForm.get('GUI_Qty')?.setValue(qty);
+      }
+      this.dataForm.get('SAL_GUIYYYYMM')?.disable();
       this.dataForm.get('SAL_GUITrack')?.disable();
       this.dataForm.get('GUI_Qty')?.disable();
-      this.dataForm.get('SAL_GUIBegNo')?.disable();
-      this.dataForm.get('SAL_GUIEndNo')?.disable();
     }
-    const totQtyValue = this.dataForm.get('SAL_BlankCnt')?.value;
-    if (totQtyValue && totQtyValue !== 0) {
-      const qty = Math.floor(totQtyValue / 50);
-      this.dataForm.get('GUI_Qty')?.setValue(qty);
-    }
-    this.dataForm.get('SAL_GUIEndNo')?.valueChanges.subscribe(endNoValue => {
-      const begNoValue = this.dataForm.get('SAL_GUIBegNo')?.value;
-      if (begNoValue !== null && begNoValue !== '' && endNoValue !== null && endNoValue !== '') {
-        const beg = Number(begNoValue);
-        const end = Number(endNoValue);
-        if (!isNaN(beg) && !isNaN(end)) {
-          if (end >= beg && (beg % 100 === 0 || beg % 100 === 50) && (end % 100 === 49 || end % 100 === 99)) {
-            const totalQty = end - beg + 1;
-            if (totalQty % 50 === 0) {
-              const qty = totalQty / 50;
-              this.dataForm.get('GUI_Qty')?.setValue(qty, { emitEvent: false });
-              this.dataForm.get('SAL_BlankCnt')?.setValue(totalQty, { emitEvent: false });
-            } else {
-              this.dataForm.get('GUI_Qty')?.setValue(null, { emitEvent: false });
-              this.dataForm.get('SAL_BlankCnt')?.setValue(null, { emitEvent: false });
-              console.warn('總張數無法被 50 整除，資料格式可能有誤');
-            }
-          }
-        }
-      }
+    // 監聽表單變化
+    this.dataForm.get('SAL_GUIYYYYMM')?.valueChanges.subscribe(() => {
+      this.dataForm.get('SAL_GUITrack')?.setValue(null); // 清除字軌選擇
+      this.dataForm.get('SAL_GUIBegNo')?.setValue(''); // 清除起始號碼
+      this.dataForm.get('SAL_GUIEndNo')?.setValue(''); // 清除結束號碼
+      this.dataForm.get('GUI_Qty')?.setValue(null); // 清除券
+      this.dataForm.get('SAL_GUITrack')?.disable();
+      this.fetchGUITrackOptions(); // 更新字軌選項
+      this.fetchGUIBegEndNo();
     });
-    this.dataForm.get('GUI_Qty')?.valueChanges.subscribe(value => {
-      const qty = Number(value);
-      if (!isNaN(qty)) {
-        const totalQty = qty * 50;
-        this.dataForm.get('SAL_BlankCnt')?.setValue(totalQty, { emitEvent: false });
-        const begValue = this.dataForm.get('SAL_GUIBegNo')?.value;
-        if (begValue != null && begValue !== '' && !isNaN(Number(begValue))) {
-          const beg = Number(begValue);
-          const end = beg + totalQty - 1;
-          this.dataForm.get('SAL_GUIEndNo')?.setValue(end.toString().padStart(8, '0'), { emitEvent: false });
-        }
+    this.dataForm.get('SAL_GUITrack')?.valueChanges.subscribe((value) => {
+      this.fetchGUIBegEndNo();
+      this.maxQty = (this.guiTrackOptions.find(option => option.GUI_Track === value)?.UnassignedQty || 0) / 50;
+      if (this.maxQty > 0) {
+        this.dataForm.get('GUI_Qty')?.enable();
+        this.dataForm.get('GUI_Qty')?.setValidators([Validators.required, Validators.max(this.maxQty)]);
+        this.dataForm.get('GUI_Qty')?.updateValueAndValidity();
       } else {
-        this.dataForm.get('SAL_BlankCnt')?.setValue(null, { emitEvent: false });
-        this.dataForm.get('SAL_GUIEndNo')?.setValue(null, { emitEvent: false });  // 也可以考慮清除 GUI_EndNo
+        this.dataForm.get('GUI_Qty')?.disable();
       }
     });
+    this.dataForm.get('GUI_Qty')?.valueChanges.subscribe(() => {
+      this.fetchGUIBegEndNo();
+    });
+  }
+
+  private fetchGUITrackOptions(): void {
+    const guiDate: Date | null = this.dataForm.get('SAL_GUIYYYYMM')?.value || null;
+    this.guiTrackOptions = []; // 清空字軌選項
+    this.maxQty = 0; // 重置最大發票號碼
+    if (guiDate instanceof Date && !isNaN(guiDate.getTime())) {
+      const year = guiDate.getFullYear().toString();
+      const month = (guiDate.getMonth() + 1).toString().padStart(2, '0');
+      const yymm = `${year}${month}`;
+      this.fin12010Service.queryPOS1017GUITrack({ GUI_YYMM: yymm }).subscribe(res => {
+        if (res.Data.length > 0) {
+          this.guiTrackOptions = res.Data
+          if (this.isFormCreateable) {
+            this.dataForm.get('SAL_GUITrack')?.enable();
+          }
+        } else {
+          this.dataForm.get('SAL_GUITrack')?.disable();
+        }
+      });
+    }
+  }
+  private fetchGUIBegEndNo(): void {
+    if (!this.isFormCreateable) return; // 只有在可創建表單時才執行
+    const guiDate: Date | null = this.dataForm.get('SAL_GUIYYYYMM')?.value || null;
+    const track: string = this.dataForm.get('SAL_GUITrack')?.value || '';
+    const qty: number = this.dataForm.get('GUI_Qty')?.value || 0;
+    this.dataForm.get('SAL_GUIBegNo')?.setValue(''); // 清除起始號碼
+    this.dataForm.get('SAL_GUIEndNo')?.setValue(''); // 清除結束號碼
+    if (guiDate instanceof Date && !isNaN(guiDate.getTime()) && track && qty > 0) {
+      const year = guiDate.getFullYear().toString();
+      const month = (guiDate.getMonth() + 1).toString().padStart(2, '0');
+      const yymm = `${year}${month}`;
+      const params = { GUI_YYMM: yymm, GUI_Track: track, AddRolls: qty };
+      this.fin12010Service.queryPOS1017GUIBegNo_GUIEndNo(params).subscribe(res => {
+        this.dataForm.patchValue({
+          SAL_GUIBegNo: res.Data?.New_GUI_BegNo ?? '',
+          SAL_GUIEndNo: res.Data?.New_GUI_EndNo ?? ''
+        }, { emitEvent: false });
+      });
+    }
   }
   setMinDate(): Date | undefined {
     if (this.isFormCreateable) {
@@ -128,10 +155,24 @@ export class FIN12010CRUComponent extends BasicCruPageComponent<IFin12010Data> i
   }
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
-      this.loading = true;
+      const guiDate: Date | null = frm.get('SAL_GUIYYYYMM')?.value;
+      let guiYYMM = '';
+      if (guiDate instanceof Date && !isNaN(guiDate.getTime())) {
+        const year = guiDate.getFullYear();
+        const month = (guiDate.getMonth() + 1).toString().padStart(2, '0');
+        guiYYMM = `${year}${month}`;
+      }
+      const body = {
+        SAL_GUIYYYYMM: guiYYMM,
+        SAL_GUITrack: this.isFormCreateable ? frm.get('SAL_GUITrack')?.value : undefined,
+        SAL_GUIBegNo: this.isFormCreateable ? frm.get('SAL_GUIBegNo')?.value : undefined,
+        SAL_GUIEndNo: this.isFormCreateable ? frm.get('SAL_GUIEndNo')?.value : undefined,
+        SAL_Type: frm.get('SAL_Type')?.value,
+        id: this.isFormCreateable ? undefined : this.rowdata?.id ?? 0
+      }
       const serviceCall = this.isFormCreateable
-        ? this.fin12010Service.insertFIN12010(this.buildInsertBody(frm))
-        : this.fin12010Service.updateFIN12010(this.buildUpdateBody(frm));
+        ? this.fin12010Service.insertFIN12010(body)
+        : this.fin12010Service.updateFIN12010(body);
       serviceCall.pipe(finalize(() => this.loading = false)).subscribe(res => {
         this.messageService.successBubble(res.Message)
         if (this.isFormCreateable) {
@@ -142,35 +183,5 @@ export class FIN12010CRUComponent extends BasicCruPageComponent<IFin12010Data> i
         }
       });
     });
-  }
-
-  private buildInsertBody(frm: FormGroup): {
-    SAL_GUIYYYYMM: string;
-    SAL_GUITrack: string;
-    SAL_GUIBegNo: string;
-    SAL_GUIEndNo: string;
-    SAL_Type: string;
-  } {
-    const guiDate: Date | null = frm.get('SAL_GUIYYYYMM_Date')?.value;
-    let guiYYMM = '';
-    if (guiDate instanceof Date && !isNaN(guiDate.getTime())) {
-      const year = guiDate.getFullYear();
-      const month = (guiDate.getMonth() + 1).toString().padStart(2, '0');
-      guiYYMM = `${year}${month}`;
-    }
-
-    return {
-      SAL_GUIYYYYMM: guiYYMM,
-      SAL_GUITrack: frm.get('SAL_GUITrack')?.value,
-      SAL_GUIBegNo: frm.get('SAL_GUIBegNo')?.value,
-      SAL_GUIEndNo: frm.get('SAL_GUIEndNo')?.value,
-      SAL_Type: frm.get('SAL_Type')?.value
-    };
-  }
-  private buildUpdateBody(frm: FormGroup): {
-    id: number;
-    SAL_Type: string;
-  } {
-    return { id: this.rowdata?.id ?? 0, SAL_Type: frm.get('SAL_Type')?.value || '' };
   }
 }

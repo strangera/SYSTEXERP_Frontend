@@ -7,11 +7,12 @@
     <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
       <div class="grid p-fluid">
         <app-calendar class="col-12 md:col-6 lg:col-4" calendarType="dateMonthOne" label="發票年月"
-          [control]="dataForm.controls.SAL_GUIYYYYMM_Date" [submitted]="submitted" [minDate]="minDate" />
-        <app-input-text class="col-12 lg:col-6 xl:col-4" label="字軌" controlName="SAL_GUITrack"
-          [control]="dataForm.controls.SAL_GUITrack" [submitted]="submitted" />
+          [control]="dataForm.controls.SAL_GUIYYYYMM" [submitted]="submitted" [minDate]="minDate" />
+        <app-dropdown class="col-12 lg:col-6 xl:col-4" controlName="SAL_GUITrack" label="字軌" [options]="guiTrackOptions"
+          optionLabel="GUI_Track" optionValue="GUI_Track" [control]="dataForm.controls.SAL_GUITrack"
+          [submitted]="submitted" />
         <app-input-number class="col-12 md:col-6 lg:col-4" label="券數(1券=50張)" controlName="GUI_Qty"
-          [control]="dataForm.controls.GUI_Qty" [max]="99999999" [useGrouping]="false" [submitted]="submitted" />
+          [control]="dataForm.controls.GUI_Qty" [max]="maxQty" [useGrouping]="false" [submitted]="submitted" />
         <app-input-text-range class="col-12 lg:col-6 xl:col-4" startLabel="發票起始號碼" endLabel="發票結束號碼"
           [startControl]="dataForm.controls.SAL_GUIBegNo" [endControl]="dataForm.controls.SAL_GUIEndNo"
           [submitted]="submitted" [errorForGroup]="true" />
@@ -21,7 +22,7 @@
       </div>
       <div *ngIf="!isFormReadable" class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
         <app-button btnType="cancel" [form]="dataForm"></app-button>
-        <app-button btnType="submit"></app-button>
+        <app-button btnType="submit" [loading]="loading"></app-button>
       </div>
     </form>
   </p-panel>
