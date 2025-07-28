@@ -47,12 +47,10 @@ import { Tls11010Service } from '../../../service/api/tls/tls11010.service';
   ],
 })
 export class TLS2B030Component extends BasicQueryPageComponent<any> {
- 
   queryForm = this.formBuilder.group({
-   
-    onedatemm: [],
-    startdate: [],
-    enddate: [],
+    TXN_YearMonth: [],
+    TXN_Date_Start: [],
+    TXN_Date_End: [],
     cahserStart: [
       ,
       [Validators.max(999999), this.validationService.numberValidator],
@@ -77,7 +75,7 @@ export class TLS2B030Component extends BasicQueryPageComponent<any> {
     tlt_floor: [],
     area_no: [],
     usagecount: [0, [Validators.required]],
-    ...createPaginationConfig([{ field: 'onedatemm', order: 1 }]),
+    ...createPaginationConfig([{ field: 'TXN_YearMonth', order: 1 }]),
   });
 
   data: any[] = [];
@@ -88,8 +86,6 @@ export class TLS2B030Component extends BasicQueryPageComponent<any> {
   regionOptions: any[] = [];
   BUILDING_NO_Options: any[] = [];
   subtotalFields: string[] = [];
-
-
 
   // 下拉選項
   cahserTypeOptions: any[] = [];
@@ -113,73 +109,77 @@ export class TLS2B030Component extends BasicQueryPageComponent<any> {
       this.queryForm,
       (form) => this.onSubmit(form),
     );
-   this.queryForm = this.formBuilder.group(
-  {
-    onedatemm: [],
-    startdate: [],
-    enddate: [],
-    cahserStart: [
-      null,
-      [Validators.max(999999), this.validationService.numberValidator],
-    ],
-    cahserEnd: [
-      null,
-      [Validators.max(999999), this.validationService.numberValidator],
-    ],
-    counterStart: [
-      null,
-      [Validators.max(999999), this.validationService.numberValidator],
-    ],
-    counterEnd: [
-      null,
-      [Validators.max(999999), this.validationService.numberValidator],
-    ],
-    regionCode: [[]],
-    cahserType: [[]],
-    onlyShowOverflow: [],
-    tlt_building: [],
-    tlt_floor: [],
-    area_no: [],
-    usagecount: [0, [Validators.required]],
-    ...createPaginationConfig([{ field: 'onedatemm', order: 1 }]),
-  },
-  {
-    validators: this.atLeastOneDateValidator.bind(this),
-  }
-);
-this.queryForm.get('onedatemm')?.valueChanges.subscribe((val) => {
-  const startControl = this.queryForm.get('startdate');
-  const endControl = this.queryForm.get('enddate');
 
-  if (val) {
-    if (startControl?.enabled) startControl.disable({ emitEvent: false });
-    if (endControl?.enabled) endControl.disable({ emitEvent: false });
-  } else {
-    if (startControl?.disabled) startControl.enable({ emitEvent: false });
-    if (endControl?.disabled) endControl.enable({ emitEvent: false });
-  }
-});
+    this.queryForm = this.formBuilder.group(
+      {
+        TXN_YearMonth: [],
+        TXN_Date_Start: [],
+        TXN_Date_End: [],
+        cahserStart: [
+          null,
+          [Validators.max(999999), this.validationService.numberValidator],
+        ],
+        cahserEnd: [
+          null,
+          [Validators.max(999999), this.validationService.numberValidator],
+        ],
+        counterStart: [
+          null,
+          [Validators.max(999999), this.validationService.numberValidator],
+        ],
+        counterEnd: [
+          null,
+          [Validators.max(999999), this.validationService.numberValidator],
+        ],
+        regionCode: [[]],
+        cahserType: [[]],
+        onlyShowOverflow: [],
+        tlt_building: [],
+        tlt_floor: [],
+        area_no: [],
+        usagecount: [0, [Validators.required]],
+        ...createPaginationConfig([{ field: 'TXN_YearMonth', order: 1 }]),
+      },
+      {
+        validators: this.atLeastOneDateValidator.bind(this),
+      },
+    );
+    this.queryForm.get('TXN_YearMonth')?.valueChanges.subscribe((val) => {
+      const startControl = this.queryForm.get('TXN_Date_Start');
+      const endControl = this.queryForm.get('TXN_Date_End');
 
-this.queryForm.get('startdate')?.valueChanges.subscribe((val) => {
-  const onedateControl = this.queryForm.get('onedatemm');
+      if (val) {
+        if (startControl?.enabled) startControl.disable({ emitEvent: false });
+        if (endControl?.enabled) endControl.disable({ emitEvent: false });
+      } else {
+        if (startControl?.disabled) startControl.enable({ emitEvent: false });
+        if (endControl?.disabled) endControl.enable({ emitEvent: false });
+      }
+    });
 
-  if (val) {
-    if (onedateControl?.enabled) onedateControl.disable({ emitEvent: false });
-  } else if (!this.queryForm.get('enddate')?.value) {
-    if (onedateControl?.disabled) onedateControl.enable({ emitEvent: false });
-  }
-});
+    this.queryForm.get('TXN_Date_Start')?.valueChanges.subscribe((val) => {
+      const onedateControl = this.queryForm.get('TXN_YearMonth');
 
-this.queryForm.get('enddate')?.valueChanges.subscribe((val) => {
-  const onedateControl = this.queryForm.get('onedatemm');
+      if (val) {
+        if (onedateControl?.enabled)
+          onedateControl.disable({ emitEvent: false });
+      } else if (!this.queryForm.get('TXN_Date_End')?.value) {
+        if (onedateControl?.disabled)
+          onedateControl.enable({ emitEvent: false });
+      }
+    });
 
-  if (val) {
-    if (onedateControl?.enabled) onedateControl.disable({ emitEvent: false });
-  } else if (!this.queryForm.get('startdate')?.value) {
-    if (onedateControl?.disabled) onedateControl.enable({ emitEvent: false });
-  }
-});
+    this.queryForm.get('TXN_Date_End')?.valueChanges.subscribe((val) => {
+      const onedateControl = this.queryForm.get('TXN_YearMonth');
 
+      if (val) {
+        if (onedateControl?.enabled)
+          onedateControl.disable({ emitEvent: false });
+      } else if (!this.queryForm.get('TXN_Date_Start')?.value) {
+        if (onedateControl?.disabled)
+          onedateControl.enable({ emitEvent: false });
+      }
+    });
 
     this.cahserTypeService
       .getSystemTypes()
@@ -193,14 +193,20 @@ this.queryForm.get('enddate')?.valueChanges.subscribe((val) => {
     this.tls11010Service
       .getBuildingOptions()
       .subscribe((data) => (this.BUILDING_NO_Options = data));
-        // 加入 subtotalFields 計算（只排除文字欄位）
-  const textFields = ['ECR_No', 'tlt_no', 'tlt_name'];
-  this.subtotalFields = this.columns
-    .filter(col => !textFields.includes(col.field))
-    .map(col => col.field);
+    // 加入 subtotalFields 計算（只排除文字欄位）
+    const textFields = ['ECR_No', 'tlt_no', 'tlt_name'];
+    this.subtotalFields = this.columns
+      .filter((col) => !textFields.includes(col.field))
+      .map((col) => col.field);
   }
 
   onSubmit(form: FormGroup): void {
+    console.log('✅ 觸發 onSubmit', form.value);
+    if (form.invalid) {
+      console.warn('❌ 表單驗證失敗:', form.errors, form.value);
+      this.messageService.errorBubble('日期必要欄位');
+      return;
+    }
     this.handleSubmit(form, () => {
       const payload = { ...form.value };
       Object.keys(payload).forEach((key) => {
@@ -233,65 +239,332 @@ this.queryForm.get('enddate')?.valueChanges.subscribe((val) => {
   moneyFormat(value: number): string {
     return value != null ? value.toLocaleString('en-US') : '0'; // ✅ 使用美式格式
   }
-onClearForm(): void {
-  this.queryForm.reset();
-  this.queryForm.get('startdate')?.enable({ emitEvent: false });
-  this.queryForm.get('enddate')?.enable({ emitEvent: false });
-  this.queryForm.get('onedatemm')?.enable({ emitEvent: false });
-}
-
-private atLeastOneDateValidator(group: FormGroup): { [key: string]: any } | null {
-  const start = group.get('startdate')?.value;
-  const end = group.get('enddate')?.value;
-  const month = group.get('onedatemm')?.value;
-
-  const isDateRangeFilled = !!start && !!end;
-  const isMonthFilled = !!month;
-
-  if (!isDateRangeFilled && !isMonthFilled) {
-    return { atLeastOneDateRequired: true };
+  onClearForm(): void {
+    this.queryForm.reset();
+    this.queryForm.get('TXN_Date_Start')?.enable({ emitEvent: false });
+    this.queryForm.get('TXN_Date_End')?.enable({ emitEvent: false });
+    this.queryForm.get('TXN_YearMonth')?.enable({ emitEvent: false });
   }
 
-  if (isDateRangeFilled && isMonthFilled) {
-    return { onlyOneDateAllowed: true };
+  private atLeastOneDateValidator(
+    group: FormGroup,
+  ): { [key: string]: any } | null {
+    const start = group.get('TXN_Date_Start')?.value;
+    const end = group.get('TXN_Date_End')?.value;
+    const month = group.get('TXN_YearMonth')?.value;
+
+    const isDateRangeFilled = start instanceof Date && !isNaN(start.getTime()) &&
+      end instanceof Date && !isNaN(end.getTime());
+    const isMonthFilled = !!month;
+
+    if (!isDateRangeFilled && !isMonthFilled) {
+      return { atLeastOneDateRequired: true };
+    }
+
+    if (isDateRangeFilled && isMonthFilled) {
+      return { onlyOneDateAllowed: true };
+    }
+
+    return null;
   }
 
-  return null;
-}
-
-
- columns: any[] = [
-  { field: 'ECR_No', header: '收銀機號', visible: true },
-  { field: 'tlt_no', header: '專櫃編號', visible: true },
-  { field: 'tlt_name', header: '櫃位名稱', visible: true, style: 'text-left' },
-  { field: 'Pay_Dif_10', header: '現金', visible: true, style: 'text-right', format: this.moneyFormat },
-  { field: 'Pay_Dif_41', header: '聯信連線', visible: true, style: 'text-right', format: this.moneyFormat },
-  { field: 'Pay_Dif_42', header: '聯信離線', visible: true, style: 'text-right', format: this.moneyFormat },
-  { field: 'Pay_Dif_12', header: '聯信紅利', visible: true, style: 'text-right', format: this.moneyFormat },
-   { field: 'Pay_Dif_81', header: '中信-停車場', visible: true, style: 'text-right', format: this.moneyFormat },
-   { field: 'Pay_Dif_43', header: '中信連線', visible: true, style: 'text-right', format: this.moneyFormat },
-   { field: 'Pay_Dif_44', header: '中信離線', visible: true, style: 'text-right', format: this.moneyFormat },
-   { field: 'Pay_Dif_14', header: '中信紅利', visible: true, style: 'text-right', format: this.moneyFormat },  
-   { field: 'Pay_Dif_82', header: '一卡通-停車場', visible: true, style: 'text-right', format: this.moneyFormat },
-   { field: 'Pay_Dif_52', header: '一卡通', visible: true, style: 'text-right', format: this.moneyFormat },
-   { field: 'Pay_Dif_20', header: '禮券', visible: true, style: 'text-right', format: this.moneyFormat },
-   { field: 'Pay_Dif_62', header: '商品提貨單', visible: true, style: 'text-right', format: this.moneyFormat },
-   { field: 'Pay_Dif_77', header: '感熱紙抵用券', visible: true, style: 'text-right', format: this.moneyFormat },
-   { field: 'Pay_Dif_71', header: '商品抵用券', visible: true, style: 'text-right', format: this.moneyFormat },
-   { field: 'Pay_Dif_30', header: '貴賓提貨單(應收帳款)', visible: true, style: 'text-right', format: this.moneyFormat },
-   { field: 'Pay_Dif_73', header: '外來禮券(抵用券)', visible: true, style: 'text-right', format: this.moneyFormat },
-   { field: 'Pay_Dif_72', header: '外來提貨單(抵用券)', visible: true, style: 'text-right', format: this.moneyFormat },
-   { field: 'Pay_Dif_74', header: '活動券(自營)', visible: true, style: 'text-right', format: this.moneyFormat },
-   { field: 'Pay_Dif_75', header: '折價券', visible: true, style: 'text-right', format: this.moneyFormat },
-   { field: 'Pay_Dif_76', header: '現抵', visible: true, style: 'text-right', format: this.moneyFormat },
-   { field: 'Pay_Dif_24', header: '禮券餘代卡', visible: true, style: 'text-right', format: this.moneyFormat },
-   { field: 'Pay_Dif_25', header: '提貨單餘代卡', visible: true, style: 'text-right', format: this.moneyFormat },
-   { field: 'Pay_Dif_07', header: '會員折抵', visible: true, style: 'text-right', format: this.moneyFormat },
-   { field: 'Pay_Dif_83', header: 'LINE Pay-停車場', visible: true, style: 'text-right', format: this.moneyFormat },
-   { field: 'Pay_Dif_55', header: 'LINE Pay', visible: true, style: 'text-right', format: this.moneyFormat },
-   { field: 'Pay_Dif_78', header: 'APP抵用券', visible: true, style: 'text-right', format: this.moneyFormat },
-   { field: 'Pay_Dif_79', header: 'APP提貨單', visible: true, style: 'text-right', format: this.moneyFormat },
-   { field: 'PPay_Dif_sum', header: '總金額', visible: true, style: 'text-right', format: this.moneyFormat },
- 
-];
+  // const textFields = ['ECR_No', 'tlt_no', 'tlt_name'];
+  columns: any[] = [
+    { field: 'ECR_No', header: '收銀機號', visible: true },
+    { field: 'tlt_no', header: '專櫃編號', visible: true },
+    {
+      field: 'tlt_name',
+      header: '櫃位名稱',
+      visible: true,
+      style: 'text-left',
+    },
+    {
+      field: 'Pay_Dif_10',
+      header: '現金',
+      visible: true,
+      style: 'text-right',
+      format: this.moneyFormat,
+      isTotal: true,
+    },
+    {
+      field: 'Pay_Dif_41',
+      header: '聯信連線',
+      visible: true,
+      style: 'text-right',
+      format: this.moneyFormat,
+      isTotal: true,
+    },
+    {
+      field: 'Pay_Dif_42',
+      header: '聯信離線',
+      visible: true,
+      style: 'text-right',
+      format: this.moneyFormat,
+      isTotal: true,
+    },
+    {
+      field: 'Pay_Dif_12',
+      header: '聯信紅利',
+      visible: true,
+      style: 'text-right',
+      format: this.moneyFormat,
+      isTotal: true,
+    },
+    {
+      field: 'Pay_Dif_81',
+      header: '中信-停車場',
+      visible: true,
+      style: 'text-right',
+      format: this.moneyFormat,
+      isTotal: true,
+    },
+    {
+      field: 'Pay_Dif_43',
+      header: '中信連線',
+      visible: true,
+      style: 'text-right',
+      format: this.moneyFormat,
+      isTotal: true,
+    },
+    {
+      field: 'Pay_Dif_44',
+      header: '中信離線',
+      visible: true,
+      style: 'text-right',
+      format: this.moneyFormat,
+      isTotal: true,
+    },
+    {
+      field: 'Pay_Dif_14',
+      header: '中信紅利',
+      visible: true,
+      style: 'text-right',
+      format: this.moneyFormat,
+      isTotal: true,
+    },
+    {
+      field: 'Pay_Dif_82',
+      header: '一卡通-停車場',
+      visible: true,
+      style: 'text-right',
+      format: this.moneyFormat,
+      isTotal: true,
+    },
+    {
+      field: 'Pay_Dif_52',
+      header: '一卡通',
+      visible: true,
+      style: 'text-right',
+      format: this.moneyFormat,
+      isTotal: true,
+    },
+    {
+      field: 'Pay_Dif_20',
+      header: '禮券',
+      visible: true,
+      style: 'text-right',
+      format: this.moneyFormat,
+      isTotal: true,
+    },
+    {
+      field: 'Pay_Dif_62',
+      header: '商品提貨單',
+      visible: true,
+      style: 'text-right',
+      format: this.moneyFormat,
+      isTotal: true,
+    },
+    {
+      field: 'Pay_Dif_77',
+      header: '感熱紙抵用券',
+      visible: true,
+      style: 'text-right',
+      format: this.moneyFormat,
+      isTotal: true,
+    },
+    {
+      field: 'Pay_Dif_71',
+      header: '商品抵用券',
+      visible: true,
+      style: 'text-right',
+      format: this.moneyFormat,
+      isTotal: true,
+    },
+    {
+      field: 'Pay_Dif_30',
+      header: '貴賓提貨單(應收帳款)',
+      visible: true,
+      style: 'text-right',
+      format: this.moneyFormat,
+      isTotal: true,
+    },
+    {
+      field: 'Pay_Dif_73',
+      header: '外來禮券(抵用券)',
+      visible: true,
+      style: 'text-right',
+      format: this.moneyFormat,
+      isTotal: true,
+    },
+    {
+      field: 'Pay_Dif_72',
+      header: '外來提貨單(抵用券)',
+      isTotal: true,
+      visible: true,
+      style: 'text-right',
+      format: this.moneyFormat,
+    },
+    {
+      field: 'Pay_Dif_74',
+      header: '活動券(自營)',
+      visible: true,
+      style: 'text-right',
+      format: this.moneyFormat,
+      isTotal: true,
+    },
+    {
+      field: 'Pay_Dif_75',
+      header: '折價券',
+      visible: true,
+      style: 'text-right',
+      format: this.moneyFormat,
+      isTotal: true,
+    },
+    {
+      field: 'Pay_Dif_76',
+      header: '現抵',
+      visible: true,
+      style: 'text-right',
+      format: this.moneyFormat,
+      isTotal: true,
+    },
+    {
+      field: 'Pay_Dif_24',
+      header: '禮券餘代卡',
+      visible: true,
+      style: 'text-right',
+      format: this.moneyFormat,
+      isTotal: true,
+    },
+    {
+      field: 'Pay_Dif_25',
+      header: '提貨單餘代卡',
+      visible: true,
+      style: 'text-right',
+      format: this.moneyFormat,
+      isTotal: true,
+    },
+    {
+      field: 'Pay_Dif_07',
+      header: '會員折抵',
+      visible: true,
+      style: 'text-right',
+      format: this.moneyFormat,
+      isTotal: true,
+    },
+    {
+      field: 'Pay_Dif_83',
+      header: 'LINE Pay-停車場',
+      visible: true,
+      style: 'text-right',
+      format: this.moneyFormat,
+      isTotal: true,
+    },
+    {
+      field: 'Pay_Dif_55',
+      header: 'LINE Pay',
+      visible: true,
+      style: 'text-right',
+      format: this.moneyFormat,
+      isTotal: true,
+    },
+    {
+      field: 'Pay_Dif_78',
+      header: 'APP抵用券',
+      visible: true,
+      style: 'text-right',
+      format: this.moneyFormat,
+      isTotal: true,
+    },
+    {
+      field: 'Pay_Dif_79',
+      header: 'APP提貨單',
+      visible: true,
+      style: 'text-right',
+      format: this.moneyFormat,
+      isTotal: true,
+    },
+    {
+      field: 'Pay_Dif_22',
+      header: '外來提貨單-高夢',
+      visible: true,
+      style: 'text-right',
+      format: this.moneyFormat,
+      isTotal: true,
+    },
+    {
+      field: 'Pay_Dif_23',
+      header: '外來禮券-高夢',
+      visible: true,
+      style: 'text-right',
+      format: this.moneyFormat,
+      isTotal: true,
+    },
+    {
+      field: 'Pay_Dif_53',
+      header: '悠遊卡',
+      visible: true,
+      style: 'text-right',
+      format: this.moneyFormat,
+      isTotal: true,
+    },
+    {
+      field: 'Pay_Dif_56',
+      header: 'iPASS MONEY',
+      visible: true,
+      style: 'text-right',
+      format: this.moneyFormat,
+      isTotal: true,
+    },
+    {
+      field: 'Pay_Dif_57',
+      header: '台灣Pay',
+      visible: true,
+      style: 'text-right',
+      format: this.moneyFormat,
+      isTotal: true,
+    },
+    {
+      field: 'Pay_Dif_58',
+      header: '南紡錢包',
+      visible: true,
+      style: 'text-right',
+      format: this.moneyFormat,
+      isTotal: true,
+    },
+    {
+      field: 'Pay_Dif_59',
+      header: '即享券',
+      visible: true,
+      style: 'text-right',
+      format: this.moneyFormat,
+      isTotal: true,
+    },
+    {
+      field: 'Pay_Dif_60',
+      header: '喜客券',
+      visible: true,
+      style: 'text-right',
+      format: this.moneyFormat,
+      isTotal: true,
+    },
+    {
+      field: 'PPay_Dif_sum',
+      header: '總金額',
+      visible: true,
+      style: 'text-right',
+      format: this.moneyFormat,
+      isTotal: true,
+    },
+  ];
 }

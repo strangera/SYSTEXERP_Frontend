@@ -16,7 +16,7 @@
   (selectionChange)="onSelectionChange($event)" (onRowSelect)="select.emit($event)"
   (onRowUnselect)="unSelect.emit($event)" [rowSelectable]="rowSelectableWrapper"
   [loading]="loading && data.length === 0" [expandedRowKeys]="IsPrint ? expandedRows : {}"
-  paginatorDropdownAppendTo="body" editMode="row">
+  paginatorDropdownAppendTo="body" editMode="row" [groupRowsBy]="groupRowsBy" rowGroupMode="subheader">
   <ng-template pTemplate="caption">
     <div class="grid align-items-center justify-content-between mx-0" *ngIf="showCaption && !rowEditing">
       <div class="caption-left button-group flex gap-2 py-2">
@@ -131,6 +131,25 @@
       </tr>
     </ng-container>
   </ng-template>
+  <ng-template pTemplate="groupfooter" let-rowData *ngIf="showSubTotal">
+    <tr>
+      <td class="text-center font-bold">小計</td>
+      <td *ngIf="IsPrint && showCheckBox && !rowEditing && selectionMode === 'multiple'"></td>
+      <td *ngIf="expansionDataKey && IsPrint"></td>
+      <ng-container *ngFor="let col of columns">
+        <td class="text-center font-bold" *ngIf="!col.hidden">
+          <ng-container *ngIf="col.isSubTotal">
+            {{
+            col.format ?
+            col.format(getGroupSubtotal(rowData[groupRowsBy], col.field)) :
+            getGroupSubtotal(rowData[groupRowsBy], col.field)
+            }}
+          </ng-container>
+        </td>
+      </ng-container>
+      <td [hidden]="!IsPrint || !showManage"></td>
+    </tr>
+  </ng-template>
   <ng-template pTemplate="body" let-rowIndex="rowIndex" let-rowData let-columns="columns" let-expanded="expanded"
     let-editing="editing" let-ri="rowIndex">
     <tr #htmlTableRowElement [attr.data-key]="rowData[dataKey]" [pSelectableRow]="rowData" style="height: 35px"
@@ -237,17 +256,17 @@
       </ng-template>
     </tr>
   </ng-template>
-  <ng-template pTemplate="footer" let-columns>
-    <tr *ngIf="showSubtotal" class="bg-gray-100 font-semibold">
-      <td class="text-center">小計</td>
+  <ng-template pTemplate="footer" let-columns *ngIf="showTotal">
+    <tr>
+      <td class="text-center font-bold">總計</td>
       <td *ngIf="IsPrint && showCheckBox && !rowEditing && selectionMode === 'multiple'"></td>
       <td *ngIf="expansionDataKey && IsPrint"></td>
-      <td *ngFor="let col of columns" [ngClass]="col.style" class="text-center">
-        <ng-container *ngIf="subtotalFields.includes(col.field)">
-          {{ col.format ? col.format(subtotals[col.field]) : subtotals[col.field]}}
+      <td *ngFor="let col of columns" class="text-center font-bold pr-2">
+        <ng-container *ngIf="col.isTotal">
+          {{ col.format ? col.format(getTotal(col.field)) : getTotal(col.field)}}
         </ng-container>
       </td>
-      <td *ngIf="IsPrint && showManage"></td>
+      <td [hidden]="!IsPrint || !showManage"></td>
     </tr>
   </ng-template>
   <ng-template pTemplate="loadingbody" let-columns="columns">

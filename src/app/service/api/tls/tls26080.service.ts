@@ -59,12 +59,12 @@ export class TLS26080Service {
   ) { }
 
   /** 查詢資料 */
-  loadTLS26080(query: TLS26080Query): void {
+  loadTLS26080(query: TLS26080Query = {}): void {
     if (this.tableLoading) return void (this.tableLoading = !1);
     this.tableLoading = !0;
     const api = mock
       ? mockQueryTLS26080
-      : this.http.post<BaseQueryResponse<TLS26080Data>>(`${apiUrl}/queryTLS26080`, query);
+      : this.http.post<BaseQueryResponse<TLS26080Data>>(`${apiUrl}/TLS0000/TLS2000/queryTLS26080`, query);
 
     api.pipe(
       take(1),
@@ -102,7 +102,7 @@ export class TLS26080Service {
     const id = data.pod_no;
 
     this.http.post<BaseQueryResponse<{ Status: ApprovalStatus; }>>(
-      `${apiUrl}${data.pod_status === ApprovalStatus.未核准 ? '/approvalTLS26010' : '/disapprovalTLS26010'}`,
+      `${apiUrl}/TLS0000/TLS2000${data.pod_status === ApprovalStatus.未核准 ? '/approvalTLS26010' : '/disapprovalTLS26010'}`,
       { id }).pipe(
         take(1),
         tap(() => this.approvalData.set(ApprovalStatus.未核准)),

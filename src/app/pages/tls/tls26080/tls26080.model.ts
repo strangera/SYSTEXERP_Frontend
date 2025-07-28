@@ -2,32 +2,37 @@ import { BaseQueryResponse } from '@shared/models';
 import { delay, Observable, of } from 'rxjs';
 
 export interface TLS26080Data {
-  id: number;                // 主鍵，自動編號
-  mid: number;               // 主檔關聯 ID
-  str_no: string;            // 店鋪編號
-  pod_no: string;            // 活動申請編號
-  pod_type: string;          // 活動類型 (1=預售, 2=滿千送百送百免回, ...)
-  org_id?: string;           // 組織部門 (SYS3100)
-  act_no?: string;           // 活動編號 (群組)
-  pod_desc?: string;         // 活動名稱
-  pod_sdate: string;         // 活動起始日期 (YYYY-MM-DD)
-  pod_edate: string;         // 活動終止日期 (YYYY-MM-DD)
-  pod_busdate?: string;      // 活動正檔日期
-  cap_item?: string;         // 扣款代碼 (APS1003.cap_type='E')
-  pod_status: string;        // 活動狀態 (0=未核準,1=已核準,9=刪除)
+  CRT_Date: string;          // 建立日期
+  CRT_USR_Name?: string;     // 建立人員姓名
+  CRT_USR_No?: string;       // 建立人員編號
+  UPD_Date?: string;         // 變更日期
+  UPD_USR_Name?: string;     // 變更人員姓名
+  UPD_USR_No?: string;       // 變更人員編號
+  act_no?: string;           // 活動編號
+  approved_date?: string;    // 核准日期
   approved_userno?: string;  // 核准人員編號
   approved_usr_name?: string;// 核准人員姓名
-  approved_date?: string;    // 核准日期 (datetime)
-  crt_date: string;          // 建立日期 (datetime)
-  crt_usr_no?: string;       // 建立人員編號
-  crt_usr_name?: string;     // 建立人員姓名
-  upd_date?: string;         // 變更日期 (datetime)
-  upd_usr_no?: string;       // 變更人員編號
-  upd_usr_name?: string;     // 變更人員姓名
+  cap_item?: string;         // 扣款代碼 (APS1003.cap_type='E')
+  id: number;                // 主鍵，自動編號
+  mid: number;               // 主檔關聯 ID
+  org_id?: string;           // 組織部門 (SYS3100)
+  pod_busdate?: string;      // 活動正檔日期
+  pod_desc?: string;         // 活動名稱
+  pod_edate: string;         // 活動終止日期
+  pod_no: string;            // 活動申請編號
+  pod_sdate: string;         // 活動起始日期
+  pod_status: string;        // 活動狀態 (0=未核準,1=已核準,9=刪除)
+  pod_type: string;          // 活動類型 (1=預售, 2=滿千送百, ...)
+  str_no: string;            // 店鋪編號
 }
 
 export interface TLS26080Query {
-
+  pod_no?: string;            // 活動申請編號
+  pod_desc?: string;          // 活動名稱
+  pod_sdate?: string | Date;         // 活動日期 (起)
+  pod_edate?: string | Date;         // 活動日期 (迄)
+  pod_busdate?: string | Date;       // 活動正檔日期
+  cap_item?: string[];        // 扣款代碼
 }
 
 /** 活動類型 */
@@ -78,9 +83,9 @@ export const mockQueryTLS26080: Observable<BaseQueryResponse<TLS26080Data>> = of
       pod_busdate: "2025-09-02",
       cap_item: "E12",
       pod_status: "0",
-      crt_date: "2025-07-25 06:11:06",
-      crt_usr_no: "USR332",
-      crt_usr_name: "陳大同"
+      CRT_Date: "2025-07-25 06:11:06",
+      CRT_USR_No: "USR332",
+      CRT_USR_Name: "陳大同"
     },
     {
       id: 2,
@@ -96,9 +101,9 @@ export const mockQueryTLS26080: Observable<BaseQueryResponse<TLS26080Data>> = of
       pod_busdate: "2025-09-25",
       cap_item: "E03",
       pod_status: "0",
-      crt_date: "2025-07-25 06:11:06",
-      crt_usr_no: "USR144",
-      crt_usr_name: "王小明"
+      CRT_Date: "2025-07-25 06:11:06",
+      CRT_USR_No: "USR144",
+      CRT_USR_Name: "王小明"
     },
     {
       id: 3,
@@ -114,9 +119,9 @@ export const mockQueryTLS26080: Observable<BaseQueryResponse<TLS26080Data>> = of
       pod_busdate: "2025-09-15",
       cap_item: "E45",
       pod_status: "0",
-      crt_date: "2025-07-25 06:11:06",
-      crt_usr_no: "USR511",
-      crt_usr_name: "李小華"
+      CRT_Date: "2025-07-25 06:11:06",
+      CRT_USR_No: "USR511",
+      CRT_USR_Name: "李小華"
     },
     {
       id: 4,
@@ -132,9 +137,9 @@ export const mockQueryTLS26080: Observable<BaseQueryResponse<TLS26080Data>> = of
       pod_busdate: "2025-09-30",
       cap_item: "E88",
       pod_status: "0",
-      crt_date: "2025-07-25 06:11:06",
-      crt_usr_no: "USR203",
-      crt_usr_name: "陳大同"
+      CRT_Date: "2025-07-25 06:11:06",
+      CRT_USR_No: "USR203",
+      CRT_USR_Name: "陳大同"
     },
     {
       id: 5,
@@ -150,12 +155,12 @@ export const mockQueryTLS26080: Observable<BaseQueryResponse<TLS26080Data>> = of
       pod_busdate: "2025-10-05",
       cap_item: "E07",
       pod_status: "0",
-      crt_date: "2025-07-25 06:11:06",
-      crt_usr_no: "USR201",
-      crt_usr_name: "王小明",
-      upd_date: "2025-07-26 08:15:30",
-      upd_usr_no: "USR302",
-      upd_usr_name: "李小華"
+      CRT_Date: "2025-07-25 06:11:06",
+      CRT_USR_No: "USR201",
+      CRT_USR_Name: "王小明",
+      UPD_Date: "2025-07-26 08:15:30",
+      UPD_USR_No: "USR302",
+      UPD_USR_Name: "李小華"
     },
     {
       id: 6,
@@ -171,12 +176,12 @@ export const mockQueryTLS26080: Observable<BaseQueryResponse<TLS26080Data>> = of
       pod_busdate: "2025-10-05",
       cap_item: "E55",
       pod_status: "0",
-      crt_date: "2025-07-25 06:11:06",
-      crt_usr_no: "USR105",
-      crt_usr_name: "陳大同",
-      upd_date: "2025-07-26 09:40:12",
-      upd_usr_no: "USR400",
-      upd_usr_name: "陳大同"
+      CRT_Date: "2025-07-25 06:11:06",
+      CRT_USR_No: "USR105",
+      CRT_USR_Name: "陳大同",
+      UPD_Date: "2025-07-26 09:40:12",
+      UPD_USR_No: "USR400",
+      UPD_USR_Name: "陳大同"
     },
     {
       id: 7,
@@ -192,12 +197,12 @@ export const mockQueryTLS26080: Observable<BaseQueryResponse<TLS26080Data>> = of
       pod_busdate: "2025-10-10",
       cap_item: "E23",
       pod_status: "0",
-      crt_date: "2025-07-25 06:11:06",
-      crt_usr_no: "USR555",
-      crt_usr_name: "李小華",
-      upd_date: "2025-07-26 10:22:51",
-      upd_usr_no: "USR601",
-      upd_usr_name: "王小明"
+      CRT_Date: "2025-07-25 06:11:06",
+      CRT_USR_No: "USR555",
+      CRT_USR_Name: "李小華",
+      UPD_Date: "2025-07-26 10:22:51",
+      UPD_USR_No: "USR601",
+      UPD_USR_Name: "王小明"
     },
     {
       id: 8,
@@ -213,9 +218,9 @@ export const mockQueryTLS26080: Observable<BaseQueryResponse<TLS26080Data>> = of
       pod_busdate: "2025-09-10",
       cap_item: "E11",
       pod_status: "1",
-      crt_date: "2025-07-25 06:11:06",
-      crt_usr_no: "USR211",
-      crt_usr_name: "王小明",
+      CRT_Date: "2025-07-25 06:11:06",
+      CRT_USR_No: "USR211",
+      CRT_USR_Name: "王小明",
       approved_userno: "USR333",
       approved_usr_name: "陳大同",
       approved_date: "2025-07-26 11:10:05"
@@ -234,9 +239,9 @@ export const mockQueryTLS26080: Observable<BaseQueryResponse<TLS26080Data>> = of
       pod_busdate: "2025-09-25",
       cap_item: "E44",
       pod_status: "1",
-      crt_date: "2025-07-25 06:11:06",
-      crt_usr_no: "USR410",
-      crt_usr_name: "李小華",
+      CRT_Date: "2025-07-25 06:11:06",
+      CRT_USR_No: "USR410",
+      CRT_USR_Name: "李小華",
       approved_userno: "USR288",
       approved_usr_name: "王小明",
       approved_date: "2025-07-26 12:45:21"
@@ -255,9 +260,9 @@ export const mockQueryTLS26080: Observable<BaseQueryResponse<TLS26080Data>> = of
       pod_busdate: "2025-09-20",
       cap_item: "E29",
       pod_status: "1",
-      crt_date: "2025-07-25 06:11:06",
-      crt_usr_no: "USR521",
-      crt_usr_name: "陳大同",
+      CRT_Date: "2025-07-25 06:11:06",
+      CRT_USR_No: "USR521",
+      CRT_USR_Name: "陳大同",
       approved_userno: "USR501",
       approved_usr_name: "李小華",
       approved_date: "2025-07-26 13:32:44"
@@ -276,9 +281,9 @@ export const mockQueryTLS26080: Observable<BaseQueryResponse<TLS26080Data>> = of
       pod_busdate: "2025-09-30",
       cap_item: "E62",
       pod_status: "1",
-      crt_date: "2025-07-25 06:11:06",
-      crt_usr_no: "USR302",
-      crt_usr_name: "王小明",
+      CRT_Date: "2025-07-25 06:11:06",
+      CRT_USR_No: "USR302",
+      CRT_USR_Name: "王小明",
       approved_userno: "USR722",
       approved_usr_name: "陳大同",
       approved_date: "2025-07-26 14:15:37"
@@ -297,12 +302,12 @@ export const mockQueryTLS26080: Observable<BaseQueryResponse<TLS26080Data>> = of
       pod_busdate: "2025-10-05",
       cap_item: "E34",
       pod_status: "9",
-      crt_date: "2025-07-25 06:11:06",
-      crt_usr_no: "USR420",
-      crt_usr_name: "李小華",
-      upd_date: "2025-07-26 15:25:40",
-      upd_usr_no: "USR602",
-      upd_usr_name: "王小明"
+      CRT_Date: "2025-07-25 06:11:06",
+      CRT_USR_No: "USR420",
+      CRT_USR_Name: "李小華",
+      UPD_Date: "2025-07-26 15:25:40",
+      UPD_USR_No: "USR602",
+      UPD_USR_Name: "王小明"
     },
     {
       id: 13,
@@ -318,12 +323,12 @@ export const mockQueryTLS26080: Observable<BaseQueryResponse<TLS26080Data>> = of
       pod_busdate: "2025-10-08",
       cap_item: "E59",
       pod_status: "9",
-      crt_date: "2025-07-25 06:11:06",
-      crt_usr_no: "USR311",
-      crt_usr_name: "陳大同",
-      upd_date: "2025-07-26 16:03:12",
-      upd_usr_no: "USR775",
-      upd_usr_name: "李小華"
+      CRT_Date: "2025-07-25 06:11:06",
+      CRT_USR_No: "USR311",
+      CRT_USR_Name: "陳大同",
+      UPD_Date: "2025-07-26 16:03:12",
+      UPD_USR_No: "USR775",
+      UPD_USR_Name: "李小華"
     },
     {
       id: 14,
@@ -339,9 +344,9 @@ export const mockQueryTLS26080: Observable<BaseQueryResponse<TLS26080Data>> = of
       pod_busdate: "2025-10-15",
       cap_item: "E77",
       pod_status: "0",
-      crt_date: "2025-07-25 06:11:06",
-      crt_usr_no: "USR210",
-      crt_usr_name: "李小華"
+      CRT_Date: "2025-07-25 06:11:06",
+      CRT_USR_No: "USR210",
+      CRT_USR_Name: "李小華"
     },
     {
       id: 15,
@@ -357,9 +362,9 @@ export const mockQueryTLS26080: Observable<BaseQueryResponse<TLS26080Data>> = of
       pod_busdate: "2025-10-20",
       cap_item: "E12",
       pod_status: "0",
-      crt_date: "2025-07-25 06:11:06",
-      crt_usr_no: "USR110",
-      crt_usr_name: "陳大同"
+      CRT_Date: "2025-07-25 06:11:06",
+      CRT_USR_No: "USR110",
+      CRT_USR_Name: "陳大同"
     },
     {
       id: 16,
@@ -375,9 +380,9 @@ export const mockQueryTLS26080: Observable<BaseQueryResponse<TLS26080Data>> = of
       pod_busdate: "2025-10-25",
       cap_item: "E55",
       pod_status: "0",
-      crt_date: "2025-07-25 06:11:06",
-      crt_usr_no: "USR501",
-      crt_usr_name: "王小明"
+      CRT_Date: "2025-07-25 06:11:06",
+      CRT_USR_No: "USR501",
+      CRT_USR_Name: "王小明"
     },
     {
       id: 17,
@@ -393,9 +398,9 @@ export const mockQueryTLS26080: Observable<BaseQueryResponse<TLS26080Data>> = of
       pod_busdate: "2025-10-28",
       cap_item: "E21",
       pod_status: "0",
-      crt_date: "2025-07-25 06:11:06",
-      crt_usr_no: "USR601",
-      crt_usr_name: "李小華"
+      CRT_Date: "2025-07-25 06:11:06",
+      CRT_USR_No: "USR601",
+      CRT_USR_Name: "李小華"
     },
     {
       id: 18,
@@ -411,9 +416,9 @@ export const mockQueryTLS26080: Observable<BaseQueryResponse<TLS26080Data>> = of
       pod_busdate: "2025-10-31",
       cap_item: "E64",
       pod_status: "1",
-      crt_date: "2025-07-25 06:11:06",
-      crt_usr_no: "USR777",
-      crt_usr_name: "陳大同",
+      CRT_Date: "2025-07-25 06:11:06",
+      CRT_USR_No: "USR777",
+      CRT_USR_Name: "陳大同",
       approved_userno: "USR622",
       approved_usr_name: "王小明",
       approved_date: "2025-07-26 17:10:10"
@@ -432,12 +437,12 @@ export const mockQueryTLS26080: Observable<BaseQueryResponse<TLS26080Data>> = of
       pod_busdate: "2025-11-03",
       cap_item: "E90",
       pod_status: "9",
-      crt_date: "2025-07-25 06:11:06",
-      crt_usr_no: "USR850",
-      crt_usr_name: "陳大同",
-      upd_date: "2025-07-26 19:00:00",
-      upd_usr_no: "USR992",
-      upd_usr_name: "王小明"
+      CRT_Date: "2025-07-25 06:11:06",
+      CRT_USR_No: "USR850",
+      CRT_USR_Name: "陳大同",
+      UPD_Date: "2025-07-26 19:00:00",
+      UPD_USR_No: "USR992",
+      UPD_USR_Name: "王小明"
     },
     {
       id: 20,
@@ -453,12 +458,12 @@ export const mockQueryTLS26080: Observable<BaseQueryResponse<TLS26080Data>> = of
       pod_busdate: "2025-11-05",
       cap_item: "E31",
       pod_status: "9",
-      crt_date: "2025-07-25 06:11:06",
-      crt_usr_no: "USR321",
-      crt_usr_name: "王小明",
-      upd_date: "2025-07-26 20:15:25",
-      upd_usr_no: "USR210",
-      upd_usr_name: "李小華"
+      CRT_Date: "2025-07-25 06:11:06",
+      CRT_USR_No: "USR321",
+      CRT_USR_Name: "王小明",
+      UPD_Date: "2025-07-26 20:15:25",
+      UPD_USR_No: "USR210",
+      UPD_USR_Name: "李小華"
     },
   ]
 }).pipe(delay(1000));

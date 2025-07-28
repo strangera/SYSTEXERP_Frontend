@@ -63,10 +63,10 @@ export class TLS29010Component extends BasicQueryPageComponent<TALPORDERD_OPENDi
         tlt_id: [null, [Validators.maxLength(1), Validators.min(0),Validators.max(9)]], // 抽成類別(0-9) 送出時再轉乘string
         tlt_no: ['', [Validators.maxLength(8)]],        // 專櫃編號
         cag_barcode: ['', [Validators.maxLength(13)]],  // 折數條碼
-        use_flag: ['', [Validators.maxLength(1)]],      // 是否使用 Y/N
 
+        use_flag: ['', [Validators.maxLength(1)]],      // 是否使用 Y/N
         crt_usr_name: ['', [Validators.maxLength(16)]], // 建立人員
-        upd_date: [null], // 變更日期
+        upd_date: [null], // 變更日期 / createDAte
 
         // --疑問(1.開放日期要怎麼取、2.專櫃位置編號、商品類別(中分類) TALPORDERM沒有)--
 

@@ -4,7 +4,7 @@ import { debounceTime, Subject, switchMap } from 'rxjs';
 import { LocationData, LocationForm, LocationService } from './location.service';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { SystemTypeService } from '../../../service/basic/system-type.service';
-import { Column } from '../../../shared/componentkit/table/table.model';
+import { Column, formatAmount } from '../../../shared/componentkit/table/table.model';
 import { FieldsConfig, DropdownTableComponent } from '../../../shared/componentkit/dropdown-table/dropdown-table.component';
 import { ExpandableEditTableComponent } from '../../../shared/componentkit/expandable-edit-table/expandable-edit-table.component';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
@@ -177,12 +177,17 @@ export class InputTableComponent extends BasicQueryPageComponent<any> implements
     Month: [null, [Validators.required]], // Dropdown
 
   });
-  columns2 = [
+  columns2: Column[] = [
+    { field: 'bank', header: '館別' },
     { field: 'salesDate', header: '銷售日期', groupField: '111' },
     { field: 'cashRegister', header: '收銀機號', groupField: '111' },
     { field: 'transactionId', header: '交易序號' },
     { field: 'originalCounter', header: '原專櫃', groupField: '222' },
-    { field: 'updatedCounter', header: '修正後專櫃', groupField: '222' }
+    { field: 'updatedCounter', header: '修正後專櫃', groupField: '222' },
+    { field: 'quantity', header: '數量', isSubTotal: true, isTotal: true, format: formatAmount },
+    { field: 'price', header: '單價' },
+    { field: 'costPrice', header: '進價', isSubTotal: true, isTotal: true, format: formatAmount },
+    { field: 'salesAmount', header: '銷售金額', isSubTotal: true, isTotal: true, format: formatAmount }
   ];
 
   columnGroup = [
@@ -193,35 +198,55 @@ export class InputTableComponent extends BasicQueryPageComponent<any> implements
   dataGroup = [
     {
       id: 1,
+      bank: 'Bank A',
       salesDate: '2024/01/01',
       cashRegister: '001',
       transactionId: 'TX123',
       originalCounter: 'A',
-      updatedCounter: 'B'
+      updatedCounter: 'B',
+      quantity: 10,
+      price: 100,
+      costPrice: 90,
+      salesAmount: 1000
     },
     {
       id: 2,
+      bank: 'Bank B',
       salesDate: '2024/01/02',
       cashRegister: '002',
       transactionId: 'TX456',
       originalCounter: 'C',
-      updatedCounter: 'D'
+      updatedCounter: 'D',
+      quantity: 5,
+      price: 200,
+      costPrice: 180,
+      salesAmount: 1000
     },
     {
       id: 3,
+      bank: 'Bank B',
       salesDate: '2024/01/03',
       cashRegister: '003',
       transactionId: 'TX789',
       originalCounter: 'E',
-      updatedCounter: 'F'
+      updatedCounter: 'F',
+      quantity: 8,
+      price: 150,
+      costPrice: 130,
+      salesAmount: 1200
     },
     {
       id: 4,
+      bank: 'Bank A',
       salesDate: '2024/01/04',
       cashRegister: '004',
       transactionId: 'TX012',
       originalCounter: 'G',
-      updatedCounter: 'H'
+      updatedCounter: 'H',
+      quantity: 12,
+      price: 120,
+      costPrice: 100,
+      salesAmount: 1440
     }
   ];
   // 表格

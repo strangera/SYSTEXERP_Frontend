@@ -19,6 +19,7 @@ export class CalendarComponent extends BasicKitComponent implements OnInit {
   @Input() control = new FormControl();
   @Input() controlName = '';
   @Input() submitted = false;
+  @Input() override isRequired = false;
 
   // 📌 calendarType（包含新增加 oddMonthOne）
   @Input() calendarType: 'timeOne' | 'dateOne' | 'dateTimeOne' | 'dateMonthOne' | 'dateYearOne' | 'oddMonthOne' = 'dateOne';

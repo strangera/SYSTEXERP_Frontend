@@ -47,13 +47,13 @@ export class FIN12010Component extends BasicQueryPageComponent<IFin12010Data> im
     SAL_GUINo_start: [null, [Validators.maxLength(8), Validators.minLength(8), Validators.max(99999950)]], // 發票號碼(起)
     SAL_GUINo_end: [null, [Validators.maxLength(8), Validators.minLength(8), Validators.max(99999999)]], // 發票號碼(迄)
     SAL_TypeList: [[]], // 使用別
-    ...createPaginationConfig([{ field: 'SAL_GUIYYYYMM', order: 1 }]), // 分頁和排序參數
+    ...createPaginationConfig([{ field: 'id', order: 1 }]), // 分頁和排序參數
   }, { validators: this.validationService.guiNumberRangeValidator('SAL_GUINo_start', 'SAL_GUINo_end') });
   totalRecords = 0;
   data: IFin12010Data[] = [];
   selectedItems: IFin12010Data[] = [];
   columns: Column[] = [
-    { field: 'SAL_GUIYYYYMM_Date', header: '發票年月', visible: true, format: formatYYYYMM },
+    { field: 'SAL_GUIYYYYMM', header: '發票年月', visible: true, format: formatYYYYMM },
     { field: 'SAL_GUITrack', header: '字軌', visible: true },
     { field: 'SAL_GUIBegNo', header: '發票起號', visible: true },
     { field: 'SAL_GUIEndNo', header: '發票迄號', visible: true },
@@ -102,7 +102,7 @@ export class FIN12010Component extends BasicQueryPageComponent<IFin12010Data> im
       this.fin12010Service.queryFIN12010(body).pipe(finalize(() => this.loading = false)).pipe(untilDestroyed(this)).subscribe(res => {
         this.data = res.Data.map(item => ({
           ...item,
-          SAL_GUIYYYYMM_Date: item.SAL_GUIYYYYMM
+          SAL_GUIYYYYMM: item.SAL_GUIYYYYMM
             ? new Date(+item.SAL_GUIYYYYMM.substring(0, 4), +item.SAL_GUIYYYYMM.substring(4, 6) - 1, 1)
             : null,
         }));

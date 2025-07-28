@@ -1,5 +1,6 @@
 
-import { Component, OnInit, signal } from '@angular/core';
+import { DatePipe } from '@angular/common';
+import { Component, computed, OnInit, signal } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 import { TLS26080Service } from '@service/api';
@@ -39,16 +40,16 @@ export class TLS26080Component extends BasicQueryPageComponent<TLS26080Data> imp
     pod_status: [ApprovalStatus.未核准], // 核准狀態
     org_id: [''], // 部門
     cap_item: [[]], // 扣款代碼
-    pod_sdate: [new Date()], // 起始日期(起)
-    pod_edate: [new Date()], // 起始日期(迄)
-    pod_busdate: [new Date()], // 活動正檔日期
+    pod_sdate: ['' as unknown as Date], // 起始日期(起)
+    pod_edate: ['' as unknown as Date], // 起始日期(迄)
+    pod_busdate: ['' as unknown as Date], // 活動正檔日期
   });
 
   public columns: Column[] = [
     { field: 'pod_no', header: '活動單號', visible: true },
     { field: 'pod_desc', header: '活動名稱', visible: true },
-    { field: 'pod_sdate', header: '活動期間(起日)', visible: true },
-    { field: 'pod_edate', header: '活動期間(迄日)', visible: true },
+    { field: 'pod_sdate', header: '活動期間(起日)', visible: true, format: v => this.datePipe.transform(v, 'YYYY/MM/dd') },
+    { field: 'pod_edate', header: '活動期間(迄日)', visible: true, format: v => this.datePipe.transform(v, 'YYYY/MM/dd') },
     { field: 'cap_item', header: '扣款代碼', visible: true },
     { field: 'pod_type', header: '扣款名稱', visible: true },
     { field: 'pod_status', header: '狀態', visible: true, format: this.service.approvalStatus.bind(this) },
@@ -58,19 +59,27 @@ export class TLS26080Component extends BasicQueryPageComponent<TLS26080Data> imp
   public data: TLS26080Data[] = [];
   public selectedItems: TLS26080Data[] = [];
 
-  constructor(public service: TLS26080Service) {
+  private queryTLS26080 = computed(() => {
+    const formValues = this.queryForm.value;
+    const result = {};
+    formValues.pod_no && (Reflect.set(result, 'pod_no', formValues.pod_no));
+    formValues.pod_desc && (Reflect.set(result, 'pod_desc', formValues.pod_desc));
+    formValues.pod_status && (Reflect.set(result, 'pod_status', formValues.pod_status));
+    formValues.pod_sdate && (Reflect.set(result, 'pod_sdate', this.datePipe.transform(formValues.pod_sdate, 'YYYY/MM/dd')));
+    formValues.pod_edate && (Reflect.set(result, 'pod_edate', this.datePipe.transform(formValues.pod_edate, 'YYYY/MM/dd')));
+    formValues.pod_busdate && (Reflect.set(result, 'pod_busdate', this.datePipe.transform(formValues.pod_busdate, 'YYYY/MM/dd')));
+    return result;
+  });
+
+  constructor(
+    public service: TLS26080Service,
+    private datePipe: DatePipe,
+  ) {
     super();
   }
 
   ngOnInit(): void {
     this.initializePage('TLS26080', '/TLS/TLS26080CRU', this.queryForm, this.onSubmit.bind(this));
-    this.mocks();
-  }
-
-  mocks(): void {
-    // 模擬資料
-    this.service.loadTLS26080({});
-    this.totalRecords.set(this.data.length);
   }
 
   canQuery(): boolean {
@@ -100,52 +109,8 @@ export class TLS26080Component extends BasicQueryPageComponent<TLS26080Data> imp
   // 提交查詢
   onSubmit(frm: FormGroup): void {
     this.handleSubmit(frm, () => {
-      // 模擬 API 查詢
-      // setTimeout(() => {
-      //   const formValues = frm.value;
-      //   let filteredData = [...this.service.mockData];
-
-      //   // 篩選邏輯
-      //   if (formValues.activityType) {
-      //     filteredData = filteredData.filter(item =>
-      //       item.activityType === formValues.activityType
-      //     );
-      //   }
-      //   if (formValues.department) {
-      //     filteredData = filteredData.filter(item =>
-      //       item.department === formValues.department
-      //     );
-      //   }
-      //   if (formValues.activityGroup) {
-      //     filteredData = filteredData.filter(item =>
-      //       item.activityGroup === formValues.activityGroup
-      //     );
-      //   }
-      //   if (formValues.activityName) {
-      //     filteredData = filteredData.filter(item =>
-      //       item.activityName === formValues.activityName
-      //     );
-      //   }
-      //   if (formValues.activityStartDate) {
-      //     filteredData = filteredData.filter(item =>
-      //       new Date(item.activityStartDate) >= new Date(formValues.activityStartDate)
-      //     );
-      //   }
-      //   if (formValues.activityEndDate) {
-      //     filteredData = filteredData.filter(item =>
-      //       new Date(item.activityEndDate) <= new Date(formValues.activityEndDate)
-      //     );
-      //   }
-      //   if (formValues.activityOfficialDate) {
-      //     filteredData = filteredData.filter(item =>
-      //       item.activityOfficialDate === formValues.activityOfficialDate
-      //     );
-      //   }
-
-      //   this.data = filteredData;
-      //   this.totalRecords = filteredData.length;
-      //   this.queryStateService.setQueryState(this.ProgNo, frm.value);
-      // }, 1000);
+      frm.valid && this.canQuery() && this.service.loadTLS26080(this.queryTLS26080());
+      this.loading = !1;
     });
   }
 

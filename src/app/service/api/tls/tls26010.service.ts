@@ -229,7 +229,7 @@ export class TLS26010Service {
 
     const api = mock
       ? of(mockQueryTLS26010)
-      : this.http.post<BaseQueryResponse<TLS26010>>(`${apiUrl}/queryTLS26010`, query);
+      : this.http.post<BaseQueryResponse<TLS26010>>(`${apiUrl}/TLS0000/TLS2000/queryTLS26010`, query);
 
     api.pipe(
       take(1),
@@ -247,7 +247,7 @@ export class TLS26010Service {
     if (this.TableLoading) { this.TableLoading = !1; return of(); };
     this.TableLoading = !0;
 
-    return this.http.post<BaseQueryResponse<any>>(`${apiUrl}/insertTLS26010`, payload).pipe(
+    return this.http.post<BaseQueryResponse<any>>(`${apiUrl}/TLS0000/TLS2000/insertTLS26010`, payload).pipe(
       take(1),
       tap(() => { }),
       catchError(error => this.errorHandler.handleError(error)),
@@ -263,7 +263,7 @@ export class TLS26010Service {
     if (this.TableLoading) { this.TableLoading = !1; return of(); };
     this.TableLoading = !0;
 
-    return this.http.post<BaseQueryResponse<any>>(`${apiUrl}/updateTLS26010`, data).pipe(
+    return this.http.post<BaseQueryResponse<any>>(`${apiUrl}/TLS0000/TLS2000/updateTLS26010`, data).pipe(
       take(1),
       tap((response) => {
         if (response.Status === 'Success') {
@@ -312,7 +312,7 @@ export class TLS26010Service {
     }
     const formData = new FormData();
     formData.append('file', file);
-    this.http.post<any>(`${apiUrl}/importTLS26010`, formData).pipe(
+    this.http.post<any>(`${apiUrl}/TLS0000/TLS2000/importTLS26010`, formData).pipe(
       take(1),
       tap(res => {
         const data: any = res?.Data;
@@ -342,7 +342,7 @@ export class TLS26010Service {
   downloadTemplate(): void {
     if (this.downloadLoading) return void (this.downloadLoading = !1);
     this.downloadLoading = !0;
-    this.http.get(`${apiUrl}/downloadTLS26010Template`, { responseType: 'blob', })
+    this.http.get(`${apiUrl}/TLS0000/TLS2000/downloadTLS26010Template`, { responseType: 'blob', })
       .pipe(
         take(1),
         tap((res: Blob) => {
@@ -362,7 +362,7 @@ export class TLS26010Service {
 
   /** 下載錯誤檔 */
   downloadErrorFile(filePath: string) {
-    window.open(`${apiUrl}/${filePath}`, '_blank');
+    window.open(`${apiUrl}/TLS0000/TLS2000/${filePath}`, '_blank');
   }
 
   /** 刪除預購活動 */
@@ -377,7 +377,7 @@ export class TLS26010Service {
         Meta: { Timestamp: "2025-01-20T10:00:00.0000000Z", RequestId: "test-request-id-12345" },
         Status: "0000"
       })
-      : this.http.post<BaseQueryResponse<any>>(`${apiUrl}/deleteTLS26010`, { id });
+      : this.http.post<BaseQueryResponse<any>>(`${apiUrl}/TLS0000/TLS2000/deleteTLS26010`, { id });
 
     api.pipe(
       take(1),
@@ -403,7 +403,7 @@ export class TLS26010Service {
     const id = data.pod_no;
 
     this.http.post<BaseQueryResponse<{ Status: ApprovalStatus; }>>(
-      `${apiUrl}${data.pod_status === ApprovalStatus.未核准 ? '/approvalTLS26010' : '/disapprovalTLS26010'}`,
+      `${apiUrl}/TLS0000/TLS2000${data.pod_status === ApprovalStatus.未核准 ? '/approvalTLS26010' : '/disapprovalTLS26010'}`,
       { id }).pipe(
         take(1),
         tap(() => this.approvalData.set(ApprovalStatus.未核准)),
