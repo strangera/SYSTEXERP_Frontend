@@ -3,7 +3,6 @@ on:
   push:
     branches: [ prod ]
   workflow_dispatch:
-
 jobs:
   build:
     runs-on: ubuntu-latest  # Angular 專案用 ubuntu 比較常見
@@ -26,11 +25,16 @@ jobs:
         find . -name "tsconfig.json" -not -path "./node_modules/*"
     
     - name: Install dependencies
-      run: npm ci
+      run: |
+        echo "=== Checking package files ==="
+        ls -la package*.json
+        echo "=== Attempting npm install ==="
+        npm install --legacy-peer-deps
+        echo "=== Install completed ==="
       continue-on-error: false
     
     - name: Build project
-      run: npm run build -- --skip-type-check
+      run: ng build --configuration production --base-href /TSRDWEBDEV/
       continue-on-error: false
       env:
         NODE_OPTIONS: "--max_old_space_size=4096"  # 增加記憶體限制，避免建置時記憶體不足
@@ -96,8 +100,9 @@ jobs:
           **提交**: ${{ github.sha }}
           **分支**: ${{ github.ref_name }}
           **建置者**: ${{ github.actor }}
+          **Base Href**: /TSRDWEBDEV/
           
-          📦 這個版本包含了完整的建置檔案，可以直接部署到靜態網站伺服器。
+          📦 這個版本包含了完整的建置檔案，已配置 production 環境和正確的 base-href，可以直接部署到靜態網站伺服器。
         files: ./Angular_App.zip
         make_latest: true
       env:
