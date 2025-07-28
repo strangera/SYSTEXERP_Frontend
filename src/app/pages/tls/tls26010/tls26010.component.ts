@@ -129,12 +129,13 @@ export class TLS26010Component extends BasicQueryPageComponent<any> {
     const sys3800 = this.sys3800Signal();
     const sys3900 = this.sys3900Signal();
 
-    return {
-      building_no: sys3800 || '',
-      floor_no: sys3900 || '',
+    const result = {
       sdate: startDate || '',
       edate: endDate || '',
     };
+    sys3800 && (Reflect.set(result, 'building_no', sys3800));
+    sys3900 && (Reflect.set(result, 'floor_no', sys3900));
+    return result;
   });
 
   private queryTLS26010 = computed<TLS26010Query>(() => {
@@ -212,6 +213,7 @@ export class TLS26010Component extends BasicQueryPageComponent<any> {
   onSubmit(frm: FormGroup): void {
     this.handleSubmit(frm, () => {
       frm.valid && this.canQuery() && this.service.loadTLS26010(this.queryTLS26010());
+      this.loading = !1;
     });
   }
 

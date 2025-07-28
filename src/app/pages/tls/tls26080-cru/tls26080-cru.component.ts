@@ -101,6 +101,7 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<ActivityData> im
       case CRUDStatus.Create:
         this.formTitle = 'create-conditions';
         this.crudstatus = CRUDStatus.Create;
+        this.dataForm.patchValue({ pod_no: '自動給號', });
         break;
       // 修改
       case CRUDStatus.Edit:

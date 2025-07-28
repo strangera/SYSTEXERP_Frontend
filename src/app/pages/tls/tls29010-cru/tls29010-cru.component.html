@@ -22,7 +22,7 @@
             </div>
             <div class="grid p-fluid">
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-text label="活動編號" controlName="pod_no" [control]="dataForm.controls.pod_no"
+                    <app-input-text label="活動申請編號" controlName="pod_no" [control]="dataForm.controls.pod_no"
                     [submitted]="submitted"></app-input-text>
                 </div>
                 <div class="col-12 md:col-6 lg:col-4">
@@ -40,10 +40,29 @@
                     <app-input-text label="店部編號" controlName="str_no" [control]="dataForm.controls.str_no" [submitted]="submitted"></app-input-text>
                 </div>
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-text label="活動類型" controlName="pod_type" [control]="dataForm.controls.pod_type" [submitted]="submitted"></app-input-text>
+                    <!-- <app-input-text label="活動類型" controlName="pod_type" [control]="dataForm.controls.pod_type" [submitted]="submitted"></app-input-text> -->
+                    <app-dropdown
+                    label="活動類型"
+                    controlName="pod_type"
+                    [options]="podTypeOptions"
+                    optionLabel="label"
+                    optionValue="value"
+                    [control]="dataForm.controls.pod_type"
+                    [submitted]="submitted"
+                    (changeEvent)="onPodDescChange($event.value)">
+                    </app-dropdown>
                 </div>
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-text label="部門代碼" controlName="org_id" [control]="dataForm.controls.org_id" [submitted]="submitted"></app-input-text>
+                    <app-dropdown
+                    label="部門代碼"
+                    controlName="org_id"
+                    [options]="orgOptions"
+                    optionLabel="Label"
+                    optionValue="No"
+                    [control]="dataForm.controls.org_id"
+                    [submitted]="submitted"
+                    (changeEvent)="onPodDescChange($event.value)">
+                    </app-dropdown>
                 </div>
             </div>
             <div class="grid p-fluid">
@@ -59,9 +78,19 @@
             </div>
             <div class="grid p-fluid">
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-text label="活動狀態" controlName="pod_status" [control]="dataForm.controls.pod_status" [submitted]="submitted"></app-input-text>
+                    <app-dropdown
+                    label="活動狀態"
+                    controlName="pod_status"
+                    [options]="pod_status_Options"
+                    optionLabel="label"
+                    optionValue="value"
+                    [control]="dataForm.controls.pod_status"
+                    [submitted]="submitted"
+                    (changeEvent)="onPodDescChange($event.value)">
+                    </app-dropdown>
                 </div>
             </div>
+            <hr>
             <!-- 核准人員 -->
             <div class="grid p-fluid">
                 <div class="col-12 md:col-6 lg:col-4">
