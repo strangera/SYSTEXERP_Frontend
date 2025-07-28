@@ -53,6 +53,9 @@ export class FIN12020Component extends BasicQueryPageComponent<FIN12020Data> imp
     {
       field: 'GUIPaper', header: '發票類別', visible: true, format: (value: number) => this.invoiceTypeOptions.find(item => Number(item.value) === value)?.label || value
     },
+    {
+      field: 'GUI_Status', header: '發票狀態', visible: true, format: (value: number) => this.invoiceStatusOptions.find(item => item.value === value)?.label || value
+    },
     { field: 'SAL_Type', header: '使用別', visible: true, format: (value: string) => this.usageTypeOptions.find(item => item.value === value)?.label || value },
     { field: 'CRT_Date', header: '建檔日期', visible: true, format: formatDate },
     { field: 'CRT_USR_No', header: '建檔人員', visible: true },

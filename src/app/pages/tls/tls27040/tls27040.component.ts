@@ -1,3 +1,4 @@
+import { DropDownListService } from 'src/app/service/utility/dropDownList.service';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
@@ -11,6 +12,7 @@ import { TableComponent } from '../../../shared/componentkit/table/table.compone
 import { TranslateModule } from '@ngx-translate/core'; // Add this import as requested
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { Column } from '@shared/componentkit/table/table.model';
+import { CheckOptions, CrdTxnFgOptions, POS611XOptions, queryFilterOptions, TxnTypeOptions } from './tls27040.model';
 @Component({
   selector: 'app-tls27040',
   templateUrl: './tls27040.component.html',
@@ -22,23 +24,32 @@ export class TLS27040Component extends BasicQueryPageComponent<any> implements O
     ECR_No: [],  // 收銀機號 POS5006.ECR_No
     TXN_No: [],  // 交易序號 POS5006.TXN_No
     TLT_No: [],  // 專櫃編號
-    NCML_TxnType: [],  // 銷售狀況 "銷售狀況：00=一般銷售 04=退貨銷售"
-    NCML_PayCrdType: [],  // 卡別
-    NCML_TxnAmtStart: [],  // 金額開始
-    NCML_TxnAmtEnd: [],  // 金額結束
-    NCML_TxnDateTimeStart: [],  // 銷售日期與時間開始
-    NCML_TxnDateTimeEnd: [],  // 銷售日期與時間結束
-    NCML_CrdNo: [],  // 卡號
-    NCML_TmID: [],  // EDC號碼
-    NCML_BatCloseDateStart: [],  // 請款日期開始
-    NCML_BatCloseDateEnd: [],  // 請款日期結束
-    NCML_CrdTxnFg: [],  // 交易類別：一般、分期、紅利
-    NCML_Check: [],  // 輸入狀態 0=手刷補登 2=調整補登 3=CardPool欠落
-    NCML_ApprovalCode: [],  // 授權碼
-    NCML_TermNo: [],  // 分期期數 sys1000 T109
+    TxnType: [],  // 銷售狀況 "銷售狀況：00=一般銷售 04=退貨銷售"
+    PayCrdType: [],  // 卡別 POS1006
+    TxnAmtStart: [],  // 金額開始
+    TxnAmtEnd: [],  // 金額結束
+    TxnDateTimeStart: [],  // 銷售日期與時間開始
+    TxnDateTimeEnd: [],  // 銷售日期與時間結束
+    CrdNo: [],  // 卡號
+    TmID: [],  // EDC號碼
+    BatCloseDateStart: [],  // 請款日期開始
+    BatCloseDateEnd: [],  // 請款日期結束
+    CrdTxnFg: [],  // 交易類別：一般、分期、紅利
+    Check: [],  // 輸入狀態 0=手刷補登 2=調整補登 3=CardPool欠落
+    ApprovalCode: [],  // 授權碼
+    TermNo: [],  // 分期期數 sys1000 T109
     POS611X: [],  // 收單銀行
     queryFilter: []  // 查詢篩選
   });
+  totalRecords = 0;
+  TxnTypeOptions = TxnTypeOptions;  // 銷售狀況
+  PayCrdTypeOptions = [];           // 卡別
+  CrdTxnFgOptions = CrdTxnFgOptions;             // 交易類別
+  CheckOptions = CheckOptions;                // 輸入狀態
+  TermNoOptions = [];                // 分期期數
+  POS611XOptions = POS611XOptions;             // 收單銀行
+  queryFilterOptions = queryFilterOptions;             // 查詢篩選
+
   data: any[] = [];
   columns: Column[] = [
     { field: 'cashRegisterCode', header: '收銀機代碼', visible: true },
@@ -64,13 +75,14 @@ export class TLS27040Component extends BasicQueryPageComponent<any> implements O
     { field: 'modifier', header: '修改者', visible: true },
     { field: 'modificationDate', header: '修改日期', visible: true },
   ];
-  totalRecords = 0;
 
   constructor(
+    private readonly dropDownListService: DropDownListService
   ) { super(); }
 
   ngOnInit(): void {
     this.initializePage('TLS27040', 'TLS/TLS27040cru', this.queryForm, (form) => this.onSubmit(form));
+    // this.dropDownListService.getPOS2034Options
   }
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {

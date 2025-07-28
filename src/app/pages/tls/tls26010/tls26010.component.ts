@@ -183,7 +183,7 @@ export class TLS26010Component extends BasicQueryPageComponent<any> {
     this.service.loadSYS3A00();
 
     // 僅供測試
-    this.service.loadTLS26010(this.queryTLS26010());
+    // this.service.loadTLS26010(this.queryTLS26010());
   };
 
   canQuery(): boolean {

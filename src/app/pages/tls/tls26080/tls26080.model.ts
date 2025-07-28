@@ -30,7 +30,8 @@ export interface TLS26080Query {
 
 }
 
-export enum CampainAccountingTypes {
+/** 活動類型 */
+export enum CampaignAccountingTypes {
   '預售' = 1,
   '滿千送百發行' = 2,
   '滿千送百兌回' = 3,
@@ -41,15 +42,15 @@ export enum CampainAccountingTypes {
   '期間開放折扣' = 8,
 }
 
-export const CampainAccountingType = new Map<string, { No: string; Name: string; }>([
-  ['預售', { No: '1', Name: CampainAccountingTypes[1] }],
-  ['滿千送百發行', { No: '2', Name: CampainAccountingTypes[2] }],
-  ['滿千送百兌回', { No: '3', Name: CampainAccountingTypes[3] }],
-  ['會員卡集點銷售', { No: '4', Name: CampainAccountingTypes[4] }],
-  ['會員卡集點點數', { No: '5', Name: CampainAccountingTypes[5] }],
-  ['全館消費滿額集點銷售', { No: '6', Name: CampainAccountingTypes[6] }],
-  ['全館消費滿額集點點數', { No: '7', Name: CampainAccountingTypes[7] }],
-  ['期間開放折扣', { No: '8', Name: CampainAccountingTypes[8] }],
+export const CampaignAccountingType = new Map<string, { No: string; Name: string; }>([
+  ['預售', { No: '1', Name: CampaignAccountingTypes[1] }],
+  ['滿千送百發行', { No: '2', Name: CampaignAccountingTypes[2] }],
+  ['滿千送百兌回', { No: '3', Name: CampaignAccountingTypes[3] }],
+  ['會員卡集點銷售', { No: '4', Name: CampaignAccountingTypes[4] }],
+  ['會員卡集點點數', { No: '5', Name: CampaignAccountingTypes[5] }],
+  ['全館消費滿額集點銷售', { No: '6', Name: CampaignAccountingTypes[6] }],
+  ['全館消費滿額集點點數', { No: '7', Name: CampaignAccountingTypes[7] }],
+  ['期間開放折扣', { No: '8', Name: CampaignAccountingTypes[8] }],
 ]);
 
 export const mockQueryTLS26080: Observable<BaseQueryResponse<TLS26080Data>> = of({
