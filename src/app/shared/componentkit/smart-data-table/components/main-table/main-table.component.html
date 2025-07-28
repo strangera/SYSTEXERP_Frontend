@@ -116,6 +116,7 @@
         [ngStyle]="getActionColumnStyle()"
       >
         <div class="action-buttons">
+          <!-- 🔧 修復編輯按鈕 - 完全複製原版邏輯 -->
           <!-- 編輯按鈕 -->
           <button
             *ngIf="!isRowEditing(rowIndex)"
@@ -125,21 +126,21 @@
             icon="pi pi-pencil"
             pTooltip="編輯"
             tooltipPosition="top"
-            class="p-button-rounded p-button-text action-button edit-button"
+            class="action-button edit-button"
             (click)="onRowEditStart(rowData, rowIndex)"
-            [disabled]="loading"
+            [disabled]="loading || editingRowIndex !== null"
           ></button>
 
-          <!-- 儲存按鈕 -->
+          <!-- 確認/儲存按鈕 -->
           <button
             *ngIf="isRowEditing(rowIndex)"
             pButton
             pRipple
             type="button"
             icon="pi pi-check"
-            pTooltip="儲存"
+            pTooltip="確認"
             tooltipPosition="top"
-            class="p-button-rounded p-button-text p-button-success action-button save-button"
+            class="action-button save-button"
             (click)="onRowEditSave(rowData, rowIndex)"
             [disabled]="loading"
           ></button>
@@ -153,7 +154,7 @@
             icon="pi pi-times"
             pTooltip="取消"
             tooltipPosition="top"
-            class="p-button-rounded p-button-text p-button-danger action-button cancel-button"
+            class="action-button cancel-button"
             (click)="onRowEditCancel(rowData, rowIndex)"
             [disabled]="loading"
           ></button>

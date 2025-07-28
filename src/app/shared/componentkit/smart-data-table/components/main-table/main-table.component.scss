@@ -88,6 +88,9 @@
       text-align: center;
       vertical-align: middle;
       font-size: 1.22rem;     // 🔧 匹配原始字體大小
+      height: auto;            // 🔧 修復：自動高度避免溢出
+      overflow: visible;       // 🔧 修復：確保內容可見
+      white-space: nowrap;     // 🔧 修復：防止文字換行
 
       // 序號欄樣式
       &.sequence-cell {
@@ -119,9 +122,17 @@
       &.editing-cell {
         background-color: #fef3c7;
         border-color: #f59e0b;
+        overflow: visible !important;  // 🔧 修復：確保編輯元件可見
+        white-space: normal;           // 🔧 修復：編輯時允許換行
+        height: auto !important;       // 🔧 修復：編輯時自動高度
 
         app-table-cell {
           background-color: transparent;
+          width: 100%;
+          height: auto;
+          overflow: visible !important;
+          position: relative;
+          z-index: 15;
         }
       }
 
@@ -183,11 +194,16 @@
         &.editing-cell {
           background-color: #fef3c7;
           overflow: visible !important;  // 🔧 確保下拉選單可見
+          height: auto !important;       // 🔧 修復：編輯時自動調整高度
+          white-space: normal !important; // 🔧 修復：編輯時允許內容換行
 
           // 🔧 確保下拉選單容器有正確的層級
           app-table-cell {
             position: relative;
             z-index: 15;
+            width: 100%;
+            height: auto;
+            overflow: visible !important;
           }
         }
       }
@@ -248,9 +264,12 @@
     width: 2rem !important;
     height: 2rem !important;
     border-radius: 0.375rem !important;                    // 🔧 匹配原始方形按鈕
-    border: 1px solid #d1d5db;
+    border: 1px solid rgb(212 212 212) !important;         // 🔧 匹配原始邊框
     background-color: rgba(239, 246, 255) !important;      // 🔧 匹配原始按鈕背景
     transition: all 0.2s ease;
+    display: inline-flex !important;                       // 🔧 確保按鈕可見
+    align-items: center !important;
+    justify-content: center !important;
 
     &:hover:not(:disabled) {
       background-color: rgba(0, 123, 255, 0.2) !important; // 🔧 匹配原始懸停
@@ -259,50 +278,61 @@
     }
 
     &:disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
+      opacity: 0.5 !important;
+      cursor: not-allowed !important;
 
       &:hover {
-        transform: none;
-        box-shadow: none;
+        transform: none !important;
+        box-shadow: none !important;
       }
     }
 
-    // 🔧 匹配原始圖示顏色
-    span.p-button-icon.pi {
+    // 🔧 修復圖示顏色和顯示
+    .p-button-icon,
+    span.p-button-icon,
+    .pi {
       color: #007bff !important;
+      font-size: 0.9rem !important;
+      display: inline-block !important;
+      visibility: visible !important;
     }
 
     // 編輯按鈕
     &.edit-button {
-      color: #3b82f6;
-      border-color: #3b82f6;
+      .p-button-icon,
+      .pi {
+        color: #3b82f6 !important;
+      }
 
       &:hover:not(:disabled) {
-        background-color: #dbeafe;
-        border-color: #2563eb;
+        background-color: #dbeafe !important;
+        border-color: #2563eb !important;
       }
     }
 
     // 儲存按鈕
     &.save-button {
-      color: #10b981;
-      border-color: #10b981;
+      .p-button-icon,
+      .pi {
+        color: #10b981 !important;
+      }
 
       &:hover:not(:disabled) {
-        background-color: #d1fae5;
-        border-color: #059669;
+        background-color: #d1fae5 !important;
+        border-color: #059669 !important;
       }
     }
 
     // 取消按鈕
     &.cancel-button {
-      color: #ef4444;
-      border-color: #ef4444;
+      .p-button-icon,
+      .pi {
+        color: #ef4444 !important;
+      }
 
       &:hover:not(:disabled) {
-        background-color: #fee2e2;
-        border-color: #dc2626;
+        background-color: #fee2e2 !important;
+        border-color: #dc2626 !important;
       }
     }
   }

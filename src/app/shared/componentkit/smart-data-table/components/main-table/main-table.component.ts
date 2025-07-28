@@ -94,7 +94,7 @@ export class MainTableComponent implements OnInit, OnChanges {
   // ==================== 🔧 修復編輯邏輯 - 直接從原版複製 ====================
 
   /**
-   * 開始編輯行 - 完全複製原版邏輯
+   * 開始編輯行 - 🔧 修復邏輯，確保狀態同步
    */
   onRowEditStart(rowData: any, rowIndex: number): void {
     if (this.config.readonly || this.editingRowIndex !== null) {
@@ -107,10 +107,12 @@ export class MainTableComponent implements OnInit, OnChanges {
     // 🔧 直接複製原版的編輯邏輯
     this.clonedItems[rowData[dataKey]] = { ...rowData };
 
-    // 更新狀態
+    // 🔧 修復：確保狀態服務知道編輯狀態
     this.stateService.startRowEdit(rowIndex, rowData, dataKey);
 
     this.rowEditStart.emit({ data: rowData, index: rowIndex });
+    
+    console.log(`✅ 開始編輯行: ${rowIndex}, editingRowIndex: ${this.editingRowIndex}`);
   }
 
   /**

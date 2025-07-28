@@ -207,22 +207,32 @@ export class SmartDataTableComponent implements OnInit, OnDestroy, OnChanges {
 
     const dataKey = this.mergedConfig.dataKey || 'id';
 
-    // 🔧 直接複製原版邏輯
+    // 🔧 修復：確保編輯狀態正確設定
     this.editingRowIndex = event.index;
     this.clonedItems[event.data[dataKey]] = { ...event.data };
 
+    // 🔧 同步狀態到服務
+    this.stateService.startRowEdit(event.index, event.data, dataKey);
+
     this.rowEdit.emit(event.data);
+    
+    console.log(`✅ 主組件開始編輯: ${event.index}, 當前editingRowIndex: ${this.editingRowIndex}`);
   }
 
   onRowEditSave(event: { data: any; index: number }): void {
     const dataKey = this.mergedConfig.dataKey || 'id';
     const oldData = this.clonedItems[event.data[dataKey]];
 
-    // 清理
+    // 🔧 修復：正確清理編輯狀態
     delete this.clonedItems[event.data[dataKey]];
     this.editingRowIndex = null;
 
+    // 🔧 同步狀態到服務
+    this.stateService.saveRowEdit(event.data, dataKey);
+
     this.rowSave.emit({ oldData, newData: event.data });
+    
+    console.log(`✅ 主組件儲存編輯: ${event.index}, editingRowIndex: ${this.editingRowIndex}`);
   }
 
   onRowEditCancel(event: { data: any; index: number }): void {
@@ -234,11 +244,16 @@ export class SmartDataTableComponent implements OnInit, OnDestroy, OnChanges {
       Object.assign(event.data, originalData);
     }
 
-    // 清理
+    // 🔧 修復：正確清理編輯狀態
     delete this.clonedItems[event.data[dataKey]];
     this.editingRowIndex = null;
 
+    // 🔧 同步狀態到服務
+    this.stateService.cancelRowEdit(event.data, dataKey);
+
     this.rowCancel.emit(event.data);
+    
+    console.log(`✅ 主組件取消編輯: ${event.index}, editingRowIndex: ${this.editingRowIndex}`);
   }
 
   onSelectionChange(selectedItems: any[]): void {

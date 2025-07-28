@@ -439,7 +439,11 @@ export class TableCellComponent implements OnInit, OnChanges {
   }
 
   get canEdit(): boolean {
-    return this.column.editable === true && this.isEditing && !this.readonly;
+    // 🔧 修復：嚴格檢查 editable 欄位，只有明確設為 true 的才可編輯
+    if (this.column.editable !== true) {
+      return false;
+    }
+    return this.isEditing && !this.readonly;
   }
 
   get canDisplay(): boolean {

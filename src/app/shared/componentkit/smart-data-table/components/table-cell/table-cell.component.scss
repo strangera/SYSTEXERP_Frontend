@@ -3,7 +3,21 @@
 :host {
   display: block;
   width: 100%;
-  height: 100%;
+  height: auto; // 🔧 修復：改為自動高度避免內容溢出
+  max-height: none; // 🔧 修復：移除高度限制
+  overflow: visible; // 🔧 修復：確保內容可見
+}
+
+// ==================== 容器樣式修復 ====================
+
+.table-cell-container {
+  width: 100%;
+  height: auto; // 🔧 修復：自動高度
+  overflow: visible; // 🔧 修復：確保內容不被裁切
+  position: relative;
+  display: flex;
+  align-items: center;
+  min-height: 2rem; // 🔧 修復：設定最小高度但允許擴展
 }
 
 // ==================== 基礎輸入樣式 ====================

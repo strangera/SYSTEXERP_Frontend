@@ -199,7 +199,7 @@
     }
   }
 
-  // 🎯 匹配原始操作按鈕樣式
+  // 🎯 修復操作按鈕樣式 - 確保編輯按鈕正確顯示
   .action-button,
   .edit-buttons .p-button,
   .detail-edit-buttons .p-button {
@@ -208,6 +208,10 @@
     background-color: rgba(239, 246, 255) !important;  // 🔧 匹配原始按鈕背景
     border-radius: 5px !important;                     // 🔧 匹配原始按鈕圓角
     border: 1px solid rgb(212 212 212) !important;     // 🔧 匹配原始按鈕邊框
+    display: inline-flex !important;                   // 🔧 確保按鈕顯示
+    align-items: center !important;
+    justify-content: center !important;
+    position: relative !important;
 
     &:hover:not(:disabled) {
       background-color: rgba(0, 123, 255, 0.2) !important;  // 🔧 匹配原始懸停
@@ -215,8 +219,32 @@
       box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     }
 
-    span.p-button-icon.pi {
+    &:disabled {
+      opacity: 0.5 !important;
+      cursor: not-allowed !important;
+    }
+
+    // 🔧 修復圖示顯示問題
+    .p-button-icon,
+    span.p-button-icon,
+    .pi {
       color: #007bff !important;  // 🔧 匹配原始圖示顏色
+      font-size: 0.9rem !important;
+      display: inline-block !important;
+      visibility: visible !important;
+    }
+
+    // 🔧 特定按鈕樣式
+    &.edit-button .pi {
+      color: #3b82f6 !important;
+    }
+
+    &.save-button .pi {
+      color: #10b981 !important;
+    }
+
+    &.cancel-button .pi {
+      color: #ef4444 !important;
     }
   }
 
