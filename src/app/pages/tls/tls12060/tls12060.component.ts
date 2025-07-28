@@ -76,7 +76,7 @@ export class TLS12060Component extends BasicQueryPageComponent<Potential_Custome
         queryForm = this.formBuilder.group({
           // 先建立表單，還不確定table內容
           contract_type: [[]],  // 合約種類
-          contract_status: [[]], //  合約狀態
+          contract_status: [[]], //  合約狀態 (可能是TLS14010這支)
           CreatedDateStart: [null],  // 接洽日期_起始日
           CreatedDateEnd: [null],  // 接洽日期_終止日
 
@@ -86,7 +86,7 @@ export class TLS12060Component extends BasicQueryPageComponent<Potential_Custome
 
           area: [[], [Validators.maxLength(100)]],  // 區域
           floor: [[], [Validators.maxLength(100)]],  // 樓層
-          location: [[], [Validators.maxLength(100)]],  // 位置編號
+          location: [[], [Validators.maxLength(100)]],  // 位置編號 (應該是SYS3A00這支)
 
           each_row: [10, [Validators.min(1), Validators.max(100)]], // 每頁顯示行數
           version_start: [0, [Validators.min(0)]], // 版本起始
@@ -109,36 +109,27 @@ export class TLS12060Component extends BasicQueryPageComponent<Potential_Custome
         floor_Option: apiOption[] = []; // 樓層
         location_Option: apiOption[] = []; // 位置編號
         cus_uniform_Option: POS2013[] = []; // 廠商統一編號(pos2013)
-        contact_USR_Option: apiOption[] = [  // 接洽人員代碼/名稱 -- 等候端提供
-          {No: '123',Name:'張三',Label: '123-張三'}
-        ];
+        contact_USR_Option: apiOption[] = [];  // 接洽人員代碼/名稱
         
         data: Potential_Customer[] = [];
         columns: Column[] = [
-          { field: 'contact_USR_No', header: '接洽人員代碼', visible: true },
-          { field: 'contact_USR_Name', header: '接洽人員姓名', visible: true },
-          { field: 'cus_uniform_id', header: '廠商統一編號', visible: true },
-          { field: 'VEN_Name', header: '廠商名稱', visible: true },
-          { field: 'VEN_EngName', header: '廠商英文名稱', visible: true },
-          { field: 'bus_type', header: '大分類代碼', visible: true , format: (value: string) =>
+          { field: 'counter', header: '專櫃', visible: true },
+
+          { field: 'contact_USR', header: '洽談者', visible: true },
+          { field: 'CreatedDate', header: '洽談日', visible: true },
+          { field: 'cus_uniform_id', header: '統編/廠商', visible: true },
+          { field: 'bus_type', header: '大分類', visible: true , format: (value: string) =>
             this.bus_type_Option.find((option) => option.No === value)?.Label || value
           },
-          { field: 'tlt_name', header: '品牌（專櫃名稱）', visible: true },
-          { field: 'tlt_EngName', header: '品牌英文名稱', visible: true },
-          { field: 'VEN_Boss', header: '廠商聯絡人', visible: true },
-          { field: 'VEN_BossTel', header: '廠商聯絡人電話', visible: true },
-          { field: 'VEN_BossTitle', header: '廠商聯絡人頭銜', visible: true },
-          { field: 'VEN_BossFax', header: '廠商聯絡人傳真', visible: true },
-          { field: 'VEN_BossMobile', header: '廠商聯絡人行動電話', visible: true },
-          { field: 'VEN_BossEmail', header: '廠商聯絡人電子郵件', visible: true },
-          { field: 'VEN_Addr', header: '公司通訊地址', visible: true },
-          { field: 'VEN_PersonInCharge', header: '公司負責人', visible: true },
-          // { field: 'business_type', header: '經營方式', visible: true, format: (value: string) =>
-          //   this.business_type_Option.find((option) => option.No === value)?.Label || value
-          // },
-          { field: 'demanded_area', header: '需求面積', visible: true },
-          { field: 'country_of_origin', header: '商品出產地', visible: true },
-          { field: 'remarks', header: '備註', visible: true },
+          { field: 'contract_type', header: '類型', visible: true },
+          
+          { field: 'version', header: '版本', visible: true },
+          { field: 'rent_Number', header: '位置租賃數', visible: true }, // 後端提供目前不確定欄位名稱
+          { field: 'contract_status', header: '進度', visible: true }, //可能是合約狀態，等list內容
+          
+          // { field: 'area', header: '區域', visible: true },
+          // { field: 'floor', header: '樓層', visible: true },
+          // { field: 'each_row', header: '每頁顯示行數', visible: true },
   
           { field: 'CRT_Date', header: '建立日期', visible: true, format: formatDate  },
           { field: 'CRT_USR_No', header: '建立人員代碼', visible: false },
@@ -237,6 +228,15 @@ export class TLS12060Component extends BasicQueryPageComponent<Potential_Custome
         }
     
         loadOptions(){
+          // 查 接待人員
+          this.tls12060Service.queryTLS12010_DropDownList({}).subscribe((response) => {
+            this.contact_USR_Option = response.Data.map((item: any) => ({
+              No: item.contact_USR_No, // 接待人員 代碼
+              Name: item.contact_USR_Name, // 接待人員 名稱
+              Label: item.contact_USR_No + '/' + item.contact_USR_Name, // 組合成顯示用的Label
+            }));
+            console.log('接待人員代號:', this.contact_USR_Option);
+          });
           // 查 大分類(專櫃)
           this.tls12060Service.queryTLTBUSTYPE_DropDownList({}).subscribe((response) => {
             this.bus_type_Option = response.Data.map((item: any) => ({
@@ -247,11 +247,30 @@ export class TLS12060Component extends BasicQueryPageComponent<Potential_Custome
           });
           // 查 樓層
           this.tls12060Service.querySYS3900_DropDownList({}).subscribe((response) => {
-            this.bus_type_Option = response.Data.map((item: any) => ({
-              No: item.No, // 大分類(專櫃) 號
+            this.floor_Option = response.Data.map((item: any) => ({
+              No: item.No, // 樓層 號
+              Name: item.Name, // 樓層 名稱
               Label: item.No + '/' + item.Name, // 組合成顯示用的Label
             }));
-            console.log('大分類代號:', this.bus_type_Option);
+            console.log('大分類代號:', this.floor_Option);
+          });
+          //查 位置編號
+          this.tls12060Service.queryPOS2002_DropDownList({}).subscribe((response) => {
+            this.location_Option = response.Data.map((item: any) => ({
+              No: item.No, // 位置編號
+              Name: item.Name, // 位置 名稱
+              Label: item.No + '/' + item.Name, // 組合成顯示用的Label
+            }));
+            console.log('location_Option:', this.location_Option);
+          });
+          // 查 區域代碼
+          this.tls12060Service.querySYS3A00_DropDownList({}).subscribe((response) => {
+            this.area_Option = response.Data.map((item: any) => ({
+              No: item.No, // 區域代碼
+              Name: item.Name, // 區域 名稱
+              Label: item.No + '/' + item.Name, // 組合成顯示用的Label
+            }));
+            console.log('area_Option:', this.area_Option);
           });
           // 查 統編
           this.tls12060Service.queryPOS2013_DropDownList({"VEN_Flag": '1'}).subscribe((response) => {
