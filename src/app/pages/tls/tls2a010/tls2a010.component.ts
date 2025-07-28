@@ -5,12 +5,13 @@ import { TranslateModule } from '@ngx-translate/core';
 import { ButtonComponent, DropdownComponent, MenubarComponent, TableComponent, CalendarComponent, InputTextRangeComponent } from '@shared/index';
 import { AccordionModule } from 'primeng/accordion';
 import { DropDownListService, IDropdownItem } from 'src/app/service/utility/dropDownList.service';
-import { Column, createPaginationConfig } from 'src/app/shared/componentkit/table/table.model';
+import { Column, ColumnGroup, createPaginationConfig } from 'src/app/shared/componentkit/table/table.model';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { Button } from 'primeng/button';
 import { NgStyle, NgIf } from '@angular/common';
 import { TooltipModule } from 'primeng/tooltip';
 import { DropdownRangeComponent } from '@shared/componentkit/dropdown-range/dropdown-range.component';
+import { creditCardColumns, creditCardGroup, defaultColumns } from './tls2a010.model';
 
 
 @Component({
@@ -69,7 +70,13 @@ export class TLS2A010Component extends BasicQueryPageComponent<any> implements O
     }
   ];
   IsPrint = true;
+  selectedColumns: Column[] = [];     // 顯示哪些資料欄位
+  columnGroup: ColumnGroup[] = [];    // 顯示上層群組欄位（分組標題）
 
+  defaultColumns = defaultColumns;
+
+  creditCardGroup = creditCardGroup;
+  creditCardColumns = creditCardColumns;
 
 
   constructor(
@@ -100,31 +107,12 @@ export class TLS2A010Component extends BasicQueryPageComponent<any> implements O
   }
 
 
-  columns: Column[] = [
-    { header: '收銀機代號', field: 'ECR_No' },
-    { header: '專櫃編號', field: 'TLT_NO' },
-    { header: '專櫃名稱', field: 'tlt_name' },
-    { header: '付款別', field: 'PAY_NO' },
-
-    { header: '系統帳', field: 'BOOK_PayAmt' },
-    { header: '實收帳', field: 'ACT_PayAmt' },
-    { header: '系統/實收帳差異', field: 'OVER_PayAmt' },
-    { header: '修正後金額', field: 'MOD_PayAmt' },
-    {
-      header: '審核狀態',
-      field: 'check_status',
-      format: (v) => v === 'Y' ? '已審核' : v === 'N' ? '未審核' : v
-    },
-    { header: '審核人員', field: 'check_usr_name' },
-    {
-      header: '是否有缺單', field: 'isMissing',
-      format: (v) => v === 'Y' ? '是' : v === 'N' ? '否' : v
-    },
-  ];
 
   ngOnInit(): void {
     this.initializePage('TLS2A010', 'TLS/TLS2A010cru', this.queryForm, (form) => this.onSubmit(form));
     this.loadDropdownOptions();
+    this.selectedColumns = this.defaultColumns;
+    this.columnGroup = [];
 
     this.dropDownListService.querySYS3900_DropDownList().pipe(untilDestroyed(this)).subscribe(res => {
       this.floorOptions = res.Data.map(item => ({ ...item, label: item.Name, value: item.No }));
@@ -142,6 +130,7 @@ export class TLS2A010Component extends BasicQueryPageComponent<any> implements O
           value: x.No,
           Name: x.Name,
           No: x.No,
+          PAY_Type: x.PAY_Type ?? ''
         };
       });
     });
@@ -163,6 +152,11 @@ export class TLS2A010Component extends BasicQueryPageComponent<any> implements O
     this.todayDisplay = `${mm}/${dd}`;
 
 
+  }
+
+  get PAY_NO_NAME(): string {
+    const option = this.paymentToolOptions.find(opt => opt.No === this.PAY_NO);
+    return option?.label ?? this.PAY_NO;
   }
 
   get selectedCount(): number {
@@ -211,7 +205,7 @@ export class TLS2A010Component extends BasicQueryPageComponent<any> implements O
           id: 2,
           TXN_Date: '2025-07-22',
           ECR_No: 'ECR002',
-          PAY_NO: '信用卡',
+          PAY_NO: '現金',
           TLT_NO: 'A02',
           tlt_name: '貓砂盆專賣',
           BOOK_PayAmt: 1200,
@@ -230,8 +224,9 @@ export class TLS2A010Component extends BasicQueryPageComponent<any> implements O
 
       //抓第一筆資料設定
       const first = this.data[0];
-      this.PAY_NO = first?.PAY_NO || '';
+      this.PAY_NO = this.queryForm.value.PAY_NO || '';
       this.TXN_Date = first?.TXN_Date || '';
+      this.onPayNoChange(this.PAY_NO);
 
       // 顯示當天的 mm/dd
       const today = new Date();
@@ -245,5 +240,23 @@ export class TLS2A010Component extends BasicQueryPageComponent<any> implements O
     console.log('Reviewing selected items:', selectedItems);
     // Add your logic for reviewing the selected items here
   }
+  onPayNoChange(payNo: string): void {
+    console.log(payNo);
+    const payType = this.paymentToolOptions.find(opt => opt.No === payNo)?.PAY_Type ?? '';
+    console.log(payType);
+
+    this.PAY_NO = payNo;
+
+    if (payType === '0') {
+      this.selectedColumns = this.creditCardColumns;
+      this.columnGroup = this.creditCardGroup;
+    } else {
+      this.selectedColumns = this.defaultColumns;
+      this.columnGroup = [];
+    }
+
+
+  }
+
 
 }

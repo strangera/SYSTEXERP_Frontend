@@ -67,6 +67,7 @@
               optionValue="value"
               [control]="queryForm.controls.PAY_NO"
               [submitted]="submitted"
+              (changeEvent)="onPayNoChange($event.value)"
             ></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
@@ -99,7 +100,8 @@
   <app-table
     dataKey="id"
     [data]="data"
-    [columns]="columns"
+    [columns]="selectedColumns"
+    [columnGroup]="columnGroup"
     [showCheckBox]="true"
     (selectionChange)="selectedItems = $event"
     [selectedItems]="selectedItems"
@@ -131,7 +133,9 @@
 
         <span>
           審核支付工具：
-          <span class="text-pink-600" *ngIf="PAY_NO">【 {{ PAY_NO }} 】</span>
+          <span class="text-pink-600" *ngIf="PAY_NO">
+            【 {{ PAY_NO_NAME }} 】
+          </span>
         </span>
 
         <span class="ml-3">
