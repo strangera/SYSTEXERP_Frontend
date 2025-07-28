@@ -10,8 +10,8 @@
           <b class="text-red-500 text-2xl">最新完成(可測試使用)</b>
         </p-divider>
         <app-table dataKey="id" [data]="dataGroup" [columns]="columns2" [columnGroup]="columnGroup"
-          (edit)="onEdit($event)" (detail)="onDetail($event)" [showCheckBox]="true"
-          expansionDataKeys="children"></app-table>
+          (edit)="onEdit($event)" (detail)="onDetail($event)" [showCheckBox]="true" expansionDataKeys="children"
+          [groupRowsBy]="'bank'"></app-table>
         <p-divider align="left" type="solid">
           <b class="text-primary">下拉範圍</b>
         </p-divider>
