@@ -966,6 +966,10 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
       if (item._status === 'deleted' && item._isNew) {
         return false;  // 新增後又刪除的不需要提交
       }
+      if (!item.location_no || item.location_no.trim() === '') {
+        console.warn('過濾掉沒有位置編號的項目:', item);
+        return false;
+      }
       return true;
     });
 
