@@ -59,7 +59,7 @@
   </p-panel>
 </div>
 <div class="card">
-  <div *ngIf="!isRead"
+  <div *ngIf="!isFormReadable"
        class="grid p-fluid">
     <div class="col-12 md:col-6 lg:col-4">
       <app-button btnType="create"
@@ -68,7 +68,7 @@
     </div>
   </div>
   <div class="col-12">
-    <app-table [showCheckBox]="!isRead"
+    <app-table [showCheckBox]="!isFormReadable"
                [showEdit]="false"
                [showDetail]="false"
                [showDelete]="false"
@@ -82,7 +82,7 @@
   </div>
 </div>
 <div class="card">
-  <div *ngIf="!isRead"
+  <div *ngIf="!isFormReadable"
        class="grid p-fluid">
     <div class="col-12 md:col-6 lg:col-4">
       <app-button btnType="create"
@@ -91,13 +91,13 @@
     </div>
   </div>
   <div class="col-12">
-    <app-table [showCheckBox]="!isRead"
+    <app-table [showCheckBox]="!isFormReadable"
                [showEdit]="false"
                [showDetail]="false"
                [showDelete]="false"
                [showManage]="false"
                [showReportMode]="false"
-               [showExcel]="true"
+               [showExcel]="isFormEditable"
                (exportExcel)="onExportExcel()"
                (importExcel)="onImportExcel($event)"
                [data]="tltTableFiltered"

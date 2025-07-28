@@ -34,7 +34,7 @@ export interface Column {
 }
 
 export interface ColumnGroup {
-  colspan: number;
+  field: string;
   header: string;
   align?: 'left' | 'center' | 'right';
 }
