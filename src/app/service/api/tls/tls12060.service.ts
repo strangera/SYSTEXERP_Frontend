@@ -37,6 +37,10 @@ export class Tls12060Service {
   //   return this.http.post<any>(`${this.apiUrl}/deleteTLS12010`, body);
   // }
   // --- dropDown ---
+  //查詢 接待人員
+  queryTLS12010_DropDownList(body: any): Observable<any> {
+    return this.http.post<any>(`${environment.ApiUrl}/queryTLS12010_DropDownList`, body);
+  }
 
   // 查詢 大分類(業種)設定檔
   queryTLTBUSTYPE_DropDownList(body: any): Observable<any> {
@@ -51,4 +55,15 @@ export class Tls12060Service {
   querySYS3900_DropDownList(body: any): Observable<any> {
     return this.http.post<any>(`${environment.ApiUrl}/querySYS3900_DropDownList`, body);
   }
+
+  //查詢 位置編號 設定檔(SYS3A00)
+  queryPOS2002_DropDownList(body: any): Observable<any> {
+    return this.http.post<any>(`${environment.ApiUrl}/queryPOS2002_DropDownList`, body);
+  }
+
+  //查詢 區域代碼(SYS3A00)
+  querySYS3A00_DropDownList(body: any): Observable<any> {
+    return this.http.post<any>(`${environment.ApiUrl}/querySYS3A00_DropDownList`, body);
+  }
+
 }
