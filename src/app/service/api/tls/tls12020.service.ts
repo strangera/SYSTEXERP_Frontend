@@ -2,8 +2,28 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
-import { ApiResponse } from '../../system/auth.service';
-import { TLS41010Data } from '../../../pages/tls/tls41010/tls41010.model';
+
 @Injectable({
   providedIn: 'root',
 })
+export class TLS12020Service {
+  private apiUrl = `${environment.ApiUrl}/TLS0000/TLS1000`;
+
+  constructor(private http: HttpClient) {}
+
+  queryTLS12020(data: any): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/queryTLS12020`, data);
+  }
+
+  insertTLS12020(data: any): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/insertTLS12020`, data);
+  }
+
+  updateTLS12020(data: any): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/updateTLS12020`, data);
+  }
+
+  deleteTLS12020(data: any): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/deleteTLS12020`, data);
+  }
+}

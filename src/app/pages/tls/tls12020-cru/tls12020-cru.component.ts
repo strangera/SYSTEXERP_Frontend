@@ -1,19 +1,19 @@
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormBuilder, ReactiveFormsModule, Validators, FormGroup } from '@angular/forms';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
-// import { TLS12020Service } from '../../../service/api/tls/tls12020.service';
+import { TLS12020Service } from '../../../service/api/tls/tls12020.service';
 import { DropDownListService, IDropdownItem } from '../../../service/utility/dropDownList.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { AccordionModule } from 'primeng/accordion';
-import { TranslateModule } from '@ngx-translate/core';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { EditorTextComponent } from '../../../shared/componentkit/editor-text/editor-text.component';
-import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
 import { InputTextareaComponent } from '@shared/componentkit';
+import { ValidationService } from '@shared/service';
+
 
 
 
@@ -30,8 +30,6 @@ import { InputTextareaComponent } from '@shared/componentkit';
     ReactiveFormsModule,
     DropdownComponent,
     InputTextComponent,
-    InputNumberComponent,
-    EditorTextComponent,
     CalendarComponent,
     InputTextareaComponent
   ],
@@ -77,12 +75,15 @@ export class TLS12020CRUComponent extends BasicCruPageComponent<any> implements 
   constructor(
     private fb: FormBuilder,
     private dropDownListService: DropDownListService,
-    // private tls12020Service: TLS12020Service
+    private tls12020Service: TLS12020Service,
+    private validationService: ValidationService,
+    private translate: TranslateService,
   ) {
     super();
   }
   ngOnInit(): void {
     this.initializePage('TLS12020', this.dataForm);
+    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
 
     this.loadDropdownOptions();
     //訪談人員api
@@ -146,10 +147,52 @@ export class TLS12020CRUComponent extends BasicCruPageComponent<any> implements 
     });
   }
 
-  onSubmit() {
-    this.handleSubmit(this.dataForm, () => {
-      console.log('Form submitted successfully');
+  onSubmit(frm: FormGroup): void {
+    this.handleSubmit(frm, () => {
+      const formValue = frm.getRawValue();
+      const body = {
+        ...formValue,
+        ID: 0,
+        ven_uniform: formValue.vendorUID,
+        VEN_Name: formValue.vendorCName,
+        VEN_EngName: formValue.vendorEName,
+        VEN_ContactPerson: formValue.VEN_Boss,
+        contact_USR_No: formValue.contact_USR_Name,
+        tlt_name: formValue.brand,
+        bus_type: formValue.bus_type,
+        VEN_BossTel: formValue.VEN_BossTel,
+        VEN_BossTitle: formValue.VEN_BossTitle,
+        VEN_BossMobile: formValue.VEN_BossMobile,
+        VEN_BossEmail: formValue.VEN_BossEmail,
+        VEN_Addr: formValue.VEN_Addr,
+        contact_Date: formValue.contact_Date,
+        contact_Time: formValue.contact_Time,
+        willing_level: formValue.willing_level,
+        building_no: formValue.building_no,
+        FLOOR_NO: formValue.FLOOR_NO,
+        LOCATION_No: formValue.LOCATION_No,
+        contact_record: formValue.contact_record,
+        contact_remarks: formValue.contact_remarks,
+        contact_USR_Name: formValue.contact_USR_Name,
+      };
+
+      this.tls12020Service.insertTLS12020(body).subscribe({
+        next: (res) => {
+          if (res.Status === '0000') {
+            this.messageService.successBubble(this.translate.instant('新增成功'));
+            this.dataForm.reset();
+          } else {
+            this.messageService.errorBubble(this.translate.instant('新增失敗') + '：' + (res.Message || ''));
+          }
+        },
+        error: (err) => {
+          console.error('API 錯誤', err);
+          this.messageService.errorBubble(this.translate.instant('API 發生錯誤'));
+        }
+      });
     });
   }
+
+
 
 };

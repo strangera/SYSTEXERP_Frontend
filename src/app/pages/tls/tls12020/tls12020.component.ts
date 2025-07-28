@@ -13,7 +13,7 @@ import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdow
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
-// import { TLS12020Service} from '../../../service/api/tls/tls12020.service';
+import { TLS12020Service } from '../../../service/api/tls/tls12020.service';
 import { LocationOptionsService } from '../../../service/api/dropdownservice/location-options.service';
 
 @Component({
@@ -46,7 +46,7 @@ export class TLS12020Component extends BasicQueryPageComponent<any> implements O
     contact_Dateend: [null],
     contact_time: [''],
     contact_USR_Name: ['', [Validators.required]], // 訪談人員（必填）
-    willing_level: [''],
+    willing_level: [null],
     ...createPaginationConfig([{ field: 'ECR_LocNo', order: 1 }]),
   });
 
@@ -75,7 +75,7 @@ export class TLS12020Component extends BasicQueryPageComponent<any> implements O
 
 
   constructor(
-    // private tls12020ervice: TLS12020Service,
+    private tls12020Service: TLS12020Service,
     private locationOptionsService: LocationOptionsService,
     private dropDownListService: DropDownListService
   ) {
@@ -84,6 +84,7 @@ export class TLS12020Component extends BasicQueryPageComponent<any> implements O
 
   ngOnInit(): void {
     this.initializePage('TLS12020', 'TLS/TLS12020cru', this.queryForm, (form) => this.onSubmit(form));
+    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
     this.loadDropdownOptions();
 
     this.dropDownListService.queryTBLUSER_DropDownList().pipe(untilDestroyed(this)).subscribe(res => {
@@ -128,44 +129,36 @@ export class TLS12020Component extends BasicQueryPageComponent<any> implements O
 
   }
 
-  onSubmit(frm: FormGroup) {
-    // this.handleSubmit(frm, () => {
-    //   this.tls12020Service.queryTLS12020(frm.getRawValue())
-    //     .pipe(finalize(() => this.loading = false), untilDestroyed(this))
-    //     .subscribe((res) => {
-    //       this.data = res.Data;
-    //       this.totalRecords = res.TotalCount;
-    //       this.queryStateService.setQueryState(this.ProgNo, frm);
-    //     });
-    // });
+  onSubmit(form: FormGroup): void {
+    this.handleSubmit(form, () => {
+      const params = {
+        request: {
+          ...form.value,
+          willing_level: form.value.willing_level || null,
+          contact_Datestart: form.value.contact_Datestart
+            ? new Date(form.value.contact_Datestart).toISOString()
+            : null,
+          contact_Dateend: form.value.contact_Dateend
+            ? new Date(form.value.contact_Dateend).toISOString()
+            : null,
+        }
+      };
+
+      this.tls12020Service.queryTLS12020(params).subscribe({
+        next: (res) => {
+          this.data = res.Data ?? [];
+          this.totalRecords = res.TotalCount ?? 0;
+          this.queryStateService.setQueryState(this.ProgNo, params);
+          this.loading = false;
+        },
+        error: (err) => {
+          console.error('TLS12020 查詢失敗', err);
+          this.loading = false;
+        }
+      });
+    });
   }
 
-  //   onCreate(data?: any) {
-  //     if (this.canPerformAction('20')) {
-  //       this.navigateWithState(CRUDStatus.Create, data);
-  //     }
-  //   }
-
-  //   onEdit(data: any) {
-  //     if (this.canPerformAction('30')) {
-  //       const newData = { ...data };
 
 
-  //       this.navigateWithState(CRUDStatus.Edit, newData);
-  //     }
-  //   }
-
-  //   onDetail(data: any) {
-  //     if (this.canPerformAction('10')) {
-  //       this.navigateWithState(CRUDStatus.Read, data);
-  //     }
-  //   }
-
-  //   onLazyLoadData(event: any, queryForm: FormGroup) {
-  //     queryForm.patchValue({
-  //       pageSize: event.pageSize,
-  //       pageIndex: event.pageIndex,
-  //       SortBy: event.SortBy
-  //     });
-  //   }
 }

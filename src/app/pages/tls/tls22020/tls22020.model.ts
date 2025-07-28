@@ -1,0 +1,96 @@
+import { Column, ColumnGroup, formatAmount } from "@shared/componentkit/table/table.model";
+export interface TLS22020Data {
+  ECR_No: string;
+  TLT_NO: string;
+  tlt_name: string;
+  check_status?: string;
+  check_usr_name?: string;
+  isMissing?: string;
+  [key: string]: any;
+}
+// 群組的付款別清單
+export const payNoDataList = [
+  { Pay_No: "10", Pay_Name: "現金" },
+  { Pay_No: "07", Pay_Name: "會員折抵" },
+  { Pay_No: "12", Pay_Name: "聯信紅利" },
+  { Pay_No: "14", Pay_Name: "中信紅利" },
+  { Pay_No: "22", Pay_Name: "外來提貨單-高夢" },
+  { Pay_No: "23", Pay_Name: "外來禮券-高夢" },
+  { Pay_No: "24", Pay_Name: "禮券餘代卡" },
+  { Pay_No: "25", Pay_Name: "提貨單餘代卡" },
+  { Pay_No: "30", Pay_Name: "貴賓提貨單(應收帳款)" },
+  { Pay_No: "41", Pay_Name: "聯信連線" },
+  { Pay_No: "42", Pay_Name: "聯信離線" },
+  { Pay_No: "43", Pay_Name: "中信連線" },
+  { Pay_No: "44", Pay_Name: "中信離線" },
+  { Pay_No: "52", Pay_Name: "一卡通" },
+  { Pay_No: "55", Pay_Name: "LINE Pay" },
+  { Pay_No: "56", Pay_Name: "iPASS MONEY" },
+  { Pay_No: "57", Pay_Name: "台灣Pay" },
+  { Pay_No: "58", Pay_Name: "南紡錢包" },
+  { Pay_No: "59", Pay_Name: "即享券" },
+  { Pay_No: "60", Pay_Name: "喜客券" },
+  { Pay_No: "79", Pay_Name: "APP提貨單" },
+  { Pay_No: "77", Pay_Name: "感熱紙抵用券" },
+  { Pay_No: "78", Pay_Name: "APP抵用券" },
+  { Pay_No: "62", Pay_Name: "商品提貨單" },
+  { Pay_No: "20", Pay_Name: "禮券" },
+  { Pay_No: "71", Pay_Name: "商品抵用券" },
+  { Pay_No: "72", Pay_Name: "外來提貨單(抵用券)" },
+  { Pay_No: "73", Pay_Name: "外來禮券(抵用券)" },
+  { Pay_No: "74", Pay_Name: "活動券(自營)" },
+  { Pay_No: "75", Pay_Name: "折價券" },
+  { Pay_No: "76", Pay_Name: "現抵" },
+  { Pay_No: "81", Pay_Name: "中信-停車場" },
+  { Pay_No: "82", Pay_Name: "一卡通-停車場" },
+  { Pay_No: "83", Pay_Name: "LINE Pay-停車場" }
+];
+
+
+// 群組資訊（套用在表格）
+export const creditCardGroup: ColumnGroup[] = payNoDataList.map(item => ({
+  field: item.Pay_No,
+  header: item.Pay_Name
+}));
+
+//固定前置欄位
+const baseColumns: Column[] = [
+  { header: '收銀機代號', field: 'ECR_No' },
+  { header: '專櫃編號', field: 'TLT_NO' },
+  { header: '專櫃名稱', field: 'tlt_name' }
+];
+
+// 每個付款別的「三個子欄位」
+const paymentColumns: Column[] = payNoDataList.flatMap((item) => [
+  { header: '明細', field: `TXN_PayAmt_${item.Pay_No}`, groupField: item.Pay_No, isTotal: true , format: formatAmount,},
+  { header: '帳單', field: `SLE_PayAmt_${item.Pay_No}`, groupField: item.Pay_No, isTotal: true , format: formatAmount,},
+  { header: '差異', field: `Diff_PayAmt_${item.Pay_No}`, groupField: item.Pay_No, isTotal: true, },
+]);
+
+// 固定欄位
+const tailColumns: Column[] = [
+  {
+    header: '明細總金額',
+    field: 'TXN_Total',
+    format: formatAmount,
+    isTotal: true
+  },
+  {
+    header: '帳單總金額',
+    field: 'SLE_Total',
+    format: formatAmount,
+    isTotal: true
+  },
+  {
+    header: '總差額',
+    field: 'Diff_Total',
+    format: formatAmount,
+    isTotal: true
+  },
+];
+
+export const creditCardColumns: Column[] = [
+  ...baseColumns,
+  ...paymentColumns,
+  ...tailColumns
+];
