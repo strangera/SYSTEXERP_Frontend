@@ -40,6 +40,8 @@ import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/
 import { CheckboxModule } from 'primeng/checkbox';
 import { InputTextareaComponent } from '../../../shared/componentkit/input-textarea/input-textarea.component';
 import { NgIf } from '@angular/common';
+import { ButtonModule } from 'primeng/button';
+import { InputTextModule } from 'primeng/inputtext';
 
 @Component({
   selector: 'app-tls13010-cru',
@@ -61,6 +63,8 @@ import { NgIf } from '@angular/common';
     CheckboxModule,
     AutoCompleteComponent,
     InputTextareaComponent,
+    ButtonModule,
+    InputTextModule,
   ],
 
 })
@@ -201,12 +205,14 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
     tlt_openflag: [''],
     cap_saletype1: ['N'],
     cap_saletype2: ['N'],
+    cap_saletype3: ['N'],
+    cap_saletype4: ['N'],
     activity3: [false],
     activity4: [false],
     open_deposit: [''],
     total_amt_unit: [''],
     total_amt_vendor_unit: [''],
-    company_addr: [''],
+    company_register_address: [''],
     // 銀行 AutoComplete
     selectedBankInfo: null
   });
@@ -618,7 +624,6 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
       credit_card: '',
       total_amt_unit: 'M', // 預設為月
       total_amt_vendor_unit: 'M', // 預設為月
-      company_addr: '',
     });
 
     // 🎯 清空位置資料
@@ -681,7 +686,7 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
       contact_tel: queryData['contact_tel'] as string,
       contact_fax: queryData['contact_fax'] as string,
       contact_addr: queryData['contact_addr'] as string,
-      company_addr: queryData['company_addr'] as string,
+      company_register_address: queryData['company_register_address'] as string,
       tlt_remark: queryData['tlt_remark'] as string,
 
       // 其他欄位
@@ -701,6 +706,8 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
       ticket_remarks: queryData['ticket_remarks'] as string,
       cap_saletype1: queryData['cap_saletype1'] as string,
       cap_saletype2: queryData['cap_saletype2'] as string,
+      cap_saletype3: queryData['cap_saletype3'] as string,
+      cap_saletype4: queryData['cap_saletype4'] as string,
       contact_USR_No: queryData['contact_USR_No'] as string,
       contact_USR_Name: queryData['contact_USR_Name'] as string,
       total_amt_unit: queryData['total_amt_unit'] as string,
@@ -1886,5 +1893,65 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
 
       this.messageService.infoBubble('已切換到編輯模式');
     }
+  }
+
+  /**
+ * 🎯 新增：取得公司登記地址
+ */
+  getCompanyAddress(): string {
+    const address = this.dataForm.get('company_register_address')?.value;
+    return address?.trim() || '';
+  }
+
+  /**
+   * 🎯 新增：複製公司登記地址到郵寄地址
+   */
+  copyCompanyAddressToContact(): void {
+    const companyAddress = this.getCompanyAddress();
+
+    if (!companyAddress) {
+      this.messageService.warnBubble('公司登記地址為空，無法複製');
+      return;
+    }
+
+    // 檢查是否為檢視模式
+    if (this.isViewMode) {
+      this.messageService.warnBubble('檢視模式下無法修改資料');
+      return;
+    }
+
+    // // 檢查郵寄地址是否已有值
+    // const currentContactAddr = this.dataForm.get('contact_addr')?.value?.trim();
+    // if (currentContactAddr) {
+    //   if (!confirm('郵寄地址已有內容，確定要覆蓋嗎？')) {
+    //     return;
+    //   }
+    // }
+
+    // 複製地址
+    this.dataForm.patchValue({
+      contact_addr: companyAddress
+    });
+
+    // 標記欄位為已修改（觸發驗證樣式）
+    this.dataForm.get('contact_addr')?.markAsTouched();
+    this.dataForm.get('contact_addr')?.markAsDirty();
+
+    // 自動儲存
+    this.saveToWorkflow();
+
+    this.messageService.successBubble('已複製公司登記地址到郵寄地址');
+
+    console.log('📋 地址複製完成:', {
+      from: companyAddress,
+      to: this.dataForm.get('contact_addr')?.value
+    });
+  }
+
+  /**
+   * 🎯 新增：檢查按鈕是否可用
+   */
+  canCopyAddress(): boolean {
+    return !this.isViewMode && !!this.getCompanyAddress();
   }
 }

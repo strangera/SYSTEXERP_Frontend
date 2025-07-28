@@ -432,14 +432,34 @@
               <app-input-text label="公司傳真號碼(F)" controlName="contact_fax" [control]="dataForm.controls.contact_fax"
                 [submitted]="submitted"></app-input-text>
             </div>
+            <!-- 使用自定義 SCSS 樣式的地址區塊 -->
             <div class="col-12 md:col-6 lg:col-6 flex flex-column gap-3">
-              <app-input-text label="郵寄地址" controlName="contact_addr" [control]="dataForm.controls.contact_addr"
-                [submitted]="submitted"></app-input-text>
+              <!-- 公司登記地址 -->
+              <app-input-text label="公司登記地址" controlName="company_register_address"
+                [control]="dataForm.controls.company_register_address" [submitted]="submitted" [disabled]="true">
+              </app-input-text>
 
-              <app-input-text label="公司登記地址" controlName="company_addr" [control]="dataForm.controls.company_addr"
-                [submitted]="submitted"></app-input-text>
+              <!-- 郵寄地址 -->
+              <div class="field">
+                <label for="contact_addr" class="block text-900 font-medium mb-2">郵寄地址</label>
+                <div class="address-input-container">
+                  <!-- 輸入框 - 完整寬度 -->
+                  <input type="text" pInputText formControlName="contact_addr" class="w-full"
+                    [class.ng-invalid]="hasFieldError('contact_addr')"
+                    [class.ng-dirty]="dataForm.controls.contact_addr.dirty">
+
+                  <!-- 按鈕 - 使用自定義樣式 -->
+                  <button type="button" [disabled]="!canCopyAddress()" (click)="copyCompanyAddressToContact()"
+                    class="copy-address-button">
+                    <i class="pi pi-copy"></i>
+                    同公司登記地址
+                  </button>
+                </div>
+                <small class="p-error block mt-1" *ngIf="hasFieldError('contact_addr')">
+                  {{ getFieldErrorMessage('contact_addr') }}
+                </small>
+              </div>
             </div>
-
             <div class="col-12 md:col-6 lg:col-6"></div>
             <div class="col-12">
               <app-input-textarea label="備註" controlName="tlt_remark" [control]="dataForm.controls.tlt_remark"
