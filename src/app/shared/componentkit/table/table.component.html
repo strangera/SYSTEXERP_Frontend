@@ -139,7 +139,11 @@
       <ng-container *ngFor="let col of columns">
         <td class="text-center font-bold" *ngIf="!col.hidden">
           <ng-container *ngIf="col.isSubTotal">
-            {{ getGroupSubtotal(rowData[groupRowsBy], col.field) }}
+            {{
+            col.format ?
+            col.format(getGroupSubtotal(rowData[groupRowsBy], col.field)) :
+            getGroupSubtotal(rowData[groupRowsBy], col.field)
+            }}
           </ng-container>
         </td>
       </ng-container>
@@ -259,7 +263,7 @@
       <td *ngIf="expansionDataKey && IsPrint"></td>
       <td *ngFor="let col of columns" class="text-center font-bold pr-2">
         <ng-container *ngIf="col.isTotal">
-          {{ getTotal(col.field) }}
+          {{ col.format ? col.format(getTotal(col.field)) : getTotal(col.field)}}
         </ng-container>
       </td>
       <td [hidden]="!IsPrint || !showManage"></td>

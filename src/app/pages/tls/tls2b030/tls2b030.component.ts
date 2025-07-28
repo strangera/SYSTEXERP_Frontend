@@ -254,7 +254,7 @@ export class TLS2B030Component extends BasicQueryPageComponent<any> {
     const month = group.get('TXN_YearMonth')?.value;
 
     const isDateRangeFilled = start instanceof Date && !isNaN(start.getTime()) &&
-                          end instanceof Date && !isNaN(end.getTime());
+      end instanceof Date && !isNaN(end.getTime());
     const isMonthFilled = !!month;
 
     if (!isDateRangeFilled && !isMonthFilled) {
@@ -268,6 +268,7 @@ export class TLS2B030Component extends BasicQueryPageComponent<any> {
     return null;
   }
 
+  // const textFields = ['ECR_No', 'tlt_no', 'tlt_name'];
   columns: any[] = [
     { field: 'ECR_No', header: '收銀機號', visible: true },
     { field: 'tlt_no', header: '專櫃編號', visible: true },
@@ -283,6 +284,7 @@ export class TLS2B030Component extends BasicQueryPageComponent<any> {
       visible: true,
       style: 'text-right',
       format: this.moneyFormat,
+      isTotal: true,
     },
     {
       field: 'Pay_Dif_41',
@@ -290,6 +292,7 @@ export class TLS2B030Component extends BasicQueryPageComponent<any> {
       visible: true,
       style: 'text-right',
       format: this.moneyFormat,
+      isTotal: true,
     },
     {
       field: 'Pay_Dif_42',
@@ -297,6 +300,7 @@ export class TLS2B030Component extends BasicQueryPageComponent<any> {
       visible: true,
       style: 'text-right',
       format: this.moneyFormat,
+      isTotal: true,
     },
     {
       field: 'Pay_Dif_12',
@@ -304,6 +308,7 @@ export class TLS2B030Component extends BasicQueryPageComponent<any> {
       visible: true,
       style: 'text-right',
       format: this.moneyFormat,
+      isTotal: true,
     },
     {
       field: 'Pay_Dif_81',
@@ -311,6 +316,7 @@ export class TLS2B030Component extends BasicQueryPageComponent<any> {
       visible: true,
       style: 'text-right',
       format: this.moneyFormat,
+      isTotal: true,
     },
     {
       field: 'Pay_Dif_43',
@@ -318,6 +324,7 @@ export class TLS2B030Component extends BasicQueryPageComponent<any> {
       visible: true,
       style: 'text-right',
       format: this.moneyFormat,
+      isTotal: true,
     },
     {
       field: 'Pay_Dif_44',
@@ -325,6 +332,7 @@ export class TLS2B030Component extends BasicQueryPageComponent<any> {
       visible: true,
       style: 'text-right',
       format: this.moneyFormat,
+      isTotal: true,
     },
     {
       field: 'Pay_Dif_14',
@@ -332,6 +340,7 @@ export class TLS2B030Component extends BasicQueryPageComponent<any> {
       visible: true,
       style: 'text-right',
       format: this.moneyFormat,
+      isTotal: true,
     },
     {
       field: 'Pay_Dif_82',
@@ -339,6 +348,7 @@ export class TLS2B030Component extends BasicQueryPageComponent<any> {
       visible: true,
       style: 'text-right',
       format: this.moneyFormat,
+      isTotal: true,
     },
     {
       field: 'Pay_Dif_52',
@@ -346,6 +356,7 @@ export class TLS2B030Component extends BasicQueryPageComponent<any> {
       visible: true,
       style: 'text-right',
       format: this.moneyFormat,
+      isTotal: true,
     },
     {
       field: 'Pay_Dif_20',
@@ -353,6 +364,7 @@ export class TLS2B030Component extends BasicQueryPageComponent<any> {
       visible: true,
       style: 'text-right',
       format: this.moneyFormat,
+      isTotal: true,
     },
     {
       field: 'Pay_Dif_62',
@@ -360,6 +372,7 @@ export class TLS2B030Component extends BasicQueryPageComponent<any> {
       visible: true,
       style: 'text-right',
       format: this.moneyFormat,
+      isTotal: true,
     },
     {
       field: 'Pay_Dif_77',
@@ -367,6 +380,7 @@ export class TLS2B030Component extends BasicQueryPageComponent<any> {
       visible: true,
       style: 'text-right',
       format: this.moneyFormat,
+      isTotal: true,
     },
     {
       field: 'Pay_Dif_71',
@@ -374,6 +388,7 @@ export class TLS2B030Component extends BasicQueryPageComponent<any> {
       visible: true,
       style: 'text-right',
       format: this.moneyFormat,
+      isTotal: true,
     },
     {
       field: 'Pay_Dif_30',
@@ -381,6 +396,7 @@ export class TLS2B030Component extends BasicQueryPageComponent<any> {
       visible: true,
       style: 'text-right',
       format: this.moneyFormat,
+      isTotal: true,
     },
     {
       field: 'Pay_Dif_73',
@@ -388,10 +404,12 @@ export class TLS2B030Component extends BasicQueryPageComponent<any> {
       visible: true,
       style: 'text-right',
       format: this.moneyFormat,
+      isTotal: true,
     },
     {
       field: 'Pay_Dif_72',
       header: '外來提貨單(抵用券)',
+      isTotal: true,
       visible: true,
       style: 'text-right',
       format: this.moneyFormat,
@@ -402,6 +420,7 @@ export class TLS2B030Component extends BasicQueryPageComponent<any> {
       visible: true,
       style: 'text-right',
       format: this.moneyFormat,
+      isTotal: true,
     },
     {
       field: 'Pay_Dif_75',
@@ -409,6 +428,7 @@ export class TLS2B030Component extends BasicQueryPageComponent<any> {
       visible: true,
       style: 'text-right',
       format: this.moneyFormat,
+      isTotal: true,
     },
     {
       field: 'Pay_Dif_76',
@@ -416,6 +436,7 @@ export class TLS2B030Component extends BasicQueryPageComponent<any> {
       visible: true,
       style: 'text-right',
       format: this.moneyFormat,
+      isTotal: true,
     },
     {
       field: 'Pay_Dif_24',
@@ -423,6 +444,7 @@ export class TLS2B030Component extends BasicQueryPageComponent<any> {
       visible: true,
       style: 'text-right',
       format: this.moneyFormat,
+      isTotal: true,
     },
     {
       field: 'Pay_Dif_25',
@@ -430,6 +452,7 @@ export class TLS2B030Component extends BasicQueryPageComponent<any> {
       visible: true,
       style: 'text-right',
       format: this.moneyFormat,
+      isTotal: true,
     },
     {
       field: 'Pay_Dif_07',
@@ -437,6 +460,7 @@ export class TLS2B030Component extends BasicQueryPageComponent<any> {
       visible: true,
       style: 'text-right',
       format: this.moneyFormat,
+      isTotal: true,
     },
     {
       field: 'Pay_Dif_83',
@@ -444,6 +468,7 @@ export class TLS2B030Component extends BasicQueryPageComponent<any> {
       visible: true,
       style: 'text-right',
       format: this.moneyFormat,
+      isTotal: true,
     },
     {
       field: 'Pay_Dif_55',
@@ -451,6 +476,7 @@ export class TLS2B030Component extends BasicQueryPageComponent<any> {
       visible: true,
       style: 'text-right',
       format: this.moneyFormat,
+      isTotal: true,
     },
     {
       field: 'Pay_Dif_78',
@@ -458,6 +484,7 @@ export class TLS2B030Component extends BasicQueryPageComponent<any> {
       visible: true,
       style: 'text-right',
       format: this.moneyFormat,
+      isTotal: true,
     },
     {
       field: 'Pay_Dif_79',
@@ -465,6 +492,7 @@ export class TLS2B030Component extends BasicQueryPageComponent<any> {
       visible: true,
       style: 'text-right',
       format: this.moneyFormat,
+      isTotal: true,
     },
     {
       field: 'Pay_Dif_22',
@@ -472,6 +500,7 @@ export class TLS2B030Component extends BasicQueryPageComponent<any> {
       visible: true,
       style: 'text-right',
       format: this.moneyFormat,
+      isTotal: true,
     },
     {
       field: 'Pay_Dif_23',
@@ -479,6 +508,7 @@ export class TLS2B030Component extends BasicQueryPageComponent<any> {
       visible: true,
       style: 'text-right',
       format: this.moneyFormat,
+      isTotal: true,
     },
     {
       field: 'Pay_Dif_53',
@@ -486,6 +516,7 @@ export class TLS2B030Component extends BasicQueryPageComponent<any> {
       visible: true,
       style: 'text-right',
       format: this.moneyFormat,
+      isTotal: true,
     },
     {
       field: 'Pay_Dif_56',
@@ -493,6 +524,7 @@ export class TLS2B030Component extends BasicQueryPageComponent<any> {
       visible: true,
       style: 'text-right',
       format: this.moneyFormat,
+      isTotal: true,
     },
     {
       field: 'Pay_Dif_57',
@@ -500,6 +532,7 @@ export class TLS2B030Component extends BasicQueryPageComponent<any> {
       visible: true,
       style: 'text-right',
       format: this.moneyFormat,
+      isTotal: true,
     },
     {
       field: 'Pay_Dif_58',
@@ -507,6 +540,7 @@ export class TLS2B030Component extends BasicQueryPageComponent<any> {
       visible: true,
       style: 'text-right',
       format: this.moneyFormat,
+      isTotal: true,
     },
     {
       field: 'Pay_Dif_59',
@@ -514,6 +548,7 @@ export class TLS2B030Component extends BasicQueryPageComponent<any> {
       visible: true,
       style: 'text-right',
       format: this.moneyFormat,
+      isTotal: true,
     },
     {
       field: 'Pay_Dif_60',
@@ -521,6 +556,7 @@ export class TLS2B030Component extends BasicQueryPageComponent<any> {
       visible: true,
       style: 'text-right',
       format: this.moneyFormat,
+      isTotal: true,
     },
     {
       field: 'PPay_Dif_sum',
@@ -528,6 +564,7 @@ export class TLS2B030Component extends BasicQueryPageComponent<any> {
       visible: true,
       style: 'text-right',
       format: this.moneyFormat,
+      isTotal: true,
     },
   ];
 }

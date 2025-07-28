@@ -13,7 +13,7 @@ type DisplayMode = 'Report' | 'SummaryReport';
   templateUrl: './tls23030-cru.component.html',
   styleUrl: './tls23030-cru.component.scss',
   standalone: true,
-  imports: [MenubarComponent, ReportTableGroupComponent,TableComponent],
+  imports: [MenubarComponent, ReportTableGroupComponent, TableComponent],
 })
 export class TLS23030CRUComponent extends BasicCruPageComponent<any> {
   data: any[] = [];
@@ -41,29 +41,30 @@ export class TLS23030CRUComponent extends BasicCruPageComponent<any> {
   }
   paymentSummary: any[] = [];
 
-private buildPaymentSummary(): void {
-  const map = new Map<string, number>();
+  private buildPaymentSummary(): void {
+    const map = new Map<string, number>();
 
-  for (const item of this.data) {
-    const key = item['PAY_NAME'] ?? '未分類';
-    const amt = parseFloat(item['TXN_PayAmt']) || 0;
-    map.set(key, (map.get(key) ?? 0) + amt);
+    for (const item of this.data) {
+      const key = item['PAY_NAME'] ?? '未分類';
+      const amt = parseFloat(item['TXN_PayAmt']) || 0;
+      map.set(key, (map.get(key) ?? 0) + amt);
+    }
+
+    this.paymentSummary = Array.from(map.entries()).map(([PAY_NAME, TXN_PayAmt]) => ({
+      PAY_NAME,
+      TXN_PayAmt,
+    }));
   }
-
-  this.paymentSummary = Array.from(map.entries()).map(([PAY_NAME, TXN_PayAmt]) => ({
-    PAY_NAME,
-    TXN_PayAmt,
-  }));
-}
-paymentSummaryColumns = [
-  { header: '付款別', field: 'PAY_NAME', style: 'text-left' },
-  {
-    header: '金額',
-    field: 'TXN_PayAmt',
-    style: 'text-right',
-    format: (val: number) => val?.toLocaleString() || '0',
-  },
-];
+  paymentSummaryColumns = [
+    { header: '付款別', field: 'PAY_NAME', style: 'text-left' },
+    {
+      header: '金額',
+      field: 'TXN_PayAmt',
+      style: 'text-right',
+      format: (val: number) => val?.toLocaleString() || '0',
+      isTotal: true,
+    },
+  ];
 
   async ngOnInit(): Promise<void> {
     this.initializePage('TLS23030', this.dataForm);
@@ -81,31 +82,31 @@ paymentSummaryColumns = [
       this.messageService.warnBubble('⚠️ 無資料可顯示，請重新查詢。');
     }
 
-    
-      if (state?.data) {
-    this.data = state.data;
-    this.dateStart = state.queryFormValue?.TXN_DateStart || '';
-    this.dateEnd = state.queryFormValue?.TXN_DateEnd || '';
-    this.printedAt = new Date().toLocaleString('zh-TW');
-    this.displayMode = state.queryFormValue?.DisplayMode || 'Report';
 
-    // ⬇️ 加入付款別統計
-    const map = new Map<string, number>();
-    for (const row of this.data) {
-      const key = row['PAY_NAME'] ?? '未分類';
-      const val = parseFloat(row['TXN_PayAmt']) || 0;
-      map.set(key, (map.get(key) || 0) + val);
+    if (state?.data) {
+      this.data = state.data;
+      this.dateStart = state.queryFormValue?.TXN_DateStart || '';
+      this.dateEnd = state.queryFormValue?.TXN_DateEnd || '';
+      this.printedAt = new Date().toLocaleString('zh-TW');
+      this.displayMode = state.queryFormValue?.DisplayMode || 'Report';
+
+      // ⬇️ 加入付款別統計
+      const map = new Map<string, number>();
+      for (const row of this.data) {
+        const key = row['PAY_NAME'] ?? '未分類';
+        const val = parseFloat(row['TXN_PayAmt']) || 0;
+        map.set(key, (map.get(key) || 0) + val);
+      }
+
+      this.paymentSummary = Array.from(map.entries()).map(([PAY_NAME, TXN_PayAmt]) => ({
+        PAY_NAME,
+        TXN_PayAmt,
+      }));
+    } else {
+      this.messageService.warnBubble('⚠️ 無資料可顯示，請重新查詢。');
     }
 
-    this.paymentSummary = Array.from(map.entries()).map(([PAY_NAME, TXN_PayAmt]) => ({
-      PAY_NAME,
-      TXN_PayAmt,
-    }));
-  } else {
-    this.messageService.warnBubble('⚠️ 無資料可顯示，請重新查詢。');
-  }
-
-  this.initializePage('TLS23030', this.dataForm);
+    this.initializePage('TLS23030', this.dataForm);
   }
 
   get columns() {
@@ -273,13 +274,13 @@ paymentSummaryColumns = [
       xlsx.writeFile(wb, `銷售報表_${new Date().toISOString()}.xlsx`);
     });
   }
-get extraPDFTables() {
-  return [
-    {
-      title: '付款別小計',
-      columns: this.paymentSummaryColumns,
-      data: this.paymentSummary,
-    },
-  ];
-}
+  get extraPDFTables() {
+    return [
+      {
+        title: '付款別小計',
+        columns: this.paymentSummaryColumns,
+        data: this.paymentSummary,
+      },
+    ];
+  }
 }

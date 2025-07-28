@@ -75,11 +75,12 @@ export class TableComponent extends BasicPrintDataComponent implements OnInit, O
   @Input() disabled = false;                                                    // 是否禁用 table
   // 欄位群組
   @Input() columnGroup?: ColumnGroup[];                                         // table 群組欄位
-  // 資料群組
+  // 資料小計
   @Input() groupRowsBy = '';                                                    // table 群組資料
   groupedDataCache = new Map();                                                 // 用於緩存已分組的數據
   @Input() showSubTotal = false;                                                // 是否顯示群組小計
-  @Input() showTotal = true;                                                    // 是否顯示總計
+  // 資料總計
+  @Input() showTotal = false;                                                    // 是否顯示總計
   // select 選擇Row相關
   @Input() showCheckBox = false;                                                // 是否顯示 checkbox
   @Input() selectionMode: 'multiple' | 'single' | null | undefined = 'multiple';// table 勾選 Mode (預設多選)
@@ -159,8 +160,6 @@ export class TableComponent extends BasicPrintDataComponent implements OnInit, O
   @Input() showDelete = true;                    // 是否顯示刪除按鈕
   @Input() deleteIcon = 'pi pi-trash';          // 刪除按鈕圖示
   // 權限
-  @Input() showSubtotal = false; // 是否顯示小計
-  @Input() subtotalFields: string[] = []; // 要計算小計的欄位名稱
   private ngUnsubscribe = new Subject<void>();
   public funInfo: FunsrightInfo | undefined;
 
@@ -357,19 +356,6 @@ export class TableComponent extends BasicPrintDataComponent implements OnInit, O
   // 權限
   canPerformAction(action: string): boolean {
     return this.funInfo?.PrivilegeBehavior?.some(behavior => behavior.function_code === action) || false;
-  }
-  get subtotals(): Record<string, number> {
-    const result: Record<string, number> = {};
-    if (!this.data || this.data.length === 0) return result;
-
-    this.subtotalFields.forEach(field => {
-      result[field] = this.data.reduce((sum, row) => {
-        const val = parseFloat(row[field]) || 0;
-        return sum + val;
-      }, 0);
-    });
-
-    return result;
   }
   sanitizeHtml(html: string): SafeHtml {
     return this.sanitizer.bypassSecurityTrustHtml(html);

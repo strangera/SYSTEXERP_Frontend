@@ -9,145 +9,70 @@
   </div>
 
   <p-accordion>
-    <p-accordionTab
-      header="{{ 'query-conditions' | translate }}"
-      [selected]="true"
-      class="line-height-3 m-0"
-      [headerStyleClass]="'query-accordionTab'"
-    >
-      <form
-        [formGroup]="queryForm"
-        id="queryForm"
-        (ngSubmit)="onSubmit(queryForm)"
-      >
+    <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'">
+      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar-range
-              calendarType="dateRange"
-              label="銷售日期-日報表*"
-              [startControl]="queryForm.controls.TXN_Date_Start"
-              [endControl]="queryForm.controls.TXN_Date_End"
-              [submitted]="submitted"
-              
-            ></app-calendar-range>
+            <app-calendar-range calendarType="dateRange" label="銷售日期-日報表*"
+              [startControl]="queryForm.controls.TXN_Date_Start" [endControl]="queryForm.controls.TXN_Date_End"
+              [submitted]="submitted"></app-calendar-range>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
- <app-calendar
-  label="銷售年月-月報表"
-  controlName="TXN_YearMonth"               
-  [calendarType]="'dateMonthOne'"      
-  [control]="queryForm.controls.TXN_YearMonth"
-  [submitted]="submitted"
-  [isRequired]="true"                 
-></app-calendar>
+            <app-calendar label="銷售年月-月報表" controlName="TXN_YearMonth" [calendarType]="'dateMonthOne'"
+              [control]="queryForm.controls.TXN_YearMonth" [submitted]="submitted" [isRequired]="true"></app-calendar>
           </div>
         </div>
         <hr />
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-number-range
-              [useGrouping]="false"
-              label="收銀機號"
-              [startControl]="queryForm.controls.cahserStart"
-              [endControl]="queryForm.controls.cahserEnd"
-              [submitted]="submitted"
-            ></app-input-number-range>
+            <app-input-number-range [useGrouping]="false" label="收銀機號" [startControl]="queryForm.controls.cahserStart"
+              [endControl]="queryForm.controls.cahserEnd" [submitted]="submitted"></app-input-number-range>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-number-range
-              [useGrouping]="false"
-              label="專櫃編號"
-              [startControl]="queryForm.controls.counterStart"
-              [endControl]="queryForm.controls.counterEnd"
-              [submitted]="submitted"
-            ></app-input-number-range>
+            <app-input-number-range [useGrouping]="false" label="專櫃編號" [startControl]="queryForm.controls.counterStart"
+              [endControl]="queryForm.controls.counterEnd" [submitted]="submitted"></app-input-number-range>
           </div>
         </div>
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select
-              label="收銀類別"
-              controlName="cahserType"
-              [options]="cahserTypeOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.cahserType"
-              [submitted]="submitted"
-            ></app-multi-select>
+            <app-multi-select label="收銀類別" controlName="cahserType" [options]="cahserTypeOptions" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.cahserType" [submitted]="submitted"></app-multi-select>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="館別"
-              [options]="BUILDING_NO_Options"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.tlt_building"
-              [submitted]="submitted"
-            ></app-dropdown>
+            <app-dropdown label="館別" [options]="BUILDING_NO_Options" optionLabel="label" optionValue="value"
+              [control]="queryForm.controls.tlt_building" [submitted]="submitted"></app-dropdown>
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select
-              label="樓層"
-              [options]="floorOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.tlt_floor"
-              [submitted]="submitted"
-            ></app-multi-select>
+            <app-multi-select label="樓層" [options]="floorOptions" optionLabel="label" optionValue="value"
+              [control]="queryForm.controls.tlt_floor" [submitted]="submitted"></app-multi-select>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select
-              label="區域"
-              controlName="area_no"
-              [options]="regionOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.area_no"
-              [submitted]="submitted"
-            ></app-multi-select>
+            <app-multi-select label="區域" controlName="area_no" [options]="regionOptions" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.area_no" [submitted]="submitted"></app-multi-select>
           </div>
         </div>
         <hr />
         <div class="grid p-fluid">
           <div class="col-12 md:col-4 lg:col-4">
-<p-checkbox
-  label="僅顯示溢欠"
-  [formControl]="queryForm.controls.onlyShowOverflow"
-  binary="true"
-></p-checkbox>
+            <p-checkbox label="僅顯示溢欠" [formControl]="queryForm.controls.onlyShowOverflow" binary="true"></p-checkbox>
           </div>
         </div>
 
-      <div
-        class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
-      >
-        <app-button btnType="clear" (click)="onClearForm()"></app-button>
-        <app-button btnType="query" [loading]="loading"></app-button>
-      </div>
-         
+        <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+          <app-button btnType="clear" (click)="onClearForm()"></app-button>
+          <app-button btnType="query" [loading]="loading"></app-button>
+        </div>
+
       </form>
     </p-accordionTab>
   </p-accordion>
 </div>
 
 <div class="card">
-  <app-table
-    tableKey="TLS2B010"
-    [data]="data"
-    [columns]="columns"
-    dataKey="Rep_YYYYMM"
-    [multiSortMeta]="[{ field: 'Rep_YYYYMM', order: 1 }]"
-    [totalRecords]="totalRecords"
-    [lazy]="true"
-    [loading]="loading"
-    (edit)="onEdit($event)"
-    (detail)="onDetail($event)"
-    [showManage]="false"
-    [showDelete]="false"
-    [showCheckBox]="false"
-      [showSubtotal]="true"
-  [subtotalFields]="subtotalFields"
-    (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"
-  ></app-table>
+  <app-table tableKey="TLS2B010" [data]="data" [columns]="columns" dataKey="Rep_YYYYMM"
+    [multiSortMeta]="[{ field: 'Rep_YYYYMM', order: 1 }]" [totalRecords]="totalRecords" [lazy]="true"
+    [loading]="loading" (edit)="onEdit($event)" (detail)="onDetail($event)" [showManage]="false" [showDelete]="false"
+    [showCheckBox]="false" (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"></app-table>
 </div>

@@ -4,7 +4,7 @@ import { debounceTime, Subject, switchMap } from 'rxjs';
 import { LocationData, LocationForm, LocationService } from './location.service';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { SystemTypeService } from '../../../service/basic/system-type.service';
-import { Column } from '../../../shared/componentkit/table/table.model';
+import { Column, formatAmount } from '../../../shared/componentkit/table/table.model';
 import { FieldsConfig, DropdownTableComponent } from '../../../shared/componentkit/dropdown-table/dropdown-table.component';
 import { ExpandableEditTableComponent } from '../../../shared/componentkit/expandable-edit-table/expandable-edit-table.component';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
@@ -184,10 +184,10 @@ export class InputTableComponent extends BasicQueryPageComponent<any> implements
     { field: 'transactionId', header: '交易序號' },
     { field: 'originalCounter', header: '原專櫃', groupField: '222' },
     { field: 'updatedCounter', header: '修正後專櫃', groupField: '222' },
-    { field: 'quantity', header: '數量', isSubTotal: true, isTotal: true },
+    { field: 'quantity', header: '數量', isSubTotal: true, isTotal: true, format: formatAmount },
     { field: 'price', header: '單價' },
-    { field: 'costPrice', header: '進價', isSubTotal: true, isTotal: true },
-    { field: 'salesAmount', header: '銷售金額', isSubTotal: true, isTotal: true }
+    { field: 'costPrice', header: '進價', isSubTotal: true, isTotal: true, format: formatAmount },
+    { field: 'salesAmount', header: '銷售金額', isSubTotal: true, isTotal: true, format: formatAmount }
   ];
 
   columnGroup = [
