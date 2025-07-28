@@ -33,6 +33,7 @@ export class CalendarRangeComponent extends BasicKitComponent implements OnInit 
   @Input() startMaxDate: Date | undefined | null = null;
   @Input() endMinDate: Date | undefined | null = null;
   @Input() maxDate: Date | undefined | null = null;
+  
   // 元件類型對應
   private readonly calendarConfig = {
     timeRange: { timeOnly: true, showTime: true, dateFormat: undefined, view: 'date', placeholder: '請選擇時間' },
