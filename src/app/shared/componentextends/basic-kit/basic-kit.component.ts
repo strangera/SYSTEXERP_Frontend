@@ -65,6 +65,9 @@ export class BasicKitComponent {
   }
 
   setPlaceholder(control: FormControl, index = 0): void {
+    if (this.placeholder && this.placeholder2) {
+      return;
+    }
     const placeholderParts: string[] = [];
 
     if (control.hasValidator(Validators.required)) {

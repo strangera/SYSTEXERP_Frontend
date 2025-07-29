@@ -162,12 +162,7 @@ export class AuthService {
     return this.http.post<any>(`${this.apiUrl}/User/GetUserDashboard`, {}).pipe(
       map((response: any) => {
         sessionStorage.setItem('FunRightsInfo', JSON.stringify(response.Data.funright_info));
-        const funRightsInfo = [
-          { id: "", prog_No: "dashboard", prog_id: "", prog_name: "佈告欄", prog_up: "", module_no: "", sub_module_no: "", prog_ispage: "Y", prog_stopflag: "N", prog_sort: "" },
-          { id: "", prog_No: "900001", prog_id: "", prog_name: "範例", prog_up: "", module_no: "", sub_module_no: "", prog_ispage: "Y", prog_stopflag: "N", prog_sort: "" },
-          ...response.Data.funright_info
-        ];
-        this._menuUpdated.next(funRightsInfo);
+        this._menuUpdated.next(response.Data.funright_info);
         return response;
       }),
       catchError((error) => {

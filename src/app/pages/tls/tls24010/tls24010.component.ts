@@ -2,8 +2,8 @@ import { AddButton } from './../../../shared/componentkit/table/table.model';
 import { Component, OnInit, ViewChild } from '@angular/core';
 import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { Column, createPaginationConfig, formatDate } from '../../../shared/componentkit/table/table.model';
-import { DropDownListService } from '../../../service/utility/dropDownList.service';
+import { Column, createPaginationConfig } from '../../../shared/componentkit/table/table.model';
+import { DropDownListService, IDropdownItem } from '../../../service/utility/dropDownList.service';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TLS24010Data, Tls24010Service } from '../../../service/api/tls/tls24010.service';
 import { finalize } from 'rxjs';
@@ -18,6 +18,7 @@ import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdow
 import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { TranslateModule } from '@ngx-translate/core';
+import { columns, FIX_TYPE, TXN_GUIPaperOptions, txnStatusOptions } from './tls24010.model';
 
 // 交易補登作業
 @Component({
@@ -44,7 +45,7 @@ export class TLS24010Component extends BasicQueryPageComponent<TLS24010Data> imp
     TXN_GUIPaper: ['E', [Validators.required]],/*補登類別 → TXN_GUIPaper */
     TXN_Date: [new Date(), [Validators.required]],    /*銷售日期 → POS5006.TXN_Date */
     ECR_No: ['', [Validators.required]], /*收銀機號 → ECR_No */
-    TLT_No: ['008974', [Validators.required]], /*櫃編 → TLT_No */
+    TLT_No: ['000164', [Validators.required]], /*櫃編 → TLT_No */
     TLT_Name: [''], /*櫃名 → TLT_Name */
     store_way: [''], /*櫃位類型 → store_way */
     talent_id: [0], /*專櫃代號 → talent_id */
@@ -53,27 +54,13 @@ export class TLS24010Component extends BasicQueryPageComponent<TLS24010Data> imp
   });
   totalRecords = 0;
   today = new Date(); // 獲取當前日期
-  TXN_GUIPaperOptions: { label: string, value: string }[] = [
-    { label: '補原機台', value: 'E' },
-    { label: '手開二聯式發票', value: '2' }
-  ];
-  TXN_ModeOptions: { label: string, value: string }[] = [
-    { label: '收銀', value: 'R' },
-    { label: '補輸入', value: 'E' },
-    { label: '訓練', value: 'T' },
-    { label: '事後登錄', value: 'P' },
-  ];
-  ECR_NoOptions: { No: string, Name: string, label: string }[] = [];
-  TLT_NoOptions: { No: string, Name: string, label: string, store_way?: string, talent_id?: number }[] = [];
+  TXN_GUIPaperOptions = TXN_GUIPaperOptions
+  txnStatusOptions = txnStatusOptions
+  ECR_NoOptions: IDropdownItem[] = [];
+  TLT_NoOptions: IDropdownItem[] = [];
   data: TLS24010Data[] = [];
-  columns: Column[] = [
-    { field: 'TXN_Date', header: '銷售日期', visible: true, format: formatDate },
-    { field: 'ECR_No', header: '收銀機號', visible: true },
-    { field: 'TXN_No', header: '交易序號', visible: true },
-    { field: 'TLT_No', header: '專櫃編號', visible: true },
-    { field: 'TLT_Name', header: '專櫃名稱', visible: true },
-    { field: 'TXN_Mode', header: '交易型態', visible: true, format: (value: string) => this.TXN_ModeOptions.find(opt => opt.value === value)?.label || value },
-  ];
+  selectedRowData?: TLS24010Data;
+  columns: Column[] = columns
   addButton: AddButton[] = [
     { label: '功能', icon: 'pi pi-ellipsis-h', action: (rowdata, event) => this.openModal(rowdata, event) }
   ]
@@ -118,15 +105,16 @@ export class TLS24010Component extends BasicQueryPageComponent<TLS24010Data> imp
   }
   @ViewChild('menu') menu?: Menu;
   items: MenuItem[] = [
-    { label: '專櫃編號修正', icon: 'pi pi-id-card', disabled: false },
-    { label: '折扣別修正', icon: 'pi pi-percentage', disabled: false },
-    { label: '抽成類別修正', icon: 'pi pi-tags', disabled: false },
-    { label: '付款別修正', icon: 'pi pi-credit-card', disabled: false },
-    { label: '發票修正', icon: 'pi pi-receipt', disabled: false },
-    { label: '交易資料作廢', icon: 'pi pi-trash', disabled: false },
-    { label: '預售交易修正', icon: 'pi pi-shopping-cart', disabled: false },
+    { label: '專櫃編號修正', icon: 'pi pi-id-card', disabled: false, command: () => this.onEditFix(this.selectedRowData!, FIX_TYPE.專櫃編號修正) },
+    { label: '折扣別修正', icon: 'pi pi-percentage', disabled: false, command: () => this.onEditFix(this.selectedRowData!, FIX_TYPE.折扣別修正) },
+    { label: '抽成類別修正', icon: 'pi pi-tags', disabled: false, command: () => this.onEditFix(this.selectedRowData!, FIX_TYPE.抽成類別修正) },
+    { label: '付款別修正', icon: 'pi pi-credit-card', disabled: false, command: () => this.onEditFix(this.selectedRowData!, FIX_TYPE.付款別修正) },
+    { label: '發票修正', icon: 'pi pi-receipt', disabled: false, command: () => this.onEditFix(this.selectedRowData!, FIX_TYPE.發票修正) },
+    { label: '交易資料作廢', icon: 'pi pi-trash', disabled: false, command: () => this.onEditFix(this.selectedRowData!, FIX_TYPE.交易資料作廢) },
+    { label: '預售交易修正', icon: 'pi pi-shopping-cart', disabled: false, command: () => this.onEditFix(this.selectedRowData!, FIX_TYPE.預售交易修正) },
   ];
   openModal(rowdata: TLS24010Data, event?: Event): void {
+    this.selectedRowData = rowdata;
     if (this.menu && event) {
       this.menu.toggle(event);
     }
@@ -150,5 +138,8 @@ export class TLS24010Component extends BasicQueryPageComponent<TLS24010Data> imp
     this.dropDownList.queryTLTTALENT_ByContractDate_DropDownList(event.toISOString().split('T')[0]).pipe(untilDestroyed(this)).subscribe(options => {
       this.TLT_NoOptions = options.Data.map(item => ({ ...item, label: `${item.No} - ${item.Name}` }));
     });
+  }
+  onEditFix(rowData: TLS24010Data, type: string): void {
+    this.onEdit({ ...rowData, type });
   }
 }

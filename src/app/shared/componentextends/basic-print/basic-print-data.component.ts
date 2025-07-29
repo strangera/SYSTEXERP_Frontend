@@ -49,7 +49,7 @@ export class BasicPrintDataComponent {
         ServiceName: apiUrl ? `${apiUrl}` : `query${ProgNo}`,
         Conditions: queryState?.value || []
       },
-      report_title: REPORT_TITLES[`query${ProgNo}`] || 'Report',
+      report_title: REPORT_TITLES[`query${ProgNo}`] || funInfo?.prog_name,
       columns: pdfColumns,
       config: {
         ...event,
@@ -108,7 +108,7 @@ export class BasicPrintDataComponent {
         ServiceName: apiUrl ? `${apiUrl}` : `query${ProgNo}`,
         Conditions: queryState?.value
       },
-      report_title: REPORT_TITLES[`query${ProgNo}`] || 'Report',
+      report_title: REPORT_TITLES[`query${ProgNo}`] || funInfo?.prog_name,
       columns: excelColumns,
       config: event,
       file_name: `${userInfo?.user_No}_${funInfo?.prog_id}_${formattedToday}`,

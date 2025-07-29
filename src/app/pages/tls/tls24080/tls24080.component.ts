@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { ReportTypeService } from '../../../service/basic/report-type.service'; // 報表型態 service
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { Column, ColumnGroup } from '../../../shared/componentkit/table/table.model';
+import { Column } from '../../../shared/componentkit/table/table.model';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { AccordionModule } from 'primeng/accordion';
 import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
@@ -30,8 +30,8 @@ import { TranslateModule } from '@ngx-translate/core';
 })
 export class TLS24080Component extends BasicQueryPageComponent<any> implements OnInit {
   queryForm = this.formBuilder.group({
-    saleDateStart: [, [Validators.required]], // 銷售日期起
-    saleDateEnd: [, [Validators.required]],   // 銷售日期迄
+    TXN_DateStart: [new Date(), [Validators.required]], // 銷售日期起
+    TXN_DateEnd: [new Date(), [Validators.required]],   // 銷售日期迄
     correctionDateStart: [], // 修正日期起
     correctionDateEnd: [],   // 修正日期迄
     cashierCode: [],  // 收銀機號

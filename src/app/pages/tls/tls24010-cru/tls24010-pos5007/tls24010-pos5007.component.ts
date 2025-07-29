@@ -1,5 +1,5 @@
 import { DecimalPipe, NgIf } from '@angular/common';
-import { Component, Input, OnInit } from '@angular/core';
+import { Component, Input, OnChanges, OnInit, SimpleChanges } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { DividerModule } from 'primeng/divider';
@@ -29,7 +29,7 @@ import { NotificationService } from '@shared/component/notification-message/noti
   templateUrl: './tls24010-pos5007.component.html',
   styleUrls: ['./tls24010-pos5007.component.scss']
 })
-export class Tls24010Pos5007Component implements OnInit {
+export class Tls24010Pos5007Component implements OnInit, OnChanges {
   @Input() TXN_GUIPaper?: string // 補登類別 補原機台='E' 手開二聯式發票='2'
   @Input() TLT_No?: string//專櫃編號
   @Input() TLT_Name?: string//專櫃名稱
@@ -57,7 +57,11 @@ export class Tls24010Pos5007Component implements OnInit {
     if (this.TLT_No) {
       this.dropDownListService.queryPOS2004_DropDownList(this.TLT_No).pipe(untilDestroyed(this)).subscribe((data) => {
         if (data.Data.length > 0) {
-          this.POS2004Options = data.Data.map((item) => ({ ...item, label: `${item.PLU_MagNo} - ${item.PLU_Name}` }));
+          this.POS2004Options = data.Data.map((item) => ({
+            ...item,
+            label: `${item.PLU_MagNo} - ${item.PLU_Name}`
+
+          }));
         } else {
           this.messageService.errorBubble('此專櫃無銷售商品', '無法新增');
         }
@@ -75,6 +79,16 @@ export class Tls24010Pos5007Component implements OnInit {
     }
   }
 
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['data'] && changes['data'].currentValue.length > 0 && !this.isFormCreateable) {
+      this.POS5007Data = [...this.data.map((item, index) => ({
+        ...item,
+        id: index + 1,
+        TXN_Amt: (item.TXN_Qty || 0) * (item.PLU_SalePrc || 0),
+      }))];
+    }
+  }
+
   insertRow(): void {
     this.POS5007Data.push({
       id: this.index + 1,
@@ -86,7 +100,7 @@ export class Tls24010Pos5007Component implements OnInit {
       TXN_Amt: 0,
       TXN_Disc: 0,
       TXN_SaleAmt: 0,
-      TLT_ID: undefined,
+      tlt_id: undefined,
       PLU_TaxType: undefined,
       TXN_DiscCode: undefined,
     });
@@ -106,7 +120,7 @@ export class Tls24010Pos5007Component implements OnInit {
     event.TXN_SaleAmt = event.TXN_Amt + (event.TXN_Disc || 0);
   }
   onChangeTLT_ID(rowData: POS5007Data) {
-    const item = this.tlt_idOptions.find((item) => item.tlt_id === rowData.TLT_ID);
+    const item = this.tlt_idOptions.find((item) => item.tlt_id === rowData.tlt_id);
     rowData.PLU_TaxType = item?.cag_taxtype;
     rowData.TXN_DiscCode = item?.cag_barcode;
     rowData.TXN_DiscCode_Name = item?.cag_barcode_name;

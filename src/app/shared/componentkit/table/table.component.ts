@@ -272,16 +272,13 @@ export class TableComponent extends BasicPrintDataComponent implements OnInit, O
     this.selectionChange.emit(this.selectedItems);
   }
   // 行編輯保存
-  onRowEditSave(rowData: any, rowIndex: number, htmlRowRef?: HTMLElement) {
+  onRowEditSave(rowData: any, ri: number, htmlTableRowElement: HTMLTableRowElement) {
     if (!validateRowData(rowData, this.columns, this.data, this.messageService, this.dataKey)) return; // 如果驗證不通過，返回
     const oldData = this.clonedProducts[rowData[this.dataKey]]; // 儲存原始數據
     delete this.clonedProducts[rowData[this.dataKey]]; // 刪除原始數據
     this.rowEditing = false; // 關閉編輯模式
-    this.dt.saveRowEdit(rowData, htmlRowRef as HTMLTableRowElement);
- // ✅ 修正後
- // 手動保存編輯狀態
-    this.rowEditSave.emit({ oldData, newData: rowData, ri: rowIndex, data: this.data });
-// 發射事件
+    this.dt.saveRowEdit(rowData, htmlTableRowElement ?? null); // 手動保存編輯狀態
+    this.rowEditSave.emit({ oldData, newData: rowData, ri, data: this.data }); // 發射事件
     this.dataChange.emit(this.data);
   }
   // 行編輯取消

@@ -200,7 +200,7 @@ export class TLS24010CRUComponent extends BasicCruPageComponent<TLS24010Data | u
               PLU_SalePrc: item.PLU_SalePrc,
               TXN_Disc: item.TXN_Disc,
               TXN_SaleAmt: item.TXN_SaleAmt,
-              tlt_id: item.TLT_ID,
+              tlt_id: item.tlt_id,
               PLU_TaxType: item.PLU_TaxType,
               TXN_DiscCode: item.TXN_DiscCode
             };

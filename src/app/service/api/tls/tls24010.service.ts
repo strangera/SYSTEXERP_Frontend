@@ -30,6 +30,7 @@ export interface TLS24010Data {
   store_way?: string; // 櫃位類型
   talent_id?: number; // 專櫃合約編號
   TXN_GUIPaper: string; // 補登類別
+  type?: string; // 修正類型
 }
 
 export interface POS5007Data {
@@ -42,7 +43,7 @@ export interface POS5007Data {
   TXN_Amt?: number; // 單價小計金額
   TXN_Disc?: number; // 單價折扣讓金額
   TXN_SaleAmt?: number; // 單價銷售金額
-  TLT_ID?: string; // 類別
+  tlt_id?: string; // 類別
   PLU_TaxType?: string; // 稅別
   TXN_DiscCode?: string; // 折扣別
   TXN_DiscCode_Name?: string; // 折扣名稱
