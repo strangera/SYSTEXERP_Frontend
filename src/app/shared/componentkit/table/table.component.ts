@@ -266,13 +266,16 @@ export class TableComponent extends BasicPrintDataComponent implements OnInit, O
     this.selectionChange.emit(this.selectedItems);
   }
   // 行編輯保存
-  onRowEditSave(rowData: any, ri: number, htmlTableRowElement: HTMLTableRowElement) {
+  onRowEditSave(rowData: any, rowIndex: number, htmlRowRef?: HTMLElement) {
     if (!validateRowData(rowData, this.columns, this.data, this.messageService, this.dataKey)) return; // 如果驗證不通過，返回
     const oldData = this.clonedProducts[rowData[this.dataKey]]; // 儲存原始數據
     delete this.clonedProducts[rowData[this.dataKey]]; // 刪除原始數據
     this.rowEditing = false; // 關閉編輯模式
-    this.dt.saveRowEdit(rowData, htmlTableRowElement ?? null); // 手動保存編輯狀態
-    this.rowEditSave.emit({ oldData, newData: rowData, ri, data: this.data }); // 發射事件
+    this.dt.saveRowEdit(rowData, htmlRowRef as HTMLTableRowElement);
+ // ✅ 修正後
+ // 手動保存編輯狀態
+    this.rowEditSave.emit({ oldData, newData: rowData, ri: rowIndex, data: this.data });
+// 發射事件
     this.dataChange.emit(this.data);
   }
   // 行編輯取消
@@ -404,4 +407,19 @@ export class TableComponent extends BasicPrintDataComponent implements OnInit, O
     const align = this.columnGroup?.find(g => g.field === groupField)?.align;
     return align ? 'text-' + align : 'text-center';
   }
+  getHeaderRowColumns(columns: Column[], rowNumber: number): Column[] {
+  return columns.filter(col => (col.headerRow ?? 1) === rowNumber && col.visible !== false && col.hidden !== true);
+}
+
+getMaxHeaderRow(columns: Column[]): number {
+  return Math.max(...columns.map(col => col.headerRow ?? 1));
+}
+getOptionLabel(col: Column, value: any): string {
+  const options = this.getOptions?.(undefined, col) ?? col.options ?? [];
+  const optionLabel = col.optionLabel ?? 'label';
+  const optionValue = col.optionValue ?? 'value';
+  const found = options.find((opt: any) => opt[optionValue] === value);
+  return found ? found[optionLabel] : '';
+}
+
 }

@@ -67,6 +67,7 @@ import { CurrencyPipe } from '@angular/common'; // 若後續有使用 pipe 顯�
 })
 export class TLS2B010Component extends BasicQueryPageComponent<any> {
   ECRNoOptions: any[] = []; // 收銀機號下拉選單
+   CounterOptions: any[] = []; // 專櫃選項
   data: any[] = [];
   closeDate: string = '查詢中...';
   ECR_TypeOptions = [
@@ -78,7 +79,7 @@ export class TLS2B010Component extends BasicQueryPageComponent<any> {
   CashShowupByOptions: any[] = [];
   selectedItems: any[] = [];
   totalRecords = 0;
-  CounterOptions: any[] = []; // 專櫃選項
+ 
   BUILDING_NO_Options: any[] = [];
   floorOptions: any[] = [];
   reimbursementOptions: any[] = [

@@ -98,24 +98,25 @@
 </div>
 
 <div class="card">
-  <app-table
-    tableKey="TLS2B010"
-    [data]="data"
-    [columns]="columns"
-    dataKey="Rep_YYYYMM"
-    [multiSortMeta]="[{ field: 'Rep_YYYYMM', order: 1 }]"
-    [totalRecords]="totalRecords"
-    [lazy]="true"
-    [loading]="loading"
-    (edit)="onEdit($event)"
-    (detail)="onDetail($event)"
-    [showManage]="false"
-    [showDelete]="false"
-    [showCheckBox]="false"
-    [showSubtotal]="true"
-    [subtotalFields]="subtotalFields"
-    (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"
-  ></app-table>
+<app-table
+  tableKey="TLS2B020"
+  [data]="data"
+  [columns]="columns"
+  dataKey="id"
+  [multiSortMeta]="[{ field: 'cashier', order: 1 }]"
+  [totalRecords]="totalRecords"
+  [lazy]="true"
+  [loading]="loading"
+  (edit)="onEdit($event)"
+  (detail)="onDetail($event)"
+  [showManage]="false"
+  [showDelete]="false"
+  [showCheckBox]="false"
+  [showSubtotal]="true"
+  [subtotalFields]="subtotalFields"
+  (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"
+></app-table>
+
 </div>
 <div class="flex justify-content-end gap-6 text-lg font-bold mt-3 pr-3">
 <div class="flex justify-content-end gap-6 text-lg font-bold mt-3 pr-3">

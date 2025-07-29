@@ -109,79 +109,72 @@ queryForm = this.formBuilder.group({
     this.underpaidAmount = underpaid;
   }
   ngOnInit(): void {
-    this.initializePage(
-      'TLS2B020',
-      '/TLS2000/TLS2B020CRU',
-      this.queryForm,
-      (form) => this.onSubmit(form),
-    );
+  this.initializePage(
+    'TLS2B020',
+    '/TLS2000/TLS2B020CRU',
+    this.queryForm,
+    (form) => this.onSubmit(form),
+  );
 
-    this.cashierDistinctionService.getSystemTypes().subscribe((res) => {
-      this.cashierDistinctionOptions = res;
-    });
+  this.cashierDistinctionService.getSystemTypes().subscribe((res) => {
+    this.cashierDistinctionOptions = res;
+  });
 
-    this.overflowStatusService.getSystemTypes().subscribe((res) => {
-      this.overflowStatusOptions = res;
-    });
-    this.cashierService.getCashierOptions().subscribe((res) => {
-      this.cashierOptions =
-        res?.map((x: any) => ({
-          label: x.label, // 給 table 用
-          formLabel: `${x.value} - ${x.label}`, // 給下拉選單用
-          value: x.value,
-        })) || [];
-    });
-    this.floorService
-      .getFloors()
-      .subscribe((data) => (this.floorOptions = data));
-    this.tls11010Service
-      .getBuildingOptions()
-      .subscribe((res) => (this.BUILDING_NO_Options = res));
-    const today = new Date();
-    const year = today.getFullYear();
-    const month = (today.getMonth() + 1).toString().padStart(2, '0');
-    const currentMonthStr = `${year}${month}`; // e.g., "202507"
+  this.overflowStatusService.getSystemTypes().subscribe((res) => {
+    this.overflowStatusOptions = res;
+  });
 
-    this.buildColumnsByMonth(currentMonthStr);
-    this.queryForm.get('overflowStatus')?.valueChanges.subscribe(() => {
-      this.calculateAmounts();
-    });
+  this.cashierService.getCashierOptions().subscribe((res) => {
+    this.cashierOptions =
+      res?.map((x: any) => ({
+        label: x.label,
+        formLabel: `${x.value} - ${x.label}`,
+        value: x.value,
+      })) || [];
+  });
+
+  this.floorService.getFloors().subscribe((data) => {
+    this.floorOptions = data;
+  });
+
+  this.tls11010Service.getBuildingOptions().subscribe((res) => {
+    this.BUILDING_NO_Options = res;
+  });
+
+  // ✅ 初始化固定雙列欄位
+ this.columns = [
+  { field: 'building', header: '館別', visible: true },
+  { field: 'floor', header: '樓層', visible: true },
+  { field: 'cashier', header: '收銀員', visible: true },
+  ...Array.from({ length: 31 }, (_, i) => ({
+    field: `day${i + 1}`,
+    header: `${i + 1}`,
+    visible: true,
+    style: 'text-right',
+    format: this.moneyFormat
+  })),
+  {
+    field: 'total',
+    header: '合計',
+    visible: true,
+    style: 'text-right',
+    format: this.moneyFormat
   }
-  buildColumnsByMonth(monthStr: string): void {
-    if (!monthStr || monthStr.length !== 6) return;
+];
 
-    const year = +monthStr.substring(0, 4);
-    const month = +monthStr.substring(4, 6);
-    const daysInMonth = new Date(year, month, 0).getDate();
 
-    const staticColumns = [
-      { field: 'building', header: '館別', visible: true },
-      { field: 'floor', header: '樓層', visible: true },
-      { field: 'cashier', header: '收銀員', visible: true },
-    ];
+  this.subtotalFields = [
+    ...Array.from({ length: 31 }, (_, i) => `day${i + 1}`),
+    'total'
+  ];
 
-    const dayColumns = Array.from({ length: daysInMonth }, (_, i) => ({
-      field: `day${i + 1}`,
-      header: `${i + 1}`,
-      visible: true,
-      style: 'text-right',
-      format: this.moneyFormat,
-    }));
+  // ✅ 重新計算總金額（當 overflowStatus 改變）
+  this.queryForm.get('overflowStatus')?.valueChanges.subscribe(() => {
+    this.calculateAmounts();
+  });
+}
 
-    const totalColumn = {
-      field: 'total',
-      header: '合計',
-      visible: true,
-      style: 'text-right',
-      format: this.moneyFormat,
-    };
-
-    this.columns = [...staticColumns, ...dayColumns, totalColumn];
-    this.subtotalFields = [
-      ...dayColumns.map((col) => col.field),
-      totalColumn.field,
-    ];
-  }
+ 
 
 onSubmit(form: FormGroup): void {
   this.submitted = true;
@@ -198,7 +191,7 @@ onSubmit(form: FormGroup): void {
     }
   });
 
-  // ⬇️ 依 TXN_Date 建立欄位
+  // ✅ 保留 TXN_Date → yyyymm，給查詢 payload 使用（不再產生欄位）
   if (payload.TXN_Date) {
     const rawValue = payload.TXN_Date;
     const yyyymm =
@@ -207,8 +200,36 @@ onSubmit(form: FormGroup): void {
         : `${rawValue.getFullYear()}${(rawValue.getMonth() + 1)
             .toString()
             .padStart(2, '0')}`;
-    this.buildColumnsByMonth(yyyymm);
+
+    payload.TXN_YYYYMM = yyyymm; // ⬅️ 自訂一個欄位，後端如果吃不到 TXN_Date 可以改用這個
   }
+
+  this.loading = true;
+  this.messageService.blockUi();
+
+  forkJoin({
+    reportData: this.tls2b020Service.queryTLS2B020(payload),
+    closeDateRes: this.tls2b020Service.queryCloseDate(payload),
+  }).subscribe({
+    next: ({ reportData, closeDateRes }) => {
+      this.data = reportData?.Data ?? [];
+      this.totalRecords = reportData?.TotalCount ?? this.data.length;
+
+      this.queryStateService.setQueryState(this.ProgNo, payload);
+      this.closeDate = closeDateRes?.Data ?? '-';
+
+      this.messageService.successBubble('查詢成功');
+    },
+    error: () => {
+      this.messageService.errorBubble('查詢失敗，請稍後再試');
+      this.loading = false;
+    },
+    complete: () => {
+      this.loading = false;
+      this.messageService.unblockUi();
+    },
+  });
+
 
   this.loading = true;
   this.messageService.blockUi();

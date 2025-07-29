@@ -24,6 +24,8 @@ import { RegionService } from '../../../service/basic/region-code.service';
 import { FloorService } from '../../../service/basic/floor.service';
 import { ValidationService } from '../../../shared/service/validation.service';
 import { Tls11010Service } from '../../../service/api/tls/tls11010.service';
+import { ECRNoService } from '../../../service/basic/ECRNo.service';
+import { CounterNameService } from '../../../service/basic/counter-name.service';
 
 @Component({
   selector: 'app-tls2b030',
@@ -37,7 +39,7 @@ import { Tls11010Service } from '../../../service/api/tls/tls11010.service';
     ReactiveFormsModule,
     CalendarRangeComponent,
     CalendarComponent,
-    InputNumberRangeComponent,
+    // InputNumberRangeComponent,
     MultiSelectComponent,
     DropdownComponent,
     CheckboxModule,
@@ -47,34 +49,18 @@ import { Tls11010Service } from '../../../service/api/tls/tls11010.service';
   ],
 })
 export class TLS2B030Component extends BasicQueryPageComponent<any> {
+
   queryForm = this.formBuilder.group({
     TXN_YearMonth: [],
     TXN_Date_Start: [],
     TXN_Date_End: [],
-    cahserStart: [
-      ,
-      [Validators.max(999999), this.validationService.numberValidator],
-    ],
-    cahserEnd: [
-      ,
-      [Validators.max(999999), this.validationService.numberValidator],
-    ],
-    counterStart: [
-      ,
-      [Validators.max(999999), this.validationService.numberValidator],
-    ],
-    counterEnd: [
-      ,
-      [Validators.max(999999), this.validationService.numberValidator],
-    ],
-    regionCode: [[]],
-    cahserType: [[]],
-
+    ECR_No_List: [[]],
+    TLT_No_List: [[]],
+    ECR_Type: [],
     onlyShowOverflow: [],
     tlt_building: [],
-    tlt_floor: [],
-    area_no: [],
-    usagecount: [0, [Validators.required]],
+    tlt_floor: [[]],
+    area_no: [[]],
     ...createPaginationConfig([{ field: 'TXN_YearMonth', order: 1 }]),
   });
 
@@ -90,6 +76,8 @@ export class TLS2B030Component extends BasicQueryPageComponent<any> {
   // 下拉選項
   cahserTypeOptions: any[] = [];
   areaCodeOptions: any[] = [];
+  ECRNoOptions: any[] = []; // 收銀機號下拉選單
+   CounterOptions: any[] = []; // 專櫃選項
 
   constructor(
     private tls2b030Service: TLS2B030Service,
@@ -97,7 +85,9 @@ export class TLS2B030Component extends BasicQueryPageComponent<any> {
     private floorService: FloorService,
     private regionService: RegionService,
     private tls11010Service: Tls11010Service,
-    private validationService: ValidationService,
+   
+        private ECRNoService: ECRNoService,
+        private counterNameService: CounterNameService,
   ) {
     super();
   }
@@ -115,35 +105,36 @@ export class TLS2B030Component extends BasicQueryPageComponent<any> {
         TXN_YearMonth: [],
         TXN_Date_Start: [],
         TXN_Date_End: [],
-        cahserStart: [
-          null,
-          [Validators.max(999999), this.validationService.numberValidator],
-        ],
-        cahserEnd: [
-          null,
-          [Validators.max(999999), this.validationService.numberValidator],
-        ],
-        counterStart: [
-          null,
-          [Validators.max(999999), this.validationService.numberValidator],
-        ],
-        counterEnd: [
-          null,
-          [Validators.max(999999), this.validationService.numberValidator],
-        ],
-        regionCode: [[]],
-        cahserType: [[]],
-        onlyShowOverflow: [],
+        ECR_No_List: [[]],
+        TLT_No_List: [[]],
+        ECR_Type: [],
+        OnlyShowOverAmount: [],
         tlt_building: [],
-        tlt_floor: [],
-        area_no: [],
-        usagecount: [0, [Validators.required]],
+        tlt_floor: [[]],
+        area_no: [[]],
         ...createPaginationConfig([{ field: 'TXN_YearMonth', order: 1 }]),
       },
       {
         validators: this.atLeastOneDateValidator.bind(this),
       },
     );
+
+     this.ECRNoService.getECRNo().subscribe((res) => {
+      this.ECRNoOptions =
+        res?.map((x: any) => ({
+          label: x.label, // 給 table 用
+          formLabel: `${x.value} - ${x.label}`, // 給下拉選單用
+          value: x.value,
+        })) || [];
+    });
+    this.counterNameService.getCounters().subscribe((res) => {
+      this.CounterOptions =
+        res?.map((x: any) => ({
+          label: x.label, // 給 table 用
+          formLabel: `${x.value} - ${x.label}`, // 給下拉選單用
+          value: x.value,
+        })) || [];
+    });
     this.queryForm.get('TXN_YearMonth')?.valueChanges.subscribe((val) => {
       const startControl = this.queryForm.get('TXN_Date_Start');
       const endControl = this.queryForm.get('TXN_Date_End');
@@ -200,41 +191,57 @@ export class TLS2B030Component extends BasicQueryPageComponent<any> {
       .map((col) => col.field);
   }
 
-  onSubmit(form: FormGroup): void {
-    console.log('✅ 觸發 onSubmit', form.value);
-    if (form.invalid) {
-      console.warn('❌ 表單驗證失敗:', form.errors, form.value);
-      this.messageService.errorBubble('日期必要欄位');
-      return;
-    }
-    this.handleSubmit(form, () => {
-      const payload = { ...form.value };
-      Object.keys(payload).forEach((key) => {
-        if (typeof payload[key] === 'string') {
-          payload[key] = payload[key].trim() || null;
-        }
-      });
+ onSubmit(form: FormGroup): void {
+  console.log('✅ 觸發 onSubmit', form.value);
 
-      this.loading = true;
-      this.messageService.blockUi();
-
-      this.tls2b030Service.queryTLS2B030(payload).subscribe({
-        next: (res) => {
-          this.data = res.Data ?? [];
-          this.totalRecords = res.TotalCount ?? this.data.length;
-          this.queryStateService.setQueryState(this.ProgNo, payload);
-          this.messageService.successBubble('查詢成功');
-        },
-        error: () => {
-          this.messageService.errorBubble('查詢失敗');
-        },
-        complete: () => {
-          this.loading = false;
-          this.messageService.unblockUi();
-        },
-      });
-    });
+  if (form.invalid) {
+    console.warn('❌ 表單驗證失敗:', form.errors, form.value);
+    this.messageService.errorBubble('日期必要欄位');
+    return;
   }
+
+  this.handleSubmit(form, () => {
+    const payload = { ...form.value };
+
+    // ✅ 字串欄位去除空白
+    Object.keys(payload).forEach((key) => {
+      if (typeof payload[key] === 'string') {
+        payload[key] = payload[key].trim() || null;
+      }
+    });
+    // ✅ checkbox 對應 API 欄位名稱
+payload['OnlyShowOverAmount'] = payload['onlyShowOverflow'];
+delete payload['onlyShowOverflow'];
+
+    // ✅ TXN_YearMonth：轉換成 yyyyMM 格式
+    const month = payload['TXN_YearMonth'];
+    if (month instanceof Date && !isNaN(month.getTime())) {
+      const yyyy = month.getFullYear();
+      const mm = String(month.getMonth() + 1).padStart(2, '0');
+      payload['TXN_YearMonth'] = `${yyyy}${mm}`;
+    }
+
+    this.loading = true;
+    this.messageService.blockUi();
+
+    this.tls2b030Service.queryTLS2B030(payload).subscribe({
+      next: (res) => {
+        this.data = res.Data ?? [];
+        this.totalRecords = res.TotalCount ?? this.data.length;
+        this.queryStateService.setQueryState(this.ProgNo, payload);
+        this.messageService.successBubble('查詢成功');
+      },
+      error: () => {
+        this.messageService.errorBubble('查詢失敗');
+      },
+      complete: () => {
+        this.loading = false;
+        this.messageService.unblockUi();
+      },
+    });
+  });
+}
+
 
   moneyFormat(value: number): string {
     return value != null ? value.toLocaleString('en-US') : '0'; // ✅ 使用美式格式

@@ -11,9 +11,9 @@ export class CahserTypeService {
   apiUrl: string = environment.ApiUrl;
   title: string = '收銀機類型';
   options: any[] = [
-    { value: 1, label: '全部' },
-    { value: 2, label: '自收' },
-    { value: 3, label: '統收' },
+
+    { value: '1', label: '統收' },
+    { value: '2', label: '自收' },
   ];
 
   constructor(

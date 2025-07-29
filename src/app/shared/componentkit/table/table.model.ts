@@ -31,6 +31,7 @@ export interface Column {
   dateFormat?: string; // 日期格式（例如 'yy-mm-dd'，僅適用於 type='date'）
   frozen?: boolean;  // 是否凍結 (是否為凍結欄位)
   alignFrozen?: string; // 凍結欄位對齊方式
+   headerRow?: number; 
 }
 
 export interface ColumnGroup {
