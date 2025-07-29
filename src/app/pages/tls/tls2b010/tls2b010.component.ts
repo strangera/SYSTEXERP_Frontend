@@ -1,39 +1,37 @@
 import { Component } from '@angular/core';
 import {
   FormGroup,
-  Validators,
   FormsModule,
   ReactiveFormsModule,
+  Validators,
 } from '@angular/forms';
-import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
-import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { CashShowupByService } from '../../../service/basic/cash-showup-by.service';
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
+import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
+import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 // UI Imports
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { CurrencyPipe, DatePipe, DecimalPipe, NgIf } from '@angular/common';
+import { TranslateModule } from '@ngx-translate/core';
 import { AccordionModule } from 'primeng/accordion';
+import { ButtonModule } from 'primeng/button';
+import { PaginatorModule } from 'primeng/paginator';
+import { TableModule } from 'primeng/table';
+import { TooltipModule } from 'primeng/tooltip'; // 如需 tooltip 說明
+import { finalize } from 'rxjs';
+import { Tls11010Service } from '../../../service/api/tls/tls11010.service';
+import { TLS2B010Service } from '../../../service/api/tls/tls2-b010.service';
+import { ECRNoService } from '../../../service/basic/ECRNo.service';
+import { CounterNameService } from '../../../service/basic/counter-name.service';
+import { FloorService } from '../../../service/basic/floor.service';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
 import { RadiobuttonComponent } from '../../../shared/componentkit/radiobutton/radiobutton.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { TranslateModule } from '@ngx-translate/core';
-import { ECRNoService } from '../../../service/basic/ECRNo.service';
-import { CounterNameService } from '../../../service/basic/counter-name.service';
-import { Tls11010Service } from '../../../service/api/tls/tls11010.service';
-import { FloorService } from '../../../service/basic/floor.service';
-import { DecimalPipe, NgIf } from '@angular/common';
-import { TLS2B010Service } from '../../../service/api/tls/tls2-b010.service';
-import { DatePipe } from '@angular/common';
-import { finalize } from 'rxjs';
 import { ReportTableGroupComponent } from '../../../shared/componentkit/report-table-group/report-table-group.component';
+import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { ReimbursementYypeService } from './../../../service/basic/reimbursement-yype.service';
-import { TableModule } from 'primeng/table';
-import { PaginatorModule } from 'primeng/paginator';
-import { ButtonModule } from 'primeng/button';
-import { TooltipModule } from 'primeng/tooltip'; // 如需 tooltip 說明
-import { CurrencyPipe } from '@angular/common'; // 若後續有使用 pipe 顯示金額
 
 
 
@@ -60,8 +58,8 @@ import { CurrencyPipe } from '@angular/common'; // 若後續有使用 pipe 顯�
     ReportTableGroupComponent,
     DatePipe,
     NgIf,
-   
-    
+
+
   ],
   providers: [CashShowupByService],
 })
@@ -92,7 +90,6 @@ export class TLS2B010Component extends BasicQueryPageComponent<any> {
     { value: 2, label: '溢欠簡表' },
   ];
   printedAt: string = '';
-  now = new Date(); // ✅ 用於 template
   simpleData: any[] = [];
 
   queryForm = this.formBuilder.group({
@@ -203,107 +200,107 @@ export class TLS2B010Component extends BasicQueryPageComponent<any> {
     }));
   }
 
-onSubmit(form: FormGroup): void {
-  this.submitted = true;
+  onSubmit(form: FormGroup): void {
+    this.submitted = true;
 
-  if (form.invalid) {
-    this.messageService.warnBubble('請完整填寫查詢條件');
-    return;
-  }
-
-  const payload = { ...form.value };
-
-  // ✅ 加入店號（來自 localStorage）
-  const userInfo = localStorage.getItem('UserInfo');
-  if (userInfo) {
-    try {
-      const parsed = JSON.parse(userInfo);
-      if (parsed.SYS_StoreNo) {
-        payload['SYS_StoreNo'] = parsed.SYS_StoreNo;
-      }
-    } catch (err) {
-      console.error('❌ 解析 UserInfo 發生錯誤:', err);
+    if (form.invalid) {
+      this.messageService.warnBubble('請完整填寫查詢條件');
+      return;
     }
-  }
 
-  // ✅ 清除空值、空陣列、空字串
-  Object.keys(payload).forEach((key) => {
-    const value = payload[key];
-    if (typeof value === 'string') {
-      payload[key] = value.trim();
-      if (payload[key] === '') {
+    const payload = { ...form.value };
+
+    // ✅ 加入店號（來自 localStorage）
+    const userInfo = localStorage.getItem('UserInfo');
+    if (userInfo) {
+      try {
+        const parsed = JSON.parse(userInfo);
+        if (parsed.SYS_StoreNo) {
+          payload['SYS_StoreNo'] = parsed.SYS_StoreNo;
+        }
+      } catch (err) {
+        console.error('❌ 解析 UserInfo 發生錯誤:', err);
+      }
+    }
+
+    // ✅ 清除空值、空陣列、空字串
+    Object.keys(payload).forEach((key) => {
+      const value = payload[key];
+      if (typeof value === 'string') {
+        payload[key] = value.trim();
+        if (payload[key] === '') {
+          delete payload[key];
+        }
+      }
+      if (Array.isArray(value) && value.length === 0) {
         delete payload[key];
       }
-    }
-    if (Array.isArray(value) && value.length === 0) {
-      delete payload[key];
-    }
-    if (value === null || value === undefined) {
-      delete payload[key];
-    }
-  });
-
-  // ✅ 排除前端控制欄位
-  delete payload['reimbursementType'];
-
-  this.loading = true;
-  this.messageService.blockUi();
-
-  const reporttype = form.controls['reporttype'].value;
-
-  const apiCall =
-    reporttype === 2
-      ? this.tls2B010Service.simpleTLS2B010(payload) // ✅ 無 QueryData 層
-      : this.tls2B010Service.queryTLS2B010(payload); // ✅ 有 QueryData 層
-
- apiCall
-  .pipe(
-    finalize(() => {
-      this.loading = false;
-      this.messageService.unblockUi();
-    }),
-  )
-  .subscribe({
-    next: (res) => {
-      if (res?.Status === '0000') {
-        this.queryStateService.setQueryState(this.ProgNo, payload);
-
-        if (reporttype === 2) {
-          // ✅ 後端回傳陣列，處理 sumOVER_PayAmt 欄位
-          const rawData = res.Data || [];
-
-          // 🔢 建立加總 Map
-          const grouped = new Map<string, number>();
-          rawData.forEach((row:any) => {
-            const key = row.ECR_No || '未指定';
-            const current = grouped.get(key) || 0;
-            const amt = parseFloat(row.OVER_PayAmt) || 0;
-            grouped.set(key, current + amt);
-          });
-
-          // 🧩 填入 sumOVER_PayAmt 欄位
-          this.simpleData = rawData.map((row:any) => ({
-            ...row,
-            sumOVER_PayAmt: grouped.get(row.ECR_No || '未指定') || 0,
-          }));
-
-          this.totalRecords = res.TotalCount || 0;
-        } else {
-          // ✅ 支付別溢欠明細表
-          const responseData = res.Data || {};
-          this.data = responseData.QueryData || [];
-          this.closeDate = responseData.LastCloseDate || '-';
-          this.totalRecords = res.TotalCount || 0;
-        }
-      } else {
-        this.messageService.errorBubble(res?.Message || '查詢失敗');
+      if (value === null || value === undefined) {
+        delete payload[key];
       }
-    },
-    error: () => {
-      this.messageService.errorBubble('查詢失敗，請稍後再試');
-    },
-  });
-}
+    });
+
+    // ✅ 排除前端控制欄位
+    delete payload['reimbursementType'];
+
+    this.loading = true;
+    this.messageService.blockUi();
+
+    const reporttype = form.controls['reporttype'].value;
+
+    const apiCall =
+      reporttype === 2
+        ? this.tls2B010Service.simpleTLS2B010(payload) // ✅ 無 QueryData 層
+        : this.tls2B010Service.queryTLS2B010(payload); // ✅ 有 QueryData 層
+
+    apiCall
+      .pipe(
+        finalize(() => {
+          this.loading = false;
+          this.messageService.unblockUi();
+        }),
+      )
+      .subscribe({
+        next: (res) => {
+          if (res?.Status === '0000') {
+            this.queryStateService.setQueryState(this.ProgNo, payload);
+
+            if (reporttype === 2) {
+              // ✅ 後端回傳陣列，處理 sumOVER_PayAmt 欄位
+              const rawData = res.Data || [];
+
+              // 🔢 建立加總 Map
+              const grouped = new Map<string, number>();
+              rawData.forEach((row: any) => {
+                const key = row.ECR_No || '未指定';
+                const current = grouped.get(key) || 0;
+                const amt = parseFloat(row.OVER_PayAmt) || 0;
+                grouped.set(key, current + amt);
+              });
+
+              // 🧩 填入 sumOVER_PayAmt 欄位
+              this.simpleData = rawData.map((row: any) => ({
+                ...row,
+                sumOVER_PayAmt: grouped.get(row.ECR_No || '未指定') || 0,
+              }));
+
+              this.totalRecords = res.TotalCount || 0;
+            } else {
+              // ✅ 支付別溢欠明細表
+              const responseData = res.Data || {};
+              this.data = responseData.QueryData || [];
+              this.closeDate = responseData.LastCloseDate || '-';
+              this.totalRecords = res.TotalCount || 0;
+            }
+          } else {
+            this.messageService.errorBubble(res?.Message || '查詢失敗');
+          }
+        },
+        error: () => {
+          this.messageService.errorBubble('查詢失敗，請稍後再試');
+        },
+      });
+  }
 
 
 
@@ -393,10 +390,10 @@ onSubmit(form: FormGroup): void {
       format: (value: any) =>
         value
           ? new Date(value).toLocaleDateString('zh-TW', {
-              year: 'numeric',
-              month: '2-digit',
-              day: '2-digit',
-            })
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+          })
           : '',
     },
     // {

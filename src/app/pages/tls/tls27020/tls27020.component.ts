@@ -1,18 +1,18 @@
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { untilDestroyed } from '@ngneat/until-destroy';
+import { TranslateModule } from '@ngx-translate/core';
+import { TLS27020Data, TLS27020Service } from '@service/api/tls/tls27020.service';
+import { DropDownListService } from '@service/utility/dropDownList.service';
+import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
+import { InputNumberComponent, MultiSelectComponent } from '@shared/componentkit';
+import { Column, createPaginationConfig, formatDate } from '@shared/componentkit/table/table.model';
+import { AccordionModule } from 'primeng/accordion';
+import { finalize } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { AccordionModule } from 'primeng/accordion';
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { TranslateModule } from '@ngx-translate/core';
-import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
-import { Column, createPaginationConfig, formatDate } from '@shared/componentkit/table/table.model';
-import { TLS27020Data, TLS27020Service } from '@service/api/tls/tls27020.service';
-import { untilDestroyed } from '@ngneat/until-destroy';
-import { finalize } from 'rxjs';
-import { DropDownListService } from '@service/utility/dropDownList.service';
-import { InputNumberComponent, MultiSelectComponent } from '@shared/componentkit';
 
 @Component({
   selector: 'app-tls27020',
@@ -37,9 +37,8 @@ export class TLS27020Component extends BasicQueryPageComponent<TLS27020Data> imp
     { field: 'ACT_PayAmt_ori', header: '實收金額' },
     { field: 'crt_usr_name', header: '建立人員姓名' }
   ];
-  now = new Date();
-  ECR_NoOptions: { No: string, Name: string, label: string }[] = [];
-  TLTTALENT_DropDownList: { No: string, Name: string, label: string }[] = [];
+  ECR_NoOptions: { No: string, Name: string, label: string; }[] = [];
+  TLTTALENT_DropDownList: { No: string, Name: string, label: string; }[] = [];
   constructor(
     private readonly dropDownList: DropDownListService,
     private readonly tls27020Service: TLS27020Service
