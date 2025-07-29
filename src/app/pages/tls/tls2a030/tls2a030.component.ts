@@ -7,10 +7,12 @@ import { ECRNoService } from '../../../service/basic/ECRNo.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { AccordionModule } from 'primeng/accordion';
 import { CalendarRangeQuickComponent } from '../../../shared/componentkit/calendar-range-quick/calendar-range-quick.component';
-import { InputTextRangeComponent } from '../../../shared/componentkit/input-text-range/input-text-range.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { TranslateModule } from '@ngx-translate/core';
+import { TLS2A030Service } from '../../../service/api/tls/tls2a030.service';
+import { DropdownRangeComponent } from '@shared/componentkit/dropdown-range/dropdown-range.component';
+
 
 interface SalesRecord {
   paymentTool: string;
@@ -23,84 +25,96 @@ interface SalesRecord {
 }
 
 @Component({
-    selector: 'app-tls2a030',
-    templateUrl: './tls2a030.component.html',
-    standalone: true,
-    imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarRangeQuickComponent, InputTextRangeComponent, ButtonComponent, TableComponent, TranslateModule]
+  selector: 'app-tls2a030',
+  templateUrl: './tls2a030.component.html',
+  standalone: true,
+  imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarRangeQuickComponent, DropdownRangeComponent,
+    ButtonComponent, TableComponent, TranslateModule]
 })
 export class TLS2A030Component extends BasicQueryPageComponent<any> implements OnInit {
   queryForm = this.formBuilder.group({
-    tlt_bdate_start: [null, Validators.required],
-    tlt_bdate_end: [null, Validators.required],
-    tlt_no: [''],
-    tlt_no_end: [''],
+    SaleDateStart: [null, Validators.required],
+    SaleDateEnd: [null, Validators.required],
+    ECR_No: [null],
+    ECR_No_Start: [null],
+    ECR_No_End: [null],
     ...createPaginationConfig([{ field: 'paymentTool', order: 1 }])
   });
 
   data: SalesRecord[] = [];
   totalRecords = 0;
   selectedItems: SalesRecord[] = [];
-
+  ECRNoOptions: any[] = [];
   // 表格欄位
   columns = [
-    { field: 'paymentTool', header: '支付工具' },
-    { field: 'actualShortfallAmount', header: '實際淨欠總額 (A)' },
-    { field: 'preAuditShortfallAmount', header: '審核前淨欠總額 (B = C - D)' },
-    { field: 'receiptTotal', header: '實收總額 (C)' },
-    { field: 'systemTotal', header: '系統帳 (D)' },
-    { field: 'compareCD', header: '(C) 與 (D) 比較' },
-    { field: 'compareAB', header: '(A) 與 (B) 比較' }
+    { field: 'PAY_NAME', header: '支付工具' },
+    { field: 'OVER_PayAmt', header: '實際淨欠總額 (A)' },
+    { field: 'PreAudit_OVER_PayAmt', header: '審核前淨欠總額 (B)' },
+    { field: 'Actual_ReceivedAmt', header: '實收總額 (C)' },
+    { field: 'BOOK_PayAmt', header: '系統帳 (D)' },
+    {
+      field: 'Compare_CD',
+      header: '(C) 與 (D) 比較',
+      format: (v: boolean) => v ? 'Y' : 'N'
+    },
+    {
+      field: 'Compare_AB',
+      header: '(A) 與 (B) 比較',
+      format: (v: boolean) => v ? 'Y' : 'N'
+    }
   ];
+
 
   constructor(
     private locationOptionsService: LocationOptionsService,
-    private ecrNoService: ECRNoService
+    private ECRNoService: ECRNoService,
+    private tls2a030Service: TLS2A030Service
   ) {
     super();
   }
 
   ngOnInit(): void {
     this.initializePage('TLS2A030', undefined, this.queryForm, this.onSubmit.bind(this));
+    this.ECRNoService.getECRNo().subscribe((data) => {
+      this.ECRNoOptions = data;
+    });
   }
+
 
   onSubmit(form: FormGroup): void {
-    this.submitted = true;
-    if (form.invalid) return;
-
-    this.loading = true;
-
-    // 假資料，實際應從 API 抓資料
-    const rawData = [
-      {
-        paymentTool: '現金',
-        actualShortfallAmount: -74760642,
-        receiptTotal: 1175669391,
-        systemTotal: 1250430033
-      },
-      {
-        paymentTool: '聯合信用卡',
-        actualShortfallAmount: 1412153,
-        receiptTotal: 1128433256,
-        systemTotal: 1127021103
-      }
-    ];
-
-    this.data = rawData.map(item => {
-      const preAudit = item.receiptTotal - item.systemTotal;
-      return {
-        ...item,
-        preAuditShortfallAmount: preAudit,
-        compareCD: this.compareValues(item.receiptTotal, item.systemTotal),
-        compareAB: this.compareValues(item.actualShortfallAmount, preAudit)
+    this.handleSubmit(form, () => {
+      const payload = {
+        PageSize: form.value.PageSize,
+        PageIndex: form.value.PageIndex,
+        OrderBy: form.value.OrderBy,
+        Offset: form.value.Offset,
+        SortBy: form.value.SortBy,
+        SaleDateStart: form.value.tlt_bdate_start?.toISOString() ?? null,
+        SaleDateEnd: form.value.tlt_bdate_end?.toISOString() ?? null,
+        ECR_No_Start: form.value.ECR_No_Start ?? '',
+        ECR_No_End: form.value.ECR_No_End ?? ''
       };
+
+      this.tls2a030Service.queryTLS2A030(payload).subscribe({
+        next: (res: any) => {
+          const rawData = res?.Data ?? [];
+
+          this.data = rawData.map((item: any) => ({
+            ...item,
+            Compare_CD: item.Compare_CD,
+            Compare_AB: item.Compare_AB
+          }));
+
+          this.totalRecords = res.TotalCount ?? this.data.length;
+          this.loading = false;
+        },
+        error: (err) => {
+          console.error('TLS2A030 查詢失敗', err);
+          this.loading = false;
+        }
+      });
     });
-
-    this.totalRecords = this.data.length;
-    this.loading = false;
   }
 
-  compareValues(a: number, b: number): 'Y' | 'N' {
-    return a === b ? 'Y' : 'N';
-  }
 
 }
