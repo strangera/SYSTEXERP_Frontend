@@ -1,5 +1,5 @@
 import { NgIf } from '@angular/common';
-import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnInit } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, Input, OnChanges, OnInit, SimpleChanges } from '@angular/core';
 import { FormArray, FormBuilder, FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { DividerModule } from 'primeng/divider';
 import { InputTextModule } from 'primeng/inputtext';
@@ -34,42 +34,41 @@ import { DropdownComponent } from '../../../../shared/componentkit/dropdown/drop
   styleUrls: ['./tls24010-pos5008.component.scss'],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
-export class Tls24010Pos5008Component implements OnInit {
+export class Tls24010Pos5008Component implements OnInit, OnChanges {
   @Input() data: POS5008Data[] = [];
-  @Input() isFormCreateable?: boolean
-  @Input() isFormEditable?: boolean
-  @Input() isFormReadable?: boolean
-  @Input() submitted?: boolean
+  @Input() type?: string;
+  @Input() isFormCreateable?: boolean;
+  @Input() isFormEditable?: boolean;
+  @Input() isFormReadable?: boolean;
+  @Input() submitted?: boolean;
+
   form?: FormGroup;
-  POS5008FormArray?: FormArray;
+  POS5008FormArray: FormArray = this.fb.array([]);
   POS5008Data: POS5008Data[] = [];
   POS5008SelectedItems: POS5008Data[] = [];
   POS5008Columns: Column[] = POS5008Columns;
+  isOptionsLoaded = false;
   trackByRow = (index: number, item: POS5008Data) => { return item?.id || index; }
-  CRD_TypeOptions = CRD_TypeOptions; //下拉選單 信用卡別
-  PAY_TypeOptions: IDropdownItem[] = []; //下拉選單 付款別
-  sys_typeOptions: SystemOption[] = []; // 下拉選單 分期數
+
+  CRD_TypeOptions = CRD_TypeOptions;
+  PAY_TypeOptions: IDropdownItem[] = [];
+  sys_typeOptions: SystemOption[] = [];
 
   constructor(
     private readonly dropDownListService: DropDownListService,
     private readonly fb: FormBuilder,
     private readonly cdr: ChangeDetectorRef
   ) {
-    this.POS5008FormArray = this.fb.array([]);
     this.form = this.fb.group({
       POS5008: this.POS5008FormArray
     });
   }
+
   ngOnInit(): void {
-    if (this.data.length > 0 && !this.isFormCreateable) {
-      this.POS5008Data = [...this.data];
-    }
-    //--付款明細------------------------------------------------------
     this.dropDownListService.queryPOS1006_DropDownList().pipe(untilDestroyed(this)).subscribe((res) => {
-      this.PAY_TypeOptions = res.Data.map((item) => ({ ...item, label: item.Name }));
-      const rows = res.Data.map((item, index) => {
+      this.PAY_TypeOptions = res.Data.map(item => ({ ...item, label: item.Name }));
+      const rows = res.Data.map(item => {
         const row: POS5008Data = {
-          ID: index,
           PAY_No: item.No,
           PAY_Name: item.Name,
           TXN_PayAmt: 0,
@@ -81,26 +80,87 @@ export class Tls24010Pos5008Component implements OnInit {
           PAY_Type: item.PAY_Type,
           selected: false
         };
-        this.POS5008FormArray?.push(this.createRowForm(row));
+        this.POS5008FormArray.push(this.createRowForm(row));
         return row;
       });
       this.POS5008Data = rows;
       this.sys_typeOptions = SystemOptionsService.getOptions('T109');
+
+      this.isOptionsLoaded = true;
+      this.applyInputData();
       this.cdr.markForCheck();
     });
   }
+
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['data'] && changes['data'].currentValue?.length > 0 && !this.isFormCreateable) {
+      this.applyInputData();
+    }
+
+    if (changes['isFormCreateable'] && this.POS5008FormArray?.length > 0) {
+      const isDisabled = !this.isFormCreateable;
+      this.posFormArrayControls.forEach(formGroup => {
+        Object.keys(formGroup.controls).forEach(controlName => {
+          const control = formGroup.get(controlName);
+          if (controlName !== 'PAY_Name' && controlName !== 'PAY_No') {
+            if (isDisabled) {
+              control?.disable({ emitEvent: false })
+            } else {
+              control?.enable({ emitEvent: false });
+            }
+          }
+        });
+      });
+      this.cdr.markForCheck();
+    }
+  }
+
+  private applyInputData(): void {
+    if (!this.isOptionsLoaded || !this.data?.length || !this.POS5008Data.length) return;
+    this.POS5008SelectedItems = [...this.data];
+    this.POS5008SelectedItems.forEach(item => {
+      const rowIndex = this.POS5008Data.findIndex(d => d.PAY_No === item.PAY_No);
+      if (rowIndex !== -1) {
+        const formGroup = this.POS5008FormArray.at(rowIndex) as FormGroup;
+        const patchedData = {
+          ...item,
+          TERM_No: String(item.TERM_No),
+        };
+        formGroup.patchValue(patchedData, { emitEvent: false });
+        this.POS5008Data[rowIndex].selected = true;
+        formGroup.updateValueAndValidity({ emitEvent: false });
+      }
+    });
+    const combined = this.POS5008Data.map((data, index) => ({
+      data,
+      form: this.POS5008FormArray.at(index) as FormGroup,
+    }));
+    const sorted = [
+      ...combined.filter(x => x.data.selected),
+      ...combined.filter(x => !x.data.selected),
+    ];
+    this.POS5008Data = sorted.map(x => x.data);
+    this.POS5008FormArray.clear();
+    sorted.forEach(x => this.POS5008FormArray.push(x.form));
+
+    this.cdr.markForCheck();
+  }
+
   createRowForm(row: POS5008Data): FormGroup {
+    const isDisabled = !this.isFormCreateable;
+
     return this.fb.group({
       PAY_Name: [{ value: row.PAY_Name, disabled: true }],
       PAY_No: [{ value: row.PAY_No, disabled: true }],
-      TXN_PayAmt: [null],
-      CRD_Type: [''],
-      CRD_No: ['', [Validators.maxLength(20)]],
-      TXN_CouponNo: ['', [Validators.maxLength(50)]],
-      TXN_PayDesc: ['', [Validators.maxLength(100)]],
-      TERM_No: ['']
+      TXN_PayAmt: [{ value: null, disabled: isDisabled }],
+      CRD_Type: [{ value: '', disabled: isDisabled }],
+      CRD_No: [{ value: '', disabled: isDisabled }, [Validators.maxLength(20)]],
+      TXN_CouponNo: [{ value: '', disabled: isDisabled }, [Validators.maxLength(50)]],
+      TXN_PayDesc: [{ value: '', disabled: isDisabled }, [Validators.maxLength(100)]],
+      TERM_No: [{ value: '', disabled: isDisabled }]
     });
   }
+
   get posFormArrayControls() {
     return this.POS5008FormArray?.controls as FormGroup[];
   }

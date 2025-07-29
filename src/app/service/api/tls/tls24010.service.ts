@@ -29,7 +29,7 @@ export interface TLS24010Data {
   TXN_Mode: string; // 交易型態
   store_way?: string; // 櫃位類型
   talent_id?: number; // 專櫃合約編號
-  TXN_GUIPaper: string; // 補登類別
+  TXN_GUIPaper?: string; // 補登類別
   type?: string; // 修正類型
 }
 

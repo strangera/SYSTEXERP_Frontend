@@ -18,4 +18,8 @@
   &::-webkit-scrollbar-thumb:hover {
     background: #cccccc;
   }
+
+  .p-checkbox-box.p-component.p-highlight.p-disabled {
+    background-color: #2196f3 !important;
+  }
 }
