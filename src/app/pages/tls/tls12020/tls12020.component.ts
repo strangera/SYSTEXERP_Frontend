@@ -1,5 +1,6 @@
 
 import { Component, OnInit } from '@angular/core';
+import { formatDate } from '@angular/common';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { DropDownListService, IDropdownItem } from '../../../service/utility/dropDownList.service';
@@ -53,19 +54,19 @@ export class TLS12020Component extends BasicQueryPageComponent<any> implements O
 
   data: any[] = [];
   columns: Column[] = [
-    { header: '位置編號', field: 'ECR_LocNo' },
-    { header: '廠商統一編號', field: 'cus_uniform_id' },
-    { header: '廠商名稱(中文)', field: 'ven_name' },
+    { header: '位置編號', field: 'LOCATION_No' },
+    { header: '廠商統一編號', field: 'ven_uniform' },
+    { header: '廠商名稱(中文)', field: 'VEN_Name' },
     { header: '廠商名稱(英文)', field: 'VEN_EngName' },
-    { header: '品牌', field: 'brand' },
-    { header: '資料作成店', field: 'create_store' },
-    { header: '聯絡人', field: 'contact_person' },
-    { header: '聯絡人電話', field: 'contact_phone' },
-    { header: '訪談日期', field: 'contact_date' },
-    { header: '訪談時間', field: 'contact_time' },
+    { header: '品牌', field: 'tlt_name' },
+    { header: '聯絡人', field: 'VEN_ContactPerson' },
+    { header: '聯絡人電話', field: 'VEN_BossTel' },
+    { header: '訪談日期', field: 'contact_Date', visible: true, format: (value: any) => formatDate(value, 'yyyy/MM/dd', 'en-US') },
+    { header: '訪談時間', field: 'contact_Time', visible: true, format: this.formatTimeHHmm },
     { header: '訪談人員', field: 'contact_USR_Name' },
     { header: '意願等級', field: 'willing_level' },
   ];
+
   selectedItems: any[] = [];
   totalRecords = 0;
   vendorUIDOptions: IDropdownItem[] = [];
@@ -128,6 +129,10 @@ export class TLS12020Component extends BasicQueryPageComponent<any> implements O
     });
 
   }
+  formatTimeHHmm(value: string): string {
+    if (!value || value.length !== 4) return '';
+    return `${value.slice(0, 2)}:${value.slice(2)}`;
+  }
 
   onSubmit(form: FormGroup): void {
     this.handleSubmit(form, () => {
@@ -150,6 +155,7 @@ export class TLS12020Component extends BasicQueryPageComponent<any> implements O
           this.totalRecords = res.TotalCount ?? 0;
           this.queryStateService.setQueryState(this.ProgNo, params);
           this.loading = false;
+          this.selectedItems = [];
         },
         error: (err) => {
           console.error('TLS12020 查詢失敗', err);

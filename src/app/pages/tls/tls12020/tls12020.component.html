@@ -100,7 +100,7 @@
     [data]="data"
     [columns]="columns"
     (edit)="onEdit($event)"
-    [showCheckBox]="true"
+    [showCheckBox]="false"
     (selectionChange)="selectedItems = $event"
     [selectedItems]="selectedItems"
     [multiSortMeta]="[{ field: 'ECR_No', order: 1 }]"
@@ -110,5 +110,6 @@
     [loading]="loading"
     [showPaginator]="true"
     [showReportMode]="true"
+    (detail)="onDetail($event)"
   ></app-table>
 </div>

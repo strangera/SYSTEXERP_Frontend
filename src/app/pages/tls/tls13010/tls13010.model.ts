@@ -350,7 +350,7 @@ export interface ContractInfo {
   contact_tel?: string;
   contact_fax?: string;
   contact_addr?: string;
-  company_addr?: string;
+  company_register_address?: string;
   tlt_remark?: string;
   ticket_remarks?: string;
   tlt_kind?: string;

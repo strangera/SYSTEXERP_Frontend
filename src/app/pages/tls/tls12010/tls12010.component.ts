@@ -298,11 +298,11 @@ export class TLS12010Component extends BasicQueryPageComponent<Potential_Custome
         });
 
         // 查詢 接待人員
-        this.tls12010Service.queryTLS12010_DropDownList({}).subscribe((response) => {
+        this.tls12010Service.queryTBLUSER_DropDownList({}).subscribe((response) => {
           this.contact_USR_Option = response.Data.map((item: any) => ({
-            No: item.contact_USR_Name, // 接待人員 名稱
-            Name: item.contact_USR_Name, // 接待人員 名稱
-            Label: item.contact_USR_No+ '-'+ item.contact_USR_Name //標籤
+            No: item.No, // 接待人員 名稱
+            Name: item.Name, // 接待人員 名稱
+            Label: item.No+ '-'+ item.Name //標籤
           }));
           console.log('接待人員代號:', this.contact_USR_Option);
         });

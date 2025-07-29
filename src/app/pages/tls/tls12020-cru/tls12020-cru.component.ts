@@ -146,6 +146,36 @@ export class TLS12020CRUComponent extends BasicCruPageComponent<any> implements 
       }));
     });
   }
+  formatDateOnly(value: any): string | null {
+    if (!value) return null;
+    const d = new Date(value);
+    const yyyy = d.getFullYear();
+    const mm = String(d.getMonth() + 1).padStart(2, '0');
+    const dd = String(d.getDate()).padStart(2, '0');
+    return `${yyyy}-${mm}-${dd}T00:00:00`;
+  }
+
+  formatTime(value: any): string | null {
+    if (!value) return null;
+
+    if (value instanceof Date) {
+      const hh = String(value.getHours()).padStart(2, '0');
+      const mm = String(value.getMinutes()).padStart(2, '0');
+      return `${hh}${mm}`; // 傳回 "0930"
+    }
+
+    if (typeof value === 'string') {
+      const [h, m] = value.split(':');
+      const hh = String(h).padStart(2, '0');
+      const mm = String(m).padStart(2, '0');
+      return `${hh}${mm}`; // 傳回 "1130"
+    }
+
+    return null;
+  }
+
+
+
 
   onSubmit(frm: FormGroup): void {
     this.handleSubmit(frm, () => {
@@ -165,16 +195,16 @@ export class TLS12020CRUComponent extends BasicCruPageComponent<any> implements 
         VEN_BossMobile: formValue.VEN_BossMobile,
         VEN_BossEmail: formValue.VEN_BossEmail,
         VEN_Addr: formValue.VEN_Addr,
-        contact_Date: formValue.contact_Date,
-        contact_Time: formValue.contact_Time,
-        willing_level: formValue.willing_level,
-        building_no: formValue.building_no,
+        contact_Date: this.formatDateOnly(formValue.contact_Date), // 確保是 YYYY-MM-DDT00:00:00
+        contact_Time: this.formatTime(formValue.contact_Time),
         FLOOR_NO: formValue.FLOOR_NO,
         LOCATION_No: formValue.LOCATION_No,
         contact_record: formValue.contact_record,
         contact_remarks: formValue.contact_remarks,
         contact_USR_Name: formValue.contact_USR_Name,
       };
+      console.log('送出 contact_Time:', formValue.contact_Time);
+      console.log('轉換後 contact_Time:', this.formatTime(formValue.contact_Time));
 
       this.tls12020Service.insertTLS12020(body).subscribe({
         next: (res) => {
