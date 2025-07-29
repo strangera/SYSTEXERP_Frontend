@@ -36,96 +36,83 @@
       </form>
     </p-accordionTab>
   </p-accordion>
-  <div class="card mt-5">
-    <div style="display: flex; flex-wrap: wrap; gap: 10px">
-      <!-- 左圖區塊 -->
-      <div style="flex: 2 1 0; min-width: 400px">
-        <img
-          [src]="'assets/TLS12050/' + selectedImage"
-          [attr.alt]="'目前選擇樓層：' + selectedFloor"
-          style="width: 100%; height: auto; max-width: 100%"
-        />
-      </div>
+<div class="card mt-5">
+  <div style="display: flex; flex-wrap: wrap; gap: 10px">
+    <!-- 左圖區塊 -->
+    <div style="flex: 2 1 0; min-width: 400px">
+      <img *ngIf="selectedImage"
+        [src]="'assets/TLS12050/' + selectedImage"
+        [attr.alt]="'目前選擇樓層：' + selectedFloor"
+        style="width: 100%; height: auto; max-width: 100%"
+      />
+    </div>
 
-      <!-- 右側營運資訊 -->
-      <div style="flex: 1 1 0; min-width: 300px; margin-top: 100px">
-        <table
-          style="width: 100%; border-collapse: collapse"
-          border="1"
-          cellspacing="10"
-          cellpadding="10"
-        >
-          <tbody>
-            <tr>
-              <td colspan="2"><b>目前營運資訊</b></td>
-            </tr>
-            <tr>
-              <td style="width: 28%; background-color: rgb(185, 236, 219)">
-                <b>項目</b>
-              </td>
-              <td style="width: 72%; background-color: rgb(185, 236, 219)">
-                <b>資訊</b>
-              </td>
-            </tr>
-            <tr>
-              <td>檢視進度</td>
-              <td>
-                <app-multi-select
-                  formControlName="statusList"
-                  [options]="dropdown3"
-                  optionLabel="label"
-                  optionValue="value"
-                  [selectedItemsLabel]="'已選 {0} 項'"
-                  [maxSelectedLabels]="0"
-                  [panelStyle]="{ width: '320px' }"
-                ></app-multi-select>
-              </td>
-            </tr>
-            <tr>
-              <td>樓層</td>
-              <td>{{ selectedFloor }}</td>
-            </tr>
-            <tr>
-              <td>總計</td>
-              <td>{{ selectedFloorCNT }}</td>
-            </tr>
-            <tr>
-              <td style="background-color: rgb(185, 236, 219)"><b>色彩</b></td>
-              <td style="background-color: rgb(185, 236, 219)"><b>狀態</b></td>
-            </tr>
-            <tr>
-              <td>
-                <i class="pi pi-star-fill" style="color: rgb(88, 88, 88)"></i>
-              </td>
-              <td>閒置中(%):0.1</td>
-            </tr>
-            <tr>
-              <td>
-                <i
-                  class="pi pi-star-fill"
-                  style="color: rgb(255, 167, 236)"
-                ></i>
-              </td>
-              <td>追蹤中(%):11.09</td>
-            </tr>
-            <tr>
-              <td>
-                <i class="pi pi-star-fill" style="color: rgb(255, 191, 52)"></i>
-              </td>
-              <td>要約書階段 LOO Status(%):0</td>
-            </tr>
-            <tr>
-              <td>
-                <i
-                  class="pi pi-star-fill"
-                  style="color: rgb(104, 220, 231)"
-                ></i>
-              </td>
-              <td>內裝施工階段 Fitout Construction Status(%):0</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
+    <!-- 右側營運資訊 -->
+    <div style="flex: 1 1 0; min-width: 300px; margin-top: 100px">
+      <table
+        style="width: 100%; border-collapse: collapse"
+        border="1"
+        cellspacing="10"
+        cellpadding="10"
+      >
+        <tbody>
+          <tr>
+            <td colspan="2"><b>目前營運資訊</b></td>
+          </tr>
+          <tr>
+            <td style="width: 28%; background-color: rgb(185, 236, 219)">
+              <b>項目</b>
+            </td>
+            <td style="width: 72%; background-color: rgb(185, 236, 219)">
+              <b>資訊</b>
+            </td>
+          </tr>
+          <tr>
+            <td>檢視進度</td>
+            <td>
+              <app-multi-select
+                formControlName="statusList"
+                [options]="dropdown3"
+                optionLabel="label"
+                optionValue="value"
+                [selectedItemsLabel]="'已選 {0} 項'"
+                [maxSelectedLabels]="0"
+                [panelStyle]="{ width: '320px' }"
+              ></app-multi-select>
+            </td>
+          </tr>
+          <tr>
+            <td>樓層</td>
+            <td>{{ selectedFloor }}</td>
+          </tr>
+          <tr>
+            <td>總計</td>
+            <td>{{ selectedFloorCNT }}</td>
+          </tr>
+          <tr>
+            <td style="background-color: rgb(185, 236, 219)"><b>色彩</b></td>
+            <td style="background-color: rgb(185, 236, 219)"><b>狀態</b></td>
+          </tr>
+          <tr>
+            <td><i class="pi pi-star-fill" style="color: rgb(88, 88, 88)"></i></td>
+            <td>閒置中(%): {{ idlePercent }}</td>
+          </tr>
+          <tr>
+            <td><i class="pi pi-star-fill" style="color: rgb(255, 167, 236)"></i></td>
+            <td>洽談中(%): {{ negotiationPercent }}</td>
+          </tr>
+          <tr>
+            <td><i class="pi pi-star-fill" style="color: rgb(255, 191, 52)"></i></td>
+            <td>營運中(%): {{ operationPercent }}</td>
+          </tr>
+          <tr>
+            <td><i class="pi pi-star-fill" style="color: rgb(104, 220, 231)"></i></td>
+            <td>停用(%): {{ outofServicePercent }}</td>
+          </tr>
+        </tbody>
+      </table>
     </div>
   </div>
+</div>
+
 </div>
