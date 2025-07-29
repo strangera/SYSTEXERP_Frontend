@@ -9,6 +9,8 @@ export interface Column {
   format?: (value: any) => string | number | null; // 格式化(日期、時間...)
 
   groupField?: string;
+  isSubTotal?: boolean; // 是否為小計欄位
+  isTotal?: boolean; // 是否為總計欄位
   showSort?: boolean;
   sortField?: string; // 排序欄位(預設為 field)
 
@@ -171,11 +173,11 @@ export const formatTimeHHMM = (value: string | number | Date): string => {
 
 
 // 000,000,000
-export const formatAmount = (number: number | string): number => {
-  if (number === null || number === undefined || isNaN(Number(number))) return 0;
-  return Number(number); // 或維持原本 regex 寫法
+export const formatAmount = (val: number | string): string => {
+  const num = Number(val);
+  if (isNaN(num)) return '0';
+  return num.toLocaleString(); // eg. 1,000,000
 };
-
 export const formatYN = (value: string): string => {
   return value === 'Y' ? '是' : '否';
 };

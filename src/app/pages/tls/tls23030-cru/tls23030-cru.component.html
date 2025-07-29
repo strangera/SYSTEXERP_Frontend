@@ -4,46 +4,19 @@
   </div>
 
   <div class="card">
-    <app-report-table-group
-      [columns]="columns"
-      [data]="data"
-      [subtotalFields]="
+    <app-report-table-group [columns]="columns" [data]="data" [subtotalFields]="
         displayMode === 'SummaryReport'
           ? ['TXN_TaxAlwnc', 'TXN_PayAmt']
           : ['TXN_PayAmt', 'TXN_TaxAlwnc']
-      "
-      [enableGrouping]="displayMode === 'Report'"
-      [groupByField]="displayMode === 'Report' ? 'TXN_No' : null"
-      [groupByLabel]="'交易序號'"
-      [reportTitle]="
+      " [enableGrouping]="displayMode === 'Report'" [groupByField]="displayMode === 'Report' ? 'TXN_No' : null"
+      [groupByLabel]="'交易序號'" [reportTitle]="
         displayMode === 'SummaryReport' ? '付款別報表' : '付款別報表'
-      "
-      [currentPage]="1"
-      [dateStart]="dateStart"
-      [dateEnd]="dateEnd"
-      [printedAt]="printedAt"
-      [showGroupedBody]="true"
-      [allowMergeToggle]="true"
-      [showTotalOnly]="displayMode === 'SummaryReport'"
-      [pdfSummaryText]="[]"
-      [defaultMergedView]="false"
-      [extraTablesForPDF]="extraPDFTables"
-    ></app-report-table-group>
+      " [currentPage]="1" [dateStart]="dateStart" [dateEnd]="dateEnd" [printedAt]="printedAt" [showGroupedBody]="true"
+      [allowMergeToggle]="true" [showTotalOnly]="displayMode === 'SummaryReport'" [pdfSummaryText]="[]"
+      [defaultMergedView]="false" [extraTablesForPDF]="extraPDFTables"></app-report-table-group>
   </div>
-  
-<app-table
-  [tableKey]="'TLS23030_PAYMENT_SUMMARY'"
- [columns]="paymentSummaryColumns"
-  [data]="paymentSummary"
-  [showFooter]="true"
-  [subtotalFields]="['TXN_PayAmt']"
-  [showSubtotal]="true"
-  [showPaginator]="false"
-  [showCheckBox]="false"
-  [showHeader]="false"
-  [showReportMode]="false"
-  [showManage]="false"
-  [showDelete]="false"
-/>
-</div>
 
+  <app-table [tableKey]="'TLS23030_PAYMENT_SUMMARY'" [columns]="paymentSummaryColumns" [data]="paymentSummary"
+    [showFooter]="true" [showPaginator]="false" [showCheckBox]="false" [showHeader]="false" [showReportMode]="false"
+    [showManage]="false" [showDelete]="false" />
+</div>

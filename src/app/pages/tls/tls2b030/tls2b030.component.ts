@@ -261,7 +261,7 @@ delete payload['onlyShowOverflow'];
     const month = group.get('TXN_YearMonth')?.value;
 
     const isDateRangeFilled = start instanceof Date && !isNaN(start.getTime()) &&
-                          end instanceof Date && !isNaN(end.getTime());
+      end instanceof Date && !isNaN(end.getTime());
     const isMonthFilled = !!month;
 
     if (!isDateRangeFilled && !isMonthFilled) {
@@ -275,6 +275,7 @@ delete payload['onlyShowOverflow'];
     return null;
   }
 
+  // const textFields = ['ECR_No', 'tlt_no', 'tlt_name'];
   columns: any[] = [
     { field: 'ECR_No', header: '收銀機號', visible: true },
     { field: 'tlt_no', header: '專櫃編號', visible: true },
@@ -290,6 +291,7 @@ delete payload['onlyShowOverflow'];
       visible: true,
       style: 'text-right',
       format: this.moneyFormat,
+      isTotal: true,
     },
     {
       field: 'Pay_Dif_41',
@@ -297,6 +299,7 @@ delete payload['onlyShowOverflow'];
       visible: true,
       style: 'text-right',
       format: this.moneyFormat,
+      isTotal: true,
     },
     {
       field: 'Pay_Dif_42',
@@ -304,6 +307,7 @@ delete payload['onlyShowOverflow'];
       visible: true,
       style: 'text-right',
       format: this.moneyFormat,
+      isTotal: true,
     },
     {
       field: 'Pay_Dif_12',
@@ -311,6 +315,7 @@ delete payload['onlyShowOverflow'];
       visible: true,
       style: 'text-right',
       format: this.moneyFormat,
+      isTotal: true,
     },
     {
       field: 'Pay_Dif_81',
@@ -318,6 +323,7 @@ delete payload['onlyShowOverflow'];
       visible: true,
       style: 'text-right',
       format: this.moneyFormat,
+      isTotal: true,
     },
     {
       field: 'Pay_Dif_43',
@@ -325,6 +331,7 @@ delete payload['onlyShowOverflow'];
       visible: true,
       style: 'text-right',
       format: this.moneyFormat,
+      isTotal: true,
     },
     {
       field: 'Pay_Dif_44',
@@ -332,6 +339,7 @@ delete payload['onlyShowOverflow'];
       visible: true,
       style: 'text-right',
       format: this.moneyFormat,
+      isTotal: true,
     },
     {
       field: 'Pay_Dif_14',
@@ -339,6 +347,7 @@ delete payload['onlyShowOverflow'];
       visible: true,
       style: 'text-right',
       format: this.moneyFormat,
+      isTotal: true,
     },
     {
       field: 'Pay_Dif_82',
@@ -346,6 +355,7 @@ delete payload['onlyShowOverflow'];
       visible: true,
       style: 'text-right',
       format: this.moneyFormat,
+      isTotal: true,
     },
     {
       field: 'Pay_Dif_52',
@@ -353,6 +363,7 @@ delete payload['onlyShowOverflow'];
       visible: true,
       style: 'text-right',
       format: this.moneyFormat,
+      isTotal: true,
     },
     {
       field: 'Pay_Dif_20',
@@ -360,6 +371,7 @@ delete payload['onlyShowOverflow'];
       visible: true,
       style: 'text-right',
       format: this.moneyFormat,
+      isTotal: true,
     },
     {
       field: 'Pay_Dif_62',
@@ -367,6 +379,7 @@ delete payload['onlyShowOverflow'];
       visible: true,
       style: 'text-right',
       format: this.moneyFormat,
+      isTotal: true,
     },
     {
       field: 'Pay_Dif_77',
@@ -374,6 +387,7 @@ delete payload['onlyShowOverflow'];
       visible: true,
       style: 'text-right',
       format: this.moneyFormat,
+      isTotal: true,
     },
     {
       field: 'Pay_Dif_71',
@@ -381,6 +395,7 @@ delete payload['onlyShowOverflow'];
       visible: true,
       style: 'text-right',
       format: this.moneyFormat,
+      isTotal: true,
     },
     {
       field: 'Pay_Dif_30',
@@ -388,6 +403,7 @@ delete payload['onlyShowOverflow'];
       visible: true,
       style: 'text-right',
       format: this.moneyFormat,
+      isTotal: true,
     },
     {
       field: 'Pay_Dif_73',
@@ -395,10 +411,12 @@ delete payload['onlyShowOverflow'];
       visible: true,
       style: 'text-right',
       format: this.moneyFormat,
+      isTotal: true,
     },
     {
       field: 'Pay_Dif_72',
       header: '外來提貨單(抵用券)',
+      isTotal: true,
       visible: true,
       style: 'text-right',
       format: this.moneyFormat,
@@ -409,6 +427,7 @@ delete payload['onlyShowOverflow'];
       visible: true,
       style: 'text-right',
       format: this.moneyFormat,
+      isTotal: true,
     },
     {
       field: 'Pay_Dif_75',
@@ -416,6 +435,7 @@ delete payload['onlyShowOverflow'];
       visible: true,
       style: 'text-right',
       format: this.moneyFormat,
+      isTotal: true,
     },
     {
       field: 'Pay_Dif_76',
@@ -423,6 +443,7 @@ delete payload['onlyShowOverflow'];
       visible: true,
       style: 'text-right',
       format: this.moneyFormat,
+      isTotal: true,
     },
     {
       field: 'Pay_Dif_24',
@@ -430,6 +451,7 @@ delete payload['onlyShowOverflow'];
       visible: true,
       style: 'text-right',
       format: this.moneyFormat,
+      isTotal: true,
     },
     {
       field: 'Pay_Dif_25',
@@ -437,6 +459,7 @@ delete payload['onlyShowOverflow'];
       visible: true,
       style: 'text-right',
       format: this.moneyFormat,
+      isTotal: true,
     },
     {
       field: 'Pay_Dif_07',
@@ -444,6 +467,7 @@ delete payload['onlyShowOverflow'];
       visible: true,
       style: 'text-right',
       format: this.moneyFormat,
+      isTotal: true,
     },
     {
       field: 'Pay_Dif_83',
@@ -451,6 +475,7 @@ delete payload['onlyShowOverflow'];
       visible: true,
       style: 'text-right',
       format: this.moneyFormat,
+      isTotal: true,
     },
     {
       field: 'Pay_Dif_55',
@@ -458,6 +483,7 @@ delete payload['onlyShowOverflow'];
       visible: true,
       style: 'text-right',
       format: this.moneyFormat,
+      isTotal: true,
     },
     {
       field: 'Pay_Dif_78',
@@ -465,6 +491,7 @@ delete payload['onlyShowOverflow'];
       visible: true,
       style: 'text-right',
       format: this.moneyFormat,
+      isTotal: true,
     },
     {
       field: 'Pay_Dif_79',
@@ -472,6 +499,7 @@ delete payload['onlyShowOverflow'];
       visible: true,
       style: 'text-right',
       format: this.moneyFormat,
+      isTotal: true,
     },
     {
       field: 'Pay_Dif_22',
@@ -479,6 +507,7 @@ delete payload['onlyShowOverflow'];
       visible: true,
       style: 'text-right',
       format: this.moneyFormat,
+      isTotal: true,
     },
     {
       field: 'Pay_Dif_23',
@@ -486,6 +515,7 @@ delete payload['onlyShowOverflow'];
       visible: true,
       style: 'text-right',
       format: this.moneyFormat,
+      isTotal: true,
     },
     {
       field: 'Pay_Dif_53',
@@ -493,6 +523,7 @@ delete payload['onlyShowOverflow'];
       visible: true,
       style: 'text-right',
       format: this.moneyFormat,
+      isTotal: true,
     },
     {
       field: 'Pay_Dif_56',
@@ -500,6 +531,7 @@ delete payload['onlyShowOverflow'];
       visible: true,
       style: 'text-right',
       format: this.moneyFormat,
+      isTotal: true,
     },
     {
       field: 'Pay_Dif_57',
@@ -507,6 +539,7 @@ delete payload['onlyShowOverflow'];
       visible: true,
       style: 'text-right',
       format: this.moneyFormat,
+      isTotal: true,
     },
     {
       field: 'Pay_Dif_58',
@@ -514,6 +547,7 @@ delete payload['onlyShowOverflow'];
       visible: true,
       style: 'text-right',
       format: this.moneyFormat,
+      isTotal: true,
     },
     {
       field: 'Pay_Dif_59',
@@ -521,6 +555,7 @@ delete payload['onlyShowOverflow'];
       visible: true,
       style: 'text-right',
       format: this.moneyFormat,
+      isTotal: true,
     },
     {
       field: 'Pay_Dif_60',
@@ -528,6 +563,7 @@ delete payload['onlyShowOverflow'];
       visible: true,
       style: 'text-right',
       format: this.moneyFormat,
+      isTotal: true,
     },
     {
       field: 'PPay_Dif_sum',
@@ -535,6 +571,7 @@ delete payload['onlyShowOverflow'];
       visible: true,
       style: 'text-right',
       format: this.moneyFormat,
+      isTotal: true,
     },
   ];
 }

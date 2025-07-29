@@ -504,8 +504,10 @@ export class ContractFlowService {
    * 🎯 修正：儲存第1步資料
    */
   saveStep1Data(formData: ContractInfo): void {
-    console.log('💾 儲存 Step1 資料...');
-
+    if (this.isViewMode()) {
+      console.log('🔍 檢視模式，跳過 Step1 資料儲存');
+      return;
+    }
     const modeInfo = this.getWorkflowModeInfo();
 
     if (modeInfo.isNewMode) {
@@ -531,7 +533,6 @@ export class ContractFlowService {
    * 取得第1步資料
    */
   getStep1Data(queryData?: any): ContractInfo | null {
-    // console.log('🔍 取得 Step1 資料...');
 
     if (queryData) {
       const queryTalentId = queryData.talent_id || queryData.apply_no;
@@ -567,6 +568,10 @@ export class ContractFlowService {
    * 🎯 修正：儲存第2步資料（代扣款）
    */
   saveStep2Data(data: FareItem[]): void {
+    if (this.isViewMode()) {
+      console.log('🔍 檢視模式，跳過 Step2 資料儲存');
+      return;
+    }
     if (this.contractData.contractId) {
       this.contractData.step2 = data;
       this.contractData.metadata.lastModified = new Date();
@@ -580,8 +585,10 @@ export class ContractFlowService {
    * 🎯 修正：儲存第3步資料（抽成設定）
    */
   saveStep3Data(data: CommissionItem[]): void {
-    console.log('💾 儲存 Step3 資料到工作流程...');
-
+    if (this.isViewMode()) {
+      console.log('🔍 檢視模式，跳過 Step3 資料儲存');
+      return;
+    }
     if (this.contractData.contractId) {
       this.contractData.step3 = Array.isArray(data) ? data : [data];
       this.contractData.metadata.lastModified = new Date();
@@ -595,6 +602,10 @@ export class ContractFlowService {
    * 🎯 修正：儲存第4步資料（條件設定）
    */
   saveStep4Data(data: ConditionItem[]): void {
+    if (this.isViewMode()) {
+      console.log('🔍 檢視模式，跳過 Step4 資料儲存');
+      return;
+    }
     if (this.contractData.contractId) {
       this.contractData.step4 = Array.isArray(data) ? data : [data];
       this.contractData.metadata.lastModified = new Date();

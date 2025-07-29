@@ -248,16 +248,34 @@ export class TLS13010Component extends BasicQueryPageComponent<ContractItem> imp
    * 載入 POS2013 選項
    */
   private loadPOS2013Options(): void {
-    // 如果 DropdownService 中已經載入完成，直接使用
-    if (this.tls13010DropdownService.pos2013Options.length > 0) {
-      this.pos2013Options = this.tls13010DropdownService.getPOS2013Options();
-    } else {
-      // 否則延遲載入
-      setTimeout(() => {
-        this.pos2013Options = this.tls13010DropdownService.getPOS2013Options();
-        console.log('POS2013選項載入完成 (查詢頁面):', this.pos2013Options.length);
-      }, 500);
+    console.log('📍 開始載入 POS2013 選項');
+
+    // 如果服務已經載入完成，直接使用
+    const options = this.tls13010DropdownService.getPOS2013Options();
+    if (options.length > 0) {
+      this.pos2013Options = options;
+      console.log('✅ POS2013 選項已載入:', this.pos2013Options.length);
+      return;
     }
+
+    // 如果未載入，持續檢查直到載入完成
+    const checkInterval = setInterval(() => {
+      const latestOptions = this.tls13010DropdownService.getPOS2013Options();
+      if (latestOptions.length > 0) {
+        this.pos2013Options = latestOptions;
+        console.log('✅ POS2013 選項載入完成:', this.pos2013Options.length);
+        clearInterval(checkInterval);
+      }
+    }, 200); // 每 200ms 檢查一次
+
+    // 設置 5 秒超時，避免無限等待
+    setTimeout(() => {
+      clearInterval(checkInterval);
+      if (this.pos2013Options.length === 0) {
+        console.warn('⚠️ POS2013 選項載入超時');
+        this.messageService.warnBubble('載入廠商選項失敗，請重新整理頁面');
+      }
+    }, 5000);
   }
 
   /**
@@ -386,11 +404,13 @@ export class TLS13010Component extends BasicQueryPageComponent<ContractItem> imp
   override onDetail(rowData: ContractItem): void {
     console.log('🔍 開始檢視模式:', rowData);
 
-    // 設定為檢視模式
+    // 🎯 先設定工作流程資料（這樣 URL 乾淨但資料有保存）
     this.contractFlowService.startViewWorkflow(rowData);
 
-    // 導向 CRU 頁面（但會是唯讀模式）
-    this.router.navigate(['account/tls/tls13010cru']);
+    // 🎯 關鍵：只在檢視模式時加上 mode=view 參數
+    this.router.navigate(['account/tls/tls13010cru'], {
+      queryParams: { mode: 'view' }  // 只加這一個參數
+    });
 
     this.messageService.infoBubble('進入檢視模式，所有欄位為唯讀');
   }

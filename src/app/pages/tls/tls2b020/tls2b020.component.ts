@@ -44,10 +44,10 @@ import { forkJoin } from 'rxjs';
     RadiobuttonComponent,
     ButtonComponent,
     TableComponent,
-    
+
     MultiSelectComponent,
     TranslateModule,
-    
+
   ],
 })
 export class TLS2B020Component extends BasicQueryPageComponent<any> {
@@ -61,23 +61,23 @@ export class TLS2B020Component extends BasicQueryPageComponent<any> {
   overpaidAmount: number = 0; // 溢付金額（合計）
   underpaidAmount: number = 0; // 欠收金額（API回傳）
   closeDate: string = '查詢中...';
-    // 表格資料與欄位
+  // 表格資料與欄位
   data: any[] = [];
   totalRecords = 0;
   selectedItems: any[] = [];
   columns: any[] = [];
 
-  
-// 查詢表單
-queryForm = this.formBuilder.group({
-  tlt_building: [null],                            // 館別
-  tlt_floor: [[]],                                 // 樓層（多選）
-  TXN_Date: [null, [Validators.required]],         // 銷售日期（應為 Date 類型）
-  USR_No: [[]],                                     // 收銀員代號清單（備用）
-  cashierDistinction: [null],                         // 收銀員區分（保留）
-  overflowStatus: [null],                                  // 顯示方式：null=全部, 2=溢款, 3=欠款
-  ...createPaginationConfig([{ field: 'TXN_Date', order: 1 }])
-});
+
+  // 查詢表單
+  queryForm = this.formBuilder.group({
+    tlt_building: [null],                            // 館別
+    tlt_floor: [[]],                                 // 樓層（多選）
+    TXN_Date: [null, [Validators.required]],         // 銷售日期（應為 Date 類型）
+    USR_No: [[]],                                     // 收銀員代號清單（備用）
+    cashierDistinction: [null],                         // 收銀員區分（保留）
+    overflowStatus: [null],                                  // 顯示方式：null=全部, 2=溢款, 3=欠款
+    ...createPaginationConfig([{ field: 'TXN_Date', order: 1 }])
+  });
 
 
 
@@ -179,17 +179,17 @@ queryForm = this.formBuilder.group({
 onSubmit(form: FormGroup): void {
   this.submitted = true;
 
-  if (form.invalid) {
-    this.messageService.warnBubble('請完整填寫查詢條件');
-    return;
-  }
-
-  const payload = { ...form.value };
-  Object.keys(payload).forEach((key) => {
-    if (typeof payload[key] === 'string') {
-      payload[key] = payload[key].trim() || null;
+    if (form.invalid) {
+      this.messageService.warnBubble('請完整填寫查詢條件');
+      return;
     }
-  });
+
+    const payload = { ...form.value };
+    Object.keys(payload).forEach((key) => {
+      if (typeof payload[key] === 'string') {
+        payload[key] = payload[key].trim() || null;
+      }
+    });
 
   // ✅ 保留 TXN_Date → yyyymm，給查詢 payload 使用（不再產生欄位）
   if (payload.TXN_Date) {
@@ -231,35 +231,35 @@ onSubmit(form: FormGroup): void {
   });
 
 
-  this.loading = true;
-  this.messageService.blockUi();
+    this.loading = true;
+    this.messageService.blockUi();
 
-  // ✅ 改為平行呼叫：主資料 + 關帳日
-  forkJoin({
-    reportData: this.tls2b020Service.queryTLS2B020(payload),
-    closeDateRes: this.tls2b020Service.queryCloseDate(payload),
-  }).subscribe({
-    next: ({ reportData, closeDateRes }) => {
-      this.data = reportData?.Data ?? [];
-      this.totalRecords = reportData?.TotalCount ?? this.data.length;
+    // ✅ 改為平行呼叫：主資料 + 關帳日
+    forkJoin({
+      reportData: this.tls2b020Service.queryTLS2B020(payload),
+      closeDateRes: this.tls2b020Service.queryCloseDate(payload),
+    }).subscribe({
+      next: ({ reportData, closeDateRes }) => {
+        this.data = reportData?.Data ?? [];
+        this.totalRecords = reportData?.TotalCount ?? this.data.length;
 
-      this.queryStateService.setQueryState(this.ProgNo, payload);
+        this.queryStateService.setQueryState(this.ProgNo, payload);
 
-      // ✅ 從 closeDateRes.Data 拿關帳日
-      this.closeDate = closeDateRes?.Data ?? '-';
+        // ✅ 從 closeDateRes.Data 拿關帳日
+        this.closeDate = closeDateRes?.Data ?? '-';
 
-      this.messageService.successBubble('查詢成功');
-    },
-    error: () => {
-      this.messageService.errorBubble('查詢失敗，請稍後再試');
-      this.loading = false;
-    },
-    complete: () => {
-      this.loading = false;
-      this.messageService.unblockUi();
-    },
-  });
-}
+        this.messageService.successBubble('查詢成功');
+      },
+      error: () => {
+        this.messageService.errorBubble('查詢失敗，請稍後再試');
+        this.loading = false;
+      },
+      complete: () => {
+        this.loading = false;
+        this.messageService.unblockUi();
+      },
+    });
+  }
 
 
 
@@ -267,22 +267,22 @@ onSubmit(form: FormGroup): void {
     return value != null ? value.toLocaleString('en-US') : '0';
   }
   get overflowStatusDisplay(): string {
-  const value = this.queryForm.get('overflowStatus')?.value;
-const overflowValue = Number(this.queryForm.get('overflowStatus')?.value ?? NaN);
+    const value = this.queryForm.get('overflowStatus')?.value;
+    const overflowValue = Number(this.queryForm.get('overflowStatus')?.value ?? NaN);
 
-  if (overflowValue === 2)  {
-    return `欠收金額：${this.formatAmount(this.underpaidAmount)} 元`;
-  }else if (overflowValue === 3){
-    return `溢付金額：${this.formatAmount(this.overpaidAmount)} 元　欠收金額：${this.formatAmount(this.underpaidAmount)} 元`;
-  } else {
-    // 預設為全部 (value === 1)
-    return `溢付金額：${this.formatAmount(this.overpaidAmount)} 元`;
+    if (overflowValue === 2) {
+      return `欠收金額：${this.formatAmount(this.underpaidAmount)} 元`;
+    } else if (overflowValue === 3) {
+      return `溢付金額：${this.formatAmount(this.overpaidAmount)} 元　欠收金額：${this.formatAmount(this.underpaidAmount)} 元`;
+    } else {
+      // 預設為全部 (value === 1)
+      return `溢付金額：${this.formatAmount(this.overpaidAmount)} 元`;
+    }
   }
-}
 
-private formatAmount(value: number): string {
-  return value?.toLocaleString('zh-TW', { minimumFractionDigits: 0, maximumFractionDigits: 0 }) ?? '0';
-}
+  private formatAmount(value: number): string {
+    return value?.toLocaleString('zh-TW', { minimumFractionDigits: 0, maximumFractionDigits: 0 }) ?? '0';
+  }
 
 
   onClearForm(): void {
