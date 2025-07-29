@@ -1,9 +1,8 @@
 <div class="card">
-  <div class="grid align-items-center">
-    <div class="col" style="flex: 1">
-      <app-menubar [ProgNo]="ProgNo"></app-menubar>
-    </div>
+  <div class="flex gap-2 mb-2">
+    <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
   </div>
+
   <p-accordion>
     <p-accordionTab
       header="{{ 'query-conditions' | translate }}"
@@ -18,31 +17,34 @@
       >
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-number
-              [useGrouping]="false"
+            <app-dropdown
               label="收銀機號"
-              controlName="casherNumber"
-              [control]="queryForm.controls.casherNumber"
+              controlName="ECR_No"
+              [options]="ECRNoOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.ECR_No"
               [submitted]="submitted"
-            ></app-input-number>
+            ></app-dropdown>
           </div>
+
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-number
               [useGrouping]="false"
               label="交易序號"
-              controlName="transferNumber"
-              [control]="queryForm.controls.transferNumber"
+              controlName="TXN_No"
+              [control]="queryForm.controls.TXN_No"
               [submitted]="submitted"
             ></app-input-number>
           </div>
+
           <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar-range
-              calendarType="dateRange"
+            <app-calendar-range-quick
               label="銷售日期"
-              [startControl]="queryForm.controls.startdate"
-              [endControl]="queryForm.controls.enddate"
+              [startControl]="queryForm.controls.TXN_DateStart"
+              [endControl]="queryForm.controls.TXN_DateEnd"
               [submitted]="submitted"
-            ></app-calendar-range>
+            ></app-calendar-range-quick>
           </div>
         </div>
         <div class="grid p-fluid">
@@ -68,8 +70,8 @@
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-number
               label="信用卡卡號"
-              controlName="creditCardID"
-              [control]="queryForm.controls.creditCardID"
+              controlName="SYS_DisplayCredit"
+              [control]="queryForm.controls.SYS_DisplayCredit"
               [submitted]="submitted"
             ></app-input-number>
           </div>
@@ -78,36 +80,55 @@
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown
               label="樓層"
-              controlName="floor"
+              controlName="FLOOR_NO"
               [options]="floorOptions"
               optionLabel="label"
               optionValue="value"
-              [control]="queryForm.controls.floor"
+              [control]="queryForm.controls.FLOOR_NO"
+              [submitted]="submitted"
+            ></app-dropdown>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown
+              label="館別"
+              controlName="building_no"
+              [options]="buildingNoOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.building_no"
               [submitted]="submitted"
             ></app-dropdown>
           </div>
         </div>
         <div>
-          <div class="grid justify-content-end">
-            <app-button btnType="clear" (onClick)="onClearForm()"></app-button>
-            <app-button
-              btnType="query"
-              (onClick)="onSubmitQuery(queryForm)"
-              [loading]="loading"
-            ></app-button>
+          <div>
+            <div
+              class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
+            >
+              <app-button btnType="clear"></app-button>
+              <app-button btnType="query" [loading]="loading"></app-button>
+            </div>
           </div>
-        </div>
+          </div>
       </form>
     </p-accordionTab>
   </p-accordion>
 </div>
+
 <div class="card">
-  <div class="col-13">
-    <app-table
-      [data]="data"
-      [columns]="columns"
-      (edit)="onEdit($event)"
-      (detail)="onDetail($event)"
-    ></app-table>
-  </div>
+<app-table
+  dataKey="id"
+  [data]="data"
+  [columns]="columns"
+  [showCheckBox]="true"
+  [multiSortMeta]="[{ field: 'ECR_No', order: 1 }]"
+  [totalRecords]="totalRecords"
+  [lazy]="true"
+  [loading]="loading"
+  [showPaginator]="true"
+  [showReportMode]="false"
+  [showDelete]="false"
+  [showDetail]="false"
+  [showEdit]="false"
+></app-table>
 </div>

@@ -7,7 +7,6 @@ import { ECRNoService } from '../../../service/basic/ECRNo.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { AccordionModule } from 'primeng/accordion';
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
-import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
 import { DropdownModule } from 'primeng/dropdown';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
@@ -15,6 +14,8 @@ import { TranslateModule } from '@ngx-translate/core';
 import { TLS22020Service } from '../../../service/api/tls/tls22020.service';
 import { DropdownRangeComponent } from '@shared/componentkit/dropdown-range/dropdown-range.component';
 import { createPaginationConfig } from '@shared/componentkit/table/table.model';
+import { creditCardColumns, creditCardGroup, TLS22020Data, payNoDataList } from './tls22020.model';
+import { CommonModule } from '@angular/common';
 
 @Component({
   templateUrl: './tls22020.component.html',
@@ -25,12 +26,12 @@ import { createPaginationConfig } from '@shared/componentkit/table/table.model';
     FormsModule,
     ReactiveFormsModule,
     CalendarComponent,
-    MultiSelectComponent,
     DropdownModule,
     ButtonComponent,
     TableComponent,
     TranslateModule,
-    DropdownRangeComponent
+    DropdownRangeComponent,
+    CommonModule
   ],
 })
 
@@ -45,15 +46,13 @@ export class TLS22020Component extends BasicQueryPageComponent<any> implements O
     ...createPaginationConfig([{ field: 'ECR_No', order: 1 }]),
   });
   // 表格資料
-  data: any[] = [];
+  data: TLS22020Data[] = [];
   ECRNoOptions: any[] = [];
   columns: any[] = [
     { field: 'ECR_No', header: '收銀機號', visible: true },
     { field: 'tlt_no', header: '專櫃編號', visible: true },
     { field: 'tlt_name', header: '專櫃名稱', visible: true },
-    // { field: 'pay_NoDataList', header: '明細', visible: true },
-    // { field: 'pay_NoDataList', header: 'Z表', visible: true },
-    // { field: 'pay_NoDataList', header: '差額', visible: true },
+
   ];
 
 
@@ -64,6 +63,43 @@ export class TLS22020Component extends BasicQueryPageComponent<any> implements O
     { label: '是', value: 'Y' },
     { label: '否', value: 'N' }
   ];
+  selectedColumns = creditCardColumns;
+  columnGroup = creditCardGroup;
+  totalRow: TLS22020Data = {
+    ECR_No: '',
+    TLT_NO: '',
+    tlt_name: '',
+  };
+  total: Record<string, number> = {
+    TXN_Total: 0,
+    SLE_Total: 0,
+    Diff_Total: 0,
+  };
+
+
+  calcTotal(data: TLS22020Data[]) {
+    this.total = {
+      TXN_Total: 0,
+      SLE_Total: 0,
+      Diff_Total: 0,
+    };
+
+    for (const item of data) {
+      for (const pay of payNoDataList) {
+        const payNo = pay.Pay_No;
+        for (const type of ['TXN_PayAmt', 'SLE_PayAmt', 'Diff_PayAmt']) {
+          const key = `${type}_${payNo}`;
+          this.total[key] = (this.total[key] || 0) + (item[key] || 0);
+        }
+      }
+
+      this.total['TXN_Total'] += item['TXN_Total'] || 0;
+      this.total['SLE_Total'] += item['SLE_Total'] || 0;
+      this.total['Diff_Total'] += item['Diff_Total'] || 0;
+    }
+  }
+
+
 
   constructor(
 
@@ -95,21 +131,45 @@ export class TLS22020Component extends BasicQueryPageComponent<any> implements O
         ...form.value,
         TXN_Date: form.value.TXN_Date.toLocaleDateString('en-CA'),
       };
-      console.log('送出查詢參數:', params);
+
       this.tls22020Service.queryTLS22020(params).subscribe({
         next: (res) => {
-          this.data = res.Data ?? [];
+          const flatData = (res.Data ?? []).map((item: any) => {
+            const row: any = {
+              ECR_No: item.ECR_No,
+              tlt_no: item.tlt_no,
+              tlt_name: item.tlt_name,
+              TXN_Total: item.Total_Txn_PayAmt,
+              SLE_Total: item.Total_SLE_PayAmt,
+              Diff_Total: item.Total_Diff_PayAmt,
+            };
+
+            for (const pay of item.pay_NoDataList) {
+              const payNo = pay.Pay_No;
+              row[`TXN_PayAmt_${payNo}`] = pay.TXN_PayAmt;
+              row[`SLE_PayAmt_${payNo}`] = pay.SLE_PayAmt;
+              row[`Diff_PayAmt_${payNo}`] = pay.Diff_PayAmt;
+            }
+
+            return row;
+          });
+
+          this.data = flatData;
           this.totalRecords = res.TotalCount;
+          this.queryStateService.setQueryState(this.ProgNo, params);
+          this.calcTotal(this.data);
           this.loading = false;
-          this.queryStateService.setQueryState(this.ProgNo, this.queryForm.value);
         },
         error: (err) => {
           console.error('TLS22020 查詢失敗', err);
           this.loading = false;
         }
       });
+
     });
   }
+
+
 }
 
 
