@@ -39,9 +39,9 @@ export class TLS26010Component extends BasicQueryPageComponent<TLS26010Data> {
 
   // 查詢表單
   public queryForm = this.formBuilder.group({
-    sys3800: [''], // 館別
-    sys3900: [''], // 樓層
-    sys3A00: [''], // 區域
+    sys3800: [,], // 館別
+    sys3900: [,], // 樓層
+    sys3A00: [,], // 區域
     ecrNos: [[] as string[]], // 收銀機號
     tltNos: [[] as string[]], // 專櫃ID
     podSdateS: [this.dateS, Validators.required], // 起始日期(起)
@@ -59,12 +59,18 @@ export class TLS26010Component extends BasicQueryPageComponent<TLS26010Data> {
   public readonly addButton: AddButton[] = [
     {
       label: '核准', icon: 'pi pi-check-circle text-green-500',
-      action: (rowData: TLS26010Data) => this.service.loadApproval(rowData),
+      action: (rowData: TLS26010Data) => {
+        this.service.loadApproval(rowData);
+        this.service.loadTLS26010(this.queryTLS26010());
+      },
       disabled: (rowData: TLS26010Data) => rowData.pod_status !== ApprovalStatus.未核准,
     },
     {
       label: '反核准', icon: 'pi pi-undo text-orange-500',
-      action: (rowData: TLS26010Data) => this.service.loadApproval(rowData),
+      action: (rowData: TLS26010Data) => {
+        this.service.loadApproval(rowData);
+        this.service.loadTLS26010(this.queryTLS26010());
+      },
       disabled: (rowData: TLS26010Data) => rowData.pod_status !== ApprovalStatus.已核准,
     },
   ];
@@ -203,7 +209,14 @@ export class TLS26010Component extends BasicQueryPageComponent<TLS26010Data> {
 
   public onClearForm(): void {
     this.queryForm.reset();
-  };
+    this.queryForm.patchValue({
+      podSdateS: this.dateS,
+      podSdateE: this.dateE,
+      podEdateS: this.dateS,
+      podEdateE: this.dateE,
+    });
+    this.queryForm.markAsPristine();
+  }
 
   public onSubmitQuery(): void {
     console.log(`submit:`, [this.queryForm.value, this.sys3900Signal(), this.dateValidationSignal()]);

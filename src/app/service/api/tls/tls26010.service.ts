@@ -373,7 +373,7 @@ export class TLS26010Service {
   loadApproval(data: TLS26010Data): void {
     if (this.approvalStatusLoading) return void (this.approvalStatusLoading = !1);
     this.approvalStatusLoading = !0;
-    const id = data.pod_no;
+    const id = data.id;
 
     this.http.post<BaseQueryResponse<{ Status: ApprovalStatus; }>>(
       `${apiUrl}/TLS0000/TLS2000${data.pod_status === ApprovalStatus.未核准 ? '/approveTLS26010' : '/disapproveTLS26010'}`,

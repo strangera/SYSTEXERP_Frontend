@@ -52,15 +52,15 @@ export class TLS26010CRUComponent extends BasicCruPageComponent<TLS26010Data> im
 
   public dataForm = this.formBuilder.nonNullable.group({
     pod_no: ['自動給號'], // 預售活動編號
-    pod_desc: ['', [Validators.required, Validators.maxLength(100)]], // 預售名稱
+    pod_desc: [, [Validators.required, Validators.maxLength(100)]], // 預售名稱
     pod_sdate: [new Date(), Validators.required], // 預售期間(起)
     pod_edate: [new Date(), Validators.required], // 預售期間(迄)
     pod_busdate: [new Date(), Validators.required], // 活動正檔日期
     pod_status: ['未核准'], // 核准狀態
     ECR_Nos: [[] as string[]], //收銀機清單
     tlt_nos: [[] as string[]], //專櫃清單
-    sys3800: [''], // 館別
-    sys3900: [''], // 樓層
+    sys3800: [,], // 館別
+    sys3900: [,], // 樓層
   });
   private get df() { return this.dataForm.controls; }
 
@@ -197,10 +197,10 @@ export class TLS26010CRUComponent extends BasicCruPageComponent<TLS26010Data> im
     });
   }
 
-  dialogChange(event: DropdownChangeEvent): void {
+  public dialogChange(event: DropdownChangeEvent): void {
     console.log(`dialogChange:`, [event]);
-    if (event && event.value?.lenth) {
-      this.dataForm.patchValue({ sys3800: '', sys3900: '' });
+    if (event && event.value?.length) {
+      this.dataForm.patchValue({ sys3800: undefined, sys3900: undefined });
       if (this.dialogVisible() === 'ecr') this.df.ECR_Nos.patchValue([]);
       if (this.dialogVisible() === 'tlt') this.df.tlt_nos.patchValue([]);
     }
