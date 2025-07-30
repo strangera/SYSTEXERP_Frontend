@@ -95,13 +95,13 @@
 <div class="card">
   <div class="col-12">
     <app-table [showCheckBox]="true"
-               [editDisabled]="editDisabled || !isEditable"
                [data]="service.TLS26010Data()"
                [tableKey]="'TLS26010'"
                [dataKey]="'pod_no'"
                [columns]="columns"
                [addButton]="addButton"
                [selectedItems]="selectedItems"
+               [editDisabled]="editDisabled"
                [isRowSelectable]="isRowSelectable"
                (selectionChange)="selectedItems = $event"
                (delete)="onDelete($event)"

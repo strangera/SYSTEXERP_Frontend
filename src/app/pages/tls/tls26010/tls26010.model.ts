@@ -1,4 +1,4 @@
-import { ApiError, ApiMeta, BaseQueryResponse, DropdownOption } from '@shared/models/api/base-api.interface';
+import { BaseQueryResponse } from '@shared/models/api/base-api.interface';
 
 /**
  * @description
@@ -56,91 +56,103 @@ export interface TLS26010Data {
   build_no?: string;
   floor_no?: string;
   talent_id?: number;
-  tlt_nos?: string;
+  tlt_nos?: string[];
 }
 
 export interface TLS26010DetailResponse extends Omit<BaseQueryResponse<TLS26010Detail>, 'Data'> {
   Data: TLS26010Detail;
 }
 
+/** * @description
+ * - ecr_list: 收銀機清單
+ * - pod_info: 預售活動基本資訊
+ * - talent_list: 櫃位清單
+ */
 export interface TLS26010Detail {
-  ecr_list: ECRTableData[];
-  pod_info: {
-    id: number;
-    mid: number;
-    pod_desc: string;
-    pod_edate: Date;
-    pod_no: string;
-    pod_sdate: Date;
-    pod_status: '0' | '1' | '9';
-  } | null;
-  talent_list: TLTTALENTData[];
+  ecr_list: EcrItem[];
+  pod_info: PodInfo;
+  talent_list: TalentItem[];
 }
 
-export interface TLS26010Payload {
+/** * @description
+ * - id: 主鍵，自動編號
+ * - pod_no: 預售活動編號
+ * - pod_desc: 預售活動名稱
+ * - pod_sdate: 預售活動起始日期
+ * - pod_edate: 預售活動終止日期
+ * - pod_status: 預售活動狀態 (0=未核准, 1=已核准, 9=刪除)
+ */
+export interface PodInfo {
+  id?: number;
   pod_no?: string;
   pod_desc: string;
   pod_sdate: Date;
   pod_edate: Date;
-  pod_status: '0' | '1' | '9';
-  ECR_Nos?: string[];
-  tlt_nos?: string[];
+  pod_status?: '0' | '1' | '9';
 }
 
-export interface ECRTableData {
-  id: number;
+/** * @description
+ * - id: 主鍵，自動編號
+ * - ECR_No: 收銀機編號
+ * - tlt_no: 櫃位編號
+ * - tlt_name: 櫃位名稱
+ * - Status: 操作狀態 (original=原始, modify=修改, delete=刪除, new=新增)
+ */
+export interface EcrItem {
+  id?: number;
   ECR_No: string;
   tlt_no: string;
-  tlt_name: string | null;
+  tlt_name: string;
+  Status?: 'original' | 'modify' | 'delete' | 'new';
 }
 
-export interface TLTTALENTData {
-  id: number;
+/**
+ * @description
+ * - id: 主鍵，自動編號
+ * - tlt_no: 櫃位編號
+ * - tlt_name: 櫃位名稱
+ * - Status: 操作狀態 (original=原始, modify=修改, delete=刪除, new=新增)
+ */
+export interface TalentItem {
+  id?: number;
   tlt_no: string;
-  tlt_name: string | null;
+  tlt_name: string;
+  Status?: 'original' | 'modify' | 'delete' | 'new';
 }
 
-export const mockPreorderECRList: BaseQueryResponse<DropdownOption> = {
-  Error: void 0,
-  Message: '成功',
-  Meta: {
-    Timestamp: '2025-01-20T10:00:00.0000000Z',
-    RequestId: 'test-request-id-12345'
-  },
-  Status: '0000',
-  TotalCount: 3,
-  TotalPage: 1,
-  Data: [
-    { No: '000001', Name: '01' },
-    { No: '000002', Name: '02' },
-    { No: '000003', Name: '03' },
-    { No: '000004', Name: '04' },
-    { No: '000005', Name: '05' }
-  ]
-};
+/** * @description
+ * - pod_info: 活動基本資訊
+ * - ecr_list: ECR 清單
+ * - talent_list: 櫃位清單
+ */
+export interface PodCreateRequest {
+  pod_info: PodInfo;
+  ecr_list: EcrItem[];
+  talent_list: TalentItem[];
+}
 
-export const mockTLS26010Data: BaseQueryResponse<TLS26010Data> = {
-  Status: "0000",
-  Data: [
-    {
-      CanDelete: "1",
-      CanEdit: "1",
-      id: 1,
-      pod_no: "20250720001",
-      pod_desc: "123456",
-      pod_sdate: "2025-07-20T00:00:00" as unknown as Date,
-      pod_edate: "2025-07-31T00:00:00" as unknown as Date,
-      pod_status: "0",
-      approved_usr_name: null,
-      approved_date: null
-    }
-  ],
-  Error: undefined,
-  Meta: {
-    Timestamp: "2025-07-29T06:52:12.3665130Z",
-    RequestId: "7ea05a72-44b2-4405-bac0-ad68ed5fea9d"
-  },
-  Message: "成功",
-  TotalCount: 1,
-  TotalPage: 1
-};
+/** * @description
+ * - pod_info: 活動基本資訊
+ * - ecr_list: ECR 清單
+ * - talent_list: 櫃位清單
+ */
+export interface PodUpdateRequest {
+  pod_info: PodInfo;
+  ecr_list: EcrItem[];
+  talent_list: TalentItem[];
+}
+
+export type PodRequest = PodCreateRequest | PodUpdateRequest;
+
+export interface FormValue {
+  ECR_Nos?: string[] | null;
+  tlt_nos?: string[] | null;
+  pod_desc?: string | null;
+  pod_sdate?: Date | null;
+  pod_edate?: Date | null;
+}
+
+export interface StatusProcessStrategy {
+  processEcrList(): EcrItem[];
+  processTalentList(): TalentItem[];
+}
