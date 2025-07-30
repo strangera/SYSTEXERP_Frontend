@@ -101,7 +101,7 @@ export class TLS29010CRUComponent extends BasicCruPageComponent<TALPORDERD_OPEND
       dataForm = this.formBuilder.group({
         id: [{value: null, disabled: true}], // 主鍵，自動編號
         mid: [{value: null, disabled: true}], // 主檔關聯 ID
-        str_no: ['', Validators.required], // 店部編號
+        str_no: [{value: '', disabled: true}], // 店部編號
         // --先選 專櫃活動設定主檔TALPORDERM--
         //欄位用這些就好
         pod_no: [{value: null, disabled: true}], // 活動申請編號 (YYYYMMDDSSS)
@@ -245,7 +245,8 @@ export class TLS29010CRUComponent extends BasicCruPageComponent<TALPORDERD_OPEND
         //新增模式pod_desc才可以填寫，否則與其他欄位一樣都設為disabled
         if(this.crudstatus === CRUDStatus.Create) {
           this.dataForm.get('pod_desc')?.enable();
-
+          const userInfo = this.authService?.getUserInfo?.();
+          this.dataForm.get('str_no')?.setValue(userInfo?.SYS_StoreNo || '') //依照section填寫店號
         } else {
           this.dataForm.get('pod_desc')?.disable();
         }
