@@ -12,7 +12,7 @@
            class="line-height-3 m-0">
     <form [formGroup]="dataForm"
           id="dataForm"
-          (ngSubmit)="onSubmit(dataForm)">
+          (ngSubmit)="onSubmit()">
       <div class="grid p-fluid">
         <div class="col-12 md:col-6 lg:col-4">
           <app-input-text label="預售活動編號"
@@ -48,18 +48,18 @@
     </form>
     <div class="col pt-4">
       <div class="grid justify-content-end">
-        <app-button btnType="cancel"
-                    (click)="onCancel()"
+        <app-button btnType="clear"
+                    (click)="onClear()"
                     *ngIf="isFormCreateable || isFormEditable"></app-button>
         <app-button btnType="submit"
-                    (click)="onSubmit(dataForm)"
+                    (click)="onSubmit()"
                     *ngIf="isFormEditable || isFormCreateable"></app-button>
       </div>
     </div>
   </p-panel>
 </div>
 <div class="card">
-  <div *ngIf="isFormEditable"
+  <div *ngIf="isFormEditable || isFormCreateable"
        class="grid p-fluid">
     <div class="col-12 md:col-6 lg:col-4">
       <app-button btnType="create"
@@ -86,7 +86,7 @@
   </div>
 </div>
 <div class="card">
-  <div *ngIf="isFormEditable"
+  <div *ngIf="isFormEditable || isFormCreateable"
        class="grid p-fluid">
     <div class="col-12 md:col-6 lg:col-4">
       <app-button btnType="create"
@@ -116,7 +116,7 @@
 <app-dialog [visible]="!!dialogVisible()"
             [header]="dialogVisible() === 'ecr' ? '新增收銀機' : '新增專櫃'"
             (visibleChange)="dialogVisible.set(!1)"
-            (save)="saveDialog(dataForm)"
+            (save)="onSubmit()"
             [height]="'50vh'">
   <form [formGroup]="dataForm">
     <div class="grid p-fluid">

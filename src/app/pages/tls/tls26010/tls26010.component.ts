@@ -1,7 +1,7 @@
 import { DatePipe } from '@angular/common';
 import { Component, computed, effect } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 import { TLS26010Service } from '@service/api/tls/tls26010.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
@@ -39,32 +39,39 @@ export class TLS26010Component extends BasicQueryPageComponent<TLS26010Data> {
 
   // 查詢表單
   public queryForm = this.formBuilder.group({
-    sys3800: [''], // 館別
-    sys3900: [''], // 樓層
-    sys3A00: [''], // 區域
-    ecrNos: [[] as string[]], // 收銀機號
-    tltNos: [[] as string[]], // 專櫃ID
-    podSdateS: [this.dateS, Validators.required], // 起始日期(起)
-    podSdateE: [this.dateE, Validators.required], // 起始日期(迄)
-    podEdateS: [this.dateS, Validators.required], // 截止日期(起)
-    podEdateE: [this.dateE, Validators.required], // 截止日期(迄)
+    sys3800: new FormControl<string | undefined>(undefined), // 館別
+    sys3900: new FormControl<string | undefined>(undefined), // 樓層
+    sys3A00: new FormControl<string | undefined>(undefined), // 區域
+    ecrNos: new FormControl<string[] | undefined>(undefined), // 收銀機號
+    tltNos: new FormControl<string[] | undefined>(undefined), // 專櫃ID
+    podSdateS: new FormControl<Date>(this.dateS, Validators.required), // 起始日期(起)
+    podSdateE: new FormControl<Date>(this.dateE, Validators.required), // 起始日期(迄)
+    podEdateS: new FormControl<Date>(this.dateS, Validators.required), // 截止日期(起)
+    podEdateE: new FormControl<Date>(this.dateE, Validators.required), // 截止日期(迄)
   });
 
   public selectedItems: TLS26010Data[] = [];
 
-  public readonly editDisabled = (rowData: TLS26010Data) => rowData.pod_status !== ApprovalStatus.未核准;
-  public readonly isEditable = (rowData: TLS26010Data) => rowData.CanEdit == '1';
-  public readonly isRowSelectable = (rowData: TLS26010Data) => rowData.CanDelete == '0';
+  public readonly editDisabled = (rowData: TLS26010Data) =>
+    (Reflect.has(rowData, 'CanEdit') && rowData.CanEdit == '1') || rowData.pod_status !== ApprovalStatus.未核准;
+  public readonly isRowSelectable = (rowData: TLS26010Data) =>
+    (Reflect.has(rowData, 'CanDelete') && rowData.CanDelete == '1');
 
   public readonly addButton: AddButton[] = [
     {
       label: '核准', icon: 'pi pi-check-circle text-green-500',
-      action: (rowData: TLS26010Data) => this.service.loadApproval(rowData),
+      action: (rowData: TLS26010Data) => {
+        this.service.loadApproval(rowData);
+        queueMicrotask(() => this.service.loadTLS26010(this.queryTLS26010()));
+      },
       disabled: (rowData: TLS26010Data) => rowData.pod_status !== ApprovalStatus.未核准,
     },
     {
       label: '反核准', icon: 'pi pi-undo text-orange-500',
-      action: (rowData: TLS26010Data) => this.service.loadApproval(rowData),
+      action: (rowData: TLS26010Data) => {
+        this.service.loadApproval(rowData);
+        queueMicrotask(() => this.service.loadTLS26010(this.queryTLS26010()));
+      },
       disabled: (rowData: TLS26010Data) => rowData.pod_status !== ApprovalStatus.已核准,
     },
   ];
@@ -202,8 +209,13 @@ export class TLS26010Component extends BasicQueryPageComponent<TLS26010Data> {
   }
 
   public onClearForm(): void {
-    this.queryForm.reset();
-  };
+    this.queryForm.reset({
+      podSdateS: this.dateS,
+      podSdateE: this.dateE,
+      podEdateS: this.dateS,
+      podEdateE: this.dateE,
+    });
+  }
 
   public onSubmitQuery(): void {
     console.log(`submit:`, [this.queryForm.value, this.sys3900Signal(), this.dateValidationSignal()]);
@@ -233,16 +245,4 @@ export class TLS26010Component extends BasicQueryPageComponent<TLS26010Data> {
       reject: () => this.messageService.infoBubble('已取消刪除')
     });
   }
-}
-
-interface QueryForm {
-  sys3800: string;
-  sys3900: string;
-  sys3A00: string;
-  ecrNos: string[];
-  tltNos: string[];
-  podSdateS: Date;
-  podSdateE: Date;
-  podEdateS: Date;
-  podEdateE: Date;
 }

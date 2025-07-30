@@ -9,16 +9,42 @@
       <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text label="店部編號" controlName="str_no" [control]="queryForm.controls.str_no"
-              [submitted]="submitted"></app-input-text>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
             <app-input-text label="活動編號" controlName="pod_no" [control]="queryForm.controls.pod_no"
               [submitted]="submitted"></app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-number label="合約編號系統" controlName="talent_id" [control]="queryForm.controls.talent_id"
-              [submitted]="submitted"></app-input-number>
+            <app-dropdown
+              label="折扣別"
+              controlName="pod_type"
+              [options]="podTypeOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.pod_type"
+              [submitted]="submitted">
+            </app-dropdown>
+          </div>
+        </div>
+        <div class="grid p-fluid">
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-calendar-range calendarType="dateRange" label="活動期間"
+              [startControl]="queryForm.controls.pod_sdate" [endControl]="queryForm.controls.pod_edate"
+              [submitted]="submitted" />
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown
+              label="活動狀態"
+              controlName="pod_status"
+              [options]="pod_status_Options"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.pod_status"
+              [submitted]="submitted">
+            </app-dropdown>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-calendar-range calendarType="dateRange" label="維護日"
+              [startControl]="queryForm.controls.mantain_sdate" [endControl]="queryForm.controls.mantain_edate"
+              [submitted]="submitted" />
           </div>
         </div>
         <div class="grid p-fluid">
@@ -31,11 +57,15 @@
               optionValue="No" [control]="queryForm.controls.tlt_no" [submitted]="submitted"></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text label="折數(條碼)" controlName="cag_barcode" [control]="queryForm.controls.cag_barcode"
-              [submitted]="submitted"></app-input-text>
+            <app-dropdown label="專櫃位置編號" controlName="locationNumber" [options]="pos2002_location_Option" optionLabel="Name"
+              optionValue="No" [control]="queryForm.controls.locationNumber" [submitted]="submitted"></app-dropdown>
           </div>
         </div>
         <div class="grid p-fluid">
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-text label="建立人員姓名" controlName="crt_usr_name" [control]="queryForm.controls.crt_usr_name"
+              [submitted]="submitted"></app-input-text>
+          </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown label="是否使用" controlName="use_flag" [options]="whetherOption" optionLabel="label"
               optionValue="value" [control]="queryForm.controls.use_flag" [submitted]="submitted"></app-dropdown>

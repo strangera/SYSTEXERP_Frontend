@@ -107,7 +107,7 @@ export class TLS12010Component extends BasicQueryPageComponent<Potential_Custome
       bus_type_Option: apiOption[] = []; // 業種-大分類代碼
       tlt_name_Option: apiOption[] = []; // 品牌
       cus_uniform_Option: POS2013[] = []; // 廠商統一編號(pos2013) -- 等候端提供 (必須包含No、Name、EName)
-      contact_USR_Option: apiOption[] = [];  // 接洽人員代碼/名稱 -- 等候端提供
+      contact_USR_Option: apiOption[] = [];  // 接洽人員代碼/名稱
       
       data: Potential_Customer[] = [];
       columns: Column[] = [

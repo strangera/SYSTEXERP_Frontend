@@ -38,8 +38,8 @@ export class Tls12060Service {
   // }
   // --- dropDown ---
   //查詢 接待人員
-  queryTLS12010_DropDownList(body: any): Observable<any> {
-    return this.http.post<any>(`${environment.ApiUrl}/queryTLS12010_DropDownList`, body);
+  queryTBLUSER_DropDownList(body: any): Observable<any> {
+    return this.http.post<any>(`${environment.ApiUrl}/queryTBLUSER_DropDownList`, body);
   }
 
   // 查詢 大分類(業種)設定檔
