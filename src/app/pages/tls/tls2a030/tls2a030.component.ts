@@ -12,6 +12,8 @@ import { TableComponent } from '../../../shared/componentkit/table/table.compone
 import { TranslateModule } from '@ngx-translate/core';
 import { TLS2A030Service } from '../../../service/api/tls/tls2a030.service';
 import { DropdownRangeComponent } from '@shared/componentkit/dropdown-range/dropdown-range.component';
+import { HttpClient } from '@angular/common/http';
+import { environment } from '../../../../environments/environment';
 
 
 interface SalesRecord {
@@ -33,12 +35,12 @@ interface SalesRecord {
 })
 export class TLS2A030Component extends BasicQueryPageComponent<any> implements OnInit {
   queryForm = this.formBuilder.group({
-    SaleDateStart: [null, Validators.required],
-    SaleDateEnd: [null, Validators.required],
-    ECR_No: [null],
-    ECR_No_Start: [null],
-    ECR_No_End: [null],
-    ...createPaginationConfig([{ field: 'paymentTool', order: 1 }])
+    SaleDateStart: [null as Date | null, Validators.required],
+    SaleDateEnd: [null as Date | null, Validators.required],
+    ECR_No: [null as string | null],
+    ECR_No_Start: [null as string | null],
+    ECR_No_End: [null as string | null],
+    ...createPaginationConfig([{ field: 'PAY_NAME', order: 1 }])
   });
 
   data: SalesRecord[] = [];
@@ -47,20 +49,22 @@ export class TLS2A030Component extends BasicQueryPageComponent<any> implements O
   ECRNoOptions: any[] = [];
   // 表格欄位
   columns = [
-    { field: 'PAY_NAME', header: '支付工具' },
-    { field: 'OVER_PayAmt', header: '實際淨欠總額 (A)' },
-    { field: 'PreAudit_OVER_PayAmt', header: '審核前淨欠總額 (B)' },
-    { field: 'Actual_ReceivedAmt', header: '實收總額 (C)' },
-    { field: 'BOOK_PayAmt', header: '系統帳 (D)' },
+    { field: 'PAY_NAME', header: '支付工具', visible: true },
+    { field: 'OVER_PayAmt', header: '實際淨欠總額 (A)', visible: true },
+    { field: 'PreAudit_OVER_PayAmt', header: '審核前淨欠總額 (B)', visible: true },
+    { field: 'Actual_ReceivedAmt', header: '實收總額 (C)', visible: true },
+    { field: 'BOOK_PayAmt', header: '系統帳 (D)', visible: true },
     {
       field: 'Compare_CD',
       header: '(C) 與 (D) 比較',
-      format: (v: boolean) => v ? 'Y' : 'N'
+      format: (v: boolean) => v ? 'Y' : 'N',
+      visible: true
     },
     {
       field: 'Compare_AB',
       header: '(A) 與 (B) 比較',
-      format: (v: boolean) => v ? 'Y' : 'N'
+      format: (v: boolean) => v ? 'Y' : 'N',
+      visible: true
     }
   ];
 
@@ -68,15 +72,78 @@ export class TLS2A030Component extends BasicQueryPageComponent<any> implements O
   constructor(
     private locationOptionsService: LocationOptionsService,
     private ECRNoService: ECRNoService,
-    private tls2a030Service: TLS2A030Service
+    private tls2a030Service: TLS2A030Service,
+    private http: HttpClient,
   ) {
     super();
   }
 
   ngOnInit(): void {
-    this.initializePage('TLS2A030', undefined, this.queryForm, this.onSubmit.bind(this));
+    this.initializePage('TLS2A030', '/TLS/TLS2A030cru', this.queryForm, (form) => this.onSubmit(form));
+    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
+
     this.ECRNoService.getECRNo().subscribe((data) => {
       this.ECRNoOptions = data;
+    });
+  }
+  onImportExcel(event: any): void {
+    const file = event.files[0];
+    if (!file) {
+      console.error('No file selected for import');
+      return;
+    }
+  }
+
+  onExportExcel(): void {
+    const raw = this.queryForm.getRawValue();
+
+    const condition = {
+      ...raw,
+      SaleDateStart:
+        raw.SaleDateStart instanceof Date
+          ? raw.SaleDateStart.toISOString()
+          : raw.SaleDateStart ?? null,
+      SaleDateEnd:
+        raw.SaleDateEnd instanceof Date
+          ? raw.SaleDateEnd.toISOString()
+          : raw.SaleDateEnd ?? null,
+      ECR_No: raw.ECR_No?.trim() ?? '',
+      ECR_No_Start: raw.ECR_No_Start?.trim() ?? '',
+      ECR_No_End: raw.ECR_No_End?.trim() ?? '',
+    };
+
+    const payload = {
+      query_condition: {
+        ServiceName: 'queryTLS2A030',
+        Conditions: [condition],
+      },
+      report_title: '溢欠彙總表',
+      file_name: `TLS22030_${new Date().toISOString().slice(0, 10)}`,
+      columns: this.columns.filter(c => c.visible),
+      config: {
+        print_reportTitle: 'Y',
+        print_reportTitle_per_page: 'N',
+        print_eject: 'Y',
+        print_field_title: 'Y',
+        print_field_title_per_page: 'N',
+      }
+    };
+
+    console.log('匯出 payload:', payload);
+
+    this.http.post(`${environment.ApiUrl}/exportExcel`, payload, {
+      responseType: 'blob'
+    }).subscribe({
+      next: (blob) => {
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${payload.file_name}.xlsx`;
+        a.click();
+      },
+      error: (err) => {
+        console.error('❌ Excel 匯出失敗', err);
+      }
     });
   }
 
@@ -84,16 +151,24 @@ export class TLS2A030Component extends BasicQueryPageComponent<any> implements O
   onSubmit(form: FormGroup): void {
     this.handleSubmit(form, () => {
       const payload = {
-        PageSize: form.value.PageSize,
-        PageIndex: form.value.PageIndex,
-        OrderBy: form.value.OrderBy,
-        Offset: form.value.Offset,
-        SortBy: form.value.SortBy,
-        SaleDateStart: form.value.tlt_bdate_start?.toISOString() ?? null,
-        SaleDateEnd: form.value.tlt_bdate_end?.toISOString() ?? null,
-        ECR_No_Start: form.value.ECR_No_Start ?? '',
-        ECR_No_End: form.value.ECR_No_End ?? ''
+        request: {
+          PageSize: form.value.PageSize,
+          PageIndex: form.value.PageIndex,
+          OrderBy: form.value.OrderBy,
+          Offset: form.value.Offset,
+          SortBy: form.value.SortBy,
+          SaleDateStart: form.value.SaleDateStart instanceof Date
+            ? form.value.SaleDateStart.toISOString()
+            : null,
+          SaleDateEnd: form.value.SaleDateEnd instanceof Date
+            ? form.value.SaleDateEnd.toISOString()
+            : null,
+
+          ECR_No_Start: form.value.ECR_No_Start?.trim() || '',
+          ECR_No_End: form.value.ECR_No_End?.trim() || ''
+        }
       };
+
 
       this.tls2a030Service.queryTLS2A030(payload).subscribe({
         next: (res: any) => {
@@ -115,6 +190,5 @@ export class TLS2A030Component extends BasicQueryPageComponent<any> implements O
       });
     });
   }
-
 
 }

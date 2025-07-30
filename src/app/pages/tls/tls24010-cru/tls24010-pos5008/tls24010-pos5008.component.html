@@ -1,7 +1,7 @@
 <p-divider align="left" type="solid" styleClass="pb-2">
   <span class="text-center text-xl font-bold text-primary">支付工具</span>
 </p-divider>
-<p-table [value]="POS5008Data" [(selection)]="POS5008SelectedItems" dataKey="ID" [rowTrackBy]="trackByRow"
+<p-table [value]="POS5008Data" [(selection)]="POS5008SelectedItems" dataKey="PAY_No" [rowTrackBy]="trackByRow"
   [resizableColumns]="true" styleClass="p-datatable-sm p-datatable-striped p-datatable-gridlines"
   (onRowSelect)="onRowSelect($event)" (onRowUnselect)="onRowUnselect($event)">
   <ng-template pTemplate="header" let-columns>
@@ -19,7 +19,9 @@
     <tr [formGroup]="posFormArrayControls[i]">
       <td class="text-center">{{ i + 1 }}</td>
 
-      <td class="text-center"><p-tableCheckbox [pSelectableRow]="rowData" [value]="rowData" /></td>
+      <td class="text-center">
+        <p-tableCheckbox [pSelectableRow]="rowData" [value]="rowData" [disabled]="!isFormCreateable" />
+      </td>
 
       <td class="text-center">
         <app-input-text controlName="PAY_Name" [control]="getFormControl(posFormArrayControls[i], 'PAY_Name')"

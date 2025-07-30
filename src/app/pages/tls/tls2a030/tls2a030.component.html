@@ -51,18 +51,20 @@
 
 <div class="card">
   <app-table
-    tableKey="TLS2A030"
     [data]="data"
     [columns]="columns"
     [selectedItems]="selectedItems"
     (selectionChange)="selectedItems = $event"
-    [showCheckBox]="true"
+    [showCheckBox]="false"
     dataKey="id"
-    [multiSortMeta]="[{ field: 'pendingApprovalRegisterCode', order: 1 }]"
+    [multiSortMeta]="[{ field: 'PAY_NAME', order: 1 }]"
     [totalRecords]="totalRecords"
     [lazy]="true"
     [loading]="loading"
     (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"
     [showManage]="false"
+    [showDelete]="false"
+    [showReportMode]="true"
+    (onSubmit)="onSubmit(queryForm)"
   ></app-table>
 </div>

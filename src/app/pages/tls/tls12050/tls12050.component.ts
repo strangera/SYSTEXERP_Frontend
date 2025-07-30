@@ -1,15 +1,17 @@
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
-import { ActivatedRoute } from '@angular/router';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { ValidationService } from '../../../shared/service/validation.service';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { AccordionModule } from 'primeng/accordion';
 import { TranslateModule } from '@ngx-translate/core';
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
 import { TLS12050Service } from '../../../service/api/tls/tls12050.service';
 import { NgIf } from '@angular/common';
+import { CommonModule } from '@angular/common';
+import { environment } from 'src/environments/environment';
+import { ImageModule } from 'primeng/image';
+
 
 @Component({
   selector: 'app-tls12050',
@@ -17,35 +19,37 @@ import { NgIf } from '@angular/common';
   styleUrls: ['./tls12050.component.scss'],
   standalone: true,
   imports: [
+    CommonModule,
     MenubarComponent,
     DropdownComponent,
     ReactiveFormsModule,
     AccordionModule,
     TranslateModule,
     MultiSelectComponent,
-    NgIf
+    NgIf,
+    ImageModule
   ],
 })
 export class TLS12050Component extends BasicQueryPageComponent<any> implements OnInit {
-  queryForm: FormGroup = this.fb.group({
-    category: [],
-    floor: [],
-    statusList: []
+  queryForm = this.fb.group({
+    building_no: ['A'],
+    FLOOR_NO: ['1F'],
+    statusList: [],
   });
 
   dropdown1 = [
-    { label: 'A1', value: 'A1' },
-    { label: 'A2', value: 'A2' }
+    { label: 'A1', value: 'A' },
+    { label: 'A2', value: 'A' }
   ];
 
   dropdown2 = [
-    { label: 'B1', value: 'B1', CNT: 10 },
-    { label: 'F1', value: 'F1', CNT: 20 },
-    { label: 'F2', value: 'F2', CNT: 15 },
-    { label: 'F3', value: 'F3', CNT: 25 },
-    { label: 'F4', value: 'F4', CNT: 30 },
-    { label: 'F5', value: 'F5', CNT: 18 },
-    { label: 'F6', value: 'F6', CNT: 22 },
+    { label: 'B1', value: 'B1' },
+    { label: '1F', value: '1F' },
+    { label: '2F', value: '2F' },
+    { label: '3F', value: '3F' },
+    { label: '4F', value: '4F' },
+    { label: '5F', value: '5F' },
+    { label: '6F', value: '6F' },
   ];
 
   dropdown3 = [
@@ -56,19 +60,20 @@ export class TLS12050Component extends BasicQueryPageComponent<any> implements O
   ];
 
   // 動態綁定欄位
-  selectedImage!: string;
-  selectedFloor = '';
-  selectedFloorCNT = 0;
+  // 無圖片預設
+  blank = environment.ApiUrl + '/images/blank.jpg';
+  selectedImage?: string; // 圖片 URL
+  selectedFloor = ''; // 選擇的樓層
+  All_Count = 0; // 選擇的樓層數量
 
-  idlePercent = 0;
-  negotiationPercent = 0;
-  operationPercent = 0;
-  outofServicePercent = 0;
+  Idle = 0; // 閒置百分比
+  Under_Negotiation = 0; // 洽談中百分比
+  In_Operation = 0; // 營運中百分比
+  Outof_Service = 0; // 停用百分比
+  statsList: any[] = [];
 
   constructor(
     private fb: FormBuilder,
-    private activatedRoute: ActivatedRoute,
-    private validationService: ValidationService,
     private tls12050Service: TLS12050Service,
   ) {
     super();
@@ -77,26 +82,48 @@ export class TLS12050Component extends BasicQueryPageComponent<any> implements O
   ngOnInit(): void {
     this.initializePage('TLS12050', 'tls/tls12050', this.queryForm, (form) => this.onSubmit(form));
     this.loadOptions();
-    this.queryForm.get('floor')?.valueChanges.subscribe((floorCode: string) => {
-      this.selectedFloor = this.dropdown2.find(f => f.value === floorCode)?.label ?? floorCode;
+    this.queryForm.get('building_no')?.valueChanges.subscribe(() => {
+      this.triggerImageUpdate();
     });
-    this.queryForm.get('floor')?.valueChanges.subscribe((floorCode: string) => {
-      if (!floorCode) {
-        return;
+
+    this.queryForm.get('FLOOR_NO')?.valueChanges.subscribe(() => {
+      this.triggerImageUpdate();
+    });
+    this.triggerImageUpdate();
+  }
+  onImageError(event: Event): void {
+    const imgElement = event.target as HTMLImageElement;
+    imgElement.src = this.blank; // 請替換成你自己的預設圖路徑
+  }
+  triggerImageUpdate(): void {
+    const category = this.queryForm.get('building_no')?.value;
+    const floor = this.queryForm.get('FLOOR_NO')?.value;
+    if (category && floor) {
+      this.fetchImageAndStats(this.queryForm);
+    }
+  }
+  fetchImageAndStats(frm: FormGroup): void {
+    this.tls12050Service.queryTLS12050(frm.getRawValue()).subscribe({
+      next: (res) => {
+        const stat = res.Data?.[0];
+        this.selectedImage = environment.ApiUrl + '/' + stat?.Image_Url
+        this.selectedFloor = frm.get('FLOOR_NO')?.value;
+        this.All_Count = stat?.All_Count ?? 0;
+
+        this.Idle = stat?.Idle ?? 0;
+        this.Under_Negotiation = stat?.Under_Negotiation ?? 0;
+        this.In_Operation = stat?.In_Operation ?? 0;
+        this.Outof_Service = stat?.Outof_Service ?? 0;
+      },
+      error: (err) => {
+        console.error('查詢失敗', err);
       }
-      const selected = this.dropdown2.find(f => f.value === floorCode);
-      this.selectedFloor = selected?.label ?? '';
-      this.selectedImage = 'floor-' + floorCode.toLowerCase() + '.jpg';
-      this.selectedFloorCNT = selected?.CNT ?? 0;
     });
-
-
   }
 
   onSubmit(form: FormGroup): void {
     if (form.valid) {
       const value = form.value;
-
       const payload = {
         PageSize: 999,
         PageIndex: 1,
@@ -111,23 +138,9 @@ export class TLS12050Component extends BasicQueryPageComponent<any> implements O
 
       this.tls12050Service.queryTLS12050(payload).subscribe({
         next: (res: any) => {
-          const stat = res.Data?.[0];
+          this.statsList = res.Data ?? [];
+          console.log('查詢結果:', res.Data);
 
-          const total = stat?.All_Count ?? 0;
-
-          // 圖片檔名（只傳檔名，不含路徑）
-          this.selectedImage = stat?.FloorImage ?? '';
-
-          // 樓層文字（從 dropdown2 的 label 找）
-          const floorItem = this.dropdown2.find(f => f.value === value.floor);
-          this.selectedFloor = floorItem?.label ?? value.floor ?? '';
-          this.selectedFloorCNT = total;
-
-          // 狀態百分比
-          this.idlePercent = total ? +(stat.Idle * 100 / total).toFixed(2) : 0;
-          this.operationPercent = total ? +(stat.In_Operation * 100 / total).toFixed(2) : 0;
-          this.negotiationPercent = total ? +(stat.Under_Negotiation * 100 / total).toFixed(2) : 0;
-          this.outofServicePercent = total ? +(stat.Outof_Service * 100 / total).toFixed(2) : 0;
 
           this.loading = false;
         },
@@ -138,21 +151,27 @@ export class TLS12050Component extends BasicQueryPageComponent<any> implements O
       });
     }
   }
-  onImageSelect(event: any): void {
-    console.log('Image selected:', event);
 
-  }
+  // onRowSelect(row: any): void {
+  //   this.selectedImage = row.Image_Url ?? '';
+  //   this.selectedFloorCNT = row.All_Count ?? 0;
+  //   this.idlePercent = row.All_Count ? +(row.Idle * 100 / row.All_Count).toFixed(2) : 0;
+  //   this.operationPercent = row.All_Count ? +(row.In_Operation * 100 / row.All_Count).toFixed(2) : 0;
+  //   this.negotiationPercent = row.All_Count ? +(row.Under_Negotiation * 100 / row.All_Count).toFixed(2) : 0;
+  //   this.outofServicePercent = row.All_Count ? +(row.Outof_Service * 100 / row.All_Count).toFixed(2) : 0;
+  // }
+
   onStatusChange(event: any): void {
-    const current = event.value || [];
+    // const current = event.value || [];
 
-    if (current.includes('all')) {
-      const allRealOptions = this.dropdown3
-        .filter(opt => opt.value !== 'all')
-        .map(opt => opt.value);
-      this.queryForm.get('statusList')?.setValue(allRealOptions);
-    } else {
-      this.queryForm.get('statusList')?.setValue(current);
-    }
+    // if (current.includes('all')) {
+    //   const allRealOptions = this.dropdown3
+    //     .filter(opt => opt.value !== 'all')
+    //     .map(opt => opt.value);
+    //   this.queryForm.get('statusList')?.setValue(allRealOptions);
+    // } else {
+    //   this.queryForm.get('statusList')?.setValue(current);
+    // }
   }
 
   loadOptions(): void {

@@ -1,19 +1,20 @@
-import { NavigationExtras, Router } from '@angular/router';
 import { inject } from '@angular/core';
-import { NotificationService } from '../../component/notification-message/notification.service';
-import { AuthService } from '../../../service/system/auth.service';
 import { FormBuilder, FormGroup } from '@angular/forms';
-import { QueryStateService } from '../../service/query-state.service';
-import { take } from 'rxjs';
-import { UserInfo } from '../../models/system/userInfo';
-import { FunsrightInfo } from '../../models/system/funsrightInfo';
-import { CurrentPageService } from '../../../layout/app.menulist/current-page.service';
-import { CRUDStatus } from '../../models/system/CRUDstatus';
-import { LazyLoadEvent } from '../../componentkit/table/table.model';
+import { NavigationExtras, Router } from '@angular/router';
 import { UntilDestroy } from '@ngneat/until-destroy';
 import { ConfirmationService } from 'primeng/api';
+import { take } from 'rxjs';
+import { CurrentPageService } from '../../../layout/app.menulist/current-page.service';
+import { AuthService } from '../../../service/system/auth.service';
+import { NotificationService } from '../../component/notification-message/notification.service';
+import { LazyLoadEvent } from '../../componentkit/table/table.model';
+import { CRUDStatus } from '../../models/system/CRUDstatus';
+import { FunsrightInfo } from '../../models/system/funsrightInfo';
+import { UserInfo } from '../../models/system/userInfo';
+import { QueryStateService } from '../../service/query-state.service';
 @UntilDestroy()
 export abstract class BasicQueryPageComponent<T> {
+  protected readonly now: Date = new Date();
   ProgNo = '';
   cruPage = '';
 
