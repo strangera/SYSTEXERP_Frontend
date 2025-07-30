@@ -24,6 +24,7 @@ export interface TLS26010Query {
 /**
  * @description
  * - CanDelete: 是否可刪除 (0=否, 1=是)
+ * - CanEdit: 是否可編輯 (0=否, 1=是)
  * - approved_date: 核准日期
  * - approved_usr_name: 核准人員姓名
  * - id: 主鍵，自動編號
@@ -41,6 +42,7 @@ export interface TLS26010Query {
  */
 export interface TLS26010Data {
   CanDelete: '0' | '1';
+  CanEdit: '0' | '1';
   approved_date: Date | null;
   approved_usr_name: string | null;
   id: number;
@@ -122,6 +124,7 @@ export const mockTLS26010Data: BaseQueryResponse<TLS26010Data> = {
   Data: [
     {
       CanDelete: "1",
+      CanEdit: "1",
       id: 1,
       pod_no: "20250720001",
       pod_desc: "123456",
