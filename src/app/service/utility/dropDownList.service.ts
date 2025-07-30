@@ -94,7 +94,8 @@ export interface POS2004Item {
   PLU_MagNo: string;
   PLU_No: string;
   PLU_Name: string;
-  PLU_SalePrc: number
+  PLU_SalePrc?: number,
+  label?: string; // 用於顯示的標籤
 }
 
 export interface TLTTALENT_CHARGEData {

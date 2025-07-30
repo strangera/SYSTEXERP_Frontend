@@ -35,6 +35,7 @@ import { formatTimeToHHMMSS } from '@shared/componentkit/table/table.model';
 export class TLS24010CRUComponent extends BasicCruPageComponent<TLS24010Data | unknown> implements OnInit {
   @ViewChild(Tls24010Pos5007Component) pos5007Comp?: Tls24010Pos5007Component;
   @ViewChild(Tls24010Pos5008Component) pos5008Comp?: Tls24010Pos5008Component;
+  type?: string;
   TXN_GUIPaper?: string; // 補登類別 補原機台='E' 手開二聯式發票='2'
   TLT_Name?: string; //專櫃名稱
   store_way?: string // 1為專櫃 2=自營
@@ -79,19 +80,22 @@ export class TLS24010CRUComponent extends BasicCruPageComponent<TLS24010Data | u
   ngOnInit(): void {
     this.initializePage('TLS24010', this.dataForm);
     const rowDataTyped = this.rowdata as TLS24010Data;
-    if (this.isFormCreateable && this.rowdata) {
+    this.TXN_GUIPaper = rowDataTyped.TXN_GUIPaper
+    this.TLT_Name = rowDataTyped.TLT_Name;
+    this.store_way = rowDataTyped.store_way;
+    this.talent_id = rowDataTyped.talent_id;
+    if (this.isFormCreateable) {
       this.dataForm.patchValue({
         TXN_Date: rowDataTyped.TXN_Date,
         ECR_No: rowDataTyped.ECR_No,
         TLT_No: rowDataTyped.TLT_No,
       });
-      this.TLT_Name = rowDataTyped.TLT_Name;
-      this.store_way = rowDataTyped.store_way;
-      this.talent_id = rowDataTyped.talent_id;
-      this.TXN_GUIPaper = rowDataTyped.TXN_GUIPaper
+    }
+    if (this.isFormEditable) {
+      this.type = rowDataTyped?.type;
     }
     if (!this.isFormCreateable) {
-      this.TXN_GUIPaper = rowDataTyped.TXN_GUIPaper
+      this.dataForm.disable();
       const body = {
         SYS_StoreNo: this.authService.currentUserValue?.SYS_StoreNo ?? '',
         TXN_Date: rowDataTyped.TXN_Date,

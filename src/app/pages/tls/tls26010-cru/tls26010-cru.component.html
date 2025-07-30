@@ -40,7 +40,7 @@
         <div class="col-12 md:col-4 lg:col-4">
           <app-input-text label="核准狀態"
                           controlName="pod_status"
-                          [control]="dataForm.controls.pod_status"
+                          [control]="podStatus"
                           [disabled]="true">
           </app-input-text>
         </div>
@@ -59,7 +59,7 @@
   </p-panel>
 </div>
 <div class="card">
-  <div *ngIf="!isFormReadable"
+  <div *ngIf="isFormEditable"
        class="grid p-fluid">
     <div class="col-12 md:col-6 lg:col-4">
       <app-button btnType="create"
@@ -82,7 +82,7 @@
   </div>
 </div>
 <div class="card">
-  <div *ngIf="!isFormReadable"
+  <div *ngIf="isFormEditable"
        class="grid p-fluid">
     <div class="col-12 md:col-6 lg:col-4">
       <app-button btnType="create"
@@ -108,9 +108,9 @@
   </div>
 </div>
 
-<app-dialog [visible]="dialogVisible() !== null"
+<app-dialog [visible]="!!dialogVisible()"
             [header]="dialogVisible() === 'ecr' ? '新增收銀機' : '新增專櫃'"
-            (visibleChange)="dialogVisible.set(null)"
+            (visibleChange)="dialogVisible.set(!1)"
             (save)="saveDialog(dataForm)"
             [height]="'50vh'">
   <form [formGroup]="dataForm">

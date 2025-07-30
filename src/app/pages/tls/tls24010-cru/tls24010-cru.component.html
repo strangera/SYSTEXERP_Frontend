@@ -96,11 +96,11 @@
         <app-tls24010-pos5007 [data]="ProductDetailList" class="col-12" [TXN_GUIPaper]="TXN_GUIPaper"
           [TLT_Name]="TLT_Name" [store_way]="store_way" [talent_id]="talent_id"
           [TLT_No]="this.dataForm.get('TLT_No')?.value" [isFormCreateable]="isFormCreateable"
-          [isFormEditable]="isFormEditable" [isFormReadable]="isFormReadable"></app-tls24010-pos5007>
+          [isFormEditable]="isFormEditable" [isFormReadable]="isFormReadable" [type]="type"></app-tls24010-pos5007>
       </div>
       <div class="grid p-fluid card">
         <app-tls24010-pos5008 [data]="PaymentDetailsList" class="col-12" [submitted]="submitted"
-          [isFormCreateable]="isFormCreateable" [isFormEditable]="isFormEditable"
+          [isFormCreateable]="isFormCreateable" [isFormEditable]="isFormEditable" [type]="type"
           [isFormReadable]="isFormReadable"></app-tls24010-pos5008>
       </div>
       <div *ngIf="!isFormReadable" class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">

@@ -43,6 +43,7 @@ export class InputTextComponent extends BasicKitComponent implements OnInit, OnC
     }
     if (this.customPlaceholder) {
       this.placeholder = this.customPlaceholder;
+      this.placeholder2 = this.customPlaceholder;
     }
     this.updateControlState(this.control);
     // 訂閱 control 的狀態變化

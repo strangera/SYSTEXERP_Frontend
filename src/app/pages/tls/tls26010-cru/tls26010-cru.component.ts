@@ -13,8 +13,13 @@ import { CRUDStatus } from '@shared/models/system/CRUDstatus';
 import { DropdownChangeEvent } from 'primeng/dropdown';
 import { FileSelectEvent, FileUploadModule } from 'primeng/fileupload';
 import { PanelModule } from 'primeng/panel';
-import { combineLatest, finalize, tap } from 'rxjs';
-import { ECRTableData, QueryPayload, TLS26010Data, TLS26010Payload, TLTTALENTData } from '../tls26010/tls26010.model';
+import { finalize, tap } from 'rxjs';
+import { ECRTableData, TLS26010Data, TLS26010Payload, TLTTALENTData } from '../tls26010/tls26010.model';
+
+const shallowEqual = <T extends Record<string, any>>(a: T, b: T): boolean => {
+  const keys = Object.keys(a) as (keyof T)[];
+  return keys.every((k: keyof T) => a[k] === b[k]);
+};
 
 // 預購活動檔期設定
 @Component({
@@ -42,7 +47,7 @@ export class TLS26010CRUComponent extends BasicCruPageComponent<TLS26010Data> im
   public CRUDStatus = CRUDStatus;
   public ecrTableFiltered: ECRTableData[] = [];
   public tltTableFiltered: TLTTALENTData[] = [];
-  public dialogVisible = signal<'ecr' | 'tlt' | null>(null);
+  public dialogVisible = signal<'ecr' | 'tlt' | false>(!1);
   private dialogLoading = signal<boolean>(!1);
 
   public dataForm = this.formBuilder.nonNullable.group({
@@ -59,46 +64,73 @@ export class TLS26010CRUComponent extends BasicCruPageComponent<TLS26010Data> im
   });
   private get df() { return this.dataForm.controls; }
 
+  public get podStatus() {
+    const statusSet = new Set(['0', '1', '9']);
+    const podStatus = this.dataForm.controls.pod_status;
+    podStatus.patchValue(statusSet.has(podStatus.value)
+      ? this.service.approvalStatus(podStatus.value)
+      : podStatus.value || '未核准');
+    return podStatus;
+  }
+
   private sys3800Signal = toSignal(this.df.sys3800.valueChanges);
   private sys3900Signal = toSignal(this.df.sys3900.valueChanges);
   private sdateSignal = toSignal(this.df.pod_sdate.valueChanges);
   private edateSignal = toSignal(this.df.pod_edate.valueChanges);
 
-  private dateCheck = effect(() => {
+  private readonly dateCheckEffect = effect(() => {
     const sdate = this.sdateSignal();
     const edate = this.edateSignal();
-
+    const payload = this.queryPayload();
     if (sdate && edate && sdate > edate) {
       this.df.pod_edate.setErrors({ dateError: true });
-      this.service.loadPreorderECRList({ ...this.queryPayload(), data_type: '1' }).subscribe();
-    } else {
-      this.df.pod_edate.setErrors(null);
-    }
+      this.service.loadPreorderECRList({ ...payload, data_type: '1' });
+    } else { this.df.pod_edate.setErrors(null); }
   });
-  private DialogEffect = effect(() => {
-    console.log(`DialogEffect:`, [this.dataForm.value]);
-    if (this.dialogVisible() === 'ecr') this.service.loadPreorderECRList({ ...this.queryPayload(), data_type: '1' }).subscribe();
-    if (this.dialogVisible() === 'tlt') this.service.loadTLTTALENT(this.queryPayload()).subscribe();
+  private readonly ecrDialogOpenEffect = effect(() => {
+    const dialog = this.dialogVisible();
+    if (dialog !== 'ecr') return;
+    this.service.loadSYS3800();
+    this.service.loadSYS3900();
+    const payload = this.queryPayload();
+    this.service.loadPreorderECRList({ ...payload, data_type: '1' });
+
+    console.log('ecrDialogOpenEffect:', [this.dataForm.value, payload, dialog]);
   }, { allowSignalWrites: true });
+  private readonly tltDialogOpenEffect = effect(() => {
+    const dialog = this.dialogVisible();
+    if (dialog !== 'tlt') return;
+    this.service.loadSYS3800();
+    this.service.loadSYS3900();
+    const payload = this.queryPayload();
+    this.service.loadTLTTALENT(payload);
+
+    console.log('tltDialogOpenEffect:', [this.dataForm.value, payload, dialog]);
+  }, { allowSignalWrites: true });
+  private readonly ecrTableDataFilterEffect = effect(() => {
+    this.ecrTableFiltered = this.service.ECRTableData()
+      .filter(ecr => this.df.ECR_Nos.value.includes(ecr.ECR_No));
+  });
+  private readonly tltTableDataFilterEffect = effect(() => {
+    this.tltTableFiltered = this.service.TLTTableData()
+      .filter(tlt => this.df.tlt_nos.value.includes(tlt.tlt_no));
+  });
+  private readonly TLS26010DetailEffect = effect(() => {
+    this.dataForm.patchValue({
+      ECR_Nos: this.service.TLS26010Detail().ecr_list.map(ecr => ecr.ECR_No),
+      tlt_nos: this.service.TLS26010Detail().talent_list.map(tlt => tlt.tlt_no),
+    });
+    this.ecrTableFiltered = this.service.TLS26010Detail().ecr_list;
+    this.tltTableFiltered = this.service.TLS26010Detail().talent_list;
+  });
 
   // API queries
-  private queryPayload = computed<QueryPayload>(() => {
-    const sdate = this.sdateSignal();
-    const edate = this.edateSignal();
-    const sys3800 = this.sys3800Signal();
-    const sys3900 = this.sys3900Signal();
-
-    // 確保日期值存在且為有效的 Date 物件
-    const startDate = sdate instanceof Date ? sdate : this.df.pod_sdate.value;
-    const endDate = edate instanceof Date ? edate : this.df.pod_edate.value;
-
-    return {
-      building_no: sys3800 || '',
-      floor_no: sys3900 || '',
-      sdate: startDate instanceof Date ? startDate.toISOString().split('T')[0] : '',
-      edate: endDate instanceof Date ? endDate.toISOString().split('T')[0] : '',
-    };
-  });
+  private readonly queryPayload = computed(() => ({
+    building_no: this.sys3800Signal(),
+    floor_no: this.sys3900Signal(),
+    sdate: this.sdateSignal()!,
+    edate: this.edateSignal()!,
+  }), { equal: shallowEqual });
 
   columns: Column[] = [
     { field: 'ECR_No', header: '收銀機號', visible: true },
@@ -117,59 +149,8 @@ export class TLS26010CRUComponent extends BasicCruPageComponent<TLS26010Data> im
 
   ngOnInit(): void {
     this.initializePage('TLS26010', this.dataForm);
-
-    const state = this.router.lastSuccessfulNavigation?.extras.state as {
-      crudstatus: CRUDStatus,
-      rowdata: any,
-    };
-
-    switch (state.crudstatus) {
-      // 創建
-      case CRUDStatus.Create:
-        this.formTitle = 'create-conditions';
-        this.crudstatus = CRUDStatus.Create;
-        break;
-      // 修改
-      case CRUDStatus.Edit:
-        this.formTitle = 'edit-conditions';
-        this.crudstatus = CRUDStatus.Edit;
-        break;
-      // 讀檔
-      case CRUDStatus.Read:
-        this.formTitle = 'display-conditions';
-        this.crudstatus = CRUDStatus.Read;
-        break;
-    }
-
-    const rowData = state?.rowdata;
-
-    if (this.isFormEditable && rowData) {
-      rowData.pod_status = this.service.approvalStatus(rowData.pod_status);
-
-      // 載入既有的表單資料（編輯模式）
-      this.dataForm.patchValue({
-        pod_no: rowData.pod_no || '自動給號',
-        pod_desc: rowData.pod_desc || '',
-        pod_sdate: rowData.pod_sdate ? new Date(rowData.pod_sdate) : new Date(),
-        pod_edate: rowData.pod_edate ? new Date(rowData.pod_edate) : new Date(),
-        pod_status: rowData.pod_status || '未核准',
-        sys3800: rowData.sys3800 || '',
-        sys3900: rowData.sys3900 || [],
-        ECR_Nos: rowData.ECR_Nos || [],
-        tlt_nos: rowData.tlt_nos || [],
-      });
-    }
-
-    this.service.loadSYS3800();
-    this.service.loadSYS3900();
-
-    combineLatest([
-      this.service.loadPreorderECRList({ ...this.queryPayload(), data_type: '1' }),
-      this.service.loadTLTTALENT(this.queryPayload()),
-    ]).pipe(
-      tap(() => { this.tableFilter(); }),
-      finalize(() => { console.log(`init:`, [this.funInfo, state, this.dataForm.value]); }),
-    ).subscribe();
+    this.service.loadTLS26010Detail({ pod_no: this.rowdata?.pod_no || '' });
+    console.log(`init:`, [this.funInfo, this.rowdata, this.dataForm.value]);
   }
 
   /** 處理文件上傳事件 */
@@ -189,8 +170,8 @@ export class TLS26010CRUComponent extends BasicCruPageComponent<TLS26010Data> im
 
       const payload: TLS26010Payload = {
         pod_desc: value.pod_desc,
-        pod_sdate: value.pod_sdate.toISOString().split('T')[0],
-        pod_edate: value.pod_edate.toISOString().split('T')[0],
+        pod_sdate: value.pod_sdate,
+        pod_edate: value.pod_edate,
         pod_status: ApprovalStatus.未核准,
         ECR_Nos: value.ECR_Nos,
         tlt_nos: value.tlt_nos,
@@ -212,17 +193,10 @@ export class TLS26010CRUComponent extends BasicCruPageComponent<TLS26010Data> im
     });
   }
 
-  private tableFilter(): void {
-    console.log(`table filter:`, [this.dataForm.value]);
-    this.ecrTableFiltered = this.service.ECRTableData()
-      .filter(ecr => this.df.ECR_Nos.value.includes(ecr.ECR_No));
-    this.tltTableFiltered = this.service.TLTTableData()
-      .filter(tlt => this.df.tlt_nos.value.includes(tlt.tlt_no));
-  };
-
   dialogChange(event: DropdownChangeEvent): void {
     console.log(`dialogChange:`, [event]);
     if (event && event.value?.lenth) {
+      this.dataForm.patchValue({ sys3800: '', sys3900: [] });
       if (this.dialogVisible() === 'ecr') this.df.ECR_Nos.patchValue([]);
       if (this.dialogVisible() === 'tlt') this.df.tlt_nos.patchValue([]);
     }
@@ -230,35 +204,31 @@ export class TLS26010CRUComponent extends BasicCruPageComponent<TLS26010Data> im
 
   saveDialog(frm: FormGroup): void {
     console.log(`saveDialog:`, [frm.value, this.dataForm.value]);
-    this.tableFilter();
-    this.dialogVisible.set(null);
-    this.dialogLoading.set(!1);
-
-    // this.handleSubmit(frm, () => {
-    //   this.service.updateTLS26010({
-    //     pod_desc: df.pod_desc.value || '',
-    //     pod_sdate: df.pod_sdate.value.toISOString().split('T')[0],
-    //     pod_edate: df.pod_edate.value.toISOString().split('T')[0],
-    //     pod_status: '0',
-    //     ECR_Nos: df.ECR_Nos.value,
-    //     tlt_nos: df.tlt_nos.value,
-    //   }).pipe(
-    //     finalize(() => {
-    //       this.dialogLoading.set(!1);
-    //       this.ECRDialogVisible.set(!1);
-    //       this.TLTDialogVisible.set(!1);
-    //     }),
-    //     tap(res => {
-    //       this.dataForm.patchValue({
-    //         ECR_Nos: df.ECR_Nos.value,
-    //         tlt_nos: df.tlt_nos.value,
-    //       });
-    //       this.tableFilter();
-    //       this.messageService.successBubble(this.isFormCreateable ? '新增成功' : '修改成功');
-    //       this.isFormCreateable ? this.dataForm.reset() : this.onCancel();
-    //     })
-    //   ).subscribe();
-    // });
+    this.handleSubmit(frm, () => {
+      this.service.updateTLS26010({
+        pod_desc: this.df.pod_desc.value || '',
+        pod_sdate: this.df.pod_sdate.value,
+        pod_edate: this.df.pod_edate.value,
+        pod_status: '0',
+        ECR_Nos: this.df.ECR_Nos.value,
+        tlt_nos: this.df.tlt_nos.value,
+      }).pipe(
+        finalize(() => {
+          this.dialogLoading.set(!1);
+          this.dialogVisible.set(!1);
+          this.service.loadTLS26010Detail({ pod_no: this.rowdata?.pod_no || '' });
+        }),
+        tap(res => {
+          this.dataForm.patchValue({
+            ECR_Nos: this.df.ECR_Nos.value,
+            tlt_nos: this.df.tlt_nos.value,
+          });
+          this.messageService.successBubble(this.isFormCreateable ? '新增成功' : '修改成功');
+          this.isFormCreateable ? this.dataForm.reset() : this.onCancel();
+          console.log(`update:`, [res, this.dataForm.value, this.isFormCreateable]);
+        })
+      ).subscribe();
+    });
   };
 }
 
