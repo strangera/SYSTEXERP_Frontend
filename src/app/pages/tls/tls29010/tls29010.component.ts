@@ -107,8 +107,7 @@ export class TLS29010Component extends BasicQueryPageComponent<TALPORDERD_OPENDi
         { field: 'talent_id', header: '合約編號系統', visible: true },
         { field: 'tlt_id', header: '抽成類別(0-9)', visible: true },
         { field: 'tlt_no', header: '專櫃編號', visible: true },
-        { field: 'cag_barcode', header: '大分類代碼', visible: true },
-        { field: 'tlt_name', header: '折數(條碼)', visible: true },
+        { field: 'cag_barcode', header: '折數(條碼)', visible: true },
         { field: 'use_flag', header: '是否使用', visible: true, format: (value: string) =>
           this.whetherOption.find((option) => option.value === value)?.label || value
         },
