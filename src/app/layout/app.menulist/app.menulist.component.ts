@@ -38,6 +38,7 @@ export class AppMenulistComponent implements OnInit, OnDestroy {
         this.model = this.appMenulistService.buildMenuModel(newData);
       } else {
         this.authService.getFunRightsInfo().pipe(untilDestroyed(this)).subscribe();
+        this.authService.queryAllSystemCode().pipe(untilDestroyed(this)).subscribe();
       }
     });
     // 訂閱 currentPageProgNo 的變化
