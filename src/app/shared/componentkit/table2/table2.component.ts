@@ -6,7 +6,7 @@ import { AddButton, Column2, ColumnGroup, FieldChangeEvent, LazyLoadEvent, RowEd
 import { FileSelectEvent, FileUpload, FileUploadModule } from 'primeng/fileupload';
 import { NotificationService } from '../../component/notification-message/notification.service';
 import { QueryStateService } from '../../service/query-state.service';
-import { BasicPrintDataComponent } from '../../componentextends/basic-print/basic-print-data.component';
+import { BasicPrintData2Component } from '../../componentextends/basic-print/basic-print-data2.component';
 import { CurrentPageService } from '../../../layout/app.menulist/current-page.service';
 import { Subject, takeUntil } from 'rxjs';
 import { FunsrightInfo } from '../../models/system/funsrightInfo';
@@ -24,7 +24,7 @@ import { CalendarModule } from 'primeng/calendar';
 import { CheckboxModule } from 'primeng/checkbox';
 import { SkeletonModule } from 'primeng/skeleton';
 import { TableExpansion2Component } from './table-expansion2/table-expansion2.component';
-import { TableExport2Component } from './table-export2/table-export2.component';
+import { TableExport, TableExport2Component } from './table-export2/table-export2.component';
 import { BlockUIModule } from 'primeng/blockui';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 @Component({
@@ -59,7 +59,7 @@ import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
     BlockUIModule
   ],
 })
-export class Table2Component extends BasicPrintDataComponent implements OnInit, OnChanges, OnDestroy {
+export class Table2Component extends BasicPrintData2Component implements OnInit, OnChanges, OnDestroy {
   // 基本設置
   @ViewChild('dt', { static: false }) dt!: Table;                               // table 元件
   @ViewChild('fileUpload') fileUpload!: FileUpload;                             // 檔案上傳 元件
@@ -163,6 +163,7 @@ export class Table2Component extends BasicPrintDataComponent implements OnInit, 
   // 權限
   private ngUnsubscribe = new Subject<void>();
   public funInfo: FunsrightInfo | undefined;
+  
 
   constructor(
     private readonly queryStateService: QueryStateService,
@@ -409,4 +410,58 @@ export class Table2Component extends BasicPrintDataComponent implements OnInit, 
   getTotal(field: string): number {
     return this.data.reduce((sum, row) => sum + (row[field] || 0), 0);
   }
+getFlattenedExportColumns(): Column2[] {
+  const flatColumns: Column2[] = [];
+
+  const visibleCols = this.columns.filter(
+    col => !!col.field && !!col.header && !col.hidden && col.visible !== false
+  );
+
+  for (const col of visibleCols) {
+    // 🟢 第二列且有 groupField ➜ 使用 groupField + field 作為 header
+    if (col.headerRow === 2 && col.groupField) {
+      const groupHeader = this.getGroupHeader(col.groupField);
+      flatColumns.push({
+        ...col,
+        header: `${groupHeader ?? col.groupField ?? 'Uncategorized'}-${col.field}`,
+      });
+    }
+    // 🟡 第二列但沒有 groupField ➜ 使用 field 作為 header
+    else if (col.headerRow === 2 && !col.groupField) {
+      flatColumns.push({
+        ...col,
+        header: col.field, // ⚠️ 不再用 col.header
+      });
+    }
+    // 🔵 第一列或 rowspan（合併欄位） ➜ 使用 field 作為 header
+    else if (!col.headerRow || col.headerRow === 1 || col.rowspan) {
+      flatColumns.push({
+        ...col,
+        header: col.field, // ⚠️ 同樣不再用 col.header
+      });
+    }
+  }
+
+  return flatColumns;
 }
+
+
+
+onExport(event: TableExport) {
+  const columns = this.getFlattenedExportColumns(); // 🔧 將雙表頭攤平
+
+  console.table(columns.map(col => ({
+    field: col.field,
+    header: col.header,
+    visible: col.visible
+  }))); // ✅ 印出送出欄位，方便除錯
+
+  if (this.exportStatus === 'PDF') {
+    this.exportPDFDownload(event, columns, this.apiUrl);
+  } else {
+    this.exportExcelDownload(event, columns, this.apiUrl);
+  }
+}
+
+}
+
