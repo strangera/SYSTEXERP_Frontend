@@ -284,19 +284,40 @@ onSubmit(form: FormGroup): void {
   moneyFormat(value: number): string {
     return value != null ? value.toLocaleString('en-US') : '0';
   }
-  get overflowStatusDisplay(): string {
-    const value = this.queryForm.get('overflowStatus')?.value;
-    const overflowValue = Number(this.queryForm.get('overflowStatus')?.value ?? NaN);
+get overflowStatusDisplay(): string {
+  const rawValue = this.queryForm.get('overflowStatus')?.value;
+  const value = rawValue as number | null;
 
-    if (overflowValue === 2) {
-      return `欠收金額：${this.formatAmount(this.underpaidAmount)} 元`;
-    } else if (overflowValue === 3) {
-      return `溢付金額：${this.formatAmount(this.overpaidAmount)} 元　欠收金額：${this.formatAmount(this.underpaidAmount)} 元`;
+  const net = this.overpaidAmount - this.underpaidAmount;
+
+  if (value === 3) {
+    // 欠款
+    if (net < 0) {
+      return `欠收金額：${this.formatAmount(Math.abs(net))} 元`;
     } else {
-      // 預設為全部 (value === 1)
-      return `溢付金額：${this.formatAmount(this.overpaidAmount)} 元`;
+      return `欠收金額：0 元`;
+    }
+  } else if (value === 2) {
+    // 溢款
+    if (net > 0) {
+      return `溢付金額：${this.formatAmount(net)} 元`;
+    } else {
+      return `溢付金額：0 元`;
+    }
+  } else {
+    // 全部（null）：根據 net 顯示哪一邊有值
+    if (net > 0) {
+      return `溢付金額：${this.formatAmount(net)} 元　欠收金額：0 元`;
+    } else if (net < 0) {
+      return `溢付金額：0 元　欠收金額：${this.formatAmount(Math.abs(net))} 元`;
+    } else {
+      return `溢付金額：0 元　欠收金額：0 元`;
     }
   }
+}
+
+
+
 
   private formatAmount(value: number): string {
     return value?.toLocaleString('zh-TW', { minimumFractionDigits: 0, maximumFractionDigits: 0 }) ?? '0';
