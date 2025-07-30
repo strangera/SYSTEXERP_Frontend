@@ -201,7 +201,6 @@ export class TLS14020Component extends BasicQueryPageComponent<ContractItem> imp
       label: '列印',
       icon: 'pi pi-print text-green-500',
       action: (rowData: ContractItem) => {
-        console.log('要列印的資料', rowData);
         this.onPrint(rowData);
       },
     },
@@ -209,7 +208,6 @@ export class TLS14020Component extends BasicQueryPageComponent<ContractItem> imp
       label: '顯示合約',
       icon: 'pi pi-file-word text-orange-500',
       action: (rowData: ContractItem) => {
-        console.log('這是該列資料嗎?2', rowData);
         this.dialogVisible = true;
         this.queryContractLog(rowData);
       },
@@ -240,7 +238,6 @@ export class TLS14020Component extends BasicQueryPageComponent<ContractItem> imp
   }
 
   private loadDropdownOptions(): void {
-    console.log('進下拉');
     // 大分類下拉
     this.sysb800Service.getSystemTypes().subscribe({
       next: (response: any[]) => {
@@ -248,7 +245,6 @@ export class TLS14020Component extends BasicQueryPageComponent<ContractItem> imp
           value: item.value || item.code || item.id,
           label: item.label || item.name || item.description
         }));
-        console.log('大分類選項載入完成:', this.businessTypeCodeOptions);
       },
       error: (error) => {
         console.error('載入大分類選項失敗:', error);
@@ -259,7 +255,6 @@ export class TLS14020Component extends BasicQueryPageComponent<ContractItem> imp
     this.vendorCategoryService.getVendorCategoryOptions("1").subscribe({
       next: (response: any[]) => {
         this.vendorOptions = response;
-        console.log('POS2013選項載入完成:', this.vendorOptions);
       },
       error: (error) => {
         console.error('載入POS2013選項失敗:', error);
@@ -281,7 +276,6 @@ export class TLS14020Component extends BasicQueryPageComponent<ContractItem> imp
         this.floorOptions = results.floor; // 樓層
         this.organizationOptions = results.org; // 組織
         this.businessTypeOptions = results.paperType; // 營業型態
-        console.log('位置', results.location);
       },
       error: (error) => {
         console.error('載入 Location 選項失敗:', error);
@@ -291,7 +285,6 @@ export class TLS14020Component extends BasicQueryPageComponent<ContractItem> imp
     this.negotiatorService.getNegotiatorOptions().subscribe({
       next: (response: any[]) => {
         this.negotiatorOptions = response;
-        console.log('洽談者選項載入完成:', this.negotiatorOptions.length);
       },
       error: (error) => {
         console.error('載入洽談者選項失敗:', error);
@@ -331,9 +324,6 @@ export class TLS14020Component extends BasicQueryPageComponent<ContractItem> imp
             this.totalRecords = response.TotalCount || response.Data.length;
             // 儲存查詢條件（成功查詢後）
             this.queryStateService.setQueryState(this.ProgNo, frm.value);
-            if (this.data.length === 0) {
-              console.log('查詢結果為空');
-            }
           } else {
             console.error('API error:', response.Status, response.Message);
           }
@@ -355,12 +345,8 @@ export class TLS14020Component extends BasicQueryPageComponent<ContractItem> imp
     this.tls14020Service.queryContractLog(data).subscribe({
       next: (response: any) => {
         if (response.Status === '0000') {
-          console.log('開窗查詢結果', response.Data);
           this.dialogData = response.Data || [];
           this.dialogTotalRecords = response.TotalCount || response.Data.length;
-          if (this.data.length === 0) {
-            console.log('查詢結果為空');
-          }
         } else {
           console.error('API error:', response.Status, response.Message);
         }
@@ -384,7 +370,6 @@ export class TLS14020Component extends BasicQueryPageComponent<ContractItem> imp
         if (response.Status === '0000') {
           // 成功時下載檔案
           this.downloadFile(response.Data.FileData, response.Data.FileName);
-          console.log('Word文檔生成成功', response);
         } else {
           console.error('生成Word文檔失敗:', response.Status, response.Message);
           this.messageService.errorBubble(response.Message || '生成文檔失敗');
@@ -461,7 +446,6 @@ export class TLS14020Component extends BasicQueryPageComponent<ContractItem> imp
       next: (response: any) => {
         if (response.Status === '0000') {
           const rowData = response.Data || [];
-          console.log('查完資料', rowData);
           if (rowData.length !== 0) {
             this.navigateWithState(CRUDStatus.Read, rowData[0]);
           }
