@@ -49,7 +49,6 @@ import { CounterNameService } from '../../../service/basic/counter-name.service'
   ],
 })
 export class TLS2B030Component extends BasicQueryPageComponent<any> {
-
   queryForm = this.formBuilder.group({
     TXN_YearMonth: [],
     TXN_Date_Start: [],
@@ -77,7 +76,7 @@ export class TLS2B030Component extends BasicQueryPageComponent<any> {
   cahserTypeOptions: any[] = [];
   areaCodeOptions: any[] = [];
   ECRNoOptions: any[] = []; // 收銀機號下拉選單
-   CounterOptions: any[] = []; // 專櫃選項
+  CounterOptions: any[] = []; // 專櫃選項
 
   constructor(
     private tls2b030Service: TLS2B030Service,
@@ -85,9 +84,9 @@ export class TLS2B030Component extends BasicQueryPageComponent<any> {
     private floorService: FloorService,
     private regionService: RegionService,
     private tls11010Service: Tls11010Service,
-   
-        private ECRNoService: ECRNoService,
-        private counterNameService: CounterNameService,
+
+    private ECRNoService: ECRNoService,
+    private counterNameService: CounterNameService,
   ) {
     super();
   }
@@ -97,7 +96,7 @@ export class TLS2B030Component extends BasicQueryPageComponent<any> {
       'TLS2B030',
       '/TLS2000/TLS2B030CRU',
       this.queryForm,
-      (form) => this.onSubmit(form),
+      
     );
 
     this.queryForm = this.formBuilder.group(
@@ -119,7 +118,7 @@ export class TLS2B030Component extends BasicQueryPageComponent<any> {
       },
     );
 
-     this.ECRNoService.getECRNo().subscribe((res) => {
+    this.ECRNoService.getECRNo().subscribe((res) => {
       this.ECRNoOptions =
         res?.map((x: any) => ({
           label: x.label, // 給 table 用
@@ -191,57 +190,56 @@ export class TLS2B030Component extends BasicQueryPageComponent<any> {
       .map((col) => col.field);
   }
 
- onSubmit(form: FormGroup): void {
-  console.log('✅ 觸發 onSubmit', form.value);
+  onSubmit(form: FormGroup): void {
+    console.log('✅ 觸發 onSubmit', form.value);
 
-  if (form.invalid) {
-    console.warn('❌ 表單驗證失敗:', form.errors, form.value);
-    this.messageService.errorBubble('日期必要欄位');
-    return;
-  }
-
-  this.handleSubmit(form, () => {
-    const payload = { ...form.value };
-
-    // ✅ 字串欄位去除空白
-    Object.keys(payload).forEach((key) => {
-      if (typeof payload[key] === 'string') {
-        payload[key] = payload[key].trim() || null;
-      }
-    });
-    // ✅ checkbox 對應 API 欄位名稱
-payload['OnlyShowOverAmount'] = payload['onlyShowOverflow'];
-delete payload['onlyShowOverflow'];
-
-    // ✅ TXN_YearMonth：轉換成 yyyyMM 格式
-    const month = payload['TXN_YearMonth'];
-    if (month instanceof Date && !isNaN(month.getTime())) {
-      const yyyy = month.getFullYear();
-      const mm = String(month.getMonth() + 1).padStart(2, '0');
-      payload['TXN_YearMonth'] = `${yyyy}${mm}`;
+    if (form.invalid) {
+      console.warn('❌ 表單驗證失敗:', form.errors, form.value);
+      this.messageService.errorBubble('日期必要欄位');
+      return;
     }
 
-    this.loading = true;
-    this.messageService.blockUi();
+    this.handleSubmit(form, () => {
+      const payload = { ...form.value };
 
-    this.tls2b030Service.queryTLS2B030(payload).subscribe({
-      next: (res) => {
-        this.data = res.Data ?? [];
-        this.totalRecords = res.TotalCount ?? this.data.length;
-        this.queryStateService.setQueryState(this.ProgNo, payload);
-        this.messageService.successBubble('查詢成功');
-      },
-      error: () => {
-        this.messageService.errorBubble('查詢失敗');
-      },
-      complete: () => {
-        this.loading = false;
-        this.messageService.unblockUi();
-      },
+      // ✅ 字串欄位去除空白
+      Object.keys(payload).forEach((key) => {
+        if (typeof payload[key] === 'string') {
+          payload[key] = payload[key].trim() || null;
+        }
+      });
+      // ✅ checkbox 對應 API 欄位名稱
+      payload['OnlyShowOverAmount'] = payload['onlyShowOverflow'];
+      delete payload['onlyShowOverflow'];
+
+      // ✅ TXN_YearMonth：轉換成 yyyyMM 格式
+      const month = payload['TXN_YearMonth'];
+      if (month instanceof Date && !isNaN(month.getTime())) {
+        const yyyy = month.getFullYear();
+        const mm = String(month.getMonth() + 1).padStart(2, '0');
+        payload['TXN_YearMonth'] = `${yyyy}${mm}`;
+      }
+
+      this.loading = true;
+      this.messageService.blockUi();
+
+      this.tls2b030Service.queryTLS2B030(payload).subscribe({
+        next: (res) => {
+          this.data = res.Data ?? [];
+          this.totalRecords = res.TotalCount ?? this.data.length;
+          this.queryStateService.setQueryState(this.ProgNo, payload);
+          this.messageService.successBubble('查詢成功');
+        },
+        error: () => {
+          this.messageService.errorBubble('查詢失敗');
+        },
+        complete: () => {
+          this.loading = false;
+          this.messageService.unblockUi();
+        },
+      });
     });
-  });
-}
-
+  }
 
   moneyFormat(value: number): string {
     return value != null ? value.toLocaleString('en-US') : '0'; // ✅ 使用美式格式
@@ -260,8 +258,11 @@ delete payload['onlyShowOverflow'];
     const end = group.get('TXN_Date_End')?.value;
     const month = group.get('TXN_YearMonth')?.value;
 
-    const isDateRangeFilled = start instanceof Date && !isNaN(start.getTime()) &&
-      end instanceof Date && !isNaN(end.getTime());
+    const isDateRangeFilled =
+      start instanceof Date &&
+      !isNaN(start.getTime()) &&
+      end instanceof Date &&
+      !isNaN(end.getTime());
     const isMonthFilled = !!month;
 
     if (!isDateRangeFilled && !isMonthFilled) {

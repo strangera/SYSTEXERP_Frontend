@@ -1,5 +1,5 @@
 import { Component, Input, OnInit, ChangeDetectorRef } from '@angular/core';
-import { Column, expandAnimation } from '../table2.model';
+import { Column2, expandAnimation } from '../table2.model';
 import { TableModule } from 'primeng/table';
 import { PrimeTemplate } from 'primeng/api';
 import { NgFor, NgClass, NgIf } from '@angular/common';
@@ -14,7 +14,7 @@ import { NgFor, NgClass, NgIf } from '@angular/common';
 })
 export class TableExpansion2Component implements OnInit {
   @Input() expansionDataKey = '';
-  @Input() expansionColumns: Column[] = [];
+  @Input() expansionColumns: Column2[] = [];
   @Input() rowData: any;
   @Input() expansionSortField = 'ID';
   @Input() expansionSortOrder = 1;
@@ -34,7 +34,7 @@ export class TableExpansion2Component implements OnInit {
     });
   }
 
-  getFilterColumns(columns: Column[]): Column[] {
+  getFilterColumns(columns: Column2[]): Column2[] {
     return columns.filter(col => !col.hidden);
   }
 }

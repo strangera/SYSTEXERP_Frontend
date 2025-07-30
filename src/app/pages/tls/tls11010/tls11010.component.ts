@@ -91,12 +91,21 @@ export class TLS11010Component extends BasicQueryPageComponent<any> {
       visible: true,
       format: (value: any) => this.getLabelFromOptions(value, this.LOCATION_Status_Options),
     },
-    {
-      field: 'Purpose_no',
-      header: '用途代碼',
-      visible: true,
-      format: (value: any) => this.getLabelFromOptions(value, this.usageOptions),
-    },
+{
+  field: 'Purpose_no',
+  header: '用途名稱',
+  visible: true,
+  format: (value: any) => {
+    if (Array.isArray(value)) {
+      return value
+        .map((v: any) => this.getLabelFromOptions(v, this.usageOptions))
+        .join(', ');
+    } else {
+      return this.getLabelFromOptions(value, this.usageOptions);
+    }
+  }
+}
+,
     { field: 'Draw_X', header: 'X 軸', visible: true },
     { field: 'Draw_Y', header: 'Y 軸', visible: true },
   ];
@@ -205,11 +214,11 @@ export class TLS11010Component extends BasicQueryPageComponent<any> {
       error: () => this.messageService.errorBubble('刪除失敗'),
     });
   }
-
-  getLabelFromOptions(value: any, options: any[]): string {
-    const found = options?.find(opt => String(opt.value) === String(value));
-    return found ? found.label : value;
-  }
+getLabelFromOptions(value: any, options: any[]): string {
+  const trimmedValue = String(value).trim();
+  const found = options?.find(opt => String(opt.value).trim() === trimmedValue);
+  return found ? found.label : trimmedValue;
+}
 
 
 }

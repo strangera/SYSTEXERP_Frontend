@@ -16,7 +16,7 @@ export class DataTypeService {
   ) { }
 
   getDataOptions(): Observable<any[]> {
-    return this.http.post<any>(`${this.apiUrl}/TLS0000/TLS4000/queryTLS47010`, {}).pipe(
+    return this.http.post<any>(`${this.apiUrl}/queryDEFTBL_DropDownList`, {}).pipe(
       map(res => res?.Data || []),
       tap(data => console.debug('getTLS47010TableOptions response', data)),
       catchError((error: HttpErrorResponse) => this.errorHandler.handleError(error))

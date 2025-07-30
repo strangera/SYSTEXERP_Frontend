@@ -1,7 +1,7 @@
 import { animate, state, style, transition, trigger } from "@angular/animations";
 import { NotificationService } from "../../component/notification-message/notification.service";
 import { SortMeta } from "primeng/api";
-export interface Column {
+export interface Column2 {
   field: string;     // 欄位名稱 (資料的欄位名稱)
   header: string;    // 欄位標題 (顯示在表格上的標題)
   visible?: boolean;  // 是否顯示 (可篩選欄位是否顯示？)
@@ -11,8 +11,12 @@ export interface Column {
   groupField?: string;
   isSubTotal?: boolean; // 是否為小計欄位
   isTotal?: boolean; // 是否為總計欄位
+
   showSort?: boolean;
   sortField?: string; // 排序欄位(預設為 field)
+    /** ✅ 新增這兩個屬性 */
+  rowspan?: boolean;       // 如果此欄要橫跨兩列
+  headerRow?: 1 | 2;       // 第幾列顯示（1 或 2）
 
   disabled?: (value: any) => boolean;  // 是否禁用 (是否為禁用欄位)
 
@@ -93,7 +97,7 @@ export interface FieldChangeEvent {
 }
 
 // 新增一個方法來驗證行數據
-export function validateRowData(rowData: any, columns: Column[], data: any, messageService: NotificationService, dataKey: string): boolean {
+export function validateRowData(rowData: any, columns: Column2[], data: any, messageService: NotificationService, dataKey: string): boolean {
   // 新增的預設判斷：檢查除了 dataKey 以外的所有欄位是否都為 null/undefined/空字串
   const otherColumns = columns.filter(col => col.field !== dataKey);
   const allOtherFieldsAreEmpty = otherColumns.every(col => {
