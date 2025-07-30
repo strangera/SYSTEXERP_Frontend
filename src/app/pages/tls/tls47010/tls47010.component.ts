@@ -62,8 +62,8 @@ export class TLS47010Component extends BasicQueryPageComponent<any> {
 
     this.dataTypeService.getDataOptions().subscribe((res) => {
       this.dataTypeOptions = res.map((x: any) => ({
-        label: `${x.TBL_Name}`,
-        value: x.TBL_Name,
+        label: `${x.No} - ${x.Name}`,
+        value: x.No,
       }));
     });
   }

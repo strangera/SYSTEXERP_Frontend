@@ -2,7 +2,7 @@
 import { Component, EventEmitter, Input, SimpleChanges, OnChanges, Output, ViewChild, OnDestroy, OnInit } from '@angular/core';
 import { Table, TableLazyLoadEvent, TablePageEvent, TableRowSelectEvent, TableRowUnSelectEvent, TableModule } from 'primeng/table';
 import { SortMeta, PrimeTemplate } from 'primeng/api';
-import { AddButton, Column, ColumnGroup, FieldChangeEvent, LazyLoadEvent, RowEditSaveEvent, toggleButtons, validateRowData } from './table2.model';
+import { AddButton, Column2, ColumnGroup, FieldChangeEvent, LazyLoadEvent, RowEditSaveEvent, toggleButtons, validateRowData } from './table2.model';
 import { FileSelectEvent, FileUpload, FileUploadModule } from 'primeng/fileupload';
 import { NotificationService } from '../../component/notification-message/notification.service';
 import { QueryStateService } from '../../service/query-state.service';
@@ -67,8 +67,8 @@ export class Table2Component extends BasicPrintDataComponent implements OnInit, 
   @Input() tableKey: string | undefined = undefined;                            // table 唯一標識 (必填)
   @Input() apiUrl?: string;                                                     // table API URL (可選)
   @Input() title: string | undefined = undefined;                               // table 標題
-  @Input() columns!: Column[];                                                  // table 欄位配置 (必填)
-  selectedColumns!: Column[];                                                   // table 預設顯示欄位
+  @Input() columns!: Column2[];                                                  // table 欄位配置 (必填)
+  selectedColumns!: Column2[];                                                   // table 預設顯示欄位
   @Input() data: any[] = [];                                                    // table 資料 (必填)
   @Output() dataChange = new EventEmitter<any[]>();                             // table 資料改變 (事件)
   @Input() loading = false;                                                     // 是否顯示 loading
@@ -114,7 +114,7 @@ export class Table2Component extends BasicPrintDataComponent implements OnInit, 
   @Input() deleteData = false;                // 預先刪除資料
   @Output() delete = new EventEmitter<any>(); // 刪除事件
   // expansion 收合展開
-  @Input() expansionColumns: Column[] = [];  // 收合展開 欄位配置(expansion必需配置)
+  @Input() expansionColumns: Column2[] = [];  // 收合展開 欄位配置(expansion必需配置)
   @Input() expansionDataKey = '';            // 收合展開 資料key(expansion必需配置)
   @Input() expansionSortField = '';          // 收合展開 排序欄位(單一排序)
   @Input() expansionSortOrder = 0;           // 收合展開 排序方向 (1:升序、-1:降序)
@@ -159,6 +159,7 @@ export class Table2Component extends BasicPrintDataComponent implements OnInit, 
   @Input() emptyMessage = '查無資料';                // table 無資料時顯示文字
   @Input() showDelete = true;                    // 是否顯示刪除按鈕
   @Input() deleteIcon = 'pi pi-trash';          // 刪除按鈕圖示
+  
   // 權限
   private ngUnsubscribe = new Subject<void>();
   public funInfo: FunsrightInfo | undefined;
@@ -314,7 +315,7 @@ export class Table2Component extends BasicPrintDataComponent implements OnInit, 
     this.selectionChange.emit(this.selectedItems);
   }
   // (欄位是Dropdown使用): 獲取Dropdown的選項，支持function加入或直接給List
-  getOptions(rowData: any, col: Column) { return typeof col.options === 'function' ? (col.options(rowData) || undefined) : col.options || undefined; }
+  getOptions(rowData: any, col: Column2) { return typeof col.options === 'function' ? (col.options(rowData) || undefined) : col.options || undefined; }
   // (欄位是Input、Dropdown使用): 處理值變化事件
   onFieldChange(rowData: any, field: string, value: any) { this.fieldChange.emit({ rowData, field, value }); }
   // 事件類型 (有需求可使用)
@@ -361,11 +362,11 @@ export class Table2Component extends BasicPrintDataComponent implements OnInit, 
     return this.sanitizer.bypassSecurityTrustHtml(html);
   }
 
-  getColumnSpan(columns: Column[], groupField: string): number {
+  getColumnSpan(columns: Column2[], groupField: string): number {
     return columns.filter(col => col.groupField === groupField && col.visible !== false && col.hidden !== true).length;
   }
 
-  getUngroupedColumns(columns: Column[], columnGroup: ColumnGroup[]): Column[] {
+  getUngroupedColumns(columns: Column2[], columnGroup: ColumnGroup[]): Column2[] {
     const groupFields = columnGroup.map(g => g.field);
     return columns.filter(
       col =>
@@ -374,7 +375,7 @@ export class Table2Component extends BasicPrintDataComponent implements OnInit, 
         col.hidden !== true
     );
   }
-  shouldRenderGroupHeader(col: Column, index: number, columns: Column[]): boolean {
+  shouldRenderGroupHeader(col: Column2, index: number, columns: Column2[]): boolean {
     if (!col.groupField || col.hidden === true || col.visible === false) return false;
     const currentGroup = col.groupField;
     for (let i = 0; i < index; i++) {
