@@ -50,7 +50,7 @@ import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
   ],
 })
 export class SsoDashboardComponent implements OnInit, OnDestroy { // 實現 OnDestroy
-  logo = 'assets/layout/images/logo.png';
+  logo = 'assets/layout/images/logo.webp';
   user: UserInfo | null = null;
   private subscriptions: Subscription[] = [];
   items: MenuItem[] = [

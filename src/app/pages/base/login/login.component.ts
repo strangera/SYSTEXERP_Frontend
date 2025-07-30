@@ -26,7 +26,7 @@ import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
   ],
 })
 export class LoginComponent {
-  logoPath = 'assets/layout/images/login_logo.png';
+  logoPath = 'assets/layout/images/login_logo.webp';
   loginForm = this.formBuilder.group({
     code: ['admin' as string, Validators.required],
     password: ['1' as string, Validators.required],

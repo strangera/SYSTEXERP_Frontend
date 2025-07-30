@@ -67,7 +67,13 @@ export class MenubarComponent implements OnInit {
   noProgNo = false;
   getMenuName(funs: FunsrightInfo[], progNo: string): void {
     const prog = funs.find(x => x.prog_No === progNo);
-    if (!prog) { this.noProgNo = true; this.menu = ['未知頁面，此頁面尚未開發，待安排!!!!!!!!!!!!!']; return; }
+    if (!prog) {
+      this.noProgNo = true;
+      this.menu = ['未知頁面，此頁面尚未開發，待安排!!!!!!!!!!!!!'];
+      return;
+    }
+
+    this.noProgNo = false;
     this.menu.push(prog.prog_name);
     if (prog.prog_up) this.getMenuName(funs, prog.prog_up);
   }

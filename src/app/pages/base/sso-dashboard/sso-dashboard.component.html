@@ -1,7 +1,7 @@
 <div class="layout-wrapper" *ngIf="user">
   <div #appTopbarDiv class="layout-topbar justify-content-between flex-wrap lg:flex-nowrap">
     <a class="layout-topbar-logo" routerLink="/sso/dashboard">
-      <img [src]="logo" alt="logo">
+      <img loading="lazy" [src]="logo" alt="logo">
       <span class="min-w-max">{{'management-platform-title' | translate}}</span>
     </a>
     <button #topbarmenubutton class="p-link layout-topbar-menu-button layout-topbar-button"
@@ -53,7 +53,7 @@
         class="animation-duration-1000 col-12 sm:col-6 md:col-3 flex justify-content-center">
         <p-card styleClass="w-full h-full flex flex-column justify-content-between">
           <ng-template pTemplate="header">
-            <img [src]="'assets/layout/images/' + item.System_ImgFile + '.png'" [alt]="item.System_Name"
+            <img loading="lazy" [src]="'assets/layout/images/' + item.System_ImgFile + '.webp'" [alt]="item.System_Name"
               style="width: 100%; display: block;">
           </ng-template>
           <ng-template pTemplate="content">

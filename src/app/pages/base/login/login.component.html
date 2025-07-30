@@ -1,7 +1,7 @@
 <div
   class="fadein animation-duration-500 surface-ground flex align-items-center justify-content-center min-h-screen min-w-screen overflow-hidden relative">
   <div class="flex flex-column align-items-center justify-content-center w-full sm:w-auto h-screensm:h-auto">
-    <img [src]="logoPath" alt="logo"
+    <img [src]="logoPath" alt="logo" loading="lazy"
       class="fadeindown animation-duration-500 hidden sm:block mb-5 w-18rem flex-shrink-0" />
     <div class="card w-full sm:w-auto h-screen sm:h-auto flex flex-column align-items-center justify-content-center">
       <div
@@ -38,8 +38,7 @@
   </div>
 
   <!-- ✅ 固定在右下角的版本字串 -->
-  <div
-    style="position: fixed; bottom: 10px; right: 10px; font-size: 0.875rem; color: #666; z-index: 10;">
+  <div style="position: fixed; bottom: 10px; right: 10px; font-size: 0.875rem; color: #666; z-index: 10;">
     2025/07/28_V2 14:18
   </div>
 </div>
