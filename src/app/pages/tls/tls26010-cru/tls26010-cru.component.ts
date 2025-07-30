@@ -60,7 +60,7 @@ export class TLS26010CRUComponent extends BasicCruPageComponent<TLS26010Data> im
     ECR_Nos: [[] as string[]], //收銀機清單
     tlt_nos: [[] as string[]], //專櫃清單
     sys3800: [''], // 館別
-    sys3900: [[] as string[]], // 樓層
+    sys3900: [''], // 樓層
   });
   private get df() { return this.dataForm.controls; }
 
@@ -132,40 +132,44 @@ export class TLS26010CRUComponent extends BasicCruPageComponent<TLS26010Data> im
     edate: this.edateSignal()!,
   }), { equal: shallowEqual });
 
-  columns: Column[] = [
+  public columns: Column[] = [
     { field: 'ECR_No', header: '收銀機號', visible: true },
     { field: 'tlt_no', header: '專櫃編號', visible: true },
     { field: 'tlt_name', header: '櫃位名稱', visible: true },
   ];
 
-  columns2: Column[] = [
+  public columns2: Column[] = [
     { field: 'tlt_no', header: '專櫃編號', visible: true },
     { field: 'tlt_name', header: '櫃位名稱', visible: true },
   ];
+
+  public readonly isRowSelectable = (rowData: TLS26010Data): boolean =>
+    !(Reflect.has(rowData, 'CanDelete') && rowData.CanDelete === '0');
 
   constructor(public service: TLS26010Service) {
     super();
   }
 
-  ngOnInit(): void {
+  public ngOnInit(): void {
     this.initializePage('TLS26010', this.dataForm);
-    this.service.loadTLS26010Detail({ pod_no: this.rowdata?.pod_no || '' });
+    if (this.crudstatus !== CRUDStatus.Create)
+      this.service.loadTLS26010Detail({ pod_no: this.rowdata?.pod_no || '' });
     console.log(`init:`, [this.funInfo, this.rowdata, this.dataForm.value]);
   }
 
   /** 處理文件上傳事件 */
-  onImportExcel(event: FileSelectEvent): void {
+  public onImportExcel(event: FileSelectEvent): void {
     const file = event.files[0];
     this.service.importTLS26010(file);
   }
 
   // 下載範例檔案
-  onExportExcel() {
+  public onExportExcel() {
     this.service.downloadTemplate();
   }
 
-  onSubmit(frm: FormGroup): void {
-    const value: TLS26010FormData = frm.value;
+  public onSubmit(frm: FormGroup): void {
+    const value = frm.value;
     this.handleSubmit(frm, () => {
 
       const payload: TLS26010Payload = {
@@ -196,13 +200,13 @@ export class TLS26010CRUComponent extends BasicCruPageComponent<TLS26010Data> im
   dialogChange(event: DropdownChangeEvent): void {
     console.log(`dialogChange:`, [event]);
     if (event && event.value?.lenth) {
-      this.dataForm.patchValue({ sys3800: '', sys3900: [] });
+      this.dataForm.patchValue({ sys3800: '', sys3900: '' });
       if (this.dialogVisible() === 'ecr') this.df.ECR_Nos.patchValue([]);
       if (this.dialogVisible() === 'tlt') this.df.tlt_nos.patchValue([]);
     }
   }
 
-  saveDialog(frm: FormGroup): void {
+  public saveDialog(frm: FormGroup): void {
     console.log(`saveDialog:`, [frm.value, this.dataForm.value]);
     this.handleSubmit(frm, () => {
       this.service.updateTLS26010({
@@ -232,11 +236,12 @@ export class TLS26010CRUComponent extends BasicCruPageComponent<TLS26010Data> im
   };
 }
 
-interface TLS26010FormData {
+interface DataForm {
   pod_no: string;
   pod_desc: string;
   pod_sdate: Date;
   pod_edate: Date;
+  pod_busdate: Date;
   pod_status: string;
   ECR_Nos: string[];
   tlt_nos: string[];

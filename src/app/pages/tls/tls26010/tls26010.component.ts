@@ -33,7 +33,7 @@ import { DependentDataQuery, TLS26010Data, TLS26010Query } from './tls26010.mode
     TableExpansionComponent,
   ]
 })
-export class TLS26010Component extends BasicQueryPageComponent<any> {
+export class TLS26010Component extends BasicQueryPageComponent<TLS26010Data> {
   private dateS: Date = new Date(this.now.getFullYear(), this.now.getMonth(), 1);
   private dateE: Date = new Date(this.now.getFullYear(), this.now.getMonth() + 1, 0);
 
@@ -53,6 +53,8 @@ export class TLS26010Component extends BasicQueryPageComponent<any> {
   public selectedItems: TLS26010Data[] = [];
 
   public readonly editDisabled = (rowData: TLS26010Data) => rowData.pod_status !== ApprovalStatus.未核准;
+  public readonly isEditable = (rowData: TLS26010Data) => rowData.CanEdit == '1';
+  public readonly isRowSelectable = (rowData: TLS26010Data) => rowData.CanDelete == '0';
 
   public readonly addButton: AddButton[] = [
     {
@@ -83,9 +85,8 @@ export class TLS26010Component extends BasicQueryPageComponent<any> {
   ]).pipe(
     map(([podSdateS, podSdateE, podEdateS, podEdateE]) => {
       const hasAnyDate = podSdateS || podSdateE || podEdateS || podEdateE;
-      if (!hasAnyDate) return { isValid: true, dates: { podSdateS, podSdateE, podEdateS, podEdateE } };
-
       let isValid = true;
+      if (!hasAnyDate) return { isValid, dates: { podSdateS, podSdateE, podEdateS, podEdateE } };
 
       // 檢查起始日期範圍
       if (podSdateS && podSdateE) {
@@ -186,9 +187,6 @@ export class TLS26010Component extends BasicQueryPageComponent<any> {
     this.service.loadSYS3800();
     this.service.loadSYS3900();
     this.service.loadSYS3A00();
-
-    // 僅供測試
-    // this.service.loadTLS26010(this.queryTLS26010());
   };
 
   private canQuery(): boolean {
@@ -201,12 +199,6 @@ export class TLS26010Component extends BasicQueryPageComponent<any> {
 
   private canEdit(): boolean {
     return true;
-  }
-
-  isRowSelectable(rowData: Event): boolean {
-    console.log(`isRowSelectable:`, rowData);
-    const data = rowData as unknown as TLS26010Data;
-    return data.CanDelete == '1';
   }
 
   public onClearForm(): void {
@@ -241,4 +233,16 @@ export class TLS26010Component extends BasicQueryPageComponent<any> {
       reject: () => this.messageService.infoBubble('已取消刪除')
     });
   }
+}
+
+interface QueryForm {
+  sys3800: string;
+  sys3900: string;
+  sys3A00: string;
+  ecrNos: string[];
+  tltNos: string[];
+  podSdateS: Date;
+  podSdateE: Date;
+  podEdateS: Date;
+  podEdateE: Date;
 }
