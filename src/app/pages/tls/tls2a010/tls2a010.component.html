@@ -27,11 +27,11 @@
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown
               label="樓層"
-              controlName="FLOOR_NO"
+              controlName="tlt_floor"
               [options]="floorOptions"
               optionLabel="label"
               optionValue="value"
-              [control]="queryForm.controls.FLOOR_NO"
+              [control]="queryForm.controls.tlt_floor"
               [submitted]="submitted"
             ></app-dropdown>
           </div>
@@ -73,11 +73,11 @@
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown
               label="館別"
-              controlName="building_no"
+              controlName="tlt_building"
               [options]="buildingNoOptions"
               optionLabel="label"
               optionValue="value"
-              [control]="queryForm.controls.building_no"
+              [control]="queryForm.controls.tlt_building"
               [submitted]="submitted"
             ></app-dropdown>
           </div>

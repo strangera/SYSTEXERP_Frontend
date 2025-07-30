@@ -21,6 +21,7 @@
               [options]="dropdown1"
               optionLabel="label"
               optionValue="value"
+              [control]="queryForm.controls.building_no"
             ></app-dropdown>
           </div>
           <div class="col-12 md:col-10 lg:col-6">
@@ -29,21 +30,26 @@
               [options]="dropdown2"
               optionLabel="label"
               optionValue="value"
-              (changeEvent)="onImageSelect($event)"
+              [control]="queryForm.controls.FLOOR_NO"
             ></app-dropdown>
           </div>
         </div>
       </form>
     </p-accordionTab>
   </p-accordion>
+
   <div class="card mt-5">
     <div style="display: flex; flex-wrap: wrap; gap: 10px">
       <!-- 左圖區塊 -->
       <div style="flex: 2 1 0; min-width: 400px">
-        <img
-          [src]="'assets/TLS12050/' + selectedImage"
+
+        <p-image
+          *ngIf="selectedImage"
+          [src]="selectedImage"
+          (onImageError)="onImageError($event)"
           [attr.alt]="'目前選擇樓層：' + selectedFloor"
-          style="width: 100%; height: auto; max-width: 100%"
+          [preview]="true"
+          imageClass="w-full h-auto max-w-full"
         />
       </div>
 
@@ -71,7 +77,7 @@
               <td>檢視進度</td>
               <td>
                 <app-multi-select
-                  formControlName="statusList"
+                  [control]="queryForm.controls.statusList"
                   [options]="dropdown3"
                   optionLabel="label"
                   optionValue="value"
@@ -87,7 +93,7 @@
             </tr>
             <tr>
               <td>總計</td>
-              <td>{{ selectedFloorCNT }}</td>
+              <td>{{ All_Count }}</td>
             </tr>
             <tr>
               <td style="background-color: rgb(185, 236, 219)"><b>色彩</b></td>
@@ -97,7 +103,7 @@
               <td>
                 <i class="pi pi-star-fill" style="color: rgb(88, 88, 88)"></i>
               </td>
-              <td>閒置中(%):0.1</td>
+              <td>閒置中(%): {{ Idle }}</td>
             </tr>
             <tr>
               <td>
@@ -106,13 +112,13 @@
                   style="color: rgb(255, 167, 236)"
                 ></i>
               </td>
-              <td>追蹤中(%):11.09</td>
+              <td>洽談中(%): {{ Under_Negotiation }}</td>
             </tr>
             <tr>
               <td>
                 <i class="pi pi-star-fill" style="color: rgb(255, 191, 52)"></i>
               </td>
-              <td>要約書階段 LOO Status(%):0</td>
+              <td>營運中(%): {{ In_Operation }}</td>
             </tr>
             <tr>
               <td>
@@ -121,7 +127,7 @@
                   style="color: rgb(104, 220, 231)"
                 ></i>
               </td>
-              <td>內裝施工階段 Fitout Construction Status(%):0</td>
+              <td>停用(%): {{ Outof_Service }}</td>
             </tr>
           </tbody>
         </table>
