@@ -56,10 +56,8 @@
                           [disabled]="false"
                           [submitted]="submitted"></app-calendar>
           </div>
-        </div>
 
-        <div class="grid p-fluid">
-          <!-- 扣款項目 -->
+          <!-- 扣款代碼 -->
           <div class="col-12 md:col-6 lg:col-4">
             <app-multi-select label="扣款代碼"
                               controlName="cap_item"
@@ -71,14 +69,12 @@
           </div>
         </div>
       </form>
-      <div>
-        <div class="grid justify-content-end">
-          <app-button btnType="clear"
-                      (click)="onClearForm()"></app-button>
-          <app-button btnType="submit"
-                      (click)="onSubmitQuery()"
-                      [loading]="loading"></app-button>
-        </div>
+      <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+        <app-button btnType="clear"
+                    (click)="onClearForm()"></app-button>
+        <app-button btnType="submit"
+                    (click)="onSubmitQuery()"
+                    [loading]="loading"></app-button>
       </div>
     </p-accordionTab>
   </p-accordion>
@@ -89,8 +85,9 @@
              [data]="service.TLS26080List()"
              [dataKey]="'pod_no'"
              [columns]="columns"
+             [isRowSelectable]="isRowSelectable"
              (edit)="onEdit($event)"
-             [editDisabled]="editableStatus"
+             [editDisabled]="isEditable"
              (detail)="onDetail($event)"
              [selectedItems]="selectedItems"
              (selectionChange)="selectedItems = $event"
