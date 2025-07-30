@@ -1,208 +1,87 @@
-import { Component, OnInit, ViewEncapsulation, } from '@angular/core';
-import { FormArray, FormBuilder, FormControl, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { NavigationExtras, Router } from '@angular/router';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-import { AuthService } from '../../../service/system/auth.service';
-import { TranslateService, TranslateModule } from '@ngx-translate/core';
-import { BasicCrupageComponent } from '../../../shared/componentextends/basic-crupage/basic-crupage.component';
+import { Component, OnInit } from '@angular/core';
+import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
+import { TLS26040Data, TLS26040Data2, TLS26040Service } from '../../../service/api/tls/tls26040.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { NgIf } from '@angular/common';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { PanelModule } from 'primeng/panel';
-import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { AccordionModule } from 'primeng/accordion';
+import { NgIf } from '@angular/common';
 import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
+import { Column, createPaginationConfig } from '../../../shared/componentkit/table/table.model';
+import { finalize } from 'rxjs';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
-//預售管理作業
+import { CalendarComponent } from '@shared/componentkit';
+
 @Component({
-    selector: 'app-tls26040-cru',
-    templateUrl: './tls26040-cru.component.html',
-    styleUrl: './tls26040-cru.component.scss',
-    standalone: true,
-    imports: [MenubarComponent, NgIf, ButtonComponent, PanelModule, FormsModule, ReactiveFormsModule, CalendarComponent, InputTextComponent, AccordionModule, CalendarRangeComponent, TableComponent, TranslateModule]
+  selector: 'app-tls26040-cru',
+  templateUrl: './tls26040-cru.component.html',
+  styleUrl: './tls26040-cru.component.scss',
+  standalone: true,
+  imports: [
+    NgIf,
+    MenubarComponent,
+    ButtonComponent,
+    PanelModule,
+    FormsModule,
+    ReactiveFormsModule,
+    InputTextComponent,
+    CalendarRangeComponent,
+    TableComponent,
+    CalendarComponent
+  ]
 })
-export class TLS26040CRUComponent extends BasicCrupageComponent implements OnInit {
-  CashRegisterTypeItems: any[] = [
-    { label: '業主', value: '1' },
-    { label: '非業主', value: '2' },
-  ];
-  // ----------------------------------------------------------------
-  dataForm = this.formBuilder.nonNullable.group({
-    name: ['', [Validators.required, Validators.minLength(5), Validators.maxLength(10)]],
-    age: ['', Validators.required],
-    email: ['', [Validators.maxLength(50), Validators.required]],
-    // ----------------------------------------------------------------
-    items: this.formBuilder.array([
-      this.createItem()
-    ]),
+export class TLS26040CRUComponent extends BasicCruPageComponent<TLS26040Data> implements OnInit {
+  dataForm = this.formBuilder.group({
+    preOrderDateFrom: ['', Validators.required],      // 預售日期(起)
+    preOrderDateTo: ['', Validators.required],        // 預售日期(訖)
+    transactionNo: [''],                               // 交易序號
+    receivingMachineNo: [''],                         // 收銀機號
+    counterCode: [''],                                // 專櫃編號
   });
-  // ----------------------------------------------------------------
+
+  dataForm2 = this.formBuilder.group({
+    checkoutDate: ['', Validators.required],          // 結帳日期
+  });
+
+
+  totalRecords = 0;
+  data: TLS26040Data2[] = [];
+  selectedItems: TLS26040Data2[] = [];
+
+  columns: Column[] = [
+    { field: 'preOrderDate', header: '預告日期', visible: true },
+    { field: 'counterCode', header: '櫃別編號', visible: true },
+    { field: 'receivingMachineNo', header: '收銀機號', visible: true },
+    { field: 'transactionNo', header: '交易序號', visible: true },
+    { field: 'amount', header: '業績金額', visible: true }
+  ];
+
   constructor(
-    private router: Router,
-    private formBuilder: FormBuilder,
-    private messageService: NotificationService,
-    private authService: AuthService,
-    private translate: TranslateService,
+    private tls26040Service: TLS26040Service
   ) {
-    super();  // 呼叫父類建構子
+    super();
   }
-  // 表格資料
-  data: any[] = [
 
-  ];
-  filteredData: any[] = [...this.data];
-  columns: any[] = [
-    { field: 'preSaleDate', header: '預售日期', visible: true },
-    { field: 'categoryCode', header: '欄別編號', visible: true },
-    { field: 'cashRegisterCode', header: '收銀機號', visible: true },
-    { field: 'transactionSerial', header: '交易序號', visible: true },
-    { field: 'businessIncome', header: '業績金額', visible: true }
-
-  ];
   ngOnInit(): void {
-    // 初始化
-    this.ProgNo = '220038';
+    this.initializePage('TLS26040', this.dataForm);
+  }
 
-
-    //
-    // ----------------------------------------------------------------
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
-    //
-    // ----------------------------------------------------------------
-    const state = this.router.lastSuccessfulNavigation?.extras.state as {
-      crudstatus: CRUDStatus,
-      rowdata: any,
+  onSubmit(frm: FormGroup): void {
+    const request = {
+      ...frm.value
     };
-
-    switch (state.crudstatus) {
-      // 創建
-      case CRUDStatus.Create:
-        this.formTitle = 'create-conditions';
-        this.accordionTabCss = 'create-accordionTab';
-        this.crudstatus = CRUDStatus.Create;
-        this.showConfirm = this.canAdd();
-        break;
-      // 修改
-      case CRUDStatus.Edit:
-        this.formTitle = 'edit-conditions';
-        this.accordionTabCss = 'edit-accordionTab';
-        this.crudstatus = CRUDStatus.Edit;
-        this.showConfirm = this.canEdit();
-        this.Edit(state.rowdata);
-        break;
-      // 讀檔
-      case CRUDStatus.Read:
-        this.formTitle = 'display-conditions';
-        this.crudstatus = CRUDStatus.Read;
-        this.Read(state.rowdata);
-        break;
-    }
-
-    console.log(this.accordionTabCss);
-  }
-
-  // ----------------------------------------------------------------
-  get items(): FormArray {
-    return this.dataForm.get('items') as FormArray;
-  }
-
-  getFormControl(index: number, controlName: string): FormControl {
-    return this.items.at(index).get(controlName) as FormControl;
-  }
-  // ----------------------------------------------------------------
-  createItem(): FormGroup {
-    return this.formBuilder.group({
-      name: ['', [Validators.required, Validators.maxLength(14)]], // Input Text
-      CashRegisterType: ['1', Validators.required], // 收銀機型態
-      SalesDate: ['', Validators.required], // 銷售日期
-      CashRegisterCode: ['', Validators.required], // 收銀機號
-      TransactionSerialNumber: ['', Validators.required], // 交易流水號
-      CounterNumber: ['', Validators.required], // 專櫃編號
-      TwoPartInvoiceNumberStart: ['', Validators.required], // 二聯發票號碼(起號)
-      TwoPartInvoiceNumberEnd: ['', Validators.required], // 二聯發票號碼(迄號)
-      TaxableAmount: ['', Validators.required], // 應稅金額
-      TaxFreeAmount: ['', Validators.required], // 免稅金額
+    this.handleSubmit(frm, () => {
+      this.tls26040Service.queryTLS26040_2(request)
+        .pipe(finalize(() => this.loading = false))
+        .subscribe(response => {
+          this.data = response.Data;
+          this.totalRecords = response.TotalCount;
+        });
     });
   }
-  onRemoveItem(index: number) {
-    this.items.removeAt(index);
-  }
-  // ----------------------------------------------------------------
-  Edit(rowdata: any) {
-    this.dataForm.patchValue(rowdata);
-  }
 
-  Read(rowdata: any) {
-    this.dataForm.patchValue(rowdata);
-    this.dataForm.disable();
-  }
-
-  onAddItem(): void {
-    this.items.push(this.createItem());
-  }
-
-  onSubmit(frm: FormGroup) {
-    this.messageService.blockUi();
-    this.submitted = true;
-
-    if (this.dataForm.invalid) {
-      this.messageService.errorBubble(this.translate.instant('form_error_message'));
-      this.messageService.unblockUi();
-      return;
-    }
-
-    switch (this.crudstatus) {
-      case CRUDStatus.Create:
-        if (this.canAdd()) {
-          // this.storeService.addMachine(frm.value as MachineForm).subscribe((response: any) => {
-          this.messageService.successBubble(this.translate.instant('success_message'));
-        }
-        break;
-      case CRUDStatus.Edit:
-        if (this.canEdit()) {
-          // this.storeService.updateMachine(frm.value as MachineForm).subscribe((response: any) => {
-          this.messageService.successBubble(this.translate.instant('updated-successfully'));
-        }
-        break;
-    }
-
-    this.messageService.unblockUi();
-    this.submitted = false;
-  }
-
-  submitForm(frm: FormGroup) {
-    // 查詢邏輯
-    this.onSubmit(frm);
-  }//CRU
-
-  onCancel() {
-    this.router.navigate(['TLS2000/TLS26040']);
-  }
-  onEdit(data: any) {
-    if (this.canEdit()) {
-      let extras: NavigationExtras = {
-        state: {
-          crudstatus: 'Edit',
-          rowdata: data,
-          queryform: this.dataForm,
-        },
-        skipLocationChange: true,
-      };
-      this.router.navigate(['TLS2000/TLS26040'], extras);
-    }
-  }
-
-  onDetail(data: any) {
-    let extras: NavigationExtras = {
-      state: {
-        crudstatus: 'Read',
-        rowdata: data,
-        queryform: this.dataForm,
-      },
-      skipLocationChange: true,
-    };
-    this.router.navigate(['TLS2000/TLS26040'], extras);
+  onCheckout(): void {
+    // TODO: 更新資料
   }
 }
