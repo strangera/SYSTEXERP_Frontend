@@ -29,7 +29,7 @@ import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/
 import { formatApproveStatus, formatCheckType, formatDecoType, formatMoneyType, formatOpenflagStatus, formatStoreWay, formatTltTermType } from '../tls13010/tls13010.constants';
 import { DialogComponent } from '../../../shared/componentkit/dialog/dialog.component';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-import { RadiobuttonYNComponent } from '@shared/componentkit';
+import { RadiobuttonYNComponent } from '@shared/componentkit/radiobutton-yn/radiobutton-yn.component';
 
 interface ContractItem {
   id: string;
