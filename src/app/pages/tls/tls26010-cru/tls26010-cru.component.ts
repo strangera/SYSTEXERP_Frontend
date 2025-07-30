@@ -5,16 +5,22 @@ import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angula
 import { TranslateModule } from '@ngx-translate/core';
 import { TLS26010Service } from '@service/api/tls/tls26010.service';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
-import { ButtonComponent, CalendarRangeComponent, DialogComponent, DropdownComponent, InputTextComponent, MultiSelectComponent, TableComponent } from '@shared/componentkit';
 import { Column } from '@shared/componentkit/table/table.model';
-import { MenubarComponent } from '@shared/index';
-import { ApprovalStatus } from '@shared/models';
 import { CRUDStatus } from '@shared/models/system/CRUDstatus';
 import { DropdownChangeEvent } from 'primeng/dropdown';
 import { FileSelectEvent, FileUploadModule } from 'primeng/fileupload';
 import { PanelModule } from 'primeng/panel';
 import { finalize, tap } from 'rxjs';
 import { EcrItem, FormValue, PodRequest, StatusProcessStrategy, TalentItem, TLS26010Data } from '../tls26010/tls26010.model';
+import { ApprovalStatus } from '@shared/models/tls/approval-status.model';
+import { MenubarComponent } from '@shared/component/menubar/menubar.component';
+import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/calendar-range.component';
+import { ButtonComponent } from '@shared/componentkit/button/button.component';
+import { TableComponent } from '@shared/componentkit/table/table.component';
+import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
+import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
+import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
+import { DialogComponent } from '@shared/componentkit/dialog/dialog.component';
 
 const shallowEqual = <T extends Record<string, any>>(a: T, b: T): boolean => {
   const keys = Object.keys(a) as (keyof T)[];

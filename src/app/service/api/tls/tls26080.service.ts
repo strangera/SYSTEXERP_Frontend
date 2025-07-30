@@ -5,8 +5,8 @@ import { CampaignData, mockCampaignData } from '@pages/tls/tls26080-cru/ts26080-
 import { CampaignAccountingType, CampaignAccountingTypes, TLS26080Data, TLS26080Query } from '@pages/tls/tls26080/tls26080.model';
 import { ErrorHandlerService } from '@service/system/error-handler.service';
 import { NotificationService } from '@shared/component/notification-message/notification.service';
-import { ApprovalStatus } from '@shared/models';
 import { BaseQueryResponse, DropdownOption } from '@shared/models/api/base-api.interface';
+import { ApprovalStatus } from '@shared/models/tls/approval-status.model';
 import { catchError, EMPTY, finalize, of, take, tap } from 'rxjs';
 import { environment } from 'src/environments/environment';
 

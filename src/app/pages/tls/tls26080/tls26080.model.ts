@@ -1,6 +1,3 @@
-import { BaseQueryResponse } from '@shared/models';
-import { delay, Observable, of } from 'rxjs';
-
 export interface TLS26080Data {
   CanDelete: '0' | '1';     // 是否可刪除 (0=否, 1=是)
   CanEdit: '0' | '1';       // 是否可編輯 (0=否, 1=是)

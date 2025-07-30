@@ -5,7 +5,6 @@ import { TranslateModule } from '@ngx-translate/core';
 import { TLS27020Data, TLS27020Service } from '@service/api/tls/tls27020.service';
 import { DropDownListService } from '@service/utility/dropDownList.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
-import { InputNumberComponent, MultiSelectComponent } from '@shared/componentkit';
 import { Column, createPaginationConfig, formatDate } from '@shared/componentkit/table/table.model';
 import { AccordionModule } from 'primeng/accordion';
 import { finalize } from 'rxjs';
@@ -13,6 +12,8 @@ import { MenubarComponent } from '../../../shared/component/menubar/menubar.comp
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
+import { InputNumberComponent } from '@shared/componentkit/input-number/input-number.component';
+import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
 
 @Component({
   selector: 'app-tls27020',

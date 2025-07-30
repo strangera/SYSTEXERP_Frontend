@@ -45,7 +45,7 @@ import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-ra
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { TranslateModule } from '@ngx-translate/core';
-import { InputTextRangeComponent } from "@shared/componentkit";
+import { InputTextRangeComponent } from '@shared/componentkit/input-text-range/input-text-range.component';
 
 @Component({
   selector: 'app-tls13010',

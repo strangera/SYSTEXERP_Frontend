@@ -1,8 +1,8 @@
 import { Injectable } from '@angular/core';
 import { HttpEvent, HttpInterceptor, HttpHandler, HttpRequest, HttpResponse } from '@angular/common/http';
 import { Observable, tap } from 'rxjs';
-import { QueryStateService } from '@shared/service';
 import { CurrentPageService } from '../layout/app.menulist/current-page.service';
+import { QueryStateService } from '@shared/service/query-state.service';
 
 @Injectable()
 export class QueryCacheInterceptorService implements HttpInterceptor {

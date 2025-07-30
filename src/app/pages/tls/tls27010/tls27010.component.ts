@@ -4,11 +4,11 @@ import { MenubarComponent } from '../../../shared/component/menubar/menubar.comp
 import { AccordionModule } from 'primeng/accordion';
 import { TranslateModule } from '@ngx-translate/core';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
-import { FileUploadComponent } from '@shared/componentkit';
 import { FileUploadHandlerEvent } from 'primeng/fileupload';
 import { TLS27010Service } from '@service/api/tls/tls27010.service';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { finalize } from 'rxjs';
+import { FileUploadComponent } from '@shared/componentkit/file-upload/file-upload.component';
 @Component({
   selector: 'app-tls27010',
   templateUrl: './tls27010.component.html',

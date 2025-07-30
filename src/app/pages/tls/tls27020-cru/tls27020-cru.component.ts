@@ -8,11 +8,12 @@ import { InputTextComponent } from '../../../shared/componentkit/input-text/inpu
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { NgIf } from '@angular/common';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
-import { DropdownComponent, InputNumberComponent } from '@shared/componentkit';
 import { InsertTLS27020, TLS27020Data, TLS27020Service, UpdateTLS27020 } from '@service/api/tls/tls27020.service';
 import { DropDownListService } from '@service/utility/dropDownList.service';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { combineLatest, distinctUntilChanged, filter, finalize } from 'rxjs';
+import { InputNumberComponent } from '@shared/componentkit/input-number/input-number.component';
+import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 
 @Component({
   selector: 'app-tls27020-cru',

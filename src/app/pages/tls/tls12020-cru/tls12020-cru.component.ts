@@ -11,8 +11,8 @@ import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdow
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
-import { InputTextareaComponent } from '@shared/componentkit';
-import { ValidationService } from '@shared/service';
+import { InputTextareaComponent } from '@shared/componentkit/input-textarea/input-textarea.component';
+import { ValidationService } from '@shared/service/validation.service';
 
 
 

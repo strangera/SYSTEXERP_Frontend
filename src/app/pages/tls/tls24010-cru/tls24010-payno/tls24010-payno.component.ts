@@ -2,7 +2,7 @@ import { ChangeDetectionStrategy, Component, Input, OnChanges, OnInit, SimpleCha
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { POS5008Data } from '@service/api/tls/tls24010.service';
 import { DropDownListService, IDropdownItem } from '@service/utility/dropDownList.service';
-import { TableComponent } from '@shared/componentkit';
+import { TableComponent } from '@shared/componentkit/table/table.component';
 import { Column, formatAmount } from '@shared/componentkit/table/table.model';
 
 @UntilDestroy()

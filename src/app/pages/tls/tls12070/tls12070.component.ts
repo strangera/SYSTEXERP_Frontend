@@ -13,9 +13,9 @@ import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-ra
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
 import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
 import { CalendarRangeQuickComponent } from '../../../shared/componentkit/calendar-range-quick/calendar-range-quick.component';
-import { ReportTableGroupComponent } from '@shared/componentkit';
-import { apiOption } from '@shared/models';
 import { Tls12070Service } from '@service/api/tls/tls12070.service';
+import { apiOption } from '@shared/models/tls/tls000.model';
+import { ReportTableGroupComponent } from '@shared/componentkit/report-table-group/report-table-group.component';
 
 export interface interviewList {
   id: number; // 主鍵，自動編號
@@ -34,13 +34,13 @@ export interface interviewList {
 
 // 2.1.2.7 專櫃訪談紀錄追蹤表
 @Component({
-    selector: 'app-tls12070',
-    templateUrl: './tls12070.component.html',
-    styleUrl: './tls12070.component.scss',
-    standalone: true,
-    imports: [MenubarComponent, ButtonComponent,InputTextComponent, InputNumberComponent, AccordionModule, FormsModule,ReactiveFormsModule, CalendarRangeComponent, CalendarRangeQuickComponent, DropdownComponent, MultiSelectComponent, InputTextComponent, TableComponent, ReportTableGroupComponent,TranslateModule]
+  selector: 'app-tls12070',
+  templateUrl: './tls12070.component.html',
+  styleUrl: './tls12070.component.scss',
+  standalone: true,
+  imports: [MenubarComponent, ButtonComponent, InputTextComponent, InputNumberComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarRangeComponent, CalendarRangeQuickComponent, DropdownComponent, MultiSelectComponent, InputTextComponent, TableComponent, ReportTableGroupComponent, TranslateModule]
 })
-export class TLS12070Component extends BasicQueryPageComponent<interviewList> implements OnInit{
+export class TLS12070Component extends BasicQueryPageComponent<interviewList> implements OnInit {
   // 查詢
   queryForm = this.formBuilder.group({
     // 先建立表單，還不確定table內容
@@ -56,36 +56,36 @@ export class TLS12070Component extends BasicQueryPageComponent<interviewList> im
   totalRecords = 0;// 分頁和排序參數 // 排序需要
 
   contact_USR_Option: apiOption[] = []; // 訪談人員 (確定是這支了)
-          
+
   data: interviewList[] = [];
   columns: Column[] = [
 
     { field: 'interview_USR', header: '訪談人員', visible: true },
     { field: 'potentialNumber', header: '潛在客戶數', visible: true },
     { field: 'visitNumber', header: '拜訪記錄次數', visible: true },
-    
-    { field: 'CRT_Date', header: '建立日期', visible: true, format: formatDate  },
+
+    { field: 'CRT_Date', header: '建立日期', visible: true, format: formatDate },
     { field: 'CRT_USR_No', header: '建立人員代碼', visible: false },
     { field: 'CRT_USR_Name', header: '建立人員姓名', visible: false },
     { field: 'UPD_Date', header: '變更日期', visible: false, format: formatDate },
     { field: 'UPD_USR_No', header: '變更人員代碼', visible: false },
     { field: 'UPD_USR_Name', header: '變更人員姓名', visible: false }
   ];
-        
+
   selectedItems: interviewList[] = [];// 多選項目
-        
+
   // ----------------------------------------------------------------
   constructor(private tls12070Service: Tls12070Service) {
     super();
   }
-        
+
   ngOnInit(): void {
     this.initializePage('TLS12070', 'TLS/TLS12060cru', this.queryForm, (form) => this.onSubmit(form));
     this.loadOptions();
   }
-        
+
   onSubmit(frm: FormGroup) {
-    console.log('查詢條件',frm.value);
+    console.log('查詢條件', frm.value);
     this.handleSubmit(frm, () => {
       // this.tls12010Service.queryTLS12010(frm.value).subscribe({
       //   next: (response) => {
@@ -108,33 +108,33 @@ export class TLS12070Component extends BasicQueryPageComponent<interviewList> im
       // });
     });
   }
-    
+
   // 刪除項目
   onDelete(data: interviewList | interviewList[]): void {
     console.log('Delete data:', JSON.stringify(data, null, 2));
-          
+
     const items = Array.isArray(data) ? data : [data];
     if (items.length === 0) {
-        console.error('No items to delete');
-        this.messageService.errorBubble('無法刪除：沒有選中的項目');
-        return;
+      console.error('No items to delete');
+      this.messageService.errorBubble('無法刪除：沒有選中的項目');
+      return;
     }
-          
+
     // 收集所有有效的 ID
     const idList = items
       .filter((item) => item && item.id != null && item.id !== undefined)
       .map((item) => item.id);
-          
-      if (idList.length === 0) {
-        console.error('No valid IDs to delete');
-        this.messageService.errorBubble('無法刪除：選中的項目缺少有效 ID');
-        return;
-      }
-        
+
+    if (idList.length === 0) {
+      console.error('No valid IDs to delete');
+      this.messageService.errorBubble('無法刪除：選中的項目缺少有效 ID');
+      return;
+    }
+
     // const deleteBody = {
     //   idList: idList, // 符合 API 的 idList 格式
     // };
-              
+
     // this.tls12010Service.deleteTLS12010(deleteBody).subscribe({
     //   next: (response) => {
     //     if (response.Status === '0000') {
@@ -152,21 +152,21 @@ export class TLS12070Component extends BasicQueryPageComponent<interviewList> im
     //     this.onSubmit(this.queryForm);
     //   },
     // });
-          
+
     this.selectedItems = [];
   }
-        
+
   // isRowSelectable(rowData: interviewList): boolean {
   //   return rowData.CanDel ?? false;
   // }
-      
-  loadOptions(){
+
+  loadOptions() {
     // 查詢 接待人員
     this.tls12070Service.queryTBLUSER_DropDownList({}).subscribe((response) => {
       this.contact_USR_Option = response.Data.map((item: any) => ({
         No: item.No, // 接待人員 名稱
         Name: item.Name, // 接待人員 名稱
-        Label: item.No+ '-'+ item.Name //標籤
+        Label: item.No + '-' + item.Name //標籤
       }));
       console.log('接待人員代號:', this.contact_USR_Option);
     });

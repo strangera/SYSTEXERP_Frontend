@@ -5,14 +5,18 @@ import { FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators } 
 import { TranslateModule } from '@ngx-translate/core';
 import { TLS26010Service } from '@service/api/tls/tls26010.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
-import { ButtonComponent, CalendarRangeComponent, DropdownComponent, MultiSelectComponent, TableComponent } from '@shared/componentkit';
 import { TableExpansionComponent } from '@shared/componentkit/table/table-expansion/table-expansion.component';
 import { AddButton, Column } from '@shared/componentkit/table/table.model';
-import { MenubarComponent } from '@shared/index';
-import { ApprovalStatus } from '@shared/models';
 import { AccordionModule } from 'primeng/accordion';
 import { combineLatest, map } from 'rxjs';
 import { DependentDataQuery, TLS26010Data, TLS26010Query } from './tls26010.model';
+import { MenubarComponent } from '@shared/component/menubar/menubar.component';
+import { ButtonComponent } from '@shared/componentkit/button/button.component';
+import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
+import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
+import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/calendar-range.component';
+import { TableComponent } from '@shared/componentkit/table/table.component';
+import { ApprovalStatus } from '@shared/models/tls/approval-status.model';
 
 @Component({
   selector: 'app-tls26010',

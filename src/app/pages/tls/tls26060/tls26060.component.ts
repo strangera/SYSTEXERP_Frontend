@@ -13,7 +13,6 @@ import { TableComponent } from '../../../shared/componentkit/table/table.compone
 import { AccordionModule } from 'primeng/accordion';
 import { TranslateModule } from '@ngx-translate/core';
 import { Column, createPaginationConfig } from '../../../shared/componentkit/table/table.model';
-import { CalendarComponent, DropdownComponent, InputNumberComponent, RadiobuttonComponent } from '@shared/componentkit';
 import { BusinessTypeCodeService } from '@service/basic/business-type-code-service.service';
 import { CommissionTypeService } from '@service/basic/commission-type.service';
 import { OrganizationNumberService } from '@service/basic/organization-number.service';
@@ -23,6 +22,10 @@ import { TaxableService } from '@service/basic/taxable.service';
 import { FloorService } from '@service/basic/floor.service';
 import { RegionService } from '@service/basic/region-code.service';
 import { CounterCodeService } from '@service/basic/counter-code.service';
+import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
+import { InputNumberComponent } from '@shared/componentkit/input-number/input-number.component';
+import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
+import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
 
 @Component({
   selector: 'app-tls26060',
