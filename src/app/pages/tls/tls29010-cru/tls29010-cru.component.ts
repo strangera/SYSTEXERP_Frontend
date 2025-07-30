@@ -192,7 +192,7 @@ export class TLS29010CRUComponent extends BasicCruPageComponent<TALPORDERD_OPEND
         // { field: 'pod_no', header: '活動編號', type: 'text', editable: true, autoWidth: false },  //活動編號(TALPORDERM)
 
         { field: 'talent_id', header: '合約編號系統', type: 'number', editable: false, autoWidth: true, hidden:true }, // 不用顯示 內容與主檔案一致 *
-        { field: 'tlt_id', header: '抽成類別', type: 'text', editable: false, autoWidth: true }, // 抽成類別(0-9) *
+        { field: 'tlt_id', header: '抽成類別', type: 'text', editable: true, autoWidth: true }, // 抽成類別(0-9) *
         //---要使用的---
         // [專櫃編號] 帶出 下面這坨
         { field: 'tlt_no', header: '專櫃名稱', type: 'dropdown', editable: true, autoWidth: true, options: this.mockDetailDataOptions}, //(專櫃編號_專櫃名稱，下拉選單)用[專櫃編號] 帶出 [專櫃名稱]、[抽成類別]、[折數]、[抽成率] * ([TALPORDERD])
