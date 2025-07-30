@@ -229,11 +229,11 @@ export class TLS12060Component extends BasicQueryPageComponent<Potential_Custome
     
         loadOptions(){
           // 查 接待人員
-          this.tls12060Service.queryTLS12010_DropDownList({}).subscribe((response) => {
+          this.tls12060Service.queryTBLUSER_DropDownList({}).subscribe((response) => {
             this.contact_USR_Option = response.Data.map((item: any) => ({
-              No: item.contact_USR_No, // 接待人員 代碼
-              Name: item.contact_USR_Name, // 接待人員 名稱
-              Label: item.contact_USR_No + '/' + item.contact_USR_Name, // 組合成顯示用的Label
+              No: item.No, // 接待人員 代碼
+              Name: item.Name, // 接待人員 名稱
+              Label: item.No + '/' + item.Name, // 組合成顯示用的Label
             }));
             console.log('接待人員代號:', this.contact_USR_Option);
           });

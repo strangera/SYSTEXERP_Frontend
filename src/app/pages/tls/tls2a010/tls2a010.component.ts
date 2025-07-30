@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
-import { ButtonComponent, DropdownComponent, MenubarComponent, TableComponent, CalendarComponent, InputTextRangeComponent } from '@shared/index';
+import { ButtonComponent, DropdownComponent, MenubarComponent, TableComponent, CalendarComponent } from '@shared/index';
 import { AccordionModule } from 'primeng/accordion';
 import { DropDownListService, IDropdownItem } from 'src/app/service/utility/dropDownList.service';
 import { Column, ColumnGroup, createPaginationConfig } from 'src/app/shared/componentkit/table/table.model';
@@ -12,7 +12,7 @@ import { NgStyle, NgIf } from '@angular/common';
 import { TooltipModule } from 'primeng/tooltip';
 import { DropdownRangeComponent } from '@shared/componentkit/dropdown-range/dropdown-range.component';
 import { creditCardColumns, creditCardGroup, defaultColumns } from './tls2a010.model';
-
+import { Tls2a010Service } from 'src/app/service/api/tls/tls2a010.service';
 
 @Component({
   selector: 'app-tls2a010',
@@ -27,7 +27,6 @@ import { creditCardColumns, creditCardGroup, defaultColumns } from './tls2a010.m
     DropdownComponent,
     CalendarComponent,
     TableComponent,
-    InputTextRangeComponent,
     Button,
     NgStyle,
     NgIf,
@@ -39,11 +38,12 @@ export class TLS2A010Component extends BasicQueryPageComponent<any> implements O
 
   queryForm = this.formBuilder.group({
     TXN_Date: [null, Validators.required],
-    FLOOR_NO: [''],
+    tlt_floor: [''],
     ECR_No_Start: [null, Validators.required],
     ECR_No_End: [null, Validators.required],
     PAY_NO: ['', Validators.required],
-    building_no: [''],
+    tlt_building: [''],
+    SYS_StoreNo: [this.authService.currentUserValue?.SYS_StoreNo ?? ''],
     ...createPaginationConfig([{ field: 'ECR_No', order: 1 }]),
   }, { validators: this.validateRangeStartBeforeEnd });
 
@@ -72,15 +72,14 @@ export class TLS2A010Component extends BasicQueryPageComponent<any> implements O
   IsPrint = true;
   selectedColumns: Column[] = [];     // 顯示哪些資料欄位
   columnGroup: ColumnGroup[] = [];    // 顯示上層群組欄位（分組標題）
-
   defaultColumns = defaultColumns;
-
   creditCardGroup = creditCardGroup;
   creditCardColumns = creditCardColumns;
 
 
   constructor(
     private dropDownListService: DropDownListService,
+    private tls2a010Service: Tls2a010Service
 
   ) {
     super();
@@ -171,10 +170,6 @@ export class TLS2A010Component extends BasicQueryPageComponent<any> implements O
     console.log('缺單被點擊:', row);
 
   }
-  // onMissingClick(rowData: any): void {
-  //   console.log('跳轉 CRU 缺單處理頁面:', rowData);
-  //   this.router.navigate(['/TLS/TLS2A020cru'], { queryParams: { ECR_No: rowData.ECR_No, TXN_Date: rowData.TXN_Date } });
-  // }
 
   onSubmit(form: FormGroup): void {
     this.submitted = true;
@@ -182,60 +177,45 @@ export class TLS2A010Component extends BasicQueryPageComponent<any> implements O
 
     this.loading = true;
 
-    setTimeout(() => {
-      this.data = [
-        {
-          id: 1,
-          TXN_Date: '2025-07-23',
-          ECR_No: 'ECR001',
-          PAY_NO: '信用卡',
-          TLT_NO: 'A01',
-          tlt_name: '貓咪世界',
-          BOOK_PayAmt: 1100,
-          ACT_PayAmt: 1030,
-          OVER_PayAmt: 70,
-          MOD_PayAmt: 1030,
-          check_status: 'N',
-          check_usr_name: 'MEOW',
-          isMissing: 'N',
-          PAY_NAME: '信用卡',
-          Settle_Date: '2025/07/25'
-        },
-        {
-          id: 2,
-          TXN_Date: '2025-07-22',
-          ECR_No: 'ECR002',
-          PAY_NO: '現金',
-          TLT_NO: 'A02',
-          tlt_name: '貓砂盆專賣',
-          BOOK_PayAmt: 1200,
-          ACT_PayAmt: 1110,
-          OVER_PayAmt: 90,
-          MOD_PayAmt: 1110,
-          check_status: 'Y',
-          check_usr_name: 'HANNAH',
-          check_date: '2025-07-23 00:00:00',
-          abnormalCheck: 'N',
-          isMissing: 'Y',
-          PAY_NAME: '現金',
-          Settle_Date: '2025/07/24'
-        },
-      ];
+    const raw = form.value;
 
-      //抓第一筆資料設定
-      const first = this.data[0];
-      this.PAY_NO = this.queryForm.value.PAY_NO || '';
-      this.TXN_Date = first?.TXN_Date || '';
-      this.onPayNoChange(this.PAY_NO);
+    const payload = {
+      PageSize: raw.PageSize ?? 0,
+      PageIndex: raw.PageIndex ?? 0,
+      OrderBy: raw.OrderBy ?? '',
+      Offset: raw.Offset ?? 0,
+      SortBy: raw.SortBy ?? [],
 
-      // 顯示當天的 mm/dd
-      const today = new Date();
-      this.todayDisplay = `${today.getMonth() + 1}/${today.getDate()}`;
+      SYS_StoreNo: raw.SYS_StoreNo ?? '',
+      TXN_Date: raw.TXN_Date ? new Date(raw.TXN_Date).toISOString().split('T')[0] : '',
+      ECR_No_Start: raw.ECR_No_Start ?? '',
+      ECR_No_End: raw.ECR_No_End ?? '',
+      PAY_NO: raw.PAY_NO ?? '',
+      tlt_floor: raw.tlt_floor ?? '',
+      tlt_building: raw.tlt_building ?? '',
 
-      this.totalRecords = this.data.length;
-      this.loading = false;
-    }, 800);
+    };
+
+
+    this.tls2a010Service.queryTLS2A010(payload).pipe(untilDestroyed(this)).subscribe({
+      next: (res) => {
+        this.data = res?.Data ?? [];
+
+        const first = this.data[0];
+        this.PAY_NO = this.queryForm.value.PAY_NO || '';
+        this.TXN_Date = first?.TXN_Date || '';
+        this.onPayNoChange(this.PAY_NO);
+
+        this.totalRecords = res.TotalCount ?? this.data.length;
+        this.loading = false;
+      },
+      error: (err) => {
+        console.error('TLS2A010 查詢失敗', err);
+        this.loading = false;
+      }
+    });
   }
+
   onReview(selectedItems: any[]): void {
     console.log('Reviewing selected items:', selectedItems);
     // Add your logic for reviewing the selected items here

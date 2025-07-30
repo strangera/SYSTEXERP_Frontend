@@ -7,10 +7,14 @@ import { ECRNoService } from '../../../service/basic/ECRNo.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { AccordionModule } from 'primeng/accordion';
 import { CalendarRangeQuickComponent } from '../../../shared/componentkit/calendar-range-quick/calendar-range-quick.component';
-import { InputTextRangeComponent } from '../../../shared/componentkit/input-text-range/input-text-range.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { TranslateModule } from '@ngx-translate/core';
+import { TLS2A030Service } from '../../../service/api/tls/tls2a030.service';
+import { DropdownRangeComponent } from '@shared/componentkit/dropdown-range/dropdown-range.component';
+import { HttpClient } from '@angular/common/http';
+import { environment } from '../../../../environments/environment';
+
 
 interface SalesRecord {
   paymentTool: string;
@@ -23,84 +27,168 @@ interface SalesRecord {
 }
 
 @Component({
-    selector: 'app-tls2a030',
-    templateUrl: './tls2a030.component.html',
-    standalone: true,
-    imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarRangeQuickComponent, InputTextRangeComponent, ButtonComponent, TableComponent, TranslateModule]
+  selector: 'app-tls2a030',
+  templateUrl: './tls2a030.component.html',
+  standalone: true,
+  imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarRangeQuickComponent, DropdownRangeComponent,
+    ButtonComponent, TableComponent, TranslateModule]
 })
 export class TLS2A030Component extends BasicQueryPageComponent<any> implements OnInit {
   queryForm = this.formBuilder.group({
-    tlt_bdate_start: [null, Validators.required],
-    tlt_bdate_end: [null, Validators.required],
-    tlt_no: [''],
-    tlt_no_end: [''],
-    ...createPaginationConfig([{ field: 'paymentTool', order: 1 }])
+    SaleDateStart: [null as Date | null, Validators.required],
+    SaleDateEnd: [null as Date | null, Validators.required],
+    ECR_No: [null as string | null],
+    ECR_No_Start: [null as string | null],
+    ECR_No_End: [null as string | null],
+    ...createPaginationConfig([{ field: 'PAY_NAME', order: 1 }])
   });
 
   data: SalesRecord[] = [];
   totalRecords = 0;
   selectedItems: SalesRecord[] = [];
-
+  ECRNoOptions: any[] = [];
   // 表格欄位
   columns = [
-    { field: 'paymentTool', header: '支付工具' },
-    { field: 'actualShortfallAmount', header: '實際淨欠總額 (A)' },
-    { field: 'preAuditShortfallAmount', header: '審核前淨欠總額 (B = C - D)' },
-    { field: 'receiptTotal', header: '實收總額 (C)' },
-    { field: 'systemTotal', header: '系統帳 (D)' },
-    { field: 'compareCD', header: '(C) 與 (D) 比較' },
-    { field: 'compareAB', header: '(A) 與 (B) 比較' }
+    { field: 'PAY_NAME', header: '支付工具', visible: true },
+    { field: 'OVER_PayAmt', header: '實際淨欠總額 (A)', visible: true },
+    { field: 'PreAudit_OVER_PayAmt', header: '審核前淨欠總額 (B)', visible: true },
+    { field: 'Actual_ReceivedAmt', header: '實收總額 (C)', visible: true },
+    { field: 'BOOK_PayAmt', header: '系統帳 (D)', visible: true },
+    {
+      field: 'Compare_CD',
+      header: '(C) 與 (D) 比較',
+      format: (v: boolean) => v ? 'Y' : 'N',
+      visible: true
+    },
+    {
+      field: 'Compare_AB',
+      header: '(A) 與 (B) 比較',
+      format: (v: boolean) => v ? 'Y' : 'N',
+      visible: true
+    }
   ];
+
 
   constructor(
     private locationOptionsService: LocationOptionsService,
-    private ecrNoService: ECRNoService
+    private ECRNoService: ECRNoService,
+    private tls2a030Service: TLS2A030Service,
+    private http: HttpClient,
   ) {
     super();
   }
 
   ngOnInit(): void {
-    this.initializePage('TLS2A030', undefined, this.queryForm, this.onSubmit.bind(this));
+    this.initializePage('TLS2A030', '/TLS/TLS2A030cru', this.queryForm, (form) => this.onSubmit(form));
+    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
+
+    this.ECRNoService.getECRNo().subscribe((data) => {
+      this.ECRNoOptions = data;
+    });
   }
+  onImportExcel(event: any): void {
+    const file = event.files[0];
+    if (!file) {
+      console.error('No file selected for import');
+      return;
+    }
+  }
+
+  onExportExcel(): void {
+    const raw = this.queryForm.getRawValue();
+
+    const condition = {
+      ...raw,
+      SaleDateStart:
+        raw.SaleDateStart instanceof Date
+          ? raw.SaleDateStart.toISOString()
+          : raw.SaleDateStart ?? null,
+      SaleDateEnd:
+        raw.SaleDateEnd instanceof Date
+          ? raw.SaleDateEnd.toISOString()
+          : raw.SaleDateEnd ?? null,
+      ECR_No: raw.ECR_No?.trim() ?? '',
+      ECR_No_Start: raw.ECR_No_Start?.trim() ?? '',
+      ECR_No_End: raw.ECR_No_End?.trim() ?? '',
+    };
+
+    const payload = {
+      query_condition: {
+        ServiceName: 'queryTLS2A030',
+        Conditions: [condition],
+      },
+      report_title: '溢欠彙總表',
+      file_name: `TLS22030_${new Date().toISOString().slice(0, 10)}`,
+      columns: this.columns.filter(c => c.visible),
+      config: {
+        print_reportTitle: 'Y',
+        print_reportTitle_per_page: 'N',
+        print_eject: 'Y',
+        print_field_title: 'Y',
+        print_field_title_per_page: 'N',
+      }
+    };
+
+    console.log('匯出 payload:', payload);
+
+    this.http.post(`${environment.ApiUrl}/exportExcel`, payload, {
+      responseType: 'blob'
+    }).subscribe({
+      next: (blob) => {
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${payload.file_name}.xlsx`;
+        a.click();
+      },
+      error: (err) => {
+        console.error('❌ Excel 匯出失敗', err);
+      }
+    });
+  }
+
 
   onSubmit(form: FormGroup): void {
-    this.submitted = true;
-    if (form.invalid) return;
+    this.handleSubmit(form, () => {
+      const payload = {
+        request: {
+          PageSize: form.value.PageSize,
+          PageIndex: form.value.PageIndex,
+          OrderBy: form.value.OrderBy,
+          Offset: form.value.Offset,
+          SortBy: form.value.SortBy,
+          SaleDateStart: form.value.SaleDateStart instanceof Date
+            ? form.value.SaleDateStart.toISOString()
+            : null,
+          SaleDateEnd: form.value.SaleDateEnd instanceof Date
+            ? form.value.SaleDateEnd.toISOString()
+            : null,
 
-    this.loading = true;
-
-    // 假資料，實際應從 API 抓資料
-    const rawData = [
-      {
-        paymentTool: '現金',
-        actualShortfallAmount: -74760642,
-        receiptTotal: 1175669391,
-        systemTotal: 1250430033
-      },
-      {
-        paymentTool: '聯合信用卡',
-        actualShortfallAmount: 1412153,
-        receiptTotal: 1128433256,
-        systemTotal: 1127021103
-      }
-    ];
-
-    this.data = rawData.map(item => {
-      const preAudit = item.receiptTotal - item.systemTotal;
-      return {
-        ...item,
-        preAuditShortfallAmount: preAudit,
-        compareCD: this.compareValues(item.receiptTotal, item.systemTotal),
-        compareAB: this.compareValues(item.actualShortfallAmount, preAudit)
+          ECR_No_Start: form.value.ECR_No_Start?.trim() || '',
+          ECR_No_End: form.value.ECR_No_End?.trim() || ''
+        }
       };
+
+
+      this.tls2a030Service.queryTLS2A030(payload).subscribe({
+        next: (res: any) => {
+          const rawData = res?.Data ?? [];
+
+          this.data = rawData.map((item: any) => ({
+            ...item,
+            Compare_CD: item.Compare_CD,
+            Compare_AB: item.Compare_AB
+          }));
+
+          this.totalRecords = res.TotalCount ?? this.data.length;
+          this.loading = false;
+        },
+        error: (err) => {
+          console.error('TLS2A030 查詢失敗', err);
+          this.loading = false;
+        }
+      });
     });
-
-    this.totalRecords = this.data.length;
-    this.loading = false;
-  }
-
-  compareValues(a: number, b: number): 'Y' | 'N' {
-    return a === b ? 'Y' : 'N';
   }
 
 }

@@ -259,7 +259,7 @@ export interface TLS41010Item {
 
 
 export const columns: Column[] = [
-  { field: 'SYS_StoreNo', header: '收銀機所屬門市店號', visible: true },
+  { field: 'SYS_StoreNo', header: '收銀機所屬門市店號', visible: false },
   { field: 'ECR_No', header: '收銀機號', visible: true },
   { field: 'ECR_Name', header: '收銀機名稱', visible: true },
   {

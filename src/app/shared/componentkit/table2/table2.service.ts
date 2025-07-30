@@ -1,30 +1,37 @@
 import { Injectable } from '@angular/core';
 import { environment } from '../../../../environments/environment';
-import { HttpClient, HttpResponse, HttpHeaders } from '@angular/common/http';
+
 import { Observable } from 'rxjs';
+import { HttpClient, HttpResponse, HttpHeaders } from '@angular/common/http';
 
 @Injectable({
   providedIn: 'root'
 })
 export class Table2Service {
   apiUrl = `${environment.ApiUrl}`;
+  constructor(private http: HttpClient) { }
 
-  constructor(private http: HttpClient) {}
+exportPDF(payload: any): Observable<Blob> {
+  
+  const headers = new HttpHeaders({
+    'Content-Type': 'application/json',
+    'Accept': 'application/pdf'  // ⛳ 很關鍵
+  });
 
-  exportPDF(data: any): Observable<HttpResponse<Blob>> {
-    const headers = new HttpHeaders({
-      'Accept': 'application/pdf',       // ✅ 向後端表示我要 PDF
-      'Content-Type': 'application/json' // ✅ 如果你是傳送 JSON 給後端
-    });
+  return this.http.post(`${this.apiUrl}/exportPDF`, payload, {
+    headers,
+    responseType: 'blob'  // ✅ 不要 cast 成 'json'
+  });
+}
 
+
+  exportExcel(data: any): Observable<HttpResponse<Blob>> {
     return this.http.post(
-      `${this.apiUrl}/exportPDF`,
-      data,
+      `${this.apiUrl}/exportExcel`, data,
       {
-        headers,
-        responseType: 'blob' as 'json',  // ✅ 強制轉型避免 TS 錯
+        responseType: 'blob',
         observe: 'response'
       }
-    ) as Observable<HttpResponse<Blob>>; // ✅ 最終轉型成你要的回傳型別
+    );
   }
 }
