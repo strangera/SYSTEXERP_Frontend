@@ -244,24 +244,22 @@ export class TLS26010CRUComponent extends BasicCruPageComponent<TLS26010Data> im
   });
   private readonly ecrDialogOpenEffect = effect(() => {
     const dialog = this.dialogVisible();
-    if (!this.dialogVisible() || dialog !== 'ecr') {
+    if (!this.dialogVisible())
       this.dataForm.patchValue({ sys3800: undefined, sys3900: undefined, ECR_Nos: [] });
-    } else {
-      this.service.loadSYS3800();
-      this.service.loadSYS3900();
-      this.service.loadPreorderECRList({ ...this.queryPayload(), data_type: '1' });
-    }
+    if (dialog !== 'ecr') return;
+    this.service.loadSYS3800();
+    this.service.loadSYS3900();
+    this.service.loadPreorderECRList({ ...this.queryPayload(), data_type: '1' });
     console.log('ecrDialogOpenEffect:', [this.dataForm.value, this.queryPayload(), dialog]);
   }, { allowSignalWrites: !0 });
   private readonly tltDialogOpenEffect = effect(() => {
     const dialog = this.dialogVisible();
-    if (!this.dialogVisible() || dialog !== 'tlt') {
+    if (!this.dialogVisible())
       this.dataForm.patchValue({ sys3800: undefined, sys3900: undefined, tlt_nos: [] });
-    } else {
-      this.service.loadSYS3800();
-      this.service.loadSYS3900();
-      this.service.loadTLTTALENT({ ...this.queryPayload() });
-    }
+    if (dialog !== 'tlt') return;
+    this.service.loadSYS3800();
+    this.service.loadSYS3900();
+    this.service.loadTLTTALENT({ ...this.queryPayload() });
     console.log('tltDialogOpenEffect:', [this.dataForm.value, this.queryPayload(), dialog]);
   }, { allowSignalWrites: !0 });
   private readonly TLS26010DetailEffect = effect(() => {
