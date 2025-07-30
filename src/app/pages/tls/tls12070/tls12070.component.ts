@@ -44,8 +44,8 @@ export class TLS12070Component extends BasicQueryPageComponent<interviewList> im
   // 查詢
   queryForm = this.formBuilder.group({
     // 先建立表單，還不確定table內容
-    CreatedDateStart: [null],  // 訪談日期_起始日
-    CreatedDateEnd: [null],  // 訪談日期_終止日
+    contact_DateStart: [null],  // 訪談日期_起始日
+    contact_DateEnd: [null],  // 訪談日期_終止日
     contact_USR_Name: [[], [Validators.maxLength(100)]], // 訪談人員 (drop，應該就是接洽人員)
 
     //分頁查詢
@@ -55,7 +55,7 @@ export class TLS12070Component extends BasicQueryPageComponent<interviewList> im
   // ----------------------------------------------------------------
   totalRecords = 0;// 分頁和排序參數 // 排序需要
 
-  contact_USR_Option: apiOption[] = []; // 訪談人員
+  contact_USR_Option: apiOption[] = []; // 訪談人員 (確定是這支了)
           
   data: interviewList[] = [];
   columns: Column[] = [
