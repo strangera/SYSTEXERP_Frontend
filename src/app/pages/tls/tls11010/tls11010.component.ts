@@ -92,7 +92,7 @@ export class TLS11010Component extends BasicQueryPageComponent<any> {
       format: (value: any) => this.getLabelFromOptions(value, this.LOCATION_Status_Options),
     },
 {
-  field: 'Purpose_desc',
+  field: 'purpose_desc',
   header: '用途名稱',
   visible: true,
   
@@ -171,7 +171,7 @@ export class TLS11010Component extends BasicQueryPageComponent<any> {
       this.tls11010Service.queryData(formValue).subscribe({
         next: (res) => {
           if (res.Status === '0000') {
-            this.data = res?.Data || [];
+            this.data = this.convertNullToEmptyString(res?.Data || []);
             this.totalRecords = res?.TotalCount || this.data.length;
             console.log('✅ totalRecords =', this.totalRecords);
             this.queryStateService.setQueryState(this.ProgNo, formValue);
@@ -192,6 +192,22 @@ export class TLS11010Component extends BasicQueryPageComponent<any> {
       });
     });
   }
+private convertNullToEmptyString(data: any): any {
+  if (Array.isArray(data)) {
+    return data.map(item => this.convertNullToEmptyString(item));
+  } else if (typeof data === 'object' && data !== null) {
+    const result: any = {};
+    for (const key in data) {
+      if (data[key] === null) {
+        result[key] = '';
+      } else {
+        result[key] = this.convertNullToEmptyString(data[key]);
+      }
+    }
+    return result;
+  }
+  return data;
+}
 
   onDelete(selectedItems: any[]) {
     if (!selectedItems.length) return;
