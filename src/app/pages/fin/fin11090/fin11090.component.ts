@@ -11,7 +11,7 @@ import { InputTextComponent } from '../../../shared/componentkit/input-text/inpu
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { TranslateModule } from '@ngx-translate/core';
-import { CalendarRangeComponent } from '@shared/componentkit';
+import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
 
 @Component({
   selector: 'app-fin11090',

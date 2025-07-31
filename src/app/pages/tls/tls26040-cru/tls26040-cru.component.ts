@@ -11,7 +11,7 @@ import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-ra
 import { Column, createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 import { finalize } from 'rxjs';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { CalendarComponent } from '@shared/componentkit';
+import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
 
 @Component({
   selector: 'app-tls26040-cru',
