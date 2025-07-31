@@ -2,7 +2,6 @@ import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 import { Column } from '@shared/componentkit/table/table.model';
-import { ButtonComponent, CalendarRangeQuickComponent, DropdownComponent, InputNumberComponent, InputNumberRangeComponent, MenubarComponent, MultiSelectComponent, TableComponent } from '@shared/index';
 // import { TLS2A010Service } from '@services/api/tls/tls2a010.service';
 import { AccordionModule } from 'primeng/accordion';
 import { DropdownModule } from 'primeng/dropdown';
@@ -15,6 +14,14 @@ import { DropDownListService, IDropdownItem } from '@service/utility/dropDownLis
 import { HttpClient } from '@angular/common/http';
 import { LocationOptionsService } from '../../../service/api/dropdownservice/location-options.service';
 import { untilDestroyed } from '@ngneat/until-destroy';
+import { MenubarComponent } from '@shared/component/menubar/menubar.component';
+import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
+import { ButtonComponent } from '@shared/componentkit/button/button.component';
+import { TableComponent } from '@shared/componentkit/table/table.component';
+import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
+import { InputNumberComponent } from '@shared/componentkit/input-number/input-number.component';
+import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
+import { InputNumberRangeComponent } from '@shared/componentkit/input-number-range/input-number-range.component';
 
 @Component({
   selector: 'app-tls22030',

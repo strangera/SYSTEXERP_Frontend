@@ -1,7 +1,7 @@
 import { Component } from '@angular/core';
 import { Location } from '@angular/common';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
-import '../../../../assets/font/NotoSansTC-VariableFont_wght-normal';
+
 import { PdfService } from '../../../service/basic/pdf.service';
 import { Tls11010Service } from '../../../service/api/tls/tls11010.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
@@ -16,11 +16,11 @@ interface ReportColumn {
 }
 
 @Component({
-    selector: 'app-tls23090-cru',
-    templateUrl: './tls23090-cru.component.html',
-    styleUrls: ['./tls23090-cru.component.scss'],
-    standalone: true,
-    imports: [MenubarComponent, ReportTableGroupComponent]
+  selector: 'app-tls23090-cru',
+  templateUrl: './tls23090-cru.component.html',
+  styleUrls: ['./tls23090-cru.component.scss'],
+  standalone: true,
+  imports: [MenubarComponent, ReportTableGroupComponent]
 })
 export class TLS23090CRUComponent extends BasicCruPageComponent<any> {
   displayMode: DisplayMode = 'CreditCardDetail';
@@ -103,107 +103,107 @@ export class TLS23090CRUComponent extends BasicCruPageComponent<any> {
             format: (val: number) => val?.toLocaleString() || '0'
           },
         ];
-case 'CounterCardAnalysis':
-  return [
-    { field: 'tlt_no', header: '專櫃編號' },
-    { field: 'tlt_name', header: '櫃位名稱' },
-    {
-      field: 'CRD_Type_List.VISA.Amount',
-      header: 'VISA 金額',
-      style: 'text-right',
-      format: (val: number) => val?.toLocaleString() || '0'
-    },
-    {
-      field: 'CRD_Type_List.VISA.Count',
-      header: 'VISA 筆數',
-      style: 'text-right',
-      format: (val: number) => val?.toLocaleString() || '0'
-    },
-    {
-      field: 'CRD_Type_List.MASTER.Amount',
-      header: 'MASTER 金額',
-      style: 'text-right',
-      format: (val: number) => val?.toLocaleString() || '0'
-    },
-    {
-      field: 'CRD_Type_List.MASTER.Count',
-      header: 'MASTER 筆數',
-      style: 'text-right',
-      format: (val: number) => val?.toLocaleString() || '0'
-    },
-    {
-      field: 'CRD_Type_List.JCB.Amount',
-      header: 'JCB 金額',
-      style: 'text-right',
-      format: (val: number) => val?.toLocaleString() || '0'
-    },
-    {
-      field: 'CRD_Type_List.JCB.Count',
-      header: 'JCB 筆數',
-      style: 'text-right',
-      format: (val: number) => val?.toLocaleString() || '0'
-    },
-    {
-      field: 'CRD_Type_List.AE.Amount',
-      header: 'AE 金額',
-      style: 'text-right',
-      format: (val: number) => val?.toLocaleString() || '0'
-    },
-    {
-      field: 'CRD_Type_List.AE.Count',
-      header: 'AE 筆數',
-      style: 'text-right',
-      format: (val: number) => val?.toLocaleString() || '0'
-    },
-    {
-      field: 'CRD_Type_List.DA.Amount',
-      header: 'DA 金額',
-      style: 'text-right',
-      format: (val: number) => val?.toLocaleString() || '0'
-    },
-    {
-      field: 'CRD_Type_List.DA.Count',
-      header: 'DA 筆數',
-      style: 'text-right',
-      format: (val: number) => val?.toLocaleString() || '0'
-    },
-    {
-      field: 'CRD_Type_List.UnionPay.Amount',
-      header: '銀聯 金額',
-      style: 'text-right',
-      format: (val: number) => val?.toLocaleString() || '0'
-    },
-    {
-      field: 'CRD_Type_List.UnionPay.Count',
-      header: '銀聯 筆數',
-      style: 'text-right',
-      format: (val: number) => val?.toLocaleString() || '0'
-    },
-    {
-      field: 'CRD_Type_List.Others.Amount',
-      header: '其他卡別 金額',
-      style: 'text-right',
-      format: (val: number) => val?.toLocaleString() || '0'
-    },
-    {
-      field: 'CRD_Type_List.Others.Count',
-      header: '其他卡別 筆數',
-      style: 'text-right',
-      format: (val: number) => val?.toLocaleString() || '0'
-    },
-    {
-      field: 'CRD_Type_List.Total.Amount',
-      header: '總金額',
-      style: 'text-right',
-      format: (val: number) => val?.toLocaleString() || '0'
-    },
-    {
-      field: 'CRD_Type_List.Total.Count',
-      header: '總筆數',
-      style: 'text-right',
-      format: (val: number) => val?.toLocaleString() || '0'
-    },
-  ];
+      case 'CounterCardAnalysis':
+        return [
+          { field: 'tlt_no', header: '專櫃編號' },
+          { field: 'tlt_name', header: '櫃位名稱' },
+          {
+            field: 'CRD_Type_List.VISA.Amount',
+            header: 'VISA 金額',
+            style: 'text-right',
+            format: (val: number) => val?.toLocaleString() || '0'
+          },
+          {
+            field: 'CRD_Type_List.VISA.Count',
+            header: 'VISA 筆數',
+            style: 'text-right',
+            format: (val: number) => val?.toLocaleString() || '0'
+          },
+          {
+            field: 'CRD_Type_List.MASTER.Amount',
+            header: 'MASTER 金額',
+            style: 'text-right',
+            format: (val: number) => val?.toLocaleString() || '0'
+          },
+          {
+            field: 'CRD_Type_List.MASTER.Count',
+            header: 'MASTER 筆數',
+            style: 'text-right',
+            format: (val: number) => val?.toLocaleString() || '0'
+          },
+          {
+            field: 'CRD_Type_List.JCB.Amount',
+            header: 'JCB 金額',
+            style: 'text-right',
+            format: (val: number) => val?.toLocaleString() || '0'
+          },
+          {
+            field: 'CRD_Type_List.JCB.Count',
+            header: 'JCB 筆數',
+            style: 'text-right',
+            format: (val: number) => val?.toLocaleString() || '0'
+          },
+          {
+            field: 'CRD_Type_List.AE.Amount',
+            header: 'AE 金額',
+            style: 'text-right',
+            format: (val: number) => val?.toLocaleString() || '0'
+          },
+          {
+            field: 'CRD_Type_List.AE.Count',
+            header: 'AE 筆數',
+            style: 'text-right',
+            format: (val: number) => val?.toLocaleString() || '0'
+          },
+          {
+            field: 'CRD_Type_List.DA.Amount',
+            header: 'DA 金額',
+            style: 'text-right',
+            format: (val: number) => val?.toLocaleString() || '0'
+          },
+          {
+            field: 'CRD_Type_List.DA.Count',
+            header: 'DA 筆數',
+            style: 'text-right',
+            format: (val: number) => val?.toLocaleString() || '0'
+          },
+          {
+            field: 'CRD_Type_List.UnionPay.Amount',
+            header: '銀聯 金額',
+            style: 'text-right',
+            format: (val: number) => val?.toLocaleString() || '0'
+          },
+          {
+            field: 'CRD_Type_List.UnionPay.Count',
+            header: '銀聯 筆數',
+            style: 'text-right',
+            format: (val: number) => val?.toLocaleString() || '0'
+          },
+          {
+            field: 'CRD_Type_List.Others.Amount',
+            header: '其他卡別 金額',
+            style: 'text-right',
+            format: (val: number) => val?.toLocaleString() || '0'
+          },
+          {
+            field: 'CRD_Type_List.Others.Count',
+            header: '其他卡別 筆數',
+            style: 'text-right',
+            format: (val: number) => val?.toLocaleString() || '0'
+          },
+          {
+            field: 'CRD_Type_List.Total.Amount',
+            header: '總金額',
+            style: 'text-right',
+            format: (val: number) => val?.toLocaleString() || '0'
+          },
+          {
+            field: 'CRD_Type_List.Total.Count',
+            header: '總筆數',
+            style: 'text-right',
+            format: (val: number) => val?.toLocaleString() || '0'
+          },
+        ];
 
       default:
         return [{ header: '錯誤', field: '', format: () => '未知模式' }];

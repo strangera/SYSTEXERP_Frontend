@@ -1,7 +1,6 @@
 import { Injectable } from '@angular/core';
 import { jsPDF } from 'jspdf';
 import autoTable from 'jspdf-autotable';
-import '../../../assets/font/NotoSansTC-VariableFont_wght-normal.js'; // ✅ 匯入字型 JS，自動註冊字型
 
 @Injectable({ providedIn: 'root' })
 export class PdfService {
@@ -44,7 +43,8 @@ export class PdfService {
     });
 
     // ✅ 直接使用註冊好的字型
-    doc.setFont('NotoSansTC');
+    doc.addFont('assets/font/NotoSerifTC-VariableFont_wght.ttf', 'Noto Serif TC', 'normal');
+    doc.setFont('Noto Serif TC');
 
 
     const marginLeft = 40;
@@ -119,7 +119,7 @@ export class PdfService {
       margin: { left: marginLeft, right: marginLeft },
       tableWidth: 'wrap', // ✅ 重點一：讓表格寬度跟內容一致
       styles: {
-        font: 'NotoSansTC',
+        font: 'Noto Serif TC',
         fontSize: 9,
         lineColor: [0, 0, 0],
         lineWidth: 0.1,
@@ -127,7 +127,7 @@ export class PdfService {
       },
       columnStyles,
       headStyles: {
-        font: 'NotoSansTC',
+        font: 'Noto Serif TC',
         fontStyle: 'normal',
         fontSize: 10,
         fillColor: [212, 222, 254],
@@ -139,7 +139,7 @@ export class PdfService {
         if (isTotalRow) {
           data.cell.styles.fillColor = [250, 250, 210];
           data.cell.styles.fontStyle = 'normal';
-          data.cell.styles.font = 'NotoSansTC';
+          data.cell.styles.font = 'Noto Serif TC';
         }
       },
     });
@@ -147,7 +147,7 @@ export class PdfService {
     const autoTableDoc = doc as any;
     let summaryY = autoTableDoc.lastAutoTable.finalY + 20;
     if (summaryText.length) {
-      doc.setFont('NotoSansTC');
+      doc.setFont('Noto Serif TC');
       doc.setFontSize(10);
       doc.setTextColor(255, 0, 0);
       summaryText.forEach(line => {

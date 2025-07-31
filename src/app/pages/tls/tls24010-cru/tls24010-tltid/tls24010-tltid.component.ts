@@ -2,7 +2,7 @@ import { Component, Input, OnChanges, OnInit, SimpleChanges } from '@angular/cor
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { POS5007Data } from '@service/api/tls/tls24010.service';
 import { DropDownListService, TLTTALENT_CHARGEData } from '@service/utility/dropDownList.service';
-import { TableComponent } from '@shared/componentkit';
+import { TableComponent } from '@shared/componentkit/table/table.component';
 import { Column, formatAmount } from '@shared/componentkit/table/table.model';
 @UntilDestroy()
 @Component({

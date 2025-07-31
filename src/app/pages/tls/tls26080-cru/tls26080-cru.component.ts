@@ -3,15 +3,21 @@ import { NgIf } from '@angular/common';
 import { Component, effect, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
-import { TLS26080Service } from '@service/api';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
-import { ButtonComponent, CalendarComponent, CalendarRangeComponent, DropdownComponent, InputTextComponent, MultiSelectComponent, TableComponent } from '@shared/componentkit';
 import { Column } from '@shared/componentkit/table/table.model';
-import { MenubarComponent } from '@shared/index';
-import { CRUDStatus } from '@shared/models';
 import { PanelModule } from 'primeng/panel';
 import { CampaignAccountingType } from '../tls26080/tls26080.model';
 import { ActivityData, CounterData, DeductionItem } from './ts26080-cru.model';
+import { TLS26080Service } from '@service/api/tls/tls26080.service';
+import { CRUDStatus } from '@shared/models/system/CRUDstatus';
+import { ButtonComponent } from '@shared/componentkit/button/button.component';
+import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
+import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/calendar-range.component';
+import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
+import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
+import { MenubarComponent } from '@shared/component/menubar/menubar.component';
+import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
+import { TableComponent } from '@shared/componentkit/table/table.component';
 
 
 @Component({

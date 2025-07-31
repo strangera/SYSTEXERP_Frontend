@@ -14,11 +14,11 @@ import { ButtonComponent } from '../../../shared/componentkit/button/button.comp
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { TranslateModule } from '@ngx-translate/core';
 import { Tls22030Service } from '../../../service/api/tls/tls22030.service';
-import { DropdownComponent } from '@shared/componentkit';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { DropDownListService, IDropdownItem } from '../../../service/utility/dropDownList.service';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../../environments/environment';
+import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 
 
 @Component({

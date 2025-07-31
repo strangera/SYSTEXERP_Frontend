@@ -29,6 +29,7 @@ import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/
 import { formatApproveStatus, formatCheckType, formatDecoType, formatMoneyType, formatOpenflagStatus, formatStoreWay, formatTltTermType } from '../tls13010/tls13010.constants';
 import { DialogComponent } from '../../../shared/componentkit/dialog/dialog.component';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
+import { RadiobuttonYNComponent } from '@shared/componentkit/radiobutton-yn/radiobutton-yn.component';
 
 interface ContractItem {
   id: string;
@@ -72,7 +73,7 @@ interface DialogItem {
   templateUrl: './tls14020.component.html',
   styleUrl: './tls14020.component.scss',
   standalone: true,
-  imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputNumberComponent, DropdownComponent, InputTextComponent, InputNumberRangeComponent, CalendarRangeComponent, ButtonComponent, TranslateModule, TableComponent, MultiSelectComponent, DialogComponent]
+  imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputNumberComponent, DropdownComponent, InputTextComponent, InputNumberRangeComponent, CalendarRangeComponent, ButtonComponent, TranslateModule, TableComponent, MultiSelectComponent, DialogComponent, RadiobuttonYNComponent]
 })
 export class TLS14020Component extends BasicQueryPageComponent<ContractItem> implements OnInit {
   // ProgNo: string = '210018';
@@ -247,7 +248,6 @@ export class TLS14020Component extends BasicQueryPageComponent<ContractItem> imp
         }));
       },
       error: (error) => {
-        console.error('載入大分類選項失敗:', error);
         this.businessTypeCodeOptions = [];
       }
     });
@@ -257,7 +257,6 @@ export class TLS14020Component extends BasicQueryPageComponent<ContractItem> imp
         this.vendorOptions = response;
       },
       error: (error) => {
-        console.error('載入POS2013選項失敗:', error);
         this.vendorOptions = [];
       }
     });
@@ -278,7 +277,6 @@ export class TLS14020Component extends BasicQueryPageComponent<ContractItem> imp
         this.businessTypeOptions = results.paperType; // 營業型態
       },
       error: (error) => {
-        console.error('載入 Location 選項失敗:', error);
       }
     });
     //洽談者
@@ -287,7 +285,6 @@ export class TLS14020Component extends BasicQueryPageComponent<ContractItem> imp
         this.negotiatorOptions = response;
       },
       error: (error) => {
-        console.error('載入洽談者選項失敗:', error);
         this.negotiatorOptions = [];
       }
     });
@@ -324,16 +321,11 @@ export class TLS14020Component extends BasicQueryPageComponent<ContractItem> imp
             this.totalRecords = response.TotalCount || response.Data.length;
             // 儲存查詢條件（成功查詢後）
             this.queryStateService.setQueryState(this.ProgNo, frm.value);
-          } else {
-            console.error('API error:', response.Status, response.Message);
           }
           this.loading = false;
-          this.messageService.unblockUi();
         },
         error: (err: string) => {
-          console.error('API error:', err);
           this.loading = false;
-          this.messageService.unblockUi();
         }
       });
     });
@@ -344,16 +336,11 @@ export class TLS14020Component extends BasicQueryPageComponent<ContractItem> imp
     this.loading = true;
     this.tls14020Service.queryContractLog(data).subscribe({
       next: (response: any) => {
-        if (response.Status === '0000') {
-          this.dialogData = response.Data || [];
-          this.dialogTotalRecords = response.TotalCount || response.Data.length;
-        } else {
-          console.error('API error:', response.Status, response.Message);
-        }
+        this.dialogData = response.Data || [];
+        this.dialogTotalRecords = response.TotalCount || response.Data.length;
         this.loading = false;
       },
       error: (err: string) => {
-        console.error('API error:', err);
         this.loading = false;
         this.messageService.unblockUi();
       }
@@ -370,18 +357,12 @@ export class TLS14020Component extends BasicQueryPageComponent<ContractItem> imp
         if (response.Status === '0000') {
           // 成功時下載檔案
           this.downloadFile(response.Data.FileData, response.Data.FileName);
-        } else {
-          console.error('生成Word文檔失敗:', response.Status, response.Message);
-          this.messageService.errorBubble(response.Message || '生成文檔失敗');
         }
         this.loading = false;
         this.messageService.unblockUi();
       },
       error: (err: string) => {
-        console.error('生成Word文檔錯誤:', err);
         this.loading = false;
-        this.messageService.unblockUi();
-        this.messageService.errorBubble('生成文檔失敗，請稍後再試');
       }
     });
   }
@@ -414,8 +395,6 @@ export class TLS14020Component extends BasicQueryPageComponent<ContractItem> imp
       }
       // 如果後端直接回傳blob或其他格式，可以在這裡處理
     } catch (error) {
-      console.error('下載檔案失敗:', error);
-      this.messageService.errorBubble('下載檔案失敗');
     }
   }
 
@@ -425,12 +404,6 @@ export class TLS14020Component extends BasicQueryPageComponent<ContractItem> imp
       next: (response: any) => {
         this.downloadFile(response.Data.FileData, response.Data.FileName);
       },
-      error: (error) => {
-        console.error('下載檔案失敗:', error);
-        // 可選：顯示錯誤提示給用戶
-        // alert('下載檔案失敗，請稍後再試');
-        this.messageService.errorBubble('下載檔案失敗，請稍後再試');
-      }
     });
   }
 
@@ -450,15 +423,10 @@ export class TLS14020Component extends BasicQueryPageComponent<ContractItem> imp
             this.navigateWithState(CRUDStatus.Read, rowData[0]);
           }
         } else {
-          this.messageService.errorBubble(`查詢失敗: ${response.Message || '未知錯誤'}`);
         }
-      },
-      error: (err: any) => {
-        this.messageService.errorBubble('查詢失敗，請檢查網路連線或聯繫管理員');
       },
       complete: () => {
         this.loading = false;
-        this.messageService.unblockUi();
       }
     });
   }

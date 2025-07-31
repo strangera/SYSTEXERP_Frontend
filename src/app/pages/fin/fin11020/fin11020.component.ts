@@ -14,7 +14,7 @@ import { InputTextComponent } from '../../../shared/componentkit/input-text/inpu
 import { InputTextRangeComponent } from '../../../shared/componentkit/input-text-range/input-text-range.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { TranslateModule } from '@ngx-translate/core';
-import { ValidationService } from '@shared/service';
+import { ValidationService } from '@shared/service/validation.service';
 
 //1.1.1.2 發票基本資料維護
 @Component({

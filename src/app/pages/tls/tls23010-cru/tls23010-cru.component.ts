@@ -1,7 +1,7 @@
 import { Component } from '@angular/core';
 import { Location, NgIf, NgFor } from '@angular/common';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
-import '../../../../assets/font/NotoSansTC-VariableFont_wght-normal';
+
 import { PdfService } from '../../../service/basic/pdf.service';
 import { StatusFlagService } from '../../../service/basic/status-flag.service';
 import { WhetherService } from '../../../service/basic/whether.service';

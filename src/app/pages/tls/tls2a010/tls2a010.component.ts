@@ -2,7 +2,6 @@ import { Component, OnInit } from '@angular/core';
 import { FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TranslateModule } from '@ngx-translate/core';
-import { ButtonComponent, DropdownComponent, MenubarComponent, TableComponent, CalendarComponent } from '@shared/index';
 import { AccordionModule } from 'primeng/accordion';
 import { DropDownListService, IDropdownItem } from 'src/app/service/utility/dropDownList.service';
 import { Column, ColumnGroup, createPaginationConfig } from 'src/app/shared/componentkit/table/table.model';
@@ -13,6 +12,11 @@ import { TooltipModule } from 'primeng/tooltip';
 import { DropdownRangeComponent } from '@shared/componentkit/dropdown-range/dropdown-range.component';
 import { creditCardColumns, creditCardGroup, defaultColumns } from './tls2a010.model';
 import { Tls2a010Service } from 'src/app/service/api/tls/tls2a010.service';
+import { MenubarComponent } from '@shared/component/menubar/menubar.component';
+import { ButtonComponent } from '@shared/componentkit/button/button.component';
+import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
+import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
+import { TableComponent } from '@shared/componentkit/table/table.component';
 
 @Component({
   selector: 'app-tls2a010',
