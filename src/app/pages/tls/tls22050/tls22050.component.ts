@@ -31,19 +31,16 @@ import { TranslateModule } from '@ngx-translate/core';
 export class TLS22050Component extends BasicQueryPageComponent<any> implements OnInit {
 
   queryForm = this.formBuilder.group({
-    status1: [''],
-    status2: [''],
-    salesDate: [null as Date | null],
-    startdate: [null as Date | null],
-    enddate: [null as Date | null],
+    status1: ['all'],
+    status2: ['ALL'],
+    salesDate: [new Date()],
+    startdate: [new Date()],
+    enddate: [new Date()],
   });
   // 表格
   // ----------------------------------------------------------------
   data: any[] = [
-    // { contactPerson: 'A先生', contactDate: '2024-08-08', UID: '123' ,industryType: '停車管理', category: '專櫃。意向書',version: 1, rentNumber: 1, progress: '未審核'},
-    // { contactPerson: 'B先生', contactDate: '2024-08-09', UID: '456' ,industryType: '停車管理', category: '專櫃。意向書',version: 1, rentNumber: 2, progress: '已審核'},
-    // { contactPerson: 'C先生', contactDate: '2024-08-10', UID: '789' ,industryType: '停車管理', category: '專櫃。意向書',version: 1, rentNumber: 3, progress: '未審核'},
-    // 其他資料
+
   ];
   filteredData: any[] = [...this.data];
   statusOptions = [
@@ -51,16 +48,24 @@ export class TLS22050Component extends BasicQueryPageComponent<any> implements O
     { label: '一般', value: 'ordinary' },
     { label: '停管', value: 'stop' }
   ];
+  status2Options = [
+  { label: '全部', value: 'ALL' },
+  { label: '連線', value: 'Y' },
+  { label: '離線', value: 'N' },
+];
+
   salesMinDate: Date | null = null;
   salesMaxDate: Date | null = null;
   columns: any[] = [
-    { field: 'contactPerson', header: '系統筆數', visible: true },
-    { field: 'contactDate', header: '實收筆數', visible: true },
-    { field: 'UID', header: '系統金額', visible: true },
-    { field: 'industryType', header: '實收金額', visible: true },
-    { field: 'category', header: '帳差(實收-系統)', visible: true },
-    // 其他欄位
-  ];
+  { field: 'PAY_NO', header: '付款別', visible: true },
+  { field: 'ECR_NO', header: '收銀機號', visible: true },
+  { field: 'TXN_NO', header: '交易序號', visible: true },
+  { field: 'SYS_AMT', header: '系統金額', visible: true },
+  { field: 'ACT_AMT', header: '實收金額', visible: true },
+  { field: 'DIFF_AMT', header: '帳差', visible: true },
+  { field: 'ORDER_NO', header: '訂單編號', visible: true },
+];
+
 
   constructor(
 

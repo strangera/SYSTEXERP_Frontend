@@ -44,6 +44,16 @@
               placeholder="請選擇"
             ></p-dropdown>
           </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <label for="status2">顯示條件</label>
+            <p-dropdown
+              [options]="status2Options"
+              optionLabel="label"
+              optionValue="value"
+              [formControl]="queryForm.controls.status2"
+              placeholder="請選擇"
+            ></p-dropdown>
+          </div>
         </div>
         <div>
           <div
