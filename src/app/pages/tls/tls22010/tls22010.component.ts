@@ -15,36 +15,29 @@ import { TableComponent } from '../../../shared/componentkit/table/table.compone
 import { TranslateModule } from '@ngx-translate/core';
 
 @Component({
-    templateUrl: './tls22010.component.html',
-    standalone: true,
-    imports: [
-        MenubarComponent,
-        AccordionModule,
-        FormsModule,
-        ReactiveFormsModule,
-        CalendarComponent,
-        MultiSelectComponent,
-        DropdownModule,
-        RadiobuttonComponent,
-        ButtonComponent,
-        TableComponent,
-        TranslateModule,
-    ],
+  templateUrl: './tls22010.component.html',
+  standalone: true,
+  imports: [
+    MenubarComponent,
+    AccordionModule,
+    FormsModule,
+    ReactiveFormsModule,
+    CalendarComponent,
+    MultiSelectComponent,
+    DropdownModule,
+    RadiobuttonComponent,
+    ButtonComponent,
+    TableComponent,
+    TranslateModule,
+  ],
 })
 export class TLS22010Component extends BasicQueryPageComponent<any> implements OnInit {
 
   queryForm = this.formBuilder.group({
-    salesDate: [],                    // 日期
-    tlt_floor: [[]],
-    ECR_No: [[]],
-    floor: [],                   // 樓層
-    floorRadio: [''],            // 樓層單選按鈕
-    machineCode: [],             // 收銀機代碼
-    machineCodeRadio: [''],      // 收銀機代碼單選按鈕
-    machineDisplayOptions: [],   // 收銀機顯示選項
-    radioOption: [null],          // 單選按鈕選項
-    systemStatus: [null],
-    clearMachineStatus: [null],
+    TXN_Date: [null],           // 對應原本的 salesDate
+    floor_noList: [[]],         // 對應原本的 tlt_floor
+    ECR_No: [[]],               // 名稱已正確
+    ShowStatus: [null],         // 對應原本的 radioOption
     status1: [''],
     status2: [''],
   });
@@ -77,6 +70,7 @@ export class TLS22010Component extends BasicQueryPageComponent<any> implements O
     { field: 'status', header: '狀態', visible: true },
   ];
   statusOptions = [
+    { label: '全部', value: 'all' },
     { label: '正常', value: 'normal' },
     { label: '異常', value: 'abnormal' }
   ];
@@ -115,37 +109,25 @@ export class TLS22010Component extends BasicQueryPageComponent<any> implements O
     });
 
   }
-
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
-      this.data = [
-        {
-          collectionMachineCode: 'M001',
-          line: 'L1',
-          district: 'A區',
-          floor: '1F',
-          salesAmountA: 10000,
-          depositAmount: 2000,
-          refundAmountC2: 500,
-          discountD: 9500,
-          agencyFeeL: 300,
-          invoicedAmountE: 9000,
-          reportedAmountK: 100,
-          remittedAmountI: 9400,
-          invoiceTotalAmountF: 9700,
-          invoiceNoTaxAmountM: 8500,
-          invoiceTaxAmountN: 850,
-          invoiceCashAmountO: 350,
-          collectionAmountG: 200,
-          discountJ: 100,
-          paymentAmountH: 9600,
-          zReportAmount: 10000,
-          kioskOperation: '補登1筆',
-          status: '正常',
-        }
-      ];
-    })
+      const value = this.queryForm.value;
+
+
+      const params = {
+        TXN_Date: value.TXN_Date
+          ? new Date(value.TXN_Date).toISOString().split('T')[0]
+          : null,
+        ECR_No: value.ECR_No,
+        floor_noList: value.floor_noList,
+        ShowStatus: value.ShowStatus,
+      };
+      console.log('Query Parameters:', params); // Example usage
+
+      this.data = [];
+    });
   }
+
 
 
   // // Handle Radio Button Selection
