@@ -10,6 +10,7 @@ export interface DependentDataQuery {
   data_type?: string;
   building_no?: string | null;
   floor_no?: string | null;
+  area_no?: string | null;
 }
 
 export interface TLS26010Query {
