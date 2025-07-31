@@ -25,7 +25,7 @@
       <span *ngIf="isRequired" class="required">*</span>
     </label>
     <p-inputGroup id="input-number-end">
-      <p-inputNumber id="input-number-range" [formControl]="endControl" [placeholder]="placeholder"
+      <p-inputNumber id="input-number-range" [formControl]="endControl" [placeholder]="placeholder2"
         [showButtons]="showButtons" [min]="minBoundary" [max]="maxBoundary" [step]="step" [useGrouping]="useGrouping"
         [minFractionDigits]="minFractionDigits" [maxFractionDigits]="maxFractionDigits"
         [ngClass]="{'ng-dirty ng-invalid': submitted && endControl.errors}" [mode]="mode"
