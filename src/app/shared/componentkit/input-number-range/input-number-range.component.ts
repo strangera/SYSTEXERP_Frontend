@@ -37,8 +37,6 @@ export class InputNumberRangeComponent extends BasicKitComponent implements OnIn
   @Output() blurEvent = new EventEmitter<{ start: any, end: any }>();
 
   ngOnInit(): void {
-    if (this.startControl?.disabled) this.placeholder = '';
-    if (this.endControl?.disabled) this.placeholder2 = '';
     if (this.startControl.enabled && this.endControl.enabled) {
       this.updateControlState(this.startControl, this.endControl);
     }

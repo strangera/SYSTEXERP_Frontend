@@ -46,11 +46,13 @@ export class BasicKitComponent {
       return;
     }
 
-    const maxResult = validator(new FormControl(999999999));
-    this.maxValue = maxResult?.['max']?.max ?? null;
+    // 用超過最大值來觸發 max 錯誤
+    const maxTest = validator(new FormControl(Number.MAX_SAFE_INTEGER));
+    this.maxValue = maxTest?.['max']?.max ?? null;
 
-    const minResult = validator(new FormControl(-999999999));
-    this.minValue = minResult?.['min']?.min ?? null;
+    // 用小於最小值來觸發 min 錯誤
+    const minTest = validator(new FormControl(-Number.MAX_SAFE_INTEGER));
+    this.minValue = minTest?.['min']?.min ?? null;
   }
 
   checkNumberValidator(control: AbstractControl): void {
@@ -65,6 +67,12 @@ export class BasicKitComponent {
   }
 
   setPlaceholder(control: FormControl, index = 0): void {
+    if (control.disabled) {
+      this.placeholder = '';
+      this.placeholder2 = '';
+      return;
+    }
+
     if (this.placeholder && this.placeholder2) {
       return;
     }
@@ -73,7 +81,6 @@ export class BasicKitComponent {
     if (control.hasValidator(Validators.required)) {
       placeholderParts.push('必填');
     }
-
     if (this.maxLength && this.minLength && this.maxLength === this.minLength) {
       placeholderParts.push(`必須為${this.minLength}個字`);
     } else if (this.maxLength) {
@@ -81,7 +88,6 @@ export class BasicKitComponent {
     } else if (this.minLength) {
       placeholderParts.push(`最少${this.minLength}個字`);
     }
-
     if (this.minValue !== null && this.maxValue !== null && this.minValue === this.maxValue) {
       placeholderParts.push(`必須為${this.minValue}`);
     } else {
@@ -92,11 +98,9 @@ export class BasicKitComponent {
         placeholderParts.push(`最大值為${this.maxValue}`);
       }
     }
-
     if (this.isNumberOnly) {
       placeholderParts.unshift('請輸入數字');
     }
-
     const finalPlaceholder = placeholderParts.join(', ');
     if (index === 0) this.placeholder = finalPlaceholder;
     if (index === 1) this.placeholder2 = finalPlaceholder;
