@@ -1,30 +1,39 @@
 import { HttpClient } from '@angular/common/http';
 import { effect, Injectable, signal } from '@angular/core';
-import { TLS26010Data } from '@pages/tls/tls26010/tls26010.model';
-import { CampaignData, mockCampaignData } from '@pages/tls/tls26080-cru/ts26080-cru.model';
-import { CampaignAccountingType, CampaignAccountingTypes, TLS26080Data, TLS26080Query } from '@pages/tls/tls26080/tls26080.model';
+import { CampaignAccountingType, CampaignAccountingTypes, CampaignData, TLS26080Data, TLS26080Query } from '@pages/tls/tls26080/tls26080.model';
 import { ErrorHandlerService } from '@service/system/error-handler.service';
 import { NotificationService } from '@shared/component/notification-message/notification.service';
 import { BaseQueryResponse, DropdownOption } from '@shared/models/api/base-api.interface';
 import { ApprovalStatus } from '@shared/models/tls/approval-status.model';
-import { catchError, EMPTY, finalize, of, take, tap } from 'rxjs';
+import { ConfirmationService } from 'primeng/api';
+import { catchError, EMPTY, finalize, take, tap } from 'rxjs';
 import { environment } from 'src/environments/environment';
 
-const mock = !1;
 const apiUrl: string = environment.ApiUrl;
 
 @Injectable({ providedIn: 'root' })
 export class TLS26080Service {
 
-  public approvalData = signal<ApprovalStatus>(ApprovalStatus.未核准);
+  // 儲存資料
   public TLS26080List = signal<TLS26080Data[]>([]);
   public campaignData = signal<CampaignData>({} as CampaignData);
   private TLS26080Data = signal<TLS26080Data[]>([]);
 
+  // 讀取狀態
   private tableLoading = !1;
   private approvalStatusLoading = !1;
   private campaignLoading = !1;
 
+  // 下拉選單資料
+  public readonly departmentItems = signal<DropdownOption[]>([]);
+  public readonly capItems = signal<DropdownOption[]>(Array.from(CampaignAccountingType.values()));
+  public readonly podStatusItems = signal<DropdownOption[]>([
+    { No: ApprovalStatus.未核准, Name: '未核准' },
+    { No: ApprovalStatus.已核准, Name: '已核准' },
+    { No: ApprovalStatus.刪除, Name: '刪除' },
+  ]);
+
+  // 核准狀態顯示
   public approvalStatus(value: string): string {
     switch (value) {
       case ApprovalStatus.未核准: return '未核准';
@@ -32,6 +41,13 @@ export class TLS26080Service {
       case ApprovalStatus.刪除: return '刪除';
       default: return value;
     }
+  }
+
+  // 核准狀態檢查
+  private approvalCheck({ pod_status }: TLS26080Data) {
+    return pod_status === ApprovalStatus.未核准
+      ? { api: `approveTLS26080`, confirm: `核准` }
+      : { api: `disapproveTLS26080`, confirm: `反核准` };
   }
 
   private fetchTLS26080List = effect(() => {
@@ -44,18 +60,11 @@ export class TLS26080Service {
     this.TLS26080List.set(Array.from(res.values()));
   }, { allowSignalWrites: true });
 
-  public readonly departmentItems = signal<DropdownOption[]>([]);
-  public readonly capItems = signal<DropdownOption[]>(Array.from(CampaignAccountingType.values()));
-  public readonly podStatusItems = signal<DropdownOption[]>([
-    { No: ApprovalStatus.未核准, Name: '未核准' },
-    { No: ApprovalStatus.已核准, Name: '已核准' },
-    { No: ApprovalStatus.刪除, Name: '刪除' },
-  ]);
-
   constructor(
     private http: HttpClient,
     private errorHandler: ErrorHandlerService,
     private messageService: NotificationService,
+    private confirmationService: ConfirmationService,
   ) { }
 
   /** 查詢資料 */
@@ -80,10 +89,7 @@ export class TLS26080Service {
   loadCampaignData(query: any): void {
     if (this.campaignLoading) return void (this.campaignLoading = !1);
     this.campaignLoading = !0;
-    const api = mock
-      ? of(mockCampaignData)
-      : this.http.post<BaseQueryResponse<CampaignData>>(`${apiUrl}/queryCampaignData`, query);
-    api.pipe(
+    this.http.post<BaseQueryResponse<CampaignData>>(`${apiUrl}/queryCampaignData`, query).pipe(
       take(1),
       tap(response => this.campaignData.set(response.Data[0] || {} as CampaignData)),
       catchError(error => { this.errorHandler.handleError(error); return EMPTY; }),
@@ -92,36 +98,36 @@ export class TLS26080Service {
   }
 
   /** 核准或反核准預購活動 */
-  loadApproval(data: TLS26010Data): void {
+  loadApproval(data: TLS26080Data): void {
     if (this.approvalStatusLoading) return void (this.approvalStatusLoading = !1);
     this.approvalStatusLoading = !0;
-    const id = data.pod_no;
-
-    this.http.post<BaseQueryResponse<{ Status: ApprovalStatus; }>>(
-      `${apiUrl}/TLS0000/TLS2000${data.pod_status === ApprovalStatus.未核准 ? '/approveTLS26010' : '/disapproveTLS26010'}`,
-      { id }).pipe(
-        take(1),
-        tap(() => this.approvalData.set(ApprovalStatus.未核准)),
-        tap(response =>
-          this.approvalData.set(response['Status'] as ApprovalStatus || response.Data[0].Status)),
-        catchError(error => this.errorHandler.handleError(error)),
-        finalize(() => {
-          this.approvalStatusLoading = !1;
-          console.log('核准結果:', this.approvalData());
-        })
-      ).subscribe();
+    this.confirmationService.confirm({
+      message: `是否確定${this.approvalCheck(data).confirm}選取項目？`,
+      accept: () => {
+        const id = data.id;
+        this.http.post<BaseQueryResponse<{ Status: ApprovalStatus; }>>(
+          `${apiUrl}/TLS0000/TLS2000/${this.approvalCheck(data).api}`, { id }).pipe(
+            take(1),
+            tap(() => this.TLS26080Data.update(currentData => {
+              const index = currentData.findIndex(item => item.id === id);
+              if (index !== -1) currentData[index].pod_status = this.approvalCheck(data).confirm === '核准'
+                ? ApprovalStatus.已核准
+                : ApprovalStatus.未核准;
+              return currentData;
+            })),
+            catchError(error => this.errorHandler.handleError(error)),
+            finalize(() => {
+              this.approvalStatusLoading = !1;
+              console.log('核准結果:',);
+            })
+          ).subscribe();
+        this.messageService.successBubble(`${this.approvalCheck(data).confirm}成功`);
+      },
+      reject: () => this.messageService.infoBubble(`${this.approvalCheck(data).confirm}已取消`)
+    });
   }
 
   ngOnDestroy(): void {
-    // 服務銷毀時清除所有資料
-    this.clearData();
-  }
-
-  clearData(): void {
-    // 清除 signal 資料
-    this.TLS26080Data.set([]);
-    this.TLS26080List.set([]);
-    this.approvalData.set(ApprovalStatus.未核准);
     this.fetchTLS26080List.destroy();
   }
 }

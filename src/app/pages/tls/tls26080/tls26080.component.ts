@@ -1,22 +1,22 @@
 
 import { DatePipe } from '@angular/common';
 import { Component, computed, OnInit, signal } from '@angular/core';
-import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
+import { TLS26080Service } from '@service/api/tls/tls26080.service';
+import { MenubarComponent } from '@shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
-import { Column } from '@shared/componentkit/table/table.model';
-import { AccordionModule } from 'primeng/accordion';
-import { TLS26080Data } from './tls26080.model';
-import { ApprovalStatus } from '@shared/models/tls/approval-status.model';
 import { ButtonComponent } from '@shared/componentkit/button/button.component';
-import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
 import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/calendar-range.component';
+import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
-import { MenubarComponent } from '@shared/component/menubar/menubar.component';
 import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
 import { TableComponent } from '@shared/componentkit/table/table.component';
-import { TLS26080Service } from '@service/api/tls/tls26080.service';
+import { Column } from '@shared/componentkit/table/table.model';
+import { ApprovalStatus } from '@shared/models/tls/approval-status.model';
+import { AccordionModule } from 'primeng/accordion';
+import { TLS26080Data } from './tls26080.model';
 
 @Component({
   selector: 'app-tls26080',
@@ -39,16 +39,40 @@ import { TLS26080Service } from '@service/api/tls/tls26080.service';
   ],
 })
 export class TLS26080Component extends BasicQueryPageComponent<TLS26080Data> implements OnInit {
+  private dateS: Date = new Date(this.now.getFullYear(), this.now.getMonth(), 1);
+  private dateE: Date = new Date(this.now.getFullYear(), this.now.getMonth() + 1, 0);
+
   // 查詢表單
   public queryForm = this.formBuilder.group({
-    pod_no: ['', Validators.maxLength(10)], // 活動單號
-    pod_desc: ['', Validators.maxLength(100)], // 活動名稱
-    pod_status: [ApprovalStatus.未核准], // 核准狀態
-    org_id: [''], // 部門
-    cap_item: [[] as string[]], // 扣款代碼
-    pod_sdate: [new Date()], // 起始日期(起)
-    pod_edate: [new Date()], // 起始日期(迄)
-    pod_busdate: [new Date()], // 活動正檔日期
+    pod_no: new FormControl<string | undefined>(undefined, [Validators.maxLength(10)]), // 活動單號
+    pod_desc: new FormControl<string | undefined>(undefined, [Validators.maxLength(100)]), // 活動名稱
+    pod_status: new FormControl<ApprovalStatus>(ApprovalStatus.未核准), // 核准狀態
+    org_id: new FormControl<string | undefined>(undefined), // 部門
+    cap_item: new FormControl<string[]>([]), // 扣款代碼
+    pod_sdate: new FormControl<Date>(this.dateS), // 起始日期(起)
+    pod_edate: new FormControl<Date>(this.dateE), // 起始日期(迄)
+    pod_busdate: new FormControl<Date | undefined>(undefined), // 活動正檔日期
+  });
+
+  public selectedItems: TLS26080Data[] = [];
+
+  public readonly editDisabled = (rowData: TLS26080Data) =>
+    rowData?.CanEdit == '1' || rowData.pod_status !== ApprovalStatus.未核准;
+  public readonly isRowSelectable = (rowData: TLS26080Data) =>
+    rowData?.CanDelete == '1';
+
+  public totalRecords = signal<number>(0);
+
+  private queryTLS26080 = computed(() => {
+    const { pod_no, pod_desc, pod_status, pod_sdate, pod_edate, pod_busdate } = this.queryForm.value;
+    return {
+      ...(pod_no && { pod_no }),
+      ...(pod_desc && { pod_desc }),
+      ...(pod_status && { pod_status }),
+      ...(pod_sdate && { pod_sdate }),
+      ...(pod_edate && { pod_edate }),
+      ...(pod_busdate && { pod_busdate }),
+    };
   });
 
   public columns: Column[] = [
@@ -61,26 +85,6 @@ export class TLS26080Component extends BasicQueryPageComponent<TLS26080Data> imp
     { field: 'pod_status', header: '狀態', visible: true, format: this.service.approvalStatus.bind(this) },
   ];
 
-  public readonly editDisabled = (rowData: TLS26080Data) => rowData.pod_status !== ApprovalStatus.未核准;
-  public readonly isEditable = (rowData: TLS26080Data) => rowData.CanEdit == '1';
-  public readonly isRowSelectable = (rowData: TLS26080Data) => rowData.CanDelete == '0';
-
-  public totalRecords = signal<number>(0);
-  public data: TLS26080Data[] = [];
-  public selectedItems: TLS26080Data[] = [];
-
-  private queryTLS26080 = computed(() => {
-    const formValues = this.queryForm.value;
-    const result = {};
-    formValues.pod_no && (Reflect.set(result, 'pod_no', formValues.pod_no));
-    formValues.pod_desc && (Reflect.set(result, 'pod_desc', formValues.pod_desc));
-    formValues.pod_status && (Reflect.set(result, 'pod_status', formValues.pod_status));
-    formValues.pod_sdate && (Reflect.set(result, 'pod_sdate', this.datePipe.transform(formValues.pod_sdate, 'YYYY/MM/dd')));
-    formValues.pod_edate && (Reflect.set(result, 'pod_edate', this.datePipe.transform(formValues.pod_edate, 'YYYY/MM/dd')));
-    formValues.pod_busdate && (Reflect.set(result, 'pod_busdate', this.datePipe.transform(formValues.pod_busdate, 'YYYY/MM/dd')));
-    return result;
-  });
-
   constructor(
     public readonly service: TLS26080Service,
     private readonly datePipe: DatePipe,
@@ -92,23 +96,28 @@ export class TLS26080Component extends BasicQueryPageComponent<TLS26080Data> imp
     this.initializePage('TLS26080', '/TLS/TLS26080CRU', this.queryForm, this.onSubmit.bind(this));
   }
 
-  public canQuery(): boolean {
+  private canQuery(): boolean {
     return true;
   }
 
-  public canAdd(): boolean {
+  private canAdd(): boolean {
     return true;
   }
 
-  public canEdit(): boolean {
+  private canEdit(): boolean {
     return true;
   }
 
-  public onClearForm(): void {
-    this.queryForm.reset();
+  public onClear(): void {
+    this.queryForm.reset({
+      pod_sdate: this.dateS,
+      pod_edate: this.dateE,
+      pod_status: ApprovalStatus.未核准,
+    });
   };
 
   public onSubmitQuery(): void {
+    console.log(`submit:`, [this.queryForm.value]);
     this.onSubmit(this.queryForm);
   };
 

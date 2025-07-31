@@ -34,6 +34,59 @@ export interface TLS26080Query {
   cap_item?: string[];        // 扣款代碼
 }
 
+// 活動資料模型
+export interface ActivityData {
+  id: number;
+  activityType: string;
+  department: string;
+  activityGroup: string;
+  activityName: string;
+  activityStartDate: string;
+  activityEndDate: string;
+  activityOfficialDate: string;
+}
+
+// 專櫃資料模型
+export interface CounterData {
+  id: number;
+  counterCode: string;
+  counterName: string;
+  itemCode: string;
+  commissionTypeCode: string;
+  commissionTypeName: string;
+  presaleStartCalculation: string;
+  contractStartDate: string;
+  contractEndDate: string;
+  operationStartDate: string;
+  operationEndDate: string;
+  deductionItems: string;
+  selected?: boolean;
+}
+
+// 扣款項目模型
+export interface DeductionItem {
+  id: number;
+  counterCode: string;
+  counterName: string;
+  itemCode: string;
+  itemName: string;
+  amountOrRate: number;
+  isRate: boolean; // true: 比率, false: 金額
+  displayAmount?: string; // 用於顯示格式化後的金額/比率
+}
+
+export interface CampaignData {
+  No: string; // 序號
+  Status: string; // 狀態 (0=失效, 1=生效, Temp=暫存)
+  CampaignId: string; // 活動ID
+  CampaignName: string; // 活動名稱
+  StartTime: string; // 開始時間
+  EndTime: string; // 結束時間
+  AccountingType: string; // 活動類型
+  AccountingOption: '0' | '1'; // 是否參加財務扣款結算 ('0'=不參與, '1'=指定DM類型)
+  Remark: string; // 備註
+}
+
 /** 活動類型 */
 export enum CampaignAccountingTypes {
   '預售' = 1,
