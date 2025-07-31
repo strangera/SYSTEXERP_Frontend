@@ -1,65 +1,44 @@
 <div class="card">
-  <div class="grid align-items-center">
-    <div class="col" style="flex: 1">
-      <app-menubar [ProgNo]="ProgNo"></app-menubar>
-    </div>
-    <div>
-      <app-button btnType="submit" (click)="submitForm(dataForm)" *ngIf="isFormEditable"></app-button>
-      <app-button btnType="cancel" (click)="onCancel()" class="col"></app-button>
-    </div>
+  <div class="flex gap-2 mb-2">
+    <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
+    <app-button btnType="back" (click)="onCancel()"></app-button>
   </div>
+  <p-panel [header]="'查詢預售資料'" class="line-height-3 m-0">
+    <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
+      <div class="grid p-fluid">
+        <!-- 預售日期(起訖) -->
+        <app-calendar-range class="col-12 md:col-6 lg:col-4" label="預售日期" calendarType="dateRange"
+          [startControl]="dataForm.controls.preOrderDateFrom" [endControl]="dataForm.controls.preOrderDateTo"
+          [submitted]="submitted"></app-calendar-range>
+        <!-- 收銀機號 -->
+        <app-input-text class="col-12 md:col-6 lg:col-4" label="收銀機號" controlName="receivingMachineNo"
+          [control]="dataForm.controls.receivingMachineNo" [submitted]="submitted"></app-input-text>
+        <!-- 交易序號 -->
+        <app-input-text class="col-12 md:col-6 lg:col-4" label="交易序號" controlName="transactionNo"
+          [control]="dataForm.controls.transactionNo" [submitted]="submitted"></app-input-text>
+        <!-- 專櫃編號 -->
+        <app-input-text class="col-12 md:col-6 lg:col-4" label="專櫃編號" controlName="counterCode"
+          [control]="dataForm.controls.counterCode" [submitted]="submitted"></app-input-text>
+      </div>
+      <div *ngIf="!isFormReadable" class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+        <app-button btnType="cancel" [form]="dataForm"></app-button>
+        <app-button btnType="query" [loading]="loading"></app-button>
+      </div>
+    </form>
+  </p-panel>
 </div>
-<p-panel [header]="formTitle | translate" class="line-height-3 m-0">
-  <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
-    <div class="grid p-fluid">
-      <div class="col-12 md:col-6 lg:col-4">
-        <app-calendar calendarType="dateOne" label="結帳日期" controlName="name" [control]="dataForm.controls.name"
-          [submitted]="submitted">
-        </app-calendar>
-      </div>
-      <div class="col-12 md:col-6 lg:col-4">
-        <app-input-text label="預估結帳金額" controlName="name" [control]="dataForm.controls.name" [submitted]="submitted">
-        </app-input-text>
-      </div>
-    </div>
-  </form>
-</p-panel>
+
 <div class="card">
-  <app-button btnType="create" label="查詢預售資料" icon="pi pi-search"></app-button>
-
-
-  <p-accordion>
-    <p-accordionTab header="預售資料" [selected]="true" class="line-height-3 m-0" [headerStyleClass]="'query-accordionTab'">
-      <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
-        <div class="grid p-fluid">
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar-range calendarType="dateRange" label="預售日期" controlName="name"
-              [startControl]="dataForm.controls.name" [endControl]="dataForm.controls.name" [submitted]="submitted">
-            </app-calendar-range>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text label="收銀機機號" controlName="name" [control]="dataForm.controls.name" [submitted]="submitted">
-            </app-input-text>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text label="交易序號" controlName="name" [control]="dataForm.controls.name" [submitted]="submitted">
-            </app-input-text>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text label="專櫃編號" controlName="name" [control]="dataForm.controls.name" [submitted]="submitted">
-            </app-input-text>
-          </div>
-
-        </div>
-      </form>
-    </p-accordionTab>
-  </p-accordion>
-
-  <div class="card">
-    <div class="col-12">
-      <app-table [showCheckBox]="true" [data]="data" [columns]="columns" (edit)="onEdit($event)"
-        (detail)="onDetail($event)">
-      </app-table>
-    </div>
+  <app-table tableKey="TLS26040_2" dataKey="ID" [data]="data" [columns]="columns" [selectedItems]="selectedItems"
+    (selectionChange)="selectedItems = $event" [multiSortMeta]="[{ field: 'ID', order: 1 }]"
+    [totalRecords]="totalRecords" (lazyLoadData)="onLazyLoadData($event, dataForm); 
+    onSubmit(dataForm)" [lazy]="true" [loading]="loading" [showManage]="false" [showReportMode]="false"
+    [showDelete]="false" [showCheckBox]="true">
+  </app-table>
+  <div *ngIf="data.length > 0" class="grid p-fluid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+    <!-- 結帳日期 -->
+    <app-calendar label="結帳日期" calendarType="dateOne" [control]="dataForm2.controls.checkoutDate"
+      [submitted]="submitted"></app-calendar>
+    <app-button label="全部結帳" (click)="onCheckout()"></app-button>
   </div>
 </div>

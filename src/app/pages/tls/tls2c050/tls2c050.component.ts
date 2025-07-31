@@ -8,7 +8,6 @@ import { MenubarComponent } from '../../../shared/component/menubar/menubar.comp
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { AccordionModule } from 'primeng/accordion';
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { TranslateModule } from '@ngx-translate/core';
 import { forkJoin } from 'rxjs';
 
@@ -24,7 +23,6 @@ import { forkJoin } from 'rxjs';
     FormsModule,
     ReactiveFormsModule,
     CalendarComponent,
-    // TableComponent,
     TranslateModule
   ]
 })
@@ -32,8 +30,6 @@ export class TLS2C050Component extends BasicQueryPageComponent<any> {
 
   queryForm = this.formBuilder.group({
     onedatedd: [null, [Validators.required]], // 匯檔發票日期
-    usagecount: [0, [Validators.required]],   // 次數限制 (0 不限制)
-    ...createPaginationConfig([{ field: 'onedatedd', order: 1 }])
   });
 
 
@@ -43,6 +39,7 @@ export class TLS2C050Component extends BasicQueryPageComponent<any> {
   selectedItems: any[] = [];
 
   closeDate: string = '查詢中...';
+  summaryDate: string = '查詢中...';
 
   constructor(
     private tls2c050Service: TLS2C050Service,
@@ -51,8 +48,8 @@ export class TLS2C050Component extends BasicQueryPageComponent<any> {
     super();
   }
 
-  override ngOnInit(): void {
-    this.initializePage('TLS2C050', '/TLS2000/TLS2C050CRU', this.queryForm, this.onSubmit.bind(this));
+  ngOnInit(): void {
+    this.initializePage('TLS2C050', '/tls2000/tls2C050cru', this.queryForm, (form) => this.onSubmit(form));
   }
 
   onSubmit(form: FormGroup): void {
@@ -75,11 +72,14 @@ export class TLS2C050Component extends BasicQueryPageComponent<any> {
 
     forkJoin({
       dataRes: this.tls2c050Service.queryTLS2C050(payload),
-      closeDateRes: this.tls2b020Service.queryCloseDate(payload)
+      closeDateRes: this.tls2b020Service.queryCloseDate(payload),
+      summaryDateRes: this.tls2c050Service.querySummaryDate(payload)
     }).subscribe({
-      next: ({ dataRes, closeDateRes }) => {
+      next: ({ dataRes, closeDateRes, summaryDateRes }) => {
         this.data = dataRes?.Data ?? [];
         this.totalRecords = dataRes?.TotalCount ?? this.data.length;
+        this.closeDate = closeDateRes?.Data ?? '-';
+        this.summaryDate = summaryDateRes?.Data ?? '-';
 
         this.queryStateService.setQueryState(this.ProgNo, payload);
 
@@ -96,9 +96,5 @@ export class TLS2C050Component extends BasicQueryPageComponent<any> {
         this.messageService.unblockUi();
       }
     });
-  }
-
-  onClearForm(): void {
-    this.queryForm.reset();
   }
 }
