@@ -180,6 +180,18 @@
               </th>
             </tr>
           </ng-template>
+          <!-- 📌 無資料時顯示 -->
+<ng-template pTemplate="emptymessage">
+  <tr>
+    <td
+      [attr.colspan]="selectedColumns.length"
+      class="text-center text-xl font-bold text-primary bg-gray-50"
+      style="padding: 2rem 1rem;"
+    >
+      <i class="pi pi-info-circle mr-2 text-primary"></i>{{ emptyMessage }}
+    </td>
+  </tr>
+</ng-template>
 
           <!-- 📌 資料列 -->
           <ng-template pTemplate="body" let-rowData let-rowIndex="rowIndex">
@@ -325,6 +337,18 @@
               </th>
             </tr>
           </ng-template>
+          <!-- 📌 無資料時顯示 -->
+<ng-template pTemplate="emptymessage">
+  <tr>
+    <td
+      [attr.colspan]="selectedColumns.length + (showExpandColumn ? 1 : 0)"
+      class="text-center text-xl font-bold text-primary bg-gray-50"
+      style="padding: 2rem 1rem;"
+    >
+      <i class="pi pi-info-circle mr-2 text-primary"></i>{{ emptyMessage }}
+    </td>
+  </tr>
+</ng-template>
 
           <!-- 📌 資料列 -->
           <ng-template pTemplate="body" let-rowData let-rowIndex="rowIndex">

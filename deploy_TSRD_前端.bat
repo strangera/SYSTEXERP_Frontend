@@ -1,7 +1,7 @@
 @echo off
 chcp 65001 >nul
 echo 🚀 開始建置 Angular 專案...
-call ng build --configuration production --base-href /TSRDWEBDEV/
+call ng build --configuration production --base-href /tsrdwebdev/
 
 if %errorlevel% neq 0 (
     echo ❌ Build 失敗，停止部署。

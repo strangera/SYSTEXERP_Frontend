@@ -88,6 +88,7 @@ export class ReportTableGroupComponent implements OnInit {
 
   @Input() detailFieldKeys: string[] = [];                // 展開資料查詢用的欄位 key
   @Input() fetchDetailFn: (payload: any) => Promise<any[]> = async () => []; // 明細查詢方法
+  @Input() emptyMessage: string = '查無資料'; // 當表格無資料時顯示文字
 
   @Input() extraTablesForPDF: {                           // PDF 附加額外表格
     title: string;
