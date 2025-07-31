@@ -12,6 +12,7 @@ import { InputTextComponent } from '../../../shared/componentkit/input-text/inpu
 import { InputNumberRangeComponent } from '../../../shared/componentkit/input-number-range/input-number-range.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { TranslateModule } from '@ngx-translate/core';
+import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 
 
 
@@ -170,15 +171,15 @@ export class TLS11010Component extends BasicQueryPageComponent<any> {
       // ✅ 使用修正後的 formValue
       this.tls11010Service.queryData(formValue).subscribe({
         next: (res) => {
-          if (res.Status === '0000') {
-            this.data = res?.Data || [];
-            this.totalRecords = res?.TotalCount || this.data.length;
-            console.log('✅ totalRecords =', this.totalRecords);
-            this.queryStateService.setQueryState(this.ProgNo, formValue);
-          }
-          this.loading = false;
-          this.messageService.unblockUi();
-        },
+  if (res.Status === '0000') {
+    this.data = this.convertNullToEmptyString(res?.Data || []);
+    this.totalRecords = res?.TotalCount || this.data.length;
+    console.log('✅ totalRecords =', this.totalRecords);
+    this.queryStateService.setQueryState(this.ProgNo, formValue);
+  }
+  this.loading = false;
+  this.messageService.unblockUi();
+},
         error: () => {
           this.messageService.errorBubble('查詢錯誤');
           this.loading = false;
@@ -212,6 +213,32 @@ getLabelFromOptions(value: any, options: any[]): string {
   const found = options?.find(opt => String(opt.value).trim() === trimmedValue);
   return found ? found.label : trimmedValue;
 }
+  override onEdit(data: any): void {
+  if (!this.canPerformAction('30')) return;
 
+  const trimmedData = {
+    ...data,
+    AREA_NO: Array.isArray(data?.AREA_NO)
+      ? data.AREA_NO.map((x: any) => String(x).trim())
+      : String(data?.AREA_NO ?? '').trim(),
+  };
 
+  console.log('🛫 編輯時傳入的 trimmed AREA_NO：', trimmedData.AREA_NO);
+
+  this.navigateWithState(CRUDStatus.Edit, trimmedData);
+}
+convertNullToEmptyString(obj: any): any {
+  if (Array.isArray(obj)) {
+    return obj.map(item => this.convertNullToEmptyString(item));
+  } else if (typeof obj === 'object' && obj !== null) {
+    const newObj: any = {};
+    Object.keys(obj).forEach(key => {
+      const value = obj[key];
+      newObj[key] = value === null ? '' : this.convertNullToEmptyString(value);
+    });
+    return newObj;
+  }
+  return obj;
+}
+ 
 }
