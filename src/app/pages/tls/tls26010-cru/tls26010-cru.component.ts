@@ -1,179 +1,30 @@
 import { NgIf } from '@angular/common';
 import { Component, computed, effect, OnInit, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 import { TLS26010Service } from '@service/api/tls/tls26010.service';
+import { MenubarComponent } from '@shared/component/menubar/menubar.component';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
+import { ButtonComponent } from '@shared/componentkit/button/button.component';
+import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/calendar-range.component';
+import { DialogComponent } from '@shared/componentkit/dialog/dialog.component';
+import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
+import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
+import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
+import { TableComponent } from '@shared/componentkit/table/table.component';
 import { Column } from '@shared/componentkit/table/table.model';
 import { CRUDStatus } from '@shared/models/system/CRUDstatus';
-import { DropdownChangeEvent } from 'primeng/dropdown';
+import { ApprovalStatus } from '@shared/models/tls/approval-status.model';
 import { FileSelectEvent, FileUploadModule } from 'primeng/fileupload';
 import { PanelModule } from 'primeng/panel';
 import { finalize, tap } from 'rxjs';
-import { EcrItem, FormValue, PodRequest, StatusProcessStrategy, TalentItem, TLS26010Data } from '../tls26010/tls26010.model';
-import { ApprovalStatus } from '@shared/models/tls/approval-status.model';
-import { MenubarComponent } from '@shared/component/menubar/menubar.component';
-import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/calendar-range.component';
-import { ButtonComponent } from '@shared/componentkit/button/button.component';
-import { TableComponent } from '@shared/componentkit/table/table.component';
-import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
-import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
-import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
-import { DialogComponent } from '@shared/componentkit/dialog/dialog.component';
+import { EcrItem, PodRequest, TalentItem, TLS26010Data } from '../tls26010/tls26010.model';
 
 const shallowEqual = <T extends Record<string, any>>(a: T, b: T): boolean => {
   const keys = Object.keys(a) as (keyof T)[];
   return keys.every((k: keyof T) => a[k] === b[k]);
 };
-
-/**
- * 建立模式狀態處理策略
- */
-class CreateStatusStrategy implements StatusProcessStrategy {
-  constructor(
-    private formValue: FormValue,
-    private service: TLS26010Service
-  ) { }
-
-  processEcrList(): EcrItem[] {
-    return (this.formValue.ECR_Nos || []).map((ecrNo: string) => {
-      const ecrOption = this.service.ECRMap?.get(ecrNo);
-      return {
-        ECR_No: ecrNo,
-        tlt_no: ecrOption?.Name || '',
-        tlt_name: ecrOption?.Name || '',
-        Status: 'new' as const
-      };
-    });
-  }
-
-  processTalentList(): TalentItem[] {
-    return (this.formValue.tlt_nos || []).map((tltNo: string) => {
-      const tltOption = this.service.TLTMap?.get(tltNo);
-      return {
-        tlt_no: tltNo,
-        tlt_name: tltOption?.Name || '',
-        Status: 'new' as const
-      };
-    });
-  }
-}
-
-/**
- * 修改模式狀態處理策略
- */
-class UpdateStatusStrategy implements StatusProcessStrategy {
-  constructor(
-    private formValue: FormValue,
-    private service: TLS26010Service,
-    private ecrDetailMap: Map<string, EcrItem>,
-    private tltDetailMap: Map<string, TalentItem>
-  ) { }
-
-  processEcrList(): EcrItem[] {
-    const currentSelected = new Set(this.formValue.ECR_Nos || []);
-    const originalEcrs = new Set(Array.from(this.ecrDetailMap.keys()));
-    const result: EcrItem[] = [];
-
-    // 處理刪除的項目：原始存在但表單中未選中
-    for (const originalEcrNo of originalEcrs) {
-      if (!currentSelected.has(originalEcrNo)) {
-        const originalEcr = this.ecrDetailMap.get(originalEcrNo)!;
-        result.push({
-          ...originalEcr,
-          Status: 'delete'
-        });
-      }
-    }
-
-    // 處理表單中選中的項目
-    for (const selectedEcrNo of currentSelected) {
-      if (originalEcrs.has(selectedEcrNo)) {
-        // 原始存在：判斷是否為 original 或 modify
-        const originalEcr = this.ecrDetailMap.get(selectedEcrNo)!;
-        result.push({
-          ...originalEcr,
-          Status: originalEcr.ECR_No === selectedEcrNo ? 'original' : 'modify'
-        });
-      } else {
-        // 原始不存在：new
-        const originalEcr = this.ecrDetailMap.get(selectedEcrNo);
-        result.push({
-          ECR_No: selectedEcrNo,
-          tlt_no: originalEcr?.tlt_no || '',
-          tlt_name: originalEcr?.tlt_name || '',
-          Status: 'new'
-        });
-      }
-    }
-
-    return result;
-  }
-
-  processTalentList(): TalentItem[] {
-    const currentSelected = new Set(this.formValue.tlt_nos || []);
-    const originalTalents = new Set(Array.from(this.tltDetailMap.keys()));
-    const result: TalentItem[] = [];
-
-    // 處理刪除的項目：原始存在但表單中未選中
-    for (const originalTltNo of originalTalents) {
-      if (!currentSelected.has(originalTltNo)) {
-        const originalTalent = this.tltDetailMap.get(originalTltNo)!;
-        result.push({
-          ...originalTalent,
-          Status: 'delete'
-        });
-      }
-    }
-
-    // 處理表單中選中的項目
-    for (const selectedTltNo of currentSelected) {
-      if (originalTalents.has(selectedTltNo)) {
-        // 原始存在：判斷是否為 original 或 modify
-        const originalTalent = this.tltDetailMap.get(selectedTltNo)!;
-        const currentNo = this.service.TLTMap.get(selectedTltNo)?.No || originalTalent.tlt_no;
-        result.push({
-          ...originalTalent,
-          tlt_no: currentNo,
-          tlt_name: this.service.TLTMap.get(selectedTltNo)?.Name || originalTalent.tlt_name,
-          Status: originalTalent.tlt_no === currentNo ? 'original' : 'modify'
-        });
-      } else {
-        // 原始不存在：new
-        result.push({
-          tlt_no: selectedTltNo,
-          tlt_name: this.service.TLTMap.get(selectedTltNo)?.Name || '',
-          Status: 'new'
-        });
-      }
-    }
-
-    return result;
-  }
-}
-
-/**
- * 狀態處理工廠
- */
-class StatusProcessorFactory {
-  static createStrategy(
-    isCreateMode: boolean,
-    formValue: FormValue,
-    service: TLS26010Service,
-    ecrDetailMap?: Map<string, EcrItem>,
-    tltDetailMap?: Map<string, TalentItem>
-  ): StatusProcessStrategy {
-    if (isCreateMode) {
-      return new CreateStatusStrategy(formValue, service);
-    } else {
-      if (!ecrDetailMap || !tltDetailMap) {
-        throw new Error('修改模式需要提供 ecrDetailMap 和 tltDetailMap');
-      }
-      return new UpdateStatusStrategy(formValue, service, ecrDetailMap, tltDetailMap);
-    }
-  }
-}
 
 // 預購活動檔期設定
 @Component({
@@ -287,8 +138,6 @@ export class TLS26010CRUComponent extends BasicCruPageComponent<TLS26010Data> im
   private readonly queryPayload = computed(() => ({
     building_no: this.sys3800Signal(),
     floor_no: this.sys3900Signal(),
-    sdate: this.sdateSignal()!,
-    edate: this.edateSignal()!,
   }), { equal: shallowEqual });
 
   public columns: Column[] = [
@@ -327,21 +176,62 @@ export class TLS26010CRUComponent extends BasicCruPageComponent<TLS26010Data> im
     this.service.downloadTemplate();
   }
 
+  /**
+   * 建立 CRUD 列表
+   * @param original 原始資料
+   * @param selected 選取的 ID 列表
+   * @param resolveNew 新增項目的解析函式
+   * @returns CRUD 列表
+   */
+  private buildCrudList<T extends { Status?: any; }>(
+    original: Map<string, T>,
+    selected: string[],
+    resolveNew: (id: string) => T
+  ): (T & { Status: 'new' | 'delete' | 'original' | 'modify'; })[] {
+    const result: (T & { Status: any; })[] = [];
+    const selectedSet = new Set(selected);
+
+    // 刪除：原本有但現在沒有
+    for (const [id, item] of original.entries()) {
+      if (!selectedSet.has(id)) {
+        result.push({ ...item, Status: 'delete' });
+      }
+    }
+
+    // 新增或保留
+    for (const id of selectedSet) {
+      const item = original.get(id);
+      if (!item) {
+        // 原始不存在 → 新增
+        result.push({ ...resolveNew(id), Status: 'new' });
+      } else {
+        // 原始存在 → 保留
+        result.push({ ...item, Status: 'original' });
+      }
+    }
+    return result;
+  }
+
   public onSubmit(): void {
-    const value = this.dataForm.value;
     this.handleSubmit(this.dataForm, () => {
-      const strategy = StatusProcessorFactory.createStrategy(
-        this.isFormCreateable,
-        value,
-        this.service,
+
+      const value = this.dataForm.value;
+
+      const ecr_list = this.buildCrudList(
         this.ecrDetailMap,
-        this.tltDetailMap
+        this.dataForm.value.ECR_Nos || [],
+        (id) => ({ ECR_No: id, tlt_no: '', tlt_name: '' }) as EcrItem
       );
 
-      const ecrList = strategy.processEcrList();
-      const talentList = strategy.processTalentList();
+      const talent_list = this.buildCrudList(
+        this.tltDetailMap,
+        this.dataForm.value.tlt_nos || [],
+        (id) => ({ tlt_no: id, tlt_name: '' }) as TalentItem
+      );
 
       const payload: PodRequest = {
+        ecr_list,
+        talent_list,
         pod_info: {
           ...(this.isFormCreateable ? {} : { pod_no: this.rowdata?.pod_no }),
           ...(this.isFormCreateable ? {} : { id: this.rowdata?.id }),
@@ -350,11 +240,9 @@ export class TLS26010CRUComponent extends BasicCruPageComponent<TLS26010Data> im
           pod_edate: value.pod_edate || this.dateE,
           pod_status: ApprovalStatus.未核准,
         },
-        ecr_list: ecrList,
-        talent_list: talentList,
       };
 
-      console.log(`submit:`, [value, payload]);
+      console.log(`submit:`, [value, ecr_list, talent_list, payload]);
 
       (this.isFormCreateable ? this.service.insertTLS26010(payload) : this.service.updateTLS26010(payload)).pipe(
         finalize(() => {
@@ -382,8 +270,12 @@ export class TLS26010CRUComponent extends BasicCruPageComponent<TLS26010Data> im
     });
   }
 
-  public dialogChange(event: DropdownChangeEvent): void {
-    console.log(`dialogChange:`, [event]);
+  public onDialogSubmit(): void {
+    this.ecrTableFiltered = this.df.ECR_Nos.value?.map(ecrNo =>
+      this.ecrDetailMap.get(ecrNo) || ({ ECR_No: ecrNo, tlt_no: '', tlt_name: '' } as EcrItem)) || [];
+    this.tltTableFiltered = this.df.tlt_nos.value?.map(tltNo =>
+      this.tltDetailMap.get(tltNo) || ({ tlt_no: tltNo, tlt_name: '' } as TalentItem)) || [];
+    this.onSubmit();
   }
 
   public onClear(): void {

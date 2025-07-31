@@ -8,8 +8,8 @@ import { BaseQueryResponse } from '@shared/models/api/base-api.interface';
  */
 export interface DependentDataQuery {
   data_type?: string;
-  sdate: Date;
-  edate: Date;
+  building_no?: string | null;
+  floor_no?: string | null;
 }
 
 export interface TLS26010Query {
@@ -143,16 +143,3 @@ export interface PodUpdateRequest {
 }
 
 export type PodRequest = PodCreateRequest | PodUpdateRequest;
-
-export interface FormValue {
-  ECR_Nos?: string[] | null;
-  tlt_nos?: string[] | null;
-  pod_desc?: string | null;
-  pod_sdate?: Date | null;
-  pod_edate?: Date | null;
-}
-
-export interface StatusProcessStrategy {
-  processEcrList(): EcrItem[];
-  processTalentList(): TalentItem[];
-}

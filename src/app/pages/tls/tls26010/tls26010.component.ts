@@ -4,19 +4,19 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 import { TLS26010Service } from '@service/api/tls/tls26010.service';
+import { MenubarComponent } from '@shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
+import { ButtonComponent } from '@shared/componentkit/button/button.component';
+import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/calendar-range.component';
+import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
+import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
 import { TableExpansionComponent } from '@shared/componentkit/table/table-expansion/table-expansion.component';
+import { TableComponent } from '@shared/componentkit/table/table.component';
 import { AddButton, Column } from '@shared/componentkit/table/table.model';
+import { ApprovalStatus } from '@shared/models/tls/approval-status.model';
 import { AccordionModule } from 'primeng/accordion';
 import { combineLatest, map } from 'rxjs';
 import { DependentDataQuery, TLS26010Data, TLS26010Query } from './tls26010.model';
-import { MenubarComponent } from '@shared/component/menubar/menubar.component';
-import { ButtonComponent } from '@shared/componentkit/button/button.component';
-import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
-import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
-import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/calendar-range.component';
-import { TableComponent } from '@shared/componentkit/table/table.component';
-import { ApprovalStatus } from '@shared/models/tls/approval-status.model';
 
 @Component({
   selector: 'app-tls26010',
@@ -64,18 +64,12 @@ export class TLS26010Component extends BasicQueryPageComponent<TLS26010Data> {
   public readonly addButton: AddButton[] = [
     {
       label: '核准', icon: 'pi pi-check-circle text-green-500',
-      action: (rowData: TLS26010Data) => {
-        this.service.loadApproval(rowData);
-        queueMicrotask(() => this.service.loadTLS26010(this.queryTLS26010()));
-      },
+      action: (rowData: TLS26010Data) => this.service.loadApproval(rowData),
       disabled: (rowData: TLS26010Data) => rowData.pod_status !== ApprovalStatus.未核准,
     },
     {
       label: '反核准', icon: 'pi pi-undo text-orange-500',
-      action: (rowData: TLS26010Data) => {
-        this.service.loadApproval(rowData);
-        queueMicrotask(() => this.service.loadTLS26010(this.queryTLS26010()));
-      },
+      action: (rowData: TLS26010Data) => this.service.loadApproval(rowData),
       disabled: (rowData: TLS26010Data) => rowData.pod_status !== ApprovalStatus.已核准,
     },
   ];
@@ -135,32 +129,16 @@ export class TLS26010Component extends BasicQueryPageComponent<TLS26010Data> {
 
   // 監聽館別及樓層及區域變化
   private readonly dependentDataEffect = effect(() => {
-    const build_no = this.sys3800Signal();
+    const building_no = this.sys3800Signal();
     const floor_no = this.sys3900Signal();
     const area_no = this.sys3A00Signal();
 
     if (floor_no) {
       this.queryForm.patchValue({ ecrNos: [], tltNos: [] }, { emitEvent: false });
-      this.service.loadPreorderECRList({ ...this.queryPayload(), data_type: '1' });
-      this.service.loadTLTTALENT(this.queryPayload());
+      this.service.loadPreorderECRList({ building_no, floor_no, data_type: '1' });
+      this.service.loadTLTTALENT({ building_no, floor_no });
     }
   }, { allowSignalWrites: !0 });
-
-  // API queries
-  private queryPayload = computed<DependentDataQuery>(() => {
-    const startDate = this.dateValidationSignal().dates.podSdateS;
-    const endDate = this.dateValidationSignal().dates.podEdateE;
-    const sys3800 = this.sys3800Signal();
-    const sys3900 = this.sys3900Signal();
-
-    const result = {
-      sdate: startDate || this.now,
-      edate: endDate || this.now,
-    };
-    sys3800 && (Reflect.set(result, 'building_no', sys3800));
-    sys3900 && (Reflect.set(result, 'floor_no', sys3900));
-    return result;
-  });
 
   private queryTLS26010 = computed<TLS26010Query>(() => {
     const dates = this.dateValidationSignal().dates;
