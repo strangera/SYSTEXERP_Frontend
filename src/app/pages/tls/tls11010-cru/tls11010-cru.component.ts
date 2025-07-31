@@ -228,7 +228,7 @@ this.tls11010Service.getUsageOptions().subscribe((res) => {
         this.tls11010Service.updateData(raw).subscribe({
           next: () => {
             this.messageService.successBubble(this.translate.instant('updated-successfully'));
-            this.router.navigate(['/TLS', 'TLS11010']); // ✅ 導回查詢頁
+            this.router.navigate(['account/tls', 'tls11010']); // ✅ 導回查詢頁
           },
           error: () => {
             this.messageService.errorBubble(this.translate.instant('update_failed'));
@@ -252,7 +252,7 @@ this.tls11010Service.getUsageOptions().subscribe((res) => {
     this.tls11010Service.deleteData([id]).subscribe({
       next: () => {
         this.messageService.successBubble('刪除成功');
-        this.router.navigate(['/TLS', 'TLS11010']);
+        this.router.navigate(['/tls', 'TLS11010']);
       },
       error: () => {
         this.messageService.errorBubble('刪除失敗');
