@@ -5,26 +5,23 @@
   }
 
   &::-webkit-scrollbar-track {
-    background: #ffffff;
-    border: 5px solid #ffffff;
+    background: transparent;
+    border: 5px solid transparent;
   }
 
   &::-webkit-scrollbar-thumb {
     background: #9f9f9f;
     border-radius: 12px;
-    border: 2px solid #eaeaea;
+    border: 2px solid var(--surface-d);
   }
 
   &::-webkit-scrollbar-thumb:hover {
-    background: #cccccc;
+    background: #949494;
   }
 
   .p-datatable {
     &.p-datatable-sm .p-datatable-footer {
       padding: 0;
-    }
-    .error-border {
-      border: 1px solid red;
     }
     .p-selectbutton .p-button {
       width: auto !important;
@@ -67,14 +64,17 @@
         }
         .p-multiselect-trigger-icon {
           font-size: 1.4em;
-          color: #ffffff;
+          color: var(--surface-card);
         }
         .p-multiselect {
           border-radius: 50%;
-          border: 1px solid #989898;
+          border: 1px solid var(--surface-400);
           width: 100%;
           height: 100%;
-          background-color: #989898;
+          background-color: var(--surface-400);
+        }
+        .p-multiselect-trigger {
+          flex-shrink: unset;
         }
         .ng-trigger-overlayContentAnimation {
           width: 200px;
@@ -91,10 +91,10 @@
       }
     }
 
-    .p-datatable-tbody > tr.p-highlight {
-      background-color: #c5e4fc;
-      color: #000000;
-    }
+    // .p-datatable-tbody > tr.p-highlight {
+    //   background-color: #c5e4fc;
+    //   color: #000000;
+    // }
 
     .p-selectable-row:not(.p-disabled-row):hover {
       background-color: #d5edff !important;
@@ -102,11 +102,11 @@
     }
 
     .p-disabled-row {
-      background-color: #ffffffc4 !important;
+      // background-color: #ffffffc4 !important;
       color: #495057 !important;
 
       &.p-highlight {
-        background-color: #ffffffc4 !important;
+        // background-color: #ffffffc4 !important;
       }
       // 禁用的 checkbox 樣式
       .p-checkbox {
@@ -145,12 +145,12 @@
       border-width: 0 1px 1px 1px;
     }
     .p-datatable-wrapper {
-      border: 1px solid #e9ecef;
+      border: 1px solid var(--surface-d);
     }
     // 可選行的hover效果
     .p-selectable-row:not(.p-disabled-row) {
       &:hover {
-        background-color: #e3f2fd !important;
+        background-color: var(--p-selectable-row-hover) !important;
         cursor: pointer;
       }
     }
@@ -199,25 +199,25 @@
     }
   }
   .group-header {
-    background-color: #a5b4fc !important;
+    background-color: var(--table-header-bg-group) !important;
   }
   .p-datatable .p-datatable-thead > tr > th {
     background: var(--table-header-bg);
   }
 
   .p-datatable .p-datatable-tbody > tr:nth-child(even) {
-    background: #eef2ff;
+    // background: #eef2ff;
   }
 
   .icon-button button {
-    background-color: rgba(239, 246, 255);
+    background-color: var(--icon-button-bg);
     border-radius: 5px;
-    border: 1px solid rgb(212 212 212);
+    border: var(--icon-button-border);
     &:hover {
       background-color: rgba(0, 123, 255, 0.2);
     }
     span.p-button-icon.pi {
-      color: #007bff;
+      color: var(--icon-button-span);
     }
   }
 }

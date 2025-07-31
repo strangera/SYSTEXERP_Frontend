@@ -16,14 +16,14 @@ interface ButtonConfig {
   permissionCode?: string; // 加上這個，表示 permissionCode 可能是 string 或 undefined
 }
 @Component({
-    selector: 'app-button',
-    templateUrl: './button.component.html',
-    styleUrl: './button.component.scss',
-    standalone: true,
-    imports: [Button]
+  selector: 'app-button',
+  templateUrl: './button.component.html',
+  styleUrl: './button.component.scss',
+  standalone: true,
+  imports: [Button]
 })
 export class ButtonComponent implements OnInit, OnDestroy {
-  @Input() btnType: 'default' | 'create' | 'edit' | 'delete' | 'query' | 'cancel' | 'clear' | 'submit' | 'next' | 'previous' | 'smartclear' | 'report' | 'back' | 'CSV'  | 'textclear' = 'default';
+  @Input() btnType: 'default' | 'create' | 'edit' | 'delete' | 'query' | 'cancel' | 'clear' | 'submit' | 'next' | 'previous' | 'smartclear' | 'report' | 'back' | 'CSV' | 'textclear' = 'default';
   @Input() loading = false;
   @Output() clickEvent = new EventEmitter<void>();
   // --- 以下為按鈕配置 ---
@@ -43,19 +43,19 @@ export class ButtonComponent implements OnInit, OnDestroy {
   private ngUnsubscribe = new Subject<void>();
 
   private readonly buttonConfig: Record<string, ButtonConfig> = {
-    default: { label: '標籤', icon: undefined, class: '', disabled: false, type: 'button', severity: 'info' },           // 預設
-    create: { label: '新增', icon: 'pi pi-plus', class: '', disabled: false, type: 'button', severity: 'info', permissionCode: '20' },   // 新增
-    clear: { label: '清除', icon: undefined, class: 'button-clear', text: true, disabled: false, type: 'reset', severity: 'info' },                   // 清除
+    default: { label: '標籤', icon: undefined, class: '', disabled: false, type: 'button', severity: undefined },           // 預設
+    create: { label: '新增', icon: 'pi pi-plus', class: '', disabled: false, type: 'button', severity: undefined, permissionCode: '20' },   // 新增
+    clear: { label: '清除', icon: undefined, class: 'button-clear', text: true, disabled: false, type: 'reset', severity: undefined },                   // 清除
     cancel: { label: '清除', icon: 'pi pi-times', class: 'button-cancel', outlined: true, disabled: false, type: 'button', severity: 'secondary' },       // 取消
     delete: { label: '刪除', icon: 'pi pi-trash', class: 'p-button-danger', disabled: false, type: 'button', severity: 'danger', permissionCode: '40' },// 刪除
-    edit: { label: '編輯', icon: 'pi pi-pencil', class: '', disabled: false, type: 'button', severity: 'info', permissionCode: '30' },     // 編輯
-    query: { label: '查詢', icon: 'pi pi-search', class: '', disabled: false, type: 'submit', severity: 'info', permissionCode: '10' },   // 查詢
-    submit: { label: '確認', icon: 'pi pi-check', class: '', disabled: false, type: 'submit', severity: 'info' },            // 確認
-    next: { label: '下一步', icon: 'pi pi-arrow-right', class: '', disabled: false, type: 'button', severity: 'info' },        // 下一步
-    previous: { label: '上一步', icon: 'pi pi-arrow-left', class: 'button-previous', outlined: true, disabled: false, type: 'button', severity: 'info' }, // 上一步
+    edit: { label: '編輯', icon: 'pi pi-pencil', class: '', disabled: false, type: 'button', severity: undefined, permissionCode: '30' },     // 編輯
+    query: { label: '查詢', icon: 'pi pi-search', class: '', disabled: false, type: 'submit', severity: undefined, permissionCode: '10' },   // 查詢
+    submit: { label: '確認', icon: 'pi pi-check', class: '', disabled: false, type: 'submit', severity: undefined },            // 確認
+    next: { label: '下一步', icon: 'pi pi-arrow-right', class: '', disabled: false, type: 'button', severity: undefined },        // 下一步
+    previous: { label: '上一步', icon: 'pi pi-arrow-left', class: 'button-previous', outlined: true, disabled: false, type: 'button', severity: undefined }, // 上一步
     back: { label: '離開', icon: 'pi pi-arrow-left', class: 'button-back', outlined: true, disabled: false, type: 'button', severity: 'secondary' },      // 離開
     smartclear: { label: '清除', icon: 'pi pi-times', class: 'button-smart-clear', outlined: true, disabled: false, type: 'button', severity: 'secondary' }, // 智慧清除
-    report: { label: '報表模式', icon: 'pi pi-file', class: '', disabled: false, type: 'button', severity: 'info' } ,// 報表模式
+    report: { label: '報表模式', icon: 'pi pi-file', class: '', disabled: false, type: 'button', severity: undefined },// 報表模式
     textclear: { label: '清除', icon: undefined, class: 'p-button-text p-button-sm', text: true, disabled: false, type: 'button', severity: null },  //無背景按鈕
   };
 

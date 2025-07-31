@@ -21,7 +21,7 @@
   </div>
 
   <div #topbarmenu class="layout-topbar-menu lg:flex lg:flex-column justify-content-center align-items-end"
-    [ngClass]="{'layout-topbar-menu-mobile-active': layoutService.state.profileSidebarVisible}">
+    [ngClass]="{'layout-topbar-menu-mobile-active': layoutService.isProfileSidebarVisible()}">
     <div
       class="flex flex-row align-items-center font-bold text-primary justify-content-center col-flex gap-2 m-1 text-sm">
       <i class="pi pi-clock text-sm"></i>
@@ -49,8 +49,8 @@
               [scrollable]="true" [scrollHeight]="'30rem'">
               <ng-template pTemplate="header">
                 <tr>
-                  <th *ngIf="editingFavorites" class="p-1 text-center bg-white"><p-tableHeaderCheckbox /></th>
-                  <th *ngIf="editingFavorites" class="p-1 text-center bg-white">排序</th>
+                  <th *ngIf="editingFavorites" class="p-1 text-center"><p-tableHeaderCheckbox /></th>
+                  <th *ngIf="editingFavorites" class="p-1 text-center">排序</th>
                   <th *ngIf="!editingFavorites"
                     class="border-round-xl p-0 flex justify-content-between align-items-center">
                     <p-button class="w-full opacity-100" styleClass="w-full border-round-lg opacity-100" label="我的最愛"

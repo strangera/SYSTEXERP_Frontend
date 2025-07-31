@@ -1,4 +1,4 @@
-<div class="layout-wrapper" [ngClass]="containerClass" *ngIf="user">
+<div class="layout-wrapper" [ngClass]="containerClass()" *ngIf="user">
   <div #appTopbarDiv>
     <app-topbar (topMenuClick)="selectedTopMenuProgNo = $event"></app-topbar>
   </div>
@@ -9,8 +9,9 @@
           <i class="pi text-2xl cursor-pointer" [ngClass]="{'pi-sun': !isDarkMode(), 'pi-moon': isDarkMode()}"
             style="color: var(--text-color);"></i>
         </button>
-        <button type="button" class="p-link layout-sidebar-close-button lg:hidden" (click)="onMaskClick()">
-          <i class="pi pi-times text-white text-2xl cursor-pointer" style="color: var(--text-color);"></i>
+        <button type="button" class="p-link layout-sidebar-close-button lg:hidden"
+          (click)="layoutService.onOutsideClick()">
+          <i class="pi pi-times text-2xl cursor-pointer" style="color: var(--text-color);"></i>
         </button>
       </div>
     </div>
@@ -21,5 +22,6 @@
       <router-outlet></router-outlet>
     </div>
   </div>
-  <div class="layout-mask" tabindex="0" (click)="onMaskClick()" (keydown.enter)="onMaskClick()"></div>
+  <div class="layout-mask" tabindex="0" (click)="layoutService.onOutsideClick()"
+    (keydown.enter)="layoutService.onOutsideClick()"></div>
 </div>

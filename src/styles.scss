@@ -1,6 +1,4 @@
 $gutter: 1rem; //for primeflex grid system
-
-@import "assets/layout/styles/layout/layout.scss";
 // primeNg editor quill
 @import "../node_modules/quill/dist/quill.core.css";
 @import "../node_modules/quill/dist/quill.snow.css";
@@ -82,12 +80,16 @@ body {
   opacity: 0.35; /* Firefox */
 }
 
+.p-datepicker {
+  min-width: 170px;
+}
+
 input[disabled],
 .p-dropdown.p-disabled,
 .p-component:disabled,
 .p-component.p-disabled {
-  background-color: #d6d6d6 !important;
-  color: #495057;
+  background-color: var(--surface-300) !important;
+  color: var(--surface-600);
   font-weight: bold;
   cursor: not-allowed;
   border: 1px solid #e9ecef;
@@ -95,11 +97,11 @@ input[disabled],
   pointer-events: none;
   span,
   p {
-    color: #000;
+    color: var(--text-color);
   }
 
   span.p-button-icon {
-    color: #898989 !important;
+    color: var(--surface-400) !important;
   }
 }
 
@@ -152,10 +154,6 @@ input[disabled],
   }
 }
 
-.p-inputtext,
-.p-dropdown {
-  background-color: transparent;
-}
 @media print {
   body * {
     visibility: hidden;

@@ -26,9 +26,13 @@ import { TranslateModule } from '@ngx-translate/core';
 })
 export class TLS27040CRUComponent extends BasicCruPageComponent<any> implements OnInit {
   dataForm = this.formBuilder.nonNullable.group({
-    cashRegisterNumber: [, Validators.required],  // 收銀機號
-    transactionSerialNumber: [, Validators.required],  // 交易流水號
-    counterID: [, Validators.required],  // 專櫃編號
+    ECR_No: ['', Validators.required],  // 收銀機號
+    TXN_No: ['', Validators.required],  // 交易流水號
+    TLT_No: ['', Validators.required],  // 專櫃編號
+    NCML_PayCrdType: [null],    // 卡別
+    NCML_TxnType: [null],         // 銷售狀況
+    NCML_TxnAmt: [null, [Validators.max(9999999999)]],       // 交易金額起 decimal 12, 2
+    CTBC_PayDate: [null, Validators.required],  // 請款日期
     salesCondition: [, Validators.required],  // 銷售狀況
     cardCategory: [, Validators.required],  // 卡別
     amount: [, Validators.required],  // 金額

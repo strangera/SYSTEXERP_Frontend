@@ -49,7 +49,9 @@
       background-color: var(
         --blue-800
       ); /* 使用你定義的藍色 800 作為 active 顏色，可根據喜好調整 */
-
+      .p-button-icon {
+        color: white;
+      }
       .p-button-label {
         color: white;
       }
