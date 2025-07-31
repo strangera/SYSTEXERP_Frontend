@@ -16,6 +16,7 @@ import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { CheckboxModule } from 'primeng/checkbox';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { Table2Component } from '../../../shared/componentkit/table2/table2.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { TranslateModule } from '@ngx-translate/core';
 import { TLS2B030Service } from '../../../service/api/tls/tls2-b030.service';
@@ -44,8 +45,10 @@ import { CounterNameService } from '../../../service/basic/counter-name.service'
     DropdownComponent,
     CheckboxModule,
     ButtonComponent,
-    TableComponent,
+    Table2Component,
+    
     TranslateModule,
+    TableComponent,
   ],
 })
 export class TLS2B030Component extends BasicQueryPageComponent<any> {

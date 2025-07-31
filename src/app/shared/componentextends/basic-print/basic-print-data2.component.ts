@@ -5,9 +5,9 @@ import { ChangeDetectorRef, inject, Injectable } from '@angular/core';
 import { QueryStateService } from '../../service/query-state.service';
 import { TableService } from '../../componentkit/table/table.service';
 import { HttpResponse } from '@angular/common/http';
-import { Column } from '../../componentkit/table/table.model';
+import { Column2 } from '../../componentkit/table2/table2.model';
 import { AuthService } from '../../../service/system/auth.service';
-import { TableExport } from '../../componentkit/table/table-export/table-export.component';
+import { TableExport2 } from '../../componentkit/table2/table-export2/table-export2.component';
 import { REPORT_TITLES } from '../../componentkit/table/report-titles';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 
@@ -26,10 +26,10 @@ export class BasicPrintData2Component {
   tableService = inject(TableService);
   authService = inject(AuthService);
 
-  exportPDFDownload(event: TableExport, columns: Column[], apiUrl?: string): void {
+  exportPDFDownload(event: TableExport2, columns: Column2[], apiUrl?: string): void {
     const ProgNo = this.currentPage.currentPageProgNoSubject.getValue() as string;
     const funInfo = this.authService.getUserPermissions(ProgNo); // 取得權限
-    const queryState = this.queryState.getQueryState(ProgNo);
+    const queryState = this.queryState.getQueryState(`query${ProgNo}`);
     const userInfo = this.authService.currentUserValue;
     const today = new Date();
     const year = today.getFullYear();
@@ -79,45 +79,16 @@ export class BasicPrintData2Component {
         }
         this.exportDialog = false;
       },
-error: (err: any) => {
-  console.error('❌ PDF 匯出失敗:', err);
-
-  // 明確檢查是否有 status
-  const status = err?.status ?? '未提供';
-
-  // Blob 錯誤處理
-  if (err?.error instanceof Blob) {
-    const reader = new FileReader();
-    reader.onload = () => {
-      const errorText = reader.result as string;
-      console.error(`⚠️ 錯誤訊息內容（Blob 轉文字）：`, errorText);
-      alert(`PDF 匯出失敗（狀態碼: ${status}）：\n${errorText}`);
-    };
-    reader.readAsText(err.error);
-  }
-
-  // string 錯誤處理
-  else if (typeof err?.error === 'string') {
-    console.error(`⚠️ 錯誤訊息內容（文字）:`, err.error);
-    alert(`PDF 匯出失敗（狀態碼: ${status}）：\n${err.error}`);
-  }
-
-  // 沒有錯誤內容時 fallback
-  else {
-    console.error('❓ 無法辨識錯誤格式：', err);
-    alert(`PDF 匯出失敗：伺服器回應 406（格式錯誤），請確認查詢條件與欄位定義正確。`);
-  }
-
-  this.exportDialog = false;
-}
-
-
+      error: (err: any) => {
+        console.error('Error downloading PDF:', err);
+        this.exportDialog = false;
+      }
     });
   }
-  exportExcelDownload(event: TableExport, columns: Column[], apiUrl?: string): void {
+  exportExcelDownload(event: TableExport2, columns: Column2[], apiUrl?: string): void {
     const ProgNo = this.currentPage.currentPageProgNoSubject.getValue() as string;
     const funInfo = this.authService.getUserPermissions(ProgNo); // 取得權限
-    const queryState = this.queryState.getQueryState(ProgNo);
+    const queryState = this.queryState.getQueryState(`query${ProgNo}`);
     const userInfo = this.authService.currentUserValue;
     const today = new Date();
     const year = today.getFullYear();
@@ -174,6 +145,4 @@ error: (err: any) => {
   toggleVisibility(): void {
     this.IsPrint = !this.IsPrint;
   }
-
-  
 }
