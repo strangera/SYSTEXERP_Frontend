@@ -22,25 +22,25 @@ interface GroupedDataItem {
 }
 
 @Component({
-    selector: 'app-tls23120-cru',
-    templateUrl: './tls23120-cru.component.html',
-    styleUrls: ['./tls23120-cru.component.scss'],
-    standalone: true,
-    imports: [
-        MenubarComponent,
-        DialogModule,
-        FormsModule,
-        ButtonDirective,
-        NgFor,
-        NgIf,
-        TableModule,
-        PrimeTemplate,
-        NgClass,
-        NgSwitch,
-        NgSwitchCase,
-        NgSwitchDefault,
-        DatePipe,
-    ],
+  selector: 'app-tls23120-cru',
+  templateUrl: './tls23120-cru.component.html',
+  styleUrls: ['./tls23120-cru.component.scss'],
+  standalone: true,
+  imports: [
+    MenubarComponent,
+    DialogModule,
+    FormsModule,
+    ButtonDirective,
+    NgFor,
+    NgIf,
+    TableModule,
+    PrimeTemplate,
+    NgClass,
+    NgSwitch,
+    NgSwitchCase,
+    NgSwitchDefault,
+    DatePipe,
+  ],
 })
 export class TLS23120CRUComponent extends BasicCruPageComponent<any> {
   // 原始欄位與資料
@@ -234,9 +234,9 @@ export class TLS23120CRUComponent extends BasicCruPageComponent<any> {
     this.showGroupedBody = !this.showGroupedBody;
   }
 
-getRowIndex(groupIndex: number, rowIndex: number): number {
-  return rowIndex + 1; // 不使用 groupIndex，直接從 1 開始
-}
+  getRowIndex(groupIndex: number, rowIndex: number): number {
+    return rowIndex + 1; // 不使用 groupIndex，直接從 1 開始
+  }
 
   getSubtotal(group: any[], field: string): string {
     const sum = group.reduce((acc, row) => {
@@ -251,23 +251,23 @@ getRowIndex(groupIndex: number, rowIndex: number): number {
     return typeof value === 'number' ? value.toLocaleString('en-US') : '0';
   }
 
-printPage(): void {
-  const printContents = document.getElementById('print-section')?.innerHTML;
-  if (!printContents) {
-    console.warn('⚠️ 找不到要列印的區塊');
-    return;
-  }
+  printPage(): void {
+    const printContents = document.getElementById('print-section')?.innerHTML;
+    if (!printContents) {
+      console.warn('⚠️ 找不到要列印的區塊');
+      return;
+    }
 
-  const popupWin = window.open('', '_blank', 'top=0,left=0,height=100%,width=auto');
-  if (!popupWin) return;
+    const popupWin = window.open('', '_blank', 'top=0,left=0,height=100%,width=auto');
+    if (!popupWin) return;
 
-  popupWin.document.open();
-  popupWin.document.write(`
+    popupWin.document.open();
+    popupWin.document.write(`
     <html>
       <head>
         <title>列印報表</title>
         <style>
-          body { font-family: 'NotoSansTC', sans-serif; padding: 20px; }
+          body { font-family: 'Noto Serif TC', sans-serif; padding: 20px; }
           table, th, td {
             border: 1px solid black;
             border-collapse: collapse;
@@ -283,8 +283,8 @@ printPage(): void {
       </body>
     </html>
   `);
-  popupWin.document.close();
-}
+    popupWin.document.close();
+  }
 
 
   splitData(): void {
@@ -328,167 +328,167 @@ printPage(): void {
     this.location.back();
   }
   exportPDF(orientation: 'p' | 'l' = 'p'): void {
-  const columnCount = this.selectedColumns.length;
-  const columnWidth = 80;
-  const customWidth = Math.max(595, columnCount * columnWidth);
+    const columnCount = this.selectedColumns.length;
+    const columnWidth = 80;
+    const customWidth = Math.max(595, columnCount * columnWidth);
 
-  const doc = new jsPDF({
-    orientation,
-    unit: 'pt',
-    format: [customWidth, 842],
-  });
+    const doc = new jsPDF({
+      orientation,
+      unit: 'pt',
+      format: [customWidth, 842],
+    });
 
-  const marginLeft = 40;
-  let currentY = 40;
-  const pageWidth = doc.internal.pageSize.getWidth();
+    const marginLeft = 40;
+    let currentY = 40;
+    const pageWidth = doc.internal.pageSize.getWidth();
+    doc.addFont('assets/font/NotoSerifTC-VariableFont_wght.ttf', 'Noto Serif TC', 'normal');
+    doc.setFont('Noto Serif TC');
+    doc.setFontSize(14);
+    doc.text(this.reportTitle, pageWidth / 2, currentY, { align: 'center' });
+    currentY += 20;
 
-  doc.setFont('NotoSansTC');
-  doc.setFontSize(14);
-  doc.text(this.reportTitle, pageWidth / 2, currentY, { align: 'center' });
-  currentY += 20;
-
-  doc.setFontSize(10);
-  doc.setFont('NotoSansTC');
-  doc.text(`${this.dateRangeLabel}：${this.formatDate(this.dateStart)} ~ ${this.formatDate(this.dateEnd)}`, marginLeft, currentY);
-  doc.text(`列印時間：${this.printedAt}`, pageWidth - marginLeft, currentY, { align: 'right' });
-  currentY += 14;
-
-  this.groupedData.forEach((group, groupIndex) => {
     doc.setFontSize(10);
-    doc.setFont('NotoSansTC');
-// 設定左右欄位的起始位置
-const leftX = marginLeft;
-const rightX = pageWidth / 2 + 10;
+    doc.setFont('Noto Serif TC');
+    doc.text(`${this.dateRangeLabel}：${this.formatDate(this.dateStart)} ~ ${this.formatDate(this.dateEnd)}`, marginLeft, currentY);
+    doc.text(`列印時間：${this.printedAt}`, pageWidth - marginLeft, currentY, { align: 'right' });
+    currentY += 14;
 
-// 每行高度
-const lineHeight = 14;
+    this.groupedData.forEach((group, groupIndex) => {
+      doc.setFontSize(10);
+      doc.setFont('Noto Serif TC');
+      // 設定左右欄位的起始位置
+      const leftX = marginLeft;
+      const rightX = pageWidth / 2 + 10;
 
-// 第一行
-doc.text(`大分類：${group.rows[0]?.bus_type ?? '－'} / ${group.rows[0]?.bus_type_name ?? '－'}`, leftX, currentY);
-doc.text(`銷售日期：${this.formatDate(group.rows[0]?.TXN_DATE)}`, rightX, currentY);
-currentY += lineHeight;
+      // 每行高度
+      const lineHeight = 14;
 
-// 第二行（移除 專櫃 / 抽成類別）
-doc.text(`製表日期：${this.printedAt}`, leftX, currentY);
-doc.text(`區域：${group.rows[0]?.AREA_NO ?? '－'}`, rightX, currentY);
-currentY += lineHeight;
+      // 第一行
+      doc.text(`大分類：${group.rows[0]?.bus_type ?? '－'} / ${group.rows[0]?.bus_type_name ?? '－'}`, leftX, currentY);
+      doc.text(`銷售日期：${this.formatDate(group.rows[0]?.TXN_DATE)}`, rightX, currentY);
+      currentY += lineHeight;
 
-// 第三行
-doc.text(`樓層：${group.rows[0]?.FLOOR_NO ?? '－'}`, leftX, currentY);
-doc.text(`抽成類別：${group.rows[0]?.TLT_ID ?? '無'}`, rightX, currentY); // 紅色
-currentY += lineHeight;
+      // 第二行（移除 專櫃 / 抽成類別）
+      doc.text(`製表日期：${this.printedAt}`, leftX, currentY);
+      doc.text(`區域：${group.rows[0]?.AREA_NO ?? '－'}`, rightX, currentY);
+      currentY += lineHeight;
 
-// 第四行
-doc.text(`交易總件數：${group.rows.length ?? 0}`, leftX, currentY);
-doc.text(`退貨件數：${group.rows[0]?.return_qty ?? 0}    退貨金額：${group.rows[0]?.return_amt ?? 0}`, rightX, currentY);
-currentY += 20;
+      // 第三行
+      doc.text(`樓層：${group.rows[0]?.FLOOR_NO ?? '－'}`, leftX, currentY);
+      doc.text(`抽成類別：${group.rows[0]?.TLT_ID ?? '無'}`, rightX, currentY); // 紅色
+      currentY += lineHeight;
+
+      // 第四行
+      doc.text(`交易總件數：${group.rows.length ?? 0}`, leftX, currentY);
+      doc.text(`退貨件數：${group.rows[0]?.return_qty ?? 0}    退貨金額：${group.rows[0]?.return_amt ?? 0}`, rightX, currentY);
+      currentY += 20;
 
 
-    // 欄位定義
-    const tableColumns = this.selectedColumns.map(col => ({
-      header: col.header,
-      dataKey: col.field,
-    }));
+      // 欄位定義
+      const tableColumns = this.selectedColumns.map(col => ({
+        header: col.header,
+        dataKey: col.field,
+      }));
 
-    // 資料列
-    const tableData = group.rows.map((row, rowIndex) => {
-      const rowData: any = {};
-      this.selectedColumns.forEach((col) => {
-        if (col.field === '__index') {
-          rowData[col.field] = this.getRowIndex(groupIndex, rowIndex);
-        } else {
-          rowData[col.field] = col.format ? col.format(row[col.field]) : row[col.field];
-        }
+      // 資料列
+      const tableData = group.rows.map((row, rowIndex) => {
+        const rowData: any = {};
+        this.selectedColumns.forEach((col) => {
+          if (col.field === '__index') {
+            rowData[col.field] = this.getRowIndex(groupIndex, rowIndex);
+          } else {
+            rowData[col.field] = col.format ? col.format(row[col.field]) : row[col.field];
+          }
+        });
+        return rowData;
       });
-      return rowData;
+
+      // 小計列
+      if (group.showSubtotal) {
+        const subtotalRow: any = {};
+        this.selectedColumns.forEach((col) => {
+          if (col.field === '__index') {
+            subtotalRow[col.field] = '小計';
+          } else if (this.subtotalFields.includes(col.field)) {
+            subtotalRow[col.field] = this.getSubtotal(group.rows, col.field);
+          } else {
+            subtotalRow[col.field] = '';
+          }
+        });
+        tableData.push(subtotalRow);
+      }
+
+      // 總計列
+      if (group.showTotal) {
+        const totalRow: any = {};
+        this.selectedColumns.forEach((col) => {
+          if (col.field === '__index') {
+            totalRow[col.field] = '總計';
+          } else if (this.subtotalFields.includes(col.field)) {
+            totalRow[col.field] = this.getSubtotal(group.rows, col.field);
+          } else {
+            totalRow[col.field] = '';
+          }
+        });
+        tableData.push(totalRow);
+      }
+
+      // 繪製表格
+      autoTable(doc, {
+        startY: currentY,
+        head: [tableColumns.map(col => col.header)],
+        body: tableData.map(row => tableColumns.map(col => row[col.dataKey] ?? '')),
+        styles: {
+          font: 'Noto Serif TC',
+          fontSize: 9,
+          halign: 'center',
+          valign: 'middle',
+        },
+        headStyles: {
+          font: 'Noto Serif TC',
+          fontStyle: 'normal',
+          fontSize: 10,
+          fillColor: [212, 222, 254],
+          textColor: [0, 0, 0],
+          halign: 'center',
+        },
+        footStyles: {
+          font: 'Noto Serif TC',
+          fontStyle: 'normal',
+          fontSize: 10,
+          fillColor: [212, 222, 254],
+          textColor: [0, 0, 0],
+          halign: 'center',
+        },
+        theme: 'grid',
+        margin: { left: marginLeft, right: marginLeft },
+        didDrawCell: (data) => {
+          const rowIndex = data.row.index;
+          const isSubtotal = group.showSubtotal && rowIndex === group.rows.length;
+          const isTotal = group.showTotal && (
+            group.showSubtotal ? rowIndex === group.rows.length + 1 : rowIndex === group.rows.length
+          );
+
+          if (isSubtotal) {
+            data.cell.styles.fillColor = [255, 245, 204]; // 淡黃色
+            data.cell.styles.fontStyle = 'bold';
+          }
+
+          if (isTotal) {
+            data.cell.styles.fillColor = [204, 229, 255]; // 淡藍色
+            data.cell.styles.fontStyle = 'bold';
+          }
+        },
+        didDrawPage: (data) => {
+          if (data.cursor) {
+            currentY = data.cursor.y + 30;
+          }
+        },
+      });
     });
 
-    // 小計列
-    if (group.showSubtotal) {
-      const subtotalRow: any = {};
-      this.selectedColumns.forEach((col) => {
-        if (col.field === '__index') {
-          subtotalRow[col.field] = '小計';
-        } else if (this.subtotalFields.includes(col.field)) {
-          subtotalRow[col.field] = this.getSubtotal(group.rows, col.field);
-        } else {
-          subtotalRow[col.field] = '';
-        }
-      });
-      tableData.push(subtotalRow);
-    }
-
-    // 總計列
-    if (group.showTotal) {
-      const totalRow: any = {};
-      this.selectedColumns.forEach((col) => {
-        if (col.field === '__index') {
-          totalRow[col.field] = '總計';
-        } else if (this.subtotalFields.includes(col.field)) {
-          totalRow[col.field] = this.getSubtotal(group.rows, col.field);
-        } else {
-          totalRow[col.field] = '';
-        }
-      });
-      tableData.push(totalRow);
-    }
-
-    // 繪製表格
-    autoTable(doc, {
-      startY: currentY,
-      head: [tableColumns.map(col => col.header)],
-      body: tableData.map(row => tableColumns.map(col => row[col.dataKey] ?? '')),
-      styles: {
-        font: 'NotoSansTC',
-        fontSize: 9,
-        halign: 'center',
-        valign: 'middle',
-      },
-      headStyles: {
-        font: 'NotoSansTC',
-        fontStyle: 'normal',
-        fontSize: 10,
-        fillColor: [212, 222, 254],
-        textColor: [0, 0, 0],
-        halign: 'center',
-      },
-      footStyles: {
-        font: 'NotoSansTC',
-        fontStyle: 'normal',
-        fontSize: 10,
-        fillColor: [212, 222, 254],
-        textColor: [0, 0, 0],
-        halign: 'center',
-      },
-      theme: 'grid',
-      margin: { left: marginLeft, right: marginLeft },
-      didDrawCell: (data) => {
-        const rowIndex = data.row.index;
-        const isSubtotal = group.showSubtotal && rowIndex === group.rows.length;
-        const isTotal = group.showTotal && (
-          group.showSubtotal ? rowIndex === group.rows.length + 1 : rowIndex === group.rows.length
-        );
-
-        if (isSubtotal) {
-          data.cell.styles.fillColor = [255, 245, 204]; // 淡黃色
-          data.cell.styles.fontStyle = 'bold';
-        }
-
-        if (isTotal) {
-          data.cell.styles.fillColor = [204, 229, 255]; // 淡藍色
-          data.cell.styles.fontStyle = 'bold';
-        }
-      },
-      didDrawPage: (data) => {
-        if (data.cursor) {
-          currentY = data.cursor.y + 30;
-        }
-      },
-    });
-  });
-
-  doc.save(`報表_${new Date().toISOString()}.pdf`);
-}
+    doc.save(`報表_${new Date().toISOString()}.pdf`);
+  }
 
   formatDate(dateStr: string): string {
     if (!dateStr) return '';

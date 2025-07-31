@@ -15,7 +15,7 @@ import { InputTextRangeComponent } from '../../../shared/componentkit/input-text
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { TranslateModule } from '@ngx-translate/core';
-import { ValidationService } from '@shared/service';
+import { ValidationService } from '@shared/service/validation.service';
 
 @Component({
   selector: 'app-fin11030',

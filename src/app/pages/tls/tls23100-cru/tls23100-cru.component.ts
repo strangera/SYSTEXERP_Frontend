@@ -1,7 +1,7 @@
 import { Component } from '@angular/core';
 import { Location } from '@angular/common';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
-import '../../../../assets/font/NotoSansTC-VariableFont_wght-normal';
+
 import { PdfService } from '../../../service/basic/pdf.service';
 import { Tls11010Service } from '../../../service/api/tls/tls11010.service';
 import { ColumnLabelService } from '../../../service/basic/column-label.service';
@@ -9,11 +9,11 @@ import { MenubarComponent } from '../../../shared/component/menubar/menubar.comp
 import { ReportTableGroupComponent } from '../../../shared/componentkit/report-table-group/report-table-group.component';
 
 @Component({
-    selector: 'app-tls23100-cru',
-    templateUrl: './tls23100-cru.component.html',
-    styleUrls: ['./tls23100-cru.component.scss'],
-    standalone: true,
-    imports: [MenubarComponent, ReportTableGroupComponent]
+  selector: 'app-tls23100-cru',
+  templateUrl: './tls23100-cru.component.html',
+  styleUrls: ['./tls23100-cru.component.scss'],
+  standalone: true,
+  imports: [MenubarComponent, ReportTableGroupComponent]
 })
 export class TLS23100CRUComponent extends BasicCruPageComponent<any> {
   data: any[] = [];
@@ -59,17 +59,17 @@ export class TLS23100CRUComponent extends BasicCruPageComponent<any> {
     });
 
     this.columns = [
-    { field: 'ECR_No', header: '收銀機號', visible: true },
-    { field: 'TXN_No', header: '交易序號', visible: true },
-    { field: 'tlt_no', header: '專櫃編號', visible: true, style: 'text-left' },
-    { field: 'tlt_name', header: '櫃位名稱', visible: true, style: 'text-left' },
-    { field: 'PAY_NO', header: '付款別', visible: true},
-    { field: 'PAY_NAME', header: '付款名稱', visible: true},
-    { field: 'CRD_Type', header: '信用卡卡別', visible: true },
-    { field: 'CRD_Name', header: '信用卡', visible: true },
-    { field: 'CRD_No', header: '信用卡卡號', visible: true },
-    { field: 'TXN_PayAmt', header: '金額', visible: true, style: 'text-right', format: (val: number) => val?.toLocaleString('en-US') || '0' },
-  ];
+      { field: 'ECR_No', header: '收銀機號', visible: true },
+      { field: 'TXN_No', header: '交易序號', visible: true },
+      { field: 'tlt_no', header: '專櫃編號', visible: true, style: 'text-left' },
+      { field: 'tlt_name', header: '櫃位名稱', visible: true, style: 'text-left' },
+      { field: 'PAY_NO', header: '付款別', visible: true },
+      { field: 'PAY_NAME', header: '付款名稱', visible: true },
+      { field: 'CRD_Type', header: '信用卡卡別', visible: true },
+      { field: 'CRD_Name', header: '信用卡', visible: true },
+      { field: 'CRD_No', header: '信用卡卡號', visible: true },
+      { field: 'TXN_PayAmt', header: '金額', visible: true, style: 'text-right', format: (val: number) => val?.toLocaleString('en-US') || '0' },
+    ];
 
 
     this.initializePage('TLS23100', this.dataForm);

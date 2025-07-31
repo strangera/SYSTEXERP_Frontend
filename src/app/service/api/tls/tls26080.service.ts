@@ -2,11 +2,11 @@ import { HttpClient } from '@angular/common/http';
 import { effect, Injectable, signal } from '@angular/core';
 import { TLS26010Data } from '@pages/tls/tls26010/tls26010.model';
 import { CampaignData, mockCampaignData } from '@pages/tls/tls26080-cru/ts26080-cru.model';
-import { CampaignAccountingType, CampaignAccountingTypes, mockQueryTLS26080, TLS26080Data, TLS26080Query } from '@pages/tls/tls26080/tls26080.model';
+import { CampaignAccountingType, CampaignAccountingTypes, TLS26080Data, TLS26080Query } from '@pages/tls/tls26080/tls26080.model';
 import { ErrorHandlerService } from '@service/system/error-handler.service';
 import { NotificationService } from '@shared/component/notification-message/notification.service';
-import { ApprovalStatus } from '@shared/models';
 import { BaseQueryResponse, DropdownOption } from '@shared/models/api/base-api.interface';
+import { ApprovalStatus } from '@shared/models/tls/approval-status.model';
 import { catchError, EMPTY, finalize, of, take, tap } from 'rxjs';
 import { environment } from 'src/environments/environment';
 
@@ -62,11 +62,7 @@ export class TLS26080Service {
   loadTLS26080(query: TLS26080Query = {}): void {
     if (this.tableLoading) return void (this.tableLoading = !1);
     this.tableLoading = !0;
-    const api = mock
-      ? mockQueryTLS26080
-      : this.http.post<BaseQueryResponse<TLS26080Data>>(`${apiUrl}/TLS0000/TLS2000/queryTLS26080`, query);
-
-    api.pipe(
+    this.http.post<BaseQueryResponse<TLS26080Data>>(`${apiUrl}/TLS0000/TLS2000/queryTLS26080`, query).pipe(
       take(1),
       tap(response => this.TLS26080Data.set(response.Data.map(item => ({
         ...item,
@@ -102,7 +98,7 @@ export class TLS26080Service {
     const id = data.pod_no;
 
     this.http.post<BaseQueryResponse<{ Status: ApprovalStatus; }>>(
-      `${apiUrl}/TLS0000/TLS2000${data.pod_status === ApprovalStatus.未核准 ? '/approvalTLS26010' : '/disapprovalTLS26010'}`,
+      `${apiUrl}/TLS0000/TLS2000${data.pod_status === ApprovalStatus.未核准 ? '/approveTLS26010' : '/disapproveTLS26010'}`,
       { id }).pipe(
         take(1),
         tap(() => this.approvalData.set(ApprovalStatus.未核准)),

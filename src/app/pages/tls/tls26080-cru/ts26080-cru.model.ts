@@ -1,4 +1,4 @@
-import { BaseQueryResponse } from "@shared/models";
+import { BaseQueryResponse } from "@shared/models/api/base-api.interface";
 
 // 活動資料模型
 export interface ActivityData {

@@ -1,7 +1,7 @@
 import { Component } from '@angular/core';
 import { Location } from '@angular/common';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
-import '../../../../assets/font/NotoSansTC-VariableFont_wght-normal';
+
 import { PdfService } from '../../../service/basic/pdf.service';
 import { Tls11010Service } from '../../../service/api/tls/tls11010.service';
 import { ColumnLabelService } from '../../../service/basic/column-label.service';
@@ -9,11 +9,11 @@ import { MenubarComponent } from '../../../shared/component/menubar/menubar.comp
 import { ReportTableGroupComponent } from '../../../shared/componentkit/report-table-group/report-table-group.component';
 
 @Component({
-    selector: 'app-tls23110-cru',
-    templateUrl: './tls23110-cru.component.html',
-    styleUrls: ['./tls23110-cru.component.scss'],
-    standalone: true,
-    imports: [MenubarComponent, ReportTableGroupComponent]
+  selector: 'app-tls23110-cru',
+  templateUrl: './tls23110-cru.component.html',
+  styleUrls: ['./tls23110-cru.component.scss'],
+  standalone: true,
+  imports: [MenubarComponent, ReportTableGroupComponent]
 })
 export class TLS23110CRUComponent extends BasicCruPageComponent<any> {
   data: any[] = [];

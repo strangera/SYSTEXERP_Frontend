@@ -19,7 +19,7 @@ import { CalendarComponent } from '../../../shared/componentkit/calendar/calenda
 import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
 import { RadiobuttonComponent } from '../../../shared/componentkit/radiobutton/radiobutton.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
+import { Table2Component } from '../../../shared/componentkit/table2/table2.component';
 import { TranslateModule } from '@ngx-translate/core';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
@@ -43,7 +43,7 @@ import { forkJoin } from 'rxjs';
     DropdownComponent,
     RadiobuttonComponent,
     ButtonComponent,
-    TableComponent,
+    Table2Component,
 
     MultiSelectComponent,
     TranslateModule,
@@ -142,31 +142,49 @@ export class TLS2B020Component extends BasicQueryPageComponent<any> {
   });
 
   // ✅ 初始化固定雙列欄位
- this.columns = [
-  { field: 'building', header: '館別', visible: true },
-  { field: 'floor', header: '樓層', visible: true },
-  { field: 'cashier', header: '收銀員', visible: true },
-  ...Array.from({ length: 31 }, (_, i) => ({
-    field: `day${i + 1}`,
-    header: `${i + 1}`,
-    visible: true,
-    style: 'text-right',
-    format: this.moneyFormat
-  })),
-  {
-    field: 'total',
-    header: '合計',
-    visible: true,
-    style: 'text-right',
-    format: this.moneyFormat
-  }
+this.columns = [
+  { field: 'tlt_building', header: '館別', visible: true, rowspan: true },
+  { field: 'tlt_floor', header: '樓層', visible: true, rowspan: true },
+  { field: 'USR_No', header: '收銀員代號', visible: true, rowspan: true },
+
+  // 第1列：1~16
+  { field: 'Day01', header: '1', headerRow: 1, visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true },
+  { field: 'Day02', header: '2', headerRow: 1, visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true },
+  { field: 'Day03', header: '3', headerRow: 1, visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true },
+  { field: 'Day04', header: '4', headerRow: 1, visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true },
+  { field: 'Day05', header: '5', headerRow: 1, visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true },
+  { field: 'Day06', header: '6', headerRow: 1, visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true },
+  { field: 'Day07', header: '7', headerRow: 1, visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true },
+  { field: 'Day08', header: '8', headerRow: 1, visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true },
+  { field: 'Day09', header: '9', headerRow: 1, visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true },
+  { field: 'Day10', header: '10', headerRow: 1, visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true },
+  { field: 'Day11', header: '11', headerRow: 1, visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true },
+  { field: 'Day12', header: '12', headerRow: 1, visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true },
+  { field: 'Day13', header: '13', headerRow: 1, visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true },
+  { field: 'Day14', header: '14', headerRow: 1, visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true },
+  { field: 'Day15', header: '15', headerRow: 1, visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true },
+  { field: 'Day16', header: '16', headerRow: 1, visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true },
+
+  // 第2列：17~31
+  { field: 'Day17', header: '17', headerRow: 2, visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true },
+  { field: 'Day18', header: '18', headerRow: 2, visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true },
+  { field: 'Day19', header: '19', headerRow: 2, visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true },
+  { field: 'Day20', header: '20', headerRow: 2, visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true },
+  { field: 'Day21', header: '21', headerRow: 2, visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true },
+  { field: 'Day22', header: '22', headerRow: 2, visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true },
+  { field: 'Day23', header: '23', headerRow: 2, visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true },
+  { field: 'Day24', header: '24', headerRow: 2, visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true },
+  { field: 'Day25', header: '25', headerRow: 2, visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true },
+  { field: 'Day26', header: '26', headerRow: 2, visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true },
+  { field: 'Day27', header: '27', headerRow: 2, visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true },
+  { field: 'Day28', header: '28', headerRow: 2, visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true },
+  { field: 'Day29', header: '29', headerRow: 2, visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true },
+  { field: 'Day30', header: '30', headerRow: 2, visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true },
+  { field: 'Day31', header: '31', headerRow: 2, visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true },
+
+  // 合計
+  { field: 'TotalAmt', header: '合計', headerRow: 2, visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true },
 ];
-
-
-  this.subtotalFields = [
-    ...Array.from({ length: 31 }, (_, i) => `day${i + 1}`),
-    'total'
-  ];
 
   // ✅ 重新計算總金額（當 overflowStatus 改變）
   this.queryForm.get('overflowStatus')?.valueChanges.subscribe(() => {
@@ -266,19 +284,40 @@ onSubmit(form: FormGroup): void {
   moneyFormat(value: number): string {
     return value != null ? value.toLocaleString('en-US') : '0';
   }
-  get overflowStatusDisplay(): string {
-    const value = this.queryForm.get('overflowStatus')?.value;
-    const overflowValue = Number(this.queryForm.get('overflowStatus')?.value ?? NaN);
+get overflowStatusDisplay(): string {
+  const rawValue = this.queryForm.get('overflowStatus')?.value;
+  const value = rawValue as number | null;
 
-    if (overflowValue === 2) {
-      return `欠收金額：${this.formatAmount(this.underpaidAmount)} 元`;
-    } else if (overflowValue === 3) {
-      return `溢付金額：${this.formatAmount(this.overpaidAmount)} 元　欠收金額：${this.formatAmount(this.underpaidAmount)} 元`;
+  const net = this.overpaidAmount - this.underpaidAmount;
+
+  if (value === 3) {
+    // 欠款
+    if (net < 0) {
+      return `欠收金額：${this.formatAmount(Math.abs(net))} 元`;
     } else {
-      // 預設為全部 (value === 1)
-      return `溢付金額：${this.formatAmount(this.overpaidAmount)} 元`;
+      return `欠收金額：0 元`;
+    }
+  } else if (value === 2) {
+    // 溢款
+    if (net > 0) {
+      return `溢付金額：${this.formatAmount(net)} 元`;
+    } else {
+      return `溢付金額：0 元`;
+    }
+  } else {
+    // 全部（null）：根據 net 顯示哪一邊有值
+    if (net > 0) {
+      return `溢付金額：${this.formatAmount(net)} 元　欠收金額：0 元`;
+    } else if (net < 0) {
+      return `溢付金額：0 元　欠收金額：${this.formatAmount(Math.abs(net))} 元`;
+    } else {
+      return `溢付金額：0 元　欠收金額：0 元`;
     }
   }
+}
+
+
+
 
   private formatAmount(value: number): string {
     return value?.toLocaleString('zh-TW', { minimumFractionDigits: 0, maximumFractionDigits: 0 }) ?? '0';

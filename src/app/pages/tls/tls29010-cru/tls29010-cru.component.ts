@@ -101,7 +101,7 @@ export class TLS29010CRUComponent extends BasicCruPageComponent<TALPORDERD_OPEND
       dataForm = this.formBuilder.group({
         id: [{value: null, disabled: true}], // 主鍵，自動編號
         mid: [{value: null, disabled: true}], // 主檔關聯 ID
-        str_no: ['', Validators.required], // 店部編號
+        str_no: [{value: '', disabled: true}], // 店部編號
         // --先選 專櫃活動設定主檔TALPORDERM--
         //欄位用這些就好
         pod_no: [{value: null, disabled: true}], // 活動申請編號 (YYYYMMDDSSS)
@@ -192,7 +192,7 @@ export class TLS29010CRUComponent extends BasicCruPageComponent<TALPORDERD_OPEND
         // { field: 'pod_no', header: '活動編號', type: 'text', editable: true, autoWidth: false },  //活動編號(TALPORDERM)
 
         { field: 'talent_id', header: '合約編號系統', type: 'number', editable: false, autoWidth: true, hidden:true }, // 不用顯示 內容與主檔案一致 *
-        { field: 'tlt_id', header: '抽成類別', type: 'text', editable: false, autoWidth: true }, // 抽成類別(0-9) *
+        { field: 'tlt_id', header: '抽成類別', type: 'text', editable: true, autoWidth: true }, // 抽成類別(0-9) *
         //---要使用的---
         // [專櫃編號] 帶出 下面這坨
         { field: 'tlt_no', header: '專櫃名稱', type: 'dropdown', editable: true, autoWidth: true, options: this.mockDetailDataOptions}, //(專櫃編號_專櫃名稱，下拉選單)用[專櫃編號] 帶出 [專櫃名稱]、[抽成類別]、[折數]、[抽成率] * ([TALPORDERD])
@@ -245,7 +245,8 @@ export class TLS29010CRUComponent extends BasicCruPageComponent<TALPORDERD_OPEND
         //新增模式pod_desc才可以填寫，否則與其他欄位一樣都設為disabled
         if(this.crudstatus === CRUDStatus.Create) {
           this.dataForm.get('pod_desc')?.enable();
-
+          const userInfo = this.authService?.getUserInfo?.();
+          this.dataForm.get('str_no')?.setValue(userInfo?.SYS_StoreNo || '') //依照section填寫店號
         } else {
           this.dataForm.get('pod_desc')?.disable();
         }

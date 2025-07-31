@@ -1,7 +1,7 @@
 import { Component } from '@angular/core';
 import { Location } from '@angular/common';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
-import '../../../../assets/font/NotoSansTC-VariableFont_wght-normal';
+
 import { PdfService } from '../../../service/basic/pdf.service';
 import { Tls11010Service } from '../../../service/api/tls/tls11010.service';
 import { TxnStatusService } from '../../../service/basic/txn-status.service';
@@ -10,11 +10,11 @@ import { ReportTableGroupComponent } from '../../../shared/componentkit/report-t
 type DisplayMode = 'Report' | 'ByPaymentType' | 'ByDiscountType';
 
 @Component({
-    selector: 'app-tls23040-cru',
-    templateUrl: './tls23040-cru.component.html',
-    styleUrls: ['./tls23040-cru.component.scss'],
-    standalone: true,
-    imports: [MenubarComponent, ReportTableGroupComponent]
+  selector: 'app-tls23040-cru',
+  templateUrl: './tls23040-cru.component.html',
+  styleUrls: ['./tls23040-cru.component.scss'],
+  standalone: true,
+  imports: [MenubarComponent, ReportTableGroupComponent]
 })
 export class TLS23040CRUComponent extends BasicCruPageComponent<any> {
   displayMode: DisplayMode = 'Report';

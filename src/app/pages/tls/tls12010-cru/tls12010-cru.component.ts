@@ -179,7 +179,7 @@ export class TLS12010CRUComponent extends BasicCruPageComponent<Potential_Custom
   
     business_type_Option: apiOption[] = []; // 經營方式(SYS1000.T117)（長度1，1=生產者、2=代理商、3=經銷商、4=其它）
     bus_type_Option: apiOption[] = []; // 業種-大分類代碼
-    tlt_name_Option: apiOption[] = []; //品牌
+    tlt_name_Option: any[] = []; //品牌
     cus_uniform_Option: POS2013[] = []; // 廠商統一編號(pos2013)
     contact_USR_Option: apiOption[] = [];  // 接洽人員代碼/名稱
     // ----------------------------------------------------------------
@@ -222,6 +222,19 @@ export class TLS12010CRUComponent extends BasicCruPageComponent<Potential_Custom
         if (this.skipValueChanges) return;
         this.onCusTypeChange(value);
       });
+
+      //品牌 valueChanges
+      this.dataForm.get('tlt_name')?.valueChanges.subscribe(value => {
+        if (this.skipValueChanges) return;
+        const match = this.tlt_name_Option.find(opt => opt.No === value);
+          if (match) {
+            this.dataForm.get('tlt_EngName')?.setValue(match.LOGO_EN_NAME);
+          } else {
+            this.dataForm.get('tlt_EngName')?.setValue('');
+            // this.messageService.errorBubble('無該廠商名稱資料');
+          }
+      });
+
 
       this.dataForm.get('cus_uniform_id')?.valueChanges.subscribe(value => {
         if (this.skipValueChanges) return;
@@ -334,7 +347,9 @@ export class TLS12010CRUComponent extends BasicCruPageComponent<Potential_Custom
         // 查 品牌
         this.tls12010Service.queryPLULOGO_DropDownList({}).subscribe((response) => {
           this.tlt_name_Option = response.Data.map((item: any) => ({
-            No: item.No, // 專櫃主代碼
+            No: item.No, // 品牌主代碼
+            Name: item.Name, //品牌名稱
+            LOGO_EN_NAME: item.LOGO_EN_NAME, // 品牌英文名稱
             Label: item.No + '/' + item.Name, // 組合成顯示用的Label
           }));
           console.log('品牌代號:', this.tlt_name_Option);

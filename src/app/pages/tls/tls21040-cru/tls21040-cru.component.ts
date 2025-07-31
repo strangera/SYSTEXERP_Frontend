@@ -10,10 +10,10 @@ import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdow
 import { NgIf } from '@angular/common';
 import { TranslateModule } from '@ngx-translate/core';
 import { TLS21040Data, Tls21040Service } from '@service/api/tls/tls21040.service';
-import { CalendarRangeQuickComponent } from '@shared/componentkit';
 import { finalize } from 'rxjs';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { formatDateToYYYYMMDD } from '@shared/componentkit/table/table.model';
+import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
 
 @Component({
   selector: 'app-tls21040-cru',

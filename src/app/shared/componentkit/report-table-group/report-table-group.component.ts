@@ -13,7 +13,7 @@ import {
 
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
-import '../../../../assets/font/NotoSansTC-VariableFont_wght-normal';
+
 import { ChangeDetectorRef } from '@angular/core';
 import { formatDate } from '../table/table.model';
 import { ButtonDirective } from 'primeng/button';
@@ -396,8 +396,8 @@ export class ReportTableGroupComponent implements OnInit {
     const marginLeft = 40;
     let currentY = 40;
     const pageWidth = doc.internal.pageSize.getWidth();
-
-    doc.setFont('NotoSansTC');
+    doc.addFont('assets/font/NotoSerifTC-VariableFont_wght.ttf', 'Noto Serif TC', 'normal');
+    doc.setFont('Noto Serif TC');
     doc.setFontSize(14);
     doc.text(this.reportTitle, pageWidth / 2, currentY, { align: 'center' });
     currentY += 20;
@@ -427,7 +427,7 @@ export class ReportTableGroupComponent implements OnInit {
         // 每張表格間距 30pt
         y += 30;
 
-        doc.setFont('NotoSansTC');
+        doc.setFont('Noto Serif TC');
         doc.setFontSize(12);
         doc.text(table.title, marginLeft, y);
         y += 10;
@@ -471,10 +471,10 @@ export class ReportTableGroupComponent implements OnInit {
           head: [headers],
           body,
           margin: { left: marginLeft, right: marginLeft },
-          styles: { font: 'NotoSansTC', fontSize: 9 },
+          styles: { font: 'Noto Serif TC', fontSize: 9 },
           columnStyles,
           headStyles: {
-            font: 'NotoSansTC',
+            font: 'Noto Serif TC',
             fontStyle: 'normal',
             fontSize: 10,
             fillColor: [230, 230, 250],
@@ -547,10 +547,10 @@ export class ReportTableGroupComponent implements OnInit {
       head: [headers],
       body,
       margin: { left: marginLeft, right: marginLeft },
-      styles: { font: 'NotoSansTC', fontSize: 9 },
+      styles: { font: 'Noto Serif TC', fontSize: 9 },
       columnStyles,
       headStyles: {
-        font: 'NotoSansTC',
+        font: 'Noto Serif TC',
         fontStyle: 'normal',
         fontSize: 10,
         fillColor: [212, 222, 254],
@@ -563,7 +563,7 @@ export class ReportTableGroupComponent implements OnInit {
         // ✅ 加上總計列樣式
         if (raw[0] === '總計') {
           data.cell.styles.fillColor = [250, 250, 210];
-          data.cell.styles.font = 'NotoSansTC';
+          data.cell.styles.font = 'Noto Serif TC';
           data.cell.styles.fontStyle = 'normal';
         }
       },
@@ -639,10 +639,10 @@ export class ReportTableGroupComponent implements OnInit {
       head: [headers],
       body: allRows,
       margin: { left: marginLeft, right: marginLeft },
-      styles: { font: 'NotoSansTC', fontSize: 9 },
+      styles: { font: 'Noto Serif TC', fontSize: 9 },
       columnStyles,
       headStyles: {
-        font: 'NotoSansTC',
+        font: 'Noto Serif TC',
         fontStyle: 'normal',
         fontSize: 10,
         fillColor: [212, 222, 254],
@@ -659,12 +659,12 @@ export class ReportTableGroupComponent implements OnInit {
           'colSpan' in raw[0]
         ) {
           data.cell.styles.fillColor = [240, 240, 255];
-          data.cell.styles.font = 'NotoSansTC';
+          data.cell.styles.font = 'Noto Serif TC';
           data.cell.styles.fontStyle = 'normal';
         }
         if (raw[0] === '小計') {
           data.cell.styles.fillColor = [250, 250, 210];
-          data.cell.styles.font = 'NotoSansTC';
+          data.cell.styles.font = 'Noto Serif TC';
         }
       },
     });
@@ -675,7 +675,7 @@ export class ReportTableGroupComponent implements OnInit {
 
   private printSummaryText(doc: jsPDF, startY: number): void {
     if (this.pdfSummaryText?.length) {
-      doc.setFont('NotoSansTC');
+      doc.setFont('Noto Serif TC');
       doc.setTextColor(255, 0, 0);
       doc.setFontSize(10);
       let y = startY;

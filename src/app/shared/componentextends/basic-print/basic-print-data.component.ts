@@ -29,7 +29,7 @@ export class BasicPrintDataComponent {
   exportPDFDownload(event: TableExport, columns: Column[], apiUrl?: string): void {
     const ProgNo = this.currentPage.currentPageProgNoSubject.getValue() as string;
     const funInfo = this.authService.getUserPermissions(ProgNo); // 取得權限
-    const queryState = this.queryState.getQueryState(ProgNo);
+    const queryState = this.queryState.getQueryState(`query${ProgNo}`);
     const userInfo = this.authService.currentUserValue;
     const today = new Date();
     const year = today.getFullYear();
@@ -88,7 +88,7 @@ export class BasicPrintDataComponent {
   exportExcelDownload(event: TableExport, columns: Column[], apiUrl?: string): void {
     const ProgNo = this.currentPage.currentPageProgNoSubject.getValue() as string;
     const funInfo = this.authService.getUserPermissions(ProgNo); // 取得權限
-    const queryState = this.queryState.getQueryState(ProgNo);
+    const queryState = this.queryState.getQueryState(`query${ProgNo}`);
     const userInfo = this.authService.currentUserValue;
     const today = new Date();
     const year = today.getFullYear();

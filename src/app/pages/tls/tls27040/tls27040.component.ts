@@ -12,7 +12,7 @@ import { TableComponent } from '../../../shared/componentkit/table/table.compone
 import { TranslateModule } from '@ngx-translate/core'; // Add this import as requested
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { Column } from '@shared/componentkit/table/table.model';
-import { CheckOptions, CrdTxnFgOptions, POS611XOptions, queryFilterOptions, TxnTypeOptions } from './tls27040.model';
+import { CheckOptions, CrdTxnFgOptions, POS6118_columns, POS6119_columns, POS6119P_columns, POS611XOptions, queryFilterOptions, TxnTypeOptions } from './tls27040.model';
 @Component({
   selector: 'app-tls27040',
   templateUrl: './tls27040.component.html',
@@ -51,30 +51,9 @@ export class TLS27040Component extends BasicQueryPageComponent<any> implements O
   queryFilterOptions = queryFilterOptions;             // 查詢篩選
 
   data: any[] = [];
-  columns: Column[] = [
-    { field: 'cashRegisterCode', header: '收銀機代碼', visible: true },
-    { field: 'transactionFlowCode', header: '交易流水號', visible: true },
-    { field: 'counterCode', header: '專櫃編號', visible: true },
-    { field: 'cardType', header: '卡別', visible: true },
-    { field: 'amount', header: '金額', visible: true },
-    { field: 'saleDate', header: '銷售日期', visible: true },
-    { field: 'saleTime', header: '銷售時間', visible: true },
-    { field: 'requestDate', header: '請款日期', visible: true },
-    { field: 'cardNumber', header: '卡號', visible: true },
-    { field: 'invoiceNumber', header: '發票號碼', visible: true },
-    { field: 'edcCode', header: 'EDC號碼', visible: true },
-    { field: 'approvalCode', header: '授權碼', visible: true },
-    { field: 'saleStatus', header: '銷售狀況', visible: true },
-    { field: 'transactionType', header: '交易類別', visible: true },
-    { field: 'inputStatus', header: '輸入狀態', visible: true },
-    { field: 'installmentCount', header: '分期期數', visible: true },
-    { field: 'bank', header: '收單行', visible: true },
-    { field: 'requestSource', header: '請款來源', visible: true },
-    { field: 'creator', header: '建立者', visible: true },
-    { field: 'creationDate', header: '建立日期', visible: true },
-    { field: 'modifier', header: '修改者', visible: true },
-    { field: 'modificationDate', header: '修改日期', visible: true },
-  ];
+  POS6118_columns: Column[] = POS6118_columns;
+  POS6119_columns: Column[] = POS6119_columns;
+  POS6119P_columns: Column[] = POS6119P_columns;
 
   constructor(
     private readonly dropDownListService: DropDownListService

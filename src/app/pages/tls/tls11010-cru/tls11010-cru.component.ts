@@ -66,7 +66,7 @@ export class TLS11010CRUComponent extends BasicCruPageComponent<any> {
     LOCATION_Status: [0, [Validators.required, Validators.maxLength(1)]],
 
     // 用途代碼 (Purpose_no) - 長度 2，必填
-    Purpose_no: ['', [Validators.required, Validators.maxLength(2)]],
+    Purpose_no: [null, [Validators.required]],
 
     // X 軸 (Draw_X) - 長度 255，可為 null
     Draw_X: ['', [Validators.maxLength(255)]],
@@ -179,13 +179,23 @@ export class TLS11010CRUComponent extends BasicCruPageComponent<any> {
         value: x.value,
       })) || [];
     });
-    this.tls11010Service.getUsageOptions().subscribe((res) => {
-      this.usageOptions = res?.map((x: any) => ({
-        label: x.label,
-        formLabel: `${x.value} - ${x.label}`,
-        value: x.value,
-      })) || [];
-    });
+this.tls11010Service.getUsageOptions().subscribe((res) => {
+  this.usageOptions = res?.map((x: any) => ({
+    label: x.label,
+    formLabel: `${x.value} - ${x.label}`,
+    value: String(x.value).trim(), // 保險起見
+  })) || [];
+
+  // 👉 編輯狀態時，修正用途代碼
+  if (this.crudstatus === CRUDStatus.Edit) {
+    const matchedUsage = this.usageOptions.find(
+      opt => String(opt.value).trim() === String(this.rowdata?.Purpose_no).trim()
+    );
+    if (matchedUsage) {
+      this.inputForm.patchValue({ Purpose_no: matchedUsage.value });
+    }
+  }
+});
     this.tls11010Service.getBuildingOptions().subscribe(res => this.BUILDING_NO_Options = res);
   }
 

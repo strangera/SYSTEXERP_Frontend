@@ -13,8 +13,8 @@ import { ButtonComponent } from '../../../shared/componentkit/button/button.comp
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { TranslateModule } from '@ngx-translate/core';
 import { ECRNoService } from '@service/basic/ECRNo.service';
-import { MultiSelectComponent } from '@shared/componentkit';
 import { DatePipe } from '@angular/common';
+import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
 
 @Component({
   selector: 'app-fin12020',

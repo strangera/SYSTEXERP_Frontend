@@ -3,14 +3,21 @@ import { NgIf } from '@angular/common';
 import { Component, effect, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
-import { TLS26080Service } from '@service/api';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
-import { ButtonComponent, CalendarComponent, CalendarRangeComponent, DropdownComponent, InputTextComponent, MultiSelectComponent, TableComponent } from '@shared/componentkit';
 import { Column } from '@shared/componentkit/table/table.model';
-import { MenubarComponent } from '@shared/index';
-import { ApprovalStatus, CRUDStatus } from '@shared/models';
 import { PanelModule } from 'primeng/panel';
+import { CampaignAccountingType } from '../tls26080/tls26080.model';
 import { ActivityData, CounterData, DeductionItem } from './ts26080-cru.model';
+import { TLS26080Service } from '@service/api/tls/tls26080.service';
+import { CRUDStatus } from '@shared/models/system/CRUDstatus';
+import { ButtonComponent } from '@shared/componentkit/button/button.component';
+import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
+import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/calendar-range.component';
+import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
+import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
+import { MenubarComponent } from '@shared/component/menubar/menubar.component';
+import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
+import { TableComponent } from '@shared/componentkit/table/table.component';
 
 
 @Component({
@@ -44,6 +51,7 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<ActivityData> im
     pod_edate: [new Date()], // 起始日期(迄)
     pod_busdate: [new Date()], // 活動正檔日期
     pod_status: ['未核准'], // 核准狀態
+    pod_type: [''], // 扣款名稱
     org_id: [''], // 部門
     cap_item: [''], // 扣款代碼
   });
@@ -88,8 +96,6 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<ActivityData> im
 
   ngOnInit(): void {
     this.initializePage('TLS26080', this.dataForm);
-    // this.dataForm.get('pod_no')?.setValue('20250401');
-    // this.loadMockData();
 
     const state = this.router.lastSuccessfulNavigation?.extras.state as {
       crudstatus: CRUDStatus,
@@ -116,6 +122,7 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<ActivityData> im
     }
 
     const rowData = state?.rowdata;
+    console.log(`rowData:`, [rowData]);
 
     if (this.isFormEditable && rowData) {
       rowData.pod_status = this.service.approvalStatus(rowData.pod_status);
@@ -127,8 +134,9 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<ActivityData> im
         pod_sdate: rowData.pod_sdate ? new Date(rowData.pod_sdate) : new Date(),
         pod_edate: rowData.pod_edate ? new Date(rowData.pod_edate) : new Date(),
         pod_status: rowData.pod_status || '未核准',
+        pod_type: CampaignAccountingType.get(rowData.pod_type)?.Name || '',
         org_id: rowData.org_id || '',
-        cap_item: rowData.cap_item || [],
+        cap_item: rowData.cap_item || CampaignAccountingType.get(rowData.pod_type)?.No || [],
         pod_busdate: rowData.pod_busdate ? new Date(rowData.pod_busdate) : new Date(),
       });
     }
@@ -139,88 +147,81 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<ActivityData> im
     this.service.loadCampaignData({});
   }
 
-  // 載入假資料
-  loadMockData(): void {
-    // this.counterData = [...this.mockCounterData];
-    // 直接載入所有扣款項目
-    // this.deductionData = [...this.allDeductionItems];
-  }
+  // // 專櫃選擇事件
+  // onCounterSelect(counter: CounterData): void {
+  //   this.selectedCounter = counter;
+  //   this.loadDeductionItems(counter.counterCode);
+  // }
 
-  // 專櫃選擇事件
-  onCounterSelect(counter: CounterData): void {
-    this.selectedCounter = counter;
-    this.loadDeductionItems(counter.counterCode);
-  }
+  // // 載入扣款項目
+  // loadDeductionItems(counterCode: string): void {
+  //   // this.deductionData = this.mockDeductionData[counterCode] || [];
+  // }
 
-  // 載入扣款項目
-  loadDeductionItems(counterCode: string): void {
-    // this.deductionData = this.mockDeductionData[counterCode] || [];
-  }
+  // // 新增專櫃 - 修復加入 counterName
+  // onAddCounter(): void {
+  //   const newCounter: CounterData = {
+  //     id: this.counterData.length + 1,
+  //     counterCode: '',
+  //     counterName: '',
+  //     itemCode: '',
+  //     commissionTypeCode: '',
+  //     commissionTypeName: '',
+  //     presaleStartCalculation: '',
+  //     contractStartDate: '',
+  //     contractEndDate: '',
+  //     operationStartDate: '',
+  //     operationEndDate: '',
+  //     deductionItems: ''
+  //   };
+  //   this.counterData = [...this.counterData, newCounter];
+  // }
 
-  // 新增專櫃 - 修復加入 counterName
-  onAddCounter(): void {
-    const newCounter: CounterData = {
-      id: this.counterData.length + 1,
-      counterCode: '',
-      counterName: '',
-      itemCode: '',
-      commissionTypeCode: '',
-      commissionTypeName: '',
-      presaleStartCalculation: '',
-      contractStartDate: '',
-      contractEndDate: '',
-      operationStartDate: '',
-      operationEndDate: '',
-      deductionItems: ''
-    };
-    this.counterData = [...this.counterData, newCounter];
-  }
+  // // 刪除專櫃
+  // onDeleteCounter(counter: CounterData): void {
+  //   this.counterData = this.counterData.filter(item => item.id !== counter.id);
+  //   if (this.selectedCounter?.id === counter.id) {
+  //     this.selectedCounter = void 0;
+  //     this.deductionData = [];
+  //   }
+  // }
 
-  // 刪除專櫃
-  onDeleteCounter(counter: CounterData): void {
-    this.counterData = this.counterData.filter(item => item.id !== counter.id);
-    if (this.selectedCounter?.id === counter.id) {
-      this.selectedCounter = void 0;
-      this.deductionData = [];
-    }
-  }
+  // // 新增扣款項目 - 修復加入 counterName
+  // onAddDeductionItem(): void {
+  //   if (!this.selectedCounter) {
+  //     this.messageService.warnBubble('請先選擇專櫃');
+  //     return;
+  //   }
 
-  // 新增扣款項目 - 修復加入 counterName
-  onAddDeductionItem(): void {
-    if (!this.selectedCounter) {
-      this.messageService.warnBubble('請先選擇專櫃');
-      return;
-    }
+  //   const newItem: DeductionItem = {
+  //     id: Date.now(), // 使用時間戳作為暫時 ID
+  //     counterCode: this.selectedCounter.counterCode,
+  //     counterName: this.selectedCounter.counterName, // 加入 counterName
+  //     itemCode: '',
+  //     itemName: '',
+  //     amountOrRate: 0,
+  //     isRate: false
+  //   };
 
-    const newItem: DeductionItem = {
-      id: Date.now(), // 使用時間戳作為暫時 ID
-      counterCode: this.selectedCounter.counterCode,
-      counterName: this.selectedCounter.counterName, // 加入 counterName
-      itemCode: '',
-      itemName: '',
-      amountOrRate: 0,
-      isRate: false
-    };
+  //   this.deductionData = [...this.deductionData, newItem];
 
-    this.deductionData = [...this.deductionData, newItem];
+  //   // 更新 mock 資料
+  //   // if (!this.mockDeductionData[this.selectedCounter.counterCode]) {
+  //   //   this.mockDeductionData[this.selectedCounter.counterCode] = [];
+  //   // }
+  //   // this.mockDeductionData[this.selectedCounter.counterCode].push(newItem);
+  // }
 
-    // 更新 mock 資料
-    // if (!this.mockDeductionData[this.selectedCounter.counterCode]) {
-    //   this.mockDeductionData[this.selectedCounter.counterCode] = [];
-    // }
-    // this.mockDeductionData[this.selectedCounter.counterCode].push(newItem);
-  }
+  // // 刪除扣款項目
+  // onDeleteDeductionItem(item: DeductionItem): void {
+  //   this.deductionData = this.deductionData.filter(deduction => deduction.id !== item.id);
 
-  // 刪除扣款項目
-  onDeleteDeductionItem(item: DeductionItem): void {
-    this.deductionData = this.deductionData.filter(deduction => deduction.id !== item.id);
-
-    // 更新 mock 資料
-    // if (this.selectedCounter) {
-    //   this.mockDeductionData[this.selectedCounter.counterCode] =
-    //     this.mockDeductionData[this.selectedCounter.counterCode]?.filter(d => d.id !== item.id) || [];
-    // }
-  }
+  //   // 更新 mock 資料
+  //   // if (this.selectedCounter) {
+  //   //   this.mockDeductionData[this.selectedCounter.counterCode] =
+  //   //     this.mockDeductionData[this.selectedCounter.counterCode]?.filter(d => d.id !== item.id) || [];
+  //   // }
+  // }
 
   onClearForm(): void {
     this.dataForm.reset();
@@ -233,14 +234,8 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<ActivityData> im
   // 表單提交
   onSubmit(frm: FormGroup): void {
     this.handleSubmit(frm, () => {
-      const formValue = frm.getRawValue();
+      console.log(`submit:`, [frm]);
 
-      // 組合完整的提交資料
-      const submitData = {
-        ...formValue,
-        counterData: this.counterData,
-        // deductionData: this.mockDeductionData
-      };
 
       switch (this.crudstatus) {
         case CRUDStatus.Create:

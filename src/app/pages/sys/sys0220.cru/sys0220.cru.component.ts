@@ -11,9 +11,9 @@ import { InputTextComponent } from '../../../shared/componentkit/input-text/inpu
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { NgIf } from '@angular/common';
 import { TranslateModule } from '@ngx-translate/core';
-import { DialogComponent } from '@shared/componentkit';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { finalize } from 'rxjs';
+import { DialogComponent } from '@shared/componentkit/dialog/dialog.component';
 
 export interface RoleOption {
   ID: string; // ID

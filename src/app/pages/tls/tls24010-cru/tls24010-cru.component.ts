@@ -26,11 +26,39 @@ import { Tls24010Pos5008Component } from './tls24010-pos5008/tls24010-pos5008.co
 import { Tls24010Pos5007Component } from './tls24010-pos5007/tls24010-pos5007.component';
 import { finalize, tap } from 'rxjs';
 import { formatTimeToHHMMSS } from '@shared/componentkit/table/table.model';
+import { Tls24010PaynoComponent } from './tls24010-payno/tls24010-payno.component';
+import { Tls24010TltidComponent } from './tls24010-tltid/tls24010-tltid.component';
+import { Tls24010TltnoComponent } from './tls24010-tltno/tls24010-tltno.component';
+import { FIX_TYPE } from '../tls24010/tls24010.model';
 @Component({
   selector: 'app-tls24010-cru',
   templateUrl: './tls24010-cru.component.html',
   standalone: true,
-  imports: [MenubarComponent, ButtonComponent, PanelModule, FormsModule, ReactiveFormsModule, CalendarComponent, InputNumberComponent, NgIf, TranslateModule, InputTextComponent, InputTextareaComponent, RadiobuttonYNComponent, DropdownComponent, DividerModule, TableModule, InputNumberModule, InputTextModule, DropdownModule, Tls24010Pos5008Component, Tls24010Pos5007Component],
+  imports: [
+    MenubarComponent,
+    ButtonComponent,
+    PanelModule,
+    FormsModule,
+    ReactiveFormsModule,
+    CalendarComponent,
+    InputNumberComponent,
+    NgIf,
+    TranslateModule,
+    InputTextComponent,
+    InputTextareaComponent,
+    RadiobuttonYNComponent,
+    DropdownComponent,
+    DividerModule,
+    TableModule,
+    InputNumberModule,
+    InputTextModule,
+    DropdownModule,
+    Tls24010Pos5008Component,
+    Tls24010Pos5007Component,
+    Tls24010PaynoComponent,
+    Tls24010TltidComponent,
+    Tls24010TltnoComponent
+  ],
 })
 export class TLS24010CRUComponent extends BasicCruPageComponent<TLS24010Data | unknown> implements OnInit {
   @ViewChild(Tls24010Pos5007Component) pos5007Comp?: Tls24010Pos5007Component;
@@ -72,6 +100,7 @@ export class TLS24010CRUComponent extends BasicCruPageComponent<TLS24010Data | u
   USR_NoOptions: IDropdownItem[] = []; //下拉選單 收銀員編號
   txnStatusOptions = txnStatusOptions //下拉選單 交易型態
   TXN_GUI_CarrTypeOptions = TXN_GUI_CarrTypeOptions;//下拉選單 電子載具種類
+  TLT_NoOptions: IDropdownItem[] = [];
   constructor(
     private readonly dropDownListService: DropDownListService,
     private readonly validationService: ValidationService,
@@ -112,6 +141,15 @@ export class TLS24010CRUComponent extends BasicCruPageComponent<TLS24010Data | u
       this.USR_NoOptions = data.Data.map((item) => ({ ...item, label: `${item.No} - ${item.Name}` }));
     });
     this.listenForChanges();
+    if (this.type === FIX_TYPE.專櫃編號修正) {
+      this.dataForm.get('TLT_No')?.enable();
+      const TXN_Date = this.dataForm.get('TXN_Date')?.value;
+      if (TXN_Date) {
+        this.dropDownListService.queryTLTTALENT_ByContractDate_DropDownList(TXN_Date).pipe(untilDestroyed(this)).subscribe(options => {
+          this.TLT_NoOptions = options.Data.map(item => ({ ...item, label: `${item.No} - ${item.Name}` }));
+        });
+      }
+    }
   }
   listenForChanges() {
     const txnVipControl = this.dataForm.get('TXN_VIP');

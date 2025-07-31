@@ -9,10 +9,10 @@ import { TranslateModule } from '@ngx-translate/core';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { Column, createPaginationConfig } from '@shared/componentkit/table/table.model';
 import { IDropdownItem } from '@service/utility/dropDownList.service';
-import { MultiSelectComponent } from '@shared/componentkit';
 import { ITLS27050Data, TLS27050Service } from '@service/api/tls/tls27050.service';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { finalize } from 'rxjs';
+import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
 
 @Component({
   selector: 'app-tls27050',

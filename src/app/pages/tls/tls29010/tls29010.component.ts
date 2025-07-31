@@ -54,24 +54,22 @@ export class TLS29010Component extends BasicQueryPageComponent<TALPORDERD_OPENDi
 
     // 查詢
       queryForm = this.formBuilder.group({
-        // TALPORDERD_OPENDisc
-        // id: [{ value: null, disabled: true }], // 自動產生，不允許編輯
-        // mid: [0, Validators.required],
-        str_no: ['', [Validators.maxLength(8)]],        // 店部編號
-        pod_no: ['', [Validators.maxLength(12)]],       // 活動編號
-        talent_id: [null],                              // 合約編號
-        tlt_id: [null, [Validators.maxLength(1), Validators.min(0),Validators.max(9)]], // 抽成類別(0-9) 送出時再轉乘string
-        tlt_no: ['', [Validators.maxLength(8)]],        // 專櫃編號
-        cag_barcode: ['', [Validators.maxLength(13)]],  // 折數條碼
-
-        use_flag: ['', [Validators.maxLength(1)]],      // 是否使用 Y/N
-        crt_usr_name: ['', [Validators.maxLength(16)]], // 建立人員
-        upd_date: [null], // 變更日期 / createDAte
-
-        // --疑問(1.開放日期要怎麼取、2.專櫃位置編號、商品類別(中分類) TALPORDERM沒有)--
+        // TALPORDERM
+        pod_no: [''],       // 活動申請編號YYYYMMDDSSS(活動起始日期+流水號)
+        pod_type: [[]], // 折扣別(1=預售, 2=滿千送百發行, 3=滿千送百兌回, 4~5=會員卡集點, 6~7=全館集點, 8=期間開放折扣)
+        pod_sdate: [null], // 活動起始日 (Date)
+        pod_edate: [null], // 活動終止日 (Date)
+        pod_status: [[]], // 活動狀態(0=未核准, 1=已核准, 9=刪除)
+        mantain_sdate: [null], // 建立、變更日，查詢合併為維護日 (Date) (upd優先，upd是null查crt)
+        mantain_edate: [null], // 建立、變更日，查詢合併為維護日 (Date)
+        tlt_id: [[]], // 抽成類別(0-9)
+        tlt_no: [[]], // 專櫃編號
+        use_flag: [[]], // 是否使用 Y/N
+        crt_usr_name: [''], // 建立人員姓名
+        locationNumber:[[]],// 專櫃位置編號 // POS2002
 
         //分頁查詢
-        ...createPaginationConfig([{ field: 'str_no', order: 1 }]), // 分頁和排序參數
+        ...createPaginationConfig([{ field: 'pod_no', order: 1 }]), // 分頁和排序參數
       });
       // 表格
       // ----------------------------------------------------------------
@@ -82,7 +80,26 @@ export class TLS29010Component extends BasicQueryPageComponent<TALPORDERD_OPENDi
         {value: 'N', label: '否'}
       ];
 
+      pod_status_Options = [
+        { label: '未核准', value: '0' },
+        { label: '已核准', value: '1' },
+        { label: '刪除', value: '9' },
+      ];
+
+      podTypeOptions = [
+        { label: '1 預售', value: '1' },
+        { label: '2 滿千送百(發行)', value: '2' },
+        { label: '3 滿千送百(兌回)', value: '3' },
+        { label: '4 會員卡集點-銷售', value: '4' },
+        { label: '5 會員卡集點-點數', value: '5' },
+        { label: '6 全館集點-銷售', value: '6' },
+        { label: '7 全館集點-點數', value: '7' },
+        { label: '8 期間開放折扣', value: '8' }, //新增用這個
+      ];
+
+
       tlt_No_Option: apiOption[] = [];  // 專櫃編號下拉
+      pos2002_location_Option: apiOption[] = [];  // 專櫃編號下拉
       
       data: TALPORDERD_OPENDisc[] = [];
       columns: Column[] = [
@@ -91,8 +108,7 @@ export class TLS29010Component extends BasicQueryPageComponent<TALPORDERD_OPENDi
         { field: 'talent_id', header: '合約編號系統', visible: true },
         { field: 'tlt_id', header: '抽成類別(0-9)', visible: true },
         { field: 'tlt_no', header: '專櫃編號', visible: true },
-        { field: 'cag_barcode', header: '大分類代碼', visible: true },
-        { field: 'tlt_name', header: '折數(條碼)', visible: true },
+        { field: 'cag_barcode', header: '折數(條碼)', visible: true },
         { field: 'use_flag', header: '是否使用', visible: true, format: (value: string) =>
           this.whetherOption.find((option) => option.value === value)?.label || value
         },
@@ -207,5 +223,18 @@ export class TLS29010Component extends BasicQueryPageComponent<TALPORDERD_OPENDi
 
             console.log('專櫃編號 下拉:', response.Data);
           });
+
+        // 專櫃位置編號
+        this.tls12010Service
+          .queryPOS2002_DropDownList({})
+          .subscribe((response) => {
+            this.pos2002_location_Option = response.Data.map((item: apiOption) => ({
+              No: item.No,
+              Name: item.Name,
+              Label: item.No + '-' + item.Name,
+            }));
+
+            console.log('專櫃編號 下拉:', response.Data);
+          });  
       }
 }

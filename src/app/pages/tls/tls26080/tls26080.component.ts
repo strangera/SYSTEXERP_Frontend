@@ -3,14 +3,20 @@ import { DatePipe } from '@angular/common';
 import { Component, computed, OnInit, signal } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
-import { TLS26080Service } from '@service/api';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
-import { ButtonComponent, CalendarComponent, CalendarRangeComponent, DropdownComponent, InputTextComponent, MultiSelectComponent, TableComponent } from '@shared/componentkit';
 import { Column } from '@shared/componentkit/table/table.model';
-import { MenubarComponent } from '@shared/index';
-import { ApprovalStatus } from '@shared/models';
 import { AccordionModule } from 'primeng/accordion';
 import { TLS26080Data } from './tls26080.model';
+import { ApprovalStatus } from '@shared/models/tls/approval-status.model';
+import { ButtonComponent } from '@shared/componentkit/button/button.component';
+import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
+import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/calendar-range.component';
+import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
+import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
+import { MenubarComponent } from '@shared/component/menubar/menubar.component';
+import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
+import { TableComponent } from '@shared/componentkit/table/table.component';
+import { TLS26080Service } from '@service/api/tls/tls26080.service';
 
 @Component({
   selector: 'app-tls26080',
@@ -39,10 +45,10 @@ export class TLS26080Component extends BasicQueryPageComponent<TLS26080Data> imp
     pod_desc: ['', Validators.maxLength(100)], // 活動名稱
     pod_status: [ApprovalStatus.未核准], // 核准狀態
     org_id: [''], // 部門
-    cap_item: [[]], // 扣款代碼
-    pod_sdate: ['' as unknown as Date], // 起始日期(起)
-    pod_edate: ['' as unknown as Date], // 起始日期(迄)
-    pod_busdate: ['' as unknown as Date], // 活動正檔日期
+    cap_item: [[] as string[]], // 扣款代碼
+    pod_sdate: [new Date()], // 起始日期(起)
+    pod_edate: [new Date()], // 起始日期(迄)
+    pod_busdate: [new Date()], // 活動正檔日期
   });
 
   public columns: Column[] = [
@@ -54,6 +60,10 @@ export class TLS26080Component extends BasicQueryPageComponent<TLS26080Data> imp
     { field: 'pod_type', header: '扣款名稱', visible: true },
     { field: 'pod_status', header: '狀態', visible: true, format: this.service.approvalStatus.bind(this) },
   ];
+
+  public readonly editDisabled = (rowData: TLS26080Data) => rowData.pod_status !== ApprovalStatus.未核准;
+  public readonly isEditable = (rowData: TLS26080Data) => rowData.CanEdit == '1';
+  public readonly isRowSelectable = (rowData: TLS26080Data) => rowData.CanDelete == '0';
 
   public totalRecords = signal<number>(0);
   public data: TLS26080Data[] = [];
@@ -72,42 +82,38 @@ export class TLS26080Component extends BasicQueryPageComponent<TLS26080Data> imp
   });
 
   constructor(
-    public service: TLS26080Service,
-    private datePipe: DatePipe,
+    public readonly service: TLS26080Service,
+    private readonly datePipe: DatePipe,
   ) {
     super();
   }
 
-  ngOnInit(): void {
+  public ngOnInit(): void {
     this.initializePage('TLS26080', '/TLS/TLS26080CRU', this.queryForm, this.onSubmit.bind(this));
   }
 
-  canQuery(): boolean {
+  public canQuery(): boolean {
     return true;
   }
 
-  canAdd(): boolean {
+  public canAdd(): boolean {
     return true;
   }
 
-  canEdit(): boolean {
+  public canEdit(): boolean {
     return true;
   }
 
-  editableStatus(rowData: TLS26080Data): boolean {
-    return rowData.pod_status === ApprovalStatus.刪除;
-  }
-
-  onClearForm(): void {
+  public onClearForm(): void {
     this.queryForm.reset();
   };
 
-  onSubmitQuery(): void {
+  public onSubmitQuery(): void {
     this.onSubmit(this.queryForm);
   };
 
   // 提交查詢
-  onSubmit(frm: FormGroup): void {
+  public onSubmit(frm: FormGroup): void {
     this.handleSubmit(frm, () => {
       frm.valid && this.canQuery() && this.service.loadTLS26080(this.queryTLS26080());
       this.loading = !1;
@@ -115,7 +121,7 @@ export class TLS26080Component extends BasicQueryPageComponent<TLS26080Data> imp
   }
 
   // 刪除項目
-  onDelete(data: TLS26080Data | TLS26080Data[]): void {
+  public onDelete(data: TLS26080Data | TLS26080Data[]): void {
     //   const items = Array.isArray(data) ? data : [data];
     //   if (items.length === 0) return;
 
@@ -137,8 +143,4 @@ export class TLS26080Component extends BasicQueryPageComponent<TLS26080Data> imp
 
     //   this.selectedItems = [];
   }
-
-  // isRowSelectable(rowData: Tls26080Data): boolean {
-  //   return rowData.CanDel;
-  // }
 }

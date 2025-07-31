@@ -14,9 +14,9 @@ export const TLTTALENT_columns: Column[] = [
   // 基本資料
   { field: 'tlt_no', header: '專櫃編號', visible: true },
   // { field: 'tlt_shortname', header: '專櫃簡稱', visible: true },
-  { field: 'tlt_name', header: '品牌(專櫃名稱)', visible: true },
+  { field: 'tlt_name', header: '櫃位名稱', visible: true },
   // { field: 'ven_uniform', header: '廠商統一編號(pos2013)', visible: true },
-  { field: 'VEN_Name', header: '廠商名稱(pos2013.ven_name)', visible: true },
+  { field: 'VEN_Name', header: '廠商名稱', visible: true },
 
   // 洽談階段資訊
   // { field: 'paper_type', header: '營業型態(sys1000.T101)', visible: true },

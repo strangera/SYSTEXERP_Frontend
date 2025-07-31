@@ -91,12 +91,14 @@ export class TLS11010Component extends BasicQueryPageComponent<any> {
       visible: true,
       format: (value: any) => this.getLabelFromOptions(value, this.LOCATION_Status_Options),
     },
-    {
-      field: 'Purpose_no',
-      header: '用途代碼',
-      visible: true,
-      format: (value: any) => this.getLabelFromOptions(value, this.usageOptions),
-    },
+{
+  field: 'purpose_desc',
+  header: '用途名稱',
+  visible: true,
+  
+  
+}
+,
     { field: 'Draw_X', header: 'X 軸', visible: true },
     { field: 'Draw_Y', header: 'Y 軸', visible: true },
   ];
@@ -169,7 +171,7 @@ export class TLS11010Component extends BasicQueryPageComponent<any> {
       this.tls11010Service.queryData(formValue).subscribe({
         next: (res) => {
           if (res.Status === '0000') {
-            this.data = res?.Data || [];
+            this.data = this.convertNullToEmptyString(res?.Data || []);
             this.totalRecords = res?.TotalCount || this.data.length;
             console.log('✅ totalRecords =', this.totalRecords);
             this.queryStateService.setQueryState(this.ProgNo, formValue);
@@ -190,6 +192,22 @@ export class TLS11010Component extends BasicQueryPageComponent<any> {
       });
     });
   }
+private convertNullToEmptyString(data: any): any {
+  if (Array.isArray(data)) {
+    return data.map(item => this.convertNullToEmptyString(item));
+  } else if (typeof data === 'object' && data !== null) {
+    const result: any = {};
+    for (const key in data) {
+      if (data[key] === null) {
+        result[key] = '';
+      } else {
+        result[key] = this.convertNullToEmptyString(data[key]);
+      }
+    }
+    return result;
+  }
+  return data;
+}
 
   onDelete(selectedItems: any[]) {
     if (!selectedItems.length) return;
@@ -205,11 +223,11 @@ export class TLS11010Component extends BasicQueryPageComponent<any> {
       error: () => this.messageService.errorBubble('刪除失敗'),
     });
   }
-
-  getLabelFromOptions(value: any, options: any[]): string {
-    const found = options?.find(opt => String(opt.value) === String(value));
-    return found ? found.label : value;
-  }
+getLabelFromOptions(value: any, options: any[]): string {
+  const trimmedValue = String(value).trim();
+  const found = options?.find(opt => String(opt.value).trim() === trimmedValue);
+  return found ? found.label : trimmedValue;
+}
 
 
 }

@@ -42,15 +42,15 @@
             [control]="queryForm.controls.paytype" [submitted]="submitted" />
           <!-- 替換 app-multi-select 為 app-radiobutton-yn -->
           <app-radiobutton-yn class="col-12 md:col-6 lg:col-4" label="是否開立業主發票" controlName="rece_yn"
-            [control]="queryForm.controls.rece_yn" [submitted]="submitted">
+            [control]="queryForm.controls.rece_yn" [submitted]="submitted" [showAll]="true">
           </app-radiobutton-yn>
           <!-- 替換 app-multi-select 為 app-radiobutton-yn -->
           <app-radiobutton-yn class="col-12 md:col-6 lg:col-4" label="是否使用業主收銀機" controlName="pos_yn"
-            [control]="queryForm.controls.pos_yn" [submitted]="submitted">
+            [control]="queryForm.controls.pos_yn" [submitted]="submitted" [showAll]="true">
           </app-radiobutton-yn>
           <!-- 替換 app-multi-select 為 app-radiobutton-yn -->
           <app-radiobutton-yn class="col-12 md:col-6 lg:col-4" label="是否為業主收現" controlName="cash_yn"
-            [control]="queryForm.controls.cash_yn" [submitted]="submitted">
+            [control]="queryForm.controls.cash_yn" [submitted]="submitted" [showAll]="true">
           </app-radiobutton-yn>
         </div>
         <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">

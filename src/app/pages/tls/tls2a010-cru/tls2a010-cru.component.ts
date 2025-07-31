@@ -4,11 +4,13 @@ import { Column } from '../../../shared/componentkit/table/table.model';
 import { ReactiveFormsModule, FormGroup, FormBuilder } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
-import { ButtonComponent, MenubarComponent, TableComponent } from '@shared/index';
 import { AccordionModule } from 'primeng/accordion';
 import { TooltipModule } from 'primeng/tooltip';
 import { PanelModule } from 'primeng/panel';
 import { TLS2A010Data } from '../tls2a010/tls2a010.model';
+import { MenubarComponent } from '@shared/component/menubar/menubar.component';
+import { ButtonComponent } from '@shared/componentkit/button/button.component';
+import { TableComponent } from '@shared/componentkit/table/table.component';
 
 
 @Component({
@@ -158,11 +160,11 @@ export class TLS2A010CRUComponent extends BasicCruPageComponent<TLS2A010Data> im
       //       this.onCancel();
       //     }
       //   },
-        setTimeout(() => {
-          this.loading = false;
-          this.messageService.successBubble('提交成功');
-          this.onCancel();
-        }, 1000);
+      setTimeout(() => {
+        this.loading = false;
+        this.messageService.successBubble('提交成功');
+        this.onCancel();
+      }, 1000);
     });
   }
   onFieldChange(event: any) {

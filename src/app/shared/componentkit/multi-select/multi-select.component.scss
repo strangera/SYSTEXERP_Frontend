@@ -1,9 +1,12 @@
-::ng-deep .p-multiselect-panel .group-header {
-  padding: 1rem 1rem;
-  margin:  -0.9rem -1.5rem 1.5rem; /* 向左移動 */
-  font-weight: 600;
-  font-size: 1.1rem;
-  color: #666;
+::ng-deep .p-multiselect-panel {
+  width: 100% !important;
+  .group-header {
+    padding: 1rem 1rem;
+    margin: -0.9rem -1.5rem 1.5rem; /* 向左移動 */
+    font-weight: 600;
+    font-size: 1.1rem;
+    color: #666;
+  }
 }
 
 /* 分組項目縮排 */
