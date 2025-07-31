@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { computed, effect, Injectable, signal } from '@angular/core';
-import { DependentDataQuery, EcrItem, PodRequest, TalentItem, TLS26010Data, TLS26010Detail, TLS26010DetailResponse, TLS26010Query } from '@pages/tls/tls26010/tls26010.model';
+import { DependentDataQuery, PodRequest, TLS26010Data, TLS26010Detail, TLS26010DetailResponse, TLS26010Query } from '@pages/tls/tls26010/tls26010.model';
 import { ErrorHandlerService } from '@service/system/error-handler.service';
 import { NotificationService } from '@shared/component/notification-message/notification.service';
 import { BaseQueryResponse, DropdownOption } from '@shared/models/api/base-api.interface';
@@ -16,7 +16,6 @@ const apiUrl: string = environment.ApiUrl;
 export class TLS26010Service {
 
   // 儲存資料
-  public approvalData = signal<ApprovalStatus>(ApprovalStatus.未核准);
   public TLS26010Data = signal<TLS26010Data[]>([]);
   public TLS26010Detail = signal<TLS26010Detail | undefined>(undefined);
   private sys3800Data = signal<DropdownOption[]>([]);
@@ -24,19 +23,6 @@ export class TLS26010Service {
   private sys3A00Data = signal<DropdownOption[]>([]);
   private preorderECRData = signal<DropdownOption[]>([]);
   private TLTTALENTData = signal<DropdownOption[]>([]);
-
-  // 快取上次載入的資料，用於比較內容變化
-  private lastSys3800Data: DropdownOption[] = [];
-  private lastSys3900Data: DropdownOption[] = [];
-
-  /** 比較兩個 DropdownOption 陣列是否相同 */
-  private compareDropdownData(data1: DropdownOption[], data2: DropdownOption[]): boolean {
-    if (data1.length !== data2.length) return false;
-    return data1.every((item1, index) => {
-      const item2 = data2[index];
-      return item1.No === item2?.No && item1.Name === item2?.Name;
-    });
-  }
 
   // 讀取狀態
   private sys3800Loading = !1;
@@ -55,6 +41,7 @@ export class TLS26010Service {
   public get ECRList() { return Array.from(this.ECRMap.values()); };
   public get TLTList() { return Array.from(this.TLTMap.values()); };
 
+  // 核准狀態顯示
   public approvalStatus(value: string): string {
     switch (value) {
       case ApprovalStatus.未核准: return '未核准';
@@ -62,6 +49,13 @@ export class TLS26010Service {
       case ApprovalStatus.刪除: return '刪除';
       default: return value;
     }
+  }
+
+  // 核准狀態檢查
+  private approvalCheck({ pod_status }: TLS26010Data) {
+    return pod_status === ApprovalStatus.未核准
+      ? { api: `approveTLS26010`, confirm: `核准` }
+      : { api: `disapproveTLS26010`, confirm: `反核准` };
   }
 
   // 取得館別、樓層、區域代碼等下拉選單資料，用 map 去重
@@ -90,12 +84,6 @@ export class TLS26010Service {
     this.TLTMap.clear();
     for (const item of this.TLTTALENTData()) this.TLTMap.set(item.No, item);
   });
-
-  private approvalCheck({ pod_status }: TLS26010Data) {
-    return pod_status === ApprovalStatus.未核准
-      ? { api: `approveTLS26010`, confirm: `核准` }
-      : { api: `disapproveTLS26010`, confirm: `反核准` };
-  }
 
   constructor(
     private http: HttpClient,
@@ -384,7 +372,7 @@ export class TLS26010Service {
             catchError(error => this.errorHandler.handleError(error)),
             finalize(() => {
               this.approvalStatusLoading = !1;
-              console.log('核准結果:', this.approvalData());
+              console.log('核准結果:',);
             })
           ).subscribe();
         this.messageService.successBubble(`${this.approvalCheck(data).confirm}成功`);

@@ -16,7 +16,7 @@ import { AddButton, Column } from '@shared/componentkit/table/table.model';
 import { ApprovalStatus } from '@shared/models/tls/approval-status.model';
 import { AccordionModule } from 'primeng/accordion';
 import { combineLatest, map } from 'rxjs';
-import { DependentDataQuery, TLS26010Data, TLS26010Query } from './tls26010.model';
+import { TLS26010Data, TLS26010Query } from './tls26010.model';
 
 @Component({
   selector: 'app-tls26010',
@@ -190,7 +190,7 @@ export class TLS26010Component extends BasicQueryPageComponent<TLS26010Data> {
     return true;
   }
 
-  public onClearForm(): void {
+  public onClear(): void {
     this.queryForm.reset({
       podSdateS: this.dateS,
       podSdateE: this.dateE,

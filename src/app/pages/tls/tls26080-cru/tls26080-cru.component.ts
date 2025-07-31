@@ -1,24 +1,22 @@
 
 import { NgIf } from '@angular/common';
-import { Component, effect, OnInit } from '@angular/core';
-import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { Component, OnInit, effect } from '@angular/core';
+import { FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
-import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
-import { Column } from '@shared/componentkit/table/table.model';
-import { PanelModule } from 'primeng/panel';
-import { CampaignAccountingType } from '../tls26080/tls26080.model';
-import { ActivityData, CounterData, DeductionItem } from './ts26080-cru.model';
 import { TLS26080Service } from '@service/api/tls/tls26080.service';
-import { CRUDStatus } from '@shared/models/system/CRUDstatus';
+import { MenubarComponent } from '@shared/component/menubar/menubar.component';
+import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
 import { ButtonComponent } from '@shared/componentkit/button/button.component';
-import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
 import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/calendar-range.component';
+import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
-import { MenubarComponent } from '@shared/component/menubar/menubar.component';
 import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
 import { TableComponent } from '@shared/componentkit/table/table.component';
-
+import { Column } from '@shared/componentkit/table/table.model';
+import { ApprovalStatus } from '@shared/models/tls/approval-status.model';
+import { PanelModule } from 'primeng/panel';
+import { ActivityData, CounterData, DeductionItem } from '../tls26080/tls26080.model';
 
 @Component({
   selector: 'app-tls26080-cru',
@@ -42,18 +40,20 @@ import { TableComponent } from '@shared/componentkit/table/table.component';
   ]
 })
 export class TLS26080CRUComponent extends BasicCruPageComponent<ActivityData> implements OnInit {
+  private dateS: Date = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
+  private dateE: Date = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0);
 
   // 主表單：活動基本資料
   public dataForm = this.formBuilder.nonNullable.group({
-    pod_no: ['', Validators.maxLength(10)], // 活動單號
-    pod_desc: ['', Validators.maxLength(100)], // 活動名稱
-    pod_sdate: [new Date()], // 起始日期(起)
-    pod_edate: [new Date()], // 起始日期(迄)
-    pod_busdate: [new Date()], // 活動正檔日期
-    pod_status: ['未核准'], // 核准狀態
-    pod_type: [''], // 扣款名稱
-    org_id: [''], // 部門
-    cap_item: [''], // 扣款代碼
+    pod_no: new FormControl<string>('自動給號', [Validators.maxLength(10)]), // 活動單號
+    pod_desc: new FormControl<string>('', [Validators.maxLength(100)]), // 活動名稱
+    pod_sdate: new FormControl<Date>(this.dateS, [Validators.required]), // 起始日期(起)
+    pod_edate: new FormControl<Date>(this.dateE, [Validators.required]), // 起始日期(迄)
+    pod_busdate: new FormControl<Date | undefined>(undefined), // 活動正檔日期
+    pod_status: new FormControl<string>(ApprovalStatus.未核准), // 核准狀態
+    pod_type: new FormControl<string | undefined>(undefined), // 扣款名稱
+    org_id: new FormControl<string | undefined>(undefined), // 部門
+    cap_item: new FormControl<string | undefined>(undefined), // 扣款代碼
   });
 
   // 專櫃資料表格
@@ -75,7 +75,7 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<ActivityData> im
     { field: 'amountOrRate', header: '金額/比率', visible: true }
   ];
 
-  private campaignDataEffect = effect(() => {
+  private readonly campaignDataEffect = effect(() => {
     const data = this.service.campaignData();
     if (!Reflect.ownKeys(data).length) return;
     console.log('Campaign Data:', data);
@@ -94,57 +94,33 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<ActivityData> im
     super();
   }
 
-  ngOnInit(): void {
+  public ngOnInit(): void {
     this.initializePage('TLS26080', this.dataForm);
-
-    const state = this.router.lastSuccessfulNavigation?.extras.state as {
-      crudstatus: CRUDStatus,
-      rowdata: any,
-    };
-
-    switch (state.crudstatus) {
-      // 創建
-      case CRUDStatus.Create:
-        this.formTitle = 'create-conditions';
-        this.crudstatus = CRUDStatus.Create;
-        this.dataForm.patchValue({ pod_no: '自動給號', });
-        break;
-      // 修改
-      case CRUDStatus.Edit:
-        this.formTitle = 'edit-conditions';
-        this.crudstatus = CRUDStatus.Edit;
-        break;
-      // 讀檔
-      case CRUDStatus.Read:
-        this.formTitle = 'display-conditions';
-        this.crudstatus = CRUDStatus.Read;
-        break;
-    }
-
-    const rowData = state?.rowdata;
-    console.log(`rowData:`, [rowData]);
-
-    if (this.isFormEditable && rowData) {
-      rowData.pod_status = this.service.approvalStatus(rowData.pod_status);
-
-      // 載入既有的表單資料（編輯模式）
-      this.dataForm.patchValue({
-        pod_no: rowData.pod_no || '自動給號',
-        pod_desc: rowData.pod_desc || '',
-        pod_sdate: rowData.pod_sdate ? new Date(rowData.pod_sdate) : new Date(),
-        pod_edate: rowData.pod_edate ? new Date(rowData.pod_edate) : new Date(),
-        pod_status: rowData.pod_status || '未核准',
-        pod_type: CampaignAccountingType.get(rowData.pod_type)?.Name || '',
-        org_id: rowData.org_id || '',
-        cap_item: rowData.cap_item || CampaignAccountingType.get(rowData.pod_type)?.No || [],
-        pod_busdate: rowData.pod_busdate ? new Date(rowData.pod_busdate) : new Date(),
-      });
-    }
   }
 
   /** 讀取環友資料 */
-  queryCampaign(): void {
+  public queryCampaign(): void {
     this.service.loadCampaignData({});
+  }
+
+  public onClear(): void {
+    this.dataForm.reset({
+      pod_no: '自動給號',
+      pod_sdate: this.dateS,
+      pod_edate: this.dateE,
+      pod_status: ApprovalStatus.未核准,
+    });
+  };
+
+  public onSubmitQuery(): void {
+    this.onSubmit(this.dataForm);
+  };
+
+  // 表單提交
+  public onSubmit(frm: FormGroup): void {
+    this.handleSubmit(frm, () => {
+      console.log(`submit:`, [frm]);
+    });
   }
 
   // // 專櫃選擇事件
@@ -222,41 +198,4 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<ActivityData> im
   //   //     this.mockDeductionData[this.selectedCounter.counterCode]?.filter(d => d.id !== item.id) || [];
   //   // }
   // }
-
-  onClearForm(): void {
-    this.dataForm.reset();
-  };
-
-  onSubmitQuery(): void {
-    this.onSubmit(this.dataForm);
-  };
-
-  // 表單提交
-  onSubmit(frm: FormGroup): void {
-    this.handleSubmit(frm, () => {
-      console.log(`submit:`, [frm]);
-
-
-      switch (this.crudstatus) {
-        case CRUDStatus.Create:
-          if (this.canAdd()) {
-            // 模擬 API 新增
-            setTimeout(() => {
-              this.messageService.successBubble('新增成功');
-              this.onCancel();
-            }, 1000);
-          }
-          break;
-        case CRUDStatus.Edit:
-          if (this.canEdit()) {
-            // 模擬 API 更新
-            setTimeout(() => {
-              this.messageService.successBubble('更新成功');
-              this.onCancel();
-            }, 1000);
-          }
-          break;
-      }
-    });
-  }
 }
