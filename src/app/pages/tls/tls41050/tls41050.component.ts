@@ -13,6 +13,10 @@ import { TranslateModule } from '@ngx-translate/core';
 import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
 import { Tls41050Service } from '../../../service/api/tls/tls41050.service';
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
+import { concatMap, finalize, from } from 'rxjs';
+import { untilDestroyed } from '@ngneat/until-destroy';
+import { ButtonModule } from 'primeng/button';
+import { NgStyle } from '@angular/common';
 
 export interface POS1002 {
   ID: number; // decimal(19,0)
@@ -52,7 +56,21 @@ export interface POS1002 {
     templateUrl: './tls41050.component.html',
     styleUrl: './tls41050.component.scss',
     standalone: true,
-    imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputTextComponent,InputNumberComponent, DropdownComponent, MultiSelectComponent, TableComponent, TranslateModule]
+    imports: [
+      MenubarComponent,
+      ButtonComponent,
+      AccordionModule,
+      FormsModule,
+      ReactiveFormsModule,
+      InputTextComponent,
+      InputNumberComponent,
+      DropdownComponent,
+      MultiSelectComponent,
+      TableComponent,
+      TranslateModule,
+      ButtonModule,
+      NgStyle,
+      ]
 })
 export class TLS41050Component extends BasicQueryPageComponent<POS1002> implements OnInit{
   // 0715 更新 收銀機號、所屬專櫃編號 串接api 用[]送出
@@ -172,7 +190,7 @@ export class TLS41050Component extends BasicQueryPageComponent<POS1002> implemen
   
     isRowSelectable(): boolean {
       // return rowData.CanDel
-      return false; //不予許刪除
+      return true; //不予許刪除 (0731 新增，要能逐筆上傳 開放選擇)
     }
 
     loadOptions(){
@@ -193,4 +211,40 @@ export class TLS41050Component extends BasicQueryPageComponent<POS1002> implemen
         console.log('專櫃主檔代號:', this.TLTTALENT_Option);
       });
     }
+
+    //---0731規格更新---
+        //下傳
+        btnLoading = false;
+        onUpload() {
+          const storeNo = this.authService.getUserInfo()?.SYS_StoreNo ?? '';
+          const items = this.selectedItems;
+          if (!items.length) return;
+    
+          this.btnLoading = true;
+    
+          from(items).pipe(
+            concatMap((item) => {
+              const params = {
+                SYS_StoreNo: storeNo,
+                EXP_StoreNo: storeNo,
+                EXP_Type: "POS1002",
+                EXP_DocNo: storeNo+";"+item.ECR_No,
+                EXP_DataFlag: "S2P",
+                EXP_Desc: ""
+              };
+              return this.tls41050Service.execSpFunc(params);
+            }),
+            finalize(() => this.btnLoading = false),
+            untilDestroyed(this)
+          ).subscribe({
+            next: (response) => {
+              this.messageService.successBubble('異動檔下傳成功');
+              console.log('exec Response',response);
+            },
+            complete: () => {
+              this.selectedItems = [];
+              this.onSubmit(this.queryForm);
+            }
+          }); 
+      }
 }
