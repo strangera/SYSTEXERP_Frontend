@@ -26,6 +26,22 @@ export interface TLS26040Data {
   amount: number;             // 金額
 }
 
+export interface TLS26040QueryRequest2 {
+  preOrderDateFrom: string;      // 預售日期(起)
+  preOrderDateTo: string;        // 預售日期(訖)
+  transactionNo: string;         // 交易序號
+  receivingMachineNo: string;    // 收銀機號
+  counterCode: string;           // 專櫃編號
+}
+
+export interface TLS26040Data2 {
+  preOrderDate: string;        // 預售日期
+  counterCode: string;         // 櫃別編號
+  receivingMachineNo: string;  // 收銀機機號
+  transactionNo: string;       // 交易序號
+  amount: number;              // 來源金額
+}
+
 
 @Injectable({
   providedIn: 'root'
@@ -53,6 +69,26 @@ export class TLS26040Service {
         batchNo: 'BATCH001',
         transactionNo: 'TXN001',
         amount: 1000
+      }],
+      Message: '成功',
+      TotalPage: 1
+    });
+  }
+
+  // 查詢未設定結帳日期之資料
+  queryTLS26040_2(data: TLS26040QueryRequest2): Observable<BaseQueryResponse<TLS26040Data2>> {
+    // return this.http.post<BaseQueryResponse<TLS26040Data>>(`${this.apiUrl}/queryTLS26040`, data);
+
+    // 回傳假資料
+    return of({
+      Status: '0000',
+      TotalCount: 1,
+      Data: [{
+        preOrderDate: '2020/10/15',
+        counterCode: '000092',
+        receivingMachineNo: '0000921',
+        transactionNo: '041375',
+        amount: 50200
       }],
       Message: '成功',
       TotalPage: 1
