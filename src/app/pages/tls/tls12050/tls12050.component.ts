@@ -34,12 +34,12 @@ export class TLS12050Component extends BasicQueryPageComponent<any> implements O
   queryForm = this.fb.group({
     building_no: ['A'],
     FLOOR_NO: ['1F'],
-    statusList: [],
+    // statusList: [],
   });
 
   dropdown1 = [
     { label: 'A1', value: 'A' },
-    { label: 'A2', value: 'A' }
+    { label: 'A2', value: 'B' }
   ];
 
   dropdown2 = [
@@ -52,24 +52,26 @@ export class TLS12050Component extends BasicQueryPageComponent<any> implements O
     { label: '6F', value: '6F' },
   ];
 
-  dropdown3 = [
-    { label: '閒置（未使用）', value: 'idle' },
-    { label: '洽談中（要約書）', value: 'negotiating' },
-    { label: '營運中（合約）', value: 'operating' },
-    { label: '停用', value: 'disabled' }
-  ];
+  // dropdown3 = [
+  //   { label: '閒置（未使用）', value: 'idle' },
+  //   { label: '洽談中（要約書）', value: 'negotiating' },
+  //   { label: '營運中（合約）', value: 'operating' },
+  //   { label: '停用', value: 'disabled' }
+  // ];
 
   // 動態綁定欄位
   // 無圖片預設
   blank = environment.ApiUrl + '/images/blank.jpg';
   selectedImage?: string; // 圖片 URL
   selectedFloor = ''; // 選擇的樓層
+  selectedbuilding_no = ''; // 選擇的館別
   All_Count = 0; // 選擇的樓層數量
 
-  Idle = 0; // 閒置百分比
-  Under_Negotiation = 0; // 洽談中百分比
-  In_Operation = 0; // 營運中百分比
-  Outof_Service = 0; // 停用百分比
+  Idle = '';
+  Under_Negotiation = '';
+  In_Operation = '';
+  Outof_Service = '';
+
   statsList: any[] = [];
 
   constructor(
@@ -108,16 +110,20 @@ export class TLS12050Component extends BasicQueryPageComponent<any> implements O
         const stat = res.Data?.[0];
         this.selectedImage = environment.ApiUrl + '/' + stat?.Image_Url
         this.selectedFloor = frm.get('FLOOR_NO')?.value;
+        this.selectedbuilding_no = frm.get('building_no')?.value;
         this.All_Count = stat?.All_Count ?? 0;
 
-        this.Idle = stat?.Idle ?? 0;
-        this.Under_Negotiation = stat?.Under_Negotiation ?? 0;
-        this.In_Operation = stat?.In_Operation ?? 0;
-        this.Outof_Service = stat?.Outof_Service ?? 0;
+        const total = stat?.All_Count ?? 0;
+        this.Idle = this.calculatePercent(stat?.Idle ?? 0, total);
+        this.Under_Negotiation = this.calculatePercent(stat?.Under_Negotiation ?? 0, total);
+        this.In_Operation = this.calculatePercent(stat?.In_Operation ?? 0, total);
+        this.Outof_Service = this.calculatePercent(stat?.Outof_Service ?? 0, total);
+
       },
       error: (err) => {
         console.error('查詢失敗', err);
       }
+
     });
   }
 
@@ -152,14 +158,12 @@ export class TLS12050Component extends BasicQueryPageComponent<any> implements O
     }
   }
 
-  // onRowSelect(row: any): void {
-  //   this.selectedImage = row.Image_Url ?? '';
-  //   this.selectedFloorCNT = row.All_Count ?? 0;
-  //   this.idlePercent = row.All_Count ? +(row.Idle * 100 / row.All_Count).toFixed(2) : 0;
-  //   this.operationPercent = row.All_Count ? +(row.In_Operation * 100 / row.All_Count).toFixed(2) : 0;
-  //   this.negotiationPercent = row.All_Count ? +(row.Under_Negotiation * 100 / row.All_Count).toFixed(2) : 0;
-  //   this.outofServicePercent = row.All_Count ? +(row.Outof_Service * 100 / row.All_Count).toFixed(2) : 0;
-  // }
+  private calculatePercent(value: number, total: number): string {
+    if (!total || total === 0) return '0%';
+    const percent = (value / total) * 100;
+    return percent.toFixed(1) + '%';
+  }
+
 
   onStatusChange(event: any): void {
     // const current = event.value || [];
@@ -177,5 +181,9 @@ export class TLS12050Component extends BasicQueryPageComponent<any> implements O
   loadOptions(): void {
     // 如果 dropdown 要動態載入，可放這裡
   }
+  get selectedBuildingLabel(): string {
+    return this.dropdown1.find(opt => opt.value === this.selectedbuilding_no)?.label ?? this.selectedbuilding_no;
+  }
+
 }
 
