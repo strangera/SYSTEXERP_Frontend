@@ -97,6 +97,8 @@ export const tlsRoutes: Routes = [
   { path: 'tls22030', loadComponent: () => import('./tls22030/tls22030.component').then(m => m.TLS22030Component) },
   // 電子發票上送筆數檢核表
   { path: 'tls22040', loadComponent: () => import('./tls22040/tls22040.component').then(m => m.TLS22040Component) },
+  // 第三方支付帳差報表
+  { path: 'tls22050', loadComponent: () => import('./tls22050/tls22050.component').then(m => m.TLS22050Component) },
   // 型態別報表
   { path: 'tls23010', loadComponent: () => import('./tls23010/tls23010.component').then(m => m.TLS23010Component) },
   // 折扣別報表
