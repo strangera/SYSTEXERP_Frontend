@@ -51,8 +51,8 @@ export class TLS13040Component extends BasicQueryPageComponent<any> {
     area_noList: [[] as string[]],
     bus_typeList: [[] as string[]],
     tlt_openflagList: [[] as string[]],
-    tlt_bdate_start: [null],
-    tlt_bdate_end: [null],
+    tlt_bdate_start: [new Date('2024-01-01')],
+    tlt_bdate_end: [new Date('2024-01-31')],
     tlt_edate_start: [null],
     tlt_edate_end: [null],
     tlt_term_typeList: [[] as string[]],
@@ -124,7 +124,7 @@ export class TLS13040Component extends BasicQueryPageComponent<any> {
     { field: 'cag_barcode_50', header: '5折', visible: true },
     { field: 'cag_barcode_sale', header: '特價', visible: true },
     {
-      field: 'org_name',
+      field: 'org_id',
       header: '組織代碼',
       visible: true,
       format: (value: any) => {

@@ -6,6 +6,7 @@ import { NotificationService } from '@shared/component/notification-message/noti
 import { BaseQueryResponse, DropdownOption } from '@shared/models/api/base-api.interface';
 import { ApprovalStatus } from '@shared/models/tls/approval-status.model';
 import saveAs from 'file-saver';
+import { ConfirmationService } from 'primeng/api';
 import { catchError, EMPTY, finalize, Observable, of, take, tap } from 'rxjs';
 import { environment } from 'src/environments/environment';
 
@@ -90,10 +91,17 @@ export class TLS26010Service {
     for (const item of this.TLTTALENTData()) this.TLTMap.set(item.No, item);
   });
 
+  private approvalCheck({ pod_status }: TLS26010Data) {
+    return pod_status === ApprovalStatus.未核准
+      ? { api: `approveTLS26010`, confirm: `核准` }
+      : { api: `disapproveTLS26010`, confirm: `反核准` };
+  }
+
   constructor(
     private http: HttpClient,
     private errorHandler: ErrorHandlerService,
     private messageService: NotificationService,
+    private confirmationService: ConfirmationService,
   ) { }
 
   /** 取得館別 */
@@ -230,24 +238,25 @@ export class TLS26010Service {
     return this.http.post<BaseQueryResponse<any>>(`${apiUrl}/TLS0000/TLS2000/updateTLS26010`, data).pipe(
       take(1),
       tap((response) => {
-        if (response.Status === 'Success') {
+        if (response.Status === '0000') {
           // 更新本地數據
           this.TLS26010Data.update(currentData => {
             const info = data.pod_info;
             const index = currentData.findIndex(item => item.pod_no === info.pod_no);
-            if (index !== -1) {
-              if (currentData[index]) {
-                const updatedData: TLS26010Data = {
-                  ...currentData[index],
-                  pod_desc: info.pod_desc,
-                  pod_sdate: info.pod_sdate,
-                  pod_edate: info.pod_edate,
-                  pod_status: info.pod_status ?? ApprovalStatus.未核准,
-                  tlt_nos: data.talent_list.map(t => t.tlt_no),
-                  ECR_Nos: data.ecr_list.map(e => e.ECR_No),
-                };
-                currentData[index] = updatedData;
-              }
+            console.log(`update data:`, [currentData, info, index]);
+            if (index !== -1 && currentData[index]) {
+              const updatedData: TLS26010Data = {
+                ...currentData[index],
+                pod_desc: info.pod_desc,
+                pod_sdate: info.pod_sdate,
+                pod_edate: info.pod_edate,
+                pod_status: currentData[index].pod_status === ApprovalStatus.已核准
+                  ? ApprovalStatus.未核准
+                  : ApprovalStatus.已核准,
+                tlt_nos: data.talent_list.map(t => t.tlt_no),
+                ECR_Nos: data.ecr_list.map(e => e.ECR_No),
+              };
+              currentData[index] = updatedData;
             }
             return [...currentData];
           });
@@ -358,21 +367,30 @@ export class TLS26010Service {
   loadApproval(data: TLS26010Data): void {
     if (this.approvalStatusLoading) return void (this.approvalStatusLoading = !1);
     this.approvalStatusLoading = !0;
-    const id = data.id;
-
-    this.http.post<BaseQueryResponse<{ Status: ApprovalStatus; }>>(
-      `${apiUrl}/TLS0000/TLS2000${data.pod_status === ApprovalStatus.未核准 ? '/approveTLS26010' : '/disapproveTLS26010'}`,
-      { id }).pipe(
-        take(1),
-        tap(() => this.approvalData.set(ApprovalStatus.未核准)),
-        tap(response =>
-          this.approvalData.set(response['Status'] as ApprovalStatus || response.Data[0].Status)),
-        catchError(error => this.errorHandler.handleError(error)),
-        finalize(() => {
-          this.approvalStatusLoading = !1;
-          console.log('核准結果:', this.approvalData());
-        })
-      ).subscribe();
+    this.confirmationService.confirm({
+      message: `是否確定${this.approvalCheck(data).confirm}選取項目？`,
+      accept: () => {
+        const id = data.id;
+        this.http.post<BaseQueryResponse<{ Status: ApprovalStatus; }>>(
+          `${apiUrl}/TLS0000/TLS2000/${this.approvalCheck(data).api}`, { id }).pipe(
+            take(1),
+            tap(() => this.TLS26010Data.update(currentData => {
+              const index = currentData.findIndex(item => item.id === id);
+              if (index !== -1) currentData[index].pod_status = this.approvalCheck(data).confirm === '核准'
+                ? ApprovalStatus.已核准
+                : ApprovalStatus.未核准;
+              return currentData;
+            })),
+            catchError(error => this.errorHandler.handleError(error)),
+            finalize(() => {
+              this.approvalStatusLoading = !1;
+              console.log('核准結果:', this.approvalData());
+            })
+          ).subscribe();
+        this.messageService.successBubble(`${this.approvalCheck(data).confirm}成功`);
+      },
+      reject: () => this.messageService.infoBubble(`${this.approvalCheck(data).confirm}已取消`)
+    });
   }
 
   ngOnDestroy(): void {

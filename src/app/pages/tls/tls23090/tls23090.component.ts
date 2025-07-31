@@ -56,8 +56,8 @@ export class TLS23090Component extends BasicQueryPageComponent<any> {
   displayMode: 'CreditCardDetail' | 'CounterCardAnalysis' = 'CreditCardDetail'; // 預設報表模式
 
   queryForm = this.formBuilder.group({
-    TXN_DateStart: [new Date('2020-01-01'), [Validators.required]],
-    TXN_DateEnd: [new Date(), [Validators.required]],
+    TXN_DateStart: [new Date('2024-01-01'), [Validators.required]],
+    TXN_DateEnd: [new Date('2024-01-31'), [Validators.required]],
     ECR_No: [],
     tlt_no: [],
     CRD_Type: [],

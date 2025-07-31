@@ -1,4 +1,5 @@
 @echo off
+chcp 65001 >nul
 echo 🚀 開始建置 Angular 專案...
 call ng build --configuration production --base-href /TSRDWEBDEV/
 

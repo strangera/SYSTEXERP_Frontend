@@ -53,8 +53,8 @@ import { TranslateModule } from '@ngx-translate/core';
 })
 export class TLS23040Component extends BasicQueryPageComponent<any> {
   queryForm = this.formBuilder.group({
-    TXN_DateStart: [new Date('2020-01-01') as Date, [Validators.required]],
-    TXN_DateEnd: [new Date(), [Validators.required]],
+    TXN_DateStart: [new Date('2024-01-01'), [Validators.required]],
+    TXN_DateEnd: [new Date('2024-01-31'), [Validators.required]],
     ECR_No: [''],
     TXN_No_Start: [null],
     TXN_No_End: [null],

@@ -69,8 +69,8 @@ export class TLS23030Component extends BasicQueryPageComponent<any> {
 
   queryForm = this.formBuilder.group({
     DisplayMode: this.displayMode, // 預設為明細表模式
-    TXN_DateStart: [new Date('2020-01-01') as Date, [Validators.required]],
-    TXN_DateEnd: [new Date('2020-01-03') as Date, [Validators.required]],
+    TXN_DateStart: [new Date('2024-01-01'), [Validators.required]],
+    TXN_DateEnd: [new Date('2024-01-31'), [Validators.required]],
     ECR_No: [], // ✅ 修正為 []
     TXN_No_Start: [null],
     TXN_No_End: [null],

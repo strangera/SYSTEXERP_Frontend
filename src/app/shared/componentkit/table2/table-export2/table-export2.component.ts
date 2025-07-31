@@ -7,7 +7,7 @@ import { InputNumberModule } from 'primeng/inputnumber';
 import { NgIf } from '@angular/common';
 import { Button } from 'primeng/button';
 
-export interface TableExport {
+export interface TableExport2 {
   print_reportTitle?: string;
   print_reportTitle_per_page?: string;
   print_eject?: string;
@@ -33,7 +33,7 @@ export class TableExport2Component implements OnInit, OnDestroy {
   @Input() disable = false;
   @Input() exportStatus: 'PDF' | 'Excel' = 'PDF';
   @Output() visibleChange = new EventEmitter<boolean>();
-  @Output() save = new EventEmitter<TableExport>();
+  @Output() save = new EventEmitter<TableExport2>();
 
   private destroy$ = new Subject<void>();
 
@@ -125,7 +125,7 @@ export class TableExport2Component implements OnInit, OnDestroy {
       this.form.markAllAsTouched();
       return;
     }
-    const tableExportData: TableExport = {
+    const tableExportData: TableExport2 = {
       print_reportTitle: this.form.value.print_reportTitle || 'Y',
       print_reportTitle_per_page: this.form.value.print_reportTitle_per_page || 'N',
       print_eject: this.form.value.print_eject || 'Y',

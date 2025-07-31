@@ -115,6 +115,7 @@ export class TLS2B020Component extends BasicQueryPageComponent<any> {
     this.queryForm,
     (form) => this.onSubmit(form),
   );
+    this.calculateColumnTotals()
 
   this.cashierDistinctionService.getSystemTypes().subscribe((res) => {
     this.cashierDistinctionOptions = res;
@@ -197,19 +198,19 @@ this.columns = [
 onSubmit(form: FormGroup): void {
   this.submitted = true;
 
-    if (form.invalid) {
-      this.messageService.warnBubble('請完整填寫查詢條件');
-      return;
+  if (form.invalid) {
+    this.messageService.warnBubble('請完整填寫查詢條件');
+    return;
+  }
+
+  const payload = { ...form.value };
+  Object.keys(payload).forEach((key) => {
+    if (typeof payload[key] === 'string') {
+      payload[key] = payload[key].trim() || null;
     }
+  });
 
-    const payload = { ...form.value };
-    Object.keys(payload).forEach((key) => {
-      if (typeof payload[key] === 'string') {
-        payload[key] = payload[key].trim() || null;
-      }
-    });
-
-  // ✅ 保留 TXN_Date → yyyymm，給查詢 payload 使用（不再產生欄位）
+  // ✅ 保留 TXN_Date → yyyymm，給查詢 payload 使用
   if (payload.TXN_Date) {
     const rawValue = payload.TXN_Date;
     const yyyymm =
@@ -218,13 +219,13 @@ onSubmit(form: FormGroup): void {
         : `${rawValue.getFullYear()}${(rawValue.getMonth() + 1)
             .toString()
             .padStart(2, '0')}`;
-
-    payload.TXN_YYYYMM = yyyymm; // ⬅️ 自訂一個欄位，後端如果吃不到 TXN_Date 可以改用這個
+    payload.TXN_YYYYMM = yyyymm;
   }
 
   this.loading = true;
   this.messageService.blockUi();
 
+  // ✅ 平行呼叫主資料 + 關帳日
   forkJoin({
     reportData: this.tls2b020Service.queryTLS2B020(payload),
     closeDateRes: this.tls2b020Service.queryCloseDate(payload),
@@ -232,9 +233,17 @@ onSubmit(form: FormGroup): void {
     next: ({ reportData, closeDateRes }) => {
       this.data = reportData?.Data ?? [];
       this.totalRecords = reportData?.TotalCount ?? this.data.length;
+      this.closeDate = closeDateRes?.Data ?? '-';
 
       this.queryStateService.setQueryState(this.ProgNo, payload);
-      this.closeDate = closeDateRes?.Data ?? '-';
+
+      // ✅ 計算欠收金額
+      this.calculateAmounts();
+
+      // ✅ 計算欄位合計總和
+      this.calculateColumnTotals();
+      console.log('[✅ 欄位合計結果]', this.columnTotals);
+      console.log('[✅ TotalAmt 合計]', this.columnTotals['TotalAmt']);
 
       this.messageService.successBubble('查詢成功');
     },
@@ -247,37 +256,8 @@ onSubmit(form: FormGroup): void {
       this.messageService.unblockUi();
     },
   });
+}
 
-
-    this.loading = true;
-    this.messageService.blockUi();
-
-    // ✅ 改為平行呼叫：主資料 + 關帳日
-    forkJoin({
-      reportData: this.tls2b020Service.queryTLS2B020(payload),
-      closeDateRes: this.tls2b020Service.queryCloseDate(payload),
-    }).subscribe({
-      next: ({ reportData, closeDateRes }) => {
-        this.data = reportData?.Data ?? [];
-        this.totalRecords = reportData?.TotalCount ?? this.data.length;
-
-        this.queryStateService.setQueryState(this.ProgNo, payload);
-
-        // ✅ 從 closeDateRes.Data 拿關帳日
-        this.closeDate = closeDateRes?.Data ?? '-';
-
-        this.messageService.successBubble('查詢成功');
-      },
-      error: () => {
-        this.messageService.errorBubble('查詢失敗，請稍後再試');
-        this.loading = false;
-      },
-      complete: () => {
-        this.loading = false;
-        this.messageService.unblockUi();
-      },
-    });
-  }
 
 
 
@@ -288,35 +268,48 @@ get overflowStatusDisplay(): string {
   const rawValue = this.queryForm.get('overflowStatus')?.value;
   const value = rawValue as number | null;
 
-  const net = this.overpaidAmount - this.underpaidAmount;
+  // ✅ 使用欄位合計的 TotalAmt 作為溢收
+  const overpaid = this.columnTotals['TotalAmt'] || 0;
+
+  // ✅ 欠收金額仍來自 API 欄位總和
+  const underpaid = this.underpaidAmount;
+
+  const net = overpaid - underpaid;
 
   if (value === 3) {
     // 欠款
-    if (net < 0) {
-      return `欠收金額：${this.formatAmount(Math.abs(net))} 元`;
-    } else {
-      return `欠收金額：0 元`;
-    }
+    return `欠收金額：${this.formatAmount(Math.max(0, -net))} 元`;
   } else if (value === 2) {
     // 溢款
-    if (net > 0) {
-      return `溢付金額：${this.formatAmount(net)} 元`;
-    } else {
-      return `溢付金額：0 元`;
-    }
+    return `溢付金額：${this.formatAmount(Math.max(0, net))} 元`;
   } else {
-    // 全部（null）：根據 net 顯示哪一邊有值
-    if (net > 0) {
-      return `溢付金額：${this.formatAmount(net)} 元　欠收金額：0 元`;
-    } else if (net < 0) {
-      return `溢付金額：0 元　欠收金額：${this.formatAmount(Math.abs(net))} 元`;
-    } else {
-      return `溢付金額：0 元　欠收金額：0 元`;
-    }
+    // 全部（null）
+    const showOver = `溢付金額：${this.formatAmount(Math.max(0, net))} 元`;
+    const showUnder = `欠收金額：${this.formatAmount(Math.max(0, -net))} 元`;
+    return `${showOver}　${showUnder}`;
   }
 }
 
 
+columnTotals: Record<string, number> = {};
+
+calculateColumnTotals(): void {
+  const totals: Record<string, number> = {};
+
+  this.columns.forEach(col => {
+    if (!col.isTotal) return;
+
+    const field = col.field;
+    const sum = this.data.reduce((acc, row) => {
+      const val = parseFloat(row[field]);
+      return acc + (isNaN(val) ? 0 : val);
+    }, 0);
+
+    totals[field] = sum;
+  });
+
+  this.columnTotals = totals;
+}
 
 
   private formatAmount(value: number): string {
