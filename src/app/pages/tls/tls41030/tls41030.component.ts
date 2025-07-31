@@ -10,6 +10,10 @@ import { AccordionModule } from 'primeng/accordion';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { TranslateModule } from '@ngx-translate/core';
+import { concatMap, finalize, from } from 'rxjs';
+import { untilDestroyed } from '@ngneat/until-destroy';
+import { ButtonModule } from 'primeng/button';
+import { NgStyle } from '@angular/common';
 
 
 interface POS2001 {
@@ -42,7 +46,18 @@ interface POS2001 {
     templateUrl: './tls41030.component.html',
     styleUrl: './tls41030.component.scss',
     standalone: true,
-    imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputTextComponent, TableComponent, TranslateModule]
+    imports: [
+      MenubarComponent,
+      ButtonComponent,
+      AccordionModule,
+      FormsModule,
+      ReactiveFormsModule,
+      InputTextComponent,
+      TableComponent,
+      TranslateModule,
+      ButtonModule,
+      NgStyle,
+    ]
 })
 export class TLS41030Component extends BasicQueryPageComponent<POS2001> implements OnInit{
     bigCategoryOptions: { value: string, label: string }[] = []; // 用於下拉選單
@@ -196,4 +211,40 @@ export class TLS41030Component extends BasicQueryPageComponent<POS2001> implemen
       // return rowData.CanDel;
       return true;
     }
+
+    //---0731規格更新---
+    //下傳
+    btnLoading = false;
+    onUpload() {
+      const storeNo = this.authService.getUserInfo()?.SYS_StoreNo ?? '';
+      const items = this.selectedItems;
+      if (!items.length) return;
+
+      this.btnLoading = true;
+
+      from(items).pipe(
+        concatMap((item) => {
+          const params = {
+            SYS_StoreNo: storeNo,
+            EXP_StoreNo: storeNo,
+            EXP_Type: "POS2001",
+            EXP_DocNo: item.USR_No,
+            EXP_DataFlag: "S2P",
+            EXP_Desc: ""
+          };
+          return this.tls41030Service.execSpFunc(params);
+        }),
+        finalize(() => this.btnLoading = false),
+        untilDestroyed(this)
+      ).subscribe({
+        next: (response) => {
+          this.messageService.successBubble('異動檔下傳成功');
+          console.log('exec Response',response);
+        },
+        complete: () => {
+          this.selectedItems = [];
+          this.onSubmit(this.queryForm);
+        }
+      }); 
+  }
 }

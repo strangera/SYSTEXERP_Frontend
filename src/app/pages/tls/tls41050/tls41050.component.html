@@ -64,7 +64,8 @@
       (detail)="onDetail($event)"
       [selectedItems]="selectedItems"
       (selectionChange)="selectedItems = $event"
-      [showCheckBox]="false"
+      [showCheckBox]="true"
+      [showDelete]="false"
       dataKey="id"
       [multiSortMeta]="[{ field: 'ECR_No', order: 1 }]"
       [totalRecords]="totalRecords"
@@ -72,6 +73,12 @@
       [lazy]="true"
       [loading]="loading"
       [isRowSelectable]="isRowSelectable"
-    ></app-table>
+    >
+    <header>
+      <p-button [ngStyle]="{ width: '35px', height: '35px' }" [style]="{ width: '35px', height: '35px' }" pTooltip="下傳"
+        tooltipPosition="top" pButton icon="pi pi-upload" severity="success" class="p-button-rounded p-button-text"
+        [disabled]="selectedItems.length === 0" (click)="onUpload()"/>
+    </header>
+  </app-table>
   </div>
 </div>

@@ -32,4 +32,9 @@ export class Tls41050Service {
     queryTLTTALENT_DropDownList(data: any): Observable<any> {
       return this.http.post<any>(`${environment.ApiUrl}/queryTLTTALENT_DropDownList`, data);
     }
+
+    // 異動檔 下傳
+    execSpFunc(body: any): Observable<any> {
+      return this.http.post<any>(`${environment.ApiUrl}/ExecSpFunc/ExecSpFunc`, body);
+    }
 }
