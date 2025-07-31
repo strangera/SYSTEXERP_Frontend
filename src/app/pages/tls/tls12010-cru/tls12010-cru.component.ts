@@ -330,7 +330,7 @@ export class TLS12010CRUComponent extends BasicCruPageComponent<Potential_Custom
             this.contact_USR_Option = response.Data.map((item: any) => ({
               No: item.contact_USR_No, // 接待人員 代碼
               Name: item.contact_USR_Name, // 接待人員 名稱
-              Label: item.contact_USR_No + '/' + item.contact_USR_Name, // 組合成顯示用的Label
+              Label: item.contact_USR_No + '-' + item.contact_USR_Name, // 組合成顯示用的Label
             }));
             console.log('接待人員代號:', this.contact_USR_Option);
           });
@@ -339,7 +339,7 @@ export class TLS12010CRUComponent extends BasicCruPageComponent<Potential_Custom
         this.tls12010Service.queryTLTBUSTYPE_DropDownList({}).subscribe((response) => {
           this.bus_type_Option = response.Data.map((item: any) => ({
             No: item.No, // 大分類(專櫃) 號
-            Label: item.No + '/' + item.Name, // 組合成顯示用的Label
+            Label: item.No + '-' + item.Name, // 組合成顯示用的Label
           }));
           console.log('大分類代號:', this.bus_type_Option);
         });
@@ -350,7 +350,7 @@ export class TLS12010CRUComponent extends BasicCruPageComponent<Potential_Custom
             No: item.No, // 品牌主代碼
             Name: item.Name, //品牌名稱
             LOGO_EN_NAME: item.LOGO_EN_NAME, // 品牌英文名稱
-            Label: item.No + '/' + item.Name, // 組合成顯示用的Label
+            Label: item.No + '-' + item.Name, // 組合成顯示用的Label
           }));
           console.log('品牌代號:', this.tlt_name_Option);
         });
@@ -519,6 +519,7 @@ export class TLS12010CRUComponent extends BasicCruPageComponent<Potential_Custom
     }
 
     onRowCancelDetail(event: any) {
+      
       this.tls12010DetailService.handleRowCancel(event);
     }
     // 新增 Potential_Customer_Detail
