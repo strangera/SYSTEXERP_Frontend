@@ -23,4 +23,13 @@ export class TLS2C050Service {
     );
   }
 
+
+
+  // 最近匯總日期
+  querySummaryDate(payload: any): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/TLS0000/TLS2000/querySummaryDate`, payload).pipe(
+      tap(response => console.log('查詢最近匯總日:', response)),
+      catchError((error) => this.errorHandler.handleError(error))
+    );
+  }
 }
