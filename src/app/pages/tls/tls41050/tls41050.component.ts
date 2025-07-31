@@ -212,7 +212,7 @@ export class TLS41050Component extends BasicQueryPageComponent<POS1002> implemen
       });
     }
 
-    //---0731規格更新---
+    //---0731規格更新(EXP_DataFlag 刪除基本不會用到)---
         //下傳
         btnLoading = false;
         onUpload() {

@@ -59,7 +59,7 @@
           <app-input-text class="col-12 md:col-6 lg:col-4" label="授權碼" controlName="NCML_ApprovalCode"
             [control]="queryForm.controls.NCML_ApprovalCode" [submitted]="submitted" />
           <app-multi-select class="col-12 md:col-6 lg:col-4" label="分期期數" controlName="NCML_TermNo"
-            [options]="TermNoOptions" optionLabel="label" optionValue="value"
+            [options]="TermNoOptions" optionLabel="SYS_Name" optionValue="SYS_Code"
             [control]="queryForm.controls.NCML_TermNoList" [submitted]="submitted" />
         </div>
         <!-- 中信、中信-停車專用欄位 -->
@@ -107,9 +107,9 @@
         </div>
         <hr *ngIf="selectedBank" />
         <div *ngIf="selectedBank" class="grid p-fluid">
-          <app-multi-select class="col-12 md:col-6 lg:col-4" label="查詢篩選" controlName="queryFilter"
-            [options]="queryFilterOptions" optionLabel="label" optionValue="value"
-            [control]="queryForm.controls.queryFilter" [submitted]="submitted" />
+          <app-radiobutton class="col-12" label="查詢篩選" controlName="queryFilter" [options]="queryFilterOptions"
+            optionLabel="label" optionValue="value" [control]="queryForm.controls.queryFilter"
+            [submitted]="submitted" />
         </div>
         <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
           <app-button btnType="clear"></app-button>
@@ -122,6 +122,6 @@
 <div class="card">
   <app-table dataKey="ID" [data]="data" [columns]="currentColumns" (edit)="onEdit($event)" (detail)="onDetail($event)"
     [multiSortMeta]="[{ field: 'ID', order: 1 }]" [totalRecords]="totalRecords"
-    (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [lazy]="true"
-    [loading]="loading"></app-table>
+    (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [lazy]="true" [loading]="loading"
+    [apiUrl]="selectApi"></app-table>
 </div>

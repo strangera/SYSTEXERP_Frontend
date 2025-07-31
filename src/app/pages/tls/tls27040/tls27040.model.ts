@@ -4,36 +4,72 @@ export const POS6118_columns: Column[] = [
   { field: 'ECR_No', header: '收銀機號' },
   { field: 'TXN_No', header: '交易流水號' },
   { field: 'TLT_No', header: '專櫃編號' },
-  { field: '', header: '卡別' },
-  { field: '', header: '金額' },
-  { field: '', header: '銷售日期' },
-  { field: '', header: '銷售時間' },
-  { field: '', header: '請款日期' },
-  { field: '', header: '卡號' },
-  { field: '', header: '發票號碼' },
-  { field: '', header: 'EDC號碼' },
-  { field: '', header: '授權碼' },
-  { field: '', header: '銷售狀況' },
-  { field: '', header: '交易類別' },
-  { field: '', header: '輸入狀況' },
-  { field: '', header: '分期期數' },
-  { field: '', header: '請款來源' },
-  { field: '', header: '建立者' },
-  { field: '', header: '建立日期' },
-  { field: '', header: '修改者' },
-  { field: '', header: '修改日期' },
-
+  { field: 'NCML_PayCrdType', header: '卡別' },
+  { field: 'NCML_TxnAmt', header: '金額' },
+  { field: 'NCML_TxnDate', header: '銷售日期' },
+  { field: 'NCML_TxnTime', header: '銷售時間' },
+  { field: 'NCML_BatCloseDate', header: '請款日期' },
+  { field: 'NCML_CrdNo', header: '卡號' },
+  { field: 'NCML_GUI_No', header: '發票號碼' },
+  { field: 'NCML_TmID', header: 'EDC號碼' },
+  { field: 'NCML_ApprovalCode', header: '授權碼' },
+  { field: 'NCML_TxnType', header: '銷售狀況' },
+  { field: 'NCML_CrdTxnFg', header: '交易類別' },
+  { field: 'NCML_Check', header: '輸入狀況' },
+  { field: 'NCML_TermNo', header: '分期期數' },
+  { field: 'NCML_Source', header: '請款來源' },
+  { field: 'CRT_USR_No', header: '建立者' },
+  { field: 'CRT_Date', header: '建立日期' },
+  { field: 'UPD_USR_No', header: '修改者' },
+  { field: 'UPD_Date', header: '修改日期' },
+  // acquiring_Bank
 ];
 export const POS6119_columns: Column[] = [
-
+  { field: 'ECR_No', header: '收銀機號' },
+  { field: 'TXN_No', header: '交易流水號' },
+  { field: 'TLT_No', header: '專櫃編號' },
+  { field: 'CTBC_TxnAmt', header: '金額' },
+  { field: 'CTBC_TxnTime', header: '銷售日期' },
+  { field: 'CTBC_Date', header: '請款日期' },
+  { field: 'CTBC_CrdNo', header: '卡號' },
+  { field: 'CTBC_GUI_No', header: '發票號碼' },
+  { field: 'CTBC_TmID', header: 'EDC號碼' },
+  { field: 'CTBC_ApprovalCode', header: '授權碼' },
+  { field: 'CTBC_TxnCode', header: '銷售狀態' },
+  { field: 'CTBC_DataType', header: '交易類別' },
+  { field: 'CTBC_Check', header: '輸入狀況' },
+  { field: 'CTBC_TermNo', header: '分期期數' },
+  { field: 'CRT_USR_No', header: '建立者' },
+  { field: 'CRT_Date', header: '建立日期' },
+  { field: 'UPD_USR_No', header: '修改者' },
+  { field: 'UPD_Date', header: '修改日期' },
 ];
 export const POS6119P_columns: Column[] = [
-
+  { field: 'ECR_No', header: '收銀機號' },
+  { field: 'TXN_No', header: '交易流水號' },
+  { field: 'TLT_No', header: '專櫃編號' },
+  { field: 'CTBC_TxnAmt', header: '金額' },
+  { field: 'CTBC_TxnDate', header: '銷售日期' },
+  { field: 'CTBC_BusDate', header: '請款日期' },
+  { field: 'CTBC_CrdNo', header: '卡號' },
+  { field: 'CTBC_GUI_No', header: '發票號碼' },
+  { field: 'CTBC_TmID', header: 'EDC號碼' },
+  { field: 'CTBC_ApprovalCode', header: '授權碼' },
+  { field: 'CTBC_TxnType', header: '交易類型' },
+  { field: 'CTBC_DataType', header: '交易類別' },
+  { field: 'CTBC_Check', header: '輸入狀況' },
+  { field: 'CTBC_TermNo', header: '分期期數' },
+  { field: 'CTBC_Source', header: '請款來源' },
+  { field: 'CRT_USR_No', header: '建立者' },
+  { field: 'CRT_Date', header: '建立日期' },
+  { field: 'UPD_USR_No', header: '修改者' },
+  { field: 'UPD_Date', header: '修改日期' },
 ];
 
 export interface PosConfig {
   columns: Column[];
   formFields: (keyof TLS27040Form)[];
+  api: string;
 }
 
 export interface TLS27040Form {
@@ -81,7 +117,8 @@ export const POS611X_CONFIGS: Record<string, PosConfig> = {
       'NCML_TxnDate', 'NCML_TxnTime', 'NCML_TxnType', 'NCML_ApprovalCode',
       'NCML_CrdTxnFg', 'NCML_TermNo', 'ECR_No', 'TXN_No', 'TLT_No',
       'NCML_TxnAmt', 'NCML_Check'
-    ]
+    ],
+    api: 'queryPOS6118'
   },
   1: {
     columns: POS6119_columns,
@@ -89,7 +126,8 @@ export const POS611X_CONFIGS: Record<string, PosConfig> = {
       'CTBC_TmID', 'CTBC_Date', 'CTBC_CrdNo', 'CTBC_TxnTime', 'CTBC_TxnCode',
       'CTBC_ApprovalCode', 'CTBC_DataType', 'CTBC_TermNo', 'ECR_No',
       'TXN_No', 'TLT_No', 'CTBC_TxnAmt', 'CTBC_Check'
-    ]
+    ],
+    api: 'queryPOS6119'
   },
   2: {
     columns: POS6119P_columns,
@@ -97,10 +135,10 @@ export const POS611X_CONFIGS: Record<string, PosConfig> = {
       'CTBC_TmID', 'CTBC_TxnDate', 'CTBC_CrdNo', 'CTBC_TxnType',
       'CTBC_ApprovalCode', 'ECR_No', 'TXN_No', 'TLT_No',
       'CTBC_TxnAmt', 'CTBC_Check'
-    ]
+    ],
+    api: 'queryPOS6119P'
   }
 };
-
 export const TxnTypeOptions = [
   { label: '一般銷售', value: '00' },
   { label: '退貨銷售', value: '04' }
@@ -131,8 +169,20 @@ export const POS611XOptions = [
   { label: '中信', value: '1' },
   { label: '中信-停車場', value: '2' }
 ]
+export const PayCrdTypeOptions = [
+  { label: 'VISA', value: 'V' },
+  { label: 'MASTER', value: 'M' },
+  { label: 'JCB', value: 'J' },
+  { label: 'AE', value: 'A' },
+  { label: 'DINVER', value: 'D' },
+  { label: '銀聯卡', value: 'S' },
+  { label: '其他', value: 'O' },
+]
 export const queryFilterOptions = [
-  { label: '全部', value: 'all' },
-  { label: '未處理', value: 'unprocessed' },
-  { label: '已處理', value: 'processed' }
+  { label: '收銀機號為空', value: '00' },
+  { label: '專櫃編號為空', value: '01' },
+  { label: '專櫃編號不存在', value: '02' },
+  { label: '交易流水號為空', value: '03' },
+  { label: '銷售日期為空', value: '04' },
+  { label: '銷售日期與請款日不同', value: '05' },
 ]

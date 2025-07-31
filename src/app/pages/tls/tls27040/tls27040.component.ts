@@ -11,13 +11,15 @@ import { TableComponent } from '../../../shared/componentkit/table/table.compone
 import { TranslateModule } from '@ngx-translate/core'; // Add this import as requested
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { Column, createPaginationConfig } from '@shared/componentkit/table/table.model';
-import { BusCrdTxnFgOptions, CheckOptions, CrdTxnFgOptions, CTBC_TxnCodeOptions, CTBC_TxnTypeOptions, POS611X_CONFIGS, POS611XOptions, queryFilterOptions, TxnTypeOptions } from './tls27040.model';
+import { BusCrdTxnFgOptions, CheckOptions, CrdTxnFgOptions, CTBC_TxnCodeOptions, CTBC_TxnTypeOptions, PayCrdTypeOptions, POS611X_CONFIGS, POS611XOptions, queryFilterOptions, TxnTypeOptions } from './tls27040.model';
 import { NgIf } from '@angular/common';
 import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { untilDestroyed } from '@ngneat/until-destroy';
-import { TLS27040Service } from '@service/api/tls/tls27040.service';
+import { POS6118Data, POS6119Data, POS6119PData, TLS27040Service } from '@service/api/tls/tls27040.service';
 import { finalize } from 'rxjs';
+import { SystemOptionsService } from '@service/system/sys1000.service';
+import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
 @Component({
   selector: 'app-tls27040',
   templateUrl: './tls27040.component.html',
@@ -35,32 +37,33 @@ import { finalize } from 'rxjs';
     CalendarRangeComponent,
     TableComponent,
     TranslateModule,
-    NgIf
+    NgIf,
+    RadiobuttonComponent
   ]
 })
-export class TLS27040Component extends BasicQueryPageComponent<any> implements OnInit {
+export class TLS27040Component extends BasicQueryPageComponent<POS6118Data | POS6119Data | POS6119PData> implements OnInit {
   queryForm = this.formBuilder.group({
     POS611X: ['', [Validators.required]], // 收單銀行
     // 共用
-    ECR_NoList: [null],     // ECR編號
-    TXN_NoList: [null],   // 交易編號
-    TLT_NoList: [null],   // 專櫃編號
+    ECR_NoList: [null], // ECR編號
+    TXN_NoList: [null], // 交易編號
+    TLT_NoList: [null], // 專櫃編號
     // 聯合專用欄位
     NCML_TxnTypeList: [null],         // 銷售狀況
     NCML_PayCrdTypeList: [null],    // 卡別
-    NCML_TxnAmt_Start: [null, [Validators.max(9999999999.99)]],       // 交易金額起 decimal 12, 2
-    NCML_TxnAmt_End: [null, [Validators.max(9999999999.99)]],      // 交易金額迄 decimal 12, 2
+    NCML_TxnAmt_Start: [null, [Validators.max(9999999999)]],       // 交易金額起 decimal 12, 2
+    NCML_TxnAmt_End: [null, [Validators.max(9999999999)]],      // 交易金額迄 decimal 12, 2
     NCML_TxnDate_Start: [null],    // 交易日期起
     NCML_TxnDate_End: [null],    // 交易日期迄
     NCML_TxnTime_Start: [null],  // 交易時間起
     NCML_TxnTime_End: [null],  // 交易時間迄
-    NCML_CrdNo: [''],       // 卡號
-    NCML_TmID: [''],      //EDC號碼
+    NCML_CrdNo: ['', [Validators.maxLength(32)]],       // 卡號
+    NCML_TmID: ['', [Validators.maxLength(8)]],      //EDC號碼
     NCML_BatCloseDate_Start: [null], // 請款日期起
     NCML_BatCloseDate_End: [null], // 請款日期迄
     NCML_CrdTxnFgList: [null],      // 交易類別 資料型態，C=一般交易、I=分期交易、R=紅利交易
     NCML_CheckList: [null],       // 輸入狀態
-    NCML_ApprovalCode: [''],  // 核准碼
+    NCML_ApprovalCode: ['', [Validators.maxLength(6)]],  // 核准碼
     NCML_TermNoList: [null],      // 分期期數
     // 中信專用欄位 (若你有要加入查詢欄位)
     CTBC_TxnCode: [], // 銷售狀態
@@ -68,7 +71,7 @@ export class TLS27040Component extends BasicQueryPageComponent<any> implements O
     CTBC_TxnAmtEnd: [], // 交易金額迄
     CTBC_TxnTimeStart: [], // 交易時間起
     CTBC_TxnTimeEnd: [], // 交易時間迄
-    CTBC_CrdNo: [], // 卡號
+    CTBC_CrdNo: ['', [Validators.maxLength(32)]], // 卡號
     CTBC_TmID: [], // EDC號碼
     CTBC_DateStart: [], // 請款日期起
     CTBC_DateEnd: [], // 請款日期迄
@@ -87,19 +90,20 @@ export class TLS27040Component extends BasicQueryPageComponent<any> implements O
     ...createPaginationConfig([{ field: 'ID', order: 1 }]),
   });
   totalRecords = 0;
-  data: any[] = [];
+  data: POS6118Data[] | POS6119Data[] | POS6119PData[] = [];
   TxnTypeOptions = TxnTypeOptions;  // 銷售狀況
-  PayCrdTypeOptions = [];           // 卡別
+  PayCrdTypeOptions = PayCrdTypeOptions;           // 卡別
   CrdTxnFgOptions = CrdTxnFgOptions;             // 交易類別
-  BusCrdTxnFgOptions = BusCrdTxnFgOptions
+  BusCrdTxnFgOptions = BusCrdTxnFgOptions;
   CTBC_TxnCodeOptions = CTBC_TxnCodeOptions; // 銷售狀態
   CTBC_TxnTypeOptions = CTBC_TxnTypeOptions; // 交易類型
   CheckOptions = CheckOptions;                // 輸入狀態
-  TermNoOptions = [];                // 分期期數
+  TermNoOptions = SystemOptionsService.getOptions('T109');
   POS611XOptions = POS611XOptions;             // 收單銀行
   queryFilterOptions = queryFilterOptions;             // 查詢篩選
 
   selectedBank: string | null = null;
+  selectApi?: string;
   currentColumns: Column[] = [];
   visibleFields: string[] = [];
 
@@ -119,13 +123,16 @@ export class TLS27040Component extends BasicQueryPageComponent<any> implements O
       const config = POS611X_CONFIGS[bankCode ?? ''] || { columns: [], formFields: [] };
       this.currentColumns = config.columns;
       this.visibleFields = config.formFields;
+      this.selectApi = config.api;
     });
     const defaultBank = this.queryForm.get('POS611X')?.value;
     if (defaultBank) {
       const config = POS611X_CONFIGS[defaultBank];
       this.currentColumns = config?.columns || [];
       this.visibleFields = config?.formFields || [];
+      this.selectApi = config.api;
     }
+    this.queryForm.get('POS611X')?.setValue('1');
   }
   loadDropdownOptions() {
     this.dropDownListService.queryPOS1002_DropDownList().pipe(untilDestroyed(this)).subscribe(res => {

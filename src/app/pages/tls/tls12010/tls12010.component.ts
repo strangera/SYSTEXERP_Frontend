@@ -119,9 +119,7 @@ export class TLS12010Component extends BasicQueryPageComponent<Potential_Custome
         { field: 'cus_uniform_id', header: '廠商統一編號', visible: true },
         { field: 'VEN_Name', header: '廠商名稱', visible: true },
         { field: 'VEN_EngName', header: '廠商英文名稱', visible: true },
-        { field: 'bus_type', header: '大分類代碼', visible: true , format: (value: string) =>
-          this.bus_type_Option.find((option) => option.No === value)?.Label || value
-        },
+        { field: 'bus_type', header: '大分類代碼', visible: true},
         { field: 'bus_type_name', header: '大分類名稱', visible: true},
         { field: 'tlt_name', header: '品牌（專櫃名稱）', visible: true },
         { field: 'tlt_EngName', header: '品牌英文名稱', visible: true },
