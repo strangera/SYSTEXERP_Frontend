@@ -49,8 +49,8 @@ export class TLS13030Component extends BasicQueryPageComponent<any> {
     floor_noList: [[] as string[]],
     area_noList: [[] as string[]],
     tlt_openflagList: [[] as string[]],
-    tlt_bdate_start: [null],
-    tlt_bdate_end: [null],
+    tlt_bdate_start: [new Date('2024-01-01')],
+    tlt_bdate_end: [new Date('2024-01-31')],
     tlt_edate_start: [null],
     tlt_edate_end: [null],
     cap_typeList: [[] as string[]],
@@ -232,27 +232,25 @@ export class TLS13030Component extends BasicQueryPageComponent<any> {
     });
   }
 
-  processResultData(resData: any[]): any[] {
-    const formatYYYYMM = (value: string): string => {
-      if (value && value.length === 6) {
-        return `${value.substring(0, 4)}/${value.substring(4, 2)}`;
-      }
-      return value;
-    };
+processResultData(resData: any[]): any[] {
+  const formatYYYYMM = (value: string): string => {
+    if (value && value.length === 6) {
+      return `${value.substring(0, 4)}/${value.substring(4, 6)}`;
+    }
+    return value;
+  };
 
-    return (resData || []).map((item: any) => {
-      const [code, name] = (item.bus_type ?? '').split('/');
-      return {
-        ...item,
-        defSalesAmt: item.defSalesAmt ?? 0,
-        commRate: item.commRate ?? 0,
-        bus_type_code: code ?? '',
-        bus_type_name: name ?? '',
-        tpy_bdate: formatYYYYMM(item.tpy_bdate),
-        tpy_edate: formatYYYYMM(item.tpy_edate),
-      };
-    });
-  }
+  return (resData || []).map((item: any) => {
+    return {
+      ...item,
+      defSalesAmt: item.defSalesAmt ?? 0,
+      commRate: item.commRate ?? 0,
+      tpy_bdate: formatYYYYMM(item.tpy_bdate),
+      tpy_edate: formatYYYYMM(item.tpy_edate),
+    };
+  });
+}
+
 
 
   onSubmit(form: FormGroup): void {

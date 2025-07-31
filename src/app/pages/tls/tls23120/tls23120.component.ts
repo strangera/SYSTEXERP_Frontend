@@ -33,8 +33,8 @@ export class TLS23120Component extends BasicQueryPageComponent<any> {
   customPageSize = 1000;
 
   queryForm = this.formBuilder.group({
-    TXN_DateStart: [new Date('2020-01-01') as Date, [Validators.required]],
-    TXN_DateEnd: [new Date('2020-01-15') as Date, [Validators.required]],
+    TXN_DateStart: [new Date('2024-01-01'), [Validators.required]],
+    TXN_DateEnd: [new Date('2024-01-31'), [Validators.required]],
     bus_type: [],
     ShowBusType: true,
     tlt_building: [],

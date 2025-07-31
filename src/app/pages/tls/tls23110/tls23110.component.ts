@@ -35,8 +35,8 @@ export class TLS23110Component extends BasicQueryPageComponent<any> {
 
   queryForm = this.formBuilder.group({
 
-    TXN_DateStart: [new Date('2020-01-01') as Date, Validators.required],
-    TXN_DateEnd: [new Date('2020-01-01') as Date, Validators.required],
+    TXN_DateStart: [new Date('2024-01-01'), Validators.required],
+    TXN_DateEnd: [new Date('2024-01-31'), Validators.required],
     tlt_term_type: [],       // e.g., 'st'
     rece_yn: [],            // e.g., 's'
     IsNoPLU_No: [true],        // 預設 true
