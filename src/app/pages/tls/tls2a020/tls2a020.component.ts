@@ -68,14 +68,7 @@ export class TLS2A020Component extends BasicQueryPageComponent<any> implements O
     { field: 'receiptAmount', header: '實收金額', visible: true }
   ];
   data: SalesRecord[] = [
-    {
-      id: 1,
-      salesDate: '1',
-      pendingApprovalRegisterCode: '1',
-      pendingApprovalPaymentTool: '1',
-      systemAmount: 11111111111111,
-      receiptAmount: 1,
-    },
+
   ];
 
   // 選單資料
@@ -130,25 +123,25 @@ export class TLS2A020Component extends BasicQueryPageComponent<any> implements O
   onSubmit(form: FormGroup): void {
     this.handleSubmit(form, () => {
       // 模擬查詢結果
-      this.data = [
-        {
-          id: 1,
-          salesDate: '2025/06/23',
-          pendingApprovalRegisterCode: 'R001',
-          pendingApprovalPaymentTool: 'LINE Pay',
-          systemAmount: 1200,
-          receiptAmount: 1180
-        },
-        {
-          id: 2,
-          salesDate: '2025/06/23',
-          pendingApprovalRegisterCode: 'R002',
-          pendingApprovalPaymentTool: '信用卡',
-          systemAmount: 2400,
-          receiptAmount: 2400
-        }
-      ];
-      this.totalRecords = this.data.length;
+      // this.data = [
+      //   {
+      //     id: 1,
+      //     salesDate: '2025/06/23',
+      //     pendingApprovalRegisterCode: 'R001',
+      //     pendingApprovalPaymentTool: 'LINE Pay',
+      //     systemAmount: 1200,
+      //     receiptAmount: 1180
+      //   },
+      //   {
+      //     id: 2,
+      //     salesDate: '2025/06/23',
+      //     pendingApprovalRegisterCode: 'R002',
+      //     pendingApprovalPaymentTool: '信用卡',
+      //     systemAmount: 2400,
+      //     receiptAmount: 2400
+      //   }
+      // ];
+      // this.totalRecords = this.data.length;
       this.loading = false;
       this.messageService.unblockUi();
     });
