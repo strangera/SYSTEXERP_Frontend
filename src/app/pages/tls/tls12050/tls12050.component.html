@@ -42,7 +42,6 @@
     <div style="display: flex; flex-wrap: wrap; gap: 10px">
       <!-- 左圖區塊 -->
       <div style="flex: 2 1 0; min-width: 400px">
-
         <p-image
           *ngIf="selectedImage"
           [src]="selectedImage"
@@ -73,7 +72,7 @@
                 <b>資訊</b>
               </td>
             </tr>
-            <tr>
+            <!-- <tr>
               <td>檢視進度</td>
               <td>
                 <app-multi-select
@@ -86,48 +85,41 @@
                   [panelStyle]="{ width: '320px' }"
                 ></app-multi-select>
               </td>
-            </tr>
+            </tr> -->
             <tr>
               <td>樓層</td>
               <td>{{ selectedFloor }}</td>
             </tr>
             <tr>
-              <td>總計</td>
-              <td>{{ All_Count }}</td>
+              <td>館別</td>
+              <td>{{ selectedBuildingLabel }}</td>
+            </tr>
+
+            <tr>
+              <td style="background-color: rgb(185, 236, 219)">總計</td>
+              <td style="background-color: rgb(185, 236, 219)">{{ All_Count }}</td>
             </tr>
             <tr>
-              <td style="background-color: rgb(185, 236, 219)"><b>色彩</b></td>
-              <td style="background-color: rgb(185, 236, 219)"><b>狀態</b></td>
-            </tr>
-            <tr>
+              <td ><b>狀態</b></td>
               <td>
-                <i class="pi pi-star-fill" style="color: rgb(88, 88, 88)"></i>
+                <b>佔比 (%)</b>
               </td>
-              <td>閒置中(%): {{ Idle }}</td>
             </tr>
             <tr>
-              <td>
-                <i
-                  class="pi pi-star-fill"
-                  style="color: rgb(255, 167, 236)"
-                ></i>
-              </td>
-              <td>洽談中(%): {{ Under_Negotiation }}</td>
+              <td>閒置</td>
+              <td>{{ Idle }}</td>
             </tr>
             <tr>
-              <td>
-                <i class="pi pi-star-fill" style="color: rgb(255, 191, 52)"></i>
-              </td>
-              <td>營運中(%): {{ In_Operation }}</td>
+              <td>洽談中</td>
+              <td>{{ Under_Negotiation }}</td>
             </tr>
             <tr>
-              <td>
-                <i
-                  class="pi pi-star-fill"
-                  style="color: rgb(104, 220, 231)"
-                ></i>
-              </td>
-              <td>停用(%): {{ Outof_Service }}</td>
+              <td>營運中</td>
+              <td>{{ In_Operation }}</td>
+            </tr>
+            <tr>
+              <td>停用</td>
+              <td>{{ Outof_Service }}</td>
             </tr>
           </tbody>
         </table>

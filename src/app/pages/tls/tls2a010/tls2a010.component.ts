@@ -137,7 +137,7 @@ export class TLS2A010Component extends BasicQueryPageComponent<any> implements O
         };
       });
     });
-    this.dropDownListService.queryPOS1002TML_DropDownList()
+    this.dropDownListService.queryPOS1002_DropDownList()
       .pipe(untilDestroyed(this))
       .subscribe(res => {
         if (res && res.Data) {
@@ -149,6 +149,7 @@ export class TLS2A010Component extends BasicQueryPageComponent<any> implements O
           }));
         }
       });
+
     const today = new Date();
     const mm = today.getMonth() + 1; // 月份是從 0 開始的
     const dd = today.getDate();
