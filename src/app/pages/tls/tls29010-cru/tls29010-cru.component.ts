@@ -247,6 +247,9 @@ export class TLS29010CRUComponent extends BasicCruPageComponent<TALPORDERD_OPEND
           this.dataForm.get('pod_desc')?.enable();
           const userInfo = this.authService?.getUserInfo?.();
           this.dataForm.get('str_no')?.setValue(userInfo?.SYS_StoreNo || '') //依照section填寫店號
+
+          this.dataForm.get('pod_status')?.setValue('0') //新增模式 [活動狀態] 只能(未審核)
+          this.dataForm.get('pod_status')?.disable();
         } else {
           this.dataForm.get('pod_desc')?.disable();
         }
@@ -270,7 +273,7 @@ export class TLS29010CRUComponent extends BasicCruPageComponent<TALPORDERD_OPEND
           }
 
           if (item.status === 'new') {
-            return { ...item, ID: null}; // 把新項目的 ID, PC_id 改為 null
+            return { ...item, id: null}; // 把新項目的 ID, PC_id 改為 null
           }
           return item; // 其他不變
         });

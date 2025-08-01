@@ -100,8 +100,17 @@ export class TLS12060Component extends BasicQueryPageComponent<Potential_Custome
   // ----------------------------------------------------------------
   totalRecords = 0;// 分頁和排序參數 // 排序需要
 
-  contact_type_Option: option[] = []; // 合約種類
-  contract_status_Option: option[] = []; // 合約狀態
+  contact_type_Option: option[] = [
+    {value: '1', label: '全部'},
+    {value: '2', label: '意向書'},
+    {value: '3', label: '要約書'},
+    {value: '4', label: '契約書'},
+  ]; // 合約種類(待確認)
+  contract_status_Option: option[] = [
+    {value: '1', label: '未審核'},
+    {value: '2', label: '已審核'},
+    {value: '3', label: '已作廢'},
+  ]; // 合約狀態
   contactName_Option: option[] = []; // 接洽人員
 
   bus_type_Option: apiOption[] = []; // 業種-大分類代碼

@@ -27,24 +27,23 @@ export class Tls12010DetailService {
 
     addPotential(data: any[], defaultNew: any, tableRef: any): void {
         console.log('defaultNew',defaultNew);
-        const newPerson = {
+        const newPotential = {
             ...defaultNew,
             id: this.generatePotentialId(data), // 新增時將id指定為0
-            // id: 0, // 新增時將id指定為0
         };
 
-        console.log('新2020項目', newPerson);
-        data.push(newPerson);
+        console.log('新潛在客戶項目', newPotential);
+        data.push(newPotential);
 
         setTimeout(() => {
-            const index = data.indexOf(newPerson);
+            const index = data.indexOf(newPotential);
             if (index >= 0 && tableRef?.onRowEditInit) {
-                tableRef.onRowEditInit(newPerson, index);
+                tableRef.onRowEditInit(newPotential, index);
             }
         }, 0);
     }
 
-    deletePotential(selectedItems: any[], data: any[], messageService: any): void {
+    deletePotential(selectedItems: any[], data: any[]): void {
         if (confirm(`確定要刪除 ${selectedItems.length} 個潛在客戶明細項目嗎？`)) {
             selectedItems.forEach(item => {
                 const index = data.findIndex(d => d.id === item.id);
@@ -52,7 +51,7 @@ export class Tls12010DetailService {
                     data.splice(index, 1);
                 }
             });
-            messageService.successBubble(`已刪除 ${selectedItems.length} 筆明細`);
+            console.log(`已刪除 ${selectedItems.length} 筆明細`);
         }
     }
 }

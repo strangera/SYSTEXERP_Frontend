@@ -41,7 +41,7 @@ export class Tls29010DetailService {
     addPotentialCustomerDetail(data: any[], defaultNew: any, tableRef: any): void {
         const newItem = {
             ...defaultNew,
-            ID: this.generatePotentialCustomerDetailId(data),
+            id: this.generatePotentialCustomerDetailId(data),
             status: 'new'  // 👈 直接設好
         };
 
@@ -60,7 +60,7 @@ export class Tls29010DetailService {
     deletePotentialCustomerDetail(selectedItems: any[], data: any[]): void {
         if (confirm(`確定要刪除 ${selectedItems.length} 個其他商場項目嗎？`)) {
             selectedItems.forEach(item => {
-                const index = data.findIndex(d => d.ID === item.ID);
+                const index = data.findIndex(d => d.id === item.id);
                 if (index > -1) {
                     if (data[index].status === 'new') {
                         data.splice(index, 1);
