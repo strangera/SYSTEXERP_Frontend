@@ -20,6 +20,9 @@ import { POS6118Data, POS6119Data, POS6119PData, TLS27040Service } from '@servic
 import { finalize } from 'rxjs';
 import { SystemOptionsService } from '@service/system/sys1000.service';
 import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
+import { DialogComponent } from '@shared/componentkit/dialog/dialog.component';
+import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
+import { InputNumberComponent } from '@shared/componentkit/input-number/input-number.component';
 @Component({
   selector: 'app-tls27040',
   templateUrl: './tls27040.component.html',
@@ -38,7 +41,10 @@ import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutt
     TableComponent,
     TranslateModule,
     NgIf,
-    RadiobuttonComponent
+    RadiobuttonComponent,
+    DialogComponent,
+    CalendarComponent,
+    InputNumberComponent
   ]
 })
 export class TLS27040Component extends BasicQueryPageComponent<POS6118Data | POS6119Data | POS6119PData> implements OnInit {
@@ -176,5 +182,24 @@ export class TLS27040Component extends BasicQueryPageComponent<POS6118Data | POS
           break;
       }
     });
+  }
+  dialogVisible = false;
+  dialogLoading = false;
+  dialogSubmitted = false;
+  dialogQueryForm = this.formBuilder.group({
+    ECR_No: ['', [Validators.required, Validators.maxLength(10)]],
+    TXN_No: [null as number | null, [Validators.required, Validators.max(99999999)]],
+    CTBC_TxnDate: [null, [Validators.required]],
+  })
+  onOpenDialog() {
+    this.dialogVisible = true;
+  }
+  onDialogSubmit(frm: FormGroup) {
+    this.dialogSubmitted = true;
+    this.dialogLoading = true;
+    // 打API
+    if (!frm.valid) {
+      this.dialogVisible = false;
+    }
   }
 }
