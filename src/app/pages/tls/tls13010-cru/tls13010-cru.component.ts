@@ -42,6 +42,7 @@ import { InputTextareaComponent } from '../../../shared/componentkit/input-texta
 import { NgIf } from '@angular/common';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
+import { RadiobuttonComponent } from "@shared/componentkit/radiobutton/radiobutton.component";
 
 @Component({
   selector: 'app-tls13010-cru',
@@ -65,6 +66,7 @@ import { InputTextModule } from 'primeng/inputtext';
     InputTextareaComponent,
     ButtonModule,
     InputTextModule,
+    RadiobuttonComponent
   ],
 
 })
@@ -184,7 +186,11 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
     invoice_type: [''],
 
     // 其他設定
-    meter_typeList: [[]],
+    water_flag: ['N'],
+    electric_flag: ['N'],
+    gas_flag: ['N'],
+
+
     paymentMethods: [[]],
     ticket_remarks: [''],
 
@@ -216,6 +222,11 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
     // 銀行 AutoComplete
     selectedBankInfo: null
   });
+
+  meterReadingOptions = [
+    { value: 'Y', label: '是' },
+    { value: 'N', label: '否' }
+  ];
 
   // ==========  固定下拉選單選項 ==========
   decorationOptions = [...TLS13010_DROPDOWN_OPTIONS.decorationType];
@@ -299,7 +310,6 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
     // 設定監聽
     this.setupAutoSave();
     this.setupBusTypeListener();
-
 
     setTimeout(() => {
       this.validateWorkflowData();
@@ -712,6 +722,9 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
       contact_USR_Name: queryData['contact_USR_Name'] as string,
       total_amt_unit: queryData['total_amt_unit'] as string,
       total_amt_vendor_unit: queryData['total_amt_vendor_unit'] as string,
+      water_flag: queryData['water_flag'] as string || 'N',
+      electric_flag: queryData['electric_flag'] as string || 'N',
+      gas_flag: queryData['gas_flag'] as string || 'N',
     });
 
     const bankId = queryData['bank_id'] as string;
@@ -857,6 +870,7 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
   private saveToWorkflow(): void {
     // 移除條件檢查，總是儲存
     const formData = this.dataForm.getRawValue();
+
 
     console.log('💾 準備儲存工作流程資料...');
     console.log('📋 表單資料:', {
