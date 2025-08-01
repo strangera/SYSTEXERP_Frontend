@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
-import { effect, Injectable, signal } from '@angular/core';
-import { CampaignAccountingType, CampaignAccountingTypes, CampaignData, TLS26080Data, TLS26080Query } from '@pages/tls/tls26080/tls26080.model';
+import { Injectable, signal } from '@angular/core';
+import { CampaignData, TLS26080Data, TLS26080Detail, TLS26080Query } from '@pages/tls/tls26080/tls26080.model';
 import { ErrorHandlerService } from '@service/system/error-handler.service';
 import { NotificationService } from '@shared/component/notification-message/notification.service';
 import { BaseQueryResponse, DropdownOption } from '@shared/models/api/base-api.interface';
@@ -15,9 +15,9 @@ const apiUrl: string = environment.ApiUrl;
 export class TLS26080Service {
 
   // 儲存資料
-  public TLS26080List = signal<TLS26080Data[]>([]);
+  public TLS26080Data = signal<TLS26080Data[]>([]);
+  public TLS26080Detail = signal<TLS26080Detail[]>([]);
   public campaignData = signal<CampaignData>({} as CampaignData);
-  private TLS26080Data = signal<TLS26080Data[]>([]);
 
   // 讀取狀態
   private tableLoading = !1;
@@ -26,7 +26,7 @@ export class TLS26080Service {
 
   // 下拉選單資料
   public readonly departmentItems = signal<DropdownOption[]>([]);
-  public readonly capItems = signal<DropdownOption[]>(Array.from(CampaignAccountingType.values()));
+  public readonly capItems = signal<DropdownOption[]>([]);
   public readonly podStatusItems = signal<DropdownOption[]>([
     { No: ApprovalStatus.未核准, Name: '未核准' },
     { No: ApprovalStatus.已核准, Name: '已核准' },
@@ -50,16 +50,6 @@ export class TLS26080Service {
       : { api: `disapproveTLS26080`, confirm: `反核准` };
   }
 
-  private fetchTLS26080List = effect(() => {
-    const res = new Map<string, TLS26080Data>();
-    const tlsData = this.TLS26080Data();
-    for (const item of tlsData) {
-      if (res.has(item.pod_no)) continue;
-      res.set(item.pod_no, item);
-    }
-    this.TLS26080List.set(Array.from(res.values()));
-  }, { allowSignalWrites: true });
-
   constructor(
     private http: HttpClient,
     private errorHandler: ErrorHandlerService,
@@ -73,10 +63,7 @@ export class TLS26080Service {
     this.tableLoading = !0;
     this.http.post<BaseQueryResponse<TLS26080Data>>(`${apiUrl}/TLS0000/TLS2000/queryTLS26080`, query).pipe(
       take(1),
-      tap(response => this.TLS26080Data.set(response.Data.map(item => ({
-        ...item,
-        pod_type: CampaignAccountingTypes[Number(item.pod_type)] || item.pod_type,
-      })))),
+      tap(response => this.TLS26080Data.set(response.Data)),
       catchError(error => this.errorHandler.handleError(error)),
       finalize(() => {
         this.tableLoading = !1;
@@ -97,7 +84,22 @@ export class TLS26080Service {
     ).subscribe();
   }
 
-  /** 核准或反核准預購活動 */
+  /** 專櫃活動 */
+  loadTLS26080Detail(query: { pod_no: string; }): void {
+    if (this.tableLoading) return void (this.tableLoading = !1);
+    this.tableLoading = !0;
+    this.http.post<BaseQueryResponse<TLS26080Detail>>(`${apiUrl}/TLS0000/TLS2000/queryTLS26080_Detail`, query).pipe(
+      take(1),
+      tap(response => this.TLS26080Detail.set(response.Data)),
+      catchError(error => this.errorHandler.handleError(error)),
+      finalize(() => {
+        this.tableLoading = !1;
+        console.log('專櫃活動細節查詢結果:', this.TLS26080Detail());
+      })
+    ).subscribe();
+  }
+
+  /** 核准或反核准專櫃活動 */
   loadApproval(data: TLS26080Data): void {
     if (this.approvalStatusLoading) return void (this.approvalStatusLoading = !1);
     this.approvalStatusLoading = !0;
@@ -128,6 +130,5 @@ export class TLS26080Service {
   }
 
   ngOnDestroy(): void {
-    this.fetchTLS26080List.destroy();
   }
 }
