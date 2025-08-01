@@ -15,6 +15,7 @@
         (ngSubmit)="onSubmit(queryForm)"
       >
         <div class="grid p-fluid">
+          <!-- 大分類代碼 -->
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown
               label="大分類代碼"
@@ -26,6 +27,8 @@
               [submitted]="submitted"
             ></app-dropdown>
           </div>
+
+          <!-- 中分類代碼 -->
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown
               label="中分類代碼"
@@ -37,6 +40,8 @@
               [submitted]="submitted"
             ></app-dropdown>
           </div>
+
+          <!-- 小分類代碼 -->
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown
               label="小分類代碼"
@@ -48,6 +53,7 @@
               [submitted]="submitted"
             ></app-dropdown>
           </div>
+
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown
               label="管理編號"

@@ -67,14 +67,18 @@
     </p-accordionTab>
   </p-accordion>
 </div>
-
 <div class="card">
   <div class="col-12">
     <app-table
       tableKey="TLS22050"
       [data]="data"
       [columns]="columns"
+      [columnGroup]="columnGroup"
+      [showTotal]="true"
+      [multiSortMeta]="[{ field: 'ECR_No', order: 1 }]"
+      [totalRecords]="totalRecords"
+      (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"
+      [lazy]="true"
     ></app-table>
   </div>
 </div>
-
