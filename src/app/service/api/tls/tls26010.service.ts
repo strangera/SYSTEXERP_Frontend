@@ -1,6 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { computed, effect, Injectable, signal } from '@angular/core';
 import { DependentDataQuery, PodRequest, TLS26010Data, TLS26010Detail, TLS26010DetailResponse, TLS26010Query } from '@pages/tls/tls26010/tls26010.model';
+import { AuthService } from '@service/system/auth.service';
 import { ErrorHandlerService } from '@service/system/error-handler.service';
 import { NotificationService } from '@shared/component/notification-message/notification.service';
 import { BaseQueryResponse, DropdownOption } from '@shared/models/api/base-api.interface';
@@ -87,6 +88,7 @@ export class TLS26010Service {
 
   constructor(
     private http: HttpClient,
+    private auth: AuthService,
     private errorHandler: ErrorHandlerService,
     private messageService: NotificationService,
     private confirmationService: ConfirmationService,
@@ -364,9 +366,13 @@ export class TLS26010Service {
             take(1),
             tap(() => this.TLS26010Data.update(currentData => {
               const index = currentData.findIndex(item => item.id === id);
-              if (index !== -1) currentData[index].pod_status = this.approvalCheck(data).confirm === '核准'
-                ? ApprovalStatus.已核准
-                : ApprovalStatus.未核准;
+              const usr = this.auth.getUserInfo();
+              const approval = this.approvalCheck(data).confirm === '核准';
+              if (index !== -1) {
+                currentData[index].approved_usr_name = approval ? usr!.user_Name : null;
+                currentData[index].approved_date = approval ? new Date() : null;
+                currentData[index].pod_status = approval ? ApprovalStatus.已核准 : ApprovalStatus.未核准;
+              }
               return currentData;
             })),
             catchError(error => this.errorHandler.handleError(error)),
