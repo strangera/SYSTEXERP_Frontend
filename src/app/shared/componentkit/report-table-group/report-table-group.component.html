@@ -24,271 +24,262 @@
     <label class="text-sm">合併顯示</label>
   </div>
 
-
-    <div class="flex items-center gap-2" *ngIf="mergedView">
-      <button
-        pButton
-        type="button"
-        [label]="'每表格列數：' + rowsPerTable + ' 列'"
-        icon="pi pi-sliders-h"
-        (click)="openRowsPerTableDialog()"
-        class="p-button-sm p-button-info"
-      ></button>
-    </div>
+  <div class="flex items-center gap-2" *ngIf="mergedView">
     <button
       pButton
       type="button"
-      label="顯示欄位"
-      icon="pi pi-eye"
-      (click)="showColumnDialog = true"
+      [label]="'每表格列數：' + rowsPerTable + ' 列'"
+      icon="pi pi-sliders-h"
+      (click)="openRowsPerTableDialog()"
       class="p-button-sm p-button-info"
     ></button>
+  </div>
+  <button
+    pButton
+    type="button"
+    label="顯示欄位"
+    icon="pi pi-eye"
+    (click)="showColumnDialog = true"
+    class="p-button-sm p-button-info"
+  ></button>
 
-    <button
-      pButton
-      type="button"
-      label="匯出 PDF"
-      icon="pi pi-file-pdf"
-      (click)="exportPDF('l')"
-      class="p-button-sm p-button-danger"
-    ></button>
+  <button
+    pButton
+    type="button"
+    label="匯出 PDF"
+    icon="pi pi-file-pdf"
+    (click)="exportPDF('l')"
+    class="p-button-sm p-button-danger"
+  ></button>
 
-    <button
-      pButton
-      type="button"
-      label="匯出 Excel"
-      icon="pi pi-file-excel"
-      (click)="exportExcel()"
-      class="p-button-sm p-button-success"
-    ></button>
+  <button
+    pButton
+    type="button"
+    label="匯出 Excel"
+    icon="pi pi-file-excel"
+    (click)="exportExcel()"
+    class="p-button-sm p-button-success"
+  ></button>
 
-    <button
-      pButton
-      type="button"
-      label="列印"
-      icon="pi pi-print"
-      (click)="printPage()"
-      class="p-button-sm p-button-secondary"
-    ></button>
+  <button
+    pButton
+    type="button"
+    label="列印"
+    icon="pi pi-print"
+    (click)="printPage()"
+    class="p-button-sm p-button-secondary"
+  ></button>
 
-<button
-  *ngIf="showBackButton"
-  pButton
-  type="button"
-  icon="pi pi-arrow-left"
-  label="回上頁"
-  class="p-button-sm p-button-secondary"
-  (click)="goBack()"
-></button>
+  <button
+    *ngIf="showBackButton"
+    pButton
+    type="button"
+    icon="pi pi-arrow-left"
+    label="回上頁"
+    class="p-button-sm p-button-secondary"
+    (click)="goBack()"
+  ></button>
 
-    <!-- ✅ 顯示資料列的開關 -->
-    <div class="flex items-center gap-2" *ngIf="!mergedView">
-      <p-inputSwitch
-        [(ngModel)]="showGroupedBody"
-        (ngModelChange)="onToggleGroupedBody()"
-      />
-      <label class="text-sm">顯示資料列</label>
+  <!-- ✅ 顯示資料列的開關 -->
+  <div class="flex items-center gap-2" *ngIf="!mergedView">
+    <p-inputSwitch
+      [(ngModel)]="showGroupedBody"
+      (ngModelChange)="onToggleGroupedBody()"
+    />
+    <label class="text-sm">顯示資料列</label>
+  </div>
+</div>
+
+<!-- ✅ 上方操作列與對話框區保留不變 -->
+<div class="printable-section">
+  <div *ngIf="!mergedView" class="grouped-view">
+    <div
+      *ngFor="let group of groupedData; let i = index"
+      class="report-table-wrapper mb-5"
+    >
+      <!-- ✅ 報表標題與資料區間 -->
+      <div
+        class="mb-2 text-sm text-gray-600 font-medium"
+        *ngIf="showDateRangeLabel"
+      >
+        <div>
+          {{ dateRangeLabel }}：{{ dateStart | date: "yyyy/MM/dd" }} ~
+          {{ dateEnd | date: "yyyy/MM/dd" }}
+        </div>
+      </div>
+
+      <!-- ✅ 自訂群組標頭區（若有提供 Template） -->
+      <ng-container *ngIf="groupHeaderTemplate">
+        <ng-container
+          *ngTemplateOutlet="groupHeaderTemplate; context: { $implicit: group }"
+        ></ng-container>
+      </ng-container>
+
+      <!-- 群組標題（如有） -->
+      <div
+        *ngIf="group[0]?.__groupKey"
+        class="mb-2 text-blue-700 font-bold text-base"
+        (click)="toggleGroupBody(group[0].__groupKey)"
+      >
+        {{ groupByLabel || groupByField }}：{{ group[0].__groupKey }}
+      </div>
+
+      <!-- 群組資料表 -->
+
+      <p-table
+        [value]="group"
+        [columns]="selectedColumns"
+        [resizableColumns]="true"
+        [paginator]="false"
+        scrollable="true"
+        scrollDirection="horizontal"
+        scrollHeight="auto"
+        [styleClass]="
+          'p-datatable-sm p-datatable-striped p-datatable-gridlines'
+        "
+      >
+        <!-- 📌 表頭 -->
+        <ng-template pTemplate="header">
+          <tr>
+            <th
+              *ngFor="let col of selectedColumns"
+              class="text-center"
+              [ngClass]="col.style"
+              [pSortableColumn]="
+                col.field !== '__index' ? col.field : undefined
+              "
+            >
+              <ng-container *ngIf="col.field === '__index'; else normalHeader">
+                <i
+                  class="pi cursor-pointer mr-1"
+                  [ngClass]="{
+                    'pi-chevron-down': groupBodyExpanded[group[0]?.__groupKey],
+                    'pi-chevron-right':
+                      !groupBodyExpanded[group[0]?.__groupKey],
+                  }"
+                  (click)="toggleGroupBody(group[0]?.__groupKey)"
+                ></i>
+                {{ col.header }}
+              </ng-container>
+              <ng-template #normalHeader>
+                {{ col.header }}
+                <p-sortIcon
+                  *ngIf="col.field !== '__index'"
+                  [field]="col.field"
+                />
+              </ng-template>
+            </th>
+          </tr>
+        </ng-template>
+        <!-- 📌 無資料時顯示 -->
+        <ng-template pTemplate="emptymessage">
+          <tr>
+            <td
+              [attr.colspan]="selectedColumns.length"
+              class="text-center text-xl font-bold text-primary bg-gray-50"
+              style="padding: 2rem 1rem"
+            >
+              <i class="pi pi-info-circle mr-2 text-primary"></i>
+              {{ emptyMessage }}
+            </td>
+          </tr>
+        </ng-template>
+
+        <!-- 📌 資料列 -->
+        <ng-template pTemplate="body" let-rowData let-rowIndex="rowIndex">
+           <tr *ngIf="groupBodyExpanded[group[0]?.__groupKey] && data.length > 0">
+            <td
+              *ngFor="let col of selectedColumns"
+              class="text-center"
+              [ngClass]="col.style"
+            >
+              <ng-container *ngIf="col.field === '__index'">
+                {{ getRowIndex(i, rowIndex) }}
+              </ng-container>
+              <ng-container *ngIf="col.field !== '__index'">
+                <ng-container *ngIf="col.format; else raw">
+                  {{ col.format(rowData[col.field]) }}
+                </ng-container>
+                <ng-template #raw>
+                  {{ rowData[col.field] }}
+                </ng-template>
+              </ng-container>
+            </td>
+          </tr>
+        </ng-template>
+
+        <!-- 📌 小計 -->
+        <ng-template pTemplate="footer">
+          <tr
+            class="bg-yellow-100 font-semibold"
+            *ngIf="subtotalFields.length > 0"
+          >
+            <td
+              *ngFor="let col of selectedColumns"
+              class="text-center"
+              [ngClass]="col.style"
+            >
+              <ng-container [ngSwitch]="col.field">
+                <ng-container *ngSwitchCase="'__index'">小計</ng-container>
+                <ng-container *ngSwitchDefault>
+                  <ng-container *ngIf="subtotalFields.includes(col.field)">
+                    {{ getSubtotal(group, col.field) }}
+                  </ng-container>
+                </ng-container>
+              </ng-container>
+            </td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </div>
+
+    <!-- ✅ 所有群組結束後的總計列（嵌入在同一區塊內） -->
+    <!-- ✅ 所有群組結束後的總計區塊（含表頭） -->
+    <div class="report-table-wrapper mt-3 border-t pt-3" *ngIf="showGrandTotal">
+      <p-table
+        [value]="[{}]"
+        [columns]="selectedColumns"
+        [paginator]="false"
+        [resizableColumns]="true"
+        scrollable="true"
+        [style]="{ width: '100%' }"
+        [styleClass]="'p-datatable-sm p-datatable-gridlines'"
+      >
+        <!-- 📌 表頭 -->
+        <ng-template pTemplate="header">
+          <tr>
+            <th
+              *ngFor="let col of selectedColumns"
+              class="text-center"
+              [ngClass]="col.style"
+            >
+              {{ col.header }}
+            </th>
+          </tr>
+        </ng-template>
+
+        <!-- 📌 總計列 -->
+        <ng-template pTemplate="body">
+          <tr class="bg-yellow-200 font-bold">
+            <td
+              *ngFor="let col of selectedColumns"
+              class="text-center"
+              [ngClass]="col.style"
+            >
+              <ng-container [ngSwitch]="col.field">
+                <ng-container *ngSwitchCase="'__index'">總計</ng-container>
+                <ng-container *ngSwitchDefault>
+                  <ng-container *ngIf="subtotalFields.includes(col.field)">
+                    {{ getGrandTotal(col.field) }}
+                  </ng-container>
+                </ng-container>
+              </ng-container>
+            </td>
+          </tr>
+        </ng-template>
+      </p-table>
     </div>
   </div>
-
-  <!-- ✅ 上方操作列與對話框區保留不變 -->
-  <div class="printable-section">
-    <div *ngIf="!mergedView" class="grouped-view">
-      <div
-        *ngFor="let group of groupedData; let i = index"
-        class="report-table-wrapper mb-5"
-      >
-        <!-- ✅ 報表標題與資料區間 -->
-        <div
-          class="mb-2 text-sm text-gray-600 font-medium"
-          *ngIf="showDateRangeLabel"
-        >
-          <div>
-            {{ dateRangeLabel }}：{{ dateStart | date: "yyyy/MM/dd" }} ~
-            {{ dateEnd | date: "yyyy/MM/dd" }}
-          </div>
-        </div>
-
-        <!-- ✅ 自訂群組標頭區（若有提供 Template） -->
-        <ng-container *ngIf="groupHeaderTemplate">
-          <ng-container
-            *ngTemplateOutlet="
-              groupHeaderTemplate;
-              context: { $implicit: group }
-            "
-          ></ng-container>
-        </ng-container>
-
-        <!-- 群組標題（如有） -->
-        <div
-          *ngIf="group[0]?.__groupKey"
-          class="mb-2 text-blue-700 font-bold text-base"
-          (click)="toggleGroupBody(group[0].__groupKey)"
-        >
-          {{ groupByLabel || groupByField }}：{{ group[0].__groupKey }}
-        </div>
-
-        <!-- 群組資料表 -->
-
-  <p-table
-    [value]="group"
-    [columns]="selectedColumns"
-    [resizableColumns]="true"
-    [paginator]="false"
-    scrollable="true"
-    scrollDirection="horizontal"
-    scrollHeight="auto"
-    [styleClass]="
-            'p-datatable-sm p-datatable-striped p-datatable-gridlines'
-          "
-    
-    
-  >
-          <!-- 📌 表頭 -->
-          <ng-template pTemplate="header">
-            <tr>
-              <th
-                *ngFor="let col of selectedColumns"
-                class="text-center"
-                [ngClass]="col.style"
-                [pSortableColumn]="
-                  col.field !== '__index' ? col.field : undefined
-                "
-              >
-                <ng-container
-                  *ngIf="col.field === '__index'; else normalHeader"
-                >
-                  <i
-                    class="pi cursor-pointer mr-1"
-                    [ngClass]="{
-                      'pi-chevron-down':
-                        groupBodyExpanded[group[0]?.__groupKey],
-                      'pi-chevron-right':
-                        !groupBodyExpanded[group[0]?.__groupKey],
-                    }"
-                    (click)="toggleGroupBody(group[0]?.__groupKey)"
-                  ></i>
-                  {{ col.header }}
-                </ng-container>
-                <ng-template #normalHeader>
-                  {{ col.header }}
-                  <p-sortIcon
-                    *ngIf="col.field !== '__index'"
-                    [field]="col.field"
-                  />
-                </ng-template>
-              </th>
-            </tr>
-          </ng-template>
-          <!-- 📌 無資料時顯示 -->
-<ng-template pTemplate="emptymessage">
-  <tr>
-    <td
-      [attr.colspan]="selectedColumns.length"
-      class="text-center text-xl font-bold text-primary bg-gray-50"
-      style="padding: 2rem 1rem;"
-    >
-      <i class="pi pi-info-circle mr-2 text-primary"></i>{{ emptyMessage }}
-    </td>
-  </tr>
-</ng-template>
-
-          <!-- 📌 資料列 -->
-          <ng-template pTemplate="body" let-rowData let-rowIndex="rowIndex">
-            <tr *ngIf="groupBodyExpanded[group[0]?.__groupKey]">
-              <td
-                *ngFor="let col of selectedColumns"
-                class="text-center"
-                [ngClass]="col.style"
-              >
-                <ng-container *ngIf="col.field === '__index'">
-                  {{ getRowIndex(i, rowIndex) }}
-                </ng-container>
-                <ng-container *ngIf="col.field !== '__index'">
-                  <ng-container *ngIf="col.format; else raw">
-                    {{ col.format(rowData[col.field]) }}
-                  </ng-container>
-                  <ng-template #raw>
-                    {{ rowData[col.field] }}
-                  </ng-template>
-                </ng-container>
-              </td>
-            </tr>
-          </ng-template>
-
-          <!-- 📌 小計 -->
-          <ng-template pTemplate="footer">
-            <tr
-              class="bg-yellow-100 font-semibold"
-              *ngIf="subtotalFields.length > 0"
-            >
-              <td
-                *ngFor="let col of selectedColumns"
-                class="text-center"
-                [ngClass]="col.style"
-              >
-                <ng-container [ngSwitch]="col.field">
-                  <ng-container *ngSwitchCase="'__index'">小計</ng-container>
-                  <ng-container *ngSwitchDefault>
-                    <ng-container *ngIf="subtotalFields.includes(col.field)">
-                      {{ getSubtotal(group, col.field) }}
-                    </ng-container>
-                  </ng-container>
-                </ng-container>
-              </td>
-            </tr>
-          </ng-template>
-        </p-table>
-
-      </div>
-      
-   <!-- ✅ 所有群組結束後的總計列（嵌入在同一區塊內） -->
-<!-- ✅ 所有群組結束後的總計區塊（含表頭） -->
-<div class="report-table-wrapper mt-3 border-t pt-3"  *ngIf="showGrandTotal">
-  <p-table
-    [value]="[{}]"
-    [columns]="selectedColumns"
-    [paginator]="false"
-    [resizableColumns]="true"
-    scrollable="true"
-    [style]="{ width: '100%' }"
-    [styleClass]="'p-datatable-sm p-datatable-gridlines'"
-  >
-    <!-- 📌 表頭 -->
-    <ng-template pTemplate="header">
-      <tr>
-        <th
-          *ngFor="let col of selectedColumns"
-          class="text-center"
-          [ngClass]="col.style"
-        >
-          {{ col.header }}
-        </th>
-      </tr>
-    </ng-template>
-
-    <!-- 📌 總計列 -->
-    <ng-template pTemplate="body">
-      <tr class="bg-yellow-200 font-bold">
-        <td
-          *ngFor="let col of selectedColumns"
-          class="text-center"
-          [ngClass]="col.style"
-        >
-          <ng-container [ngSwitch]="col.field">
-            <ng-container *ngSwitchCase="'__index'">總計</ng-container>
-            <ng-container *ngSwitchDefault>
-              <ng-container *ngIf="subtotalFields.includes(col.field)">
-                {{ getGrandTotal(col.field) }}
-              </ng-container>
-            </ng-container>
-          </ng-container>
-        </td>
-      </tr>
-    </ng-template>
-  </p-table>
-</div>
-</div>
 
   <!-- ✅ 合併顯示區（大表） -->
 
@@ -305,7 +296,7 @@
           [resizableColumns]="true"
           [paginator]="false"
           [customSort]="true"
-                   scrollable="true"
+          scrollable="true"
           [style]="{ width: '100%' }"
           [scrollHeight]="'auto'"
           (sort)="onTableSort($event)"
@@ -338,17 +329,20 @@
             </tr>
           </ng-template>
           <!-- 📌 無資料時顯示 -->
-<ng-template pTemplate="emptymessage">
-  <tr>
-    <td
-      [attr.colspan]="selectedColumns.length + (showExpandColumn ? 1 : 0)"
-      class="text-center text-xl font-bold text-primary bg-gray-50"
-      style="padding: 2rem 1rem;"
-    >
-      <i class="pi pi-info-circle mr-2 text-primary"></i>{{ emptyMessage }}
-    </td>
-  </tr>
-</ng-template>
+          <ng-template pTemplate="emptymessage">
+            <tr>
+              <td
+                [attr.colspan]="
+                  selectedColumns.length + (showExpandColumn ? 1 : 0)
+                "
+                class="text-center text-xl font-bold text-primary bg-gray-50"
+                style="padding: 2rem 1rem"
+              >
+                <i class="pi pi-info-circle mr-2 text-primary"></i>
+                {{ emptyMessage }}
+              </td>
+            </tr>
+          </ng-template>
 
           <!-- 📌 資料列 -->
           <ng-template pTemplate="body" let-rowData let-rowIndex="rowIndex">

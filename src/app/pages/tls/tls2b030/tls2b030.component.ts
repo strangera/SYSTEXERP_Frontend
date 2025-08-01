@@ -45,7 +45,7 @@ import { CounterNameService } from '../../../service/basic/counter-name.service'
     DropdownComponent,
     CheckboxModule,
     ButtonComponent,
-    Table2Component,
+    // Table2Component,
     
     TranslateModule,
     TableComponent,
