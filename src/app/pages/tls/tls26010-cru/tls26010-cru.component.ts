@@ -101,22 +101,24 @@ export class TLS26010CRUComponent extends BasicCruPageComponent<TLS26010Data> im
   });
   private readonly ecrDialogOpenEffect = effect(() => {
     const dialog = this.dialogVisible();
+    const payload = this.queryPayload();
     if (!this.dialogVisible())
       this.dataForm.patchValue({ sys3800: undefined, sys3900: undefined, ECR_Nos: [] });
     if (dialog !== 'ecr') return;
     this.service.loadSYS3800();
-    this.service.loadSYS3900();
-    this.service.loadPreorderECRList({ ...this.queryPayload(), data_type: '1' });
+    this.service.loadSYS3900(payload.building_no);
+    this.service.loadPreorderECRList({ ...payload, data_type: '1' });
     console.log('ecrDialogOpenEffect:', [this.dataForm.value, this.queryPayload(), dialog]);
   }, { allowSignalWrites: !0 });
   private readonly tltDialogOpenEffect = effect(() => {
     const dialog = this.dialogVisible();
+    const payload = this.queryPayload();
     if (!this.dialogVisible())
       this.dataForm.patchValue({ sys3800: undefined, sys3900: undefined, tlt_nos: [] });
     if (dialog !== 'tlt') return;
     this.service.loadSYS3800();
-    this.service.loadSYS3900();
-    this.service.loadTLTTALENT({ ...this.queryPayload() });
+    this.service.loadSYS3900(payload.building_no);
+    this.service.loadTLTTALENT({ ...payload });
     console.log('tltDialogOpenEffect:', [this.dataForm.value, this.queryPayload(), dialog]);
   }, { allowSignalWrites: !0 });
   private readonly TLS26010DetailEffect = effect(() => {
@@ -138,6 +140,7 @@ export class TLS26010CRUComponent extends BasicCruPageComponent<TLS26010Data> im
   private readonly queryPayload = computed(() => ({
     building_no: this.sys3800Signal(),
     floor_no: this.sys3900Signal(),
+    area_no: this.rowdata?.area_no,
   }), { equal: shallowEqual });
 
   public columns: Column[] = [
@@ -154,6 +157,9 @@ export class TLS26010CRUComponent extends BasicCruPageComponent<TLS26010Data> im
   public readonly isRowSelectable = (rowData: TLS26010Data): boolean =>
     !(Reflect.has(rowData, 'CanDelete') && rowData.CanDelete === '0');
 
+  // 靜態資料: 用於表單初始化和重置
+  private staticData: TLS26010Data = this.dataForm.value as TLS26010Data;
+
   constructor(public service: TLS26010Service) {
     super();
   }
@@ -162,6 +168,7 @@ export class TLS26010CRUComponent extends BasicCruPageComponent<TLS26010Data> im
     this.initializePage('TLS26010', this.dataForm);
     if (this.crudstatus !== CRUDStatus.Create)
       this.service.loadTLS26010Detail({ pod_no: this.rowdata?.pod_no || '' });
+    this.staticData = this.dataForm.value as TLS26010Data;
     console.log(`init:`, [this.funInfo, this.rowdata, this.dataForm.value]);
   }
 
@@ -279,18 +286,20 @@ export class TLS26010CRUComponent extends BasicCruPageComponent<TLS26010Data> im
   }
 
   public onClear(): void {
-    this.dataForm.reset({
-      pod_no: '自動給號',
-      pod_desc: void 0,
-      pod_sdate: new Date(),
-      pod_edate: this.dateE,
-      pod_busdate: this.dateE,
-      pod_status: '未核准',
-      ECR_Nos: [],
-      tlt_nos: [],
-      sys3800: void 0,
-      sys3900: void 0,
-    });
+    this.crudstatus === CRUDStatus.Edit
+      ? this.dataForm.reset(this.staticData)
+      : this.dataForm.reset({
+        pod_no: '自動給號',
+        pod_desc: void 0,
+        pod_sdate: new Date(),
+        pod_edate: this.dateE,
+        pod_busdate: this.dateE,
+        pod_status: '未核准',
+        ECR_Nos: [],
+        tlt_nos: [],
+        sys3800: void 0,
+        sys3900: void 0,
+      });
   }
 
   public ngOnDestroy(): void {

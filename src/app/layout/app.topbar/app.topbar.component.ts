@@ -232,6 +232,7 @@ export class AppTopbarComponent implements OnInit, OnDestroy {
   }
   // 點擊我的最愛事件
   onFavoriteItemClick(item: FunsrightInfo) {
+    if (!item || this.editingFavorites) return;
     if (item.prog_ispage === 'N') {
       this.messageService.warnBubble(`您目前無檢視「${item.label}」的權限，請聯絡系統管理員開啟權限。`, '無法開啟畫面');
       return;

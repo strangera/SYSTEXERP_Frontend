@@ -101,9 +101,9 @@
             [submitted]="submitted" />
           <app-input-text class="col-12 md:col-6 lg:col-4" label="授權碼" controlName="CTBC_ApprovalCode"
             [control]="queryForm.controls.CTBC_ApprovalCode" [submitted]="submitted" />
-          <app-multi-select class="col-12 md:col-6 lg:col-4" label="分期期數" controlName="CTBC_TermNo"
-            [options]="TermNoOptions" optionLabel="label" optionValue="value" [control]="queryForm.controls.CTBC_TermNo"
-            [submitted]="submitted" />
+          <app-multi-select *ngIf="selectedBank === '1'" class="col-12 md:col-6 lg:col-4" label="分期期數"
+            controlName="CTBC_TermNo" [options]="TermNoOptions" optionLabel="label" optionValue="value"
+            [control]="queryForm.controls.CTBC_TermNo" [submitted]="submitted" />
         </div>
         <hr *ngIf="selectedBank" />
         <div *ngIf="selectedBank" class="grid p-fluid">

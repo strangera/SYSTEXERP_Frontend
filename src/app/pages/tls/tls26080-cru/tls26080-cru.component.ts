@@ -14,9 +14,10 @@ import { InputTextComponent } from '@shared/componentkit/input-text/input-text.c
 import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
 import { TableComponent } from '@shared/componentkit/table/table.component';
 import { Column } from '@shared/componentkit/table/table.model';
+import { CRUDStatus } from '@shared/models/system/CRUDstatus';
 import { ApprovalStatus } from '@shared/models/tls/approval-status.model';
 import { PanelModule } from 'primeng/panel';
-import { ActivityData, CounterData, DeductionItem } from '../tls26080/tls26080.model';
+import { ActivityData, CounterData, DeductionItem, TLS26080Data } from '../tls26080/tls26080.model';
 
 @Component({
   selector: 'app-tls26080-cru',
@@ -39,7 +40,7 @@ import { ActivityData, CounterData, DeductionItem } from '../tls26080/tls26080.m
     TableComponent,
   ]
 })
-export class TLS26080CRUComponent extends BasicCruPageComponent<ActivityData> implements OnInit {
+export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> implements OnInit {
   private dateS: Date = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
   private dateE: Date = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0);
 
@@ -90,12 +91,19 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<ActivityData> im
     });
   }, { allowSignalWrites: true });
 
+  // 靜態資料: 用於表單初始化和重置
+  private staticData: TLS26080Data = this.dataForm.value as TLS26080Data;
+
   constructor(public service: TLS26080Service) {
     super();
   }
 
   public ngOnInit(): void {
     this.initializePage('TLS26080', this.dataForm);
+    if (this.crudstatus !== CRUDStatus.Create)
+      this.service.loadTLS26080Detail({ pod_no: this.rowdata?.pod_no || '' });
+    this.staticData = this.dataForm.value as TLS26080Data;
+    console.log(`init:`, [this.rowdata, this.crudstatus, this.dataForm.value]);
   }
 
   /** 讀取環友資料 */
@@ -104,12 +112,14 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<ActivityData> im
   }
 
   public onClear(): void {
-    this.dataForm.reset({
-      pod_no: '自動給號',
-      pod_sdate: this.dateS,
-      pod_edate: this.dateE,
-      pod_status: ApprovalStatus.未核准,
-    });
+    this.crudstatus === CRUDStatus.Edit
+      ? this.dataForm.reset(this.staticData)
+      : this.dataForm.reset({
+        pod_no: '自動給號',
+        pod_sdate: this.dateS,
+        pod_edate: this.dateE,
+        pod_status: ApprovalStatus.未核准,
+      });
   };
 
   public onSubmitQuery(): void {
@@ -153,14 +163,14 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<ActivityData> im
   //   this.counterData = [...this.counterData, newCounter];
   // }
 
-  // // 刪除專櫃
-  // onDeleteCounter(counter: CounterData): void {
-  //   this.counterData = this.counterData.filter(item => item.id !== counter.id);
-  //   if (this.selectedCounter?.id === counter.id) {
-  //     this.selectedCounter = void 0;
-  //     this.deductionData = [];
-  //   }
-  // }
+  // 刪除專櫃
+  onDeleteCounter(counter: CounterData): void {
+    this.counterData = this.counterData.filter(item => item.id !== counter.id);
+    if (this.selectedCounter?.id === counter.id) {
+      this.selectedCounter = void 0;
+      this.deductionData = [];
+    }
+  }
 
   // // 新增扣款項目 - 修復加入 counterName
   // onAddDeductionItem(): void {

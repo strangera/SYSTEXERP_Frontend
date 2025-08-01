@@ -3,14 +3,13 @@
     {{ title }}
   </span>
 </p-divider>
-<p-blockUI [target]="dt" [blocked]="disabled"></p-blockUI>
 <p-table #dt [value]="data" [columns]="selectedColumns" [(selection)]="selectedItems" sortMode="multiple"
   [selectionMode]="showCheckBox && IsPrint ? selectionMode : null" [dataKey]="dataKey" [rowTrackBy]="trackByRow"
   [resizableColumns]="true" [paginator]="showPaginator && IsPrint && !rowEditing && !loading" [scrollable]="scrollable"
   [showCurrentPageReport]="IsPrint" [multiSortMeta]="multiSortMeta" [rowsPerPageOptions]="[10, 30, 50]"
   [scrollHeight]="scrollHeight" [rows]="rows" [(first)]="first" (onPage)="onPageChange($event)"
   (onLazyLoad)="loadDataLazy($event)" [lazy]="lazy || !IsPrint"
-  [styleClass]="'p-datatable-sm p-datatable-striped' + (IsPrint ? ' p-datatable-gridlines' : '')"
+  [styleClass]="'p-datatable-sm ' + (IsPrint ? ' p-datatable-gridlines' : '') + (!disabled ? 'p-datatable-striped' : '')"
   [virtualScroll]="!IsPrint" [virtualScrollItemSize]="35" [virtualScrollDelay]="250"
   currentPageReportTemplate="第{currentPage}頁 / 總共{totalPages}頁 (總筆數:{totalRecords})" (onSort)="onSort($event)"
   (selectionChange)="onSelectionChange($event)" (onRowSelect)="select.emit($event)"
@@ -277,7 +276,7 @@
     </tr>
   </ng-template>
   <ng-template *ngIf="expansionDataKey" pTemplate="rowexpansion" let-rowData>
-    <tr class="bg-gray-300" id="expansion-row">
+    <tr id="expansion-row">
       <td [attr.colspan]="getVisibleHeaderCount">
         <app-table-expansion [rowData]="rowData" [expansionDataKey]="expansionDataKey"
           [expansionColumns]="expansionColumns" [expansionSortField]="expansionSortField"

@@ -38,8 +38,8 @@ import { TLS26010Data, TLS26010Query } from './tls26010.model';
   ]
 })
 export class TLS26010Component extends BasicQueryPageComponent<TLS26010Data> {
-  private dateS: Date = new Date(this.now.getFullYear(), this.now.getMonth(), 1);
-  private dateE: Date = new Date(this.now.getFullYear(), this.now.getMonth() + 1, 0);
+  private readonly dateS: Date = new Date(this.now.getFullYear(), this.now.getMonth(), 1);
+  private readonly dateE: Date = new Date(this.now.getFullYear(), this.now.getMonth() + 1, 0);
 
   // 查詢表單
   public queryForm = this.formBuilder.group({
@@ -53,8 +53,6 @@ export class TLS26010Component extends BasicQueryPageComponent<TLS26010Data> {
     podEdateS: new FormControl<Date>(this.dateS, Validators.required), // 截止日期(起)
     podEdateE: new FormControl<Date>(this.dateE, Validators.required), // 截止日期(迄)
   });
-
-  public selectedItems: TLS26010Data[] = [];
 
   public readonly editDisabled = (rowData: TLS26010Data) =>
     (Reflect.has(rowData, 'CanEdit') && rowData.CanEdit == '1') || rowData.pod_status !== ApprovalStatus.未核准;
@@ -127,18 +125,54 @@ export class TLS26010Component extends BasicQueryPageComponent<TLS26010Data> {
     }
   });
 
-  // 監聽館別及樓層及區域變化
+  // 監聽館別變化，重置樓層、區域、收銀機號及專櫃ID
+  private buildingEffect = effect(() => {
+    const building_no = this.sys3800Signal();
+    if (!building_no?.length) return;
+    this.service.loadSYS3900(building_no);
+    this.queryForm.patchValue({
+      sys3900: undefined,
+      sys3A00: undefined,
+      ecrNos: undefined,
+      tltNos: undefined,
+    }, { emitEvent: false });
+  }, { allowSignalWrites: true });
+
+  // 監聽樓層變化，重置區域、收銀機號及專櫃ID
+  private floorEffect = effect(() => {
+    const building_no = this.sys3800Signal();
+    const floor_no = this.sys3900Signal();
+    if (!floor_no?.length || !building_no?.length) return;
+    this.service.loadSYS3A00();
+    this.queryForm.patchValue({
+      sys3A00: undefined,
+      ecrNos: undefined,
+      tltNos: undefined,
+    }, { emitEvent: false });
+  }, { allowSignalWrites: true });
+
+  // 監聽區域變化，重置收銀機號及專櫃ID
+  private areaEffect = effect(() => {
+    const building_no = this.sys3800Signal();
+    const floor_no = this.sys3900Signal();
+    const area_no = this.sys3A00Signal();
+    if (!area_no?.length || !building_no?.length || !floor_no?.length) return;
+    this.queryForm.patchValue({
+      ecrNos: undefined,
+      tltNos: undefined,
+    }, { emitEvent: false });
+  }, { allowSignalWrites: true });
+
+  // 監聽館別、樓層及區域變化，載入相關資料
   private readonly dependentDataEffect = effect(() => {
     const building_no = this.sys3800Signal();
     const floor_no = this.sys3900Signal();
     const area_no = this.sys3A00Signal();
-
-    if (floor_no) {
-      this.queryForm.patchValue({ ecrNos: [], tltNos: [] }, { emitEvent: false });
-      this.service.loadPreorderECRList({ building_no, floor_no, data_type: '1' });
-      this.service.loadTLTTALENT({ building_no, floor_no });
-    }
-  }, { allowSignalWrites: !0 });
+    console.log(`dependentDataEffect:`, [building_no, floor_no, area_no]);
+    if (!building_no?.length || !floor_no?.length || !area_no?.length) return;
+    this.service.loadPreorderECRList({ building_no, floor_no, area_no, data_type: '2' });
+    this.service.loadTLTTALENT({ building_no, floor_no, area_no });
+  }, { allowSignalWrites: true });
 
   private queryTLS26010 = computed<TLS26010Query>(() => {
     const dates = this.dateValidationSignal().dates;
@@ -210,7 +244,7 @@ export class TLS26010Component extends BasicQueryPageComponent<TLS26010Data> {
       frm.valid && this.canQuery() && this.service.loadTLS26010(this.queryTLS26010());
       this.loading = !1;
     });
-  }
+  };
 
   /** 刪除選中的活動 */
   public onDelete(data: TLS26010Data[]): void {

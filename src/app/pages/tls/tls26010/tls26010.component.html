@@ -100,10 +100,8 @@
                [dataKey]="'pod_no'"
                [columns]="columns"
                [addButton]="addButton"
-               [selectedItems]="selectedItems"
                [editDisabled]="editDisabled"
                [isRowSelectable]="isRowSelectable"
-               (selectionChange)="selectedItems = $event"
                (delete)="onDelete($event)"
                (edit)="onEdit($event)"
                (detail)="onDetail($event)"></app-table>

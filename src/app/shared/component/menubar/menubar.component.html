@@ -4,8 +4,7 @@
       [model]="customBreadcrumbItems.length ? customBreadcrumbItems : breadcrumbItems" [home]="home">
       <ng-template pTemplate="item" let-item>
         <div class="cursor-pointer" [routerLink]="item.url">
-          <span class="text-sm font-semibold text-gray-700 dark:text-gray-200"
-            [ngClass]="noProgNo ? 'text-red-500' : ''">
+          <span class="text-sm font-semibold" [ngClass]="noProgNo ? 'text-red-500' : 'text-color'">
             {{ item.label }}
           </span>
           <i *ngIf="item.isLast && !noProgNo"
