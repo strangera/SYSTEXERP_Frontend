@@ -75,10 +75,10 @@ export class TLS12060Component extends BasicQueryPageComponent<Potential_Custome
   // 查詢
   queryForm = this.formBuilder.group({
     // 先建立表單，還不確定table內容
-    contract_type: [[]],  // 合約種類
-    contract_status: [[]], //  合約狀態 (可能是TLS14010這支)
-    CreatedDateStart: [null],  // 接洽日期_起始日
-    CreatedDateEnd: [null],  // 接洽日期_終止日
+    contract_type: [[]],  // 合約種類(要約書、契約書)
+    contract_status: [[]], //  合約狀態 (未審核、已審核、已作廢)
+    CreatedDateStart: [null, [Validators.required]],  // 接洽日期_起始日
+    CreatedDateEnd: [null, [Validators.required]],  // 接洽日期_終止日
 
     contact_USR: [[], [Validators.maxLength(100)]], // 接洽人員
     cus_uniform_id: [[], [Validators.maxLength(100)]], // 廠商統一編號
@@ -101,11 +101,9 @@ export class TLS12060Component extends BasicQueryPageComponent<Potential_Custome
   totalRecords = 0;// 分頁和排序參數 // 排序需要
 
   contact_type_Option: option[] = [
-    {value: '1', label: '全部'},
-    {value: '2', label: '意向書'},
     {value: '3', label: '要約書'},
     {value: '4', label: '契約書'},
-  ]; // 合約種類(待確認)
+  ]; // 合約種類
   contract_status_Option: option[] = [
     {value: '1', label: '未審核'},
     {value: '2', label: '已審核'},
