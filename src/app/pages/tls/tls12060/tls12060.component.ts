@@ -91,7 +91,7 @@ export class TLS12060Component extends BasicQueryPageComponent<Potential_Custome
     each_row: [10, [Validators.min(1), Validators.max(100)]], // 每頁顯示行數
     version_start: [0, [Validators.min(0)]], // 版本起始
     version_end: [0, [Validators.min(0)]], // 版本終止
-    counter: ['', [Validators.min(0)]], // 專櫃編號
+    counter: [[], [Validators.min(0)]], // 專櫃編號
 
     //分頁查詢
     ...createPaginationConfig([{ field: 'contact_USR_No', order: 1 }]), // 分頁和排序參數
@@ -110,6 +110,7 @@ export class TLS12060Component extends BasicQueryPageComponent<Potential_Custome
   location_Option: apiOption[] = []; // 位置編號
   cus_uniform_Option: POS2013[] = []; // 廠商統一編號(pos2013)
   contact_USR_Option: apiOption[] = [];  // 接洽人員代碼/名稱
+  TLTTalent_Option: apiOption[] = []; // 專櫃編號
 
   data: Potential_Customer[] = [];
   columns: Column[] = [
@@ -273,6 +274,16 @@ export class TLS12060Component extends BasicQueryPageComponent<Potential_Custome
       }));
       console.log('area_Option:', this.area_Option);
     });
+    // 查 櫃編
+    this.tls12060Service.queryTLTTALENT_DropDownList({}).subscribe((response) => {
+      this.TLTTalent_Option = response.Data.map((item: any) => ({
+        No: item.No, // 櫃編 代碼
+        Name: item.Name, // 櫃編 名稱
+        Label: item.No + '/' + item.Name, // 組合成顯示用的Label
+      }));
+      console.log('area_Option:', this.TLTTalent_Option);
+    });
+
     // 查 統編
     this.tls12060Service.queryPOS2013_DropDownList({ "VEN_Flag": '1' }).subscribe((response) => {
       // 去除重複的 No，只保留第一筆

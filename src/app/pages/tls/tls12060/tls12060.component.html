@@ -61,8 +61,10 @@
               [submitted]="submitted" />
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text label="專櫃編號 " controlName="counter" [control]="queryForm.controls.counter"
-              [submitted]="submitted"></app-input-text>
+            <!-- <app-input-text label="專櫃編號 " controlName="counter" [control]="queryForm.controls.counter"
+              [submitted]="submitted"></app-input-text> -->
+            <app-multi-select label="專櫃編號" controlName="counter" [options]="TLTTalent_Option" optionLabel="Label"
+              optionValue="No" [control]="queryForm.controls.counter" [submitted]="submitted"></app-multi-select>
           </div>
         </div>
         <!-- <div> -->
