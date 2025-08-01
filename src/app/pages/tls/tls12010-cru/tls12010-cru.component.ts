@@ -23,11 +23,11 @@ import { ColumnDef, ExpandableEditTableComponent } from '../../../shared/compone
 import { Tls12010DetailService } from './tls12010-detail.service';
 
 export interface Potential_Customer {
-  ID: number; // 主鍵，自動編號
+  id: number; // 主鍵，自動編號
 
   contact_USR_No: string; // 接洽人員代碼
   contact_USR_Name: string; // 接洽人員姓名
-  cus_type: string; // 廠商類型：1=統編、2=身份證字號、3=員工ID
+  cus_type: string; // 廠商類型：1=統編、2=身份證字號、3=員工id
   cus_uniform_id: string; // 廠商統一編號 (根據類型不同有不同意義)
   VEN_Name: string; // 廠商名稱
   VEN_EngName?: string; // 廠商英文名稱
@@ -57,8 +57,8 @@ export interface Potential_Customer {
 
 // Potential_Customer_Detail 潛在客戶其他資料明細檔
 export interface Potential_Customer_Detail {
-  ID: number; // 主鍵，自動編號
-  PC_id: number; // 潛在客戶ID (Potential_Customer 的 ID)
+  id: number; // 主鍵，自動編號
+  PC_id: number; // 潛在客戶id (Potential_Customer 的 id)
   other_shop: string; // 其他商場
   shop_area: number; // 面積 (小數，預設 0)
   total_amt: number; // 營業額 (整數，預設 0)  
@@ -103,21 +103,21 @@ export class TLS12010CRUComponent extends BasicCruPageComponent<Potential_Custom
   // ----------------------------------------------------------------
     dataForm = this.formBuilder.nonNullable.group({
         // Potential_Customer 潛在客戶主檔
-        ID: [{value: null, disabled: true}], // 主鍵，自動編號
+        id: [{value: null, disabled: true}], // 主鍵，自動編號
         contact_USR_No: ['', [Validators.required, Validators.maxLength(16)]],  // 接洽人員代碼
         contact_USR_Name: ['', [Validators.required, Validators.maxLength(20)]],  // 接洽人員姓名
-        cus_type: ['1', [Validators.required, Validators.maxLength(1)]], // 廠商類型（1=統編、2=身份證、3=員工ID）
+        cus_type: ['1', [Validators.required, Validators.maxLength(1)]], // 廠商類型（1=統編、2=身份證、3=員工id）
         cus_uniform_id: ['', [Validators.required, Validators.maxLength(16)]], // 廠商統一編號(pos2013)
         // /*若廠商類型為1=統編, 為廠商統編 (pos2013.ven_uniform) */
 	         /*若廠商 類型為2=身份證字號, 進行身份證檢查碼檢查 */
-	         /*若廠商類型為3=員工ID, 檢查 tblUser.user_no */ 
+	         /*若廠商類型為3=員工id, 檢查 tblUser.user_no */ 
         VEN_Name: ['', [Validators.required, Validators.maxLength(100)]], // 廠商名稱
         /*若廠商類型為2=身份證字號, 由使用者自行輸入 */
-	      /*若廠商類型為3=員工ID, tblUser.user_name */
+	      /*若廠商類型為3=員工id, tblUser.user_name */
         // 有資料可以用 [烘焙坊] 輸入測試試試
         VEN_EngName: ['', [Validators.maxLength(100)]], // 廠商英文名稱
         /*若廠商類型為2=身份證字號, 由使用者自行輸入 */
-	      /*若廠商類型為3=員工ID, 由使用者自行輸入 */
+	      /*若廠商類型為3=員工id, 由使用者自行輸入 */
         bus_type: ['', [Validators.maxLength(2)]], // 業種-大分類代碼(tltbustype)
         tlt_name: ['', [Validators.maxLength(100)]],  // 品牌(專櫃名稱)
         tlt_EngName: ['', [Validators.maxLength(100)]], // 品牌英文(專櫃名稱)
@@ -147,8 +147,9 @@ export class TLS12010CRUComponent extends BasicCruPageComponent<Potential_Custom
         { field: 'total_amt', header: '營業額', type: 'number', allowDecimal: true, editable: true, autoWidth: true }
     ];
     // 預設新項目模板
-    defaultNewDetail: { PC_id: number | null; other_shop: string; shop_area: number; total_amt: number; status: string } = {
-      PC_id: null, // 潛在客戶ID (Potential_Customer 的 ID)
+    defaultNewDetail: { id: number, PC_id: number | null; other_shop: string; shop_area: number; total_amt: number; status: string } = {
+      id: 0,
+      PC_id: null, // 潛在客戶id (Potential_Customer 的 id)
       other_shop: '', // 其他商場
       shop_area: 0, // 面積
       total_amt: 0, // 營業額
@@ -158,6 +159,7 @@ export class TLS12010CRUComponent extends BasicCruPageComponent<Potential_Custom
     // 預設 POS2005 新項目模板
     createDefaultNew(PC_id: number) {
       this.defaultNewDetail = {
+        id: 0,
         PC_id: PC_id,
         other_shop: '', // 其他商場
         shop_area: 0, // 面積
@@ -171,7 +173,7 @@ export class TLS12010CRUComponent extends BasicCruPageComponent<Potential_Custom
     // ------
 
     //
-    cus_type_Option: option[] = [ // 廠商類型（1=統編、2=身份證、3=員工ID）
+    cus_type_Option: option[] = [ // 廠商類型（1=統編、2=身份證、3=員工id）
       {value: '1', label: '統編'},
       {value: '2', label: '身份證'},
       {value: '3', label: '員工ID'}
@@ -194,7 +196,7 @@ export class TLS12010CRUComponent extends BasicCruPageComponent<Potential_Custom
       this.initializePage('TLS12010', this.dataForm);
       this.loadOptions();
 
-      const PC_id = this.dataForm.get('ID')?.value;
+      const PC_id = this.dataForm.get('id')?.value;
       if (PC_id) {
         this.loadDetailData(PC_id);
         this.createDefaultNew(PC_id);
@@ -268,7 +270,7 @@ export class TLS12010CRUComponent extends BasicCruPageComponent<Potential_Custom
         return;
       }
 
-      //將新的資料ID指定為null
+      //將新的資料id指定為null
       const processedDetail = this.potentialDetail.map(item => {
         // 刪除 key 為空字串的欄位
         if ("" in item) {
@@ -276,7 +278,7 @@ export class TLS12010CRUComponent extends BasicCruPageComponent<Potential_Custom
         }
 
         if (item.status === 'new') {
-          return { ...item, ID: null}; // 把新項目的 ID, PC_id 改為 null
+          return { ...item, id: null}; // 把新項目的 id, PC_id 改為 null
         }
         return item; // 其他不變
       });
@@ -327,13 +329,13 @@ export class TLS12010CRUComponent extends BasicCruPageComponent<Potential_Custom
     loadOptions() {
         // 查詢 接待人員
         this.tls12010Service.queryTBLUSER_DropDownList({}).subscribe((response) => {
-            this.contact_USR_Option = response.Data.map((item: any) => ({
-              No: item.contact_USR_No, // 接待人員 代碼
-              Name: item.contact_USR_Name, // 接待人員 名稱
-              Label: item.contact_USR_No + '-' + item.contact_USR_Name, // 組合成顯示用的Label
-            }));
-            console.log('接待人員代號:', this.contact_USR_Option);
-          });
+          this.contact_USR_Option = response.Data.map((item: any) => ({
+            No: item.No, // 接待人員 名稱
+            Name: item.Name, // 接待人員 名稱
+            Label: item.No+ '-'+ item.Name //標籤
+          }));
+          console.log('接待人員代號:', this.contact_USR_Option);
+        });
 
         // 查 大分類(專櫃)
         this.tls12010Service.queryTLTBUSTYPE_DropDownList({}).subscribe((response) => {
@@ -473,7 +475,7 @@ export class TLS12010CRUComponent extends BasicCruPageComponent<Potential_Custom
 
           break;
 
-        case '3': // 員工ID
+        case '3': // 員工id
           { cus_uniform_id.setValidators([
             Validators.required,
             Validators.maxLength(16),
@@ -481,7 +483,7 @@ export class TLS12010CRUComponent extends BasicCruPageComponent<Potential_Custom
           VEN_Name.setValidators([Validators.required, Validators.maxLength(100)]);
           VEN_EngName.setValidators([Validators.maxLength(100)]);
 
-          // VEN_Name 直接套用token的 tblUser.user_name 給員工ID
+          // VEN_Name 直接套用token的 tblUser.user_name 給員工id
           const userNo = this.authService.getUserInfo()?.user_No ?? ''
           const userName = this.authService.getUserInfo()?.user_Name ?? ''
           if(userNo && userName){ //有用戶名不允許編輯
@@ -507,28 +509,26 @@ export class TLS12010CRUComponent extends BasicCruPageComponent<Potential_Custom
       VEN_EngName.updateValueAndValidity();
     }
 
-    // ---明細檔操作---
+    // --潛在明細檔 操作---
     //HTML 顯示的明細資料
     get filteredDetail(): Potential_Customer_Detail[] {
       return this.potentialDetail.filter(item => item.status !== 'deleted');
     }
+    //---potential明細編輯事件---
+      onRowSaveDetail(event: any) {
+        this.tls12010DetailService.handleRowSave(event);
+      }
+      onRowCancelDetail(event: any) {
+        this.tls12010DetailService.handleRowCancel(event);
+      }
+      // 新增 潛在明細檔
+      onAddDetail() {
+        this.tls12010DetailService.addPotential(this.potentialDetail, this.defaultNewDetail, this.detailTable);
+      }
     
-    //---Potential_Customer_Detail 表格編輯事件---
-    onRowSaveDetail(event: any) {
-      this.tls12010DetailService.handleRowSave(event);
-    }
-
-    onRowCancelDetail(event: any) {
-      
-      this.tls12010DetailService.handleRowCancel(event);
-    }
-    // 新增 Potential_Customer_Detail
-    onAddPotentialCustomerDetail() {
-      this.tls12010DetailService.addPotentialCustomerDetail(this.potentialDetail, this.defaultNewDetail, this.detailTable);
-    }
-    // 批次刪除  Potential_Customer_Detail
-    onBatchDeleteDetail(selectedItems: Potential_Customer_Detail[]): void {
-      this.tls12010DetailService.deletePotentialCustomerDetail(selectedItems, this.potentialDetail);
-    }      
+      // 批次刪除 潛在明細檔
+      onBatchDeleteDetail(selectedItems: any[]): void {
+        this.tls12010DetailService.deletePotential(selectedItems, this.potentialDetail, this.detailTable);
+      }
     
 }
