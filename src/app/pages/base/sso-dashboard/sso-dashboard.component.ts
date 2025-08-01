@@ -198,7 +198,7 @@ if (!userNo) {
 }
 
 this.subscriptions.push(
-  this.authService.getOuterToken(userNo).pipe(
+  this.authService.getOuterToken().pipe(
     untilDestroyed(this),
     concatMap((tokenResponse) => {
       if (tokenResponse.Status !== '0000' || !tokenResponse.Data) {
