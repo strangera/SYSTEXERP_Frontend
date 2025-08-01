@@ -1,7 +1,7 @@
 @echo off
 chcp 65001 >nul
 echo 🚀 開始建置 Angular 專案...
-call ng build --configuration production --base-href /tsrdweb/
+call ng build --configuration production --base-href /tsrdwebdev/
 
 if %errorlevel% neq 0 (
     echo ❌ Build 失敗，停止部署。
@@ -9,8 +9,8 @@ if %errorlevel% neq 0 (
     exit /b %errorlevel%
 )
 
-echo ✅ 建置完成，開始複製檔案到 \\10.3.11.2\tsrdweb ...
-xcopy /E /Y /I "dist\tsrderp-frontend\browser" "\\10.3.11.2\tsrdweb"
+echo ✅ 建置完成，開始複製檔案到 \\10.3.11.2\tsrdwebdev ...
+xcopy /E /Y /I "dist\tsrderp-frontend\browser" "\\10.3.11.2\tsrdwebdev"
 
 if %errorlevel% neq 0 (
     echo ❌ 複製失敗！
