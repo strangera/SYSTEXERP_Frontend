@@ -9,10 +9,6 @@
     background-color: var(--sidebar-bg);
   }
 
-  i {
-    color: var(--sidebar-icon-color) !important;
-  }
-
   ul a {
     color: var(--sidebar-text-color);
     &:hover {
@@ -79,8 +75,19 @@
     background: var(--gray-400); /* 稍微深一點的灰色作為 hover */
   }
   .layout-sidebar-sticky {
-    background-color: var(--topbar-sticky-bg);
-    -webkit-backdrop-filter: blur(8px);
-    backdrop-filter: blur(8px);
+    background-color: rgba(255, 255, 255, 0.8); // 淡白色半透明
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05); // 淺邊框
+    backdrop-filter: blur(6px);
+    -webkit-backdrop-filter: blur(6px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.06); // 下方柔和陰影
+    transition: all 0.3s ease;
+    z-index: 10;
+  }
+}
+
+::ng-deep .dark-theme {
+  .layout-sidebar-sticky {
+    background-color: rgb(32 38 68 / 70%);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
   }
 }

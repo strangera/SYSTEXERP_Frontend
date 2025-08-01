@@ -267,7 +267,7 @@ export class TLS23120CRUComponent extends BasicCruPageComponent<any> {
       <head>
         <title>列印報表</title>
         <style>
-          body { font-family: 'Noto Serif TC', sans-serif; padding: 20px; }
+          body { font-family: 'Noto Sans TC', sans-serif; padding: 20px; }
           table, th, td {
             border: 1px solid black;
             border-collapse: collapse;
@@ -341,21 +341,21 @@ export class TLS23120CRUComponent extends BasicCruPageComponent<any> {
     const marginLeft = 40;
     let currentY = 40;
     const pageWidth = doc.internal.pageSize.getWidth();
-    doc.addFont('assets/font/NotoSerifTC-VariableFont_wght.ttf', 'Noto Serif TC', 'normal');
-    doc.setFont('Noto Serif TC');
+    doc.addFont('assets/fonts/NotoSansTC-VariableFont_wght.ttf', 'Noto Sans TC', 'normal');
+    doc.setFont('Noto Sans TC');
     doc.setFontSize(14);
     doc.text(this.reportTitle, pageWidth / 2, currentY, { align: 'center' });
     currentY += 20;
 
     doc.setFontSize(10);
-    doc.setFont('Noto Serif TC');
+    doc.setFont('Noto Sans TC');
     doc.text(`${this.dateRangeLabel}：${this.formatDate(this.dateStart)} ~ ${this.formatDate(this.dateEnd)}`, marginLeft, currentY);
     doc.text(`列印時間：${this.printedAt}`, pageWidth - marginLeft, currentY, { align: 'right' });
     currentY += 14;
 
     this.groupedData.forEach((group, groupIndex) => {
       doc.setFontSize(10);
-      doc.setFont('Noto Serif TC');
+      doc.setFont('Noto Sans TC');
       // 設定左右欄位的起始位置
       const leftX = marginLeft;
       const rightX = pageWidth / 2 + 10;
@@ -439,13 +439,13 @@ export class TLS23120CRUComponent extends BasicCruPageComponent<any> {
         head: [tableColumns.map(col => col.header)],
         body: tableData.map(row => tableColumns.map(col => row[col.dataKey] ?? '')),
         styles: {
-          font: 'Noto Serif TC',
+          font: 'Noto Sans TC',
           fontSize: 9,
           halign: 'center',
           valign: 'middle',
         },
         headStyles: {
-          font: 'Noto Serif TC',
+          font: 'Noto Sans TC',
           fontStyle: 'normal',
           fontSize: 10,
           fillColor: [212, 222, 254],
@@ -453,7 +453,7 @@ export class TLS23120CRUComponent extends BasicCruPageComponent<any> {
           halign: 'center',
         },
         footStyles: {
-          font: 'Noto Serif TC',
+          font: 'Noto Sans TC',
           fontStyle: 'normal',
           fontSize: 10,
           fillColor: [212, 222, 254],
