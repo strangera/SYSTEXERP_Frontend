@@ -93,7 +93,9 @@
 
               <!-- Checkbox 核取方塊 -->
               <div *ngSwitchCase="'checkbox'" class="checkbox-wrapper">
-                <p-checkbox [(ngModel)]="rowData[col.field]" [binary]="true"></p-checkbox>
+                <p-checkbox [(ngModel)]="rowData[col.field]" [binary]="true"
+                  (ngModelChange)="col.directEdit ? onDirectEditChange(rowData, col.field, $event, ri, col) : null"
+                  [disabled]="readonly || col.editable === false"></p-checkbox>
               </div>
 
               <!-- 預設文字輸入 -->
@@ -277,7 +279,9 @@
 
               <!-- Checkbox -->
               <div *ngSwitchCase="'checkbox'" class="checkbox-wrapper">
-                <p-checkbox [(ngModel)]="detailData[col.field]" [binary]="true"></p-checkbox>
+                <p-checkbox [(ngModel)]="detailData[col.field]" [binary]="true"
+                  (ngModelChange)="col.directEdit ? onDirectEditChange(rowData, col.field, $event, ri, col) : null"
+                  [disabled]="readonly || col.editable === false"></p-checkbox>
               </div>
 
               <!-- 預設文字輸入 -->

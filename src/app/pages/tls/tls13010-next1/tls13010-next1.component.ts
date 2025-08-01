@@ -144,7 +144,8 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
       header: '是否新增',
       type: 'checkbox',
       editable: true,
-      autoWidth: true
+      autoWidth: true,
+      directEdit: true // 允許直接編輯checkbox
     },
     {
       field: 'cap_item',
@@ -225,7 +226,8 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
       header: '是否新增',
       type: 'checkbox',
       editable: true,
-      width: '80px'
+      width: '80px',
+      directEdit: true // 允許直接編輯checkbox
     },
     {
       field: 'cap_item',
@@ -326,7 +328,8 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
       header: '是否新增',
       type: 'checkbox',
       editable: true,
-      width: '80px'
+      width: '80px',
+      directEdit: true // 允許直接編輯checkbox
     },
     {
       field: 'cap_item',
@@ -422,7 +425,8 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
       header: '是否新增',
       type: 'checkbox',
       editable: true,
-      width: '80px'
+      width: '80px',
+      directEdit: true // 允許直接編輯checkbox
     },
     {
       field: 'cap_item',
@@ -498,7 +502,8 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
       header: '是否新增',
       type: 'checkbox',
       editable: true,
-      width: '80px'
+      width: '80px',
+      directEdit: true // 允許直接編輯checkbox
     },
     {
       field: 'cap_item',

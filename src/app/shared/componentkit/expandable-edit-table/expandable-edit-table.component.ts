@@ -100,6 +100,8 @@ export interface ColumnDef {
   style?: string;
   options?: any[];
 
+  directEdit?: boolean; //控制能否直接編輯checkbox
+
   allowDecimal?: boolean;  // 是否允許小數點
   decimalPlaces?: number;  // 小數位數，預設2位
 
@@ -1009,11 +1011,17 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
 
   // 🎯 新增：檢查欄位是否應該顯示為輸入控件
   shouldShowInputControl(column: ColumnDef, isEditing: boolean): boolean {
+    if (column.directEdit === true && column.editable !== false) {
+      return true;
+    }
     return this.isFieldEditable(column, isEditing);
   }
 
   // 🎯 新增：檢查欄位是否應該顯示為純文字
   shouldShowDisplayOnly(column: ColumnDef, isEditing: boolean): boolean {
+    if (column.directEdit === true && column.editable !== false) {
+      return false;
+    }
     return !this.isFieldEditable(column, isEditing);
   }
 
@@ -1024,5 +1032,33 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
         return this.data.some(dataItem => dataItem[this.dataKey] === selectedItem[this.dataKey]);
       });
     }
+  }
+
+  onDirectEditChange(rowData: any, field: string, newValue: any, rowIndex?: number, column?: ColumnDef): void {
+    const oldValue = rowData[field];
+    rowData[field] = newValue;
+
+    console.log(`✅ 直接編輯變更: ${field} = ${newValue} (第${(rowIndex || 0) + 1}行)`);
+
+    // 🎯 觸發和編輯保存一樣的事件，讓外部組件知道資料已更新
+    this.save.emit({
+      oldData: { ...rowData, [field]: oldValue },
+      newData: { ...rowData }
+    });
+  }
+
+  // 🎯 新增：處理詳細資料直接編輯欄位的變更事件
+  onDetailDirectEditChange(detailData: any, parentData: any, field: string, newValue: any, rowIndex?: number, detailIndex?: number): void {
+    const oldValue = detailData[field];
+    detailData[field] = newValue;
+
+    console.log(`✅ 詳細資料直接編輯變更: ${field} = ${newValue} (主行${(rowIndex || 0) + 1}, 詳細行${(detailIndex || 0) + 1})`);
+
+    // 🎯 觸發詳細資料保存事件
+    this.detailSave.emit({
+      oldDetail: { ...detailData, [field]: oldValue },
+      newDetail: { ...detailData },
+      parentData: parentData
+    });
   }
 }
