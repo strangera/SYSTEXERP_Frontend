@@ -31,7 +31,7 @@ const shallowEqual = <T extends Record<string, any>>(a: T, b: T): boolean => {
   selector: 'app-tls26010-cru',
   templateUrl: './tls26010-cru.component.html',
   styleUrl: './tls26010-cru.component.scss',
-  standalone: true,
+  standalone: !0,
   imports: [
     NgIf,
     PanelModule,
@@ -133,8 +133,8 @@ export class TLS26010CRUComponent extends BasicCruPageComponent<TLS26010Data> im
     for (const ecr of this.ecrTableFiltered) {
       if (this.service.ECRMap.has(ecr.ECR_No)) ECR_Nos.push(ecr.ECR_No);
     }
-    this.dataForm.patchValue({ sys3900: void 0, ECR_Nos }, { emitEvent: false });
-  }, { allowSignalWrites: true });
+    this.dataForm.patchValue({ sys3900: void 0, ECR_Nos }, { emitEvent: !1 });
+  }, { allowSignalWrites: !0 });
   /** 監聽樓層變化，重置區域、收銀機號及專櫃ID */
   private readonly floorEffect = effect(() => {
     const building_no = this.sys3800Signal();
@@ -144,8 +144,8 @@ export class TLS26010CRUComponent extends BasicCruPageComponent<TLS26010Data> im
     for (const tlt of this.tltTableFiltered) {
       if (this.service.TLTMap.has(tlt.tlt_no)) tlt_nos.push(tlt.tlt_no);
     }
-    this.dataForm.patchValue({ sys3800: void 0, tlt_nos }, { emitEvent: false });
-  }, { allowSignalWrites: true });
+    this.dataForm.patchValue({ sys3800: void 0, tlt_nos }, { emitEvent: !1 });
+  }, { allowSignalWrites: !0 });
   /** 監聽館別、樓層及區域變化，載入相關資料 */
   private readonly dependentDataEffect = effect(() => {
     const building_no = this.sys3800Signal();
@@ -155,7 +155,7 @@ export class TLS26010CRUComponent extends BasicCruPageComponent<TLS26010Data> im
     if (!building_no?.length || !floor_no?.length) return;
     this.service.loadPreorderECRList({ ...payload, data_type: '2' });
     this.service.loadTLTTALENT(payload);
-  }, { allowSignalWrites: true });
+  }, { allowSignalWrites: !0 });
   /** 初始化 ECR & TLT Table資料 */
   private readonly TLS26010DetailEffect = effect(() => {
     if (!this.service.TLS26010Detail()) return;
@@ -335,7 +335,7 @@ export class TLS26010CRUComponent extends BasicCruPageComponent<TLS26010Data> im
         tlt_name: tlt.get(id)?.Name || ''
       }));
 
-    this.dialogVisible.set(false);
+    this.dialogVisible.set(!1);
   }
 
   public onClear(): void {

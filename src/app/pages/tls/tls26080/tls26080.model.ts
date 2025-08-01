@@ -89,15 +89,20 @@ export interface DeductionItem {
 }
 
 export interface CampaignData {
-  No: string; // 序號
-  Status: string; // 狀態 (0=失效, 1=生效, Temp=暫存)
-  CampaignId: string; // 活動ID
-  CampaignName: string; // 活動名稱
-  StartTime: string; // 開始時間
-  EndTime: string; // 結束時間
-  AccountingType: string; // 活動類型
-  AccountingOption: '0' | '1'; // 是否參加財務扣款結算 ('0'=不參與, '1'=指定DM類型)
-  Remark: string; // 備註
+  AccountingType: string;
+  CampaignId: string;
+  CampaignName: string;
+  EndTime: Date;
+  Remark: string;
+  StartTime: Date;
+}
+
+export interface CampaignCounterData {
+  CampaignId: string;
+  CounterCode: string;
+  ProductType: string;
+  talent_id: number;
+  tlt_name: string;
 }
 
 // /** 活動類型 */

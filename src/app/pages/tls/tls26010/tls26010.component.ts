@@ -92,8 +92,8 @@ export class TLS26010Component extends BasicQueryPageComponent<TLS26010Data> {
       sys3A00: undefined,
       ecrNos: undefined,
       tltNos: undefined,
-    }, { emitEvent: false });
-  }, { allowSignalWrites: true });
+    }, { emitEvent: !1 });
+  }, { allowSignalWrites: !0 });
 
   // 監聽樓層變化，重置區域、收銀機號及專櫃ID
   private readonly floorEffect = effect(() => {
@@ -105,8 +105,8 @@ export class TLS26010Component extends BasicQueryPageComponent<TLS26010Data> {
       sys3A00: undefined,
       ecrNos: undefined,
       tltNos: undefined,
-    }, { emitEvent: false });
-  }, { allowSignalWrites: true });
+    }, { emitEvent: !1 });
+  }, { allowSignalWrites: !0 });
 
   // 監聽區域變化，重置收銀機號及專櫃ID
   private readonly areaEffect = effect(() => {
@@ -117,8 +117,8 @@ export class TLS26010Component extends BasicQueryPageComponent<TLS26010Data> {
     this.queryForm.patchValue({
       ecrNos: undefined,
       tltNos: undefined,
-    }, { emitEvent: false });
-  }, { allowSignalWrites: true });
+    }, { emitEvent: !1 });
+  }, { allowSignalWrites: !0 });
 
   // 監聽館別、樓層及區域變化，載入相關資料
   private readonly dependentDataEffect = effect(() => {
@@ -129,7 +129,7 @@ export class TLS26010Component extends BasicQueryPageComponent<TLS26010Data> {
     if (!building_no?.length || !floor_no?.length || !area_no?.length) return;
     this.service.loadPreorderECRList({ building_no, floor_no, area_no, data_type: '2' });
     this.service.loadTLTTALENT({ building_no, floor_no, area_no });
-  }, { allowSignalWrites: true });
+  }, { allowSignalWrites: !0 });
 
   private readonly queryTLS26010 = computed<TLS26010Query & { isValid: boolean; }>(() => {
     const pod_sdate_S = this.podSdateSSignal() || this.dateS;
@@ -137,34 +137,34 @@ export class TLS26010Component extends BasicQueryPageComponent<TLS26010Data> {
     const pod_edate_S = this.podEdateSSignal() || this.dateS;
     const pod_edate_E = this.podEdateESignal() || this.dateE;
 
-    let isValid = true;
+    let isValid = !0;
 
     // 檢查起始日期範圍
     if (pod_sdate_S && pod_sdate_E) {
       const start = new Date(pod_sdate_S);
       const end = new Date(pod_sdate_E);
-      if (start > end) isValid = false;
+      if (start > end) isValid = !1;
     }
 
     // 檢查截止日期範圍
     if (pod_edate_S && pod_edate_E) {
       const start = new Date(pod_edate_S);
       const end = new Date(pod_edate_E);
-      if (start > end) isValid = false;
+      if (start > end) isValid = !1;
     }
 
     // 檢查起始日期與截止日期的關係
     if (pod_sdate_S && pod_edate_S) {
       const start = new Date(pod_sdate_S);
       const end = new Date(pod_edate_S);
-      if (start > end) isValid = false;
+      if (start > end) isValid = !1;
     }
 
     // 檢查起始日期與截止日期的關係
     if (pod_sdate_E && pod_edate_E) {
       const start = new Date(pod_sdate_E);
       const end = new Date(pod_edate_E);
-      if (start > end) isValid = false;
+      if (start > end) isValid = !1;
     }
 
     return {
@@ -179,13 +179,13 @@ export class TLS26010Component extends BasicQueryPageComponent<TLS26010Data> {
   });
 
   public columns: Column[] = [
-    { field: 'pod_no', header: '預售活動編號', visible: true },
-    { field: 'pod_desc', header: '活動名稱', visible: true },
-    { field: 'pod_sdate', header: '活動起始日期', visible: true, format: v => this.datePipe.transform(v, 'YYYY/MM/dd') },
-    { field: 'pod_edate', header: '活動終止日期', visible: true, format: v => this.datePipe.transform(v, 'YYYY/MM/dd') },
-    { field: 'pod_status', header: '核准狀態', visible: true, format: this.service.approvalStatus.bind(this) },
-    { field: 'approved_usr_name', header: '核准人員', visible: true },
-    { field: 'approved_date', header: '核准日期', visible: true, format: v => this.datePipe.transform(v, 'YYYY/MM/dd') },
+    { field: 'pod_no', header: '預售活動編號', visible: !0 },
+    { field: 'pod_desc', header: '活動名稱', visible: !0 },
+    { field: 'pod_sdate', header: '活動起始日期', visible: !0, format: v => this.datePipe.transform(v, 'YYYY/MM/dd') },
+    { field: 'pod_edate', header: '活動終止日期', visible: !0, format: v => this.datePipe.transform(v, 'YYYY/MM/dd') },
+    { field: 'pod_status', header: '核准狀態', visible: !0, format: this.service.approvalStatus.bind(this) },
+    { field: 'approved_usr_name', header: '核准人員', visible: !0 },
+    { field: 'approved_date', header: '核准日期', visible: !0, format: v => this.datePipe.transform(v, 'YYYY/MM/dd') },
   ];
 
   constructor(
@@ -205,15 +205,15 @@ export class TLS26010Component extends BasicQueryPageComponent<TLS26010Data> {
   };
 
   private canQuery(): boolean {
-    return true;
+    return !0;
   }
 
   private canAdd(): boolean {
-    return true;
+    return !0;
   }
 
   private canEdit(): boolean {
-    return true;
+    return !0;
   }
 
   public onClear(): void {
