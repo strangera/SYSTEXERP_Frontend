@@ -105,7 +105,7 @@
                     [submitted]="submitted"></app-input-text>
                 </div>
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-dropdown label="經營方式" controlName="business_type" [options]="business_type_Option" optionLabel="Name"
+                    <app-dropdown label="經營方式" controlName="business_type" [options]="business_type_Option" optionLabel="Label"
                     optionValue="No" [control]="dataForm.controls.business_type" [submitted]="submitted"></app-dropdown>
                 </div>
             </div>
@@ -118,19 +118,18 @@
                     <app-input-text label="商品出產地" controlName="country_of_origin" [control]="dataForm.controls.country_of_origin"
                     [submitted]="submitted"></app-input-text>
                 </div>
-            </div>
-            <div class="grid p-fluid">
-                <app-input-text label="備註" controlName="remarks" [control]="dataForm.controls.remarks"
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-input-text label="備註" controlName="remarks" [control]="dataForm.controls.remarks"
                     [submitted]="submitted"></app-input-text>
+                </div>
             </div><hr>
 
             <!-- 潛在客戶明細檔 -->
-            <app-expandable-edit-table #detailTable [mainColumns]="Potential_Customer_Detail_Columns" 
-            [data]="filteredDetail"
-            [loading]="expandDetailLoading" detailKey="" dataKey="ID" [showCheckBox]="true" [showPaginator]="false"
-            [showAddButton]="true" [showDetailTabs]="false" [showDetailAddButton]="false" [readonly]="crudstatus === 'Read'"
-            [defaultNewItem]="defaultNewDetail" (save)="onRowSaveDetail($event)" (cancel)="onRowCancelDetail($event)"
-            (batchDelete)="onBatchDeleteDetail($event)" (addMainItem)="onAddPotentialCustomerDetail()"></app-expandable-edit-table>
+            <app-expandable-edit-table #detailTable [mainColumns]="Potential_Customer_Detail_Columns" [data]="potentialDetail"
+                [loading]="expandDetailLoading" detailKey="" dataKey="id" [showCheckBox]="true" [showPaginator]="false"
+                [showAddButton]="true" [showDetailTabs]="false" [showDetailAddButton]="false" [readonly]="crudstatus === 'Read'"
+                [defaultNewItem]="defaultNewDetail" (save)="onRowSaveDetail($event)" (cancel)="onRowCancelDetail($event)"
+                (batchDelete)="onBatchDeleteDetail($event)" (addMainItem)="onAddDetail()"></app-expandable-edit-table>
 
             <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
                 *ngIf="!isFormReadable">
