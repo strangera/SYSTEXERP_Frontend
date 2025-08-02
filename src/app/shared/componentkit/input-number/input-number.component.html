@@ -1,20 +1,20 @@
-<label [hidden]="!showLabel" [for]="controlName">{{ label }}
+<label [hidden]="!showLabel || label===''" [for]="controlName">{{ label }}
   <span *ngIf="isRequired" class="required">*</span>
 </label>
 <p-inputGroup id="input-number">
-  <p-inputNumber *ngIf="min === null; else inputNumber" [inputId]="controlName" [formControl]="control"
-    [placeholder]="customPlaceholder || placeholder" [showButtons]="showButtons" [max]="max" [step]="step"
-    [useGrouping]="useGrouping" [minFractionDigits]="minFractionDigits" [maxFractionDigits]="maxFractionDigits"
-    [ngClass]="{'ng-dirty ng-invalid': submitted && control.errors}" [mode]="mode" [title]="label" [name]="label"
-    [incrementButtonClass]="incrementButtonClass" [decrementButtonClass]="decrementButtonClass"
-    (onInputChange)="onInputChange($event)" (onBlur)="onBlur($event)" [size]="" />
+  <ng-container *ngIf="minValue === null; else inputNumber">
+    <p-inputNumber [inputId]="controlName" [title]="label" [name]="label" [formControl]="control"
+      [placeholder]="customPlaceholder || placeholder" [showButtons]="showButtons" [max]="max || maxValue" [step]="step"
+      [useGrouping]="useGrouping" [minFractionDigits]="minFractionDigits" [maxFractionDigits]="maxFractionDigits"
+      [ngClass]="{'ng-dirty ng-invalid': submitted && control.errors}" [mode]="mode" [maxlength]="maxLength"
+      (onInput)="onInputChange($event)" />
+  </ng-container>
   <ng-template #inputNumber>
-    <p-inputNumber [inputId]="controlName" [formControl]="control" [placeholder]="customPlaceholder || placeholder"
-      [showButtons]="showButtons" [min]="min" [max]="max" [step]="step" [useGrouping]="useGrouping"
-      [minFractionDigits]="minFractionDigits" [maxFractionDigits]="maxFractionDigits" [title]="label" [name]="label"
-      [ngClass]="{'ng-dirty ng-invalid': submitted && control.errors}" [mode]="mode"
-      [incrementButtonClass]="incrementButtonClass" [decrementButtonClass]="decrementButtonClass"
-      (onInputChange)="onInputChange($event)" (onBlur)="onBlur($event)" />
+    <p-inputNumber [inputId]="controlName" [title]="label" [name]="label" [formControl]="control"
+      [placeholder]="customPlaceholder || placeholder" [showButtons]="showButtons" [min]="min || minValue"
+      [max]="max || maxValue" [step]="step" [useGrouping]="useGrouping" [minFractionDigits]="minFractionDigits"
+      [maxFractionDigits]="maxFractionDigits" [ngClass]="{'ng-dirty ng-invalid': submitted && control.errors}"
+      [mode]="mode" [maxlength]="maxLength" (onInput)="onInputChange($event)" />
   </ng-template>
   <p-inputGroupAddon *ngIf="suffix">{{ suffix }}</p-inputGroupAddon>
 </p-inputGroup>

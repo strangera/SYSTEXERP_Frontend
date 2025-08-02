@@ -1,18 +1,41 @@
 <form [formGroup]="queryForm" (ngSubmit)="onSubmit(queryForm)">
-    <div class="grid p-fluid">
-        <app-input-text class="col-12 md:col-6 lg:col-5" label="文字輸入" controlName="text"
-            [control]="queryForm.controls.text" [submitted]="submitted" />
-        <app-input-text-range class="col-12 md:col-6 lg:col-5" label="文字輸入" [startControl]="queryForm.controls.text1"
-            [endControl]="queryForm.controls.text2" [submitted]="submitted" />
-        <app-input-text-range class="col-12 md:col-6 lg:col-5" startLabel="文字輸入" endLabel="文字輸入"
-            [startControl]="queryForm.controls.text3" [endControl]="queryForm.controls.text4" [submitted]="submitted" />
-        <app-input-textarea class="col-12 md:col-6 lg:col-5" label="長文字輸入" controlName="textarea"
-            [control]="queryForm.controls.textarea" [submitted]="submitted" />
-        <app-input-number class="col-12 md:col-6 lg:col-5" label="數字輸入" controlName="number"
-            [control]="queryForm.controls.number" [submitted]="submitted" />
-        <app-input-number-range class="col-12 md:col-6 lg:col-5" label="數字輸入"
-            [startControl]="queryForm.controls.number1" [endControl]="queryForm.controls.number2"
-            [submitted]="submitted" />
+    <div class="flex">
+        <div class="col-6">
+            <div class="flex flex-column gap-2 mb-3">
+                <h1>字串輸入框</h1>
+            </div>
+            <h5>文字輸入</h5>
+            <div class='card flex flex-wrap gap-3 p-fluid justify-content-center'>
+                <app-input-text label="文字輸入" controlName="text" [control]="queryForm.controls.text"
+                    [submitted]="submitted" />
+            </div>
+            <h5>文字輸入(範圍)</h5>
+            <div class='card flex flex-wrap gap-3 p-fluid justify-content-center'>
+                <app-input-text-range label="文字輸入" [startControl]="queryForm.controls.text1"
+                    [endControl]="queryForm.controls.text2" [submitted]="submitted" />
+            </div>
+            <h5>長文字</h5>
+            <div class='card flex flex-wrap gap-3 p-fluid justify-content-center'>
+                <app-input-textarea label="長文字輸入" controlName="textarea" [control]="queryForm.controls.textarea"
+                    [submitted]="submitted" />
+            </div>
+        </div>
+        <div class="col-6">
+            <div class="flex flex-column gap-2 mb-3">
+                <h1>數字輸入框</h1>
+            </div>
+            <h5>數字輸入</h5>
+            <div class='card flex flex-wrap gap-3 p-fluid justify-content-center'>
+                <app-input-number label="Input Number" controlName="number" [control]="queryForm.controls.number"
+                    [submitted]="submitted" />
+            </div>
+            <h5>數字輸入(範圍)</h5>
+            <div class='card flex flex-wrap gap-3 p-fluid justify-content-center'>
+                <app-input-number-range startLabel="Input Number Range" endLabel="Input Number Range"
+                    [startControl]="queryForm.controls.number1" [endControl]="queryForm.controls.number2"
+                    [submitted]="submitted" />
+            </div>
+        </div>
     </div>
     <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
         <app-button btnType="clear"></app-button>

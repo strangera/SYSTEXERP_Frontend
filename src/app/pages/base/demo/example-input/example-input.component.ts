@@ -23,15 +23,13 @@ import { COMMON_IMPORTS } from '../demo-imports';
 })
 export class ExampleInputComponent extends BasicQueryPageComponent<unknown> implements OnInit {
   queryForm = this.formBuilder.group({
-    text: ['', Validators.required],
-    text1: ['', Validators.required],
-    text2: ['', Validators.required],
-    text3: ['', Validators.required],
-    text4: ['', Validators.required],
-    textarea: ['', Validators.required],
-    number: [null, Validators.required],
-    number1: [null, Validators.required],
-    number2: [null, Validators.required],
+    text: ['', [Validators.required]],
+    text1: ['', [Validators.required]],
+    text2: ['', [Validators.required]],
+    textarea: ['', [Validators.required]],
+    number: [null, [Validators.required, Validators.max(9999999)]],
+    number1: [null, [Validators.required, Validators.max(9999), Validators.min(0)]],
+    number2: [null, [Validators.required, Validators.max(9999999), Validators.min(0)]],
   });
 
   ngOnInit(): void {

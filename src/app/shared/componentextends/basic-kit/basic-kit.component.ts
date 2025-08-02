@@ -49,6 +49,9 @@ export class BasicKitComponent {
     // 用超過最大值來觸發 max 錯誤
     const maxTest = validator(new FormControl(Number.MAX_SAFE_INTEGER));
     this.maxValue = maxTest?.['max']?.max ?? null;
+    if (this.maxValue !== null && !isNaN(this.maxValue)) {
+      this.maxLength = this.maxValue.toString().length;
+    }
 
     // 用小於最小值來觸發 min 錯誤
     const minTest = validator(new FormControl(-Number.MAX_SAFE_INTEGER));
@@ -68,8 +71,8 @@ export class BasicKitComponent {
 
   setPlaceholder(control: FormControl, index = 0): void {
     if (control.disabled) {
-      this.placeholder = '';
-      this.placeholder2 = '';
+      if (index === 0) this.placeholder = '';
+      if (index === 1) this.placeholder2 = '';
       return;
     }
 
@@ -81,9 +84,9 @@ export class BasicKitComponent {
     if (control.hasValidator(Validators.required)) {
       placeholderParts.push('必填');
     }
-    if (this.maxLength && this.minLength && this.maxLength === this.minLength) {
+    if (this.maxLength && this.minLength && this.maxLength === this.minLength && !this.maxValue) {
       placeholderParts.push(`必須為${this.minLength}個字`);
-    } else if (this.maxLength) {
+    } else if (this.maxLength && !this.maxValue) {
       placeholderParts.push(`最多${this.maxLength}個字`);
     } else if (this.minLength) {
       placeholderParts.push(`最少${this.minLength}個字`);
