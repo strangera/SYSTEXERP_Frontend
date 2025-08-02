@@ -8,7 +8,7 @@ import { debounceTime, finalize } from 'rxjs';
 import { Sys0110Service } from '../../../service/api/sys/sys0110.service';
 import { Column, createPaginationConfig, formatAmount, formatDate, LazyLoadEvent, RowEditSaveEvent } from '../../../shared/componentkit/table/table.model';
 import { POStatus } from '../tls52030/tls52030.component';
-import { validateMinNumber } from '../../../shared/models/system/validate-field.model';
+import { validateMinNumber } from '../../../shared/componentkit/table/validate-field.model';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { PanelModule } from 'primeng/panel';
@@ -23,25 +23,25 @@ import { DialogComponent } from '../../../shared/componentkit/dialog/dialog.comp
 import { TranslateModule } from '@ngx-translate/core';
 // 2.5.2.3  進貨驗收作業CRU
 @Component({
-    selector: 'app-tls52030-cru',
-    templateUrl: './tls52030-cru.component.html',
-    standalone: true,
-    imports: [
-        MenubarComponent,
-        ButtonComponent,
-        PanelModule,
-        FormsModule,
-        ReactiveFormsModule,
-        InputTextComponent,
-        DropdownComponent,
-        InputNumberComponent,
-        CalendarComponent,
-        InputTextareaComponent,
-        TableComponent,
-        NgIf,
-        DialogComponent,
-        TranslateModule,
-    ],
+  selector: 'app-tls52030-cru',
+  templateUrl: './tls52030-cru.component.html',
+  standalone: true,
+  imports: [
+    MenubarComponent,
+    ButtonComponent,
+    PanelModule,
+    FormsModule,
+    ReactiveFormsModule,
+    InputTextComponent,
+    DropdownComponent,
+    InputNumberComponent,
+    CalendarComponent,
+    InputTextareaComponent,
+    TableComponent,
+    NgIf,
+    DialogComponent,
+    TranslateModule,
+  ],
 })
 export class TLS52030CRUComponent extends BasicCruPageComponent<ITLS52030Data> implements OnInit {
   dataForm = this.formBuilder.nonNullable.group({

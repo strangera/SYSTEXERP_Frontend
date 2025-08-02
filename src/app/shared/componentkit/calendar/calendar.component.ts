@@ -40,12 +40,12 @@ export class CalendarComponent extends BasicKitComponent implements OnInit {
   @Output() yearChangeEvent = new EventEmitter<CalendarYearChangeEvent>();
 
   private readonly calendarConfig = {
-    timeOne: { timeOnly: true, showTime: true, showSeconds: false, dateFormat: undefined, view: 'date', placeholder: '請選擇時間' },
-    dateOne: { timeOnly: false, showTime: false, showSeconds: false, dateFormat: 'yy/mm/dd', view: 'date', placeholder: '請選擇日期' },
-    dateTimeOne: { timeOnly: false, showTime: true, showSeconds: true, dateFormat: 'yy/mm/dd', view: 'date', placeholder: '請選擇日期時間' },
-    dateMonthOne: { timeOnly: false, showTime: false, showSeconds: false, dateFormat: 'yy/mm', view: 'month', placeholder: '請選擇月份' },
-    dateYearOne: { timeOnly: false, showTime: false, showSeconds: false, dateFormat: 'yy', view: 'year', placeholder: '請選擇年份' },
-    oddMonthOne: { timeOnly: false, showTime: false, showSeconds: false, dateFormat: 'yy/mm', view: 'month', placeholder: '請選擇奇數月份' }
+    timeOne: { timeOnly: true, showTime: true, dateFormat: undefined, view: 'date', placeholder: '請選擇時間' },
+    dateOne: { timeOnly: false, showTime: false, dateFormat: 'yy/mm/dd', view: 'date', placeholder: '請選擇日期' },
+    dateTimeOne: { timeOnly: false, showTime: true, dateFormat: 'yy/mm/dd', view: 'date', placeholder: '請選擇日期時間' },
+    dateMonthOne: { timeOnly: false, showTime: false, dateFormat: 'yy/mm', view: 'month', placeholder: '請選擇月份' },
+    dateYearOne: { timeOnly: false, showTime: false, dateFormat: 'yy', view: 'year', placeholder: '請選擇年份' },
+    oddMonthOne: { timeOnly: false, showTime: false, dateFormat: 'yy/mm', view: 'month', placeholder: '請選擇奇數月份' }
   };
 
   ngOnInit() {
@@ -68,7 +68,6 @@ export class CalendarComponent extends BasicKitComponent implements OnInit {
     if (config) {
       this.timeOnly = config.timeOnly;
       this.showTime = config.showTime;
-      this.showSeconds = config.showSeconds;
       this.dateFormat = config.dateFormat;
       this.view = config.view as 'date' | 'month' | 'year';
     }

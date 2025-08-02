@@ -1,60 +1,59 @@
 import { NgClass, NgIf } from '@angular/common';
 import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { ControlMessagesComponent } from '@shared/component/control-messages/control-messages.component';
 import { BasicKitComponent } from '@shared/componentextends/basic-kit/basic-kit.component';
-import { DropdownChangeEvent, DropdownLazyLoadEvent, DropdownModule } from 'primeng/dropdown';
+import { DropdownChangeEvent } from 'primeng/dropdown';
 import { InputGroupModule } from 'primeng/inputgroup';
-import { Subject, takeUntil } from 'rxjs';
+import { DropdownComponent } from '../dropdown/dropdown.component';
 
 @Component({
   selector: 'app-dropdown-range',
   standalone: true,
-  imports: [NgIf, InputGroupModule, FormsModule, DropdownModule, ReactiveFormsModule, NgClass, ControlMessagesComponent],
+  imports: [
+    NgIf,
+    InputGroupModule,
+    FormsModule,
+    DropdownComponent,
+    ReactiveFormsModule,
+    NgClass,
+  ],
   templateUrl: './dropdown-range.component.html',
   styleUrl: './dropdown-range.component.scss'
 })
 export class DropdownRangeComponent extends BasicKitComponent implements OnInit {
+  // 必填欄位
   @Input() label = '';
+  @Input() showLabel = true;
   @Input() startLabel!: string;
   @Input() endLabel!: string;
-  @Input() startControl: FormControl = new FormControl(); // 開始值的 FormControl
-  @Input() endControl: FormControl = new FormControl(); // 結束值的 FormControl
-  @Input() submitted = false;
-  @Input() errorForGroup = false;
   @Input() controlName = '';
-  @Input() options: any[] = [];
+  @Input() startControlName = '';
+  @Input() endControlName = '';
+  @Input() startControl = new FormControl(); // 開始值的 FormControl
+  @Input() endControl = new FormControl(); // 結束值的 FormControl
+  @Input() options: unknown[] = [];
   @Input() optionLabel = ''; // 資料的 Label
   @Input() optionValue = ''; // 資料的 Value
+  @Input() submitted = false;
+  // PrimeNG 下拉選單屬性
+  @Input() showClear = true; // 是否顯示清除按鈕
+  @Input() filter = true; // 是否啟用過濾功能
+  // 自訂屬性
+  @Input() errorForGroup = false;
   @Input() templateLabel = ''; // 自訂 Label 模板
-  destroy$ = new Subject<void>(); // 銷毀訂閱
-  @Output() changeEvent = new EventEmitter<DropdownChangeEvent>();
+  // 觸發事件
+  @Output() startChangeEvent = new EventEmitter<DropdownChangeEvent>();
+  @Output() endChangeEvent = new EventEmitter<DropdownChangeEvent>();
+
   ngOnInit(): void {
-    this.handleControlState(this.startControl);
-    this.handleControlState(this.endControl);
-    // 監聽 `disabled` 變化
-    this.startControl.statusChanges.pipe(takeUntil(this.destroy$)).subscribe(() => {
-      this.handleControlState(this.startControl);
-    });
-    this.endControl.statusChanges.pipe(takeUntil(this.destroy$)).subscribe(() => {
-      this.handleControlState(this.endControl);
-    });
+    this.checkRequiredValidator(this.startControl, 0);
+    this.checkRequiredValidator(this.endControl, 1);
   }
 
-  onLazyLoad(event: DropdownLazyLoadEvent) {
-    console.log(event);
+  onStartDropdownChange(event: DropdownChangeEvent) {
+    this.startChangeEvent.emit(event);
   }
-
-  private handleControlState(control: FormControl) {
-    if (!control.disabled) {
-      this.updateControlState(this.startControl, this.endControl);
-      if (!this.placeholder) {
-        this.placeholder = '請選擇';
-      }
-    }
-  }
-
-  onDropdownChange(event: DropdownChangeEvent) {
-    this.changeEvent.emit(event);
+  onEndDropdownChange(event: DropdownChangeEvent) {
+    this.endChangeEvent.emit(event);
   }
 }

@@ -27,11 +27,11 @@ import { ExampleTempleteComponent } from './example-templete/example-templete.co
 export class InputTableComponent implements AfterViewInit {
   @ViewChildren('container', { read: ViewContainerRef }) containers!: QueryList<ViewContainerRef>;
   tabs: { title: string; component: any; class: string }[] = [
+    { title: '表格', component: ExampleTableComponent, class: 'text-900' },
     { title: '輸入框', component: ExampleInputComponent, class: 'text-900' },
     { title: '單選', component: ExampleDropdownComponent, class: 'text-900' },
     { title: '多選', component: ExampleMultiComponent, class: 'text-900' },
     { title: '日曆', component: ExampleCalendarComponent, class: 'text-900' },
-    { title: '表格', component: ExampleTableComponent, class: 'text-900' },
     { title: '表格(Bruce)', component: ExampleTableBruceComponent, class: 'text-900' },
     { title: '上傳相關', component: ExampleUploadComponent, class: 'text-900' },
     { title: '自動填入', component: ExampleAutocompleteComponent, class: 'text-900' },

@@ -1,5 +1,7 @@
 import { AbstractControl, FormControl, Validators } from '@angular/forms';
+import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 
+@UntilDestroy()
 export class BasicKitComponent {
   placeholder: string | undefined;
   placeholder2: string | undefined;
@@ -10,6 +12,14 @@ export class BasicKitComponent {
   maxValue: number | null = null;
   minValue: number | null = null;
   isNumberOnly = false;
+
+  initControl(control: FormControl): void {
+    // 訂閱 control 的狀態變化
+    control.statusChanges.pipe(untilDestroyed(this)).subscribe(() => {
+      this.updateControlState(control);
+    });
+    this.updateControlState(control);
+  }
 
   updateControlState(...controls: FormControl[]) {
     controls.forEach((control, index) => {
@@ -71,8 +81,8 @@ export class BasicKitComponent {
 
   setPlaceholder(control: FormControl, index = 0): void {
     if (control.disabled) {
-      if (index === 0) this.placeholder = '';
-      if (index === 1) this.placeholder2 = '';
+      if (index === 0) this.placeholder = ''; this.isRequired = false;
+      if (index === 1) this.placeholder2 = ''; this.isRequired2 = false;
       return;
     }
 

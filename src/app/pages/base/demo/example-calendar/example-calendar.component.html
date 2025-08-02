@@ -1,41 +1,57 @@
 <form [formGroup]="queryForm" (ngSubmit)="onSubmit(queryForm)">
-    <div class="grid p-fluid">
-        <app-calendar calendarType="timeOne" class="col-12 md:col-6 lg:col-5" label="時分"
-            [control]="queryForm.controls.timeOne" controlName="timeOne" [submitted]="submitted" />
-        <app-calendar-range calendarType="timeRange" class="col-12 md:col-6 lg:col-5" label="時分"
-            [startControl]="queryForm.controls.timeRange1" [endControl]="queryForm.controls.timeRange2"
-            [submitted]="submitted" />
-        <app-calendar calendarType="dateOne" class="col-12 md:col-6 lg:col-5" label="年月日"
-            [control]="queryForm.controls.dateOne" controlName="dateOne" [submitted]="submitted" />
-        <app-calendar-range calendarType="dateRange" class="col-12 md:col-6 lg:col-5" label="年月日"
-            [startControl]="queryForm.controls.dateRange1" [endControl]="queryForm.controls.dateRange2"
-            [submitted]="submitted" />
-        <app-calendar-range-quick class="col-12 md:col-6 lg:col-5" label="年月日(快速碼)"
-            [startControl]="queryForm.controls.dateRangeQuick1" [endControl]="queryForm.controls.dateRangeQuick2"
-            [submitted]="submitted" />
-        <app-calendar-range calendarType="dateTimeRange" class="col-12 md:col-6 lg:col-5" label="年月日時分秒"
-            [startControl]="queryForm.controls.dateTimeRange1" [endControl]="queryForm.controls.dateTimeRange2"
-            [submitted]="submitted" />
-        <app-calendar calendarType="dateTimeOne" class="col-12 md:col-6 lg:col-5" label="年月日時分秒"
-            [control]="queryForm.controls.dateTimeOne" [submitted]="submitted" />
-        <app-calendar-range calendarType="dateTimeRange" class="col-12 md:col-6 lg:col-5" label="年月日時分秒"
-            [startControl]="queryForm.controls.dateTimeRange1" [endControl]="queryForm.controls.dateTimeRange2"
-            [submitted]="submitted" />
-        <app-calendar calendarType="dateMonthOne" class="col-12 md:col-6 lg:col-5" label="月"
-            [control]="queryForm.controls.dateMonthOne" [submitted]="submitted" />
-        <app-calendar-range calendarType="dateMonthRange" class="col-12 md:col-6 lg:col-5" label="月"
-            [startControl]="queryForm.controls.dateMonthRange1" [endControl]="queryForm.controls.dateMonthRange2"
-            [submitted]="submitted" />
-        <app-calendar calendarType="dateYearOne" class="col-12 md:col-6 lg:col-5" label="年"
-            [control]="queryForm.controls.dateYearOne" [submitted]="submitted" />
-        <app-calendar-range calendarType="dateYearRange" class="col-12 md:col-6 lg:col-5" label="年"
-            [startControl]="queryForm.controls.dateYearRange1" [endControl]="queryForm.controls.dateYearRange2"
-            [submitted]="submitted" />
-        <app-query-year-month class="col-12 md:col-6 lg:col-5" [label]="'查詢年月'" [submitted]="submitted"
-            [onlyOddMonths]="true" [control]="queryForm.controls.dateYearMonth" />
+    <div class="flex">
+        <div class="col-12">
+            <h5>hh:mm</h5>
+            <div class='card flex flex-wrap gap-3 p-fluid justify-content-center'>
+                <app-calendar calendarType="timeOne" class="col-12 md:col-6 lg:col-5" label="時分"
+                    [control]="queryForm.controls.timeOne" controlName="timeOne" [submitted]="submitted" />
+                <app-calendar-range calendarType="timeRange" class="col-12 md:col-6 lg:col-5" label="時分"
+                    [startControl]="queryForm.controls.timeRange1" [endControl]="queryForm.controls.timeRange2"
+                    [submitted]="submitted" />
+            </div>
+            <h5>YYYY/MM/DD</h5>
+            <div class='card flex flex-wrap gap-3 p-fluid justify-content-center'>
+                <app-calendar calendarType="dateOne" class="col-12 md:col-6 lg:col-5" label="年月日"
+                    [control]="queryForm.controls.dateOne" controlName="dateOne" [submitted]="submitted" />
+                <app-calendar-range-quick class="col-12 md:col-6 lg:col-5" label="年月日(快速碼)"
+                    [startControl]="queryForm.controls.dateRangeQuick1"
+                    [endControl]="queryForm.controls.dateRangeQuick2" [submitted]="submitted" />
+            </div>
+            <h5>YYYY/MM/DD hh:mm</h5>
+            <div class='card flex flex-wrap gap-3 p-fluid justify-content-center'>
+                <app-calendar calendarType="dateTimeOne" class="col-12 md:col-6 lg:col-5" label="年月日時分秒"
+                    [control]="queryForm.controls.dateTimeOne" [submitted]="submitted" />
+                <app-calendar-range calendarType="dateTimeRange" class="col-12 md:col-6 lg:col-5" label="年月日時分秒"
+                    [startControl]="queryForm.controls.dateTimeRange1" [endControl]="queryForm.controls.dateTimeRange2"
+                    [submitted]="submitted" />
+            </div>
+            <h5>YYYY/MM</h5>
+            <div class='card flex flex-wrap gap-3 p-fluid justify-content-center'>
+                <app-calendar calendarType="dateMonthOne" class="col-12 md:col-6 lg:col-5" label="年月"
+                    [control]="queryForm.controls.dateMonthOne" [submitted]="submitted" />
+                <app-calendar-range calendarType="dateMonthRange" class="col-12 md:col-6 lg:col-5" label="年月"
+                    [startControl]="queryForm.controls.dateMonthRange1"
+                    [endControl]="queryForm.controls.dateMonthRange2" [submitted]="submitted" />
+            </div>
+            <h5>YYYY</h5>
+            <div class='card flex flex-wrap gap-3 p-fluid justify-content-center'>
+                <app-calendar calendarType="dateYearOne" class="col-12 md:col-6 lg:col-5" label="年"
+                    [control]="queryForm.controls.dateYearOne" [submitted]="submitted" />
+                <app-calendar-range calendarType="dateYearRange" class="col-12 md:col-6 lg:col-5" label="年"
+                    [startControl]="queryForm.controls.dateYearRange1" [endControl]="queryForm.controls.dateYearRange2"
+                    [submitted]="submitted" />
+            </div>
+            <h5>YYYYMM</h5>
+            <div class='card flex flex-wrap gap-3 p-fluid justify-content-center'>
+                <app-query-year-month class="col-12 md:col-6 lg:col-5" [label]="'查詢年月'" [submitted]="submitted"
+                    [onlyOddMonths]="true" [control]="queryForm.controls.dateYearMonth" />
+            </div>
+        </div>
     </div>
     <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
         <app-button btnType="clear"></app-button>
         <app-button btnType="query" [loading]="loading"></app-button>
+    </div>
+    <div class="grid p-fluid">
     </div>
 </form>

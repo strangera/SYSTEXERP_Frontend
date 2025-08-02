@@ -1,4 +1,4 @@
-import { ChangeDetectionStrategy, Component, EventEmitter, Input, Output } from '@angular/core';
+import { ChangeDetectionStrategy, Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { BasicKitComponent } from '../../componentextends/basic-kit/basic-kit.component';
 import { NgIf, NgClass } from '@angular/common';
@@ -22,7 +22,7 @@ import { InputNumberInputEvent } from 'primeng/inputnumber';
     InputGroupAddonModule,
   ]
 })
-export class InputNumberRangeComponent extends BasicKitComponent {
+export class InputNumberRangeComponent extends BasicKitComponent implements OnInit {
   // 必填欄位
   @Input() label = '';
   @Input() startLabel!: string;
@@ -43,6 +43,11 @@ export class InputNumberRangeComponent extends BasicKitComponent {
   // 觸發事件
   @Output() startChangeEvent = new EventEmitter<InputNumberInputEvent>();
   @Output() endChangeEvent = new EventEmitter<InputNumberInputEvent>();
+
+  ngOnInit(): void {
+    this.checkRequiredValidator(this.startControl, 0);
+    this.checkRequiredValidator(this.endControl, 1);
+  }
 
   onStartInputChange(event: InputNumberInputEvent) {
     this.startChangeEvent.emit(event);

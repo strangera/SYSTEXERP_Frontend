@@ -6,18 +6,19 @@
             </div>
             <h5>文字輸入</h5>
             <div class='card flex flex-wrap gap-3 p-fluid justify-content-center'>
-                <app-input-text label="文字輸入" controlName="text" [control]="queryForm.controls.text"
+                <app-input-text label="Input Text" controlName="text" [control]="queryForm.controls.text"
                     [submitted]="submitted" />
             </div>
             <h5>文字輸入(範圍)</h5>
             <div class='card flex flex-wrap gap-3 p-fluid justify-content-center'>
-                <app-input-text-range label="文字輸入" [startControl]="queryForm.controls.text1"
-                    [endControl]="queryForm.controls.text2" [submitted]="submitted" />
+                <app-input-text-range startLabel="Input Text Range" endLabel="Input Text Range"
+                    [startControl]="queryForm.controls.text1" [endControl]="queryForm.controls.text2"
+                    [submitted]="submitted" />
             </div>
             <h5>長文字</h5>
             <div class='card flex flex-wrap gap-3 p-fluid justify-content-center'>
-                <app-input-textarea label="長文字輸入" controlName="textarea" [control]="queryForm.controls.textarea"
-                    [submitted]="submitted" />
+                <app-input-textarea label="Input Textarea" controlName="textarea"
+                    [control]="queryForm.controls.textarea" [submitted]="submitted" />
             </div>
         </div>
         <div class="col-6">

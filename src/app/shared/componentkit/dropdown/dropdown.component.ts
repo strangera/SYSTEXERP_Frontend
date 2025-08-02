@@ -1,8 +1,7 @@
-import { ChangeDetectionStrategy, Component, EventEmitter, Input, OnChanges, OnInit, Output, SimpleChanges } from '@angular/core';
+import { ChangeDetectionStrategy, Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { BasicKitComponent } from '../../componentextends/basic-kit/basic-kit.component';
-import { DropdownChangeEvent, DropdownLazyLoadEvent, DropdownModule } from 'primeng/dropdown';
-import { Subject, takeUntil } from 'rxjs';
+import { DropdownChangeEvent, DropdownModule } from 'primeng/dropdown';
 import { NgIf, NgClass } from '@angular/common';
 import { ControlMessagesComponent } from '../../component/control-messages/control-messages.component';
 @Component({
@@ -13,62 +12,29 @@ import { ControlMessagesComponent } from '../../component/control-messages/contr
   standalone: true,
   imports: [NgIf, DropdownModule, FormsModule, ReactiveFormsModule, NgClass, ControlMessagesComponent]
 })
-export class DropdownComponent extends BasicKitComponent implements OnInit, OnChanges {
-  // 基本
+export class DropdownComponent extends BasicKitComponent implements OnInit {
+  // 必填
   @Input() label = '';
-  @Input() override placeholder = '';
+  @Input() showLabel = true;
   @Input() controlName = '';
-  @Input() options: any[] = [];
-  @Input() optionsAll = false; // 是否顯示全部選項
+  @Input() control = new FormControl();
+  @Input() options: unknown[] = [];
   @Input() optionLabel = ''; // 資料的 Label
   @Input() optionValue = ''; // 資料的 Value
-  @Input() control = new FormControl();
+  @Input() customPlaceholder = '請選擇';
   @Input() submitted = false; // 檢查欄位是否標準
-  @Input() loading = true; // 載入狀態
-  @Input() showLabel = true;
-  @Input() showErrorMessage = true;
-  @Input() templateLabel = ''; // 自訂 Label 模板
+  // PrimeNG 下拉選單屬性
   @Input() showClear = true; // 是否顯示清除按鈕
   @Input() filter = true; // 是否啟用過濾功能
-  destroy$ = new Subject<void>(); // 銷毀訂閱
-  // 選項
+  // 自訂屬性
+  @Input() showErrorMessage = true;
+  @Input() templateLabel = ''; // 自訂 Label 模板
+  // 觸發事件
   @Output() changeEvent = new EventEmitter<DropdownChangeEvent>();
 
   ngOnInit(): void {
-    this.ensureControl();
-    this.handleControlState();
-
-    // 監聽 `disabled` 變化
-    this.control.statusChanges.pipe(takeUntil(this.destroy$)).subscribe(() => {
-      this.handleControlState();
-    });
+    this.initControl(this.control);
   }
-
-  ngOnChanges(changes: SimpleChanges): void {
-    if (changes['options'] && changes['options'].currentValue.length > 0) {
-      this.loading = false;
-    }
-  }
-
-  onLazyLoad(event: DropdownLazyLoadEvent) {
-    console.log(event);
-  }
-
-  private ensureControl() {
-    if (!this.control) {
-      this.control = new FormControl();
-    }
-  }
-
-  private handleControlState() {
-    if (!this.control.disabled) {
-      this.updateControlState(this.control);
-      if (!this.placeholder) {
-        this.placeholder = '請選擇';
-      }
-    }
-  }
-
   onDropdownChange(event: DropdownChangeEvent) {
     this.changeEvent.emit(event);
   }

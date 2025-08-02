@@ -60,9 +60,9 @@ import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
   ],
 })
 export class TableComponent extends BasicPrintDataComponent implements OnInit, OnChanges, OnDestroy {
-  // 基本設置
   @ViewChild('dt', { static: false }) dt!: Table;                               // table 元件
   @ViewChild('fileUpload') fileUpload!: FileUpload;                             // 檔案上傳 元件
+  // 基本設置
   @Input() dataKey = 'ID';                                                      // table 資料key
   @Input() tableKey: string | undefined = undefined;                            // table 唯一標識 (必填)
   @Input() apiUrl?: string;                                                     // table API URL (可選)
@@ -73,53 +73,27 @@ export class TableComponent extends BasicPrintDataComponent implements OnInit, O
   @Output() dataChange = new EventEmitter<any[]>();                             // table 資料改變 (事件)
   @Input() loading = false;                                                     // 是否顯示 loading
   @Input() disabled = false;                                                    // 是否禁用 table
-  // 欄位群組
-  @Input() columnGroup?: ColumnGroup[];                                         // table 群組欄位
-  // 資料小計
-  @Input() groupRowsBy = '';                                                    // table 群組資料
-  groupedDataCache = new Map();                                                 // 用於緩存已分組的數據
-  @Input() showSubTotal = false;                                                // 是否顯示群組小計
-  // 資料總計
-  @Input() showTotal = false;                                                    // 是否顯示總計
   // select 選擇Row相關
   @Input() showCheckBox = false;                                                // 是否顯示 checkbox
   @Input() selectionMode: 'multiple' | 'single' | null | undefined = 'multiple';// table 勾選 Mode (預設多選)
   @Input() selectedItems: any = [];                                             // table 已勾選資料
   @Input() isRowSelectable: (rowData: any) => boolean | undefined = () => true; // 可選擇(條件)
-  @Output() select = new EventEmitter<TableRowSelectEvent>();                   // 資料取消勾選(事件)
+  @Output() select = new EventEmitter<TableRowSelectEvent>();                   // 資料勾選(事件)
   @Output() unSelect = new EventEmitter<TableRowUnSelectEvent>();               // 資料取消勾選(事件)
-  @Output() selectionChange = new EventEmitter<any>();                          // 資料勾選(事件)
+  @Output() selectionChange = new EventEmitter<any>();                          // 資料變更(事件)
   @Output() itemClick = new EventEmitter<any>();                                // row資料點選(事件)
-  // Sort 相關
-  @Input() showSort = true;                                                     // 是否顯示排序
-  @Input() multiSortMeta: SortMeta[] = [{ field: this.dataKey, order: 1 }];     // table 排序依據 (多重排序 {field欄位、order排序方向} )
-  // rowEdit 相關
-  @Input() rowEditing = false;                                                  // 是否正在編輯Row
-  clonedProducts: Record<string, any> = {};                                     // 儲存編輯前資料
-  @Output() rowEditInit = new EventEmitter<any>();                              // Row 編輯初始化事件
-  @Output() rowEditSave = new EventEmitter<RowEditSaveEvent>();                 // Row 編輯保存事件
-  @Output() rowEditCancel = new EventEmitter<any>();                            // Row 編輯取消事件
-  @Input() rowEditDisabled: (rowData: any) => boolean | undefined = () => false;// Row禁止編輯條件
-  @Input() alwaysEdit = false;                                                  // 是否總是編輯
   // Header 相關
   @Input() showCaption = true;                                                  // 是否顯示 Caption
   // Header(左) 相關
   @Input() showHeader = true;                 // 是否顯示 Header
   @Input() showReportMode = true;             // 是否顯示 匯出按鈕
   @Input() showInsert = false;                // 是否顯示 Insert新增按鈕
-  @Input() insertRowData = false;             // 預設新增模式 (關聯：需要加入dataKey, dataChange)
-  @Input() defaultInsertData: any = {};       // 預設新增資料 (可選，預設為所有資料為null)
   @Output() insert = new EventEmitter<any>(); // 新增事件
-  @Input() insertDisabled = false;            // 新增按鈕是否禁用
-  @Input() deleteData = false;                // 預先刪除資料
+  @Input() insertDisabled = false;            // 新增按鈕是否禁用 
+  @Input() deleteData = false;                // 預先刪除資料 (關聯：需要加入dataKey, dataChange)
   @Output() delete = new EventEmitter<any>(); // 刪除事件
-  // expansion 收合展開
-  @Input() expansionColumns: Column[] = [];  // 收合展開 欄位配置(expansion必需配置)
-  @Input() expansionDataKey = '';            // 收合展開 資料key(expansion必需配置)
-  @Input() expansionSortField = '';          // 收合展開 排序欄位(單一排序)
-  @Input() expansionSortOrder = 0;           // 收合展開 排序方向 (1:升序、-1:降序)
-  expression = false;                        // 收合展開 狀態 (true:展開、false:收合)
-  expandedRows: Record<string, boolean> = {};// 收合展開 已展開資料
+  @Input() showDelete = true;                    // 是否顯示刪除按鈕
+  @Input() deleteIcon = 'pi pi-trash';          // 刪除按鈕圖示
   // Header(右) 相關
   @Input() showExcel = false;                      // 是否顯示 匯出Excel
   @Input() showExcelExport = true;                 // 是否顯示 匯出Excel按鈕
@@ -128,6 +102,35 @@ export class TableComponent extends BasicPrintDataComponent implements OnInit, O
   @Input() exportExcelLoading = false;             // 匯出 Excel loading
   @Output() importExcel = new EventEmitter<FileSelectEvent>(); // 匯入 Excel 事件
   @Input() showPage = true;                        // 是否顯示 下拉選單分頁器
+  // Sort 相關
+  @Input() showSort = true;                                                     // 是否顯示排序
+  @Input() multiSortMeta: SortMeta[] = [{ field: this.dataKey, order: 1 }];     // table 排序依據 (多重排序 {field欄位、order排序方向} )
+  // 欄位群組
+  @Input() columnGroup?: ColumnGroup[];                                         // table 群組欄位
+  // 資料小計
+  @Input() groupRowsBy = '';                                                    // table 群組資料
+  groupedDataCache = new Map();                                                 // 用於緩存已分組的數據
+  @Input() showSubTotal = false;                                                // 是否顯示群組小計
+  // 資料總計
+  @Input() showTotal = false;                                                   // 是否顯示總計
+  // rowEdit 相關
+  @Input() showRowEdit = false;                                                 // 是否顯示 Row編輯按鈕
+  @Input() rowEditing = false;                                                  // 是否正在編輯Row
+  clonedProducts: Record<string, any> = {};                                     // 儲存編輯前資料
+  @Output() rowEditInit = new EventEmitter<any>();                              // Row 編輯初始化事件
+  @Output() rowEditSave = new EventEmitter<RowEditSaveEvent>();                 // Row 編輯保存事件
+  @Output() rowEditCancel = new EventEmitter<any>();                            // Row 編輯取消事件
+  @Input() rowEditDisabled: (rowData: any) => boolean | undefined = () => false;// Row禁止編輯條件
+  @Input() alwaysEdit = false;                                                  // 是否總是編輯
+  @Input() insertRowData = false;             // 預設新增模式 (關聯：需要加入dataKey, dataChange)
+  @Input() defaultInsertData: any = {};       // 預設新增資料 (可選，預設為所有資料為null)
+  // expansion 收合展開
+  @Input() expansionColumns: Column[] = [];  // 收合展開 欄位配置(expansion必需配置)
+  @Input() expansionDataKey = '';            // 收合展開 資料key(expansion必需配置)
+  @Input() expansionSortField = '';          // 收合展開 排序欄位(單一排序)
+  @Input() expansionSortOrder = 0;           // 收合展開 排序方向 (1:升序、-1:降序)
+  expression = false;                        // 收合展開 狀態 (true:展開、false:收合)
+  expandedRows: Record<string, boolean> = {};// 收合展開 已展開資料
   // 管理 欄位
   @Input() showManage = true;                // 是否顯示 管理欄位
   @Input() showDetail = true;                // 是否顯示 管理欄位(明細按鈕)
@@ -137,7 +140,6 @@ export class TableComponent extends BasicPrintDataComponent implements OnInit, O
   @Output() edit = new EventEmitter<any>();  // 編輯事件
   @Input() addButton: AddButton[] = [];      // 自定義 管理按鈕
   @Input() buttonsLoading = false;           // 按鈕們 loading
-  @Input() showRowEdit = false;              // 是否顯示 Row編輯按鈕
   // body
   @Output() fieldChange = new EventEmitter<FieldChangeEvent>(); // input 變更事件
   @Output() selectButton = new EventEmitter<any>();             // 選擇 按鈕事件
@@ -157,8 +159,6 @@ export class TableComponent extends BasicPrintDataComponent implements OnInit, O
   @Output() lazyLoadData = new EventEmitter<LazyLoadEvent>(); // Lazy 加載事件
   // 其他
   @Input() emptyMessage = '查無資料';                // table 無資料時顯示文字
-  @Input() showDelete = true;                    // 是否顯示刪除按鈕
-  @Input() deleteIcon = 'pi pi-trash';          // 刪除按鈕圖示
   // 權限
   private ngUnsubscribe = new Subject<void>();
   public funInfo: FunsrightInfo | undefined;

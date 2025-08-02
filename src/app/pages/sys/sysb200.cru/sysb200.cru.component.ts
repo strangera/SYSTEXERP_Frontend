@@ -7,7 +7,7 @@ import { Sysbc00Service } from './../../../service/api/sys/sysbc00.service';
 import { Column } from '../../../shared/componentkit/table/table.model';
 import {
   validateMaxLength,
-} from '../../../shared/models/system/validate-field.model';
+} from '../../../shared/componentkit/table/validate-field.model';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { PanelModule } from 'primeng/panel';

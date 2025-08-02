@@ -4,7 +4,7 @@ import { BasicKitComponent } from '../../componentextends/basic-kit/basic-kit.co
 import { NgIf, NgClass } from '@angular/common';
 import { InputGroupModule } from 'primeng/inputgroup';
 import { InputTextModule } from 'primeng/inputtext';
-import { ControlMessagesComponent } from '../../component/control-messages/control-messages.component';
+import { InputTextComponent } from '../input-text/input-text.component';
 
 @Component({
   selector: 'app-input-text-range',
@@ -12,40 +12,52 @@ import { ControlMessagesComponent } from '../../component/control-messages/contr
   styleUrl: './input-text-range.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
-  imports: [NgIf, InputGroupModule, FormsModule, InputTextModule, ReactiveFormsModule, NgClass, ControlMessagesComponent]
+  imports: [NgIf,
+    InputGroupModule,
+    FormsModule,
+    InputTextModule,
+    ReactiveFormsModule,
+    NgClass,
+    InputTextComponent,
+  ]
 })
 export class InputTextRangeComponent extends BasicKitComponent implements OnInit {
+  // 必填欄位
   @Input() label = '';
+  @Input() showLabel = true;
   @Input() startLabel!: string;
   @Input() endLabel!: string;
-  @Input() startControl: FormControl = new FormControl(); // 開始值的 FormControl
-  @Input() endControl: FormControl = new FormControl(); // 結束值的 FormControl
+  @Input() controlName = '';
+  @Input() startControlName = '';
+  @Input() endControlName = '';
+  @Input() startControl = new FormControl(); // 開始值的 FormControl
+  @Input() endControl = new FormControl(); // 結束值的 FormControl
   @Input() submitted = false;
-  @Output() rangeChange = new EventEmitter<{ start: any, end: any }>();
-  @Output() blurEvent = new EventEmitter<{ start: any, end: any }>();
+  // 自訂屬性
   @Input() errorForGroup = false;
+  // 觸發事件
+  @Output() startChange = new EventEmitter<Event>();
+  @Output() endChange = new EventEmitter<Event>();
+  // @Output() blurEvent = new EventEmitter<{ start: any, end: any }>(); // 用於觸發輸入框失焦事件
 
   ngOnInit(): void {
-    if (this.startControl.enabled && this.endControl.enabled) {
-      this.updateControlState(this.startControl, this.endControl);
-    }
+    this.checkRequiredValidator(this.startControl, 0);
+    this.checkRequiredValidator(this.endControl, 1);
   }
 
   onStartInputChange(event: Event) {
-    const input = event.target as HTMLInputElement;
-    this.rangeChange.emit({ start: input.value, end: this.endControl.value });
+    this.startChange.emit(event);
   }
 
   onEndInputChange(event: Event) {
-    const input = event.target as HTMLInputElement;
-    this.rangeChange.emit({ start: this.startControl.value, end: input.value });
+    this.endChange.emit(event);
   }
 
-  onStartBlur(event: Event) {
-    this.blurEvent.emit({ start: this.startControl.value, end: this.endControl.value });
-  }
+  // onStartBlur(event: Event) {
+  //   this.blurEvent.emit({ start: this.startControl.value, end: this.endControl.value });
+  // }
 
-  onEndBlur(event: Event) {
-    this.blurEvent.emit({ start: this.startControl.value, end: this.endControl.value });
-  }
+  // onEndBlur(event: Event) {
+  //   this.blurEvent.emit({ start: this.startControl.value, end: this.endControl.value });
+  // }
 }

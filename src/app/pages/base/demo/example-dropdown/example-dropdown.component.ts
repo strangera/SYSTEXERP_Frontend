@@ -21,11 +21,11 @@ import { RadiobuttonYNComponent } from '@shared/componentkit/radiobutton-yn/radi
 })
 export class ExampleDropdownComponent extends BasicQueryPageComponent<unknown> implements OnInit {
   queryForm = this.formBuilder.group({
-    dropdown: ['', Validators.required],
-    dropdownRangeStart: ['', Validators.required],
-    dropdownRangeEnd: ['', Validators.required],
-    radiolist: ['', Validators.required],
-    radioYN: ['', Validators.required],
+    dropdown: [null, Validators.required],
+    dropdownRangeStart: [null, Validators.required],
+    dropdownRangeEnd: [null, Validators.required],
+    radiolist: [null, Validators.required],
+    radioYN: [null],
   });
 
   systemTypeOptions = [

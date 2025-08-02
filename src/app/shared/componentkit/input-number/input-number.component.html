@@ -1,5 +1,6 @@
 <label [hidden]="!showLabel || label===''" [for]="controlName">{{ label }}
   <span *ngIf="isRequired" class="required">*</span>
+  <ng-content select="header"></ng-content>
 </label>
 <p-inputGroup id="input-number">
   <ng-container *ngIf="minValue === null; else inputNumber">

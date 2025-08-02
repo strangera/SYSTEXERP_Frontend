@@ -1,13 +1,13 @@
-<label [hidden]="!showLabel" [for]="controlName">{{ label }}
+<label [hidden]="!showLabel || label===''" [for]="controlName">{{ label }}
   <span *ngIf="isRequired" class="required">*</span>
+  <ng-content select="header"></ng-content>
 </label>
-
 <p-dropdown styleClass="w-full" [id]="controlName" [formControl]="control"
-  [placeholder]="control.disabled ? '' : placeholder" [options]="options" [optionLabel]="optionLabel"
+  [placeholder]="customPlaceholder || placeholder" [options]="options" [optionLabel]="optionLabel"
   [optionValue]="optionValue" [showClear]="showClear" [ngClass]="{'ng-dirty ng-invalid': submitted && control.errors}"
   [dropdownIcon]="control.disabled ? 'hidden' : 'pi pi-angle-down'" (onChange)="onDropdownChange($event)"
-  dataKey="optionValue" [filter]="filter" appendTo="body" (onLazyLoad)="onLazyLoad($event)" [virtualScroll]="true"
-  [virtualScrollItemSize]="34" [resetFilterOnHide]="true">
+  dataKey="optionValue" [filter]="filter" appendTo="body" [virtualScroll]="true" [virtualScrollItemSize]="34"
+  [resetFilterOnHide]="true">
   <ng-template let-options pTemplate="item" *ngIf="templateLabel !== ''">
     <div class="flex align-items-center gap-2">
       <div>{{ options[templateLabel] }}</div>
@@ -15,4 +15,5 @@
   </ng-template>
 </p-dropdown>
 
-<app-control-messages [hidden]="!showErrorMessage" [onerror]="submitted" [control]="control"></app-control-messages>
+<app-control-messages [hidden]="!showErrorMessage" [onerror]="submitted || (control.touched && control.invalid)"
+  [control]="control"></app-control-messages>

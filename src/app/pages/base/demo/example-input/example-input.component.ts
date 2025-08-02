@@ -23,10 +23,10 @@ import { COMMON_IMPORTS } from '../demo-imports';
 })
 export class ExampleInputComponent extends BasicQueryPageComponent<unknown> implements OnInit {
   queryForm = this.formBuilder.group({
-    text: ['', [Validators.required]],
-    text1: ['', [Validators.required]],
-    text2: ['', [Validators.required]],
-    textarea: ['', [Validators.required]],
+    text: ['', [Validators.required, Validators.maxLength(20)]],
+    text1: ['', [Validators.required, Validators.maxLength(20)]],
+    text2: ['', [Validators.required, Validators.maxLength(20)]],
+    textarea: ['', [Validators.required, Validators.maxLength(200)]],
     number: [null, [Validators.required, Validators.max(9999999)]],
     number1: [null, [Validators.required, Validators.max(9999), Validators.min(0)]],
     number2: [null, [Validators.required, Validators.max(9999999), Validators.min(0)]],
