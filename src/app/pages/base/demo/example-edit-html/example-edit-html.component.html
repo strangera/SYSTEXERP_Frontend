@@ -1,0 +1,10 @@
+<form [formGroup]="queryForm" (ngSubmit)="onSubmit(queryForm)">
+    <div class="grid p-fluid">
+        <app-editor-text class="col-12" label="編輯器" controlName="editortext" [control]="queryForm.controls.editortext"
+            [submitted]="submitted" />
+    </div>
+    <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+        <app-button btnType="clear"></app-button>
+        <app-button btnType="query" [loading]="loading"></app-button>
+    </div>
+</form>

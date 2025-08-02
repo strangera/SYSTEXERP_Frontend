@@ -41,22 +41,4 @@ export class InputNumberRangeComponent extends BasicKitComponent implements OnIn
       this.updateControlState(this.startControl, this.endControl);
     }
   }
-
-  onStartInputChange(event: Event) {
-    const input = event.target as HTMLInputElement;
-    this.rangeChange.emit({ start: input.value, end: this.endControl.value });
-  }
-
-  onEndInputChange(event: Event) {
-    const input = event.target as HTMLInputElement;
-    this.rangeChange.emit({ start: this.startControl.value, end: input.value });
-  }
-
-  onStartBlur(event: Event) {
-    this.blurEvent.emit({ start: this.startControl.value, end: this.endControl.value });
-  }
-
-  onEndBlur(event: Event) {
-    this.blurEvent.emit({ start: this.startControl.value, end: this.endControl.value });
-  }
 }

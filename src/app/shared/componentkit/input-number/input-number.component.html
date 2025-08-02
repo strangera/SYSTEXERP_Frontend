@@ -2,16 +2,16 @@
   <span *ngIf="isRequired" class="required">*</span>
 </label>
 <p-inputGroup id="input-number">
-  <p-inputNumber *ngIf="min === null; else inputNumber" [id]="controlName" [formControl]="control"
+  <p-inputNumber *ngIf="min === null; else inputNumber" [inputId]="controlName" [formControl]="control"
     [placeholder]="customPlaceholder || placeholder" [showButtons]="showButtons" [max]="max" [step]="step"
     [useGrouping]="useGrouping" [minFractionDigits]="minFractionDigits" [maxFractionDigits]="maxFractionDigits"
-    [ngClass]="{'ng-dirty ng-invalid': submitted && control.errors}" [mode]="mode"
+    [ngClass]="{'ng-dirty ng-invalid': submitted && control.errors}" [mode]="mode" [title]="label" [name]="label"
     [incrementButtonClass]="incrementButtonClass" [decrementButtonClass]="decrementButtonClass"
-    (onInputChange)="onInputChange($event)" (onBlur)="onBlur($event)" />
+    (onInputChange)="onInputChange($event)" (onBlur)="onBlur($event)" [size]="" />
   <ng-template #inputNumber>
-    <p-inputNumber [id]="controlName" [formControl]="control" [placeholder]="customPlaceholder || placeholder"
+    <p-inputNumber [inputId]="controlName" [formControl]="control" [placeholder]="customPlaceholder || placeholder"
       [showButtons]="showButtons" [min]="min" [max]="max" [step]="step" [useGrouping]="useGrouping"
-      [minFractionDigits]="minFractionDigits" [maxFractionDigits]="maxFractionDigits"
+      [minFractionDigits]="minFractionDigits" [maxFractionDigits]="maxFractionDigits" [title]="label" [name]="label"
       [ngClass]="{'ng-dirty ng-invalid': submitted && control.errors}" [mode]="mode"
       [incrementButtonClass]="incrementButtonClass" [decrementButtonClass]="decrementButtonClass"
       (onInputChange)="onInputChange($event)" (onBlur)="onBlur($event)" />

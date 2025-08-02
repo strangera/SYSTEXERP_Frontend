@@ -12,8 +12,7 @@
         [showButtons]="showButtons" [min]="minBoundary" [max]="maxBoundary" [step]="step" [useGrouping]="useGrouping"
         [minFractionDigits]="minFractionDigits" [maxFractionDigits]="maxFractionDigits"
         [ngClass]="{'ng-dirty ng-invalid': submitted && startControl.errors}" [mode]="mode"
-        [incrementButtonClass]="incrementButtonClass" [decrementButtonClass]="decrementButtonClass"
-        (onInputChange)="onStartInputChange($event)" (onBlur)="onStartBlur($event)" />
+        [incrementButtonClass]="incrementButtonClass" [decrementButtonClass]="decrementButtonClass" />
       <p-inputGroupAddon *ngIf="suffix">{{ suffix }}</p-inputGroupAddon>
     </p-inputGroup>
   </div>
@@ -29,8 +28,7 @@
         [showButtons]="showButtons" [min]="minBoundary" [max]="maxBoundary" [step]="step" [useGrouping]="useGrouping"
         [minFractionDigits]="minFractionDigits" [maxFractionDigits]="maxFractionDigits"
         [ngClass]="{'ng-dirty ng-invalid': submitted && endControl.errors}" [mode]="mode"
-        [incrementButtonClass]="incrementButtonClass" [decrementButtonClass]="decrementButtonClass"
-        (onInputChange)="onEndInputChange($event)" (onBlur)="onEndBlur($event)" />
+        [incrementButtonClass]="incrementButtonClass" [decrementButtonClass]="decrementButtonClass" />
       <p-inputGroupAddon *ngIf="suffix">{{ suffix }}</p-inputGroupAddon>
     </p-inputGroup>
   </div>

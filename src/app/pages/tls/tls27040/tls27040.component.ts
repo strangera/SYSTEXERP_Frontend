@@ -199,7 +199,9 @@ export class TLS27040Component extends BasicQueryPageComponent<POS6118Data | POS
     this.dialogLoading = true;
     // 打API
     if (!frm.valid) {
-      this.dialogVisible = false;
+      this.dialogLoading = false;
+      return;
     }
+    this.dialogVisible = false;
   }
 }
