@@ -37,13 +37,9 @@ export class TLS2A050Component extends BasicQueryPageComponent<any> implements O
     startdate: [null as Date | null],
     enddate: [null as Date | null],
   });
-  // 表格
-  // ----------------------------------------------------------------
+
   data: any[] = [
-    // { contactPerson: 'A先生', contactDate: '2024-08-08', UID: '123' ,industryType: '停車管理', category: '專櫃。意向書',version: 1, rentNumber: 1, progress: '未審核'},
-    // { contactPerson: 'B先生', contactDate: '2024-08-09', UID: '456' ,industryType: '停車管理', category: '專櫃。意向書',version: 1, rentNumber: 2, progress: '已審核'},
-    // { contactPerson: 'C先生', contactDate: '2024-08-10', UID: '789' ,industryType: '停車管理', category: '專櫃。意向書',version: 1, rentNumber: 3, progress: '未審核'},
-    // 其他資料
+
   ];
   filteredData: any[] = [...this.data];
   statusOptions = [
@@ -121,55 +117,4 @@ export class TLS2A050Component extends BasicQueryPageComponent<any> implements O
     this.messageService.unblockUi();
   }
 
-  //   onSubmitQuery(frm: FormGroup) {
-  //     // 查詢邏輯
-  //     this.onSubmit(frm);
-  //   }
-
-  //   onClearForm() {
-  //     this.queryForm.reset();  // 重置表單
-  //   }
-
-  //   onCreate() {
-  //     if (this.canAdd()) {
-  //       let extras: NavigationExtras = {
-  //         state: {
-  //           crudstatus: CRUDStatus.Create,
-  //           queryform: this.queryForm,
-  //         },
-  //         skipLocationChange: true
-  //       };
-
-  //       //console.log("extra", extras);
-  //       this.router.navigate(['/TLS2000/TLS2A050CRU'], extras);
-  //     }
-  //   }
-
-  //   onEdit(data: any) {
-  //     if (this.canEdit()) {
-  //       let extras: NavigationExtras = {
-  //         state: {
-  //           crudstatus: CRUDStatus.Edit,
-  //           rowdata: data,
-  //           queryform: this.queryForm,
-  //         },
-  //         skipLocationChange: true
-  //       };
-
-  //       this.router.navigate(['/TLS2000/TLS2A050CRU'], extras);
-  //     }
-  //   }
-
-  //   onDetail(data: any) {
-  //     let extras: NavigationExtras = {
-  //       state: {
-  //         crudstatus: CRUDStatus.Read,
-  //         rowdata: data,
-  //         queryform: this.queryForm,
-  //       },
-  //       skipLocationChange: true
-  //     };
-
-  //     this.router.navigate(['/TLS2000/TLS2A050CRU'], extras);
-  //   }
 }

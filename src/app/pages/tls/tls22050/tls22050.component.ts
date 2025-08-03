@@ -42,7 +42,6 @@ export class TLS22050Component extends BasicQueryPageComponent<any> implements O
   data: any[] = [];
   filteredData: any[] = [];
   totalRecords = 0;
-
   salesMinDate: Date | null = null;
   salesMaxDate: Date | null = null;
 
@@ -50,6 +49,8 @@ export class TLS22050Component extends BasicQueryPageComponent<any> implements O
   actPayAmtSum = 0;
   overPayAmtSum = 0;
   isTotal = true;
+  exportExcelLoading = false;
+
   statusOptions = [
     { label: '全部', value: 'all' },
     { label: '一般', value: 'ordinary' },
@@ -71,7 +72,7 @@ export class TLS22050Component extends BasicQueryPageComponent<any> implements O
       visible: true,
       groupField: 'TOTAL',
       isTotal: true,
-      fractionDigits: 2,
+      format: formatAmount,
     },
     {
       field: 'ACT_PayAmt',
@@ -79,7 +80,7 @@ export class TLS22050Component extends BasicQueryPageComponent<any> implements O
       visible: true,
       groupField: 'TOTAL',
       isTotal: true,
-      fractionDigits: 2,
+      format: formatAmount,
     },
     {
       field: 'OVER_PayAmt',
@@ -87,10 +88,9 @@ export class TLS22050Component extends BasicQueryPageComponent<any> implements O
       visible: true,
       groupField: 'TOTAL',
       isTotal: true,
-      fractionDigits: 2,
+      format: formatAmount,
     },
   ];
-
 
   columnGroup: ColumnGroup[] = [
     { field: 'TOTAL', header: '金額資訊' },
@@ -112,7 +112,6 @@ export class TLS22050Component extends BasicQueryPageComponent<any> implements O
         const selected = new Date(val);
         const year = selected.getFullYear();
         const month = selected.getMonth();
-
         this.salesMinDate = new Date(year, month, 1);
         this.salesMaxDate = new Date(year, month + 1, 0);
 
@@ -127,7 +126,6 @@ export class TLS22050Component extends BasicQueryPageComponent<any> implements O
   onSubmit(form: FormGroup): void {
     this.handleSubmit(form, () => {
       const raw = form.getRawValue();
-
       const payload = {
         request: {
           PageSize: raw.PageSize,
@@ -135,14 +133,8 @@ export class TLS22050Component extends BasicQueryPageComponent<any> implements O
           OrderBy: raw.OrderBy,
           Offset: raw.Offset,
           SortBy: raw.SortBy,
-          TXN_DateStart:
-            raw.startdate instanceof Date
-              ? raw.startdate.toISOString().split('T')[0]
-              : null,
-          TXN_DateEnd:
-            raw.enddate instanceof Date
-              ? raw.enddate.toISOString().split('T')[0]
-              : null,
+          TXN_DateStart: raw.startdate?.toISOString().split('T')[0] ?? null,
+          TXN_DateEnd: raw.enddate?.toISOString().split('T')[0] ?? null,
           POS_TypeList: raw.status1 !== 'all' ? [raw.status1] : [],
           VOU_CheckList: raw.status2 !== 'ALL' ? [raw.status2] : [],
         },
@@ -150,11 +142,8 @@ export class TLS22050Component extends BasicQueryPageComponent<any> implements O
 
       this.tls22050Service.queryTLS22050(payload).subscribe({
         next: (res) => {
-          this.data = (res.Data ?? []).flatMap((group: { PAY_Name: string; _DetailList: any[] }) =>
-            (group._DetailList ?? []).map((detail) => ({
-              PAY_Name: group.PAY_Name,
-              ...detail,
-            }))
+          this.data = (res.Data ?? []).flatMap((group: any) =>
+            (group._DetailList ?? []).map((detail: any) => ({ PAY_Name: group.PAY_Name, ...detail }))
           );
 
           this.filteredData = [...this.data];
@@ -163,7 +152,6 @@ export class TLS22050Component extends BasicQueryPageComponent<any> implements O
           this.bookPayCntSum = this.data.reduce((sum, cur) => sum + Number(cur.BOOK_PayAmt || 0), 0);
           this.actPayAmtSum = this.data.reduce((sum, cur) => sum + Number(cur.ACT_PayAmt || 0), 0);
           this.overPayAmtSum = this.data.reduce((sum, cur) => sum + Number(cur.OVER_PayAmt || 0), 0);
-
         },
         error: (err) => {
           console.error('TLS22050 查詢失敗', err);
@@ -173,4 +161,65 @@ export class TLS22050Component extends BasicQueryPageComponent<any> implements O
     });
   }
 
+  exportReport = () => {
+    const raw = this.queryForm.getRawValue();
+    const payload = {
+      query_condition: {
+        ServiceName: 'queryTLS22050',
+        Conditions: {
+          request: {
+            TXN_DateStart: raw.startdate?.toISOString().split('T')[0] ?? null,
+            TXN_DateEnd: raw.enddate?.toISOString().split('T')[0] ?? null,
+            POS_TypeList: raw.status1 !== 'all' ? [raw.status1] : [],
+            VOU_CheckList: raw.status2 !== 'ALL' ? [raw.status2] : [],
+            SortBy: raw.SortBy,
+          },
+        },
+      },
+      report_title: '第三方支付帳差報表',
+      columns: this.columns.filter(col => col.visible).map(col => ({ field: col.field, header: col.header, visible: true })),
+      config: {
+        print_reportTitle: 'Y',
+        print_reportTitle_per_page: 'N',
+        print_eject: 'Y',
+        print_field_title: 'Y',
+        print_field_title_per_page: 'N',
+        page_lines: 10,
+        print_reportFooter: 'Y',
+        print_reportFooter_per_page: 'N',
+        print_line_number: 'Y',
+        footer_DataType: 'TLS22050',
+      },
+      file_name: `admin_22250_${new Date().toISOString().split('T')[0].replace(/-/g, '')}`,
+    };
+
+    this.exportExcelLoading = true;
+    this.tls22050Service.exportTLS22050(payload).subscribe({
+      next: (res: Blob) => {
+        const blob = new Blob([res], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${payload.file_name}.xlsx`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        window.URL.revokeObjectURL(url);
+        this.exportExcelLoading = false;
+      },
+      error: (err) => {
+        console.error('TLS22050 匯出失敗', err);
+        this.exportExcelLoading = false;
+      },
+    });
+  };
+}
+
+function formatAmount(value: number): string {
+  if (isNaN(value)) return '';
+  const isInteger = Number.isInteger(value);
+  return value.toLocaleString('en-US', {
+    minimumFractionDigits: isInteger ? 0 : 2,
+    maximumFractionDigits: 2,
+  });
 }

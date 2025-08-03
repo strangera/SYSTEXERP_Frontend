@@ -79,6 +79,11 @@
       [totalRecords]="totalRecords"
       (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"
       [lazy]="true"
-    ></app-table>
+      [showManage]="false"
+      [showDelete]="false"
+      [showExcelExport]="true"
+      [exportExcelLoading]="exportExcelLoading"
+      (exportExcel)="exportReport()"
+    />
   </div>
 </div>
