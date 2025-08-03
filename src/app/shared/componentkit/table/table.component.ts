@@ -25,7 +25,7 @@ import { CheckboxModule } from 'primeng/checkbox';
 import { SkeletonModule } from 'primeng/skeleton';
 import { TableExpansionComponent } from './table-expansion/table-expansion.component';
 import { TableExportComponent } from './table-export/table-export.component';
-import { BlockUIModule } from 'primeng/blockui';
+import { AutoCompleteCompleteEvent, AutoCompleteModule } from 'primeng/autocomplete';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 @Component({
   selector: 'app-table',
@@ -56,7 +56,7 @@ import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
     SkeletonModule,
     TableExpansionComponent,
     TableExportComponent,
-    BlockUIModule
+    AutoCompleteModule
   ],
 })
 export class TableComponent extends BasicPrintDataComponent implements OnInit, OnChanges, OnDestroy {
@@ -143,6 +143,7 @@ export class TableComponent extends BasicPrintDataComponent implements OnInit, O
   // body
   @Output() fieldChange = new EventEmitter<FieldChangeEvent>(); // input 變更事件
   @Output() selectButton = new EventEmitter<any>();             // 選擇 按鈕事件
+  @Output() filterChange = new EventEmitter<{ rowData: any, value: string }>(); // autoComplete 過濾事件
   // Footer
   @Input() showFooter = false;                      // 是否顯示 Footer
   // 分頁器
@@ -315,6 +316,10 @@ export class TableComponent extends BasicPrintDataComponent implements OnInit, O
   }
   // (欄位是Dropdown使用): 獲取Dropdown的選項，支持function加入或直接給List
   getOptions(rowData: any, col: Column) { return typeof col.options === 'function' ? (col.options(rowData) || undefined) : col.options || undefined; }
+  // autoComplete觸發事件
+  filterOptions(event: AutoCompleteCompleteEvent) {
+    this.filterChange.emit({ rowData: event.originalEvent, value: event.query });
+  }
   // (欄位是Input、Dropdown使用): 處理值變化事件
   onFieldChange(rowData: any, field: string, value: any) { this.fieldChange.emit({ rowData, field, value }); }
   // 事件類型 (有需求可使用)

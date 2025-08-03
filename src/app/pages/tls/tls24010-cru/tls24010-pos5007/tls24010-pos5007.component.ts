@@ -11,6 +11,7 @@ import { DropDownListService, POS2004Item, TLTTALENT_CHARGEData } from '../../..
 import { POS5007Data } from '../../../../service/api/tls/tls24010.service';
 import { ButtonModule } from 'primeng/button';
 import { NotificationService } from '@shared/component/notification-message/notification.service';
+import { STORE_WAY } from '../tls24010-cru.model';
 @UntilDestroy()
 @Component({
   selector: 'app-tls24010-pos5007',
@@ -53,7 +54,7 @@ export class Tls24010Pos5007Component implements OnInit, OnChanges {
   }
   ngOnInit(): void {
     switch (this.store_way) {
-      case '2':// 自營櫃位
+      case STORE_WAY.自營:// 自營櫃位
         if (this.TLT_No) {
           this.dropDownListService.queryPOS2004_DropDownList(this.TLT_No).pipe(untilDestroyed(this)).subscribe((data) => {
             if (data.Data.length > 0) {
@@ -67,7 +68,7 @@ export class Tls24010Pos5007Component implements OnInit, OnChanges {
           })
         }
         break;
-      case '1':// 專櫃櫃位
+      case STORE_WAY.專櫃:// 專櫃櫃位
         this.POS2004Options = [
           {
             PLU_MagNo: this.TLT_No || '',
@@ -105,9 +106,9 @@ export class Tls24010Pos5007Component implements OnInit, OnChanges {
   insertRow(): void {
     this.POS5007Data.push({
       id: this.index + 1,
-      PLU_MagNo: this.store_way === '1' ? this.POS2004Options[0] : undefined,
-      PLU_No: this.store_way === '1' ? this.POS2004Options[0].PLU_No : undefined,
-      PLU_Name: this.store_way === '1' ? this.TLT_Name : undefined,
+      PLU_MagNo: this.store_way === STORE_WAY.專櫃 ? this.POS2004Options[0] : undefined,
+      PLU_No: this.store_way === STORE_WAY.專櫃 ? this.POS2004Options[0].PLU_No : undefined,
+      PLU_Name: this.store_way === STORE_WAY.專櫃 ? this.TLT_Name : undefined,
       TXN_Qty: 0,
       PLU_SalePrc: 0,
       TXN_Amt: 0,

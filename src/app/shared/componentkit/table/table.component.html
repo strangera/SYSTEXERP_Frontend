@@ -183,6 +183,12 @@
                 [disabled]="col.disabled ? col.disabled(rowData) : false"
                 (ngModelChange)="onFieldChange(rowData, col.field, $event)" [minFractionDigits]="col.fractionDigits"
                 [maxFractionDigits]="col.fractionDigits" [useGrouping]="col.useGrouping" />
+              <p-autoComplete *ngIf="col.type === 'autoComplete'" class="w-full min-w-max" styleClass="w-full"
+                appendTo="body" [(ngModel)]="rowData[col.field]" [ngModelOptions]="{ standalone: true }"
+                placeholder="請輸入{{ col.header }}" [suggestions]="getOptions(rowData, col)"
+                (onSelect)="onFieldChange(rowData, col.field, $event)" (completeMethod)="filterOptions($event)"
+                [optionLabel]="col.optionLabel" [optionValue]="col.optionValue"
+                [disabled]="col.disabled ? col.disabled(rowData) : false" />
               <p-dropdown *ngIf="col.type === 'dropdown'" styleClass="w-full" [showClear]="true" appendTo="body"
                 [(ngModel)]="rowData[col.field]" [ngModelOptions]="{ standalone: true }" [filter]="true"
                 placeholder="請輸入{{ col.header }}" [options]="getOptions(rowData, col)" [optionLabel]="col.optionLabel"
@@ -205,6 +211,11 @@
                 [disabled]="col.disabled ? col.disabled(rowData) : alwaysEdit ? false : true"
                 (ngModelChange)="onFieldChange(rowData, col.field, $event)" [minFractionDigits]="col.fractionDigits"
                 [maxFractionDigits]="col.fractionDigits" [useGrouping]="col.useGrouping" />
+              <p-autoComplete *ngIf="col.type === 'autoComplete'" class="w-full min-w-max" styleClass="w-full"
+                appendTo="body" [(ngModel)]="rowData[col.field]" placeholder="請輸入{{ col.header }}"
+                [suggestions]="getOptions(rowData, col)" (onSelect)="onFieldChange(rowData, col.field, $event)"
+                (completeMethod)="filterOptions($event)" [ngModelOptions]="{ standalone: true }"
+                [optionLabel]="col.optionLabel" [optionValue]="col.optionValue" />
               <p-dropdown *ngIf="col.type === 'dropdown'" styleClass="w-full" [showClear]="true" appendTo="body"
                 [(ngModel)]="rowData[col.field]" [ngModelOptions]="{ standalone: true }" [filter]="true"
                 placeholder="請輸入{{ col.header }}" [options]="getOptions(rowData, col)" [optionLabel]="col.optionLabel"
@@ -253,7 +264,7 @@
         </td>
       </ng-container>
       <ng-template #loadingTemplate>
-        <td *ngFor="let _ of [].constructor(getVisibleHeaderCount+1)">
+        <td *ngFor="let _ of [].constructor(getVisibleHeaderCount)">
           <p-skeleton />
         </td>
       </ng-template>
