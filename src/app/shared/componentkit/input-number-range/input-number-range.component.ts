@@ -37,39 +37,8 @@ export class InputNumberRangeComponent extends BasicKitComponent implements OnIn
   @Output() blurEvent = new EventEmitter<{ start: any, end: any }>();
 
   ngOnInit(): void {
-    if (this.placeholder) {
-      // placeholder 會同時應用到開始和結束輸入框
-    }
-    if (this.startControl?.disabled && this.endControl?.disabled) {
-      this.placeholder = '';
-    } else {
+    if (this.startControl.enabled && this.endControl.enabled) {
       this.updateControlState(this.startControl, this.endControl);
     }
-    // 監聽值的變化
-    this.startControl.valueChanges.subscribe(value => {
-      this.rangeChange.emit({ start: value, end: this.endControl.value });
-    });
-
-    this.endControl.valueChanges.subscribe(value => {
-      this.rangeChange.emit({ start: this.startControl.value, end: value });
-    });
-  }
-
-  onStartInputChange(event: Event) {
-    const input = event.target as HTMLInputElement;
-    this.rangeChange.emit({ start: input.value, end: this.endControl.value });
-  }
-
-  onEndInputChange(event: Event) {
-    const input = event.target as HTMLInputElement;
-    this.rangeChange.emit({ start: this.startControl.value, end: input.value });
-  }
-
-  onStartBlur(event: Event) {
-    this.blurEvent.emit({ start: this.startControl.value, end: this.endControl.value });
-  }
-
-  onEndBlur(event: Event) {
-    this.blurEvent.emit({ start: this.startControl.value, end: this.endControl.value });
   }
 }

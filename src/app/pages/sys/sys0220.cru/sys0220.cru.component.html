@@ -16,8 +16,8 @@
         </div>
       </div>
       <div class="card">
-        <app-table tableKey="SYS0230CRU" [data]="roleUserData" [columns]="roleUserColumns" [showCheckBox]="true"
-          [showManage]="false" [showDelete]="false" dataKey="ID" [multiSortMeta]="[{ field: 'Match', order: -1 }]"
+        <app-table tableKey="SYS0230CRU" [data]="roleUserData" [columns]="roleUserColumns" [showManage]="false"
+          [showDelete]="false" dataKey="ID" [multiSortMeta]="[{ field: 'Match', order: -1 }]"
           [selectedItems]="selectedRoleUserData" (selectionChange)="selectedRoleUserData = $event"
           [showReportMode]="false" [deleteData]="true" [showInsert]="true" (dataChange)="roleUserData = $event"
           (insert)="dialogVisible = true" [disabled]="isFormReadable" [showCaption]="!isFormReadable"

@@ -31,10 +31,10 @@ export class TLS23100Component extends BasicQueryPageComponent<any> {
 
   queryForm = this.formBuilder.group({
     counterCode: [''],
-    TXN_DateStart: [new Date('2020-01-01') as Date, [Validators.required]],
-    TXN_DateEnd: [new Date(), [Validators.required]],
-    pstarttime: [new Date('2020-01-01'), [Validators.required]],
-    pendtime: [new Date(), [Validators.required]],
+    TXN_DateStart: [new Date('2024-01-01') as Date, [Validators.required]],
+    TXN_DateEnd: [new Date('2024-01-31'), [Validators.required]],
+    pstarttime: [[Validators.required]],
+    pendtime: [ [Validators.required]],
     paymentType: [],
     TLT_No: [],
     ECR_No: [],

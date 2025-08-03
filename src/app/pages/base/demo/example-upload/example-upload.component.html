@@ -1,0 +1,16 @@
+<form [formGroup]="queryForm" (ngSubmit)="onSubmit(queryForm)">
+    <div class="grid p-fluid">
+        <app-img-upload class="col-12" (uploadFiles)="files2 = $event" [images]="images"
+            [fileLimit]="10 - images.length" (imagesChange)="images = $event"
+            (imagesDeleteChange)="confirmDeleteImages = $event" [disabled]="images.length < 10">
+        </app-img-upload>
+        <app-file-upload #fileUpload class="col-12" name="myFile" [accept]="allowedFileTypes" [multiple]="true"
+            chooseLabel="選擇 CSV 或 TXT 檔案" uploadLabel="上傳" cancelLabel="清除" [auto]="false" [customUpload]="true"
+            mode="advanced" (select)="files = $event.files" [loading]="loading"
+            (uploadHandler)="handleCustomUpload($event)"></app-file-upload>
+    </div>
+    <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+        <app-button btnType="clear"></app-button>
+        <app-button btnType="query" [loading]="loading"></app-button>
+    </div>
+</form>

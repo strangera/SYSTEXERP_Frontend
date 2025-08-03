@@ -9,7 +9,7 @@
       <i class="pi pi-ellipsis-v"></i>
     </button>
     <div #topbarmenu class="layout-topbar-menu lg:flex lg:flex-column justify-content-center align-items-end"
-      [ngClass]="{'layout-topbar-menu-mobile-active': layoutService.state.profileSidebarVisible}">
+      [ngClass]="{'layout-topbar-menu-mobile-active': layoutService.isProfileSidebarVisible()}">
       <div class="flex flex-row align-items-center justify-content-center col-flex">
         <div class="text-center ml-1 block" [ngStyle]="{'color': 'rgb(146, 60, 60)'}">
           <button type="button" class="layout-topbar-button p-link min-w-max" pTooltip="個人資料"

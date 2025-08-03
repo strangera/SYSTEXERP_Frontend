@@ -82,8 +82,8 @@
       <div>
         <div class="grid justify-content-end">
           <app-button btnType="clear"
-                      (click)="onClearForm()"></app-button>
-          <app-button btnType="submit"
+                      (click)="onClear()"></app-button>
+          <app-button btnType="query"
                       (click)="onSubmitQuery()"
                       [loading]="loading"></app-button>
         </div>
@@ -100,10 +100,8 @@
                [dataKey]="'pod_no'"
                [columns]="columns"
                [addButton]="addButton"
-               [selectedItems]="selectedItems"
                [editDisabled]="editDisabled"
                [isRowSelectable]="isRowSelectable"
-               (selectionChange)="selectedItems = $event"
                (delete)="onDelete($event)"
                (edit)="onEdit($event)"
                (detail)="onDetail($event)"></app-table>

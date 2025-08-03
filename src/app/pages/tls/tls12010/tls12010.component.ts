@@ -18,7 +18,7 @@ import { CalendarComponent } from '../../../shared/componentkit/calendar/calenda
 import { CalendarRangeQuickComponent } from '../../../shared/componentkit/calendar-range-quick/calendar-range-quick.component';
 
 export interface Potential_Customer {
-  ID: number; // 主鍵，自動編號
+  id: number; // 主鍵，自動編號
 
   contact_USR_No: string; // 接洽人員代碼
   contact_USR_Name: string; // 接洽人員姓名
@@ -119,9 +119,8 @@ export class TLS12010Component extends BasicQueryPageComponent<Potential_Custome
         { field: 'cus_uniform_id', header: '廠商統一編號', visible: true },
         { field: 'VEN_Name', header: '廠商名稱', visible: true },
         { field: 'VEN_EngName', header: '廠商英文名稱', visible: true },
-        { field: 'bus_type', header: '大分類代碼', visible: true , format: (value: string) =>
-          this.bus_type_Option.find((option) => option.No === value)?.Label || value
-        },
+        { field: 'bus_type', header: '大分類代碼', visible: true},
+        { field: 'bus_type_name', header: '大分類名稱', visible: true},
         { field: 'tlt_name', header: '品牌（專櫃名稱）', visible: true },
         { field: 'tlt_EngName', header: '品牌英文名稱', visible: true },
         { field: 'VEN_Boss', header: '廠商聯絡人', visible: true },
@@ -197,8 +196,8 @@ export class TLS12010Component extends BasicQueryPageComponent<Potential_Custome
       
           // 收集所有有效的 ID
           const idList = items
-            .filter((item) => item && item.ID != null && item.ID !== undefined)
-            .map((item) => item.ID);
+            .filter((item) => item && item.id != null && item.id !== undefined)
+            .map((item) => item.id);
       
           if (idList.length === 0) {
             console.error('No valid IDs to delete');

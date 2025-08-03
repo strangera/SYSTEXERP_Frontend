@@ -118,13 +118,14 @@ export class TLS11010CRUComponent extends BasicCruPageComponent<any> {
 
 
     // 根據實際狀態決定選項
-    if (this.crudstatus === CRUDStatus.Edit) {
-      const rawStatus = this.rowdata?.LOCATION_Status;
-      const status = rawStatus !== undefined && rawStatus !== null ? Number(rawStatus) : -1;
+   if (this.crudstatus === CRUDStatus.Edit) {
+  const rawStatus = this.rowdata?.LOCATION_Status;
+  const status = rawStatus !== undefined && rawStatus !== null ? Number(rawStatus) : -1;
 
-      console.log('🎯 編輯狀態：', status);  // 看實際進來的值
+  this.inputForm.patchValue(this.rowdata); // 帶入整筆資料
 
-      this.inputForm.patchValue(this.rowdata); // 帶入整筆資料
+  console.log('🛬 CRU 接收到 AREA_NO：', this.rowdata?.AREA_NO);
+  console.log('📝 patch 完的 AREA_NO 值：', this.inputForm.get('AREA_NO')?.value);
 
       // 根據實際狀態決定選項
       switch (status) {
@@ -171,7 +172,23 @@ export class TLS11010CRUComponent extends BasicCruPageComponent<any> {
 
     // 其餘選項初始化
     this.tls11010Service.getFloorOptions().subscribe(res => this.floorOptions = res);
-    this.tls11010Service.getRegionOptions().subscribe(res => this.RegionCodeOptions = res);
+    this.tls11010Service.getRegionOptions().subscribe(res => {
+  this.RegionCodeOptions = res?.map((x: any) => ({
+    label: x.label,
+    formLabel: `${x.value} - ${x.label}`,
+    value: String(x.value).trim(), // ✅ 這裡加 trim
+  })) || [];
+
+  // 👉 編輯狀態下，補 patch trimmed AREA_NO
+  if (this.crudstatus === CRUDStatus.Edit) {
+    const matchedRegion = this.RegionCodeOptions.find(
+      opt => String(opt.value) === String(this.rowdata?.AREA_NO).trim()
+    );
+    if (matchedRegion) {
+      this.inputForm.patchValue({ AREA_NO: matchedRegion.value });
+    }
+  }
+});
     this.tls11010Service.getOrgOptions().subscribe(res => {
       this.OrganizationCodeOptions = res?.map((x: any) => ({
         label: x.label,
@@ -228,7 +245,7 @@ this.tls11010Service.getUsageOptions().subscribe((res) => {
         this.tls11010Service.updateData(raw).subscribe({
           next: () => {
             this.messageService.successBubble(this.translate.instant('updated-successfully'));
-            this.router.navigate(['/TLS', 'TLS11010']); // ✅ 導回查詢頁
+            this.router.navigate(['account/tls', 'tls11010']); // ✅ 導回查詢頁
           },
           error: () => {
             this.messageService.errorBubble(this.translate.instant('update_failed'));
@@ -252,7 +269,7 @@ this.tls11010Service.getUsageOptions().subscribe((res) => {
     this.tls11010Service.deleteData([id]).subscribe({
       next: () => {
         this.messageService.successBubble('刪除成功');
-        this.router.navigate(['/TLS', 'TLS11010']);
+        this.router.navigate(['/tls', 'TLS11010']);
       },
       error: () => {
         this.messageService.errorBubble('刪除失敗');

@@ -4,9 +4,9 @@
     <app-button btnType="back" (click)="onCancel()"></app-button>
   </div>
   <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
-    <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
+    <form [formGroup]="POS6118dataForm" id="dataForm" (ngSubmit)="onSubmit(POS6118dataForm)">
       <div class="grid p-fluid">
-        <app-input-text class="col-12 md:col-6 lg:col-4" label="收銀機號" controlName="cashRegisterNumber"
+        <!-- <app-input-text class="col-12 md:col-6 lg:col-4" label="收銀機號" controlName="cashRegisterNumber"
           [control]="dataForm.controls.cashRegisterNumber" [submitted]="submitted">
         </app-input-text>
         <app-input-text class="col-12 md:col-6 lg:col-4" label="交易流水號" controlName="transactionSerialNumber"
@@ -59,11 +59,11 @@
         </app-dropdown>
         <app-calendar class="col-12 md:col-6 lg:col-4" calendarType="timeOne" label="時間"
           [control]="dataForm.controls.transactionTime" [submitted]="submitted">
-        </app-calendar>
+        </app-calendar> -->
       </div>
     </form>
     <div *ngIf="!isFormReadable" class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
-      <app-button btnType="cancel" [form]="dataForm"></app-button>
+      <app-button btnType="cancel" [form]="POS6118dataForm"></app-button>
       <app-button btnType="submit" [loading]="loading"></app-button>
     </div>
   </p-panel>

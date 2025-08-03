@@ -33,7 +33,7 @@ export class CalendarRangeComponent extends BasicKitComponent implements OnInit 
   @Input() startMaxDate: Date | undefined | null = null;
   @Input() endMinDate: Date | undefined | null = null;
   @Input() maxDate: Date | undefined | null = null;
-  
+
   // 元件類型對應
   private readonly calendarConfig = {
     timeRange: { timeOnly: true, showTime: true, dateFormat: undefined, view: 'date', placeholder: '請選擇時間' },
@@ -44,8 +44,7 @@ export class CalendarRangeComponent extends BasicKitComponent implements OnInit 
   };
   ngOnInit() {
     this.configCalendar(); // 設置元件
-    if (!this.startControl.disabled && !this.endControl.disabled) {
-      this.placeholder = this.calendarConfig[this.calendarType].placeholder;
+    if (this.startControl.enabled && this.endControl.enabled) {
       this.updateControlState(this.startControl, this.endControl);
     }
     if (this.startControl.value && typeof this.startControl.value === 'string') {
@@ -63,6 +62,8 @@ export class CalendarRangeComponent extends BasicKitComponent implements OnInit 
     this.showTime = config.showTime;
     this.dateFormat = config.dateFormat;
     this.view = config.view as 'date' | 'month' | 'year';
+    this.placeholder = config.placeholder;
+    this.placeholder2 = config.placeholder;
   }
 
   validateRange() {

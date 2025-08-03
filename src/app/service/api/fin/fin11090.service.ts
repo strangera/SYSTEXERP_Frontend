@@ -9,6 +9,9 @@ export interface FIN11090QueryRequest extends BaseQueryRequest {
   invoice_date?: string;     // 發票日期
   cashier_no?: string;       // 收銀機號
   txn_seq?: string;          // 交易序號
+  void_date_from?: string;    // 作廢日期(起)
+  void_date_to?: string;      // 作廢日期(迄)
+  void_user?: string;         // 作廢人員
 }
 
 // --- FIN11090 查詢回應 Model 定義 ---
@@ -19,6 +22,8 @@ export interface FIN11090Data {
   cashier_no?: string;       // 收銀機號
   txn_seq?: string;          // 交易序號
   invoice_amt?: string;      // 交易金額
+  void_date?: string;         // 作廢日期
+  void_user?: string;         // 作廢人員
 }
 
 @Injectable({
@@ -40,7 +45,9 @@ export class Fin11090Service {
             invoice_date: '2025-07-01',
             cashier_no: 'C1001',
             txn_seq: '000001',
-            invoice_amt: '1000'
+            invoice_amt: '1000',
+            void_date: '2025-07-03',
+            void_user: 'User1'
           },
           {
             prefix: 'CD',
@@ -48,7 +55,9 @@ export class Fin11090Service {
             invoice_date: '2025-07-02',
             cashier_no: 'C2002',
             txn_seq: '000002',
-            invoice_amt: '2000'
+            invoice_amt: '2000',
+            void_date: '2025-07-04',
+            void_user: 'User2'
           }
         ],
         Status: '0000',

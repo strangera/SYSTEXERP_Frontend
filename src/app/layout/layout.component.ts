@@ -1,4 +1,4 @@
-import { AfterViewInit, Component, ElementRef, HostListener, OnDestroy, Renderer2, Type, ViewChild } from '@angular/core';
+import { AfterViewInit, Component, effect, ElementRef, HostListener, OnDestroy, Renderer2, Type, ViewChild } from '@angular/core';
 import { Router, NavigationEnd, RouterOutlet } from '@angular/router';
 import { Subject, Subscription, filter } from 'rxjs';
 import { UserInfo } from '../shared/models/system/userInfo';
@@ -25,7 +25,7 @@ interface AddTabItem {
   templateUrl: './layout.component.html',
   styleUrl: './layout.component.scss',
   standalone: true,
-  imports: [NgIf, NgClass, AppTopbarComponent, AppMenulistComponent, RouterOutlet]
+  imports: [NgIf, NgClass, AppTopbarComponent, AppMenulistComponent, RouterOutlet, AppMenulistComponent]
 })
 export class LayoutComponent implements AfterViewInit, OnDestroy {
   @ViewChild(AppMenulistComponent) appSidebar!: AppMenulistComponent;
@@ -46,19 +46,50 @@ export class LayoutComponent implements AfterViewInit, OnDestroy {
 
   constructor(
     private router: Router,
-    private layoutService: LayoutService,
+    public layoutService: LayoutService,
     private authService: AuthService,
     public renderer: Renderer2
   ) {
     this.subscriptions.push(this.authService.user.pipe(untilDestroyed(this)).subscribe(x => this.user = x));
+    // 監聽 layoutService 的 isOverlayMenuActive 或 isStaticMenuMobileActive 變化來啟用/禁用滾動
+    // 更好的做法是 effect 內部處理 toggleBodyScroll，但在組件內監聽也可以
+    effect(() => {
+      const overlayActive = this.layoutService.isOverlayMenuActive();
+      const mobileActive = this.layoutService.isStaticMenuMobileActive();
+      // 這裡可以根據 isOverlayMenuActive 或 isStaticMenuMobileActive 的狀態來決定是否啟用滾動
+      // 由於 onOutsideClick 已經包含了 toggleBodyScroll(true)
+      // 這裡可以確保在菜單打開時，body 滾動被禁用
+      this.toggleBodyScroll(!(overlayActive || mobileActive));
+    });
+    // 監聽所有側邊欄 Signal 變化來決定是否添加或移除 menu-active 相關的 class
+    // 這是更直接的方法，替代了之前的 createOutsideClickListener 和 hideMenu 邏輯
+    effect(() => {
+      const isOverlayActive = this.layoutService.isOverlayMenuActive();
+      const isStaticMobileActive = this.layoutService.isStaticMenuMobileActive();
+      const isProfileSidebarVisible = this.layoutService.isProfileSidebarVisible();
+
+      // 這裡可以根據你的 CSS 框架來應用正確的 class
+      // 例如，如果你的 CSS 類名是 layout-mobile-active，則在 mobileActive 為 true 時添加
+      if (isOverlayActive || isStaticMobileActive || isProfileSidebarVisible) {
+        // 當任何一個主要側邊欄打開時，可能需要添加一個通用類來處理遮罩或 body 滾動
+        document.documentElement.classList.add('menu-active-state'); // 自定義一個通用類
+      } else {
+        document.documentElement.classList.remove('menu-active-state');
+      }
+    }, { allowSignalWrites: true }); // 如果 effect 內部有 Signal 寫入，記得加這個
   }
 
   ngAfterViewInit() {
     this.subscribeToRouterEvents();
-    this.waitForElementsToInitialize();
-    this.adjustMainContainerPadding();
+    this.adjustMainContainerPadding(); // 確保在初始載入後也調整一次
+
+    // 監聽 layoutService 的 overlayOpen$ 事件，以便在菜單打開時添加 body 的 class
+    this.subscriptions.push(
+      this.layoutService.overlayOpen$.pipe(untilDestroyed(this)).subscribe(() => {
+        this.toggleBodyScroll(false); // 禁用滾動
+      })
+    );
     if (this.sidebarContainer?.nativeElement && this.scrollContent?.nativeElement) {
-      // 添加滾動事件監聽器到滾動容器
       this.renderer.listen(this.sidebarContainer.nativeElement, 'scroll', () => {
         const scrollTop = this.sidebarContainer.nativeElement.scrollTop;
         if (scrollTop > 0) {
@@ -72,7 +103,6 @@ export class LayoutComponent implements AfterViewInit, OnDestroy {
 
   ngOnDestroy() {
     this.subscriptions.forEach(sub => sub.unsubscribe());
-    this.clearMenuOutsideClickListener();
     this.destroy$.next();
     this.destroy$.complete();
   }
@@ -82,11 +112,12 @@ export class LayoutComponent implements AfterViewInit, OnDestroy {
 
     const checkElements = () => {
       const sidebarElement = this.appSidebar?.el?.nativeElement;
+      console.log(sidebarElement);
+
       const menuButtonElement = this.appTopbar?.menuButton?.nativeElement;
       const searchInputElement = this.searchInput?.nativeElement;
 
       if (sidebarElement && menuButtonElement && searchInputElement && this.appTopbar.appTopbarDiv && this.layoutMainContainer) { // 確保 appTopbarDiv 和 layoutMainContainer 也存在
-        this.initializeMenuListeners();
         this.adjustMainContainerPadding(); // 確保在初始載入後也調整一次
       } else if (Date.now() - startTime < checkTimeout) {
         requestAnimationFrame(checkElements);
@@ -95,58 +126,21 @@ export class LayoutComponent implements AfterViewInit, OnDestroy {
 
     requestAnimationFrame(checkElements);
   }
-
-  private initializeMenuListeners() {
-    const sidebarElement = this.appSidebar?.el?.nativeElement;
-    const menuButtonElement = this.appTopbar?.menuButton?.nativeElement;
-    const searchInputElement = this.searchInput?.nativeElement;
-    if (!sidebarElement || !menuButtonElement || !searchInputElement) return;
-    this.clearMenuOutsideClickListener();
-    this.menuOutsideClickListener = this.createOutsideClickListener(
-      [sidebarElement, menuButtonElement, searchInputElement],
-      this.hideMenu.bind(this)
-    );
-    if (this.layoutService.state.staticMenuMobileActive) {
-      this.toggleBodyScroll(false);
-    }
-  }
-
-  private createOutsideClickListener(elements: HTMLElement[], callback: () => void): () => void {
-    return this.renderer.listen('document', 'click', event => {
-      const isOutsideClicked = elements.every(
-        element => !element.contains(event.target as HTMLElement)
-      );
-      if (isOutsideClicked) callback();
-    });
-  }
-
   private subscribeToRouterEvents() {
-    this.router.events.pipe(filter(event => event instanceof NavigationEnd)).pipe(untilDestroyed(this)).subscribe(() => {
-      this.hideMenu();
+    this.router.events.pipe(filter(event => event instanceof NavigationEnd), untilDestroyed(this)).subscribe(() => {
+      this.layoutService.onOutsideClick(); // 導航時關閉所有菜單
     });
   }
-
-  private hideMenu() {
-    this.layoutService.state.overlayMenuActive = false;
-    this.layoutService.state.staticMenuMobileActive = false;
-    this.layoutService.state.menuHoverActive = false;
-    this.clearMenuOutsideClickListener();
-    this.toggleBodyScroll(true);
-  }
-
-  private clearMenuOutsideClickListener() {
-    if (this.menuOutsideClickListener) {
-      this.menuOutsideClickListener();
-      this.menuOutsideClickListener = null;
-    }
-  }
-
   private toggleBodyScroll(enable: boolean): void {
     document.body.classList.toggle('blocked-scroll', !enable);
   }
   @HostListener('window:resize', ['$event'])
   onResize(event: any): void {
     this.adjustMainContainerPadding();
+    // 當視窗大小改變時，也觸發一次菜單狀態的調整
+    // 這將確保在桌面和行動裝置模式之間切換時，菜單狀態能夠正確響應
+    // 這裡調用 onOutsideClick 其實只是為了重置狀態，讓 layoutService 自己判斷
+    this.layoutService.onOutsideClick();
   }
 
   adjustMainContainerPadding(): void {
@@ -154,21 +148,25 @@ export class LayoutComponent implements AfterViewInit, OnDestroy {
       this.renderer.setStyle(this.layoutMainContainer.nativeElement, 'paddingTop', `${this.appTopbar.appTopbarDiv.nativeElement.offsetHeight}px`);
     }
   }
-  get containerClass() {
+  containerClass = computed(() => {
+    const config = this.layoutService.config();
     return {
-      'layout-theme-light': this.layoutService.config().colorScheme === 'light',
-      'layout-theme-dark': this.layoutService.config().colorScheme === 'dark',
-      'dark-theme': this.layoutService.config().colorScheme === 'dark', // 添加 dark-theme class
-      'light-theme': this.layoutService.config().colorScheme === 'light', // 添加 light-theme class (可選，因為預設是 light)
-      'layout-overlay': this.layoutService.config().menuMode === 'overlay',
-      'layout-static': this.layoutService.config().menuMode === 'static',
-      'layout-static-inactive': this.layoutService.state.staticMenuDesktopInactive && this.layoutService.config().menuMode === 'static',
-      'layout-overlay-active': this.layoutService.state.overlayMenuActive,
-      'layout-mobile-active': this.layoutService.state.staticMenuMobileActive,
-      'p-input-filled': this.layoutService.config().inputStyle === 'filled',
-      'p-ripple-disabled': !this.layoutService.config().ripple
-    }
-  }
+      'layout-theme-light': config.colorScheme === 'light',
+      'layout-theme-dark': config.colorScheme === 'dark',
+      'dark-theme': config.colorScheme === 'dark',
+      'light-theme': config.colorScheme === 'light',
+      'layout-overlay': config.menuMode === 'overlay',
+      'layout-static': config.menuMode === 'static',
+      // 直接使用 layoutService 中的 Signal
+      'layout-static-inactive': this.layoutService.isStaticMenuDesktopInactive() && config.menuMode === 'static',
+      'layout-overlay-active': this.layoutService.isOverlayMenuActive(),
+      'layout-mobile-active': this.layoutService.isStaticMenuMobileActive(),
+      'p-input-filled': config.inputStyle === 'filled',
+      'p-ripple-disabled': !config.ripple,
+      // 增加 profileSidebarVisible 的 class
+      'layout-profile-sidebar-active': this.layoutService.isProfileSidebarVisible()
+    };
+  });
 
   private delayAction(callback: () => void, delay = 10): void {
     setTimeout(callback, delay);
@@ -191,6 +189,7 @@ export class LayoutComponent implements AfterViewInit, OnDestroy {
       this.activeIndex = this.tabs.length - 1;
     }
   }
-  onMaskClick() { this.hideMenu(); }
-  onToggleTheme() { this.layoutService.toggleColorScheme(); }
+  onToggleTheme() {
+    this.layoutService.toggleColorScheme();
+  }
 }

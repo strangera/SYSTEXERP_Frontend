@@ -170,6 +170,21 @@ export const formatTimeHHMM = (value: string | number | Date): string => {
   return `${strValue.substring(0, 2)}:${strValue.substring(2, 4)}`;
 };
 
+// HH:MM:SS
+export const formatTimeHHMMSS = (value: string | number | Date): string => {
+  if (!value) return '';
+
+  if (value instanceof Date) {
+    const hh = String(value.getHours()).padStart(2, '0');
+    const mm = String(value.getMinutes()).padStart(2, '0');
+    const ss = String(value.getSeconds()).padStart(2, '0');
+    return `${hh}:${mm}:${ss}`;
+  }
+
+  const strValue = String(value).padStart(6, '0'); // 確保是6位數，不足補0
+  return `${strValue.substring(0, 2)}:${strValue.substring(2, 4)}:${strValue.substring(4, 6)}`;
+};
+
 
 // 000,000,000
 export const formatAmount = (val: number | string): string => {

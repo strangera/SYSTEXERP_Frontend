@@ -75,10 +75,10 @@ export class TLS12060Component extends BasicQueryPageComponent<Potential_Custome
   // 查詢
   queryForm = this.formBuilder.group({
     // 先建立表單，還不確定table內容
-    contract_type: [[]],  // 合約種類
-    contract_status: [[]], //  合約狀態 (可能是TLS14010這支)
-    CreatedDateStart: [null],  // 接洽日期_起始日
-    CreatedDateEnd: [null],  // 接洽日期_終止日
+    contract_type: [[]],  // 合約種類(要約書、契約書)
+    contract_status: [[]], //  合約狀態 (未審核、已審核、已作廢)
+    CreatedDateStart: [null, [Validators.required]],  // 接洽日期_起始日
+    CreatedDateEnd: [null, [Validators.required]],  // 接洽日期_終止日
 
     contact_USR: [[], [Validators.maxLength(100)]], // 接洽人員
     cus_uniform_id: [[], [Validators.maxLength(100)]], // 廠商統一編號
@@ -91,7 +91,7 @@ export class TLS12060Component extends BasicQueryPageComponent<Potential_Custome
     each_row: [10, [Validators.min(1), Validators.max(100)]], // 每頁顯示行數
     version_start: [0, [Validators.min(0)]], // 版本起始
     version_end: [0, [Validators.min(0)]], // 版本終止
-    counter: ['', [Validators.min(0)]], // 專櫃編號
+    counter: [[], [Validators.min(0)]], // 專櫃編號
 
     //分頁查詢
     ...createPaginationConfig([{ field: 'contact_USR_No', order: 1 }]), // 分頁和排序參數
@@ -100,8 +100,15 @@ export class TLS12060Component extends BasicQueryPageComponent<Potential_Custome
   // ----------------------------------------------------------------
   totalRecords = 0;// 分頁和排序參數 // 排序需要
 
-  contact_type_Option: option[] = []; // 合約種類
-  contract_status_Option: option[] = []; // 合約狀態
+  contact_type_Option: option[] = [
+    {value: '3', label: '要約書'},
+    {value: '4', label: '契約書'},
+  ]; // 合約種類
+  contract_status_Option: option[] = [
+    {value: '1', label: '未審核'},
+    {value: '2', label: '已審核'},
+    {value: '3', label: '已作廢'},
+  ]; // 合約狀態
   contactName_Option: option[] = []; // 接洽人員
 
   bus_type_Option: apiOption[] = []; // 業種-大分類代碼
@@ -110,6 +117,7 @@ export class TLS12060Component extends BasicQueryPageComponent<Potential_Custome
   location_Option: apiOption[] = []; // 位置編號
   cus_uniform_Option: POS2013[] = []; // 廠商統一編號(pos2013)
   contact_USR_Option: apiOption[] = [];  // 接洽人員代碼/名稱
+  TLTTalent_Option: apiOption[] = []; // 專櫃編號
 
   data: Potential_Customer[] = [];
   columns: Column[] = [
@@ -273,6 +281,16 @@ export class TLS12060Component extends BasicQueryPageComponent<Potential_Custome
       }));
       console.log('area_Option:', this.area_Option);
     });
+    // 查 櫃編
+    this.tls12060Service.queryTLTTALENT_DropDownList({}).subscribe((response) => {
+      this.TLTTalent_Option = response.Data.map((item: any) => ({
+        No: item.No, // 櫃編 代碼
+        Name: item.Name, // 櫃編 名稱
+        Label: item.No + '/' + item.Name, // 組合成顯示用的Label
+      }));
+      console.log('area_Option:', this.TLTTalent_Option);
+    });
+
     // 查 統編
     this.tls12060Service.queryPOS2013_DropDownList({ "VEN_Flag": '1' }).subscribe((response) => {
       // 去除重複的 No，只保留第一筆

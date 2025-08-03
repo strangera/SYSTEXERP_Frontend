@@ -5,12 +5,11 @@ import { PrimeTemplate } from 'primeng/api';
 import { NgFor, NgClass, NgIf } from '@angular/common';
 
 @Component({
-    selector: 'app-table-expansion',
-    templateUrl: './table-expansion.component.html',
-    styleUrl: './table-expansion.component.scss',
-    animations: [expandAnimation],
-    standalone: true,
-    imports: [TableModule, PrimeTemplate, NgFor, NgClass, NgIf]
+  selector: 'app-table-expansion',
+  templateUrl: './table-expansion.component.html',
+  animations: [expandAnimation],
+  standalone: true,
+  imports: [TableModule, PrimeTemplate, NgFor, NgClass, NgIf]
 })
 export class TableExpansionComponent implements OnInit {
   @Input() expansionDataKey = '';

@@ -1,0 +1,17 @@
+<form [formGroup]="queryForm" (ngSubmit)="onSubmit(queryForm)">
+    <div class="grid p-fluid">
+        <app-dropdown class="col-12 md:col-6 lg:col-5" label="單選下拉" controlName="dropdown" [options]="systemTypeOptions"
+            optionLabel="label" optionValue="value" [control]="queryForm.controls.dropdown" [submitted]="submitted" />
+        <app-dropdown-range class="col-12 md:col-6 lg:col-5" label="下拉範圍" controlName="dropdownRange"
+            [startControl]="queryForm.controls.dropdownRangeStart" [endControl]="queryForm.controls.dropdownRangeEnd"
+            [submitted]="submitted" [options]="systemTypeOptions" optionLabel="label" optionValue="value" />
+        <app-radiobutton class="col-12" label="radio多選" groupname="radiolist" [control]="queryForm.controls.radiolist"
+            [options]="systemTypeOptions" [submitted]="submitted" />
+        <app-radiobutton-yn class="col-12" label="radio是/否" groupname="radioYN" [control]="queryForm.controls.radioYN"
+            [submitted]="submitted" [showAll]="true" />
+    </div>
+    <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+        <app-button btnType="clear"></app-button>
+        <app-button btnType="query" [loading]="loading"></app-button>
+    </div>
+</form>

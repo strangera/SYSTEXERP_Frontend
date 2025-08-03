@@ -1,0 +1,4 @@
+<app-table [data]="data" [columns]="columns" (edit)="onEdit($event)" (detail)="onDetail($event)"
+    [isRowSelectable]="isRowSelectable" [showCheckBox]="true"></app-table>
+<app-table dataKey="id" [data]="dataGroup" [columns]="columns2" [columnGroup]="columnGroup" (edit)="onEdit($event)"
+    (detail)="onDetail($event)" [showCheckBox]="true" expansionDataKeys="children" [groupRowsBy]="'bank'"></app-table>

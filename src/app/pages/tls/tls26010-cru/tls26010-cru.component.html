@@ -71,13 +71,10 @@
     <app-table [showCheckBox]="!isFormReadable"
                [showEdit]="false"
                [showDetail]="false"
-               [showDelete]="false"
+               [showDelete]="isFormEditable || isFormCreateable"
                [showManage]="false"
                [showReportMode]="false"
                [isRowSelectable]="isRowSelectable"
-               [showExcel]="isFormEditable"
-               (exportExcel)="onExportExcel()"
-               (importExcel)="onImportExcel($event)"
                [data]="ecrTableFiltered"
                [dataKey]="'tlt_no'"
                [tableKey]="'TLS26010_ECR'"
@@ -98,7 +95,7 @@
     <app-table [showCheckBox]="!isFormReadable"
                [showEdit]="false"
                [showDetail]="false"
-               [showDelete]="false"
+               [showDelete]="isFormEditable || isFormCreateable"
                [showManage]="false"
                [showReportMode]="false"
                [isRowSelectable]="isRowSelectable"
@@ -116,7 +113,7 @@
 <app-dialog [visible]="!!dialogVisible()"
             [header]="dialogVisible() === 'ecr' ? '新增收銀機' : '新增專櫃'"
             (visibleChange)="dialogVisible.set(!1)"
-            (save)="onSubmit()"
+            (save)="onDialogSubmit()"
             [height]="'50vh'">
   <form [formGroup]="dataForm">
     <div class="grid p-fluid">
@@ -127,8 +124,7 @@
                       optionLabel="Name"
                       optionValue="No"
                       [control]="dataForm.controls.sys3800"
-                      [submitted]="submitted"
-                      (changeEvent)="dialogChange($event)"></app-dropdown>
+                      [submitted]="submitted"></app-dropdown>
       </div>
       <div class="col-12 md:col-6 lg:col-4">
         <app-dropdown label="樓層"
@@ -137,8 +133,7 @@
                       optionLabel="Name"
                       optionValue="No"
                       [control]="dataForm.controls.sys3900"
-                      [submitted]="submitted"
-                      (changeEvent)="dialogChange($event)"></app-dropdown>
+                      [submitted]="submitted"></app-dropdown>
       </div>
       <!-- <div class="col-12 md:col-6 lg:col-4">
           <app-dropdown label="區域"

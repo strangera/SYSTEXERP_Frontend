@@ -80,8 +80,8 @@ export class TLS23010Component extends BasicQueryPageComponent<any> {
   customPageSize = 1000;
 
   queryForm = this.formBuilder.group({
-    TXN_DateStart: [new Date('2020-01-01'), [Validators.required]],
-    TXN_DateEnd: [new Date('2020-01-16'), [Validators.required]],
+    TXN_DateStart: [new Date('2024-01-01'), [Validators.required]],
+    TXN_DateEnd: [new Date('2024-01-31'), [Validators.required]],
     ECR_No: [[]], // ✅ 收銀機號 → 陣列
     TXN_No_Start: [null], // 交易序號(起)
     TXN_No_End: [null], // 交易序號(迄)

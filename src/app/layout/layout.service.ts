@@ -9,44 +9,28 @@ export interface AppConfig {
   menuMode: string;
   scale: number;
 }
-
-interface LayoutState {
-  staticMenuDesktopInactive: boolean;
-  overlayMenuActive: boolean;
-  profileSidebarVisible: boolean;
-  configSidebarVisible: boolean;
-  staticMenuMobileActive: boolean;
-  menuHoverActive: boolean;
-}
-
-@Injectable({
-  providedIn: 'root',
-})
+@Injectable({ providedIn: 'root' })
 export class LayoutService {
-  _config: AppConfig = {
+  config = signal<AppConfig>({
     ripple: false,
     inputStyle: 'outlined',
     menuMode: 'static',
     colorScheme: 'light',
-    theme: 'lara-light-indigo',
+    theme: 'blue',
     scale: 14,
-  };
+  });
 
-  config = signal<AppConfig>(this._config);
-
-  state: LayoutState = {
-    staticMenuDesktopInactive: false,
-    overlayMenuActive: false,
-    profileSidebarVisible: false,
-    configSidebarVisible: false,
-    staticMenuMobileActive: false,
-    menuHoverActive: false,
-  };
+  // 在這裡保留一份初始配置，用於 effect 內部判斷是否主題發生了變化
+  private initialConfig: AppConfig = { ...this.config() }; // 深拷貝初始值
+  isStaticMenuDesktopInactive = signal(false); // 桌機靜態模式下側邊欄是否不活躍
+  isOverlayMenuActive = signal(false);         // 覆蓋模式下側邊欄是否活躍
+  isStaticMenuMobileActive = signal(false);    // 手機模式下側邊欄是否活躍
+  isProfileSidebarVisible = signal(false);     // 個人資料側邊欄是否可見 (你原先的 profileSidebarVisible)
+  isConfigSidebarVisible = signal(false);      // 配置側邊欄是否可見 (你原先的 configSidebarVisible)
+  isMenuHoverActive = signal(false);           // 菜單懸停是否活躍 (你原先的 menuHoverActive)
 
   private configUpdate = new Subject<AppConfig>();
-  private overlayOpen = new Subject<any>();
-  isDarkMode = signal(false);
-
+  private overlayOpen = new Subject<void>();
   configUpdate$ = this.configUpdate.asObservable();
   overlayOpen$ = this.overlayOpen.asObservable();
 
@@ -54,52 +38,81 @@ export class LayoutService {
     effect(() => {
       const config = this.config();
       this.updateThemeClass(config.colorScheme === 'dark');
-      if (this.updateStyle(config)) {
-        this.changeTheme();
+      // 當 colorScheme 或 theme 改變時才需要重新載入
+      if (
+        config.colorScheme !== this.initialConfig.colorScheme ||
+        config.theme !== this.initialConfig.theme
+      ) {
+        this.loadThemeCss(config.theme, config.colorScheme);
       }
+      // 更新 initialConfig 以便下次 effect 運行時進行比較
+      this.initialConfig = { ...config };
+
       this.changeScale(config.scale);
       this.onConfigUpdate();
-    }, { allowSignalWrites: true }); // 添加 allowSignalWrites: true
+    }, { allowSignalWrites: true });
+    // 監聽 overlayOpen$ 以在側邊欄打開時強制關閉其他側邊欄
+    this.overlayOpen$.subscribe(() => {
+      // 當任何一個 overlay (例如 menu 或 profile sidebar) 打開時，
+      // 確保其他類似的 overlay 關閉，避免多個重疊。
+      if (this.isOverlayMenuActive() || this.isStaticMenuMobileActive()) {
+        this.isProfileSidebarVisible.set(false); // 確保 profileSidebar 關閉
+      }
+      if (this.isProfileSidebarVisible()) {
+        this.isOverlayMenuActive.set(false);
+        this.isStaticMenuMobileActive.set(false);
+      }
+    });
   }
 
-
-  updateStyle(config: AppConfig) {
-    return (
-      config.theme !== this._config.theme ||
-      config.colorScheme !== this._config.colorScheme
-    );
+  // 現在的邏輯是根據 colorScheme 和 theme 來構建路徑
+  private loadThemeCss(themeName: string, colorScheme: string) {
+    const themeLink = document.getElementById('app-theme') as HTMLLinkElement;
+    if (themeLink) {
+      themeLink.href = `lara-${colorScheme}-${themeName}.css`;
+    }
   }
-
   onMenuToggle() {
     if (this.isOverlay()) {
-      this.state.overlayMenuActive = !this.state.overlayMenuActive;
-      if (this.state.overlayMenuActive) {
-        this.overlayOpen.next(null);
+      this.isOverlayMenuActive.update(val => !val);
+      if (this.isOverlayMenuActive()) {
+        this.overlayOpen.next();
+      }
+    } else { // Static menu mode
+      if (this.isDesktop()) {
+        this.isStaticMenuDesktopInactive.update(val => !val);
+      } else { // Mobile mode
+        this.isStaticMenuMobileActive.update(val => !val);
+        if (this.isStaticMenuMobileActive()) {
+          this.overlayOpen.next();
+        }
       }
     }
-
-    if (this.isDesktop()) {
-      this.state.staticMenuDesktopInactive =
-        !this.state.staticMenuDesktopInactive;
-    } else {
-      this.state.staticMenuMobileActive =
-        !this.state.staticMenuMobileActive;
-
-      if (this.state.staticMenuMobileActive) {
-        this.overlayOpen.next(null);
-      }
+    // 確保只在菜單實際打開時發送 overlayOpen 事件
+    if (this.isOverlayMenuActive() || this.isStaticMenuMobileActive()) {
+      this.overlayOpen.next();
     }
   }
-
+  // 用於在外部點擊時關閉所有菜單
+  onOutsideClick() {
+    this.isOverlayMenuActive.set(false);
+    this.isStaticMenuMobileActive.set(false);
+    this.isProfileSidebarVisible.set(false); // 也關閉個人資料側邊欄
+    this.isMenuHoverActive.set(false); // 關閉 hover 狀態
+    this.isConfigSidebarVisible.set(false); // 根據需求決定是否關閉配置側邊欄
+  }
   showProfileSidebar() {
-    this.state.profileSidebarVisible = !this.state.profileSidebarVisible;
-    if (this.state.profileSidebarVisible) {
-      this.overlayOpen.next(null);
+    this.isProfileSidebarVisible.update(val => !val); // 切換顯示狀態
+    if (this.isProfileSidebarVisible()) {
+      this.overlayOpen.next(); // 打開時發送事件
     }
   }
-
   showConfigSidebar() {
-    this.state.configSidebarVisible = true;
+    this.isConfigSidebarVisible.set(true);
+  }
+
+  hideConfigSidebar() { // 提供一個方法來關閉配置側邊欄
+    this.isConfigSidebarVisible.set(false);
   }
 
   isOverlay() {
@@ -109,38 +122,14 @@ export class LayoutService {
   isDesktop() {
     return window.innerWidth > 991;
   }
-
   isMobile() {
     return !this.isDesktop();
   }
 
   onConfigUpdate() {
-    this._config = { ...this.config() };
     this.configUpdate.next(this.config());
   }
 
-  changeTheme() {
-    const themeLink = document.getElementById('theme-css') as HTMLLinkElement;
-    if (!themeLink) {
-      return;
-    }
-    this.replaceThemeLink(`assets/layout/styles/themes/tomsworld/theme.css`);
-  }
-
-  replaceThemeLink(href: string) {
-    const id = 'theme-css';
-    const themeLink = document.getElementById(id) as HTMLLinkElement;
-    const cloneLinkElement = themeLink.cloneNode(true) as HTMLLinkElement;
-
-    cloneLinkElement.setAttribute('href', href);
-    cloneLinkElement.setAttribute('id', id + '-clone');
-
-    themeLink.parentNode!.insertBefore(cloneLinkElement, themeLink.nextSibling);
-    cloneLinkElement.addEventListener('load', () => {
-      themeLink.remove();
-      cloneLinkElement.setAttribute('id', id);
-    });
-  }
   updateThemeClass(isDark: boolean) {
     if (isDark) {
       document.documentElement.classList.add('dark-theme');
@@ -149,16 +138,24 @@ export class LayoutService {
       document.documentElement.classList.add('light-theme');
       document.documentElement.classList.remove('dark-theme');
     }
-    this.isDarkMode.set(isDark); // 現在可以在 effect 中寫入 isDarkMode signal
   }
   changeScale(value: number) {
     document.documentElement.style.fontSize = `${value}px`;
   }
-
   // 切換佈景主題 (light/dark)
   toggleColorScheme() {
+    this.config.update(currentConfig => {
+      const newColorScheme = currentConfig.colorScheme === 'light' ? 'dark' : 'light';
+      return {
+        ...currentConfig,
+        colorScheme: newColorScheme,
+      };
+    });
+  }
+  changeTheme(newTheme: string) {
     this.config.update(currentConfig => ({
-      ...currentConfig, colorScheme: currentConfig.colorScheme === 'light' ? 'dark' : 'light',
+      ...currentConfig,
+      theme: newTheme
     }));
   }
 }

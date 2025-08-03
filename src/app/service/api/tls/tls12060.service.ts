@@ -66,4 +66,8 @@ export class Tls12060Service {
     return this.http.post<any>(`${environment.ApiUrl}/querySYS3A00_DropDownList`, body);
   }
 
+  //查詢 專櫃編號(TLTTALENT)
+  queryTLTTALENT_DropDownList(body: any): Observable<any> {
+    return this.http.post<any>(`${environment.ApiUrl}/queryTLTTALENT_DropDownList`, body);
+  }
 }

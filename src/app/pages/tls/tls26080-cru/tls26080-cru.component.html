@@ -66,9 +66,12 @@
         </div>
       </div>
     </form>
-    <div *ngIf="isFormEditable"
+    <div *ngIf="isFormEditable || isFormCreateable"
          class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
-      <app-button label="讀取環友資料"
+      <app-button btnType="clear"
+                  (click)="onClear()"></app-button>
+      <app-button btnType="query"
+                  label="讀取環友資料"
                   (click)="queryCampaign()"></app-button>
       <app-button btnType="submit"
                   label="存檔"
@@ -76,25 +79,64 @@
     </div>
   </p-panel>
 
-  <!-- 專櫃資料表格 -->
-  <!-- <p-panel header="專櫃資料"
-           class="line-height-3 m-0 mb-3">
-    <app-table [showCheckBox]="true"
-               [data]="counterData"
-               [dataKey]="'pod_no'"
-               [columns]="counterColumns"
-               (delete)="onDeleteCounter($event)"></app-table> -->
-
-  <!-- 選中專櫃提示 -->
-  <!-- <div *ngIf="selectedCounter"
-         class="mt-2 p-2 bg-blue-50 border-round">
-      <small class="text-blue-600">
-        <i class="pi pi-info-circle mr-1"></i>
-        已選擇專櫃：{{ selectedCounter.counterCode }} -
-        {{ selectedCounter.commissionTypeName }}
-      </small>
+  <div class="card">
+    <div class="grid p-fluid">
+      <div class="col-12">
+        <!-- 環友資料表格 -->
+        <p-panel header="環友資料"
+                 class="line-height-3 m-0 mb-3">
+          <app-table [showCheckBox]="true"
+                     [showManage]="false"
+                     [data]="service.campaignData()"
+                     [dataKey]="'campaignId'"
+                     [columns]="campaignColumns"></app-table>
+        </p-panel>
+      </div>
     </div>
-  </p-panel> -->
+  </div>
+
+  <div class="card">
+    <div class="grid p-fluid">
+      <div class="col-12">
+        <!-- 環友專櫃資料表格 -->
+        <p-panel header="環友專櫃資料"
+                 class="line-height-3 m-0 mb-3">
+          <app-table [showCheckBox]="true"
+                     [showManage]="false"
+                     [data]="service.campaignCounterData()"
+                     [dataKey]="'campaignCounterId'"
+                     [columns]="campaignCounterColumns"></app-table>
+        </p-panel>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="grid p-fluid">
+      <div class="col-12">
+        <!-- 專櫃資料表格 -->
+        <p-panel header="專櫃資料"
+                 class="line-height-3 m-0 mb-3">
+          <app-table [showCheckBox]="true"
+                     [showManage]="false"
+                     [data]="service.TLS26080Detail()"
+                     [dataKey]="'tlt_no'"
+                     [columns]="counterColumns"
+                     (delete)="onDeleteCounter($event)"></app-table>
+
+          <!-- 選中專櫃提示 -->
+          <div *ngIf="selectedCounter"
+               class="mt-2 p-2 bg-blue-50 border-round">
+            <small class="text-blue-600">
+              <i class="pi pi-info-circle mr-1"></i>
+              已選擇專櫃：{{ selectedCounter.counterCode }} -
+              {{ selectedCounter.commissionTypeName }}
+            </small>
+          </div>
+        </p-panel>
+      </div>
+    </div>
+  </div>
 
   <!-- 扣款項目表格 -->
   <!-- <p-panel header="扣款項目明細" class="line-height-3 m-0 mb-3">
@@ -123,11 +165,11 @@
   </p-panel> -->
 
   <!-- 操作按鈕 -->
-  <div *ngIf="!isFormReadable"
+  <!-- <div *ngIf="!isFormReadable"
        class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
     <app-button btnType="clear"
                 (click)="onClearForm()"></app-button>
     <app-button btnType="submit"
                 (click)="onSubmit(dataForm)"></app-button>
-  </div>
+  </div> -->
 </div>

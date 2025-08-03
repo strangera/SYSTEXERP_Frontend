@@ -1,13 +1,13 @@
-import { Component, EventEmitter, Input, OnChanges, OnDestroy, OnInit, Output, SimpleChanges } from '@angular/core';
+import { Component, EventEmitter, Input, OnChanges, OnInit, Output, SimpleChanges } from '@angular/core';
 import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { BasicKitComponent } from '../../componentextends/basic-kit/basic-kit.component';
-import { Subject, takeUntil } from 'rxjs';
 import { NgIf, NgClass } from '@angular/common';
 import { InputGroupModule } from 'primeng/inputgroup';
 import { InputNumberModule } from 'primeng/inputnumber';
 import { InputGroupAddonModule } from 'primeng/inputgroupaddon';
 import { ControlMessagesComponent } from '../../component/control-messages/control-messages.component';
-
+import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
+@UntilDestroy()
 @Component({
   selector: 'app-input-number',
   templateUrl: './input-number.component.html',
@@ -24,7 +24,7 @@ import { ControlMessagesComponent } from '../../component/control-messages/contr
     ControlMessagesComponent,
   ],
 })
-export class InputNumberComponent extends BasicKitComponent implements OnInit, OnChanges, OnDestroy {
+export class InputNumberComponent extends BasicKitComponent implements OnInit, OnChanges {
   @Input() label = '';
   @Input() suffix: string | undefined | null = null;
   @Input() controlName = '';
@@ -45,11 +45,8 @@ export class InputNumberComponent extends BasicKitComponent implements OnInit, O
   @Input() showErrorMessage = true;
   @Output() changeEvent = new EventEmitter<any>();
   @Output() blurEvent = new EventEmitter<any>();
-  private destroy$ = new Subject<void>();
 
   ngOnInit(): void {
-    // 動態設置 max 值，// 設置 max 為 10^maxLength - 1
-    if (this.maxLength) { this.max = Math.pow(10, this.maxLength) - 1; }
     if (this.customPlaceholder) {
       this.placeholder = this.customPlaceholder;
     }
@@ -59,11 +56,9 @@ export class InputNumberComponent extends BasicKitComponent implements OnInit, O
       this.updateControlState(this.control);
     }
     // 訂閱 control 的狀態變化
-    this.control.statusChanges
-      .pipe(takeUntil(this.destroy$)) // 使用 takeUntil 確保組件銷毀時取消訂閱
-      .subscribe(() => {
-        this.updatePlaceholderState(); // 當狀態改變時重新評估 placeholder
-      });
+    this.control.statusChanges.pipe(untilDestroyed(this)).subscribe(() => {
+      this.updatePlaceholderState();
+    });
   }
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['submitted']?.currentValue === true) {
@@ -88,9 +83,5 @@ export class InputNumberComponent extends BasicKitComponent implements OnInit, O
 
   onBlur(event: Event) {
     this.blurEvent.emit(event);
-  }
-  ngOnDestroy(): void {
-    this.destroy$.next();
-    this.destroy$.complete();
   }
 }

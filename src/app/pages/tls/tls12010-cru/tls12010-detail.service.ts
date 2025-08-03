@@ -34,14 +34,14 @@ export class Tls12010DetailService {
 
     //---PotentialCustomer 增加 ID ---
     generatePotentialCustomerDetailId(data: any[]): number {
-        const maxId = Math.max(...data.map(p => p.ID), 0);
+        const maxId = Math.max(...data.map(p => p.id), 0);
         return maxId + 1;
     }
 
-    addPotentialCustomerDetail(data: any[], defaultNew: any, tableRef: any): void {
+    addPotential(data: any[], defaultNew: any, tableRef: any): void {
         const newItem = {
             ...defaultNew,
-            ID: this.generatePotentialCustomerDetailId(data),
+            id: this.generatePotentialCustomerDetailId(data),
             status: 'new'  // 👈 直接設好
         };
 
@@ -57,10 +57,10 @@ export class Tls12010DetailService {
         }, 0);
     }
 
-    deletePotentialCustomerDetail(selectedItems: any[], data: any[]): void {
+    deletePotential(selectedItems: any[], data: any[]): void {
         if (confirm(`確定要刪除 ${selectedItems.length} 個其他商場項目嗎？`)) {
             selectedItems.forEach(item => {
-                const index = data.findIndex(d => d.ID === item.ID);
+                const index = data.findIndex(d => d.id === item.id);
                 if (index > -1) {
                     if (data[index].status === 'new') {
                         data.splice(index, 1);
