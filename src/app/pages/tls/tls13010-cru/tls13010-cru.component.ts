@@ -1349,7 +1349,6 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
     console.log('下拉選單變更:', { field, newValue, oldValue, currentStatus: rowData._status });
 
     if (field === 'location_no' && newValue) {
-      // 位置編號變更時自動帶入詳細資訊
       const selectedLocation = this.locationWithDetailsOptions.find(
         location => location.value === newValue
       );
@@ -1360,7 +1359,12 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
         if (targetIndex > -1) {
           const selected = selectedLocation as unknown as Record<string, unknown>;
 
-          // ✅ 統一的狀態更新邏輯
+          // 🎯 保留原有的營業坪數，只有在原本沒有值時才使用新的
+          const originalSpace = this.locationData[targetIndex].tlt_space;
+          const newSpace = Number(selected['tlt_space'] ?? 0);
+          const finalSpace = (originalSpace && originalSpace > 0) ? originalSpace : newSpace;
+
+          // ✅ 統一的狀態更新邏輯（保留你原有的邏輯）
           const currentStatus = this.locationData[targetIndex]._status;
           let newStatus: 'new' | 'modified' | 'original' | 'deleted' | undefined;
 
@@ -1379,11 +1383,11 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
             tlt_building: String(selected['tlt_building'] ?? ''),
             tlt_floor: String(selected['tlt_floor'] ?? ''),
             area_no: String(selected['area_no'] ?? ''),
-            tlt_space: Number(selected['tlt_space'] ?? 0),
+            tlt_space: finalSpace, // ✅ 使用保護邏輯
             building_desc: String(selected['building_desc'] ?? ''),
             floor_desc: String(selected['floor_desc'] ?? ''),
             area_desc: String(selected['area_desc'] ?? ''),
-            _status: newStatus
+            _status: newStatus // ✅ 使用正確定義的 newStatus
           };
 
           // ✅ 強制觸發變更檢測
@@ -1397,15 +1401,12 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
         }
       }
     } else {
-      // ✅ 其他欄位變更的狀態處理
+      // ✅ 其他欄位變更的狀態處理（保留你原有的邏輯）
       if (rowData._status === 'new') {
-        // 新增資料保持 new 狀態
         rowData._status = 'new';
       } else if (!rowData._status || rowData._status === 'original') {
-        // 既有資料變更為 modified
         rowData._status = 'modified';
       }
-      // 如果已經是 modified，保持不變
     }
 
     this.saveToWorkflow();
