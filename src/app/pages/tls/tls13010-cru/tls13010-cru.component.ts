@@ -1346,8 +1346,6 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
   }): void {
     const { rowData, field, newValue, oldValue } = event;
 
-    console.log('下拉選單變更:', { field, newValue, oldValue, currentStatus: rowData._status });
-
     if (field === 'location_no' && newValue) {
       const selectedLocation = this.locationWithDetailsOptions.find(
         location => location.value === newValue
@@ -1359,21 +1357,19 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
         if (targetIndex > -1) {
           const selected = selectedLocation as unknown as Record<string, unknown>;
 
-          // 🎯 保留原有的營業坪數，只有在原本沒有值時才使用新的
-          const originalSpace = this.locationData[targetIndex].tlt_space;
+          // 🎯 修正邏輯：允許位置編號變更時更新營業坪數
           const newSpace = Number(selected['tlt_space'] ?? 0);
-          const finalSpace = (originalSpace && originalSpace > 0) ? originalSpace : newSpace;
 
-          // ✅ 統一的狀態更新邏輯（保留你原有的邏輯）
+          // ✅ 狀態邏輯保持不變
           const currentStatus = this.locationData[targetIndex]._status;
           let newStatus: 'new' | 'modified' | 'original' | 'deleted' | undefined;
 
           if (currentStatus === 'new') {
-            newStatus = 'new';  // 新增資料保持 new
+            newStatus = 'new';
           } else if (currentStatus === 'original' || currentStatus === 'modified') {
-            newStatus = 'modified';  // 既有資料變更為 modified
+            newStatus = 'modified';
           } else {
-            newStatus = 'modified';  // 預設為 modified
+            newStatus = 'modified';
           }
 
           // 更新資料
@@ -1383,17 +1379,15 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
             tlt_building: String(selected['tlt_building'] ?? ''),
             tlt_floor: String(selected['tlt_floor'] ?? ''),
             area_no: String(selected['area_no'] ?? ''),
-            tlt_space: finalSpace, // ✅ 使用保護邏輯
+            tlt_space: newSpace, // ✅ 直接使用新的營業坪數
             building_desc: String(selected['building_desc'] ?? ''),
             floor_desc: String(selected['floor_desc'] ?? ''),
             area_desc: String(selected['area_desc'] ?? ''),
-            _status: newStatus // ✅ 使用正確定義的 newStatus
+            _status: newStatus
           };
 
-          // ✅ 強制觸發變更檢測
+          // 強制觸發變更檢測
           this.locationData = [...this.locationData];
-
-          // 同步更新 rowData 參考
           Object.assign(rowData, this.locationData[targetIndex]);
 
           this.saveToWorkflow();
@@ -1401,7 +1395,7 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
         }
       }
     } else {
-      // ✅ 其他欄位變更的狀態處理（保留你原有的邏輯）
+      // 其他欄位變更的狀態處理
       if (rowData._status === 'new') {
         rowData._status = 'new';
       } else if (!rowData._status || rowData._status === 'original') {
