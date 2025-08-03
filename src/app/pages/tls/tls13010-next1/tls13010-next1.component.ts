@@ -164,7 +164,7 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
     {
       field: 'tpy_bdate',
       header: '起始年月',
-      type: 'text',
+      type: 'date',
       editable: true,
       autoWidth: true,
       dateFormat: 'year-month'

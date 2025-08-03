@@ -659,7 +659,6 @@ export class DataCleaner {
    */
   static cleanLocationInfo(rawLocations: any[]): CleanLocationInfo[] {
     return rawLocations
-      .filter(location => location._status !== 'deleted')
       .map(location => ({
         ...(this.hasValidId(location.id) ? { id: Number(location.id) } : {}),
         location_no: location.location_no || '',
