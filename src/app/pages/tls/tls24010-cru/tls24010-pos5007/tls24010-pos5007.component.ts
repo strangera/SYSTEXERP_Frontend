@@ -79,6 +79,7 @@ export class Tls24010Pos5007Component implements OnInit, OnChanges {
         ];
         this.dropDownListService.queryTLTTALENT_CHARGE_DropDownList(this.talent_id).pipe(untilDestroyed(this)).subscribe((data) => {
           this.tlt_idOptions = data.Data.map((item) => ({ ...item, label: `${item.tlt_id} - ${item.tlt_id_desc}` }));
+          this.insertRow();
         })
         break;
       default: break;

@@ -199,7 +199,13 @@
                 [(ngModel)]="rowData[col.field]" [ngModelOptions]="{ standalone: true }" [filter]="true"
                 placeholder="請輸入{{ col.header }}" [options]="getOptions(rowData, col)" [optionLabel]="col.optionLabel"
                 [optionValue]="col.optionValue" [disabled]="col.disabled ? col.disabled(rowData) : false"
-                (onChange)="onFieldChange(rowData, col.field, $event.value, rowIndex)" />
+                (onChange)="onFieldChange(rowData, col.field, $event.value, rowIndex)">
+                <ng-template let-item pTemplate=" item" *ngIf="col.templateLabel">
+                  <div class="flex align-items-center gap-2">
+                    <span>{{ item[col.templateLabel] }}</span>
+                  </div>
+                </ng-template>
+              </p-dropdown>
               <p-calendar *ngIf="col.type === 'date'" class="w-full" styleClass="min-w-max" [showIcon]="true"
                 [(ngModel)]="rowData[col.field]" [ngModelOptions]="{ standalone: true }" appendTo="body"
                 placeholder="請選擇{{ col.header }}" [dateFormat]="col.dateFormat || 'yy-mm-dd'"
@@ -233,7 +239,13 @@
                 placeholder="請輸入{{ col.header }}" [options]="getOptions(rowData, col)" [optionLabel]="col.optionLabel"
                 [optionValue]="col.optionValue"
                 [disabled]="col.disabled ? col.disabled(rowData) : alwaysEdit ? false : true"
-                (onChange)="onFieldChange(rowData, col.field, $event.value)" />
+                (onChange)="onFieldChange(rowData, col.field, $event.value)">
+                <ng-template let-item pTemplate="item" *ngIf="col.templateLabel">
+                  <div class="flex align-items-center gap-2">
+                    <span>{{ item[col.templateLabel] }}</span>
+                  </div>
+                </ng-template>
+              </p-dropdown>
               <p-calendar *ngIf="col.type === 'date'" class="w-full" styleClass="min-w-max" [showIcon]="true"
                 [(ngModel)]="rowData[col.field]" [ngModelOptions]="{ standalone: true }" appendTo="body"
                 placeholder="請選擇{{ col.header }}" [dateFormat]="col.dateFormat || 'yy-mm-dd'"

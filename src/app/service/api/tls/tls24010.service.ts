@@ -49,9 +49,11 @@ export interface POS5007Data {
   TXN_Disc?: number; // 單價折扣讓金額
   TXN_SaleAmt?: number; // 單價銷售金額
   tlt_id?: string; // 類別
+  tlt_id_desc?: string;
   PLU_TaxType?: string; // 稅別
   TXN_DiscCode?: string; // 折扣別
   TXN_DiscCode_Name?: string; // 折扣名稱
+  TXN_DiscName?: string;
 }
 
 export interface POS5008Data {
@@ -140,17 +142,17 @@ export interface UpdateTLS24010Payload {
     }[];
   };
   DiscCodeEditList?: {
-    POS5007_ID: number;
+    POS5007_ID?: number;
     Talent_ID: number;
     TXN_DiscCode: string;
   }[];
   TLTIdEditList?: {
-    POS5007_ID: number;
+    POS5007_ID?: number;
     Talent_ID: number;
     tlt_id: string;
   }[];
   PayNoEditList?: {
-    POS5008_ID: number;
+    POS5008_ID?: number;
     PAY_No: string;
     TXN_PayAmt: number;
     CRD_Type: string;
@@ -173,6 +175,7 @@ export interface QueryPOS2004ForUpdatePayload {
 }
 
 export interface POS2004ForUpdateResponse {
+  id?: number;
   TLT_No: string;
   TLT_Name: string;
   tlt_id: string;
