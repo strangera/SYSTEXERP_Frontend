@@ -13,7 +13,7 @@
       <form
         [formGroup]="queryForm"
         id="queryForm"
-        (ngSubmit)="onSubmit(queryForm)"
+        (ngSubmit)="onSubmit()"
       >
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
@@ -61,10 +61,10 @@
     [totalRecords]="totalRecords"
     [lazy]="true"
     [loading]="loading"
-    (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"
+    (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit()"
     [showManage]="false"
     [showDelete]="false"
     [showReportMode]="true"
-    (onSubmit)="onSubmit(queryForm)"
+    (onSubmit)="onSubmit()"
   ></app-table>
 </div>

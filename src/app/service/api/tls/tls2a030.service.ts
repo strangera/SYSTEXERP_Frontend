@@ -1,19 +1,24 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { catchError, Observable, of, tap } from 'rxjs';
 import { environment } from '../../../../environments/environment';
+import { ErrorHandlerService } from '../../system/error-handler.service';
 
 @Injectable({
-  providedIn: 'root',
+  providedIn: 'root'
 })
 export class TLS2A030Service {
-  private apiUrl = `${environment.ApiUrl}/TLS0000/TLS2000`;
+  private apiUrl: string = environment.ApiUrl;
 
-  constructor(private http: HttpClient) {}
+  constructor(
+    private http: HttpClient,
+    private errorHandler: ErrorHandlerService
+  ) {}
 
   queryTLS2A030(data: any): Observable<any> {
-    return this.http.post<any>(`${this.apiUrl}/queryTLS2A030`, data);
+    return this.http.post<any>(`${this.apiUrl}/TLS0000/TLS2000/queryTLS2A030`, data).pipe(
+      tap(response => console.log('查詢結果:', response)),
+      catchError(error => this.errorHandler.handleError(error))
+    );
   }
-
-
 }

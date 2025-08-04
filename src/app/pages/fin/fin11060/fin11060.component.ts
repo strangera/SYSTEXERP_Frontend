@@ -1,119 +1,214 @@
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
-// Shared
-import { AuthService } from '../../../service/system/auth.service';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-import { ValidationService } from '../../../shared/service/validation.service';
-import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
+import { createPaginationConfig, Column, formatDate } from '../../../shared/componentkit/table/table.model';
+import { option } from '../../../shared/models/sys/sysb000.module';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { AccordionModule } from 'primeng/accordion';
-import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { TranslateModule } from '@ngx-translate/core';
-//
+import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
+import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
+import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
+import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
+import { CalendarRangeQuickComponent } from '../../../shared/componentkit/calendar-range-quick/calendar-range-quick.component';
+import { Tls12060Service } from '@service/api/tls/tls12060.service';
+import { InputNumberRangeComponent } from '@shared/componentkit/input-number-range/input-number-range.component';
+import { InputTextRangeComponent } from '@shared/componentkit/input-text-range/input-text-range.component';
+import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
+import { ReportTableGroupComponent } from '@shared/componentkit/report-table-group/report-table-group.component';
+
+export interface POS8011H {
+  id: number; // 主鍵，自動編號
+
+  contact_USR_No: string; // 接洽人員代碼
+  contact_USR_Name: string; // 接洽人員姓名
+  cus_type: string; // 廠商類型：1=統編、2=身份證字號、3=員工ID
+  cus_uniform_id: string; // 廠商統一編號 (根據類型不同有不同意義)
+  VEN_Name: string; // 廠商名稱
+  VEN_EngName?: string; // 廠商英文名稱
+  bus_type?: string; // 業種-大分類代碼
+  tlt_name?: string; // 品牌（專櫃名稱）
+  tlt_EngName?: string; // 品牌英文（專櫃名稱）
+  VEN_Boss: string; // 廠商聯絡人
+  VEN_BossTel: string; // 廠商聯絡人電話
+  VEN_BossTitle?: string; // 廠商聯絡人頭銜
+  VEN_BossFax?: string; // 廠商聯絡人傳真
+  VEN_BossMobile?: string; // 廠商聯絡人行動電話
+  VEN_BossEmail?: string; // 廠商聯絡人電子郵件
+  VEN_Addr?: string; // 公司通訊地址
+  VEN_PersonInCharge?: string; // 公司負責人
+  business_type?: string; // 經營方式
+  demanded_area?: number; // 需求面積 (小數，預設 0)
+  country_of_origin?: string; // 商品出產地
+  remarks?: string; // 備註 (HTML 格式)
+
+  CRT_Date: string; // 建立日期 (ISO 字串格式: YYYY-MM-DD)
+  CRT_USR_No?: string; // 建立人員代碼
+  CRT_USR_Name?: string; // 建立人員姓名
+  UPD_Date?: string; // 變更日期 (ISO 格式: YYYY-MM-DDTHH:mm:ss)
+  UPD_USR_No?: string; // 變更人員代碼
+  UPD_USR_Name?: string; // 變更人員姓名
+
+  CanDel?: boolean;  //能否刪除(僅顯示)
+}
 
 @Component({
     selector: 'app-fin11060',
     templateUrl: './fin11060.component.html',
     styleUrl: './fin11060.component.scss',
     standalone: true,
-    imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarComponent, TranslateModule]
+    imports: [MenubarComponent, ButtonComponent, InputTextComponent, InputTextRangeComponent, InputNumberComponent, RadiobuttonComponent, InputNumberRangeComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarComponent, CalendarRangeComponent, CalendarRangeQuickComponent, DropdownComponent, MultiSelectComponent, InputTextComponent, ReportTableGroupComponent, TranslateModule]
 })
 
-//1.1.1.6 產生二聯式電子未使用空白發票檔案
-export class FIN11060Component extends BasicQpageComponent implements OnInit {
-  //
-  queryForm = this.formBuilder.group({
-    onedatemm: [], // 申報年月
-  });
-  // 下拉資料多個呈現
-  // ----------------------------------------------------------------
-  roles: any[] = [
-    { id: 1, roleCode: 'ADMIN', roleName: 'Administrator' },
-    { id: 2, roleCode: 'USER', roleName: 'User' },
-    { id: 3, roleCode: 'GUEST', roleName: 'Guest' },
-  ];
-  // 表格
-  // ----------------------------------------------------------------
-  data: any[] = [
-    // 其他資料
-  ];
-  columns: any[] = [
-    { field: 'col1', header: '發票年月', visible: true },
-    { field: 'col2', header: '字軌', visible: true },
-    { field: 'col3', header: '發票號碼(起)', visible: true },
-    { field: 'col4', header: '發票號碼(迄)', visible: true },
-    { field: 'col5', header: '發票類別', visible: true },
-    { field: 'col6', header: '有無副聯', visible: true },
-    // 其他欄位
-  ];
-  // ----------------------------------------------------------------
-
-  constructor(
-    private router: Router,
-    private formBuilder: FormBuilder,
-    private messageService: NotificationService,
-    private authService: AuthService,
-    private validationService: ValidationService,
-    //
-  ) {
-    super(); // 呼叫父類建構子
-  }
-
-  ngOnInit(): void {
-    // 初始化
-    this.ProgNo = '110006';
-    this.cruPage = '/FIN1000/FIN11060CRU';
-    //
-    // ----------------------------------------------------------------
-    // ----------------------------------------------------------------
-
-    // ----------------------------------------------------------------
-  }
-
-  // ----------------------------------------------------------------
-  onSubmit(frm: FormGroup) {
-    console.log(frm.value);
-    this.submitted = true;
-    this.loading = true;
-    this.messageService.blockUi();
-
-    if (frm.valid && this.canQuery()) {
-      // 提交邏輯
-      // Service
-      // this.xxxService.queryMachine(frm.value as xxxInterface)
-      //  .subscribe((response: any) => {
-      //    this.rows = response.xxx;
-      // });
-    }
-
-    this.loading = false;
-    this.messageService.unblockUi();
-  }
-
-  onSubmitQuery(frm: FormGroup) {
-    // 查詢邏輯
-    this.onSubmit(frm);
-  }
-  // ----------------------------------------------------------------
-  onCreate() {
-    if (this.canAdd()) {
-      this.navigateWithState(this.router, CRUDStatus.Create, null, this.cruPage);
-    }
-  }
-
-  onEdit(data: any) {
-    if (this.canEdit()) {
-      this.navigateWithState(this.router, CRUDStatus.Edit, data, this.cruPage);
-    }
-  }
-
-  onDetail(data: any) {
-    this.navigateWithState(this.router, CRUDStatus.Read, data, this.cruPage);
-  }
-  onClearForm() {
-    this.queryForm.reset();  // 重置表單
-  }
+// 電子發票上送狀況表
+export class FIN11060Component extends BasicQueryPageComponent<POS8011H> implements OnInit{
+  // 查詢
+      queryForm = this.formBuilder.group({
+        // 先建立表單，還不確定POS8011H內容
+        SalesDateStart: [null, [Validators.required]],  // 銷售日期_起始日(必填)
+        SalesDateEnd: [null, [Validators.required]],  // 銷售日期_終止日(必填)
+        processDateStart: [null],  // 產檔日期_起始日
+        processDateEnd: [null],  // 產檔日期_終止日
+        GUI_No_start: [null, [Validators.maxLength(8), Validators.minLength(8), Validators.max(99999950)]], // 發票號碼(起)
+        GUI_No_end: [null, [Validators.maxLength(8), Validators.minLength(8), Validators.max(99999999)]], // 發票號碼(迄)
+        ECR_No_start: [null, [Validators.maxLength(8), Validators.minLength(8), Validators.max(99999950)]], // 收銀機代號(起)
+        ECR_No_end: [null, [Validators.maxLength(8), Validators.minLength(8), Validators.max(99999999)]], // 收銀機代號(迄)
+        
+        condition_type: [[]],  // 條件依據
+        show_error: [[]], //  是否只顯示異常
+        
+        //分頁查詢
+        ...createPaginationConfig([{ field: 'contact_USR_No', order: 1 }]), // 分頁和排序參數
+      });
+      // 表格
+      // ----------------------------------------------------------------
+      totalRecords = 0;// 分頁和排序參數 // 排序需要
+    
+      contact_type_Option: option[] = [
+        {label: '條件1', value: '1'},
+        {label: '條件2', value: '2'},
+        {label: '條件3', value: '3'},
+      ];
+      show_error_Option: option[] = [
+        {label: '是', value: 'Y'},
+        {label: '否', value: 'N'},
+      ]; 
+    
+      data: POS8011H[] = [];
+      columns: Column[] = [// 表格欄位定義
+        { field: 'SalesDateStart', header: '銷售日期_起始日', visible: true },
+        { field: 'SalesDateEnd', header: '銷售日期_終止日', visible: true },
+        { field: 'processDateStart', header: '產檔日期_起始日', visible: true },
+        { field: 'processDateEnd', header: '產檔日期_終止日', visible: true },
+        { field: 'GUI_No_start', header: '發票號碼(起)', visible: true },
+        { field: 'GUI_No_end', header: '發票號碼(迄)', visible: true },
+        { field: 'ECR_No_start', header: '收銀機代號(起)', visible: true },
+        { field: 'ECR_No_end', header: '收銀機代號(迄)', visible: true },
+        { field: 'condition_type', header: '條件依據', visible: true },
+        { field: 'show_error', header: '是否只顯示異常', visible: true },
+      ];
+    
+      selectedItems: POS8011H[] = [];// 多選項目
+    
+      // ----------------------------------------------------------------
+      constructor(private tls12060Service: Tls12060Service) {
+        super();
+      }
+    
+      ngOnInit(): void {
+        this.initializePage('FIN11060', 'FIN/FIN11060', this.queryForm, (form) => this.onSubmit(form));
+        this.loadOptions();
+      }
+    
+      onSubmit(frm: FormGroup) {
+        console.log('查詢條件', frm.value);
+        this.handleSubmit(frm, () => {
+          // this.tls12010Service.queryTLS12010(frm.value).subscribe({
+          //   next: (response) => {
+          //     if (response.Status === '0000') {
+          //       this.data = response.Data || [];
+          //       console.log('Result', this.data);
+          //       this.totalRecords = response.TotalCount || response.Data.length;
+          //       this.queryStateService.setQueryState(this.ProgNo, frm.value);
+          //     } else {
+          //       console.error('API error:', response.Status, response.Message);
+          //     }
+          //     this.loading = false;
+          //     this.messageService.unblockUi();
+          //   },
+          //   error: (err: string) => {
+          //     console.error('API error:', err);
+          //     this.loading = false;
+          //     this.messageService.unblockUi();
+          //   },
+          // });
+        });
+      }
+    
+      // 刪除項目
+      onDelete(data: POS8011H | POS8011H[]): void {
+        console.log('Delete data:', JSON.stringify(data, null, 2));
+    
+        const items = Array.isArray(data) ? data : [data];
+        if (items.length === 0) {
+          console.error('No items to delete');
+          this.messageService.errorBubble('無法刪除：沒有選中的項目');
+          return;
+        }
+    
+        // 收集所有有效的 ID
+        const idList = items
+          .filter((item) => item && item.id != null && item.id !== undefined)
+          .map((item) => item.id);
+    
+        if (idList.length === 0) {
+          console.error('No valid IDs to delete');
+          this.messageService.errorBubble('無法刪除：選中的項目缺少有效 ID');
+          return;
+        }
+    
+        // const deleteBody = {
+        //   idList: idList, // 符合 API 的 idList 格式
+        // };
+    
+        // this.tls12010Service.deleteTLS12010(deleteBody).subscribe({
+        //   next: (response) => {
+        //     if (response.Status === '0000') {
+        //       this.messageService.successBubble('選中項目刪除成功');
+        //     } else {
+        //       console.error('API error:', response.Status, response.Message);
+        //       this.messageService.errorBubble(`刪除失敗: ${response.Message}`);
+        //     }
+        //   },
+        //   error: (err: string) => {
+        //     console.error('API error:', err);
+        //     this.messageService.errorBubble('刪除失敗');
+        //   },
+        //   complete: () => {
+        //     this.onSubmit(this.queryForm);
+        //   },
+        // });
+    
+        this.selectedItems = [];
+      }
+    
+      isRowSelectable(rowData: POS8011H): boolean {
+        return rowData.CanDel ?? false;
+      }
+    
+      loadOptions() {
+        // 查 接待人員
+        // this.tls12060Service.queryTBLUSER_DropDownList({}).subscribe((response) => {
+        //   this.contact_USR_Option = response.Data.map((item: any) => ({
+        //     No: item.No, // 接待人員 代碼
+        //     Name: item.Name, // 接待人員 名稱
+        //     Label: item.No + '/' + item.Name, // 組合成顯示用的Label
+        //   }));
+        //   console.log('接待人員代號:', this.contact_USR_Option);
+        // });
+      }
 }
