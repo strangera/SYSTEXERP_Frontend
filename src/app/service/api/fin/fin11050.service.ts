@@ -1,17 +1,40 @@
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { BaseQueryRequest, BaseQueryResponse } from '../../../shared/models/api/base-api.interface';
+import { HttpClient } from '@angular/common/http';
+import { environment } from 'src/environments/environment';
 
 // --- FIN11050 查詢參數 Model 定義 ---
 export interface FIN11050QueryRequest extends BaseQueryRequest {
-  format_code?: string;      // 格式代號
-  format_name?: string;      // 格式名稱
+  INV_GUIType?: string;      // 發票格式代號
+  INV_GUIName?: string;      // 發票格式名稱
 }
 
 // --- FIN11050 回應資料 Model 定義 ---
 export interface FIN11050Data {
-  format_code: string;      // 格式代號
-  format_name: string;      // 格式名稱
+  id: number;                // 主鍵ID
+  mid: number;               // 關聯ID
+  INV_GUIType: string;       // 發票格式代號
+  INV_GUIName: string;       // 發票格式名稱
+  CRT_Date: string;          // 建立日期
+  CRT_USR_No: string;        // 建立人員編號
+  CRT_USR_Name: string;      // 建立人員名稱
+  UPD_Date: string;          // 更新日期
+  UPD_USR_No: string;        // 更新人員編號
+  UPD_USR_Name: string;      // 更新人員名稱
+}
+
+// --- 新增 FIN11050 資料請求 Model ---
+export interface FIN11050InsertRequest {
+  INV_GUIType: string;       // 發票格式代號
+  INV_GUIName: string;       // 發票格式名稱
+}
+
+// --- 更新 FIN11050 資料請求 Model ---
+export interface FIN11050UpdateRequest {
+  id: number;                // 主鍵ID
+  INV_GUIType: string;       // 發票格式代號
+  INV_GUIName: string;       // 發票格式名稱
 }
 
 @Injectable({
@@ -19,45 +42,22 @@ export interface FIN11050Data {
 })
 export class Fin11050Service {
 
-  constructor() { }
+  private apiUrl = environment.ApiUrl + '/FIN0000/INV1000';
+
+  constructor(private http: HttpClient) { }
 
   // 查詢
-  queryFIN11050(params: FIN11050QueryRequest): Observable<BaseQueryResponse<FIN11050Data>> {
-    // 回傳假資料
-    return new Observable((observer) => {
-      observer.next({
-        Data: [
-          {
-            format_code: 'A1',
-            format_name: '薪資格式'
-          },
-          {
-            format_code: 'B2',
-            format_name: '獎金格式'
-          }
-        ],
-        Status: '0000',
-        TotalCount: 2,
-        TotalPage: 1,
-        Message: '查詢成功'
-      } as BaseQueryResponse<FIN11050Data>);
-      observer.complete();
-    });
+  queryFIN11050(data: FIN11050QueryRequest): Observable<BaseQueryResponse<FIN11050Data>> {
+    return this.http.post<BaseQueryResponse<FIN11050Data>>(`${this.apiUrl}/queryFIN11050`, data);
   }
 
   // 新增
-  insertFIN11050(body: FIN11050Data): Observable<{ Status: string, Message: string }> {
-    return new Observable((observer) => {
-      observer.next({ Status: '0000', Message: '新增成功' });
-      observer.complete();
-    });
+  insertFIN11050(data: FIN11050InsertRequest): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/insertFIN11050`, data);
   }
 
   // 修改
-  updateFIN11050(body: FIN11050Data): Observable<{ Status: string, Message: string }> {
-    return new Observable((observer) => {
-      observer.next({ Status: '0000', Message: '修改成功' });
-      observer.complete();
-    });
+  updateFIN11050(data: FIN11050UpdateRequest): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/updateFIN11050`, data);
   }
 }

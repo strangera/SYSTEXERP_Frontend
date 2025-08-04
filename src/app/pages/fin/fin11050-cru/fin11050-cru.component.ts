@@ -1,24 +1,42 @@
 import { Component, OnInit } from '@angular/core';
-import { Validators, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { FIN11050Data, Fin11050Service } from '../../../service/api/fin/fin11050.service';
+import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
+import { FIN11050Data, FIN11050InsertRequest, FIN11050UpdateRequest, Fin11050Service } from '../../../service/api/fin/fin11050.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { PanelModule } from 'primeng/panel';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { NgIf } from '@angular/common';
+import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
+import { finalize } from 'rxjs';
 
 @Component({
-    selector: 'app-fin11050-cru',
-    templateUrl: './fin11050-cru.component.html',
-    styleUrl: './fin11050-cru.component.scss',
-    standalone: true,
-    imports: [MenubarComponent, ButtonComponent, PanelModule, FormsModule, ReactiveFormsModule, InputTextComponent, NgIf]
+  selector: 'app-fin11050-cru',
+  templateUrl: './fin11050-cru.component.html',
+  styleUrl: './fin11050-cru.component.scss',
+  standalone: true,
+  imports: [
+    NgIf,
+    MenubarComponent,
+    ButtonComponent,
+    PanelModule,
+    FormsModule,
+    ReactiveFormsModule,
+    InputTextComponent,
+  ]
 })
 export class FIN11050CRUComponent extends BasicCruPageComponent<FIN11050Data> implements OnInit {
-  dataForm = this.formBuilder.group({
-    format_code: ['', [Validators.required, Validators.maxLength(2)]],    // 格式代號
-    format_name: ['', [Validators.required, Validators.maxLength(100)]]   // 格式名稱
+  dataForm = this.formBuilder.nonNullable.group({
+    id: [0], // 主鍵
+    mid: [0], // 關聯ID
+    INV_GUIType: ['', [Validators.required, Validators.maxLength(2)]], // 格式代號
+    INV_GUIName: ['', [Validators.required, Validators.maxLength(100)]], // 格式名稱
+    CRT_Date: [''], // 建立日期
+    CRT_USR_No: [''], // 建立人員編號
+    CRT_USR_Name: [''], // 建立人員名稱
+    UPD_Date: [''], // 更新日期
+    UPD_USR_No: [''], // 更新人員編號
+    UPD_USR_Name: [''], // 更新人員名稱
   });
 
   constructor(private fin11050Service: Fin11050Service) {
@@ -27,60 +45,50 @@ export class FIN11050CRUComponent extends BasicCruPageComponent<FIN11050Data> im
 
   ngOnInit(): void {
     this.initializePage('FIN11050', this.dataForm);
-    if (this.isFormReadable) {
-      this.dataForm.disable();
-    }
+    this.setReadOnlyFields();
   }
 
-  onSubmit(frm: FormGroup): void {
-    this.messageService.blockUi();
-    this.submitted = true;
-
-    if (frm.invalid) {
-      this.messageService.unblockUi();
-      return;
-    }
-
-    const formValue = frm.getRawValue();
-
-    if (this.isFormCreateable) {
-      this.fin11050Service.insertFIN11050(formValue).subscribe({
-        next: (response) => {
-          if (response.Status === '0000') {
-            this.messageService.successBubble('新增成功');
-            this.dataForm.reset();
-          } else {
-            this.messageService.errorBubble(response.Message || '新增失敗');
+  onSubmit(form: FormGroup): void {
+    const formValue = form.getRawValue();
+    this.handleSubmit(form, () => {
+      switch (this.crudstatus) {
+        case CRUDStatus.Create:
+          if (this.canAdd()) {
+            const rb: FIN11050InsertRequest = {
+              INV_GUIType: formValue.INV_GUIType,
+              INV_GUIName: formValue.INV_GUIName,
+            };
+            this.fin11050Service.insertFIN11050(rb)
+              .pipe(finalize(() => this.loading = false))
+              .subscribe(() => {
+                this.messageService.successBubble('新增成功');
+                this.dataForm.reset();
+              });
           }
-        },
-        error: () => {
-          this.messageService.errorBubble('新增失敗');
-        },
-        complete: () => {
-          this.messageService.unblockUi();
-          this.submitted = false;
-        }
-      });
-    } else if (this.isFormEditable) {
-      this.fin11050Service.updateFIN11050(formValue).subscribe({
-        next: (response) => {
-          if (response.Status === '0000') {
-            this.messageService.successBubble('修改成功');
-          } else {
-            this.messageService.errorBubble(response.Message || '修改失敗');
+          break;
+        case CRUDStatus.Edit:
+          if (this.canEdit()) {
+            const rb: FIN11050UpdateRequest = {
+              id: formValue.id,
+              INV_GUIType: formValue.INV_GUIType,
+              INV_GUIName: formValue.INV_GUIName,
+            };
+            this.fin11050Service.updateFIN11050(rb)
+              .pipe(finalize(() => this.loading = false))
+              .subscribe(() => {
+                this.messageService.successBubble('更新成功');
+                this.onCancel();
+              });
           }
-        },
-        error: () => {
-          this.messageService.errorBubble('修改失敗');
-        },
-        complete: () => {
-          this.messageService.unblockUi();
-          this.submitted = false;
-        }
-      });
-    } else {
-      this.messageService.unblockUi();
-      this.submitted = false;
+          break;
+      }
+    });
+  }
+
+  setReadOnlyFields() {
+    // 編輯時「格式代號」不可異動
+    if (this.crudstatus === 'Edit') {
+      this.dataForm.get('INV_GUIType')?.disable();
     }
   }
 }
