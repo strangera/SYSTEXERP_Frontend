@@ -19,7 +19,7 @@
             <app-calendar
               label="銷售日期"
               calendarType="dateOne"
-              [control]="queryForm.controls.salesDate"
+              [control]="queryForm.controls.TXN_Date"
               [submitted]="submitted"
             ></app-calendar>
           </div>
@@ -61,14 +61,14 @@
           <div class="col-12 lg:col-8">
             <app-radiobutton
               label="查詢條件"
-              groupname="radioOption"
-              [control]="queryForm.controls.radioOption"
+              groupname="SortOrder"
+              [control]="queryForm.controls.SortOrder"
               [submitted]="submitted"
               [options]="[
                 { value: 'ECR', label: '收銀機號' },
                 { value: 'payTool', label: '支付工具' },
               ]"
-              (valueChange)="queryForm.controls.radioOption.setValue($event)"
+              (valueChange)="queryForm.controls.SortOrder.setValue($event)"
             ></app-radiobutton>
           </div>
         </div>
@@ -91,7 +91,7 @@
     [columns]="columns"
     [selectedItems]="selectedItems"
     (selectionChange)="selectedItems = $event"
-    [showCheckBox]="true"
+    [showCheckBox]="false"
     dataKey="id"
     [multiSortMeta]="[{ field: 'pendingApprovalRegisterCode', order: 1 }]"
     [totalRecords]="totalRecords"
@@ -99,5 +99,6 @@
     [loading]="loading"
     (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"
     [showManage]="false"
+    [showDelete]="false"
   ></app-table>
 </div>

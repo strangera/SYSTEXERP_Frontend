@@ -85,7 +85,7 @@ import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
     InputNumberModule,
     CalendarModule,
     CheckboxModule,
-    NgStyle,
+    // NgStyle,
     SkeletonModule,
     TableExpansion2Component,
     TableExport2Component,

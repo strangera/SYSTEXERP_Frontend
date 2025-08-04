@@ -204,4 +204,9 @@ export class AuthService {
       return null;
     }
   }
+getOuterToken(): Observable<ApiResponse<string>> {
+  return this.http.get<ApiResponse<string>>(
+    `${environment.ApiUrl}/SSOLogin/getOuterToken`
+  );
+}
 }

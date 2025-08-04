@@ -15,6 +15,7 @@
         (ngSubmit)="onSubmit(queryForm)"
       >
         <div class="grid p-fluid">
+          <!-- 大分類代碼 -->
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown
               label="大分類代碼"
@@ -26,6 +27,8 @@
               [submitted]="submitted"
             ></app-dropdown>
           </div>
+
+          <!-- 中分類代碼 -->
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown
               label="中分類代碼"
@@ -37,6 +40,8 @@
               [submitted]="submitted"
             ></app-dropdown>
           </div>
+
+          <!-- 小分類代碼 -->
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown
               label="小分類代碼"
@@ -48,17 +53,38 @@
               [submitted]="submitted"
             ></app-dropdown>
           </div>
+          <!-- 管理編號 -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="管理編號"
-              controlName="generalCode"
-              [options]="managementIdOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.generalCode"
+            <app-dropdown-table
+              [control]="queryForm.controls.queryNo"
               [submitted]="submitted"
-            ></app-dropdown>
+              optionLabel="PLU_MagNo"
+              optionValue="PLU_MagNo"
+              [suggestions]="suggestions"
+              [fieldsConfig]="fieldsConfig"
+              (inputValueChanged)="onAutoCompleteInputChange($event)"
+              (formValueChanged)="onformValueChanged($event)"
+              [formGroup]="opForm"
+              [dialogData]="opData"
+              [dialogColumns]="opColumns"
+              [loading]="opLoading"
+              [totalRecords]="opTotalRecords"
+            >
+              <app-input-text
+                class="col-12 md:col-6"
+                label="管理編號"
+                controlName="queryNo"
+                [control]="opForm.controls.queryNo"
+              ></app-input-text>
+              <app-input-text
+                class="col-12 md:col-6"
+                label="商品名稱"
+                controlName="PLU_Name"
+                [control]="opForm.controls.PLU_Name"
+              ></app-input-text>
+            </app-dropdown-table>
           </div>
+          <!-- 品牌編號 -->
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown
               label="品牌編號"
@@ -70,8 +96,11 @@
               [submitted]="submitted"
             ></app-dropdown>
           </div>
-          <div class="col-12 md:col-6 lg:col-4">
+
+          <!-- 安全庫存 -->
+          <div class="col-12 md:col-6 lg:col-4 mt-5">
             <p-checkbox
+              binary="true"
               label="只顯示低於安全庫存"
               formControlName="isSafetyStock"
             ></p-checkbox>
@@ -81,8 +110,8 @@
         <div
           class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
         >
-          <app-button btnType="clear"></app-button>
-          <app-button btnType="query" [loading]="loading"></app-button>
+          <app-button btnType="clear" />
+          <app-button btnType="query" [loading]="loading" />
         </div>
       </form>
     </p-accordionTab>

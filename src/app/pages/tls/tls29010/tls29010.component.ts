@@ -66,7 +66,8 @@ export class TLS29010Component extends BasicQueryPageComponent<TALPORDERD_OPENDi
         tlt_no: [[]], // 專櫃編號
         use_flag: [[]], // 是否使用 Y/N
         crt_usr_name: [''], // 建立人員姓名
-        locationNumber:[[]],// 專櫃位置編號 // POS2002
+
+        //---0801更新(位置編號不使用)---
 
         //分頁查詢
         ...createPaginationConfig([{ field: 'pod_no', order: 1 }]), // 分頁和排序參數
@@ -99,7 +100,6 @@ export class TLS29010Component extends BasicQueryPageComponent<TALPORDERD_OPENDi
 
 
       tlt_No_Option: apiOption[] = [];  // 專櫃編號下拉
-      pos2002_location_Option: apiOption[] = [];  // 專櫃編號下拉
       
       data: TALPORDERD_OPENDisc[] = [];
       columns: Column[] = [
@@ -223,18 +223,5 @@ export class TLS29010Component extends BasicQueryPageComponent<TALPORDERD_OPENDi
 
             console.log('專櫃編號 下拉:', response.Data);
           });
-
-        // 專櫃位置編號
-        this.tls12010Service
-          .queryPOS2002_DropDownList({})
-          .subscribe((response) => {
-            this.pos2002_location_Option = response.Data.map((item: apiOption) => ({
-              No: item.No,
-              Name: item.Name,
-              Label: item.No + '-' + item.Name,
-            }));
-
-            console.log('專櫃編號 下拉:', response.Data);
-          });  
       }
 }

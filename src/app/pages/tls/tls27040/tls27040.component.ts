@@ -20,6 +20,9 @@ import { POS6118Data, POS6119Data, POS6119PData, TLS27040Service } from '@servic
 import { finalize } from 'rxjs';
 import { SystemOptionsService } from '@service/system/sys1000.service';
 import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
+import { DialogComponent } from '@shared/componentkit/dialog/dialog.component';
+import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
+import { InputNumberComponent } from '@shared/componentkit/input-number/input-number.component';
 @Component({
   selector: 'app-tls27040',
   templateUrl: './tls27040.component.html',
@@ -38,7 +41,10 @@ import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutt
     TableComponent,
     TranslateModule,
     NgIf,
-    RadiobuttonComponent
+    RadiobuttonComponent,
+    DialogComponent,
+    CalendarComponent,
+    InputNumberComponent
   ]
 })
 export class TLS27040Component extends BasicQueryPageComponent<POS6118Data | POS6119Data | POS6119PData> implements OnInit {
@@ -66,27 +72,27 @@ export class TLS27040Component extends BasicQueryPageComponent<POS6118Data | POS
     NCML_ApprovalCode: ['', [Validators.maxLength(6)]],  // 核准碼
     NCML_TermNoList: [null],      // 分期期數
     // 中信專用欄位 (若你有要加入查詢欄位)
-    CTBC_TxnCode: [], // 銷售狀態
-    CTBC_TxnAmtStart: [], // 交易金額起
-    CTBC_TxnAmtEnd: [], // 交易金額迄
-    CTBC_TxnTimeStart: [], // 交易時間起
-    CTBC_TxnTimeEnd: [], // 交易時間迄
+    CTBC_TxnCode: [null], // 銷售狀態
+    CTBC_TxnAmtStart: [null, [Validators.max(9999999999)]], // 交易金額起
+    CTBC_TxnAmtEnd: [null, [Validators.max(9999999999)]], // 交易金額迄
+    CTBC_TxnTimeStart: [null], // 交易時間起
+    CTBC_TxnTimeEnd: [null], // 交易時間迄
     CTBC_CrdNo: ['', [Validators.maxLength(32)]], // 卡號
-    CTBC_TmID: [], // EDC號碼
-    CTBC_DateStart: [], // 請款日期起
-    CTBC_DateEnd: [], // 請款日期迄
-    CTBC_DataType: [],  // 交易類別 // 中信 資料型態，C=一般交易、I=分期交易、R=紅利交易 // 中信停車場只有一般交易
-    CTBC_Check: [], // 輸入狀態
-    CTBC_ApprovalCode: [],  // 核准碼
+    CTBC_TmID: ['', [Validators.maxLength(8)]], // EDC號碼
+    CTBC_DateStart: [null], // 請款日期起
+    CTBC_DateEnd: [null], // 請款日期迄
+    CTBC_DataType: [null],  // 交易類別 // 中信 資料型態，C=一般交易、I=分期交易、R=紅利交易 // 中信停車場只有一般交易
+    CTBC_Check: [null], // 輸入狀態
+    CTBC_ApprovalCode: ['', [Validators.maxLength(6)]],  // 核准碼
     CTBC_TermNo: [],  // 分期期數 // 中信-停車 無分期
     // 中信-停車專用欄位
-    CTBC_TxnType: [], // 交易類型
-    CTBC_TxnDateStart: [], // 交易日期起
-    CTBC_TxnDateEnd: [], // 交易日期迄
-    CTBC_BusDateStart: [], // 請款日期起
-    CTBC_BusDateEnd: [], // 請款日期迄
+    CTBC_TxnType: [null], // 交易類型
+    CTBC_TxnDateStart: [null], // 交易日期起
+    CTBC_TxnDateEnd: [null], // 交易日期迄
+    CTBC_BusDateStart: [null], // 請款日期起
+    CTBC_BusDateEnd: [null], // 請款日期迄
 
-    queryFilter: [], // 查詢篩選
+    queryFilter: [null], // 查詢篩選
     ...createPaginationConfig([{ field: 'ID', order: 1 }]),
   });
   totalRecords = 0;
@@ -176,5 +182,26 @@ export class TLS27040Component extends BasicQueryPageComponent<POS6118Data | POS
           break;
       }
     });
+  }
+  dialogVisible = false;
+  dialogLoading = false;
+  dialogSubmitted = false;
+  dialogQueryForm = this.formBuilder.group({
+    ECR_No: ['', [Validators.required, Validators.maxLength(10)]],
+    TXN_No: [null as number | null, [Validators.required, Validators.max(99999999)]],
+    CTBC_TxnDate: [null, [Validators.required]],
+  })
+  onOpenDialog() {
+    this.dialogVisible = true;
+  }
+  onDialogSubmit(frm: FormGroup) {
+    this.dialogSubmitted = true;
+    this.dialogLoading = true;
+    // 打API
+    if (!frm.valid) {
+      this.dialogLoading = false;
+      return;
+    }
+    this.dialogVisible = false;
   }
 }

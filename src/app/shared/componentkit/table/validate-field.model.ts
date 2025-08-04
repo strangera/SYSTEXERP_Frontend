@@ -62,10 +62,16 @@ export function validateDuplicate(
 }
 
 // ['欄位不能為空', '資料錯誤']
-export function validateRequired(value: string): { isValid: boolean; errorMessage: string[] } {
+export function validateRequired(
+  value: string,
+  rowData: any,
+  data: any[],
+  field: string,
+  header: string
+): { isValid: boolean; errorMessage: string[] } {
   return {
     isValid: value !== null && value !== '',
-    errorMessage: ['欄位不能為空', '資料錯誤'],
+    errorMessage: [`「${header}」為必填項目，欄位不能為空`, '資料錯誤'],
   };
 }
 

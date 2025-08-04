@@ -1,8 +1,8 @@
 :root {
-  font-family: "Inter var", sans-serif;
+  font-family: "NotoSansTC", sans-serif;
   font-feature-settings: "cv02", "cv03", "cv04", "cv11";
   font-variation-settings: normal;
-  --font-family: "Inter var", sans-serif;
+  --font-family: "NotoSansTC", sans-serif;
   --font-feature-settings: "cv02", "cv03", "cv04", "cv11";
   --surface-a: #1f2937;
   --surface-b: #111827;
@@ -67,24 +67,10 @@
   --sidebar-item-bg-active: #4b5563; /* 一個更深的灰色作為 active 背景 */
   --sidebar-item-text-active: #64b5f6; /* 一個較亮的藍色作為 active 文字 */
   --sidebar-border-color: #4b5563; /* 一個較深的灰色作為邊框顏色 */
+  --accordion-header-text: #dce2e5; /* 暗模式建議色：sky-900 */
+  --accordion-header-bg: #004972; /* 淺藍字色，sky-200 左右 */
 }
 
-@font-face {
-  font-family: "Inter var";
-  font-weight: 100 900;
-  font-display: swap;
-  font-style: normal;
-  font-named-instance: "Regular";
-  src: url("/assets/fonts/Inter-roman.var.woff2?v=3.19") format("woff2");
-}
-@font-face {
-  font-family: "Inter var";
-  font-weight: 100 900;
-  font-display: swap;
-  font-style: italic;
-  font-named-instance: "Italic";
-  src: url("/assets/fonts/Inter-italic.var.woff2?v=3.19") format("woff2");
-}
 :root {
   --blue-50: rgb(245.2, 248.75, 254.55);
   --blue-100: rgb(207.96, 225, 252.84);

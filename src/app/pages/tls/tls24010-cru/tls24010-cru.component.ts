@@ -143,6 +143,7 @@ export class TLS24010CRUComponent extends BasicCruPageComponent<TLS24010Data | u
     this.listenForChanges();
     if (this.type === FIX_TYPE.專櫃編號修正) {
       this.dataForm.get('TLT_No')?.enable();
+      this.dataForm.get('TXN_Remark')?.enable();
       const TXN_Date = this.dataForm.get('TXN_Date')?.value;
       if (TXN_Date) {
         this.dropDownListService.queryTLTTALENT_ByContractDate_DropDownList(TXN_Date).pipe(untilDestroyed(this)).subscribe(options => {

@@ -1,4 +1,4 @@
-import { Column } from "@shared/componentkit/table/table.model"
+import { Column, formatDate, formatDateTime, formatTimeHHMMSS } from "@shared/componentkit/table/table.model"
 
 export const POS6118_columns: Column[] = [
   { field: 'ECR_No', header: '收銀機號' },
@@ -6,9 +6,9 @@ export const POS6118_columns: Column[] = [
   { field: 'TLT_No', header: '專櫃編號' },
   { field: 'NCML_PayCrdType', header: '卡別' },
   { field: 'NCML_TxnAmt', header: '金額' },
-  { field: 'NCML_TxnDate', header: '銷售日期' },
-  { field: 'NCML_TxnTime', header: '銷售時間' },
-  { field: 'NCML_BatCloseDate', header: '請款日期' },
+  { field: 'NCML_TxnDate', header: '銷售日期', format: formatDate },
+  { field: 'NCML_TxnTime', header: '銷售時間', format: formatTimeHHMMSS },
+  { field: 'NCML_BatCloseDate', header: '請款日期', format: formatDate },
   { field: 'NCML_CrdNo', header: '卡號' },
   { field: 'NCML_GUI_No', header: '發票號碼' },
   { field: 'NCML_TmID', header: 'EDC號碼' },
@@ -19,9 +19,9 @@ export const POS6118_columns: Column[] = [
   { field: 'NCML_TermNo', header: '分期期數' },
   { field: 'NCML_Source', header: '請款來源' },
   { field: 'CRT_USR_No', header: '建立者' },
-  { field: 'CRT_Date', header: '建立日期' },
+  { field: 'CRT_Date', header: '建立日期', format: formatDateTime },
   { field: 'UPD_USR_No', header: '修改者' },
-  { field: 'UPD_Date', header: '修改日期' },
+  { field: 'UPD_Date', header: '修改日期', format: formatDateTime },
   // acquiring_Bank
 ];
 export const POS6119_columns: Column[] = [
@@ -29,20 +29,20 @@ export const POS6119_columns: Column[] = [
   { field: 'TXN_No', header: '交易流水號' },
   { field: 'TLT_No', header: '專櫃編號' },
   { field: 'CTBC_TxnAmt', header: '金額' },
-  { field: 'CTBC_TxnTime', header: '銷售日期' },
-  { field: 'CTBC_Date', header: '請款日期' },
+  { field: 'CTBC_TxnTime', header: '銷售日期', format: formatDateTime },
+  { field: 'CTBC_Date', header: '請款日期', format: formatDate },
   { field: 'CTBC_CrdNo', header: '卡號' },
   { field: 'CTBC_GUI_No', header: '發票號碼' },
   { field: 'CTBC_TmID', header: 'EDC號碼' },
   { field: 'CTBC_ApprovalCode', header: '授權碼' },
-  { field: 'CTBC_TxnCode', header: '銷售狀態' },
-  { field: 'CTBC_DataType', header: '交易類別' },
+  { field: 'CTBC_TxnCode', header: '銷售狀態', format: (value) => CTBC_TxnCodeOptions.find(item => item.value === value)?.label || value },
+  { field: 'CTBC_DataType', header: '交易類別', format: (value) => CrdTxnFgOptions.find(item => item.value === value)?.label || value },
   { field: 'CTBC_Check', header: '輸入狀況' },
   { field: 'CTBC_TermNo', header: '分期期數' },
   { field: 'CRT_USR_No', header: '建立者' },
-  { field: 'CRT_Date', header: '建立日期' },
+  { field: 'CRT_Date', header: '建立日期', format: formatDateTime },
   { field: 'UPD_USR_No', header: '修改者' },
-  { field: 'UPD_Date', header: '修改日期' },
+  { field: 'UPD_Date', header: '修改日期', format: formatDateTime },
 ];
 export const POS6119P_columns: Column[] = [
   { field: 'ECR_No', header: '收銀機號' },
@@ -61,9 +61,9 @@ export const POS6119P_columns: Column[] = [
   { field: 'CTBC_TermNo', header: '分期期數' },
   { field: 'CTBC_Source', header: '請款來源' },
   { field: 'CRT_USR_No', header: '建立者' },
-  { field: 'CRT_Date', header: '建立日期' },
+  { field: 'CRT_Date', header: '建立日期', format: formatDateTime },
   { field: 'UPD_USR_No', header: '修改者' },
-  { field: 'UPD_Date', header: '修改日期' },
+  { field: 'UPD_Date', header: '修改日期', format: formatDateTime },
 ];
 
 export interface PosConfig {
@@ -151,13 +151,14 @@ export const CTBC_TxnTypeOptions = [
   { label: '正向交易(銷售)', value: '40' },
   { label: '退款', value: '41' }
 ]
+// C=一般交易、I=分期交易、R=紅利交易
 export const CrdTxnFgOptions = [
-  { label: '一般', value: '0' },
-  { label: '分期', value: '1' },
-  { label: '紅利', value: '2' }
+  { label: '一般交易', value: 'C' },
+  { label: '分期交易', value: 'I' },
+  { label: '紅利交易', value: 'R' }
 ]
 export const BusCrdTxnFgOptions = [
-  { label: '一般', value: '0' },
+  { label: '一般交易', value: 'C' },
 ]
 export const CheckOptions = [
   { label: '手刷補登', value: '0' },

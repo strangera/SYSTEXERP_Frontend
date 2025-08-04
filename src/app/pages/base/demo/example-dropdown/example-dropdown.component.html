@@ -1,0 +1,37 @@
+<form [formGroup]="queryForm" (ngSubmit)="onSubmit(queryForm)">
+    <div class="flex">
+        <div class="col-6">
+            <h5>單選下拉</h5>
+            <div class='card flex flex-wrap gap-3 p-fluid justify-content-center'>
+                <app-dropdown class="col-12 md:col-6 lg:col-5" label="單選下拉" controlName="dropdown"
+                    [options]="systemTypeOptions" optionLabel="label" optionValue="value"
+                    [control]="queryForm.controls.dropdown" [submitted]="submitted" />
+            </div>
+            <h5>單選下拉(範圍)</h5>
+            <div class='card flex flex-wrap gap-3 p-fluid justify-content-center'>
+                <app-dropdown-range class="col-12 md:col-6 lg:col-5" label="下拉範圍" controlName="dropdownRange"
+                    [startControl]="queryForm.controls.dropdownRangeStart"
+                    [endControl]="queryForm.controls.dropdownRangeEnd" [submitted]="submitted"
+                    [options]="systemTypeOptions" optionLabel="label" optionValue="value" />
+            </div>
+        </div>
+        <div class="col-6">
+            <h5>單選RadioButton</h5>
+            <div class='card flex flex-wrap gap-3 p-fluid justify-content-center'>
+                <app-radiobutton class="col-12" label="radio多選" groupname="radiolist"
+                    [control]="queryForm.controls.radiolist" [options]="systemTypeOptions" [submitted]="submitted" />
+            </div>
+            <h5>單選(是:Y 否:N 全部:null)</h5>
+            <div class='card flex flex-wrap gap-3 p-fluid justify-content-center'>
+                <app-radiobutton-yn class="col-12" label="radio是/否" [control]="queryForm.controls.radioYN"
+                    [submitted]="submitted" [showAll]="true" />
+            </div>
+        </div>
+    </div>
+    <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+        <app-button btnType="clear"></app-button>
+        <app-button btnType="query" [loading]="loading"></app-button>
+    </div>
+    <div class="grid p-fluid">
+    </div>
+</form>

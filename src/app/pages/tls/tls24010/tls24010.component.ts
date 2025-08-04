@@ -19,6 +19,7 @@ import { InputNumberComponent } from '../../../shared/componentkit/input-number/
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { TranslateModule } from '@ngx-translate/core';
 import { columns, FIX_TYPE, TXN_GUIPaperOptions, txnStatusOptions } from './tls24010.model';
+import { STORE_WAY } from '../tls24010-cru/tls24010-cru.model';
 
 // 交易補登作業
 @Component({
@@ -78,8 +79,8 @@ export class TLS24010Component extends BasicQueryPageComponent<TLS24010Data> imp
       this.TLT_NoOptions = options.Data.map(item => ({ ...item, label: `${item.No} - ${item.Name}` }));
       this.queryForm.get('TLT_No')?.setValue('000164');
     });
-    // this.queryForm.get('TXN_Date')?.setValue(new Date(this.today.getFullYear(), this.today.getMonth(), this.today.getDate(), 0, 0, 0));
-    this.queryForm.get('TXN_Date')?.setValue(new Date('2025-07-29T00:00:00'));
+    this.queryForm.get('TXN_Date')?.setValue(new Date(this.today.getFullYear(), this.today.getMonth(), this.today.getDate(), 0, 0, 0));
+    // this.queryForm.get('TXN_Date')?.setValue(new Date('2025-07-29T00:00:00'));
   }
   onDateSelect(event: Date): void {
     this.queryForm.get('TXN_Date')?.setValue(event);
@@ -116,12 +117,11 @@ export class TLS24010Component extends BasicQueryPageComponent<TLS24010Data> imp
     const store_way = this.queryForm.value.store_way;
     this.items = [
       { label: '專櫃編號修正', icon: 'pi pi-id-card', disabled: false, command: () => this.onEditData(this.selectedRowData!, FIX_TYPE.專櫃編號修正) },
-      { label: '折扣別修正', icon: 'pi pi-percentage', disabled: store_way === '2', command: () => this.onEditData(this.selectedRowData!, FIX_TYPE.折扣別修正) },
-      { label: '抽成類別修正', icon: 'pi pi-tags', disabled: store_way === '2', command: () => this.onEditData(this.selectedRowData!, FIX_TYPE.抽成類別修正) },
+      { label: '折數修正', icon: 'pi pi-percentage', disabled: store_way === STORE_WAY.自營, command: () => this.onEditData(this.selectedRowData!, FIX_TYPE.折扣別修正) },
+      { label: '抽成類別修正', icon: 'pi pi-tags', disabled: store_way === STORE_WAY.自營, command: () => this.onEditData(this.selectedRowData!, FIX_TYPE.抽成類別修正) },
       { label: '付款別修正', icon: 'pi pi-credit-card', disabled: false, command: () => this.onEditData(this.selectedRowData!, FIX_TYPE.付款別修正) },
-      { label: '發票修正', icon: 'pi pi-receipt', disabled: true, command: () => this.onEditData(this.selectedRowData!, FIX_TYPE.發票修正) },
+      { label: '是否為預售交易修正', icon: 'pi pi-shopping-cart', disabled: true, command: () => this.onEditData(this.selectedRowData!, FIX_TYPE.預售交易修正) },
       { label: '交易資料作廢', icon: 'pi pi-trash', disabled: true, command: () => this.onEditData(this.selectedRowData!, FIX_TYPE.交易資料作廢) },
-      { label: '預售交易修正', icon: 'pi pi-shopping-cart', disabled: true, command: () => this.onEditData(this.selectedRowData!, FIX_TYPE.預售交易修正) },
     ];
   }
 

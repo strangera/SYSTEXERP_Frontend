@@ -1,7 +1,7 @@
 ::ng-deep #custom-file-upload {
   .p-fileupload-buttonbar {
     padding: 0.5rem;
-    background-color: #c7d2fe;
+    background-color: var(--table-header-bg);
   }
 
   .p-fileupload-files {
@@ -30,7 +30,7 @@
 ::ng-deep #custom-file-upload {
   .p-carousel-header {
     padding: 0.5rem;
-    background-color: #c7d2fe;
+    background-color:  var(--table-header-bg);
   }
   .image-container {
     width: 100%; /* 確保圖片容器佔滿父元素 */

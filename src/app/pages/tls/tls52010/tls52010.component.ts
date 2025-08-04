@@ -33,18 +33,18 @@ export const enum POStatus {
 }
 // 2.5.2.1 採購單維護作業
 @Component({
-    selector: 'app-tls52010',
-    templateUrl: './tls52010.component.html',
-    animations: [
-        trigger('slideInFromLeft', [
-            transition(':enter', [
-                style({ opacity: 0, transform: 'translateX(-20%)' }),
-                animate('400ms ease-out', style({ opacity: 1, transform: 'translateX(0)' }))
-            ])
-        ])
-    ],
-    standalone: true,
-    imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputTextComponent, MultiSelectComponent, DropdownTableComponent, DropdownComponent, CalendarRangeComponent, TableComponent, Button, TooltipModule, NgStyle, NgIf, TranslateModule]
+  selector: 'app-tls52010',
+  templateUrl: './tls52010.component.html',
+  animations: [
+    trigger('slideInFromLeft', [
+      transition(':enter', [
+        style({ opacity: 0, transform: 'translateX(-20%)' }),
+        animate('400ms ease-out', style({ opacity: 1, transform: 'translateX(0)' }))
+      ])
+    ])
+  ],
+  standalone: true,
+  imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputTextComponent, MultiSelectComponent, DropdownTableComponent, DropdownComponent, CalendarRangeComponent, TableComponent, Button, TooltipModule, NgStyle, NgIf, TranslateModule]
 })
 export class TLS52010Component extends BasicQueryPageComponent<ITLS52010Data> implements OnInit {
   queryForm = this.formBuilder.group({

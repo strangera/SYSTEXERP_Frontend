@@ -22,7 +22,7 @@ import { TLS26080Data } from './tls26080.model';
   selector: 'app-tls26080',
   templateUrl: './tls26080.component.html',
   styleUrl: './tls26080.component.scss',
-  standalone: true,
+  standalone: !0,
   imports: [
     AccordionModule,
     FormsModule,
@@ -57,9 +57,9 @@ export class TLS26080Component extends BasicQueryPageComponent<TLS26080Data> imp
   public selectedItems: TLS26080Data[] = [];
 
   public readonly editDisabled = (rowData: TLS26080Data) =>
-    rowData?.CanEdit == '1' || rowData.pod_status !== ApprovalStatus.未核准;
+    (Reflect.has(rowData, 'CanEdit') && rowData.CanEdit == '1') || rowData.pod_status !== ApprovalStatus.未核准;
   public readonly isRowSelectable = (rowData: TLS26080Data) =>
-    rowData?.CanDelete == '1';
+    Reflect.has(rowData, 'CanDelete') && rowData.CanDelete == '1' || rowData.pod_status === ApprovalStatus.未核准;
 
   public totalRecords = signal<number>(0);
 
@@ -76,13 +76,13 @@ export class TLS26080Component extends BasicQueryPageComponent<TLS26080Data> imp
   });
 
   public columns: Column[] = [
-    { field: 'pod_no', header: '活動單號', visible: true },
-    { field: 'pod_desc', header: '活動名稱', visible: true },
-    { field: 'pod_sdate', header: '活動期間(起日)', visible: true, format: v => this.datePipe.transform(v, 'YYYY/MM/dd') },
-    { field: 'pod_edate', header: '活動期間(迄日)', visible: true, format: v => this.datePipe.transform(v, 'YYYY/MM/dd') },
-    { field: 'cap_item', header: '扣款代碼', visible: true },
-    { field: 'pod_type', header: '扣款名稱', visible: true },
-    { field: 'pod_status', header: '狀態', visible: true, format: this.service.approvalStatus.bind(this) },
+    { field: 'pod_no', header: '活動單號', visible: !0 },
+    { field: 'pod_desc', header: '活動名稱', visible: !0 },
+    { field: 'pod_sdate', header: '活動期間(起日)', visible: !0, format: v => this.datePipe.transform(v, 'YYYY/MM/dd') },
+    { field: 'pod_edate', header: '活動期間(迄日)', visible: !0, format: v => this.datePipe.transform(v, 'YYYY/MM/dd') },
+    { field: 'cap_item', header: '扣款代碼', visible: !0 },
+    { field: 'pod_type', header: '扣款名稱', visible: !0 },
+    { field: 'pod_status', header: '狀態', visible: !0, format: this.service.approvalStatus.bind(this) },
   ];
 
   constructor(
@@ -94,18 +94,20 @@ export class TLS26080Component extends BasicQueryPageComponent<TLS26080Data> imp
 
   public ngOnInit(): void {
     this.initializePage('TLS26080', '/TLS/TLS26080CRU', this.queryForm, this.onSubmit.bind(this));
+
+    this.service.loadAPS1003DropDownList(['E']);
   }
 
   private canQuery(): boolean {
-    return true;
+    return !0;
   }
 
   private canAdd(): boolean {
-    return true;
+    return !0;
   }
 
   private canEdit(): boolean {
-    return true;
+    return !0;
   }
 
   public onClear(): void {

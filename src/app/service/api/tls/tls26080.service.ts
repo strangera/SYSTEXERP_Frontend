@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, signal } from '@angular/core';
-import { CampaignData, TLS26080Data, TLS26080Detail, TLS26080Query } from '@pages/tls/tls26080/tls26080.model';
+import { CampaignCounterData, CampaignData, TLS26080Data, TLS26080Detail, TLS26080Query } from '@pages/tls/tls26080/tls26080.model';
 import { ErrorHandlerService } from '@service/system/error-handler.service';
 import { NotificationService } from '@shared/component/notification-message/notification.service';
 import { BaseQueryResponse, DropdownOption } from '@shared/models/api/base-api.interface';
@@ -17,17 +17,20 @@ export class TLS26080Service {
   // 儲存資料
   public TLS26080Data = signal<TLS26080Data[]>([]);
   public TLS26080Detail = signal<TLS26080Detail[]>([]);
-  public campaignData = signal<CampaignData>({} as CampaignData);
+  public campaignData = signal<CampaignData[]>([]);
+  public campaignCounterData = signal<CampaignCounterData[]>([]);
 
   // 讀取狀態
   private tableLoading = !1;
   private approvalStatusLoading = !1;
   private campaignLoading = !1;
+  private campaignCounterLoading = !1;
+  private capItemsLoading = !1;
 
   // 下拉選單資料
-  public readonly departmentItems = signal<DropdownOption[]>([]);
-  public readonly capItems = signal<DropdownOption[]>([]);
-  public readonly podStatusItems = signal<DropdownOption[]>([
+  public departmentItems = signal<DropdownOption[]>([]);
+  public capItems = signal<DropdownOption[]>([]);
+  public podStatusItems = signal<DropdownOption[]>([
     { No: ApprovalStatus.未核准, Name: '未核准' },
     { No: ApprovalStatus.已核准, Name: '已核准' },
     { No: ApprovalStatus.刪除, Name: '刪除' },
@@ -57,8 +60,22 @@ export class TLS26080Service {
     private confirmationService: ConfirmationService,
   ) { }
 
+  public loadAPS1003DropDownList(cap_typeList: string[]): void {
+    if (this.capItemsLoading) return void (this.capItemsLoading = !1);
+    this.capItemsLoading = !0;
+    this.http.post<BaseQueryResponse<DropdownOption>>(`${apiUrl}/queryAPS1003_DropDownList`, { cap_typeList }).pipe(
+      take(1),
+      tap(response => this.capItems.set(response.Data || [])),
+      catchError(error => this.errorHandler.handleError(error)),
+      finalize(() => {
+        this.capItemsLoading = !1;
+        console.log('APS1003查詢結果:', this.capItems());
+      })
+    ).subscribe();
+  }
+
   /** 查詢資料 */
-  loadTLS26080(query: TLS26080Query = {}): void {
+  public loadTLS26080(query: TLS26080Query = {}): void {
     if (this.tableLoading) return void (this.tableLoading = !1);
     this.tableLoading = !0;
     this.http.post<BaseQueryResponse<TLS26080Data>>(`${apiUrl}/TLS0000/TLS2000/queryTLS26080`, query).pipe(
@@ -70,22 +87,34 @@ export class TLS26080Service {
         console.log('查詢結果:', this.TLS26080Data());
       })
     ).subscribe();
-  }
+  };
 
   /** 查詢環友資料 */
-  loadCampaignData(query: any): void {
+  public loadCampaignData(query: any = {}): void {
     if (this.campaignLoading) return void (this.campaignLoading = !1);
     this.campaignLoading = !0;
-    this.http.post<BaseQueryResponse<CampaignData>>(`${apiUrl}/queryCampaignData`, query).pipe(
+    this.http.post<BaseQueryResponse<CampaignData>>(`${apiUrl}/TLS0000/TLS2000/queryCampaign`, query).pipe(
       take(1),
-      tap(response => this.campaignData.set(response.Data[0] || {} as CampaignData)),
+      tap(response => this.campaignData.set(response.Data)),
       catchError(error => { this.errorHandler.handleError(error); return EMPTY; }),
       finalize(() => { console.log('查詢環友資料:', this.campaignData()); })
     ).subscribe();
-  }
+  };
+
+  /** 查詢環友Counter資料 */
+  public loadCampaignCounter(query: { CampaignIdList: string[]; }): void {
+    if (this.campaignCounterLoading) return void (this.campaignCounterLoading = !1);
+    this.campaignCounterLoading = !0;
+    this.http.post<BaseQueryResponse<CampaignCounterData>>(`${apiUrl}/TLS0000/TLS2000/queryCampaignCounter`, query).pipe(
+      take(1),
+      tap(response => this.campaignCounterData.set(response.Data)),
+      catchError(error => { this.errorHandler.handleError(error); return EMPTY; }),
+      finalize(() => { console.log('查詢環友Counter資料:', this.campaignCounterData()); })
+    ).subscribe();
+  };
 
   /** 專櫃活動 */
-  loadTLS26080Detail(query: { pod_no: string; }): void {
+  public loadTLS26080Detail(query: { pod_no: string; }): void {
     if (this.tableLoading) return void (this.tableLoading = !1);
     this.tableLoading = !0;
     this.http.post<BaseQueryResponse<TLS26080Detail>>(`${apiUrl}/TLS0000/TLS2000/queryTLS26080_Detail`, query).pipe(
@@ -97,10 +126,10 @@ export class TLS26080Service {
         console.log('專櫃活動細節查詢結果:', this.TLS26080Detail());
       })
     ).subscribe();
-  }
+  };
 
   /** 核准或反核准專櫃活動 */
-  loadApproval(data: TLS26080Data): void {
+  public loadApproval(data: TLS26080Data): void {
     if (this.approvalStatusLoading) return void (this.approvalStatusLoading = !1);
     this.approvalStatusLoading = !0;
     this.confirmationService.confirm({
@@ -127,8 +156,5 @@ export class TLS26080Service {
       },
       reject: () => this.messageService.infoBubble(`${this.approvalCheck(data).confirm}已取消`)
     });
-  }
-
-  ngOnDestroy(): void {
   }
 }

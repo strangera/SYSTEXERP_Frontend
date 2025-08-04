@@ -1,0 +1,75 @@
+<div class="flex">
+    <div class="col-12">
+        <p-tabView>
+            <p-tabPanel header="基本設置">
+                <app-table dataKey="id" tableKey="自行取名(不可重複)" apiUrl='報表模式需要(預設為"query"+程式代碼) 可調整' title="基本設置"
+                    [data]="data1" [columns]="columns1" [loading]='loading' (edit)="onEdit($event)"
+                    (detail)="onDetail($event)">
+                </app-table>
+            </p-tabPanel>
+            <p-tabPanel header="CheckBox">
+                <app-table dataKey="id" [data]="data2" [columns]="columns2" [showCheckBox]="true"
+                    selectionMode="multiple" [selectedItems]="selectedItems2" [isRowSelectable]="isRowSelectable2"
+                    (select)="onSelect2($event)" (unSelect)="onUnSelect2($event)" (itemClick)="onItemClick2($event)"
+                    (selectionChange)="onSelectionChange2($event)" (edit)="onEdit($event)" (detail)="onDetail($event)">
+                </app-table>
+            </p-tabPanel>
+            <p-tabPanel header="排序">
+                <app-table title="關閉排序 showSort='false'" dataKey="id" [data]="data3" [columns]="columns3"
+                    [showSort]="false">
+                </app-table>
+                <app-table tableKey="table3" title="預設排序multiSortMeta (記得加上tableKey參數)" dataKey="id" [data]="data3"
+                    [columns]="columns3" [multiSortMeta]="[{field: 'field1',order: 1},{field: 'field2',order: -1}]"
+                    [showSort]="true">
+                </app-table>
+            </p-tabPanel>
+            <p-tabPanel header="群組Header">
+                <app-table dataKey="id" [data]="data4" [columns]="columns4" [columnGroup]="columnGroup4"></app-table>
+            </p-tabPanel>
+            <p-tabPanel header="小計/總計">
+                <app-table dataKey="id" [data]="data5" [columns]="columns5" groupRowsBy="bank"></app-table>
+            </p-tabPanel>
+            <p-tabPanel header="可編輯">
+                <app-table title="一次編輯一筆(功能包含 刪除 新增) 可預設新增資料預設值" dataKey="id" [data]="data6" [columns]="columns6"
+                    [showRowEdit]="true" [showInsert]="true" [rowEditDisabled]="rowEditDisabled" [showEdit]="false"
+                    [showDetail]="false" [insertRowData]="true" [showCheckBox]="true" [selectedItems]="selectedItems6"
+                    (selectionChange)="selectedItems6 = $event" [deleteData]="true" (dataChange)="data6 = $event"
+                    [defaultInsertData]="defaultInsertData">
+                </app-table>
+                <app-table title="總是編輯模式(功能包含 刪除 新增) 可預設新增資料預設值" dataKey="id" [data]="data6" [columns]="columns6"
+                    [showRowEdit]="true" [showInsert]="true" [alwaysEdit]="true" [insertRowData]="true"
+                    [showCheckBox]="true" [selectedItems]="selectedItems6" (selectionChange)="selectedItems6 = $event"
+                    [deleteData]="true" (dataChange)="data6 = $event" [defaultInsertData]="defaultInsertData">
+                </app-table>
+            </p-tabPanel>
+            <p-tabPanel header="展開式Table">
+                <app-table dataKey="id" [data]="data7" [columns]="columns7" expansionDataKey="details"
+                    [expansionColumns]="expansionColumns7">
+                </app-table>
+            </p-tabPanel>
+            <p-tabPanel header="Table其他功能">
+                <app-table title="管理相關" dataKey="id" [data]="data8" [columns]="columns8" [addButton]="addButton8"
+                    [buttonsLoading]="buttonsLoading8" [editDisabled]="editDisabled8">
+                </app-table>
+                <hr />
+                <app-table title="自訂Header" dataKey="id" [data]="data8" [columns]="columns8">
+                    <header>
+                        <div class="flex align-items-center justify-content-between w-full border-1 surface-border p-2">
+                            <p-button type="button" label="按鈕"></p-button>
+                            <span class="ml-2">此空間可以加入你想加入的任何東西</span>
+                        </div>
+                    </header>
+                </app-table>
+                <hr />
+                <app-table title="自訂Footer" dataKey="id" [data]="data8" [columns]="columns8" [showFooter]="true">
+                    <footer>
+                        <div class="flex align-items-center justify-content-between w-full border-1 surface-border p-2">
+                            <p-button type="button" label="按鈕"></p-button>
+                            <span class="ml-2">此空間可以加入你想加入的任何東西</span>
+                        </div>
+                    </footer>
+                </app-table>
+            </p-tabPanel>
+        </p-tabView>
+    </div>
+</div>
