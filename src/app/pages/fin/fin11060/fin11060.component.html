@@ -1,28 +1,63 @@
 <div class="card">
-    <div class="grid align-items-center">
-        <div class="col" style="flex: 1">
-            <app-menubar [ProgNo]="ProgNo"></app-menubar>
+  <div class="flex gap-2 mb-2">
+    <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
+    <!-- <app-button btnType="create" (click)="onCreate()" label="{{ 'create' | translate }}"></app-button> -->
+  </div>
+  <p-accordion>
+    <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'">
+      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
+        <div class="grid p-fluid">
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-calendar-range-quick label="銷售日期"
+            [startControl]="queryForm.controls.SalesDateStart" [endControl]="queryForm.controls.SalesDateEnd"
+            [submitted]="submitted" />
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-calendar-range-quick label="產檔日期"
+            [startControl]="queryForm.controls.processDateStart" [endControl]="queryForm.controls.processDateEnd"
+            [submitted]="submitted" />
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-text-range startLabel="起始發票號碼(含字軌)" endLabel="結束發票號(含字軌)"
+            [startControl]="queryForm.controls.GUI_No_start" [endControl]="queryForm.controls.GUI_No_end"
+            [submitted]="submitted" [errorForGroup]="true" />
+          </div>
         </div>
-        <div *appHasPermission="addPermission">
-            <app-button btnType="create" label="轉檔" (click)="onCreate()" class="col"></app-button>
+        <div class="grid p-fluid">
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-text-range startLabel="起始收銀機代號" endLabel="結束收銀機代號"
+            [startControl]="queryForm.controls.ECR_No_start" [endControl]="queryForm.controls.ECR_No_end"
+            [submitted]="submitted" [errorForGroup]="true" />
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-multi-select label="查詢條件依據" controlName="condition_type" [options]="contact_type_Option" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.condition_type" [submitted]="submitted"></app-multi-select>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-radiobutton
+              label="是否只顯示異常"
+              groupname="show_error"
+              [control]="queryForm.controls.show_error"
+              [options]="show_error_Option"
+              [submitted]="submitted"
+            ></app-radiobutton>
+          </div>
         </div>
-    </div>
-    <p-accordion>
-        <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
-            [headerStyleClass]="'query-accordionTab'">
-            <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
-                <div class="grid p-fluid">
-                    <div class="col-12 md:col-6 lg:col-4">
-                        <app-calendar calendarType="dateMonthOne" label="申報年月" [control]="queryForm.controls.onedatemm"
-                            [submitted]="submitted">
-                        </app-calendar>
-                    </div>
-                </div>
-            </form>
-            <ul>
-                <li>請注意 :</li>
-                <li>1、申報年月需小於系統日申報期間 。</li>
-            </ul>
-        </p-accordionTab>
-    </p-accordion>
+        <!-- <div> -->
+        <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+          <app-button btnType="clear"></app-button>
+          <app-button btnType="query" [loading]="loading"></app-button>
+        </div>
+        <!-- </div> -->
+      </form>
+    </p-accordionTab>
+  </p-accordion>
+</div>
+<div class="card">
+  <app-report-table-group [columns]="columns" [data]="data"
+    [subtotalFields]="['condition_type']" [enableGrouping]="false"
+    [reportTitle]="'電子發票上送表'" [currentPage]="1" [dateStart]="'SalesDateStart'" [dateEnd]="'SalesDateEnd'" [showTotalOnly]="false"
+    [defaultMergedView]="true">
+  </app-report-table-group>
 </div>
