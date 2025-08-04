@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
@@ -10,7 +10,10 @@ import { ButtonComponent } from '../../../shared/componentkit/button/button.comp
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { TranslateModule } from '@ngx-translate/core';
 import { Tls22050Service } from '../../../service/api/tls/tls22050.service';
-import { Column, ColumnGroup, createPaginationConfig } from 'src/app/shared/componentkit/table/table.model';
+import { Column, ColumnGroup } from 'src/app/shared/componentkit/table/table.model';
+import { ButtonModule } from 'primeng/button';
+import { NgClass } from '@angular/common';
+import { MultiSelectComponent } from "@shared/componentkit/multi-select/multi-select.component";
 
 @Component({
   selector: 'app-tls22050',
@@ -27,16 +30,18 @@ import { Column, ColumnGroup, createPaginationConfig } from 'src/app/shared/comp
     ButtonComponent,
     TableComponent,
     TranslateModule,
+    ButtonModule,
+    NgClass,
+    MultiSelectComponent
   ],
 })
 export class TLS22050Component extends BasicQueryPageComponent<any> implements OnInit {
   queryForm = this.formBuilder.group({
-    status1: ['all'],
-    status2: ['ALL'],
+    POS_TypeList: [null],
+    VOU_CheckList: [null],
     salesDate: [new Date()],
-    startdate: [new Date()],
-    enddate: [new Date()],
-    ...createPaginationConfig([{ field: 'ECR_No', order: 1 }]),
+    TXN_DateStart: [new Date()],
+    TXN_DateEnd: [new Date()],
   });
 
   data: any[] = [];
@@ -52,14 +57,13 @@ export class TLS22050Component extends BasicQueryPageComponent<any> implements O
   exportExcelLoading = false;
 
   statusOptions = [
-    { label: '全部', value: 'all' },
-    { label: '一般', value: 'ordinary' },
-    { label: '停管', value: 'stop' },
+    { label: '一般', value: '' },
+    { label: '停管', value: 'PKNG' },
   ];
-  status2Options = [
-    { label: '全部', value: 'ALL' },
-    { label: '連線', value: 'Y' },
-    { label: '離線', value: 'N' },
+  VOU_Check_Options = [
+    { label: '連線', value: "1" },
+    { label: '離線', value: "2" },
+    { label: '大宗兌回', value: "3" },
   ];
 
   columns: Column[] = [
@@ -96,7 +100,10 @@ export class TLS22050Component extends BasicQueryPageComponent<any> implements O
     { field: 'TOTAL', header: '金額資訊' },
   ];
 
-  constructor(private tls22050Service: Tls22050Service) {
+  constructor(
+    private tls22050Service: Tls22050Service,
+    private cdr: ChangeDetectorRef
+  ) {
     super();
   }
 
@@ -104,20 +111,22 @@ export class TLS22050Component extends BasicQueryPageComponent<any> implements O
     this.initializePage('TLS22050', '/TLS/TLS22050cru', this.queryForm, (form) =>
       this.onSubmit(form)
     );
-
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
-
     this.queryForm.get('salesDate')?.valueChanges.subscribe((val) => {
       if (val) {
-        const selected = new Date(val);
-        const year = selected.getFullYear();
-        const month = selected.getMonth();
+        const year = val.getFullYear();
+        const month = val.getMonth();
         this.salesMinDate = new Date(year, month, 1);
         this.salesMaxDate = new Date(year, month + 1, 0);
 
         this.queryForm.patchValue({
-          startdate: this.salesMinDate,
-          enddate: this.salesMaxDate,
+          TXN_DateStart: this.salesMinDate,
+          TXN_DateEnd: this.salesMaxDate,
+        });
+        setTimeout(() => {
+          this.queryForm.patchValue({
+            TXN_DateStart: this.salesMinDate,
+            TXN_DateEnd: this.salesMaxDate,
+          });
         });
       }
     });
@@ -126,18 +135,15 @@ export class TLS22050Component extends BasicQueryPageComponent<any> implements O
   onSubmit(form: FormGroup): void {
     this.handleSubmit(form, () => {
       const raw = form.getRawValue();
+      console.log(raw.TXN_DateStart?.toISOString().split('T'));
       const payload = {
-        request: {
-          PageSize: raw.PageSize,
-          PageIndex: raw.PageIndex,
-          OrderBy: raw.OrderBy,
-          Offset: raw.Offset,
-          SortBy: raw.SortBy,
-          TXN_DateStart: raw.startdate?.toISOString().split('T')[0] ?? null,
-          TXN_DateEnd: raw.enddate?.toISOString().split('T')[0] ?? null,
-          POS_TypeList: raw.status1 !== 'all' ? [raw.status1] : [],
-          VOU_CheckList: raw.status2 !== 'ALL' ? [raw.status2] : [],
-        },
+        ...raw,
+        TXN_DateStart: raw.TXN_DateStart
+          ? `${raw.TXN_DateStart.getFullYear()}-${(raw.TXN_DateStart.getMonth() + 1).toString().padStart(2, '0')}-${raw.TXN_DateStart.getDate().toString().padStart(2, '0')}`
+          : null,
+        TXN_DateEnd: raw.TXN_DateEnd
+          ? `${raw.TXN_DateEnd.getFullYear()}-${(raw.TXN_DateEnd.getMonth() + 1).toString().padStart(2, '0')}-${raw.TXN_DateEnd.getDate().toString().padStart(2, '0')}`
+          : null,
       };
 
       this.tls22050Service.queryTLS22050(payload).subscribe({
@@ -163,35 +169,20 @@ export class TLS22050Component extends BasicQueryPageComponent<any> implements O
 
   exportReport = () => {
     const raw = this.queryForm.getRawValue();
+
     const payload = {
-      query_condition: {
-        ServiceName: 'queryTLS22050',
-        Conditions: {
-          request: {
-            TXN_DateStart: raw.startdate?.toISOString().split('T')[0] ?? null,
-            TXN_DateEnd: raw.enddate?.toISOString().split('T')[0] ?? null,
-            POS_TypeList: raw.status1 !== 'all' ? [raw.status1] : [],
-            VOU_CheckList: raw.status2 !== 'ALL' ? [raw.status2] : [],
-            SortBy: raw.SortBy,
-          },
-        },
+      FileName: "string",
+      ReportTitle: "string",
+      queryTLS22050Request: {
+        ...raw,
+        TXN_DateStart: raw.TXN_DateStart
+          ? `${raw.TXN_DateStart.getFullYear()}-${(raw.TXN_DateStart.getMonth() + 1).toString().padStart(2, '0')}-${raw.TXN_DateStart.getDate().toString().padStart(2, '0')}`
+          : null,
+        TXN_DateEnd: raw.TXN_DateEnd
+          ? `${raw.TXN_DateEnd.getFullYear()}-${(raw.TXN_DateEnd.getMonth() + 1).toString().padStart(2, '0')}-${raw.TXN_DateEnd.getDate().toString().padStart(2, '0')}`
+          : null,
       },
-      report_title: '第三方支付帳差報表',
-      columns: this.columns.filter(col => col.visible).map(col => ({ field: col.field, header: col.header, visible: true })),
-      config: {
-        print_reportTitle: 'Y',
-        print_reportTitle_per_page: 'N',
-        print_eject: 'Y',
-        print_field_title: 'Y',
-        print_field_title_per_page: 'N',
-        page_lines: 10,
-        print_reportFooter: 'Y',
-        print_reportFooter_per_page: 'N',
-        print_line_number: 'Y',
-        footer_DataType: 'TLS22050',
-      },
-      file_name: `admin_22250_${new Date().toISOString().split('T')[0].replace(/-/g, '')}`,
-    };
+    }
 
     this.exportExcelLoading = true;
     this.tls22050Service.exportTLS22050(payload).subscribe({
@@ -200,7 +191,7 @@ export class TLS22050Component extends BasicQueryPageComponent<any> implements O
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `${payload.file_name}.xlsx`;
+        a.download = `${payload.FileName}.xlsx`;
         document.body.appendChild(a);
         a.click();
         a.remove();
