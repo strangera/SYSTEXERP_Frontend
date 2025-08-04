@@ -43,6 +43,7 @@ import { NgIf } from '@angular/common';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { RadiobuttonComponent } from "@shared/componentkit/radiobutton/radiobutton.component";
+import { CRUDStatus } from '@shared/models/system/CRUDstatus';
 
 @Component({
   selector: 'app-tls13010-cru',
@@ -285,11 +286,14 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
 
   // ==========  生命週期方法 ==========
   ngOnInit(): void {
-    // 第一時間檢查 URL 參數 for 檢視模式
-    this.checkViewModeFromURL();
+    // // 第一時間檢查 URL 參數 for 檢視模式
+    // this.checkViewModeFromURL();
 
     this.initializePage('TLS13010', this.dataForm);
     this.funInfo = this.authService.getUserPermissions(this.ProgNo);
+
+    // 🎯 從服務取得狀態
+    this.isViewMode = this.contractFlowService.isViewMode();
 
     //關鍵：一定要在這裡設定檢視模式 UI 監聽
     this.setupViewModeUI();
@@ -331,6 +335,33 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
       this.viewModeSubscription.unsubscribe();
     }
     this.subscriptions.forEach(sub => sub.unsubscribe());
+  }
+
+  override initializePage(progNo: string, form?: FormGroup): void {
+    // 只取父類的基礎功能
+    if (this.authService.currentUserValue) {
+      this.user = this.authService.currentUserValue;
+    }
+    this.ProgNo = progNo;
+    this.currentPageService.setCurrentProgNo(this.ProgNo);
+    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
+
+    // 🎯 忽略父類的 CRUDStatus 邏輯，使用自己的
+    this.formTitle = this.getCustomTitle();
+    this.crudstatus = CRUDStatus.Edit; // 固定為 Edit，避免表單被 disable
+
+    // 🎯 從服務取得檢視模式狀態
+    this.isViewMode = this.contractFlowService.isViewMode();
+    if (this.isViewMode && form) {
+      form.disable();
+    }
+  }
+
+  private getCustomTitle(): string {
+    if (this.contractFlowService.isViewMode()) {
+      return '檢視契約資料';
+    }
+    return this.contractFlowService.isNewContractMode() ? '新增契約資料' : '編輯契約資料';
   }
 
   /**
@@ -1072,33 +1103,33 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
 
   onSubmitNext(): void {
     if (this.isViewMode) {
-      // 🎯 檢視模式：導航到 Next1 檢視模式
-      this.router.navigate(['account/tls/tls13010next1'], {
-        queryParams: { mode: 'view' }  // 帶上檢視參數
-      });
+      // 🎯 檢視模式：直接導航，不帶參數
+      this.router.navigate(['account/tls/tls13010next1']);
       return;
     }
 
     // 🎯 編輯模式的原有邏輯
     if (this.dataForm.valid) {
       this.saveToWorkflow();
-      this.router.navigate(['account/tls/tls13010next1']);  // 編輯模式不帶參數
+      this.router.navigate(['account/tls/tls13010next1']);
     } else {
       this.messageService.warnBubble('請檢查必填欄位');
       this.markFormGroupTouched(this.dataForm);
     }
   }
 
-
   override onCancel(): void {
     if (this.isViewMode) {
-      this.exitViewMode();
+      this.contractFlowService.clearViewMode();
+      this.router.navigate(['account/tls/tls13010']);
+      this.messageService.infoBubble('已退出檢視模式');
       return;
     }
+
+    // 編輯模式：使用父類邏輯或自訂
     if (this.dataForm.dirty) {
       if (confirm('是否要儲存目前的編輯內容？')) {
         this.saveToWorkflow();
-        this.messageService.infoBubble('已儲存草稿');
       }
     }
     this.router.navigate(['account/tls/tls13010']);

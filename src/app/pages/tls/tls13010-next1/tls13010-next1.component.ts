@@ -606,7 +606,7 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
   }
 
   ngOnInit(): void {
-    this.checkViewModeFromURL();
+    this.initializeViewModeFromService();
     this.initializeDataStructure();
     this.initializePage('TLS13010', this.dataForm);
     this.loadOrgOptions();
@@ -631,21 +631,6 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
   }
 
 
-  /**
-     * 🎯 關鍵：從 URL 檢查是否為檢視模式
-     */
-  private checkViewModeFromURL(): void {
-    const queryParams = this.route.snapshot.queryParams;
-    const mode = queryParams['mode'];
-
-    if (mode === 'view') {
-      this.isViewMode = true;
-      this.contractFlowService.setViewMode(true);
-    } else {
-      this.isViewMode = false;
-      this.contractFlowService.setViewMode(false);
-    }
-  }
 
   private loadWorkflowData(): void {
     console.log('🚀 Next1 開始載入工作流程資料...');
@@ -735,6 +720,35 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
     }
 
     console.log('🎯 所有類型的組織選項更新完成');
+  }
+
+  private initializeViewModeFromService(): void {
+    // 訂閱檢視模式狀態變更
+    const viewModeSub = this.contractFlowService.isViewMode$.subscribe(isViewMode => {
+      this.isViewMode = isViewMode;
+      console.log('🔍 Next1 檢視模式狀態更新:', isViewMode);
+
+      if (isViewMode) {
+        this.applyViewModeSettings();
+      }
+    });
+
+    this.subscriptions.push(viewModeSub);
+
+    // 立即取得當前狀態
+    this.isViewMode = this.contractFlowService.isViewMode();
+    if (this.isViewMode) {
+      this.applyViewModeSettings();
+    }
+  }
+
+  private applyViewModeSettings(): void {
+    console.log('🔍 套用 Next1 檢視模式設定');
+
+    // 設定表格欄位為唯讀
+    this.updateColumnsReadonly(true);
+
+    // 可以加入其他檢視模式設定...
   }
 
   private prepareContractInfoDisplay(): void {
@@ -1693,12 +1707,12 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
   // 導航
   onSubmitNext(): void {
     if (this.isViewMode) {
-      // 🎯 檢視模式：導航到 Next2 檢視模式
-      this.router.navigate(['account/tls/tls13010next2'], {
-        queryParams: { mode: 'view' }
-      });
+      // 🎯 檢視模式：導航到 Next2，不帶 URL 參數
+      this.router.navigate(['account/tls/tls13010next2']);
       return;
     }
+
+    // 編輯模式：原有邏輯
     this.saveFareDataToWorkflow();
 
     const hasSelectedItems = Object.keys(this.originalFareData).some(capType =>
@@ -1711,20 +1725,18 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
     }
 
     this.router.navigate(['account/tls/tls13010next2']);
-    // this.messageService.infoBubble('進入下一步：抽成設定');
   }
 
   override onCancel(): void {
     if (this.isViewMode) {
-      // 🎯 檢視模式：返回上一步檢視
-      this.router.navigate(['account/tls/tls13010cru'], {
-        queryParams: { mode: 'view' }
-      });
+      // 🎯 檢視模式：返回上一步，不帶 URL 參數
+      this.router.navigate(['account/tls/tls13010cru']);
       return;
     }
+
+    // 編輯模式：原有邏輯
     this.saveFareDataToWorkflow();
     this.router.navigate(['account/tls/tls13010cru']);
-    // this.messageService.infoBubble('已返回合約資訊頁面');
   }
 
   onRealCancel(): void {

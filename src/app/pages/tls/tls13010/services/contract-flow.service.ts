@@ -1412,4 +1412,29 @@ export class ContractFlowService {
 
     return clearOps;
   }
+
+  /**
+   * 🎯 簡單的檢視模式判定（暫時都回傳 false，讓使用者選擇）
+   */
+  shouldBeViewMode(rowData: any): boolean {
+    // 暫時先都回傳 false，表示都可以編輯
+    // 未來有特殊需求再加判定邏輯
+    return false;
+  }
+
+  /**
+   * 🎯 智慧啟動（自動判定模式）
+   */
+  startSmartWorkflow(rowData: any): void {
+    const isViewMode = this.shouldBeViewMode(rowData);
+
+    if (isViewMode) {
+      this.setViewMode(true);
+    } else {
+      this.setViewMode(false);
+    }
+
+    this.startWorkflow(rowData);
+    console.log('🎯 智慧啟動完成，模式:', isViewMode ? '檢視' : '編輯');
+  }
 }
