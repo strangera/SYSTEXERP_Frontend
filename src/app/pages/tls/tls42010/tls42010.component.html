@@ -5,21 +5,21 @@
         <div class="col" style="flex: 1">
           <app-menubar [ProgNo]="ProgNo"></app-menubar>
         </div>
-        <div *appHasPermission="addPermission">
+        <div >
           <app-button
             btnType="create"
             label="EXCEL匯入"
             class="col"
           ></app-button>
         </div>
-        <div *appHasPermission="addPermission">
+        <div >
           <app-button
             btnType="create"
             label="複製菜單"
             class="col"
           ></app-button>
         </div>
-        <div *appHasPermission="addPermission">
+        <div >
           <app-button
             btnType="create"
             (click)="onCreate()"
