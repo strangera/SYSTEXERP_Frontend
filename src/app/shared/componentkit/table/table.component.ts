@@ -68,6 +68,7 @@ export class TableComponent extends BasicPrintDataComponent implements OnInit, O
   @Input() apiUrl?: string;                                                     // table API URL (可選)
   @Input() title: string | undefined = undefined;                               // table 標題
   @Input() columns!: Column[];                                                  // table 欄位配置 (必填)
+  originalColumns!: Column[];                                                   // table 原始欄位
   selectedColumns!: Column[];                                                   // table 預設顯示欄位
   @Input() data: any[] = [];                                                    // table 資料 (必填)
   @Output() dataChange = new EventEmitter<any[]>();                             // table 資料改變 (事件)
@@ -86,6 +87,7 @@ export class TableComponent extends BasicPrintDataComponent implements OnInit, O
   @Input() showCaption = true;                                                  // 是否顯示 Caption
   // Header(左) 相關
   @Input() showHeader = true;                 // 是否顯示 Header
+  @Input() showFilter = true;                 // 是否顯示 Filter
   @Input() showReportMode = true;             // 是否顯示 匯出按鈕
   @Input() showInsert = false;                // 是否顯示 Insert新增按鈕
   @Output() insert = new EventEmitter<any>(); // 新增事件
@@ -196,6 +198,7 @@ export class TableComponent extends BasicPrintDataComponent implements OnInit, O
       });
     }
     if (changes['columns']) {
+      this.originalColumns = this.columns;
       this.columns = this.columns.filter(col => !col.hidden);
       this.multiSortMeta = this.queryStateService.getQueryState(this.tableKey + 'Sort')?.value ?? this.multiSortMeta; // 取得排序歷史紀錄
       this.selectedColumns = this.queryStateService.getQueryState(this.tableKey + 'Filter')?.value ?? this.columns.filter(col => col.visible !== false); // 取得顯示欄位
@@ -225,7 +228,6 @@ export class TableComponent extends BasicPrintDataComponent implements OnInit, O
     this.first = event.first;   // 更新當前起始索引
     this.rows = event.rows;     // 更新每頁行數
     this.queryStateService.setQueryState(this.tableKey + 'rows', this.rows); // 保存分頁狀態
-    console.log(this.rows);
     this.selectedPage = Math.ceil((event.first / event.rows) + 1); // 更新下拉選單中的頁碼
     this.calculateTotalPages();
   }
@@ -311,7 +313,6 @@ export class TableComponent extends BasicPrintDataComponent implements OnInit, O
   onSelectionChange(event: any) {
     const selected = Array.isArray(event) ? event : event ? [event] : [];
     this.selectedItems = selected.filter((item: any) => this.isRowSelectable(item));
-    console.log('🔍 DEBUG onSelectionChange:', this.selectedItems);
     this.selectionChange.emit(this.selectedItems);
   }
   // (欄位是Dropdown使用): 獲取Dropdown的選項，支持function加入或直接給List
@@ -332,12 +333,13 @@ export class TableComponent extends BasicPrintDataComponent implements OnInit, O
       this.rowEditing = true;
       this.multiSortMeta = [{ field: this.dataKey, order: 0 }];
       const newRowData: Record<string, any> = {};
-      this.columns.forEach(col => {
+      this.originalColumns.forEach(col => {
         newRowData[col.field] = this.defaultInsertData[col.field] !== undefined
           ? this.defaultInsertData[col.field] : null;
       });
       newRowData[this.dataKey] = new Date().getTime();
       this.data = [newRowData, ...this.data];
+      console.log(this.data);
       this.dataChange.emit(this.data);
       this.onRowEditInit(newRowData);
     } else {

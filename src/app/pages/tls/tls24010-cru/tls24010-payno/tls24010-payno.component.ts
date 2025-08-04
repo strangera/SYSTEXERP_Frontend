@@ -1,9 +1,9 @@
 import { ChangeDetectionStrategy, Component, Input, OnChanges, OnInit, SimpleChanges } from '@angular/core';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
-import { POS5008Data } from '@service/api/tls/tls24010.service';
+import { POS5008Data, Tls24010Service } from '@service/api/tls/tls24010.service';
 import { DropDownListService, IDropdownItem } from '@service/utility/dropDownList.service';
 import { TableComponent } from '@shared/componentkit/table/table.component';
-import { Column, formatAmount } from '@shared/componentkit/table/table.model';
+import { Column } from '@shared/componentkit/table/table.model';
 
 @UntilDestroy()
 @Component({
@@ -20,23 +20,40 @@ export class Tls24010PaynoComponent implements OnInit, OnChanges {
   payNoData: POS5008Data[] = [];
   private previousData: POS5008Data[] = [];
   columns: Column[] = [
-    { field: 'PAY_Name', header: '付款別(修正前)', },
-    { field: 'PAY_No', header: '付款別', type: 'dropdown', options: [], optionLabel: 'label', optionValue: 'No' },
-    // { field: 'PAY_Type', header: '付款別', },
-    { field: 'TXN_PayAmt', header: '金額', format: formatAmount },
-    { field: 'CRD_Name', header: '信用卡別' },
-    { field: 'CRD_NoTXN_CouponNoTXN_PayDesc', header: '信用卡卡號/券號/應收付款對象', },
-    { field: 'TERM_Name', header: '分期數' },
+    { field: 'ID', header: 'ID', hidden: true },
+    { field: 'PAY_No', header: '付款別', type: 'dropdown', options: [], optionLabel: 'label', optionValue: 'PAY_No', disabled: (rowData) => Number(rowData.ID) !== 0 },
+    { field: 'TXN_PayAmt', header: '金額', type: 'inputNumber' },
+    { field: 'CRD_Name', header: '信用卡別', type: 'dropdown', disabled: (rowData) => rowData.PAY_Type !== "0" },
+    { field: 'CRD_NoTXN_CouponNoTXN_PayDesc', header: '信用卡卡號/券號/應收付款對象', type: 'input' },
+    { field: 'TERM_Name', header: '分期數', type: 'dropdown', disabled: (rowData) => rowData.PAY_Type !== "0" },
   ]
   PAY_TypeOptions: IDropdownItem[] = [];
+  defaultInsertData: POS5008Data = {
+    ID: 0,
+    PAY_No: undefined,
+    PAY_Name: undefined,
+    TXN_PayAmt: undefined,
+    CRD_Type: undefined,
+    CRD_No: undefined,
+    TXN_CouponNo: undefined,
+    TXN_PayDesc: undefined,
+    TERM_No: undefined,
+    PAY_Type: undefined,
+  };
 
   constructor(
+    private readonly tls24010Service: Tls24010Service,
     private readonly dropDownListService: DropDownListService,
   ) { }
 
   ngOnInit(): void {
     this.dropDownListService.queryPOS1006_DropDownList().pipe(untilDestroyed(this)).subscribe((res) => {
-      this.PAY_TypeOptions = res.Data.map(item => ({ ...item, label: item.Name }));
+      this.PAY_TypeOptions = res.Data.map(item => ({
+        ...item,
+        PAY_No: item.No,
+        PAY_Name: item.Name,
+        label: item.Name
+      }));
       this.columns.find(col => col.field === 'PAY_No')!.options = this.PAY_TypeOptions;
     });
   }
@@ -46,7 +63,6 @@ export class Tls24010PaynoComponent implements OnInit, OnChanges {
     if (newData?.length > 0 && !this.isSameData(newData, this.previousData)) {
       this.payNoData = newData.map((item) => ({
         ...item,
-        PAY_No: '', // 依需求設定
         CRD_NoTXN_CouponNoTXN_PayDesc:
           item.PAY_Type === '0' ? item.CRD_No || '' :
             item.PAY_Type === 'A' ? item.TXN_PayDesc || '' :
@@ -60,5 +76,14 @@ export class Tls24010PaynoComponent implements OnInit, OnChanges {
   private isSameData(newData: POS5008Data[], oldData: POS5008Data[]): boolean {
     if (newData.length !== oldData.length) return false;
     return newData.every((item, index) => item.ID === oldData[index]?.ID);
+  }
+
+  onFieldChange(event: { rowData: POS5008Data, field: string, value: string, index?: number }): void {
+    const selectedItem = this.PAY_TypeOptions.find(item => item.No === event.value);
+    if (selectedItem) {
+      event.rowData.PAY_Type = selectedItem.PAY_Type;
+    }
+    console.log(this.payNoData);
+
   }
 }

@@ -131,6 +131,7 @@ export class TLS24010CRUComponent extends BasicCruPageComponent<TLS24010Data | u
     }
     if (this.isFormEditable) {
       this.type = rowDataTyped?.type;
+      this.dataForm.get('TXN_Remark')?.enable();
     }
     if (!this.isFormCreateable) {
       this.dataForm.disable();
@@ -151,10 +152,11 @@ export class TLS24010CRUComponent extends BasicCruPageComponent<TLS24010Data | u
     });
     this.listenForChanges();
     if (this.type === FIX_TYPE.專櫃編號修正) {
-      this.dataForm.get('TXN_Remark')?.enable();
       if (this.store_way === STORE_WAY.專櫃) {
         this.dataForm.get('TLT_No')?.enable();
       }
+    } else if (this.type === FIX_TYPE.預售交易修正) {
+      this.dataForm.get('TXN_PreOrder')?.enable();
     }
   }
   listenForChanges() {
@@ -287,6 +289,7 @@ export class TLS24010CRUComponent extends BasicCruPageComponent<TLS24010Data | u
   @ViewChild(Tls24010TltnoComponent) tltnoComp?: Tls24010TltnoComponent;
   @ViewChild(Tls24010TltidComponent) tltidComp?: Tls24010TltidComponent;
   @ViewChild(Tls24010DiscodeComponent) discodeComp?: Tls24010DiscodeComponent;
+  @ViewChild(Tls24010PaynoComponent) paynoComp?: Tls24010PaynoComponent;
   updateTLS24010() {
     const rowData = this.rowdata as TLS24010Data;
     const body = {
@@ -347,6 +350,38 @@ export class TLS24010CRUComponent extends BasicCruPageComponent<TLS24010Data | u
             POS5007_ID: item.ID,
             Talent_ID: item.Talent_ID || this.talent_id || 0,
             TXN_DiscCode: item.TXN_DiscCode || '',
+          }
+        })
+      }
+      this.tls24010Service.updateTLS24010(data).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe((res) => {
+        this.messageService.successBubble(res.Message);
+      });
+    } else if (this.type === FIX_TYPE.預售交易修正) {
+      const data = {
+        ...body,
+        EditType: TLS24010_EDIT_TYPE.是否為預售交易修正,
+        PreOrderEdit: {
+          Talent_ID: this.TLT_NoOptions.find(item => item.No === this.dataForm.getRawValue().TLT_No)?.talent_id || this.talent_id || 0,
+          TXN_PreOrder: this.dataForm.getRawValue().TXN_PreOrder
+        }
+      }
+      this.tls24010Service.updateTLS24010(data).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe((res) => {
+        this.messageService.successBubble(res.Message);
+      });
+    } else if (this.type === FIX_TYPE.付款別修正) {
+      const data = {
+        ...body,
+        EditType: TLS24010_EDIT_TYPE.付款別修正,
+        PayNoEditList: this.paynoComp?.payNoData.map(item => {
+          return {
+            POS5008_ID: item.ID || 0,
+            PAY_No: item.PAY_No || '',
+            TXN_PayAmt: item.TXN_PayAmt || 0,
+            CRD_Type: item.CRD_Type || '',
+            CRD_No: item.CRD_No || '',
+            TXN_CouponNo: item.TXN_CouponNo || '',
+            TXN_PayDesc: item.TXN_PayDesc || '',
+            TERM_No: Number(item.TERM_No) || 0,
           }
         })
       }

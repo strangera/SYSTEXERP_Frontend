@@ -116,12 +116,12 @@ export class TLS24010Component extends BasicQueryPageComponent<TLS24010Data> imp
   updateItems(): void {
     const store_way = this.queryForm.value.store_way;
     this.items = [
-      { label: '專櫃編號修正', icon: 'pi pi-id-card', disabled: false, command: () => this.onEditData(this.selectedRowData!, FIX_TYPE.專櫃編號修正) },
+      { label: '專櫃編號修正', icon: 'pi pi-id-card', command: () => this.onEditData(this.selectedRowData!, FIX_TYPE.專櫃編號修正) },
       { label: '折數修正', icon: 'pi pi-percentage', disabled: store_way === STORE_WAY.自營, command: () => this.onEditData(this.selectedRowData!, FIX_TYPE.折扣別修正) },
       { label: '抽成類別修正', icon: 'pi pi-tags', disabled: store_way === STORE_WAY.自營, command: () => this.onEditData(this.selectedRowData!, FIX_TYPE.抽成類別修正) },
-      { label: '付款別修正', icon: 'pi pi-credit-card', disabled: false, command: () => this.onEditData(this.selectedRowData!, FIX_TYPE.付款別修正) },
-      { label: '是否為預售交易修正', icon: 'pi pi-shopping-cart', disabled: true, command: () => this.onEditData(this.selectedRowData!, FIX_TYPE.預售交易修正) },
-      { label: '交易資料作廢', icon: 'pi pi-trash', disabled: true, command: () => this.onEditData(this.selectedRowData!, FIX_TYPE.交易資料作廢) },
+      { label: '付款別修正', icon: 'pi pi-credit-card', command: () => this.onEditData(this.selectedRowData!, FIX_TYPE.付款別修正) },
+      { label: '是否為預售交易修正', icon: 'pi pi-shopping-cart', command: () => this.onEditData(this.selectedRowData!, FIX_TYPE.預售交易修正) },
+      { label: '交易資料作廢', icon: 'pi pi-trash', command: () => this.onEditData(this.selectedRowData!, FIX_TYPE.交易資料作廢) },
     ];
   }
 
