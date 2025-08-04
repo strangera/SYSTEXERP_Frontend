@@ -3,7 +3,7 @@ import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angula
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { IPOS2004DetailData, ITLS52020Data, TLS52020Detail, TLS52020Request, Tls52020Service } from '../../../service/api/tls/tls52020.service';
 import { DropDownListService, IDropdownItem } from '../../../service/utility/dropDownList.service';
-import { validateMinNumber } from '../../../shared/models/system/validate-field.model';
+import { validateMinNumber } from '../../../shared/componentkit/table/validate-field.model';
 import { Column, createPaginationConfig, RowEditSaveEvent } from '../../../shared/componentkit/table/table.model';
 import { Sys0110Service } from '../../../service/api/sys/sys0110.service';
 import { untilDestroyed } from '@ngneat/until-destroy';
@@ -24,27 +24,27 @@ import { DialogComponent } from '../../../shared/componentkit/dialog/dialog.comp
 import { TranslateModule } from '@ngx-translate/core';
 // 2.5.2.3  進貨驗收作業CRU
 @Component({
-    selector: 'app-tls52020-cru',
-    templateUrl: './tls52020-cru.component.html',
-    standalone: true,
-    imports: [
-        MenubarComponent,
-        ButtonComponent,
-        PanelModule,
-        FormsModule,
-        ReactiveFormsModule,
-        InputTextComponent,
-        DropdownComponent,
-        NgClass,
-        NgIf,
-        InputNumberComponent,
-        CalendarComponent,
-        InputTextareaComponent,
-        TableComponent,
-        DialogComponent,
-        DropdownTableComponent,
-        TranslateModule,
-    ],
+  selector: 'app-tls52020-cru',
+  templateUrl: './tls52020-cru.component.html',
+  standalone: true,
+  imports: [
+    MenubarComponent,
+    ButtonComponent,
+    PanelModule,
+    FormsModule,
+    ReactiveFormsModule,
+    InputTextComponent,
+    DropdownComponent,
+    NgClass,
+    NgIf,
+    InputNumberComponent,
+    CalendarComponent,
+    InputTextareaComponent,
+    TableComponent,
+    DialogComponent,
+    DropdownTableComponent,
+    TranslateModule,
+  ],
 })
 export class TLS52020CRUComponent extends BasicCruPageComponent<ITLS52020Data> implements OnInit {
   dataForm = this.formBuilder.nonNullable.group({

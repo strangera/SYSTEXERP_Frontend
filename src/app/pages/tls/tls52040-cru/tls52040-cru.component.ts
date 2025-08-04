@@ -7,7 +7,7 @@ import { Sys0110Service } from '../../../service/api/sys/sys0110.service';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { debounceTime, finalize } from 'rxjs';
 import { TLS52040Request, ITLS52040Data, ITLS52040Detail, Tls52040Service } from '../../../service/api/tls/tls52040.service';
-import { validateMinNumber } from '../../../shared/models/system/validate-field.model';
+import { validateMinNumber } from '../../../shared/componentkit/table/validate-field.model';
 import { POStatus } from '../tls52040/tls52040.component';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
@@ -22,25 +22,25 @@ import { NgIf } from '@angular/common';
 import { DialogComponent } from '../../../shared/componentkit/dialog/dialog.component';
 import { TranslateModule } from '@ngx-translate/core';
 @Component({
-    selector: 'app-tls52040-cru',
-    templateUrl: './tls52040-cru.component.html',
-    standalone: true,
-    imports: [
-        MenubarComponent,
-        ButtonComponent,
-        PanelModule,
-        FormsModule,
-        ReactiveFormsModule,
-        InputTextComponent,
-        DropdownComponent,
-        InputNumberComponent,
-        CalendarComponent,
-        InputTextareaComponent,
-        TableComponent,
-        NgIf,
-        DialogComponent,
-        TranslateModule,
-    ],
+  selector: 'app-tls52040-cru',
+  templateUrl: './tls52040-cru.component.html',
+  standalone: true,
+  imports: [
+    MenubarComponent,
+    ButtonComponent,
+    PanelModule,
+    FormsModule,
+    ReactiveFormsModule,
+    InputTextComponent,
+    DropdownComponent,
+    InputNumberComponent,
+    CalendarComponent,
+    InputTextareaComponent,
+    TableComponent,
+    NgIf,
+    DialogComponent,
+    TranslateModule,
+  ],
 })
 export class TLS52040CRUComponent extends BasicCruPageComponent<ITLS52040Data> implements OnInit {
   dataForm = this.formBuilder.nonNullable.group({

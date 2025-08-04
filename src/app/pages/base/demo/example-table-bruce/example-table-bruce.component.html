@@ -1,0 +1,7 @@
+<app-expandable-edit-table title="人員資料表" [mainColumns]="mainColumns" [detailColumns]="detailColumns" [data]="data"
+    [loading]="expandLoading" detailKey="details" dataKey="id" [showCheckBox]="true" [showPaginator]="true"
+    [showAddButton]="true" [showDetailAddButton]="true" [defaultNewItem]="defaultNewPerson"
+    [defaultNewDetailItem]="defaultNewDetail" (save)="onRowSave($event)" (cancel)="onRowCancel($event)"
+    (detailSave)="onDetailSave($event)" (detailCancel)="onDetailCancel($event)" (addMainItem)="onAddPerson()"
+    (addDetailItem)="onAddDetail($event)">
+</app-expandable-edit-table>

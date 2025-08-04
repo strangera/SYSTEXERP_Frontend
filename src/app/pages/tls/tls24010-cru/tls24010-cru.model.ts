@@ -40,3 +40,8 @@ export const POS5008Columns: Column[] = [
   },
   { field: 'TERM_No', header: '分期數', type: 'dropdown' },// 期別，0=一般，其餘為分期的期數
 ]
+
+export enum STORE_WAY {
+  專櫃 = '1',
+  自營 = '2',
+}

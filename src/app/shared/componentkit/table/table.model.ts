@@ -18,7 +18,7 @@ export interface Column {
 
   validate?: ((value: string, rowData: any, data: any[], field: string, header: string) => { isValid: boolean, errorMessage: string[] })[]; // 驗證規則(如果是可輸入的欄位)
 
-  type?: 'input' | 'inputNumber' | 'dropdown' | 'button' | 'html' | 'date' | 'default'; // 欄位類型
+  type?: 'input' | 'inputNumber' | 'dropdown' | 'button' | 'html' | 'date' | 'autoComplete' | 'default'; // 欄位類型
   prefix?: string;
   fractionDigits?: number;
   useGrouping?: boolean;
@@ -168,6 +168,21 @@ export const formatTimeHHMM = (value: string | number | Date): string => {
 
   const strValue = String(value).padStart(4, '0'); // 確保是4位數，不足補0
   return `${strValue.substring(0, 2)}:${strValue.substring(2, 4)}`;
+};
+
+// HH:MM:SS
+export const formatTimeHHMMSS = (value: string | number | Date): string => {
+  if (!value) return '';
+
+  if (value instanceof Date) {
+    const hh = String(value.getHours()).padStart(2, '0');
+    const mm = String(value.getMinutes()).padStart(2, '0');
+    const ss = String(value.getSeconds()).padStart(2, '0');
+    return `${hh}:${mm}:${ss}`;
+  }
+
+  const strValue = String(value).padStart(6, '0'); // 確保是6位數，不足補0
+  return `${strValue.substring(0, 2)}:${strValue.substring(2, 4)}:${strValue.substring(4, 6)}`;
 };
 
 

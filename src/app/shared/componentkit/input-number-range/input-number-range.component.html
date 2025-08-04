@@ -4,36 +4,23 @@
 </label>
 <div class="grid p-fluid">
   <div class="col pb-0">
-    <label *ngIf="startLabel" for="input-number-range">{{ startLabel }}
-      <span *ngIf="isRequired" class="required">*</span>
-    </label>
     <p-inputGroup id="input-number-start">
-      <p-inputNumber id="input-number-range" [formControl]="startControl" [placeholder]="placeholder"
-        [showButtons]="showButtons" [min]="minBoundary" [max]="maxBoundary" [step]="step" [useGrouping]="useGrouping"
-        [minFractionDigits]="minFractionDigits" [maxFractionDigits]="maxFractionDigits"
-        [ngClass]="{'ng-dirty ng-invalid': submitted && startControl.errors}" [mode]="mode"
-        [incrementButtonClass]="incrementButtonClass" [decrementButtonClass]="decrementButtonClass"
-        (onInputChange)="onStartInputChange($event)" (onBlur)="onStartBlur($event)" />
-      <p-inputGroupAddon *ngIf="suffix">{{ suffix }}</p-inputGroupAddon>
+      <app-input-number [label]="startLabel || ''" [controlName]="startControlName" [control]="startControl"
+        [submitted]="submitted" [minFractionDigits]="minFractionDigits" [maxFractionDigits]="maxFractionDigits"
+        [useGrouping]="useGrouping" [mode]="mode" [suffix]="suffix" [step]="step" [showButtons]="showButtons"
+        (changeEvent)="onStartInputChange($event)"></app-input-number>
     </p-inputGroup>
   </div>
-  <div class="flex" [ngClass]="startLabel ?'pt-4':''">
-    <span class="align-self-center text-center " [ngClass]="startLabel ?'pt-1':''">~</span>
+  <div class="flex"
+    [ngClass]="startLabel ? submitted || (startControl.touched && startControl.invalid) ? 'py-4' : 'pt-4' : submitted || (startControl.touched && startControl.invalid) ? 'pb-3' : ''">
+    <span class="align-self-center text-center " [ngClass]="startLabel ? 'pt-1' : ''">~</span>
   </div>
   <div class="col pb-0">
-    <label *ngIf="endLabel" for="input-text-range">{{ endLabel }}
-      <span *ngIf="isRequired" class="required">*</span>
-    </label>
     <p-inputGroup id="input-number-end">
-      <p-inputNumber id="input-number-range" [formControl]="endControl" [placeholder]="placeholder2"
-        [showButtons]="showButtons" [min]="minBoundary" [max]="maxBoundary" [step]="step" [useGrouping]="useGrouping"
-        [minFractionDigits]="minFractionDigits" [maxFractionDigits]="maxFractionDigits"
-        [ngClass]="{'ng-dirty ng-invalid': submitted && endControl.errors}" [mode]="mode"
-        [incrementButtonClass]="incrementButtonClass" [decrementButtonClass]="decrementButtonClass"
-        (onInputChange)="onEndInputChange($event)" (onBlur)="onEndBlur($event)" />
-      <p-inputGroupAddon *ngIf="suffix">{{ suffix }}</p-inputGroupAddon>
+      <app-input-number [label]="endLabel || ''" [controlName]="endControlName" [control]="endControl"
+        [submitted]="submitted" [minFractionDigits]="minFractionDigits" [maxFractionDigits]="maxFractionDigits"
+        [useGrouping]="useGrouping" [mode]="mode" [suffix]="suffix" [step]="step" [showButtons]="showButtons"
+        (changeEvent)="onEndInputChange($event)"></app-input-number>
     </p-inputGroup>
   </div>
 </div>
-<app-control-messages [onerror]="submitted || (startControl.touched && startControl.invalid)"
-  [control]="startControl"></app-control-messages>

@@ -30,17 +30,18 @@
         <!-- 交易序號 → POS5006.TXN_No -->
         <app-input-text class="col-12 md:col-6 lg:col-3" label="交易序號" [control]="dataForm.controls.TXN_No"
           [submitted]="submitted" />
+        <!-- 備註 → POS5006.TXN_Remark -->
+        <app-input-textarea class="col-12" label="備註" [control]="dataForm.controls.TXN_Remark"
+          [submitted]="submitted" />
       </div>
       <hr *ngIf="type === '01'" />
       <div *ngIf="type === '01'" class="grid p-fluid card">
         <app-tls24010-tltno [data]="ProductDetailList" [store_way]="store_way" [talent_id]="talent_id"
+          [TXN_Date]="dataForm.controls.TXN_Date.value" [TLT_No]="dataForm.controls.TLT_No.value"
           class="col-12"></app-tls24010-tltno>
       </div>
       <hr />
       <div class="grid p-fluid">
-        <!-- 備註 → POS5006.TXN_Remark -->
-        <app-input-textarea class="col-12" label="備註" [control]="dataForm.controls.TXN_Remark"
-          [submitted]="submitted" />
         <!-- 收銀員編號 → POS2001.USR_No -->
         <app-dropdown class="col-12 md:col-6 lg:col-3" label="收銀員編號" [control]="dataForm.controls.USR_No"
           [submitted]="submitted" [options]="USR_NoOptions" optionLabel="label" optionValue="No" />

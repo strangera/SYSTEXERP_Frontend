@@ -111,6 +111,78 @@ export interface InsertTLS24010Payload {
   }[];
 }
 
+export interface UpdateTLS24010Payload {
+  EditType: string;
+  Store_way: string;
+  SYS_StoreNo: string;
+  TXN_Date: string;
+  ECR_No: string;
+  TXN_No: number;
+  POS5006_ID: number;
+  TXN_Remark: string;
+  TLTNoEdit: {
+    TLT_No: string;
+    Talent_ID: number;
+    updatePOS5007List: {
+      POS5007_ID: number;
+      TLT_No: string;
+      PLU_MagNo: string;
+      PLU_No: string;
+      Talent_ID: number;
+      tlt_id: string;
+      PLU_TaxType: string;
+      TXN_DiscCode: string;
+    }[];
+  };
+  DiscCodeEditList: {
+    POS5007_ID: number;
+    Talent_ID: number;
+    TXN_DiscCode: string;
+  }[];
+  TLTIdEditList: {
+    POS5007_ID: number;
+    Talent_ID: number;
+    tlt_id: string;
+  }[];
+  PayNoEditList: {
+    POS5008_ID: number;
+    PAY_No: string;
+    TXN_PayAmt: number;
+    CRD_Type: string;
+    CRD_No: string;
+    TXN_CouponNo: string;
+    TXN_PayDesc: string;
+    TERM_No: number;
+  }[];
+  PreOrderEdit: {
+    Talent_ID: number;
+    TXN_PreOrder: string;
+  };
+}
+
+export interface QueryPOS2004ForUpdatePayload {
+  Store_way: string;
+  TXN_Date: string;
+  TLT_No: string;
+  Keyword: string;
+}
+
+export interface POS2004ForUpdateResponse {
+  TLT_No: string;
+  TLT_Name: string;
+  tlt_id: string;
+  tlt_id_desc: string;
+  cag_taxtype: string;
+  cag_barcode: string;
+  cag_barcode_name: string;
+  PLU_MagNo: string;
+  PLU_No: string;
+  PLU_Name: string;
+  PLU_OrgPLUNo: string;
+  PLU_SalePrc: number;
+  talent_id: number;
+}
+
 @Injectable({
   providedIn: 'root',
 })
@@ -140,8 +212,25 @@ export class Tls24010Service {
  * @param payload 請參考 Swagger insertTLS24010 API 格式
  * @returns 成功訊息或錯誤訊息
  */
-  insertTLS24010(payload: InsertTLS24010Payload): Observable<ApiResponse<any>> {
-    return this.http.post<ApiResponse<any>>(`${this.apiUrl}/insertTLS24010`, payload);
+  insertTLS24010(payload: InsertTLS24010Payload): Observable<ApiResponse<number>> {
+    return this.http.post<ApiResponse<number>>(`${this.apiUrl}/insertTLS24010`, payload);
+  }
+  /**
+   * 更新交易補登資料（修正用）
+   * @param payload 依照 Swagger 規格傳入資料
+   * @returns API 回應結果
+   */
+  updateTLS24010(payload: UpdateTLS24010Payload): Observable<ApiResponse<number>> {
+    return this.http.post<ApiResponse<number>>(`${this.apiUrl}/updateTLS24010`, payload);
+  }
+
+  /**
+   * 查詢 POS2004 商品資料（修正用）
+   * @param payload 查詢條件
+   * @returns 商品資料列表
+   */
+  queryPOS2004ForUpdate(payload: QueryPOS2004ForUpdatePayload): Observable<ApiResponse<POS2004ForUpdateResponse[]>> {
+    return this.http.post<ApiResponse<POS2004ForUpdateResponse[]>>(`${this.apiUrl}/queryPOS2004ForUpdate`, payload);
   }
 
 }

@@ -79,28 +79,67 @@
     </div>
   </p-panel>
 
-  <!-- 專櫃資料表格 -->
-  <p-panel header="專櫃資料"
-           class="line-height-3 m-0 mb-3">
-    <app-table [showCheckBox]="true"
-               [data]="service.TLS26080Detail()"
-               [dataKey]="'pod_no'"
-               [columns]="counterColumns"
-               (delete)="onDeleteCounter($event)"></app-table>
-
-    <!-- 選中專櫃提示 -->
-    <!-- <div *ngIf="selectedCounter"
-         class="mt-2 p-2 bg-blue-50 border-round">
-      <small class="text-blue-600">
-        <i class="pi pi-info-circle mr-1"></i>
-        已選擇專櫃：{{ selectedCounter.counterCode }} -
-        {{ selectedCounter.commissionTypeName }}
-      </small>
+  <div class="card">
+    <div class="grid p-fluid">
+      <div class="col-12">
+        <!-- 環友資料表格 -->
+        <p-panel header="環友資料"
+                 class="line-height-3 m-0 mb-3">
+          <app-table [showCheckBox]="true"
+                     [showManage]="false"
+                     [data]="service.campaignData()"
+                     [dataKey]="'campaignId'"
+                     [columns]="campaignColumns"></app-table>
+        </p-panel>
+      </div>
     </div>
-  </p-panel> -->
+  </div>
 
-    <!-- 扣款項目表格 -->
-    <!-- <p-panel header="扣款項目明細" class="line-height-3 m-0 mb-3">
+  <div class="card">
+    <div class="grid p-fluid">
+      <div class="col-12">
+        <!-- 環友專櫃資料表格 -->
+        <p-panel header="環友專櫃資料"
+                 class="line-height-3 m-0 mb-3">
+          <app-table [showCheckBox]="true"
+                     [showManage]="false"
+                     [data]="service.campaignCounterData()"
+                     [dataKey]="'campaignCounterId'"
+                     [columns]="campaignCounterColumns"></app-table>
+        </p-panel>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="grid p-fluid">
+      <div class="col-12">
+        <!-- 專櫃資料表格 -->
+        <p-panel header="專櫃資料"
+                 class="line-height-3 m-0 mb-3">
+          <app-table [showCheckBox]="true"
+                     [showManage]="false"
+                     [data]="service.TLS26080Detail()"
+                     [dataKey]="'tlt_no'"
+                     [columns]="counterColumns"
+                     (delete)="onDeleteCounter($event)"></app-table>
+
+          <!-- 選中專櫃提示 -->
+          <div *ngIf="selectedCounter"
+               class="mt-2 p-2 bg-blue-50 border-round">
+            <small class="text-blue-600">
+              <i class="pi pi-info-circle mr-1"></i>
+              已選擇專櫃：{{ selectedCounter.counterCode }} -
+              {{ selectedCounter.commissionTypeName }}
+            </small>
+          </div>
+        </p-panel>
+      </div>
+    </div>
+  </div>
+
+  <!-- 扣款項目表格 -->
+  <!-- <p-panel header="扣款項目明細" class="line-height-3 m-0 mb-3">
     <div class="flex justify-content-between align-items-center mb-2">
       <div *ngIf="selectedCounter" class="text-blue-600">
         <i class="pi pi-tag mr-1"></i>
@@ -122,11 +161,11 @@
     >
       <i class="pi pi-inbox text-4xl mb-2 block"></i>
       <p class="m-0">目前沒有扣款項目，請點擊「新增扣款項目」開始新增</p>
-    </div> -->
-  </p-panel>
+    </div>
+  </p-panel> -->
 
-    <!-- 操作按鈕 -->
-    <!-- <div *ngIf="!isFormReadable"
+  <!-- 操作按鈕 -->
+  <!-- <div *ngIf="!isFormReadable"
        class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
     <app-button btnType="clear"
                 (click)="onClearForm()"></app-button>

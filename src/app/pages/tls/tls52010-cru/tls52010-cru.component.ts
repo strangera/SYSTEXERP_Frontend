@@ -5,7 +5,7 @@ import { debounceTime, finalize } from 'rxjs';
 import { DropDownListService, IDropdownItem } from '../../../service/utility/dropDownList.service';
 import { IGetBudgetAmountRequest, IPODetail, IPOS2004DetailData, IQueryPOS2004DetailRequest, IQueryPOS2004DetailResponse, ITLS52010Data, ITLS52010Request, Tls52010Service } from '../../../service/api/tls/tls52010.service';
 import { Column, createPaginationConfig, RowEditSaveEvent } from '../../../shared/componentkit/table/table.model';
-import { validateMinNumber } from '../../../shared/models/system/validate-field.model';
+import { validateMinNumber } from '../../../shared/componentkit/table/validate-field.model';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { Sys0110Service } from '../../../service/api/sys/sys0110.service';
 import { FieldsConfig, DropdownTableComponent } from '../../../shared/componentkit/dropdown-table/dropdown-table.component';

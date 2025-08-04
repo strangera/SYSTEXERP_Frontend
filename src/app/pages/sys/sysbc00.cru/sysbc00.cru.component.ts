@@ -5,7 +5,7 @@ import { Column } from '../../../shared/componentkit/table/table.model';
 import { Aps1004Request, Sys1004Service } from '../../../service/api/sys/sys1004.service';
 import { ISysbc00Data, Sysbc00Service } from '../../../service/api/sys/sysbc00.service';
 import { concatMap, finalize, forkJoin, Observable, of } from 'rxjs';
-import { validateDuplicate, validateMaxLength, validateMaxNumber, validateRequired } from '../../../shared/models/system/validate-field.model';
+import { validateDuplicate, validateMaxLength, validateMaxNumber, validateRequired } from '../../../shared/componentkit/table/validate-field.model';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
@@ -16,20 +16,20 @@ import { NgIf } from '@angular/common';
 import { TranslateModule } from '@ngx-translate/core';
 
 @Component({
-    selector: 'app-sysbc00.cru',
-    templateUrl: './sysbc00.cru.component.html',
-    standalone: true,
-    imports: [
-        MenubarComponent,
-        ButtonComponent,
-        PanelModule,
-        FormsModule,
-        ReactiveFormsModule,
-        InputTextComponent,
-        TableComponent,
-        NgIf,
-        TranslateModule,
-    ],
+  selector: 'app-sysbc00.cru',
+  templateUrl: './sysbc00.cru.component.html',
+  standalone: true,
+  imports: [
+    MenubarComponent,
+    ButtonComponent,
+    PanelModule,
+    FormsModule,
+    ReactiveFormsModule,
+    InputTextComponent,
+    TableComponent,
+    NgIf,
+    TranslateModule,
+  ],
 })
 // 銀行基本資料維護作業 CRU
 export class SYSBC00CRUComponent extends BasicCruPageComponent<ISysbc00Data> implements OnInit {

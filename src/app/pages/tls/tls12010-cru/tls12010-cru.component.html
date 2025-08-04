@@ -125,7 +125,7 @@
             </div><hr>
 
             <!-- 潛在客戶明細檔 -->
-            <app-expandable-edit-table #detailTable [mainColumns]="Potential_Customer_Detail_Columns" [data]="potentialDetail"
+            <app-expandable-edit-table #detailTable [mainColumns]="Potential_Customer_Detail_Columns" [data]="filteredDetail"
                 [loading]="expandDetailLoading" detailKey="" dataKey="id" [showCheckBox]="true" [showPaginator]="false"
                 [showAddButton]="true" [showDetailTabs]="false" [showDetailAddButton]="false" [readonly]="crudstatus === 'Read'"
                 [defaultNewItem]="defaultNewDetail" (save)="onRowSaveDetail($event)" (cancel)="onRowCancelDetail($event)"

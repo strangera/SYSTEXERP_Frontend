@@ -20,7 +20,6 @@ export interface AutoCompleteOption {
 @Component({
   selector: 'app-autocomplete',
   templateUrl: './app-autocomplete.component.html',
-  styleUrls: ['./app-autocomplete.component.scss'],
   standalone: true,
   imports: [NgIf, AutoCompleteModule, FormsModule, NgClass, PrimeTemplate]
 })
