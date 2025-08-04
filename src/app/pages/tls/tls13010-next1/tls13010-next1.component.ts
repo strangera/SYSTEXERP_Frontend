@@ -248,18 +248,20 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
     {
       field: 'tpy_bdate',
       header: '扣款起始年月',
-      type: 'text',
+      type: 'date',
       editable: true,
       width: '130px',
-      dateFormat: 'year-month'
+      dateFormat: 'year-month',
+      maxLength: 7
     },
     {
       field: 'tpy_edate',
       header: '扣款結束年月',
-      type: 'text',
+      type: 'date',
       editable: true,
       width: '130px',
-      dateFormat: 'year-month'
+      dateFormat: 'year-month',
+      maxLength: 7
     },
     {
       field: 'tpy_type',
@@ -350,18 +352,20 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
     {
       field: 'tpy_bdate',
       header: '扣款起始年月',
-      type: 'text',
+      type: 'date',
       editable: true,
       width: '130px',
-      dateFormat: 'full-date'
+      dateFormat: 'year-month',
+      maxLength: 7
     },
     {
       field: 'tpy_edate',
       header: '扣款結束年月',
-      type: 'text',
+      type: 'date',
       editable: true,
       width: '130px',
-      dateFormat: 'full-date'
+      dateFormat: 'year-month',
+      maxLength: 7
     },
     {
       field: 'tpy_totalamt',
@@ -447,18 +451,20 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
     {
       field: 'tpy_bdate',
       header: '扣款起始年月',
-      type: 'text',
+      type: 'date',
       editable: true,
       width: '130px',
-      dateFormat: 'full-date'
+      dateFormat: 'year-month',
+      maxLength: 7
     },
     {
       field: 'tpy_edate',
       header: '扣款結束年月',
-      type: 'text',
+      type: 'date',
       editable: true,
       width: '130px',
-      dateFormat: 'full-date'
+      dateFormat: 'year-month',
+      maxLength: 7
     },
     {
       field: 'tpy_type',
@@ -524,18 +530,20 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
     {
       field: 'tpy_bdate',
       header: '扣款起始年月',
-      type: 'text',
+      type: 'date',
       editable: true,
       width: '130px',
-      dateFormat: 'full-date'
+      dateFormat: 'year-month',
+      maxLength: 7
     },
     {
       field: 'tpy_edate',
       header: '扣款結束年月',
-      type: 'text',
+      type: 'date',
       editable: true,
       width: '130px',
-      dateFormat: 'full-date'
+      dateFormat: 'year-month',
+      maxLength: 7
     },
     {
       field: 'tpy_type',
