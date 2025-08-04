@@ -89,7 +89,7 @@ export class TableComponent extends BasicPrintDataComponent implements OnInit, O
   @Input() showReportMode = true;             // 是否顯示 匯出按鈕
   @Input() showInsert = false;                // 是否顯示 Insert新增按鈕
   @Output() insert = new EventEmitter<any>(); // 新增事件
-  @Input() insertDisabled = false;            // 新增按鈕是否禁用 
+  @Input() insertDisabled = false;            // 新增按鈕是否禁用
   @Input() deleteData = false;                // 預先刪除資料 (關聯：需要加入dataKey, dataChange)
   @Output() delete = new EventEmitter<any>(); // 刪除事件
   @Input() showDelete = true;                    // 是否顯示刪除按鈕
@@ -321,7 +321,7 @@ export class TableComponent extends BasicPrintDataComponent implements OnInit, O
     this.filterChange.emit({ rowData: event.originalEvent, value: event.query });
   }
   // (欄位是Input、Dropdown使用): 處理值變化事件
-  onFieldChange(rowData: any, field: string, value: any) { this.fieldChange.emit({ rowData, field, value }); }
+  onFieldChange(rowData: any, field: string, value: any, index?: number) { this.fieldChange.emit({ rowData, field, value, index }); }
   // 事件類型 (有需求可使用)
   editRow(rowData: any) { this.edit.emit(rowData); }                // Edit 按鈕 事件
   detailRow(rowData: any) { this.detail.emit(rowData); }            // Detail 或 雙擊行 事件

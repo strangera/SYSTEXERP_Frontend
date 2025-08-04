@@ -20,3 +20,9 @@
     color: #6c757d !important;
   }
 }
+
+:host ::ng-deep .p-accordion-header-link {
+  background-color: var(--surface-0) !important;
+  color: var(--text-color) !important;
+  font-weight: normal;
+}

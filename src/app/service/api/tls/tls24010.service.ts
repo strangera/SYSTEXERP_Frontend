@@ -21,6 +21,7 @@ export interface TLS24010DetailRequest {
 }
 
 export interface TLS24010Data {
+  ID?: number;
   TXN_Date: string; // 銷售日期
   ECR_No: string; // 收銀機號
   TXN_No: string; // 交易序號
@@ -35,12 +36,16 @@ export interface TLS24010Data {
 
 export interface POS5007Data {
   id: number; // 唯一識別碼
+  ID?: number; // 唯一識別碼
   PLU_MagNo?: string | POS2004Item; // 商品編號
   PLU_No?: string; // 國際條碼
   PLU_Name?: string; // 商品名稱
+  TLT_No?: string; // 專櫃編號
+  Talent_ID?: number;
   TXN_Qty?: number;// 數量
   PLU_SalePrc?: number; // 單價金額
-  TXN_Amt?: number; // 單價小計金額
+  Unitprice?: number; // 單價小計金額 !!
+  TXN_Amt?: number; // 單價小計金額 !!
   TXN_Disc?: number; // 單價折扣讓金額
   TXN_SaleAmt?: number; // 單價銷售金額
   tlt_id?: string; // 類別
@@ -118,33 +123,33 @@ export interface UpdateTLS24010Payload {
   TXN_Date: string;
   ECR_No: string;
   TXN_No: number;
-  POS5006_ID: number;
+  POS5006_ID?: number;
   TXN_Remark: string;
-  TLTNoEdit: {
+  TLTNoEdit?: {
     TLT_No: string;
     Talent_ID: number;
     updatePOS5007List: {
-      POS5007_ID: number;
+      POS5007_ID?: number;
       TLT_No: string;
       PLU_MagNo: string;
       PLU_No: string;
       Talent_ID: number;
-      tlt_id: string;
-      PLU_TaxType: string;
-      TXN_DiscCode: string;
+      tlt_id?: string;
+      PLU_TaxType?: string;
+      TXN_DiscCode?: string;
     }[];
   };
-  DiscCodeEditList: {
+  DiscCodeEditList?: {
     POS5007_ID: number;
     Talent_ID: number;
     TXN_DiscCode: string;
   }[];
-  TLTIdEditList: {
+  TLTIdEditList?: {
     POS5007_ID: number;
     Talent_ID: number;
     tlt_id: string;
   }[];
-  PayNoEditList: {
+  PayNoEditList?: {
     POS5008_ID: number;
     PAY_No: string;
     TXN_PayAmt: number;
@@ -154,7 +159,7 @@ export interface UpdateTLS24010Payload {
     TXN_PayDesc: string;
     TERM_No: number;
   }[];
-  PreOrderEdit: {
+  PreOrderEdit?: {
     Talent_ID: number;
     TXN_PreOrder: string;
   };
@@ -163,8 +168,8 @@ export interface UpdateTLS24010Payload {
 export interface QueryPOS2004ForUpdatePayload {
   Store_way: string;
   TXN_Date: string;
-  TLT_No: string;
-  Keyword: string;
+  TLT_No?: string;
+  Keyword?: string;
 }
 
 export interface POS2004ForUpdateResponse {

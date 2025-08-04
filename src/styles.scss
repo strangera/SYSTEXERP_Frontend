@@ -80,8 +80,7 @@ input[disabled],
 .p-component:disabled,
 .p-component.p-disabled {
   background-color: var(--surface-300) !important;
-  color: var(--surface-600);
-  font-weight: bold;
+  color: var(--surface-900);
   cursor: not-allowed;
   border: 1px solid #e9ecef;
   opacity: 0.65;

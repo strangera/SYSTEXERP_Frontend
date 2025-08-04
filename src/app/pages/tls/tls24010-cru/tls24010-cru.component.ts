@@ -16,7 +16,7 @@ import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdow
 import { DropDownListService, IDropdownItem } from '../../../service/utility/dropDownList.service';
 import { ValidationService } from '../../../shared/service/validation.service';
 import { untilDestroyed } from '@ngneat/until-destroy';
-import { TXN_GUI_CarrTypeOptions, txnStatusOptions } from './tls24010-cru.model';
+import { STORE_WAY, TLS24010_EDIT_TYPE, TXN_GUI_CarrTypeOptions, txnStatusOptions } from './tls24010-cru.model';
 import { DividerModule } from 'primeng/divider';
 import { TableModule } from 'primeng/table';
 import { InputNumberModule } from 'primeng/inputnumber';
@@ -142,7 +142,6 @@ export class TLS24010CRUComponent extends BasicCruPageComponent<TLS24010Data | u
     });
     this.listenForChanges();
     if (this.type === FIX_TYPE.專櫃編號修正) {
-      this.dataForm.get('TLT_No')?.enable();
       this.dataForm.get('TXN_Remark')?.enable();
       const TXN_Date = this.dataForm.get('TXN_Date')?.value;
       if (TXN_Date) {
@@ -207,6 +206,10 @@ export class TLS24010CRUComponent extends BasicCruPageComponent<TLS24010Data | u
     });
   }
   onSubmit(frm: FormGroup) {
+    if (this.isFormEditable) {
+      this.updateTLS24010();
+      return;
+    }
     this.handleSubmit(frm, () => {
       if (this.pos5008Comp?.POS5008SelectedItems.length === 0) {
         this.messageService.errorBubble('請至少選擇一筆支付工具');
@@ -266,6 +269,47 @@ export class TLS24010CRUComponent extends BasicCruPageComponent<TLS24010Data | u
         console.log(res);
       });
     });
+  }
+  @ViewChild(Tls24010TltnoComponent) tltnoComp?: Tls24010TltnoComponent;
+  updateTLS24010() {
+    const rowData = this.rowdata as TLS24010Data;
+    const body = {
+      EditType: TLS24010_EDIT_TYPE.專櫃編號修正,
+      Store_way: this.store_way || '',
+      SYS_StoreNo: this.authService.currentUserValue?.SYS_StoreNo || '',
+      // 把TXN_Date轉成字串YYYY-MM-DD
+      TXN_Date: this.dataForm.getRawValue().TXN_Date,
+      ECR_No: this.dataForm.getRawValue().ECR_No,
+      TXN_No: Number(this.dataForm.getRawValue().TXN_No),
+      POS5006_ID: rowData.ID,
+      TXN_Remark: this.dataForm.getRawValue().TXN_Remark,
+    }
+    if (this.type === FIX_TYPE.專櫃編號修正) {
+      const data = {
+        ...body,
+        TLTNoEdit: {
+          TLT_No: this.dataForm.getRawValue().TLT_No,
+          Talent_ID: this.talent_id || 0,
+          updatePOS5007List: this.tltnoComp?.tltIdData.map(item => {
+            return {
+              POS5007_ID: item.ID,
+              TLT_No: this.dataForm.getRawValue().TLT_No,
+              PLU_MagNo: item.PLU_MagNo as string,
+              PLU_No: item.PLU_No || '',
+              Talent_ID: item.Talent_ID || this.talent_id || 0,
+              tlt_id: this.store_way === STORE_WAY.專櫃 ? item.tlt_id : undefined,
+              PLU_TaxType: this.store_way === STORE_WAY.專櫃 ? item.PLU_TaxType : undefined,
+              TXN_DiscCode: this.store_way === STORE_WAY.專櫃 ? item.TXN_DiscCode : undefined
+            }
+          }) || []
+        }
+      }
+      this.tls24010Service.updateTLS24010(data).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe((res) => {
+        console.log(res);
+      });
+    } else if (this.type === '02') {
+
+    }
   }
 }
 
