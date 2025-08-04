@@ -19,6 +19,7 @@ import { Tls12060Service } from '@service/api/tls/tls12060.service';
 import { InputNumberRangeComponent } from '@shared/componentkit/input-number-range/input-number-range.component';
 import { InputTextRangeComponent } from '@shared/componentkit/input-text-range/input-text-range.component';
 import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
+import { ReportTableGroupComponent } from '@shared/componentkit/report-table-group/report-table-group.component';
 
 export interface POS8011H {
   id: number; // 主鍵，自動編號
@@ -60,7 +61,7 @@ export interface POS8011H {
     templateUrl: './fin11060.component.html',
     styleUrl: './fin11060.component.scss',
     standalone: true,
-    imports: [MenubarComponent, ButtonComponent, InputTextComponent, InputTextRangeComponent, InputNumberComponent, RadiobuttonComponent, InputNumberRangeComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarComponent, CalendarRangeComponent, CalendarRangeQuickComponent, DropdownComponent, MultiSelectComponent, InputTextComponent, TableComponent, TranslateModule]
+    imports: [MenubarComponent, ButtonComponent, InputTextComponent, InputTextRangeComponent, InputNumberComponent, RadiobuttonComponent, InputNumberRangeComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarComponent, CalendarRangeComponent, CalendarRangeQuickComponent, DropdownComponent, MultiSelectComponent, InputTextComponent, ReportTableGroupComponent, TranslateModule]
 })
 
 // 電子發票上送狀況表
@@ -98,14 +99,17 @@ export class FIN11060Component extends BasicQueryPageComponent<POS8011H> impleme
       ]; 
     
       data: POS8011H[] = [];
-      columns: Column[] = [
-    
-        { field: 'CRT_Date', header: '建立日期', visible: true, format: formatDate },
-        { field: 'CRT_USR_No', header: '建立人員代碼', visible: false },
-        { field: 'CRT_USR_Name', header: '建立人員姓名', visible: false },
-        { field: 'UPD_Date', header: '變更日期', visible: false, format: formatDate },
-        { field: 'UPD_USR_No', header: '變更人員代碼', visible: false },
-        { field: 'UPD_USR_Name', header: '變更人員姓名', visible: false }
+      columns: Column[] = [// 表格欄位定義
+        { field: 'SalesDateStart', header: '銷售日期_起始日', visible: true },
+        { field: 'SalesDateEnd', header: '銷售日期_終止日', visible: true },
+        { field: 'processDateStart', header: '產檔日期_起始日', visible: true },
+        { field: 'processDateEnd', header: '產檔日期_終止日', visible: true },
+        { field: 'GUI_No_start', header: '發票號碼(起)', visible: true },
+        { field: 'GUI_No_end', header: '發票號碼(迄)', visible: true },
+        { field: 'ECR_No_start', header: '收銀機代號(起)', visible: true },
+        { field: 'ECR_No_end', header: '收銀機代號(迄)', visible: true },
+        { field: 'condition_type', header: '條件依據', visible: true },
+        { field: 'show_error', header: '是否只顯示異常', visible: true },
       ];
     
       selectedItems: POS8011H[] = [];// 多選項目
