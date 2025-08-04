@@ -8,14 +8,12 @@
       [headerStyleClass]="'query-accordionTab'">
       <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text label="格式代號" controlName="format_code" [control]="queryForm.controls.format_code"
-              [submitted]="submitted"></app-input-text>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text label="格式名稱" controlName="format_name" [control]="queryForm.controls.format_name"
-              [submitted]="submitted"></app-input-text>
-          </div>
+          <!-- 發票格式代號 -->
+          <app-input-text class="col-12 md:col-6 lg:col-4" label="發票格式代號" controlName="INV_GUIType"
+            [control]="queryForm.controls.INV_GUIType" [submitted]="submitted" placeholder="最長2個字"></app-input-text>
+          <!-- 發票格式名稱 -->
+          <app-input-text class="col-12 md:col-6 lg:col-4" label="發票格式名稱" controlName="INV_GUIName"
+            [control]="queryForm.controls.INV_GUIName" [submitted]="submitted" placeholder="最長100個字"></app-input-text>
         </div>
         <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
           <app-button btnType="clear"></app-button>
@@ -26,11 +24,9 @@
   </p-accordion>
 </div>
 <div class="card">
-  <div class="col-13">
-    <app-table tableKey="FIN11050" [data]="data" [columns]="columns" [selectedItems]="selectedItems"
-      (selectionChange)="selectedItems = $event" [showDelete]="false" [showCheckBox]="false" dataKey="row_no"
-      [multiSortMeta]="[{ field: 'format_code', order: 1 }]" [totalRecords]="totalRecords"
-      (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [lazy]="true" [loading]="loading"
-      [isRowSelectable]="isRowSelectable" (edit)="onEdit($event)" (detail)="onDetail($event)"></app-table>
-  </div>
+  <app-table tableKey="FIN11050" [data]="data" [columns]="columns" (edit)="onEdit($event)" (detail)="onDetail($event)"
+    [selectedItems]="selectedItems" (selectionChange)="selectedItems = $event" [showDelete]="false"
+    [showCheckBox]="false" dataKey="id" [totalRecords]="totalRecords"
+    (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [lazy]="true" [loading]="loading">
+  </app-table>
 </div>

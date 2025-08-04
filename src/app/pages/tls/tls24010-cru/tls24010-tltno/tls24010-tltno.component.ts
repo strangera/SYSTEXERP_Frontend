@@ -1,10 +1,11 @@
-import { Component, Input, OnChanges, OnInit, SimpleChanges } from '@angular/core';
+import { Component, Host, Input, OnChanges, OnInit, Optional, SimpleChanges } from '@angular/core';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { POS2004ForUpdateResponse, POS5007Data, Tls24010Service } from '@service/api/tls/tls24010.service';
 import { TableComponent } from '@shared/componentkit/table/table.component';
 import { Column, formatAmount } from '@shared/componentkit/table/table.model';
 import { STORE_WAY } from '../tls24010-cru.model';
 import { AutoCompleteSelectEvent } from 'primeng/autocomplete';
+import { TLS24010CRUComponent } from '../tls24010-cru.component';
 
 @UntilDestroy()
 @Component({
@@ -25,17 +26,18 @@ export class Tls24010TltnoComponent implements OnInit, OnChanges {
   private previousData: POS5007Data[] = [];
   tltIdData: POS5007Data[] = [];
   columns: Column[] = [
-    { field: 'PLU_MagNo', header: '商品編號/專櫃編號', type: 'autoComplete', options: [], optionLabel: 'PLU_MagNo', optionValue: 'PLU_MagNo' },
+    { field: 'PLU_MagNo', header: '商品編號/專櫃編號', type: 'autoComplete', options: [], templateLabel: 'label', optionLabel: 'PLU_MagNo', optionValue: 'PLU_MagNo' },
     { field: 'PLU_Name', header: '商品名稱/櫃位名稱' },
     { field: 'TXN_Qty', header: '數量', format: formatAmount },
-    { field: 'Unitprice', header: '單價金額', format: formatAmount },
-    { field: 'PLU_SalePrc', header: '單價小計金額', format: formatAmount },
+    { field: 'PLU_SalePrc', header: '單價金額', format: formatAmount },
+    { field: 'Unitprice', header: '單價小計金額', format: formatAmount },
     { field: 'TXN_Disc', header: '單價折扣讓金額(負數)', format: formatAmount },
     { field: 'TXN_SaleAmt', header: '單價銷售金額', format: formatAmount },
   ]
   POS2004Options: POS2004ForUpdateResponse[] = []; //下拉選單 商品資料
   constructor(
-    private readonly tls24010Service: Tls24010Service
+    private readonly tls24010Service: Tls24010Service,
+    @Optional() @Host() public tls24010?: TLS24010CRUComponent
   ) { }
   ngOnInit(): void {
   }
@@ -67,27 +69,35 @@ export class Tls24010TltnoComponent implements OnInit, OnChanges {
 
   filterCountry(event: { rowData: POS5007Data, value: string }): void {
     const query = event.value.toLowerCase();
-    if (!query || !this.store_way || !this.TXN_Date || !this.TLT_No || query.length < 5) {
+    if (!query || !this.store_way || !this.TXN_Date || !this.TLT_No || query.length < 9) {
       return;
     }
     const body = {
       Store_way: this.store_way,
       TXN_Date: this.TXN_Date,
-      TLT_No: this.TLT_No,
       Keyword: query
     }
-    this.tls24010Service.queryPOS2004ForUpdate(body) // !!! 還是留意一下這段api，太多資料會爆炸
+    this.tls24010Service.queryPOS2004ForUpdate(body)
       .pipe(untilDestroyed(this))
       .subscribe((response) => {
-        this.POS2004Options = response.Data;
+        this.POS2004Options = response.Data.map((item) => ({
+          ...item,
+          label: `${item.PLU_MagNo} - ${item.PLU_No} - ${item.PLU_OrgPLUNo} - ${item.PLU_Name}`
+        }));
         this.columns[0].options = this.POS2004Options;
       });
   }
-  onFieldChange(event: { rowData: POS5007Data, field: string, value: AutoCompleteSelectEvent }): void {
+  onFieldChange(event: { rowData: POS5007Data, field: string, value: AutoCompleteSelectEvent, index?: number }): void {
     if (event.field === 'PLU_MagNo') {
       const selectedItem = this.POS2004Options.find(item => item.PLU_MagNo === event.value?.value.PLU_MagNo);
       if (selectedItem) {
         event.rowData.PLU_Name = selectedItem.PLU_Name;
+        event.rowData.TLT_No = selectedItem.TLT_No;
+        event.rowData.PLU_No = selectedItem.PLU_No;
+        event.rowData.Talent_ID = selectedItem.talent_id;
+        if (event.index === 0) {
+          this.tls24010?.dataForm.patchValue({ TLT_No: selectedItem.TLT_No });
+        }
       }
     }
   }

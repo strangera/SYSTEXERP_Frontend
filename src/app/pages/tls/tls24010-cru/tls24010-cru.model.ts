@@ -45,3 +45,12 @@ export enum STORE_WAY {
   專櫃 = '1',
   自營 = '2',
 }
+
+export enum TLS24010_EDIT_TYPE {
+  專櫃編號修正 = "TLTNoEdit",
+  折數修正 = "DiscCodeEdit",
+  抽成類別修正 = "TLTIdEdit",
+  付款別修正 = "PayNoEdit",
+  是否為預售交易修正 = "PreOrderEdit",
+  交易資料作廢 = "VoidEdit"
+}
