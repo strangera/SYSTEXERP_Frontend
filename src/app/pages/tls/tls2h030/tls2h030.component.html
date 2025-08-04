@@ -5,14 +5,14 @@
         <div class="col" style="flex: 1">
           <app-menubar [ProgNo]="ProgNo"></app-menubar>
         </div>
-        <div *appHasPermission="addPermission">
+        <div >
           <app-button
             btnType="create"
             label="產生發票"
             class="col"
           ></app-button>
         </div>
-        <div *appHasPermission="addPermission">
+        <div >
           <app-button
             btnType="create"
             label="重新列印"

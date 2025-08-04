@@ -5,10 +5,10 @@
         <div class="col" style="flex: 1">
           <app-menubar [ProgNo]="ProgNo"></app-menubar>
         </div>
-        <div *appHasPermission="addPermission">
+        <div >
           <app-button btnType="create" label="下一步" class="col"></app-button>
         </div>
-        <div *appHasPermission="addPermission">
+        <div >
           <app-button
             btnType="create"
             label="調整報表"
