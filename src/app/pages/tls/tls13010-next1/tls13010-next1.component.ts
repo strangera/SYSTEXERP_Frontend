@@ -144,7 +144,8 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
       header: '是否新增',
       type: 'checkbox',
       editable: true,
-      autoWidth: true
+      autoWidth: true,
+      directEdit: true // 允許直接編輯checkbox
     },
     {
       field: 'cap_item',
@@ -163,10 +164,11 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
     {
       field: 'tpy_bdate',
       header: '起始年月',
-      type: 'text',
+      type: 'date',
       editable: true,
       autoWidth: true,
-      dateFormat: 'year-month'
+      dateFormat: 'year-month',
+      maxLength: 7,
     },
     {
       field: 'tpy_type',
@@ -194,7 +196,7 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
       field: 'tpy_amount',
       header: '扣款金額',
       type: 'number',
-      editable: true,
+      editable: false,
       autoWidth: true
     },
     {
@@ -225,7 +227,8 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
       header: '是否新增',
       type: 'checkbox',
       editable: true,
-      width: '80px'
+      width: '80px',
+      directEdit: true // 允許直接編輯checkbox
     },
     {
       field: 'cap_item',
@@ -277,6 +280,7 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
       field: 'tpy_qty',
       header: '數量',
       type: 'number',
+      allowDecimal: true,
       editable: true,
       width: '70px'
     },
@@ -284,7 +288,7 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
       field: 'tpy_amount',
       header: '扣款金額(未稅)',
       type: 'number',
-      editable: true,
+      editable: false,
       width: '120px'
     },
     {
@@ -325,7 +329,8 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
       header: '是否新增',
       type: 'checkbox',
       editable: true,
-      width: '80px'
+      width: '80px',
+      directEdit: true // 允許直接編輯checkbox
     },
     {
       field: 'cap_item',
@@ -421,7 +426,8 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
       header: '是否新增',
       type: 'checkbox',
       editable: true,
-      width: '80px'
+      width: '80px',
+      directEdit: true // 允許直接編輯checkbox
     },
     {
       field: 'cap_item',
@@ -497,7 +503,8 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
       header: '是否新增',
       type: 'checkbox',
       editable: true,
-      width: '80px'
+      width: '80px',
+      directEdit: true // 允許直接編輯checkbox
     },
     {
       field: 'cap_item',
@@ -1383,6 +1390,7 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
     });
 
     const { newData } = event;
+    this.autoCalculateAmount(newData, capType);
 
     // A類型特殊處理：自動設定結束日期等於開始日期
     if (capType === 'A' && newData.tpy_bdate) {
@@ -1477,6 +1485,63 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
     }
 
     this.saveFareDataToWorkflow();
+  }
+
+  private autoCalculateAmount(data: any, capType: string): void {
+    // 只處理 A 和 B 類型
+    if (capType !== 'A' && capType !== 'B') {
+      return;
+    }
+
+    // 檢查是否有單價和數量
+    const unitPrice = parseFloat(data.tpy_unitamt) || 0;
+    const quantity = parseFloat(data.tpy_qty) || 0;
+
+    if (unitPrice > 0 && quantity > 0) {
+      // 計算金額：單價 × 數量
+      const calculatedAmount = unitPrice * quantity;
+      data.tpy_amount = calculatedAmount;
+
+      console.log(`💰 自動計算金額 (${capType}類型):`, {
+        項目: data.cap_item,
+        單價: unitPrice,
+        數量: quantity,
+        計算金額: calculatedAmount
+      });
+    } else {
+      // 如果單價或數量為 0，清空金額
+      if (unitPrice === 0 || quantity === 0) {
+        data.tpy_amount = 0;
+        console.log(`💰 清空金額 (${capType}類型): ${data.cap_item} - 單價或數量為0`);
+      }
+    }
+  }
+
+  // 🎯 即時計算方法（只處理 A 和 B 類型）
+  onFieldChange(fieldName: string, newValue: any, rowData: any, capType: string): void {
+    // 只處理 A 和 B 類型的單價和數量變更
+    if ((capType === 'A' || capType === 'B') && (fieldName === 'tpy_unitamt' || fieldName === 'tpy_qty')) {
+      rowData[fieldName] = newValue;
+
+      const unitPrice = parseFloat(rowData.tpy_unitamt) || 0;
+      const quantity = parseFloat(rowData.tpy_qty) || 0;
+
+      if (unitPrice > 0 && quantity > 0) {
+        const calculatedAmount = unitPrice * quantity;
+        rowData.tpy_amount = calculatedAmount;
+
+        console.log(`💰 即時計算金額 (${capType}類型):`, {
+          欄位: fieldName,
+          新值: newValue,
+          單價: unitPrice,
+          數量: quantity,
+          計算金額: calculatedAmount
+        });
+      } else {
+        // 單價或數量為 0 時，清空金額
+        rowData.tpy_amount = 0;
+      }
+    }
   }
 
   onFareTableEdit(rowData: any, capType: string): void {

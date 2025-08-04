@@ -559,12 +559,7 @@ export class DataCleaner {
    * 🎯 修正：清理合約基本資料以配合後端
    */
   static cleanContractInfo(rawData: any): CleanContractData {
-    const meterTypes = rawData.meter_typeList || [];
-    console.log('🔍 處理前的 meter_typeList:', meterTypes);
-    // 🎯 方案：有選到就送 Y，沒選到送 N（或不送，讓後端用預設值）
-    const waterFlag = meterTypes.includes('water') || meterTypes.includes('W') || meterTypes.includes('1') ? 'Y' : 'N';
-    const electricFlag = meterTypes.includes('electric') || meterTypes.includes('E') || meterTypes.includes('2') ? 'Y' : 'N';
-    const gasFlag = meterTypes.includes('gas') || meterTypes.includes('G') || meterTypes.includes('3') ? 'Y' : 'N';
+
 
     return {
       // 基本資料
@@ -631,9 +626,9 @@ export class DataCleaner {
       overall_status: rawData.overall_status,
       rent_ahead: rawData.rent_ahead,
       rent_period: this.parseNumber(rawData.rent_period),
-      water_flag: waterFlag,
-      electric_flag: electricFlag,
-      gas_flag: gasFlag,
+      water_flag: rawData.water_flag || 'N',
+      electric_flag: rawData.electric_flag || 'N',
+      gas_flag: rawData.gas_flag || 'N',
       cap_saletype1: rawData.cap_saletype1,
       cap_saletype2: rawData.cap_saletype2,
 
@@ -664,7 +659,6 @@ export class DataCleaner {
    */
   static cleanLocationInfo(rawLocations: any[]): CleanLocationInfo[] {
     return rawLocations
-      .filter(location => location._status !== 'deleted')
       .map(location => ({
         ...(this.hasValidId(location.id) ? { id: Number(location.id) } : {}),
         location_no: location.location_no || '',

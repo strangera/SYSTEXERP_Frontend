@@ -186,7 +186,7 @@ export class ContractFlowService {
       cleanData.commissions.masters.toUpdate.length > 0;
 
     if (!hasCommissions && cleanData.contractInfo.data.tlt_term_type === '3') {
-      warnings.push('一般抽成模式建議至少設定一個抽成項目');
+      // warnings.push('一般抽成模式建議至少設定一個抽成項目');
     }
 
     // 條件設定驗證
