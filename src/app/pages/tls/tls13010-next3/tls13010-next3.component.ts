@@ -1784,8 +1784,4 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionItem>
 
     // 🎯 表格的 readonly 屬性會根據 isViewMode 自動處理
   }
-
-  getSubmitButtonText(): string {
-    return this.isViewMode ? '結束檢視' : '確認送出';
-  }
 }

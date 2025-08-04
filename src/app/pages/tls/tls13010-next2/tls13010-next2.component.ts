@@ -2257,11 +2257,9 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
   }
 
   onClearAndExit(): void {
-    if (confirm('確定要清空所有暫存資料並離開嗎？此操作無法復原。')) {
-      this.contractFlowService.clearTempData();
-      this.router.navigate(['account/tls/tls13010']);
-      this.notificationService.infoBubble('已清空暫存資料並離開');
-    }
+    this.contractFlowService.clearTempData();
+    this.router.navigate(['account/tls/tls13010']);
+    this.notificationService.infoBubble('已清空暫存資料並離開');
   }
 
   private hasItemId(item: any): boolean {

@@ -286,9 +286,6 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
 
   // ==========  生命週期方法 ==========
   ngOnInit(): void {
-    // // 第一時間檢查 URL 參數 for 檢視模式
-    // this.checkViewModeFromURL();
-
     this.initializePage('TLS13010', this.dataForm);
     this.funInfo = this.authService.getUserPermissions(this.ProgNo);
 

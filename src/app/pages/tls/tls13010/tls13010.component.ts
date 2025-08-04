@@ -395,14 +395,14 @@ export class TLS13010Component extends BasicQueryPageComponent<ContractItem> imp
    * 詳細檢視功能
    */
   override onDetail(rowData: ContractItem): void {
-    // 強制設為檢視模式
-    this.contractFlowService.setViewMode(true);
-    this.contractFlowService.startWorkflow(rowData);
+    // 🎯 使用 startViewWorkflow 會自動持久化檢視模式
+    this.contractFlowService.startViewWorkflow(rowData);
 
-    this.router.navigate(['account/tls/tls13010cru']); // 不帶參數
+    // 🎯 不帶任何 URL 參數，依賴持久化狀態
+    this.router.navigate(['account/tls/tls13010cru']);
+
     this.messageService.infoBubble('進入檢視模式');
   }
-
   /**
    * 導航到指定步驟
    */
