@@ -11,6 +11,28 @@ export class Tls29010Service {
     apiUrl: string = environment.ApiUrl + '/TLS0000/TLS2000';
     constructor(private http: HttpClient) { }
 
+  // 查詢 TALPORDERD_OPENDisc 資料表
+  queryTLS29010(body: any): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/queryTLS29010`, body);
+  }
+
+  // 新增 TALPORDERD_OPENDisc 資料表
+  insertTLS29010(body: any): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/insertTLS29010`, body);
+  }
+
+  // 修改 TALPORDERD_OPENDisc 資料表
+  updateTLS29010(body: any): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/updateTLS29010`, body);
+  }
+
+  // 刪除 TALPORDERD_OPENDisc 資料表
+  deleteTLS29010(body: any): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/deleteTLS29010`, body);
+  }
+
+  // ---dropDown下拉---
+
   // 查詢 專櫃編號
   queryTLTTALENT_Status_DropDownList(body: any): Observable<any> {
     return this.http.post<any>(`${environment.ApiUrl}/queryTLTTALENT_Status_DropDownList`, body);
