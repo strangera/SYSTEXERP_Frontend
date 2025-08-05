@@ -1255,12 +1255,10 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionItem>
   }
 
   onRealCancel(): void {
-    if (confirm('確定要離開契約編輯流程嗎？所有暫存資料將會保留。')) {
-      if (!this.isViewMode) {
-        this.saveConditionDataToWorkflow();
-      }
-      this.router.navigate(['account/tls/tls13010']);
+    if (!this.isViewMode) {
+      this.saveConditionDataToWorkflow();
     }
+    this.router.navigate(['account/tls/tls13010']);
   }
 
   // 🎯 工具方法

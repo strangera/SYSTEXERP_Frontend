@@ -2,9 +2,15 @@
 <div class="card">
   <div class="flex gap-2 mb-2">
     <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
-    <app-button btnType="back" label="上一步" (click)="onClearAndExit()"></app-button>
-    <app-button [btnType]="getNextButtonType()" [label]="getNextButtonLabel()" (click)="onSubmitNext()"
-      [disabled]="!hasCommissionData()" [loading]="loading"></app-button>
+    <app-button btnType="back" label="上一步" (click)="onCancel()"></app-button>
+    <app-button *ngIf="isGeneralCommissionMode && !isViewMode" btnType="submit" label="確認" (click)="onSubmitNext()"
+      [disabled]="!hasCommissionData()" [loading]="loading">
+    </app-button>
+
+    <!-- 其他抽成：編輯模式和檢視模式都顯示下一步 -->
+    <app-button *ngIf="!isGeneralCommissionMode" btnType="create" label="下一步(租金設定)" (click)="onSubmitNext()"
+      [disabled]="!isViewMode && !hasCommissionData()" [loading]="loading">
+    </app-button>
     <app-button btnType="back" (click)="onClearAndExit()"></app-button>
   </div>
 

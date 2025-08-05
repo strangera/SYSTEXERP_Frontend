@@ -2182,9 +2182,15 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
   // 導航方法
   onSubmitNext(): void {
     if (this.isViewMode) {
-      // 🎯 檢視模式：直接導航，不帶參數
-      this.router.navigate(['account/tls/tls13010next3']);
-      return;
+      if (this.isGeneralCommissionMode) {
+        // 一般抽成檢視：回到列表
+        this.router.navigate(['account/tls/tls13010']);
+        return;
+      } else {
+        // 其他抽成檢視：到 Next3
+        this.router.navigate(['account/tls/tls13010next3']);
+        return;
+      }
     }
 
     // 編輯模式：原有邏輯
@@ -2249,11 +2255,9 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
   }
 
   onRealCancel(): void {
-    if (confirm('確定要離開契約編輯流程嗎？所有暫存資料將會保留。')) {
-      this.saveCommissionDataToWorkflow();
-      this.router.navigate(['account/tls/tls13010']);
-      this.notificationService.infoBubble('已離開契約編輯流程');
-    }
+    this.saveCommissionDataToWorkflow();
+    this.router.navigate(['account/tls/tls13010']);
+    this.notificationService.infoBubble('已離開契約編輯流程');
   }
 
   onClearAndExit(): void {
@@ -2522,5 +2526,17 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
     }
   }
 
+  shouldShowSubmitButton(): boolean {
+    if (this.isViewMode) {
+      return false;
+    }
+    return this.isGeneralCommissionMode; // 只有一般抽成顯示「確認」按鈕
+  }
 
+  shouldShowNextStepButton(): boolean {
+    if (this.isViewMode) {
+      return false;
+    }
+    return !this.isGeneralCommissionMode; // 只有非一般抽成顯示「下一步」按鈕
+  }
 }
