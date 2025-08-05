@@ -1,45 +1,23 @@
 <div class="flex gap-2 mb-2">
   <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
-  <app-button btnType="create" (click)="onCreate()"></app-button>
+      <app-button
+      btnType="create"
+      (click)="onCreate()"
+      
+    ></app-button>
 </div>
 <p-accordion>
-  <p-accordionTab
-    header="查詢條件"
-    [selected]="true"
-    class="line-height-3 m-0"
-    [headerStyleClass]="'query-accordionTab'"
-  >
-    <form
-      [formGroup]="queryForm"
-      id="queryForm"
-      (ngSubmit)="onSubmit(queryForm)"
-    >
+  <p-accordionTab header="查詢條件" [selected]="true" class="line-height-3 m-0" [headerStyleClass]="'query-accordionTab'">
+    <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
       <div class="grid p-fluid">
-        <app-input-text
-          class="col-12 sm:col-6 md:col-4"
-          label="縣市代號"
-          controlName="City"
-          [control]="queryForm.controls.CITY_No"
-          [submitted]="submitted"
-        ></app-input-text>
-        <app-input-text
-          class="col-12 sm:col-6 md:col-4"
-          label="縣市名稱"
-          controlName="City_Name"
-          [control]="queryForm.controls.CITY_Name"
-          [submitted]="submitted"
-        ></app-input-text>
-        <app-input-text
-          class="col-12 sm:col-6 md:col-4"
-          label="群組"
-          controlName="City_Group"
-          [control]="queryForm.controls.CITY_Group"
-          [submitted]="submitted"
-        ></app-input-text>
+        <app-input-text class="col-12 sm:col-6 md:col-4 " label="縣市代號" controlName="City_No"
+          [control]="queryForm.controls.City_No" [submitted]="submitted"></app-input-text>
+        <app-input-text class="col-12 sm:col-6 md:col-4 " label="縣市名稱" controlName="City_Name"
+          [control]="queryForm.controls.City_Name" [submitted]="submitted"></app-input-text>
+        <app-input-text class="col-12 sm:col-6 md:col-4 " label="群組" controlName="City_Group"
+          [control]="queryForm.controls.City_Group" [submitted]="submitted"></app-input-text>
       </div>
-      <div
-        class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
-      >
+      <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
         <app-button btnType="clear"></app-button>
         <app-button btnType="query" [loading]="loading"></app-button>
       </div>
@@ -47,21 +25,12 @@
   </p-accordionTab>
 </p-accordion>
 <div class="card">
-  <app-table
-    tableKey="SYSBR00"
-    [data]="data"
-    [columns]="columns"
-    [selectedItems]="selectedItems"
-    (selectionChange)="selectedItems = $event"
-    (delete)="onDelete($event)"
-    [showCheckBox]="true"
-    dataKey="CITY_No"
-    [multiSortMeta]="[{ field: 'CITY_No', order: 1 }]"
-    [totalRecords]="totalRecords"
-    [lazy]="true"
-    [loading]="loading"
-    (edit)="onEdit($event)"
-    (detail)="onDetail($event)"
-    (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"
-  ></app-table>
+  <app-table [tableKey]="'sysbr00'" dataKey="CITY_ID" [multiSortMeta]="[{ field: 'CITY_No', order: 1}]"
+    [columns]="columns" [data]="data" [loading]="loading" [showCheckBox]="true" (edit)="onEdit($event)"
+    (detail)="onDetail($event)" [selectedItems]="selectedItems" (selectionChange)="selectedItems = $event"
+    [showCheckBox]="true" (delete)="deleteRow($event)">
+  <header>
+    
+  </header>
+  </app-table>
 </div>
