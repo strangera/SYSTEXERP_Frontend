@@ -1,6 +1,6 @@
 import { Tls29010Service } from './../../../service/api/tls/tls29010.service';
 import { Component, OnInit } from '@angular/core';
-import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { createPaginationConfig, Column, formatDate } from '../../../shared/componentkit/table/table.model';
 import { apiOption, option } from '../../../shared/models/sys/sysb000.module';
@@ -16,6 +16,7 @@ import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/
 import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
 import { CalendarRangeQuickComponent } from '../../../shared/componentkit/calendar-range-quick/calendar-range-quick.component';
+import { Tls12010Service } from '@service/api/tls/tls12010.service';
 
 // TALPORDERM (主檔)
 export interface TALPORDERM {
@@ -70,7 +71,7 @@ export class TLS29010Component extends BasicQueryPageComponent<TALPORDERM> imple
     // 查詢
       queryForm = this.formBuilder.group({
         // TALPORDERM
-        pod_no: [''],       // 活動申請編號YYYYMMDDSSS(活動起始日期+流水號)
+        pod_no: [''],   // 活動申請編號YYYYMMDDSSS(活動起始日期+流水號)
         pod_type: [[]], // 折扣別(1=預售, 2=滿千送百發行, 3=滿千送百兌回, 4~5=會員卡集點, 6~7=全館集點, 8=期間開放折扣)
         pod_sdate: [null], // 活動起始日 (Date)
         pod_edate: [null], // 活動終止日 (Date)
@@ -172,7 +173,9 @@ export class TLS29010Component extends BasicQueryPageComponent<TALPORDERM> imple
       selectedItems: TALPORDERM[] = [];// 多選項目
     
       // ----------------------------------------------------------------
-      constructor(private tls29010Service: Tls29010Service) {
+      constructor(
+        private tls29010Service: Tls29010Service,
+      ) {
         super();
       }
     
@@ -260,16 +263,16 @@ export class TLS29010Component extends BasicQueryPageComponent<TALPORDERM> imple
 
       loadOption(){
         // 專櫃編號
-        // this.tls12010Service
-        //   .queryTLTTALENT_Status_DropDownList({})
-        //   .subscribe((response) => {
-        //     this.tlt_No_Option = response.Data.map((item: apiOption) => ({
-        //       No: item.No,
-        //       Name: item.Name,
-        //       Label: item.No + '-' + item.Name,
-        //     }));
+        this.tls29010Service
+          .queryTLTTALENT_Status_DropDownList({})
+          .subscribe((response) => {
+            this.tlt_No_Option = response.Data.map((item: apiOption) => ({
+              No: item.No,
+              Name: item.Name,
+              Label: item.No + '-' + item.Name,
+            }));
 
-        //     console.log('專櫃編號 下拉:', response.Data);
-        //   });
+            console.log('專櫃編號 下拉:', response.Data);
+          });
       }
 }
