@@ -9,7 +9,7 @@ export interface TLS26020QueryRequest extends BaseQueryRequest {
   Sale_DateStart: string;     // 銷售日期(起)
   Sale_DateEnd: string;       // 銷售日期(訖)
   tlt_building: string[];     // 館別
-  Org_Name: string;           // 組織名稱
+  Org_Name: string[];           // 組織名稱
   tlt_floor: string[];        // 樓層
 }
 

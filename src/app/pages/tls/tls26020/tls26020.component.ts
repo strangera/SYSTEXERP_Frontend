@@ -15,6 +15,8 @@ import { MultiSelectComponent } from "../../../shared/componentkit/multi-select/
 import { Tls11010Service } from '@service/api/tls/tls11010.service';
 import { FloorService } from '@service/basic/floor.service';
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
+import { Tls51080Service } from '@service/api/tls/tls51080.service';
+import { apiOption } from '@shared/models/sys/sysb000.module';
 
 @Component({
   selector: 'app-tls26020',
@@ -40,7 +42,7 @@ export class TLS26020Component extends BasicQueryPageComponent<TLS26020Data> imp
     Sale_DateStart: ['', Validators.required],        // 銷售日期(起)
     Sale_DateEnd: ['', Validators.required],          // 銷售日期(訖)
     tlt_building: [[],],          // 館別
-    Org_Name: ['',],              // 組織名稱
+    Org_Name: [[], '',],              // 組織名稱
     tlt_floor: [[],],             // 樓層
     ...createPaginationConfig([{ field: 'id', order: 1 }])
   });
@@ -65,10 +67,13 @@ export class TLS26020Component extends BasicQueryPageComponent<TLS26020Data> imp
 
   buildingOptions: any[] = [];
 
+  orgOptions: any[] = [];
+
   constructor(
     private tls26020Service: TLS26020Service,
     private tls11010Service: Tls11010Service,
     private floorService: FloorService,
+    private tls51080Service: Tls51080Service
   ) {
     super();
   }
@@ -100,6 +105,13 @@ export class TLS26020Component extends BasicQueryPageComponent<TLS26020Data> imp
     this.floorService.getFloors().subscribe((data) => {
       this.floorOptions = data;
     });
+
+    // 組織代碼下拉
+    this.tls51080Service
+      .querySYS3100_DropDownList({})
+      .subscribe((response) => {
+        this.orgOptions = response.Data;
+      });
   }
 
 }

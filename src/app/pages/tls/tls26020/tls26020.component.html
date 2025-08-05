@@ -18,8 +18,9 @@
             [control]="queryForm.controls.tlt_building" [submitted]="submitted"></app-multi-select>
 
           <!-- 組織名稱 -->
-          <app-input-text class="col-12 md:col-6 lg:col-4" label="組織名稱" controlName="Org_Name"
-            [control]="queryForm.controls.Org_Name" [submitted]="submitted"></app-input-text>
+          <app-multi-select class="col-12 md:col-6 lg:col-4" label="組織名稱" controlName="Org_Name" [options]="orgOptions"
+            optionLabel="Name" optionValue="No" [control]="queryForm.controls.Org_Name"
+            [submitted]="submitted"></app-multi-select>
 
           <!-- 樓層(多選) -->
           <app-multi-select class="col-12 md:col-6 lg:col-4" label="樓層" controlName="tlt_floor" [options]="floorOptions"
