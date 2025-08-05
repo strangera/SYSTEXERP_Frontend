@@ -99,7 +99,7 @@
             ></app-multi-select>
           </div>
         </div>
-      </form>
+
       <div class="col-12 md:col-6 lg:col-4">
         <label for="pageSize">限制筆數</label>
         <input
@@ -120,10 +120,11 @@
         <app-button
           btnType="report"
           label="報表模式"
-          (clickEvent)="confirmPageSizeAndNavigate()"
+          (click)="confirmPageSizeAndNavigate()"
           [loading]="loading"
         ></app-button>
       </div>
+         </form>
     </p-accordionTab>
   </p-accordion>
 </div>

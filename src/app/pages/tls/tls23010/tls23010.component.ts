@@ -410,7 +410,7 @@ export class TLS23010Component extends BasicQueryPageComponent<any> {
             this.data = res.Data || [];
             this.totalRecords = res.TotalCount || this.data.length;
             this.queryStateService.setQueryState(this.ProgNo, payload);
-            this.messageService.successBubble('查詢成功');
+            
           } else {
             this.data = [];
             this.totalRecords = 0;
@@ -470,71 +470,74 @@ export class TLS23010Component extends BasicQueryPageComponent<any> {
     });
   };
 
-  confirmPageSizeAndNavigate(): void {
-    this.submitted = true;
-    if (this.queryForm.invalid) {
-      this.messageService.warnBubble('請確認欄位資料是否完整');
-      this.queryForm.markAllAsTouched();
-      return;
+ confirmPageSizeAndNavigate(): void {
+  this.submitted = true;
+  if (this.queryForm.invalid) {
+    this.messageService.warnBubble('請確認欄位資料是否完整');
+    this.queryForm.markAllAsTouched();
+    return;
+  }
+
+  const rawFormValue = { ...this.queryForm.value };
+  for (const key in rawFormValue) {
+    const typedKey = key as keyof typeof rawFormValue;
+    if (rawFormValue[typedKey] === '') {
+      rawFormValue[typedKey] = null;
     }
+  }
 
-    const rawFormValue = { ...this.queryForm.value } as any;
-    for (const key in rawFormValue) {
-      if (rawFormValue[key] === '') rawFormValue[key] = null;
-    }
+  const queryFormValue = {
+    ...rawFormValue,
+    pageSize: this.customPageSize,
+  };
 
-    const queryFormValue = {
-      ...rawFormValue,
-      pageSize: this.customPageSize,
-    };
+  this.loading = true;
+  this.messageService.blockUi();
 
-    this.loading = true;
-    this.messageService.blockUi();
+  this.tls23010Service
+    .queryTLS23010(queryFormValue, this.displayMode)
+    .subscribe({
+      next: (res) => {
+        if (res.Status === '0000') {
+          const mainData = (res.Data || []).map((row: any) => ({
+            ...row,
+            TXN_Key: `${row.TXN_Date}_${row.ECR_No}_${row.TXN_No}`,
+            DetailList: row.DetailList || [],
+          }));
 
-    this.tls23010Service
-      .queryTLS23010(queryFormValue, this.displayMode)
-      .subscribe({
-        next: async (res) => {
-          if (res.Status === '0000') {
-            const mainData = (res.Data || []).map((row: any) => ({
-              ...row,
-              TXN_Key: `${row.TXN_Date}_${row.ECR_No}_${row.TXN_No}`,
-            }));
+          this.queryStateService.setQueryState(this.ProgNo, queryFormValue);
 
-            // ✅ 一併查詢每筆明細
-            const enrichedData = await Promise.all(
-              mainData.map(async (row: any) => {
-                const detail = await this.fetchDetailData(row);
-                return { ...row, DetailList: detail };
-              }),
-            );
+          // ✅ 等路由跳轉完成才解除 Loading
+          this.router.navigate(['account/tls/tls23010cru'], {
+            state: {
+              queryFormValue,
+              pageSize: this.customPageSize,
+              data: mainData,
+              displayMode: this.displayMode,
+            },
+          }).then(() => {
+            this.loading = false;
+            this.messageService.unblockUi();
+            this.showPageSizeDialog = false;
+          });
 
-            this.queryStateService.setQueryState(this.ProgNo, queryFormValue);
-            this.router.navigate(['account/tls/tls23010cru'], {
-              state: {
-                queryFormValue,
-                pageSize: this.customPageSize,
-                data: enrichedData,
-                displayMode: this.displayMode,
-              },
-            });
-            this.messageService.successBubble('查詢成功');
-          } else {
-            this.messageService.errorBubble('查詢失敗');
-          }
-        },
-        error: () => {
-          this.messageService.errorBubble('查詢錯誤');
-          this.loading = false;
-          this.messageService.unblockUi();
-        },
-        complete: () => {
+        } else {
+          this.messageService.errorBubble('查詢失敗');
           this.loading = false;
           this.messageService.unblockUi();
           this.showPageSizeDialog = false;
-        },
-      });
-  }
+        }
+      },
+      error: () => {
+        this.messageService.errorBubble('查詢錯誤');
+        this.loading = false;
+        this.messageService.unblockUi();
+        this.showPageSizeDialog = false;
+      }
+    });
+}
+
+
 
   cancelQuery(): void {
     if (this.querySubscription) {
