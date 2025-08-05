@@ -77,7 +77,7 @@ export class TLS24010Component extends BasicQueryPageComponent<TLS24010Data> imp
     });
     this.dropDownList.queryTLTTALENT_ByContractDate_DropDownList(this.today.toISOString().split('T')[0]).pipe(untilDestroyed(this)).subscribe(options => {
       this.TLT_NoOptions = options.Data.map(item => ({ ...item, label: `${item.No} - ${item.Name}` }));
-      this.queryForm.get('TLT_No')?.setValue('999998');
+      this.queryForm.get('TLT_No')?.setValue('999981');
     });
     this.queryForm.get('TXN_Date')?.setValue(new Date(this.today.getFullYear(), this.today.getMonth(), this.today.getDate(), 0, 0, 0));
     // this.queryForm.get('TXN_Date')?.setValue(new Date('2025-07-29T00:00:00'));

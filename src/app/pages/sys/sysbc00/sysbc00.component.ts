@@ -14,19 +14,19 @@ import { TableComponent } from '../../../shared/componentkit/table/table.compone
 import { TranslateModule } from '@ngx-translate/core';
 
 @Component({
-    selector: 'app-sysbc00',
-    templateUrl: './sysbc00.component.html',
-    standalone: true,
-    imports: [
-        MenubarComponent,
-        ButtonComponent,
-        AccordionModule,
-        FormsModule,
-        ReactiveFormsModule,
-        InputTextComponent,
-        TableComponent,
-        TranslateModule,
-    ],
+  selector: 'app-sysbc00',
+  templateUrl: './sysbc00.component.html',
+  standalone: true,
+  imports: [
+    MenubarComponent,
+    ButtonComponent,
+    AccordionModule,
+    FormsModule,
+    ReactiveFormsModule,
+    InputTextComponent,
+    TableComponent,
+    TranslateModule,
+  ],
 })
 // 銀行基本資料維護作業
 export class SYSBC00Component extends BasicQueryPageComponent<ISysbc00Data> implements OnInit {

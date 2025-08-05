@@ -116,8 +116,9 @@
       <div *ngIf="type !== '02' && type !== '03' && type !== '01'" class="grid p-fluid card">
         <app-tls24010-pos5007 [data]="ProductDetailList" class="col-12" [TXN_GUIPaper]="TXN_GUIPaper"
           [TLT_Name]="TLT_Name" [store_way]="store_way" [talent_id]="talent_id"
-          [TLT_No]="this.dataForm.get('TLT_No')?.value" [isFormCreateable]="isFormCreateable"
-          [isFormEditable]="isFormEditable" [isFormReadable]="isFormReadable" [type]="type"></app-tls24010-pos5007>
+          [TXN_Date]="this.dataForm.controls.TXN_Date.value" [TLT_No]="this.dataForm.get('TLT_No')?.value"
+          [isFormCreateable]="isFormCreateable" [isFormEditable]="isFormEditable" [isFormReadable]="isFormReadable"
+          [type]="type"></app-tls24010-pos5007>
       </div>
       <div *ngIf="type !== '04'" class="grid p-fluid card">
         <app-tls24010-pos5008 [data]="PaymentDetailsList" class="col-12" [submitted]="submitted"

@@ -222,4 +222,10 @@ export class Tls24010Pos5008Component implements OnInit, OnChanges {
 
     return !invalidRows;
   }
+  getCRD_NoTXN_CouponNoTXN_PayDesc(rowData: POS5008Data): string {
+    return rowData.CRD_No && rowData.CRD_No !== '' ?
+      rowData.CRD_No : rowData.TXN_CouponNo && rowData.TXN_CouponNo !== '' ?
+        rowData.TXN_CouponNo : rowData.TXN_PayDesc && rowData.TXN_PayDesc !== '' ?
+          rowData.TXN_PayDesc : '';
+  }
 }

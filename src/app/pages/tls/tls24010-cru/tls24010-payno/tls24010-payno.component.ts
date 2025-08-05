@@ -1,9 +1,11 @@
 import { ChangeDetectionStrategy, Component, Input, OnChanges, OnInit, SimpleChanges } from '@angular/core';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
-import { POS5008Data, Tls24010Service } from '@service/api/tls/tls24010.service';
+import { POS5008Data } from '@service/api/tls/tls24010.service';
 import { DropDownListService, IDropdownItem } from '@service/utility/dropDownList.service';
 import { TableComponent } from '@shared/componentkit/table/table.component';
 import { Column } from '@shared/componentkit/table/table.model';
+import { CRD_TypeOptions } from '../tls24010-cru.model';
+import { SystemOptionsService } from '@service/system/sys1000.service';
 
 @UntilDestroy()
 @Component({
@@ -23,9 +25,9 @@ export class Tls24010PaynoComponent implements OnInit, OnChanges {
     { field: 'ID', header: 'ID', hidden: true },
     { field: 'PAY_No', header: '付款別', type: 'dropdown', options: [], optionLabel: 'label', optionValue: 'PAY_No', disabled: (rowData) => Number(rowData.ID) !== 0 },
     { field: 'TXN_PayAmt', header: '金額', type: 'inputNumber' },
-    { field: 'CRD_Name', header: '信用卡別', type: 'dropdown', disabled: (rowData) => rowData.PAY_Type !== "0" },
+    { field: 'CRD_Type', header: '信用卡別', type: 'dropdown', options: CRD_TypeOptions, optionLabel: 'label', optionValue: 'value', disabled: (rowData) => rowData.PAY_Type !== "0" },
     { field: 'CRD_NoTXN_CouponNoTXN_PayDesc', header: '信用卡卡號/券號/應收付款對象', type: 'input' },
-    { field: 'TERM_Name', header: '分期數', type: 'dropdown', disabled: (rowData) => rowData.PAY_Type !== "0" },
+    { field: 'TERM_No', header: '分期數', type: 'dropdown', options: SystemOptionsService.getOptions('T109'), optionLabel: 'SYS_Name', optionValue: 'SYS_Code', disabled: (rowData) => rowData.PAY_Type !== "0" },
   ]
   PAY_TypeOptions: IDropdownItem[] = [];
   defaultInsertData: POS5008Data = {
@@ -39,10 +41,10 @@ export class Tls24010PaynoComponent implements OnInit, OnChanges {
     TXN_PayDesc: undefined,
     TERM_No: undefined,
     PAY_Type: undefined,
+    CRD_NoTXN_CouponNoTXN_PayDesc: undefined
   };
 
   constructor(
-    private readonly tls24010Service: Tls24010Service,
     private readonly dropDownListService: DropDownListService,
   ) { }
 
@@ -61,14 +63,18 @@ export class Tls24010PaynoComponent implements OnInit, OnChanges {
     const newData: POS5008Data[] = changes['data']?.currentValue;
 
     if (newData?.length > 0 && !this.isSameData(newData, this.previousData)) {
-      this.payNoData = newData.map((item) => ({
-        ...item,
-        CRD_NoTXN_CouponNoTXN_PayDesc:
-          item.PAY_Type === '0' ? item.CRD_No || '' :
-            item.PAY_Type === 'A' ? item.TXN_PayDesc || '' :
-              item.TXN_CouponNo || item.TXN_PayDesc || item.CRD_No || '',
-      }));
-
+      this.payNoData = newData.map((item) => {
+        const mappedPAYType = this.PAY_TypeOptions.find(i => i.No === item.PAY_No)?.PAY_Type;
+        return {
+          ...item,
+          TERM_No: String(item.TERM_No),
+          PAY_Type: mappedPAYType,
+          CRD_NoTXN_CouponNoTXN_PayDesc:
+            mappedPAYType === '0' ? item.CRD_No || '' :
+              mappedPAYType === 'A' ? item.TXN_PayDesc || '' :
+                item.TXN_CouponNo || '',
+        };
+      });
       this.previousData = newData; // 更新快取版本
     }
   }
@@ -79,11 +85,19 @@ export class Tls24010PaynoComponent implements OnInit, OnChanges {
   }
 
   onFieldChange(event: { rowData: POS5008Data, field: string, value: string, index?: number }): void {
-    const selectedItem = this.PAY_TypeOptions.find(item => item.No === event.value);
+    const selectedItem = this.PAY_TypeOptions.find(item => item.No === event.rowData.PAY_No);
     if (selectedItem) {
       event.rowData.PAY_Type = selectedItem.PAY_Type;
+      if (event.field === 'PAY_No') {
+        event.rowData.TXN_PayAmt = undefined;
+        event.rowData.CRD_Type = undefined;
+        event.rowData.CRD_NoTXN_CouponNoTXN_PayDesc = undefined;
+        event.rowData.TERM_No = undefined;
+      }
     }
-    console.log(this.payNoData);
+  }
 
+  isRowSelectable(rowData: POS5008Data): boolean {
+    return rowData.ID === 0;
   }
 }

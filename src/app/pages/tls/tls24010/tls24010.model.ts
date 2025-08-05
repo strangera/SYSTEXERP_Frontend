@@ -2,7 +2,9 @@ import { Column, formatDate } from "@shared/componentkit/table/table.model";
 
 export const TXN_GUIPaperOptions = [
   { label: '補原機台', value: 'E' },
-  { label: '手開二聯式發票', value: '2' }
+  { label: '手開二聯式發票', value: '2' },
+  { label: '交易作廢', value: 'R' },
+  { label: '折讓單', value: 'C' }
 ]
 export const txnStatusOptions = [
   { label: '一般交易', value: 'N' },

@@ -28,6 +28,7 @@ export interface Column {
   optionLabel?: string; // 下拉選單 optionLabel
   optionValue?: string; // 下拉選單 optionValue
   templateLabel?: string; // 模板欄位 label
+  filter?: boolean;
 
   buttonLabel?: string; // 選擇按鈕 label
   checkboxTrueLabel?: string; // checkbox 非編輯模式 true 顯示文字（適用於單一布林值）

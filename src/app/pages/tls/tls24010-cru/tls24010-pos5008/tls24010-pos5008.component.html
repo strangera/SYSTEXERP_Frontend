@@ -1,9 +1,10 @@
 <p-divider align="left" type="solid" styleClass="pb-2">
   <span class="text-center text-xl font-bold text-primary">支付工具</span>
 </p-divider>
-<p-table [value]="POS5008Data" [(selection)]="POS5008SelectedItems" dataKey="PAY_No" [rowTrackBy]="trackByRow"
-  [resizableColumns]="true" styleClass="p-datatable-sm p-datatable-striped p-datatable-gridlines"
-  (onRowSelect)="onRowSelect($event)" (onRowUnselect)="onRowUnselect($event)">
+<p-table [value]="!isFormCreateable ? POS5008SelectedItems: POS5008Data" [(selection)]="POS5008SelectedItems"
+  dataKey="PAY_No" [rowTrackBy]="trackByRow" [resizableColumns]="true"
+  styleClass="p-datatable-sm p-datatable-striped p-datatable-gridlines" (onRowSelect)="onRowSelect($event)"
+  (onRowUnselect)="onRowUnselect($event)">
   <ng-template pTemplate="header" let-columns>
     <tr>
       <th class="w-1rem">序號</th>
@@ -24,41 +25,58 @@
       </td>
 
       <td class="text-center">
-        <app-input-text controlName="PAY_Name" [control]="getFormControl(posFormArrayControls[i], 'PAY_Name')"
-          [submitted]="submitted && rowData.selected" [showLabel]="false" [showErrorMessage]="false" />
+        <app-input-text *ngIf="isFormCreateable" controlName="PAY_Name"
+          [control]="getFormControl(posFormArrayControls[i], 'PAY_Name')" [submitted]="submitted && rowData.selected"
+          [showLabel]="false" [showErrorMessage]="false" />
+        <span *ngIf="!isFormCreateable">
+          {{ rowData.PAY_Name }}
+        </span>
       </td>
 
-      <td>
-        <app-input-number controlName="TXN_PayAmt" [control]="getFormControl(posFormArrayControls[i], 'TXN_PayAmt')"
-          [submitted]="submitted && rowData.selected" [showLabel]="false" [showErrorMessage]="false"
-          [max]="9999999999.9999" [maxFractionDigits]="4" customPlaceholder="請輸入金額" />
+      <td class="text-right">
+        <app-input-number *ngIf="isFormCreateable" controlName="TXN_PayAmt"
+          [control]="getFormControl(posFormArrayControls[i], 'TXN_PayAmt')" [submitted]="submitted && rowData.selected"
+          [showLabel]="false" [showErrorMessage]="false" [max]="9999999999.9999" [maxFractionDigits]="4"
+          customPlaceholder="請輸入金額" />
+        <span *ngIf="!isFormCreateable">
+          $ {{ rowData.TXN_PayAmt }}
+        </span>
       </td>
 
-      <td>
-        <app-dropdown *ngIf="rowData.PAY_Type === '0'" controlName="CRD_Type"
+      <td class="text-center">
+        <app-dropdown *ngIf="rowData.PAY_Type === '0' && isFormCreateable" controlName="CRD_Type"
           [control]="getFormControl(posFormArrayControls[i], 'CRD_Type')" placeholder="請選擇信用卡別"
-          [options]="CRD_TypeOptions" optionLabel="label" optionValue="value"
+          [options]="CRD_TypeOptions" optionLabel="label" optionValue="value" [filter]="false"
           [submitted]="submitted && rowData.selected" [showLabel]="false" [showErrorMessage]="false" />
+        <span *ngIf="!isFormCreateable">
+          {{ rowData.CRD_Name }}
+        </span>
       </td>
 
-      <td>
-        <app-input-text *ngIf="rowData.PAY_Type === '0'" controlName="CRD_No"
+      <td class="text-center">
+        <app-input-text *ngIf="rowData.PAY_Type === '0' && isFormCreateable" controlName="CRD_No"
           [control]="getFormControl(posFormArrayControls[i], 'CRD_No')" [submitted]="submitted && rowData.selected"
           [showLabel]="false" [showErrorMessage]="false" customPlaceholder="請輸入信用卡卡號" />
-        <app-input-text *ngIf="rowData.PAY_Type !== '0' && rowData.PAY_Type !== 'A'" controlName="TXN_CouponNo"
-          [control]="getFormControl(posFormArrayControls[i], 'TXN_CouponNo')"
+        <app-input-text *ngIf="rowData.PAY_Type !== '0' && rowData.PAY_Type !== 'A' && isFormCreateable"
+          controlName="TXN_CouponNo" [control]="getFormControl(posFormArrayControls[i], 'TXN_CouponNo')"
           [submitted]="submitted && rowData.selected" [showLabel]="false" [showErrorMessage]="false"
           customPlaceholder="請輸入券號" />
-        <app-input-text *ngIf="rowData.PAY_Type === 'A'" controlName="TXN_PayDesc"
+        <app-input-text *ngIf="rowData.PAY_Type === 'A' && isFormCreateable" controlName="TXN_PayDesc"
           [control]="getFormControl(posFormArrayControls[i], 'TXN_PayDesc')" [submitted]="submitted && rowData.selected"
           [showLabel]="false" [showErrorMessage]="false" customPlaceholder="請輸入應收付款對象" />
+        <span *ngIf="!isFormCreateable">
+          {{ getCRD_NoTXN_CouponNoTXN_PayDesc(rowData)}}
+          {{ rowData.CRD_No }}
+        </span>
       </td>
-
-      <td>
-        <app-dropdown *ngIf="rowData.PAY_Type === '0'" controlName="TERM_No" [showLabel]="false"
+      <td class="text-center">
+        <app-dropdown *ngIf="rowData.PAY_Type === '0' && isFormCreateable" controlName="TERM_No" [showLabel]="false"
           [showErrorMessage]="false" [control]="getFormControl(posFormArrayControls[i], 'TERM_No')" placeholder="請選擇分期數"
           [options]="sys_typeOptions" optionLabel="SYS_Name" optionValue="SYS_Code"
-          [submitted]="submitted && rowData.selected" />
+          [submitted]="submitted && rowData.selected" [filter]="false" />
+        <span *ngIf="!isFormCreateable">
+          {{ rowData.TERM_Name }}
+        </span>
       </td>
     </tr>
   </ng-template>

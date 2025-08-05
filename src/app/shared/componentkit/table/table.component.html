@@ -196,7 +196,7 @@
                 </ng-template>
               </p-autoComplete>
               <p-dropdown *ngIf="col.type === 'dropdown'" styleClass="w-full" [showClear]="true" appendTo="body"
-                [(ngModel)]="rowData[col.field]" [ngModelOptions]="{ standalone: true }" [filter]="true"
+                [(ngModel)]="rowData[col.field]" [ngModelOptions]="{ standalone: true }" [filter]="col.filter"
                 placeholder="請輸入{{ col.header }}" [options]="getOptions(rowData, col)" [optionLabel]="col.optionLabel"
                 [optionValue]="col.optionValue" [disabled]="col.disabled ? col.disabled(rowData) : false"
                 (onChange)="onFieldChange(rowData, col.field, $event.value, rowIndex)">
@@ -235,7 +235,7 @@
                 </ng-template>
               </p-autoComplete>
               <p-dropdown *ngIf="col.type === 'dropdown'" styleClass="w-full" [showClear]="true" appendTo="body"
-                [(ngModel)]="rowData[col.field]" [ngModelOptions]="{ standalone: true }" [filter]="true"
+                [(ngModel)]="rowData[col.field]" [ngModelOptions]="{ standalone: true }" [filter]="col.filter"
                 placeholder="請輸入{{ col.header }}" [options]="getOptions(rowData, col)" [optionLabel]="col.optionLabel"
                 [optionValue]="col.optionValue"
                 [disabled]="col.disabled ? col.disabled(rowData) : alwaysEdit ? false : true"

@@ -69,6 +69,7 @@ export interface POS5008Data {
   TXN_PayDesc?: string,               // 傳給後端
   TERM_No?: string; // 期別              // 傳給後端
   selected?: boolean
+  CRD_NoTXN_CouponNoTXN_PayDesc?: string;
 }
 
 export interface InsertTLS24010Payload {
