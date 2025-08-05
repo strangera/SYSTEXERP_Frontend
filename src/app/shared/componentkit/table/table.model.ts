@@ -18,6 +18,7 @@ export interface Column {
 
   validate?: ((value: string, rowData: any, data: any[], field: string, header: string) => { isValid: boolean, errorMessage: string[] })[]; // 驗證規則(如果是可輸入的欄位)
 
+  dataKey?: string;
   type?: 'input' | 'inputNumber' | 'dropdown' | 'button' | 'html' | 'date' | 'autoComplete' | 'default'; // 欄位類型
   prefix?: string;
   fractionDigits?: number;
@@ -26,6 +27,7 @@ export interface Column {
   options?: any | ((rowData: any) => any); // 支持靜態數據或基於 rowData 生成
   optionLabel?: string; // 下拉選單 optionLabel
   optionValue?: string; // 下拉選單 optionValue
+  templateLabel?: string; // 模板欄位 label
 
   buttonLabel?: string; // 選擇按鈕 label
   checkboxTrueLabel?: string; // checkbox 非編輯模式 true 顯示文字（適用於單一布林值）
@@ -90,6 +92,7 @@ export interface FieldChangeEvent {
   rowData: any;
   field: string;
   value: any;
+  index?: number;
 }
 
 // 新增一個方法來驗證行數據

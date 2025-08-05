@@ -141,10 +141,10 @@ export class TLS26010Service {
   }
 
   /** 取得收銀機號 */
-  loadPreorderECRList(query: DependentDataQuery & { data_type: string; }): void {
+  loadPreorderECRList(query: DependentDataQuery & { ecr_type: string; }): void {
     if (this.preorderECRLoading) return void (this.preorderECRLoading = !1);
     this.preorderECRLoading = !0;
-    this.http.post<BaseQueryResponse<DropdownOption>>(`${apiUrl}/QueryECRDropDownList`, query).pipe(
+    this.http.post<BaseQueryResponse<DropdownOption>>(`${apiUrl}/queryECRDropDownList`, query).pipe(
       take(1),
       tap(() => this.preorderECRData.set([])),
       tap(response => this.preorderECRData.set(response.Data)),
@@ -162,7 +162,7 @@ export class TLS26010Service {
     this.TLTTALENTLoading = !0;
     // if (query.building_no === '' && query.floor_no === '') return void (this.TLTTALENTLoading = !1);
 
-    this.http.post<BaseQueryResponse<DropdownOption>>(`${apiUrl}/queryTLTTALENT_DropDownList`, query).pipe(
+    this.http.post<BaseQueryResponse<DropdownOption>>(`${apiUrl}/queryTalentDropDownList`, query).pipe(
       take(1),
       tap(() => this.TLTTALENTData.set([])),
       tap(response => this.TLTTALENTData.set(response.Data)),
@@ -338,10 +338,7 @@ export class TLS26010Service {
   }
 
   /** 刪除預購活動 */
-  deleteTLS26010(data: TLS26010Data): void {
-    if (this.tableLoading) return void (this.tableLoading = !1);
-    this.tableLoading = !0;
-    const id = data.pod_no;
+  deleteTLS26010({ id }: TLS26010Data): void {
     this.http.post<BaseQueryResponse<any>>(`${apiUrl}/TLS0000/TLS2000/deleteTLS26010`, { id }).pipe(
       take(1),
       tap(() => this.TLS26010Data.set(this.TLS26010Data())),

@@ -55,7 +55,7 @@ export class SYSB100CRUComponent
     STO_MailFax: ['', [Validators.maxLength(15)]], // 郵寄傳真
     STO_MailAddr: ['', [Validators.maxLength(100)]], // 郵寄地址
     STO_InvoiceAddr: ['', [Validators.maxLength(100)]], // 發票地址
-    STO_Email: ['', [Validators.maxLength(100)]], // 電子郵件
+    STO_Email: ['', [Validators.maxLength(100), Validators.email]], // 電子郵件
     STO_URL: ['', [Validators.maxLength(100)]], // 公司網址
   });
 

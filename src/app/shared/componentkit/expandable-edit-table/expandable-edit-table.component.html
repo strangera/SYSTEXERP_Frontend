@@ -66,7 +66,9 @@
           <ng-container *ngIf="shouldShowInputControl(col, isRowEditing(ri))">
             <ng-container [ngSwitch]="col.type">
               <!-- 基本文字輸入 -->
-              <input *ngSwitchCase="'text'" pInputText type="text" [(ngModel)]="rowData[col.field]" />
+              <input *ngSwitchCase="'text'" pInputText type="text" [ngModel]="rowData[col.field]"
+                (ngModelChange)="onTextInputChange(rowData, col, $event)" [maxlength]="col.maxLength ?? null"
+                [placeholder]="col.placeholder || ''" class="text-input" />
 
               <!-- 數字輸入 -->
               <p-inputNumber *ngSwitchCase="'number'" [(ngModel)]="rowData[col.field]" [minFractionDigits]="
@@ -84,16 +86,20 @@
               <!-- 🎯 日期選擇 - 使用新的方法 -->
               <div *ngSwitchCase="'date'" class="date-selector-wrapper">
                 <input pInputText type="text" [ngModel]="getDateInputValue(rowData, col)"
-                  (ngModelChange)="onDateInputChange(rowData, col, $event)" [placeholder]="getDatePlaceholder(col)"
-                  class="date-input" />
+                  (ngModelChange)="onDateInputChange(rowData, col, $event)" (blur)="onDateInputBlur(rowData, col)"
+                  [placeholder]="getDatePlaceholder(col)"
+                  [maxlength]="col.maxLength || (col.dateFormat?.includes('year-month') ? 7 : 10)" class="date-input" />
                 <button pButton pRipple type="button" icon="pi pi-calendar"
                   class="p-button-text p-button-sm p-button-rounded date-picker-button"
-                  (click)="openDatePicker(rowData, col.field, false, ri)"></button>
+                  (click)="openDatePicker(rowData, col.field, false, ri)">
+                </button>
               </div>
 
               <!-- Checkbox 核取方塊 -->
               <div *ngSwitchCase="'checkbox'" class="checkbox-wrapper">
-                <p-checkbox [(ngModel)]="rowData[col.field]" [binary]="true"></p-checkbox>
+                <p-checkbox [(ngModel)]="rowData[col.field]" [binary]="true"
+                  (ngModelChange)="col.directEdit ? onDirectEditChange(rowData, col.field, $event, ri, col) : null"
+                  [disabled]="readonly || col.editable === false"></p-checkbox>
               </div>
 
               <!-- 預設文字輸入 -->
@@ -242,7 +248,9 @@
           <ng-container *ngIf="shouldShowInputControl(col, isDetailEditing(ri, di))">
             <ng-container [ngSwitch]="col.type">
               <!-- 基本文字輸入 -->
-              <input *ngSwitchCase="'text'" pInputText type="text" [(ngModel)]="detailData[col.field]" />
+              <input *ngSwitchCase="'text'" pInputText type="text" [ngModel]="detailData[col.field]"
+                (ngModelChange)="onDetailTextInputChange(detailData, col, $event, ri, di)"
+                [maxlength]="col.maxLength ?? null" [placeholder]="col.placeholder || ''" class="text-input" />
 
               <!-- 數字輸入 -->
               <p-inputNumber *ngSwitchCase="'number'" [(ngModel)]="detailData[col.field]" [minFractionDigits]="
@@ -260,24 +268,21 @@
 
               <!-- 🎯 日期選擇 - 使用新的方法 -->
               <div *ngSwitchCase="'date'" class="date-selector-wrapper">
-                <input pInputText type="text" [ngModel]="getDateInputValue(detailData, col)" (ngModelChange)="
-                              onDateInputChange(detailData, col, $event)
-                            " [placeholder]="getDatePlaceholder(col)" class="date-input" />
+                <input pInputText type="text" [ngModel]="getDateInputValue(detailData, col, true, di)"
+                  (ngModelChange)="onDateInputChange(detailData, col, $event, true, di)"
+                  (blur)="onDateInputBlur(detailData, col, true, di)" [placeholder]="getDatePlaceholder(col)"
+                  [maxlength]="col.maxLength || (col.dateFormat?.includes('year-month') ? 7 : 10)" class="date-input" />
                 <button pButton pRipple type="button" icon="pi pi-calendar"
-                  class="p-button-text p-button-sm p-button-rounded date-picker-button" (click)="
-                              openDatePicker(
-                                detailData,
-                                col.field,
-                                true,
-                                ri,
-                                di
-                              )
-                            "></button>
+                  class="p-button-text p-button-sm p-button-rounded date-picker-button"
+                  (click)="openDatePicker(detailData, col.field, true, ri, di)">
+                </button>
               </div>
 
               <!-- Checkbox -->
               <div *ngSwitchCase="'checkbox'" class="checkbox-wrapper">
-                <p-checkbox [(ngModel)]="detailData[col.field]" [binary]="true"></p-checkbox>
+                <p-checkbox [(ngModel)]="detailData[col.field]" [binary]="true"
+                  (ngModelChange)="col.directEdit ? onDirectEditChange(rowData, col.field, $event, ri, col) : null"
+                  [disabled]="readonly || col.editable === false"></p-checkbox>
               </div>
 
               <!-- 預設文字輸入 -->
@@ -364,7 +369,9 @@
 <p-dialog header="選擇日期" [(visible)]="datePickerVisible" [modal]="true" [style]="{ width: '400px' }"
   [contentStyle]="{ overflow: 'visible' }" [draggable]="false" [resizable]="false" styleClass="date-picker-dialog">
   <div class="date-picker-container">
-    <p-calendar [(ngModel)]="temporaryDate" [inline]="true" [showIcon]="false" [showButtonBar]="true"></p-calendar>
+    <p-calendar [(ngModel)]="temporaryDate" [inline]="true" [showIcon]="false" [showButtonBar]="true"
+      [view]="getCalendarView()" [dateFormat]="getCalendarDateFormat()">
+    </p-calendar>
   </div>
   <ng-template pTemplate="footer">
     <div class="dialog-footer">

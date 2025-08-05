@@ -2,12 +2,12 @@ import { BaseQueryResponse } from '@shared/models/api/base-api.interface';
 
 /**
  * @description
- * - data_type: 1: 讀取收銀機主檔中統收機台, 2: 讀取預購活動主檔中的收銀機台
+ * - ecr_type: 1: 讀取收銀機主檔中統收機台, 2: 讀取預購活動主檔中的收銀機台
  * - sdate: 起始日期
  * - edate: 結束日期
  */
 export interface DependentDataQuery {
-  data_type?: string;
+  ecr_type?: string;
   building_no?: string | null;
   floor_no?: string | null;
   area_no?: string | null;

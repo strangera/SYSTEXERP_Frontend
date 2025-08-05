@@ -1,70 +1,108 @@
 <div class="card">
-  <div class="grid align-items-center">
-    <div class="col" style="flex: 1">
-      <app-menubar [ProgNo]="ProgNo"></app-menubar>
-    </div>
-    <div *appHasPermission="addPermission">
-      <app-button
-        btnType="create"
-        (click)="onCreate()"
-        class="col"
-      ></app-button>
-    </div>
+  <div class="flex gap-2 mb-2">
+    <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
   </div>
   <p-accordion>
-    <p-accordionTab
-      header="{{ 'query-conditions' | translate }}"
-      [selected]="true"
-      class="line-height-3 m-0"
-      [headerStyleClass]="'query-accordionTab'"
-    >
-      <form
-        [formGroup]="queryForm"
-        id="queryForm"
-        (ngSubmit)="onSubmit(queryForm)"
-      >
+    <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'">
+      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar
-              calendarType="dateMonthOne"
-              label="申報年月"
-              [control]="queryForm.controls.declareYm"
-              [submitted]="submitted"
-            ></app-calendar>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="申報書種類"
-              controlName="declareType"
-              [options]="declareTypeOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.declareType"
-              [submitted]="submitted"
-            ></app-dropdown>
-          </div>
+          <!-- 發票日期起迄 -->
+          <app-calendar-range class="col-12 md:col-6 lg:col-4" label="發票日期"
+            [startControl]="queryForm.controls.InvoiceDateStart" [endControl]="queryForm.controls.InvoiceDateEnd"
+            [submitted]="submitted"></app-calendar-range>
+
+          <!-- 發票格式 -->
+          <app-multi-select class="col-12 md:col-6 lg:col-4" label="發票格式" controlName="FormatCode"
+            [options]="formatCodeOptions" [control]="queryForm.controls.FormatCode" [submitted]="submitted"
+            [optionLabel]="'label'" [optionValue]="'value'"></app-multi-select>
+
+          <!-- 字軌 -->
+          <app-input-text class="col-12 md:col-6 lg:col-4" label="字軌" controlName="Character"
+            [control]="queryForm.controls.Character" [submitted]="submitted"></app-input-text>
+
+          <!-- 發票號碼起迄 -->
+          <app-input-text-range class="col-12 md:col-6 lg:col-4" label="發票號碼"
+            [startControl]="queryForm.controls.InvoiceNumberStart" [endControl]="queryForm.controls.InvoiceNumberEnd"
+            [submitted]="submitted" [errorForGroup]="true"></app-input-text-range>
+
+          <!-- 申報年月 -->
+          <app-calendar-range class="col-12 md:col-6 lg:col-4" label="申報年月" calendarType="dateMonthRange"
+            [startControl]="queryForm.controls.DeclareYearMonthStart"
+            [endControl]="queryForm.controls.DeclareYearMonthEnd" [submitted]="submitted"></app-calendar-range>
+
+          <!-- 資料所屬年月起迄 -->
+          <app-calendar-range class="col-12 md:col-6 lg:col-4" label="資料所屬年月" calendarType="dateMonthRange"
+            [startControl]="queryForm.controls.DataYearMonthStart" [endControl]="queryForm.controls.DataYearMonthEnd"
+            [submitted]="submitted"></app-calendar-range>
+
+
+          <!-- 廠商統一編號 -->
+          <app-input-text-range class="col-12 md:col-6 lg:col-4" label="廠商統一編號" controlName="SellerUniform"
+            [startControl]="queryForm.controls.SellerUniformStart" [endControl]="queryForm.controls.SellerUniformEnd"
+            [submitted]="submitted"></app-input-text-range>
+
+          <!-- 扣抵代號 -->
+          <app-input-text class="col-12 md:col-6 lg:col-4" label="扣抵代號" controlName="DeductionCode"
+            [control]="queryForm.controls.DeductionCode" [submitted]="submitted"></app-input-text>
+
+          <!-- 類別區分 -->
+          <app-multi-select class="col-12 md:col-6 lg:col-4" label="類別區分" controlName="InvoiceType"
+            [options]="invoiceTypeOptions" [control]="queryForm.controls.InvoiceType" [submitted]="submitted"
+            [optionLabel]="'label'" [optionValue]="'value'"></app-multi-select>
+
+          <!-- 課稅別 -->
+          <app-multi-select class="col-12 md:col-6 lg:col-4" label="課稅別" controlName="TaxType"
+            [options]="taxTypeOptions" [control]="queryForm.controls.TaxType" [submitted]="submitted"
+            [optionLabel]="'label'" [optionValue]="'value'"></app-multi-select>
+
+          <!-- 憑證單號 -->
+          <app-input-text-range class="col-12 md:col-6 lg:col-4" label="憑證單號"
+            [startControl]="queryForm.controls.CertNumberStart" [endControl]="queryForm.controls.CertNumberEnd"
+            [submitted]="submitted" [errorForGroup]="true"></app-input-text-range>
+
+          <!-- 傳票號碼起迄 -->
+          <app-input-text-range class="col-12 md:col-6 lg:col-4" label="傳票號碼"
+            [startControl]="queryForm.controls.CarrierNumberStart" [endControl]="queryForm.controls.CarrierNumberEnd"
+            [submitted]="submitted" [errorForGroup]="true"></app-input-text-range>
+
+          <!-- 發票使用別 -->
+          <app-multi-select class="col-12 md:col-6 lg:col-4" label="發票使用別" controlName="InvoiceUsage"
+            [options]="invoiceUsageOptions" [control]="queryForm.controls.InvoiceUsage" [submitted]="submitted"
+            [optionLabel]="'label'" [optionValue]="'value'"></app-multi-select>
+
+          <!-- 系統別 -->
+          <app-input-text class="col-12 md:col-6 lg:col-4" label="系統別" controlName="SystemType"
+            [control]="queryForm.controls.SystemType" [submitted]="submitted"></app-input-text>
+
+          <!-- 建立日期起迄 -->
+          <app-calendar-range class="col-12 md:col-6 lg:col-4" label="建立日期"
+            [startControl]="queryForm.controls.BuildDateStart" [endControl]="queryForm.controls.BuildDateEnd"
+            [submitted]="submitted"></app-calendar-range>
+
+          <!-- 傳票類立者 -->
+          <app-input-text class="col-12 md:col-6 lg:col-4" label="傳票類立者" controlName="CarrierType"
+            [control]="queryForm.controls.CarrierType" [submitted]="submitted"></app-input-text>
+
+          <!-- 列印方式 -->
+          <app-dropdown class="col-12 md:col-6 lg:col-4" label="列印方式" controlName="PrintType"
+            [options]="printTypeOptions" [optionLabel]="'label'" [optionValue]="'value'"
+            [control]="queryForm.controls.PrintType" [submitted]="submitted"></app-dropdown>
+
         </div>
-        <div>
-          <div class="grid justify-content-end">
-            <app-button btnType="clear" (onClick)="onClearForm()"></app-button>
-            <app-button
-              btnType="query"
-              (onClick)="onSubmitQuery(queryForm)"
-              [loading]="loading"
-            ></app-button>
-          </div>
+        <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+          <app-button btnType="clear"></app-button>
+          <app-button btnType="query" [loading]="loading"></app-button>
         </div>
       </form>
     </p-accordionTab>
   </p-accordion>
 </div>
+
 <div class="card">
-  <div class="col-13">
-    <app-table
-      [data]="data"
-      [columns]="columns"
-      (edit)="onEdit($event)"
-      (detail)="onDetail($event)"
-    ></app-table>
-  </div>
+  <app-table tableKey="FIN15010" dataKey="Sequence" [data]="data" [columns]="columns" [selectedItems]="selectedItems"
+    (selectionChange)="selectedItems = $event" [multiSortMeta]="[{ field: 'Sequence', order: -1 }]"
+    [totalRecords]="totalRecords" (lazyLoadData)="onLazyLoadData($event, queryForm);onSubmit(queryForm)" [lazy]="true"
+    [loading]="loading" [showManage]="false" [showDelete]="false">
+  </app-table>
 </div>

@@ -91,10 +91,14 @@ export interface IPOS2013Request {
 }
 
 export interface POS2004Item {
+  id?: number;
   PLU_MagNo: string;
   PLU_No: string;
   PLU_Name: string;
   PLU_SalePrc?: number,
+  TLT_No?: string,
+  cag_barcode?: string,
+  tlt_id?: string,
   label?: string; // 用於顯示的標籤
 }
 

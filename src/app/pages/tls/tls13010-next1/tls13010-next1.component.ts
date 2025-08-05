@@ -144,7 +144,8 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
       header: '是否新增',
       type: 'checkbox',
       editable: true,
-      autoWidth: true
+      autoWidth: true,
+      directEdit: true // 允許直接編輯checkbox
     },
     {
       field: 'cap_item',
@@ -163,10 +164,11 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
     {
       field: 'tpy_bdate',
       header: '起始年月',
-      type: 'text',
+      type: 'date',
       editable: true,
       autoWidth: true,
-      dateFormat: 'year-month'
+      dateFormat: 'year-month',
+      maxLength: 7,
     },
     {
       field: 'tpy_type',
@@ -194,7 +196,7 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
       field: 'tpy_amount',
       header: '扣款金額',
       type: 'number',
-      editable: true,
+      editable: false,
       autoWidth: true
     },
     {
@@ -225,7 +227,8 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
       header: '是否新增',
       type: 'checkbox',
       editable: true,
-      width: '80px'
+      width: '80px',
+      directEdit: true // 允許直接編輯checkbox
     },
     {
       field: 'cap_item',
@@ -245,18 +248,20 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
     {
       field: 'tpy_bdate',
       header: '扣款起始年月',
-      type: 'text',
+      type: 'date',
       editable: true,
       width: '130px',
-      dateFormat: 'year-month'
+      dateFormat: 'year-month',
+      maxLength: 7
     },
     {
       field: 'tpy_edate',
       header: '扣款結束年月',
-      type: 'text',
+      type: 'date',
       editable: true,
       width: '130px',
-      dateFormat: 'year-month'
+      dateFormat: 'year-month',
+      maxLength: 7
     },
     {
       field: 'tpy_type',
@@ -277,6 +282,7 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
       field: 'tpy_qty',
       header: '數量',
       type: 'number',
+      allowDecimal: true,
       editable: true,
       width: '70px'
     },
@@ -284,7 +290,7 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
       field: 'tpy_amount',
       header: '扣款金額(未稅)',
       type: 'number',
-      editable: true,
+      editable: false,
       width: '120px'
     },
     {
@@ -325,7 +331,8 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
       header: '是否新增',
       type: 'checkbox',
       editable: true,
-      width: '80px'
+      width: '80px',
+      directEdit: true // 允許直接編輯checkbox
     },
     {
       field: 'cap_item',
@@ -345,18 +352,20 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
     {
       field: 'tpy_bdate',
       header: '扣款起始年月',
-      type: 'text',
+      type: 'date',
       editable: true,
       width: '130px',
-      dateFormat: 'full-date'
+      dateFormat: 'year-month',
+      maxLength: 7
     },
     {
       field: 'tpy_edate',
       header: '扣款結束年月',
-      type: 'text',
+      type: 'date',
       editable: true,
       width: '130px',
-      dateFormat: 'full-date'
+      dateFormat: 'year-month',
+      maxLength: 7
     },
     {
       field: 'tpy_totalamt',
@@ -421,7 +430,8 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
       header: '是否新增',
       type: 'checkbox',
       editable: true,
-      width: '80px'
+      width: '80px',
+      directEdit: true // 允許直接編輯checkbox
     },
     {
       field: 'cap_item',
@@ -441,18 +451,20 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
     {
       field: 'tpy_bdate',
       header: '扣款起始年月',
-      type: 'text',
+      type: 'date',
       editable: true,
       width: '130px',
-      dateFormat: 'full-date'
+      dateFormat: 'year-month',
+      maxLength: 7
     },
     {
       field: 'tpy_edate',
       header: '扣款結束年月',
-      type: 'text',
+      type: 'date',
       editable: true,
       width: '130px',
-      dateFormat: 'full-date'
+      dateFormat: 'year-month',
+      maxLength: 7
     },
     {
       field: 'tpy_type',
@@ -497,7 +509,8 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
       header: '是否新增',
       type: 'checkbox',
       editable: true,
-      width: '80px'
+      width: '80px',
+      directEdit: true // 允許直接編輯checkbox
     },
     {
       field: 'cap_item',
@@ -517,18 +530,20 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
     {
       field: 'tpy_bdate',
       header: '扣款起始年月',
-      type: 'text',
+      type: 'date',
       editable: true,
       width: '130px',
-      dateFormat: 'full-date'
+      dateFormat: 'year-month',
+      maxLength: 7
     },
     {
       field: 'tpy_edate',
       header: '扣款結束年月',
-      type: 'text',
+      type: 'date',
       editable: true,
       width: '130px',
-      dateFormat: 'full-date'
+      dateFormat: 'year-month',
+      maxLength: 7
     },
     {
       field: 'tpy_type',
@@ -591,7 +606,7 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
   }
 
   ngOnInit(): void {
-    this.checkViewModeFromURL();
+    this.initializeViewModeFromService();
     this.initializeDataStructure();
     this.initializePage('TLS13010', this.dataForm);
     this.loadOrgOptions();
@@ -616,21 +631,6 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
   }
 
 
-  /**
-     * 🎯 關鍵：從 URL 檢查是否為檢視模式
-     */
-  private checkViewModeFromURL(): void {
-    const queryParams = this.route.snapshot.queryParams;
-    const mode = queryParams['mode'];
-
-    if (mode === 'view') {
-      this.isViewMode = true;
-      this.contractFlowService.setViewMode(true);
-    } else {
-      this.isViewMode = false;
-      this.contractFlowService.setViewMode(false);
-    }
-  }
 
   private loadWorkflowData(): void {
     console.log('🚀 Next1 開始載入工作流程資料...');
@@ -720,6 +720,35 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
     }
 
     console.log('🎯 所有類型的組織選項更新完成');
+  }
+
+  private initializeViewModeFromService(): void {
+    // 訂閱檢視模式狀態變更
+    const viewModeSub = this.contractFlowService.isViewMode$.subscribe(isViewMode => {
+      this.isViewMode = isViewMode;
+      console.log('🔍 Next1 檢視模式狀態更新:', isViewMode);
+
+      if (isViewMode) {
+        this.applyViewModeSettings();
+      }
+    });
+
+    this.subscriptions.push(viewModeSub);
+
+    // 立即取得當前狀態
+    this.isViewMode = this.contractFlowService.isViewMode();
+    if (this.isViewMode) {
+      this.applyViewModeSettings();
+    }
+  }
+
+  private applyViewModeSettings(): void {
+    console.log('🔍 套用 Next1 檢視模式設定');
+
+    // 設定表格欄位為唯讀
+    this.updateColumnsReadonly(true);
+
+    // 可以加入其他檢視模式設定...
   }
 
   private prepareContractInfoDisplay(): void {
@@ -1383,6 +1412,7 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
     });
 
     const { newData } = event;
+    this.autoCalculateAmount(newData, capType);
 
     // A類型特殊處理：自動設定結束日期等於開始日期
     if (capType === 'A' && newData.tpy_bdate) {
@@ -1477,6 +1507,63 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
     }
 
     this.saveFareDataToWorkflow();
+  }
+
+  private autoCalculateAmount(data: any, capType: string): void {
+    // 只處理 A 和 B 類型
+    if (capType !== 'A' && capType !== 'B') {
+      return;
+    }
+
+    // 檢查是否有單價和數量
+    const unitPrice = parseFloat(data.tpy_unitamt) || 0;
+    const quantity = parseFloat(data.tpy_qty) || 0;
+
+    if (unitPrice > 0 && quantity > 0) {
+      // 計算金額：單價 × 數量
+      const calculatedAmount = unitPrice * quantity;
+      data.tpy_amount = calculatedAmount;
+
+      console.log(`💰 自動計算金額 (${capType}類型):`, {
+        項目: data.cap_item,
+        單價: unitPrice,
+        數量: quantity,
+        計算金額: calculatedAmount
+      });
+    } else {
+      // 如果單價或數量為 0，清空金額
+      if (unitPrice === 0 || quantity === 0) {
+        data.tpy_amount = 0;
+        console.log(`💰 清空金額 (${capType}類型): ${data.cap_item} - 單價或數量為0`);
+      }
+    }
+  }
+
+  // 🎯 即時計算方法（只處理 A 和 B 類型）
+  onFieldChange(fieldName: string, newValue: any, rowData: any, capType: string): void {
+    // 只處理 A 和 B 類型的單價和數量變更
+    if ((capType === 'A' || capType === 'B') && (fieldName === 'tpy_unitamt' || fieldName === 'tpy_qty')) {
+      rowData[fieldName] = newValue;
+
+      const unitPrice = parseFloat(rowData.tpy_unitamt) || 0;
+      const quantity = parseFloat(rowData.tpy_qty) || 0;
+
+      if (unitPrice > 0 && quantity > 0) {
+        const calculatedAmount = unitPrice * quantity;
+        rowData.tpy_amount = calculatedAmount;
+
+        console.log(`💰 即時計算金額 (${capType}類型):`, {
+          欄位: fieldName,
+          新值: newValue,
+          單價: unitPrice,
+          數量: quantity,
+          計算金額: calculatedAmount
+        });
+      } else {
+        // 單價或數量為 0 時，清空金額
+        rowData.tpy_amount = 0;
+      }
+    }
   }
 
   onFareTableEdit(rowData: any, capType: string): void {
@@ -1620,12 +1707,12 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
   // 導航
   onSubmitNext(): void {
     if (this.isViewMode) {
-      // 🎯 檢視模式：導航到 Next2 檢視模式
-      this.router.navigate(['account/tls/tls13010next2'], {
-        queryParams: { mode: 'view' }
-      });
+      // 🎯 檢視模式：導航到 Next2，不帶 URL 參數
+      this.router.navigate(['account/tls/tls13010next2']);
       return;
     }
+
+    // 編輯模式：原有邏輯
     this.saveFareDataToWorkflow();
 
     const hasSelectedItems = Object.keys(this.originalFareData).some(capType =>
@@ -1638,20 +1725,18 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
     }
 
     this.router.navigate(['account/tls/tls13010next2']);
-    // this.messageService.infoBubble('進入下一步：抽成設定');
   }
 
   override onCancel(): void {
     if (this.isViewMode) {
-      // 🎯 檢視模式：返回上一步檢視
-      this.router.navigate(['account/tls/tls13010cru'], {
-        queryParams: { mode: 'view' }
-      });
+      // 🎯 檢視模式：返回上一步，不帶 URL 參數
+      this.router.navigate(['account/tls/tls13010cru']);
       return;
     }
+
+    // 編輯模式：原有邏輯
     this.saveFareDataToWorkflow();
     this.router.navigate(['account/tls/tls13010cru']);
-    // this.messageService.infoBubble('已返回合約資訊頁面');
   }
 
   onRealCancel(): void {

@@ -10,7 +10,7 @@ $gutter: 1rem; //for primeflex grid system
 
 @font-face {
   font-family: "NotoSansTC";
-  src: url("/assets/fonts/NotoSansTC-VariableFont_wght.ttf") format("truetype");
+  src: url("assets/fonts/NotoSansTC-VariableFont_wght.woff2") format("truetype");
   font-weight: 100 900;
   font-style: normal;
 }
@@ -80,8 +80,7 @@ input[disabled],
 .p-component:disabled,
 .p-component.p-disabled {
   background-color: var(--surface-300) !important;
-  color: var(--surface-600);
-  font-weight: bold;
+  color: var(--surface-900);
   cursor: not-allowed;
   border: 1px solid #e9ecef;
   opacity: 0.65;

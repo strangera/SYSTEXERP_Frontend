@@ -1,5 +1,5 @@
 import { HttpClient } from '@angular/common/http';
-import { Injectable, signal } from '@angular/core';
+import { computed, effect, Injectable, signal } from '@angular/core';
 import { CampaignCounterData, CampaignData, TLS26080Data, TLS26080Detail, TLS26080Query } from '@pages/tls/tls26080/tls26080.model';
 import { ErrorHandlerService } from '@service/system/error-handler.service';
 import { NotificationService } from '@shared/component/notification-message/notification.service';
@@ -102,10 +102,10 @@ export class TLS26080Service {
   };
 
   /** 查詢環友Counter資料 */
-  public loadCampaignCounter(query: { CampaignIdList: string[]; }): void {
+  public loadCampaignCounter(query: string[]): void {
     if (this.campaignCounterLoading) return void (this.campaignCounterLoading = !1);
     this.campaignCounterLoading = !0;
-    this.http.post<BaseQueryResponse<CampaignCounterData>>(`${apiUrl}/TLS0000/TLS2000/queryCampaignCounter`, query).pipe(
+    this.http.post<BaseQueryResponse<CampaignCounterData>>(`${apiUrl}/TLS0000/TLS2000/queryCampaignCounter`, { CampaignIdList: query }).pipe(
       take(1),
       tap(response => this.campaignCounterData.set(response.Data)),
       catchError(error => { this.errorHandler.handleError(error); return EMPTY; }),
@@ -114,10 +114,10 @@ export class TLS26080Service {
   };
 
   /** 專櫃活動 */
-  public loadTLS26080Detail(query: { pod_no: string; }): void {
+  public loadTLS26080Detail(query: string): void {
     if (this.tableLoading) return void (this.tableLoading = !1);
     this.tableLoading = !0;
-    this.http.post<BaseQueryResponse<TLS26080Detail>>(`${apiUrl}/TLS0000/TLS2000/queryTLS26080_Detail`, query).pipe(
+    this.http.post<BaseQueryResponse<TLS26080Detail>>(`${apiUrl}/TLS0000/TLS2000/queryTLS26080_Detail`, { pod_no: query }).pipe(
       take(1),
       tap(response => this.TLS26080Detail.set(response.Data)),
       catchError(error => this.errorHandler.handleError(error)),
@@ -127,6 +127,17 @@ export class TLS26080Service {
       })
     ).subscribe();
   };
+
+  public insertTLS26080(data: any): void {
+    this.http.post<BaseQueryResponse<any>>(`${apiUrl}/TLS0000/TLS2000/insertTLS26080`, data).pipe(
+      take(1),
+      tap(response => {
+        console.log(`insertTLS26080:`, [response]);
+        this.messageService.successBubble('新增成功');
+      }),
+      catchError(error => this.errorHandler.handleError(error))
+    ).subscribe();
+  }
 
   /** 核准或反核准專櫃活動 */
   public loadApproval(data: TLS26080Data): void {

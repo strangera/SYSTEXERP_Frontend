@@ -127,7 +127,7 @@ export class TLS26010Component extends BasicQueryPageComponent<TLS26010Data> {
     const area_no = this.sys3A00Signal();
     console.log(`dependentDataEffect:`, [building_no, floor_no, area_no]);
     if (!building_no?.length || !floor_no?.length || !area_no?.length) return;
-    this.service.loadPreorderECRList({ building_no, floor_no, area_no, data_type: '2' });
+    this.service.loadPreorderECRList({ building_no, floor_no, area_no, ecr_type: '2' });
     this.service.loadTLTTALENT({ building_no, floor_no, area_no });
   }, { allowSignalWrites: !0 });
 
@@ -242,14 +242,11 @@ export class TLS26010Component extends BasicQueryPageComponent<TLS26010Data> {
 
   /** 刪除選中的活動 */
   public onDelete(data: TLS26010Data[]): void {
-    if (!this.canEdit()) return;
+    console.log(`刪除活動:`, data);
     this.confirmationService.confirm({
       message: '是否確認刪除選中的預售活動?',
       accept: () => {
-        for (const item of data) {
-          if (item.pod_status !== ApprovalStatus.未核准) continue;
-          this.service.deleteTLS26010(item);
-        }
+        for (const item of data) this.service.deleteTLS26010(item);
         this.messageService.successBubble('刪除成功');
       },
       reject: () => this.messageService.infoBubble('已取消刪除')

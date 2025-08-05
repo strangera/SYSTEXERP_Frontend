@@ -38,7 +38,7 @@ interface Column {
 
   validate?: ((value: string, rowData: any, data: any[], field: string, header: string) => { isValid: boolean, errorMessage: string[] })[]; // 驗證規則(如果是可輸入的欄位)
 
-  type?: 'input' | 'inputNumber' | 'dropdown' | 'button' | 'html' | 'date' | 'default'; // 欄位類型
+  type?: 'input' | 'inputNumber' | 'dropdown' | 'button' | 'html' | 'date' | 'autoComplete' | 'default'; // 欄位類型
   prefix?: string;
   fractionDigits?: number;
   useGrouping?: boolean;
@@ -397,7 +397,7 @@ export class ReportTableGroupComponent implements OnInit {
     const marginLeft = 40;
     let currentY = 40;
     const pageWidth = doc.internal.pageSize.getWidth();
-    doc.addFont('assets/fonts/NotoSansTC-VariableFont_wght.ttf', 'Noto Sans TC', 'normal');
+    doc.addFont('assets/fonts/NotoSansTC-VariableFont_wght.woff2', 'Noto Sans TC', 'normal');
     doc.setFont('Noto Sans TC');
     doc.setFontSize(14);
     doc.text(this.reportTitle, pageWidth / 2, currentY, { align: 'center' });

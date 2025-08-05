@@ -1,6 +1,7 @@
 
 import { DatePipe, NgIf } from '@angular/common';
-import { Component, OnInit, effect, signal } from '@angular/core';
+import { Component, OnInit, effect } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
 import { FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 import { TLS26080Service } from '@service/api/tls/tls26080.service';
@@ -17,7 +18,7 @@ import { Column } from '@shared/componentkit/table/table.model';
 import { CRUDStatus } from '@shared/models/system/CRUDstatus';
 import { ApprovalStatus } from '@shared/models/tls/approval-status.model';
 import { PanelModule } from 'primeng/panel';
-import { CampaignCounterData, CampaignData, CounterData, DeductionItem, TLS26080Data } from '../tls26080/tls26080.model';
+import { CounterData, DeductionItem, TLS26080Data, TLS26080Detail } from '../tls26080/tls26080.model';
 
 @Component({
   selector: 'app-tls26080-cru',
@@ -47,15 +48,23 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
   // 主表單：活動基本資料
   public dataForm = this.formBuilder.nonNullable.group({
     pod_no: new FormControl<string>('自動給號', [Validators.maxLength(10)]), // 活動單號
-    pod_desc: new FormControl<string>('', [Validators.maxLength(100)]), // 活動名稱
+    pod_desc: new FormControl<string>('', [Validators.required, Validators.minLength(3), Validators.maxLength(100)]), // 活動名稱
     pod_sdate: new FormControl<Date>(this.dateS, [Validators.required]), // 起始日期(起)
     pod_edate: new FormControl<Date>(this.dateE, [Validators.required]), // 起始日期(迄)
-    pod_busdate: new FormControl<Date | undefined>(undefined), // 活動正檔日期
+    pod_busdate: new FormControl<Date | undefined>(undefined, [Validators.required]), // 活動正檔日期
     pod_status: new FormControl<string>(ApprovalStatus.未核准), // 核准狀態
     pod_type: new FormControl<string | undefined>(undefined), // 扣款名稱
     org_id: new FormControl<string | undefined>(undefined), // 部門
     cap_item: new FormControl<string | undefined>(undefined, [Validators.minLength(3), Validators.maxLength(10), Validators.required]), // 扣款代碼
   });
+
+  private calcDateType = [
+    { label: '活動起始日至截止日', value: 'Y' },
+    { label: '正檔日至截止日', value: 'N' }
+  ];
+
+  private podTypeSignal = toSignal(this.dataForm.controls.pod_type.valueChanges, { initialValue: undefined });
+  private capItemSignal = toSignal(this.dataForm.controls.cap_item.valueChanges, { initialValue: undefined });
 
   private counterData = new Map<string, CounterData>();
   private deductionData = new Map<string, DeductionItem>();
@@ -64,20 +73,42 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
 
   private readonly campaignDataEffect = effect(() => {
     const data = this.service.campaignData();
-    console.log('Campaign Data:', [data]);
+    const podNo = this.rowdata?.pod_no;
+    const ids = new Map<string, string>();
+    if (!data.length) return;
+
+    for (let i = 0; i < data.length; i++) {
+      if (podNo !== data[i].CampaignId) continue;
+      ids.set(String(i), data[i].CampaignId);
+    }
+    this.service.loadCampaignCounter(Array.from(ids.values()));
+
+    console.log('CampaignDataEffect:', [data, podNo, ids]);
   }, { allowSignalWrites: !0 });
 
-  // 專櫃資料表
-  public counterColumns: Column[] = [
-    { field: 'tlt_no', header: '專櫃編號', visible: !0 },
-    { field: 'tlt_name', header: '櫃位名稱', visible: !0 },
-    { field: 'tlt_id', header: '抽成類別', visible: !0 },
-    { field: 'calc_date_type', header: '預售起日計算', visible: !0, format: v => v === 'Y' ? '活動起始日至截止日' : '正檔日至截止日' },
-    { field: 'tpy_rate', header: '抽成率', visible: !0, format: v => `${v * 100}%` },
-  ];
+  private readonly campaignCounterDataEffect = effect(() => {
+    const counterData = this.service.campaignCounterData();
+    const result = new Map<string, any>();
+    if (!counterData.length) return;
+    for (const item of counterData) {
+      result.set(String(item.talent_id), {
+        pod_no: this.crudstatus === CRUDStatus.Create ? '' : this.rowdata?.pod_no,
+        talent_id: item.talent_id,
+        tlt_id: item.ProductType,
+        tlt_no: String(item.talent_id),
+        tlt_name: item.tlt_name,
+        calc_date_type: this.podTypeSignal() || 'Y',
+        cap_item: this.capItemSignal(),
+        tpy_rate: 10,
+      });
+    }
+    console.log('CampaignCounterDataEffect:', [counterData, result]);
+    this.service.TLS26080Detail.set(Array.from(result.values()));
+  }, { allowSignalWrites: !0 });
 
   // 環友資料表
   campaignColumns: Column[] = [
+    { field: 'CampaignId', header: '活動編號', visible: !0 },
     { field: 'CampaignName', header: '活動名稱', visible: !0 },
     { field: 'StartTime', header: '活動開始時間', visible: !0, format: v => this.datePipe.transform(v, 'YYYY/MM/dd') },
     { field: 'EndTime', header: '活動結束時間', visible: !0, format: v => this.datePipe.transform(v, 'YYYY/MM/dd') },
@@ -86,21 +117,30 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
   ];
 
   // 環友專櫃資料表
-  campaignCounterColumns: Column[] = [
-    { field: 'CampaignId', header: '活動編號', visible: !0 },
-    { field: 'CounterCode', header: '專櫃編號', visible: !0 },
-    { field: 'ProductType', header: '專櫃抽成類別', visible: !0 },
+  // campaignCounterColumns: Column[] = [
+  //   { field: 'CounterCode', header: '專櫃編號', visible: !0 },
+  //   { field: 'ProductType', header: '專櫃抽成類別', visible: !0 },
+  // ];
+
+  // 專櫃資料表
+  public counterColumns: Column[] = [
+    { field: 'tlt_no', header: '專櫃編號', visible: !0 },
+    { field: 'tlt_name', header: '櫃位名稱', visible: !0 },
+    { field: 'tlt_id', header: '抽成類別', visible: !0 },
+    { field: 'calc_date_type', header: '預售起日計算', visible: !0, type: 'dropdown', options: () => this.calcDateType, format: v => v === 'Y' ? '活動起始日至截止日' : '正檔日至截止日' },
+    { field: 'tpy_rate', header: '抽成率', visible: !0, type: 'inputNumber', format: v => `${v}%` },
   ];
 
   // 扣款項目資料表
-  deductionColumns: Column[] = [
-    { field: 'itemCode', header: '扣款項目編號', visible: !0 },
-    { field: 'itemName', header: '扣款項目名稱', visible: !0 },
-    { field: 'amountOrRate', header: '金額/比率', visible: !0 }
-  ];
+  // deductionColumns: Column[] = [
+  //   { field: 'itemCode', header: '扣款項目編號', visible: !0 },
+  //   { field: 'itemName', header: '扣款項目名稱', visible: !0 },
+  //   { field: 'amountOrRate', header: '金額/比率', visible: !0 }
+  // ];
 
   // 靜態資料: 用於表單初始化和重置
   private staticData: TLS26080Data = this.dataForm.value as TLS26080Data;
+  private staticDetailData: TLS26080Detail[] = [];
 
   constructor(
     public service: TLS26080Service,
@@ -111,8 +151,11 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
 
   public ngOnInit(): void {
     this.initializePage('TLS26080', this.dataForm);
-    if (this.crudstatus !== CRUDStatus.Create)
-      this.service.loadTLS26080Detail({ pod_no: this.rowdata!.pod_no || '' });
+    console.log(`init:`, [this.rowdata, this.crudstatus, this.dataForm.value]);
+    if (this.crudstatus !== CRUDStatus.Create) {
+      this.service.loadTLS26080Detail(this.rowdata!.pod_no || '');
+      this.staticDetailData = [...this.service.TLS26080Detail()];
+    }
     this.service.loadAPS1003DropDownList(['E']);
     this.staticData = this.dataForm.value as TLS26080Data;
     console.log(`init:`, [this.rowdata, this.crudstatus, this.dataForm.value]);
@@ -121,11 +164,6 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
   /** 讀取環友資料 */
   public queryCampaign(): void {
     this.service.loadCampaignData();
-    let ids: string[] = [];
-    for (const campaign of this.service.campaignData()) {
-      campaign.CampaignId !== this.rowdata!.pod_no && ids.push(campaign.CampaignId);
-    }
-    this.service.loadCampaignCounter({ CampaignIdList: ids });
   }
 
   public onClear(): void {
@@ -137,6 +175,9 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
         pod_edate: this.dateE,
         pod_status: ApprovalStatus.未核准,
       });
+    this.crudstatus === CRUDStatus.Edit
+      ? this.service.TLS26080Detail.set(this.staticDetailData)
+      : this.service.TLS26080Detail.set([]);
   };
 
   public onSubmitQuery(): void {
@@ -146,7 +187,18 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
   // 表單提交
   public onSubmit(frm: FormGroup): void {
     this.handleSubmit(frm, () => {
-      console.log(`submit:`, [frm]);
+      console.log(`submit:`, [frm.value, this.service.TLS26080Detail()]);
+      this.confirmationService.confirm({
+        message: '是否確認存檔?',
+        accept: () => {
+          this.service.insertTLS26080({
+            ...frm.value,
+            TALPORDERD_VOUCHERDetails: Array.from(this.service.TLS26080Detail()),
+          });
+          this.messageService.successBubble('存檔成功');
+        },
+        reject: () => this.messageService.infoBubble('已取消存檔')
+      });
     });
   }
 

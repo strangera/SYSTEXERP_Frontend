@@ -12,6 +12,7 @@ import { DropdownModule } from 'primeng/dropdown';
 import { CheckboxModule } from 'primeng/checkbox';
 import { DialogModule } from 'primeng/dialog';
 import { CalendarModule } from 'primeng/calendar';
+import { NotificationService } from '@shared/component/notification-message/notification.service';
 
 interface DataItem {
   id: number;
@@ -100,12 +101,18 @@ export interface ColumnDef {
   style?: string;
   options?: any[];
 
+  directEdit?: boolean; //控制能否直接編輯checkbox
+
   allowDecimal?: boolean;  // 是否允許小數點
   decimalPlaces?: number;  // 小數位數，預設2位
 
   // 🎯 使用語義化的日期格式類型
   dateFormat?: DateFormatType;
   placeholder?: string;
+
+  // 🎯 輸入長度限制
+  maxLength?: number;
+  minLength?: number;
 
   // 🔧 寬度控制參數
   width?: string;
@@ -198,7 +205,8 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
   currentDateField: { data: any, field: string, isDetail: boolean, rowIndex?: number, detailIndex?: number } | null = null;
   temporaryDate: Date | null = null;
 
-  constructor(private cdr: ChangeDetectorRef) { }
+
+  constructor(private cdr: ChangeDetectorRef, private messageService: NotificationService) { }
 
   ngOnInit() {
     this.totalRecords = this.data.length;
@@ -223,6 +231,15 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
       }
     }
   }
+
+  ngOnDestroy() {
+    if (this.inputTimeout) {
+      clearTimeout(this.inputTimeout);
+    }
+  }
+
+  private userInputValue = '';
+  private inputTimeout: any = null;
 
   // 🎯 核心功能：純粹的日期格式化，不修改原始資料
   private formatDateForDisplay(rawValue: any, formatType: DateFormatType): string {
@@ -311,64 +328,126 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
     const trimmed = inputValue.trim();
 
     try {
-      // 處理緊湊格式 YYYYMM (6位數字)
-      if (/^\d{6}$/.test(trimmed)) {
-        const year = parseInt(trimmed.substring(0, 4), 10);
-        const month = parseInt(trimmed.substring(4, 6), 10) - 1;
-        if (this.isValidDate(year, month, 1)) {
-          return new Date(year, month, 1);
+      // 🎯 年月格式處理
+      if (formatType.includes('year-month')) {
+        // 格式: YYYY/MM, YYYY-MM, YYYYMM
+        let year: number, month: number;
+
+        if (/^\d{4}[\/-]\d{1,2}$/.test(trimmed)) {
+          // YYYY/MM 或 YYYY-MM
+          const parts = trimmed.split(/[\/-]/);
+          year = parseInt(parts[0], 10);
+          month = parseInt(parts[1], 10);
+        } else if (/^\d{6}$/.test(trimmed)) {
+          // YYYYMM
+          year = parseInt(trimmed.substring(0, 4), 10);
+          month = parseInt(trimmed.substring(4, 6), 10);
+        } else if (/^\d{4}[\/-]\d{1,2}[\/-]\d{1,2}$/.test(trimmed)) {
+          // 如果使用者輸入了完整日期，但要求年月格式，只取年月
+          const parts = trimmed.split(/[\/-]/);
+          year = parseInt(parts[0], 10);
+          month = parseInt(parts[1], 10);
+        } else {
+          return null;
         }
-      }
-      // 處理緊湊格式 YYYYMMDD (8位數字)
-      else if (/^\d{8}$/.test(trimmed)) {
-        const year = parseInt(trimmed.substring(0, 4), 10);
-        const month = parseInt(trimmed.substring(4, 6), 10) - 1;
-        const day = parseInt(trimmed.substring(6, 8), 10);
-        if (this.isValidDate(year, month, day)) {
-          if (formatType.includes('year-month')) {
-            return new Date(year, month, 1);
-          } else {
-            return new Date(year, month, day);
-          }
+
+        // 驗證年月有效性
+        if (year < 1900 || year > 2100 || month < 1 || month > 12) {
+          return null;
         }
-      }
-      // 處理標準格式 YYYY/MM 或 YYYY-MM
-      else if (/^\d{4}[\/-]\d{1,2}$/.test(trimmed)) {
-        const parts = trimmed.split(/[\/-]/);
-        const year = parseInt(parts[0], 10);
-        const month = parseInt(parts[1], 10) - 1;
-        if (this.isValidDate(year, month, 1)) {
-          return new Date(year, month, 1);
-        }
-      }
-      // 處理完整日期格式 YYYY/MM/DD 或 YYYY-MM-DD
-      else if (/^\d{4}[\/-]\d{1,2}[\/-]\d{1,2}$/.test(trimmed)) {
-        const parts = trimmed.split(/[\/-]/);
-        const year = parseInt(parts[0], 10);
-        const month = parseInt(parts[1], 10) - 1;
-        const day = parseInt(parts[2], 10);
-        if (this.isValidDate(year, month, day)) {
-          if (formatType.includes('year-month')) {
-            return new Date(year, month, 1);
-          } else {
-            return new Date(year, month, day);
-          }
-        }
-      }
-      // 嘗試通用解析
-      else {
-        const parsed = new Date(trimmed);
-        if (!isNaN(parsed.getTime())) {
-          return parsed;
-        }
+
+        return new Date(year, month - 1, 1);
       }
 
-      console.warn('無法解析的日期格式:', inputValue);
-      return null;
+      // 🎯 完整日期格式處理
+      else {
+        let year: number, month: number, day: number;
+
+        if (/^\d{4}[\/-]\d{1,2}[\/-]\d{1,2}$/.test(trimmed)) {
+          // YYYY/MM/DD 或 YYYY-MM-DD
+          const parts = trimmed.split(/[\/-]/);
+          year = parseInt(parts[0], 10);
+          month = parseInt(parts[1], 10);
+          day = parseInt(parts[2], 10);
+        } else if (/^\d{8}$/.test(trimmed)) {
+          // YYYYMMDD
+          year = parseInt(trimmed.substring(0, 4), 10);
+          month = parseInt(trimmed.substring(4, 6), 10);
+          day = parseInt(trimmed.substring(6, 8), 10);
+        } else if (/^\d{4}[\/-]\d{1,2}$/.test(trimmed)) {
+          // 如果使用者只輸入了年月，自動補充日期為1號
+          const parts = trimmed.split(/[\/-]/);
+          year = parseInt(parts[0], 10);
+          month = parseInt(parts[1], 10);
+          day = 1;
+        } else {
+          return null;
+        }
+
+        // 驗證日期有效性
+        if (!this.isValidDate(year, month - 1, day)) {
+          return null;
+        }
+
+        return new Date(year, month - 1, day);
+      }
     } catch (error) {
       console.error('日期解析錯誤:', error);
       return null;
     }
+  }
+
+  // 🎯 通用文字輸入處理（支援長度限制）
+  onTextInputChange(rowData: any, column: ColumnDef, inputValue: string): void {
+    let processedValue = inputValue;
+
+    // 應用長度限制
+    if (column.maxLength && inputValue.length > column.maxLength) {
+      processedValue = inputValue.substring(0, column.maxLength);
+    }
+
+    rowData[column.field] = processedValue;
+
+    // 如果是直接編輯模式，觸發儲存
+    if (column.directEdit) {
+      this.onDirectEditChange(rowData, column.field, processedValue);
+    }
+  }
+
+  // 🎯 詳細資料文字輸入處理
+  onDetailTextInputChange(detailData: any, column: ColumnDef, inputValue: string, rowIndex: number, detailIndex: number): void {
+    let processedValue = inputValue;
+
+    // 應用長度限制
+    if (column.maxLength && inputValue.length > column.maxLength) {
+      processedValue = inputValue.substring(0, column.maxLength);
+    }
+
+    detailData[column.field] = processedValue;
+
+    // 如果是直接編輯模式，觸發儲存
+    if (column.directEdit) {
+      // 需要找到父資料
+      const parentData = this.data[rowIndex];
+      this.onDetailDirectEditChange(detailData, parentData, column.field, processedValue, rowIndex, detailIndex);
+    }
+  }
+
+  // 🎯 清理欄位狀態（在行編輯結束時呼叫）
+  private cleanupFieldStates(rowData: any): void {
+    const rowKey = rowData[this.dataKey];
+    const keysToDelete: string[] = [];
+
+    this.fieldInputStates.forEach((state, key) => {
+      if (key.startsWith(`${rowKey}_`)) {
+        if (state.timeout) {
+          clearTimeout(state.timeout);
+        }
+        keysToDelete.push(key);
+      }
+    });
+
+    keysToDelete.forEach(key => this.fieldInputStates.delete(key));
   }
 
   // 🎯 對外接口：取得格式化的日期顯示值
@@ -380,30 +459,168 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
     return this.formatDateForDisplay(rawValue, formatType);
   }
 
-  // 🎯 對外接口：取得日期輸入值（編輯時使用）
-  getDateInputValue(rowData: any, column: ColumnDef): string {
-    // 編輯時顯示和非編輯時相同
-    return this.getDateDisplayValue(rowData, column);
+  private isCurrentlyEditing(rowData: any, field: string): boolean {
+    // 這裡可以根據你的編輯狀態邏輯來判斷
+    // 簡單的判斷方式：檢查是否有焦點或正在編輯狀態
+    return this.userInputValue !== '';
   }
 
+  // 每個欄位的輸入狀態管理
+  private fieldInputStates: Map<string, {
+    userInput: string;
+    isValid: boolean;
+    originalValue: any;
+    errorMessage: string;
+    timeout?: any;
+  }> = new Map();
+
+  // 🎯 獲取欄位的唯一鍵
+  private getFieldKey(rowData: any, field: string, isDetail: boolean = false, detailIndex?: number): string {
+    const mainKey = `${rowData[this.dataKey]}_${field}`;
+    return isDetail ? `${mainKey}_detail_${detailIndex}` : mainKey;
+  }
+
+
   // 🎯 對外接口：處理日期輸入變更
-  onDateInputChange(rowData: any, column: ColumnDef, inputValue: string): void {
+  onDateInputChange(rowData: any, column: ColumnDef, inputValue: string, isDetail: boolean = false, detailIndex?: number): void {
+    const fieldKey = this.getFieldKey(rowData, column.field, isDetail, detailIndex);
     const field = column.field;
     const formatType = column.dateFormat || 'full-date';
 
-    if (!inputValue || inputValue.trim() === '') {
+    // 🎯 應用長度限制
+    let processedValue = inputValue;
+    if (column.maxLength && inputValue.length > column.maxLength) {
+      processedValue = inputValue.substring(0, column.maxLength);
+    }
+
+    // 獲取或建立欄位狀態
+    let fieldState = this.fieldInputStates.get(fieldKey);
+    if (!fieldState) {
+      fieldState = {
+        userInput: processedValue,
+        isValid: true,
+        originalValue: rowData[field],
+        errorMessage: ''
+      };
+      this.fieldInputStates.set(fieldKey, fieldState);
+    }
+
+    // 更新使用者輸入
+    fieldState.userInput = processedValue;
+    fieldState.errorMessage = '';
+
+    // 清除之前的延遲驗證
+    if (fieldState.timeout) {
+      clearTimeout(fieldState.timeout);
+    }
+
+    // 🎯 即時驗證但不立即更新資料
+    if (!processedValue || processedValue.trim() === '') {
+      fieldState.isValid = true;
       rowData[field] = null;
       return;
     }
 
-    const parsed = this.parseUserInput(inputValue, formatType);
-    if (parsed) {
-      rowData[field] = parsed;
-      console.log(`✅ 日期輸入更新: ${field} = ${parsed}`);
+    // 🎯 延遲驗證和更新
+    fieldState.timeout = setTimeout(() => {
+      const parsed = this.parseUserInput(processedValue, formatType);
+
+      if (parsed) {
+        fieldState!.isValid = true;
+        fieldState!.errorMessage = '';
+        rowData[field] = parsed;
+        console.log(`✅ 日期輸入更新: ${field} = ${parsed}`);
+
+        // 🎯 觸發儲存事件（如果是直接編輯模式）
+        if (column.directEdit) {
+          if (isDetail) {
+            this.onDetailDirectEditChange(rowData, rowData, field, parsed, undefined, detailIndex);
+          } else {
+            this.onDirectEditChange(rowData, field, parsed);
+          }
+        }
+      } else {
+        fieldState!.isValid = false;
+        fieldState!.errorMessage = this.getDateErrorMessage(processedValue, formatType);
+        console.warn(`⚠️ 無效的日期輸入: ${processedValue}`);
+
+        // 🎯 顯示錯誤訊息
+        this.showErrorMessage(fieldState!.errorMessage);
+      }
+
+      this.cdr.detectChanges();
+    }, 300);
+  }
+
+  // 🎯 獲取日期錯誤訊息
+  private getDateErrorMessage(inputValue: string, formatType: DateFormatType): string {
+    if (formatType.includes('year-month')) {
+      return `無效的年月格式：${inputValue}。請輸入如 2024/01、202401 或 2024-01 的格式`;
     } else {
-      console.warn(`無效的日期輸入: ${inputValue}`);
-      // 可以選擇保留無效輸入或清空
-      // rowData[field] = null;
+      return `無效的日期格式：${inputValue}。請輸入如 2024/01/15、20240115 或 2024-01-15 的格式`;
+    }
+  }
+
+  // 🎯 顯示錯誤訊息的方法（你需要根據你的訊息服務來實作）
+  private showErrorMessage(message: string): void {
+    // 🎯 這裡使用你現有的錯誤訊息系統
+    // 例如: this.messageService.add({severity:'error', summary: '輸入錯誤', detail: message});
+    // 或者: this.toastr.error(message, '輸入錯誤');
+    console.error('輸入錯誤:', message);
+
+    // 🎯 如果你有全域的錯誤訊息服務，在這裡呼叫它
+    // 暫時用 alert 示範，你可以改成你的訊息系統
+    // alert(message);
+    this.messageService.warnBubble(message);
+  }
+
+  // 🎯 獲取日期輸入值（編輯時使用）
+  getDateInputValue(rowData: any, column: ColumnDef, isDetail: boolean = false, detailIndex?: number): string {
+    const fieldKey = this.getFieldKey(rowData, column.field, isDetail, detailIndex);
+    const fieldState = this.fieldInputStates.get(fieldKey);
+
+    // 如果有使用者正在輸入的值，顯示使用者輸入
+    if (fieldState && fieldState.userInput !== undefined) {
+      return fieldState.userInput;
+    }
+
+    // 否則顯示格式化的值
+    return this.getDateDisplayValue(rowData, column);
+  }
+
+  // 🎯 檢查欄位是否有效
+  isFieldValid(rowData: any, column: ColumnDef, isDetail: boolean = false, detailIndex?: number): boolean {
+    const fieldKey = this.getFieldKey(rowData, column.field, isDetail, detailIndex);
+    const fieldState = this.fieldInputStates.get(fieldKey);
+    return fieldState ? fieldState.isValid : true;
+  }
+
+  // 🎯 處理輸入框失焦事件
+  onDateInputBlur(rowData: any, column: ColumnDef, isDetail: boolean = false, detailIndex?: number): void {
+    const fieldKey = this.getFieldKey(rowData, column.field, isDetail, detailIndex);
+    const fieldState = this.fieldInputStates.get(fieldKey);
+
+    if (fieldState) {
+      // 清除超時，立即執行驗證
+      if (fieldState.timeout) {
+        clearTimeout(fieldState.timeout);
+        delete fieldState.timeout;
+      }
+
+      // 如果輸入無效，恢復原值
+      if (!fieldState.isValid && fieldState.userInput) {
+        const formatType = column.dateFormat || 'full-date';
+        const parsed = this.parseUserInput(fieldState.userInput, formatType);
+
+        if (!parsed) {
+          // 恢復到原始值
+          rowData[column.field] = fieldState.originalValue;
+          fieldState.userInput = this.getDateDisplayValue(rowData, column);
+          fieldState.isValid = true;
+        }
+      }
+
+      this.cdr.detectChanges();
     }
   }
 
@@ -414,8 +631,24 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
     }
 
     const formatType = column.dateFormat || 'full-date';
-    const config = DATE_FORMAT_CONFIG[formatType];
-    return config.placeholder;
+
+    // 根據格式提供更明確的提示
+    switch (formatType) {
+      case 'year-month':
+        return '例：2024/01 或 202401';
+      case 'year-month-compact':
+        return '例：202401';
+      case 'year-month-dash':
+        return '例：2024-01';
+      case 'full-date':
+        return '例：2024/01/15 或 20240115';
+      case 'full-date-compact':
+        return '例：20240115';
+      case 'full-date-dash':
+        return '例：2024-01-15';
+      default:
+        return '請輸入日期';
+    }
   }
 
   // 🎯 輔助方法：日期有效性檢查
@@ -534,6 +767,8 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
       const oldData = this.clonedItems[rowData[this.dataKey]];
       delete this.clonedItems[rowData[this.dataKey]];
       this.editingRow = null;
+      // 清理欄位狀態
+      this.cleanupFieldStates(rowData);
       this.save.emit({ oldData, newData: rowData });
       this.cdr.detectChanges();
     } catch (error) {
@@ -546,6 +781,8 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
       this.data[rowIndex] = this.clonedItems[rowData[this.dataKey]];
       delete this.clonedItems[rowData[this.dataKey]];
       this.editingRow = null;
+      // 清理欄位狀態
+      this.cleanupFieldStates(rowData);
       this.cancel.emit(rowData);
       this.cdr.detectChanges();
     } catch (error) {
@@ -639,13 +876,27 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
 
   confirmDateSelection() {
     if (this.currentDateField && this.temporaryDate) {
-      // 直接設定 Date 物件到主欄位
-      this.currentDateField.data[this.currentDateField.field] = this.temporaryDate;
+      const column = this.getCurrentEditingColumn();
+
+      if (column && column.dateFormat && column.dateFormat.includes('year-month')) {
+        // 🎯 年月格式：將日期設為該月的第一天
+        const year = this.temporaryDate.getFullYear();
+        const month = this.temporaryDate.getMonth();
+        const adjustedDate = new Date(year, month, 1);
+
+        this.currentDateField.data[this.currentDateField.field] = adjustedDate;
+        console.log(`✅ 年月選擇完成: ${year}/${month + 1}`);
+      } else {
+        // 🎯 完整日期格式：直接使用選擇的日期
+        this.currentDateField.data[this.currentDateField.field] = this.temporaryDate;
+        console.log(`✅ 日期選擇完成: ${this.temporaryDate}`);
+      }
 
       if (this.currentDateField.isDetail) {
         this.cdr.detectChanges();
       }
     }
+
     this.datePickerVisible = false;
     this.currentDateField = null;
     this.temporaryDate = null;
@@ -1009,11 +1260,17 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
 
   // 🎯 新增：檢查欄位是否應該顯示為輸入控件
   shouldShowInputControl(column: ColumnDef, isEditing: boolean): boolean {
+    if (column.directEdit === true && column.editable !== false) {
+      return true;
+    }
     return this.isFieldEditable(column, isEditing);
   }
 
   // 🎯 新增：檢查欄位是否應該顯示為純文字
   shouldShowDisplayOnly(column: ColumnDef, isEditing: boolean): boolean {
+    if (column.directEdit === true && column.editable !== false) {
+      return false;
+    }
     return !this.isFieldEditable(column, isEditing);
   }
 
@@ -1025,4 +1282,105 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
       });
     }
   }
+
+  onDirectEditChange(rowData: any, field: string, newValue: any, rowIndex?: number, column?: ColumnDef): void {
+    const oldValue = rowData[field];
+    rowData[field] = newValue;
+
+    console.log(`✅ 直接編輯變更: ${field} = ${newValue} (第${(rowIndex || 0) + 1}行)`);
+
+    // 🎯 觸發和編輯保存一樣的事件，讓外部組件知道資料已更新
+    this.save.emit({
+      oldData: { ...rowData, [field]: oldValue },
+      newData: { ...rowData }
+    });
+  }
+
+  // 🎯 新增：處理詳細資料直接編輯欄位的變更事件
+  onDetailDirectEditChange(detailData: any, parentData: any, field: string, newValue: any, rowIndex?: number, detailIndex?: number): void {
+    const oldValue = detailData[field];
+    detailData[field] = newValue;
+
+    console.log(`✅ 詳細資料直接編輯變更: ${field} = ${newValue} (主行${(rowIndex || 0) + 1}, 詳細行${(detailIndex || 0) + 1})`);
+
+    // 🎯 觸發詳細資料保存事件
+    this.detailSave.emit({
+      oldDetail: { ...detailData, [field]: oldValue },
+      newDetail: { ...detailData },
+      parentData: parentData
+    });
+  }
+
+  getCalendarView(): 'date' | 'month' | 'year' {
+    if (!this.currentDateField) {
+      return 'date';
+    }
+
+    // 從當前編輯的欄位取得日期格式
+    const column = this.getCurrentEditingColumn();
+    if (!column || !column.dateFormat) {
+      return 'date';
+    }
+
+    const dateFormat = column.dateFormat;
+
+    // 根據日期格式決定 Calendar 的顯示模式
+    if (dateFormat.includes('year-month')) {
+      return 'month';  // 只顯示年月選擇
+    } else {
+      return 'date';   // 顯示完整日期選擇
+    }
+  }
+
+  getCalendarDateFormat(): string {
+    if (!this.currentDateField) {
+      return 'yy/mm/dd';
+    }
+
+    const column = this.getCurrentEditingColumn();
+    if (!column || !column.dateFormat) {
+      return 'yy/mm/dd';
+    }
+
+    const dateFormat = column.dateFormat;
+
+    // 根據日期格式類型返回 PrimeNG Calendar 的格式
+    switch (dateFormat) {
+      case 'year-month':
+      case 'year-month-compact':
+      case 'year-month-dash':
+        return 'yy/mm';
+      case 'full-date':
+      case 'full-date-compact':
+      case 'full-date-dash':
+      default:
+        return 'yy/mm/dd';
+    }
+  }
+
+  private getCurrentEditingColumn(): ColumnDef | null {
+    if (!this.currentDateField) {
+      return null;
+    }
+
+    const fieldName = this.currentDateField.field;
+
+    // 從主欄位中尋找
+    let column = this.mainColumns.find(col => col.field === fieldName);
+
+    // 如果沒找到，從詳細欄位中尋找
+    if (!column) {
+      column = this.detailColumns.find(col => col.field === fieldName);
+    }
+
+    // 如果還是沒找到，從當前分頁的詳細欄位中尋找
+    if (!column && this.showDetailTabs && this.currentDateField.data) {
+      const currentTab = this.getDetailSelectedTab(this.currentDateField.data);
+      const tabColumns = this.detailColumnsMap[currentTab] || [];
+      column = tabColumns.find(col => col.field === fieldName);
+    }
+
+    return column || null;
+  }
+
 }

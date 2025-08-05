@@ -245,9 +245,7 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
   }
 
   ngOnInit(): void {
-
-    // 🎯 第一時間檢查 URL 參數
-    this.checkViewModeFromURL();
+    this.setupViewModeUI();
     this.initializePage('TLS13010', this.dataForm);
 
     this.loadDiscountOptions().then(() => {
@@ -258,12 +256,18 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
 
   ngOnDestroy(): void {
     this.subscriptions.forEach(sub => sub.unsubscribe());
+
+    if (this.viewModeSubscription) {
+      this.viewModeSubscription.unsubscribe();
+    }
   }
+
   private setupAutoSave(): void {
     if (this.isViewMode) {
       console.log('🔍 Next2 檢視模式，跳過自動儲存設定');
       return;
     }
+
     if (this.dataForm) {
       const formSubscription = this.dataForm.valueChanges.pipe(
         debounceTime(300),
@@ -272,26 +276,6 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
         this.saveToWorkflow();
       });
       this.subscriptions.push(formSubscription);
-    }
-  }
-
-  /**
-    * 🎯 新增：從 URL 檢查是否為檢視模式
-    */
-  private checkViewModeFromURL(): void {
-    const queryParams = this.route.snapshot.queryParams;
-    const mode = queryParams['mode'];
-
-    console.log('🔍 Next2 檢查 URL 參數:', { mode });
-
-    if (mode === 'view') {
-      console.log('🔒 Next2 URL 檢測到檢視模式');
-      this.isViewMode = true;
-      this.contractFlowService.setViewMode(true);
-    } else {
-      console.log('📝 Next2 URL 未檢測到檢視模式');
-      this.isViewMode = false;
-      this.contractFlowService.setViewMode(false);
     }
   }
 
@@ -2198,25 +2182,21 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
   // 導航方法
   onSubmitNext(): void {
     if (this.isViewMode) {
-      // 🎯 檢視模式：導航到 Next3 檢視模式
-      this.router.navigate(['account/tls/tls13010next3'], {
-        queryParams: { mode: 'view' }
-      });
+      // 🎯 檢視模式：直接導航，不帶參數
+      this.router.navigate(['account/tls/tls13010next3']);
       return;
     }
-    // 儲存資料到工作流程
+
+    // 編輯模式：原有邏輯
     this.saveCommissionDataToWorkflow();
 
-    // 檢查是否有抽成項目
     const hasCommissionItems = this.commissionData.length > 0;
     if (!hasCommissionItems) {
       this.notificationService.warnBubble('請至少設定一個抽成項目');
       return;
     }
 
-    // 根據抽成別決定下一步
     if (this.isGeneralCommissionMode) {
-      // 🎯 一般抽成：直接送出，不需要 Next3 一致性檢查
       const validation = this.validateGeneralCommissionData();
       if (!validation.isValid) {
         this.notificationService.warnBubble(validation.errors[0]);
@@ -2224,8 +2204,6 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
       }
       this.showConfirmDialog = true;
     } else {
-      // 🎯 其他抽成別：前往 Next3，移除一致性檢查
-      console.log('🔄 前往 Next3 設定條件');
       this.router.navigate(['account/tls/tls13010next3']);
     }
   }
@@ -2260,15 +2238,14 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
 
   override onCancel(): void {
     if (this.isViewMode) {
-      // 🎯 檢視模式：返回 Next1 檢視模式
-      this.router.navigate(['account/tls/tls13010next1'], {
-        queryParams: { mode: 'view' }
-      });
+      // 🎯 檢視模式：返回上一步，不帶參數
+      this.router.navigate(['account/tls/tls13010next1']);
       return;
     }
+
+    // 編輯模式：原有邏輯
     this.saveCommissionDataToWorkflow();
     this.router.navigate(['account/tls/tls13010next1']);
-    // this.notificationService.infoBubble('已返回初始頁面、);、
   }
 
   onRealCancel(): void {
@@ -2303,6 +2280,10 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
   }
 
   saveAllChanges(): void {
+    if (this.isViewMode) {
+      this.notificationService.infoBubble('檢視模式下無法儲存變更');
+      return;
+    }
     this.saveCommissionDataToWorkflow();
     this.notificationService.successBubble('所有變更已儲存');
   }

@@ -9,8 +9,13 @@
       <div *ngIf="type === '04'" class="grid p-fluid card">
         <app-tls24010-payno [data]="PaymentDetailsList" class="col-12"></app-tls24010-payno>
       </div>
-      <div *ngIf="type === '02' || type === '03'" class="grid p-fluid card">
-        <app-tls24010-tltid [data]="ProductDetailList" [talent_id]="talent_id" class="col-12"></app-tls24010-tltid>
+      <div *ngIf="type === '03'" class="grid p-fluid card">
+        <app-tls24010-tltid [TXN_Date]="dataForm.controls.TXN_Date.value" [data]="ProductDetailList"
+          [talent_id]="talent_id" [TLT_No]="dataForm.controls.TLT_No.value" class="col-12"></app-tls24010-tltid>
+      </div>
+      <div *ngIf="type === '02'" class="grid p-fluid card">
+        <app-tls24010-discode [TXN_Date]="dataForm.controls.TXN_Date.value" [data]="ProductDetailList"
+          [talent_id]="talent_id" [TLT_No]="dataForm.controls.TLT_No.value" class="col-12"></app-tls24010-discode>
       </div>
       <!------------->
       <div class="grid p-fluid">
@@ -23,7 +28,7 @@
         <!-- 專櫃編號 → POS5006.TLT_No -->
         <app-dropdown *ngIf="type === '01'" class="col-12 md:col-6 lg:col-3" label="專櫃編號"
           [control]="dataForm.controls.TLT_No" [submitted]="submitted" [options]="TLT_NoOptions" optionLabel="label"
-          optionValue="No" />
+          optionValue="No" [showClear]="false" />
         <!-- 專櫃編號 → POS5006.TLT_No -->
         <app-input-text *ngIf="type !== '01'" class="col-12 md:col-6 lg:col-3" label="專櫃編號"
           [control]="dataForm.controls.TLT_No" [submitted]="submitted" />
@@ -38,7 +43,7 @@
       <div *ngIf="type === '01'" class="grid p-fluid card">
         <app-tls24010-tltno [data]="ProductDetailList" [store_way]="store_way" [talent_id]="talent_id"
           [TXN_Date]="dataForm.controls.TXN_Date.value" [TLT_No]="dataForm.controls.TLT_No.value"
-          class="col-12"></app-tls24010-tltno>
+          [TLT_NoOptions]="TLT_NoOptions" class="col-12"></app-tls24010-tltno>
       </div>
       <hr />
       <div class="grid p-fluid">

@@ -151,19 +151,24 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionItem>
   }
 
   ngOnInit(): void {
-    console.log('🚀 TLS13010Next3Component 初始化開始');
+    this.setupViewModeUI();
     this.initializePage('TLS13010', this.dataForm);
 
     this.loadDiscountOptions().then(() => {
       this.loadWorkflowData();
     });
 
-    // 設定檢視模式 UI 監聽
-    this.setupViewModeUI();
   }
 
   ngOnDestroy(): void {
     console.log('🔄 Next3 組件銷毀前暫存資料');
+
+    if (!this.isViewMode) {
+      console.log('📝 編輯模式：儲存條件設定資料');
+      this.saveConditionDataToWorkflow();
+    } else {
+      console.log('🔍 檢視模式：跳過資料儲存');
+    }
 
     // 🎯 ⭐ 重要：組件銷毀前暫存
     this.saveConditionDataToWorkflow();
@@ -957,10 +962,13 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionItem>
   // 🎯 提交相關方法
   onSubmitNext(): void {
     if (this.isViewMode) {
-      // 🎯 檢視模式：返回到列表頁面或上一頁
+      // 🎯 檢視模式：直接返回列表，不執行提交
       this.router.navigate(['account/tls/tls13010']);
+      this.notificationService.infoBubble('已結束檢視');
       return;
     }
+
+    // 編輯模式：原有的提交邏輯
     this.saveConditionDataToWorkflow();
     this.showConfirmDialog = true;
   }
@@ -1235,13 +1243,12 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionItem>
   // 🎯 導航方法
   override onCancel(): void {
     if (this.isViewMode) {
-      // 🎯 檢視模式：返回 Next2 檢視模式
-      this.router.navigate(['account/tls/tls13010next2'], {
-        queryParams: { mode: 'view' }
-      });
+      // 🎯 檢視模式：返回 Next2，不帶參數
+      this.router.navigate(['account/tls/tls13010next2']);
       return;
     }
 
+    // 編輯模式：原有邏輯
     console.log('🔄 Next3 返回前一頁，先暫存資料');
     this.saveConditionDataToWorkflow();
     this.router.navigate(['account/tls/tls13010next2']);
@@ -1763,7 +1770,6 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionItem>
       this.applyViewModeSettings(isViewMode);
     });
   }
-
   /**
    * 🎯 新增：套用檢視模式設定
    */
@@ -1777,5 +1783,9 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionItem>
     }
 
     // 🎯 表格的 readonly 屬性會根據 isViewMode 自動處理
+  }
+
+  getSubmitButtonText(): string {
+    return this.isViewMode ? '結束檢視' : '確認送出';
   }
 }

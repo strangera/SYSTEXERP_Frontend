@@ -76,6 +76,15 @@ export const finRoutes: Routes = [
   // 形成媒體申報檔
   { path: 'fin15040', loadComponent: () => import('./fin15040/fin15040.component').then(m => m.FIN15040Component) },
   { path: 'fin15040cru', loadComponent: () => import('./fin15040-cru/fin15040-cru.component').then(m => m.FIN15040CRUComponent) },
+  // 媒申核對報表
+  { path: 'fin15070', loadComponent: () => import('./fin15070/fin15070.component').then(m => m.FIN15070Component) },
+  // 營業人媒體檔案申報表
+  { path: 'fin15080', loadComponent: () => import('./fin15080/fin15080.component').then(m => m.FIN15080Component) },
+  // 營業人媒體檔案遞送單
+  { path: 'fin15090', loadComponent: () => import('./fin15090/fin15090.component').then(m => m.FIN15090Component) },
+  // 銷貨退回或折讓單列印
+  { path: 'fin15100', loadComponent: () => import('./fin15100/fin15100.component').then(m => m.FIN15100Component) },
+
   // 公司銀行資料維護
   { path: 'fin21010', loadComponent: () => import('./fin21010/fin21010.component').then(m => m.FIN21010Component) },
   { path: 'fin21010cru', loadComponent: () => import('./fin21010-cru/fin21010-cru.component').then(m => m.FIN21010CRUComponent) },
