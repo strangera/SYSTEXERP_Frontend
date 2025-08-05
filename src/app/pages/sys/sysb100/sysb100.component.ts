@@ -11,6 +11,7 @@ import { AccordionModule } from 'primeng/accordion';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { TranslateModule } from '@ngx-translate/core';
+import { ValidationService } from '@shared/service/validation.service';
 
 @Component({
     selector: 'app-sysb100',
@@ -58,7 +59,7 @@ export class SYSB100Component
     STO_MailFax: ['', [Validators.maxLength(15)]], // 郵寄傳真
     STO_MailAddr: ['', [Validators.maxLength(100)]], // 郵寄地址
     STO_InvoiceAddr: ['', [Validators.maxLength(100)]], // 發票地址
-    STO_Email: ['', [Validators.maxLength(100)]], // 電子郵件
+    STO_Email: ['', [Validators.maxLength(100), Validators.email]], // 電子郵件
     STO_URL: ['', [Validators.maxLength(100)]], // 公司網址
 
     //分頁查詢
