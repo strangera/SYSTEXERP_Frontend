@@ -73,8 +73,8 @@ export class FIN11060Component extends BasicQueryPageComponent<InvoiceRecord> im
         processDateEnd: [null],  // 產檔日期_終止日
         GUI_No_start: [null, [Validators.maxLength(8), Validators.minLength(8), Validators.max(99999950)]], // 發票號碼(起)
         GUI_No_end: [null, [Validators.maxLength(8), Validators.minLength(8), Validators.max(99999999)]], // 發票號碼(迄)
-        ECR_No: [null, [Validators.maxLength(8), Validators.minLength(8), Validators.max(99999950)]], // 收銀機代號(起) > 直接改多選
-        // ECR_No_end: [null, [Validators.maxLength(8), Validators.minLength(8), Validators.max(99999999)]], // 收銀機代號(迄)
+        ECR_No_start: [null, [Validators.maxLength(8)]], // 收銀機代號(起)
+        ECR_No_end: [null, [Validators.maxLength(8)]], // 收銀機代號(迄)
         condition_type: ['1',Validators.required],  // 條件依據
         show_error: [[]], //  是否只顯示異常
         
