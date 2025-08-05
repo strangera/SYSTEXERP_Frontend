@@ -150,12 +150,37 @@ export class TLS24010Component extends BasicQueryPageComponent<TLS24010Data> imp
   }
   // 編輯補登資料
   onEditData(rowData: TLS24010Data, type: string): void {
-    this.onEdit({
-      ...rowData,
-      type,
-      TXN_GUIPaper: this.queryForm.value.TXN_GUIPaper,
-      store_way: this.queryForm.value.store_way,
-      talent_id: this.queryForm.value.talent_id
-    });
+    if (type === FIX_TYPE.交易資料作廢) {
+      this.messageService.confirm({
+        header: '作廢交易資料',
+        message: '確定要作廢交易資料嗎?',
+        accept: () => {
+          this.onEdit({
+            ...rowData,
+            type,
+            TXN_GUIPaper: this.queryForm.value.TXN_GUIPaper,
+            store_way: this.queryForm.value.store_way,
+            talent_id: this.queryForm.value.talent_id
+          });
+        },
+        extraButtons: [
+          {
+            label: '顯示說明',
+            severity: 'info',
+            action: () => {
+              this.messageService.infoBox('交易作廢後不可恢復，請謹慎操作');
+            }
+          }
+        ]
+      });
+    } else {
+      this.onEdit({
+        ...rowData,
+        type,
+        TXN_GUIPaper: this.queryForm.value.TXN_GUIPaper,
+        store_way: this.queryForm.value.store_way,
+        talent_id: this.queryForm.value.talent_id
+      });
+    }
   }
 }

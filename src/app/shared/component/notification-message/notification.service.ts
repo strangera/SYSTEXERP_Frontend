@@ -12,6 +12,11 @@ interface ConfirmOptions {
   reject?: () => void;
   type?: 'confirm' | 'update' | 'delete'; // 添加类型
   showIcon?: boolean; // 新增是否顯示圖示的屬性
+  extraButtons?: {
+    label: string;
+    action: () => void;
+    severity?: string; // optional, like 'info', 'secondary'
+  }[];
 }
 interface InputBoxOptions {
   header: string;

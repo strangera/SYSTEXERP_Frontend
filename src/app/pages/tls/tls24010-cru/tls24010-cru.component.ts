@@ -309,6 +309,8 @@ export class TLS24010CRUComponent extends BasicCruPageComponent<TLS24010Data | u
         TLTNoEdit: {
           TLT_No: this.dataForm.getRawValue().TLT_No,
           Talent_ID: this.TLT_NoOptions.find(item => item.No === this.dataForm.getRawValue().TLT_No)?.talent_id || this.talent_id || 0,
+          Contract_No: this.tltnoComp?.tltIdData[0].Contract_No || '',
+          Contract_SubNo: this.tltnoComp?.tltIdData[0].Contract_SubNo || '',
           updatePOS5007List: this.tltnoComp?.tltIdData.map(item => {
             return {
               POS5007_ID: item.ID,
@@ -318,7 +320,9 @@ export class TLS24010CRUComponent extends BasicCruPageComponent<TLS24010Data | u
               Talent_ID: item.Talent_ID || this.talent_id || 0,
               tlt_id: this.store_way === STORE_WAY.專櫃 ? (item.PLU_MagNo as POS2004Item).tlt_id as string : item.tlt_id as string || '',
               PLU_TaxType: this.store_way === STORE_WAY.專櫃 ? item.PLU_TaxType : undefined,
-              TXN_DiscCode: this.store_way === STORE_WAY.專櫃 ? (item.PLU_MagNo as POS2004Item).cag_barcode as string : item.TXN_DiscCode as string || ''
+              TXN_DiscCode: this.store_way === STORE_WAY.專櫃 ? (item.PLU_MagNo as POS2004Item).cag_barcode as string : item.TXN_DiscCode as string || '',
+              Contract_No: this.store_way === STORE_WAY.專櫃 ? (item.PLU_MagNo as POS2004Item).Contract_No as string : item.Contract_No as string || '',
+              Contract_SubNo: this.store_way === STORE_WAY.專櫃 ? (item.PLU_MagNo as POS2004Item).Contract_SubNo as string : item.Contract_SubNo as string || ''
             }
           }) || []
         }
@@ -384,6 +388,14 @@ export class TLS24010CRUComponent extends BasicCruPageComponent<TLS24010Data | u
             TERM_No: item.PAY_Type === '0' ? Number(item.TERM_No) : 0,
           }
         })
+      }
+      this.tls24010Service.updateTLS24010(data).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe((res) => {
+        this.messageService.successBubble(res.Message);
+      });
+    } else if (this.type === FIX_TYPE.交易資料作廢) {
+      const data = {
+        ...body,
+        EditType: TLS24010_EDIT_TYPE.交易資料作廢,
       }
       this.tls24010Service.updateTLS24010(data).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe((res) => {
         this.messageService.successBubble(res.Message);

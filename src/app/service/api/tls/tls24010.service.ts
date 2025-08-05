@@ -54,6 +54,8 @@ export interface POS5007Data {
   TXN_DiscCode?: string; // 折扣別
   TXN_DiscCode_Name?: string; // 折扣名稱
   TXN_DiscName?: string;
+  Contract_No?: string;
+  Contract_SubNo?: string;
 }
 
 export interface POS5008Data {
@@ -117,6 +119,7 @@ export interface InsertTLS24010Payload {
     TXN_PayDesc: string;
     TERM_No: number;
   }[];
+  VoidEdit: Record<string, string>
 }
 
 export interface UpdateTLS24010Payload {
@@ -131,12 +134,16 @@ export interface UpdateTLS24010Payload {
   TLTNoEdit?: {
     TLT_No: string;
     Talent_ID: number;
+    Contract_No: string
+    Contract_SubNo: string
     updatePOS5007List: {
       POS5007_ID?: number;
       TLT_No: string;
       PLU_MagNo: string;
       PLU_No: string;
       Talent_ID: number;
+      Contract_No: string,
+      Contract_SubNo: string,
       tlt_id?: string;
       PLU_TaxType?: string;
       TXN_DiscCode?: string;
@@ -190,6 +197,8 @@ export interface POS2004ForUpdateResponse {
   PLU_OrgPLUNo: string;
   PLU_SalePrc: number;
   talent_id: number;
+  Contract_No: string;
+  Contract_SubNo: string;
 }
 
 @Injectable({

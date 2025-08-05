@@ -139,14 +139,14 @@ export class Tls24010TltnoComponent implements OnInit, OnChanges {
         event.rowData.TLT_No = selectedItem.TLT_No;
         event.rowData.PLU_No = selectedItem.PLU_No;
         event.rowData.Talent_ID = selectedItem.talent_id;
+        event.rowData.Contract_No = selectedItem.Contract_No;
+        event.rowData.Contract_SubNo = selectedItem.Contract_SubNo;
         if (event.index === 0) {
           this.tls24010?.dataForm.patchValue({ TLT_No: selectedItem.TLT_No });
         }
       }
     } else {
       const selectedItem = this.POS2004Options.find(item => item.id === (event.value as unknown as POS2004Item).id);
-      console.log(selectedItem);
-
       if (selectedItem) {
         event.rowData.PLU_Name = selectedItem.TLT_Name;
         event.rowData.TLT_No = selectedItem.TLT_No;
@@ -154,6 +154,8 @@ export class Tls24010TltnoComponent implements OnInit, OnChanges {
         event.rowData.Talent_ID = selectedItem.talent_id;
         event.rowData.tlt_id_desc = selectedItem.tlt_id_desc;
         event.rowData.TXN_DiscName = selectedItem.cag_barcode_name;
+        event.rowData.Contract_No = selectedItem.Contract_No;
+        event.rowData.Contract_SubNo = selectedItem.Contract_SubNo;
       }
     }
   }
