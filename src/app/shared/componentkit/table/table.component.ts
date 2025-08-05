@@ -1,32 +1,32 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { Component, EventEmitter, Input, SimpleChanges, OnChanges, Output, ViewChild, OnDestroy, OnInit } from '@angular/core';
-import { Table, TableLazyLoadEvent, TablePageEvent, TableRowSelectEvent, TableRowUnSelectEvent, TableModule } from 'primeng/table';
-import { SortMeta, PrimeTemplate } from 'primeng/api';
-import { AddButton, Column, ColumnGroup, FieldChangeEvent, LazyLoadEvent, RowEditSaveEvent, toggleButtons, validateRowData } from './table.model';
-import { FileSelectEvent, FileUpload, FileUploadModule } from 'primeng/fileupload';
-import { NotificationService } from '../../component/notification-message/notification.service';
-import { QueryStateService } from '../../service/query-state.service';
-import { BasicPrintDataComponent } from '../../componentextends/basic-print/basic-print-data.component';
-import { CurrentPageService } from '../../../layout/app.menulist/current-page.service';
-import { Subject, takeUntil } from 'rxjs';
-import { FunsrightInfo } from '../../models/system/funsrightInfo';
-import { NgIf, NgClass, NgFor, NgStyle } from '@angular/common';
-import { DividerModule } from 'primeng/divider';
-import { MultiSelectModule } from 'primeng/multiselect';
-import { TooltipModule } from 'primeng/tooltip';
+import { NgClass, NgFor, NgIf, NgStyle } from '@angular/common';
+import { Component, EventEmitter, Input, OnChanges, OnDestroy, OnInit, Output, SimpleChanges, ViewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
+import { PrimeTemplate, SortMeta } from 'primeng/api';
+import { AutoCompleteCompleteEvent, AutoCompleteModule } from 'primeng/autocomplete';
 import { Button, ButtonDirective } from 'primeng/button';
-import { DropdownModule } from 'primeng/dropdown';
-import { Ripple } from 'primeng/ripple';
-import { InputTextModule } from 'primeng/inputtext';
-import { InputNumberModule } from 'primeng/inputnumber';
 import { CalendarModule } from 'primeng/calendar';
 import { CheckboxModule } from 'primeng/checkbox';
+import { DividerModule } from 'primeng/divider';
+import { DropdownModule } from 'primeng/dropdown';
+import { FileSelectEvent, FileUpload, FileUploadModule } from 'primeng/fileupload';
+import { InputNumberModule } from 'primeng/inputnumber';
+import { InputTextModule } from 'primeng/inputtext';
+import { MultiSelectModule } from 'primeng/multiselect';
+import { Ripple } from 'primeng/ripple';
 import { SkeletonModule } from 'primeng/skeleton';
+import { Table, TableLazyLoadEvent, TableModule, TablePageEvent, TableRowSelectEvent, TableRowUnSelectEvent } from 'primeng/table';
+import { TooltipModule } from 'primeng/tooltip';
+import { Subject, takeUntil } from 'rxjs';
+import { CurrentPageService } from '../../../layout/app.menulist/current-page.service';
+import { NotificationService } from '../../component/notification-message/notification.service';
+import { BasicPrintDataComponent } from '../../componentextends/basic-print/basic-print-data.component';
+import { FunsrightInfo } from '../../models/system/funsrightInfo';
+import { QueryStateService } from '../../service/query-state.service';
 import { TableExpansionComponent } from './table-expansion/table-expansion.component';
 import { TableExportComponent } from './table-export/table-export.component';
-import { AutoCompleteCompleteEvent, AutoCompleteModule } from 'primeng/autocomplete';
-import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
+import { AddButton, Column, ColumnGroup, FieldChangeEvent, LazyLoadEvent, RowEditSaveEvent, toggleButtons, validateRowData } from './table.model';
 @Component({
   selector: 'app-table',
   templateUrl: './table.component.html',
@@ -124,6 +124,7 @@ export class TableComponent extends BasicPrintDataComponent implements OnInit, O
   @Output() rowEditCancel = new EventEmitter<any>();                            // Row 編輯取消事件
   @Input() rowEditDisabled: (rowData: any) => boolean | undefined = () => false;// Row禁止編輯條件
   @Input() alwaysEdit = false;                                                  // 是否總是編輯
+  @Input() alwaysBlurValidate = false;                                         // 是否總是驗證欄位 (true:總是驗證、false:只在送出時驗證)
   @Input() insertRowData = false;             // 預設新增模式 (關聯：需要加入dataKey, dataChange)
   @Input() defaultInsertData: any = {};       // 預設新增資料 (可選，預設為所有資料為null)
   // expansion 收合展開
@@ -145,18 +146,18 @@ export class TableComponent extends BasicPrintDataComponent implements OnInit, O
   // body
   @Output() fieldChange = new EventEmitter<FieldChangeEvent>(); // input 變更事件
   @Output() selectButton = new EventEmitter<any>();             // 選擇 按鈕事件
-  @Output() filterChange = new EventEmitter<{ rowData: any, value: string }>(); // autoComplete 過濾事件
+  @Output() filterChange = new EventEmitter<{ rowData: any, value: string; }>(); // autoComplete 過濾事件
   // Footer
   @Input() showFooter = false;                      // 是否顯示 Footer
   // 分頁器
   @Input() scrollHeight = '400px';                  // table 高度
-  @Input() scrollable = true                        // 是否要滾輪
+  @Input() scrollable = true;                        // 是否要滾輪
   @Input() showPaginator = true;                    // 是否顯示 分頁器
   @Input() totalRecords = 0;                        // 記錄總數
   totalPages = 0;                                   // 共幾頁數
-  rows = 10                                         // 每頁顯示的行數
+  rows = 10;                                         // 每頁顯示的行數
   first = 0;                                        // 當前表格的起始索引
-  pages: { label: string, value: number }[] = [];   // (右上)下拉選單 頁數選項
+  pages: { label: string, value: number; }[] = [];   // (右上)下拉選單 頁數選項
   selectedPage: number | null = 1;                  // (右上)下拉選單 當前選擇的頁數
   @Input() lazy = false;                                      // 是否啟用 Lazy 加載
   @Output() lazyLoadData = new EventEmitter<LazyLoadEvent>(); // Lazy 加載事件
@@ -165,6 +166,11 @@ export class TableComponent extends BasicPrintDataComponent implements OnInit, O
   // 權限
   private ngUnsubscribe = new Subject<void>();
   public funInfo: FunsrightInfo | undefined;
+
+  public showClear = (col: Column): boolean => {
+    if (typeof col?.optionShowClear === 'boolean') return col.optionShowClear;
+    return true;
+  };
 
   constructor(
     private readonly queryStateService: QueryStateService,
@@ -246,11 +252,11 @@ export class TableComponent extends BasicPrintDataComponent implements OnInit, O
   }
   /* =================================核心程式碼======================================= */
   // 行追蹤
-  trackByRow = (index: number, item: any) => { return item?.[this.dataKey] || index; }
+  trackByRow = (index: number, item: any) => { return item?.[this.dataKey] || index; };
   // 計算欄位總數(包含序號、勾選、管理、展開)
   get getVisibleHeaderCount(): number { return 1 + Number(this.showCheckBox) + this.selectedColumns.length + Number(this.showManage) + (this.expansionDataKey ? 1 : 0); }
   // 行是否可選
-  rowSelectableWrapper = ({ data }: { data: any, index: number }): boolean | undefined => { return this.isRowSelectable(data) && !this.rowEditing };
+  rowSelectableWrapper = ({ data }: { data: any, index: number; }): boolean | undefined => { return this.isRowSelectable(data) && !this.rowEditing; };
   // 展開所有 符合的row
   toggleExpandCollapse() {
     this.expandedRows = this.expression ? {} : Object.fromEntries(this.data.filter(p => p[this.expansionDataKey]?.length).map(p => [p[this.dataKey], true]));
@@ -276,7 +282,8 @@ export class TableComponent extends BasicPrintDataComponent implements OnInit, O
   }
   // 行編輯保存
   onRowEditSave(rowData: any, ri: number, htmlTableRowElement: HTMLTableRowElement) {
-    if (!validateRowData(rowData, this.columns, this.data, this.messageService, this.dataKey)) return; // 如果驗證不通過，返回
+    // 在 alwaysEdit 和 alwaysBlurValidate 模式下，跳過驗證因為已在失去焦點時驗證過
+    if (!this.alwaysEdit && !this.alwaysBlurValidate && !validateRowData(rowData, this.columns, this.data, this.messageService, this.dataKey)) return; // 如果驗證不通過，返回
     const oldData = this.clonedProducts[rowData[this.dataKey]]; // 儲存原始數據
     delete this.clonedProducts[rowData[this.dataKey]]; // 刪除原始數據
     this.rowEditing = false; // 關閉編輯模式
@@ -323,6 +330,27 @@ export class TableComponent extends BasicPrintDataComponent implements OnInit, O
   }
   // (欄位是Input、Dropdown使用): 處理值變化事件
   onFieldChange(rowData: any, field: string, value: any, index?: number) { this.fieldChange.emit({ rowData, field, value, index }); }
+
+  // 處理失去焦點時的驗證 (alwaysEdit 模式專用)
+  onFieldBlur(rowData: any, field: string, value: any) {
+    if (!this.alwaysEdit && !this.alwaysBlurValidate) return; // 只在 alwaysEdit 和 alwaysBlurValidate 模式下執行
+
+    const column = this.columns.find(col => col.field === field);
+    if (column?.validate) {
+      const hasValidationError = column.validate.some(validateFn => {
+        const { isValid, errorMessage } = validateFn(value, rowData, this.data, field, column.header);
+        if (!isValid) {
+          const [message, title] = errorMessage;
+          this.messageService.errorBubble(message, title);
+        }
+        return !isValid;
+      });
+
+      if (!hasValidationError) {
+        console.log(`欄位 ${column.header} 驗證通過`);
+      }
+    }
+  }
   // 事件類型 (有需求可使用)
   editRow(rowData: any) { this.edit.emit(rowData); }                // Edit 按鈕 事件
   detailRow(rowData: any) { this.detail.emit(rowData); }            // Detail 或 雙擊行 事件
