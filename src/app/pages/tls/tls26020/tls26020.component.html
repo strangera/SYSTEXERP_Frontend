@@ -36,7 +36,8 @@
 </div>
 <div class="card">
   <app-table tableKey="TLS26020" [data]="data" [columns]="columns" [selectedItems]="selectedItems"
-    (selectionChange)="selectedItems = $event" dataKey="tlt_no" [totalRecords]="totalRecords" (lazyLoadData)="onLazyLoadData($event, queryForm); 
+    (selectionChange)="selectedItems = $event" dataKey="id" [totalRecords]="totalRecords"
+    [multiSortMeta]="[{ field: 'id', order: 1 }]" (lazyLoadData)="onLazyLoadData($event, queryForm); 
     onSubmit(queryForm)" [lazy]="true" [loading]="loading" [showManage]="false" [showDelete]="false">
   </app-table>
 </div>

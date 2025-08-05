@@ -42,7 +42,7 @@ export class TLS26020Component extends BasicQueryPageComponent<TLS26020Data> imp
     tlt_building: [[],],          // 館別
     Org_Name: ['',],              // 組織名稱
     tlt_floor: [[],],             // 樓層
-    ...createPaginationConfig([{ field: 'tlt_no', order: 1 }])
+    ...createPaginationConfig([{ field: 'id', order: 1 }])
   });
 
   totalRecords = 0;
@@ -79,15 +79,8 @@ export class TLS26020Component extends BasicQueryPageComponent<TLS26020Data> imp
   }
 
   onSubmit(frm: FormGroup) {
-    const queryRequest: TLS26020QueryRequest = {
-      Sale_DateStart: frm.value.Sale_DateStart,
-      Sale_DateEnd: frm.value.Sale_DateEnd,
-      tlt_building: frm.value.tlt_building || [],
-      Org_Name: frm.value.Org_Name || '',
-      tlt_floor: frm.value.tlt_floor || []
-    };
     this.handleSubmit(frm, () => {
-      this.tls26020Service.queryTLS26020(queryRequest)
+      this.tls26020Service.queryTLS26020(frm.value)
         .pipe(finalize(() => this.loading = false))
         .subscribe(response => {
           this.data = response.Data;
