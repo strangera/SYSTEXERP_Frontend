@@ -75,28 +75,6 @@ export class TLS22010Component extends BasicQueryPageComponent<any> implements O
     { field: 'Status_Code', header: '狀態', visible: true },
   ];
 
-  expansionColumns7: Column[] = [
-    { field: 'TXN_No', header: '交易序號' },
-    { field: 'TXN_GUIBegNo', header: '起始發票號' },
-    { field: 'TXN_GUIEndNo', header: '結束發票號' },
-    { field: 'TXN_TotSaleAmt', header: '銷售金額 (A)' },
-    { field: 'sad_preorder_Amt', header: '預購金額' },
-    { field: 'sad_settle_Amt', header: '預購結帳 (C2)' },
-    { field: 'TXN_TotSaleAmt_Sum', header: '銷售小計(D) = (A)' },
-    { field: 'TXN_TotExtraAmt', header: '代收/付金額 (L)' },
-    { field: 'TXN_TotHaveTax', header: '已開發票金額 (E)' },
-    { field: 'TXN_ChangeHaveTax', header: '已開溢付 (K)' },
-    { field: 'TXN_TotOver', header: '已匯送付 (I)' },
-    { field: 'TXN_TotGUI', header: '發票總金額 (F)' },
-    { field: 'GUI_NET', header: '發票未稅金額 (M)' },
-    { field: 'TXN_TotTax', header: '發票稅額 (N)' },
-    { field: 'TXN_TotGUISaleNoTax', header: '發票免稅金額 (O)' },
-    { field: 'TXN_TotOver_Sum', header: '溢收 (G)' },
-    { field: 'GUI_REFUND', header: '折讓 (J)' },
-    { field: 'TXN_TotPayAmt', header: '付款金額(H)' }
-  ];
-
-
   statusOptions = [
     { label: '全部', value: 'all' },
     { label: '正常', value: 'normal' },

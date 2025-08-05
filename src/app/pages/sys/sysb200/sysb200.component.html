@@ -39,6 +39,7 @@
             <app-input-text label="廠商簡稱" controlName="	VEN_SName" [control]="queryForm.controls.VEN_SName"
               [submitted]="submitted"></app-input-text>
           </div>
+
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown label="廠商匯款銀行代號" controlName="VEN_BNK_No" [control]="queryForm.controls.VEN_BNK_No"
               [options]="(bankOptions$ | async) || []" optionLabel="label" optionValue="value" [submitted]="submitted">

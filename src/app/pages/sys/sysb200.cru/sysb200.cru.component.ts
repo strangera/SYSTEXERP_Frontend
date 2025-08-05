@@ -18,18 +18,19 @@ import { TableComponent } from '../../../shared/componentkit/table/table.compone
 import { NgIf, AsyncPipe } from '@angular/common';
 import { TranslateModule } from '@ngx-translate/core';
 import { Sysb200Service } from '../../../service/api/sys/sysb200.service';
+import { InputNumberComponent } from '@shared/componentkit/input-number/input-number.component';
 
 @Component({
   selector: 'app-sysb200-cru',
   templateUrl: './sysb200.cru.component.html',
   styleUrls: ['./sysb200.cru.component.scss'],
   standalone: true,
-  imports: [MenubarComponent, ButtonComponent, PanelModule, FormsModule, ReactiveFormsModule, InputTextComponent, DropdownComponent, RadiobuttonComponent, TableComponent, NgIf, AsyncPipe, TranslateModule]
+  imports: [MenubarComponent, ButtonComponent, PanelModule, FormsModule, ReactiveFormsModule, InputTextComponent, DropdownComponent, RadiobuttonComponent, TableComponent, NgIf, AsyncPipe, TranslateModule, InputNumberComponent]
 })
 export class SYSB200CRUComponent extends BasicCruPageComponent<Tlsb200Model> implements OnInit {
   dataForm = this.formBuilder.nonNullable.group({
     // 基本資料
-    VEN_No: ['', [Validators.required, Validators.maxLength(14)]],
+    VEN_No: [{ value: '', disabled: true }, [Validators.required, Validators.maxLength(14)]],
     VEN_Flag: ['', Validators.required],
     VEN_Uniform: ['', Validators.maxLength(10)],
     VEN_RemitFeeMode: ['', Validators.required],
@@ -51,7 +52,7 @@ export class SYSB200CRUComponent extends BasicCruPageComponent<Tlsb200Model> imp
     VEN_BankNo: ['', [Validators.maxLength(10)]],
     VEN_BankAccountNo: ['', Validators.maxLength(40)],
     VEN_AccountName: ['', Validators.maxLength(64)],
-    VEN_PayConditionDay: ['', Validators.required],
+    VEN_PayConditionDay: [null, [Validators.required, Validators.min(0)]],
 
     // 其他資料
     VEN_Status: ['0', Validators.required],
@@ -169,6 +170,8 @@ export class SYSB200CRUComponent extends BasicCruPageComponent<Tlsb200Model> imp
 
   copyAddress() {
     this.dataForm.controls['VEN_GUIAddr'].setValue(this.dataForm.controls['VEN_Address'].value);
+    this.dataForm.controls.VEN_No.disable();
+
   }
 
   resetTable() {

@@ -108,12 +108,8 @@
       [showReportMode]="false"
       [showDelete]="false"
       [loading]="loading"
-      expansionDataKey="details"
-      (rowExpand)="onRowExpand($event)"
       [columns]="columns7"
-      [expansionColumns]="expansionColumns7"
-      (onRowExpand)="onRowExpand($event)"
-      [showManage]="false"
+
     >
       <header>
         <p-button
@@ -131,6 +127,3 @@
     </app-table>
   </div>
 </div>
-<!-- * 發票總金額(F) = 發票未稅金額(M) + 發票稅額(N) + 發票免稅金額(O) * 付款金額(H)
-= 發票總金額(F) + 溢收(G) + 已開發票金額 (E) + 訂金結帳訂金 (C3) + 代收/付金額
-(L) * 已開發票溢付(I)=溢收 (G) -->

@@ -3,7 +3,6 @@ import { Component, OnInit } from '@angular/core';
 import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ValidationService } from '../../../shared/service/validation.service';
-import { SortMeta } from 'primeng/api';
 import { ActivatedRoute } from '@angular/router';
 import { map } from 'rxjs/operators';
 import { Observable } from 'rxjs';
@@ -106,11 +105,11 @@ export class SYSB200Component extends BasicQueryPageComponent<any> implements On
       }
     },
     { field: 'VEN_Uniform', header: '統一編號', visible: true },
-    { field: 'VEN_CName', header: '廠商名稱(中文)', visible: true },
+    { field: 'VEN_CName', header: '廠商名稱(中文)', visible: false },
     { field: 'VEN_EName', header: '廠商名稱(英文)', visible: false },
     { field: 'VEN_SName', header: '廠商簡稱', visible: false },
     { field: 'VEN_Address', header: '通訊地址', visible: true },
-    { field: 'VEN_Boss', header: '聯絡人', visible: true },
+    { field: 'VEN_Boss', header: '聯絡人', visible: false },
     { field: 'VEN_BossTitle', header: '聯絡人職稱', visible: false },
     { field: 'VEN_BossEmail', header: '聯絡人電子郵件', visible: false },
     { field: 'VEN_BossTel', header: '聯絡人電話', visible: false },
