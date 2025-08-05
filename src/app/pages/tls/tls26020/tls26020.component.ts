@@ -12,6 +12,9 @@ import { TranslateModule } from '@ngx-translate/core';
 import { InputTextRangeComponent } from '../../../shared/componentkit/input-text-range/input-text-range.component';
 import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
 import { MultiSelectComponent } from "../../../shared/componentkit/multi-select/multi-select.component";
+import { Tls11010Service } from '@service/api/tls/tls11010.service';
+import { FloorService } from '@service/basic/floor.service';
+import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
 
 @Component({
   selector: 'app-tls26020',
@@ -28,18 +31,18 @@ import { MultiSelectComponent } from "../../../shared/componentkit/multi-select/
     TranslateModule,
     InputTextRangeComponent,
     CalendarRangeComponent,
-    MultiSelectComponent
+    MultiSelectComponent,
+    InputTextComponent
   ]
 })
 export class TLS26020Component extends BasicQueryPageComponent<TLS26020Data> implements OnInit {
   queryForm = this.formBuilder.group({
-    saleDateFrom: [''],        // 銷售日期(起)
-    saleDateTo: [''],          // 銷售日期(訖)
-    storeCodeFrom: [''],       // 館別(起)
-    storeCodeTo: [''],         // 館別(訖)
-    organizationName: [''],    // 組織名稱
-    floor: [''],               // 樓層
-    ...createPaginationConfig([{ field: 'ID', order: 1 }])
+    Sale_DateStart: ['', Validators.required],        // 銷售日期(起)
+    Sale_DateEnd: ['', Validators.required],          // 銷售日期(訖)
+    tlt_building: [[],],          // 館別
+    Org_Name: ['',],              // 組織名稱
+    tlt_floor: [[],],             // 樓層
+    ...createPaginationConfig([{ field: 'tlt_no', order: 1 }])
   });
 
   totalRecords = 0;
@@ -47,49 +50,63 @@ export class TLS26020Component extends BasicQueryPageComponent<TLS26020Data> imp
   selectedItems: TLS26020Data[] = [];
 
   columns: Column[] = [
-    { field: 'storeCode', header: '館別', visible: true },
-    { field: 'organizationName', header: '組織名稱', visible: true },
-    { field: 'counterCode', header: '專櫃編號', visible: true },
-    { field: 'locationCode', header: '位置編號', visible: true },
-    { field: 'counterName', header: '櫃位名稱', visible: true },
-    { field: 'preorderAmount', header: '預售金額', visible: true },
-    { field: 'saleAmount', header: '銷售金額', visible: true },
-    { field: 'preorderAccum', header: '預售累積', visible: true }
+    { field: 'tlt_building', header: '館別', visible: false },
+    { field: 'Building_desc', header: '館別', visible: true },
+    { field: 'Org_Name', header: '組織名稱', visible: true },
+    { field: 'tlt_no', header: '專櫃編號', visible: true },
+    { field: 'location_no', header: '位置編號', visible: true },
+    { field: 'tlt_name', header: '櫃位名稱', visible: true },
+    { field: 'sad_preorder_money', header: '預售金額', visible: true, format: (value: number) => value.toLocaleString() },
+    { field: 'sad_sale_amt', header: '銷售金額', visible: true, format: (value: number) => value.toLocaleString() },
+    { field: 'sad_preorder_amt', header: '預售累積', visible: true, format: (value: number) => value.toLocaleString() }
   ];
 
-  orgOptions = [
-    { Name: '總公司', No: '1' },
-    { Name: '分公司', No: '2' }
-  ];
+  floorOptions: any[] = [];
 
-  floorOptions = [
-    { Name: '一樓', No: '1' },
-    { Name: '二樓', No: '2' },
-    { Name: '三樓', No: '3' }
-  ];
+  buildingOptions: any[] = [];
 
   constructor(
-    private tls26020Service: TLS26020Service
+    private tls26020Service: TLS26020Service,
+    private tls11010Service: Tls11010Service,
+    private floorService: FloorService,
   ) {
     super();
   }
 
   ngOnInit(): void {
     this.initializePage('TLS26020', 'tls/tls26020', this.queryForm, (form) => this.onSubmit(form));
+    this.loadOptions();
   }
 
   onSubmit(frm: FormGroup) {
     const queryRequest: TLS26020QueryRequest = {
-      ...frm.value
+      Sale_DateStart: frm.value.Sale_DateStart,
+      Sale_DateEnd: frm.value.Sale_DateEnd,
+      tlt_building: frm.value.tlt_building || [],
+      Org_Name: frm.value.Org_Name || '',
+      tlt_floor: frm.value.tlt_floor || []
     };
     this.handleSubmit(frm, () => {
       this.tls26020Service.queryTLS26020(queryRequest)
         .pipe(finalize(() => this.loading = false))
         .subscribe(response => {
           this.data = response.Data;
-          this.totalRecords = response.TotalCount
+          this.totalRecords = response.TotalCount;
           this.queryStateService.setQueryState(this.ProgNo, frm.getRawValue());
         });
     });
   }
+
+  loadOptions() {
+    // 加載館別選項
+    this.tls11010Service.getBuildingOptions().subscribe((data) => {
+      this.buildingOptions = data;
+    });
+
+    // 加載樓層選項
+    this.floorService.getFloors().subscribe((data) => {
+      this.floorOptions = data;
+    });
+  }
+
 }
