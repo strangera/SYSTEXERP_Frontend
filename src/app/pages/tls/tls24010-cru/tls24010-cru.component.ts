@@ -377,11 +377,11 @@ export class TLS24010CRUComponent extends BasicCruPageComponent<TLS24010Data | u
             POS5008_ID: item.ID || 0,
             PAY_No: item.PAY_No || '',
             TXN_PayAmt: item.TXN_PayAmt || 0,
-            CRD_Type: item.CRD_Type || '',
-            CRD_No: item.CRD_No || '',
-            TXN_CouponNo: item.TXN_CouponNo || '',
-            TXN_PayDesc: item.TXN_PayDesc || '',
-            TERM_No: Number(item.TERM_No) || 0,
+            CRD_Type: item.PAY_Type === '0' ? item.CRD_Type || '' : '',
+            CRD_No: item.PAY_Type === '0' ? item.CRD_NoTXN_CouponNoTXN_PayDesc || '' : '',
+            TXN_CouponNo: item.PAY_Type !== '0' && item.PAY_Type !== 'A' ? item.CRD_NoTXN_CouponNoTXN_PayDesc || '' : '',
+            TXN_PayDesc: item.PAY_Type === 'A' ? item.CRD_NoTXN_CouponNoTXN_PayDesc || '' : '',
+            TERM_No: item.PAY_Type === '0' ? Number(item.TERM_No) : 0,
           }
         })
       }

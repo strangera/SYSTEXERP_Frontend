@@ -31,7 +31,7 @@ export class Tls24010DiscodeComponent implements OnInit, OnChanges {
     { field: 'TXN_SaleAmt', header: '單價銷售金額', format: formatAmount },
     { field: 'tlt_id_desc', header: '分類抽成類別' },
     { field: 'PLU_TaxType', header: '稅別', },
-    { field: 'TXN_DiscCode', header: '折扣別', type: 'dropdown', options: [], optionLabel: 'label', optionValue: 'cag_barcode' },
+    { field: 'TXN_DiscCode', header: '折扣別', type: 'dropdown', options: [], optionLabel: 'label', optionValue: 'cag_barcode', filter: false },
   ]
   TXN_DiscCodeOptions: TLTTALENT_CHARGEData[] = [];
   POS2004Options: POS2004ForUpdateResponse[] = []; //下拉選單 商品資料

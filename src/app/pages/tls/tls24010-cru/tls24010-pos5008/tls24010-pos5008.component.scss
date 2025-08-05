@@ -19,6 +19,9 @@
     background: #cccccc;
   }
 
+  .p-datatable .p-datatable-thead > tr > th {
+    background: var(--table-header-bg);
+  }
   .p-checkbox-box.p-component.p-highlight.p-disabled {
     background-color: #2196f3 !important;
   }
