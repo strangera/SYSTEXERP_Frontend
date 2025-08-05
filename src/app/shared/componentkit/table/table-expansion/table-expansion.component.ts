@@ -9,7 +9,7 @@ import { NgFor, NgClass, NgIf } from '@angular/common';
   templateUrl: './table-expansion.component.html',
   animations: [expandAnimation],
   standalone: true,
-  imports: [TableModule, PrimeTemplate, NgFor, NgClass, NgIf]
+  imports: [TableModule, PrimeTemplate, NgFor, NgIf]
 })
 export class TableExpansionComponent implements OnInit {
   @Input() expansionDataKey = '';

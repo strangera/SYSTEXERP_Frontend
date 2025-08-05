@@ -19,23 +19,23 @@ import { TableComponent } from '../../../shared/componentkit/table/table.compone
 import { TranslateModule } from '@ngx-translate/core';
 
 @Component({
-    selector: 'app-sysbr10',
-    templateUrl: './sysbr10.component.html',
-    styleUrls: ['./sysbr10.component.scss'],
-    standalone: true,
-    imports: [
-        MenubarComponent,
-        ButtonComponent,
-        AccordionModule,
-        FormsModule,
-        ReactiveFormsModule,
-        CalendarRangeComponent,
-        MultiSelectComponent,
-        RadiobuttonComponent,
-        InputTextComponent,
-        TableComponent,
-        TranslateModule,
-    ],
+  selector: 'app-sysbr10',
+  templateUrl: './sysbr10.component.html',
+  styleUrls: ['./sysbr10.component.scss'],
+  standalone: true,
+  imports: [
+    MenubarComponent,
+    ButtonComponent,
+    AccordionModule,
+    FormsModule,
+    ReactiveFormsModule,
+    CalendarRangeComponent,
+    MultiSelectComponent,
+    RadiobuttonComponent,
+    InputTextComponent,
+    TableComponent,
+    TranslateModule,
+  ],
 })
 export class SYSBR10Component extends BasicQueryPageComponent<any> {
   // 下拉選單資料
@@ -64,7 +64,7 @@ export class SYSBR10Component extends BasicQueryPageComponent<any> {
     User_No: [[]], // 使用者代號
     Org_ID: [[]], // 組織代號
     Pub_Type: [[]], // 公告類型
-    Pub_Eable: [], // 是否啟用
+    pub_enable: [], // 是否啟用
     Pub_Event: [], // 公告主題關鍵字
     ...createPaginationConfig,
   });
@@ -82,7 +82,7 @@ export class SYSBR10Component extends BasicQueryPageComponent<any> {
       visible: true,
       format: this.formatDateTime,
     },
-    { field: 'Pub_Eable', header: '是否啟動', visible: true },
+    { field: 'pub_enable', header: '是否啟動', visible: true },
     { field: 'Pub_Type', header: '公告類別', visible: true },
     { field: 'Pub_Event', header: '公告事項', visible: true },
   ];
@@ -202,7 +202,6 @@ export class SYSBR10Component extends BasicQueryPageComponent<any> {
             },
           });
         } else {
-          this.messageService.successBubble('查詢成功');
           this.loading = false;
           this.messageService.unblockUi();
         }
@@ -234,11 +233,11 @@ export class SYSBR10Component extends BasicQueryPageComponent<any> {
     });
   }
   isRowSelectable = (rowData: any): boolean => {
-    return true; // 或加條件 rowData.Pub_Eable === '1'
+    return true; // 或加條件 rowData.pub_enable === '1'
   };
 
   editDisabled = (rowData: any): boolean => {
-    return false; // 或根據條件 return rowData.Pub_Eable !== '1';
+    return false; // 或根據條件 return rowData.pub_enable !== '1';
   };
 
   dialogVisible = false;
@@ -255,7 +254,7 @@ export class SYSBR10Component extends BasicQueryPageComponent<any> {
     this.sysbr10Service
       .updateSYSBR10_PubEable({
         id: this.selectedRowForDisable.id,
-        Pub_Eable: 'N',
+        pub_enable: 'N',
       })
       .subscribe({
         next: () => {
@@ -274,47 +273,47 @@ export class SYSBR10Component extends BasicQueryPageComponent<any> {
     this.selectedRowForDisable = null;
   }
 
-override onEdit(row: any): void {
-  if (!row?.id) return;
+  override onEdit(row: any): void {
+    if (!row?.id) return;
 
-  this.confirmationService.confirm({
-    message: '是否將此筆資料的狀態改為【不啟用】？',
-    header: '確認停用',
-    icon: 'pi pi-exclamation-triangle',
-    acceptLabel: '是',
-    rejectLabel: '否',
-    accept: () => {
-      this.sysbr10Service.updateSYSBR10_PubEable({ id: row.id, Pub_Eable: 'N' }).subscribe({
-        next: () => {
-          this.messageService.successBubble('狀態已更新為不啟用');
+    this.confirmationService.confirm({
+      message: '是否將此筆資料的狀態改為【不啟用】？',
+      header: '確認停用',
+      icon: 'pi pi-exclamation-triangle',
+      acceptLabel: '是',
+      rejectLabel: '否',
+      accept: () => {
+        this.sysbr10Service
+          .updateSYSBR10_PubEable({ id: row.id, pub_enable: 'N' })
+          .subscribe({
+            next: () => {
+              this.messageService.successBubble('狀態已更新為不啟用');
 
-          // ✅ 成功後查詢明細
-          this.sysbr10Service.querySYSBR10Detail(row.id).subscribe({
-            next: (res) => {
-              const detailList = res?.Data || [];
+              // ✅ 成功後查詢明細
+              this.sysbr10Service.querySYSBR10Detail(row.id).subscribe({
+                next: (res) => {
+                  const detailList = res?.Data || [];
 
-              // ✅ 將主檔 + 明細一起導入編輯頁
-              const fullData = {
-                ...row,
-                DetailList: detailList
-              };
-              this.navigateWithState(CRUDStatus.Edit, fullData);
+                  // ✅ 將主檔 + 明細一起導入編輯頁
+                  const fullData = {
+                    ...row,
+                    DetailList: detailList,
+                  };
+                  this.navigateWithState(CRUDStatus.Edit, fullData);
+                },
+                error: () => {
+                  this.messageService.errorBubble('載入明細失敗');
+                },
+              });
             },
             error: () => {
-              this.messageService.errorBubble('載入明細失敗');
-            }
+              this.messageService.errorBubble('更新失敗');
+            },
           });
-        },
-        error: () => {
-          this.messageService.errorBubble('更新失敗');
-        }
-      });
-    },
-    reject: () => {
-      // 使用者按了 "否"，不做事
-    }
-  });
-}
-
-
+      },
+      reject: () => {
+        // 使用者按了 "否"，不做事
+      },
+    });
+  }
 }

@@ -72,7 +72,7 @@ export class SYSBR10Service {
       catchError(error => this.errorHandler.handleError(error))
     );
   }
-  updateSYSBR10_PubEable(payload: { id: number; Pub_Eable: string }): Observable<ApiResponse<any>> {
+  updateSYSBR10_PubEable(payload: { id: number; pub_enable: string }): Observable<ApiResponse<any>> {
   return this.http.post<ApiResponse<any>>(
     `${this.apiUrl}/SYS0000/BAS1000/updateSYSBR10_PubEable`,
     payload
