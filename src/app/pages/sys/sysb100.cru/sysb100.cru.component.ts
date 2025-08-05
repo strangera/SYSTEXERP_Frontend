@@ -38,17 +38,17 @@ export class SYSB100CRUComponent
     SYS_StoreNo: ['', [Validators.required, Validators.maxLength(10)]], // 公司編號/店號
     STR_Uniform: ['', [Validators.required, Validators.maxLength(8), this.validationService.numberValidator]], // 統一編號 (0805新增數字驗證)
     SYS_StoreName: ['', [Validators.maxLength(60)]], // 公司名稱(中文)
-    SYS_StoreNameENG: ['', [Validators.maxLength(60), this.validationService.pureEnglishValidator]], // 公司名稱(英文)
-    STO_TaxNo: ['', [Validators.required, Validators.maxLength(10), this.validationService.numberValidator]], // 稅籍編號 (0805新增數字驗證)
+    SYS_StoreNameENG: ['', [Validators.maxLength(60), this.validationService.noChineseValidator]], // 公司名稱(英文)
+    STO_TaxNo: ['', [Validators.required, Validators.maxLength(10), this.validationService.noChineseValidator]], // 稅籍編號 (0805新增 非中文 驗證)
     STO_ManagerName: ['', [Validators.required, Validators.maxLength(12)]], // 負責人
     STO_ContactName: ['', [Validators.required, Validators.maxLength(12)]], // 聯絡人
     STO_ContactTel: ['', [Validators.required, Validators.maxLength(15), this.validationService.numberValidator]], // 聯絡人電話
     STO_ContactFax: ['', [Validators.required, Validators.maxLength(15), this.validationService.numberValidator]], // 聯絡人傳真
     STO_Addr: ['', [Validators.required, Validators.maxLength(100)]], // 公司(營業處)地址(中文)
-    STO_AddrENG: ['', [Validators.maxLength(100), this.validationService.pureEnglishValidator]], // 公司(營業處)地址(英文)
+    STO_AddrENG: ['', [Validators.maxLength(100), this.validationService.noChineseValidator]], // 公司(營業處)地址(英文)
     STO_RegAddr: ['', [Validators.required, Validators.maxLength(100)]], // 公司登記地址(中文)
-    STO_RegAddrENG: ['', [Validators.maxLength(100), this.validationService.pureEnglishValidator]], // 公司登記地址(英文)
-    STO_BRN: ['', [Validators.maxLength(10), this.validationService.numberValidator]], // 營業登記證號 (0805新增數字驗證)
+    STO_RegAddrENG: ['', [Validators.maxLength(100), this.validationService.noChineseValidator]], // 公司登記地址(英文)
+    STO_BRN: ['', [Validators.maxLength(10), this.validationService.noChineseValidator]], // 營業登記證號 (0805新增 非中文 驗證)
     STO_Tel: ['', [Validators.maxLength(15), this.validationService.numberValidator]], // 公司電話
     STO_Fax: ['', [Validators.maxLength(15), this.validationService.numberValidator]], // 公司傳真
     STO_PostCode: ['', [Validators.required, Validators.maxLength(6), this.validationService.numberValidator]], // 郵遞區號
@@ -57,7 +57,7 @@ export class SYSB100CRUComponent
     STO_MailAddr: ['', [Validators.maxLength(100)]], // 郵寄地址
     STO_InvoiceAddr: ['', [Validators.maxLength(100)]], // 發票地址
     STO_Email: ['', [Validators.maxLength(100), Validators.email]], // 電子郵件
-    STO_URL: ['', [Validators.maxLength(100), this.validationService.englishAndSymbolValidator]], // 公司網址 (0805新增英文+符號驗證)
+    STO_URL: ['', [Validators.maxLength(100), this.validationService.noChineseValidator]], // 公司網址 (0805新增 非中文 驗證)
   });
 
   constructor(

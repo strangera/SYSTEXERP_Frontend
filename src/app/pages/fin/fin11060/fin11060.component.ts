@@ -1,14 +1,14 @@
+import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { createPaginationConfig, Column, formatDate } from '../../../shared/componentkit/table/table.model';
+import { createPaginationConfig, Column } from '../../../shared/componentkit/table/table.model';
 import { option } from '../../../shared/models/sys/sysb000.module';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { AccordionModule } from 'primeng/accordion';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { TranslateModule } from '@ngx-translate/core';
 import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
@@ -20,52 +20,50 @@ import { InputNumberRangeComponent } from '@shared/componentkit/input-number-ran
 import { InputTextRangeComponent } from '@shared/componentkit/input-text-range/input-text-range.component';
 import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
 import { ReportTableGroupComponent } from '@shared/componentkit/report-table-group/report-table-group.component';
+import { untilDestroyed } from '@ngneat/until-destroy';
+import { ECRNoService } from '@service/basic/ECRNo.service';
 
-export interface POS8011H {
-  id: number; // 主鍵，自動編號
-
-  contact_USR_No: string; // 接洽人員代碼
-  contact_USR_Name: string; // 接洽人員姓名
-  cus_type: string; // 廠商類型：1=統編、2=身份證字號、3=員工ID
-  cus_uniform_id: string; // 廠商統一編號 (根據類型不同有不同意義)
-  VEN_Name: string; // 廠商名稱
-  VEN_EngName?: string; // 廠商英文名稱
-  bus_type?: string; // 業種-大分類代碼
-  tlt_name?: string; // 品牌（專櫃名稱）
-  tlt_EngName?: string; // 品牌英文（專櫃名稱）
-  VEN_Boss: string; // 廠商聯絡人
-  VEN_BossTel: string; // 廠商聯絡人電話
-  VEN_BossTitle?: string; // 廠商聯絡人頭銜
-  VEN_BossFax?: string; // 廠商聯絡人傳真
-  VEN_BossMobile?: string; // 廠商聯絡人行動電話
-  VEN_BossEmail?: string; // 廠商聯絡人電子郵件
-  VEN_Addr?: string; // 公司通訊地址
-  VEN_PersonInCharge?: string; // 公司負責人
-  business_type?: string; // 經營方式
-  demanded_area?: number; // 需求面積 (小數，預設 0)
-  country_of_origin?: string; // 商品出產地
-  remarks?: string; // 備註 (HTML 格式)
-
-  CRT_Date: string; // 建立日期 (ISO 字串格式: YYYY-MM-DD)
-  CRT_USR_No?: string; // 建立人員代碼
-  CRT_USR_Name?: string; // 建立人員姓名
-  UPD_Date?: string; // 變更日期 (ISO 格式: YYYY-MM-DDTHH:mm:ss)
-  UPD_USR_No?: string; // 變更人員代碼
-  UPD_USR_Name?: string; // 變更人員姓名
-
-  CanDel?: boolean;  //能否刪除(僅顯示)
+export interface InvoiceBase {
+  id: number;
+  TXN_Time: Date; // 發票日期
+  MIG_Time: Date; // 上傳日期
+  CF0401_9000: number; // 一般交易_正常
+  CF0501_9000: number; // 作廢交易_正常
+  CF0701_9000: number; // 發票註銷_正常
+  DG0401_9000: number; // 跨期折讓_正常
+  DG0501_9000: number; // 跨期折讓作廢_正常
+  CF0401_9001: number; // 一般交易_異常
+  CF0501_9001: number; // 作廢交易_異常
+  CF0701_9001: number; // 發票註銷_異常
+  DG0401_9001: number; // 跨期折讓_異常
+  DG0501_9001: number; // 跨期折讓作廢_異常
 }
+
+export interface InvoiceType1 extends InvoiceBase {
+  TXN_No: string; // 交易序號
+  TXN_GUINO: string; // 發票號碼
+}
+
+export interface InvoiceType2 extends InvoiceBase {
+  ECR_No: string; // 收銀機號
+}
+
+export interface InvoiceType3 extends InvoiceBase {
+  TXN_Date: Date; // 交易日期
+}
+
+type InvoiceRecord = InvoiceType1 | InvoiceType2 | InvoiceType3; //聯合型別
 
 @Component({
     selector: 'app-fin11060',
     templateUrl: './fin11060.component.html',
     styleUrl: './fin11060.component.scss',
     standalone: true,
-    imports: [MenubarComponent, ButtonComponent, InputTextComponent, InputTextRangeComponent, InputNumberComponent, RadiobuttonComponent, InputNumberRangeComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarComponent, CalendarRangeComponent, CalendarRangeQuickComponent, DropdownComponent, MultiSelectComponent, InputTextComponent, ReportTableGroupComponent, TranslateModule]
+    imports: [CommonModule, MenubarComponent, ButtonComponent, InputTextComponent, InputTextRangeComponent, InputNumberComponent, RadiobuttonComponent, InputNumberRangeComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarComponent, CalendarRangeComponent, CalendarRangeQuickComponent, DropdownComponent, MultiSelectComponent, InputTextComponent, ReportTableGroupComponent, TranslateModule]
 })
 
 // 電子發票上送狀況表
-export class FIN11060Component extends BasicQueryPageComponent<POS8011H> implements OnInit{
+export class FIN11060Component extends BasicQueryPageComponent<InvoiceRecord> implements OnInit{
   // 查詢
       queryForm = this.formBuilder.group({
         // 先建立表單，還不確定POS8011H內容
@@ -75,10 +73,9 @@ export class FIN11060Component extends BasicQueryPageComponent<POS8011H> impleme
         processDateEnd: [null],  // 產檔日期_終止日
         GUI_No_start: [null, [Validators.maxLength(8), Validators.minLength(8), Validators.max(99999950)]], // 發票號碼(起)
         GUI_No_end: [null, [Validators.maxLength(8), Validators.minLength(8), Validators.max(99999999)]], // 發票號碼(迄)
-        ECR_No_start: [null, [Validators.maxLength(8), Validators.minLength(8), Validators.max(99999950)]], // 收銀機代號(起)
-        ECR_No_end: [null, [Validators.maxLength(8), Validators.minLength(8), Validators.max(99999999)]], // 收銀機代號(迄)
-        
-        condition_type: [[]],  // 條件依據
+        ECR_No: [null, [Validators.maxLength(8), Validators.minLength(8), Validators.max(99999950)]], // 收銀機代號(起) > 直接改多選
+        // ECR_No_end: [null, [Validators.maxLength(8), Validators.minLength(8), Validators.max(99999999)]], // 收銀機代號(迄)
+        condition_type: ['1',Validators.required],  // 條件依據
         show_error: [[]], //  是否只顯示異常
         
         //分頁查詢
@@ -89,39 +86,90 @@ export class FIN11060Component extends BasicQueryPageComponent<POS8011H> impleme
       totalRecords = 0;// 分頁和排序參數 // 排序需要
     
       contact_type_Option: option[] = [
-        {label: '條件1', value: '1'},
-        {label: '條件2', value: '2'},
-        {label: '條件3', value: '3'},
+        {label: '銷售日期', value: '1'},
+        {label: '收銀機號', value: '2'},
+        {label: '交易序號', value: '3'},
       ];
       show_error_Option: option[] = [
         {label: '是', value: 'Y'},
         {label: '否', value: 'N'},
       ]; 
+
+      POS_NOSOptions: { value: string; label: string; }[] = []; // 收銀機號
+
     
-      data: POS8011H[] = [];
-      columns: Column[] = [// 表格欄位定義
-        { field: 'SalesDateStart', header: '銷售日期_起始日', visible: true },
-        { field: 'SalesDateEnd', header: '銷售日期_終止日', visible: true },
-        { field: 'processDateStart', header: '產檔日期_起始日', visible: true },
-        { field: 'processDateEnd', header: '產檔日期_終止日', visible: true },
-        { field: 'GUI_No_start', header: '發票號碼(起)', visible: true },
-        { field: 'GUI_No_end', header: '發票號碼(迄)', visible: true },
-        { field: 'ECR_No_start', header: '收銀機代號(起)', visible: true },
-        { field: 'ECR_No_end', header: '收銀機代號(迄)', visible: true },
-        { field: 'condition_type', header: '條件依據', visible: true },
-        { field: 'show_error', header: '是否只顯示異常', visible: true },
+      data: InvoiceRecord[] = [];
+      columns: Column[] = []; //顯示的column
+      columnsType1: Column[] = [
+        { field: 'TXN_No', header: '交易序號', visible: true },
+        { field: 'TXN_GUINO', header: '發票號碼', visible: true },
+        { field: 'TXN_Time', header: '發票日期', visible: true },
+        { field: 'MIG_Time', header: '上傳日期', visible: true },
+        { field: 'CF0401_9000', header: '一般交易_正常', visible: true },
+        { field: 'CF0501_9000', header: '作廢交易_正常', visible: true },
+        { field: 'CF0701_9000', header: '發票註銷_正常', visible: true },
+        { field: 'DG0401_9000', header: '跨期折讓_正常', visible: true },
+        { field: 'DG0501_9000', header: '跨期折讓作廢_正常', visible: true },
+        { field: 'CF0401_9001', header: '一般交易_異常', visible: true },
+        { field: 'CF0501_9001', header: '作廢交易_異常', visible: true },
+        { field: 'CF0701_9001', header: '發票註銷_異常', visible: true },
+        { field: 'DG0401_9001', header: '跨期折讓_異常', visible: true },
+        { field: 'DG0501_9001', header: '跨期折讓作廢_異常', visible: true },
+      ];
+
+      columnsType2: Column[] = [
+        { field: 'ECR_No', header: '收銀機號', visible: true },
+        { field: 'TXN_Time', header: '發票日期', visible: true },
+        { field: 'MIG_Time', header: '上傳日期', visible: true },
+        { field: 'CF0401_9000', header: '一般交易_正常', visible: true },
+        { field: 'CF0501_9000', header: '作廢交易_正常', visible: true },
+        { field: 'CF0701_9000', header: '發票註銷_正常', visible: true },
+        { field: 'DG0401_9000', header: '跨期折讓_正常', visible: true },
+        { field: 'DG0501_9000', header: '跨期折讓作廢_正常', visible: true },
+        { field: 'CF0401_9001', header: '一般交易_異常', visible: true },
+        { field: 'CF0501_9001', header: '作廢交易_異常', visible: true },
+        { field: 'CF0701_9001', header: '發票註銷_異常', visible: true },
+        { field: 'DG0401_9001', header: '跨期折讓_異常', visible: true },
+        { field: 'DG0501_9001', header: '跨期折讓作廢_異常', visible: true },
+      ];
+
+      columnsType3: Column[] = [
+        { field: 'TXN_Date', header: '交易日期', visible: true },
+        { field: 'TXN_Time', header: '發票日期', visible: true },
+        { field: 'MIG_Time', header: '上傳日期', visible: true },
+        { field: 'CF0401_9000', header: '一般交易_正常', visible: true },
+        { field: 'CF0501_9000', header: '作廢交易_正常', visible: true },
+        { field: 'CF0701_9000', header: '發票註銷_正常', visible: true },
+        { field: 'DG0401_9000', header: '跨期折讓_正常', visible: true },
+        { field: 'DG0501_9000', header: '跨期折讓作廢_正常', visible: true },
+        { field: 'CF0401_9001', header: '一般交易_異常', visible: true },
+        { field: 'CF0501_9001', header: '作廢交易_異常', visible: true },
+        { field: 'CF0701_9001', header: '發票註銷_異常', visible: true },
+        { field: 'DG0401_9001', header: '跨期折讓_異常', visible: true },
+        { field: 'DG0501_9001', header: '跨期折讓作廢_異常', visible: true },
       ];
     
-      selectedItems: POS8011H[] = [];// 多選項目
+      selectedItems: InvoiceRecord[] = [];// 多選項目
     
       // ----------------------------------------------------------------
-      constructor(private tls12060Service: Tls12060Service) {
+      constructor(
+        private tls12060Service: Tls12060Service,
+        private eCRNoService: ECRNoService,
+      ) {
         super();
       }
     
       ngOnInit(): void {
         this.initializePage('FIN11060', 'FIN/FIN11060', this.queryForm, (form) => this.onSubmit(form));
         this.loadOptions();
+
+        // 監聽 condition_type 變化(切換顯示欄位)
+        this.queryForm.get('condition_type')?.valueChanges.subscribe((value) => {
+          this.updateColumnsByCondition(value);
+        });
+
+        // 預設初始欄位
+        this.updateColumnsByCondition(this.queryForm.get('condition_type')?.value || '1');
       }
     
       onSubmit(frm: FormGroup) {
@@ -148,9 +196,31 @@ export class FIN11060Component extends BasicQueryPageComponent<POS8011H> impleme
           // });
         });
       }
+
+      //顯示欄位(初始為條件1)
+      updateColumnsByCondition(value: string | string[] | null): void {
+        const type = Array.isArray(value) ? value[0] : value;
+
+        switch (type) {
+          case '1':
+            this.columns = [...this.columnsType1];
+            console.log('切換為欄位1',this.columns);
+            break;
+          case '2':
+            this.columns = [...this.columnsType2];
+            console.log('切換為欄位2',this.columns);
+            break;
+          case '3':
+            this.columns = [...this.columnsType3];
+            console.log('切換為欄位3',this.columns);
+            break;
+          default:
+            this.columns = [];
+        }
+      }
     
       // 刪除項目
-      onDelete(data: POS8011H | POS8011H[]): void {
+      onDelete(data: InvoiceRecord | InvoiceRecord[]): void {
         console.log('Delete data:', JSON.stringify(data, null, 2));
     
         const items = Array.isArray(data) ? data : [data];
@@ -196,19 +266,9 @@ export class FIN11060Component extends BasicQueryPageComponent<POS8011H> impleme
         this.selectedItems = [];
       }
     
-      isRowSelectable(rowData: POS8011H): boolean {
-        return rowData.CanDel ?? false;
-      }
     
       loadOptions() {
-        // 查 接待人員
-        // this.tls12060Service.queryTBLUSER_DropDownList({}).subscribe((response) => {
-        //   this.contact_USR_Option = response.Data.map((item: any) => ({
-        //     No: item.No, // 接待人員 代碼
-        //     Name: item.Name, // 接待人員 名稱
-        //     Label: item.No + '/' + item.Name, // 組合成顯示用的Label
-        //   }));
-        //   console.log('接待人員代號:', this.contact_USR_Option);
-        // });
+        // 查 收銀機號
+        this.eCRNoService.getECRNo().pipe(untilDestroyed(this)).subscribe(data => this.POS_NOSOptions = data.map((item: { value: string; label: string; }) => ({ ...item, label: `${item.value} - ${item.label}` })));
       }
 }
