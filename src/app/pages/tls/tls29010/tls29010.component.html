@@ -13,7 +13,7 @@
               [submitted]="submitted"></app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
+            <app-multi-select
               label="折扣別"
               controlName="pod_type"
               [options]="podTypeOptions"
@@ -21,11 +21,11 @@
               optionValue="value"
               [control]="queryForm.controls.pod_type"
               [submitted]="submitted">
-            </app-dropdown>
+            </app-multi-select>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="專櫃編號" controlName="tlt_no" [options]="tlt_No_Option" optionLabel="Name"
-              optionValue="No" [control]="queryForm.controls.tlt_no" [submitted]="submitted"></app-dropdown>
+            <app-multi-select label="專櫃編號" controlName="tlt_no" [options]="tlt_No_Option" optionLabel="Name"
+              optionValue="No" [control]="queryForm.controls.tlt_no" [submitted]="submitted"></app-multi-select>
           </div>
         </div>
         <div class="grid p-fluid">
@@ -35,7 +35,7 @@
               [submitted]="submitted" />
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
+            <app-multi-select
               label="活動狀態"
               controlName="pod_status"
               [options]="pod_status_Options"
@@ -43,7 +43,7 @@
               optionValue="value"
               [control]="queryForm.controls.pod_status"
               [submitted]="submitted">
-            </app-dropdown>
+            </app-multi-select>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-calendar-range calendarType="dateRange" label="維護日"
@@ -61,8 +61,8 @@
               [submitted]="submitted"></app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="是否使用" controlName="use_flag" [options]="whetherOption" optionLabel="label"
-              optionValue="value" [control]="queryForm.controls.use_flag" [submitted]="submitted"></app-dropdown>
+            <app-multi-select label="是否使用" controlName="use_flag" [options]="whetherOption" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.use_flag" [submitted]="submitted"></app-multi-select>
           </div>
         </div>
         <!-- <div> -->

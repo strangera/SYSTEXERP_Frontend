@@ -11,6 +11,7 @@ import { PanelModule } from 'primeng/panel';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { NgIf } from '@angular/common';
 import { TranslateModule } from '@ngx-translate/core';
+import { ValidationService } from '@shared/service/validation.service';
 
 @Component({
     selector: 'app-sysb100.cru',
@@ -37,22 +38,22 @@ export class SYSB100CRUComponent
     SYS_StoreNo: ['', [Validators.required, Validators.maxLength(10)]], // 公司編號/店號
     STR_Uniform: ['', [Validators.required, Validators.maxLength(8)]], // 統一編號
     SYS_StoreName: ['', [Validators.maxLength(60)]], // 公司名稱(中文)
-    SYS_StoreNameENG: ['', [Validators.maxLength(60)]], // 公司名稱(英文)
+    SYS_StoreNameENG: ['', [Validators.maxLength(60), this.validationService.pureEnglishValidator]], // 公司名稱(英文)
     STO_TaxNo: ['', [Validators.required, Validators.maxLength(10)]], // 稅籍編號
     STO_ManagerName: ['', [Validators.required, Validators.maxLength(12)]], // 負責人
     STO_ContactName: ['', [Validators.required, Validators.maxLength(12)]], // 聯絡人
-    STO_ContactTel: ['', [Validators.required, Validators.maxLength(15)]], // 聯絡人電話
-    STO_ContactFax: ['', [Validators.required, Validators.maxLength(15)]], // 聯絡人傳真
+    STO_ContactTel: ['', [Validators.required, Validators.maxLength(15), this.validationService.numberValidator]], // 聯絡人電話
+    STO_ContactFax: ['', [Validators.required, Validators.maxLength(15), this.validationService.numberValidator]], // 聯絡人傳真
     STO_Addr: ['', [Validators.required, Validators.maxLength(100)]], // 公司(營業處)地址(中文)
-    STO_AddrENG: ['', [Validators.maxLength(100)]], // 公司(營業處)地址(英文)
+    STO_AddrENG: ['', [Validators.maxLength(100), this.validationService.pureEnglishValidator]], // 公司(營業處)地址(英文)
     STO_RegAddr: ['', [Validators.required, Validators.maxLength(100)]], // 公司登記地址(中文)
-    STO_RegAddrENG: ['', [Validators.maxLength(100)]], // 公司登記地址(英文)
+    STO_RegAddrENG: ['', [Validators.maxLength(100), this.validationService.pureEnglishValidator]], // 公司登記地址(英文)
     STO_BRN: ['', [Validators.maxLength(10)]], // 營業登記證號
-    STO_Tel: ['', [Validators.maxLength(15)]], // 公司電話
-    STO_Fax: ['', [Validators.maxLength(15)]], // 公司傳真
-    STO_PostCode: ['', [Validators.required, Validators.maxLength(6)]], // 郵遞區號
-    STO_MailTel: ['', [Validators.maxLength(15)]], // 郵寄電話
-    STO_MailFax: ['', [Validators.maxLength(15)]], // 郵寄傳真
+    STO_Tel: ['', [Validators.maxLength(15), this.validationService.numberValidator]], // 公司電話
+    STO_Fax: ['', [Validators.maxLength(15), this.validationService.numberValidator]], // 公司傳真
+    STO_PostCode: ['', [Validators.required, Validators.maxLength(6), this.validationService.numberValidator]], // 郵遞區號
+    STO_MailTel: ['', [Validators.maxLength(15), this.validationService.numberValidator]], // 郵寄電話
+    STO_MailFax: ['', [Validators.maxLength(15), this.validationService.numberValidator]], // 郵寄傳真
     STO_MailAddr: ['', [Validators.maxLength(100)]], // 郵寄地址
     STO_InvoiceAddr: ['', [Validators.maxLength(100)]], // 發票地址
     STO_Email: ['', [Validators.maxLength(100), Validators.email]], // 電子郵件
@@ -60,7 +61,8 @@ export class SYSB100CRUComponent
   });
 
   constructor(
-    private sysb100Service: Sysb100Service) {
+    private sysb100Service: Sysb100Service,
+    private validationService: ValidationService) {
     super();
   }
 

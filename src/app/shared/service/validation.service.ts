@@ -38,6 +38,8 @@ export class ValidationService {
       invalidOddMonth: '只能選擇單數月',
       invalidMinMonthDate: '不能小於本期',
       notMultipleOf50: '請輸入 50 的倍數',
+      pureEnglish: '只能輸入純英文',
+      englishAndSymbol: '只能輸入英文和符號',
     };
     return config[validatorName];
   }
@@ -253,5 +255,28 @@ export class ValidationService {
       if (typeof value !== 'number') return { notMultipleOf50: true };
       return value % 50 === 0 ? null : { notMultipleOf50: true };
     };
+  }
+
+  // 只能輸入純英文（大小寫皆可）
+  pureEnglishValidator(control: { value: string | null }) {
+    const value = control.value;
+    if (value !== null && value !== '') {
+      if (!/^[A-Za-z]+$/.test(value)) {
+        return { pureEnglish: true };
+      }
+    }
+    return null;
+  }
+
+  // 只能輸入英文（A-Z, a-z）和符號（不包含數字與空白）
+  englishAndSymbolValidator(control: { value: string | null }) {
+    const value = control.value;
+    if (value !== null && value !== '') {
+      // 僅允許英文大小寫 + 一般符號，不含數字與空白
+      if (!/^[A-Za-z!@#$%^&*(),.?":{}|<>_\-+=`~[\]\\;'/]+$/.test(value)) {
+        return { englishAndSymbol: true };
+      }
+    }
+    return null;
   }
 }
