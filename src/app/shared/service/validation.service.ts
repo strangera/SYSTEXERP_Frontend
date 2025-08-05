@@ -38,6 +38,9 @@ export class ValidationService {
       invalidOddMonth: '只能選擇單數月',
       invalidMinMonthDate: '不能小於本期',
       notMultipleOf50: '請輸入 50 的倍數',
+      pureEnglish: '只能輸入純英文',
+      englishAndSymbol: '只能輸入英文和符號',
+      containsChinese: '不可輸入中文或全形字元',
     };
     return config[validatorName];
   }
@@ -253,5 +256,41 @@ export class ValidationService {
       if (typeof value !== 'number') return { notMultipleOf50: true };
       return value % 50 === 0 ? null : { notMultipleOf50: true };
     };
+  }
+
+  // 只能輸入純英文（大小寫皆可）
+  pureEnglishValidator(control: { value: string | null }) {
+    const value = control.value;
+    if (value !== null && value !== '') {
+      if (!/^[A-Za-z]+$/.test(value)) {
+        return { pureEnglish: true };
+      }
+    }
+    return null;
+  }
+
+  // 只能輸入英文（A-Z, a-z）和符號（不包含數字與空白）
+  englishAndSymbolValidator(control: { value: string | null }) {
+    const value = control.value;
+    if (value !== null && value !== '') {
+      // 僅允許英文大小寫 + 一般符號，不含數字與空白
+      if (!/^[A-Za-z!@#$%^&*(),.?":{}|<>_\-+=`~[\]\\;'/]+$/.test(value)) {
+        return { englishAndSymbol: true };
+      }
+    }
+    return null;
+  }
+
+  // 不可輸入中文（含全形中文字或符號）
+  noChineseValidator(control: { value: string | null }) {
+    const value = control.value;
+    if (value !== null && value !== '') {
+      // 使用 Unicode 範圍 + u flag 來匹配 CJK 漢字（基本、擴充A~E）
+      const chineseRegex = /[\u4E00-\u9FFF\u3400-\u4DBF\u{20000}-\u{2A6DF}\u{2A700}-\u{2B73F}\u{2B740}-\u{2B81F}\u{2B820}-\u{2CEAF}]/u;
+      if (chineseRegex.test(value)) {
+        return { containsChinese: true };
+      }
+    }
+    return null;
   }
 }
