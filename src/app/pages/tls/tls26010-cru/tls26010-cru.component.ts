@@ -99,20 +99,21 @@ export class TLS26010CRUComponent extends BasicCruPageComponent<TLS26010Data> im
     const payload = this.queryPayload();
     if (sdate && edate && sdate > edate) {
       this.df.pod_edate.setErrors({ dateError: !0 });
-      this.service.loadPreorderECRList({ ...payload, data_type: '1' });
+      this.service.loadPreorderECRList({ ...payload, ecr_type: '1' });
     } else { this.df.pod_edate.setErrors(null); }
   });
   /** 監聽 dialogVisible 狀態，根據不同對話框類型載入相關資料 */
   private readonly dialogOpenEffect = effect(() => {
     const payload = this.queryPayload();
     const dialogType = this.dialogVisible();
+    if (!dialogType) return;
     this.service.loadSYS3800();
     if (dialogType === 'ecr') {
       this.dataForm.patchValue({
         ECR_Nos: this.ecrTableFiltered.map(ecr => ecr.ECR_No),
         tlt_nos: [],
       });
-      this.service.loadPreorderECRList({ ...payload, data_type: '1' });
+      this.service.loadPreorderECRList({ ...payload, ecr_type: '1' });
       console.log('ecrDialogOpenEffect:', [this.dataForm.value, this.queryPayload()]);
     }
     else if (dialogType === 'tlt') {
@@ -133,7 +134,7 @@ export class TLS26010CRUComponent extends BasicCruPageComponent<TLS26010Data> im
     for (const ecr of this.ecrTableFiltered) {
       if (this.service.ECRMap.has(ecr.ECR_No)) ECR_Nos.push(ecr.ECR_No);
     }
-    this.dataForm.patchValue({ sys3900: void 0, ECR_Nos }, { emitEvent: !1 });
+    this.dataForm.patchValue({ ECR_Nos }, { emitEvent: !1 });
   }, { allowSignalWrites: !0 });
   /** 監聽樓層變化，重置區域、收銀機號及專櫃ID */
   private readonly floorEffect = effect(() => {
@@ -144,7 +145,7 @@ export class TLS26010CRUComponent extends BasicCruPageComponent<TLS26010Data> im
     for (const tlt of this.tltTableFiltered) {
       if (this.service.TLTMap.has(tlt.tlt_no)) tlt_nos.push(tlt.tlt_no);
     }
-    this.dataForm.patchValue({ sys3800: void 0, tlt_nos }, { emitEvent: !1 });
+    this.dataForm.patchValue({ tlt_nos }, { emitEvent: !1 });
   }, { allowSignalWrites: !0 });
   /** 監聽館別、樓層及區域變化，載入相關資料 */
   private readonly dependentDataEffect = effect(() => {
@@ -153,7 +154,7 @@ export class TLS26010CRUComponent extends BasicCruPageComponent<TLS26010Data> im
     const payload = this.queryPayload();
     console.log(`dependentDataEffect:`, [building_no, floor_no]);
     if (!building_no?.length || !floor_no?.length) return;
-    this.service.loadPreorderECRList({ ...payload, data_type: '2' });
+    this.service.loadPreorderECRList({ ...payload, ecr_type: '2' });
     this.service.loadTLTTALENT(payload);
   }, { allowSignalWrites: !0 });
   /** 初始化 ECR & TLT Table資料 */
