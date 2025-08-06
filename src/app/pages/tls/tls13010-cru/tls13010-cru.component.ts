@@ -1431,69 +1431,72 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
     rowData: LocationItem;
     field: string;
     newValue: string;
-    oldValue: string
+    oldValue: string;
+    selectedOption?: any; // 🎯 關鍵：selector-panel 應該提供這個
   }): void {
-    const { rowData, field, newValue, oldValue } = event;
+    const { rowData, field, newValue, oldValue, selectedOption } = event;
+
+    console.log('🔄 位置欄位變更事件:', {
+      field,
+      newValue,
+      oldValue,
+      hasSelectedOption: !!selectedOption,
+      rowId: rowData.id
+    });
 
     if (field === 'location_no' && newValue) {
-      const selectedLocation = this.locationWithDetailsOptions.find(
-        location => location.value === newValue
-      );
-
-      if (selectedLocation) {
-        const targetIndex = this.locationData.findIndex(item => item.id === rowData.id);
-
-        if (targetIndex > -1) {
-          const selected = selectedLocation as unknown as Record<string, unknown>;
-
-          // 🎯 修正邏輯：允許位置編號變更時更新營業坪數
-          const newSpace = Number(selected['tlt_space'] ?? 0);
-
-          // ✅ 狀態邏輯保持不變
-          const currentStatus = this.locationData[targetIndex]._status;
-          let newStatus: 'new' | 'modified' | 'original' | 'deleted' | undefined;
-
-          if (currentStatus === 'new') {
-            newStatus = 'new';
-          } else if (currentStatus === 'original' || currentStatus === 'modified') {
-            newStatus = 'modified';
-          } else {
-            newStatus = 'modified';
-          }
-
-          // 更新資料
-          this.locationData[targetIndex] = {
-            ...this.locationData[targetIndex],
-            location_no: newValue,
-            tlt_building: String(selected['tlt_building'] ?? ''),
-            tlt_floor: String(selected['tlt_floor'] ?? ''),
-            area_no: String(selected['area_no'] ?? ''),
-            tlt_space: newSpace, // ✅ 直接使用新的營業坪數
-            building_desc: String(selected['building_desc'] ?? ''),
-            floor_desc: String(selected['floor_desc'] ?? ''),
-            area_desc: String(selected['area_desc'] ?? ''),
-            _status: newStatus
-          };
-
-          // 強制觸發變更檢測
-          this.locationData = [...this.locationData];
-          Object.assign(rowData, this.locationData[targetIndex]);
-
-          this.saveToWorkflow();
-          this.messageService.infoBubble(`已自動帶入位置 ${newValue} 的詳細資訊`);
-        }
-      }
-    } else {
-      // 其他欄位變更的狀態處理
-      if (rowData._status === 'new') {
-        rowData._status = 'new';
-      } else if (!rowData._status || rowData._status === 'original') {
-        rowData._status = 'modified';
+      // 🎯 優先使用 selectedOption（來自 selector-panel）
+      if (selectedOption) {
+        console.log('📋 使用 selector-panel 提供的完整資料:', selectedOption);
+        this.handleLocationSelectionFromSelectorPanel(rowData, selectedOption);
       }
     }
-
     this.saveToWorkflow();
   }
+
+  // 🎯 新增：專門處理來自 selector-panel 的選擇
+  private handleLocationSelectionFromSelectorPanel(rowData: LocationItem, selectedOption: any): void {
+    const targetIndex = this.locationData.findIndex(item => item.id === rowData.id);
+
+    if (targetIndex === -1) {
+      console.error('❌ 找不到對應項目:', rowData.id);
+      return;
+    }
+
+    // 🎯 從 selectedOption 取得所有需要的資料
+    const locationData = {
+      location_no: selectedOption.value || selectedOption.location_no || '',
+      tlt_building: selectedOption.tlt_building || '',
+      tlt_floor: selectedOption.tlt_floor || '',
+      area_no: selectedOption.area_no || '',
+      tlt_space: Number(selectedOption.tlt_space) || 0,
+      building_desc: selectedOption.building_desc || '',
+      floor_desc: selectedOption.floor_desc || '',
+      area_desc: selectedOption.area_desc || ''
+    };
+
+    console.log('📋 從 selector-panel 取得的位置資料:', locationData);
+
+    // 🎯 更新資料
+    const currentStatus = this.locationData[targetIndex]._status;
+    const newStatus = currentStatus === 'new' ? 'new' : 'modified';
+
+    this.locationData[targetIndex] = {
+      ...this.locationData[targetIndex],
+      ...locationData,
+      _status: newStatus
+    };
+
+    // 🎯 同步更新 rowData（讓表格立即顯示）
+    Object.assign(rowData, this.locationData[targetIndex]);
+
+    // 🎯 觸發變更檢測
+    this.locationData = [...this.locationData];
+    this.updateDisplayLocationData();
+
+    // this.messageService.infoBubble(`已選擇位置：${locationData.location_no}（${locationData.building_desc}）`);
+  }
+
 
   // 清除所有位置
   onClearAllLocations(): void {

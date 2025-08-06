@@ -215,7 +215,8 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
     rowData: any,
     field: string,
     newValue: any,
-    oldValue: any
+    oldValue: any,
+    selectedOption?: any
   }>();
 
   expandedRows: { [key: string]: boolean } = {};
@@ -1429,11 +1430,9 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
       const control = new FormControl(rowData[fieldName] || '');
       this.selectorControls.set(key, control);
 
-      // 監聽變更並同步到 rowData
-      control.valueChanges.subscribe(value => {
-        rowData[fieldName] = value;
-        this.onDirectEditChange(rowData, fieldName, value);
-      });
+      // 🎯 注意：不要在這裡監聽 valueChanges
+      // 因為 selector-panel 的事件會直接處理值的更新
+      // 避免重複觸發 onDirectEditChange
     }
 
     return this.selectorControls.get(key)!;
@@ -1504,4 +1503,76 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
     this.selectorSuggestions.clear();
     this.selectorSearchForms.clear();
   }
+
+  //===============處理table發出的事件=============================
+  // 在 expandable-edit-table.component.ts 中新增以下方法
+  // 🎯 在 cleanupSelectorResources() 方法之後新增：
+
+  /**
+   * 🎯 處理 selector-panel 的 itemSelected 事件
+   */
+  onSelectorItemSelected(selectedItem: any, rowData: any, column: ColumnDef): void {
+    console.log('🎯 表格收到 selector item selected:', {
+      selectedItem,
+      rowDataId: rowData.id || rowData[this.dataKey],
+      field: column.field
+    });
+
+    const oldValue = rowData[column.field];
+    const newValue = selectedItem[column.selectorConfig?.valuePropertyName || 'value'];
+
+    // 🎯 更新 rowData
+    rowData[column.field] = newValue;
+
+    // 🎯 更新對應的 FormControl
+    const control = this.getSelectorControl(rowData, column.field);
+    if (control) {
+      control.setValue(newValue, { emitEvent: false }); // 不觸發 valueChanges
+    }
+
+    // 🚨 關鍵：發出 dropdownChange 事件，包含完整的 selectedItem
+    this.dropdownChange.emit({
+      rowData,
+      field: column.field,
+      newValue,
+      oldValue,
+      selectedOption: selectedItem // 🎯 這裡傳遞完整的選擇項目資料
+    });
+
+    console.log('✅ 表格發出 dropdownChange 事件，包含 selectedOption');
+  }
+
+  /**
+   * 🎯 處理 selector-panel 的 valueChanged 事件
+   */
+  onSelectorValueChanged(event: { oldValue: any, newValue: any, selectedItem: any }, rowData: any, column: ColumnDef): void {
+    console.log('🔄 表格收到 selector value changed:', {
+      event,
+      rowDataId: rowData.id || rowData[this.dataKey],
+      field: column.field
+    });
+
+    // 🎯 更新 rowData
+    rowData[column.field] = event.newValue;
+
+    // 🎯 發出 dropdownChange 事件
+    this.dropdownChange.emit({
+      rowData,
+      field: column.field,
+      newValue: event.newValue,
+      oldValue: event.oldValue,
+      selectedOption: event.selectedItem // 🎯 傳遞完整的選擇項目資料
+    });
+  }
+
+  /**
+   * 🎯 處理 selector-panel 的 selectionChanged 事件
+   */
+  onSelectorSelectionChanged(selectedItem: any, rowData: any, column: ColumnDef): void {
+    console.log('🎯 表格收到 selector selection changed:', selectedItem);
+
+    // 🎯 與 itemSelected 使用相同的處理邏輯
+    this.onSelectorItemSelected(selectedItem, rowData, column);
+  }
+
 }

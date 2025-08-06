@@ -38,6 +38,10 @@ export class SelectorPanelComponent extends BasicKitComponent implements OnInit,
   @Input() displayFieldsConfig: DisplayFieldConfig[] = []; // 顯示欄位的配置
   @Output() searchInputChanged = new EventEmitter<Record<string, string>>(); // 搜尋輸入變更事件
 
+  @Output() itemSelected = new EventEmitter<any>();    // 🎯 項目選擇事件
+  @Output() valueChanged = new EventEmitter<{ oldValue: any, newValue: any, selectedItem: any }>(); // 🎯 值變更事件
+  @Output() selectionChanged = new EventEmitter<any>(); // 🎯 選擇變更事件
+
   // 🎯 覆蓋面板相關
   @ViewChild('selectorOverlay') selectorOverlay: OverlayPanel | undefined;
   private unsubscribe$ = new Subject<void>();
@@ -110,9 +114,36 @@ export class SelectorPanelComponent extends BasicKitComponent implements OnInit,
 
   // 🎯 處理表格行選擇事件
   onTableRowSelected(event: TableRowSelectEvent) {
-    this.selectedRecord = event.data;
+    console.log('🎯 Selector panel - 表格行被選擇:', event.data);
+
+    const oldValue = this.valueControl.value;
+    const selectedItem = event.data;
+    const newValue = this.valuePropertyName ? selectedItem[this.valuePropertyName] : selectedItem;
+
+    // 🎯 更新控制器值
+    this.valueControl.setValue(newValue);
+
+    // 🎯 更新內部狀態
+    this.selectedRecord = selectedItem;
     this.autoCompleteItems = [...this.panelDataSource];
-    this.valueControl.setValue(this.valuePropertyName ? this.selectedRecord[this.valuePropertyName] : this.selectedRecord);
+
+    // 🚨 關鍵：發出包含完整選擇資料的事件
+    this.itemSelected.emit(selectedItem);
+
+    this.valueChanged.emit({
+      oldValue: oldValue,
+      newValue: newValue,
+      selectedItem: selectedItem  // 🎯 這個很重要！
+    });
+
+    this.selectionChanged.emit(selectedItem);
+
+    console.log('✅ Selector panel - 發出事件:', {
+      itemSelected: selectedItem,
+      valueChanged: { oldValue, newValue, selectedItem }
+    });
+
+    // 🎯 清理並關閉面板
     this.selectorOverlay?.hide();
     this.panelDataSource = [];
     this.selectedRecord = [];

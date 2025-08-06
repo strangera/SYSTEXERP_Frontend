@@ -76,7 +76,10 @@
                 [panelTableColumns]="col.selectorConfig?.panelTableColumns || []"
                 [totalDataCount]="col.selectorConfig?.totalDataCount || 0"
                 (searchInputChanged)="onSelectorSearchInputChanged($event, rowData, col)"
-                (searchFormChanged)="onSelectorSearchFormChanged($event, rowData, col)">
+                (searchFormChanged)="onSelectorSearchFormChanged($event, rowData, col)"
+                (itemSelected)="onSelectorItemSelected($event, rowData, col)"
+                (valueChanged)="onSelectorValueChanged($event, rowData, col)"
+                (selectionChanged)="onSelectorSelectionChanged($event, rowData, col)">
 
                 <!-- 搜尋表單內容 -->
                 <div search-form class="grid" [formGroup]="getSelectorSearchForm(rowData, col)">
