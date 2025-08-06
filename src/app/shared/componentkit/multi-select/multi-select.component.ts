@@ -1,5 +1,5 @@
 import { NgClass, NgIf } from '@angular/common';
-import { Component, Input, OnInit, ViewChild } from '@angular/core';
+import { Component, ElementRef, Input, OnInit, TemplateRef, ViewChild } from '@angular/core';
 import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { MultiSelect, MultiSelectLazyLoadEvent, MultiSelectModule } from 'primeng/multiselect';
 import { ControlMessagesComponent } from '../../component/control-messages/control-messages.component';
@@ -31,6 +31,7 @@ export class MultiSelectComponent extends BasicKitComponent implements OnInit {
   @Input() submitted = false; // 檢查欄位是否標準
   @Input() loading = true; // 載入狀態
   @Input() variant: 'filled' | 'outlined' = 'outlined';
+  @Input() appendTo: HTMLElement | ElementRef | TemplateRef<any> | string | null | undefined | any = void 0;
 
   @Input() group = false; // 是否啟用分組
   @Input() optionGroupLabel = 'label'; // 分組的標籤欄位

@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { computed, effect, Injectable, signal } from '@angular/core';
-import { DependentDataQuery, PodRequest, TLS26010Data, TLS26010Detail, TLS26010DetailResponse, TLS26010Query } from '@pages/tls/tls26010/tls26010.model';
+import { DependentDataQuery, ECRDropdown, PodRequest, TLS26010Data, TLS26010Detail, TLS26010DetailResponse, TLS26010Query, TLTDropdown } from '@pages/tls/tls26010/tls26010.model';
 import { AuthService } from '@service/system/auth.service';
 import { ErrorHandlerService } from '@service/system/error-handler.service';
 import { NotificationService } from '@shared/component/notification-message/notification.service';
@@ -19,11 +19,11 @@ export class TLS26010Service {
   // 儲存資料
   public TLS26010Data = signal<TLS26010Data[]>([]);
   public TLS26010Detail = signal<TLS26010Detail | undefined>(undefined);
+  public preorderECRData = signal<ECRDropdown[]>([]);
+  public TLTTALENTData = signal<TLTDropdown[]>([]);
   private sys3800Data = signal<DropdownOption[]>([]);
   private sys3900Data = signal<DropdownOption[]>([]);
   private sys3A00Data = signal<DropdownOption[]>([]);
-  private preorderECRData = signal<DropdownOption[]>([]);
-  private TLTTALENTData = signal<DropdownOption[]>([]);
 
   // 讀取狀態
   private sys3800Loading = !1;
@@ -37,8 +37,8 @@ export class TLS26010Service {
   private downloadLoading = !1;
 
   // 下拉選單資料
-  public ECRMap = new Map<string, DropdownOption>([]);
-  public TLTMap = new Map<string, DropdownOption>([]);
+  public ECRMap = new Map<string, ECRDropdown>([]);
+  public TLTMap = new Map<string, TLTDropdown>([]);
   public get ECRList() { return Array.from(this.ECRMap.values()); };
   public get TLTList() { return Array.from(this.TLTMap.values()); };
 
@@ -79,11 +79,11 @@ export class TLS26010Service {
   // 變化監聽
   private ECRsEffect = effect(() => {
     this.ECRMap.clear();
-    for (const item of this.preorderECRData()) this.ECRMap.set(item.No, item);
+    for (const item of this.preorderECRData()) this.ECRMap.set(item.ecr_no, item);
   });
   private TLTsEffect = effect(() => {
     this.TLTMap.clear();
-    for (const item of this.TLTTALENTData()) this.TLTMap.set(item.No, item);
+    for (const item of this.TLTTALENTData()) this.TLTMap.set(item.tlt_no, item);
   });
 
   constructor(
@@ -141,10 +141,10 @@ export class TLS26010Service {
   }
 
   /** 取得收銀機號 */
-  loadPreorderECRList(query: DependentDataQuery & { data_type: string; }): void {
+  loadPreorderECRList(query: DependentDataQuery & { ecr_type: string; }): void {
     if (this.preorderECRLoading) return void (this.preorderECRLoading = !1);
     this.preorderECRLoading = !0;
-    this.http.post<BaseQueryResponse<DropdownOption>>(`${apiUrl}/QueryECRDropDownList`, query).pipe(
+    this.http.post<BaseQueryResponse<ECRDropdown>>(`${apiUrl}/queryECRDropDownList`, query).pipe(
       take(1),
       tap(() => this.preorderECRData.set([])),
       tap(response => this.preorderECRData.set(response.Data)),
@@ -162,7 +162,7 @@ export class TLS26010Service {
     this.TLTTALENTLoading = !0;
     // if (query.building_no === '' && query.floor_no === '') return void (this.TLTTALENTLoading = !1);
 
-    this.http.post<BaseQueryResponse<DropdownOption>>(`${apiUrl}/queryTLTTALENT_DropDownList`, query).pipe(
+    this.http.post<BaseQueryResponse<TLTDropdown>>(`${apiUrl}/queryTalentDropDownList`, query).pipe(
       take(1),
       tap(() => this.TLTTALENTData.set([])),
       tap(response => this.TLTTALENTData.set(response.Data)),
@@ -244,7 +244,7 @@ export class TLS26010Service {
                   ? ApprovalStatus.未核准
                   : ApprovalStatus.已核准,
                 tlt_nos: data.talent_list.map(t => t.tlt_no),
-                ECR_Nos: data.ecr_list.map(e => e.ECR_No),
+                ecr_nos: data.ecr_list.map(e => e.ecr_no),
               };
               currentData[index] = updatedData;
             }
@@ -266,82 +266,8 @@ export class TLS26010Service {
     );
   }
 
-  /** 上傳 */
-  importTLS26010(file: File): void {
-    if (this.importLoading) return void (this.importLoading = !1);
-    this.importLoading = !0;
-    if (!file) return void (this.importLoading = !1);
-    console.log(`file upload:`, [file]);
-    // if (file.size > 10 * 1024 * 1024) {
-    //   this.messageService.errorBubble('檔案大小超過限制，請選擇小於10MB的檔案');
-    //   this.importLoading = !1;
-    //   return;
-    // }
-    if (!file.name.endsWith('.xlsx') && !file.name.endsWith('.xls') && !file.name.endsWith('.csv')) {
-      this.messageService.errorBubble(`請上傳有效的 Excel 檔案`);
-      this.importLoading = !1;
-      return;
-    }
-    const formData = new FormData();
-    formData.append('file', file);
-    this.http.post<any>(`${apiUrl}/TLS0000/TLS2000/importTLS26010`, formData).pipe(
-      take(1),
-      tap(res => {
-        const data: any = res?.Data;
-        const cb = (item: any) => {
-          if (item.ErrorFilePath) {
-            // 有錯誤檔：顯示錯誤提示
-            this.messageService.errorBubble(`部分資料匯入失敗，請下載錯誤檔檢查`);
-            // 自動下載錯誤檔
-            this.downloadErrorFile(item.ErrorFilePath);
-          } else {
-            // 沒有錯誤檔：顯示成功筆數
-            this.messageService.infoBubble(`匯入成功，筆數：${item.SuccessCount}`);
-          }
-        };
-        if (!Array.isArray(data)) cb(data);
-        else for (const item of data) { cb(item); }
-      }),
-      catchError(() => { this.messageService.errorBubble('檔案上傳失敗，請稍後再試'); return EMPTY; }),
-      finalize(() => {
-        this.importLoading = !1;
-        console.log('上傳結果:', this.TLS26010Data());
-      }),
-    ).subscribe();
-  }
-
-  /** 下載範例檔 */
-  downloadTemplate(): void {
-    if (this.downloadLoading) return void (this.downloadLoading = !1);
-    this.downloadLoading = !0;
-    this.http.get(`${apiUrl}/TLS0000/TLS2000/downloadTLS26010Template`, { responseType: 'blob', })
-      .pipe(
-        take(1),
-        tap((res: Blob) => {
-          const blob = new Blob([res], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-          saveAs(blob, 'TLS26010_Template.xlsx');
-        }),
-        catchError(() => {
-          this.messageService.errorBubble('下載範例檔案失敗，請稍後再試');
-          return EMPTY;
-        }),
-        finalize(() => {
-          this.downloadLoading = !1;
-          console.log('下載範例檔結果:', this.TLS26010Data());
-        }),
-      ).subscribe();
-  }
-
-  /** 下載錯誤檔 */
-  downloadErrorFile(filePath: string) {
-    window.open(`${apiUrl}/TLS0000/TLS2000/${filePath}`, '_blank');
-  }
-
   /** 刪除預購活動 */
-  deleteTLS26010(data: TLS26010Data): void {
-    if (this.tableLoading) return void (this.tableLoading = !1);
-    this.tableLoading = !0;
-    const id = data.pod_no;
+  deleteTLS26010({ id }: TLS26010Data): void {
     this.http.post<BaseQueryResponse<any>>(`${apiUrl}/TLS0000/TLS2000/deleteTLS26010`, { id }).pipe(
       take(1),
       tap(() => this.TLS26010Data.set(this.TLS26010Data())),

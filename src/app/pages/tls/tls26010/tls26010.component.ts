@@ -42,11 +42,11 @@ export class TLS26010Component extends BasicQueryPageComponent<TLS26010Data> {
 
   // 查詢表單
   public queryForm = this.formBuilder.group({
-    sys3800: new FormControl<string | undefined>(undefined), // 館別
-    sys3900: new FormControl<string | undefined>(undefined), // 樓層
-    sys3A00: new FormControl<string | undefined>(undefined), // 區域
-    ecrNos: new FormControl<string[] | undefined>(undefined), // 收銀機號
-    tltNos: new FormControl<string[] | undefined>(undefined), // 專櫃ID
+    sys3800: new FormControl<string[] | undefined>(void 0), // 館別
+    sys3900: new FormControl<string[] | undefined>(void 0), // 樓層
+    sys3A00: new FormControl<string[] | undefined>(void 0), // 區域
+    ecrNos: new FormControl<string[] | undefined>(void 0), // 收銀機號
+    tltNos: new FormControl<string[] | undefined>(void 0), // 專櫃ID
     podSdateS: new FormControl<Date>(this.dateS, Validators.required), // 起始日期(起)
     podSdateE: new FormControl<Date>(this.dateE, Validators.required), // 起始日期(迄)
     podEdateS: new FormControl<Date>(this.dateS, Validators.required), // 截止日期(起)
@@ -82,53 +82,20 @@ export class TLS26010Component extends BasicQueryPageComponent<TLS26010Data> {
     },
   ];
 
-  // 監聽館別變化，重置樓層、區域、收銀機號及專櫃ID
-  private readonly buildingEffect = effect(() => {
-    const building_no = this.sys3800Signal();
-    if (!building_no?.length) return;
-    this.service.loadSYS3900(building_no);
-    this.queryForm.patchValue({
-      sys3900: undefined,
-      sys3A00: undefined,
-      ecrNos: undefined,
-      tltNos: undefined,
-    }, { emitEvent: !1 });
-  }, { allowSignalWrites: !0 });
-
-  // 監聽樓層變化，重置區域、收銀機號及專櫃ID
-  private readonly floorEffect = effect(() => {
-    const building_no = this.sys3800Signal();
-    const floor_no = this.sys3900Signal();
-    if (!floor_no?.length || !building_no?.length) return;
-    this.service.loadSYS3A00();
-    this.queryForm.patchValue({
-      sys3A00: undefined,
-      ecrNos: undefined,
-      tltNos: undefined,
-    }, { emitEvent: !1 });
-  }, { allowSignalWrites: !0 });
-
-  // 監聽區域變化，重置收銀機號及專櫃ID
-  private readonly areaEffect = effect(() => {
-    const building_no = this.sys3800Signal();
-    const floor_no = this.sys3900Signal();
-    const area_no = this.sys3A00Signal();
-    if (!area_no?.length || !building_no?.length || !floor_no?.length) return;
-    this.queryForm.patchValue({
-      ecrNos: undefined,
-      tltNos: undefined,
-    }, { emitEvent: !1 });
-  }, { allowSignalWrites: !0 });
-
   // 監聽館別、樓層及區域變化，載入相關資料
   private readonly dependentDataEffect = effect(() => {
-    const building_no = this.sys3800Signal();
-    const floor_no = this.sys3900Signal();
-    const area_no = this.sys3A00Signal();
-    console.log(`dependentDataEffect:`, [building_no, floor_no, area_no]);
-    if (!building_no?.length || !floor_no?.length || !area_no?.length) return;
-    this.service.loadPreorderECRList({ building_no, floor_no, area_no, data_type: '2' });
-    this.service.loadTLTTALENT({ building_no, floor_no, area_no });
+    const sys3800Value = this.sys3800Signal();
+    const sys3900Value = this.sys3900Signal();
+    const sys3A00Value = this.sys3A00Signal();
+
+    const building_nos = Array.isArray(sys3800Value) ? sys3800Value.filter((val): val is string => val != null) : [];
+    const floor_nos = Array.isArray(sys3900Value) ? sys3900Value.filter((val): val is string => val != null) : [];
+    const area_nos = Array.isArray(sys3A00Value) ? sys3A00Value.filter((val): val is string => val != null) : [];
+
+    console.log(`dependentDataEffect:`, [building_nos, floor_nos, area_nos]);
+    if (!building_nos?.length && !floor_nos?.length && !area_nos?.length) return;
+    this.service.loadPreorderECRList({ building_nos, floor_nos, area_nos, ecr_type: '2' });
+    this.service.loadTLTTALENT({ building_nos, floor_nos, area_nos });
   }, { allowSignalWrites: !0 });
 
   private readonly queryTLS26010 = computed<TLS26010Query & { isValid: boolean; }>(() => {
@@ -168,8 +135,8 @@ export class TLS26010Component extends BasicQueryPageComponent<TLS26010Data> {
     }
 
     return {
-      ECR_Nos: Array.from(this.ecrNosSignal() || []),
-      tlt_nos: Array.from(this.tltNosSignal() || []),
+      ecr_nos: Array.isArray(this.ecrNosSignal()) ? Array.from(this.ecrNosSignal()!) : [],
+      tlt_nos: Array.isArray(this.tltNosSignal()) ? Array.from(this.tltNosSignal()!) : [],
       pod_sdate_S,
       pod_sdate_E,
       pod_edate_S,
@@ -242,14 +209,11 @@ export class TLS26010Component extends BasicQueryPageComponent<TLS26010Data> {
 
   /** 刪除選中的活動 */
   public onDelete(data: TLS26010Data[]): void {
-    if (!this.canEdit()) return;
+    console.log(`刪除活動:`, data);
     this.confirmationService.confirm({
       message: '是否確認刪除選中的預售活動?',
       accept: () => {
-        for (const item of data) {
-          if (item.pod_status !== ApprovalStatus.未核准) continue;
-          this.service.deleteTLS26010(item);
-        }
+        for (const item of data) this.service.deleteTLS26010(item);
         this.messageService.successBubble('刪除成功');
       },
       reject: () => this.messageService.infoBubble('已取消刪除')

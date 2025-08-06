@@ -2,17 +2,17 @@ import { Component, OnInit } from '@angular/core';
 import { NotificationService } from './notification.service';
 import { ConfirmationService, MessageService, PrimeTemplate } from 'primeng/api';
 import { ConfirmDialogModule } from 'primeng/confirmdialog';
-import { NgIf } from '@angular/common';
+import { NgFor, NgIf } from '@angular/common';
 import { Button, ButtonDirective } from 'primeng/button';
 import { ToastModule } from 'primeng/toast';
 import { DialogModule } from 'primeng/dialog';
 
 @Component({
-    selector: 'app-notification-message',
-    templateUrl: './notification-message.component.html',
-    styleUrl: './notification-message.component.scss',
-    standalone: true,
-    imports: [ConfirmDialogModule, PrimeTemplate, NgIf, Button, ToastModule, DialogModule, ButtonDirective]
+  selector: 'app-notification-message',
+  templateUrl: './notification-message.component.html',
+  styleUrl: './notification-message.component.scss',
+  standalone: true,
+  imports: [ConfirmDialogModule, PrimeTemplate, NgIf, Button, ToastModule, DialogModule, ButtonDirective, NgFor]
 })
 export class NotificationMessageComponent implements OnInit {
   msgBoxHeader = '';
@@ -26,6 +26,7 @@ export class NotificationMessageComponent implements OnInit {
   inputBoxOK?: (value: string) => void;
   inputBoxCancel?: () => void;
   showIcon = false; // 新增 showIcon 屬性，預設為 false
+  extraButtons: { label: string; action: () => void; severity?: "success" | "info" | "warning" | "danger" | "help" | "primary" | "secondary" | "contrast" | null | undefined }[] = [];
   // ----------------------------------------------------------------
   constructor(
     private notificationService: NotificationService,
@@ -48,6 +49,7 @@ export class NotificationMessageComponent implements OnInit {
 
     this.notificationService.confirmMsg$.subscribe((opts) => {
       this.showIcon = opts.showIcon === true; // 只有明確設定為 true 時才顯示圖示
+      this.extraButtons = opts.extraButtons || [];
       this.confirmationService.confirm({
         header: opts.header,
         message: opts.message,
@@ -142,5 +144,10 @@ export class NotificationMessageComponent implements OnInit {
       default:
         return 'info';
     }
+  }
+
+  onExtraButtonClick(btn: { label: string; action: () => void }) {
+    btn.action();
+    this.confirmationService.close();
   }
 }

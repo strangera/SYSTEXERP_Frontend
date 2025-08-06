@@ -6,6 +6,7 @@ import { Column, formatAmount } from '@shared/componentkit/table/table.model';
 import { STORE_WAY } from '../tls24010-cru.model';
 import { AutoCompleteSelectEvent } from 'primeng/autocomplete';
 import { TLS24010CRUComponent } from '../tls24010-cru.component';
+import { IDropdownItem, POS2004Item } from '@service/utility/dropDownList.service';
 
 @UntilDestroy()
 @Component({
@@ -23,10 +24,11 @@ export class Tls24010TltnoComponent implements OnInit, OnChanges {
   @Input() TXN_Date?: string;
   @Input() TLT_No?: string;
   @Input() Keyword?: string;
+  @Input() TLT_NoOptions?: IDropdownItem[] = [];
   private previousData: POS5007Data[] = [];
   tltIdData: POS5007Data[] = [];
   columns: Column[] = [
-    { field: 'PLU_MagNo', header: '商品編號/專櫃編號', type: 'autoComplete', options: [], templateLabel: 'label', optionLabel: 'PLU_MagNo', optionValue: 'PLU_MagNo' },
+    { field: 'PLU_MagNo', header: '商品編號/專櫃編號', type: 'autoComplete', options: [], templateLabel: 'label', optionLabel: 'PLU_MagNo' },
     { field: 'PLU_Name', header: '商品名稱/櫃位名稱' },
     { field: 'TXN_Qty', header: '數量', format: formatAmount },
     { field: 'PLU_SalePrc', header: '單價金額', format: formatAmount },
@@ -40,6 +42,28 @@ export class Tls24010TltnoComponent implements OnInit, OnChanges {
     @Optional() @Host() public tls24010?: TLS24010CRUComponent
   ) { }
   ngOnInit(): void {
+    if (this.store_way === STORE_WAY.專櫃) {
+      const txnDate = this.TXN_Date as unknown as Date
+      const body = {
+        Store_way: STORE_WAY.專櫃,
+        TXN_Date: txnDate ? txnDate.toISOString().split('T')[0] : '',
+        TLT_No: this.TLT_No
+      }
+      this.tls24010Service.queryPOS2004ForUpdate(body).pipe(untilDestroyed(this)).subscribe((response) => {
+        this.POS2004Options = response.Data.map((item, index) => ({
+          ...item,
+          id: index,
+          label: `${item.TLT_No} - ${item.TLT_Name}`
+        }));
+        this.columns[0].type = 'dropdown';
+        this.columns[0].options = this.POS2004Options;
+        this.columns[0].templateLabel = 'label';
+        this.columns[0].optionLabel = 'TLT_No';
+      });
+    } else {
+      this.columns[0].optionValue = 'PLU_MagNo';
+      this.columns[0].type = 'autoComplete';
+    }
   }
   ngOnChanges(changes: SimpleChanges): void {
     const newData: POS5007Data[] = changes['data']?.currentValue;
@@ -47,17 +71,37 @@ export class Tls24010TltnoComponent implements OnInit, OnChanges {
     if (newData?.length > 0 && !this.isSameData(newData, this.previousData)) {
       this.tltIdData = newData.map((item) => ({
         ...item,
-        PLU_TaxType: item.PLU_TaxType === '0' ? '免稅' : (item.PLU_TaxType === '1' ? '應稅' : item.PLU_TaxType),
+        PLU_MagNo: this.store_way === STORE_WAY.專櫃 ? this.POS2004Options.find((option) => option.TLT_No === item.PLU_MagNo) : item.PLU_MagNo,
+        PLU_Name: this.store_way === STORE_WAY.專櫃 ? this.TLT_NoOptions?.find((option) => option.No === item.PLU_MagNo)?.Name : item.PLU_Name
       }));
-
       this.previousData = newData; // 更新快取版本
+    }
+    if (changes['TLT_No']?.currentValue && this.store_way === STORE_WAY.專櫃) {
+      const txnDate = this.TXN_Date as unknown as Date
+      const body = {
+        Store_way: STORE_WAY.專櫃,
+        TXN_Date: txnDate ? txnDate.toISOString().split('T')[0] : '',
+        TLT_No: this.TLT_No
+      }
+      this.tls24010Service.queryPOS2004ForUpdate(body).pipe(untilDestroyed(this)).subscribe((response) => {
+        this.POS2004Options = response.Data.map((item, index) => ({
+          ...item,
+          id: index, label: `${item.TLT_No} - ${item.TLT_Name}`,
+        }));
+        this.columns[0].options = this.POS2004Options;
+        this.tltIdData = this.tltIdData.map((item) => ({
+          ...item,
+          PLU_MagNo: this.POS2004Options.find((option) => option.TLT_No === item.PLU_MagNo),
+          PLU_Name: this.TLT_NoOptions?.find((option) => option.No === item.PLU_MagNo)?.Name || ''
+        }))
+      });
     }
 
     if (changes['store_way']?.currentValue === STORE_WAY.專櫃) {
       this.columns = [
         ...this.columns,
-        { field: 'tlt_id', header: '分類抽成類別' },
-        { field: 'PLU_TaxType', header: '稅別', },
+        { field: 'tlt_id_desc', header: '分類抽成類別' },
+        { field: 'PLU_TaxType', header: '稅別', format: (value: string) => value === '0' ? '免稅' : (value === '1' ? '應稅' : value) },
         { field: 'TXN_DiscName', header: '折扣別', },
       ]
     }
@@ -72,32 +116,46 @@ export class Tls24010TltnoComponent implements OnInit, OnChanges {
     if (!query || !this.store_way || !this.TXN_Date || !this.TLT_No || query.length < 9) {
       return;
     }
+    const txnDate = this.TXN_Date as unknown as Date
     const body = {
       Store_way: this.store_way,
-      TXN_Date: this.TXN_Date,
+      TXN_Date: txnDate ? txnDate.toISOString().split('T')[0] : '',
       Keyword: query
     }
-    this.tls24010Service.queryPOS2004ForUpdate(body)
-      .pipe(untilDestroyed(this))
-      .subscribe((response) => {
-        this.POS2004Options = response.Data.map((item) => ({
-          ...item,
-          label: `${item.PLU_MagNo} - ${item.PLU_No} - ${item.PLU_OrgPLUNo} - ${item.PLU_Name}`
-        }));
-        this.columns[0].options = this.POS2004Options;
-      });
+    this.tls24010Service.queryPOS2004ForUpdate(body).pipe(untilDestroyed(this)).subscribe((response) => {
+      this.POS2004Options = response.Data.map((item, index) => ({
+        ...item,
+        id: index,
+        label: `${item.PLU_MagNo} - ${item.PLU_No} - ${item.PLU_OrgPLUNo} - ${item.PLU_Name}`
+      }));
+      this.columns[0].options = this.POS2004Options;
+    });
   }
   onFieldChange(event: { rowData: POS5007Data, field: string, value: AutoCompleteSelectEvent, index?: number }): void {
-    if (event.field === 'PLU_MagNo') {
+    if (event.field === 'PLU_MagNo' && this.store_way === STORE_WAY.自營) {
       const selectedItem = this.POS2004Options.find(item => item.PLU_MagNo === event.value?.value.PLU_MagNo);
       if (selectedItem) {
         event.rowData.PLU_Name = selectedItem.PLU_Name;
         event.rowData.TLT_No = selectedItem.TLT_No;
         event.rowData.PLU_No = selectedItem.PLU_No;
         event.rowData.Talent_ID = selectedItem.talent_id;
+        event.rowData.Contract_No = selectedItem.Contract_No;
+        event.rowData.Contract_SubNo = selectedItem.Contract_SubNo;
         if (event.index === 0) {
           this.tls24010?.dataForm.patchValue({ TLT_No: selectedItem.TLT_No });
         }
+      }
+    } else {
+      const selectedItem = this.POS2004Options.find(item => item.id === (event.value as unknown as POS2004Item).id);
+      if (selectedItem) {
+        event.rowData.PLU_Name = selectedItem.TLT_Name;
+        event.rowData.TLT_No = selectedItem.TLT_No;
+        event.rowData.PLU_No = selectedItem.PLU_No;
+        event.rowData.Talent_ID = selectedItem.talent_id;
+        event.rowData.tlt_id_desc = selectedItem.tlt_id_desc;
+        event.rowData.TXN_DiscName = selectedItem.cag_barcode_name;
+        event.rowData.Contract_No = selectedItem.Contract_No;
+        event.rowData.Contract_SubNo = selectedItem.Contract_SubNo;
       }
     }
   }

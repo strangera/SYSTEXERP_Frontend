@@ -89,7 +89,7 @@ export class TLS23130Component extends BasicQueryPageComponent<any> {
   }
 
   ngOnInit(): void {
-    this.initializePage('TLS23130', '', this.queryForm, (form) => this.onSubmit(form));
+    this.initializePage('TLS23130', '', this.queryForm);
 
     this.cardTypeService.getCardType().subscribe(data => this.cardTypeOptions = data);
     this.organizationNumberService.getOrganizationNumbers().subscribe(data => this.organizationOptions = data);
@@ -108,47 +108,7 @@ export class TLS23130Component extends BasicQueryPageComponent<any> {
     });
   }
 
-  onSubmit(form: FormGroup): void {
-    this.submitted = true;
-    if (this.loading) return;
-
-    if (form.invalid) {
-      this.messageService.warnBubble('請確認欄位資料是否完整');
-      return;
-    }
-
-    this.handleSubmit(form, () => {
-      const payload = { ...form.value };
-      Object.keys(payload).forEach(key => {
-        if (payload[key] === '') payload[key] = null;
-      });
-
-      this.tls23130Service.queryTLS23130(payload).subscribe({
-        next: (res) => {
-          if (res.Status === '0000') {
-            this.data = res.Data || [];
-            this.totalRecords = res.TotalCount || this.data.length;
-            this.queryStateService.setQueryState(this.ProgNo, payload);
-            this.messageService.successBubble('查詢成功');
-          } else {
-            this.data = [];
-            this.totalRecords = 0;
-            this.messageService.errorBubble('查詢失敗');
-          }
-        },
-        error: () => {
-          this.data = [];
-          this.totalRecords = 0;
-          this.loading = false;
-          this.messageService.errorBubble('查詢錯誤');
-        },
-        complete: () => {
-          this.loading = false;
-          this.messageService.unblockUi();
-        }
-      });
-    });
-  }
+  
 
   goToReportMode(): void {
     this.customPageSize = 1000;
@@ -178,7 +138,7 @@ export class TLS23130Component extends BasicQueryPageComponent<any> {
               data: res.Data || []
             }
           });
-          this.messageService.successBubble('查詢成功');
+          
         } else {
           this.messageService.errorBubble('查詢失敗');
         }

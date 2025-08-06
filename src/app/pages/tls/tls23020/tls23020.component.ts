@@ -59,11 +59,11 @@ const now = new Date();
     ],
 })
 export class TLS23020Component extends BasicQueryPageComponent<any> {
+  //所需參數
   displayMode: 'Detail' | 'Summary' = 'Detail'; // 預設顯示明細報表
-
   data: any[] = [];
   totalRecords: number = 0;
-  // 表單欄位
+  //Request
   queryForm = this.formBuilder.group({
     TXN_DateStart: [new Date('2024-01-01'), [Validators.required]], // 交易日期起
     TXN_DateEnd: [new Date('2024-01-31'), [Validators.required]], // 交易日期訖
@@ -86,11 +86,10 @@ export class TLS23020Component extends BasicQueryPageComponent<any> {
     tlt_floor: [], // 所屬樓層
     org_id: [], // 組織代碼
     isSummary: false,
-    // DisplayMode: this.useSummaryMode ? 'SummaryReport' : 'Report', // 顯示模式
     ...createPaginationConfig([{ field: 'ECR_No', order: 1 }]),
   });
 
-  // 欄位定義（依後端欄位為主）
+//Response
   columns = [
     {
       field: 'TXN_Date',
@@ -216,9 +215,7 @@ export class TLS23020Component extends BasicQueryPageComponent<any> {
   }
 
   ngOnInit(): void {
-    this.initializePage('TLS23020', 'TLS23020cru', this.queryForm, (form) =>
-      this.onSubmit(form),
-    );
+    this.initializePage('TLS23020', 'TLS23020cru', this.queryForm);
     this.tls11010Service
       .getBuildingOptions()
       .subscribe((res) => (this.BUILDING_NO_Options = res));
@@ -274,43 +271,7 @@ export class TLS23020Component extends BasicQueryPageComponent<any> {
     });
   }
 
-  onSubmit(form: any): void {
-    if (this.loading) return;
-
-    this.handleSubmit(form, () => {
-      const payload = { ...form.value };
-
-      // 將空字串改為 null
-      Object.keys(payload).forEach((key) => {
-        if (payload[key] === '') payload[key] = null;
-      });
-
-      this.tls23020Service.queryTLS23020(payload).subscribe({
-        next: (res) => {
-          if (res.Status === '0000') {
-            this.data = res.Data || [];
-            this.totalRecords = res.TotalCount || this.data.length;
-            this.queryStateService.setQueryState(this.ProgNo, payload);
-            this.messageService.successBubble('查詢成功');
-          } else {
-            this.data = [];
-            this.totalRecords = 0;
-            this.messageService.errorBubble('查詢失敗');
-          }
-        },
-        error: () => {
-          this.data = [];
-          this.totalRecords = 0;
-          this.loading = false;
-          this.messageService.errorBubble('查詢錯誤');
-        },
-        complete: () => {
-          this.loading = false;
-          this.messageService.unblockUi();
-        },
-      });
-    });
-  }
+  
   getLabelFromOptions(value: any, options: any[]): string {
     const found = options?.find((opt) => String(opt.value) === String(value));
     return found ? found.label : value;
@@ -368,7 +329,7 @@ export class TLS23020Component extends BasicQueryPageComponent<any> {
                 displayMode: this.displayMode,
               },
             });
-            this.messageService.successBubble('查詢成功');
+            
           } else {
             this.messageService.errorBubble('查詢失敗');
           }

@@ -5,9 +5,9 @@ import { Observable } from 'rxjs';
 import { environment } from 'src/environments/environment';
 
 export interface POS6118Request {
-  ECR_NoList: string[]
+  ECR_No: string
   TXN_No: string,
-  TLT_NoList: string[],
+  TLT_No: string,
   NCML_TxnTypeList: string[],
   NCML_PayCrdTypeList: string[],
   NCML_TxnAmt_Start: string,
@@ -26,9 +26,9 @@ export interface POS6118Request {
   NCML_TermNoList: string[]
 }
 export interface POS6119Request {
-  ECR_NoList: string[],
+  ECR_No: string,
   TXN_No: string,
-  TLT_NoList: string[],
+  TLT_No: string,
   CTBC_TxnTypeList: string[],
   CTBC_TxnAmt_Start: string,
   CTBC_TxnAmt_End: string,
@@ -36,15 +36,17 @@ export interface POS6119Request {
   CTBC_TxnDate_End: string,
   CTBC_CrdNo: string,
   CTBC_TmID: string,
-  CTBC_BusDate_Start: string,
-  CTBC_BusDate_End: string,
+  CTBC_Date_Start: string,
+  CTBC_Date_End: string,
+  CTBC_DataTypeList: string[],
   CTBC_CheckList: string[],
-  CTBC_ApprovalCode: string
+  CTBC_ApprovalCode: string;
+  CTBC_TermNoList: string[]
 }
 export interface POS6119PRequest {
-  ECR_NoList: string[],
+  ECR_No: string,
   TXN_No: string,
-  TLT_NoList: string[],
+  TLT_No: string,
   CTBC_TxnTypeList: string[],
   CTBC_TxnAmt_Start: string,
   CTBC_TxnAmt_End: string,
@@ -69,6 +71,7 @@ export interface POS6118Data {
   NCML_PayCrdType: string,
   NCML_CrdNo: string,
   NCML_TxnDate: string,
+  NCML_Date: string,
   NCML_TxnTime: string,
   NCML_TxnType: string,
   NCML_ApprovalCode: string,
@@ -91,6 +94,7 @@ export interface POS6119Data {
   CTBC_TxnAmt: number,
   CTBC_TmID: string,
   CTBC_Date: string,
+  CTBC_PayDate: string,
   CTBC_CrdNo: string,
   CTBC_TxnTime: string,
   CTBC_TxnCode: string,
@@ -240,5 +244,35 @@ export class TLS27040Service {
    */
   insertPOS6119P(body: POS6119PInsert): Observable<ApiResponse<number>> {
     return this.http.post<ApiResponse<number>>(`${this.apiUrl}/insertPOS6119P`, body);
+  }
+  // 刪除資料
+  deleteTLS27040(body: { idList: number[], tableName: string }): Observable<ApiResponse<any>> {
+    return this.http.post<ApiResponse<any>>(`${this.apiUrl}/deleteTLS27040`, body);
+  }
+
+  // 檢核能否新增
+  queryInsCheck(body: {
+    SYS_StoreNo: string,
+    ECR_No: string,
+    TXN_No: string,
+    TXN_Date: string,
+    tableName: string
+  }): Observable<ApiResponse<any>> {
+    return this.http.post<ApiResponse<any>>(`${this.apiUrl}/queryInsCheck`, body);
+  }
+
+  //  更新 POS6118
+  updatePOS6118(body: POS6118Data): Observable<ApiResponse<number>> {
+    return this.http.post<ApiResponse<number>>(`${this.apiUrl}/updatePOS6118`, body);
+  }
+
+  //  更新 POS6119
+  updatePOS6119(body: POS6119Data): Observable<ApiResponse<number>> {
+    return this.http.post<ApiResponse<number>>(`${this.apiUrl}/updatePOS6119`, body);
+  }
+
+  //  更新 POS6119P
+  updatePOS6119P(body: POS6119PData): Observable<ApiResponse<number>> {
+    return this.http.post<ApiResponse<number>>(`${this.apiUrl}/updatePOS6119P`, body);
   }
 }

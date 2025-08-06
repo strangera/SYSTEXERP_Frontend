@@ -183,7 +183,7 @@ export class TLS29010CRUComponent extends BasicCruPageComponent<TALPORDERD_OPEND
       //主檔下拉 --之後由後端api提供
 
       // ---Potential_Customer_Detail 潛在客戶其他資料明細檔 table---
-      potentialDetail: TALPORDERD_OPENDisc[] = [];
+      opendisc_Detail: TALPORDERD_OPENDisc[] = [];
       //欄位資訊
       Potential_Customer_Detail_Columns: ColumnDef[] = [
         // { field: 'id', header: '主鍵', type: 'number', editable: false, autoWidth: false },
@@ -197,7 +197,7 @@ export class TLS29010CRUComponent extends BasicCruPageComponent<TALPORDERD_OPEND
         // [專櫃編號] 帶出 下面這坨
         { field: 'tlt_no', header: '專櫃名稱', type: 'dropdown', editable: true, autoWidth: true, options: this.mockDetailDataOptions}, //(專櫃編號_專櫃名稱，下拉選單)用[專櫃編號] 帶出 [專櫃名稱]、[抽成類別]、[折數]、[抽成率] * ([TALPORDERD])
         { field: 'cag_barcode', header: '折數', type: 'text', editable: true, autoWidth: true }, // 後端提供，要去(TLTTALENT_CHARGED)撈 *
-        { field: 'cag_charge_rate', header: '抽成率', type: 'text', editable: true, autoWidth: true }, // 後端提供，要去(TLTTALENT_CHARGED)撈 * (*為一組，用id,mid 對應)
+        { field: 'cag_charge_rate', header: '抽成率', type: 'text', editable: true, autoWidth: true }, // 後端提供，要去(TLTTALENT_CHARGED)撈 * (*為一組，用id,mid 對應) 只有顯示，不會存到明細
         { field: 'use_flag', header: '是否使用', type: 'dropdown', editable: true, autoWidth: true, options: this.whetherOption }, // 本作業維護
       ];
       // 預設新項目模板
@@ -240,7 +240,14 @@ export class TLS29010CRUComponent extends BasicCruPageComponent<TALPORDERD_OPEND
       ngOnInit(): void {
         this.initializePage('TLS29010', this.dataForm);
         this.loadOption();
-        console.log('讀取資料', this.dataForm.value);
+
+        const pod_no = this.dataForm.get('pod_no')?.value;
+        if(pod_no){
+          this.loadDetailData(pod_no); //讀取明細檔
+          // this.createDefaultNew; //編輯頁如果有新項目要寫入在此更改
+          //設定初始直
+        }
+
         
         //新增模式pod_desc才可以填寫，否則與其他欄位一樣都設為disabled
         if(this.crudstatus === CRUDStatus.Create) {
@@ -265,15 +272,10 @@ export class TLS29010CRUComponent extends BasicCruPageComponent<TALPORDERD_OPEND
           return;
         }
 
-         //將新的資料ID指定為null
-        const processedDetail = this.potentialDetail.map(item => {
-          // 刪除 key 為空字串的欄位
-          if ("" in item) {
-            delete item[""];
-          }
-
+        //將新的資料id指定為null
+        const processedDetail = this.opendisc_Detail.map(item => {
           if (item.status === 'new') {
-            return { ...item, id: null}; // 把新項目的 ID, PC_id 改為 null
+            return { ...item, id: null}; // 把新項目的 id, PC_id 改為 null
           }
           return item; // 其他不變
         });
@@ -297,7 +299,8 @@ export class TLS29010CRUComponent extends BasicCruPageComponent<TALPORDERD_OPEND
             break;
           case CRUDStatus.Edit:
             if (this.canEdit()) {
-              console.log('update', body);
+              // console.log('update', body);
+              console.log('update:', JSON.stringify(body, null, 2));
               // this.tls51080Service.updateTLS51080(formValue).subscribe(() => {
               //   // this.messageService.successBubble('更新成功');
               //   this.onCancel(); // 儲存後，會返回列表
@@ -345,6 +348,23 @@ export class TLS29010CRUComponent extends BasicCruPageComponent<TALPORDERD_OPEND
           });
       }
 
+      //讀取明細檔
+      async loadDetailData(pod_no: string): Promise<void> {
+        console.log('要求pod_no資料:', pod_no);
+        this.tls29010Service.queryTLS29010_Detail({"POD_No": pod_no}).subscribe((response) => {
+          if (response.Status === '0000') {
+            this.opendisc_Detail = response.Data.map((item: any) => ({
+              ...item,
+              status: 'original', // 有明細資料，讀取明細狀態設定為 'original';
+            }));
+            console.log('取得明細資料:', this.opendisc_Detail);
+          } else {
+            this.messageService.infoBubble(`該主檔無明細資料`);
+          }
+        });
+      }
+
+
     // ---主檔點選後的變更(僅顯新增模式)---
     // ---修改模式只會該筆主檔的，且不可編輯---
     onPodDescChange(desc: string): void {
@@ -369,7 +389,7 @@ export class TLS29010CRUComponent extends BasicCruPageComponent<TALPORDERD_OPEND
     // ---明細檔操作---
     //HTML 顯示的明細資料
     get filteredDetail(): TALPORDERD_OPENDisc[] {
-      return this.potentialDetail.filter(item => item.status !== 'deleted');
+      return this.opendisc_Detail.filter(item => item.status !== 'deleted');
     }
     
     //---TALPORDERD_OPENDisc 表格編輯事件---
@@ -382,10 +402,10 @@ export class TLS29010CRUComponent extends BasicCruPageComponent<TALPORDERD_OPEND
     }
     // 新增 TALPORDERD_OPENDisc
     onAddPotentialCustomerDetail() {
-      this.tls29010DetailService.addPotentialCustomerDetail(this.potentialDetail, this.defaultNewDetail, this.detailTable);
+      this.tls29010DetailService.addPotentialCustomerDetail(this.opendisc_Detail, this.defaultNewDetail, this.detailTable);
     }
     // 批次刪除 TALPORDERD_OPENDisc
     onBatchDeleteDetail(selectedItems: TALPORDERD_OPENDisc[]): void {
-      this.tls29010DetailService.deletePotentialCustomerDetail(selectedItems, this.potentialDetail);
+      this.tls29010DetailService.deletePotentialCustomerDetail(selectedItems, this.opendisc_Detail);
     }            
 }

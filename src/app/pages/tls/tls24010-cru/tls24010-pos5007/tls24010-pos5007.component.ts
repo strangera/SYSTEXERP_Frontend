@@ -7,7 +7,7 @@ import { DropdownModule } from 'primeng/dropdown';
 import { InputNumberModule } from 'primeng/inputnumber';
 import { InputTextModule } from 'primeng/inputtext';
 import { TableModule } from 'primeng/table';
-import { DropDownListService, POS2004Item, TLTTALENT_CHARGEData } from '../../../../service/utility/dropDownList.service';
+import { DropDownListService, IDropdownItem, POS2004Item, TLTTALENT_CHARGEData } from '../../../../service/utility/dropDownList.service';
 import { POS5007Data } from '../../../../service/api/tls/tls24010.service';
 import { ButtonModule } from 'primeng/button';
 import { NotificationService } from '@shared/component/notification-message/notification.service';
@@ -35,6 +35,7 @@ export class Tls24010Pos5007Component implements OnInit, OnChanges {
   @Input() TXN_GUIPaper?: string // 補登類別 補原機台='E' 手開二聯式發票='2'
   @Input() TLT_No?: string//專櫃編號
   @Input() TLT_Name?: string//專櫃名稱
+  @Input() TXN_Date?: string//專櫃名稱
   @Input() store_way?: string// 1為專櫃 2=自營
   @Input() talent_id?: number//專櫃編號
   @Input() data: POS5007Data[] = []
@@ -46,6 +47,7 @@ export class Tls24010Pos5007Component implements OnInit, OnChanges {
   POS5007SelectedItems: POS5007Data[] = [];
   POS2004Options: POS2004Item[] = []; //下拉選單 商品資料
   tlt_idOptions: TLTTALENT_CHARGEData[] = []; //下拉選單 類別
+  TLT_NoOptions: IDropdownItem[] = [];
   trackByRow = (index: number, item: POS5007Data) => { return item?.id || index; }
   constructor(
     private readonly dropDownListService: DropDownListService,
@@ -79,7 +81,13 @@ export class Tls24010Pos5007Component implements OnInit, OnChanges {
         ];
         this.dropDownListService.queryTLTTALENT_CHARGE_DropDownList(this.talent_id).pipe(untilDestroyed(this)).subscribe((data) => {
           this.tlt_idOptions = data.Data.map((item) => ({ ...item, label: `${item.tlt_id} - ${item.tlt_id_desc}` }));
+          this.insertRow();
         })
+        if (this.TXN_Date) {
+          this.dropDownListService.queryTLTTALENT_ByContractDate_DropDownList(this.TXN_Date).pipe(untilDestroyed(this)).subscribe(options => {
+            this.TLT_NoOptions = options.Data.map(item => ({ ...item, label: `${item.No} - ${item.Name}` }));
+          });
+        }
         break;
       default: break;
     }
@@ -100,7 +108,12 @@ export class Tls24010Pos5007Component implements OnInit, OnChanges {
         } as POS2004Item,
         tlt_id: item.tlt_id ? item.tlt_id : undefined
       }))];
+      this.calculateLastYearTotal();
     }
+  }
+
+  getPLU_Name(rowData: POS5007Data): string {
+    return this.TLT_NoOptions.find(item => item.No === rowData.PLU_No)?.Name || '';
   }
 
   insertRow(): void {
@@ -132,6 +145,7 @@ export class Tls24010Pos5007Component implements OnInit, OnChanges {
       event.TXN_Disc = -Math.abs(event.TXN_Disc);
     }
     event.TXN_SaleAmt = event.TXN_Amt + (event.TXN_Disc || 0);
+    this.calculateLastYearTotal();
   }
   onChangeTLT_ID(rowData: POS5007Data) {
     const item = this.tlt_idOptions.find((item) => item.tlt_id === rowData.tlt_id);
@@ -140,7 +154,6 @@ export class Tls24010Pos5007Component implements OnInit, OnChanges {
     rowData.TXN_DiscCode_Name = item?.cag_barcode_name;
   }
   onChangePLU_MagNo(rowData: POS5007Data) {
-    console.log(rowData);
     if (!rowData.PLU_MagNo) {
       rowData.PLU_Name = undefined;
       rowData.PLU_SalePrc = undefined;
@@ -149,5 +162,27 @@ export class Tls24010Pos5007Component implements OnInit, OnChanges {
     const show = rowData.PLU_MagNo as POS2004Item
     rowData.PLU_Name = show.PLU_Name;
     rowData.PLU_SalePrc = show.PLU_SalePrc;
+  }
+  TXN_SaleAmtTotal = 0;
+  calculateLastYearTotal() {
+    let total = 0;
+    for (const row of this.POS5007Data) {
+      total += row.TXN_SaleAmt || 0;
+    }
+    this.TXN_SaleAmtTotal = total;
+  }
+
+  getTXN_SaleAmtLength(row: POS5007Data): number {
+    const amt = row.TXN_SaleAmt ?? 0;
+    return Math.floor(Math.abs(amt)).toString().length;
+  }
+
+  getAllowedMaxLength(row: POS5007Data, field: 'TXN_Qty' | 'PLU_SalePrc' | 'TXN_Disc'): number {
+    const MAX_TOTAL_LENGTH = 10;
+    const currentAmtLength = this.getTXN_SaleAmtLength(row);
+    // 你可以用最簡單方式先全部統一扣掉目前長度
+    const remain = MAX_TOTAL_LENGTH - currentAmtLength;
+    // 最小設定為 1，不然會出現 maxlength 為 0 導致無法輸入
+    return Math.max(remain, 1);
   }
 }

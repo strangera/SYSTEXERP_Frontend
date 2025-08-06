@@ -19,7 +19,7 @@ import { TranslateModule } from '@ngx-translate/core';
     templateUrl: './tls23140.component.html',
     styleUrls: ['./tls23140.component.scss'],
     standalone: true,
-    imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarRangeQuickComponent, MultiSelectComponent, InputTextComponent, ButtonComponent, TableComponent, TranslateModule]
+    imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarRangeQuickComponent, MultiSelectComponent, InputTextComponent, ButtonComponent,  TranslateModule]
 })
 export class TLS23140Component extends BasicQueryPageComponent<any> {
   queryForm = this.formBuilder.group({
@@ -65,7 +65,7 @@ export class TLS23140Component extends BasicQueryPageComponent<any> {
   }
 
   ngOnInit(): void {
-    this.initializePage('TLS23140', '', this.queryForm, (form) => this.onSubmit(form));
+    this.initializePage('TLS23140', '', this.queryForm);
 
     this.transactionMachineService.getTransactionMachines().subscribe(data => {
       this.transactionMachineOptions = data;
@@ -86,60 +86,7 @@ export class TLS23140Component extends BasicQueryPageComponent<any> {
     });
   }
 
-  onSubmit(form: FormGroup): void {
-    this.submitted = true;
-    if (this.loading) return;
-
-    if (form.invalid) {
-      this.messageService.warnBubble('請確認欄位資料是否完整');
-      return;
-    }
-
-    this.handleSubmit(form, () => {
-      const payload = { ...form.value };
-
-      // ✅ 將 'Y' / 'N' 轉成 true / false
-      if (payload.IsHaveTERM_No === 'Y') {
-        payload.IsHaveTERM_No = true;
-      } else if (payload.IsHaveTERM_No === 'N') {
-        payload.IsHaveTERM_No = false;
-      }
-
-      // ✅ 將空字串轉 null
-      Object.keys(payload).forEach(key => {
-        if (payload[key] === '') payload[key] = null;
-      });
-
-      console.log('查詢參數:', payload);
-
-      this.tls23140Service.queryTLS23140(payload).subscribe({
-        next: (res) => {
-          console.log('查詢結果:', res);
-          if (res.Status === '0000') {
-            this.data = res.Data || [];
-            this.totalRecords = res.TotalCount || this.data.length;
-            this.queryStateService.setQueryState(this.ProgNo, payload);
-            this.messageService.successBubble('查詢成功');
-          } else {
-            this.data = [];
-            this.totalRecords = 0;
-            this.messageService.errorBubble('查詢失敗');
-          }
-        },
-        error: () => {
-          this.data = [];
-          this.totalRecords = 0;
-          this.loading = false;
-          this.messageService.errorBubble('查詢錯誤');
-        },
-        complete: () => {
-          this.loading = false;
-          this.messageService.unblockUi();
-        }
-      });
-    });
-  }
-
+  
 
   getLabelFromOptions(value: any, options: any[]): string {
     const found = options?.find(opt => String(opt.value) === String(value));

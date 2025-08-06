@@ -1,1 +1,35 @@
-<p>tls22010-cru works!</p>
+<div class="card">
+  <div class="flex gap-2 mb-2">
+    <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
+    <!-- <app-button btnType="back" (click)="onCancel()" /> -->
+  </div>
+
+  <div class="card">
+    <div class="col-12">
+      <app-table
+        tableKey="TLS22010"
+        [data]="data"
+        [multiSortMeta]="[{ field: 'ECR_No', order: 1 }]"
+        [totalRecords]="totalRecords"
+
+        [showReportMode]="false"
+        [showDelete]="false"
+        [loading]="loading"
+        [columns]="columns7"
+      >
+        <header>
+          <p-button
+            pButton
+            tooltipPosition="top"
+            pTooltip="匯出Excel"
+            [style.width]="'35px'"
+            [style.height]="'35px'"
+            class="p-button-rounded p-button-text p-button-info"
+            icon="fa-regular fa-file-lines"
+
+          />
+        </header>
+      </app-table>
+    </div>
+  </div>
+</div>

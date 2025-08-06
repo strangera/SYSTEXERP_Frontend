@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
@@ -9,112 +9,203 @@ import { DropdownModule } from 'primeng/dropdown';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { TranslateModule } from '@ngx-translate/core';
+import { Tls2A050Service } from 'src/app/service/api/tls/tls2a050.service';
+import { ColumnGroup, createPaginationConfig } from 'src/app/shared/componentkit/table/table.model';
+import { ButtonModule } from 'primeng/button';
+import { MultiSelectComponent } from "@shared/componentkit/multi-select/multi-select.component";
+
 
 
 @Component({
-    selector: 'app-tls2a050',
-    templateUrl: './tls2a050.component.html',
-    standalone: true,
-    imports: [
-        MenubarComponent,
-        AccordionModule,
-        FormsModule,
-        ReactiveFormsModule,
-        CalendarComponent,
-        CalendarRangeComponent,
-        DropdownModule,
-        ButtonComponent,
-        TableComponent,
-        TranslateModule,
-    ],
+  selector: 'app-tls2a050',
+  templateUrl: './tls2a050.component.html',
+  standalone: true,
+  imports: [
+    MenubarComponent,
+    AccordionModule,
+    FormsModule,
+    ReactiveFormsModule,
+    CalendarComponent,
+    CalendarRangeComponent,
+    DropdownModule,
+    ButtonComponent,
+    TableComponent,
+    TranslateModule,
+    ButtonModule,
+    MultiSelectComponent
+  ],
 })
 export class TLS2A050Component extends BasicQueryPageComponent<any> implements OnInit {
-
-  queryForm = this.formBuilder.group({
-    status1: [''],
-    status2: [''],
-    salesDate: [null as Date | null],
-    startdate: [null as Date | null],
-    enddate: [null as Date | null],
-  });
-
-  data: any[] = [
-
-  ];
-  filteredData: any[] = [...this.data];
-  statusOptions = [
-    { label: '全部', value: 'all' },
-    { label: '一般', value: 'ordinary' },
-    { label: '停管', value: 'stop' }
-  ];
-  salesMinDate: Date | null = null;
-  salesMaxDate: Date | null = null;
-  columns: any[] = [
-    { field: 'contactPerson', header: '系統筆數', visible: true },
-    { field: 'contactDate', header: '實收筆數', visible: true },
-    { field: 'UID', header: '系統金額', visible: true },
-    { field: 'industryType', header: '實收金額', visible: true },
-    { field: 'category', header: '帳差(實收-系統)', visible: true },
-    // 其他欄位
-  ];
-
-  constructor(
-
-  ) {
-    super();
+  formatDate(date: Date): string {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
   }
 
-  ngOnInit(): void {
-    this.initializePage('TLS2A050', '/TLS/TLS2A050cru', this.queryForm, (form) => this.onSubmit(form));
-    // 初始化權限
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
-    this.queryForm.get('salesDate')?.valueChanges.subscribe((val) => {
-      if (val) {
-        const selected = new Date(val);
-        const year = selected.getFullYear();
-        const month = selected.getMonth();
+  queryForm = this.formBuilder.group({
+    POS_TypeList: [[] as string[]],
+    salesDate: [new Date()],
+    TXN_DateStart: [new Date()],
+    TXN_DateEnd: [new Date()],
+    ...createPaginationConfig([{ field: 'ECR_No', order: 1 }]),
+  });
 
-        this.salesMinDate = new Date(year, month, 1);
-        this.salesMaxDate = new Date(year, month + 1, 0);
+  data: any[] = [];
+  totalRecords = 0;
+  filteredData: any[] = [...this.data];
+  POS_TypeListOptions = [
+    { label: '一般', value: '' },
+    { label: '停管', value: 'PKNG' },
+  ];
 
-        // 可選：重設原來的區間
-        this.queryForm.patchValue({
-          startdate: this.salesMinDate,
-          enddate: this.salesMaxDate,
-        });
-      }
-    });
+  salesMinDate: Date | null = null;
+  salesMaxDate: Date | null = null;
+  columns: any[] = [];
+  columnGroup: ColumnGroup[] = [];
+  exportExcelLoading = false;
+
+  constructor(
+    private tls2A050Service: Tls2A050Service,
+    private cdr: ChangeDetectorRef
+  ) {
+    super();
   }
 
   canQuery(): boolean {
     return true;
   }
 
-  canAdd(): boolean {
-    return true;
-  }
+  ngOnInit(): void {
+    this.initializePage('TLS2A050', '/TLS/TLS2A050cru', this.queryForm, (form) => this.onSubmit(form));
+    this.queryForm.get('salesDate')?.valueChanges.subscribe((val) => {
+      if (val) {
+        const selected = new Date(val);
+        const year = selected.getFullYear();
+        const month = selected.getMonth();
+        this.salesMinDate = new Date(year, month, 1);
+        this.salesMaxDate = new Date(year, month + 1, 0);
 
-  canEdit(): boolean {
-    return true;
+        this.queryForm.patchValue({
+          TXN_DateStart: this.salesMinDate,
+          TXN_DateEnd: this.salesMaxDate,
+        });
+      }
+    });
   }
 
   onSubmit(frm: FormGroup) {
-    console.log(frm.value);
     this.submitted = true;
     this.loading = true;
     this.messageService.blockUi();
 
     if (frm.valid && this.canQuery()) {
-      // 提交邏輯
-      // Service
-      // this.xxxService.queryMachine(frm.value as xxxInterface)
-      //  .subscribe((response: any) => {
-      //    this.rows = response.xxx;
-      // });
+      const raw = frm.value;
+      const requestParams = {
+        salesDate: raw.salesDate ? this.formatDate(raw.salesDate) : null,
+        TXN_DateStart: raw.TXN_DateStart ? this.formatDate(raw.TXN_DateStart) : null,
+        TXN_DateEnd: raw.TXN_DateEnd ? this.formatDate(raw.TXN_DateEnd) : null,
+        POS_TypeList: raw.POS_TypeList?.includes('all') ? [] : raw.POS_TypeList,
+      };
+
+      const params = {
+        ...requestParams,
+        pageIndex: raw.pageIndex ?? 1,
+        pageSize: raw.pageSize ?? 10,
+        SortBy: raw.SortBy ?? [],
+      };
+
+      this.tls2A050Service.queryTLS2A050(params).subscribe({
+        next: (res) => {
+          const flatData: any[] = [];
+          const payNameSet = new Set<string>();
+
+          (res.Data ?? []).forEach((entry: any) => {
+            const row: any = { TXN_Date: entry.TXN_Date };
+
+            (entry._DetailList ?? []).forEach((detail: any, index: number) => {
+              const name = detail.PAY_Name;
+              payNameSet.add(name);
+              row[`${index}_BOOK_PayCnt`] = detail.BOOK_PayCnt;
+              row[`${index}_ACT_PayCnt`] = detail.ACT_PayCnt;
+              row[`${index}_BOOK_PayAmt`] = detail.BOOK_PayAmt;
+              row[`${index}_ACT_PayAmt`] = detail.ACT_PayAmt;
+              row[`${index}_OVER_PayAmt`] = detail.OVER_PayAmt;
+            });
+
+            flatData.push(row);
+          });
+
+          const payNames = Array.from(payNameSet);
+          const columns: any[] = [{ field: 'TXN_Date', header: '交易日期', visible: true }];
+          const columnGroup: ColumnGroup[] = [];
+
+          payNames.forEach((name, index) => {
+            columns.push(
+              { field: `${index}_BOOK_PayCnt`, header: '系統筆數', visible: true, groupField: name },
+              { field: `${index}_ACT_PayCnt`, header: '實收筆數', visible: true, groupField: name },
+              { field: `${index}_BOOK_PayAmt`, header: '系統金額', visible: true, groupField: name },
+              { field: `${index}_ACT_PayAmt`, header: '實收金額', visible: true, groupField: name },
+              { field: `${index}_OVER_PayAmt`, header: '帳差 (實收-系統)', visible: true, groupField: name }
+            );
+            columnGroup.push({ field: name, header: `[${name}] 行動支付` });
+          });
+
+          this.columns = columns;
+          this.columnGroup = columnGroup;
+          this.data = flatData;
+          this.totalRecords = res.TotalCount ?? 0;
+          this.queryStateService.setQueryState(this.ProgNo, frm.value);
+          this.loading = false;
+          this.messageService.unblockUi();
+        },
+        error: (err) => {
+          console.error('TLS2A050 查詢失敗', err);
+          this.loading = false;
+          this.messageService.unblockUi();
+        },
+      });
+    } else {
+      this.loading = false;
+      this.messageService.unblockUi();
+    }
+  }
+  exportReport = () => {
+    const raw = this.queryForm.getRawValue();
+
+    const payload = {
+      FileName: "string",
+      ReportTitle: "string",
+      queryTLS2A050Request: {
+        ...raw,
+        TXN_DateStart: raw.TXN_DateStart
+          ? `${raw.TXN_DateStart.getFullYear()}-${(raw.TXN_DateStart.getMonth() + 1).toString().padStart(2, '0')}-${raw.TXN_DateStart.getDate().toString().padStart(2, '0')}`
+          : null,
+        TXN_DateEnd: raw.TXN_DateEnd
+          ? `${raw.TXN_DateEnd.getFullYear()}-${(raw.TXN_DateEnd.getMonth() + 1).toString().padStart(2, '0')}-${raw.TXN_DateEnd.getDate().toString().padStart(2, '0')}`
+          : null,
+      },
     }
 
-    this.loading = false;
-    this.messageService.unblockUi();
-  }
-
+    this.exportExcelLoading = true;
+    this.tls2A050Service.exportTLS2A050(payload).subscribe({
+      next: (res: Blob) => {
+        const blob = new Blob([res], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${payload.FileName}.xlsx`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        window.URL.revokeObjectURL(url);
+        this.exportExcelLoading = false;
+      },
+      error: (err) => {
+        console.error('TLS2A050 匯出失敗', err);
+        this.exportExcelLoading = false;
+      },
+    });
+  };
 }
+

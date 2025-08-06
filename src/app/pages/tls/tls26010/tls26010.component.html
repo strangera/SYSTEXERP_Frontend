@@ -18,38 +18,38 @@
             (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="館別"
-                          controlName="sys3800"
-                          [options]="service.sys3800List()"
-                          optionLabel="Name"
-                          optionValue="No"
-                          [control]="queryForm.controls.sys3800"
-                          [submitted]="submitted"></app-dropdown>
+            <app-multi-select label="館別"
+                              controlName="sys3800"
+                              [options]="service.sys3800List()"
+                              optionLabel="Name"
+                              optionValue="No"
+                              [control]="queryForm.controls.sys3800"
+                              [submitted]="submitted"></app-multi-select>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="樓層"
-                          controlName="sys3900"
-                          [options]="service.sys3900List()"
-                          optionLabel="Name"
-                          optionValue="No"
-                          [control]="queryForm.controls.sys3900"
-                          [submitted]="submitted"></app-dropdown>
+            <app-multi-select label="樓層"
+                              controlName="sys3900"
+                              [options]="service.sys3900List()"
+                              optionLabel="Name"
+                              optionValue="No"
+                              [control]="queryForm.controls.sys3900"
+                              [submitted]="submitted"></app-multi-select>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="區域"
-                          controlName="sys3A00"
-                          [options]="service.sys3A00List()"
-                          optionLabel="Name"
-                          optionValue="No"
-                          [control]="queryForm.controls.sys3A00"
-                          [submitted]="submitted"></app-dropdown>
+            <app-multi-select label="區域"
+                              controlName="sys3A00"
+                              [options]="service.sys3A00List()"
+                              optionLabel="Name"
+                              optionValue="No"
+                              [control]="queryForm.controls.sys3A00"
+                              [submitted]="submitted"></app-multi-select>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-multi-select label="收銀機號"
                               controlName="ecrNos"
                               [options]="service.ECRList"
-                              optionLabel="Name"
-                              optionValue="No"
+                              optionLabel="ecr_name"
+                              optionValue="ecr_no"
                               [control]="queryForm.controls.ecrNos"
                               [submitted]="submitted"></app-multi-select>
           </div>
@@ -57,8 +57,8 @@
             <app-multi-select label="專櫃名稱"
                               controlName="tltNos"
                               [options]="service.TLTList"
-                              optionLabel="Name"
-                              optionValue="No"
+                              optionLabel="tlt_name"
+                              optionValue="tlt_no"
                               [control]="queryForm.controls.tltNos"
                               [submitted]="submitted"></app-multi-select>
           </div>

@@ -42,7 +42,6 @@ export class TLS23120Component extends BasicQueryPageComponent<any> {
     org_id: [],
     area_no : [],
     TLT_No: [],
-    
     ...createPaginationConfig
   });
 
@@ -62,17 +61,12 @@ export class TLS23120Component extends BasicQueryPageComponent<any> {
   ];
 
   organizationOptions: any[] = [];
-  
   bus_typeOptions: any[] = [];
   businessTypeCodeOptions: any[] = [];
-
   whetherOptions: any[] = [];
-
   floorOptions: any[] = [];
   regionOptions: any[] = [];
-BUILDING_NO_Options: any[] = [];
-
-  
+  BUILDING_NO_Options: any[] = [];
   OrganizationCodeOptions: any[] = [];
   CounterOptions: any[] = [];
   WhetherOptions = [
@@ -82,11 +76,9 @@ BUILDING_NO_Options: any[] = [];
 
   constructor(
     private tls23120Service: TLS23120Service,
-   
     private businessTypeCodeService: BusinessTypeCodeService,
     private organizationNumberService: OrganizationNumberService,
     private whetherService: WhetherService,
-   
     private counterNameService: CounterNameService,
     private bigCategoryCodeService: BigCategoryCodeService,
      private floorService: FloorService,
@@ -97,8 +89,7 @@ BUILDING_NO_Options: any[] = [];
   }
 
   ngOnInit(): void {
-    this.initializePage('TLS23120', '', this.queryForm, (form) => this.onSubmit(form));
-
+    this.initializePage('TLS23120', '', this.queryForm);
     this.organizationNumberService.getOrganizationNumbers().subscribe(data => this.organizationOptions = data);
     this.regionService.getRegionOptions().subscribe(data => this.regionOptions = data);
     this.floorService.getFloors().subscribe(data => this.floorOptions = data);
@@ -106,7 +97,6 @@ BUILDING_NO_Options: any[] = [];
     this.businessTypeCodeService.getBusinessTypeCodes().subscribe(data => this.businessTypeCodeOptions = data);
     this.whetherService.getWhetherOptions().subscribe(data => this.whetherOptions = data);
     this.bigCategoryCodeService.getSystemTypes().subscribe(data => this.bus_typeOptions = data);
-    
     this.tls11010Service.getOrgOptions().subscribe(res => {
       this.OrganizationCodeOptions = res?.map(x => ({ label: x.label, formLabel: `${x.value} - ${x.label}`, value: x.value })) || [];
     });
@@ -114,58 +104,10 @@ BUILDING_NO_Options: any[] = [];
       this.CounterOptions = res?.map(x => ({ label: x.label, formLabel: `${x.value} - ${x.label}`, value: x.value })) || [];
     });
   }
-
-  onSubmit(form: FormGroup): void {
-    this.submitted = true;
-    if (this.loading) return;
-
-    if (form.invalid) {
-      this.messageService.warnBubble('請確認欄位資料是否完整');
-      return;
-    }
-
-    this.handleSubmit(form, () => {
-      const payload = { ...form.value };
-      Object.keys(payload).forEach(key => {
-        if (payload[key] === '') payload[key] = null;
-      });
-
-      this.loading = true;
-      this.messageService.blockUi();
-
-      this.tls23120Service.queryTLS23120(payload).subscribe({
-        next: (res) => {
-          if (res.Status === '0000') {
-            this.data = res.Data || [];
-            this.totalRecords = res.TotalCount || this.data.length;
-            this.queryStateService.setQueryState(this.ProgNo, payload);
-            this.messageService.successBubble('查詢成功');
-          } else {
-            this.data = [];
-            this.totalRecords = 0;
-            this.messageService.errorBubble('查詢失敗');
-          }
-        },
-        error: () => {
-          this.data = [];
-          this.totalRecords = 0;
-          this.messageService.errorBubble('查詢錯誤');
-          this.loading = false;
-        },
-        complete: () => {
-          this.loading = false;
-          this.messageService.unblockUi();
-          this.showPageSizeDialog = false;
-        }
-      });
-    });
-  }
-
   goToReportMode(): void {
     this.customPageSize = 1000;
     this.showPageSizeDialog = true;
   }
-
   confirmPageSizeAndNavigate(): void {
     this.submitted = true;
     if (this.queryForm.invalid) {
@@ -182,7 +124,6 @@ BUILDING_NO_Options: any[] = [];
 
     this.loading = true;
     this.messageService.blockUi();
-
     this.tls23120Service.queryTLS23120(queryFormValue).subscribe({
       next: (res) => {
         if (res.Status === '0000') {
@@ -194,7 +135,6 @@ BUILDING_NO_Options: any[] = [];
               data: res.Data || []
             }
           });
-          this.messageService.successBubble('查詢成功');
         } else {
           this.messageService.errorBubble('查詢失敗');
         }
@@ -213,8 +153,5 @@ BUILDING_NO_Options: any[] = [];
     });
   }
 
-  getLabelFromOptions(value: any, options: any[]): string {
-    const found = options?.find(opt => String(opt.value) === String(value));
-    return found ? found.label : value;
-  }
+
 }

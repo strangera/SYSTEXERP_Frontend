@@ -1,4 +1,3 @@
-import { DropDownListService, IDropdownItem } from 'src/app/service/utility/dropDownList.service';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
@@ -22,7 +21,6 @@ import { SystemOptionsService } from '@service/system/sys1000.service';
 import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
 import { DialogComponent } from '@shared/componentkit/dialog/dialog.component';
 import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
-import { InputNumberComponent } from '@shared/componentkit/input-number/input-number.component';
 @Component({
   selector: 'app-tls27040',
   templateUrl: './tls27040.component.html',
@@ -44,16 +42,15 @@ import { InputNumberComponent } from '@shared/componentkit/input-number/input-nu
     RadiobuttonComponent,
     DialogComponent,
     CalendarComponent,
-    InputNumberComponent
   ]
 })
 export class TLS27040Component extends BasicQueryPageComponent<POS6118Data | POS6119Data | POS6119PData> implements OnInit {
   queryForm = this.formBuilder.group({
     POS611X: ['', [Validators.required]], // 收單銀行
     // 共用
-    ECR_NoList: [null], // ECR編號
-    TXN_NoList: [null], // 交易編號
-    TLT_NoList: [null], // 專櫃編號
+    ECR_No: ['', [Validators.maxLength(10)]], // ECR編號
+    TXN_No: ['', [Validators.maxLength(8)]], // 交易編號
+    TLT_No: ['', [Validators.maxLength(12)]], // 專櫃編號
     // 聯合專用欄位
     NCML_TxnTypeList: [null],         // 銷售狀況
     NCML_PayCrdTypeList: [null],    // 卡別
@@ -112,18 +109,12 @@ export class TLS27040Component extends BasicQueryPageComponent<POS6118Data | POS
   selectApi?: string;
   currentColumns: Column[] = [];
   visibleFields: string[] = [];
-
-  ECR_NoListOptions: IDropdownItem[] = [];
-  TXN_NoListOptions: IDropdownItem[] = [];
-  TLT_NoListOptions: IDropdownItem[] = [];
   constructor(
-    private readonly dropDownListService: DropDownListService,
     private readonly tls27040Service: TLS27040Service,
   ) { super(); }
 
   ngOnInit(): void {
     this.initializePage('TLS27040', 'TLS/TLS27040cru', this.queryForm, (form) => this.onSubmit(form));
-    this.loadDropdownOptions();
     this.queryForm.get('POS611X')?.valueChanges.subscribe((bankCode: string | null) => {
       this.selectedBank = bankCode;
       const config = POS611X_CONFIGS[bankCode ?? ''] || { columns: [], formFields: [] };
@@ -140,23 +131,6 @@ export class TLS27040Component extends BasicQueryPageComponent<POS6118Data | POS
     }
     this.queryForm.get('POS611X')?.setValue('1');
   }
-  loadDropdownOptions() {
-    this.dropDownListService.queryPOS1002_DropDownList().pipe(untilDestroyed(this)).subscribe(res => {
-      this.ECR_NoListOptions = res.Data.map(item => ({
-        ...item, label: item.No + ' - ' + item.Name,
-      }));
-    });
-    // this.dropDownListService.queryPOS1003_DropDownList().pipe(untilDestroyed(this)).subscribe(res => {
-    //   this.TXN_NoListOptions = res.Data.map(item => ({
-    //     ...item, label: item.No + ' - ' + item.Name,
-    //   }));
-    // });
-    this.dropDownListService.queryTLTTALENT_DropDownList().pipe(untilDestroyed(this)).subscribe(res => {
-      this.TLT_NoListOptions = res.Data.map(item => ({
-        ...item, label: item.No + ' - ' + item.Name,
-      }));
-    });
-  }
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
       switch (this.selectedBank) {
@@ -164,18 +138,21 @@ export class TLS27040Component extends BasicQueryPageComponent<POS6118Data | POS
           this.tls27040Service.queryPOS6118(frm.value).pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(res => {
             this.data = res.Data;
             this.totalRecords = res.TotalCount;
+            this.queryForm.get('SortBy')?.setValue([{ field: 'ID', order: 1 }]);
           });
           break;
         case '1':
           this.tls27040Service.queryPOS6119(frm.value).pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(res => {
             this.data = res.Data;
             this.totalRecords = res.TotalCount;
+            this.queryForm.get('SortBy')?.setValue([{ field: 'ID', order: 1 }]);
           });
           break;
         case '2':
           this.tls27040Service.queryPOS6119P(frm.value).pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(res => {
             this.data = res.Data;
             this.totalRecords = res.TotalCount;
+            this.queryForm.get('SortBy')?.setValue([{ field: 'ID', order: 1 }]);
           });
           break;
         default:
@@ -188,8 +165,9 @@ export class TLS27040Component extends BasicQueryPageComponent<POS6118Data | POS
   dialogSubmitted = false;
   dialogQueryForm = this.formBuilder.group({
     ECR_No: ['', [Validators.required, Validators.maxLength(10)]],
-    TXN_No: [null as number | null, [Validators.required, Validators.max(99999999)]],
-    CTBC_TxnDate: [null, [Validators.required]],
+    TXN_No: ['', [Validators.required, Validators.maxLength(8)]],
+    TXN_Date: [null, [Validators.required]],
+    tableName: [null, [Validators.required]],
   })
   onOpenDialog() {
     this.dialogVisible = true;
@@ -197,11 +175,16 @@ export class TLS27040Component extends BasicQueryPageComponent<POS6118Data | POS
   onDialogSubmit(frm: FormGroup) {
     this.dialogSubmitted = true;
     this.dialogLoading = true;
-    // 打API
     if (!frm.valid) {
       this.dialogLoading = false;
       return;
     }
-    this.dialogVisible = false;
+    const body = {
+      ...frm.getRawValue(),
+      SYS_StoreNo: this.authService.currentUserValue?.SYS_StoreNo,
+    }
+    this.tls27040Service.queryInsCheck(body).pipe(finalize(() => this.dialogLoading = false), untilDestroyed(this)).subscribe(res => {
+      console.log(res.Message);
+    })
   }
 }

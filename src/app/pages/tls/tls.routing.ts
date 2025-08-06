@@ -699,4 +699,5 @@ export const tlsRoutes: Routes = [
   { path: 'tls26060', loadComponent: () => import('./tls26060/tls26060.component').then(m => m.TLS26060Component) },
   // 各櫃預售業績總表
   { path: 'tls26070', loadComponent: () => import('./tls26070/tls26070.component').then(m => m.TLS26070Component) },
+  
 ];

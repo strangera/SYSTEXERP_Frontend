@@ -150,8 +150,7 @@ export class TLS23090Component extends BasicQueryPageComponent<any> {
   }
 
   ngOnInit(): void {
-    this.initializePage('TLS23090', 'TLS23090cru', this.queryForm, (form) =>
-      this.onSubmit(form),
+    this.initializePage('TLS23090', 'TLS23090cru', this.queryForm, 
     );
 
     this.cardTypeService
@@ -201,51 +200,6 @@ export class TLS23090Component extends BasicQueryPageComponent<any> {
       .subscribe((data) => (this.connectionStatusOptions = data));
   }
 
-  onSubmit(form: FormGroup): void {
-    this.submitted = true;
-    if (this.loading) return;
-
-    if (form.invalid) {
-      this.messageService.warnBubble('請確認欄位資料是否完整');
-      return;
-    }
-
-    this.handleSubmit(form, () => {
-      const payload = { ...form.value };
-
-      if (payload.IsHaveTERM_No === 'Y') payload.IsHaveTERM_No = true;
-      else if (payload.IsHaveTERM_No === 'N') payload.IsHaveTERM_No = false;
-
-      Object.keys(payload).forEach((key) => {
-        if (payload[key] === '') payload[key] = null;
-      });
-
-      // this.tls23090Service.queryTLS23090(payload).subscribe({
-      //   next: (res) => {
-      //     if (res.Status === '0000') {
-      //       this.data = res.Data || [];
-      //       this.totalRecords = res.TotalCount || this.data.length;
-      //       this.queryStateService.setQueryState(this.ProgNo, payload);
-      //       this.messageService.successBubble('查詢成功');
-      //     } else {
-      //       this.data = [];
-      //       this.totalRecords = 0;
-      //       this.messageService.errorBubble('查詢失敗');
-      //     }
-      //   },
-      //   error: () => {
-      //     this.data = [];
-      //     this.totalRecords = 0;
-      //     this.loading = false;
-      //     this.messageService.errorBubble('查詢錯誤');
-      //   },
-      //   complete: () => {
-      //     this.loading = false;
-      //     this.messageService.unblockUi();
-      //   }
-      // });
-    });
-  }
 
   goToReportMode(): void {
     if (!this.customPageSize || this.customPageSize <= 0) {
@@ -255,55 +209,63 @@ export class TLS23090Component extends BasicQueryPageComponent<any> {
   }
 
   confirmPageSizeAndNavigate(): void {
-    this.submitted = true;
-    if (this.queryForm.invalid) {
-      this.messageService.warnBubble('請確認欄位資料是否完整');
-      this.queryForm.markAllAsTouched();
-      return;
-    }
+  if (this.loading) return;
 
-    const queryFormValue = {
-      ...this.queryForm.value,
-      pageSize: this.customPageSize,
-    };
+  this.submitted = true;
 
-    this.loading = true;
-    this.messageService.blockUi();
-
-    this.tls23090Service
-      .queryTLS23090(queryFormValue, this.displayMode)
-      .subscribe({
-        next: (res) => {
-          if (res.Status === '0000') {
-            this.queryStateService.setQueryState(this.ProgNo, queryFormValue);
-
-            this.router.navigate(['account/tls/tls23090cru'], {
-              state: {
-                queryFormValue,
-                pageSize: this.customPageSize,
-                data: res.Data || [],
-                displayMode: this.displayMode, // ✅ 傳入查詢模式
-              },
-            });
-
-            this.messageService.successBubble('查詢成功');
-          } else {
-            this.messageService.errorBubble('查詢失敗');
-          }
-        },
-        error: () => {
-          this.messageService.errorBubble('查詢錯誤');
-          this.loading = false;
-          this.messageService.unblockUi();
-          this.showPageSizeDialog = false;
-        },
-        complete: () => {
-          this.loading = false;
-          this.messageService.unblockUi();
-          this.showPageSizeDialog = false;
-        },
-      });
+  if (this.queryForm.invalid) {
+    this.messageService.warnBubble('請確認欄位資料是否完整');
+    this.queryForm.markAllAsTouched();
+    return;
   }
+
+  const queryFormValue = {
+    ...this.queryForm.value,
+    pageSize: this.customPageSize,
+  };
+
+  this.loading = true;
+  this.messageService.blockUi();
+
+  let resultData: any[] = [];
+  let statusOK = false;
+
+  this.tls23090Service
+    .queryTLS23090(queryFormValue, this.displayMode)
+    .subscribe({
+      next: (res) => {
+        if (res.Status === '0000') {
+          resultData = res.Data || [];
+          statusOK = true;
+          this.queryStateService.setQueryState(this.ProgNo, queryFormValue);
+        } else {
+          this.messageService.errorBubble('查詢失敗');
+        }
+      },
+      error: () => {
+        this.messageService.errorBubble('查詢錯誤');
+      },
+      complete: () => {
+        this.loading = false;
+        this.messageService.unblockUi();
+        this.showPageSizeDialog = false;
+
+        if (statusOK) {
+          
+          this.router.navigate(['account/tls/tls23090cru'], {
+            state: {
+              queryFormValue,
+              pageSize: this.customPageSize,
+              data: resultData,
+              displayMode: this.displayMode,
+            },
+          });
+        }
+      },
+    });
+}
+
+
 
   moneyFormat(value: number): string {
     return value != null ? value.toLocaleString('en-US') : '0';

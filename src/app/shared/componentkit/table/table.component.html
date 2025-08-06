@@ -19,8 +19,8 @@
   <ng-template pTemplate="caption">
     <div class="grid align-items-center justify-content-between mx-0" *ngIf="showCaption && !rowEditing">
       <div class="caption-left button-group flex gap-2 py-2">
-        <p-multiSelect [options]="columns" [(ngModel)]="selectedColumns" optionLabel="header" dropdownIcon="pi pi-cog"
-          pTooltip="過濾欄位" tooltipPosition="top" (onChange)="onFilterChange($event)" />
+        <p-multiSelect *ngIf="showFilter" [options]="columns" [(ngModel)]="selectedColumns" optionLabel="header"
+          dropdownIcon="pi pi-cog" pTooltip="過濾欄位" tooltipPosition="top" (onChange)="onFilterChange($event)" />
         <p-button [icon]="IsPrint ? 'pi pi-file' : 'pi pi-times'" [rounded]="true"
           *ngIf="showReportMode && data.length > 0" (click)="toggleVisibility()"
           [pTooltip]="IsPrint ? '報表模式' : '關閉報表模式'" tooltipPosition="top" [outlined]="!IsPrint"
@@ -176,13 +176,15 @@
               <input *ngIf="col.type === 'input'" pInputText class="w-full min-w-max" placeholder="請輸入{{ col.header }}"
                 [(ngModel)]="rowData[col.field]" [ngModelOptions]="{ standalone: true }"
                 [disabled]="col.disabled ? col.disabled(rowData) : false"
-                (ngModelChange)="onFieldChange(rowData, col.field, $event)" />
+                (ngModelChange)="onFieldChange(rowData, col.field, $event)"
+                (blur)="onFieldBlur(rowData, col.field, rowData[col.field])" />
               <p-inputNumber *ngIf="col.type === 'inputNumber'" class="w-full min-w-max" styleClass="w-full"
                 mode="decimal" [(ngModel)]="rowData[col.field]" [ngModelOptions]="{ standalone: true }"
                 [prefix]="col.prefix" placeholder="請輸入{{ col.header }}"
                 [disabled]="col.disabled ? col.disabled(rowData) : false"
                 (ngModelChange)="onFieldChange(rowData, col.field, $event)" [minFractionDigits]="col.fractionDigits"
-                [maxFractionDigits]="col.fractionDigits" [useGrouping]="col.useGrouping" />
+                [maxFractionDigits]="col.fractionDigits" [useGrouping]="col.useGrouping"
+                (onBlur)="onFieldBlur(rowData, col.field, rowData[col.field])" />
               <p-autoComplete *ngIf="col.type === 'autoComplete'" class="w-full min-w-max" styleClass="w-full"
                 appendTo="body" [(ngModel)]="rowData[col.field]" [ngModelOptions]="{ standalone: true }"
                 placeholder="請輸入{{ col.header }}" [suggestions]="getOptions(rowData, col)"
@@ -195,11 +197,17 @@
                   </div>
                 </ng-template>
               </p-autoComplete>
-              <p-dropdown *ngIf="col.type === 'dropdown'" styleClass="w-full" [showClear]="true" appendTo="body"
-                [(ngModel)]="rowData[col.field]" [ngModelOptions]="{ standalone: true }" [filter]="true"
+              <p-dropdown *ngIf="col.type === 'dropdown'" styleClass="w-full" [showClear]="showClear(col)" appendTo="body"
+                [(ngModel)]="rowData[col.field]" [ngModelOptions]="{ standalone: true }" [filter]="col.filter"
                 placeholder="請輸入{{ col.header }}" [options]="getOptions(rowData, col)" [optionLabel]="col.optionLabel"
                 [optionValue]="col.optionValue" [disabled]="col.disabled ? col.disabled(rowData) : false"
-                (onChange)="onFieldChange(rowData, col.field, $event.value, rowIndex)" />
+                (onChange)="onFieldChange(rowData, col.field, $event.value, rowIndex)">
+                <ng-template let-item pTemplate=" item" *ngIf="col.templateLabel">
+                  <div class="flex align-items-center gap-2">
+                    <span>{{ item[col.templateLabel] }}</span>
+                  </div>
+                </ng-template>
+              </p-dropdown>
               <p-calendar *ngIf="col.type === 'date'" class="w-full" styleClass="min-w-max" [showIcon]="true"
                 [(ngModel)]="rowData[col.field]" [ngModelOptions]="{ standalone: true }" appendTo="body"
                 placeholder="請選擇{{ col.header }}" [dateFormat]="col.dateFormat || 'yy-mm-dd'"
@@ -210,13 +218,15 @@
               <input *ngIf="col.type === 'input'" pInputText class="w-full min-w-max" placeholder="請輸入{{ col.header }}"
                 [(ngModel)]="rowData[col.field]" [ngModelOptions]="{ standalone: true }"
                 [disabled]="col.disabled ? col.disabled(rowData) : alwaysEdit ? false : true"
-                (ngModelChange)="onFieldChange(rowData, col.field, $event)" />
+                (ngModelChange)="onFieldChange(rowData, col.field, $event)"
+                (blur)="onFieldBlur(rowData, col.field, rowData[col.field])" />
               <p-inputNumber *ngIf="col.type === 'inputNumber'" class="w-full min-w-max" styleClass="w-full"
                 mode="decimal" [(ngModel)]="rowData[col.field]" [ngModelOptions]="{ standalone: true }"
-                [prefix]="col.prefix" placeholder="請輸入{{ col.header }}"
+                [prefix]="col.prefix" [suffix]="col.suffix" placeholder="請輸入{{ col.header }}"
                 [disabled]="col.disabled ? col.disabled(rowData) : alwaysEdit ? false : true"
                 (ngModelChange)="onFieldChange(rowData, col.field, $event)" [minFractionDigits]="col.fractionDigits"
-                [maxFractionDigits]="col.fractionDigits" [useGrouping]="col.useGrouping" />
+                [maxFractionDigits]="col.fractionDigits" [useGrouping]="col.useGrouping"
+                (onBlur)="onFieldBlur(rowData, col.field, rowData[col.field])" />
               <p-autoComplete *ngIf="col.type === 'autoComplete'" class="w-full min-w-max" styleClass="w-full"
                 appendTo="body" [(ngModel)]="rowData[col.field]" placeholder="請輸入{{ col.header }}"
                 [suggestions]="getOptions(rowData, col)" (onSelect)="onFieldChange(rowData, col.field, $event,rowIndex)"
@@ -228,12 +238,18 @@
                   </div>
                 </ng-template>
               </p-autoComplete>
-              <p-dropdown *ngIf="col.type === 'dropdown'" styleClass="w-full" [showClear]="true" appendTo="body"
-                [(ngModel)]="rowData[col.field]" [ngModelOptions]="{ standalone: true }" [filter]="true"
+              <p-dropdown *ngIf="col.type === 'dropdown'" styleClass="w-full" [showClear]="showClear(col)" appendTo="body"
+                [(ngModel)]="rowData[col.field]" [ngModelOptions]="{ standalone: true }" [filter]="col.filter"
                 placeholder="請輸入{{ col.header }}" [options]="getOptions(rowData, col)" [optionLabel]="col.optionLabel"
                 [optionValue]="col.optionValue"
                 [disabled]="col.disabled ? col.disabled(rowData) : alwaysEdit ? false : true"
-                (onChange)="onFieldChange(rowData, col.field, $event.value)" />
+                (onChange)="onFieldChange(rowData, col.field, $event.value)">
+                <ng-template let-item pTemplate="item" *ngIf="col.templateLabel">
+                  <div class="flex align-items-center gap-2">
+                    <span>{{ item[col.templateLabel] }}</span>
+                  </div>
+                </ng-template>
+              </p-dropdown>
               <p-calendar *ngIf="col.type === 'date'" class="w-full" styleClass="min-w-max" [showIcon]="true"
                 [(ngModel)]="rowData[col.field]" [ngModelOptions]="{ standalone: true }" appendTo="body"
                 placeholder="請選擇{{ col.header }}" [dateFormat]="col.dateFormat || 'yy-mm-dd'"

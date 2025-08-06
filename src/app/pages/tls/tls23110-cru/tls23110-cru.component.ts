@@ -88,10 +88,10 @@ export class TLS23110CRUComponent extends BasicCruPageComponent<any> {
     return value != null ? value.toLocaleString('en-US') : '0';
   }
 
-  goBack(): void {
-    this.location.back();
-  }
-
+goBack(): void {
+  this.messageService.unblockUi(); // ✅ 明確解除
+  this.location.back();
+}
   printPage(): void {
     window.print();
   }

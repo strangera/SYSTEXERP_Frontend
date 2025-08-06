@@ -1,6 +1,6 @@
 import { Tls29010Service } from './../../../service/api/tls/tls29010.service';
 import { Component, OnInit } from '@angular/core';
-import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { createPaginationConfig, Column, formatDate } from '../../../shared/componentkit/table/table.model';
 import { apiOption, option } from '../../../shared/models/sys/sysb000.module';
@@ -16,6 +16,7 @@ import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/
 import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
 import { CalendarRangeQuickComponent } from '../../../shared/componentkit/calendar-range-quick/calendar-range-quick.component';
+import { Tls12010Service } from '@service/api/tls/tls12010.service';
 
 // TALPORDERM (主檔)
 export interface TALPORDERM {
@@ -70,7 +71,7 @@ export class TLS29010Component extends BasicQueryPageComponent<TALPORDERM> imple
     // 查詢
       queryForm = this.formBuilder.group({
         // TALPORDERM
-        pod_no: [''],       // 活動申請編號YYYYMMDDSSS(活動起始日期+流水號)
+        pod_no: [null],   // 活動申請編號YYYYMMDDSSS(活動起始日期+流水號)
         pod_type: [[]], // 折扣別(1=預售, 2=滿千送百發行, 3=滿千送百兌回, 4~5=會員卡集點, 6~7=全館集點, 8=期間開放折扣)
         pod_sdate: [null], // 活動起始日 (Date)
         pod_edate: [null], // 活動終止日 (Date)
@@ -80,7 +81,7 @@ export class TLS29010Component extends BasicQueryPageComponent<TALPORDERM> imple
         tlt_id: [[]], // 抽成類別(0-9)
         tlt_no: [[]], // 專櫃編號
         use_flag: [[]], // 是否使用 Y/N
-        crt_usr_name: [''], // 建立人員姓名
+        crt_usr_name: [null], // 建立人員姓名
 
         //---0801更新(位置編號不使用)---
 
@@ -113,33 +114,80 @@ export class TLS29010Component extends BasicQueryPageComponent<TALPORDERM> imple
         { label: '8 期間開放折扣', value: '8' }, //新增用這個
       ];
 
+      tlt_id_Options = [
+        { label: '1', value: '1' },
+        { label: '2', value: '2' },
+        { label: '3', value: '3' },
+        { label: '4', value: '4' },
+        { label: '5', value: '5' },
+        { label: '6', value: '6' },
+        { label: '7', value: '7' },
+        { label: '8', value: '8' },
+        { label: '9', value: '9' },
+      ];
+
 
       tlt_No_Option: apiOption[] = [];  // 專櫃編號下拉
       
       data: TALPORDERM[] = [];
       columns: Column[] = [
+        { field: 'id', header: '流水號', visible: false },
+        { field: 'mid', header: 'MID', visible: false },
         { field: 'str_no', header: '店部編號', visible: true },
-        { field: 'pod_no', header: '活動編號', visible: true },
-        { field: 'talent_id', header: '合約編號系統', visible: true },
-        { field: 'tlt_id', header: '抽成類別(0-9)', visible: true },
-        { field: 'tlt_no', header: '專櫃編號', visible: true },
-        { field: 'cag_barcode', header: '折數(條碼)', visible: true },
-        { field: 'use_flag', header: '是否使用', visible: true, format: (value: string) =>
-          this.whetherOption.find((option) => option.value === value)?.label || value
+        { field: 'pod_no', header: '活動申請編號', visible: true },
+        {
+          field: 'pod_type',
+          header: '活動類型',
+          visible: true,
+          format: (value: string) =>
+            ({
+              '1': '預售',
+              '2': '滿千送百發行',
+              '3': '滿千送百兌回',
+              '4': '會員卡集點-銷售',
+              '5': '會員卡集點-點數',
+              '6': '全館滿額集點-銷售',
+              '7': '全館滿額集點-點數',
+              '8': '期間開放折扣',
+            }[value] || value),
         },
+        { field: 'org_id', header: '組織部門', visible: false },
+        { field: 'act_no', header: '活動編號(群組)', visible: false },
+        { field: 'pod_desc', header: '活動名稱', visible: true },
+        { field: 'pod_sdate', header: '活動起始日', visible: true, format: formatDate },
+        { field: 'pod_edate', header: '活動結束日', visible: true, format: formatDate },
+        { field: 'pod_busdate', header: '活動正檔日', visible: false, format: formatDate },
+        { field: 'cap_item', header: '扣款代碼', visible: false },
+        {
+          field: 'pod_status',
+          header: '活動狀態',
+          visible: true,
+          format: (value: string) =>
+            ({
+              '0': '未核准',
+              '1': '已核准',
+              '9': '刪除',
+            }[value] || value),
+        },
+        { field: 'approved_userno', header: '核准人員代碼', visible: false },
+        { field: 'approved_usr_name', header: '核准人員姓名', visible: false },
+        { field: 'approved_date', header: '核准日期', visible: false, format: formatDate },
 
-        { field: 'CRT_Date', header: '建立日期', visible: true, format: formatDate  },
+        { field: 'CRT_Date', header: '建立日期', visible: true, format: formatDate },
         { field: 'CRT_USR_No', header: '建立人員代碼', visible: false },
         { field: 'CRT_USR_Name', header: '建立人員姓名', visible: false },
         { field: 'UPD_Date', header: '變更日期', visible: false, format: formatDate },
         { field: 'UPD_USR_No', header: '變更人員代碼', visible: false },
         { field: 'UPD_USR_Name', header: '變更人員姓名', visible: false },
       ];
+
     
       selectedItems: TALPORDERM[] = [];// 多選項目
     
       // ----------------------------------------------------------------
-      constructor(private tls29010Service: Tls29010Service) {
+      constructor(
+        private tls29010Service: Tls29010Service,
+      ) {
         super();
       }
     
@@ -227,16 +275,16 @@ export class TLS29010Component extends BasicQueryPageComponent<TALPORDERM> imple
 
       loadOption(){
         // 專櫃編號
-        // this.tls12010Service
-        //   .queryTLTTALENT_Status_DropDownList({})
-        //   .subscribe((response) => {
-        //     this.tlt_No_Option = response.Data.map((item: apiOption) => ({
-        //       No: item.No,
-        //       Name: item.Name,
-        //       Label: item.No + '-' + item.Name,
-        //     }));
+        this.tls29010Service
+          .queryTLTTALENT_Status_DropDownList({})
+          .subscribe((response) => {
+            this.tlt_No_Option = response.Data.map((item: apiOption) => ({
+              No: item.No,
+              Name: item.Name,
+              Label: item.No + '-' + item.Name,
+            }));
 
-        //     console.log('專櫃編號 下拉:', response.Data);
-        //   });
+            console.log('專櫃編號 下拉:', response.Data);
+          });
       }
 }

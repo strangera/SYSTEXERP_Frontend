@@ -11,9 +11,14 @@ export class Tls29010Service {
     apiUrl: string = environment.ApiUrl + '/TLS0000/TLS2000';
     constructor(private http: HttpClient) { }
 
-  // 查詢 TALPORDERD_OPENDisc 資料表
+  // 查詢 TALPORDERM 資料表
   queryTLS29010(body: any): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/queryTLS29010`, body);
+  }
+
+  // 查詢 TALPORDERD_OPENDisc 資料表
+  queryTLS29010_Detail(body: any): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/queryTLS29010_Detail`, body);
   }
 
   // 新增 TALPORDERD_OPENDisc 資料表

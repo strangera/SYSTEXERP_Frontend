@@ -1,4 +1,4 @@
-import { AddButton } from './../../../shared/componentkit/table/table.model';
+import { AddButton, formatDateToYYYY_MM_DD } from './../../../shared/componentkit/table/table.model';
 import { Component, OnInit, ViewChild } from '@angular/core';
 import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
@@ -19,7 +19,7 @@ import { InputNumberComponent } from '../../../shared/componentkit/input-number/
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { TranslateModule } from '@ngx-translate/core';
 import { columns, FIX_TYPE, TXN_GUIPaperOptions, txnStatusOptions } from './tls24010.model';
-import { STORE_WAY } from '../tls24010-cru/tls24010-cru.model';
+import { STORE_WAY, TLS24010_EDIT_TYPE } from '../tls24010-cru/tls24010-cru.model';
 
 // 交易補登作業
 @Component({
@@ -48,10 +48,10 @@ export class TLS24010Component extends BasicQueryPageComponent<TLS24010Data> imp
     TXN_Date: [null as Date | null, [Validators.required]],    /*銷售日期 → POS5006.TXN_Date */
     ECR_No: ['000011', [Validators.required]], /*收銀機號 → ECR_No */
     TLT_No: ['', [Validators.required]], /*櫃編 → TLT_No */
+    TXN_No: [null as number | null, [Validators.maxLength(8), Validators.max(99999999)]],  /*交易序號 → TXN_No */
     TLT_Name: [''], /*櫃名 → TLT_Name */
     store_way: [''], /*櫃位類型 → store_way */
     talent_id: [0], /*專櫃代號 → talent_id */
-    TXN_No: [null as number | null, [Validators.maxLength(8), Validators.max(99999999)]],  /*交易序號 → TXN_No */
     ...createPaginationConfig([{ field: 'TXN_Date', order: -1 }]), // 分頁和排序參數
   });
   totalRecords = 0;
@@ -63,9 +63,7 @@ export class TLS24010Component extends BasicQueryPageComponent<TLS24010Data> imp
   data: TLS24010Data[] = [];
   selectedRowData?: TLS24010Data;
   columns: Column[] = columns
-  addButton: AddButton[] = [
-    { label: '功能', icon: 'pi pi-ellipsis-h', action: (rowdata, event) => this.openModal(rowdata, event) }
-  ]
+  addButton: AddButton[] = []
   constructor(
     private readonly dropDownList: DropDownListService,
     private readonly tls24010Service: Tls24010Service,
@@ -77,10 +75,8 @@ export class TLS24010Component extends BasicQueryPageComponent<TLS24010Data> imp
     });
     this.dropDownList.queryTLTTALENT_ByContractDate_DropDownList(this.today.toISOString().split('T')[0]).pipe(untilDestroyed(this)).subscribe(options => {
       this.TLT_NoOptions = options.Data.map(item => ({ ...item, label: `${item.No} - ${item.Name}` }));
-      this.queryForm.get('TLT_No')?.setValue('000164');
     });
     this.queryForm.get('TXN_Date')?.setValue(new Date(this.today.getFullYear(), this.today.getMonth(), this.today.getDate(), 0, 0, 0));
-    // this.queryForm.get('TXN_Date')?.setValue(new Date('2025-07-29T00:00:00'));
   }
   onDateSelect(event: Date): void {
     this.queryForm.get('TXN_Date')?.setValue(event);
@@ -93,35 +89,44 @@ export class TLS24010Component extends BasicQueryPageComponent<TLS24010Data> imp
     this.handleSubmit(frm, () => {
       this.tls24010Service.queryTLS24010(frm.getRawValue()).pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(res => {
         this.data = res.Data.map(item => ({
-          ...item,
-          TXN_No: item.TXN_No.toString(),
+          ...item, TXN_No: item.TXN_No.toString(),
         }));
         this.totalRecords = res.TotalCount;
-        this.updateData();
-        this.queryStateService.setQueryState(this.ProgNo, frm.value);
+        this.updateData(frm);
       });
     });
   }
-  updateData(): void {
-    const TLT_No = this.queryForm.get('TLT_No')?.value;
+  isTXN_GUIPaper!: boolean;
+  updateData(frm: FormGroup): void {
+    const TLT_No = frm.get('TLT_No')?.value;
     const data = this.TLT_NoOptions.find(option => option.No === TLT_No);
     if (data?.store_way && data?.Name && data?.talent_id) {
       this.queryForm.get('store_way')?.setValue(data.store_way);
       this.queryForm.get('TLT_Name')?.setValue(data?.Name);
       this.queryForm.get('talent_id')?.setValue(data?.talent_id);
     }
-    this.updateItems();
+    this.isTXN_GUIPaper = frm.get('TXN_GUIPaper')?.value === 'R' || frm.get('TXN_GUIPaper')?.value === 'C';
+    this.queryStateService.setQueryState(this.ProgNo, frm.value);
+    this.addButton = [
+      {
+        label: frm.get('TXN_GUIPaper')?.value === 'R' || frm.get('TXN_GUIPaper')?.value === 'C' ? '取消作廢' : '修正交易資料',
+        icon: frm.get('TXN_GUIPaper')?.value === 'R' || frm.get('TXN_GUIPaper')?.value === 'C' ? 'pi pi-undo' : 'pi pi-ellipsis-h',
+        action: (rowdata: TLS24010Data, event) => frm.get('TXN_GUIPaper')?.value === 'R' || frm.get('TXN_GUIPaper')?.value === 'C' ? this.onCancel(rowdata) : this.openModal(rowdata, event),
+        disabled: (rowData: TLS24010Data) => rowData.TXN_Status === 'D'
+      }
+    ]
+    this.updateItems(frm);
   }
   items: MenuItem[] = [];
-  updateItems(): void {
-    const store_way = this.queryForm.value.store_way;
+  updateItems(frm: FormGroup): void {
+    const store_way = frm.get('store_way')?.value;
     this.items = [
-      { label: '專櫃編號修正', icon: 'pi pi-id-card', disabled: false, command: () => this.onEditData(this.selectedRowData!, FIX_TYPE.專櫃編號修正) },
+      { label: '專櫃編號修正', icon: 'pi pi-id-card', command: () => this.onEditData(this.selectedRowData!, FIX_TYPE.專櫃編號修正) },
       { label: '折數修正', icon: 'pi pi-percentage', disabled: store_way === STORE_WAY.自營, command: () => this.onEditData(this.selectedRowData!, FIX_TYPE.折扣別修正) },
       { label: '抽成類別修正', icon: 'pi pi-tags', disabled: store_way === STORE_WAY.自營, command: () => this.onEditData(this.selectedRowData!, FIX_TYPE.抽成類別修正) },
-      { label: '付款別修正', icon: 'pi pi-credit-card', disabled: false, command: () => this.onEditData(this.selectedRowData!, FIX_TYPE.付款別修正) },
-      { label: '是否為預售交易修正', icon: 'pi pi-shopping-cart', disabled: true, command: () => this.onEditData(this.selectedRowData!, FIX_TYPE.預售交易修正) },
-      { label: '交易資料作廢', icon: 'pi pi-trash', disabled: true, command: () => this.onEditData(this.selectedRowData!, FIX_TYPE.交易資料作廢) },
+      { label: '付款別修正', icon: 'pi pi-credit-card', command: () => this.onEditData(this.selectedRowData!, FIX_TYPE.付款別修正) },
+      { label: '是否為預售交易修正', icon: 'pi pi-shopping-cart', command: () => this.onEditData(this.selectedRowData!, FIX_TYPE.預售交易修正) },
+      { label: '交易資料作廢', icon: 'pi pi-trash', command: () => this.onEditData(this.selectedRowData!, FIX_TYPE.交易資料作廢) },
     ];
   }
 
@@ -132,30 +137,97 @@ export class TLS24010Component extends BasicQueryPageComponent<TLS24010Data> imp
     }
   }
   // 補登資料
-  onCreateData(): void {
+  onCreateData(frm: FormGroup): void {
+    if (frm?.value.TXN_GUIPaper === 'R' || frm?.value.TXN_GUIPaper === 'C') { return; }
     this.submitted = true;
     if (!this.queryForm.valid) { return; }
-    this.updateData();
-    this.queryStateService.setQueryState(this.ProgNo, this.queryForm.value);
-    this.onCreate(this.queryForm.value);
+    this.updateData(frm);
+    this.onCreate(frm.value);
   }
   // 查看補登資料
   onDetailData(rowdata: TLS24010Data): void {
+    if (this.isTXN_GUIPaper) { return; }
+    const history = this.queryStateService.getQueryState(this.ProgNo);
     this.onDetail({
       ...rowdata,
-      TXN_GUIPaper: this.queryForm.value.TXN_GUIPaper,
-      store_way: this.queryForm.value.store_way,
-      talent_id: this.queryForm.value.talent_id
+      TXN_GUIPaper: history?.value.TXN_GUIPaper,
+      store_way: history?.value.store_way,
+      talent_id: history?.value.talent_id
     });
   }
   // 編輯補登資料
   onEditData(rowData: TLS24010Data, type: string): void {
-    this.onEdit({
-      ...rowData,
-      type,
-      TXN_GUIPaper: this.queryForm.value.TXN_GUIPaper,
-      store_way: this.queryForm.value.store_way,
-      talent_id: this.queryForm.value.talent_id
+    const history = this.queryStateService.getQueryState(this.ProgNo);
+    if (type === FIX_TYPE.交易資料作廢) {
+      this.messageService.confirm({
+        header: '作廢交易資料',
+        message: '確定要作廢交易資料嗎?',
+        accept: () => {
+          const body = {
+            Store_way: history?.value.store_way || '',
+            SYS_StoreNo: this.authService.currentUserValue?.SYS_StoreNo || '',
+            TXN_Date: formatDateToYYYY_MM_DD(rowData.TXN_Date) || '',
+            ECR_No: rowData.ECR_No || '',
+            TXN_No: Number(rowData.TXN_No) || 0,
+            POS5006_ID: rowData.ID || 0,
+            TXN_Remark: rowData.TXN_Remark || '',
+          }
+          const data = {
+            ...body,
+            EditType: TLS24010_EDIT_TYPE.交易資料作廢,
+          }
+          this.tls24010Service.updateTLS24010(data).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe((res) => {
+            this.messageService.successBubble(res.Message);
+            this.onSubmit(this.queryForm);
+          });
+        },
+        extraButtons: [
+          {
+            label: '確認資料',
+            severity: 'info',
+            action: () => {
+              this.onEdit({
+                ...rowData,
+                type,
+                TXN_GUIPaper: history?.value.TXN_GUIPaper,
+                store_way: history?.value.store_way,
+                talent_id: history?.value.talent_id
+              });
+            }
+          }
+        ]
+      });
+    } else {
+      this.onEdit({
+        ...rowData,
+        type,
+        TXN_GUIPaper: this.queryForm.value.TXN_GUIPaper,
+        store_way: this.queryForm.value.store_way,
+        talent_id: this.queryForm.value.talent_id
+      });
+    }
+  }
+
+  onCancel(rowdata: TLS24010Data): void {
+    this.messageService.confirm({
+      header: '取消作廢交易資料',
+      message: '確定要取消作廢交易資料嗎?',
+      accept: () => {
+        this.loading = true;
+        this.tls24010Service.cancelVoidTLS24010({
+          SYS_StoreNo: this.authService.currentUserValue?.SYS_StoreNo || '',
+          TXN_Date: formatDateToYYYY_MM_DD(rowdata.TXN_Date),
+          ECR_No: rowdata.ECR_No,
+          TXN_No: Number(rowdata.TXN_No),
+        }).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe((res) => {
+          this.onSubmit(this.queryForm);
+          this.messageService.successBubble(res.Message);
+        });
+      }
     });
+  }
+
+  get checkTXN_GUIPaper(): boolean {
+    return this.queryForm.get('TXN_GUIPaper')?.value === 'R' || this.queryForm.get('TXN_GUIPaper')?.value === 'C'
   }
 }

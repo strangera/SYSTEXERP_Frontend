@@ -1,3 +1,4 @@
+import { ValidationService } from '@shared/service/validation.service';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 // Permissions
@@ -40,7 +41,7 @@ export class SYSB300Component
   // 查詢
   queryForm = this.formBuilder.group({
     // SYS3000 組織階層設定檔
-    level_id: ['', [Validators.maxLength(2)]], // 組織階層代碼
+    level_id: ['', [Validators.maxLength(2), this.validationService.noChineseValidator]], // 組織階層代碼
     level_name: ['', [Validators.maxLength(30)]], // 組織階層名稱
     p_level_id: ['', [Validators.maxLength(2)]], // 上層組織代碼/名稱
     //分頁查詢
@@ -51,8 +52,8 @@ export class SYSB300Component
   totalRecords = 0;// 分頁和排序參數 // 排序需要
   data: Sysb300m[] = [];
   columns: Column[] = [
-    { field: 'level_id', header: '階層代碼', visible: true },
-    { field: 'level_name', header: '階層名稱', visible: true },
+    { field: 'level_id', header: '組織階層代碼', visible: true },
+    { field: 'level_name', header: '組織階層名稱', visible: true },
     {
       field: 'p_level_id',
       header: '上層組織編號',
@@ -74,7 +75,10 @@ export class SYSB300Component
 
   // ----------------------------------------------------------------
 
-  constructor(private sysb300Service: Sysb300Service) {
+  constructor(
+    private sysb300Service: Sysb300Service,
+    private validationService: ValidationService,
+  ) {
     super();
   }
 

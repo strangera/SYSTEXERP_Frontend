@@ -18,6 +18,9 @@
   &::-webkit-scrollbar-thumb:hover {
     background: #cccccc;
   }
+  .p-datatable .p-datatable-thead > tr > th {
+    background: var(--table-header-bg);
+  }
   .tls24010-pos5007 {
     .p-datatable-header {
       background: transparent;

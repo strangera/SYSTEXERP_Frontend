@@ -7,22 +7,32 @@
       [headerStyleClass]="'query-accordionTab'">
       <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar-range calendarType="dateRange" label="銷售日期" [startControl]="queryForm.controls.TXN_DateStart"
-              [endControl]="queryForm.controls.TXN_DateEnd" [submitted]="submitted"></app-calendar-range>
+          <div class="col-12 md:col-6 lg:col-5">
+            <app-calendar-range calendarType="dateRange" startLabel="銷售起始日" endLabel="銷售截止日"
+              [startControl]="queryForm.controls.TXN_Date_Start" [endControl]="queryForm.controls.TXN_Date_End"
+              [submitted]="submitted"></app-calendar-range>
           </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar-range calendarType="dateRange" label="修正日期"
-              [startControl]="queryForm.controls.correctionDateStart"
-              [endControl]="queryForm.controls.correctionDateEnd" [submitted]="submitted"></app-calendar-range>
+          <div class="col-12 md:col-6 lg:col-5">
+            <app-calendar-range calendarType="dateRange" startLabel="修正起始日" endLabel="修正截止日"
+              [startControl]="queryForm.controls.UPD_Date_Start" [endControl]="queryForm.controls.UPD_Date_End"
+              [submitted]="submitted"></app-calendar-range>
           </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text label="收銀機號" controlName="cashierCode" [control]="queryForm.controls.cashierCode"
-              [submitted]="submitted"></app-input-text>
+        </div>
+        <div class="grid p-fluid">
+          <div class="col-12 md:col-6 lg:col-5">
+            <app-multi-select class="col-12 md:col-6" label="收銀機號" [control]="queryForm.controls.ECR_No"
+              [submitted]="submitted" [options]="ECR_NoOptions" optionLabel="label" optionValue="No" />
           </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="報表型態" controlName="reportType" [options]="reportTypeOptions" optionLabel="label"
-              optionValue="value" [control]="queryForm.controls.reportType" [submitted]="submitted"></app-dropdown>
+          <div class="col-12 md:col-6 lg:col-5">
+            <app-input-number-range startLabel="交易流水號(起)" endLabel="交易流水號(迄)" startControlName="TXN_No_Start"
+              endControlName="TXN_No_End" [startControl]="queryForm.controls.TXN_No_Start" [useGrouping]="false"
+              [endControl]="queryForm.controls.TXN_No_End" [submitted]="submitted"></app-input-number-range>
+          </div>
+        </div>
+        <div class="grid p-fluid">
+          <div class="col-12">
+            <app-radiobutton label="報表型態" controlName="EditType" [options]="EditTypeOptions" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.EditType" [submitted]="submitted"></app-radiobutton>
           </div>
         </div>
         <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
@@ -34,6 +44,8 @@
   </p-accordion>
 </div>
 <div class="card">
-  <app-table tableKey="TLS24010" dataKey="BNK_No" [data]="data" [columns]="columns" (edit)="onEdit($event)"
-    (detail)="onDetail($event)" [showCheckBox]="true"></app-table>
+  <app-table tableKey="TLS24010" dataKey="ID" [data]="data" [columns]="columns" [showEdit]="false" [showDetail]="false"
+    [showDelete]="false" [multiSortMeta]="[{ field: 'ID', order: -1 }]" [totalRecords]="totalRecords"
+    (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [lazy]="true"
+    [loading]="loading"></app-table>
 </div>

@@ -1,6 +1,6 @@
 import { animate, state, style, transition, trigger } from "@angular/animations";
-import { NotificationService } from "../../component/notification-message/notification.service";
 import { SortMeta } from "primeng/api";
+import { NotificationService } from "../../component/notification-message/notification.service";
 export interface Column {
   field: string;     // 欄位名稱 (資料的欄位名稱)
   header: string;    // 欄位標題 (顯示在表格上的標題)
@@ -16,17 +16,21 @@ export interface Column {
 
   disabled?: (value: any) => boolean;  // 是否禁用 (是否為禁用欄位)
 
-  validate?: ((value: string, rowData: any, data: any[], field: string, header: string) => { isValid: boolean, errorMessage: string[] })[]; // 驗證規則(如果是可輸入的欄位)
+  validate?: ((value: string, rowData: any, data: any[], field: string, header: string) => { isValid: boolean, errorMessage: string[]; })[]; // 驗證規則(如果是可輸入的欄位)
 
+  dataKey?: string;
   type?: 'input' | 'inputNumber' | 'dropdown' | 'button' | 'html' | 'date' | 'autoComplete' | 'default'; // 欄位類型
-  prefix?: string;
+  prefix?: string; // 前綴 (適用於 input 類型)
+  suffix?: string; // 後綴 (適用於 input 類型)
   fractionDigits?: number;
   useGrouping?: boolean;
 
   options?: any | ((rowData: any) => any); // 支持靜態數據或基於 rowData 生成
   optionLabel?: string; // 下拉選單 optionLabel
   optionValue?: string; // 下拉選單 optionValue
+  optionShowClear?: boolean; // 下拉選單是否顯示清除按鈕
   templateLabel?: string; // 模板欄位 label
+  filter?: boolean;
 
   buttonLabel?: string; // 選擇按鈕 label
   checkboxTrueLabel?: string; // checkbox 非編輯模式 true 顯示文字（適用於單一布林值）
@@ -56,7 +60,7 @@ export const createPaginationConfig = (defaultSortBy?: SortMeta[]) => {
   return {
     pageSize: [10],
     pageIndex: [1], // 你將初始頁碼改為 1
-    SortBy: [defaultSortBy],
+    SortBy: [defaultSortBy ?? []],
   };
 };
 
@@ -203,7 +207,7 @@ export const formatTimeToHHMMSS = (date: Date): string => {
   const mm = date.getMinutes().toString().padStart(2, '0');
   const ss = date.getSeconds().toString().padStart(2, '0');
   return `${hh}:${mm}:${ss}`;
-}
+};
 // formatDateToYYYYMMDD：輸出為 YYYYMMDD
 export const formatDateToYYYYMMDD = (value: string | Date): string => {
   if (!value) return '';
@@ -241,3 +245,18 @@ export function convertDateToYYYYMM(date: Date): string {
   const month = (date.getMonth() + 1).toString().padStart(2, '0'); // 月份從 1 開始
   return `${year}${month}`;
 }
+// formatDateToYYYY_MM_DD：輸出為 YYYY-MM-DD（避免 toISOString 造成減一天）
+export const formatDateToYYYY_MM_DD = (value: string | Date): string => {
+  if (!value) return '';
+
+  const date = value instanceof Date ? value : new Date(value);
+  if (isNaN(date.getTime())) return '';
+
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+
+  return `${year}-${month}-${day}`;
+};
+// addDaysToDate：增加天數後的日期
+export const addDaysToDate = (date: Date, days: number): Date => new Date(date.getTime() + days * 24 * 60 * 60 * 1000);

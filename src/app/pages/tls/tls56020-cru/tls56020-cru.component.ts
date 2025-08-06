@@ -1,19 +1,18 @@
 import { Component, OnInit } from '@angular/core';
-import { FormArray, FormBuilder, FormControl, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { NavigationExtras, Router } from '@angular/router';
-// Services
-import { WarehouseService } from '../../../service/basic/warehouse.service';
-import { BrandCodeService } from '../../../service/basic/brand-code.service';
-import { IssuanceTypeService } from '../../../service/basic/issuance-type.service';
-import { IssuanceNoteStatusService } from '../../../service/basic/issuance-note-status.service';
-import { UserCodeService } from '../../../service/basic/user-code.service';
-// Shared
+import {
+  FormArray,
+  FormControl,
+  FormGroup,
+  FormsModule,
+  ReactiveFormsModule
+} from '@angular/forms';
+import { untilDestroyed } from '@ngneat/until-destroy';
+import { map } from 'rxjs/operators';
+
+
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-import { AuthService } from '../../../service/system/auth.service';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-import { OrganizationNumberService } from '../../../service/basic/organization-number.service';
 import { TranslateService } from '@ngx-translate/core';
-import { BasicCrupageComponent } from '../../../shared/componentextends/basic-crupage/basic-crupage.component';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { PanelModule } from 'primeng/panel';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
@@ -24,111 +23,79 @@ import { NgFor, NgIf } from '@angular/common';
 import { ButtonDynamicallydeleteComponent } from '../../../shared/componentkit/button-dynamicallydelete/button-dynamicallydelete.component';
 import { ButtonDynamicallyaddComponent } from '../../../shared/componentkit/button-dynamicallyadd/button-dynamicallyadd.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-
+import { TranslateModule } from '@ngx-translate/core';
+import { DropDownListService, IDropdownItem } from '../../../service/utility/dropDownList.service';
+import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
 @Component({
-    selector: 'app-tls56020-cru',
-    templateUrl: './tls56020-cru.component.html',
-    styleUrl: './tls56020-cru.component.scss',
-    standalone: true,
-    imports: [MenubarComponent, PanelModule, FormsModule, ReactiveFormsModule, InputTextComponent, DropdownComponent, EditorTextComponent, CalendarComponent, NgFor, ButtonDynamicallydeleteComponent, ButtonDynamicallyaddComponent, ButtonComponent, NgIf]
+  selector: 'app-tls56020-cru',
+  templateUrl: './tls56020-cru.component.html',
+  styleUrl: './tls56020-cru.component.scss',
+  standalone: true,
+  imports: [
+    MenubarComponent,
+    PanelModule,
+    FormsModule,
+    ReactiveFormsModule,
+    InputTextComponent,
+    DropdownComponent,
+    EditorTextComponent,
+    CalendarComponent,
+    NgFor,
+    ButtonDynamicallydeleteComponent,
+    ButtonDynamicallyaddComponent,
+    ButtonComponent,
+    NgIf,
+    TranslateModule
+  ]
 })
-export class TLS56020CRUComponent extends BasicCrupageComponent
-  implements OnInit {
-  // ProgNo: string = '250033';
-  // funInfo?: FunsrightInfo;
-  // // Permissions
-  // a
-  // 
-  // 
-  // loading: boolean = false;
-  // submitted: boolean = false;
-
+export class TLS56020CRUComponent extends BasicCruPageComponent<any> implements OnInit {
   dataForm = this.formBuilder.group({
-    issuanceNoteCode: [{ value: '自動編號', disabled: true }],
-    generalCode: [],
-    warehouseCode: [, Validators.required],
-    brandCode: [, Validators.required],
-    issuanceType: [],
-    issuanceNoteStatus: [],
-    applicantCode: [, Validators.required],
-    approverCode: [],
-    applicationDateFrom: [],
-    applicationDateTo: [],
-    approvalDateFrom: [, Validators.required],
-    approvalDateTo: [],
-    remark: [],
-    organizationNumber: [, Validators.required],
-    // ----------------------------------------------------------------
+    SPM_No: [{ value: '自動編號', disabled: true }],
+    SPM_Type: [],
+    SPM_remark: [],
+    APPLY_USR_No: [],
+    org_id: [],
+    APPLY_Date_Start: [],
+    HOS_NoList: [[]],
+    LOGO_NoList: [[]],
     items: this.formBuilder.array([this.createItem()]),
   });
 
   // Dropdown options
-  warehouseOptions: any[] = [];
-  brandCodeOptions: any[] = [];
-  issuanceTypeOptions: any[] = [];
-  issuanceNoteStatusOptions: any[] = [];
-  applicantCodeOptions: any[] = [];
-  approverCodeOptions: any[] = [];
-  organizationNumberOptions: any[] = [];  // Updated dropdown for 部門編號
-  // formTitle: string = '';   //CRU
-  // showConfirm: boolean = false;//CRU
-  // crudstatus: CRUDStatus = CRUDStatus.Read;//CRU
-
-  // Table data
+  issuanceTypeOptions: { label: string; value: string }[] = [];
+  APPLY_USR_NoOptions: { label: string; value: string }[] = [];
+  org_id: { label: string; value: string }[] = [];
+  warehouseOptions: { label: string, value: string }[] = []; // 倉別
+  brandOptions: { label: string; value: string }[] = [];
+  userOptions: { label: string, value: string }[] = [];
 
   constructor(
-    private router: Router,
-    private formBuilder: FormBuilder,
     private notificationService: NotificationService,
-    private warehouseService: WarehouseService,
-    private brandCodeService: BrandCodeService,
-    private issuanceTypeService: IssuanceTypeService,
-    private issuanceNoteStatusService: IssuanceNoteStatusService,
-    private userCodeService: UserCodeService,
-    private authService: AuthService,
-    private organizationNumberService: OrganizationNumberService,  // Updated this service
     private translate: TranslateService,
-    private messageService: NotificationService
+    private dropDownListService: DropDownListService,
+
   ) {
-    super(); // 呼叫父類建構子
+    super();
   }
 
   ngOnInit(): void {
-    this.ProgNo = '250033';
-    // Initialize dropdown options
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
-    this.warehouseService.getWarehouseOptions().subscribe((data) => (this.warehouseOptions = data));
-    this.brandCodeService.getSystemTypes().subscribe((data) => (this.brandCodeOptions = data));
-    this.issuanceTypeService.getIssuanceTypes().subscribe((data) => (this.issuanceTypeOptions = data));
-    this.issuanceNoteStatusService.getIssuanceNoteStatuses().subscribe((data) => (this.issuanceNoteStatusOptions = data));
-    this.organizationNumberService.getOrganizationNumbers().subscribe((data) => (this.organizationNumberOptions = data));  // Updated dropdown initialization for 部門編號
-    this.userCodeService.getUserCode().subscribe((data) => {
-      this.applicantCodeOptions = data;
-      this.approverCodeOptions = data;
+    this.initializePage('TLS56020', this.dataForm);
+    // 倉別 (HOS_No)
+    this.dropDownListService.getPOS2034Options().pipe(untilDestroyed(this),
+      map(response => response.Data.map(item => ({ label: item.Name, value: item.No })))
+    ).subscribe(options => { this.warehouseOptions = options; });
+    // 申請人員、審核人員、結案人員 (共用人員下拉選單)
+    this.dropDownListService.queryTBLUSER_DropDownList().pipe(untilDestroyed(this),
+      map(response => response.Data.map(item => ({ label: item.Name, value: item.No })))
+    ).subscribe(options => {
+      this.userOptions = options;
     });
-    const state = this.router.lastSuccessfulNavigation?.extras.state as {
-      crudstatus: CRUDStatus;
-      rowdata: any;
-    }; //CRU
-
-    switch (state.crudstatus) {
-      case CRUDStatus.Create:
-        this.formTitle = '新增資料';
-        this.showConfirm = this.canAdd();
-        break;
-      case CRUDStatus.Edit:
-        console.log(state.rowdata);
-        this.formTitle = '編輯資料';
-        this.showConfirm = this.canEdit();
-        this.Edit(state.rowdata);
-        break;
-      case CRUDStatus.Read:
-        this.formTitle = '顯示資料';
-        this.Read(state.rowdata);
-        break;
-    } //CRU
+    this.issuanceTypeOptions = [
+      { label: '贈品領用', value: '1' },
+      { label: '公關活動', value: '2' },
+    ];
   }
-  // ----------------------------------------------------------------
+
   get items(): FormArray {
     return this.dataForm.get('items') as FormArray;
   }
@@ -136,77 +103,62 @@ export class TLS56020CRUComponent extends BasicCrupageComponent
   getFormControl(index: number, controlName: string): FormControl {
     return this.items.at(index).get(controlName) as FormControl;
   }
-  onRemoveItem(index: number) {
-    this.items.removeAt(index);
-  }
-
-  createItem(): FormGroup {
-    return this.formBuilder.group({
-      mgname: [],
-      price: [{ value: '自動帶入', disabled: true }],
-      stocknum: [{ value: '自動帶入', disabled: true }],
-      Receivequantity: [],
-      discount2: [],
-      barcode: [{ value: '自動帶入', disabled: true }],
-      vendorCode: [{ value: '自動帶入', disabled: true }],
-      remark: [],
-    });
-  }
-
-  Edit(rowdata: any) {
-    this.dataForm.patchValue(rowdata);
-  }
-
-  Read(rowdata: any) {
-    this.dataForm.patchValue(rowdata);
-    this.dataForm.disable();
-  }
 
   onAddItem(): void {
     this.items.push(this.createItem());
   }
 
-  onSubmit(frm: FormGroup) {
-    this.messageService.blockUi();
+  onRemoveItem(index: number): void {
+    this.items.removeAt(index);
+  }
+
+  createItem(): FormGroup {
+    return this.formBuilder.group({
+      PLU_MagNo: [],
+      RPD_SalePrc: [],
+      stocknum: [],
+      SPM_TotQty: [],
+      remark: [],
+    });
+  }
+
+  Edit(rowdata: any): void {
+    this.dataForm.patchValue(rowdata);
+  }
+
+  Read(rowdata: any): void {
+    this.dataForm.patchValue(rowdata);
+    this.dataForm.disable();
+  }
+
+  onSubmit(frm: FormGroup): void {
+    this.notificationService.blockUi();
     this.submitted = true;
 
-    if (this.dataForm.invalid) {
-      this.messageService.errorBubble(
-        this.translate.instant('form_error_message')
-      );
-      this.messageService.unblockUi();
+    if (frm.invalid) {
+      this.notificationService.errorBubble(this.translate.instant('form_error_message'));
+      this.notificationService.unblockUi();
       return;
     }
 
     switch (this.crudstatus) {
       case CRUDStatus.Create:
         if (this.canAdd()) {
-          // this.storeService.addMachine(frm.value as MachineForm).subscribe((response: any) => {
-          this.messageService.successBubble(
-            this.translate.instant('success_message')
-          );
+          this.notificationService.successBubble(this.translate.instant('success_message'));
         }
         break;
       case CRUDStatus.Edit:
         if (this.canEdit()) {
-          // this.storeService.updateMachine(frm.value as MachineForm).subscribe((response: any) => {
-          this.messageService.successBubble(
-            this.translate.instant('updated-successfully')
-          );
+          this.notificationService.successBubble(this.translate.instant('updated-successfully'));
         }
         break;
     }
 
-    this.messageService.unblockUi();
+    this.notificationService.unblockUi();
     this.submitted = false;
   }
 
-  submitForm(frm: FormGroup) {
-    // 查詢邏輯
+  submitForm(frm: FormGroup): void {
     this.onSubmit(frm);
-  }
-
-  onCancel() {
-    this.router.navigate(['/TLS5000/TLS56020']);
   }
 }

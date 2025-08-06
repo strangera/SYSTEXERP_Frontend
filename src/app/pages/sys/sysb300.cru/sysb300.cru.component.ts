@@ -75,6 +75,16 @@ export class SYSB300CRUComponent
       return;
     }
 
+    // ✅ 新增驗證(0806 上層組織代碼必須小於組織階層代碼)
+    const levelId = this.dataForm.controls.level_id.value;
+    const pLevelId = this.dataForm.controls.p_level_id.value;
+
+    if (pLevelId && levelId <= pLevelId) {
+      this.messageService.errorBubble('上層組織代碼必須小於組織階層代碼');
+      this.messageService.unblockUi();
+      return;
+    }
+
     //檢查使否已有上層組織
     const query = {
       level_id: '',

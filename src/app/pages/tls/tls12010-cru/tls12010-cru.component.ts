@@ -293,11 +293,11 @@ export class TLS12010CRUComponent extends BasicCruPageComponent<Potential_Custom
           if (this.canAdd()) {
             console.log('insert:', JSON.stringify(body, null, 2));
             console.log('detail', this.potentialDetail);
-            // this.tls12010Service.insertTLS12010(body).subscribe(() => {
-            //   this.messageService.successBubble('新增成功');
-            //   // this.onCancel(); // 儲存後，會清除資料留在原頁面，不返回列表
-            //   this.dataForm.reset(); // 重置表單
-            // });
+            this.tls12010Service.insertTLS12010(body).subscribe(() => {
+              this.messageService.successBubble('新增成功');
+              // this.onCancel(); // 儲存後，會清除資料留在原頁面，不返回列表
+              this.dataForm.reset(); // 重置表單
+            });
           }
           break;
         case CRUDStatus.Edit:

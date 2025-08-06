@@ -9,11 +9,7 @@
       class="line-height-3 m-0"
       [headerStyleClass]="'query-accordionTab'"
     >
-      <form
-        [formGroup]="queryForm"
-        id="queryForm"
-        (ngSubmit)="onSubmit(queryForm)"
-      >
+      <form [formGroup]="queryForm" id="queryForm">
         <div class="grid p-fluid">
           <!-- 銷售日期 -->
           <app-calendar-range-quick
