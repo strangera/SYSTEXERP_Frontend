@@ -29,7 +29,7 @@ import { formatTimeToHHMMSS } from '@shared/componentkit/table/table.model';
 import { Tls24010PaynoComponent } from './tls24010-payno/tls24010-payno.component';
 import { Tls24010TltidComponent } from './tls24010-tltid/tls24010-tltid.component';
 import { Tls24010TltnoComponent } from './tls24010-tltno/tls24010-tltno.component';
-import { FIX_TYPE } from '../tls24010/tls24010.model';
+import { FIX_TYPE, FIX_TYPE_LABEL } from '../tls24010/tls24010.model';
 import { Tls24010DiscodeComponent } from './tls24010-discode/tls24010-discode.component';
 @Component({
   selector: 'app-tls24010-cru',
@@ -246,43 +246,49 @@ export class TLS24010CRUComponent extends BasicCruPageComponent<TLS24010Data | u
         this.loading = false;
         return
       }
-      const body = {
-        Store_way: this.store_way,
-        TXN_GUIPaper: this.TXN_GUIPaper,
-        ...frm.getRawValue(),
-        TXN_GUIRemark: undefined,
-        TXN_No: this.isFormCreateable ? undefined : frm.getRawValue().TXN_No,
-        TXN_Time: formatTimeToHHMMSS(frm.getRawValue().TXN_Time),
-        POS5007_INFO: pos5007Data.map((item) => {
-          if (typeof item.PLU_MagNo === 'object' && item.PLU_MagNo !== null) {
-            return {
-              PLU_MagNo: item.PLU_MagNo.PLU_MagNo,
-              PLU_No: item.PLU_MagNo.PLU_No,
-              TXN_Qty: item.TXN_Qty,
-              PLU_SalePrc: item.PLU_SalePrc,
-              TXN_Disc: item.TXN_Disc,
-              TXN_SaleAmt: item.TXN_SaleAmt,
-              tlt_id: item.tlt_id,
-              PLU_TaxType: item.PLU_TaxType,
-              TXN_DiscCode: item.TXN_DiscCode
-            };
+      this.messageService.confirm({
+        header: '確認',
+        message: `確定要新增嗎?`,
+        accept: () => {
+          const body = {
+            Store_way: this.store_way,
+            TXN_GUIPaper: this.TXN_GUIPaper,
+            ...frm.getRawValue(),
+            TXN_GUIRemark: undefined,
+            TXN_No: this.isFormCreateable ? undefined : frm.getRawValue().TXN_No,
+            TXN_Time: formatTimeToHHMMSS(frm.getRawValue().TXN_Time),
+            POS5007_INFO: pos5007Data.map((item) => {
+              if (typeof item.PLU_MagNo === 'object' && item.PLU_MagNo !== null) {
+                return {
+                  PLU_MagNo: item.PLU_MagNo.PLU_MagNo,
+                  PLU_No: item.PLU_MagNo.PLU_No,
+                  TXN_Qty: item.TXN_Qty,
+                  PLU_SalePrc: item.PLU_SalePrc,
+                  TXN_Disc: item.TXN_Disc,
+                  TXN_SaleAmt: item.TXN_SaleAmt,
+                  tlt_id: item.tlt_id,
+                  PLU_TaxType: item.PLU_TaxType,
+                  TXN_DiscCode: item.TXN_DiscCode
+                };
+              }
+              return item;
+            }),
+            POS5008_INFO: pos5008Data.map((item) => {
+              return {
+                PAY_No: item.PAY_No,
+                TXN_PayAmt: item.TXN_PayAmt,
+                CRD_Type: item.CRD_Type !== '' ? item.CRD_Type : undefined,
+                CRD_No: item.CRD_Type !== '' ? item.CRD_No : undefined,
+                TXN_CouponNo: item.TXN_CouponNo != '' ? item.TXN_CouponNo : undefined,
+                TXN_PayDesc: item.TXN_PayDesc != '' ? item.TXN_PayDesc : undefined,
+                TERM_No: item.TERM_No !== '' ? Number(item.TERM_No) : undefined
+              };
+            }),
           }
-          return item;
-        }),
-        POS5008_INFO: pos5008Data.map((item) => {
-          return {
-            PAY_No: item.PAY_No,
-            TXN_PayAmt: item.TXN_PayAmt,
-            CRD_Type: item.CRD_Type !== '' ? item.CRD_Type : undefined,
-            CRD_No: item.CRD_Type !== '' ? item.CRD_No : undefined,
-            TXN_CouponNo: item.TXN_CouponNo != '' ? item.TXN_CouponNo : undefined,
-            TXN_PayDesc: item.TXN_PayDesc != '' ? item.TXN_PayDesc : undefined,
-            TERM_No: item.TERM_No !== '' ? Number(item.TERM_No) : undefined
-          };
-        }),
-      }
-      this.tls24010Service.insertTLS24010(body).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe((res) => {
-        this.messageService.successBubble(res.Message);
+          this.tls24010Service.insertTLS24010(body).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe((res) => {
+            this.messageService.successBubble(res.Message);
+          });
+        }
       });
     });
   }
@@ -291,104 +297,123 @@ export class TLS24010CRUComponent extends BasicCruPageComponent<TLS24010Data | u
   @ViewChild(Tls24010DiscodeComponent) discodeComp?: Tls24010DiscodeComponent;
   @ViewChild(Tls24010PaynoComponent) paynoComp?: Tls24010PaynoComponent;
   updateTLS24010() {
-    const rowData = this.rowdata as TLS24010Data;
-    const body = {
-      Store_way: this.store_way || '',
-      SYS_StoreNo: this.authService.currentUserValue?.SYS_StoreNo || '',
-      // 把TXN_Date轉成字串YYYY-MM-DD
-      TXN_Date: this.dataForm.getRawValue().TXN_Date,
-      ECR_No: this.dataForm.getRawValue().ECR_No,
-      TXN_No: Number(this.dataForm.getRawValue().TXN_No),
-      POS5006_ID: rowData.ID,
-      TXN_Remark: this.dataForm.getRawValue().TXN_Remark,
-    }
-    if (this.type === FIX_TYPE.專櫃編號修正) {
-      const data = {
-        ...body,
-        EditType: TLS24010_EDIT_TYPE.專櫃編號修正,
-        TLTNoEdit: {
-          TLT_No: this.dataForm.getRawValue().TLT_No,
-          Talent_ID: this.TLT_NoOptions.find(item => item.No === this.dataForm.getRawValue().TLT_No)?.talent_id || this.talent_id || 0,
-          updatePOS5007List: this.tltnoComp?.tltIdData.map(item => {
-            return {
-              POS5007_ID: item.ID,
+    this.messageService.confirm({
+      header: FIX_TYPE_LABEL[this.type as FIX_TYPE],
+      message: `確定要修正嗎?`,
+      accept: () => {
+        this.loading = true;
+        const rowData = this.rowdata as TLS24010Data;
+        const body = {
+          Store_way: this.store_way || '',
+          SYS_StoreNo: this.authService.currentUserValue?.SYS_StoreNo || '',
+          // 把TXN_Date轉成字串YYYY-MM-DD
+          TXN_Date: this.dataForm.getRawValue().TXN_Date,
+          ECR_No: this.dataForm.getRawValue().ECR_No,
+          TXN_No: Number(this.dataForm.getRawValue().TXN_No),
+          POS5006_ID: rowData.ID,
+          TXN_Remark: this.dataForm.getRawValue().TXN_Remark,
+        }
+        if (this.type === FIX_TYPE.專櫃編號修正) {
+          const data = {
+            ...body,
+            EditType: TLS24010_EDIT_TYPE.專櫃編號修正,
+            TLTNoEdit: {
               TLT_No: this.dataForm.getRawValue().TLT_No,
-              PLU_MagNo: this.store_way === STORE_WAY.專櫃 ? (item.PLU_MagNo as POS2004Item).TLT_No as string : item.PLU_MagNo as string || '',
-              PLU_No: this.store_way === STORE_WAY.專櫃 ? (item.PLU_MagNo as POS2004Item).TLT_No as string : item.PLU_No as string || '',
-              Talent_ID: item.Talent_ID || this.talent_id || 0,
-              tlt_id: this.store_way === STORE_WAY.專櫃 ? (item.PLU_MagNo as POS2004Item).tlt_id as string : item.tlt_id as string || '',
-              PLU_TaxType: this.store_way === STORE_WAY.專櫃 ? item.PLU_TaxType : undefined,
-              TXN_DiscCode: this.store_way === STORE_WAY.專櫃 ? (item.PLU_MagNo as POS2004Item).cag_barcode as string : item.TXN_DiscCode as string || ''
+              Talent_ID: this.TLT_NoOptions.find(item => item.No === this.dataForm.getRawValue().TLT_No)?.talent_id || this.talent_id || 0,
+              Contract_No: this.tltnoComp?.tltIdData[0].Contract_No || '',
+              Contract_SubNo: this.tltnoComp?.tltIdData[0].Contract_SubNo || '',
+              updatePOS5007List: this.tltnoComp?.tltIdData.map(item => {
+                return {
+                  POS5007_ID: item.ID,
+                  TLT_No: this.dataForm.getRawValue().TLT_No,
+                  PLU_MagNo: this.store_way === STORE_WAY.專櫃 ? (item.PLU_MagNo as POS2004Item).TLT_No as string : item.PLU_MagNo as string || '',
+                  PLU_No: this.store_way === STORE_WAY.專櫃 ? (item.PLU_MagNo as POS2004Item).TLT_No as string : item.PLU_No as string || '',
+                  Talent_ID: item.Talent_ID || this.talent_id || 0,
+                  tlt_id: this.store_way === STORE_WAY.專櫃 ? (item.PLU_MagNo as POS2004Item).tlt_id as string : item.tlt_id as string || '',
+                  PLU_TaxType: this.store_way === STORE_WAY.專櫃 ? item.PLU_TaxType : undefined,
+                  TXN_DiscCode: this.store_way === STORE_WAY.專櫃 ? (item.PLU_MagNo as POS2004Item).cag_barcode as string : item.TXN_DiscCode as string || '',
+                  Contract_No: this.store_way === STORE_WAY.專櫃 ? (item.PLU_MagNo as POS2004Item).Contract_No as string : item.Contract_No as string || '',
+                  Contract_SubNo: this.store_way === STORE_WAY.專櫃 ? (item.PLU_MagNo as POS2004Item).Contract_SubNo as string : item.Contract_SubNo as string || ''
+                }
+              }) || []
             }
-          }) || []
+          }
+          this.tls24010Service.updateTLS24010(data).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe((res) => {
+            this.messageService.successBubble(res.Message);
+          });
+        } else if (this.type === FIX_TYPE.抽成類別修正) {
+          const data = {
+            ...body,
+            EditType: TLS24010_EDIT_TYPE.抽成類別修正,
+            TLTIdEditList: this.tltidComp?.tltIdData.map(item => {
+              return {
+                POS5007_ID: item.ID,
+                Talent_ID: item.Talent_ID || this.talent_id || 0,
+                tlt_id: item.tlt_id || '',
+              }
+            })
+          }
+          this.tls24010Service.updateTLS24010(data).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe((res) => {
+            this.messageService.successBubble(res.Message);
+          });
+        } else if (this.type === FIX_TYPE.折扣別修正) {
+          const data = {
+            ...body,
+            EditType: TLS24010_EDIT_TYPE.折數修正,
+            DiscCodeEditList: this.discodeComp?.discodeData.map(item => {
+              return {
+                POS5007_ID: item.ID,
+                Talent_ID: item.Talent_ID || this.talent_id || 0,
+                TXN_DiscCode: item.TXN_DiscCode || '',
+              }
+            })
+          }
+          this.tls24010Service.updateTLS24010(data).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe((res) => {
+            this.messageService.successBubble(res.Message);
+          });
+        } else if (this.type === FIX_TYPE.預售交易修正) {
+          const data = {
+            ...body,
+            EditType: TLS24010_EDIT_TYPE.是否為預售交易修正,
+            PreOrderEdit: {
+              Talent_ID: this.TLT_NoOptions.find(item => item.No === this.dataForm.getRawValue().TLT_No)?.talent_id || this.talent_id || 0,
+              TXN_PreOrder: this.dataForm.getRawValue().TXN_PreOrder
+            }
+          }
+          this.tls24010Service.updateTLS24010(data).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe((res) => {
+            this.messageService.successBubble(res.Message);
+          });
+        } else if (this.type === FIX_TYPE.付款別修正) {
+          const data = {
+            ...body,
+            EditType: TLS24010_EDIT_TYPE.付款別修正,
+            PayNoEditList: this.paynoComp?.payNoData.map(item => {
+              return {
+                POS5008_ID: item.ID || 0,
+                PAY_No: item.PAY_No || '',
+                TXN_PayAmt: item.TXN_PayAmt || 0,
+                CRD_Type: item.PAY_Type === '0' ? item.CRD_Type || '' : '',
+                CRD_No: item.PAY_Type === '0' ? item.CRD_NoTXN_CouponNoTXN_PayDesc || '' : '',
+                TXN_CouponNo: item.PAY_Type !== '0' && item.PAY_Type !== 'A' ? item.CRD_NoTXN_CouponNoTXN_PayDesc || '' : '',
+                TXN_PayDesc: item.PAY_Type === 'A' ? item.CRD_NoTXN_CouponNoTXN_PayDesc || '' : '',
+                TERM_No: item.PAY_Type === '0' ? Number(item.TERM_No) : 0,
+              }
+            })
+          }
+          this.tls24010Service.updateTLS24010(data).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe((res) => {
+            this.messageService.successBubble(res.Message);
+          });
+        } else if (this.type === FIX_TYPE.交易資料作廢) {
+          const data = {
+            ...body,
+            EditType: TLS24010_EDIT_TYPE.交易資料作廢,
+          }
+          this.tls24010Service.updateTLS24010(data).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe((res) => {
+            this.messageService.successBubble(res.Message);
+          });
         }
       }
-      this.tls24010Service.updateTLS24010(data).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe((res) => {
-        this.messageService.successBubble(res.Message);
-      });
-    } else if (this.type === FIX_TYPE.抽成類別修正) {
-      const data = {
-        ...body,
-        EditType: TLS24010_EDIT_TYPE.抽成類別修正,
-        TLTIdEditList: this.tltidComp?.tltIdData.map(item => {
-          return {
-            POS5007_ID: item.ID,
-            Talent_ID: item.Talent_ID || this.talent_id || 0,
-            tlt_id: item.tlt_id || '',
-          }
-        })
-      }
-      this.tls24010Service.updateTLS24010(data).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe((res) => {
-        this.messageService.successBubble(res.Message);
-      });
-    } else if (this.type === FIX_TYPE.折扣別修正) {
-      const data = {
-        ...body,
-        EditType: TLS24010_EDIT_TYPE.折數修正,
-        DiscCodeEditList: this.discodeComp?.discodeData.map(item => {
-          return {
-            POS5007_ID: item.ID,
-            Talent_ID: item.Talent_ID || this.talent_id || 0,
-            TXN_DiscCode: item.TXN_DiscCode || '',
-          }
-        })
-      }
-      this.tls24010Service.updateTLS24010(data).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe((res) => {
-        this.messageService.successBubble(res.Message);
-      });
-    } else if (this.type === FIX_TYPE.預售交易修正) {
-      const data = {
-        ...body,
-        EditType: TLS24010_EDIT_TYPE.是否為預售交易修正,
-        PreOrderEdit: {
-          Talent_ID: this.TLT_NoOptions.find(item => item.No === this.dataForm.getRawValue().TLT_No)?.talent_id || this.talent_id || 0,
-          TXN_PreOrder: this.dataForm.getRawValue().TXN_PreOrder
-        }
-      }
-      this.tls24010Service.updateTLS24010(data).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe((res) => {
-        this.messageService.successBubble(res.Message);
-      });
-    } else if (this.type === FIX_TYPE.付款別修正) {
-      const data = {
-        ...body,
-        EditType: TLS24010_EDIT_TYPE.付款別修正,
-        PayNoEditList: this.paynoComp?.payNoData.map(item => {
-          return {
-            POS5008_ID: item.ID || 0,
-            PAY_No: item.PAY_No || '',
-            TXN_PayAmt: item.TXN_PayAmt || 0,
-            CRD_Type: item.PAY_Type === '0' ? item.CRD_Type || '' : '',
-            CRD_No: item.PAY_Type === '0' ? item.CRD_NoTXN_CouponNoTXN_PayDesc || '' : '',
-            TXN_CouponNo: item.PAY_Type !== '0' && item.PAY_Type !== 'A' ? item.CRD_NoTXN_CouponNoTXN_PayDesc || '' : '',
-            TXN_PayDesc: item.PAY_Type === 'A' ? item.CRD_NoTXN_CouponNoTXN_PayDesc || '' : '',
-            TERM_No: item.PAY_Type === '0' ? Number(item.TERM_No) : 0,
-          }
-        })
-      }
-      this.tls24010Service.updateTLS24010(data).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe((res) => {
-        this.messageService.successBubble(res.Message);
-      });
-    }
+    });
   }
 }
 

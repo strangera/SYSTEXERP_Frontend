@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { computed, effect, Injectable, signal } from '@angular/core';
-import { DependentDataQuery, PodRequest, TLS26010Data, TLS26010Detail, TLS26010DetailResponse, TLS26010Query } from '@pages/tls/tls26010/tls26010.model';
+import { DependentDataQuery, ECRDropdown, PodRequest, TLS26010Data, TLS26010Detail, TLS26010DetailResponse, TLS26010Query, TLTDropdown } from '@pages/tls/tls26010/tls26010.model';
 import { AuthService } from '@service/system/auth.service';
 import { ErrorHandlerService } from '@service/system/error-handler.service';
 import { NotificationService } from '@shared/component/notification-message/notification.service';
@@ -19,11 +19,11 @@ export class TLS26010Service {
   // 儲存資料
   public TLS26010Data = signal<TLS26010Data[]>([]);
   public TLS26010Detail = signal<TLS26010Detail | undefined>(undefined);
+  public preorderECRData = signal<ECRDropdown[]>([]);
+  public TLTTALENTData = signal<TLTDropdown[]>([]);
   private sys3800Data = signal<DropdownOption[]>([]);
   private sys3900Data = signal<DropdownOption[]>([]);
   private sys3A00Data = signal<DropdownOption[]>([]);
-  private preorderECRData = signal<DropdownOption[]>([]);
-  private TLTTALENTData = signal<DropdownOption[]>([]);
 
   // 讀取狀態
   private sys3800Loading = !1;
@@ -37,8 +37,8 @@ export class TLS26010Service {
   private downloadLoading = !1;
 
   // 下拉選單資料
-  public ECRMap = new Map<string, DropdownOption>([]);
-  public TLTMap = new Map<string, DropdownOption>([]);
+  public ECRMap = new Map<string, ECRDropdown>([]);
+  public TLTMap = new Map<string, TLTDropdown>([]);
   public get ECRList() { return Array.from(this.ECRMap.values()); };
   public get TLTList() { return Array.from(this.TLTMap.values()); };
 
@@ -79,11 +79,11 @@ export class TLS26010Service {
   // 變化監聽
   private ECRsEffect = effect(() => {
     this.ECRMap.clear();
-    for (const item of this.preorderECRData()) this.ECRMap.set(item.No, item);
+    for (const item of this.preorderECRData()) this.ECRMap.set(item.ecr_no, item);
   });
   private TLTsEffect = effect(() => {
     this.TLTMap.clear();
-    for (const item of this.TLTTALENTData()) this.TLTMap.set(item.No, item);
+    for (const item of this.TLTTALENTData()) this.TLTMap.set(item.tlt_no, item);
   });
 
   constructor(
@@ -144,7 +144,7 @@ export class TLS26010Service {
   loadPreorderECRList(query: DependentDataQuery & { ecr_type: string; }): void {
     if (this.preorderECRLoading) return void (this.preorderECRLoading = !1);
     this.preorderECRLoading = !0;
-    this.http.post<BaseQueryResponse<DropdownOption>>(`${apiUrl}/queryECRDropDownList`, query).pipe(
+    this.http.post<BaseQueryResponse<ECRDropdown>>(`${apiUrl}/queryECRDropDownList`, query).pipe(
       take(1),
       tap(() => this.preorderECRData.set([])),
       tap(response => this.preorderECRData.set(response.Data)),
@@ -162,7 +162,7 @@ export class TLS26010Service {
     this.TLTTALENTLoading = !0;
     // if (query.building_no === '' && query.floor_no === '') return void (this.TLTTALENTLoading = !1);
 
-    this.http.post<BaseQueryResponse<DropdownOption>>(`${apiUrl}/queryTalentDropDownList`, query).pipe(
+    this.http.post<BaseQueryResponse<TLTDropdown>>(`${apiUrl}/queryTalentDropDownList`, query).pipe(
       take(1),
       tap(() => this.TLTTALENTData.set([])),
       tap(response => this.TLTTALENTData.set(response.Data)),
@@ -244,7 +244,7 @@ export class TLS26010Service {
                   ? ApprovalStatus.未核准
                   : ApprovalStatus.已核准,
                 tlt_nos: data.talent_list.map(t => t.tlt_no),
-                ECR_Nos: data.ecr_list.map(e => e.ECR_No),
+                ecr_nos: data.ecr_list.map(e => e.ecr_no),
               };
               currentData[index] = updatedData;
             }

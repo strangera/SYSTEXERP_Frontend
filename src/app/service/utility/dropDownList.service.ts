@@ -99,6 +99,8 @@ export interface POS2004Item {
   TLT_No?: string,
   cag_barcode?: string,
   tlt_id?: string,
+  Contract_No?: string,
+  Contract_SubNo?: string
   label?: string; // 用於顯示的標籤
 }
 

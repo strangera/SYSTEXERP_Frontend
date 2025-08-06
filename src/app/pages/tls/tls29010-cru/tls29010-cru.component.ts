@@ -241,6 +241,20 @@ export class TLS29010CRUComponent extends BasicCruPageComponent<TALPORDERD_OPEND
         this.initializePage('TLS29010', this.dataForm);
         this.loadOption();
         console.log('讀取資料', this.dataForm.value);
+
+        //查詢明細檔案
+        const request={
+          "POD_No": this.dataForm.get('pod_no')?.value,
+          "pageSize": 1000,
+          "pageIndex": 1,
+          "Offset": 0,
+          "SortBy": [],
+        }
+        this.tls29010Service.queryTLS29010_Detail(request).subscribe((response) => {
+          console.log('明細查詢成功');
+          console.log('明細response', response.Data);
+
+        });
         
         //新增模式pod_desc才可以填寫，否則與其他欄位一樣都設為disabled
         if(this.crudstatus === CRUDStatus.Create) {

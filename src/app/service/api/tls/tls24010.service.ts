@@ -27,7 +27,29 @@ export interface TLS24010Data {
   TXN_No: string; // 交易序號
   TLT_No: string; // 專櫃編號
   TLT_Name: string; // 專櫃名稱
+  TXN_Status: string; // 交易狀態
+  TXN_Remark: string; // 備註
   TXN_Mode: string; // 交易型態
+  USR_No: string; // 操作員編號
+  TXN_PreOrder: string,
+  TXN_VIP: string,
+  TXN_TaxType: string,
+  TXN_TaxFreeCertNo: string,
+  GUI_Track: string,
+  TXN_GUIBegNo: string,
+  TXN_GUIEndNo: string,
+  TXN_CustCnt: number,
+  TXN_MemCard: string,
+  TXN_Uniform: string,
+  TXN_Time: string
+  TXN_GUI_CarrType: string,
+  TXN_GUIVehicle: string,
+  TXN_GUI_CarrId: string,
+  TXN_GUI_CarrIdEx: string,
+  TXN_GUIRemark: string,
+  TXN_PrintTimes: number,
+  IsHaveGUILoveCode: string,
+  TXN_GUILoveCode: string
   store_way?: string; // 櫃位類型
   talent_id?: number; // 專櫃合約編號
   TXN_GUIPaper?: string; // 補登類別
@@ -54,6 +76,8 @@ export interface POS5007Data {
   TXN_DiscCode?: string; // 折扣別
   TXN_DiscCode_Name?: string; // 折扣名稱
   TXN_DiscName?: string;
+  Contract_No?: string;
+  Contract_SubNo?: string;
 }
 
 export interface POS5008Data {
@@ -117,6 +141,7 @@ export interface InsertTLS24010Payload {
     TXN_PayDesc: string;
     TERM_No: number;
   }[];
+  VoidEdit: Record<string, string>
 }
 
 export interface UpdateTLS24010Payload {
@@ -127,16 +152,20 @@ export interface UpdateTLS24010Payload {
   ECR_No: string;
   TXN_No: number;
   POS5006_ID?: number;
-  TXN_Remark: string;
+  TXN_Remark?: string;
   TLTNoEdit?: {
     TLT_No: string;
     Talent_ID: number;
+    Contract_No: string
+    Contract_SubNo: string
     updatePOS5007List: {
       POS5007_ID?: number;
       TLT_No: string;
       PLU_MagNo: string;
       PLU_No: string;
       Talent_ID: number;
+      Contract_No: string,
+      Contract_SubNo: string,
       tlt_id?: string;
       PLU_TaxType?: string;
       TXN_DiscCode?: string;
@@ -190,6 +219,15 @@ export interface POS2004ForUpdateResponse {
   PLU_OrgPLUNo: string;
   PLU_SalePrc: number;
   talent_id: number;
+  Contract_No: string;
+  Contract_SubNo: string;
+}
+
+export interface CancelVoidTLS24010Payload {
+  SYS_StoreNo: string,
+  TXN_Date: string,
+  ECR_No: string,
+  TXN_No: number
 }
 
 @Injectable({
@@ -242,4 +280,12 @@ export class Tls24010Service {
     return this.http.post<ApiResponse<POS2004ForUpdateResponse[]>>(`${this.apiUrl}/queryPOS2004ForUpdate`, payload);
   }
 
+  /**
+   * 取消交易補登
+   * @param payload 依照 Swagger 規格傳入資料
+   * @returns API 回應結果
+   */
+  cancelVoidTLS24010(payload: CancelVoidTLS24010Payload): Observable<ApiResponse<number>> {
+    return this.http.post<ApiResponse<number>>(`${this.apiUrl}/cancelVoidTLS24010`, payload);
+  }
 }
