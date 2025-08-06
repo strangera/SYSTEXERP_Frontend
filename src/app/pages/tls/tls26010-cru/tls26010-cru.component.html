@@ -75,8 +75,9 @@
                [showManage]="false"
                [showReportMode]="false"
                [isRowSelectable]="isRowSelectable"
+               (delete)="onDelete($event)"
                [data]="ecrTableFiltered"
-               [dataKey]="'tlt_no'"
+               [dataKey]="'ecr_no'"
                [tableKey]="'TLS26010_ECR'"
                [columns]="columns">
     </app-table>
@@ -102,6 +103,7 @@
                [showExcel]="isFormEditable"
                (exportExcel)="onExportExcel()"
                (importExcel)="onImportExcel($event)"
+               (delete)="onDelete($event)"
                [data]="tltTableFiltered"
                [dataKey]="'tlt_no'"
                [tableKey]="'TLS26010_TLT'"
@@ -112,53 +114,55 @@
 
 <app-dialog [visible]="!!dialogVisible()"
             [header]="dialogVisible() === 'ecr' ? '新增收銀機' : '新增專櫃'"
-            (visibleChange)="dialogVisible.set(!1)"
+            (visibleChange)="onVisibleChange($event)"
             (save)="onDialogSubmit()"
             [height]="'50vh'">
   <form [formGroup]="dataForm">
     <div class="grid p-fluid">
       <div class="col-12 md:col-6 lg:col-4">
-        <app-dropdown label="館別"
-                      controlName="sys3800"
-                      [options]="service.sys3800List()"
-                      optionLabel="Name"
-                      optionValue="No"
-                      [control]="dataForm.controls.sys3800"
-                      [submitted]="submitted"></app-dropdown>
-      </div>
-      <div class="col-12 md:col-6 lg:col-4">
-        <app-dropdown label="樓層"
-                      controlName="sys3900"
-                      [options]="service.sys3900List()"
-                      optionLabel="Name"
-                      optionValue="No"
-                      [control]="dataForm.controls.sys3900"
-                      [submitted]="submitted"></app-dropdown>
-      </div>
-      <!-- <div class="col-12 md:col-6 lg:col-4">
-          <app-dropdown label="區域"
-                        controlName="sys3A00"
-                        [options]="service.sys3A00List()"
-                        optionLabel="Name"
-                        optionValue="No"
-                        [control]="dataForm.controls.sys3A00"
-                        [submitted]="submitted"></app-dropdown>
-        </div> -->
-      <div class="col-12 md:col-6 lg:col-4">
-        <app-multi-select *ngIf="dialogVisible() === 'ecr'"
-                          label="收銀機號"
-                          controlName="ECR_Nos"
-                          [options]="service.ECRList"
+        <app-multi-select label="館別"
+                          controlName="sys3800"
+                          [options]="service.sys3800List()"
                           optionLabel="Name"
                           optionValue="No"
-                          [control]="dataForm.controls.ECR_Nos"
+                          [control]="dataForm.controls.sys3800"
+                          [submitted]="submitted"></app-multi-select>
+      </div>
+      <div class="col-12 md:col-6 lg:col-4">
+        <app-multi-select label="樓層"
+                          controlName="sys3900"
+                          [options]="service.sys3900List()"
+                          optionLabel="Name"
+                          optionValue="No"
+                          [control]="dataForm.controls.sys3900"
+                          [submitted]="submitted"></app-multi-select>
+      </div>
+      <div class="col-12 md:col-6 lg:col-4">
+        <app-multi-select label="區域"
+                          controlName="sys3A00"
+                          [options]="service.sys3A00List()"
+                          optionLabel="Name"
+                          optionValue="No"
+                          [control]="dataForm.controls.sys3A00"
+                          [submitted]="submitted"></app-multi-select>
+      </div>
+      <div class="col-12 md:col-6 lg:col-4">
+        <app-multi-select *ngIf="dialogVisible() === 'ecr'"
+                          [appendTo]="'body'"
+                          label="收銀機號"
+                          controlName="ecr_nos"
+                          [options]="service.ECRList"
+                          optionLabel="ecr_name"
+                          optionValue="ecr_no"
+                          [control]="dataForm.controls.ecr_nos"
                           [submitted]="submitted"></app-multi-select>
         <app-multi-select *ngIf="dialogVisible() === 'tlt'"
+                          [appendTo]="'body'"
                           label="專櫃名稱"
                           controlName="tlt_nos"
                           [options]="service.TLTList"
-                          optionLabel="Name"
-                          optionValue="No"
+                          optionLabel="tlt_name"
+                          optionValue="tlt_no"
                           [control]="dataForm.controls.tlt_nos"
                           [submitted]="submitted"></app-multi-select>
       </div>
