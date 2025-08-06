@@ -170,7 +170,6 @@
             [submitted]="submitted"
           ></app-dropdown>
         </div>
-        x
 
         <div class="col-12 md:col-6 lg:col-4">
           <app-input-text
@@ -200,16 +199,17 @@
       </div>
       <div class="grid p-fluid mt-5">
         <app-table
+          dataKey="id"
           [showReportMode]="false"
           class="col-12"
           [data]="contacts"
           [columns]="columns"
           [showEdit]="false"
           [showDetail]="false"
-          [showCheckBox]="true"
           [showInsert]="!isReadonly"
           [showRowEdit]="!isReadonly"
           (selectionChange)="selectedRows = $event"
+          [deleteData]="!isReadonly"
           [selectedItems]="selectedRows"
           [showCaption]="!isFormReadable"
           [showManage]="!isReadonly"

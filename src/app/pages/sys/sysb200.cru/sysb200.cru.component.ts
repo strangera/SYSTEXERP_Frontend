@@ -7,6 +7,7 @@ import { Sysbc00Service } from './../../../service/api/sys/sysbc00.service';
 import { Column } from '../../../shared/componentkit/table/table.model';
 import {
   validateMaxLength,
+  validateNoChinese,
 } from '../../../shared/componentkit/table/validate-field.model';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
@@ -32,7 +33,10 @@ export class SYSB200CRUComponent extends BasicCruPageComponent<Tlsb200Model> imp
     // 基本資料
     VEN_No: [{ value: '', disabled: true }, [Validators.required, Validators.maxLength(14)]],
     VEN_Flag: ['', Validators.required],
-    VEN_Uniform: ['', Validators.maxLength(10)],
+    VEN_Uniform: ['', [
+      Validators.maxLength(10),
+      Validators.pattern(/^\d{8}$/)
+    ]],
     VEN_RemitFeeMode: ['', Validators.required],
     VEN_Name: ['', [Validators.required, Validators.maxLength(60)]],
     VEN_EngName: ['', Validators.maxLength(60)],
@@ -66,10 +70,10 @@ export class SYSB200CRUComponent extends BasicCruPageComponent<Tlsb200Model> imp
   columns: Column[] = [
     { field: 'VEN_Boss', header: '聯絡人', type: 'input', validate: [validateMaxLength(12)] },
     { field: 'VEN_BossTitle', header: '職稱', type: 'input', validate: [validateMaxLength(16)] },
-    { field: 'VEN_BossID', header: '身份證字號', type: 'input', validate: [validateMaxLength(10)] },
-    { field: 'VEN_BossTel', header: '電話', type: 'input', validate: [validateMaxLength(15)] },
+    { field: 'VEN_BossID', header: '身份證字號', type: 'input', validate: [validateMaxLength(10), validateNoChinese()] },
+    { field: 'VEN_BossTel', header: '電話', type: 'input', validate: [validateMaxLength(15), validateNoChinese()] },
     { field: 'VEN_BossAddr', header: '地址', type: 'input', validate: [validateMaxLength(100)] },
-    { field: 'VEN_BossEmail', header: '電子郵件', type: 'input', validate: [validateMaxLength(60)] },
+    { field: 'VEN_BossEmail', header: '電子郵件', type: 'input', validate: [validateMaxLength(60), validateNoChinese()] },
   ];
 
   venderOptions: { label: string; value: string }[] = [];
@@ -109,7 +113,7 @@ export class SYSB200CRUComponent extends BasicCruPageComponent<Tlsb200Model> imp
 
   ngOnInit(): void {
     this.initializePage('SYSB200', this.dataForm);
-    this.loadOptions();
+
     const id = this.rowdata?.id
     if (id) {
       this.sysb200Service.querySYSB200Detail({ pos2013_id: id }).subscribe({
@@ -141,14 +145,7 @@ export class SYSB200CRUComponent extends BasicCruPageComponent<Tlsb200Model> imp
       }
     }
   }
-  loadOptions() {
-    // this.sysb200Service.querySYSB200({}).subscribe(res => {
-    //   this.venderOptions = (res.Data ?? []).map((item: { VEN_No: string; VEN_Name: string }) => ({
-    //     label: `${item.VEN_No} - ${item.VEN_Name}`,
-    //     value: item.VEN_No
-    //   }));
-    // });
-  }
+
   loadBankOptions() {
     this.bankOptions$ = this.sysbc00Service.querySYSBC00({}).pipe(
       map(res => (res.Data ?? []).map(item => ({
