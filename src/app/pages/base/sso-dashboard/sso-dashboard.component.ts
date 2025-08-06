@@ -189,55 +189,38 @@ navigateToUrl(item: ApiItem): void {
       })
     );
   } else {
-    // 🔁 外部系統流程
-   // 外部系統流程
-const userNo = this.user?.user_No || '';
-if (!userNo) {
-  this.messageService.errorBubble('找不到登入使用者資訊');
-  return;
-}
+    // ✅ 外部系統流程（不再呼叫 /Outer）
+    const userNo = this.user?.user_No || '';
+    if (!userNo) {
+      this.messageService.errorBubble('找不到登入使用者資訊');
+      return;
+    }
 
-this.subscriptions.push(
-  this.authService.getOuterToken(userNo).pipe(
-    untilDestroyed(this),
-    concatMap((tokenResponse) => {
-      if (tokenResponse.Status !== '0000' || !tokenResponse.Data) {
-        throw new Error('取得一次性 Token 失敗');
-      }
+    this.subscriptions.push(
+      this.authService.getOuterToken().pipe(
+        untilDestroyed(this),
+        finalize(() => this.loading = false),
+        concatMap((tokenResponse) => {
+          if (tokenResponse.Status !== '0000' || !tokenResponse.Data) {
+            throw new Error('取得一次性 Token 失敗');
+          }
 
-      const token = tokenResponse.Data;
-      const outerApiUrl = `${environment.ApiUrl}/SSOLogin/Outer`;
+          const token = tokenResponse.Data;
+          const targetUrl = `${item.System_Url}?token=${encodeURIComponent(token)}`;
 
-      // ✅ 在這裡補上 win 的宣告
-      const win = window.open('', '_blank');
-
-      return fetch(outerApiUrl, {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${token}`
+          // ✅ 開新頁面導向外部系統（直接帶 token）
+          window.open(targetUrl, '_blank');
+          return [];
+        })
+      ).subscribe({
+        error: () => {
+          this.messageService.errorBubble('無法前往外部系統，請稍後再試');
         }
       })
-        .then(res => res.json())
-        .then(data => {
-          if (data.Status === '0000' && data.Data?.user_No) {
-            const targetUrl = `${item.System_Url}?token=${encodeURIComponent(token)}`;
-            win!.location.href = targetUrl;
-          } else {
-            this.messageService.errorBubble('外部系統登入失敗');
-            win?.close();
-          }
-        })
-        .catch(() => {
-          this.messageService.errorBubble('外部系統登入失敗');
-          win?.close();
-        });
-    }),
-    finalize(() => this.loading = false)
-  ).subscribe()
-);
-
+    );
   }
 }
+
 
 
 

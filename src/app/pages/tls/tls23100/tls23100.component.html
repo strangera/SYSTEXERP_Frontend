@@ -12,7 +12,6 @@
       <form
         [formGroup]="queryForm"
         id="queryForm"
-        (ngSubmit)="onSubmit(queryForm)"
       >
         <div class="grid p-fluid">
           <!-- 銷售日期 -->
@@ -51,15 +50,15 @@
 
           <!-- 付款別 -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
+            <app-multi-select
               label="付款別"
-              controlName="paymentType"
+              controlName="CRD_Type"
               [options]="paymentTypeOptions"
               optionLabel="label"
               optionValue="value"
-              [control]="queryForm.controls.paymentType"
+              [control]="queryForm.controls.CRD_Type"
               [submitted]="submitted"
-            ></app-dropdown>
+            ></app-multi-select>
           </div>
 
           <!-- 館別 -->
@@ -99,7 +98,7 @@
             ></app-multi-select>
           </div>
         </div>
-      </form>
+  </form>
       <div class="col-12 md:col-6 lg:col-4">
         <label for="pageSize">限制筆數</label>
         <input
@@ -116,34 +115,17 @@
         class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
       >
         <app-button btnType="clear"></app-button>
-        <!-- <app-button btnType="query" [loading]="loading"></app-button> -->
+       
         <app-button
           btnType="report"
           label="報表模式"
-          (clickEvent)="confirmPageSizeAndNavigate()"
+          (click)="confirmPageSizeAndNavigate()"
           [loading]="loading"
         ></app-button>
       </div>
+       
     </p-accordionTab>
   </p-accordion>
 </div>
 
-<!-- 查詢結果 -->
-<!-- <div class="card">
-  <app-table
-    tableKey="TLS23100"
-    [data]="data"
-    [columns]="columns"
-    [showCheckBox]="false"
-    dataKey="transactionNumber"
-    [multiSortMeta]="[{ field: 'counterCode', order: 1 }]"
-    [totalRecords]="totalRecords"
-    [lazy]="true"
-    [loading]="loading"
-    (edit)="onEdit($event)"
-    (detail)="onDetail($event)"
-    [showManage]="false"
-    [showDelete]="false"
-    (lazyLoadData)="onLazyLoadData($event, queryForm); "
-  ></app-table>
-</div> -->
+

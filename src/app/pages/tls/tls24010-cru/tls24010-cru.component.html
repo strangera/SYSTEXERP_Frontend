@@ -9,8 +9,13 @@
       <div *ngIf="type === '04'" class="grid p-fluid card">
         <app-tls24010-payno [data]="PaymentDetailsList" class="col-12"></app-tls24010-payno>
       </div>
-      <div *ngIf="type === '02' || type === '03'" class="grid p-fluid card">
-        <app-tls24010-tltid [data]="ProductDetailList" [talent_id]="talent_id" class="col-12"></app-tls24010-tltid>
+      <div *ngIf="type === '03'" class="grid p-fluid card">
+        <app-tls24010-tltid [TXN_Date]="dataForm.controls.TXN_Date.value" [data]="ProductDetailList"
+          [talent_id]="talent_id" [TLT_No]="dataForm.controls.TLT_No.value" class="col-12"></app-tls24010-tltid>
+      </div>
+      <div *ngIf="type === '02'" class="grid p-fluid card">
+        <app-tls24010-discode [TXN_Date]="dataForm.controls.TXN_Date.value" [data]="ProductDetailList"
+          [talent_id]="talent_id" [TLT_No]="dataForm.controls.TLT_No.value" class="col-12"></app-tls24010-discode>
       </div>
       <!------------->
       <div class="grid p-fluid">
@@ -23,24 +28,25 @@
         <!-- 專櫃編號 → POS5006.TLT_No -->
         <app-dropdown *ngIf="type === '01'" class="col-12 md:col-6 lg:col-3" label="專櫃編號"
           [control]="dataForm.controls.TLT_No" [submitted]="submitted" [options]="TLT_NoOptions" optionLabel="label"
-          optionValue="No" />
+          optionValue="No" [showClear]="false" />
         <!-- 專櫃編號 → POS5006.TLT_No -->
         <app-input-text *ngIf="type !== '01'" class="col-12 md:col-6 lg:col-3" label="專櫃編號"
           [control]="dataForm.controls.TLT_No" [submitted]="submitted" />
         <!-- 交易序號 → POS5006.TXN_No -->
         <app-input-text class="col-12 md:col-6 lg:col-3" label="交易序號" [control]="dataForm.controls.TXN_No"
           [submitted]="submitted" />
+        <!-- 備註 → POS5006.TXN_Remark -->
+        <app-input-textarea class="col-12" label="備註" [control]="dataForm.controls.TXN_Remark"
+          [submitted]="submitted" />
       </div>
       <hr *ngIf="type === '01'" />
       <div *ngIf="type === '01'" class="grid p-fluid card">
         <app-tls24010-tltno [data]="ProductDetailList" [store_way]="store_way" [talent_id]="talent_id"
-          class="col-12"></app-tls24010-tltno>
+          [TXN_Date]="dataForm.controls.TXN_Date.value" [TLT_No]="dataForm.controls.TLT_No.value"
+          [TLT_NoOptions]="TLT_NoOptions" class="col-12"></app-tls24010-tltno>
       </div>
       <hr />
       <div class="grid p-fluid">
-        <!-- 備註 → POS5006.TXN_Remark -->
-        <app-input-textarea class="col-12" label="備註" [control]="dataForm.controls.TXN_Remark"
-          [submitted]="submitted" />
         <!-- 收銀員編號 → POS2001.USR_No -->
         <app-dropdown class="col-12 md:col-6 lg:col-3" label="收銀員編號" [control]="dataForm.controls.USR_No"
           [submitted]="submitted" [options]="USR_NoOptions" optionLabel="label" optionValue="No" />
@@ -110,8 +116,9 @@
       <div *ngIf="type !== '02' && type !== '03' && type !== '01'" class="grid p-fluid card">
         <app-tls24010-pos5007 [data]="ProductDetailList" class="col-12" [TXN_GUIPaper]="TXN_GUIPaper"
           [TLT_Name]="TLT_Name" [store_way]="store_way" [talent_id]="talent_id"
-          [TLT_No]="this.dataForm.get('TLT_No')?.value" [isFormCreateable]="isFormCreateable"
-          [isFormEditable]="isFormEditable" [isFormReadable]="isFormReadable" [type]="type"></app-tls24010-pos5007>
+          [TXN_Date]="this.dataForm.controls.TXN_Date.value" [TLT_No]="this.dataForm.get('TLT_No')?.value"
+          [isFormCreateable]="isFormCreateable" [isFormEditable]="isFormEditable" [isFormReadable]="isFormReadable"
+          [type]="type"></app-tls24010-pos5007>
       </div>
       <div *ngIf="type !== '04'" class="grid p-fluid card">
         <app-tls24010-pos5008 [data]="PaymentDetailsList" class="col-12" [submitted]="submitted"

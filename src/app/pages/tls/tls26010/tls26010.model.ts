@@ -2,24 +2,53 @@ import { BaseQueryResponse } from '@shared/models/api/base-api.interface';
 
 /**
  * @description
- * - data_type: 1: 讀取收銀機主檔中統收機台, 2: 讀取預購活動主檔中的收銀機台
+ * - ecr_type: 1: 讀取收銀機主檔中統收機台, 2: 讀取預購活動主檔中的收銀機台
  * - sdate: 起始日期
  * - edate: 結束日期
  */
 export interface DependentDataQuery {
-  data_type?: string;
-  building_no?: string | null;
-  floor_no?: string | null;
-  area_no?: string | null;
+  ecr_type?: string;
+  building_nos?: string[] | null;
+  floor_nos?: string[] | null;
+  area_nos?: string[] | null;
 }
 
 export interface TLS26010Query {
-  ECR_Nos: string[];
+  ecr_nos: string[];
   tlt_nos: string[];
   pod_sdate_S: Date;
   pod_sdate_E: Date;
   pod_edate_S: Date;
   pod_edate_E: Date;
+}
+
+export interface ECRDropdown {
+  area_name?: string;
+  area_no?: string;
+  building_name?: string;
+  building_no?: string;
+  ecr_name: string;
+  ecr_no: string;
+  ecr_type: string;
+  floor_name?: string;
+  floor_no?: string;
+  tlt_name: string;
+  tlt_no: string;
+}
+
+export interface TLTDropdown {
+  VEN_Name: string;
+  apply_no: string;
+  area_name?: string;
+  area_no?: string;
+  building_name?: string;
+  building_no?: string;
+  floor_name?: string;
+  floor_no?: string;
+  talent_id: number;
+  tlt_name: string;
+  tlt_no: string;
+  ven_no: string;
 }
 
 /**
@@ -34,7 +63,7 @@ export interface TLS26010Query {
  * - pod_no: 活動編號
  * - pod_sdate: 活動起始日期
  * - pod_status: 活動狀態 (0=未核準,1=已核準,9=刪除)
- * - ECR_Nos: 收銀機號碼列表
+ * - ecr_nos: 收銀機號碼列表
  * - area_no: 區域編號
  * - build_no: 館別編號
  * - floor_no: 樓層編號
@@ -52,7 +81,7 @@ export interface TLS26010Data {
   pod_no: string;
   pod_sdate: Date;
   pod_status: '0' | '1' | '9';
-  ECR_Nos?: string[];
+  ecr_nos?: string[];
   area_no?: string;
   build_no?: string;
   floor_no?: string;
@@ -94,14 +123,14 @@ export interface PodInfo {
 
 /** * @description
  * - id: 主鍵，自動編號
- * - ECR_No: 收銀機編號
+ * - ecr_no: 收銀機編號
  * - tlt_no: 櫃位編號
  * - tlt_name: 櫃位名稱
  * - Status: 操作狀態 (original=原始, modify=修改, delete=刪除, new=新增)
  */
 export interface EcrItem {
   id?: number;
-  ECR_No: string;
+  ecr_no: string;
   tlt_no: string;
   tlt_name: string;
   Status?: 'original' | 'modify' | 'delete' | 'new';

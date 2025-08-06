@@ -1,6 +1,6 @@
 import { Tls29010Service } from './../../../service/api/tls/tls29010.service';
 import { Component, OnInit } from '@angular/core';
-import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { createPaginationConfig, Column, formatDate } from '../../../shared/componentkit/table/table.model';
 import { apiOption, option } from '../../../shared/models/sys/sysb000.module';
@@ -16,20 +16,38 @@ import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/
 import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
 import { CalendarRangeQuickComponent } from '../../../shared/componentkit/calendar-range-quick/calendar-range-quick.component';
+import { Tls12010Service } from '@service/api/tls/tls12010.service';
 
-// TALPORDERD_OPENDisc
-export interface TALPORDERD_OPENDisc {
-  id: number; // 主鍵，自動編號
-  mid: number; // 主鍵，自動編號
-
+// TALPORDERM (主檔)
+export interface TALPORDERM {
+  id: string; // identity(1,1) not null
+  mid: number; // DEFAULT 0 not null
   str_no: string; // 店部編號
-  pod_no: string; // 活動編號(TALPORDERM)
-  talent_id: number; // 合約編號系統
-  tlt_id: string; // 抽成類別(0-9)
+  pod_no: string; // 活動申請編號YYYYMMDDSSS(活動起始日期+流水號)
+  pod_type: '1' | '2' | '3' | '4' | '5' | '6' | '7' | '8'; 
+  // 活動類型:
+  // 1=預售 (只有預售才下到 pos)
+  // 2=滿千送百發行
+  // 3=滿千送百兌回
+  // 4=會員卡集點-銷售 (不用)
+  // 5=會員卡集點-點數 (不用)
+  // 6=全館消費滿額集點-銷售
+  // 7=全館消費滿額集點-點數
+  // 8=期間開放折扣
 
-  tlt_no: string; // 專櫃編號
-  cag_barcode: string; // 折數(條碼)
-  use_flag: string; // 是否使用 Y/N
+  org_id?: string | null; // 組織-部門(SYS3100) //
+  act_no?: string | null; // 活動編號(群組) //
+  pod_desc?: string | null; // 活動名稱
+  pod_sdate: Date; // 活動起始日期
+  pod_edate: Date; // 活動終止日期
+  pod_busdate?: Date | null; // 活動正檔日期
+  cap_item?: string | null; // 扣款代碼
+  pod_status: '0' | '1' | '9'; 
+  // 0=未核准 1=已核准 9=刪除
+
+  approved_userno?: string | null; // 核准人員
+  approved_usr_name?: string | null; // 核准人員姓名
+  approved_date?: Date | null; // 核准日期
 
   CRT_Date: string; // 建立日期 (ISO 字串格式: YYYY-MM-DD)
   CRT_USR_No: string; // 建立人員代碼
@@ -37,8 +55,6 @@ export interface TALPORDERD_OPENDisc {
   UPD_Date: string; // 變更日期 (ISO 格式: YYYY-MM-DDTHH:mm:ss)
   UPD_USR_No: string; // 變更人員代碼
   UPD_USR_Name: string; // 變更人員姓名
-
-  CanDel?: boolean;  //能否刪除(僅顯示)
 }
 
 @Component({
@@ -50,12 +66,12 @@ export interface TALPORDERD_OPENDisc {
 })
 
 // 2.2.9.1 折扣開放維護作業
-export class TLS29010Component extends BasicQueryPageComponent<TALPORDERD_OPENDisc> implements OnInit{
+export class TLS29010Component extends BasicQueryPageComponent<TALPORDERM> implements OnInit{
 
     // 查詢
       queryForm = this.formBuilder.group({
         // TALPORDERM
-        pod_no: [''],       // 活動申請編號YYYYMMDDSSS(活動起始日期+流水號)
+        pod_no: [''],   // 活動申請編號YYYYMMDDSSS(活動起始日期+流水號)
         pod_type: [[]], // 折扣別(1=預售, 2=滿千送百發行, 3=滿千送百兌回, 4~5=會員卡集點, 6~7=全館集點, 8=期間開放折扣)
         pod_sdate: [null], // 活動起始日 (Date)
         pod_edate: [null], // 活動終止日 (Date)
@@ -101,30 +117,65 @@ export class TLS29010Component extends BasicQueryPageComponent<TALPORDERD_OPENDi
 
       tlt_No_Option: apiOption[] = [];  // 專櫃編號下拉
       
-      data: TALPORDERD_OPENDisc[] = [];
+      data: TALPORDERM[] = [];
       columns: Column[] = [
+        { field: 'id', header: '流水號', visible: false },
+        { field: 'mid', header: 'MID', visible: false },
         { field: 'str_no', header: '店部編號', visible: true },
-        { field: 'pod_no', header: '活動編號', visible: true },
-        { field: 'talent_id', header: '合約編號系統', visible: true },
-        { field: 'tlt_id', header: '抽成類別(0-9)', visible: true },
-        { field: 'tlt_no', header: '專櫃編號', visible: true },
-        { field: 'cag_barcode', header: '折數(條碼)', visible: true },
-        { field: 'use_flag', header: '是否使用', visible: true, format: (value: string) =>
-          this.whetherOption.find((option) => option.value === value)?.label || value
+        { field: 'pod_no', header: '活動申請編號', visible: true },
+        {
+          field: 'pod_type',
+          header: '活動類型',
+          visible: true,
+          format: (value: string) =>
+            ({
+              '1': '預售',
+              '2': '滿千送百發行',
+              '3': '滿千送百兌回',
+              '4': '會員卡集點-銷售',
+              '5': '會員卡集點-點數',
+              '6': '全館滿額集點-銷售',
+              '7': '全館滿額集點-點數',
+              '8': '期間開放折扣',
+            }[value] || value),
         },
+        { field: 'org_id', header: '組織部門', visible: false },
+        { field: 'act_no', header: '活動編號(群組)', visible: false },
+        { field: 'pod_desc', header: '活動名稱', visible: true },
+        { field: 'pod_sdate', header: '活動起始日', visible: true, format: formatDate },
+        { field: 'pod_edate', header: '活動結束日', visible: true, format: formatDate },
+        { field: 'pod_busdate', header: '活動正檔日', visible: false, format: formatDate },
+        { field: 'cap_item', header: '扣款代碼', visible: false },
+        {
+          field: 'pod_status',
+          header: '活動狀態',
+          visible: true,
+          format: (value: string) =>
+            ({
+              '0': '未核准',
+              '1': '已核准',
+              '9': '刪除',
+            }[value] || value),
+        },
+        { field: 'approved_userno', header: '核准人員代碼', visible: false },
+        { field: 'approved_usr_name', header: '核准人員姓名', visible: false },
+        { field: 'approved_date', header: '核准日期', visible: false, format: formatDate },
 
-        { field: 'CRT_Date', header: '建立日期', visible: true, format: formatDate  },
+        { field: 'CRT_Date', header: '建立日期', visible: true, format: formatDate },
         { field: 'CRT_USR_No', header: '建立人員代碼', visible: false },
         { field: 'CRT_USR_Name', header: '建立人員姓名', visible: false },
         { field: 'UPD_Date', header: '變更日期', visible: false, format: formatDate },
         { field: 'UPD_USR_No', header: '變更人員代碼', visible: false },
         { field: 'UPD_USR_Name', header: '變更人員姓名', visible: false },
       ];
+
     
-      selectedItems: TALPORDERD_OPENDisc[] = [];// 多選項目
+      selectedItems: TALPORDERM[] = [];// 多選項目
     
       // ----------------------------------------------------------------
-      constructor(private tls12010Service: Tls29010Service) {
+      constructor(
+        private tls29010Service: Tls29010Service,
+      ) {
         super();
       }
     
@@ -136,30 +187,30 @@ export class TLS29010Component extends BasicQueryPageComponent<TALPORDERD_OPENDi
       onSubmit(frm: FormGroup) {
         console.log('查詢條件',frm.value);
         this.handleSubmit(frm, () => {
-          // this.tls12010Service.queryTLS12010(frm.value).subscribe({
-          //   next: (response) => {
-          //     if (response.Status === '0000') {
-          //       this.data = response.Data || [];
-          //       console.log('Result', this.data);
-          //       this.totalRecords = response.TotalCount || response.Data.length;
-          //       this.queryStateService.setQueryState(this.ProgNo, frm.value);
-          //     } else {
-          //       console.error('API error:', response.Status, response.Message);
-          //     }
-          //     this.loading = false;
-          //     this.messageService.unblockUi();
-          //   },
-          //   error: (err: string) => {
-          //     console.error('API error:', err);
-          //     this.loading = false;
-          //     this.messageService.unblockUi();
-          //   },
-          // });
+          this.tls29010Service.queryTLS29010(frm.value).subscribe({
+            next: (response) => {
+              if (response.Status === '0000') {
+                this.data = response.Data || [];
+                console.log('Result', this.data);
+                this.totalRecords = response.TotalCount || response.Data.length;
+                this.queryStateService.setQueryState(this.ProgNo, frm.value);
+              } else {
+                console.error('API error:', response.Status, response.Message);
+              }
+              this.loading = false;
+              this.messageService.unblockUi();
+            },
+            error: (err: string) => {
+              console.error('API error:', err);
+              this.loading = false;
+              this.messageService.unblockUi();
+            },
+          });
         });
       }
 
       // 刪除項目
-        onDelete(data: TALPORDERD_OPENDisc | TALPORDERD_OPENDisc[]): void {
+        onDelete(data: TALPORDERM | TALPORDERM[]): void {
           console.log('Delete data:', JSON.stringify(data, null, 2));
       
           const items = Array.isArray(data) ? data : [data];
@@ -181,26 +232,26 @@ export class TLS29010Component extends BasicQueryPageComponent<TALPORDERD_OPENDi
           }
     
       
-          // const deleteBody = {
-          //   idList: idList, // 符合 API 的 idList 格式
-          // };
-          // this.tls41050Service.deleteTLS51070(deleteBody).subscribe({
-          //   next: (response) => {
-          //     if (response.Status === '0000') {
-          //       this.messageService.successBubble('選中項目刪除成功');
-          //     } else {
-          //       console.error('API error:', response.Status, response.Message);
-          //       this.messageService.errorBubble(`刪除失敗: ${response.Message}`);
-          //     }
-          //   },
-          //   error: (err: string) => {
-          //     console.error('API error:', err);
-          //     this.messageService.errorBubble('刪除失敗');
-          //   },
-          //   complete: () => {
-          //     this.onSubmit(this.queryForm);
-          //   },
-          // });
+          const deleteBody = {
+            idList: idList, // 符合 API 的 idList 格式
+          };
+          this.tls29010Service.deleteTLS29010(deleteBody).subscribe({
+            next: (response) => {
+              if (response.Status === '0000') {
+                this.messageService.successBubble('選中項目刪除成功');
+              } else {
+                console.error('API error:', response.Status, response.Message);
+                this.messageService.errorBubble(`刪除失敗: ${response.Message}`);
+              }
+            },
+            error: (err: string) => {
+              console.error('API error:', err);
+              this.messageService.errorBubble('刪除失敗');
+            },
+            complete: () => {
+              this.onSubmit(this.queryForm);
+            },
+          });
       
           this.selectedItems = [];
         }
@@ -212,7 +263,7 @@ export class TLS29010Component extends BasicQueryPageComponent<TALPORDERD_OPENDi
 
       loadOption(){
         // 專櫃編號
-        this.tls12010Service
+        this.tls29010Service
           .queryTLTTALENT_Status_DropDownList({})
           .subscribe((response) => {
             this.tlt_No_Option = response.Data.map((item: apiOption) => ({

@@ -43,7 +43,7 @@ export class PdfService {
     });
 
     // ✅ 直接使用註冊好的字型
-    doc.addFont('assets/fonts/NotoSansTC-VariableFont_wght.ttf', 'Noto Sans TC', 'normal');
+    doc.addFont('assets/fonts/NotoSansTC-VariableFont_wght.woff2', 'Noto Sans TC', 'normal');
     doc.setFont('Noto Sans TC');
 
 

@@ -280,15 +280,29 @@
               <app-input-text label="契約屆滿保證金" controlName="construct_fees" [control]="dataForm.controls.construct_fees"
                 [submitted]="submitted"></app-input-text>
             </div>
-            <div class="col-12 md:col-6 lg:col-4">
+            <!-- <div class="col-12 md:col-6 lg:col-4">
               <app-multi-select label="是否抄錶" controlName="meterReading" [options]="meterTypeOptions" optionLabel="label"
                 optionValue="value" [control]="dataForm.controls.meter_typeList"
                 [submitted]="submitted"></app-multi-select>
-            </div>
+            </div> -->
             <div class="col-12 md:col-6 lg:col-4">
+              <app-radiobutton label="水錶抄錶" groupname="waterFlag" [control]="dataForm.controls.water_flag"
+                [options]="meterReadingOptions" [submitted]="submitted"></app-radiobutton>
+            </div>
+
+            <div class="col-12 md:col-6 lg:col-4">
+              <app-radiobutton label="電錶抄錶" groupname="electricFlag" [control]="dataForm.controls.electric_flag"
+                [options]="meterReadingOptions" [submitted]="submitted"></app-radiobutton>
+            </div>
+
+            <div class="col-12 md:col-6 lg:col-4">
+              <app-radiobutton label="瓦斯錶抄錶" groupname="gasFlag" [control]="dataForm.controls.gas_flag"
+                [options]="meterReadingOptions" [submitted]="submitted"></app-radiobutton>
+            </div>
+            <!-- <div class="col-12 md:col-6 lg:col-4">
               <app-dropdown label="有無保證金" controlName="guaranteeNote" [options]="depositTypeOptions" optionLabel="label"
                 optionValue="value" [control]="dataForm.controls.open_deposit" [submitted]="submitted"></app-dropdown>
-            </div>
+            </div> -->
             <div class="col-12 md:col-6 lg:col-4">
               <app-input-text label="保證金備註" controlName="ticket_remarks" [control]="dataForm.controls.ticket_remarks"
                 [submitted]="submitted"></app-input-text>

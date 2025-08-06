@@ -90,8 +90,8 @@
           <div class="col-12 md:col-6 lg:col-4">
             <app-radiobutton
               label="是否啟用"
-              groupname="Pub_Eable"
-              [control]="queryForm.controls.Pub_Eable"
+              groupname="pub_enable"
+              [control]="queryForm.controls.pub_enable"
               [options]="YNOptions"
               [submitted]="submitted"
             ></app-radiobutton>
@@ -124,7 +124,7 @@
     [data]="data"
     [columns]="columns"
     [expansionColumns]="detailcolumns"
-     expansionDataKey="children"
+    expansionDataKey="children"
     (detail)="onDetail($event)"
     [showEdit]="true"
     [showCheckBox]="true"

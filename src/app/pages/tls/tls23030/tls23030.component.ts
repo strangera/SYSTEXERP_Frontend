@@ -64,7 +64,8 @@ type DisplayMode = 'Report' | 'SummaryReport';
 })
 export class TLS23030Component extends BasicQueryPageComponent<any> {
   displayMode: DisplayMode = 'Report';
-
+  data: any[] = [];
+  totalRecords = 0;
   useSummaryMode = false; // 預設為明細表模式
 
   queryForm = this.formBuilder.group({
@@ -95,8 +96,6 @@ export class TLS23030Component extends BasicQueryPageComponent<any> {
     ...createPaginationConfig([{ field: 'ECR_No', order: 1 }]),
   });
 
-  data: any[] = [];
-  totalRecords = 0;
 
   columns: any[] = [
     {
@@ -228,9 +227,7 @@ export class TLS23030Component extends BasicQueryPageComponent<any> {
   }
 
   ngOnInit(): void {
-    this.initializePage('TLS23030', '', this.queryForm, (form) =>
-      this.onSubmit(form),
-    );
+    this.initializePage('TLS23030', '', this.queryForm );
 
     // ✅ 下拉選單初始化
     this.displayModeService
@@ -324,57 +321,7 @@ export class TLS23030Component extends BasicQueryPageComponent<any> {
     };
   }
 
-  onSubmit(form: FormGroup): void {
-    this.submitted = true;
-    if (this.loading) return;
-
-    if (form.invalid) {
-      this.messageService.warnBubble('請確認欄位資料是否完整');
-      return;
-    }
-
-    this.handleSubmit(form, () => {
-      const payload = this.cleanFormPayload({ ...form.value });
-
-      console.log('查詢參數:', payload);
-
-      this.tls23030Service
-        .queryTLS23030(payload)
-        .pipe(
-          timeout(30000),
-          catchError((err) => {
-            if (err.name === 'TimeoutError') {
-              this.messageService.warnBubble(
-                '查詢時間過久，請嘗試縮小查詢條件範圍',
-              );
-            } else {
-              this.messageService.errorBubble('查詢錯誤');
-            }
-            this.data = [];
-            this.totalRecords = 0;
-            this.loading = false;
-            this.messageService.unblockUi();
-            return of({ Status: '9999', Data: [] });
-          }),
-        )
-        .subscribe({
-          next: (res: any) => {
-            if (res.Status === '0000') {
-              this.data = res.Data || [];
-              this.totalRecords = res.TotalCount || this.data.length;
-              this.queryStateService.setQueryState(this.ProgNo, payload);
-              this.messageService.successBubble('查詢成功');
-            } else if (res.Status !== '9999') {
-              this.messageService.errorBubble('查詢失敗');
-            }
-          },
-          complete: () => {
-            this.loading = false;
-            this.messageService.unblockUi();
-          },
-        });
-    });
-  }
+ 
 
   getLabelFromOptions(value: any, options: any[]): string {
     const found = options?.find((opt) => String(opt.value) === String(value));
@@ -449,7 +396,7 @@ export class TLS23030Component extends BasicQueryPageComponent<any> {
                 }
               });
 
-            this.messageService.successBubble('查詢成功');
+            
           } else if (res.Status !== '9999') {
             this.messageService.errorBubble('查詢失敗');
           }

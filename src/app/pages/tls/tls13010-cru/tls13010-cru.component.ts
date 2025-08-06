@@ -42,6 +42,8 @@ import { InputTextareaComponent } from '../../../shared/componentkit/input-texta
 import { NgIf } from '@angular/common';
 import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
+import { RadiobuttonComponent } from "@shared/componentkit/radiobutton/radiobutton.component";
+import { CRUDStatus } from '@shared/models/system/CRUDstatus';
 
 @Component({
   selector: 'app-tls13010-cru',
@@ -65,6 +67,7 @@ import { InputTextModule } from 'primeng/inputtext';
     InputTextareaComponent,
     ButtonModule,
     InputTextModule,
+    RadiobuttonComponent
   ],
 
 })
@@ -184,7 +187,11 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
     invoice_type: [''],
 
     // 其他設定
-    meter_typeList: [[]],
+    water_flag: ['N'],
+    electric_flag: ['N'],
+    gas_flag: ['N'],
+
+
     paymentMethods: [[]],
     ticket_remarks: [''],
 
@@ -216,6 +223,11 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
     // 銀行 AutoComplete
     selectedBankInfo: null
   });
+
+  meterReadingOptions = [
+    { value: 'Y', label: '是' },
+    { value: 'N', label: '否' }
+  ];
 
   // ==========  固定下拉選單選項 ==========
   decorationOptions = [...TLS13010_DROPDOWN_OPTIONS.decorationType];
@@ -274,11 +286,14 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
 
   // ==========  生命週期方法 ==========
   ngOnInit(): void {
-    // 第一時間檢查 URL 參數 for 檢視模式
-    this.checkViewModeFromURL();
+    // // 第一時間檢查 URL 參數 for 檢視模式
+    // this.checkViewModeFromURL();
 
     this.initializePage('TLS13010', this.dataForm);
     this.funInfo = this.authService.getUserPermissions(this.ProgNo);
+
+    // 🎯 從服務取得狀態
+    this.isViewMode = this.contractFlowService.isViewMode();
 
     //關鍵：一定要在這裡設定檢視模式 UI 監聽
     this.setupViewModeUI();
@@ -300,7 +315,6 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
     this.setupAutoSave();
     this.setupBusTypeListener();
 
-
     setTimeout(() => {
       this.validateWorkflowData();
       this.updateDisplayLocationData();
@@ -321,6 +335,33 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
       this.viewModeSubscription.unsubscribe();
     }
     this.subscriptions.forEach(sub => sub.unsubscribe());
+  }
+
+  override initializePage(progNo: string, form?: FormGroup): void {
+    // 只取父類的基礎功能
+    if (this.authService.currentUserValue) {
+      this.user = this.authService.currentUserValue;
+    }
+    this.ProgNo = progNo;
+    this.currentPageService.setCurrentProgNo(this.ProgNo);
+    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
+
+    // 🎯 忽略父類的 CRUDStatus 邏輯，使用自己的
+    this.formTitle = this.getCustomTitle();
+    this.crudstatus = CRUDStatus.Edit; // 固定為 Edit，避免表單被 disable
+
+    // 🎯 從服務取得檢視模式狀態
+    this.isViewMode = this.contractFlowService.isViewMode();
+    if (this.isViewMode && form) {
+      form.disable();
+    }
+  }
+
+  private getCustomTitle(): string {
+    if (this.contractFlowService.isViewMode()) {
+      return '檢視契約資料';
+    }
+    return this.contractFlowService.isNewContractMode() ? '新增契約資料' : '編輯契約資料';
   }
 
   /**
@@ -712,6 +753,9 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
       contact_USR_Name: queryData['contact_USR_Name'] as string,
       total_amt_unit: queryData['total_amt_unit'] as string,
       total_amt_vendor_unit: queryData['total_amt_vendor_unit'] as string,
+      water_flag: queryData['water_flag'] as string || 'N',
+      electric_flag: queryData['electric_flag'] as string || 'N',
+      gas_flag: queryData['gas_flag'] as string || 'N',
     });
 
     const bankId = queryData['bank_id'] as string;
@@ -857,6 +901,7 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
   private saveToWorkflow(): void {
     // 移除條件檢查，總是儲存
     const formData = this.dataForm.getRawValue();
+
 
     console.log('💾 準備儲存工作流程資料...');
     console.log('📋 表單資料:', {
@@ -1058,33 +1103,33 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
 
   onSubmitNext(): void {
     if (this.isViewMode) {
-      // 🎯 檢視模式：導航到 Next1 檢視模式
-      this.router.navigate(['account/tls/tls13010next1'], {
-        queryParams: { mode: 'view' }  // 帶上檢視參數
-      });
+      // 🎯 檢視模式：直接導航，不帶參數
+      this.router.navigate(['account/tls/tls13010next1']);
       return;
     }
 
     // 🎯 編輯模式的原有邏輯
     if (this.dataForm.valid) {
       this.saveToWorkflow();
-      this.router.navigate(['account/tls/tls13010next1']);  // 編輯模式不帶參數
+      this.router.navigate(['account/tls/tls13010next1']);
     } else {
       this.messageService.warnBubble('請檢查必填欄位');
       this.markFormGroupTouched(this.dataForm);
     }
   }
 
-
   override onCancel(): void {
     if (this.isViewMode) {
-      this.exitViewMode();
+      this.contractFlowService.clearViewMode();
+      this.router.navigate(['account/tls/tls13010']);
+      this.messageService.infoBubble('已退出檢視模式');
       return;
     }
+
+    // 編輯模式：使用父類邏輯或自訂
     if (this.dataForm.dirty) {
       if (confirm('是否要儲存目前的編輯內容？')) {
         this.saveToWorkflow();
-        this.messageService.infoBubble('已儲存草稿');
       }
     }
     this.router.navigate(['account/tls/tls13010']);
@@ -1332,10 +1377,7 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
   }): void {
     const { rowData, field, newValue, oldValue } = event;
 
-    console.log('下拉選單變更:', { field, newValue, oldValue, currentStatus: rowData._status });
-
     if (field === 'location_no' && newValue) {
-      // 位置編號變更時自動帶入詳細資訊
       const selectedLocation = this.locationWithDetailsOptions.find(
         location => location.value === newValue
       );
@@ -1346,16 +1388,19 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
         if (targetIndex > -1) {
           const selected = selectedLocation as unknown as Record<string, unknown>;
 
-          // ✅ 統一的狀態更新邏輯
+          // 🎯 修正邏輯：允許位置編號變更時更新營業坪數
+          const newSpace = Number(selected['tlt_space'] ?? 0);
+
+          // ✅ 狀態邏輯保持不變
           const currentStatus = this.locationData[targetIndex]._status;
           let newStatus: 'new' | 'modified' | 'original' | 'deleted' | undefined;
 
           if (currentStatus === 'new') {
-            newStatus = 'new';  // 新增資料保持 new
+            newStatus = 'new';
           } else if (currentStatus === 'original' || currentStatus === 'modified') {
-            newStatus = 'modified';  // 既有資料變更為 modified
+            newStatus = 'modified';
           } else {
-            newStatus = 'modified';  // 預設為 modified
+            newStatus = 'modified';
           }
 
           // 更新資料
@@ -1365,17 +1410,15 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
             tlt_building: String(selected['tlt_building'] ?? ''),
             tlt_floor: String(selected['tlt_floor'] ?? ''),
             area_no: String(selected['area_no'] ?? ''),
-            tlt_space: Number(selected['tlt_space'] ?? 0),
+            tlt_space: newSpace, // ✅ 直接使用新的營業坪數
             building_desc: String(selected['building_desc'] ?? ''),
             floor_desc: String(selected['floor_desc'] ?? ''),
             area_desc: String(selected['area_desc'] ?? ''),
             _status: newStatus
           };
 
-          // ✅ 強制觸發變更檢測
+          // 強制觸發變更檢測
           this.locationData = [...this.locationData];
-
-          // 同步更新 rowData 參考
           Object.assign(rowData, this.locationData[targetIndex]);
 
           this.saveToWorkflow();
@@ -1383,15 +1426,12 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
         }
       }
     } else {
-      // ✅ 其他欄位變更的狀態處理
+      // 其他欄位變更的狀態處理
       if (rowData._status === 'new') {
-        // 新增資料保持 new 狀態
         rowData._status = 'new';
       } else if (!rowData._status || rowData._status === 'original') {
-        // 既有資料變更為 modified
         rowData._status = 'modified';
       }
-      // 如果已經是 modified，保持不變
     }
 
     this.saveToWorkflow();

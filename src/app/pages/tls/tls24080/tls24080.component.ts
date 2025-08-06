@@ -39,8 +39,8 @@ export class TLS24080Component extends BasicQueryPageComponent<any> implements O
   });
   reportTypeOptions: any[] = [];
   data: any[] = [
-    { salesDate: '2022/01/01', cashierCode: 'A', transactionSerial: '12345678', originalCounterName: 'A', previousCounterName: 'B', updatedCounterName: 'C', updateDate: '2022/01/01', updatedBy: 'A' },
-    { salesDate: '2022/01/01', cashierCode: 'A', transactionSerial: '12345678', originalCounterName: 'A', previousCounterName: 'B', updatedCounterName: 'C', updateDate: '2022/01/01', updatedBy: 'A' },
+    // { salesDate: '2022/01/01', cashierCode: 'A', transactionSerial: '12345678', originalCounterName: 'A', previousCounterName: 'B', updatedCounterName: 'C', updateDate: '2022/01/01', updatedBy: 'A' },
+    // { salesDate: '2022/01/01', cashierCode: 'A', transactionSerial: '12345678', originalCounterName: 'A', previousCounterName: 'B', updatedCounterName: 'C', updateDate: '2022/01/01', updatedBy: 'A' },
   ];
   columns: Column[] = [
     { field: 'salesDate', header: '銷售日期', visible: true },

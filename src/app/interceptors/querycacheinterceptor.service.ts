@@ -16,11 +16,10 @@ export class QueryCacheInterceptorService implements HttpInterceptor {
     return next.handle(req).pipe(
       tap(event => {
         if (event instanceof HttpResponse && event.status === 200) {
-          const url = req.url.toLowerCase();
-          const isQueryAPI = url.includes('/query');
-          const progNo = this.currentPage.currentPageProgNoSubject.getValue();
-          if (isQueryAPI && progNo) {
-            this.queryState.setQueryState(`query${progNo}`, req.body);
+          const url = req.url;
+          const api = url.split('/').pop();
+          if (api) {
+            this.queryState.setQueryState(`${api}`, req.body);
           }
         }
       })

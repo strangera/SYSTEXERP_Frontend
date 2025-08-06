@@ -21,12 +21,35 @@ export interface TLS24010DetailRequest {
 }
 
 export interface TLS24010Data {
+  ID?: number;
   TXN_Date: string; // 銷售日期
   ECR_No: string; // 收銀機號
   TXN_No: string; // 交易序號
   TLT_No: string; // 專櫃編號
   TLT_Name: string; // 專櫃名稱
+  TXN_Status: string; // 交易狀態
+  TXN_Remark: string; // 備註
   TXN_Mode: string; // 交易型態
+  USR_No: string; // 操作員編號
+  TXN_PreOrder: string,
+  TXN_VIP: string,
+  TXN_TaxType: string,
+  TXN_TaxFreeCertNo: string,
+  GUI_Track: string,
+  TXN_GUIBegNo: string,
+  TXN_GUIEndNo: string,
+  TXN_CustCnt: number,
+  TXN_MemCard: string,
+  TXN_Uniform: string,
+  TXN_Time: string
+  TXN_GUI_CarrType: string,
+  TXN_GUIVehicle: string,
+  TXN_GUI_CarrId: string,
+  TXN_GUI_CarrIdEx: string,
+  TXN_GUIRemark: string,
+  TXN_PrintTimes: number,
+  IsHaveGUILoveCode: string,
+  TXN_GUILoveCode: string
   store_way?: string; // 櫃位類型
   talent_id?: number; // 專櫃合約編號
   TXN_GUIPaper?: string; // 補登類別
@@ -35,18 +58,26 @@ export interface TLS24010Data {
 
 export interface POS5007Data {
   id: number; // 唯一識別碼
+  ID?: number; // 唯一識別碼
   PLU_MagNo?: string | POS2004Item; // 商品編號
   PLU_No?: string; // 國際條碼
   PLU_Name?: string; // 商品名稱
+  TLT_No?: string; // 專櫃編號
+  Talent_ID?: number;
   TXN_Qty?: number;// 數量
   PLU_SalePrc?: number; // 單價金額
-  TXN_Amt?: number; // 單價小計金額
+  Unitprice?: number; // 單價小計金額 !!
+  TXN_Amt?: number; // 單價小計金額 !!
   TXN_Disc?: number; // 單價折扣讓金額
   TXN_SaleAmt?: number; // 單價銷售金額
   tlt_id?: string; // 類別
+  tlt_id_desc?: string;
   PLU_TaxType?: string; // 稅別
   TXN_DiscCode?: string; // 折扣別
   TXN_DiscCode_Name?: string; // 折扣名稱
+  TXN_DiscName?: string;
+  Contract_No?: string;
+  Contract_SubNo?: string;
 }
 
 export interface POS5008Data {
@@ -62,6 +93,7 @@ export interface POS5008Data {
   TXN_PayDesc?: string,               // 傳給後端
   TERM_No?: string; // 期別              // 傳給後端
   selected?: boolean
+  CRD_NoTXN_CouponNoTXN_PayDesc?: string;
 }
 
 export interface InsertTLS24010Payload {
@@ -109,6 +141,93 @@ export interface InsertTLS24010Payload {
     TXN_PayDesc: string;
     TERM_No: number;
   }[];
+  VoidEdit: Record<string, string>
+}
+
+export interface UpdateTLS24010Payload {
+  EditType: string;
+  Store_way: string;
+  SYS_StoreNo: string;
+  TXN_Date: string;
+  ECR_No: string;
+  TXN_No: number;
+  POS5006_ID?: number;
+  TXN_Remark?: string;
+  TLTNoEdit?: {
+    TLT_No: string;
+    Talent_ID: number;
+    Contract_No: string
+    Contract_SubNo: string
+    updatePOS5007List: {
+      POS5007_ID?: number;
+      TLT_No: string;
+      PLU_MagNo: string;
+      PLU_No: string;
+      Talent_ID: number;
+      Contract_No: string,
+      Contract_SubNo: string,
+      tlt_id?: string;
+      PLU_TaxType?: string;
+      TXN_DiscCode?: string;
+    }[];
+  };
+  DiscCodeEditList?: {
+    POS5007_ID?: number;
+    Talent_ID: number;
+    TXN_DiscCode: string;
+  }[];
+  TLTIdEditList?: {
+    POS5007_ID?: number;
+    Talent_ID: number;
+    tlt_id: string;
+  }[];
+  PayNoEditList?: {
+    POS5008_ID?: number;
+    PAY_No: string;
+    TXN_PayAmt: number;
+    CRD_Type: string;
+    CRD_No: string;
+    TXN_CouponNo: string;
+    TXN_PayDesc: string;
+    TERM_No: number;
+  }[];
+  PreOrderEdit?: {
+    Talent_ID: number;
+    TXN_PreOrder: string;
+  };
+}
+
+export interface QueryPOS2004ForUpdatePayload {
+  Store_way: string;
+  TXN_Date: string;
+  TLT_No?: string;
+  Keyword?: string;
+}
+
+export interface POS2004ForUpdateResponse {
+  id?: number;
+  TLT_No: string;
+  TLT_Name: string;
+  tlt_id: string;
+  tlt_id_desc: string;
+  cag_taxtype: string;
+  cag_barcode: string;
+  cag_barcode_name: string;
+  PLU_MagNo: string;
+  PLU_No: string;
+  PLU_Name: string;
+  PLU_OrgPLUNo: string;
+  PLU_SalePrc: number;
+  talent_id: number;
+  Contract_No: string;
+  Contract_SubNo: string;
+}
+
+export interface CancelVoidTLS24010Payload {
+  SYS_StoreNo: string,
+  TXN_Date: string,
+  ECR_No: string,
+  TXN_No: number
 }
 
 @Injectable({
@@ -140,8 +259,33 @@ export class Tls24010Service {
  * @param payload 請參考 Swagger insertTLS24010 API 格式
  * @returns 成功訊息或錯誤訊息
  */
-  insertTLS24010(payload: InsertTLS24010Payload): Observable<ApiResponse<any>> {
-    return this.http.post<ApiResponse<any>>(`${this.apiUrl}/insertTLS24010`, payload);
+  insertTLS24010(payload: InsertTLS24010Payload): Observable<ApiResponse<number>> {
+    return this.http.post<ApiResponse<number>>(`${this.apiUrl}/insertTLS24010`, payload);
+  }
+  /**
+   * 更新交易補登資料（修正用）
+   * @param payload 依照 Swagger 規格傳入資料
+   * @returns API 回應結果
+   */
+  updateTLS24010(payload: UpdateTLS24010Payload): Observable<ApiResponse<number>> {
+    return this.http.post<ApiResponse<number>>(`${this.apiUrl}/updateTLS24010`, payload);
   }
 
+  /**
+   * 查詢 POS2004 商品資料（修正用）
+   * @param payload 查詢條件
+   * @returns 商品資料列表
+   */
+  queryPOS2004ForUpdate(payload: QueryPOS2004ForUpdatePayload): Observable<ApiResponse<POS2004ForUpdateResponse[]>> {
+    return this.http.post<ApiResponse<POS2004ForUpdateResponse[]>>(`${this.apiUrl}/queryPOS2004ForUpdate`, payload);
+  }
+
+  /**
+   * 取消交易補登
+   * @param payload 依照 Swagger 規格傳入資料
+   * @returns API 回應結果
+   */
+  cancelVoidTLS24010(payload: CancelVoidTLS24010Payload): Observable<ApiResponse<number>> {
+    return this.http.post<ApiResponse<number>>(`${this.apiUrl}/cancelVoidTLS24010`, payload);
+  }
 }

@@ -1,6 +1,6 @@
 import { animate, state, style, transition, trigger } from "@angular/animations";
-import { NotificationService } from "../../component/notification-message/notification.service";
 import { SortMeta } from "primeng/api";
+import { NotificationService } from "../../component/notification-message/notification.service";
 export interface Column {
   field: string;     // 欄位名稱 (資料的欄位名稱)
   header: string;    // 欄位標題 (顯示在表格上的標題)
@@ -16,16 +16,21 @@ export interface Column {
 
   disabled?: (value: any) => boolean;  // 是否禁用 (是否為禁用欄位)
 
-  validate?: ((value: string, rowData: any, data: any[], field: string, header: string) => { isValid: boolean, errorMessage: string[] })[]; // 驗證規則(如果是可輸入的欄位)
+  validate?: ((value: string, rowData: any, data: any[], field: string, header: string) => { isValid: boolean, errorMessage: string[]; })[]; // 驗證規則(如果是可輸入的欄位)
 
-  type?: 'input' | 'inputNumber' | 'dropdown' | 'button' | 'html' | 'date' | 'default'; // 欄位類型
-  prefix?: string;
+  dataKey?: string;
+  type?: 'input' | 'inputNumber' | 'dropdown' | 'button' | 'html' | 'date' | 'autoComplete' | 'default'; // 欄位類型
+  prefix?: string; // 前綴 (適用於 input 類型)
+  suffix?: string; // 後綴 (適用於 input 類型)
   fractionDigits?: number;
   useGrouping?: boolean;
 
   options?: any | ((rowData: any) => any); // 支持靜態數據或基於 rowData 生成
   optionLabel?: string; // 下拉選單 optionLabel
   optionValue?: string; // 下拉選單 optionValue
+  optionShowClear?: boolean; // 下拉選單是否顯示清除按鈕
+  templateLabel?: string; // 模板欄位 label
+  filter?: boolean;
 
   buttonLabel?: string; // 選擇按鈕 label
   checkboxTrueLabel?: string; // checkbox 非編輯模式 true 顯示文字（適用於單一布林值）
@@ -90,6 +95,7 @@ export interface FieldChangeEvent {
   rowData: any;
   field: string;
   value: any;
+  index?: number;
 }
 
 // 新增一個方法來驗證行數據
@@ -201,7 +207,7 @@ export const formatTimeToHHMMSS = (date: Date): string => {
   const mm = date.getMinutes().toString().padStart(2, '0');
   const ss = date.getSeconds().toString().padStart(2, '0');
   return `${hh}:${mm}:${ss}`;
-}
+};
 // formatDateToYYYYMMDD：輸出為 YYYYMMDD
 export const formatDateToYYYYMMDD = (value: string | Date): string => {
   if (!value) return '';

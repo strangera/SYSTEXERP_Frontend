@@ -53,6 +53,9 @@ export class InputTextComponent extends BasicKitComponent implements OnInit {
     }
   }
   onInputChange(event: Event): void {
+    if (this.copyControl) {
+      this.copyControl.setValue(this.control.value, { emitEvent: false });
+    }
     this.inputChange.emit(event);
   }
   onClick(): void {
