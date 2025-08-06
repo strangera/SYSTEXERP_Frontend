@@ -27,22 +27,22 @@
             <app-calendar-range
               calendarType="dateRange"
               label="查詢日期"
-              [startControl]="queryForm.controls.startdate"
-              [endControl]="queryForm.controls.enddate"
+              [startControl]="queryForm.controls.TXN_DateStart"
+              [endControl]="queryForm.controls.TXN_DateEnd"
               [minDate]="salesMinDate"
               [maxDate]="salesMaxDate"
               [submitted]="submitted"
             ></app-calendar-range>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <label for="status1">POS類型</label>
-            <p-dropdown
-              [options]="statusOptions"
+            <label for="POS_TypeList">POS類型</label>
+            <app-multi-select
+              [options]="POS_TypeListOptions"
               optionLabel="label"
               optionValue="value"
-              [formControl]="queryForm.controls.status1"
+              [formControl]="queryForm.controls.POS_TypeList"
               placeholder="請選擇"
-            ></p-dropdown>
+            ></app-multi-select>
           </div>
         </div>
         <div>
@@ -62,8 +62,29 @@
   <div class="col-12">
     <app-table
       tableKey="TLS2a050"
+      [showManage]="false"
       [data]="data"
       [columns]="columns"
-    ></app-table>
+      [columnGroup]="columnGroup"
+      [multiSortMeta]="[{ field: 'ECR_No', order: 1 }]"
+      [totalRecords]="totalRecords"
+      (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"
+      [showReportMode]="false"
+      [showDelete]="false"
+    >
+      <header>
+        <p-button
+          pButton
+          tooltipPosition="top"
+          pTooltip="匯出Excel"
+          [style.width]="'35px'"
+          [style.height]="'35px'"
+          class="p-button-rounded p-button-text p-button-info"
+          icon="fa-regular fa-file-lines"
+          [disabled]="!canPerformAction('70')"
+          (click)="exportReport()"
+        />
+      </header>
+    </app-table>
   </div>
 </div>

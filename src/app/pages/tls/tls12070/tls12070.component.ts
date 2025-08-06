@@ -58,7 +58,7 @@ export class TLS12070Component extends BasicQueryPageComponent<interviewList> im
   contact_USR_Option: apiOption[] = []; // 訪談人員 (確定是這支了)
 
   data: interviewList[] = [];
-  columns: Column[] = [
+  columns: any[] = [
 
     { field: 'interview_USR', header: '訪談人員', visible: true },
     { field: 'potentialNumber', header: '潛在客戶數', visible: true },

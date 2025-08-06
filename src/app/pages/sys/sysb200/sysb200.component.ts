@@ -1,9 +1,9 @@
 import { Sysbc00Service } from './../../../service/api/sys/sysbc00.service';
+import { DropDownListService, IDropdownItem } from 'src/app/service/utility/dropDownList.service';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ValidationService } from '../../../shared/service/validation.service';
-import { SortMeta } from 'primeng/api';
 import { ActivatedRoute } from '@angular/router';
 import { map } from 'rxjs/operators';
 import { Observable } from 'rxjs';
@@ -18,6 +18,7 @@ import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdow
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { AsyncPipe } from '@angular/common';
 import { TranslateModule } from '@ngx-translate/core';
+
 export const enum POStatus {
   已申請 = '0',
   取消 = '1',
@@ -71,10 +72,11 @@ export class SYSB200Component extends BasicQueryPageComponent<any> implements On
     VEN_NoList: [[]],
     VEN_Status: [''], // 預設查詢「未審核」「已審核」
     VEN_Uniform: ['', [Validators.maxLength(10)]],
-    VEN_CName: ['', [Validators.maxLength(60)]],
+    VEN_Name: ['', [Validators.maxLength(60)]],
     VEN_EName: ['', [Validators.maxLength(60)]],
     VEN_SName: ['', [Validators.maxLength(10)]],
     VEN_BNK_No: ['', [this.validationService.numberValidator, Validators.maxLength(10)]],
+    VEN_GUIAddr: ['', [Validators.maxLength(100)]],
     VEN_Address: ['', [Validators.maxLength(100)]],
     VEN_Boss: ['', [Validators.maxLength(12)]],
     VEN_BossTitle: ['', [Validators.maxLength(16)]],
@@ -106,11 +108,11 @@ export class SYSB200Component extends BasicQueryPageComponent<any> implements On
       }
     },
     { field: 'VEN_Uniform', header: '統一編號', visible: true },
-    { field: 'VEN_CName', header: '廠商名稱(中文)', visible: true },
+    { field: 'VEN_CName', header: '廠商名稱(中文)', visible: false },
     { field: 'VEN_EName', header: '廠商名稱(英文)', visible: false },
     { field: 'VEN_SName', header: '廠商簡稱', visible: false },
     { field: 'VEN_Address', header: '通訊地址', visible: true },
-    { field: 'VEN_Boss', header: '聯絡人', visible: true },
+    { field: 'VEN_Boss', header: '聯絡人', visible: false },
     { field: 'VEN_BossTitle', header: '聯絡人職稱', visible: false },
     { field: 'VEN_BossEmail', header: '聯絡人電子郵件', visible: false },
     { field: 'VEN_BossTel', header: '聯絡人電話', visible: false },
@@ -122,7 +124,7 @@ export class SYSB200Component extends BasicQueryPageComponent<any> implements On
     { field: 'VEN_PayConditionDay', header: '付款期限(天數)', visible: true },
     { field: 'VEN_BNK_No', header: '廠商匯款銀行代號', visible: true },
   ];
-
+  VEN_NoList: IDropdownItem[] = [];
   contacts: any[] = [];
   totalRecords = 0;
   selectedRows: any[] = [];
@@ -131,6 +133,7 @@ export class SYSB200Component extends BasicQueryPageComponent<any> implements On
   venderOptions: any[] = [];
   t111Options: any[] = [];
   bankOptions$!: Observable<any[]>;
+
 
   addButton: AddButton[] = [
     {
@@ -158,35 +161,29 @@ export class SYSB200Component extends BasicQueryPageComponent<any> implements On
   ];
 
   constructor(
+    private dropDownListService: DropDownListService,
     private activatedRoute: ActivatedRoute,
     private validationService: ValidationService,
     private sysbc00Service: Sysbc00Service,
     private sysb200Service: Sysb200Service
+
   ) {
     super();
   }
 
   ngOnInit(): void {
-    this.initializePage('SYSB200', 'sys/sysb200cru');
+    this.initializePage('SYSB200', 'sys/sysb200cru', this.queryForm, (form) => this.onSubmit(form));
     this.loadOptions();
-
-    // 處理從 CRU 回到查詢自動刷新
-    if (localStorage.getItem('refreshList') === 'true') {
-      this.onSubmit(this.queryForm);
-      localStorage.removeItem('refreshList');
-    }
-
-    // 若有查詢還原功能
-    this.handleQueryRestore(this.queryForm, 'SYSB200', (form) => this.onSubmit(form));
   }
 
   loadOptions() {
-    this.sysb200Service.querySYSB200({ request: { PageSize: 9999, PageIndex: 0, SortBy: [] } }).subscribe(res => {
-      this.venderOptions = (res.Data ?? []).map((item: { VEN_No: string; VEN_Name: string }) => ({
-        label: `${item.VEN_No} - ${item.VEN_Name}`,
+    this.dropDownListService.queryPOS2013_DropDownList({}).subscribe(res => {
+      this.venderOptions = (res.Data ?? []).map(item => ({
+        label: `${item.No} - ${item.Name}`,
         value: item.VEN_No
       }));
     });
+
 
     this.t111Options = [
       { SYS_Name: '即期', id: 0 },
@@ -211,7 +208,7 @@ export class SYSB200Component extends BasicQueryPageComponent<any> implements On
         VEN_NoList: raw.VEN_NoList,
         VEN_Status: raw.VEN_Status,
         VEN_Uniform: raw.VEN_Uniform,
-        VEN_Name: raw.VEN_CName,
+        VEN_Name: raw.VEN_Name,
         VEN_EngName: raw.VEN_EName,
         VEN_ShortName: raw.VEN_SName,
         VEN_BNK_No: raw.VEN_BNK_No,
@@ -226,20 +223,20 @@ export class SYSB200Component extends BasicQueryPageComponent<any> implements On
         VEN_Fax: raw.VEN_Fax,
         VEN_Remark: raw.VEN_Remark,
         VEN_PayConditionDay: raw.VEN_PayConditionDay === '' ? null : raw.VEN_PayConditionDay,
+        VEN_GUIAddr: raw.VEN_GUIAddr,
         PageSize: raw.pageSize,
         PageIndex: raw.pageIndex,
         SortBy: raw.SortBy,
         OrderBy: '',
         Offset: 0,
-        VEN_GUIAddr: '',
       };
 
       this.sysb200Service.querySYSB200(queryData).subscribe({
         next: (res) => {
           this.data = res.Data ?? [];
           this.totalRecords = res.TotalCount ?? this.data.length;
+          this.queryStateService.setQueryState('SYSB200', form.value); // 儲存查詢條件
           this.loading = false;
-          this.messageService.unblockUi();
         },
         error: () => {
           this.loading = false;
@@ -247,7 +244,9 @@ export class SYSB200Component extends BasicQueryPageComponent<any> implements On
         },
       });
     });
+    localStorage.setItem('SYSB200_queryForm', JSON.stringify(this.queryForm.getRawValue()));
   }
+
 
   onDelete(rows: any[]): void {
     this.contacts = this.contacts.filter(item => !rows.includes(item));

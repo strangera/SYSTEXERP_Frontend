@@ -58,7 +58,7 @@ export class Tls14040Component extends BasicQueryPageComponent<Garantee_Ticket> 
 
   data: Garantee_Ticket[] = [];// 表格數據和篩選數據
 
-  columns: Column[] = [// 表格欄位定義
+  columns: any[] = [// 表格欄位定義
     { field: 'tlt_no', header: '專櫃編號', visible: true },
     { field: 'tlt_name', header: '專櫃名稱', visible: true },
     { field: 'VEN_No', header: '廠商代號', visible: true },
