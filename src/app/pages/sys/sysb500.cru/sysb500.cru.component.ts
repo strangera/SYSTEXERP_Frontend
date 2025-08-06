@@ -12,6 +12,7 @@ import { PanelModule } from 'primeng/panel';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { NgIf } from '@angular/common';
 import { TranslateModule } from '@ngx-translate/core';
+import { ValidationService } from '@shared/service/validation.service';
 
 @Component({
     selector: 'app-sysb500.cru',
@@ -36,12 +37,13 @@ export class SYSB500CRUComponent
   // ----------------------------------------------------------------
   dataForm = this.formBuilder.nonNullable.group({
     id: [],
-    area_no: ['', [Validators.required, Validators.maxLength(2)]], // 區域別編號
-    area_desc: ['', [Validators.required, Validators.maxLength(30)]], // 區域別名稱
+    area_no: ['', [Validators.required, Validators.maxLength(2), this.validationService.noChineseValidator]], // 區域別編號
+    area_desc: ['', [Validators.required, Validators.maxLength(20)]], // 區域別名稱
   });
   // ----------------------------------------------------------------
   constructor(
     private sysb500Service: Sysb500Service,
+    private validationService: ValidationService,
     //
   ) {
     super(); // 呼叫父類建構子

@@ -10,7 +10,7 @@
           <app-dropdown
             label="組織階層代碼/名稱"
             controlName="level_id"
-            [options]="upgroup_Options"
+            [options]="filteredUpgroupOptions"
             optionLabel="Label"
             optionValue="No"
             [control]="dataForm.controls.level_id"
@@ -41,13 +41,6 @@
         *ngIf="dataForm.get('org_id')?.value !== '100000'"
       >
         <div class="col-12 md:col-6 lg:col-4">
-          <!-- <app-input-text
-            label="上層組織階層代碼/名稱"
-            controlName="p_level_id"
-            [control]="dataForm.controls.p_level_id"
-            [submitted]="submitted"
-            [disabled]="true"
-          ></app-input-text> -->
           <app-dropdown
             label="上層組織階層代碼/名稱"
             controlName="p_level_id"

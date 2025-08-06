@@ -36,7 +36,7 @@
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select
+            <app-dropdown
               label="收銀機號"
               controlName="ECR_No"
               [options]="ECRNoOptions"
@@ -44,7 +44,7 @@
               optionValue="value"
               [control]="queryForm.controls.ECR_No"
               [submitted]="submitted"
-            ></app-multi-select>
+            ></app-dropdown>
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
@@ -76,10 +76,10 @@
               [control]="queryForm.controls.ShowStatus"
               [submitted]="submitted"
               [options]="[
-                { value: 'hasTransaction', label: '只顯示有交易之機台' },
-                { value: 'allMachines', label: '顯示所有之機台' },
-                { value: 'offlineMachines', label: '顯示可能離線之機台' },
-                { value: 'unclearedMachines', label: '顯示未清機之機台' },
+                { value: '1', label: '只顯示有交易之機台' },
+                { value: '2', label: '顯示所有之機台' },
+                { value: '3', label: '顯示可能離線之機台' },
+                { value: '4', label: '顯示未清機之機台' },
               ]"
               (valueChange)="queryForm.controls.ShowStatus.setValue($event)"
             ></app-radiobutton>
@@ -102,10 +102,28 @@
     <app-table
       tableKey="TLS22010"
       [data]="data"
-      [columns]="columns"
-    ></app-table>
+      [multiSortMeta]="[{ field: 'ECR_No', order: 1 }]"
+      [totalRecords]="totalRecords"
+      (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"
+      [showReportMode]="false"
+      [showDelete]="false"
+      [loading]="loading"
+      [columns]="columns7"
+
+    >
+      <header>
+        <p-button
+          pButton
+          tooltipPosition="top"
+          pTooltip="匯出Excel"
+          [style.width]="'35px'"
+          [style.height]="'35px'"
+          class="p-button-rounded p-button-text p-button-info"
+          icon="fa-regular fa-file-lines"
+          [disabled]="!canPerformAction('70')"
+          (click)="exportReport()"
+        />
+      </header>
+    </app-table>
   </div>
 </div>
-* 發票總金額(F) = 發票未稅金額(M) + 發票稅額(N) + 發票免稅金額(O) * 付款金額(H)
-= 發票總金額(F) + 溢收(G) + 已開發票金額 (E) + 訂金結帳訂金 (C3) + 代收/付金額
-(L) * 已開發票溢付(I)=溢收 (G)

@@ -99,3 +99,14 @@ export function validateMaxNumber(max: number): (value: string, rowData: any, da
     };
   };
 }
+
+//欄位禁止輸入中文
+export function validateNoChinese(): (value: string, rowData: any, data: any[], field: string, header: string) => { isValid: boolean; errorMessage: string[] } {
+  return (value: string) => {
+    const hasChinese = /[\u4e00-\u9fa5]/.test(value ?? '');
+    return {
+      isValid: !hasChinese,
+      errorMessage: [`${value} 含有中文，不可輸入中文`, '格式錯誤']
+    };
+  };
+}

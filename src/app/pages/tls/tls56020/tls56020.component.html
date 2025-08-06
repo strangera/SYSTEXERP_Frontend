@@ -1,16 +1,9 @@
 <div class="card">
-  <div class="grid align-items-center">
-    <div class="col" style="flex: 1">
-      <app-menubar [ProgNo]="ProgNo"></app-menubar>
-    </div>
-    <div >
-      <app-button
-        btnType="create"
-        (click)="onCreate()"
-        class="col"
-      ></app-button>
-    </div>
+  <div class="flex gap-2 mb-2">
+    <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
+    <app-button btnType="create" (click)="onCreate()"></app-button>
   </div>
+
   <p-accordion>
     <p-accordionTab
       header="{{ 'query-conditions' | translate }}"
@@ -25,40 +18,66 @@
       >
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
+            <app-input-number
               label="領用單編號"
               controlName="issuanceNoteCode"
               [control]="queryForm.controls.issuanceNoteCode"
               [submitted]="submitted"
-            ></app-input-text>
+            ></app-input-number>
           </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="倉別"
-              controlName="warehouseCode"
-              [options]="warehouseOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.warehouseCode"
-              [submitted]="submitted"
-            ></app-dropdown>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
+          <app-multi-select
+            class="col-12 md:col-6 lg:col-4"
+            label="倉別"
+            controlName="HOS_No"
+            [options]="warehouseOptions"
+            optionLabel="label"
+            optionValue="value"
+            [control]="queryForm.controls.HOS_NoList"
+            [submitted]="submitted"
+          ></app-multi-select>
+          <!-- 管理編號 -->
+          <app-dropdown-table
+            class="col-12 md:col-6 lg:col-4"
+            [control]="queryForm.controls.queryNo"
+            [submitted]="submitted"
+            optionLabel="PLU_MagNo"
+            optionValue="PLU_MagNo"
+            [suggestions]="suggestions"
+            [fieldsConfig]="fieldsConfig"
+            (inputValueChanged)="onAutoCompleteInputChange($event)"
+            (formValueChanged)="onFormValueChanged($event)"
+            [formGroup]="opForm"
+            [dialogData]="opData"
+            [dialogColumns]="opColumns"
+            [loading]="opLoading"
+            [totalRecords]="opTotalRecords"
+          >
             <app-input-text
+              class="col-12 md:col-6"
               label="管理編號"
-              controlName="generalCode"
-              [control]="queryForm.controls.generalCode"
-              [submitted]="submitted"
-            ></app-input-text>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
+              controlName="queryNo"
+              [control]="opForm.controls.queryNo"
+            />
             <app-input-text
-              label="品牌編號"
-              controlName="brandCode"
-              [control]="queryForm.controls.brandCode"
-              [submitted]="submitted"
-            ></app-input-text>
-          </div>
+              class="col-12 md:col-6"
+              label="商品名稱"
+              controlName="PLU_Name"
+              [control]="opForm.controls.PLU_Name"
+            />
+          </app-dropdown-table>
+
+          <!-- 品牌代碼 (對應 LOGO_No) -->
+          <app-multi-select
+            class="col-12 md:col-6 lg:col-4"
+            label="品牌代碼/名稱"
+            controlName="LOGO_No"
+            [options]="brandOptions"
+            optionLabel="label"
+            optionValue="value"
+            [control]="queryForm.controls.LOGO_NoList"
+            [submitted]="submitted"
+          ></app-multi-select>
+          <!-- 廠商編號 -->
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown
               label="領用類別"
@@ -81,68 +100,75 @@
               [submitted]="submitted"
             ></app-dropdown>
           </div>
-          <div class="col-12 md:col-6 lg:col-4">
+          <hr />
+        </div>
+          <div class="grid p-fluid">
+            <!-- 申請人員 -->
             <app-dropdown
-              label="申請人編號"
-              controlName="applicantCode"
-              [options]="applicantCodeOptions"
+              class="col-12 md:col-6 lg:col-4"
+              label="申請人"
+              controlName="APPLY_USR"
+              [options]="userOptions"
               optionLabel="label"
               optionValue="value"
-              [control]="queryForm.controls.applicantCode"
+              [control]="queryForm.controls.APPLY_USR"
               [submitted]="submitted"
-            ></app-dropdown>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="審核人編號"
-              controlName="approverCode"
-              [options]="approverCodeOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.approverCode"
-              [submitted]="submitted"
-            ></app-dropdown>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
+            />
+            <!-- 申請日期 -->
             <app-calendar-range
+              class="col-12 md:col-6 lg:col-4"
               calendarType="dateRange"
               label="申請日期"
-              [startControl]="queryForm.controls.applicationDateFrom"
-              [endControl]="queryForm.controls.applicationDateTo"
+              [startControl]="queryForm.controls.APPLY_Date_Start"
+              [endControl]="queryForm.controls.APPLY_Date_End"
               [submitted]="submitted"
-            ></app-calendar-range>
+            />
           </div>
-          <div class="col-12 md:col-6 lg:col-4">
+          <div class="grid p-fluid">
+            <!-- 審核人員 -->
+            <app-dropdown
+              class="col-12 md:col-6 lg:col-4"
+              label="審核人"
+              controlName="APRV_USR"
+              [options]="userOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.APRV_USR"
+              [submitted]="submitted"
+            />
+            <!-- 審核日期 -->
             <app-calendar-range
+              class="col-12 md:col-6 lg:col-4"
               calendarType="dateRange"
               label="審核日期"
-              [startControl]="queryForm.controls.approvalDateFrom"
-              [endControl]="queryForm.controls.approvalDateTo"
+              [startControl]="queryForm.controls.APRV_Date_Start"
+              [endControl]="queryForm.controls.APRV_Date_End"
               [submitted]="submitted"
-            ></app-calendar-range>
+            />
           </div>
-        </div>
+          <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+            <app-button btnType="clear" />
+            <app-button btnType="query" [loading]="loading" />
+          </div>
       </form>
-      <div>
-        <div class="grid justify-content-end">
-          <app-button btnType="clear" (onClick)="onClearForm()"></app-button>
-          <app-button
-            btnType="query"
-            (onClick)="onSubmitQuery(queryForm)"
-            [loading]="loading"
-          ></app-button>
-        </div>
-      </div>
     </p-accordionTab>
   </p-accordion>
 </div>
-<!-- <div class="card">
-  <div class="col-12">
-    <app-table
-      [data]="data"
-      [columns]="columns"
-      (edit)="onEdit($event)"
-      (detail)="onDetail($event)"
-    ></app-table>
-  </div>
-</div> -->
+<div class="card">
+  <app-table
+    tableKey="TLS2A020"
+    [data]="data"
+    [columns]="columns"
+    (edit)="onEdit($event)"
+    (detail)="onDetail($event)"
+    [showCheckBox]="false"
+    dataKey="id"
+    [multiSortMeta]="[{ field: 'VEN_No', order: 1 }]"
+    [totalRecords]="totalRecords"
+    [lazy]="true"
+    (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"
+    [showManage]="true"
+    [loading]="loading"
+    [showDelete]="false"
+  ></app-table>
+</div>

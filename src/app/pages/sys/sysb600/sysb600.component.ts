@@ -1,3 +1,4 @@
+import { ValidationService } from '@shared/service/validation.service';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 // Shared
@@ -35,8 +36,8 @@ export class SYSB600Component
   // 查詢
   // ----------------------------------------------------------------
   queryForm = this.formBuilder.group({
-    floor_no: ['', [Validators.maxLength(2)]], // 樓層編號
-    floor_desc: ['', [Validators.maxLength(30)]], //樓層名稱
+    floor_no: ['', [Validators.maxLength(2), this.validationService.noChineseValidator]], // 樓層編號
+    floor_desc: ['', [Validators.maxLength(20)]], //樓層名稱
 
     //分頁查詢
     ...createPaginationConfig([{ field: 'floor_no', order: 1 }]), // 分頁和排序參數
@@ -53,7 +54,11 @@ export class SYSB600Component
   selectedItems: Sysb600m[] = [];
   // ----------------------------------------------------------------
 
-  constructor(private sysb600Service: Sysb600Service) {
+  constructor(
+    private sysb600Service: Sysb600Service,
+    private validationService: ValidationService,
+
+  ) {
     super();
   }
 
