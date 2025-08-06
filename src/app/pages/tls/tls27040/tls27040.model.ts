@@ -166,9 +166,9 @@ export const CheckOptions = [
   { label: 'CardPool欠落', value: '3' }
 ]
 export const POS611XOptions = [
-  { label: '聯合', value: '0' },
-  { label: '中信', value: '1' },
-  { label: '中信-停車場', value: '2' }
+  { label: '聯合', value: '0', table: 'POS6118' },
+  { label: '中信', value: '1', table: 'POS6119' },
+  { label: '中信-停車場', value: '2', table: 'POS6119P' },
 ]
 export const PayCrdTypeOptions = [
   { label: 'VISA', value: 'V' },

@@ -16,10 +16,13 @@ import { TableComponent } from '@shared/componentkit/table/table.component';
 import { Column } from '@shared/componentkit/table/table.model';
 import { CRUDStatus } from '@shared/models/system/CRUDstatus';
 import { ApprovalStatus } from '@shared/models/tls/approval-status.model';
+import { ExcelImportService } from '@shared/service/excel-import.service';
 import { FileSelectEvent, FileUploadModule } from 'primeng/fileupload';
 import { PanelModule } from 'primeng/panel';
 import { finalize, tap } from 'rxjs';
+import * as XLSX from 'xlsx';
 import { EcrItem, PodRequest, TalentItem, TLS26010Data } from '../tls26010/tls26010.model';
+import { columns } from './../../fin/fin11020/fin11020.model';
 
 const shallowEqual = <T extends Record<string, any>>(a: T, b: T): boolean => {
   const keys = Object.keys(a) as (keyof T)[];
@@ -199,7 +202,10 @@ export class TLS26010CRUComponent extends BasicCruPageComponent<TLS26010Data> im
   // 靜態資料: 用於表單初始化和重置
   private staticData: TLS26010Data = this.dataForm.value as TLS26010Data;
 
-  constructor(public service: TLS26010Service) {
+  constructor(
+    public service: TLS26010Service,
+    private readonly excelImport: ExcelImportService,
+  ) {
     super();
   }
 
@@ -211,15 +217,68 @@ export class TLS26010CRUComponent extends BasicCruPageComponent<TLS26010Data> im
     console.log(`init:`, [this.funInfo, this.rowdata, this.dataForm.value]);
   }
 
-  /** 處理文件上傳事件 */
-  public onImportExcel(event: FileSelectEvent): void {
+  /** 處理 excel 匯入 */
+  public async onImportExcel(event: FileSelectEvent): Promise<void> {
     const file = event.files[0];
-    this.service.importTLS26010(file);
+    const columns = ['tlt_no', 'tlt_name'];
+    try {
+      const data: TalentItem[] = await this.excelImport.importExcel(file, columns);
+
+      // 驗證資料完整性
+      const validData = data.filter(item =>
+        item.tlt_no && item.tlt_no.trim() !== '' &&
+        item.tlt_name && item.tlt_name.trim() !== ''
+      );
+
+      if (!validData.length) return void this.messageService.errorBubble('匯入檔案沒有有效資料');
+
+      // 建立現有項目的 Set 以提升查找效率
+      const existingSet = new Set<string>();
+      for (const item of this.tltTableFiltered) { existingSet.add(item.tlt_no); }
+
+      // 將匯入資料轉為 Map 以提升處理效率
+      const importDataMap = new Map<string, TalentItem>();
+      for (const item of validData) { importDataMap.set(item.tlt_no, item); }
+
+      // 過濾出不存在的項目並加上 CRUD 標記
+      const newItems: TalentItem[] = [];
+      for (const [tlt_no, item] of importDataMap) {
+        if (!existingSet.has(tlt_no)) {
+          newItems.push(item);
+          // 同時更新 tltDetailMap
+          this.tltDetailMap.set(tlt_no, item);
+        }
+      }
+
+      // 更新 tltNosSignal，為新項目加上 'new' 標記
+      const currentTltNos = this.tltNosSignal();
+      const newTltItems = newItems.map(item => ({ ...item, Status: 'new' as const }));
+      this.tltNosSignal.set([...currentTltNos, ...newTltItems]);
+      this.tltTableFiltered = [...this.tltTableFiltered, ...newItems];
+      this.messageService.successBubble(`匯入成功：新增 ${newItems.length} 筆資料`);
+
+      console.log(`importExcel:`, [event, this.tltTableFiltered, this.tltNosSignal()]);
+
+    } catch (error) {
+      console.error('Excel 匯入錯誤:', error);
+      this.messageService.errorBubble('Excel 檔案讀取失敗，請檢查檔案格式');
+    }
   }
 
-  // 下載範例檔案
-  public onExportExcel() {
-    this.service.downloadTemplate();
+  /** 下載範例檔案 */
+  public onExportExcel(): void {
+    // 建立工作簿
+    const wb = XLSX.utils.book_new();
+    // 建立工作表
+    const ws = XLSX.utils.aoa_to_sheet([
+      ['tlt_no', 'tlt_name'],
+    ]);
+    console.log(`onExportExcel:`, [wb, ws]);
+
+    // 將工作表加入工作簿
+    XLSX.utils.book_append_sheet(wb, ws, '專櫃範本');
+    // 生成並下載檔案
+    XLSX.writeFile(wb, `專櫃範本_${new Date().toISOString().split('T')[0]}.xlsx`);
   }
 
   /**
@@ -302,6 +361,7 @@ export class TLS26010CRUComponent extends BasicCruPageComponent<TLS26010Data> im
     });
   }
 
+  /** 對話框資料 */
   public onDialogSubmit(): void {
     const dialog = this.dialogVisible();
     const tlt = this.service.TLTMap;

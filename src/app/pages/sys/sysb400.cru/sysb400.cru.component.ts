@@ -189,7 +189,7 @@ export class SYSB400CRUComponent
         }));
         orgLoaded = true;
         if (upgroupLoaded && orgLoaded) resolve();
-      });
+      });      
     });
   }
 

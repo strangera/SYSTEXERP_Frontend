@@ -397,7 +397,7 @@ export class ReportTableGroupComponent implements OnInit {
     const marginLeft = 40;
     let currentY = 40;
     const pageWidth = doc.internal.pageSize.getWidth();
-    doc.addFont('assets/fonts/NotoSansTC-VariableFont_wght.woff2', 'Noto Sans TC', 'normal');
+    doc.addFont('assets/fonts/NotoSansTC-VariableFont_wght.ttf', 'Noto Sans TC', 'normal');
     doc.setFont('Noto Sans TC');
     doc.setFontSize(14);
     doc.text(this.reportTitle, pageWidth / 2, currentY, { align: 'center' });

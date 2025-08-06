@@ -51,8 +51,8 @@ export class SYSB300Component
   totalRecords = 0;// 分頁和排序參數 // 排序需要
   data: Sysb300m[] = [];
   columns: Column[] = [
-    { field: 'level_id', header: '階層代碼', visible: true },
-    { field: 'level_name', header: '階層名稱', visible: true },
+    { field: 'level_id', header: '組織階層代碼', visible: true },
+    { field: 'level_name', header: '組織階層名稱', visible: true },
     {
       field: 'p_level_id',
       header: '上層組織編號',

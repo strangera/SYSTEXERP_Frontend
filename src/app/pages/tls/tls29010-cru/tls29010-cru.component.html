@@ -106,7 +106,7 @@
             <hr>
             <!-- 折扣別維護 -->
             <app-expandable-edit-table #detailTable title="折扣別明細" [mainColumns]="Potential_Customer_Detail_Columns" 
-            [data]="potentialDetail"
+            [data]="filteredDetail"
             [loading]="expandDetailLoading" detailKey="" dataKey="id" [showCheckBox]="true" [showPaginator]="false"
             [showAddButton]="true" [showDetailTabs]="false" [showDetailAddButton]="false" [readonly]="crudstatus === 'Read'"
             [defaultNewItem]="defaultNewDetail" (save)="onRowSaveDetail($event)" (cancel)="onRowCancelDetail($event)"

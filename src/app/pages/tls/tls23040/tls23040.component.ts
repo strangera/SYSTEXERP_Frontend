@@ -68,7 +68,7 @@ export class TLS23040Component extends BasicQueryPageComponent<any> {
   queryForm = this.formBuilder.group({
     TXN_DateStart: [new Date('2024-01-01'), [Validators.required]],
     TXN_DateEnd: [new Date('2024-01-01'), [Validators.required]],
-    ECR_No: [[]],
+    ECR_No: [null], // ✅ 初始為 null（不會出現預設選項）
     TXN_No_Start: [null],
     TXN_No_End: [null],
     TLT_No: [[]],
@@ -231,29 +231,38 @@ export class TLS23040Component extends BasicQueryPageComponent<any> {
   //報表模式
 
   private cleanFormPayload(payload: any): any {
-    for (const key in payload) {
-      const val = payload[key];
-      if (
-        val === '' ||
-        val === null ||
-        (Array.isArray(val) && val.length === 0)
-      ) {
-        payload[key] = null;
-      }
+  delete payload.displayMode;
+
+  for (const key in payload) {
+    const val = payload[key];
+    if (
+      val === '' ||
+      val === null ||
+      (Array.isArray(val) && val.length === 0)
+    ) {
+      payload[key] = null;
     }
-
-    if (payload['IsHaveTERM_No'] === 'Y') payload['IsHaveTERM_No'] = true;
-    if (payload['IsHaveTERM_No'] === 'N') payload['IsHaveTERM_No'] = false;
-
-    return {
-      ...payload,
-      pageSize: payload.pageSize ?? 30, // ✅ 小寫
-      pageIndex: (payload.pageIndex ?? 1) - 1, // ✅ 小寫
-      Offset: 0,
-      OrderBy: '',
-      SortBy: payload.SortBy ?? [{ field: 'ID', order: 1 }],
-    };
   }
+
+  // ✅ 如果 ECR_No 是 null，就轉為空陣列（後端需要陣列型別）
+  if (!Array.isArray(payload.ECR_No)) {
+    payload.ECR_No = payload.ECR_No == null ? [] : [payload.ECR_No];
+  }
+
+  if (payload['IsHaveTERM_No'] === 'Y') payload['IsHaveTERM_No'] = true;
+  if (payload['IsHaveTERM_No'] === 'N') payload['IsHaveTERM_No'] = false;
+
+  return {
+    ...payload,
+    pageSize: payload.pageSize ?? 30,
+    pageIndex: (payload.pageIndex ?? 1) - 1,
+    Offset: 0,
+    OrderBy: '',
+    SortBy: payload.SortBy ?? [{ field: 'ID', order: 1 }],
+  };
+}
+
+
 
   goToReportMode(): void {
     if (!this.customPageSize || this.customPageSize <= 0) {
@@ -273,25 +282,18 @@ export class TLS23040Component extends BasicQueryPageComponent<any> {
     const queryFormValue = this.cleanFormPayload({
       ...this.queryForm.value,
       pageSize: this.customPageSize,
-      displayMode: this.displayMode,
+      // displayMode: this.displayMode,
     });
 
-    // 付款別報表一定要有 ECR_No
-if (this.displayMode === 'ByPaymentType') {
-  // 收銀機號必填，若為空自動帶入第一筆
-  if (!queryFormValue.ECR_No || queryFormValue.ECR_No.length === 0) {
-    const firstECR = this.ECRNoOptions[0]?.value;
-    if (firstECR) {
-      queryFormValue.ECR_No = [firstECR]; // 改為陣列
-    } else {
-      this.messageService.warnBubble('付款別報表需選擇收銀機號');
-      this.loading = false;
-      this.messageService.unblockUi();
-      return;
-    }
-  }
-}
-
+//     // 付款別報表一定要有 ECR_No
+// if (this.displayMode === 'ByPaymentType') {
+//   if (!queryFormValue.ECR_No || queryFormValue.ECR_No.length === 0) {
+//     this.messageService.warnBubble('付款別報表需選擇收銀機號');
+//     this.loading = false;
+//     this.messageService.unblockUi();
+//     return;
+//   }
+// }
     this.loading = true;
     this.messageService.blockUi();
 
