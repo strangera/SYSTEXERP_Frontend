@@ -128,6 +128,7 @@ export class SYSB400Component
 
   onSubmit(frm: FormGroup): void {
     this.handleSubmit(frm, () => {
+      console.log('查詢條件',frm.value);
       this.sysb400Service.querySYSB400(frm.value).subscribe({
         next: (response) => {
           console.log('API response:', response);
