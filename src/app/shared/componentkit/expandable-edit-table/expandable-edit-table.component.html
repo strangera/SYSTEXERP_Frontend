@@ -65,6 +65,33 @@
           <!-- 可編輯欄位 -->
           <ng-container *ngIf="shouldShowInputControl(col, isRowEditing(ri))">
             <ng-container [ngSwitch]="col.type">
+              <app-selector-panel *ngSwitchCase="'selector-panel'"
+                [valueControl]="getSelectorControl(rowData, col.field)"
+                [autoCompleteItems]="getSelectorSuggestions(rowData, col.field)"
+                [valuePropertyName]="col.selectorConfig?.valuePropertyName || 'value'"
+                [labelPropertyName]="col.selectorConfig?.labelPropertyName || 'label'"
+                [displayFieldsConfig]="col.selectorConfig?.displayFieldsConfig || []"
+                [panelDataSource]="col.selectorConfig?.panelDataSource || []"
+                [panelTableColumns]="col.selectorConfig?.panelTableColumns || []"
+                [totalDataCount]="col.selectorConfig?.totalDataCount || 0"
+                (searchInputChanged)="onSelectorSearchInputChanged($event, rowData, col)"
+                (searchFormChanged)="onSelectorSearchFormChanged($event, rowData, col)">
+
+                <!-- 搜尋表單內容 -->
+                <div search-form class="grid">
+                  <ng-container *ngFor="let formField of col.selectorConfig?.searchFormFields">
+                    <div [class]="formField.colClass || 'col-6'">
+                      <label [for]="formField.name">{{ formField.label }}</label>
+                      <input *ngIf="formField.type === 'text'" [id]="formField.name" type="text" pInputText
+                        [formControlName]="formField.name" />
+                      <p-dropdown *ngIf="formField.type === 'dropdown'" [id]="formField.name"
+                        [formControlName]="formField.name" [options]="formField.options" optionLabel="label"
+                        optionValue="value" [showClear]="true">
+                      </p-dropdown>
+                    </div>
+                  </ng-container>
+                </div>
+              </app-selector-panel>
               <!-- 基本文字輸入 -->
               <input *ngSwitchCase="'text'" pInputText type="text" [ngModel]="rowData[col.field]"
                 (ngModelChange)="onTextInputChange(rowData, col, $event)" [maxlength]="col.maxLength ?? null"

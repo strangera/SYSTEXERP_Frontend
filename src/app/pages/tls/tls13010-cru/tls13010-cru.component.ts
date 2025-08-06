@@ -3,7 +3,7 @@ import { TOTAL_AMT_UNIT_OPTIONS } from './../tls13010/tls13010.constants';
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
-import { distinctUntilChanged, map, Observable, Subscription, debounceTime } from 'rxjs';
+import { distinctUntilChanged, map, Observable, Subscription, debounceTime, of } from 'rxjs';
 
 // 基礎組件
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
@@ -25,7 +25,7 @@ import { BusinessTypeCodeService } from '../../../service/basic/business-type-co
 import { OrganizationNumberService } from '../../../service/basic/organization-number.service';
 import { BankOptionsService } from '../../../service/api/dropdownservice/bank-option.service';
 import { AutoCompleteOption, AutoCompleteComponent } from '../../../shared/componentkit/app-autocomplete/app-autocomplete.component';
-import { ColumnDef, ExpandableEditTableComponent } from '../../../shared/componentkit/expandable-edit-table/expandable-edit-table.component';
+import { ColumnDef, ExpandableEditTableComponent, SelectorTableColumn } from '../../../shared/componentkit/expandable-edit-table/expandable-edit-table.component';
 import { LocationOptionsService } from '../../../service/api/dropdownservice/location-options.service';
 import { TLS13010Service } from '../../../service/api/tls/tls13010.service';
 import { CategoryItem, ContractInfo, LocationItem } from '../tls13010/tls13010.model';
@@ -89,10 +89,64 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
     {
       field: 'location_no',
       header: '位置編號',
-      type: 'dropdown',
+      type: 'selector-panel',  // 🎯 改用 selector-panel
       editable: true,
-      style: 'min-width: 150px',
-      options: [] // 這裡會在 updateLocationColumnOptions 中更新
+      style: 'min-width: 200px',
+      selectorConfig: {
+        valuePropertyName: 'value',
+        labelPropertyName: 'label',
+        displayFieldsConfig: [
+          {
+            fieldName: 'value',
+            displayLabel: '',
+            isPrimaryField: true
+          },
+        ],
+        panelTableColumns: [
+          { field: 'value', header: '位置編號', sortable: true },
+          { field: 'building_desc', header: '館別', sortable: true },
+          { field: 'floor_desc', header: '樓層' },
+          { field: 'area_desc', header: '區域' },
+          { field: 'tlt_space', header: '營業坪數' },
+          // { field: 'status', header: '狀態' }
+        ] as SelectorTableColumn[],
+        searchFormFields: [
+          {
+            name: 'building_code',
+            label: '館別代號',
+            type: 'dropdown',
+            colClass: 'col-6',
+            options: [
+              { label: 'A館', value: 'A' },
+              { label: 'B館', value: 'B' },
+              { label: 'C館', value: 'C' }
+            ]
+          },
+          {
+            name: 'floor_code',
+            label: '樓層代號',
+            type: 'dropdown',
+            colClass: 'col-6',
+            options: [
+              { label: 'B4', value: 'B4' },
+              { label: 'B3', value: 'B3' },
+              { label: 'B2', value: 'B2' },
+              { label: 'B1', value: 'B1' },
+              { label: '1F', value: '1F' },
+              { label: '2F', value: '2F' }
+            ]
+          },
+          {
+            name: 'area_code',
+            label: '區域代號',
+            type: 'text',
+            colClass: 'col-6'
+          }
+        ],
+        searchMethod: this.searchLocationOptions.bind(this),
+        panelDataSource: [],
+        totalDataCount: 0
+      }
     },
     {
       field: 'building_desc',
@@ -343,15 +397,22 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
     this.currentPageService.setCurrentProgNo(this.ProgNo);
     this.funInfo = this.authService.getUserPermissions(this.ProgNo);
 
-    // 🎯 忽略父類的 CRUDStatus 邏輯，使用自己的
-    this.formTitle = this.getCustomTitle();
-    this.crudstatus = CRUDStatus.Edit; // 固定為 Edit，避免表單被 disable
+    // 🎯 固定為 Edit，避免表單被 disable
+    this.crudstatus = CRUDStatus.Edit;
 
-    // 🎯 從服務取得檢視模式狀態
+    // 🎯 從服務取得檢視模式狀態，並設定標題
     this.isViewMode = this.contractFlowService.isViewMode();
+    this.formTitle = this.getCustomTitle();
+
+    // 🎯 如果是檢視模式，設定表單為唯讀
     if (this.isViewMode && form) {
       form.disable();
     }
+
+    console.log('📋 頁面初始化完成:', {
+      isViewMode: this.isViewMode,
+      title: this.formTitle
+    });
   }
 
   private getCustomTitle(): string {
@@ -488,17 +549,17 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
   private updateLocationColumnOptions(): void {
     console.log('開始更新表格欄位選項...');
 
-    const locationColumn = this.locationColumns.find(col => col.field === 'location_no');
-    if (locationColumn) {
-      locationColumn.options = this.locationWithDetailsOptions.map(option => ({
-        label: option.label,  // 用 service 轉換後的 label
-        value: option.value   // 用 service 轉換後的 value
-      }));
+    // const locationColumn = this.locationColumns.find(col => col.field === 'location_no');
+    // if (locationColumn) {
+    //   locationColumn.options = this.locationWithDetailsOptions.map(option => ({
+    //     label: option.label,  // 用 service 轉換後的 label
+    //     value: option.value   // 用 service 轉換後的 value
+    //   }));
 
-      console.log('已更新表格下拉選單選項:', locationColumn.options.length, '筆');
-    } else {
-      console.warn('找不到 location_no 欄位！'); // 改回原本的訊息
-    }
+    //   console.log('已更新表格下拉選單選項:', locationColumn.options.length, '筆');
+    // } else {
+    //   console.warn('找不到 location_no 欄位！'); // 改回原本的訊息
+    // }
   }
 
   // 載入工作流程資料（修改，正確載入位置資料）
@@ -1780,92 +1841,41 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
     // 🎯 如果已經是檢視模式，立即設定
     if (currentViewMode) {
       this.isViewMode = true;
-      this.applyViewModeSettings(true);
+      this.handleViewModeChange(true);
     }
 
     // 🎯 訂閱後續變更
     this.viewModeSubscription = this.contractFlowService.isViewMode$.subscribe(isViewMode => {
       console.log('🔍 檢視模式變更:', isViewMode);
       this.isViewMode = isViewMode;
-      this.applyViewModeSettings(isViewMode);
+      this.handleViewModeChange(isViewMode);
     });
   }
 
-  /**
- * 🎯 新增：套用檢視模式設定
- */
-  private applyViewModeSettings(isViewMode: boolean): void {
+  private handleViewModeChange(isViewMode: boolean): void {
+    console.log('🔄 處理檢視模式變更:', isViewMode);
+
     if (isViewMode) {
-      // 🎯 檢視模式：所有欄位都不可編輯
-      this.locationColumns = this.locationColumns.map(col => ({
-        ...col,
-        editable: false
-      }));
+      // 🎯 檢視模式：設定表單為唯讀
+      this.setFormReadonly(true);
+
+      // 🎯 更新頁面標題
+      this.formTitle = '檢視契約資料';
+
+      console.log('🔒 已設定為檢視模式');
     } else {
-      // 🎯 編輯模式：恢復原始的可編輯設定
-      this.locationColumns = [
-        {
-          field: 'location_no',
-          header: '位置編號',
-          type: 'dropdown',
-          editable: true,  // ✅ 位置編號可編輯
-          style: 'min-width: 150px',
-          options: this.locationColumns.find(col => col.field === 'location_no')?.options || []
-        },
-        {
-          field: 'building_desc',
-          header: '館別',
-          type: 'text',
-          editable: false,  // ✅ 館別不可編輯
-          style: 'min-width: 100px'
-        },
-        {
-          field: 'floor_desc',
-          header: '樓層',
-          type: 'text',
-          editable: false,  // ✅ 樓層不可編輯
-          style: 'min-width: 100px'
-        },
-        {
-          field: 'area_desc',
-          header: '區域',
-          type: 'text',
-          editable: false,  // ✅ 區域不可編輯
-          style: 'min-width: 100px'
-        },
-        {
-          field: 'tlt_space',
-          header: '營業坪數',
-          type: 'number',
-          editable: false,  // ✅ 營業坪數不可編輯
-          style: 'min-width: 120px'
-        }
-      ];
+      // 🎯 編輯模式：恢復表單可編輯性
+      this.setFormReadonly(false);
+
+      // 🎯 恢復欄位的特殊狀態（某些欄位永遠禁用）
+      this.restoreFieldConstraints();
+
+      // 🎯 更新頁面標題
+      this.formTitle = this.contractFlowService.isNewContractMode() ? '新增契約資料' : '編輯契約資料';
+
+      console.log('🔓 已設定為編輯模式');
     }
   }
-
-  /**
-   * 🎯 新增：恢復欄位的原始狀態
-   */
-  private restoreOriginalFieldStates(): void {
-    console.log('🔄 恢復原始欄位狀態');
-
-    // 版次永遠禁用
-    this.dataForm.get('contract_subno')?.disable();
-
-    // 如果不是新增模式，某些欄位禁用
-    if (!this.contractFlowService.isNewContractMode()) {
-      const nonEditableFields = ['tlt_name', 'apply_no', 'tlt_no', 'VEN_Name'];
-      nonEditableFields.forEach(fieldName => {
-        const control = this.dataForm.get(fieldName);
-        if (control) {
-          control.disable();
-          console.log(`🔒 禁用欄位: ${fieldName}`);
-        }
-      });
-    }
-  }
-
 
   /**
    * 🎯 新增：設定表單為唯讀
@@ -1877,17 +1887,40 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
     } else {
       this.dataForm.enable();
       console.log('🔓 表單已設為可編輯');
+
+      // 🎯 立即恢復必要的欄位約束
+      setTimeout(() => {
+        this.restoreFieldConstraints();
+      }, 0);
     }
   }
 
   /**
-   * 🎯 新增：設定位置表格為唯讀
+   * 🎯 新增：恢復欄位約束（不破壞 selector-panel）
    */
-  private updateLocationTableReadonly(readonly: boolean): void {
-    this.locationColumns = this.locationColumns.map(col => ({
-      ...col,
-      editable: !readonly
-    }));
+  private restoreFieldConstraints(): void {
+    console.log('🔄 恢復欄位約束');
+
+    // 🎯 版次永遠禁用
+    const contractSubnoControl = this.dataForm.get('contract_subno');
+    if (contractSubnoControl) {
+      contractSubnoControl.disable();
+      console.log('🔒 版次欄位已禁用');
+    }
+
+    // 🎯 如果不是新增模式，某些欄位禁用
+    if (!this.contractFlowService.isNewContractMode()) {
+      const nonEditableFields = ['talent_id', 'apply_no', 'tlt_no'];
+      nonEditableFields.forEach(fieldName => {
+        const control = this.dataForm.get(fieldName);
+        if (control) {
+          control.disable();
+          console.log(`🔒 禁用欄位: ${fieldName}`);
+        }
+      });
+    }
+
+    // 🎯 注意：不要修改 locationColumns，讓 selector-panel 自己處理檢視模式
   }
 
   /**
@@ -1990,5 +2023,28 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
    */
   canCopyAddress(): boolean {
     return !this.isViewMode && !!this.getCompanyAddress();
+  }
+
+  // searchLocationOptions(searchParams: any): Observable<any[]> {
+  //   console.log('🔍 搜尋位置選項:', searchParams);
+
+  //   // 如果有搜尋參數，呼叫 API
+  //   if (searchParams && Object.keys(searchParams).length > 0) {
+  //     return this.locationOptionsService.getLocationWithDetailsOptions(searchParams);
+  //   }
+  //   // 沒有搜尋參數時，返回預設的位置選項
+  //   return of(this.locationWithDetailsOptions);
+  // }
+
+  searchLocationOptions(searchParams: any): Observable<any[]> {
+    console.log('🔍 搜尋被呼叫:', searchParams);
+
+    // 🎯 直接回傳測試資料，不管任何參數
+    const testData = [
+      { value: 'TEST001', label: 'TEST001 - 測試位置1' },
+      { value: 'TEST002', label: 'TEST002 - 測試位置2' }
+    ];
+
+    return of(testData);
   }
 }

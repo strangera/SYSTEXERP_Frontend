@@ -1,6 +1,6 @@
 import { Component, Input, Output, EventEmitter, ViewChild, ChangeDetectorRef, TemplateRef, ContentChild, ElementRef, OnInit, OnChanges } from '@angular/core';
 import { Table, TableModule } from 'primeng/table';
-import { FormBuilder, FormGroup, FormsModule } from '@angular/forms';
+import { FormBuilder, FormControl, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { NgIf, NgClass, NgFor, NgStyle, NgSwitch, NgSwitchCase, NgSwitchDefault, DecimalPipe } from '@angular/common';
 import { PrimeTemplate } from 'primeng/api';
 import { ButtonDirective } from 'primeng/button';
@@ -13,6 +13,23 @@ import { CheckboxModule } from 'primeng/checkbox';
 import { DialogModule } from 'primeng/dialog';
 import { CalendarModule } from 'primeng/calendar';
 import { NotificationService } from '@shared/component/notification-message/notification.service';
+// import { DisplayFieldConfig } from '../selector-panel/selector-panel.component';
+// import { Column } from '../table/table.model';
+import { Observable } from 'rxjs';
+import { SelectorPanelComponent } from '../selector-panel/selector-panel.component';
+
+export interface DisplayFieldConfig {
+  fieldName: string;
+  displayLabel: string;
+  formatValue?: (value: any) => string | number | null;
+  isPrimaryField?: boolean;
+}
+
+export interface SelectorTableColumn {
+  field: string;
+  header: string;
+  sortable?: boolean;
+}
 
 interface DataItem {
   id: number;
@@ -101,6 +118,17 @@ export interface ColumnDef {
   style?: string;
   options?: any[];
 
+  selectorConfig?: {
+    valuePropertyName: string; // 取值用的屬性名稱
+    labelPropertyName: string; // 顯示用的屬性名稱
+    displayFieldsConfig: DisplayFieldConfig[]; // 顯示欄位配置
+    panelTableColumns: SelectorTableColumn[];   // 面板表格欄位
+    searchFormFields: any[];  // 搜尋表單欄位配置
+    searchMethod?: (searchParams: any) => Observable<any[]>;  // 搜尋方法
+    panelDataSource?: any[];  // 面板資料來源
+    totalDataCount?: number;  // 總筆數
+  };
+
   directEdit?: boolean; //控制能否直接編輯checkbox
 
   allowDecimal?: boolean;  // 是否允許小數點
@@ -133,7 +161,7 @@ export interface ColumnDef {
   templateUrl: './expandable-edit-table.component.html',
   styleUrls: ['./expandable-edit-table.component.scss'],
   standalone: true,
-  imports: [NgIf, TableModule, NgClass, PrimeTemplate, ButtonDirective, Ripple, TooltipModule, NgFor, NgStyle, NgSwitch, NgSwitchCase, FormsModule, InputTextModule, InputNumberModule, DropdownModule, CheckboxModule, NgSwitchDefault, DialogModule, CalendarModule, DecimalPipe]
+  imports: [NgIf, TableModule, NgClass, PrimeTemplate, ButtonDirective, Ripple, TooltipModule, NgFor, NgStyle, NgSwitch, NgSwitchCase, FormsModule, InputTextModule, InputNumberModule, DropdownModule, CheckboxModule, NgSwitchDefault, DialogModule, CalendarModule, DecimalPipe, ReactiveFormsModule, SelectorPanelComponent, SelectorPanelComponent]
 })
 export class ExpandableEditTableComponent implements OnInit, OnChanges {
   @ViewChild('dt') dt!: Table;
@@ -205,8 +233,17 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
   currentDateField: { data: any, field: string, isDetail: boolean, rowIndex?: number, detailIndex?: number } | null = null;
   temporaryDate: Date | null = null;
 
+  //selector 相關的控制項和資料
+  private selectorControls: Map<string, FormControl> = new Map();
+  private selectorSuggestions: Map<string, any[]> = new Map();
+  private selectorSearchForms: Map<string, FormGroup> = new Map();
 
-  constructor(private cdr: ChangeDetectorRef, private messageService: NotificationService) { }
+
+  constructor(
+    private cdr: ChangeDetectorRef,
+    private messageService: NotificationService,
+    private fb: FormBuilder
+  ) { }
 
   ngOnInit() {
     this.totalRecords = this.data.length;
@@ -233,6 +270,7 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
   }
 
   ngOnDestroy() {
+    this.cleanupSelectorResources();
     if (this.inputTimeout) {
       clearTimeout(this.inputTimeout);
     }
@@ -1383,4 +1421,86 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
     return column || null;
   }
 
+  //===========================特殊下拉功能區域=============================
+  getSelectorControl(rowData: any, fieldName: string): FormControl {
+    const key = `${rowData[this.dataKey]}_${fieldName}`;
+
+    if (!this.selectorControls.has(key)) {
+      const control = new FormControl(rowData[fieldName] || '');
+      this.selectorControls.set(key, control);
+
+      // 監聽變更並同步到 rowData
+      control.valueChanges.subscribe(value => {
+        rowData[fieldName] = value;
+        this.onDirectEditChange(rowData, fieldName, value);
+      });
+    }
+
+    return this.selectorControls.get(key)!;
+  }
+
+  // 🎯 新增：取得 selector 建議項目
+  getSelectorSuggestions(rowData: any, fieldName: string): any[] {
+    const key = `${rowData[this.dataKey]}_${fieldName}`;
+    return this.selectorSuggestions.get(key) || [];
+  }
+
+  // 🎯 新增：處理 selector 搜尋輸入變更
+  onSelectorSearchInputChanged(searchParams: any, rowData: any, column: ColumnDef): void {
+    const key = `${rowData[this.dataKey]}_${column.field}`;
+
+    if (column.selectorConfig?.searchMethod) {
+      column.selectorConfig.searchMethod(searchParams).subscribe(suggestions => {
+        this.selectorSuggestions.set(key, suggestions);
+      });
+    }
+  }
+
+  // 🎯 新增：處理 selector 搜尋表單變更
+  onSelectorSearchFormChanged(formValue: any, rowData: any, column: ColumnDef): void {
+    if (column.selectorConfig?.searchMethod) {
+      column.selectorConfig.searchMethod(formValue).subscribe(results => {
+        if (column.selectorConfig) {
+          column.selectorConfig.panelDataSource = results;
+        }
+      });
+    }
+  }
+
+  // 🎯 新增：取得 selector 搜尋表單
+  getSelectorSearchForm(rowData: any, column: ColumnDef): FormGroup {
+    const key = `${rowData[this.dataKey]}_${column.field}`;
+
+    if (!this.selectorSearchForms.has(key)) {
+      const form = this.createSelectorSearchForm(column);
+      this.selectorSearchForms.set(key, form);
+    }
+
+    return this.selectorSearchForms.get(key)!;
+  }
+
+  // 🎯 新增：建立 selector 搜尋表單
+  private createSelectorSearchForm(column: ColumnDef): FormGroup {
+    const formConfig: { [key: string]: any } = {};
+
+    if (column.selectorConfig?.searchFormFields) {
+      column.selectorConfig.searchFormFields.forEach(field => {
+        formConfig[field.name] = [''];
+      });
+    }
+
+    // 加入分頁相關欄位
+    formConfig['pageSize'] = [10];
+    formConfig['pageIndex'] = [0];
+    formConfig['sortBy'] = [''];
+
+    return this.fb.group(formConfig);
+  }
+
+  // 🎯 新增：清理 selector 相關資源
+  private cleanupSelectorResources(): void {
+    this.selectorControls.clear();
+    this.selectorSuggestions.clear();
+    this.selectorSearchForms.clear();
+  }
 }
