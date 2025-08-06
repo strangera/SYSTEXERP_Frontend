@@ -36,7 +36,7 @@ export class SYSB500Component
   // ----------------------------------------------------------------
   queryForm = this.formBuilder.group({
     area_no: ['', [Validators.maxLength(2)]], // 區域別編號
-    area_desc: ['', [Validators.maxLength(30)]], // 區域別名稱
+    area_desc: ['', [Validators.maxLength(20)]], // 區域別名稱
 
     //分頁查詢
     ...createPaginationConfig([{ field: 'area_no', order: 1 }]), // 分頁和排序參數
