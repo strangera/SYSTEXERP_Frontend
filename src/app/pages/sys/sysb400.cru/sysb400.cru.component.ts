@@ -63,6 +63,8 @@ export class SYSB400CRUComponent
   raw_org_Option: orgOption[] = []; // 原始資料（永不變動）
   upgroup_Options: apiOption[] = [];
   filtered_p_level_Options: apiOption[] = [];   //依據組織階層代碼 動態變化的 上層組織階層代碼
+  // 0806新增 組織階層代碼 (篩選)
+  filteredUpgroupOptions: apiOption[] = [];
   org_Option: orgOption[] = [];
   whetherOptions: option[] = [
     { value: 'Y', label: '是' },
@@ -167,6 +169,12 @@ export class SYSB400CRUComponent
           Name: item.Name,
           Label: item.No + '-' + item.Name,
         }));
+
+        // ✅ 根據 crudstatus 過濾「全公司」的項目
+        this.filteredUpgroupOptions = this.crudstatus === 'Create'
+          ? this.upgroup_Options.filter(opt => opt.Name !== '全公司')
+          : [...this.upgroup_Options];
+
         upgroupLoaded = true;
         if (upgroupLoaded && orgLoaded) resolve();
       });
@@ -189,7 +197,7 @@ export class SYSB400CRUComponent
         }));
         orgLoaded = true;
         if (upgroupLoaded && orgLoaded) resolve();
-      });      
+      });
     });
   }
 
