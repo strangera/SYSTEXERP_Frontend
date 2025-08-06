@@ -155,7 +155,7 @@ export class TLS2A050Component extends BasicQueryPageComponent<any> implements O
           this.columnGroup = columnGroup;
           this.data = flatData;
           this.totalRecords = res.TotalCount ?? 0;
-          this.queryStateService.setQueryState(this.ProgNo, params);
+          this.queryStateService.setQueryState(this.ProgNo, frm.value);
           this.loading = false;
           this.messageService.unblockUi();
         },
