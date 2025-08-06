@@ -1911,19 +1911,42 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
       console.log('🔒 版次欄位已禁用');
     }
 
+    // 🎯 公司登記地址永遠禁用（因為是從其他系統帶入的）
+    const companyAddressControl = this.dataForm.get('company_register_address');
+    if (companyAddressControl) {
+      companyAddressControl.disable();
+      console.log('🔒 公司登記地址欄位已禁用');
+    }
+
     // 🎯 如果不是新增模式，某些欄位禁用
     if (!this.contractFlowService.isNewContractMode()) {
-      const nonEditableFields = ['talent_id', 'apply_no', 'tlt_no'];
+      const nonEditableFields = [
+        'talent_id',    // 專櫃ID
+        'apply_no',     // 專櫃招募編號
+        'tlt_no',       // 專櫃編號
+        'VEN_Name',     // 廠商名稱
+        'tlt_name'      // 櫃位名稱
+      ];
+
       nonEditableFields.forEach(fieldName => {
         const control = this.dataForm.get(fieldName);
         if (control) {
           control.disable();
-          console.log(`🔒 禁用欄位: ${fieldName}`);
+          console.log(`🔒 編輯模式禁用欄位: ${fieldName}`);
+        }
+      });
+    } else {
+      // 🎯 新增模式下，確保這些欄位是可編輯的
+      const editableInNewMode = ['apply_no', 'tlt_no', 'VEN_Name', 'tlt_name'];
+
+      editableInNewMode.forEach(fieldName => {
+        const control = this.dataForm.get(fieldName);
+        if (control && control.disabled) {
+          control.enable();
+          console.log(`🔓 新增模式啟用欄位: ${fieldName}`);
         }
       });
     }
-
-    // 🎯 注意：不要修改 locationColumns，讓 selector-panel 自己處理檢視模式
   }
 
   /**
