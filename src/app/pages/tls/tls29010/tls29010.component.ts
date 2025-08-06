@@ -71,7 +71,7 @@ export class TLS29010Component extends BasicQueryPageComponent<TALPORDERM> imple
     // 查詢
       queryForm = this.formBuilder.group({
         // TALPORDERM
-        pod_no: [''],   // 活動申請編號YYYYMMDDSSS(活動起始日期+流水號)
+        pod_no: [null],   // 活動申請編號YYYYMMDDSSS(活動起始日期+流水號)
         pod_type: [[]], // 折扣別(1=預售, 2=滿千送百發行, 3=滿千送百兌回, 4~5=會員卡集點, 6~7=全館集點, 8=期間開放折扣)
         pod_sdate: [null], // 活動起始日 (Date)
         pod_edate: [null], // 活動終止日 (Date)
@@ -81,7 +81,7 @@ export class TLS29010Component extends BasicQueryPageComponent<TALPORDERM> imple
         tlt_id: [[]], // 抽成類別(0-9)
         tlt_no: [[]], // 專櫃編號
         use_flag: [[]], // 是否使用 Y/N
-        crt_usr_name: [''], // 建立人員姓名
+        crt_usr_name: [null], // 建立人員姓名
 
         //---0801更新(位置編號不使用)---
 
@@ -112,6 +112,18 @@ export class TLS29010Component extends BasicQueryPageComponent<TALPORDERM> imple
         { label: '6 全館集點-銷售', value: '6' },
         { label: '7 全館集點-點數', value: '7' },
         { label: '8 期間開放折扣', value: '8' }, //新增用這個
+      ];
+
+      tlt_id_Options = [
+        { label: '1', value: '1' },
+        { label: '2', value: '2' },
+        { label: '3', value: '3' },
+        { label: '4', value: '4' },
+        { label: '5', value: '5' },
+        { label: '6', value: '6' },
+        { label: '7', value: '7' },
+        { label: '8', value: '8' },
+        { label: '9', value: '9' },
       ];
 
 
