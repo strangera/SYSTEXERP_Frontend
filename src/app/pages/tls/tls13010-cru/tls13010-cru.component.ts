@@ -3,7 +3,7 @@ import { TOTAL_AMT_UNIT_OPTIONS } from './../tls13010/tls13010.constants';
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
-import { distinctUntilChanged, map, Observable, Subscription, debounceTime, of } from 'rxjs';
+import { distinctUntilChanged, map, Observable, Subscription, debounceTime, of, catchError, tap } from 'rxjs';
 
 // 基礎組件
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
@@ -113,39 +113,32 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
         searchFormFields: [
           {
             name: 'building_code',
-            label: '館別代號',
+            label: '館別',
             type: 'dropdown',
             colClass: 'col-6',
-            options: [
-              { label: 'A館', value: 'A' },
-              { label: 'B館', value: 'B' },
-              { label: 'C館', value: 'C' }
-            ]
+            options: [], // 🎯 會在 updateSelectorPanelOptions 中更新
+            placeholder: '選擇館別'
           },
           {
             name: 'floor_code',
-            label: '樓層代號',
+            label: '樓層',
             type: 'dropdown',
             colClass: 'col-6',
-            options: [
-              { label: 'B4', value: 'B4' },
-              { label: 'B3', value: 'B3' },
-              { label: 'B2', value: 'B2' },
-              { label: 'B1', value: 'B1' },
-              { label: '1F', value: '1F' },
-              { label: '2F', value: '2F' }
-            ]
+            options: [], //會在 updateSelectorPanelOptions 中更新
+            placeholder: '選擇樓層'
           },
           {
             name: 'area_code',
             label: '區域代號',
-            type: 'text',
-            colClass: 'col-6'
-          }
+            type: 'dropdown',
+            options: [], // 會在 updateSelectorPanelOptions 中更新
+            colClass: 'col-6',
+            placeholder: '輸入區域代號'
+          },
         ],
         searchMethod: this.searchLocationOptions.bind(this),
         panelDataSource: [],
-        totalDataCount: 0
+        totalDataCount: 0,
       }
     },
     {
@@ -377,7 +370,9 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
         this.ensureClassificationDataLoaded(currentBusType);
       }
     }, 500);
-
+    setTimeout(() => {
+      this.updateSelectorPanelOptions();
+    }, 1000); // 給足夠時間讓 dropdown 服務載入完成
   }
 
   ngOnDestroy(): void {
@@ -500,7 +495,7 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
   }
 
   private loadLocationWithDetailsOptions(): void {
-    console.log('開始載入位置選項...');
+    console.log('🔄 開始載入位置選項...');
 
     // 取得目前的 talentId（如果是編輯模式）
     const workflowData = this.contractFlowService.getCurrentData();
@@ -508,13 +503,18 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
 
     this.locationOptionsService.getLocationWithDetailsOptions(talentId).subscribe({
       next: (data) => {
-        console.log('API回傳的資料:', data);
+        console.log('📥 API回傳的位置資料:', data);
         this.locationWithDetailsOptions = data;
-        this.updateLocationColumnOptions();
-        console.log('位置選項載入完成，共', this.locationWithDetailsOptions.length, '筆');
+
+        // 🎯 資料載入完成後，更新 selector 面板選項
+        setTimeout(() => {
+          this.updateSelectorPanelOptions();
+        }, 100);
+
+        console.log('✅ 位置選項載入完成，共', this.locationWithDetailsOptions.length, '筆');
       },
       error: (err) => {
-        console.warn('載入位置選項失敗:', err);
+        console.warn('❌ 載入位置選項失敗:', err);
         this.messageService.warnBubble('載入位置選項失敗，請重新整理頁面');
       }
     });
@@ -2025,26 +2025,90 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
     return !this.isViewMode && !!this.getCompanyAddress();
   }
 
-  // searchLocationOptions(searchParams: any): Observable<any[]> {
-  //   console.log('🔍 搜尋位置選項:', searchParams);
-
-  //   // 如果有搜尋參數，呼叫 API
-  //   if (searchParams && Object.keys(searchParams).length > 0) {
-  //     return this.locationOptionsService.getLocationWithDetailsOptions(searchParams);
-  //   }
-  //   // 沒有搜尋參數時，返回預設的位置選項
-  //   return of(this.locationWithDetailsOptions);
-  // }
-
   searchLocationOptions(searchParams: any): Observable<any[]> {
-    console.log('🔍 搜尋被呼叫:', searchParams);
+    console.log('🔍 位置搜尋 - 搜尋參數:', searchParams);
+    console.log('🔍 參數類型:', typeof searchParams);
+    console.log('🔍 參數內容:', JSON.stringify(searchParams));
 
-    // 🎯 直接回傳測試資料，不管任何參數
-    const testData = [
-      { value: 'TEST001', label: 'TEST001 - 測試位置1' },
-      { value: 'TEST002', label: 'TEST002 - 測試位置2' }
-    ];
+    // 🎯 如果沒有搜尋參數，呼叫 service 取得全部位置
+    if (!searchParams || Object.keys(searchParams).length === 0) {
+      console.log('📋 無搜尋條件，回傳所有位置選項');
+      return this.locationOptionsService.getLocationWithDetailsOptions();
+    }
 
-    return of(testData);
+    // 🎯 準備 API 請求參數 (只傳三個)
+    const apiParams: any = {};
+
+    if (searchParams.building_code) {
+      apiParams.building_code = searchParams.building_code;
+      console.log('🏢 加入館別參數:', apiParams.building_code);
+    }
+    if (searchParams.floor_code) {
+      apiParams.floor_code = searchParams.floor_code;
+      console.log('🏢 加入樓層參數:', apiParams.floor_code);
+    }
+    if (searchParams.area_code) {
+      apiParams.area_code = searchParams.area_code;
+      console.log('📍 加入區域參數:', apiParams.area_code);
+    }
+
+    console.log('📤 最終 API 請求參數:', JSON.stringify(apiParams));
+
+    // 🎯 呼叫後端 API
+    return this.locationOptionsService.getLocationWithDetailsOptions(apiParams).pipe(
+      tap((results) => {
+        console.log('✅ API 搜尋成功:', {
+          參數: apiParams,
+          結果數量: results.length,
+          前3筆: results.slice(0, 3).map(item => ({
+            location_no: item.location_no || item.value,
+            building_desc: item.building_desc,
+            floor_desc: item.floor_desc,
+            area_desc: item.area_desc
+          }))
+        });
+      }),
+      catchError((error) => {
+        console.error('❌ 位置搜尋錯誤:', error);
+        this.messageService.warnBubble('搜尋位置失敗，請重試');
+        return of([]);
+      })
+    );
+  }
+
+
+  private updateSelectorPanelOptions(): void {
+    const locationColumn = this.locationColumns.find(col => col.field === 'location_no');
+
+    if (locationColumn?.selectorConfig?.searchFormFields) {
+      // 🎯 使用 dropdown 服務中已載入的館別選項
+      const buildingField = locationColumn.selectorConfig.searchFormFields.find(
+        field => field.name === 'building_code'
+      );
+      if (buildingField) {
+        buildingField.options = this.tls13010DropdownService.buildingOptions || [];
+        console.log('🏢 館別選項已更新:', buildingField.options.length);
+      }
+
+      // 🎯 使用 dropdown 服務中已載入的樓層選項
+      const floorField = locationColumn.selectorConfig.searchFormFields.find(
+        field => field.name === 'floor_code'
+      );
+      if (floorField) {
+        floorField.options = this.tls13010DropdownService.floorOptions || [];
+        console.log('🏢 樓層選項已更新:', floorField.options.length);
+      }
+
+      // 🎯 使用 dropdown 服務中已載入的區域選項
+      const areaField = locationColumn.selectorConfig.searchFormFields.find(
+        field => field.name === 'area_code'
+      );
+      if (areaField) {
+        areaField.options = this.tls13010DropdownService.regionOptions || [];
+        console.log('📍 區域選項已更新:', areaField.options.length);
+      }
+
+      console.log('✅ Selector 面板選項更新完成');
+    }
   }
 }

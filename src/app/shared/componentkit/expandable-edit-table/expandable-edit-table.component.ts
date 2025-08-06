@@ -1458,6 +1458,7 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
 
   // 🎯 新增：處理 selector 搜尋表單變更
   onSelectorSearchFormChanged(formValue: any, rowData: any, column: ColumnDef): void {
+    console.log('🚨 onSelectorSearchFormChanged 被呼叫了！', formValue);
     if (column.selectorConfig?.searchMethod) {
       column.selectorConfig.searchMethod(formValue).subscribe(results => {
         if (column.selectorConfig) {

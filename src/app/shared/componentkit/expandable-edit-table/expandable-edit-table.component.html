@@ -67,6 +67,7 @@
             <ng-container [ngSwitch]="col.type">
               <app-selector-panel *ngSwitchCase="'selector-panel'"
                 [valueControl]="getSelectorControl(rowData, col.field)"
+                [searchForm]="getSelectorSearchForm(rowData, col)"
                 [autoCompleteItems]="getSelectorSuggestions(rowData, col.field)"
                 [valuePropertyName]="col.selectorConfig?.valuePropertyName || 'value'"
                 [labelPropertyName]="col.selectorConfig?.labelPropertyName || 'label'"
@@ -78,7 +79,7 @@
                 (searchFormChanged)="onSelectorSearchFormChanged($event, rowData, col)">
 
                 <!-- 搜尋表單內容 -->
-                <div search-form class="grid">
+                <div search-form class="grid" [formGroup]="getSelectorSearchForm(rowData, col)">
                   <ng-container *ngFor="let formField of col.selectorConfig?.searchFormFields">
                     <div [class]="formField.colClass || 'col-6'">
                       <label [for]="formField.name">{{ formField.label }}</label>
