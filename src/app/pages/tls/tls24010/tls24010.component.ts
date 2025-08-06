@@ -19,7 +19,7 @@ import { InputNumberComponent } from '../../../shared/componentkit/input-number/
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { TranslateModule } from '@ngx-translate/core';
 import { columns, FIX_TYPE, TXN_GUIPaperOptions, txnStatusOptions } from './tls24010.model';
-import { STORE_WAY } from '../tls24010-cru/tls24010-cru.model';
+import { STORE_WAY, TLS24010_EDIT_TYPE } from '../tls24010-cru/tls24010-cru.model';
 
 // 交易補登作業
 @Component({
@@ -64,7 +64,11 @@ export class TLS24010Component extends BasicQueryPageComponent<TLS24010Data> imp
   selectedRowData?: TLS24010Data;
   columns: Column[] = columns
   addButton: AddButton[] = [
-    { label: '功能', icon: 'pi pi-ellipsis-h', action: (rowdata, event) => this.openModal(rowdata, event) }
+    {
+      label: '功能',
+      icon: this.queryForm.get('TXN_GUIPaper')?.value === 'R' || this.queryForm.get('TXN_GUIPaper')?.value === 'C' ? 'pi pi-plus' : 'pi pi-ellipsis-h',
+      action: (rowdata: TLS24010Data, event) => rowdata.TXN_GUIPaper === 'R' || rowdata.TXN_GUIPaper === 'C' ? this.onCancel(rowdata) : this.openModal(rowdata, event)
+    }
   ]
   constructor(
     private readonly dropDownList: DropDownListService,
@@ -77,10 +81,8 @@ export class TLS24010Component extends BasicQueryPageComponent<TLS24010Data> imp
     });
     this.dropDownList.queryTLTTALENT_ByContractDate_DropDownList(this.today.toISOString().split('T')[0]).pipe(untilDestroyed(this)).subscribe(options => {
       this.TLT_NoOptions = options.Data.map(item => ({ ...item, label: `${item.No} - ${item.Name}` }));
-      this.queryForm.get('TLT_No')?.setValue('999981');
     });
     this.queryForm.get('TXN_Date')?.setValue(new Date(this.today.getFullYear(), this.today.getMonth(), this.today.getDate(), 0, 0, 0));
-    // this.queryForm.get('TXN_Date')?.setValue(new Date('2025-07-29T00:00:00'));
   }
   onDateSelect(event: Date): void {
     this.queryForm.get('TXN_Date')?.setValue(event);
@@ -155,20 +157,35 @@ export class TLS24010Component extends BasicQueryPageComponent<TLS24010Data> imp
         header: '作廢交易資料',
         message: '確定要作廢交易資料嗎?',
         accept: () => {
-          this.onEdit({
-            ...rowData,
-            type,
-            TXN_GUIPaper: this.queryForm.value.TXN_GUIPaper,
-            store_way: this.queryForm.value.store_way,
-            talent_id: this.queryForm.value.talent_id
+          const body = {
+            Store_way: this.queryForm.value.store_way || '',
+            SYS_StoreNo: this.authService.currentUserValue?.SYS_StoreNo || '',
+            TXN_Date: (rowData.TXN_Date as unknown as Date).toISOString().split('T')[0] || '',
+            ECR_No: rowData.ECR_No || '',
+            TXN_No: Number(rowData.TXN_No) || 0,
+            POS5006_ID: rowData.ID || 0,
+            TXN_Remark: rowData.TXN_Remark || '',
+          }
+          const data = {
+            ...body,
+            EditType: TLS24010_EDIT_TYPE.交易資料作廢,
+          }
+          this.tls24010Service.updateTLS24010(data).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe((res) => {
+            this.messageService.successBubble(res.Message);
           });
         },
         extraButtons: [
           {
-            label: '顯示說明',
+            label: '確認資料',
             severity: 'info',
             action: () => {
-              this.messageService.infoBox('交易作廢後不可恢復，請謹慎操作');
+              this.onEdit({
+                ...rowData,
+                type,
+                TXN_GUIPaper: this.queryForm.value.TXN_GUIPaper,
+                store_way: this.queryForm.value.store_way,
+                talent_id: this.queryForm.value.talent_id
+              });
             }
           }
         ]
@@ -182,5 +199,23 @@ export class TLS24010Component extends BasicQueryPageComponent<TLS24010Data> imp
         talent_id: this.queryForm.value.talent_id
       });
     }
+  }
+
+  onCancel(rowdata: TLS24010Data): void {
+    this.messageService.confirm({
+      header: '取消作廢交易資料',
+      message: '確定要取消作廢交易資料嗎?',
+      accept: () => {
+        this.loading = true;
+        this.tls24010Service.cancelVoidTLS24010({
+          SYS_StoreNo: this.authService.currentUserValue?.SYS_StoreNo || '',
+          TXN_Date: (rowdata.TXN_Date as unknown as Date).toISOString().split('T')[0],
+          ECR_No: rowdata.ECR_No,
+          TXN_No: Number(rowdata.TXN_No),
+        }).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe((res) => {
+          this.messageService.successBubble(res.Message);
+        });
+      }
+    });
   }
 }

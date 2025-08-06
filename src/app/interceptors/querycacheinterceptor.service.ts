@@ -18,7 +18,6 @@ export class QueryCacheInterceptorService implements HttpInterceptor {
         if (event instanceof HttpResponse && event.status === 200) {
           const url = req.url;
           const api = url.split('/').pop();
-          console.log(api);
           if (api) {
             this.queryState.setQueryState(`${api}`, req.body);
           }

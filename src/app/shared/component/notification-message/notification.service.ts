@@ -15,7 +15,7 @@ interface ConfirmOptions {
   extraButtons?: {
     label: string;
     action: () => void;
-    severity?: string; // optional, like 'info', 'secondary'
+    severity?: "success" | "info" | "warning" | "danger" | "help" | "primary" | "secondary" | "contrast" | null | undefined
   }[];
 }
 interface InputBoxOptions {

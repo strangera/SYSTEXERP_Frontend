@@ -14,7 +14,7 @@
         </p-button>
 
         <p-button *ngFor="let btn of extraButtons" [label]="btn.label" [severity]="btn.severity || 'secondary'"
-          styleClass="w-8rem" (click)="btn.action()">
+          styleClass="w-8rem" (click)="onExtraButtonClick(btn)">
         </p-button>
 
         <p-button title="取消" label="取消" (click)="cd.reject()" outlined="true" styleClass="w-8rem">
