@@ -13,6 +13,7 @@ import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdow
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { NgIf } from '@angular/common';
 import { TranslateModule } from '@ngx-translate/core';
+import { ValidationService } from '@shared/service/validation.service';
 
 // 組織碼設定作業(包含level)
 export interface orgOption {
@@ -47,11 +48,11 @@ export class SYSB400CRUComponent
   dataForm = this.formBuilder.nonNullable.group({
     // SYS3100 組織碼設定作業
     id: [], // ID
-    org_id: ['', [Validators.required, Validators.maxLength(6)]], // 組織代碼
+    org_id: ['', [Validators.required, Validators.maxLength(6), this.validationService.noChineseValidator]], // 組織代碼
     org_name: ['', [Validators.required, Validators.maxLength(40)]], // 組織名稱
-    p_org_id: ['', [Validators.required, Validators.maxLength(20)]], // 上層組織代碼
+    p_org_id: ['', [Validators.required, Validators.maxLength(20), this.validationService.noChineseValidator]], // 上層組織代碼
     level_id: ['', [Validators.required, Validators.maxLength(2)]], // 組織階層代碼
-    p_level_id: ['', [Validators.required, Validators.maxLength(2)]], // 上層組織階層代碼
+    p_level_id: ['', [Validators.required, Validators.maxLength(2), this.validationService.noChineseValidator]], // 上層組織階層代碼
     p_level_name: ['', [Validators.maxLength(40)]], // 上層組織階層名稱
     stop_flag: ['N', [Validators.required, Validators.maxLength(1)]], // 是否停用
     CanDel: [false], // 是否可刪除
@@ -76,6 +77,7 @@ export class SYSB400CRUComponent
   constructor(
     private sysb400Service: Sysb400Service,
     private sysb300Service: Sysb300Service,
+    private validationService: ValidationService,
   ) {
     super();
   }
@@ -107,8 +109,11 @@ export class SYSB400CRUComponent
 
     // 監聽組織階層代碼的變化 (決定上p_org_id的選項)
     this.dataForm.controls.p_level_id.valueChanges.subscribe((pLevelId) => {
-      if (pLevelId) {
+      if (pLevelId ) {
         this.dataForm.controls.p_org_id.enable();
+        if(this.crudstatus =='Read'){
+          this.dataForm.controls.p_org_id.disable();
+        }
       } else {
         this.dataForm.controls.p_org_id.disable();
         this.dataForm.controls.p_org_id.setValue('');
@@ -170,9 +175,9 @@ export class SYSB400CRUComponent
           Label: item.No + '-' + item.Name,
         }));
 
-        // ✅ 根據 crudstatus 過濾「全公司」的項目
+        // ✅ 根據 新增模式 忽略「全公司」的項目
         this.filteredUpgroupOptions = this.crudstatus === 'Create'
-          ? this.upgroup_Options.filter(opt => opt.Name !== '全公司')
+          ? this.upgroup_Options.filter(opt => opt.No !== '10')
           : [...this.upgroup_Options];
 
         upgroupLoaded = true;

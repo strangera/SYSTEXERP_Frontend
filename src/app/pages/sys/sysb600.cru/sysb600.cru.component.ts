@@ -1,3 +1,4 @@
+import { ValidationService } from '@shared/service/validation.service';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 // Shared
@@ -36,14 +37,15 @@ export class SYSB600CRUComponent
   // ----------------------------------------------------------------
   dataForm = this.formBuilder.nonNullable.group({
     id: [],
-    floor_no: ['', [Validators.required, Validators.maxLength(2)]], // 樓層編號
-    floor_desc: ['', [Validators.required, Validators.maxLength(30)]], // 樓層名稱
+    floor_no: ['', [Validators.required, Validators.maxLength(2), this.validationService.noChineseValidator]], // 樓層編號
+    floor_desc: ['', [Validators.required, Validators.maxLength(20)]], // 樓層名稱
   });
   //
   // ----------------------------------------------------------------
   constructor(
     private sysb600Service: Sysb600Service,
     private translate: TranslateService,
+    private validationService: ValidationService,
     //
   ) {
     super(); // 呼叫父類建構子
