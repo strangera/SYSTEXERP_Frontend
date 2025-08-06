@@ -28,14 +28,27 @@ export interface TLS26080Data {
 }
 
 export interface TLS26080Detail {
+  pod_no?: string;            // 活動申請編號
+  pod_type?: string;          // 活動類型
   calc_date_type: 'Y' | 'N';  // 預購起日計算 ('Y'=活動起始日至截止日, 'N'=正檔日至截止日)
   cap_item: string;           // 扣款代碼
-  id: number;                 // 主鍵
+  id?: number;                // 主鍵
   talent_id: number;          // 專櫃 ID
   tlt_id: string;             // 專櫃關聯 ID
   tlt_name: string;           // 專櫃名稱
   tlt_no: string;             // 專櫃編號
-  tpy_rate: string;           // 費用計算的比率
+  tpy_rate: number;           // 費用計算的比率
+}
+
+export interface TLS2608InsertPayload {
+  pod_no: string;             // 活動申請編號
+  pod_type: string;           // 活動類型
+  pod_desc: string;           // 活動名稱
+  pod_sdate: Date;            // 活動起始日期
+  pod_edate: Date;            // 活動終止日期
+  pod_busdate: Date;          // 活動正檔日期
+  cap_item: string;           // 扣款代碼
+  TALPORDERD_VOUCHERDetails: TLS26080Detail[]; // 活動專櫃資料
 }
 
 export interface TLS26080Query {

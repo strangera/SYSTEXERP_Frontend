@@ -28,20 +28,35 @@
 
         <!-- 活動名稱 -->
         <div class="col-12 md:col-6 lg:col-8">
+          <app-dropdown label="活動名稱"
+                        controlName="pod_desc"
+                        [options]="service.campaignData()"
+                        optionLabel="CampaignName"
+                        optionValue="CampaignId"
+                        [control]="dataForm.controls.pod_desc"
+                        [submitted]="submitted"></app-dropdown>
+        </div>
+        <!-- <div class="col-12 md:col-6 lg:col-8">
           <app-input-text label="活動名稱"
                           controlName="pod_desc"
                           [control]="dataForm.controls.pod_desc"
                           [disabled]="false"
                           [submitted]="submitted">
           </app-input-text>
-        </div>
+        </div> -->
       </div>
 
       <div class="grid p-fluid">
-        <!-- 活動起始日 -->
+        <!-- 活動週期 -->
         <div class="col-12 md:col-6 lg:col-4">
+          <!-- <app-radiobutton label="活動起始日期"
+                           groupname="calcDateType"
+                           [control]="dataForm.controls.calcDateType"
+                           [options]="calcDateType"
+                           [submitted]="submitted">
+          </app-radiobutton> -->
           <app-calendar-range calendarType="dateRange"
-                              label="活動起始日期"
+                              label="活動日期"
                               [startControl]="dataForm.controls.pod_sdate"
                               [endControl]="dataForm.controls.pod_edate"
                               [submitted]="submitted">
@@ -124,21 +139,23 @@
         <app-table [showCheckBox]="true"
                    [showRowEdit]="true"
                    [alwaysEdit]="true"
+                   [alwaysBlurValidate]="true"
                    [insertRowData]="true"
                    [data]="service.TLS26080Detail()"
                    [dataKey]="'tlt_no'"
-                   [columns]="counterColumns"
-                   (delete)="onDeleteCounter($event)"></app-table>
+                   [tableKey]="'TLS26080_Counter'"
+                   (onBlur)="onBlurCounter($event)"
+                   [columns]="counterColumns"></app-table>
 
         <!-- 選中專櫃提示 -->
-        <div *ngIf="selectedCounter"
+        <!-- <div *ngIf="selectedCounter"
              class="mt-2 p-2 bg-blue-50 border-round">
           <small class="text-blue-600">
             <i class="pi pi-info-circle mr-1"></i>
             已選擇專櫃：{{ selectedCounter.counterCode }} -
             {{ selectedCounter.commissionTypeName }}
           </small>
-        </div>
+        </div> -->
       </p-panel>
     </div>
   </div>
