@@ -13,7 +13,7 @@ export class Tls29010DetailService {
             // 如果是新資料就保持 'new'
             if (newData.status !== 'new') {
                 // 比對 old/new，有差異才設為 modified
-                const keysToCompare = ['tlt_id', 'pod_sdate', 'pod_edate', 'cag_barcode']; // 你關心的欄位
+                const keysToCompare = ['tlt_id', 'tlt_no','pod_sdate', 'pod_edate', 'cag_barcode', 'use_flag']; // 你關心的欄位
                 const isModified = keysToCompare.some(key => oldData[key] !== newData[key]);
 
                 if (isModified) {
