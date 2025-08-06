@@ -1,4 +1,4 @@
-import { AddButton } from './../../../shared/componentkit/table/table.model';
+import { AddButton, formatDateToYYYY_MM_DD } from './../../../shared/componentkit/table/table.model';
 import { Component, OnInit, ViewChild } from '@angular/core';
 import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
@@ -63,13 +63,7 @@ export class TLS24010Component extends BasicQueryPageComponent<TLS24010Data> imp
   data: TLS24010Data[] = [];
   selectedRowData?: TLS24010Data;
   columns: Column[] = columns
-  addButton: AddButton[] = [
-    {
-      label: '功能',
-      icon: this.queryForm.get('TXN_GUIPaper')?.value === 'R' || this.queryForm.get('TXN_GUIPaper')?.value === 'C' ? 'pi pi-plus' : 'pi pi-ellipsis-h',
-      action: (rowdata: TLS24010Data, event) => rowdata.TXN_GUIPaper === 'R' || rowdata.TXN_GUIPaper === 'C' ? this.onCancel(rowdata) : this.openModal(rowdata, event)
-    }
-  ]
+  addButton: AddButton[] = []
   constructor(
     private readonly dropDownList: DropDownListService,
     private readonly tls24010Service: Tls24010Service,
@@ -112,6 +106,14 @@ export class TLS24010Component extends BasicQueryPageComponent<TLS24010Data> imp
       this.queryForm.get('TLT_Name')?.setValue(data?.Name);
       this.queryForm.get('talent_id')?.setValue(data?.talent_id);
     }
+    this.addButton = [
+      {
+        label: this.queryForm.get('TXN_GUIPaper')?.value === 'R' || this.queryForm.get('TXN_GUIPaper')?.value === 'C' ? '取消作廢' : '修正交易資料',
+        icon: this.queryForm.get('TXN_GUIPaper')?.value === 'R' || this.queryForm.get('TXN_GUIPaper')?.value === 'C' ? 'pi pi-undo' : 'pi pi-ellipsis-h',
+        action: (rowdata: TLS24010Data, event) => this.queryForm.get('TXN_GUIPaper')?.value === 'R' || this.queryForm.get('TXN_GUIPaper')?.value === 'C' ? this.onCancel(rowdata) : this.openModal(rowdata, event),
+        disabled: (rowData: TLS24010Data) => rowData.TXN_Status === 'D'
+      }
+    ]
     this.updateItems();
   }
   items: MenuItem[] = [];
@@ -135,6 +137,8 @@ export class TLS24010Component extends BasicQueryPageComponent<TLS24010Data> imp
   }
   // 補登資料
   onCreateData(): void {
+    const queryForm = this.queryForm.value;
+    if (queryForm.TXN_GUIPaper === 'R' || queryForm.TXN_GUIPaper === 'C') { return; }
     this.submitted = true;
     if (!this.queryForm.valid) { return; }
     this.updateData();
@@ -160,7 +164,7 @@ export class TLS24010Component extends BasicQueryPageComponent<TLS24010Data> imp
           const body = {
             Store_way: this.queryForm.value.store_way || '',
             SYS_StoreNo: this.authService.currentUserValue?.SYS_StoreNo || '',
-            TXN_Date: rowData.TXN_Date || '',
+            TXN_Date: formatDateToYYYY_MM_DD(rowData.TXN_Date) || '',
             ECR_No: rowData.ECR_No || '',
             TXN_No: Number(rowData.TXN_No) || 0,
             POS5006_ID: rowData.ID || 0,
@@ -172,6 +176,7 @@ export class TLS24010Component extends BasicQueryPageComponent<TLS24010Data> imp
           }
           this.tls24010Service.updateTLS24010(data).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe((res) => {
             this.messageService.successBubble(res.Message);
+            this.onSubmit(this.queryForm);
           });
         },
         extraButtons: [
@@ -209,10 +214,11 @@ export class TLS24010Component extends BasicQueryPageComponent<TLS24010Data> imp
         this.loading = true;
         this.tls24010Service.cancelVoidTLS24010({
           SYS_StoreNo: this.authService.currentUserValue?.SYS_StoreNo || '',
-          TXN_Date: (rowdata.TXN_Date as unknown as Date).toISOString().split('T')[0],
+          TXN_Date: formatDateToYYYY_MM_DD(rowdata.TXN_Date),
           ECR_No: rowdata.ECR_No,
           TXN_No: Number(rowdata.TXN_No),
         }).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe((res) => {
+          this.onSubmit(this.queryForm);
           this.messageService.successBubble(res.Message);
         });
       }
