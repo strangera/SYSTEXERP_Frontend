@@ -258,3 +258,5 @@ export const formatDateToYYYY_MM_DD = (value: string | Date): string => {
 
   return `${year}-${month}-${day}`;
 };
+// addDaysToDate：增加天數後的日期
+export const addDaysToDate = (date: Date, days: number): Date => new Date(date.getTime() + days * 24 * 60 * 60 * 1000);

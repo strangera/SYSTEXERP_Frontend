@@ -5,10 +5,11 @@
 <div class="grid p-fluid">
   <div class="col pb-0">
     <p-inputGroup id="input-number-start">
-      <app-input-number [label]="startLabel || ''" [controlName]="startControlName" [control]="startControl"
-        [submitted]="submitted" [minFractionDigits]="minFractionDigits" [maxFractionDigits]="maxFractionDigits"
-        [useGrouping]="useGrouping" [mode]="mode" [suffix]="suffix" [step]="step" [showButtons]="showButtons"
-        (changeEvent)="onStartInputChange($event)"></app-input-number>
+      <app-input-number class="w-full" [label]="startLabel || ''" [controlName]="startControlName"
+        [control]="startControl" [submitted]="submitted" [minFractionDigits]="minFractionDigits"
+        [maxFractionDigits]="maxFractionDigits" [useGrouping]="useGrouping" [mode]="mode" [suffix]="suffix"
+        [step]="step" [showButtons]="showButtons" (changeEvent)="onStartInputChange($event)"
+        (blurEvent)="onStartBlur($event)"></app-input-number>
     </p-inputGroup>
   </div>
   <div class="flex"
@@ -17,10 +18,10 @@
   </div>
   <div class="col pb-0">
     <p-inputGroup id="input-number-end">
-      <app-input-number [label]="endLabel || ''" [controlName]="endControlName" [control]="endControl"
+      <app-input-number class="w-full" [label]="endLabel || ''" [controlName]="endControlName" [control]="endControl"
         [submitted]="submitted" [minFractionDigits]="minFractionDigits" [maxFractionDigits]="maxFractionDigits"
         [useGrouping]="useGrouping" [mode]="mode" [suffix]="suffix" [step]="step" [showButtons]="showButtons"
-        (changeEvent)="onEndInputChange($event)"></app-input-number>
+        (changeEvent)="onEndInputChange($event)" (blurEvent)="onEndBlur($event)"></app-input-number>
     </p-inputGroup>
   </div>
 </div>
