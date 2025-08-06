@@ -15,15 +15,12 @@
         <hr *ngIf="selectedBank" />
         <div *ngIf="selectedBank" class="grid p-fluid">
           <!-- 共通性 -->
-          <app-multi-select class="col-12 md:col-6 lg:col-4" label="收銀機號" controlName="ECR_No"
-            [control]="queryForm.controls.ECR_NoList" [submitted]="submitted" [options]="ECR_NoListOptions"
-            optionLabel="label" optionValue="No" />
-          <app-multi-select class="col-12 md:col-6 lg:col-4" label="交易流水號" controlName="TXN_No"
-            [control]="queryForm.controls.TXN_NoList" [submitted]="submitted" [options]="TXN_NoListOptions"
-            optionLabel="label" optionValue="No" />
-          <app-multi-select class="col-12 md:col-6 lg:col-4" label="專櫃編號" controlName="TLT_No"
-            [control]="queryForm.controls.TLT_NoList" [submitted]="submitted" [options]="TLT_NoListOptions"
-            optionLabel="label" optionValue="No" />
+          <app-input-text class="col-12 md:col-6 lg:col-4" label="收銀機號" controlName="ECR_No"
+            [control]="queryForm.controls.ECR_No" [submitted]="submitted" />
+          <app-input-text class="col-12 md:col-6 lg:col-4" label="交易流水號" controlName="TXN_No"
+            [control]="queryForm.controls.TXN_No" [submitted]="submitted" />
+          <app-input-text class="col-12 md:col-6 lg:col-4" label="專櫃編號" controlName="TLT_No"
+            [control]="queryForm.controls.TLT_No" [submitted]="submitted" />
         </div>
         <hr *ngIf="selectedBank" />
         <!-- 聯合專用欄位 -->
@@ -131,13 +128,18 @@
   height="h-10rem">
   <form [formGroup]="dialogQueryForm" (ngSubmit)="onDialogSubmit(dialogQueryForm)">
     <div class="grid p-fluid">
+      <app-dropdown class="col-12 md:col-6 lg:col-4" label="收單銀行" controlName="tableName" [options]="POS611XOptions"
+        optionLabel="label" optionValue="table" [control]="dialogQueryForm.controls.tableName" [submitted]="submitted"
+        [filter]="false" />
+    </div>
+    <hr />
+    <div class="grid p-fluid">
       <app-input-text class="col-12 md:col-6 lg:col-4" label="收銀機號" controlName="ECR_No"
         [control]="dialogQueryForm.controls.ECR_No" [submitted]="dialogSubmitted" />
-      <app-input-number class="col-12 md:col-6 lg:col-4" label="交易流水號" controlName="TXN_No"
-        [control]="dialogQueryForm.controls.TXN_No" [submitted]="dialogSubmitted" [useGrouping]="false"
-        [max]="99999999" />
+      <app-input-text class="col-12 md:col-6 lg:col-4" label="交易流水號" controlName="TXN_No"
+        [control]="dialogQueryForm.controls.TXN_No" [submitted]="dialogSubmitted" />
       <app-calendar class="col-12 md:col-6 lg:col-4" calendarType="dateOne" label="銷售日期"
-        [control]="dialogQueryForm.controls.CTBC_TxnDate" [submitted]="dialogSubmitted" />
+        [control]="dialogQueryForm.controls.TXN_Date" [submitted]="dialogSubmitted" />
     </div>
     <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
       <app-button btnType="query" [loading]="dialogLoading"></app-button>

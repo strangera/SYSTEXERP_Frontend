@@ -160,7 +160,7 @@ export class TLS24010Component extends BasicQueryPageComponent<TLS24010Data> imp
           const body = {
             Store_way: this.queryForm.value.store_way || '',
             SYS_StoreNo: this.authService.currentUserValue?.SYS_StoreNo || '',
-            TXN_Date: (rowData.TXN_Date as unknown as Date).toISOString().split('T')[0] || '',
+            TXN_Date: rowData.TXN_Date || '',
             ECR_No: rowData.ECR_No || '',
             TXN_No: Number(rowData.TXN_No) || 0,
             POS5006_ID: rowData.ID || 0,
