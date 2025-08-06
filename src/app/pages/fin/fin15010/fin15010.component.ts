@@ -27,6 +27,7 @@ import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.compon
   standalone: true,
   imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputTextRangeComponent, CalendarRangeComponent, InputTextComponent, InputNumberRangeComponent, TableComponent, TranslateModule, MultiSelectComponent, DropdownComponent]
 })
+// 申報書維護
 export class FIN15010Component extends BasicQueryPageComponent<FIN15010Data> implements OnInit {
   queryForm = this.formBuilder.group({
     InvoiceDateStart: [null], // 發票日期_起
