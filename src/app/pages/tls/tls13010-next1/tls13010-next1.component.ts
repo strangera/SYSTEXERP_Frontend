@@ -1740,11 +1740,9 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
   }
 
   onRealCancel(): void {
-    if (confirm('確定要離開契約編輯流程嗎？所有暫存資料將會保留。')) {
-      this.saveFareDataToWorkflow();
-      this.router.navigate(['account/tls/tls13010']);
-      this.messageService.infoBubble('已離開契約編輯流程');
-    }
+    this.saveFareDataToWorkflow();
+    this.router.navigate(['account/tls/tls13010']);
+    this.messageService.infoBubble('已離開契約編輯流程');
   }
 
   onClearAndExit(): void {

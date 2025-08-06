@@ -1,0 +1,60 @@
+<div class="grid p-fluid">
+  <ng-container *ngFor="let fieldConfig of displayFieldsConfig">
+    <div class="col pb-0">
+      <ng-container *ngIf="fieldConfig.isPrimaryField; else otherFieldsTemplate">
+        <label [for]="fieldConfig.fieldName">{{ fieldConfig.displayLabel }}
+          <span *ngIf="isRequired" class="required">*</span>
+        </label>
+
+        <!-- 🎯 主要輸入欄位 - 點擊時打開面板 -->
+        <div class="selector-input-wrapper">
+          <p-autoComplete [formControl]="valueControl" [id]="fieldConfig.fieldName" [optionLabel]="labelPropertyName"
+            [suggestions]="autoCompleteItems" [optionValue]="valuePropertyName"
+            [placeholder]="valueControl.disabled ? '' : placeholder" [readonly]="true"
+            (onFocus)="openSelectorPanel($event)" (click)="openSelectorPanel($event)" class="clickable-autocomplete">
+          </p-autoComplete>
+
+          <!-- 🎯 選擇器按鈕 -->
+          <button type="button" pButton pRipple icon="pi pi-search" class="p-button-outlined selector-button"
+            (click)="openSelectorPanel($event)" [disabled]="valueControl.disabled">
+          </button>
+        </div>
+
+        <app-control-messages [onerror]="isSubmitted || (valueControl.touched && valueControl.invalid)"
+          [control]="valueControl">
+        </app-control-messages>
+      </ng-container>
+
+      <ng-template #otherFieldsTemplate>
+        <label for="{{ fieldConfig.fieldName }}">{{ fieldConfig.displayLabel }}</label>
+        <input type="text" pInputText [disabled]="true" [value]="getDisplayFieldValue(fieldConfig)"
+          class="readonly-field" />
+      </ng-template>
+    </div>
+  </ng-container>
+</div>
+
+<!-- 🎯 選擇器覆蓋面板 -->
+<p-overlayPanel #selectorOverlay [style]="{'max-width': '800px', 'min-width': '600px'}" [appendTo]="'body'"
+  styleClass="selector-overlay-panel">
+
+  <div class="selector-panel-header">
+    <h4>選擇項目</h4>
+    <button type="button" pButton pRipple icon="pi pi-times" class="p-button-rounded p-button-text p-button-sm"
+      (click)="closeSelectorPanel()">
+    </button>
+  </div>
+
+  <form [formGroup]="searchForm" class="grid p-fluid selector-search-form">
+    <!-- 🎯 這裡可以放置搜尋表單的內容 -->
+    <ng-content select="[search-form]"></ng-content>
+
+    <!-- 🎯 選擇器表格 -->
+    <app-table class="col-12 selector-table" [dataKey]="valuePropertyName" [data]="panelDataSource"
+      [selectedItems]="selectedRecord" (select)="onTableRowSelected($event)" [columns]="panelTableColumns"
+      [showHeader]="true" [showPage]="true" [showCheckBox]="true" selectionMode="single" [showManage]="false"
+      scrollHeight="300px" [loading]="isDataLoading" [multiSortMeta]="[{ field: valuePropertyName, order: -1 }]"
+      [totalRecords]="totalDataCount" (lazyLoadData)="onPaginationLoad($event, searchForm)" [lazy]="true"
+      [showCaption]="false" />
+  </form>
+</p-overlayPanel>

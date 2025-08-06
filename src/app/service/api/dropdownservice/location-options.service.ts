@@ -1,7 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { ErrorHandlerService } from '../../system/error-handler.service';
-import { map, Observable } from 'rxjs';
+import { catchError, map, Observable, of } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 
 @Injectable({
@@ -76,30 +76,53 @@ export class LocationOptionsService {
   }
 
   // 位置代碼選項 - 包含自動帶入用的館別、樓層、區域資訊
-  getLocationWithDetailsOptions(talentId?: string): Observable<any[]> {
-    // 如果有 talentId 就傳入，沒有就傳空物件
-    const body = talentId ? { talentId } : {};
+  getLocationWithDetailsOptions(searchParams?: {
+    building_code?: string;
+    floor_code?: string;
+    area_code?: string;
+  }): Observable<any[]> {
+
+    // 準備請求體
+    const body: any = {};
+
+    // 🎯 如果有搜尋參數就加入
+    if (searchParams) {
+      if (searchParams.building_code) {
+        body.building_code = searchParams.building_code;
+      }
+      if (searchParams.floor_code) {
+        body.floor_code = searchParams.floor_code;
+      }
+      if (searchParams.area_code) {
+        body.area_code = searchParams.area_code;
+      }
+    }
+
+    console.log('🔍 LocationService API 請求體:', body);
 
     return this.http
       .post<any>(`${this.apiUrl}/queryPOS2002_Location_DropDownList`, body)
       .pipe(
-        map((res) => res?.Data?.map((x: any) => ({
-          label: x.location_no,           // 下拉選單顯示用
-          value: x.location_no,           // 下拉選單選擇值
-          tlt_building: x.tlt_building,   // 自動帶入用 - 館別
-          tlt_floor: x.tlt_floor,         // 自動帶入用 - 樓層
-          area_no: x.area_no,             // 自動帶入用 - 區域
-          tlt_space: x.tlt_space || 0,    // 自動帶入用 - 營業面積
-          building_desc: x.building_desc || '', // 新增館別描述
-          floor_desc: x.floor_desc || '',   // 新增樓層描述
-          area_desc: x.area_desc || ''      // 新增區域描述
-        })) ?? [])
+        map((res) => {
+          console.log('📥 LocationService API 回應:', res);
+
+          return res?.Data?.map((x: any) => ({
+            label: x.location_no,           // 下拉選單顯示用
+            value: x.location_no,           // 下拉選單選擇值
+            location_no: x.location_no,     // 🎯 確保這個欄位存在
+            tlt_building: x.tlt_building,   // 自動帶入用 - 館別
+            tlt_floor: x.tlt_floor,         // 自動帶入用 - 樓層
+            area_no: x.area_no,             // 自動帶入用 - 區域
+            tlt_space: x.tlt_space || 0,    // 自動帶入用 - 營業面積
+            building_desc: x.building_desc || '', // 館別描述
+            floor_desc: x.floor_desc || '',   // 樓層描述
+            area_desc: x.area_desc || ''      // 區域描述
+          })) ?? [];
+        }),
+        catchError((error) => {
+          console.error('❌ getLocationWithDetailsOptions 錯誤:', error);
+          return of([]);
+        })
       );
   }
-
-  // "location_no": "string",
-  //     "tlt_building": "string",
-  //     "tlt_floor": "string",
-  //     "area_no": "string",
-  //     "businessArea": 0
 }
