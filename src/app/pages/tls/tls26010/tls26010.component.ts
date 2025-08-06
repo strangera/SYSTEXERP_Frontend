@@ -84,9 +84,14 @@ export class TLS26010Component extends BasicQueryPageComponent<TLS26010Data> {
 
   // 監聽館別、樓層及區域變化，載入相關資料
   private readonly dependentDataEffect = effect(() => {
-    const building_nos = (this.sys3800Signal() || []).filter((val): val is string => val != null);
-    const floor_nos = (this.sys3900Signal() || []).filter((val): val is string => val != null);
-    const area_nos = (this.sys3A00Signal() || []).filter((val): val is string => val != null);
+    const sys3800Value = this.sys3800Signal();
+    const sys3900Value = this.sys3900Signal();
+    const sys3A00Value = this.sys3A00Signal();
+
+    const building_nos = Array.isArray(sys3800Value) ? sys3800Value.filter((val): val is string => val != null) : [];
+    const floor_nos = Array.isArray(sys3900Value) ? sys3900Value.filter((val): val is string => val != null) : [];
+    const area_nos = Array.isArray(sys3A00Value) ? sys3A00Value.filter((val): val is string => val != null) : [];
+
     console.log(`dependentDataEffect:`, [building_nos, floor_nos, area_nos]);
     if (!building_nos?.length && !floor_nos?.length && !area_nos?.length) return;
     this.service.loadPreorderECRList({ building_nos, floor_nos, area_nos, ecr_type: '2' });
@@ -130,8 +135,8 @@ export class TLS26010Component extends BasicQueryPageComponent<TLS26010Data> {
     }
 
     return {
-      ecr_nos: Array.from(this.ecrNosSignal() || []),
-      tlt_nos: Array.from(this.tltNosSignal() || []),
+      ecr_nos: Array.isArray(this.ecrNosSignal()) ? Array.from(this.ecrNosSignal()!) : [],
+      tlt_nos: Array.isArray(this.tltNosSignal()) ? Array.from(this.tltNosSignal()!) : [],
       pod_sdate_S,
       pod_sdate_E,
       pod_edate_S,
