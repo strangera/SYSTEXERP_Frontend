@@ -90,7 +90,7 @@
                         [formControlName]="formField.name" />
                       <p-dropdown *ngIf="formField.type === 'dropdown'" [id]="formField.name"
                         [formControlName]="formField.name" [options]="formField.options" optionLabel="label"
-                        optionValue="value" [showClear]="true">
+                        optionValue="value" [showClear]="true" [style]="{'width': '100%', 'min-width': '200px'}">
                       </p-dropdown>
                     </div>
                   </ng-container>

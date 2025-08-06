@@ -115,15 +115,15 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
             name: 'building_code',
             label: '館別',
             type: 'dropdown',
-            colClass: 'col-6',
+            colClass: 'col-4',
             options: [], // 🎯 會在 updateSelectorPanelOptions 中更新
-            placeholder: '選擇館別'
+            placeholder: '選擇館別',
           },
           {
             name: 'floor_code',
             label: '樓層',
             type: 'dropdown',
-            colClass: 'col-6',
+            colClass: 'col-4',
             options: [], //會在 updateSelectorPanelOptions 中更新
             placeholder: '選擇樓層'
           },
@@ -132,7 +132,7 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
             label: '區域代號',
             type: 'dropdown',
             options: [], // 會在 updateSelectorPanelOptions 中更新
-            colClass: 'col-6',
+            colClass: 'col-4',
             placeholder: '輸入區域代號'
           },
         ],
