@@ -117,7 +117,9 @@ export class TLS23110Component extends BasicQueryPageComponent<any> {
   }
 
   ngOnInit(): void {
-    this.initializePage('TLS23110', 'TLS23110cru', this.queryForm, (form) => this.onSubmit(form));
+    this.loading = false; // ✅ 保險起見，先還原 loading
+    this.messageService.unblockUi();  // <-- 🔓 關鍵解除畫面卡住
+    this.initializePage('TLS23110', 'TLS23110cru', this.queryForm);
     this.whetherService.getWhetherOptions().subscribe(data => this.WhetherOptions = data);
     this.deductionbigCategoryService.getLocalDeductionCategories().subscribe(data => this.DeductionbigCategoryOptions = data);
     this.typeService.getTypeOptions().subscribe(data => this.TypeOptions = data);
@@ -134,62 +136,6 @@ export class TLS23110Component extends BasicQueryPageComponent<any> {
     });
   }
 
-  onSubmit(form: FormGroup): void {
-    this.submitted = true;
-    if (this.loading) return;
-
-    if (form.invalid) {
-      this.messageService.warnBubble('請確認欄位資料是否完整');
-      return;
-    }
-
-    this.handleSubmit(form, () => {
-      const payload = { ...form.value };
-
-      if (payload.IsHaveTERM_No === 'Y') payload.IsHaveTERM_No = true;
-      else if (payload.IsHaveTERM_No === 'N') payload.IsHaveTERM_No = false;
-
-      Object.keys(payload).forEach(key => {
-        if (payload[key] === '') payload[key] = null;
-      });
-
-      this.tls23110Service.queryTLS23110(payload).subscribe({
-        next: (res) => {
-          if (res.Status === '0000') {
-            this.data = (res.Data || []).map((item: any) => {
-              const flat: { [key: string]: any } = { Day: item.Day };
-              const list = item.Discount_List || {};
-              for (const key in list) {
-                flat[`${key}_TXN_SaleNoTax`] = list[key]?.TXN_SaleNoTax || 0;
-                flat[`${key}_TXN_Tax`] = list[key]?.TXN_Tax || 0;
-                flat[`${key}_Total`] = list[key]?.Total || 0;
-              }
-              return flat;
-            });
-
-            this.totalRecords = res.TotalCount || this.data.length;
-            this.queryStateService.setQueryState(this.ProgNo, payload);
-            this.messageService.successBubble('查詢成功');
-          } else {
-            this.data = [];
-            this.totalRecords = 0;
-            this.messageService.errorBubble('查詢失敗');
-          }
-        },
-        error: () => {
-          this.data = [];
-          this.totalRecords = 0;
-          this.messageService.errorBubble('查詢錯誤');
-        }
-
-      });
-    });
-  }
-
-  goToReportMode(): void {
-    this.customPageSize = 1000;
-    this.showPageSizeDialog = true;
-  }
 
   confirmPageSizeAndNavigate(): void {
     this.submitted = true;
@@ -234,15 +180,20 @@ export class TLS23110Component extends BasicQueryPageComponent<any> {
             };
           });
 
-          this.router.navigate(['account/tls/tls23110cru'], {
-            state: {
-              queryFormValue,
-              pageSize: this.customPageSize,
-              data: flatData
-            }
-          });
+this.router.navigate(['account/tls/tls23110cru'], {
+  state: {
+    queryFormValue,
+    pageSize: this.customPageSize,
+    data: flatData
+  }
+}).then(() => {
+  this.loading = false;
+  this.messageService.unblockUi();
+  this.showPageSizeDialog = false;
+  
+});
 
-          this.messageService.successBubble('查詢成功');
+          
         } else {
           this.messageService.errorBubble('查詢失敗');
         }
@@ -261,8 +212,5 @@ export class TLS23110Component extends BasicQueryPageComponent<any> {
     });
   }
 
-  getLabelFromOptions(value: any, options: any[]): string {
-    const found = options?.find(opt => String(opt.value) === String(value));
-    return found ? found.label : value;
-  }
+
 }

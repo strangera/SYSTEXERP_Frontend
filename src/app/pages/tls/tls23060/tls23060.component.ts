@@ -69,7 +69,7 @@ export class TLS23060Component extends BasicQueryPageComponent<any> {
   }
 
   ngOnInit(): void {
-    this.initializePage('TLS23060', 'TLS23060cru', this.queryForm, (form) => this.onSubmit(form));
+    this.initializePage('TLS23060', 'TLS23060cru', this.queryForm);
     this.whetherService.getWhetherOptions().subscribe(data => this.WhetherOptions = data);
     this.typeService.getTypeOptions().subscribe(data => this.typeOptions = data);
     this.floorService.getFloors().subscribe(data => this.floorOptions = data);
@@ -97,45 +97,7 @@ export class TLS23060Component extends BasicQueryPageComponent<any> {
     });
   }
 
-  onSubmit(form: FormGroup): void {
-    this.submitted = true;
-    if (this.loading || form.invalid) return;
-
-    this.handleSubmit(form, () => {
-      const payload = this.cleanFormPayload({ ...form.value });
-
-      this.loading = true;
-      this.messageService.blockUi();
-
-      this.tls23060Service.queryTLS23060(payload).pipe(
-        timeout(30000),
-        catchError(err => {
-          this.messageService.errorBubble('查詢失敗');
-          this.loading = false;
-          this.messageService.unblockUi();
-          return of({ Status: '9999', Data: [] });
-        })
-      ).subscribe({
-        next: (res) => {
-          if (res.Status === '0000') {
-            this.data = res.Data || [];
-            this.totalRecords = res.TotalCount || this.data.length;
-            this.queryStateService.setQueryState(this.ProgNo, payload);
-            this.messageService.successBubble('查詢成功');
-          } else {
-            this.data = [];
-            this.totalRecords = 0;
-            this.messageService.errorBubble('查詢失敗');
-          }
-        },
-        complete: () => {
-          this.loading = false;
-          this.messageService.unblockUi();
-        }
-      });
-    });
-  }
-
+  
   goToReportMode(): void {
     this.customPageSize = 1000;
     this.showPageSizeDialog = true;
@@ -176,7 +138,7 @@ export class TLS23060Component extends BasicQueryPageComponent<any> {
               data: res.Data || []
             }
           });
-          this.messageService.successBubble('查詢成功');
+          
         } else {
           this.messageService.errorBubble('查詢失敗');
         }

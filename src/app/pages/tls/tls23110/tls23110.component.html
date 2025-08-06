@@ -13,7 +13,6 @@
       <form
         [formGroup]="queryForm"
         id="queryForm"
-        (ngSubmit)="onSubmit(queryForm)"
       >
         <div class="grid p-fluid">
           <!-- Radio + 銷售日期區間 -->
@@ -131,7 +130,7 @@
         <app-button
           btnType="report"
           label="報表模式"
-          (clickEvent)="confirmPageSizeAndNavigate()"
+          (click)="confirmPageSizeAndNavigate()"
           [loading]="loading"
         ></app-button>
       </div>
@@ -139,22 +138,3 @@
   </p-accordion>
 </div>
 
-<!-- 查詢結果 -->
-<!-- <div class="card">
-  <app-table
-    tableKey="TLS23110"
-    [data]="data"
-    [columns]="columns"
-    [showCheckBox]="false"
-    dataKey="grandTotal"
-    [multiSortMeta]="[{ field: 'saleDateStart', order: 1 }]"
-    [totalRecords]="totalRecords"
-    [lazy]="true"
-    [loading]="loading"
-    (edit)="onEdit($event)"
-    (detail)="onDetail($event)"
-    [showManage]="false"
-    [showDelete]="false"
-    (lazyLoadData)="onLazyLoadData($event, queryForm)"
-  ></app-table>
-</div> -->

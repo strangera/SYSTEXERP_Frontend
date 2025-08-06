@@ -41,27 +41,27 @@ import { TranslateModule } from '@ngx-translate/core';
   ],
 })
 export class TLS23100Component extends BasicQueryPageComponent<any> {
+  //此頁面所需參數
   showPageSizeDialog = false;
   customPageSize = 1000;
+  Data: any[] = [];
+  totalRecords = 0;
 
+  //request
   queryForm = this.formBuilder.group({
-    counterCode: [''],
     TXN_DateStart: [new Date('2024-01-01') as Date, [Validators.required]],
     TXN_DateEnd: [new Date('2024-01-31'), [Validators.required]],
-    pstarttime: [[Validators.required]],
-    pendtime: [[Validators.required]],
-    paymentType: [],
-    TLT_No: [],
-    ECR_No: [],
+    ECR_No: [[]],
+    TLT_No: [[]],
+    CRD_Type: [[]],
+    CRD_No: [],
     tlt_building: [],
-    tlt_floor: [],
-    org_id: [],
+    tlt_floor: [[]],
+    org_id: [[]],
     ...createPaginationConfig([{ field: 'TLT_No', order: 1 }]),
   });
 
-  data: any[] = [];
-  totalRecords = 0;
-
+  //response
   columns: any[] = [
     { field: 'ECR_No', header: '收銀機號', visible: true },
     { field: 'TXN_No', header: '交易序號', visible: true },
@@ -82,17 +82,21 @@ export class TLS23100Component extends BasicQueryPageComponent<any> {
       header: '金額',
       visible: true,
       style: 'text-right',
-      format: (val: number) => val?.toLocaleString('en-US') || '0',
+      format: this.moneyFormat,
     },
   ];
-
+  //column 所需格式
+  moneyFormat(value: number): string {
+    return value != null ? value.toLocaleString('en-US') : '0'; // ✅ 使用美式格式
+  }
+  //下拉選單
   paymentTypeOptions: any[] = [];
   floorOptions: any[] = [];
   BUILDING_NO_Options: any[] = [];
   OrganizationCodeOptions: any[] = [];
   CounterOptions: any[] = [];
   ECRNoOptions: any[] = [];
-
+  //匯入所需Services
   constructor(
     private paymentTypeService: PaymentTypeService,
     private tls23100Service: TLS23100Service,
@@ -103,29 +107,10 @@ export class TLS23100Component extends BasicQueryPageComponent<any> {
   ) {
     super();
   }
-
+  //頁面起始
   ngOnInit(): void {
-    this.initializePage('TLS23100', 'tls/tls23100cru', this.queryForm, (form) =>
-      this.onSubmit(form),
-    );
-
-    this.paymentTypeService
-      .getPaymentTypes()
-      .subscribe((data) => (this.paymentTypeOptions = data));
-    this.floorService
-      .getFloors()
-      .subscribe((data) => (this.floorOptions = data));
-    this.tls11010Service
-      .getBuildingOptions()
-      .subscribe((data) => (this.BUILDING_NO_Options = data));
-    this.tls11010Service.getOrgOptions().subscribe((res) => {
-      this.OrganizationCodeOptions =
-        res?.map((x) => ({
-          label: x.label,
-          formLabel: `${x.value} - ${x.label}`,
-          value: x.value,
-        })) || [];
-    });
+    this.initializePage('TLS23100', 'tls/tls23100cru', this.queryForm);
+    //收銀機號下拉
     this.ECRNoService.getECRNo().subscribe((res) => {
       this.ECRNoOptions =
         res?.map((x) => ({
@@ -134,6 +119,7 @@ export class TLS23100Component extends BasicQueryPageComponent<any> {
           value: x.value,
         })) || [];
     });
+    //專櫃編號下拉
     this.counterNameService.getCounters().subscribe((res) => {
       this.CounterOptions =
         res?.map((x) => ({
@@ -142,116 +128,100 @@ export class TLS23100Component extends BasicQueryPageComponent<any> {
           value: x.value,
         })) || [];
     });
-  }
+    //付款別下拉
+    this.paymentTypeService
+      .getPaymentTypes()
+      .subscribe((data) => (this.paymentTypeOptions = data));
+    //館別下拉
+    this.tls11010Service
+      .getBuildingOptions()
+      .subscribe((data) => (this.BUILDING_NO_Options = data));
+    //樓層下拉
+    this.floorService
+      .getFloors()
+      .subscribe((data) => (this.floorOptions = data));
 
-  onSubmit(form: FormGroup): void {
-    this.submitted = true;
-    if (this.loading) return;
-
-    if (form.invalid) {
-      this.messageService.warnBubble('請確認欄位資料是否完整');
-      return;
-    }
-
-    this.handleSubmit(form, () => {
-      const payload = { ...form.value };
-
-      if (payload.IsHaveTERM_No === 'Y') payload.IsHaveTERM_No = true;
-      else if (payload.IsHaveTERM_No === 'N') payload.IsHaveTERM_No = false;
-
-      Object.keys(payload).forEach((key) => {
-        if (payload[key] === '') payload[key] = null;
-      });
-
-      this.tls23100Service.queryTLS23100(payload).subscribe({
-        next: (res) => {
-          if (res.Status === '0000') {
-            this.data = res.Data || [];
-            this.totalRecords = res.TotalCount || this.data.length;
-            this.queryStateService.setQueryState(this.ProgNo, payload);
-            this.messageService.successBubble('查詢成功');
-            
-          } else {
-            this.data = [];
-            this.totalRecords = 0;
-            this.messageService.errorBubble('查詢失敗');
-          }
-        },
-        error: () => {
-          this.data = [];
-          this.totalRecords = 0;
-          this.loading = false;
-          this.messageService.errorBubble('查詢錯誤');
-        },
-        complete: () => {
-          this.loading = false;
-          this.messageService.unblockUi();
-        },
-      });
+    //組織代碼下拉
+    this.tls11010Service.getOrgOptions().subscribe((res) => {
+      this.OrganizationCodeOptions =
+        res?.map((x) => ({
+          label: x.label,
+          formLabel: `${x.value} - ${x.label}`,
+          value: x.value,
+        })) || [];
     });
   }
 
-  goToReportMode(): void {
-    this.customPageSize = 1000;
-    this.showPageSizeDialog = true;
-  }
-
   confirmPageSizeAndNavigate(): void {
-  this.submitted = true;
-  if (this.queryForm.invalid) {
-    this.messageService.warnBubble('請確認欄位資料是否完整');
-    this.queryForm.markAllAsTouched();
-    return;
-  }
+    this.submitted = true;
 
-  const queryFormValue = {
-    ...this.queryForm.value,
-    pageSize: this.customPageSize
-  };
-
-  this.loading = true;
-  this.messageService.blockUi();
-
-  this.tls23100Service.queryTLS23100(queryFormValue).subscribe({
-    next: (res) => {
-      if (res.Status === '0000') {
-        this.queryStateService.setQueryState(this.ProgNo, queryFormValue);
-
-        this.router.navigate(['tls23100cru'], {
-          state: {
-            queryFormValue,
-           pageSize: this.customPageSize,
-  pageIndex: 1 ,
-            data: res.Data || []
-          }
-        });
-
-        this.messageService.successBubble('查詢成功');
-      } else {
-        this.messageService.errorBubble('查詢失敗');
-      }
-    },
-    error: () => {
-      this.messageService.errorBubble('查詢錯誤');
-      this.loading = false;
-      this.messageService.unblockUi();
-      this.showPageSizeDialog = false;
-    },
-    complete: () => {
-      this.loading = false;
-      this.messageService.unblockUi();
-      this.showPageSizeDialog = false;
+    // ✅ 驗證查詢表單是否有效
+    if (this.queryForm.invalid) {
+      this.messageService.warnBubble('請確認欄位資料是否完整');
+      this.queryForm.markAllAsTouched();
+      return;
     }
-  });
-}
 
+    // ✅ 取出表單值並處理空字串 => null
+    const rawFormValue: Record<string, any> = { ...this.queryForm.value };
 
+    for (const key in rawFormValue) {
+      const value = rawFormValue[key];
 
+      if (typeof value === 'string' && value.trim() === '') {
+        rawFormValue[key] = null;
+      }
+    }
 
+    // ✅ 加入自定義筆數參數（PageSize 是後端預期欄位）
+    const queryFormValue = {
+      ...rawFormValue,
+      pageSize: this.customPageSize, // 前端使用的
+      PageSize: this.customPageSize, // 傳給後端
+      PageIndex: 1, // 預設查詢第 1 頁
+    };
 
+    // ✅ 啟用 loading 與畫面鎖定
+    this.loading = true;
+    this.messageService.blockUi();
 
-  getLabelFromOptions(value: any, options: any[]): string {
-    const found = options?.find((opt) => String(opt.value) === String(value));
-    return found ? found.label : value;
+    // ✅ 呼叫查詢 API
+    this.tls23100Service.queryTLS23100(queryFormValue).subscribe({
+      next: (res) => {
+        if (res.Status === '0000') {
+          // ✅ 儲存查詢條件
+          this.queryStateService.setQueryState(this.ProgNo, queryFormValue);
+
+          // ✅ 導頁到報表模式頁面並帶入查詢結果
+          this.router
+            .navigate(['account/tls/tls23100cru'], {
+              state: {
+                queryFormValue,
+                pageSize: this.customPageSize,
+                data: res.Data || [],
+              },
+            })
+            .then(() => {
+              // ✅ 路由完成後解除 loading 與 dialog
+              this.loading = false;
+              this.messageService.unblockUi();
+              this.showPageSizeDialog = false;
+            });
+        } else {
+          // ❌ 查詢失敗提示
+          this.messageService.errorBubble('查詢失敗');
+          this.loading = false;
+          this.messageService.unblockUi();
+          this.showPageSizeDialog = false;
+        }
+      },
+      error: () => {
+        // ❌ 連線或伺服器錯誤處理
+        this.messageService.errorBubble('查詢錯誤');
+        this.loading = false;
+        this.messageService.unblockUi();
+        this.showPageSizeDialog = false;
+      },
+    });
   }
 }

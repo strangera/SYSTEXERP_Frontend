@@ -7,6 +7,7 @@ import { Tls11010Service } from '../../../service/api/tls/tls11010.service';
 import { TxnStatusService } from '../../../service/basic/txn-status.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ReportTableGroupComponent } from '../../../shared/componentkit/report-table-group/report-table-group.component';
+import { TLS23040ResponseItem, PaymentDetail, DiscountDetail } from '../tls23040/tls23040.model';
 type DisplayMode = 'Report' | 'ByPaymentType' | 'ByDiscountType';
 
 @Component({
@@ -18,7 +19,11 @@ type DisplayMode = 'Report' | 'ByPaymentType' | 'ByDiscountType';
 })
 export class TLS23040CRUComponent extends BasicCruPageComponent<any> {
   displayMode: DisplayMode = 'Report';
-  data: any[] = [];
+  data:
+  | TLS23040ResponseItem[]
+  | (PaymentDetail & { parent: TLS23040ResponseItem })[]
+  | (DiscountDetail & { parent: TLS23040ResponseItem })[] = [];
+
   printedAt: string = '';
   dateStart: string = '';
   dateEnd: string = '';
@@ -26,12 +31,11 @@ export class TLS23040CRUComponent extends BasicCruPageComponent<any> {
   useSummaryMode = false;
   pdfSummary: string[] = [];
   queryFormValue: any;
+  dataForm = this.formBuilder.nonNullable.group({});
 
 
   OrganizationCodeOptions: any[] = [];
   txnStatusOptions: any[] = [];
-
-  dataForm = this.formBuilder.nonNullable.group({});
 
   constructor(
     private location: Location,
@@ -146,16 +150,6 @@ export class TLS23040CRUComponent extends BasicCruPageComponent<any> {
             visible: true,
             format: (val: any) => this.getLabelFromOptions(val, this.txnStatusOptions)
           },
-          // {
-          //   field: 'TXN_FlagStatus',
-          //   header: '狀態旗標',
-          //   visible: true,
-          // },
-          // {
-          //   field: 'TXN_Subtype',
-          //   header: '交易附屬型態',
-          //   visible: true,
-          // },
           { field: 'TXN_TaxFreeCertNo', header: '外交官免稅卡號', visible: true },
           { field: 'USR_No', header: '收銀員', visible: true },
           { field: 'TXN_PkngUID', header: '停車卡號', visible: true },

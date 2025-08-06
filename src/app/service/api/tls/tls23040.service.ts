@@ -15,17 +15,17 @@ export class TLS23040Service {
     private errorHandler: ErrorHandlerService
   ) { }
 
-  queryTLS23040(query: any): Observable<any> {
-    const storeNo = JSON.parse(localStorage.getItem('UserInfo') || '{}').SYS_StoreNo;
-    if (storeNo) {
-      query.SYS_StoreNo = storeNo;
-    }
-    return this.http.post<any>(`${this.apiUrl}/TLS0000/TLS2000/queryTLS23040`, query).pipe(
-      tap(response => console.log('查詢結果:', response)),
-      catchError((error) => this.errorHandler.handleError(error))
-    );
+queryTLS23040(query: any): Observable<any> {
+  const storeNo = JSON.parse(localStorage.getItem('UserInfo') || '{}')?.SYS_StoreNo;
+  if (storeNo) {
+    query.SYS_StoreNo = storeNo;
   }
 
+  return this.http.post<any>(`${this.apiUrl}/TLS0000/TLS2000/queryTLS23040`, query).pipe(
+    tap(response => console.log('查詢結果:', response)),
+    catchError((error) => this.errorHandler.handleError(error))
+  );
+}
   queryTLS23040Detail(query: any): Observable<any> {
     const storeNo = JSON.parse(localStorage.getItem('UserInfo') || '{}').SYS_StoreNo;
     if (storeNo) {

@@ -24,14 +24,12 @@ import { TranslateModule } from '@ngx-translate/core';
 })
 export class TLS23070Component extends BasicQueryPageComponent<any> {
 
-  CounterOptions: any[] = [];
-  floorOptions: any[] = [];
-  BUILDING_NO_Options: any[] = [];
-  WhetherOptions: any[] = [];
-  OrganizationCodeOptions: any[] = [''];
+
 
   showPageSizeDialog = false;
   customPageSize = 1000;
+  data: any[] = [];
+  totalRecords = 0;
 
   queryForm = this.formBuilder.group({
 
@@ -44,8 +42,7 @@ export class TLS23070Component extends BasicQueryPageComponent<any> {
     ...createPaginationConfig([{ field: 'tlt_no', order: 1 }])
   });
 
-  data: any[] = [];
-  totalRecords = 0;
+
 
   columns: any[] = [
     { field: 'tlt_no', header: '專櫃編號', visible: true },
@@ -102,6 +99,11 @@ export class TLS23070Component extends BasicQueryPageComponent<any> {
     { field: 'TXN_CancelAmt', header: '作廢金額', visible: true, style: 'text-right', format: this.moneyFormat }
 
   ];
+  CounterOptions: any[] = [];
+  floorOptions: any[] = [];
+  BUILDING_NO_Options: any[] = [];
+  WhetherOptions: any[] = [];
+  OrganizationCodeOptions: any[] = [''];
 
   constructor(
     private tls23070Service: TLS23070Service,
@@ -148,7 +150,7 @@ export class TLS23070Component extends BasicQueryPageComponent<any> {
             this.data = res.Data || [];
             this.totalRecords = res.TotalCount || this.data.length;
             this.queryStateService.setQueryState(this.ProgNo, payload);
-            this.messageService.successBubble('查詢成功');
+            
           } else {
             this.data = [];
             this.totalRecords = 0;
@@ -200,7 +202,7 @@ export class TLS23070Component extends BasicQueryPageComponent<any> {
               data: res.Data || []
             }
           });
-          this.messageService.successBubble('查詢成功');
+          
         } else {
           this.messageService.errorBubble('查詢失敗');
         }

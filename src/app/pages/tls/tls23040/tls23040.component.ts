@@ -1,5 +1,10 @@
 import { Component } from '@angular/core';
-import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import {
+  FormGroup,
+  Validators,
+  FormsModule,
+  ReactiveFormsModule,
+} from '@angular/forms';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { TLS23040Service } from '../../../service/api/tls/tls23040.service';
 import { TxnStatusService } from '../../../service/basic/txn-status.service';
@@ -26,54 +31,57 @@ import { RadioButtonModule } from 'primeng/radiobutton';
 import { PrimeTemplate } from 'primeng/api';
 import { ButtonDirective } from 'primeng/button';
 import { TranslateModule } from '@ngx-translate/core';
+import { TLS23040ResponseItem, PaymentDetail, DiscountDetail } from './tls23040.model';
 
 @Component({
-    selector: 'app-tls23040',
-    templateUrl: './tls23040.component.html',
-    styleUrls: ['./tls23040.component.scss'],
-    standalone: true,
-    imports: [
-        MenubarComponent,
-        AccordionModule,
-        FormsModule,
-        ReactiveFormsModule,
-        CalendarRangeQuickComponent,
-        MultiSelectComponent,
-        InputNumberRangeComponent,
-        DropdownComponent,
-        InputTextComponent,
-        InputTextModule,
-        ButtonComponent,
-        DialogModule,
-        RadioButtonModule,
-        PrimeTemplate,
-        ButtonDirective,
-        TranslateModule,
-    ],
+  selector: 'app-tls23040',
+  templateUrl: './tls23040.component.html',
+  styleUrls: ['./tls23040.component.scss'],
+  standalone: true,
+  imports: [
+    MenubarComponent,
+    AccordionModule,
+    FormsModule,
+    ReactiveFormsModule,
+    CalendarRangeQuickComponent,
+    MultiSelectComponent,
+    InputNumberRangeComponent,
+    DropdownComponent,
+    InputTextComponent,
+    InputTextModule,
+    ButtonComponent,
+    DialogModule,
+    RadioButtonModule,
+    PrimeTemplate,
+    ButtonDirective,
+    TranslateModule,
+  ],
 })
 export class TLS23040Component extends BasicQueryPageComponent<any> {
+  data: TLS23040ResponseItem[] = [];
+  totalRecords = 0;
+  showPageSizeDialog = false;
+  customPageSize = 10;
+  useSummaryMode = false; // 預設為明細表模式
+  displayMode: 'Report' | 'ByPaymentType' | 'ByDiscountType' = 'Report';
+
   queryForm = this.formBuilder.group({
     TXN_DateStart: [new Date('2024-01-01'), [Validators.required]],
-    TXN_DateEnd: [new Date('2024-01-31'), [Validators.required]],
-    ECR_No: [''],
+    TXN_DateEnd: [new Date('2024-01-01'), [Validators.required]],
+    ECR_No: [[]],
     TXN_No_Start: [null],
     TXN_No_End: [null],
-    TLT_No: [''],
-    TXN_Status: [''],
+    TLT_No: [[]],
+    TXN_Status: [[]],
+    TXN_FlagStatus: [[]],
     TXN_PkngUID: [''],
     TXN_MemCard: [''],
     TXN_GUIBegNo: [''],
     tlt_building: [''],
-    tlt_floor: [''],
-    org_id: [''],
-    TXN_FlagStatus: [''],
-    TXN_Subtype: [''],
-
+    tlt_floor: [[]],
+    org_id: [[]],
     ...createPaginationConfig([{ field: 'ECR_No', order: 1 }]),
   });
-
-  data: any[] = [];
-  totalRecords = 0;
 
   columns: any[] = [
     {
@@ -120,16 +128,6 @@ export class TLS23040Component extends BasicQueryPageComponent<any> {
       format: (val: any) =>
         this.getLabelFromOptions(val, this.txnStatusOptions),
     },
-    // {
-    //   field: 'TXN_FlagStatus',
-    //   header: '狀態旗標',
-    //   visible: true,
-    // },
-    // {
-    //   field: 'TXN_Subtype',
-    //   header: '交易附屬型態',
-    //   visible: true,
-    // },
     { field: 'TXN_TaxFreeCertNo', header: '外交官免稅卡號', visible: true },
     { field: 'USR_No', header: '收銀員', visible: true },
     { field: 'TXN_PkngUID', header: '停車卡號', visible: true },
@@ -174,16 +172,13 @@ export class TLS23040Component extends BasicQueryPageComponent<any> {
     private floorService: FloorService,
     private ECRNoService: ECRNoService,
     private counterNameService: CounterNameService,
-
     private tls11010Service: Tls11010Service,
   ) {
     super();
   }
-  useSummaryMode = false; // 預設為明細表模式
+
   ngOnInit(): void {
-    this.initializePage('TLS23040', '', this.queryForm, (form) =>
-      this.onSubmit(form),
-    );
+    this.initializePage('TLS23040', '', this.queryForm);
     this.useSummaryMode = false; // 預設為明細表模式
 
     this.statusFlagService
@@ -228,48 +223,6 @@ export class TLS23040Component extends BasicQueryPageComponent<any> {
     });
   }
 
-  onSubmit(form: FormGroup): void {
-    this.submitted = true;
-    if (this.loading) return;
-
-    if (form.invalid) {
-      this.messageService.warnBubble('請確認欄位資料是否完整');
-      return;
-    }
-
-    this.handleSubmit(form, () => {
-      const payload = { ...form.value };
-      Object.keys(payload).forEach((key) => {
-        if (payload[key] === '') payload[key] = null;
-      });
-
-      this.tls23040Service.queryTLS23040(payload).subscribe({
-        next: (res) => {
-          if (res.Status === '0000') {
-            this.data = res.Data || [];
-            this.totalRecords = res.TotalCount || this.data.length;
-            this.queryStateService.setQueryState(this.ProgNo, payload);
-            this.messageService.successBubble('查詢成功');
-          } else {
-            this.data = [];
-            this.totalRecords = 0;
-            this.messageService.errorBubble('查詢失敗');
-          }
-        },
-        error: () => {
-          this.data = [];
-          this.totalRecords = 0;
-          this.loading = false;
-          this.messageService.errorBubble('查詢錯誤');
-        },
-        complete: () => {
-          this.loading = false;
-          this.messageService.unblockUi();
-        },
-      });
-    });
-  }
-
   getLabelFromOptions(value: any, options: any[]): string {
     const found = options?.find((opt) => String(opt.value) === String(value));
     return found ? found.label : value;
@@ -277,8 +230,6 @@ export class TLS23040Component extends BasicQueryPageComponent<any> {
 
   //報表模式
 
-  showPageSizeDialog = false;
-  customPageSize = 1000;
   private cleanFormPayload(payload: any): any {
     for (const key in payload) {
       const val = payload[key];
@@ -310,7 +261,7 @@ export class TLS23040Component extends BasicQueryPageComponent<any> {
     }
     this.showPageSizeDialog = true;
   }
-  displayMode: 'Report' | 'ByPaymentType' | 'ByDiscountType' = 'Report';
+
   confirmPageSizeAndNavigate(): void {
     this.submitted = true;
     if (this.queryForm.invalid) {
@@ -325,30 +276,27 @@ export class TLS23040Component extends BasicQueryPageComponent<any> {
       displayMode: this.displayMode,
     });
 
-    console.log('🔍 當前查詢模式:', this.displayMode);
-    console.log('📤 查詢參數:', queryFormValue);
-    // ✅ 自動補 ECR_No 的邏輯放這
-    if (this.displayMode === 'ByPaymentType' && !queryFormValue.ECR_No) {
-      const firstECR = this.ECRNoOptions[0]?.value;
-      if (firstECR) {
-        queryFormValue.ECR_No = firstECR;
-      } else {
-        this.messageService.warnBubble('付款別報表需選擇收銀機號');
-        this.loading = false;
-        this.messageService.unblockUi();
-        return;
-      }
+    // 付款別報表一定要有 ECR_No
+if (this.displayMode === 'ByPaymentType') {
+  // 收銀機號必填，若為空自動帶入第一筆
+  if (!queryFormValue.ECR_No || queryFormValue.ECR_No.length === 0) {
+    const firstECR = this.ECRNoOptions[0]?.value;
+    if (firstECR) {
+      queryFormValue.ECR_No = [firstECR]; // 改為陣列
+    } else {
+      this.messageService.warnBubble('付款別報表需選擇收銀機號');
+      this.loading = false;
+      this.messageService.unblockUi();
+      return;
     }
+  }
+}
 
     this.loading = true;
     this.messageService.blockUi();
 
-    const query$ =
-      this.displayMode === 'Report'
-        ? this.tls23040Service.queryTLS23040(queryFormValue)
-        : this.tls23040Service.queryCombined(queryFormValue);
-
-    query$
+    this.tls23040Service
+      .queryTLS23040(queryFormValue)
       .pipe(
         timeout(30000),
         catchError((err) => {
@@ -367,7 +315,30 @@ export class TLS23040Component extends BasicQueryPageComponent<any> {
       .subscribe({
         next: (res) => {
           if (res.Status === '0000') {
-            const resultData = res.Data || [];
+            const rawData = res.Data || [];
+
+           let dataToNavigate: TLS23040ResponseItem[] | (PaymentDetail & { parent: TLS23040ResponseItem })[] | (DiscountDetail & { parent: TLS23040ResponseItem })[] = [];
+
+            if (this.displayMode === 'Report') {
+              dataToNavigate = rawData;
+            } else if (this.displayMode === 'ByPaymentType') {
+           dataToNavigate = (rawData as TLS23040ResponseItem[]).flatMap(
+  (item) =>
+    item.PaymentDetail?.map((p): PaymentDetail & { parent: TLS23040ResponseItem } => ({
+      ...p,
+      parent: item,
+    })) || []
+);
+
+            } else if (this.displayMode === 'ByDiscountType') {
+              dataToNavigate = rawData.flatMap(
+                (item: any) =>
+                  item.DiscountDetail?.map((d: any) => ({
+                    ...d,
+                    parent: item,
+                  })) || [],
+              );
+            }
 
             this.queryStateService.setQueryState(this.ProgNo, queryFormValue);
 
@@ -375,12 +346,10 @@ export class TLS23040Component extends BasicQueryPageComponent<any> {
               state: {
                 queryFormValue,
                 pageSize: this.customPageSize,
-                data: resultData,
+                data: dataToNavigate,
                 displayMode: this.displayMode,
               },
             });
-
-            this.messageService.successBubble('查詢成功');
           } else {
             this.messageService.errorBubble('查詢失敗');
           }
