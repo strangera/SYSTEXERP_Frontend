@@ -9,7 +9,7 @@
       class="line-height-3 m-0"
       [headerStyleClass]="'query-accordionTab'"
     >
- <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
+ <form [formGroup]="queryForm" id="queryForm">
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
             <app-calendar-range-quick calendarType="dateRange" label="交易日期"
@@ -62,21 +62,4 @@
   </p-accordion>
 </div>
 
-<div class="card">
-  <app-table
-    tableKey="TLS23140"
-    [data]="data"
-    [columns]="columns"
-    [showCheckBox]="true"
-    dataKey="TXN_No"
-    [multiSortMeta]="[{ field: 'ECR_No', order: 1 }]"
-    [totalRecords]="totalRecords"
-    [lazy]="true"
-    [loading]="loading"
-    (edit)="onEdit($event)"
-    (detail)="onDetail($event)"
-    [showManage]="false"
-    [showDelete]="false"
-    (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"
-  ></app-table>
-</div>
+

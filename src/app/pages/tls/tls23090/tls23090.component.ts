@@ -150,8 +150,7 @@ export class TLS23090Component extends BasicQueryPageComponent<any> {
   }
 
   ngOnInit(): void {
-    this.initializePage('TLS23090', 'TLS23090cru', this.queryForm, (form) =>
-      this.onSubmit(form),
+    this.initializePage('TLS23090', 'TLS23090cru', this.queryForm, 
     );
 
     this.cardTypeService
@@ -201,51 +200,6 @@ export class TLS23090Component extends BasicQueryPageComponent<any> {
       .subscribe((data) => (this.connectionStatusOptions = data));
   }
 
-  onSubmit(form: FormGroup): void {
-    this.submitted = true;
-    if (this.loading) return;
-
-    if (form.invalid) {
-      this.messageService.warnBubble('請確認欄位資料是否完整');
-      return;
-    }
-
-    this.handleSubmit(form, () => {
-      const payload = { ...form.value };
-
-      if (payload.IsHaveTERM_No === 'Y') payload.IsHaveTERM_No = true;
-      else if (payload.IsHaveTERM_No === 'N') payload.IsHaveTERM_No = false;
-
-      Object.keys(payload).forEach((key) => {
-        if (payload[key] === '') payload[key] = null;
-      });
-
-      // this.tls23090Service.queryTLS23090(payload).subscribe({
-      //   next: (res) => {
-      //     if (res.Status === '0000') {
-      //       this.data = res.Data || [];
-      //       this.totalRecords = res.TotalCount || this.data.length;
-      //       this.queryStateService.setQueryState(this.ProgNo, payload);
-      //       this.messageService.successBubble('查詢成功');
-      //     } else {
-      //       this.data = [];
-      //       this.totalRecords = 0;
-      //       this.messageService.errorBubble('查詢失敗');
-      //     }
-      //   },
-      //   error: () => {
-      //     this.data = [];
-      //     this.totalRecords = 0;
-      //     this.loading = false;
-      //     this.messageService.errorBubble('查詢錯誤');
-      //   },
-      //   complete: () => {
-      //     this.loading = false;
-      //     this.messageService.unblockUi();
-      //   }
-      // });
-    });
-  }
 
   goToReportMode(): void {
     if (!this.customPageSize || this.customPageSize <= 0) {

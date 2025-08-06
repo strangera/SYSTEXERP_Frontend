@@ -12,7 +12,7 @@
       <form
         [formGroup]="queryForm"
         id="queryForm"
-        (ngSubmit)="onSubmit(queryForm)"
+        
       >
         <div class="grid p-fluid">
           <app-calendar-range-quick
@@ -80,17 +80,7 @@
               [submitted]="submitted"
             ></app-multi-select>
           </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="交易附屬型態"
-              controlName="TXN_Subtype"
-              [options]="TXN_SubtypeOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.TXN_Subtype"
-              [submitted]="submitted"
-            ></app-dropdown>
-          </div>
+
 
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-text
@@ -180,12 +170,7 @@
   </p-accordion>
 </div>
 
-<!-- <div class="card">
-  <app-table tableKey="TLS23040" [data]="data" [columns]="columns" [showCheckBox]="false" dataKey="TXN_No"
-    [multiSortMeta]="[{ field: 'ECR_No', order: 1 }]" [totalRecords]="totalRecords" [lazy]="true" [loading]="loading"
-    (edit)="onEdit($event)" (detail)="onDetail($event)" [showManage]="false" [showDelete]="false" [showCheckBox]="false"
-    (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"></app-table>
-</div> -->
+
 
 <p-dialog
   header="查詢模式"
