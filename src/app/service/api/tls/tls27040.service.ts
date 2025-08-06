@@ -5,60 +5,67 @@ import { Observable } from 'rxjs';
 import { environment } from 'src/environments/environment';
 
 export interface POS6118Request {
-  ECR_No: string
-  TXN_No: string,
-  TLT_No: string,
-  NCML_TxnTypeList: string[],
-  NCML_PayCrdTypeList: string[],
-  NCML_TxnAmt_Start: string,
-  NCML_TxnAmt_End: string,
-  NCML_TxnDate_Start: string,
-  NCML_TxnDate_End: string,
-  NCML_TxnTime_Start: string,
-  NCML_TxnTime_End: string,
-  NCML_CrdNo: string,
-  NCML_TmID: string,
-  NCML_BatCloseDate_Start: string,
-  NCML_BatCloseDate_End: string,
-  NCML_CrdTxnFgList: string[],
-  NCML_CheckList: string[],
-  NCML_ApprovalCode: string,
-  NCML_TermNoList: string[]
+  ECR_No: string;
+  TXN_No: string;
+  TLT_No: string;
+  NCML_TxnTypeList: string[];
+  NCML_PayCrdTypeList: string[];
+  NCML_TxnAmt_Start: string;
+  NCML_TxnAmt_End: string;
+  NCML_TxnDate_Start: string;
+  NCML_TxnDate_End: string;
+  NCML_TxnTime_Start: string;
+  NCML_TxnTime_End: string;
+  NCML_CrdNo: string;
+  NCML_TmID: string;
+  NCML_BatCloseDate_Start: string;
+  NCML_BatCloseDate_End: string;
+  NCML_CrdTxnFgList: string[];
+  NCML_CheckList: string[];
+  NCML_ApprovalCode: string;
+  NCML_TermNoList: string[];
+  radioBtn: string;
 }
+
 export interface POS6119Request {
-  ECR_No: string,
-  TXN_No: string,
-  TLT_No: string,
-  CTBC_TxnTypeList: string[],
-  CTBC_TxnAmt_Start: string,
-  CTBC_TxnAmt_End: string,
-  CTBC_TxnDate_Start: string,
-  CTBC_TxnDate_End: string,
-  CTBC_CrdNo: string,
-  CTBC_TmID: string,
-  CTBC_Date_Start: string,
-  CTBC_Date_End: string,
-  CTBC_DataTypeList: string[],
-  CTBC_CheckList: string[],
+  ECR_No: string;
+  TXN_No: string;
+  TLT_No: string;
+  CTBC_TxnCodeList: string[];
+  CTBC_TxnAmt_Start: string;
+  CTBC_TxnAmt_End: string;
+  CTBC_TxnTime_Start: string;
+  CTBC_TxnTime_End: string;
+  CTBC_CrdNo: string;
+  CTBC_TmID: string;
+  CTBC_Date_Start: string;
+  CTBC_Date_End: string;
+  CTBC_DataTypeList: string[];
+  CTBC_CheckList: string[];
   CTBC_ApprovalCode: string;
-  CTBC_TermNoList: string[]
+  CTBC_TermNoList: string[];
+  radioBtn: string;
 }
+
 export interface POS6119PRequest {
-  ECR_No: string,
-  TXN_No: string,
-  TLT_No: string,
-  CTBC_TxnTypeList: string[],
-  CTBC_TxnAmt_Start: string,
-  CTBC_TxnAmt_End: string,
-  CTBC_TxnDate_Start: string,
-  CTBC_TxnDate_End: string,
-  CTBC_CrdNo: string,
-  CTBC_TmID: string,
-  CTBC_BusDate_Start: string,
-  CTBC_BusDate_End: string,
-  CTBC_CheckList: string[],
-  CTBC_ApprovalCode: string
+  ECR_No: string;
+  TXN_No: string;
+  TLT_No: string;
+  CTBC_TxnTypeList: string[];
+  CTBC_TxnAmt_Start: string;
+  CTBC_TxnAmt_End: string;
+  CTBC_TxnDate_Start: string;
+  CTBC_TxnDate_End: string;
+  CTBC_CrdNo: string;
+  CTBC_TmID: string;
+  CTBC_BusDate_Start: string;
+  CTBC_BusDate_End: string;
+  CTBC_DataTypeList: string[];
+  CTBC_CheckList: string[];
+  CTBC_ApprovalCode: string;
+  radioBtn: string;
 }
+
 export interface POS6118Data {
   ID: number,
   MID: number,
@@ -122,8 +129,6 @@ export interface POS6119PData {
   CTBC_TxnDate: string,
   CTBC_TxnType: string,
   CTBC_ApprovalCode: string,
-  CTBC_DataType: string,
-  CTBC_TermNo: number,
   CTBC_Check: string,
   acquiring_Bank: string,
   CRT_USR_No: string,

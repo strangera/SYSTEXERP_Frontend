@@ -222,6 +222,24 @@ export const formatDateToYYYYMMDD = (value: string | Date): string => {
   return `${year}${month}${day}`;
 };
 
+// formatDateTimeToHHMMSS：將完整日期時間字串轉為 HH:MM:SS
+export const formatDateTimeToHHMMSS = (dateStr: string): string => {
+  if (!dateStr) {
+    return '';
+  }
+  const date = new Date(dateStr);
+  // 檢查是否為有效的日期
+  if (isNaN(date.getTime())) {
+    return '';
+  }
+
+  const hours = String(date.getHours()).padStart(2, '0');
+  const minutes = String(date.getMinutes()).padStart(2, '0');
+  const seconds = String(date.getSeconds()).padStart(2, '0');
+
+  return `${hours}:${minutes}:${seconds}`;
+};
+
 // 輸出YYYYMM格式的日期
 export const formatYYYYMMToDate = (value: string): Date | null => {
   if (!value || !/^\d{6}$/.test(value)) return null;

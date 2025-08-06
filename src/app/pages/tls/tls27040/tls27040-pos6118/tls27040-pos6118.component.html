@@ -1,0 +1,64 @@
+<ng-template #formTemplate>
+  <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
+    <!-- 共通性 -->
+    <div class="grid p-fluid">
+      <app-input-text class="col-12 md:col-6 lg:col-4" label="收銀機號" controlName="ECR_No"
+        [control]="queryForm.controls.ECR_No" [submitted]="submitted" />
+      <app-input-text class="col-12 md:col-6 lg:col-4" label="交易流水號" controlName="TXN_No"
+        [control]="queryForm.controls.TXN_No" [submitted]="submitted" />
+      <app-input-text class="col-12 md:col-6 lg:col-4" label="專櫃編號" controlName="TLT_No"
+        [control]="queryForm.controls.TLT_No" [submitted]="submitted" />
+    </div>
+    <hr />
+    <!-- 聯合專用欄位 -->
+    <div class="grid p-fluid">
+      <app-multi-select class="col-12 md:col-6 lg:col-4" label="銷售狀況" controlName="NCML_TxnType"
+        [options]="TxnTypeOptions" optionLabel="label" optionValue="value"
+        [control]="queryForm.controls.NCML_TxnTypeList" [submitted]="submitted" />
+      <app-multi-select class="col-12 md:col-6 lg:col-4" label="卡別" controlName="NCML_PayCrdType"
+        [options]="PayCrdTypeOptions" optionLabel="label" optionValue="value"
+        [control]="queryForm.controls.NCML_PayCrdTypeList" [submitted]="submitted" />
+      <app-input-number-range class="col-12 md:col-6 lg:col-4" [useGrouping]="false" label="金額"
+        [startControl]="queryForm.controls.NCML_TxnAmt_Start" [endControl]="queryForm.controls.NCML_TxnAmt_End"
+        [submitted]="submitted" />
+      <app-calendar-range class="col-12 md:col-6 lg:col-4" calendarType="dateRange" label="銷售日期"
+        [startControl]="queryForm.controls.NCML_TxnDate_Start" [endControl]="queryForm.controls.NCML_TxnDate_End"
+        [submitted]="submitted" />
+      <app-calendar-range class="col-12 md:col-6 lg:col-4" calendarType="timeRange" label="銷售時間"
+        [startControl]="queryForm.controls.NCML_TxnTime_Start" [endControl]="queryForm.controls.NCML_TxnTime_End"
+        [submitted]="submitted" />
+      <app-input-text class="col-12 md:col-6 lg:col-4" label="卡號" controlName="NCML_CrdNo"
+        [control]="queryForm.controls.NCML_CrdNo" [submitted]="submitted" />
+      <app-input-text class="col-12 md:col-6 lg:col-4" label="EDC號碼" controlName="NCML_TmID"
+        [control]="queryForm.controls.NCML_TmID" [submitted]="submitted" />
+      <app-calendar-range class="col-12 md:col-6 lg:col-4" calendarType="dateRange" label="請款日期"
+        [startControl]="queryForm.controls.NCML_BatCloseDate_Start"
+        [endControl]="queryForm.controls.NCML_BatCloseDate_End" [submitted]="submitted" />
+      <app-multi-select class="col-12 md:col-6 lg:col-4" label="交易類別" controlName="NCML_CrdTxnFg"
+        [options]="CrdTxnFgOptions" optionLabel="label" optionValue="value"
+        [control]="queryForm.controls.NCML_CrdTxnFgList" [submitted]="submitted" />
+      <app-multi-select class="col-12 md:col-6 lg:col-4" label="輸入狀態" controlName="NCML_Check" [options]="CheckOptions"
+        optionLabel="label" optionValue="value" [control]="queryForm.controls.NCML_CheckList" [submitted]="submitted" />
+      <app-input-text class="col-12 md:col-6 lg:col-4" label="授權碼" controlName="NCML_ApprovalCode"
+        [control]="queryForm.controls.NCML_ApprovalCode" [submitted]="submitted" />
+      <app-multi-select class="col-12 md:col-6 lg:col-4" label="分期期數" controlName="NCML_TermNo"
+        [options]="TermNoOptions" optionLabel="SYS_Name" optionValue="SYS_Code"
+        [control]="queryForm.controls.NCML_TermNoList" [submitted]="submitted" />
+    </div>
+    <hr />
+    <div class="grid p-fluid">
+      <app-radiobutton class="col-12" label="查詢篩選" controlName="radioBtn" [options]="queryFilterOptions"
+        optionLabel="label" optionValue="value" [control]="queryForm.controls.radioBtn" [submitted]="submitted" />
+    </div>
+    <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+      <app-button btnType="clear"></app-button>
+      <app-button btnType="query" [loading]="loading"></app-button>
+    </div>
+  </form>
+</ng-template>
+<ng-template #tableTemplate>
+  <app-table tableKey="POS6118" dataKey="ID" [data]="POS6118Data" [columns]="POS6118_columns" (edit)="onEdit($event)"
+    (detail)="onDetail($event)" [multiSortMeta]="[{ field: 'ID', order: 1 }]" [totalRecords]="totalRecords"
+    (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [lazy]="true" [loading]="loading"
+    apiUrl="queryPOS6118"></app-table>
+</ng-template>
