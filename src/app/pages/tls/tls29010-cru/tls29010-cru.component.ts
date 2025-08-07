@@ -45,7 +45,8 @@ export interface TALPORDERM {
   pod_sdate: Date; // 活動起始日期
   pod_edate: Date; // 活動終止日期
   pod_busdate?: Date | null; // 活動正檔日期
-  cap_item?: string | null; // 扣款代碼
+  pod_back_sdate?: Date | null;  //活動兌回起始日期
+  pod_back_edate?: Date | null;  //活動兌回終止日期
   pod_status: '0' | '1' | '9'; 
   // 0=未核准 1=已核准 9=刪除
 
@@ -109,11 +110,11 @@ export class TLS29010CRUComponent extends BasicCruPageComponent<TALPORDERD_OPEND
         pod_desc: ['',[Validators.required, Validators.maxLength(100)]], // 活動名稱(新增時開放下拉選取) 抓 [TALPORDERD]
         pod_sdate: [{value: null, disabled: true}], // 活動起始日 (Date)
         pod_edate: [{value: null, disabled: true}], // 活動終止日 (Date)
-
         org_id: [''], // 組織-部門(SYS3100)
         act_no: [''], // 活動編號(群組)
         pod_busdate: [{value: null, disabled: true}], // 活動正檔日期
-        cap_item: [''], // 扣款代碼
+        pod_back_sdate: [{value: null, disabled: true}], // 活動兌回起始日期
+        pod_back_edate: [{value: null, disabled: true}], // 活動兌回終止日期
         pod_status: ['', Validators.required], // 活動狀態(0=未核准, 1=已核准, 9=刪除)
 
         // 核准不會再新增進行，先鎖起來
@@ -159,22 +160,6 @@ export class TLS29010CRUComponent extends BasicCruPageComponent<TALPORDERD_OPEND
         }
       ];
 
-      //測試用的主檔表單 (如果是編輯模式就只有一筆)
-      activityList: any = [
-        {
-          pod_no: '20250724001',
-          pod_desc: '測試活動A',
-          pod_sdate: new Date('2025-07-24'),
-          pod_edate: new Date('2025-08-24'),
-        },
-        {
-          pod_no: '20250724002',
-          pod_desc: '夏日特賣會',
-          pod_sdate: new Date('2025-08-01'),
-          pod_edate: new Date('2025-08-31'),
-        }
-      ];
-
       // 有8 不能重複
       actNoOptions: apiOption[] = []; // 活動群組編號下拉選單 -- 僅顯示(依照id, mid自動切換)
       tlt_No_Option: apiOption[] = [];  // 專櫃編號下拉
@@ -197,7 +182,7 @@ export class TLS29010CRUComponent extends BasicCruPageComponent<TALPORDERD_OPEND
         // [專櫃編號] 帶出 下面這坨
         { field: 'tlt_no', header: '專櫃名稱', type: 'dropdown', editable: true, autoWidth: true, options: this.mockDetailDataOptions}, //(專櫃編號_專櫃名稱，下拉選單)用[專櫃編號] 帶出 [專櫃名稱]、[抽成類別]、[折數]、[抽成率] * ([TALPORDERD])
         { field: 'cag_barcode', header: '折數', type: 'text', editable: true, autoWidth: true }, // 後端提供，要去(TLTTALENT_CHARGED)撈 *
-        { field: 'cag_charge_rate', header: '抽成率', type: 'text', editable: true, autoWidth: true }, // 後端提供，要去(TLTTALENT_CHARGED)撈 * (*為一組，用id,mid 對應) 只有顯示，不會存到明細
+        // { field: 'cag_charge_rate', header: '抽成率', type: 'text', editable: true, autoWidth: true }, // 後端提供，要去(TLTTALENT_CHARGED)撈 * (*為一組，用id,mid 對應) 只有顯示，不會存到明細
         { field: 'use_flag', header: '是否使用', type: 'dropdown', editable: true, autoWidth: true, options: this.whetherOption }, // 本作業維護
       ];
       // 預設新項目模板
@@ -240,6 +225,7 @@ export class TLS29010CRUComponent extends BasicCruPageComponent<TALPORDERD_OPEND
       ngOnInit(): void {
         this.initializePage('TLS29010', this.dataForm);
         this.loadOption();
+        console.log('主檔',this.dataForm.getRawValue());
 
         const pod_no = this.dataForm.get('pod_no')?.value;
         if(pod_no){
@@ -257,6 +243,10 @@ export class TLS29010CRUComponent extends BasicCruPageComponent<TALPORDERD_OPEND
 
           this.dataForm.get('pod_status')?.setValue('0') //新增模式 [活動狀態] 只能(未審核)
           this.dataForm.get('pod_status')?.disable();
+
+          // 新增 活動類型只能選8號
+          this.dataForm.get('pod_type')?.setValue('8') //新增模式 只能選 8 期間開放折扣
+          this.dataForm.get('pod_type')?.disable();
         } else {
           this.dataForm.get('pod_desc')?.disable();
         }
@@ -273,24 +263,32 @@ export class TLS29010CRUComponent extends BasicCruPageComponent<TALPORDERD_OPEND
         }
 
         //將新的資料id指定為null
-        const processedDetail = this.opendisc_Detail.map(item => {
+        const processedDetail = this.opendisc_Detail
+        .map(item => {
+          // 先清除掉 key 是 "" 的屬性
+          const cleaned = Object.fromEntries(
+            Object.entries(item).filter(([key, _]) => key !== '')
+          );
+
+          // 若是 new 的項目，把 id 設成 null
           if (item.status === 'new') {
-            return { ...item, id: null}; // 把新項目的 id, PC_id 改為 null
+            cleaned['id'] = null;
           }
-          return item; // 其他不變
+
+          return cleaned;
         });
     
         const formValue = frm.getRawValue();
         const body = {
           ...formValue,
-          Detail: processedDetail, // 將明細資料加入請求體
+          TALPORDERD_OPENDisc: processedDetail, // 將明細資料加入請求體
         }
-    
+        
         switch (this.crudstatus) {
           case CRUDStatus.Create:
             if (this.canAdd()) {
               console.log('insert', body);
-              // this.tls51080Service.insertTLS51080(formValue).subscribe(() => {
+              // this.tls29010Service.insertTLS29010(body).subscribe(() => {
               //   this.messageService.successBubble('新增成功');
               //   // this.onCancel(); // 儲存後，會清除資料留在原頁面，不返回列表
               //   this.dataForm.reset(); // 重置表單
@@ -301,7 +299,7 @@ export class TLS29010CRUComponent extends BasicCruPageComponent<TALPORDERD_OPEND
             if (this.canEdit()) {
               // console.log('update', body);
               console.log('update:', JSON.stringify(body, null, 2));
-              // this.tls51080Service.updateTLS51080(formValue).subscribe(() => {
+              // this.tls29010Service.updateTLS29010(body).subscribe(() => {
               //   // this.messageService.successBubble('更新成功');
               //   this.onCancel(); // 儲存後，會返回列表
               // });
@@ -363,28 +361,6 @@ export class TLS29010CRUComponent extends BasicCruPageComponent<TALPORDERD_OPEND
           }
         });
       }
-
-
-    // ---主檔點選後的變更(僅顯新增模式)---
-    // ---修改模式只會該筆主檔的，且不可編輯---
-    onPodDescChange(desc: string): void {
-      if(this.crudstatus === CRUDStatus.Create){
-        const selectedActivity = this.activityList.find((act: { pod_desc: string; }) => act.pod_desc === desc);
-        console.log('主檔名稱',selectedActivity);
-
-        if (selectedActivity) {
-          this.dataForm.patchValue({
-            pod_no: selectedActivity.pod_no,
-            pod_desc: selectedActivity.pod_desc,
-            pod_sdate: selectedActivity.pod_sdate,
-            pod_edate: selectedActivity.pod_edate,
-          });
-
-          //依據選擇內容更新明細模板的日期
-          // this.createDefaultNew('');
-        }
-      }
-    }
 
     // ---明細檔操作---
     //HTML 顯示的明細資料

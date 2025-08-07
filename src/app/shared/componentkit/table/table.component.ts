@@ -132,6 +132,10 @@ export class TableComponent extends BasicPrintDataComponent implements OnInit, O
   @Input() expansionDataKey = '';            // 收合展開 資料key(expansion必需配置)
   @Input() expansionSortField = '';          // 收合展開 排序欄位(單一排序)
   @Input() expansionSortOrder = 0;           // 收合展開 排序方向 (1:升序、-1:降序)
+  @Input() expansionShowPaginator = false;   // expansion 是否顯示分頁器
+  @Input() expansionRows = 10;               // expansion 每頁顯示行數
+  @Input() expansionRowsPerPageOptions = [10, 30, 50]; // expansion 分頁選項
+  @Input() expansionScrollHeight = '300px';  // expansion 表格高度
   expression = false;                        // 收合展開 狀態 (true:展開、false:收合)
   expandedRows: Record<string, boolean> = {};// 收合展開 已展開資料
   // 管理 欄位

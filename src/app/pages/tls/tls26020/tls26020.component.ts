@@ -3,15 +3,19 @@ import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angula
 import { finalize } from 'rxjs';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { createPaginationConfig, Column } from '../../../shared/componentkit/table/table.model';
-import { TLS26020Data, TLS26020QueryRequest, TLS26020Service } from '../../../service/api/tls/tls26020.service';
+import { TLS26020Data, TLS26020Service } from '../../../service/api/tls/tls26020.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { AccordionModule } from 'primeng/accordion';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { TranslateModule } from '@ngx-translate/core';
-import { InputTextRangeComponent } from '../../../shared/componentkit/input-text-range/input-text-range.component';
 import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
 import { MultiSelectComponent } from "../../../shared/componentkit/multi-select/multi-select.component";
+import { Tls11010Service } from '@service/api/tls/tls11010.service';
+import { FloorService } from '@service/basic/floor.service';
+import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
+import { Tls51080Service } from '@service/api/tls/tls51080.service';
+import { untilDestroyed } from '@ngneat/until-destroy';
 
 @Component({
   selector: 'app-tls26020',
@@ -26,70 +30,105 @@ import { MultiSelectComponent } from "../../../shared/componentkit/multi-select/
     ReactiveFormsModule,
     TableComponent,
     TranslateModule,
-    InputTextRangeComponent,
     CalendarRangeComponent,
-    MultiSelectComponent
+    MultiSelectComponent,
+    InputTextComponent
   ]
 })
 export class TLS26020Component extends BasicQueryPageComponent<TLS26020Data> implements OnInit {
   queryForm = this.formBuilder.group({
-    saleDateFrom: [''],        // 銷售日期(起)
-    saleDateTo: [''],          // 銷售日期(訖)
-    storeCodeFrom: [''],       // 館別(起)
-    storeCodeTo: [''],         // 館別(訖)
-    organizationName: [''],    // 組織名稱
-    floor: [''],               // 樓層
-    ...createPaginationConfig([{ field: 'ID', order: 1 }])
+    Sale_DateStart: [null, Validators.required],        // 改為 null
+    Sale_DateEnd: [null, Validators.required],          // 改為 null
+    tlt_building: [[]],
+    Org_ID: [[]],
+    Org_Name: [''],
+    tlt_floor: [[]],
+    ...createPaginationConfig([{ field: 'tlt_no', order: 1 }]) // 修正排序欄位
   });
 
   totalRecords = 0;
   data: TLS26020Data[] = [];
   selectedItems: TLS26020Data[] = [];
 
+  // 修正 columns 根據實際 API 回應
   columns: Column[] = [
-    { field: 'storeCode', header: '館別', visible: true },
-    { field: 'organizationName', header: '組織名稱', visible: true },
-    { field: 'counterCode', header: '專櫃編號', visible: true },
-    { field: 'locationCode', header: '位置編號', visible: true },
-    { field: 'counterName', header: '櫃位名稱', visible: true },
-    { field: 'preorderAmount', header: '預售金額', visible: true },
-    { field: 'saleAmount', header: '銷售金額', visible: true },
-    { field: 'preorderAccum', header: '預售累積', visible: true }
+    { field: 'tlt_no', header: '專櫃編號', visible: true },
+    { field: 'tlt_name', header: '專櫃名稱', visible: true },
+    { field: 'txn_TotGUI', header: '發票金額', visible: true, format: (value: number) => value.toLocaleString() },
+    { field: 'txn_TotSaleAmt', header: '業績金額', visible: true, format: (value: number) => value.toLocaleString() }
   ];
 
-  orgOptions = [
-    { Name: '總公司', No: '1' },
-    { Name: '分公司', No: '2' }
+  // 展開詳細資料的欄位定義
+  expansionColumns: Column[] = [
+    { field: 'TXN_DATE', header: '交易日期', visible: true },
+    { field: 'ECR_NO', header: '機號', visible: true },
+    { field: 'TXN_NO', header: '交易序號', visible: true },
+    { field: 'TXN_GUIBegNo_Pre', header: '字軌', visible: true },
+    { field: 'TXN_GUIBegNo', header: '發票起號', visible: true },
+    { field: 'TXN_GUIEndNo', header: '發票迄號', visible: true },
+    { field: 'TXN_TotGUI', header: '發票金額', visible: true, format: (value: number) => value.toLocaleString() },
+    { field: 'TXN_TotSaleAmt', header: '業績金額', visible: true, format: (value: number) => value.toLocaleString() }
   ];
 
-  floorOptions = [
-    { Name: '一樓', No: '1' },
-    { Name: '二樓', No: '2' },
-    { Name: '三樓', No: '3' }
-  ];
+  // 下拉選單選項
+  floorOptions: any[] = [];
+  buildingOptions: any[] = [];
+  orgOptions: any[] = [];
 
   constructor(
-    private tls26020Service: TLS26020Service
+    private tls26020Service: TLS26020Service,
+    private tls11010Service: Tls11010Service,
+    private floorService: FloorService,
+    private tls51080Service: Tls51080Service
   ) {
     super();
   }
 
   ngOnInit(): void {
     this.initializePage('TLS26020', 'tls/tls26020', this.queryForm, (form) => this.onSubmit(form));
+    this.loadOptions();
   }
 
   onSubmit(frm: FormGroup) {
-    const queryRequest: TLS26020QueryRequest = {
-      ...frm.value
-    };
     this.handleSubmit(frm, () => {
-      this.tls26020Service.queryTLS26020(queryRequest)
+      this.tls26020Service.queryTLS26020(frm.value)
         .pipe(finalize(() => this.loading = false))
         .subscribe(response => {
           this.data = response.Data;
-          this.totalRecords = response.TotalCount
+          this.totalRecords = response.TotalCount;
+          this.addDetailData(this.data); // 添加展開明細資料
           this.queryStateService.setQueryState(this.ProgNo, frm.getRawValue());
         });
     });
+  }
+
+  // 為每一筆主資料載入詳細資料
+  addDetailData(data: TLS26020Data[]) {
+    data.forEach(item => {
+      this.tls26020Service.queryTLS26020Detail({
+        tlt_no: item.tlt_no
+      }).pipe(untilDestroyed(this)).subscribe(response => {
+        item.details = response.Data;
+      });
+    });
+  }
+
+  loadOptions() {
+    // 加載館別選項
+    this.tls11010Service.getBuildingOptions().subscribe((data) => {
+      this.buildingOptions = data;
+    });
+
+    // 加載樓層選項
+    this.floorService.getFloors().subscribe((data) => {
+      this.floorOptions = data;
+    });
+
+    // 組織代碼下拉
+    this.tls51080Service
+      .querySYS3100_DropDownList({})
+      .subscribe((response) => {
+        this.orgOptions = response.Data;
+      });
   }
 }

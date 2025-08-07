@@ -63,7 +63,7 @@ export interface POS2013 {
   Label: string,
 }
 
-// 2.1.2.6 招商進度監控
+// 2.1.2.6 招商進度監控(報表)
 @Component({
   selector: 'app-tls12060',
   templateUrl: './tls12060.component.html',
