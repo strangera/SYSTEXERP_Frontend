@@ -7,35 +7,20 @@
     <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
       <div class="grid p-fluid">
         <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text
-            label="角色代碼"
-            controlName="Role_No"
-            [control]="dataForm.controls.Role_No"
-            [submitted]="submitted"
-          ></app-input-text>
+          <app-input-text label="角色代號" controlName="Role_No" [control]="dataForm.controls.Role_No"
+            [submitted]="submitted"></app-input-text>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text
-            label="角色名稱"
-            controlName="Role_Name"
-            [control]="dataForm.controls.Role_Name"
-            [submitted]="submitted"
-          ></app-input-text>
+          <app-input-text label="角色名稱" controlName="Role_Name" [control]="dataForm.controls.Role_Name"
+            [submitted]="submitted"></app-input-text>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text
-            label="角色註記"
-            controlName="Description"
-            [control]="dataForm.controls.Description"
-            [submitted]="submitted"
-          ></app-input-text>
+          <app-input-text label="角色註記" controlName="Description" [control]="dataForm.controls.Description"
+            [submitted]="submitted"></app-input-text>
         </div>
       </div>
 
-      <div
-        class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
-        *ngIf="!isFormReadable"
-      >
+      <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3" *ngIf="!isFormReadable">
         <app-button btnType="cancel" [form]="dataForm"></app-button>
         <app-button btnType="submit"></app-button>
       </div>

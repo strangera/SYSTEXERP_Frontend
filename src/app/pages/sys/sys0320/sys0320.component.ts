@@ -11,21 +11,22 @@ import { InputTextComponent } from '../../../shared/componentkit/input-text/inpu
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { TranslateModule } from '@ngx-translate/core';
+import { finalize } from 'rxjs';
 
 @Component({
-    selector: 'app-sys0320',
-    templateUrl: './sys0320.component.html',
-    standalone: true,
-    imports: [
-        MenubarComponent,
-        AccordionModule,
-        FormsModule,
-        ReactiveFormsModule,
-        InputTextComponent,
-        ButtonComponent,
-        TableComponent,
-        TranslateModule,
-    ],
+  selector: 'app-sys0320',
+  templateUrl: './sys0320.component.html',
+  standalone: true,
+  imports: [
+    MenubarComponent,
+    AccordionModule,
+    FormsModule,
+    ReactiveFormsModule,
+    InputTextComponent,
+    ButtonComponent,
+    TableComponent,
+    TranslateModule,
+  ],
 })
 // 4.2.3.2 使用者系統權限設定
 export class SYS0320Component extends BasicQueryPageComponent<UserData> implements OnInit {
@@ -59,16 +60,16 @@ export class SYS0320Component extends BasicQueryPageComponent<UserData> implemen
   // 表單提交邏輯
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
-      this.sys0110Service.queryUser(frm.value).pipe(untilDestroyed(this)).subscribe({
-        next: (response) => {
-          this.data = response.Data || [];
-          this.totalRecords = response.TotalCount;
+      this.sys0110Service.queryUser(frm.value).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe((response) => {
+        if (response.Data) {
+          this.data = response.Data
+          this.totalRecords = response.TotalCount || response.Data.length;
           this.queryStateService.setQueryState(this.ProgNo, frm.value);
-          this.loading = false;
-        },
-        error: () => {
-          this.loading = false;
-        },
+        } else {
+          this.data = [];
+          this.totalRecords = 0;
+          this.messageService.warnBubble(response.Message);
+        }
       });
     });
   }

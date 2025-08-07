@@ -52,8 +52,9 @@ export class CalendarRangeQuickComponent extends BasicKitComponent implements On
     super();
   }
   ngOnInit() {
-    if (!this.startControl.disabled && !this.endControl.disabled) {
-      this.placeholder = '請選擇日期';
+    if (this.startControl.enabled && this.endControl.enabled) {
+      this.placeholder = '請選擇日期'
+      this.placeholder2 = '請選擇日期'
       this.updateControlState(this.startControl, this.endControl);
     }
     if (this.startControl.value && typeof this.startControl.value === 'string') {

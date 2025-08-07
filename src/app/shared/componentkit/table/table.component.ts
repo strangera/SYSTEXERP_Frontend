@@ -97,6 +97,7 @@ export class TableComponent extends BasicPrintDataComponent implements OnInit, O
   @Output() delete = new EventEmitter<any>(); // 刪除事件
   @Input() showDelete = true;                    // 是否顯示刪除按鈕
   @Input() deleteIcon = 'pi pi-trash';          // 刪除按鈕圖示
+  @Input() deletepTooltip = '刪除';              // 刪除按鈕提示
   // Header(右) 相關
   @Input() showExcel = false;                      // 是否顯示 匯出Excel
   @Input() showExcelExport = true;                 // 是否顯示 匯出Excel按鈕
@@ -205,6 +206,7 @@ export class TableComponent extends BasicPrintDataComponent implements OnInit, O
           this.calculateTotalPages(); // 計算總頁數
         } else {
           this.dt.totalRecords = 0;
+          this.selectedItems = [];
         }
         this.selectionChange.emit(this.selectedItems);
       });

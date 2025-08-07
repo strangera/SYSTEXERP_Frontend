@@ -12,24 +12,24 @@ import { PanelModule } from 'primeng/panel';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { NgIf } from '@angular/common';
 import { TranslateModule } from '@ngx-translate/core';
+import { ValidationService } from '@shared/service/validation.service';
 // 4-2-2-1角色基本資料維護
 
 // 角色基本資料維護 CRU
 @Component({
-    selector: 'app-sys0210-cru',
-    templateUrl: './sys0210.cru.component.html',
-    styleUrls: ['./sys0210.cru.component.scss'],
-    standalone: true,
-    imports: [
-        MenubarComponent,
-        ButtonComponent,
-        PanelModule,
-        FormsModule,
-        ReactiveFormsModule,
-        InputTextComponent,
-        NgIf,
-        TranslateModule,
-    ],
+  selector: 'app-sys0210-cru',
+  templateUrl: './sys0210.cru.component.html',
+  standalone: true,
+  imports: [
+    MenubarComponent,
+    ButtonComponent,
+    PanelModule,
+    FormsModule,
+    ReactiveFormsModule,
+    InputTextComponent,
+    NgIf,
+    TranslateModule,
+  ],
 })
 export class SYS0210CRUComponent
   extends BasicCruPageComponent<tblUser>
@@ -37,7 +37,7 @@ export class SYS0210CRUComponent
   // ----------------------------------------------------------------
   dataForm = this.formBuilder.group({
     id: [], // ID
-    Role_No: ['', [Validators.required, Validators.maxLength(10)]], // 角色代號
+    Role_No: ['', [Validators.required, Validators.maxLength(10), this.validationService.alphanumericValidator]], // 角色代號
     Role_Name: ['', [Validators.required, Validators.maxLength(30)]], // 角色名稱
     Description: ['', [Validators.maxLength(50)]], // 角色註記
   });
@@ -45,6 +45,7 @@ export class SYS0210CRUComponent
   // ----------------------------------------------------------------
   constructor(
     private sys0210Service: Sys0210Service,
+    private readonly validationService: ValidationService
   ) {
     super();
   }

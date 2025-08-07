@@ -37,9 +37,9 @@
           pButton icon="pi pi-plus" severity="success" class="p-button-rounded p-button-text"
           [disabled]="insertDisabled" />
         <!-- || !canPerformAction('20') -->
-        <p-button *ngIf="IsPrint && showDelete && !rowEditing" (click)="deleteRow(selectedItems)" pTooltip="刪除"
-          tooltipPosition="top" pButton [icon]="deleteIcon" severity="danger" class="p-button-text" [rounded]="true"
-          [disabled]="selectedItems?.length <= 0" />
+        <p-button *ngIf="IsPrint && showDelete && !rowEditing" (click)="deleteRow(selectedItems)"
+          [pTooltip]="deletepTooltip" tooltipPosition="top" pButton [icon]="deleteIcon" severity="danger"
+          class="p-button-text" [rounded]="true" [disabled]="selectedItems?.length <= 0" />
         <!-- || !canPerformAction('40') -->
       </div>
       <div *ngIf="IsPrint" class="flex-grow-1 p-2">

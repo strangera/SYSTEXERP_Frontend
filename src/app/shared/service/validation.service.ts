@@ -42,6 +42,7 @@ export class ValidationService {
       englishAndSymbol: '只能輸入英文和符號',
       containsChinese: '不可輸入中文或全形字元',
       invalidAlphanumeric: '只能輸入半形英文和數字',
+      invalidEnglishNumberSymbol: '只能輸入英文和數字和符號',
     };
     return config[validatorName];
   }
@@ -309,5 +310,31 @@ export class ValidationService {
       }
     }
     return null;
+  }
+  /**
+   * 只能輸入半形英文、數字和特殊符號（不含中文或全形字元）
+   * @description 該驗證器同時檢查是否為純空白字串。
+   */
+  englishNumberSymbolValidator(control: { value: string | null }) {
+    const value = control.value;
+
+    // 如果值為 null 或 undefined，則不進行驗證。
+    if (value === null || value === undefined) {
+      return null;
+    }
+
+    // 檢查值是否為空白字串（包含空格、tab 等）。
+    // 如果是，返回錯誤。
+    if (typeof value === 'string' && value.trim() === '') {
+      return { invalidEnglishNumberSymbol: true };
+    }
+
+    // 檢查是否只包含半形英數字和半形特殊符號。
+    // 這個正則表達式會匹配所有 ASCII 字元（0-127），
+    // 這樣可以有效地排除所有全形字元和中文字。
+    const isValid = /^[\x20-\x7E]*$/.test(value);
+
+    // 如果驗證不通過，返回錯誤；否則返回 null。
+    return isValid ? null : { invalidEnglishNumberSymbol: true };
   }
 }

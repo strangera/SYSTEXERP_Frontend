@@ -13,11 +13,11 @@ import { TableComponent } from '../../../shared/componentkit/table/table.compone
 import { TranslateModule } from '@ngx-translate/core';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { finalize } from 'rxjs';
+import { ValidationService } from '@shared/service/validation.service';
 
 @Component({
   selector: 'app-sys0210',
   templateUrl: './sys0210.component.html',
-  styleUrls: ['./sys0210.component.scss'],
   standalone: true,
   imports: [
     MenubarComponent,
@@ -35,7 +35,7 @@ export class SYS0210Component extends BasicQueryPageComponent<tblRole>
   implements OnInit {
   // 查詢
   queryForm = this.formBuilder.group({
-    Role_No: ['', [Validators.maxLength(10)]], // 角色代號
+    Role_No: ['', [Validators.maxLength(10), this.validationService.alphanumericValidator]], // 角色代號
     Role_Name: ['', [Validators.maxLength(30)]], // 角色名稱
     Description: ['', [Validators.maxLength(50)]], // 角色註記
 
@@ -59,7 +59,10 @@ export class SYS0210Component extends BasicQueryPageComponent<tblRole>
   // 多選項目
   selectedItems: tblRole[] = [];
 
-  constructor(private sys0210Service: Sys0210Service) {
+  constructor(
+    private readonly sys0210Service: Sys0210Service,
+    private readonly validationService: ValidationService
+  ) {
     super();
   }
 
