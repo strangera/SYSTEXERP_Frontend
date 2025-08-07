@@ -11,25 +11,26 @@ import { AccordionModule } from 'primeng/accordion';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { TranslateModule } from '@ngx-translate/core';
+import { ValidationService } from '@shared/service/validation.service';
 
 @Component({
-    selector: 'app-sysbq00',
-    templateUrl: './sysbq00.component.html',
-    standalone: true,
-    imports: [
-        MenubarComponent,
-        ButtonComponent,
-        AccordionModule,
-        FormsModule,
-        ReactiveFormsModule,
-        InputTextComponent,
-        TableComponent,
-        TranslateModule,
-    ],
+  selector: 'app-sysbq00',
+  templateUrl: './sysbq00.component.html',
+  standalone: true,
+  imports: [
+    MenubarComponent,
+    ButtonComponent,
+    AccordionModule,
+    FormsModule,
+    ReactiveFormsModule,
+    InputTextComponent,
+    TableComponent,
+    TranslateModule,
+  ],
 })
 export class SYSBQ00Component extends BasicQueryPageComponent<Sysbq00Data> implements OnInit {
   queryForm = this.formBuilder.group({
-    data_type: ['', [Validators.maxLength(10)]],          // 資料型態
+    data_type: ['', [Validators.maxLength(10), this.validationService.alphanumericValidator]],          // 資料型態
     data_type_desc: ['', [Validators.maxLength(200)]],     // 資料型態的描述 (line1, line2, line3, line4, line5)
     ...createPaginationConfig([{ field: 'data_type', order: 1 }]) // 分頁和排序
   });
@@ -55,7 +56,8 @@ export class SYSBQ00Component extends BasicQueryPageComponent<Sysbq00Data> imple
 
 
   constructor(
-    private sysbq00Service: Sysbq00Service,
+    private readonly sysbq00Service: Sysbq00Service,
+    private readonly validationService: ValidationService
   ) {
     super();
   }
