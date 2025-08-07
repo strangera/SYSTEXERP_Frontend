@@ -16,7 +16,6 @@ import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/
 import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
 import { CalendarRangeQuickComponent } from '../../../shared/componentkit/calendar-range-quick/calendar-range-quick.component';
-import { Tls12010Service } from '@service/api/tls/tls12010.service';
 
 // TALPORDERM (主檔)
 export interface TALPORDERM {
@@ -41,7 +40,8 @@ export interface TALPORDERM {
   pod_sdate: Date; // 活動起始日期
   pod_edate: Date; // 活動終止日期
   pod_busdate?: Date | null; // 活動正檔日期
-  cap_item?: string | null; // 扣款代碼
+  pod_back_sdate?: Date | null;  //活動兌回起始日期
+  pod_back_edate?: Date | null;  //活動兌回終止日期
   pod_status: '0' | '1' | '9'; 
   // 0=未核准 1=已核准 9=刪除
 
@@ -151,13 +151,14 @@ export class TLS29010Component extends BasicQueryPageComponent<TALPORDERM> imple
               '8': '期間開放折扣',
             }[value] || value),
         },
-        { field: 'org_id', header: '組織部門', visible: false },
-        { field: 'act_no', header: '活動編號(群組)', visible: false },
+        { field: 'org_id', header: '組織部門', visible: true },
+        { field: 'act_no', header: '活動編號(群組)', visible: true },
         { field: 'pod_desc', header: '活動名稱', visible: true },
         { field: 'pod_sdate', header: '活動起始日', visible: true, format: formatDate },
         { field: 'pod_edate', header: '活動結束日', visible: true, format: formatDate },
-        { field: 'pod_busdate', header: '活動正檔日', visible: false, format: formatDate },
-        { field: 'cap_item', header: '扣款代碼', visible: false },
+        { field: 'pod_busdate', header: '活動正檔日', visible: true, format: formatDate },
+        { field: 'pod_back_sdate', header: '活動兌回起始日期', visible: true, format: formatDate },
+        { field: 'pod_back_edate', header: '活動兌回終止日期', visible: true, format: formatDate },
         {
           field: 'pod_status',
           header: '活動狀態',
@@ -195,12 +196,13 @@ export class TLS29010Component extends BasicQueryPageComponent<TALPORDERM> imple
         this.initializePage('TLS29010', 'TLS/TLS29010cru', this.queryForm, (form) => this.onSubmit(form));
         this.loadOption();
       }
-    
+  
       onSubmit(frm: FormGroup) {
-        console.log('查詢條件',frm.value);
         this.handleSubmit(frm, () => {
+          console.log('query condition', frm.value);
           this.tls29010Service.queryTLS29010(frm.value).subscribe({
             next: (response) => {
+              // console.log('回傳階層:', response.Data);
               if (response.Status === '0000') {
                 this.data = response.Data || [];
                 console.log('Result', this.data);
