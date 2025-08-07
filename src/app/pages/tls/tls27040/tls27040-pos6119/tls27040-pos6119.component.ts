@@ -58,6 +58,7 @@ export class Tls27040POS6119Component extends BasicQueryPageComponent<POS6119Dat
   });
   totalRecords = 0;
   POS6119Data: POS6119Data[] = [];
+  selectedItems: POS6119Data[] = [];
   POS6119_columns = POS6119_columns;
   CTBC_TxnCodeOptions = CTBC_TxnCodeOptions
   TermNoOptions = SystemOptionsService.getOptions('T109');
@@ -70,14 +71,26 @@ export class Tls27040POS6119Component extends BasicQueryPageComponent<POS6119Dat
   ) { super(); }
 
   ngOnInit(): void {
-    this.initializePage('TLS27040', 'TLS/TLS27040cru');
+    this.initializePage('TLS27040', 'TLS/TLS27040cru', this.queryForm, (form) => this.onSubmit(form));
   }
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
       this.tls27040Service.queryPOS6119(frm.value).pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(res => {
         this.POS6119Data = res.Data;
         this.totalRecords = res.TotalCount;
+        this.queryStateService.setQueryState(this.ProgNo, frm.value);
       });
+    });
+  }
+  onDelete(selectedItems: POS6119Data[]) {
+    this.loading = true;
+    const body = {
+      idList: selectedItems.map(item => item.ID),
+      tableName: 'POS6119'
+    }
+    this.tls27040Service.deleteTLS27040(body).pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(res => {
+      this.messageService.successBubble(res.Message);
+      this.onSubmit(this.queryForm);
     });
   }
 }

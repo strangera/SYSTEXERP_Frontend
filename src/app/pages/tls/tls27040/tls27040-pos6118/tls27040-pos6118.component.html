@@ -60,5 +60,6 @@
   <app-table tableKey="POS6118" dataKey="ID" [data]="POS6118Data" [columns]="POS6118_columns" (edit)="onEdit($event)"
     (detail)="onDetail($event)" [multiSortMeta]="[{ field: 'ID', order: 1 }]" [totalRecords]="totalRecords"
     (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [lazy]="true" [loading]="loading"
-    apiUrl="queryPOS6118"></app-table>
+    apiUrl="queryPOS6118" [showCheckBox]="true" [selectedItems]="selectedItems"
+    (selectionChange)="selectedItems = $event" (delete)="onDelete($event)"></app-table>
 </ng-template>
