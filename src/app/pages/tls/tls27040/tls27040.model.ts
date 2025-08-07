@@ -4,15 +4,15 @@ import { Column, formatDate, formatDateTime, formatDateTimeToHHMMSS } from "@sha
 export const POS6118_columns: Column[] = [
   { field: 'ECR_No', header: '收銀機號' }, // 對應 POS6118.ECR_No
   { field: 'TXN_No', header: '交易流水號' }, // 對應 POS6118.TXN_No
-  { field: 'TLT_NO', header: '專櫃編號' }, // 對應 POS6118.TLT_No
+  { field: 'TLT_No', header: '專櫃編號' }, // 對應 POS6118.TLT_No
   { field: 'NCML_TxnAmt', header: '金額' }, // 對應 POS6118.NCML_TxnAmt
   { field: 'NCML_TmID', header: 'EDC號碼' }, // 對應 POS6118.NCML_TmID
-  { field: 'NCML_BatCloseDate', header: '請款日期', format: formatDate }, // 對應 POS6118.NCML_BatCloseDate (DATE)
+  { field: 'NCML_BatCloseDate', header: '入帳日', format: formatDate }, // 對應 POS6118.NCML_BatCloseDate (DATE)
   { field: 'NCML_PayCrdType', header: '卡別', format: (value) => PayCrdTypeOptions.find(item => item.value === value)?.label || value }, // 對應 POS6118.NCML_PayCrdType
   { field: 'NCML_CrdNo', header: '卡號' }, // 對應 POS6118.NCML_CrdNo
   { field: 'NCML_TxnDate', header: '銷售日期', format: formatDate }, // 對應 POS6118.NCML_TxnDate (DATE)
-  { field: 'NCML_Date', header: '請款日期', format: formatDate }, // 對應 POS6118.NCML_Date (DATE)
   { field: 'NCML_TxnTime', header: '銷售時間', format: formatDateTimeToHHMMSS }, // 對應 POS6118.NCML_TxnTime (DATETIME), 使用新函式只顯示時間
+  { field: 'NCML_Date', header: '請款日期', format: formatDate }, // 對應 POS6118.NCML_Date (DATE)
   { field: 'NCML_TxnType', header: '銷售狀況', format: (value) => TxnTypeOptions.find(item => item.value === value)?.label || value }, // 對應 POS6118.NCML_TxnType
   { field: 'NCML_ApprovalCode', header: '授權碼' }, // 對應 POS6118.NCML_ApprovalCode
   { field: 'NCML_CrdTxnFg', header: '交易類別', format: (value) => CrdTxnFgOptions.find(item => item.value === value)?.label || value }, // 對應 POS6118.NCML_CrdTxnFg
@@ -29,13 +29,13 @@ export const POS6118_columns: Column[] = [
 export const POS6119_columns: Column[] = [
   { field: 'ECR_No', header: '收銀機號' }, // 對應 POS6119.ECR_No
   { field: 'TXN_No', header: '交易流水號' }, // 對應 POS6119.TXN_No
-  { field: 'TLT_NO', header: '專櫃編號' }, // 對應 POS6119.TLT_No
+  { field: 'TLT_No', header: '專櫃編號' }, // 對應 POS6119.TLT_No
   { field: 'CTBC_TxnAmt', header: '金額' }, // 對應 POS6119.CTBC_TxnAmt
   { field: 'CTBC_TmID', header: 'EDC號碼' }, // 對應 POS6119.CTBC_TmID
   { field: 'CTBC_Date', header: '請款日期', format: formatDate }, // 對應 POS6119.CTBC_Date (DATE)
   { field: 'CTBC_PayDate', header: '入帳日', format: formatDate }, // 對應 POS6119.CTBC_PayDate (DATE), 應為 formatDate
-  { field: 'CTBC_CrdNo', header: '卡號' }, // 對應 POS6119.CTBC_CrdNo
   { field: 'CTBC_TxnTime', header: '銷售日期', format: formatDateTime }, // 對應 POS6119.CTBC_TxnTime (DATETIME), 標題改為「交易時間」更精確
+  { field: 'CTBC_CrdNo', header: '卡號' }, // 對應 POS6119.CTBC_CrdNo
   { field: 'CTBC_TxnCode', header: '交易類別碼', format: (value) => CTBC_TxnCodeOptions.find(item => item.value === value)?.label || value }, // 對應 POS6119.CTBC_TxnCode, 標題改為「交易類別碼」
   { field: 'CTBC_ApprovalCode', header: '授權碼' }, // 對應 POS6119.CTBC_ApprovalCode
   { field: 'CTBC_DataType', header: '資料型態', format: (value) => CrdTxnFgOptions.find(item => item.value === value)?.label || value }, // 對應 POS6119.CTBC_DataType, 標題改為「資料型態」
@@ -52,12 +52,13 @@ export const POS6119_columns: Column[] = [
 export const POS6119P_columns: Column[] = [
   { field: 'ECR_No', header: '收銀機號' }, // 對應 POS6119P.ECR_No
   { field: 'TXN_No', header: '交易流水號' }, // 對應 POS6119P.TXN_No
-  { field: 'TLT_NO', header: '專櫃編號' }, // 對應 POS6119P.TLT_No
+  { field: 'TLT_No', header: '專櫃編號' }, // 對應 POS6119P.TLT_No
   { field: 'CTBC_TxnAmt', header: '金額' }, // 對應 POS6119P.CTBC_TxnAmt
   { field: 'CTBC_TmID', header: 'EDC號碼' }, // 對應 POS6119P.CTBC_TmID
-  { field: 'CTBC_BusDate', header: '帳務日', format: formatDate }, // 對應 POS6119P.CTBC_BusDate (DATE), 標題改為「帳務日」
   { field: 'CTBC_CrdNo', header: '卡號' }, // 對應 POS6119P.CTBC_CrdNo
   { field: 'CTBC_TxnDate', header: '銷售日期', format: formatDate }, // 對應 POS6119P.CTBC_TxnDate (DATE)
+  { field: 'CTBC_Date', header: '請款日期', format: formatDate }, // 對應 POS6119P.CTBC_Date (DATE)
+  { field: 'CTBC_PayDate', header: '入帳日', format: formatDate }, // 對應 POS6119P.CTBC_PayDate (DATE), 應為 formatDate
   { field: 'CTBC_TxnType', header: '交易類型', format: (value) => CTBC_TxnTypeOptions.find(item => item.value === value)?.label || value }, // 對應 POS6119P.CTBC_TxnType, 標題改為「交易類型」
   { field: 'CTBC_ApprovalCode', header: '授權碼' }, // 對應 POS6119P.CTBC_ApprovalCode
   { field: 'CTBC_Check', header: '輸入狀況', format: (value) => CheckOptions.find(item => item.value === value)?.label || value }, // 對應 POS6119P.CTBC_Check
@@ -99,11 +100,19 @@ export const BusCrdTxnFgOptions = [
 ];
 
 // Y=比對正確、N=比對錯誤、M=已修正、A=手動新增
+// export const CheckOptions = [
+//   { label: '比對正確', value: 'Y' },
+//   { label: '比對錯誤', value: 'N' },
+//   { label: '已修正', value: 'M' },
+//   { label: '手動新增', value: 'A' }
+// ];
+// 0=手刷補登
+// 2=調整補登
+// 3=CardPool欠落
 export const CheckOptions = [
-  { label: '比對正確', value: 'Y' },
-  { label: '比對錯誤', value: 'N' },
-  { label: '已修正', value: 'M' },
-  { label: '手動新增', value: 'A' }
+  { label: '手刷補登', value: '0' },
+  { label: '調整補登', value: '2' },
+  { label: 'CardPool欠落', value: '3' },
 ];
 
 export const POS611XOptions = [
@@ -126,6 +135,14 @@ export const queryFilterOptions = [
   { label: '收銀機號為空', value: 'ECR_NoBtn' },
   { label: '專櫃編號為空', value: 'StoIDBtn' },
   { label: '專櫃編號不存在', value: 'TLT_NoIsExistBtn' },
+  { label: '交易流水號為空', value: 'TXN_NoBtn' },
+  { label: '銷售日期為空', value: 'TxnDateBtn' },
+  { label: '銷售日期與請款日不同', value: 'DateDifferBtn' },
+];
+
+export const queryFilterForPos6119POptions = [
+  { label: '收銀機號為空', value: 'ECR_NoBtn' },
+  { label: '專櫃編號為空', value: 'StoIDBtn' },
   { label: '交易流水號為空', value: 'TXN_NoBtn' },
   { label: '銷售日期為空', value: 'TxnDateBtn' },
   { label: '銷售日期與請款日不同', value: 'DateDifferBtn' },

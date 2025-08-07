@@ -1,9 +1,9 @@
-import { Component, OnInit, TemplateRef, ViewChild } from '@angular/core';
+import { Component, Input, OnInit, TemplateRef, ViewChild } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { POS6119PData, TLS27040Service } from '@service/api/tls/tls27040.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { createPaginationConfig } from '@shared/componentkit/table/table.model';
-import { BusCrdTxnFgOptions, CheckOptions, CTBC_TxnTypeOptions, POS6119P_columns, queryFilterOptions } from '../tls27040.model';
+import { BusCrdTxnFgOptions, CheckOptions, CTBC_TxnTypeOptions, POS6119P_columns, queryFilterForPos6119POptions } from '../tls27040.model';
 import { finalize } from 'rxjs';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { ButtonComponent } from '@shared/componentkit/button/button.component';
@@ -36,6 +36,7 @@ import { TableComponent } from '@shared/componentkit/table/table.component';
 export class Tls27040POS6119pComponent extends BasicQueryPageComponent<POS6119PData> implements OnInit {
   @ViewChild('formTemplate', { static: true }) formTemplate!: TemplateRef<unknown>;
   @ViewChild('tableTemplate', { static: true }) tableTemplate!: TemplateRef<unknown>;
+  @Input() selectedBank!: string;
   queryForm = this.formBuilder.group({
     ECR_No: ['', [Validators.maxLength(10)]], // ECR編號
     TXN_No: ['', [Validators.maxLength(8)]], // 交易編號
@@ -64,7 +65,7 @@ export class Tls27040POS6119pComponent extends BasicQueryPageComponent<POS6119PD
   TermNoOptions = SystemOptionsService.getOptions('T109');
   BusCrdTxnFgOptions = BusCrdTxnFgOptions
   CheckOptions = CheckOptions
-  queryFilterOptions = queryFilterOptions
+  queryFilterForPos6119POptions = queryFilterForPos6119POptions
   constructor(
     private readonly tls27040Service: TLS27040Service,
   ) { super(); }
@@ -75,9 +76,12 @@ export class Tls27040POS6119pComponent extends BasicQueryPageComponent<POS6119PD
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
       this.tls27040Service.queryPOS6119P(frm.value).pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(res => {
-        this.POS6119PData = res.Data;
+        this.POS6119PData = res.Data.map(item => ({
+          ...item,
+          tableName: 'POS6119P'
+        }));
         this.totalRecords = res.TotalCount;
-        this.queryStateService.setQueryState(this.ProgNo, frm.value);
+        this.queryStateService.setQueryState(this.ProgNo, { ...frm.value, selectedBank: this.selectedBank });
       });
     });
   }

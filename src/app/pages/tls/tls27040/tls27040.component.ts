@@ -14,7 +14,7 @@ import { POS6118Data, POS6119Data, POS6119PData, TLS27040Service } from '@servic
 import { finalize } from 'rxjs';
 import { DialogComponent } from '@shared/componentkit/dialog/dialog.component';
 import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
-import { DropdownModule } from 'primeng/dropdown';
+import { DropdownChangeEvent, DropdownModule } from 'primeng/dropdown';
 import { Tls27040POS6118Component } from './tls27040-pos6118/tls27040-pos6118.component';
 import { Tls27040POS6119Component } from './tls27040-pos6119/tls27040-pos6119.component';
 import { Tls27040POS6119pComponent } from './tls27040-pos6119p/tls27040-pos6119p.component';
@@ -46,7 +46,7 @@ export class TLS27040Component extends BasicQueryPageComponent<POS6118Data | POS
   @ViewChild('pos6119', { static: false }) pos6119!: Tls27040POS6119Component;
   @ViewChild('pos6119p', { static: false }) pos6119p!: Tls27040POS6119pComponent;
 
-  selectedBank = '0';
+  selectedBank!: string;
   POS6118Data: POS6118Data[] = [];
   POS6119Data: POS6119Data[] = [];
   POS6119PData: POS6119PData[] = [];
@@ -57,6 +57,10 @@ export class TLS27040Component extends BasicQueryPageComponent<POS6118Data | POS
 
   ngOnInit(): void {
     this.initializePage('TLS27040', 'TLS/TLS27040cru');
+    const queryState = this.queryStateService.getQueryState(this.ProgNo);
+    if (queryState?.value && queryState?.value.selectedBank) {
+      this.selectedBank = this.queryStateService.getQueryState(this.ProgNo)?.value.selectedBank;
+    }
   }
   dialogVisible = false;
   dialogLoading = false;
@@ -108,5 +112,11 @@ export class TLS27040Component extends BasicQueryPageComponent<POS6118Data | POS
       case '2': return this.pos6119p?.tableTemplate;
       default: return null;
     }
+  }
+
+  dialogSelectedBank!: string;
+
+  onBankChange(event: DropdownChangeEvent) {
+    this.dialogSelectedBank = event.value;
   }
 }

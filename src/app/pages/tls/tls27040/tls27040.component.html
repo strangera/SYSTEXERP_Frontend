@@ -22,9 +22,9 @@
   <ng-container *ngTemplateOutlet="currentTableTemplate"></ng-container>
 </div>
 <div class="hidden">
-  <app-tls27040-pos6118 #pos6118></app-tls27040-pos6118>
-  <app-tls27040-pos6119 #pos6119></app-tls27040-pos6119>
-  <app-tls27040-pos6119p #pos6119p></app-tls27040-pos6119p>
+  <app-tls27040-pos6118 #pos6118 [selectedBank]="selectedBank"></app-tls27040-pos6118>
+  <app-tls27040-pos6119 #pos6119 [selectedBank]="selectedBank"></app-tls27040-pos6119>
+  <app-tls27040-pos6119p #pos6119p [selectedBank]="selectedBank"></app-tls27040-pos6119p>
 </div>
 <app-dialog [visible]="dialogVisible" header="新增實收檔" [showFooter]="false" (visibleChange)="dialogVisible = $event"
   height="h-10rem">
@@ -32,7 +32,7 @@
     <div class="grid p-fluid">
       <app-dropdown class="col-12 md:col-6 lg:col-4" label="收單銀行" controlName="tableName" [options]="POS611XOptions"
         optionLabel="label" optionValue="table" [control]="dialogQueryForm.controls.tableName" [submitted]="submitted"
-        [filter]="false" />
+        [filter]="false" (changeEvent)="onBankChange($event)" />
     </div>
     <hr />
     <div class="grid p-fluid">
@@ -40,8 +40,10 @@
         [control]="dialogQueryForm.controls.ECR_No" [submitted]="dialogSubmitted" />
       <app-input-text class="col-12 md:col-6 lg:col-4" label="交易流水號" controlName="TXN_No"
         [control]="dialogQueryForm.controls.TXN_No" [submitted]="dialogSubmitted" />
-      <app-calendar class="col-12 md:col-6 lg:col-4" calendarType="dateOne" label="銷售日期"
-        [control]="dialogQueryForm.controls.TXN_Date" [submitted]="dialogSubmitted" />
+      <app-calendar *ngIf="dialogSelectedBank === 'POS6119'" class="col-12 md:col-6 lg:col-4" calendarType="dateTimeOne"
+        label="銷售日期" [control]="dialogQueryForm.controls.TXN_Date" [submitted]="dialogSubmitted" />
+      <app-calendar class="col-12 md:col-6 lg:col-4" *ngIf="dialogSelectedBank !== 'POS6119'" calendarType="dateOne"
+        label="銷售日期" [control]="dialogQueryForm.controls.TXN_Date" [submitted]="dialogSubmitted" />
     </div>
     <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
       <app-button btnType="query" [loading]="dialogLoading"></app-button>
