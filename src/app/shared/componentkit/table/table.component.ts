@@ -156,7 +156,7 @@ export class TableComponent extends BasicPrintDataComponent implements OnInit, O
   // Footer
   @Input() showFooter = false;                      // 是否顯示 Footer
   // 分頁器
-  @Input() scrollHeight = '400px';                  // table 高度
+  @Input() scrollHeight = '650px';                  // table 高度
   @Input() scrollable = true;                        // 是否要滾輪
   @Input() showPaginator = true;                    // 是否顯示 分頁器
   @Input() totalRecords = 0;                        // 記錄總數
@@ -264,13 +264,11 @@ export class TableComponent extends BasicPrintDataComponent implements OnInit, O
     this.queryStateService.setQueryState(this.tableKey + 'Sort', this.multiSortMeta);
   }
   loadDataLazy(event: TableLazyLoadEvent) {
-    setTimeout(() => {
-      if (this.totalRecords === 0) { return; }
-      const pageSize = event.rows && event.rows > 0 ? event.rows : 30;
-      const pageIndex = (event.first ?? 0) / pageSize + 1;
-      const SortBy = event.multiSortMeta ?? [{ field: this.dataKey, order: 1 }];
-      this.lazyLoadData.emit({ pageIndex, pageSize, SortBy });
-    });
+    if (this.totalRecords === 0 || !this.IsPrint || this.rowEditing) { return; }
+    const pageSize = event.rows && event.rows > 0 ? event.rows : 30;
+    const pageIndex = (event.first ?? 0) / pageSize + 1;
+    const SortBy = event.multiSortMeta ?? [{ field: this.dataKey, order: 1 }];
+    this.lazyLoadData.emit({ pageIndex, pageSize, SortBy });
   }
   /* =================================核心程式碼======================================= */
   // 行追蹤
@@ -306,7 +304,7 @@ export class TableComponent extends BasicPrintDataComponent implements OnInit, O
       });
     }
   }
-  // 全展開/收合
+  // 全展開/收合的邏輯
   toggleExpandCollapse() {
     this.expression = !this.expression;
     if (this.expression) {
