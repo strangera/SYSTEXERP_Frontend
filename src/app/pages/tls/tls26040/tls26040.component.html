@@ -8,23 +8,30 @@
       [headerStyleClass]="'query-accordionTab'">
       <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
-          <!-- 預售日期(起訖) -->
-          <app-calendar-range class="col-12 md:col-6 lg:col-4" label="預售日期" calendarType="dateRange"
-            [startControl]="queryForm.controls.preOrderDateFrom" [endControl]="queryForm.controls.preOrderDateTo"
+          <!-- 銷售日期起迄 -->
+          <app-calendar-range class="col-12 md:col-6 lg:col-4" label="銷售日期"
+            [startControl]="queryForm.controls.sad_date_start" [endControl]="queryForm.controls.sad_date_end"
             [submitted]="submitted"></app-calendar-range>
-          <!-- 結帳日期(起訖) -->
-          <app-calendar-range class="col-12 md:col-6 lg:col-4" label="結帳日期" calendarType="dateRange"
-            [startControl]="queryForm.controls.settlementDateFrom" [endControl]="queryForm.controls.settlementDateTo"
-            [submitted]="submitted"></app-calendar-range>
-          <!-- 收銀機號 -->
-          <app-input-text class="col-12 md:col-6 lg:col-4" label="收銀機號" controlName="receivingMachineNo"
-            [control]="queryForm.controls.receivingMachineNo" [submitted]="submitted"></app-input-text>
-          <!-- 專櫃編號 -->
-          <app-input-text class="col-12 md:col-6 lg:col-4" label="專櫃編號" controlName="counterCode"
-            [control]="queryForm.controls.counterCode" [submitted]="submitted"></app-input-text>
+
+          <!-- 結帳日期起迄 -->
+          <app-calendar-range class="col-12 md:col-6 lg:col-4" label="結帳日期"
+            [startControl]="queryForm.controls.sad_preorder_date_start"
+            [endControl]="queryForm.controls.sad_preorder_date_end" [submitted]="submitted"></app-calendar-range>
+
+          <!-- 專櫃編號(多選) -->
+          <app-multi-select class="col-12 md:col-6 lg:col-4" label="專櫃編號" controlName="tlt_noList"
+            [options]="tltNoOptions" [control]="queryForm.controls.tlt_noList" [submitted]="submitted"
+            [optionLabel]="'label'" [optionValue]="'value'"></app-multi-select>
+
           <!-- 批號 -->
-          <app-input-text class="col-12 md:col-6 lg:col-4" label="批號" controlName="batchNo"
-            [control]="queryForm.controls.batchNo" [submitted]="submitted"></app-input-text>
+          <app-input-text class="col-12 md:col-6 lg:col-4" label="批號" controlName="batch_no"
+            [control]="queryForm.controls.batch_no" [submitted]="submitted"></app-input-text>
+
+          <!-- 篩選條件 -->
+          <app-dropdown class="col-12 md:col-6 lg:col-4" label="篩選條件" controlName="IsNotlt_no"
+            [options]="isNotltNoOptions" [control]="queryForm.controls.IsNotlt_no" [submitted]="submitted"
+            [optionLabel]="'label'" [optionValue]="'value'"></app-dropdown>
+
         </div>
         <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
           <app-button btnType="clear"></app-button>
@@ -34,10 +41,12 @@
     </p-accordionTab>
   </p-accordion>
 </div>
+
 <div class="card">
-  <app-table tableKey="TLS26040" dataKey="ID" [data]="data" [columns]="columns" [selectedItems]="selectedItems"
-    (selectionChange)="selectedItems = $event" [multiSortMeta]="[{ field: 'ID', order: 1 }]"
-    [totalRecords]="totalRecords" (lazyLoadData)="onLazyLoadData($event, queryForm); 
-    onSubmit(queryForm)" [lazy]="true" [loading]="loading" [showManage]="false">
+  <app-table tableKey="TLS26040" dataKey="id" [data]="data" [columns]="columns" [selectedItems]="selectedItems"
+    (selectionChange)="selectedItems = $event" [multiSortMeta]="[{ field: 'id', order: 1 }]"
+    [totalRecords]="totalRecords" (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [lazy]="true"
+    [loading]="loading" [showManage]="false" [showDelete]="false" [expansionColumns]="expansionColumns"
+    expansionDataKey="details" [expansionShowPaginator]="true" [expansionRows]="50">
   </app-table>
 </div>

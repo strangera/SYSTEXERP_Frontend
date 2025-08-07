@@ -323,7 +323,9 @@
       <td [attr.colspan]="getVisibleHeaderCount">
         <app-table-expansion [rowData]="rowData" [expansionDataKey]="expansionDataKey"
           [expansionColumns]="expansionColumns" [expansionSortField]="expansionSortField"
-          [expansionSortOrder]="expansionSortOrder"></app-table-expansion>
+          [expansionSortOrder]="expansionSortOrder" [showPaginator]="expansionShowPaginator" [rows]="expansionRows"
+          [scrollHeight]="expansionScrollHeight" [rowsPerPageOptions]="expansionRowsPerPageOptions">
+        </app-table-expansion>
       </td>
     </tr>
   </ng-template>

@@ -1,13 +1,18 @@
 <div [@expandAnimation]="isExpanded ? 'expanded' : 'collapsed'" class="transition-all duration-300">
   <p-table class="w-full" [value]="localRowData" [columns]="getFilterColumns(expansionColumns)"
-    [sortField]="expansionSortField" [sortOrder]="expansionSortOrder" [scrollHeight]="'300px'">
+    [sortField]="expansionSortField" [sortOrder]="expansionSortOrder" [scrollHeight]="scrollHeight"
+    [paginator]="showPaginator" [rows]="rows" [totalRecords]="totalRecords" [(first)]="first"
+    (onPage)="onPageChange($event)" [rowsPerPageOptions]="rowsPerPageOptions" [showCurrentPageReport]="true"
+    currentPageReportTemplate="第{currentPage}頁 / 總共{totalPages}頁 (總筆數:{totalRecords})"
+    paginatorStyleClass="p-paginator-sm" styleClass="p-datatable-sm p-datatable-gridlines">
 
     <!-- 表頭 -->
     <ng-template pTemplate="header" let-columns>
       <tr>
         <th class="w-1rem">序號</th>
         <th *ngFor="let col of getFilterColumns(expansionColumns)" [pSortableColumn]="col.field" class="text-center">
-          {{ col.header }} <p-sortIcon [field]="col.field"></p-sortIcon>
+          {{ col.header }}
+          <p-sortIcon [field]="col.field"></p-sortIcon>
         </th>
       </tr>
     </ng-template>
@@ -15,13 +20,22 @@
     <!-- 表身 -->
     <ng-template pTemplate="body" let-rowData let-columns="columns" let-rowIndex="rowIndex">
       <tr>
-        <td class="text-center">{{ rowIndex + 1 }}</td>
+        <td class="text-center">{{ first + rowIndex + 1 }}</td>
         <td *ngFor="let col of getFilterColumns(expansionColumns)" class="text-center">
           <span *ngIf="rowData[col.field] !== undefined && rowData[col.field] !== null && !col.type">
             {{ col.format ? col.format(rowData[col.field]) : rowData[col.field] }}
           </span>
         </td>
       </tr>
+    </ng-template>
+
+    <!-- 空資料訊息 -->
+    <ng-template pTemplate="emptymessage">
+      <div class="flex justify-content-center min-h-full" [ngStyle]="{ height: '62px' }">
+        <p class="empty-message text-xl font-bold text-center">
+          查無展開資料
+        </p>
+      </div>
     </ng-template>
 
   </p-table>
