@@ -47,7 +47,8 @@ export class FIN15070Component extends BasicQueryPageComponent<any> {
   selectedItems: any[] = [];
 columnGroup = [
   { header: '銷售日期', field: 'SaleDate' },
-  { header: '折扣後稅收(A)', field: 'A' },
+  { header: '折扣別報表(A)', field: 'A' },
+  { header: 'A-(B-B2)',field: 'A-B+B2', visible: true, style: 'text-right', format: this.moneyFormat },
   { header: '日結發票(B)', field: 'B' },
   { header: '已帳銷貨收入', field: 'B5Group' },
   { header: '差異稅務稅收(C)', field: 'C' },
@@ -64,7 +65,7 @@ columns = [
   { field: 'A1', header: '應稅未稅金額', groupField: 'A', visible: true, style: 'text-right', format: this.moneyFormat },
   { field: 'A2', header: '稅額', groupField: 'A', visible: true, style: 'text-right', format: this.moneyFormat },
   { field: 'A3', header: '免稅金額', groupField: 'A', visible: true, style: 'text-right', format: this.moneyFormat },
-  { field: 'A4', header: 'A-(B2)', groupField: 'A', visible: true, style: 'text-right', format: this.moneyFormat },
+  { field: 'A-B+B2', header: 'A-(B-B2)', visible: true, style: 'text-right', format: this.moneyFormat },
 
   { field: 'B1', header: '發票收入', groupField: 'B', visible: true, style: 'text-right', format: this.moneyFormat },
   { field: 'B2', header: '發票稅額', groupField: 'B', visible: true, style: 'text-right', format: this.moneyFormat },
