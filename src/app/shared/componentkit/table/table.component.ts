@@ -70,6 +70,7 @@ export class TableComponent extends BasicPrintDataComponent implements OnInit, O
   @Input() columns!: Column[];                                                  // table 欄位配置 (必填)
   originalColumns!: Column[];                                                   // table 原始欄位
   selectedColumns!: Column[];                                                   // table 預設顯示欄位
+  isColumnsInitialized = false;                                                 // table 欄位是否初始化
   @Input() data: any[] = [];                                                    // table 資料 (必填)
   @Output() dataChange = new EventEmitter<any[]>();                             // table 資料改變 (事件)
   @Input() loading = false;                                                     // 是否顯示 loading
@@ -207,11 +208,27 @@ export class TableComponent extends BasicPrintDataComponent implements OnInit, O
         this.selectionChange.emit(this.selectedItems);
       });
     }
-    if (changes['columns']) {
+    // 僅在 columns 首次被設定時執行初始化邏輯
+    // 這樣就不會在每次 data 變動時都重置 filter 狀態
+    if (changes['columns'] && this.columns.length > 0 && !this.isColumnsInitialized) {
       this.originalColumns = this.columns;
       this.columns = this.columns.filter(col => !col.hidden);
-      this.multiSortMeta = this.queryStateService.getQueryState(this.tableKey + 'Sort')?.value ?? this.multiSortMeta; // 取得排序歷史紀錄
-      this.selectedColumns = this.queryStateService.getQueryState(this.tableKey + 'Filter')?.value ?? this.columns.filter(col => col.visible !== false); // 取得顯示欄位
+      // 恢復歷史紀錄，如果沒有就使用預設值
+      const storedSort = this.queryStateService.getQueryState(this.tableKey + 'Sort')?.value;
+      if (storedSort) { this.multiSortMeta = storedSort; }
+      const storedFilter = this.queryStateService.getQueryState(this.tableKey + 'Filter')?.value;
+      if (storedFilter) {
+        const validFilteredColumns = this.columns.filter(col =>// 這裡需要確保從快取讀取到的欄位是有效的
+          storedFilter.some((storedCol: any) => storedCol.field === col.field)
+        );
+        this.selectedColumns = validFilteredColumns;
+        this.columns.forEach(col => {// 根據儲存的過濾欄位，更新 this.columns 的 visible 屬性
+          col.visible = this.selectedColumns.some(selCol => selCol.field === col.field);
+        });
+      } else {
+        this.selectedColumns = this.columns.filter(col => col.visible !== false);// 沒有儲存的狀態，使用預設值
+      }
+      this.isColumnsInitialized = true;
     }
   }
   ngOnDestroy(): void {
@@ -268,12 +285,12 @@ export class TableComponent extends BasicPrintDataComponent implements OnInit, O
   }
   // 過濾欄位記錄保存
   onFilterChange(event: any) {
-    this.columns = this.columns.map(col => ({
-      ...col,
-      visible: event.value.some((ev: any) => ev.field === col.field),
-    }));
+    this.columns.forEach(col => {
+      col.visible = event.value.some((ev: any) => ev.field === col.field);
+    });
     this.selectedColumns = this.columns.filter(col => col.visible !== false);
     this.queryStateService.setQueryState(this.tableKey + 'Filter', this.selectedColumns);
+
   }
   // 行編輯初始化
   onRowEditInit(rowData: any) {
