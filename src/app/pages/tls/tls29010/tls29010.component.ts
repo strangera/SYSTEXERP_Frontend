@@ -270,9 +270,9 @@ export class TLS29010Component extends BasicQueryPageComponent<TALPORDERM> imple
           this.selectedItems = [];
         }
     
-      isRowSelectable(): boolean {
-        // return rowData.CanDel
-        return false; //不予許刪除
+      isRowSelectable(rowData: TALPORDERM): boolean {
+        return true;
+        // return false; //不予許刪除
       }
 
       loadOption(){

@@ -147,21 +147,6 @@ export class TLS29010CRUComponent extends BasicCruPageComponent<TALPORDERD_OPEND
         { label: '刪除', value: '9' },
       ];
 
-      mockDetailDataOptions = [
-        {
-          value: '1',
-          label: 'A001_新光三越信義A11', // 專櫃名稱（專櫃編號_專櫃名稱）
-        },
-        {
-          value: '2',
-          label: 'B002_統一時代百貨台北店',
-        },
-        {
-          value: '3',
-          label: 'C003_台中大遠百',
-        }
-      ];
-
       // 有8 不能重複
       actNoOptions: apiOption[] = []; // 活動群組編號下拉選單 -- 僅顯示(依照id, mid自動切換)
       tlt_No_Option: apiOption[] = [];  // 專櫃編號下拉
@@ -178,22 +163,23 @@ export class TLS29010CRUComponent extends BasicCruPageComponent<TALPORDERD_OPEND
         // { field: 'str_no', header: '店部編號', type: 'text', editable: true, autoWidth: false },
         // { field: 'pod_no', header: '活動編號', type: 'text', editable: true, autoWidth: false },  //活動編號(TALPORDERM)
 
-        { field: 'talent_id', header: '合約編號系統', type: 'number', editable: false, autoWidth: true, hidden:true }, // 不用顯示 內容與主檔案一致 *
+        // { field: 'talent_id', header: '合約編號系統', type: 'number', editable: false, autoWidth: true, hidden:true }, // 不用顯示 內容與主檔案一致 *
         { field: 'tlt_id', header: '抽成類別', type: 'text', editable: true, autoWidth: true }, // 抽成類別(0-9) *
         //---要使用的---
         // [專櫃編號] 帶出 下面這坨
-        { field: 'tlt_no', header: '專櫃名稱', type: 'dropdown', editable: true, autoWidth: true, options: this.mockDetailDataOptions}, //(專櫃編號_專櫃名稱，下拉選單)用[專櫃編號] 帶出 [專櫃名稱]、[抽成類別]、[折數]、[抽成率] * ([TALPORDERD])
+        { field: 'tlt_no', header: '專櫃名稱', type: 'text', editable: true, autoWidth: true}, //(專櫃編號_專櫃名稱，下拉選單)用[專櫃編號] 帶出 [專櫃名稱]、[抽成類別]、[折數]、[抽成率] * ([TALPORDERD])
         { field: 'cag_barcode', header: '折數', type: 'text', editable: true, autoWidth: true }, // 後端提供，要去(TLTTALENT_CHARGED)撈 *
         // { field: 'cag_charge_rate', header: '抽成率', type: 'text', editable: true, autoWidth: true }, // 後端提供，要去(TLTTALENT_CHARGED)撈 * (*為一組，用id,mid 對應) 只有顯示，不會存到明細
         { field: 'use_flag', header: '是否使用', type: 'dropdown', editable: true, autoWidth: true, options: this.whetherOption }, // 本作業維護
       ];
       // 預設新項目模板
       defaultNewDetail: any = {
+        pod_no: '', //自動設設為和主檔一致
         // talent_id: '', // 合約編號系統
         tlt_id: '', // 折扣別
         // --SA指定的顯示項目--
         tlt_no: '', // 抽成類別
-        cag_barcode: 0, // 折數條碼 //依照專櫃編號 進行變動
+        cag_barcode: 0, // 折數條碼
         // cag_charge_rate: 0, // 折數條碼 //依照專櫃編號 進行變動
         use_flag: 'Y', // 是否使用
 
@@ -268,18 +254,24 @@ export class TLS29010CRUComponent extends BasicCruPageComponent<TALPORDERD_OPEND
           return;
         }
 
-        //將新的資料id指定為null
-        const processedDetail = this.opendisc_Detail
-        .map(item => {
-          // 先清除掉 key 是 "" 的屬性
+        // 明細送出的pod全部都用主檔的pod_no
+        const mainPodNo = this.dataForm.get('pod_no')?.value;
+        if(!mainPodNo){
+          this.messageService.errorBubble('必須輸入活動申請編號，請重新操作');
+          return;
+        }
+
+        const processedDetail = this.opendisc_Detail.map(item => {
           const cleaned = Object.fromEntries(
             Object.entries(item).filter(([key, _]) => key !== '')
           );
 
-          // 若是 new 的項目，把 id 設成 null
           if (item.status === 'new') {
             cleaned['id'] = null;
           }
+
+          // 👉 自動指定為主檔 pod_no
+          cleaned['pod_no'] = mainPodNo;
 
           return cleaned;
         });
@@ -295,21 +287,21 @@ export class TLS29010CRUComponent extends BasicCruPageComponent<TALPORDERD_OPEND
             if (this.canAdd()) {
               // console.log('insert', body);
               console.log('insert', JSON.stringify(body, null, 2));
-              this.tls29010Service.insertTLS29010(body).subscribe(() => {
-                this.messageService.successBubble('新增成功');
-                // this.onCancel(); // 儲存後，會清除資料留在原頁面，不返回列表
-                this.dataForm.reset(); // 重置表單
-              });
+              // this.tls29010Service.insertTLS29010(body).subscribe(() => {
+              //   this.messageService.successBubble('新增成功');
+              //   // this.onCancel(); // 儲存後，會清除資料留在原頁面，不返回列表
+              //   this.dataForm.reset(); // 重置表單
+              // });
             }
             break;
           case CRUDStatus.Edit:
             if (this.canEdit()) {
               // console.log('update', body);
               console.log('update:', JSON.stringify(body, null, 2));
-              // this.tls29010Service.updateTLS29010(body).subscribe(() => {
-              //   // this.messageService.successBubble('更新成功');
-              //   this.onCancel(); // 儲存後，會返回列表
-              // });
+              this.tls29010Service.updateTLS29010(body).subscribe(() => {
+                // this.messageService.successBubble('更新成功');
+                this.onCancel(); // 儲存後，會返回列表
+              });
             }
             break;
         }
