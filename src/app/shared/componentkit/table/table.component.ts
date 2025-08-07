@@ -18,7 +18,7 @@ import { Ripple } from 'primeng/ripple';
 import { SkeletonModule } from 'primeng/skeleton';
 import { Table, TableLazyLoadEvent, TableModule, TablePageEvent, TableRowSelectEvent, TableRowUnSelectEvent } from 'primeng/table';
 import { TooltipModule } from 'primeng/tooltip';
-import { Subject, takeUntil } from 'rxjs';
+import { finalize, Observable, Subject, takeUntil } from 'rxjs';
 import { CurrentPageService } from '../../../layout/app.menulist/current-page.service';
 import { NotificationService } from '../../component/notification-message/notification.service';
 import { BasicPrintDataComponent } from '../../componentextends/basic-print/basic-print-data.component';
@@ -56,7 +56,7 @@ import { AddButton, Column, ColumnGroup, FieldChangeEvent, LazyLoadEvent, RowEdi
     SkeletonModule,
     TableExpansionComponent,
     TableExportComponent,
-    AutoCompleteModule
+    AutoCompleteModule,
   ],
 })
 export class TableComponent extends BasicPrintDataComponent implements OnInit, OnChanges, OnDestroy {
@@ -137,6 +137,7 @@ export class TableComponent extends BasicPrintDataComponent implements OnInit, O
   @Input() expansionRows = 10;               // expansion 每頁顯示行數
   @Input() expansionRowsPerPageOptions = [10, 30, 50]; // expansion 分頁選項
   @Input() expansionScrollHeight = '300px';  // expansion 表格高度
+  @Input() expansionLoadFn?: (rowData: any) => Observable<any>; // 屬性來接收父層傳來的載入函數
   expression = false;                        // 收合展開 狀態 (true:展開、false:收合)
   expandedRows: Record<string, boolean> = {};// 收合展開 已展開資料
   // 管理 欄位
@@ -278,10 +279,48 @@ export class TableComponent extends BasicPrintDataComponent implements OnInit, O
   get getVisibleHeaderCount(): number { return 1 + Number(this.showCheckBox) + this.selectedColumns.length + Number(this.showManage) + (this.expansionDataKey ? 1 : 0); }
   // 行是否可選
   rowSelectableWrapper = ({ data }: { data: any, index: number; }): boolean | undefined => { return this.isRowSelectable(data) && !this.rowEditing; };
-  // 展開所有 符合的row
+  // 修改 toggleRowExpansion 方法
+  toggleRowExpansion(rowData: any) {
+    const rowKey = rowData[this.dataKey];
+    const hasDetails = rowData[this.expansionDataKey] && rowData[this.expansionDataKey]?.length > 0;
+    if (hasDetails) {// 已經有資料了，直接切換展開/收合狀態，不再呼叫 API
+      if (this.expandedRows[rowKey]) {
+        delete this.expandedRows[rowKey]; // 收合
+      } else {
+        this.expandedRows[rowKey] = true; // 展開
+      }
+    } else if (this.expansionLoadFn) {// 第一次展開，沒有資料，才呼叫 API 載入
+      rowData.expansionLoading = true;
+      this.expansionLoadFn(rowData).pipe(takeUntil(this.ngUnsubscribe), finalize(() => {
+        rowData.expansionLoading = false;// 無論成功或失敗，都在這裡關閉這筆資料的 loading 狀態
+        this.cdr.detectChanges();// 強制 Angular 檢測變更，確保 UI 立即更新
+      })
+      ).subscribe(response => {
+        const responseData = response.Data;
+        if (responseData && Array.isArray(responseData) && responseData.length > 0) {
+          rowData[this.expansionDataKey] = responseData;
+          this.expandedRows[rowKey] = true;
+        } else {
+          this.messageService.infoBubble('查無詳細資料。');
+        }
+      });
+    }
+  }
+  // 全展開/收合
   toggleExpandCollapse() {
-    this.expandedRows = this.expression ? {} : Object.fromEntries(this.data.filter(p => p[this.expansionDataKey]?.length).map(p => [p[this.dataKey], true]));
     this.expression = !this.expression;
+    if (this.expression) {
+      // 展開所有行
+      this.data.forEach(rowData => {
+        const rowKey = rowData[this.dataKey];
+        if (!this.expandedRows[rowKey]) {// 只有在該行尚未展開時，才調用 toggleRowExpansion
+          // 檢查資料、載入資料，並設定 expandedRows 的狀態。
+          this.toggleRowExpansion(rowData);
+        }
+      });
+    } else {
+      this.expandedRows = {}; // 收合所有行
+    }
   }
   // 過濾欄位記錄保存
   onFilterChange(event: any) {

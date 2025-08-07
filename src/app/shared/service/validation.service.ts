@@ -41,6 +41,7 @@ export class ValidationService {
       pureEnglish: '只能輸入純英文',
       englishAndSymbol: '只能輸入英文和符號',
       containsChinese: '不可輸入中文或全形字元',
+      invalidAlphanumeric: '只能輸入半形英文和數字',
     };
     return config[validatorName];
   }
@@ -267,6 +268,22 @@ export class ValidationService {
       }
     }
     return null;
+  }
+
+  /**
+  * 只能輸入半形英文和數字
+  */
+  alphanumericValidator(control: { value: string | null }) {
+    const value = control.value;
+    // 如果值為空，則不進行驗證，因為這應該由 `required` 驗證器來處理
+    if (value === null || value === '') {
+      return null;
+    }
+
+    // 使用正規表達式檢查是否只包含英文字母和數字
+    const isValid = /^[a-zA-Z0-9]+$/.test(value);
+
+    return isValid ? null : { invalidAlphanumeric: true };
   }
 
   // 只能輸入英文（A-Z, a-z）和符號（不包含數字與空白）
