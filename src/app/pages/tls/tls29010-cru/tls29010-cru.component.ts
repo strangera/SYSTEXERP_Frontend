@@ -1,3 +1,4 @@
+import { ValidationService } from '@shared/service/validation.service';
 import { Tls29010DetailService } from './tls29010-detail.service';
 // --Commonly used imports--
 import { Component, OnInit, ViewChild, } from '@angular/core';
@@ -21,6 +22,7 @@ import { BasicCruPageComponent } from '../../../shared/componentextends/basic-cr
 import { apiOption,option } from '../../../shared/models/sys/sysb000.module';
 import { Tls29010Service } from '../../../service/api/tls/tls29010.service';
 import { ColumnDef, ExpandableEditTableComponent } from '@shared/componentkit/expandable-edit-table/expandable-edit-table.component';
+import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/calendar-range.component';
 
 // TALPORDERM (主檔)
 export interface TALPORDERM {
@@ -91,7 +93,7 @@ export interface TALPORDERD_OPENDisc {
   templateUrl: './tls29010-cru.component.html',
   styleUrl: './tls29010-cru.component.scss',
   standalone: true,
-  imports: [MenubarComponent, PanelModule, FormsModule, ReactiveFormsModule, ExpandableEditTableComponent, CalendarComponent, DropdownComponent, RadiobuttonComponent, EditorTextComponent, InputTextComponent, InputNumberComponent, EditorTextComponent, NgFor, ButtonDynamicallydeleteComponent, ButtonDynamicallyaddComponent, ButtonComponent, NgIf, TranslateModule]
+  imports: [MenubarComponent, PanelModule, FormsModule, ReactiveFormsModule, ExpandableEditTableComponent, CalendarComponent, CalendarRangeComponent, DropdownComponent, RadiobuttonComponent, EditorTextComponent, InputTextComponent, InputNumberComponent, EditorTextComponent, NgFor, ButtonDynamicallydeleteComponent, ButtonDynamicallyaddComponent, ButtonComponent, NgIf, TranslateModule]
 })
 
 // 2.2.9.1 折扣開放維護作業cru
@@ -105,22 +107,22 @@ export class TLS29010CRUComponent extends BasicCruPageComponent<TALPORDERD_OPEND
         str_no: [{value: '', disabled: true}], // 店部編號
         // --先選 專櫃活動設定主檔TALPORDERM--
         //欄位用這些就好
-        pod_no: [{value: null, disabled: true}], // 活動申請編號 (YYYYMMDDSSS)
-        pod_type: ['', Validators.required], // 活動類型(1=預售, 2=滿千送百發行, 3=滿千送百兌回, 4~5=會員卡集點, 6~7=全館集點, 8=期間開放折扣)
-        pod_desc: ['',[Validators.required, Validators.maxLength(100)]], // 活動名稱(新增時開放下拉選取) 抓 [TALPORDERD]
-        pod_sdate: [{value: null, disabled: true}], // 活動起始日 (Date)
-        pod_edate: [{value: null, disabled: true}], // 活動終止日 (Date)
+        pod_no: ['',[Validators.required, Validators.maxLength(12), this.validationService.noChineseValidator]], // 活動申請編號 (YYYYMMDDSSS)
+        pod_type: ['',[Validators.required]], // 活動類型(1=預售, 2=滿千送百發行, 3=滿千送百兌回, 4~5=會員卡集點, 6~7=全館集點, 8=期間開放折扣)
+        // pod_desc: ['',[Validators.required, Validators.maxLength(100)]], // 活動名稱(新增時開放下拉選取) 抓 [TALPORDERD]
+        pod_sdate: [null,[Validators.required]], // 活動起始日 (Date)
+        pod_edate: [null,[Validators.required]], // 活動終止日 (Date)
         org_id: [''], // 組織-部門(SYS3100)
         act_no: [''], // 活動編號(群組)
-        pod_busdate: [{value: null, disabled: true}], // 活動正檔日期
-        pod_back_sdate: [{value: null, disabled: true}], // 活動兌回起始日期
-        pod_back_edate: [{value: null, disabled: true}], // 活動兌回終止日期
+        pod_busdate: [null], // 活動正檔日期
+        pod_back_sdate: [null], // 活動兌回起始日期
+        pod_back_edate: [null], // 活動兌回終止日期
         pod_status: ['', Validators.required], // 活動狀態(0=未核准, 1=已核准, 9=刪除)
 
-        // 核准不會再新增進行，先鎖起來
-        approved_userno: [{value: null, disabled: true}], // 核准人員編號
-        approved_usr_name: [{value: null, disabled: true}], // 核准人員姓名
-        approved_date: [{value: null, disabled: true}], // 核准日期
+        // 核准不會再新增進行
+        approved_userno: [null,[Validators.maxLength(16), this.validationService.noChineseValidator]], // 核准人員編號
+        approved_usr_name: [null,[Validators.maxLength(20)]], // 核准人員姓名
+        approved_date: [null], // 核准日期
       });
     
       whetherOption: option[] = [ // 是否使用 Y/N
@@ -145,21 +147,6 @@ export class TLS29010CRUComponent extends BasicCruPageComponent<TALPORDERD_OPEND
         { label: '刪除', value: '9' },
       ];
 
-      mockDetailDataOptions = [
-        {
-          value: '1',
-          label: 'A001_新光三越信義A11', // 專櫃名稱（專櫃編號_專櫃名稱）
-        },
-        {
-          value: '2',
-          label: 'B002_統一時代百貨台北店',
-        },
-        {
-          value: '3',
-          label: 'C003_台中大遠百',
-        }
-      ];
-
       // 有8 不能重複
       actNoOptions: apiOption[] = []; // 活動群組編號下拉選單 -- 僅顯示(依照id, mid自動切換)
       tlt_No_Option: apiOption[] = [];  // 專櫃編號下拉
@@ -176,23 +163,24 @@ export class TLS29010CRUComponent extends BasicCruPageComponent<TALPORDERD_OPEND
         // { field: 'str_no', header: '店部編號', type: 'text', editable: true, autoWidth: false },
         // { field: 'pod_no', header: '活動編號', type: 'text', editable: true, autoWidth: false },  //活動編號(TALPORDERM)
 
-        { field: 'talent_id', header: '合約編號系統', type: 'number', editable: false, autoWidth: true, hidden:true }, // 不用顯示 內容與主檔案一致 *
+        // { field: 'talent_id', header: '合約編號系統', type: 'number', editable: false, autoWidth: true, hidden:true }, // 不用顯示 內容與主檔案一致 *
         { field: 'tlt_id', header: '抽成類別', type: 'text', editable: true, autoWidth: true }, // 抽成類別(0-9) *
         //---要使用的---
         // [專櫃編號] 帶出 下面這坨
-        { field: 'tlt_no', header: '專櫃名稱', type: 'dropdown', editable: true, autoWidth: true, options: this.mockDetailDataOptions}, //(專櫃編號_專櫃名稱，下拉選單)用[專櫃編號] 帶出 [專櫃名稱]、[抽成類別]、[折數]、[抽成率] * ([TALPORDERD])
+        { field: 'tlt_no', header: '專櫃名稱', type: 'text', editable: true, autoWidth: true}, //(專櫃編號_專櫃名稱，下拉選單)用[專櫃編號] 帶出 [專櫃名稱]、[抽成類別]、[折數]、[抽成率] * ([TALPORDERD])
         { field: 'cag_barcode', header: '折數', type: 'text', editable: true, autoWidth: true }, // 後端提供，要去(TLTTALENT_CHARGED)撈 *
         // { field: 'cag_charge_rate', header: '抽成率', type: 'text', editable: true, autoWidth: true }, // 後端提供，要去(TLTTALENT_CHARGED)撈 * (*為一組，用id,mid 對應) 只有顯示，不會存到明細
         { field: 'use_flag', header: '是否使用', type: 'dropdown', editable: true, autoWidth: true, options: this.whetherOption }, // 本作業維護
       ];
       // 預設新項目模板
       defaultNewDetail: any = {
-        talent_id: '', // 合約編號系統
+        pod_no: '', //自動設設為和主檔一致
+        // talent_id: '', // 合約編號系統
         tlt_id: '', // 折扣別
         // --SA指定的顯示項目--
         tlt_no: '', // 抽成類別
-        cag_barcode: 0, // 折數條碼 //依照專櫃編號 進行變動
-        cag_charge_rate: 0, // 折數條碼 //依照專櫃編號 進行變動
+        cag_barcode: 0, // 折數條碼
+        // cag_charge_rate: 0, // 折數條碼 //依照專櫃編號 進行變動
         use_flag: 'Y', // 是否使用
 
         status: 'new' // 新增狀態
@@ -218,6 +206,7 @@ export class TLS29010CRUComponent extends BasicCruPageComponent<TALPORDERD_OPEND
       constructor(
         private tls29010Service: Tls29010Service,
         private tls29010DetailService: Tls29010DetailService,
+        private validationService: ValidationService,
       ) {
         super(); // 呼叫父類建構子
       }
@@ -243,6 +232,9 @@ export class TLS29010CRUComponent extends BasicCruPageComponent<TALPORDERD_OPEND
 
           this.dataForm.get('pod_status')?.setValue('0') //新增模式 [活動狀態] 只能(未審核)
           this.dataForm.get('pod_status')?.disable();
+          this.dataForm.get('approved_userno')?.disable();
+          this.dataForm.get('approved_usr_name')?.disable();
+          this.dataForm.get('approved_date')?.disable();
 
           // 新增 活動類型只能選8號
           this.dataForm.get('pod_type')?.setValue('8') //新增模式 只能選 8 期間開放折扣
@@ -262,18 +254,24 @@ export class TLS29010CRUComponent extends BasicCruPageComponent<TALPORDERD_OPEND
           return;
         }
 
-        //將新的資料id指定為null
-        const processedDetail = this.opendisc_Detail
-        .map(item => {
-          // 先清除掉 key 是 "" 的屬性
+        // 明細送出的pod全部都用主檔的pod_no
+        const mainPodNo = this.dataForm.get('pod_no')?.value;
+        if(!mainPodNo){
+          this.messageService.errorBubble('必須輸入活動申請編號，請重新操作');
+          return;
+        }
+
+        const processedDetail = this.opendisc_Detail.map(item => {
           const cleaned = Object.fromEntries(
             Object.entries(item).filter(([key, _]) => key !== '')
           );
 
-          // 若是 new 的項目，把 id 設成 null
           if (item.status === 'new') {
             cleaned['id'] = null;
           }
+
+          // 👉 自動指定為主檔 pod_no
+          cleaned['pod_no'] = mainPodNo;
 
           return cleaned;
         });
@@ -287,7 +285,8 @@ export class TLS29010CRUComponent extends BasicCruPageComponent<TALPORDERD_OPEND
         switch (this.crudstatus) {
           case CRUDStatus.Create:
             if (this.canAdd()) {
-              console.log('insert', body);
+              // console.log('insert', body);
+              console.log('insert', JSON.stringify(body, null, 2));
               // this.tls29010Service.insertTLS29010(body).subscribe(() => {
               //   this.messageService.successBubble('新增成功');
               //   // this.onCancel(); // 儲存後，會清除資料留在原頁面，不返回列表
@@ -299,10 +298,10 @@ export class TLS29010CRUComponent extends BasicCruPageComponent<TALPORDERD_OPEND
             if (this.canEdit()) {
               // console.log('update', body);
               console.log('update:', JSON.stringify(body, null, 2));
-              // this.tls29010Service.updateTLS29010(body).subscribe(() => {
-              //   // this.messageService.successBubble('更新成功');
-              //   this.onCancel(); // 儲存後，會返回列表
-              // });
+              this.tls29010Service.updateTLS29010(body).subscribe(() => {
+                // this.messageService.successBubble('更新成功');
+                this.onCancel(); // 儲存後，會返回列表
+              });
             }
             break;
         }
