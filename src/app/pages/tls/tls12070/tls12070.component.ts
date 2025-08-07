@@ -18,18 +18,28 @@ import { apiOption } from '@shared/models/tls/tls000.model';
 import { ReportTableGroupComponent } from '@shared/componentkit/report-table-group/report-table-group.component';
 
 export interface interviewList {
-  id: number; // 主鍵，自動編號
-
-  CreatedDateStart: Date,  // 訪談日期_起始日
-  CreatedDateEnd: Date,  // 訪談日期_終止日
-  contact_USR_Name: string, // 訪談人員 (drop，應該就是接洽人員)
-
-  CRT_Date: string; // 建立日期 (ISO 字串格式: YYYY-MM-DD)
-  CRT_USR_No?: string; // 建立人員代碼
-  CRT_USR_Name?: string; // 建立人員姓名
-  UPD_Date?: string; // 變更日期 (ISO 格式: YYYY-MM-DDTHH:mm:ss)
-  UPD_USR_No?: string; // 變更人員代碼
-  UPD_USR_Name?: string; // 變更人員姓名
+  id: number; // ID
+  ven_uniform: string; // 廠商統一編號(pos2013)
+  VEN_Name: string; // 廠商名稱(pos2013.ven_name)
+  VEN_EngName?: string; // 廠商英文名稱(pos2013.VEN_EngName)
+  tlt_name?: string; // 品牌(專櫃名稱)
+  bus_type?: string; // 業種-大分類代碼(tltbustype)
+  VEN_ContactPerson: string; // 廠商聯絡姓名
+  VEN_BossTel: string; // 廠商聯絡人電話
+  VEN_BossTitle?: string; // 廠商聯絡人頭銜
+  VEN_BossMobile?: string; // 廠商聯絡人行動電話
+  VEN_BossEmail?: string; // 廠商聯絡人電子郵件
+  VEN_Addr?: string; // 廠商公司地址
+  contact_Date?: string; // 訪談日期
+  contact_Time?: string; // 訪談時間
+  willing_level: string; // 意願等級(SYS1000.T116)
+  FLOOR_NO?: string; // 接洽樓層(sys3900)
+  building_no?: string; // 接洽館別代碼(sys3800)
+  LOCATION_No?: string; // 接洽店位代碼(POS2002)
+  contact_USR_No: string; // 訪談人員代碼
+  contact_USR_Name: string; // 訪談人員姓名
+  contact_record?: string; // 洽談重點及交換資料紀錄
+  contact_remarks?: string; // 備註
 }
 
 // 2.1.2.7 專櫃訪談紀錄追蹤表
@@ -43,10 +53,10 @@ export interface interviewList {
 export class TLS12070Component extends BasicQueryPageComponent<interviewList> implements OnInit {
   // 查詢
   queryForm = this.formBuilder.group({
-    // 先建立表單，還不確定table內容
-    contact_DateStart: [null],  // 訪談日期_起始日
-    contact_DateEnd: [null],  // 訪談日期_終止日
-    contact_USR_Name: [[], [Validators.maxLength(100)]], // 訪談人員 (drop，應該就是接洽人員)
+    // Customer_interview表單
+    contact_Date_Start: [null],  // 訪談日期_起始日
+    contact_Date_End: [null],  // 訪談日期_終止日
+    contact_USR_No: [[], [Validators.maxLength(20)]], // contact_USR_No (drop，應該就是接洽人員)
 
     //分頁查詢
     ...createPaginationConfig([{ field: 'contact_USR_No', order: 1 }]), // 分頁和排序參數
@@ -58,19 +68,31 @@ export class TLS12070Component extends BasicQueryPageComponent<interviewList> im
   contact_USR_Option: apiOption[] = []; // 訪談人員 (確定是這支了)
 
   data: interviewList[] = [];
-  columns: any[] = [
+  columns: Column[] = [
+  // { field: 'id', header: 'ID', visible: true },
+  { field: 'ven_uniform', header: '廠商統一編號', visible: true }, // POS2013
+  { field: 'VEN_Name', header: '廠商名稱', visible: true }, // POS2013.name
+  { field: 'VEN_EngName', header: '廠商英文名稱', visible: true },  // pos2013.EngName
+  { field: 'tlt_name', header: '品牌(專櫃名稱)', visible: true },
+  { field: 'bus_type', header: '業種-大分類代碼', visible: true }, // tltbustype
+  { field: 'VEN_ContactPerson', header: '廠商聯絡姓名', visible: true },
+  { field: 'VEN_BossTel', header: '廠商聯絡人電話', visible: true },
+  { field: 'VEN_BossTitle', header: '廠商聯絡人頭銜', visible: true },
+  { field: 'VEN_BossMobile', header: '廠商聯絡人行動電話', visible: true },
+  { field: 'VEN_BossEmail', header: '廠商聯絡人電子郵件', visible: true },
+  { field: 'VEN_Addr', header: '廠商公司地址', visible: true },
+  { field: 'contact_Date', header: '訪談日期', visible: true, format: formatDate },
+  { field: 'contact_Time', header: '訪談時間', visible: true },
+  { field: 'willing_level', header: '意願等級', visible: true }, // SYS1000.T116
+  { field: 'FLOOR_NO', header: '接洽樓層', visible: true }, // sys3900
+  { field: 'building_no', header: '接洽館別代碼', visible: true }, // sys3800
+  { field: 'LOCATION_No', header: '接洽店位代碼', visible: true }, //POS2002
+  { field: 'contact_USR_No', header: '訪談人員代碼', visible: true },
+  { field: 'contact_USR_Name', header: '訪談人員姓名', visible: true },
+  { field: 'contact_record', header: '洽談重點及交換資料紀錄', visible: true },
+  { field: 'contact_remarks', header: '備註', visible: true },
+];
 
-    { field: 'interview_USR', header: '訪談人員', visible: true },
-    { field: 'potentialNumber', header: '潛在客戶數', visible: true },
-    { field: 'visitNumber', header: '拜訪記錄次數', visible: true },
-
-    { field: 'CRT_Date', header: '建立日期', visible: true, format: formatDate },
-    { field: 'CRT_USR_No', header: '建立人員代碼', visible: false },
-    { field: 'CRT_USR_Name', header: '建立人員姓名', visible: false },
-    { field: 'UPD_Date', header: '變更日期', visible: false, format: formatDate },
-    { field: 'UPD_USR_No', header: '變更人員代碼', visible: false },
-    { field: 'UPD_USR_Name', header: '變更人員姓名', visible: false }
-  ];
 
   selectedItems: interviewList[] = [];// 多選項目
 

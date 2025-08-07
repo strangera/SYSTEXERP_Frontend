@@ -10,12 +10,12 @@
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
             <app-calendar-range-quick label="訪談日期"
-            [startControl]="queryForm.controls.contact_DateStart" [endControl]="queryForm.controls.contact_DateEnd"
+            [startControl]="queryForm.controls.contact_Date_Start" [endControl]="queryForm.controls.contact_Date_End"
             [submitted]="submitted" />
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-              <app-dropdown label="訪談人員代碼/名稱" controlName="contact_USR_Name" [options]="contact_USR_Option" optionLabel="Name"
-                optionValue="No" [control]="queryForm.controls.contact_USR_Name" [submitted]="submitted"></app-dropdown>
+              <app-dropdown label="訪談人員代碼/名稱" controlName="contact_USR_No" [options]="contact_USR_Option" optionLabel="Name"
+                optionValue="No" [control]="queryForm.controls.contact_USR_No" [submitted]="submitted"></app-dropdown>
           </div>
         </div>
         <!-- <div> -->
@@ -29,29 +29,9 @@
   </p-accordion>
 </div>
 <div class="card">
-  <div class="col-13">
-    <app-table
-      tableKey="TLS12070"
-      [data]="data"
-      [columns]="columns"
-      (edit)="onEdit($event)"
-      (detail)="onDetail($event)"
-      (delete)="onDelete($event)"
-      [selectedItems]="selectedItems"
-      (selectionChange)="selectedItems = $event"
-      [showCheckBox]="true"
-      dataKey="id"
-      [multiSortMeta]="[{ field: 'contact_USR_No', order: 1 }]"
-      [totalRecords]="totalRecords"
-      (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"
-      [lazy]="true"
-      [loading]="loading"
-    ></app-table>
-    
-  </div>
   <app-report-table-group [columns]="columns" [data]="data"
-    [subtotalFields]="['contact_USR_Name']" [enableGrouping]="false"
-    [reportTitle]="'專櫃訪談紀錄追蹤表'" [currentPage]="1" [dateStart]="'CreatedDateStart'" [dateEnd]="'CreatedDateEnd'" [showTotalOnly]="false"
+    [subtotalFields]="['contact_USR_No']" [enableGrouping]="false"
+    [reportTitle]="'專櫃訪談紀錄追蹤表'" [currentPage]="1" [dateStart]="'contact_Date_Start'" [dateEnd]="'contact_Date_End'" [showTotalOnly]="false"
     [defaultMergedView]="true">
   </app-report-table-group>
 </div>
