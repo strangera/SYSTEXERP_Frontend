@@ -67,6 +67,8 @@ export interface POS6119PRequest {
 }
 
 export interface POS6118Data {
+  tableName?: string,
+  TXN_Date: string,
   ID: number,
   MID: number,
   ECR_No: string,
@@ -93,6 +95,8 @@ export interface POS6118Data {
 }
 
 export interface POS6119Data {
+  tableName?: string,
+  TXN_Date: string,
   ID: number,
   MID: number,
   ECR_No: string,
@@ -117,6 +121,8 @@ export interface POS6119Data {
 }
 
 export interface POS6119PData {
+  tableName?: string,
+  TXN_Date: string,
   ID: number,
   MID: number,
   ECR_No: string,
@@ -138,9 +144,7 @@ export interface POS6119PData {
 }
 
 export interface POS6118Insert {
-  NCML_File: string,
   NCML_Date: string,
-  NCML_SeqNo: number,
   ECR_No: string,
   TXN_No: number,
   TLT_No: string,
@@ -150,6 +154,7 @@ export interface POS6118Insert {
   NCML_CrdNo: string,
   NCML_TmID: string,
   NCML_BatCloseDate: string,
+  NCML_TxnDate: string,
   NCML_ApprovalCode: string,
   NCML_Check: string,
   NCML_CrdTxnFg: string,
@@ -158,32 +163,24 @@ export interface POS6118Insert {
 }
 
 export interface POS6119Insert {
-  CTBC_File: string,
   CTBC_Date: string,
-  CTBC_SeqNo: number,
   ECR_No: string,
   TXN_No: number,
   TLT_No: string,
   CTBC_DataType: string,
   CTBC_TxnTime: string,
   CTBC_CrdNo: string,
-  CTBC_MerID: string,
   CTBC_TmID: string,
   CTBC_TxnCode: string,
   CTBC_TxnAmt: number,
+  CTBC_PayDate: string,
   CTBC_ApprovalCode: string,
   CTBC_Check: string,
   CTBC_TermNo: number,
-  CRT_Date: string,
-  CRT_USR_No: string,
-  UPD_Date: string,
-  UPD_USR_No: string
 }
 
 export interface POS6119PInsert {
-  CTBC_File: string,
   CTBC_Date: string,
-  CTBC_SeqNo: number,
   ECR_No: string,
   TXN_No: number,
   TLT_No: string,
@@ -195,10 +192,6 @@ export interface POS6119PInsert {
   CTBC_TmID: string,
   CTBC_ApprovalCode: string,
   CTBC_Check: string,
-  CRT_Date: string,
-  CRT_USR_No: string,
-  UPD_Date: string,
-  UPD_USR_No: string
 }
 
 @Injectable({
@@ -251,8 +244,8 @@ export class TLS27040Service {
     return this.http.post<ApiResponse<number>>(`${this.apiUrl}/insertPOS6119P`, body);
   }
   // 刪除資料
-  deleteTLS27040(body: { idList: number[], tableName: string }): Observable<ApiResponse<any>> {
-    return this.http.post<ApiResponse<any>>(`${this.apiUrl}/deleteTLS27040`, body);
+  deleteTLS27040(body: { idList: number[], tableName: string }): Observable<ApiResponse<number>> {
+    return this.http.post<ApiResponse<number>>(`${this.apiUrl}/deleteTLS27040`, body);
   }
 
   // 檢核能否新增
@@ -262,8 +255,8 @@ export class TLS27040Service {
     TXN_No: string,
     TXN_Date: string,
     tableName: string
-  }): Observable<ApiResponse<any>> {
-    return this.http.post<ApiResponse<any>>(`${this.apiUrl}/queryInsCheck`, body);
+  }): Observable<ApiResponse<boolean>> {
+    return this.http.post<ApiResponse<boolean>>(`${this.apiUrl}/queryInsCheck`, body);
   }
 
   //  更新 POS6118

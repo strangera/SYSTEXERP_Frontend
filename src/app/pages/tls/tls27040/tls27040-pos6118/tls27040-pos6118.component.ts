@@ -61,6 +61,7 @@ export class Tls27040POS6118Component extends BasicQueryPageComponent<POS6118Dat
   });
   totalRecords = 0;
   POS6118Data: POS6118Data[] = [];
+  selectedItems: POS6118Data[] = [];
   POS6118_columns = POS6118_columns;
   TxnTypeOptions = TxnTypeOptions;
   PayCrdTypeOptions = PayCrdTypeOptions;
@@ -74,14 +75,27 @@ export class Tls27040POS6118Component extends BasicQueryPageComponent<POS6118Dat
   ) { super(); }
 
   ngOnInit(): void {
-    this.initializePage('TLS27040', 'TLS/TLS27040cru');
+    this.initializePage('TLS27040', 'TLS/TLS27040cru', this.queryForm, (form) => this.onSubmit(form));
   }
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
       this.tls27040Service.queryPOS6118(frm.value).pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(res => {
         this.POS6118Data = res.Data;
         this.totalRecords = res.TotalCount;
+        this.queryStateService.setQueryState(this.ProgNo, frm.value);
       });
+    });
+  }
+
+  onDelete(selectedItems: POS6118Data[]) {
+    this.loading = true;
+    const body = {
+      idList: selectedItems.map(item => item.ID),
+      tableName: 'POS6118'
+    }
+    this.tls27040Service.deleteTLS27040(body).pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(res => {
+      this.messageService.successBubble(res.Message);
+      this.onSubmit(this.queryForm);
     });
   }
 }

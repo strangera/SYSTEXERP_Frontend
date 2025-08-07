@@ -44,7 +44,7 @@ export class TLS24080Component extends BasicQueryPageComponent<TLTNoEditItem | D
     ECR_No: [null],  // 收銀機號
     TXN_No_Start: [null as null | number, [Validators.max(99999999)]],  // 領取交易序號 起
     TXN_No_End: [null as null | number, [Validators.max(99999999)]],  // 領取交易序號 迄
-    EditType: [null, [Validators.required]],// 報表型態
+    EditType: ['TLTNoEdit', [Validators.required]],// 報表型態
     ...createPaginationConfig([{ field: 'ID', order: 1 }]), // 分頁和排序參數
   });
   totalRecords = 0;
@@ -76,7 +76,7 @@ export class TLS24080Component extends BasicQueryPageComponent<TLTNoEditItem | D
         ...frm.value,
         TXN_Date_Start: formatDateToYYYY_MM_DD(frm.value.TXN_Date_Start),
         TXN_Date_End: formatDateToYYYY_MM_DD(frm.value.TXN_Date_End),
-        UPD_Date_End: addDaysToDate(frm.value.UPD_Date_End, 1)
+        UPD_Date_End: frm.value.UPD_Date_End ? addDaysToDate(frm.value.UPD_Date_End, 1) : null,
       }
       this.tls24080Service.queryTLS24080(body).pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(res => {
         switch (frm.value.EditType) {

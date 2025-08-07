@@ -4,7 +4,6 @@ import { MenubarComponent } from '../../../shared/component/menubar/menubar.comp
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { AccordionModule } from 'primeng/accordion';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { TranslateModule } from '@ngx-translate/core'; // Add this import as requested
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { POS611XOptions } from './tls27040.model';
@@ -47,7 +46,7 @@ export class TLS27040Component extends BasicQueryPageComponent<POS6118Data | POS
   @ViewChild('pos6119', { static: false }) pos6119!: Tls27040POS6119Component;
   @ViewChild('pos6119p', { static: false }) pos6119p!: Tls27040POS6119pComponent;
 
-  selectedBank!: string;
+  selectedBank = '0';
   POS6118Data: POS6118Data[] = [];
   POS6119Data: POS6119Data[] = [];
   POS6119PData: POS6119PData[] = [];
@@ -83,7 +82,11 @@ export class TLS27040Component extends BasicQueryPageComponent<POS6118Data | POS
       SYS_StoreNo: this.authService.currentUserValue?.SYS_StoreNo,
     }
     this.tls27040Service.queryInsCheck(body).pipe(finalize(() => this.dialogLoading = false), untilDestroyed(this)).subscribe(res => {
-      console.log(res.Message);
+      if (res.Data === true) {
+        this.onCreate(frm.getRawValue());
+      } else {
+        this.messageService.warnBubble(res.Message);
+      }
     })
   }
 

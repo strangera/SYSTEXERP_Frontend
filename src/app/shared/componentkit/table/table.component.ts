@@ -382,6 +382,7 @@ export class TableComponent extends BasicPrintDataComponent implements OnInit, O
       this.dataChange.emit(this.data);
       this.selectedItems = [];
     }
+    this.selectedItems = [];
   }
   onExportExcel() { this.exportExcel.emit(); }                      // 匯出Excel範本 事件
   onImportExcel(event: FileSelectEvent) {                           // 匯入Excel
