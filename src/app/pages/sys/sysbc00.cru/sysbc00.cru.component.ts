@@ -1,3 +1,4 @@
+import { ValidationService } from '@shared/service/validation.service';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
@@ -14,6 +15,7 @@ import { InputTextComponent } from '../../../shared/componentkit/input-text/inpu
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { NgIf } from '@angular/common';
 import { TranslateModule } from '@ngx-translate/core';
+import { ApiResponse } from '@service/system/auth.service';
 
 @Component({
   selector: 'app-sysbc00.cru',
@@ -35,7 +37,7 @@ import { TranslateModule } from '@ngx-translate/core';
 export class SYSBC00CRUComponent extends BasicCruPageComponent<ISysbc00Data> implements OnInit {
   dataForm = this.formBuilder.nonNullable.group({// APS1001 銀行主檔
     id: [],
-    BNK_No: ['', [Validators.required, Validators.maxLength(10)]], // 金資中心銀行代碼
+    BNK_No: ['', [Validators.required, Validators.maxLength(10), this.validation.numberValidator]], // 銀行代碼
     BNK_Name: ['', [Validators.required, Validators.maxLength(60)]], // 銀行名稱
     BNK_ShortName: ['', [Validators.required, Validators.maxLength(30)]], // 銀行簡稱
   });
@@ -50,7 +52,8 @@ export class SYSBC00CRUComponent extends BasicCruPageComponent<ISysbc00Data> imp
   ];
   constructor(
     private sys1004Service: Sys1004Service,
-    private sysbc00Service: Sysbc00Service
+    private sysbc00Service: Sysbc00Service,
+    private validation: ValidationService
   ) {
     super();
   }
@@ -100,7 +103,7 @@ export class SYSBC00CRUComponent extends BasicCruPageComponent<ISysbc00Data> imp
   }
 
 
-  getSys1004SaveObservables(data: Aps1004Request[]): Observable<any>[] {
+  getSys1004SaveObservables(data: Aps1004Request[]): Observable<ApiResponse<number>>[] {
     const newItems = data.filter(d => !d.id);
     const updateItems = data.filter(d => !!d.id);
 
