@@ -3,20 +3,19 @@ import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angula
 import { finalize } from 'rxjs';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { createPaginationConfig, Column } from '../../../shared/componentkit/table/table.model';
-import { TLS26020Data, TLS26020QueryRequest, TLS26020Service } from '../../../service/api/tls/tls26020.service';
+import { TLS26020Data, TLS26020Service } from '../../../service/api/tls/tls26020.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { AccordionModule } from 'primeng/accordion';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { TranslateModule } from '@ngx-translate/core';
-import { InputTextRangeComponent } from '../../../shared/componentkit/input-text-range/input-text-range.component';
 import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
 import { MultiSelectComponent } from "../../../shared/componentkit/multi-select/multi-select.component";
 import { Tls11010Service } from '@service/api/tls/tls11010.service';
 import { FloorService } from '@service/basic/floor.service';
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
 import { Tls51080Service } from '@service/api/tls/tls51080.service';
-import { apiOption } from '@shared/models/sys/sysb000.module';
+import { untilDestroyed } from '@ngneat/until-destroy';
 
 @Component({
   selector: 'app-tls26020',
@@ -31,7 +30,6 @@ import { apiOption } from '@shared/models/sys/sysb000.module';
     ReactiveFormsModule,
     TableComponent,
     TranslateModule,
-    InputTextRangeComponent,
     CalendarRangeComponent,
     MultiSelectComponent,
     InputTextComponent
@@ -39,34 +37,42 @@ import { apiOption } from '@shared/models/sys/sysb000.module';
 })
 export class TLS26020Component extends BasicQueryPageComponent<TLS26020Data> implements OnInit {
   queryForm = this.formBuilder.group({
-    Sale_DateStart: ['', Validators.required],        // 銷售日期(起)
-    Sale_DateEnd: ['', Validators.required],          // 銷售日期(訖)
-    tlt_building: [[],],          // 館別
-    Org_Name: [[], '',],              // 組織名稱
-    tlt_floor: [[],],             // 樓層
-    ...createPaginationConfig([{ field: 'id', order: 1 }])
+    Sale_DateStart: [null, Validators.required],        // 改為 null
+    Sale_DateEnd: [null, Validators.required],          // 改為 null
+    tlt_building: [[]],
+    Org_ID: [[]],
+    Org_Name: [''],
+    tlt_floor: [[]],
+    ...createPaginationConfig([{ field: 'tlt_no', order: 1 }]) // 修正排序欄位
   });
 
   totalRecords = 0;
   data: TLS26020Data[] = [];
   selectedItems: TLS26020Data[] = [];
 
+  // 修正 columns 根據實際 API 回應
   columns: Column[] = [
-    { field: 'tlt_building', header: '館別', visible: false },
-    { field: 'Building_desc', header: '館別', visible: true },
-    { field: 'Org_Name', header: '組織名稱', visible: true },
     { field: 'tlt_no', header: '專櫃編號', visible: true },
-    { field: 'location_no', header: '位置編號', visible: true },
-    { field: 'tlt_name', header: '櫃位名稱', visible: true },
-    { field: 'sad_preorder_money', header: '預售金額', visible: true, format: (value: number) => value.toLocaleString() },
-    { field: 'sad_sale_amt', header: '銷售金額', visible: true, format: (value: number) => value.toLocaleString() },
-    { field: 'sad_preorder_amt', header: '預售累積', visible: true, format: (value: number) => value.toLocaleString() }
+    { field: 'tlt_name', header: '專櫃名稱', visible: true },
+    { field: 'txn_TotGUI', header: '發票金額', visible: true, format: (value: number) => value.toLocaleString() },
+    { field: 'txn_TotSaleAmt', header: '業績金額', visible: true, format: (value: number) => value.toLocaleString() }
   ];
 
+  // 展開詳細資料的欄位定義
+  expansionColumns: Column[] = [
+    { field: 'TXN_DATE', header: '交易日期', visible: true },
+    { field: 'ECR_NO', header: '機號', visible: true },
+    { field: 'TXN_NO', header: '交易序號', visible: true },
+    { field: 'TXN_GUIBegNo_Pre', header: '字軌', visible: true },
+    { field: 'TXN_GUIBegNo', header: '發票起號', visible: true },
+    { field: 'TXN_GUIEndNo', header: '發票迄號', visible: true },
+    { field: 'TXN_TotGUI', header: '發票金額', visible: true, format: (value: number) => value.toLocaleString() },
+    { field: 'TXN_TotSaleAmt', header: '業績金額', visible: true, format: (value: number) => value.toLocaleString() }
+  ];
+
+  // 下拉選單選項
   floorOptions: any[] = [];
-
   buildingOptions: any[] = [];
-
   orgOptions: any[] = [];
 
   constructor(
@@ -90,8 +96,20 @@ export class TLS26020Component extends BasicQueryPageComponent<TLS26020Data> imp
         .subscribe(response => {
           this.data = response.Data;
           this.totalRecords = response.TotalCount;
+          this.addDetailData(this.data); // 添加展開明細資料
           this.queryStateService.setQueryState(this.ProgNo, frm.getRawValue());
         });
+    });
+  }
+
+  // 為每一筆主資料載入詳細資料
+  addDetailData(data: TLS26020Data[]) {
+    data.forEach(item => {
+      this.tls26020Service.queryTLS26020Detail({
+        tlt_no: item.tlt_no
+      }).pipe(untilDestroyed(this)).subscribe(response => {
+        item.details = response.Data;
+      });
     });
   }
 
@@ -113,5 +131,4 @@ export class TLS26020Component extends BasicQueryPageComponent<TLS26020Data> imp
         this.orgOptions = response.Data;
       });
   }
-
 }
