@@ -26,7 +26,7 @@ export class FIN11010CRUComponent extends BasicCruPageComponent<FIN11010Data> im
     id: [0], // 資料識別碼
     mid: [0], // 中間識別碼
 
-    STO_Uniform: ['', [Validators.required, Validators.maxLength(8)]], // 公司代號(統一編號)
+    STO_Uniform: ['', [Validators.required, Validators.maxLength(8)]], // 營業人統編
     STO_TaxName: ['', [Validators.required, Validators.maxLength(60)]], // 營業人名稱
     STO_TaxNo: ['', [Validators.required, Validators.maxLength(9)]], // 稅籍編號
     STO_ManagerName: ['', [Validators.required, Validators.maxLength(12)]], // 負責人姓名
