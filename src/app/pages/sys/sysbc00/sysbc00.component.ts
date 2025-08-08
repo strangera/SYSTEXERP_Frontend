@@ -1,9 +1,10 @@
+import { ValidationService } from '@shared/service/validation.service';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ISysbc00Data, Sysbc00Service } from '../../../service/api/sys/sysbc00.service';
 import { Column, createPaginationConfig, formatDateTime } from '../../../shared/componentkit/table/table.model';
-import { finalize } from 'rxjs';
+import { finalize, Observable } from 'rxjs';
 import { Sys1004Service } from '../../../service/api/sys/sys1004.service';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
@@ -31,7 +32,7 @@ import { TranslateModule } from '@ngx-translate/core';
 // 銀行基本資料維護作業
 export class SYSBC00Component extends BasicQueryPageComponent<ISysbc00Data> implements OnInit {
   queryForm = this.formBuilder.group({
-    BNK_No: ['', [Validators.maxLength(10)]], // 金資中心銀行代碼
+    BNK_No: ['', [Validators.maxLength(10), this.validation.numberValidator]], // 銀行代碼
     BNK_Name: ['', [Validators.maxLength(60)]], // 銀行名稱
     BNK_ShortName: ['', [Validators.maxLength(30)]], // 銀行簡稱
     ...createPaginationConfig([{ field: 'BNK_No', order: 1 }]), // 分頁和排序參數
@@ -40,7 +41,7 @@ export class SYSBC00Component extends BasicQueryPageComponent<ISysbc00Data> impl
   data: ISysbc00Data[] = [];
   selectedRows: ISysbc00Data[] = [];
   columns: Column[] = [
-    { field: 'BNK_No', header: '金資中心銀行代碼', visible: true },
+    { field: 'BNK_No', header: '銀行代碼', visible: true },
     { field: 'BNK_Name', header: '銀行名稱', visible: true },
     { field: 'BNK_ShortName', header: '銀行簡稱', visible: true },
     { field: 'CRT_Date', header: '建立日期', visible: false, format: formatDateTime },
@@ -64,8 +65,9 @@ export class SYSBC00Component extends BasicQueryPageComponent<ISysbc00Data> impl
   ];
 
   constructor(
-    private sysbc00Service: Sysbc00Service,
-    private sys1004Service: Sys1004Service
+    private readonly sysbc00Service: Sysbc00Service,
+    private readonly sys1004Service: Sys1004Service,
+    private readonly validation: ValidationService,
   ) {
     super();
   }
@@ -77,21 +79,14 @@ export class SYSBC00Component extends BasicQueryPageComponent<ISysbc00Data> impl
     this.handleSubmit(frm, () => {
       this.sysbc00Service.querySYSBC00(frm.value).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(response => {
         this.data = response.Data;
-        this.addSys1004Data(this.data);
         this.totalRecords = response.TotalCount;
         this.queryStateService.setQueryState(this.ProgNo, frm.value);
       });
     })
   }
-
-  addSys1004Data(data: ISysbc00Data[]) {
-    data.forEach(item => {
-      this.sys1004Service.queryAPS1004({ BNK_No: item.BNK_No }).pipe(untilDestroyed(this)).subscribe(response => {
-        item.details = response.Data;
-      });
-    });
-  }
-
+  loadBankDetails = (rowData: ISysbc00Data): Observable<any> => {
+    return this.sys1004Service.queryAPS1004({ BNK_No: rowData.BNK_No });
+  };
   onDelete(rows: ISysbc00Data[]) {
     this.confirmationService.confirm({
       message: `是否確認刪除此銀行?`,

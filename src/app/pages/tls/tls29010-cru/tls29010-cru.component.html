@@ -5,25 +5,19 @@
     </div>
     <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
         <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
-            <h6>選擇主檔</h6>
             <div class="grid p-fluid">
-                <div class="col-12 md:col-6 lg:col-4">
+                <!-- <div class="col-12 md:col-6 lg:col-4">
                     <app-input-text label="活動名稱" controlName="pod_desc" [control]="dataForm.controls.pod_desc"
                     [submitted]="submitted"></app-input-text>
-                </div>
-            </div>
-            <div class="grid p-fluid">
+                </div> -->
                 <div class="col-12 md:col-6 lg:col-4">
                     <app-input-text label="活動申請編號" controlName="pod_no" [control]="dataForm.controls.pod_no"
                     [submitted]="submitted"></app-input-text>
                 </div>
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-calendar label="活動起始日" controlName="pod_sdate" [control]="dataForm.controls.pod_sdate"
-                    [submitted]="submitted"></app-calendar>
-                </div>
-                <div class="col-12 md:col-6 lg:col-4">
-                    <app-calendar label="活動終止日" controlName="pod_edate" [control]="dataForm.controls.pod_edate"
-                    [submitted]="submitted"></app-calendar>
+                    <app-calendar-range calendarType="dateRange" label="活動期間"
+                    [startControl]="dataForm.controls.pod_sdate" [endControl]="dataForm.controls.pod_edate"
+                    [submitted]="submitted" />
                 </div>
             </div>
             <hr>
@@ -62,14 +56,13 @@
                 <div class="col-12 md:col-6 lg:col-4">
                     <app-calendar label="活動正檔日" controlName="pod_busdate" [control]="dataForm.controls.pod_busdate" [submitted]="submitted"></app-calendar>
                 </div>
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-calendar-range calendarType="dateRange" label="活動兌回期間"
+                    [startControl]="dataForm.controls.pod_back_sdate" [endControl]="dataForm.controls.pod_back_edate"
+                    [submitted]="submitted" />
+                </div>
             </div>
             <div class="grid p-fluid">
-                <div class="col-12 md:col-6 lg:col-4">
-                    <app-calendar label="活動兌回起始日期" controlName="pod_back_sdate" [control]="dataForm.controls.pod_back_sdate" [submitted]="submitted"></app-calendar>
-                </div>
-                <div class="col-12 md:col-6 lg:col-4">
-                    <app-calendar label="活動兌回終止日期" controlName="pod_back_edate" [control]="dataForm.controls.pod_back_edate" [submitted]="submitted"></app-calendar>
-                </div>
                 <div class="col-12 md:col-6 lg:col-4">
                     <app-dropdown
                     label="活動狀態"

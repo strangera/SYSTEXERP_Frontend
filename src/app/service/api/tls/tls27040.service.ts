@@ -85,7 +85,7 @@ export interface POS6118Data {
   NCML_TxnType: string,
   NCML_ApprovalCode: string,
   NCML_CrdTxnFg: string,
-  NCML_TermNo: number,
+  NCML_TermNo: number | string,
   NCML_Check: string,
   acquiring_Bank: string,
   CRT_USR_No: string,
@@ -111,7 +111,7 @@ export interface POS6119Data {
   CTBC_TxnCode: string,
   CTBC_ApprovalCode: string,
   CTBC_DataType: string,
-  CTBC_TermNo: number,
+  CTBC_TermNo: number | string,
   CTBC_Check: string,
   acquiring_Bank: string,
   CRT_USR_No: string,
@@ -158,7 +158,7 @@ export interface POS6118Insert {
   NCML_ApprovalCode: string,
   NCML_Check: string,
   NCML_CrdTxnFg: string,
-  NCML_TermNo: number,
+  NCML_TermNo: number | string,
   NCML_TxnTime: string
 }
 
@@ -176,7 +176,7 @@ export interface POS6119Insert {
   CTBC_PayDate: string,
   CTBC_ApprovalCode: string,
   CTBC_Check: string,
-  CTBC_TermNo: number,
+  CTBC_TermNo: number | string,
 }
 
 export interface POS6119PInsert {
@@ -192,6 +192,60 @@ export interface POS6119PInsert {
   CTBC_TmID: string,
   CTBC_ApprovalCode: string,
   CTBC_Check: string,
+}
+
+export interface POS6118Update {
+  ID: number,
+  ECR_No: string,
+  TXN_No: number,
+  TLT_No: string,
+  NCML_Date: string,
+  NCML_PayCrdType: string,
+  NCML_TxnType: string,
+  NCML_TxnAmt: number,
+  NCML_CrdNo: string,
+  NCML_TmID: string,
+  NCML_BatCloseDate: string,
+  NCML_TxnDate: string,
+  NCML_ApprovalCode: string,
+  NCML_Check: string,
+  NCML_CrdTxnFg: string,
+  NCML_TermNo: number | string,
+  NCML_TxnTime: string
+}
+
+export interface POS6119Update {
+  ID: number,
+  ECR_No: string,
+  TXN_No: number,
+  TLT_No: string,
+  CTBC_Date: string,
+  CTBC_TxnTime: string,
+  CTBC_PayDate: string,
+  CTBC_TermNo: number | string,
+  CTBC_DataType: string,
+  CTBC_CrdNo: string,
+  CTBC_TmID: string,
+  CTBC_TxnCode: string,
+  CTBC_TxnAmt: number,
+  CTBC_ApprovalCode: string,
+  CTBC_Check: string
+}
+
+export interface POS6119PUpdate {
+  ID: number,
+  ECR_No: string,
+  TXN_No: number,
+  TLT_No: string,
+  CTBC_CrdNo: string,
+  CTBC_Date: string,
+  CTBC_TxnDate: string,
+  CTBC_TxnAmt: number,
+  CTBC_TxnType: string,
+  CTBC_PayDate: string,
+  CTBC_TmID: string,
+  CTBC_ApprovalCode: string,
+  CTBC_Check: string
 }
 
 @Injectable({
@@ -260,17 +314,17 @@ export class TLS27040Service {
   }
 
   //  更新 POS6118
-  updatePOS6118(body: POS6118Data): Observable<ApiResponse<number>> {
+  updatePOS6118(body: POS6118Update): Observable<ApiResponse<number>> {
     return this.http.post<ApiResponse<number>>(`${this.apiUrl}/updatePOS6118`, body);
   }
 
   //  更新 POS6119
-  updatePOS6119(body: POS6119Data): Observable<ApiResponse<number>> {
+  updatePOS6119(body: POS6119Update): Observable<ApiResponse<number>> {
     return this.http.post<ApiResponse<number>>(`${this.apiUrl}/updatePOS6119`, body);
   }
 
   //  更新 POS6119P
-  updatePOS6119P(body: POS6119PData): Observable<ApiResponse<number>> {
+  updatePOS6119P(body: POS6119PUpdate): Observable<ApiResponse<number>> {
     return this.http.post<ApiResponse<number>>(`${this.apiUrl}/updatePOS6119P`, body);
   }
 }

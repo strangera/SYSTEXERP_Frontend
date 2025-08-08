@@ -1,4 +1,4 @@
-import { Component, OnInit, TemplateRef, ViewChild } from '@angular/core';
+import { Component, Input, OnInit, TemplateRef, ViewChild } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { POS6118Data, TLS27040Service } from '@service/api/tls/tls27040.service';
@@ -36,6 +36,7 @@ import { TableComponent } from '@shared/componentkit/table/table.component';
 export class Tls27040POS6118Component extends BasicQueryPageComponent<POS6118Data> implements OnInit {
   @ViewChild('formTemplate', { static: true }) formTemplate!: TemplateRef<unknown>;
   @ViewChild('tableTemplate', { static: true }) tableTemplate!: TemplateRef<unknown>;
+  @Input() selectedBank!: string;
   queryForm = this.formBuilder.group({
     ECR_No: ['', [Validators.maxLength(10)]], // ECR編號
     TXN_No: ['', [Validators.maxLength(8)]], // 交易編號
@@ -80,9 +81,13 @@ export class Tls27040POS6118Component extends BasicQueryPageComponent<POS6118Dat
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
       this.tls27040Service.queryPOS6118(frm.value).pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(res => {
-        this.POS6118Data = res.Data;
+        this.POS6118Data = res.Data.map(item => ({
+          ...item,
+          NCML_TermNo: String(item.NCML_TermNo),
+          tableName: 'POS6118'
+        }));
         this.totalRecords = res.TotalCount;
-        this.queryStateService.setQueryState(this.ProgNo, frm.value);
+        this.queryStateService.setQueryState(this.ProgNo, { ...frm.value, selectedBank: this.selectedBank });
       });
     });
   }

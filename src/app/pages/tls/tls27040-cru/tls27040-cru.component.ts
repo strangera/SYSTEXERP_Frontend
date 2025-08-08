@@ -13,7 +13,8 @@ import { TranslateModule } from '@ngx-translate/core';
 import { POS6118Data, POS6119Data, POS6119PData, TLS27040Service } from '@service/api/tls/tls27040.service';
 import { CheckOptions, CrdTxnFgOptions, CTBC_TxnCodeOptions, CTBC_TxnTypeOptions, PayCrdTypeOptions, POS611XOptions, TxnTypeOptions } from '../tls27040/tls27040.model';
 import { SystemOptionsService } from '@service/system/sys1000.service';
-import { finalize } from 'rxjs';
+import { finalize, Observable } from 'rxjs';
+import { ApiResponse } from '@service/system/auth.service';
 @Component({
   selector: 'app-tls27040-cru',
   templateUrl: './tls27040-cru.component.html',
@@ -95,8 +96,10 @@ export class TLS27040CRUComponent extends BasicCruPageComponent<POS6118Data | PO
           form.get('tableName')?.disable();
           form.get('ECR_No')?.disable();
           form.get('TXN_No')?.disable();
-          form.get('NCML_TxnDate')?.setValue(this.rowdata?.TXN_Date);
-          form.get('NCML_TxnDate')?.disable();
+          if (this.isFormCreateable) {
+            form.get('NCML_TxnDate')?.setValue(this.rowdata?.TXN_Date);
+            form.get('NCML_TxnDate')?.disable();
+          }
           break;
         }
       case 'POS6119':
@@ -106,8 +109,10 @@ export class TLS27040CRUComponent extends BasicCruPageComponent<POS6118Data | PO
           form.get('tableName')?.disable();
           form.get('ECR_No')?.disable();
           form.get('TXN_No')?.disable();
-          form.get('CTBC_TxnTime')?.setValue(this.rowdata?.TXN_Date);
-          form.get('CTBC_TxnTime')?.disable();
+          if (this.isFormCreateable) {
+            form.get('CTBC_TxnTime')?.setValue(this.rowdata?.TXN_Date);
+            form.get('CTBC_TxnTime')?.disable();
+          }
           break;
         }
       case 'POS6119P':
@@ -117,8 +122,10 @@ export class TLS27040CRUComponent extends BasicCruPageComponent<POS6118Data | PO
           form.get('tableName')?.disable();
           form.get('ECR_No')?.disable();
           form.get('TXN_No')?.disable();
-          form.get('CTBC_TxnDate')?.setValue(this.rowdata?.TXN_Date);
-          form.get('CTBC_TxnDate')?.disable();
+          if (this.isFormCreateable) {
+            form.get('CTBC_TxnDate')?.setValue(this.rowdata?.TXN_Date);
+            form.get('CTBC_TxnDate')?.disable();
+          }
           break;
         }
     }
@@ -126,6 +133,7 @@ export class TLS27040CRUComponent extends BasicCruPageComponent<POS6118Data | PO
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
       const formValue = frm.getRawValue();
+      let apiCall: Observable<ApiResponse<number>> | undefined = undefined;
       switch (this.rowdata?.tableName) {
         case 'POS6118':
           {
@@ -134,13 +142,13 @@ export class TLS27040CRUComponent extends BasicCruPageComponent<POS6118Data | PO
               NCML_Date: this.datePipe.transform(formValue.NCML_Date, 'yyyy-MM-dd'),
               NCML_BatCloseDate: this.datePipe.transform(formValue.NCML_BatCloseDate, 'yyyy-MM-dd'),
               NCML_TxnDate: this.datePipe.transform(formValue.NCML_TxnDate, 'yyyy-MM-dd'),
-              // 將 NCML_TxnTime 轉換為 HH:mm:ss 格式，確保後端能正確解析時間部分
-              NCML_TxnTime: this.datePipe.transform(formValue.NCML_TxnTime, 'HH:mm:ss'),
-              NCML_TermNo: Number(formValue.NCML_TermNo)
+              NCML_TermNo: Number(formValue.NCML_TermNo),
+            };
+            if (this.isFormCreateable) {
+              apiCall = this.tls27040Service.insertPOS6118(body);
+            } else {
+              apiCall = this.tls27040Service.updatePOS6118({ ID: this.rowdata?.ID as number, ...body });
             }
-            this.tls27040Service.insertPOS6118(body).pipe(finalize(() => this.loading = false)).subscribe(res => {
-              console.log(res);
-            })
             break;
           }
         case 'POS6119':
@@ -149,11 +157,13 @@ export class TLS27040CRUComponent extends BasicCruPageComponent<POS6118Data | PO
               ...formValue,
               CTBC_Date: this.datePipe.transform(formValue.CTBC_Date, 'yyyy-MM-dd'),
               CTBC_PayDate: this.datePipe.transform(formValue.CTBC_PayDate, 'yyyy-MM-dd'),
-              CTBC_TermNo: Number(formValue.CTBC_TermNo)
+              CTBC_TermNo: Number(formValue.CTBC_TermNo),
+            };
+            if (this.isFormCreateable) {
+              apiCall = this.tls27040Service.insertPOS6119(body);
+            } else {
+              apiCall = this.tls27040Service.updatePOS6119({ ID: this.rowdata?.ID as number, ...body });
             }
-            this.tls27040Service.insertPOS6119(body).pipe(finalize(() => this.loading = false)).subscribe(res => {
-              console.log(res);
-            })
             break;
           }
         case 'POS6119P':
@@ -163,12 +173,21 @@ export class TLS27040CRUComponent extends BasicCruPageComponent<POS6118Data | PO
               CTBC_Date: this.datePipe.transform(formValue.CTBC_Date, 'yyyy-MM-dd'),
               CTBC_TxnDate: this.datePipe.transform(formValue.CTBC_TxnDate, 'yyyy-MM-dd'),
               CTBC_PayDate: this.datePipe.transform(formValue.CTBC_PayDate, 'yyyy-MM-dd')
+            };
+            if (this.isFormCreateable) {
+              apiCall = this.tls27040Service.insertPOS6119P(body);
+            } else {
+              apiCall = this.tls27040Service.updatePOS6119P({ ID: this.rowdata?.ID as number, ...body });
             }
-            this.tls27040Service.insertPOS6119P(body).pipe(finalize(() => this.loading = false)).subscribe(res => {
-              console.log(res);
-            })
             break;
           }
+      }
+      // 統一處理 API 呼叫，避免重複程式碼
+      if (apiCall) {
+        apiCall.pipe(finalize(() => this.loading = false)).subscribe(res => {
+          this.messageService.successBubble(res.Message);
+          this.onCancel();
+        });
       }
     });
   }

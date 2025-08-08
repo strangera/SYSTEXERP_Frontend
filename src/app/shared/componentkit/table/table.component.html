@@ -7,11 +7,11 @@
   [selectionMode]="showCheckBox && IsPrint ? selectionMode : null" [dataKey]="dataKey" [rowTrackBy]="trackByRow"
   [resizableColumns]="true" [paginator]="showPaginator && IsPrint && !rowEditing && !loading" [scrollable]="scrollable"
   [showCurrentPageReport]="IsPrint" [multiSortMeta]="multiSortMeta" [rowsPerPageOptions]="[10, 30, 50]"
-  [scrollHeight]="scrollHeight" [rows]="rows" [(first)]="first" (onPage)="onPageChange($event)"
+  [scrollHeight]="expansionDataKey ? 'auto' : scrollHeight" [rows]="rows" [(first)]="first"
   (onLazyLoad)="loadDataLazy($event)" [lazy]="lazy || !IsPrint"
   [styleClass]="'p-datatable-sm' + (IsPrint ? ' p-datatable-gridlines' : ' ') + (!disabled ? ' p-datatable-striped' : ' ')"
   [virtualScroll]="!IsPrint" [virtualScrollItemSize]="35" [virtualScrollDelay]="250"
-  currentPageReportTemplate="第{currentPage}頁 / 總共{totalPages}頁 (總筆數:{totalRecords})" (onSort)="onSort($event)"
+  currentPageReportTemplate="第{currentPage}頁 / 總共{totalPages}頁 (總筆數:{totalRecords})"
   (selectionChange)="onSelectionChange($event)" (onRowSelect)="select.emit($event)"
   (onRowUnselect)="unSelect.emit($event)" [rowSelectable]="rowSelectableWrapper"
   [loading]="loading && data.length === 0" [expandedRowKeys]="IsPrint ? expandedRows : {}"
@@ -37,9 +37,9 @@
           pButton icon="pi pi-plus" severity="success" class="p-button-rounded p-button-text"
           [disabled]="insertDisabled" />
         <!-- || !canPerformAction('20') -->
-        <p-button *ngIf="IsPrint && showDelete && !rowEditing" (click)="deleteRow(selectedItems)" pTooltip="刪除"
-          tooltipPosition="top" pButton [icon]="deleteIcon" severity="danger" class="p-button-text" [rounded]="true"
-          [disabled]="selectedItems?.length <= 0" />
+        <p-button *ngIf="IsPrint && showDelete && !rowEditing" (click)="deleteRow(selectedItems)"
+          [pTooltip]="deletepTooltip" tooltipPosition="top" pButton [icon]="deleteIcon" severity="danger"
+          class="p-button-text" [rounded]="true" [disabled]="selectedItems?.length <= 0" />
         <!-- || !canPerformAction('40') -->
       </div>
       <div *ngIf="IsPrint" class="flex-grow-1 p-2">
@@ -164,9 +164,11 @@
             [value]="rowData" [disabled]="!isRowSelectable(rowData)" />
         </td>
         <td *ngIf="expansionDataKey && IsPrint" class="text-center">
-          <p-button pRipple [pRowToggler]="rowData" [text]="true" [rounded]="true" [plain]="true" severity="secondary"
-            [raised]="!expanded" [icon]="expanded? 'pi pi-chevron-down': 'pi pi-chevron-right'"
-            [disabled]="rowData[expansionDataKey]?.length === 0" pButton />
+          <p-button pRipple [text]="true" [rounded]="true" [plain]="true" severity="secondary"
+            [raised]="!expandedRows[rowData[dataKey]]"
+            [icon]="rowData.expansionLoading ? 'pi pi-spin pi-spinner' : (expandedRows[rowData[dataKey]] ? 'pi pi-chevron-down' : 'pi pi-chevron-right')"
+            pButton (click)="toggleRowExpansion(rowData)"
+            [disabled]="rowData.expansionLoading || (rowData[expansionDataKey]?.length === 0) || (!expansionLoadFn && !rowData[expansionDataKey]?.length)" />
         </td>
         <td *ngFor="let col of columns" class="text-center" style="text-overflow: ellipsis"
           (click)="editing ? $event.stopPropagation() : null" (dblclick)="detailRow(rowData)" [ngClass]="col.style"
@@ -197,10 +199,11 @@
                   </div>
                 </ng-template>
               </p-autoComplete>
-              <p-dropdown *ngIf="col.type === 'dropdown'" styleClass="w-full" [showClear]="showClear(col)" appendTo="body"
-                [(ngModel)]="rowData[col.field]" [ngModelOptions]="{ standalone: true }" [filter]="col.filter"
-                placeholder="請輸入{{ col.header }}" [options]="getOptions(rowData, col)" [optionLabel]="col.optionLabel"
-                [optionValue]="col.optionValue" [disabled]="col.disabled ? col.disabled(rowData) : false"
+              <p-dropdown *ngIf="col.type === 'dropdown'" styleClass="w-full" [showClear]="showClear(col)"
+                appendTo="body" [(ngModel)]="rowData[col.field]" [ngModelOptions]="{ standalone: true }"
+                [filter]="col.filter" placeholder="請輸入{{ col.header }}" [options]="getOptions(rowData, col)"
+                [optionLabel]="col.optionLabel" [optionValue]="col.optionValue"
+                [disabled]="col.disabled ? col.disabled(rowData) : false"
                 (onChange)="onFieldChange(rowData, col.field, $event.value, rowIndex)">
                 <ng-template let-item pTemplate=" item" *ngIf="col.templateLabel">
                   <div class="flex align-items-center gap-2">
@@ -238,10 +241,10 @@
                   </div>
                 </ng-template>
               </p-autoComplete>
-              <p-dropdown *ngIf="col.type === 'dropdown'" styleClass="w-full" [showClear]="showClear(col)" appendTo="body"
-                [(ngModel)]="rowData[col.field]" [ngModelOptions]="{ standalone: true }" [filter]="col.filter"
-                placeholder="請輸入{{ col.header }}" [options]="getOptions(rowData, col)" [optionLabel]="col.optionLabel"
-                [optionValue]="col.optionValue"
+              <p-dropdown *ngIf="col.type === 'dropdown'" styleClass="w-full" [showClear]="showClear(col)"
+                appendTo="body" [(ngModel)]="rowData[col.field]" [ngModelOptions]="{ standalone: true }"
+                [filter]="col.filter" placeholder="請輸入{{ col.header }}" [options]="getOptions(rowData, col)"
+                [optionLabel]="col.optionLabel" [optionValue]="col.optionValue"
                 [disabled]="col.disabled ? col.disabled(rowData) : alwaysEdit ? false : true"
                 (onChange)="onFieldChange(rowData, col.field, $event.value)">
                 <ng-template let-item pTemplate="item" *ngIf="col.templateLabel">

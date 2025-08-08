@@ -11,29 +11,30 @@ import { InputTextComponent } from '../../../shared/componentkit/input-text/inpu
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { TranslateModule } from '@ngx-translate/core';
+import { ValidationService } from '@shared/service/validation.service';
 // 4-2-2-2角色之使用者設定維護
 @Component({
-    selector: 'app-sys0230',
-    templateUrl: './sys0230.component.html',
-    styleUrls: ['./sys0230.component.scss'],
-    standalone: true,
-    imports: [
-        MenubarComponent,
-        AccordionModule,
-        FormsModule,
-        ReactiveFormsModule,
-        InputTextComponent,
-        ButtonComponent,
-        TableComponent,
-        TranslateModule,
-    ],
+  selector: 'app-sys0230',
+  templateUrl: './sys0230.component.html',
+  styleUrls: ['./sys0230.component.scss'],
+  standalone: true,
+  imports: [
+    MenubarComponent,
+    AccordionModule,
+    FormsModule,
+    ReactiveFormsModule,
+    InputTextComponent,
+    ButtonComponent,
+    TableComponent,
+    TranslateModule,
+  ],
 })
 
 export class SYS0230Component extends BasicQueryPageComponent<tblRole>
   implements OnInit {
   // 查詢
   queryForm = this.formBuilder.group({
-    Role_No: ['', [Validators.maxLength(10)]], // 角色代號
+    Role_No: ['', [Validators.maxLength(10), this.validationService.alphanumericValidator]], // 角色代號
     Role_Name: ['', [Validators.maxLength(30)]], // 角色名稱
 
     //分頁查詢
@@ -54,7 +55,8 @@ export class SYS0230Component extends BasicQueryPageComponent<tblRole>
   roleCodeOptions: any[] = [];
 
   constructor(
-    private sys0210Service: Sys0210Service,
+    private readonly sys0210Service: Sys0210Service,
+    private readonly validationService: ValidationService
   ) {
     super();
   }

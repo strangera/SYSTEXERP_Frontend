@@ -46,7 +46,7 @@ export class TLS27040Component extends BasicQueryPageComponent<POS6118Data | POS
   @ViewChild('pos6119', { static: false }) pos6119!: Tls27040POS6119Component;
   @ViewChild('pos6119p', { static: false }) pos6119p!: Tls27040POS6119pComponent;
 
-  selectedBank = '0';
+  selectedBank!: string;
   POS6118Data: POS6118Data[] = [];
   POS6119Data: POS6119Data[] = [];
   POS6119PData: POS6119PData[] = [];
@@ -57,6 +57,10 @@ export class TLS27040Component extends BasicQueryPageComponent<POS6118Data | POS
 
   ngOnInit(): void {
     this.initializePage('TLS27040', 'TLS/TLS27040cru');
+    const queryState = this.queryStateService.getQueryState(this.ProgNo);
+    if (queryState?.value && queryState?.value.selectedBank) {
+      this.selectedBank = this.queryStateService.getQueryState(this.ProgNo)?.value.selectedBank;
+    }
   }
   dialogVisible = false;
   dialogLoading = false;
