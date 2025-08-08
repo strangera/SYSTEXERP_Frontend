@@ -34,7 +34,7 @@ export class Tls29010DetailService {
 
     //---PotentialCustomer 增加 ID ---
     generatePotentialCustomerDetailId(data: any[]): number {
-        const maxId = Math.max(...data.map(p => p.ID), 0);
+        const maxId = Math.max(...data.map(p => p.id), 0);
         return maxId + 1;
     }
 
