@@ -1,151 +1,68 @@
 <div class="card">
-  <div class="grid align-items-center">
-    <div class="col" style="flex: 1">
-      <app-menubar [ProgNo]="ProgNo"></app-menubar>
-    </div>
-    <div >
-      <app-button
-        btnType="create"
-        (click)="onCreate()"
-        class="col"
-      ></app-button>
-    </div>
+  <div class="flex gap-2 mb-2">
+    <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
+    <app-button btnType="create" (click)="onCreate()"></app-button>
   </div>
   <p-accordion>
-    <p-accordionTab
-      header="{{ 'query-conditions' | translate }}"
-      [selected]="true"
-      class="line-height-3 m-0"
-      [headerStyleClass]="'query-accordionTab'"
-    >
-      <form
-        [formGroup]="queryForm"
-        id="queryForm"
-        (ngSubmit)="onSubmit(queryForm)"
-      >
+    <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'">
+      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
-              label="倉別請領單編號"
-              controlName="organizationRequestCode"
-              [control]="queryForm.controls.organizationRequestCode"
-              [submitted]="submitted"
-            ></app-input-text>
+          <!-- <div class="col-12 md:col-6 lg:col-4">
+            <app-input-text label="倉別請領單編號" controlName="organizationRequestCode"
+              [control]="queryForm.controls.organizationRequestCode" [submitted]="submitted"></app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="倉別調撥單狀態"
-              controlName="issuanceNoteStatus"
-              [options]="issuanceNoteStatusOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.issuanceNoteStatus"
-              [submitted]="submitted"
-            ></app-dropdown>
+            <app-dropdown label="倉別調撥單狀態" controlName="issuanceNoteStatus" [options]="issuanceNoteStatusOptions"
+              optionLabel="label" optionValue="value" [control]="queryForm.controls.issuanceNoteStatus"
+              [submitted]="submitted"></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
-              label="管理編號"
-              controlName="generalCode"
-              [control]="queryForm.controls.generalCode"
-              [submitted]="submitted"
-            ></app-input-text>
+            <app-input-text label="管理編號" controlName="generalCode" [control]="queryForm.controls.generalCode"
+              [submitted]="submitted"></app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="品牌編號"
-              controlName="brandCode"
-              [options]="brandCodeOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.brandCode"
-              [submitted]="submitted"
-            ></app-dropdown>
+            <app-dropdown label="品牌編號" controlName="brandCode" [options]="brandCodeOptions" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.brandCode" [submitted]="submitted"></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="調出倉別"
-              controlName="warehouseCode"
-              [options]="warehouseOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.warehouseCode"
-              [submitted]="submitted"
-            ></app-dropdown>
+            <app-dropdown label="調出倉別" controlName="warehouseCode" [options]="warehouseOptions" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.warehouseCode" [submitted]="submitted"></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="調入倉別"
-              controlName="warehouseCode"
-              [options]="warehouseOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.warehouseCode"
-              [submitted]="submitted"
-            ></app-dropdown>
+            <app-dropdown label="調入倉別" controlName="warehouseCode" [options]="warehouseOptions" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.warehouseCode" [submitted]="submitted"></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="申請人編號"
-              controlName="applicantCode"
-              [options]="userCodeOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.applicantCode"
-              [submitted]="submitted"
-            ></app-dropdown>
+            <app-dropdown label="申請人編號" controlName="applicantCode" [options]="userCodeOptions" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.applicantCode" [submitted]="submitted"></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="審核人編號"
-              controlName="approverCode"
-              [options]="userCodeOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.approverCode"
-              [submitted]="submitted"
-            ></app-dropdown>
+            <app-dropdown label="審核人編號" controlName="approverCode" [options]="userCodeOptions" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.approverCode" [submitted]="submitted"></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar-range
-              calendarType="dateRange"
-              label="申請日期"
+            <app-calendar-range calendarType="dateRange" label="申請日期"
               [startControl]="queryForm.controls.applicationDateFrom"
-              [endControl]="queryForm.controls.applicationDateTo"
-              [submitted]="submitted"
-            ></app-calendar-range>
+              [endControl]="queryForm.controls.applicationDateTo" [submitted]="submitted"></app-calendar-range>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar-range
-              calendarType="dateRange"
-              label="審核日期"
-              [startControl]="queryForm.controls.approvalDateFrom"
-              [endControl]="queryForm.controls.approvalDateTo"
-              [submitted]="submitted"
-            ></app-calendar-range>
-          </div>
+            <app-calendar-range calendarType="dateRange" label="審核日期"
+              [startControl]="queryForm.controls.approvalDateFrom" [endControl]="queryForm.controls.approvalDateTo"
+              [submitted]="submitted"></app-calendar-range>
+          </div> -->
+        </div>
+        <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+          <app-button btnType="clear"></app-button>
+          <app-button btnType="query" [loading]="loading"></app-button>
         </div>
       </form>
-      <div>
-        <div class="grid justify-content-end">
-          <app-button btnType="clear" (onClick)="onClearForm()"></app-button>
-          <app-button
-            btnType="query"
-            (onClick)="onSubmitQuery(queryForm)"
-            [loading]="loading"
-          ></app-button>
-        </div>
-      </div>
     </p-accordionTab>
   </p-accordion>
 </div>
-<!-- <div class="card">
-  <div class="col-12">
-    <app-table
-      [data]="data"
-      [columns]="columns"
-      (edit)="onEdit($event)"
-      (detail)="onDetail($event)"
-    ></app-table>
-  </div>
-</div> -->
+<div class="card">
+  <app-table dataKey="ECR_TmplNo" [data]="data" [columns]="columns" (edit)="onEdit($event)" (detail)="onDetail($event)"
+    [multiSortMeta]="[{ field: 'ECR_TmplNo', order: 1 }]" [totalRecords]="totalRecords" [showCheckBox]="true"
+    (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [lazy]="true"
+    [loading]="loading"></app-table>
+</div>

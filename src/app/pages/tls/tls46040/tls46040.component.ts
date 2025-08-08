@@ -20,11 +20,10 @@ import { TranslateModule } from '@ngx-translate/core';
 
 // 2.4.6.4  收銀機異動排程維護
 @Component({
-    selector: 'app-tls46040',
-    templateUrl: './tls46040.component.html',
-    styleUrl: './tls46040.component.scss',
-    standalone: true,
-    imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputNumberComponent, CalendarComponent, MultiSelectComponent, TableComponent, TranslateModule]
+  selector: 'app-tls46040',
+  templateUrl: './tls46040.component.html',
+  standalone: true,
+  imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputNumberComponent, CalendarComponent, MultiSelectComponent, TableComponent, TranslateModule]
 })
 export class TLS46040Component {
   ProgNo: string = '240022';
