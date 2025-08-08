@@ -123,7 +123,7 @@ formatRepYYYYMM(value: string): string {
           this.data = res.Data || [];
           this.totalRecords = res.TotalCount || this.data.length;
           this.queryStateService.setQueryState(this.ProgNo, payload);
-          this.messageService.successBubble('查詢成功');
+          
        
       },
       //       next: (res) => {

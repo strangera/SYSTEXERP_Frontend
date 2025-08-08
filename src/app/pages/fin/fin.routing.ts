@@ -76,6 +76,8 @@ export const finRoutes: Routes = [
   // 形成媒體申報檔
   { path: 'fin15040', loadComponent: () => import('./fin15040/fin15040.component').then(m => m.FIN15040Component) },
   { path: 'fin15040cru', loadComponent: () => import('./fin15040-cru/fin15040-cru.component').then(m => m.FIN15040CRUComponent) },
+  { path: 'fin15050', loadComponent: () => import('./fin15050/fin15050.component').then(m => m.FIN15050Component) },
+  { path: 'fin15060', loadComponent: () => import('./fin15060/fin15060.component').then(m => m.FIN15060Component) },
   // 媒申核對報表
   { path: 'fin15070', loadComponent: () => import('./fin15070/fin15070.component').then(m => m.FIN15070Component) },
   // 營業人媒體檔案申報表

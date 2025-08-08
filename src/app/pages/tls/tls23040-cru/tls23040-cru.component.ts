@@ -7,11 +7,7 @@ import { Tls11010Service } from '../../../service/api/tls/tls11010.service';
 import { TxnStatusService } from '../../../service/basic/txn-status.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ReportTableGroupComponent } from '../../../shared/componentkit/report-table-group/report-table-group.component';
-import {
-  TLS23040ResponseItem,
-  PaymentDetail,
-  DiscountDetail,
-} from '../tls23040/tls23040.model';
+import { PaymentDetail, DiscountDetail, InvoiceDetail } from '../tls23040/tls23040.model';
 type DisplayMode = 'Report' | 'ByPaymentType' | 'ByDiscountType';
 
 @Component({
@@ -23,10 +19,8 @@ type DisplayMode = 'Report' | 'ByPaymentType' | 'ByDiscountType';
 })
 export class TLS23040CRUComponent extends BasicCruPageComponent<any> {
   displayMode: DisplayMode = 'Report';
-  data:
-    | TLS23040ResponseItem[]
-    | (PaymentDetail & { parent: TLS23040ResponseItem })[]
-    | (DiscountDetail & { parent: TLS23040ResponseItem })[] = [];
+  // ✅ 直接吃三種明細 union
+  data: InvoiceDetail[] | PaymentDetail[] | DiscountDetail[] = [];
 
   printedAt: string = '';
   dateStart: string = '';
@@ -50,9 +44,7 @@ export class TLS23040CRUComponent extends BasicCruPageComponent<any> {
   }
 
   async ngOnInit(): Promise<void> {
-    const state = history.state;
-    console.log('✅ Router 傳入的 state:', state);
-
+     const state = history.state;
     if (state?.data) {
       this.data = state.data;
       this.queryFormValue = state.queryFormValue;
@@ -61,17 +53,9 @@ export class TLS23040CRUComponent extends BasicCruPageComponent<any> {
       this.pageSize = state.pageSize || 1000;
       this.printedAt = new Date().toLocaleString('zh-TW');
 
-      // ✅ 設定 displayMode，限制只能是三個合法值
-      const validDisplayModes: DisplayMode[] = [
-        'Report',
-        'ByPaymentType',
-        'ByDiscountType',
-      ];
-      const incomingMode =
-        state.displayMode || state.queryFormValue?.DisplayMode || 'Report';
-      this.displayMode = validDisplayModes.includes(incomingMode)
-        ? incomingMode
-        : 'Report';
+      const validDisplayModes: DisplayMode[] = ['Report','ByPaymentType','ByDiscountType'];
+      const incomingMode = state.displayMode || state.queryFormValue?.DisplayMode || 'Report';
+      this.displayMode = validDisplayModes.includes(incomingMode) ? incomingMode : 'Report';
     } else {
       this.messageService.warnBubble('⚠️ 無資料可顯示，請重新查詢。');
     }

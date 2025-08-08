@@ -1,0 +1,40 @@
+<div class="card">
+  <div class="flex gap-2 mb-2">
+    <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
+  </div>
+  <p-accordion>
+    <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'">
+      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
+        <div class="grid p-fluid">
+          <!-- 申報年月 -->
+          <app-calendar class="col-12 md:col-6 lg:col-4" label="申報年月" calendarType="dateMonthOne"
+            [control]="queryForm.controls.DeclareMonth" [submitted]="submitted"></app-calendar>
+          <!-- 使用別 -->
+          <app-dropdown class="col-12 md:col-6 lg:col-4" label="使用別" controlName="UsageType"
+            [options]="usageTypeOptions" [optionLabel]="'label'" [optionValue]="'value'"
+            [control]="queryForm.controls.UsageType" [submitted]="submitted"></app-dropdown>
+          <!-- 字軌 -->
+          <app-input-text class="col-12 md:col-6 lg:col-4" label="字軌" controlName="Character"
+            [control]="queryForm.controls.Character" [submitted]="submitted"></app-input-text>
+          <!-- 發票號碼起迄 -->
+          <app-input-text-range class="col-12 md:col-6 lg:col-4" label="發票號碼"
+            [startControl]="queryForm.controls.InvoiceNumberStart" [endControl]="queryForm.controls.InvoiceNumberEnd"
+            [submitted]="submitted"></app-input-text-range>
+        </div>
+        <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+          <app-button btnType="clear"></app-button>
+          <app-button btnType="query" [loading]="loading"></app-button>
+        </div>
+      </form>
+    </p-accordionTab>
+  </p-accordion>
+</div>
+
+<div class="card">
+  <app-table tableKey="FIN15050" dataKey="InvoiceNumber" [data]="data" [columns]="columns"
+    [selectedItems]="selectedItems" (selectionChange)="selectedItems = $event" [totalRecords]="totalRecords"
+    (lazyLoadData)="onLazyLoadData($event, queryForm);onSubmit(queryForm)" [lazy]="true" [loading]="loading"
+    [showManage]="false" [showDelete]="false">
+  </app-table>
+</div>

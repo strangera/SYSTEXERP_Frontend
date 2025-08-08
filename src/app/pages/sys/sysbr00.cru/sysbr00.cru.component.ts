@@ -170,6 +170,7 @@ export class SYSBR00CRUComponent extends BasicCruPageComponent<any> implements O
         this.sysbr0Service.insertCity(frm.value).subscribe({
           next: () => {
             this.messageService.successBubble('縣市新增成功', '新增成功');
+             frm.reset();
             
           },
           error: (error) => {

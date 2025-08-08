@@ -107,9 +107,17 @@ export class TLS12020CRUComponent extends BasicCruPageComponent<any> implements 
       this.buildingNoOptions = res.Data.map(x => ({ label: x.Name, value: x.No, Name: x.Name, No: x.No }));
     });
     //統編API
-    this.dropDownListService.queryPOS2013_DropDownList().pipe(untilDestroyed(this)).subscribe(res => {
-      this.vendorUIDOptions = res.Data;
-    });
+    this.dropDownListService.queryPOS2013_DropDownList()
+      .pipe(untilDestroyed(this))
+      .subscribe(res => {
+        this.vendorUIDOptions = res.Data.map(item => ({
+          label: `${item.Name} ${item.No}`, // 顯示中文+數字
+          value: item.No,                   // 送出用的值
+          Name: item.Name,                  // 加入 Name 屬性
+          No: item.No                       // 加入 No 屬性
+        }));
+      });
+
     //位置編號
     this.dropDownListService.queryPOS2002_DropDownList().subscribe((res) => {
       if (res?.Status === '0000') {

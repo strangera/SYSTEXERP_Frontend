@@ -31,7 +31,7 @@ import { RadioButtonModule } from 'primeng/radiobutton';
 import { PrimeTemplate } from 'primeng/api';
 import { ButtonDirective } from 'primeng/button';
 import { TranslateModule } from '@ngx-translate/core';
-import { TLS23040ResponseItem, PaymentDetail, DiscountDetail } from './tls23040.model';
+import { PaymentDetail, DiscountDetail, InvoiceDetail } from './tls23040.model';
 
 @Component({
   selector: 'app-tls23040',
@@ -58,7 +58,7 @@ import { TLS23040ResponseItem, PaymentDetail, DiscountDetail } from './tls23040.
   ],
 })
 export class TLS23040Component extends BasicQueryPageComponent<any> {
-  data: TLS23040ResponseItem[] = [];
+  
   totalRecords = 0;
   showPageSizeDialog = false;
   customPageSize = 10;
@@ -272,95 +272,86 @@ export class TLS23040Component extends BasicQueryPageComponent<any> {
   }
 
   confirmPageSizeAndNavigate(): void {
-    this.submitted = true;
-    if (this.queryForm.invalid) {
-      this.messageService.warnBubble('請確認欄位資料是否完整');
-      this.queryForm.markAllAsTouched();
-      return;
-    }
-
-    const queryFormValue = this.cleanFormPayload({
-      ...this.queryForm.value,
-      pageSize: this.customPageSize,
-      // displayMode: this.displayMode,
-    });
-
-//     // 付款別報表一定要有 ECR_No
-// if (this.displayMode === 'ByPaymentType') {
-//   if (!queryFormValue.ECR_No || queryFormValue.ECR_No.length === 0) {
-//     this.messageService.warnBubble('付款別報表需選擇收銀機號');
-//     this.loading = false;
-//     this.messageService.unblockUi();
-//     return;
-//   }
-// }
-    this.loading = true;
-    this.messageService.blockUi();
-
-    this.tls23040Service
-      .queryTLS23040(queryFormValue)
-      .pipe(
-        timeout(30000),
-        catchError((err) => {
-          if (err.name === 'TimeoutError') {
-            this.messageService.warnBubble(
-              '查詢時間過久，請嘗試縮小查詢條件範圍',
-            );
-          } else {
-            this.messageService.errorBubble('查詢失敗');
-          }
-          this.loading = false;
-          this.messageService.unblockUi();
-          return of({ Status: '9999', Data: [] });
-        }),
-      )
-      .subscribe({
-        next: (res) => {
-          if (res.Status === '0000') {
-            const rawData = res.Data || [];
-
-           let dataToNavigate: TLS23040ResponseItem[] | (PaymentDetail & { parent: TLS23040ResponseItem })[] | (DiscountDetail & { parent: TLS23040ResponseItem })[] = [];
-
-            if (this.displayMode === 'Report') {
-              dataToNavigate = rawData;
-            } else if (this.displayMode === 'ByPaymentType') {
-           dataToNavigate = (rawData as TLS23040ResponseItem[]).flatMap(
-  (item) =>
-    item.PaymentDetail?.map((p): PaymentDetail & { parent: TLS23040ResponseItem } => ({
-      ...p,
-      parent: item,
-    })) || []
-);
-
-            } else if (this.displayMode === 'ByDiscountType') {
-              dataToNavigate = rawData.flatMap(
-                (item: any) =>
-                  item.DiscountDetail?.map((d: any) => ({
-                    ...d,
-                    parent: item,
-                  })) || [],
-              );
-            }
-
-            this.queryStateService.setQueryState(this.ProgNo, queryFormValue);
-
-            this.router.navigate(['account/tls/tls23040cru'], {
-              state: {
-                queryFormValue,
-                pageSize: this.customPageSize,
-                data: dataToNavigate,
-                displayMode: this.displayMode,
-              },
-            });
-          } else {
-            this.messageService.errorBubble('查詢失敗');
-          }
-        },
-        complete: () => {
-          this.loading = false;
-          this.messageService.unblockUi();
-          this.showPageSizeDialog = false;
-        },
-      });
+  this.submitted = true;
+  if (this.queryForm.invalid) {
+    this.messageService.warnBubble('請確認欄位資料是否完整');
+    this.queryForm.markAllAsTouched();
+    return;
   }
+
+  const queryFormValue = this.cleanFormPayload({
+    ...this.queryForm.value,
+    pageSize: this.customPageSize,
+  });
+
+  this.loading = true;
+  this.messageService.blockUi();
+
+  this.tls23040Service
+    .queryTLS23040(queryFormValue)
+    .pipe(
+      timeout(30000),
+      catchError((err) => {
+        if (err.name === 'TimeoutError') {
+          this.messageService.warnBubble('查詢時間過久，請嘗試縮小查詢條件範圍');
+        } else {
+          this.messageService.errorBubble('查詢失敗');
+        }
+        this.loading = false;
+        this.messageService.unblockUi();
+        // 用空陣列回傳，型別一致
+        return of({ Status: '9999', Data: [], Error: null, Meta: null, Message: '', TotalCount: 0, TotalPage: 0 });
+      }),
+    )
+    .subscribe({
+      next: (res) => {
+        if (res.Status === '0000') {
+          const groups = res.Data || [];
+
+          let dataToNavigate:
+            | InvoiceDetail[]
+            | PaymentDetail[]
+            | DiscountDetail[] = [];
+
+          switch (this.displayMode) {
+            case 'Report':
+              // ✅ 只拿發票/交易明細
+              dataToNavigate = groups.flatMap(g => g.InvoiceDetail ?? []);
+              break;
+            case 'ByPaymentType':
+              // ✅ 只拿付款明細
+              dataToNavigate = groups.flatMap(g => g.PaymentDetail ?? []);
+              break;
+            case 'ByDiscountType':
+              // ✅ 只拿折扣明細
+              dataToNavigate = groups.flatMap(g => g.DiscountDetail ?? []);
+              break;
+          }
+
+          // 紀錄查詢狀態
+          this.queryStateService.setQueryState(this.ProgNo, queryFormValue);
+
+          // 帶資料去 CRU 頁
+          this.router.navigate(['account/tls/tls23040cru'], {
+            state: {
+              queryFormValue,
+              pageSize: this.customPageSize,
+              data: dataToNavigate,
+              displayMode: this.displayMode,
+              // 也可順帶 totalCount/totalPage 若你要用
+              totalCount: res.TotalCount,
+              totalPage: res.TotalPage,
+            },
+          });
+        } else {
+          this.messageService.errorBubble('查詢失敗');
+        }
+      },
+      complete: () => {
+        this.loading = false;
+        this.messageService.unblockUi();
+        this.showPageSizeDialog = false;
+      },
+    });
+}
 }
