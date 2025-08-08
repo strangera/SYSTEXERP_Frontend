@@ -129,7 +129,7 @@ export class TLS13040Component extends BasicQueryPageComponent<any> {
       visible: true,
       format: (value: any) => {
         const found = this.OrganizationCodeOptions.find(opt => String(opt.value) === String(value));
-        return found ? `${found.value} - ${found.label}` : value ?? '';
+        return found ? `${found.value}` : value ?? '';
       }
     },
 
