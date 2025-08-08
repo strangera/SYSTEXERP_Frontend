@@ -37,13 +37,13 @@ import { DatePipe } from '@angular/common';
 })
 export class TLS26030Component extends BasicQueryPageComponent<TLS26030Data> implements OnInit {
   queryForm = this.formBuilder.group({
-    Sale_DateStart: ['', Validators.required],        // 銷售日期(起)
-    Sale_DateEnd: ['', Validators.required],          // 銷售日期(訖)
+    Sale_DateStart: ['2025/08/01', Validators.required],
+    Sale_DateEnd: ['2025/08/31', Validators.required],
     tlt_building: [[]],                               // 館別
     Org_ID: [[]],                                     // 組織代號
     Org_Name: [''],                                   // 組織名稱
     tlt_floor: [[]],                                  // 樓層
-    ...createPaginationConfig([{ field: 'TXN_No', order: 1 }])
+    ...createPaginationConfig([])
   });
 
   totalRecords = 0;

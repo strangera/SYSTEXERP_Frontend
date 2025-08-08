@@ -16,6 +16,7 @@ import { FloorService } from '@service/basic/floor.service';
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
 import { Tls51080Service } from '@service/api/tls/tls51080.service';
 import { untilDestroyed } from '@ngneat/until-destroy';
+import { DatePipe } from '@angular/common';
 
 @Component({
   selector: 'app-tls26020',
@@ -37,13 +38,13 @@ import { untilDestroyed } from '@ngneat/until-destroy';
 })
 export class TLS26020Component extends BasicQueryPageComponent<TLS26020Data> implements OnInit {
   queryForm = this.formBuilder.group({
-    Sale_DateStart: [null, Validators.required],        // 改為 null
-    Sale_DateEnd: [null, Validators.required],          // 改為 null
+    Sale_DateStart: ['2024/01/01', Validators.required],
+    Sale_DateEnd: ['2024/12/31', Validators.required],
     tlt_building: [[]],
     Org_ID: [[]],
     Org_Name: [''],
     tlt_floor: [[]],
-    ...createPaginationConfig([{ field: 'tlt_no', order: 1 }]) // 修正排序欄位
+    ...createPaginationConfig([]) // 修正排序欄位
   });
 
   totalRecords = 0;
@@ -60,7 +61,7 @@ export class TLS26020Component extends BasicQueryPageComponent<TLS26020Data> imp
 
   // 展開詳細資料的欄位定義
   expansionColumns: Column[] = [
-    { field: 'TXN_DATE', header: '交易日期', visible: true },
+    { field: 'TXN_DATE', header: '交易日期', visible: true, format: (value: any) => value ? this.datePipe.transform(value, 'yyyy/MM/dd') : '' },
     { field: 'ECR_NO', header: '機號', visible: true },
     { field: 'TXN_NO', header: '交易序號', visible: true },
     { field: 'TXN_GUIBegNo_Pre', header: '字軌', visible: true },
@@ -79,7 +80,8 @@ export class TLS26020Component extends BasicQueryPageComponent<TLS26020Data> imp
     private tls26020Service: TLS26020Service,
     private tls11010Service: Tls11010Service,
     private floorService: FloorService,
-    private tls51080Service: Tls51080Service
+    private tls51080Service: Tls51080Service,
+    private datePipe: DatePipe
   ) {
     super();
   }

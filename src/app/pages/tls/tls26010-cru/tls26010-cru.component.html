@@ -40,7 +40,7 @@
         <div class="col-12 md:col-4 lg:col-4">
           <app-input-text label="核准狀態"
                           controlName="pod_status"
-                          [control]="podStatus"
+                          [control]="df.pod_status"
                           [disabled]="true">
           </app-input-text>
         </div>
@@ -50,32 +50,31 @@
       <div class="grid justify-content-end">
         <app-button btnType="clear"
                     (click)="onClear()"
-                    *ngIf="isFormCreateable || isFormEditable"></app-button>
+                    *ngIf="!isFormReadable"></app-button>
         <app-button btnType="submit"
                     (click)="onSubmit()"
-                    *ngIf="isFormEditable || isFormCreateable"></app-button>
+                    *ngIf="!isFormReadable"></app-button>
       </div>
     </div>
   </p-panel>
 </div>
 <div class="card">
-  <div *ngIf="isFormEditable || isFormCreateable"
+  <div *ngIf="!isFormReadable"
        class="grid p-fluid">
     <div class="col-12 md:col-6 lg:col-4">
       <app-button btnType="create"
                   label="新增收銀機"
-                  (click)="dialogVisible.set('ecr'); submitted = false"></app-button>
+                  (click)="onOpenDialog('ecr')"></app-button>
     </div>
   </div>
   <div class="col-12">
-    <app-table [showCheckBox]="!isFormReadable"
+    <app-table [showCheckBox]="false"
                [showEdit]="false"
                [showDetail]="false"
-               [showDelete]="isFormEditable || isFormCreateable"
+               [showDelete]="false"
                [showManage]="false"
                [showReportMode]="false"
-               [isRowSelectable]="isRowSelectable"
-               (delete)="onDelete($event)"
+               [isRowSelectable]="service.isRowSelectable"
                [data]="ecrTableFiltered"
                [dataKey]="'ecr_no'"
                [tableKey]="'TLS26010_ECR'"
@@ -84,26 +83,25 @@
   </div>
 </div>
 <div class="card">
-  <div *ngIf="isFormEditable || isFormCreateable"
+  <div *ngIf="!isFormReadable"
        class="grid p-fluid">
     <div class="col-12 md:col-6 lg:col-4">
       <app-button btnType="create"
                   label="新增專櫃"
-                  (click)="dialogVisible.set('tlt'); submitted = false"></app-button>
+                  (click)="onOpenDialog('tlt')"></app-button>
     </div>
   </div>
   <div class="col-12">
-    <app-table [showCheckBox]="!isFormReadable"
+    <app-table [showCheckBox]="false"
                [showEdit]="false"
                [showDetail]="false"
-               [showDelete]="isFormEditable || isFormCreateable"
+               [showDelete]="false"
                [showManage]="false"
                [showReportMode]="false"
-               [isRowSelectable]="isRowSelectable"
+               [isRowSelectable]="service.isRowSelectable"
                [showExcel]="isFormEditable"
                (exportExcel)="onExportExcel()"
                (importExcel)="onImportExcel($event)"
-               (delete)="onDelete($event)"
                [data]="tltTableFiltered"
                [dataKey]="'tlt_no'"
                [tableKey]="'TLS26010_TLT'"
@@ -116,37 +114,57 @@
             [header]="dialogVisible() === 'ecr' ? '新增收銀機' : '新增專櫃'"
             (visibleChange)="onVisibleChange($event)"
             (save)="onDialogSubmit()"
-            [height]="'50vh'">
+            [height]="'auto'">
   <form [formGroup]="dataForm">
     <div class="grid p-fluid">
       <div class="col-12 md:col-6 lg:col-4">
         <app-multi-select label="館別"
                           controlName="sys3800"
-                          [options]="service.sys3800List()"
+                          [options]="service.sys3800Data()"
                           optionLabel="Name"
                           optionValue="No"
+                          appendTo="body"
                           [control]="dataForm.controls.sys3800"
+                          [loading]="service.sys3800Loading"
                           [submitted]="submitted"></app-multi-select>
       </div>
       <div class="col-12 md:col-6 lg:col-4">
         <app-multi-select label="樓層"
                           controlName="sys3900"
-                          [options]="service.sys3900List()"
+                          [options]="service.sys3900Data()"
                           optionLabel="Name"
                           optionValue="No"
+                          appendTo="body"
                           [control]="dataForm.controls.sys3900"
+                          [loading]="service.sys3900Loading"
                           [submitted]="submitted"></app-multi-select>
       </div>
       <div class="col-12 md:col-6 lg:col-4">
         <app-multi-select label="區域"
                           controlName="sys3A00"
-                          [options]="service.sys3A00List()"
+                          [options]="service.sys3A00Data()"
                           optionLabel="Name"
                           optionValue="No"
+                          appendTo="body"
                           [control]="dataForm.controls.sys3A00"
+                          [loading]="service.sys3A00Loading"
                           [submitted]="submitted"></app-multi-select>
       </div>
-      <div class="col-12 md:col-6 lg:col-4">
+      <div class="col-12">
+        <app-table [showCheckBox]="true"
+                   [showManage]="false"
+                   [showDelete]="false"
+                   [showReportMode]="false"
+                   [selectedItems]="selectedDialogData"
+                   (selectionChange)="onSelectionChange($event)"
+                   [data]="dialogData"
+                   [dataKey]="dialogDataKey"
+                   [tableKey]="dialogTableKey"
+                   [columns]="dialogColumn"
+                   [loading]="service.ecrLoading || service.tltLoading">
+        </app-table>
+      </div>
+      <!-- <div class="col-12 md:col-6 lg:col-4">
         <app-multi-select *ngIf="dialogVisible() === 'ecr'"
                           [appendTo]="'body'"
                           label="收銀機號"
@@ -165,7 +183,7 @@
                           optionValue="tlt_no"
                           [control]="dataForm.controls.tlt_nos"
                           [submitted]="submitted"></app-multi-select>
-      </div>
+      </div> -->
     </div>
   </form>
 </app-dialog>
