@@ -14,12 +14,12 @@ import { AccordionModule } from 'primeng/accordion';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { Button } from 'primeng/button';
 import { TooltipModule } from 'primeng/tooltip';
 import { NgStyle } from '@angular/common';
 import { TranslateModule } from '@ngx-translate/core';
+import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
 
 export const enum POStatus {
   已確認 = '1',
@@ -31,26 +31,26 @@ export const enum POStatus {
 
 // 2.5.2.3 進貨驗收作業
 @Component({
-    selector: 'app-tls52030',
-    templateUrl: './tls52030.component.html',
-    standalone: true,
-    imports: [
-        MenubarComponent,
-        ButtonComponent,
-        AccordionModule,
-        FormsModule,
-        ReactiveFormsModule,
-        InputTextComponent,
-        MultiSelectComponent,
-        DropdownTableComponent,
-        DropdownComponent,
-        CalendarRangeComponent,
-        TableComponent,
-        Button,
-        TooltipModule,
-        NgStyle,
-        TranslateModule,
-    ],
+  selector: 'app-tls52030',
+  templateUrl: './tls52030.component.html',
+  standalone: true,
+  imports: [
+    MenubarComponent,
+    ButtonComponent,
+    AccordionModule,
+    FormsModule,
+    ReactiveFormsModule,
+    InputTextComponent,
+    MultiSelectComponent,
+    DropdownTableComponent,
+    DropdownComponent,
+    CalendarRangeQuickComponent,
+    TableComponent,
+    Button,
+    TooltipModule,
+    NgStyle,
+    TranslateModule,
+  ],
 })
 export class TLS52030Component extends BasicQueryPageComponent<ITLS52030Data> implements OnInit {
   queryForm = this.formBuilder.group({

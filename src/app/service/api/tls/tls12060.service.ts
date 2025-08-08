@@ -11,10 +11,10 @@ export class Tls12060Service {
   apiUrl: string = environment.ApiUrl + '/TLS0000/TLS1000';
   constructor(private http: HttpClient) {}
 
-  // // 查詢 Potential_Customer 資料表
-  // queryTLS12010(body: any): Observable<any> {
-  //   return this.http.post<any>(`${this.apiUrl}/queryTLS12010`, body);
-  // }
+  // 查詢 Potential_Customer 資料表
+  queryTLS12060(body: any): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/queryTLS12060`, body);
+  }
 
   // // 查詢 Potential_Customer_Detail資料表
   // queryTLS12010_Detail(body: any): Observable<any> {

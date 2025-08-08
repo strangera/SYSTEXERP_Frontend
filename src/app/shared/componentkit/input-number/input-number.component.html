@@ -8,14 +8,16 @@
       [placeholder]="customPlaceholder || placeholder" [showButtons]="showButtons" [max]="max || maxValue" [step]="step"
       [useGrouping]="useGrouping" [minFractionDigits]="minFractionDigits" [maxFractionDigits]="maxFractionDigits"
       [ngClass]="{'ng-dirty ng-invalid': submitted && control.errors}" [mode]="mode" [maxlength]="maxLength"
-      (onInput)="onInputChange($event)" (onBlur)="onBlur($event)" />
+      (onInput)="onInputChange($event)" (onBlur)="onBlur($event)" [pTooltip]="customPlaceholder || placeholder"
+      tooltipPosition="bottom" />
   </ng-container>
   <ng-template #inputNumber>
     <p-inputNumber [inputId]="controlName" [title]="label" [name]="label" [formControl]="control"
       [placeholder]="customPlaceholder || placeholder" [showButtons]="showButtons" [min]="min || minValue"
       [max]="max || maxValue" [step]="step" [useGrouping]="useGrouping" [minFractionDigits]="minFractionDigits"
       [maxFractionDigits]="maxFractionDigits" [ngClass]="{'ng-dirty ng-invalid': submitted && control.errors}"
-      [mode]="mode" [maxlength]="maxLength" (onInput)="onInputChange($event)" (onBlur)="onBlur($event)" />
+      [mode]="mode" [maxlength]="maxLength" (onInput)="onInputChange($event)" (onBlur)="onBlur($event)"
+      [pTooltip]="customPlaceholder || placeholder" tooltipPosition="bottom" />
   </ng-template>
   <p-inputGroupAddon *ngIf="suffix">{{ suffix }}</p-inputGroupAddon>
 </p-inputGroup>

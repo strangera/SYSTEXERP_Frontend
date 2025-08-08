@@ -13,7 +13,7 @@ import { DropdownModule } from 'primeng/dropdown';
 import { FileSelectEvent, FileUpload, FileUploadModule } from 'primeng/fileupload';
 import { InputNumberModule } from 'primeng/inputnumber';
 import { InputTextModule } from 'primeng/inputtext';
-import { MultiSelectModule } from 'primeng/multiselect';
+import { MultiSelectChangeEvent, MultiSelectModule } from 'primeng/multiselect';
 import { Ripple } from 'primeng/ripple';
 import { SkeletonModule } from 'primeng/skeleton';
 import { Table, TableLazyLoadEvent, TableModule, TablePageEvent, TableRowSelectEvent, TableRowUnSelectEvent } from 'primeng/table';
@@ -189,6 +189,7 @@ export class TableComponent extends BasicPrintDataComponent implements OnInit, O
     this.currentPageService.currentPageProgNo$.pipe(takeUntil(this.ngUnsubscribe)).subscribe(progNo => {
       if (progNo) {
         this.funInfo = this.authService.getUserPermissions(progNo);
+        this.tableKey = this.tableKey ? this.tableKey : progNo + 'TableQueryState';
       } else {
         this.funInfo = undefined;
       }
@@ -201,13 +202,8 @@ export class TableComponent extends BasicPrintDataComponent implements OnInit, O
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['data']) {
       setTimeout(() => {
-        const dataLength = this.totalRecords !== 0 ? this.totalRecords : this.data.length;
-        if (dataLength > 0) {
-          this.calculateTotalPages(); // 計算總頁數
-        } else {
-          this.dt.totalRecords = 0;
-          this.selectedItems = [];
-        }
+        this.calculateTotalPages(); // 計算總頁數
+        this.selectedItems = []
         this.selectionChange.emit(this.selectedItems);
       });
     }
@@ -217,21 +213,20 @@ export class TableComponent extends BasicPrintDataComponent implements OnInit, O
       this.originalColumns = this.columns;
       this.columns = this.columns.filter(col => !col.hidden);
       // 恢復歷史紀錄，如果沒有就使用預設值
-      const storedSort = this.queryStateService.getQueryState(this.tableKey + 'Sort')?.value;
-      if (storedSort) { this.multiSortMeta = storedSort; }
-      const storedFilter = this.queryStateService.getQueryState(this.tableKey + 'Filter')?.value;
-      if (storedFilter) {
-        const validFilteredColumns = this.columns.filter(col =>// 這裡需要確保從快取讀取到的欄位是有效的
-          storedFilter.some((storedCol: any) => storedCol.field === col.field)
-        );
-        this.selectedColumns = validFilteredColumns;
-        this.columns.forEach(col => {// 根據儲存的過濾欄位，更新 this.columns 的 visible 屬性
-          col.visible = this.selectedColumns.some(selCol => selCol.field === col.field);
-        });
-      } else {
-        this.selectedColumns = this.columns.filter(col => col.visible !== false);// 沒有儲存的狀態，使用預設值
-      }
-      this.isColumnsInitialized = true;
+      setTimeout(() => {
+        const storedSort = this.queryStateService.getQueryState(this.tableKey + 'Sort')?.value;
+        if (storedSort) { this.multiSortMeta = storedSort; }
+        const storedFilter = this.queryStateService.getQueryState(this.tableKey + 'Filter')?.value;
+        if (storedFilter) {
+          this.columns = storedFilter;
+          const validFilteredColumns = this.columns.filter(col => col.visible !== false);// 只保留可見的欄位
+          this.selectedColumns = validFilteredColumns;
+        } else {
+          this.selectedColumns = this.columns.filter(col => col.visible !== false);// 沒有儲存的狀態，使用預設值
+        }
+        this.isColumnsInitialized = true;
+
+      }, 300);
     }
   }
   ngOnDestroy(): void {
@@ -244,7 +239,9 @@ export class TableComponent extends BasicPrintDataComponent implements OnInit, O
     this.totalPages = Math.ceil(this.dt.totalRecords / this.rows);
     this.pages = Array.from({ length: this.totalPages }, (_, index) => ({ label: `第 ${index + 1} 頁`, value: index + 1 }));
     // 若當前頁數超過最大頁數，則移動到最大頁數，但至少為 1
-    if (this.selectedPage && this.selectedPage > this.totalPages) { this.goToPage(Math.max(this.totalPages, 1)); }
+    if (this.selectedPage && this.selectedPage > this.totalPages && this.dt.totalRecords !== 0) {
+      this.goToPage(Math.max(this.totalPages, 1));
+    }
     this.cdr.detectChanges(); // 在计算完所有页面信息后，通知 Angular 更新 UI
   }
   // 右上dropdown 跳轉頁數
@@ -269,6 +266,7 @@ export class TableComponent extends BasicPrintDataComponent implements OnInit, O
     if (this.totalRecords === 0 || !this.IsPrint || this.rowEditing) { return; }
     const pageSize = event.rows && event.rows > 0 ? event.rows : 30;
     const pageIndex = (event.first ?? 0) / pageSize + 1;
+    this.selectedPage = pageIndex;
     const SortBy = event.multiSortMeta ?? [{ field: this.dataKey, order: 1 }];
     this.lazyLoadData.emit({ pageIndex, pageSize, SortBy });
   }
@@ -323,13 +321,11 @@ export class TableComponent extends BasicPrintDataComponent implements OnInit, O
     }
   }
   // 過濾欄位記錄保存
-  onFilterChange(event: any) {
+  onFilterChange(event: MultiSelectChangeEvent) {
     this.columns.forEach(col => {
       col.visible = event.value.some((ev: any) => ev.field === col.field);
     });
-    this.selectedColumns = this.columns.filter(col => col.visible !== false);
-    this.queryStateService.setQueryState(this.tableKey + 'Filter', this.selectedColumns);
-
+    this.queryStateService.setQueryState(this.tableKey + 'Filter', this.columns);
   }
   // 行編輯初始化
   onRowEditInit(rowData: any) {

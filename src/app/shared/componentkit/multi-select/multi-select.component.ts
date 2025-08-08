@@ -1,7 +1,7 @@
 import { NgClass, NgIf } from '@angular/common';
 import { Component, ElementRef, Input, OnInit, TemplateRef, ViewChild } from '@angular/core';
 import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { MultiSelect, MultiSelectLazyLoadEvent, MultiSelectModule } from 'primeng/multiselect';
+import { MultiSelect, MultiSelectModule } from 'primeng/multiselect';
 import { ControlMessagesComponent } from '../../component/control-messages/control-messages.component';
 import { BasicKitComponent } from '../../componentextends/basic-kit/basic-kit.component';
 
@@ -47,9 +47,6 @@ export class MultiSelectComponent extends BasicKitComponent implements OnInit {
     if (!this.control.disabled) {
       this.updateControlState(this.control);
     }
-  }
-  onLazyLoad(event: MultiSelectLazyLoadEvent) {
-    console.log(event);
   }
   private ensureControl() {
     if (!this.control) {

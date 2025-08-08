@@ -12,6 +12,8 @@ import { ButtonComponent } from '../../../shared/componentkit/button/button.comp
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { TranslateModule } from '@ngx-translate/core';
 import { ValidationService } from '@shared/service/validation.service';
+import { untilDestroyed } from '@ngneat/until-destroy';
+import { finalize } from 'rxjs';
 // 4-2-2-2角色之使用者設定維護
 @Component({
   selector: 'app-sys0230',
@@ -68,24 +70,15 @@ export class SYS0230Component extends BasicQueryPageComponent<tblRole>
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
       console.log('query condition', frm.value);
-      this.sys0210Service.queryRole(frm.value).subscribe({
-        next: (response) => {
-          console.log('回傳Role:', response.Data);
-          if (response.Status === '0000') {
-            this.data = response.Data || [];
-            this.totalRecords = response.TotalCount || response.Data.length;
-            this.queryStateService.setQueryState(this.ProgNo, frm.value);
-          } else {
-            console.error('API error:', response.Status, response.Message);
-          }
-          this.loading = false;
-          this.messageService.unblockUi();
-        },
-        error: (err: string) => {
-          console.error('API error:', err);
-          this.loading = false;
-          this.messageService.unblockUi();
-        },
+      this.sys0210Service.queryRole(frm.value).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(response => {
+        if (response.Data) {
+          this.queryStateService.setQueryState(this.ProgNo, frm.value);
+          this.data = response.Data;
+          this.totalRecords = response.TotalCount;
+        } else {
+          this.data = [];
+          this.totalRecords = 0;
+        }
       });
     });
   }

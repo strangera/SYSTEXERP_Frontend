@@ -32,55 +32,55 @@ export interface UserOption {
 
 // 4-2-2-3角色複製 CRU
 @Component({
-    selector: 'app-sys0240.cru',
-    templateUrl: './sys0240.cru.component.html',
-    animations: [
-        trigger('expandCollapse', [
-            transition(':enter', [
-                style({ height: '0', opacity: 0 }),
-                animate('300ms ease-out', style({ height: '*', opacity: 1 }))
-            ]),
-            transition(':leave', [
-                animate('200ms ease-in', style({ height: '0', opacity: 0 }))
-            ])
-        ])
-    ],
-    changeDetection: ChangeDetectionStrategy.OnPush,
-    standalone: true,
-    imports: [
-        MenubarComponent,
-        ButtonComponent,
-        PanelModule,
-        FormsModule,
-        ReactiveFormsModule,
-        InputTextComponent,
-        InputGroupComponent,
-        CheckboxModule,
-        NgIf,
-        TableComponent,
-        DividerModule,
-        TabViewModule,
-        PrimeTemplate,
-        NgClass,
-        NgFor,
-        AccordionModule,
-        TranslateModule,
-    ],
+  selector: 'app-sys0240.cru',
+  templateUrl: './sys0240.cru.component.html',
+  animations: [
+    trigger('expandCollapse', [
+      transition(':enter', [
+        style({ height: '0', opacity: 0 }),
+        animate('300ms ease-out', style({ height: '*', opacity: 1 }))
+      ]),
+      transition(':leave', [
+        animate('200ms ease-in', style({ height: '0', opacity: 0 }))
+      ])
+    ])
+  ],
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  standalone: true,
+  imports: [
+    MenubarComponent,
+    ButtonComponent,
+    PanelModule,
+    FormsModule,
+    ReactiveFormsModule,
+    InputTextComponent,
+    InputGroupComponent,
+    CheckboxModule,
+    NgIf,
+    TableComponent,
+    DividerModule,
+    TabViewModule,
+    PrimeTemplate,
+    NgClass,
+    NgFor,
+    AccordionModule,
+    TranslateModule,
+  ],
 })
 
 export class SYS0240CRUComponent extends BasicCruPageComponent<tblRole> implements OnInit {
   // ----------------------------------------------------------------
   dataForm = this.formBuilder.nonNullable.group({
     id: [], // ID
-    Role_No: ['', [Validators.required, Validators.maxLength(10)]], // 來源角色代碼
+    Role_No: ['', [Validators.required, Validators.maxLength(10)]], // 來源角色代號
     Role_Name: ['', [Validators.required, Validators.maxLength(30)]], // 來源角色名稱
-    Target_No: ['', [Validators.required, Validators.maxLength(10)]], // 目標角色代碼
+    Target_No: ['', [Validators.required, Validators.maxLength(10)]], // 目標角色代號
     Target_Name: ['', [Validators.maxLength(30)]], // 目標角色名稱
     IsAllCopy: [false],
   });
   targetOptions: apiOption[] = []; //目標options
   roleColumns: Column[] = [
-    { field: 'Role_No', header: '角色代碼', visible: true },
+    { field: 'Role_No', header: '角色代號', visible: true },
     { field: 'Role_Name', header: '角色名稱', visible: true }
   ];
   roleUserData: UserOption[] = []; //目標權限

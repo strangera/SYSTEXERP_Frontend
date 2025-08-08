@@ -5,8 +5,8 @@
 <div class="grid p-fluid">
   <div class="col pb-0">
     <p-inputGroup id="input-text-start">
-      <app-input-text [label]="startLabel || ''" [controlName]="startControlName" [control]="startControl"
-        [submitted]="submitted" (inputChange)="onStartInputChange($event)" />
+      <app-input-text class="w-full" [label]="startLabel || ''" [controlName]="startControlName"
+        [control]="startControl" [submitted]="submitted" (inputChange)="onStartInputChange($event)" />
     </p-inputGroup>
   </div>
   <div class="flex"
@@ -15,7 +15,7 @@
   </div>
   <div class="col pb-0">
     <p-inputGroup id="input-text-end">
-      <app-input-text [label]="endLabel || ''" [controlName]="endControlName" [control]="endControl"
+      <app-input-text class="w-full" [label]="endLabel || ''" [controlName]="endControlName" [control]="endControl"
         [submitted]="submitted" (inputChange)="onEndInputChange($event)" />
     </p-inputGroup>
   </div>

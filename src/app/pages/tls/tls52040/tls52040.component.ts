@@ -20,6 +20,7 @@ import { Button } from 'primeng/button';
 import { TooltipModule } from 'primeng/tooltip';
 import { NgStyle } from '@angular/common';
 import { TranslateModule } from '@ngx-translate/core';
+import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
 
 export const enum POStatus {
   已確認 = '1',
@@ -29,26 +30,26 @@ export const enum POStatus {
   作廢 = '9',
 }
 @Component({
-    selector: 'app-tls52040',
-    templateUrl: './tls52040.component.html',
-    standalone: true,
-    imports: [
-        MenubarComponent,
-        ButtonComponent,
-        AccordionModule,
-        FormsModule,
-        ReactiveFormsModule,
-        InputTextComponent,
-        MultiSelectComponent,
-        DropdownTableComponent,
-        DropdownComponent,
-        CalendarRangeComponent,
-        TableComponent,
-        Button,
-        TooltipModule,
-        NgStyle,
-        TranslateModule,
-    ],
+  selector: 'app-tls52040',
+  templateUrl: './tls52040.component.html',
+  standalone: true,
+  imports: [
+    MenubarComponent,
+    ButtonComponent,
+    AccordionModule,
+    FormsModule,
+    ReactiveFormsModule,
+    InputTextComponent,
+    MultiSelectComponent,
+    DropdownTableComponent,
+    DropdownComponent,
+    TableComponent,
+    Button,
+    TooltipModule,
+    NgStyle,
+    TranslateModule,
+    CalendarRangeQuickComponent
+  ],
 })
 export class TLS52040Component extends BasicQueryPageComponent<ITLS52040Data> implements OnInit {
   queryForm = this.formBuilder.group({

@@ -31,7 +31,7 @@ import { finalize } from 'rxjs';
 // 4.2.3.2 使用者系統權限設定
 export class SYS0320Component extends BasicQueryPageComponent<UserData> implements OnInit {
   queryForm = this.formBuilder.group({
-    user_No: ['', [Validators.maxLength(10)]], // 使用者代碼
+    user_No: ['', [Validators.maxLength(10)]], // 使用者編號
     user_Name: ['', [Validators.maxLength(30)]], // 使用者名稱
     ...createPaginationConfig([{ field: 'user_No', order: 1 }]), // 分頁和排序參數
   });

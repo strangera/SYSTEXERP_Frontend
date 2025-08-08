@@ -39,7 +39,7 @@ export class SYS0310Component extends BasicQueryPageComponent<Role> implements O
   totalRecords = 0;// 分頁和排序參數 // 排序需要
   data: Role[] = [];
   columns: Column[] = [
-    { field: 'Role_No', header: '角色編號', visible: true },
+    { field: 'Role_No', header: '角色代碼', visible: true },
     { field: 'Role_Name', header: '角色名稱', visible: true },
     { field: 'Description', header: '描述', visible: true },
     { field: 'CRT_Date', header: '建立日期', visible: false, format: formatDateTime },

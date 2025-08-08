@@ -135,6 +135,11 @@ export abstract class BasicQueryPageComponent<T> {
   }
 
   onLazyLoadData(event: LazyLoadEvent, queryForm: FormGroup) {
+    this.queryStateService.getQueryState(this.ProgNo)?.pipe(take(1)).subscribe((query) => {
+      if (query) {
+        queryForm.patchValue(query);
+      }
+    })
     queryForm.patchValue({
       pageSize: event.pageSize,
       pageIndex: event.pageIndex,

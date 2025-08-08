@@ -26,9 +26,9 @@ import { ValidationService } from '@shared/service/validation.service';
 })
 export class FIN11020Component extends BasicQueryPageComponent<MainInvoiceData> implements OnInit {
   queryForm = this.formBuilder.group({
-    GUI_YYMM_start: [null, [Validators.required]], // 發票年月
-    GUI_YYMM_end: [null, [Validators.required]], // 發票年月
-    GUI_Track: ['', [Validators.maxLength(2)]], // 字軌
+    GUI_YYMM_start: [new Date(), [Validators.required]], // 發票年月
+    GUI_YYMM_end: [new Date(), [Validators.required]], // 發票年月
+    GUI_Track: ['', [Validators.required, this.validationService.guiTrackValidator, Validators.maxLength(2), Validators.minLength(2)]], // 字軌
     GUI_No_start: [null, [Validators.maxLength(8), Validators.minLength(8), Validators.max(99999950)]], // 發票號碼(起)
     GUI_No_end: [null, [Validators.maxLength(8), Validators.minLength(8), Validators.max(99999999)]], // 發票號碼(迄)
     ...createPaginationConfig([{ field: 'GUI_YYMM', order: 1 }]), // 分頁和排序參數
@@ -49,7 +49,7 @@ export class FIN11020Component extends BasicQueryPageComponent<MainInvoiceData> 
     this.initializePage('FIN11020', '/FIN/FIN11020cru', this.queryForm, (form) => this.onSubmit(form));
     this.queryForm.get('GUI_YYMM_start')?.valueChanges.subscribe(value => {
       const endDate = this.queryForm.get('GUI_YYMM_end')?.value;
-      if (value && (!endDate || endDate === '')) {
+      if (value && (!endDate)) {
         this.queryForm.get('GUI_YYMM_end')?.setValue(value);
       }
     });

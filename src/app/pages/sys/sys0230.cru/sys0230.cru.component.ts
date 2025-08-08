@@ -50,7 +50,7 @@ export class SYS0230CRUComponent extends BasicCruPageComponent<tblUser>
   });
   roleUserData: UserOption[] = [];
   roleUserColumns: Column[] = [
-    { field: 'User_No', header: '使用者代號', visible: true },
+    { field: 'User_No', header: '使用者編號', visible: true },
     { field: 'User_Name', header: '使用者名稱', visible: true },
   ]
   selectedRoleUserData: UserOption[] = []; // 選取的使用者資料
@@ -94,7 +94,7 @@ export class SYS0230CRUComponent extends BasicCruPageComponent<tblUser>
   selectedItemsDialog: UserOption[] = [];
   dialogData: UserOption[] = [];
   dialogColumns: Column[] = [
-    { field: 'User_No', header: '使用者代號', visible: true },
+    { field: 'User_No', header: '使用者編號', visible: true },
     { field: 'User_Name', header: '使用者名稱', visible: true },
   ];
   isRowSelectable(event: UserOption): boolean {
