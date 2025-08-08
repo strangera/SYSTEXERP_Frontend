@@ -18,6 +18,7 @@ import { TranslateModule } from '@ngx-translate/core';
 import { SystemOptionsService } from '@service/system/sys1000.service';
 import { SystemOption } from '@shared/models/sys/sys1000.model';
 import { user_priorityOptions } from './sys0110.model';
+import { finalize } from 'rxjs';
 
 // 4-2-1-1 使用者基本資料維護
 @Component({
@@ -132,18 +133,10 @@ export class SYS0110Component extends BasicQueryPageComponent<UserData> implemen
   // 提交查詢：處理表單並呼叫查詢 API
   onSubmit(frm: FormGroup): void {
     this.handleSubmit(frm, () => {
-      this.sys0110Service.queryUser(frm.value).pipe(untilDestroyed(this)).subscribe({
-        next: (response) => {
-          if (response.Status === '0000') {
-            this.queryStateService.setQueryState(this.ProgNo, frm.value);
-          }
-          this.data = response.Data || [];
-          this.totalRecords = response.TotalCount || response.Data?.length; // 排序需要
-          this.loading = false;
-        },
-        error: () => {
-          this.loading = false;
-        },
+      this.sys0110Service.queryUser(frm.value).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(response => {
+        this.queryStateService.setQueryState(this.ProgNo, frm.value);
+        this.data = response.Data || [];
+        this.totalRecords = response.TotalCount;
       });
     });
   }

@@ -95,24 +95,21 @@ export class BasicKitComponent {
       placeholderParts.push('必填');
     }
     if (this.maxLength && this.minLength && this.maxLength === this.minLength && !this.maxValue) {
-      placeholderParts.push(`必須為${this.minLength}個字`);
+      placeholderParts.push(`${this.minLength}個字`);
     } else if (this.maxLength && !this.maxValue) {
       placeholderParts.push(`最多${this.maxLength}個字`);
     } else if (this.minLength) {
       placeholderParts.push(`最少${this.minLength}個字`);
     }
     if (this.minValue !== null && this.maxValue !== null && this.minValue === this.maxValue) {
-      placeholderParts.push(`必須為${this.minValue}`);
+      placeholderParts.push(`須為${this.minValue}`);
     } else {
       if (this.minValue !== null) {
-        placeholderParts.push(`最小值為${this.minValue}`);
+        placeholderParts.push(`最小值${this.minValue}`);
       }
       if (this.maxValue !== null) {
-        placeholderParts.push(`最大值為${this.maxValue}`);
+        placeholderParts.push(`最大值${this.maxValue}`);
       }
-    }
-    if (this.isNumberOnly) {
-      placeholderParts.unshift('請輸入數字');
     }
     const finalPlaceholder = placeholderParts.join(', ');
     if (index === 0) this.placeholder = finalPlaceholder;

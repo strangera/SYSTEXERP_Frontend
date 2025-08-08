@@ -6,11 +6,11 @@
   <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
     <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
       <div class="grid p-fluid">
-        <app-input-text class="col-12 md:col-6 xl:col-3" label="來源角色代碼" controlName="Role_No"
+        <app-input-text class="col-12 md:col-6 xl:col-3" label="來源角色代號" controlName="Role_No"
           [control]="dataForm.controls.Role_No" [submitted]="submitted" [disabled]="true" />
         <app-input-text class="col-12 md:col-6 xl:col-3" label="來源角色名稱" controlName="Role_Name"
           [control]="dataForm.controls.Role_Name" [submitted]="submitted" [disabled]="true" />
-        <app-input-group class="col-12 xl:col-6" label="目的角色編號/名稱" controlName="Target_No"
+        <app-input-group class="col-12 xl:col-6" label="目的角色代碼/名稱" controlName="Target_No"
           [control]="dataForm.controls.Target_No" [submitted]="submitted" [options]="targetOptions" optionLabel="label"
           optionValue="Role_No" [columns]="roleColumns" />
         <p-checkbox class="col-12 sm:col-6" inputId="IsAllCopy" formControlName="IsAllCopy" label="是否複製使用者權限"

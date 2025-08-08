@@ -69,7 +69,7 @@ export const guiTypeOptions = [
 export const columns: Column[] = [
   { field: 'GUI_YYMM', header: '發票年月', visible: true, format: formatYYYYMM }, // 發票年月YYYYMM (西元年單數月)
   { field: 'GUI_SerNo', header: '序號', visible: true }, // 序號
-  { field: 'GUI_Track', header: '發票字軌', visible: true }, // 發票字軌
+  { field: 'GUI_Track', header: '字軌', visible: true }, // 字軌
   { field: 'GUI_BegNo', header: '發票起始號碼', visible: true }, // 發票起始號碼
   { field: 'GUI_EndNo', header: '發票結束號碼', visible: true }, // 發票結束號碼
   { field: 'GUI_TotQty', header: '發票張數', visible: true }, // 發票張數
@@ -94,7 +94,7 @@ export const subColumns: Column[] = [
   { field: 'STO_No', header: '分店編號', visible: true }, // 分店編號
   { field: 'GUI_YYMM', header: '發票年月', visible: true }, // 發票年月YYYYMM (西元年單數月)
   { field: 'GUI_SerNo', header: '序號', visible: true }, // 序號
-  { field: 'GUI_Track', header: '發票字軌', visible: true }, // 發票字軌
+  { field: 'GUI_Track', header: '字軌', visible: true }, // 字軌
   { field: 'GUI_BegNo', header: '發票起始號碼', visible: true }, // 發票起始號碼
   { field: 'GUI_EndNo', header: '發票結束號碼', visible: true }, // 發票結束號碼
   { field: 'GUI_TotQty', header: '發票張數', visible: true }, // 發票張數

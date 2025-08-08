@@ -20,7 +20,7 @@ import { ControlMessagesComponent } from '../../component/control-messages/contr
     InputTextModule,
     TooltipModule,
     ButtonComponent,
-    ControlMessagesComponent
+    ControlMessagesComponent,
   ]
 })
 export class InputTextComponent extends BasicKitComponent implements OnInit {

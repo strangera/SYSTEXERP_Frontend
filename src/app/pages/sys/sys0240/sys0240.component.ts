@@ -11,24 +11,25 @@ import { InputTextComponent } from '../../../shared/componentkit/input-text/inpu
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { TranslateModule } from '@ngx-translate/core';
+import { finalize } from 'rxjs';
 // Permissions
 // Shared
 // 4-2-2-3角色複製
 @Component({
-    selector: 'app-sys0240',
-    templateUrl: './sys0240.component.html',
-    styleUrls: ['./sys0240.component.scss'],
-    standalone: true,
-    imports: [
-        MenubarComponent,
-        AccordionModule,
-        FormsModule,
-        ReactiveFormsModule,
-        InputTextComponent,
-        ButtonComponent,
-        TableComponent,
-        TranslateModule,
-    ],
+  selector: 'app-sys0240',
+  templateUrl: './sys0240.component.html',
+  styleUrls: ['./sys0240.component.scss'],
+  standalone: true,
+  imports: [
+    MenubarComponent,
+    AccordionModule,
+    FormsModule,
+    ReactiveFormsModule,
+    InputTextComponent,
+    ButtonComponent,
+    TableComponent,
+    TranslateModule,
+  ],
 })
 
 export class SYS0240Component extends BasicQueryPageComponent<tblRole>
@@ -68,24 +69,15 @@ export class SYS0240Component extends BasicQueryPageComponent<tblRole>
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
       console.log('query condition', frm.value);
-      this.sys0210Service.queryRole(frm.value).pipe(untilDestroyed(this)).subscribe({
-        next: (response) => {
-          console.log('回傳Role:', response.Data);
-          if (response.Status === '0000') {
-            this.data = response.Data || [];
-            this.totalRecords = response.TotalCount || response.Data.length;
-            this.queryStateService.setQueryState(this.ProgNo, frm.value);
-          } else {
-            console.error('API error:', response.Status, response.Message);
-          }
-          this.loading = false;
-          this.messageService.unblockUi();
-        },
-        error: (err: string) => {
-          console.error('API error:', err);
-          this.loading = false;
-          this.messageService.unblockUi();
-        },
+      this.sys0210Service.queryRole(frm.value).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe((response) => {
+        if (response.Data) {
+          this.queryStateService.setQueryState(this.ProgNo, frm.value);
+          this.data = response.Data;
+          this.totalRecords = response.TotalCount;
+        } else {
+          this.data = [];
+          this.totalRecords = 0;
+        }
       });
     });
   }

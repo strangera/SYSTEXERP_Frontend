@@ -10,7 +10,14 @@ import { ControlMessagesComponent } from '../../component/control-messages/contr
   styleUrl: './dropdown.component.scss',
   changeDetection: ChangeDetectionStrategy.OnPush,
   standalone: true,
-  imports: [NgIf, DropdownModule, FormsModule, ReactiveFormsModule, NgClass, ControlMessagesComponent]
+  imports: [
+    NgIf,
+    DropdownModule,
+    FormsModule,
+    ReactiveFormsModule,
+    NgClass,
+    ControlMessagesComponent
+  ]
 })
 export class DropdownComponent extends BasicKitComponent implements OnInit {
   // 必填

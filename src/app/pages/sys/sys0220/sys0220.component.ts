@@ -16,6 +16,8 @@ import { CalendarRangeQuickComponent } from '../../../shared/componentkit/calend
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { TranslateModule } from '@ngx-translate/core';
+import { finalize } from 'rxjs';
+import { untilDestroyed } from '@ngneat/until-destroy';
 
 // 4-2-2-4使用者之角色設定維護
 @Component({
@@ -147,21 +149,15 @@ export class SYS0220Component extends BasicQueryPageComponent<UserData> implemen
   onSubmit(frm: FormGroup): void {
     this.handleSubmit(frm, () => {
       console.log('查詢表單', frm.value);
-      this.sys0110Service.queryUser(frm.value).subscribe({
-        next: (response) => {
-          if (response.Status === '0000') {
-            this.data = response.Data || [];
-            this.totalRecords = response.TotalCount || response.Data.length; // 排序需要
-            this.queryStateService.setQueryState(this.ProgNo, frm.value);
-            // console.log('查詢結果', this.data);
-          }
-          this.loading = false;
-          this.messageService.unblockUi();
-        },
-        error: () => {
-          this.loading = false;
-          this.messageService.unblockUi();
-        },
+      this.sys0110Service.queryUser(frm.value).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe((response) => {
+        if (response.Data) {
+          this.queryStateService.setQueryState(this.ProgNo, frm.value);
+          this.data = response.Data;
+          this.totalRecords = response.TotalCount;
+        } else {
+          this.data = [];
+          this.totalRecords = 0;
+        }
       });
     });
   }

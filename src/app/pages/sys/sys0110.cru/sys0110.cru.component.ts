@@ -132,12 +132,7 @@ export class SYS0110CRUComponent extends BasicCruPageComponent<UserInfo> impleme
   }
   // 加載下拉選項
   loadAndSetupColumns() {
-    const orgOptions$ = this.locationOptionsService.getOrgOptions().pipe(
-      map((options: any) => options.map((item: { value: string; label: string }) => ({
-        ...item,
-        label: item.value + ' - ' + item.label,
-      })))
-    );
+    const orgOptions$ = this.locationOptionsService.getOrgOptions()
 
     //讀取T103項目
     const systemCodeOptions$ = this.sys0110Service.queryAllSystemCode({}).pipe(

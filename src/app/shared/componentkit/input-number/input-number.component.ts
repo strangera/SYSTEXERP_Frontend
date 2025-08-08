@@ -7,6 +7,7 @@ import { InputNumberInputEvent, InputNumberModule } from 'primeng/inputnumber';
 import { InputGroupAddonModule } from 'primeng/inputgroupaddon';
 import { ControlMessagesComponent } from '../../component/control-messages/control-messages.component';
 import { UntilDestroy } from '@ngneat/until-destroy';
+import { TooltipModule } from 'primeng/tooltip';
 @UntilDestroy()
 @Component({
   selector: 'app-input-number',
@@ -21,6 +22,7 @@ import { UntilDestroy } from '@ngneat/until-destroy';
     InputGroupModule,
     InputGroupAddonModule,
     ControlMessagesComponent,
+    TooltipModule
   ],
 })
 export class InputNumberComponent extends BasicKitComponent implements OnInit {

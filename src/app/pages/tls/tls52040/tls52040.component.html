@@ -46,9 +46,9 @@
             optionLabel="label" optionValue="value" [control]="queryForm.controls.APPLY_USR"
             [submitted]="submitted"></app-dropdown>
           <!-- 申請日期 -->
-          <app-calendar-range class="col-12 md:col-6 lg:col-4" calendarType="dateRange" label="申請日期"
+          <app-calendar-range-quick class="col-12 md:col-6 lg:col-4" calendarType="dateRange" label="申請日期"
             [startControl]="queryForm.controls.APPLY_Date_Start" [endControl]="queryForm.controls.APPLY_Date_End"
-            [submitted]="submitted"></app-calendar-range>
+            [submitted]="submitted"></app-calendar-range-quick>
           <!-- 退貨單號 -->
           <app-input-text class="col-12 md:col-6 lg:col-4" label="退貨單號" controlName="PO_No"
             [control]="queryForm.controls.PO_No" [submitted]="submitted"></app-input-text>
@@ -57,9 +57,9 @@
             optionLabel="label" optionValue="value" [control]="queryForm.controls.APRV_USR"
             [submitted]="submitted"></app-dropdown>
           <!-- 審核日期 -->
-          <app-calendar-range class="col-12 md:col-6 lg:col-4" calendarType="dateRange" label="審核日期"
+          <app-calendar-range-quick class="col-12 md:col-6 lg:col-4" calendarType="dateRange" label="審核日期"
             [startControl]="queryForm.controls.APRV_Date_Start" [endControl]="queryForm.controls.APRV_Date_End"
-            [submitted]="submitted"></app-calendar-range>
+            [submitted]="submitted"></app-calendar-range-quick>
         </div>
         <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
           <app-button btnType="clear"></app-button>

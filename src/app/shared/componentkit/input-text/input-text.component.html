@@ -7,7 +7,8 @@
     [placeholder]="control.disabled ? '' : customPlaceholder || placeholder" [min]="minLength" [maxlength]="maxLength"
     [ngClass]="{ 'ng-invalid ng-dirty': (submitted && control.errors) || (this.errorForGroup && this.control.parent?.errors)}"
     pInputText [attr.aria-label]="label || placeholder" title="{{ label || placeholder }}"
-    (change)="onInputChange($event)" />
+    (change)="onInputChange($event)" [pTooltip]="control.disabled ? '' : customPlaceholder || placeholder"
+    tooltipPosition="bottom" />
   <input *ngIf="showStar" class="w-full" type="text" pInputText [(ngModel)]="value" [disabled]="true" />
   <span *ngIf="showCopyButton" tabindex="0" pTooltip="複製" tooltipPosition="top" (click)="copyText(control)"
     (keydown.enter)="copyText(control)" class="copy-button pi pi-copy"></span>
