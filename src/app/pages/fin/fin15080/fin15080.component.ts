@@ -18,6 +18,8 @@ import { ButtonComponent } from '../../../shared/componentkit/button/button.comp
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { TranslateModule } from '@ngx-translate/core';
 import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
+import { query } from '@angular/animations';
+import { QueryYearMonthComponent } from '@shared/componentkit/query-year-month/query-year-month.component';
 
 @Component({
   selector: 'app-fin15080',
@@ -31,6 +33,7 @@ import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-se
     ReactiveFormsModule,
     CalendarComponent,
     DropdownComponent,
+    QueryYearMonthComponent,
     ButtonComponent,
     TableComponent,
     TranslateModule,
@@ -61,7 +64,7 @@ export class FIN15080Component extends BasicQueryPageComponent<any> {
     { field: 'ZERO_RATE_AMOUNT', header: '零稅率銷售額', visible: true, style: 'text-right', format: this.moneyFormat },
     { field: 'DUTY_FREE_AMOUNT', header: '免稅銷售額', visible: true, style: 'text-right', format: this.moneyFormat },
   ];
-
+columnGroup = [];
   constructor(
     private fin15080Service: FIN15080Service,
     private businessIdService: BusinessIdService,
