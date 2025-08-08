@@ -1,8 +1,6 @@
 .expandable-edit-table-container {
   // 整體容器樣式 - 🔧 移除預設 margin，讓使用者自行控制間距
   margin: 0;
-  background-color: #fff;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 
   // 🔧 重要修正：使用智能的 overflow 處理
   overflow-x: auto;
@@ -157,7 +155,6 @@
       position: sticky;
       top: 0;
       z-index: 2;
-      background-color: #fff;
 
       // 🔧 統一 multiselect 樣式 - 參考 table.component.scss
       p-multiselect {
@@ -196,12 +193,8 @@
 
     // 🔧 重要修正：表格頭的響應式處理 - 統一使用 var(--table-header-bg)
     .p-datatable-thead > tr > th {
-      background: var(
-        --table-header-bg,
-        #c7d2fe
-      ); // 使用 CSS 變數，預設值為原色
+      background: var(--table-header-bg);
       text-align: center;
-      padding: 0.75rem 0.5rem;
       border: 1px solid #e9ecef;
       font-weight: 600;
 
@@ -401,7 +394,7 @@
         }
 
         .p-datatable-thead > tr > th {
-          background: #dfe7f6;
+          background: var(--table-header-bg);
           font-size: 0.9rem;
           padding: 0.5rem 0.3rem;
         }
@@ -499,14 +492,6 @@
         color: #ffffff;
       }
     }
-
-    .p-datatable-emptymessage > td {
-      text-align: center;
-      padding: 1rem;
-      font-style: italic;
-      color: #6c757d;
-    }
-
     // 🔧 統一滾動器樣式
     .p-scroller .p-scroller-inline {
       background: #cacaca;
@@ -522,16 +507,10 @@
     opacity: 0.7;
     // pointer-events: none;
     background-color: #f0f0f0;
-
-    .p-datatable-thead > tr > th {
-      background: #e0e0e0;
-    }
   }
 
   // 🔧 統一表格頁腳樣式
   .table-footer {
-    background-color: #f8f9fa;
-    border: 1px solid #e9ecef;
     border-width: 0 1px 1px 1px;
   }
 
@@ -544,7 +523,6 @@
     position: sticky;
     top: 0;
     z-index: 3;
-    background-color: #fff;
 
     .table-caption-left,
     .table-caption-right {
@@ -633,13 +611,6 @@
     }
   }
 
-  .empty-message {
-    position: absolute;
-    left: 50%;
-    top: 67%;
-    transform: translate(-50%, -50%);
-  }
-
   .no-wrap {
     white-space: nowrap;
     div {
@@ -720,23 +691,6 @@
     border-radius: 0;
     padding: 0.5rem 0.5rem 0 0.5rem;
     font-size: 1.35rem;
-
-    .empty-message-cell {
-      padding: 0;
-      background: transparent;
-      border: none;
-    }
-    .empty-message-content {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      height: 90px;
-      background: #f8f9fa;
-      border-radius: 4px;
-      color: #6c757d;
-      font-size: 1.3rem;
-      font-weight: 500;
-    }
     .p-datatable-thead > tr > th {
       font-size: 1.1rem !important;
       background: #4a69bd !important;
@@ -749,9 +703,7 @@
 
   // 外層表格表頭樣式
   .expandable-edit-table-container .p-datatable-thead > tr > th {
-    font-size: 1.25rem;
     font-weight: bold;
-    background: #e3eafc;
     color: #2d3a4b;
     letter-spacing: 1px;
   }
@@ -790,5 +742,11 @@
         background-color: #c5e4fc !important;
       }
     }
+  }
+  .empty-message {
+    position: absolute;
+    left: 50%;
+    top: 80%;
+    transform: translate(-50%, -50%);
   }
 }
