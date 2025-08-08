@@ -1,0 +1,11 @@
+{
+  "extends": [
+    // ... 其他設定
+  ],
+  "plugins": [
+    "unused-imports"
+  ],
+  "rules": {
+    "unused-imports/no-unused-imports": "error"
+  }
+}
