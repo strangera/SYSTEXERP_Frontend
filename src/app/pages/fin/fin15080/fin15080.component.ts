@@ -31,8 +31,6 @@ import { QueryYearMonthComponent } from '@shared/componentkit/query-year-month/q
     AccordionModule,
     FormsModule,
     ReactiveFormsModule,
-    CalendarComponent,
-    DropdownComponent,
     QueryYearMonthComponent,
     ButtonComponent,
     TableComponent,
