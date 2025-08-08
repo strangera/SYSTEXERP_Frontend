@@ -160,6 +160,31 @@ export class FIN13030Component extends BasicQueryPageComponent<FIN13030Data> imp
 
   // 移動路由
   override onCreate(frm: FormGroup) {
+    // 檢查必填欄位
+    const requiredFields = [
+      { field: 'INV_GUINo_B', message: '請輸入發票號碼_起' },
+      { field: 'INV_GUINo_E', message: '請輸入發票號碼_迄' },
+      { field: 'INV_GUIDate_B', message: '請輸入發票日期_起' },
+      { field: 'INV_GUIDate_E', message: '請輸入發票日期_迄' },
+      { field: 'INV_YM_B', message: '請輸入資料所屬年月_起' },
+      { field: 'INV_YM_E', message: '請輸入資料所屬年月_迄' },
+      { field: 'INV_DeclareYM_B', message: '請輸入申報年月_起' },
+      { field: 'INV_DeclareYM_E', message: '請輸入申報年月_迄' }
+    ];
+
+    // 檢查每個欄位是否有值
+    const errorMessages: string[] = [];
+    for (const requiredField of requiredFields) {
+      const value = frm.get(requiredField.field)?.value;
+      if (!value || value === '' || value === null) {
+        errorMessages.push(requiredField.message);
+      }
+    }
+    if (errorMessages.length > 0) {
+      this.messageService.errorBubble(errorMessages.join('<br>'));
+      return; // 停止執行
+    }
+
     if (this.canPerformAction('20')) { // '新增' 的 function_code 是 "20"
       // 取得零稅率發票
       const rb: FIN13030GetZeroTaxGUIRequest = {
