@@ -12,18 +12,21 @@ import { ButtonComponent } from '../../../shared/componentkit/button/button.comp
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { TranslateModule } from '@ngx-translate/core';
 import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
+import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
+import { ECRNoService } from '@service/basic/ECRNo.service';
+import { untilDestroyed } from '@ngneat/until-destroy';
 
 @Component({
   selector: 'app-fin11090',
   templateUrl: './fin11090.component.html',
   styleUrl: './fin11090.component.scss',
   standalone: true,
-  imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarComponent, InputTextComponent, ButtonComponent, TableComponent, TranslateModule, CalendarRangeComponent]
+  imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarComponent, InputTextComponent, ButtonComponent, TableComponent, TranslateModule, MultiSelectComponent]
 })
 export class FIN11090Component extends BasicQueryPageComponent<FIN11090Data> implements OnInit {
   queryForm = this.formBuilder.group({
     invoice_date: ['', [Validators.required]],
-    cashier_no: ['', [Validators.required, Validators.maxLength(10)]],
+    cashier_no: [[], [Validators.required, Validators.maxLength(10)]],
     txn_seq: ['', [Validators.required, Validators.maxLength(6)]],
     prefix: ['', [Validators.required, Validators.maxLength(2)]],
     invoice_no: ['', [Validators.required, Validators.maxLength(8)]],
@@ -44,12 +47,16 @@ export class FIN11090Component extends BasicQueryPageComponent<FIN11090Data> imp
     { field: 'void_user', header: '作廢人員', visible: false }
   ];
 
-  constructor(private fin11090Service: Fin11090Service) {
+  POS_NOSOptions: { value: string; label: string; }[] = [];
+
+  constructor(private fin11090Service: Fin11090Service, private eCRNoService: ECRNoService) {
     super();
   }
 
   ngOnInit(): void {
     this.initializePage('FIN11090', 'fin/fin11090cru', this.queryForm, (form) => this.onSubmit(form));
+    this.eCRNoService.getECRNo().pipe(untilDestroyed(this)).subscribe(data => this.POS_NOSOptions = data.map((item: { value: string; label: string; }) => ({ ...item, label: `${item.value} - ${item.label}` })));
+
   }
 
   onSubmit(frm: FormGroup) {
