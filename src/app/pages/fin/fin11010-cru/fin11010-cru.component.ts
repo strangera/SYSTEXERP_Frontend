@@ -12,6 +12,7 @@ import { DropdownOption } from '../../../shared/models/api/base-api.interface';
 import { DatePipe, NgIf } from '@angular/common';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { finalize } from 'rxjs';
+import { ValidationService } from '@shared/service/validation.service';
 
 @Component({
   selector: 'app-fin11010-cru',
@@ -25,18 +26,25 @@ export class FIN11010CRUComponent extends BasicCruPageComponent<FIN11010Data> im
     id: [0], // 資料識別碼
     mid: [0], // 中間識別碼
 
-    STO_Uniform: ['', [Validators.required, Validators.maxLength(8)]], // 公司代號(統一編號)
+    STO_Uniform: ['', [Validators.required, Validators.maxLength(8)]], // 營業人統編
     STO_TaxName: ['', [Validators.required, Validators.maxLength(60)]], // 營業人名稱
     STO_TaxNo: ['', [Validators.required, Validators.maxLength(9)]], // 稅籍編號
     STO_ManagerName: ['', [Validators.required, Validators.maxLength(12)]], // 負責人姓名
     STO_Addr: ['', [Validators.required, Validators.maxLength(100)]], // 營業地址
     REP_OrgCode: ['', [Validators.required]], // 總繳代號
     STO_Direct: ['', Validators.required], // 是否採直接扣抵法
-    STO_HQUniform: ['', [Validators.maxLength(8)]], // 總公司統編
+    STO_HQUniform: ['', [Validators.maxLength(8), this.validationService.numberValidator]], // 總公司統編
     STO_ApplyFlag: ['', Validators.required], // 自行或委託辦理申報註記
     STO_ApplyName: ['', [Validators.required, Validators.maxLength(12)]], // (代理)申報人姓名
-    STO_ApplyTEL: ['', [Validators.required, Validators.maxLength(15)]],
-    STO_ApplyID: ['', [Validators.maxLength(50)]], // 代理申報人證書(登錄)字號
+    STO_ApplyTEL: [
+      '',
+      [
+        Validators.required,
+        Validators.maxLength(15),
+        this.validationService.phoneNumberValidator
+      ]
+    ],
+    STO_ApplyID: ['', [Validators.maxLength(10)]], // 代理申報人證書(登錄)字號
     REP_BegGUIYM: ['', Validators.required], // 申報年月起
 
     // 其他可能需要的欄位（根據 FIN11010Data 介面）
@@ -78,7 +86,11 @@ export class FIN11010CRUComponent extends BasicCruPageComponent<FIN11010Data> im
   ];
 
 
-  constructor(private fin11010Service: FIN11010Service, private datePipe: DatePipe) {
+  constructor(
+    private fin11010Service: FIN11010Service,
+    private datePipe: DatePipe,
+    private validationService: ValidationService
+  ) {
     super();
   }
 

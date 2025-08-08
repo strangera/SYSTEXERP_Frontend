@@ -26,6 +26,7 @@ import { ButtonComponent } from '../../../shared/componentkit/button/button.comp
 import { TranslateModule } from '@ngx-translate/core';
 import { DropDownListService, IDropdownItem } from '../../../service/utility/dropDownList.service';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
+import { TableComponent } from '@shared/componentkit/table/table.component';
 @Component({
   selector: 'app-tls56020-cru',
   templateUrl: './tls56020-cru.component.html',
@@ -45,7 +46,8 @@ import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/ba
     ButtonDynamicallyaddComponent,
     ButtonComponent,
     NgIf,
-    TranslateModule
+    TranslateModule,
+    TableComponent
   ]
 })
 export class TLS56020CRUComponent extends BasicCruPageComponent<any> implements OnInit {

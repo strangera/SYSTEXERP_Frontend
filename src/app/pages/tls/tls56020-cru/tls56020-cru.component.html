@@ -89,7 +89,28 @@
         </div>
       </div>
       <hr />
-      <ng-container formArrayName="items">
+       <!-- <div class="grid p-fluid mt-5">
+        <app-table
+          dataKey="id"
+          [showReportMode]="false"
+          class="col-12"
+          [data]="contacts"
+          [columns]="columns"
+          [showEdit]="false"
+          [showDetail]="false"
+          [showInsert]="!isReadonly"
+          [showRowEdit]="!isReadonly"
+          (selectionChange)="selectedRows = $event"
+          [deleteData]="!isReadonly"
+          [selectedItems]="selectedRows"
+          [showCaption]="!isFormReadable"
+          [showManage]="!isReadonly"
+          [showCheckBox]="!isReadonly"
+          [insertRowData]="true"
+          (dataChange)="contacts = $event"
+        ></app-table>
+      </div> -->
+      <!-- <!-- <ng-container formArrayName="items"> -->
         <ng-container
           *ngFor="let item of items.controls; let i = index"
           [formGroupName]="i"
@@ -147,13 +168,12 @@
             </div>
           </div>
           <hr />
-        </ng-container>
       </ng-container>
       <div class="pt-1">
         <app-button-dynamicallyadd
           (click)="onAddItem()"
         ></app-button-dynamicallyadd>
-      </div>
+      </div> -->
     </form>
     <div class="col pt-4">
       <div class="grid justify-content-end">

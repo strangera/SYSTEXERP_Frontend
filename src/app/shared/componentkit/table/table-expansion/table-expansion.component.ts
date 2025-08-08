@@ -19,7 +19,7 @@ export class TableExpansionComponent implements OnInit {
   @Input() expansionSortOrder = 1;
 
   // 新增分頁相關參數
-  @Input() showPaginator = true;          // 是否顯示分頁器
+  @Input() showPaginator = false;          // 是否顯示分頁器
   @Input() rows = 10;                     // 每頁顯示行數
   @Input() rowsPerPageOptions = [10, 30, 50]; // 分頁選項
   @Input() scrollHeight = '300px';        // 表格高度

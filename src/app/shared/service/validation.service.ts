@@ -1,4 +1,3 @@
-
 import { Injectable } from '@angular/core';
 import { AbstractControl, FormGroup, ValidationErrors, ValidatorFn } from '@angular/forms';
 // taiwan-id-validator
@@ -43,6 +42,7 @@ export class ValidationService {
       containsChinese: '不可輸入中文或全形字元',
       invalidAlphanumeric: '只能輸入半形英文和數字',
       invalidEnglishNumberSymbol: '只能輸入英文和數字和符號',
+      invalidPhoneNumber: '電話號碼格式錯誤'
     };
     return config[validatorName];
   }
@@ -336,5 +336,25 @@ export class ValidationService {
 
     // 如果驗證不通過，返回錯誤；否則返回 null。
     return isValid ? null : { invalidEnglishNumberSymbol: true };
+  }
+
+  /**
+   * 電話號碼驗證器
+   * 只允許數字和連字號(-)
+   */
+  phoneNumberValidator(control: { value: string | null }) {
+    const value = control.value;
+    if (value === null || value === '') {
+      return null;
+    }
+
+    // 只允許數字和連字號
+    const phoneRegex = /^[0-9\-]+$/;
+
+    if (!phoneRegex.test(value)) {
+      return { invalidPhoneNumber: true };
+    }
+
+    return null;
   }
 }

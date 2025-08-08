@@ -30,13 +30,13 @@
           <app-dropdown
             class="col-12 md:col-6 lg:col-4"
             label="廠商統一編號"
-            controlName="cus_uniform_id"
-            optionLabel="VEN_No"
-            optionValue="VEN_No"
+            controlName="vendorUID"
             [options]="vendorUIDOptions"
-            [control]="queryForm.controls.cus_uniform_id"
-            [submitted]="submitted"
+            optionLabel="label"
+            optionValue="value"
+            [control]="queryForm.controls.vendorUID"
           ></app-dropdown>
+
           <app-input-text
             class="col-12 md:col-6 lg:col-4"
             label="廠商名稱(中文)"
