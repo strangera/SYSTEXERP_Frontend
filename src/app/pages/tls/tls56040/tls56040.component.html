@@ -8,49 +8,58 @@
       [headerStyleClass]="'query-accordionTab'">
       <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
-          <!-- <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text label="倉別請領單編號" controlName="organizationRequestCode"
-              [control]="queryForm.controls.organizationRequestCode" [submitted]="submitted"></app-input-text>
-          </div>
+          <!-- 移入/出編號 -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="倉別調撥單狀態" controlName="issuanceNoteStatus" [options]="issuanceNoteStatusOptions"
-              optionLabel="label" optionValue="value" [control]="queryForm.controls.issuanceNoteStatus"
-              [submitted]="submitted"></app-dropdown>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text label="管理編號" controlName="generalCode" [control]="queryForm.controls.generalCode"
+            <app-input-text label="倉別請領單編號" controlName="MVM_No" [control]="queryForm.controls.MVM_No"
               [submitted]="submitted"></app-input-text>
           </div>
+          <!-- 移轉狀態 -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="品牌編號" controlName="brandCode" [options]="brandCodeOptions" optionLabel="label"
-              optionValue="value" [control]="queryForm.controls.brandCode" [submitted]="submitted"></app-dropdown>
+            <app-dropdown label="倉別調撥單狀態" controlName="MVM_Status" [options]="issuanceNoteStatusOptions"
+              optionLabel="label" optionValue="value" [control]="queryForm.controls.MVM_Status"
+              [submitted]="submitted"></app-dropdown>
           </div>
+          <!-- 管理碼 -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="調出倉別" controlName="warehouseCode" [options]="warehouseOptions" optionLabel="label"
-              optionValue="value" [control]="queryForm.controls.warehouseCode" [submitted]="submitted"></app-dropdown>
+            <app-input-text label="管理編號" controlName="PLU_MagNo" [control]="queryForm.controls.PLU_MagNo"
+              [submitted]="submitted"></app-input-text>
           </div>
+          <!-- 品牌編號 -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="調入倉別" controlName="warehouseCode" [options]="warehouseOptions" optionLabel="label"
-              optionValue="value" [control]="queryForm.controls.warehouseCode" [submitted]="submitted"></app-dropdown>
+            <app-dropdown label="品牌編號" controlName="LOGO_No" [options]="LOGO_Noptions" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.LOGO_No" [submitted]="submitted"></app-dropdown>
           </div>
+          <!-- 調出倉別 (對應SYS_StoreNo) -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="申請人編號" controlName="applicantCode" [options]="userCodeOptions" optionLabel="label"
-              optionValue="value" [control]="queryForm.controls.applicantCode" [submitted]="submitted"></app-dropdown>
+            <app-dropdown label="調出倉別" controlName="SYS_StoreNo_Out" [options]="warehouseOptions" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.OUT_HOS_No" [submitted]="submitted"></app-dropdown>
           </div>
+          <!-- 調入倉別 (對應MVM_MoveStoreNo) -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="審核人編號" controlName="approverCode" [options]="userCodeOptions" optionLabel="label"
-              optionValue="value" [control]="queryForm.controls.approverCode" [submitted]="submitted"></app-dropdown>
+            <app-dropdown label="調入倉別" controlName="MVM_MoveStoreNo_In" [options]="warehouseOptions" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.IN_HOS_No" [submitted]="submitted"></app-dropdown>
           </div>
+          <!-- 申請人員 (對應CRT_USR_No) -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar-range calendarType="dateRange" label="申請日期"
-              [startControl]="queryForm.controls.applicationDateFrom"
-              [endControl]="queryForm.controls.applicationDateTo" [submitted]="submitted"></app-calendar-range>
+            <app-dropdown label="申請人編號" controlName="CRT_USR_No" [options]="userCodeOptions" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.CRT_USR_No" [submitted]="submitted"></app-dropdown>
           </div>
+          <!-- 審核人員 (對應UPD_USR_No) -->
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown label="審核人編號" controlName="UPD_USR_No" [options]="userCodeOptions" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.UPD_USR_No" [submitted]="submitted"></app-dropdown>
+          </div>
+          <!-- 移轉日期 (申請日期) -->
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-calendar-range calendarType="dateRange" label="申請日期" [startControl]="queryForm.controls.MVM_Date_Start"
+              [endControl]="queryForm.controls.MVM_Date_End" [submitted]="submitted"></app-calendar-range>
+          </div>
+          <!-- 移入驗收日期/移出確認日期 (審核日期) -->
           <div class="col-12 md:col-6 lg:col-4">
             <app-calendar-range calendarType="dateRange" label="審核日期"
-              [startControl]="queryForm.controls.approvalDateFrom" [endControl]="queryForm.controls.approvalDateTo"
-              [submitted]="submitted"></app-calendar-range>
-          </div> -->
+              [startControl]="queryForm.controls.MVM_ConfirmDate_Start"
+              [endControl]="queryForm.controls.MVM_ConfirmDate_End" [submitted]="submitted"></app-calendar-range>
+          </div>
         </div>
         <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
           <app-button btnType="clear"></app-button>
@@ -61,8 +70,10 @@
   </p-accordion>
 </div>
 <div class="card">
-  <app-table dataKey="ECR_TmplNo" [data]="data" [columns]="columns" (edit)="onEdit($event)" (detail)="onDetail($event)"
-    [multiSortMeta]="[{ field: 'ECR_TmplNo', order: 1 }]" [totalRecords]="totalRecords" [showCheckBox]="true"
+  <!-- dataKey設定為 primary key MVM_No -->
+  <!-- multiSortMeta設定為 primary key MVM_No -->
+  <app-table dataKey="MVM_No" [data]="data" [columns]="columns" (edit)="onEdit($event)" (detail)="onDetail($event)"
+    [multiSortMeta]="[{ field: 'MVM_No', order: 1 }]" [totalRecords]="totalRecords" [showCheckBox]="true"
     (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [lazy]="true"
     [loading]="loading"></app-table>
 </div>

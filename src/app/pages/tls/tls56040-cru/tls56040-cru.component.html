@@ -6,46 +6,118 @@
   <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
     <form [formGroup]="dataForm" (ngSubmit)="onSubmit(dataForm)">
       <div class="grid p-fluid">
-        <!-- <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text label="倉別調撥單編號" controlName="issuanceReturnCode"
-            [control]="dataForm.controls.issuanceReturnCode" [submitted]="submitted"></app-input-text>
-        </div>
+        <!-- 主檔欄位 -->
+        <!-- 調撥單編號 -->
         <div class="col-12 md:col-6 lg:col-4">
-          <app-dropdown label="品牌編號" controlName="brandCode" [options]="brandCodeOptions" optionLabel="label"
-            optionValue="value" [control]="dataForm.controls.brandCode" [submitted]="submitted"></app-dropdown>
+          <app-input-text label="調撥單編號" controlName="MVM_No" [control]="dataForm.controls.MVM_No"
+            [submitted]="submitted"></app-input-text>
         </div>
+        <!-- 品牌編號 -->
         <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text label="金額" controlName="amount" [control]="dataForm.controls.amount" [submitted]="submitted">
-          </app-input-text>
+          <app-dropdown label="品牌編號" controlName="LOGO_No" [options]="brandCodeOptions" optionLabel="label"
+            optionValue="value" [control]="dataForm.controls.LOGO_No" [submitted]="submitted"></app-dropdown>
         </div>
+        <!-- 金額 -->
         <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text label="數量" controlName="amount" [control]="dataForm.controls.quantity"
-            [submitted]="submitted">
-          </app-input-text>
+          <app-input-text label="金額" controlName="APPLY_TotBuyNet" [control]="dataForm.controls.APPLY_TotBuyNet"
+            [submitted]="submitted"></app-input-text>
         </div>
+        <!-- 數量 -->
         <div class="col-12 md:col-6 lg:col-4">
-          <app-dropdown label="調出倉別" controlName="warehouseCode" [options]="warehouseOptions" optionLabel="label"
-            optionValue="value" [control]="dataForm.controls.inwarehouseCode" [submitted]="submitted"></app-dropdown>
+          <app-input-text label="數量" controlName="APPLY_TotQty" [control]="dataForm.controls.APPLY_TotQty"
+            [submitted]="submitted"></app-input-text>
         </div>
+        <!-- 調出倉別 -->
         <div class="col-12 md:col-6 lg:col-4">
-          <app-dropdown label="調入倉別" controlName="warehouseCode" [options]="warehouseOptions" optionLabel="label"
-            optionValue="value" [control]="dataForm.controls.exwarehouseCode" [submitted]="submitted"></app-dropdown>
+          <app-dropdown label="調出倉別" controlName="OUT_HOS_No" [options]="warehouseOptions" optionLabel="label"
+            optionValue="value" [control]="dataForm.controls.OUT_HOS_No" [submitted]="submitted"></app-dropdown>
         </div>
+        <!-- 調入倉別 -->
         <div class="col-12 md:col-6 lg:col-4">
-          <app-editor-text label="倉別調撥單 說 明" controlName="remark" [control]="dataForm.controls.remark"
-            [style]="{ height: '100px' }" [submitted]="submitted">
-          </app-editor-text>
+          <app-dropdown label="調入倉別" controlName="IN_HOS_No" [options]="warehouseOptions" optionLabel="label"
+            optionValue="value" [control]="dataForm.controls.IN_HOS_No" [submitted]="submitted"></app-dropdown>
         </div>
-
+        <!-- 申請日期 -->
         <div class="col-12 md:col-6 lg:col-4">
-          <app-dropdown label="申請人編號" controlName="applicantCode" [options]="applicantCodeOptions" optionLabel="label"
-            optionValue="value" [control]="dataForm.controls.applicantCode" [submitted]="submitted"></app-dropdown>
-        </div>
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-calendar calendarType="dateOne" label="申請日期" [control]="dataForm.controls.applicationDateFrom"
+          <app-calendar calendarType="dateOne" label="申請日期" [control]="dataForm.controls.applicationDate"
             [submitted]="submitted"></app-calendar>
-        </div> -->
+        </div>
+        <!-- 申請人編號 (包含中文名稱) -->
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text label="申請人編號" controlName="applicantCode" [control]="dataForm.controls.applicantCode"
+            [submitted]="submitted"></app-input-text>
+        </div>
+        <!-- 倉別調撥單說明 -->
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-editor-text label="倉別調撥單說明" controlName="MVM_Remark" [control]="dataForm.controls.MVM_Remark"
+            [style]="{ height: '100px' }" [submitted]="submitted"></app-editor-text>
+        </div>
       </div>
+
+      <!-- 明細檔表格 -->
+      <p-panel header="商品明細" class="mt-4">
+        <p-table [value]="details.controls" dataKey="MVD_SeqNo">
+          <ng-template pTemplate="header">
+            <tr>
+              <th>項次</th>
+              <th>商品管理編號</th>
+              <th>國際條碼</th>
+              <th>商品名稱</th>
+              <th>進單價</th>
+              <th>目前庫存</th>
+              <th>調撥申請數量</th>
+              <th>調撥申請進價未稅小計</th>
+              <th>單項說明</th>
+              <th>操作</th>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="body" let-detail let-i="rowIndex">
+            <tr [formGroupName]="i">
+              <td>{{ detail.get('MVD_SeqNo')?.value }}</td>
+              <td>
+                <app-input-text controlName="PLU_MagNo" [control]="detail.get('PLU_MagNo')"
+                  [submitted]="submitted"></app-input-text>
+              </td>
+              <td>
+                <app-input-text controlName="PLU_No" [control]="detail.get('PLU_No')"
+                  [submitted]="submitted"></app-input-text>
+              </td>
+              <td>
+                <app-input-text controlName="PLU_Name" [control]="detail.get('PLU_Name')"
+                  [submitted]="submitted"></app-input-text>
+              </td>
+              <td>
+                <app-input-text controlName="MVD_BuyPrc" [control]="detail.get('MVD_BuyPrc')"
+                  [submitted]="submitted"></app-input-text>
+              </td>
+              <td>
+                <app-input-text controlName="CurrentStock" [control]="detail.get('CurrentStock')"
+                  [submitted]="submitted"></app-input-text>
+              </td>
+              <td>
+                <app-input-text controlName="APPLY_Qty" [control]="detail.get('APPLY_Qty')"
+                  [submitted]="submitted"></app-input-text>
+              </td>
+              <td>
+                <app-input-text controlName="APPLY_BuyNet" [control]="detail.get('APPLY_BuyNet')"
+                  [submitted]="submitted"></app-input-text>
+              </td>
+              <td>
+                <app-input-text controlName="MVD_Remark" [control]="detail.get('MVD_Remark')"
+                  [submitted]="submitted"></app-input-text>
+              </td>
+              <td>
+                <app-button btnType="delete" (click)="removeDetailRow(i)"></app-button>
+              </td>
+            </tr>
+          </ng-template>
+        </p-table>
+        <div class="flex justify-content-end mt-3">
+          <app-button label="新增明細" (click)="addDetailRow()"></app-button>
+        </div>
+      </p-panel>
+
+
       <div *ngIf="!isFormReadable" class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
         <app-button btnType="cancel" [form]="dataForm"></app-button>
         <app-button btnType="submit" [loading]="loading" />
