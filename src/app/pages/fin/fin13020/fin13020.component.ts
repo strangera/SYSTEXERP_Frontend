@@ -15,11 +15,11 @@ import { TableComponent } from '../../../shared/componentkit/table/table.compone
 import { TranslateModule } from '@ngx-translate/core';
 
 @Component({
-    selector: 'app-fin13020',
-    templateUrl: './fin13020.component.html',
-    styleUrls: ['./fin13020.component.scss'],
-    standalone: true,
-    imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputTextRangeComponent, InputTextComponent, CalendarRangeComponent, DropdownComponent, QueryYearMonthComponent, TableComponent, TranslateModule]
+  selector: 'app-fin13020',
+  templateUrl: './fin13020.component.html',
+  styleUrls: ['./fin13020.component.scss'],
+  standalone: true,
+  imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputTextRangeComponent, InputTextComponent, CalendarRangeComponent, DropdownComponent, QueryYearMonthComponent, TableComponent, TranslateModule]
 })
 export class FIN13020Component extends BasicQueryPageComponent<any> {
 
@@ -27,13 +27,13 @@ export class FIN13020Component extends BasicQueryPageComponent<any> {
     { value: '701702007', label: '701702007' },
     { value: '703902223', label: '703902223' },
   ];
-    PUR_VoucherTypeOptions: any[] = [
+  PUR_VoucherTypeOptions: any[] = [
     { value: '23', label: '三聯式、電子計算機及三聯式收銀機統一發票之進貨退出或折讓證明單' },
     { value: '24', label: '二聯式收銀機統一發票及載有稅額之其他憑證之進貨退出或折讓證明單' },
   ];
 
   queryForm = this.formBuilder.group({
-    
+
 
     TXN_Ret_NoStart: [null], // 退出/折讓單號(起)
     TXN_Ret_NoEnd: [null],   // 退出/折讓單號(迄)
@@ -46,8 +46,8 @@ export class FIN13020Component extends BasicQueryPageComponent<any> {
     INV_DeclareYM: [null], // 發票年月
     Source_Doc_NoStart: [], // 憑證單號(起)
     Source_Doc_NoEnd: [],   // 憑證單號(迄)
-    Voucher_NoStart: [], // 發票號碼(起)
-    Voucher_NoEnd: [],   // 發票號碼(迄)
+    Voucher_NoStart: [], // 發票起始號碼
+    Voucher_NoEnd: [],   // 發票結束號碼
     ...createPaginationConfig
   });
 
@@ -55,14 +55,16 @@ export class FIN13020Component extends BasicQueryPageComponent<any> {
   totalRecords = 0;
 
   columns: any[] = [
-    { field: 'TXN_Ret_No', header: '退出/折讓單號', visible: true },   
+    { field: 'TXN_Ret_No', header: '退出/折讓單號', visible: true },
     { field: 'PUR_GUINo', header: '字軌', visible: true }, //
     { field: 'InvoiceNumber', header: '發票號碼', visible: true },//
-    { field: 'PUR_GUIDate', header: '退出/折讓日期', visible: true,format: this.formatDateFromBackend   },
+    { field: 'PUR_GUIDate', header: '退出/折讓日期', visible: true, format: this.formatDateFromBackend },
     { field: 'PUR_VoucherType', header: '發票格式', visible: true },
     { field: 'Credit_Type', header: '區別', visible: true, format: this.formatCreditType },  //折讓/退出
-    { field: 'PUR_RepYYYYMM', header: '申報年月', visible: true,
-    format: this.formatRepYYYYMM },
+    {
+      field: 'PUR_RepYYYYMM', header: '申報年月', visible: true,
+      format: this.formatRepYYYYMM
+    },
     { field: 'PUR_Net', header: '退回/折讓金額', visible: true },
     { field: 'PUR_Tax', header: '退回/折讓稅額', visible: true },
     { field: 'Source_Doc_No', header: '憑證單號', visible: true },
@@ -73,30 +75,30 @@ export class FIN13020Component extends BasicQueryPageComponent<any> {
     super();
   }
   formatCreditType(value: string): string {
-  switch (value) {
-    case 'C': return '折讓';
-    case 'R': return '退出';
-    default: return value;
+    switch (value) {
+      case 'C': return '折讓';
+      case 'R': return '退出';
+      default: return value;
+    }
   }
-}
-formatDateFromBackend(dateStr: string): string {
-  if (!dateStr) return '';
-  const date = new Date(dateStr);
-  if (isNaN(date.getTime())) return ''; // 無效日期處理
-  return `${date.getFullYear()}/${(date.getMonth() + 1)
-    .toString()
-    .padStart(2, '0')}/${date.getDate().toString().padStart(2, '0')}`;
-}
-formatRepYYYYMM(value: string): string {
-  if (!value || value.length !== 6) return value;
-  return `${value.substring(0, 4)}/${value.substring(4, 6)}`;
-}
+  formatDateFromBackend(dateStr: string): string {
+    if (!dateStr) return '';
+    const date = new Date(dateStr);
+    if (isNaN(date.getTime())) return ''; // 無效日期處理
+    return `${date.getFullYear()}/${(date.getMonth() + 1)
+      .toString()
+      .padStart(2, '0')}/${date.getDate().toString().padStart(2, '0')}`;
+  }
+  formatRepYYYYMM(value: string): string {
+    if (!value || value.length !== 6) return value;
+    return `${value.substring(0, 4)}/${value.substring(4, 6)}`;
+  }
 
 
 
   ngOnInit(): void {
-    this.initializePage('FIN13020','/FIN/FIN13020CRU', this.queryForm);
-    
+    this.initializePage('FIN13020', '/FIN/FIN13020CRU', this.queryForm);
+
   }
 
   onSubmit(form: FormGroup): void {
@@ -119,12 +121,12 @@ formatRepYYYYMM(value: string): string {
 
     this.fin13020Service.queryFIN13020(payload).subscribe({
       next: (res) => {
-        
-          this.data = res.Data || [];
-          this.totalRecords = res.TotalCount || this.data.length;
-          this.queryStateService.setQueryState(this.ProgNo, payload);
-          
-       
+
+        this.data = res.Data || [];
+        this.totalRecords = res.TotalCount || this.data.length;
+        this.queryStateService.setQueryState(this.ProgNo, payload);
+
+
       },
       //       next: (res) => {
       //   if (res.Status === '0000') {

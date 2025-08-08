@@ -123,7 +123,7 @@ export interface PodInfo {
 
 /** * @description
  * - id: 主鍵，自動編號
- * - ecr_no: 收銀機編號
+ * - ecr_no: 收銀機號
  * - tlt_no: 櫃位編號
  * - tlt_name: 櫃位名稱
  * - Status: 操作狀態 (original=原始, modify=修改, delete=刪除, new=新增)
