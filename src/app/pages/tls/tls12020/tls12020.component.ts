@@ -36,7 +36,7 @@ import { LocationOptionsService } from '../../../service/api/dropdownservice/loc
 export class TLS12020Component extends BasicQueryPageComponent<any> implements OnInit {
   queryForm = this.formBuilder.group({
     ECR_LocNo: [''],
-    cus_uniform_id: [''],
+    vendorUID: ['', [Validators.required]], // 廠商統一編號（必填）
     ven_name: ['', Validators.maxLength(60)],
     VEN_EngName: ['', Validators.maxLength(60)],
     brand: [''],
@@ -102,9 +102,18 @@ export class TLS12020Component extends BasicQueryPageComponent<any> implements O
         }));
       });
 
-    this.dropDownListService.queryPOS2013_DropDownList().pipe(untilDestroyed(this)).subscribe(res => {
-      this.vendorUIDOptions = res.Data;
-    });
+    //統編API
+    this.dropDownListService.queryPOS2013_DropDownList()
+      .pipe(untilDestroyed(this))
+      .subscribe(res => {
+        this.vendorUIDOptions = res.Data.map(item => ({
+          label: `${item.Name} ${item.No}`, // 顯示中文+數字
+          value: item.No,                   // 送出用的值
+          Name: item.Name,                  // 加入 Name 屬性
+          No: item.No                       // 加入 No 屬性
+        }));
+      });
+
     this.dropDownListService.queryTBLUSER_DropDownList().pipe(untilDestroyed(this)).subscribe(res => {
       this.contact_USR_NameOptions = res.Data;
     });
