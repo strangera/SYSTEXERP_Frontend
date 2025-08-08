@@ -43,7 +43,7 @@ export class FIN12020Component extends BasicQueryPageComponent<FIN12020Data> imp
 
   columns: Column[] = [
     { field: 'GUI_YYMM', header: '發票年月', visible: true },
-    { field: 'ECR_NO', header: '機號', visible: true },
+    { field: 'ECR_NO', header: '收銀機編號', visible: true },
     { field: 'GUI_TRACK', header: '字軌', visible: true },
     { field: 'GUI_SNOS', header: '起始號碼', visible: true },
     { field: 'GUI_ENOS', header: '發票號碼', visible: true },
