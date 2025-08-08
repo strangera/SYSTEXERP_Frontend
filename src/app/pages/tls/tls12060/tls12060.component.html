@@ -51,10 +51,10 @@
           </div>
         </div>
         <div class="grid p-fluid">
-          <div class="col-12 md:col-6 lg:col-4">
+          <!-- <div class="col-12 md:col-6 lg:col-4">
             <app-input-text label="每行個數 " controlName="each_row" [control]="queryForm.controls.each_row"
               [submitted]="submitted"></app-input-text>
-          </div>
+          </div> -->
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-number-range label="版本編號"
               [startControl]="queryForm.controls.version_start" [endControl]="queryForm.controls.version_end"
@@ -88,7 +88,8 @@
       (delete)="onDelete($event)"
       [selectedItems]="selectedItems"
       (selectionChange)="selectedItems = $event"
-      [showCheckBox]="true"
+      [showCheckBox]="false"
+      [showManage]="false"
       dataKey="id"
       [multiSortMeta]="[{ field: 'contact_USR_No', order: 1 }]"
       [totalRecords]="totalRecords"
@@ -97,5 +98,9 @@
       [loading]="loading"
       [isRowSelectable]="isRowSelectable"
     ></app-table>
-  </div>
+      <!-- <app-report-table-group [columns]="columns" [data]="data"
+        [enableGrouping]="false" [reportTitle]="'招商進度監控表'" [currentPage]="1" [showTotalOnly]="false"
+        [defaultMergedView]="true">
+      </app-report-table-group> -->
+    </div>
 </div>

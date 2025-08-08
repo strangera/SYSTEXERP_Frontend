@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { createPaginationConfig, Column, formatDate } from '../../../shared/componentkit/table/table.model';
+import { Column, formatDate } from '../../../shared/componentkit/table/table.model';
 import { apiOption, option } from '../../../shared/models/sys/sysb000.module';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
@@ -17,40 +17,21 @@ import { CalendarComponent } from '../../../shared/componentkit/calendar/calenda
 import { CalendarRangeQuickComponent } from '../../../shared/componentkit/calendar-range-quick/calendar-range-quick.component';
 import { Tls12060Service } from '@service/api/tls/tls12060.service';
 import { InputNumberRangeComponent } from '@shared/componentkit/input-number-range/input-number-range.component';
+import { createPaginationConfig, formatDateTime } from '@shared/componentkit/table2/table2.model';
+import { ReportTableGroupComponent } from '@shared/componentkit/report-table-group/report-table-group.component';
 
-export interface Potential_Customer {
-  id: number; // 主鍵，自動編號
-
-  contact_USR_No: string; // 接洽人員代碼
-  contact_USR_Name: string; // 接洽人員姓名
-  cus_type: string; // 廠商類型：1=統編、2=身份證字號、3=員工ID
-  cus_uniform_id: string; // 廠商統一編號 (根據類型不同有不同意義)
-  VEN_Name: string; // 廠商名稱
-  VEN_EngName?: string; // 廠商英文名稱
-  bus_type?: string; // 業種-大分類代碼
-  tlt_name?: string; // 品牌（專櫃名稱）
-  tlt_EngName?: string; // 品牌英文（專櫃名稱）
-  VEN_Boss: string; // 廠商聯絡人
-  VEN_BossTel: string; // 廠商聯絡人電話
-  VEN_BossTitle?: string; // 廠商聯絡人頭銜
-  VEN_BossFax?: string; // 廠商聯絡人傳真
-  VEN_BossMobile?: string; // 廠商聯絡人行動電話
-  VEN_BossEmail?: string; // 廠商聯絡人電子郵件
-  VEN_Addr?: string; // 公司通訊地址
-  VEN_PersonInCharge?: string; // 公司負責人
-  business_type?: string; // 經營方式
-  demanded_area?: number; // 需求面積 (小數，預設 0)
-  country_of_origin?: string; // 商品出產地
-  remarks?: string; // 備註 (HTML 格式)
-
-  CRT_Date: string; // 建立日期 (ISO 字串格式: YYYY-MM-DD)
-  CRT_USR_No?: string; // 建立人員代碼
-  CRT_USR_Name?: string; // 建立人員姓名
-  UPD_Date?: string; // 變更日期 (ISO 格式: YYYY-MM-DDTHH:mm:ss)
-  UPD_USR_No?: string; // 變更人員代碼
-  UPD_USR_Name?: string; // 變更人員姓名
-
-  CanDel?: boolean;  //能否刪除(僅顯示)
+export interface response10260 {
+  "id": number,
+  "tlt_name": string,
+  "contact_person": string,
+  "contact_date": Date,
+  "vendor_name": string,
+  "bus_type": string,
+  "contact_type": string,
+  "contract_subno": number,
+  "rent_space": number,
+  "approve_desc": string,
+  "crt_date": Date,
 }
 
 export interface POS2013 {
@@ -69,16 +50,15 @@ export interface POS2013 {
   templateUrl: './tls12060.component.html',
   styleUrl: './tls12060.component.scss',
   standalone: true,
-  imports: [MenubarComponent, ButtonComponent, InputTextComponent, InputNumberComponent, InputNumberRangeComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarComponent, CalendarRangeComponent, CalendarRangeQuickComponent, DropdownComponent, MultiSelectComponent, InputTextComponent, TableComponent, TranslateModule]
+  imports: [MenubarComponent, ButtonComponent, InputTextComponent, InputNumberComponent, InputNumberRangeComponent, AccordionModule, FormsModule, ReactiveFormsModule, ReportTableGroupComponent, CalendarComponent, CalendarRangeComponent, CalendarRangeQuickComponent, DropdownComponent, MultiSelectComponent, InputTextComponent, TableComponent, TranslateModule]
 })
-export class TLS12060Component extends BasicQueryPageComponent<Potential_Customer> implements OnInit {
+export class TLS12060Component extends BasicQueryPageComponent<response10260> implements OnInit {
   // 查詢
   queryForm = this.formBuilder.group({
-    // 先建立表單，還不確定table內容
     contract_type: [[]],  // 合約種類(要約書、契約書)
     contract_status: [[]], //  合約狀態 (未審核、已審核、已作廢)
-    CreatedDateStart: [null, [Validators.required]],  // 接洽日期_起始日
-    CreatedDateEnd: [null, [Validators.required]],  // 接洽日期_終止日
+    CreatedDateStart: [null],  // 接洽日期_起始日
+    CreatedDateEnd: [null],  // 接洽日期_終止日
 
     contact_USR: [[], [Validators.maxLength(100)]], // 接洽人員
     cus_uniform_id: [[], [Validators.maxLength(100)]], // 廠商統一編號
@@ -88,9 +68,9 @@ export class TLS12060Component extends BasicQueryPageComponent<Potential_Custome
     floor: [[], [Validators.maxLength(100)]],  // 樓層
     location: [[], [Validators.maxLength(100)]],  // 位置編號 (應該是SYS3A00這支)
 
-    each_row: [10, [Validators.min(1), Validators.max(100)]], // 每頁顯示行數
-    version_start: [0, [Validators.min(0)]], // 版本起始
-    version_end: [0, [Validators.min(0)]], // 版本終止
+    each_row: [['10'], [Validators.min(1), Validators.max(100)]], // 每頁顯示行數
+    version_start: [null, [Validators.min(0)]], // 版本起始
+    version_end: [null, [Validators.min(0)]], // 版本終止
     counter: [[], [Validators.min(0)]], // 專櫃編號
 
     //分頁查詢
@@ -119,36 +99,22 @@ export class TLS12060Component extends BasicQueryPageComponent<Potential_Custome
   contact_USR_Option: apiOption[] = [];  // 接洽人員代碼/名稱
   TLTTalent_Option: apiOption[] = []; // 專櫃編號
 
-  data: Potential_Customer[] = [];
+  data: response10260[] = [];
   columns: Column[] = [
-    { field: 'counter', header: '專櫃', visible: true },
+    { field: 'tlt_name', header: '專櫃', visible: true },
+    { field: 'contact_person', header: '洽談者', visible: true },
+    { field: 'contact_date', header: '洽談日', visible: true, format: formatDate },
+    { field: 'vendor_name', header: '統編/廠商', visible: true },
+    { field: 'bus_type', header: '大分類', visible: true},
+    { field: 'contract_type', header: '合約種類', visible: true },
 
-    { field: 'contact_USR', header: '洽談者', visible: true },
-    { field: 'CreatedDate', header: '洽談日', visible: true },
-    { field: 'cus_uniform_id', header: '統編/廠商', visible: true },
-    {
-      field: 'bus_type', header: '大分類', visible: true, format: (value: string) =>
-        this.bus_type_Option.find((option) => option.No === value)?.Label || value
-    },
-    { field: 'contract_type', header: '類型', visible: true },
-
-    { field: 'version', header: '版本', visible: true },
-    { field: 'rent_Number', header: '位置租賃數', visible: true }, // 後端提供目前不確定欄位名稱
-    { field: 'contract_status', header: '進度', visible: true }, //可能是合約狀態，等list內容
-
-    // { field: 'area', header: '區域', visible: true },
-    // { field: 'floor', header: '樓層', visible: true },
-    // { field: 'each_row', header: '每頁顯示行數', visible: true },
-
-    { field: 'CRT_Date', header: '建立日期', visible: true, format: formatDate },
-    { field: 'CRT_USR_No', header: '建立人員代碼', visible: false },
-    { field: 'CRT_USR_Name', header: '建立人員姓名', visible: false },
-    { field: 'UPD_Date', header: '變更日期', visible: false, format: formatDate },
-    { field: 'UPD_USR_No', header: '變更人員代碼', visible: false },
-    { field: 'UPD_USR_Name', header: '變更人員姓名', visible: false }
+    { field: 'contract_subno', header: '版本', visible: true },
+    { field: 'rent_space', header: '位置租賃數', visible: true },
+    { field: 'approve_desc', header: '合約狀態', visible: true},
+    { field: 'crt_date', header: '建立日期', visible: true, format: formatDateTime}, 
   ];
 
-  selectedItems: Potential_Customer[] = [];// 多選項目
+  selectedItems: response10260[] = [];// 多選項目
 
   // ----------------------------------------------------------------
   constructor(private tls12060Service: Tls12060Service) {
@@ -161,32 +127,33 @@ export class TLS12060Component extends BasicQueryPageComponent<Potential_Custome
   }
 
   onSubmit(frm: FormGroup) {
-    console.log('查詢條件', frm.value);
+    // console.log('查詢條件', frm.value);
+    console.log('查詢條件', JSON.stringify(frm.value, null, 2));
     this.handleSubmit(frm, () => {
-      // this.tls12010Service.queryTLS12010(frm.value).subscribe({
-      //   next: (response) => {
-      //     if (response.Status === '0000') {
-      //       this.data = response.Data || [];
-      //       console.log('Result', this.data);
-      //       this.totalRecords = response.TotalCount || response.Data.length;
-      //       this.queryStateService.setQueryState(this.ProgNo, frm.value);
-      //     } else {
-      //       console.error('API error:', response.Status, response.Message);
-      //     }
-      //     this.loading = false;
-      //     this.messageService.unblockUi();
-      //   },
-      //   error: (err: string) => {
-      //     console.error('API error:', err);
-      //     this.loading = false;
-      //     this.messageService.unblockUi();
-      //   },
-      // });
+      this.tls12060Service.queryTLS12060(frm.value).subscribe({
+        next: (response) => {
+          if (response.Status === '0000') {
+            this.data = response.Data || [];
+            console.log('Result', this.data);
+            this.totalRecords = response.TotalCount || response.Data.length;
+            this.queryStateService.setQueryState(this.ProgNo, frm.value);
+          } else {
+            console.error('API error:', response.Status, response.Message);
+          }
+          this.loading = false;
+          this.messageService.unblockUi();
+        },
+        error: (err: string) => {
+          console.error('API error:', err);
+          this.loading = false;
+          this.messageService.unblockUi();
+        },
+      });
     });
   }
 
   // 刪除項目
-  onDelete(data: Potential_Customer | Potential_Customer[]): void {
+  onDelete(data: response10260 | response10260[]): void {
     console.log('Delete data:', JSON.stringify(data, null, 2));
 
     const items = Array.isArray(data) ? data : [data];
@@ -232,8 +199,8 @@ export class TLS12060Component extends BasicQueryPageComponent<Potential_Custome
     this.selectedItems = [];
   }
 
-  isRowSelectable(rowData: Potential_Customer): boolean {
-    return rowData.CanDel ?? false;
+  isRowSelectable(): boolean {
+    return false;
   }
 
   loadOptions() {
