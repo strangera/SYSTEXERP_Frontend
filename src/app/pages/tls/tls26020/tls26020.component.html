@@ -44,6 +44,6 @@
     (selectionChange)="selectedItems = $event" dataKey="tlt_no" [totalRecords]="totalRecords" (lazyLoadData)="onLazyLoadData($event, queryForm); 
     onSubmit(queryForm)" [lazy]="true" [loading]="loading" [showManage]="false" [showDelete]="false"
     [expansionColumns]="expansionColumns" expansionDataKey="details" [expansionShowPaginator]="true"
-    [expansionRows]="50">
+    [expansionRows]="50" [showTotal]="true">
   </app-table>
 </div>
