@@ -54,8 +54,8 @@ export class TLS26020Component extends BasicQueryPageComponent<TLS26020Data> imp
   columns: Column[] = [
     { field: 'tlt_no', header: '專櫃編號', visible: true },
     { field: 'tlt_name', header: '專櫃名稱', visible: true },
-    { field: 'txn_TotGUI', header: '發票金額', visible: true, format: (value: number) => value.toLocaleString() },
-    { field: 'txn_TotSaleAmt', header: '業績金額', visible: true, format: (value: number) => value.toLocaleString() }
+    { field: 'txn_TotGUI', header: '發票金額', visible: true, format: (value: number) => value.toLocaleString(), isTotal: true },
+    { field: 'txn_TotSaleAmt', header: '業績金額', visible: true, format: (value: number) => value.toLocaleString(), isTotal: true }
   ];
 
   // 展開詳細資料的欄位定義
