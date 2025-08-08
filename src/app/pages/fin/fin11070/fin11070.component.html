@@ -1,53 +1,40 @@
 <div class="card">
-  <div class="grid align-items-center">
-    <div class="col" style="flex: 1">
-      <app-menubar [ProgNo]="ProgNo"></app-menubar>
-    </div>
+  <div class="flex gap-2 mb-2">
+    <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
+    <app-button btnType="create" (click)="onExport()" label="轉檔"></app-button>
   </div>
   <p-accordion>
-    <p-accordionTab
-      header="{{ 'query-conditions' | translate }}"
-      [selected]="true"
-      class="line-height-3 m-0"
-      [headerStyleClass]="'query-accordionTab'"
-    >
-      <form
-        [formGroup]="queryForm"
-        id="queryForm"
-        (ngSubmit)="onSubmit(queryForm)"
-      >
+    <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'">
+      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar-range
-              calendarType="dateRange"
-              label="銷售日期"
-              [startControl]="queryForm.controls.startdate"
-              [endControl]="queryForm.controls.enddate"
-              [submitted]="submitted"
-            ></app-calendar-range>
+          <!-- 申報年月 -->
+          <app-calendar class="col-12 md:col-6 lg:col-4" label="申報年月" calendarType="dateMonthOne"
+            [control]="queryForm.controls.DeclareYearMonth" [submitted]="submitted" placeholder="請選擇月份"></app-calendar>
+        </div>
+
+        <!-- 說明文字 -->
+        <div class="grid p-fluid">
+          <div class="col-12 pl-3">
+            <ul class="mb-0 pl-3">
+              <li>請注意：</li>
+              <li>1、申報年月頁小於各條件日申報年月。</li>
+            </ul>
           </div>
         </div>
-        <div>
-          <div class="grid justify-content-end">
-            <app-button btnType="clear" (onClick)="onClearForm()"></app-button>
-            <app-button
-              btnType="query"
-              (onClick)="onSubmitQuery(queryForm)"
-              [loading]="loading"
-            ></app-button>
-          </div>
+
+        <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+          <app-button btnType="clear"></app-button>
+          <app-button btnType="query" [loading]="loading"></app-button>
         </div>
       </form>
     </p-accordionTab>
   </p-accordion>
 </div>
+
 <div class="card">
-  <div class="col-13">
-    <app-table
-      [data]="data"
-      [columns]="columns"
-      (edit)="onEdit($event)"
-      (detail)="onDetail($event)"
-    ></app-table>
-  </div>
+  <app-table tableKey="FIN11070" [data]="data" [columns]="columns" [selectedItems]="selectedItems"
+    (selectionChange)="selectedItems = $event" dataKey="UploadProcessTime" [totalRecords]="totalRecords"
+    [multiSortMeta]="[{field: 'ID', order: 1}]" (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"
+    [lazy]="true" [loading]="loading" [showManage]="false" [showDelete]="false"></app-table>
 </div>

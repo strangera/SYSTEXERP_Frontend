@@ -93,7 +93,7 @@ export class TLS11010Component extends BasicQueryPageComponent<any> {
       format: (value: any) => this.getLabelFromOptions(value, this.LOCATION_Status_Options),
     },
 {
-  field: 'Purpose_desc',
+  field: 'purpose_desc',
   header: '用途名稱',
   visible: true,
   
