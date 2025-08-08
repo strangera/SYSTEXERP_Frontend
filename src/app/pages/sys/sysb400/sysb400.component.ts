@@ -18,21 +18,21 @@ import { TranslateModule } from '@ngx-translate/core';
 
 // 組織碼設定作業
 @Component({
-    selector: 'app-sysb400',
-    templateUrl: './sysb400.component.html',
-    styleUrls: ['./sysb400.component.scss'],
-    standalone: true,
-    imports: [
-        MenubarComponent,
-        ButtonComponent,
-        AccordionModule,
-        FormsModule,
-        ReactiveFormsModule,
-        InputTextComponent,
-        DropdownComponent,
-        TableComponent,
-        TranslateModule,
-    ],
+  selector: 'app-sysb400',
+  templateUrl: './sysb400.component.html',
+  styleUrls: ['./sysb400.component.scss'],
+  standalone: true,
+  imports: [
+    MenubarComponent,
+    ButtonComponent,
+    AccordionModule,
+    FormsModule,
+    ReactiveFormsModule,
+    InputTextComponent,
+    DropdownComponent,
+    TableComponent,
+    TranslateModule,
+  ],
 })
 export class SYSB400Component
   extends BasicQueryPageComponent<Sysb400m>
@@ -128,7 +128,7 @@ export class SYSB400Component
 
   onSubmit(frm: FormGroup): void {
     this.handleSubmit(frm, () => {
-      console.log('查詢條件',frm.value);
+      console.log('查詢條件', frm.value);
       this.sysb400Service.querySYSB400(frm.value).subscribe({
         next: (response) => {
           console.log('API response:', response);
@@ -213,8 +213,8 @@ export class SYSB400Component
     ];
 
     // 所有組織代碼
-    this.sysb400Service.querySYS3100_DropDownList({}).subscribe((response) => {
-      this.org_Option = response.Data.map((item: any) => ({
+    this.sysb400Service.querySYS3100_DropDownList().subscribe((response) => {
+      this.org_Option = response.Data.map(item => ({
         No: item.No,
         Name: item.Name,
         Label: item.No + '-' + item.Name,

@@ -19,22 +19,22 @@ import { TranslateModule } from '@ngx-translate/core';
 
 // 4-2-2-4使用者之角色設定維護
 @Component({
-    selector: 'app-sys0220',
-    templateUrl: './sys0220.component.html',
-    styleUrls: ['./sys0220.component.scss'],
-    standalone: true,
-    imports: [
-        MenubarComponent,
-        AccordionModule,
-        FormsModule,
-        ReactiveFormsModule,
-        InputTextComponent,
-        MultiSelectComponent,
-        CalendarRangeQuickComponent,
-        ButtonComponent,
-        TableComponent,
-        TranslateModule,
-    ],
+  selector: 'app-sys0220',
+  templateUrl: './sys0220.component.html',
+  styleUrls: ['./sys0220.component.scss'],
+  standalone: true,
+  imports: [
+    MenubarComponent,
+    AccordionModule,
+    FormsModule,
+    ReactiveFormsModule,
+    InputTextComponent,
+    MultiSelectComponent,
+    CalendarRangeQuickComponent,
+    ButtonComponent,
+    TableComponent,
+    TranslateModule,
+  ],
 })
 
 export class SYS0220Component extends BasicQueryPageComponent<UserData> implements OnInit {
@@ -120,8 +120,8 @@ export class SYS0220Component extends BasicQueryPageComponent<UserData> implemen
     });
 
     //建立組織下拉清單(SYS3100) 查詢全部
-    this.sysb400Service.querySYS3100_DropDownList({}).subscribe((response) => {
-      this.SYS3100_Options = response.Data.map((item: any) => ({
+    this.sysb400Service.querySYS3100_DropDownList().subscribe((response) => {
+      this.SYS3100_Options = response.Data.map((item) => ({
         No: item.No,
         Name: item.Name,
         Label: item.No + '-' + item.Name,

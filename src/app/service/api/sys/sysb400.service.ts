@@ -2,6 +2,12 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
+import { ApiResponse } from '@service/system/auth.service';
+
+interface Options {
+  No: string;
+  Name: string;
+}
 
 @Injectable({
   providedIn: 'root',
@@ -34,8 +40,8 @@ export class Sysb400Service {
   }
 
   // 查詢 組織代碼下拉 SYS3100 下拉式
-  querySYS3100_DropDownList(body: any): Observable<any> {
-    return this.http.post<any>(`${environment.ApiUrl}/querySYS3100_DropDownList`, body);
+  querySYS3100_DropDownList(): Observable<ApiResponse<Options[]>> {
+    return this.http.post<ApiResponse<Options[]>>(`${environment.ApiUrl}/querySYS3100_DropDownList`, {});
   }
 
   // 查詢 組織代碼下拉 SYS3100 樹狀下拉式

@@ -9,7 +9,7 @@ import { LocationOptionsService } from '../../../service/api/dropdownservice/loc
 import { Column } from '../../../shared/componentkit/table/table.model';
 import { Sysb800DropdownService } from '../../../service/api/sys/sysb800-dropdown.service';
 import { finalize, forkJoin, map } from 'rxjs';
-import { UserInfo, UserSys3700Detail } from '../sys0110/sys0110.model';
+import { user_priorityOptions, UserInfo, UserSys3700Detail } from '../sys0110/sys0110.model';
 import { UserCodeService } from '../../../service/basic/user-code.service';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
@@ -83,6 +83,7 @@ export class SYS0110CRUComponent extends BasicCruPageComponent<UserInfo> impleme
     { value: '4', label: '虛擬櫃' },
   ]
   BUS_TypeOptions: { value: string; label: string }[] = []
+  user_priorityOptions = user_priorityOptions;
 
   data: UserSys3700Detail[] = [];
   selectedRows: UserSys3700Detail[] = [];

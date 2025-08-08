@@ -17,6 +17,7 @@ import { TableComponent } from '../../../shared/componentkit/table/table.compone
 import { TranslateModule } from '@ngx-translate/core';
 import { SystemOptionsService } from '@service/system/sys1000.service';
 import { SystemOption } from '@shared/models/sys/sys1000.model';
+import { user_priorityOptions } from './sys0110.model';
 
 // 4-2-1-1 使用者基本資料維護
 @Component({
@@ -42,7 +43,7 @@ export class SYS0110Component extends BasicQueryPageComponent<UserData> implemen
   queryForm = this.formBuilder.group({
     user_No: ['', Validators.maxLength(10)], // 使用者編號
     user_Name: ['', Validators.maxLength(20)], // 使用者名稱
-    user_priority: [[], Validators.maxLength(1)], // 使用者等級 > 規格?不知道內容
+    user_priority: [null], // 使用者等級 > 規格?不知道內容
     org_ID: [[]], // 組織編號 (SYSB400_SYS3100)
     str_dateStart: [null], // 帳號有效開始日期
     str_dateEnd: [null], // 帳號有效結束日期
@@ -54,6 +55,7 @@ export class SYS0110Component extends BasicQueryPageComponent<UserData> implemen
   });
 
   totalRecords = 0;// 分頁和排序參數 // 排序需要
+  user_priorityOptions = user_priorityOptions;
 
   // 表格資料
   data: UserData[] = [];
@@ -120,8 +122,8 @@ export class SYS0110Component extends BasicQueryPageComponent<UserData> implemen
       Name: item.SYS_Name,
       Label: item.SYS_Code + '-' + item.SYS_Name,
     }));
-    this.sysb400Service.querySYS3100_DropDownList({}).pipe(untilDestroyed(this)).subscribe((response) => {
-      this.SYS3100_Options = response.Data.map((item: any) => ({ ...item, Label: item.No + '-' + item.Name, }));
+    this.sysb400Service.querySYS3100_DropDownList().pipe(untilDestroyed(this)).subscribe((response) => {
+      this.SYS3100_Options = response.Data.map(item => ({ ...item, Label: item.No + '-' + item.Name, }));
     });
     this.userTypeOptions = [{ value: '1', label: '公司內部人員' }, { value: '2', label: '專櫃人員' }, { value: '3', label: '其他' },];
     this.userStatusOptions = [{ value: '1', label: '有效' }, { value: '2', label: '停用' },];
