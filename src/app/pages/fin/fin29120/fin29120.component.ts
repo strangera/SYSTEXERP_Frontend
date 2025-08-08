@@ -19,11 +19,11 @@ import { TranslateModule } from '@ngx-translate/core';
 
 //1.2.9.12 應付帳款進項發票對應表
 @Component({
-    selector: 'app-fin29120',
-    templateUrl: './fin29120.component.html',
-    styleUrl: './fin29120.component.scss',
-    standalone: true,
-    imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarComponent, InputTextComponent, InputNumberRangeComponent, ButtonComponent, TableComponent, TranslateModule]
+  selector: 'app-fin29120',
+  templateUrl: './fin29120.component.html',
+  styleUrl: './fin29120.component.scss',
+  standalone: true,
+  imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarComponent, InputTextComponent, InputNumberRangeComponent, ButtonComponent, TableComponent, TranslateModule]
 })
 export class FIN29120Component extends BasicQpageComponent implements OnInit {
   //
@@ -32,8 +32,8 @@ export class FIN29120Component extends BasicQpageComponent implements OnInit {
     track: ['', [Validators.maxLength(2)]], // 字軌
     startFactoryID: [, [this.validationService.numberValidator, Validators.max(99999999999999)]], // 廠客代號
     endFactoryID: [, [this.validationService.numberValidator, Validators.max(99999999999999)]], // 廠客代號
-    startserialticket: [, [this.validationService.numberValidator, Validators.max(99999999)]], // 發票號碼(起)
-    endserialticket: [, [this.validationService.numberValidator, Validators.max(99999999)]], // 發票號碼(迄)
+    startserialticket: [, [this.validationService.numberValidator, Validators.max(99999999)]], // 發票起始號碼
+    endserialticket: [, [this.validationService.numberValidator, Validators.max(99999999)]], // 發票結束號碼
   });
   // 下拉資料多個呈現
   // ----------------------------------------------------------------

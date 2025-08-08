@@ -8,10 +8,10 @@
       <div class="grid p-fluid">
         <app-calendar calendarType="dateMonthOne" class="col-12 md:col-6 lg:col-4" label="發票年月"
           [control]="dataForm.controls.GUI_YYMM" [submitted]="submitted" [minDate]="minDate" />
-        <app-table dataKey="ECR_No" title="加入收銀機" class="col-12" [data]="data" [columns]="columns" [showManage]="false"
-          [showCheckBox]="true" [showInsert]="true" (insert)="dialogVisible = true;this.selectedItemsDialog = []"
-          (delete)="onDelete($event)" [selectedItems]="selectedData" (selectionChange)="selectedData = $event"
-          [showReportMode]="false"></app-table>
+        <app-table tableKey="fin11200DetailTable" dataKey="ECR_No" title="加入收銀機" class="col-12" [data]="data"
+          [columns]="columns" [showManage]="false" [showCheckBox]="true" [showInsert]="true"
+          (insert)="dialogVisible = true;this.selectedItemsDialog = []" (delete)="onDelete($event)"
+          [selectedItems]="selectedData" (selectionChange)="selectedData = $event" [showReportMode]="false"></app-table>
       </div>
       <div *ngIf="!isFormReadable" class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
         <app-button btnType="cancel" [form]="dataForm" (clickEvent)="resetTable()"></app-button>
@@ -24,7 +24,7 @@
 <app-dialog [visible]="dialogVisible" header="選擇收銀機" (visibleChange)="dialogVisible = $event" (save)="saveDialog()"
   [disable]="selectedItemsDialog.length === 0">
   <form [formGroup]="dialogQueryForm" class="flex pb-2 align-items-end gap-2">
-    <app-input-text class="flex-grow-1" label="收銀機編號" controlName="ECR_No" [control]="dialogQueryForm.controls.ECR_No"
+    <app-input-text class="flex-grow-1" label="收銀機號" controlName="ECR_No" [control]="dialogQueryForm.controls.ECR_No"
       (input)="inputEnter()" />
     <app-input-text class="flex-grow-1" label="收銀機名稱" controlName="ECR_Name"
       [control]="dialogQueryForm.controls.ECR_Name" (input)="inputEnter()" />

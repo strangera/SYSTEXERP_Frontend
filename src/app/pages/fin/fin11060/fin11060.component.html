@@ -9,19 +9,17 @@
       <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar-range-quick label="銷售日期"
-            [startControl]="queryForm.controls.SalesDateStart" [endControl]="queryForm.controls.SalesDateEnd"
-            [submitted]="submitted" />
+            <app-calendar-range-quick label="銷售日期" [startControl]="queryForm.controls.SalesDateStart"
+              [endControl]="queryForm.controls.SalesDateEnd" [submitted]="submitted" />
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar-range-quick label="產檔日期"
-            [startControl]="queryForm.controls.processDateStart" [endControl]="queryForm.controls.processDateEnd"
-            [submitted]="submitted" />
+            <app-calendar-range-quick label="產檔日期" [startControl]="queryForm.controls.processDateStart"
+              [endControl]="queryForm.controls.processDateEnd" [submitted]="submitted" />
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-text-range startLabel="起始發票號碼(含字軌)" endLabel="結束發票號(含字軌)"
-            [startControl]="queryForm.controls.GUI_No_start" [endControl]="queryForm.controls.GUI_No_end"
-            [submitted]="submitted" [errorForGroup]="true" />
+              [startControl]="queryForm.controls.GUI_No_start" [endControl]="queryForm.controls.GUI_No_end"
+              [submitted]="submitted" [errorForGroup]="true" />
           </div>
         </div>
         <div class="grid p-fluid">
@@ -30,24 +28,20 @@
             [startControl]="queryForm.controls.ECR_No_start" [endControl]="queryForm.controls.ECR_No_end"
             [submitted]="submitted" [errorForGroup]="true" />
           </div> -->
-          <app-dropdown class=" col-12 md:col-6 lg:col-4" label="收銀機編號(起)" controlName="ECR_No_start"
-            [options]="POS_NOSOptions" optionLabel="label" optionValue="value" [control]="queryForm.controls.ECR_No_start"
-            [submitted]="submitted" />
-          <app-dropdown class=" col-12 md:col-6 lg:col-4" label="收銀機編號(迄)" controlName="ECR_No_end"
+          <app-dropdown class=" col-12 md:col-6 lg:col-4" label="收銀機號(起)" controlName="ECR_No_start"
+            [options]="POS_NOSOptions" optionLabel="label" optionValue="value"
+            [control]="queryForm.controls.ECR_No_start" [submitted]="submitted" />
+          <app-dropdown class=" col-12 md:col-6 lg:col-4" label="收銀機號(迄)" controlName="ECR_No_end"
             [options]="POS_NOSOptions" optionLabel="label" optionValue="value" [control]="queryForm.controls.ECR_No_end"
             [submitted]="submitted" />
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="查詢條件依據" controlName="condition_type" [options]="contact_type_Option" optionLabel="label"
-              optionValue="value" [control]="queryForm.controls.condition_type" [submitted]="submitted"></app-dropdown>
+            <app-dropdown label="查詢條件依據" controlName="condition_type" [options]="contact_type_Option"
+              optionLabel="label" optionValue="value" [control]="queryForm.controls.condition_type"
+              [submitted]="submitted"></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-radiobutton
-              label="是否只顯示異常"
-              groupname="show_error"
-              [control]="queryForm.controls.show_error"
-              [options]="show_error_Option"
-              [submitted]="submitted"
-            ></app-radiobutton>
+            <app-radiobutton label="是否只顯示異常" groupname="show_error" [control]="queryForm.controls.show_error"
+              [options]="show_error_Option" [submitted]="submitted"></app-radiobutton>
           </div>
         </div>
         <!-- <div> -->
@@ -62,43 +56,22 @@
 </div>
 <!-- Group 1：交易序號 -->
 <ng-container [ngSwitch]="queryForm.get('condition_type')?.value">
-  <div class="card" >
-    <app-report-table-group
-      *ngSwitchCase="'1'"
-      [columns]="columnsType1"
-      [data]="data"
-      [subtotalFields]="['TXN_Time','MIG_Time']"
-      [enableGrouping]="false"
-      [reportTitle]="'電子發票上送表 - 條件1'"
-      [currentPage]="1"
-      [showTotalOnly]="false"
-      [defaultMergedView]="true">
+  <div class="card">
+    <app-report-table-group *ngSwitchCase="'1'" [columns]="columnsType1" [data]="data"
+      [subtotalFields]="['TXN_Time','MIG_Time']" [enableGrouping]="false" [reportTitle]="'電子發票上送表 - 條件1'"
+      [currentPage]="1" [showTotalOnly]="false" [defaultMergedView]="true">
     </app-report-table-group>
 
     <!-- Group 2：收銀機號 -->
-    <app-report-table-group
-      *ngSwitchCase="'2'"
-      [columns]="columnsType2"
-      [data]="data"
-      [subtotalFields]="['TXN_Time','MIG_Time']"
-      [enableGrouping]="false"
-      [reportTitle]="'電子發票上送表 - 條件2'"
-      [currentPage]="1"
-      [showTotalOnly]="false"
-      [defaultMergedView]="true">
+    <app-report-table-group *ngSwitchCase="'2'" [columns]="columnsType2" [data]="data"
+      [subtotalFields]="['TXN_Time','MIG_Time']" [enableGrouping]="false" [reportTitle]="'電子發票上送表 - 條件2'"
+      [currentPage]="1" [showTotalOnly]="false" [defaultMergedView]="true">
     </app-report-table-group>
 
     <!-- Group 3：交易日期 -->
-    <app-report-table-group
-      *ngSwitchCase="'3'"
-      [columns]="columnsType3"
-      [data]="data"
-      [subtotalFields]="['TXN_Time','MIG_Time']"
-      [enableGrouping]="false"
-      [reportTitle]="'電子發票上送表 - 條件3'"
-      [currentPage]="1"
-      [showTotalOnly]="false"
-      [defaultMergedView]="true">
+    <app-report-table-group *ngSwitchCase="'3'" [columns]="columnsType3" [data]="data"
+      [subtotalFields]="['TXN_Time','MIG_Time']" [enableGrouping]="false" [reportTitle]="'電子發票上送表 - 條件3'"
+      [currentPage]="1" [showTotalOnly]="false" [defaultMergedView]="true">
     </app-report-table-group>
   </div>
-</ng-container> 
+</ng-container>

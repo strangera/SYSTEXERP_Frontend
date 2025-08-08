@@ -28,8 +28,8 @@ export class FIN12020Component extends BasicQueryPageComponent<FIN12020Data> imp
     GUI_YYMM_start: ['', Validators.required], // 發票年月(起)
     GUI_YYMM_end: ['', Validators.required], // 發票年月(迄)
     GUI_TRACK: ['', [Validators.maxLength(2)]], // 字軌
-    GUINo_start: ['', [Validators.maxLength(8)]], // 發票號碼(起)
-    GUINo_end: ['', [Validators.maxLength(8)]], // 發票號碼(迄)
+    GUINo_start: ['', [Validators.maxLength(8)]], // 發票起始號碼
+    GUINo_end: ['', [Validators.maxLength(8)]], // 發票結束號碼
     GUIPaperList: [[]], // 發票類別清單 (多選)
     ECR_NOList: [[]], // 收銀機號清單 (多選)
     GUI_StatusList: [[]], // 發票狀態清單 (多選)
@@ -43,7 +43,7 @@ export class FIN12020Component extends BasicQueryPageComponent<FIN12020Data> imp
 
   columns: Column[] = [
     { field: 'GUI_YYMM', header: '發票年月', visible: true },
-    { field: 'ECR_NO', header: '收銀機編號', visible: true },
+    { field: 'ECR_NO', header: '收銀機號', visible: true },
     { field: 'GUI_TRACK', header: '字軌', visible: true },
     { field: 'GUI_SNOS', header: '起始號碼', visible: true },
     { field: 'GUI_ENOS', header: '發票號碼', visible: true },

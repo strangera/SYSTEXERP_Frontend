@@ -19,7 +19,7 @@
           <app-input-text-range class="col-12 md:col-6 lg:col-4" startLabel="發票起始號碼" endLabel="發票結束號碼"
             [startControl]="queryForm.controls.GUINo_start" [endControl]="queryForm.controls.GUINo_end"
             [submitted]="submitted" [errorForGroup]="true"></app-input-text-range>
-          <app-multi-select class="col-12 md:col-6 lg:col-4" label="收銀機編號" controlName="ECR_NOList"
+          <app-multi-select class="col-12 md:col-6 lg:col-4" label="收銀機號" controlName="ECR_NOList"
             [options]="cashierNoOptions" optionLabel="label" optionValue="value"
             [control]="queryForm.controls.ECR_NOList" [submitted]="submitted"></app-multi-select>
           <app-multi-select class="col-12 md:col-6 lg:col-4" label="發票狀態" controlName="GUI_StatusList"

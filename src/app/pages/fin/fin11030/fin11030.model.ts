@@ -8,7 +8,7 @@ export interface APS2001Data {
   SAL_GUITrack: string; // 字軌
   SAL_GUIBegNo: string; // 發票起號
   SAL_GUIEndNo: string; // 發票迄號
-  SAL_GUIPaper: string; // 發票聯式
+  SAL_GUIPaper: string; // 發票類別
   SAL_LastUsedGUINo?: string; // 已使用的發票號 (可為空)
   SAL_VoidGUICnt?: number; // 作廢發票張數 (可為空)
   SAL_BlankCnt?: number; // 發票張數 (可為空)
@@ -46,10 +46,10 @@ export const columns: Column[] = [
   { field: 'SAL_GUIBegMM', header: '起始月份', visible: false },
   { field: 'SAL_GUIEndMM', header: '終止月份', visible: false },
   { field: 'SAL_GUITrack', header: '字軌', visible: true },
-  { field: 'SAL_GUIBegNo', header: '發票號碼(起)', visible: true },
-  { field: 'SAL_GUIEndNo', header: '發票號碼(迄)', visible: true },
+  { field: 'SAL_GUIBegNo', header: '發票起始號碼', visible: true },
+  { field: 'SAL_GUIEndNo', header: '發票結束號碼', visible: true },
   {
-    field: 'SAL_GUIPaper', header: '發票聯式', visible: true,
+    field: 'SAL_GUIPaper', header: '發票類別', visible: true,
     format: (value: string) => SAL_GUIPaperOptions.find(x => x.value === value)?.label || value
   },
   { field: 'SAL_LastUsedGUINo', header: '已使用的發票號', visible: false },

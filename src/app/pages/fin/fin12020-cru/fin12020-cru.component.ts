@@ -13,19 +13,19 @@ import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdow
 import { NgIf } from '@angular/common';
 
 @Component({
-    selector: 'app-fin12020-cru',
-    templateUrl: './fin12020-cru.component.html',
-    styleUrl: './fin12020-cru.component.scss',
-    standalone: true,
-    imports: [MenubarComponent, ButtonComponent, PanelModule, FormsModule, ReactiveFormsModule, InputTextComponent, DropdownComponent, NgIf]
+  selector: 'app-fin12020-cru',
+  templateUrl: './fin12020-cru.component.html',
+  styleUrl: './fin12020-cru.component.scss',
+  standalone: true,
+  imports: [MenubarComponent, ButtonComponent, PanelModule, FormsModule, ReactiveFormsModule, InputTextComponent, DropdownComponent, NgIf]
 })
 export class FIN12020CRUComponent extends BasicCruPageComponent<FIN12020Data> {
 
   dataForm = this.formBuilder.group({
     invoice_month: ['', [Validators.required]], // 發票年月
     prefix: ['', [Validators.required, Validators.maxLength(2)]], // 字軌
-    invoice_no_start: ['', [Validators.required, Validators.maxLength(8)]], // 發票號碼(起)
-    invoice_no_end: ['', [Validators.required, Validators.maxLength(8)]], // 發票號碼(迄)
+    invoice_no_start: ['', [Validators.required, Validators.maxLength(8)]], // 發票起始號碼
+    invoice_no_end: ['', [Validators.required, Validators.maxLength(8)]], // 發票結束號碼
     next_invoice_no: ['', [Validators.maxLength(8)]], // NEXT發票配號號碼
     usage_type: ['', [Validators.required]], // 使用別
     invoice_status: ['', [Validators.required]], // 使用狀態
@@ -36,8 +36,8 @@ export class FIN12020CRUComponent extends BasicCruPageComponent<FIN12020Data> {
   columns: Column[] = [
     { field: 'invoice_month', header: '發票年月', visible: true },
     { field: 'prefix', header: '字軌', visible: true },
-    { field: 'invoice_no_start', header: '發票號碼(起)', visible: true },
-    { field: 'invoice_no_end', header: '發票號碼(迄)', visible: true },
+    { field: 'invoice_no_start', header: '發票起始號碼', visible: true },
+    { field: 'invoice_no_end', header: '發票結束號碼', visible: true },
     { field: 'next_invoice_no', header: 'NEXT發票配號號碼', visible: true },
     { field: 'usage_type', header: '使用別', visible: true },
     { field: 'invoice_status', header: '使用狀態', visible: true }

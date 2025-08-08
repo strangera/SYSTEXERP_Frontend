@@ -18,6 +18,7 @@ import { Button, ButtonDirective } from 'primeng/button';
 import { TooltipModule } from 'primeng/tooltip';
 import { NgStyle } from '@angular/common';
 import { TranslateModule } from '@ngx-translate/core';
+import { createPaginationConfig } from '@shared/componentkit/table2/table2.model';
 
 @Component({
   selector: 'app-fin11200',
@@ -46,7 +47,8 @@ export class FIN11200Component extends BasicQueryPageComponent<Pos1018> implemen
   queryForm = this.formBuilder.group({
     GUI_YY: [null, [Validators.required]], // 發票年月
     GUI_MM: [null, [Validators.required]], // 發票年月
-    ECR_No: [null, [Validators.required]], // 收銀機編號
+    ECR_No: [null, [Validators.required]], // 收銀機號
+    ...createPaginationConfig([{ field: 'ID', order: 1 }]), // 分頁和排序參數
   });
   totalRecords = 0;
   monthOptions = monthOptions;
@@ -78,10 +80,10 @@ export class FIN11200Component extends BasicQueryPageComponent<Pos1018> implemen
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
       const body = {
+        ...frm.value,
         GUI_YYMM: this.convertDateToYYYYMM2(frm),
         ECR_NoList: frm.get('ECR_No')?.value
       }
-      console.log(body);
       this.fin11200Service.queryFIN11200(body).pipe(finalize(() => this.loading = false)).pipe(untilDestroyed(this)).subscribe((response) => {
         this.data = response.Data.map((item: Pos1018) => ({
           ...item,

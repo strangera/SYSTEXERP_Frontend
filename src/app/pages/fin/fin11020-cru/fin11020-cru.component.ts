@@ -44,7 +44,7 @@ export class FIN11020CRUComponent extends BasicCruPageComponent<MainInvoiceData>
     GUI_YYMM: [null, [Validators.required]],                          // 發票年月
     GUI_SerNo: [{ value: '', disabled: true }],                       // 序號
     GUI_Track: ['', [Validators.required, this.validationService.guiTrackValidator, Validators.maxLength(2), Validators.minLength(2)]],  // 字軌
-    GUI_BegNo: ['', [Validators.maxLength(8), Validators.minLength(8), Validators.required, this.validationService.guiBegNoValidator]], // 發票起始號碼
+    GUI_BegNo: ['', [Validators.maxLength(8), Validators.minLength(8), Validators.required, this.validationService.guiBegNoValidator]], // 碼
     GUI_EndNo: ['', [Validators.maxLength(8), Validators.minLength(8), Validators.required, this.validationService.guiEndNoValidator]], // 發票結束號碼
     GUI_Qty: [0, [Validators.required, Validators.maxLength(8), Validators.max(99999999)]], // 券數
     GUI_TotQty: [{ value: 0, disabled: true }],       // 發票張數

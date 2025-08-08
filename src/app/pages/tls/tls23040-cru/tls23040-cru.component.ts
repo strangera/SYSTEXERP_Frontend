@@ -44,7 +44,7 @@ export class TLS23040CRUComponent extends BasicCruPageComponent<any> {
   }
 
   async ngOnInit(): Promise<void> {
-     const state = history.state;
+    const state = history.state;
     if (state?.data) {
       this.data = state.data;
       this.queryFormValue = state.queryFormValue;
@@ -53,7 +53,7 @@ export class TLS23040CRUComponent extends BasicCruPageComponent<any> {
       this.pageSize = state.pageSize || 1000;
       this.printedAt = new Date().toLocaleString('zh-TW');
 
-      const validDisplayModes: DisplayMode[] = ['Report','ByPaymentType','ByDiscountType'];
+      const validDisplayModes: DisplayMode[] = ['Report', 'ByPaymentType', 'ByDiscountType'];
       const incomingMode = state.displayMode || state.queryFormValue?.DisplayMode || 'Report';
       this.displayMode = validDisplayModes.includes(incomingMode) ? incomingMode : 'Report';
     } else {
@@ -127,8 +127,8 @@ export class TLS23040CRUComponent extends BasicCruPageComponent<any> {
             style: 'text-left',
           },
           { field: 'gui_track', header: '發票起號(字軌)', visible: true },
-          { field: 'GUIBegNo', header: '發票號碼(起)', visible: true },
-          { field: 'GUIEndNo', header: '發票號碼(迄)', visible: true },
+          { field: 'GUIBegNo', header: '發票起始號碼', visible: true },
+          { field: 'GUIEndNo', header: '發票結束號碼', visible: true },
           {
             field: 'TXN_TotGUI',
             header: '發票金額',
@@ -279,7 +279,7 @@ export class TLS23040CRUComponent extends BasicCruPageComponent<any> {
 
     const mergeTotalCols =
       this.displayMode === 'ByPaymentType' ||
-      this.displayMode === 'ByDiscountType'
+        this.displayMode === 'ByDiscountType'
         ? 2
         : 0;
 

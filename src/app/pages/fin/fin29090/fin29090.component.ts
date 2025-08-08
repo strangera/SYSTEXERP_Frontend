@@ -20,19 +20,19 @@ import { TranslateModule } from '@ngx-translate/core';
 
 //1.2.9.9 貼現三聯式發票列印
 @Component({
-    selector: 'app-fin29090',
-    templateUrl: './fin29090.component.html',
-    styleUrl: './fin29090.component.scss',
-    standalone: true,
-    imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarComponent, InputTextComponent, InputNumberRangeComponent, DropdownComponent, ButtonComponent, TranslateModule]
+  selector: 'app-fin29090',
+  templateUrl: './fin29090.component.html',
+  styleUrl: './fin29090.component.scss',
+  standalone: true,
+  imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarComponent, InputTextComponent, InputNumberRangeComponent, DropdownComponent, ButtonComponent, TranslateModule]
 })
 export class FIN29090Component extends BasicQpageComponent implements OnInit {
   //
   queryForm = this.formBuilder.group({
     onedatemm: [], // 申報年月
     wordTrack: ['', [Validators.required, Validators.maxLength(2)]], // 字軌
-    startserialticket: [, [this.validationService.numberValidator, Validators.required, Validators.max(99999999)]], // 發票號碼(起)
-    endserialticket: [, [this.validationService.numberValidator, Validators.required, Validators.max(99999999)]], // 發票號碼(迄)
+    startserialticket: [, [this.validationService.numberValidator, Validators.required, Validators.max(99999999)]], // 發票起始號碼
+    endserialticket: [, [this.validationService.numberValidator, Validators.required, Validators.max(99999999)]], // 發票結束號碼
     printPage: [], // 發票封面是否列印
   });
   // 下拉資料多個呈現

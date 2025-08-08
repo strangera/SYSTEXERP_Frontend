@@ -23,7 +23,7 @@
         <app-calendar class="col-12 md:col-6 lg:col-3" label="銷售日期" [control]="dataForm.controls.TXN_Date"
           [submitted]="submitted"></app-calendar>
         <!-- 收銀機號 → POS5006.ECR_No -->
-        <app-input-text class="col-12 md:col-6 lg:col-3" label="收銀機編號" [control]="dataForm.controls.ECR_No"
+        <app-input-text class="col-12 md:col-6 lg:col-3" label="收銀機號" [control]="dataForm.controls.ECR_No"
           [submitted]="submitted" />
         <!-- 專櫃編號 → POS5006.TLT_No -->
         <app-dropdown *ngIf="type === '01'" class="col-12 md:col-6 lg:col-3" label="專櫃編號"
