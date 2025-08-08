@@ -1,0 +1,214 @@
+// selector-panel.component.scss
+
+.selector-input-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+
+  .clickable-autocomplete {
+    flex: 1;
+
+    ::ng-deep .p-autocomplete-input {
+      cursor: pointer;
+
+      &:focus {
+        cursor: text;
+      }
+    }
+  }
+
+  // .selector-button {
+  //   flex-shrink: 0;
+  //   width: 2.5rem;
+  //   height: 2.5rem;
+  // }
+  .selector-button {
+  display: none !important;
+}
+}
+
+.readonly-field {
+  background-color: #f8f9fa;
+  border-color: #e9ecef;
+  cursor: not-allowed;
+}
+
+// 🎯 覆蓋面板樣式
+::ng-deep .selector-overlay-panel {
+  .p-overlaypanel-content {
+    padding: 0;
+  }
+
+  .selector-panel-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
+    border-bottom: 1px solid #e9ecef;
+    background-color: #f8f9fa;
+
+    h4 {
+      margin: 0;
+      color: #495057;
+      font-size: 1.1rem;
+      font-weight: 600;
+    }
+  }
+
+  .selector-search-form {
+    padding: 1rem;
+    margin: 0;
+
+    .col-12 {
+      padding: 0;
+    }
+  }
+
+  .selector-table {
+    margin-top: 1rem;
+
+    ::ng-deep .p-datatable {
+      .p-datatable-header {
+        background-color: #f1f3f4;
+        border: 1px solid #d1d5db;
+      }
+
+      .p-datatable-thead > tr > th {
+        background-color: #f1f3f4;
+        border-color: #d1d5db;
+        padding: 0.75rem;
+        font-weight: 600;
+        color: #374151;
+      }
+
+      .p-datatable-tbody > tr {
+        &:hover {
+          background-color: #f3f4f6;
+        }
+
+        &.p-highlight {
+          background-color: #dbeafe;
+          color: #1e40af;
+        }
+
+        > td {
+          padding: 0.75rem;
+          border-color: #e5e7eb;
+        }
+      }
+    }
+  }
+}
+
+// 🎯 響應式設計
+@media (max-width: 768px) {
+  ::ng-deep .selector-overlay-panel {
+    .p-overlaypanel {
+      max-width: 95vw !important;
+      min-width: 300px !important;
+    }
+
+    .selector-search-form {
+      padding: 0.75rem;
+    }
+
+    .selector-table {
+      ::ng-deep .p-datatable {
+        font-size: 0.875rem;
+
+        .p-datatable-thead > tr > th,
+        .p-datatable-tbody > tr > td {
+          padding: 0.5rem;
+        }
+      }
+    }
+  }
+
+  .selector-input-wrapper {
+    .selector-button {
+      width: 2rem;
+      height: 2rem;
+    }
+  }
+}
+
+// 🎯 主題適配
+:host-context(.dark-theme) {
+  .readonly-field {
+    background-color: #2d3748;
+    border-color: #4a5568;
+    color: #e2e8f0;
+  }
+
+  ::ng-deep .selector-overlay-panel {
+    .selector-panel-header {
+      background-color: #2d3748;
+      border-color: #4a5568;
+
+      h4 {
+        color: #e2e8f0;
+      }
+    }
+
+    .selector-table {
+      ::ng-deep .p-datatable {
+        .p-datatable-header,
+        .p-datatable-thead > tr > th {
+          background-color: #374151;
+          border-color: #4b5563;
+          color: #f9fafb;
+        }
+
+        .p-datatable-tbody > tr {
+          &:hover {
+            background-color: #374151;
+          }
+
+          &.p-highlight {
+            background-color: #1e3a8a;
+            color: #dbeafe;
+          }
+
+          > td {
+            border-color: #4b5563;
+            background-color: #1f2937;
+            color: #f9fafb;
+          }
+        }
+      }
+    }
+  }
+}
+
+// 🎯 動畫效果
+.selector-input-wrapper {
+  .selector-button {
+    transition: all 0.2s ease;
+
+    &:hover:not(:disabled) {
+      transform: translateY(-1px);
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    &:active {
+      transform: translateY(0);
+    }
+  }
+}
+
+::ng-deep .selector-overlay-panel {
+  .p-overlaypanel {
+    animation: fadeInUp 0.3s ease;
+  }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

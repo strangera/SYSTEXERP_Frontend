@@ -45,11 +45,15 @@ export class InputNumberComponent extends BasicKitComponent implements OnInit {
   @Input() showErrorMessage = true;
   // 觸發事件
   @Output() changeEvent = new EventEmitter<InputNumberInputEvent>();
+  @Output() blurEvent = new EventEmitter<Event>();
 
   ngOnInit(): void {
     this.initControl(this.control);
   }
   onInputChange(event: InputNumberInputEvent) {
     this.changeEvent.emit(event);
+  }
+  onBlur(event: Event) {
+    this.blurEvent.emit(event);
   }
 }

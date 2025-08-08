@@ -64,8 +64,8 @@ export class Sys1004Service {
    * @param data 要新增的銀行分行基本資料
    * @returns API 響應
    */
-  insertAPS1004(data: Aps1004Request): Observable<ApiResponse<any>> {
-    return this.http.post<ApiResponse<any>>(`${this.apiUrl}/insertAPS1004`, data);
+  insertAPS1004(data: Aps1004Request): Observable<ApiResponse<number>> {
+    return this.http.post<ApiResponse<number>>(`${this.apiUrl}/insertAPS1004`, data);
   }
 
   /**
@@ -73,8 +73,8 @@ export class Sys1004Service {
    * @param data 要更新的銀行分行基本資料，包含 ID
    * @returns API 響應
    */
-  updateAPS1004(data: Aps1004Request): Observable<ApiResponse<any>> {
-    return this.http.post<ApiResponse<any>>(`${this.apiUrl}/updateAPS1004`, data);
+  updateAPS1004(data: Aps1004Request): Observable<ApiResponse<number>> {
+    return this.http.post<ApiResponse<number>>(`${this.apiUrl}/updateAPS1004`, data);
   }
 
   /**
@@ -82,9 +82,9 @@ export class Sys1004Service {
    * @param idList 要刪除的記錄 ID 列表
    * @returns API 響應
    */
-  deleteAPS1004(idList: number[]): Observable<ApiResponse<any>> {
+  deleteAPS1004(idList: number[]): Observable<ApiResponse<number>> {
     // 根據 Swagger 範例，請求體需要是一個包含 idList 屬性的物件
     const body: IDeleteAps1004Request = { idList: idList };
-    return this.http.post<ApiResponse<any>>(`${this.apiUrl}/deleteAPS1004`, body);
+    return this.http.post<ApiResponse<number>>(`${this.apiUrl}/deleteAPS1004`, body);
   }
 }

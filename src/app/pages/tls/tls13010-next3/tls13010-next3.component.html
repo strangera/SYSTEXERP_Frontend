@@ -2,7 +2,7 @@
   <div class="flex gap-2 mb-2">
     <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
     <app-button btnType="back" label="上一步" (click)="onCancel()"></app-button>
-    <app-button btnType="submit" [label]="getSubmitButtonText()" (click)="onSubmitNext()"></app-button>
+    <app-button *ngIf="!isViewMode" btnType="submit" label="確認" (click)="onSubmitNext()"></app-button>
 
     <!-- <app-button
   [btnType]="getSubmitButtonType()"
@@ -16,7 +16,7 @@
       styleClass="p-button-info"
       title="查看當前要提交的資料摘要"
     ></app-button> -->
-    <app-button btnType="cancel" (click)="onRealCancel()"></app-button>
+    <app-button btnType="cancel" label="離開" (click)="onRealCancel()"></app-button>
     <!-- <p-button
       label="重新生成資料"
       icon="pi pi-refresh"

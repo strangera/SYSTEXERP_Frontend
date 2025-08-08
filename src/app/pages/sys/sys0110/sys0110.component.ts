@@ -43,12 +43,12 @@ export class SYS0110Component extends BasicQueryPageComponent<UserData> implemen
     user_No: ['', Validators.maxLength(10)], // 使用者編號
     user_Name: ['', Validators.maxLength(20)], // 使用者名稱
     user_priority: [[], Validators.maxLength(1)], // 使用者等級 > 規格?不知道內容
-    org_ID: [[], Validators.maxLength(20)], // 組織編號 (SYSB400_SYS3100)
+    org_ID: [[]], // 組織編號 (SYSB400_SYS3100)
     str_dateStart: [null], // 帳號有效開始日期
     str_dateEnd: [null], // 帳號有效結束日期
     last_loginStart: [null], // 帳號有效開始日期
     last_loginEnd: [null], // 帳號有效結束日期
-    status: [[], Validators.maxLength(2)], // 使用者狀態 1=有效 2=停用
+    status: [[]], // 使用者狀態 1=有效 2=停用
     user_type: [[]], // 使用者型態 1=公司內部人員(default) 2=專櫃人員 3=其他
     ...createPaginationConfig([{ field: 'user_No', order: 1 }]), // 分頁和排序參數
   });
@@ -81,7 +81,7 @@ export class SYS0110Component extends BasicQueryPageComponent<UserData> implemen
         this.userTypeOptions.find((option) => option.value === value)?.label ||
         value
     },
-    { field: 'user_email', header: 'Email', visible: true },
+    { field: 'user_email', header: '電子信箱', visible: true },
     { field: 'TLT_No', header: '所屬專櫃編號', visible: true },
     { field: 'remarks', header: '備註', visible: true },
     { field: 'user_priority', header: '使用者等級', visible: true },

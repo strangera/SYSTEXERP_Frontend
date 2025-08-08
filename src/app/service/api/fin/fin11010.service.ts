@@ -2,10 +2,10 @@ import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../../environments/environment';
-import { BaseDeleteRequest, BaseQueryResponse } from '../../../shared/models/api/base-api.interface';
+import { BaseDeleteRequest, BaseQueryRequest, BaseQueryResponse } from '../../../shared/models/api/base-api.interface';
 
 // --- TDS1003 查詢參數 Model 定義 ---
-export interface FIN11010QueryRequest {
+export interface FIN11010QueryRequest extends BaseQueryRequest {
   STO_Uniform?: string;         // 統一編號
   STO_TaxName?: string;         // 稅籍名稱
   STO_Addr?: string;            // 地址

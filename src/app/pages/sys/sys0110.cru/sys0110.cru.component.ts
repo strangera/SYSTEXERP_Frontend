@@ -1,3 +1,4 @@
+import { ValidationService } from '@shared/service/validation.service';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { apiOption, option, SYS1000 } from '../../../shared/models/sys/sysb000.module';
@@ -44,9 +45,9 @@ import { TranslateModule } from '@ngx-translate/core';
 export class SYS0110CRUComponent extends BasicCruPageComponent<UserInfo> implements OnInit {
   dataForm = this.formBuilder.nonNullable.group({
     id: [null], // 序號
-    user_No: ['', [Validators.required, Validators.maxLength(10)]], // 使用者編號
+    user_No: ['', [Validators.required, Validators.maxLength(10), this.validationService.englishNumberSymbolValidator]], // 使用者編號
     user_Name: ['', [Validators.required, Validators.maxLength(20)]], // 使用者名稱
-    user_Password: ['', [Validators.required]], // 使用者密碼-加密
+    user_Password: ['', [Validators.required, this.validationService.englishNumberSymbolValidator]], // 使用者密碼-加密
     title: ['', Validators.maxLength(6)], // 職稱代碼-SYS1000 (就是職位)
     org_ID: ['', [Validators.required, Validators.maxLength(20)]], // 組織編號 (SYSB400_SYS3100)
     str_date: [null], // 帳號有效開始日期
@@ -93,6 +94,7 @@ export class SYS0110CRUComponent extends BasicCruPageComponent<UserInfo> impleme
     private encrypt: EncryptionService,
     private sysb800DropdownService: Sysb800DropdownService,
     private userCodeService: UserCodeService,
+    private readonly validationService: ValidationService
   ) {
     super();
   }

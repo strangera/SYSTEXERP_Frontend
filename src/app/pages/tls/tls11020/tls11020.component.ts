@@ -109,7 +109,7 @@ export class TLS11020Component extends BasicQueryPageComponent<any> {
   }
 
   ngOnInit(): void {
-    this.initializePage('TLS11020', 'TLS/TLS11020cru', this.queryForm, (f) => this.onSubmit(f));
+    this.initializePage('TLS11020', 'tls/tls11020cru', this.queryForm, (f) => this.onSubmit(f));
     this.deductionService.getDeductionCategories().subscribe((data) => {
       this.deductionCategoryOptions = data;
 
@@ -144,7 +144,7 @@ export class TLS11020Component extends BasicQueryPageComponent<any> {
             this.data = res?.Data || [];
             this.totalRecords = res?.TotalCount || this.data.length;
             this.queryStateService.setQueryState(this.ProgNo, formValue);
-            this.messageService.successBubble('查詢成功');
+            
           } else {
             this.messageService.errorBubble('查詢失敗');
           }

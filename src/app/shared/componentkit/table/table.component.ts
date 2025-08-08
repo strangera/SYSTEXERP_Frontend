@@ -18,7 +18,7 @@ import { Ripple } from 'primeng/ripple';
 import { SkeletonModule } from 'primeng/skeleton';
 import { Table, TableLazyLoadEvent, TableModule, TablePageEvent, TableRowSelectEvent, TableRowUnSelectEvent } from 'primeng/table';
 import { TooltipModule } from 'primeng/tooltip';
-import { Subject, takeUntil } from 'rxjs';
+import { finalize, Observable, Subject, takeUntil } from 'rxjs';
 import { CurrentPageService } from '../../../layout/app.menulist/current-page.service';
 import { NotificationService } from '../../component/notification-message/notification.service';
 import { BasicPrintDataComponent } from '../../componentextends/basic-print/basic-print-data.component';
@@ -56,7 +56,7 @@ import { AddButton, Column, ColumnGroup, FieldChangeEvent, LazyLoadEvent, RowEdi
     SkeletonModule,
     TableExpansionComponent,
     TableExportComponent,
-    AutoCompleteModule
+    AutoCompleteModule,
   ],
 })
 export class TableComponent extends BasicPrintDataComponent implements OnInit, OnChanges, OnDestroy {
@@ -70,6 +70,7 @@ export class TableComponent extends BasicPrintDataComponent implements OnInit, O
   @Input() columns!: Column[];                                                  // table 欄位配置 (必填)
   originalColumns!: Column[];                                                   // table 原始欄位
   selectedColumns!: Column[];                                                   // table 預設顯示欄位
+  isColumnsInitialized = false;                                                 // table 欄位是否初始化
   @Input() data: any[] = [];                                                    // table 資料 (必填)
   @Output() dataChange = new EventEmitter<any[]>();                             // table 資料改變 (事件)
   @Input() loading = false;                                                     // 是否顯示 loading
@@ -96,6 +97,7 @@ export class TableComponent extends BasicPrintDataComponent implements OnInit, O
   @Output() delete = new EventEmitter<any>(); // 刪除事件
   @Input() showDelete = true;                    // 是否顯示刪除按鈕
   @Input() deleteIcon = 'pi pi-trash';          // 刪除按鈕圖示
+  @Input() deletepTooltip = '刪除';              // 刪除按鈕提示
   // Header(右) 相關
   @Input() showExcel = false;                      // 是否顯示 匯出Excel
   @Input() showExcelExport = true;                 // 是否顯示 匯出Excel按鈕
@@ -132,6 +134,11 @@ export class TableComponent extends BasicPrintDataComponent implements OnInit, O
   @Input() expansionDataKey = '';            // 收合展開 資料key(expansion必需配置)
   @Input() expansionSortField = '';          // 收合展開 排序欄位(單一排序)
   @Input() expansionSortOrder = 0;           // 收合展開 排序方向 (1:升序、-1:降序)
+  @Input() expansionShowPaginator = false;   // expansion 是否顯示分頁器
+  @Input() expansionRows = 10;               // expansion 每頁顯示行數
+  @Input() expansionRowsPerPageOptions = [10, 30, 50]; // expansion 分頁選項
+  @Input() expansionScrollHeight = '300px';  // expansion 表格高度
+  @Input() expansionLoadFn?: (rowData: any) => Observable<any>; // 屬性來接收父層傳來的載入函數
   expression = false;                        // 收合展開 狀態 (true:展開、false:收合)
   expandedRows: Record<string, boolean> = {};// 收合展開 已展開資料
   // 管理 欄位
@@ -150,7 +157,7 @@ export class TableComponent extends BasicPrintDataComponent implements OnInit, O
   // Footer
   @Input() showFooter = false;                      // 是否顯示 Footer
   // 分頁器
-  @Input() scrollHeight = '400px';                  // table 高度
+  @Input() scrollHeight = '650px';                  // table 高度
   @Input() scrollable = true;                        // 是否要滾輪
   @Input() showPaginator = true;                    // 是否顯示 分頁器
   @Input() totalRecords = 0;                        // 記錄總數
@@ -199,15 +206,32 @@ export class TableComponent extends BasicPrintDataComponent implements OnInit, O
           this.calculateTotalPages(); // 計算總頁數
         } else {
           this.dt.totalRecords = 0;
+          this.selectedItems = [];
         }
         this.selectionChange.emit(this.selectedItems);
       });
     }
-    if (changes['columns']) {
+    // 僅在 columns 首次被設定時執行初始化邏輯
+    // 這樣就不會在每次 data 變動時都重置 filter 狀態
+    if (changes['columns'] && this.columns.length > 0 && !this.isColumnsInitialized) {
       this.originalColumns = this.columns;
       this.columns = this.columns.filter(col => !col.hidden);
-      this.multiSortMeta = this.queryStateService.getQueryState(this.tableKey + 'Sort')?.value ?? this.multiSortMeta; // 取得排序歷史紀錄
-      this.selectedColumns = this.queryStateService.getQueryState(this.tableKey + 'Filter')?.value ?? this.columns.filter(col => col.visible !== false); // 取得顯示欄位
+      // 恢復歷史紀錄，如果沒有就使用預設值
+      const storedSort = this.queryStateService.getQueryState(this.tableKey + 'Sort')?.value;
+      if (storedSort) { this.multiSortMeta = storedSort; }
+      const storedFilter = this.queryStateService.getQueryState(this.tableKey + 'Filter')?.value;
+      if (storedFilter) {
+        const validFilteredColumns = this.columns.filter(col =>// 這裡需要確保從快取讀取到的欄位是有效的
+          storedFilter.some((storedCol: any) => storedCol.field === col.field)
+        );
+        this.selectedColumns = validFilteredColumns;
+        this.columns.forEach(col => {// 根據儲存的過濾欄位，更新 this.columns 的 visible 屬性
+          col.visible = this.selectedColumns.some(selCol => selCol.field === col.field);
+        });
+      } else {
+        this.selectedColumns = this.columns.filter(col => col.visible !== false);// 沒有儲存的狀態，使用預設值
+      }
+      this.isColumnsInitialized = true;
     }
   }
   ngOnDestroy(): void {
@@ -242,13 +266,11 @@ export class TableComponent extends BasicPrintDataComponent implements OnInit, O
     this.queryStateService.setQueryState(this.tableKey + 'Sort', this.multiSortMeta);
   }
   loadDataLazy(event: TableLazyLoadEvent) {
-    setTimeout(() => {
-      if (this.totalRecords === 0) { return; }
-      const pageSize = event.rows && event.rows > 0 ? event.rows : 30;
-      const pageIndex = (event.first ?? 0) / pageSize + 1;
-      const SortBy = event.multiSortMeta ?? [{ field: this.dataKey, order: 1 }];
-      this.lazyLoadData.emit({ pageIndex, pageSize, SortBy });
-    });
+    if (this.totalRecords === 0 || !this.IsPrint || this.rowEditing) { return; }
+    const pageSize = event.rows && event.rows > 0 ? event.rows : 30;
+    const pageIndex = (event.first ?? 0) / pageSize + 1;
+    const SortBy = event.multiSortMeta ?? [{ field: this.dataKey, order: 1 }];
+    this.lazyLoadData.emit({ pageIndex, pageSize, SortBy });
   }
   /* =================================核心程式碼======================================= */
   // 行追蹤
@@ -257,19 +279,57 @@ export class TableComponent extends BasicPrintDataComponent implements OnInit, O
   get getVisibleHeaderCount(): number { return 1 + Number(this.showCheckBox) + this.selectedColumns.length + Number(this.showManage) + (this.expansionDataKey ? 1 : 0); }
   // 行是否可選
   rowSelectableWrapper = ({ data }: { data: any, index: number; }): boolean | undefined => { return this.isRowSelectable(data) && !this.rowEditing; };
-  // 展開所有 符合的row
+  // 修改 toggleRowExpansion 方法
+  toggleRowExpansion(rowData: any) {
+    const rowKey = rowData[this.dataKey];
+    const hasDetails = rowData[this.expansionDataKey] && rowData[this.expansionDataKey]?.length > 0;
+    if (hasDetails) {// 已經有資料了，直接切換展開/收合狀態，不再呼叫 API
+      if (this.expandedRows[rowKey]) {
+        delete this.expandedRows[rowKey]; // 收合
+      } else {
+        this.expandedRows[rowKey] = true; // 展開
+      }
+    } else if (this.expansionLoadFn) {// 第一次展開，沒有資料，才呼叫 API 載入
+      rowData.expansionLoading = true;
+      this.expansionLoadFn(rowData).pipe(takeUntil(this.ngUnsubscribe), finalize(() => {
+        rowData.expansionLoading = false;// 無論成功或失敗，都在這裡關閉這筆資料的 loading 狀態
+        this.cdr.detectChanges();// 強制 Angular 檢測變更，確保 UI 立即更新
+      })
+      ).subscribe(response => {
+        const responseData = response.Data;
+        if (responseData && Array.isArray(responseData) && responseData.length > 0) {
+          rowData[this.expansionDataKey] = responseData;
+          this.expandedRows[rowKey] = true;
+        } else {
+          this.messageService.infoBubble('查無詳細資料。');
+        }
+      });
+    }
+  }
+  // 全展開/收合的邏輯
   toggleExpandCollapse() {
-    this.expandedRows = this.expression ? {} : Object.fromEntries(this.data.filter(p => p[this.expansionDataKey]?.length).map(p => [p[this.dataKey], true]));
     this.expression = !this.expression;
+    if (this.expression) {
+      // 展開所有行
+      this.data.forEach(rowData => {
+        const rowKey = rowData[this.dataKey];
+        if (!this.expandedRows[rowKey]) {// 只有在該行尚未展開時，才調用 toggleRowExpansion
+          // 檢查資料、載入資料，並設定 expandedRows 的狀態。
+          this.toggleRowExpansion(rowData);
+        }
+      });
+    } else {
+      this.expandedRows = {}; // 收合所有行
+    }
   }
   // 過濾欄位記錄保存
   onFilterChange(event: any) {
-    this.columns = this.columns.map(col => ({
-      ...col,
-      visible: event.value.some((ev: any) => ev.field === col.field),
-    }));
+    this.columns.forEach(col => {
+      col.visible = event.value.some((ev: any) => ev.field === col.field);
+    });
     this.selectedColumns = this.columns.filter(col => col.visible !== false);
     this.queryStateService.setQueryState(this.tableKey + 'Filter', this.selectedColumns);
+
   }
   // 行編輯初始化
   onRowEditInit(rowData: any) {
@@ -382,6 +442,7 @@ export class TableComponent extends BasicPrintDataComponent implements OnInit, O
       this.dataChange.emit(this.data);
       this.selectedItems = [];
     }
+    this.selectedItems = [];
   }
   onExportExcel() { this.exportExcel.emit(); }                      // 匯出Excel範本 事件
   onImportExcel(event: FileSelectEvent) {                           // 匯入Excel

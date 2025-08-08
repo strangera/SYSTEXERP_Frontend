@@ -18,8 +18,6 @@ export abstract class BasicQueryPageComponent<T> {
   ProgNo = '';
   cruPage = '';
 
-  abstract queryForm: FormGroup; // 查詢表單 (如果真的不需要Form，先下queryForm = this.formBuilder.group({}); 就好)
-
   user?: UserInfo | null; // 使用者資訊
   funInfo?: FunsrightInfo; // 權限
 

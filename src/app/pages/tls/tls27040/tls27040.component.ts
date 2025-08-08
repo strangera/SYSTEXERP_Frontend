@@ -1,26 +1,23 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ViewChild } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { AccordionModule } from 'primeng/accordion';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { InputNumberRangeComponent } from '../../../shared/componentkit/input-number-range/input-number-range.component';
-import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { TranslateModule } from '@ngx-translate/core'; // Add this import as requested
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
-import { Column, createPaginationConfig } from '@shared/componentkit/table/table.model';
-import { BusCrdTxnFgOptions, CheckOptions, CrdTxnFgOptions, CTBC_TxnCodeOptions, CTBC_TxnTypeOptions, PayCrdTypeOptions, POS611X_CONFIGS, POS611XOptions, queryFilterOptions, TxnTypeOptions } from './tls27040.model';
-import { NgIf } from '@angular/common';
-import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
+import { POS611XOptions } from './tls27040.model';
+import { NgIf, NgTemplateOutlet } from '@angular/common';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { POS6118Data, POS6119Data, POS6119PData, TLS27040Service } from '@service/api/tls/tls27040.service';
 import { finalize } from 'rxjs';
-import { SystemOptionsService } from '@service/system/sys1000.service';
-import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
 import { DialogComponent } from '@shared/componentkit/dialog/dialog.component';
 import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
+import { DropdownModule } from 'primeng/dropdown';
+import { Tls27040POS6118Component } from './tls27040-pos6118/tls27040-pos6118.component';
+import { Tls27040POS6119Component } from './tls27040-pos6119/tls27040-pos6119.component';
+import { Tls27040POS6119pComponent } from './tls27040-pos6119p/tls27040-pos6119p.component';
 @Component({
   selector: 'app-tls27040',
   templateUrl: './tls27040.component.html',
@@ -32,133 +29,38 @@ import { CalendarComponent } from '@shared/componentkit/calendar/calendar.compon
     FormsModule,
     ReactiveFormsModule,
     InputTextComponent,
-    MultiSelectComponent,
     DropdownComponent,
-    InputNumberRangeComponent,
-    CalendarRangeComponent,
-    TableComponent,
     TranslateModule,
     NgIf,
-    RadiobuttonComponent,
     DialogComponent,
     CalendarComponent,
+    DropdownModule,
+    Tls27040POS6118Component,
+    Tls27040POS6119Component,
+    Tls27040POS6119pComponent,
+    NgTemplateOutlet,
   ]
 })
 export class TLS27040Component extends BasicQueryPageComponent<POS6118Data | POS6119Data | POS6119PData> implements OnInit {
-  queryForm = this.formBuilder.group({
-    POS611X: ['', [Validators.required]], // 收單銀行
-    // 共用
-    ECR_No: ['', [Validators.maxLength(10)]], // ECR編號
-    TXN_No: ['', [Validators.maxLength(8)]], // 交易編號
-    TLT_No: ['', [Validators.maxLength(12)]], // 專櫃編號
-    // 聯合專用欄位
-    NCML_TxnTypeList: [null],         // 銷售狀況
-    NCML_PayCrdTypeList: [null],    // 卡別
-    NCML_TxnAmt_Start: [null, [Validators.max(9999999999)]],       // 交易金額起 decimal 12, 2
-    NCML_TxnAmt_End: [null, [Validators.max(9999999999)]],      // 交易金額迄 decimal 12, 2
-    NCML_TxnDate_Start: [null],    // 交易日期起
-    NCML_TxnDate_End: [null],    // 交易日期迄
-    NCML_TxnTime_Start: [null],  // 交易時間起
-    NCML_TxnTime_End: [null],  // 交易時間迄
-    NCML_CrdNo: ['', [Validators.maxLength(32)]],       // 卡號
-    NCML_TmID: ['', [Validators.maxLength(8)]],      //EDC號碼
-    NCML_BatCloseDate_Start: [null], // 請款日期起
-    NCML_BatCloseDate_End: [null], // 請款日期迄
-    NCML_CrdTxnFgList: [null],      // 交易類別 資料型態，C=一般交易、I=分期交易、R=紅利交易
-    NCML_CheckList: [null],       // 輸入狀態
-    NCML_ApprovalCode: ['', [Validators.maxLength(6)]],  // 核准碼
-    NCML_TermNoList: [null],      // 分期期數
-    // 中信專用欄位 (若你有要加入查詢欄位)
-    CTBC_TxnCode: [null], // 銷售狀態
-    CTBC_TxnAmtStart: [null, [Validators.max(9999999999)]], // 交易金額起
-    CTBC_TxnAmtEnd: [null, [Validators.max(9999999999)]], // 交易金額迄
-    CTBC_TxnTimeStart: [null], // 交易時間起
-    CTBC_TxnTimeEnd: [null], // 交易時間迄
-    CTBC_CrdNo: ['', [Validators.maxLength(32)]], // 卡號
-    CTBC_TmID: ['', [Validators.maxLength(8)]], // EDC號碼
-    CTBC_DateStart: [null], // 請款日期起
-    CTBC_DateEnd: [null], // 請款日期迄
-    CTBC_DataType: [null],  // 交易類別 // 中信 資料型態，C=一般交易、I=分期交易、R=紅利交易 // 中信停車場只有一般交易
-    CTBC_Check: [null], // 輸入狀態
-    CTBC_ApprovalCode: ['', [Validators.maxLength(6)]],  // 核准碼
-    CTBC_TermNo: [],  // 分期期數 // 中信-停車 無分期
-    // 中信-停車專用欄位
-    CTBC_TxnType: [null], // 交易類型
-    CTBC_TxnDateStart: [null], // 交易日期起
-    CTBC_TxnDateEnd: [null], // 交易日期迄
-    CTBC_BusDateStart: [null], // 請款日期起
-    CTBC_BusDateEnd: [null], // 請款日期迄
+  @ViewChild('pos6118', { static: false }) pos6118!: Tls27040POS6118Component;
+  @ViewChild('pos6119', { static: false }) pos6119!: Tls27040POS6119Component;
+  @ViewChild('pos6119p', { static: false }) pos6119p!: Tls27040POS6119pComponent;
 
-    queryFilter: [null], // 查詢篩選
-    ...createPaginationConfig([{ field: 'ID', order: 1 }]),
-  });
-  totalRecords = 0;
-  data: POS6118Data[] | POS6119Data[] | POS6119PData[] = [];
-  TxnTypeOptions = TxnTypeOptions;  // 銷售狀況
-  PayCrdTypeOptions = PayCrdTypeOptions;           // 卡別
-  CrdTxnFgOptions = CrdTxnFgOptions;             // 交易類別
-  BusCrdTxnFgOptions = BusCrdTxnFgOptions;
-  CTBC_TxnCodeOptions = CTBC_TxnCodeOptions; // 銷售狀態
-  CTBC_TxnTypeOptions = CTBC_TxnTypeOptions; // 交易類型
-  CheckOptions = CheckOptions;                // 輸入狀態
-  TermNoOptions = SystemOptionsService.getOptions('T109');
+  selectedBank!: string;
+  POS6118Data: POS6118Data[] = [];
+  POS6119Data: POS6119Data[] = [];
+  POS6119PData: POS6119PData[] = [];
   POS611XOptions = POS611XOptions;             // 收單銀行
-  queryFilterOptions = queryFilterOptions;             // 查詢篩選
-
-  selectedBank: string | null = null;
-  selectApi?: string;
-  currentColumns: Column[] = [];
-  visibleFields: string[] = [];
   constructor(
     private readonly tls27040Service: TLS27040Service,
   ) { super(); }
 
   ngOnInit(): void {
-    this.initializePage('TLS27040', 'TLS/TLS27040cru', this.queryForm, (form) => this.onSubmit(form));
-    this.queryForm.get('POS611X')?.valueChanges.subscribe((bankCode: string | null) => {
-      this.selectedBank = bankCode;
-      const config = POS611X_CONFIGS[bankCode ?? ''] || { columns: [], formFields: [] };
-      this.currentColumns = config.columns;
-      this.visibleFields = config.formFields;
-      this.selectApi = config.api;
-    });
-    const defaultBank = this.queryForm.get('POS611X')?.value;
-    if (defaultBank) {
-      const config = POS611X_CONFIGS[defaultBank];
-      this.currentColumns = config?.columns || [];
-      this.visibleFields = config?.formFields || [];
-      this.selectApi = config.api;
+    this.initializePage('TLS27040', 'TLS/TLS27040cru');
+    const queryState = this.queryStateService.getQueryState(this.ProgNo);
+    if (queryState?.value && queryState?.value.selectedBank) {
+      this.selectedBank = this.queryStateService.getQueryState(this.ProgNo)?.value.selectedBank;
     }
-    this.queryForm.get('POS611X')?.setValue('1');
-  }
-  onSubmit(frm: FormGroup) {
-    this.handleSubmit(frm, () => {
-      switch (this.selectedBank) {
-        case '0':
-          this.tls27040Service.queryPOS6118(frm.value).pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(res => {
-            this.data = res.Data;
-            this.totalRecords = res.TotalCount;
-            this.queryForm.get('SortBy')?.setValue([{ field: 'ID', order: 1 }]);
-          });
-          break;
-        case '1':
-          this.tls27040Service.queryPOS6119(frm.value).pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(res => {
-            this.data = res.Data;
-            this.totalRecords = res.TotalCount;
-            this.queryForm.get('SortBy')?.setValue([{ field: 'ID', order: 1 }]);
-          });
-          break;
-        case '2':
-          this.tls27040Service.queryPOS6119P(frm.value).pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(res => {
-            this.data = res.Data;
-            this.totalRecords = res.TotalCount;
-            this.queryForm.get('SortBy')?.setValue([{ field: 'ID', order: 1 }]);
-          });
-          break;
-        default:
-          break;
-      }
-    });
   }
   dialogVisible = false;
   dialogLoading = false;
@@ -184,7 +86,31 @@ export class TLS27040Component extends BasicQueryPageComponent<POS6118Data | POS
       SYS_StoreNo: this.authService.currentUserValue?.SYS_StoreNo,
     }
     this.tls27040Service.queryInsCheck(body).pipe(finalize(() => this.dialogLoading = false), untilDestroyed(this)).subscribe(res => {
-      console.log(res.Message);
+      if (res.Data === true) {
+        this.onCreate(frm.getRawValue());
+      } else {
+        this.messageService.warnBubble(res.Message);
+      }
     })
+  }
+
+  // 新增一個 getter 來安全地取得 formTemplate
+  get currentFormTemplate() {
+    switch (this.selectedBank) {
+      case '0': return this.pos6118?.formTemplate;
+      case '1': return this.pos6119?.formTemplate;
+      case '2': return this.pos6119p?.formTemplate;
+      default: return null;
+    }
+  }
+
+  // 新增一個 getter 來安全地取得 tableTemplate
+  get currentTableTemplate() {
+    switch (this.selectedBank) {
+      case '0': return this.pos6118?.tableTemplate;
+      case '1': return this.pos6119?.tableTemplate;
+      case '2': return this.pos6119p?.tableTemplate;
+      default: return null;
+    }
   }
 }

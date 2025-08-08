@@ -1,3 +1,4 @@
+import { ValidationService } from '@shared/service/validation.service';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
@@ -28,7 +29,7 @@ import { TranslateModule } from '@ngx-translate/core';
 })
 export class SYSBQ00CRUComponent extends BasicCruPageComponent<Sysbq00Data> implements OnInit {
   dataForm = this.formBuilder.nonNullable.group({
-    data_type: ['', [Validators.required, Validators.maxLength(20)]],
+    data_type: ['', [Validators.required, Validators.maxLength(10), this.validationService.alphanumericValidator]],
     line1: ['', [Validators.maxLength(200)]],
     line2: ['', [Validators.maxLength(200)]],
     line3: ['', [Validators.maxLength(200)]],
@@ -36,7 +37,10 @@ export class SYSBQ00CRUComponent extends BasicCruPageComponent<Sysbq00Data> impl
     line5: ['', [Validators.maxLength(200)]],
   });
 
-  constructor(private sysbq00Service: Sysbq00Service) {
+  constructor(
+    private readonly sysbq00Service: Sysbq00Service,
+    private readonly validationService: ValidationService
+  ) {
     super();
   }
 

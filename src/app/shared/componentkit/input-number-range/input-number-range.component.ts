@@ -43,6 +43,8 @@ export class InputNumberRangeComponent extends BasicKitComponent implements OnIn
   // 觸發事件
   @Output() startChangeEvent = new EventEmitter<InputNumberInputEvent>();
   @Output() endChangeEvent = new EventEmitter<InputNumberInputEvent>();
+  @Output() startBlurEvent = new EventEmitter<Event>();
+  @Output() endBlurEvent = new EventEmitter<Event>();
 
   ngOnInit(): void {
     this.checkRequiredValidator(this.startControl, 0);
@@ -54,5 +56,23 @@ export class InputNumberRangeComponent extends BasicKitComponent implements OnIn
   }
   onEndInputChange(event: InputNumberInputEvent) {
     this.endChangeEvent.emit(event);
+  }
+  onStartBlur(event: Event) {
+    // 如果開始值大於結束值,則將開始值設為結束值
+    const start = this.startControl.value;
+    const end = this.endControl.value;
+    if (start != null && end != null && start > end) {
+      this.startControl.setValue(end);
+    }
+    this.startBlurEvent.emit(event);
+  }
+  onEndBlur(event: Event) {
+    // 如果結束值小於開始值,則將結束值設為開始值
+    const start = this.startControl.value;
+    const end = this.endControl.value;
+    if (start != null && end != null && start > end) {
+      this.endControl.setValue(start);
+    }
+    this.endBlurEvent.emit(event);
   }
 }

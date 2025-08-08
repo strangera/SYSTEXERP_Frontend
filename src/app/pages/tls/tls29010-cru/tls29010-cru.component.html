@@ -5,33 +5,19 @@
     </div>
     <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
         <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
-            <h6>選擇主檔</h6>
             <div class="grid p-fluid">
-                <div class="col-12 md:col-6 lg:col-4">
-                    <app-dropdown
-                    label="活動名稱"
-                    controlName="pod_desc"
-                    [options]="activityList"
-                    optionLabel="pod_desc"
-                    optionValue="pod_desc"
-                    [control]="dataForm.controls.pod_desc"
-                    [submitted]="submitted"
-                    (changeEvent)="onPodDescChange($event.value)">
-                    </app-dropdown>
-                </div>
-            </div>
-            <div class="grid p-fluid">
+                <!-- <div class="col-12 md:col-6 lg:col-4">
+                    <app-input-text label="活動名稱" controlName="pod_desc" [control]="dataForm.controls.pod_desc"
+                    [submitted]="submitted"></app-input-text>
+                </div> -->
                 <div class="col-12 md:col-6 lg:col-4">
                     <app-input-text label="活動申請編號" controlName="pod_no" [control]="dataForm.controls.pod_no"
                     [submitted]="submitted"></app-input-text>
                 </div>
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-calendar label="活動起始日" controlName="pod_sdate" [control]="dataForm.controls.pod_sdate"
-                    [submitted]="submitted"></app-calendar>
-                </div>
-                <div class="col-12 md:col-6 lg:col-4">
-                    <app-calendar label="活動終止日" controlName="pod_edate" [control]="dataForm.controls.pod_edate"
-                    [submitted]="submitted"></app-calendar>
+                    <app-calendar-range calendarType="dateRange" label="活動期間"
+                    [startControl]="dataForm.controls.pod_sdate" [endControl]="dataForm.controls.pod_edate"
+                    [submitted]="submitted" />
                 </div>
             </div>
             <hr>
@@ -48,8 +34,7 @@
                     optionLabel="label"
                     optionValue="value"
                     [control]="dataForm.controls.pod_type"
-                    [submitted]="submitted"
-                    (changeEvent)="onPodDescChange($event.value)">
+                    [submitted]="submitted">
                     </app-dropdown>
                 </div>
                 <div class="col-12 md:col-6 lg:col-4">
@@ -60,20 +45,21 @@
                     optionLabel="Label"
                     optionValue="No"
                     [control]="dataForm.controls.org_id"
-                    [submitted]="submitted"
-                    (changeEvent)="onPodDescChange($event.value)">
+                    [submitted]="submitted">
                     </app-dropdown>
                 </div>
             </div>
             <div class="grid p-fluid">
                 <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-text label="扣款代碼" controlName="cap_item" [control]="dataForm.controls.cap_item" [submitted]="submitted"></app-input-text>
-                </div>
-                <div class="col-12 md:col-6 lg:col-4">
                     <app-input-text label="活動群組編號" controlName="act_no" [control]="dataForm.controls.act_no" [submitted]="submitted"></app-input-text>
                 </div>
                 <div class="col-12 md:col-6 lg:col-4">
                     <app-calendar label="活動正檔日" controlName="pod_busdate" [control]="dataForm.controls.pod_busdate" [submitted]="submitted"></app-calendar>
+                </div>
+                <div class="col-12 md:col-6 lg:col-4">
+                    <app-calendar-range calendarType="dateRange" label="活動兌回期間"
+                    [startControl]="dataForm.controls.pod_back_sdate" [endControl]="dataForm.controls.pod_back_edate"
+                    [submitted]="submitted" />
                 </div>
             </div>
             <div class="grid p-fluid">
@@ -85,8 +71,7 @@
                     optionLabel="label"
                     optionValue="value"
                     [control]="dataForm.controls.pod_status"
-                    [submitted]="submitted"
-                    (changeEvent)="onPodDescChange($event.value)">
+                    [submitted]="submitted">
                     </app-dropdown>
                 </div>
             </div>

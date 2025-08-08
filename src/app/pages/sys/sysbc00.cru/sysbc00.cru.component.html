@@ -15,8 +15,8 @@
         <app-input-text class="col-12 md:col-6 lg:col-4" label="銀行簡稱" controlName="BNK_ShortName"
           [control]="dataForm.controls.BNK_ShortName" [submitted]="submitted">
         </app-input-text>
-        <app-table [showReportMode]="false" class="col-12" [data]="data" [columns]="columns" [showEdit]="false"
-          [showDetail]="false" [showCheckBox]="true" [showInsert]="true" [showRowEdit]="true"
+        <app-table [showReportMode]="false" tableKey="SYSBC00Detail" class="col-12" [data]="data" [columns]="columns"
+          [showEdit]="false" [showDetail]="false" [showCheckBox]="true" [showInsert]="true" [showRowEdit]="true"
           (delete)="onDelete($event)" (selectionChange)="selectedRows = $event" [selectedItems]="selectedRows"
           [showCaption]="!isFormReadable" [showManage]="!isFormReadable" [showCheckBox]="!isFormReadable"
           [insertRowData]="true" (dataChange)="data = $event"></app-table>

@@ -135,7 +135,7 @@ export class TLS11020CRUComponent extends BasicCruPageComponent<any> {
         this.tls11020Service.updateTLS11020(raw).subscribe({
           next: () => {
             this.messageService.successBubble(this.translate.instant('updated-successfully'));
-            this.router.navigate(['/TLS', 'TLS11020']); // ✅ 導回查詢頁
+            this.onCancel() // ✅ 導回查詢頁
             // ✅ 清空表單並保留預設值（同新增時處理）
             this.inputForm.reset();
             this.inputForm.get('CAP_Item')?.disable();

@@ -1,1 +1,69 @@
-<p>fin15080 works!</p>
+<div class="card">
+  <div class="flex gap-2 mb-2">
+    <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
+  </div>
+
+  <p-accordion>
+    <p-accordionTab
+      header="{{ 'query-conditions' | translate }}"
+      [selected]="true"
+      class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'"
+    >
+      <form
+        [formGroup]="queryForm"
+        id="queryForm"
+        (ngSubmit)="onSubmit()"
+      >
+        <div class="grid p-fluid">
+
+
+
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-query-year-month
+              label="申報年月"
+              [control]="queryForm.controls.DeclareYM"
+              [submitted]="submitted"
+              [onlyOddMonths]="true"
+            ></app-query-year-month>
+          </div>
+                    <div class="col-12 md:col-6 lg:col-4">
+            <app-multi-select
+              label="稅籍編號"
+              [control]="queryForm.controls.Business_ID"
+              [submitted]="submitted"
+            ></app-multi-select>
+          </div>
+
+        </div>
+
+        <div
+          class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
+        >
+          <app-button btnType="clear" ></app-button>
+          <app-button btnType="query" [loading]="loading"></app-button>
+        </div>
+      </form>
+    </p-accordionTab>
+  </p-accordion>
+</div>
+
+<div class="card">
+  <app-table
+    tableKey="FIN13080"
+    [data]="data"
+    [columns]="columns"
+    [columnGroup]="columnGroup"
+    dataKey="DeclareMonth"
+    [multiSortMeta]="[{ field: 'DeclareMonth', order: 1 }]"
+    [totalRecords]="totalRecords"
+    [lazy]="true"
+    [loading]="loading"
+    (edit)="onEdit($event)"
+    (detail)="onDetail($event)"
+    [showManage]="true"
+    [showDelete]="true"
+    [showCheckBox]="true"
+    (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit()"
+  ></app-table>
+</div>
