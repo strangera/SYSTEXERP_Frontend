@@ -9,19 +9,26 @@
         <div class="grid p-fluid">
           <!-- 銷售日期起迄 -->
           <app-calendar-range class="col-12 md:col-6 lg:col-4" label="銷售日期" calendarType="dateRange"
-            [startControl]="queryForm.controls.saleDateFrom" [endControl]="queryForm.controls.saleDateTo"
+            [startControl]="queryForm.controls.Sale_DateStart" [endControl]="queryForm.controls.Sale_DateEnd"
             [submitted]="submitted"></app-calendar-range>
-          <!-- 館別(起訖) -->
-          <app-input-text-range class="col-12 md:col-6 lg:col-4" label="館別" controlName="storeCodeRange"
-            [startControl]="queryForm.controls.storeCodeFrom" [endControl]="queryForm.controls.storeCodeTo"
-            [submitted]="submitted" [errorForGroup]="true" />
-          <!-- 組織名稱 -->
-          <app-multi-select class="col-12 md:col-6 lg:col-4" label="組織名稱" controlName="organizationName"
-            [options]="orgOptions" optionLabel="Name" optionValue="No" [control]="queryForm.controls.organizationName"
+
+          <!-- 館別(多選) -->
+          <app-multi-select class="col-12 md:col-6 lg:col-4" label="館別" controlName="tlt_building"
+            [options]="buildingOptions" optionLabel="label" optionValue="value"
+            [control]="queryForm.controls.tlt_building" [submitted]="submitted"></app-multi-select>
+
+          <!-- 組織代號 -->
+          <app-multi-select class="col-12 md:col-6 lg:col-4" label="組織代號" controlName="Org_ID" [options]="orgOptions"
+            optionLabel="Name" optionValue="No" [control]="queryForm.controls.Org_ID"
             [submitted]="submitted"></app-multi-select>
-          <!-- 樓層 -->
-          <app-multi-select class="col-12 md:col-6 lg:col-4" label="樓層" controlName="floor" [options]="floorOptions"
-            optionLabel="Name" optionValue="No" [control]="queryForm.controls.floor"
+
+          <!-- 組織名稱 -->
+          <app-input-text class="col-12 md:col-6 lg:col-4" label="組織名稱" controlName="Org_Name"
+            [control]="queryForm.controls.Org_Name" [submitted]="submitted"></app-input-text>
+
+          <!-- 樓層(多選) -->
+          <app-multi-select class="col-12 md:col-6 lg:col-4" label="樓層" controlName="tlt_floor" [options]="floorOptions"
+            optionLabel="label" optionValue="value" [control]="queryForm.controls.tlt_floor"
             [submitted]="submitted"></app-multi-select>
         </div>
         <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
@@ -32,10 +39,11 @@
     </p-accordionTab>
   </p-accordion>
 </div>
+
 <div class="card">
   <app-table tableKey="TLS26030" [data]="data" [columns]="columns" [selectedItems]="selectedItems"
-    (selectionChange)="selectedItems = $event" dataKey="ID" [multiSortMeta]="[{ field: 'saleDate', order: 1 }]"
+    (selectionChange)="selectedItems = $event" dataKey="TXN_No" [multiSortMeta]="[{ field: 'TXN_No', order: 1 }]"
     [totalRecords]="totalRecords" (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [lazy]="true"
-    [loading]="loading" [showManage]="false" [showDelete]="false">
+    [loading]="loading" [showManage]="false" [showDelete]="false" [showTotal]="true">
   </app-table>
 </div>

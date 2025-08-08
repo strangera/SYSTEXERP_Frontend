@@ -1,78 +1,50 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { BaseQueryResponse } from '@shared/models/api/base-api.interface';
-import { Observable, of } from 'rxjs';
+import { BaseQueryRequest, BaseQueryResponse } from '@shared/models/api/base-api.interface';
+import { environment } from '../../../../environments/environment';
+import { Observable } from 'rxjs';
 
 // Query request interface for TLS26030
-export interface TLS26030QueryRequest {
-  saleDateFrom: string;      // 銷售日期(起)
-  saleDateTo: string;        // 銷售日期(訖)
-  storeCodeFrom: string;     // 館別(起)
-  storeCodeTo: string;       // 館別(訖)
-  organizationName: string;  // 組織名稱
-  floor: string;             // 樓層
+export interface TLS26030QueryRequest extends BaseQueryRequest {
+  Sale_DateStart?: string;      // 銷售日期(起) - ISO 8601 格式
+  Sale_DateEnd?: string;        // 銷售日期(訖) - ISO 8601 格式
+  tlt_building?: string[];      // 館別
+  Org_ID?: string[];            // 組織代號
+  Org_Name?: string;            // 組織名稱
+  tlt_floor?: string[];         // 樓層
 }
 
+// Data result interface for TLS26030 (預售明細表資料)
 export interface TLS26030Data {
-  saleDate: string;
-  hall: string;
-  organizationName: string;
-  posMachineNo: string;
-  transactionNo: string;
-  counterCode: string;
-  locationCode: string;
-  fieldName: string;
-  preOrderAmount: number;
-  recognizedAmount: number;
-  recognitionBatchNo: string;
-  preOrderStatus: string;
-  voidOrReturnDate?: string;
-  voidOrReturnMachineNo?: string;
-  voidOrReturnSerialNo?: string;
-  settlementDate?: string;
-  settlementMachineNo?: string;
-  settlementSerialNo?: string;
+  TXN_Date: string;             // 交易日期
+  ECR_No: string;               // 收銀機號
+  TXN_No: string;               // 交易序號
+  TXN_TotSaleAmt: number;       // 銷售總金額
+  CANCEL_Date: string;          // 作廢日期
+  CANCEL_ECR_No: string;        // 作廢收銀機號
+  CANCEL_TXN_No: string;        // 作廢交易序號
+  TLT_No: string;               // 專櫃編號
+  tlt_name: string;             // 專櫃名稱
+  ORG_ID: string;               // 組織代號
+  Org_Name: string;             // 組織名稱
+  Preorder_status: string;      // 預售狀態
+  Recog_Amt: number;            // 認列金額
+  Batch_No: string;             // 批號
+  Close_Date: string;           // 結帳日期
+  Close_Ecr_No: string;         // 結帳收銀機號
+  Close_Txn_No: string;         // 結帳交易序號
 }
 
 @Injectable({
   providedIn: 'root'
 })
 export class TLS26030Service {
-
-  // private apiUrl = environment.ApiUrl + '/FIN0000/INV1000';
+  private apiUrl = environment.ApiUrl + '/TLS0000/TLS2000';
 
   constructor(private http: HttpClient) { }
 
-  // 查詢
+  // 查詢預售明細表
   queryTLS26030(data: TLS26030QueryRequest): Observable<BaseQueryResponse<TLS26030Data>> {
-    // return this.http.post<BaseQueryResponse<TLS26030Data>>(`${this.apiUrl}/queryTLS26030`, data);
-
-    // 回傳假資料
-    return of({
-      Status: '0000',
-      TotalCount: 1,
-      Data: [{
-        saleDate: '2023-10-01',
-        hall: 'Main Hall',
-        organizationName: '總公司',
-        posMachineNo: 'POS001',
-        transactionNo: 'TXN001',
-        counterCode: 'C001',
-        locationCode: 'L001',
-        fieldName: 'Field A',
-        preOrderAmount: 1000,
-        recognizedAmount: 800,
-        recognitionBatchNo: 'RB001',
-        preOrderStatus: 'Pending',
-        voidOrReturnDate: '2023-10-02',
-        voidOrReturnMachineNo: 'POS002',
-        voidOrReturnSerialNo: 'SR001',
-        settlementDate: '2023-10-03',
-        settlementMachineNo: 'POS003',
-        settlementSerialNo: 'SR002',
-      }],
-      Message: 'Success',
-      TotalPage: 1
-    });
+    return this.http.post<BaseQueryResponse<TLS26030Data>>(`${this.apiUrl}/queryTLS26030`, data);
   }
 }
