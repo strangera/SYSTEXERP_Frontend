@@ -13,7 +13,6 @@ import { finalize } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 
-import { validateMinNumber } from '../../../shared/componentkit/table/validate-field.model';
 import {
   IQueryPOS2004DetailRequest,
   IQueryPOS2004DetailResponse,
