@@ -5,7 +5,7 @@ import { environment } from '../../../environments/environment'; // ✅ 修正�
 
 @Injectable({ providedIn: 'root' })
 export class BusinessIdService {
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient) { }
 
   /**
    * 取得稅籍編號下拉選單清單

@@ -1,4 +1,5 @@
 import { BaseQueryResponse } from '@shared/models/api/base-api.interface';
+import { ItemOperationStatus } from '@shared/models/system/CRUDstatus';
 
 /**
  * @description
@@ -22,7 +23,7 @@ export interface TLS26010Query {
   pod_edate_E: Date;
 }
 
-export interface ECRDropdown {
+export interface EcrTable {
   area_name?: string;
   area_no?: string;
   building_name?: string;
@@ -34,9 +35,11 @@ export interface ECRDropdown {
   floor_no?: string;
   tlt_name: string;
   tlt_no: string;
+  /** 操作狀態 */
+  Status?: ItemOperationStatus;
 }
 
-export interface TLTDropdown {
+export interface TltTable {
   VEN_Name: string;
   apply_no: string;
   area_name?: string;
@@ -49,6 +52,8 @@ export interface TLTDropdown {
   tlt_name: string;
   tlt_no: string;
   ven_no: string;
+  /** 操作狀態 */
+  Status?: ItemOperationStatus;
 }
 
 /**
@@ -121,33 +126,25 @@ export interface PodInfo {
   pod_status?: '0' | '1' | '9';
 }
 
-/** * @description
- * - id: 主鍵，自動編號
- * - ecr_no: 收銀機編號
- * - tlt_no: 櫃位編號
- * - tlt_name: 櫃位名稱
- * - Status: 操作狀態 (original=原始, modify=修改, delete=刪除, new=新增)
- */
 export interface EcrItem {
   id?: number;
+  building_name?: string;
+  floor_name?: string;
+  area_name?: string;
   ecr_no: string;
   tlt_no: string;
   tlt_name: string;
-  Status?: 'original' | 'modify' | 'delete' | 'new';
+  Status: ItemOperationStatus;
 }
 
-/**
- * @description
- * - id: 主鍵，自動編號
- * - tlt_no: 櫃位編號
- * - tlt_name: 櫃位名稱
- * - Status: 操作狀態 (original=原始, modify=修改, delete=刪除, new=新增)
- */
 export interface TalentItem {
   id?: number;
+  building_name?: string;
+  floor_name?: string;
+  area_name?: string;
   tlt_no: string;
   tlt_name: string;
-  Status?: 'original' | 'modify' | 'delete' | 'new';
+  Status: ItemOperationStatus;
 }
 
 /** * @description

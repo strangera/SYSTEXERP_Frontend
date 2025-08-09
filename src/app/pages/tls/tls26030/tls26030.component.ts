@@ -8,10 +8,14 @@ import { ButtonComponent } from '../../../shared/componentkit/button/button.comp
 import { AccordionModule } from 'primeng/accordion';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { TranslateModule } from '@ngx-translate/core';
-import { InputTextRangeComponent } from '../../../shared/componentkit/input-text-range/input-text-range.component';
 import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
 import { MultiSelectComponent } from "../../../shared/componentkit/multi-select/multi-select.component";
-import { TLS26030Data, TLS26030Service, TLS26030QueryRequest } from '@service/api/tls/tls26030.service';
+import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
+import { TLS26030Data, TLS26030Service } from '@service/api/tls/tls26030.service';
+import { Tls11010Service } from '@service/api/tls/tls11010.service';
+import { FloorService } from '@service/basic/floor.service';
+import { Tls51080Service } from '@service/api/tls/tls51080.service';
+import { DatePipe } from '@angular/common';
 
 @Component({
   selector: 'app-tls26030',
@@ -28,18 +32,18 @@ import { TLS26030Data, TLS26030Service, TLS26030QueryRequest } from '@service/ap
     MultiSelectComponent,
     TableComponent,
     TranslateModule,
-    InputTextRangeComponent,
+    InputTextComponent,
   ]
 })
 export class TLS26030Component extends BasicQueryPageComponent<TLS26030Data> implements OnInit {
   queryForm = this.formBuilder.group({
-    saleDateFrom: [''],        // 銷售日期(起)
-    saleDateTo: [''],          // 銷售日期(訖)
-    storeCodeFrom: [''],       // 館別(起)
-    storeCodeTo: [''],         // 館別(訖)
-    organizationName: [''],    // 組織名稱
-    floor: [''],               // 樓層
-    ...createPaginationConfig([{ field: 'saleDate', order: 1 }])
+    Sale_DateStart: ['2025/08/01', Validators.required],
+    Sale_DateEnd: ['2025/08/31', Validators.required],
+    tlt_building: [[]],                               // 館別
+    Org_ID: [[]],                                     // 組織代號
+    Org_Name: [''],                                   // 組織名稱
+    tlt_floor: [[]],                                  // 樓層
+    ...createPaginationConfig([])
   });
 
   totalRecords = 0;
@@ -47,53 +51,49 @@ export class TLS26030Component extends BasicQueryPageComponent<TLS26030Data> imp
   selectedItems: TLS26030Data[] = [];
 
   columns: Column[] = [
-    { field: 'saleDate', header: '銷售日期', visible: true },
-    { field: 'hall', header: '館別', visible: true },
-    { field: 'organizationName', header: '組織名稱', visible: true },
-    { field: 'posMachineNo', header: 'POS機號', visible: true },
-    { field: 'transactionNo', header: '交易序號', visible: true },
-    { field: 'counterCode', header: '專櫃編號', visible: true },
-    { field: 'locationCode', header: '位置編號', visible: true },
-    { field: 'fieldName', header: '櫃位名稱', visible: true },
-    { field: 'preOrderAmount', header: '預售金額', visible: true },
-    { field: 'recognizedAmount', header: '認列金額', visible: true },
-    { field: 'recognitionBatchNo', header: '認列批號', visible: true },
-    { field: 'preOrderStatus', header: '預售狀態', visible: true },
-    { field: 'voidOrReturnDate', header: '作廢/退貨日期', visible: true },
-    { field: 'voidOrReturnMachineNo', header: '作廢/退貨機號', visible: true },
-    { field: 'voidOrReturnSerialNo', header: '作廢/退貨序號', visible: true },
-    { field: 'settlementDate', header: '結帳日期', visible: true },
-    { field: 'settlementMachineNo', header: '結帳機號', visible: true },
-    { field: 'settlementSerialNo', header: '結帳序號', visible: true }
+    { field: 'TXN_Date', header: '銷售日期', visible: true, format: (value: any) => value ? this.datePipe.transform(value, 'yyyy/MM/dd') : '' },
+    { field: 'ECR_No', header: '收銀機號', visible: true },
+    { field: 'TXN_No', header: '交易序號', visible: true },
+    { field: 'TLT_No', header: '專櫃編號', visible: true },
+    { field: 'tlt_name', header: '專櫃名稱', visible: true },
+    { field: 'TXN_TotSaleAmt', header: '預售金額', visible: true, format: (value: number) => value ? value.toLocaleString() : '0', isTotal: true },
+    { field: 'Recog_Amt', header: '認列金額', visible: true, format: (value: number) => value ? value.toLocaleString() : '0', isTotal: true },
+    { field: 'Batch_No', header: '認列批號', visible: true },
+    { field: 'Preorder_status', header: '預售狀態', visible: true },
+    { field: 'CANCEL_Date', header: '作廢/退貨日期', visible: true, format: (value: any) => value ? this.datePipe.transform(value, 'yyyy/MM/dd') : '' },
+    { field: 'CANCEL_ECR_No', header: '作廢/退貨機號', visible: true },
+    { field: 'CANCEL_TXN_No', header: '作廢/退貨序號', visible: true },
+    { field: 'Close_Date', header: '結帳日期', visible: true, format: (value: any) => value ? this.datePipe.transform(value, 'yyyy/MM/dd') : '' },
+    { field: 'Close_Ecr_No', header: '結帳機號', visible: true },
+    { field: 'Close_Txn_No', header: '結帳序號', visible: true },
+    // 隱藏不需要顯示的欄位
+    { field: 'ORG_ID', header: '組織代號', visible: false },
+    { field: 'Org_Name', header: '組織名稱', visible: false }
   ];
 
-  orgOptions = [
-    { Name: '總公司', No: '1' },
-    { Name: '分公司', No: '2' }
-  ];
-
-  floorOptions = [
-    { Name: '一樓', No: '1' },
-    { Name: '二樓', No: '2' },
-    { Name: '三樓', No: '3' }
-  ];
+  // 下拉選單選項
+  floorOptions: any[] = [];
+  buildingOptions: any[] = [];
+  orgOptions: any[] = [];
 
   constructor(
-    private tls26030Service: TLS26030Service
+    private tls26030Service: TLS26030Service,
+    private tls11010Service: Tls11010Service,
+    private floorService: FloorService,
+    private tls51080Service: Tls51080Service,
+    private datePipe: DatePipe
   ) {
     super();
   }
 
   ngOnInit(): void {
     this.initializePage('TLS26030', 'tls/tls26030', this.queryForm, (form) => this.onSubmit(form));
+    this.loadOptions();
   }
 
   onSubmit(frm: FormGroup) {
-    const queryRequest: TLS26030QueryRequest = {
-      ...frm.value
-    };
     this.handleSubmit(frm, () => {
-      this.tls26030Service.queryTLS26030(queryRequest)
+      this.tls26030Service.queryTLS26030(frm.value)
         .pipe(finalize(() => this.loading = false))
         .subscribe(response => {
           this.data = response.Data;
@@ -101,5 +101,24 @@ export class TLS26030Component extends BasicQueryPageComponent<TLS26030Data> imp
           this.queryStateService.setQueryState(this.ProgNo, frm.getRawValue());
         });
     });
+  }
+
+  loadOptions() {
+    // 加載館別選項
+    this.tls11010Service.getBuildingOptions().subscribe((data) => {
+      this.buildingOptions = data;
+    });
+
+    // 加載樓層選項
+    this.floorService.getFloors().subscribe((data) => {
+      this.floorOptions = data;
+    });
+
+    // 組織代碼下拉
+    this.tls51080Service
+      .querySYS3100_DropDownList({})
+      .subscribe((response) => {
+        this.orgOptions = response.Data;
+      });
   }
 }

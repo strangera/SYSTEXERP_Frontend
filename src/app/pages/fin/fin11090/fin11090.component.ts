@@ -24,26 +24,24 @@ export class FIN11090Component extends BasicQueryPageComponent<FIN11090Data> imp
   queryForm = this.formBuilder.group({
     invoice_date: ['', [Validators.required]],
     cashier_no: ['', [Validators.required, Validators.maxLength(10)]],
-    txn_seq: ['', [Validators.required, Validators.maxLength(10)]],
+    txn_seq: ['', [Validators.required, Validators.maxLength(6)]],
     prefix: ['', [Validators.required, Validators.maxLength(2)]],
     invoice_no: ['', [Validators.required, Validators.maxLength(8)]],
-    void_date_from: [''],    // 作廢日期(起)
-    void_date_to: [''],      // 作廢日期(迄)
-    void_user: [''],          // 作廢人員
     ...createPaginationConfig([{ field: 'invoice_date', order: -1 }]),
   });
   totalRecords = 0;
   data: FIN11090Data[] = [];
   selectedItems: FIN11090Data[] = [];
   columns: Column[] = [
-    { field: 'invoice_date', header: '發票日期', visible: true },
-    { field: 'prefix', header: '字軌', visible: false },
-    { field: 'invoice_no', header: '發票號碼', visible: true },
+    { field: 'invoice_date', header: '銷售日期', visible: true, },
     { field: 'cashier_no', header: '收銀機號', visible: true },
     { field: 'txn_seq', header: '交易序號', visible: true },
-    { field: 'invoice_amt', header: '交易金額', visible: true },
-    { field: 'void_date', header: '作廢日期', visible: true },
-    { field: 'void_user', header: '作廢人員', visible: true }
+    { field: 'invoice_no', header: '發票號碼', visible: true, },
+    { field: 'invoice_amt', header: '交易金額', visible: true, format: (value: number) => value ? value.toLocaleString() : '0' },
+    // 隱藏不需要顯示的欄位
+    { field: 'invoice_no', header: '發票號碼後段', visible: false },
+    { field: 'void_date', header: '作廢日期', visible: false },
+    { field: 'void_user', header: '作廢人員', visible: false }
   ];
 
   constructor(private fin11090Service: Fin11090Service) {

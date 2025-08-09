@@ -21,7 +21,7 @@ export interface FIN11090Data {
   invoice_date?: string;     // 發票日期
   cashier_no?: string;       // 收銀機號
   txn_seq?: string;          // 交易序號
-  invoice_amt?: string;      // 交易金額
+  invoice_amt?: number;      // 交易金額
   void_date?: string;         // 作廢日期
   void_user?: string;         // 作廢人員
 }
@@ -45,7 +45,7 @@ export class Fin11090Service {
             invoice_date: '2025-07-01',
             cashier_no: 'C1001',
             txn_seq: '000001',
-            invoice_amt: '1000',
+            invoice_amt: 1000,
             void_date: '2025-07-03',
             void_user: 'User1'
           },
@@ -55,7 +55,7 @@ export class Fin11090Service {
             invoice_date: '2025-07-02',
             cashier_no: 'C2002',
             txn_seq: '000002',
-            invoice_amt: '2000',
+            invoice_amt: 2000,
             void_date: '2025-07-04',
             void_user: 'User2'
           }

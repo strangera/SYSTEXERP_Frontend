@@ -37,9 +37,6 @@ import { TLS26010Data, TLS26010Query } from './tls26010.model';
   ]
 })
 export class TLS26010Component extends BasicQueryPageComponent<TLS26010Data> {
-  private readonly dateS: Date = new Date(this.now.getFullYear(), this.now.getMonth(), 1);
-  private readonly dateE: Date = new Date(this.now.getFullYear(), this.now.getMonth() + 1, 0);
-
   // 查詢表單
   public queryForm = this.formBuilder.group({
     sys3800: new FormControl<string[] | undefined>(void 0), // 館別
@@ -47,10 +44,10 @@ export class TLS26010Component extends BasicQueryPageComponent<TLS26010Data> {
     sys3A00: new FormControl<string[] | undefined>(void 0), // 區域
     ecrNos: new FormControl<string[] | undefined>(void 0), // 收銀機號
     tltNos: new FormControl<string[] | undefined>(void 0), // 專櫃ID
-    podSdateS: new FormControl<Date>(this.dateS, Validators.required), // 起始日期(起)
-    podSdateE: new FormControl<Date>(this.dateE, Validators.required), // 起始日期(迄)
-    podEdateS: new FormControl<Date>(this.dateS, Validators.required), // 截止日期(起)
-    podEdateE: new FormControl<Date>(this.dateE, Validators.required), // 截止日期(迄)
+    podSdateS: new FormControl<Date>(this.service.dateS, Validators.required), // 起始日期(起)
+    podSdateE: new FormControl<Date>(this.service.dateE, Validators.required), // 起始日期(迄)
+    podEdateS: new FormControl<Date>(this.service.dateS, Validators.required), // 截止日期(起)
+    podEdateE: new FormControl<Date>(this.service.dateE, Validators.required), // 截止日期(迄)
   });
 
   // 監聽用
@@ -67,8 +64,6 @@ export class TLS26010Component extends BasicQueryPageComponent<TLS26010Data> {
   // Table 相關
   public readonly editDisabled = (rowData: TLS26010Data) =>
     (Reflect.has(rowData, 'CanEdit') && rowData.CanEdit == '1') || rowData.pod_status !== ApprovalStatus.未核准;
-  public readonly isRowSelectable = (rowData: TLS26010Data) =>
-    (Reflect.has(rowData, 'CanDelete') && rowData.CanDelete == '1') || rowData.pod_status === ApprovalStatus.未核准;
   public readonly addButton: AddButton[] = [
     {
       label: '核准', icon: 'pi pi-check-circle text-green-500',
@@ -99,10 +94,10 @@ export class TLS26010Component extends BasicQueryPageComponent<TLS26010Data> {
   }, { allowSignalWrites: !0 });
 
   private readonly queryTLS26010 = computed<TLS26010Query & { isValid: boolean; }>(() => {
-    const pod_sdate_S = this.podSdateSSignal() || this.dateS;
-    const pod_sdate_E = this.podSdateESignal() || this.dateE;
-    const pod_edate_S = this.podEdateSSignal() || this.dateS;
-    const pod_edate_E = this.podEdateESignal() || this.dateE;
+    const pod_sdate_S = this.podSdateSSignal() || this.service.dateS;
+    const pod_sdate_E = this.podSdateESignal() || this.service.dateE;
+    const pod_edate_S = this.podEdateSSignal() || this.service.dateS;
+    const pod_edate_E = this.podEdateESignal() || this.service.dateE;
 
     let isValid = !0;
 
@@ -185,10 +180,10 @@ export class TLS26010Component extends BasicQueryPageComponent<TLS26010Data> {
 
   public onClear(): void {
     this.queryForm.reset({
-      podSdateS: this.dateS,
-      podSdateE: this.dateE,
-      podEdateS: this.dateS,
-      podEdateE: this.dateE,
+      podSdateS: this.service.dateS,
+      podSdateE: this.service.dateE,
+      podEdateS: this.service.dateS,
+      podEdateE: this.service.dateE,
     });
   }
 

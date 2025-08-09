@@ -9,8 +9,8 @@ export interface FIN12020QueryRequest extends BaseQueryRequest {
   GUI_YYMM_start?: string;        // 發票年月(起)
   GUI_YYMM_end?: string;          // 發票年月(訖)
   GUI_TRACK?: string;             // 字軌
-  GUINo_start?: string;           // 發票號碼(起)
-  GUINo_end?: string;             // 發票號碼(迄)
+  GUINo_start?: string;           // 發票起始號碼
+  GUINo_end?: string;             // 發票結束號碼
   GUIPaperList?: string[];        // 發票類別清單
   ECR_NOList?: string[];          // 收銀機號清單
   GUI_StatusList?: string[];      // 發票狀態清單
@@ -22,8 +22,8 @@ export interface FIN12020Data {
   GUI_YYMM?: string;         // 發票年月
   ECR_NO?: string;           // 收銀機號
   GUI_TRACK?: string;        // 字軌
-  GUI_SNOS?: string;         // 發票號碼(起)
-  GUI_ENOS?: string;         // 發票號碼(迄)
+  GUI_SNOS?: string;         // 發票起始號碼
+  GUI_ENOS?: string;         // 發票結束號碼
   TOT_NOS?: number;          // 總張數
   USED_NOS?: number;         // 已用張數
   FREE_NOS?: number;         // 未用張數

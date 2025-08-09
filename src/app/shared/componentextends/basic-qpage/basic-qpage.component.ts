@@ -1,3 +1,4 @@
+// !!! 不使用
 import { FunsrightInfo } from '../../models/system/funsrightInfo';
 import { NavigationExtras, Router } from '@angular/router';
 import { CRUDStatus } from '../../models/system/CRUDstatus';

@@ -7,7 +7,8 @@
       "projectType": "application",
       "schematics": {
         "@schematics/angular:component": {
-          "style": "scss"
+          "style": "none",
+          "skipTests": true
         }
       },
       "root": "",
@@ -83,8 +84,7 @@
               "buildTarget": "TSRDERP_Frontend:build:production"
             },
             "development": {
-              "buildTarget": "TSRDERP_Frontend:build:development",
-              "proxyConfig": "proxy.conf.json"
+              "buildTarget": "TSRDERP_Frontend:build:development"
             }
           },
           "defaultConfiguration": "development",

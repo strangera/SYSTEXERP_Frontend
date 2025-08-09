@@ -20,7 +20,7 @@
           <div class="col-12 md:col-6 lg:col-4">
             <app-multi-select label="館別"
                               controlName="sys3800"
-                              [options]="service.sys3800List()"
+                              [options]="service.sys3800Data()"
                               optionLabel="Name"
                               optionValue="No"
                               [control]="queryForm.controls.sys3800"
@@ -29,7 +29,7 @@
           <div class="col-12 md:col-6 lg:col-4">
             <app-multi-select label="樓層"
                               controlName="sys3900"
-                              [options]="service.sys3900List()"
+                              [options]="service.sys3900Data()"
                               optionLabel="Name"
                               optionValue="No"
                               [control]="queryForm.controls.sys3900"
@@ -38,7 +38,7 @@
           <div class="col-12 md:col-6 lg:col-4">
             <app-multi-select label="區域"
                               controlName="sys3A00"
-                              [options]="service.sys3A00List()"
+                              [options]="service.sys3A00Data()"
                               optionLabel="Name"
                               optionValue="No"
                               [control]="queryForm.controls.sys3A00"
@@ -47,7 +47,7 @@
           <div class="col-12 md:col-6 lg:col-4">
             <app-multi-select label="收銀機號"
                               controlName="ecrNos"
-                              [options]="service.ECRList"
+                              [options]="service.ecrData()"
                               optionLabel="ecr_name"
                               optionValue="ecr_no"
                               [control]="queryForm.controls.ecrNos"
@@ -56,7 +56,7 @@
           <div class="col-12 md:col-6 lg:col-4">
             <app-multi-select label="專櫃名稱"
                               controlName="tltNos"
-                              [options]="service.TLTList"
+                              [options]="service.tltData()"
                               optionLabel="tlt_name"
                               optionValue="tlt_no"
                               [control]="queryForm.controls.tltNos"
@@ -101,9 +101,10 @@
                [columns]="columns"
                [addButton]="addButton"
                [editDisabled]="editDisabled"
-               [isRowSelectable]="isRowSelectable"
+               [isRowSelectable]="service.isRowSelectable"
                (delete)="onDelete($event)"
                (edit)="onEdit($event)"
-               (detail)="onDetail($event)"></app-table>
+               (detail)="onDetail($event)"
+               [loading]="service.tableLoading"></app-table>
   </div>
 </div>

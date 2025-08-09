@@ -58,7 +58,7 @@ import { PaymentDetail, DiscountDetail, InvoiceDetail } from './tls23040.model';
   ],
 })
 export class TLS23040Component extends BasicQueryPageComponent<any> {
-  
+
   totalRecords = 0;
   showPageSizeDialog = false;
   customPageSize = 10;
@@ -105,8 +105,8 @@ export class TLS23040Component extends BasicQueryPageComponent<any> {
       style: 'text-left',
     },
     { field: 'gui_track', header: '發票起號(字軌)', visible: true },
-    { field: 'GUIBegNo', header: '發票號碼(起)', visible: true },
-    { field: 'GUIEndNo', header: '發票號碼(迄)', visible: true },
+    { field: 'GUIBegNo', header: '發票起始號碼', visible: true },
+    { field: 'GUIEndNo', header: '發票結束號碼', visible: true },
     {
       field: 'TXN_TotGUI',
       header: '發票金額',
@@ -231,36 +231,36 @@ export class TLS23040Component extends BasicQueryPageComponent<any> {
   //報表模式
 
   private cleanFormPayload(payload: any): any {
-  delete payload.displayMode;
+    delete payload.displayMode;
 
-  for (const key in payload) {
-    const val = payload[key];
-    if (
-      val === '' ||
-      val === null ||
-      (Array.isArray(val) && val.length === 0)
-    ) {
-      payload[key] = null;
+    for (const key in payload) {
+      const val = payload[key];
+      if (
+        val === '' ||
+        val === null ||
+        (Array.isArray(val) && val.length === 0)
+      ) {
+        payload[key] = null;
+      }
     }
+
+    // ✅ 如果 ECR_No 是 null，就轉為空陣列（後端需要陣列型別）
+    if (!Array.isArray(payload.ECR_No)) {
+      payload.ECR_No = payload.ECR_No == null ? [] : [payload.ECR_No];
+    }
+
+    if (payload['IsHaveTERM_No'] === 'Y') payload['IsHaveTERM_No'] = true;
+    if (payload['IsHaveTERM_No'] === 'N') payload['IsHaveTERM_No'] = false;
+
+    return {
+      ...payload,
+      pageSize: payload.pageSize ?? 30,
+      pageIndex: (payload.pageIndex ?? 1) - 1,
+      Offset: 0,
+      OrderBy: '',
+      SortBy: payload.SortBy ?? [{ field: 'ID', order: 1 }],
+    };
   }
-
-  // ✅ 如果 ECR_No 是 null，就轉為空陣列（後端需要陣列型別）
-  if (!Array.isArray(payload.ECR_No)) {
-    payload.ECR_No = payload.ECR_No == null ? [] : [payload.ECR_No];
-  }
-
-  if (payload['IsHaveTERM_No'] === 'Y') payload['IsHaveTERM_No'] = true;
-  if (payload['IsHaveTERM_No'] === 'N') payload['IsHaveTERM_No'] = false;
-
-  return {
-    ...payload,
-    pageSize: payload.pageSize ?? 30,
-    pageIndex: (payload.pageIndex ?? 1) - 1,
-    Offset: 0,
-    OrderBy: '',
-    SortBy: payload.SortBy ?? [{ field: 'ID', order: 1 }],
-  };
-}
 
 
 
@@ -272,86 +272,86 @@ export class TLS23040Component extends BasicQueryPageComponent<any> {
   }
 
   confirmPageSizeAndNavigate(): void {
-  this.submitted = true;
-  if (this.queryForm.invalid) {
-    this.messageService.warnBubble('請確認欄位資料是否完整');
-    this.queryForm.markAllAsTouched();
-    return;
-  }
+    this.submitted = true;
+    if (this.queryForm.invalid) {
+      this.messageService.warnBubble('請確認欄位資料是否完整');
+      this.queryForm.markAllAsTouched();
+      return;
+    }
 
-  const queryFormValue = this.cleanFormPayload({
-    ...this.queryForm.value,
-    pageSize: this.customPageSize,
-  });
-
-  this.loading = true;
-  this.messageService.blockUi();
-
-  this.tls23040Service
-    .queryTLS23040(queryFormValue)
-    .pipe(
-      timeout(30000),
-      catchError((err) => {
-        if (err.name === 'TimeoutError') {
-          this.messageService.warnBubble('查詢時間過久，請嘗試縮小查詢條件範圍');
-        } else {
-          this.messageService.errorBubble('查詢失敗');
-        }
-        this.loading = false;
-        this.messageService.unblockUi();
-        // 用空陣列回傳，型別一致
-        return of({ Status: '9999', Data: [], Error: null, Meta: null, Message: '', TotalCount: 0, TotalPage: 0 });
-      }),
-    )
-    .subscribe({
-      next: (res) => {
-        if (res.Status === '0000') {
-          const groups = res.Data || [];
-
-          let dataToNavigate:
-            | InvoiceDetail[]
-            | PaymentDetail[]
-            | DiscountDetail[] = [];
-
-          switch (this.displayMode) {
-            case 'Report':
-              // ✅ 只拿發票/交易明細
-              dataToNavigate = groups.flatMap(g => g.InvoiceDetail ?? []);
-              break;
-            case 'ByPaymentType':
-              // ✅ 只拿付款明細
-              dataToNavigate = groups.flatMap(g => g.PaymentDetail ?? []);
-              break;
-            case 'ByDiscountType':
-              // ✅ 只拿折扣明細
-              dataToNavigate = groups.flatMap(g => g.DiscountDetail ?? []);
-              break;
-          }
-
-          // 紀錄查詢狀態
-          this.queryStateService.setQueryState(this.ProgNo, queryFormValue);
-
-          // 帶資料去 CRU 頁
-          this.router.navigate(['account/tls/tls23040cru'], {
-            state: {
-              queryFormValue,
-              pageSize: this.customPageSize,
-              data: dataToNavigate,
-              displayMode: this.displayMode,
-              // 也可順帶 totalCount/totalPage 若你要用
-              totalCount: res.TotalCount,
-              totalPage: res.TotalPage,
-            },
-          });
-        } else {
-          this.messageService.errorBubble('查詢失敗');
-        }
-      },
-      complete: () => {
-        this.loading = false;
-        this.messageService.unblockUi();
-        this.showPageSizeDialog = false;
-      },
+    const queryFormValue = this.cleanFormPayload({
+      ...this.queryForm.value,
+      pageSize: this.customPageSize,
     });
-}
+
+    this.loading = true;
+    this.messageService.blockUi();
+
+    this.tls23040Service
+      .queryTLS23040(queryFormValue)
+      .pipe(
+        timeout(30000),
+        catchError((err) => {
+          if (err.name === 'TimeoutError') {
+            this.messageService.warnBubble('查詢時間過久，請嘗試縮小查詢條件範圍');
+          } else {
+            this.messageService.errorBubble('查詢失敗');
+          }
+          this.loading = false;
+          this.messageService.unblockUi();
+          // 用空陣列回傳，型別一致
+          return of({ Status: '9999', Data: [], Error: null, Meta: null, Message: '', TotalCount: 0, TotalPage: 0 });
+        }),
+      )
+      .subscribe({
+        next: (res) => {
+          if (res.Status === '0000') {
+            const groups = res.Data || [];
+
+            let dataToNavigate:
+              | InvoiceDetail[]
+              | PaymentDetail[]
+              | DiscountDetail[] = [];
+
+            switch (this.displayMode) {
+              case 'Report':
+                // ✅ 只拿發票/交易明細
+                dataToNavigate = groups.flatMap(g => g.InvoiceDetail ?? []);
+                break;
+              case 'ByPaymentType':
+                // ✅ 只拿付款明細
+                dataToNavigate = groups.flatMap(g => g.PaymentDetail ?? []);
+                break;
+              case 'ByDiscountType':
+                // ✅ 只拿折扣明細
+                dataToNavigate = groups.flatMap(g => g.DiscountDetail ?? []);
+                break;
+            }
+
+            // 紀錄查詢狀態
+            this.queryStateService.setQueryState(this.ProgNo, queryFormValue);
+
+            // 帶資料去 CRU 頁
+            this.router.navigate(['account/tls/tls23040cru'], {
+              state: {
+                queryFormValue,
+                pageSize: this.customPageSize,
+                data: dataToNavigate,
+                displayMode: this.displayMode,
+                // 也可順帶 totalCount/totalPage 若你要用
+                totalCount: res.TotalCount,
+                totalPage: res.TotalPage,
+              },
+            });
+          } else {
+            this.messageService.errorBubble('查詢失敗');
+          }
+        },
+        complete: () => {
+          this.loading = false;
+          this.messageService.unblockUi();
+          this.showPageSizeDialog = false;
+        },
+      });
+  }
 }

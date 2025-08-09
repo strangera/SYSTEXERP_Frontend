@@ -44,8 +44,8 @@ export class FIN12010Component extends BasicQueryPageComponent<IFin12010Data> im
     SAL_GUIYYYYMM_start: [null, [Validators.required]], // 發票年月
     SAL_GUIYYYYMM_end: [null, [Validators.required]], // 發票年月
     SAL_GUITrack: ['', [Validators.maxLength(2)]], // 字軌
-    SAL_GUINo_start: [null, [Validators.maxLength(8), Validators.minLength(8), Validators.max(99999950)]], // 發票號碼(起)
-    SAL_GUINo_end: [null, [Validators.maxLength(8), Validators.minLength(8), Validators.max(99999999)]], // 發票號碼(迄)
+    SAL_GUINo_start: [null, [Validators.maxLength(8), Validators.minLength(8), Validators.max(99999950)]], // 發票起始號碼
+    SAL_GUINo_end: [null, [Validators.maxLength(8), Validators.minLength(8), Validators.max(99999999)]], // 發票結束號碼
     SAL_TypeList: [[]], // 使用別
     ...createPaginationConfig([{ field: 'id', order: 1 }]), // 分頁和排序參數
   }, { validators: this.validationService.guiNumberRangeValidator('SAL_GUINo_start', 'SAL_GUINo_end') });
@@ -62,7 +62,7 @@ export class FIN12010Component extends BasicQueryPageComponent<IFin12010Data> im
     { field: 'GUI_DingType', header: '是否為丁種發票', visible: true, format: formatYN },
     { field: 'SAL_GUIBegMM', header: '起始月份', visible: false, format: formatDate },
     { field: 'SAL_GUIEndMM', header: '終止月份', visible: false, format: formatDate },
-    { field: 'SAL_GUIPaper', header: '發票聯式', visible: false, format: value => this.SAL_GUIPaperOptions.find(x => x.value === value)?.label || value }, // 修正為 '發票聯式'
+    { field: 'SAL_GUIPaper', header: '發票類別', visible: false, format: value => this.SAL_GUIPaperOptions.find(x => x.value === value)?.label || value }, // 修正為 '發票類別'
     { field: 'SAL_VoidGUICnt', header: '作廢發票張數', visible: false, format: formatAmount },
     { field: 'SAL_BlankCnt', header: '發票張數', visible: false, format: formatAmount },
     { field: 'SAL_SAmt', header: '應稅金額', visible: false, format: formatAmount },

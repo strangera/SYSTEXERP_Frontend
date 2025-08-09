@@ -47,7 +47,7 @@ export class FIN11200CRUComponent extends BasicCruPageComponent<Pos1018> impleme
   data: POS1002[] = [];
   selectedData: POS1002[] = [];
   columns: Column[] = [
-    { field: 'ECR_No', header: '收銀機編號', visible: true },
+    { field: 'ECR_No', header: '收銀機號', visible: true },
     { field: 'ECR_Name', header: '收銀機名稱', visible: true },
   ]
 
@@ -122,7 +122,7 @@ export class FIN11200CRUComponent extends BasicCruPageComponent<Pos1018> impleme
   }
 
   dialogQueryForm = this.formBuilder.group({
-    ECR_No: [''], // 收銀機編號
+    ECR_No: [''], // 收銀機號
     ECR_Name: [''], // 收銀機名稱
   });
   dialogData: POS1002[] = [];

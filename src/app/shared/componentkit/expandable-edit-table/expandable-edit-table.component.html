@@ -248,23 +248,12 @@
 
     <!-- 空資料訊息模板 -->
     <ng-template pTemplate="emptymessage">
-      <tr>
-        <td [attr.colspan]="
-                      getDetailColumnsForTab(rowData).length +
-                      (readonly ? 1 : 3)
-                    " class="empty-message-cell">
-          <div class="empty-message-content">
-            <i class="pi pi-info-circle" style="
-                          font-size: 1.5rem;
-                          color: #b0b0b0;
-                          margin-right: 0.5rem;
-                        "></i>
-            查無詳細資料
-          </div>
-        </td>
-      </tr>
+      <div class="flex flex-wrap justify-content-center min-h-full" [ngStyle]="{ height: '62px' }">
+        <p class="empty-message text-xl font-bold text-center">
+          查無詳細資料
+        </p>
+      </div>
     </ng-template>
-
     <ng-template pTemplate="body" let-detailData let-di="rowIndex">
       <tr>
         <td style="text-align: center">{{ di + 1 }}</td>
@@ -387,11 +376,11 @@
 
 <!-- 無資料時顯示 -->
 <ng-template pTemplate="emptymessage">
-  <tr>
-    <td [attr.colspan]="getExpandedColspan()" style="text-align: center">
+  <div class="flex flex-wrap justify-content-center min-h-full" [ngStyle]="{ height: '62px' }">
+    <p class="empty-message text-xl font-bold text-center">
       {{ emptyMessage }}
-    </td>
-  </tr>
+    </p>
+  </div>
 </ng-template>
 </p-table>
 </div>

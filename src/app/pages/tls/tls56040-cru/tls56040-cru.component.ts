@@ -1,19 +1,5 @@
-import { Component } from '@angular/core';
-import { FormBuilder, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { NavigationExtras, Router } from '@angular/router';
-// Services
-import { WarehouseService } from '../../../service/basic/warehouse.service';
-import { BrandCodeService } from '../../../service/basic/brand-code.service';
-import { IssuanceTypeService } from '../../../service/basic/issuance-type.service';
-import { IssuanceNoteStatusService } from '../../../service/basic/issuance-note-status.service';
-import { UserCodeService } from '../../../service/basic/user-code.service';
-// Shared
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-
-import { FunsrightInfo, PermissionsInfo } from '../../../shared/models/system/funsrightInfo';
-import { AuthService } from '../../../service/system/auth.service';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-import { OrganizationNumberService } from '../../../service/basic/organization-number.service';
+import { Component, OnInit } from '@angular/core';
+import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { PanelModule } from 'primeng/panel';
@@ -22,235 +8,212 @@ import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdow
 import { EditorTextComponent } from '../../../shared/componentkit/editor-text/editor-text.component';
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
 import { NgIf } from '@angular/common';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
-
+import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
+import { Column } from '@shared/componentkit/table/table.model';
+import { TranslateModule } from '@ngx-translate/core';
+import { TableModule } from "primeng/table";
 
 @Component({
   selector: 'app-tls56040-cru',
   templateUrl: './tls56040-cru.component.html',
-  styleUrl: './tls56040-cru.component.scss',
   standalone: true,
-  imports: [MenubarComponent, ButtonComponent, PanelModule, FormsModule, ReactiveFormsModule, InputTextComponent, DropdownComponent, EditorTextComponent, CalendarComponent, NgIf, TableComponent]
+  imports: [MenubarComponent, ButtonComponent, PanelModule, FormsModule, ReactiveFormsModule, InputTextComponent, DropdownComponent, EditorTextComponent, CalendarComponent, NgIf, TranslateModule, TableModule]
 })
-export class TLS56040CRUComponent {
-  ProgNo: string = '250035';
-  funInfo?: FunsrightInfo;
-
-
-
-  loading: boolean = false;
-  submitted: boolean = false;
-  formTitle: string = '';   //CRU
-  showConfirm: boolean = false;//CRU
-  crudstatus: CRUDStatus = CRUDStatus.Read;//CRU
-
+export class TLS56040CRUComponent extends BasicCruPageComponent<any> implements OnInit {
+  // 主檔表單定義
   dataForm = this.formBuilder.group({
-    issuanceNoteCode: [{ value: '自動編號', disabled: true }],
-    generalCode: [],
-    inwarehouseCode: [, Validators.required],
-    exwarehouseCode: [, Validators.required],
-    brandCode: [, Validators.required],
+    MVM_No: [{ value: '系統自動取號', disabled: true }], // 調撥單編號，readonly, 系統自動取號
+    LOGO_No: [null, Validators.required], // 品牌編號，下拉選項，必填
+    OUT_HOS_No: [null, Validators.required], // 調出倉別，下拉選項，必填
+    IN_HOS_No: [null, Validators.required], // 調入倉別，下拉選項，必填
+    APPLY_TotBuyNet: [{ value: 0, disabled: true }], // 金額，readonly，明細加總
+    APPLY_TotQty: [{ value: 0, disabled: true }], // 數量，readonly，明細加總
+    applicationDate: [{ value: new Date(), disabled: true }], // 申請日期，預帶系統日期
+    applicantCode: [{ value: '預帶登入人員', disabled: true }], // 申請人編號，預帶登入人員
+    applicantName: [{ value: '預帶登入人員姓名', disabled: true }], // 申請人中文名稱
+    MVM_Remark: [null], // 倉別調撥單說明
 
-    issuanceType: [],
-    issuanceNoteStatus: [],
-    applicantCode: [],
-    approverCode: [],
-    applicationDateFrom: [, Validators.required],
-    applicationDateTo: [],
-    approvalDateFrom: [],
-    approvalDateTo: [],
-    remark: [],
-    organizationNumber: [],
-    issuanceReturnCode: [{ value: '自動編號', disabled: true }],
-    amount: [],
-    quantity: [],
+    // 以下主檔欄位不顯示在畫面上，但需要初始化
+    SYS_StoreNo: [null], // 公司編號/店號
+    MVM_Status: ['1'], // 調撥狀態，新增給1=已申請
+    org_id: [null], // 組織代碼/部門代碼，給null
+
+    OUTGODS_TotQty: [0], // 調撥發貨數量合計
+    OUTGODS_TotBuyNet: [0], // 調撥發貨未稅進價小計
+    OUTGODS_TotBuyTax: [0], // 調撥發貨進價稅額小計
+    OUTGODS_TotBuyAmt: [0], // 調撥發貨進價合計
+    OUTGODS_TotSaleAmt: [0], // 調撥發貨售價合計
+
+    Confirm_TotQty: [0], // 調撥驗收數量合計
+    Confirm_TotBuyNet: [0], // 調撥驗收未稅進價小計
+    Confirm_TotBuyTax: [0], // 調撥驗收進價稅額小計
+    Confirm_TotBuyAmt: [0], // 調撥驗收進價合計
+    Confirm_TotSaleAmt: [0], // 調撥驗收售價合計
+
+    OUTGODS_DATE: [null], // 發貨日期
+    OUTGODS_USR_No: [null], // 發貨人員
+    OUTGODS_USR_Name: [null], // 發貨人員姓名
+
+    Confirm_DATE: [null], // 驗收日期
+    Confirm_USR_No: [null], // 驗收人員
+    Confirm_USR_Name: [null], // 驗收人員姓名
+
+    // 明細檔項目 (作為 FormArray)
+    details: this.formBuilder.array([])
   });
 
-  // Dropdown options
-  warehouseOptions: any[] = [];
-  brandCodeOptions: any[] = [];
-  issuanceTypeOptions: any[] = [];
-  issuanceNoteStatusOptions: any[] = [];
-  applicantCodeOptions: any[] = [];
-  approverCodeOptions: any[] = [];
-  organizationNumberOptions: any[] = [];  // Updated dropdown for 部門編號
-
-  // Table data
-  data: any[] = [
-    {
-      sequence: 1,
-      isNew: true,
-      aboveNew: true,
-      productManagementCodeName: 'Product A',
-      productPrice: 200.0,
-      currentStock: 50,
-      claimQuantity: 5,
-      itemRemarks: 'Some remarks',
-    },
-    {
-      sequence: 2,
-      isNew: false,
-      aboveNew: false,
-      productManagementCodeName: 'Product B',
-      productPrice: 150.0,
-      currentStock: 30,
-      claimQuantity: 3,
-      itemRemarks: 'Other remarks',
-    },
-    // Add other data as needed
+  data: any[] = []; // 用於表格顯示明細數據
+  columns: Column[] = [
+    { field: 'MVD_SeqNo', header: '項次', visible: true },
+    { field: 'PLU_MagNo', header: '商品管理編號', visible: true },
+    { field: 'PLU_No', header: '國際條碼', visible: true },
+    { field: 'PLU_Name', header: '商品名稱', visible: true },
+    { field: 'MVD_BuyPrc', header: '進單價', visible: true },
+    { field: 'CurrentStock', header: '目前庫存', visible: true }, // 需要SP讀取
+    { field: 'APPLY_Qty', header: '調撥申請數量', visible: true },
+    { field: 'APPLY_BuyNet', header: '調撥申請進價未稅小計', visible: true },
+    { field: 'MVD_Remark', header: '單項說明', visible: true },
+    // 以下明細檔欄位不顯示在畫面上，但可能需要用於計算或後端傳輸
+    { field: 'PLU_Unit', header: '單位代碼', visible: false },
+    { field: 'PLU_BoxQty', header: '裝箱入數', visible: false },
+    { field: 'PLU_StockTaxType', header: '進價稅別', visible: false },
+    { field: 'PLU_TaxType', header: '售價稅別', visible: false },
+    { field: 'MVD_SalePrc', header: '售單價', visible: false },
+    { field: 'OUTGODS_QTY', header: '調撥發貨數量', visible: false },
+    { field: 'Confirm_QTY', header: '調撥驗收數量', visible: false },
+    { field: 'APPLY_BuyTax', header: '調撥申請進價稅額', visible: false },
+    { field: 'APPLY_BuyAmt', header: '調撥申請進價合計', visible: false },
+    { field: 'APPLY_SaleAmt', header: '調撥申請售價小計', visible: false },
+    { field: 'OUTGODS_BuyNet', header: '調撥發貨進價未稅小計', visible: false },
+    { field: 'OUTGODS_BuyTax', header: '調撥發貨進價稅額', visible: false },
+    { field: 'OUTGODS_BuyAmt', header: '調撥發貨進價合計', visible: false },
+    { field: 'OUTGODS_SaleAmt', header: '調撥發貨售價小計', visible: false },
+    { field: 'Confirm_BuyNet', header: '調撥驗收進價未稅小計', visible: false },
+    { field: 'Confirm_BuyTax', header: '調撥驗收進價稅額', visible: false },
+    { field: 'Confirm_BuyAmt', header: '調撥驗收進價合計', visible: false },
+    { field: 'Confirm_SaleAmt', header: '調撥驗收售價小計', visible: false },
+    { field: 'CRT_Date', header: '建立日期', visible: false },
+    { field: 'CRT_USR_No', header: '建立人員', visible: false },
+    { field: 'CRT_USR_Name', header: '建立人員姓名', visible: false },
+    { field: 'UPD_Date', header: '變更日期', visible: false },
+    { field: 'UPD_USR_No', header: '變更人員', visible: false },
+    { field: 'UPD_USR_Name', header: '變更人員姓名', visible: false },
   ];
 
-  filteredData: any[] = [...this.data];
-  columns: any[] = [
-    { field: 'sequence', header: '序號', visible: true },
-    { field: 'isNew', header: '是否新增', visible: true },
-    { field: 'aboveNew', header: '以上新增', visible: true },
-    { field: 'productManagementCodeName', header: '商品管理編號/名稱', visible: true },
-    { field: 'productPrice', header: '商品售價', visible: true },
-    { field: 'currentStock', header: '目前庫存', visible: true },
-    { field: 'claimQuantity', header: '領用數量', visible: true },
-    { field: 'itemRemarks', header: '單項備註', visible: true },
-  ];
+  // 下拉選單選項 (需從API獲取)
+  brandCodeOptions: any[] = []; // PLULOGO商品品牌設定檔
+  warehouseOptions: any[] = []; // POS2034倉庫設定檔
+  applicantCodeOptions: any[] = []; // 登入人員資訊 (可能需要一個包含中文名稱的選項)
 
-  constructor(
-    private router: Router,
-    private formBuilder: FormBuilder,
-    private notificationService: NotificationService,
-    private warehouseService: WarehouseService,
-    private brandCodeService: BrandCodeService,
-    private issuanceTypeService: IssuanceTypeService,
-    private issuanceNoteStatusService: IssuanceNoteStatusService,
-    private userCodeService: UserCodeService,
-    private authService: AuthService,
-    private organizationNumberService: OrganizationNumberService,  // Updated this service
-  ) { }
+  constructor() {
+    super();
+  }
 
   ngOnInit(): void {
-    // Initialize dropdown options
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
-    this.warehouseService.getWarehouseOptions().subscribe((data) => (this.warehouseOptions = data));
-    this.brandCodeService.getSystemTypes().subscribe((data) => (this.brandCodeOptions = data));
-    this.issuanceTypeService.getIssuanceTypes().subscribe((data) => (this.issuanceTypeOptions = data));
-    this.issuanceNoteStatusService.getIssuanceNoteStatuses().subscribe((data) => (this.issuanceNoteStatusOptions = data));
-    this.organizationNumberService.getOrganizationNumbers().subscribe((data) => (this.organizationNumberOptions = data));  // Updated dropdown initialization for 部門編號
-    this.userCodeService.getUserCode().subscribe((data) => {
-      this.applicantCodeOptions = data;
-      this.approverCodeOptions = data;
+    this.initializePage('TLS56040', this.dataForm);
+
+    // 調出倉別與調入倉別必需不同 的驗證
+    this.dataForm.controls['OUT_HOS_No'].valueChanges.subscribe(value => {
+      if (value && this.dataForm.controls['IN_HOS_No'].value === value) {
+        this.dataForm.controls['IN_HOS_No'].setErrors({ 'warehouseMismatch': true });
+      } else {
+        this.dataForm.controls['IN_HOS_No'].setErrors(null);
+      }
     });
-    const state = this.router.lastSuccessfulNavigation?.extras.state as {
-      crudstatus: CRUDStatus,
-      rowdata: any,
-    };//CRU
 
-    switch (state.crudstatus) {
-      case CRUDStatus.Create:
-        this.formTitle = '新增資料';
-        this.showConfirm = this.canAdd();
-        break;
-      case CRUDStatus.Edit:
-        console.log(state.rowdata);
-        this.formTitle = '編輯資料';
-        this.showConfirm = this.canEdit();
-        this.Edit(state.rowdata);
-        break;
-      case CRUDStatus.Read:
-        this.formTitle = '顯示資料';
-        this.Read(state.rowdata);
-        break;
-    }//CRU
-  }
-  Edit(rowdata: any) {
-    this.dataForm.patchValue(rowdata);
-  }
+    this.dataForm.controls['IN_HOS_No'].valueChanges.subscribe(value => {
+      if (value && this.dataForm.controls['OUT_HOS_No'].value === value) {
+        this.dataForm.controls['IN_HOS_No'].setErrors({ 'warehouseMismatch': true });
+      } else {
+        this.dataForm.controls['IN_HOS_No'].setErrors(null);
+      }
+    });
 
-  Read(rowdata: any) {
-    this.dataForm.patchValue(rowdata);
-    this.dataForm.disable();
-  }
+    // TODO: 預帶登入人員資訊 (包含中文名稱)
+    // 假設有一個 authService 可以獲取登入用戶
+    // const loggedInUser = this.authService.getLoggedInUser();
+    // if (loggedInUser) {
+    //   this.dataForm.patchValue({
+    //     applicantCode: loggedInUser.userNo,
+    //     applicantName: loggedInUser.userName
+    //   });
+    // }
 
-  canQuery(): boolean {
-    return true;
-  }
-
-  canAdd(): boolean {
-    return true;
-  }
-
-  canEdit(): boolean {
-    return true;
+    // TODO: 載入下拉選單資料
+    // this.loadBrandCodeOptions();
+    // this.loadWarehouseOptions();
+    // this.loadApplicantCodeOptions();
   }
 
   onSubmit(frm: FormGroup) {
-    console.log(frm.value);
-    this.submitted = true;
-    this.loading = true;
-    this.notificationService.blockUi();
-
-    if (frm.valid && this.canQuery()) {
-      // Submit logic here
-    }
-
-    this.loading = false;
-    this.notificationService.unblockUi();
+    this.handleSubmit(frm, () => {
+      // 提交邏輯
+      console.log('Form Submitted!', frm.value);
+    });
+  }
+  // 商品明細的 FormArray Getter
+  get details() {
+    return this.dataForm.get('details') as import('@angular/forms').FormArray;
   }
 
-  onSubmitQuery(frm: FormGroup) {
-    // 查詢邏輯
-    this.onSubmit(frm);
+  // 新增商品明細行
+  addDetailRow() {
+    // TODO: 系統自動取項次 MVD_SeqNo，需要呼叫 spIMSGETSEQ_GetNextSerialNo SP
+    // 目前先給一個簡單的遞增值
+    const nextSeqNo = this.dataForm.controls['details'].length + 1;
+
+    const detailRow = this.formBuilder.group({
+      MVD_SeqNo: [{ value: nextSeqNo, disabled: true }], // 項次，readonly
+      PLU_MagNo: [null], // 商品管理編號
+      PLU_No: [{ value: null, disabled: true }], // 國際條碼，readonly
+      PLU_Name: [{ value: null, disabled: true }], // 商品名稱，readonly
+      MVD_BuyPrc: [{ value: 0, disabled: true }], // 進單價，readonly
+      CurrentStock: [{ value: 0, disabled: true }], // 目前庫存，readonly，需要SP讀取
+      APPLY_Qty: [0, Validators.required], // 調撥申請數量，預設0，必填
+      APPLY_BuyNet: [{ value: 0, disabled: true }], // 調撥申請進價未稅小計，readonly
+      MVD_Remark: [null], // 單項說明
+      // 以下為不顯示在畫面上，但需要初始化或計算的明細欄位
+      PLU_Unit: [{ value: null, disabled: true }], // 單位代碼
+      PLU_BoxQty: [{ value: null, disabled: true }], // 裝箱入數
+      PLU_StockTaxType: [{ value: null, disabled: true }], // 進價稅別
+      PLU_TaxType: [{ value: null, disabled: true }], // 售價稅別
+      MVD_SalePrc: [{ value: null, disabled: true }], // 售單價
+      OUTGODS_QTY: [0], // 調撥發貨數量
+      Confirm_QTY: [0], // 調撥驗收數量
+      APPLY_BuyTax: [{ value: 0, disabled: true }], // 調撥申請進價稅額
+      APPLY_BuyAmt: [{ value: 0, disabled: true }], // 調撥申請進價合計
+      APPLY_SaleAmt: [{ value: 0, disabled: true }], // 調撥申請售價小計
+      OUTGODS_BuyNet: [0], // 調撥發貨進價未稅小計
+      OUTGODS_BuyTax: [0], // 調撥發貨進價稅額
+      OUTGODS_BuyAmt: [0], // 調撥發貨進價合計
+      OUTGODS_SaleAmt: [0], // 調撥發貨售價小計
+      Confirm_BuyNet: [0], // 調撥驗收進價未稅小計
+      Confirm_BuyTax: [0], // 調撥驗收進價稅額
+      Confirm_BuyAmt: [0], // 調撥驗收進價合計
+      Confirm_SaleAmt: [0], // 調撥驗收售價小計
+      CRT_Date: [null],
+      CRT_USR_No: [null],
+      CRT_USR_Name: [null],
+      UPD_Date: [null],
+      UPD_USR_No: [null],
+      UPD_USR_Name: [null],
+    });
+
+    this.details.push(detailRow);
+
+    // TODO: 監聽 PLU_MagNo 或 PLU_No 欄位的變化，觸發商品資訊查詢和庫存查詢
+    // detailRow.get('PLU_MagNo')?.valueChanges.subscribe(value => { /* ... 查詢邏輯 ... */ });
+    // detailRow.get('APPLY_Qty')?.valueChanges.subscribe(value => { /* ... 金額計算邏輯 ... */ });
   }
 
-  onClearForm() {
-    this.dataForm.reset();  // 重置表單
+  // 刪除商品明細行
+  removeDetailRow(index: number) {
+    this.details.removeAt(index);
+    // TODO: 重新計算主檔金額與數量
   }
 
-  onCreate() {
-    if (this.canAdd()) {
-      let extras: NavigationExtras = {
-        state: {
-          crudstatus: CRUDStatus.Create,
-          dataForm: this.dataForm,
-        },
-        skipLocationChange: true,
-      };
-      this.router.navigate(['TLS5000/TLS56040'], extras);
-    }
-  }
-
-  onEdit(data: any) {
-    if (this.canEdit()) {
-      let extras: NavigationExtras = {
-        state: {
-          crudstatus: CRUDStatus.Edit,
-          rowdata: data,
-          dataForm: this.dataForm,
-        },
-        skipLocationChange: true,
-      };
-      this.router.navigate(['/demoCRU'], extras);
-    }
-  }
-
-  onDetail(data: any) {
-    let extras: NavigationExtras = {
-      state: {
-        crudstatus: CRUDStatus.Read,
-        rowdata: data,
-        dataForm: this.dataForm,
-      },
-      skipLocationChange: true,
-    };
-    this.router.navigate(['/demoCRU'], extras);
-  }
-  get isFormEditable(): boolean {
-    return (this.crudstatus === CRUDStatus.Create && this.canAdd()) || (this.crudstatus === CRUDStatus.Edit && this.canEdit());
-  }//CRU
-
-  submitForm(frm: FormGroup) {
-    // 查詢邏輯
-    this.onSubmit(frm);
-  }//CRU
-
-  onCancel() {
-    this.router.navigate(['TLS5000/TLS56040']);
-  }//CRU
+  // TODO: 實現載入品牌、倉庫、人員等下拉選單資料的方法
+  // loadBrandCodeOptions() { /* ... */ }
+  // loadWarehouseOptions() { /* ... */ }
+  // loadApplicantCodeOptions() { /* ... */ }
 }

@@ -1,8 +1,0 @@
-{
-  "/assets/*": {
-    "target": "http://localhost:4200",
-    "secure": false,
-    "logLevel": "debug",
-    "bypass": "(req, res, proxyOptions) => { res.setHeader('Access-Control-Allow-Origin', '*'); res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, DELETE'); res.setHeader('Access-Control-Allow-Headers', 'X-Requested-With, Content-Type, Authorization'); }"
-  }
-}

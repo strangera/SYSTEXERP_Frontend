@@ -18,7 +18,7 @@ export class AnnouncementCategoryService {
   constructor(
     private http: HttpClient,
     private errorHandler: ErrorHandlerService,
-  ) {}
+  ) { }
 
   Pub_TypeOptions(): Observable<any[]> {
     return of(this.options).pipe(

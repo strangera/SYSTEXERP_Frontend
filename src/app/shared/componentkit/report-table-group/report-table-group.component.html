@@ -92,6 +92,66 @@
 
 <!-- ✅ 上方操作列與對話框區保留不變 -->
 <div class="printable-section">
+  <div *ngIf="data.length === 0" class="report-table-wrapper mb-5">
+  <p-table
+    [value]="[]"
+    [columns]="selectedColumns"
+    [paginator]="false"
+    [resizableColumns]="true"
+    scrollable="true"
+    [styleClass]="'p-datatable-sm p-datatable-gridlines'"
+  >
+    <!-- 表頭 -->
+    <ng-template pTemplate="header">
+      <tr>
+        <th
+          *ngFor="let col of selectedColumns"
+          class="text-center"
+          [ngClass]="col.style"
+        >
+          {{ col.header }}
+        </th>
+      </tr>
+    </ng-template>
+
+    <!-- 中間顯示 emptyMessage -->
+    <ng-template pTemplate="emptymessage">
+      <tr>
+        <td
+          [attr.colspan]="selectedColumns.length"
+          class="text-center text-xl font-bold text-primary bg-gray-50"
+          style="padding: 2rem 1rem"
+        >
+          <i class="pi pi-info-circle mr-2 text-primary"></i>
+          {{ emptyMessage }}
+        </td>
+      </tr>
+    </ng-template>
+
+    <!-- 表尾：總計 0（或格式化後） -->
+    <ng-template pTemplate="footer">
+      <tr
+        class="bg-yellow-200 font-bold"
+        *ngIf="showGrandTotal || subtotalFields.length > 0"
+      >
+        <td
+          *ngFor="let col of selectedColumns"
+          class="text-center"
+          [ngClass]="col.style"
+        >
+          <ng-container [ngSwitch]="col.field">
+            <ng-container *ngSwitchCase="'__index'">總計</ng-container>
+            <ng-container *ngSwitchDefault>
+              <ng-container *ngIf="subtotalFields.includes(col.field)">
+                {{ getGrandTotal(col.field) }}
+              </ng-container>
+            </ng-container>
+          </ng-container>
+        </td>
+      </tr>
+    </ng-template>
+  </p-table>
+</div>
   <div *ngIf="!mergedView" class="grouped-view">
     <div
       *ngFor="let group of groupedData; let i = index"
@@ -282,8 +342,71 @@
   </div>
 
   <!-- ✅ 合併顯示區（大表） -->
+   
 
   <div *ngIf="mergedView" class="merged-view">
+      <!-- 空資料專用表格 -->
+  <div *ngIf="data.length === 0" class="mb-5">
+    <p-table
+      [value]="[]"
+      [columns]="selectedColumns"
+      [paginator]="false"
+      [resizableColumns]="true"
+      scrollable="true"
+      [styleClass]="'p-datatable-sm p-datatable-gridlines'"
+    >
+      <!-- 表頭 -->
+      <ng-template pTemplate="header">
+        <tr>
+          <th
+            *ngFor="let col of selectedColumns"
+            class="text-center"
+            [ngClass]="col.style"
+          >
+            {{ col.header }}
+          </th>
+        </tr>
+      </ng-template>
+
+      <!-- 中間顯示 emptyMessage -->
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td
+            [attr.colspan]="selectedColumns.length"
+            class="text-center text-xl font-bold text-primary bg-gray-50"
+            style="padding: 2rem 1rem"
+          >
+            <i class="pi pi-info-circle mr-2 text-primary"></i>
+            {{ emptyMessage }}
+          </td>
+        </tr>
+      </ng-template>
+
+      <!-- 表尾 -->
+      <ng-template pTemplate="footer">
+        <tr
+          class="bg-yellow-200 font-bold"
+          *ngIf="showGrandTotal || subtotalFields.length > 0"
+        >
+          <td
+            *ngFor="let col of selectedColumns"
+            class="text-center"
+            [ngClass]="col.style"
+          >
+            <ng-container [ngSwitch]="col.field">
+              <ng-container *ngSwitchCase="'__index'">總計</ng-container>
+              <ng-container *ngSwitchDefault>
+                <ng-container *ngIf="subtotalFields.includes(col.field)">
+                  {{ getGrandTotal(col.field) }}
+                </ng-container>
+              </ng-container>
+            </ng-container>
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
+
     <div
       *ngFor="let group of mergedPagedGroups; let groupIndex = index"
       class="mb-5"
