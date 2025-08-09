@@ -92,9 +92,9 @@ export class TLS56020CRUComponent
   // -------------------- Options --------------------
   issuanceTypeOptions: { label: string; value: string }[] = [];
   userOptions: { label: string; value: string }[] = [];
-  departmentOptions: { label: string; value: string }[] = []; // ⬅ 原 org_id options 改名避免混淆
   brandOptions: IDropdownItem[] = []; // 品牌下拉選單選項
   warehouseOptions: IDropdownItem[] = []; // 倉別下拉選單選項
+  departmentOptions: { label: string, value: string }[] = []; // 部門下拉選單選項
 
   // -------------------- Table (main) --------------------
   data: IPOS2004DetailData[] = [];
@@ -111,11 +111,9 @@ export class TLS56020CRUComponent
       header: '稅別',
       format: (v) => (v === '0' ? '免稅' : '應稅'),
     },
-    { field: 'POD_SubQty', header: '數量', type: 'inputNumber', validate: [validateMinNumber(0)] },
-    { field: 'PLU_SalePrc_UNI', header: '單價' },
-    { field: 'POD_BuyNet', header: '小計' },
-    { field: 'PLU_SalePrc', header: '售價' },
-    { field: 'POD_SaleAmt', header: '售價小計' },
+    { field: 'POD_SubQty', header: '數量'},
+    { field: 'PLU_SalePrc', header: '商品售價',type: 'inputNumber' },
+    { field: 'PLU_SalePrc_UNI', header: '商品進價', type: 'inputNumber' },
     { field: 'POD_Remark', header: '備註', type: 'input' },
   ];
 
@@ -225,6 +223,14 @@ export class TLS56020CRUComponent
     this.dropDownListService.getPOS2034Options().pipe(untilDestroyed(this)).subscribe(response => {
       this.warehouseOptions = response.Data;
     });
+    this.dropDownListService.querySYS3100_join_POS1001_DropDownList()
+      .pipe(untilDestroyed(this))
+      .subscribe(response => {
+        this.departmentOptions = (response.Data || []).map(item => ({
+          label: item.Name,
+          value: item.No
+        }));
+      });
   }
 
   // -------------------- Form Helpers --------------------
