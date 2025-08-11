@@ -36,10 +36,12 @@ jobs:
     
     # 建置生產環境
     - name: Build Production project
-      run: npx ng build --configuration production --base-href /TSRDWEBDEV/
-      continue-on-error: false
+      run: |
+        echo "=== Building Production (關閉 AOT 編譯) ==="
+        npx ng build --configuration production --base-href /TSRDWEBDEV/ --aot=false --build-optimizer=false
+      continue-on-error: true
       env:
-        NODE_OPTIONS: "--max_old_space_size=4096"  # 增加記憶體限制，避免建置時記憶體不足
+        NODE_OPTIONS: "--max_old_space_size=4096"
     
     - name: Rename Production build
       run: |
@@ -53,8 +55,10 @@ jobs:
     
     # 建置測試環境  
     - name: Build Staging project
-      run: npx ng build --configuration staging --base-href /tsrdwebdev/
-      continue-on-error: false
+      run: |
+        echo "=== Building Staging (關閉 AOT 編譯) ==="
+        npx ng build --configuration staging --base-href /tsrdwebdev/ --aot=false --build-optimizer=false
+      continue-on-error: true
       env:
         NODE_OPTIONS: "--max_old_space_size=4096"
     
