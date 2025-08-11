@@ -61,14 +61,15 @@
           </div>
           <!-- 移轉日期 (申請日期) -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar-range calendarType="dateRange" label="申請日期" [startControl]="queryForm.controls.MVM_Date_Start"
-              [endControl]="queryForm.controls.MVM_Date_End" [submitted]="submitted"></app-calendar-range>
+            <app-calendar-range-quick calendarType="dateRange" label="申請日期"
+              [startControl]="queryForm.controls.MVM_Date_Start" [endControl]="queryForm.controls.MVM_Date_End"
+              [submitted]="submitted"></app-calendar-range-quick>
           </div>
           <!-- 移入驗收日期/移出確認日期 (審核日期) -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar-range calendarType="dateRange" label="審核日期"
+            <app-calendar-range-quick calendarType="dateRange" label="審核日期"
               [startControl]="queryForm.controls.MVM_ConfirmDate_Start"
-              [endControl]="queryForm.controls.MVM_ConfirmDate_End" [submitted]="submitted"></app-calendar-range>
+              [endControl]="queryForm.controls.MVM_ConfirmDate_End" [submitted]="submitted"></app-calendar-range-quick>
           </div>
         </div>
         <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">

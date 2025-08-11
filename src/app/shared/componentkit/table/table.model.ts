@@ -1,6 +1,4 @@
-import { animate, state, style, transition, trigger } from "@angular/animations";
 import { SortMeta } from "primeng/api";
-import { NotificationService } from "../../component/notification-message/notification.service";
 export interface Column {
   field: string;     // 欄位名稱 (資料的欄位名稱)
   header: string;    // 欄位標題 (顯示在表格上的標題)
@@ -64,19 +62,6 @@ export const createPaginationConfig = (defaultSortBy?: SortMeta[]) => {
   };
 };
 
-export const toggleButtons = trigger('toggleButtons', [
-  state('hidden', style({ transform: 'translateX(-10px)', width: '0px', opacity: 0 })),
-  state('visible', style({ transform: 'translateX(0px)', width: 'auto', opacity: 1 })),
-  transition('hidden <=> visible', [animate('300ms ease-in-out')])
-]);
-
-export const expandAnimation = trigger('expandAnimation', [
-  state('collapsed', style({ height: '0px', opacity: 0 })),
-  state('expanded', style({ height: '*', opacity: 1 })),
-  transition('collapsed <=> expanded', animate('200ms ease-in-out'))
-]);
-
-
 export interface AddButton {
   label: string;
   icon: string;
@@ -96,41 +81,6 @@ export interface FieldChangeEvent {
   field: string;
   value: any;
   index?: number;
-}
-
-// 新增一個方法來驗證行數據
-export function validateRowData(rowData: any, columns: Column[], data: any, messageService: NotificationService, dataKey: string, defaultInsertData?: any): boolean {
-  // 新增的預設判斷：檢查除了 dataKey 以外的所有欄位是否都為 null/undefined/空字串
-  const otherColumns = columns.filter(col => col.field !== dataKey);
-  // 檢查 rowData 的值是否都與 defaultInsertData 的值完全相同
-  // 這才是判斷「使用者是否修改過任何欄位」的正確方式
-  const isRowUnchangedFromDefault = otherColumns.every(col => {
-    const currentValue = rowData[col.field];
-    // 判斷 defaultInsertData 中是否存在該欄位，如果沒有則預設為 null (與 newRowData 的初始化邏輯一致)
-    const defaultValue = (defaultInsertData && defaultInsertData[col.field] !== undefined)
-      ? defaultInsertData[col.field]
-      : null;
-    // 比較當前值與預設值是否相同
-    return currentValue === defaultValue;
-  });
-
-  // 如果 rowData 保持未變動，則顯示錯誤訊息並返回 false
-  if (isRowUnchangedFromDefault) {
-    messageService.errorBubble('請輸入至少一個欄位的值', '未輸入任何值');
-    return false; // 驗證失敗
-  }
-
-  // 原始的驗證邏輯
-  return columns.every(col =>
-    !(col.validate?.some(validateFn => {
-      const { isValid, errorMessage } = validateFn(rowData[col.field], rowData, data, col.field, col.header);
-      if (!isValid) {
-        const [message, title] = errorMessage;
-        messageService.errorBubble(message, title);
-      }
-      return !isValid;
-    }))
-  );
 }
 //formatDate：會輸出 2024/05/27 格式
 export const formatDate = (dateStr: string) => {

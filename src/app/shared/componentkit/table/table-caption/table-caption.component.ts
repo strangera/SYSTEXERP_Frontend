@@ -8,9 +8,10 @@ import { DropdownModule } from 'primeng/dropdown';
 import { FileSelectEvent, FileUpload, FileUploadModule } from 'primeng/fileupload';
 import { MultiSelectChangeEvent, MultiSelectModule } from 'primeng/multiselect';
 import { TooltipModule } from 'primeng/tooltip';
-import { Column, toggleButtons } from '../table.model';
+import { Column } from '../table.model';
 import { QueryStateService } from '@shared/service/query-state.service';
 import { TableExportComponent } from '../table-export/table-export.component';
+import { toggleButtons } from './table-caption.model';
 
 @Component({
   selector: 'app-table-caption',

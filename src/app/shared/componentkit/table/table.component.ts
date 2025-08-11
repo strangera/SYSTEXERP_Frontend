@@ -6,11 +6,11 @@ import { AutoCompleteCompleteEvent } from 'primeng/autocomplete';
 import { FileSelectEvent } from 'primeng/fileupload';
 import { MultiSelectChangeEvent } from 'primeng/multiselect';
 import { Table, TableLazyLoadEvent, TablePageEvent, TableRowSelectEvent, TableRowUnSelectEvent } from 'primeng/table';
-import { finalize, Observable } from 'rxjs';
+import { Observable } from 'rxjs';
 import { BasicPrintDataComponent } from '../../componentextends/basic-print/basic-print-data.component';
-import { AddButton, Column, ColumnGroup, FieldChangeEvent, LazyLoadEvent, RowEditSaveEvent, validateRowData } from './table.model';
+import { AddButton, Column, ColumnGroup, FieldChangeEvent, LazyLoadEvent, RowEditSaveEvent } from './table.model';
 import { COMMON_IMPORTS } from './import-table';
-import { untilDestroyed } from '@ngneat/until-destroy';
+import { TableUtilityService } from './table-utility.service';
 @Component({
   selector: 'app-table',
   templateUrl: './table.component.html',
@@ -129,7 +129,8 @@ export class TableComponent extends BasicPrintDataComponent implements OnChanges
   @Input() emptyMessage = '查無資料';                // table 無資料時顯示文字
 
   constructor(
-    private readonly sanitizer: DomSanitizer
+    private readonly sanitizer: DomSanitizer,
+    private readonly tableUtilityService: TableUtilityService
   ) { super(); }
   // 當 data 發生變化時，重置分頁與頁碼
   ngOnChanges(changes: SimpleChanges): void {
@@ -181,51 +182,20 @@ export class TableComponent extends BasicPrintDataComponent implements OnChanges
   // 行追蹤
   trackByRow = (index: number, item: any) => { return item?.[this.dataKey] || index; };
   // 計算欄位總數(包含序號、勾選、管理、展開)
-  get getVisibleHeaderCount(): number { return 1 + Number(this.showCheckBox) + this.selectedColumns.length + Number(this.showManage) + (this.expansionDataKey ? 1 : 0); }
+  get getVisibleHeaderCount(): number {
+    const visibleColumnCount = this.tableUtilityService.getVisibleColumnCount(this.selectedColumns);
+    return 1 + Number(this.showCheckBox) + visibleColumnCount + Number(this.showManage) + (this.expansionDataKey ? 1 : 0);
+  }
   // 行是否可選
   rowSelectableWrapper = ({ data }: { data: any, index: number; }): boolean | undefined => { return this.isRowSelectable(data) && !this.rowEditing; };
-  // 修改 toggleRowExpansion 方法
+  // 切換行展開
   toggleRowExpansion(rowData: any) {
-    const rowKey = rowData[this.dataKey];
-    const hasDetails = rowData[this.expansionDataKey] && rowData[this.expansionDataKey]?.length > 0;
-    if (hasDetails) {// 已經有資料了，直接切換展開/收合狀態，不再呼叫 API
-      if (this.expandedRows[rowKey]) {
-        delete this.expandedRows[rowKey]; // 收合
-      } else {
-        this.expandedRows[rowKey] = true; // 展開
-      }
-    } else if (this.expansionLoadFn) {// 第一次展開，沒有資料，才呼叫 API 載入
-      rowData.expansionLoading = true;
-      this.expansionLoadFn(rowData).pipe(untilDestroyed(this), finalize(() => {
-        rowData.expansionLoading = false;// 無論成功或失敗，都在這裡關閉這筆資料的 loading 狀態
-        this.cdr.detectChanges();// 強制 Angular 檢測變更，確保 UI 立即更新
-      })
-      ).subscribe(response => {
-        const responseData = response.Data;
-        if (responseData && Array.isArray(responseData) && responseData.length > 0) {
-          rowData[this.expansionDataKey] = responseData;
-          this.expandedRows[rowKey] = true;
-        } else {
-          this.messageService.infoBubble('查無詳細資料。');
-        }
-      });
-    }
+    this.tableUtilityService.toggleRowExpansionLogic(rowData, this.dataKey, this.expansionDataKey, this.expansionLoadFn, this.expandedRows, this);
   }
   // 全展開/收合的邏輯
   toggleExpandCollapse() {
     this.expression = !this.expression;
-    if (this.expression) {
-      // 展開所有行
-      this.data.forEach(rowData => {
-        const rowKey = rowData[this.dataKey];
-        if (!this.expandedRows[rowKey]) {// 只有在該行尚未展開時，才調用 toggleRowExpansion
-          // 檢查資料、載入資料，並設定 expandedRows 的狀態。
-          this.toggleRowExpansion(rowData);
-        }
-      });
-    } else {
-      this.expandedRows = {}; // 收合所有行
-    }
+    this.tableUtilityService.toggleExpandCollapseLogic(this.data, this.expression, this.dataKey, this.expansionDataKey, this.expansionLoadFn, this.expandedRows, this);
   }
   // 過濾欄位記錄保存
   onFilterChange(event: MultiSelectChangeEvent) {
@@ -246,7 +216,7 @@ export class TableComponent extends BasicPrintDataComponent implements OnChanges
   // 行編輯保存
   onRowEditSave(rowData: any, ri: number, htmlTableRowElement: HTMLTableRowElement) {
     // 驗證邏輯不變
-    if (!this.alwaysEdit && !this.alwaysBlurValidate && !validateRowData(rowData, this.columns, this.data, this.messageService, this.dataKey, this.defaultInsertData)) return;
+    if (!this.alwaysEdit && !this.alwaysBlurValidate && !this.tableUtilityService.validateRowData(rowData, this.columns, this.data, this.messageService, this.dataKey, this.defaultInsertData)) return;
 
     const rowId = rowData[this.dataKey];
     const oldData = this.clonedProducts[rowId];
@@ -269,6 +239,27 @@ export class TableComponent extends BasicPrintDataComponent implements OnChanges
     this.dt.saveRowEdit(rowData, htmlTableRowElement ?? null);
     this.rowEditSave.emit({ oldData, newData: rowData, ri, data: this.data });
     this.dataChange.emit(this.data);
+  }
+
+  // 處理失去焦點時的驗證 (alwaysEdit 模式專用)
+  onFieldBlur(rowData: any, field: string, value: any) {
+    if (!this.alwaysEdit && !this.alwaysBlurValidate) return; // 只在 alwaysEdit 和 alwaysBlurValidate 模式下執行
+
+    const column = this.columns.find(col => col.field === field);
+    if (column?.validate) {
+      const hasValidationError = column.validate.some(validateFn => {
+        const { isValid, errorMessage } = validateFn(value, rowData, this.data, field, column.header);
+        if (!isValid) {
+          const [message, title] = errorMessage;
+          this.messageService.errorBubble(message, title);
+        }
+        return !isValid;
+      });
+
+      if (!hasValidationError) {
+        console.log(`欄位 ${column.header} 驗證通過`);
+      }
+    }
   }
   // 行編輯取消
   onRowEditCancel(rowData: any, ri: number) {
@@ -304,33 +295,8 @@ export class TableComponent extends BasicPrintDataComponent implements OnChanges
   filterOptions(event: AutoCompleteCompleteEvent) {
     this.filterChange.emit({ rowData: event.originalEvent, value: event.query });
   }
-  // (欄位是Input、Dropdown使用): 處理值變化事件
+  // 處理值變化事件
   onFieldChange(rowData: any, field: string, value: any, index?: number) { this.fieldChange.emit({ rowData, field, value, index }); }
-
-  // 處理失去焦點時的驗證 (alwaysEdit 模式專用)
-  onFieldBlur(rowData: any, field: string, value: any) {
-    if (!this.alwaysEdit && !this.alwaysBlurValidate) return; // 只在 alwaysEdit 和 alwaysBlurValidate 模式下執行
-
-    const column = this.columns.find(col => col.field === field);
-    if (column?.validate) {
-      const hasValidationError = column.validate.some(validateFn => {
-        const { isValid, errorMessage } = validateFn(value, rowData, this.data, field, column.header);
-        if (!isValid) {
-          const [message, title] = errorMessage;
-          this.messageService.errorBubble(message, title);
-        }
-        return !isValid;
-      });
-
-      if (!hasValidationError) {
-        console.log(`欄位 ${column.header} 驗證通過`);
-      }
-    }
-  }
-  // 事件類型 (有需求可使用)
-  editRow(rowData: any) { this.edit.emit(rowData); }                // Edit 按鈕 事件
-  detailRow(rowData: any) { this.detail.emit(rowData); }            // Detail 或 雙擊行 事件
-  onSelectButton(rowData: any) { this.selectButton.emit(rowData); } // 欄位Button 選擇 事件
   // Insert 按鈕
   insertRow() {
     if (this.insertRowData) {
@@ -361,33 +327,23 @@ export class TableComponent extends BasicPrintDataComponent implements OnChanges
     }
     this.selectedItems = [];
   }
+  editRow(rowData: any) { this.edit.emit(rowData); }                // Edit 按鈕 事件
+  detailRow(rowData: any) { this.detail.emit(rowData); }            // Detail 或 雙擊行 事件
+  onSelectButton(rowData: any) { this.selectButton.emit(rowData); } // 欄位Button 選擇 事件
   sanitizeHtml(html: string): SafeHtml {
     return this.sanitizer.bypassSecurityTrustHtml(html);
   }
-
+  // 計算分組欄位跨度
   getColumnSpan(columns: Column[], groupField: string): number {
-    return columns.filter(col => col.groupField === groupField && col.visible !== false && col.hidden !== true).length;
+    return this.tableUtilityService.getColumnSpan(columns, groupField);
   }
-
+  // 取得沒有分組的欄位
   getUngroupedColumns(columns: Column[], columnGroup: ColumnGroup[]): Column[] {
-    const groupFields = columnGroup.map(g => g.field);
-    return columns.filter(
-      col =>
-        (!col.groupField || !groupFields.includes(col.groupField)) &&
-        col.visible !== false &&
-        col.hidden !== true
-    );
+    return this.tableUtilityService.getUngroupedColumns(columns, columnGroup);
   }
+  // 判斷是否應該渲染分組標題
   shouldRenderGroupHeader(col: Column, index: number, columns: Column[]): boolean {
-    if (!col.groupField || col.hidden === true || col.visible === false) return false;
-    const currentGroup = col.groupField;
-    for (let i = 0; i < index; i++) {
-      const prev = columns[i];
-      if (prev.groupField === currentGroup && prev.visible !== false && prev.hidden !== true) {
-        return false;
-      }
-    }
-    return true;
+    return this.tableUtilityService.shouldRenderGroupHeader(col, index, columns);
   }
   // 分組標題
   getGroupHeader(groupField: string): string {
@@ -400,14 +356,10 @@ export class TableComponent extends BasicPrintDataComponent implements OnChanges
   }
   // 分組總計
   getGroupSubtotal(groupValue: any, field: string): number {
-    if (!this.groupedDataCache.has(groupValue)) {
-      const rows = this.data.filter(item => item[this.groupRowsBy] === groupValue);
-      this.groupedDataCache.set(groupValue, rows);
-    }
-    return this.groupedDataCache.get(groupValue).reduce((sum: number, row: any) => sum + (row[field] || 0), 0);
+    return this.tableUtilityService.getGroupSubtotal(this.data, this.groupRowsBy, groupValue, field);
   }
   // 全表總計
   getTotal(field: string): number {
-    return this.data.reduce((sum, row) => sum + (row[field] || 0), 0);
+    return this.tableUtilityService.getTotal(this.data, field);
   }
 }

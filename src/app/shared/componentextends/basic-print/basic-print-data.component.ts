@@ -3,7 +3,7 @@ import { CurrentPageService } from './../../../layout/app.menulist/current-page.
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { ChangeDetectorRef, inject, Injectable } from '@angular/core';
 import { QueryStateService } from '../../service/query-state.service';
-import { TableService } from '../../componentkit/table/table.service';
+import { TableService } from '../../componentkit/table/report.service';
 import { HttpResponse } from '@angular/common/http';
 import { Column } from '../../componentkit/table/table.model';
 import { AuthService } from '../../../service/system/auth.service';

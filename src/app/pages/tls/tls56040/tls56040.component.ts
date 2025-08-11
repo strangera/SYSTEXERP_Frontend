@@ -5,7 +5,6 @@ import { ButtonComponent } from '../../../shared/componentkit/button/button.comp
 import { AccordionModule } from 'primeng/accordion';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
 import { TranslateModule } from '@ngx-translate/core';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { Column, createPaginationConfig, formatDateTime } from '@shared/componentkit/table/table.model';
@@ -16,6 +15,7 @@ import { DropdownTableComponent, FieldsConfig } from '@shared/componentkit/dropd
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { IQueryPOS2004DetailRequest, IQueryPOS2004DetailResponse, Tls52010Service } from '@service/api/tls/tls52010.service';
 import { DropDownListService } from '@service/utility/dropDownList.service';
+import { CalendarRangeQuickComponent } from "@shared/componentkit/calendar-range-quick/calendar-range-quick.component";
 
 @Component({
   selector: 'app-tls56040',
@@ -29,12 +29,12 @@ import { DropDownListService } from '@service/utility/dropDownList.service';
     ReactiveFormsModule,
     InputTextComponent,
     DropdownComponent,
-    CalendarRangeComponent,
     TranslateModule,
     TableComponent,
     CommonModule,
     MultiSelectComponent,
-    DropdownTableComponent
+    DropdownTableComponent,
+    CalendarRangeQuickComponent
   ],
 })
 export class TLS56040Component extends BasicQueryPageComponent<any> implements OnInit {
