@@ -18,6 +18,9 @@ import { CalendarComponent } from '@shared/componentkit/calendar/calendar.compon
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { TableComponent } from '@shared/componentkit/table/table.component';
 
+const yesterday = new Date();
+yesterday.setDate(yesterday.getDate() - 1);
+
 @Component({
   selector: 'app-tls2a010',
   templateUrl: './tls2a010.component.html',
@@ -41,7 +44,7 @@ import { TableComponent } from '@shared/componentkit/table/table.component';
 export class TLS2A010Component extends BasicQueryPageComponent<any> implements OnInit {
 
   queryForm = this.formBuilder.group({
-    TXN_Date: [null, Validators.required],
+    TXN_Date: [yesterday, Validators.required],
     tlt_floor: [''],
     ECR_No_Start: [null, Validators.required],
     ECR_No_End: [null, Validators.required],

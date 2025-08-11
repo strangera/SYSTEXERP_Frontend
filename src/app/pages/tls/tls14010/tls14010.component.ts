@@ -30,6 +30,9 @@ export interface TLTContract {
   tlt_openflag: string;        // 營運狀況 (代碼)
 }
 
+const yesterday = new Date();
+yesterday.setDate(yesterday.getDate() - 1);
+
 @Component({
   selector: 'app-tls14010',
   templateUrl: './tls14010.component.html',
@@ -38,6 +41,7 @@ export interface TLTContract {
   imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, MultiSelectComponent, InputTextComponent, DropdownComponent, CalendarRangeQuickComponent, ButtonComponent, TableComponent, TranslateModule]
 })
 
+// 合約狀態清單
 export class TLS14010Component extends BasicQueryPageComponent<TLTContract>
   implements OnInit {
   // 查詢
@@ -55,8 +59,8 @@ export class TLS14010Component extends BasicQueryPageComponent<TLTContract>
     contract_subno_start: ['', [Validators.maxLength(100)]], // 版本編號_start
     contract_subno_end: ['', [Validators.maxLength(100)]], // 版本編號_end
     apply_statusList: [[], [Validators.maxLength(100)]], // 合約狀態 1=未審核 2=已審核 fix
-    tlt_bdate: ['', [Validators.maxLength(100)]], // 營運起始日
-    tlt_edate: ['', [Validators.maxLength(100)]], // 營運終止日
+    tlt_bdate: [yesterday], // 營運起始日
+    tlt_edate: [yesterday], // 營運終止日
 
     //分頁查詢
     ...createPaginationConfig([{ field: 'tlt_no', order: 0 }]), // 分頁和排序參數

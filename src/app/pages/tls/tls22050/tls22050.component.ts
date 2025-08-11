@@ -14,6 +14,7 @@ import { Column, ColumnGroup } from 'src/app/shared/componentkit/table/table.mod
 import { ButtonModule } from 'primeng/button';
 import { NgClass } from '@angular/common';
 import { MultiSelectComponent } from "@shared/componentkit/multi-select/multi-select.component";
+import { yesterday } from '@shared/models/system/query-form.model';
 
 @Component({
   selector: 'app-tls22050',
@@ -40,8 +41,8 @@ export class TLS22050Component extends BasicQueryPageComponent<any> implements O
     POS_TypeList: [null],
     VOU_CheckList: [null],
     salesDate: [new Date()],
-    TXN_DateStart: [new Date()],
-    TXN_DateEnd: [new Date()],
+    TXN_DateStart: [yesterday],
+    TXN_DateEnd: [yesterday],
   });
 
   data: any[] = [];
