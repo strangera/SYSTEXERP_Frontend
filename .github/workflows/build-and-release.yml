@@ -1,8 +1,9 @@
-name: Build and Release Angular App
+name: Build and Release Angular App (Dual Environment)
 on:
   push:
     branches: [ prod ]
   workflow_dispatch:
+
 jobs:
   build:
     runs-on: ubuntu-latest  # Angular 專案用 ubuntu 比較常見
@@ -33,11 +34,39 @@ jobs:
         echo "=== Install completed ==="
       continue-on-error: false
     
-    - name: Build project
-      run: ng build --configuration production --base-href /TSRDWEBDEV/
+    # 建置生產環境
+    - name: Build Production project
+      run: npx ng build --configuration production --base-href /TSRDWEBDEV/
       continue-on-error: false
       env:
         NODE_OPTIONS: "--max_old_space_size=4096"  # 增加記憶體限制，避免建置時記憶體不足
+    
+    - name: Rename Production build
+      run: |
+        if [ -d "dist" ]; then
+          mv dist dist-production
+          echo "Production build renamed"
+        else
+          echo "Production build failed - no dist folder!"
+          exit 1
+        fi
+    
+    # 建置測試環境  
+    - name: Build Staging project
+      run: npx ng build --configuration staging --base-href /tsrdwebdev/
+      continue-on-error: false
+      env:
+        NODE_OPTIONS: "--max_old_space_size=4096"
+    
+    - name: Rename Staging build
+      run: |
+        if [ -d "dist" ]; then
+          mv dist dist-staging
+          echo "Staging build renamed"
+        else
+          echo "Staging build failed - no dist folder!"
+          exit 1
+        fi
     
     # 可選：執行測試
     # - name: Run tests
@@ -49,33 +78,58 @@ jobs:
     
     - name: List build output
       run: |
-        echo "=== Build Output ==="
-        if [ -d "dist" ]; then
-          find dist -type f -name "*.js" -o -name "*.css" -o -name "*.html" | head -20
-          echo "Total files in dist: $(find dist -type f | wc -l)"
-          echo "Dist folder size: $(du -sh dist)"
+        echo "=== Production Build Output ==="
+        if [ -d "dist-production" ]; then
+          find dist-production -type f -name "*.js" -o -name "*.css" -o -name "*.html" | head -20
+          echo "Total files in dist-production: $(find dist-production -type f | wc -l)"
+          echo "Production folder size: $(du -sh dist-production)"
         else
-          echo "Dist folder not found!"
-          ls -la
+          echo "Production dist folder not found!"
+        fi
+        
+        echo "=== Staging Build Output ==="
+        if [ -d "dist-staging" ]; then
+          find dist-staging -type f -name "*.js" -o -name "*.css" -o -name "*.html" | head -20
+          echo "Total files in dist-staging: $(find dist-staging -type f | wc -l)"
+          echo "Staging folder size: $(du -sh dist-staging)"
+        else
+          echo "Staging dist folder not found!"
         fi
     
     - name: Remove source maps (optional)
       run: |
-        if [ -d "dist" ]; then
-          find dist -name "*.map" -delete
-          echo "Source maps removed"
+        if [ -d "dist-production" ]; then
+          find dist-production -name "*.map" -delete
+          echo "Production source maps removed"
+        fi
+        if [ -d "dist-staging" ]; then
+          find dist-staging -name "*.map" -delete
+          echo "Staging source maps removed"
         fi
     
-    - name: Create zip package
+    - name: Create Production zip package
       run: |
-        if [ -d "dist" ]; then
-          cd dist
-          zip -r ../Angular_App.zip . -x "*.map"
+        if [ -d "dist-production" ]; then
+          cd dist-production
+          zip -r ../Angular_App_Production.zip . -x "*.map"
           cd ..
-          echo "Package created successfully"
-          echo "Package size: $(du -sh Angular_App.zip)"
+          echo "Production package created successfully"
+          echo "Production package size: $(du -sh Angular_App_Production.zip)"
         else
-          echo "Dist directory not found!"
+          echo "Production directory not found!"
+          exit 1
+        fi
+    
+    - name: Create Staging zip package
+      run: |
+        if [ -d "dist-staging" ]; then
+          cd dist-staging
+          zip -r ../Angular_App_Staging.zip . -x "*.map"
+          cd ..
+          echo "Staging package created successfully"
+          echo "Staging package size: $(du -sh Angular_App_Staging.zip)"
+        else
+          echo "Staging directory not found!"
           exit 1
         fi
     
@@ -87,23 +141,18 @@ jobs:
       id: package_version
       run: echo "version=$(node -p "require('./package.json').version")" >> $GITHUB_OUTPUT
     
-    - name: Create Release
-      uses: softprops/action-gh-release@v2
+    # 上傳 Production 版本到 Artifacts
+    - name: Upload Production Build
+      uses: actions/upload-artifact@v4
       with:
-        tag_name: "v${{ steps.package_version.outputs.version }}-${{ steps.timestamp.outputs.timestamp }}"
-        name: "Angular App v${{ steps.package_version.outputs.version }} - ${{ steps.timestamp.outputs.timestamp }}"
-        body: |
-          🚀 Angular 應用程式自動建置版本
-          
-          **版本**: v${{ steps.package_version.outputs.version }}
-          **建置時間**: ${{ steps.timestamp.outputs.timestamp }}
-          **提交**: ${{ github.sha }}
-          **分支**: ${{ github.ref_name }}
-          **建置者**: ${{ github.actor }}
-          **Base Href**: /TSRDWEBDEV/
-          
-          📦 這個版本包含了完整的建置檔案，已配置 production 環境和正確的 base-href，可以直接部署到靜態網站伺服器。
-        files: ./Angular_App.zip
-        make_latest: true
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        name: Angular_App_Production_v${{ steps.package_version.outputs.version }}_${{ steps.timestamp.outputs.timestamp }}
+        path: Angular_App_Production.zip
+        retention-days: 30
+    
+    # 上傳 Staging 版本到 Artifacts  
+    - name: Upload Staging Build
+      uses: actions/upload-artifact@v4
+      with:
+        name: Angular_App_Staging_v${{ steps.package_version.outputs.version }}_${{ steps.timestamp.outputs.timestamp }}
+        path: Angular_App_Staging.zip
+        retention-days: 30
