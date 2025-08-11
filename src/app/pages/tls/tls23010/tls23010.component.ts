@@ -78,10 +78,24 @@ export class TLS23010Component extends BasicQueryPageComponent<any> {
   progressValue = 0;
   showPageSizeDialog = false;
   customPageSize = 1000;
+  
+   // 「昨天 00:00」與「今天 23:59:59」常用預設
+  readonly yesterday: Date = (() => {
+    const d = new Date();
+    d.setHours(0, 0, 0, 0);
+    d.setDate(d.getDate() - 1);
+    return d;
+  })();
+
+  readonly today: Date = (() => {
+    const d = new Date();
+    d.setHours(23, 59, 59, 999);
+    return d;
+  })();
 
   queryForm = this.formBuilder.group({
-    TXN_DateStart: [new Date('2024-01-01'), [Validators.required]],
-    TXN_DateEnd: [new Date('2024-01-31'), [Validators.required]],
+    TXN_DateStart: [this.yesterday, [Validators.required]],
+    TXN_DateEnd: [this.yesterday, [Validators.required]],
     ECR_No: [[]], // ✅ 收銀機號 → 陣列
     TXN_No_Start: [null], // 交易序號(起)
     TXN_No_End: [null], // 交易序號(迄)
@@ -143,23 +157,6 @@ export class TLS23010Component extends BasicQueryPageComponent<any> {
           : `${date.getFullYear()}/${(date.getMonth() + 1).toString().padStart(2, '0')}/${date.getDate().toString().padStart(2, '0')}`;
       },
     },
-    // {
-    //   field: 'TXN_Time',
-    //   header: '銷售時間',
-    //   visible: true,
-    //   format: (val: string) => {
-    //     const date = new Date(val);
-    //     if (isNaN(date.getTime())) return val;
-
-    //     const yyyy = date.getFullYear();
-    //     const MM = (date.getMonth() + 1).toString().padStart(2, '0');
-    //     const dd = date.getDate().toString().padStart(2, '0');
-    //     const HH = date.getHours().toString().padStart(2, '0');
-    //     const mm = date.getMinutes().toString().padStart(2, '0');
-
-    //     return `${yyyy}/${MM}/${dd} ${HH}:${mm}`;
-    //   }
-    // },
     { field: 'ECR_No', header: '機號', visible: true },
     { field: 'TXN_No', header: '交易序號', visible: true, style: 'text-right' },
     { field: 'tlt_no', header: '專櫃編號', visible: true },
@@ -168,9 +165,7 @@ export class TLS23010Component extends BasicQueryPageComponent<any> {
       header: '櫃位名稱',
       visible: true,
       style: 'text-left',
-    }, // 非 POS5006 欄位，UI 顯示用
-    // { field: 'SYS_StoreNo', header: '店號', visible: false },
-
+    }, 
     { field: 'TXN_Uniform', header: '統一編號', visible: true },
     { field: 'TXN_GUIBegNoFirstNo', header: '字軌', visible: true }, // 假設為字軌顯示
     { field: 'TXN_GUIBegNo', header: '起始發票號碼', visible: true },
