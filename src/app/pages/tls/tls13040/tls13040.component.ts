@@ -53,7 +53,7 @@ export class TLS13040Component extends BasicQueryPageComponent<any> {
   data: any[] = [];
   totalRecords = 0;
   selectedItems: any[] = [];
-  
+
   queryForm = this.formBuilder.group({
     tlt_no: [''],
     tlt_name: [''],
@@ -76,9 +76,6 @@ export class TLS13040Component extends BasicQueryPageComponent<any> {
 
     ...createPaginationConfig([{ field: 'tlt_no', order: 1 }])
   });
-
-
-
   floorOptions: any[] = [];
   regionOptions: any[] = [];
   businessTypeCodeOptions: any[] = [];
@@ -87,11 +84,9 @@ export class TLS13040Component extends BasicQueryPageComponent<any> {
   DeductionbigCategoryOptions: any[] = [];
   discountOptions: any[] = [];
   organizationOptions: any[] = [];
-  
   bus_typeOptions: any[] = [];
   BUILDING_NO_Options: any[] = [];
   OrganizationCodeOptions: any[] = [];
-
 
   columns: any[] = [
     { field: 'tlt_no', header: '專櫃代碼', visible: true },
@@ -104,21 +99,11 @@ export class TLS13040Component extends BasicQueryPageComponent<any> {
     },
     { field: 'floor_desc', header: '樓層', visible: true },
     { field: 'area_no', header: '區域', visible: true },
-     { field: 'bus_type', header: '大分類編號', visible: true },
+    { field: 'bus_type', header: '大分類編號', visible: true },
     { field: 'bus_type_name', header: '大分類名稱', visible: true },
     { field: 'bus_class_name', header: '商品類別', visible: true },
-    {
-      field: 'tlt_bdate',
-      header: '合約起日',
-      visible: true,
-      
-    },
-    {
-      field: 'tlt_edate',
-      header: '合約迄日',
-      visible: true,
-      
-    },
+    { field: 'tlt_bdate',header: '合約起日',visible: true,},
+    { field: 'tlt_edate',header: '合約迄日',visible: true,},
     { field: 'tlt_id_desc', header: '合約類型', visible: true },
     { field: 'cag_taxtype', header: '課稅別', visible: true },
     { field: 'cag_barcode', header: '折數', visible: true },
@@ -143,11 +128,11 @@ export class TLS13040Component extends BasicQueryPageComponent<any> {
 
     { field: 'org_name', header: '組織名稱', visible: true },
   ];
+
   formatYYYYMMDD(raw: string): string {
     if (!raw) return '';
     const date = new Date(raw);
     if (isNaN(date.getTime())) return raw; // 傳入不是有效日期就直接回傳原值
-
     const yyyy = date.getFullYear();
     const mm = String(date.getMonth() + 1).padStart(2, '0');
     const dd = String(date.getDate()).padStart(2, '0');
@@ -166,10 +151,6 @@ export class TLS13040Component extends BasicQueryPageComponent<any> {
     private discountService: DiscountService,
     private bigCategoryCodeService: BigCategoryCodeService,
     private tls11010Service: Tls11010Service,
-
-
-
-
   ) {
     super();
   }
