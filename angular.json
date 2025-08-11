@@ -85,6 +85,9 @@
             },
             "development": {
               "buildTarget": "TSRDERP_Frontend:build:development"
+            },
+            "staging": {
+              "buildTarget": "TSRDERP_Frontend:build:staging"
             }
           },
           "defaultConfiguration": "development",
