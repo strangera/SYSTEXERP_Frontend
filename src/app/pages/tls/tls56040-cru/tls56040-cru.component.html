@@ -14,7 +14,7 @@
         </div>
         <!-- 品牌編號 -->
         <div class="col-12 md:col-6 lg:col-4">
-          <app-dropdown label="品牌編號" controlName="LOGO_No" [options]="brandCodeOptions" optionLabel="label"
+          <app-dropdown label="品牌編號" controlName="LOGO_No" [options]="brandOptions" optionLabel="label"
             optionValue="value" [control]="dataForm.controls.LOGO_No" [submitted]="submitted"></app-dropdown>
         </div>
         <!-- 金額 -->
@@ -39,18 +39,18 @@
         </div>
         <!-- 申請日期 -->
         <div class="col-12 md:col-6 lg:col-4">
-          <app-calendar calendarType="dateOne" label="申請日期" [control]="dataForm.controls.applicationDate"
+          <app-calendar calendarType="dateOne" label="申請日期" [control]="dataForm.controls.CRT_Date"
             [submitted]="submitted"></app-calendar>
         </div>
         <!-- 申請人編號 (包含中文名稱) -->
         <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text label="申請人編號" controlName="applicantCode" [control]="dataForm.controls.applicantCode"
-            [submitted]="submitted"></app-input-text>
+          <app-dropdown label="申請人編號/姓名" controlName="applicantCode" [control]="dataForm.controls.CRT_USR_No"
+            [submitted]="submitted" [options]="userOptions" optionLabel="label" optionValue="value"></app-dropdown>
         </div>
         <!-- 倉別調撥單說明 -->
         <div class="col-12 md:col-6 lg:col-4">
-          <app-editor-text label="倉別調撥單說明" controlName="MVM_Remark" [control]="dataForm.controls.MVM_Remark"
-            [style]="{ height: '100px' }" [submitted]="submitted"></app-editor-text>
+          <app-input-textarea label="倉別調撥單說明" controlName="MVM_Remark" [control]="dataForm.controls.MVM_Remark"
+            [style]="{ height: '100px' }" [submitted]="submitted"></app-input-textarea>
         </div>
       </div>
 
