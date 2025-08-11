@@ -56,13 +56,13 @@ export class FIN13010CRUComponent
   ];
 
   dataForm = this.formBuilder.nonNullable.group({
-    GUI_Track: [null as string | null], // 字軌
-    PUR_GUINo: [''], // 發票號碼
+    GUI_Track: [null as string | null, Validators.required], // 字軌 (必填)
+    PUR_GUINo: ['', Validators.required],                     // 發票號碼 (必填)
     PUR_GUINo_Correspond: [''], // 發票號碼
     PUR_GUIDate: ['', Validators.required], // 領用日期
     PUR_VoucherType: [''], // 發票格式
     PUR_RepYYYYMM: [''], // 發票年月
-    Credit_Type: [''], // 區別（折讓/退出）
+    Credit_Type: ['', Validators.required], // 區別（折讓/退出）
     PUR_TaxType: ['', Validators.required], // 稅別
     PUR_Net: [undefined as any],
     PUR_Tax: [undefined as any],

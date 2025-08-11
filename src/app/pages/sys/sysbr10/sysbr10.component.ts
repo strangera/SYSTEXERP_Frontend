@@ -110,7 +110,7 @@ export class SYSBR10Component extends BasicQueryPageComponent<any> {
   }
 
   ngOnInit(): void {
-    this.initializePage('SYSBR10', '/sys/sysbr10cru', this.queryForm);
+    this.initializePage('SYSBR10', '/sys/sysbr10cru', this.queryForm,(form) => this.onSubmit(form));
 
     this.announcementCategoryService
       .Pub_TypeOptions()

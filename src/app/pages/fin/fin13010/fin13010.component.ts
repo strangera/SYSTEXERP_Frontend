@@ -128,17 +128,6 @@ export class FIN13010Component extends BasicQueryPageComponent<any> {
 
 
       },
-      //       next: (res) => {
-      //   if (res.Status === '0000') {
-      //     this.data = res.Data || [];
-      //     this.totalRecords = res.TotalCount || this.data.length;
-      //     this.queryStateService.setQueryState(this.ProgNo, payload);
-      //     this.messageService.successBubble('查詢成功');
-      //   } else {
-      //     this.messageService.errorBubble('查詢失敗');
-      //     this.loading = false;
-      //   }
-      // },
       error: () => {
         this.messageService.errorBubble('查詢錯誤');
         this.loading = false;
