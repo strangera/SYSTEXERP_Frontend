@@ -44,6 +44,16 @@ import { TranslateModule } from '@ngx-translate/core';
     ],
 })
 export class TLS13040Component extends BasicQueryPageComponent<any> {
+  readonly yesterday: Date = (() => {
+    const d = new Date();
+    d.setHours(0, 0, 0, 0);
+    d.setDate(d.getDate() - 1);
+    return d;
+  })();
+  data: any[] = [];
+  totalRecords = 0;
+  selectedItems: any[] = [];
+  
   queryForm = this.formBuilder.group({
     tlt_no: [''],
     tlt_name: [''],
@@ -51,8 +61,8 @@ export class TLS13040Component extends BasicQueryPageComponent<any> {
     area_noList: [[] as string[]],
     bus_typeList: [[] as string[]],
     tlt_openflagList: [[] as string[]],
-    tlt_bdate_start: [new Date('2024-01-01')],
-    tlt_bdate_end: [new Date('2024-01-31')],
+    tlt_bdate_start: [this.yesterday],
+    tlt_bdate_end: [this.yesterday],
     tlt_edate_start: [null],
     tlt_edate_end: [null],
     tlt_term_typeList: [[] as string[]],
@@ -68,8 +78,6 @@ export class TLS13040Component extends BasicQueryPageComponent<any> {
   });
 
 
-  data: any[] = [];
-  totalRecords = 0;
 
   floorOptions: any[] = [];
   regionOptions: any[] = [];
@@ -79,7 +87,7 @@ export class TLS13040Component extends BasicQueryPageComponent<any> {
   DeductionbigCategoryOptions: any[] = [];
   discountOptions: any[] = [];
   organizationOptions: any[] = [];
-  selectedItems: any[] = [];
+  
   bus_typeOptions: any[] = [];
   BUILDING_NO_Options: any[] = [];
   OrganizationCodeOptions: any[] = [];
