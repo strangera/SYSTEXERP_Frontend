@@ -12,7 +12,7 @@
       <form
         [formGroup]="queryForm"
         id="queryForm"
-        (ngSubmit)="onSubmit(queryForm)"
+        
       >
         <div class="grid p-fluid">
           <app-calendar-range-quick
@@ -245,17 +245,7 @@
           </div>
         </div>
       </form>
-      <div class="col-12 md:col-6 lg:col-4">
-        <label for="pageSize">限制筆數</label>
-        <input
-          id="pageSize"
-          type="number"
-          pInputText
-          [(ngModel)]="customPageSize"
-          min="1"
-          style="width: 100%"
-        />
-      </div>
+
 
       <div
         class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
@@ -271,30 +261,7 @@
     </p-accordionTab>
   </p-accordion>
 </div>
-<!-- <div class="card">
-  <app-table
-    tableKey="TLS23010"
-    [data]="data"
-    [columns]="columns"
-    [selectedItems]="selectedItems"
-    (selectionChange)="selectedItems = $event"
-    [showCheckBox]="true"
-    dataKey="TXN_No"
-    [multiSortMeta]="[{ field: 'TXN_No', order: 1 }]"
-    [totalRecords]="totalRecords"
-    [lazy]="true"
-    [loading]="loading"
-    [showCheckBox]="false"
-    (edit)="onEdit($event)"
-    (detail)="onDetail($event)"
-    [showManage]="false"
-    [showDelete]="false"
-    
-    [showSubtotal]="false"
-    [subtotalFields]="['TXN_TotPayAmt', 'TXN_TotDisc']"
-    (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"
-  ></app-table>
-</div> -->
+
 <p-dialog
   header="查詢模式"
   [(visible)]="showPageSizeDialog"
