@@ -76,6 +76,9 @@ export interface Potential_Customer{
   UPD_USR_Name?: string; // 變更人員姓名
 }
 
+const yesterday = new Date();
+yesterday.setDate(yesterday.getDate() - 1);
+
 
 // 2.1.2.7 專櫃訪談紀錄追蹤表
 @Component({
@@ -89,8 +92,8 @@ export class TLS12070Component extends BasicQueryPageComponent<Customer_intervie
   // 查詢
   queryForm = this.formBuilder.group({
     // Customer_interview表單
-    contact_Date_Start: [null],  // 訪談日期_起始日
-    contact_Date_End: [null],  // 訪談日期_終止日
+    contact_Date_Start: [yesterday],  // 訪談日期_起始日
+    contact_Date_End: [yesterday],  // 訪談日期_終止日
     contact_USR_No: [[], [Validators.maxLength(20)]], // contact_USR_No (drop，應該就是接洽人員)
 
     //分頁查詢
@@ -104,10 +107,9 @@ export class TLS12070Component extends BasicQueryPageComponent<Customer_intervie
 
   interview_data: Customer_interview[] = []; //意願報表
   intervew_columns: Column[] = [
-    // { field: 'id', header: 'ID', visible: true },
     { field: 'ven_uniform', header: '廠商統一編號', visible: true }, // POS2013
     { field: 'VEN_Name', header: '廠商名稱', visible: true }, // POS2013.name
-    { field: 'VEN_EngName', header: '廠商英文名稱', visible: true },  // pos2013.EngName
+    // { field: 'VEN_EngName', header: '廠商英文名稱', visible: true },  // pos2013.EngName
     { field: 'tlt_name', header: '品牌(專櫃名稱)', visible: true },
     { field: 'bus_type', header: '業種-大分類代碼', visible: true }, // tltbustype
     { field: 'VEN_ContactPerson', header: '廠商聯絡姓名', visible: true },
@@ -133,8 +135,6 @@ export class TLS12070Component extends BasicQueryPageComponent<Customer_intervie
     { field: '???', header: '潛在客戶數', visible: true },
     { field: '???', header: '拜訪記錄次數', visible: true },
     //下面是明細展開(直接請後端給 太麻煩了)
-    
-
   ];
 
 
@@ -153,25 +153,25 @@ export class TLS12070Component extends BasicQueryPageComponent<Customer_intervie
   onSubmit(frm: FormGroup) {
     console.log('查詢條件', frm.value);
     this.handleSubmit(frm, () => {
-      // this.tls12010Service.queryTLS12010(frm.value).subscribe({
-      //   next: (response) => {
-      //     if (response.Status === '0000') {
-      //       this.data = response.Data || [];
-      //       console.log('Result', this.data);
-      //       this.totalRecords = response.TotalCount || response.Data.length;
-      //       this.queryStateService.setQueryState(this.ProgNo, frm.value);
-      //     } else {
-      //       console.error('API error:', response.Status, response.Message);
-      //     }
-      //     this.loading = false;
-      //     this.messageService.unblockUi();
-      //   },
-      //   error: (err: string) => {
-      //     console.error('API error:', err);
-      //     this.loading = false;
-      //     this.messageService.unblockUi();
-      //   },
-      // });
+      this.tls12070Service.queryTLS12070(frm.value).subscribe({
+        next: (response) => {
+          if (response.Status === '0000') {
+            this.interview_data = response.Data || [];
+            console.log('Result', response.Data);
+            this.totalRecords = response.TotalCount || response.Data.length;
+            this.queryStateService.setQueryState(this.ProgNo, frm.value);
+          } else {
+            console.error('API error:', response.Status, response.Message);
+          }
+          this.loading = false;
+          this.messageService.unblockUi();
+        },
+        error: (err: string) => {
+          console.error('API error:', err);
+          this.loading = false;
+          this.messageService.unblockUi();
+        },
+      });
     });
   }
 
