@@ -114,13 +114,13 @@ export class TLS13030Component extends BasicQueryPageComponent<any> {
     },
     {
       field: 'tlt_bdate',
-      header: '合約起日',
+      header: '合約起始日',
       visible: true,
      
     },
     {
       field: 'tlt_edate',
-      header: '合約迄日',
+      header: '合約截止日',
       visible: true,
      
     },

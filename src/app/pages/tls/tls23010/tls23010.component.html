@@ -245,6 +245,17 @@
           </div>
         </div>
       </form>
+            <div class="col-12 md:col-6 lg:col-4">
+        <label for="pageSize">限制筆數</label>
+        <input
+          id="pageSize"
+          type="number"
+          pInputText
+          [(ngModel)]="customPageSize"
+          min="1"
+          style="width: 100%"
+        />
+      </div>
 
 
       <div

@@ -29,7 +29,7 @@ export class TLS23010CRUComponent extends BasicCruPageComponent<any> {
   printedAt: string = '';
   dateStart: string = '';
   dateEnd: string = '';
-
+  pageSize: number = 1000;
   queryFormValue: any;
   dataForm = this.formBuilder.nonNullable.group({});
   pdfSummary: string[] = [];
@@ -54,7 +54,7 @@ export class TLS23010CRUComponent extends BasicCruPageComponent<any> {
       ...row,
       TXN_Key: `${row.TXN_Date}_${row.ECR_No}_${row.TXN_No}`,
     }));
-    
+    this.pageSize = state?.pageSize ?? 1000;
     this.displayMode = state?.displayMode ?? 'Detail'; //
     this.printedAt = new Date().toLocaleString('zh-TW', { hour12: false });
     this.dateStart = state.queryFormValue?.TXN_DateStart || '';

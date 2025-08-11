@@ -89,7 +89,7 @@ export class TLS13040Component extends BasicQueryPageComponent<any> {
   OrganizationCodeOptions: any[] = [];
 
   columns: any[] = [
-    { field: 'tlt_no', header: '專櫃代碼', visible: true },
+    { field: 'tlt_no', header: '專櫃編號', visible: true },
     { field: 'tlt_name', header: '櫃位名稱', visible: true },
     {
       field: 'tlt_building',
@@ -102,8 +102,8 @@ export class TLS13040Component extends BasicQueryPageComponent<any> {
     { field: 'bus_type', header: '大分類編號', visible: true },
     { field: 'bus_type_name', header: '大分類名稱', visible: true },
     { field: 'bus_class_name', header: '商品類別', visible: true },
-    { field: 'tlt_bdate',header: '合約起日',visible: true,},
-    { field: 'tlt_edate',header: '合約迄日',visible: true,},
+    { field: 'tlt_bdate',header: '合約起始日',visible: true,},
+    { field: 'tlt_edate',header: '合約截止日',visible: true,},
     { field: 'tlt_id_desc', header: '合約類型', visible: true },
     { field: 'cag_taxtype', header: '課稅別', visible: true },
     { field: 'cag_barcode', header: '折數', visible: true },

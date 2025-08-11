@@ -49,6 +49,7 @@ interface MainData {
 
 const now = new Date();
 
+
 //型態別報表
 @Component({
   selector: 'app-tls23010',
@@ -77,7 +78,7 @@ const now = new Date();
 export class TLS23010Component extends BasicQueryPageComponent<any> {
   displayMode: 'Detail' | 'Summary' = 'Detail'; // 預設顯示明細報表
   querySubscription: Subscription | null = null;
-
+  customPageSize = 1000;
   progressValue = 0;
   showPageSizeDialog = false;
   data: any[] = [];
@@ -375,7 +376,7 @@ private readonly QUERY_TIMEOUT_MS = 30_000; // 30 秒
           value: x.value,
         })) || [];
     });
-    
+    this.customPageSize = 1000; // ✅ 強制設值
   }
 
 
@@ -389,7 +390,9 @@ private readonly QUERY_TIMEOUT_MS = 30_000; // 30 秒
   }
 
   goToReportMode(): void {
-
+    if (!this.customPageSize || this.customPageSize <= 0) {
+      this.customPageSize = 1000;
+    }
     this.showPageSizeDialog = true;
   }
   fetchDetailData = async (payload: any): Promise<any[]> => {
@@ -428,7 +431,7 @@ confirmPageSizeAndNavigate(): void {
     if (rawFormValue[typedKey] === '') rawFormValue[typedKey] = null;
   }
 
-  const queryFormValue = { ...rawFormValue };
+  const queryFormValue = { ...rawFormValue,pageSize: this.customPageSize, };
 
   // 若已有查詢在跑，先取消
   this.querySubscription?.unsubscribe();
@@ -469,6 +472,7 @@ confirmPageSizeAndNavigate(): void {
               state: {
                 queryFormValue,
                 data: mainData,
+                pageSize: this.customPageSize,
                 displayMode: this.displayMode,
               },
             })

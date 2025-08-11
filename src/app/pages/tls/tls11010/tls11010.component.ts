@@ -104,8 +104,8 @@ export class TLS11010Component extends BasicQueryPageComponent<any> {
       header: '用途名稱',
       visible: true,
     },
-    { field: 'Draw_X', header: 'X 軸', visible: true },
-    { field: 'Draw_Y', header: 'Y 軸', visible: true },
+    { field: 'Draw_X', header: '平面圖X座標', visible: true },
+    { field: 'Draw_Y', header: '平面圖Y座標', visible: true },
   ];
 
   floorOptions: any[] = [];
