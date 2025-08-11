@@ -1,4 +1,4 @@
-name: Build Angular App (Simple & Direct)
+name: Build Angular App (Dual Environment)
 on:
   push:
     branches: [ prod ]
@@ -12,100 +12,120 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
     
-    - name: Setup Node.js (same as local)
+    - name: Setup Node.js
       uses: actions/setup-node@v4
       with:
         node-version: '18'
         cache: 'npm'
     
-    - name: Install dependencies exactly like local
+    - name: Install dependencies
       run: |
         npm install --legacy-peer-deps
-        npm list @angular/cli || npm install -g @angular/cli
     
-    - name: Debug - Check everything before build
+    - name: Add staging configuration to angular.json
       run: |
-        echo "=== Node & npm versions ==="
-        node --version
-        npm --version
+        echo "=== Adding staging configuration ==="
+        node -e "
+        const fs = require('fs');
+        const config = JSON.parse(fs.readFileSync('angular.json', 'utf8'));
         
-        echo "=== Angular CLI version ==="
-        npx ng version
+        // 新增 staging configuration
+        config.projects.TSRDERP_Frontend.architect.build.configurations.staging = {
+          'fileReplacements': [
+            {
+              'replace': 'src/environments/environment.ts',
+              'with': 'src/environments/environment.staging.ts'
+            }
+          ],
+          'budgets': [
+            {
+              'type': 'initial',
+              'maximumWarning': '2mb',
+              'maximumError': '5mb'
+            },
+            {
+              'type': 'anyComponentStyle',
+              'maximumWarning': '2mb',
+              'maximumError': '5mb'
+            }
+          ],
+          'outputHashing': 'all',
+          'aot': true,
+          'optimization': true
+        };
         
-        echo "=== Project structure ==="
-        ls -la
-        ls -la src/
-        
-        echo "=== Environment files ==="
-        ls -la src/environments/
-        
-        echo "=== Angular.json check ==="
-        cat angular.json | grep -A 10 -B 5 "production"
+        fs.writeFileSync('angular.json', JSON.stringify(config, null, 2));
+        console.log('✅ Staging configuration added');
+        "
     
-    - name: Build EXACTLY like your local command
+    # 建置生產環境 (無DEV後綴)
+    - name: Build Production Environment
       run: |
-        echo "=== Building exactly like local ==="
-        npx ng build --configuration production --base-href /tsrdwebdev/
-        echo "=== Build command completed ==="
+        echo "=== Building Production (無DEV後綴) ==="
+        npx ng build --configuration production --base-href /TSRDWEBDEV/
+      env:
+        NODE_OPTIONS: "--max_old_space_size=4096"
     
-    - name: Check what was actually built
+    - name: Prepare Production files
       run: |
-        echo "=== Checking all possible output locations ==="
-        find . -name "dist*" -type d 2>/dev/null || echo "No dist directories found"
-        find . -name "browser" -type d 2>/dev/null || echo "No browser directories found"
-        find . -type d -name "*tsrderp*" 2>/dev/null || echo "No tsrderp directories found"
-        
-        echo "=== Current directory contents ==="
-        ls -la
-        
-        echo "=== If dist exists, show contents ==="
-        if [ -d "dist" ]; then
-          echo "Found dist directory:"
-          find dist -type f | head -20
-        fi
-    
-    - name: Create package from whatever we found
-      run: |
-        echo "=== Creating package from any build output ==="
-        
-        # Try to find build output in various locations
         if [ -d "dist/tsrderp-frontend" ]; then
-          echo "Found dist/tsrderp-frontend"
-          cd dist/tsrderp-frontend
-          zip -r ../../Angular_App.zip .
-          cd ../..
-        elif [ -d "dist/browser" ]; then
-          echo "Found dist/browser"
-          cd dist/browser
-          zip -r ../../Angular_App.zip .
-          cd ../..
+          mv dist/tsrderp-frontend dist-production
+          echo "✅ Production files ready"
         elif [ -d "dist" ]; then
-          echo "Found dist"
-          cd dist
-          zip -r ../Angular_App.zip .
-          cd ..
-        else
-          echo "No build output found, creating empty zip"
-          mkdir temp-empty
-          cd temp-empty
-          echo "Build failed - no output generated" > BUILD_FAILED.txt
-          zip -r ../Angular_App.zip .
-          cd ..
+          mv dist dist-production
+          echo "✅ Production files ready (fallback)"
         fi
         
-        echo "Package created: $(ls -la *.zip)"
+        echo "Production files:"
+        find dist-production -type f | head -10
+        echo "Total files: $(find dist-production -type f | wc -l)"
     
-    - name: Upload build result
+    # 建置測試環境 (有DEV後綴)
+    - name: Build Staging Environment
+      run: |
+        echo "=== Building Staging (有DEV後綴) ==="
+        npx ng build --configuration staging --base-href /tsrdwebdev/
+      env:
+        NODE_OPTIONS: "--max_old_space_size=4096"
+    
+    - name: Prepare Staging files
+      run: |
+        if [ -d "dist/tsrderp-frontend" ]; then
+          mv dist/tsrderp-frontend dist-staging
+          echo "✅ Staging files ready"
+        elif [ -d "dist" ]; then
+          mv dist dist-staging
+          echo "✅ Staging files ready (fallback)"
+        fi
+        
+        echo "Staging files:"
+        find dist-staging -type f | head -10
+        echo "Total files: $(find dist-staging -type f | wc -l)"
+    
+    - name: Remove source maps
+      run: |
+        find dist-production -name "*.map" -delete 2>/dev/null || true
+        find dist-staging -name "*.map" -delete 2>/dev/null || true
+        echo "Source maps removed"
+    
+    - name: Get build info
+      id: build_info
+      run: |
+        echo "timestamp=$(date +'%Y-%m-%d-%H-%M-%S')" >> $GITHUB_OUTPUT
+        echo "version=$(node -p "require('./package.json').version")" >> $GITHUB_OUTPUT
+    
+    # 上傳 Production 資料夾（artifact 會自動 zip）
+    - name: Upload Production Build
       uses: actions/upload-artifact@v4
       with:
-        name: Angular_Build_$(date +'%Y-%m-%d_%H-%M-%S')
-        path: Angular_App.zip
+        name: Angular_App_Production_v${{ steps.build_info.outputs.version }}_${{ steps.build_info.outputs.timestamp }}
+        path: dist-production/
         retention-days: 30
     
-    - name: Show final debug info
-      if: always()
-      run: |
-        echo "=== Final debug information ==="
-        echo "Build completed (with or without success)"
-        echo "Check the uploaded artifact to see what was generated"
-        echo "If BUILD_FAILED.txt is in the zip, the build didn't work"
+    # 上傳 Staging 資料夾（artifact 會自動 zip）
+    - name: Upload Staging Build
+      uses: actions/upload-artifact@v4
+      with:
+        name: Angular_App_Staging_v${{ steps.build_info.outputs.version }}_${{ steps.build_info.outputs.timestamp }}
+        path: dist-staging/
+        retention-days: 30
