@@ -1456,14 +1456,66 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
   }
 
   // 🎯 新增：處理 selector 搜尋表單變更
+  // 🎯 把原來的方法完全替換為：
   onSelectorSearchFormChanged(formValue: any, rowData: any, column: ColumnDef): void {
-    console.log('🚨 onSelectorSearchFormChanged 被呼叫了！', formValue);
+    console.log('🚨 表格收到搜尋表單變更:', formValue);
+    console.log('🔍 表單值詳細:', JSON.stringify(formValue, null, 2));
+
     if (column.selectorConfig?.searchMethod) {
-      column.selectorConfig.searchMethod(formValue).subscribe(results => {
-        if (column.selectorConfig) {
-          column.selectorConfig.panelDataSource = results;
+      console.log('🚀 準備執行搜尋:', formValue);
+
+      column.selectorConfig.searchMethod(formValue).subscribe({
+        next: (results) => {
+          console.log('✅ 搜尋成功，結果數量:', results.length);
+
+          if (column.selectorConfig) {
+            column.selectorConfig.panelDataSource = results;
+
+            // 🎯 關鍵：從 LocationService 的特殊物件中取得分頁資訊
+            const paginationInfo = (results as any).__paginationInfo;
+
+            if (paginationInfo) {
+              // 有分頁資訊，使用後端提供的總筆數
+              column.selectorConfig.totalDataCount = paginationInfo.totalCount;
+              console.log('📊 使用後端分頁資訊:', {
+                總筆數: paginationInfo.totalCount,
+                總頁數: paginationInfo.totalPages,
+                當前頁: paginationInfo.currentPage,
+                每頁筆數: paginationInfo.pageSize
+              });
+            }
+          }
+
+          console.log('📊 面板資料已更新:', {
+            資料筆數: results.length,
+            總筆數: column.selectorConfig?.totalDataCount
+          });
+        },
+        error: (error) => {
+          console.error('❌ 搜尋失敗:', error);
+          if (column.selectorConfig) {
+            column.selectorConfig.panelDataSource = [];
+            column.selectorConfig.totalDataCount = 0;
+          }
         }
       });
+    }
+  }
+
+  // 🎯 新增：更新總筆數的方法（在 ExpandableEditTable 中加入）
+  private updateTotalCount(selectorConfig: any, results: any[], searchParams: any): void {
+    const pageSize = searchParams.pageSize || 10;
+    const pageIndex = searchParams.pageIndex || 0;
+
+    // 🎯 簡化邏輯：如果回傳的資料少於 pageSize，表示是最後一頁
+    if (results.length < pageSize) {
+      // 最後一頁：計算總筆數
+      selectorConfig.totalDataCount = pageIndex * pageSize + results.length;
+      console.log('📊 總筆數 (最後頁):', selectorConfig.totalDataCount);
+    } else {
+      // 不是最後一頁：估算總筆數（至少還有下一頁）
+      selectorConfig.totalDataCount = (pageIndex + 1) * pageSize + 1;
+      console.log('📊 總筆數 (估計):', selectorConfig.totalDataCount);
     }
   }
 
@@ -1489,10 +1541,10 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
       });
     }
 
-    // 加入分頁相關欄位
+    // 🎯 修正：統一使用大寫 SortBy
     formConfig['pageSize'] = [10];
-    formConfig['pageIndex'] = [0];
-    formConfig['sortBy'] = [''];
+    formConfig['pageIndex'] = [1];
+    formConfig['SortBy'] = [[]];  // 用大寫，預設空陣列
 
     return this.fb.group(formConfig);
   }

@@ -58,7 +58,7 @@ export class Tls29010DetailService {
     }
 
     deletePotentialCustomerDetail(selectedItems: any[], data: any[]): void {
-        if (confirm(`確定要刪除 ${selectedItems.length} 個其他商場項目嗎？`)) {
+        if (confirm(`確定要刪除 ${selectedItems.length} 個其他明細項目嗎？`)) {
             selectedItems.forEach(item => {
                 const index = data.findIndex(d => d.id === item.id);
                 if (index > -1) {

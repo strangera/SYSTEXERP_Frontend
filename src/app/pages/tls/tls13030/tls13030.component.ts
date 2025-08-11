@@ -16,7 +16,6 @@ import { InputTextComponent } from '../../../shared/componentkit/input-text/inpu
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
 import { MultiLocationFilterComponent } from '../../../shared/componentkit/multi-location-filter/multi-location-filter.component';
 import { CalendarRangeQuickComponent } from '../../../shared/componentkit/calendar-range-quick/calendar-range-quick.component';
-import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { TranslateModule } from '@ngx-translate/core';
@@ -115,13 +114,13 @@ export class TLS13030Component extends BasicQueryPageComponent<any> {
     },
     {
       field: 'tlt_bdate',
-      header: '合約起日',
+      header: '合約起始日',
       visible: true,
      
     },
     {
       field: 'tlt_edate',
-      header: '合約迄日',
+      header: '合約截止日',
       visible: true,
      
     },

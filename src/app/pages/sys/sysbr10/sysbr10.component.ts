@@ -191,7 +191,7 @@ export class SYSBR10Component extends BasicQueryPageComponent<any> {
           // 等待所有明細查詢完成
           forkJoin(detailRequests).subscribe({
             complete: () => {
-              this.messageService.successBubble('查詢成功（含明細）');
+             
               this.loading = false;
               this.messageService.unblockUi();
             },

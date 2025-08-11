@@ -17,6 +17,7 @@ import { Tls22010Service } from '../../../service/api/tls/tls22010.service';
 import { createPaginationConfig, Column } from 'src/app/shared/componentkit/table/table.model';
 import { ButtonModule } from 'primeng/button';
 import { Router } from '@angular/router';
+import { yesterday } from '@shared/models/system/query-form.model';
 
 @Component({
   templateUrl: './tls22010.component.html',
@@ -45,7 +46,7 @@ export class TLS22010Component extends BasicQueryPageComponent<any> implements O
   }
 
   queryForm = this.formBuilder.group({
-    TXN_Date: [null as Date | null, { validators: [Validators.required], updateOn: 'change' }],
+    TXN_Date: [yesterday, { validators: [Validators.required], updateOn: 'change' }],
     floor_noList: [[]],
     ECR_No: [[]],
     ShowStatus: ['1'],
@@ -105,7 +106,7 @@ export class TLS22010Component extends BasicQueryPageComponent<any> implements O
 
   ngOnInit(): void {
     this.initializePage('TLS22010', '/TLS/TLS22010cru', this.queryForm, (form) => this.onSubmit(form));
-    this.queryForm.patchValue({ TXN_Date: new Date() });
+    this.queryForm.patchValue({ TXN_Date: yesterday });
     this.floorService.getFloors().subscribe((data) => (this.floorOptions = data));
     this.machineDisplayService.getMachinedisplay().subscribe((data) => (this.machinedisplayOptions = data));
     this.ECRNoService.getECRNo().subscribe((data) => (this.ECRNoOptions = data));

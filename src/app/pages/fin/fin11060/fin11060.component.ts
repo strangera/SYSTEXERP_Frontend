@@ -54,6 +54,9 @@ export interface InvoiceType3 extends InvoiceBase {
 
 type InvoiceRecord = InvoiceType1 | InvoiceType2 | InvoiceType3; //聯合型別
 
+const yesterday = new Date();
+yesterday.setDate(yesterday.getDate() - 1);
+
 @Component({
   selector: 'app-fin11060',
   templateUrl: './fin11060.component.html',
@@ -67,8 +70,8 @@ export class FIN11060Component extends BasicQueryPageComponent<InvoiceRecord> im
   // 查詢
   queryForm = this.formBuilder.group({
     // 先建立表單，還不確定POS8011H內容
-    SalesDateStart: [null, [Validators.required]],  // 銷售日期_起始日(必填)
-    SalesDateEnd: [null, [Validators.required]],  // 銷售日期_終止日(必填)
+    SalesDateStart: [yesterday, [Validators.required]],  // 銷售日期_起始日(必填_預設昨天)
+    SalesDateEnd: [yesterday, [Validators.required]],  // 銷售日期_終止日(必填_預設昨天)
     processDateStart: [null],  // 產檔日期_起始日
     processDateEnd: [null],  // 產檔日期_終止日
     GUI_No_start: [null, [Validators.maxLength(8), Validators.minLength(8), Validators.max(99999950)]], // 發票起始號碼

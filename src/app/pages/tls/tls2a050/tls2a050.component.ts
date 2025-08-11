@@ -13,6 +13,7 @@ import { Tls2A050Service } from 'src/app/service/api/tls/tls2a050.service';
 import { ColumnGroup, createPaginationConfig } from 'src/app/shared/componentkit/table/table.model';
 import { ButtonModule } from 'primeng/button';
 import { MultiSelectComponent } from "@shared/componentkit/multi-select/multi-select.component";
+import { yesterday } from '@shared/models/system/query-form.model';
 
 
 
@@ -46,8 +47,8 @@ export class TLS2A050Component extends BasicQueryPageComponent<any> implements O
   queryForm = this.formBuilder.group({
     POS_TypeList: [[] as string[]],
     salesDate: [new Date()],
-    TXN_DateStart: [new Date()],
-    TXN_DateEnd: [new Date()],
+    TXN_DateStart: [yesterday],
+    TXN_DateEnd: [yesterday],
     ...createPaginationConfig([{ field: 'ECR_No', order: 1 }]),
   });
 
