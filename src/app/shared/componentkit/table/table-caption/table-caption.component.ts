@@ -100,7 +100,6 @@ export class TableCaptionComponent extends BasicPrintDataComponent implements On
           this.columnsEvent.emit(this.columns);
         }
         this.isColumnsInitialized = true;
-
       }, 300);
     }
   }

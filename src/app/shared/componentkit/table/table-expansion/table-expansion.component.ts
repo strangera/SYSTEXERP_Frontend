@@ -2,14 +2,14 @@ import { Component, Input, OnInit, ChangeDetectorRef } from '@angular/core';
 import { Column, expandAnimation } from '../table.model';
 import { TableModule } from 'primeng/table';
 import { PrimeTemplate } from 'primeng/api';
-import { NgFor, NgClass, NgIf, CommonModule } from '@angular/common';
+import { NgFor, NgIf, CommonModule } from '@angular/common';
 
 @Component({
   selector: 'app-table-expansion',
   templateUrl: './table-expansion.component.html',
   animations: [expandAnimation],
   standalone: true,
-  imports: [TableModule, PrimeTemplate, NgFor, NgClass, NgIf, CommonModule]
+  imports: [TableModule, PrimeTemplate, NgFor, NgIf, CommonModule]
 })
 export class TableExpansionComponent implements OnInit {
   @Input() expansionDataKey = '';

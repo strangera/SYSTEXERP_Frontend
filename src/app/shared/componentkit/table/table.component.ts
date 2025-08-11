@@ -389,14 +389,16 @@ export class TableComponent extends BasicPrintDataComponent implements OnChanges
     }
     return true;
   }
-
+  // 分組標題
   getGroupHeader(groupField: string): string {
     return this.columnGroup?.find(g => g.field === groupField)?.header ?? groupField;
   }
+  // 分組欄位對齊
   getGroupAlignClass(groupField: string): string {
     const align = this.columnGroup?.find(g => g.field === groupField)?.align;
     return align ? 'text-' + align : 'text-center';
   }
+  // 分組總計
   getGroupSubtotal(groupValue: any, field: string): number {
     if (!this.groupedDataCache.has(groupValue)) {
       const rows = this.data.filter(item => item[this.groupRowsBy] === groupValue);
