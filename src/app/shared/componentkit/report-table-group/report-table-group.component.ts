@@ -522,13 +522,18 @@ private exportMergedPDF(
     const body: any[] = [];
 
     // 空訊息列（跨欄）
-    body.push([
-      {
-        content: this.emptyMessage || '查無資料',
-        colSpan: headers.length,
-        styles: { halign: 'center', fontStyle: 'bold', textColor: [33, 150, 243] },
-      },
-    ]);
+body.push([
+  {
+    content: this.emptyMessage || '查無資料',
+    colSpan: headers.length,
+    styles: {
+      font: 'Noto Sans TC',               
+      halign: 'center',
+      
+      textColor: [33, 150, 243],
+    },
+  },
+]);
 
     // 總計列
     const totalRow = this.selectedColumns.map((col) => {
@@ -557,9 +562,11 @@ private exportMergedPDF(
         const raw = Array.isArray(data.row.raw) ? data.row.raw : [];
         if (raw[0] && typeof raw[0] === 'object' && 'colSpan' in raw[0]) {
           data.cell.styles.fillColor = [240, 240, 255];
+          data.cell.styles.font = 'Noto Sans TC';
         }
         if (raw[0] === '總計') {
           data.cell.styles.fillColor = [250, 250, 210];
+          data.cell.styles.font = 'Noto Sans TC';
         }
       },
     });
@@ -678,6 +685,7 @@ private exportGroupedPDF(
         }
         if (raw[0] === '總計') {
           data.cell.styles.fillColor = [250, 250, 210];
+          data.cell.styles.font = 'Noto Sans TC';
         }
       },
     });
