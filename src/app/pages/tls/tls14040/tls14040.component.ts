@@ -1,7 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { Column, createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 import { apiOption, option } from '../../../shared/models/sys/sysb000.module';
 import { Tls14030Service } from '../../../service/API/tls/tls14030.service';
 import { Garantee_Ticket } from '../../../shared/models/tls/tls000.model';
@@ -13,6 +12,9 @@ import { CalendarRangeQuickComponent } from '../../../shared/componentkit/calend
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { ReportTableGroupComponent } from '../../../shared/componentkit/report-table-group/report-table-group.component';
 import { TranslateModule } from '@ngx-translate/core';
+
+const yesterday = new Date();
+yesterday.setDate(yesterday.getDate() - 1);
 
 @Component({
   selector: 'app-tls14040',
@@ -43,8 +45,8 @@ export class Tls14040Component extends BasicQueryPageComponent<Garantee_Ticket> 
 
     apply_statusList: [[]], // 申請案件狀態(1=洽談中 2=簽約中  5=已作廢)
 
-    tlt_bdate: [''], // 合約期間_起
-    tlt_edate: [''], // 合約期間_迄
+    tlt_bdate: [yesterday], // 合約期間_起
+    tlt_edate: [yesterday], // 合約期間_迄
 
     approve_statusList: [[]], // 審核狀態 1=未審核  2=已審核
 
