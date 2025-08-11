@@ -30,6 +30,7 @@ import { formatApproveStatus, formatCheckType, formatDecoType, formatMoneyType, 
 import { DialogComponent } from '../../../shared/componentkit/dialog/dialog.component';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { RadiobuttonYNComponent } from '@shared/componentkit/radiobutton-yn/radiobutton-yn.component';
+import { yesterday } from '@shared/models/system/query-form.model';
 
 interface ContractItem {
   id: string;
@@ -106,10 +107,10 @@ export class TLS14020Component extends BasicQueryPageComponent<ContractItem> imp
     contact_Date_Start: [],
     contact_Date_End: [],
     paper_type_List: [[]],
-    tlt_bdate_Start: [],
-    tlt_bdate_End: [],
-    tlt_edate_Start: [],
-    tlt_edate_End: [],
+    tlt_bdate_Start: [yesterday],
+    tlt_bdate_End: [yesterday],
+    tlt_edate_Start: [yesterday],
+    tlt_edate_End: [yesterday],
     tlt_contract_bdate_Start: [],
     tlt_contract_bdate_End: [],
     tlt_contract_edate_Start: [],
