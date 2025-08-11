@@ -63,10 +63,16 @@ export class TLS23020Component extends BasicQueryPageComponent<any> {
   displayMode: 'Detail' | 'Summary' = 'Detail'; // 預設顯示明細報表
   data: any[] = [];
   totalRecords: number = 0;
+    readonly yesterday: Date = (() => {
+    const d = new Date();
+    d.setHours(0, 0, 0, 0);
+    d.setDate(d.getDate() - 1);
+    return d;
+  })();
   //Request
   queryForm = this.formBuilder.group({
-    TXN_DateStart: [new Date('2024-01-01'), [Validators.required]], // 交易日期起
-    TXN_DateEnd: [new Date('2024-01-31'), [Validators.required]], // 交易日期訖
+    TXN_DateStart: [this.yesterday, [Validators.required]], // 交易日期起
+    TXN_DateEnd: [this.yesterday, [Validators.required]], // 交易日期訖
     ECR_No: [], // 收銀機機號
     TXN_No_Start: [null, [this.validationService.numberValidator]], // 交易序號起
     TXN_No_End: [null, [this.validationService.numberValidator]], // 交易序號訖

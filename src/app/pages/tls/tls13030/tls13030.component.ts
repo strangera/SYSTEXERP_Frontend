@@ -35,7 +35,6 @@ import { TranslateModule } from '@ngx-translate/core';
         MultiSelectComponent,
         MultiLocationFilterComponent,
         CalendarRangeQuickComponent,
-        CalendarRangeComponent,
         ButtonComponent,
         TableComponent,
         TranslateModule,
