@@ -152,18 +152,78 @@ export class SelectorPanelComponent extends BasicKitComponent implements OnInit,
 
   // 🎯 處理分頁載入事件
   onPaginationLoad(event: LazyLoadEvent, searchFormGroup: FormGroup) {
+    console.log('📄 SelectorPanel 收到分頁事件:', event);
+    console.log('🚨 DEBUG - event:', event);
+    console.log('🚨 DEBUG - 當前表單值:', searchFormGroup.value);
+
+    // 🎯 修正：將 1-based 轉為 0-based，並正確處理 SortBy
+    const pageIndex = Math.max(0, (event.pageIndex || 1) - 1);
+
     searchFormGroup.patchValue({
-      pageSize: event.pageSize,
-      pageIndex: event.pageIndex,
-      SortBy: event.SortBy
-    });
+      pageSize: event.pageSize || 10,
+      pageIndex: pageIndex,
+      SortBy: event.SortBy || []  // 🎯 用大寫的 SortBy，傳陣列
+    }, { emitEvent: false });
+
+    console.log('📋 更新後的表單值:', searchFormGroup.value);
+
+    this.triggerSearch(searchFormGroup);
+  }
+
+  // 🎯 新增：triggerSearch 方法（在 SelectorPanel 中加入）
+  private triggerSearch(searchFormGroup: FormGroup): void {
+    const formValue = searchFormGroup.value;
+
+    console.log('🚀 SelectorPanel 觸發搜尋:', formValue);
+
+    // 檢查是否有有效的搜尋條件（排除分頁參數）
+    const searchConditions = { ...formValue };
+    delete searchConditions.pageSize;
+    delete searchConditions.pageIndex;
+    delete searchConditions.SortBy;
+
+    const hasValidInput = Object.values(searchConditions).some(
+      (val) => val !== null && val !== undefined && val !== '' && (!Array.isArray(val) || val.length > 0)
+    );
+
+    // 如果有搜尋條件或者是分頁操作，就發出搜尋事件
+    if (hasValidInput || formValue.pageIndex > 0) {
+      console.log('✅ 發出搜尋表單變更事件');
+      this.searchFormChanged.emit(formValue);
+    } else {
+      console.log('📋 載入預設資料');
+      this.searchFormChanged.emit({
+        pageSize: formValue.pageSize || 10,
+        pageIndex: 0,
+        SortBy: formValue.SortBy || []
+      });
+    }
   }
 
   // 🎯 打開選擇器面板
+  // 在 selector-panel.component.ts 中修改：
   openSelectorPanel(event: Event) {
     this.selectorOverlay?.toggle(event);
-  }
 
+    // 🎯 加入這段：確保表單有分頁參數
+    if (this.searchForm) {
+      const currentValue = this.searchForm.value;
+
+      // 如果沒有分頁參數，就設定預設值
+      if (currentValue.pageSize === undefined || currentValue.pageIndex === undefined) {
+        this.searchForm.patchValue({
+          pageSize: 10,
+          pageIndex: 0,  // 0-based
+          SortBy: [{ field: this.valuePropertyName, order: 1 }]
+        }, { emitEvent: false });
+
+        console.log('🔧 初始化分頁參數:', this.searchForm.value);
+
+        // 立即觸發一次搜尋
+        this.triggerSearch(this.searchForm);
+      }
+    }
+  }
   // 🎯 關閉選擇器面板
   closeSelectorPanel() {
     this.selectorOverlay?.hide();

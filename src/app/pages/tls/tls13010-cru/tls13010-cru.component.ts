@@ -2052,54 +2052,19 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
   }
 
   searchLocationOptions(searchParams: any): Observable<any[]> {
-    console.log('🔍 位置搜尋 - 搜尋參數:', searchParams);
-    console.log('🔍 參數類型:', typeof searchParams);
-    console.log('🔍 參數內容:', JSON.stringify(searchParams));
+    console.log('🔍 CRU 收到搜尋參數:', searchParams);
 
-    // 🎯 如果沒有搜尋參數，呼叫 service 取得全部位置
-    if (!searchParams || Object.keys(searchParams).length === 0) {
-      console.log('📋 無搜尋條件，回傳所有位置選項');
-      return this.locationOptionsService.getLocationWithDetailsOptions();
+    // 🎯 轉換 SortBy 的欄位名稱
+    if (searchParams.SortBy && Array.isArray(searchParams.SortBy)) {
+      searchParams.SortBy = searchParams.SortBy.map((sort: any) => ({
+        field: sort.field === 'value' ? 'location_no' : sort.field,  // 🎯 轉換欄位名
+        order: 1  // 🎯 固定為升序，或保持原值 sort.order
+      }));
     }
 
-    // 🎯 準備 API 請求參數 (只傳三個)
-    const apiParams: any = {};
+    console.log('🔄 轉換後參數:', searchParams);
 
-    if (searchParams.building_code) {
-      apiParams.building_code = searchParams.building_code;
-      console.log('🏢 加入館別參數:', apiParams.building_code);
-    }
-    if (searchParams.floor_code) {
-      apiParams.floor_code = searchParams.floor_code;
-      console.log('🏢 加入樓層參數:', apiParams.floor_code);
-    }
-    if (searchParams.area_code) {
-      apiParams.area_code = searchParams.area_code;
-      console.log('📍 加入區域參數:', apiParams.area_code);
-    }
-
-    console.log('📤 最終 API 請求參數:', JSON.stringify(apiParams));
-
-    // 🎯 呼叫後端 API
-    return this.locationOptionsService.getLocationWithDetailsOptions(apiParams).pipe(
-      tap((results) => {
-        console.log('✅ API 搜尋成功:', {
-          參數: apiParams,
-          結果數量: results.length,
-          前3筆: results.slice(0, 3).map(item => ({
-            location_no: item.location_no || item.value,
-            building_desc: item.building_desc,
-            floor_desc: item.floor_desc,
-            area_desc: item.area_desc
-          }))
-        });
-      }),
-      catchError((error) => {
-        console.error('❌ 位置搜尋錯誤:', error);
-        this.messageService.warnBubble('搜尋位置失敗，請重試');
-        return of([]);
-      })
-    );
+    return this.locationOptionsService.getLocationWithDetailsOptions(searchParams);
   }
 
 
