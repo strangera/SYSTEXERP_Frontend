@@ -3,7 +3,7 @@ import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angula
 // Shared
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
-import { apiOption, option, Sysb400m } from '../../../shared/models/sys/sysb000.module';
+import { apiOption, option, Sysb400m } from '../../../shared/models/sys/sysb000.model';
 import { Sysb400Service } from '../../../service/api/sys/sysb400.service';
 import { Sysb300Service } from '../../../service/api/sys/sysb300.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
@@ -24,21 +24,21 @@ export interface orgOption {
 }
 
 @Component({
-    selector: 'app-sysb400.cru',
-    templateUrl: './sysb400.cru.component.html',
-    styleUrl: './sysb400.cru.component.scss',
-    standalone: true,
-    imports: [
-        MenubarComponent,
-        ButtonComponent,
-        PanelModule,
-        FormsModule,
-        ReactiveFormsModule,
-        DropdownComponent,
-        InputTextComponent,
-        NgIf,
-        TranslateModule,
-    ],
+  selector: 'app-sysb400.cru',
+  templateUrl: './sysb400.cru.component.html',
+  styleUrl: './sysb400.cru.component.scss',
+  standalone: true,
+  imports: [
+    MenubarComponent,
+    ButtonComponent,
+    PanelModule,
+    FormsModule,
+    ReactiveFormsModule,
+    DropdownComponent,
+    InputTextComponent,
+    NgIf,
+    TranslateModule,
+  ],
 })
 // 組織碼設定作業 CRU
 export class SYSB400CRUComponent
@@ -84,7 +84,7 @@ export class SYSB400CRUComponent
 
   ngOnInit(): void {
     this.initializePage('SYSB400', this.dataForm);
-    console.log('表單',this.dataForm.value);
+    console.log('表單', this.dataForm.value);
     this.dataForm.get('p_level_id')?.disable(); // 上層組織階層代碼/名稱 不可手動更改
 
     // 不可點選上層組織代碼
@@ -109,9 +109,9 @@ export class SYSB400CRUComponent
 
     // 監聽組織階層代碼的變化 (決定上p_org_id的選項)
     this.dataForm.controls.p_level_id.valueChanges.subscribe((pLevelId) => {
-      if (pLevelId ) {
+      if (pLevelId) {
         this.dataForm.controls.p_org_id.enable();
-        if(this.crudstatus =='Read'){
+        if (this.crudstatus == 'Read') {
           this.dataForm.controls.p_org_id.disable();
         }
       } else {
@@ -210,8 +210,8 @@ export class SYSB400CRUComponent
     // 修改：使用父類的 handleSubmit 方法
     this.handleSubmit(frm, () => {
       const formValue = frm.getRawValue();
-      console.log('送出',formValue);
-      
+      console.log('送出', formValue);
+
       switch (this.crudstatus) {
         case CRUDStatus.Create:
           if (this.canAdd()) {

@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { Column, formatDate } from '../../../shared/componentkit/table/table.model';
-import { apiOption, option } from '../../../shared/models/sys/sysb000.module';
+import { apiOption, option } from '../../../shared/models/sys/sysb000.model';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { AccordionModule } from 'primeng/accordion';
@@ -81,13 +81,13 @@ export class TLS12060Component extends BasicQueryPageComponent<response10260> im
   totalRecords = 0;// 分頁和排序參數 // 排序需要
 
   contact_type_Option: option[] = [
-    {value: '3', label: '要約書'},
-    {value: '4', label: '契約書'},
+    { value: '3', label: '要約書' },
+    { value: '4', label: '契約書' },
   ]; // 合約種類
   contract_status_Option: option[] = [
-    {value: '1', label: '未審核'},
-    {value: '2', label: '已審核'},
-    {value: '3', label: '已作廢'},
+    { value: '1', label: '未審核' },
+    { value: '2', label: '已審核' },
+    { value: '3', label: '已作廢' },
   ]; // 合約狀態
   contactName_Option: option[] = []; // 接洽人員
 
@@ -105,13 +105,13 @@ export class TLS12060Component extends BasicQueryPageComponent<response10260> im
     { field: 'contact_person', header: '洽談者', visible: true },
     { field: 'contact_date', header: '洽談日', visible: true, format: formatDate },
     { field: 'vendor_name', header: '統編/廠商', visible: true },
-    { field: 'bus_type', header: '大分類', visible: true},
+    { field: 'bus_type', header: '大分類', visible: true },
     { field: 'contract_type', header: '合約種類', visible: true },
 
     { field: 'contract_subno', header: '版本', visible: true },
     { field: 'rent_space', header: '位置租賃數', visible: true },
-    { field: 'approve_desc', header: '合約狀態', visible: true},
-    { field: 'crt_date', header: '建立日期', visible: true, format: formatDateTime}, 
+    { field: 'approve_desc', header: '合約狀態', visible: true },
+    { field: 'crt_date', header: '建立日期', visible: true, format: formatDateTime },
   ];
 
   selectedItems: response10260[] = [];// 多選項目

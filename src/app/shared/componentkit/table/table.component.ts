@@ -1,63 +1,26 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { NgClass, NgFor, NgIf, NgStyle } from '@angular/common';
 import { Component, EventEmitter, Input, OnChanges, OnDestroy, OnInit, Output, SimpleChanges, ViewChild } from '@angular/core';
-import { FormsModule } from '@angular/forms';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
-import { PrimeTemplate, SortMeta } from 'primeng/api';
-import { AutoCompleteCompleteEvent, AutoCompleteModule } from 'primeng/autocomplete';
-import { Button, ButtonDirective } from 'primeng/button';
-import { CalendarModule } from 'primeng/calendar';
-import { CheckboxModule } from 'primeng/checkbox';
-import { DividerModule } from 'primeng/divider';
-import { DropdownModule } from 'primeng/dropdown';
-import { FileSelectEvent, FileUpload, FileUploadModule } from 'primeng/fileupload';
-import { InputNumberModule } from 'primeng/inputnumber';
-import { InputTextModule } from 'primeng/inputtext';
-import { MultiSelectChangeEvent, MultiSelectModule } from 'primeng/multiselect';
-import { Ripple } from 'primeng/ripple';
-import { SkeletonModule } from 'primeng/skeleton';
-import { Table, TableLazyLoadEvent, TableModule, TablePageEvent, TableRowSelectEvent, TableRowUnSelectEvent } from 'primeng/table';
-import { TooltipModule } from 'primeng/tooltip';
+import { SortMeta } from 'primeng/api';
+import { AutoCompleteCompleteEvent } from 'primeng/autocomplete';
+import { FileSelectEvent, FileUpload } from 'primeng/fileupload';
+import { MultiSelectChangeEvent } from 'primeng/multiselect';
+import { Table, TableLazyLoadEvent, TablePageEvent, TableRowSelectEvent, TableRowUnSelectEvent } from 'primeng/table';
 import { finalize, Observable, Subject, takeUntil } from 'rxjs';
 import { CurrentPageService } from '../../../layout/app.menulist/current-page.service';
 import { NotificationService } from '../../component/notification-message/notification.service';
 import { BasicPrintDataComponent } from '../../componentextends/basic-print/basic-print-data.component';
 import { FunsrightInfo } from '../../models/system/funsrightInfo';
 import { QueryStateService } from '../../service/query-state.service';
-import { TableExpansionComponent } from './table-expansion/table-expansion.component';
-import { TableExportComponent } from './table-export/table-export.component';
 import { AddButton, Column, ColumnGroup, FieldChangeEvent, LazyLoadEvent, RowEditSaveEvent, toggleButtons, validateRowData } from './table.model';
+import { COMMON_IMPORTS } from './import-table';
 @Component({
   selector: 'app-table',
   templateUrl: './table.component.html',
   styleUrl: './table.component.scss',
   animations: [toggleButtons],
   standalone: true,
-  imports: [
-    NgIf,
-    DividerModule,
-    TableModule,
-    PrimeTemplate,
-    MultiSelectModule,
-    TooltipModule,
-    FormsModule,
-    Button,
-    NgClass,
-    ButtonDirective,
-    FileUploadModule,
-    DropdownModule,
-    NgFor,
-    Ripple,
-    InputTextModule,
-    InputNumberModule,
-    CalendarModule,
-    CheckboxModule,
-    NgStyle,
-    SkeletonModule,
-    TableExpansionComponent,
-    TableExportComponent,
-    AutoCompleteModule,
-  ],
+  imports: [COMMON_IMPORTS],
 })
 export class TableComponent extends BasicPrintDataComponent implements OnInit, OnChanges, OnDestroy {
   @ViewChild('dt', { static: false }) dt!: Table;                               // table 元件
@@ -80,10 +43,10 @@ export class TableComponent extends BasicPrintDataComponent implements OnInit, O
   @Input() selectionMode: 'multiple' | 'single' | null | undefined = 'multiple';// table 勾選 Mode (預設多選)
   @Input() selectedItems: any = [];                                             // table 已勾選資料
   @Input() isRowSelectable: (rowData: any) => boolean | undefined = () => true; // 可選擇(條件)
+  @Output() selectionChange = new EventEmitter<any>();                          // 資料變更(事件)
   @Output() select = new EventEmitter<TableRowSelectEvent>();                   // 資料勾選(事件)
   @Output() unSelect = new EventEmitter<TableRowUnSelectEvent>();               // 資料取消勾選(事件)
-  @Output() selectionChange = new EventEmitter<any>();                          // 資料變更(事件)
-  @Output() itemClick = new EventEmitter<any>();                                // row資料點選(事件)
+  @Output() itemClick = new EventEmitter<any>();                                // 資料點選(事件)
   // Header 相關
   @Input() showCaption = true;                                                  // 是否顯示 Caption
   // Header(左) 相關
@@ -174,16 +137,11 @@ export class TableComponent extends BasicPrintDataComponent implements OnInit, O
   private ngUnsubscribe = new Subject<void>();
   public funInfo: FunsrightInfo | undefined;
 
-  public showClear = (col: Column): boolean => {
-    if (typeof col?.optionShowClear === 'boolean') return col.optionShowClear;
-    return true;
-  };
-
   constructor(
     private readonly queryStateService: QueryStateService,
     private readonly messageService: NotificationService,
     private readonly currentPageService: CurrentPageService,
-    private sanitizer: DomSanitizer
+    private readonly sanitizer: DomSanitizer
   ) { super(); }
   ngOnInit(): void {
     this.currentPageService.currentPageProgNo$.pipe(takeUntil(this.ngUnsubscribe)).subscribe(progNo => {

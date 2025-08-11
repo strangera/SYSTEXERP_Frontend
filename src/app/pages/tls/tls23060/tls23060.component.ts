@@ -30,9 +30,21 @@ import { TranslateModule } from '@ngx-translate/core';
     imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarRangeQuickComponent, RadiobuttonComponent, MultiSelectComponent, DropdownComponent, InputTextModule, ButtonComponent, TranslateModule]
 })
 export class TLS23060Component extends BasicQueryPageComponent<any> {
-  queryForm = this.formBuilder.group({
-    TXN_DateStart: [new Date('2024-01-01'), [Validators.required]],
-    TXN_DateEnd: [new Date('2024-01-31'), [Validators.required]],
+
+  data: any[] = [];
+  totalRecords = 0;
+  showPageSizeDialog = false;
+  customPageSize = 1000;
+ readonly yesterday: Date = (() => {
+    const d = new Date();
+    d.setHours(0, 0, 0, 0);
+    d.setDate(d.getDate() - 1);
+    return d;
+  })();
+
+    queryForm = this.formBuilder.group({
+    TXN_DateStart: [this.yesterday, [Validators.required]],
+    TXN_DateEnd: [this.yesterday, [Validators.required]],
     rece_yn: [null],
     ECR_No: [],
     tlt_no: [],
@@ -41,11 +53,6 @@ export class TLS23060Component extends BasicQueryPageComponent<any> {
     org_id: [],
     ...createPaginationConfig([{ field: 'ECR_No', order: 1 }])
   });
-
-  data: any[] = [];
-  totalRecords = 0;
-  showPageSizeDialog = false;
-  customPageSize = 1000;
 
   WhetherOptions: any[] = [];
   typeOptions: any[] = [];

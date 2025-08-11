@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 // Shared
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { Sysb100m } from '../../../shared/models/sys/sysb000.module';
+import { Sysb100m } from '../../../shared/models/sys/sysb000.model';
 import { Sysb100Service } from '../../../service/api/sys/sysb100.service';
 import { Column, createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
@@ -14,20 +14,20 @@ import { TranslateModule } from '@ngx-translate/core';
 import { ValidationService } from '@shared/service/validation.service';
 
 @Component({
-    selector: 'app-sysb100',
-    templateUrl: './sysb100.component.html',
-    styleUrl: './sysb100.component.scss',
-    standalone: true,
-    imports: [
-        MenubarComponent,
-        ButtonComponent,
-        AccordionModule,
-        FormsModule,
-        ReactiveFormsModule,
-        InputTextComponent,
-        TableComponent,
-        TranslateModule,
-    ],
+  selector: 'app-sysb100',
+  templateUrl: './sysb100.component.html',
+  styleUrl: './sysb100.component.scss',
+  standalone: true,
+  imports: [
+    MenubarComponent,
+    ButtonComponent,
+    AccordionModule,
+    FormsModule,
+    ReactiveFormsModule,
+    InputTextComponent,
+    TableComponent,
+    TranslateModule,
+  ],
 })
 // 公司基本資料維護作業
 export class SYSB100Component

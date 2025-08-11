@@ -16,7 +16,6 @@ import { InputTextComponent } from '../../../shared/componentkit/input-text/inpu
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
 import { MultiLocationFilterComponent } from '../../../shared/componentkit/multi-location-filter/multi-location-filter.component';
 import { CalendarRangeQuickComponent } from '../../../shared/componentkit/calendar-range-quick/calendar-range-quick.component';
-import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { TranslateModule } from '@ngx-translate/core';
@@ -35,7 +34,6 @@ import { TranslateModule } from '@ngx-translate/core';
         MultiSelectComponent,
         MultiLocationFilterComponent,
         CalendarRangeQuickComponent,
-        CalendarRangeComponent,
         ButtonComponent,
         TableComponent,
         TranslateModule,
@@ -43,14 +41,23 @@ import { TranslateModule } from '@ngx-translate/core';
 })
 export class TLS13030Component extends BasicQueryPageComponent<any> {
   isPrint = true; // 或預設為 false，視需求切換
+  readonly yesterday: Date = (() => {
+    const d = new Date();
+    d.setHours(0, 0, 0, 0);
+    d.setDate(d.getDate() - 1);
+    return d;
+  })();
+  data: any[] = [];
+  totalRecords = 0;
+  selectedItems: any[] = [];
   queryForm = this.formBuilder.group({
     tlt_no: ['', [Validators.maxLength(10)]],
     tlt_name: ['', [Validators.maxLength(50)]],
     floor_noList: [[] as string[]],
     area_noList: [[] as string[]],
     tlt_openflagList: [[] as string[]],
-    tlt_bdate_start: [new Date('2024-01-01')],
-    tlt_bdate_end: [new Date('2024-01-31')],
+    tlt_bdate_start: [this.yesterday],
+    tlt_bdate_end: [this.yesterday],
     tlt_edate_start: [null],
     tlt_edate_end: [null],
     cap_typeList: [[] as string[]],
@@ -64,9 +71,7 @@ export class TLS13030Component extends BasicQueryPageComponent<any> {
     ...createPaginationConfig([{ field: 'tlt_no', order: 1 }])
   });
 
-  data: any[] = [];
-  totalRecords = 0;
-  selectedItems: any[] = [];
+
   regionOptions: any[] = [];
   floorOptions: any[] = [];
   operationStatusOptions: any[] = [];

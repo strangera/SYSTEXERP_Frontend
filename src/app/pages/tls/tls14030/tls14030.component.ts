@@ -3,7 +3,7 @@ import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { Column, createPaginationConfig } from '../../../shared/componentkit/table/table.model';
-import { apiOption, option } from '../../../shared/models/sys/sysb000.module';
+import { apiOption, option } from '../../../shared/models/sys/sysb000.model';
 import { Tls14030Service } from '../../../service/API/tls/tls14030.service';
 import { Garantee_Ticket } from '../../../shared/models/tls/tls000.model';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
@@ -17,11 +17,11 @@ import { TranslateModule } from '@ngx-translate/core';
 
 // 保證傳票
 @Component({
-    selector: 'app-tls14030',
-    templateUrl: './tls14030.component.html',
-    styleUrl: './tls14030.component.scss',
-    standalone: true,
-    imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, MultiSelectComponent, InputTextComponent, CalendarRangeQuickComponent, TableComponent, TranslateModule]
+  selector: 'app-tls14030',
+  templateUrl: './tls14030.component.html',
+  styleUrl: './tls14030.component.scss',
+  standalone: true,
+  imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, MultiSelectComponent, InputTextComponent, CalendarRangeQuickComponent, TableComponent, TranslateModule]
 })
 export class Tls14030Component extends BasicQueryPageComponent<Garantee_Ticket> implements OnInit {
   // 查詢表單：保證傳票
@@ -43,7 +43,7 @@ export class Tls14030Component extends BasicQueryPageComponent<Garantee_Ticket> 
     contract_subno_start: [''], // 合約附號_起
     contract_subno_end: [''], // 合約附號_迄
     apply_statusList: [[]], // 申請案件狀態(1=洽談中 2=簽約中  5=已作廢)
-    
+
     approve_statusList: [[]], // 申請狀態 1=未審核  2=已審核
     get_ticket_status_List: [[]], // 票據收票狀態 "0=未繳票  1=已繳票  2=已退票  9=封存"
     ticket_type_List: [[]], // 保證票型態 "1=準時開業保證票 2=施工保證票 3=契約屆滿保證票"
@@ -60,23 +60,27 @@ export class Tls14030Component extends BasicQueryPageComponent<Garantee_Ticket> 
     { field: 'tlt_name', header: '專櫃名稱', visible: true },
     { field: 'VEN_No', header: '廠商代號', visible: true },
     { field: 'VEN_Name', header: '廠商名稱', visible: true },
-    { field: 'ticket_type', header: '保證票型態', visible: true,
+    {
+      field: 'ticket_type', header: '保證票型態', visible: true,
       format: (value: string) =>
         this.ticket_typeOption.find((option) => option.value === value)?.label ||
         value
-     },
+    },
     { field: 'ticket_no', header: '票據編號', visible: true },
-    { field: 'ticket_kind', header: '票據種類', visible: true,
+    {
+      field: 'ticket_kind', header: '票據種類', visible: true,
       format: (value: string) =>
         this.ticket_kindOption.find((option) => option.value === value)?.label ||
-        value },
+        value
+    },
     { field: 'ticket_amount', header: '保證票金額', visible: true },
     { field: 'expiry_date', header: '票據到期日期', visible: true, format: (value: string) => value ? new Date(value).toLocaleDateString() : '' },
-    { field: 'get_ticket_status', header: '票據收票狀態', visible: true,
+    {
+      field: 'get_ticket_status', header: '票據收票狀態', visible: true,
       format: (value: string) =>
         this.get_ticket_statusOption.find((option) => option.value === value)?.label ||
         value
-     },
+    },
     { field: 'get_date', header: '繳票日期', visible: true, format: (value: string) => value ? new Date(value).toLocaleDateString() : '' },
     { field: 'return_date', header: '退票日期', visible: true, format: (value: string) => value ? new Date(value).toLocaleDateString() : '' },
     { field: 'close_date', header: '封存日期', visible: true, format: (value: string) => value ? new Date(value).toLocaleDateString() : '' },
@@ -144,7 +148,7 @@ export class Tls14030Component extends BasicQueryPageComponent<Garantee_Ticket> 
   onSubmit(frm: FormGroup): void {
     const formValue = frm.getRawValue();
     formValue.tlt_name = '';
-    console.log('14030要求',formValue);
+    console.log('14030要求', formValue);
     this.handleSubmit(frm, () => {
       this.tls14030Service.queryTLS14030(formValue).subscribe({
         next: (response) => {
@@ -153,7 +157,7 @@ export class Tls14030Component extends BasicQueryPageComponent<Garantee_Ticket> 
             this.totalRecords = response.TotalCount || response.Data.length; // 排序需要
             this.queryStateService.setQueryState(this.ProgNo, formValue);
 
-            console.log('取得資料',this.data);
+            console.log('取得資料', this.data);
           }
           this.loading = false;
           this.messageService.unblockUi();
@@ -208,79 +212,79 @@ export class Tls14030Component extends BasicQueryPageComponent<Garantee_Ticket> 
   loadOptions() {
     // 部門下拉
     this.tls14030Service
-          .queryPOS2002_DropDownList({})
-          .subscribe((response) => {
-            this.locationOption = response.Data.map((item: apiOption) => ({
-              No: item.No,
-              Name: item.Name,
-              Label: item.No + '-' + item.Name,
-            }));
-  
-            console.log('locationOption:', this.locationOption);
-          });
+      .queryPOS2002_DropDownList({})
+      .subscribe((response) => {
+        this.locationOption = response.Data.map((item: apiOption) => ({
+          No: item.No,
+          Name: item.Name,
+          Label: item.No + '-' + item.Name,
+        }));
+
+        console.log('locationOption:', this.locationOption);
+      });
 
     // 區域下拉
     this.tls14030Service
-          .querySYS3A00_DropDownList({})
-          .subscribe((response) => {
-            this.areaOption = response.Data.map((item: apiOption) => ({
-              No: item.No,
-              Name: item.Name,
-              Label: item.No + '-' + item.Name,
-            }));
-  
-            console.log('areaOption:', this.areaOption);
-          });
+      .querySYS3A00_DropDownList({})
+      .subscribe((response) => {
+        this.areaOption = response.Data.map((item: apiOption) => ({
+          No: item.No,
+          Name: item.Name,
+          Label: item.No + '-' + item.Name,
+        }));
+
+        console.log('areaOption:', this.areaOption);
+      });
 
     // 樓層下拉
     this.tls14030Service
-          .querySYS3900_DropDownList({})
-          .subscribe((response) => {
-            this.floorOption = response.Data.map((item: apiOption) => ({
-              No: item.No,
-              Name: item.Name,
-              Label: item.No + '-' + item.Name,
-            }));
-  
-            console.log('floorOption:', this.floorOption);
-          });
+      .querySYS3900_DropDownList({})
+      .subscribe((response) => {
+        this.floorOption = response.Data.map((item: apiOption) => ({
+          No: item.No,
+          Name: item.Name,
+          Label: item.No + '-' + item.Name,
+        }));
+
+        console.log('floorOption:', this.floorOption);
+      });
 
     // 大分類下拉
     this.tls14030Service
-          .queryPOS2003_DropDownList({})
-          .subscribe((response) => {
-            this.bus_typeOption = response.Data.map((item: apiOption) => ({
-              No: item.No,
-              Name: item.Name,
-              Label: item.No + '-' + item.Name,
-            }));
-  
-            console.log('bus_typeOption:', this.bus_typeOption);
-          });
+      .queryPOS2003_DropDownList({})
+      .subscribe((response) => {
+        this.bus_typeOption = response.Data.map((item: apiOption) => ({
+          No: item.No,
+          Name: item.Name,
+          Label: item.No + '-' + item.Name,
+        }));
+
+        console.log('bus_typeOption:', this.bus_typeOption);
+      });
 
     // 組織 下拉
     this.tls14030Service
-          .querySYS3100_DropDownList({})
-          .subscribe((response) => {
-            this.orgOption = response.Data.map((item: apiOption) => ({
-              No: item.No,
-              Name: item.Name,
-              Label: item.No + '-' + item.Name,
-            }));
-  
-            console.log('orgOption:', this.orgOption);
-          });
+      .querySYS3100_DropDownList({})
+      .subscribe((response) => {
+        this.orgOption = response.Data.map((item: apiOption) => ({
+          No: item.No,
+          Name: item.Name,
+          Label: item.No + '-' + item.Name,
+        }));
+
+        console.log('orgOption:', this.orgOption);
+      });
 
     // 專櫃編號 下拉
     this.tls14030Service
-          .queryTLTTALENT_DropDownList({})
-          .subscribe((response) => {
-            this.tlt_noListOption = response.Data.map((item: apiOption) => ({
-              No: item.No,
-              Label: item.No+'-'+item.Name,
-            }));
-  
-            console.log('專櫃編號:', response.Data);
-          });
+      .queryTLTTALENT_DropDownList({})
+      .subscribe((response) => {
+        this.tlt_noListOption = response.Data.map((item: apiOption) => ({
+          No: item.No,
+          Label: item.No + '-' + item.Name,
+        }));
+
+        console.log('專櫃編號:', response.Data);
+      });
   }
 }

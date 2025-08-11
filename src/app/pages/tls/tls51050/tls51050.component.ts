@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { createPaginationConfig, Column } from '../../../shared/componentkit/table/table.model';
-import { option } from '../../../shared/models/sys/sysb000.module';
+import { option } from '../../../shared/models/sys/sysb000.model';
 import { PluUnit } from '../../../shared/models/tls/tls000.model';
 import { Tls51050Service } from '../../../service/api/tls/tls51050.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
@@ -14,11 +14,11 @@ import { TranslateModule } from '@ngx-translate/core';
 
 // 2.5.1.5  商品單位設定
 @Component({
-    selector: 'app-tls51050',
-    templateUrl: './tls51050.component.html',
-    styleUrl: './tls51050.component.scss',
-    standalone: true,
-    imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputTextComponent, TableComponent, TranslateModule]
+  selector: 'app-tls51050',
+  templateUrl: './tls51050.component.html',
+  styleUrl: './tls51050.component.scss',
+  standalone: true,
+  imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputTextComponent, TableComponent, TranslateModule]
 })
 export class TLS51050Component extends BasicQueryPageComponent<PluUnit>
   implements OnInit {
