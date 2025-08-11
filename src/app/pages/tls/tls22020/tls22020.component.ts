@@ -16,7 +16,8 @@ import { DropdownRangeComponent } from '@shared/componentkit/dropdown-range/drop
 import { createPaginationConfig } from '@shared/componentkit/table/table.model';
 import { creditCardColumns, creditCardGroup, TLS22020Data, payNoDataList } from './tls22020.model';
 import { CommonModule } from '@angular/common';
-
+const yesterday = new Date();
+yesterday.setDate(yesterday.getDate() - 1);
 @Component({
   templateUrl: './tls22020.component.html',
   standalone: true,
@@ -39,7 +40,7 @@ export class TLS22020Component extends BasicQueryPageComponent<any> implements O
 
   queryForm = this.formBuilder.group({
     ECR_No: [null],
-    TXN_Date: [null, [Validators.required]],
+    TXN_Date: [yesterday, [Validators.required]],
     ECR_No_Start: [null],
     ECR_No_End: [null],
     status1: [null],

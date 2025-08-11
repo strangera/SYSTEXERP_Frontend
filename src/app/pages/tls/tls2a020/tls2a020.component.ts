@@ -15,6 +15,7 @@ import { TableComponent } from '../../../shared/componentkit/table/table.compone
 import { TranslateModule } from '@ngx-translate/core';
 import { TLS2A020Service } from '../../../service/api/tls/tls2a020.service';
 import { formatDate } from '@angular/common';
+import { yesterday } from '@shared/models/system/query-form.model';
 
 @Component({
   templateUrl: './tls2a020.component.html',
@@ -37,7 +38,7 @@ import { formatDate } from '@angular/common';
 export class TLS2A020Component extends BasicQueryPageComponent<any> implements OnInit {
   // 表單
   queryForm = this.formBuilder.group({
-    TXN_Date: [new Date(), [Validators.required]],
+    TXN_Date: [yesterday, [Validators.required]],
     tlt_floor: [[]],
     sort: [''],
     ECR_No: [[]],
