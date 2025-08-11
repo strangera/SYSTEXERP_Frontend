@@ -46,11 +46,17 @@ export class TLS23100Component extends BasicQueryPageComponent<any> {
   customPageSize = 1000;
   Data: any[] = [];
   totalRecords = 0;
+   readonly yesterday: Date = (() => {
+    const d = new Date();
+    d.setHours(0, 0, 0, 0);
+    d.setDate(d.getDate() - 1);
+    return d;
+  })();
 
   //request
   queryForm = this.formBuilder.group({
-    TXN_DateStart: [new Date('2024-01-01') as Date, [Validators.required]],
-    TXN_DateEnd: [new Date('2024-01-31'), [Validators.required]],
+    TXN_DateStart: [this.yesterday as Date, [Validators.required]],
+    TXN_DateEnd: [this.yesterday, [Validators.required]],
     ECR_No: [[]],
     TLT_No: [[]],
     CRD_Type: [[]],

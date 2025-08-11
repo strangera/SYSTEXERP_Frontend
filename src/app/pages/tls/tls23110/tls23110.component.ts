@@ -32,11 +32,17 @@ import { TranslateModule } from '@ngx-translate/core';
 export class TLS23110Component extends BasicQueryPageComponent<any> {
   showPageSizeDialog = false;
   customPageSize = 1000;
+   readonly yesterday: Date = (() => {
+    const d = new Date();
+    d.setHours(0, 0, 0, 0);
+    d.setDate(d.getDate() - 1);
+    return d;
+  })();
 
   queryForm = this.formBuilder.group({
 
-    TXN_DateStart: [new Date('2024-01-01'), Validators.required],
-    TXN_DateEnd: [new Date('2024-01-31'), Validators.required],
+    TXN_DateStart: [this.yesterday, Validators.required],
+    TXN_DateEnd: [this.yesterday, Validators.required],
     tlt_term_type: [],       // e.g., 'st'
     rece_yn: [],            // e.g., 's'
     IsNoPLU_No: [true],        // 預設 true

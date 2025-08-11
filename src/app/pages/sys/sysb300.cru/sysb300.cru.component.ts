@@ -1,4 +1,4 @@
-import { apiOption, Sysb300m } from '../../../shared/models/sys/sysb000.module';
+import { apiOption, Sysb300m } from '../../../shared/models/sys/sysb000.model';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 // Shared
@@ -14,21 +14,21 @@ import { NgIf } from '@angular/common';
 import { TranslateModule } from '@ngx-translate/core';
 
 @Component({
-    selector: 'app-sysb300.cru',
-    templateUrl: './sysb300.cru.component.html',
-    styleUrl: './sysb300.cru.component.scss',
-    standalone: true,
-    imports: [
-        MenubarComponent,
-        ButtonComponent,
-        PanelModule,
-        FormsModule,
-        ReactiveFormsModule,
-        InputTextComponent,
-        DropdownComponent,
-        NgIf,
-        TranslateModule,
-    ],
+  selector: 'app-sysb300.cru',
+  templateUrl: './sysb300.cru.component.html',
+  styleUrl: './sysb300.cru.component.scss',
+  standalone: true,
+  imports: [
+    MenubarComponent,
+    ButtonComponent,
+    PanelModule,
+    FormsModule,
+    ReactiveFormsModule,
+    InputTextComponent,
+    DropdownComponent,
+    NgIf,
+    TranslateModule,
+  ],
 })
 // 組織階層設定作業 CRU
 export class SYSB300CRUComponent

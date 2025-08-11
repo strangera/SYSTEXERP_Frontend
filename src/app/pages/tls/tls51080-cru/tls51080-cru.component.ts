@@ -2,7 +2,7 @@ import { Component, OnInit, } from '@angular/core';
 import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
-import { apiOption } from '../../../shared/models/sys/sysb000.module';
+import { apiOption } from '../../../shared/models/sys/sysb000.model';
 import { POS2034 } from '../../../shared/models/tls/tls000.model';
 import { Tls51080Service } from '../../../service/api/tls/tls51080.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
@@ -15,11 +15,11 @@ import { TranslateModule } from '@ngx-translate/core';
 
 // 2.5.1.6 品牌設定作業  CRU
 @Component({
-    selector: 'app-tls51080-cru',
-    templateUrl: './tls51080-cru.component.html',
-    styleUrl: './tls51080-cru.component.scss',
-    standalone: true,
-    imports: [MenubarComponent, ButtonComponent, PanelModule, FormsModule, ReactiveFormsModule, InputTextComponent, DropdownComponent, NgIf, TranslateModule]
+  selector: 'app-tls51080-cru',
+  templateUrl: './tls51080-cru.component.html',
+  styleUrl: './tls51080-cru.component.scss',
+  standalone: true,
+  imports: [MenubarComponent, ButtonComponent, PanelModule, FormsModule, ReactiveFormsModule, InputTextComponent, DropdownComponent, NgIf, TranslateModule]
 })
 export class TLS51080CRUComponent extends BasicCruPageComponent<POS2034>
   implements OnInit {
@@ -50,7 +50,7 @@ export class TLS51080CRUComponent extends BasicCruPageComponent<POS2034>
     console.log('讀取資料', this.dataForm.value);
 
     //因此作業不可刪除，倉庫代碼 不可異動
-    if(this.crudstatus == CRUDStatus.Edit){
+    if (this.crudstatus == CRUDStatus.Edit) {
       this.dataForm.get('HOS_No')?.disable();
     }
   }
@@ -138,7 +138,7 @@ export class TLS51080CRUComponent extends BasicCruPageComponent<POS2034>
             Label: item.No + '-' + item.Name,
           }));
 
-          console.log('館別',this.building_noOptions);
+          console.log('館別', this.building_noOptions);
         });
 
 

@@ -35,12 +35,10 @@
         </div>
         <p-button *ngIf="IsPrint && showInsert && !rowEditing" (click)="insertRow()" pTooltip="新增" tooltipPosition="top"
           pButton icon="pi pi-plus" severity="success" class="p-button-rounded p-button-text"
-          [disabled]="insertDisabled" />
-        <!-- || !canPerformAction('20') -->
+          [disabled]="insertDisabled || !canPerformAction('20')" />
         <p-button *ngIf="IsPrint && showDelete && !rowEditing" (click)="deleteRow(selectedItems)"
           [pTooltip]="deletepTooltip" tooltipPosition="top" pButton [icon]="deleteIcon" severity="danger"
-          class="p-button-text" [rounded]="true" [disabled]="selectedItems?.length <= 0" />
-        <!-- || !canPerformAction('40') -->
+          class="p-button-text" [rounded]="true" [disabled]="selectedItems?.length <= 0|| !canPerformAction('40')" />
       </div>
       <div *ngIf="IsPrint" class="flex-grow-1 p-2">
         <ng-content select="header"></ng-content>
@@ -199,7 +197,7 @@
                   </div>
                 </ng-template>
               </p-autoComplete>
-              <p-dropdown *ngIf="col.type === 'dropdown'" styleClass="w-full" [showClear]="showClear(col)"
+              <p-dropdown *ngIf="col.type === 'dropdown'" styleClass="w-full" [showClear]="col.optionShowClear"
                 appendTo="body" [(ngModel)]="rowData[col.field]" [ngModelOptions]="{ standalone: true }"
                 [filter]="col.filter" placeholder="請輸入{{ col.header }}" [options]="getOptions(rowData, col)"
                 [optionLabel]="col.optionLabel" [optionValue]="col.optionValue"
@@ -241,7 +239,7 @@
                   </div>
                 </ng-template>
               </p-autoComplete>
-              <p-dropdown *ngIf="col.type === 'dropdown'" styleClass="w-full" [showClear]="showClear(col)"
+              <p-dropdown *ngIf="col.type === 'dropdown'" styleClass="w-full" [showClear]="col.optionShowClear"
                 appendTo="body" [(ngModel)]="rowData[col.field]" [ngModelOptions]="{ standalone: true }"
                 [filter]="col.filter" placeholder="請輸入{{ col.header }}" [options]="getOptions(rowData, col)"
                 [optionLabel]="col.optionLabel" [optionValue]="col.optionValue"
@@ -302,6 +300,7 @@
     </tr>
   </ng-template>
   <ng-template pTemplate="footer" let-columns *ngIf="showTotal">
+    <!-- <app-table-footer></app-table-footer> -->
     <tr>
       <td class="text-center font-bold">總計</td>
       <td *ngIf="IsPrint && showCheckBox && !rowEditing && selectionMode === 'multiple'"></td>
@@ -323,7 +322,7 @@
   </ng-template>
   <ng-template *ngIf="expansionDataKey" pTemplate="rowexpansion" let-rowData>
     <tr id="expansion-row">
-      <td [attr.colspan]="getVisibleHeaderCount">
+      <td [attr.colspan]="expansionColumns.length">
         <app-table-expansion [rowData]="rowData" [expansionDataKey]="expansionDataKey"
           [expansionColumns]="expansionColumns" [expansionSortField]="expansionSortField"
           [expansionSortOrder]="expansionSortOrder" [showPaginator]="expansionShowPaginator" [rows]="expansionRows"

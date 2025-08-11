@@ -3,7 +3,7 @@ import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angula
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { PluUnit } from '../../../shared/models/tls/tls000.model';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
-import { option } from '../../../shared/models/sys/sysb000.module';
+import { option } from '../../../shared/models/sys/sysb000.model';
 import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 import { Tls51050Service } from '../../../service/api/tls/tls51050.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
@@ -17,11 +17,11 @@ import { TranslateModule } from '@ngx-translate/core';
 
 // 2.5.1.5 商品單位設定  CRU
 @Component({
-    selector: 'app-tls51050-cru',
-    templateUrl: './tls51050-cru.component.html',
-    styleUrl: './tls51050-cru.component.scss',
-    standalone: true,
-    imports: [MenubarComponent, ButtonComponent, PanelModule, FormsModule, ReactiveFormsModule, InputTextComponent, DropdownComponent, NgIf, TranslateModule]
+  selector: 'app-tls51050-cru',
+  templateUrl: './tls51050-cru.component.html',
+  styleUrl: './tls51050-cru.component.scss',
+  standalone: true,
+  imports: [MenubarComponent, ButtonComponent, PanelModule, FormsModule, ReactiveFormsModule, InputTextComponent, DropdownComponent, NgIf, TranslateModule]
 })
 export class TLS51050CRUComponent extends BasicCruPageComponent<PluUnit>
   implements OnInit {

@@ -18,7 +18,7 @@ import { TxnStatusService } from '../../../service/basic/txn-status.service';
 import { CounterNameService } from '../../../service/basic/counter-name.service';
 import { ECRNoService } from '../../../service/basic/ECRNo.service';
 import { CashierService } from '../../../service/basic/cashier.service';
-import { Subscription } from 'rxjs';
+import { Subscription, EMPTY, throwError, BehaviorSubject } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { AccordionModule } from 'primeng/accordion';
 import { CalendarRangeQuickComponent } from '../../../shared/componentkit/calendar-range-quick/calendar-range-quick.component';
@@ -33,6 +33,9 @@ import { RadioButtonModule } from 'primeng/radiobutton';
 import { PrimeTemplate } from 'primeng/api';
 import { ButtonDirective } from 'primeng/button';
 import { TranslateModule } from '@ngx-translate/core';
+// 既有 import 保留，新增這些
+
+import { timeout, catchError, finalize } from 'rxjs/operators';
 interface MainData {
   SYS_StoreNo: string;
   TXN_Date: string;
@@ -77,11 +80,23 @@ export class TLS23010Component extends BasicQueryPageComponent<any> {
 
   progressValue = 0;
   showPageSizeDialog = false;
-  customPageSize = 1000;
+  data: any[] = [];
+  totalRecords = 0;
+  selectedItems: any[] = [];
+   // 「昨天 00:00」與「今天 23:59:59」常用預設
+  readonly yesterday: Date = (() => {
+    const d = new Date();
+    d.setHours(0, 0, 0, 0);
+    d.setDate(d.getDate() - 1);
+    return d;
+  })();
+  // 類別內加上（放在屬性區）
+private readonly QUERY_TIMEOUT_MS = 30_000; // 30 秒
+
 
   queryForm = this.formBuilder.group({
-    TXN_DateStart: [new Date('2024-01-01'), [Validators.required]],
-    TXN_DateEnd: [new Date('2024-01-31'), [Validators.required]],
+    TXN_DateStart: [this.yesterday, [Validators.required]],
+    TXN_DateEnd: [this.yesterday, [Validators.required]],
     ECR_No: [[]], // ✅ 收銀機號 → 陣列
     TXN_No_Start: [null], // 交易序號(起)
     TXN_No_End: [null], // 交易序號(迄)
@@ -98,21 +113,16 @@ export class TLS23010Component extends BasicQueryPageComponent<any> {
     TXN_GUILoveCode: [''], // 愛心碼
     TXN_GUI_CarrType: [[]], // ✅ 載具種類 → 陣列
     TXN_GUI_CarrId: [''], // 載具號碼
-
     rece_yn: [''], // 是否開立業主發票 (s/空)
     cash_yn: [''], // 是否為業主收現 (s/空)
     tlt_building: [''], // 館別
     tlt_floor: [[]], // ✅ 樓層 → 陣列
     org_id: [[]], // ✅ 組織代碼 → 陣列
-
     TXN_Subtype: [''], // 交易附屬型態
-
     ...createPaginationConfig([{ field: 'ECR_No', order: 1 }]), // 包含 PageSize, PageIndex, Offset, OrderBy, SortBy
   });
 
-  data: any[] = [];
-  totalRecords = 0;
-  selectedItems: any[] = [];
+
   // 下拉選單選項
   BUILDING_NO_Options: any[] = [];
   floorOptions: any[] = [];
@@ -143,23 +153,6 @@ export class TLS23010Component extends BasicQueryPageComponent<any> {
           : `${date.getFullYear()}/${(date.getMonth() + 1).toString().padStart(2, '0')}/${date.getDate().toString().padStart(2, '0')}`;
       },
     },
-    // {
-    //   field: 'TXN_Time',
-    //   header: '銷售時間',
-    //   visible: true,
-    //   format: (val: string) => {
-    //     const date = new Date(val);
-    //     if (isNaN(date.getTime())) return val;
-
-    //     const yyyy = date.getFullYear();
-    //     const MM = (date.getMonth() + 1).toString().padStart(2, '0');
-    //     const dd = date.getDate().toString().padStart(2, '0');
-    //     const HH = date.getHours().toString().padStart(2, '0');
-    //     const mm = date.getMinutes().toString().padStart(2, '0');
-
-    //     return `${yyyy}/${MM}/${dd} ${HH}:${mm}`;
-    //   }
-    // },
     { field: 'ECR_No', header: '機號', visible: true },
     { field: 'TXN_No', header: '交易序號', visible: true, style: 'text-right' },
     { field: 'tlt_no', header: '專櫃編號', visible: true },
@@ -168,9 +161,7 @@ export class TLS23010Component extends BasicQueryPageComponent<any> {
       header: '櫃位名稱',
       visible: true,
       style: 'text-left',
-    }, // 非 POS5006 欄位，UI 顯示用
-    // { field: 'SYS_StoreNo', header: '店號', visible: false },
-
+    }, 
     { field: 'TXN_Uniform', header: '統一編號', visible: true },
     { field: 'TXN_GUIBegNoFirstNo', header: '字軌', visible: true }, // 假設為字軌顯示
     { field: 'TXN_GUIBegNo', header: '起始發票號碼', visible: true },
@@ -322,9 +313,9 @@ export class TLS23010Component extends BasicQueryPageComponent<any> {
   }
 
   ngOnInit(): void {
-    this.initializePage('TLS23010', '', this.queryForm, (f) =>
-      this.onSubmit(f),
+    this.initializePage('TLS23010', '', this.queryForm, 
     );
+    //  this.restoreQueryFromState();
     const savedQuery = localStorage.getItem('TLS23010_queryForm');
     if (savedQuery) {
       const parsedQuery = JSON.parse(savedQuery);
@@ -384,53 +375,9 @@ export class TLS23010Component extends BasicQueryPageComponent<any> {
           value: x.value,
         })) || [];
     });
-    this.customPageSize = 1000; // ✅ 強制設值
+    
   }
-  onSubmit(form: FormGroup): void {
-    if (this.loading) return;
 
-    if (form.invalid) {
-      this.messageService.warnBubble('請完整填寫所有必填欄位');
-      form.markAllAsTouched();
-      return;
-    }
-
-    this.handleSubmit(form, () => {
-      const payload = { ...form.value };
-      Object.keys(payload).forEach((k) => {
-        if (payload[k] === '') payload[k] = null;
-      });
-
-      this.loading = true;
-      this.messageService.blockUi();
-
-      this.tls23010Service.queryTLS23010(payload, this.displayMode).subscribe({
-        next: (res) => {
-          if (res.Status === '0000') {
-            this.data = res.Data || [];
-            this.totalRecords = res.TotalCount || this.data.length;
-            this.queryStateService.setQueryState(this.ProgNo, payload);
-            
-          } else {
-            this.data = [];
-            this.totalRecords = 0;
-            this.messageService.errorBubble('查詢失敗');
-          }
-        },
-        error: () => {
-          this.messageService.errorBubble('查詢錯誤');
-          this.loading = false;
-          this.messageService.unblockUi();
-        },
-        complete: () => {
-          this.loading = false;
-          this.messageService.unblockUi();
-        },
-      });
-
-      localStorage.setItem('TLS23010_queryForm', JSON.stringify(payload));
-    });
-  }
 
   getLabelFromOptions(value: any, options: any[]): string {
     const found = options?.find((opt) => String(opt.value) === String(value));
@@ -442,9 +389,7 @@ export class TLS23010Component extends BasicQueryPageComponent<any> {
   }
 
   goToReportMode(): void {
-    if (!this.customPageSize || this.customPageSize <= 0) {
-      this.customPageSize = 1000;
-    }
+
     this.showPageSizeDialog = true;
   }
   fetchDetailData = async (payload: any): Promise<any[]> => {
@@ -469,8 +414,7 @@ export class TLS23010Component extends BasicQueryPageComponent<any> {
       });
     });
   };
-
- confirmPageSizeAndNavigate(): void {
+confirmPageSizeAndNavigate(): void {
   this.submitted = true;
   if (this.queryForm.invalid) {
     this.messageService.warnBubble('請確認欄位資料是否完整');
@@ -481,21 +425,34 @@ export class TLS23010Component extends BasicQueryPageComponent<any> {
   const rawFormValue = { ...this.queryForm.value };
   for (const key in rawFormValue) {
     const typedKey = key as keyof typeof rawFormValue;
-    if (rawFormValue[typedKey] === '') {
-      rawFormValue[typedKey] = null;
-    }
+    if (rawFormValue[typedKey] === '') rawFormValue[typedKey] = null;
   }
 
-  const queryFormValue = {
-    ...rawFormValue,
-    pageSize: this.customPageSize,
-  };
+  const queryFormValue = { ...rawFormValue };
+
+  // 若已有查詢在跑，先取消
+  this.querySubscription?.unsubscribe();
 
   this.loading = true;
   this.messageService.blockUi();
 
-  this.tls23010Service
+  this.querySubscription = this.tls23010Service
     .queryTLS23010(queryFormValue, this.displayMode)
+    .pipe(
+      timeout(this.QUERY_TIMEOUT_MS),
+      catchError((err) => {
+        if (err?.name === 'TimeoutError') {
+          this.messageService.warnBubble(
+            '查詢逾時（30 秒）。請調整查詢條件後再試，例如：縮短日期區間、指定機號/專櫃、或輸入交易序號範圍。'
+          );
+          this.loading = false;
+          this.messageService.unblockUi();
+          this.showPageSizeDialog = false;
+          return EMPTY;
+        }
+        return throwError(() => err);
+      })
+    )
     .subscribe({
       next: (res) => {
         if (res.Status === '0000') {
@@ -507,20 +464,19 @@ export class TLS23010Component extends BasicQueryPageComponent<any> {
 
           this.queryStateService.setQueryState(this.ProgNo, queryFormValue);
 
-          // ✅ 等路由跳轉完成才解除 Loading
-          this.router.navigate(['account/tls/tls23010cru'], {
-            state: {
-              queryFormValue,
-              pageSize: this.customPageSize,
-              data: mainData,
-              displayMode: this.displayMode,
-            },
-          }).then(() => {
-            this.loading = false;
-            this.messageService.unblockUi();
-            this.showPageSizeDialog = false;
-          });
-
+          this.router
+            .navigate(['account/tls/tls23010cru'], {
+              state: {
+                queryFormValue,
+                data: mainData,
+                displayMode: this.displayMode,
+              },
+            })
+            .then(() => {
+              this.loading = false;
+              this.messageService.unblockUi(); // ✅ 跳轉完成才解除
+              this.showPageSizeDialog = false;
+            });
         } else {
           this.messageService.errorBubble('查詢失敗');
           this.loading = false;
@@ -533,11 +489,23 @@ export class TLS23010Component extends BasicQueryPageComponent<any> {
         this.loading = false;
         this.messageService.unblockUi();
         this.showPageSizeDialog = false;
-      }
+      },
     });
 }
 
-
+// private restoreQueryFromState(): void {
+//   // 1) 先從 QueryStateService 取（最即時）
+//   const saved = this.queryStateService.getQueryState(this.ProgNo);
+//   if (saved) {
+//     this.queryForm.patchValue(saved);
+//     return;
+//   }
+//   // 2) 退而求其次，用 localStorage
+//   const ls = localStorage.getItem('TLS23010_queryForm');
+//   if (ls) {
+//     this.queryForm.patchValue(JSON.parse(ls));
+//   }
+// }
 
   cancelQuery(): void {
     if (this.querySubscription) {

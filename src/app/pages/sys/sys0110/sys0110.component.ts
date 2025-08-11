@@ -2,7 +2,7 @@ import { Sys0110Service } from './../../../service/api/sys/sys0110.service';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { apiOption, option, tblUser } from '../../../shared/models/sys/sysb000.module';
+import { apiOption, option, tblUser } from '../../../shared/models/sys/sysb000.model';
 import { Column, createPaginationConfig, formatDate, formatDateTime } from '../../../shared/componentkit/table/table.model';
 import { Sysb400Service } from '../../../service/api/sys/sysb400.service';
 import { UserData } from '../../../shared/models/sys/user.model';

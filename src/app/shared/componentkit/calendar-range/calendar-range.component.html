@@ -11,8 +11,7 @@
     <p-calendar [formControl]="startControl" [placeholder]="startControl.disabled ? '' : placeholder"
       [timeOnly]="timeOnly" [showTime]="showTime" hourFormat="24" [dateFormat]="dateFormat" [view]="view"
       [ngClass]="{'ng-invalid ng-dirty': submitted && startControl.errors}" [showIcon]="!startControl.disabled"
-      [iconDisplay]="'input'" [minDate]="minDate" [maxDate]=" startMaxDate ? startMaxDate:endControl.value"
-      [appendTo]="'body'">
+      [iconDisplay]="'input'" [minDate]="minDate" [maxDate]="startMaxDate" [appendTo]="'body'">
       <ng-template pTemplate="inputicon" let-clickCallBack="clickCallBack">
         <i *ngIf="timeOnly" class="pi pi-clock pointer-events-none"></i>
         <i *ngIf="!timeOnly" class="pi pi-calendar pointer-events-none"></i>
@@ -32,7 +31,7 @@
     <p-calendar [formControl]="endControl" [placeholder]="endControl.disabled ? '' : placeholder2" [timeOnly]="timeOnly"
       [showTime]="showTime" hourFormat="24" [dateFormat]="dateFormat" [view]="view" [iconDisplay]="'input'"
       [ngClass]="{'ng-invalid ng-dirty': submitted && endControl.errors}" [showIcon]="!endControl.disabled"
-      [minDate]="endMinDate ? endMinDate:startControl.value" [maxDate]="maxDate" [appendTo]="'body'">
+      [minDate]="endMinDate" [maxDate]="maxDate" [appendTo]="'body'">
       <ng-template pTemplate="inputicon" let-clickCallBack="clickCallBack">
         <i *ngIf="timeOnly" class="pi pi-clock pointer-events-none"></i>
         <i *ngIf="!timeOnly" class="pi pi-calendar pointer-events-none"></i>

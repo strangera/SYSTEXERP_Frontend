@@ -6,7 +6,7 @@ import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-
 import { Column, createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 import { Sys0110Service } from '../../../service/api/sys/sys0110.service';
 import { Sysb400Service } from '../../../service/api/sys/sysb400.service';
-import { tblUser, apiOption, option, SYS1000 } from '../../../shared/models/sys/sysb000.module';
+import { tblUser, apiOption, option, SYS1000 } from '../../../shared/models/sys/sysb000.model';
 import { UserData } from '../../../shared/models/sys/user.model';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { AccordionModule } from 'primeng/accordion';

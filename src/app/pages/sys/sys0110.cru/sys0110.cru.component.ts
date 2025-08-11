@@ -1,7 +1,7 @@
 import { ValidationService } from '@shared/service/validation.service';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { apiOption, option, SYS1000 } from '../../../shared/models/sys/sysb000.module';
+import { apiOption, option, SYS1000 } from '../../../shared/models/sys/sysb000.model';
 import { Sys0110Service } from '../../../service/api/sys/sys0110.service';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { EncryptionService } from '../../../shared/service/encryption.service';

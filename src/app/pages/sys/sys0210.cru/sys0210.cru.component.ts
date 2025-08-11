@@ -5,7 +5,7 @@ import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angula
 // Shared
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
-import { tblUser } from '../../../shared/models/sys/sysb000.module';
+import { tblUser } from '../../../shared/models/sys/sysb000.model';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { PanelModule } from 'primeng/panel';

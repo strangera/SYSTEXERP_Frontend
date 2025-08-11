@@ -4,7 +4,7 @@ import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angula
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 //
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
-import { Sysb500m } from '../../../shared/models/sys/sysb000.module';
+import { Sysb500m } from '../../../shared/models/sys/sysb000.model';
 import { Sysb500Service } from '../../../service/api/sys/sysb500.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
@@ -15,20 +15,20 @@ import { TranslateModule } from '@ngx-translate/core';
 import { ValidationService } from '@shared/service/validation.service';
 
 @Component({
-    selector: 'app-sysb500.cru',
-    templateUrl: './sysb500.cru.component.html',
-    styleUrl: './sysb500.cru.component.scss',
-    standalone: true,
-    imports: [
-        MenubarComponent,
-        ButtonComponent,
-        PanelModule,
-        FormsModule,
-        ReactiveFormsModule,
-        InputTextComponent,
-        NgIf,
-        TranslateModule,
-    ],
+  selector: 'app-sysb500.cru',
+  templateUrl: './sysb500.cru.component.html',
+  styleUrl: './sysb500.cru.component.scss',
+  standalone: true,
+  imports: [
+    MenubarComponent,
+    ButtonComponent,
+    PanelModule,
+    FormsModule,
+    ReactiveFormsModule,
+    InputTextComponent,
+    NgIf,
+    TranslateModule,
+  ],
 })
 // 區域基本資料維護作業 CRU
 export class SYSB500CRUComponent

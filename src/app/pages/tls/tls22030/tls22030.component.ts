@@ -20,6 +20,8 @@ import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../../environments/environment';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 
+const yesterday = new Date();
+yesterday.setDate(yesterday.getDate() - 1);
 
 @Component({
   selector: 'app-tls22030',
@@ -32,8 +34,8 @@ export class TLS22030Component extends BasicQueryPageComponent<any> implements O
   queryForm = this.formBuilder.group({
     ECR_No: [''],
     TLT_NoList: [null],
-    TXN_DateStart: [null, Validators.required],
-    TXN_DateEnd: [null, Validators.required],
+    TXN_DateStart: [yesterday, Validators.required],
+    TXN_DateEnd: [yesterday, Validators.required],
     IsLossStatus: [null], // 預設值為 '0000'，表示全部
     ...createPaginationConfig([{ field: 'tlt_no', order: 1 }])
   });

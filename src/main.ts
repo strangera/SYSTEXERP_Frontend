@@ -1,7 +1,6 @@
 /// <reference types="@angular/localize" />
 import { routes } from './app/app.routing';
 import { bootstrapApplication, BrowserModule } from '@angular/platform-browser';
-import { platformBrowserDynamic } from '@angular/platform-browser-dynamic';
 import { provideHttpClient, withInterceptorsFromDi, HTTP_INTERCEPTORS, HttpClient } from '@angular/common/http';
 import { MessageService, ConfirmationService, PrimeNGConfig } from 'primeng/api';
 import { CustomheaderinterceptorService } from './app/interceptors/customheaderinterceptor.service';
@@ -21,8 +20,6 @@ import { environment } from './environments/environment';
 import { AppComponent } from './app/app.component';
 import { importProvidersFrom } from '@angular/core';
 import { QueryCacheInterceptorService } from '@interceptors/querycacheinterceptor.service';
-
-const currentUser = localStorage.getItem('UserInfo');
 
 export function HttpLoaderFactory(http: HttpClient) {
   return new TranslateHttpLoader(http, './assets/i18n/', '.json');
@@ -58,7 +55,7 @@ bootstrapApplication(AppComponent, {
     PrimeNGConfig,
     {
       provide: HTTP_INTERCEPTORS,
-      useClass: CustomheaderinterceptorService, // 先添加自定義頭部
+      useClass: CustomheaderinterceptorService, // 添加自定義頭部
       multi: true
     },
     {
@@ -68,12 +65,12 @@ bootstrapApplication(AppComponent, {
     },
     {
       provide: HTTP_INTERCEPTORS,
-      useClass: DateToISOStringInterceptor,
+      useClass: DateToISOStringInterceptor, // 序列化日期
       multi: true
     },
     {
       provide: HTTP_INTERCEPTORS,
-      useClass: ErrorinterceptorService, // 最後處理錯誤
+      useClass: ErrorinterceptorService, // 處理錯誤
       multi: true
     },
     {

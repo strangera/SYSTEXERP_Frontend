@@ -14,7 +14,7 @@ import { InputNumberComponent } from '../../../shared/componentkit/input-number/
 import { ButtonDynamicallyaddComponent } from '../../../shared/componentkit/button-dynamicallyadd/button-dynamicallyadd.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
-import { option } from '../../../shared/models/sys/sysb000.module';
+import { option } from '../../../shared/models/sys/sysb000.model';
 import { ValidationService } from '../../../shared/service/validation.service';
 import { Tls41050Service } from '../../../service/api/tls/tls41050.service';
 
@@ -85,24 +85,24 @@ export class TLS41050CRUComponent extends BasicCruPageComponent<POS1002>
   });
   //
   ECR_Type_Option: option[] = [ // 機台類型 1=集中機台(統收)、2=專櫃機台(自收)、5=離線機台(不開立業主發票、不使用業主機台)、7=它社機台(開立業主發票、不使用業主機台)
-        {value: '1', label: '集中機台(統收)'},
-        {value: '2', label: '專櫃機台(自收)'},
-        {value: '5', label: '離線機台(不開立業主發票、不使用業主機台)'},
-        {value: '7', label: '它社機台(開立業主發票、不使用業主機台)'}
-      ];
-  
-      ECR_Status_Option: option[] = [ // 收銀機狀態 A=啟用(預設值)、C=停用、S=強制停用、T=訓練
-        {value: 'A', label: '啟用'},
-        {value: 'C', label: '停用'},
-        {value: 'S', label: '強制停用'},
-        {value: 'T', label: '訓練'}
-      ]
-  
-      ECR_GUI_Type_Option: option[] = [ // 發票使用類別，00=不開發票、03=二聯式收銀機發票、07=電子發票(預設值)
-        {value: '00', label: '不開發票'},
-        {value: '03', label: '二聯式收銀機發票'},
-        {value: '07', label: '電子發票'}
-      ]
+    { value: '1', label: '集中機台(統收)' },
+    { value: '2', label: '專櫃機台(自收)' },
+    { value: '5', label: '離線機台(不開立業主發票、不使用業主機台)' },
+    { value: '7', label: '它社機台(開立業主發票、不使用業主機台)' }
+  ];
+
+  ECR_Status_Option: option[] = [ // 收銀機狀態 A=啟用(預設值)、C=停用、S=強制停用、T=訓練
+    { value: 'A', label: '啟用' },
+    { value: 'C', label: '停用' },
+    { value: 'S', label: '強制停用' },
+    { value: 'T', label: '訓練' }
+  ]
+
+  ECR_GUI_Type_Option: option[] = [ // 發票使用類別，00=不開發票、03=二聯式收銀機發票、07=電子發票(預設值)
+    { value: '00', label: '不開發票' },
+    { value: '03', label: '二聯式收銀機發票' },
+    { value: '07', label: '電子發票' }
+  ]
   // ----------------------------------------------------------------
   constructor(
     private tls41050Service: Tls41050Service,
@@ -113,7 +113,7 @@ export class TLS41050CRUComponent extends BasicCruPageComponent<POS1002>
 
   ngOnInit(): void {
     this.initializePage('TLS41050', this.dataForm);
-    console.log('讀取表單',this.dataForm.value);
+    console.log('讀取表單', this.dataForm.value);
   }
 
   onSubmit(frm: FormGroup) {

@@ -17,6 +17,8 @@ import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-se
 import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
 import { DiscCodeEditColumn, PayNoEditColumn, PreOrderEditColumn, TLTIdEditColumn, TLTNoEditColumn, VoidEditColumn } from './tls24080.model';
 import { createPaginationConfig } from '@shared/componentkit/table2/table2.model';
+import { yesterday } from '@shared/models/system/query-form.model';
+
 @Component({
   selector: 'app-tls24080',
   templateUrl: './tls24080.component.html',
@@ -37,8 +39,8 @@ import { createPaginationConfig } from '@shared/componentkit/table2/table2.model
 })
 export class TLS24080Component extends BasicQueryPageComponent<TLTNoEditItem | DiscCodeEditItem | TLTIdEditItem | PayNoEditItem | PreOrderEditItem | VoidEditItem> implements OnInit {
   queryForm = this.formBuilder.group({
-    TXN_Date_Start: [new Date(), [Validators.required]], // 銷售日期起
-    TXN_Date_End: [new Date(), [Validators.required]],   // 銷售日期迄
+    TXN_Date_Start: [yesterday, [Validators.required]], // 銷售日期起 // 預設昨天
+    TXN_Date_End: [yesterday, [Validators.required]],   // 銷售日期迄 // 預設昨天
     UPD_Date_Start: [null], // 修正日期起
     UPD_Date_End: [null],   // 修正日期迄
     ECR_No: [null],  // 收銀機號

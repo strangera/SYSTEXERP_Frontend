@@ -4,7 +4,7 @@ import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angula
 // Permissions
 // import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { apiOption, Sysb300m } from '../../../shared/models/sys/sysb000.module';
+import { apiOption, Sysb300m } from '../../../shared/models/sys/sysb000.model';
 import { Sysb300Service } from '../../../service/api/sys/sysb300.service';
 import { Column, createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
@@ -16,21 +16,21 @@ import { TableComponent } from '../../../shared/componentkit/table/table.compone
 import { TranslateModule } from '@ngx-translate/core';
 
 @Component({
-    selector: 'app-sysb300',
-    templateUrl: './sysb300.component.html',
-    styleUrl: './sysb300.component.scss',
-    standalone: true,
-    imports: [
-        MenubarComponent,
-        ButtonComponent,
-        AccordionModule,
-        FormsModule,
-        ReactiveFormsModule,
-        InputTextComponent,
-        DropdownComponent,
-        TableComponent,
-        TranslateModule,
-    ],
+  selector: 'app-sysb300',
+  templateUrl: './sysb300.component.html',
+  styleUrl: './sysb300.component.scss',
+  standalone: true,
+  imports: [
+    MenubarComponent,
+    ButtonComponent,
+    AccordionModule,
+    FormsModule,
+    ReactiveFormsModule,
+    InputTextComponent,
+    DropdownComponent,
+    TableComponent,
+    TranslateModule,
+  ],
 })
 
 // 組織階層設定作業

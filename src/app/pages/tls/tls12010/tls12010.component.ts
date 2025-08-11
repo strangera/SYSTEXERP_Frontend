@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { createPaginationConfig, Column, formatDate } from '../../../shared/componentkit/table/table.model';
-import { apiOption, option } from '../../../shared/models/sys/sysb000.module';
+import { apiOption, option } from '../../../shared/models/sys/sysb000.model';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { AccordionModule } from 'primeng/accordion';
@@ -52,7 +52,7 @@ export interface Potential_Customer {
   CanDel?: boolean;  //能否刪除(僅顯示)
 }
 
-export interface POS2013{
+export interface POS2013 {
   No: string,
   Name: string,
   ShortName: string,
@@ -64,246 +64,248 @@ export interface POS2013{
 
 // 2.1.2.1 潛在客戶資料維護
 @Component({
-    selector: 'app-tls12010',
-    templateUrl: './tls12010.component.html',
-    styleUrl: './tls12010.component.scss',
-    standalone: true,
-    imports: [MenubarComponent, ButtonComponent,InputTextComponent, InputNumberComponent, AccordionModule, FormsModule, ReactiveFormsModule,CalendarComponent, CalendarRangeComponent, CalendarRangeQuickComponent, DropdownComponent, MultiSelectComponent, InputTextComponent, TableComponent, TranslateModule]
+  selector: 'app-tls12010',
+  templateUrl: './tls12010.component.html',
+  styleUrl: './tls12010.component.scss',
+  standalone: true,
+  imports: [MenubarComponent, ButtonComponent, InputTextComponent, InputNumberComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarComponent, CalendarRangeComponent, CalendarRangeQuickComponent, DropdownComponent, MultiSelectComponent, InputTextComponent, TableComponent, TranslateModule]
 })
-export class TLS12010Component extends BasicQueryPageComponent<Potential_Customer> implements OnInit{
-    // 查詢
-      queryForm = this.formBuilder.group({
-        // Potential_Customer 潛在客戶主檔
-        CreatedDateStart: [null],  // 建立日期_起始日
-        CreatedDateEnd: [null],  // 建立日期_終止日
-        contact_USR_Name: ['', [Validators.maxLength(16)]],  // 接洽人員代碼/名稱 -- 之後會用dropdown*
-        cus_uniform_id: [[], [Validators.maxLength(16)]], // 廠商統一編號 --這邊要請後端更新 pos2013.ven_uniform 的下拉 *
-        // /*若廠商類型為1=統編, 為廠商統編 (pos2013.ven_uniform) */
-	         /*若廠商 類型為2=身份證字號, 進行身份證檢查碼檢查 */
-	         /*若廠商類型為3=員工ID, 檢查 tblUser.user_no */ 
-        VEN_Name: ['', [Validators.maxLength(100)]], // 廠商名稱(中文)
-        /*若廠商類型為2=身份證字號, 由使用者自行輸入 */
-	      /*若廠商類型為3=員工ID, tblUser.user_name */
-        VEN_EngName: ['', [Validators.maxLength(100)]], // 廠商名稱(英文)
-        /*若廠商類型為2=身份證字號, 由使用者自行輸入 */
-	      /*若廠商類型為3=員工ID, 由使用者自行輸入 */
-        bus_type: [[], [Validators.maxLength(2)]], // 業種-大分類代碼(tltbustype)
-        tlt_name: ['', [Validators.maxLength(100)]],  // 品牌(專櫃名稱)
-        tlt_EngName: ['', [Validators.maxLength(100)]], // 品牌英文(專櫃名稱)
-        //分頁查詢
-        ...createPaginationConfig([{ field: 'contact_USR_No', order: 1 }]), // 分頁和排序參數
+export class TLS12010Component extends BasicQueryPageComponent<Potential_Customer> implements OnInit {
+  // 查詢
+  queryForm = this.formBuilder.group({
+    // Potential_Customer 潛在客戶主檔
+    CreatedDateStart: [null],  // 建立日期_起始日
+    CreatedDateEnd: [null],  // 建立日期_終止日
+    contact_USR_Name: ['', [Validators.maxLength(16)]],  // 接洽人員代碼/名稱 -- 之後會用dropdown*
+    cus_uniform_id: [[], [Validators.maxLength(16)]], // 廠商統一編號 --這邊要請後端更新 pos2013.ven_uniform 的下拉 *
+    // /*若廠商類型為1=統編, 為廠商統編 (pos2013.ven_uniform) */
+    /*若廠商 類型為2=身份證字號, 進行身份證檢查碼檢查 */
+    /*若廠商類型為3=員工ID, 檢查 tblUser.user_no */
+    VEN_Name: ['', [Validators.maxLength(100)]], // 廠商名稱(中文)
+    /*若廠商類型為2=身份證字號, 由使用者自行輸入 */
+    /*若廠商類型為3=員工ID, tblUser.user_name */
+    VEN_EngName: ['', [Validators.maxLength(100)]], // 廠商名稱(英文)
+    /*若廠商類型為2=身份證字號, 由使用者自行輸入 */
+    /*若廠商類型為3=員工ID, 由使用者自行輸入 */
+    bus_type: [[], [Validators.maxLength(2)]], // 業種-大分類代碼(tltbustype)
+    tlt_name: ['', [Validators.maxLength(100)]],  // 品牌(專櫃名稱)
+    tlt_EngName: ['', [Validators.maxLength(100)]], // 品牌英文(專櫃名稱)
+    //分頁查詢
+    ...createPaginationConfig([{ field: 'contact_USR_No', order: 1 }]), // 分頁和排序參數
+  });
+  // 表格
+  // ----------------------------------------------------------------
+  totalRecords = 0;// 分頁和排序參數 // 排序需要
+
+  cus_type_Option: option[] = [ // 廠商類型（1=統編、2=身份證、3=員工ID）
+    { value: '1', label: '統編' },
+    { value: '2', label: '身份證' },
+    { value: '3', label: '員工ID' }
+  ];
+
+  business_type_Option: apiOption[] = []; // 經營方式(SYS1000.T117)（長度1，1=生產者、2=代理商、3=經銷商、4=其它）
+  bus_type_Option: apiOption[] = []; // 業種-大分類代碼
+  tlt_name_Option: apiOption[] = []; // 品牌
+  cus_uniform_Option: POS2013[] = []; // 廠商統一編號(pos2013) -- 等候端提供 (必須包含No、Name、EName)
+  contact_USR_Option: apiOption[] = [];  // 接洽人員代碼/名稱
+
+  data: Potential_Customer[] = [];
+  columns: Column[] = [
+    { field: 'contact_USR_No', header: '接洽人員代碼', visible: true },
+    { field: 'contact_USR_Name', header: '接洽人員姓名', visible: true },
+    {
+      field: 'cus_type', header: '廠商類型', visible: true, format: (value: string) =>
+        this.cus_type_Option.find((option) => option.value === value)?.label || value
+    },
+    { field: 'cus_uniform_id', header: '廠商統一編號', visible: true },
+    { field: 'VEN_Name', header: '廠商名稱', visible: true },
+    { field: 'VEN_EngName', header: '廠商英文名稱', visible: true },
+    { field: 'bus_type', header: '大分類代碼', visible: true },
+    { field: 'bus_type_name', header: '大分類名稱', visible: true },
+    { field: 'tlt_name', header: '品牌（專櫃名稱）', visible: true },
+    { field: 'tlt_EngName', header: '品牌英文名稱', visible: true },
+    { field: 'VEN_Boss', header: '廠商聯絡人', visible: true },
+    { field: 'VEN_BossTel', header: '廠商聯絡人電話', visible: true },
+    { field: 'VEN_BossTitle', header: '廠商聯絡人頭銜', visible: true },
+    { field: 'VEN_BossFax', header: '廠商聯絡人傳真', visible: true },
+    { field: 'VEN_BossMobile', header: '廠商聯絡人行動電話', visible: true },
+    { field: 'VEN_BossEmail', header: '廠商聯絡人電子郵件', visible: true },
+    { field: 'VEN_Addr', header: '公司通訊地址', visible: true },
+    { field: 'VEN_PersonInCharge', header: '公司負責人', visible: true },
+    {
+      field: 'business_type', header: '經營方式', visible: true, format: (value: string) =>
+        this.business_type_Option.find((option) => option.No === value)?.Label || value
+    },
+    { field: 'demanded_area', header: '需求面積', visible: true },
+    { field: 'country_of_origin', header: '商品出產地', visible: true },
+    { field: 'remarks', header: '備註', visible: true },
+
+    { field: 'CRT_Date', header: '建立日期', visible: true, format: formatDate },
+    { field: 'CRT_USR_No', header: '建立人員代碼', visible: false },
+    { field: 'CRT_USR_Name', header: '建立人員姓名', visible: false },
+    { field: 'UPD_Date', header: '變更日期', visible: false, format: formatDate },
+    { field: 'UPD_USR_No', header: '變更人員代碼', visible: false },
+    { field: 'UPD_USR_Name', header: '變更人員姓名', visible: false },
+  ];
+
+  selectedItems: Potential_Customer[] = [];// 多選項目
+
+  // ----------------------------------------------------------------
+  constructor(private tls12010Service: Tls12010Service) {
+    super();
+  }
+
+  ngOnInit(): void {
+    this.initializePage('TLS12010', 'TLS/TLS12010cru', this.queryForm, (form) => this.onSubmit(form));
+    this.loadOptions();
+  }
+
+  onSubmit(frm: FormGroup) {
+    console.log('查詢條件', frm.value);
+    this.handleSubmit(frm, () => {
+      this.tls12010Service.queryTLS12010(frm.value).subscribe({
+        next: (response) => {
+          if (response.Status === '0000') {
+            this.data = response.Data || [];
+            console.log('Result', this.data);
+            this.totalRecords = response.TotalCount || response.Data.length;
+            this.queryStateService.setQueryState(this.ProgNo, frm.value);
+          } else {
+            console.error('API error:', response.Status, response.Message);
+          }
+          this.loading = false;
+          this.messageService.unblockUi();
+        },
+        error: (err: string) => {
+          console.error('API error:', err);
+          this.loading = false;
+          this.messageService.unblockUi();
+        },
       });
-      // 表格
-      // ----------------------------------------------------------------
-      totalRecords = 0;// 分頁和排序參數 // 排序需要
-    
-      cus_type_Option: option[] = [ // 廠商類型（1=統編、2=身份證、3=員工ID）
-        {value: '1', label: '統編'},
-        {value: '2', label: '身份證'},
-        {value: '3', label: '員工ID'}
-      ];
-  
-      business_type_Option: apiOption[] = []; // 經營方式(SYS1000.T117)（長度1，1=生產者、2=代理商、3=經銷商、4=其它）
-      bus_type_Option: apiOption[] = []; // 業種-大分類代碼
-      tlt_name_Option: apiOption[] = []; // 品牌
-      cus_uniform_Option: POS2013[] = []; // 廠商統一編號(pos2013) -- 等候端提供 (必須包含No、Name、EName)
-      contact_USR_Option: apiOption[] = [];  // 接洽人員代碼/名稱
-      
-      data: Potential_Customer[] = [];
-      columns: Column[] = [
-        { field: 'contact_USR_No', header: '接洽人員代碼', visible: true },
-        { field: 'contact_USR_Name', header: '接洽人員姓名', visible: true },
-        { field: 'cus_type', header: '廠商類型', visible: true, format: (value: string) =>
-          this.cus_type_Option.find((option) => option.value === value)?.label || value
-        },
-        { field: 'cus_uniform_id', header: '廠商統一編號', visible: true },
-        { field: 'VEN_Name', header: '廠商名稱', visible: true },
-        { field: 'VEN_EngName', header: '廠商英文名稱', visible: true },
-        { field: 'bus_type', header: '大分類代碼', visible: true},
-        { field: 'bus_type_name', header: '大分類名稱', visible: true},
-        { field: 'tlt_name', header: '品牌（專櫃名稱）', visible: true },
-        { field: 'tlt_EngName', header: '品牌英文名稱', visible: true },
-        { field: 'VEN_Boss', header: '廠商聯絡人', visible: true },
-        { field: 'VEN_BossTel', header: '廠商聯絡人電話', visible: true },
-        { field: 'VEN_BossTitle', header: '廠商聯絡人頭銜', visible: true },
-        { field: 'VEN_BossFax', header: '廠商聯絡人傳真', visible: true },
-        { field: 'VEN_BossMobile', header: '廠商聯絡人行動電話', visible: true },
-        { field: 'VEN_BossEmail', header: '廠商聯絡人電子郵件', visible: true },
-        { field: 'VEN_Addr', header: '公司通訊地址', visible: true },
-        { field: 'VEN_PersonInCharge', header: '公司負責人', visible: true },
-        { field: 'business_type', header: '經營方式', visible: true, format: (value: string) =>
-          this.business_type_Option.find((option) => option.No === value)?.Label || value
-        },
-        { field: 'demanded_area', header: '需求面積', visible: true },
-        { field: 'country_of_origin', header: '商品出產地', visible: true },
-        { field: 'remarks', header: '備註', visible: true },
+    });
+  }
 
-        { field: 'CRT_Date', header: '建立日期', visible: true, format: formatDate  },
-        { field: 'CRT_USR_No', header: '建立人員代碼', visible: false },
-        { field: 'CRT_USR_Name', header: '建立人員姓名', visible: false },
-        { field: 'UPD_Date', header: '變更日期', visible: false, format: formatDate },
-        { field: 'UPD_USR_No', header: '變更人員代碼', visible: false },
-        { field: 'UPD_USR_Name', header: '變更人員姓名', visible: false },
-      ];
-    
-      selectedItems: Potential_Customer[] = [];// 多選項目
-    
-      // ----------------------------------------------------------------
-      constructor(private tls12010Service: Tls12010Service) {
-        super();
-      }
-    
-      ngOnInit(): void {
-        this.initializePage('TLS12010', 'TLS/TLS12010cru', this.queryForm, (form) => this.onSubmit(form));
-        this.loadOptions();
-      }
-    
-      onSubmit(frm: FormGroup) {
-        console.log('查詢條件',frm.value);
-        this.handleSubmit(frm, () => {
-          this.tls12010Service.queryTLS12010(frm.value).subscribe({
-            next: (response) => {
-              if (response.Status === '0000') {
-                this.data = response.Data || [];
-                console.log('Result', this.data);
-                this.totalRecords = response.TotalCount || response.Data.length;
-                this.queryStateService.setQueryState(this.ProgNo, frm.value);
-              } else {
-                console.error('API error:', response.Status, response.Message);
-              }
-              this.loading = false;
-              this.messageService.unblockUi();
-            },
-            error: (err: string) => {
-              console.error('API error:', err);
-              this.loading = false;
-              this.messageService.unblockUi();
-            },
-          });
-        });
-      }
+  // 刪除項目
+  onDelete(data: Potential_Customer | Potential_Customer[]): void {
+    console.log('Delete data:', JSON.stringify(data, null, 2));
 
-      // 刪除項目
-        onDelete(data: Potential_Customer | Potential_Customer[]): void {
-          console.log('Delete data:', JSON.stringify(data, null, 2));
-      
-          const items = Array.isArray(data) ? data : [data];
-          if (items.length === 0) {
-            console.error('No items to delete');
-            this.messageService.errorBubble('無法刪除：沒有選中的項目');
-            return;
-          }
-      
-          // 收集所有有效的 ID
-          const idList = items
-            .filter((item) => item && item.id != null && item.id !== undefined)
-            .map((item) => item.id);
-      
-          if (idList.length === 0) {
-            console.error('No valid IDs to delete');
-            this.messageService.errorBubble('無法刪除：選中的項目缺少有效 ID');
-            return;
-          }
-    
-          const deleteBody = {
-            idList: idList, // 符合 API 的 idList 格式
-          };
+    const items = Array.isArray(data) ? data : [data];
+    if (items.length === 0) {
+      console.error('No items to delete');
+      this.messageService.errorBubble('無法刪除：沒有選中的項目');
+      return;
+    }
 
-          console.log('deleteBody',deleteBody);
-          
-          this.tls12010Service.deleteTLS12010(deleteBody).subscribe({
-            next: (response) => {
-              if (response.Status === '0000') {
-                this.messageService.successBubble('選中項目刪除成功');
-              } else {
-                console.error('API error:', response.Status, response.Message);
-                this.messageService.errorBubble(`刪除失敗: ${response.Message}`);
-              }
-            },
-            error: (err: string) => {
-              console.error('API error:', err);
-              this.messageService.errorBubble('刪除失敗');
-            },
-            complete: () => {
-              this.onSubmit(this.queryForm);
-            },
-          });
-      
-          this.selectedItems = [];
-        }
+    // 收集所有有效的 ID
+    const idList = items
+      .filter((item) => item && item.id != null && item.id !== undefined)
+      .map((item) => item.id);
 
-      //接待人員變化
-    onUSR_NoChange(id: string): void{
-      // contact_USR_Option 有對應的No 就將Name寫入 contact_USR_Name
-       const selectedUSR = this.contact_USR_Option.find(item => item.No === id);
-        if (selectedUSR) {
-          this.queryForm.get('contact_USR_Name')?.setValue(selectedUSR.Name);
+    if (idList.length === 0) {
+      console.error('No valid IDs to delete');
+      this.messageService.errorBubble('無法刪除：選中的項目缺少有效 ID');
+      return;
+    }
+
+    const deleteBody = {
+      idList: idList, // 符合 API 的 idList 格式
+    };
+
+    console.log('deleteBody', deleteBody);
+
+    this.tls12010Service.deleteTLS12010(deleteBody).subscribe({
+      next: (response) => {
+        if (response.Status === '0000') {
+          this.messageService.successBubble('選中項目刪除成功');
         } else {
-          // 若找不到，清空欄位或保留原值，看你的需求
-          this.queryForm.get('contact_USR_Name')?.setValue('');
+          console.error('API error:', response.Status, response.Message);
+          this.messageService.errorBubble(`刪除失敗: ${response.Message}`);
         }
-    }  
-    
-      isRowSelectable(rowData: Potential_Customer): boolean {
-        return rowData.CanDel ?? false;
-      }
-  
-      loadOptions(){
-        // 查 大分類(專櫃)
-        this.tls12010Service.queryTLTBUSTYPE_DropDownList({}).subscribe((response) => {
-          this.bus_type_Option = response.Data.map((item: any) => ({
-            No: item.No, // 大分類(專櫃) 號
-            Label: item.No + '/' + item.Name, // 組合成顯示用的Label
-          }));
-          console.log('大分類代號:', this.bus_type_Option);
-        });
-        // 查 品牌
-        this.tls12010Service.queryPLULOGO_DropDownList({}).subscribe((response) => {
-          this.tlt_name_Option = response.Data.map((item: any) => ({
-            No: item.No, // 專櫃主代碼
-            Label: item.No + '/' + item.Name, // 組合成顯示用的Label
-          }));
-          console.log('品牌代號:', this.tlt_name_Option);
-        });
-        // 查 統編
-        this.tls12010Service.queryPOS2013_DropDownList({"VEN_Flag": '1'}).subscribe((response) => {
-          // 去除重複的 No，只保留第一筆
-          const uniqueMap = new Map<string, any>();
-          response.Data.forEach((item: any) => {
-            if (!uniqueMap.has(item.No)) {
-              uniqueMap.set(item.No, item);
-            }
-          });
+      },
+      error: (err: string) => {
+        console.error('API error:', err);
+        this.messageService.errorBubble('刪除失敗');
+      },
+      complete: () => {
+        this.onSubmit(this.queryForm);
+      },
+    });
 
-          // 建立 dropdown options
-          this.cus_uniform_Option = Array.from(uniqueMap.values()).map((item: any) => ({
-            No: item.No,
-            Name: item.Name,
-            ShortName: item.ShortName,
-            VEN_No: item.VEN_No,
-            VEN_EngName: item.VEN_EngName,
-            Label: item.No + '/' + item.Name,
-          }));
+    this.selectedItems = [];
+  }
 
-          console.log('統編代號(去重):', this.cus_uniform_Option);
-        });
-        // 查 經營方式
-         this.tls12010Service.querySYS1000_DropDownList({"SYS_Type": 'T117'}).subscribe((response) => {
-          this.business_type_Option = response.Data.map((item: any) => ({
-            No: item.No, // 經營方式 代碼
-            Label: item.No + '/' + item.Name, // 組合成顯示用的Label
-          }));
-          console.log('經營方式代號:', this.business_type_Option);
-        });
+  //接待人員變化
+  onUSR_NoChange(id: string): void {
+    // contact_USR_Option 有對應的No 就將Name寫入 contact_USR_Name
+    const selectedUSR = this.contact_USR_Option.find(item => item.No === id);
+    if (selectedUSR) {
+      this.queryForm.get('contact_USR_Name')?.setValue(selectedUSR.Name);
+    } else {
+      // 若找不到，清空欄位或保留原值，看你的需求
+      this.queryForm.get('contact_USR_Name')?.setValue('');
+    }
+  }
 
-        // 查詢 接待人員
-        this.tls12010Service.queryTBLUSER_DropDownList({}).subscribe((response) => {
-          this.contact_USR_Option = response.Data.map((item: any) => ({
-            No: item.No, // 接待人員 名稱
-            Name: item.Name, // 接待人員 名稱
-            Label: item.No+ '-'+ item.Name //標籤
-          }));
-          console.log('接待人員代號:', this.contact_USR_Option);
-        });
-      }
+  isRowSelectable(rowData: Potential_Customer): boolean {
+    return rowData.CanDel ?? false;
+  }
+
+  loadOptions() {
+    // 查 大分類(專櫃)
+    this.tls12010Service.queryTLTBUSTYPE_DropDownList({}).subscribe((response) => {
+      this.bus_type_Option = response.Data.map((item: any) => ({
+        No: item.No, // 大分類(專櫃) 號
+        Label: item.No + '/' + item.Name, // 組合成顯示用的Label
+      }));
+      console.log('大分類代號:', this.bus_type_Option);
+    });
+    // 查 品牌
+    this.tls12010Service.queryPLULOGO_DropDownList({}).subscribe((response) => {
+      this.tlt_name_Option = response.Data.map((item: any) => ({
+        No: item.No, // 專櫃主代碼
+        Label: item.No + '/' + item.Name, // 組合成顯示用的Label
+      }));
+      console.log('品牌代號:', this.tlt_name_Option);
+    });
+    // 查 統編
+    this.tls12010Service.queryPOS2013_DropDownList({ "VEN_Flag": '1' }).subscribe((response) => {
+      // 去除重複的 No，只保留第一筆
+      const uniqueMap = new Map<string, any>();
+      response.Data.forEach((item: any) => {
+        if (!uniqueMap.has(item.No)) {
+          uniqueMap.set(item.No, item);
+        }
+      });
+
+      // 建立 dropdown options
+      this.cus_uniform_Option = Array.from(uniqueMap.values()).map((item: any) => ({
+        No: item.No,
+        Name: item.Name,
+        ShortName: item.ShortName,
+        VEN_No: item.VEN_No,
+        VEN_EngName: item.VEN_EngName,
+        Label: item.No + '/' + item.Name,
+      }));
+
+      console.log('統編代號(去重):', this.cus_uniform_Option);
+    });
+    // 查 經營方式
+    this.tls12010Service.querySYS1000_DropDownList({ "SYS_Type": 'T117' }).subscribe((response) => {
+      this.business_type_Option = response.Data.map((item: any) => ({
+        No: item.No, // 經營方式 代碼
+        Label: item.No + '/' + item.Name, // 組合成顯示用的Label
+      }));
+      console.log('經營方式代號:', this.business_type_Option);
+    });
+
+    // 查詢 接待人員
+    this.tls12010Service.queryTBLUSER_DropDownList({}).subscribe((response) => {
+      this.contact_USR_Option = response.Data.map((item: any) => ({
+        No: item.No, // 接待人員 名稱
+        Name: item.Name, // 接待人員 名稱
+        Label: item.No + '-' + item.Name //標籤
+      }));
+      console.log('接待人員代號:', this.contact_USR_Option);
+    });
+  }
 }

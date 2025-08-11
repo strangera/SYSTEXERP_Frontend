@@ -35,16 +35,23 @@ import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/cale
   ],
 })
 export class FIN15070Component extends BasicQueryPageComponent<any> {
-  queryForm = this.formBuilder.group({
-    DeclareMonth: [null, Validators.required],
-    SaleDateStart: [new Date('2024-01-01'), Validators.required],
-    SaleDateEnd: [new Date('2024-01-31'), Validators.required],
-    ...createPaginationConfig,
-  });
 
   data: any[] = [];
   totalRecords = 0;
   selectedItems: any[] = [];
+  readonly yesterday: Date = (() => {
+    const d = new Date();
+    d.setHours(0, 0, 0, 0);
+    d.setDate(d.getDate() - 1);
+    return d;
+  })();
+    queryForm = this.formBuilder.group({
+    DeclareMonth: [null, Validators.required],
+    SaleDateStart: [this.yesterday, Validators.required],
+    SaleDateEnd: [this.yesterday, Validators.required],
+    ...createPaginationConfig,
+  });
+
 columnGroup = [
   { header: '銷售日期', field: 'SaleDate' },
   { header: '折扣別報表(A)', field: 'A' },

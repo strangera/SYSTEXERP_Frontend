@@ -2,7 +2,7 @@ import { Sys0230Service } from './../../../service/api/sys/sys0230.service';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
-import { tblUser } from '../../../shared/models/sys/sysb000.module';
+import { tblUser } from '../../../shared/models/sys/sysb000.model';
 import { Column } from '../../../shared/componentkit/table/table.model';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
