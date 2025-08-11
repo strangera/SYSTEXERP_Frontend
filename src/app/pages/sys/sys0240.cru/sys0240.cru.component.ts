@@ -2,7 +2,7 @@ import { Component, OnInit, ChangeDetectionStrategy, ChangeDetectorRef } from '@
 import { Validators, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { Column } from '../../../shared/componentkit/table/table.model';
-import { apiOption, tblRole } from '../../../shared/models/sys/sysb000.module';
+import { apiOption, tblRole } from '../../../shared/models/sys/sysb000.model';
 import { Sys0210Service } from '../../../service/api/sys/sys0210.service';
 import { Sys0230Service } from '../../../service/api/sys/sys0230.service';
 import { animate, style, transition, trigger } from '@angular/animations';
