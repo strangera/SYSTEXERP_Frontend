@@ -178,7 +178,6 @@ export class TableComponent extends BasicPrintDataComponent implements OnChanges
     const SortBy = event.multiSortMeta ?? [{ field: this.dataKey, order: 1 }];
     this.lazyLoadData.emit({ pageIndex, pageSize, SortBy });
   }
-  /* =================================核心程式碼======================================= */
   // 行追蹤
   trackByRow = (index: number, item: any) => { return item?.[this.dataKey] || index; };
   // 計算欄位總數(包含序號、勾選、管理、展開)
@@ -215,9 +214,13 @@ export class TableComponent extends BasicPrintDataComponent implements OnChanges
   }
   // 行編輯保存
   onRowEditSave(rowData: any, ri: number, htmlTableRowElement: HTMLTableRowElement) {
-    // 驗證邏輯不變
-    if (!this.alwaysEdit && !this.alwaysBlurValidate && !this.tableUtilityService.validateRowData(rowData, this.columns, this.data, this.messageService, this.dataKey, this.defaultInsertData)) return;
-
+    if (this.insertRowData && this.tableUtilityService.isNewRowUnchanged(rowData, this.columns, this.dataKey, this.defaultInsertData)) {
+      this.messageService.errorBubble('請輸入至少一個欄位的值', '未輸入任何值');
+      return;// 驗證邏輯
+    }
+    if (!this.tableUtilityService.validateRowData(rowData, this.columns, this.data, this.messageService)) {
+      return;// 執行整行驗證
+    }
     const rowId = rowData[this.dataKey];
     const oldData = this.clonedProducts[rowId];
 
@@ -239,27 +242,6 @@ export class TableComponent extends BasicPrintDataComponent implements OnChanges
     this.dt.saveRowEdit(rowData, htmlTableRowElement ?? null);
     this.rowEditSave.emit({ oldData, newData: rowData, ri, data: this.data });
     this.dataChange.emit(this.data);
-  }
-
-  // 處理失去焦點時的驗證 (alwaysEdit 模式專用)
-  onFieldBlur(rowData: any, field: string, value: any) {
-    if (!this.alwaysEdit && !this.alwaysBlurValidate) return; // 只在 alwaysEdit 和 alwaysBlurValidate 模式下執行
-
-    const column = this.columns.find(col => col.field === field);
-    if (column?.validate) {
-      const hasValidationError = column.validate.some(validateFn => {
-        const { isValid, errorMessage } = validateFn(value, rowData, this.data, field, column.header);
-        if (!isValid) {
-          const [message, title] = errorMessage;
-          this.messageService.errorBubble(message, title);
-        }
-        return !isValid;
-      });
-
-      if (!hasValidationError) {
-        console.log(`欄位 ${column.header} 驗證通過`);
-      }
-    }
   }
   // 行編輯取消
   onRowEditCancel(rowData: any, ri: number) {
@@ -283,6 +265,16 @@ export class TableComponent extends BasicPrintDataComponent implements OnChanges
     this.rowEditCancel.emit({ data: this.data, rowData, ri });
     this.cdr.detectChanges();
   }
+  // 處理失去焦點時的驗證 (alwaysEdit 模式專用)
+  onFieldBlur(rowData: any, field: string, value: any) {
+    if (!this.alwaysEdit && !this.alwaysBlurValidate) {
+      return;
+    }
+    const column = this.columns.find(col => col.field === field);
+    if (column) {
+      this.tableUtilityService.validateSingleField(value, rowData, this.data, column, this.messageService);
+    }
+  }
   // 資料勾選
   onSelectionChange(event: any) {
     const selected = Array.isArray(event) ? event : event ? [event] : [];
@@ -300,17 +292,11 @@ export class TableComponent extends BasicPrintDataComponent implements OnChanges
   // Insert 按鈕
   insertRow() {
     if (this.insertRowData) {
+      const { newRowData, data } = this.tableUtilityService.insertNewRow(this.data, this.originalColumns, this.dataKey, this.defaultInsertData);
       this.rowEditing = true;
       this.multiSortMeta = [{ field: this.dataKey, order: 0 }];
-      const newRowData: Record<string, any> = {};
-      this.originalColumns.forEach(col => {
-        newRowData[col.field] = this.defaultInsertData[col.field] !== undefined
-          ? this.defaultInsertData[col.field] : null;
-      });
-      const tempId = `temp-${new Date().getTime()}`;// 給予一個以 'temp-' 開頭的字串臨時 ID
-      newRowData[this.dataKey] = tempId;
-      this.clonedProducts[tempId] = { ...newRowData };// 將新資料的備份存到 clonedProducts 中
-      this.data = [newRowData, ...this.data];
+      this.data = data;
+      this.clonedProducts[newRowData[this.dataKey]] = { ...newRowData }; // 儲存備份
       this.dataChange.emit(this.data);
       this.onRowEditInit(newRowData);
     } else {
@@ -323,13 +309,16 @@ export class TableComponent extends BasicPrintDataComponent implements OnChanges
     if (this.deleteData) {
       this.data = this.data.filter(item => !selectedItems.includes(item));
       this.dataChange.emit(this.data);
-      this.selectedItems = [];
     }
     this.selectedItems = [];
   }
-  editRow(rowData: any) { this.edit.emit(rowData); }                // Edit 按鈕 事件
-  detailRow(rowData: any) { this.detail.emit(rowData); }            // Detail 或 雙擊行 事件
-  onSelectButton(rowData: any) { this.selectButton.emit(rowData); } // 欄位Button 選擇 事件
+  // Edit 按鈕 事件
+  editRow(rowData: any) { this.edit.emit(rowData); }
+  // Detail 或 雙擊行 事件
+  detailRow(rowData: any) { this.detail.emit(rowData); }
+  // 欄位Button 選擇 事件
+  onSelectButton(rowData: any) { this.selectButton.emit(rowData); }
+  // 防止XSS
   sanitizeHtml(html: string): SafeHtml {
     return this.sanitizer.bypassSecurityTrustHtml(html);
   }

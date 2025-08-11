@@ -144,90 +144,18 @@
           [alignFrozen]="col.alignFrozen ? col.alignFrozen : 'right'" pFrozenColumn [frozen]="IsPrint && col.frozen">
           <p-cellEditor *ngIf="showRowEdit">
             <ng-template pTemplate="input">
-              <input *ngIf="col.type === 'input'" pInputText class="w-full min-w-max" placeholder="請輸入{{ col.header }}"
-                [(ngModel)]="rowData[col.field]" [ngModelOptions]="{ standalone: true }"
+              <app-table-input [col]="col" [rowData]="rowData" [rowIndex]="rowIndex" [alwaysEdit]="false"
+                (fieldChange)="onFieldChange(rowData, $event.field, $event.value, $event.rowIndex)"
                 [disabled]="col.disabled ? col.disabled(rowData) : false"
-                (ngModelChange)="onFieldChange(rowData, col.field, $event)"
-                (blur)="onFieldBlur(rowData, col.field, rowData[col.field])" />
-              <p-inputNumber *ngIf="col.type === 'inputNumber'" class="w-full min-w-max" styleClass="w-full"
-                mode="decimal" [(ngModel)]="rowData[col.field]" [ngModelOptions]="{ standalone: true }"
-                [prefix]="col.prefix" placeholder="請輸入{{ col.header }}"
-                [disabled]="col.disabled ? col.disabled(rowData) : false"
-                (ngModelChange)="onFieldChange(rowData, col.field, $event)" [minFractionDigits]="col.fractionDigits"
-                [maxFractionDigits]="col.fractionDigits" [useGrouping]="col.useGrouping"
-                (onBlur)="onFieldBlur(rowData, col.field, rowData[col.field])" />
-              <p-autoComplete *ngIf="col.type === 'autoComplete'" inputStyleClass="w-full" class="w-full min-w-max"
-                styleClass="w-full" appendTo="body" [(ngModel)]="rowData[col.field]"
-                [ngModelOptions]="{ standalone: true }" placeholder="請輸入{{ col.header }}"
-                [suggestions]="getOptions(rowData, col)" (onSelect)="onFieldChange(rowData, col.field, $event,rowIndex)"
-                (completeMethod)="filterOptions($event)" [optionLabel]="col.optionLabel" [optionValue]="col.optionValue"
-                [disabled]="col.disabled ? col.disabled(rowData) : false">
-                <ng-template let-item pTemplate="item" *ngIf="col.templateLabel">
-                  <div class="flex align-items-center gap-2">
-                    <span>{{ item[col.templateLabel] }}</span>
-                  </div>
-                </ng-template>
-              </p-autoComplete>
-              <p-dropdown *ngIf="col.type === 'dropdown'" styleClass="w-full" [showClear]="col.optionShowClear"
-                appendTo="body" [(ngModel)]="rowData[col.field]" [ngModelOptions]="{ standalone: true }"
-                [filter]="col.filter" placeholder="請輸入{{ col.header }}" [options]="getOptions(rowData, col)"
-                [optionLabel]="col.optionLabel" [optionValue]="col.optionValue"
-                [disabled]="col.disabled ? col.disabled(rowData) : false"
-                (onChange)="onFieldChange(rowData, col.field, $event.value, rowIndex)">
-                <ng-template let-item pTemplate=" item" *ngIf="col.templateLabel">
-                  <div class="flex align-items-center gap-2">
-                    <span>{{ item[col.templateLabel] }}</span>
-                  </div>
-                </ng-template>
-              </p-dropdown>
-              <p-calendar *ngIf="col.type === 'date'" class="w-full" styleClass="min-w-max" [showIcon]="true"
-                [(ngModel)]="rowData[col.field]" [ngModelOptions]="{ standalone: true }" appendTo="body"
-                placeholder="請選擇{{ col.header }}" [dateFormat]="col.dateFormat || 'yy-mm-dd'"
-                [disabled]="col.disabled ? col.disabled(rowData) : false" [minDate]="col.minDate"
-                [maxDate]="col.maxDate" (ngModelChange)="onFieldChange(rowData, col.field, $event)" />
+                (fieldBlur)="onFieldBlur(rowData, $event.field, $event.value)" (filterChange)="filterOptions($event)">
+              </app-table-input>
             </ng-template>
             <ng-template pTemplate="output">
-              <input *ngIf="col.type === 'input'" pInputText class="w-full min-w-max" placeholder="請輸入{{ col.header }}"
-                [(ngModel)]="rowData[col.field]" [ngModelOptions]="{ standalone: true }"
+              <app-table-input [col]="col" [rowData]="rowData" [rowIndex]="rowIndex" [alwaysEdit]="alwaysEdit"
+                (fieldChange)="onFieldChange(rowData, $event.field, $event.value, $event.rowIndex)"
                 [disabled]="col.disabled ? col.disabled(rowData) : alwaysEdit ? false : true"
-                (ngModelChange)="onFieldChange(rowData, col.field, $event)"
-                (blur)="onFieldBlur(rowData, col.field, rowData[col.field])" />
-              <p-inputNumber *ngIf="col.type === 'inputNumber'" class="w-full min-w-max" styleClass="w-full"
-                mode="decimal" [(ngModel)]="rowData[col.field]" [ngModelOptions]="{ standalone: true }"
-                [prefix]="col.prefix" [suffix]="col.suffix" placeholder="請輸入{{ col.header }}"
-                [disabled]="col.disabled ? col.disabled(rowData) : alwaysEdit ? false : true"
-                (ngModelChange)="onFieldChange(rowData, col.field, $event)" [minFractionDigits]="col.fractionDigits"
-                [maxFractionDigits]="col.fractionDigits" [useGrouping]="col.useGrouping"
-                (onBlur)="onFieldBlur(rowData, col.field, rowData[col.field])" />
-              <p-autoComplete *ngIf="col.type === 'autoComplete'" inputStyleClass="w-full" class="w-full min-w-max"
-                styleClass="w-full" appendTo="body" [(ngModel)]="rowData[col.field]" placeholder="請輸入{{ col.header }}"
-                [suggestions]="getOptions(rowData, col)" (onSelect)="onFieldChange(rowData, col.field, $event,rowIndex)"
-                (completeMethod)="filterOptions($event)" [ngModelOptions]="{ standalone: true }"
-                [optionLabel]="col.optionLabel" [optionValue]="col.optionValue"
-                [disabled]="col.disabled ? col.disabled(rowData) : alwaysEdit ? false : true">
-                <ng-template let-item pTemplate="item" *ngIf="col.templateLabel">
-                  <div class="flex align-items-center gap-2">
-                    <span>{{ item[col.templateLabel] }}</span>
-                  </div>
-                </ng-template>
-              </p-autoComplete>
-              <p-dropdown *ngIf="col.type === 'dropdown'" styleClass="w-full" [showClear]="col.optionShowClear"
-                appendTo="body" [(ngModel)]="rowData[col.field]" [ngModelOptions]="{ standalone: true }"
-                [filter]="col.filter" placeholder="請輸入{{ col.header }}" [options]="getOptions(rowData, col)"
-                [optionLabel]="col.optionLabel" [optionValue]="col.optionValue"
-                [disabled]="col.disabled ? col.disabled(rowData) : alwaysEdit ? false : true"
-                (onChange)="onFieldChange(rowData, col.field, $event.value)">
-                <ng-template let-item pTemplate="item" *ngIf="col.templateLabel">
-                  <div class="flex align-items-center gap-2">
-                    <span>{{ item[col.templateLabel] }}</span>
-                  </div>
-                </ng-template>
-              </p-dropdown>
-              <p-calendar *ngIf="col.type === 'date'" class="w-full" styleClass="min-w-max" [showIcon]="true"
-                [(ngModel)]="rowData[col.field]" [ngModelOptions]="{ standalone: true }" appendTo="body"
-                placeholder="請選擇{{ col.header }}" [dateFormat]="col.dateFormat || 'yy-mm-dd'"
-                [disabled]="col.disabled ? col.disabled(rowData) : alwaysEdit ? false : true" [minDate]="col.minDate"
-                [maxDate]="col.maxDate" (ngModelChange)="onFieldChange(rowData, col.field, $event)" />
+                (fieldBlur)="onFieldBlur(rowData, $event.field, $event.value)" (filterChange)="filterOptions($event)">
+              </app-table-input>
             </ng-template>
           </p-cellEditor>
           <ng-container *ngIf="col.type === 'button'">

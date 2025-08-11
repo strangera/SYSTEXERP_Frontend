@@ -145,28 +145,9 @@ export class TableUtilityService {
     }
   }
   // 新增一個方法來驗證行數據
-  validateRowData(rowData: any, columns: Column[], data: any, messageService: NotificationService, dataKey: string, defaultInsertData?: any): boolean {
-    // 新增的預設判斷：檢查除了 dataKey 以外的所有欄位是否都為 null/undefined/空字串
-    const otherColumns = columns.filter(col => col.field !== dataKey);
-    // 檢查 rowData 的值是否都與 defaultInsertData 的值完全相同
-    // 這才是判斷「使用者是否修改過任何欄位」的正確方式
-    const isRowUnchangedFromDefault = otherColumns.every(col => {
-      const currentValue = rowData[col.field];
-      // 判斷 defaultInsertData 中是否存在該欄位，如果沒有則預設為 null (與 newRowData 的初始化邏輯一致)
-      const defaultValue = (defaultInsertData && defaultInsertData[col.field] !== undefined)
-        ? defaultInsertData[col.field]
-        : null;
-      // 比較當前值與預設值是否相同
-      return currentValue === defaultValue;
-    });
-
-    // 如果 rowData 保持未變動，則顯示錯誤訊息並返回 false
-    if (isRowUnchangedFromDefault) {
-      messageService.errorBubble('請輸入至少一個欄位的值', '未輸入任何值');
-      return false; // 驗證失敗
-    }
-
-    // 原始的驗證邏輯
+  // 驗證整行資料
+  validateRowData(rowData: any, columns: Column[], data: any, messageService: any): boolean {
+    // 檢查所有欄位是否都符合各自的驗證規則
     return columns.every(col =>
       !(col.validate?.some(validateFn => {
         const { isValid, errorMessage } = validateFn(rowData[col.field], rowData, data, col.field, col.header);
@@ -177,5 +158,56 @@ export class TableUtilityService {
         return !isValid;
       }))
     );
+  }
+
+  // 新增一個方法來檢查新增模式下的資料是否被修改
+  isNewRowUnchanged(rowData: any, columns: Column[], dataKey: string, defaultInsertData: any): boolean {
+    const otherColumns = columns.filter(col => col.field !== dataKey);
+    return otherColumns.every(col => {
+      const currentValue = rowData[col.field];
+      const defaultValue = (defaultInsertData && defaultInsertData[col.field] !== undefined)
+        ? defaultInsertData[col.field]
+        : null;
+      return currentValue === defaultValue;
+    });
+  }
+
+  validateSingleField(value: any, rowData: any, data: any[], column: Column, messageService: any): boolean {
+    if (!column.validate) {
+      return true; // 沒有驗證規則，直接通過
+    }
+
+    const hasValidationError = column.validate.some(validateFn => {
+      const { isValid, errorMessage } = validateFn(value, rowData, data, column.field, column.header);
+      if (!isValid) {
+        const [message, title] = errorMessage;
+        messageService.errorBubble(message, title);
+      }
+      return !isValid;
+    });
+
+    if (!hasValidationError) {
+      console.log(`欄位 ${column.header} 驗證通過`);
+    }
+
+    return !hasValidationError; // 回傳是否通過驗證
+  }
+
+  insertNewRow(data: any[], originalColumns: Column[], dataKey: string, defaultInsertData: any): { newRowData: any, data: any[] } {
+    const newRowData: Record<string, any> = {};
+    originalColumns.forEach(col => {
+      newRowData[col.field] = defaultInsertData[col.field] !== undefined
+        ? defaultInsertData[col.field] : null;
+    });
+
+    // 產生一個臨時 ID
+    const tempId = `temp-${new Date().getTime()}`;
+    newRowData[dataKey] = tempId;
+
+    // 將新資料加入到資料陣列的開頭
+    const updatedData = [newRowData, ...data];
+
+    // 回傳新資料和更新後的資料陣列
+    return { newRowData, data: updatedData };
   }
 }
