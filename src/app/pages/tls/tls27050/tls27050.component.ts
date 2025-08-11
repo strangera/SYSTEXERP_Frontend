@@ -13,6 +13,7 @@ import { ITLS27050Data, TLS27050Service } from '@service/api/tls/tls27050.servic
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { finalize } from 'rxjs';
 import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
+import { yesterday } from '@shared/models/system/query-form.model';
 
 @Component({
   selector: 'app-tls27050',
@@ -22,7 +23,7 @@ import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-se
 })
 export class TLS27050Component extends BasicQueryPageComponent<ITLS27050Data> implements OnInit {
   queryForm = this.formBuilder.group({
-    TXN_Date: [null, [Validators.required]], // 銷售日期
+    TXN_Date: [yesterday, [Validators.required]], // 銷售日期
     PAY_TypeList: [], // 支付工具別
     ...createPaginationConfig([{ field: 'id', order: 1 }]), // 分頁和排序參數
   });
