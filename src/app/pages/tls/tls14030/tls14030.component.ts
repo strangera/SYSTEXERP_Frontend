@@ -1,10 +1,10 @@
+import { Tls14030Service } from './../../../service/api/tls/tls14030.service';
 import { Label } from './../tls51070-os/tls51070-os.component';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { Column, createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 import { apiOption, option } from '../../../shared/models/sys/sysb000.model';
-import { Tls14030Service } from '../../../service/API/tls/tls14030.service';
 import { Garantee_Ticket } from '../../../shared/models/tls/tls000.model';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';

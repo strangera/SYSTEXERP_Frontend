@@ -1,4 +1,4 @@
-import { Tls14030Service } from './../../../service/API/tls/tls14030.service';
+import { Tls14030Service } from './../../../service/api/tls/tls14030.service';
 import { Component, OnInit } from '@angular/core';
 import { Validators, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
