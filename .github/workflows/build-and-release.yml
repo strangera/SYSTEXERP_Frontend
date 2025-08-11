@@ -38,7 +38,7 @@ jobs:
     - name: Build Production project
       run: |
         echo "=== Building Production (關閉 AOT 編譯) ==="
-        npx ng build --configuration production --base-href /TSRDWEBDEV/ --aot=false --build-optimizer=false
+        npx ng build --configuration production --base-href /TSRDWEBDEV/ --aot=false
       continue-on-error: true
       env:
         NODE_OPTIONS: "--max_old_space_size=4096"
@@ -57,7 +57,7 @@ jobs:
     - name: Build Staging project
       run: |
         echo "=== Building Staging (關閉 AOT 編譯) ==="
-        npx ng build --configuration staging --base-href /tsrdwebdev/ --aot=false --build-optimizer=false
+        npx ng build --configuration staging --base-href /tsrdwebdev/ --aot=false
       continue-on-error: true
       env:
         NODE_OPTIONS: "--max_old_space_size=4096"
