@@ -16,6 +16,7 @@ import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-ra
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { TLS12020Service } from '../../../service/api/tls/tls12020.service';
 import { LocationOptionsService } from '../../../service/api/dropdownservice/location-options.service';
+import { yesterday } from '@shared/models/system/query-form.model';
 
 @Component({
   selector: 'app-tls12020',
@@ -43,8 +44,8 @@ export class TLS12020Component extends BasicQueryPageComponent<any> implements O
     create_store: [''],
     contact_person: [''],
     contact_phone: [''],
-    contact_Datestart: [null],
-    contact_Dateend: [null],
+    contact_Datestart: [yesterday],
+    contact_Dateend: [yesterday],
     contact_time: [''],
     contact_USR_Name: ['', [Validators.required]], // 訪談人員（必填）
     willing_level: [null],

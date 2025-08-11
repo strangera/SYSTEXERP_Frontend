@@ -22,6 +22,7 @@ import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.compon
 import { InputNumberComponent } from '@shared/componentkit/input-number/input-number.component';
 import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
 import { InputNumberRangeComponent } from '@shared/componentkit/input-number-range/input-number-range.component';
+import { yesterday } from '@shared/models/system/query-form.model';
 
 @Component({
   selector: 'app-tls22030',
@@ -48,8 +49,8 @@ export class TLS2A040Component extends BasicQueryPageComponent<any> implements O
   queryForm = this.formBuilder.group({
     ECR_No: [null],
     TXN_No: [null],
-    TXN_DateStart: [null, Validators.required],
-    TXN_DateEnd: [null, Validators.required],
+    TXN_DateStart: [yesterday, Validators.required],
+    TXN_DateEnd: [yesterday, Validators.required],
     casherFrom: [null],
     casherTo: [null],
     status: [[]],
