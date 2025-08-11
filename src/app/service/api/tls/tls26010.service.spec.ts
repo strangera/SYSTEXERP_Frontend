@@ -1,93 +1,49 @@
 import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
-import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
-import { of, throwError } from 'rxjs';
-
-import {
-  ApprovalStatus,
-  ECRTableData,
-  PreorderECRListQuery,
-  TLS26010Data,
-  TLS26010Payload,
-  TLS26010Query,
-  TLTTALENTData,
-  TLTTALENTQuery
-} from '@pages/tls/tls26010/tls26010.model';
+import { DependentDataQuery, EcrTable, PodRequest, TLS26010Data, TLS26010Query, TltTable } from '@pages/tls/tls26010/tls26010.model';
+import { AuthService } from '@service/system/auth.service';
 import { ErrorHandlerService } from '@service/system/error-handler.service';
 import { NotificationService } from '@shared/component/notification-message/notification.service';
 import { BaseQueryResponse, DropdownOption } from '@shared/models/api/base-api.interface';
+import { ItemOperationStatus } from '@shared/models/system/CRUDstatus';
+import { ApprovalStatus } from '@shared/models/tls/approval-status.model';
+import { ConfirmationService } from 'primeng/api';
 import { environment } from 'src/environments/environment';
 import { TLS26010Service } from './tls26010.service';
 
 describe('TLS26010Service', () => {
   let service: TLS26010Service;
   let httpMock: HttpTestingController;
-  let errorHandlerService: jasmine.SpyObj<ErrorHandlerService>;
-  let notificationService: jasmine.SpyObj<NotificationService>;
+  let authServiceSpy: jasmine.SpyObj<AuthService>;
+  let errorHandlerSpy: jasmine.SpyObj<ErrorHandlerService>;
+  let notificationServiceSpy: jasmine.SpyObj<NotificationService>;
+  let confirmationServiceSpy: jasmine.SpyObj<ConfirmationService>;
 
-  const mockDropdownOptions: DropdownOption[] = [
-    { No: '001', Name: 'Test Option 1' },
-    { No: '002', Name: 'Test Option 2' }
-  ];
-
-  const mockECRTableData: ECRTableData[] = [
-    { ECR_No: '001', tlt_no: 'TLT001', tlt_name: 'Test TLT 1' },
-    { ECR_No: '002', tlt_no: 'TLT002', tlt_name: 'Test TLT 2' }
-  ];
-
-  const mockTLTTableData: TLTTALENTData[] = [
-    { tlt_no: 'TLT001', tlt_name: 'Test TLT 1' },
-    { tlt_no: 'TLT002', tlt_name: 'Test TLT 2' }
-  ];
-
-  const mockTLS26010Data: TLS26010Data[] = [
-    {
-      pod_no: 'POD001',
-      pod_desc: 'Test Pod 1',
-      pod_sdate: '2025-01-01',
-      pod_edate: '2025-01-31',
-      pod_status: ApprovalStatus.未核准,
-      approved_usr_name: 'TestUser',
-      approved_date: '2025-01-01'
-    }
-  ];
-
-  const mockBaseResponse: BaseQueryResponse<any> = {
-    Status: 'Success',
-    Message: '成功',
-    Data: [],
-    Error: undefined,
-    Meta: {
-      Timestamp: '2025-01-01T00:00:00.000Z',
-      RequestId: 'test-request-id'
-    },
-    TotalCount: 0,
-    TotalPage: 0
-  };
+  const mockApiUrl = environment.ApiUrl;
 
   beforeEach(() => {
-    const errorHandlerSpy = jasmine.createSpyObj('ErrorHandlerService', ['handleError']);
-    const notificationSpy = jasmine.createSpyObj('NotificationService', [
-      'successBubble',
-      'errorBubble',
-      'infoBubble'
-    ]);
+    const authSpy = jasmine.createSpyObj('AuthService', ['getUserInfo']);
+    const errorSpy = jasmine.createSpyObj('ErrorHandlerService', ['handleError']);
+    const notificationSpy = jasmine.createSpyObj('NotificationService', ['successBubble', 'errorBubble', 'infoBubble']);
+    const confirmationSpy = jasmine.createSpyObj('ConfirmationService', ['confirm']);
 
     TestBed.configureTestingModule({
       imports: [HttpClientTestingModule],
       providers: [
         TLS26010Service,
-        { provide: ErrorHandlerService, useValue: errorHandlerSpy },
-        { provide: NotificationService, useValue: notificationSpy }
+        { provide: AuthService, useValue: authSpy },
+        { provide: ErrorHandlerService, useValue: errorSpy },
+        { provide: NotificationService, useValue: notificationSpy },
+        { provide: ConfirmationService, useValue: confirmationSpy }
       ]
     });
 
     service = TestBed.inject(TLS26010Service);
     httpMock = TestBed.inject(HttpTestingController);
-    errorHandlerService = TestBed.inject(ErrorHandlerService) as jasmine.SpyObj<ErrorHandlerService>;
-    notificationService = TestBed.inject(NotificationService) as jasmine.SpyObj<NotificationService>;
-
-    errorHandlerService.handleError.and.returnValue(of());
+    authServiceSpy = TestBed.inject(AuthService) as jasmine.SpyObj<AuthService>;
+    errorHandlerSpy = TestBed.inject(ErrorHandlerService) as jasmine.SpyObj<ErrorHandlerService>;
+    notificationServiceSpy = TestBed.inject(NotificationService) as jasmine.SpyObj<NotificationService>;
+    confirmationServiceSpy = TestBed.inject(ConfirmationService) as jasmine.SpyObj<ConfirmationService>;
   });
 
   afterEach(() => {
@@ -98,463 +54,511 @@ describe('TLS26010Service', () => {
     expect(service).toBeTruthy();
   });
 
-  describe('Initial State', () => {
-    it('should have correct initial signal values', () => {
-      expect(service.approvalData()).toBe(ApprovalStatus.未核准);
-      expect(service.ECRTableData()).toEqual([]);
-      expect(service.TLTTableData()).toEqual([]);
-      expect(service.TLS26010List()).toEqual([]);
-    });
-
-    it('should have correct initial maps', () => {
-      expect(service.ECRMap.size).toBe(0);
-      expect(service.TLTMap.size).toBe(0);
-      expect(service.ECRTableMap.size).toBe(0);
-      expect(service.TLTTableMap.size).toBe(0);
-    });
-  });
-
-  describe('approvalStatus', () => {
-    it('should return correct status strings', () => {
-      expect(service.approvalStatus(ApprovalStatus.未核准)).toBe('未核准');
-      expect(service.approvalStatus(ApprovalStatus.已核准)).toBe('已核准');
-      expect(service.approvalStatus(ApprovalStatus.刪除)).toBe('刪除');
-      expect(service.approvalStatus('unknown' as any)).toBe('unknown');
-    });
+  it('should have initial signals defined', () => {
+    expect(service.TLS26010Data()).toEqual([]);
+    expect(service.TLS26010Detail()).toBeUndefined();
+    expect(service.sys3800Data()).toEqual([]);
+    expect(service.sys3900Data()).toEqual([]);
+    expect(service.sys3A00Data()).toEqual([]);
+    expect(service.ecrData()).toEqual([]);
+    expect(service.tltData()).toEqual([]);
   });
 
   describe('loadSYS3800', () => {
-    it('should load SYS3800 data successfully', () => {
-      const query = { test: 'query' };
-      const response = { ...mockBaseResponse, Data: mockDropdownOptions };
+    it('should load building data successfully', () => {
+      const mockResponse: BaseQueryResponse<DropdownOption> = {
+        Status: '0000',
+        Data: [
+          { No: 'A', Name: '館A' },
+          { No: 'B', Name: '館B' }
+        ],
+        Message: 'Success',
+        TotalCount: 2,
+        TotalPage: 1
+      };
 
-      service.loadSYS3800(query);
+      service.loadSYS3800();
 
-      const req = httpMock.expectOne(`${environment.ApiUrl}/querySYS3800_DropDownList`);
+      const req = httpMock.expectOne(`${mockApiUrl}/querySYS3800_DropDownList`);
       expect(req.request.method).toBe('POST');
-      expect(req.request.body).toEqual(query);
+      expect(req.request.body).toEqual({});
+      req.flush(mockResponse);
 
-      req.flush(response);
-
-      expect(service.sys3800List().length).toBe(2);
-    });
-
-    it('should handle SYS3800 load error', () => {
-      const query = { test: 'query' };
-      const error = new Error('Network error');
-
-      service.loadSYS3800(query);
-
-      const req = httpMock.expectOne(`${environment.ApiUrl}/querySYS3800_DropDownList`);
-      req.error(new ErrorEvent('error', { error }));
-
-      expect(errorHandlerService.handleError).toHaveBeenCalled();
-    });
-
-    it('should prevent multiple concurrent SYS3800 calls', () => {
-      const query = { test: 'query' };
-
-      service.loadSYS3800(query);
-      service.loadSYS3800(query); // Second call should be ignored
-
-      httpMock.expectOne(`${environment.ApiUrl}/querySYS3800_DropDownList`);
-      // Only one request should be made
-      expect(true).toBe(true); // Add expectation to prevent warning
+      expect(service.sys3800Data()).toEqual(mockResponse.Data);
     });
   });
 
   describe('loadSYS3900', () => {
-    it('should load SYS3900 data successfully', () => {
-      const query = { test: 'query' };
-      const response = { ...mockBaseResponse, Data: mockDropdownOptions };
+    it('should load floor data successfully with building_no', () => {
+      const mockBuildingNo = 'A';
+      const mockResponse: BaseQueryResponse<DropdownOption> = {
+        Status: '0000',
+        Data: [
+          { No: '1', Name: '1樓' },
+          { No: '2', Name: '2樓' }
+        ],
+        Message: 'Success',
+        TotalCount: 2,
+        TotalPage: 1
+      };
 
-      service.loadSYS3900(query);
+      service.loadSYS3900(mockBuildingNo);
 
-      const req = httpMock.expectOne(`${environment.ApiUrl}/querySYS3900_DropDownList`);
+      const req = httpMock.expectOne(`${mockApiUrl}/querySYS3900_DropDownList`);
       expect(req.request.method).toBe('POST');
-      expect(req.request.body).toEqual(query);
+      expect(req.request.body).toEqual({ building_no: mockBuildingNo });
+      req.flush(mockResponse);
 
-      req.flush(response);
-
-      expect(service.sys3900List().length).toBe(2);
+      expect(service.sys3900Data()).toEqual(mockResponse.Data);
     });
 
-    it('should handle SYS3900 load error', () => {
-      const query = { test: 'query' };
-      const error = new Error('Network error');
+    it('should load floor data successfully without building_no', () => {
+      const mockResponse: BaseQueryResponse<DropdownOption> = {
+        Status: '0000',
+        Data: [],
+        Message: 'Success',
+        TotalCount: 0,
+        TotalPage: 0
+      };
 
-      service.loadSYS3900(query);
+      service.loadSYS3900();
 
-      const req = httpMock.expectOne(`${environment.ApiUrl}/querySYS3900_DropDownList`);
-      req.error(new ErrorEvent('error', { error }));
+      const req = httpMock.expectOne(`${mockApiUrl}/querySYS3900_DropDownList`);
+      expect(req.request.method).toBe('POST');
+      expect(req.request.body).toEqual({});
+      req.flush(mockResponse);
 
-      expect(errorHandlerService.handleError).toHaveBeenCalled();
+      expect(service.sys3900Data()).toEqual(mockResponse.Data);
+    });
+  });
+
+  describe('loadSYS3A00', () => {
+    it('should load area data successfully', () => {
+      const mockResponse: BaseQueryResponse<DropdownOption> = {
+        Status: '0000',
+        Data: [
+          { No: 'A1', Name: '區域A1' },
+          { No: 'A2', Name: '區域A2' }
+        ],
+        Message: 'Success',
+        TotalCount: 2,
+        TotalPage: 1
+      };
+
+      service.loadSYS3A00();
+
+      const req = httpMock.expectOne(`${mockApiUrl}/querySYS3A00_DropDownList`);
+      expect(req.request.method).toBe('POST');
+      expect(req.request.body).toEqual({});
+      req.flush(mockResponse);
+
+      expect(service.sys3A00Data()).toEqual(mockResponse.Data);
     });
   });
 
   describe('loadPreorderECRList', () => {
-    it('should load preorder ECR list successfully', () => {
-      const query: PreorderECRListQuery = {
-        data_type: '1',
-        SYS3800s: [{ building_no: '001' }],
-        SYS3900s: [{ floor_no: '001' }]
+    it('should load ECR list successfully', () => {
+      const mockQuery: DependentDataQuery & { ecr_type: string; } = {
+        ecr_type: '1',
+        building_nos: ['A'],
+        floor_nos: ['1'],
+        area_nos: ['A1']
       };
 
-      service.loadPreorderECRList(query);
+      const mockEcrData: EcrTable[] = [{
+        ecr_no: 'ECR001',
+        ecr_name: '收銀機001',
+        tlt_no: 'TLT001',
+        tlt_name: '專櫃001',
+        ecr_type: '1',
+        area_no: 'A1',
+        area_name: '區域A1',
+        building_no: 'A',
+        building_name: '館A',
+        floor_no: '1',
+        floor_name: '1樓',
+        Status: ItemOperationStatus.Original
+      }];
 
-      // Note: When mock is true, no HTTP request should be made
-      httpMock.expectNone(`${environment.ApiUrl}/queryPreorderECR_List`);
-      expect(true).toBe(true); // Add expectation to prevent warning
-    });
+      const mockResponse: BaseQueryResponse<EcrTable> = {
+        Status: '0000',
+        Data: mockEcrData,
+        Message: 'Success',
+        TotalCount: 1,
+        TotalPage: 1
+      };
 
-    it('should handle preorder ECR list load error', () => {
-      // This test would require mocking to be false
-      // For now, we'll skip since mock is always true in the service
-      expect(true).toBe(true); // Add expectation to prevent warning
+      service.loadPreorderECRList(mockQuery);
+
+      const req = httpMock.expectOne(`${mockApiUrl}/queryECRDropDownList`);
+      expect(req.request.method).toBe('POST');
+      expect(req.request.body).toEqual(mockQuery);
+      req.flush(mockResponse);
+
+      expect(service.ecrData()).toEqual(mockResponse.Data);
     });
   });
 
   describe('loadTLTTALENT', () => {
-    it('should load TLTTALENT data successfully', () => {
-      const query: TLTTALENTQuery = {
-        SYS3800s: [{ building_no: '001' }],
-        SYS3900s: [{ floor_no: '001' }]
+    it('should load talent list successfully', () => {
+      const mockQuery: DependentDataQuery = {
+        building_nos: ['A'],
+        floor_nos: ['1'],
+        area_nos: ['A1']
       };
-      const response = { ...mockBaseResponse, Data: mockDropdownOptions };
 
-      service.loadTLTTALENT(query);
+      const mockTltData: TltTable[] = [{
+        tlt_no: 'TLT001',
+        tlt_name: '專櫃001',
+        talent_id: 1,
+        apply_no: 'APP001',
+        VEN_Name: '廠商A',
+        ven_no: 'VEN001',
+        area_no: 'A1',
+        area_name: '區域A1',
+        building_no: 'A',
+        building_name: '館A',
+        floor_no: '1',
+        floor_name: '1樓',
+        Status: ItemOperationStatus.Original
+      }];
 
-      const req = httpMock.expectOne(`${environment.ApiUrl}/queryTLTTALENT_DropDownList`);
+      const mockResponse: BaseQueryResponse<TltTable> = {
+        Status: '0000',
+        Data: mockTltData,
+        Message: 'Success',
+        TotalCount: 1,
+        TotalPage: 1
+      };
+
+      service.loadTLTTALENT(mockQuery);
+
+      const req = httpMock.expectOne(`${mockApiUrl}/queryTalentDropDownList`);
       expect(req.request.method).toBe('POST');
-      expect(req.request.body).toEqual(query);
+      expect(req.request.body).toEqual(mockQuery);
+      req.flush(mockResponse);
 
-      req.flush(response);
-
-      expect(service.TLTList.length).toBeGreaterThanOrEqual(0);
-    });
-
-    it('should handle TLTTALENT load error', () => {
-      const query: TLTTALENTQuery = {
-        SYS3800s: [{ building_no: '001' }],
-        SYS3900s: [{ floor_no: '001' }]
-      };
-      const error = new Error('Network error');
-
-      service.loadTLTTALENT(query);
-
-      const req = httpMock.expectOne(`${environment.ApiUrl}/queryTLTTALENT_DropDownList`);
-      req.error(new ErrorEvent('error', { error }));
-
-      expect(errorHandlerService.handleError).toHaveBeenCalled();
+      expect(service.tltData()).toEqual(mockResponse.Data);
     });
   });
 
   describe('loadTLS26010', () => {
     it('should load TLS26010 data successfully', () => {
-      const query: TLS26010Query = {
-        ECR_Nos: ['001', '002'],
-        tlt_nos: ['TLT001', 'TLT002'],
-        pod_sdate_S: '2025-01-01',
-        pod_sdate_E: '2025-01-31',
-        pod_edate_S: '2025-01-01',
-        pod_edate_E: '2025-01-31'
+      const mockQuery: TLS26010Query = {
+        ecr_nos: ['ECR001'],
+        tlt_nos: ['TLT001'],
+        pod_sdate_S: new Date('2024-01-01'),
+        pod_sdate_E: new Date('2024-01-31'),
+        pod_edate_S: new Date('2024-02-01'),
+        pod_edate_E: new Date('2024-02-28')
       };
 
-      service.loadTLS26010(query);
+      const mockData: TLS26010Data[] = [{
+        id: 1,
+        pod_no: 'POD001',
+        pod_desc: '測試活動',
+        pod_sdate: new Date('2024-01-01'),
+        pod_edate: new Date('2024-01-31'),
+        pod_status: ApprovalStatus.未核准,
+        CanEdit: '1',
+        CanDelete: '1',
+        approved_date: null,
+        approved_usr_name: null,
+        ecr_nos: ['ECR001'],
+        tlt_nos: ['TLT001'],
+        area_no: 'A1',
+        build_no: 'A',
+        floor_no: '1',
+        talent_id: 1
+      }];
 
-      // Note: When mock is true, no HTTP request should be made
-      httpMock.expectNone(`${environment.ApiUrl}/queryTLS26010`);
-      expect(true).toBe(true); // Add expectation to prevent warning
+      const mockResponse: BaseQueryResponse<TLS26010Data> = {
+        Status: '0000',
+        Data: mockData,
+        Message: 'Success',
+        TotalCount: 1,
+        TotalPage: 1
+      };
+
+      service.loadTLS26010(mockQuery);
+
+      const req = httpMock.expectOne(`${mockApiUrl}/TLS0000/TLS2000/queryTLS26010`);
+      expect(req.request.method).toBe('POST');
+      expect(req.request.body).toEqual(mockQuery);
+      req.flush(mockResponse);
+
+      expect(service.TLS26010Data()).toEqual(mockResponse.Data);
     });
   });
 
   describe('insertTLS26010', () => {
     it('should insert TLS26010 data successfully', () => {
-      const payload: TLS26010Payload = {
-        pod_no: 'POD001',
-        pod_desc: 'Test Pod',
-        pod_sdate: '2025-01-01',
-        pod_edate: '2025-01-31',
-        pod_status: '0',
-        ECR_Nos: [{ ECR_No: '001', tlt_no: 'TLT001', tlt_name: 'Test TLT 1' }],
-        tlt_nos: [{ tlt_no: 'TLT001', tlt_name: 'Test TLT 1' }]
+      const mockPayload: PodRequest = {
+        pod_info: {
+          pod_desc: '新活動',
+          pod_sdate: new Date('2024-01-01'),
+          pod_edate: new Date('2024-01-31'),
+          pod_status: ApprovalStatus.未核准
+        },
+        ecr_list: [{
+          ecr_no: 'ECR001',
+          ecr_name: '收銀機001',
+          tlt_no: 'TLT001',
+          tlt_name: '專櫃001',
+          Status: ItemOperationStatus.New
+        }],
+        talent_list: [{
+          tlt_no: 'TLT001',
+          tlt_name: '專櫃001',
+          Status: ItemOperationStatus.New
+        }]
       };
-      const response = { ...mockBaseResponse };
 
-      service.insertTLS26010(payload).subscribe();
+      const mockResponse: BaseQueryResponse<any> = {
+        Status: '0000',
+        Message: 'Created successfully',
+        Data: [{ id: 1 }],
+        TotalCount: 0,
+        TotalPage: 0
+      };
 
-      const req = httpMock.expectOne(`${environment.ApiUrl}/insertTLS26010`);
+      service.insertTLS26010(mockPayload).subscribe(response => {
+        expect(response.Status).toBe('0000');
+        expect(response.Data[0].id).toBe(1);
+      });
+
+      const req = httpMock.expectOne(`${mockApiUrl}/TLS0000/TLS2000/insertTLS26010`);
       expect(req.request.method).toBe('POST');
-      expect(req.request.body).toEqual(payload);
-
-      req.flush(response);
-    });
-
-    it('should handle insert error', () => {
-      const payload: TLS26010Payload = {
-        pod_no: 'POD001',
-        pod_desc: 'Test Pod',
-        pod_sdate: '2025-01-01',
-        pod_edate: '2025-01-31',
-        pod_status: '0',
-        ECR_Nos: [{ ECR_No: '001', tlt_no: 'TLT001', tlt_name: 'Test TLT 1' }],
-        tlt_nos: [{ tlt_no: 'TLT001', tlt_name: 'Test TLT 1' }]
-      };
-      const error = new Error('Insert error');
-
-      service.insertTLS26010(payload).subscribe();
-
-      const req = httpMock.expectOne(`${environment.ApiUrl}/insertTLS26010`);
-      req.error(new ErrorEvent('error', { error }));
-
-      expect(errorHandlerService.handleError).toHaveBeenCalled();
+      expect(req.request.body).toEqual(mockPayload);
+      req.flush(mockResponse);
     });
   });
 
   describe('updateTLS26010', () => {
     it('should update TLS26010 data successfully', () => {
-      const payload: TLS26010Payload = {
-        pod_no: 'POD001',
-        pod_desc: 'Updated Pod',
-        pod_sdate: '2025-01-01',
-        pod_edate: '2025-01-31',
-        pod_status: '0',
-        ECR_Nos: [{ ECR_No: '001', tlt_no: 'TLT001', tlt_name: 'Test TLT 1' }],
-        tlt_nos: [{ tlt_no: 'TLT001', tlt_name: 'Test TLT 1' }]
+      const mockPayload: PodRequest = {
+        pod_info: {
+          id: 1,
+          pod_no: 'POD001',
+          pod_desc: '更新活動',
+          pod_sdate: new Date('2024-01-01'),
+          pod_edate: new Date('2024-01-31'),
+          pod_status: ApprovalStatus.已核准
+        },
+        ecr_list: [{
+          id: 1,
+          ecr_no: 'ECR001',
+          ecr_name: '收銀機001',
+          tlt_no: 'TLT001',
+          tlt_name: '專櫃001',
+          Status: ItemOperationStatus.Modified
+        }],
+        talent_list: [{
+          id: 1,
+          tlt_no: 'TLT001',
+          tlt_name: '專櫃001',
+          Status: ItemOperationStatus.Modified
+        }]
       };
-      const response = { ...mockBaseResponse, Status: 'Success' };
 
-      service.updateTLS26010(payload).subscribe();
+      const mockResponse: BaseQueryResponse<any> = {
+        Status: '0000',
+        Message: 'Updated successfully',
+        Data: [],
+        TotalCount: 0,
+        TotalPage: 0
+      };
 
-      const req = httpMock.expectOne(`${environment.ApiUrl}/updateTLS26010`);
+      // 設置初始數據
+      service.TLS26010Data.set([{
+        id: 1,
+        pod_no: 'POD001',
+        pod_desc: '原始活動',
+        pod_sdate: new Date('2024-01-01'),
+        pod_edate: new Date('2024-01-31'),
+        pod_status: ApprovalStatus.未核准,
+        CanEdit: '1',
+        CanDelete: '1',
+        approved_date: null,
+        approved_usr_name: null
+      }]);
+
+      service.updateTLS26010(mockPayload).subscribe(response => {
+        expect(response.Status).toBe('0000');
+      });
+
+      const req = httpMock.expectOne(`${mockApiUrl}/TLS0000/TLS2000/updateTLS26010`);
       expect(req.request.method).toBe('POST');
-      expect(req.request.body).toEqual(payload);
-
-      req.flush(response);
-
-      expect(notificationService.successBubble).toHaveBeenCalledWith('更新成功');
-    });
-
-    it('should handle update failure', () => {
-      const payload: TLS26010Payload = {
-        pod_no: 'POD001',
-        pod_desc: 'Updated Pod',
-        pod_sdate: '2025-01-01',
-        pod_edate: '2025-01-31',
-        pod_status: '0',
-        ECR_Nos: [{ ECR_No: '001', tlt_no: 'TLT001', tlt_name: 'Test TLT 1' }],
-        tlt_nos: [{ tlt_no: 'TLT001', tlt_name: 'Test TLT 1' }]
-      };
-      const response = { ...mockBaseResponse, Status: 'Failed', Message: 'Update failed' };
-
-      service.updateTLS26010(payload).subscribe();
-
-      const req = httpMock.expectOne(`${environment.ApiUrl}/updateTLS26010`);
-      req.flush(response);
-
-      expect(notificationService.errorBubble).toHaveBeenCalledWith('更新失敗: Update failed');
-    });
-
-    it('should handle update error', () => {
-      const payload: TLS26010Payload = {
-        pod_no: 'POD001',
-        pod_desc: 'Updated Pod',
-        pod_sdate: '2025-01-01',
-        pod_edate: '2025-01-31',
-        pod_status: '0',
-        ECR_Nos: [{ ECR_No: '001', tlt_no: 'TLT001', tlt_name: 'Test TLT 1' }],
-        tlt_nos: [{ tlt_no: 'TLT001', tlt_name: 'Test TLT 1' }]
-      };
-      const error = new Error('Update error');
-
-      service.updateTLS26010(payload).subscribe();
-
-      const req = httpMock.expectOne(`${environment.ApiUrl}/updateTLS26010`);
-      req.error(new ErrorEvent('error', { error }));
-
-      expect(notificationService.errorBubble).toHaveBeenCalledWith('更新失敗，請稍後再試');
-      expect(errorHandlerService.handleError).toHaveBeenCalled();
+      expect(req.request.body).toEqual(mockPayload);
+      req.flush(mockResponse);
     });
   });
 
   describe('deleteTLS26010', () => {
     it('should delete TLS26010 data successfully', () => {
-      const data: TLS26010Data = {
+      const mockData: TLS26010Data = {
+        id: 1,
         pod_no: 'POD001',
-        pod_desc: 'Test Pod',
-        pod_sdate: '2025-01-01',
-        pod_edate: '2025-01-31',
+        pod_desc: '測試活動',
+        pod_sdate: new Date('2024-01-01'),
+        pod_edate: new Date('2024-01-31'),
         pod_status: ApprovalStatus.未核准,
-        approved_usr_name: 'TestUser',
-        approved_date: '2025-01-01'
+        CanEdit: '1',
+        CanDelete: '1',
+        approved_date: null,
+        approved_usr_name: null
       };
 
-      service.deleteTLS26010(data);
-
-      // Note: When mock is true, no HTTP request should be made
-      httpMock.expectNone(`${environment.ApiUrl}/deleteTLS26010`);
-      expect(true).toBe(true); // Add expectation to prevent warning
-    });
-  });
-
-  describe('importTLS26010', () => {
-    it('should import TLS26010 file successfully', () => {
-      const file = new File(['test content'], 'test.xlsx', { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-      const response = {
-        Data: {
-          SuccessCount: 10,
-          ErrorFilePath: null
-        }
+      const mockResponse: BaseQueryResponse<any> = {
+        Status: '0000',
+        Message: 'Deleted successfully',
+        Data: [],
+        TotalCount: 0,
+        TotalPage: 0
       };
 
-      service.importTLS26010(file);
+      service.deleteTLS26010(mockData);
 
-      const req = httpMock.expectOne(`${environment.ApiUrl}/importTLS26010`);
+      const req = httpMock.expectOne(`${mockApiUrl}/TLS0000/TLS2000/deleteTLS26010`);
       expect(req.request.method).toBe('POST');
-      expect(req.request.body instanceof FormData).toBeTruthy();
-
-      req.flush(response);
-
-      expect(notificationService.infoBubble).toHaveBeenCalledWith('匯入成功，筆數：10');
-    });
-
-    it('should handle import with error file', () => {
-      const file = new File(['test content'], 'test.xlsx', { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-      const response = {
-        Data: {
-          SuccessCount: 5,
-          ErrorFilePath: 'errors/error_file.xlsx'
-        }
-      };
-
-      spyOn(window, 'open');
-
-      service.importTLS26010(file);
-
-      const req = httpMock.expectOne(`${environment.ApiUrl}/importTLS26010`);
-      req.flush(response);
-
-      expect(notificationService.errorBubble).toHaveBeenCalledWith('部分資料匯入失敗，請下載錯誤檔檢查');
-      expect(window.open).toHaveBeenCalledWith(`${environment.ApiUrl}/errors/error_file.xlsx`, '_blank');
-    });
-
-    it('should handle import error', () => {
-      const file = new File(['test content'], 'test.xlsx', { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-      const error = new Error('Import error');
-
-      service.importTLS26010(file);
-
-      const req = httpMock.expectOne(`${environment.ApiUrl}/importTLS26010`);
-      req.error(new ErrorEvent('error', { error }));
-
-      expect(notificationService.errorBubble).toHaveBeenCalledWith('檔案上傳失敗，請稍後再試');
-    });
-  });
-
-  describe('downloadErrorFile', () => {
-    it('should download error file', () => {
-      spyOn(window, 'open');
-      const filePath = 'errors/error_file.xlsx';
-
-      service.downloadErrorFile(filePath);
-
-      expect(window.open).toHaveBeenCalledWith(`${environment.ApiUrl}/${filePath}`, '_blank');
+      expect(req.request.body).toEqual({ id: mockData.id });
+      req.flush(mockResponse);
     });
   });
 
   describe('loadApproval', () => {
-    it('should approve TLS26010 successfully', () => {
-      const data: TLS26010Data = {
+    it('should approve data when confirmed', () => {
+      const mockData: TLS26010Data = {
+        id: 1,
         pod_no: 'POD001',
-        pod_desc: 'Test Pod',
-        pod_sdate: '2025-01-01',
-        pod_edate: '2025-01-31',
+        pod_desc: '測試活動',
+        pod_sdate: new Date('2024-01-01'),
+        pod_edate: new Date('2024-01-31'),
         pod_status: ApprovalStatus.未核准,
-        approved_usr_name: 'TestUser',
-        approved_date: '2025-01-01'
+        CanEdit: '1',
+        CanDelete: '1',
+        approved_date: null,
+        approved_usr_name: null
       };
-      const response = { ...mockBaseResponse, Status: ApprovalStatus.已核准, Data: [{ Status: ApprovalStatus.已核准 }] };
 
-      service.loadApproval(data);
+      const mockUserInfo = {
+        AccessToken: 'token',
+        SYS_StoreNo: 'store001',
+        USER_PwdExpireDate: '2025-12-31',
+        id: 1,
+        mid: 'mall001',
+        user_Name: '測試用戶',
+        user_No: 'USR001',
+        user_email: 'test@example.com',
+        client_ip: '127.0.0.1',
+        STR_Uniform: '12345678'
+      };
+      authServiceSpy.getUserInfo.and.returnValue(mockUserInfo);
 
-      const req = httpMock.expectOne(`${environment.ApiUrl}/approvalTLS26010`);
+      // 模擬確認對話框接受
+      confirmationServiceSpy.confirm.and.callFake((options: any) => {
+        if (options.accept) {
+          options.accept();
+        }
+        return confirmationServiceSpy;
+      });
+
+      const mockResponse: BaseQueryResponse<{ Status: ApprovalStatus; }> = {
+        Status: '0000',
+        Message: 'Approved successfully',
+        Data: [{ Status: ApprovalStatus.已核准 }],
+        TotalCount: 0,
+        TotalPage: 0
+      };
+
+      // 設置初始數據
+      service.TLS26010Data.set([mockData]);
+
+      service.loadApproval(mockData);
+
+      const req = httpMock.expectOne(`${mockApiUrl}/TLS0000/TLS2000/approveTLS26010`);
       expect(req.request.method).toBe('POST');
-      expect(req.request.body).toEqual({ id: 'POD001' });
+      expect(req.request.body).toEqual({ id: mockData.id });
+      req.flush(mockResponse);
 
-      req.flush(response);
-
-      expect(service.approvalData()).toBe(ApprovalStatus.已核准);
+      expect(confirmationServiceSpy.confirm).toHaveBeenCalled();
+      expect(notificationServiceSpy.successBubble).toHaveBeenCalledWith('核准成功');
     });
+  });
 
-    it('should disapprove TLS26010 successfully', () => {
-      const data: TLS26010Data = {
+  describe('approvalStatus', () => {
+    it('should return correct approval status text', () => {
+      expect(service.approvalStatus(ApprovalStatus.未核准)).toBe('未核准');
+      expect(service.approvalStatus(ApprovalStatus.已核准)).toBe('已核准');
+      expect(service.approvalStatus(ApprovalStatus.刪除)).toBe('刪除');
+      expect(service.approvalStatus('unknown')).toBe('unknown');
+    });
+  });
+
+  describe('isRowSelectable', () => {
+    it('should return true for deletable row', () => {
+      const rowData: TLS26010Data = {
+        id: 1,
         pod_no: 'POD001',
-        pod_desc: 'Test Pod',
-        pod_sdate: '2025-01-01',
-        pod_edate: '2025-01-31',
+        pod_desc: '測試活動',
+        pod_sdate: new Date(),
+        pod_edate: new Date(),
         pod_status: ApprovalStatus.已核准,
-        approved_usr_name: 'TestUser',
-        approved_date: '2025-01-01'
+        CanEdit: '1',
+        CanDelete: '1',
+        approved_date: null,
+        approved_usr_name: null
       };
-      const response = { ...mockBaseResponse, Status: ApprovalStatus.未核准, Data: [{ Status: ApprovalStatus.未核准 }] };
 
-      service.loadApproval(data);
-
-      const req = httpMock.expectOne(`${environment.ApiUrl}/disapprovalTLS26010`);
-      expect(req.request.method).toBe('POST');
-      expect(req.request.body).toEqual({ id: 'POD001' });
-
-      req.flush(response);
-
-      expect(service.approvalData()).toBe(ApprovalStatus.未核准);
+      expect(service.isRowSelectable(rowData)).toBe(true);
     });
 
-    it('should handle approval error', () => {
-      const data: TLS26010Data = {
+    it('should return true for unapproved row', () => {
+      const rowData: TLS26010Data = {
+        id: 1,
         pod_no: 'POD001',
-        pod_desc: 'Test Pod',
-        pod_sdate: '2025-01-01',
-        pod_edate: '2025-01-31',
+        pod_desc: '測試活動',
+        pod_sdate: new Date(),
+        pod_edate: new Date(),
         pod_status: ApprovalStatus.未核准,
-        approved_usr_name: 'TestUser',
-        approved_date: '2025-01-01'
+        CanEdit: '0',
+        CanDelete: '0',
+        approved_date: null,
+        approved_usr_name: null
       };
-      const error = new Error('Approval error');
 
-      service.loadApproval(data);
+      expect(service.isRowSelectable(rowData)).toBe(true);
+    });
 
-      const req = httpMock.expectOne(`${environment.ApiUrl}/approvalTLS26010`);
-      req.error(new ErrorEvent('error', { error }));
+    it('should return false for non-deletable approved row', () => {
+      const rowData: TLS26010Data = {
+        id: 1,
+        pod_no: 'POD001',
+        pod_desc: '測試活動',
+        pod_sdate: new Date(),
+        pod_edate: new Date(),
+        pod_status: ApprovalStatus.已核准,
+        CanEdit: '0',
+        CanDelete: '0',
+        approved_date: null,
+        approved_usr_name: null
+      };
 
-      expect(errorHandlerService.handleError).toHaveBeenCalled();
+      expect(service.isRowSelectable(rowData)).toBe(false);
     });
   });
 
-  describe('clearData', () => {
-    it('should clear all signal data', () => {
-      service.clearData();
-
-      expect(service.sys3800List()).toEqual([]);
-      expect(service.sys3900List()).toEqual([]);
-      expect(service.ECRList).toEqual([]);
-      expect(service.TLTList).toEqual([]);
-      expect(service.TLS26010List()).toEqual([]);
-    });
-  });
-
-  describe('ECR and TLT Lists', () => {
-    it('should return ECR list from map', () => {
-      const option: DropdownOption = { No: '001', Name: 'Test ECR' };
-      service.ECRMap.set('001', option);
-
-      expect(service.ECRList).toEqual([option]);
+  describe('shallowEqual', () => {
+    it('should return true for equal objects', () => {
+      const objA = { a: 1, b: 2 };
+      const objB = { a: 1, b: 2 };
+      expect(service.shallowEqual(objA, objB)).toBe(true);
     });
 
-    it('should return TLT list from map', () => {
-      const option: DropdownOption = { No: 'TLT001', Name: 'Test TLT' };
-      service.TLTMap.set('TLT001', option);
-
-      expect(service.TLTList).toEqual([option]);
+    it('should return false for different objects', () => {
+      const objA = { a: 1, b: 2 };
+      const objB = { a: 1, b: 3 };
+      expect(service.shallowEqual(objA, objB)).toBe(false);
     });
   });
 });
