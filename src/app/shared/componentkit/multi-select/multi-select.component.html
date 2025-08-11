@@ -6,7 +6,7 @@
   [optionValue]="optionValue" [formControl]="control" [ngClass]="{ 'ng-dirty ng-invalid': submitted && control.errors }"
   [showToggleAll]="true" placeholder="全部" [variant]="variant" [group]="group" [optionGroupLabel]="optionGroupLabel"
   [appendTo]="appendTo" [optionGroupChildren]="optionGroupChildren" [resetFilterOnHide]="true"
-  [selectedItemsLabel]="selectedItemsLabel" [maxSelectedLabels]="maxSelectedLabels" [panelStyle]="panelStyle">
+  [selectedItemsLabel]="selectedItemsLabel" [maxSelectedLabels]="maxSelectedLabels">
   <!-- 🆕 簡潔的分組標題模板 -->
   <ng-template let-group pTemplate="group" *ngIf="group">
     <div class="group-header">

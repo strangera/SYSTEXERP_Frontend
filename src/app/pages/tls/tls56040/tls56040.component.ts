@@ -38,7 +38,6 @@ import { CalendarRangeQuickComponent } from "@shared/componentkit/calendar-range
   ],
 })
 export class TLS56040Component extends BasicQueryPageComponent<any> implements OnInit {
-  // 查詢表單定義，欄位名稱對應資料庫schema
   queryForm = this.formBuilder.group({
     MVM_No: [null, [Validators.maxLength(12)]],               // varchar(12)
     MVM_Status: [null, [Validators.maxLength(1)]],            // varchar(1)
@@ -56,7 +55,6 @@ export class TLS56040Component extends BasicQueryPageComponent<any> implements O
   });
   totalRecords = 0;
   data: any[] = [];
-  // 表格欄位定義，使用schema名稱和中文標題
   columns: Column[] = [
     { field: 'MVM_No', header: '調撥單編號', visible: true },
     { field: 'CRT_Date', header: '申請日期', visible: true, format: formatDateTime },
@@ -71,7 +69,7 @@ export class TLS56040Component extends BasicQueryPageComponent<any> implements O
     { field: 'MVM_Status', header: '單據狀態', visible: true, format: (value) => this.issuanceNoteStatusOptions.find((item) => item.value === value)?.label || value },
   ];
 
-  // 倉別調撥單狀態選項 (根據需求，這可能與 MVM_Status 的資料庫值有映射關係)
+  // 倉別調撥單狀態選項
   issuanceNoteStatusOptions = [
     { label: '已申請', value: '1' },
     { label: '已審核', value: '2' },
@@ -86,7 +84,7 @@ export class TLS56040Component extends BasicQueryPageComponent<any> implements O
 
   constructor(
     private tls52010Service: Tls52010Service,
-    private dropDownListService: DropDownListService, // 注入 DropDownListService
+    private dropDownListService: DropDownListService,
   ) {
     super();
   }

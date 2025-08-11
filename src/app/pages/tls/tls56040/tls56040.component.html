@@ -49,21 +49,25 @@
               optionLabel="label" optionValue="value" [control]="queryForm.controls.IN_HOS_No"
               [submitted]="submitted"></app-multi-select>
           </div>
+        </div>
+        <div class="grid p-fluid">
           <!-- 申請人員 (對應CRT_USR_No) -->
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown label="申請人編號/名稱" controlName="CRT_USR_No" [options]="userOptions" optionLabel="label"
               optionValue="value" [control]="queryForm.controls.CRT_USR_No" [submitted]="submitted"></app-dropdown>
-          </div>
-          <!-- 審核人員 (對應UPD_USR_No) -->
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="審核人編號/名稱" controlName="UPD_USR_No" [options]="userOptions" optionLabel="label"
-              optionValue="value" [control]="queryForm.controls.UPD_USR_No" [submitted]="submitted"></app-dropdown>
           </div>
           <!-- 移轉日期 (申請日期) -->
           <div class="col-12 md:col-6 lg:col-4">
             <app-calendar-range-quick calendarType="dateRange" label="申請日期"
               [startControl]="queryForm.controls.MVM_Date_Start" [endControl]="queryForm.controls.MVM_Date_End"
               [submitted]="submitted"></app-calendar-range-quick>
+          </div>
+        </div>
+        <div class="grid p-fluid">
+          <!-- 審核人員 (對應UPD_USR_No) -->
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown label="審核人編號/名稱" controlName="UPD_USR_No" [options]="userOptions" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.UPD_USR_No" [submitted]="submitted"></app-dropdown>
           </div>
           <!-- 移入驗收日期/移出確認日期 (審核日期) -->
           <div class="col-12 md:col-6 lg:col-4">
@@ -81,8 +85,6 @@
   </p-accordion>
 </div>
 <div class="card">
-  <!-- dataKey設定為 primary key MVM_No -->
-  <!-- multiSortMeta設定為 primary key MVM_No -->
   <app-table dataKey="MVM_No" [data]="data" [columns]="columns" (edit)="onEdit($event)" (detail)="onDetail($event)"
     [multiSortMeta]="[{ field: 'MVM_No', order: 1 }]" [totalRecords]="totalRecords" [showCheckBox]="true"
     (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [lazy]="true"
