@@ -1,4 +1,4 @@
-import { Tls41030Service } from './../../../service/API/tls/tls41030.service';
+import { Tls41030Service } from './../../../service/api/tls/tls41030.service';
 import { Component, OnInit, } from '@angular/core';
 import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
