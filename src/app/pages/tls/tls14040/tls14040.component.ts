@@ -1,8 +1,8 @@
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { apiOption, option } from '../../../shared/models/sys/sysb000.module';
 import { Tls14030Service } from '../../../service/API/tls/tls14030.service';
+import { apiOption, option } from '../../../shared/models/sys/sysb000.model';
 import { Garantee_Ticket } from '../../../shared/models/tls/tls000.model';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { AccordionModule } from 'primeng/accordion';
