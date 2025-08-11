@@ -32,8 +32,9 @@ export class TableCaptionComponent extends BasicPrintDataComponent implements On
   @ViewChild('fileUpload') fileUpload!: FileUpload; // 檔案上傳 元件
   @Input() data: any[] = [];                        // table 資料 (必填)
   @Input() columns!: Column[];                      // table 欄位配置 (必填)
-  @Input() selectedColumns!: Column[];             // table 預設顯示欄位
   @Output() columnsEvent = new EventEmitter<Column[]>();// table 欄位配置 (必填)
+  @Input() selectedColumns!: Column[];             // table 預設顯示欄位
+  @Output() selectedColumnsEvent = new EventEmitter<Column[]>();// table 欄位配置 (必填)
   isColumnsInitialized = false;                                                 // table 欄位是否初始化
   @Input() rowEditing = false;                      // 是否正在編輯Row
   @Input() selectedItems: any = [];                 // table 已勾選資料
@@ -82,8 +83,7 @@ export class TableCaptionComponent extends BasicPrintDataComponent implements On
     }
     // 僅在 columns 首次被設定時執行初始化邏輯
     // 這樣就不會在每次 data 變動時都重置 filter 狀態
-    if (changes['columns'] && this.columns.length > 0 && !this.isColumnsInitialized) {
-      this.columns = this.columns.filter(col => !col.hidden);
+    if (changes['columns'] && this.columns?.length > 0 && !this.isColumnsInitialized) {
       // 恢復歷史紀錄，如果沒有就使用預設值
       setTimeout(() => {
         const storedFilter = this.queryStateService.getQueryState(this.tableKey + 'Filter')?.value;
@@ -91,8 +91,13 @@ export class TableCaptionComponent extends BasicPrintDataComponent implements On
           this.columns = storedFilter;
           const validFilteredColumns = this.columns.filter(col => col.visible !== false);// 只保留可見的欄位
           this.selectedColumns = validFilteredColumns;
+          this.selectedColumnsEvent.emit(this.selectedColumns);
+          this.columnsEvent.emit(this.columns);
         } else {
+          this.columns = this.columns.filter(col => !col.hidden);
           this.selectedColumns = this.columns.filter(col => col.visible !== false);// 沒有儲存的狀態，使用預設值
+          this.selectedColumnsEvent.emit(this.selectedColumns);
+          this.columnsEvent.emit(this.columns);
         }
         this.isColumnsInitialized = true;
 
@@ -114,7 +119,7 @@ export class TableCaptionComponent extends BasicPrintDataComponent implements On
     this.columns.forEach(col => {
       col.visible = event.value.some((ev: any) => ev.field === col.field);
     });
-    this.columnsEvent.emit(this.selectedColumns);
+    this.selectedColumnsEvent.emit(this.selectedColumns);
     this.queryStateService.setQueryState(this.tableKey + 'Filter', this.columns);
   }
   onExportExcel() { this.exportExcel.emit(); }                      // 匯出Excel範本 事件

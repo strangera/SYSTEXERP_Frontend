@@ -159,7 +159,7 @@ export abstract class BasicPrintDataComponent {
       if (progNo) {
         this.funInfo = this.authService.getUserPermissions(progNo);
         this.tableKey = this.tableKey ? this.tableKey : progNo + 'TableQueryState';
-        this.cdr.detectChanges(); // 資料更新後觸發變更偵測
+        // this.cdr.detectChanges(); // 資料更新後觸發變更偵測
       } else {
         // 如果 progNo 為空，也將 funInfo 重置為安全預設值
         this.funInfo = { PrivilegeBehavior: [] } as unknown as FunsrightInfo;

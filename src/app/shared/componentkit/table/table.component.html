@@ -12,20 +12,20 @@
   [styleClass]="'p-datatable-sm' + (IsPrint ? ' p-datatable-gridlines' : ' ') + (!disabled ? ' p-datatable-striped' : ' ')"
   [virtualScroll]="!IsPrint" [virtualScrollItemSize]="35" [virtualScrollDelay]="250"
   currentPageReportTemplate="第{currentPage}頁 / 總共{totalPages}頁 (總筆數:{totalRecords})"
-  (selectionChange)="onSelectionChange($event)" (onRowSelect)="select.emit($event)"
+  (selectionChange)="onSelectionChange($event)" (onRowSelect)="select.emit($event)" (onPage)="onPageChange($event)"
   (onRowUnselect)="unSelect.emit($event)" [rowSelectable]="rowSelectableWrapper"
   [loading]="loading && data.length === 0" [expandedRowKeys]="IsPrint ? expandedRows : {}"
   paginatorDropdownAppendTo="body" editMode="row" [groupRowsBy]="groupRowsBy" rowGroupMode="subheader">
   <ng-template pTemplate="caption">
-    <app-table-caption [data]="data" [columns]="columns" [selectedColumns]="selectedColumns"
-      (columnsEvent)="selectedColumns = $event" [rowEditing]=" rowEditing" [selectedItems]="selectedItems"
-      [tableKey]="tableKey" [expansionDataKey]="expansionDataKey" [showCaption]="showCaption" [showHeader]="showHeader"
-      [showFilter]="showFilter" [showReportMode]="showReportMode" [showInsert]="showInsert"
-      [insertDisabled]="insertDisabled" [deleteData]="deleteData" [showDelete]="showDelete" [deleteIcon]="deleteIcon"
-      [deletepTooltip]="deletepTooltip" [showExcel]="showExcel" [showExcelExport]="showExcelExport"
-      [showExcelImport]="showExcelImport" [exportExcelLoading]="exportExcelLoading" [showPage]="showPage"
-      [totalPages]="totalPages" [pages]="pages" [selectedPage]="selectedPage" [rows]="rows" [first]="first"
-      (expandEvent)="toggleExpandCollapse()" (insert)="insertRow()" (delete)="deleteRow($event)"
+    <app-table-caption [data]="data" [columns]="columns" (columnsEvent)="columns = $event"
+      [selectedColumns]="selectedColumns" (selectedColumnsEvent)="selectedColumns = $event" [rowEditing]=" rowEditing"
+      [selectedItems]="selectedItems" [tableKey]="tableKey" [expansionDataKey]="expansionDataKey"
+      [showCaption]="showCaption" [showHeader]="showHeader" [showFilter]="showFilter" [showReportMode]="showReportMode"
+      [showInsert]="showInsert" [insertDisabled]="insertDisabled" [deleteData]="deleteData" [showDelete]="showDelete"
+      [deleteIcon]="deleteIcon" [deletepTooltip]="deletepTooltip" [showExcel]="showExcel"
+      [showExcelExport]="showExcelExport" [showExcelImport]="showExcelImport" [exportExcelLoading]="exportExcelLoading"
+      [showPage]="showPage" [totalPages]="totalPages" [pages]="pages" [selectedPage]="selectedPage" [rows]="rows"
+      [first]="first" (expandEvent)="toggleExpandCollapse()" (insert)="insertRow()" (delete)="deleteRow($event)"
       (exportExcel)="exportExcel.emit()" (importExcel)="importExcel.emit($event)" (pageChange)="goToPage($event)"
       [totalRecords]="dt.totalRecords" [apiUrl]="apiUrl">
       <header><ng-content select="header"></ng-content></header>
@@ -156,11 +156,11 @@
                 (ngModelChange)="onFieldChange(rowData, col.field, $event)" [minFractionDigits]="col.fractionDigits"
                 [maxFractionDigits]="col.fractionDigits" [useGrouping]="col.useGrouping"
                 (onBlur)="onFieldBlur(rowData, col.field, rowData[col.field])" />
-              <p-autoComplete *ngIf="col.type === 'autoComplete'" class="w-full min-w-max" styleClass="w-full"
-                appendTo="body" [(ngModel)]="rowData[col.field]" [ngModelOptions]="{ standalone: true }"
-                placeholder="請輸入{{ col.header }}" [suggestions]="getOptions(rowData, col)"
-                (onSelect)="onFieldChange(rowData, col.field, $event,rowIndex)" (completeMethod)="filterOptions($event)"
-                [optionLabel]="col.optionLabel" [optionValue]="col.optionValue"
+              <p-autoComplete *ngIf="col.type === 'autoComplete'" inputStyleClass="w-full" class="w-full min-w-max"
+                styleClass="w-full" appendTo="body" [(ngModel)]="rowData[col.field]"
+                [ngModelOptions]="{ standalone: true }" placeholder="請輸入{{ col.header }}"
+                [suggestions]="getOptions(rowData, col)" (onSelect)="onFieldChange(rowData, col.field, $event,rowIndex)"
+                (completeMethod)="filterOptions($event)" [optionLabel]="col.optionLabel" [optionValue]="col.optionValue"
                 [disabled]="col.disabled ? col.disabled(rowData) : false">
                 <ng-template let-item pTemplate="item" *ngIf="col.templateLabel">
                   <div class="flex align-items-center gap-2">
@@ -199,11 +199,12 @@
                 (ngModelChange)="onFieldChange(rowData, col.field, $event)" [minFractionDigits]="col.fractionDigits"
                 [maxFractionDigits]="col.fractionDigits" [useGrouping]="col.useGrouping"
                 (onBlur)="onFieldBlur(rowData, col.field, rowData[col.field])" />
-              <p-autoComplete *ngIf="col.type === 'autoComplete'" class="w-full min-w-max" styleClass="w-full"
-                appendTo="body" [(ngModel)]="rowData[col.field]" placeholder="請輸入{{ col.header }}"
+              <p-autoComplete *ngIf="col.type === 'autoComplete'" inputStyleClass="w-full" class="w-full min-w-max"
+                styleClass="w-full" appendTo="body" [(ngModel)]="rowData[col.field]" placeholder="請輸入{{ col.header }}"
                 [suggestions]="getOptions(rowData, col)" (onSelect)="onFieldChange(rowData, col.field, $event,rowIndex)"
                 (completeMethod)="filterOptions($event)" [ngModelOptions]="{ standalone: true }"
-                [optionLabel]="col.optionLabel" [optionValue]="col.optionValue">
+                [optionLabel]="col.optionLabel" [optionValue]="col.optionValue"
+                [disabled]="col.disabled ? col.disabled(rowData) : alwaysEdit ? false : true">
                 <ng-template let-item pTemplate="item" *ngIf="col.templateLabel">
                   <div class="flex align-items-center gap-2">
                     <span>{{ item[col.templateLabel] }}</span>

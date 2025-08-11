@@ -99,15 +99,23 @@ export interface FieldChangeEvent {
 }
 
 // 新增一個方法來驗證行數據
-export function validateRowData(rowData: any, columns: Column[], data: any, messageService: NotificationService, dataKey: string): boolean {
+export function validateRowData(rowData: any, columns: Column[], data: any, messageService: NotificationService, dataKey: string, defaultInsertData?: any): boolean {
   // 新增的預設判斷：檢查除了 dataKey 以外的所有欄位是否都為 null/undefined/空字串
   const otherColumns = columns.filter(col => col.field !== dataKey);
-  const allOtherFieldsAreEmpty = otherColumns.every(col => {
-    const value = rowData[col.field];
-    return value === null || value === undefined || (typeof value === 'string' && value.trim() === '');
+  // 檢查 rowData 的值是否都與 defaultInsertData 的值完全相同
+  // 這才是判斷「使用者是否修改過任何欄位」的正確方式
+  const isRowUnchangedFromDefault = otherColumns.every(col => {
+    const currentValue = rowData[col.field];
+    // 判斷 defaultInsertData 中是否存在該欄位，如果沒有則預設為 null (與 newRowData 的初始化邏輯一致)
+    const defaultValue = (defaultInsertData && defaultInsertData[col.field] !== undefined)
+      ? defaultInsertData[col.field]
+      : null;
+    // 比較當前值與預設值是否相同
+    return currentValue === defaultValue;
   });
 
-  if (allOtherFieldsAreEmpty) {
+  // 如果 rowData 保持未變動，則顯示錯誤訊息並返回 false
+  if (isRowUnchangedFromDefault) {
     messageService.errorBubble('請輸入至少一個欄位的值', '未輸入任何值');
     return false; // 驗證失敗
   }

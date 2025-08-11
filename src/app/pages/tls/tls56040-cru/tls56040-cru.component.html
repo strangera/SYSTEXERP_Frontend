@@ -53,71 +53,9 @@
             [style]="{ height: '100px' }" [submitted]="submitted"></app-input-textarea>
         </div>
       </div>
-
-      <!-- 明細檔表格 -->
-      <p-panel header="商品明細" class="mt-4">
-        <p-table [value]="details.controls" dataKey="MVD_SeqNo">
-          <ng-template pTemplate="header">
-            <tr>
-              <th>項次</th>
-              <th>商品管理編號</th>
-              <th>國際條碼</th>
-              <th>商品名稱</th>
-              <th>進單價</th>
-              <th>目前庫存</th>
-              <th>調撥申請數量</th>
-              <th>調撥申請進價未稅小計</th>
-              <th>單項說明</th>
-              <th>操作</th>
-            </tr>
-          </ng-template>
-          <ng-template pTemplate="body" let-detail let-i="rowIndex">
-            <tr [formGroupName]="i">
-              <td>{{ detail.get('MVD_SeqNo')?.value }}</td>
-              <td>
-                <app-input-text controlName="PLU_MagNo" [control]="detail.get('PLU_MagNo')"
-                  [submitted]="submitted"></app-input-text>
-              </td>
-              <td>
-                <app-input-text controlName="PLU_No" [control]="detail.get('PLU_No')"
-                  [submitted]="submitted"></app-input-text>
-              </td>
-              <td>
-                <app-input-text controlName="PLU_Name" [control]="detail.get('PLU_Name')"
-                  [submitted]="submitted"></app-input-text>
-              </td>
-              <td>
-                <app-input-text controlName="MVD_BuyPrc" [control]="detail.get('MVD_BuyPrc')"
-                  [submitted]="submitted"></app-input-text>
-              </td>
-              <td>
-                <app-input-text controlName="CurrentStock" [control]="detail.get('CurrentStock')"
-                  [submitted]="submitted"></app-input-text>
-              </td>
-              <td>
-                <app-input-text controlName="APPLY_Qty" [control]="detail.get('APPLY_Qty')"
-                  [submitted]="submitted"></app-input-text>
-              </td>
-              <td>
-                <app-input-text controlName="APPLY_BuyNet" [control]="detail.get('APPLY_BuyNet')"
-                  [submitted]="submitted"></app-input-text>
-              </td>
-              <td>
-                <app-input-text controlName="MVD_Remark" [control]="detail.get('MVD_Remark')"
-                  [submitted]="submitted"></app-input-text>
-              </td>
-              <td>
-                <app-button btnType="delete" (click)="removeDetailRow(i)"></app-button>
-              </td>
-            </tr>
-          </ng-template>
-        </p-table>
-        <div class="flex justify-content-end mt-3">
-          <app-button label="新增明細" (click)="addDetailRow()"></app-button>
-        </div>
-      </p-panel>
-
-
+      <app-table dataKey="id" [data]="data" [columns]="columns" [showInsert]="true" [showRowEdit]="true"
+        [deleteData]="true" (dataChange)="data = $event" [insertRowData]="true" [defaultInsertData]="defaultInsertData"
+        [showCheckBox]="true" [showReportMode]="false"></app-table>
       <div *ngIf="!isFormReadable" class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
         <app-button btnType="cancel" [form]="dataForm"></app-button>
         <app-button btnType="submit" [loading]="loading" />

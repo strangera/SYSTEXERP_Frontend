@@ -14,6 +14,7 @@ import { TableModule } from "primeng/table";
 import { DropDownListService } from '@service/utility/dropDownList.service';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { InputTextareaComponent } from '@shared/componentkit/input-textarea/input-textarea.component';
+import { TableComponent } from '@shared/componentkit/table/table.component';
 
 @Component({
   selector: 'app-tls56040-cru',
@@ -31,7 +32,8 @@ import { InputTextareaComponent } from '@shared/componentkit/input-textarea/inpu
     NgIf,
     TranslateModule,
     TableModule,
-    InputTextareaComponent
+    InputTextareaComponent,
+    TableComponent
   ]
 })
 export class TLS56040CRUComponent extends BasicCruPageComponent<any> implements OnInit {
@@ -76,43 +78,27 @@ export class TLS56040CRUComponent extends BasicCruPageComponent<any> implements 
     details: this.formBuilder.array([])
   });
 
-  data: any[] = []; // 用於表格顯示明細數據
+  data: any = []; // 用於表格顯示明細數據
   columns: Column[] = [
-    { field: 'MVD_SeqNo', header: '項次', visible: true },
-    { field: 'PLU_MagNo', header: '商品管理編號', visible: true },
+    { field: 'PLU_MagNo', header: '商品管理編號', visible: true, type: 'autoComplete' },
     { field: 'PLU_No', header: '國際條碼', visible: true },
     { field: 'PLU_Name', header: '商品名稱', visible: true },
     { field: 'MVD_BuyPrc', header: '進單價', visible: true },
     { field: 'CurrentStock', header: '目前庫存', visible: true }, // 需要SP讀取
-    { field: 'APPLY_Qty', header: '調撥申請數量', visible: true },
+    { field: 'APPLY_Qty', header: '調撥申請數量', visible: true, type: 'inputNumber' },
     { field: 'APPLY_BuyNet', header: '調撥申請進價未稅小計', visible: true },
-    { field: 'MVD_Remark', header: '單項說明', visible: true },
-    // 以下明細檔欄位不顯示在畫面上，但可能需要用於計算或後端傳輸
-    { field: 'PLU_Unit', header: '單位代碼', visible: false },
-    { field: 'PLU_BoxQty', header: '裝箱入數', visible: false },
-    { field: 'PLU_StockTaxType', header: '進價稅別', visible: false },
-    { field: 'PLU_TaxType', header: '售價稅別', visible: false },
-    { field: 'MVD_SalePrc', header: '售單價', visible: false },
-    { field: 'OUTGODS_QTY', header: '調撥發貨數量', visible: false },
-    { field: 'Confirm_QTY', header: '調撥驗收數量', visible: false },
-    { field: 'APPLY_BuyTax', header: '調撥申請進價稅額', visible: false },
-    { field: 'APPLY_BuyAmt', header: '調撥申請進價合計', visible: false },
-    { field: 'APPLY_SaleAmt', header: '調撥申請售價小計', visible: false },
-    { field: 'OUTGODS_BuyNet', header: '調撥發貨進價未稅小計', visible: false },
-    { field: 'OUTGODS_BuyTax', header: '調撥發貨進價稅額', visible: false },
-    { field: 'OUTGODS_BuyAmt', header: '調撥發貨進價合計', visible: false },
-    { field: 'OUTGODS_SaleAmt', header: '調撥發貨售價小計', visible: false },
-    { field: 'Confirm_BuyNet', header: '調撥驗收進價未稅小計', visible: false },
-    { field: 'Confirm_BuyTax', header: '調撥驗收進價稅額', visible: false },
-    { field: 'Confirm_BuyAmt', header: '調撥驗收進價合計', visible: false },
-    { field: 'Confirm_SaleAmt', header: '調撥驗收售價小計', visible: false },
-    { field: 'CRT_Date', header: '建立日期', visible: false },
-    { field: 'CRT_USR_No', header: '建立人員', visible: false },
-    { field: 'CRT_USR_Name', header: '建立人員姓名', visible: false },
-    { field: 'UPD_Date', header: '變更日期', visible: false },
-    { field: 'UPD_USR_No', header: '變更人員', visible: false },
-    { field: 'UPD_USR_Name', header: '變更人員姓名', visible: false },
+    { field: 'MVD_Remark', header: '單項說明', visible: true, type: 'input' },
   ];
+  defaultInsertData: any = {
+    PLU_MagNo: null,
+    PLU_No: null,
+    PLU_Name: null,
+    MVD_BuyPrc: 0,
+    CurrentStock: 0,
+    APPLY_Qty: 0,
+    APPLY_BuyNet: 0,
+    MVD_Remark: null,
+  }
 
   // 下拉選單選項 (需從API獲取)
   brandOptions: { label: string; value: string }[] = [];// 品牌
