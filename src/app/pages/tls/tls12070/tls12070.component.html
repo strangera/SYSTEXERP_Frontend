@@ -1,7 +1,6 @@
 <div class="card">
   <div class="flex gap-2 mb-2">
     <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
-    <app-button btnType="create" (click)="onCreate()" label="{{ 'create' | translate }}"></app-button>
   </div>
   <p-accordion>
     <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
@@ -14,13 +13,14 @@
             [submitted]="submitted" />
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-              <app-dropdown label="訪談人員代碼/名稱" controlName="contact_USR_No" [options]="contact_USR_Option" optionLabel="Name"
-                optionValue="No" [control]="queryForm.controls.contact_USR_No" [submitted]="submitted"></app-dropdown>
+              <app-multi-select label="訪談人員代碼/名稱" controlName="contact_USR_No" [options]="contact_USR_Option" optionLabel="Name"
+                optionValue="No" [control]="queryForm.controls.contact_USR_No" [submitted]="submitted"></app-multi-select>
           </div>
         </div>
         <!-- <div> -->
         <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
           <app-button btnType="clear"></app-button>
+          <app-button label="意願報表"></app-button>
           <app-button btnType="query" [loading]="loading"></app-button>
         </div>
         <!-- </div> -->
@@ -30,7 +30,7 @@
 </div>
 <div class="card">
   <app-report-table-group [columns]="intervew_columns" [data]="interview_data"
-    [subtotalFields]="['contact_USR_No']" [enableGrouping]="false"
+    [enableGrouping]="false"
     [reportTitle]="'專櫃訪談紀錄追蹤表'" [currentPage]="1" [dateStart]="'contact_Date_Start'" [dateEnd]="'contact_Date_End'" [showTotalOnly]="false"
     [defaultMergedView]="true">
   </app-report-table-group>

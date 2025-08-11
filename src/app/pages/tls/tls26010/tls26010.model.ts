@@ -132,6 +132,7 @@ export interface EcrItem {
   floor_name?: string;
   area_name?: string;
   ecr_no: string;
+  ecr_name?: string;
   tlt_no: string;
   tlt_name: string;
   Status: ItemOperationStatus;

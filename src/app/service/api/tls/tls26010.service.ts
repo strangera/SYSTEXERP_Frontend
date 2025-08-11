@@ -101,6 +101,7 @@ export class TLS26010Service {
     this.sys3800Loading = !0;
     this.http.post<BaseQueryResponse<DropdownOption>>(`${apiUrl}/querySYS3800_DropDownList`, {}).pipe(
       take(1),
+      tap(() => this.sys3800Data.set([])),
       tap(response => this.sys3800Data.set(response.Data)),
       catchError(error => this.errorHandler.handleError(error)),
       finalize(() => {
@@ -116,6 +117,7 @@ export class TLS26010Service {
     this.sys3900Loading = !0;
     this.http.post<BaseQueryResponse<DropdownOption>>(`${apiUrl}/querySYS3900_DropDownList`, building_no?.length ? { building_no } : {}).pipe(
       take(1),
+      tap(() => this.sys3900Data.set([])),
       tap(response => this.sys3900Data.set(response.Data)),
       catchError(error => this.errorHandler.handleError(error)),
       finalize(() => {
