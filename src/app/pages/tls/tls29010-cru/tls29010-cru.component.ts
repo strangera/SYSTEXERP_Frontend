@@ -107,7 +107,7 @@ export class TLS29010CRUComponent extends BasicCruPageComponent<TALPORDERD_OPEND
     str_no: [{ value: '', disabled: true }], // 店部編號
     // --先選 專櫃活動設定主檔TALPORDERM--
     //欄位用這些就好
-    pod_no: ['', [Validators.required, Validators.maxLength(12), this.validationService.noChineseValidator]], // 活動申請編號 (YYYYMMDDSSS)
+    pod_no: [{ value: null, disabled: true }], // 活動申請編號 (YYYYMMDDSSS)
     pod_type: ['', [Validators.required]], // 活動類型(1=預售, 2=滿千送百發行, 3=滿千送百兌回, 4~5=會員卡集點, 6~7=全館集點, 8=期間開放折扣)
     // pod_desc: ['',[Validators.required, Validators.maxLength(100)]], // 活動名稱(新增時開放下拉選取) 抓 [TALPORDERD]
     pod_sdate: [null, [Validators.required]], // 活動起始日 (Date)
@@ -157,33 +157,34 @@ export class TLS29010CRUComponent extends BasicCruPageComponent<TALPORDERD_OPEND
   // ---Potential_Customer_Detail 潛在客戶其他資料明細檔 table---
   opendisc_Detail: TALPORDERD_OPENDisc[] = [];
   //欄位資訊
-  Potential_Customer_Detail_Columns: ColumnDef[] = [
+  TALPORDERD_OPENDisc_Detail_Columns: ColumnDef[] = [
     // { field: 'id', header: '主鍵', type: 'number', editable: false, autoWidth: false },
     // { field: 'mid', header: '主鍵', type: 'number', editable: false, autoWidth: false },
     // { field: 'str_no', header: '店部編號', type: 'text', editable: true, autoWidth: false },
     // { field: 'pod_no', header: '活動編號', type: 'text', editable: true, autoWidth: false },  //活動編號(TALPORDERM)
 
-    // { field: 'talent_id', header: '合約編號系統', type: 'number', editable: false, autoWidth: true, hidden:true }, // 不用顯示 內容與主檔案一致 *
-    { field: 'tlt_id', header: '抽成類別', type: 'text', editable: true, autoWidth: true }, // 抽成類別(0-9) *
+    { field: 'talent_id', header: '合約編號系統', type: 'number', editable: true, autoWidth: true }, // 不用顯示 內容與主檔案一致 *
+    { field: 'tlt_id', header: '抽成類別', type: 'text', editable: false, autoWidth: true }, // 抽成類別(0-9) *
     //---要使用的---
     // [專櫃編號] 帶出 下面這坨
-    { field: 'tlt_no', header: '專櫃名稱', type: 'text', editable: true, autoWidth: true }, //(專櫃編號_專櫃名稱，下拉選單)用[專櫃編號] 帶出 [專櫃名稱]、[抽成類別]、[折數]、[抽成率] * ([TALPORDERD])
-    { field: 'cag_barcode', header: '折數', type: 'text', editable: true, autoWidth: true }, // 後端提供，要去(TLTTALENT_CHARGED)撈 *
-    // { field: 'cag_charge_rate', header: '抽成率', type: 'text', editable: true, autoWidth: true }, // 後端提供，要去(TLTTALENT_CHARGED)撈 * (*為一組，用id,mid 對應) 只有顯示，不會存到明細
+    { field: 'tlt_no', header: '專櫃編號', type: 'text', editable: false, autoWidth: true }, //(專櫃編號_專櫃名稱，下拉選單)用[專櫃編號] 帶出 [專櫃名稱]、[抽成類別]、[折數]、[抽成率] * ([TALPORDERD])
+    { field: 'cag_barcode', header: '折數', type: 'text', editable: false, autoWidth: true }, // 後端提供，要去(TLTTALENT_CHARGED)撈 *
+    { field: 'cag_charge_rate', header: '抽成率', type: 'text', editable: false, autoWidth: true, hidden: true }, // 後端提供，要去(TLTTALENT_CHARGED)撈 * (*為一組，用id,mid 對應) 只有顯示，不會存到明細
     { field: 'use_flag', header: '是否使用', type: 'dropdown', editable: true, autoWidth: true, options: this.whetherOption }, // 本作業維護
   ];
   // 預設新項目模板
   defaultNewDetail: any = {
     pod_no: '', //自動設設為和主檔一致
-    // talent_id: '', // 合約編號系統
+    talent_id: 0, // 合約編號系統
     tlt_id: '', // 折扣別
     // --SA指定的顯示項目--
     tlt_no: '', // 抽成類別
     cag_barcode: 0, // 折數條碼
-    // cag_charge_rate: 0, // 折數條碼 //依照專櫃編號 進行變動
+    cag_charge_rate: 0, // 折數條碼 //依照專櫃編號 進行變動
     use_flag: 'Y', // 是否使用
 
-    status: 'new' // 新增狀態
+    status: 'new', // 新增狀態
+    CanDel: true,
   };
   // 預設 POS2005 新項目模板 (內容有需要變動時使用)
   // createDefaultNew() {
@@ -254,12 +255,10 @@ export class TLS29010CRUComponent extends BasicCruPageComponent<TALPORDERD_OPEND
       return;
     }
 
-    // 明細送出的pod全部都用主檔的pod_no
+    // 明細送出的pod全部都用主檔的pod_no (新增是後端自動新增流水號)
     const mainPodNo = this.dataForm.get('pod_no')?.value;
-    if (!mainPodNo) {
-      this.messageService.errorBubble('必須輸入活動申請編號，請重新操作');
-      return;
-    }
+
+    // console.log('原始明細資料',this.opendisc_Detail);
 
     const processedDetail = this.opendisc_Detail.map(item => {
       const cleaned = Object.fromEntries(
@@ -267,7 +266,7 @@ export class TLS29010CRUComponent extends BasicCruPageComponent<TALPORDERD_OPEND
       );
 
       if (item.status === 'new') {
-        cleaned['id'] = null;
+        cleaned['id'] = 0;
       }
 
       // 👉 自動指定為主檔 pod_no
@@ -287,11 +286,11 @@ export class TLS29010CRUComponent extends BasicCruPageComponent<TALPORDERD_OPEND
         if (this.canAdd()) {
           // console.log('insert', body);
           console.log('insert', JSON.stringify(body, null, 2));
-          // this.tls29010Service.insertTLS29010(body).subscribe(() => {
-          //   this.messageService.successBubble('新增成功');
-          //   // this.onCancel(); // 儲存後，會清除資料留在原頁面，不返回列表
-          //   this.dataForm.reset(); // 重置表單
-          // });
+          this.tls29010Service.insertTLS29010(body).subscribe(() => {
+            this.messageService.successBubble('新增成功');
+            // this.onCancel(); // 儲存後，會清除資料留在原頁面，不返回列表
+            this.dataForm.reset(); // 重置表單
+          });
         }
         break;
       case CRUDStatus.Edit:
@@ -367,9 +366,45 @@ export class TLS29010CRUComponent extends BasicCruPageComponent<TALPORDERD_OPEND
     return this.opendisc_Detail.filter(item => item.status !== 'deleted');
   }
 
-  //---TALPORDERD_OPENDisc 表格編輯事件---
-  onRowSaveDetail(event: any) {
-    this.tls29010DetailService.handleRowSave(event);
+  // ---TALPORDERD_OPENDisc 表格編輯事件---
+  async onRowSaveDetail(event: any) {
+    const { oldData, newData } = event;
+
+    if (newData?.talent_id) {
+      console.log('寫入合約主檔案', newData.talent_id);
+
+      try {
+        const res = await this.tls29010Service
+          .queryTLTTALENT_CHARGED({ talent_id: newData.talent_id })
+          .toPromise();
+
+        if (res.Status === '0000' && res.Data?.length) {
+          const apiData = res.Data[0];
+
+          // 更新 newData
+          newData.tlt_id = apiData.tlt_id;
+          newData.tlt_no = apiData.tlt_no;
+          newData.cag_barcode = apiData.cag_barcode;
+          newData.cag_charge_rate = apiData.cag_charge_rate;
+
+          console.log('合約明細', apiData);
+
+          // 這時才做狀態判斷
+          this.tls29010DetailService.handleRowSave({ oldData, newData });
+        } else {
+          this.messageService.errorBubble('找不到對應的合約資料，移除該筆明細');
+          const index = this.opendisc_Detail.indexOf(newData);
+          if (index > -1) {
+            this.opendisc_Detail.splice(index, 1);
+          }
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    } else {
+      // 沒有 talent_id 直接進行狀態判斷
+      this.tls29010DetailService.handleRowSave(event);
+    }
   }
 
   onRowCancelDetail(event: any) {
