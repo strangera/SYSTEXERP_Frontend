@@ -10,12 +10,14 @@ import { AuthService } from '../../../service/system/auth.service';
 import { TableExport } from '../../componentkit/table/table-export/table-export.component';
 import { REPORT_TITLES } from '../../componentkit/table/report-titles';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
+import { FunsrightInfo } from '@shared/models/system/funsrightInfo';
+import { NotificationService } from '@shared/component/notification-message/notification.service';
 
 @UntilDestroy()
 @Injectable({
   providedIn: 'root'
 })
-export class BasicPrintDataComponent {
+export abstract class BasicPrintDataComponent {
   IsPrint = true;
   exportDialog = false;
   exportStatus: 'PDF' | 'Excel' = 'PDF';
@@ -25,6 +27,11 @@ export class BasicPrintDataComponent {
   currentPage = inject(CurrentPageService);
   tableService = inject(TableService);
   authService = inject(AuthService);
+  messageService = inject(NotificationService);
+
+  constructor() {
+    this.getProgNo();
+  }
 
   exportPDFDownload(event: TableExport, columns: Column[], apiUrl?: string): void {
     const ProgNo = this.currentPage.currentPageProgNoSubject.getValue() as string;
@@ -144,5 +151,23 @@ export class BasicPrintDataComponent {
   }
   toggleVisibility(): void {
     this.IsPrint = !this.IsPrint;
+  }
+  public funInfo?: FunsrightInfo = { PrivilegeBehavior: [] } as unknown as FunsrightInfo;
+  abstract tableKey: string | undefined; // table 唯一標識 (必填)
+  getProgNo() {
+    this.currentPage.currentPageProgNo$.pipe(untilDestroyed(this)).subscribe(progNo => {
+      if (progNo) {
+        this.funInfo = this.authService.getUserPermissions(progNo);
+        this.tableKey = this.tableKey ? this.tableKey : progNo + 'TableQueryState';
+        this.cdr.detectChanges(); // 資料更新後觸發變更偵測
+      } else {
+        // 如果 progNo 為空，也將 funInfo 重置為安全預設值
+        this.funInfo = { PrivilegeBehavior: [] } as unknown as FunsrightInfo;
+      }
+    });
+  }
+  // 權限
+  canPerformAction(action: string): boolean {
+    return this.funInfo?.PrivilegeBehavior?.some(behavior => behavior.function_code === action) || false;
   }
 }

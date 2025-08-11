@@ -264,8 +264,8 @@ export function convertDateToYYYYMM(date: Date): string {
   return `${year}${month}`;
 }
 // formatDateToYYYY_MM_DD：輸出為 YYYY-MM-DD（避免 toISOString 造成減一天）
-export const formatDateToYYYY_MM_DD = (value: string | Date): string => {
-  if (!value) return '';
+export const formatDateToYYYY_MM_DD = (value: string | Date): string | null => {
+  if (!value) return null;
 
   const date = value instanceof Date ? value : new Date(value);
   if (isNaN(date.getTime())) return '';
