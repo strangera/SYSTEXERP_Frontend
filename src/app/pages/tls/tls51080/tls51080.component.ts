@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { createPaginationConfig, Column, formatDate } from '../../../shared/componentkit/table/table.model';
-import { apiOption } from '../../../shared/models/sys/sysb000.module';
+import { apiOption } from '../../../shared/models/sys/sysb000.model';
 import { POS2034 } from '../../../shared/models/tls/tls000.model';
 import { Tls51080Service } from '../../../service/api/tls/tls51080.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
@@ -15,11 +15,11 @@ import { TranslateModule } from '@ngx-translate/core';
 
 // 2.5.1.8  分倉資料處理
 @Component({
-    selector: 'app-tls51080',
-    templateUrl: './tls51080.component.html',
-    styleUrl: './tls51080.component.scss',
-    standalone: true,
-    imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputTextComponent, DropdownComponent, TableComponent, TranslateModule]
+  selector: 'app-tls51080',
+  templateUrl: './tls51080.component.html',
+  styleUrl: './tls51080.component.scss',
+  standalone: true,
+  imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputTextComponent, DropdownComponent, TableComponent, TranslateModule]
 })
 export class TLS51080Component extends BasicQueryPageComponent<POS2034> implements OnInit {
   // 查詢

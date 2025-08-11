@@ -1,6 +1,6 @@
 // pos2005-handler.service.ts
 import { Injectable } from '@angular/core';
-import { option } from '../../../shared/models/sys/sysb000.module';
+import { option } from '../../../shared/models/sys/sysb000.model';
 
 @Injectable({
     providedIn: 'root',

@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { createPaginationConfig, Column, formatDate } from '../../../shared/componentkit/table/table.model';
-import { apiOption, option } from '../../../shared/models/sys/sysb000.module';
+import { apiOption, option } from '../../../shared/models/sys/sysb000.model';
 import { POS2004 } from '../../../shared/models/tls/tls000.model';
 import { Tls51070Service } from '../../../service/api/tls/tls51070.service';
 import { FileSelectEvent, FileUploadModule } from 'primeng/fileupload';
@@ -18,11 +18,11 @@ import { TranslateModule } from '@ngx-translate/core';
 
 // 2.5.1.7  商品基本資料
 @Component({
-    selector: 'app-tls51070',
-    templateUrl: './tls51070.component.html',
-    styleUrl: './tls51070.component.scss',
-    standalone: true,
-    imports: [MenubarComponent, FileUploadModule, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputTextComponent, DropdownComponent, TableComponent, TranslateModule]
+  selector: 'app-tls51070',
+  templateUrl: './tls51070.component.html',
+  styleUrl: './tls51070.component.scss',
+  standalone: true,
+  imports: [MenubarComponent, FileUploadModule, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputTextComponent, DropdownComponent, TableComponent, TranslateModule]
 })
 export class TLS51070Component extends BasicQueryPageComponent<POS2004> implements OnInit {
   // 查詢
@@ -119,7 +119,7 @@ export class TLS51070Component extends BasicQueryPageComponent<POS2004> implemen
     { field: 'PLU_Reserve1', header: '說明', visible: true },
     { field: 'PLU_Reserve3', header: '系列', visible: true },
 
-    { field: 'CRT_Date', header: '建立日期', visible: false, format: formatDate  },
+    { field: 'CRT_Date', header: '建立日期', visible: false, format: formatDate },
     { field: 'CRT_USR_No', header: '建立人員代碼', visible: false },
     { field: 'CRT_USR_Name', header: '建立人員姓名', visible: false },
     { field: 'UPD_Date', header: '變更日期', visible: false, format: formatDate },
@@ -399,7 +399,7 @@ export class TLS51070Component extends BasicQueryPageComponent<POS2004> implemen
             // 有錯誤檔：顯示錯誤提示
             this.messageService.errorBubble(`部分資料匯入失敗，請下載錯誤檔檢查`);
             // 自動下載錯誤檔
-             this.downloadErrorFile(data.ErrorFilePath);
+            this.downloadErrorFile(data.ErrorFilePath);
           } else {
             // 沒有錯誤檔：顯示成功筆數
             this.messageService.infoBubble(`匯入成功，筆數：${data.SuccessCount}`);

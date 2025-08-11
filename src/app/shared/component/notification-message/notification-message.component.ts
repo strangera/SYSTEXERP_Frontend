@@ -10,7 +10,6 @@ import { DialogModule } from 'primeng/dialog';
 @Component({
   selector: 'app-notification-message',
   templateUrl: './notification-message.component.html',
-  styleUrl: './notification-message.component.scss',
   standalone: true,
   imports: [ConfirmDialogModule, PrimeTemplate, NgIf, Button, ToastModule, DialogModule, ButtonDirective, NgFor]
 })
