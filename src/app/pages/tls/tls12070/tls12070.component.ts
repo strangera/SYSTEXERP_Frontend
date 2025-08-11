@@ -135,8 +135,6 @@ export class TLS12070Component extends BasicQueryPageComponent<Customer_intervie
     { field: '???', header: '潛在客戶數', visible: true },
     { field: '???', header: '拜訪記錄次數', visible: true },
     //下面是明細展開(直接請後端給 太麻煩了)
-    
-
   ];
 
 
