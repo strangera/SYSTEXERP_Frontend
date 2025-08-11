@@ -21,4 +21,5 @@ export interface TreeNode {
   children: TreeNode[];
   actions: TreeNode[];
   parent?: TreeNode;
+  isDisable?: boolean | string
 }
