@@ -337,9 +337,13 @@ exportPDF(orientation: 'p' | 'l' = 'p'): void {
   const info = this.getHeaderInfo();
 
   // 讓每頁都畫相同表頭 + 頁碼
-  const drawHeader = () => this.drawReportHeader(doc, info, marginLeft, pageWidth);
+  let pageNo = 0;
+const drawHeader = () => {
+  pageNo += 1;
+  this.drawReportHeader(doc, info, marginLeft, pageWidth, pageNo);
+};
 
-  let currentY = 0;
+  let currentY = 180; // 保留給表頭的高度
   drawHeader();
   currentY = 180; // 表頭大概佔到這個高度，下面開始畫表格
 
@@ -405,13 +409,7 @@ exportPDF(orientation: 'p' | 'l' = 'p'): void {
     currentY = (doc as any).lastAutoTable.finalY + 30;
   });
 
-  // 頁碼（全部頁面跑一次）
-  const pageCount = doc.getNumberOfPages();
-  for (let i = 1; i <= pageCount; i++) {
-    doc.setPage(i);
-    doc.setFontSize(9);
-    doc.text(`頁數：${i}`, pageWidth - marginLeft, 164, { align: 'right' }); // 放在表頭區的右上
-  }
+
 
   doc.save(`專櫃日對帳單_${new Date().toISOString()}.pdf`);
 }
@@ -444,44 +442,62 @@ private getHeaderInfo() {
 }
 
 /** 依「圖一」畫表頭（公司/標題置中 + 左右資訊列） */
-private drawReportHeader(doc: jsPDF, info: any, marginLeft: number, pageWidth: number) {
-  const leftX = marginLeft;
-  const rightX = pageWidth - marginLeft;
-  const midX = pageWidth / 2;
+/** 依註解排版的表頭：三欄(左/中/右)，右側為「製表日期 + 頁數」 */
+private drawReportHeader(
+  doc: jsPDF,
+  info: any,
+  marginLeft: number,
+  pageWidth: number,
+  pageNo?: number // 目前頁數（可只顯示單一頁碼）
+) {
+  const leftX = marginLeft;             // 左欄
+  const midX  = leftX + 240;            // 左中欄（第二欄，依需要可調）
+  const rightX = pageWidth - marginLeft; // 右欄（靠右對齊）
+  const lineGap = 18;
 
-  // 公司、標題（置中）
+  // 公司、標題置中
   doc.setFontSize(16);
-  doc.text(info.company, midX, 50, { align: 'center' });
+  doc.text(info.company || '', pageWidth / 2, 50, { align: 'center' });
   doc.setFontSize(14);
-  doc.text(info.title, midX, 75, { align: 'center' });
+  doc.text(info.title || '', pageWidth / 2, 75, { align: 'center' });
 
   doc.setFontSize(10);
   let y = 110;
 
-  // 第 1 行
+  // ── 第 1 列 ───────────────────────────────────────────────
+  // 第 1 列 第 1 行
   doc.text(`業種：${info.biz || '－'}`, leftX, y);
-  doc.text(`製表日期：${info.madeAt}`, rightX, y, { align: 'right' });
-  y += 18;
+  // 第 1 列 第 2 行
+  doc.text(`銷售日期：${info.salesDate || '－'} `, midX, y);
+  // 第 1 列 第 3 行（右側）：製表日期 + 頁數
+  const pageLabel = (typeof pageNo === 'number') ? `   頁數：${pageNo}` : '';
+  doc.text(`製表日期：${info.madeAt}${pageLabel}`, rightX, y, { align: 'right' });
+  y += lineGap;
 
-  // 第 2 行
+  // ── 第 2 列 ───────────────────────────────────────────────
+  // 第 2 列 第 1 行
   doc.text(`專櫃：${info.counter || '－'}`, leftX, y);
-  // 右側「頁數」稍後在 exportPDF 最後統一補上
-  y += 18;
+  // 第 2 列 第 2 行
+  doc.text(`樓層：${info.floor || '－'}  抽成類別：${info.cutType} `, midX, y);
+  // 第 2 列 第 3 行（右側）：抽成類別 + 交易總件數/退貨件數（同一行）
+  doc.text(
+    `  交易總件數：${info.totalTxns} / 退貨件數：${info.returnQty}`,
+    rightX,
+    y,
+    { align: 'right' }
+  );
+  y += lineGap;
 
-  // 第 3 行
+  // ── 第 3 列 ───────────────────────────────────────────────
+  // 第 3 列 第 1 行
   doc.text(`區域：${info.area || '－'}`, leftX, y);
-  doc.text(`交易總件數：${info.totalTxns} / 退貨件數：${info.returnQty}`, rightX, y, { align: 'right' });
-  y += 18;
-
-  // 第 4 行
-  doc.text(`銷售日期：${info.salesDate || '－'}`, leftX, y);
+  // 第 3 列 第 3 行（右側）
   doc.text(`退貨金額：${info.returnAmt}`, rightX, y, { align: 'right' });
-  y += 18;
 
-  // 第 5 行
-  doc.text(`樓層：${info.floor || '－'}`, leftX, y);
-  doc.text(`抽成類別：${info.cutType}`, rightX, y, { align: 'right' });
+  // 如果你想保留「第 4 列」空行以拉開表頭與表格距離，可再加：
+  // y += lineGap;
 }
+
 
 
   formatDate(dateStr: string): string {
