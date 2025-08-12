@@ -70,7 +70,7 @@ export class TLS23070Component extends BasicQueryPageComponent<any> {
   }
 
   ngOnInit(): void {
-    this.initializePage('TLS23070', 'TLS23070cru', this.queryForm, (form) => this.onSubmit(form));
+    this.initializePage('TLS23070', 'TLS23070cru', this.queryForm, );
     this.restoreQueryFromStorage();
     this.formValueSub = this.queryForm.valueChanges
     .subscribe(() => this.saveQueryToStorage());
@@ -97,42 +97,7 @@ export class TLS23070Component extends BasicQueryPageComponent<any> {
     });
   }
 
-  onSubmit(form: FormGroup): void {
-    this.submitted = true;
-    if (this.loading || form.invalid) return;
-
-    this.handleSubmit(form, () => {
-      const payload = { ...form.value };
-      Object.keys(payload).forEach(key => {
-        if (payload[key] === '') payload[key] = null;
-      });
-
-      this.tls23070Service.queryTLS23070(payload).subscribe({
-        next: (res) => {
-          if (res.Status === '0000') {
-            this.data = res.Data || [];
-            this.totalRecords = res.TotalCount || this.data.length;
-            this.queryStateService.setQueryState(this.ProgNo, payload);
-            
-          } else {
-            this.data = [];
-            this.totalRecords = 0;
-            this.messageService.errorBubble('查詢失敗');
-          }
-        },
-        error: () => {
-          this.data = [];
-          this.totalRecords = 0;
-          this.messageService.errorBubble('查詢錯誤');
-          this.loading = false;
-        },
-        complete: () => {
-          this.loading = false;
-          this.messageService.unblockUi();
-        }
-      });
-    });
-  }
+  
   goToReportMode(): void {
     this.customPageSize = 1000;
     this.showPageSizeDialog = true;
