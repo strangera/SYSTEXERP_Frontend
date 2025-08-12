@@ -46,15 +46,16 @@
 
 <div class="card">
   <app-table
-    tableKey="TLS22040"
+    tableKey="id"
     [data]="data"
     [columns]="columns"
-    [showCheckBox]="true"
+    [showCheckBox]="false"
     dataKey="id"
     [multiSortMeta]="[{ field: 'pendingApprovalRegisterCode', order: 1 }]"
     [lazy]="true"
     [loading]="loading"
     (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"
     [showManage]="false"
+    [showDelete]="false"
   ></app-table>
 </div>

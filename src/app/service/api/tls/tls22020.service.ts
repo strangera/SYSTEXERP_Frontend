@@ -48,4 +48,7 @@ export class TLS22020Service {
   queryTLS22020(data: any): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/queryTLS22020`, data);
   }
+  exportTLS22020(data: any): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/exportTLS22020`, data);
+  }
 }
