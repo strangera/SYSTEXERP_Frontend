@@ -16,6 +16,7 @@ import { DropdownRangeComponent } from '@shared/componentkit/dropdown-range/drop
 import { createPaginationConfig } from '@shared/componentkit/table/table.model';
 import { creditCardColumns, creditCardGroup, TLS22020Data, payNoDataList } from './tls22020.model';
 import { CommonModule } from '@angular/common';
+import { ButtonModule } from 'primeng/button';
 const yesterday = new Date();
 yesterday.setDate(yesterday.getDate() - 1);
 @Component({
@@ -32,7 +33,9 @@ yesterday.setDate(yesterday.getDate() - 1);
     TableComponent,
     TranslateModule,
     DropdownRangeComponent,
-    CommonModule
+    CommonModule,
+    ButtonModule
+
   ],
 })
 
@@ -44,6 +47,8 @@ export class TLS22020Component extends BasicQueryPageComponent<any> implements O
     ECR_No_Start: [null],
     ECR_No_End: [null],
     status1: [null],
+    TXN_DateStart: [null as Date | null],
+    TXN_DateEnd: [null as Date | null],
     ...createPaginationConfig([{ field: 'ECR_No', order: 1 }]),
   });
   // 表格資料
@@ -55,7 +60,7 @@ export class TLS22020Component extends BasicQueryPageComponent<any> implements O
     { field: 'tlt_name', header: '專櫃名稱', visible: true },
 
   ];
-
+  exportExcelLoading = false;
 
   // 下拉選單選項
   whetherOptions: any[] = [];
@@ -169,9 +174,48 @@ export class TLS22020Component extends BasicQueryPageComponent<any> implements O
 
     });
   }
+  exportReport = () => {
+    const raw = this.queryForm.getRawValue();
 
+    const payload = {
+      FileName: "string",
+      ReportTitle: "string",
+      queryTLS22020Request: {
+        ...raw,
+        TXN_DateStart: raw.TXN_DateStart
+          ? `${raw.TXN_DateStart.getFullYear()}-${(raw.TXN_DateStart.getMonth() + 1).toString().padStart(2, '0')}-${raw.TXN_DateStart.getDate().toString().padStart(2, '0')}`
+          : null,
+        TXN_DateEnd: raw.TXN_DateEnd
+          ? `${raw.TXN_DateEnd.getFullYear()}-${(raw.TXN_DateEnd.getMonth() + 1).toString().padStart(2, '0')}-${raw.TXN_DateEnd.getDate().toString().padStart(2, '0')}`
+          : null,
+      },
+    }
 
+    this.exportExcelLoading = true;
+    this.tls22020Service.exportTLS22020(payload).subscribe({
+      next: (res: Blob) => {
+        const blob = new Blob([res], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${payload.FileName}.xlsx`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        window.URL.revokeObjectURL(url);
+        this.exportExcelLoading = false;
+      },
+      error: (err) => {
+        console.error('TLS22050 匯出失敗', err);
+        this.exportExcelLoading = false;
+      },
+    });
+  };
 }
+
+
+
+
 
 
 
