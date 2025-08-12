@@ -1,5 +1,5 @@
-import { Component } from '@angular/core';
-import { Location, NgIf, NgFor } from '@angular/common';
+import { Component, ViewChild } from '@angular/core';
+
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 
 import { PdfService } from '../../../service/basic/pdf.service';
@@ -9,8 +9,12 @@ import { TXN_SubtypeService } from '../../../service/basic/TXN_Subtype.service';
 import { CarrierTypeService } from '../../../service/basic/carrier-type.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ReportTableGroupComponent } from '../../../shared/componentkit/report-table-group/report-table-group.component';
+import { NgIf, DecimalPipe } from '@angular/common';  // ⬅️ 加這行
 import { TLS23010Service } from '@service/api/tls/tls23010.service';
+import { finalize } from 'rxjs/operators';
+import { TLS23010CacheService } from '@service/api/tls/tls23010-cache.service';
 type DisplayMode = 'Detail' | 'Summary';
+
 interface ReportColumn {
   header: string;
   field: string;
@@ -22,7 +26,7 @@ interface ReportColumn {
   templateUrl: './tls23010-cru.component.html',
   styleUrls: ['./tls23010-cru.component.scss'],
   standalone: true,
-  imports: [MenubarComponent, ReportTableGroupComponent],
+  imports: [NgIf, DecimalPipe, MenubarComponent, ReportTableGroupComponent],
 })
 export class TLS23010CRUComponent extends BasicCruPageComponent<any> {
   mergedView: boolean = true;
@@ -32,7 +36,25 @@ export class TLS23010CRUComponent extends BasicCruPageComponent<any> {
   dateEnd: string = '';
   pageSize: number = 1000;
   queryFormValue: any;
+ private queryKey = '';
+
+  // 來自 navigate state
+  
+ currentPage = 1;
+
+  totalPage = 0;
+  totalCount = 0;
+  loadingMore = false;
+  showGrandTotal = false;
+
+
+  allPagesLoaded = false;
+
+
   dataForm = this.formBuilder.nonNullable.group({});
+
+
+
   pdfSummary: string[] = [];
   statusFlagOptions: any[] = [];
   txnStatusOptions: any[] = [];
@@ -45,38 +67,94 @@ export class TLS23010CRUComponent extends BasicCruPageComponent<any> {
     private txnSubtypeService: TXN_SubtypeService,
     private carrierTypeService: CarrierTypeService,
     private tls23010Service: TLS23010Service,
+    private tls23010Cache: TLS23010CacheService,
   ) {
     super();
   }
 
   async ngOnInit(): Promise<void> {
-    const state = history.state;
-    this.queryFormValue = state?.queryFormValue;
-    this.data = (state?.data || []).map((row: any) => ({
-      ...row,
-      TXN_Key: `${row.TXN_Date}_${row.ECR_No}_${row.TXN_No}`,
-    }));
-    this.pageSize = state?.pageSize ?? 1000;
-    this.displayMode = state?.displayMode ?? 'Detail'; //
-    this.printedAt = new Date().toLocaleString('zh-TW', { hour12: false });
-    this.dateStart = state.queryFormValue?.TXN_DateStart || '';
-    this.dateEnd = state.queryFormValue?.TXN_DateEnd || '';
-    console.log('✅ TLS23010CRUComponent displayMode:', this.displayMode); //
-    this.initializePage('TLS23010', this.dataForm);
-    this.statusFlagService
-      .getStatusFlags()
-      .subscribe((res) => (this.statusFlagOptions = res));
-    this.whetherService
-      .getWhetherOptions()
-      .subscribe((res) => (this.whetherOptions = res));
-    this.txnSubtypeService
-      .getTXNSubtype()
-      .subscribe((res) => (this.transactionSubTypeOptions = res));
-    this.carrierTypeService
-      .getCarrierType()
-      .subscribe((res) => (this.carrierTypeOptions = res));
-    this.updatePdfSummary();
-  }
+  const s = history.state ?? {};
+
+  // ✅ 查詢條件（含 PageSize / PageIndex）
+  this.queryFormValue = s?.queryFormValue ?? {};
+  this.pageSize     = Number(s?.pageSize ?? this.queryFormValue?.PageSize ?? 1000) || 1000;
+  this.currentPage  = Number(this.queryFormValue?.PageIndex ?? 1);
+  this.totalCount   = Number(s?.totalCount ?? 0);
+  this.totalPage    = Number(
+    s?.totalPage ??
+    (this.totalCount ? Math.ceil(this.totalCount / this.pageSize) : 0)
+  );
+
+  // ✅ 顯示模式與合併視圖
+  this.displayMode = (s?.displayMode as 'Detail' | 'Summary') ?? 'Detail';
+  this.mergedView  = this.displayMode === 'Detail'; // Summary 一律關閉合併表
+      // ⭐ 生成查詢 key 並嘗試從快取還原
+    this.queryKey = this.tls23010Cache.makeKey(this.queryFormValue);
+    const cached = this.tls23010Cache.getState(this.queryKey);
+
+  // ✅ 首頁資料（Query 頁帶來的第一頁）
+  this.data = (Array.isArray(s?.data) ? s.data : []).map((row: any) => ({
+    ...row,
+    TXN_Key: `${row.TXN_Date}_${row.ECR_No}_${row.TXN_No}`,
+  }));
+
+  // ✅ 報表抬頭資訊
+  this.printedAt = new Date().toLocaleString('zh-TW', { hour12: false });
+  this.dateStart = this.queryFormValue?.TXN_DateStart ?? '';
+  this.dateEnd   = this.queryFormValue?.TXN_DateEnd   ?? '';
+  if (cached && cached.merged?.length) {
+      // ✅ 命中：直接還原
+      this.data       = cached.merged.map(r => ({ ...r, TXN_Key: `${r.TXN_Date}_${r.ECR_No}_${r.TXN_No}` }));
+      this.currentPage = cached.currentPage ?? 1;
+      this.totalCount  = cached.totalCount ?? 0;
+      this.totalPage   = cached.totalPage ?? 0;
+
+      this.printedAt = cached.printedAt ?? new Date().toLocaleString('zh-TW', { hour12: false });
+      this.dateStart = cached.dateStart ?? this.queryFormValue?.TXN_DateStart ?? '';
+      this.dateEnd   = cached.dateEnd   ?? this.queryFormValue?.TXN_DateEnd   ?? '';
+
+      // 還原捲動位置
+      setTimeout(() => this.restoreChildScrollTop(cached.scrollTop ?? 0), 0);
+    } else {
+      // ❌ 沒有快取：用首頁資料初始化，並寫入快取
+      this.data = (Array.isArray(s?.data) ? s.data : []).map((row: any) => ({
+        ...row,
+        TXN_Key: `${row.TXN_Date}_${row.ECR_No}_${row.TXN_No}`,
+      }));
+      this.printedAt = new Date().toLocaleString('zh-TW', { hour12: false });
+      this.dateStart = this.queryFormValue?.TXN_DateStart ?? '';
+      this.dateEnd   = this.queryFormValue?.TXN_DateEnd   ?? '';
+
+      // ⭐ 存入第 1 頁快取
+      if (this.data.length) {
+        this.tls23010Cache.setPage(this.queryKey, this.currentPage, this.data);
+        this.tls23010Cache.setState(this.queryKey, {
+          currentPage: this.currentPage,
+          totalCount : this.totalCount,
+          totalPage  : this.totalPage,
+          printedAt  : this.printedAt,
+          dateStart  : this.dateStart,
+          dateEnd    : this.dateEnd,
+        });
+      }
+    }
+
+  // ✅ 標準頁面初始化
+  this.initializePage('TLS23010', this.dataForm);
+
+  // 下拉選項
+  this.statusFlagService.getStatusFlags().subscribe(res => (this.statusFlagOptions = res));
+  this.whetherService.getWhetherOptions().subscribe(res => (this.whetherOptions = res));
+  this.txnSubtypeService.getTXNSubtype().subscribe(res => (this.transactionSubTypeOptions = res));
+  this.carrierTypeService.getCarrierType().subscribe(res => (this.carrierTypeOptions = res));
+
+  // ✅ 決定是否已載完全部頁（控制總計顯示用）
+  this.updateAllPagesLoaded?.();
+
+  // ✅ 更新 PDF 摘要
+  this.updatePdfSummary();
+  
+}
 
   private _displayMode: 'Detail' | 'Summary' = 'Detail';
 
@@ -333,28 +411,26 @@ fetchDetailData = async (payload: any): Promise<any[]> => {
           },
         ];
 
-      case 'Summary':
-        return [
-          {
-            field: 'TXN_Date',
-            header: '銷售日期',
-
-            format: (val: string) => {
-              const date = new Date(val);
-              return isNaN(date.getTime())
-                ? val
-                : `${date.getFullYear()}/${(date.getMonth() + 1).toString().padStart(2, '0')}/${date.getDate().toString().padStart(2, '0')}`;
-            },
-          },
-          { field: 'tlt_no', header: '專櫃編號' },
-          { field: 'tlt_name', header: '櫃位名稱' },
-          {
-            field: 'TXN_TotSaleAmt',
-            header: '發票總金額',
-            style: 'text-right',
-            format: this.moneyFormat,
-          },
-        ];
+case 'Summary':
+  return [
+    {
+      field: 'TXN_Date',
+      header: '銷售日期',
+      format: (val: string) => {
+        const d = new Date(val);
+        return isNaN(d.getTime()) ? val :
+          `${d.getFullYear()}/${(d.getMonth()+1).toString().padStart(2,'0')}/${d.getDate().toString().padStart(2,'0')}`;
+      },
+    },
+    { field: 'tlt_no',   header: '專櫃編號' },
+    { field: 'tlt_name', header: '櫃位名稱' },
+    {
+      field: 'TXN_TotGUI',                // ⬅️ 用回應裡的欄位
+      header: '發票總金額',
+      style: 'text-right',
+      format: this.moneyFormat,
+    },
+  ];
 
       default:
         return [{ header: '錯誤', field: '', format: () => '未知模式' }];
@@ -390,4 +466,120 @@ fetchDetailData = async (payload: any): Promise<any[]> => {
       },
     ];
   }
+    private updateAllPagesLoaded(): void {
+    if (this.totalPage) {
+      this.allPagesLoaded = this.currentPage >= this.totalPage;
+      return;
+    }
+    // 後端若沒回 TotalPage，用長度比對 TotalCount
+    if (this.totalCount) {
+      this.allPagesLoaded = this.data.length >= this.totalCount;
+    }
+  }
+
+
+trackByRow = (_: number, row: any) => row?.TXN_Key ?? _;
+
+
+
+// 由 reachBottom 觸發
+onReachBottom(): void {
+  if (!this.loadingMore && !this.showGrandTotal && this.displayMode === 'Detail') {
+    this.loadNextPage();
+  }
+}
+
+/** ===== 與子元件互動：讀/寫 scrollTop ===== */
+// 1) 先抓子元件實例
+@ViewChild(ReportTableGroupComponent) tableGroup?: any;
+
+// 2) 取目前 scrollTop（子元件會回傳 host 的 scrollTop）
+private getChildScrollTop(): number {
+  try { return this.tableGroup?.getHostScrollTop?.() ?? 0; } catch { return 0; }
+}
+
+// 3) 還原 scrollTop
+private restoreChildScrollTop(top: number): void {
+  try { this.tableGroup?.setHostScrollTop?.(top); } catch {}
+}
+
+ // ⭐ 記住離開時的捲動位置
+  ngOnDestroy(): void {
+    try {
+      const top = this.getChildScrollTop();
+      this.tls23010Cache.setState(this.queryKey, { scrollTop: top });
+    } catch {}
+  }
+
+  private loadNextPage(): void {
+    if (this.loadingMore || this.showGrandTotal || this.displayMode !== 'Detail') return;
+
+    const nextIndex = this.currentPage + 1;
+    if (this.totalPage && nextIndex > this.totalPage) return;
+
+    this.loadingMore = true;
+
+    const prevTop = this.getChildScrollTop();
+
+    // ⭐ 先查快取
+    const cachedRows = this.tls23010Cache.getPage(this.queryKey, nextIndex);
+    if (cachedRows?.length) {
+      // ✅ 命中快取，不打 API
+      this.data = [...this.data, ...cachedRows];
+      this.currentPage = nextIndex;
+      this.showGrandTotal = this.totalPage ? this.currentPage >= this.totalPage : cachedRows.length < this.pageSize;
+
+      // 更新快取的 merged / currentPage / scroll
+      this.tls23010Cache.setState(this.queryKey, {
+        merged: this.data,
+        currentPage: this.currentPage,
+      });
+
+      this.restoreChildScrollTop(prevTop);
+      this.loadingMore = false;
+      return;
+    }
+
+    // ❌ 沒命中才打 API
+    const body = {
+      ...(this.queryFormValue || {}),
+      PageSize: this.pageSize,
+      PageIndex: nextIndex,
+    };
+
+    this.tls23010Service.queryTLS23010(body, 'Detail')
+      .pipe(finalize(() => (this.loadingMore = false)))
+      .subscribe({
+        next: (res) => {
+          const rows = (res?.Data || []).map((r: any) => ({
+            ...r,
+            TXN_Key: `${r.TXN_Date}_${r.ECR_No}_${r.TXN_No}`,
+          }));
+
+          this.data = [...this.data, ...rows];
+
+          if (typeof res?.TotalCount === 'number') this.totalCount = res.TotalCount;
+          if (typeof res?.TotalPage  === 'number') this.totalPage  = res.TotalPage;
+
+          this.currentPage = nextIndex;
+
+          this.showGrandTotal = this.totalPage
+            ? this.currentPage >= this.totalPage
+            : rows.length < this.pageSize;
+
+          // ⭐ 把本頁寫入快取 & 更新狀態
+          this.tls23010Cache.setPage(this.queryKey, nextIndex, rows);
+          this.tls23010Cache.setState(this.queryKey, {
+            merged: this.data,
+            currentPage: this.currentPage,
+            totalCount : this.totalCount,
+            totalPage  : this.totalPage,
+          });
+
+          this.restoreChildScrollTop(prevTop); // 還原視覺位置
+        },
+        error: () => { /* 可視需要提示 */ },
+      });
+  }
+
 }

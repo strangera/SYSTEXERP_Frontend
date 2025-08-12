@@ -1,0 +1,13 @@
+/* 放在 tls2b030.component.scss 或你的共用樣式 */
+:host ::ng-deep .required label,
+:host ::ng-deep .required .label {
+  color: #000 !important; /* 標籤文字固定黑色 */
+}
+
+:host ::ng-deep .required label::after,
+:host ::ng-deep .required .label::after {
+  content: ' *';
+  color: #e53935;         /* 只有星號紅色 */
+  font-weight: 600;
+  margin-left: 2px;
+}

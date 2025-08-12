@@ -37,4 +37,12 @@ export class TLS23010Service {
       catchError(err => this.errorHandler.handleError(err))
     );
   }
+    // ✅ 新增：彙總（不帶 PageSize/PageIndex）
+  queryTLS23010Summary(body: any): Observable<any> {
+    const url = `${this.apiUrl}/TLS0000/TLS2000/queryTLS23010_Summary`;
+    return this.http.post<any>(url, body).pipe(
+      tap(r => console.log('🎯 TLS23010 Summary 查詢結果:', r)),
+      catchError(err => this.errorHandler.handleError(err))
+    );
+  }
 }

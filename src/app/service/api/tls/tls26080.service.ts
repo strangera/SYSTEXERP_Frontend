@@ -13,6 +13,12 @@ const apiUrl: string = environment.ApiUrl;
 
 @Injectable({ providedIn: 'root' })
 export class TLS26080Service {
+  private readonly d = (() => {
+    const n = new Date(), y = n.getFullYear(), m = n.getMonth();
+    return { start: new Date(y, m, 1), end: new Date(y, m + 1, 0) };
+  })();
+  public readonly dateS: Date = this.d.start;
+  public readonly dateE: Date = this.d.end;
 
   // 儲存資料
   public TLS26080Data = signal<TLS26080Data[]>([]);

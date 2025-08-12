@@ -90,7 +90,6 @@ describe('TLS26010Service', () => {
 
   describe('loadSYS3900', () => {
     it('should load floor data successfully with building_no', () => {
-      const mockBuildingNo = 'A';
       const mockResponse: BaseQueryResponse<DropdownOption> = {
         Status: '0000',
         Data: [
@@ -102,11 +101,10 @@ describe('TLS26010Service', () => {
         TotalPage: 1
       };
 
-      service.loadSYS3900(mockBuildingNo);
+      service.loadSYS3900();
 
       const req = httpMock.expectOne(`${mockApiUrl}/querySYS3900_DropDownList`);
       expect(req.request.method).toBe('POST');
-      expect(req.request.body).toEqual({ building_no: mockBuildingNo });
       req.flush(mockResponse);
 
       expect(service.sys3900Data()).toEqual(mockResponse.Data);

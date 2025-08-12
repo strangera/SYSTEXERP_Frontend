@@ -303,25 +303,99 @@ confirmPageSizeAndNavigate(): void {
     return;
   }
 
-  const rawFormValue = { ...this.queryForm.value };
-  for (const key in rawFormValue) {
-    const typedKey = key as keyof typeof rawFormValue;
-    if (rawFormValue[typedKey] === '') rawFormValue[typedKey] = null;
-  }
+  // 先把 '' 轉成 null，避免送空字串
+  const raw = { ...this.queryForm.value };
+  Object.keys(raw).forEach(k => {
+    if ((raw as any)[k] === '') (raw as any)[k] = null;
+  });
 
-  const queryFormValue = { ...rawFormValue,pageSize: this.customPageSize, };
+  // Summary 與 Detail 共用的 base payload（Summary 不需要 PageSize/PageIndex）
+  const basePayload = { ...raw };
 
   // 若已有查詢在跑，先取消
   this.querySubscription?.unsubscribe();
+
+  // ======== ✅ Summary：不帶分頁，改打 /queryTLS23010_Summary ========
+  if (this.displayMode === 'Summary') {
+    this.loading = true;
+    this.messageService.blockUi();
+
+    this.querySubscription = this.tls23010Service
+      .queryTLS23010Summary(basePayload)
+      .pipe(
+        timeout(this.QUERY_TIMEOUT_MS),
+        takeUntil(this.destroy$),
+        catchError(err => {
+          if (err?.name === 'TimeoutError') {
+            this.messageService.warnBubble('查詢逾時（30 秒）。請縮小日期或加條件再試。');
+            this.loading = false;
+            this.messageService.unblockUi();
+            this.showPageSizeDialog = false;
+            return EMPTY;
+          }
+          return throwError(() => err);
+        })
+      )
+      .subscribe({
+        next: (res) => {
+          if (res?.Status === '0000') {
+            const mainData = (res?.Data || []).map((row: any, idx: number) => ({
+              ...row,
+              // Summary 沒交易序號，用日期+櫃位+索引湊唯一鍵供 dataKey 使用
+              TXN_Key: `${row.TXN_Date}_${row.tlt_no}_${idx}`,
+            }));
+
+            // 存查詢條件（之後回報表頁可復原）
+            this.queryStateService.setQueryState(this.ProgNo, basePayload);
+
+            this.router.navigate(['account/tls/tls23010cru'], {
+              state: {
+                queryFormValue: basePayload,
+                data: mainData,
+                // Summary 不分頁
+                pageSize: 0,
+                totalCount: mainData.length,
+                totalPage: 1,
+                displayMode: 'Summary',
+              },
+            }).then(() => {
+              this.loading = false;
+              this.messageService.unblockUi();
+              this.showPageSizeDialog = false;
+            });
+          } else {
+            this.messageService.errorBubble(res?.Message || '查詢失敗');
+            this.loading = false;
+            this.messageService.unblockUi();
+            this.showPageSizeDialog = false;
+          }
+        },
+        error: () => {
+          this.messageService.errorBubble('查詢錯誤');
+          this.loading = false;
+          this.messageService.unblockUi();
+          this.showPageSizeDialog = false;
+        },
+      });
+
+    return; // ⬅️ 結束 Summary 流程
+  }
+
+  // ======== ✅ Detail：原流程，仍打 /queryTLS23010，帶分頁 ========
+  const queryFormValue = {
+    ...basePayload,
+    PageSize: this.customPageSize || 1000,
+    PageIndex: 1,
+  };
 
   this.loading = true;
   this.messageService.blockUi();
 
   this.querySubscription = this.tls23010Service
-    .queryTLS23010(queryFormValue, this.displayMode)
+    .queryTLS23010(queryFormValue, 'Detail')
     .pipe(
       timeout(this.QUERY_TIMEOUT_MS),
-       takeUntil(this.destroy$), 
+      takeUntil(this.destroy$),
       catchError((err) => {
         if (err?.name === 'TimeoutError') {
           this.messageService.warnBubble(
@@ -337,31 +411,32 @@ confirmPageSizeAndNavigate(): void {
     )
     .subscribe({
       next: (res) => {
-        if (res.Status === '0000') {
-          const mainData = (res.Data || []).map((row: any) => ({
+        if (res?.Status === '0000') {
+          const mainData = (res?.Data || []).map((row: any) => ({
             ...row,
-            TXN_Key: `${row.TXN_Date}_${row.ECR_No}_${row.TXN_No}`,
+            TXN_Key: `${row.TXN_Date}_${row.ECR_No}_${row.TXN_No}`, // Detail 的唯一鍵
             DetailList: row.DetailList || [],
           }));
 
+          // 存查詢條件（之後回報表頁可復原）
           this.queryStateService.setQueryState(this.ProgNo, queryFormValue);
 
-          this.router
-            .navigate(['account/tls/tls23010cru'], {
-              state: {
-                queryFormValue,
-                data: mainData,
-                pageSize: this.customPageSize,
-                displayMode: this.displayMode,
-              },
-            })
-            .then(() => {
-              this.loading = false;
-              this.messageService.unblockUi(); // ✅ 跳轉完成才解除
-              this.showPageSizeDialog = false;
-            });
+          this.router.navigate(['account/tls/tls23010cru'], {
+            state: {
+              queryFormValue,
+              data: mainData,
+              pageSize: queryFormValue.PageSize,
+              totalCount: res.TotalCount ?? 0,
+              totalPage:  res.TotalPage  ?? 0,
+              displayMode: 'Detail',
+            },
+          }).then(() => {
+            this.loading = false;
+            this.messageService.unblockUi();
+            this.showPageSizeDialog = false;
+          });
         } else {
-          this.messageService.errorBubble('查詢失敗');
+          this.messageService.errorBubble(res?.Message || '查詢失敗');
           this.loading = false;
           this.messageService.unblockUi();
           this.showPageSizeDialog = false;

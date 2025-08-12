@@ -1,29 +1,21 @@
 import { Component } from '@angular/core';
-import {
-  FormGroup,
-  Validators,
-  FormsModule,
-  ReactiveFormsModule,
-} from '@angular/forms';
+import { FormGroup, Validators, FormsModule, ReactiveFormsModule, ValidationErrors } from '@angular/forms';
 import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { AccordionModule } from 'primeng/accordion';
 import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
-import { InputNumberRangeComponent } from '../../../shared/componentkit/input-number-range/input-number-range.component';
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { CheckboxModule } from 'primeng/checkbox';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { Table2Component } from '../../../shared/componentkit/table2/table2.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { TranslateModule } from '@ngx-translate/core';
 import { TLS2B030Service } from '../../../service/api/tls/tls2-b030.service';
 import { CahserTypeService } from '../../../service/basic/cahser-type.service';
 import { RegionService } from '../../../service/basic/region-code.service';
 import { FloorService } from '../../../service/basic/floor.service';
-import { ValidationService } from '../../../shared/service/validation.service';
 import { Tls11010Service } from '../../../service/api/tls/tls11010.service';
 import { ECRNoService } from '../../../service/basic/ECRNo.service';
 import { CounterNameService } from '../../../service/basic/counter-name.service';
@@ -40,37 +32,24 @@ import { CounterNameService } from '../../../service/basic/counter-name.service'
     ReactiveFormsModule,
     CalendarRangeComponent,
     CalendarComponent,
-    // InputNumberRangeComponent,
     MultiSelectComponent,
     DropdownComponent,
     CheckboxModule,
     ButtonComponent,
-    // Table2Component,
-    
     TranslateModule,
     TableComponent,
   ],
 })
 export class TLS2B030Component extends BasicQueryPageComponent<any> {
-      readonly yesterday: Date = (() => {
+  readonly yesterday: Date = (() => {
     const d = new Date();
     d.setHours(0, 0, 0, 0);
     d.setDate(d.getDate() - 1);
     return d;
   })();
-  queryForm = this.formBuilder.group({
-    TXN_YearMonth: [],
-    TXN_Date_Start: [this.yesterday, [Validators.required]],
-    TXN_Date_End: [this.yesterday, [Validators.required]],
-    ECR_No_List: [[]],
-    TLT_No_List: [[]],
-    ECR_Type: [],
-    onlyShowOverflow: [],
-    tlt_building: [],
-    tlt_floor: [[]],
-    area_no: [[]],
-    ...createPaginationConfig([{ field: 'TXN_YearMonth', order: 1 }]),
-  });
+
+  // 注意：只宣告，不先 new；避免 ngOnInit 再覆蓋掉預設值
+  queryForm!: FormGroup;
 
   data: any[] = [];
   totalRecords = 0;
@@ -84,8 +63,8 @@ export class TLS2B030Component extends BasicQueryPageComponent<any> {
   // 下拉選項
   cahserTypeOptions: any[] = [];
   areaCodeOptions: any[] = [];
-  ECRNoOptions: any[] = []; // 收銀機號下拉選單
-  CounterOptions: any[] = []; // 專櫃選項
+  ECRNoOptions: any[] = [];
+  CounterOptions: any[] = [];
 
   constructor(
     private tls2b030Service: TLS2B030Service,
@@ -93,7 +72,6 @@ export class TLS2B030Component extends BasicQueryPageComponent<any> {
     private floorService: FloorService,
     private regionService: RegionService,
     private tls11010Service: Tls11010Service,
-
     private ECRNoService: ECRNoService,
     private counterNameService: CounterNameService,
   ) {
@@ -101,132 +79,144 @@ export class TLS2B030Component extends BasicQueryPageComponent<any> {
   }
 
   ngOnInit(): void {
-    this.initializePage(
-      'TLS2B030',
-      '/TLS2000/TLS2B030CRU',
-      this.queryForm,
-      
-    );
-
+    // 先建立表單（預設走「日報表」：昨天～昨天）
     this.queryForm = this.formBuilder.group(
       {
-        TXN_YearMonth: [],
-        TXN_Date_Start: [],
-        TXN_Date_End: [],
+        TXN_YearMonth: [{ value: null, disabled: true }],     // 先停用月報表
+        TXN_Date_Start: [this.yesterday],
+        TXN_Date_End: [this.yesterday],
         ECR_No_List: [[]],
         TLT_No_List: [[]],
         ECR_Type: [],
-        OnlyShowOverAmount: [],
+        onlyShowOverflow: [false],
         tlt_building: [],
         tlt_floor: [[]],
         area_no: [[]],
         ...createPaginationConfig([{ field: 'TXN_YearMonth', order: 1 }]),
       },
-      {
-        validators: this.atLeastOneDateValidator.bind(this),
-      },
+      { validators: this.dateChoiceValidator.bind(this) }
     );
 
+    this.initializePage('TLS2B030', '/TLS2000/TLS2B030CRU', this.queryForm);
+
+    // 二擇一互斥：任一側有值就鎖住另一側
+    this.queryForm.get('TXN_YearMonth')?.valueChanges.subscribe((val) => {
+      const start = this.queryForm.get('TXN_Date_Start')!;
+      const end = this.queryForm.get('TXN_Date_End')!;
+      if (val) {
+        // 選了月 -> 清空並停用日區間
+        start.setValue(null, { emitEvent: false });
+        end.setValue(null, { emitEvent: false });
+        start.disable({ emitEvent: false });
+        end.disable({ emitEvent: false });
+      } else {
+        // 沒選月 -> 啟用日區間（若都沒值，回填昨天~昨天）
+        start.enable({ emitEvent: false });
+        end.enable({ emitEvent: false });
+        if (!start.value && !end.value) {
+          start.setValue(this.yesterday, { emitEvent: false });
+          end.setValue(this.yesterday, { emitEvent: false });
+        }
+      }
+      this.queryForm.updateValueAndValidity({ emitEvent: false });
+    });
+
+    const handleRangeChanged = () => {
+      const ym = this.queryForm.get('TXN_YearMonth')!;
+      const s = this.queryForm.get('TXN_Date_Start')!.value;
+      const e = this.queryForm.get('TXN_Date_End')!.value;
+      if (s || e) {
+        // 只要日區間有動作 -> 清空並停用月
+        ym.setValue(null, { emitEvent: false });
+        ym.disable({ emitEvent: false });
+      } else {
+        // 都清掉 -> 開放月
+        ym.enable({ emitEvent: false });
+      }
+      this.queryForm.updateValueAndValidity({ emitEvent: false });
+    };
+
+    this.queryForm.get('TXN_Date_Start')?.valueChanges.subscribe(handleRangeChanged);
+    this.queryForm.get('TXN_Date_End')?.valueChanges.subscribe(handleRangeChanged);
+
+    // 下拉資料
     this.ECRNoService.getECRNo().subscribe((res) => {
       this.ECRNoOptions =
         res?.map((x: any) => ({
-          label: x.label, // 給 table 用
-          formLabel: `${x.value} - ${x.label}`, // 給下拉選單用
+          label: x.label,
+          formLabel: `${x.value} - ${x.label}`,
           value: x.value,
         })) || [];
     });
     this.counterNameService.getCounters().subscribe((res) => {
       this.CounterOptions =
         res?.map((x: any) => ({
-          label: x.label, // 給 table 用
-          formLabel: `${x.value} - ${x.label}`, // 給下拉選單用
+          label: x.label,
+          formLabel: `${x.value} - ${x.label}`,
           value: x.value,
         })) || [];
     });
-    this.queryForm.get('TXN_YearMonth')?.valueChanges.subscribe((val) => {
-      const startControl = this.queryForm.get('TXN_Date_Start');
-      const endControl = this.queryForm.get('TXN_Date_End');
+    this.cahserTypeService.getSystemTypes().subscribe((res) => (this.cahserTypeOptions = res));
+    this.regionService.getRegionOptions().subscribe((data) => (this.regionOptions = data));
+    this.floorService.getFloors().subscribe((data) => (this.floorOptions = data));
+    this.tls11010Service.getBuildingOptions().subscribe((data) => (this.BUILDING_NO_Options = data));
 
-      if (val) {
-        if (startControl?.enabled) startControl.disable({ emitEvent: false });
-        if (endControl?.enabled) endControl.disable({ emitEvent: false });
-      } else {
-        if (startControl?.disabled) startControl.enable({ emitEvent: false });
-        if (endControl?.disabled) endControl.enable({ emitEvent: false });
-      }
-    });
-
-    this.queryForm.get('TXN_Date_Start')?.valueChanges.subscribe((val) => {
-      const onedateControl = this.queryForm.get('TXN_YearMonth');
-
-      if (val) {
-        if (onedateControl?.enabled)
-          onedateControl.disable({ emitEvent: false });
-      } else if (!this.queryForm.get('TXN_Date_End')?.value) {
-        if (onedateControl?.disabled)
-          onedateControl.enable({ emitEvent: false });
-      }
-    });
-
-    this.queryForm.get('TXN_Date_End')?.valueChanges.subscribe((val) => {
-      const onedateControl = this.queryForm.get('TXN_YearMonth');
-
-      if (val) {
-        if (onedateControl?.enabled)
-          onedateControl.disable({ emitEvent: false });
-      } else if (!this.queryForm.get('TXN_Date_Start')?.value) {
-        if (onedateControl?.disabled)
-          onedateControl.enable({ emitEvent: false });
-      }
-    });
-
-    this.cahserTypeService
-      .getSystemTypes()
-      .subscribe((res) => (this.cahserTypeOptions = res));
-    this.regionService
-      .getRegionOptions()
-      .subscribe((data) => (this.regionOptions = data));
-    this.floorService
-      .getFloors()
-      .subscribe((data) => (this.floorOptions = data));
-    this.tls11010Service
-      .getBuildingOptions()
-      .subscribe((data) => (this.BUILDING_NO_Options = data));
-    // 加入 subtotalFields 計算（只排除文字欄位）
+    // 小計欄位（非文字）
     const textFields = ['ECR_No', 'tlt_no', 'tlt_name'];
     this.subtotalFields = this.columns
       .filter((col) => !textFields.includes(col.field))
       .map((col) => col.field);
   }
 
-  onSubmit(form: FormGroup): void {
-    console.log('✅ 觸發 onSubmit', form.value);
+  /** 群組驗證器：兩種日期擇一必填；若選「日」，起訖都要有；不可同時選兩種 */
+  private dateChoiceValidator(group: FormGroup): ValidationErrors | null {
+    const start: Date | null = group.get('TXN_Date_Start')?.value ?? null;
+    const end: Date | null = group.get('TXN_Date_End')?.value ?? null;
+    const ym: Date | null = group.get('TXN_YearMonth')?.value ?? null;
 
+    const hasRange = start instanceof Date && !isNaN(start.getTime()) && end instanceof Date && !isNaN(end.getTime());
+    const hasAnyRange = (start instanceof Date && !isNaN(start.getTime())) || (end instanceof Date && !isNaN(end.getTime()));
+    const hasMonth = ym instanceof Date && !isNaN(ym.getTime());
+
+    if (hasMonth && (hasAnyRange || hasRange)) {
+      return { onlyOneDateAllowed: true };      // 不能同時填
+    }
+    if (!hasMonth && !hasAnyRange) {
+      return { atLeastOneDateRequired: true };  // 兩邊都沒填
+    }
+    if (!hasMonth && hasAnyRange && !hasRange) {
+      return { dateRangeIncomplete: true };     // 選日但沒同時填起+訖
+    }
+    return null;
+  }
+
+  onSubmit(form: FormGroup): void {
     if (form.invalid) {
-      console.warn('❌ 表單驗證失敗:', form.errors, form.value);
-      this.messageService.errorBubble('日期必要欄位');
+      this.submitted = true;
+      this.messageService.errorBubble('請完成日期條件（擇一且必填）');
       return;
     }
 
     this.handleSubmit(form, () => {
-      const payload = { ...form.value };
+      const payload: any = { ...form.getRawValue() }; // 取含 disabled 欄位處理後的值
 
-      // ✅ 字串欄位去除空白
-      Object.keys(payload).forEach((key) => {
-        if (typeof payload[key] === 'string') {
-          payload[key] = payload[key].trim() || null;
-        }
+      // 轉換字串欄位
+      Object.keys(payload).forEach((k) => {
+        if (typeof payload[k] === 'string') payload[k] = payload[k].trim() || null;
       });
-      // ✅ checkbox 對應 API 欄位名稱
+
+      // checkbox 對應 API 欄位
       payload['OnlyShowOverAmount'] = payload['onlyShowOverflow'];
       delete payload['onlyShowOverflow'];
 
-      // ✅ TXN_YearMonth：轉換成 yyyyMM 格式
+      // 月份轉 yyyyMM
       const month = payload['TXN_YearMonth'];
       if (month instanceof Date && !isNaN(month.getTime())) {
         const yyyy = month.getFullYear();
         const mm = String(month.getMonth() + 1).padStart(2, '0');
         payload['TXN_YearMonth'] = `${yyyy}${mm}`;
+      } else {
+        payload['TXN_YearMonth'] = null;
       }
 
       this.loading = true;
@@ -239,9 +229,7 @@ export class TLS2B030Component extends BasicQueryPageComponent<any> {
           this.queryStateService.setQueryState(this.ProgNo, payload);
           this.messageService.successBubble('查詢成功');
         },
-        error: () => {
-          this.messageService.errorBubble('查詢失敗');
-        },
+        error: () => this.messageService.errorBubble('查詢失敗'),
         complete: () => {
           this.loading = false;
           this.messageService.unblockUi();
@@ -250,40 +238,66 @@ export class TLS2B030Component extends BasicQueryPageComponent<any> {
     });
   }
 
-  moneyFormat(value: number): string {
-    return value != null ? value.toLocaleString('en-US') : '0'; // ✅ 使用美式格式
-  }
   onClearForm(): void {
-    this.queryForm.reset();
+    // 清空並回到預設「日報表：昨天~昨天」
+    this.queryForm.reset({}, { emitEvent: false });
     this.queryForm.get('TXN_Date_Start')?.enable({ emitEvent: false });
     this.queryForm.get('TXN_Date_End')?.enable({ emitEvent: false });
-    this.queryForm.get('TXN_YearMonth')?.enable({ emitEvent: false });
+    this.queryForm.get('TXN_YearMonth')?.disable({ emitEvent: false });
+
+    this.queryForm.patchValue(
+      {
+        TXN_YearMonth: null,
+        TXN_Date_Start: this.yesterday,
+        TXN_Date_End: this.yesterday,
+        onlyShowOverflow: false,
+        ECR_No_List: [],
+        TLT_No_List: [],
+        tlt_building: null,
+        tlt_floor: [],
+        area_no: [],
+      },
+      { emitEvent: false }
+    );
+
+    this.queryForm.updateValueAndValidity({ emitEvent: false });
+    this.submitted = false;
   }
 
-  private atLeastOneDateValidator(
-    group: FormGroup,
-  ): { [key: string]: any } | null {
-    const start = group.get('TXN_Date_Start')?.value;
-    const end = group.get('TXN_Date_End')?.value;
-    const month = group.get('TXN_YearMonth')?.value;
-
-    const isDateRangeFilled =
-      start instanceof Date &&
-      !isNaN(start.getTime()) &&
-      end instanceof Date &&
-      !isNaN(end.getTime());
-    const isMonthFilled = !!month;
-
-    if (!isDateRangeFilled && !isMonthFilled) {
-      return { atLeastOneDateRequired: true };
-    }
-
-    if (isDateRangeFilled && isMonthFilled) {
-      return { onlyOneDateAllowed: true };
-    }
-
-    return null;
+  moneyFormat(value: number): string {
+    return value != null ? value.toLocaleString('en-US') : '0';
   }
+  switchDateMode(mode: 'range' | 'month') {
+  const s = this.queryForm.get('TXN_Date_Start')!;
+  const e = this.queryForm.get('TXN_Date_End')!;
+  const ym = this.queryForm.get('TXN_YearMonth')!;
+
+  if (mode === 'range') {
+    // 清空月、停用月；啟用日（必要時回填昨天～昨天）
+    ym.setValue(null, { emitEvent: false });
+    ym.disable({ emitEvent: false });
+
+    s.enable({ emitEvent: false });
+    e.enable({ emitEvent: false });
+    if (!s.value && !e.value) {
+      s.setValue(this.yesterday, { emitEvent: false });
+      e.setValue(this.yesterday, { emitEvent: false });
+    }
+  } else {
+    // 清空日、停用日；啟用月
+    s.setValue(null, { emitEvent: false });
+    e.setValue(null, { emitEvent: false });
+    s.disable({ emitEvent: false });
+    e.disable({ emitEvent: false });
+
+    ym.enable({ emitEvent: false });
+    // 也可選擇預設 ym：例如設定為昨天所屬月份
+    // const d = this.yesterday; ym.setValue(new Date(d.getFullYear(), d.getMonth(), 1), { emitEvent: false });
+  }
+
+  this.queryForm.updateValueAndValidity({ emitEvent: false });
+}
+
 
   // const textFields = ['ECR_No', 'tlt_no', 'tlt_name'];
   columns: any[] = [

@@ -40,7 +40,7 @@
         <div class="col-12 md:col-4 lg:col-4">
           <app-input-text label="核准狀態"
                           controlName="pod_status"
-                          [control]="df.pod_status"
+                          [control]="df().pod_status"
                           [disabled]="true">
           </app-input-text>
         </div>
@@ -111,7 +111,7 @@
 </div>
 
 <app-dialog [visible]="!!dialogVisible()"
-            [header]="dialogVisible() === 'ecr' ? '新增收銀機' : '新增專櫃'"
+            [header]="dialogHeader()"
             (visibleChange)="onVisibleChange($event)"
             (save)="onDialogSubmit()"
             [height]="'auto'">
@@ -155,13 +155,13 @@
                    [showManage]="false"
                    [showDelete]="false"
                    [showReportMode]="false"
-                   [selectedItems]="selectedDialogData"
+                   [selectedItems]="dialogSelectedData()"
                    (selectionChange)="onSelectionChange($event)"
-                   [data]="dialogData"
-                   [dataKey]="dialogDataKey"
-                   [tableKey]="dialogTableKey"
-                   [columns]="dialogColumn"
-                   [loading]="service.ecrLoading || service.tltLoading">
+                   [data]="dialogData()"
+                   [dataKey]="dialogDataKey()"
+                   [tableKey]="dialogTableKey()"
+                   [columns]="dialogColumn()"
+                   [loading]="dialogLoading()">
         </app-table>
       </div>
       <!-- <div class="col-12 md:col-6 lg:col-4">
