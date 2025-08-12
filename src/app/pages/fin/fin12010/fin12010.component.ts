@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { Column, createPaginationConfig, formatAmount, formatDateTime, formatDate, formatYN, formatYYYYMM } from '../../../shared/componentkit/table/table.model';
+import { Column, createPaginationConfig, formatAmount, formatDateTime, formatYN, formatYYYYMM } from '../../../shared/componentkit/table/table.model';
 import { SystemOptionsService } from '../../../service/system/sys1000.service';
 import { SystemOption } from '../../../shared/models/sys/sys1000.model';
 import { Fin12010Service, IFin12010Data } from '../../../service/api/fin/fin12010.service';
@@ -60,8 +60,8 @@ export class FIN12010Component extends BasicQueryPageComponent<IFin12010Data> im
     { field: 'SAL_LastUsedGUINo', header: '已使用的發票號', visible: true },
     { field: 'SAL_Type', header: '使用別', visible: true, format: value => this.usageTypeOptions.find(x => x.SYS_Code === value)?.SYS_Name || value }, // 修正為 '發票用途'
     { field: 'GUI_DingType', header: '是否為丁種發票', visible: true, format: formatYN },
-    { field: 'SAL_GUIBegMM', header: '起始月份', visible: false, format: formatDate },
-    { field: 'SAL_GUIEndMM', header: '終止月份', visible: false, format: formatDate },
+    { field: 'SAL_GUIBegMM', header: '起始月份', visible: false, format: formatYYYYMM },
+    { field: 'SAL_GUIEndMM', header: '終止月份', visible: false, format: formatYYYYMM },
     { field: 'SAL_GUIPaper', header: '發票類別', visible: false, format: value => this.SAL_GUIPaperOptions.find(x => x.value === value)?.label || value }, // 修正為 '發票類別'
     { field: 'SAL_VoidGUICnt', header: '作廢發票張數', visible: false, format: formatAmount },
     { field: 'SAL_BlankCnt', header: '發票張數', visible: false, format: formatAmount },
