@@ -1,0 +1,48 @@
+/* vat-media-report.component.scss */
+.report {
+  padding: 16px;
+  color: #1f2937;
+  font-size: 14px;
+}
+
+.title {
+  text-align: center;
+  margin-bottom: 12px;
+  letter-spacing: 2px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px 12px;
+  margin-bottom: 14px;
+}
+.grid .col-span-2 { grid-column: span 2 / span 2; }
+
+.label {
+  display: inline-block;
+  margin-right: 8px;
+  color: #4b5563;
+}
+
+.section {
+  margin: 14px 0 8px;
+  font-weight: 600;
+  letter-spacing: 1px;
+}
+
+.text-left { text-align: left; }
+.text-center { text-align: center; }
+.text-right { text-align: right; }
+.font-bold { font-weight: 600; }
+.w-14 { width: 56px; }
+.muted { color: #6b7280; }
+
+:host ::ng-deep .p-datatable .p-datatable-thead > tr > th,
+:host ::ng-deep .p-datatable .p-datatable-tfoot > tr > td {
+  text-align: center;
+  vertical-align: middle;
+}
+:host ::ng-deep .p-datatable .p-datatable-tbody > tr > td:nth-child(n+3) {
+  text-align: right;
+}
