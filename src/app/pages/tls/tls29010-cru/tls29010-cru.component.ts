@@ -115,8 +115,8 @@ export class TLS29010CRUComponent extends BasicCruPageComponent<TALPORDERD_OPEND
     org_id: [''], // 組織-部門(SYS3100)
     act_no: [''], // 活動編號(群組)
     pod_busdate: [null], // 活動正檔日期
-    pod_back_sdate: [null], // 活動兌回起始日期
-    pod_back_edate: [null], // 活動兌回終止日期
+    // pod_back_sdate: [null], // 活動兌回起始日期
+    // pod_back_edate: [null], // 活動兌回終止日期
     pod_status: ['', Validators.required], // 活動狀態(0=未核准, 1=已核准, 9=刪除)
 
     // 核准不會再新增進行
