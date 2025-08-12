@@ -58,6 +58,7 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
     pod_type: new FormControl<string | undefined>(void 0), // 扣款名稱
     org_id: new FormControl<string | undefined>(void 0), // 部門
   });
+  private df = this.dataForm.controls;
 
   public calcDateType = [
     { label: '活動起始日至截止日', value: 'Y' },
@@ -189,7 +190,7 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
       this.staticDetailData = [...this.service.TLS26080Detail()];
     }
     this.service.loadAPS1003(['E']);
-    this.service.loadTLS26080();
+    this.service.loadTLS26080({ pod_sdate: this.df.pod_sdate.value!, pod_edate: this.df.pod_edate.value! });
     this.staticData = this.dataForm.value as TLS26080Data;
     console.log(`init:`, [this.rowdata, this.crudstatus, this.dataForm.value]);
   }
