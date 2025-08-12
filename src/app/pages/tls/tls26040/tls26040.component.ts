@@ -27,9 +27,16 @@ import { untilDestroyed } from '@ngneat/until-destroy';
   ]
 })
 export class TLS26040Component extends BasicQueryPageComponent<TLS26040Data> implements OnInit {
+  readonly yesterday: Date = (() => {
+    const d = new Date();
+    d.setHours(0, 0, 0, 0);
+    d.setDate(d.getDate() - 1);
+    return d;
+  })();
+
   queryForm = this.formBuilder.group({
-    sad_date_start: [null],                           // 銷售日期_起
-    sad_date_end: [null],                             // 銷售日期_迄
+    sad_date_start: [this.yesterday],                           // 銷售日期_起
+    sad_date_end: [this.yesterday],                             // 銷售日期_迄
     tlt_noList: [[]],                                 // 專櫃編號(多選)
     sad_preorder_date_start: [null],                  // 結帳日期_起
     sad_preorder_date_end: [null],                    // 結帳日期_迄

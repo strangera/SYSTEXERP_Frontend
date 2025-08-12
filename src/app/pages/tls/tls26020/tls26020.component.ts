@@ -37,9 +37,16 @@ import { DatePipe } from '@angular/common';
   ]
 })
 export class TLS26020Component extends BasicQueryPageComponent<TLS26020Data> implements OnInit {
+  readonly yesterday: Date = (() => {
+    const d = new Date();
+    d.setHours(0, 0, 0, 0);
+    d.setDate(d.getDate() - 1);
+    return d;
+  })();
+
   queryForm = this.formBuilder.group({
-    Sale_DateStart: ['2024/01/01', Validators.required],
-    Sale_DateEnd: ['2024/12/31', Validators.required],
+    Sale_DateStart: [this.yesterday, Validators.required],
+    Sale_DateEnd: [this.yesterday, Validators.required],
     tlt_building: [[]],
     Org_ID: [[]],
     Org_Name: [''],
