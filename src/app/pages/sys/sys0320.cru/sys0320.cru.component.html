@@ -31,8 +31,8 @@
                 <div class="flex align-items-center gap-2">
                   <p-triStateCheckbox [styleClass]="item.IsEnable === false? 'partialSelected' : ''"
                     checkboxFalseIcon="pi pi-minus" [name]="item.label" [ngModel]="item.IsEnable"
-                    (ngModelChange)="onNodeCheckboxChange(item, $event)" [ngModelOptions]="{standalone: true}"
-                    (click)="$event.stopPropagation()" />
+                    (ngModelChange)="onNodeCheckboxChange(item, $event)" [disabled]="item.isDisable === true"
+                    [ngModelOptions]="{standalone: true}" (click)="$event.stopPropagation()" />
                   <span class="font-bold text-xl">{{item.label}}</span>
                 </div>
                 <span class="flex align-items-center gap-2">
@@ -48,8 +48,8 @@
                         <div class="flex align-items-center gap-2">
                           <p-triStateCheckbox [styleClass]="i.IsEnable === false? 'partialSelected' : ''"
                             checkboxFalseIcon="pi pi-minus" [name]="item.label" [ngModel]="i.IsEnable"
-                            (ngModelChange)="onNodeCheckboxChange(i, $event)" [ngModelOptions]="{standalone: true}"
-                            (click)="$event.stopPropagation()" />
+                            (ngModelChange)="onNodeCheckboxChange(i, $event)" [disabled]="i.isDisable === true"
+                            [ngModelOptions]="{standalone: true}" (click)="$event.stopPropagation()" />
                           <span class="font-bold white-space-nowrap">{{i.label}}</span>
                         </div>
                         <span class="text-sm text-secondary">
@@ -60,15 +60,16 @@
                     <div *ngFor="let program of i.children; trackBy: trackByFn" class="flex align-items-center gap-2">
                       <p-triStateCheckbox [styleClass]="program.IsEnable === false ? 'partialSelected' : ''"
                         checkboxFalseIcon="pi pi-minus" class="min-w-max w-25rem"
-                        [label]="program.label + '(' + program.prog_id + ')' " [name]="i.label"
-                        [ngModel]="program.IsEnable" (ngModelChange)="onNodeCheckboxChange(program, $event)"
-                        [ngModelOptions]="{standalone: true}" />
+                        [disabled]="program.isDisable === true" [label]="program.label + '(' + program.prog_id + ')' "
+                        [name]="i.label" [ngModel]="program.IsEnable"
+                        (ngModelChange)="onNodeCheckboxChange(program, $event)" [ngModelOptions]="{standalone: true}" />
                       <div class="flex align-items-center gap-2 w-full">
                         <cdk-virtual-scroll-viewport itemSize="31"
                           class="checkbox-virtual-scroll-viewport overflow-hidden">
                           <div *cdkVirtualFor="let behavior of program.actions; trackBy: trackByFn"> <p-checkbox
                               [binary]="true" [label]="behavior.label" [name]="program.label"
-                              [ngModel]="behavior.IsEnable" (ngModelChange)="onNodeCheckboxChange(behavior, $event)"
+                              [disabled]="behavior.isDisable" [ngModel]="behavior.IsEnable"
+                              (ngModelChange)="onNodeCheckboxChange(behavior, $event)"
                               [ngModelOptions]="{standalone: true}" />
                           </div>
                         </cdk-virtual-scroll-viewport>
@@ -96,8 +97,8 @@
                 <div class="flex align-items-center gap-2">
                   <p-triStateCheckbox [styleClass]="item.IsEnable === false? 'partialSelected' : ''"
                     checkboxFalseIcon="pi pi-minus" [name]="item.label" [ngModel]="item.IsEnable"
-                    (ngModelChange)="onNodeCheckboxChange(item, $event)" [ngModelOptions]="{standalone: true}"
-                    (click)="$event.stopPropagation()" />
+                    (ngModelChange)="onNodeCheckboxChange(item, $event)" [disabled]="item.isDisable === true"
+                    [ngModelOptions]="{standalone: true}" (click)="$event.stopPropagation()" />
                   <span class="font-bold text-xl">{{item.label}}</span>
                 </div>
                 <span class="flex align-items-center gap-2">
@@ -113,8 +114,8 @@
                         <div class="flex align-items-center gap-2">
                           <p-triStateCheckbox [styleClass]="i.IsEnable === false? 'partialSelected' : ''"
                             checkboxFalseIcon="pi pi-minus" [name]="item.label" [ngModel]="i.IsEnable"
-                            (ngModelChange)="onNodeCheckboxChange(i, $event)" [ngModelOptions]="{standalone: true}"
-                            (click)="$event.stopPropagation()" />
+                            (ngModelChange)="onNodeCheckboxChange(i, $event)" [disabled]="i.isDisable === true"
+                            [ngModelOptions]="{standalone: true}" (click)="$event.stopPropagation()" />
                           <span class="font-bold white-space-nowrap">{{i.label}}</span>
                         </div>
                         <span class="text-sm text-secondary">
@@ -125,15 +126,16 @@
                     <div *ngFor="let program of i.children; trackBy: trackByFn" class="flex align-items-center gap-2">
                       <p-triStateCheckbox [styleClass]="program.IsEnable === false ? 'partialSelected' : ''"
                         checkboxFalseIcon="pi pi-minus" class="min-w-max w-25rem"
-                        [label]="program.label + '(' + program.prog_id + ')' " [name]="i.label"
-                        [ngModel]="program.IsEnable" (ngModelChange)="onNodeCheckboxChange(program, $event)"
-                        [ngModelOptions]="{standalone: true}" />
+                        [disabled]="program.isDisable === true" [label]="program.label + '(' + program.prog_id + ')' "
+                        [name]="i.label" [ngModel]="program.IsEnable"
+                        (ngModelChange)="onNodeCheckboxChange(program, $event)" [ngModelOptions]="{standalone: true}" />
                       <div class="flex align-items-center gap-2 w-full">
                         <cdk-virtual-scroll-viewport itemSize="31"
                           class="checkbox-virtual-scroll-viewport overflow-hidden">
                           <div *cdkVirtualFor="let behavior of program.actions; trackBy: trackByFn"> <p-checkbox
                               [binary]="true" [label]="behavior.label" [name]="program.label"
-                              [ngModel]="behavior.IsEnable" (ngModelChange)="onNodeCheckboxChange(behavior, $event)"
+                              [disabled]="behavior.isDisable" [ngModel]="behavior.IsEnable"
+                              (ngModelChange)="onNodeCheckboxChange(behavior, $event)"
                               [ngModelOptions]="{standalone: true}" />
                           </div>
                         </cdk-virtual-scroll-viewport>
@@ -161,8 +163,8 @@
                 <div class="flex align-items-center gap-2">
                   <p-triStateCheckbox [styleClass]="item.IsEnable === false? 'partialSelected' : ''"
                     checkboxFalseIcon="pi pi-minus" [name]="item.label" [ngModel]="item.IsEnable"
-                    (ngModelChange)="onNodeCheckboxChange(item, $event)" [ngModelOptions]="{standalone: true}"
-                    (click)="$event.stopPropagation()" [disabled]="item.isDisable === true" />
+                    (ngModelChange)="onNodeCheckboxChange(item, $event)" [disabled]="item.isDisable === true"
+                    [ngModelOptions]="{standalone: true}" (click)="$event.stopPropagation()" />
                   <span class="font-bold text-xl">{{item.label}}</span>
                 </div>
                 <span class="flex align-items-center gap-2">
@@ -178,8 +180,8 @@
                         <div class="flex align-items-center gap-2">
                           <p-triStateCheckbox [styleClass]="i.IsEnable === false? 'partialSelected' : ''"
                             checkboxFalseIcon="pi pi-minus" [name]="item.label" [ngModel]="i.IsEnable"
-                            (ngModelChange)="onNodeCheckboxChange(i, $event)" [ngModelOptions]="{standalone: true}"
-                            (click)="$event.stopPropagation()" [disabled]="i.isDisable === true" />
+                            (ngModelChange)="onNodeCheckboxChange(i, $event)" [disabled]="i.isDisable === true"
+                            [ngModelOptions]="{standalone: true}" (click)="$event.stopPropagation()" />
                           <span class="font-bold white-space-nowrap">{{i.label}}</span>
                         </div>
                         <span class="text-sm text-secondary">
@@ -227,8 +229,8 @@
                 <div class="flex align-items-center gap-2">
                   <p-triStateCheckbox [styleClass]="item.IsEnable === false? 'partialSelected' : ''"
                     checkboxFalseIcon="pi pi-minus" [name]="item.label" [ngModel]="item.IsEnable"
-                    (ngModelChange)="onNodeCheckboxChange(item, $event)" [ngModelOptions]="{standalone: true}"
-                    (click)="$event.stopPropagation()" />
+                    (ngModelChange)="onNodeCheckboxChange(item, $event)" [disabled]="item.isDisable === true"
+                    [ngModelOptions]="{standalone: true}" (click)="$event.stopPropagation()" />
                   <span class="font-bold text-xl">{{item.label}}</span>
                 </div>
                 <span class="flex align-items-center gap-2">
@@ -244,8 +246,8 @@
                         <div class="flex align-items-center gap-2">
                           <p-triStateCheckbox [styleClass]="i.IsEnable === false? 'partialSelected' : ''"
                             checkboxFalseIcon="pi pi-minus" [name]="item.label" [ngModel]="i.IsEnable"
-                            (ngModelChange)="onNodeCheckboxChange(i, $event)" [ngModelOptions]="{standalone: true}"
-                            (click)="$event.stopPropagation()" />
+                            (ngModelChange)="onNodeCheckboxChange(i, $event)" [disabled]="i.isDisable === true"
+                            [ngModelOptions]="{standalone: true}" (click)="$event.stopPropagation()" />
                           <span class="font-bold white-space-nowrap">{{i.label}}</span>
                         </div>
                         <span class="text-sm text-secondary">
@@ -256,15 +258,16 @@
                     <div *ngFor="let program of i.children; trackBy: trackByFn" class="flex align-items-center gap-2">
                       <p-triStateCheckbox [styleClass]="program.IsEnable === false ? 'partialSelected' : ''"
                         checkboxFalseIcon="pi pi-minus" class="min-w-max w-25rem"
-                        [label]="program.label + '(' + program.prog_id + ')' " [name]="i.label"
-                        [ngModel]="program.IsEnable" (ngModelChange)="onNodeCheckboxChange(program, $event)"
-                        [ngModelOptions]="{standalone: true}" />
+                        [disabled]="program.isDisable === true" [label]="program.label + '(' + program.prog_id + ')' "
+                        [name]="i.label" [ngModel]="program.IsEnable"
+                        (ngModelChange)="onNodeCheckboxChange(program, $event)" [ngModelOptions]="{standalone: true}" />
                       <div class="flex align-items-center gap-2 w-full">
                         <cdk-virtual-scroll-viewport itemSize="31"
                           class="checkbox-virtual-scroll-viewport overflow-hidden">
                           <div *cdkVirtualFor="let behavior of program.actions; trackBy: trackByFn"> <p-checkbox
                               [binary]="true" [label]="behavior.label" [name]="program.label"
-                              [ngModel]="behavior.IsEnable" (ngModelChange)="onNodeCheckboxChange(behavior, $event)"
+                              [disabled]="behavior.isDisable" [ngModel]="behavior.IsEnable"
+                              (ngModelChange)="onNodeCheckboxChange(behavior, $event)"
                               [ngModelOptions]="{standalone: true}" />
                           </div>
                         </cdk-virtual-scroll-viewport>
@@ -292,8 +295,8 @@
                 <div class="flex align-items-center gap-2">
                   <p-triStateCheckbox [styleClass]="item.IsEnable === false? 'partialSelected' : ''"
                     checkboxFalseIcon="pi pi-minus" [name]="item.label" [ngModel]="item.IsEnable"
-                    (ngModelChange)="onNodeCheckboxChange(item, $event)" [ngModelOptions]="{standalone: true}"
-                    (click)="$event.stopPropagation()" />
+                    (ngModelChange)="onNodeCheckboxChange(item, $event)" [disabled]="item.isDisable === true"
+                    [ngModelOptions]="{standalone: true}" (click)="$event.stopPropagation()" />
                   <span class="font-bold text-xl">{{item.label}}</span>
                 </div>
                 <span class="flex align-items-center gap-2">
@@ -309,8 +312,8 @@
                         <div class="flex align-items-center gap-2">
                           <p-triStateCheckbox [styleClass]="i.IsEnable === false? 'partialSelected' : ''"
                             checkboxFalseIcon="pi pi-minus" [name]="item.label" [ngModel]="i.IsEnable"
-                            (ngModelChange)="onNodeCheckboxChange(i, $event)" [ngModelOptions]="{standalone: true}"
-                            (click)="$event.stopPropagation()" />
+                            (ngModelChange)="onNodeCheckboxChange(i, $event)" [disabled]="i.isDisable === true"
+                            [ngModelOptions]="{standalone: true}" (click)="$event.stopPropagation()" />
                           <span class="font-bold white-space-nowrap">{{i.label}}</span>
                         </div>
                         <span class="text-sm text-secondary">
@@ -321,15 +324,16 @@
                     <div *ngFor="let program of i.children; trackBy: trackByFn" class="flex align-items-center gap-2">
                       <p-triStateCheckbox [styleClass]="program.IsEnable === false ? 'partialSelected' : ''"
                         checkboxFalseIcon="pi pi-minus" class="min-w-max w-25rem"
-                        [label]="program.label + '(' + program.prog_id + ')' " [name]="i.label"
-                        [ngModel]="program.IsEnable" (ngModelChange)="onNodeCheckboxChange(program, $event)"
-                        [ngModelOptions]="{standalone: true}" />
+                        [disabled]="program.isDisable === true" [label]="program.label + '(' + program.prog_id + ')' "
+                        [name]="i.label" [ngModel]="program.IsEnable"
+                        (ngModelChange)="onNodeCheckboxChange(program, $event)" [ngModelOptions]="{standalone: true}" />
                       <div class="flex align-items-center gap-2 w-full">
                         <cdk-virtual-scroll-viewport itemSize="31"
                           class="checkbox-virtual-scroll-viewport overflow-hidden">
                           <div *cdkVirtualFor="let behavior of program.actions; trackBy: trackByFn"> <p-checkbox
                               [binary]="true" [label]="behavior.label" [name]="program.label"
-                              [ngModel]="behavior.IsEnable" (ngModelChange)="onNodeCheckboxChange(behavior, $event)"
+                              [disabled]="behavior.isDisable" [ngModel]="behavior.IsEnable"
+                              (ngModelChange)="onNodeCheckboxChange(behavior, $event)"
                               [ngModelOptions]="{standalone: true}" />
                           </div>
                         </cdk-virtual-scroll-viewport>
