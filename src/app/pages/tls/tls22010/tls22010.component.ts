@@ -146,7 +146,7 @@ export class TLS22010Component extends BasicQueryPageComponent<any> implements O
     const mdy = String(mdyWithTime).split(' ')[0];
     const [mm, dd, yyyy] = mdy.split('/');
     if (!mm || !dd || !yyyy) return null;
-    return `${yyyy}-${mm.padStart(2, '0')}-${dd.padStart(2, '0')}`;
+    return `${yyyy}/${mm.padStart(2, '0')}/${dd.padStart(2, '0')}`;
   }
 
   // --------- 事件 ----------
