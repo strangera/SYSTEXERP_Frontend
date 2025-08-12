@@ -66,7 +66,7 @@ export class SYS0740Component {
   ];
   filteredData: any[] = [...this.data];
   columns: any[] = [
-    { field: 'roleCode', header: '角色代碼', visible: true },
+    { field: 'roleCode', header: '角色代號', visible: true },
     { field: 'roleName', header: '角色名稱', visible: true },
   ];
 

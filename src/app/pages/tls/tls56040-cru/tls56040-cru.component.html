@@ -39,12 +39,12 @@
         </div>
         <!-- 申請日期 -->
         <div class="col-12 md:col-6 lg:col-4">
-          <app-calendar calendarType="dateOne" label="申請日期" [control]="dataForm.controls.CRT_Date"
+          <app-calendar calendarType="dateOne" label="申請日期" [control]="dataForm.controls.APPLY_Date"
             [submitted]="submitted"></app-calendar>
         </div>
         <!-- 申請人編號 (包含中文名稱) -->
         <div class="col-12 md:col-6 lg:col-4">
-          <app-dropdown label="申請人編號/姓名" controlName="applicantCode" [control]="dataForm.controls.CRT_USR_No"
+          <app-dropdown label="申請人編號/姓名" controlName="applicantCode" [control]="dataForm.controls.APPLY_USR_No"
             [submitted]="submitted" [options]="userOptions" optionLabel="label" optionValue="value"></app-dropdown>
         </div>
         <!-- 倉別調撥單說明 -->

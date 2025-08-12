@@ -42,31 +42,32 @@ export class TLS56040Component extends BasicQueryPageComponent<any> implements O
     MVM_No: [null, [Validators.maxLength(12)]],               // varchar(12)
     MVM_Status: [null, [Validators.maxLength(1)]],            // varchar(1)
     PLU_MagNo: [null, [Validators.maxLength(20)]],          // 非 POS2021 欄位，保留不設驗證
-    LOGO_No: [null],                                        // 非 POS2021 欄位，保留不設驗證
-    OUT_HOS_No: [null, [Validators.maxLength(6)]],       // varchar(6)
-    IN_HOS_No: [null, [Validators.maxLength(6)]],    // varchar(6)
-    CRT_USR_No: ['', [Validators.maxLength(8)]],            // varchar(8)
-    UPD_USR_No: ['', [Validators.maxLength(8)]],            // varchar(8)
-    MVM_Date_Start: [new Date()],                             // datetime，預設無驗證
-    MVM_Date_End: [new Date()],                               // datetime，預設無驗證
-    MVM_ConfirmDate_Start: [null],                            // datetime，預設無驗證
-    MVM_ConfirmDate_End: [null],                              // datetime，預設無驗證
+    LOGO_No: [null],                                         // 非 POS2021 欄位，保留不設驗證
+    OUT_HOS_No: [null, [Validators.maxLength(6)]],            // varchar(6)
+    IN_HOS_No: [null, [Validators.maxLength(6)]],            // varchar(6)
+    APPLY_USR_No: ['', [Validators.maxLength(8)]],            // varchar(8)
+    APPLY_Date_Start: [new Date()],                             // datetime，預設無驗證
+    APPLY_Date_End: [new Date()],                               // datetime，預設無驗證
+    APRV_USR_No: ['', [Validators.maxLength(8)]],            // varchar(8)
+    APRV_Date_Start: [null],                            // datetime，預設無驗證
+    APRV_Date_End: [null],                              // datetime，預設無驗證
     ...createPaginationConfig([{ field: 'MVM_No', order: 1 }]),  // 分頁與排序參數，不需加驗證
   });
   totalRecords = 0;
   data: any[] = [];
   columns: Column[] = [
     { field: 'MVM_No', header: '調撥單編號', visible: true },
-    { field: 'CRT_Date', header: '申請日期', visible: true, format: formatDateTime },
+    { field: 'APPLY_Date', header: '申請日期', visible: true, format: formatDateTime },
     { field: 'IN_HOS_No', header: '調入倉別', visible: true },
     { field: 'OUT_HOS_No', header: '調出倉別', visible: true },
     { field: 'LOGO_No', header: '品牌', visible: true },
     { field: 'MVM_Remark', header: '說明', visible: true },
-    { field: 'CRT_USR_No', header: '申請人', visible: true },
-    { field: 'Confirm_USR_No', header: '審核人編號', visible: true },
-    { field: 'Confirm_USR_Name', header: '審核人姓名', visible: true },
-    { field: 'Confirm_DATE', header: '審核日期', visible: true, format: formatDateTime },
-    { field: 'MVM_Status', header: '單據狀態', visible: true, format: (value) => this.issuanceNoteStatusOptions.find((item) => item.value === value)?.label || value },
+    { field: 'APPLY_USR_No', header: '申請人編號', visible: true },
+    { field: 'APPLY_USR_Name', header: '申請人姓名', visible: true },
+    { field: 'APRV_USR_No', header: '審核人編號', visible: true },
+    { field: 'APRV_USR_Name', header: '審核人姓名', visible: true },
+    { field: 'APRV_Date', header: '審核日期', visible: true, format: formatDateTime },
+    { field: 'MVM_Status', header: '調撥狀態', visible: true, format: (value) => this.issuanceNoteStatusOptions.find((item) => item.value === value)?.label || value },
   ];
 
   // 倉別調撥單狀態選項
@@ -103,7 +104,7 @@ export class TLS56040Component extends BasicQueryPageComponent<any> implements O
     this.dropDownListService.queryTBLUSER_DropDownList().pipe(untilDestroyed(this)).subscribe(options => {
       this.userOptions = options.Data.map(item => ({ label: `${item.No} - ${item.Name}`, value: item.No }));
     });
-    this.queryForm.patchValue({ CRT_USR_No: this.authService.currentUserValue?.user_No });
+    this.queryForm.patchValue({ APPLY_USR_No: this.authService.currentUserValue?.user_No });
   }
 
   onSubmit(frm: FormGroup) {

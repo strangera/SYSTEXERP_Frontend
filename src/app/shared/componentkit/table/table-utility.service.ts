@@ -49,6 +49,7 @@ export class TableUtilityService {
 
   // 取得可見欄位總數
   getVisibleColumnCount(columns: Column[]): number {
+    if (!Array.isArray(columns)) { return 0; }
     return columns.filter(col => this.isColumnVisible(col)).length;
   }
 

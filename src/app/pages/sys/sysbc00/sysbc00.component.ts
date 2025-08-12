@@ -32,7 +32,7 @@ import { TranslateModule } from '@ngx-translate/core';
 // 銀行基本資料維護作業
 export class SYSBC00Component extends BasicQueryPageComponent<ISysbc00Data> implements OnInit {
   queryForm = this.formBuilder.group({
-    BNK_No: ['', [Validators.maxLength(10), this.validation.numberValidator]], // 銀行代碼
+    BNK_No: ['', [Validators.maxLength(10), this.validation.numberValidator]], // 銀行代號
     BNK_Name: ['', [Validators.maxLength(60)]], // 銀行名稱
     BNK_ShortName: ['', [Validators.maxLength(30)]], // 銀行簡稱
     ...createPaginationConfig([{ field: 'BNK_No', order: 1 }]), // 分頁和排序參數
@@ -41,7 +41,7 @@ export class SYSBC00Component extends BasicQueryPageComponent<ISysbc00Data> impl
   data: ISysbc00Data[] = [];
   selectedRows: ISysbc00Data[] = [];
   columns: Column[] = [
-    { field: 'BNK_No', header: '銀行代碼', visible: true },
+    { field: 'BNK_No', header: '銀行代號', visible: true },
     { field: 'BNK_Name', header: '銀行名稱', visible: true },
     { field: 'BNK_ShortName', header: '銀行簡稱', visible: true },
     { field: 'CRT_Date', header: '建立日期', visible: false, format: formatDateTime },

@@ -54,12 +54,12 @@
           <!-- 申請人員 (對應CRT_USR_No) -->
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown label="申請人編號/名稱" controlName="CRT_USR_No" [options]="userOptions" optionLabel="label"
-              optionValue="value" [control]="queryForm.controls.CRT_USR_No" [submitted]="submitted"></app-dropdown>
+              optionValue="value" [control]="queryForm.controls.APPLY_USR_No" [submitted]="submitted"></app-dropdown>
           </div>
           <!-- 移轉日期 (申請日期) -->
           <div class="col-12 md:col-6 lg:col-4">
             <app-calendar-range-quick calendarType="dateRange" label="申請日期"
-              [startControl]="queryForm.controls.MVM_Date_Start" [endControl]="queryForm.controls.MVM_Date_End"
+              [startControl]="queryForm.controls.APPLY_Date_Start" [endControl]="queryForm.controls.APPLY_Date_End"
               [submitted]="submitted"></app-calendar-range-quick>
           </div>
         </div>
@@ -67,13 +67,13 @@
           <!-- 審核人員 (對應UPD_USR_No) -->
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown label="審核人編號/名稱" controlName="UPD_USR_No" [options]="userOptions" optionLabel="label"
-              optionValue="value" [control]="queryForm.controls.UPD_USR_No" [submitted]="submitted"></app-dropdown>
+              optionValue="value" [control]="queryForm.controls.APRV_USR_No" [submitted]="submitted"></app-dropdown>
           </div>
           <!-- 移入驗收日期/移出確認日期 (審核日期) -->
           <div class="col-12 md:col-6 lg:col-4">
             <app-calendar-range-quick calendarType="dateRange" label="審核日期"
-              [startControl]="queryForm.controls.MVM_ConfirmDate_Start"
-              [endControl]="queryForm.controls.MVM_ConfirmDate_End" [submitted]="submitted"></app-calendar-range-quick>
+              [startControl]="queryForm.controls.APRV_Date_Start" [endControl]="queryForm.controls.APRV_Date_End"
+              [submitted]="submitted"></app-calendar-range-quick>
           </div>
         </div>
         <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">

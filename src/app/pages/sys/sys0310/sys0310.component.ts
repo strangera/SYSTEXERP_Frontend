@@ -32,14 +32,14 @@ import { formatDateTime } from '@shared/componentkit/table2/table2.model';
 
 export class SYS0310Component extends BasicQueryPageComponent<Role> implements OnInit {
   queryForm = this.formBuilder.group({
-    Role_No: ['', [Validators.maxLength(10)]], // 角色代碼
+    Role_No: ['', [Validators.maxLength(10)]], // 角色代號
     Role_Name: ['', [Validators.maxLength(30)]], // 角色名稱
     ...createPaginationConfig([{ field: 'Role_No', order: 1 }]), // 分頁和排序參數
   });
   totalRecords = 0;// 分頁和排序參數 // 排序需要
   data: Role[] = [];
   columns: Column[] = [
-    { field: 'Role_No', header: '角色代碼', visible: true },
+    { field: 'Role_No', header: '角色代號', visible: true },
     { field: 'Role_Name', header: '角色名稱', visible: true },
     { field: 'Description', header: '描述', visible: true },
     { field: 'CRT_Date', header: '建立日期', visible: false, format: formatDateTime },

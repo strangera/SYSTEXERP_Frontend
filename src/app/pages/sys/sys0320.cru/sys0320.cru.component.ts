@@ -64,7 +64,7 @@ interface PrivilegeOutput {
 // 使用者系統權限設定 CRU
 export class SYS0320CRUComponent extends BasicCruPageComponent<UserData> implements OnInit {
   dataForm = this.formBuilder.nonNullable.group({
-    user_No: [{ value: '', disabled: true }], // 角色代碼
+    user_No: [{ value: '', disabled: true }], // 角色代號
     user_Name: [{ value: '', disabled: true }], // 角色名稱
   });
   FIN00000Data: TreeNode | undefined; // 人資財會模組

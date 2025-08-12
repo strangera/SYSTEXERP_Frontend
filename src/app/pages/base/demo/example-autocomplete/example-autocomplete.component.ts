@@ -96,8 +96,8 @@ export class ExampleAutocompleteComponent extends BasicQueryPageComponent<unknow
       bank_id: bankId
     });
 
-    console.log('測試設定銀行代碼:', bankId);
-    this.messageService.infoBubble(`測試設定銀行代碼: ${bankId}`);
+    console.log('測試設定銀行代號:', bankId);
+    this.messageService.infoBubble(`測試設定銀行代號: ${bankId}`);
   }
 
   /**

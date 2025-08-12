@@ -13,7 +13,7 @@ export interface IQuerySysbc00Request {
   OrderBy?: string; // 可選
   Offset?: number; // 可選
   SortBy?: SortMeta[]; // 可選
-  BNK_No?: string; // 銀行代碼
+  BNK_No?: string; // 銀行代號
   BNK_Name?: string; // 銀行名稱
   BNK_ShortName?: string; // 銀行簡稱
 }
@@ -36,7 +36,7 @@ export interface ISysbc00Data {
 
 /** 新增資料介面 (insertSYSBC00) */
 export interface IInsertSysbc00Request {
-  BNK_No: string; // 銀行代碼
+  BNK_No: string; // 銀行代號
   BNK_Name: string; // 銀行名稱
   BNK_ShortName: string; // 銀行簡稱
 }
@@ -44,7 +44,7 @@ export interface IInsertSysbc00Request {
 /** 更新資料介面 (updateSYSBC00) */
 export interface IUpdateSysbc00Request {
   id: number; // 記錄 ID (用於識別要更新的記錄)
-  BNK_No: string; // 銀行代碼
+  BNK_No: string; // 銀行代號
   BNK_Name: string; // 銀行名稱
   BNK_ShortName: string; // 銀行簡稱
 }

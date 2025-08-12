@@ -47,7 +47,7 @@ export class TLS21040Component extends BasicQueryPageComponent<TLS21040Data> imp
   selectedItems: TLS21040Data[] = [];
   columns: Column[] = [
     { field: 'CRD_BinCode', header: '信用卡 BIN 碼', visible: true },
-    { field: 'BNK_No', header: '發卡銀行代碼', visible: true },
+    { field: 'BNK_No', header: '發卡銀行代號', visible: true },
     { field: 'CRD_Type', header: '信用卡卡別', visible: true, format: (value: string) => this.cardTypeOptions.find(item => item.value === value)?.label || value },
     { field: 'CRD_Kind', header: '信用卡卡種', visible: true, format: (value: string) => this.cardCategoryOptions.find(item => item.value === value)?.label || value },
     { field: 'Active_Date', header: '生效日期', visible: true, format: formatDate },

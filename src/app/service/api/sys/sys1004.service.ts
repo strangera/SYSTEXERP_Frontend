@@ -6,13 +6,13 @@ import { ApiResponse } from '../../system/auth.service';
 
 /** 查詢條件介面 (queryAPS1004) */
 export interface IQueryAps1004Request {
-  BNK_No: string; // 銀行代碼 (查詢條件)
+  BNK_No: string; // 銀行代號 (查詢條件)
 }
 
 /** APS1004 資料表的單筆資料介面 (響應數據) */
 export interface IAps1004Data {
   id: number;
-  BNK_No: string; // 銀行代碼
+  BNK_No: string; // 銀行代號
   BNK_BranchNo: string; // 分行代碼
   BNK_BranchName: string; // 分行名稱
   ACC_LEN: number; // 帳號長度
@@ -28,7 +28,7 @@ export interface IAps1004Data {
 /** 新增更新資料介面 (updateAPS1004) */
 export interface Aps1004Request {
   id?: number; // 記錄 ID
-  BNK_No?: string; // 銀行代碼
+  BNK_No?: string; // 銀行代號
   BNK_BranchNo: string; // 分行代碼
   BNK_BranchName: string; // 分行名稱
   ACC_LEN: number; // 帳號長度

@@ -6,7 +6,7 @@
   <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
     <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit()">
       <div class="grid p-fluid">
-        <app-input-text class="col-12 md:col-6 lg:col-4" label="角色代碼" controlName="Role_No"
+        <app-input-text class="col-12 md:col-6 lg:col-4" label="角色代號" controlName="Role_No"
           [control]="dataForm.controls.Role_No" [submitted]="submitted" />
         <app-input-text class="col-12 md:col-6 lg:col-4" label="角色名稱" controlName="Role_Name"
           [control]="dataForm.controls.Role_Name" [submitted]="submitted" />

@@ -91,7 +91,7 @@ export class SYSBR10Component extends BasicQueryPageComponent<any> {
     { field: 'User_Name', header: '使用者名稱', visible: true },
     { field: 'Org_ID', header: '組織代碼', visible: true },
     { field: 'Org_Name', header: '組織名稱', visible: true },
-    { field: 'Role_No', header: '角色代碼', visible: true },
+    { field: 'Role_No', header: '角色代號', visible: true },
     { field: 'Role_Name', header: '角色名稱', visible: true },
   ];
   formatDateTime(value: any): string {
@@ -110,7 +110,7 @@ export class SYSBR10Component extends BasicQueryPageComponent<any> {
   }
 
   ngOnInit(): void {
-    this.initializePage('SYSBR10', '/sys/sysbr10cru', this.queryForm,(form) => this.onSubmit(form));
+    this.initializePage('SYSBR10', '/sys/sysbr10cru', this.queryForm, (form) => this.onSubmit(form));
 
     this.announcementCategoryService
       .Pub_TypeOptions()
@@ -191,7 +191,7 @@ export class SYSBR10Component extends BasicQueryPageComponent<any> {
           // 等待所有明細查詢完成
           forkJoin(detailRequests).subscribe({
             complete: () => {
-             
+
               this.loading = false;
               this.messageService.unblockUi();
             },

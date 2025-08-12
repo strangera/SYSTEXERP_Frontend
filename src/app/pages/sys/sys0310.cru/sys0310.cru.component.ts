@@ -64,7 +64,7 @@ interface PrivilegeOutput {
 // 角色系統權限設定 CRU
 export class SYS0310CRUComponent extends BasicCruPageComponent<Role> implements OnInit {
   dataForm = this.formBuilder.nonNullable.group({
-    Role_No: [{ value: '', disabled: true }], // 角色代碼
+    Role_No: [{ value: '', disabled: true }], // 角色代號
     Role_Name: [{ value: '', disabled: true }], // 角色名稱
     Description: [{ value: '', disabled: true }], // 角色描述
   });

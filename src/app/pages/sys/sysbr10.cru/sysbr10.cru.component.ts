@@ -46,13 +46,12 @@ import { TranslateModule } from '@ngx-translate/core';
 })
 export class SYSBR10CRUComponent
   extends BasicCruPageComponent<any>
-  implements OnInit
-{
+  implements OnInit {
   showInsert = true;
   showRowEdit = true;
   insertRowData = true;
-  showDelete=true;
-  showCheckBox=true;
+  showDelete = true;
+  showCheckBox = true;
 
   minDateToday: Date = new Date(); // 今天日期
   Pub_TypeOptions: any[] = [];
@@ -91,7 +90,7 @@ export class SYSBR10CRUComponent
     },
     {
       field: 'Role_No',
-      header: '角色代碼',
+      header: '角色代號',
       visible: true,
       type: 'dropdown',
       options: [],
@@ -117,8 +116,8 @@ export class SYSBR10CRUComponent
       this.showInsert = false;
       this.showRowEdit = false;
       this.insertRowData = false;
-      this.showDelete=false;
-      this.showCheckBox=false;
+      this.showDelete = false;
+      this.showCheckBox = false;
     }
 
     if (this.crudstatus === CRUDStatus.Edit && this.rowdata?.DetailList) {
@@ -147,62 +146,62 @@ export class SYSBR10CRUComponent
     });
   }
   get isCreate(): boolean {
-  return this.crudstatus === CRUDStatus.Create;
-}
+    return this.crudstatus === CRUDStatus.Create;
+  }
 
-onSubmit(form: FormGroup): void {
-  this.handleSubmit(form, () => {
-    const value = form.getRawValue();
+  onSubmit(form: FormGroup): void {
+    this.handleSubmit(form, () => {
+      const value = form.getRawValue();
 
-    // (略) 你的日期檢查...
+      // (略) 你的日期檢查...
 
-    // ✅ 先決定主檔 id（編輯用原 id；新增為 0，由後端回填）
-    const masterId =
-      this.crudstatus === CRUDStatus.Edit ? (this.rowdata?.id ?? 0) : 0;
+      // ✅ 先決定主檔 id（編輯用原 id；新增為 0，由後端回填）
+      const masterId =
+        this.crudstatus === CRUDStatus.Edit ? (this.rowdata?.id ?? 0) : 0;
 
-    // ✅ 先產生 DetailList，不要參考到 payload
-    const detailList = this.detailList.map((row) => {
-      const detail: any = {};
-      this.detailcolumns.forEach((col) => (detail[col.field] = row[col.field] ?? null));
+      // ✅ 先產生 DetailList，不要參考到 payload
+      const detailList = this.detailList.map((row) => {
+        const detail: any = {};
+        this.detailcolumns.forEach((col) => (detail[col.field] = row[col.field] ?? null));
 
-      // 你的 id 規則原樣保留
-      detail.id =
-        typeof row.id === 'number' && row.id > 0 && String(row.id).length < 10
-          ? row.id
-          : 0;
+        // 你的 id 規則原樣保留
+        detail.id =
+          typeof row.id === 'number' && row.id > 0 && String(row.id).length < 10
+            ? row.id
+            : 0;
 
-      // ✅ 直接用 masterId，別用 payload.id
-      detail.pos5101_id = masterId;
-      return detail;
+        // ✅ 直接用 masterId，別用 payload.id
+        detail.pos5101_id = masterId;
+        return detail;
+      });
+
+      // ✅ 最後才組 payload
+      const payload = {
+        id: masterId,
+        Pub_StartDate: value.Pub_StartDate,
+        Pub_EndDate: value.Pub_EndDate,
+        Pub_Type: value.Pub_Type,
+        Pub_Event: value.Pub_Event,
+        pub_enable: value.pub_enable,
+        Pub_Description: value.Pub_Description,
+        DetailList: detailList,
+      };
+
+      if (this.crudstatus === CRUDStatus.Edit && this.canEdit()) {
+        this.sysbr10Service.updateSYSBR10(payload).subscribe(() => {
+          this.messageService.successBubble('更新成功');
+          this.onCancel();
+        });
+      }
+
+      if (this.crudstatus === CRUDStatus.Create && this.canAdd()) {
+        this.sysbr10Service.insertSYSBR10(payload).subscribe(() => {
+          this.messageService.successBubble('新增成功');
+          this.dataForm.reset();
+        });
+      }
     });
-
-    // ✅ 最後才組 payload
-    const payload = {
-      id: masterId,
-      Pub_StartDate: value.Pub_StartDate,
-      Pub_EndDate: value.Pub_EndDate,
-      Pub_Type: value.Pub_Type,
-      Pub_Event: value.Pub_Event,
-      pub_enable: value.pub_enable,
-      Pub_Description: value.Pub_Description,
-      DetailList: detailList,
-    };
-
-    if (this.crudstatus === CRUDStatus.Edit && this.canEdit()) {
-      this.sysbr10Service.updateSYSBR10(payload).subscribe(() => {
-        this.messageService.successBubble('更新成功');
-        this.onCancel();
-      });
-    }
-
-    if (this.crudstatus === CRUDStatus.Create && this.canAdd()) {
-      this.sysbr10Service.insertSYSBR10(payload).subscribe(() => {
-        this.messageService.successBubble('新增成功');
-        this.dataForm.reset();
-      });
-    }
-  });
-}
+  }
 
 
 }

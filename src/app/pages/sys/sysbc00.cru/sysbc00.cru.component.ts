@@ -37,7 +37,7 @@ import { ApiResponse } from '@service/system/auth.service';
 export class SYSBC00CRUComponent extends BasicCruPageComponent<ISysbc00Data> implements OnInit {
   dataForm = this.formBuilder.nonNullable.group({// APS1001 銀行主檔
     id: [],
-    BNK_No: ['', [Validators.required, Validators.maxLength(10), this.validation.numberValidator]], // 銀行代碼
+    BNK_No: ['', [Validators.required, Validators.maxLength(10), this.validation.numberValidator]], // 銀行代號
     BNK_Name: ['', [Validators.required, Validators.maxLength(60)]], // 銀行名稱
     BNK_ShortName: ['', [Validators.required, Validators.maxLength(30)]], // 銀行簡稱
   });
