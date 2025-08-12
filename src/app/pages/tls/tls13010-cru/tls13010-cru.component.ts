@@ -1,9 +1,7 @@
-import { TOTAL_AMT_UNIT_OPTIONS } from './../tls13010/tls13010.constants';
-// tls13010-cru.component.ts (整理後版本 - 移除無用程式碼)
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
-import { distinctUntilChanged, map, Observable, Subscription, debounceTime, of, catchError, tap } from 'rxjs';
+import { distinctUntilChanged, map, Observable, Subscription, debounceTime } from 'rxjs';
 
 // 基礎組件
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
@@ -912,18 +910,45 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
     // 監聽大分類變化
     const busTypeSubscription = this.dataForm.get('bus_type')?.valueChanges.subscribe(busType => {
       if (busType) {
+        console.log('🔄 大分類變更，載入中分類選項:', busType);
+
         this.tls13010DropdownService.loadBusClassOptions(busType).subscribe({
           next: (options: DropdownOption[]) => {
+            console.log('📋 中分類選項載入完成:', options.length);
+
             const currentBusClass = this.dataForm.get('bus_class')?.value;
             const validBusClass = options.find(option => option.value === currentBusClass);
+
             if (currentBusClass && !validBusClass) {
+              // 🎯 中分類無效時，清空中分類和小分類
+              console.log('❌ 中分類無效，清空中分類和小分類');
               this.dataForm.get('bus_class')?.setValue('');
               this.dataForm.get('bus_sclass')?.setValue('');
+              // 清空小分類選項
+              this.tls13010DropdownService.clearBusSClassOptions();
+            } else if (currentBusClass && validBusClass) {
+              // 🎯 中分類有效時，檢查並載入小分類
+              console.log('✅ 中分類有效，檢查小分類');
+              this.loadAndValidateBusSClass(busType, currentBusClass);
+            } else {
+              // 🎯 沒有中分類值時，清空小分類
+              console.log('📝 沒有中分類值，清空小分類');
+              this.dataForm.get('bus_sclass')?.setValue('');
+              this.tls13010DropdownService.clearBusSClassOptions();
             }
           },
-          error: () => this.messageService.warnBubble('載入中分類選項失敗，請重新選擇大分類')
+          error: (err) => {
+            console.error('❌ 載入中分類失敗:', err);
+            this.messageService.warnBubble('載入中分類選項失敗，請重新選擇大分類');
+            // 發生錯誤時清空所有下級分類
+            this.dataForm.get('bus_class')?.setValue('');
+            this.dataForm.get('bus_sclass')?.setValue('');
+            this.tls13010DropdownService.clearBusSClassOptions();
+          }
         });
       } else {
+        // 🎯 大分類清空時，清空所有下級分類
+        console.log('🗑️ 大分類清空，清空所有下級分類');
         this.tls13010DropdownService.clearBusClassOptions();
         this.tls13010DropdownService.clearBusSClassOptions();
         this.dataForm.get('bus_class')?.setValue('');
@@ -934,18 +959,13 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
     // 監聽中分類變化
     const busClassSubscription = this.dataForm.get('bus_class')?.valueChanges.subscribe(busClass => {
       const busType = this.dataForm.get('bus_type')?.value;
+
       if (busType && busClass) {
-        this.tls13010DropdownService.loadBusSClassOptions(busType, busClass).subscribe({
-          next: (options: DropdownOption[]) => {
-            const currentBusSClass = this.dataForm.get('bus_sclass')?.value;
-            const validBusSClass = options.find(option => option.value === currentBusSClass);
-            if (currentBusSClass && !validBusSClass) {
-              this.dataForm.get('bus_sclass')?.setValue('');
-            }
-          },
-          error: () => this.messageService.warnBubble('載入小分類選項失敗，請重新選擇中分類')
-        });
+        console.log('🔄 中分類變更，載入小分類選項:', { busType, busClass });
+        this.loadAndValidateBusSClass(busType, busClass);
       } else {
+        // 🎯 中分類清空時，清空小分類
+        console.log('🗑️ 中分類清空，清空小分類');
         this.tls13010DropdownService.clearBusSClassOptions();
         this.dataForm.get('bus_sclass')?.setValue('');
       }
@@ -953,6 +973,36 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
 
     if (busTypeSubscription) this.subscriptions.push(busTypeSubscription);
     if (busClassSubscription) this.subscriptions.push(busClassSubscription);
+  }
+
+  /**
+   * 🎯 新增：載入並驗證小分類
+   */
+  private loadAndValidateBusSClass(busType: string, busClass: string): void {
+    this.tls13010DropdownService.loadBusSClassOptions(busType, busClass).subscribe({
+      next: (options: DropdownOption[]) => {
+        console.log('📋 小分類選項載入完成:', options.length);
+
+        const currentBusSClass = this.dataForm.get('bus_sclass')?.value;
+
+        if (currentBusSClass) {
+          const validBusSClass = options.find(option => option.value === currentBusSClass);
+
+          if (!validBusSClass) {
+            // 🎯 小分類無效時清空
+            console.log('❌ 小分類無效，清空小分類');
+            this.dataForm.get('bus_sclass')?.setValue('');
+          } else {
+            console.log('✅ 小分類有效，保持原值');
+          }
+        }
+      },
+      error: (err) => {
+        console.error('❌ 載入小分類失敗:', err);
+        this.messageService.warnBubble('載入小分類選項失敗');
+        this.dataForm.get('bus_sclass')?.setValue('');
+      }
+    });
   }
 
   // ==========  表單操作方法 ==========
