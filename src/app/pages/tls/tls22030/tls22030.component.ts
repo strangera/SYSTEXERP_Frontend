@@ -38,6 +38,7 @@ export class TLS22030Component extends BasicQueryPageComponent<any> implements O
     TXN_DateEnd: [yesterday, Validators.required],
     IsLossStatus: [null], // 預設值為 '0000'，表示全部
     ...createPaginationConfig([{ field: 'tlt_no', order: 1 }])
+
   });
   totalRecords = 0;
   tltNoOptions: IDropdownItem[] = [];
@@ -77,7 +78,7 @@ export class TLS22030Component extends BasicQueryPageComponent<any> implements O
   }
 
   ngOnInit(): void {
-    this.initializePage('TLS22030', '/TLS/TLS22030cru', this.queryForm, (form) => this.onSubmit(form));
+    this.initializePage('TLS22030', '/TLS/TLS22030cru', this.queryForm);
     this.funInfo = this.authService.getUserPermissions(this.ProgNo);
     this.whetherService.getWhetherOptions().subscribe((data) => {
       this.listZeroDifferenceOptions = data;
@@ -146,14 +147,27 @@ export class TLS22030Component extends BasicQueryPageComponent<any> implements O
       }
     });
   }
-
+  /** "MM/DD/YYYY HH:mm:ss" -> "YYYY/MM/DD" */
+  private toSlashYMD(dateStr?: string | null): string | null {
+    if (!dateStr) return null;
+    const onlyDate = String(dateStr).split(' ')[0]; // 08/01/2025
+    const parts = onlyDate.split('/');
+    if (parts.length !== 3) return dateStr as any;
+    const [mm, dd, yyyy] = parts;
+    return `${yyyy}/${mm.padStart(2, '0')}/${dd.padStart(2, '0')}`;
+  }
 
   onSubmit(form: FormGroup): void {
     this.handleSubmit(form, () => {
       this.tls22030Service.queryTLS22030(form.value).subscribe({
         next: (res) => {
-          this.data = res.Data ?? [];
-          this.totalRecords = res.TotalCount;
+          const raw = res?.Data ?? [];
+          this.data = raw.map((item: any) => ({
+            ...item,
+            // 將 "08/01/2025 00:00:00" 轉為 "2025/08/01"
+            TXN_Date: this.toSlashYMD(item?.TXN_Date),
+          }));
+          this.totalRecords = res?.TotalCount ?? this.data.length;
           this.loading = false;
           this.queryStateService.setQueryState(this.ProgNo, this.queryForm.value);
         },
@@ -162,7 +176,6 @@ export class TLS22030Component extends BasicQueryPageComponent<any> implements O
           this.loading = false;
         }
       });
-
     });
   }
 

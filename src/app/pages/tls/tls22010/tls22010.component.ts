@@ -19,6 +19,8 @@ import { ButtonModule } from 'primeng/button';
 import { Router } from '@angular/router';
 import { yesterday } from '@shared/models/system/query-form.model';
 
+const SKIP_AUTO_QUERY_KEY = 'TLS22010:SKIP_AUTO_QUERY';
+
 @Component({
   templateUrl: './tls22010.component.html',
   standalone: true,
@@ -38,13 +40,7 @@ import { yesterday } from '@shared/models/system/query-form.model';
   ],
 })
 export class TLS22010Component extends BasicQueryPageComponent<any> implements OnInit {
-
-  formatNumber(value: any): string {
-    if (value == null || value === '') return '';
-    const num = Number(value);
-    return isNaN(num) ? value : num.toLocaleString('en-US');
-  }
-
+  // ------ UI 狀態 / 表單 ------
   queryForm = this.formBuilder.group({
     TXN_Date: [yesterday, { validators: [Validators.required], updateOn: 'change' }],
     floor_noList: [[]],
@@ -54,10 +50,13 @@ export class TLS22010Component extends BasicQueryPageComponent<any> implements O
     status2: [''],
     ...createPaginationConfig([{ field: 'ECR_No', order: 1 }]),
   });
+
   selectedItems: any[] = [];
   totalRecords = 0;
   data: any[] = [];
-  filteredData: any[] = [...this.data];
+  filteredData: any[] = [];
+
+  // ------ 欄位定義 ------
   columns7: Column[] = [
     { field: 'ECR_No', header: '收據機代碼', visible: true },
     { field: 'TXN_Date', header: '交易日期', visible: true },
@@ -94,6 +93,8 @@ export class TLS22010Component extends BasicQueryPageComponent<any> implements O
   machinedisplayOptions: any[] = [];
   ECRNoOptions: any[] = [];
 
+  private skipAutoQueryOnce = false;
+
   constructor(
     private floorService: FloorService,
     private machineDisplayService: MachinedisplayService,
@@ -104,46 +105,74 @@ export class TLS22010Component extends BasicQueryPageComponent<any> implements O
     super();
   }
 
+  // --------- 生命週期 ----------
   ngOnInit(): void {
-    this.initializePage('TLS22010', '/TLS/TLS22010cru', this.queryForm, (form) => this.onSubmit(form));
+    // 檢查是否剛從 CRU 返回：若是，僅跳過這次自動查詢（表單值仍會被還原）
+    this.skipAutoQueryOnce = sessionStorage.getItem(SKIP_AUTO_QUERY_KEY) === '1';
+    sessionStorage.removeItem(SKIP_AUTO_QUERY_KEY);
+
+    // initializePage 會還原 queryState（我們在 onSubmit 內用 frm.value 存），包含 TXN_Date
+    this.initializePage('TLS22010', '/TLS/TLS22010cru', this.queryForm, (form) => {
+      if (this.skipAutoQueryOnce) {
+        this.skipAutoQueryOnce = false;
+        this.loading = false; // 保險：避免殘留 loading
+        return; // 不自動查詢
+      }
+      // 正常進頁時，維持原本自動查詢
+      this.onSubmit(form);
+    });
+
+    // 載入下拉選項
     this.floorService.getFloors().subscribe((data) => (this.floorOptions = data));
     this.machineDisplayService.getMachinedisplay().subscribe((data) => (this.machinedisplayOptions = data));
     this.ECRNoService.getECRNo().subscribe((data) => (this.ECRNoOptions = data));
   }
 
+  // --------- 工具 ----------
+  formatNumber(value: any): string {
+    if (value == null || value === '') return '';
+    const num = Number(value);
+    return isNaN(num) ? value : num.toLocaleString('en-US');
+  }
+
+  /** 避免時區影響：以本地時間組 YYYY-MM-DD */
+  private toYMD(d: Date): string {
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  }
+
+  /** 從 "MM/DD/YYYY HH:mm:ss" 轉 "YYYY-MM-DD" */
+  private toIsoDate(mdyWithTime?: string | null): string | null {
+    if (!mdyWithTime) return null;
+    const mdy = String(mdyWithTime).split(' ')[0];
+    const [mm, dd, yyyy] = mdy.split('/');
+    if (!mm || !dd || !yyyy) return null;
+    return `${yyyy}-${mm.padStart(2, '0')}-${dd.padStart(2, '0')}`;
+  }
+
+  // --------- 事件 ----------
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
-      const value = this.queryForm.value;
-
-      // 工具：本地組 YYYY-MM-DD（不經過 toISOString，不受時區影響）
-      const toYMD = (d: Date) =>
-        `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+      const value = this.queryForm.value as any;
 
       const params = {
-        TXN_Date: value.TXN_Date ? toYMD(value.TXN_Date) : null,
+        TXN_Date: value.TXN_Date ? this.toYMD(value.TXN_Date) : null,
         ECR_No: value.ECR_No,
         floor_noList: value.floor_noList,
         ShowStatus: value.ShowStatus,
-      };
-
-      // 小工具：把 "06/03/2025 00:00:00" 轉成 "2025-06-03"
-      const toIsoDate = (mdyWithTime?: string) => {
-        if (!mdyWithTime) return null;
-        const mdy = mdyWithTime.split(' ')[0]; // 先拿掉時間
-        const [mm, dd, yyyy] = mdy.split('/');
-        return `${yyyy}-${mm.padStart(2, '0')}-${dd.padStart(2, '0')}`;
       };
 
       this.tls22010Service.queryTLS22010(params).subscribe({
         next: (res) => {
           this.data = (res?.Data ?? []).map((item: any) => ({
             ...item,
-            // 統一提供 TXN_Date 給畫面用 YYYY-MM-DD
-            TXN_Date: item.TXN_Date ?? toIsoDate(item.TXN_DATE),
+            // 統一提供 TXN_Date 為 YYYY-MM-DD
+            TXN_Date: item.TXN_Date ?? this.toIsoDate(item.TXN_DATE),
             details: item.details ?? [],
           }));
           this.filteredData = [...this.data];
           this.totalRecords = res?.TotalCount ?? this.data.length;
+
+          // 保留「表單值」到查詢狀態（initializePage 才能正確還原 Date 型別）
           this.queryStateService.setQueryState(this.ProgNo, frm.value);
           this.loading = false;
         },
@@ -155,5 +184,10 @@ export class TLS22010Component extends BasicQueryPageComponent<any> implements O
     });
   }
 
-
+  /** 進入 CRU（查看/編輯）前，設定返回時跳過自動查詢的一次性旗標 */
+  goToCRU(row?: any) {
+    sessionStorage.setItem(SKIP_AUTO_QUERY_KEY, '1');
+    // 依你的實際路由/參數調整
+    this.router.navigate(['/TLS/TLS22010cru'], { state: { id: row?.id } });
+  }
 }
