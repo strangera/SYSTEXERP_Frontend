@@ -21,7 +21,8 @@ import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdow
 import { InputTextModule } from 'primeng/inputtext';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { TranslateModule } from '@ngx-translate/core';
-import { Subscription, EMPTY, throwError, BehaviorSubject } from 'rxjs';
+import { Subject, Subscription, of } from 'rxjs';
+import { debounceTime, takeUntil, timeout, catchError } from 'rxjs/operators';
 @Component({
   selector: 'app-tls23100',
   templateUrl: './tls23100.component.html',
@@ -41,6 +42,7 @@ import { Subscription, EMPTY, throwError, BehaviorSubject } from 'rxjs';
   ],
 })
 export class TLS23100Component extends BasicQueryPageComponent<any> {
+  private destroy$ = new Subject<void>();
   private readonly STORAGE_KEY = 'TLS23100:queryForm';
   private formValueSub?: Subscription;
   querySubscription: Subscription | null = null;
@@ -57,18 +59,28 @@ export class TLS23100Component extends BasicQueryPageComponent<any> {
   })();
 
   //request
-  queryForm = this.formBuilder.group({
-    TXN_DateStart: [this.yesterday as Date, [Validators.required]],
-    TXN_DateEnd: [this.yesterday, [Validators.required]],
-    ECR_No: [[]],
-    TLT_No: [[]],
-    CRD_Type: [[]],
-    CRD_No: [],
-    tlt_building: [],
-    tlt_floor: [[]],
-    org_id: [[]],
-    ...createPaginationConfig([{ field: 'TLT_No', order: 1 }]),
-  });
+queryForm = this.formBuilder.group({
+  TXN_DateStart: [this.yesterday as Date, [Validators.required]],
+  TXN_DateEnd: [this.yesterday, [Validators.required]],
+
+  ECR_No: this.formBuilder.control<any[]>([]),
+  TLT_No: this.formBuilder.control<any[]>([]),
+  CRD_Type: this.formBuilder.control<any[]>([]),
+  CRD_No: this.formBuilder.control<any[]>([]),
+
+  TXN_PayAmt: [null],
+
+  tlt_building: this.formBuilder.control<any[]>([]),
+  tlt_floor: this.formBuilder.control<any[]>([]),
+  org_id: this.formBuilder.control<any[]>([]),
+
+  IPeriod: this.formBuilder.control<any[]>([]),
+  AcqBank: this.formBuilder.control<any[]>([]),
+  ConnStatus: this.formBuilder.control<any[]>([]),
+
+  IsHaveTERM_No: [null],
+  ...createPaginationConfig([{ field: 'TLT_No', order: 1 }]),
+});
 
 
   //下拉選單
@@ -94,15 +106,12 @@ export class TLS23100Component extends BasicQueryPageComponent<any> {
     this.initializePage('TLS23100', 'tls/tls23100cru', this.queryForm);
 
     this.restoreQueryFromStorage();
-    this.formValueSub = this.queryForm.valueChanges
-    .subscribe(() => this.saveQueryToStorage());
-    const savedQuery = localStorage.getItem('TLS23010_queryForm');
-    if (savedQuery) {
-      const parsedQuery = JSON.parse(savedQuery);
-      this.queryForm.patchValue(parsedQuery);
-    }
+this.queryForm.valueChanges
+  .pipe(debounceTime(300), takeUntil(this.destroy$))
+  .subscribe(() => this.saveQueryToStorage());
+
     //收銀機號下拉
-    this.ECRNoService.getECRNo().subscribe((res) => {
+    this.ECRNoService.getECRNo().pipe(takeUntil(this.destroy$)).subscribe((res) => {
       this.ECRNoOptions =
         res?.map((x) => ({
           label: x.label,
@@ -111,7 +120,7 @@ export class TLS23100Component extends BasicQueryPageComponent<any> {
         })) || [];
     });
     //專櫃編號下拉
-    this.counterNameService.getCounters().subscribe((res) => {
+    this.counterNameService.getCounters().pipe(takeUntil(this.destroy$)).subscribe((res) => {
       this.CounterOptions =
         res?.map((x) => ({
           label: x.label,
@@ -121,19 +130,19 @@ export class TLS23100Component extends BasicQueryPageComponent<any> {
     });
     //付款別下拉
     this.paymentTypeService
-      .getPaymentTypes()
+      .getPaymentTypes().pipe(takeUntil(this.destroy$))
       .subscribe((data) => (this.paymentTypeOptions = data));
     //館別下拉
     this.tls11010Service
-      .getBuildingOptions()
+      .getBuildingOptions().pipe(takeUntil(this.destroy$))
       .subscribe((data) => (this.BUILDING_NO_Options = data));
     //樓層下拉
     this.floorService
-      .getFloors()
+      .getFloors().pipe(takeUntil(this.destroy$))
       .subscribe((data) => (this.floorOptions = data));
 
     //組織代碼下拉
-    this.tls11010Service.getOrgOptions().subscribe((res) => {
+    this.tls11010Service.getOrgOptions().pipe(takeUntil(this.destroy$)).subscribe((res) => {
       this.OrganizationCodeOptions =
         res?.map((x) => ({
           label: x.label,
@@ -177,43 +186,44 @@ export class TLS23100Component extends BasicQueryPageComponent<any> {
     this.messageService.blockUi();
 
     // ✅ 呼叫查詢 API
-    this.tls23100Service.queryTLS23100(queryFormValue).subscribe({
-      next: (res) => {
-        if (res.Status === '0000') {
-          // ✅ 儲存查詢條件
-          this.queryStateService.setQueryState(this.ProgNo, queryFormValue);
-
-          // ✅ 導頁到報表模式頁面並帶入查詢結果
-          this.router
-            .navigate(['account/tls/tls23100cru'], {
-              state: {
-                queryFormValue,
-                pageSize: this.customPageSize,
-                data: res.Data || [],
-              },
-            })
-            .then(() => {
-              // ✅ 路由完成後解除 loading 與 dialog
-              this.loading = false;
-              this.messageService.unblockUi();
-              this.showPageSizeDialog = false;
-            });
-        } else {
-          // ❌ 查詢失敗提示
-          this.messageService.errorBubble('查詢失敗');
+    this.tls23100Service
+  .queryTLS23100(queryFormValue)
+  .pipe(
+    timeout(30000),
+    catchError(() => {
+      this.messageService.errorBubble('查詢失敗');
+      this.loading = false;
+      this.messageService.unblockUi();
+      this.showPageSizeDialog = false;
+      return of({ Status: '9999', Data: [] });
+    })
+  )
+  .subscribe({
+    next: (res) => {
+      if (res.Status === '0000') {
+        this.queryStateService.setQueryState(this.ProgNo, queryFormValue);
+        this.router.navigate(['account/tls/tls23100cru'], {
+          state: {
+            queryFormValue,
+            pageSize: this.customPageSize,
+            data: res.Data || [],
+          },
+        }).then(() => {
           this.loading = false;
           this.messageService.unblockUi();
           this.showPageSizeDialog = false;
-        }
-      },
-      error: () => {
-        // ❌ 連線或伺服器錯誤處理
-        this.messageService.errorBubble('查詢錯誤');
-        this.loading = false;
-        this.messageService.unblockUi();
-        this.showPageSizeDialog = false;
-      },
-    });
+        });
+      } else {
+        this.messageService.errorBubble('查詢失敗');
+      }
+    },
+    complete: () => {
+      // 若上面已導航成功會在 then() 解鎖；這裡保險再解一次
+      this.loading = false;
+      this.messageService.unblockUi();
+      this.showPageSizeDialog = false;
+    },
+  });
   }
 
     /** 立即把目前表單狀態存進 LocalStorage（日期會轉 ISO 字串） */
@@ -243,4 +253,11 @@ private restoreQueryFromStorage(): void {
 private clearQueryStorage(): void {
   localStorage.removeItem(this.STORAGE_KEY);
 }
+ngOnDestroy(): void {
+  this.destroy$.next();
+  this.destroy$.complete();
+
+  this.querySubscription?.unsubscribe();
+}
+
 }

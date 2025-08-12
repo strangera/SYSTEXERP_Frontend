@@ -21,7 +21,8 @@ import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/
 import { InputTextModule } from 'primeng/inputtext';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { TranslateModule } from '@ngx-translate/core';
-import { Subscription, EMPTY, throwError, BehaviorSubject } from 'rxjs';
+import { Subject, Subscription, of } from 'rxjs';
+import { debounceTime, takeUntil, timeout, catchError } from 'rxjs/operators';
 
 @Component({
     selector: 'app-tls23110',
@@ -31,6 +32,7 @@ import { Subscription, EMPTY, throwError, BehaviorSubject } from 'rxjs';
     imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarRangeQuickComponent, DropdownComponent, RadiobuttonComponent, MultiSelectComponent, InputTextModule, ButtonComponent, TranslateModule]
 })
 export class TLS23110Component extends BasicQueryPageComponent<any> {
+  private destroy$ = new Subject<void>();
   showPageSizeDialog = false;
   customPageSize = 1000;
   querySubscription: Subscription | null = null;
@@ -46,20 +48,21 @@ export class TLS23110Component extends BasicQueryPageComponent<any> {
   totalRecords = 0;
 
 
-  queryForm = this.formBuilder.group({   
-    TXN_DateStart: [this.yesterday, Validators.required],
-    TXN_DateEnd: [this.yesterday, Validators.required],
-    tlt_term_type: [],       // e.g., 'st'
-    rece_yn: [],            // e.g., 's'
-    IsNoPLU_No: [true],        // 預設 true
-    TLT_No: [], // string[]
-    tlt_building: [],
-    tlt_floor: [], // string[]
-    org_id: [],  // string[]
+queryForm = this.formBuilder.group({
+  TXN_DateStart: [this.yesterday, Validators.required],
+  TXN_DateEnd: [this.yesterday, Validators.required],
 
+  tlt_term_type: this.formBuilder.control<any[]>([]), // e.g., 'st'
+  rece_yn: this.formBuilder.control<any[]>([]),       // e.g., 's'
+  IsNoPLU_No: [true],
 
-    ...createPaginationConfig([{ field: 'Day', order: 1 }])
-  });
+  TLT_No: this.formBuilder.control<any[]>([]),
+  tlt_building: this.formBuilder.control<any[]>([]),
+  tlt_floor: this.formBuilder.control<any[]>([]),
+  org_id: this.formBuilder.control<any[]>([]),
+
+  ...createPaginationConfig([{ field: 'Day', order: 1 }]),
+});
   IsNoPLU_NoOptions = [
     { label: '使用業主發票', value: true },
     { label: '非使用業主發票', value: false }
@@ -103,25 +106,22 @@ export class TLS23110Component extends BasicQueryPageComponent<any> {
     this.messageService.unblockUi();  // <-- 🔓 關鍵解除畫面卡住
     this.initializePage('TLS23110', 'TLS23110cru', this.queryForm);
     this.restoreQueryFromStorage();
-    this.formValueSub = this.queryForm.valueChanges
-    .subscribe(() => this.saveQueryToStorage());
-    const savedQuery = localStorage.getItem('TLS23010_queryForm');
-    if (savedQuery) {
-      const parsedQuery = JSON.parse(savedQuery);
-      this.queryForm.patchValue(parsedQuery);
-    }
-    this.whetherService.getWhetherOptions().subscribe(data => this.WhetherOptions = data);
-    this.deductionbigCategoryService.getLocalDeductionCategories().subscribe(data => this.DeductionbigCategoryOptions = data);
-    this.typeService.getTypeOptions().subscribe(data => this.TypeOptions = data);
-    this.categoryService.getCategories().subscribe(data => this.CategoryOptions = data);
-    this.counterNameService.getCounters().subscribe(res => {
+this.queryForm.valueChanges
+  .pipe(debounceTime(300), takeUntil(this.destroy$))
+  .subscribe(() => this.saveQueryToStorage());
+
+    this.whetherService.getWhetherOptions().pipe(takeUntil(this.destroy$)).subscribe(data => this.WhetherOptions = data);
+    this.deductionbigCategoryService.getLocalDeductionCategories().pipe(takeUntil(this.destroy$)).subscribe(data => this.DeductionbigCategoryOptions = data);
+    this.typeService.getTypeOptions().pipe(takeUntil(this.destroy$)).subscribe(data => this.TypeOptions = data);
+    this.categoryService.getCategories().pipe(takeUntil(this.destroy$)).subscribe(data => this.CategoryOptions = data);
+    this.counterNameService.getCounters().pipe(takeUntil(this.destroy$)).subscribe(res => {
       this.CounterOptions = res?.map(x => ({ label: x.label, formLabel: `${x.value} - ${x.label}`, value: x.value })) || [];
     });
-    this.organizationNumberService.getOrganizationNumbers().subscribe(data => this.OrganizationNumberOptions = data);
-    this.counterOpCatService.getCounterOpCat().subscribe(data => this.CounterOpCatOptions = data);
-    this.floorService.getFloors().subscribe(data => this.floorOptions = data);
-    this.tls11010Service.getBuildingOptions().subscribe(data => this.BUILDING_NO_Options = data);
-    this.tls11010Service.getOrgOptions().subscribe(res => {
+    this.organizationNumberService.getOrganizationNumbers().pipe(takeUntil(this.destroy$)).subscribe(data => this.OrganizationNumberOptions = data);
+    this.counterOpCatService.getCounterOpCat().pipe(takeUntil(this.destroy$)).subscribe(data => this.CounterOpCatOptions = data);
+    this.floorService.getFloors().pipe(takeUntil(this.destroy$)).subscribe(data => this.floorOptions = data);
+    this.tls11010Service.getBuildingOptions().pipe(takeUntil(this.destroy$)).subscribe(data => this.BUILDING_NO_Options = data);
+    this.tls11010Service.getOrgOptions().pipe(takeUntil(this.destroy$)).subscribe(res => {
       this.OrganizationCodeOptions = res?.map(x => ({ label: x.label, formLabel: `${x.value} - ${x.label}`, value: x.value })) || [];
     });
   }
@@ -143,63 +143,66 @@ export class TLS23110Component extends BasicQueryPageComponent<any> {
     this.loading = true;
     this.messageService.blockUi();
 
-    this.tls23110Service.queryTLS23110(queryFormValue).subscribe({
-      next: (res) => {
-        if (res.Status === '0000') {
-          this.queryStateService.setQueryState(this.ProgNo, queryFormValue);
+   this.tls23110Service.queryTLS23110(queryFormValue)
+  .pipe(
+    timeout(30000),
+    catchError(() => {
+      this.messageService.errorBubble('查詢失敗');
+      this.loading = false;
+      this.messageService.unblockUi();
+      this.showPageSizeDialog = false;
+      return of({ Status: '9999', Data: [] });
+    })
+  )
+  .subscribe({
+    next: (res) => {
+      if (res.Status === '0000') {
+        this.queryStateService.setQueryState(this.ProgNo, queryFormValue);
 
-          const flatData = (res.Data || []).map((row: any) => {
-            const d = row.Discount_List || {};
-            return {
-              Day: row.Day,
-              OriginalPrice_TXN_SaleNoTax: d.OriginalPrice?.TXN_SaleNoTax ?? 0,
-              OriginalPrice_TXN_Tax: d.OriginalPrice?.TXN_Tax ?? 0,
-              OriginalPrice_Total: d.OriginalPrice?.Total ?? 0,
-              Discount90_TXN_SaleNoTax: d.Discount90?.TXN_SaleNoTax ?? 0,
-              Discount90_TXN_Tax: d.Discount90?.TXN_Tax ?? 0,
-              Discount90_Total: d.Discount90?.Total ?? 0,
-              Discount80_TXN_SaleNoTax: d.Discount80?.TXN_SaleNoTax ?? 0,
-              Discount80_TXN_Tax: d.Discount80?.TXN_Tax ?? 0,
-              Discount80_Total: d.Discount80?.Total ?? 0,
-              SpecialPrice_TXN_SaleNoTax: d.SpecialPrice?.TXN_SaleNoTax ?? 0,
-              SpecialPrice_TXN_Tax: d.SpecialPrice?.TXN_Tax ?? 0,
-              SpecialPrice_Total: d.SpecialPrice?.Total ?? 0,
-              Total_TXN_SaleNoTax: d.Total?.TXN_SaleNoTax ?? 0,
-              Total_TXN_Tax: d.Total?.TXN_Tax ?? 0,
-              Total_Total: d.Total?.Total ?? 0,
-            };
-          });
+        const flatData = (res.Data || []).map((row: any) => {
+          const d = row.Discount_List || {};
+          return {
+            Day: row.Day,
+            OriginalPrice_TXN_SaleNoTax: d.OriginalPrice?.TXN_SaleNoTax ?? 0,
+            OriginalPrice_TXN_Tax: d.OriginalPrice?.TXN_Tax ?? 0,
+            OriginalPrice_Total: d.OriginalPrice?.Total ?? 0,
+            Discount90_TXN_SaleNoTax: d.Discount90?.TXN_SaleNoTax ?? 0,
+            Discount90_TXN_Tax: d.Discount90?.TXN_Tax ?? 0,
+            Discount90_Total: d.Discount90?.Total ?? 0,
+            Discount80_TXN_SaleNoTax: d.Discount80?.TXN_SaleNoTax ?? 0,
+            Discount80_TXN_Tax: d.Discount80?.TXN_Tax ?? 0,
+            Discount80_Total: d.Discount80?.Total ?? 0,
+            SpecialPrice_TXN_SaleNoTax: d.SpecialPrice?.TXN_SaleNoTax ?? 0,
+            SpecialPrice_TXN_Tax: d.SpecialPrice?.TXN_Tax ?? 0,
+            SpecialPrice_Total: d.SpecialPrice?.Total ?? 0,
+            Total_TXN_SaleNoTax: d.Total?.TXN_SaleNoTax ?? 0,
+            Total_TXN_Tax: d.Total?.TXN_Tax ?? 0,
+            Total_Total: d.Total?.Total ?? 0,
+          };
+        });
 
-this.router.navigate(['account/tls/tls23110cru'], {
-  state: {
-    queryFormValue,
-    pageSize: this.customPageSize,
-    data: flatData
-  }
-}).then(() => {
-  this.loading = false;
-  this.messageService.unblockUi();
-  this.showPageSizeDialog = false;
-  
-});
-
-          
-        } else {
-          this.messageService.errorBubble('查詢失敗');
-        }
-      },
-      error: () => {
-        this.messageService.errorBubble('查詢錯誤');
-        this.loading = false;
-        this.messageService.unblockUi();
-        this.showPageSizeDialog = false;
-      },
-      complete: () => {
-        this.loading = false;
-        this.messageService.unblockUi();
-        this.showPageSizeDialog = false;
+        this.router.navigate(['account/tls/tls23110cru'], {
+          state: {
+            queryFormValue,
+            pageSize: this.customPageSize,
+            data: flatData,
+          }
+        }).then(() => {
+          this.loading = false;
+          this.messageService.unblockUi();
+          this.showPageSizeDialog = false;
+        });
+      } else {
+        this.messageService.errorBubble('查詢失敗');
       }
-    });
+    },
+    complete: () => {
+      this.loading = false;
+      this.messageService.unblockUi();
+      this.showPageSizeDialog = false;
+    }
+  });
+
   }
 
   /** 立即把目前表單狀態存進 LocalStorage（日期會轉 ISO 字串） */
@@ -229,4 +232,11 @@ private restoreQueryFromStorage(): void {
 private clearQueryStorage(): void {
   localStorage.removeItem(this.STORAGE_KEY);
 }
+ngOnDestroy(): void {
+  this.destroy$.next();
+  this.destroy$.complete();
+
+  this.querySubscription?.unsubscribe();
+}
+
 }
