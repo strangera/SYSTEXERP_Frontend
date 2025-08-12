@@ -12,6 +12,8 @@ import { Column } from '../table.model';
 import { QueryStateService } from '@shared/service/query-state.service';
 import { TableExportComponent } from '../table-export/table-export.component';
 import { toggleButtons } from './table-caption.model';
+import { TableUtilityService } from '../table-utility.service';
+import { Observable } from 'rxjs';
 
 @Component({
   selector: 'app-table-caption',
@@ -31,6 +33,10 @@ import { toggleButtons } from './table-caption.model';
 })
 export class TableCaptionComponent extends BasicPrintDataComponent implements OnChanges {
   @ViewChild('fileUpload') fileUpload!: FileUpload; // 檔案上傳 元件
+  @Input() dataKey = 'ID';                                                      // table 資料key
+  @Input() expansionDataKey = 'id';            // 收合展開 資料key(expansion必需配置)
+  @Input() expansionLoadFn?: (rowData: any) => Observable<any>; // 屬性來接收父層傳來的載入函數
+  @Input() expandedRows: Record<string, boolean> = {};// 收合展開 已展開資料
   @Input() data: any[] = [];                        // table 資料 (必填)
   @Input() columns!: Column[];                      // table 欄位配置 (必填)
   @Output() columnsEvent = new EventEmitter<Column[]>();// table 欄位配置 (必填)
@@ -74,7 +80,8 @@ export class TableCaptionComponent extends BasicPrintDataComponent implements On
   @Input() rows = 10;                                         // 每頁顯示的行數
   @Input() first = 0;                                        // 當前表格的起始索引
   constructor(
-    private readonly queryStateService: QueryStateService
+    private readonly queryStateService: QueryStateService,
+    private readonly tableUtilityService: TableUtilityService
   ) { super(); }
 
   // 當 data 發生變化時，重置分頁與頁碼
@@ -103,6 +110,11 @@ export class TableCaptionComponent extends BasicPrintDataComponent implements On
         this.isColumnsInitialized = true;
       }, 300);
     }
+  }
+  // 全展開/收合的邏輯
+  toggleExpandCollapse() {
+    this.expression = !this.expression;
+    this.tableUtilityService.toggleExpandCollapseLogic(this.data, this.expression, this.dataKey, this.expansionDataKey, this.expansionLoadFn, this.expandedRows, this);
   }
   // 計算總頁數並生成頁面選項
   calculateTotalPages() {

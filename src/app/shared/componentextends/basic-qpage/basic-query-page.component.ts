@@ -49,9 +49,7 @@ export abstract class BasicQueryPageComponent<T> {
         if (query && queryForm) {
           queryForm?.patchValue(query);
           queryForm?.patchValue({ pageIndex: 1 });
-          if (onSubmit) {
-            onSubmit(queryForm);
-          }
+          // if (onSubmit) { onSubmit(queryForm); }
         }
       });
     }
