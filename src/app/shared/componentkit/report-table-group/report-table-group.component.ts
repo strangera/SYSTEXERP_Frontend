@@ -57,6 +57,7 @@ interface Column {
 @Component({
   selector: 'app-report-table-group',
   templateUrl: './report-table-group.component.html',
+  styleUrls: ['./report-table-group.component.scss'],
   standalone: true,
   imports: [
     NgIf,
@@ -852,4 +853,37 @@ private exportGroupedPDF(
       this.groupBodyExpanded[key] = false;
     }
   }
+
+  // 計算內容尺寸
+getScrollWidth(bodyEl: HTMLElement): number {
+  return bodyEl?.scrollWidth ?? 0;
+}
+getScrollHeight(bodyEl: HTMLElement): number {
+  return bodyEl?.scrollHeight ?? 0;
+}
+// 是否需要顯示浮空捲軸
+needsHScroll(bodyEl: HTMLElement): boolean {
+  return (bodyEl?.scrollWidth ?? 0) > (bodyEl?.clientWidth ?? 0) + 1;
+}
+needsVScroll(bodyEl: HTMLElement): boolean {
+  return (bodyEl?.scrollHeight ?? 0) > (bodyEl?.clientHeight ?? 0) + 1;
+}
+
+// 由「浮空水平捲軸」同步到主容器
+syncFromFakeH(hostEl: HTMLElement, fakeH: HTMLElement): void {
+  if (!hostEl || !fakeH) return;
+  hostEl.scrollLeft = fakeH.scrollLeft;
+}
+// 由「浮空垂直捲軸」同步到主容器
+syncFromFakeV(hostEl: HTMLElement, fakeV: HTMLElement): void {
+  if (!hostEl || !fakeV) return;
+  hostEl.scrollTop = fakeV.scrollTop;
+}
+// 由主容器捲動時，同步兩個浮空捲軸
+onHostScroll(hostEl: HTMLElement, fakeH: HTMLElement, fakeV: HTMLElement): void {
+  if (!hostEl) return;
+  if (fakeH) fakeH.scrollLeft = hostEl.scrollLeft;
+  if (fakeV) fakeV.scrollTop = hostEl.scrollTop;
+}
+
 }

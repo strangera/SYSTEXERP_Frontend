@@ -51,6 +51,14 @@ import { forkJoin } from 'rxjs';
   ],
 })
 export class TLS2B020Component extends BasicQueryPageComponent<any> {
+  readonly lastMonth: string = (() => {
+  const d = new Date();
+  d.setMonth(d.getMonth() - 1); // 往前一個月
+  const year = d.getFullYear();
+  const month = (d.getMonth() + 1).toString().padStart(2, '0'); // 補 0
+  return `${year}/${month}`;
+})();
+
   // 下拉選單
   cashierDistinctionOptions: any[] = [];
   overflowStatusOptions: any[] = [];
@@ -72,7 +80,7 @@ export class TLS2B020Component extends BasicQueryPageComponent<any> {
   queryForm = this.formBuilder.group({
     tlt_building: [null],                            // 館別
     tlt_floor: [[]],                                 // 樓層（多選）
-    TXN_Date: [null, [Validators.required]],         // 銷售日期（應為 Date 類型）
+    TXN_Date: [this.lastMonth, [Validators.required]],         // 銷售日期（應為 Date 類型）
     USR_No: [[]],                                     // 收銀員代號清單（備用）
     cashierDistinction: [null],                         // 收銀員區分（保留）
     overflowStatus: [null],                                  // 顯示方式：null=全部, 2=溢款, 3=欠款
