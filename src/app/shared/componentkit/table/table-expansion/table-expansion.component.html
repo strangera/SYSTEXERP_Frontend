@@ -1,6 +1,6 @@
 <div [@expandAnimation]="isExpanded ? 'expanded' : 'collapsed'" class="transition-all duration-300">
   <p-table class="w-full" [value]="localRowData" [columns]="getFilterColumns(expansionColumns)"
-    [sortField]="expansionSortField" [sortOrder]="expansionSortOrder" [scrollHeight]="scrollHeight"
+    [multiSortMeta]="expansionMultiSortMeta" [scrollHeight]="scrollHeight" sortMode="multiple"
     [paginator]="showPaginator" [rows]="rows" [totalRecords]="totalRecords" [(first)]="first"
     (onPage)="onPageChange($event)" [rowsPerPageOptions]="rowsPerPageOptions" [showCurrentPageReport]="true"
     currentPageReportTemplate="第{currentPage}頁 / 總共{totalPages}頁 (總筆數:{totalRecords})"
