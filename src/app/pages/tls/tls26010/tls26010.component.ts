@@ -65,17 +65,18 @@ export class TLS26010Component extends BasicQueryPageComponent<TLS26010Data> {
       }
     ]
   });
+  public readonly df = computed(() => this.queryForm.controls);
 
   // 監聽用
-  private sys3800Signal = toSignal(this.queryForm.controls.sys3800.valueChanges);
-  private sys3900Signal = toSignal(this.queryForm.controls.sys3900.valueChanges);
-  private sys3A00Signal = toSignal(this.queryForm.controls.sys3A00.valueChanges);
-  private ecrNosSignal = toSignal(this.queryForm.controls.ecrNos.valueChanges);
-  private tltNosSignal = toSignal(this.queryForm.controls.tltNos.valueChanges);
-  private podSdateSSignal = toSignal(this.queryForm.controls.podSdateS.valueChanges);
-  private podSdateESignal = toSignal(this.queryForm.controls.podSdateE.valueChanges);
-  private podEdateSSignal = toSignal(this.queryForm.controls.podEdateS.valueChanges);
-  private podEdateESignal = toSignal(this.queryForm.controls.podEdateE.valueChanges);
+  private readonly sys3800Signal = toSignal(this.df().sys3800.valueChanges);
+  private readonly sys3900Signal = toSignal(this.df().sys3900.valueChanges);
+  private readonly sys3A00Signal = toSignal(this.df().sys3A00.valueChanges);
+  private readonly ecrNosSignal = toSignal(this.df().ecrNos.valueChanges);
+  private readonly tltNosSignal = toSignal(this.df().tltNos.valueChanges);
+  private readonly podSdateSSignal = toSignal(this.df().podSdateS.valueChanges);
+  private readonly podSdateESignal = toSignal(this.df().podSdateE.valueChanges);
+  private readonly podEdateSSignal = toSignal(this.df().podEdateS.valueChanges);
+  private readonly podEdateESignal = toSignal(this.df().podEdateE.valueChanges);
 
   // Table 相關
   public readonly editDisabled = (rowData: TLS26010Data) =>
