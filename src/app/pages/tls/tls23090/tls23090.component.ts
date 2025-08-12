@@ -26,7 +26,9 @@ import { RadioButtonModule } from 'primeng/radiobutton';
 import { PrimeTemplate } from 'primeng/api';
 import { ButtonDirective } from 'primeng/button';
 import { TranslateModule } from '@ngx-translate/core';
-import { Subscription, EMPTY, throwError, BehaviorSubject } from 'rxjs';
+import { Subject, Subscription, of } from 'rxjs';
+import { debounceTime, takeUntil, timeout, catchError } from 'rxjs/operators';
+
 
 @Component({
     selector: 'app-tls23090',
@@ -52,6 +54,7 @@ import { Subscription, EMPTY, throwError, BehaviorSubject } from 'rxjs';
     ],
 })
 export class TLS23090Component extends BasicQueryPageComponent<any> {
+  private destroy$ = new Subject<void>(); // 統一退訂用
   private readonly STORAGE_KEY = 'TLS23090:queryForm';
   private formValueSub?: Subscription;
   querySubscription: Subscription | null = null;
@@ -64,23 +67,23 @@ export class TLS23090Component extends BasicQueryPageComponent<any> {
       d.setDate(d.getDate() - 1);
       return d;
     })();
-  queryForm = this.formBuilder.group({
-    TXN_DateStart: [this.yesterday, [Validators.required]],
-    TXN_DateEnd: [this.yesterday, [Validators.required]],
-    ECR_No: [],
-    tlt_no: [],
-    CRD_Type: [],
-    CRD_No: [],
-    TXN_PayAmt: [null],
-    tlt_building: [],
-    tlt_floor: [],
-    org_id: [],
-    IPeriod: [],
-    AcqBank: [],
-    ConnStatus: [],
-    IsHaveTERM_No: [null],
-    ...createPaginationConfig([{ field: 'TXN_Date', order: 1 }]),
-  });
+queryForm = this.formBuilder.group({
+  TXN_DateStart: [this.yesterday, [Validators.required]],
+  TXN_DateEnd: [this.yesterday, [Validators.required]],
+  ECR_No: this.formBuilder.control<any[]>([]),
+  tlt_no: this.formBuilder.control<any[]>([]),
+  CRD_Type: this.formBuilder.control<any[]>([]),
+  CRD_No: this.formBuilder.control<any[]>([]),
+  TXN_PayAmt: [null],
+  tlt_building: this.formBuilder.control<any[]>([]),
+  tlt_floor: this.formBuilder.control<any[]>([]),
+  org_id: this.formBuilder.control<any[]>([]),
+  IPeriod: this.formBuilder.control<any[]>([]),
+  AcqBank: this.formBuilder.control<any[]>([]),
+  ConnStatus: this.formBuilder.control<any[]>([]),
+  IsHaveTERM_No: [null],
+  ...createPaginationConfig([{ field: 'TXN_Date', order: 1 }]),
+});
 
   cardTypeOptions: any[] = [];
   floorOptions: any[] = [];
@@ -116,27 +119,25 @@ export class TLS23090Component extends BasicQueryPageComponent<any> {
   ngOnInit(): void {
     this.initializePage('TLS23090', 'TLS23090cru', this.queryForm,);
     this.restoreQueryFromStorage();
-    this.formValueSub = this.queryForm.valueChanges
-    .subscribe(() => this.saveQueryToStorage());
-    const savedQuery = localStorage.getItem('TLS23010_queryForm');
-    if (savedQuery) {
-      const parsedQuery = JSON.parse(savedQuery);
-      this.queryForm.patchValue(parsedQuery);
-    }
+    this.queryForm.valueChanges
+  .pipe(debounceTime(300), takeUntil(this.destroy$))
+  .subscribe(() => this.saveQueryToStorage());
+
+
 
     this.cardTypeService
-      .getCardType()
+      .getCardType().pipe(takeUntil(this.destroy$))
       .subscribe((data) => (this.cardTypeOptions = data));
     this.floorService
-      .getFloors()
+      .getFloors().pipe(takeUntil(this.destroy$))
       .subscribe((data) => (this.floorOptions = data));
     this.whetherService
-      .getWhetherOptions()
+      .getWhetherOptions().pipe(takeUntil(this.destroy$))
       .subscribe((data) => (this.WhetherOptions = data));
     this.tls11010Service
-      .getBuildingOptions()
+      .getBuildingOptions().pipe(takeUntil(this.destroy$))
       .subscribe((data) => (this.BUILDING_NO_Options = data));
-    this.tls11010Service.getOrgOptions().subscribe((res) => {
+    this.tls11010Service.getOrgOptions().pipe(takeUntil(this.destroy$)).subscribe((res) => {
       this.OrganizationCodeOptions =
         res?.map((x: any) => ({
           label: x.label,
@@ -144,7 +145,7 @@ export class TLS23090Component extends BasicQueryPageComponent<any> {
           value: x.value,
         })) || [];
     });
-    this.ECRNoService.getECRNo().subscribe((res) => {
+    this.ECRNoService.getECRNo().pipe(takeUntil(this.destroy$)).subscribe((res) => {
       this.ECRNoOptions =
         res?.map((x: any) => ({
           label: x.label,
@@ -152,7 +153,7 @@ export class TLS23090Component extends BasicQueryPageComponent<any> {
           value: x.value,
         })) || [];
     });
-    this.counterNameService.getCounters().subscribe((res) => {
+    this.counterNameService.getCounters().pipe(takeUntil(this.destroy$)).subscribe((res) => {
       this.CounterOptions =
         res?.map((x: any) => ({
           label: x.label,
@@ -161,13 +162,13 @@ export class TLS23090Component extends BasicQueryPageComponent<any> {
         })) || [];
     });
     this.installmentPeriodService
-      .getInstallmentPeriods()
+      .getInstallmentPeriods().pipe(takeUntil(this.destroy$))
       .subscribe((data) => (this.installmentPeriodOptions = data));
     this.acquiringBankService
-      .getAcquiringBanks()
+      .getAcquiringBanks().pipe(takeUntil(this.destroy$))
       .subscribe((data) => (this.acquiringBankOptions = data));
     this.connectionStatusService
-      .getConnectionStatusOptions()
+      .getConnectionStatusOptions().pipe(takeUntil(this.destroy$))
       .subscribe((data) => (this.connectionStatusOptions = data));
   }
 
@@ -201,39 +202,42 @@ export class TLS23090Component extends BasicQueryPageComponent<any> {
   let resultData: any[] = [];
   let statusOK = false;
 
-  this.tls23090Service
-    .queryTLS23090(queryFormValue, this.displayMode)
-    .subscribe({
-      next: (res) => {
-        if (res.Status === '0000') {
-          resultData = res.Data || [];
-          statusOK = true;
-          this.queryStateService.setQueryState(this.ProgNo, queryFormValue);
-        } else {
-          this.messageService.errorBubble('查詢失敗');
-        }
-      },
-      error: () => {
-        this.messageService.errorBubble('查詢錯誤');
-      },
-      complete: () => {
-        this.loading = false;
-        this.messageService.unblockUi();
-        this.showPageSizeDialog = false;
-
-        if (statusOK) {
-          
-          this.router.navigate(['account/tls/tls23090cru'], {
-            state: {
-              queryFormValue,
-              pageSize: this.customPageSize,
-              data: resultData,
-              displayMode: this.displayMode,
-            },
-          });
-        }
-      },
-    });
+this.tls23090Service
+  .queryTLS23090(queryFormValue, this.displayMode)
+  .pipe(
+    timeout(30000),
+    catchError(() => {
+      this.messageService.errorBubble('查詢失敗');
+      this.loading = false;
+      this.messageService.unblockUi();
+      this.showPageSizeDialog = false;
+      return of({ Status: '9999', Data: [] });
+    })
+  )
+  .subscribe({
+    next: (res) => {
+      if (res.Status === '0000') {
+        const resultData = res.Data || [];
+        this.queryStateService.setQueryState(this.ProgNo, queryFormValue);
+        this.router.navigate(['account/tls/tls23090cru'], {
+          state: {
+            queryFormValue,
+            pageSize: this.customPageSize,
+            data: resultData,
+            displayMode: this.displayMode,
+          },
+        });
+      } else {
+        this.messageService.errorBubble('查詢失敗');
+      }
+    },
+    complete: () => {
+      this.loading = false;
+      this.messageService.unblockUi();
+      this.showPageSizeDialog = false;
+    },
+  });
+      
 }
 
 
@@ -265,4 +269,11 @@ private restoreQueryFromStorage(): void {
 private clearQueryStorage(): void {
   localStorage.removeItem(this.STORAGE_KEY);
 }
+ngOnDestroy(): void {
+  this.destroy$.next();
+  this.destroy$.complete();
+
+  this.querySubscription?.unsubscribe();
+}
+
 }

@@ -31,6 +31,8 @@ import { PrimeTemplate } from 'primeng/api';
 import { ButtonDirective } from 'primeng/button';
 import { TranslateModule } from '@ngx-translate/core';
 import { Subscription, EMPTY, throwError, BehaviorSubject } from 'rxjs';
+import { Subject } from 'rxjs';      // ✅ 新增
+import { takeUntil, debounceTime } from 'rxjs/operators'; // ✅ 新增
 
 const now = new Date();
 
@@ -63,7 +65,7 @@ export class TLS23020Component extends BasicQueryPageComponent<any> {
   
   //所需參數
   private readonly STORAGE_KEY = 'TLS23020:queryForm';
-  private formValueSub?: Subscription;
+  private destroy$ = new Subject<void>();   // ✅ 新增
   querySubscription: Subscription | null = null;
   displayMode: 'Detail' | 'Summary' = 'Detail'; // 預設顯示明細報表
   data: any[] = [];
@@ -75,30 +77,36 @@ export class TLS23020Component extends BasicQueryPageComponent<any> {
     return d;
   })();
   //Request
-  queryForm = this.formBuilder.group({
-    TXN_DateStart: [this.yesterday, [Validators.required]], // 交易日期起
-    TXN_DateEnd: [this.yesterday, [Validators.required]], // 交易日期訖
-    ECR_No: [], // 收銀機機號
-    TXN_No_Start: [null, [this.validationService.numberValidator]], // 交易序號起
-    TXN_No_End: [null, [this.validationService.numberValidator]], // 交易序號訖
-    TLT_No: [],
-    TXN_GUINo: [''], // 發票號碼
-    PLU_SalePrc_Start: [null], // 售價起
-    PLU_SalePrc_End: [null], // 售價訖
-    TXN_TaxType: [], // 稅別
-    TXN_DiscCode: [], // 原始折扣代碼
-    tlt_id: [], // 分類抽成類別
-    PLU_MagNo: [], // 商品管理編號
-    ACT_DiscCode: [], // 專櫃折數代碼
-    IsNoPLU_No: [false], // 是否無條碼商品
-    rece_yn: [], // 是否代收(顯示方式)
-    cash_yn: [], // 是否代售(顯示方式)
-    tlt_building: [], // 所屬大樓
-    tlt_floor: [], // 所屬樓層
-    org_id: [], // 組織代碼
-    isSummary: false,
-    ...createPaginationConfig([{ field: 'ECR_No', order: 1 }]),
-  });
+queryForm = this.formBuilder.group({
+  TXN_DateStart: [this.yesterday, [Validators.required]],
+  TXN_DateEnd: [this.yesterday, [Validators.required]],
+
+  ECR_No: this.formBuilder.control<any[]>([]),
+  TXN_No_Start: [null, [this.validationService.numberValidator]],
+  TXN_No_End: [null, [this.validationService.numberValidator]],
+  TLT_No: this.formBuilder.control<any[]>([]),
+
+  TXN_GUINo: [''],
+  PLU_SalePrc_Start: [null],
+  PLU_SalePrc_End: [null],
+
+  TXN_TaxType: this.formBuilder.control<any[]>([]),
+  TXN_DiscCode: this.formBuilder.control<any[]>([]),
+  tlt_id: this.formBuilder.control<any[]>([]),
+  PLU_MagNo: this.formBuilder.control<any[]>([]),
+  ACT_DiscCode: this.formBuilder.control<any[]>([]),
+
+  IsNoPLU_No: [false],
+
+  rece_yn: this.formBuilder.control<any[]>([]),
+  cash_yn: this.formBuilder.control<any[]>([]),
+  tlt_building: this.formBuilder.control<any[]>([]),
+  tlt_floor: this.formBuilder.control<any[]>([]),
+  org_id: this.formBuilder.control<any[]>([]),
+
+  isSummary: false,
+  ...createPaginationConfig([{ field: 'ECR_No', order: 1 }]),
+});
 
   // 下拉選單選項
   taxableOptions: any[] = [];
@@ -135,70 +143,87 @@ export class TLS23020Component extends BasicQueryPageComponent<any> {
   }
 
   ngOnInit(): void {
-    this.initializePage('TLS23020', 'TLS23020cru', this.queryForm);
-    this.restoreQueryFromStorage();
-    this.formValueSub = this.queryForm.valueChanges
-    
+  this.initializePage('TLS23020', 'TLS23020cru', this.queryForm);
+
+  this.restoreQueryFromStorage();
+
+  // ✅ 用 takeUntil，不再需要 this.formValueSub
+  this.queryForm.valueChanges
+    .pipe(debounceTime(300), takeUntil(this.destroy$))
     .subscribe(() => this.saveQueryToStorage());
-    const savedQuery = localStorage.getItem('TLS23010_queryForm');
-    if (savedQuery) {
-      const parsedQuery = JSON.parse(savedQuery);
-      this.queryForm.patchValue(parsedQuery);
-    }
-    this.tls11010Service
-      .getBuildingOptions()
-      .subscribe((res) => (this.BUILDING_NO_Options = res));
-    this.taxableService
-      .getSystemTypes()
-      .subscribe((data) => (this.taxableOptions = data));
-    this.discountService
-      .getLocalDiscountOptions()
-      .subscribe((data) => (this.discountOptions = data));
-    this.deductionbigCategoryService
-      .getLocalDeductionCategories()
-      .subscribe((data) => (this.deductionbigCategoryOptions = data));
-    this.whetherService
-      .getWhetherOptions()
-      .subscribe((data) => (this.whetherOptions = data));
-    this.txnStatusService
-      .getTxnStatusOptions()
-      .subscribe((data) => (this.txnStatusOptions = data));
-    this.floorService
-      .getFloors()
-      .subscribe((data) => (this.floorOptions = data));
-    this.tls11010Service.getOrgOptions().subscribe((res) => {
-      this.OrganizationCodeOptions =
-        res?.map((x: any) => ({
-          label: x.label, // 給 table 用
-          formLabel: `${x.value} - ${x.label}`, // 給下拉選單用
-          value: x.value,
-        })) || [];
+
+  // ❌ 刪掉這段混用 key 的讀取
+  // const savedQuery = localStorage.getItem('TLS23010_queryForm') ...
+
+  this.tls11010Service.getBuildingOptions()
+    .pipe(takeUntil(this.destroy$))
+    .subscribe(res => this.BUILDING_NO_Options = res);
+
+  this.taxableService.getSystemTypes()
+    .pipe(takeUntil(this.destroy$))
+    .subscribe(data => this.taxableOptions = data);
+
+  this.discountService.getLocalDiscountOptions()
+    .pipe(takeUntil(this.destroy$))
+    .subscribe(data => this.discountOptions = data);
+
+  this.deductionbigCategoryService.getLocalDeductionCategories()
+    .pipe(takeUntil(this.destroy$))
+    .subscribe(data => this.deductionbigCategoryOptions = data);
+
+  this.whetherService.getWhetherOptions()
+    .pipe(takeUntil(this.destroy$))
+    .subscribe(data => this.whetherOptions = data);
+
+  this.txnStatusService.getTxnStatusOptions()
+    .pipe(takeUntil(this.destroy$))
+    .subscribe(data => this.txnStatusOptions = data);
+
+  this.floorService.getFloors()
+    .pipe(takeUntil(this.destroy$))
+    .subscribe(data => this.floorOptions = data);
+
+  this.tls11010Service.getOrgOptions()
+    .pipe(takeUntil(this.destroy$))
+    .subscribe(res => {
+      this.OrganizationCodeOptions = (res ?? []).map((x: any) => ({
+        label: x.label,
+        formLabel: `${x.value} - ${x.label}`,
+        value: x.value,
+      }));
     });
-    this.commissionTypeService.getCommissionTypes().subscribe((res) => {
-      this.commissionTypeOptions =
-        res?.map((x: any) => ({
-          label: x.label, // 給 table 用
-          formLabel: `${x.value} - ${x.label}`, // 給下拉選單用
-          value: x.value,
-        })) || [];
+
+  this.commissionTypeService.getCommissionTypes()
+    .pipe(takeUntil(this.destroy$))
+    .subscribe(res => {
+      this.commissionTypeOptions = (res ?? []).map((x: any) => ({
+        label: x.label,
+        formLabel: `${x.value} - ${x.label}`,
+        value: x.value,
+      }));
     });
-    this.ECRNoService.getECRNo().subscribe((res) => {
-      this.ECRNoOptions =
-        res?.map((x: any) => ({
-          label: x.label, // 給 table 用
-          formLabel: `${x.value} - ${x.label}`, // 給下拉選單用
-          value: x.value,
-        })) || [];
+
+  this.ECRNoService.getECRNo()
+    .pipe(takeUntil(this.destroy$))
+    .subscribe(res => {
+      this.ECRNoOptions = (res ?? []).map((x: any) => ({
+        label: x.label,
+        formLabel: `${x.value} - ${x.label}`,
+        value: x.value,
+      }));
     });
-    this.counterNameService.getCounters().subscribe((res) => {
-      this.CounterOptions =
-        res?.map((x: any) => ({
-          label: x.label, // 給 table 用
-          formLabel: `${x.value} - ${x.label}`, // 給下拉選單用
-          value: x.value,
-        })) || [];
+
+  this.counterNameService.getCounters()
+    .pipe(takeUntil(this.destroy$))
+    .subscribe(res => {
+      this.CounterOptions = (res ?? []).map((x: any) => ({
+        label: x.label,
+        formLabel: `${x.value} - ${x.label}`,
+        value: x.value,
+      }));
     });
-  }
+}
+
 
   
   getLabelFromOptions(value: any, options: any[]): string {
@@ -303,6 +328,44 @@ private restoreQueryFromStorage(): void {
 private clearQueryStorage(): void {
   localStorage.removeItem(this.STORAGE_KEY);
 }
+onClearClick(): void {
+  this.queryForm.reset({
+    TXN_DateStart: this.yesterday,
+    TXN_DateEnd: this.yesterday,
 
+    ECR_No: [],
+    TXN_No_Start: null,
+    TXN_No_End: null,
+    TLT_No: [],
+
+    TXN_GUINo: '',
+    PLU_SalePrc_Start: null,
+    PLU_SalePrc_End: null,
+
+    TXN_TaxType: [],
+    TXN_DiscCode: [],
+    tlt_id: [],
+    PLU_MagNo: [],
+    ACT_DiscCode: [],
+
+    IsNoPLU_No: false,
+
+    rece_yn: [],
+    cash_yn: [],
+    tlt_building: [],
+    tlt_floor: [],
+    org_id: [],
+
+    isSummary: false,
+  });
+  this.clearQueryStorage();
+  this.messageService.infoBubble('已清除查詢條件');
+}
+ngOnDestroy(): void {
+  this.destroy$.next();
+  this.destroy$.complete();
+
+  this.querySubscription?.unsubscribe(); // 若你之後也加「中途取消」需求
+}
 
 }

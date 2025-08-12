@@ -101,3 +101,10 @@
 }
 
 :host ::ng-deep .hidden { display: none !important; }
+
+/* 群組表頭也套用淺藍背景色 */
+:host ::ng-deep .grouped-view .p-datatable thead th {
+  background-color: #c0c8f0 !important;
+  color: #000;
+}
+

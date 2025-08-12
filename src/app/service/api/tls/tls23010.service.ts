@@ -23,4 +23,18 @@ export class TLS23010Service {
       catchError((error) => this.errorHandler.handleError(error))
     );
   }
+
+  // ✅ 新增：點展開才打的明細 API
+  queryTLS23010Detail(body: {
+    SYS_StoreNo: string;
+    TXN_Date: string;
+    ECR_No: string;
+    TXN_No: number;
+  }): Observable<any> {
+    const url = `${this.apiUrl}/TLS0000/TLS2000/queryTLS23010_Detail`;
+    return this.http.post<any>(url, body).pipe(
+      tap(r => console.log('🎯 TLS23010 明細查詢結果:', r)),
+      catchError(err => this.errorHandler.handleError(err))
+    );
+  }
 }
