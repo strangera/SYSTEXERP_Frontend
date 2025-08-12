@@ -222,9 +222,10 @@ export class TLS12070Component extends BasicQueryPageComponent<Customer_intervie
     this.selectedItems = [];
   }
 
-  // isRowSelectable(rowData: interviewList): boolean {
-  //   return rowData.CanDel ?? false;
-  // }
+  isRowSelectable(): boolean {
+    // return rowData.CanDel ?? false;
+    return true;
+  }
 
   loadOptions() {
     // 查詢 接待人員

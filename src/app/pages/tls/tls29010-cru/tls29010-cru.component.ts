@@ -370,6 +370,28 @@ export class TLS29010CRUComponent extends BasicCruPageComponent<TALPORDERD_OPEND
   async onRowSaveDetail(event: any) {
     const { oldData, newData } = event;
 
+    // ✅ 狀態與 talent_id 重複檢查
+    const hasDuplicate = this.opendisc_Detail.some(
+      item => item !== newData && item.talent_id === newData.talent_id
+    );
+
+    if (hasDuplicate) {
+      if (newData?.status === 'new') {
+        // new 狀態，直接刪除
+        this.messageService.errorBubble('該合約編號已存在，移除該筆明細');
+        this.opendisc_Detail = this.opendisc_Detail.filter(item => item !== newData);
+      } else {
+        // 非 new 狀態，還原成舊資料
+        const index = this.opendisc_Detail.findIndex(item => item === newData);
+        if (index > -1) {
+          this.opendisc_Detail[index] = oldData;
+        }
+        this.messageService.infoBubble('重複的合約編號，已還原為原始資料');
+      }
+      return; // 有重複就不繼續執行後面
+    }
+
+    // ✅ 後續流程：有 talent_id 先查 API
     if (newData?.talent_id) {
       console.log('寫入合約主檔案', newData.talent_id);
 
@@ -389,7 +411,7 @@ export class TLS29010CRUComponent extends BasicCruPageComponent<TALPORDERD_OPEND
 
           console.log('合約明細', apiData);
 
-          // 這時才做狀態判斷
+          // 做狀態判斷與更新
           this.tls29010DetailService.handleRowSave({ oldData, newData });
         } else {
           this.messageService.errorBubble('找不到對應的合約資料，移除該筆明細');
