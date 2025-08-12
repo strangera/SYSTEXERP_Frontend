@@ -57,8 +57,8 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
     pod_status: new FormControl<string>(ApprovalStatus.未核准), // 核准狀態
     pod_type: new FormControl<string | undefined>(void 0), // 扣款名稱
     org_id: new FormControl<string | undefined>(void 0), // 部門
-    cap_item: new FormControl<string | undefined>(void 0, [Validators.minLength(3), Validators.maxLength(10), Validators.required]), // 扣款代碼
   });
+  private df = this.dataForm.controls;
 
   public calcDateType = [
     { label: '活動起始日至截止日', value: 'Y' },
@@ -112,7 +112,6 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
         pod_no: this.selectedCampaign()!.CampaignId,
         pod_type: this.selectedCampaign()!.AccountingType,
         calc_date_type: 'Y',
-        cap_item: formData.cap_item || '',
         talent_id: item.talent_id,
         tlt_id: item.ProductType,
         tlt_name: item.tlt_name,
@@ -190,8 +189,8 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
       this.service.loadTLS26080Detail(this.rowdata!.pod_no || '');
       this.staticDetailData = [...this.service.TLS26080Detail()];
     }
-    this.service.loadAPS1003DropDownList(['E']);
-    this.service.loadTLS26080();
+    this.service.loadAPS1003(['E']);
+    this.service.loadTLS26080({ pod_sdate: this.df.pod_sdate.value!, pod_edate: this.df.pod_edate.value! });
     this.staticData = this.dataForm.value as TLS26080Data;
     console.log(`init:`, [this.rowdata, this.crudstatus, this.dataForm.value]);
   }
