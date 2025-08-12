@@ -1,4 +1,5 @@
-import { Component, Input, OnInit, TemplateRef } from '@angular/core';
+import { Component, Input, OnInit, TemplateRef, ViewChild, ElementRef, Output, EventEmitter } from '@angular/core';
+
 import {
   Location,
   NgIf,
@@ -23,6 +24,9 @@ import { InputSwitchModule } from 'primeng/inputswitch';
 import { TableModule } from 'primeng/table';
 import { PrimeTemplate } from 'primeng/api';
 import { MultiSelectModule } from 'primeng/multiselect';
+import { TrackByFunction } from '@angular/core';
+
+
 interface Column {
   field: string;     // 欄位名稱 (資料的欄位名稱)
   header: string;    // 欄位標題 (顯示在表格上的標題)
@@ -98,6 +102,7 @@ export class ReportTableGroupComponent implements OnInit {
   }[] = [];
 
   @Input() groupHeaderTemplate?: TemplateRef<any>;        // 自訂群組表頭 template
+  @Input() rowTrackBy?: TrackByFunction<any>;
 
   // 📌 分頁與區間設定
   @Input() totalCount: number = 0;                        // 資料總筆數
@@ -123,35 +128,53 @@ export class ReportTableGroupComponent implements OnInit {
 
   @Input() rowExpandMode: 'single' | 'multiple' = 'multiple'; // 展開列模式
   @Input() showGrandTotal: boolean = false; // 預設不顯示
+  @Output() reachBottom = new EventEmitter<void>();
+
+@ViewChild('body',  { static: false }) bodyRef?: ElementRef<HTMLElement>;
+
+@ViewChild('fakeV', { static: false }) fakeVRef?: ElementRef<HTMLElement>;
+@ViewChild('host', { static: false }) hostRef?: ElementRef<HTMLElement>;
+@ViewChild('fakeH', { static: false }) fakeHRef?: ElementRef<HTMLElement>;
+trackByMergedGroup = (i: number, _group: any[]) => i;
+
 
   // 📌 資料 getter / setter
   private _data: any[] = [];
 
-  @Input()
-  set data(value: any[]) {
-    this._data = value;
-    this.groupBodyExpanded = {}; // ✅ 每次新資料時重設群組展開狀態
+@Input()
+set data(value: any[]) {
+  const host = this.hostRef?.nativeElement;
+  const prevTop = host?.scrollTop ?? null;
 
-    // ✅ 若有指定分組欄位，先依該欄位排序資料
-    if (this.groupByField) {
-      this._data = [...this._data].sort((a, b) => {
-        const valA = a[this.groupByField!];
-        const valB = b[this.groupByField!];
-        if (valA == null) return 1;
-        if (valB == null) return -1;
-        return String(valA).localeCompare(String(valB));
+  this._data = value;
+  this.groupBodyExpanded = {};
+
+  if (this.groupByField) {
+    this._data = [...this._data].sort((a, b) => {
+      const va = a[this.groupByField!], vb = b[this.groupByField!];
+      if (va == null) return 1;
+      if (vb == null) return -1;
+      return String(va).localeCompare(String(vb));
+    });
+  }
+  this.splitData();
+
+  // ✅ 等到下一畫面幀再還原，避免回到頂端或抖動
+  if (host && prevTop != null) {
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        host.scrollTop = prevTop;
       });
-    }
-
-    this.splitData(); // ✅ 資料設定後進行分組或切頁處理
+    });
   }
+}
+trackByRow = (_: number, row: any) => row?.[this.dataKey] ?? _;
+private emitLock = false; // 👈 節流鎖
 
+get data(): any[] {
+  return this._data;
+}
 
-
-
-  get data(): any[] {
-    return this._data;
-  }
 
   expandedRows: { [key: string]: boolean } = {};
   rowDetails: { [key: string]: any[] } = {};
@@ -874,16 +897,41 @@ syncFromFakeH(hostEl: HTMLElement, fakeH: HTMLElement): void {
   if (!hostEl || !fakeH) return;
   hostEl.scrollLeft = fakeH.scrollLeft;
 }
-// 由「浮空垂直捲軸」同步到主容器
-syncFromFakeV(hostEl: HTMLElement, fakeV: HTMLElement): void {
+
+syncFromFakeV(): void {
+  const hostEl = this.hostRef?.nativeElement;
+  const fakeV  = this.fakeVRef?.nativeElement;
   if (!hostEl || !fakeV) return;
   hostEl.scrollTop = fakeV.scrollTop;
 }
 // 由主容器捲動時，同步兩個浮空捲軸
-onHostScroll(hostEl: HTMLElement, fakeH: HTMLElement, fakeV: HTMLElement): void {
-  if (!hostEl) return;
-  if (fakeH) fakeH.scrollLeft = hostEl.scrollLeft;
-  if (fakeV) fakeV.scrollTop = hostEl.scrollTop;
+onHostScroll(): void {
+  const host = this.hostRef?.nativeElement;
+  const fakeH = this.fakeHRef?.nativeElement;
+  if (!host) return;
+
+  // 同步水平浮空捲軸
+  if (fakeH) fakeH.scrollLeft = host.scrollLeft;
+
+  // 底部觸發載入
+  const nearBottom = host.scrollTop + host.clientHeight >= host.scrollHeight - 80;
+  if (nearBottom && !this.emitLock) {
+    this.emitLock = true;
+    this.reachBottom.emit();
+    setTimeout(() => (this.emitLock = false), 150);
+  }
 }
+// 讓父層可讀/寫捲動值
+public getHostScrollTop(): number {
+  return this.hostRef?.nativeElement?.scrollTop ?? 0;
+}
+public setHostScrollTop(top: number): void {
+  const host = this.hostRef?.nativeElement;
+  if (!host) return;
+  host.scrollTop = top;
+}
+
+defaultTrackBy: TrackByFunction<any> = (_: number, row: any) => row?.[this.dataKey] ?? _;
+
 
 }
