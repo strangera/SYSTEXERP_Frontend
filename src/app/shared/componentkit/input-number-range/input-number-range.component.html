@@ -12,9 +12,9 @@
         (blurEvent)="onStartBlur($event)"></app-input-number>
     </p-inputGroup>
   </div>
-  <div class="flex"
-    [ngClass]="startLabel ? submitted || (startControl.touched && startControl.invalid) ? 'py-4' : 'pt-4' : submitted || (startControl.touched && startControl.invalid) ? 'pb-3' : ''">
-    <span class="align-self-center text-center " [ngClass]="startLabel ? 'pt-1' : ''">~</span>
+  <div class="flex justify-content-center align-items-center"
+    [ngStyle]="{ 'margin-top': startLabel ? '27px' : '7px', 'height': '43px' }">
+    <span class="text-center">~</span>
   </div>
   <div class="col pb-0">
     <p-inputGroup id="input-number-end">

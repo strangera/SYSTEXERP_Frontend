@@ -1,4 +1,4 @@
-import { NgClass, NgIf } from '@angular/common';
+import { NgClass, NgIf, NgStyle } from '@angular/common';
 import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { BasicKitComponent } from '@shared/componentextends/basic-kit/basic-kit.component';
@@ -16,6 +16,7 @@ import { DropdownComponent } from '../dropdown/dropdown.component';
     DropdownComponent,
     ReactiveFormsModule,
     NgClass,
+    NgStyle
   ],
   templateUrl: './dropdown-range.component.html',
   styleUrl: './dropdown-range.component.scss'
