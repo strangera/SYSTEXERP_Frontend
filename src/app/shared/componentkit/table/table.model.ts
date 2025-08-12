@@ -1,6 +1,4 @@
-import { animate, state, style, transition, trigger } from "@angular/animations";
 import { SortMeta } from "primeng/api";
-import { NotificationService } from "../../component/notification-message/notification.service";
 export interface Column {
   field: string;     // 欄位名稱 (資料的欄位名稱)
   header: string;    // 欄位標題 (顯示在表格上的標題)
@@ -64,19 +62,6 @@ export const createPaginationConfig = (defaultSortBy?: SortMeta[]) => {
   };
 };
 
-export const toggleButtons = trigger('toggleButtons', [
-  state('hidden', style({ transform: 'translateX(-10px)', width: '0px', opacity: 0 })),
-  state('visible', style({ transform: 'translateX(0px)', width: 'auto', opacity: 1 })),
-  transition('hidden <=> visible', [animate('300ms ease-in-out')])
-]);
-
-export const expandAnimation = trigger('expandAnimation', [
-  state('collapsed', style({ height: '0px', opacity: 0 })),
-  state('expanded', style({ height: '*', opacity: 1 })),
-  transition('collapsed <=> expanded', animate('200ms ease-in-out'))
-]);
-
-
 export interface AddButton {
   label: string;
   icon: string;
@@ -96,33 +81,6 @@ export interface FieldChangeEvent {
   field: string;
   value: any;
   index?: number;
-}
-
-// 新增一個方法來驗證行數據
-export function validateRowData(rowData: any, columns: Column[], data: any, messageService: NotificationService, dataKey: string): boolean {
-  // 新增的預設判斷：檢查除了 dataKey 以外的所有欄位是否都為 null/undefined/空字串
-  const otherColumns = columns.filter(col => col.field !== dataKey);
-  const allOtherFieldsAreEmpty = otherColumns.every(col => {
-    const value = rowData[col.field];
-    return value === null || value === undefined || (typeof value === 'string' && value.trim() === '');
-  });
-
-  if (allOtherFieldsAreEmpty) {
-    messageService.errorBubble('請輸入至少一個欄位的值', '未輸入任何值');
-    return false; // 驗證失敗
-  }
-
-  // 原始的驗證邏輯
-  return columns.every(col =>
-    !(col.validate?.some(validateFn => {
-      const { isValid, errorMessage } = validateFn(rowData[col.field], rowData, data, col.field, col.header);
-      if (!isValid) {
-        const [message, title] = errorMessage;
-        messageService.errorBubble(message, title);
-      }
-      return !isValid;
-    }))
-  );
 }
 //formatDate：會輸出 2024/05/27 格式
 export const formatDate = (dateStr: string) => {
@@ -264,8 +222,8 @@ export function convertDateToYYYYMM(date: Date): string {
   return `${year}${month}`;
 }
 // formatDateToYYYY_MM_DD：輸出為 YYYY-MM-DD（避免 toISOString 造成減一天）
-export const formatDateToYYYY_MM_DD = (value: string | Date): string => {
-  if (!value) return '';
+export const formatDateToYYYY_MM_DD = (value: string | Date): string | null => {
+  if (!value) return null;
 
   const date = value instanceof Date ? value : new Date(value);
   if (isNaN(date.getTime())) return '';

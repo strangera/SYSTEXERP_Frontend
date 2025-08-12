@@ -1,30 +1,25 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { Component, EventEmitter, Input, OnChanges, OnDestroy, OnInit, Output, SimpleChanges, ViewChild } from '@angular/core';
+import { Component, EventEmitter, Input, OnChanges, Output, SimpleChanges, ViewChild } from '@angular/core';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { SortMeta } from 'primeng/api';
 import { AutoCompleteCompleteEvent } from 'primeng/autocomplete';
-import { FileSelectEvent, FileUpload } from 'primeng/fileupload';
+import { FileSelectEvent } from 'primeng/fileupload';
 import { MultiSelectChangeEvent } from 'primeng/multiselect';
 import { Table, TableLazyLoadEvent, TablePageEvent, TableRowSelectEvent, TableRowUnSelectEvent } from 'primeng/table';
-import { finalize, Observable, Subject, takeUntil } from 'rxjs';
-import { CurrentPageService } from '../../../layout/app.menulist/current-page.service';
-import { NotificationService } from '../../component/notification-message/notification.service';
+import { Observable } from 'rxjs';
 import { BasicPrintDataComponent } from '../../componentextends/basic-print/basic-print-data.component';
-import { FunsrightInfo } from '../../models/system/funsrightInfo';
-import { QueryStateService } from '../../service/query-state.service';
-import { AddButton, Column, ColumnGroup, FieldChangeEvent, LazyLoadEvent, RowEditSaveEvent, toggleButtons, validateRowData } from './table.model';
+import { AddButton, Column, ColumnGroup, FieldChangeEvent, LazyLoadEvent, RowEditSaveEvent } from './table.model';
 import { COMMON_IMPORTS } from './import-table';
+import { TableUtilityService } from './table-utility.service';
 @Component({
   selector: 'app-table',
   templateUrl: './table.component.html',
   styleUrl: './table.component.scss',
-  animations: [toggleButtons],
   standalone: true,
   imports: [COMMON_IMPORTS],
 })
-export class TableComponent extends BasicPrintDataComponent implements OnInit, OnChanges, OnDestroy {
+export class TableComponent extends BasicPrintDataComponent implements OnChanges {
   @ViewChild('dt', { static: false }) dt!: Table;                               // table 元件
-  @ViewChild('fileUpload') fileUpload!: FileUpload;                             // 檔案上傳 元件
   // 基本設置
   @Input() dataKey = 'ID';                                                      // table 資料key
   @Input() tableKey: string | undefined = undefined;                            // table 唯一標識 (必填)
@@ -33,7 +28,6 @@ export class TableComponent extends BasicPrintDataComponent implements OnInit, O
   @Input() columns!: Column[];                                                  // table 欄位配置 (必填)
   originalColumns!: Column[];                                                   // table 原始欄位
   selectedColumns!: Column[];                                                   // table 預設顯示欄位
-  isColumnsInitialized = false;                                                 // table 欄位是否初始化
   @Input() data: any[] = [];                                                    // table 資料 (必填)
   @Output() dataChange = new EventEmitter<any[]>();                             // table 資料改變 (事件)
   @Input() loading = false;                                                     // 是否顯示 loading
@@ -133,74 +127,30 @@ export class TableComponent extends BasicPrintDataComponent implements OnInit, O
   @Output() lazyLoadData = new EventEmitter<LazyLoadEvent>(); // Lazy 加載事件
   // 其他
   @Input() emptyMessage = '查無資料';                // table 無資料時顯示文字
-  // 權限
-  private ngUnsubscribe = new Subject<void>();
-  public funInfo: FunsrightInfo | undefined;
 
   constructor(
-    private readonly queryStateService: QueryStateService,
-    private readonly messageService: NotificationService,
-    private readonly currentPageService: CurrentPageService,
-    private readonly sanitizer: DomSanitizer
+    private readonly sanitizer: DomSanitizer,
+    private readonly tableUtilityService: TableUtilityService
   ) { super(); }
-  ngOnInit(): void {
-    this.currentPageService.currentPageProgNo$.pipe(takeUntil(this.ngUnsubscribe)).subscribe(progNo => {
-      if (progNo) {
-        this.funInfo = this.authService.getUserPermissions(progNo);
-        this.tableKey = this.tableKey ? this.tableKey : progNo + 'TableQueryState';
-      } else {
-        this.funInfo = undefined;
-      }
-    });
-    this.rows = this.queryStateService.getQueryState(this.tableKey + 'rows')?.value ?? this.rows; // 取得分頁狀態
-    this.showSubTotal = this.showSubTotal ? this.showSubTotal : this.columns.find(c => c.isSubTotal) !== undefined;
-    this.showTotal = this.showTotal ? this.showTotal : this.columns.find(c => c.isTotal) !== undefined;
-  }
   // 當 data 發生變化時，重置分頁與頁碼
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['data']) {
       setTimeout(() => {
-        this.calculateTotalPages(); // 計算總頁數
+        this.dt.totalRecords = this.totalRecords !== 0 ? this.totalRecords : this.data.length;
         this.selectedItems = []
         this.selectionChange.emit(this.selectedItems);
       });
     }
-    // 僅在 columns 首次被設定時執行初始化邏輯
-    // 這樣就不會在每次 data 變動時都重置 filter 狀態
-    if (changes['columns'] && this.columns.length > 0 && !this.isColumnsInitialized) {
+    // 僅在 columns 首次被設定時執行初始化邏輯// 這樣就不會在每次 data 變動時都重置 filter 狀態
+    if (changes['columns'] && this.columns.length > 0 && changes['columns'].firstChange) {
       this.originalColumns = this.columns;
-      this.columns = this.columns.filter(col => !col.hidden);
-      // 恢復歷史紀錄，如果沒有就使用預設值
-      setTimeout(() => {
-        const storedSort = this.queryStateService.getQueryState(this.tableKey + 'Sort')?.value;
-        if (storedSort) { this.multiSortMeta = storedSort; }
-        const storedFilter = this.queryStateService.getQueryState(this.tableKey + 'Filter')?.value;
-        if (storedFilter) {
-          this.columns = storedFilter;
-          const validFilteredColumns = this.columns.filter(col => col.visible !== false);// 只保留可見的欄位
-          this.selectedColumns = validFilteredColumns;
-        } else {
-          this.selectedColumns = this.columns.filter(col => col.visible !== false);// 沒有儲存的狀態，使用預設值
-        }
-        this.isColumnsInitialized = true;
-
+      this.showSubTotal = this.showSubTotal ? this.showSubTotal : this.columns.find(c => c.isSubTotal) !== undefined;
+      this.showTotal = this.showTotal ? this.showTotal : this.columns.find(c => c.isTotal) !== undefined;
+      setTimeout(() => {// 恢復歷史紀錄，如果沒有就使用預設值
+        this.rows = this.queryState.getQueryState(this.tableKey + 'rows')?.value ?? this.rows; // 取得分頁狀態
+        this.multiSortMeta = this.queryState.getQueryState(this.tableKey + 'Sort')?.value ?? this.multiSortMeta;
       }, 300);
     }
-  }
-  ngOnDestroy(): void {
-    this.ngUnsubscribe.next();
-    this.ngUnsubscribe.complete();
-  }
-  // 計算總頁數並生成頁面選項
-  calculateTotalPages() {
-    this.dt.totalRecords = this.totalRecords !== 0 ? this.totalRecords : this.data.length;
-    this.totalPages = Math.ceil(this.dt.totalRecords / this.rows);
-    this.pages = Array.from({ length: this.totalPages }, (_, index) => ({ label: `第 ${index + 1} 頁`, value: index + 1 }));
-    // 若當前頁數超過最大頁數，則移動到最大頁數，但至少為 1
-    if (this.selectedPage && this.selectedPage > this.totalPages && this.dt.totalRecords !== 0) {
-      this.goToPage(Math.max(this.totalPages, 1));
-    }
-    this.cdr.detectChanges(); // 在计算完所有页面信息后，通知 Angular 更新 UI
   }
   // 右上dropdown 跳轉頁數
   goToPage(pageNumber: number) {
@@ -212,13 +162,13 @@ export class TableComponent extends BasicPrintDataComponent implements OnInit, O
   onPageChange(event: TablePageEvent) {
     this.first = event.first;   // 更新當前起始索引
     this.rows = event.rows;     // 更新每頁行數
-    this.queryStateService.setQueryState(this.tableKey + 'rows', this.rows); // 保存分頁狀態
+    this.queryState.setQueryState(this.tableKey + 'rows', this.rows); // 保存分頁狀態
     this.selectedPage = Math.ceil((event.first / event.rows) + 1); // 更新下拉選單中的頁碼
-    this.calculateTotalPages();
+    this.dt.totalRecords = this.totalRecords !== 0 ? this.totalRecords : this.data.length;
   }
   onSort(event: any) {
     this.multiSortMeta = event.multisortmeta;
-    this.queryStateService.setQueryState(this.tableKey + 'Sort', this.multiSortMeta);
+    this.queryState.setQueryState(this.tableKey + 'Sort', this.multiSortMeta);
   }
   loadDataLazy(event: TableLazyLoadEvent) {
     if (this.totalRecords === 0 || !this.IsPrint || this.rowEditing) { return; }
@@ -228,62 +178,30 @@ export class TableComponent extends BasicPrintDataComponent implements OnInit, O
     const SortBy = event.multiSortMeta ?? [{ field: this.dataKey, order: 1 }];
     this.lazyLoadData.emit({ pageIndex, pageSize, SortBy });
   }
-  /* =================================核心程式碼======================================= */
   // 行追蹤
   trackByRow = (index: number, item: any) => { return item?.[this.dataKey] || index; };
   // 計算欄位總數(包含序號、勾選、管理、展開)
-  get getVisibleHeaderCount(): number { return 1 + Number(this.showCheckBox) + this.selectedColumns.length + Number(this.showManage) + (this.expansionDataKey ? 1 : 0); }
+  get getVisibleHeaderCount(): number {
+    const visibleColumnCount = this.tableUtilityService.getVisibleColumnCount(this.selectedColumns);
+    return 1 + Number(this.showCheckBox) + visibleColumnCount + Number(this.showManage) + (this.expansionDataKey ? 1 : 0);
+  }
   // 行是否可選
   rowSelectableWrapper = ({ data }: { data: any, index: number; }): boolean | undefined => { return this.isRowSelectable(data) && !this.rowEditing; };
-  // 修改 toggleRowExpansion 方法
+  // 切換行展開
   toggleRowExpansion(rowData: any) {
-    const rowKey = rowData[this.dataKey];
-    const hasDetails = rowData[this.expansionDataKey] && rowData[this.expansionDataKey]?.length > 0;
-    if (hasDetails) {// 已經有資料了，直接切換展開/收合狀態，不再呼叫 API
-      if (this.expandedRows[rowKey]) {
-        delete this.expandedRows[rowKey]; // 收合
-      } else {
-        this.expandedRows[rowKey] = true; // 展開
-      }
-    } else if (this.expansionLoadFn) {// 第一次展開，沒有資料，才呼叫 API 載入
-      rowData.expansionLoading = true;
-      this.expansionLoadFn(rowData).pipe(takeUntil(this.ngUnsubscribe), finalize(() => {
-        rowData.expansionLoading = false;// 無論成功或失敗，都在這裡關閉這筆資料的 loading 狀態
-        this.cdr.detectChanges();// 強制 Angular 檢測變更，確保 UI 立即更新
-      })
-      ).subscribe(response => {
-        const responseData = response.Data;
-        if (responseData && Array.isArray(responseData) && responseData.length > 0) {
-          rowData[this.expansionDataKey] = responseData;
-          this.expandedRows[rowKey] = true;
-        } else {
-          this.messageService.infoBubble('查無詳細資料。');
-        }
-      });
-    }
+    this.tableUtilityService.toggleRowExpansionLogic(rowData, this.dataKey, this.expansionDataKey, this.expansionLoadFn, this.expandedRows, this);
   }
   // 全展開/收合的邏輯
   toggleExpandCollapse() {
     this.expression = !this.expression;
-    if (this.expression) {
-      // 展開所有行
-      this.data.forEach(rowData => {
-        const rowKey = rowData[this.dataKey];
-        if (!this.expandedRows[rowKey]) {// 只有在該行尚未展開時，才調用 toggleRowExpansion
-          // 檢查資料、載入資料，並設定 expandedRows 的狀態。
-          this.toggleRowExpansion(rowData);
-        }
-      });
-    } else {
-      this.expandedRows = {}; // 收合所有行
-    }
+    this.tableUtilityService.toggleExpandCollapseLogic(this.data, this.expression, this.dataKey, this.expansionDataKey, this.expansionLoadFn, this.expandedRows, this);
   }
   // 過濾欄位記錄保存
   onFilterChange(event: MultiSelectChangeEvent) {
     this.columns.forEach(col => {
       col.visible = event.value.some((ev: any) => ev.field === col.field);
     });
-    this.queryStateService.setQueryState(this.tableKey + 'Filter', this.columns);
+    this.queryState.setQueryState(this.tableKey + 'Filter', this.columns);
   }
   // 行編輯初始化
   onRowEditInit(rowData: any) {
@@ -296,39 +214,66 @@ export class TableComponent extends BasicPrintDataComponent implements OnInit, O
   }
   // 行編輯保存
   onRowEditSave(rowData: any, ri: number, htmlTableRowElement: HTMLTableRowElement) {
-    // 在 alwaysEdit 和 alwaysBlurValidate 模式下，跳過驗證因為已在失去焦點時驗證過
-    if (!this.alwaysEdit && !this.alwaysBlurValidate && !validateRowData(rowData, this.columns, this.data, this.messageService, this.dataKey)) return; // 如果驗證不通過，返回
-    const oldData = this.clonedProducts[rowData[this.dataKey]]; // 儲存原始數據
-    delete this.clonedProducts[rowData[this.dataKey]]; // 刪除原始數據
-    this.rowEditing = false; // 關閉編輯模式
-    this.dt.saveRowEdit(rowData, htmlTableRowElement ?? null); // 手動保存編輯狀態
-    this.rowEditSave.emit({ oldData, newData: rowData, ri, data: this.data }); // 發射事件
+    if (this.insertRowData && this.tableUtilityService.isNewRowUnchanged(rowData, this.columns, this.dataKey, this.defaultInsertData)) {
+      this.messageService.errorBubble('請輸入至少一個欄位的值', '未輸入任何值');
+      return;// 驗證邏輯
+    }
+    if (!this.tableUtilityService.validateRowData(rowData, this.columns, this.data, this.messageService)) {
+      return;// 執行整行驗證
+    }
+    const rowId = rowData[this.dataKey];
+    const oldData = this.clonedProducts[rowId];
+
+    // 判斷是否為新增中的資料 (ID 以 'temp-' 開頭)
+    if (typeof rowId === 'string' && rowId.startsWith('temp-')) {
+      // 產生一個新的已儲存的 ID，並更新資料
+      const savedId = `saved-${new Date().getTime()}`;
+      rowData[this.dataKey] = savedId;
+
+      // 同時更新 clonedProducts 的 key，確保下次編輯時能找到正確的備份
+      this.clonedProducts[savedId] = { ...oldData };
+      delete this.clonedProducts[rowId];
+    } else {
+      // 如果是舊資料，則刪除備份即可
+      delete this.clonedProducts[rowId];
+    }
+
+    this.rowEditing = false;
+    this.dt.saveRowEdit(rowData, htmlTableRowElement ?? null);
+    this.rowEditSave.emit({ oldData, newData: rowData, ri, data: this.data });
     this.dataChange.emit(this.data);
   }
   // 行編輯取消
   onRowEditCancel(rowData: any, ri: number) {
-    const originalRowData = this.clonedProducts[rowData[this.dataKey]];
-
-    // 檢查除了 dataKey 以外的所有欄位是否都為 null/undefined/空字串
-    const otherColumns = this.columns.filter(col => col.field !== this.dataKey);
-    const allOtherFieldsAreEmptyInOriginal = originalRowData && otherColumns.every(col => {
-      const value = originalRowData[col.field];
-      return value === null || value === undefined || (typeof value === 'string' && value.trim() === '');
-    });
-    if (allOtherFieldsAreEmptyInOriginal) {
-      // 如果原始資料除了 dataKey 以外都是空的，則直接從數據中刪除該行
-      this.data = this.data.filter(item => item[this.dataKey] !== rowData[this.dataKey]);
+    const rowId = rowData[this.dataKey];
+    const isNewTempRow = typeof rowId === 'string' && rowId.startsWith('temp-'); // 判斷是否為新增中的資料 (ID 以 'temp-' 開頭)
+    if (isNewTempRow) {
+      this.data = this.data.filter(item => item[this.dataKey] !== rowId);// 移除這筆新增中的資料
+      this.dataChange.emit(this.data);
     } else {
-      // 否則，恢復到原始資料
-      this.data[ri] = originalRowData;
-      this.data = [...this.data]; // 觸發 Angular 變更檢測
+      // 如果是已儲存（暫存）或舊資料，則還原
+      const originalRowData = this.clonedProducts[rowId];
+      if (originalRowData) {
+        this.data[ri] = originalRowData;
+        this.data = [...this.data];
+        this.dataChange.emit(this.data);
+      }
     }
-    this.dataChange.emit(this.data);
-    delete this.clonedProducts[rowData[this.dataKey]]; // 刪除儲存的原始數據
-    this.rowEditing = false; // 關閉編輯模式
-    this.dt.cancelRowEdit(rowData); // 手動取消編輯狀態 (PrimeNG Table 內部狀態)
-    this.rowEditCancel.emit({ data: this.data, rowData, ri }); // 發射事件
-    this.cdr.detectChanges(); // 強制檢測變更，確保 UI 更新
+    delete this.clonedProducts[rowId];// 無論是哪種情況，都刪除備份的原始數據
+    this.rowEditing = false;
+    this.dt.cancelRowEdit(rowData);
+    this.rowEditCancel.emit({ data: this.data, rowData, ri });
+    this.cdr.detectChanges();
+  }
+  // 處理失去焦點時的驗證 (alwaysEdit 模式專用)
+  onFieldBlur(rowData: any, field: string, value: any) {
+    if (!this.alwaysEdit && !this.alwaysBlurValidate) {
+      return;
+    }
+    const column = this.columns.find(col => col.field === field);
+    if (column) {
+      this.tableUtilityService.validateSingleField(value, rowData, this.data, column, this.messageService);
+    }
   }
   // 資料勾選
   onSelectionChange(event: any) {
@@ -342,46 +287,16 @@ export class TableComponent extends BasicPrintDataComponent implements OnInit, O
   filterOptions(event: AutoCompleteCompleteEvent) {
     this.filterChange.emit({ rowData: event.originalEvent, value: event.query });
   }
-  // (欄位是Input、Dropdown使用): 處理值變化事件
+  // 處理值變化事件
   onFieldChange(rowData: any, field: string, value: any, index?: number) { this.fieldChange.emit({ rowData, field, value, index }); }
-
-  // 處理失去焦點時的驗證 (alwaysEdit 模式專用)
-  onFieldBlur(rowData: any, field: string, value: any) {
-    if (!this.alwaysEdit && !this.alwaysBlurValidate) return; // 只在 alwaysEdit 和 alwaysBlurValidate 模式下執行
-
-    const column = this.columns.find(col => col.field === field);
-    if (column?.validate) {
-      const hasValidationError = column.validate.some(validateFn => {
-        const { isValid, errorMessage } = validateFn(value, rowData, this.data, field, column.header);
-        if (!isValid) {
-          const [message, title] = errorMessage;
-          this.messageService.errorBubble(message, title);
-        }
-        return !isValid;
-      });
-
-      if (!hasValidationError) {
-        console.log(`欄位 ${column.header} 驗證通過`);
-      }
-    }
-  }
-  // 事件類型 (有需求可使用)
-  editRow(rowData: any) { this.edit.emit(rowData); }                // Edit 按鈕 事件
-  detailRow(rowData: any) { this.detail.emit(rowData); }            // Detail 或 雙擊行 事件
-  onSelectButton(rowData: any) { this.selectButton.emit(rowData); } // 欄位Button 選擇 事件
   // Insert 按鈕
   insertRow() {
     if (this.insertRowData) {
+      const { newRowData, data } = this.tableUtilityService.insertNewRow(this.data, this.originalColumns, this.dataKey, this.defaultInsertData);
       this.rowEditing = true;
       this.multiSortMeta = [{ field: this.dataKey, order: 0 }];
-      const newRowData: Record<string, any> = {};
-      this.originalColumns.forEach(col => {
-        newRowData[col.field] = this.defaultInsertData[col.field] !== undefined
-          ? this.defaultInsertData[col.field] : null;
-      });
-      newRowData[this.dataKey] = new Date().getTime();
-      this.data = [newRowData, ...this.data];
-      console.log(this.data);
+      this.data = data;
+      this.clonedProducts[newRowData[this.dataKey]] = { ...newRowData }; // 儲存備份
       this.dataChange.emit(this.data);
       this.onRowEditInit(newRowData);
     } else {
@@ -394,68 +309,46 @@ export class TableComponent extends BasicPrintDataComponent implements OnInit, O
     if (this.deleteData) {
       this.data = this.data.filter(item => !selectedItems.includes(item));
       this.dataChange.emit(this.data);
-      this.selectedItems = [];
     }
     this.selectedItems = [];
   }
-  onExportExcel() { this.exportExcel.emit(); }                      // 匯出Excel範本 事件
-  onImportExcel(event: FileSelectEvent) {                           // 匯入Excel
-    this.importExcel.emit(event);
-    this.fileUpload.clear();
-  }
-  // 權限
-  canPerformAction(action: string): boolean {
-    return this.funInfo?.PrivilegeBehavior?.some(behavior => behavior.function_code === action) || false;
-  }
+  // Edit 按鈕 事件
+  editRow(rowData: any) { this.edit.emit(rowData); }
+  // Detail 或 雙擊行 事件
+  detailRow(rowData: any) { this.detail.emit(rowData); }
+  // 欄位Button 選擇 事件
+  onSelectButton(rowData: any) { this.selectButton.emit(rowData); }
+  // 防止XSS
   sanitizeHtml(html: string): SafeHtml {
     return this.sanitizer.bypassSecurityTrustHtml(html);
   }
-
+  // 計算分組欄位跨度
   getColumnSpan(columns: Column[], groupField: string): number {
-    return columns.filter(col => col.groupField === groupField && col.visible !== false && col.hidden !== true).length;
+    return this.tableUtilityService.getColumnSpan(columns, groupField);
   }
-
+  // 取得沒有分組的欄位
   getUngroupedColumns(columns: Column[], columnGroup: ColumnGroup[]): Column[] {
-    const groupFields = columnGroup.map(g => g.field);
-    return columns.filter(
-      col =>
-        (!col.groupField || !groupFields.includes(col.groupField)) &&
-        col.visible !== false &&
-        col.hidden !== true
-    );
+    return this.tableUtilityService.getUngroupedColumns(columns, columnGroup);
   }
+  // 判斷是否應該渲染分組標題
   shouldRenderGroupHeader(col: Column, index: number, columns: Column[]): boolean {
-    if (!col.groupField || col.hidden === true || col.visible === false) return false;
-    const currentGroup = col.groupField;
-    for (let i = 0; i < index; i++) {
-      const prev = columns[i]; // ✅ 只看這次 ngFor 的欄位
-      if (
-        prev.groupField === currentGroup &&
-        prev.visible !== false &&
-        prev.hidden !== true
-      ) {
-        return false;
-      }
-    }
-    return true;
+    return this.tableUtilityService.shouldRenderGroupHeader(col, index, columns);
   }
-
+  // 分組標題
   getGroupHeader(groupField: string): string {
     return this.columnGroup?.find(g => g.field === groupField)?.header ?? groupField;
   }
+  // 分組欄位對齊
   getGroupAlignClass(groupField: string): string {
     const align = this.columnGroup?.find(g => g.field === groupField)?.align;
     return align ? 'text-' + align : 'text-center';
   }
+  // 分組總計
   getGroupSubtotal(groupValue: any, field: string): number {
-    if (!this.groupedDataCache.has(groupValue)) {
-      const rows = this.data.filter(item => item[this.groupRowsBy] === groupValue);
-      this.groupedDataCache.set(groupValue, rows);
-    }
-    return this.groupedDataCache.get(groupValue).reduce((sum: number, row: any) => sum + (row[field] || 0), 0);
+    return this.tableUtilityService.getGroupSubtotal(this.data, this.groupRowsBy, groupValue, field);
   }
   // 全表總計
   getTotal(field: string): number {
-    return this.data.reduce((sum, row) => sum + (row[field] || 0), 0);
+    return this.tableUtilityService.getTotal(this.data, field);
   }
 }

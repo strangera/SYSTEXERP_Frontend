@@ -5,19 +5,36 @@ import { ButtonComponent } from '../../../shared/componentkit/button/button.comp
 import { PanelModule } from 'primeng/panel';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { EditorTextComponent } from '../../../shared/componentkit/editor-text/editor-text.component';
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
 import { NgIf } from '@angular/common';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
 import { Column } from '@shared/componentkit/table/table.model';
 import { TranslateModule } from '@ngx-translate/core';
 import { TableModule } from "primeng/table";
+import { DropDownListService } from '@service/utility/dropDownList.service';
+import { untilDestroyed } from '@ngneat/until-destroy';
+import { InputTextareaComponent } from '@shared/componentkit/input-textarea/input-textarea.component';
+import { TableComponent } from '@shared/componentkit/table/table.component';
 
 @Component({
   selector: 'app-tls56040-cru',
   templateUrl: './tls56040-cru.component.html',
   standalone: true,
-  imports: [MenubarComponent, ButtonComponent, PanelModule, FormsModule, ReactiveFormsModule, InputTextComponent, DropdownComponent, EditorTextComponent, CalendarComponent, NgIf, TranslateModule, TableModule]
+  imports: [
+    MenubarComponent,
+    ButtonComponent,
+    PanelModule,
+    FormsModule,
+    ReactiveFormsModule,
+    InputTextComponent,
+    DropdownComponent,
+    CalendarComponent,
+    NgIf,
+    TranslateModule,
+    TableModule,
+    InputTextareaComponent,
+    TableComponent
+  ]
 })
 export class TLS56040CRUComponent extends BasicCruPageComponent<any> implements OnInit {
   // 主檔表單定義
@@ -28,10 +45,9 @@ export class TLS56040CRUComponent extends BasicCruPageComponent<any> implements 
     IN_HOS_No: [null, Validators.required], // 調入倉別，下拉選項，必填
     APPLY_TotBuyNet: [{ value: 0, disabled: true }], // 金額，readonly，明細加總
     APPLY_TotQty: [{ value: 0, disabled: true }], // 數量，readonly，明細加總
-    applicationDate: [{ value: new Date(), disabled: true }], // 申請日期，預帶系統日期
-    applicantCode: [{ value: '預帶登入人員', disabled: true }], // 申請人編號，預帶登入人員
-    applicantName: [{ value: '預帶登入人員姓名', disabled: true }], // 申請人中文名稱
-    MVM_Remark: [null], // 倉別調撥單說明
+    CRT_Date: [{ value: new Date(), disabled: true }], // 申請日期，預帶系統日期
+    CRT_USR_No: [{ value: '預帶登入人員', disabled: true }], // 申請人編號，預帶登入人員
+    MVM_Remark: [null, [Validators.maxLength(200)]], // 倉別調撥單說明
 
     // 以下主檔欄位不顯示在畫面上，但需要初始化
     SYS_StoreNo: [null], // 公司編號/店號
@@ -62,55 +78,54 @@ export class TLS56040CRUComponent extends BasicCruPageComponent<any> implements 
     details: this.formBuilder.array([])
   });
 
-  data: any[] = []; // 用於表格顯示明細數據
+  data: any = []; // 用於表格顯示明細數據
   columns: Column[] = [
-    { field: 'MVD_SeqNo', header: '項次', visible: true },
-    { field: 'PLU_MagNo', header: '商品管理編號', visible: true },
+    { field: 'PLU_MagNo', header: '商品管理編號', visible: true, type: 'autoComplete' },
     { field: 'PLU_No', header: '國際條碼', visible: true },
     { field: 'PLU_Name', header: '商品名稱', visible: true },
     { field: 'MVD_BuyPrc', header: '進單價', visible: true },
     { field: 'CurrentStock', header: '目前庫存', visible: true }, // 需要SP讀取
-    { field: 'APPLY_Qty', header: '調撥申請數量', visible: true },
+    { field: 'APPLY_Qty', header: '調撥申請數量', visible: true, type: 'inputNumber' },
     { field: 'APPLY_BuyNet', header: '調撥申請進價未稅小計', visible: true },
-    { field: 'MVD_Remark', header: '單項說明', visible: true },
-    // 以下明細檔欄位不顯示在畫面上，但可能需要用於計算或後端傳輸
-    { field: 'PLU_Unit', header: '單位代碼', visible: false },
-    { field: 'PLU_BoxQty', header: '裝箱入數', visible: false },
-    { field: 'PLU_StockTaxType', header: '進價稅別', visible: false },
-    { field: 'PLU_TaxType', header: '售價稅別', visible: false },
-    { field: 'MVD_SalePrc', header: '售單價', visible: false },
-    { field: 'OUTGODS_QTY', header: '調撥發貨數量', visible: false },
-    { field: 'Confirm_QTY', header: '調撥驗收數量', visible: false },
-    { field: 'APPLY_BuyTax', header: '調撥申請進價稅額', visible: false },
-    { field: 'APPLY_BuyAmt', header: '調撥申請進價合計', visible: false },
-    { field: 'APPLY_SaleAmt', header: '調撥申請售價小計', visible: false },
-    { field: 'OUTGODS_BuyNet', header: '調撥發貨進價未稅小計', visible: false },
-    { field: 'OUTGODS_BuyTax', header: '調撥發貨進價稅額', visible: false },
-    { field: 'OUTGODS_BuyAmt', header: '調撥發貨進價合計', visible: false },
-    { field: 'OUTGODS_SaleAmt', header: '調撥發貨售價小計', visible: false },
-    { field: 'Confirm_BuyNet', header: '調撥驗收進價未稅小計', visible: false },
-    { field: 'Confirm_BuyTax', header: '調撥驗收進價稅額', visible: false },
-    { field: 'Confirm_BuyAmt', header: '調撥驗收進價合計', visible: false },
-    { field: 'Confirm_SaleAmt', header: '調撥驗收售價小計', visible: false },
-    { field: 'CRT_Date', header: '建立日期', visible: false },
-    { field: 'CRT_USR_No', header: '建立人員', visible: false },
-    { field: 'CRT_USR_Name', header: '建立人員姓名', visible: false },
-    { field: 'UPD_Date', header: '變更日期', visible: false },
-    { field: 'UPD_USR_No', header: '變更人員', visible: false },
-    { field: 'UPD_USR_Name', header: '變更人員姓名', visible: false },
+    { field: 'MVD_Remark', header: '單項說明', visible: true, type: 'input' },
   ];
+  defaultInsertData: any = {
+    PLU_MagNo: null,
+    PLU_No: null,
+    PLU_Name: null,
+    MVD_BuyPrc: 0,
+    CurrentStock: 0,
+    APPLY_Qty: 0,
+    APPLY_BuyNet: 0,
+    MVD_Remark: null,
+  }
 
   // 下拉選單選項 (需從API獲取)
-  brandCodeOptions: any[] = []; // PLULOGO商品品牌設定檔
-  warehouseOptions: any[] = []; // POS2034倉庫設定檔
-  applicantCodeOptions: any[] = []; // 登入人員資訊 (可能需要一個包含中文名稱的選項)
+  brandOptions: { label: string; value: string }[] = [];// 品牌
+  warehouseOptions: { label: string; value: string }[] = []; // 倉別
+  userOptions: { label: string; value: string }[] = [];
 
-  constructor() {
+  constructor(
+    private readonly dropDownListService: DropDownListService
+  ) {
     super();
   }
 
   ngOnInit(): void {
     this.initializePage('TLS56040', this.dataForm);
+    // 倉別 (HOS_No)
+    this.dropDownListService.getPOS2034Options().pipe(untilDestroyed(this)).subscribe(options => {
+      this.warehouseOptions = options.Data.map(item => ({ label: item.Name, value: item.No }));
+    });
+    // 品牌代碼 (LOGO_No)
+    this.dropDownListService.queryPLULOGO_DropDownList().pipe(untilDestroyed(this)).subscribe(options => {
+      this.brandOptions = options.Data.map(item => ({ label: `${item.No} - ${item.Name}`, value: item.No }));
+    });
+    // 申請人員、審核人員、結案人員 (共用人員下拉選單)
+    this.dropDownListService.queryTBLUSER_DropDownList().pipe(untilDestroyed(this)).subscribe(options => {
+      this.userOptions = options.Data.map(item => ({ label: `${item.No} - ${item.Name}`, value: item.No }));
+    });
+    this.dataForm.patchValue({ CRT_USR_No: this.authService.currentUserValue?.user_No });
 
     // 調出倉別與調入倉別必需不同 的驗證
     this.dataForm.controls['OUT_HOS_No'].valueChanges.subscribe(value => {
@@ -128,21 +143,6 @@ export class TLS56040CRUComponent extends BasicCruPageComponent<any> implements 
         this.dataForm.controls['IN_HOS_No'].setErrors(null);
       }
     });
-
-    // TODO: 預帶登入人員資訊 (包含中文名稱)
-    // 假設有一個 authService 可以獲取登入用戶
-    // const loggedInUser = this.authService.getLoggedInUser();
-    // if (loggedInUser) {
-    //   this.dataForm.patchValue({
-    //     applicantCode: loggedInUser.userNo,
-    //     applicantName: loggedInUser.userName
-    //   });
-    // }
-
-    // TODO: 載入下拉選單資料
-    // this.loadBrandCodeOptions();
-    // this.loadWarehouseOptions();
-    // this.loadApplicantCodeOptions();
   }
 
   onSubmit(frm: FormGroup) {

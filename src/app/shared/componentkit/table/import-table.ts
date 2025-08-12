@@ -17,8 +17,8 @@ import { TableModule } from 'primeng/table';
 import { TooltipModule } from 'primeng/tooltip';
 // 自定義的元件，也一同放在這裡
 import { TableExpansionComponent } from './table-expansion/table-expansion.component';
-import { TableExportComponent } from './table-export/table-export.component';
-import { TableFooterComponent } from './table-footer/table-footer.component';
+import { TableCaptionComponent } from './table-caption/table-caption.component';
+import { TableInputComponent } from './table-input/table-input.component';
 
 // 將所有需要的模組/元件/指令導出為一個常數陣列
 export const COMMON_IMPORTS = [
@@ -42,8 +42,10 @@ export const COMMON_IMPORTS = [
   CheckboxModule,
   NgStyle,
   SkeletonModule,
-  TableExpansionComponent, // 自定義元件
-  TableExportComponent,    // 自定義元件
-  TableFooterComponent,
   AutoCompleteModule,
+
+
+  TableExpansionComponent, // 自定義元件
+  TableCaptionComponent,
+  TableInputComponent
 ];

@@ -42,7 +42,8 @@ export class ValidationService {
       containsChinese: '不可輸入中文或全形字元',
       invalidAlphanumeric: '只能輸入半形英文和數字',
       invalidEnglishNumberSymbol: '只能輸入英文和數字和符號',
-      invalidPhoneNumber: '電話號碼格式錯誤'
+      invalidPhoneNumber: '電話號碼格式錯誤',
+      warehouseMismatch: '調出倉別與調入倉別必需不同',
     };
     return config[validatorName];
   }

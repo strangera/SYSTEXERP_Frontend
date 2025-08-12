@@ -5,12 +5,17 @@ import { ButtonComponent } from '../../../shared/componentkit/button/button.comp
 import { AccordionModule } from 'primeng/accordion';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
 import { TranslateModule } from '@ngx-translate/core';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
-import { Column, createPaginationConfig } from '@shared/componentkit/table/table.model';
+import { Column, createPaginationConfig, formatDateTime } from '@shared/componentkit/table/table.model';
 import { TableComponent } from '@shared/componentkit/table/table.component';
 import { CommonModule } from '@angular/common';
+import { MultiSelectComponent } from "@shared/componentkit/multi-select/multi-select.component";
+import { DropdownTableComponent, FieldsConfig } from '@shared/componentkit/dropdown-table/dropdown-table.component';
+import { untilDestroyed } from '@ngneat/until-destroy';
+import { IQueryPOS2004DetailRequest, IQueryPOS2004DetailResponse, Tls52010Service } from '@service/api/tls/tls52010.service';
+import { DropDownListService } from '@service/utility/dropDownList.service';
+import { CalendarRangeQuickComponent } from "@shared/componentkit/calendar-range-quick/calendar-range-quick.component";
 
 @Component({
   selector: 'app-tls56040',
@@ -24,23 +29,24 @@ import { CommonModule } from '@angular/common';
     ReactiveFormsModule,
     InputTextComponent,
     DropdownComponent,
-    CalendarRangeComponent,
     TranslateModule,
     TableComponent,
-    CommonModule
+    CommonModule,
+    MultiSelectComponent,
+    DropdownTableComponent,
+    CalendarRangeQuickComponent
   ],
 })
 export class TLS56040Component extends BasicQueryPageComponent<any> implements OnInit {
-  // 查詢表單定義，欄位名稱對應資料庫schema
   queryForm = this.formBuilder.group({
     MVM_No: [null, [Validators.maxLength(12)]],               // varchar(12)
     MVM_Status: [null, [Validators.maxLength(1)]],            // varchar(1)
-    PLU_MagNo: [null],                                      // 非 POS2021 欄位，保留不設驗證
+    PLU_MagNo: [null, [Validators.maxLength(20)]],          // 非 POS2021 欄位，保留不設驗證
     LOGO_No: [null],                                        // 非 POS2021 欄位，保留不設驗證
     OUT_HOS_No: [null, [Validators.maxLength(6)]],       // varchar(6)
     IN_HOS_No: [null, [Validators.maxLength(6)]],    // varchar(6)
-    CRT_USR_No: [null, [Validators.maxLength(8)]],            // varchar(8)
-    UPD_USR_No: [null, [Validators.maxLength(8)]],            // varchar(8)
+    CRT_USR_No: ['', [Validators.maxLength(8)]],            // varchar(8)
+    UPD_USR_No: ['', [Validators.maxLength(8)]],            // varchar(8)
     MVM_Date_Start: [new Date()],                             // datetime，預設無驗證
     MVM_Date_End: [new Date()],                               // datetime，預設無驗證
     MVM_ConfirmDate_Start: [null],                            // datetime，預設無驗證
@@ -49,37 +55,21 @@ export class TLS56040Component extends BasicQueryPageComponent<any> implements O
   });
   totalRecords = 0;
   data: any[] = [];
-  // 表格欄位定義，使用schema名稱和中文標題
   columns: Column[] = [
-    { field: 'MVM_No', header: '倉別請領單編號', visible: true },
-    { field: 'SYS_StoreNo', header: '店號', visible: true }, // 調出倉別
-    { field: 'MVM_Status', header: '倉別調撥單狀態', visible: true },
-    { field: 'MVM_Type', header: '移轉型態', visible: true },
-    { field: 'MVM_MoveStoreNo', header: '對方移入/出店號', visible: true }, // 調入倉別
-    { field: 'MVM_MoveNo', header: '對方移入/出編號', visible: true },
-    { field: 'MVM_Date', header: '移轉日期', visible: true },
-    { field: 'USR_Name', header: '輸入人員姓名', visible: true },
-    { field: 'MVM_TotalQty', header: '移轉數量(入數計)', visible: true },
-    { field: 'MVM_TotalSubQty', header: '數量合計', visible: true },
-    { field: 'MVM_TotalBuyNet', header: '未稅進價小計', visible: true },
-    { field: 'MVM_TotalBuyTax', header: '進價稅額小計', visible: true },
-    { field: 'MVM_TotalBuyAmt', header: '進價合計', visible: true },
-    { field: 'MVM_TotalSaleNet', header: '未稅售價小計', visible: true },
-    { field: 'MVM_TotalSaleTax', header: '售價稅額小計', visible: true },
-    { field: 'MVM_TotalSaleAmt', header: '售價合計', visible: true },
-    { field: 'MVM_Remark', header: '備註', visible: true },
-    { field: 'CRT_Date', header: '建立日期', visible: true },
-    { field: 'CRT_USR_No', header: '建立人員', visible: true },
-    { field: 'UPD_Date', header: '變更日期', visible: true },
-    { field: 'UPD_USR_No', header: '變更人員', visible: true },
-    { field: 'VEN_No', header: '廠商編號', visible: true },
-    { field: 'MVM_ConfirmTotalSubQty', header: '移入驗收數量(個數計)', visible: true },
-    { field: 'MVM_ConfirmDate', header: '移入驗收日期/移出確認日期', visible: true },
-    { field: 'MVM_TaxType', header: '是否已轉出檔案', visible: true },
-    { field: 'MVM_SenderName', header: '送貨人員姓名', visible: true },
+    { field: 'MVM_No', header: '調撥單編號', visible: true },
+    { field: 'CRT_Date', header: '申請日期', visible: true, format: formatDateTime },
+    { field: 'IN_HOS_No', header: '調入倉別', visible: true },
+    { field: 'OUT_HOS_No', header: '調出倉別', visible: true },
+    { field: 'LOGO_No', header: '品牌', visible: true },
+    { field: 'MVM_Remark', header: '說明', visible: true },
+    { field: 'CRT_USR_No', header: '申請人', visible: true },
+    { field: 'Confirm_USR_No', header: '審核人編號', visible: true },
+    { field: 'Confirm_USR_Name', header: '審核人姓名', visible: true },
+    { field: 'Confirm_DATE', header: '審核日期', visible: true, format: formatDateTime },
+    { field: 'MVM_Status', header: '單據狀態', visible: true, format: (value) => this.issuanceNoteStatusOptions.find((item) => item.value === value)?.label || value },
   ];
 
-  // 倉別調撥單狀態選項 (根據需求，這可能與 MVM_Status 的資料庫值有映射關係)
+  // 倉別調撥單狀態選項
   issuanceNoteStatusOptions = [
     { label: '已申請', value: '1' },
     { label: '已審核', value: '2' },
@@ -88,24 +78,32 @@ export class TLS56040Component extends BasicQueryPageComponent<any> implements O
     { label: '已作廢', value: '9' },
   ];
 
-  LOGO_Noptions = []; // TODO: 需要呼叫API取得PLULOGO商品品牌設定檔的資料
-  warehouseOptions = []; // TODO: 需要呼叫API取得POS2034倉庫設定檔的資料
-  userCodeOptions = []; // TODO: 需要呼叫API取得人員資訊
+  brandOptions: { label: string; value: string }[] = [];// 品牌
+  warehouseOptions: { label: string; value: string }[] = []; // 倉別
+  userOptions: { label: string; value: string }[] = [];
 
   constructor(
+    private tls52010Service: Tls52010Service,
+    private dropDownListService: DropDownListService,
   ) {
     super();
   }
 
   ngOnInit(): void {
     this.initializePage('TLS56040', '/TLS/TLS56040CRU', this.queryForm, (form) => this.onSubmit(form));
-    // TODO: 預帶登入人員 (申請人)，需要呼叫service取得登入人員資訊
-    // 例如: this.queryForm.patchValue({ CRT_USR_No: this.authService.getLoggedInUser().userNo });
-
-    // TODO: 呼叫API以載入下拉選單選項
-    // this.getBrandCodeOptions();
-    // this.getWarehouseOptions();
-    // this.getUserCodeOptions();
+    // 倉別 (HOS_No)
+    this.dropDownListService.getPOS2034Options().pipe(untilDestroyed(this)).subscribe(options => {
+      this.warehouseOptions = options.Data.map(item => ({ label: item.Name, value: item.No }));
+    });
+    // 品牌代碼 (LOGO_No)
+    this.dropDownListService.queryPLULOGO_DropDownList().pipe(untilDestroyed(this)).subscribe(options => {
+      this.brandOptions = options.Data.map(item => ({ label: `${item.No} - ${item.Name}`, value: item.No }));
+    });
+    // 申請人員、審核人員、結案人員 (共用人員下拉選單)
+    this.dropDownListService.queryTBLUSER_DropDownList().pipe(untilDestroyed(this)).subscribe(options => {
+      this.userOptions = options.Data.map(item => ({ label: `${item.No} - ${item.Name}`, value: item.No }));
+    });
+    this.queryForm.patchValue({ CRT_USR_No: this.authService.currentUserValue?.user_No });
   }
 
   onSubmit(frm: FormGroup) {
@@ -114,49 +112,69 @@ export class TLS56040Component extends BasicQueryPageComponent<any> implements O
       // 模擬API返回的數據 (實際應用中應從後端服務獲取)
       const mockData = [
         {
-          MVM_No: 'I20250809001',
-          SYS_StoreNo: 'WH001',
-          MVM_Type: '1', // 1=移出
-          MVM_MoveStoreNo: 'ST001',
-          MVM_MoveNo: 'O20250809001',
-          MVM_Date: '2025-08-09T10:00:00',
-          USR_Name: '王小明',
-          MVM_TotalQty: 10,
-          MVM_TotalSubQty: 100,
-          MVM_TotalBuyNet: 500.0000,
-          MVM_TotalBuyTax: 50.0000,
-          MVM_TotalBuyAmt: 550.0000,
-          MVM_TotalSaleNet: 1000.0000,
-          MVM_TotalSaleTax: 100.0000,
-          MVM_TotalSaleAmt: 1100.0000,
-          MVM_Status: '1', // 已申請
-          MVM_Remark: '緊急調撥',
-          CRT_Date: '2025-08-09T09:00:00',
-          CRT_USR_No: 'APL001',
-          UPD_Date: '2025-08-09T11:00:00',
-          UPD_USR_No: 'APR001', // 模擬審核人
-          VEN_No: 'VEN001',
-          MVM_ConfirmTotalSubQty: 100,
-          MVM_ConfirmDate: '2025-08-09T11:30:00',
-          MVM_TaxType: '1',
-          MVM_SenderName: '物流A',
-          PLU_No: 'P000000000001',
-          PLU_MagNo: 'GM001',
-          PLU_Name: '商品A',
-          PLU_Spec: '規格1',
-          MVD_Qty: 10,
-          MVD_SubQty: 100,
-          MVD_BuyPrc: 50.0000,
-          MVD_SalePrc: 100.0000,
-          MVD_GiftFlag: 'N',
-          MVD_ConfirmSubQty: 100,
-          Expiry_Date: '2026-12-31T00:00:00'
-        },
-        // 可新增更多模擬數據
+          MVM_No: '234567',
+          CRT_Date: '2023-05-01',
+          IN_HOS_No: '12345',
+          OUT_HOS_No: '1234',
+          LOGO_No: '1234',
+          MVM_Remark: '說明',
+          CRT_USR_No: '001',
+          Confirm_USR_No: '001',
+          Confirm_USR_Name: 'ㄇㄑ施',
+          Confirm_DATE: '2023-05-01',
+          MVM_Status: '1',
+        }
       ];
       this.data = mockData;
       this.totalRecords = mockData.length;
       this.loading = false;
+    });
+  }
+  // 管理編號
+  opLoading = false;
+  opForm = this.formBuilder.group({
+    queryNo: ['', [Validators.maxLength(20)]], // 管理編號
+    PLU_Name: ['', [Validators.maxLength(60)]], // 商品名稱
+    ...createPaginationConfig([{ field: 'PLU_MagNo', order: 1 }]), // 分頁和排序參數
+  });
+  suggestions: IQueryPOS2004DetailResponse[] = [];
+  fieldsConfig: FieldsConfig[] = [
+    { field: 'PLU_MagNo', header: '管理編號', mainDataField: true },
+  ];
+  opData: IQueryPOS2004DetailResponse[] = [];// overlayPanel 裡面的table
+  opColumns: Column[] = [
+    { field: 'PLU_MagNo', header: '商品管理編號' },
+    { field: 'PLU_No', header: '國際條碼' },
+    { field: 'PLU_OrgPLUNo', header: '廠商貨號' },
+    { field: 'PLU_Name', header: '商品名稱' },
+  ];
+  opTotalRecords = 0;
+  onAutoCompleteInputChange(event: any) {
+    const body = {
+      ...event,
+      VEN_No: '',
+      LOGO_No: '',
+      queryNo: event.PLU_MagNo || '',
+      pageSize: 30,
+      pageIndex: 1,
+      SortBy: [{ field: 'PLU_MagNo', order: 1 }],
+    }
+    this.tls52010Service.queryPOS2004Detail(body).pipe(untilDestroyed(this)).subscribe((results) => {
+      this.suggestions = [...results.Data];
+    });
+  }
+  onformValueChanged(event: IQueryPOS2004DetailRequest) {
+    this.opLoading = true;
+    const body = {
+      queryNo: event.queryNo || '',
+      PLU_Name: event.PLU_Name || '',
+      VEN_No: '',
+      LOGO_No: '',
+    };
+    this.tls52010Service.queryPOS2004Detail(body).pipe(untilDestroyed(this)).subscribe((results) => {
+      this.opData = [...results.Data]; // 更新data資料
+      this.opTotalRecords = results.TotalCount;
+      this.opLoading = false;
     });
   }
 }

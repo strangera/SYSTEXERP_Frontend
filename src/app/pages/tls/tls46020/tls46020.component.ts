@@ -19,6 +19,7 @@ import { DialogComponent } from '../../../shared/componentkit/dialog/dialog.comp
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { NgIf } from '@angular/common';
 import { TranslateModule } from '@ngx-translate/core';
+import { formatDateToYYYY_MM_DD } from '../../../shared/componentkit/table/table.model';
 
 // 2.4.6.2  POS環境變數維護作業
 @Component({
@@ -75,7 +76,12 @@ export class TLS46020Component extends BasicQueryPageComponent<TLS46020Item> imp
   }
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
-      this.tls46020Service.queryTLS46020(frm.value).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(res => {
+      const body = {
+        ...frm.value,
+        ECR_TmplBegDate: formatDateToYYYY_MM_DD(frm.value.ECR_TmplBegDate), // 環境變數啟用日期
+        ECR_TmplEndDate: formatDateToYYYY_MM_DD(frm.value.ECR_TmplEndDate), // 環境變數截止日期
+      }
+      this.tls46020Service.queryTLS46020(body).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(res => {
         this.data = res.Data;
         this.totalRecords = res.TotalCount;
         this.queryStateService.setQueryState(this.ProgNo, frm.value);

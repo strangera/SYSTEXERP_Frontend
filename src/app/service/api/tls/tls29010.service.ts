@@ -21,6 +21,11 @@ export class Tls29010Service {
     return this.http.post<any>(`${this.apiUrl}/queryTLS29010_Detail`, body);
   }
 
+  // 查詢 TLTTALENT_CHARGED 表
+  queryTLTTALENT_CHARGED(body: any): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/queryTLTTALENT_CHARGED`, body);
+  }
+
   // 新增 TALPORDERD_OPENDisc 資料表
   insertTLS29010(body: any): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/insertTLS29010`, body);
