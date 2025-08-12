@@ -38,10 +38,10 @@ import { DropdownTableComponent, FieldsConfig } from '../../../shared/componentk
     CalendarRangeComponent,
     TranslateModule,
     TableComponent,
-    InputNumberComponent,
     MultiSelectComponent,
     DropdownTableComponent,
-    ReactiveFormsModule
+    ReactiveFormsModule,
+    InputNumberComponent
 
   ],
 })

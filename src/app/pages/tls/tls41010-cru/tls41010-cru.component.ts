@@ -8,7 +8,6 @@ import { TLS41010Service } from '../../../service/api/tls/tls41010.service';
 import { TLS46020Service } from '../../../service/api/tls/tls46020.service';
 import { TLS41010Data, TLS41010Item } from '../tls41010/tls41010.model';
 import { untilDestroyed } from '@ngneat/until-destroy';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { finalize } from 'rxjs';
 import {
   salTypeOptions,
@@ -50,6 +49,13 @@ import { Tls46010Service } from '../../../service/api/tls/tls46010.service';
   ],
 })
 export class TLS41010CRUComponent extends BasicCruPageComponent<TLS41010Data> implements OnInit {
+
+  private defaultTime1110(): Date {
+    const d = new Date();
+    d.setHours(11, 10, 0, 0);
+    return d;
+  }
+
   dataForm = this.formBuilder.nonNullable.group({
     ECR_No: ['', [Validators.required, Validators.maxLength(10)]],
     ECR_Name: ['', [Validators.required, Validators.maxLength(20)]],
@@ -63,6 +69,7 @@ export class TLS41010CRUComponent extends BasicCruPageComponent<TLS41010Data> im
     ECR_Status: ['A'],
     ECR_ActiveDate: [null],
     ECR_CloseDate: [null],
+    ECR_GUI_MinQty: [50, [Validators.min(0), Validators.max(99999999)]],
     ECR_ComName: ['', [Validators.maxLength(64)]],
     ECR_IP: ['', [Validators.maxLength(20)]],
     ECR_SrvIP: ['', [Validators.maxLength(20)]],
@@ -107,9 +114,8 @@ export class TLS41010CRUComponent extends BasicCruPageComponent<TLS41010Data> im
     ECR_VoidRstDay: [0, [Validators.required, Validators.min(0), Validators.max(9999)]],
     ECR_CreditNote: ['N', [Validators.required, Validators.maxLength(1)]],
     ECR_GUI_PeriodQty: [50, [Validators.min(0), Validators.max(99999999)]],
-    ECR_GUI_MinQty: [50, [Validators.min(0), Validators.max(99999999)]],
+    ECR_SettleHHNN: [this.defaultTime1110(), [Validators.required]],
     ECR_SettleDD: ['T', [Validators.required, Validators.maxLength(2)]],
-    ECR_SettleHHNN: [null, [Validators.required]],
     ECR_KBLevel: ['', [Validators.maxLength(6)]],
     ECR_KBType: ['', [Validators.maxLength(6)]],
     ECR_Scanner: ['', [Validators.maxLength(20)]],
@@ -176,6 +182,11 @@ export class TLS41010CRUComponent extends BasicCruPageComponent<TLS41010Data> im
   }
 
   ngOnInit(): void {
+    const now = new Date();
+    now.setHours(11);
+    now.setMinutes(10);
+    now.setSeconds(0);
+    now.setMilliseconds(0);
     this.initializePage('TLS41010', this.dataForm);
     const disableFields = [
       'ECR_KBLevel',
