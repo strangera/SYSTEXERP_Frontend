@@ -63,9 +63,9 @@ export const TLS13010_DROPDOWN_OPTIONS = {
   total_amt_vendor_unit: convertToDropdownOptions(TOTAL_AMT_VENDOR_UNIT_OPTIONS),  //目標營業額單位(廠商)
   yesNo: [{ value: 'Y', label: '是' }, { value: 'N', label: '否' }],
   depositPayment: [
-    { value: 1, label: '現金' },
-    { value: 2, label: '支票' },
-    { value: 3, label: '履約保證金' }
+    { value: '1', label: '現金' },
+    { value: '2', label: '支票' },
+    { value: '3', label: '履約保證金' }
   ],
   depositType: [
     { value: '1', label: '準時開業' },
