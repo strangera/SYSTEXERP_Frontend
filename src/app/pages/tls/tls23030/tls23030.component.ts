@@ -20,7 +20,6 @@ import { TxnStatusService } from '../../../service/basic/txn-status.service';
 import { ECRNoService } from '../../../service/basic/ECRNo.service';
 import { CounterNameService } from '../../../service/basic/counter-name.service';
 import { timeout, catchError } from 'rxjs/operators';
-import { throwError, of } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { AccordionModule } from 'primeng/accordion';
 import { CalendarRangeQuickComponent } from '../../../shared/componentkit/calendar-range-quick/calendar-range-quick.component';
@@ -36,6 +35,7 @@ import { RadioButtonModule } from 'primeng/radiobutton';
 import { PrimeTemplate } from 'primeng/api';
 import { ButtonDirective } from 'primeng/button';
 import { TranslateModule } from '@ngx-translate/core'; // 確保有 import
+import { Subscription, EMPTY, throwError, BehaviorSubject, of } from 'rxjs';
 type DisplayMode = 'Report' | 'SummaryReport';
 @Component({
     selector: 'app-tls23030',
@@ -63,11 +63,14 @@ type DisplayMode = 'Report' | 'SummaryReport';
     ],
 })
 export class TLS23030Component extends BasicQueryPageComponent<any> {
+  private readonly STORAGE_KEY = 'TLS23030:queryForm';
+  private formValueSub?: Subscription;
+  querySubscription: Subscription | null = null;
   displayMode: DisplayMode = 'Report';
   data: any[] = [];
   totalRecords = 0;
   useSummaryMode = false; // 預設為明細表模式
- readonly yesterday: Date = (() => {
+  readonly yesterday: Date = (() => {
     const d = new Date();
     d.setHours(0, 0, 0, 0);
     d.setDate(d.getDate() - 1);
@@ -233,6 +236,14 @@ export class TLS23030Component extends BasicQueryPageComponent<any> {
 
   ngOnInit(): void {
     this.initializePage('TLS23030', '', this.queryForm );
+    this.restoreQueryFromStorage();
+    this.formValueSub = this.queryForm.valueChanges
+    .subscribe(() => this.saveQueryToStorage());
+    const savedQuery = localStorage.getItem('TLS23010_queryForm');
+    if (savedQuery) {
+      const parsedQuery = JSON.parse(savedQuery);
+      this.queryForm.patchValue(parsedQuery);
+    }
 
     // ✅ 下拉選單初始化
     this.displayModeService
@@ -413,4 +424,31 @@ export class TLS23030Component extends BasicQueryPageComponent<any> {
         },
       });
   }
+    /** 立即把目前表單狀態存進 LocalStorage（日期會轉 ISO 字串） */
+private saveQueryToStorage(): void {
+  const raw = this.queryForm.getRawValue();
+  const payload = JSON.stringify(raw, (k, v) => (v instanceof Date ? v.toISOString() : v));
+  localStorage.setItem(this.STORAGE_KEY, payload);
+}
+
+    /** 從 LocalStorage 還原進表單（把 ISO 字串還原成 Date 物件） */
+private restoreQueryFromStorage(): void {
+  const json = localStorage.getItem(this.STORAGE_KEY);
+  if (!json) return;
+
+  const parsed = JSON.parse(json, (_k, v) => {
+    if (typeof v === 'string' && /^\d{4}-\d{2}-\d{2}T/.test(v)) {
+      const d = new Date(v);
+      return isNaN(d.getTime()) ? v : d;
+    }
+    return v;
+  });
+
+  this.queryForm.patchValue(parsed, { emitEvent: false });
+}
+
+/** 清除 LocalStorage 內儲存的查詢條件 */
+private clearQueryStorage(): void {
+  localStorage.removeItem(this.STORAGE_KEY);
+}
 }

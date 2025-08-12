@@ -327,168 +327,169 @@ export class TLS23120CRUComponent extends BasicCruPageComponent<any> {
   goBack(): void {
     this.location.back();
   }
-  exportPDF(orientation: 'p' | 'l' = 'p'): void {
-    const columnCount = this.selectedColumns.length;
-    const columnWidth = 80;
-    const customWidth = Math.max(595, columnCount * columnWidth);
+exportPDF(orientation: 'p' | 'l' = 'p'): void {
+  const columnCount = this.selectedColumns.length;
+  const columnWidth = 80;
+  const customWidth = Math.max(595, columnCount * columnWidth);
 
-    const doc = new jsPDF({
-      orientation,
-      unit: 'pt',
-      format: [customWidth, 842],
+  const doc = new jsPDF({ orientation, unit: 'pt', format: [customWidth, 842] });
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const marginLeft = 40;
+
+  // 字型
+  doc.addFont('assets/fonts/NotoSansTC-VariableFont_wght.ttf', 'Noto Sans TC', 'normal');
+  doc.setFont('Noto Sans TC');
+
+  // 取表頭用的資料（從第一筆 or query 狀態）
+  const info = this.getHeaderInfo();
+
+  // 讓每頁都畫相同表頭 + 頁碼
+  const drawHeader = () => this.drawReportHeader(doc, info, marginLeft, pageWidth);
+
+  let currentY = 0;
+  drawHeader();
+  currentY = 180; // 表頭大概佔到這個高度，下面開始畫表格
+
+  this.groupedData.forEach((group) => {
+    // 欄位定義
+    const tableColumns = this.selectedColumns.map(col => ({ header: col.header, dataKey: col.field }));
+
+    // 資料列
+    const tableData = group.rows.map((row, rowIndex) => {
+      const obj: any = {};
+      this.selectedColumns.forEach((col) => {
+        obj[col.field] = (col.field === '__index')
+          ? (rowIndex + 1)
+          : (col.format ? col.format(row[col.field]) : row[col.field]);
+      });
+      return obj;
     });
 
-    const marginLeft = 40;
-    let currentY = 40;
-    const pageWidth = doc.internal.pageSize.getWidth();
-    doc.addFont('assets/fonts/NotoSansTC-VariableFont_wght.ttf', 'Noto Sans TC', 'normal');
-    doc.setFont('Noto Sans TC');
-    doc.setFontSize(14);
-    doc.text(this.reportTitle, pageWidth / 2, currentY, { align: 'center' });
-    currentY += 20;
-
-    doc.setFontSize(10);
-    doc.setFont('Noto Sans TC');
-    doc.text(`${this.dateRangeLabel}：${this.formatDate(this.dateStart)} ~ ${this.formatDate(this.dateEnd)}`, marginLeft, currentY);
-    doc.text(`列印時間：${this.printedAt}`, pageWidth - marginLeft, currentY, { align: 'right' });
-    currentY += 14;
-
-    this.groupedData.forEach((group, groupIndex) => {
-      doc.setFontSize(10);
-      doc.setFont('Noto Sans TC');
-      // 設定左右欄位的起始位置
-      const leftX = marginLeft;
-      const rightX = pageWidth / 2 + 10;
-
-      // 每行高度
-      const lineHeight = 14;
-
-      // 第一行
-      doc.text(`大分類：${group.rows[0]?.bus_type ?? '－'} / ${group.rows[0]?.bus_type_name ?? '－'}`, leftX, currentY);
-      doc.text(`銷售日期：${this.formatDate(group.rows[0]?.TXN_DATE)}`, rightX, currentY);
-      currentY += lineHeight;
-
-      // 第二行（移除 專櫃 / 抽成類別）
-      doc.text(`製表日期：${this.printedAt}`, leftX, currentY);
-      doc.text(`區域：${group.rows[0]?.AREA_NO ?? '－'}`, rightX, currentY);
-      currentY += lineHeight;
-
-      // 第三行
-      doc.text(`樓層：${group.rows[0]?.FLOOR_NO ?? '－'}`, leftX, currentY);
-      doc.text(`抽成類別：${group.rows[0]?.TLT_ID ?? '無'}`, rightX, currentY); // 紅色
-      currentY += lineHeight;
-
-      // 第四行
-      doc.text(`交易總件數：${group.rows.length ?? 0}`, leftX, currentY);
-      doc.text(`退貨件數：${group.rows[0]?.return_qty ?? 0}    退貨金額：${group.rows[0]?.return_amt ?? 0}`, rightX, currentY);
-      currentY += 20;
-
-
-      // 欄位定義
-      const tableColumns = this.selectedColumns.map(col => ({
-        header: col.header,
-        dataKey: col.field,
-      }));
-
-      // 資料列
-      const tableData = group.rows.map((row, rowIndex) => {
-        const rowData: any = {};
-        this.selectedColumns.forEach((col) => {
-          if (col.field === '__index') {
-            rowData[col.field] = this.getRowIndex(groupIndex, rowIndex);
-          } else {
-            rowData[col.field] = col.format ? col.format(row[col.field]) : row[col.field];
-          }
-        });
-        return rowData;
+    // 小計
+    if (group.showSubtotal) {
+      const subtotalRow: any = {};
+      this.selectedColumns.forEach((col) => {
+        if (col.field === '__index') subtotalRow[col.field] = '小計';
+        else if (this.subtotalFields.includes(col.field)) subtotalRow[col.field] = this.getSubtotal(group.rows, col.field);
+        else subtotalRow[col.field] = '';
       });
+      tableData.push(subtotalRow);
+    }
 
-      // 小計列
-      if (group.showSubtotal) {
-        const subtotalRow: any = {};
-        this.selectedColumns.forEach((col) => {
-          if (col.field === '__index') {
-            subtotalRow[col.field] = '小計';
-          } else if (this.subtotalFields.includes(col.field)) {
-            subtotalRow[col.field] = this.getSubtotal(group.rows, col.field);
-          } else {
-            subtotalRow[col.field] = '';
-          }
-        });
-        tableData.push(subtotalRow);
-      }
-
-      // 總計列
-      if (group.showTotal) {
-        const totalRow: any = {};
-        this.selectedColumns.forEach((col) => {
-          if (col.field === '__index') {
-            totalRow[col.field] = '總計';
-          } else if (this.subtotalFields.includes(col.field)) {
-            totalRow[col.field] = this.getSubtotal(group.rows, col.field);
-          } else {
-            totalRow[col.field] = '';
-          }
-        });
-        tableData.push(totalRow);
-      }
-
-      // 繪製表格
-      autoTable(doc, {
-        startY: currentY,
-        head: [tableColumns.map(col => col.header)],
-        body: tableData.map(row => tableColumns.map(col => row[col.dataKey] ?? '')),
-        styles: {
-          font: 'Noto Sans TC',
-          fontSize: 9,
-          halign: 'center',
-          valign: 'middle',
-        },
-        headStyles: {
-          font: 'Noto Sans TC',
-          fontStyle: 'normal',
-          fontSize: 10,
-          fillColor: [212, 222, 254],
-          textColor: [0, 0, 0],
-          halign: 'center',
-        },
-        footStyles: {
-          font: 'Noto Sans TC',
-          fontStyle: 'normal',
-          fontSize: 10,
-          fillColor: [212, 222, 254],
-          textColor: [0, 0, 0],
-          halign: 'center',
-        },
-        theme: 'grid',
-        margin: { left: marginLeft, right: marginLeft },
-        didDrawCell: (data) => {
-          const rowIndex = data.row.index;
-          const isSubtotal = group.showSubtotal && rowIndex === group.rows.length;
-          const isTotal = group.showTotal && (
-            group.showSubtotal ? rowIndex === group.rows.length + 1 : rowIndex === group.rows.length
-          );
-
-          if (isSubtotal) {
-            data.cell.styles.fillColor = [255, 245, 204]; // 淡黃色
-            data.cell.styles.fontStyle = 'bold';
-          }
-
-          if (isTotal) {
-            data.cell.styles.fillColor = [204, 229, 255]; // 淡藍色
-            data.cell.styles.fontStyle = 'bold';
-          }
-        },
-        didDrawPage: (data) => {
-          if (data.cursor) {
-            currentY = data.cursor.y + 30;
-          }
-        },
+    // 總計
+    if (group.showTotal) {
+      const totalRow: any = {};
+      this.selectedColumns.forEach((col) => {
+        if (col.field === '__index') totalRow[col.field] = '總計';
+        else if (this.subtotalFields.includes(col.field)) totalRow[col.field] = this.getSubtotal(group.rows, col.field);
+        else totalRow[col.field] = '';
       });
+      tableData.push(totalRow);
+    }
+
+    autoTable(doc, {
+      startY: currentY,
+      head: [tableColumns.map(c => c.header)],
+      body: tableData.map(r => tableColumns.map(c => r[c.dataKey] ?? '')),
+      styles: { font: 'Noto Sans TC', fontSize: 9, halign: 'center', valign: 'middle' },
+      headStyles: { font: 'Noto Sans TC', fontStyle: 'normal', fontSize: 10, fillColor: [212, 222, 254], textColor: [0,0,0], halign: 'center' },
+      footStyles: { font: 'Noto Sans TC', fontStyle: 'normal', fontSize: 10, fillColor: [212, 222, 254], textColor: [0,0,0], halign: 'center' },
+      theme: 'grid',
+      margin: { left: marginLeft, right: marginLeft, top: 180 }, // 頂部留給表頭
+      didDrawCell: (data) => {
+        const rowIndex = data.row.index;
+        const isSubtotal = group.showSubtotal && rowIndex === group.rows.length;
+        const isTotal = group.showTotal && (group.showSubtotal ? rowIndex === group.rows.length + 1 : rowIndex === group.rows.length);
+        if (isSubtotal) { data.cell.styles.fillColor = [255, 245, 204]; data.cell.styles.fontStyle = 'bold'; }
+        if (isTotal) { data.cell.styles.fillColor = [204, 229, 255]; data.cell.styles.fontStyle = 'bold'; }
+      },
+      didDrawPage: () => {
+        drawHeader(); // 每頁重畫表頭
+      },
     });
 
-    doc.save(`報表_${new Date().toISOString()}.pdf`);
+    // 下一段表格的起點
+    currentY = (doc as any).lastAutoTable.finalY + 30;
+  });
+
+  // 頁碼（全部頁面跑一次）
+  const pageCount = doc.getNumberOfPages();
+  for (let i = 1; i <= pageCount; i++) {
+    doc.setPage(i);
+    doc.setFontSize(9);
+    doc.text(`頁數：${i}`, pageWidth - marginLeft, 164, { align: 'right' }); // 放在表頭區的右上
   }
+
+  doc.save(`專櫃日對帳單_${new Date().toISOString()}.pdf`);
+}
+
+/** 依「圖一」準備表頭資料 */
+private getHeaderInfo() {
+  const first = this.data?.[0] ?? {};
+  const salesDate = this.queryFormValue?.TXN_DateStart || first?.TXN_DATE || this.dateStart;
+  const biz = `${first?.bus_type ?? ''}/${first?.bus_type_name ?? ''}`.replace(/^\/$/, '');
+  const counter = `${first?.TLT_NO ?? ''}/${first?.TLT_NAME ?? ''}`.replace(/^\/$/, '');
+  const area = first?.AREA_NO ?? '';
+  const floor = first?.FLOOR_NO ?? '';
+  const cutType = first?.TLT_ID ?? '0';
+  const returnQty = first?.return_qty ?? 0;
+  const returnAmt = first?.return_amt ?? 0;
+  const totalTxns = this.data?.length ?? 0;
+
+  return {
+    company: '南紡流通事業股份有限公司',
+    title: '專櫃日對帳單',
+    biz, counter, area,
+    salesDate: this.formatDate(salesDate),
+    floor,
+    cutType,
+    madeAt: this.printedAt || new Date().toLocaleString('zh-TW'),
+    totalTxns,
+    returnQty,
+    returnAmt
+  };
+}
+
+/** 依「圖一」畫表頭（公司/標題置中 + 左右資訊列） */
+private drawReportHeader(doc: jsPDF, info: any, marginLeft: number, pageWidth: number) {
+  const leftX = marginLeft;
+  const rightX = pageWidth - marginLeft;
+  const midX = pageWidth / 2;
+
+  // 公司、標題（置中）
+  doc.setFontSize(16);
+  doc.text(info.company, midX, 50, { align: 'center' });
+  doc.setFontSize(14);
+  doc.text(info.title, midX, 75, { align: 'center' });
+
+  doc.setFontSize(10);
+  let y = 110;
+
+  // 第 1 行
+  doc.text(`業種：${info.biz || '－'}`, leftX, y);
+  doc.text(`製表日期：${info.madeAt}`, rightX, y, { align: 'right' });
+  y += 18;
+
+  // 第 2 行
+  doc.text(`專櫃：${info.counter || '－'}`, leftX, y);
+  // 右側「頁數」稍後在 exportPDF 最後統一補上
+  y += 18;
+
+  // 第 3 行
+  doc.text(`區域：${info.area || '－'}`, leftX, y);
+  doc.text(`交易總件數：${info.totalTxns} / 退貨件數：${info.returnQty}`, rightX, y, { align: 'right' });
+  y += 18;
+
+  // 第 4 行
+  doc.text(`銷售日期：${info.salesDate || '－'}`, leftX, y);
+  doc.text(`退貨金額：${info.returnAmt}`, rightX, y, { align: 'right' });
+  y += 18;
+
+  // 第 5 行
+  doc.text(`樓層：${info.floor || '－'}`, leftX, y);
+  doc.text(`抽成類別：${info.cutType}`, rightX, y, { align: 'right' });
+}
+
 
   formatDate(dateStr: string): string {
     if (!dateStr) return '';

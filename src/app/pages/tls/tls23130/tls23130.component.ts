@@ -20,6 +20,7 @@ import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/
 import { InputTextModule } from 'primeng/inputtext';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { TranslateModule } from '@ngx-translate/core';
+import { Subscription, EMPTY, throwError, BehaviorSubject } from 'rxjs';
 
 @Component({
     selector: 'app-tls23130',
@@ -29,6 +30,9 @@ import { TranslateModule } from '@ngx-translate/core';
     imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarRangeQuickComponent, DropdownComponent, MultiSelectComponent, InputTextModule, ButtonComponent, TranslateModule]
 })
 export class TLS23130Component extends BasicQueryPageComponent<any> {
+  private readonly STORAGE_KEY = 'TLS23130:queryForm';
+  private formValueSub?: Subscription;
+  querySubscription: Subscription | null = null;
   showPageSizeDialog = false;
   customPageSize = 1000;
    readonly yesterday: Date = (() => {
@@ -96,7 +100,14 @@ export class TLS23130Component extends BasicQueryPageComponent<any> {
 
   ngOnInit(): void {
     this.initializePage('TLS23130', '', this.queryForm);
-
+    this.restoreQueryFromStorage();
+    this.formValueSub = this.queryForm.valueChanges
+    .subscribe(() => this.saveQueryToStorage());
+    const savedQuery = localStorage.getItem('TLS23010_queryForm');
+    if (savedQuery) {
+      const parsedQuery = JSON.parse(savedQuery);
+      this.queryForm.patchValue(parsedQuery);
+    }
     this.cardTypeService.getCardType().subscribe(data => this.cardTypeOptions = data);
     this.organizationNumberService.getOrganizationNumbers().subscribe(data => this.organizationOptions = data);
     this.regionService.getRegionOptions().subscribe(data => this.regionOptions = data);
@@ -162,9 +173,31 @@ export class TLS23130Component extends BasicQueryPageComponent<any> {
       }
     });
   }
+  /** 立即把目前表單狀態存進 LocalStorage（日期會轉 ISO 字串） */
+private saveQueryToStorage(): void {
+  const raw = this.queryForm.getRawValue();
+  const payload = JSON.stringify(raw, (k, v) => (v instanceof Date ? v.toISOString() : v));
+  localStorage.setItem(this.STORAGE_KEY, payload);
+}
 
-  getLabelFromOptions(value: any, options: any[]): string {
-    const found = options?.find(opt => String(opt.value) === String(value));
-    return found ? found.label : value;
-  }
+    /** 從 LocalStorage 還原進表單（把 ISO 字串還原成 Date 物件） */
+private restoreQueryFromStorage(): void {
+  const json = localStorage.getItem(this.STORAGE_KEY);
+  if (!json) return;
+
+  const parsed = JSON.parse(json, (_k, v) => {
+    if (typeof v === 'string' && /^\d{4}-\d{2}-\d{2}T/.test(v)) {
+      const d = new Date(v);
+      return isNaN(d.getTime()) ? v : d;
+    }
+    return v;
+  });
+
+  this.queryForm.patchValue(parsed, { emitEvent: false });
+}
+
+/** 清除 LocalStorage 內儲存的查詢條件 */
+private clearQueryStorage(): void {
+  localStorage.removeItem(this.STORAGE_KEY);
+}
 }
