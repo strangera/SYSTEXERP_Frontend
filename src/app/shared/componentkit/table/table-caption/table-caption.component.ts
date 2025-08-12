@@ -40,7 +40,7 @@ export class TableCaptionComponent extends BasicPrintDataComponent implements On
   @Input() rowEditing = false;                      // 是否正在編輯Row
   @Input() selectedItems: any = [];                 // table 已勾選資料
   @Input() tableKey: string | undefined = undefined;// table 唯一標識 (必填)
-  @Input() expansionDataKey = '';                   // 收合展開 資料key(expansion必需配置)
+  @Input() expansionColumns: Column[] = [];  // 收合展開 欄位配置(expansion必需配置)
   @Input() expression = false;                      // 收合展開 狀態 (true:展開、false:收合)
   @Input() apiUrl?: string;                         // table API URL (可選)
   // Header 相關
