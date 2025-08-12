@@ -128,22 +128,19 @@ export class SYSB400CRUComponent
       return;
     }
 
-    // 假設只要在變更時自動帶入上一層代碼
-    if (levelId === "10") {
-      this.dataForm.controls.p_level_id.setValue("");
+    // 從已載入的上層階層代碼選項中，找出小於當前 levelId 的最大值
+    const parentOption = this.upgroup_Options
+      .filter(item => parseInt(item.No, 10) < parseInt(levelId, 10))
+      .sort((a, b) => parseInt(b.No, 10) - parseInt(a.No, 10))[0];
+
+    if (parentOption) {
+      this.dataForm.controls.p_level_id.setValue(parentOption.No);
+      this.filtered_p_level_Options = [parentOption];
     } else {
-      const parentLevelNo = (parseInt(levelId, 10) - 10).toString();
-      this.dataForm.controls.p_level_id.setValue(parentLevelNo);
-
-      //把 上層組織代碼/名稱 設置為null
-      // this.dataForm.get('p_org_id')?.setValue("");
+      // 沒有上層階層時，清空
+      this.dataForm.controls.p_level_id.setValue("");
+      this.filtered_p_level_Options = [];
     }
-
-    // 假設上層階層的編碼比下層小，例如：10 是最上層，20 是中層，30 是底層
-    this.filtered_p_level_Options = this.upgroup_Options.filter(
-      // (item) => item.No < levelId
-      (item) => item.No === (parseInt(levelId, 10) - 10).toString()
-    );
 
     // 先定義 filteredNos
     const filteredNos = this.filtered_p_level_Options.map(item => item.No);

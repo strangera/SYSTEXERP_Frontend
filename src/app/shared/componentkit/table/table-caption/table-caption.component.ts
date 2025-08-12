@@ -91,23 +91,30 @@ export class TableCaptionComponent extends BasicPrintDataComponent implements On
     }
     // 僅在 columns 首次被設定時執行初始化邏輯
     // 這樣就不會在每次 data 變動時都重置 filter 狀態
-    if (changes['columns'] && this.columns?.length > 0 && !this.isColumnsInitialized) {
+    if (changes['columns'] && this.columns?.length > 0) {
       // 恢復歷史紀錄，如果沒有就使用預設值
       setTimeout(() => {
-        const storedFilter = this.queryStateService.getQueryState(this.tableKey + 'Filter')?.value;
-        if (storedFilter) {
-          this.columns = storedFilter;
-          const validFilteredColumns = this.columns.filter(col => col.visible !== false);// 只保留可見的欄位
-          this.selectedColumns = validFilteredColumns;
-          this.selectedColumnsEvent.emit(this.selectedColumns);
-          this.columnsEvent.emit(this.columns);
+        if (!this.isColumnsInitialized) {
+          const storedFilter = this.queryStateService.getQueryState(this.tableKey + 'Filter')?.value;
+          if (storedFilter) {
+            this.columns = storedFilter;
+            const validFilteredColumns = this.columns.filter(col => col.visible !== false);// 只保留可見的欄位
+            this.selectedColumns = validFilteredColumns;
+            this.selectedColumnsEvent.emit(this.selectedColumns);
+            this.columnsEvent.emit(this.columns);
+          } else {
+            this.columns = this.columns.filter(col => !col.hidden);
+            this.selectedColumns = this.columns.filter(col => col.visible !== false);// 沒有儲存的狀態，使用預設值
+            this.selectedColumnsEvent.emit(this.selectedColumns);
+            this.columnsEvent.emit(this.columns);
+          }
+          this.isColumnsInitialized = true;
         } else {
           this.columns = this.columns.filter(col => !col.hidden);
           this.selectedColumns = this.columns.filter(col => col.visible !== false);// 沒有儲存的狀態，使用預設值
           this.selectedColumnsEvent.emit(this.selectedColumns);
           this.columnsEvent.emit(this.columns);
         }
-        this.isColumnsInitialized = true;
       }, 300);
     }
   }

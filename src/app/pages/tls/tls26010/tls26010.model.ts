@@ -17,10 +17,10 @@ export interface DependentDataQuery {
 export interface TLS26010Query {
   ecr_nos: string[];
   tlt_nos: string[];
-  pod_sdate_S: Date;
-  pod_sdate_E: Date;
-  pod_edate_S: Date;
-  pod_edate_E: Date;
+  pod_sdate_S?: Date;
+  pod_sdate_E?: Date;
+  pod_edate_S?: Date;
+  pod_edate_E?: Date;
 }
 
 export interface EcrTable {
