@@ -19,6 +19,7 @@ import { InputTextComponent } from '../../../shared/componentkit/input-text/inpu
 import { debounceTime } from 'rxjs/operators';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { ExportLabelService } from '@service/utility/exportLabel.service';
+import { TLS56010Service } from '@service/api/tls/tls56010.service';
 
 export interface IPOS20031Request {
   CAT_LNo: string[];
@@ -56,13 +57,13 @@ interface IPLULOGOItem {
 })
 export class TLS56010Component extends BasicQueryPageComponent<any> implements OnInit {
   queryForm = this.formBuilder.group({
-    bigCategoryCode: [],
-    midCategoryCode: [],
-    smallCategoryCode: [],
+    CAT_LNo: [],
+    CAT_MNo: [],
+    CAT_SNo: [],
     generalCode: [],
-    brandCode: [],
+    LOGO_No: [],
     tltCode: [],
-    queryNo: [null as string | null],
+    PLU_MagNo: [null as string | null],
     PLU_Name: [],
     isSafetyStock: [false],
     ...createPaginationConfig([{ field: 'APPLY_Date', order: -1 }, { field: 'PO_No', order: 1 }]), // 分頁和排序參數
@@ -113,7 +114,8 @@ export class TLS56010Component extends BasicQueryPageComponent<any> implements O
     private brandCodeService: BrandCodeService,
     private dropDownListService: DropDownListService,
     private exportLabelService: ExportLabelService,
-    private tls52010Service: Tls52010Service
+    private tls52010Service: Tls52010Service,
+    private tls56010Service: TLS56010Service
   ) {
     super();
   }
@@ -122,7 +124,7 @@ export class TLS56010Component extends BasicQueryPageComponent<any> implements O
     this.initializePage('TLS56010', '/TLS/TLS56010cru', this.queryForm, (form) => this.onSubmit(form));
 
     this.dropDownListService.queryPOS2003_DropDownList().subscribe({
-      next: (res) => {
+      next: (res: { Data: any[]; TotalCount: number }) => {
         this.bigCategoryOptions = (res.Data ?? []).map(item => ({
           label: item.Name,
           value: item.No,
@@ -133,7 +135,7 @@ export class TLS56010Component extends BasicQueryPageComponent<any> implements O
       error: () => this.messageService.errorBubble('載入大分類選單失敗')
     });
 
-    this.queryForm.get('bigCategoryCode')?.valueChanges.pipe(debounceTime(300)).subscribe((bigCode) => {
+    this.queryForm.get('CAT_LNo')?.valueChanges.pipe(debounceTime(300)).subscribe((bigCode) => {
       if (bigCode) {
         const params: IPOS20031Request = { CAT_LNo: [bigCode] };
         this.dropDownListService.queryPOS20031_DropDownList(params).subscribe({
@@ -144,7 +146,7 @@ export class TLS56010Component extends BasicQueryPageComponent<any> implements O
               Name: item.Name,
               No: item.No
             }));
-            this.queryForm.patchValue({ midCategoryCode: null, smallCategoryCode: null }, { emitEvent: false });
+            this.queryForm.patchValue({ CAT_MNo: null, CAT_SNo: null }, { emitEvent: false });
             this.smallCategoryOptions = [];
           },
           error: () => this.messageService.errorBubble('載入中分類選單失敗')
@@ -152,12 +154,12 @@ export class TLS56010Component extends BasicQueryPageComponent<any> implements O
       } else {
         this.midCategoryOptions = [];
         this.smallCategoryOptions = [];
-        this.queryForm.patchValue({ midCategoryCode: null, smallCategoryCode: null }, { emitEvent: false });
+        this.queryForm.patchValue({ CAT_MNo: null, CAT_SNo: null }, { emitEvent: false });
       }
     });
 
-    this.queryForm.get('midCategoryCode')?.valueChanges.pipe(debounceTime(300)).subscribe((midCode) => {
-      const bigCode = this.queryForm.get('bigCategoryCode')?.value;
+    this.queryForm.get('CAT_MNo')?.valueChanges.pipe(debounceTime(300)).subscribe((midCode) => {
+      const bigCode = this.queryForm.get('CAT_LNo')?.value;
       if (bigCode && midCode) {
         const params: IPOS20032Request = {
           CAT_LNo: [bigCode],
@@ -171,13 +173,13 @@ export class TLS56010Component extends BasicQueryPageComponent<any> implements O
               Name: item.Name,
               No: item.No
             }));
-            this.queryForm.patchValue({ smallCategoryCode: null }, { emitEvent: false });
+            this.queryForm.patchValue({ CAT_SNo: null }, { emitEvent: false });
           },
           error: () => this.messageService.errorBubble('載入小分類選單失敗')
         });
       } else {
         this.smallCategoryOptions = [];
-        this.queryForm.patchValue({ smallCategoryCode: null }, { emitEvent: false });
+        this.queryForm.patchValue({ CAT_SNo: null }, { emitEvent: false });
       }
     });
 
@@ -246,10 +248,42 @@ export class TLS56010Component extends BasicQueryPageComponent<any> implements O
     });
   }
 
-  onSubmit(form: FormGroup): void {
-    this.handleSubmit(form, () => {
-      this.loading = false;
-      this.messageService.unblockUi();
+onSubmit(form: FormGroup): void {
+  this.handleSubmit(form, () => {
+    this.loading = true;
+
+    const v = form.value;
+    const params = {
+      SYS_StoreNo: v.SYS_StoreNo || '',
+      HOS_NoList: v.CAT_LNo ? [v.CAT_LNo] : [],  // 依你實際欄位調整
+      LOGO_NoList: v.LOGO_No ? [v.LOGO_No] : [],
+      PLU_MagNo: v.queryNo || '',
+      PLU_No: v.generalCode || '',
+      PLU_Name: v.PLU_Name || '',
+
+    };
+
+    this.tls56010Service.queryTLS56010(params).subscribe({
+      next: (res: { Data: any[]; TotalCount: number }) => {
+        this.data = res?.Data ?? [];
+        this.filteredData = [...this.data];
+        this.totalRecords = res?.TotalCount ?? this.data.length;
+
+        // 記住查詢條件（如果有 queryState）
+        this.queryStateService.setQueryState(this.ProgNo, params);
+
+        this.loading = false;
+        this.messageService.unblockUi();
+      },
+      error: (err: unknown) => {
+        console.error('TLS56010 查詢失敗:', err);
+        this.messageService.errorBubble('查詢失敗，請稍後再試');
+        this.loading = false;
+        this.messageService.unblockUi();
+      }
     });
-  }
+  });
+}
+
+
 }

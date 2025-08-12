@@ -19,11 +19,11 @@
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown
               label="大分類代碼"
-              controlName="bigCategoryCode"
+              controlName="CAT_LNo"
               [options]="bigCategoryOptions"
               optionLabel="label"
               optionValue="value"
-              [control]="queryForm.controls.bigCategoryCode"
+              [control]="queryForm.controls.CAT_LNo"
               [submitted]="submitted"
             ></app-dropdown>
           </div>
@@ -32,11 +32,11 @@
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown
               label="中分類代碼"
-              controlName="midCategoryCode"
+              controlName="CAT_MNo"
               [options]="midCategoryOptions"
               optionLabel="label"
               optionValue="value"
-              [control]="queryForm.controls.midCategoryCode"
+              [control]="queryForm.controls.CAT_MNo"
               [submitted]="submitted"
             ></app-dropdown>
           </div>
@@ -45,18 +45,18 @@
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown
               label="小分類代碼"
-              controlName="smallCategoryCode"
+              controlName="CAT_SNo"
               [options]="smallCategoryOptions"
               optionLabel="label"
               optionValue="value"
-              [control]="queryForm.controls.smallCategoryCode"
+              [control]="queryForm.controls.CAT_SNo"
               [submitted]="submitted"
             ></app-dropdown>
           </div>
           <!-- 管理編號 -->
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown-table
-              [control]="queryForm.controls.queryNo"
+              [control]="queryForm.controls.PLU_MagNo"
               [submitted]="submitted"
               optionLabel="PLU_MagNo"
               optionValue="PLU_MagNo"
@@ -88,11 +88,11 @@
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown
               label="品牌編號"
-              controlName="brandCode"
+              controlName="LOGO_No"
               [options]="brandCodeOptions"
               optionLabel="label"
               optionValue="value"
-              [control]="queryForm.controls.brandCode"
+              [control]="queryForm.controls.LOGO_No"
               [submitted]="submitted"
             ></app-dropdown>
           </div>
