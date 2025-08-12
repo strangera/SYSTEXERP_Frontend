@@ -46,10 +46,12 @@ export abstract class BasicQueryPageComponent<T> {
     // 取得歷史紀錄(如果有的話)
     if (this.canPerformAction('10')) { // '查詢' 的 function_code 是 "10"
       this.queryStateService.getQueryState(this.ProgNo)?.pipe(take(1)).subscribe((query) => {
-        if (query && queryForm && onSubmit) {
+        if (query && queryForm) {
           queryForm?.patchValue(query);
           queryForm?.patchValue({ pageIndex: 1 });
-          onSubmit(queryForm);
+          if (onSubmit) {
+            onSubmit(queryForm);
+          }
         }
       });
     }

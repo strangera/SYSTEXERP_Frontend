@@ -1,157 +1,109 @@
-import { Component } from '@angular/core';
-import { FormBuilder, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { NavigationExtras, Router } from '@angular/router';
-// Permissions
-import { FunsrightInfo, PermissionsInfo } from '../../../shared/models/system/funsrightInfo';
-// Shared
-import { AuthService } from '../../../service/system/auth.service';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-
-import { ValidationService } from '../../../shared/service/validation.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { AccordionModule } from 'primeng/accordion';
-import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
+import { Component, OnInit } from '@angular/core';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
+import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { AccordionModule } from 'primeng/accordion';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { TranslateModule } from '@ngx-translate/core';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { DropDownListService } from '../../../service/utility/dropDownList.service';
+import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
+import { ECRNoService } from '../../../service/basic/ECRNo.service';
+import { yesterday } from '@shared/models/system/query-form.model';
+import { CalendarComponent } from "@shared/componentkit/calendar/calendar.component";
 
-// 2.4.1.4 POS清機時間設定
 @Component({
-    selector: 'app-tls41040',
-    templateUrl: './tls41040.component.html',
-    styleUrl: './tls41040.component.scss',
-    standalone: true,
-    imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputNumberComponent, DropdownComponent, CalendarComponent, ButtonComponent, TableComponent, TranslateModule]
+  selector: 'app-tls41040',
+  templateUrl: './tls41040.component.html',
+  standalone: true,
+  imports: [
+    MenubarComponent,
+    ButtonComponent,
+    AccordionModule,
+    FormsModule,
+    ReactiveFormsModule,
+    InputTextComponent,
+    DropdownComponent,
+    TableComponent,
+    TranslateModule,
+    DropdownComponent,
+    InputTextComponent,
+    CalendarComponent
+],
 })
-export class TLS41040Component {
-  ProgNo: string = '240004';
-  // 權限
-  funInfo?: FunsrightInfo;
+export class TLS41040Component extends BasicQueryPageComponent<any> implements OnInit {
 
-  // 查詢
-  // ----------------------------------------------------------------
-  loading: boolean = false;
-  submitted: boolean = false;
+  // ---- 表單 ----
   queryForm = this.formBuilder.group({
-    // POS1002STM 收銀機清機時間設定檔
-
-    SYS_StoreNo: [, [Validators.maxLength(10)]], // 收銀機所屬門市店號
-    ECR_No: [, [Validators.maxLength(6)]], // 收銀機號
-    ECR_SettleDD: [], // 清機日期 T=當天 N=隔天 *
-    ECR_SettleHHNN: [], // 清機時間-時分
-
-    // 以下可以不用顯示於查詢頁
-    CRT_Date: [], // 建立日期
-    CRT_USR_No: ['', [Validators.maxLength(8)]], // 建立人員
-    CRT_USR_Name: ['', [Validators.maxLength(20)]], // 建立人員姓名
-    UPD_Date: [], // 變更日期
-    UPD_USR_No: ['', [Validators.maxLength(8)]], // 變更人員
-    UPD_USR_Name: ['', [Validators.maxLength(20)]], // 變更人員姓名
+    ECR_No: [''],                   // 收銀機號 (POS1002.ECR_No)
+    NOT_BegDateTime: [yesterday],        // 開始時間
+    NOT_EndDateTime: [yesterday],        // 結束時間
+    NOT_Status: ['A'],              // 通告狀態：預設 A=已生效
+    ECR_GrpDesc: ['', [Validators.maxLength(200)]], // 通告備註
+    ...createPaginationConfig([{ field: 'ECR_No', order: 1 }]),
   });
-  // 表格
-  // ----------------------------------------------------------------
-  data: any[] = [
-    { SYS_StoreNo: 'store123', ECR_No: 'register123', ECR_SettleDD: '當天', ECR_SettleHHNN: '10:10' },
-    // 其他資料
+
+  ECRNoOptions: any[] = [];
+
+
+  NOT_Status_Options = [
+    { label: '已生效', value: 'A' },
+    { label: '已刪除', value: 'D' },
+    { label: '全部', value: '' },
   ];
-  filteredData: any[] = [...this.data];
-  columns: any[] = [
-    { field: 'SYS_StoreNo', header: '收銀機所屬門市店號', visible: false },
-    { field: 'ECR_No', header: '收銀機號', visible: true },
-    { field: 'ECR_SettleDD', header: '清機日期', visible: true },
-    { field: 'ECR_SettleHHNN', header: '清機時間', visible: true },
-    // 其他欄位
+
+  private statusLabel = (v: string) => (v === 'A' ? '已生效(A)' : v === 'D' ? '已刪除(D)' : v ?? '');
+
+  columns:any[] = [
+    { field: 'NOT_DateTime', header: '通告產生時間', visible: true },
+    { field: 'NOT_BegDateTime', header: '開始日期', visible: true },
+    { field: 'NOT_EndDateTime', header: '結束時間', visible: true },
+    { field: 'NOT_Desc', header: '通告內容', visible: true },
+    { field: 'NOT_Status', header: '通告狀態', visible: true, format: (v: string) => this.statusLabel(v) },
+    { field: 'NOT_Remark', header: '通告備註', visible: true },
+    { field: 'NOT_SeqNo', header: '通告序號', visible: true },
+    { field: 'TLT_No', header: '專櫃編號', visible: true },
+    { field: 'ECR_Type', header: '機台類別', visible: true },
+    { field: 'ECR_GrpNo', header: '機台群組編號', visible: true },
+    { field: 'BUILDING_No', header: '館別', visible: true },
+    { field: 'FLOOR_No', header: '樓層', visible: true },
+    { field: 'Area_No', header: '區域', visible: true },
   ];
-  // ----------------------------------------------------------------
-  ECR_SettleDD_Options: any[] = [
-    { value: 'T', label: '當天' },
-    { value: 'N', label: '隔天' },
-  ];
+
+  data: any[] = [];
+  totalRecords = 0;
+  NOT_EndDateTime_Options = {
+    // Define your options here
+  };
 
   constructor(
-    private router: Router,
-    private formBuilder: FormBuilder,
-    private messageService: NotificationService,
-    private authService: AuthService,
-    private validationService: ValidationService,
+    private ECRNoService: ECRNoService,
+    private dropDownListService: DropDownListService,
+
   ) {
+    super();
   }
 
   ngOnInit(): void {
-    //
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
+    this.initializePage('TLS41040', '/TLS/TLS41040cru', this.queryForm, (form) => this.onSubmit(form));
+
+    this.ECRNoService.getECRNo().subscribe((data) => {
+      this.ECRNoOptions = data;
+    });
+
+
+
   }
 
-  // 權限
-  // ----------------------------------------------------------------
-  canQuery(): boolean {
-    return true;
-  }
-  canAdd(): boolean {
-    return true;
-  }
-  canEdit(): boolean {
-    return true;
-  }
-  // ----------------------------------------------------------------
+  // ---- 查詢（先放 demo）----
   onSubmit(frm: FormGroup) {
-    console.log(frm.value);
-    this.submitted = true;
-    this.loading = true;
-    this.messageService.blockUi();
-
-    if (frm.valid && this.canQuery()) {
-      // 提交邏輯
-      // Service
-      // this.xxxService.queryMachine(frm.value as xxxInterface)
-      //  .subscribe((response: any) => {
-      //    this.rows = response.xxx;
-      // });
-    }
-
-    this.loading = false;
-    this.messageService.unblockUi();
+    this.handleSubmit(frm, () => {
+      this.queryStateService.setQueryState(this.ProgNo, frm.value);
+      this.loading = false;
+    });
   }
 
-  onSubmitQuery(frm: FormGroup) {
-    // 查詢邏輯
-    this.onSubmit(frm);
-  }
 
-  onClearForm() {
-    this.queryForm.reset();  // 重置表單
-  }
-  // ----------------------------------------------------------------
-  onCreate() {
-    if (this.canAdd()) {
-      this.navigateWithState(CRUDStatus.Create);
-    }
-  }
-
-  onEdit(data: any) {
-    if (this.canEdit()) {
-      this.navigateWithState(CRUDStatus.Edit, data);
-    }
-  }
-
-  onDetail(data: any) {
-    console.log(data);
-    this.navigateWithState(CRUDStatus.Read, data);
-  }
-
-  navigateWithState(crudstatus: CRUDStatus, rowdata?: any) {
-    let extras: NavigationExtras = {
-      state: {
-        crudstatus: crudstatus,
-        rowdata: rowdata,
-      },
-    };
-
-    console.log(crudstatus);
-
-    this.router.navigate(['/TLS4000/TLS41040CRU'], extras);
-  }
 }
