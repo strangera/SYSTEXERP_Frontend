@@ -16,12 +16,13 @@
         </div>
       </div>
       <div class="card">
-        <app-table tableKey="SYS0230CRU" [data]="roleUserData" [columns]="roleUserColumns" [showManage]="false"
-          [showDelete]="false" dataKey="ID" [multiSortMeta]="[{ field: 'Match', order: -1 }]"
-          [selectedItems]="selectedRoleUserData" (selectionChange)="selectedRoleUserData = $event"
-          [showReportMode]="false" [deleteData]="true" [showInsert]="true" (dataChange)="roleUserData = $event"
-          (insert)="dialogVisible = true" [disabled]="isFormReadable" [showCaption]="!isFormReadable"
-          [showCheckBox]="!isFormReadable"></app-table>
+        <app-table title="已分配角色" tableKey="SYS0230CRU" [data]="assignedRoles" [columns]="assignedRolesColumns"
+          [showManage]="false" dataKey="ID" [multiSortMeta]="[{ field: 'ID', order: 1 }]"
+          [selectedItems]="selectedAssignedRoles" (selectionChange)="selectedAssignedRoles = $event"
+          [showReportMode]="false" [deleteData]="true" [showInsert]="true" (insert)="dialogVisible = true"
+          (delete)="onDelete($event)" [disabled]="isFormReadable" [showCaption]="!isFormReadable"
+          [showCheckBox]="!isFormReadable">
+        </app-table>
       </div>
 
       <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3" *ngIf="!isFormReadable">
@@ -33,10 +34,20 @@
 </div>
 
 <app-dialog [visible]="dialogVisible" header="選擇角色" (visibleChange)="dialogVisible = $event" (save)="saveDialog()"
-  [disable]="selectedItemsDialog.length === 0">
-  <app-table tableKey="tls52020DialogTable" dataKey="ID" [showReportMode]="false" [data]="dialogData"
-    [columns]="dialogColumns" [showDelete]="false" [selectedItems]="selectedItemsDialog" [showCaption]="false"
-    (selectionChange)="selectedItemsDialog = $event" [showHeader]="false" [showManage]="false" [showCheckBox]="true"
-    [isRowSelectable]="isRowSelectable.bind(this)">
+  [disable]="selectedAvailableRoles.length === 0">
+  <form [formGroup]="filterDialogForm" id="filterDialogForm" (ngSubmit)="filterAvailableRoles()">
+    <div class="grid p-fluid">
+      <app-input-text class="col-12 md:col-6 lg:col-4" label="角色代號" controlName="filter_role_no"
+        [control]="filterDialogForm.controls.filter_role_no" [submitted]="submitted"
+        [disabled]="false"></app-input-text>
+      <app-input-text class="col-12 md:col-6 lg:col-4" label="角色名稱" controlName="filter_role_name"
+        [control]="filterDialogForm.controls.filter_role_name" [submitted]="submitted"
+        [disabled]="false"></app-input-text>
+    </div>
+  </form>
+  <app-table tableKey="SYS0220DialogTable" dataKey="ID" [showReportMode]="false" [data]="availableRoles"
+    [columns]="availableRolesColumns" [showDelete]="false" [selectedItems]="selectedAvailableRoles"
+    [showCaption]="false" (selectionChange)="selectedAvailableRoles = $event" [showHeader]="false" [showManage]="false"
+    [showCheckBox]="true">
   </app-table>
 </app-dialog>

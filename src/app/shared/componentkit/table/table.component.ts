@@ -160,10 +160,6 @@ export class TableComponent extends BasicPrintDataComponent implements OnChanges
   }
   // Table內建 分頁器變動
   onPageChange(event: TablePageEvent) {
-    // this.first = event.first;   // 更新當前起始索引
-    // this.rows = event.rows;     // 更新每頁行數
-    console.log(this.first);
-    console.log(this.rows);
     this.queryState.setQueryState(this.tableKey + 'rows', this.rows); // 保存分頁狀態
     this.selectedPage = Math.ceil((event.first / event.rows) + 1); // 更新下拉選單中的頁碼
     this.dt.totalRecords = this.totalRecords !== 0 ? this.totalRecords : this.data.length;
