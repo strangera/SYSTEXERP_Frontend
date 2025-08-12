@@ -95,7 +95,6 @@ export class TableComponent extends BasicPrintDataComponent implements OnChanges
   @Input() expansionRowsPerPageOptions = [10, 30, 50]; // expansion 分頁選項
   @Input() expansionScrollHeight = '300px';  // expansion 表格高度
   @Input() expansionLoadFn?: (rowData: any) => Observable<any>; // 屬性來接收父層傳來的載入函數
-  expression = false;                        // 收合展開 狀態 (true:展開、false:收合)
   expandedRows: Record<string, boolean> = {};// 收合展開 已展開資料
   // 管理 欄位
   @Input() showManage = true;                // 是否顯示 管理欄位
@@ -189,11 +188,6 @@ export class TableComponent extends BasicPrintDataComponent implements OnChanges
   // 切換行展開
   toggleRowExpansion(rowData: any) {
     this.tableUtilityService.toggleRowExpansionLogic(rowData, this.dataKey, this.expansionDataKey, this.expansionLoadFn, this.expandedRows, this);
-  }
-  // 全展開/收合的邏輯
-  toggleExpandCollapse() {
-    this.expression = !this.expression;
-    this.tableUtilityService.toggleExpandCollapseLogic(this.data, this.expression, this.dataKey, this.expansionDataKey, this.expansionLoadFn, this.expandedRows, this);
   }
   // 過濾欄位記錄保存
   onFilterChange(event: MultiSelectChangeEvent) {
