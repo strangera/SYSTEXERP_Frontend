@@ -9,6 +9,7 @@ import { TXN_SubtypeService } from '../../../service/basic/TXN_Subtype.service';
 import { CarrierTypeService } from '../../../service/basic/carrier-type.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ReportTableGroupComponent } from '../../../shared/componentkit/report-table-group/report-table-group.component';
+import { TLS23010Service } from '@service/api/tls/tls23010.service';
 type DisplayMode = 'Detail' | 'Summary';
 interface ReportColumn {
   header: string;
@@ -43,6 +44,7 @@ export class TLS23010CRUComponent extends BasicCruPageComponent<any> {
     private whetherService: WhetherService,
     private txnSubtypeService: TXN_SubtypeService,
     private carrierTypeService: CarrierTypeService,
+    private tls23010Service: TLS23010Service,
   ) {
     super();
   }
@@ -118,15 +120,31 @@ export class TLS23010CRUComponent extends BasicCruPageComponent<any> {
     return value === 'Y' ? '是' : value === 'N' ? '否' : value;
   }
 
-  fetchDetailData = async (payload: any): Promise<any[]> => {
-    const match = this.data.find(
-      (row) =>
-        row.TXN_Date === payload.TXN_Date &&
-        row.ECR_No === payload.ECR_No &&
-        row.TXN_No === payload.TXN_No,
-    );
-    return match?.DetailList ?? [];
+fetchDetailData = async (payload: any): Promise<any[]> => {
+  const storeNo = (() => {
+    try {
+      const raw = localStorage.getItem('UserInfo');
+      return raw ? JSON.parse(raw)?.SYS_StoreNo ?? null : null;
+    } catch { return null; }
+  })();
+
+  if (!storeNo) return [];
+
+  const req = {
+    SYS_StoreNo: String(storeNo),
+    TXN_Date: payload?.TXN_Date,
+    ECR_No: payload?.ECR_No,
+    TXN_No: payload?.TXN_No,
   };
+
+  return new Promise(resolve => {
+    // 直接打後端，不再用 state 裡的 DetailList
+    this.tls23010Service.queryTLS23010Detail(req).subscribe({
+      next: res => resolve(res?.Data ?? []),
+      error: _ => resolve([]),
+    });
+  });
+};
 
   private getSum(field: string): number {
     return this.data.reduce(

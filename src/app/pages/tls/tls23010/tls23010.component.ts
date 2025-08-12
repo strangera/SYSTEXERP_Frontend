@@ -270,28 +270,31 @@ private saveQueryToStorage(): void {
     }
     this.showPageSizeDialog = true;
   }
-  fetchDetailData = async (payload: any): Promise<any[]> => {
-    const { TXN_Date, ECR_No, TXN_No } = payload;
+fetchDetailData = async (payload: any): Promise<any[]> => {
+  // ✅ 固定從 LocalStorage 拿門市別
+  const storeNo = (() => {
+    try {
+      const raw = localStorage.getItem('UserInfo');
+      return raw ? JSON.parse(raw)?.SYS_StoreNo ?? null : null;
+    } catch { return null; }
+  })();
 
-    const body = {
-      TXN_DateStart: TXN_Date,
-      TXN_DateEnd: TXN_Date,
-      ECR_No: [ECR_No],
-      TXN_No_Start: TXN_No,
-      TXN_No_End: TXN_No,
-      // ✅ 不需要 PageSize、PageIndex、Offset、OrderBy、SortBy
-    };
+  if (!storeNo) return [];
 
-    return new Promise((resolve) => {
-      this.tls23010Service.queryTLS23010(body, 'Detail').subscribe({
-        next: (res) => {
-          const detailList = res?.Data?.[0]?.DetailList ?? [];
-          resolve(detailList);
-        },
-        error: () => resolve([]),
-      });
-    });
+  const req = {
+    SYS_StoreNo: String(storeNo),
+    TXN_Date: payload?.TXN_Date,   // 由 ReportTableGroup 傳進來
+    ECR_No: payload?.ECR_No,
+    TXN_No: payload?.TXN_No,
   };
+
+  return new Promise(resolve => {
+    this.tls23010Service.queryTLS23010Detail(req).subscribe({
+      next: res => resolve(res?.Data ?? []),
+      error: _ => resolve([]),
+    });
+  });
+};
 confirmPageSizeAndNavigate(): void {
   this.submitted = true;
   if (this.queryForm.invalid) {
