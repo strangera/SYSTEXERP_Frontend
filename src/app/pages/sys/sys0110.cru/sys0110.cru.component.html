@@ -29,7 +29,7 @@
         <app-dropdown class="col-12 md:col-6 lg:col-4" label="使用者等級" controlName="user_priority"
           [control]="dataForm.controls.user_priority" [submitted]="submitted" [options]="user_priorityOptions"
           optionLabel="label" optionValue="value" />
-        <app-dropdown class="col-12 md:col-6 lg:col-4" label="職稱代碼" controlName="title" [options]="titleOptions"
+        <app-dropdown class="col-12 md:col-6 lg:col-4" label="職位" controlName="title" [options]="titleOptions"
           optionLabel="Label" optionValue="No" [control]="dataForm.controls.title" [submitted]="submitted" />
         <app-calendar *ngIf="!isFormCreateable" class="col-12 md:col-6 lg:col-4" label="密碼到期日"
           controlName="USER_PwdExpireDate" [control]="dataForm.controls.USER_PwdExpireDate" [submitted]="submitted" />
