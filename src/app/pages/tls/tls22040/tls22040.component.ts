@@ -10,19 +10,6 @@ import { TableComponent } from '../../../shared/componentkit/table/table.compone
 import { TranslateModule } from '@ngx-translate/core';
 import { yesterday } from '@shared/models/system/query-form.model';
 
-// interface TLS22040 {
-//   id: 0,
-//   Role_No: "string",
-//   Role_Name: "string",
-//   Description: "string",
-//   CRT_Date: "2025-06-18T15:37:00.263Z",
-//   CRT_USR_No: "string",
-//   CRT_USR_Name: "string",
-//   UPD_Date: "2025-06-18T15:37:00.263Z",
-//   UPD_USR_No: "string",
-//   UPD_USR_Name: "string"
-// }
-
 @Component({
     selector: 'app-tls22040',
     templateUrl: './tls22040.component.html',
@@ -76,7 +63,7 @@ export class TLS22040Component extends BasicQueryPageComponent<any> implements O
           invoiceTypeIMS: '一般稅額',
           invoiceAmountIMS: 120000,
           invoiceCountIMS: 45,
-          creationTimeIMS: '2025/06/02 08:15:30',
+          creationTimeIMS: '2025/06/02',
           fileDate: '2025/06/02',
           invoiceTypeTurnkey: '一般稅額',
           invoiceCountTurnkey: 45
@@ -86,7 +73,7 @@ export class TLS22040Component extends BasicQueryPageComponent<any> implements O
           invoiceTypeIMS: '特種稅額',
           invoiceAmountIMS: 85000,
           invoiceCountIMS: 30,
-          creationTimeIMS: '2025/06/03 09:10:12',
+          creationTimeIMS: '2025/06/03',
           fileDate: '2025/06/03',
           invoiceTypeTurnkey: '特種稅額',
           invoiceCountTurnkey: 30
@@ -96,7 +83,7 @@ export class TLS22040Component extends BasicQueryPageComponent<any> implements O
           invoiceTypeIMS: '免稅',
           invoiceAmountIMS: 53000,
           invoiceCountIMS: 20,
-          creationTimeIMS: '2025/06/04 07:48:55',
+          creationTimeIMS: '2025/06/04',
           fileDate: '2025/06/04',
           invoiceTypeTurnkey: '免稅',
           invoiceCountTurnkey: 20
