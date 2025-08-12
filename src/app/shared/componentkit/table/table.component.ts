@@ -140,14 +140,16 @@ export class TableComponent extends BasicPrintDataComponent implements OnChanges
       });
     }
     // 僅在 columns 首次被設定時執行初始化邏輯// 這樣就不會在每次 data 變動時都重置 filter 狀態
-    if (changes['columns'] && this.columns.length > 0 && changes['columns'].firstChange) {
+    if (changes['columns'] && this.columns.length > 0) {
       this.originalColumns = this.columns;
       this.showSubTotal = this.showSubTotal ? this.showSubTotal : this.columns.find(c => c.isSubTotal) !== undefined;
       this.showTotal = this.showTotal ? this.showTotal : this.columns.find(c => c.isTotal) !== undefined;
-      setTimeout(() => {// 恢復歷史紀錄，如果沒有就使用預設值
-        this.rows = this.queryState.getQueryState(this.tableKey + 'rows')?.value ?? this.rows; // 取得分頁狀態
-        this.multiSortMeta = this.queryState.getQueryState(this.tableKey + 'Sort')?.value ?? this.multiSortMeta;
-      }, 300);
+      if (changes['columns'].firstChange) {
+        setTimeout(() => {// 恢復歷史紀錄，如果沒有就使用預設值
+          this.rows = this.queryState.getQueryState(this.tableKey + 'rows')?.value ?? this.rows; // 取得分頁狀態
+          this.multiSortMeta = this.queryState.getQueryState(this.tableKey + 'Sort')?.value ?? this.multiSortMeta;
+        }, 300);
+      }
     }
   }
   // 右上dropdown 跳轉頁數
@@ -158,8 +160,10 @@ export class TableComponent extends BasicPrintDataComponent implements OnChanges
   }
   // Table內建 分頁器變動
   onPageChange(event: TablePageEvent) {
-    this.first = event.first;   // 更新當前起始索引
-    this.rows = event.rows;     // 更新每頁行數
+    // this.first = event.first;   // 更新當前起始索引
+    // this.rows = event.rows;     // 更新每頁行數
+    console.log(this.first);
+    console.log(this.rows);
     this.queryState.setQueryState(this.tableKey + 'rows', this.rows); // 保存分頁狀態
     this.selectedPage = Math.ceil((event.first / event.rows) + 1); // 更新下拉選單中的頁碼
     this.dt.totalRecords = this.totalRecords !== 0 ? this.totalRecords : this.data.length;

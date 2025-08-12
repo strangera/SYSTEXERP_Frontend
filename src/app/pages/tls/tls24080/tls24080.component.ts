@@ -60,7 +60,7 @@ export class TLS24080Component extends BasicQueryPageComponent<TLTNoEditItem | D
     { label: '交易資料作廢', value: 'VoidEdit' },
   ];
   data: TLTNoEditItem[] | DiscCodeEditItem[] | TLTIdEditItem[] | PayNoEditItem[] | PreOrderEditItem[] | VoidEditItem[] = [];
-  columns: Column[] = [];
+  columns: Column[] = TLTNoEditColumn;
   constructor(
     private readonly dropDownList: DropDownListService,
     private readonly tls24080Service: Tls24080Service,
@@ -70,6 +70,22 @@ export class TLS24080Component extends BasicQueryPageComponent<TLTNoEditItem | D
     this.dropDownList.queryPOS1002_DropDownList().pipe(untilDestroyed(this)).subscribe(options => {
       this.ECR_NoOptions = options.Data.map(item => ({ ...item, label: `${item.No} - ${item.Name}` }));
     });
+    this.queryForm.get('EditType')?.valueChanges.pipe(untilDestroyed(this)).subscribe(editType => {
+      switch (editType) {
+        case 'TLTNoEdit': this.columns = TLTNoEditColumn; break;
+        case 'DiscCodeEdit': this.columns = DiscCodeEditColumn; break;
+        case 'TLTIdEdit': this.columns = TLTIdEditColumn; break;
+        case 'PayNoEdit': this.columns = PayNoEditColumn; break;
+        case 'PreOrderEdit': this.columns = PreOrderEditColumn; break;
+        case 'VoidEdit': this.columns = VoidEditColumn; break;
+        default: this.columns = [];
+      }
+    })
+
+    const EditType = this.queryStateService.getQueryState(this.ProgNo)?.value?.EditType;
+    if (EditType) {
+      this.queryForm.get('EditType')?.patchValue(EditType);
+    }
   }
 
   onSubmit(frm: FormGroup) {
@@ -82,12 +98,13 @@ export class TLS24080Component extends BasicQueryPageComponent<TLTNoEditItem | D
       }
       this.tls24080Service.queryTLS24080(body).pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(res => {
         switch (frm.value.EditType) {
-          case 'TLTNoEdit': this.data = res.Data[0].TLTNoEdit as TLTNoEditItem[]; this.columns = TLTNoEditColumn; break;
-          case 'DiscCodeEdit': this.data = res.Data[0].DiscCodeEdit as DiscCodeEditItem[]; this.columns = DiscCodeEditColumn; break;
-          case 'TLTIdEdit': this.data = res.Data[0].TLTIdEdit as TLTIdEditItem[]; this.columns = TLTIdEditColumn; break;
-          case 'PayNoEdit': this.data = res.Data[0].PayNoEdit as PayNoEditItem[]; this.columns = PayNoEditColumn; break;
-          case 'PreOrderEdit': this.data = res.Data[0].PreOrderEdit as PreOrderEditItem[]; this.columns = PreOrderEditColumn; break;
-          case 'VoidEdit': this.data = res.Data[0].VoidEdit as VoidEditItem[]; this.columns = VoidEditColumn; break;
+          case 'TLTNoEdit': this.data = res.Data[0].TLTNoEdit as TLTNoEditItem[]; break;
+          case 'DiscCodeEdit': this.data = res.Data[0].DiscCodeEdit as DiscCodeEditItem[]; break;
+          case 'TLTIdEdit': this.data = res.Data[0].TLTIdEdit as TLTIdEditItem[]; break;
+          case 'PayNoEdit': this.data = res.Data[0].PayNoEdit as PayNoEditItem[]; break;
+          case 'PreOrderEdit': this.data = res.Data[0].PreOrderEdit as PreOrderEditItem[]; break;
+          case 'VoidEdit': this.data = res.Data[0].VoidEdit as VoidEditItem[]; break;
+          default: this.data = [];
         }
         this.queryStateService.setQueryState(this.ProgNo, frm.value);
       })

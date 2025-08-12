@@ -17,7 +17,8 @@
         <app-table title="關閉排序 showSort='false'" dataKey="id" [data]="data3" [columns]="columns3" [showSort]="false">
         </app-table>
         <app-table tableKey="table3" title="預設排序multiSortMeta (記得加上tableKey參數)" dataKey="id" [data]="data3"
-          [columns]="columns3" [multiSortMeta]="[{field: 'field1',order: 1},{field: 'field2',order: -1}]"
+          [columns]="columns3"
+          [multiSortMeta]="[{field: 'field1',order: 1},{field: 'field2',order: -1},{field: 'field3',order: -1}]"
           [showSort]="true">
         </app-table>
       </p-tabPanel>

@@ -7,7 +7,7 @@
   [selectionMode]="showCheckBox && IsPrint ? selectionMode : null" [dataKey]="dataKey" [rowTrackBy]="trackByRow"
   [resizableColumns]="true" [paginator]="showPaginator && IsPrint && !rowEditing && !loading" [scrollable]="scrollable"
   [showCurrentPageReport]="IsPrint" [multiSortMeta]="multiSortMeta" [rowsPerPageOptions]="[10, 30, 50]"
-  [scrollHeight]="expansionDataKey ? 'auto' : scrollHeight" [rows]="rows" [(first)]="first"
+  [scrollHeight]="expansionDataKey ? 'auto' : scrollHeight" [(rows)]="rows" [(first)]="first"
   (onLazyLoad)="loadDataLazy($event)" [lazy]="lazy || !IsPrint" (onSort)="onSort($event)"
   [styleClass]="'p-datatable-sm' + (IsPrint ? ' p-datatable-gridlines' : ' ') + (!disabled ? ' p-datatable-striped' : ' ')"
   [virtualScroll]="!IsPrint" [virtualScrollItemSize]="35" [virtualScrollDelay]="250"
