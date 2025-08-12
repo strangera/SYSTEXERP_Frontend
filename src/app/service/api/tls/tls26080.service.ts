@@ -60,7 +60,7 @@ export class TLS26080Service {
     private confirmationService: ConfirmationService,
   ) { }
 
-  public loadAPS1003DropDownList(cap_typeList: string[]): void {
+  public loadAPS1003(cap_typeList: string[]): void {
     if (this.capItemsLoading) return void (this.capItemsLoading = !1);
     this.capItemsLoading = !0;
     this.http.post<BaseQueryResponse<DropdownOption>>(`${apiUrl}/queryAPS1003_DropDownList`, { cap_typeList }).pipe(
@@ -75,7 +75,7 @@ export class TLS26080Service {
   }
 
   /** 查詢資料 */
-  public loadTLS26080(query: TLS26080Query = {}): void {
+  public loadTLS26080(query: TLS26080Query): void {
     if (this.tableLoading) return void (this.tableLoading = !1);
     this.tableLoading = !0;
     this.http.post<BaseQueryResponse<TLS26080Data>>(`${apiUrl}/TLS0000/TLS2000/queryTLS26080`, query).pipe(
