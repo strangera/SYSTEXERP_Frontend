@@ -1,1 +1,216 @@
-<p>fin15100 works!</p>
+<div class="card">
+  <div class="flex gap-2 mb-2">
+    <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
+  </div>
+
+  <p-accordion>
+    <p-accordionTab
+      header="{{ 'query-conditions' | translate }}"
+      [selected]="true"
+      class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'"
+    >
+      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit()">
+        <div class="grid p-fluid">
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-query-year-month
+              label="申報年月"
+              [control]="queryForm.controls.DeclareYM"
+              [submitted]="submitted"
+              [onlyOddMonths]="true"
+            ></app-query-year-month>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-text-range
+              label="退出/折讓單號"
+              [startControl]="queryForm.controls.TXN_Ret_NoStart"
+              [endControl]="queryForm.controls.TXN_Ret_NoEnd"
+              [submitted]="submitted"
+            ></app-input-text-range>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-text
+              label="字軌"
+              controlName="track"
+              [control]="queryForm.controls.SAL_GUITrack"
+              [submitted]="submitted"
+            ></app-input-text>
+            </div>
+            <div class="col-12 md:col-6 lg:col-4">
+              <app-input-text-range
+                label="發票號碼"
+                [startControl]="queryForm.controls.SAL_GUINo_start"
+                [endControl]="queryForm.controls.SAL_GUINo_end"
+                [submitted]="submitted"
+                [errorForGroup]="true"
+              ></app-input-text-range>
+            </div>
+         </div>
+
+        <div
+          class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
+        >
+          <app-button btnType="clear"></app-button>
+          <app-button btnType="query" [loading]="loading"></app-button>
+        </div>
+      </form>
+    </p-accordionTab>
+  </p-accordion>
+</div>
+
+<!-- <div class="card">
+  <app-table
+    tableKey="FIN15100"
+    [data]="data"
+    [columns]="columns"
+    [columnGroup]="columnGroup"
+    dataKey="DeclareMonth"
+    [multiSortMeta]="[{ field: 'DeclareMonth', order: 1 }]"
+    [totalRecords]="totalRecords"
+    [lazy]="true"
+    [loading]="loading"
+    (edit)="onEdit($event)"
+    (detail)="onDetail($event)"
+    [showManage]="true"
+    [showDelete]="true"
+    [showCheckBox]="true"
+    (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit()"
+  ></app-table>
+</div> -->
+<div class="sheet">
+
+  <!-- 頂端抬頭 -->
+  <div class="head">
+    <div class="brand">
+      <div class="logo">T.S.</div>
+      <div class="mall">
+        <div class="mall-name">南紡購物中心</div>
+        <div class="mall-en">T.S. Mall</div>
+      </div>
+    </div>
+
+    <div class="docbox">
+      <div class="doc-title">{{ doc().title }}</div>
+      <div class="row">
+        <div>折讓憑證號碼：<b>{{ doc().serialNo }}</b></div>
+        <div>日期：{{ doc().date | date:'yyyy-MM-dd' }}</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 發票資料區 -->
+  <div class="issuer grid-2">
+    <div class="label">發票營業<br />統一編號</div>
+    <div class="value">
+      <input pInputText [(ngModel)]="issuer().taxId" />
+    </div>
+
+    <div class="label">名　　稱</div>
+    <div class="value">
+      <input pInputText [(ngModel)]="issuer().name" />
+    </div>
+
+    <div class="label">營業所在地<br />址</div>
+    <div class="value">
+      <input pInputText [(ngModel)]="issuer().address" />
+    </div>
+  </div>
+
+  <!-- 貼立發票 + 日期/字軌/號碼 -->
+  <div class="affix-area">
+    <div class="affix-title">貼立發票</div>
+    <div class="datebox">
+      <div class="cell label">銷<br/>售<br/>年<br/>月<br/>日</div>
+      <div class="cell">
+        <p-inputNumber [(ngModel)]="invoice().year" [useGrouping]="false"></p-inputNumber>
+      </div>
+      <div class="cell">
+        <p-inputNumber [(ngModel)]="invoice().month" [useGrouping]="false"></p-inputNumber>
+      </div>
+      <div class="cell">
+        <p-inputNumber [(ngModel)]="invoice().day" [useGrouping]="false"></p-inputNumber>
+      </div>
+      <div class="cell label">字軌</div>
+      <div class="cell"><input pInputText [(ngModel)]="invoice().track" /></div>
+      <div class="cell label">號碼</div>
+      <div class="cell"><input pInputText [(ngModel)]="invoice().number" /></div>
+    </div>
+  </div>
+
+  <!-- 主表：退貨或折讓內容 -->
+  <div class="table-title">退　貨　或　折　讓　內　容</div>
+  <p-table
+    [value]="items()"
+    [tableStyle]="{ 'min-width': '100%', 'border-collapse':'collapse' }"
+    styleClass="print-table"
+  >
+    <ng-template pTemplate="header">
+      <tr>
+        <th style="width: 50%">品名</th>
+        <th style="width: 10%">數量</th>
+        <th style="width: 12%">單價</th>
+        <th style="width: 14%">金額(未稅)</th>
+        <th style="width: 8%">營業稅別</th>
+        <th style="width: 6%">稅率(%)</th>
+        <th style="width: 10%">稅額</th>
+        <th style="width: 6%"></th>
+      </tr>
+    </ng-template>
+
+    <ng-template pTemplate="body" let-row let-rowIndex="rowIndex">
+      <tr>
+        <td>
+          <input pInputText [(ngModel)]="row.name" class="w-100" />
+        </td>
+        <td class="num">
+          <p-inputNumber [(ngModel)]="row.qty" [min]="0" [useGrouping]="false"></p-inputNumber>
+        </td>
+        <td class="num">
+          <p-inputNumber [(ngModel)]="row.unitPrice" [min]="0" [useGrouping]="true"></p-inputNumber>
+        </td>
+        <td class="num">{{ rowAmountExcl(row) | number:'1.0-0' }}</td>
+        <td>
+          <p-dropdown [(ngModel)]="row.taxType" [options]="taxTypeOptions" [editable]="false"></p-dropdown>
+        </td>
+        <td class="num">
+          <p-inputNumber [(ngModel)]="row.taxRate" [useGrouping]="false" [min]="0"></p-inputNumber>
+        </td>
+        <td class="num">{{ rowTax(row) | number:'1.0-0' }}</td>
+        <td class="op">
+          <button pButton icon="pi pi-trash" class="p-button-text p-button-sm"
+                  (click)="removeRow(rowIndex)"></button>
+        </td>
+      </tr>
+    </ng-template>
+
+    <ng-template pTemplate="footer">
+      <tr>
+        <td class="right" colspan="3">小計</td>
+        <td class="num">{{ subtotal() | number:'1.0-0' }}</td>
+        <td class="right" colspan="2">營業稅額</td>
+        <td class="num">{{ taxTotal() | number:'1.0-0' }}</td>
+        <td></td>
+      </tr>
+      <tr>
+        <td class="right" colspan="6"><b>合計</b></td>
+        <td class="num"><b>{{ grandTotal() | number:'1.0-0' }}</b></td>
+        <td></td>
+      </tr>
+    </ng-template>
+  </p-table>
+
+  <div class="toolbar">
+    <button pButton label="新增一列" icon="pi pi-plus" (click)="addRow()"></button>
+  </div>
+
+  <!-- 備註與簽收 -->
+  <div class="footer-area">
+    <div class="note">
+      本證明單所列貨物係已發生退貨、毀損等，特此證明。
+    </div>
+    <div class="sign">
+      <div class="title">進貨當然人（減價買受人）簽收—發票專用章</div>
+      <div class="box"></div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,33 @@
+:host { display: block; }
+
+.header {
+  display: flex; align-items: flex-start; justify-content: center;
+  margin-bottom: .5rem; position: relative;
+
+  h2 { margin: 0 auto; font-weight: 600; }
+  .media { position: absolute; right: 0; top: 0; display: flex; gap: .5rem; align-items: center; }
+  .ml-2 { margin-left: .5rem; }
+}
+
+.form-table {
+  width: 100%;
+  border-collapse: collapse;
+
+  td {
+    border: 1px solid var(--surface-400, #d6d6d6);
+    padding: .5rem .75rem;
+    vertical-align: middle;
+  }
+
+  .label { background: var(--surface-100, #f7f7f7); white-space: nowrap; }
+  .vertical {
+    writing-mode: vertical-rl; text-orientation: mixed; text-align: center;
+    width: 3rem; font-weight: 600;
+  }
+  .center { text-align: center; }
+  .right  { text-align: right; }
+  .bold   { font-weight: 600; }
+  .sign   { height: 110px; }
+  .small-note { font-size: .875rem; }
+  .w-10 { width: 10%; } .w-15 { width: 15%; }
+}
