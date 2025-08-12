@@ -134,7 +134,7 @@ export class TLS13010Component extends BasicQueryPageComponent<ContractItem> imp
 
     // 保證金相關
     depositTypes: [[]],
-    open_deposit: [[]],
+    all_deposit: [[]],
     paymentMethods: [[]],
     //版次區間
     contract_subno_from: [],

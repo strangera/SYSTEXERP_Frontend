@@ -78,8 +78,9 @@ const now = new Date();
 })
 export class TLS23010Component extends BasicQueryPageComponent<any> {
   // ====== 1) 這些放在類別內屬性區 ======
-private readonly STORAGE_KEY = 'TLS23010:queryForm';
-private formValueSub?: Subscription;
+  private readonly STORAGE_KEY = 'TLS23010:queryForm';
+  private formValueSub?: Subscription;
+
   displayMode: 'Detail' | 'Summary' = 'Detail'; // 預設顯示明細報表
   querySubscription: Subscription | null = null;
   customPageSize = 1000;
@@ -88,15 +89,15 @@ private formValueSub?: Subscription;
   data: any[] = [];
   totalRecords = 0;
   selectedItems: any[] = [];
-   // 「昨天 00:00」與「今天 23:59:59」常用預設
+  
   readonly yesterday: Date = (() => {
     const d = new Date();
     d.setHours(0, 0, 0, 0);
     d.setDate(d.getDate() - 1);
     return d;
   })();
-  // 類別內加上（放在屬性區）
-private readonly QUERY_TIMEOUT_MS = 30_000; // 30 秒
+  
+   private readonly QUERY_TIMEOUT_MS = 30_000; // 30 秒
 
 
   queryForm = this.formBuilder.group({
@@ -146,152 +147,7 @@ private readonly QUERY_TIMEOUT_MS = 30_000; // 30 秒
   ];
   CounterOptions: any[] = []; // 專櫃選項
 
-  columns: any[] = [
-    {
-      field: 'TXN_Date',
-      header: '銷售日期',
-      visible: true,
-      format: (val: string) => {
-        const date = new Date(val);
-        return isNaN(date.getTime())
-          ? val
-          : `${date.getFullYear()}/${(date.getMonth() + 1).toString().padStart(2, '0')}/${date.getDate().toString().padStart(2, '0')}`;
-      },
-    },
-    { field: 'ECR_No', header: '機號', visible: true },
-    { field: 'TXN_No', header: '交易序號', visible: true, style: 'text-right' },
-    { field: 'tlt_no', header: '專櫃編號', visible: true },
-    {
-      field: 'tlt_name',
-      header: '櫃位名稱',
-      visible: true,
-      style: 'text-left',
-    }, 
-    { field: 'TXN_Uniform', header: '統一編號', visible: true },
-    { field: 'TXN_GUIBegNoFirstNo', header: '字軌', visible: true }, // 假設為字軌顯示
-    { field: 'TXN_GUIBegNo', header: '起始發票號碼', visible: true },
-    { field: 'TXN_GUIEndNo', header: '結束發票號碼', visible: true },
-    {
-      field: 'TXN_TotGUI',
-      header: '發票金額',
-      visible: true,
-      style: 'text-right',
-      format: (val: number) => val?.toLocaleString('en-US') || '0',
-    },
-    {
-      field: 'TXN_TotSaleAmt',
-      header: '銷售金額',
-      visible: true,
-      style: 'text-right',
-      format: (val: number) => val?.toLocaleString('en-US') || '0',
-    },
-    {
-      field: 'TXN_TotOver',
-      header: '溢收金額',
-      visible: true,
-      style: 'text-right',
-      format: (val: number) => val?.toLocaleString('en-US') || '0',
-    },
-    {
-      field: 'TXN_FlagStatus',
-      header: '狀態旗標',
-      visible: true,
-      format: (val: any) =>
-        this.getLabelFromOptions(val, this.statusFlagOptions),
-    },
-    {
-      field: 'TXN_Status',
-      header: '交易型態',
-      visible: true,
-      format: (val: any) =>
-        this.getLabelFromOptions(val, this.txnStatusOptions),
-    },
-    {
-      field: 'TXN_Subtype',
-      header: '交易附屬型態',
-      visible: true,
-      format: (val: any) =>
-        this.getLabelFromOptions(val, this.transactionSubTypeOptions),
-    },
-    {
-      field: 'TXN_TotPayAmt',
-      header: '訂金實收',
-      visible: true,
-      style: 'text-right',
-      format: (val: number) => val?.toLocaleString('en-US') || '0',
-    },
-    { field: 'TXN_TaxFreeCertNo', header: '外交官免稅卡號', visible: true },
-    { field: 'TXN_Time', header: '起始時間', visible: true },
-    { field: 'TXN_Time', header: '結束時間', visible: true },
-
-    { field: 'USR_No', header: '收銀員', visible: true, style: 'text-left' },
-    { field: 'TXN_PreOrderNo', header: '預售/訂金單號', visible: true },
-    { field: 'ORG_TXN_Date', header: '原交易日期', visible: true },
-    { field: 'ORG_ECR_No', header: '原收銀機號', visible: true },
-    { field: 'ORG_TXN_No', header: '原交易序號', visible: true },
-    { field: 'TXN_PkngUID', header: '停車車牌', visible: true },
-    { field: 'TXN_MemID', header: '會員卡號', visible: true },
-    {
-      field: 'TXN_TotDisc',
-      header: '折扣/讓金額',
-      visible: true,
-      style: 'text-right',
-      format: (val: number) => val?.toLocaleString('en-US') || '0',
-    },
-    {
-      field: 'TXN_YN',
-      header: '銷貨清單列印狀態',
-      visible: true,
-      format: () => '是',
-    },
-
-    {
-      field: 'TXN_DonateType',
-      header: '捐贈狀態',
-      visible: true,
-      format: (val: any) => this.getLabelFromOptions(val, this.whetherOptions),
-    },
-    { field: 'TXN_GUILoveCode', header: '捐贈社福團體代碼', visible: true },
-    { field: 'TXN_GUIRemark', header: '防偽隨機碼', visible: true },
-    {
-      field: 'TXN_GUI_CarrType',
-      header: '載具種類',
-      visible: true,
-      format: (val: any) =>
-        this.getLabelFromOptions(val, this.carrierTypeOptions),
-    },
-    { field: 'TXN_GUI_CarrId', header: '共通性載具號碼', visible: true },
-    {
-      field: 'TXN_PrintGUI',
-      header: '電子發票是否列印', //是從 **POS5006.TXN_PrintTimes** 計算出來的結果。
-      visible: true,
-      format: (val: any) => this.getYesNoLabel(val),
-    },
-    {
-      field: 'TXN_PrintGUI',
-      header: '信用卡別',
-      visible: true,
-      format: (val: any) => this.getYesNoLabel(val),
-    },
-    {
-      field: 'TXN_PrintGUI',
-      header: '號碼',
-      visible: true,
-      format: (val: any) => this.getYesNoLabel(val),
-    },
-    {
-      field: 'TXN_PrintGUI',
-      header: '分期期數',
-      visible: true,
-      format: (val: any) => this.getYesNoLabel(val),
-    },
-    {
-      field: 'TXN_PrintGUI',
-      header: '金額',
-      visible: true,
-      format: (val: any) => this.getYesNoLabel(val),
-    },
-  ];
+  
 
   // 展開式表格的載入狀態
   expandLoading = false;
@@ -320,9 +176,9 @@ private readonly QUERY_TIMEOUT_MS = 30_000; // 30 秒
   ngOnInit(): void {
     this.initializePage('TLS23010', '', this.queryForm, 
     );
+
     this.restoreQueryFromStorage();
-      // ✅ 監聽表單變更，300ms 節流後自動保存
-  this.formValueSub = this.queryForm.valueChanges
+    this.formValueSub = this.queryForm.valueChanges
     .pipe(debounceTime(300))
     .subscribe(() => this.saveQueryToStorage());
     const savedQuery = localStorage.getItem('TLS23010_queryForm');
@@ -330,6 +186,7 @@ private readonly QUERY_TIMEOUT_MS = 30_000; // 30 秒
       const parsedQuery = JSON.parse(savedQuery);
       this.queryForm.patchValue(parsedQuery);
     }
+
     this.floorService
       .getFloors()
       .subscribe((data) => (this.floorOptions = data));
@@ -394,26 +251,7 @@ private saveQueryToStorage(): void {
   localStorage.setItem(this.STORAGE_KEY, payload);
 }
 
-/** 從 LocalStorage 還原進表單（把 ISO 字串還原成 Date 物件） */
-private restoreQueryFromStorage(): void {
-  const json = localStorage.getItem(this.STORAGE_KEY);
-  if (!json) return;
 
-  const parsed = JSON.parse(json, (_k, v) => {
-    if (typeof v === 'string' && /^\d{4}-\d{2}-\d{2}T/.test(v)) {
-      const d = new Date(v);
-      return isNaN(d.getTime()) ? v : d;
-    }
-    return v;
-  });
-
-  this.queryForm.patchValue(parsed, { emitEvent: false });
-}
-
-/** 清除 LocalStorage 內儲存的查詢條件 */
-private clearQueryStorage(): void {
-  localStorage.removeItem(this.STORAGE_KEY);
-}
   getLabelFromOptions(value: any, options: any[]): string {
     const found = options?.find((opt) => String(opt.value) === String(value));
     return found ? found.label : value;
@@ -531,19 +369,7 @@ confirmPageSizeAndNavigate(): void {
     });
 }
 
-// private restoreQueryFromState(): void {
-//   // 1) 先從 QueryStateService 取（最即時）
-//   const saved = this.queryStateService.getQueryState(this.ProgNo);
-//   if (saved) {
-//     this.queryForm.patchValue(saved);
-//     return;
-//   }
-//   // 2) 退而求其次，用 localStorage
-//   const ls = localStorage.getItem('TLS23010_queryForm');
-//   if (ls) {
-//     this.queryForm.patchValue(JSON.parse(ls));
-//   }
-// }
+
 
   cancelQuery(): void {
     if (this.querySubscription) {
@@ -553,6 +379,28 @@ confirmPageSizeAndNavigate(): void {
     this.loading = false;
     this.showPageSizeDialog = false;
   }
+
+
+  /** 從 LocalStorage 還原進表單（把 ISO 字串還原成 Date 物件） */
+private restoreQueryFromStorage(): void {
+  const json = localStorage.getItem(this.STORAGE_KEY);
+  if (!json) return;
+
+  const parsed = JSON.parse(json, (_k, v) => {
+    if (typeof v === 'string' && /^\d{4}-\d{2}-\d{2}T/.test(v)) {
+      const d = new Date(v);
+      return isNaN(d.getTime()) ? v : d;
+    }
+    return v;
+  });
+
+  this.queryForm.patchValue(parsed, { emitEvent: false });
+}
+
+/** 清除 LocalStorage 內儲存的查詢條件 */
+private clearQueryStorage(): void {
+  localStorage.removeItem(this.STORAGE_KEY);
+}
 onClearClick(): void {
   this.queryForm.reset({
     TXN_DateStart: this.yesterday,
@@ -568,5 +416,7 @@ onClearClick(): void {
   this.clearQueryStorage();
   this.messageService.infoBubble('已清除查詢條件');
 }
+
+
 
 }

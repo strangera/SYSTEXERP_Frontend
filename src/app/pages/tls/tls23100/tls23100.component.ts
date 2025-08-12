@@ -21,7 +21,7 @@ import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdow
 import { InputTextModule } from 'primeng/inputtext';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { TranslateModule } from '@ngx-translate/core';
-
+import { Subscription, EMPTY, throwError, BehaviorSubject } from 'rxjs';
 @Component({
   selector: 'app-tls23100',
   templateUrl: './tls23100.component.html',
@@ -41,6 +41,9 @@ import { TranslateModule } from '@ngx-translate/core';
   ],
 })
 export class TLS23100Component extends BasicQueryPageComponent<any> {
+  private readonly STORAGE_KEY = 'TLS23100:queryForm';
+  private formValueSub?: Subscription;
+  querySubscription: Subscription | null = null;
   //此頁面所需參數
   showPageSizeDialog = false;
   customPageSize = 1000;
@@ -67,34 +70,7 @@ export class TLS23100Component extends BasicQueryPageComponent<any> {
     ...createPaginationConfig([{ field: 'TLT_No', order: 1 }]),
   });
 
-  //response
-  columns: any[] = [
-    { field: 'ECR_No', header: '收銀機號', visible: true },
-    { field: 'TXN_No', header: '交易序號', visible: true },
-    { field: 'tlt_no', header: '專櫃編號', visible: true, style: 'text-left' },
-    {
-      field: 'tlt_name',
-      header: '櫃位名稱',
-      visible: true,
-      style: 'text-left',
-    },
-    { field: 'PAY_NO', header: '付款別', visible: true },
-    { field: 'PAY_NAME', header: '付款名稱', visible: true },
-    { field: 'CRD_Type', header: '信用卡卡別', visible: true },
-    { field: 'CRD_Name', header: '信用卡', visible: true },
-    { field: 'CRD_No', header: '信用卡卡號', visible: true },
-    {
-      field: 'TXN_PayAmt',
-      header: '金額',
-      visible: true,
-      style: 'text-right',
-      format: this.moneyFormat,
-    },
-  ];
-  //column 所需格式
-  moneyFormat(value: number): string {
-    return value != null ? value.toLocaleString('en-US') : '0'; // ✅ 使用美式格式
-  }
+
   //下拉選單
   paymentTypeOptions: any[] = [];
   floorOptions: any[] = [];
@@ -116,6 +92,15 @@ export class TLS23100Component extends BasicQueryPageComponent<any> {
   //頁面起始
   ngOnInit(): void {
     this.initializePage('TLS23100', 'tls/tls23100cru', this.queryForm);
+
+    this.restoreQueryFromStorage();
+    this.formValueSub = this.queryForm.valueChanges
+    .subscribe(() => this.saveQueryToStorage());
+    const savedQuery = localStorage.getItem('TLS23010_queryForm');
+    if (savedQuery) {
+      const parsedQuery = JSON.parse(savedQuery);
+      this.queryForm.patchValue(parsedQuery);
+    }
     //收銀機號下拉
     this.ECRNoService.getECRNo().subscribe((res) => {
       this.ECRNoOptions =
@@ -230,4 +215,32 @@ export class TLS23100Component extends BasicQueryPageComponent<any> {
       },
     });
   }
+
+    /** 立即把目前表單狀態存進 LocalStorage（日期會轉 ISO 字串） */
+private saveQueryToStorage(): void {
+  const raw = this.queryForm.getRawValue();
+  const payload = JSON.stringify(raw, (k, v) => (v instanceof Date ? v.toISOString() : v));
+  localStorage.setItem(this.STORAGE_KEY, payload);
+}
+
+    /** 從 LocalStorage 還原進表單（把 ISO 字串還原成 Date 物件） */
+private restoreQueryFromStorage(): void {
+  const json = localStorage.getItem(this.STORAGE_KEY);
+  if (!json) return;
+
+  const parsed = JSON.parse(json, (_k, v) => {
+    if (typeof v === 'string' && /^\d{4}-\d{2}-\d{2}T/.test(v)) {
+      const d = new Date(v);
+      return isNaN(d.getTime()) ? v : d;
+    }
+    return v;
+  });
+
+  this.queryForm.patchValue(parsed, { emitEvent: false });
+}
+
+/** 清除 LocalStorage 內儲存的查詢條件 */
+private clearQueryStorage(): void {
+  localStorage.removeItem(this.STORAGE_KEY);
+}
 }

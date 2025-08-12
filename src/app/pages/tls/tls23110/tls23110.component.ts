@@ -21,6 +21,7 @@ import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/
 import { InputTextModule } from 'primeng/inputtext';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { TranslateModule } from '@ngx-translate/core';
+import { Subscription, EMPTY, throwError, BehaviorSubject } from 'rxjs';
 
 @Component({
     selector: 'app-tls23110',
@@ -32,15 +33,20 @@ import { TranslateModule } from '@ngx-translate/core';
 export class TLS23110Component extends BasicQueryPageComponent<any> {
   showPageSizeDialog = false;
   customPageSize = 1000;
+  querySubscription: Subscription | null = null;
    readonly yesterday: Date = (() => {
     const d = new Date();
     d.setHours(0, 0, 0, 0);
     d.setDate(d.getDate() - 1);
     return d;
   })();
+  private readonly STORAGE_KEY = 'TLS23110:queryForm';
+  private formValueSub?: Subscription;
+  data: any[] = [];
+  totalRecords = 0;
 
-  queryForm = this.formBuilder.group({
 
+  queryForm = this.formBuilder.group({   
     TXN_DateStart: [this.yesterday, Validators.required],
     TXN_DateEnd: [this.yesterday, Validators.required],
     tlt_term_type: [],       // e.g., 'st'
@@ -64,37 +70,7 @@ export class TLS23110Component extends BasicQueryPageComponent<any> {
     { label: '只顯示自營櫃', value: 'N' }
   ];
 
-  data: any[] = [];
-  totalRecords = 0;
 
-  columns: any[] = [
-    { field: 'Day', header: '日期', visible: true },
-
-    // OriginalPrice
-    { field: 'OriginalPrice_TXN_SaleNoTax', header: '正品-未稅', visible: true, style: 'text-right', format: (val: number) => val?.toLocaleString('en-US') || '0' },
-    { field: 'OriginalPrice_TXN_Tax', header: '正品-稅額', visible: true, style: 'text-right', format: (val: number) => val?.toLocaleString('en-US') || '0' },
-    { field: 'OriginalPrice_Total', header: '正品-合計', visible: true, style: 'text-right', format: (val: number) => val?.toLocaleString('en-US') || '0' },
-
-    // Discount90
-    { field: 'Discount90_TXN_SaleNoTax', header: '9折-未稅', visible: true, style: 'text-right', format: (val: number) => val?.toLocaleString('en-US') || '0' },
-    { field: 'Discount90_TXN_Tax', header: '9折-稅額', visible: true, style: 'text-right', format: (val: number) => val?.toLocaleString('en-US') || '0' },
-    { field: 'Discount90_Total', header: '9折-合計', visible: true, style: 'text-right', format: (val: number) => val?.toLocaleString('en-US') || '0' },
-
-    // Discount80
-    { field: 'Discount80_TXN_SaleNoTax', header: '8折-未稅', visible: true, style: 'text-right', format: (val: number) => val?.toLocaleString('en-US') || '0' },
-    { field: 'Discount80_TXN_Tax', header: '8折-稅額', visible: true, style: 'text-right', format: (val: number) => val?.toLocaleString('en-US') || '0' },
-    { field: 'Discount80_Total', header: '8折-合計', visible: true, style: 'text-right', format: (val: number) => val?.toLocaleString('en-US') || '0' },
-
-    // SpecialPrice
-    { field: 'SpecialPrice_TXN_SaleNoTax', header: '特價-未稅', visible: true, style: 'text-right', format: (val: number) => val?.toLocaleString('en-US') || '0' },
-    { field: 'SpecialPrice_TXN_Tax', header: '特價-稅額', visible: true, style: 'text-right', format: (val: number) => val?.toLocaleString('en-US') || '0' },
-    { field: 'SpecialPrice_Total', header: '特價-合計', visible: true, style: 'text-right', format: (val: number) => val?.toLocaleString('en-US') || '0' },
-
-    // Total
-    { field: 'Total_TXN_SaleNoTax', header: '總計-未稅', visible: true, style: 'text-right', format: (val: number) => val?.toLocaleString('en-US') || '0' },
-    { field: 'Total_TXN_Tax', header: '總計-稅額', visible: true, style: 'text-right', format: (val: number) => val?.toLocaleString('en-US') || '0' },
-    { field: 'Total_Total', header: '總計-合計', visible: true, style: 'text-right', format: (val: number) => val?.toLocaleString('en-US') || '0' },
-  ];
 
   DeductionbigCategoryOptions: any[] = [];
   TypeOptions: any[] = [];
@@ -126,6 +102,14 @@ export class TLS23110Component extends BasicQueryPageComponent<any> {
     this.loading = false; // ✅ 保險起見，先還原 loading
     this.messageService.unblockUi();  // <-- 🔓 關鍵解除畫面卡住
     this.initializePage('TLS23110', 'TLS23110cru', this.queryForm);
+    this.restoreQueryFromStorage();
+    this.formValueSub = this.queryForm.valueChanges
+    .subscribe(() => this.saveQueryToStorage());
+    const savedQuery = localStorage.getItem('TLS23010_queryForm');
+    if (savedQuery) {
+      const parsedQuery = JSON.parse(savedQuery);
+      this.queryForm.patchValue(parsedQuery);
+    }
     this.whetherService.getWhetherOptions().subscribe(data => this.WhetherOptions = data);
     this.deductionbigCategoryService.getLocalDeductionCategories().subscribe(data => this.DeductionbigCategoryOptions = data);
     this.typeService.getTypeOptions().subscribe(data => this.TypeOptions = data);
@@ -218,5 +202,31 @@ this.router.navigate(['account/tls/tls23110cru'], {
     });
   }
 
+  /** 立即把目前表單狀態存進 LocalStorage（日期會轉 ISO 字串） */
+private saveQueryToStorage(): void {
+  const raw = this.queryForm.getRawValue();
+  const payload = JSON.stringify(raw, (k, v) => (v instanceof Date ? v.toISOString() : v));
+  localStorage.setItem(this.STORAGE_KEY, payload);
+}
 
+    /** 從 LocalStorage 還原進表單（把 ISO 字串還原成 Date 物件） */
+private restoreQueryFromStorage(): void {
+  const json = localStorage.getItem(this.STORAGE_KEY);
+  if (!json) return;
+
+  const parsed = JSON.parse(json, (_k, v) => {
+    if (typeof v === 'string' && /^\d{4}-\d{2}-\d{2}T/.test(v)) {
+      const d = new Date(v);
+      return isNaN(d.getTime()) ? v : d;
+    }
+    return v;
+  });
+
+  this.queryForm.patchValue(parsed, { emitEvent: false });
+}
+
+/** 清除 LocalStorage 內儲存的查詢條件 */
+private clearQueryStorage(): void {
+  localStorage.removeItem(this.STORAGE_KEY);
+}
 }

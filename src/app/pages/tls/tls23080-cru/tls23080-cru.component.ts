@@ -32,7 +32,7 @@ export class TLS23080CRUComponent extends BasicCruPageComponent<any> {
   constructor(
     private location: Location,
     private pdfService: PdfService,
-    private tls11010Service: Tls11010Service,
+
     private columnLabelService: ColumnLabelService,
     private sharedService: TLS23080SharedService
   ) {
@@ -56,13 +56,6 @@ export class TLS23080CRUComponent extends BasicCruPageComponent<any> {
       this.messageService.warnBubble('⚠️ 無資料可顯示，請重新查詢。');
     }
 
-    this.tls11010Service.getOrgOptions().subscribe(res => {
-      this.OrganizationCodeOptions = (res || []).map(x => ({
-        label: x.label,
-        formLabel: `${x.value} - ${x.label}`,
-        value: x.value
-      }));
-    });
 
     this.initializePage('TLS23080', this.dataForm);
   }

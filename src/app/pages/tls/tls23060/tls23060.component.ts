@@ -21,7 +21,7 @@ import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdow
 import { InputTextModule } from 'primeng/inputtext';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { TranslateModule } from '@ngx-translate/core';
-
+import { Subscription, EMPTY, throwError, BehaviorSubject } from 'rxjs';
 @Component({
     selector: 'app-tls23060',
     templateUrl: './tls23060.component.html',
@@ -30,7 +30,9 @@ import { TranslateModule } from '@ngx-translate/core';
     imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarRangeQuickComponent, RadiobuttonComponent, MultiSelectComponent, DropdownComponent, InputTextModule, ButtonComponent, TranslateModule]
 })
 export class TLS23060Component extends BasicQueryPageComponent<any> {
-
+  private readonly STORAGE_KEY = 'TLS23060:queryForm';
+  private formValueSub?: Subscription;
+  querySubscription: Subscription | null = null;
   data: any[] = [];
   totalRecords = 0;
   showPageSizeDialog = false;
@@ -43,6 +45,7 @@ export class TLS23060Component extends BasicQueryPageComponent<any> {
   })();
 
     queryForm = this.formBuilder.group({
+  
     TXN_DateStart: [this.yesterday, [Validators.required]],
     TXN_DateEnd: [this.yesterday, [Validators.required]],
     rece_yn: [null],
@@ -77,6 +80,14 @@ export class TLS23060Component extends BasicQueryPageComponent<any> {
 
   ngOnInit(): void {
     this.initializePage('TLS23060', 'TLS23060cru', this.queryForm);
+    this.restoreQueryFromStorage();
+    this.formValueSub = this.queryForm.valueChanges
+    .subscribe(() => this.saveQueryToStorage());
+    const savedQuery = localStorage.getItem('TLS23010_queryForm');
+    if (savedQuery) {
+      const parsedQuery = JSON.parse(savedQuery);
+      this.queryForm.patchValue(parsedQuery);
+    }
     this.whetherService.getWhetherOptions().subscribe(data => this.WhetherOptions = data);
     this.typeService.getTypeOptions().subscribe(data => this.typeOptions = data);
     this.floorService.getFloors().subscribe(data => this.floorOptions = data);
@@ -176,36 +187,32 @@ export class TLS23060Component extends BasicQueryPageComponent<any> {
     };
   }
 
-  moneyFormat(value: number): string {
-    return value != null ? value.toLocaleString('en-US') : '0';
-  }
 
-  getLabelFromOptions(value: any, options: any[]): string {
-    const found = options?.find(opt => String(opt.value) === String(value));
-    return found ? found.label : value;
-  }
+  /** 立即把目前表單狀態存進 LocalStorage（日期會轉 ISO 字串） */
+private saveQueryToStorage(): void {
+  const raw = this.queryForm.getRawValue();
+  const payload = JSON.stringify(raw, (k, v) => (v instanceof Date ? v.toISOString() : v));
+  localStorage.setItem(this.STORAGE_KEY, payload);
+}
 
-  // 欄位定義與格式（保留所有欄位 + moneyFormat + subtotalFields 全部欄位處理）
-  columns: any[] = [
-    { field: 'ECR_No', header: '收銀機號', visible: true },
-    { field: 'tlt_no', header: '專櫃編號', visible: true },
-    { field: 'tlt_name', header: '櫃位名稱', visible: true, style: 'text-left' },
-    ...[
-      'TXN_TotPayAmt', 'TXN_PayAmt10', 'TXN_PayAmt41', 'TXN_PayAmt42', 'TXN_PayAmt12',
-      'TXN_PayAmt81', 'TXN_PayAmt43', 'TXN_PayAmt44', 'TXN_PayAmt14', 'TXN_PayAmt82',
-      'TXN_PayAmt52', 'TXN_PayAmt20', 'TXN_PayAmt62', 'TXN_PayAmt77', 'TXN_PayAmt71',
-      'TXN_PayAmt30', 'TXN_PayAmt73', 'TXN_PayAmt72', 'TXN_PayAmt74', 'TXN_PayAmt75',
-      'TXN_PayAmt76', 'TXN_PayAmt24', 'TXN_PayAmt25', 'TXN_PayAmt07', 'TXN_PayAmt55',
-      'TXN_PayAmt83', 'TXN_PayAmt78', 'TXN_PayAmt79', 'TXN_PayAmt21', 'TXN_PayAmt53',
-      'TXN_PayAmt56', 'TXN_PayAmt57', 'TXN_PayAmt58', 'TXN_PayAmt59', 'TXN_PayAmt60',
-      'TXN_PayAmt22', 'TXN_PayAmt23', 'PreSale_Received', 'PreSale_Checkout',
-      'TXN_OverAmt', 'TXN_ReturnAmt', 'TXN_ExchangeAmt', 'TXN_CancelAmt', 'TXN_AgentAmt'
-    ].map(field => ({
-      field,
-      header: this.columnLabelService.getLabel(field),
-      visible: true,
-      style: 'text-right',
-      format: this.moneyFormat.bind(this)
-    }))
-  ];
+    /** 從 LocalStorage 還原進表單（把 ISO 字串還原成 Date 物件） */
+private restoreQueryFromStorage(): void {
+  const json = localStorage.getItem(this.STORAGE_KEY);
+  if (!json) return;
+
+  const parsed = JSON.parse(json, (_k, v) => {
+    if (typeof v === 'string' && /^\d{4}-\d{2}-\d{2}T/.test(v)) {
+      const d = new Date(v);
+      return isNaN(d.getTime()) ? v : d;
+    }
+    return v;
+  });
+
+  this.queryForm.patchValue(parsed, { emitEvent: false });
+}
+
+/** 清除 LocalStorage 內儲存的查詢條件 */
+private clearQueryStorage(): void {
+  localStorage.removeItem(this.STORAGE_KEY);
+}
 }

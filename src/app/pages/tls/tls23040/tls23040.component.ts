@@ -32,6 +32,7 @@ import { PrimeTemplate } from 'primeng/api';
 import { ButtonDirective } from 'primeng/button';
 import { TranslateModule } from '@ngx-translate/core';
 import { PaymentDetail, DiscountDetail, InvoiceDetail } from './tls23040.model';
+import { Subscription, EMPTY, throwError, BehaviorSubject } from 'rxjs';
 
 @Component({
   selector: 'app-tls23040',
@@ -58,17 +59,20 @@ import { PaymentDetail, DiscountDetail, InvoiceDetail } from './tls23040.model';
   ],
 })
 export class TLS23040Component extends BasicQueryPageComponent<any> {
+  private readonly STORAGE_KEY = 'TLS23040:queryForm';
+  private formValueSub?: Subscription;
+  querySubscription: Subscription | null = null;
 
   totalRecords = 0;
   showPageSizeDialog = false;
   customPageSize = 10;
   useSummaryMode = false; // 預設為明細表模式
   displayMode: 'Report' | 'ByPaymentType' | 'ByDiscountType' = 'Report';
- readonly yesterday: Date = (() => {
-    const d = new Date();
-    d.setHours(0, 0, 0, 0);
-    d.setDate(d.getDate() - 1);
-    return d;
+  readonly yesterday: Date = (() => {
+  const d = new Date();
+  d.setHours(0, 0, 0, 0);
+  d.setDate(d.getDate() - 1);
+  return d;
   })();
   queryForm = this.formBuilder.group({
     TXN_DateStart: [this.yesterday, [Validators.required]],
@@ -88,76 +92,6 @@ export class TLS23040Component extends BasicQueryPageComponent<any> {
     ...createPaginationConfig([{ field: 'ECR_No', order: 1 }]),
   });
 
-  columns: any[] = [
-    {
-      field: 'TXN_Date',
-      header: '銷售日期',
-      visible: true,
-      format: (val: string) => {
-        const d = new Date(val);
-        return isNaN(d.getTime())
-          ? val
-          : `${d.getFullYear()}/${(d.getMonth() + 1).toString().padStart(2, '0')}/${d.getDate().toString().padStart(2, '0')}`;
-      },
-    },
-    { field: 'ECR_No', header: '收銀機號', visible: true },
-    { field: 'TXN_No', header: '交易序號', visible: true },
-    { field: 'tlt_no', header: '專櫃編號', visible: true },
-    {
-      field: 'tlt_name',
-      header: '櫃位名稱',
-      visible: true,
-      style: 'text-left',
-    },
-    { field: 'gui_track', header: '發票起號(字軌)', visible: true },
-    { field: 'GUIBegNo', header: '發票起始號碼', visible: true },
-    { field: 'GUIEndNo', header: '發票結束號碼', visible: true },
-    {
-      field: 'TXN_TotGUI',
-      header: '發票金額',
-      visible: true,
-      style: 'text-right',
-      format: (val: number) => val?.toLocaleString('en-US') || '0',
-    },
-    {
-      field: 'TXN_TotSaleAmt',
-      header: '業績金額',
-      visible: true,
-      style: 'text-right',
-      format: (val: number) => val?.toLocaleString('en-US') || '0',
-    },
-    {
-      field: 'TXN_Status',
-      header: '交易型態',
-      visible: true,
-      format: (val: any) =>
-        this.getLabelFromOptions(val, this.txnStatusOptions),
-    },
-    { field: 'TXN_TaxFreeCertNo', header: '外交官免稅卡號', visible: true },
-    { field: 'USR_No', header: '收銀員', visible: true },
-    { field: 'TXN_PkngUID', header: '停車卡號', visible: true },
-    {
-      field: 'ORG_TXN_Date',
-      header: '原交易日期',
-      visible: true,
-      format: (val: string) => {
-        const d = new Date(val);
-        return isNaN(d.getTime())
-          ? val
-          : `${d.getFullYear()}/${(d.getMonth() + 1).toString().padStart(2, '0')}/${d.getDate().toString().padStart(2, '0')}`;
-      },
-    },
-    { field: 'ORG_ECR_No', header: '原收銀機號', visible: true },
-    { field: 'ORG_TXN_No', header: '原交易序號', visible: true },
-    { field: 'TXN_MemCard', header: '會員卡號', visible: true },
-    {
-      field: 'TXN_TotPayScoreAmt',
-      header: '會員積點折抵',
-      visible: true,
-      style: 'text-right',
-      format: (val: number) => val?.toLocaleString('en-US') || '0',
-    },
-  ];
 
   statusFlagOptions: any[] = [];
   TXN_SubtypeOptions: any[] = [];
@@ -185,6 +119,14 @@ export class TLS23040Component extends BasicQueryPageComponent<any> {
   ngOnInit(): void {
     this.initializePage('TLS23040', '', this.queryForm);
     this.useSummaryMode = false; // 預設為明細表模式
+    this.restoreQueryFromStorage();
+    this.formValueSub = this.queryForm.valueChanges
+    .subscribe(() => this.saveQueryToStorage());
+    const savedQuery = localStorage.getItem('TLS23010_queryForm');
+    if (savedQuery) {
+      const parsedQuery = JSON.parse(savedQuery);
+      this.queryForm.patchValue(parsedQuery);
+    }
 
     this.statusFlagService
       .getStatusFlags()
@@ -359,4 +301,31 @@ export class TLS23040Component extends BasicQueryPageComponent<any> {
         },
       });
   }
+    /** 立即把目前表單狀態存進 LocalStorage（日期會轉 ISO 字串） */
+private saveQueryToStorage(): void {
+  const raw = this.queryForm.getRawValue();
+  const payload = JSON.stringify(raw, (k, v) => (v instanceof Date ? v.toISOString() : v));
+  localStorage.setItem(this.STORAGE_KEY, payload);
+}
+
+    /** 從 LocalStorage 還原進表單（把 ISO 字串還原成 Date 物件） */
+private restoreQueryFromStorage(): void {
+  const json = localStorage.getItem(this.STORAGE_KEY);
+  if (!json) return;
+
+  const parsed = JSON.parse(json, (_k, v) => {
+    if (typeof v === 'string' && /^\d{4}-\d{2}-\d{2}T/.test(v)) {
+      const d = new Date(v);
+      return isNaN(d.getTime()) ? v : d;
+    }
+    return v;
+  });
+
+  this.queryForm.patchValue(parsed, { emitEvent: false });
+}
+
+/** 清除 LocalStorage 內儲存的查詢條件 */
+private clearQueryStorage(): void {
+  localStorage.removeItem(this.STORAGE_KEY);
+}
 }

@@ -26,6 +26,7 @@ import { RadioButtonModule } from 'primeng/radiobutton';
 import { PrimeTemplate } from 'primeng/api';
 import { ButtonDirective } from 'primeng/button';
 import { TranslateModule } from '@ngx-translate/core';
+import { Subscription, EMPTY, throwError, BehaviorSubject } from 'rxjs';
 
 @Component({
     selector: 'app-tls23090',
@@ -51,15 +52,18 @@ import { TranslateModule } from '@ngx-translate/core';
     ],
 })
 export class TLS23090Component extends BasicQueryPageComponent<any> {
+  private readonly STORAGE_KEY = 'TLS23090:queryForm';
+  private formValueSub?: Subscription;
+  querySubscription: Subscription | null = null;
   showPageSizeDialog = false;
   customPageSize = 1000;
   displayMode: 'CreditCardDetail' | 'CounterCardAnalysis' = 'CreditCardDetail'; // 預設報表模式
- readonly yesterday: Date = (() => {
-    const d = new Date();
-    d.setHours(0, 0, 0, 0);
-    d.setDate(d.getDate() - 1);
-    return d;
-  })();
+  readonly yesterday: Date = (() => {
+      const d = new Date();
+      d.setHours(0, 0, 0, 0);
+      d.setDate(d.getDate() - 1);
+      return d;
+    })();
   queryForm = this.formBuilder.group({
     TXN_DateStart: [this.yesterday, [Validators.required]],
     TXN_DateEnd: [this.yesterday, [Validators.required]],
@@ -92,52 +96,7 @@ export class TLS23090Component extends BasicQueryPageComponent<any> {
   data: any[] = [];
   totalRecords = 0;
 
-  columns: any[] = [
-    { field: 'TXN_Date', header: '銷售日期', visible: true },
-    { field: 'ECR_No', header: '收銀機號', visible: true },
-    { field: 'TXN_No', header: '交易序號', visible: true },
-    { field: 'tlt_no', header: '專櫃編號', visible: true, style: 'text-left' },
-    {
-      field: 'tlt_no',
-      header: '櫃位名稱',
-      visible: true,
-      style: 'text-left',
-      format: (val: any) => this.getLabelFromOptions(val, this.CounterOptions),
-    },
-    { field: 'CRD_Type', header: '信用卡卡別', visible: true },
-    { field: 'CRD_No', header: '信用卡卡號', visible: true },
-    {
-      field: 'TXN_PayAmt',
-      header: '金額',
-      visible: true,
-      style: 'text-right',
-      format: this.moneyFormat,
-    },
-    {
-      field: 'TXN_Bonus',
-      header: '紅利',
-      visible: true,
-      style: 'text-right',
-      format: this.moneyFormat,
-    },
-    { field: 'TXN_Installment', header: '分期', visible: true },
-    { field: 'TXN_PeriodType', header: '分期期別', visible: true },
-    { field: 'TXN_Periods', header: '分期期數', visible: true },
-    {
-      field: 'TXN_DownPayAmt',
-      header: '頭期款分期金額',
-      visible: true,
-      style: 'text-right',
-      format: this.moneyFormat,
-    },
-    {
-      field: 'TXN_MonthlyAmt',
-      header: '每期分期金額',
-      visible: true,
-      style: 'text-right',
-      format: this.moneyFormat,
-    },
-  ];
+
 
   constructor(
     private cardTypeService: CardTypeService,
@@ -155,8 +114,15 @@ export class TLS23090Component extends BasicQueryPageComponent<any> {
   }
 
   ngOnInit(): void {
-    this.initializePage('TLS23090', 'TLS23090cru', this.queryForm, 
-    );
+    this.initializePage('TLS23090', 'TLS23090cru', this.queryForm,);
+    this.restoreQueryFromStorage();
+    this.formValueSub = this.queryForm.valueChanges
+    .subscribe(() => this.saveQueryToStorage());
+    const savedQuery = localStorage.getItem('TLS23010_queryForm');
+    if (savedQuery) {
+      const parsedQuery = JSON.parse(savedQuery);
+      this.queryForm.patchValue(parsedQuery);
+    }
 
     this.cardTypeService
       .getCardType()
@@ -272,12 +238,31 @@ export class TLS23090Component extends BasicQueryPageComponent<any> {
 
 
 
-  moneyFormat(value: number): string {
-    return value != null ? value.toLocaleString('en-US') : '0';
-  }
+  /** 立即把目前表單狀態存進 LocalStorage（日期會轉 ISO 字串） */
+private saveQueryToStorage(): void {
+  const raw = this.queryForm.getRawValue();
+  const payload = JSON.stringify(raw, (k, v) => (v instanceof Date ? v.toISOString() : v));
+  localStorage.setItem(this.STORAGE_KEY, payload);
+}
 
-  getLabelFromOptions(value: any, options: any[]): string {
-    const found = options?.find((opt) => String(opt.value) === String(value));
-    return found ? found.label : value;
-  }
+    /** 從 LocalStorage 還原進表單（把 ISO 字串還原成 Date 物件） */
+private restoreQueryFromStorage(): void {
+  const json = localStorage.getItem(this.STORAGE_KEY);
+  if (!json) return;
+
+  const parsed = JSON.parse(json, (_k, v) => {
+    if (typeof v === 'string' && /^\d{4}-\d{2}-\d{2}T/.test(v)) {
+      const d = new Date(v);
+      return isNaN(d.getTime()) ? v : d;
+    }
+    return v;
+  });
+
+  this.queryForm.patchValue(parsed, { emitEvent: false });
+}
+
+/** 清除 LocalStorage 內儲存的查詢條件 */
+private clearQueryStorage(): void {
+  localStorage.removeItem(this.STORAGE_KEY);
+}
 }

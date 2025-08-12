@@ -29,7 +29,6 @@ export class TLS23130CRUComponent extends BasicCruPageComponent<any> {
   constructor(
     private location: Location,
     private pdfService: PdfService,
-    private tls11010Service: Tls11010Service,
     private columnLabelService: ColumnLabelService
   ) {
     super();
@@ -49,15 +48,6 @@ export class TLS23130CRUComponent extends BasicCruPageComponent<any> {
     } else {
       this.messageService.warnBubble('⚠️ 無資料可顯示，請重新查詢。');
     }
-
-    this.tls11010Service.getOrgOptions().subscribe(res => {
-      this.OrganizationCodeOptions = (res || []).map(x => ({
-        label: x.label,
-        formLabel: `${x.value} - ${x.label}`,
-        value: x.value
-      }));
-    });
-
     this.columns = [
       { field: 'cardNumber', header: '卡號', visible: true },
       { field: 'transactionSequence', header: '交易序號', visible: true },
