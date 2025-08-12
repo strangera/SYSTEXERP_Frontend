@@ -1,5 +1,5 @@
 import { NgIf } from '@angular/common';
-import { ChangeDetectorRef, Component, computed, effect, OnInit, signal, Signal } from '@angular/core';
+import { Component, computed, effect, OnInit, signal, Signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
@@ -46,6 +46,7 @@ import { EcrItem, EcrTable, PodRequest, TalentItem, TLS26010Data, TLS26010Detail
   ]
 })
 export class TLS26010CRUComponent extends BasicCruPageComponent<TLS26010Data> implements OnInit {
+
   public CRUDStatus = CRUDStatus;
 
   public ecrTableFiltered: EcrItem[] = [];
@@ -196,33 +197,33 @@ export class TLS26010CRUComponent extends BasicCruPageComponent<TLS26010Data> im
   }), { equal: this.service.shallowEqual });
 
   public columns: Column[] = [
-    { field: 'ecr_no', header: '收銀機號', visible: !0 },
-    { field: 'ecr_name', header: '收銀機名稱', visible: !0 },
-    { field: 'tlt_no', header: '專櫃編號', visible: !0 },
-    { field: 'tlt_name', header: '櫃位名稱', visible: !0 },
+    { field: 'ecr_no', header: '收銀機號' },
+    { field: 'ecr_name', header: '收銀機名稱' },
+    { field: 'tlt_no', header: '專櫃編號' },
+    { field: 'tlt_name', header: '櫃位名稱' },
   ];
 
   public columns2: Column[] = [
-    { field: 'tlt_no', header: '專櫃編號', visible: !0 },
-    { field: 'tlt_name', header: '櫃位名稱', visible: !0 },
+    { field: 'tlt_no', header: '專櫃編號' },
+    { field: 'tlt_name', header: '櫃位名稱' },
   ];
 
   private columns3: Column[] = [
-    { field: 'building_name', header: '館別', visible: !0 },
-    { field: 'floor_name', header: '樓層', visible: !0 },
-    { field: 'area_name', header: '區域', visible: !0 },
-    { field: 'ecr_no', header: '收銀機號', visible: !0 },
-    { field: 'ecr_name', header: '收銀機名稱', visible: !0 },
-    { field: 'tlt_no', header: '專櫃編號', visible: !0 },
-    { field: 'tlt_name', header: '櫃位名稱', visible: !0 },
+    { field: 'building_name', header: '館別' },
+    { field: 'floor_name', header: '樓層' },
+    { field: 'area_name', header: '區域' },
+    { field: 'ecr_no', header: '收銀機號' },
+    { field: 'ecr_name', header: '收銀機名稱' },
+    { field: 'tlt_no', header: '專櫃編號' },
+    { field: 'tlt_name', header: '櫃位名稱' },
   ];
 
   private columns4: Column[] = [
-    { field: 'building_name', header: '館別', visible: !0 },
-    { field: 'floor_name', header: '樓層', visible: !0 },
-    { field: 'area_name', header: '區域', visible: !0 },
-    { field: 'tlt_no', header: '專櫃編號', visible: !0 },
-    { field: 'tlt_name', header: '櫃位名稱', visible: !0 },
+    { field: 'building_name', header: '館別' },
+    { field: 'floor_name', header: '樓層' },
+    { field: 'area_name', header: '區域' },
+    { field: 'tlt_no', header: '專櫃編號' },
+    { field: 'tlt_name', header: '櫃位名稱' },
   ];
 
   // 靜態資料: 用於表單初始化和重置
@@ -231,7 +232,6 @@ export class TLS26010CRUComponent extends BasicCruPageComponent<TLS26010Data> im
   constructor(
     public service: TLS26010Service,
     private readonly excelImport: ExcelImportService,
-    private readonly cdr: ChangeDetectorRef,
   ) {
     super();
   }
@@ -269,7 +269,7 @@ export class TLS26010CRUComponent extends BasicCruPageComponent<TLS26010Data> im
       const file = event.files?.[0];
       if (!file) return;
 
-      const data: TalentItem[] = await this.excelImport.importExcel(file, ['tlt_no', 'tlt_name']);
+      const data: TalentItem[] = await this.excelImport.importExcel(file, ['專櫃編號', '專櫃名稱']);
       const importedTltNos = data.filter(i => i.tlt_no?.trim() && i.tlt_name?.trim());
       if (!importedTltNos.length) return void this.messageService.errorBubble('匯入檔案沒有有效資料');
 
@@ -300,7 +300,7 @@ export class TLS26010CRUComponent extends BasicCruPageComponent<TLS26010Data> im
     // 建立工作簿
     const wb = XLSX.utils.book_new();
     // 建立工作表
-    const ws = XLSX.utils.aoa_to_sheet([['tlt_no', 'tlt_name'],]);
+    const ws = XLSX.utils.aoa_to_sheet([['專櫃編號', '專櫃名稱'],]);
     console.log(`onExportExcel:`, [wb, ws]);
     // 將工作表加入工作簿
     XLSX.utils.book_append_sheet(wb, ws, '專櫃範本');
