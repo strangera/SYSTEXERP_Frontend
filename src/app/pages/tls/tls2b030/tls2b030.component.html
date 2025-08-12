@@ -1,39 +1,43 @@
 <div class="card">
   <div class="flex gap-2 mb-2">
     <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
-    <!-- <app-button
-      btnType="create"
-      (click)="onCreate()"
-      label="{{ 'create' | translate }}"
-    ></app-button> -->
   </div>
 
   <p-accordion>
-    <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
-      [headerStyleClass]="'query-accordionTab'">
+    <p-accordionTab
+      header="{{ 'query-conditions' | translate }}"
+      [selected]="true"
+      class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'"
+    >
       <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
+          <!-- ✅ 初始化會由 TS 回填 昨天~昨天 -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar-range
-              calendarType="dateRange"
-              label="銷售日期-日報表"
-              [startControl]="queryForm.controls.TXN_Date_Start"
-              [endControl]="queryForm.controls.TXN_Date_End"
-              [submitted]="submitted"
-            ></app-calendar-range>
+<app-calendar-range
+  class="required"
+  label="銷售日期-日報表"
+  [startControl]="$any(queryForm.get('TXN_Date_Start'))"
+  [endControl]="$any(queryForm.get('TXN_Date_End'))"
+  [submitted]="submitted"
+></app-calendar-range>
           </div>
+
           <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar
-              label="銷售年月-月報表"
-              controlName="TXN_YearMonth"
-              [calendarType]="'dateMonthOne'"
-              [control]="queryForm.controls.TXN_YearMonth"
-              [submitted]="submitted"
-              [isRequired]="true"
-            ></app-calendar>
+<app-calendar
+  class="form-item"
+  [class.required]="($any(queryForm.get('TXN_Date_Start'))?.disabled && $any(queryForm.get('TXN_Date_End'))?.disabled)"
+  label="銷售年月-月報表"
+  controlName="TXN_YearMonth"
+  [calendarType]="'dateMonthOne'"
+  [control]="$any(queryForm.get('TXN_YearMonth'))"
+  [submitted]="submitted"
+></app-calendar>
           </div>
         </div>
+
         <hr />
+
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
             <app-multi-select
@@ -42,7 +46,7 @@
               [options]="ECRNoOptions"
               optionLabel="label"
               optionValue="value"
-              [control]="queryForm.controls.ECR_No_List"
+              [control]="$any(queryForm.get('ECR_No_List'))"
               [submitted]="submitted"
             ></app-multi-select>
           </div>
@@ -53,11 +57,12 @@
               [options]="CounterOptions"
               optionLabel="formLabel"
               optionValue="value"
-              [control]="queryForm.controls.TLT_No_List"
+              [control]="$any(queryForm.get('TLT_No_List'))"
               [submitted]="submitted"
             ></app-multi-select>
           </div>
         </div>
+
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown
@@ -66,38 +71,59 @@
               [options]="cahserTypeOptions"
               optionLabel="label"
               optionValue="value"
-              [control]="queryForm.controls.ECR_Type"
+              [control]="$any(queryForm.get('ECR_Type'))"
               [submitted]="submitted"
             ></app-dropdown>
           </div>
+
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="館別" [options]="BUILDING_NO_Options" optionLabel="label" optionValue="value"
-              [control]="queryForm.controls.tlt_building" [submitted]="submitted"></app-dropdown>
+            <app-dropdown
+              label="館別"
+              [options]="BUILDING_NO_Options"
+              optionLabel="label"
+              optionValue="value"
+              [control]="$any(queryForm.get('tlt_building'))"
+              [submitted]="submitted"
+            ></app-dropdown>
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select label="樓層" [options]="floorOptions" optionLabel="label" optionValue="value"
-              [control]="queryForm.controls.tlt_floor" [submitted]="submitted"></app-multi-select>
+            <app-multi-select
+              label="樓層"
+              [options]="floorOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="$any(queryForm.get('tlt_floor'))"
+              [submitted]="submitted"
+            ></app-multi-select>
           </div>
+
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select label="區域" controlName="area_no" [options]="regionOptions" optionLabel="label"
-              optionValue="value" [control]="queryForm.controls.area_no" [submitted]="submitted"></app-multi-select>
+            <app-multi-select
+              label="區域"
+              controlName="area_no"
+              [options]="regionOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="$any(queryForm.get('area_no'))"
+              [submitted]="submitted"
+            ></app-multi-select>
           </div>
         </div>
+
         <hr />
+
         <div class="grid p-fluid">
           <div class="col-12 md:col-4 lg:col-4">
             <p-checkbox
               label="僅顯示溢欠"
-              [formControl]="queryForm.controls.onlyShowOverflow"
+              [formControl]="$any(queryForm.get('onlyShowOverflow'))"
               binary="true"
             ></p-checkbox>
           </div>
         </div>
 
-        <div
-          class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
-        >
+        <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
           <app-button btnType="clear" (click)="onClearForm()"></app-button>
           <app-button btnType="query" [loading]="loading"></app-button>
         </div>
@@ -121,7 +147,6 @@
     [showManage]="false"
     [showDelete]="false"
     [showCheckBox]="false"
-
     (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"
   ></app-table>
 </div>
