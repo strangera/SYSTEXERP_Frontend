@@ -11,9 +11,9 @@ export class ValidationService {
     const config: any = {
       required: '必填',
       invalidNumber: '只能輸入數字',
-      電子信箱: '「電子郵件」，格式錯誤，請重新輸入。',
+      email: '「電子郵件」，格式錯誤，請重新輸入。',
       invalidCreditCard: 'Is invalid credit card number',
-      invalid電子信箱Address: '「電子郵件」，格式錯誤，請重新輸入。',
+      invalidEmailAddress: '「電子郵件」，格式錯誤，請重新輸入。',
       invalidPassword:
         'Invalid password. Password must be at least 6 characters long, and contain a number.',
       minlength: `最短長度為 ${validatorValue.requiredLength}`,
@@ -73,7 +73,7 @@ export class ValidationService {
     return null;
   }
   // 電子信箱
-  電子信箱Validator(control: { value: string | null; }) {
+  emailValidator(control: { value: string | null; }) {
     // [驗證]
     // 非必填，若有輸入值，檢核輸入資料需為英數字含特殊符號並檢查是否有@符號
     // 長度限制40個字元，非必填，若有輸入值，檢核輸入資料需為英數字含特殊符號並檢查是否有@符號
@@ -86,7 +86,7 @@ export class ValidationService {
           /[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?/
         )
       ) {
-        return { invalid電子信箱Address: true };
+        return { invalidEmailAddress: true };
       }
     }
 

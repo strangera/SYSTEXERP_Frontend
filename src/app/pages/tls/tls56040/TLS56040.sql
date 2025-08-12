@@ -187,9 +187,9 @@ create table POS2013
      VEN_Address         nvarchar (100)       not null ,     /*廠商公司地址 公司登記地址*/
      VEN_Tel             varchar (20)             null ,     /*廠商公司電話*/
      VEN_Fax             varchar (20)             null ,     /*廠商傳真*/
-     VEN_電子信箱           varchar (60)             null ,     /*廠商電子郵件*/
+     VEN_Email           varchar (60)             null ,     /*廠商電子郵件*/
      VEN_GUIAddr         nvarchar (100)           null ,     /*廠商發票地址*/
-     VEN_GUI電子信箱        varchar (60)             null ,     /*廠商發票電子郵件*/
+     VEN_GUIEmail        varchar (60)             null ,     /*廠商發票電子郵件*/
 
 	 --付款資料
      VEN_PayType         char (1)             not null ,     /*付款方式(1:電匯,2:開票,3:現金)*/

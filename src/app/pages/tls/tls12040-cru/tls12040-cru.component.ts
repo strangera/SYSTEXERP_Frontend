@@ -45,11 +45,11 @@ import { ButtonDynamicallyaddComponent } from '../../../shared/componentkit/butt
 
 // 2.1.2.4 專櫃要約書維護CRU
 @Component({
-  selector: 'app-tls12040-cru',
-  templateUrl: './tls12040-cru.component.html',
-  styleUrl: './tls12040-cru.component.scss',
-  standalone: true,
-  imports: [MenubarComponent, ButtonComponent, PanelModule, FormsModule, ReactiveFormsModule, InputNumberComponent, DropdownComponent, InputTextComponent, CalendarComponent, CheckboxModule, EditorTextComponent, NgFor, ButtonDynamicallydeleteComponent, CalendarRangeComponent, ButtonDynamicallyaddComponent, NgIf, TranslateModule]
+    selector: 'app-tls12040-cru',
+    templateUrl: './tls12040-cru.component.html',
+    styleUrl: './tls12040-cru.component.scss',
+    standalone: true,
+    imports: [MenubarComponent, ButtonComponent, PanelModule, FormsModule, ReactiveFormsModule, InputNumberComponent, DropdownComponent, InputTextComponent, CalendarComponent, CheckboxModule, EditorTextComponent, NgFor, ButtonDynamicallydeleteComponent, CalendarRangeComponent, ButtonDynamicallyaddComponent, NgIf, TranslateModule]
 })
 export class TLS12040CRUComponent extends BasicCrupageComponent implements OnInit {
   vendorUIDOptions: any[] = [];
@@ -136,8 +136,8 @@ export class TLS12040CRUComponent extends BasicCrupageComponent implements OnIni
 
     vendorName: ['', [Validators.required, Validators.maxLength(60)]], // 廠商名稱
     counterName: ['', [Validators.required, Validators.maxLength(50)]], // 品牌(櫃位名稱)
-    電子信箱: ['', [Validators.required, Validators.maxLength(20)]], // 電子郵件
-    invoice電子信箱: ['', [Validators.required, Validators.maxLength(20)]], // 發票電子郵件
+    email: ['', [Validators.required, Validators.maxLength(20)]], // 電子郵件
+    invoiceEmail: ['', [Validators.required, Validators.maxLength(20)]], // 發票電子郵件
     ticketTitle: ['', [Validators.maxLength(20)]], // 票據抬頭
     counterPhone: ['', [Validators.maxLength(20)]], // 專櫃電話號碼
     venderAccountName: ['', [Validators.maxLength(20)]], // 廠商帳戶名稱

@@ -15,7 +15,7 @@ export interface UserData {
   end_date: string;
   status: string;
   user_type: string;
-  user_電子信箱: string;
+  user_email: string;
   TLT_No: string;
   remarks: string;
   user_priority: string;

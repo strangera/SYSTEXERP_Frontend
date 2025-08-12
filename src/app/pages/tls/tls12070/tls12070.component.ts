@@ -29,7 +29,7 @@ export interface Customer_interview {
   VEN_BossTel: string; // 廠商聯絡人電話
   VEN_BossTitle?: string; // 廠商聯絡人頭銜
   VEN_BossMobile?: string; // 廠商聯絡人行動電話
-  VEN_Boss電子信箱?: string; // 廠商聯絡人電子郵件
+  VEN_BossEmail?: string; // 廠商聯絡人電子郵件
   VEN_Addr?: string; // 廠商公司地址
   contact_Date?: string; // 訪談日期
   contact_Time?: string; // 訪談時間
@@ -44,7 +44,7 @@ export interface Customer_interview {
 }
 
 // 意願報表內容
-export interface Willing_data {
+export interface Willing_data{
   id: number; // 主鍵，自動編號
 
   contact_USR_No: string; // 接洽人員代碼
@@ -102,7 +102,7 @@ export class TLS12070Component extends BasicQueryPageComponent<Customer_intervie
     { field: 'VEN_BossTel', header: '廠商聯絡人電話', visible: true },
     { field: 'VEN_BossTitle', header: '廠商聯絡人頭銜', visible: true },
     { field: 'VEN_BossMobile', header: '廠商聯絡人行動電話', visible: true },
-    { field: 'VEN_Boss電子信箱', header: '廠商聯絡人電子郵件', visible: true },
+    { field: 'VEN_BossEmail', header: '廠商聯絡人電子郵件', visible: true },
     { field: 'VEN_Addr', header: '廠商公司地址', visible: true },
     { field: 'contact_Date', header: '訪談日期', visible: true, format: formatDate },
     { field: 'contact_Time', header: '訪談時間', visible: true },
@@ -193,7 +193,7 @@ export class TLS12070Component extends BasicQueryPageComponent<Customer_intervie
         },
       });
     });
-
+    
   }
 
   // 刪除項目

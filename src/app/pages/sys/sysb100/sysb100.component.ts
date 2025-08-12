@@ -59,7 +59,7 @@ export class SYSB100Component
     STO_MailFax: ['', [Validators.maxLength(15)]], // 郵寄傳真
     STO_MailAddr: ['', [Validators.maxLength(100)]], // 郵寄地址
     STO_InvoiceAddr: ['', [Validators.maxLength(100)]], // 發票地址
-    STO_電子信箱: ['', [Validators.maxLength(100), Validators.電子信箱]], // 電子郵件
+    STO_Email: ['', [Validators.maxLength(100), Validators.email]], // 電子郵件
     STO_URL: ['', [Validators.maxLength(100)]], // 公司網址
 
     //分頁查詢
@@ -100,7 +100,7 @@ export class SYSB100Component
     { field: 'STO_MailTel', header: '郵寄電話', visible: false },
     { field: 'STO_MailFax', header: '郵寄傳真', visible: false },
     { field: 'STO_MailAddr', header: '郵寄地址', visible: false },
-    { field: 'STO_電子信箱', header: '電子信箱', visible: false },
+    { field: 'STO_Email', header: '電子信箱', visible: false },
     { field: 'STO_URL', header: '公司網址', visible: false },
   ];
   selectedItems: Sysb100m[] = []; // 多選項目

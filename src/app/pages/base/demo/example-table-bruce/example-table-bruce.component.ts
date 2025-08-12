@@ -22,7 +22,7 @@ export class ExampleTableBruceComponent extends BasicQueryPageComponent<unknown>
   // 表格
   data: any[] = [
     {
-      'id': 1, 'name': 'William', 'isdelete': true, 'age': 35, '電子信箱': 'william36@example.com', 'city': 'Yilan', 'details': [
+      'id': 1, 'name': 'William', 'isdelete': true, 'age': 35, 'email': 'william36@example.com', 'city': 'Yilan', 'details': [
         { id: 1, description: '個人資料A', manufacturer: '台灣', quantity: 10, price: 1500, discount: 5, date: '2025/05/20', testbool: true },
         { id: 2, description: '個人資料B', manufacturer: '台灣', quantity: 5, price: 3000, discount: 10 },
         { id: 3, description: '個人資料C', manufacturer: '台灣', quantity: 10, price: 1500, discount: 5 },
@@ -32,13 +32,13 @@ export class ExampleTableBruceComponent extends BasicQueryPageComponent<unknown>
       ]
     },
     {
-      'id': 2, 'name': 'Sarah', 'isdelete': false, 'age': 30, '電子信箱': 'sarah49@example.com', 'city': 'Tainan', 'details': [
+      'id': 2, 'name': 'Sarah', 'isdelete': false, 'age': 30, 'email': 'sarah49@example.com', 'city': 'Tainan', 'details': [
         { id: 3, description: '個人資料C', manufacturer: '台灣', quantity: 3, price: 2000, discount: 0 }
       ]
     },
-    { 'id': 3, 'name': 'Emily', 'isdelete': true, 'age': 24, '電子信箱': 'emily82@example.com', 'city': 'New Taipei', 'details': [] },
+    { 'id': 3, 'name': 'Emily', 'isdelete': true, 'age': 24, 'email': 'emily82@example.com', 'city': 'New Taipei', 'details': [] },
     {
-      'id': 4, 'name': 'Sarah', 'isdelete': false, 'age': 23, '電子信箱': 'sarah51@example.com', 'city': 'Tainan', 'details': [
+      'id': 4, 'name': 'Sarah', 'isdelete': false, 'age': 23, 'email': 'sarah51@example.com', 'city': 'Tainan', 'details': [
         { id: 4, description: '個人資料D', manufacturer: '台灣', quantity: 8, price: 1800, discount: 15 },
         { id: 5, description: '個人資料E', manufacturer: '台灣', quantity: 12, price: 500, discount: 0 }
       ]
@@ -48,7 +48,7 @@ export class ExampleTableBruceComponent extends BasicQueryPageComponent<unknown>
   mainColumns: ColumnDef[] = [
     { field: 'name', header: '姓名', editable: true, type: 'text' },
     { field: 'age', header: '年齡', editable: true, type: 'number' },
-    { field: '電子信箱', header: '電子信箱', editable: true, type: 'text' },
+    { field: 'email', header: 'Email', editable: true, type: 'text' },
     { field: 'city', header: '城市', editable: true, type: 'text' },
     { field: 'testbool', header: '是否', editable: true, type: 'checkbox' }
   ];

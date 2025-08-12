@@ -16,7 +16,7 @@ export interface IUserResponse {
   Status: boolean,
   Description: string,
   Auth_pswd: boolean,
-  電子信箱: string,
+  Email: string,
   JobPosition_id: number
 }
 

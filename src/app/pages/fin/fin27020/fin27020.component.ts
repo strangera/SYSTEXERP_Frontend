@@ -21,11 +21,11 @@ import { TranslateModule } from '@ngx-translate/core';
 
 //1.2.7.2 形成開票明細資料
 @Component({
-  selector: 'app-fin27020',
-  templateUrl: './fin27020.component.html',
-  styleUrl: './fin27020.component.scss',
-  standalone: true,
-  imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputNumberComponent, CalendarRangeComponent, InputTextComponent, MultiSelectComponent, TableComponent, TranslateModule]
+    selector: 'app-fin27020',
+    templateUrl: './fin27020.component.html',
+    styleUrl: './fin27020.component.scss',
+    standalone: true,
+    imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputNumberComponent, CalendarRangeComponent, InputTextComponent, MultiSelectComponent, TableComponent, TranslateModule]
 })
 export class FIN27020Component extends BasicQpageComponent implements OnInit {
   //
@@ -50,9 +50,9 @@ export class FIN27020Component extends BasicQpageComponent implements OnInit {
   // 表格
   // ----------------------------------------------------------------
   data: any[] = [
-    // { 'name': 'Emily', 'age': 28, '電子信箱': 'emily@example.com', 'city': 'Kaohsiung' },
-    // { 'name': 'Michael', 'age': 31, '電子信箱': 'michael@example.com', 'city': 'Taipei' },
-    // { 'name': 'Sarah', 'age': 24, '電子信箱': 'sarah@example.com', 'city': 'Tainan' },
+    // { 'name': 'Emily', 'age': 28, 'email': 'emily@example.com', 'city': 'Kaohsiung' },
+    // { 'name': 'Michael', 'age': 31, 'email': 'michael@example.com', 'city': 'Taipei' },
+    // { 'name': 'Sarah', 'age': 24, 'email': 'sarah@example.com', 'city': 'Tainan' },
     // 其他資料
   ];
   columns: any[] = [

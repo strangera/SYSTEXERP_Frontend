@@ -45,14 +45,14 @@ export class SYS0220Component extends BasicQueryPageComponent<UserData> implemen
     user_No: ['', Validators.maxLength(10)], // 使用者編號
     user_Name: ['', Validators.maxLength(20)], // 使用者名稱
     // user_Password: ['', Validators.maxLength(32)], // 使用者密碼-加密
-    // title: ['', Validators.maxLength(6)], // 職位-SYS1000
+    // title: ['', Validators.maxLength(6)], // 職稱代碼-SYS1000
     org_ID: [[], Validators.maxLength(20)], // 組織編號 (SYSB400_SYS3100)
     str_dateStart: [null], // 帳號有效開始日期
     str_dateEnd: [null], // 帳號有效結束日期
     status: [[], Validators.maxLength(2)], // 使用者狀態 1=有效 2=停用
     user_type: [[]], // 使用者型態 1=公司內部人員(default) 2=專櫃人員 3=其他
 
-    // user_電子信箱: ['', Validators.maxLength(100)], // 使用者電子信箱帳號
+    // user_email: ['', Validators.maxLength(100)], // 使用者email帳號
     // TLT_No: ['', Validators.maxLength(12)], // 所屬專櫃編號
     // remarks: ['', Validators.maxLength(100)], // 備註
     user_priority: [[], Validators.maxLength(1)], // 使用者等級 (user fillin)
@@ -72,7 +72,7 @@ export class SYS0220Component extends BasicQueryPageComponent<UserData> implemen
         this.userStatusOptions.find((option) => option.value === value)?.label ||
         value
     },
-    { field: 'title', header: '職位', visible: true },
+    { field: 'title', header: '職稱代碼', visible: true },
     {
       field: 'org_ID', header: '組織編號', visible: true, format: (value: string) =>
         this.SYS3100_Options.find((option) => option.No === value)?.Label ||
@@ -85,7 +85,7 @@ export class SYS0220Component extends BasicQueryPageComponent<UserData> implemen
         this.userTypeOptions.find((option) => option.value === value)?.label ||
         value
     },
-    { field: 'user_電子信箱', header: '使用者電子信箱帳號', visible: true },
+    { field: 'user_email', header: '使用者email帳號', visible: true },
     { field: 'TLT_No', header: '備註', visible: true },
     { field: 'user_priority', header: '使用者等級', visible: true },
     { field: 'USER_PwdExpireDate', header: '密碼到期日', visible: true, format: (value: string) => value ? new Date(value).toLocaleDateString() : '' },
@@ -111,7 +111,7 @@ export class SYS0220Component extends BasicQueryPageComponent<UserData> implemen
   }
   // 初始化下拉選單選項
   loadOptions() {
-    // *職位-SYS1000
+    // *職稱代碼-SYS1000
     this.sys0110Service.queryAllSystemCode({}).subscribe((response) => {
       console.log('回應', response);
       this.titleOptions = response.Data.map((item: SYS1000) => ({

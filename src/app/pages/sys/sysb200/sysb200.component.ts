@@ -33,7 +33,7 @@ export interface VendorData {
   VEN_Address: string;
   VEN_Boss: string;
   VEN_BossTitle: string;
-  VEN_Boss電子信箱: string;
+  VEN_BossEmail: string;
   VEN_BossTel: string;
   VEN_BossID: string;
   VEN_BossAddr: string;
@@ -77,7 +77,7 @@ export class SYSB200Component extends BasicQueryPageComponent<any> implements On
     VEN_Address: ['', [Validators.maxLength(100)]],
     VEN_Boss: ['', [Validators.maxLength(12)]],
     VEN_BossTitle: ['', [Validators.maxLength(16)]],
-    VEN_Boss電子信箱: ['', [Validators.maxLength(60)]],
+    VEN_BossEmail: ['', [Validators.maxLength(60)]],
     VEN_BossTel: ['', [Validators.maxLength(15)]],
     VEN_BossID: ['', [Validators.maxLength(10)]],
     VEN_BossAddr: ['', [Validators.maxLength(100)]],
@@ -109,7 +109,7 @@ export class SYSB200Component extends BasicQueryPageComponent<any> implements On
     { field: 'VEN_Address', header: '通訊地址', visible: true },
     { field: 'VEN_Boss', header: '聯絡人', visible: false },
     { field: 'VEN_BossTitle', header: '聯絡人職稱', visible: false },
-    { field: 'VEN_Boss電子信箱', header: '聯絡人電子郵件', visible: false },
+    { field: 'VEN_BossEmail', header: '聯絡人電子郵件', visible: false },
     { field: 'VEN_BossTel', header: '聯絡人電話', visible: false },
     { field: 'VEN_BossID', header: '聯絡人身份證字號', visible: false },
     { field: 'VEN_BossAddr', header: '聯絡人聯絡地址', visible: false },
@@ -217,7 +217,7 @@ export class SYSB200Component extends BasicQueryPageComponent<any> implements On
         VEN_Address: raw.VEN_Address,
         VEN_Boss: raw.VEN_Boss,
         VEN_BossTitle: raw.VEN_BossTitle,
-        VEN_Boss電子信箱: raw.VEN_Boss電子信箱,
+        VEN_BossEmail: raw.VEN_BossEmail,
         VEN_BossTel: raw.VEN_BossTel,
         VEN_BossID: raw.VEN_BossID,
         VEN_BossAddr: raw.VEN_BossAddr,
@@ -258,35 +258,34 @@ export class SYSB200Component extends BasicQueryPageComponent<any> implements On
     this.messageService.successBubble('已刪除選取資料');
   }
 
-  statusChange(row: VendorData, status: '0' | '1') {
-    const id = row.pos2013_id ?? row.id; // 只接受數字主鍵
-    if (id == null || Number.isNaN(Number(id))) {
-      this.messageService.errorBubble(`找不到有效的 id，請確認查詢結果是否有回主鍵欄位（pos2013_id / id）`);
-      return;
-    }
-
-    if (this.actionLoadingId) return;
-    this.actionLoadingId = id;
-
-    const prev = row.VEN_Status;
-    row.VEN_Status = status; // 樂觀更新
-
-    this.sysb200Service.updateStatusSYSB200({
-      id: Number(id),
-      VEN_Status: status
-    }).subscribe({
-      next: () => {
-        const msg = status === '1' ? '審核成功' : '反審核成功';
-        this.messageService.successBubble(`${msg}（ID: ${id}）`);
-        // this.onSubmit(this.queryForm); // 若要重查就打開
-      },
-      error: (err) => {
-        row.VEN_Status = prev; // 回滾
-        const apiMsg = err?.error?.Message || err?.message || '';
-        this.messageService.errorBubble(`更新失敗（ID: ${id}）：${apiMsg}`);
-      },
-      complete: () => (this.actionLoadingId = null),
-    });
-
+statusChange(row: VendorData, status: '0' | '1') {
+  const id = row.pos2013_id ?? row.id; // 只接受數字主鍵
+  if (id == null || Number.isNaN(Number(id))) {
+    this.messageService.errorBubble(`找不到有效的 id，請確認查詢結果是否有回主鍵欄位（pos2013_id / id）`);
+    return;
   }
-}
+
+  if (this.actionLoadingId) return;
+  this.actionLoadingId = id;
+
+  const prev = row.VEN_Status;
+  row.VEN_Status = status; // 樂觀更新
+
+  this.sysb200Service.updateStatusSYSB200({
+    id: Number(id),
+    VEN_Status: status
+  }).subscribe({
+    next: () => {
+      const msg = status === '1' ? '審核成功' : '反審核成功';
+      this.messageService.successBubble(`${msg}（ID: ${id}）`);
+      // this.onSubmit(this.queryForm); // 若要重查就打開
+    },
+    error: (err) => {
+      row.VEN_Status = prev; // 回滾
+      const apiMsg = err?.error?.Message || err?.message || '';
+      this.messageService.errorBubble(`更新失敗（ID: ${id}）：${apiMsg}`);
+    },
+    complete: () => (this.actionLoadingId = null),
+  });
+
+}}

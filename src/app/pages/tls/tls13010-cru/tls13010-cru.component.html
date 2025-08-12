@@ -409,11 +409,11 @@
         <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
           <div class="grid p-fluid">
             <div class="col-12 md:col-6 lg:col-4">
-              <app-input-text label="電子信箱" controlName="電子信箱" [control]="dataForm.controls.電子信箱"
+              <app-input-text label="電子信箱" controlName="email" [control]="dataForm.controls.email"
                 [submitted]="submitted"></app-input-text>
             </div>
             <div class="col-12 md:col-6 lg:col-4">
-              <app-input-text label="發票電子郵件" controlName="invoice_電子信箱" [control]="dataForm.controls.invoice_電子信箱"
+              <app-input-text label="發票電子郵件" controlName="invoice_email" [control]="dataForm.controls.invoice_email"
                 [submitted]="submitted"></app-input-text>
             </div>
             <div class="col-12 md:col-6 lg:col-4">

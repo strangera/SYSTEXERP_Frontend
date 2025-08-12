@@ -57,15 +57,15 @@ export class TLS21050Component {
   });
   // 表格数据
   data: any[] = [
-    { name: 'John', age: 25, 電子信箱: 'john@example.com' },
-    { name: 'Jane', age: 30, 電子信箱: 'jane@example.com' },
+    { name: 'John', age: 25, email: 'john@example.com' },
+    { name: 'Jane', age: 30, email: 'jane@example.com' },
     // 其他数据
   ];
   filteredData: any[] = [...this.data];
   columns: any[] = [
     { field: 'name', header: 'name', visible: true },
     { field: 'age', header: 'age', visible: true },
-    { field: '電子信箱', header: '電子信箱', visible: true },
+    { field: 'email', header: 'email', visible: true },
     // 其他列
   ];
   // 下拉选单选项

@@ -6,7 +6,7 @@ export interface UserInfo {
   mid: string;                // 商場編號
   user_Name: string;          // 使用者 名稱
   user_No: string;            // 使用者 編號
-  user_電子信箱: string;         // 使用者 電子郵件
+  user_email: string;         // 使用者 電子郵件
   client_ip: string;          // 使用者 IP 地址
   STR_Uniform: string;        // 統一編號
 }

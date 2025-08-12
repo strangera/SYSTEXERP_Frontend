@@ -60,7 +60,7 @@ export class TLS21020CRUComponent extends BasicCrupageComponent implements OnIni
   dataForm = this.formBuilder.nonNullable.group({
     name: ['', [Validators.required, Validators.minLength(5), Validators.maxLength(10)]],
     age: [],
-    電子信箱: ['', [Validators.maxLength(50), Validators.required]],
+    email: ['', [Validators.maxLength(50), Validators.required]],
     items: this.formBuilder.array([this.createItem()]), // Initialize with one item
   });
 

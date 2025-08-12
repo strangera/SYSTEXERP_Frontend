@@ -34,7 +34,7 @@ export interface Potential_Customer {
   VEN_BossTitle?: string; // 廠商聯絡人頭銜
   VEN_BossFax?: string; // 廠商聯絡人傳真
   VEN_BossMobile?: string; // 廠商聯絡人行動電話
-  VEN_Boss電子信箱?: string; // 廠商聯絡人電子郵件
+  VEN_BossEmail?: string; // 廠商聯絡人電子郵件
   VEN_Addr?: string; // 公司通訊地址
   VEN_PersonInCharge?: string; // 公司負責人
   business_type?: string; // 經營方式
@@ -129,7 +129,7 @@ export class TLS12010Component extends BasicQueryPageComponent<Potential_Custome
     { field: 'VEN_BossTitle', header: '廠商聯絡人頭銜', visible: true },
     { field: 'VEN_BossFax', header: '廠商聯絡人傳真', visible: true },
     { field: 'VEN_BossMobile', header: '廠商聯絡人行動電話', visible: true },
-    { field: 'VEN_Boss電子信箱', header: '廠商聯絡人電子郵件', visible: true },
+    { field: 'VEN_BossEmail', header: '廠商聯絡人電子郵件', visible: true },
     { field: 'VEN_Addr', header: '公司通訊地址', visible: true },
     { field: 'VEN_PersonInCharge', header: '公司負責人', visible: true },
     {
