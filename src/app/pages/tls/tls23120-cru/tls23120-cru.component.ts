@@ -56,7 +56,7 @@ export class TLS23120CRUComponent extends BasicCruPageComponent<any> {
   groupByField = 'TLT_NO'; // ✅ 群組欄位：專櫃代號（或根據實際欄位）
   groupByLabel = '專櫃';
   groupedData: GroupedDataItem[] = [];
-  reportTitle: string = '區分銷售月報表';
+  reportTitle: string = '專櫃日對帳單';
   dateRangeLabel: string = '日期區間'; // 新增屬性，請根據實際需求修改標籤
 
   // 顯示控制

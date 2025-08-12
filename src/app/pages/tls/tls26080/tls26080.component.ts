@@ -39,8 +39,10 @@ import { TLS26080Data } from './tls26080.model';
   ],
 })
 export class TLS26080Component extends BasicQueryPageComponent<TLS26080Data> implements OnInit {
-  private dateS: Date = new Date(this.now.getFullYear(), this.now.getMonth(), 1);
-  private dateE: Date = new Date(this.now.getFullYear(), this.now.getMonth() + 1, 0);
+  private readonly d = (() => {
+    const n = new Date(), y = n.getFullYear(), m = n.getMonth();
+    return { start: new Date(y, m, 1), end: new Date(y, m + 1, 0) };
+  })();
 
   // 查詢表單
   public queryForm = this.formBuilder.group({
@@ -48,40 +50,40 @@ export class TLS26080Component extends BasicQueryPageComponent<TLS26080Data> imp
     pod_desc: new FormControl<string | undefined>(undefined, [Validators.maxLength(100)]), // 活動名稱
     pod_status: new FormControl<ApprovalStatus>(ApprovalStatus.未核准), // 核准狀態
     org_id: new FormControl<string | undefined>(undefined), // 部門
-    cap_item: new FormControl<string[]>([]), // 扣款代碼
-    pod_sdate: new FormControl<Date>(this.dateS), // 起始日期(起)
-    pod_edate: new FormControl<Date>(this.dateE), // 起始日期(迄)
+    pod_sdate: new FormControl<Date>(this.d.start), // 起始日期(起)
+    pod_edate: new FormControl<Date>(this.d.end), // 起始日期(迄)
     pod_busdate: new FormControl<Date | undefined>(undefined), // 活動正檔日期
   });
 
   public selectedItems: TLS26080Data[] = [];
 
   public readonly editDisabled = (rowData: TLS26080Data) =>
-    (Reflect.has(rowData, 'CanEdit') && rowData.CanEdit == '1') || rowData.pod_status !== ApprovalStatus.未核准;
+    (Reflect.has(rowData, 'CanEdit') && !!rowData) || rowData.pod_status !== ApprovalStatus.未核准;
   public readonly isRowSelectable = (rowData: TLS26080Data) =>
-    Reflect.has(rowData, 'CanDelete') && rowData.CanDelete == '1' || rowData.pod_status === ApprovalStatus.未核准;
+    Reflect.has(rowData, 'CanDelete') && !!rowData || rowData.pod_status === ApprovalStatus.未核准;
 
   public totalRecords = signal<number>(0);
 
   private queryTLS26080 = computed(() => {
     const { pod_no, pod_desc, pod_status, pod_sdate, pod_edate, pod_busdate } = this.queryForm.value;
     return {
+      pod_sdate: pod_sdate!,
+      pod_edate: pod_edate!,
       ...(pod_no && { pod_no }),
       ...(pod_desc && { pod_desc }),
       ...(pod_status && { pod_status }),
-      ...(pod_sdate && { pod_sdate }),
-      ...(pod_edate && { pod_edate }),
       ...(pod_busdate && { pod_busdate }),
     };
   });
 
   public columns: Column[] = [
-    { field: 'pod_no', header: '活動單號', visible: !0 },
+    { field: 'pod_no', header: '活動編號', visible: !0 },
     { field: 'pod_desc', header: '活動名稱', visible: !0 },
-    { field: 'pod_sdate', header: '活動期間(起日)', visible: !0, format: v => this.datePipe.transform(v, 'YYYY/MM/dd') },
-    { field: 'pod_edate', header: '活動期間(迄日)', visible: !0, format: v => this.datePipe.transform(v, 'YYYY/MM/dd') },
-    { field: 'cap_item', header: '扣款代碼', visible: !0 },
-    { field: 'pod_type', header: '扣款名稱', visible: !0 },
+    { field: 'pod_sdate', header: '活動起始日期', visible: !0, format: v => this.datePipe.transform(v, 'YYYY/MM/dd') },
+    { field: 'pod_edate', header: '活動終止日期', visible: !0, format: v => this.datePipe.transform(v, 'YYYY/MM/dd') },
+    { field: 'pod_busdate', header: '活動正檔日期', visible: !0, format: v => this.datePipe.transform(v, 'YYYY/MM/dd') },
+    { field: 'pod_edate', header: '兌回起始日期', visible: !0, format: v => this.datePipe.transform(v, 'YYYY/MM/dd') },
+    { field: 'pod_edate', header: '兌回終止日期', visible: !0, format: v => this.datePipe.transform(v, 'YYYY/MM/dd') },
     { field: 'pod_status', header: '狀態', visible: !0, format: this.service.approvalStatus.bind(this) },
   ];
 
@@ -95,7 +97,7 @@ export class TLS26080Component extends BasicQueryPageComponent<TLS26080Data> imp
   public ngOnInit(): void {
     this.initializePage('TLS26080', '/TLS/TLS26080CRU', this.queryForm, this.onSubmit.bind(this));
 
-    this.service.loadAPS1003DropDownList(['E']);
+    this.service.loadAPS1003(['E']);
   }
 
   private canQuery(): boolean {
@@ -112,8 +114,8 @@ export class TLS26080Component extends BasicQueryPageComponent<TLS26080Data> imp
 
   public onClear(): void {
     this.queryForm.reset({
-      pod_sdate: this.dateS,
-      pod_edate: this.dateE,
+      pod_sdate: this.d.start,
+      pod_edate: this.d.end,
       pod_status: ApprovalStatus.未核准,
     });
   };
@@ -129,7 +131,7 @@ export class TLS26080Component extends BasicQueryPageComponent<TLS26080Data> imp
       frm.valid && this.canQuery() && this.service.loadTLS26080(this.queryTLS26080());
       this.loading = !1;
     });
-  }
+  };
 
   // 刪除項目
   public onDelete(data: TLS26080Data | TLS26080Data[]): void {

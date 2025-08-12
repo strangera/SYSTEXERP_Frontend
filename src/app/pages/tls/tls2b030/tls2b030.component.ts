@@ -52,10 +52,16 @@ import { CounterNameService } from '../../../service/basic/counter-name.service'
   ],
 })
 export class TLS2B030Component extends BasicQueryPageComponent<any> {
+      readonly yesterday: Date = (() => {
+    const d = new Date();
+    d.setHours(0, 0, 0, 0);
+    d.setDate(d.getDate() - 1);
+    return d;
+  })();
   queryForm = this.formBuilder.group({
     TXN_YearMonth: [],
-    TXN_Date_Start: [],
-    TXN_Date_End: [],
+    TXN_Date_Start: [this.yesterday, [Validators.required]],
+    TXN_Date_End: [this.yesterday, [Validators.required]],
     ECR_No_List: [[]],
     TLT_No_List: [[]],
     ECR_Type: [],

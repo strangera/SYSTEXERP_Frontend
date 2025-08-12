@@ -64,6 +64,12 @@ import { ReimbursementYypeService } from './../../../service/basic/reimbursement
   providers: [CashShowupByService],
 })
 export class TLS2B010Component extends BasicQueryPageComponent<any> {
+    readonly yesterday: Date = (() => {
+    const d = new Date();
+    d.setHours(0, 0, 0, 0);
+    d.setDate(d.getDate() - 1);
+    return d;
+  })();
   ECRNoOptions: any[] = []; // 收銀機號下拉選單
    CounterOptions: any[] = []; // 專櫃選項
   data: any[] = [];
@@ -93,7 +99,7 @@ export class TLS2B010Component extends BasicQueryPageComponent<any> {
   simpleData: any[] = [];
 
   queryForm = this.formBuilder.group({
-    TXN_Date: [null, [Validators.required]], // ✅ 銷售日期（單日，必填）
+    TXN_Date: [this.yesterday, [Validators.required]], // ✅ 銷售日期（單日，必填）
     ECR_No_List: [[]], // ✅ 收銀機號（多選）
     TLT_No_List: [[]], // ✅ 專櫃編號（多選）
     tlt_building: [null], // ✅ 館別（單選）

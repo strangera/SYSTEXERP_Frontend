@@ -106,7 +106,6 @@ export class TLS22010Component extends BasicQueryPageComponent<any> implements O
 
   ngOnInit(): void {
     this.initializePage('TLS22010', '/TLS/TLS22010cru', this.queryForm, (form) => this.onSubmit(form));
-    this.queryForm.patchValue({ TXN_Date: yesterday });
     this.floorService.getFloors().subscribe((data) => (this.floorOptions = data));
     this.machineDisplayService.getMachinedisplay().subscribe((data) => (this.machinedisplayOptions = data));
     this.ECRNoService.getECRNo().subscribe((data) => (this.ECRNoOptions = data));
@@ -145,7 +144,7 @@ export class TLS22010Component extends BasicQueryPageComponent<any> implements O
           }));
           this.filteredData = [...this.data];
           this.totalRecords = res?.TotalCount ?? this.data.length;
-          this.queryStateService.setQueryState(this.ProgNo, params);
+          this.queryStateService.setQueryState(this.ProgNo, frm.value);
           this.loading = false;
         },
         error: (err) => {

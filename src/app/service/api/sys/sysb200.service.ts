@@ -6,7 +6,10 @@ import { ApiResponse } from '../../system/auth.service';
 import { SortMeta } from 'primeng/api';
 
 const API_URL = `${environment.ApiUrl}/SYS0000/BAS1000`;
-
+export interface UpdateStatusSYSB200Request {
+  id: number;              // 後端指定的鍵值
+  VEN_Status: '0' | '1';   // 0=未審核, 1=已審核
+}
 /**
  * 查詢 request model
  */
@@ -66,5 +69,8 @@ export class Sysb200Service {
 
   updateSYSB200(data: any): Observable<ApiResponse<any>> {
     return this.http.post<ApiResponse<any>>(`${API_URL}/updateSYSB200`, data);
+  }
+updateStatusSYSB200(body: UpdateStatusSYSB200Request): Observable<ApiResponse<any>> {
+    return this.http.post<ApiResponse<any>>(`${API_URL}/updateStatusSYSB200`, body);
   }
 }

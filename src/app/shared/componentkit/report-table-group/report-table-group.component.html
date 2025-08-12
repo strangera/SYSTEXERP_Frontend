@@ -98,7 +98,6 @@
     [columns]="selectedColumns"
     [paginator]="false"
     [resizableColumns]="true"
-    scrollable="true"
     [styleClass]="'p-datatable-sm p-datatable-gridlines'"
   >
     <!-- 表頭 -->
@@ -191,9 +190,9 @@
         [columns]="selectedColumns"
         [resizableColumns]="true"
         [paginator]="false"
-        scrollable="true"
+
         scrollDirection="horizontal"
-        scrollHeight="auto"
+
         [styleClass]="
           'p-datatable-sm p-datatable-striped p-datatable-gridlines'
         "
@@ -301,7 +300,7 @@
         [columns]="selectedColumns"
         [paginator]="false"
         [resizableColumns]="true"
-        scrollable="true"
+
         [style]="{ width: '100%' }"
         [styleClass]="'p-datatable-sm p-datatable-gridlines'"
       >
@@ -352,7 +351,6 @@
       [columns]="selectedColumns"
       [paginator]="false"
       [resizableColumns]="true"
-      scrollable="true"
       [styleClass]="'p-datatable-sm p-datatable-gridlines'"
     >
       <!-- 表頭 -->
@@ -411,23 +409,23 @@
       *ngFor="let group of mergedPagedGroups; let groupIndex = index"
       class="mb-5"
     >
-      <div style="overflow-x: auto">
+      <!-- ✅ 浮空捲軸容器 -->
+<div class="scroll-host"
+     #host
+     (scroll)="onHostScroll(host, fakeH, fakeV)">
+       <!-- 真正捲動內容：把 table 放這裡 -->
+  <div class="scroll-body" #body>
         <p-table
-          #dt
-          [value]="group"
-          [columns]="selectedColumns"
-          [resizableColumns]="true"
-          [paginator]="false"
-          [customSort]="true"
-          scrollable="true"
-          [style]="{ width: '100%' }"
-          [scrollHeight]="'auto'"
-          (sort)="onTableSort($event)"
-          [styleClass]="
-            'p-datatable-sm p-datatable-striped p-datatable-gridlines'
-          "
-          [dataKey]="dataKey"
-          [rowExpandMode]="'single'"
+   #dt
+      [value]="group"
+      [columns]="selectedColumns"
+      [resizableColumns]="true"
+      [paginator]="false"
+      [customSort]="true"
+      (sort)="onTableSort($event)"
+      [styleClass]="'p-datatable-sm p-datatable-striped p-datatable-gridlines'"
+      [dataKey]="dataKey"
+      [rowExpandMode]="'single'">
         >
           <!-- 📌 表頭區 -->
           <ng-template pTemplate="header">
@@ -594,6 +592,21 @@
             </tr>
           </ng-template>
         </p-table>
+          <!-- ✅ 浮空「水平」捲軸（同步 scrollLeft） -->
+  <div class="float-scroll-h"
+       #fakeH
+       [class.hidden]="!needsHScroll(body)"
+       (scroll)="syncFromFakeH(host, fakeH)">
+    <div [style.width.px]="getScrollWidth(body)"></div>
+  </div>
+  <!-- ✅ 浮空「垂直」捲軸（同步 scrollTop） -->
+  <div class="float-scroll-v"
+       #fakeV
+       [class.hidden]="!needsVScroll(body)"
+       (scroll)="syncFromFakeV(host, fakeV)">
+    <div [style.height.px]="getScrollHeight(body)"></div>
+  </div>
+</div>
       </div>
     </div>
   </div>

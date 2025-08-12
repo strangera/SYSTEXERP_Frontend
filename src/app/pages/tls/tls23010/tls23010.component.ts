@@ -33,9 +33,10 @@ import { RadioButtonModule } from 'primeng/radiobutton';
 import { PrimeTemplate } from 'primeng/api';
 import { ButtonDirective } from 'primeng/button';
 import { TranslateModule } from '@ngx-translate/core';
+import { timeout, catchError, finalize, debounceTime } from 'rxjs/operators';
 // 既有 import 保留，新增這些
 
-import { timeout, catchError, finalize } from 'rxjs/operators';
+
 interface MainData {
   SYS_StoreNo: string;
   TXN_Date: string;
@@ -76,6 +77,9 @@ const now = new Date();
   ],
 })
 export class TLS23010Component extends BasicQueryPageComponent<any> {
+  // ====== 1) 這些放在類別內屬性區 ======
+private readonly STORAGE_KEY = 'TLS23010:queryForm';
+private formValueSub?: Subscription;
   displayMode: 'Detail' | 'Summary' = 'Detail'; // 預設顯示明細報表
   querySubscription: Subscription | null = null;
   customPageSize = 1000;
@@ -316,7 +320,11 @@ private readonly QUERY_TIMEOUT_MS = 30_000; // 30 秒
   ngOnInit(): void {
     this.initializePage('TLS23010', '', this.queryForm, 
     );
-    //  this.restoreQueryFromState();
+    this.restoreQueryFromStorage();
+      // ✅ 監聽表單變更，300ms 節流後自動保存
+  this.formValueSub = this.queryForm.valueChanges
+    .pipe(debounceTime(300))
+    .subscribe(() => this.saveQueryToStorage());
     const savedQuery = localStorage.getItem('TLS23010_queryForm');
     if (savedQuery) {
       const parsedQuery = JSON.parse(savedQuery);
@@ -379,7 +387,33 @@ private readonly QUERY_TIMEOUT_MS = 30_000; // 30 秒
     this.customPageSize = 1000; // ✅ 強制設值
   }
 
+/** 立即把目前表單狀態存進 LocalStorage（日期會轉 ISO 字串） */
+private saveQueryToStorage(): void {
+  const raw = this.queryForm.getRawValue();
+  const payload = JSON.stringify(raw, (k, v) => (v instanceof Date ? v.toISOString() : v));
+  localStorage.setItem(this.STORAGE_KEY, payload);
+}
 
+/** 從 LocalStorage 還原進表單（把 ISO 字串還原成 Date 物件） */
+private restoreQueryFromStorage(): void {
+  const json = localStorage.getItem(this.STORAGE_KEY);
+  if (!json) return;
+
+  const parsed = JSON.parse(json, (_k, v) => {
+    if (typeof v === 'string' && /^\d{4}-\d{2}-\d{2}T/.test(v)) {
+      const d = new Date(v);
+      return isNaN(d.getTime()) ? v : d;
+    }
+    return v;
+  });
+
+  this.queryForm.patchValue(parsed, { emitEvent: false });
+}
+
+/** 清除 LocalStorage 內儲存的查詢條件 */
+private clearQueryStorage(): void {
+  localStorage.removeItem(this.STORAGE_KEY);
+}
   getLabelFromOptions(value: any, options: any[]): string {
     const found = options?.find((opt) => String(opt.value) === String(value));
     return found ? found.label : value;
@@ -519,4 +553,20 @@ confirmPageSizeAndNavigate(): void {
     this.loading = false;
     this.showPageSizeDialog = false;
   }
+onClearClick(): void {
+  this.queryForm.reset({
+    TXN_DateStart: this.yesterday,
+    TXN_DateEnd: this.yesterday,
+    ECR_No: null,
+    TLT_No: null,
+    TXN_Status: null,
+    TXN_FlagStatus: null,
+    TXN_GUI_CarrType: null,
+    tlt_floor: null,
+    org_id: null,
+  });
+  this.clearQueryStorage();
+  this.messageService.infoBubble('已清除查詢條件');
+}
+
 }

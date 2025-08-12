@@ -1,0 +1,103 @@
+/* 你可以在 TS 或外層加上這個 CSS 變數，表示工具列高度 */
+:host { --merged-sticky-top: 0px; } /* 例如 56px 有固定工具列就調成 56px */
+
+/* 1) 統一的淺藍色表頭 */
+:host ::ng-deep .p-datatable thead th,
+:host ::ng-deep .p-datatable-scrollable-header th {
+  background-color: #c0c8f0 !important;
+  color: #000;
+}
+
+/* 2) 合併大表（mergedView）— 固定表頭到視窗頂端 */
+:host ::ng-deep .merged-view .p-datatable-scrollable-header {
+  position: sticky;                  /* 讓整個 header 容器吸頂 */
+  top: var(--merged-sticky-top, 0);  /* 視需求調整頂部位移 */
+  z-index: 100;
+  /* 底色補滿 header 容器，避免透明 */
+  background-color: #c0c8f0;
+}
+
+/* header 裡的 th 本身也 sticky（避免捲動時邊界露白） */
+:host ::ng-deep .merged-view .p-datatable thead th {
+  position: sticky;
+  top: var(--merged-sticky-top, 0);
+  z-index: 101; /* 比容器再高一點，確保壓住內容 */
+}
+
+/* 3) 非 scrollable 的情境（一般表格）— 也做 sticky */
+:host ::ng-deep .grouped-view .p-datatable thead th,
+:host ::ng-deep .printable-section > .p-datatable thead th {
+  position: sticky;
+  top: var(--merged-sticky-top, 0);
+  z-index: 100;
+}
+
+/* 4) sticky 與 table 佈局的相容性（避免邊框/重疊問題） */
+:host ::ng-deep .merged-view .p-datatable-table,
+:host ::ng-deep .grouped-view .p-datatable-table {
+  border-collapse: separate; /* sticky + collapse 會有相容性問題 */
+  border-spacing: 0;
+}
+
+/* 5) 內容層級降低，避免覆蓋表頭 */
+:host ::ng-deep .p-datatable-tbody > tr > td {
+  z-index: 1;
+}
+
+/* 6) （可選）固定表頭加一點陰影，視覺更清楚 */
+:host ::ng-deep .p-datatable-scrollable-header,
+:host ::ng-deep .p-datatable thead th {
+  box-shadow: 0 1px 0 rgba(0,0,0,.05);
+}
+/* 主容器可上下左右捲動，給一個高度讓垂直捲動成立 */
+:host ::ng-deep .scroll-host {
+  position: relative;
+  max-height: 60vh;     /* 可調整：決定垂直可視高度 */
+  overflow: auto;       /* 讓 host 成為真正的滾動容器 */
+  /* 為了 sticky 表頭的相容性 */
+  .p-datatable-table { border-collapse: separate; border-spacing: 0; }
+}
+
+/* 放實際內容（table） */
+:host ::ng-deep .scroll-body {
+  min-width: min(100%, max-content); /* 內容會撐出水平捲動 */
+}
+
+/* 水平浮空捲軸 */
+:host ::ng-deep .float-scroll-h {
+  position: sticky;
+  bottom: 8px;               /* 距離容器底部 */
+  left: 8px;
+  right: 22px;               /* 預留右邊給垂直捲軸 */
+  height: 14px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  background: rgba(255, 255, 255, 0.65);
+  backdrop-filter: blur(2px);
+  border: 1px solid rgba(0,0,0,.12);
+  border-radius: 8px;
+  z-index: 300;
+  box-shadow: 0 1px 3px rgba(0,0,0,.08);
+  /* 裡面這個空 div 只是拿來製造可捲的寬度 */
+  > div { height: 1px; }
+}
+
+/* 垂直浮空捲軸 */
+:host ::ng-deep .float-scroll-v {
+  position: sticky;
+  top: calc(var(--merged-sticky-top, 0px) + 8px);  /* 避開你的工具列/表頭 */
+  right: 8px;
+  bottom: 22px;           /* 避開水平浮空捲軸 */
+  width: 14px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  background: rgba(255, 255, 255, 0.65);
+  backdrop-filter: blur(2px);
+  border: 1px solid rgba(0,0,0,.12);
+  border-radius: 8px;
+  z-index: 300;
+  box-shadow: 0 1px 3px rgba(0,0,0,.08);
+  > div { width: 1px; }
+}
+
+:host ::ng-deep .hidden { display: none !important; }
