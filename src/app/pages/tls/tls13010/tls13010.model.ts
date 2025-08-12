@@ -121,8 +121,8 @@ export interface CleanContractData {
   cap_saletype2?: string;
 
   // 聯絡資訊
-  email?: string;
-  invoice_email?: string;
+  電子信箱?: string;
+  invoice_電子信箱?: string;
   CHECK_TITLE?: string;
   store_tel?: string;
   bank_id?: string;
@@ -340,8 +340,8 @@ export interface ContractInfo {
   deposit?: string;
   credit_card?: string;
   invoice_type?: string;
-  email?: string;
-  invoice_email?: string;
+  電子信箱?: string;
+  invoice_電子信箱?: string;
   CHECK_TITLE?: string;
   store_tel?: string;
   bank_id?: string;
@@ -633,8 +633,8 @@ export class DataCleaner {
       cap_saletype2: rawData.cap_saletype2,
 
       // 聯絡資訊
-      email: rawData.email,
-      invoice_email: rawData.invoice_email,
+      電子信箱: rawData.電子信箱,
+      invoice_電子信箱: rawData.invoice_電子信箱,
       CHECK_TITLE: rawData.CHECK_TITLE,
       store_tel: rawData.store_tel,
       bank_id: rawData.bank_id,
@@ -1319,8 +1319,8 @@ export interface ContractItem {
   water_flag: string;
   electric_flag: string;
   gas_flag: string;
-  email: string;
-  invoice_email: string;
+  電子信箱: string;
+  invoice_電子信箱: string;
   CHECK_TITLE: string;
   store_tel: string;
   bank_id: string;

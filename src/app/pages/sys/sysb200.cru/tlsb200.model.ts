@@ -15,15 +15,15 @@ export interface Tlsb200Model {
   VEN_GUIAddr: string;
   VEN_Tel: string;
   VEN_Fax: string;
-  VEN_Email: string;
-  VEN_GUIEmail: string;
+  VEN_電子信箱: string;
+  VEN_GUI電子信箱: string;
 
   // 聯絡人
   VEN_Boss: string;
   VEN_BossTitle: string;
   VEN_BossID: string;
   VEN_BossAddr: string;
-  VEN_BossEmail: string;
+  VEN_Boss電子信箱: string;
 
   // 付款資料
   VEN_PayType: string;

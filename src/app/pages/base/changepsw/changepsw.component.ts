@@ -20,7 +20,7 @@ export interface UserInfo {
   id: string;
   user_Name: string;
   user_No: string;
-  user_email: string;
+  user_電子信箱: string;
 }
 
 @UntilDestroy()

@@ -81,8 +81,8 @@ export const TLTTALENT_columns: Column[] = [
   // 付款條件
   // { field: 'check_day', header: '結帳後幾日付款', visible: true },
   { field: 'invoice_type', header: '請款單據別', visible: true },
-  // { field: 'email', header: '電子郵件信箱', visible: true },
-  // { field: 'invoice_email', header: '發票電子郵件信箱', visible: true },
+  // { field: '電子信箱', header: '電子郵件信箱', visible: true },
+  // { field: 'invoice_電子信箱', header: '發票電子郵件信箱', visible: true },
 
   // { field: 'CHECK_TITLE', header: '票據抬頭', visible: true },
   // { field: 'store_tel', header: '專櫃電話號碼', visible: true },

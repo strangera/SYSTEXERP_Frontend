@@ -56,7 +56,7 @@ export class SYSB100CRUComponent
     STO_MailFax: ['', [Validators.maxLength(15), this.validationService.numberValidator]], // 郵寄傳真
     STO_MailAddr: ['', [Validators.maxLength(100)]], // 郵寄地址
     STO_InvoiceAddr: ['', [Validators.maxLength(100)]], // 發票地址
-    STO_Email: ['', [Validators.maxLength(100), Validators.email]], // 電子郵件
+    STO_電子信箱: ['', [Validators.maxLength(100), Validators.電子信箱]], // 電子郵件
     STO_URL: ['', [Validators.maxLength(100), this.validationService.noChineseValidator]], // 公司網址 (0805新增 非中文 驗證)
   });
 
@@ -99,7 +99,7 @@ export class SYSB100CRUComponent
               STO_MailFax: ['', [Validators.maxLength(15)]], // 郵寄傳真
               STO_MailAddr: ['', [Validators.maxLength(100)]], // 郵寄地址
               STO_InvoiceAddr: ['', [Validators.maxLength(100)]], // 發票地址
-              STO_Email: ['', [Validators.maxLength(100)]], // 電子郵件
+              STO_電子信箱: ['', [Validators.maxLength(100)]], // 電子郵件
               STO_URL: ['', [Validators.maxLength(100)]], // 公司網址
 
               //分頁查詢

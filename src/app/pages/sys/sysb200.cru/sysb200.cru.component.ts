@@ -48,8 +48,8 @@ export class SYSB200CRUComponent extends BasicCruPageComponent<Tlsb200Model> imp
     VEN_GUIAddr: ['', Validators.maxLength(100)],
     VEN_Tel: ['', Validators.maxLength(15)],
     VEN_Fax: ['', Validators.maxLength(15)],
-    VEN_Email: ['', Validators.maxLength(60)],
-    VEN_GUIEmail: ['', Validators.maxLength(60)],
+    VEN_電子信箱: ['', Validators.maxLength(60)],
+    VEN_GUI電子信箱: ['', Validators.maxLength(60)],
 
     // 付款資料
     VEN_PayType: ['', Validators.required],
@@ -73,7 +73,7 @@ export class SYSB200CRUComponent extends BasicCruPageComponent<Tlsb200Model> imp
     { field: 'VEN_BossID', header: '身份證字號', type: 'input', validate: [validateMaxLength(10), validateNoChinese()] },
     { field: 'VEN_BossTel', header: '電話', type: 'input', validate: [validateMaxLength(15), validateNoChinese()] },
     { field: 'VEN_BossAddr', header: '地址', type: 'input', validate: [validateMaxLength(100)] },
-    { field: 'VEN_BossEmail', header: '電子郵件', type: 'input', validate: [validateMaxLength(60), validateNoChinese()] },
+    { field: 'VEN_Boss電子信箱', header: '電子郵件', type: 'input', validate: [validateMaxLength(60), validateNoChinese()] },
   ];
 
   venderOptions: { label: string; value: string }[] = [];
@@ -239,7 +239,7 @@ export class SYSB200CRUComponent extends BasicCruPageComponent<Tlsb200Model> imp
         VEN_BossTitle: item.VEN_BossTitle,
         VEN_BossTel: item.VEN_BossTel,
         VEN_BossAddr: item.VEN_BossAddr,
-        VEN_BossEmail: item.VEN_BossEmail,
+        VEN_Boss電子信箱: item.VEN_Boss電子信箱,
         id: item.id ?? 0
       }))
     };

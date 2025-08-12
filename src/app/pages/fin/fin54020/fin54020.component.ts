@@ -160,7 +160,7 @@ export class FIN54020Component extends BasicQpageComponent implements OnInit {
   columns: any[] = [
     { field: 'name', header: 'Name', visible: true },
     { field: 'age', header: 'Age', visible: true },
-    { field: 'email', header: 'Email', visible: true },
+    { field: '電子信箱', header: '電子信箱', visible: true },
     // Other columns
   ];
   // TypeScript Options

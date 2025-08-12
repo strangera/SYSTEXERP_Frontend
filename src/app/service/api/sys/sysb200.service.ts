@@ -29,7 +29,7 @@ export interface QuerySYSB200Request {
   VEN_GUIAddr?: string;
   VEN_Boss?: string;
   VEN_BossTitle?: string;
-  VEN_BossEmail?: string;
+  VEN_Boss電子信箱?: string;
   VEN_BossTel?: string;
   VEN_BossID?: string;
   VEN_BossAddr?: string;
@@ -70,7 +70,7 @@ export class Sysb200Service {
   updateSYSB200(data: any): Observable<ApiResponse<any>> {
     return this.http.post<ApiResponse<any>>(`${API_URL}/updateSYSB200`, data);
   }
-updateStatusSYSB200(body: UpdateStatusSYSB200Request): Observable<ApiResponse<any>> {
+  updateStatusSYSB200(body: UpdateStatusSYSB200Request): Observable<ApiResponse<any>> {
     return this.http.post<ApiResponse<any>>(`${API_URL}/updateStatusSYSB200`, body);
   }
 }

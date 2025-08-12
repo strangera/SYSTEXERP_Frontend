@@ -45,7 +45,7 @@ export class TLS12020CRUComponent extends BasicCruPageComponent<any> implements 
     VEN_BossTel: ['', [Validators.required, Validators.maxLength(18)]], // 聯絡人電話(O)
     VEN_BossTitle: ['', [Validators.maxLength(15)]], // 聯絡人稱謂
     VEN_BossMobile: ['', [Validators.maxLength(18)]], // 聯絡人手機
-    VEN_BossEmail: ['', [Validators.maxLength(60)]], // 聯絡人電子郵件
+    VEN_Boss電子信箱: ['', [Validators.maxLength(60)]], // 聯絡人電子郵件
     VEN_Addr: ['', [Validators.maxLength(100)]], // 公司地址
 
     contact_Date: [null, [Validators.required]], // 訪談日期（必填）
@@ -201,7 +201,7 @@ export class TLS12020CRUComponent extends BasicCruPageComponent<any> implements 
         VEN_BossTel: formValue.VEN_BossTel,
         VEN_BossTitle: formValue.VEN_BossTitle,
         VEN_BossMobile: formValue.VEN_BossMobile,
-        VEN_BossEmail: formValue.VEN_BossEmail,
+        VEN_Boss電子信箱: formValue.VEN_Boss電子信箱,
         VEN_Addr: formValue.VEN_Addr,
         contact_Date: this.formatDateOnly(formValue.contact_Date), // 確保是 YYYY-MM-DDT00:00:00
         contact_Time: this.formatTime(formValue.contact_Time),

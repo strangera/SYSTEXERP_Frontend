@@ -241,8 +241,8 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
     ticket_remarks: [''],
 
     // 聯絡資訊
-    email: ['', [Validators.email]],
-    invoice_email: ['', [Validators.email]],
+    電子信箱: ['', [Validators.電子信箱]],
+    invoice_電子信箱: ['', [Validators.電子信箱]],
     CHECK_TITLE: [''],
     store_tel: [''],
     bank_id: [''],
@@ -773,8 +773,8 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
 
       tlt_openflag: String(queryData['tlt_openflag'] || '').trim(),
       // 聯絡資訊
-      email: queryData['email'] as string,
-      invoice_email: queryData['invoice_email'] as string,
+      電子信箱: queryData['電子信箱'] as string,
+      invoice_電子信箱: queryData['invoice_電子信箱'] as string,
       CHECK_TITLE: queryData['CHECK_TITLE'] as string,
       store_tel: queryData['store_tel'] as string,
       bank_id: queryData['bank_id'] as string,
@@ -1650,7 +1650,7 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
     const field = this.dataForm.get(fieldName);
     if (field && field.errors) {
       if (field.errors['required']) return '此欄位為必填';
-      if (field.errors['email']) return '請輸入正確的 Email 格式';
+      if (field.errors['電子信箱']) return '請輸入正確的 電子信箱 格式';
       if (field.errors['maxlength']) return `最多可輸入 ${field.errors['maxlength'].requiredLength} 個字元`;
     }
     return '';

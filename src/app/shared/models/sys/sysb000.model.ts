@@ -21,7 +21,7 @@ export interface Sysb100m {
   STO_MailFax: string;
   STO_MailAddr: string;
   STO_InvoiceAddr: string;
-  STO_Email: string;
+  STO_電子信箱: string;
   STO_URL: string;
   CRT_Date: Date;
   CRT_USR_No: string;
@@ -45,7 +45,7 @@ export interface Sysb200m {
   contactPersonUID: string;
   contactPersonPhone: string;
   contactAddress: string;
-  contactEmail: string;
+  contact電子信箱: string;
   registeredAddress: string;
   registeredPhone: Date;
   companyFax: string;
@@ -136,7 +136,7 @@ export interface tblUser {
 
   status: string;
   user_type: string;
-  user_email: string;
+  user_電子信箱: string;
   TLT_No: string;
   remarks: string;
   user_priority: string;

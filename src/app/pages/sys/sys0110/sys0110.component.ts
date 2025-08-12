@@ -64,7 +64,7 @@ export class SYS0110Component extends BasicQueryPageComponent<UserData> implemen
     { field: 'user_No', header: '使用者編號', visible: true },
     { field: 'user_Name', header: '使用者名稱', visible: true },
     {
-      field: 'title', header: '職稱代碼', visible: true, format: (value: string) =>
+      field: 'title', header: '職位', visible: true, format: (value: string) =>
         this.titleOptions.find((option) => option.No === value)?.Label || value
     },
     {
@@ -84,7 +84,7 @@ export class SYS0110Component extends BasicQueryPageComponent<UserData> implemen
         this.userTypeOptions.find((option) => option.value === value)?.label ||
         value
     },
-    { field: 'user_email', header: '電子信箱', visible: true },
+    { field: 'user_電子信箱', header: '電子信箱', visible: true },
     { field: 'TLT_No', header: '所屬專櫃編號', visible: true },
     { field: 'remarks', header: '備註', visible: true },
     { field: 'user_priority', header: '使用者等級', visible: true },

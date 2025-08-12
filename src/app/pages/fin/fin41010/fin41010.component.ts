@@ -49,15 +49,15 @@ export class FIN41010Component extends BasicQpageComponent implements OnInit {
   organizationNumberOptions: any[] = [];
   // Table data
   data: any[] = [
-    { name: 'John', age: 25, email: 'john@example.com' },
-    { name: 'Jane', age: 30, email: 'jane@example.com' },
+    { name: 'John', age: 25, 電子信箱: 'john@example.com' },
+    { name: 'Jane', age: 30, 電子信箱: 'jane@example.com' },
     // Other data
   ];
   filteredData: any[] = [...this.data];
   columns: any[] = [
     { field: 'name', header: 'Name', visible: true },
     { field: 'age', header: 'Age', visible: true },
-    { field: 'email', header: 'Email', visible: true },
+    { field: '電子信箱', header: '電子信箱', visible: true },
     // Other columns
   ];
 

@@ -30,7 +30,7 @@ export interface UserInfo {
   end_date: string; // ISO 8601 date string
   status: string;
   user_type: string;
-  user_email: string;
+  user_電子信箱: string;
   TLT_No: string;
   remarks: string;
   user_priority: string;

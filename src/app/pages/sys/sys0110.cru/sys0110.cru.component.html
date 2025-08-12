@@ -22,14 +22,14 @@
           optionLabel="label" optionValue="value" [control]="dataForm.controls.status" [submitted]="submitted" />
         <app-dropdown class="col-12 md:col-6 lg:col-4" label="使用者型態" controlName="user_type" [options]="userTypeOptions"
           optionLabel="label" optionValue="value" [control]="dataForm.controls.user_type" [submitted]="submitted" />
-        <app-input-text class="col-12 md:col-6 lg:col-4" label="電子信箱" controlName="user_email"
-          [control]="dataForm.controls.user_email" [submitted]="submitted" />
+        <app-input-text class="col-12 md:col-6 lg:col-4" label="電子信箱" controlName="user_電子信箱"
+          [control]="dataForm.controls.user_電子信箱" [submitted]="submitted" />
         <app-input-text class="col-12 md:col-6 lg:col-4" label="備註" controlName="remarks"
           [control]="dataForm.controls.remarks" [submitted]="submitted" />
         <app-dropdown class="col-12 md:col-6 lg:col-4" label="使用者等級" controlName="user_priority"
           [control]="dataForm.controls.user_priority" [submitted]="submitted" [options]="user_priorityOptions"
           optionLabel="label" optionValue="value" />
-        <app-dropdown class="col-12 md:col-6 lg:col-4" label="職稱代碼" controlName="title" [options]="titleOptions"
+        <app-dropdown class="col-12 md:col-6 lg:col-4" label="職位" controlName="title" [options]="titleOptions"
           optionLabel="Label" optionValue="No" [control]="dataForm.controls.title" [submitted]="submitted" />
         <app-calendar *ngIf="!isFormCreateable" class="col-12 md:col-6 lg:col-4" label="密碼到期日"
           controlName="USER_PwdExpireDate" [control]="dataForm.controls.USER_PwdExpireDate" [submitted]="submitted" />

@@ -89,8 +89,8 @@ export class TLS57040Component {
   ) { }
   // Table data
   data: any[] = [
-    { name: 'John', age: 25, email: 'john@example.com' },
-    { name: 'Jane', age: 30, email: 'jane@example.com' },
+    { name: 'John', age: 25, 電子信箱: 'john@example.com' },
+    { name: 'Jane', age: 30, 電子信箱: 'jane@example.com' },
     // Other data
   ];
   filteredData: any[] = [...this.data];
