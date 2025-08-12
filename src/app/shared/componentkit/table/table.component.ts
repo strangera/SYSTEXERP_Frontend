@@ -88,9 +88,8 @@ export class TableComponent extends BasicPrintDataComponent implements OnChanges
   @Input() defaultInsertData: any = {};       // 預設新增資料 (可選，預設為所有資料為null)
   // expansion 收合展開
   @Input() expansionColumns: Column[] = [];  // 收合展開 欄位配置(expansion必需配置)
-  @Input() expansionDataKey = '';            // 收合展開 資料key(expansion必需配置)
-  @Input() expansionSortField = '';          // 收合展開 排序欄位(單一排序)
-  @Input() expansionSortOrder = 0;           // 收合展開 排序方向 (1:升序、-1:降序)
+  @Input() expansionDataKey = 'id';            // 收合展開 資料key(expansion必需配置)
+  @Input() expansionMultiSortMeta = [{ field: this.expansionDataKey, order: 1 }];// 收合展開 排序欄位(單一排序)
   @Input() expansionShowPaginator = false;   // expansion 是否顯示分頁器
   @Input() expansionRows = 10;               // expansion 每頁顯示行數
   @Input() expansionRowsPerPageOptions = [10, 30, 50]; // expansion 分頁選項
