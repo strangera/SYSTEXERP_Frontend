@@ -20,6 +20,7 @@ import { ButtonComponent } from '../../../shared/componentkit/button/button.comp
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { DropdownRangeComponent } from '@shared/componentkit/dropdown-range/dropdown-range.component';
 import { TranslateModule } from '@ngx-translate/core';
+import { yesterday } from '@shared/models/system/query-form.model';
 
 @Component({
   selector: 'app-tls2a030',
@@ -40,8 +41,8 @@ import { TranslateModule } from '@ngx-translate/core';
 })
 export class TLS2A030Component extends BasicQueryPageComponent<any> {
   queryForm = this.formBuilder.group({
-    SaleDateStart: [new Date('2024-01-01'), Validators.required],
-    SaleDateEnd: [new Date('2024-01-31'), Validators.required],
+    SaleDateStart: [yesterday, Validators.required],
+    SaleDateEnd: [yesterday, Validators.required],
     ECR_No_Start: [null as string | null],
     ECR_No_End: [null as string | null],
     ...createPaginationConfig,
@@ -87,14 +88,14 @@ export class TLS2A030Component extends BasicQueryPageComponent<any> {
       header: '(C) 與 (D) 比較',
       format: (v: boolean) => (v ? `⭕` : `❌`),
       visible: true,
-     
+
     },
     {
       field: 'Compare_AB',
       header: '(A) 與 (B) 比較',
       format: (v: boolean) => (v ? `⭕` : `❌`),
       visible: true,
-      
+
     },
   ];
 

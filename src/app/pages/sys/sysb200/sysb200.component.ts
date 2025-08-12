@@ -1,14 +1,12 @@
-import { Sysbc00Service } from './../../../service/api/sys/sysbc00.service';
-import { DropDownListService, IDropdownItem } from 'src/app/service/utility/dropDownList.service';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
+
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ValidationService } from '../../../shared/service/validation.service';
-import { ActivatedRoute } from '@angular/router';
-import { map } from 'rxjs/operators';
-import { Observable } from 'rxjs';
+
 import { AddButton, createPaginationConfig } from '../../../shared/componentkit/table/table.model';
-import { QuerySYSB200Request, Sysb200Service } from '../../../service/api/sys/sysb200.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { AccordionModule } from 'primeng/accordion';
@@ -19,18 +17,15 @@ import { TableComponent } from '../../../shared/componentkit/table/table.compone
 import { AsyncPipe } from '@angular/common';
 import { TranslateModule } from '@ngx-translate/core';
 
-export const enum POStatus {
-  已申請 = '0',
-  取消 = '1',
-  已審核 = '2',
-  部分驗收 = '3',
-  全部驗收 = '4',
-  強制結案 = '6',
-  作廢 = '9',
-}
+import { DropDownListService, IDropdownItem } from 'src/app/service/utility/dropDownList.service';
+import { Sysbc00Service } from './../../../service/api/sys/sysbc00.service';
+import { QuerySYSB200Request, Sysb200Service } from '../../../service/api/sys/sysb200.service';
+
 export interface VendorData {
+  id?: number;             // 後端若回傳 id
+  pos2013_id?: number;     // 或回傳 pos2013_id
   VEN_No: string;
-  VEN_Status: string;
+  VEN_Status: string;         // '0' 未審核 / '1' 已審核
   VEN_Uniform: string;
   VEN_CName: string;
   VEN_EName: string;
@@ -68,9 +63,11 @@ export interface VendorData {
   ],
 })
 export class SYSB200Component extends BasicQueryPageComponent<any> implements OnInit {
+
+  // ====== Form ======
   queryForm = this.formBuilder.group({
     VEN_NoList: [[]],
-    VEN_Status: [''], // 預設查詢「未審核」「已審核」
+    VEN_Status: [''],
     VEN_Uniform: ['', [Validators.maxLength(10)]],
     VEN_Name: ['', [Validators.maxLength(60)]],
     VEN_EName: ['', [Validators.maxLength(60)]],
@@ -91,6 +88,7 @@ export class SYSB200Component extends BasicQueryPageComponent<any> implements On
     ...createPaginationConfig([{ field: 'VEN_No', order: 1 }]),
   });
 
+  // ====== Table / Options ======
   approvalOptions: { label: string; value: string }[] = [
     { label: '未審核', value: '0' },
     { label: '已審核', value: '1' },
@@ -102,10 +100,7 @@ export class SYSB200Component extends BasicQueryPageComponent<any> implements On
       field: 'VEN_Status',
       header: '審核狀態',
       visible: true,
-      format: (value: string) => {
-        const option = this.approvalOptions.find(x => x.value === value);
-        return option ? option.label : value;
-      }
+      format: (value: string) => this.approvalOptions.find(x => x.value === value)?.label ?? value,
     },
     { field: 'VEN_Uniform', header: '統一編號', visible: true },
     { field: 'VEN_CName', header: '廠商名稱(中文)', visible: false },
@@ -124,66 +119,72 @@ export class SYSB200Component extends BasicQueryPageComponent<any> implements On
     { field: 'VEN_PayConditionDay', header: '付款期限(天數)', visible: true },
     { field: 'VEN_BNK_No', header: '廠商匯款銀行代號', visible: true },
   ];
-  VEN_NoList: IDropdownItem[] = [];
-  contacts: any[] = [];
-  totalRecords = 0;
-  selectedRows: any[] = [];
-  selectedItems: VendorData[] = [];
+
+  // ====== State ======
   data: VendorData[] = [];
+  totalRecords = 0;
+  selectedRows: VendorData[] = [];
+  selectedItems: VendorData[] = [];
+  VEN_NoList: IDropdownItem[] = [];
   venderOptions: any[] = [];
   t111Options: any[] = [];
   bankOptions$!: Observable<any[]>;
+  contacts: any[] = [];
 
+  /** 單筆操作中的 row id，避免重複點擊 */
+  actionLoadingId: string | number | null = null;
 
+  // ====== Row Buttons ======
   addButton: AddButton[] = [
     {
       label: '單據審核',
       icon: 'pi pi-check-circle text-green-500',
-      action: (rowData: VendorData) => {
-        if (rowData.VEN_Status !== '0') {
+      action: (row: VendorData) => {
+        if (this.actionLoadingId) return;
+        if (row.VEN_Status !== '0') {
           this.messageService.warnBubble('狀態不是「未審核」，無法審核');
           return;
         }
-        this.statusChange(rowData, '1');
+        this.statusChange(row, '1');
       },
     },
     {
       label: '反審核',
       icon: 'pi pi-undo text-orange-500',
-      action: (rowData: VendorData) => {
-        if (rowData.VEN_Status !== '1') {
-          this.messageService.warnBubble('狀態已審核，無法反審核');
+      action: (row: VendorData) => {
+        if (this.actionLoadingId) return;
+        if (row.VEN_Status !== '1') {
+          this.messageService.warnBubble('狀態不是「已審核」，無法反審核');
           return;
         }
-        this.statusChange(rowData, '0');
+        this.statusChange(row, '0');
       },
     },
   ];
 
   constructor(
     private dropDownListService: DropDownListService,
-    private activatedRoute: ActivatedRoute,
     private validationService: ValidationService,
     private sysbc00Service: Sysbc00Service,
     private sysb200Service: Sysb200Service
-
   ) {
     super();
   }
 
+  // ====== Lifecycle ======
   ngOnInit(): void {
-    this.initializePage('SYSB200', 'sys/sysb200cru', this.queryForm, (form) => this.onSubmit(form));
+    this.initializePage('SYSB200', 'sys/sysb200cru', this.queryForm, form => this.onSubmit(form));
     this.loadOptions();
   }
 
+  // ====== Options ======
   loadOptions() {
     this.dropDownListService.queryPOS2013_DropDownList({}).subscribe(res => {
-      this.venderOptions = (res.Data ?? []).map(item => ({
+      this.venderOptions = (res.Data ?? []).map((item: any) => ({
         label: `${item.No} - ${item.Name}`,
-        value: item.VEN_No
+        value: item.VEN_No,
       }));
     });
-
 
     this.t111Options = [
       { SYS_Name: '即期', id: 0 },
@@ -193,13 +194,14 @@ export class SYSB200Component extends BasicQueryPageComponent<any> implements On
     ];
 
     this.bankOptions$ = this.sysbc00Service.querySYSBC00({}).pipe(
-      map(res => (res.Data ?? []).map(item => ({
+      map(res => (res.Data ?? []).map((item: any) => ({
         label: `${item.BNK_No} ${item.BNK_Name}`,
-        value: item.BNK_No
+        value: item.BNK_No,
       })))
     );
   }
 
+  // ====== Query ======
   onSubmit(form: FormGroup) {
     this.handleSubmit(form, () => {
       const raw = form.getRawValue();
@@ -235,7 +237,7 @@ export class SYSB200Component extends BasicQueryPageComponent<any> implements On
         next: (res) => {
           this.data = res.Data ?? [];
           this.totalRecords = res.TotalCount ?? this.data.length;
-          this.queryStateService.setQueryState('SYSB200', form.value); // 儲存查詢條件
+          this.queryStateService.setQueryState('SYSB200', form.value);
           this.loading = false;
         },
         error: () => {
@@ -244,18 +246,46 @@ export class SYSB200Component extends BasicQueryPageComponent<any> implements On
         },
       });
     });
+
+    // 記錄查詢條件
     localStorage.setItem('SYSB200_queryForm', JSON.stringify(this.queryForm.getRawValue()));
   }
 
-
-  onDelete(rows: any[]): void {
+  // ====== Table Actions ======
+  onDelete(rows: VendorData[]): void {
     this.contacts = this.contacts.filter(item => !rows.includes(item));
     this.selectedRows = [];
     this.messageService.successBubble('已刪除選取資料');
   }
 
-  statusChange(rowData: VendorData, status: string) {
-    this.messageService.successBubble(`狀態更新，ID: ${rowData.VEN_No}，要更新成 ${status}`);
-    rowData.VEN_Status = status;
+statusChange(row: VendorData, status: '0' | '1') {
+  const id = row.pos2013_id ?? row.id; // 只接受數字主鍵
+  if (id == null || Number.isNaN(Number(id))) {
+    this.messageService.errorBubble(`找不到有效的 id，請確認查詢結果是否有回主鍵欄位（pos2013_id / id）`);
+    return;
   }
-}
+
+  if (this.actionLoadingId) return;
+  this.actionLoadingId = id;
+
+  const prev = row.VEN_Status;
+  row.VEN_Status = status; // 樂觀更新
+
+  this.sysb200Service.updateStatusSYSB200({
+    id: Number(id),
+    VEN_Status: status
+  }).subscribe({
+    next: () => {
+      const msg = status === '1' ? '審核成功' : '反審核成功';
+      this.messageService.successBubble(`${msg}（ID: ${id}）`);
+      // this.onSubmit(this.queryForm); // 若要重查就打開
+    },
+    error: (err) => {
+      row.VEN_Status = prev; // 回滾
+      const apiMsg = err?.error?.Message || err?.message || '';
+      this.messageService.errorBubble(`更新失敗（ID: ${id}）：${apiMsg}`);
+    },
+    complete: () => (this.actionLoadingId = null),
+  });
+
+}}
