@@ -1,6 +1,6 @@
 // src/app/service/api/tls/tls22020.service.ts
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpResponse } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 
@@ -48,7 +48,12 @@ export class TLS22020Service {
   queryTLS22020(data: any): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/queryTLS22020`, data);
   }
-  exportTLS22020(data: any): Observable<any> {
-    return this.http.post<any>(`${this.apiUrl}/exportTLS22020`, data);
+  exportTLS22020(data: any): Observable<HttpResponse<Blob>> {
+    return this.http.post(`${this.apiUrl}/exportTLS22020`, data,
+      {
+        responseType: 'blob',
+        observe: 'response'
+      }
+    );
   }
 }
