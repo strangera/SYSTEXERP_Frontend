@@ -48,14 +48,6 @@ export interface FIN15030PrintRequest extends FIN15030QueryRequest {
   IsExcel?: boolean;                  // Excel格式
 }
 
-export interface FIN15030QueryResponse {
-  FIN15030s: FIN15030Data[];
-}
-
-export interface FIN15030PrintResponse {
-  Print_URL: string;
-}
-
 @Injectable({
   providedIn: 'root'
 })

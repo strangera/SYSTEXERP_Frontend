@@ -226,7 +226,6 @@ export class FIN15020Component extends BasicQueryPageComponent<FIN15020Data> imp
 
   // 選完申報年月 載入字軌下拉
   loadGuiTrackOptions(event: any): void {
-    console.log('選擇的申報年月:', event);
     this.dropDownListService.queryPOS1018_GUI_TRACK_DropDownList({
       GUI_YYMM: this.datePipe.transform(event, 'yyyyMM') ?? '',
       MID: 0,
