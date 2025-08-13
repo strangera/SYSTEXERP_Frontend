@@ -79,18 +79,18 @@ export class TLS23040Component extends BasicQueryPageComponent<any> {
   queryForm = this.formBuilder.group({
     TXN_DateStart: [this.yesterday, [Validators.required]],
     TXN_DateEnd: [this.yesterday, [Validators.required]],
-    ECR_No: this.formBuilder.control<any[]>([]),     // ← 原本 [null] 改成陣列
+    ECR_No: [null], // ✅ 初始為 null（不會出現預設選項）
     TXN_No_Start: [null],
     TXN_No_End: [null],
-    TLT_No: this.formBuilder.control<any[]>([]),
-    TXN_Status: this.formBuilder.control<any[]>([]),
-    TXN_FlagStatus: this.formBuilder.control<any[]>([]),
+    TLT_No: [[]],
+    TXN_Status: [[]],
+    TXN_FlagStatus: [[]],
     TXN_PkngUID: [''],
     TXN_MemCard: [''],
     TXN_GUIBegNo: [''],
     tlt_building: [''],
-    tlt_floor: this.formBuilder.control<any[]>([]),
-    org_id: this.formBuilder.control<any[]>([]),
+    tlt_floor: [[]],
+    org_id: [[]],
     ...createPaginationConfig([{ field: 'ECR_No', order: 1 }]),
   });
 

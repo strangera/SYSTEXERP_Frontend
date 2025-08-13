@@ -59,29 +59,19 @@ export class TLS23100Component extends BasicQueryPageComponent<any> {
   })();
 
   //request
-queryForm = this.formBuilder.group({
-  TXN_DateStart: [this.yesterday as Date, [Validators.required]],
-  TXN_DateEnd: [this.yesterday, [Validators.required]],
-
-  ECR_No: this.formBuilder.control<any[]>([]),
-  TLT_No: this.formBuilder.control<any[]>([]),
-  CRD_Type: this.formBuilder.control<any[]>([]),
-  CRD_No: this.formBuilder.control<any[]>([]),
-
-  TXN_PayAmt: [null],
-
-  tlt_building: this.formBuilder.control<any[]>([]),
-  tlt_floor: this.formBuilder.control<any[]>([]),
-  org_id: this.formBuilder.control<any[]>([]),
-
-  IPeriod: this.formBuilder.control<any[]>([]),
-  AcqBank: this.formBuilder.control<any[]>([]),
-  ConnStatus: this.formBuilder.control<any[]>([]),
-
-  IsHaveTERM_No: [null],
-  ...createPaginationConfig([{ field: 'TLT_No', order: 1 }]),
-});
-
+  //request
+  queryForm = this.formBuilder.group({
+    TXN_DateStart: [this.yesterday as Date, [Validators.required]],
+    TXN_DateEnd: [this.yesterday, [Validators.required]],
+    ECR_No: [[]],
+    TLT_No: [[]],
+    CRD_Type: [[]],
+    CRD_No: [],
+    tlt_building: [],
+    tlt_floor: [[]],
+    org_id: [[]],
+    ...createPaginationConfig([{ field: 'TLT_No', order: 1 }]),
+  });
 
   //下拉選單
   paymentTypeOptions: any[] = [];
