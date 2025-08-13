@@ -249,11 +249,8 @@ export class TLS26010CRUComponent extends BasicCruPageComponent<TLS26010Data> im
       tap(([a, b]) => {
         console.log(`dependency:`, [a, b, this.dataForm.value]);
         if (JSON.stringify(a.payload) === JSON.stringify(b.payload)) return;
-        if (b.dialog === 'ecr') {
-          this.service.loadPreorderECRList({ ...b.payload, ecr_type: '1' });
-        } else if (b.dialog === 'tlt') {
-          this.service.loadTLTTALENT(b.payload);
-        }
+        if (b.dialog === 'ecr') { this.service.loadPreorderECRList({ ...b.payload, ecr_type: '1' }); }
+        else if (b.dialog === 'tlt') { this.service.loadTLTTALENT(b.payload); }
       })
     ).subscribe();
 
@@ -312,7 +309,7 @@ export class TLS26010CRUComponent extends BasicCruPageComponent<TLS26010Data> im
         }
       }
 
-      this.tltTableFiltered = [...merged.values()].map(i => ({ ...i, Status: i.Status ?? ItemOperationStatus.Original }));
+      this.tltTableFiltered = Array.from(merged.values(), (i => ({ ...i, Status: i.Status ?? ItemOperationStatus.Original })));
 
       console.log(`importExcel:`, [event, this.tltTableFiltered]);
       this.messageService.successBubble(`匯入成功：新增 ${newCount} 筆資料`);
@@ -374,16 +371,16 @@ export class TLS26010CRUComponent extends BasicCruPageComponent<TLS26010Data> im
     if (!dialog) return;
 
     if (this.crudstatus === CRUDStatus.Create) {
-      this.ecrTableFiltered = <EcrItem[]>this.df().ecr_nos.value?.map(item => <EcrItem>{ ...item, Status: ItemOperationStatus.New }) || [];
-      this.tltTableFiltered = <TltItem[]>this.df().tlt_nos.value?.map(item => <TltItem>{ ...item, Status: ItemOperationStatus.New }) || [];
+      this.ecrTableFiltered = (this.df().ecr_nos.value || []).map(item => <EcrItem>{ ...item, Status: ItemOperationStatus.New });
+      this.tltTableFiltered = (this.df().tlt_nos.value || []).map(item => <TltItem>{ ...item, Status: ItemOperationStatus.New });
       return void this.onVisibleChange(!1); // 關閉對話框並清除資料;
     }
 
     if (dialog === 'ecr') {
       const originalData: Map<string, EcrItem> = new Map(
-        this.originalDetailData?.ecr_list?.map(item => [item.ecr_no, item] as const) || []);
+        (this.originalDetailData?.ecr_list || []).map(item => [item.ecr_no, item] as const));
       const changedData: Map<string, EcrItem> = new Map(
-        this.df().ecr_nos.value?.map(ecr => [ecr.ecr_no, <EcrItem>{ ...ecr, Status: ecr.Status || ItemOperationStatus.New }]) || []
+        (this.df().ecr_nos.value || []).map(ecr => [ecr.ecr_no, <EcrItem>{ ...ecr, Status: ecr.Status || ItemOperationStatus.New }])
       );
       this.ecrTableFiltered = this.buildCrudList<EcrItem>(originalData, changedData);
       console.log(`ECR Dialog Submit:`, [originalData, changedData]);
@@ -391,10 +388,9 @@ export class TLS26010CRUComponent extends BasicCruPageComponent<TLS26010Data> im
 
     if (dialog === 'tlt') {
       const originalData: Map<string, TltItem> = new Map(
-        this.originalDetailData?.talent_list?.map(item => [String(item.talent_id!), item] as const) || []
-      );
+        (this.originalDetailData?.talent_list || []).map(item => [String(item.talent_id!), item] as const));
       const changedData: Map<string, TltItem> = new Map(
-        this.df().tlt_nos.value?.map(tlt => [String(tlt.talent_id!), <TltItem>{ ...tlt, Status: tlt.Status || ItemOperationStatus.New }]) || []
+        (this.df().tlt_nos.value || []).map(tlt => [String(tlt.talent_id!), <TltItem>{ ...tlt, Status: tlt.Status || ItemOperationStatus.New }])
       );
       this.tltTableFiltered = this.buildCrudList<TltItem>(originalData, changedData);
       console.log(`TLT Dialog Submit:`, [originalData, changedData]);
