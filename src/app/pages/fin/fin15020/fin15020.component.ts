@@ -19,6 +19,12 @@ import { TableComponent } from '../../../shared/componentkit/table/table.compone
 import { TranslateModule } from '@ngx-translate/core';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
+import { DropDownListService } from '@service/utility/dropDownList.service';
+
+export interface Option {
+  label: string;
+  value: string | number;
+}
 
 @Component({
   selector: 'app-fin15020',
@@ -36,7 +42,7 @@ export class FIN15020Component extends BasicQueryPageComponent<FIN15020Data> imp
     TXN_Ret_No_S: ['', [Validators.maxLength(10)]],             // 退出/折讓單號起 (string(10))
     TXN_Ret_No_E: ['', [Validators.maxLength(10)]],             // 退出/折讓單號訖 (string(10))
     PUR_VoucherType: [null],                                    // 發票格式 (dropdown)
-    GUI_Track: ['', [Validators.maxLength(2)]],                 // 字軌 (string(2))
+    GUI_Track: [null],                                         // 字軌 (string(2))
     PUR_GUINo_S: ['', [Validators.maxLength(8)]],               // 發票號碼起 (string(8))
     PUR_GUINo_E: ['', [Validators.maxLength(8)]],               // 發票號碼訖 (string(8))
     PUR_GUIDate_S: [null],                                      // 退出/折讓日期起 (date picker)
@@ -65,7 +71,6 @@ export class FIN15020Component extends BasicQueryPageComponent<FIN15020Data> imp
 
   columns: Column[] = [
     { field: 'No', header: '序號', visible: false },
-    { field: 'TXN_Ret_No', header: '退出折讓單號', visible: true },
     { field: 'PUR_VoucherType', header: '發票格式代號', visible: true, format: (value: string) => this.invoiceFormatOptions.find(opt => opt.value === value)?.label ?? '' },
     { field: 'GUI_Track', header: '字軌', visible: true },
     { field: 'InvoiceNo', header: '發票號碼', visible: true },
@@ -96,51 +101,21 @@ export class FIN15020Component extends BasicQueryPageComponent<FIN15020Data> imp
     { field: 'PUR_Uniform', header: '統一編號', visible: true }
   ];
 
-  // 常數定義
-  private static readonly STORE_NO = '10';
-  private static readonly MID = 0;
-
-  // 下拉選項
-  invoiceFormatOptions = [
-    { value: '21', label: '進項三聯式、電子計算機統一發票' },
-    { value: '22', label: '進項二聯式收銀機統一發票、載有稅額之其他憑證' },
-    { value: '25', label: '進項三聯式收銀機統一發票及一般稅額計算之電子發票' },
-    { value: '26', label: '彙總登錄每張稅額伍佰元以下之進項三聯式、電子計算機統一發票' },
-    { value: '27', label: '彙總登錄每張稅額伍佰元以下之進項二聯式收銀機統一發票、載有稅額之其他憑證' },
-    { value: '28', label: '進項海關代徵營業稅繳納證' },
-  ];
-
-  creditTypeOptions = [
+  //#region 下拉選項
+  invoiceFormatOptions: Option[] = []  // 發票格式
+  creditTypeOptions: Option[] = [
     { label: '退出', value: '1' },
     { label: '折讓', value: '2' }
-  ];
+  ];  // 區別
+  systemTypeOptions: Option[] = []  // 系統別
+  guiTrackOptions: Option[] = []  // 字軌
 
-  systemTypeOptions = [
-    { label: '資材管理系統', value: '1' },
-    { label: '能源管理系統', value: '2' },
-    { label: '客戶服務管理', value: '3' },
-    { label: '應付帳款系統', value: '4' },
-    { label: '應收帳款系統', value: '5' },
-    { label: '預算管理系統', value: '6' },
-    { label: '零用金管理系統', value: '7' },
-    { label: '總帳管理系統', value: '8' },
-    { label: '發票暨媒體申報系統', value: '9' },
-    { label: '票據管理系統', value: '10' },
-    { label: '基本資料管理系統', value: '11' },
-    { label: '權限管理系統', value: '12' },
-    { label: '招商暨合約系統', value: '13' },
-    { label: '專櫃營運管理', value: '14' },
-    { label: '決策支援管理', value: '15' },
-    { label: 'POS網管系統', value: '16' },
-    { label: '自營管理系統', value: '17' }
-  ];
-
-  mergeOptions = [
+  // 列印方式
+  mergeOptions: Option[] = [
     { label: '分開列印', value: '0' },
     { label: '合併列印', value: '1' }
   ];
-
-  exportOptions = [
+  exportOptions: Option[] = [
     { label: 'PDF', value: '0' },
     { label: 'Excel', value: '1' }
   ];
@@ -149,12 +124,14 @@ export class FIN15020Component extends BasicQueryPageComponent<FIN15020Data> imp
   constructor(
     private readonly fin15020Service: FIN15020Service,
     private readonly datePipe: DatePipe,
+    private readonly dropDownListService: DropDownListService
   ) {
     super();
   }
 
   ngOnInit(): void {
-    this.initializePage('FIN15020', 'fin/fin15020', this.queryForm, (form) => this.onSubmit(form));
+    this.initializePage('FIN15020', 'fin/fin15020cru', this.queryForm, (form) => this.onSubmit(form));
+    this.loadDropdownOptions();
   }
 
   onSubmit(frm: FormGroup): void {
@@ -216,7 +193,6 @@ export class FIN15020Component extends BasicQueryPageComponent<FIN15020Data> imp
       });
   }
 
-
   private validateRequiredFields(): boolean {
     if (this.queryForm.invalid) {
       const errors: string[] = [];
@@ -235,5 +211,24 @@ export class FIN15020Component extends BasicQueryPageComponent<FIN15020Data> imp
   private openDownloadWindow(printUrl: string): void {
     const downloadUrl = `${environment.ApiUrl}${printUrl}`;
     window.open(downloadUrl, '_blank');
+  }
+
+  private loadDropdownOptions(): void {
+    // 載入發票格式
+    this.dropDownListService.queryTDS1007_DropDownList({ mid: 0 }).subscribe(r => {
+      this.invoiceFormatOptions = r.Data.INV_GUITypes.map(item => ({ label: item.INV_GUIName, value: item.INV_GUIType }));
+    });
+    // 載入系統別
+    this.dropDownListService.querySYS1000_DropDownList({ SYS_Type: 'T207' }).subscribe(r => {
+      this.systemTypeOptions = r.Data.map(item => ({ label: item.Name, value: item.No }));
+    });
+  }
+
+  // TODO: 待確認
+  // 選完資料所屬年月才會有下拉
+  private loadGuiTrackOptions(): void {
+    // this.dropDownListService.queryPOS1018_GUI_TRACK_DropDownList({ mid: 0 }).subscribe(r => {
+    //   this.guiTrackOptions = r;
+    // });
   }
 }

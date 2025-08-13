@@ -22,9 +22,10 @@
           </app-dropdown>
 
           <!-- 字軌 -->
-          <app-input-text class="col-12 md:col-6 lg:col-4" label="字軌" controlName="GUI_Track"
-            [control]="queryForm.controls.GUI_Track" [submitted]="submitted">
-          </app-input-text>
+          <app-dropdown class="col-12 md:col-6 lg:col-4" label="字軌" controlName="GUI_Track" [options]="guiTrackOptions"
+            [optionLabel]="'label'" [optionValue]="'value'" [control]="queryForm.controls.GUI_Track"
+            [submitted]="submitted">
+          </app-dropdown>
 
           <!-- 發票號碼起迄 -->
           <app-input-text-range class="col-12 md:col-6 lg:col-4" label="發票號碼"

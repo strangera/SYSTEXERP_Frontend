@@ -82,7 +82,7 @@ export class TLS12050Component extends BasicQueryPageComponent<any> implements O
   }
 
   ngOnInit(): void {
-    this.initializePage('TLS12050', 'tls/tls12050', this.queryForm, (form) => this.onSubmit(form));
+    this.initializePage('TLS12050', 'tls/tls12050cru', this.queryForm, (form) => this.onSubmit(form));
     this.loadOptions();
     this.queryForm.get('building_no')?.valueChanges.subscribe(() => {
       this.triggerImageUpdate();

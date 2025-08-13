@@ -163,7 +163,7 @@ export class FIN11060Component extends BasicQueryPageComponent<InvoiceRecord> im
   }
 
   ngOnInit(): void {
-    this.initializePage('FIN11060', 'FIN/FIN11060', this.queryForm, (form) => this.onSubmit(form));
+    this.initializePage('FIN11060', 'FIN/FIN11060cru', this.queryForm, (form) => this.onSubmit(form));
     this.loadOptions();
 
     // 監聽 condition_type 變化(切換顯示欄位)

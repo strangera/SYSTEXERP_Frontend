@@ -101,7 +101,7 @@ export class TLS26030Component extends BasicQueryPageComponent<TLS26030Data> imp
   }
 
   ngOnInit(): void {
-    this.initializePage('TLS26030', 'tls/tls26030', this.queryForm, (form) => this.onSubmit(form));
+    this.initializePage('TLS26030', 'tls/tls26030cru', this.queryForm, (form) => this.onSubmit(form));
     this.loadOptions();
   }
 
