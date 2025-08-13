@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
-import { finalize } from 'rxjs';
+import { finalize, Observable } from 'rxjs';
 import { TLS26040Service, TLS26040Data } from '../../../service/api/tls/tls26040.service';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
@@ -11,7 +11,7 @@ import { TableComponent } from '../../../shared/componentkit/table/table.compone
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
 import { AccordionModule } from 'primeng/accordion';
 import { TranslateModule } from '@ngx-translate/core';
-import { Column, createPaginationConfig } from '../../../shared/componentkit/table/table.model';
+import { Column, createPaginationConfig, formatDate } from '../../../shared/componentkit/table/table.model';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { DropDownListService } from '@service/utility/dropDownList.service';
 import { untilDestroyed } from '@ngneat/until-destroy';
@@ -42,7 +42,7 @@ export class TLS26040Component extends BasicQueryPageComponent<TLS26040Data> imp
     sad_preorder_date_end: [null],                    // 結帳日期_迄
     batch_no: ['', [Validators.maxLength(12)]],       // 批號
     IsNotlt_no: [null, [Validators.required]],        // 篩選條件
-    ...createPaginationConfig([{ field: 'id', order: 1 }])
+    ...createPaginationConfig([{ field: 'sad_date', order: -1 }])
   });
 
   totalRecords = 0;
@@ -51,8 +51,8 @@ export class TLS26040Component extends BasicQueryPageComponent<TLS26040Data> imp
 
   columns: Column[] = [
     { field: 'id', header: 'ID', visible: false },
-    { field: 'sad_date', header: '預售日期', visible: true },
-    { field: 'sad_preorder_date', header: '結帳日期', visible: true },
+    { field: 'sad_date', header: '預售日期', visible: true, format: formatDate },
+    { field: 'sad_preorder_date', header: '結帳日期', visible: true, format: formatDate },
     { field: 'tlt_no', header: '櫃別編號', visible: true },
     { field: 'tlt_name', header: '櫃位名稱', visible: true },
     { field: 'batch_no', header: '批號', visible: true },
@@ -61,7 +61,7 @@ export class TLS26040Component extends BasicQueryPageComponent<TLS26040Data> imp
 
   // 展開詳細資料的欄位定義
   expansionColumns: Column[] = [
-    { field: 'TXN_Date', header: '預售日期', visible: true },
+    { field: 'TXN_Date', header: '預售日期', visible: true, format: formatDate },
     { field: 'TLT_No', header: '專櫃編號', visible: true },
     { field: 'tlt_name', header: '專櫃名稱', visible: true },
     { field: 'ECR_No', header: '收銀機號', visible: true },
@@ -103,20 +103,14 @@ export class TLS26040Component extends BasicQueryPageComponent<TLS26040Data> imp
           this.data = response.Data;
           this.totalRecords = response.TotalCount;
           this.queryStateService.setQueryState(this.ProgNo, frm.getRawValue());
-          this.addDetailData(this.data);
         });
     });
   }
 
-  // 為每一筆主資料載入詳細資料
-  addDetailData(data: TLS26040Data[]) {
-    data.forEach(item => {
-      this.tls26040Service.queryTLS26040Detail({
-        sad_date: item.sad_date,
-        tlt_no: item.tlt_no
-      }).pipe(untilDestroyed(this)).subscribe(response => {
-        item.details = response.Data;
-      });
-    });
-  }
+  loadDetails = (rowData: TLS26040Data): Observable<any> => {
+    return this.tls26040Service.queryTLS26040Detail({
+      sad_date: rowData.sad_date,
+      tlt_no: rowData.tlt_no
+    })
+  };
 }
