@@ -48,7 +48,7 @@ export class SYS0110CRUComponent extends BasicCruPageComponent<UserInfo> impleme
     user_No: ['', [Validators.required, Validators.maxLength(10), this.validationService.englishNumberSymbolValidator]], // 使用者編號
     user_Name: ['', [Validators.required, Validators.maxLength(20)]], // 使用者名稱
     user_Password: ['', [Validators.required, this.validationService.englishNumberSymbolValidator]], // 使用者密碼-加密
-    title: ['', Validators.maxLength(6)], // 職稱代碼-SYS1000 (就是職位)
+    title: ['', Validators.maxLength(6)], // 職位-SYS1000 (就是職位)
     org_ID: ['', [Validators.required, Validators.maxLength(20)]], // 組織編號 (SYSB400_SYS3100)
     str_date: [null], // 帳號有效開始日期
     end_date: [null], // 帳號有效結束日期

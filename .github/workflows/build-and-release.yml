@@ -1,7 +1,8 @@
 name: Build Angular App (Dual Environment)
 on:
   push:
-    branches: [ prod ]
+    tags: 
+      - 'v*'
   workflow_dispatch:
 
 jobs:

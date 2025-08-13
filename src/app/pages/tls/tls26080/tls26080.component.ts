@@ -39,10 +39,6 @@ import { TLS26080Data } from './tls26080.model';
   ],
 })
 export class TLS26080Component extends BasicQueryPageComponent<TLS26080Data> implements OnInit {
-  private readonly d = (() => {
-    const n = new Date(), y = n.getFullYear(), m = n.getMonth();
-    return { start: new Date(y, m, 1), end: new Date(y, m + 1, 0) };
-  })();
 
   // 查詢表單
   public queryForm = this.formBuilder.group({
@@ -50,8 +46,8 @@ export class TLS26080Component extends BasicQueryPageComponent<TLS26080Data> imp
     pod_desc: new FormControl<string | undefined>(undefined, [Validators.maxLength(100)]), // 活動名稱
     pod_status: new FormControl<ApprovalStatus>(ApprovalStatus.未核准), // 核准狀態
     org_id: new FormControl<string | undefined>(undefined), // 部門
-    pod_sdate: new FormControl<Date>(this.d.start), // 起始日期(起)
-    pod_edate: new FormControl<Date>(this.d.end), // 起始日期(迄)
+    pod_sdate: new FormControl<Date>(this.service.dateS), // 起始日期(起)
+    pod_edate: new FormControl<Date>(this.service.dateE), // 起始日期(迄)
     pod_busdate: new FormControl<Date | undefined>(undefined), // 活動正檔日期
   });
 
@@ -77,14 +73,14 @@ export class TLS26080Component extends BasicQueryPageComponent<TLS26080Data> imp
   });
 
   public columns: Column[] = [
-    { field: 'pod_no', header: '活動編號', visible: !0 },
-    { field: 'pod_desc', header: '活動名稱', visible: !0 },
-    { field: 'pod_sdate', header: '活動起始日期', visible: !0, format: v => this.datePipe.transform(v, 'YYYY/MM/dd') },
-    { field: 'pod_edate', header: '活動終止日期', visible: !0, format: v => this.datePipe.transform(v, 'YYYY/MM/dd') },
-    { field: 'pod_busdate', header: '活動正檔日期', visible: !0, format: v => this.datePipe.transform(v, 'YYYY/MM/dd') },
-    { field: 'pod_edate', header: '兌回起始日期', visible: !0, format: v => this.datePipe.transform(v, 'YYYY/MM/dd') },
-    { field: 'pod_edate', header: '兌回終止日期', visible: !0, format: v => this.datePipe.transform(v, 'YYYY/MM/dd') },
-    { field: 'pod_status', header: '狀態', visible: !0, format: this.service.approvalStatus.bind(this) },
+    { field: 'pod_no', header: '活動編號' },
+    { field: 'pod_desc', header: '活動名稱' },
+    { field: 'pod_sdate', header: '活動起始日期', format: v => this.datePipe.transform(v, 'YYYY/MM/dd') },
+    { field: 'pod_edate', header: '活動終止日期', format: v => this.datePipe.transform(v, 'YYYY/MM/dd') },
+    { field: 'pod_busdate', header: '活動正檔日期', format: v => this.datePipe.transform(v, 'YYYY/MM/dd') },
+    { field: 'pod_edate', header: '兌回起始日期', format: v => this.datePipe.transform(v, 'YYYY/MM/dd') },
+    { field: 'pod_edate', header: '兌回終止日期', format: v => this.datePipe.transform(v, 'YYYY/MM/dd') },
+    { field: 'pod_status', header: '狀態', format: this.service.approvalStatus.bind(this) },
   ];
 
   constructor(
@@ -114,8 +110,8 @@ export class TLS26080Component extends BasicQueryPageComponent<TLS26080Data> imp
 
   public onClear(): void {
     this.queryForm.reset({
-      pod_sdate: this.d.start,
-      pod_edate: this.d.end,
+      pod_sdate: this.service.dateS,
+      pod_edate: this.service.dateE,
       pod_status: ApprovalStatus.未核准,
     });
   };

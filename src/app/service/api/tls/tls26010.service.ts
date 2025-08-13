@@ -1,5 +1,5 @@
 import { HttpClient } from '@angular/common/http';
-import { effect, Injectable, signal } from '@angular/core';
+import { effect, Injectable, OnDestroy, signal } from '@angular/core';
 import { DependentDataQuery, EcrTable, PodRequest, TLS26010Data, TLS26010Detail, TLS26010DetailResponse, TLS26010Query, TltTable } from '@pages/tls/tls26010/tls26010.model';
 import { AuthService } from '@service/system/auth.service';
 import { ErrorHandlerService } from '@service/system/error-handler.service';
@@ -7,30 +7,31 @@ import { NotificationService } from '@shared/component/notification-message/noti
 import { BaseQueryResponse, DropdownOption } from '@shared/models/api/base-api.interface';
 import { ApprovalStatus } from '@shared/models/tls/approval-status.model';
 import { ConfirmationService } from 'primeng/api';
-import { catchError, finalize, Observable, of, take, tap } from 'rxjs';
+import { catchError, finalize, Observable, of, Subject, take, takeUntil, tap } from 'rxjs';
 import { environment } from 'src/environments/environment';
 
 const apiUrl: string = environment.ApiUrl;
 
 @Injectable({ providedIn: 'root' })
-export class TLS26010Service {
-  public readonly dateS: Date = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
-  public readonly dateE: Date = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0);
+export class TLS26010Service implements OnDestroy {
+  private readonly d = (() => {
+    const n = new Date(), y = n.getFullYear(), m = n.getMonth();
+    return { start: new Date(y, m, 1), end: new Date(y, m + 1, 0) };
+  })();
+  public readonly dateS: Date = this.d.start;
+  public readonly dateE: Date = this.d.end;
+
   public readonly isRowSelectable = (rowData: TLS26010Data) =>
     (Reflect.has(rowData, 'CanDelete') && rowData.CanDelete == '1') || rowData.pod_status === ApprovalStatus.未核准;
-  public readonly shallowEqual = <T extends Record<string, any>>(a: T, b: T): boolean => {
-    const keys = Object.keys(a) as (keyof T)[];
-    return keys.every((k: keyof T) => a[k] === b[k]);
-  };
 
   // 儲存資料
-  public TLS26010Data = signal<TLS26010Data[]>([]);
-  public TLS26010Detail = signal<TLS26010Detail | undefined>(void 0);
-  public sys3800Data = signal<DropdownOption[]>([]);
-  public sys3900Data = signal<DropdownOption[]>([]);
-  public sys3A00Data = signal<DropdownOption[]>([]);
-  public ecrData = signal<EcrTable[]>([]);
-  public tltData = signal<TltTable[]>([]);
+  public readonly TLS26010Data = signal<TLS26010Data[]>([]);
+  public readonly TLS26010Detail = signal<TLS26010Detail | undefined>(void 0);
+  public readonly sys3800Data = signal<DropdownOption[]>([]);
+  public readonly sys3900Data = signal<DropdownOption[]>([]);
+  public readonly sys3A00Data = signal<DropdownOption[]>([]);
+  public readonly ecrData = signal<EcrTable[]>([]);
+  public readonly tltData = signal<TltTable[]>([]);
 
   // 讀取狀態
   public sys3800Loading = !1;
@@ -41,34 +42,14 @@ export class TLS26010Service {
   public tableLoading = !1;
   public approvalStatusLoading = !1;
 
-  // 下拉選單資料
-  public sys3800Map = new Map<string, DropdownOption>([]);
-  public sys3900Map = new Map<string, DropdownOption>([]);
-  public sys3A00Map = new Map<string, DropdownOption>([]);
-  public ECRMap = new Map<string, EcrTable>([]);
-  public TLTMap = new Map<string, TltTable>([]);
-
-  // 主動式建立Mapping
-  private readonly sys3800Effect = effect(() => {
-    this.sys3800Map.clear();
-    for (const item of this.sys3800Data()) this.sys3800Map.set(item.No, item);
-  });
-  private readonly sys3900Effect = effect(() => {
-    this.sys3900Map.clear();
-    for (const item of this.sys3900Data()) this.sys3900Map.set(item.No, item);
-  });
-  private readonly sys3A00Effect = effect(() => {
-    this.sys3A00Map.clear();
-    for (const item of this.sys3A00Data()) this.sys3A00Map.set(item.No, item);
-  });
-  private readonly ECREffect = effect(() => {
-    this.ECRMap.clear();
-    for (const item of this.ecrData()) this.ECRMap.set(item.ecr_no, item);
-  });
-  private readonly TLTEffect = effect(() => {
-    this.TLTMap.clear();
-    for (const item of this.tltData()) this.TLTMap.set(item.tlt_no, item);
-  });
+  // Request cancellation subjects
+  private readonly sys3800Cancel$ = new Subject<void>();
+  private readonly sys3900Cancel$ = new Subject<void>();
+  private readonly sys3A00Cancel$ = new Subject<void>();
+  private readonly ecrCancel$ = new Subject<void>();
+  private readonly tltCancel$ = new Subject<void>();
+  private readonly queryCancel$ = new Subject<void>();
+  private readonly detailCancel$ = new Subject<void>();
 
   // 核准狀態顯示
   public approvalStatus(value: string): string {
@@ -97,11 +78,11 @@ export class TLS26010Service {
 
   /** 取得館別 */
   public loadSYS3800(): void {
-    if (this.sys3800Loading) return void (this.sys3800Loading = !1);
+    this.sys3800Cancel$.next();
     this.sys3800Loading = !0;
     this.http.post<BaseQueryResponse<DropdownOption>>(`${apiUrl}/querySYS3800_DropDownList`, {}).pipe(
       take(1),
-      tap(() => this.sys3800Data.set([])),
+      takeUntil(this.sys3800Cancel$),
       tap(response => this.sys3800Data.set(response.Data)),
       catchError(error => this.errorHandler.handleError(error)),
       finalize(() => {
@@ -112,12 +93,12 @@ export class TLS26010Service {
   }
 
   /** 取得樓層 */
-  public loadSYS3900(building_no?: string | null): void {
-    if (this.sys3900Loading) return void (this.sys3900Loading = !1);
+  public loadSYS3900(): void {
+    this.sys3900Cancel$.next();
     this.sys3900Loading = !0;
-    this.http.post<BaseQueryResponse<DropdownOption>>(`${apiUrl}/querySYS3900_DropDownList`, building_no?.length ? { building_no } : {}).pipe(
+    this.http.post<BaseQueryResponse<DropdownOption>>(`${apiUrl}/querySYS3900_DropDownList`, {}).pipe(
       take(1),
-      tap(() => this.sys3900Data.set([])),
+      takeUntil(this.sys3900Cancel$),
       tap(response => this.sys3900Data.set(response.Data)),
       catchError(error => this.errorHandler.handleError(error)),
       finalize(() => {
@@ -129,11 +110,11 @@ export class TLS26010Service {
 
   /** 取得區域代碼 */
   public loadSYS3A00(): void {
-    if (this.sys3A00Loading) return void (this.sys3A00Loading = !1);
+    this.sys3A00Cancel$.next();
     this.sys3A00Loading = !0;
     this.http.post<any>(`${apiUrl}/querySYS3A00_DropDownList`, {}).pipe(
       take(1),
-      tap(() => this.sys3A00Data.set([])),
+      takeUntil(this.sys3A00Cancel$),
       tap(response => this.sys3A00Data.set(response.Data)),
       catchError(error => this.errorHandler.handleError(error)),
       finalize(() => {
@@ -145,11 +126,12 @@ export class TLS26010Service {
 
   /** 取得收銀機號 */
   public loadPreorderECRList(query: DependentDataQuery & { ecr_type: string; }): void {
-    if (this.ecrLoading) return void (this.ecrLoading = !1);
+    this.ecrCancel$.next();
+    this.ecrData.set([]);
     this.ecrLoading = !0;
     this.http.post<BaseQueryResponse<EcrTable>>(`${apiUrl}/queryECRDropDownList`, query).pipe(
       take(1),
-      tap(() => this.ecrData.set([])),
+      takeUntil(this.ecrCancel$),
       tap(response => this.ecrData.set(response.Data)),
       catchError(error => this.errorHandler.handleError(error)),
       finalize(() => {
@@ -161,13 +143,12 @@ export class TLS26010Service {
 
   /** 取得專櫃編號 */
   public loadTLTTALENT(query: DependentDataQuery): void {
-    if (this.tltLoading) return void (this.tltLoading = !1);
+    this.tltCancel$.next();
+    this.tltData.set([]);
     this.tltLoading = !0;
-    // if (query.building_no === '' && query.floor_no === '') return void (this.tltLoading = !1);
-
     this.http.post<BaseQueryResponse<TltTable>>(`${apiUrl}/queryTalentDropDownList`, query).pipe(
       take(1),
-      tap(() => this.tltData.set([])),
+      takeUntil(this.tltCancel$),
       tap(response => this.tltData.set(response.Data)),
       catchError(error => this.errorHandler.handleError(error)),
       finalize(() => {
@@ -179,10 +160,11 @@ export class TLS26010Service {
 
   /** 查詢預購活動檔期 */
   public loadTLS26010(query: TLS26010Query): void {
-    if (this.tableLoading) return void (this.tableLoading = !1);
+    this.queryCancel$.next();
     this.tableLoading = !0;
     this.http.post<BaseQueryResponse<TLS26010Data>>(`${apiUrl}/TLS0000/TLS2000/queryTLS26010`, query).pipe(
       take(1),
+      takeUntil(this.queryCancel$),
       tap(response => this.TLS26010Data.set(response.Data)),
       catchError(error => this.errorHandler.handleError(error)),
       finalize(() => {
@@ -194,10 +176,11 @@ export class TLS26010Service {
 
   /** 查詢預購活動檔期 */
   public loadTLS26010Detail(query: { pod_no: string; }): void {
-    if (this.tableLoading) return void (this.tableLoading = !1);
+    this.detailCancel$.next();
     this.tableLoading = !0;
     this.http.post<TLS26010DetailResponse>(`${apiUrl}/TLS0000/TLS2000/queryTLS26010Detail`, query).pipe(
       take(1),
+      takeUntil(this.detailCancel$),
       tap(response => this.TLS26010Detail.set(response.Data)),
       catchError(error => this.errorHandler.handleError(error)),
       finalize(() => {
@@ -211,7 +194,6 @@ export class TLS26010Service {
   public insertTLS26010(payload: PodRequest): Observable<BaseQueryResponse<any>> {
     if (this.tableLoading) { this.tableLoading = !1; return of(); };
     this.tableLoading = !0;
-
     return this.http.post<BaseQueryResponse<any>>(`${apiUrl}/TLS0000/TLS2000/insertTLS26010`, payload).pipe(
       take(1),
       tap(() => { }),
@@ -227,7 +209,6 @@ export class TLS26010Service {
   public updateTLS26010(data: PodRequest): Observable<BaseQueryResponse<any>> {
     if (this.tableLoading) { this.tableLoading = !1; return of(); };
     this.tableLoading = !0;
-
     return this.http.post<BaseQueryResponse<any>>(`${apiUrl}/TLS0000/TLS2000/updateTLS26010`, data).pipe(
       take(1),
       tap((response) => {
@@ -284,7 +265,7 @@ export class TLS26010Service {
 
   /** 核准或反核准預購活動 */
   public loadApproval(data: TLS26010Data): void {
-    if (this.approvalStatusLoading) return void (this.approvalStatusLoading = !1);
+    if (this.approvalStatusLoading) return;
     this.approvalStatusLoading = !0;
     this.confirmationService.confirm({
       message: `是否確定${this.approvalCheck(data).confirm}選取項目？`,
@@ -314,5 +295,15 @@ export class TLS26010Service {
       },
       reject: () => this.messageService.infoBubble(`${this.approvalCheck(data).confirm}已取消`)
     });
+  }
+
+  ngOnDestroy(): void {
+    this.sys3800Cancel$.complete();
+    this.sys3900Cancel$.complete();
+    this.sys3A00Cancel$.complete();
+    this.ecrCancel$.complete();
+    this.tltCancel$.complete();
+    this.queryCancel$.complete();
+    this.detailCancel$.complete();
   }
 }

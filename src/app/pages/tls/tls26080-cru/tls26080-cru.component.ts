@@ -44,15 +44,13 @@ import { CounterData, TLS26080Data, TLS26080Detail } from '../tls26080/tls26080.
   ]
 })
 export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> implements OnInit {
-  private dateS: Date = new Date(new Date().getFullYear(), new Date().getMonth(), 1);
-  private dateE: Date = new Date(new Date().getFullYear(), new Date().getMonth() + 1, 0);
 
   // 主表單：活動基本資料
   public dataForm = this.formBuilder.nonNullable.group({
     pod_no: new FormControl<string>('自動給號', [Validators.maxLength(10)]), // 活動單號
     pod_desc: new FormControl<string | undefined>(void 0, [Validators.required]), // 活動名稱
-    pod_sdate: new FormControl<Date>(this.dateS, [Validators.required]), // 起始日期(起)
-    pod_edate: new FormControl<Date>(this.dateE, [Validators.required]), // 起始日期(迄)
+    pod_sdate: new FormControl<Date>(this.service.dateS, [Validators.required]), // 起始日期(起)
+    pod_edate: new FormControl<Date>(this.service.dateE, [Validators.required]), // 起始日期(迄)
     pod_busdate: new FormControl<Date | undefined>(void 0, [Validators.required]), // 活動正檔日期
     pod_status: new FormControl<string>(ApprovalStatus.未核准), // 核准狀態
     pod_type: new FormControl<string | undefined>(void 0), // 扣款名稱
@@ -105,7 +103,7 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
   private readonly campaignCounterEffect = effect(() => {
     const data = this.service.campaignCounterData();
     const formData = this.dataForm.value;
-    if (!data || !data.length || !this.selectedCampaign()) return;
+    if (!data?.length || !this.selectedCampaign()) return;
     let result: TLS26080Detail[] = [];
     for (const item of data) {
       result.push({
@@ -124,25 +122,25 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
 
   // 環友資料表
   campaignColumns: Column[] = [
-    { field: 'CampaignId', header: '活動編號', visible: !0 },
-    { field: 'CampaignName', header: '活動名稱', visible: !0 },
-    { field: 'StartTime', header: '活動開始時間', visible: !0, format: v => this.datePipe.transform(v, 'YYYY/MM/dd') },
-    { field: 'EndTime', header: '活動結束時間', visible: !0, format: v => this.datePipe.transform(v, 'YYYY/MM/dd') },
-    { field: 'AccountingType', header: '帳務拆分類別', visible: !0 },
-    { field: 'Remark', header: '活動備註', visible: !0 },
+    { field: 'CampaignId', header: '活動編號' },
+    { field: 'CampaignName', header: '活動名稱' },
+    { field: 'StartTime', header: '活動開始時間', format: v => this.datePipe.transform(v, 'YYYY/MM/dd') },
+    { field: 'EndTime', header: '活動結束時間', format: v => this.datePipe.transform(v, 'YYYY/MM/dd') },
+    { field: 'AccountingType', header: '帳務拆分類別' },
+    { field: 'Remark', header: '活動備註' },
   ];
 
   // 環友專櫃資料表
   // campaignCounterColumns: Column[] = [
-  //   { field: 'CounterCode', header: '專櫃編號', visible: !0 },
-  //   { field: 'ProductType', header: '專櫃抽成類別', visible: !0 },
+  //   { field: 'CounterCode', header: '專櫃編號' },
+  //   { field: 'ProductType', header: '專櫃抽成類別' },
   // ];
 
   // 專櫃資料表
   public counterColumns: Column[] = [
-    { field: 'tlt_no', header: '專櫃編號', visible: !0 },
-    { field: 'tlt_name', header: '櫃位名稱', visible: !0 },
-    { field: 'tlt_id', header: '抽成類別', visible: !0 },
+    { field: 'tlt_no', header: '專櫃編號' },
+    { field: 'tlt_name', header: '櫃位名稱' },
+    { field: 'tlt_id', header: '抽成類別' },
     {
       field: 'calc_date_type',
       header: '預售起日計算',
@@ -165,9 +163,9 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
 
   // 扣款項目資料表
   // deductionColumns: Column[] = [
-  //   { field: 'itemCode', header: '扣款項目編號', visible: !0 },
-  //   { field: 'itemName', header: '扣款項目名稱', visible: !0 },
-  //   { field: 'amountOrRate', header: '金額/比率', visible: !0 }
+  //   { field: 'itemCode', header: '扣款項目編號' },
+  //   { field: 'itemName', header: '扣款項目名稱' },
+  //   { field: 'amountOrRate', header: '金額/比率' }
   // ];
 
   // 靜態資料: 用於表單初始化和重置
@@ -176,8 +174,8 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
   private podNos = new Set<string>();
 
   constructor(
-    public service: TLS26080Service,
-    private datePipe: DatePipe,
+    public readonly service: TLS26080Service,
+    private readonly datePipe: DatePipe,
   ) {
     super();
   }
@@ -205,8 +203,8 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
       ? this.dataForm.reset(this.staticData)
       : this.dataForm.reset({
         pod_no: '自動給號',
-        pod_sdate: this.dateS,
-        pod_edate: this.dateE,
+        pod_sdate: this.service.dateS,
+        pod_edate: this.service.dateE,
         pod_status: ApprovalStatus.未核准,
       });
     this.crudstatus === CRUDStatus.Edit

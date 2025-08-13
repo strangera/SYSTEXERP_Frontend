@@ -124,16 +124,15 @@ export class SYS0320CRUComponent extends BasicCruPageComponent<UserData> impleme
     });
   }
   private setParentReferences(node: TreeNode, parent: TreeNode | null = null): TreeNode {
+    // 這裡我們不修改 setParentReferences，它負責建立樹狀結構，
+    // isDisable 判斷應該在處理使用者互動時進行。
     const newNode: TreeNode = { ...node, parent: parent || undefined };
 
-    // 初始化 partialSelected 和 isOpen
     if (newNode.partialSelected === undefined) {
       newNode.partialSelected = false;
       newNode.IsEnable = null;
     }
-    // 為第二層節點（模組下的直接子節點）初始化 isOpen
-    // 我們假設 `item` 是指模組的直接子節點，它們會有 `isOpen` 屬性
-    if (parent && parent.id && parent.id.endsWith('00000') || parent?.id.endsWith('0000')) { // 判斷是否為模組的直接子節點
+    if (parent && parent.id && parent.id.endsWith('00000') || parent?.id.endsWith('0000')) {
       if (newNode.isOpen === undefined) {
         newNode.isOpen = false;
       }
@@ -159,14 +158,12 @@ export class SYS0320CRUComponent extends BasicCruPageComponent<UserData> impleme
     const modules = [this.FIN00000Data, this.ASS00000Data, this.TLS00000Data, this.SYS0000Data, this.CPM0000Data];
     modules.forEach(moduleData => {
       if (moduleData) {
-        // 從最底層的 behavior 開始，向上更新所有父節點的狀態
         this.traverseAndCalculateStatus(moduleData);
       }
     });
   }
 
   private traverseAndCalculateStatus(node: TreeNode) {
-    // 先遞迴處理子節點和 actions，確保它們的狀態是最新的
     if (node.children) {
       node.children.forEach(child => this.traverseAndCalculateStatus(child));
     }
@@ -174,8 +171,6 @@ export class SYS0320CRUComponent extends BasicCruPageComponent<UserData> impleme
       node.actions.forEach(action => this.traverseAndCalculateStatus(action));
     }
 
-    // 計算當前節點 (node) 的 IsEnable 和 partialSelected 狀態
-    // 只有當節點有 children 或 actions 時才需要計算
     if ((node.children && node.children.length > 0) || (node.actions && node.actions.length > 0)) {
       let totalSelectableItems = 0;
       let selectedItemsCount = 0;
@@ -184,8 +179,9 @@ export class SYS0320CRUComponent extends BasicCruPageComponent<UserData> impleme
       // 統計所有直接子節點的狀態
       if (node.children) {
         node.children.forEach(child => {
-          totalSelectableItems++; // 每個子節點本身是可選單元
-          if (child.IsEnable) {
+          totalSelectableItems++;
+          // 在這裡，我們需要考慮 isDisable 的節點，它們永遠被視為已啟用
+          if (child.IsEnable || child.isDisable) {
             selectedItemsCount++;
           }
           if (child.partialSelected) {
@@ -197,28 +193,23 @@ export class SYS0320CRUComponent extends BasicCruPageComponent<UserData> impleme
       // 統計所有 actions (行為) 的狀態
       if (node.actions) {
         node.actions.forEach(action => {
-          totalSelectableItems++; // 每個 action 也是可選單元
-          if (action.IsEnable) {
+          totalSelectableItems++;
+          if (action.IsEnable || action.isDisable) {
             selectedItemsCount++;
           }
         });
       }
 
-      // 根據子項的狀態更新當前節點
       if (totalSelectableItems === 0) {
-        // 沒有任何可選項目，父節點應該是未勾選
         node.IsEnable = null;
         node.partialSelected = false;
       } else if (selectedItemsCount === totalSelectableItems) {
-        // 所有可選項目都已選中，父節點完全勾選
         node.IsEnable = true;
         node.partialSelected = false;
       } else if (selectedItemsCount > 0 || hasPartialSelectedChild) {
-        // 有部分項目選中或有部分選中的子節點，父節點部分勾選
-        node.IsEnable = false; // 不是完全勾選
+        node.IsEnable = false;
         node.partialSelected = true;
       } else {
-        // 沒有任何項目選中，父節點未勾選
         node.IsEnable = null;
         node.partialSelected = false;
       }
@@ -228,8 +219,7 @@ export class SYS0320CRUComponent extends BasicCruPageComponent<UserData> impleme
     const modules = [this.FIN00000Data, this.ASS00000Data, this.TLS00000Data, this.SYS0000Data, this.CPM0000Data];
     modules.forEach(moduleData => {
       if (moduleData && moduleData.children) {
-        moduleData.children.forEach(item => { // 這就是你說的第二層 `item`
-          // 檢查 `item` 的直接子節點或 actions 中是否有任何 `partialSelected` 為 true
+        moduleData.children.forEach(item => {
           let shouldOpen = false;
           if (item.children) {
             if (item.children.some(child => child.partialSelected || child.IsEnable)) {
@@ -237,13 +227,11 @@ export class SYS0320CRUComponent extends BasicCruPageComponent<UserData> impleme
             }
           }
           if (item.actions) {
-            // 雖然 actions 通常不會有 partialSelected 屬性，但為了通用性還是檢查一下
             if (item.actions.some(action => action.partialSelected || action.IsEnable)) {
               shouldOpen = true;
             }
           }
 
-          // 如果 item 本身是 partialSelected，也應該打開
           if (item.partialSelected) {
             shouldOpen = true;
           }
@@ -253,20 +241,27 @@ export class SYS0320CRUComponent extends BasicCruPageComponent<UserData> impleme
       }
     });
   }
-  onNodeCheckboxChange(node: TreeNode, newValue: boolean) {
-    node.IsEnable = newValue === false ? null : newValue; // 更新當前節點的 IsEnable
-
-    // 1. 向下聯動：如果當前節點被勾選/取消勾選，則其所有子節點和 actions 都應同步
-    this.cascadeDown(node, node.IsEnable);
-
-    // 2. 向上聯動：從當前節點開始，向上更新所有父節點的 IsEnable 和 partialSelected
-    this.cascadeUp(node);
-
-    this.cdr.markForCheck(); // 觸發變更檢測以更新 UI
+  private createUpdatedNode(node: TreeNode, newProps: Partial<TreeNode>): TreeNode {
+    return { ...node, ...newProps };
   }
+  // --- 修改這裡 ---
+  onNodeCheckboxChange(node: TreeNode, newValue: boolean) {
+    // 檢查節點是否被禁用，如果是，則直接返回，不進行任何操作
+    if (node.isDisable) {
+      return;
+    }
+
+    const updatedNode = this.createUpdatedNode(node, { IsEnable: newValue === false ? null : newValue, partialSelected: false });
+
+    this.cascadeDown(updatedNode, updatedNode.IsEnable);
+    this.cascadeUp(updatedNode);
+
+    this.cdr.markForCheck();
+  }
+
   private cascadeUp(node: TreeNode) {
     if (!node.parent) {
-      return; // 如果沒有父節點，則停止遞迴
+      return;
     }
 
     const parentNode = node.parent;
@@ -274,15 +269,14 @@ export class SYS0320CRUComponent extends BasicCruPageComponent<UserData> impleme
     let selectedChildrenAndActionsCount = 0;
     let hasPartialSelectedChildOrAction = false;
 
-    // 計算父節點的所有直接子節點和 actions 的狀態
-    // 注意：這裡應該是統計父節點的所有直接子節點 (children) 和 actions
     if (parentNode.children) {
       parentNode.children.forEach(child => {
         totalSelectableChildrenAndActions++;
-        if (child.IsEnable) {
+        // 向上聯動時，如果子節點被禁用或啟用，都計入已選中
+        if (child.IsEnable || child.isDisable) {
           selectedChildrenAndActionsCount++;
         }
-        if (child.partialSelected) { // 檢查子節點是否有部分選中狀態
+        if (child.partialSelected) {
           hasPartialSelectedChildOrAction = true;
         }
       });
@@ -291,7 +285,7 @@ export class SYS0320CRUComponent extends BasicCruPageComponent<UserData> impleme
     if (parentNode.actions) {
       parentNode.actions.forEach(action => {
         totalSelectableChildrenAndActions++;
-        if (action.IsEnable) {
+        if (action.IsEnable || action.isDisable) {
           selectedChildrenAndActionsCount++;
         }
       });
@@ -304,28 +298,30 @@ export class SYS0320CRUComponent extends BasicCruPageComponent<UserData> impleme
       parentNode.IsEnable = null;
       parentNode.partialSelected = false;
     } else if (selectedChildrenAndActionsCount === totalSelectableChildrenAndActions) {
-      // 所有子項都已選中，父節點完全勾選
       parentNode.IsEnable = true;
       parentNode.partialSelected = false;
     } else if (selectedChildrenAndActionsCount > 0 || hasPartialSelectedChildOrAction) {
-      // 有部分子項選中或有部分選中的子節點，父節點部分勾選
-      parentNode.IsEnable = false; // 不是完全勾選
+      parentNode.IsEnable = false;
       parentNode.partialSelected = true;
     } else {
-      // 沒有任何子項選中
       parentNode.IsEnable = null;
       parentNode.partialSelected = false;
     }
 
-    // 如果父節點的狀態發生了改變，則繼續向上遞迴
     if (oldParentIsEnable !== parentNode.IsEnable || oldParentPartialSelected !== parentNode.partialSelected) {
       this.cascadeUp(parentNode);
     }
   }
 
+  // --- 修改這裡 ---
   private cascadeDown(node: TreeNode, enableValue: boolean | null) {
+    // 如果節點被禁用，則不改變它的狀態，直接返回
+    if (node.isDisable) {
+      return;
+    }
+
     node.IsEnable = enableValue;
-    node.partialSelected = false; // 當父節點明確勾選或取消勾選時，它不再是 partialSelected
+    node.partialSelected = false;
 
     if (node.children) {
       node.children.forEach(child => this.cascadeDown(child, enableValue));
@@ -342,32 +338,28 @@ export class SYS0320CRUComponent extends BasicCruPageComponent<UserData> impleme
         return;
       }
 
-      // 遍歷 Level 2: item (e.g., FIN00000.children)
       moduleData.children.forEach(item => {
         if (!item.children) {
           return;
         }
 
-        // 遍歷 Level 3: subItem (e.g., item.children)
         item.children.forEach(subItem => {
           if (!subItem.children) {
             return;
           }
 
-          // 遍歷 Level 4: program (e.g., subItem.children)
-          subItem.children.forEach(program => { // <-- 這是新的 "program" 層次
+          subItem.children.forEach(program => {
             if (!program.children) {
               return;
             }
 
-            // 遍歷 Level 5: behavior (functions, e.g., program.children)
             program.actions.forEach(behavior => {
-              // 檢查 behavior 的 IsEnable 狀態
-              if (behavior.IsEnable !== undefined && behavior.IsEnable) { // 確保 IsEnable 存在
+              // 提交時，將 IsEnable 或 isDisable 為 true 的節點都視為啟用
+              if (behavior.IsEnable || behavior.isDisable) {
                 privilegeList.push({
-                  prog_no: program.id,       // Level 4 的 id (這個現在是你要的 prog_no)
-                  function_code: behavior.id,  // Level 5 的 id (這個現在是你要的 function_code)
-                  isEnable: 'Y'  // 根據 IsEnable 狀態給 'Y' 或 'N'
+                  prog_no: program.id,
+                  function_code: behavior.id,
+                  isEnable: 'Y'
                 });
               }
             });
@@ -376,7 +368,6 @@ export class SYS0320CRUComponent extends BasicCruPageComponent<UserData> impleme
       });
     };
 
-    // 依序處理每個模組的數據
     processModuleData(this.FIN00000Data);
     processModuleData(this.ASS00000Data);
     processModuleData(this.TLS00000Data);
@@ -417,10 +408,11 @@ export class SYS0320CRUComponent extends BasicCruPageComponent<UserData> impleme
     }
   }
   trackByFn(index: number, item: TreeNode): string {
-    return item.id; // 假設每個 TreeNode 都有唯一的 'id'
+    return item.id;
   }
 
   getEnabledLength(node: TreeNode): number {
-    return node.children ? node.children.filter(child => child.IsEnable).length : 0;
+    // 這裡的邏輯也應該考慮 isDisable 的節點，將其視為已啟用
+    return node.children ? node.children.filter(child => child.IsEnable || child.isDisable).length : 0;
   }
 }

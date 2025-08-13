@@ -4,7 +4,7 @@ import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { TimeRangeOption, timeRangeOptions, timeUnitOptions } from './calendar-range-quick.model';
 import { OverlayPanel, OverlayPanelModule } from 'primeng/overlaypanel';
 import { SelectButtonChangeEvent, SelectButtonModule } from 'primeng/selectbutton';
-import { NgIf, NgClass } from '@angular/common';
+import { NgIf, NgClass, NgStyle } from '@angular/common';
 import { Button } from 'primeng/button';
 import { CalendarModule } from 'primeng/calendar';
 import { PrimeTemplate } from 'primeng/api';
@@ -23,6 +23,7 @@ import { ControlMessagesComponent } from '../../component/control-messages/contr
     CalendarModule,
     ReactiveFormsModule,
     NgClass,
+    NgStyle,
     PrimeTemplate,
     ControlMessagesComponent,
   ],

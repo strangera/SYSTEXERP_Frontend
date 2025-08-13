@@ -64,7 +64,7 @@ export class SYS0110Component extends BasicQueryPageComponent<UserData> implemen
     { field: 'user_No', header: '使用者編號', visible: true },
     { field: 'user_Name', header: '使用者名稱', visible: true },
     {
-      field: 'title', header: '職稱代碼', visible: true, format: (value: string) =>
+      field: 'title', header: '職位', visible: true, format: (value: string) =>
         this.titleOptions.find((option) => option.No === value)?.Label || value
     },
     {

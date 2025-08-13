@@ -13,6 +13,7 @@ import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdow
 import { NgIf } from '@angular/common';
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
 import { TranslateModule } from '@ngx-translate/core';
+import { ValidationService } from '@shared/service/validation.service';
 //1.1.1.4 發票格式代號維護 CRU
 @Component({
   selector: 'app-fin11040-cru',
@@ -34,7 +35,7 @@ import { TranslateModule } from '@ngx-translate/core';
 export class FIN11040CRUComponent extends BasicCruPageComponent<TDS1008Data> implements OnInit {
   dataForm = this.formBuilder.nonNullable.group({
     ID: [{ value: 0, disabled: true }],
-    INV_ItemNo: ['', [Validators.required, Validators.maxLength(2)]], // 品項代號
+    INV_ItemNo: ['', [Validators.required, Validators.maxLength(2), this.validationService.alphanumericValidator]], // 品項代號
     INV_ItemName: ['', [Validators.required, Validators.maxLength(30)]], // 品項名稱
     INV_UsageType: [null, [Validators.required]], // 使用別
     CRT_Date: [{ value: null, disabled: true }],       // 建立日期
@@ -46,7 +47,8 @@ export class FIN11040CRUComponent extends BasicCruPageComponent<TDS1008Data> imp
   });
   INV_UsageTypeOptions = INV_UsageTypeOptions;
   constructor(
-    private fin11040Service: Fin11040Service
+    private fin11040Service: Fin11040Service,
+    private validationService: ValidationService
   ) {
     super();  // 呼叫父類建構子
   }

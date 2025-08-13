@@ -1,6 +1,10 @@
-import { Sys0230Service } from './../../../service/api/sys/sys0230.service';
 import { Component, OnInit } from '@angular/core';
-import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { finalize } from 'rxjs';
+import { untilDestroyed } from '@ngneat/until-destroy';
+import { TranslateModule } from '@ngx-translate/core';
+
+import { Sys0230Service } from './../../../service/api/sys/sys0230.service';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { tblUser } from '../../../shared/models/sys/sysb000.model';
 import { Column } from '../../../shared/componentkit/table/table.model';
@@ -10,17 +14,14 @@ import { PanelModule } from 'primeng/panel';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { NgIf } from '@angular/common';
-import { TranslateModule } from '@ngx-translate/core';
-import { untilDestroyed } from '@ngneat/until-destroy';
-import { finalize } from 'rxjs';
 import { DialogComponent } from '@shared/componentkit/dialog/dialog.component';
 
 export interface RoleOption {
-  ID: string; // ID
-  role_no: string; // 使用者代號
-  role_name: string; // 角色名稱
-  description: string; // 角色註記
-  Match: boolean; // 是否配對
+  ID: string;
+  role_no: string;
+  role_name: string;
+  description: string;
+  Match: boolean;
 }
 
 @Component({
@@ -37,69 +38,99 @@ export interface RoleOption {
     TableComponent,
     NgIf,
     TranslateModule,
-    DialogComponent
+    DialogComponent,
   ],
 })
-
-// 4-2-2-4使用者之角色設定維護 CRU
-export class SYS0220CRUComponent extends BasicCruPageComponent<tblUser>
-  implements OnInit {
+export class SYS0220CRUComponent extends BasicCruPageComponent<tblUser> implements OnInit {
   dataForm = this.formBuilder.nonNullable.group({
-    user_No: ['', [Validators.required, Validators.maxLength(10)]], // 使用者編號
-    user_Name: ['', [Validators.required, Validators.maxLength(20)]], // 使用者名稱
+    user_No: ['', [Validators.required, Validators.maxLength(10)]],
+    user_Name: ['', [Validators.required, Validators.maxLength(20)]],
   });
-  roleUserData: RoleOption[] = [];
-  roleUserColumns: Column[] = [
+  assignedRoles: RoleOption[] = [];
+  availableRoles: RoleOption[] = [];
+  originalAvailableRoles: RoleOption[] = [];
+  selectedAssignedRoles: RoleOption[] = [];
+  selectedAvailableRoles: RoleOption[] = [];
+  assignedRolesColumns: Column[] = [
     { field: 'role_no', header: '角色代號', visible: true },
     { field: 'role_name', header: '角色名稱', visible: true },
     { field: 'description', header: '角色註記', visible: true },
-  ]
-  selectedRoleUserData: RoleOption[] = []; // 選取的使用者資料
-  cloneRoleUserData: RoleOption[] = []; // 用於儲存原始資料的副本
-  constructor(
-    private sys0220Service: Sys0230Service, //這邊的api設定與SYS0220共用
-  ) {
+  ];
+
+  availableRolesColumns: Column[] = [
+    { field: 'role_no', header: '角色代號', visible: true },
+    { field: 'role_name', header: '角色名稱', visible: true },
+  ];
+
+  dialogVisible = false;
+
+  filterDialogForm = this.formBuilder.nonNullable.group({
+    filter_role_no: [''],
+    filter_role_name: [''],
+  });
+
+  constructor(private sys0220Service: Sys0230Service) {
     super();
   }
+
   ngOnInit(): void {
     this.initializePage('SYS0220', this.dataForm);
-    this.loadOptions(this.dataForm.get('user_No')?.value ?? ''); // 載入選項
+    this.loadRoles(this.dataForm.get('user_No')?.value ?? '');
+    this.filterDialogForm.valueChanges.pipe(untilDestroyed(this)).subscribe(() => {
+      this.filterAvailableRoles();
+    });
   }
-
-  // ----------------------------------------------------------------
-  // 載入 角色之使用者
-  loadOptions(userNo: string) {
+  loadRoles(userNo: string) {
     this.sys0220Service.queryUserRoles({ User_No: userNo }).subscribe((response) => {
-      this.dialogData = response.Data;
-      this.roleUserData = response.Data.filter((role: RoleOption) => role.Match);
-      this.cloneRoleUserData = this.roleUserData; // 深拷貝
+      const allRoles = response.Data as RoleOption[];
+      this.assignedRoles = allRoles.filter((role) => role.Match);
+      this.originalAvailableRoles = allRoles.filter((role) => !role.Match);
+      this.availableRoles = [...this.originalAvailableRoles]; // Initialize dialog data
     });
   }
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
       const requestBody = {
         User_No: frm.getRawValue().user_No,
-        RoleNoList: this.roleUserData.map(role => role.role_no),
-      }
-      this.sys0220Service.updateUserRoles(requestBody).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(() => {
-        this.messageService.successBubble('更新成功');
-        this.onCancel(); // 更新成功後返回查詢頁面
-      });
+        RoleNoList: this.assignedRoles.map((role) => role.role_no),
+      };
+
+      this.sys0220Service
+        .updateUserRoles(requestBody)
+        .pipe(untilDestroyed(this), finalize(() => (this.loading = false)))
+        .subscribe(() => {
+          this.messageService.successBubble('更新成功');
+          this.onCancel();
+        });
     });
-  }
-  dialogVisible = false;
-  selectedItemsDialog: RoleOption[] = [];
-  dialogData: RoleOption[] = [];
-  dialogColumns: Column[] = [
-    { field: 'role_no', header: '角色代號', visible: true },
-    { field: 'role_name', header: '角色名稱', visible: true },
-  ];
-  isRowSelectable(event: RoleOption): boolean {
-    return !this.roleUserData || !this.roleUserData.some((item: RoleOption) => item.ID === event.ID);
   }
   saveDialog() {
     this.dialogVisible = false;
-    this.roleUserData = [...this.roleUserData, ...this.selectedItemsDialog];
-    this.selectedItemsDialog = [];
+    this.assignedRoles = [...this.assignedRoles, ...this.selectedAvailableRoles];
+    this.availableRoles = this.availableRoles.filter(
+      (dialogItem) => !this.selectedAvailableRoles.some((selectedItem) => selectedItem.ID === dialogItem.ID)
+    );
+    this.selectedAvailableRoles = [];
+    this.filterDialogForm.reset();
+  }
+  onDelete(rolesToDelete: RoleOption[]) {
+    this.availableRoles = [...this.availableRoles, ...rolesToDelete];
+    this.assignedRoles = this.assignedRoles.filter(
+      (assignedRole) => !rolesToDelete.some((deletedRole) => deletedRole.ID === assignedRole.ID)
+    );
+  }
+
+  filterAvailableRoles(): void {
+    const { filter_role_no, filter_role_name } = this.filterDialogForm.value;
+    let filteredData = this.originalAvailableRoles;
+    if (filter_role_no) {
+      filteredData = filteredData.filter((role) => role.role_no.includes(filter_role_no));
+    }
+    if (filter_role_name) {
+      filteredData = filteredData.filter((role) => role.role_name.includes(filter_role_name));
+    }
+    this.availableRoles = filteredData.filter(
+      (availableRole) => !this.assignedRoles.some((assignedRole) => assignedRole.ID === availableRole.ID)
+    );
   }
 }

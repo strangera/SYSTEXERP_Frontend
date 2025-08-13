@@ -35,7 +35,7 @@ export const columns: Column[] = [
   { field: 'GUI_Status', header: '使用狀態', visible: true, format: (value: string) => statusOptions.find(item => item.value === value)?.label || value },
   { field: 'GUI_TRACK', header: '發票字軌', visible: true },
   { field: 'GUI_SNOS', header: '發票起始號碼', visible: true },
-  { field: 'GUI_ENOS', header: '發票終止號碼', visible: true },
+  { field: 'GUI_ENOS', header: '發票結束號碼', visible: true },
   { field: 'NEXT_SNOS', header: '下一個發票號碼', visible: true },
   { field: 'USED_NOS', header: '已用張數', visible: true },
   { field: 'TOT_NOS', header: '全部張數', visible: true },

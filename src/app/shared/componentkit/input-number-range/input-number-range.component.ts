@@ -1,7 +1,7 @@
 import { ChangeDetectionStrategy, Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import { FormControl, ReactiveFormsModule } from '@angular/forms';
 import { BasicKitComponent } from '../../componentextends/basic-kit/basic-kit.component';
-import { NgIf, NgClass } from '@angular/common';
+import { NgIf, NgClass, NgStyle } from '@angular/common';
 import { InputGroupModule } from 'primeng/inputgroup';
 import { InputGroupAddonModule } from 'primeng/inputgroupaddon';
 import { InputNumberComponent } from '../input-number/input-number.component';
@@ -16,6 +16,7 @@ import { InputNumberInputEvent } from 'primeng/inputnumber';
   imports: [
     NgIf,
     NgClass,
+    NgStyle,
     ReactiveFormsModule,
     InputNumberComponent,
     InputGroupModule,

@@ -45,7 +45,7 @@ export class SYS0220Component extends BasicQueryPageComponent<UserData> implemen
     user_No: ['', Validators.maxLength(10)], // 使用者編號
     user_Name: ['', Validators.maxLength(20)], // 使用者名稱
     // user_Password: ['', Validators.maxLength(32)], // 使用者密碼-加密
-    // title: ['', Validators.maxLength(6)], // 職稱代碼-SYS1000
+    // title: ['', Validators.maxLength(6)], // 職位-SYS1000
     org_ID: [[], Validators.maxLength(20)], // 組織編號 (SYSB400_SYS3100)
     str_dateStart: [null], // 帳號有效開始日期
     str_dateEnd: [null], // 帳號有效結束日期
@@ -72,7 +72,7 @@ export class SYS0220Component extends BasicQueryPageComponent<UserData> implemen
         this.userStatusOptions.find((option) => option.value === value)?.label ||
         value
     },
-    { field: 'title', header: '職稱代碼', visible: true },
+    { field: 'title', header: '職位', visible: true },
     {
       field: 'org_ID', header: '組織編號', visible: true, format: (value: string) =>
         this.SYS3100_Options.find((option) => option.No === value)?.Label ||
@@ -111,7 +111,7 @@ export class SYS0220Component extends BasicQueryPageComponent<UserData> implemen
   }
   // 初始化下拉選單選項
   loadOptions() {
-    // *職稱代碼-SYS1000
+    // *職位-SYS1000
     this.sys0110Service.queryAllSystemCode({}).subscribe((response) => {
       console.log('回應', response);
       this.titleOptions = response.Data.map((item: SYS1000) => ({
