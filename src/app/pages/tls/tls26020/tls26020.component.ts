@@ -136,7 +136,9 @@ export class TLS26020Component extends BasicQueryPageComponent<TLS26020Data> imp
 
   loadDetails = (rowData: TLS26020Data): Observable<any> => {
     return this.tls26020Service.queryTLS26020Detail({
-      tlt_no: rowData.tlt_no
+      tlt_no: rowData.tlt_no,
+      Sale_DateStart: this.datePipe.transform(this.queryForm.controls.Sale_DateStart.value, 'yyyy-MM-dd') ?? '',
+      Sale_DateEnd: this.datePipe.transform(this.queryForm.controls.Sale_DateEnd.value, 'yyyy-MM-dd') ?? ''
     })
   };
 }
