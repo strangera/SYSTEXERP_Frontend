@@ -7,7 +7,7 @@ import { InputTextComponent } from '../../../shared/componentkit/input-text/inpu
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { TranslateModule } from '@ngx-translate/core';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
-import { Column, createPaginationConfig, formatDateTime } from '@shared/componentkit/table/table.model';
+import { AddButton, Column, createPaginationConfig, formatDateTime } from '@shared/componentkit/table/table.model';
 import { TableComponent } from '@shared/componentkit/table/table.component';
 import { CommonModule } from '@angular/common';
 import { MultiSelectComponent } from "@shared/componentkit/multi-select/multi-select.component";
@@ -17,6 +17,13 @@ import { IQueryPOS2004DetailRequest, IQueryPOS2004DetailResponse, Tls52010Servic
 import { DropDownListService } from '@service/utility/dropDownList.service';
 import { CalendarRangeQuickComponent } from "@shared/componentkit/calendar-range-quick/calendar-range-quick.component";
 
+export const enum MVMStatus {
+  已申請 = '1',
+  已審核 = '2',
+  已發貨 = '3',
+  已收貨確認 = '4',
+  已作廢 = '9',
+}
 @Component({
   selector: 'app-tls56040',
   templateUrl: './tls56040.component.html',
@@ -68,6 +75,11 @@ export class TLS56040Component extends BasicQueryPageComponent<any> implements O
     { field: 'APRV_USR_Name', header: '審核人姓名', visible: true },
     { field: 'APRV_Date', header: '審核日期', visible: true, format: formatDateTime },
     { field: 'MVM_Status', header: '調撥狀態', visible: true, format: (value) => this.issuanceNoteStatusOptions.find((item) => item.value === value)?.label || value },
+  ];
+  addButton: AddButton[] = [
+    { label: '審核', icon: 'pi pi-check-circle text-green-500', action: (rowData: any) => { this.statusChange(rowData, MVMStatus.已審核); }, disabled: (rowData: any) => rowData.PO_Status !== MVMStatus.已申請 }, // 審核
+    { label: '反審核', icon: 'pi pi-undo text-orange-500', action: (rowData: any) => { this.statusChange(rowData, MVMStatus.已申請); }, disabled: (rowData: any) => rowData.PO_Status !== MVMStatus.已審核 }, // 反審核
+    { label: '作廢', icon: 'pi pi-trash text-red-500', action: (rowData: any) => { this.statusChange(rowData, MVMStatus.已作廢); }, disabled: (rowData: any) => rowData.PO_Status !== MVMStatus.已審核 }, // 作廢
   ];
 
   // 倉別調撥單狀態選項
@@ -177,5 +189,21 @@ export class TLS56040Component extends BasicQueryPageComponent<any> implements O
       this.opTotalRecords = results.TotalCount;
       this.opLoading = false;
     });
+  }
+  btnLoading = false;
+  statusChange(rowData: any, status: string) {
+    this.btnLoading = true;
+    const body = {
+      idList: [rowData.id],
+      PO_Status: status
+    }
+    // this.tls52010Service.updateStatusTLS52010(body).pipe(untilDestroyed(this), finalize(() => this.btnLoading = false)).subscribe(response => {
+    //   this.messageService.successBubble(response.Message);
+    //   this.onSubmit(this.queryForm);
+    // });
+  }
+
+  editDisabled(rowData: any) {
+    return rowData.PO_Status !== MVMStatus.已申請;
   }
 }

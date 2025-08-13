@@ -53,9 +53,12 @@
             [style]="{ height: '100px' }" [submitted]="submitted"></app-input-textarea>
         </div>
       </div>
-      <app-table dataKey="id" [data]="data" [columns]="columns" [showInsert]="true" [showRowEdit]="true"
-        [deleteData]="true" (dataChange)="data = $event" [insertRowData]="true" [defaultInsertData]="defaultInsertData"
-        [showCheckBox]="true" [showReportMode]="false"></app-table>
+      <app-table dataKey="PLU_MagNo" [columns]="columns" [data]="data" [selectedItems]="selectedItems"
+        [showCheckBox]="isFormCreateable" (selectionChange)="selectedItems = $event" [showEdit]="false"
+        [showDetail]="false" [showInsert]="true" (insert)="dialogVisible = true" [showRowEdit]="true"
+        (delete)="calculateTotals()" [deleteData]="true" [showManage]="!isFormReadable" [showReportMode]="false"
+        [insertDisabled]="dataForm.controls.OUT_HOS_No.value && dataForm.controls.LOGO_No.value ? false : true"
+        (rowEditSave)="onRowEditSave($event)" [showCaption]="isFormCreateable" (dataChange)="data = $event"></app-table>
       <div *ngIf="!isFormReadable" class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
         <app-button btnType="cancel" [form]="dataForm"></app-button>
         <app-button btnType="submit" [loading]="loading" />
@@ -63,3 +66,32 @@
     </form>
   </p-panel>
 </div>
+<app-dialog [visible]="dialogVisible" header="選擇商品明細" (visibleChange)="dialogVisible = $event" (save)="saveDialog()"
+  [disable]="selectedItemsDialog.length === 0">
+  <form [formGroup]="dialogQueryForm" (ngSubmit)="onQuery(dialogQueryForm)">
+    <div class="grid p-fluid">
+      <app-dropdown-table class="col-12" [control]="dialogQueryForm.controls.PLU_MagNo" [submitted]="submitted"
+        optionLabel="PLU_MagNo" optionValue="PLU_MagNo" [suggestions]="suggestions" [fieldsConfig]="fieldsConfig"
+        (inputValueChanged)="onAutoCompleteInputChange($event)" (formValueChanged)="onformValueChanged($event)"
+        [formGroup]="opForm" [dialogData]="opData" [dialogColumns]="opColumns" [loading]="opLoading"
+        [totalRecords]="opTotalRecords">
+        <app-input-text class="col-12 md:col-6" label="商品管理編號/國際條碼" controlName="queryNo"
+          [control]="opForm.controls.queryNo" />
+        <app-input-text class="col-12 md:col-6" label="商品名稱" controlName="PLU_Name"
+          [control]="opForm.controls.PLU_Name" />
+      </app-dropdown-table>
+    </div>
+    <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+      <app-button btnType="clear"></app-button>
+      <app-button btnType="query" [loading]="dialogLoading"></app-button>
+    </div>
+  </form>
+  <hr />
+  <app-table tableKey="tls56040CruDialogTable" dataKey="PLU_MagNo" [showReportMode]="false" [data]="dialogData"
+    [columns]="dialogColumns" [showDelete]="false" [selectedItems]="selectedItemsDialog" [showCaption]="false"
+    (selectionChange)="selectedItemsDialog = $event" [showHeader]="false" [showManage]="false" [showCheckBox]="true"
+    [multiSortMeta]="[{ field: 'PLU_MagNo', order: 1 }]" [totalRecords]="totalRecords"
+    (lazyLoadData)="onLazyLoadData($event, dialogQueryForm); onQuery(dialogQueryForm)" [lazy]="true"
+    [loading]="dialogLoading">
+  </app-table>
+</app-dialog>
