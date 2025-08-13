@@ -57,38 +57,7 @@ export class TLS22040Component extends BasicQueryPageComponent<any> implements O
 
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
-      this.data = [
-        {
-          salesDate: '2025/06/01',
-          invoiceTypeIMS: '一般稅額',
-          invoiceAmountIMS: 120000,
-          invoiceCountIMS: 45,
-          creationTimeIMS: '2025/06/02',
-          fileDate: '2025/06/02',
-          invoiceTypeTurnkey: '一般稅額',
-          invoiceCountTurnkey: 45
-        },
-        {
-          salesDate: '2025/06/02',
-          invoiceTypeIMS: '特種稅額',
-          invoiceAmountIMS: 85000,
-          invoiceCountIMS: 30,
-          creationTimeIMS: '2025/06/03',
-          fileDate: '2025/06/03',
-          invoiceTypeTurnkey: '特種稅額',
-          invoiceCountTurnkey: 30
-        },
-        {
-          salesDate: '2025/06/03',
-          invoiceTypeIMS: '免稅',
-          invoiceAmountIMS: 53000,
-          invoiceCountIMS: 20,
-          creationTimeIMS: '2025/06/04',
-          fileDate: '2025/06/04',
-          invoiceTypeTurnkey: '免稅',
-          invoiceCountTurnkey: 20
-        }
-      ];
+
       this.loading = false;
       this.messageService.blockUi();
 
