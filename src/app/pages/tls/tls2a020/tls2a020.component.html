@@ -25,7 +25,7 @@
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select
+            <app-dropdown
               label="收銀機號"
               controlName="ECR_No"
               [options]="ECRNoOptions"
@@ -33,18 +33,18 @@
               optionValue="value"
               [control]="queryForm.controls.ECR_No"
               [submitted]="submitted"
-            ></app-multi-select>
+            ></app-dropdown>
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select
+            <app-dropdown
               label="樓層"
               [options]="floorOptions"
               optionLabel="label"
               optionValue="value"
               [control]="queryForm.controls.tlt_floor"
               [submitted]="submitted"
-            ></app-multi-select>
+            ></app-dropdown>
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
@@ -93,7 +93,7 @@
     (selectionChange)="selectedItems = $event"
     [showCheckBox]="false"
     dataKey="id"
-    [multiSortMeta]="[{ field: 'pendingApprovalRegisterCode', order: 1 }]"
+    [multiSortMeta]="[{ field: 'TXN_Date', order: 1 }]"
     [totalRecords]="totalRecords"
     [lazy]="true"
     [loading]="loading"

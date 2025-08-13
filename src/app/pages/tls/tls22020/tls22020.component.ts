@@ -1,3 +1,4 @@
+import { saveAs } from 'file-saver';
 import { WhetherService } from './../../../service/basic/whether.service';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
@@ -19,6 +20,7 @@ import { CommonModule } from '@angular/common';
 import { ButtonModule } from 'primeng/button';
 import { finalize } from 'rxjs';
 import { untilDestroyed } from '@ngneat/until-destroy';
+import { HttpResponse } from '@angular/common/http';
 const yesterday = new Date();
 yesterday.setDate(yesterday.getDate() - 1);
 @Component({
@@ -73,11 +75,6 @@ export class TLS22020Component extends BasicQueryPageComponent<any> implements O
   ];
   selectedColumns = creditCardColumns;
   columnGroup = creditCardGroup;
-  totalRow: TLS22020Data = {
-    ECR_No: '',
-    TLT_NO: '',
-    tlt_name: '',
-  };
   total: Record<string, number> = {
     TXN_Total: 0,
     SLE_Total: 0,
@@ -177,21 +174,30 @@ export class TLS22020Component extends BasicQueryPageComponent<any> implements O
         TXN_DateEnd: raw.TXN_DateEnd
           ? `${raw.TXN_DateEnd.getFullYear()}-${(raw.TXN_DateEnd.getMonth() + 1).toString().padStart(2, '0')}-${raw.TXN_DateEnd.getDate().toString().padStart(2, '0')}`
           : null,
+        pageSize: this.totalRecords
       },
     }
 
     this.exportExcelLoading = true;
     this.tls22020Service.exportTLS22020(payload).subscribe({
-      next: (res: Blob) => {
-        const blob = new Blob([res], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `${payload.FileName}.xlsx`;
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
-        window.URL.revokeObjectURL(url);
+      next: (response: HttpResponse<Blob>) => {
+        if (response.body) {
+          const contentDisposition = response.headers.get('content-disposition');
+          let filename = `${payload.FileName}.xlsx`; // 副檔名改為 .xlsx
+          if (contentDisposition) {
+            const filenameRegex = /filename\*=UTF-8''(.+?)(?:\.xlsx)?$|filename="(.+?)(?:\.xlsx)?"$/;  //  正則匹配.xlsx
+            const matches = contentDisposition.match(filenameRegex);
+            if (matches) {
+              filename = matches[1] || matches[2] || filename;
+              filename = decodeURIComponent(filename);
+            }
+            filename = filename.replace(/["']/g, '');
+          }
+          const blob = new Blob([response.body], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }); // 正確的 MIME 類型
+          saveAs(blob, filename);
+        } else {
+          console.error("Response body is empty!");
+        }
         this.exportExcelLoading = false;
       },
       error: (err) => {

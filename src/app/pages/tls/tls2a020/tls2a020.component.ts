@@ -32,6 +32,7 @@ import { yesterday } from '@shared/models/system/query-form.model';
     ButtonComponent,
     TableComponent,
     TranslateModule,
+    DropdownComponent
   ],
 })
 
@@ -39,35 +40,18 @@ export class TLS2A020Component extends BasicQueryPageComponent<any> implements O
   // 表單
   queryForm = this.formBuilder.group({
     TXN_Date: [yesterday, [Validators.required]],
-    tlt_floor: [[]],
-    sort: [''],
-    ECR_No: [[]],
+    tlt_floor: [''],
+    ECR_No: [''],
     tlt_building: [''],
-    paymentTool: [''],
     SortOrder: ['ECR'],
-    ...createPaginationConfig([])
+    ...createPaginationConfig([{ field: 'TXN_Date', order: 1 }]),
   });
 
-  // // 表格欄位組
-  // columnsByECR: Column[] = [
-  //   { field: 'TXN_Date', header: '銷售日期', visible: true, format: (v) => formatDate(v, 'yyyy/MM/dd', 'en-US') },
-  //   { field: 'ECR_No', header: '收銀機號', visible: true },
-  //   { field: 'BOOK_PayAmt', header: '電腦金額', visible: true, format: formatAmount },
-  //   { field: 'Actual_ReceivedAmt', header: '實收金額', visible: true, format: formatAmount }
-  // ];
-
-  // columnsByPayTool: Column[] = [
-  //   { field: 'TXN_Date', header: '銷售日期', visible: true, format: (v) => formatDate(v, 'yyyy/MM/dd', 'en-US') },
-  //   { field: 'PAY_NAME', header: '支付工具', visible: true },
-  //   { field: 'BOOK_PayAmt', header: '電腦金額', visible: true, format: formatAmount },
-  //   { field: 'Actual_ReceivedAmt', header: '實收金額', visible: true, format: formatAmount }
-  // ];
 
   columns: Column[] = [];
   data: any[] = [];
   selectedItems: any[] = [];
   totalRecords = 0;
-
   floorOptions: any[] = [];
   ECRNoOptions: any[] = [];
   BUILDING_NO_Options: any[] = [];
@@ -123,23 +107,10 @@ export class TLS2A020Component extends BasicQueryPageComponent<any> implements O
   onSubmit(form: FormGroup): void {
     this.handleSubmit(form, () => {
       const raw = form.value;
-      const sortOrder = raw.SortOrder ?? 'ECR';
-      const { sortBy } = this.updateColumnsAndSortBy(sortOrder);
 
       const params = {
-        request: {
-          TXN_Date: raw.TXN_Date ? new Date(raw.TXN_Date).toISOString() : null,
-          ECR_No: Array.isArray(raw.ECR_No) ? raw.ECR_No.join(',') : raw.ECR_No ?? '',
-          tlt_floor: Array.isArray(raw.tlt_floor) ? raw.tlt_floor[0] ?? '' : raw.tlt_floor ?? '',
-          tlt_building: raw.tlt_building ?? '',
-          SortOrder: sortOrder,
-          sort: raw.sort ?? '',
-          PageSize: raw.PageSize ?? 10,
-          PageIndex: raw.PageIndex ?? 1,
-          Offset: raw.Offset ?? 0,
-          OrderBy: raw.OrderBy ?? '',
-          SortBy: sortBy
-        }
+        ...raw,
+        TXN_Date: formatDate(raw.TXN_Date, 'yyyy-MM-dd', 'en-US'),
       };
 
       this.tls2a020Service.queryTLS2A020(params).subscribe({
