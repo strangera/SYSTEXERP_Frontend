@@ -1,125 +1,68 @@
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
-import { BaseQueryRequest, BaseQueryResponse } from '../../../shared/models/api/base-api.interface';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../../environments/environment';
+import { BaseQueryRequest, BaseQueryResponse } from '@shared/models/api/base-api.interface';
 
-// --- FIN15030 查詢參數 Model 定義 ---
 export interface FIN15030QueryRequest extends BaseQueryRequest {
-  ReturnOrderNumberStart?: string;   // 退出/折讓單號_起
-  ReturnOrderNumberEnd?: string;     // 退出/折讓單號_迄
-  InvoiceFormat?: string;            // 發票格式
-  Character?: string;                // 字軌
-  InvoiceNumberStart?: string;       // 發票號碼_起
-  InvoiceNumberEnd?: string;         // 發票號碼_迄
-  ReturnDateStart?: string;          // 退出/折讓日期_起
-  ReturnDateEnd?: string;            // 退出/折讓日期_迄
-  AreaType?: string;                 // 區別
-  DeclareYearMonth?: string;         // 申報年月
-  DataYearMonthStart?: string;       // 資料所屬年月_起
-  DataYearMonthEnd?: string;         // 資料所屬年月_迄
-  VoucherNumberStart?: string;       // 憑證單號_起
-  VoucherNumberEnd?: string;         // 憑證單號_迄
-  TransmissionNumberStart?: string;  // 傳票號碼_起
-  TransmissionNumberEnd?: string;    // 傳票號碼_迄
-  PrintType?: string;                // 列印方式(合併/分開列印)
-  SystemType?: string;               // 系統別
+  MID?: number;                         // 商場編號 (南紡固定帶0)
+  STO_No?: string;                      // 分店編號 (南紡固定帶'10')
+  INV_Remark_S?: string;               // 退回/折讓單號起
+  INV_Remark_E?: string;               // 退回/折讓單號訖
+  INV_GUIType?: string;                // 發票格式
+  GUI_Track?: string;                  // 字軌
+  TXN_GUINo_S?: string;               // 發票號碼起
+  TXN_GUINo_E?: string;               // 發票號碼訖
+  TXN_Date_S?: string;                // 退回/折讓日期起
+  TXN_Date_E?: string;                // 退回/折讓日期訖
+  Credit_Type?: string;               // 區別
+  INV_YM?: string;                    // 申報年月
+  INV_Data_YM_S?: string;             // 資料所屬年月起
+  INV_Data_YM_E?: string;             // 資料所屬年月訖
+  Source_Doc_No_S?: string;           // 憑證單號起
+  Source_Doc_No_E?: string;           // 憑證單號訖
+  Voucher_No_S?: string;              // 傳票號碼起
+  Voucher_No_E?: string;              // 傳票號碼訖
+  SAL_Type?: string;                  // 系統別
 }
 
-// --- FIN15030 回應資料 Model 定義 ---
 export interface FIN15030Data {
-  Sequence: number;                  // 序號
-  ReturnOrderNumber: string;         // 退出/折讓單號
-  InvoiceFormat: string;             // 發票格式
-  Character: string;                 // 字軌
-  InvoiceNumber: string;             // 發票號碼
-  ReturnDate: string;                // 退出/折讓日期
-  AreaType: string;                  // 區別
-  DeclareYearMonth: string;          // 申報年月
-  DataYearMonth: string;             // 資料所屬年月
-  ReturnAmount: number;              // 退出/折讓金額
-  ReturnTax: number;                 // 退出/折讓稅額
-  VoucherNumber: string;             // 憑證單號
-  TransmissionNumber: string;        // 傳票號碼
-  SystemType: string;                // 系統別
-  UniformNumber: string;             // 統一編號
+  No: number;                         // 序號
+  INV_Remark: string;                 // 退回折讓單號
+  INV_GUIType: string;                // 發票格式代號
+  GUI_Track: string;                  // 字軌
+  TXN_GUINo: string;                  // 發票號碼
+  TXN_Date: string;                   // 退回折讓日期
+  Credit_Type: string;                // 區別
+  INV_YM: string;                     // 申報年月
+  TXN_Net: number;                    // 退回折讓單金額
+  TXN_Tax: number;                    // 退回折讓單稅額
+  Source_Doc_No: string;              // 憑證單號
+  Voucher_No: string;                 // 傳票編號
+  SAL_Type: string;                   // 系統別
+  TXN_Uniform: string;                // 統一編號
+}
+
+export interface FIN15030PrintRequest extends FIN15030QueryRequest {
+  IsMerge?: boolean;                  // 合併列印
+  IsExcel?: boolean;                  // Excel格式
 }
 
 @Injectable({
   providedIn: 'root'
 })
 export class FIN15030Service {
-  private apiUrl: string = environment.ApiUrl + '/FIN0000/INV1530';
+  private readonly apiUrl = `${environment.ApiUrl}/FIN0000/INV1000`;
 
   constructor(private http: HttpClient) { }
 
-  // 查詢
-  queryFIN15030(data: FIN15030QueryRequest): Observable<BaseQueryResponse<FIN15030Data>> {
-    // return this.http.post<BaseQueryResponse<FIN15030Data>>(`${this.apiUrl}/queryFIN15030`, data);
+  // 查詢銷貨退回或折讓明細表
+  queryFIN15030(data: FIN15030QueryRequest): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/queryFIN15030`, data);
+  }
 
-    // 回傳假資料
-    return new Observable<BaseQueryResponse<FIN15030Data>>(observer => {
-      const Data: BaseQueryResponse<FIN15030Data> = {
-        TotalCount: 3,
-        Data: [
-          {
-            Sequence: 1,
-            ReturnOrderNumber: '20190124001',
-            InvoiceFormat: '33',
-            Character: 'JB',
-            InvoiceNumber: '44068957',
-            ReturnDate: '2019/01/20',
-            AreaType: '折讓',
-            DeclareYearMonth: '201902',
-            DataYearMonth: '201902',
-            ReturnAmount: 1210,
-            ReturnTax: 60,
-            VoucherNumber: '60',
-            TransmissionNumber: '20190120009',
-            SystemType: '27365925',
-            UniformNumber: '27365925'
-          },
-          {
-            Sequence: 2,
-            ReturnOrderNumber: '20190225001',
-            InvoiceFormat: '33',
-            Character: 'KY',
-            InvoiceNumber: '43633124',
-            ReturnDate: '2019/02/20',
-            AreaType: '折讓',
-            DeclareYearMonth: '201902',
-            DataYearMonth: '201902',
-            ReturnAmount: 27749,
-            ReturnTax: 1387,
-            VoucherNumber: '1387',
-            TransmissionNumber: '20190220014',
-            SystemType: '27365925',
-            UniformNumber: '27365925'
-          },
-          {
-            Sequence: 3,
-            ReturnOrderNumber: '20190302001',
-            InvoiceFormat: '33',
-            Character: 'LA',
-            InvoiceNumber: '77881166',
-            ReturnDate: '2019/02/28',
-            AreaType: '折讓',
-            DeclareYearMonth: '201902',
-            DataYearMonth: '201902',
-            ReturnAmount: 16065,
-            ReturnTax: 803,
-            VoucherNumber: '803',
-            TransmissionNumber: '20190228105',
-            SystemType: '53575264',
-            UniformNumber: '53575264'
-          }
-        ],
-        Status: '',
-        Message: '',
-        TotalPage: 0
-      };
-      observer.next(Data);
-      observer.complete();
-    });
+  // 列印銷貨退回或折讓明細表
+  printFIN15030(data: FIN15030PrintRequest): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/printFIN15030`, data);
   }
 }

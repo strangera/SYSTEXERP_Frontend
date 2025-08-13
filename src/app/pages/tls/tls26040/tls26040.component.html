@@ -44,9 +44,10 @@
 
 <div class="card">
   <app-table tableKey="TLS26040" dataKey="id" [data]="data" [columns]="columns" [selectedItems]="selectedItems"
-    (selectionChange)="selectedItems = $event" [multiSortMeta]="[{ field: 'id', order: 1 }]"
+    (selectionChange)="selectedItems = $event" [multiSortMeta]="[{ field: 'sad_date', order: -1 }]"
     [totalRecords]="totalRecords" (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [lazy]="true"
     [loading]="loading" [showManage]="false" [showDelete]="false" [expansionColumns]="expansionColumns"
-    expansionDataKey="details" [expansionShowPaginator]="true" [expansionRows]="50">
+    expansionDataKey="details" [expansionShowPaginator]="true" [expansionRows]="50" [expansionLoadFn]="loadDetails"
+    [expansionMultiSortMeta]="[{ field: 'TXN_Date', order: -1 }]">
   </app-table>
 </div>

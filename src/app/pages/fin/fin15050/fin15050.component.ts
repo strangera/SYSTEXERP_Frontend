@@ -65,7 +65,7 @@ export class FIN15050Component extends BasicQueryPageComponent<FIN15050Data> imp
   }
 
   ngOnInit(): void {
-    this.initializePage('FIN15050', 'fin/fin15050qry', this.queryForm, (form) => this.onSubmit(form));
+    this.initializePage('FIN15050', 'fin/fin15050cru', this.queryForm, (form) => this.onSubmit(form));
   }
 
   onSubmit(frm: FormGroup) {
