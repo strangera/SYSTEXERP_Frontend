@@ -53,21 +53,17 @@ export interface FIN15020PrintRequest extends FIN15020QueryRequest {
   providedIn: 'root'
 })
 export class FIN15020Service {
-  private apiUrl = environment.ApiUrl + '/FIN0000/INV1000';
+  private readonly apiUrl = `${environment.ApiUrl}/FIN0000/INV1000`;
 
   constructor(private http: HttpClient) { }
 
   // 查詢進貨退出或折讓明細表
   queryFIN15020(data: FIN15020QueryRequest): Observable<any> {
-    return this.http.post<any>(
-      `${this.apiUrl}/queryFIN15020`, data
-    );
+    return this.http.post<any>(`${this.apiUrl}/queryFIN15020`, data);
   }
 
   // 列印進貨退出或折讓明細表
   printFIN15020(data: FIN15020PrintRequest): Observable<any> {
-    return this.http.post<any>(
-      `${this.apiUrl}/printFIN15020`, data
-    );
+    return this.http.post<any>(`${this.apiUrl}/printFIN15020`, data);
   }
 }

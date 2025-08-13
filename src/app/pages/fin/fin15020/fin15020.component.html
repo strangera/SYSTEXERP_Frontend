@@ -2,65 +2,78 @@
   <div class="flex gap-2 mb-2">
     <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
   </div>
+
   <p-accordion>
     <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
       [headerStyleClass]="'query-accordionTab'">
+
       <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
           <!-- 退出/折讓單號起迄 -->
           <app-input-text-range class="col-12 md:col-6 lg:col-4" label="退出/折讓單號"
             [startControl]="queryForm.controls.TXN_Ret_No_S" [endControl]="queryForm.controls.TXN_Ret_No_E"
-            [submitted]="submitted"></app-input-text-range>
+            [submitted]="submitted">
+          </app-input-text-range>
 
           <!-- 發票格式 -->
           <app-dropdown class="col-12 md:col-6 lg:col-4" label="發票格式" controlName="PUR_VoucherType"
             [options]="invoiceFormatOptions" [optionLabel]="'label'" [optionValue]="'value'"
-            [control]="queryForm.controls.PUR_VoucherType" [submitted]="submitted"></app-dropdown>
+            [control]="queryForm.controls.PUR_VoucherType" [submitted]="submitted">
+          </app-dropdown>
 
           <!-- 字軌 -->
           <app-input-text class="col-12 md:col-6 lg:col-4" label="字軌" controlName="GUI_Track"
-            [control]="queryForm.controls.GUI_Track" [submitted]="submitted" placeholder="先選擇資料所屬年月"></app-input-text>
+            [control]="queryForm.controls.GUI_Track" [submitted]="submitted">
+          </app-input-text>
 
           <!-- 發票號碼起迄 -->
           <app-input-text-range class="col-12 md:col-6 lg:col-4" label="發票號碼"
             [startControl]="queryForm.controls.PUR_GUINo_S" [endControl]="queryForm.controls.PUR_GUINo_E"
-            [submitted]="submitted"></app-input-text-range>
+            [submitted]="submitted">
+          </app-input-text-range>
 
           <!-- 退出/折讓日期起迄 -->
           <app-calendar-range class="col-12 md:col-6 lg:col-4" label="退出/折讓日期"
             [startControl]="queryForm.controls.PUR_GUIDate_S" [endControl]="queryForm.controls.PUR_GUIDate_E"
-            [submitted]="submitted"></app-calendar-range>
+            [submitted]="submitted">
+          </app-calendar-range>
 
           <!-- 區別 -->
           <app-dropdown class="col-12 md:col-6 lg:col-4" label="區別" controlName="Credit_Type"
             [options]="creditTypeOptions" [optionLabel]="'label'" [optionValue]="'value'"
-            [control]="queryForm.controls.Credit_Type" [submitted]="submitted"></app-dropdown>
+            [control]="queryForm.controls.Credit_Type" [submitted]="submitted">
+          </app-dropdown>
 
           <!-- 申報年月 (必填) -->
           <app-calendar class="col-12 md:col-6 lg:col-4" label="申報年月" calendarType="dateMonthOne"
-            [control]="queryForm.controls.PUR_RepYYYYMM" [submitted]="submitted"></app-calendar>
+            [control]="queryForm.controls.PUR_RepYYYYMM" [submitted]="submitted">
+          </app-calendar>
 
           <!-- 資料所屬年月起迄 (必填) -->
           <app-calendar-range class="col-12 md:col-6 lg:col-4" label="資料所屬年月" calendarType="dateMonthRange"
             [startControl]="queryForm.controls.PUR_GUIDateYYYYMM_S"
-            [endControl]="queryForm.controls.PUR_GUIDateYYYYMM_E" [submitted]="submitted"></app-calendar-range>
+            [endControl]="queryForm.controls.PUR_GUIDateYYYYMM_E" [submitted]="submitted">
+          </app-calendar-range>
 
           <!-- 憑證單號起迄 -->
           <app-input-text-range class="col-12 md:col-6 lg:col-4" label="憑證單號"
             [startControl]="queryForm.controls.Source_Doc_No_S" [endControl]="queryForm.controls.Source_Doc_No_E"
-            [submitted]="submitted"></app-input-text-range>
+            [submitted]="submitted">
+          </app-input-text-range>
 
           <!-- 傳票號碼起迄 -->
           <app-input-text-range class="col-12 md:col-6 lg:col-4" label="傳票號碼"
             [startControl]="queryForm.controls.Voucher_No_S" [endControl]="queryForm.controls.Voucher_No_E"
-            [submitted]="submitted"></app-input-text-range>
+            [submitted]="submitted">
+          </app-input-text-range>
 
           <!-- 系統別 -->
           <app-dropdown class="col-12 md:col-6 lg:col-4" label="系統別" controlName="SAL_Type"
             [options]="systemTypeOptions" [optionLabel]="'label'" [optionValue]="'value'"
-            [control]="queryForm.controls.SAL_Type" [submitted]="submitted"></app-dropdown>
-
+            [control]="queryForm.controls.SAL_Type" [submitted]="submitted">
+          </app-dropdown>
         </div>
+
         <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
           <app-button btnType="clear"></app-button>
           <app-button btnType="query" [loading]="loading"></app-button>
@@ -72,13 +85,18 @@
 
 <div class="card">
   <form [formGroup]="queryForm2">
-    <div class="grid justify-content-end gap-2 mb-2 p-2">
+    <div class="grid justify-content-start gap-2 mb-2 p-2">
       <app-dropdown label="合併列印" controlName="IsMerge" [options]="mergeOptions" [optionLabel]="'label'"
-        [optionValue]="'value'" [control]="queryForm2.controls.IsMerge"></app-dropdown>
+        [optionValue]="'value'" [control]="queryForm2.controls.IsMerge">
+      </app-dropdown>
+
       <app-dropdown label="匯出格式" controlName="IsExcel" [options]="exportOptions" [optionLabel]="'label'"
-        [optionValue]="'value'" [control]="queryForm2.controls.IsExcel"></app-dropdown>
+        [optionValue]="'value'" [control]="queryForm2.controls.IsExcel">
+      </app-dropdown>
+
       <app-button style="margin-top: 13px;" label="匯出報表" btnType="report" [loading]="btnLoading"
-        (click)="onExportReport()"></app-button>
+        (click)="onExportReport()">
+      </app-button>
     </div>
   </form>
 

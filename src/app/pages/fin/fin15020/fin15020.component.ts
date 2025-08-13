@@ -96,20 +96,17 @@ export class FIN15020Component extends BasicQueryPageComponent<FIN15020Data> imp
     { field: 'PUR_Uniform', header: '統一編號', visible: true }
   ];
 
-  //#region 下拉選項
+  // 常數定義
+  private static readonly STORE_NO = '10';
+  private static readonly MID = 0;
+
+  // 下拉選項
   invoiceFormatOptions = [
     { value: '21', label: '進項三聯式、電子計算機統一發票' },
     { value: '22', label: '進項二聯式收銀機統一發票、載有稅額之其他憑證' },
     { value: '25', label: '進項三聯式收銀機統一發票及一般稅額計算之電子發票' },
-    {
-      value: '26',
-      label: '彙總登錄每張稅額伍佰元以下之進項三聯式、電子計算機統一發票',
-    },
-    {
-      value: '27',
-      label:
-        '彙總登錄每張稅額伍佰元以下之進項二聯式收銀機統一發票、載有稅額之其他憑證',
-    },
+    { value: '26', label: '彙總登錄每張稅額伍佰元以下之進項三聯式、電子計算機統一發票' },
+    { value: '27', label: '彙總登錄每張稅額伍佰元以下之進項二聯式收銀機統一發票、載有稅額之其他憑證' },
     { value: '28', label: '進項海關代徵營業稅繳納證' },
   ];
 
@@ -150,8 +147,8 @@ export class FIN15020Component extends BasicQueryPageComponent<FIN15020Data> imp
   //#endregion
 
   constructor(
-    private fin15020Service: FIN15020Service,
-    private datePipe: DatePipe,
+    private readonly fin15020Service: FIN15020Service,
+    private readonly datePipe: DatePipe,
   ) {
     super();
   }
@@ -160,17 +157,15 @@ export class FIN15020Component extends BasicQueryPageComponent<FIN15020Data> imp
     this.initializePage('FIN15020', 'fin/fin15020', this.queryForm, (form) => this.onSubmit(form));
   }
 
-  onSubmit(frm: FormGroup) {
+  onSubmit(frm: FormGroup): void {
     this.handleSubmit(frm, () => {
       const requestData: FIN15020QueryRequest = {
         MID: 0,
         STO_No: '10',
         ...frm.value,
-        PUR_GUIDate_S: frm.get('PUR_GUIDate_S')?.value ? this.datePipe.transform(frm.get('PUR_GUIDate_S')?.value, 'yyyy-MM-dd') : undefined,
-        PUR_GUIDate_E: frm.get('PUR_GUIDate_E')?.value ? this.datePipe.transform(frm.get('PUR_GUIDate_E')?.value, 'yyyy-MM-dd') : undefined,
-        PUR_GUIDateYYYYMM_S: this.datePipe.transform(frm.get('PUR_GUIDateYYYYMM_S')?.value, 'yyyyMM') ?? undefined,
-        PUR_GUIDateYYYYMM_E: this.datePipe.transform(frm.get('PUR_GUIDateYYYYMM_E')?.value, 'yyyyMM') ?? undefined,
-        PUR_RepYYYYMM: this.datePipe.transform(frm.get('PUR_RepYYYYMM')?.value, 'yyyyMM') ?? undefined,
+        PUR_GUIDateYYYYMM_S: this.datePipe.transform(frm.get('PUR_GUIDateYYYYMM_S')?.value, 'yyyyMM') ?? '',
+        PUR_GUIDateYYYYMM_E: this.datePipe.transform(frm.get('PUR_GUIDateYYYYMM_E')?.value, 'yyyyMM') ?? '',
+        PUR_RepYYYYMM: this.datePipe.transform(frm.get('PUR_RepYYYYMM')?.value, 'yyyyMM') ?? '',
       };
 
       this.fin15020Service.queryFIN15020(requestData)
@@ -183,17 +178,9 @@ export class FIN15020Component extends BasicQueryPageComponent<FIN15020Data> imp
     });
   }
 
-  onExportReport() {
-    if (this.queryForm.invalid) {
-      const errors: string[] = [];
-      if (!this.queryForm.get('PUR_RepYYYYMM')?.value) errors.push('請填寫申報年月');
-      if (!this.queryForm.get('PUR_GUIDateYYYYMM_S')?.value) errors.push('請填寫資料所屬年月_起');
-      if (!this.queryForm.get('PUR_GUIDateYYYYMM_E')?.value) errors.push('請填寫資料所屬年月_訖');
-
-      if (errors.length > 0) {
-        this.messageService.errorBubble(errors.join('<br>'));
-        return;
-      }
+  onExportReport(): void {
+    if (!this.validateRequiredFields()) {
+      return;
     }
 
     this.btnLoading = true;
@@ -205,9 +192,9 @@ export class FIN15020Component extends BasicQueryPageComponent<FIN15020Data> imp
       ...Object.fromEntries(
         Object.entries(formValue).map(([key, value]) => [key, value === null ? undefined : value])
       ),
-      PUR_GUIDateYYYYMM_S: this.datePipe.transform(formValue.PUR_GUIDateYYYYMM_S, 'yyyyMM') ?? undefined,
-      PUR_GUIDateYYYYMM_E: this.datePipe.transform(formValue.PUR_GUIDateYYYYMM_E, 'yyyyMM') ?? undefined,
-      PUR_RepYYYYMM: this.datePipe.transform(formValue.PUR_RepYYYYMM, 'yyyyMM') ?? undefined,
+      PUR_GUIDateYYYYMM_S: this.datePipe.transform(formValue.PUR_GUIDateYYYYMM_S, 'yyyyMM') ?? '',
+      PUR_GUIDateYYYYMM_E: this.datePipe.transform(formValue.PUR_GUIDateYYYYMM_E, 'yyyyMM') ?? '',
+      PUR_RepYYYYMM: this.datePipe.transform(formValue.PUR_RepYYYYMM, 'yyyyMM') ?? '',
       IsMerge: this.queryForm2.value.IsMerge === '1' || false,
       IsExcel: this.queryForm2.value.IsExcel === '1' || false
     };
@@ -218,6 +205,8 @@ export class FIN15020Component extends BasicQueryPageComponent<FIN15020Data> imp
         next: (response) => {
           if (response.Status === '0000') {
             this.openDownloadWindow(response.Data.Print_URL);
+          } else {
+            this.messageService.errorBubble('產生報表失敗');
           }
         },
         error: (error) => {
@@ -225,6 +214,22 @@ export class FIN15020Component extends BasicQueryPageComponent<FIN15020Data> imp
           this.messageService.errorBubble('產生報表時發生錯誤');
         }
       });
+  }
+
+
+  private validateRequiredFields(): boolean {
+    if (this.queryForm.invalid) {
+      const errors: string[] = [];
+      if (!this.queryForm.get('PUR_RepYYYYMM')?.value) errors.push('請填寫申報年月');
+      if (!this.queryForm.get('PUR_GUIDateYYYYMM_S')?.value) errors.push('請填寫資料所屬年月_起');
+      if (!this.queryForm.get('PUR_GUIDateYYYYMM_E')?.value) errors.push('請填寫資料所屬年月_訖');
+
+      if (errors.length > 0) {
+        this.messageService.errorBubble(errors.join('<br>'));
+        return false;
+      }
+    }
+    return true;
   }
 
   private openDownloadWindow(printUrl: string): void {
