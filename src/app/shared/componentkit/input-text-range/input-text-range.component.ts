@@ -24,11 +24,11 @@ import { InputTextComponent } from '../input-text/input-text.component';
 })
 export class InputTextRangeComponent extends BasicKitComponent implements OnInit {
   // 必填欄位
-  @Input() label = '';
+  @Input() override label = '';
   @Input() showLabel = true;
   @Input() startLabel!: string;
   @Input() endLabel!: string;
-  @Input() controlName = '';
+  @Input() override controlName = '';
   @Input() startControlName = '';
   @Input() endControlName = '';
   @Input() startControl = new FormControl(); // 開始值的 FormControl

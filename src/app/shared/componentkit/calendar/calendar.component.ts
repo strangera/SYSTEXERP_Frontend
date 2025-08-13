@@ -14,27 +14,26 @@ import { ControlMessagesComponent } from '../../component/control-messages/contr
   imports: [NgIf, CalendarModule, FormsModule, ReactiveFormsModule, NgClass, PrimeTemplate, ControlMessagesComponent]
 })
 export class CalendarComponent extends BasicKitComponent implements OnInit {
-  // 📌 基本設置
-  @Input() label = '';
+  // 必填
+  @Input() override label = '';
+  @Input() showLabel = true;
+  @Input() override controlName = '';
   @Input() control = new FormControl();
-  @Input() controlName = '';
   @Input() submitted = false;
-  @Input() override isRequired = false;
-
-  // 📌 calendarType（包含新增加 oddMonthOne）
-  @Input() calendarType: 'timeOne' | 'dateOne' | 'dateTimeOne' | 'dateMonthOne' | 'dateYearOne' | 'oddMonthOne' = 'dateOne';
-
-  // 📌 PrimeNG 設置
+  // 日期類型
+  @Input() calendarType: 'timeOne' | 'dateOne' | 'dateTimeOne' | 'dateMonthOne' | 'dateYearOne' = 'dateOne';
+  // Primeng 相關屬性
   @Input() timeOnly = true;
   @Input() showTime = true;
   @Input() hourFormat = '24';
   @Input() dateFormat: string | undefined = 'yy/mm/dd';
-  @Input() view: 'date' | 'month' | 'year' = 'month'; // ✅ 不含 oddmonth
+  @Input() view: 'date' | 'month' | 'year' = 'month';
   @Input() showSeconds = false;
-  @Input() minDate: Date | undefined | null;
-  @Input() maxDate: Date | undefined | null;
+  @Input() minDate: Date | undefined | null = null;
+  @Input() maxDate: Date | undefined | null = null;
+  // 自訂屬性
   @Input() disabled = false;
-
+  // 觸發事件
   @Output() calendarEvent = new EventEmitter<any>();
   @Output() monthChangeEvent = new EventEmitter<CalendarMonthChangeEvent>();
   @Output() yearChangeEvent = new EventEmitter<CalendarYearChangeEvent>();
@@ -45,34 +44,24 @@ export class CalendarComponent extends BasicKitComponent implements OnInit {
     dateTimeOne: { timeOnly: false, showTime: true, dateFormat: 'yy/mm/dd', view: 'date', placeholder: '請選擇日期時間' },
     dateMonthOne: { timeOnly: false, showTime: false, dateFormat: 'yy/mm', view: 'month', placeholder: '請選擇月份' },
     dateYearOne: { timeOnly: false, showTime: false, dateFormat: 'yy', view: 'year', placeholder: '請選擇年份' },
-    oddMonthOne: { timeOnly: false, showTime: false, dateFormat: 'yy/mm', view: 'month', placeholder: '請選擇奇數月份' }
   };
 
   ngOnInit() {
+    this.initControl(this.control);
     if (this.disabled) this.control.disable();
-
-    this.configCalendar();
-
-    if (!this.control.disabled) {
-      this.placeholder = this.calendarConfig[this.calendarType]?.placeholder || '';
-      this.updateControlState(this.control);
-    }
-
-    if (this.control.value && typeof this.control.value === 'string') {
-      this.control.setValue(new Date(this.control.value));
-    }
-  }
-
-  private configCalendar() {
     const config = this.calendarConfig[this.calendarType];
     if (config) {
       this.timeOnly = config.timeOnly;
       this.showTime = config.showTime;
       this.dateFormat = config.dateFormat;
       this.view = config.view as 'date' | 'month' | 'year';
+      this.placeholder = config.placeholder;
+    }
+
+    if (this.control.value && typeof this.control.value === 'string') {
+      this.control.setValue(new Date(this.control.value));
     }
   }
-
   onClose() {
     this.calendarEvent.emit(this.control.value);
   }

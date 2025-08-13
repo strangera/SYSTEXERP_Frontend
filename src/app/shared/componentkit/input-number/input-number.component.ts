@@ -27,9 +27,9 @@ import { TooltipModule } from 'primeng/tooltip';
 })
 export class InputNumberComponent extends BasicKitComponent implements OnInit {
   // 必填
-  @Input() label = '';
+  @Input() override label = '';
   @Input() showLabel = true;
-  @Input() controlName = '';
+  @Input() override controlName = '';
   @Input() control = new FormControl();
   @Input() submitted = false; // 檢查欄位是否標準
   // Primeng 相關屬性

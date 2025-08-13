@@ -6,14 +6,15 @@
   <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
     <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
       <div class="grid p-fluid">
-        <app-calendar class="col-12 md:col-6 lg:col-4" calendarType="dateMonthOne" label="發票年月"
-          [control]="dataForm.controls.SAL_GUIYYYYMM" [submitted]="submitted" [minDate]="minDate" />
+        <app-calendar class="col-12 md:col-6 lg:col-4" controlName="SAL_GUIYYYYMM" calendarType="dateMonthOne"
+          label="發票年月" [control]="dataForm.controls.SAL_GUIYYYYMM" [submitted]="submitted" [minDate]="minDate" />
         <app-dropdown class="col-12 lg:col-6 xl:col-4" controlName="SAL_GUITrack" label="字軌" [options]="guiTrackOptions"
           optionLabel="GUI_Track" optionValue="GUI_Track" [control]="dataForm.controls.SAL_GUITrack"
           [submitted]="submitted" />
         <app-input-number class="col-12 md:col-6 lg:col-4" label="券數(1券=50張)" controlName="GUI_Qty"
           [control]="dataForm.controls.GUI_Qty" [max]="maxQty" [useGrouping]="false" [submitted]="submitted" />
-        <app-input-text-range class="col-12 lg:col-6 xl:col-4" startLabel="發票起始號碼" endLabel="發票結束號碼"
+        <app-input-text-range class="col-12 lg:col-6 xl:col-4" startControlName="SAL_GUIBegNo"
+          endControlName="SAL_GUIEndNo" startLabel="發票起始號碼" endLabel="發票結束號碼"
           [startControl]="dataForm.controls.SAL_GUIBegNo" [endControl]="dataForm.controls.SAL_GUIEndNo"
           [submitted]="submitted" [errorForGroup]="true" />
         <app-dropdown class="col-12 lg:col-6 xl:col-4" label="使用別" controlName="SAL_Type" [options]="usageTypeOptions"

@@ -25,7 +25,7 @@ import { InputNumberInputEvent } from 'primeng/inputnumber';
 })
 export class InputNumberRangeComponent extends BasicKitComponent implements OnInit {
   // 必填欄位
-  @Input() label = '';
+  @Input() override label = '';
   @Input() startLabel!: string;
   @Input() endLabel!: string;
   @Input() startControlName = '';

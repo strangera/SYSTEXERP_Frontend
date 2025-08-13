@@ -5,41 +5,18 @@
 <ng-content select="header"></ng-content>
 <div class="grid p-fluid">
   <div class="col pb-0">
-    <label *ngIf="startLabel" [for]="startControl">{{ startLabel }}
-      <span *ngIf="isRequired" class="required">*</span>
-    </label>
-    <p-calendar [formControl]="startControl" [placeholder]="startControl.disabled ? '' : placeholder"
-      [timeOnly]="timeOnly" [showTime]="showTime" hourFormat="24" [dateFormat]="dateFormat" [view]="view"
-      [ngClass]="{'ng-invalid ng-dirty': submitted && startControl.errors}" [showIcon]="!startControl.disabled"
-      [iconDisplay]="'input'" [minDate]="minDate" [maxDate]="startMaxDate" [appendTo]="'body'">
-      <ng-template pTemplate="inputicon" let-clickCallBack="clickCallBack">
-        <i *ngIf="timeOnly" class="pi pi-clock pointer-events-none"></i>
-        <i *ngIf="!timeOnly" class="pi pi-calendar pointer-events-none"></i>
-      </ng-template>
-    </p-calendar>
-    <app-control-messages [onerror]="submitted || (startControl.touched && startControl.invalid)"
-      [control]="startControl">
-    </app-control-messages>
+    <app-calendar class="w-full" [label]="startLabel || ''" [controlName]="startControlName" [control]="startControl"
+      [submitted]="submitted" [calendarType]="calendarOneType" [minDate]="startMinDate"
+      [maxDate]="startMaxDate"></app-calendar>
   </div>
   <div class="flex justify-content-center align-items-center"
     [ngStyle]="{ 'margin-top': startLabel ? '27px' : '7px', 'height': '43px' }">
     <span class="text-center">~</span>
   </div>
   <div class="col pb-0">
-    <label *ngIf="endLabel" [for]="endControl">{{ endLabel }}
-      <span *ngIf="isRequired" class="required">*</span>
-    </label>
-    <p-calendar [formControl]="endControl" [placeholder]="endControl.disabled ? '' : placeholder2" [timeOnly]="timeOnly"
-      [showTime]="showTime" hourFormat="24" [dateFormat]="dateFormat" [view]="view" [iconDisplay]="'input'"
-      [ngClass]="{'ng-invalid ng-dirty': submitted && endControl.errors}" [showIcon]="!endControl.disabled"
-      [minDate]="endMinDate" [maxDate]="maxDate" [appendTo]="'body'">
-      <ng-template pTemplate="inputicon" let-clickCallBack="clickCallBack">
-        <i *ngIf="timeOnly" class="pi pi-clock pointer-events-none"></i>
-        <i *ngIf="!timeOnly" class="pi pi-calendar pointer-events-none"></i>
-      </ng-template>
-    </p-calendar>
-    <app-control-messages [onerror]="submitted || (endControl.touched && endControl.invalid)" [control]="endControl">
-    </app-control-messages>
+    <app-calendar class="w-full" [label]="endLabel || ''" [controlName]="endControlName" [control]="endControl"
+      [submitted]="submitted" [calendarType]="calendarOneType" [minDate]="endMinDate"
+      [maxDate]="endMaxDate"></app-calendar>
   </div>
 </div>
 <ng-content select="footer"></ng-content>

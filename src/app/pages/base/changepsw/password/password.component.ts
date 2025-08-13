@@ -8,15 +8,15 @@ import { DividerModule } from 'primeng/divider';
 import { ControlMessagesComponent } from '../../../../shared/component/control-messages/control-messages.component';
 
 @Component({
-    selector: 'app-password',
-    templateUrl: './password.component.html',
-    styleUrl: './password.component.scss',
-    standalone: true,
-    imports: [NgIf, PasswordModule, FormsModule, ReactiveFormsModule, NgClass, PrimeTemplate, DividerModule, ControlMessagesComponent]
+  selector: 'app-password',
+  templateUrl: './password.component.html',
+  styleUrl: './password.component.scss',
+  standalone: true,
+  imports: [NgIf, PasswordModule, FormsModule, ReactiveFormsModule, NgClass, PrimeTemplate, DividerModule, ControlMessagesComponent]
 })
 export class PasswordComponent extends BasicKitComponent implements OnInit {
-  @Input() label: string | undefined;
-  @Input() controlName = '';
+  @Input() override label = '';
+  @Input() override controlName = '';
   @Input() control = new FormControl();
   @Input() submitted = false; // 檢查欄位是否標準
   @Input() disabled: boolean | undefined;

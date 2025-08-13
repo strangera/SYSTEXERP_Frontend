@@ -8,60 +8,32 @@
     <form [formGroup]="dataForm" (ngSubmit)="onSubmit(dataForm)">
       <div class="grid p-fluid">
         <div class="col-12 md:col-6 lg:col-4">
-          <app-calendar-range
-            startLabel="起始時間"
-            endLabel="結束時間"
-            [startControl]="dataForm.controls.Pub_StartDate"
-            [endControl]="dataForm.controls.Pub_EndDate"
-            [submitted]="submitted"
-            [minDate]="isCreate ? minDateToday : null" 
-          ></app-calendar-range>
+          <app-calendar-range startLabel="起始時間" endLabel="結束時間" [startControl]="dataForm.controls.Pub_StartDate"
+            [endControl]="dataForm.controls.Pub_EndDate" [submitted]="submitted"
+            [startMinDate]="isCreate ? minDateToday : null"></app-calendar-range>
         </div>
 
         <div class="col-12 md:col-6 lg:col-4">
-          <app-radiobutton
-            label="是否啟用"
-            groupname="pub_enable"
-            [control]="dataForm.controls.pub_enable"
-            [options]="YNOptions"
-            [submitted]="submitted"
-          ></app-radiobutton>
+          <app-radiobutton label="是否啟用" groupname="pub_enable" [control]="dataForm.controls.pub_enable"
+            [options]="YNOptions" [submitted]="submitted"></app-radiobutton>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
-          <app-dropdown
-            label="公告類別"
-            controlName="Pub_Type"
-            [options]="Pub_TypeOptions"
-            optionLabel="label"
-            optionValue="value"
-            [control]="dataForm.controls.Pub_Type"
-            [submitted]="submitted"
-          ></app-dropdown>
+          <app-dropdown label="公告類別" controlName="Pub_Type" [options]="Pub_TypeOptions" optionLabel="label"
+            optionValue="value" [control]="dataForm.controls.Pub_Type" [submitted]="submitted"></app-dropdown>
         </div>
 
         <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text
-            label="公告事項"
-            controlName="Pub_Event"
-            [control]="dataForm.controls.Pub_Event"
-            [submitted]="submitted"
-          ></app-input-text>
+          <app-input-text label="公告事項" controlName="Pub_Event" [control]="dataForm.controls.Pub_Event"
+            [submitted]="submitted"></app-input-text>
         </div>
         <div class="col-12 md:col-6 lg:col-8"></div>
         <div class="col-12 md:col-6 lg:col-12">
-          <app-editor-text
-            label="公告內容"
-            controlName="editortext"
-            [control]="dataForm.controls.Pub_Description"
-            [submitted]="submitted"
-          ></app-editor-text>
+          <app-editor-text label="公告內容" controlName="editortext" [control]="dataForm.controls.Pub_Description"
+            [submitted]="submitted"></app-editor-text>
         </div>
       </div>
       <!-- 按鈕列 -->
-      <div
-        class="grid justify-content-end gap-2 mt-3 border-top-1 surface-border pt-3"
-        *ngIf="!isFormReadable"
-      >
+      <div class="grid justify-content-end gap-2 mt-3 border-top-1 surface-border pt-3" *ngIf="!isFormReadable">
         <app-button btnType="smartclear"></app-button>
         <app-button btnType="submit"></app-button>
       </div>
@@ -70,22 +42,9 @@
 </div>
 
 <div class="card">
-  <app-table
-    tableKey="SYSBR10"
-    [columns]="detailcolumns"
-    dataKey="id"
-    [multiSortMeta]="[{ field: 'id', order: 1 }]"
-    [insertRowData]="insertRowData"
-    [defaultInsertData]="{ User_No: '', Org_ID: '', Role_No: '' }"
-    [showInsert]="showInsert"
-    [showRowEdit]="showRowEdit"
-    [showEdit]="false"
-    [showDetail]="false"
-    [showReportMode]="false"
-    [showDelete]="true"
-    [showCheckBox]="true"
-    [showPaginator]="false"
-    [deleteData]="true"  
-    [(data)]="detailList"
-  ></app-table>
+  <app-table tableKey="SYSBR10" [columns]="detailcolumns" dataKey="id" [multiSortMeta]="[{ field: 'id', order: 1 }]"
+    [insertRowData]="insertRowData" [defaultInsertData]="{ User_No: '', Org_ID: '', Role_No: '' }"
+    [showInsert]="showInsert" [showRowEdit]="showRowEdit" [showEdit]="false" [showDetail]="false"
+    [showReportMode]="false" [showDelete]="true" [showCheckBox]="true" [showPaginator]="false" [deleteData]="true"
+    [(data)]="detailList"></app-table>
 </div>

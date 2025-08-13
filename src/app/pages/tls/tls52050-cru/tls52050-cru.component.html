@@ -17,11 +17,11 @@
         <app-input-textarea class="col-12 md:col-6 lg:col-4" label="進價售價變價單說明" controlName="MAM_InvDesc"
           [control]="dataForm.controls.MAM_InvDesc" [submitted]="submitted"></app-input-textarea>
         <app-calendar-range class="col-12 lg:col-8" startLabel="生效日期(起)" endLabel="生效日期(迄)"
-          [startControl]="dataForm.controls.MAM_BegDate" [endControl]="dataForm.controls.MAM_EndDate"
-          [submitted]="submitted">
+          startControlName="MAM_BegDate" endControlName="MAM_EndDate" [startControl]="dataForm.controls.MAM_BegDate"
+          [endControl]="dataForm.controls.MAM_EndDate" [submitted]="submitted">
           <footer>
             <div class="flex align-items-center pt-2">
-              <p-checkbox [binary]="true" inputId="MAM_MethodCheckbox" [formControl]="dataForm.controls.MAM_Method"
+              <p-checkbox [binary]="true" inputId="MAM_Method" [formControl]="dataForm.controls.MAM_Method"
                 [trueValue]="'1'" [falseValue]="'H'" label="僅顯示回價變價單">
               </p-checkbox>
             </div>

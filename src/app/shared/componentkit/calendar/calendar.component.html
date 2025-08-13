@@ -1,6 +1,6 @@
-<!-- 標籤 -->
-<label [for]="controlName">{{ label }}
+<label [hidden]="!showLabel || label===''" [for]="controlName">{{ label }}
   <span *ngIf="isRequired" class="required">*</span>
+  <ng-content select="header"></ng-content>
 </label>
 <!-- 元件 -->
 <p-calendar [formControl]="control" [id]="controlName" [placeholder]="control.disabled ? '' : placeholder"

@@ -23,11 +23,11 @@ import { DropdownComponent } from '../dropdown/dropdown.component';
 })
 export class DropdownRangeComponent extends BasicKitComponent implements OnInit {
   // 必填欄位
-  @Input() label = '';
+  @Input() override label = '';
   @Input() showLabel = true;
   @Input() startLabel!: string;
   @Input() endLabel!: string;
-  @Input() controlName = '';
+  @Input() override controlName = '';
   @Input() startControlName = '';
   @Input() endControlName = '';
   @Input() startControl = new FormControl(); // 開始值的 FormControl

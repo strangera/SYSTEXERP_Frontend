@@ -8,7 +8,8 @@
       <div class="grid p-fluid">
         <app-input-text class="col-12 md:col-6 lg:col-4" label="環境變數編號" controlName="ECR_TmplNo"
           [control]="dataForm.controls.ECR_TmplNo" [submitted]="submitted" />
-        <app-calendar-range class="col-12 md:col-6 lg:col-4" label="有效日期" controlName="ECR_EffDate"
+        <app-calendar-range class="col-12 md:col-6 lg:col-4" startLabel="起始日期" endLabel="結束日期"
+          startControlName="ECR_TmplBegDate" endControlName="ECR_TmplEndDate"
           [startControl]="dataForm.controls.ECR_TmplBegDate" [endControl]="dataForm.controls.ECR_TmplEndDate"
           [submitted]="submitted" />
         <app-dropdown class="col-12 md:col-6 lg:col-4" label="狀態" controlName="ECR_TmplStatus"

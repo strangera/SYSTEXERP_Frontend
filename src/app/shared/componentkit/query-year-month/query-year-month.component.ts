@@ -6,17 +6,17 @@ import { DropdownModule } from 'primeng/dropdown';
 import { NgIf } from '@angular/common';
 
 @Component({
-    selector: 'app-query-year-month',
-    templateUrl: './query-year-month.component.html',
-    styleUrls: ['./query-year-month.component.scss'],
-    standalone: true,
-    imports: [FormsModule, InputTextModule, ReactiveFormsModule, DropdownModule,NgIf]
+  selector: 'app-query-year-month',
+  templateUrl: './query-year-month.component.html',
+  styleUrls: ['./query-year-month.component.scss'],
+  standalone: true,
+  imports: [FormsModule, InputTextModule, ReactiveFormsModule, DropdownModule, NgIf]
 })
 export class QueryYearMonthComponent extends BasicKitComponent implements OnInit {
-get isControlRequired(): boolean {
-  return this.control?.hasValidator?.(Validators.required) ?? false;
-}
-  @Input() label = '交易年月';
+  get isControlRequired(): boolean {
+    return this.control?.hasValidator?.(Validators.required) ?? false;
+  }
+  @Input() override  label = '交易年月';
   @Input() submitted = false;
   @Input() control!: FormControl;
 
@@ -46,24 +46,24 @@ get isControlRequired(): boolean {
       : this.allMonths;
   }
 
-ngOnInit(): void {
-  // ✅ 初始解析 YYYYMM → year + month
-  const yyyymm = this.control.value;
-  if (yyyymm?.length === 6) {
-    this.yearControl.setValue(yyyymm.substring(0, 4));
-    this.monthControl.setValue(yyyymm.substring(4, 6));
-  }
+  ngOnInit(): void {
+    // ✅ 初始解析 YYYYMM → year + month
+    const yyyymm = this.control.value;
+    if (yyyymm?.length === 6) {
+      this.yearControl.setValue(yyyymm.substring(0, 4));
+      this.monthControl.setValue(yyyymm.substring(4, 6));
+    }
 
-  // ✅ 根據外部控制項狀態禁用欄位
-  if (this.control.disabled) {
-    this.yearControl.disable();
-    this.monthControl.disable();
-  }
+    // ✅ 根據外部控制項狀態禁用欄位
+    if (this.control.disabled) {
+      this.yearControl.disable();
+      this.monthControl.disable();
+    }
 
-  // ✅ 當年或月變動，自動組成 YYYYMM 並設回 control
-  this.yearControl.valueChanges.subscribe(() => this.syncControlValue());
-  this.monthControl.valueChanges.subscribe(() => this.syncControlValue());
-}
+    // ✅ 當年或月變動，自動組成 YYYYMM 並設回 control
+    this.yearControl.valueChanges.subscribe(() => this.syncControlValue());
+    this.monthControl.valueChanges.subscribe(() => this.syncControlValue());
+  }
 
 
   private syncControlValue(): void {
@@ -72,7 +72,7 @@ ngOnInit(): void {
     const yyyymm = year && month ? `${year}${month}` : '';
     this.control.setValue(yyyymm);
   }
-    onChange(): void {
+  onChange(): void {
     this.syncControlValue();
   }
 }

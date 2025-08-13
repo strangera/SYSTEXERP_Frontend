@@ -20,8 +20,8 @@ import { ControlMessagesComponent } from '../../component/control-messages/contr
   ],
 })
 export class RadiobuttonYNComponent extends BasicKitComponent implements OnInit {
-  @Input() label = '';
-  @Input() controlName = '';
+  @Input() override label = '';
+  @Input() override controlName = '';
   @Input() control = new FormControl(); // 初始化為新 FormControl
   @Input() submitted = false; // 檢查欄位是否標準
   @Input() errorForGroup = false; // 用於 FormGroup 錯誤顯示
@@ -30,7 +30,7 @@ export class RadiobuttonYNComponent extends BasicKitComponent implements OnInit 
   ynOptions: { label: string; value: string | null }[] = [];
 
   ngOnInit(): void {
-    this.updateControlState(this.control);
+    this.initControl(this.control);
     this.ynOptions = this.showAll
       ? [
         { label: '全部', value: null },

@@ -21,8 +21,8 @@ import { BasicKitComponent } from '../../componentextends/basic-kit/basic-kit.co
 })
 export class MultiSelectComponent extends BasicKitComponent implements OnInit {
   @ViewChild('multiSelect') multiSelect!: MultiSelect;
-  @Input() label = '';
-  @Input() controlName = '';
+  @Input() override label = '';
+  @Input() override controlName = '';
   @Input() set options(value: any[]) { if (value.length) this.loading = false; this._options = value; };
   get options(): any[] { return this._options; }
   @Input() optionLabel = ''; // 資料的 Label
