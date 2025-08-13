@@ -13,9 +13,8 @@
             </app-calendar>
           </div>
           <div class="col-12 md:col-4">
-            <app-input-text label="收銀機號" controlName="cashier_no" [control]="queryForm.controls.cashier_no"
-              [submitted]="submitted">
-            </app-input-text>
+            <app-multi-select label="收銀機號" controlName="cashier_no" [options]="POS_NOSOptions" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.cashier_no" [submitted]="submitted" />
           </div>
           <div class="col-12 md:col-4">
             <app-input-text label="交易序號" controlName="txn_seq" [control]="queryForm.controls.txn_seq"

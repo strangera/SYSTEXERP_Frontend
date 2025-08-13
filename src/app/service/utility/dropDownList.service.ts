@@ -112,6 +112,33 @@ export interface TLTTALENT_CHARGEData {
   cag_barcode_name: string
 }
 
+// 新增 interface for 字軌 API
+export interface IPOS1018GUITrackRequest {
+  GUI_YYMM: string;
+  MID: number;
+  STO_No: string;
+  GUI_Type: string;
+}
+
+export interface IPOS1018GUITrackResponse {
+  GuiTracks: string[];
+}
+
+// 新增 interface for 發票格式 API
+export interface ITDS1007Request {
+  mid: number;
+}
+
+export interface ITDS1007Response {
+  INV_GUITypes: TDS1007Item[];
+}
+
+// 修改現有的 TDS1007Item interface
+export interface TDS1007Item {
+  INV_GUIType: string;
+  INV_GUIName: string;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -332,4 +359,13 @@ export class DropDownListService {
     return this.http.post<ApiResponse<TLTTALENT_CHARGEData[]>>(`${this.apiUrl}/queryTLTTALENT_CHARGE_DropDownList`, { talent_id });
   }
 
+  // 查詢字軌(POS1018)資料表下拉選單
+  queryPOS1018_GUI_TRACK_DropDownList(params: IPOS1018GUITrackRequest): Observable<ApiResponse<IPOS1018GUITrackResponse[]>> {
+    return this.http.post<ApiResponse<IPOS1018GUITrackResponse[]>>(`${this.apiUrl}/Share/queryPOS1018_GUI_TRACK_DropDownList`, params);
+  }
+
+  // 查詢發票格式(TDS1007)資料表下拉選單
+  queryTDS1007_DropDownList(params: ITDS1007Request): Observable<ApiResponse<ITDS1007Response>> {
+    return this.http.post<ApiResponse<ITDS1007Response>>(`${this.apiUrl}/Share/queryTDS1007_DropDownList`, params);
+  }
 }

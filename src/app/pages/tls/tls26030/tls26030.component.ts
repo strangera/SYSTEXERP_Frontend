@@ -36,14 +36,28 @@ import { DatePipe } from '@angular/common';
   ]
 })
 export class TLS26030Component extends BasicQueryPageComponent<TLS26030Data> implements OnInit {
+  readonly enddate: Date = (() => {
+    const d = new Date();
+    d.setHours(0, 0, 0, 0);
+    d.setDate(d.getDate() - 1);
+    return d;
+  })();
+
+  readonly startdate: Date = (() => {
+    const d = new Date();
+    d.setMonth(0, 1); // 1月1號
+    d.setHours(0, 0, 0, 0);
+    return d;
+  })();
+
   queryForm = this.formBuilder.group({
-    Sale_DateStart: ['2025/08/01', Validators.required],
-    Sale_DateEnd: ['2025/08/31', Validators.required],
+    Sale_DateStart: [this.startdate, Validators.required],
+    Sale_DateEnd: [this.enddate, Validators.required],
     tlt_building: [[]],                               // 館別
     Org_ID: [[]],                                     // 組織代號
     Org_Name: [''],                                   // 組織名稱
     tlt_floor: [[]],                                  // 樓層
-    ...createPaginationConfig([])
+    ...createPaginationConfig([{ field: 'TXN_DATE', order: -1 }, { field: 'ECR_NO', order: 1 }, { field: 'TXN_NO', order: -1 }])
   });
 
   totalRecords = 0;
@@ -87,7 +101,7 @@ export class TLS26030Component extends BasicQueryPageComponent<TLS26030Data> imp
   }
 
   ngOnInit(): void {
-    this.initializePage('TLS26030', 'tls/tls26030', this.queryForm, (form) => this.onSubmit(form));
+    this.initializePage('TLS26030', 'tls/tls26030cru', this.queryForm, (form) => this.onSubmit(form));
     this.loadOptions();
   }
 

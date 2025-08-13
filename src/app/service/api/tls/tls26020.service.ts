@@ -17,6 +17,8 @@ export interface TLS26020QueryRequest extends BaseQueryRequest {
 // 預售總表明細查詢條件
 export interface TLS26020DetailRequest {
   tlt_no: string;               // 專櫃編號
+  Sale_DateStart: string;      // 銷售日期(起) - ISO 8601 格式
+  Sale_DateEnd: string;        // 銷售日期(訖) - ISO 8601 格式
 }
 
 // Data result interface for TLS26020 (預售總表資料)
