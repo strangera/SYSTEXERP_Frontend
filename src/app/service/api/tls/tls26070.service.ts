@@ -64,24 +64,24 @@ export class TLS26070Service {
       const Data: BaseQueryResponse<TLS26070Data> = {
         TotalCount: 3,
         Data: [
-          {
-            TEAM: '商街Team',
-            GROUP: '1F',
-            TARGET_2024: 61900000,
-            SALES_2024: 56471122,
-            ACHIEVEMENT_RATE: '91.2%',
-            TX_COUNT_2024: 9430,
-            AVG_TX_2024: 5988,
-            SALES_2023: 65064344,
-            TX_COUNT_2023: 10621,
-            AVG_TX_2023: 6126,
-            GROWTH_RATE: '-13.2%',
-            SALES_DIFF: -8593121,
-            TX_COUNT_DIFF: -1191,
-            AVG_TX_DIFF: -138,
-            SALES_YIELD: 2349.37,
-            MONTHLY_PERFORMANCE: 24043
-          },
+          // {
+          //   TEAM: '商街Team',
+          //   GROUP: '1F',
+          //   TARGET_2024: 61900000,
+          //   SALES_2024: 56471122,
+          //   ACHIEVEMENT_RATE: '91.2%',
+          //   TX_COUNT_2024: 9430,
+          //   AVG_TX_2024: 5988,
+          //   SALES_2023: 65064344,
+          //   TX_COUNT_2023: 10621,
+          //   AVG_TX_2023: 6126,
+          //   GROWTH_RATE: '-13.2%',
+          //   SALES_DIFF: -8593121,
+          //   TX_COUNT_DIFF: -1191,
+          //   AVG_TX_DIFF: -138,
+          //   SALES_YIELD: 2349.37,
+          //   MONTHLY_PERFORMANCE: 24043
+          // },
           // ... (請依據查詢結果圖擴充)
         ],
         Status: '',

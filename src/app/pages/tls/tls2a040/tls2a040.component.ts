@@ -128,6 +128,7 @@ export class TLS2A040Component extends BasicQueryPageComponent<any> implements O
 
   onSubmit(form: FormGroup): void {
     this.handleSubmit(form, () => {
+      this.loading = false;
       // this.tls2a040Service.queryTLS2a040(form.value).subscribe({
       //   next: (res) => {
       //     this.data = res.Data ?? [];
