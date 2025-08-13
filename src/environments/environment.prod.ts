@@ -1,8 +1,8 @@
 // 生產環境的 API 路徑
 export const environment = {
   production: true,
-  BaseUrl: '/TSRD_WEBAPI', //不要再給我加上DEV了喔
-  ApiUrl: '/TSRD_WEBAPI', //不要再給我加上DEV了喔
+  BaseUrl: '', //不要再給我加上DEV了喔
+  ApiUrl: '', //不要再給我加上DEV了喔
   PasswordKey: '8a9zx@a1231sdl!aafohc.u',
   PasswordIV: '12523648',
   APIKey:
