@@ -36,21 +36,28 @@ import { DatePipe } from '@angular/common';
   ]
 })
 export class TLS26030Component extends BasicQueryPageComponent<TLS26030Data> implements OnInit {
-  readonly yesterday: Date = (() => {
+  readonly enddate: Date = (() => {
     const d = new Date();
     d.setHours(0, 0, 0, 0);
     d.setDate(d.getDate() - 1);
     return d;
   })();
 
+  readonly startdate: Date = (() => {
+    const d = new Date();
+    d.setMonth(0, 1); // 1月1號
+    d.setHours(0, 0, 0, 0);
+    return d;
+  })();
+
   queryForm = this.formBuilder.group({
-    Sale_DateStart: [this.yesterday, Validators.required],
-    Sale_DateEnd: [this.yesterday, Validators.required],
+    Sale_DateStart: [this.startdate, Validators.required],
+    Sale_DateEnd: [this.enddate, Validators.required],
     tlt_building: [[]],                               // 館別
     Org_ID: [[]],                                     // 組織代號
     Org_Name: [''],                                   // 組織名稱
     tlt_floor: [[]],                                  // 樓層
-    ...createPaginationConfig([])
+    ...createPaginationConfig([{ field: 'TXN_DATE', order: -1 }, { field: 'ECR_NO', order: 1 }, { field: 'TXN_NO', order: -1 }])
   });
 
   totalRecords = 0;

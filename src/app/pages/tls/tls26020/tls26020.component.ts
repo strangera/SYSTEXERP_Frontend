@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { finalize } from 'rxjs';
+import { finalize, Observable } from 'rxjs';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { createPaginationConfig, Column } from '../../../shared/componentkit/table/table.model';
 import { TLS26020Data, TLS26020Service } from '../../../service/api/tls/tls26020.service';
@@ -15,7 +15,6 @@ import { Tls11010Service } from '@service/api/tls/tls11010.service';
 import { FloorService } from '@service/basic/floor.service';
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
 import { Tls51080Service } from '@service/api/tls/tls51080.service';
-import { untilDestroyed } from '@ngneat/until-destroy';
 import { DatePipe } from '@angular/common';
 
 @Component({
@@ -37,21 +36,27 @@ import { DatePipe } from '@angular/common';
   ]
 })
 export class TLS26020Component extends BasicQueryPageComponent<TLS26020Data> implements OnInit {
-  readonly yesterday: Date = (() => {
+  readonly enddate: Date = (() => {
     const d = new Date();
     d.setHours(0, 0, 0, 0);
     d.setDate(d.getDate() - 1);
     return d;
   })();
 
+  readonly startdate: Date = (() => {
+    const d = new Date(this.enddate);
+    d.setMonth(d.getMonth() - 1);
+    return d;
+  })();
+
   queryForm = this.formBuilder.group({
-    Sale_DateStart: [this.yesterday, Validators.required],
-    Sale_DateEnd: [this.yesterday, Validators.required],
+    Sale_DateStart: [this.startdate, Validators.required],
+    Sale_DateEnd: [this.enddate, Validators.required],
     tlt_building: [[]],
     Org_ID: [[]],
     Org_Name: [''],
     tlt_floor: [[]],
-    ...createPaginationConfig([]) // 修正排序欄位
+    ...createPaginationConfig([{ field: 'tlt_no', order: 1 }]) // 修正排序欄位
   });
 
   totalRecords = 0;
@@ -94,7 +99,7 @@ export class TLS26020Component extends BasicQueryPageComponent<TLS26020Data> imp
   }
 
   ngOnInit(): void {
-    this.initializePage('TLS26020', 'tls/tls26020', this.queryForm, (form) => this.onSubmit(form));
+    this.initializePage('TLS26020', 'tls/tls26020cru', this.queryForm, (form) => this.onSubmit(form));
     this.loadOptions();
   }
 
@@ -105,20 +110,8 @@ export class TLS26020Component extends BasicQueryPageComponent<TLS26020Data> imp
         .subscribe(response => {
           this.data = response.Data;
           this.totalRecords = response.TotalCount;
-          this.addDetailData(this.data); // 添加展開明細資料
           this.queryStateService.setQueryState(this.ProgNo, frm.getRawValue());
         });
-    });
-  }
-
-  // 為每一筆主資料載入詳細資料
-  addDetailData(data: TLS26020Data[]) {
-    data.forEach(item => {
-      this.tls26020Service.queryTLS26020Detail({
-        tlt_no: item.tlt_no
-      }).pipe(untilDestroyed(this)).subscribe(response => {
-        item.details = response.Data;
-      });
     });
   }
 
@@ -140,4 +133,10 @@ export class TLS26020Component extends BasicQueryPageComponent<TLS26020Data> imp
         this.orgOptions = response.Data;
       });
   }
+
+  loadDetails = (rowData: TLS26020Data): Observable<any> => {
+    return this.tls26020Service.queryTLS26020Detail({
+      tlt_no: rowData.tlt_no
+    })
+  };
 }
