@@ -5,7 +5,7 @@ import { BasicCruPageComponent } from '../../../shared/componentextends/basic-cr
 import { PdfService } from '../../../service/basic/pdf.service';
 import { Tls11010Service } from '../../../service/api/tls/tls11010.service';
 import { ColumnLabelService } from '../../../service/basic/column-label.service';
-import { TLS23080SharedService } from '../../../service/api/tls/tls23080-shared.service';
+import { TLS23080SharedService } from './tls23080-shared.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ReportTableGroupComponent } from '../../../shared/componentkit/report-table-group/report-table-group.component';
 
