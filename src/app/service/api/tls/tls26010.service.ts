@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
-import { effect, Injectable, OnDestroy, signal } from '@angular/core';
-import { DependentDataQuery, EcrTable, PodRequest, TLS26010Data, TLS26010Detail, TLS26010DetailResponse, TLS26010Query, TltTable } from '@pages/tls/tls26010/tls26010.model';
+import { computed, Injectable, OnDestroy, signal } from '@angular/core';
+import { DependentDataQuery, EcrItem, PodRequest, TLS26010Data, TLS26010Detail, TLS26010DetailResponse, TLS26010Query, TltItem } from '@pages/tls/tls26010/tls26010.model';
 import { AuthService } from '@service/system/auth.service';
 import { ErrorHandlerService } from '@service/system/error-handler.service';
 import { NotificationService } from '@shared/component/notification-message/notification.service';
@@ -30,8 +30,8 @@ export class TLS26010Service implements OnDestroy {
   public readonly sys3800Data = signal<DropdownOption[]>([]);
   public readonly sys3900Data = signal<DropdownOption[]>([]);
   public readonly sys3A00Data = signal<DropdownOption[]>([]);
-  public readonly ecrData = signal<EcrTable[]>([]);
-  public readonly tltData = signal<TltTable[]>([]);
+  public readonly ecrData = signal<EcrItem[]>([]);
+  public readonly tltData = signal<TltItem[]>([]);
 
   // 讀取狀態
   public sys3800Loading = !1;
@@ -50,6 +50,14 @@ export class TLS26010Service implements OnDestroy {
   private readonly tltCancel$ = new Subject<void>();
   private readonly queryCancel$ = new Subject<void>();
   private readonly detailCancel$ = new Subject<void>();
+
+  public readonly ecrDataMap = computed(() => {
+    return new Map<string, EcrItem>(this.ecrData().map(ecr => ([ecr.ecr_no!, ecr])));
+  });
+
+  public readonly tltDataMap = computed(() => {
+    return new Map<string, TltItem>(this.tltData().map(tlt => ([tlt.tlt_no!, tlt])));
+  });
 
   // 核准狀態顯示
   public approvalStatus(value: string): string {
@@ -129,7 +137,7 @@ export class TLS26010Service implements OnDestroy {
     this.ecrCancel$.next();
     this.ecrData.set([]);
     this.ecrLoading = !0;
-    this.http.post<BaseQueryResponse<EcrTable>>(`${apiUrl}/queryECRDropDownList`, query).pipe(
+    this.http.post<BaseQueryResponse<EcrItem>>(`${apiUrl}/queryECRDropDownList`, query).pipe(
       take(1),
       takeUntil(this.ecrCancel$),
       tap(response => this.ecrData.set(response.Data)),
@@ -146,7 +154,7 @@ export class TLS26010Service implements OnDestroy {
     this.tltCancel$.next();
     this.tltData.set([]);
     this.tltLoading = !0;
-    this.http.post<BaseQueryResponse<TltTable>>(`${apiUrl}/queryTalentDropDownList`, query).pipe(
+    this.http.post<BaseQueryResponse<TltItem>>(`${apiUrl}/queryTalentDropDownList`, query).pipe(
       take(1),
       takeUntil(this.tltCancel$),
       tap(response => this.tltData.set(response.Data)),
@@ -217,7 +225,7 @@ export class TLS26010Service implements OnDestroy {
           this.TLS26010Data.update(currentData => {
             const info = data.pod_info;
             const index = currentData.findIndex(item => item.pod_no === info.pod_no);
-            console.log(`update data:`, [currentData, info, index]);
+            console.log(`update data:`, [currentData, data, info, index]);
             if (index !== -1 && currentData[index]) {
               const updatedData: TLS26010Data = {
                 ...currentData[index],
@@ -227,8 +235,8 @@ export class TLS26010Service implements OnDestroy {
                 pod_status: currentData[index].pod_status === ApprovalStatus.已核准
                   ? ApprovalStatus.未核准
                   : ApprovalStatus.已核准,
-                tlt_nos: data.talent_list.map(t => t.tlt_no),
-                ecr_nos: data.ecr_list.map(e => e.ecr_no),
+                tlt_nos: data.talent_list.map(t => t.tlt_no!),
+                ecr_nos: data.ecr_list.map(e => e.ecr_no!),
               };
               currentData[index] = updatedData;
             }
