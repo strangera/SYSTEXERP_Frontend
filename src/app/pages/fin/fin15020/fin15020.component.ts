@@ -140,9 +140,11 @@ export class FIN15020Component extends BasicQueryPageComponent<FIN15020Data> imp
         MID: 0,
         STO_No: '10',
         ...frm.value,
-        PUR_GUIDateYYYYMM_S: this.datePipe.transform(frm.get('PUR_GUIDateYYYYMM_S')?.value, 'yyyyMM') ?? '',
-        PUR_GUIDateYYYYMM_E: this.datePipe.transform(frm.get('PUR_GUIDateYYYYMM_E')?.value, 'yyyyMM') ?? '',
-        PUR_RepYYYYMM: this.datePipe.transform(frm.get('PUR_RepYYYYMM')?.value, 'yyyyMM') ?? '',
+        TXN_Date_S: this.datePipe.transform(frm.get('TXN_Date_S')?.value, 'yyyy-MM-dd') ?? '',
+        TXN_Date_E: this.datePipe.transform(frm.get('TXN_Date_E')?.value, 'yyyy-MM-dd') ?? '',
+        INV_YM: this.datePipe.transform(frm.get('INV_YM')?.value, 'yyyyMM') ?? '',
+        INV_Data_YM_S: this.datePipe.transform(frm.get('INV_Data_YM_S')?.value, 'yyyyMM') ?? '',
+        INV_Data_YM_E: this.datePipe.transform(frm.get('INV_Data_YM_E')?.value, 'yyyyMM') ?? '',
       };
 
       this.fin15020Service.queryFIN15020(requestData)
@@ -155,25 +157,23 @@ export class FIN15020Component extends BasicQueryPageComponent<FIN15020Data> imp
     });
   }
 
-  onExportReport(): void {
+  onExportReport(frm1: FormGroup, frm2: FormGroup): void {
     if (!this.validateRequiredFields()) {
       return;
     }
 
     this.btnLoading = true;
-    const formValue = this.queryForm.value;
-
     const exportRequest: FIN15020PrintRequest = {
       MID: 0,
       STO_No: '10',
-      ...Object.fromEntries(
-        Object.entries(formValue).map(([key, value]) => [key, value === null ? undefined : value])
-      ),
-      PUR_GUIDateYYYYMM_S: this.datePipe.transform(formValue.PUR_GUIDateYYYYMM_S, 'yyyyMM') ?? '',
-      PUR_GUIDateYYYYMM_E: this.datePipe.transform(formValue.PUR_GUIDateYYYYMM_E, 'yyyyMM') ?? '',
-      PUR_RepYYYYMM: this.datePipe.transform(formValue.PUR_RepYYYYMM, 'yyyyMM') ?? '',
-      IsMerge: this.queryForm2.value.IsMerge === '1' || false,
-      IsExcel: this.queryForm2.value.IsExcel === '1' || false
+      ...frm1.value,
+      TXN_Date_S: this.datePipe.transform(frm1.get('TXN_Date_S')?.value, 'yyyy-MM-dd') ?? '',
+      TXN_Date_E: this.datePipe.transform(frm1.get('TXN_Date_E')?.value, 'yyyy-MM-dd') ?? '',
+      INV_YM: this.datePipe.transform(frm1.get('INV_YM')?.value, 'yyyyMM') ?? '',
+      INV_Data_YM_S: this.datePipe.transform(frm1.get('INV_Data_YM_S')?.value, 'yyyyMM') ?? '',
+      INV_Data_YM_E: this.datePipe.transform(frm1.get('INV_Data_YM_E')?.value, 'yyyyMM') ?? '',
+      IsMerge: frm2.get('IsMerge')?.value === '1' || false,
+      IsExcel: frm2.get('IsExcel')?.value === '1' || false
     };
 
     this.fin15020Service.printFIN15020(exportRequest)
@@ -224,11 +224,16 @@ export class FIN15020Component extends BasicQueryPageComponent<FIN15020Data> imp
     });
   }
 
-  // TODO: 待確認
-  // 選完資料所屬年月才會有下拉
-  private loadGuiTrackOptions(): void {
-    // this.dropDownListService.queryPOS1018_GUI_TRACK_DropDownList({ mid: 0 }).subscribe(r => {
-    //   this.guiTrackOptions = r;
-    // });
+  // 選完申報年月 載入字軌下拉
+  loadGuiTrackOptions(event: any): void {
+    console.log('選擇的申報年月:', event);
+    this.dropDownListService.queryPOS1018_GUI_TRACK_DropDownList({
+      GUI_YYMM: this.datePipe.transform(event, 'yyyyMM') ?? '',
+      MID: 0,
+      STO_No: '10',
+      GUI_Type: this.queryForm.controls.PUR_VoucherType.value ?? ''
+    }).subscribe(r => {
+      this.guiTrackOptions = r.Data[0].GuiTracks.map((track: string) => ({ label: track, value: track }));
+    });
   }
 }
