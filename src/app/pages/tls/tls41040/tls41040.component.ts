@@ -13,6 +13,8 @@ import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.compon
 import { ECRNoService } from '../../../service/basic/ECRNo.service';
 import { yesterday } from '@shared/models/system/query-form.model';
 import { CalendarComponent } from "@shared/componentkit/calendar/calendar.component";
+import {Column} from '@shared/componentkit/table/table.model';
+import { InputTextareaComponent } from '@shared/componentkit/input-textarea/input-textarea.component';
 
 @Component({
   selector: 'app-tls41040',
@@ -24,14 +26,15 @@ import { CalendarComponent } from "@shared/componentkit/calendar/calendar.compon
     AccordionModule,
     FormsModule,
     ReactiveFormsModule,
-    InputTextComponent,
     DropdownComponent,
     TableComponent,
     TranslateModule,
     DropdownComponent,
-    InputTextComponent,
-    CalendarComponent
-],
+
+    CalendarComponent,
+    InputTextareaComponent
+
+  ],
 })
 export class TLS41040Component extends BasicQueryPageComponent<any> implements OnInit {
 
@@ -56,13 +59,15 @@ export class TLS41040Component extends BasicQueryPageComponent<any> implements O
 
   private statusLabel = (v: string) => (v === 'A' ? '已生效(A)' : v === 'D' ? '已刪除(D)' : v ?? '');
 
-  columns:any[] = [
+  columns7: Column[] = [
     { field: 'NOT_DateTime', header: '通告產生時間', visible: true },
     { field: 'NOT_BegDateTime', header: '開始日期', visible: true },
     { field: 'NOT_EndDateTime', header: '結束時間', visible: true },
     { field: 'NOT_Desc', header: '通告內容', visible: true },
     { field: 'NOT_Status', header: '通告狀態', visible: true, format: (v: string) => this.statusLabel(v) },
     { field: 'NOT_Remark', header: '通告備註', visible: true },
+  ];
+   expansionColumns7: Column[] = [
     { field: 'NOT_SeqNo', header: '通告序號', visible: true },
     { field: 'TLT_No', header: '專櫃編號', visible: true },
     { field: 'ECR_Type', header: '機台類別', visible: true },
@@ -87,7 +92,7 @@ export class TLS41040Component extends BasicQueryPageComponent<any> implements O
   }
 
   ngOnInit(): void {
-    this.initializePage('TLS41040', '/TLS/TLS41040cru', this.queryForm, (form) => this.onSubmit(form));
+    this.initializePage('TLS41040', '/TLS/TLS41040CRU', this.queryForm, (form) => this.onSubmit(form));
 
     this.ECRNoService.getECRNo().subscribe((data) => {
       this.ECRNoOptions = data;

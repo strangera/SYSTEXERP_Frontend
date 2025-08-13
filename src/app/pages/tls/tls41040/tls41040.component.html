@@ -1,6 +1,7 @@
 <div class="card">
   <div class="flex gap-2 mb-2">
     <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
+    <app-button btnType="create" (click)="onCreate()"></app-button>
   </div>
 
   <p-accordion>
@@ -59,8 +60,8 @@
               [submitted]="submitted"
             ></app-dropdown>
           </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
+          <div class="col-12 md:col-6 lg:col-12">
+            <app-input-textarea
               label="機台群組備註"
               controlName="ECR_GrpDesc"
               [control]="queryForm.controls.ECR_GrpDesc"
@@ -68,7 +69,7 @@
               [submitted]="submitted"
             >
               >
-            </app-input-text>
+            </app-input-textarea>
           </div>
         </div>
         <div
@@ -85,7 +86,7 @@
 <div class="card">
   <div class="col-12">
     <app-table
-      tableKey="TLS22010"
+      tableKey="TLS41010"
       [data]="data"
       [multiSortMeta]="[{ field: 'ECR_No', order: 1 }]"
       [totalRecords]="totalRecords"
@@ -97,7 +98,9 @@
       (detail)="onDetail($event)"
       [showRowEdit]="false"
       [showEdit]="false"
-      [columns]="columns"
+      [expansionColumns]="expansionColumns7"
+      [columns]="columns7"
+      expansionDataKey="details"
     ></app-table>
   </div>
 </div>
