@@ -82,30 +82,29 @@ export class TLS23030Component extends BasicQueryPageComponent<any> {
   })();
 
   // ✅ 陣列型欄位用 control<any[]>([])，避免 never[] 型別問題
-  queryForm = this.formBuilder.group({
-    DisplayMode: this.displayMode,
+   queryForm = this.formBuilder.group({
+    DisplayMode: this.displayMode, // 預設為明細表模式
     TXN_DateStart: [this.yesterday, [Validators.required]],
     TXN_DateEnd: [this.yesterday, [Validators.required]],
-
-    ECR_No: this.formBuilder.control<any[]>([]),
+    ECR_No: [], // ✅ 修正為 []
     TXN_No_Start: [null],
     TXN_No_End: [null],
-    TLT_No: this.formBuilder.control<any[]>([]),
-    PAY_Type: this.formBuilder.control<any[]>([]),
+    TLT_No: [], // ✅ 修正為 []
+    PAY_Type: [], // ✅ 修正為 []
     TXN_PayAmt_Start: [null],
     TXN_PayAmt_End: [null],
-    TXN_Status: this.formBuilder.control<any[]>([]),
+    TXN_Status: [], // ✅ 修正為 []
     TXN_MemCard: [''],
-    CRD_Type: this.formBuilder.control<any[]>([]),
+    CRD_Type: [], // ✅ 修正為 []
     CRD_No: [''],
     pay_taxtype: [''],
-    org_id: this.formBuilder.control<any[]>([]),
+    org_id: [], // ✅ 修正為 []
     IsPayType: [false],
     rece_yn: [''],
     cash_yn: [''],
     tlt_building: [''],
-    tlt_floor: this.formBuilder.control<any[]>([]),
-    PAY_NO: this.formBuilder.control<any[]>([]),
+    tlt_floor: [], // ✅ 修正為 []
+    PAY_NO: [], // ✅ 修正為 []
     IsHaveTERM_No: [false],
 
     ...createPaginationConfig([{ field: 'ECR_No', order: 1 }]),

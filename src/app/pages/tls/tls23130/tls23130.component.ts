@@ -48,17 +48,17 @@ export class TLS23130Component extends BasicQueryPageComponent<any> {
   data: any[] = [];
   totalRecords = 0;
 
-queryForm = this.formBuilder.group({
-  saleDateStart: [this.yesterday, [Validators.required]],
-  saleDateEnd: [this.yesterday, [Validators.required]],
+ queryForm = this.formBuilder.group({
+    saleDateStart: [this.yesterday, [Validators.required]],
+    saleDateEnd: [this.yesterday, [Validators.required]],
+    BNK_No: [],
+    tlt_building: [],
+    tlt_floor: [],
+    org_id: [],
+    
 
-  BNK_No: this.formBuilder.control<any[]>([]),
-  tlt_building: this.formBuilder.control<any[]>([]),
-  tlt_floor: this.formBuilder.control<any[]>([]),
-  org_id: this.formBuilder.control<any[]>([]),
-
-  ...createPaginationConfig([{ field: 'TA.tlt_no', order: 1 }]),
-});
+    ...createPaginationConfig([{ field: 'TA.tlt_no', order: 1 }])
+  });
 
 
 

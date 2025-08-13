@@ -69,16 +69,16 @@ export class TLS23080Component extends BasicQueryPageComponent<any> {
     TXN_DateStart: [this.yesterday, [Validators.required]],
     TXN_DateEnd: [this.yesterday, [Validators.required]],
     tlt_openflag: ['Y'],
-    ECR_No: this.formBuilder.control<any[]>([]),
-    tlt_building: this.formBuilder.control<any[]>([]),
-    tlt_floor: this.formBuilder.control<any[]>([]),
-    org_id: this.formBuilder.control<any[]>([]),
-    // TXN_Year: this.formBuilder.control<any[]>([]),
-    // TXN_Month: this.formBuilder.control<any[]>([]),
-    // queryMonthYear: this.formBuilder.control<any[]>([]),
+    ECR_No: [],
+
+    tlt_building: [],
+    tlt_floor: [],
+    org_id: [],
+    // TXN_Year: [],
+    // TXN_Month: [],
+    // queryMonthYear: [],
     ...createPaginationConfig([{ field: 'TXN_Date', order: 1 }])
   });
-
   constructor(
     private whetherService: WhetherService,
     private tls23080Service: TLS23080Service,
