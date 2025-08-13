@@ -56,7 +56,7 @@ export const creditCardGroup: ColumnGroup[] = payNoDataList.map(item => ({
 //固定前置欄位
 const baseColumns: Column[] = [
   { header: '收銀機代號', field: 'ECR_No' },
-  { header: '專櫃編號', field: 'TLT_NO' },
+  { header: '專櫃編號', field: 'tlt_no' },
   { header: '專櫃名稱', field: 'tlt_name' }
 ];
 
