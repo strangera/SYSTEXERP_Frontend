@@ -2,20 +2,23 @@ import { Component, OnInit } from '@angular/core';
 import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { DatePipe } from '@angular/common';
 import { finalize } from 'rxjs';
-import { FIN15020Service, FIN15020Data, FIN15020QueryRequest, FIN15020PrintRequest } from '../../../service/api/fin/fin15020.service';
-import { ValidationService } from '../../../shared/service/validation.service';
+
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
+import { createPaginationConfig, Column } from '../../../shared/componentkit/table/table.model';
+import { FIN15020Data, FIN15020Service, FIN15020QueryRequest, FIN15020PrintRequest } from '@service/api/fin/fin15020.service';
+import { environment } from '../../../../environments/environment';
+
+// Components
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { AccordionModule } from 'primeng/accordion';
 import { InputTextRangeComponent } from '../../../shared/componentkit/input-text-range/input-text-range.component';
 import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
-import { AccordionModule } from 'primeng/accordion';
 import { TranslateModule } from '@ngx-translate/core';
-import { Column, createPaginationConfig } from '../../../shared/componentkit/table/table.model';
-import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
 
 @Component({
   selector: 'app-fin15020',
@@ -51,13 +54,14 @@ export class FIN15020Component extends BasicQueryPageComponent<FIN15020Data> imp
   });
 
   queryForm2 = this.formBuilder.group({
-    IsMerge: [null],                                           // 列印方式 (dropdown)
-    IsExcel: [null],                                          // 檔案類型 (dropdown)
+    IsMerge: ['0'],  // 預設為 '0' (分開列印)
+    IsExcel: ['0']   // 預設為 '0' (PDF)
   });
 
   totalRecords = 0;
   data: FIN15020Data[] = [];
   selectedItems: FIN15020Data[] = [];
+  btnLoading = false;
 
   columns: Column[] = [
     { field: 'No', header: '序號', visible: false },
@@ -92,7 +96,7 @@ export class FIN15020Component extends BasicQueryPageComponent<FIN15020Data> imp
     { field: 'PUR_Uniform', header: '統一編號', visible: true }
   ];
 
-  // 更新選項
+  //#region 下拉選項
   invoiceFormatOptions = [
     { value: '21', label: '進項三聯式、電子計算機統一發票' },
     { value: '22', label: '進項二聯式收銀機統一發票、載有稅額之其他憑證' },
@@ -134,40 +138,42 @@ export class FIN15020Component extends BasicQueryPageComponent<FIN15020Data> imp
     { label: '自營管理系統', value: '17' }
   ];
 
-  printTypeOptions = [
+  mergeOptions = [
     { label: '分開列印', value: '0' },
     { label: '合併列印', value: '1' }
   ];
 
-  fileTypeOptions = [
+  exportOptions = [
     { label: 'PDF', value: '0' },
-    { label: 'EXCEL', value: '1' }
+    { label: 'Excel', value: '1' }
   ];
+  //#endregion
 
   constructor(
     private fin15020Service: FIN15020Service,
-    private validationService: ValidationService,
     private datePipe: DatePipe,
   ) {
     super();
   }
 
   ngOnInit(): void {
-    this.initializePage('FIN15020', 'fin/fin15020qry', this.queryForm, (form) => this.onSubmit(form));
+    this.initializePage('FIN15020', 'fin/fin15020', this.queryForm, (form) => this.onSubmit(form));
   }
 
   onSubmit(frm: FormGroup) {
-    const fin15020QueryRequest: FIN15020QueryRequest = {
-      MID: 0,                                                 // 南紡固定帶0
-      STO_No: '10',                                          // 南紡固定帶'10'
-      ...frm.value,
-      PUR_GUIDateYYYYMM_S: this.datePipe.transform(frm.get('PUR_GUIDateYYYYMM_S')?.value, 'yyyyMM'),
-      PUR_GUIDateYYYYMM_E: this.datePipe.transform(frm.get('PUR_GUIDateYYYYMM_E')?.value, 'yyyyMM'),
-      PUR_RepYYYYMM: this.datePipe.transform(frm.get('PUR_RepYYYYMM')?.value, 'yyyyMM'),
-    };
-
     this.handleSubmit(frm, () => {
-      this.fin15020Service.queryFIN15020(fin15020QueryRequest)
+      const requestData: FIN15020QueryRequest = {
+        MID: 0,
+        STO_No: '10',
+        ...frm.value,
+        PUR_GUIDate_S: frm.get('PUR_GUIDate_S')?.value ? this.datePipe.transform(frm.get('PUR_GUIDate_S')?.value, 'yyyy-MM-dd') : undefined,
+        PUR_GUIDate_E: frm.get('PUR_GUIDate_E')?.value ? this.datePipe.transform(frm.get('PUR_GUIDate_E')?.value, 'yyyy-MM-dd') : undefined,
+        PUR_GUIDateYYYYMM_S: this.datePipe.transform(frm.get('PUR_GUIDateYYYYMM_S')?.value, 'yyyyMM') ?? undefined,
+        PUR_GUIDateYYYYMM_E: this.datePipe.transform(frm.get('PUR_GUIDateYYYYMM_E')?.value, 'yyyyMM') ?? undefined,
+        PUR_RepYYYYMM: this.datePipe.transform(frm.get('PUR_RepYYYYMM')?.value, 'yyyyMM') ?? undefined,
+      };
+
+      this.fin15020Service.queryFIN15020(requestData)
         .pipe(finalize(() => this.loading = false))
         .subscribe(response => {
           this.data = response.Data.APS2002_FIN15020s;
@@ -177,22 +183,12 @@ export class FIN15020Component extends BasicQueryPageComponent<FIN15020Data> imp
     });
   }
 
-  btnLoading = false;
-
   onExportReport() {
     if (this.queryForm.invalid) {
-      // 檢查必填欄位
       const errors: string[] = [];
-
-      if (!this.queryForm.get('PUR_RepYYYYMM')?.value) {
-        errors.push('請填寫申報年月');
-      }
-      if (!this.queryForm.get('PUR_GUIDateYYYYMM_S')?.value) {
-        errors.push('請填寫資料所屬年月_起');
-      }
-      if (!this.queryForm.get('PUR_GUIDateYYYYMM_E')?.value) {
-        errors.push('請填寫資料所屬年月_訖');
-      }
+      if (!this.queryForm.get('PUR_RepYYYYMM')?.value) errors.push('請填寫申報年月');
+      if (!this.queryForm.get('PUR_GUIDateYYYYMM_S')?.value) errors.push('請填寫資料所屬年月_起');
+      if (!this.queryForm.get('PUR_GUIDateYYYYMM_E')?.value) errors.push('請填寫資料所屬年月_訖');
 
       if (errors.length > 0) {
         this.messageService.errorBubble(errors.join('<br>'));
@@ -201,24 +197,38 @@ export class FIN15020Component extends BasicQueryPageComponent<FIN15020Data> imp
     }
 
     this.btnLoading = true;
-
     const formValue = this.queryForm.value;
+
     const exportRequest: FIN15020PrintRequest = {
+      MID: 0,
+      STO_No: '10',
       ...Object.fromEntries(
         Object.entries(formValue).map(([key, value]) => [key, value === null ? undefined : value])
       ),
-      PUR_GUIDateYYYYMM_S: this.datePipe.transform(this.queryForm.value.PUR_GUIDateYYYYMM_S, 'yyyyMM') ?? undefined,
-      PUR_GUIDateYYYYMM_E: this.datePipe.transform(this.queryForm.value.PUR_GUIDateYYYYMM_E, 'yyyyMM') ?? undefined,
-      PUR_RepYYYYMM: this.datePipe.transform(this.queryForm.value.PUR_RepYYYYMM, 'yyyyMM') ?? undefined,
-      IsMerge: this.queryForm2.value.IsMerge ? this.queryForm2.value.IsMerge === '1' : false,
-      IsExcel: this.queryForm2.value.IsExcel ? this.queryForm2.value.IsExcel === '1' : false
+      PUR_GUIDateYYYYMM_S: this.datePipe.transform(formValue.PUR_GUIDateYYYYMM_S, 'yyyyMM') ?? undefined,
+      PUR_GUIDateYYYYMM_E: this.datePipe.transform(formValue.PUR_GUIDateYYYYMM_E, 'yyyyMM') ?? undefined,
+      PUR_RepYYYYMM: this.datePipe.transform(formValue.PUR_RepYYYYMM, 'yyyyMM') ?? undefined,
+      IsMerge: this.queryForm2.value.IsMerge === '1' || false,
+      IsExcel: this.queryForm2.value.IsExcel === '1' || false
     };
 
     this.fin15020Service.printFIN15020(exportRequest)
       .pipe(finalize(() => this.btnLoading = false))
-      .subscribe(response => {
-        // 處理列印回應
-        console.log('列印回應:', response);
+      .subscribe({
+        next: (response) => {
+          if (response.Status === '0000') {
+            this.openDownloadWindow(response.Data.Print_URL);
+          }
+        },
+        error: (error) => {
+          console.error('列印報表錯誤:', error);
+          this.messageService.errorBubble('產生報表時發生錯誤');
+        }
       });
+  }
+
+  private openDownloadWindow(printUrl: string): void {
+    const downloadUrl = `${environment.ApiUrl}${printUrl}`;
+    window.open(downloadUrl, '_blank');
   }
 }
