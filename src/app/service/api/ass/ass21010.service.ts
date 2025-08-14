@@ -1,15 +1,15 @@
 import { HttpClient } from '@angular/common/http';
-import { Injectable, signal } from '@angular/core';
+import { Injectable, OnDestroy, signal } from '@angular/core';
 import { IPOS2002LocationItem } from '@service/utility/dropDownList.service';
 import { BaseQueryResponse, DropdownOption } from '@shared/models/api/base-api.interface';
-import { catchError, finalize, of, take, tap } from 'rxjs';
+import { catchError, finalize, of, Subject, take, tap } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import { ErrorHandlerService } from '../../system/error-handler.service';
 
 const apiUrl: string = `${environment.ApiUrl}`;
 
 @Injectable({ providedIn: 'root' })
-export class ASS21010Service {
+export class ASS21010Service implements OnDestroy {
 
   public readonly engTypeSignal = signal<DropdownOption[]>([]);
   public readonly engMeterNoSignal = signal<DropdownOption[]>([]);
@@ -21,13 +21,18 @@ export class ASS21010Service {
   public locationLoading = !1;
   public tableLoading = !1;
 
+  private readonly engTypeCancel$ = new Subject<void>();
+  private readonly engMeterNoCancel$ = new Subject<void>();
+  private readonly locationCancel$ = new Subject<void>();
+  private readonly tableCancel$ = new Subject<void>();
+
   constructor(
     private http: HttpClient,
     private errorHandler: ErrorHandlerService
   ) { }
 
   public loadEngType(): void {
-    if (this.engTypeLoading) return void (this.engTypeLoading = !1);
+    this.engTypeCancel$.next();
     this.engTypeLoading = !0;
     of(engTypeMock).pipe(
       take(1),
@@ -41,7 +46,7 @@ export class ASS21010Service {
   };
 
   public loadEngMeterNo(): void {
-    if (this.engMeterNoLoading) return void (this.engMeterNoLoading = !1);
+    this.engMeterNoCancel$.next();
     this.engMeterNoLoading = !0;
     of(engMeterNoMock).pipe(
       take(1),
@@ -55,7 +60,7 @@ export class ASS21010Service {
   };
 
   public loadLocationNo(): void {
-    if (this.locationLoading) return void (this.locationLoading = !1);
+    this.locationCancel$.next();
     this.locationLoading = !0;
     this.http.post<any>(`${apiUrl}/queryPOS2002_DropDownList`, {}).pipe(
       take(1),
@@ -70,7 +75,7 @@ export class ASS21010Service {
 
   /** 取資料 */
   public loadASS21010(query: unknown): void {
-    if (this.tableLoading) return void (this.tableLoading = !1);
+    this.tableCancel$.next();
     this.tableLoading = !0;
     this.http.post<BaseQueryResponse<unknown>>(`${apiUrl}/ASS0000/ASS2000/queryASS21010`, query).pipe(
       take(1),
@@ -82,6 +87,13 @@ export class ASS21010Service {
       })
     ).subscribe();
   };
+
+  ngOnDestroy(): void {
+    this.engTypeCancel$.next();
+    this.engMeterNoCancel$.next();
+    this.locationCancel$.next();
+    this.tableCancel$.next();
+  }
 }
 
 
