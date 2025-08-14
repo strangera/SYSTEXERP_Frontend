@@ -1,14 +1,10 @@
 
-import { Component, computed, effect, OnInit, signal } from '@angular/core';
+import { Component, computed, effect, OnInit } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
-import { NavigationExtras } from '@angular/router';
+import { FormControl, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 import { ASS21010Service } from '@service/api/ass/ass21010.service';
-import { FloorService } from '@service/basic/floor.service';
-import { OrganizationNumberService } from '@service/basic/organization-number.service';
 import { MenubarComponent } from '@shared/component/menubar/menubar.component';
-import { NotificationService } from '@shared/component/notification-message/notification.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '@shared/componentkit/button/button.component';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
@@ -16,8 +12,6 @@ import { InputTextComponent } from '@shared/componentkit/input-text/input-text.c
 import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
 import { TableComponent } from '@shared/componentkit/table/table.component';
 import { Column } from '@shared/componentkit/table/table.model';
-import { DropdownOption } from '@shared/models/api/base-api.interface';
-import { CRUDStatus } from '@shared/models/system/CRUDstatus';
 import { AccordionModule } from 'primeng/accordion';
 
 @Component({
@@ -39,11 +33,12 @@ import { AccordionModule } from 'primeng/accordion';
   ],
 })
 export class ASS21010Component extends BasicQueryPageComponent<unknown> implements OnInit {
-  public queryForm = new FormGroup({
-    engType: new FormControl<string[]>([]),
-    dev_no: new FormControl<string[]>([]),
+
+  public queryForm = this.formBuilder.group({
+    eng_type: new FormControl<string[]>([]),
+    eng_meterNo: new FormControl<string[]>([]),
     location_no: new FormControl<string[]>([]),
-    remarks: new FormControl<string>(''),
+    eng_remark: new FormControl<string>(''),
     // bigCategoryCode: new FormControl([]),
     // midCategoryCode: new FormControl([]),
     // smallCategoryCode: new FormControl([]),
@@ -61,8 +56,7 @@ export class ASS21010Component extends BasicQueryPageComponent<unknown> implemen
     // illustrate: new FormControl([]),
     // Placementinstructions: new FormControl([]),
   });
-
-  public readonly df = computed(() => this.queryForm.controls);
+  public readonly qf = computed(() => this.queryForm.controls);
 
   private readonly dfChanges = toSignal(this.queryForm.valueChanges);
 
@@ -72,10 +66,10 @@ export class ASS21010Component extends BasicQueryPageComponent<unknown> implemen
   });
 
   public readonly columns: Column[] = [
-    { field: 'engType', header: '能源類型' },
-    { field: 'dev_no', header: '錶號' },
-    { field: 'pos_no', header: '設備位置編號' },
-    { field: 'remarks', header: '備註' },
+    { field: 'eng_type', header: '能源類型' },
+    { field: 'eng_meterNo', header: '錶號' },
+    { field: 'location_no', header: '設備位置編號' },
+    { field: 'eng_remark', header: '備註' },
   ];
 
 
@@ -189,8 +183,8 @@ export class ASS21010Component extends BasicQueryPageComponent<unknown> implemen
     this.initializePage('ASS21010', '/ASS/ASS21010CRU', this.queryForm, this.onSubmit.bind(this));
 
     this.service.loadEngType();
-    this.service.loadDevNo();
-    this.service.loadPosNo();
+    this.service.loadEngMeterNo();
+    this.service.loadLocationNo();
     this.service.loadASS21010({});
 
 
@@ -216,22 +210,15 @@ export class ASS21010Component extends BasicQueryPageComponent<unknown> implemen
     return !0;
   }
 
-  onSubmit(frm: FormGroup) {
-    console.log(frm.value);
-    // this.submitted = true;
-    // this.loading = true;
-    // this.notificationService.blockUi();
-
-    // if (frm.valid && this.canQuery()) {
-    //   // Submit logic here
-    // }
-
-    // this.loading = false;
-    // this.notificationService.unblockUi();
-  }
-
-  onSubmitQuery() {
+  public onSubmitQuery(): void {
+    console.log(`submit:`, [this.queryForm.value]);
     this.onSubmit(this.queryForm);
+  };
+
+  onSubmit(frm: FormGroup) {
+    this.handleSubmit(frm, () => {
+
+    });
   }
 
   onClear() {

@@ -14,12 +14,13 @@ import { ButtonComponent } from '../../../shared/componentkit/button/button.comp
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { TranslateModule } from '@ngx-translate/core';
 import { Tls22010Service } from '../../../service/api/tls/tls22010.service';
-import { createPaginationConfig, Column } from 'src/app/shared/componentkit/table/table.model';
+import { createPaginationConfig, Column, formatAmount } from 'src/app/shared/componentkit/table/table.model';
 import { ButtonModule } from 'primeng/button';
 import { Router } from '@angular/router';
 import { yesterday } from '@shared/models/system/query-form.model';
+import { take } from 'rxjs';
 
-const SKIP_AUTO_QUERY_KEY = 'TLS22010:SKIP_AUTO_QUERY';
+
 
 @Component({
   templateUrl: './tls22010.component.html',
@@ -42,7 +43,7 @@ const SKIP_AUTO_QUERY_KEY = 'TLS22010:SKIP_AUTO_QUERY';
 export class TLS22010Component extends BasicQueryPageComponent<any> implements OnInit {
   // ------ UI 狀態 / 表單 ------
   queryForm = this.formBuilder.group({
-    TXN_Date: [yesterday, { validators: [Validators.required], updateOn: 'change' }],
+    TXN_DATE: [yesterday, { validators: [Validators.required], updateOn: 'change' }],
     floor_noList: [[]],
     ECR_No: [[]],
     ShowStatus: ['1'],
@@ -59,25 +60,25 @@ export class TLS22010Component extends BasicQueryPageComponent<any> implements O
   // ------ 欄位定義 ------
   columns7: Column[] = [
     { field: 'ECR_No', header: '收據機代碼', visible: true },
-    { field: 'TXN_Date', header: '交易日期', visible: true },
+    { field: 'TXN_DATE', header: '交易日期', visible: true },
     { field: 'AREA_NO', header: '區域', visible: true },
     { field: 'FLOOR_NO', header: '樓層', visible: true },
-    { field: 'TXN_TotSaleAmt', header: '銷售金額 (A)', visible: true, format: (v) => this.formatNumber(v) },
-    { field: 'sad_preorder_Amt', header: '預購金額', visible: true, format: (v) => this.formatNumber(v) },
-    { field: 'sad_settle_Amt', header: '預購結帳 (C2)', visible: true, format: (v) => this.formatNumber(v) },
-    { field: 'TXN_TotSaleAmt_Sum', header: '銷售小計(D) = (A)', visible: true, format: (v) => this.formatNumber(v) },
-    { field: 'TXN_TotExtraAmt', header: '代收/付金額 (L)', visible: true, format: (v) => this.formatNumber(v) },
-    { field: 'TXN_TotHaveTax', header: '已開發票金額 (E)', visible: true, format: (v) => this.formatNumber(v) },
-    { field: 'TXN_ChangeHaveTax', header: '已開溢付 (K)', visible: true, format: (v) => this.formatNumber(v) },
-    { field: 'TXN_TotOver', header: '已匯送付 (I)', visible: true, format: (v) => this.formatNumber(v) },
-    { field: 'TXN_TotGUI', header: '發票總金額 (F)', visible: true, format: (v) => this.formatNumber(v) },
-    { field: 'GUI_NET', header: '發票未稅金額 (M)', visible: true, format: (v) => this.formatNumber(v) },
-    { field: 'TXN_TotTax', header: '發票稅額 (N)', visible: true, format: (v) => this.formatNumber(v) },
-    { field: 'TXN_TotGUISaleNoTax', header: '發票免稅金額 (O)', visible: true, format: (v) => this.formatNumber(v) },
-    { field: 'TXN_TotOver_Sum', header: '溢收 (G)', visible: true, format: (v) => this.formatNumber(v) },
-    { field: 'GUI_REFUND', header: '折讓 (J)', visible: true, format: (v) => this.formatNumber(v) },
-    { field: 'TXN_TotPayAmt', header: '付款金額(H)=(D)+(G)-(C2)-(K)', visible: true, format: (v) => this.formatNumber(v) },
-    { field: 'SLE_SaleAmt', header: 'Z 報表總金額', visible: true, format: (v) => this.formatNumber(v) },
+    { field: 'TXN_TotSaleAmt', header: '銷售金額 (A)', visible: true, format: formatAmount },
+    { field: 'sad_preorder_Amt', header: '預購金額', visible: true, format: formatAmount },
+    { field: 'sad_settle_Amt', header: '預購結帳 (C2)', visible: true, format: formatAmount },
+    { field: 'TXN_TotSaleAmt_Sum', header: '銷售小計(D) = (A)', visible: true, format: formatAmount },
+    { field: 'TXN_TotExtraAmt', header: '代收/付金額 (L)', visible: true, format: formatAmount },
+    { field: 'TXN_TotHaveTax', header: '已開發票金額 (E)', visible: true, format: formatAmount },
+    { field: 'TXN_ChangeHaveTax', header: '已開溢付 (K)', visible: true, format: formatAmount },
+    { field: 'TXN_TotOver', header: '已匯送付 (I)', visible: true, format: formatAmount},
+    { field: 'TXN_TotGUI', header: '發票總金額 (F)', visible: true, format: formatAmount },
+    { field: 'GUI_NET', header: '發票未稅金額 (M)', visible: true, format: formatAmount },
+    { field: 'TXN_TotTax', header: '發票稅額 (N)', visible: true, format: formatAmount },
+    { field: 'TXN_TotGUISaleNoTax', header: '發票免稅金額 (O)', visible: true, format: formatAmount },
+    { field: 'TXN_TotOver_Sum', header: '溢收 (G)', visible: true, format: formatAmount },
+    { field: 'GUI_REFUND', header: '折讓 (J)', visible: true, format: formatAmount },
+    { field: 'TXN_TotPayAmt', header: '付款金額(H)=(D)+(G)-(C2)-(K)', visible: true, format: formatAmount },
+    { field: 'SLE_SaleAmt', header: 'Z 報表總金額', visible: true, format: formatAmount },
     { field: 'TXN_Mode_P', header: '後台(作廢/補登)', visible: true },
     { field: 'Status_Code', header: '狀態', visible: true },
   ];
@@ -107,19 +108,14 @@ export class TLS22010Component extends BasicQueryPageComponent<any> implements O
 
   // --------- 生命週期 ----------
   ngOnInit(): void {
-    // 檢查是否剛從 CRU 返回：若是，僅跳過這次自動查詢（表單值仍會被還原）
-    this.skipAutoQueryOnce = sessionStorage.getItem(SKIP_AUTO_QUERY_KEY) === '1';
-    sessionStorage.removeItem(SKIP_AUTO_QUERY_KEY);
-
     // initializePage 會還原 queryState（我們在 onSubmit 內用 frm.value 存），包含 TXN_Date
-    this.initializePage('TLS22010', '/TLS/TLS22010cru', this.queryForm, (form) => {
-      if (this.skipAutoQueryOnce) {
-        this.skipAutoQueryOnce = false;
-        this.loading = false; // 保險：避免殘留 loading
-        return; // 不自動查詢
+    this.initializePage('TLS22010', '/TLS/TLS22010cru');
+    this.queryStateService.getQueryState(this.ProgNo)?.pipe(take(1)).subscribe((query) => {
+      if (query && this.queryForm) {
+        this.queryForm?.patchValue(query);
+        this.queryForm?.patchValue({ pageIndex: 1 });
+        this.onSubmit(this.queryForm);
       }
-      // 正常進頁時，維持原本自動查詢
-      this.onSubmit(form);
     });
 
     // 載入下拉選項
@@ -128,25 +124,9 @@ export class TLS22010Component extends BasicQueryPageComponent<any> implements O
     this.ECRNoService.getECRNo().subscribe((data) => (this.ECRNoOptions = data));
   }
 
-  // --------- 工具 ----------
-  formatNumber(value: any): string {
-    if (value == null || value === '') return '';
-    const num = Number(value);
-    return isNaN(num) ? value : num.toLocaleString('en-US');
-  }
-
   /** 避免時區影響：以本地時間組 YYYY-MM-DD */
   private toYMD(d: Date): string {
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-  }
-
-  /** 從 "MM/DD/YYYY HH:mm:ss" 轉 "YYYY-MM-DD" */
-  private toIsoDate(mdyWithTime?: string | null): string | null {
-    if (!mdyWithTime) return null;
-    const mdy = String(mdyWithTime).split(' ')[0];
-    const [mm, dd, yyyy] = mdy.split('/');
-    if (!mm || !dd || !yyyy) return null;
-    return `${yyyy}/${mm.padStart(2, '0')}/${dd.padStart(2, '0')}`;
   }
 
   // --------- 事件 ----------
@@ -155,7 +135,7 @@ export class TLS22010Component extends BasicQueryPageComponent<any> implements O
       const value = this.queryForm.value as any;
 
       const params = {
-        TXN_Date: value.TXN_Date ? this.toYMD(value.TXN_Date) : null,
+       TXN_DATE: value.TXN_DATE ? this.toYMD(value.TXN_DATE) : null,
         ECR_No: value.ECR_No,
         floor_noList: value.floor_noList,
         ShowStatus: value.ShowStatus,
@@ -166,7 +146,6 @@ export class TLS22010Component extends BasicQueryPageComponent<any> implements O
           this.data = (res?.Data ?? []).map((item: any) => ({
             ...item,
             // 統一提供 TXN_Date 為 YYYY-MM-DD
-            TXN_Date: item.TXN_Date ?? this.toIsoDate(item.TXN_DATE),
             details: item.details ?? [],
           }));
           this.filteredData = [...this.data];
@@ -182,12 +161,5 @@ export class TLS22010Component extends BasicQueryPageComponent<any> implements O
         },
       });
     });
-  }
-
-  /** 進入 CRU（查看/編輯）前，設定返回時跳過自動查詢的一次性旗標 */
-  goToCRU(row?: any) {
-    sessionStorage.setItem(SKIP_AUTO_QUERY_KEY, '1');
-    // 依你的實際路由/參數調整
-    this.router.navigate(['/TLS/TLS22010cru'], { state: { id: row?.id } });
   }
 }

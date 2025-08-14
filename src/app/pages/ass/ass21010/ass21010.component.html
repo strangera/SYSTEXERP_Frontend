@@ -19,41 +19,41 @@
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
             <app-multi-select label="能源類型"
-                              controlName="engType"
+                              controlName="eng_type"
                               [options]="service.engTypeSignal()"
                               optionLabel="Name"
                               optionValue="No"
                               appendTo="body"
-                              [control]="df().engType"
+                              [control]="qf().eng_type"
                               [loading]="service.engTypeLoading"
                               [submitted]="submitted"></app-multi-select>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-multi-select label="錶號"
-                              controlName="dev_no"
-                              [options]="service.devNoSignal()"
+                              controlName="eng_meterNo"
+                              [options]="service.engMeterNoSignal()"
                               optionLabel="Name"
                               optionValue="No"
                               appendTo="body"
-                              [control]="df().dev_no"
-                              [loading]="service.devNoLoading"
+                              [control]="qf().eng_meterNo"
+                              [loading]="service.engMeterNoLoading"
                               [submitted]="submitted"></app-multi-select>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-multi-select label="設備位置編號"
                               controlName="location_no"
-                              [options]="service.pos2002Signal()"
+                              [options]="service.locationSignal()"
                               optionLabel="Name"
                               optionValue="No"
                               appendTo="body"
-                              [control]="df().location_no"
-                              [loading]="service.pos2002Loading"
+                              [control]="qf().location_no"
+                              [loading]="service.locationLoading"
                               [submitted]="submitted"></app-multi-select>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-text label="備註"
-                            controlName="remarks"
-                            [control]="df().remarks"
+                            controlName="eng_remark"
+                            [control]="qf().eng_remark"
                             [disabled]="false"
                             [submitted]="submitted">
             </app-input-text>

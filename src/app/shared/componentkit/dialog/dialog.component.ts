@@ -16,6 +16,10 @@ export class DialogComponent {
   @Input() header = 'header'; // 開窗的標題
   @Input() disable = false;
   @Input() height = '100%'; // 高度
+  @Input() width = '100%'; // 寬度
+  @Input() maxWidth = '900px'; // 最大寬度
+  @Input() minHeight = '100px'; // 最小高度
+  @Input() styleClass = ''; // 是否顯示footer
   @Input() showFooter = true; // 是否顯示footer
   @Output() visibleChange = new EventEmitter<boolean>();
   @Output() save = new EventEmitter();
