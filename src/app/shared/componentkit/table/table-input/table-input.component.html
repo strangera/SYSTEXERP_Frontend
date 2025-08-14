@@ -1,10 +1,12 @@
 <ng-container [ngSwitch]="col.type">
-  <input *ngSwitchCase="'input'" pInputText class="w-full min-w-max" [placeholder]="'請輸入' + col.header"
-    [(ngModel)]="rowData[col.field]" [ngModelOptions]="{ standalone: true }" [disabled]="disabled"
-    (ngModelChange)="onValueChange($event)" (blur)="onBlur()" />
+  <div *ngSwitchCase="'input'" class="input-wrapper" [attr.data-suffix]="col.suffix">
+    <input pInputText class="w-full min-w-max" [placeholder]="'請輸入' + col.header"
+      [(ngModel)]="rowData[col.field]" [ngModelOptions]="{ standalone: true }" [disabled]="disabled"
+      (ngModelChange)="onValueChange($event)" (blur)="onBlur()" />
+  </div>
 
   <p-inputNumber *ngSwitchCase="'inputNumber'" class="w-full min-w-max" styleClass="w-full" mode="decimal"
-    [(ngModel)]="rowData[col.field]" [ngModelOptions]="{ standalone: true }" [prefix]="col.prefix"
+    [(ngModel)]="rowData[col.field]" [ngModelOptions]="{ standalone: true }" [prefix]="col.prefix" [suffix]="col.suffix"
     [placeholder]="'請輸入' + col.header" [disabled]="disabled" (ngModelChange)="onValueChange($event)"
     [minFractionDigits]="col.fractionDigits" [maxFractionDigits]="col.fractionDigits" [useGrouping]="col.useGrouping"
     (onBlur)="onBlur()" />
