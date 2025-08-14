@@ -1,5 +1,5 @@
 import { HttpClient } from '@angular/common/http';
-import { computed, effect, Injectable, signal } from '@angular/core';
+import { Injectable, signal } from '@angular/core';
 import { CampaignCounterData, CampaignData, TLS26080Data, TLS26080Detail, TLS26080Query, TLS2608InsertPayload } from '@pages/tls/tls26080/tls26080.model';
 import { ErrorHandlerService } from '@service/system/error-handler.service';
 import { NotificationService } from '@shared/component/notification-message/notification.service';
@@ -36,6 +36,11 @@ export class TLS26080Service {
   // 下拉選單資料
   public departmentItems = signal<DropdownOption[]>([]);
   public capItems = signal<DropdownOption[]>([]);
+  public podTypeItems = signal<DropdownOption[]>([
+    { No: '1', Name: '預售' },
+    { No: '2', Name: '滿千送百' },
+    { No: '8', Name: '期間開放折扣' },
+  ]);
   public podStatusItems = signal<DropdownOption[]>([
     { No: ApprovalStatus.未核准, Name: '未核准' },
     { No: ApprovalStatus.已核准, Name: '已核准' },

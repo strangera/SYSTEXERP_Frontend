@@ -52,7 +52,7 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
     pod_edate: new FormControl<Date>(this.service.dateE, [Validators.required]), // 起始日期(迄)
     pod_busdate: new FormControl<Date | undefined>(void 0, [Validators.required]), // 活動正檔日期
     pod_status: new FormControl<string>(ApprovalStatus.未核准), // 核准狀態
-    pod_type: new FormControl<string | undefined>(void 0), // 扣款名稱
+    pod_type: new FormControl<'1' | '2' | '8'>('2'), // 活動類型
     org_id: new FormControl<string | undefined>(void 0), // 部門
   });
   public readonly df = computed(() => this.dataForm.controls);
@@ -118,6 +118,13 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
     }
     this.service.TLS26080Detail.set(result);
   }, { allowSignalWrites: !0 });
+  /** 初始化靜態資料 */
+  public readonly staticDataEffect = effect(() => {
+    const detail = this.service.TLS26080Detail();
+    if (!detail) return;
+    TLS26080CRUComponent.staticDetailData = detail;
+    this.staticDataEffect.destroy(); // 只需執行一次
+  });
 
   // 環友資料表
   campaignColumns: Column[] = [
@@ -153,10 +160,9 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
       field: 'tpy_rate',
       header: '抽成率',
       visible: !0,
-      type: 'inputNumber',
-      validate: [(value, rowData, data, field, header) => ({ isValid: this.numChecker(value), errorMessage: ['請輸入有效的數字', '抽成率驗證錯誤'] })],
+      type: 'input',
+      validate: [this.numValidator],
       suffix: '%',
-      format: v => v ? `${v}%` : '',
     },
   ];
 
@@ -168,8 +174,8 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
   // ];
 
   // 靜態資料: 用於表單初始化和重置
-  private staticData: TLS26080Data = this.dataForm.value as TLS26080Data;
-  private staticDetailData: TLS26080Detail[] = [];
+  private static staticData: TLS26080Data;
+  private static staticDetailData: TLS26080Detail[];
   private podNos = new Set<string>();
 
   constructor(
@@ -181,14 +187,10 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
 
   public ngOnInit(): void {
     this.initializePage('TLS26080', this.dataForm);
-    console.log(`init:`, [this.rowdata, this.crudstatus, this.dataForm.value]);
-    if (this.crudstatus !== CRUDStatus.Create) {
-      this.service.loadTLS26080Detail(this.rowdata!.pod_no || '');
-      this.staticDetailData = [...this.service.TLS26080Detail()];
-    }
-    this.service.loadAPS1003(['E']);
+    if (this.crudstatus !== CRUDStatus.Create) this.service.loadTLS26080Detail(this.rowdata!.pod_no || '');
     this.service.loadTLS26080({ pod_sdate: this.df().pod_sdate.value!, pod_edate: this.df().pod_edate.value! });
-    this.staticData = this.dataForm.value as TLS26080Data;
+    this.service.loadAPS1003(['E']);
+    TLS26080CRUComponent.staticData = this.dataForm.value as TLS26080Data;
     console.log(`init:`, [this.rowdata, this.crudstatus, this.dataForm.value]);
   }
 
@@ -199,7 +201,7 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
 
   public onClear(): void {
     this.crudstatus === CRUDStatus.Edit
-      ? this.dataForm.reset(this.staticData)
+      ? this.dataForm.reset(TLS26080CRUComponent.staticData)
       : this.dataForm.reset({
         pod_no: '自動給號',
         pod_sdate: this.service.dateS,
@@ -207,7 +209,7 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
         pod_status: ApprovalStatus.未核准,
       });
     this.crudstatus === CRUDStatus.Edit
-      ? this.service.TLS26080Detail.set(this.staticDetailData)
+      ? this.service.TLS26080Detail.set(TLS26080CRUComponent.staticDetailData)
       : this.service.TLS26080Detail.set([]);
   };
 
@@ -232,17 +234,20 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
       });
     });
   }
-  private numChecker(value: any): boolean {
+
+  private numValidator(value: any): { isValid: boolean; errorMessage: string[]; } {
+    console.log(`numValidator:`, [value]);
+
     // 檢查是否為有效數字
     const num = Number(value);
-    if (isNaN(num) || !isFinite(num)) return !1;
+    if (isNaN(num) || !isFinite(num)) return { isValid: !1, errorMessage: ['請輸入有效的數字', '抽成率驗證錯誤'] };
 
     // 檢查範圍是否在 0~100 之間
-    if (num < 0 || num > 100) return !1;
+    if (num < 0 || num > 100) return { isValid: !1, errorMessage: ['請輸入有效的數字', '抽成率驗證錯誤'] };
 
     // 檢查小數點位數是否不超過一位
     const decimalPlaces = (num.toString().split('.')[1] || '').length;
-    return decimalPlaces <= 1;
+    return { isValid: decimalPlaces <= 1, errorMessage: ['請輸入有效的數字', '抽成率驗證錯誤'] };
   }
 
   public onBlurCounter(event: any): void {

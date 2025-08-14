@@ -37,7 +37,7 @@ export class SYSB600CRUComponent
   // ----------------------------------------------------------------
   dataForm = this.formBuilder.nonNullable.group({
     id: [],
-    floor_no: ['', [Validators.required, Validators.maxLength(2), this.validationService.noChineseValidator]], // 樓層編號
+    floor_no: ['', [Validators.required, Validators.maxLength(2), this.validationService.alphanumericValidator]], // 樓層編號
     floor_desc: ['', [Validators.required, Validators.maxLength(20)]], // 樓層名稱
   });
   //

@@ -16,8 +16,6 @@
           id="dataForm"
           (ngSubmit)="onSubmit(dataForm)">
       <div class="grid p-fluid">
-
-        <!-- 活動編號 -->
         <div class="col-12 md:col-6 lg:col-4">
           <app-input-text label="活動編號"
                           controlName="pod_no"
@@ -26,7 +24,6 @@
                           [submitted]="submitted"></app-input-text>
         </div>
 
-        <!-- 活動名稱 -->
         <div class="col-12 md:col-6 lg:col-8">
           <app-dropdown label="活動名稱"
                         controlName="pod_desc"
@@ -36,25 +33,19 @@
                         [control]="df().pod_desc"
                         [submitted]="submitted"></app-dropdown>
         </div>
-        <!-- <div class="col-12 md:col-6 lg:col-8">
-          <app-input-text label="活動名稱"
-                          controlName="pod_desc"
-                          [control]="df().pod_desc"
-                          [disabled]="false"
-                          [submitted]="submitted">
-          </app-input-text>
-        </div> -->
       </div>
 
       <div class="grid p-fluid">
-        <!-- 活動週期 -->
         <div class="col-12 md:col-6 lg:col-4">
-          <!-- <app-radiobutton label="活動起始日期"
-                           groupname="calcDateType"
-                           [control]="df().calcDateType"
-                           [options]="calcDateType"
-                           [submitted]="submitted">
-          </app-radiobutton> -->
+          <app-dropdown label="活動類型"
+                        controlName="pod_type"
+                        [options]="service.podTypeItems()"
+                        optionLabel="Name"
+                        optionValue="No"
+                        [control]="df().pod_type"
+                        [submitted]="submitted"></app-dropdown>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
           <app-calendar-range calendarType="dateRange"
                               label="活動日期"
                               [startControl]="df().pod_sdate"
@@ -63,7 +54,6 @@
           </app-calendar-range>
         </div>
 
-        <!-- 活動正檔 -->
         <div class="col-12 md:col-6 lg:col-4">
           <app-calendar label="活動正檔日期"
                         controlName="pod_busdate"

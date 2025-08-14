@@ -22,6 +22,7 @@ import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutt
 import { ReportTableGroupComponent } from '@shared/componentkit/report-table-group/report-table-group.component';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { ECRNoService } from '@service/basic/ECRNo.service';
+import { Fin11060Service } from '@service/api/fin/fin11060.service';
 
 export interface InvoiceBase {
   id: number;
@@ -70,19 +71,21 @@ export class FIN11060Component extends BasicQueryPageComponent<InvoiceRecord> im
   // 查詢
   queryForm = this.formBuilder.group({
     // 先建立表單，還不確定POS8011H內容
-    SalesDateStart: [yesterday, [Validators.required]],  // 銷售日期_起始日(必填_預設昨天)
-    SalesDateEnd: [yesterday, [Validators.required]],  // 銷售日期_終止日(必填_預設昨天)
-    processDateStart: [null],  // 產檔日期_起始日
-    processDateEnd: [null],  // 產檔日期_終止日
-    GUI_No_start: [null, [Validators.maxLength(8), Validators.minLength(8), Validators.max(99999950)]], // 發票起始號碼
-    GUI_No_end: [null, [Validators.maxLength(8), Validators.minLength(8), Validators.max(99999999)]], // 發票結束號碼
-    ECR_No_start: [null, [Validators.maxLength(8)]], // 收銀機代號(起)
-    ECR_No_end: [null, [Validators.maxLength(8)]], // 收銀機代號(迄)
-    condition_type: ['1', Validators.required],  // 條件依據
-    show_error: [[]], //  是否只顯示異常
+    MID: [null as number| null, [Validators.required]], // MID (local storage)
+    SYS_StoreNo: ["", [Validators.required]], // 店號 (local storage)
+    Sale_DateStart: [yesterday, [Validators.required]],  // 銷售日期_起始日(必填_預設昨天)
+    Sale_DateEnd: [yesterday, [Validators.required]],  // 銷售日期_終止日(必填_預設昨天)
+    Gen_DateStart: [null],  // 產檔日期_起始日
+    Gen_DateEnd: [null],  // 產檔日期_終止日
+    TXN_GUINoStart: [null, [Validators.maxLength(8), Validators.minLength(8), Validators.max(99999950)]], // 發票起始號碼
+    TXN_GUINoEnd: [null, [Validators.maxLength(8), Validators.minLength(8), Validators.max(99999999)]], // 發票結束號碼
+    ECR_NoStart: [null, [Validators.maxLength(8)]], // 收銀機代號(起)
+    ECR_NoEnd: [null, [Validators.maxLength(8)]], // 收銀機代號(迄)
+    Query_Cond: ['1', Validators.required],  // 條件依據 送出 (銷售日期/收銀機號/收銀機號)
+    Is_ShowErr: ['Y', [Validators.required]], //  是否只顯示異常
 
     //分頁查詢
-    ...createPaginationConfig([{ field: 'contact_USR_No', order: 1 }]), // 分頁和排序參數
+    // ...createPaginationConfig([{ field: 'TXN_GUINo', order: 1 }]), // 分頁和排序參數
   });
   // 表格
   // ----------------------------------------------------------------
@@ -118,6 +121,8 @@ export class FIN11060Component extends BasicQueryPageComponent<InvoiceRecord> im
     { field: 'CF0701_9001', header: '發票註銷_異常', visible: true },
     { field: 'DG0401_9001', header: '跨期折讓_異常', visible: true },
     { field: 'DG0501_9001', header: '跨期折讓作廢_異常', visible: true },
+    { field: 'ECR_No', header: '收銀機號', visible: true },
+    { field: 'TXN_Date', header: '交易日期', visible: true },
   ];
 
   columnsType2: Column[] = [
@@ -134,6 +139,8 @@ export class FIN11060Component extends BasicQueryPageComponent<InvoiceRecord> im
     { field: 'CF0701_9001', header: '發票註銷_異常', visible: true },
     { field: 'DG0401_9001', header: '跨期折讓_異常', visible: true },
     { field: 'DG0501_9001', header: '跨期折讓作廢_異常', visible: true },
+    { field: 'ECR_No', header: '收銀機號', visible: true },
+    { field: 'TXN_Date', header: '交易日期', visible: true },
   ];
 
   columnsType3: Column[] = [
@@ -150,13 +157,15 @@ export class FIN11060Component extends BasicQueryPageComponent<InvoiceRecord> im
     { field: 'CF0701_9001', header: '發票註銷_異常', visible: true },
     { field: 'DG0401_9001', header: '跨期折讓_異常', visible: true },
     { field: 'DG0501_9001', header: '跨期折讓作廢_異常', visible: true },
+    { field: 'ECR_No', header: '收銀機號', visible: true },
+    { field: 'TXN_Date', header: '交易日期', visible: true },
   ];
 
   selectedItems: InvoiceRecord[] = [];// 多選項目
 
   // ----------------------------------------------------------------
   constructor(
-    private tls12060Service: Tls12060Service,
+    private fin11060Service: Fin11060Service,
     private eCRNoService: ECRNoService,
   ) {
     super();
@@ -167,36 +176,40 @@ export class FIN11060Component extends BasicQueryPageComponent<InvoiceRecord> im
     this.loadOptions();
 
     // 監聽 condition_type 變化(切換顯示欄位)
-    this.queryForm.get('condition_type')?.valueChanges.subscribe((value) => {
+    this.queryForm.get('Query_Cond')?.valueChanges.subscribe((value) => {
       this.updateColumnsByCondition(value);
     });
 
     // 預設初始欄位
-    this.updateColumnsByCondition(this.queryForm.get('condition_type')?.value || '1');
+    this.updateColumnsByCondition(this.queryForm.get('Query_Cond')?.value || '1');
   }
 
   onSubmit(frm: FormGroup) {
+    this.queryForm.get('SYS_StoreNo')?.setValue(this.authService.getUserInfo()?.SYS_StoreNo ?? '');
+    const midNum = Number(this.authService.getUserInfo()?.mid ?? 0); //section項目讀取字串轉換為number
+    this.queryForm.get('MID')?.setValue(midNum);
+    // this.queryForm.get('MID')?.setValue(this.authService.getUserInfo()?.mid ?? 0);
     console.log('查詢條件', frm.value);
     this.handleSubmit(frm, () => {
-      // this.tls12010Service.queryTLS12010(frm.value).subscribe({
-      //   next: (response) => {
-      //     if (response.Status === '0000') {
-      //       this.data = response.Data || [];
-      //       console.log('Result', this.data);
-      //       this.totalRecords = response.TotalCount || response.Data.length;
-      //       this.queryStateService.setQueryState(this.ProgNo, frm.value);
-      //     } else {
-      //       console.error('API error:', response.Status, response.Message);
-      //     }
-      //     this.loading = false;
-      //     this.messageService.unblockUi();
-      //   },
-      //   error: (err: string) => {
-      //     console.error('API error:', err);
-      //     this.loading = false;
-      //     this.messageService.unblockUi();
-      //   },
-      // });
+      this.fin11060Service.queryFIN11060(frm.value).subscribe({
+        next: (response) => {
+          if (response.Status === '0000') {
+            this.data = response.Data || [];
+            console.log('Result', this.data);
+            this.totalRecords = response.TotalCount || response.Data.length;
+            this.queryStateService.setQueryState(this.ProgNo, frm.value);
+          } else {
+            console.error('API error:', response.Status, response.Message);
+          }
+          this.loading = false;
+          this.messageService.unblockUi();
+        },
+        error: (err: string) => {
+          console.error('API error:', err);
+          this.loading = false;
+          this.messageService.unblockUi();
+        },
+      });
     });
   }
 

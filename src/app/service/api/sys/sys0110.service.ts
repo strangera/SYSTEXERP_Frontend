@@ -6,20 +6,69 @@ import { ApiResponse } from '../../system/auth.service';
 import { UserData } from '../../../shared/models/sys/user.model';
 
 export interface IUserResponse {
-  ID: number,
-  Code: string,
-  CName: string,
-  EName: string,
-  Password: string,
-  Str_date: string,
-  End_date: string,
-  Status: boolean,
-  Description: string,
-  Auth_pswd: boolean,
-  Email: string,
-  JobPosition_id: number
-}
+  // 對應 id (numeric(19, 0))，numeric(19,0)在TypeScript可對應number
+  id: number;
 
+  // 對應 user_No (varchar(16))
+  user_No: string;
+
+  // 對應 user_Name (nvarchar(20))
+  user_Name: string;
+
+  // 對應 user_Password (varchar(100))
+  user_Password: string;
+
+  // 對應 title (varchar(6))
+  title: string;
+
+  // 對應 org_id (varchar(20))
+  org_id: string;
+
+  // 對應 str_date (date)。如果資料庫欄位可能為 null，則需用 union type 處理。
+  str_date: string | null;
+
+  // 對應 end_date (date)。如果資料庫欄位可能為 null，則需用 union type 處理。
+  end_date: string | null;
+
+  // 對應 status (char(1))
+  status: string;
+
+  // 對應 user_type (char(1))
+  user_type: string;
+
+  // 對應 user_email (varchar(100))
+  user_email: string;
+
+  // 對應 tlt_no (varchar(10))
+  tlt_no: string;
+
+  // 對應 remarks (nvarchar(100))
+  remarks: string;
+
+  // 對應 user_priority (char(1))
+  user_priority: string;
+
+  // 對應 CRT_Date (datetime)。如果資料庫欄位可能為 null，則需用 union type 處理。
+  CRT_Date: string | null;
+
+  // 對應 CRT_USR_No (varchar(16))
+  CRT_USR_No: string;
+
+  // 對應 CRT_USR_Name (nvarchar(20))
+  CRT_USR_Name: string;
+
+  // 對應 UPD_Date (datetime)。如果資料庫欄位可能為 null，則需用 union type 處理。
+  UPD_Date: string | null;
+
+  // 對應 UPD_USR_No (varchar(10))
+  UPD_USR_No: string;
+
+  // 對應 UPD_USR_Name (nvarchar(20))
+  UPD_USR_Name: string;
+
+  // 對應 USER_PwdExpireDate (datetime)。如果資料庫欄位可能為 null，則需用 union type 處理。
+  USER_PwdExpireDate: string | null;
+}
 @Injectable({
   providedIn: 'root'
 })

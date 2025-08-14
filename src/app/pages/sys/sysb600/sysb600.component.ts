@@ -36,7 +36,7 @@ export class SYSB600Component
   // 查詢
   // ----------------------------------------------------------------
   queryForm = this.formBuilder.group({
-    floor_no: ['', [Validators.maxLength(2), this.validationService.noChineseValidator]], // 樓層編號
+    floor_no: ['', [Validators.maxLength(2), this.validationService.alphanumericValidator]], // 樓層編號(半形英文+數字)
     floor_desc: ['', [Validators.maxLength(20)]], //樓層名稱
 
     //分頁查詢

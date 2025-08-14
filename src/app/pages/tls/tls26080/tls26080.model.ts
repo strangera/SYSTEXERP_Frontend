@@ -17,7 +17,7 @@ export interface TLS26080Data {
   pod_no: string;              // 活動申請編號
   pod_sdate: Date;             // 活動起始日期
   pod_status: '0' | '1' | '9'; // 活動狀態 (0=未核準, 1=已核準, 9=刪除)
-  pod_type: string;            // 活動類型 (1=預售, 2=滿千送百, ...)
+  pod_type: '1' | '2' | '8';   // 活動類型 (1=預售, 2=滿千送百, 8=期間開放折扣)
   str_no: string;              // 店鋪編號
   upd_date: Date;              // 變更日期
   upd_usr_name: string;        // 變更人員姓名
