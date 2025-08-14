@@ -9,16 +9,16 @@
       <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar-range-quick label="銷售日期" [startControl]="queryForm.controls.SalesDateStart"
-              [endControl]="queryForm.controls.SalesDateEnd" [submitted]="submitted" />
+            <app-calendar-range-quick label="銷售日期" [startControl]="queryForm.controls.Sale_DateStart"
+              [endControl]="queryForm.controls.Sale_DateEnd" [submitted]="submitted" />
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar-range-quick label="產檔日期" [startControl]="queryForm.controls.processDateStart"
-              [endControl]="queryForm.controls.processDateEnd" [submitted]="submitted" />
+            <app-calendar-range-quick label="產檔日期" [startControl]="queryForm.controls.Gen_DateStart"
+              [endControl]="queryForm.controls.Gen_DateEnd" [submitted]="submitted" />
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-text-range startLabel="起始發票號碼(含字軌)" endLabel="結束發票號(含字軌)"
-              [startControl]="queryForm.controls.GUI_No_start" [endControl]="queryForm.controls.GUI_No_end"
+              [startControl]="queryForm.controls.TXN_GUINoStart" [endControl]="queryForm.controls.TXN_GUINoEnd"
               [submitted]="submitted" [errorForGroup]="true" />
           </div>
         </div>
@@ -28,19 +28,19 @@
             [startControl]="queryForm.controls.ECR_No_start" [endControl]="queryForm.controls.ECR_No_end"
             [submitted]="submitted" [errorForGroup]="true" />
           </div> -->
-          <app-dropdown class=" col-12 md:col-6 lg:col-4" label="收銀機號(起)" controlName="ECR_No_start"
+          <app-dropdown class=" col-12 md:col-6 lg:col-4" label="收銀機號(起)" controlName="ECR_NoStart"
             [options]="POS_NOSOptions" optionLabel="label" optionValue="value"
-            [control]="queryForm.controls.ECR_No_start" [submitted]="submitted" />
-          <app-dropdown class=" col-12 md:col-6 lg:col-4" label="收銀機號(迄)" controlName="ECR_No_end"
-            [options]="POS_NOSOptions" optionLabel="label" optionValue="value" [control]="queryForm.controls.ECR_No_end"
+            [control]="queryForm.controls.ECR_NoStart" [submitted]="submitted" />
+          <app-dropdown class=" col-12 md:col-6 lg:col-4" label="收銀機號(迄)" controlName="ECR_NoEnd"
+            [options]="POS_NOSOptions" optionLabel="label" optionValue="value" [control]="queryForm.controls.ECR_NoEnd"
             [submitted]="submitted" />
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="查詢條件依據" controlName="condition_type" [options]="contact_type_Option"
-              optionLabel="label" optionValue="value" [control]="queryForm.controls.condition_type"
+            <app-dropdown label="查詢條件依據" controlName="Query_Cond" [options]="contact_type_Option"
+              optionLabel="label" optionValue="value" [control]="queryForm.controls.Query_Cond"
               [submitted]="submitted"></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-radiobutton label="是否只顯示異常" groupname="show_error" [control]="queryForm.controls.show_error"
+            <app-radiobutton label="是否只顯示異常" groupname="Is_ShowErr" [control]="queryForm.controls.Is_ShowErr"
               [options]="show_error_Option" [submitted]="submitted"></app-radiobutton>
           </div>
         </div>
