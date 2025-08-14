@@ -12,13 +12,13 @@ const apiUrl: string = `${environment.ApiUrl}`;
 export class ASS21010Service {
 
   public readonly engTypeSignal = signal<DropdownOption[]>([]);
-  public readonly devNoSignal = signal<DropdownOption[]>([]);
-  public readonly pos2002Signal = signal<IPOS2002LocationItem[]>([]);
+  public readonly engMeterNoSignal = signal<DropdownOption[]>([]);
+  public readonly locationSignal = signal<IPOS2002LocationItem[]>([]);
   public readonly ASS21010Data = signal<unknown[]>([]);
 
   public engTypeLoading = !1;
-  public devNoLoading = !1;
-  public pos2002Loading = !1;
+  public engMeterNoLoading = !1;
+  public locationLoading = !1;
   public tableLoading = !1;
 
   constructor(
@@ -40,30 +40,30 @@ export class ASS21010Service {
     ).subscribe();
   };
 
-  public loadDevNo(): void {
-    if (this.devNoLoading) return void (this.devNoLoading = !1);
-    this.devNoLoading = !0;
-    of(devNoMock).pipe(
+  public loadEngMeterNo(): void {
+    if (this.engMeterNoLoading) return void (this.engMeterNoLoading = !1);
+    this.engMeterNoLoading = !0;
+    of(engMeterNoMock).pipe(
       take(1),
-      tap(response => this.devNoSignal.set(response.Data)),
+      tap(response => this.engMeterNoSignal.set(response.Data)),
       catchError(error => this.errorHandler.handleError(error)),
       finalize(() => {
-        this.devNoLoading = !1;
-        console.log('查詢DevNo結果:', [this.devNoSignal()]);
+        this.engMeterNoLoading = !1;
+        console.log('查詢EngMeterNo結果:', [this.engMeterNoSignal()]);
       })
     ).subscribe();
   };
 
-  public loadPosNo(): void {
-    if (this.pos2002Loading) return void (this.pos2002Loading = !1);
-    this.pos2002Loading = !0;
+  public loadLocationNo(): void {
+    if (this.locationLoading) return void (this.locationLoading = !1);
+    this.locationLoading = !0;
     this.http.post<any>(`${apiUrl}/queryPOS2002_DropDownList`, {}).pipe(
       take(1),
-      tap(response => this.pos2002Signal.set(response.Data)),
+      tap(response => this.locationSignal.set(response.Data)),
       catchError(error => this.errorHandler.handleError(error)),
       finalize(() => {
-        this.pos2002Loading = !1;
-        console.log('查詢Pos2002結果:', [this.pos2002Signal()]);
+        this.locationLoading = !1;
+        console.log('查詢Location結果:', [this.locationSignal()]);
       })
     ).subscribe();
   };
@@ -98,7 +98,7 @@ const engTypeMock: BaseQueryResponse<DropdownOption> = {
   TotalCount: 3,
   TotalPage: 1,
 };
-const devNoMock: BaseQueryResponse<DropdownOption> = {
+const engMeterNoMock: BaseQueryResponse<DropdownOption> = {
   Status: 'success',
   Data: [
     { No: 'AB001', Name: 'AB001' },

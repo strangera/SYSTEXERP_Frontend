@@ -24,36 +24,36 @@
                               optionLabel="Name"
                               optionValue="No"
                               appendTo="body"
-                              [control]="df().engType"
+                              [control]="df().type"
                               [loading]="service.engTypeLoading"
                               [submitted]="submitted"></app-multi-select>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-multi-select label="錶號"
-                              controlName="dev_no"
-                              [options]="service.devNoSignal()"
+                              controlName="engMeterNo"
+                              [options]="service.engMeterNoSignal()"
                               optionLabel="Name"
                               optionValue="No"
                               appendTo="body"
-                              [control]="df().dev_no"
-                              [loading]="service.devNoLoading"
+                              [control]="df().meterNo"
+                              [loading]="service.engMeterNoLoading"
                               [submitted]="submitted"></app-multi-select>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-multi-select label="設備位置編號"
-                              controlName="location_no"
-                              [options]="service.pos2002Signal()"
+                              controlName="locationNo"
+                              [options]="service.locationSignal()"
                               optionLabel="Name"
                               optionValue="No"
                               appendTo="body"
-                              [control]="df().location_no"
-                              [loading]="service.pos2002Loading"
+                              [control]="df().locationNo"
+                              [loading]="service.locationLoading"
                               [submitted]="submitted"></app-multi-select>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-text label="備註"
-                            controlName="remarks"
-                            [control]="df().remarks"
+                            controlName="remark"
+                            [control]="df().remark"
                             [disabled]="false"
                             [submitted]="submitted">
             </app-input-text>

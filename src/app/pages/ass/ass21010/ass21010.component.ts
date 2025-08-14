@@ -40,10 +40,10 @@ import { AccordionModule } from 'primeng/accordion';
 })
 export class ASS21010Component extends BasicQueryPageComponent<unknown> implements OnInit {
   public queryForm = new FormGroup({
-    engType: new FormControl<string[]>([]),
-    dev_no: new FormControl<string[]>([]),
-    location_no: new FormControl<string[]>([]),
-    remarks: new FormControl<string>(''),
+    type: new FormControl<string[]>([]),
+    meterNo: new FormControl<string[]>([]),
+    locationNo: new FormControl<string[]>([]),
+    remark: new FormControl<string>(''),
     // bigCategoryCode: new FormControl([]),
     // midCategoryCode: new FormControl([]),
     // smallCategoryCode: new FormControl([]),
@@ -72,10 +72,10 @@ export class ASS21010Component extends BasicQueryPageComponent<unknown> implemen
   });
 
   public readonly columns: Column[] = [
-    { field: 'engType', header: '能源類型' },
-    { field: 'dev_no', header: '錶號' },
-    { field: 'pos_no', header: '設備位置編號' },
-    { field: 'remarks', header: '備註' },
+    { field: 'eng_type', header: '能源類型' },
+    { field: 'eng_meterNo', header: '錶號' },
+    { field: 'location_no', header: '設備位置編號' },
+    { field: 'eng_remark', header: '備註' },
   ];
 
 
@@ -189,8 +189,8 @@ export class ASS21010Component extends BasicQueryPageComponent<unknown> implemen
     this.initializePage('ASS21010', '/ASS/ASS21010CRU', this.queryForm, this.onSubmit.bind(this));
 
     this.service.loadEngType();
-    this.service.loadDevNo();
-    this.service.loadPosNo();
+    this.service.loadEngMeterNo();
+    this.service.loadLocationNo();
     this.service.loadASS21010({});
 
 
