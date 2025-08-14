@@ -37,7 +37,7 @@ export class SYSB100CRUComponent
     id: [], // ID
     SYS_StoreNo: ['', [Validators.required, Validators.maxLength(10)]], // 公司編號/店號
     STR_Uniform: ['', [Validators.required, Validators.maxLength(8), this.validationService.numberValidator]], // 統一編號 (0805新增數字驗證)
-    SYS_StoreName: ['', [Validators.maxLength(60)]], // 公司名稱(中文)
+    SYS_StoreName: ['', [Validators.required, Validators.maxLength(60)]], // 公司名稱(中文)
     SYS_StoreNameENG: ['', [Validators.maxLength(60), this.validationService.noChineseValidator]], // 公司名稱(英文)
     STO_TaxNo: ['', [Validators.required, Validators.maxLength(10), this.validationService.noChineseValidator]], // 稅籍編號 (0805新增 非中文 驗證)
     STO_ManagerName: ['', [Validators.required, Validators.maxLength(12)]], // 負責人
