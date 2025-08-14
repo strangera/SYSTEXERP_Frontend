@@ -164,17 +164,14 @@ export class TableComponent extends BasicPrintDataComponent implements OnChanges
     this.selectedPage = Math.ceil((event.first / event.rows) + 1); // 更新下拉選單中的頁碼
     this.dt.totalRecords = this.totalRecords !== 0 ? this.totalRecords : this.data.length;
   }
-  onSort(event: any) {
-    this.multiSortMeta = event.multisortmeta;
-    this.queryState.setQueryState(this.tableKey + 'Sort', this.multiSortMeta);
-  }
   loadDataLazy(event: TableLazyLoadEvent) {
     if (this.totalRecords === 0 || !this.IsPrint || this.rowEditing) { return; }
     const pageSize = event.rows && event.rows > 0 ? event.rows : 30;
     const pageIndex = (event.first ?? 0) / pageSize + 1;
     this.selectedPage = pageIndex;
-    const SortBy = event.multiSortMeta ?? [{ field: this.dataKey, order: 1 }];
-    this.lazyLoadData.emit({ pageIndex, pageSize, SortBy });
+    this.multiSortMeta = event.multiSortMeta ?? [{ field: this.dataKey, order: 1 }];
+    this.queryState.setQueryState(this.tableKey + 'Sort', this.multiSortMeta);
+    this.lazyLoadData.emit({ pageIndex, pageSize, SortBy: this.multiSortMeta });
   }
   // 行追蹤
   trackByRow = (index: number, item: any) => { return item?.[this.dataKey] || index; };

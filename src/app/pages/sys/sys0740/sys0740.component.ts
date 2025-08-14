@@ -1,164 +1,97 @@
-import { Component } from '@angular/core';
-import { FormBuilder, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { NavigationExtras, Router } from '@angular/router';
-// Permissions
-import {
-  FunsrightInfo,
-  PermissionsInfo,
-} from '../../../shared/models/system/funsrightInfo';
-// Shared
-import { AuthService } from '../../../service/system/auth.service';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-
-import { SystemTypeDetailService } from '../../../service/basic/system-type-detail.service';
+import { Component, OnInit } from '@angular/core';
+import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { AccordionModule } from 'primeng/accordion';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { TranslateModule } from '@ngx-translate/core';
+import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
+import { Column, createPaginationConfig } from '@shared/componentkit/table/table.model';
+import { untilDestroyed } from '@ngneat/until-destroy';
+import { finalize } from 'rxjs';
+import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 
-const now = new Date();
-const nowDate = new Date();
-
-interface AbnormalCode {
-  name: string;
-  code: string;
-}
+// 導入新的 SYS0740 服務和模型
+import { QuerySYS0740Request, QuerySYS0740Response, ProgNoDropdownResponse, Sys0740Service } from '@service/api/sys/sys0740.service';
 
 @Component({
   selector: 'app-sys0740',
   templateUrl: './sys0740.component.html',
-  styleUrl: './sys0740.component.scss',
   standalone: true,
   imports: [
     MenubarComponent,
     AccordionModule,
     FormsModule,
     ReactiveFormsModule,
-    DropdownComponent,
     ButtonComponent,
     TableComponent,
     TranslateModule,
+    DropdownComponent
   ],
 })
 // 作業權限之角色列表
-export class SYS0740Component {
-  situation!: AbnormalCode[];
-  selectedsituation!: AbnormalCode;
-
-  ProgNo: string = '420012';
-  // 權限
-  funInfo?: FunsrightInfo;
-
-
-
-  // 查詢
-  loading: boolean = false;
-  submitted: boolean = false;
+export class SYS0740Component extends BasicQueryPageComponent<QuerySYS0740Response> implements OnInit {
+  // 查詢表單，包含作業代碼和分頁/排序參數
   queryForm = this.formBuilder.group({
-    systemTypeDetail: [, [Validators.required]], // DropDown
+    Prog_No: ['', [Validators.required, Validators.maxLength(10)]], // 作業代碼，必填且限制長度
+    // 預設排序欄位為 Role_No，排序順序為 ASC (1)
+    ...createPaginationConfig([{ field: 'Role_No', order: 1 }]),
   });
-  // 表格
-  data: any[] = [
 
-  ];
-  filteredData: any[] = [...this.data];
-  columns: any[] = [
-    { field: 'roleCode', header: '角色代號', visible: true },
-    { field: 'roleName', header: '角色名稱', visible: true },
-  ];
+  totalRecords = 0;
+  data: QuerySYS0740Response[] = [];
+  progNoOptions: ProgNoDropdownResponse[] = []; // 用於作業代碼下拉選單
 
-  // Options
-  systemTypeDetailOptions: any[] = [];
+  // 定義表格的欄位
+  columns: Column[] = [
+    { field: 'Role_No', header: '角色代碼', visible: true, showSort: true },
+    { field: 'Role_Name', header: '角色名稱', visible: true, showSort: true },
+    { field: 'FunctionBehaviors', header: '角色權限之功能行為', visible: true, showSort: true },
+  ];
 
   constructor(
-    private router: Router,
-    private formBuilder: FormBuilder,
-    private messageService: NotificationService,
-    private authService: AuthService,
-    private systemTypeDetailService: SystemTypeDetailService
-  ) { }
+    private readonly sys0740Service: Sys0740Service // 用於查詢角色權限和作業代碼下拉選單
+  ) {
+    super();
+  }
 
   ngOnInit(): void {
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
-    this.systemTypeDetailService.getSystemTypes().subscribe((data) => {
-      this.systemTypeDetailOptions = data;
+    // 初始化頁面
+    this.initializePage('SYS0740', '/SYS/SYS0740cru', this.queryForm);
+
+    // 取得作業代碼下拉選單資料
+    this.sys0740Service.queryProgNoDropdown().pipe(untilDestroyed(this)).subscribe(response => {
+      if (response.Data) {
+        this.progNoOptions = response.Data.map((prog: ProgNoDropdownResponse) => {
+          return {
+            ...prog,
+            label: `${prog.Prog_No} - ${prog.Prog_Name}` // 組合顯示文字
+          };
+        });
+      }
     });
   }
 
-  canQuery(): boolean {
-    return true;
-  }
-
-  canAdd(): boolean {
-    return true;
-  }
-
-  canEdit(): boolean {
-    return true;
-  }
-
+  // 表單提交邏輯
   onSubmit(frm: FormGroup) {
-    console.log(frm.value);
-    this.submitted = true;
-    this.loading = true;
-    this.messageService.blockUi();
-
-    if (frm.valid && this.canQuery()) {
-      // 提交邏輯
-    }
-
-    this.loading = false;
-    this.messageService.unblockUi();
-  }
-
-  onSubmitQuery(frm: FormGroup) {
-    // 查詢邏輯
-    this.onSubmit(frm);
-  }
-
-  onClearForm() {
-    this.queryForm.reset();  // 重置表單
-  }
-
-  onCreate() {
-    if (this.canAdd()) {
-      let extras: NavigationExtras = {
-        state: {
-          crudstatus: CRUDStatus.Create,
-          queryform: this.queryForm,
-        },
-        skipLocationChange: true,
-      };
-      this.router.navigate(['/demoCRU'], extras);
-    }
-  }
-
-  onEdit(data: any) {
-    if (this.canEdit()) {
-      let extras: NavigationExtras = {
-        state: {
-          crudstatus: CRUDStatus.Edit,
-          rowdata: data,
-          queryform: this.queryForm,
-        },
-        skipLocationChange: true,
-      };
-      this.router.navigate(['/demoCRU'], extras);
-    }
-  }
-
-  onDetail(data: any) {
-    let extras: NavigationExtras = {
-      state: {
-        crudstatus: CRUDStatus.Read,
-        rowdata: data,
-        queryform: this.queryForm,
-      },
-      skipLocationChange: true,
-    };
-    this.router.navigate(['/demoCRU'], extras);
+    this.handleSubmit(frm, () => {
+      // 呼叫 sys0740Service 查詢方法
+      this.sys0740Service.querySys0740(frm.value as QuerySYS0740Request)
+        .pipe(
+          untilDestroyed(this),
+          finalize(() => this.loading = false)
+        )
+        .subscribe((response) => {
+          if (response.Data) {
+            this.data = response.Data;
+            this.totalRecords = response.TotalCount || response.Data.length;
+            this.queryStateService.setQueryState(this.ProgNo, frm.value);
+          } else {
+            this.data = [];
+            this.totalRecords = 0;
+            this.messageService.warnBubble(response.Message);
+          }
+        });
+    });
   }
 }
