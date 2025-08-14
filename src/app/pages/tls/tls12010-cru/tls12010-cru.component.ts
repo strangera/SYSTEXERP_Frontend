@@ -106,7 +106,7 @@ export class TLS12010CRUComponent extends BasicCruPageComponent<Potential_Custom
     id: [{ value: null, disabled: true }], // 主鍵，自動編號
     contact_USR_No: ['', [Validators.required, Validators.maxLength(16)]],  // 接洽人員代碼
     contact_USR_Name: ['', [Validators.required, Validators.maxLength(20)]],  // 接洽人員姓名
-    cus_type: ['1', [Validators.required, Validators.maxLength(1)]], // 廠商類型（1=統編、2=身份證、3=員工id）
+    cus_type: ['1', [Validators.required, Validators.maxLength(1)]], // 廠商類型（1=統編、2=身分證、3=員工id）
     cus_uniform_id: ['', [Validators.required, Validators.maxLength(16)]], // 廠商統一編號(pos2013)
     // /*若廠商類型為1=統編, 為廠商統編 (pos2013.ven_uniform) */
     /*若廠商 類型為2=身份證字號, 進行身份證檢查碼檢查 */
@@ -173,9 +173,9 @@ export class TLS12010CRUComponent extends BasicCruPageComponent<Potential_Custom
   // ------
 
   //
-  cus_type_Option: option[] = [ // 廠商類型（1=統編、2=身份證、3=員工id）
+  cus_type_Option: option[] = [ // 廠商類型（1=統編、2=身分證、3=員工id）
     { value: '1', label: '統編' },
-    { value: '2', label: '身份證' },
+    { value: '2', label: '身分證' },
     { value: '3', label: '員工ID' }
   ];
 
