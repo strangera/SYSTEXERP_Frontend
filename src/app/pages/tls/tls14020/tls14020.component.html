@@ -174,10 +174,26 @@
     <!-- (detail)="onDetail($event)" (delete)="onDelete($event)" -->
   </div>
 </div>
-<app-dialog [visible]="dialogVisible" header="顯示合約" [showFooter]="false" (visibleChange)="dialogVisible = $event"
-  height="60%">
+<app-dialog [visible]="dialogVisible_log" header="顯示合約" [showFooter]="false"
+  (visibleChange)="dialogVisible_log = $event" height="60%">
   <app-table tableKey="TLS14020DialogTable" dataKey="id" [data]="dialogData" [columns]="dialogColumns"
     [showReportMode]="false" [showDelete]="false" [showManage]="false"
     [multiSortMeta]="[{ field: 'contract_version', order: 0 }]" [totalRecords]="dialogTotalRecords"
     [showCaption]="false" [loading]="dialogLoading" (itemClick)="downloadContractLog($event)"></app-table>
+</app-dialog>
+<app-dialog [visible]="dialogVisible_print" header="匯出檔案" [showFooter]="false"
+  (visibleChange)="dialogVisible_print = $event" height="30%" width="300px" minHeight="250px">
+  <form [formGroup]="dialogQueryForm" (ngSubmit)="onDialogSubmit(dialogQueryForm)">
+    <div class="grid p-fluid">
+      <div class="col-12">
+        <p-checkbox class="field-checkbox" formControlName="exportContract" [binary]="true" label="契約書" />
+      </div>
+      <div class="col-12">
+        <p-checkbox class="field-checkbox" formControlName="exportRules" [binary]="true" label="進駐廠商營運管理規範" />
+      </div>
+    </div>
+    <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+      <app-button btnType="submit" [loading]="dialogLoading"></app-button>
+    </div>
+  </form>
 </app-dialog>

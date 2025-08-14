@@ -1,132 +1,68 @@
-<div class="grid">
-  <div class="col-12">
-    <div class="card">
-      <div class="grid align-items-center">
-        <div class="col" style="flex: 1">
-          <app-menubar [ProgNo]="ProgNo"></app-menubar>
-        </div>
-        <div >
-          <app-button
-            btnType="create"
-            label="EXCEL匯入"
-            class="col"
-          ></app-button>
-        </div>
-        <div >
-          <app-button
-            btnType="create"
-            label="複製菜單"
-            class="col"
-          ></app-button>
-        </div>
-        <div >
-          <app-button
-            btnType="create"
-            (click)="onCreate()"
-            class="col"
-          ></app-button>
-        </div>
-      </div>
-      <p-accordion>
-        <p-accordionTab
-          header="{{ 'query-conditions' | translate }}"
-          [selected]="true"
-          class="line-height-3 m-0"
-          [headerStyleClass]="'query-accordionTab'"
-        >
-          <form
-            [formGroup]="queryForm"
-            id="queryForm"
-            (ngSubmit)="onSubmit(queryForm)"
-          >
-            <div class="grid p-fluid">
-              <!-- <div class="col-12 md:col-6 lg:col-4">
-                                <app-input-text label="分店編號" controlName="STO_No" [control]="queryForm.controls.STO_No" [submitted]="submitted">
-                                </app-input-text>
-                            </div> -->
-              <div class="col-12 md:col-6 lg:col-4">
-                <app-dropdown
-                  label="菜單類別"
-                  controlName="SBM_Type"
-                  [options]="SBM_Type_Options"
-                  optionLabel="label"
-                  optionValue="value"
-                  [control]="queryForm.controls.SBM_Type"
-                  [submitted]="submitted"
-                ></app-dropdown>
-              </div>
-              <div class="col-12 md:col-6 lg:col-4">
-                <app-input-text
-                  label="商品條碼"
-                  controlName="PLU_No"
-                  [control]="queryForm.controls.PLU_No"
-                  [submitted]="submitted"
-                ></app-input-text>
-              </div>
-            </div>
-            <div class="grid p-fluid">
-              <div class="col-12 md:col-6 lg:col-4">
-                <app-input-text
-                  label="專櫃編號"
-                  controlName="TLT_No"
-                  [control]="queryForm.controls.TLT_No"
-                  [submitted]="submitted"
-                ></app-input-text>
-              </div>
-              <div class="col-12 md:col-6 lg:col-4">
-                <app-input-text
-                  label="櫃位名稱"
-                  controlName="TLT_Name"
-                  [control]="queryForm.controls.TLT_Name"
-                  [submitted]="submitted"
-                ></app-input-text>
-              </div>
-            </div>
-            <div class="grid p-fluid">
-              <div class="col-12 md:col-6 lg:col-4">
-                <app-calendar-range
-                  calendarType="dateTimeRange"
-                  label="有效啟始日期"
-                  [startControl]="queryForm.controls.SBM_BegDate_From"
-                  [endControl]="queryForm.controls.SBM_BegDate_To"
-                  [submitted]="submitted"
-                ></app-calendar-range>
-              </div>
-              <div class="col-12 md:col-6 lg:col-4">
-                <app-calendar-range
-                  calendarType="dateTimeRange"
-                  label="有效結束日期"
-                  [startControl]="queryForm.controls.SBM_EndDate_From"
-                  [endControl]="queryForm.controls.SBM_EndDate_To"
-                  [submitted]="submitted"
-                ></app-calendar-range>
-              </div>
-            </div>
-            <div>
-              <div class="grid justify-content-end">
-                <app-button
-                  btnType="clear"
-                  (onClick)="onClearForm()"
-                ></app-button>
-                <app-button
-                  btnType="query"
-                  (onClick)="onSubmitQuery(queryForm)"
-                  [loading]="loading"
-                ></app-button>
-              </div>
-            </div>
-          </form>
-        </p-accordionTab>
-      </p-accordion>
-    </div>
-    <div class="card">
-      <app-table
-        [data]="data"
-        [columns]="columns"
-        [expansionColumns]="subColumns"
-        (edit)="onEdit($event)"
-        (detail)="onDetail($event)"
-      ></app-table>
-    </div>
+<div class="card">
+  <div class="flex gap-2 mb-2">
+    <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
+    <app-button btnType="create" (click)="onCreate()"></app-button>
   </div>
+  <p-accordion>
+    <p-accordionTab
+      header="{{ 'query-conditions' | translate }}"
+      [selected]="true"
+      class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'"
+    >
+      <form
+        [formGroup]="queryForm"
+        id="queryForm"
+        (ngSubmit)="onSubmit(queryForm)"
+      >
+        <div class="grid p-fluid">
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-text
+              label="鍵盤編號"
+              controlName="USR_Level"
+              [control]="queryForm.controls.USR_Level"
+              [submitted]="submitted"
+            ></app-input-text>
+          </div>
+        </div>
+        <div class="grid p-fluid">
+          <div class="col-12 md:col-6 lg:col-12">
+            <app-input-textarea
+              label="鍵盤備註"
+              controlName="ECR_KBDesc"
+              [control]="queryForm.controls.ECR_KBDesc"
+              [style]="{ height: '100px' }"
+              [submitted]="submitted"
+            >
+              >
+            </app-input-textarea>
+          </div>
+        </div>
+        <div
+          class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
+        >
+          <app-button btnType="clear" />
+          <app-button btnType="query" [loading]="loading" />
+        </div>
+      </form>
+    </p-accordionTab>
+  </p-accordion>
+</div>
+<div class="card">
+  <app-table
+    tableKey="TLS2A020"
+    [data]="data"
+    [columns]="columns"
+    (edit)="onEdit($event)"
+    (detail)="onDetail($event)"
+    [showCheckBox]="false"
+    dataKey="id"
+    [multiSortMeta]="[{ field: 'VEN_No', order: 1 }]"
+    [totalRecords]="totalRecords"
+    [lazy]="true"
+    (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"
+    [showManage]="true"
+    [loading]="loading"
+    [showDelete]="false"
+  ></app-table>
 </div>

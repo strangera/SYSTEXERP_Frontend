@@ -1,25 +1,30 @@
 import { HttpClient } from '@angular/common/http';
-import { Injectable, signal } from '@angular/core';
+import { Injectable, OnDestroy, signal } from '@angular/core';
 import { IPOS2002LocationItem } from '@service/utility/dropDownList.service';
 import { BaseQueryResponse, DropdownOption } from '@shared/models/api/base-api.interface';
-import { catchError, finalize, of, take, tap } from 'rxjs';
+import { catchError, finalize, of, Subject, take, tap } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import { ErrorHandlerService } from '../../system/error-handler.service';
 
 const apiUrl: string = `${environment.ApiUrl}`;
 
 @Injectable({ providedIn: 'root' })
-export class ASS21010Service {
+export class ASS21010Service implements OnDestroy {
 
   public readonly engTypeSignal = signal<DropdownOption[]>([]);
-  public readonly devNoSignal = signal<DropdownOption[]>([]);
-  public readonly pos2002Signal = signal<IPOS2002LocationItem[]>([]);
+  public readonly engMeterNoSignal = signal<DropdownOption[]>([]);
+  public readonly locationSignal = signal<IPOS2002LocationItem[]>([]);
   public readonly ASS21010Data = signal<unknown[]>([]);
 
   public engTypeLoading = !1;
-  public devNoLoading = !1;
-  public pos2002Loading = !1;
+  public engMeterNoLoading = !1;
+  public locationLoading = !1;
   public tableLoading = !1;
+
+  private readonly engTypeCancel$ = new Subject<void>();
+  private readonly engMeterNoCancel$ = new Subject<void>();
+  private readonly locationCancel$ = new Subject<void>();
+  private readonly tableCancel$ = new Subject<void>();
 
   constructor(
     private http: HttpClient,
@@ -27,7 +32,7 @@ export class ASS21010Service {
   ) { }
 
   public loadEngType(): void {
-    if (this.engTypeLoading) return void (this.engTypeLoading = !1);
+    this.engTypeCancel$.next();
     this.engTypeLoading = !0;
     of(engTypeMock).pipe(
       take(1),
@@ -40,37 +45,37 @@ export class ASS21010Service {
     ).subscribe();
   };
 
-  public loadDevNo(): void {
-    if (this.devNoLoading) return void (this.devNoLoading = !1);
-    this.devNoLoading = !0;
-    of(devNoMock).pipe(
+  public loadEngMeterNo(): void {
+    this.engMeterNoCancel$.next();
+    this.engMeterNoLoading = !0;
+    of(engMeterNoMock).pipe(
       take(1),
-      tap(response => this.devNoSignal.set(response.Data)),
+      tap(response => this.engMeterNoSignal.set(response.Data)),
       catchError(error => this.errorHandler.handleError(error)),
       finalize(() => {
-        this.devNoLoading = !1;
-        console.log('查詢DevNo結果:', [this.devNoSignal()]);
+        this.engMeterNoLoading = !1;
+        console.log('查詢EngMeterNo結果:', [this.engMeterNoSignal()]);
       })
     ).subscribe();
   };
 
-  public loadPosNo(): void {
-    if (this.pos2002Loading) return void (this.pos2002Loading = !1);
-    this.pos2002Loading = !0;
+  public loadLocationNo(): void {
+    this.locationCancel$.next();
+    this.locationLoading = !0;
     this.http.post<any>(`${apiUrl}/queryPOS2002_DropDownList`, {}).pipe(
       take(1),
-      tap(response => this.pos2002Signal.set(response.Data)),
+      tap(response => this.locationSignal.set(response.Data)),
       catchError(error => this.errorHandler.handleError(error)),
       finalize(() => {
-        this.pos2002Loading = !1;
-        console.log('查詢Pos2002結果:', [this.pos2002Signal()]);
+        this.locationLoading = !1;
+        console.log('查詢Location結果:', [this.locationSignal()]);
       })
     ).subscribe();
   };
 
   /** 取資料 */
   public loadASS21010(query: unknown): void {
-    if (this.tableLoading) return void (this.tableLoading = !1);
+    this.tableCancel$.next();
     this.tableLoading = !0;
     this.http.post<BaseQueryResponse<unknown>>(`${apiUrl}/ASS0000/ASS2000/queryASS21010`, query).pipe(
       take(1),
@@ -82,6 +87,13 @@ export class ASS21010Service {
       })
     ).subscribe();
   };
+
+  ngOnDestroy(): void {
+    this.engTypeCancel$.next();
+    this.engMeterNoCancel$.next();
+    this.locationCancel$.next();
+    this.tableCancel$.next();
+  }
 }
 
 
@@ -98,7 +110,7 @@ const engTypeMock: BaseQueryResponse<DropdownOption> = {
   TotalCount: 3,
   TotalPage: 1,
 };
-const devNoMock: BaseQueryResponse<DropdownOption> = {
+const engMeterNoMock: BaseQueryResponse<DropdownOption> = {
   Status: 'success',
   Data: [
     { No: 'AB001', Name: 'AB001' },

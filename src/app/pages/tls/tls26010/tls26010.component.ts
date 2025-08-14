@@ -1,7 +1,7 @@
 import { DatePipe } from '@angular/common';
-import { Component, computed, effect } from '@angular/core';
+import { Component, computed, effect, OnInit } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormControl, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 import { TLS26010Service } from '@service/api/tls/tls26010.service';
 import { MenubarComponent } from '@shared/component/menubar/menubar.component';
@@ -36,9 +36,8 @@ import { TLS26010Data, TLS26010Query } from './tls26010.model';
     TableExpansionComponent,
   ]
 })
-export class TLS26010Component extends BasicQueryPageComponent<TLS26010Data> {
+export class TLS26010Component extends BasicQueryPageComponent<TLS26010Data> implements OnInit {
 
-  // 查詢表單
   public queryForm = this.formBuilder.group({
     sys3800: new FormControl<string[] | undefined>(void 0), // 館別
     sys3900: new FormControl<string[] | undefined>(void 0), // 樓層
@@ -58,25 +57,25 @@ export class TLS26010Component extends BasicQueryPageComponent<TLS26010Data> {
         const podEdateE = group.get('podEdateE')?.value;
 
         if (!podSdateS && !podSdateE && !podEdateS && !podEdateE) {
-          return { dateRequired: true };
+          return { dateRequired: !0 };
         }
 
         return null;
       }
     ]
   });
-  public readonly df = computed(() => this.queryForm.controls);
+  public readonly qf = computed(() => this.queryForm.controls);
 
   // 監聽用
-  private readonly sys3800Signal = toSignal(this.df().sys3800.valueChanges);
-  private readonly sys3900Signal = toSignal(this.df().sys3900.valueChanges);
-  private readonly sys3A00Signal = toSignal(this.df().sys3A00.valueChanges);
-  private readonly ecrNosSignal = toSignal(this.df().ecrNos.valueChanges);
-  private readonly tltNosSignal = toSignal(this.df().tltNos.valueChanges);
-  private readonly podSdateSSignal = toSignal(this.df().podSdateS.valueChanges);
-  private readonly podSdateESignal = toSignal(this.df().podSdateE.valueChanges);
-  private readonly podEdateSSignal = toSignal(this.df().podEdateS.valueChanges);
-  private readonly podEdateESignal = toSignal(this.df().podEdateE.valueChanges);
+  private readonly sys3800Signal = toSignal(this.qf().sys3800.valueChanges);
+  private readonly sys3900Signal = toSignal(this.qf().sys3900.valueChanges);
+  private readonly sys3A00Signal = toSignal(this.qf().sys3A00.valueChanges);
+  private readonly ecrNosSignal = toSignal(this.qf().ecrNos.valueChanges);
+  private readonly tltNosSignal = toSignal(this.qf().tltNos.valueChanges);
+  private readonly podSdateSSignal = toSignal(this.qf().podSdateS.valueChanges);
+  private readonly podSdateESignal = toSignal(this.qf().podSdateE.valueChanges);
+  private readonly podEdateSSignal = toSignal(this.qf().podEdateS.valueChanges);
+  private readonly podEdateESignal = toSignal(this.qf().podEdateE.valueChanges);
 
   // Table 相關
   public readonly editDisabled = (rowData: TLS26010Data) =>
@@ -204,19 +203,19 @@ export class TLS26010Component extends BasicQueryPageComponent<TLS26010Data> {
     });
   }
 
-  public onSubmitQuery(): void {
-    const query = this.queryTLS26010();
-    console.log(`submit:`, [this.queryForm.value, this.sys3900Signal(), query]);
-    if (!query.isValid) return;
-    this.onSubmit(this.queryForm);
-  };
-
   public onSubmit(frm: FormGroup): void {
     this.handleSubmit(frm, () => {
       const query = this.queryTLS26010();
       frm.valid && this.canQuery() && this.service.loadTLS26010(query);
       this.loading = !1;
     });
+  };
+
+  public onSubmitQuery(): void {
+    const query = this.queryTLS26010();
+    console.log(`submit:`, [this.queryForm.value, this.sys3900Signal(), query]);
+    if (!query.isValid) return;
+    this.onSubmit(this.queryForm);
   };
 
   /** 刪除選中的活動 */

@@ -1,188 +1,107 @@
 <div class="card">
-  <div class="grid align-items-center">
-    <div class="col" style="flex: 1">
-      <app-menubar [ProgNo]="ProgNo"></app-menubar>
-    </div>
+  <div class="flex gap-2 mb-2">
+    <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
+    <app-button btnType="back" (click)="onCancel()" />
   </div>
+
   <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
-    <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
+    <form [formGroup]="dataForm" (ngSubmit)="onSubmit(dataForm)">
       <div class="grid p-fluid">
-        <!-- <div class="col-12 md:col-6 lg:col-4">
-                    <app-input-text label="分店編號" controlName="STO_No" [control]="queryForm.controls.STO_No" [submitted]="submitted">
-                    </app-input-text>
-                </div> -->
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text
+            label="鍵盤編號"
+            controlName="USR_Level"
+            [control]="dataForm.controls.USR_Level"
+            [submitted]="submitted"
+          ></app-input-text>
+        </div>
         <div class="col-12 md:col-6 lg:col-4">
           <app-dropdown
-            label="菜單類別"
-            controlName="SBM_Type"
-            [options]="SBM_Type_Options"
+            label="收銀畫面名稱"
+            controlName="TSB_Name"
+            [options]="TSB_NameOptions"
             optionLabel="label"
             optionValue="value"
-            [control]="dataForm.controls.SBM_Type"
+            [control]="dataForm.controls.TSB_Name"
             [submitted]="submitted"
           ></app-dropdown>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text
-            label="商品條碼"
-            controlName="PLU_No"
-            [control]="dataForm.controls.PLU_No"
+          <app-dropdown
+            label="鍵盤型態"
+            controlName="ECR_KBType"
+            [options]="ECR_KBTypeOptions"
+            optionLabel="label"
+            optionValue="value"
+            [control]="dataForm.controls.ECR_KBType"
             [submitted]="submitted"
-          ></app-input-text>
+          ></app-dropdown>
+        </div>
+        <div class="col-12 md:col-6 lg:col-12">
+          <app-input-textarea
+            label="鍵盤備註"
+            controlName="ECR_KBDesc"
+            [control]="dataForm.controls.ECR_KBDesc"
+            [style]="{ height: '100px' }"
+            [submitted]="submitted"
+          ></app-input-textarea>
         </div>
       </div>
-      <div class="grid p-fluid">
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text
-            label="專櫃編號"
-            controlName="TLT_No"
-            [control]="dataForm.controls.TLT_No"
-            [submitted]="submitted"
-          ></app-input-text>
+      <div class="grid p-fluid mt-5">
+        <div class="col-12 md:col-8">
+          <p-panel header="鍵盤設定明細">
+            <div
+              class="kb-grid"
+              [style.gridTemplateColumns]="'repeat(' + xCount + ', 1fr)'"
+              [style.gridTemplateRows]="'repeat(' + yCount + ', 60px)'"
+            >
+              <button
+                *ngFor="let k of keys"
+                type="button"
+                class="kb-key"
+                [class.active]="selected?.code === k.code"
+                [ngClass]="'type-' + (k.type || 'normal')"
+                (click)="selectKey(k)"
+              >
+                <div class="kb-label">{{ k.label || k.code }}</div>
+                <div class="kb-sub" *ngIf="k.label && k.label !== k.code">
+                  {{ k.code }}
+                </div>
+              </button>
+            </div>
+          </p-panel>
         </div>
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text
-            label="櫃位名稱"
-            controlName="TLT_Name"
-            [control]="dataForm.controls.TLT_Name"
-            [submitted]="submitted"
-          ></app-input-text>
-        </div>
+          <div class="col-12 md:col-4">
+            <!-- <app-dropdown
+              label="頁數"
+              controlName="KG_KeyPage"
+              [options]="KG_KeyPageOptions"
+              optionLabel="label"
+              optionValue="code"
+              [control]="dataForm.controls.KG_KeyPage"
+              [submitted]="submitted"
+            ></app-dropdown> -->
+
+          </div>
+           <div class="col-12 md:col-4">
+            <!-- <app-dropdown
+              label="按鈕"
+              controlName="KG_button"
+              [options]="KG_buttonOptions"
+              optionLabel="label"
+              optionValue="code"
+              [control]="dataForm.controls.KG_button"
+              [submitted]="submitted"
+            ></app-dropdown> -->
+
+          </div>
       </div>
-      <div class="grid p-fluid">
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-calendar
-            calendarType="dateTimeOne"
-            label="有效啟始日期"
-            controlName="SBM_BegDate"
-            [control]="dataForm.controls.SBM_BegDate"
-            [submitted]="submitted"
-          ></app-calendar>
-        </div>
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-calendar
-            calendarType="dateTimeOne"
-            label="有效結束日期"
-            controlName="SBM_EndDate"
-            [control]="dataForm.controls.SBM_EndDate"
-            [submitted]="submitted"
-          ></app-calendar>
-        </div>
-      </div>
-      <!---->
-      <hr />
-      <ng-container formArrayName="items">
-        <ng-container
-          *ngFor="let item of items.controls; let i = index"
-          [formGroupName]="i"
-        >
-          <div class="grid align-items-center">
-            <div class="col" style="flex: 1">
-              <h4>收銀菜單 {{ i + 1 }}</h4>
-            </div>
-            <div>
-              <app-button-dynamicallydelete
-                (click)="onRemoveItem(i)"
-                [crudstatus]="crudstatus"
-                class="col"
-              ></app-button-dynamicallydelete>
-            </div>
-          </div>
-          <!-- <div class="grid p-fluid">
-                        <div class="col-12 md:col-6 lg:col-4">
-                            <app-input-text label="分店編號" controlName="STO_No" [control]="getFormControl(i, 'STO_No')" [submitted]="submitted">
-                            </app-input-text>
-                        </div>
-                        <div class="col-12 md:col-6 lg:col-4">
-                            <app-input-number label="菜單類別" controlName="SBM_Type" [control]="getFormControl(i, 'SBM_Type')" [submitted]="submitted">
-                            </app-input-number>
-                        </div>
-                        <div class="col-12 md:col-6 lg:col-4">
-                            <app-input-text label="專櫃編號" controlName="TLT_No" [control]="getFormControl(i, 'TLT_No')" [submitted]="submitted">
-                            </app-input-text>
-                        </div>
-                    </div> -->
-          <div class="grid p-fluid">
-            <div class="col-12 md:col-6 lg:col-4">
-              <app-input-number
-                [useGrouping]="false"
-                label="菜單序號"
-                controlName="SBM_SeqNo"
-                [control]="getFormControl(i, 'SBM_SeqNo')"
-                [submitted]="submitted"
-              ></app-input-number>
-            </div>
-            <div class="col-12 md:col-6 lg:col-4">
-              <app-input-number
-                label="菜單按鍵序號"
-                controlName="SBM_BtnNo"
-                [control]="getFormControl(i, 'SBM_BtnNo')"
-                [submitted]="submitted"
-              ></app-input-number>
-            </div>
-          </div>
-          <div class="grid p-fluid">
-            <div class="col-12 md:col-6 lg:col-4">
-              <app-input-text
-                label="商品貨號"
-                controlName="PLU_MagNo"
-                [control]="getFormControl(i, 'PLU_MagNo')"
-                [submitted]="submitted"
-              ></app-input-text>
-            </div>
-            <div class="col-12 md:col-6 lg:col-4">
-              <app-input-text
-                label="商品名稱"
-                controlName="PLU_Name"
-                [control]="getFormControl(i, 'PLU_Name')"
-                [submitted]="submitted"
-              ></app-input-text>
-            </div>
-            <div class="col-12 md:col-6 lg:col-4">
-              <app-input-text
-                label="商品列印名稱"
-                controlName="PLU_PrnName"
-                [control]="getFormControl(i, 'PLU_PrnName')"
-                [submitted]="submitted"
-              ></app-input-text>
-            </div>
-          </div>
-          <div class="grid p-fluid">
-            <div class="col-12 md:col-6 lg:col-4">
-              <app-input-number
-                label="商品定價"
-                controlName="PLU_FixPrc"
-                [control]="getFormControl(i, 'PLU_FixPrc')"
-                [submitted]="submitted"
-              ></app-input-number>
-            </div>
-            <div class="col-12 md:col-6 lg:col-4">
-              <app-input-number
-                label="商品售價"
-                controlName="PLU_SalePrc"
-                [control]="getFormControl(i, 'PLU_SalePrc')"
-                [submitted]="submitted"
-              ></app-input-number>
-            </div>
-          </div>
-          <hr />
-        </ng-container>
-      </ng-container>
-      <div class="pt-1">
-        <app-button-dynamicallyadd
-          (click)="onAddItem()"
-        ></app-button-dynamicallyadd>
+      <div
+        class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
+      >
+        <app-button btnType="cancel" [form]="dataForm"></app-button>
+        <app-button btnType="submit" [loading]="loading" />
       </div>
     </form>
-    <div class="col pt-4">
-      <div class="grid justify-content-end">
-        <app-button btnType="cancel" (click)="onCancel()"></app-button>
-        <app-button
-          btnType="submit"
-          (click)="submitForm(dataForm)"
-          *ngIf="isFormEditable"
-        ></app-button>
-      </div>
-    </div>
   </p-panel>
 </div>

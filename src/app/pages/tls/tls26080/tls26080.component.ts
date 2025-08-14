@@ -40,7 +40,6 @@ import { TLS26080Data } from './tls26080.model';
 })
 export class TLS26080Component extends BasicQueryPageComponent<TLS26080Data> implements OnInit {
 
-  // 查詢表單
   public queryForm = this.formBuilder.group({
     pod_no: new FormControl<string | undefined>(undefined, [Validators.maxLength(10)]), // 活動單號
     pod_desc: new FormControl<string | undefined>(undefined, [Validators.maxLength(100)]), // 活動名稱
@@ -50,6 +49,7 @@ export class TLS26080Component extends BasicQueryPageComponent<TLS26080Data> imp
     pod_edate: new FormControl<Date>(this.service.dateE), // 起始日期(迄)
     pod_busdate: new FormControl<Date | undefined>(undefined), // 活動正檔日期
   });
+  public readonly qf = computed(() => this.queryForm.controls);
 
   public selectedItems: TLS26080Data[] = [];
 

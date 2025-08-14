@@ -17,7 +17,7 @@
         <div class="col-12 md:col-6 lg:col-4">
           <app-input-text label="預售活動編號"
                           controlName="pod_no"
-                          [control]="dataForm.controls.pod_no"
+                          [control]="df().pod_no"
                           [submitted]="submitted"
                           [disabled]="true">
           </app-input-text>
@@ -25,15 +25,15 @@
         <div class="col-12 md:col-6 lg:col-8">
           <app-calendar-range calendarType="dateRange"
                               label="預售期間"
-                              [startControl]="dataForm.controls.pod_sdate"
-                              [endControl]="dataForm.controls.pod_edate"
+                              [startControl]="df().pod_sdate"
+                              [endControl]="df().pod_edate"
                               [submitted]="submitted">
           </app-calendar-range>
         </div>
         <div class="col-12 md:col-8 lg:col-8">
           <app-input-text label="預售名稱"
                           controlName="pod_desc"
-                          [control]="dataForm.controls.pod_desc"
+                          [control]="df().pod_desc"
                           [submitted]="submitted">
           </app-input-text>
         </div>
@@ -75,7 +75,7 @@
                [showManage]="false"
                [showReportMode]="false"
                [isRowSelectable]="service.isRowSelectable"
-               [data]="ecrTableFiltered"
+               [data]="ecrTableData()"
                [dataKey]="'ecr_no'"
                [tableKey]="'TLS26010_ECR'"
                [columns]="columns">
@@ -102,7 +102,7 @@
                [showExcel]="isFormEditable"
                (exportExcel)="onExportExcel()"
                (importExcel)="onImportExcel($event)"
-               [data]="tltTableFiltered"
+               [data]="tltTableData()"
                [dataKey]="'tlt_no'"
                [tableKey]="'TLS26010_TLT'"
                [columns]="columns2">
@@ -124,7 +124,7 @@
                           optionLabel="Name"
                           optionValue="No"
                           appendTo="body"
-                          [control]="dataForm.controls.sys3800"
+                          [control]="df().sys3800"
                           [loading]="service.sys3800Loading"
                           [submitted]="submitted"></app-multi-select>
       </div>
@@ -135,7 +135,7 @@
                           optionLabel="Name"
                           optionValue="No"
                           appendTo="body"
-                          [control]="dataForm.controls.sys3900"
+                          [control]="df().sys3900"
                           [loading]="service.sys3900Loading"
                           [submitted]="submitted"></app-multi-select>
       </div>
@@ -146,7 +146,7 @@
                           optionLabel="Name"
                           optionValue="No"
                           appendTo="body"
-                          [control]="dataForm.controls.sys3A00"
+                          [control]="df().sys3A00"
                           [loading]="service.sys3A00Loading"
                           [submitted]="submitted"></app-multi-select>
       </div>
@@ -172,7 +172,7 @@
                           [options]="service.ECRList"
                           optionLabel="ecr_name"
                           optionValue="ecr_no"
-                          [control]="dataForm.controls.ecr_nos"
+                          [control]="df().ecr_nos"
                           [submitted]="submitted"></app-multi-select>
         <app-multi-select *ngIf="dialogVisible() === 'tlt'"
                           [appendTo]="'body'"
@@ -181,7 +181,7 @@
                           [options]="service.TLTList"
                           optionLabel="tlt_name"
                           optionValue="tlt_no"
-                          [control]="dataForm.controls.tlt_nos"
+                          [control]="df().tlt_nos"
                           [submitted]="submitted"></app-multi-select>
       </div> -->
     </div>

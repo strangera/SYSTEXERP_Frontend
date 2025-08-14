@@ -19,7 +19,7 @@
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-text label="活動單號"
                             controlName="pod_no"
-                            [control]="queryForm.controls.pod_no"
+                            [control]="qf().pod_no"
                             [disabled]="false"
                             [submitted]="submitted">
             </app-input-text>
@@ -29,7 +29,7 @@
           <div class="col-12 md:col-6 lg:col-8">
             <app-input-text label="活動名稱"
                             controlName="pod_desc"
-                            [control]="queryForm.controls.pod_desc"
+                            [control]="qf().pod_desc"
                             [disabled]="false"
                             [submitted]="submitted">
             </app-input-text>
@@ -42,8 +42,8 @@
           <div class="col-12 md:col-6 lg:col-4">
             <app-calendar-range calendarType="dateRange"
                                 label="活動起始日期"
-                                [startControl]="queryForm.controls.pod_sdate"
-                                [endControl]="queryForm.controls.pod_edate"
+                                [startControl]="qf().pod_sdate"
+                                [endControl]="qf().pod_edate"
                                 [submitted]="submitted">
             </app-calendar-range>
           </div>
@@ -52,7 +52,7 @@
           <div class="col-12 md:col-6 lg:col-4">
             <app-calendar label="活動正檔日期"
                           controlName="pod_busdate"
-                          [control]="queryForm.controls.pod_busdate"
+                          [control]="qf().pod_busdate"
                           [disabled]="false"
                           [submitted]="submitted"></app-calendar>
           </div>
