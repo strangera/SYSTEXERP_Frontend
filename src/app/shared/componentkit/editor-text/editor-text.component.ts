@@ -13,8 +13,8 @@ import { ControlMessagesComponent } from '../../component/control-messages/contr
   imports: [NgIf, EditorModule, FormsModule, ReactiveFormsModule, ControlMessagesComponent]
 })
 export class EditorTextComponent extends BasicKitComponent implements OnInit {
-  @Input() label = '';
-  @Input() controlName = '';
+  @Input() override label = '';
+  @Input() override controlName = '';
   @Input() control = new FormControl(); // 給使用者看的
   @Input() submitted = false; // 檢查欄位是否標準
   @Input() textLength = 0;

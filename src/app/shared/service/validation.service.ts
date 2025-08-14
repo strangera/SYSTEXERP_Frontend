@@ -14,8 +14,7 @@ export class ValidationService {
       email: '「電子郵件」，格式錯誤，請重新輸入。',
       invalidCreditCard: 'Is invalid credit card number',
       invalidEmailAddress: '「電子郵件」，格式錯誤，請重新輸入。',
-      invalidPassword:
-        'Invalid password. Password must be at least 6 characters long, and contain a number.',
+      invalidPassword: `密碼無效。密碼長度至少為 6 個字元，且必須包含一個數字。`,
       minlength: `最短長度為 ${validatorValue.requiredLength}`,
       maxlength: `最長長度為 ${validatorValue.requiredLength}`,
       exactLength: `長度只能為 ${validatorValue.requiredLength}`,

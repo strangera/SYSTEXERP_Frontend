@@ -1,3 +1,4 @@
+import { saveAs } from 'file-saver';
 import { WhetherService } from './../../../service/basic/whether.service';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
@@ -17,6 +18,9 @@ import { createPaginationConfig } from '@shared/componentkit/table/table.model';
 import { creditCardColumns, creditCardGroup, TLS22020Data, payNoDataList } from './tls22020.model';
 import { CommonModule } from '@angular/common';
 import { ButtonModule } from 'primeng/button';
+import { finalize } from 'rxjs';
+import { untilDestroyed } from '@ngneat/until-destroy';
+import { HttpResponse } from '@angular/common/http';
 const yesterday = new Date();
 yesterday.setDate(yesterday.getDate() - 1);
 @Component({
@@ -71,11 +75,6 @@ export class TLS22020Component extends BasicQueryPageComponent<any> implements O
   ];
   selectedColumns = creditCardColumns;
   columnGroup = creditCardGroup;
-  totalRow: TLS22020Data = {
-    ECR_No: '',
-    TLT_NO: '',
-    tlt_name: '',
-  };
   total: Record<string, number> = {
     TXN_Total: 0,
     SLE_Total: 0,
@@ -119,9 +118,7 @@ export class TLS22020Component extends BasicQueryPageComponent<any> implements O
   }
 
   ngOnInit(): void {
-    this.initializePage('TLS22020', '/TLS/TLS22020cru', this.queryForm, (form) => this.onSubmit(form));
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
-
+    this.initializePage('TLS22020', '/TLS/TLS22020cru', this.queryForm);
     this.whetherService.getWhetherOptions().subscribe(data => {
       this.whetherOptions = data;
     });
@@ -133,43 +130,32 @@ export class TLS22020Component extends BasicQueryPageComponent<any> implements O
   onSubmit(form: FormGroup): void {
     console.log('表單提交:', form.value);
     this.handleSubmit(form, () => {
-      const params = {
-        ...form.value,
-        TXN_Date: form.value.TXN_Date.toLocaleDateString('en-CA'),
-      };
+      this.tls22020Service.queryTLS22020(form.value).pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(res => {
+        const flatData = (res.Data ?? []).map((item: any) => {
+          const row: any = {
+            ECR_No: item.ECR_No,
+            tlt_no: item.tlt_no,
+            tlt_name: item.tlt_name,
+            TXN_Total: item.Total_Txn_PayAmt,
+            SLE_Total: item.Total_SLE_PayAmt,
+            Diff_Total: item.Total_Diff_PayAmt,
+          };
 
-      this.tls22020Service.queryTLS22020(params).subscribe({
-        next: (res) => {
-          const flatData = (res.Data ?? []).map((item: any) => {
-            const row: any = {
-              ECR_No: item.ECR_No,
-              tlt_no: item.tlt_no,
-              tlt_name: item.tlt_name,
-              TXN_Total: item.Total_Txn_PayAmt,
-              SLE_Total: item.Total_SLE_PayAmt,
-              Diff_Total: item.Total_Diff_PayAmt,
-            };
+          for (const pay of item.pay_NoDataList) {
+            const payNo = pay.Pay_No;
+            row[`TXN_PayAmt_${payNo}`] = pay.TXN_PayAmt;
+            row[`SLE_PayAmt_${payNo}`] = pay.SLE_PayAmt;
+            row[`Diff_PayAmt_${payNo}`] = pay.Diff_PayAmt;
+          }
 
-            for (const pay of item.pay_NoDataList) {
-              const payNo = pay.Pay_No;
-              row[`TXN_PayAmt_${payNo}`] = pay.TXN_PayAmt;
-              row[`SLE_PayAmt_${payNo}`] = pay.SLE_PayAmt;
-              row[`Diff_PayAmt_${payNo}`] = pay.Diff_PayAmt;
-            }
+          return row;
+        });
 
-            return row;
-          });
-
-          this.data = flatData;
-          this.totalRecords = res.TotalCount;
-          this.queryStateService.setQueryState(this.ProgNo, params);
-          this.calcTotal(this.data);
-          this.loading = false;
-        },
-        error: (err) => {
-          console.error('TLS22020 查詢失敗', err);
-          this.loading = false;
-        }
+        this.data = flatData;
+        this.totalRecords = res.TotalCount;
+        this.queryStateService.setQueryState(this.ProgNo, form.value);
+        this.calcTotal(this.data);
+        this.loading = false;
       });
 
     });
@@ -188,21 +174,30 @@ export class TLS22020Component extends BasicQueryPageComponent<any> implements O
         TXN_DateEnd: raw.TXN_DateEnd
           ? `${raw.TXN_DateEnd.getFullYear()}-${(raw.TXN_DateEnd.getMonth() + 1).toString().padStart(2, '0')}-${raw.TXN_DateEnd.getDate().toString().padStart(2, '0')}`
           : null,
+        pageSize: this.totalRecords
       },
     }
 
     this.exportExcelLoading = true;
     this.tls22020Service.exportTLS22020(payload).subscribe({
-      next: (res: Blob) => {
-        const blob = new Blob([res], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `${payload.FileName}.xlsx`;
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
-        window.URL.revokeObjectURL(url);
+      next: (response: HttpResponse<Blob>) => {
+        if (response.body) {
+          const contentDisposition = response.headers.get('content-disposition');
+          let filename = `${payload.FileName}.xlsx`; // 副檔名改為 .xlsx
+          if (contentDisposition) {
+            const filenameRegex = /filename\*=UTF-8''(.+?)(?:\.xlsx)?$|filename="(.+?)(?:\.xlsx)?"$/;  //  正則匹配.xlsx
+            const matches = contentDisposition.match(filenameRegex);
+            if (matches) {
+              filename = matches[1] || matches[2] || filename;
+              filename = decodeURIComponent(filename);
+            }
+            filename = filename.replace(/["']/g, '');
+          }
+          const blob = new Blob([response.body], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }); // 正確的 MIME 類型
+          saveAs(blob, filename);
+        } else {
+          console.error("Response body is empty!");
+        }
         this.exportExcelLoading = false;
       },
       error: (err) => {

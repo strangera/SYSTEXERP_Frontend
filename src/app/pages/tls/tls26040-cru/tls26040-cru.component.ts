@@ -7,14 +7,15 @@ import { ButtonComponent } from '../../../shared/componentkit/button/button.comp
 import { PanelModule } from 'primeng/panel';
 import { NgIf } from '@angular/common';
 import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
-import { Column } from '../../../shared/componentkit/table/table.model';
-import { finalize } from 'rxjs';
+import { Column, createPaginationConfig } from '../../../shared/componentkit/table/table.model';
+import { finalize, Observable } from 'rxjs';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { DropDownListService } from '@service/utility/dropDownList.service';
 import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
 import { untilDestroyed } from '@ngneat/until-destroy';
+import { formatDate } from '@shared/componentkit/table2/table2.model';
 
 @Component({
   selector: 'app-tls26040-cru',
@@ -36,11 +37,20 @@ import { untilDestroyed } from '@ngneat/until-destroy';
   ]
 })
 export class TLS26040CRUComponent extends BasicCruPageComponent<TLS26040Data> implements OnInit {
+  readonly yesterday: Date = (() => {
+    const d = new Date();
+    d.setHours(0, 0, 0, 0);
+    d.setDate(d.getDate() - 1);
+    return d;
+  })();
+
   dataForm = this.formBuilder.group({
-    sad_date_start: [null, [Validators.required]],      // 銷售日期_起
-    sad_date_end: [null, [Validators.required]],        // 銷售日期_迄
+    sad_date_start: [this.yesterday, [Validators.required]],      // 銷售日期_起
+    sad_date_end: [this.yesterday, [Validators.required]],        // 銷售日期_迄
     tlt_noList: [[]],                                   // 專櫃編號清單(多選)
     IsNotlt_no: [null, [Validators.required]],          // 篩選條件
+    ...createPaginationConfig([{ field: 'sad_date', order: -1 }])
+
   });
 
   dataForm2 = this.formBuilder.group({
@@ -53,8 +63,8 @@ export class TLS26040CRUComponent extends BasicCruPageComponent<TLS26040Data> im
 
   columns: Column[] = [
     { field: 'id', header: 'ID', visible: false },
-    { field: 'sad_date', header: '預售日期', visible: true },
-    { field: 'sad_preorder_date', header: '結帳日期', visible: true },
+    { field: 'sad_date', header: '預售日期', visible: true, format: formatDate },
+    { field: 'sad_preorder_date', header: '結帳日期', visible: true, format: formatDate },
     { field: 'tlt_no', header: '櫃別編號', visible: true },
     { field: 'tlt_name', header: '櫃位名稱', visible: true },
     { field: 'batch_no', header: '批號', visible: true },
@@ -63,7 +73,7 @@ export class TLS26040CRUComponent extends BasicCruPageComponent<TLS26040Data> im
 
   // 展開詳細資料的欄位定義
   expansionColumns: Column[] = [
-    { field: 'TXN_Date', header: '預售日期', visible: true },
+    { field: 'TXN_Date', header: '預售日期', visible: true, format: formatDate },
     { field: 'TLT_No', header: '專櫃編號', visible: true },
     { field: 'tlt_name', header: '專櫃名稱', visible: true },
     { field: 'ECR_No', header: '收銀機號', visible: true },
@@ -106,22 +116,16 @@ export class TLS26040CRUComponent extends BasicCruPageComponent<TLS26040Data> im
         .subscribe(response => {
           this.data = response.Data;
           this.totalRecords = response.TotalCount;
-          this.addDetailData(this.data); // 添加展開明細資料
         });
     });
   }
 
-  // 為每一筆主資料載入詳細資料
-  addDetailData(data: TLS26040Data[]) {
-    data.forEach(item => {
-      this.tls26040Service.queryTLS26040Detail({
-        sad_date: item.sad_date,
-        tlt_no: item.tlt_no
-      }).pipe(untilDestroyed(this)).subscribe(response => {
-        item.details = response.Data;
-      });
-    });
-  }
+  loadDetails = (rowData: TLS26040Data): Observable<any> => {
+    return this.tls26040Service.queryTLS26040Detail({
+      sad_date: rowData.sad_date,
+      tlt_no: rowData.tlt_no
+    })
+  };
 
   onCheckout(): void {
     if (this.selectedItems.length === 0 || this.dataForm2.invalid) return;
@@ -129,8 +133,8 @@ export class TLS26040CRUComponent extends BasicCruPageComponent<TLS26040Data> im
     const insertRequest = {
       sad_preorder_date: this.dataForm2.value.sad_preorder_date ?? '',
       idList: this.selectedItems.map(item => item.id),
-      sad_date_start: this.dataForm.value.sad_date_start ?? '',
-      sad_date_end: this.dataForm.value.sad_date_end ?? '',
+      sad_date_start: this.dataForm.value.sad_date_start?.toISOString().split('T')[0] ?? '',
+      sad_date_end: this.dataForm.value.sad_date_end?.toISOString().split('T')[0] ?? '',
     };
 
     this.btnLoading = true;
@@ -143,10 +147,5 @@ export class TLS26040CRUComponent extends BasicCruPageComponent<TLS26040Data> im
         // 清空選取項目
         this.selectedItems = [];
       });
-  }
-
-  onDetail(rowData: TLS26040Data): void {
-    console.log('查看明細', rowData);
-    // this.router.navigate(['/tls/tls26040-detail', rowData.id]);
   }
 }

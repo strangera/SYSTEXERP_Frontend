@@ -34,7 +34,10 @@ export abstract class BasicQueryPageComponent<T> {
   submitted = false;
 
   // 初始化方法
-  abstract ngOnInit(): void;
+  public abstract ngOnInit(): void;
+  // public abstract canQuery(): boolean;
+  // public abstract canAdd(): boolean;
+  // public abstract canEdit(): boolean;
 
   // 初始化頁面
   initializePage(progNo: string, cruPage?: string, queryForm?: FormGroup, onSubmit?: (form: FormGroup) => void) {
@@ -139,7 +142,7 @@ export abstract class BasicQueryPageComponent<T> {
       if (query) {
         queryForm.patchValue(query);
       }
-    })
+    });
     queryForm.patchValue({
       pageSize: event.pageSize,
       pageIndex: event.pageIndex,

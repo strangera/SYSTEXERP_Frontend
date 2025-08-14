@@ -1,166 +1,90 @@
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { NavigationExtras, Router } from '@angular/router';
-// Permissions
-import {
-  FunsrightInfo,
-  PermissionsInfo,
-} from '../../../shared/models/system/funsrightInfo';
-// Shared
-import { AuthService } from '../../../service/system/auth.service';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-
-import { OrganizationNumberService } from '../../../service/basic/organization-number.service';
-import { RoleCodeService } from '../../../service/basic/role-code.service';
-import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
+import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { AccordionModule } from 'primeng/accordion';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { TranslateModule } from '@ngx-translate/core';
+import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
+import { UserData } from '@shared/models/sys/user.model';
+import { Column, createPaginationConfig, formatDateTime } from '@shared/componentkit/table/table.model';
+import { Sys0110Service } from '@service/api/sys/sys0110.service';
+import { untilDestroyed } from '@ngneat/until-destroy';
+import { finalize } from 'rxjs';
+import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
 
 @Component({
-    selector: 'app-sys0710',
-    templateUrl: './sys0710.component.html',
-    styleUrl: './sys0710.component.scss',
-    standalone: true,
-    imports: [
-        MenubarComponent,
-        AccordionModule,
-        FormsModule,
-        ReactiveFormsModule,
-        DropdownComponent,
-        ButtonComponent,
-        TableComponent,
-        TranslateModule,
-    ],
+  selector: 'app-sys0710',
+  templateUrl: './sys0710.component.html',
+  standalone: true,
+  imports: [
+    MenubarComponent,
+    AccordionModule,
+    FormsModule,
+    ReactiveFormsModule,
+    ButtonComponent,
+    TableComponent,
+    TranslateModule,
+    InputTextComponent
+  ],
 })
 // 使用者系統權限列表
-export class SYS0710Component extends BasicQpageComponent implements OnInit {
-  // 查詢
-  // ----------------------------------------------------------------
+export class SYS0710Component extends BasicQueryPageComponent<UserData> implements OnInit {
   queryForm = this.formBuilder.group({
-    userCode: [], // DropDown
-    roleCode: [], // DropDown
+    user_No: ['', [Validators.maxLength(10)]], // 使用者編號
+    user_Name: ['', [Validators.maxLength(30)]], // 使用者名稱
+    ...createPaginationConfig([{ field: 'user_No', order: 1 }]), // 分頁和排序參數
   });
-  // 表格
-  // ----------------------------------------------------------------
-  data: any[] = [
-    // 其他資料
+  totalRecords = 0;// 分頁和排序參數 // 排序需要
+  data: UserData[] = [];
+  columns: Column[] = [
+    { field: 'user_No', header: '使用者編號', visible: true },
+    { field: 'user_Name', header: '使用者名稱', visible: true },
+    { field: 'status', header: '使用者狀態', visible: true, format: (value: string) => value === '1' ? '有效' : value === '2' ? '停用' : value },
+    { field: 'CRT_Date', header: '建立日期', visible: false, format: formatDateTime },
+    { field: 'CRT_USR_No', header: '建立人員編號', visible: false },
+    { field: 'CRT_USR_Name', header: '建立人員名稱', visible: false },
+    { field: 'UPD_Date', header: '變更日期', visible: false, format: formatDateTime },
+    { field: 'UPD_USR_No', header: '變更人員編號', visible: false },
+    { field: 'UPD_USR_Name', header: '變更人員名稱', visible: false },
   ];
-  filteredData: any[] = [...this.data];
-  columns: any[] = [
-    // { field: 'serialNumber', header: '序號', visible: true },
-    { field: 'userCode', header: '使用者代碼', visible: true },
-    { field: 'userName', header: '使用者名稱', visible: true },
-    { field: 'mainSystemCode', header: '主系統代碼', visible: true },
-    { field: 'mainSystemName', header: '主系統名稱', visible: true },
-    { field: 'subSystemCode', header: '子系統代碼', visible: true },
-    { field: 'subSystemName', header: '子系統名稱', visible: true },
-    { field: 'operationCode', header: '作業代碼', visible: true },
-    { field: 'operationName', header: '作業名稱', visible: true },
-    { field: 'authorization', header: '具有權限之功能按鍵', visible: true },
-  ];
-  // ----------------------------------------------------------------
-  userCodeOptions: any[] = [];
-  roleCodeOptions: any[] = [];
-
+  //TODO: 把它放在cru
+  // columns: any[] = [
+  //   // { field: 'serialNumber', header: '序號', visible: true },
+  //   { field: 'userCode', header: '使用者代碼', visible: true },
+  //   { field: 'userName', header: '使用者名稱', visible: true },
+  //   { field: 'mainSystemCode', header: '主系統代碼', visible: true },
+  //   { field: 'mainSystemName', header: '主系統名稱', visible: true },
+  //   { field: 'subSystemCode', header: '子系統代碼', visible: true },
+  //   { field: 'subSystemName', header: '子系統名稱', visible: true },
+  //   { field: 'operationCode', header: '作業代碼', visible: true },
+  //   { field: 'operationName', header: '作業名稱', visible: true },
+  //   { field: 'authorization', header: '具有權限之功能按鍵', visible: true },
+  // ];
   constructor(
-    private router: Router,
-    private formBuilder: FormBuilder,
-    private messageService: NotificationService,
-    private authService: AuthService,
-    private roleCodeService: RoleCodeService,
-    private organizationNumberService: OrganizationNumberService
+    private sys0110Service: Sys0110Service,
   ) {
     super();
   }
 
   ngOnInit(): void {
-    this.ProgNo = '420011';
-    // ----------------------------------------------------------------
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
-    //
-    this.roleCodeService.getRoleCodes().subscribe((data) => {
-      this.roleCodeOptions = data;
-    });
-    this.organizationNumberService
-      .getOrganizationNumbers()
-      .subscribe((data) => {
-        this.userCodeOptions = data;
-      });
+    this.initializePage('SYS0710', '/SYS/sys0710cru', this.queryForm);
   }
 
+  // 表單提交邏輯
   onSubmit(frm: FormGroup) {
-    console.log(frm.value);
-    this.submitted = true;
-    this.loading = true;
-    this.messageService.blockUi();
-
-    if (frm.valid && this.canQuery()) {
-      // 提交邏輯
-      // Service
-      // this.xxxService.queryMachine(frm.value as xxxInterface)
-      //  .subscribe((response: any) => {
-      //    this.rows = response.xxx;
-      // });
-    }
-
-    this.loading = false;
-    this.messageService.unblockUi();
-  }
-
-  onSubmitQuery(frm: FormGroup) {
-    // 查詢邏輯
-    this.onSubmit(frm);
-  }
-
-  onClearForm() {
-    this.queryForm.reset(); // 重置表單
-  }
-
-  onCreate() {
-    if (this.canAdd()) {
-      let extras: NavigationExtras = {
-        state: {
-          crudstatus: CRUDStatus.Create,
-          queryform: this.queryForm,
-        },
-        skipLocationChange: true,
-      };
-
-      //console.log("extra", extras);
-      this.router.navigate(['/SYSB000/SYS0310CRU'], extras);
-    }
-  }
-
-  onEdit(data: any) {
-    if (this.canEdit()) {
-      let extras: NavigationExtras = {
-        state: {
-          crudstatus: CRUDStatus.Edit,
-          rowdata: data,
-          queryform: this.queryForm,
-        },
-        skipLocationChange: true,
-      };
-
-      this.router.navigate(['/SYSB000/SYS0310CRU'], extras);
-    }
-  }
-
-  onDetail(data: any) {
-    let extras: NavigationExtras = {
-      state: {
-        crudstatus: CRUDStatus.Read,
-        rowdata: data,
-        queryform: this.queryForm,
-      },
-      skipLocationChange: true,
-    };
-
-    this.router.navigate(['/SYSB000/SYS0310CRU'], extras);
+    this.handleSubmit(frm, () => {
+      this.sys0110Service.queryUser(frm.value).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe((response) => {
+        if (response.Data) {
+          this.data = response.Data
+          this.totalRecords = response.TotalCount || response.Data.length;
+          this.queryStateService.setQueryState(this.ProgNo, frm.value);
+        } else {
+          this.data = [];
+          this.totalRecords = 0;
+          this.messageService.warnBubble(response.Message);
+        }
+      });
+    });
   }
 }

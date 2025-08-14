@@ -73,7 +73,7 @@ export interface RowEditSaveEvent {
   oldData: any;
   newData: any;
   ri: number;
-  data: any[];
+  data: any;
 }
 // 欄位變更事件
 export interface FieldChangeEvent {

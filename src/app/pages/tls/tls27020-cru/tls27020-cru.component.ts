@@ -29,7 +29,7 @@ export class TLS27020CRUComponent extends BasicCruPageComponent<TLS27020Data> im
     TLT_Name: [{ value: '', disabled: true }], // 櫃位名稱
     magneticCard: [''], // 磁卡編號 目前資料庫沒有
     ACT_PayAmt_ori: [{ value: '', disabled: true }], /*顯示用金額*/
-    ACT_PayAmt: [null, [Validators.max(99999999.9999), Validators.required]], /*實際金額*/
+    ACT_PayAmt: [null, [Validators.max(99999999), Validators.required]], /*實際金額*/
     MOD_PayAmt: [null],
   });
   now = new Date();

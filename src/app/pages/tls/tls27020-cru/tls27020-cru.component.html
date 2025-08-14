@@ -10,7 +10,7 @@
           <span *ngIf="IsExist && isFormCreateable" class="p-error">銷售日期與收銀機號已存在，請重新輸入！</span>
         </div>
         <!-- 銷售日期 -->
-        <app-calendar class="col-12 md:col-6 lg:col-4" calendarType="dateOne" label="銷售日期"
+        <app-calendar class="col-12 md:col-6 lg:col-4" calendarType="dateOne" label="銷售日期" controlName="TXN_Date"
           [control]="dataForm.controls.TXN_Date" [submitted]="submitted" [maxDate]="now"></app-calendar>
         <!-- 收銀機號 -->
         <app-dropdown class="col-12 md:col-6 lg:col-4" label="收銀機號" controlName="ECR_No" [options]="ECR_NoOptions"
@@ -27,7 +27,7 @@
         <!-- 專櫃編號 -->
         <app-dropdown class="col-12 md:col-6 lg:col-4" label="專櫃編號" [control]="dataForm.controls.TLT_NO"
           [submitted]="submitted" [options]="TLTTALENT_DropDownList" optionLabel="No" optionValue="No"
-          templateLabel="label"></app-dropdown>
+          templateLabel="label" controlName="TLT_NO"></app-dropdown>
         <!-- 櫃位名稱 -->
         <app-input-text class="col-12 md:col-6 lg:col-4" label="櫃位名稱" controlName="TLT_Name"
           [control]="dataForm.controls.TLT_Name" [submitted]="submitted"></app-input-text>

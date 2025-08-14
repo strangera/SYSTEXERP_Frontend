@@ -15,17 +15,17 @@ import { DialogModule } from 'primeng/dialog';
 import { TableComponent } from '../table/table.component';
 
 @Component({
-    selector: 'app-input-group',
-    templateUrl: './input-group.component.html',
-    styleUrl: './input-group.component.scss',
-    changeDetection: ChangeDetectionStrategy.OnPush,
-    standalone: true,
-    imports: [NgIf, AutoCompleteModule, FormsModule, ReactiveFormsModule, NgClass, PrimeTemplate, InputTextModule, ButtonDirective, ControlMessagesComponent, DialogModule, NgFor, TableComponent]
+  selector: 'app-input-group',
+  templateUrl: './input-group.component.html',
+  styleUrl: './input-group.component.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush,
+  standalone: true,
+  imports: [NgIf, AutoCompleteModule, FormsModule, ReactiveFormsModule, NgClass, PrimeTemplate, InputTextModule, ButtonDirective, ControlMessagesComponent, DialogModule, NgFor, TableComponent]
 })
 export class InputGroupComponent<T> extends BasicKitComponent implements OnInit, OnChanges {
   // 基本設定
-  @Input() label = '';
-  @Input() controlName = '';
+  @Input() override label = '';
+  @Input() override controlName = '';
   @Input() control = new FormControl;
   @Input() submitted = false;
   @Input() options: any[] = [];

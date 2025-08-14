@@ -32,11 +32,11 @@
 
 <div class="card">
   <app-table tableKey="TLS26040_CRU" dataKey="id" [data]="data" [columns]="columns" [selectedItems]="selectedItems"
-    (selectionChange)="selectedItems = $event" [multiSortMeta]="[{ field: 'id', order: 1 }]"
+    (selectionChange)="selectedItems = $event" [multiSortMeta]="[{ field: 'sad_date', order: -1 }]"
     [totalRecords]="totalRecords" (lazyLoadData)="onLazyLoadData($event, dataForm);onSubmit(dataForm)" [lazy]="true"
     [loading]="loading" [showDelete]="false" [showCheckBox]="true" [showManage]="false"
     [expansionColumns]="expansionColumns" expansionDataKey="details" [expansionShowPaginator]="true"
-    [expansionRows]="50">
+    [expansionRows]="50" [expansionLoadFn]="loadDetails" [expansionMultiSortMeta]="[{ field: 'TXN_Date', order: -1 }]">
   </app-table>
 
   <div *ngIf="data.length > 0">

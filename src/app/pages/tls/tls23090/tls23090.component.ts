@@ -67,24 +67,23 @@ export class TLS23090Component extends BasicQueryPageComponent<any> {
       d.setDate(d.getDate() - 1);
       return d;
     })();
-queryForm = this.formBuilder.group({
-  TXN_DateStart: [this.yesterday, [Validators.required]],
-  TXN_DateEnd: [this.yesterday, [Validators.required]],
-  ECR_No: this.formBuilder.control<any[]>([]),
-  tlt_no: this.formBuilder.control<any[]>([]),
-  CRD_Type: this.formBuilder.control<any[]>([]),
-  CRD_No: this.formBuilder.control<any[]>([]),
-  TXN_PayAmt: [null],
-  tlt_building: this.formBuilder.control<any[]>([]),
-  tlt_floor: this.formBuilder.control<any[]>([]),
-  org_id: this.formBuilder.control<any[]>([]),
-  IPeriod: this.formBuilder.control<any[]>([]),
-  AcqBank: this.formBuilder.control<any[]>([]),
-  ConnStatus: this.formBuilder.control<any[]>([]),
-  IsHaveTERM_No: [null],
-  ...createPaginationConfig([{ field: 'TXN_Date', order: 1 }]),
-});
-
+ queryForm = this.formBuilder.group({
+    TXN_DateStart: [this.yesterday, [Validators.required]],
+    TXN_DateEnd: [this.yesterday, [Validators.required]],
+    ECR_No: [],
+    tlt_no: [],
+    CRD_Type: [],
+    CRD_No: [],
+    TXN_PayAmt: [null],
+    tlt_building: [],
+    tlt_floor: [],
+    org_id: [],
+    IPeriod: [],
+    AcqBank: [],
+    ConnStatus: [],
+    IsHaveTERM_No: [null],
+    ...createPaginationConfig([{ field: 'TXN_Date', order: 1 }]),
+  });
   cardTypeOptions: any[] = [];
   floorOptions: any[] = [];
   BUILDING_NO_Options: any[] = [];

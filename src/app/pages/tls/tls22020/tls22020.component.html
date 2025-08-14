@@ -69,7 +69,6 @@
       [data]="data"
       [columns]="selectedColumns"
       [columnGroup]="columnGroup"
-      (onSubmit)="onSubmit(queryForm)"
       [multiSortMeta]="[{ field: 'ECR_No', order: 1 }]"
       [totalRecords]="totalRecords"
       (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"
@@ -77,10 +76,9 @@
       [loading]="loading"
       [showManage]="false"
       [showDelete]="false"
-      [showPaginator]="false"
       [showReportMode]="false"
-      [showExcelImport]="false"
-    > <header>
+    >
+      <header>
         <p-button
           pButton
           tooltipPosition="top"
@@ -93,13 +91,6 @@
           (click)="exportReport()"
         />
       </header>
-      <ng-template pTemplate="footer" let-columns>
-        <tr>
-          <td *ngFor="let col of columns">
-            {{ col.field === "ECR_No" ? "總計" : total[col.field] || "" }}
-          </td>
-        </tr>
-      </ng-template>
     </app-table>
   </div>
 </div>

@@ -1,6 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 
-import { TLS23080SharedService } from './tls23080-shared.service';
+import { TLS23080SharedService } from '../../../pages/tls/tls23080-cru/tls23080-shared.service';
 
 describe('TLS23080SharedService', () => {
   let service: TLS23080SharedService;

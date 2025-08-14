@@ -30,7 +30,7 @@ import { ControlMessagesComponent } from '../../component/control-messages/contr
 })
 export class CalendarRangeQuickComponent extends BasicKitComponent implements OnInit {
   // 表單基本設置
-  @Input() label = ''; // 標籤
+  @Input() override label = ''; // 標籤
   @Input() startLabel = ''; // 起始日期標籤
   @Input() endLabel = ''; // 結束日期標籤
   @Input() startControl = new FormControl; // 起始日期

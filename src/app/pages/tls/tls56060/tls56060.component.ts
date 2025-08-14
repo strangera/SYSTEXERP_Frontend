@@ -97,6 +97,21 @@ export class TLS56060Component extends BasicQueryPageComponent<any> implements O
 
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
+      this.loading = false;
+      this.data = [
+        {
+          MVM_No: 'MVM0000001',
+          CRT_Date: new Date(),
+          IN_HOS_No: 'HOS00001',
+          OUT_HOS_No: 'HOS00002',
+          LOGO_No: 'LOGO00001',
+          MVM_Remark: '說明',
+          CRT_USR_No: 'USR00001',
+          Confirm_USR_No: 'USR00002',
+          Confirm_DATE: new Date(),
+          MVM_Status: '3'
+        }
+      ]
     });
   }
   // 管理編號

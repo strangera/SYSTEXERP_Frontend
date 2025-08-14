@@ -1,6 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 
-import { TLS23010CacheService } from './tls23010-cache.service';
+import { TLS23010CacheService } from '../../../pages/tls/tls23010-cru/tls23010-cache.service';
 
 describe('TLS23010CacheService', () => {
   let service: TLS23010CacheService;

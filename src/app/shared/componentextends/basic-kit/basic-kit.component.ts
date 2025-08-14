@@ -1,5 +1,7 @@
+import { inject, Input } from '@angular/core';
 import { AbstractControl, FormControl, Validators } from '@angular/forms';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
+import { FormLabelService } from '@shared/service/form-label.service';
 
 @UntilDestroy()
 export class BasicKitComponent {
@@ -12,10 +14,14 @@ export class BasicKitComponent {
   maxValue: number | null = null;
   minValue: number | null = null;
   isNumberOnly = false;
-    // ✅ 新增：數字欄位「位數上限」，不要去覆蓋 maxLength 2025/08/08
-  digitMaxLength: number | null = null;
+  @Input() controlName = '';
+  @Input() label = '';
+  protected formLabelService = inject(FormLabelService);
 
   initControl(control: FormControl): void {
+    if (this.controlName && this.label) {
+      this.formLabelService.registerLabel(this.controlName, this.label);
+    }
     // 訂閱 control 的狀態變化
     control.statusChanges.pipe(untilDestroyed(this)).subscribe(() => {
       this.updateControlState(control);
@@ -27,9 +33,8 @@ export class BasicKitComponent {
     controls.forEach((control, index) => {
       this.checkRequiredValidator(control, index);
       this.checkIntLengthValidator(control);
-      this.checkNumberValidator(control);
       this.checkMinMaxValidator(control);
-
+      this.checkNumberValidator(control);
       this.setPlaceholder(control, index);
     });
   }
@@ -52,34 +57,23 @@ export class BasicKitComponent {
   }
 
   checkMinMaxValidator(control: AbstractControl): void {
-  const validator = control.validator;
-  if (!validator) {
-    this.maxValue = null;
-    this.minValue = null;
-    this.digitMaxLength = null;  // 20250808 新增
-    return;
+    const validator = control.validator;
+    if (!validator) {
+      this.maxValue = null;
+      this.minValue = null;
+      return;
+    }
+
+    // 用超過最大值來觸發 max 錯誤
+    const maxTest = validator(new FormControl(Number.MAX_SAFE_INTEGER));
+    this.maxValue = maxTest?.['max']?.max ?? null;
+    if (this.maxValue !== null && !isNaN(this.maxValue)) {
+      this.maxLength = this.maxValue.toString().length;
+    }
+    // 用小於最小值來觸發 min 錯誤
+    const minTest = validator(new FormControl(-Number.MAX_SAFE_INTEGER));
+    this.minValue = minTest?.['min']?.min ?? null;
   }
-
-  // 用超過最大值來觸發 max 錯誤
-  const maxTest = validator(new FormControl(Number.MAX_SAFE_INTEGER));
-  this.maxValue = maxTest?.['max']?.max ?? null;
-
-  // ✅ 計算數字位數上限（給數字欄位參考）20250808 新增
-  this.digitMaxLength = (this.maxValue != null && !isNaN(this.maxValue))
-    ? this.maxValue.toString().replace(/\D/g, '').length
-    : null;
-
-  // 🔒 重要：只在「數字欄位」且「尚未有 Validators.maxLength」時，才把數值位數塞進 maxLength
-  // （這樣不會去影響 varchar(255) 這種文字欄位）
-  if (this.maxValue !== null && !isNaN(this.maxValue) && this.isNumberOnly && !this.maxLength) {
-    // ← 這行是你原本的程式碼，但現在加了保護條件
-    this.maxLength = this.maxValue.toString().length;
-  }
-
-  // 用小於最小值來觸發 min 錯誤
-  const minTest = validator(new FormControl(-Number.MAX_SAFE_INTEGER));
-  this.minValue = minTest?.['min']?.min ?? null;
-}
 
 
   checkNumberValidator(control: AbstractControl): void {

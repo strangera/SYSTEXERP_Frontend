@@ -6,20 +6,20 @@ import { RadioButtonModule } from 'primeng/radiobutton';
 import { ControlMessagesComponent } from '../../component/control-messages/control-messages.component';
 
 @Component({
-    selector: 'app-radiobutton',
-    templateUrl: './radiobutton.component.html',
-    standalone: true,
-    imports: [
-        NgIf,
-        NgFor,
-        RadioButtonModule,
-        FormsModule,
-        ReactiveFormsModule,
-        ControlMessagesComponent,
-    ],
+  selector: 'app-radiobutton',
+  templateUrl: './radiobutton.component.html',
+  standalone: true,
+  imports: [
+    NgIf,
+    NgFor,
+    RadioButtonModule,
+    FormsModule,
+    ReactiveFormsModule,
+    ControlMessagesComponent,
+  ],
 })
 export class RadiobuttonComponent extends BasicKitComponent implements OnInit {
-  @Input() label = '';
+  @Input() override label = '';
   @Input() groupname = '';
   @Input() control: FormControl = new FormControl();
   @Input() options: { value: any, label: string }[] = [];

@@ -2,61 +2,59 @@
   <div class="flex gap-2 mb-2">
     <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
   </div>
+
   <p-accordion>
     <p-accordionTab
       header="{{ 'query-conditions' | translate }}"
       [selected]="true"
       class="line-height-3 m-0"
-      [headerStyleClass]="'query-accordionTab'"
-    >
-      <form
-        [formGroup]="queryForm"
-        id="queryForm"
-        (ngSubmit)="onSubmit(queryForm)"
-      >
+      [headerStyleClass]="'query-accordionTab'">
+
+      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
-          <!-- 大分類代碼 -->
+          <!-- 大分類 -->
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown
               label="大分類代碼"
-              controlName="bigCategoryCode"
+              controlName="CAT_LNo"
               [options]="bigCategoryOptions"
               optionLabel="label"
               optionValue="value"
-              [control]="queryForm.controls.bigCategoryCode"
-              [submitted]="submitted"
-            ></app-dropdown>
+              [control]="queryForm.controls.CAT_LNo"
+              [submitted]="submitted">
+            </app-dropdown>
           </div>
 
-          <!-- 中分類代碼 -->
+          <!-- 中分類 -->
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown
               label="中分類代碼"
-              controlName="midCategoryCode"
+              controlName="CAT_MNo"
               [options]="midCategoryOptions"
               optionLabel="label"
               optionValue="value"
-              [control]="queryForm.controls.midCategoryCode"
-              [submitted]="submitted"
-            ></app-dropdown>
+              [control]="queryForm.controls.CAT_MNo"
+              [submitted]="submitted">
+            </app-dropdown>
           </div>
 
-          <!-- 小分類代碼 -->
+          <!-- 小分類 -->
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown
               label="小分類代碼"
-              controlName="smallCategoryCode"
+              controlName="CAT_SNo"
               [options]="smallCategoryOptions"
               optionLabel="label"
               optionValue="value"
-              [control]="queryForm.controls.smallCategoryCode"
-              [submitted]="submitted"
-            ></app-dropdown>
+              [control]="queryForm.controls.CAT_SNo"
+              [submitted]="submitted">
+            </app-dropdown>
           </div>
+
           <!-- 管理編號 -->
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown-table
-              [control]="queryForm.controls.queryNo"
+              [control]="queryForm.controls.PLU_MagNo"
               [submitted]="submitted"
               optionLabel="PLU_MagNo"
               optionValue="PLU_MagNo"
@@ -68,48 +66,48 @@
               [dialogData]="opData"
               [dialogColumns]="opColumns"
               [loading]="opLoading"
-              [totalRecords]="opTotalRecords"
-            >
+              [totalRecords]="opTotalRecords">
+
               <app-input-text
                 class="col-12 md:col-6"
                 label="管理編號"
                 controlName="queryNo"
-                [control]="opForm.controls.queryNo"
-              ></app-input-text>
+                [control]="opForm.controls.queryNo">
+              </app-input-text>
+
               <app-input-text
                 class="col-12 md:col-6"
                 label="商品名稱"
                 controlName="PLU_Name"
-                [control]="opForm.controls.PLU_Name"
-              ></app-input-text>
+                [control]="opForm.controls.PLU_Name">
+              </app-input-text>
             </app-dropdown-table>
           </div>
+
           <!-- 品牌編號 -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
+            <app-multi-select
               label="品牌編號"
-              controlName="brandCode"
+              controlName="LOGO_No"
               [options]="brandCodeOptions"
               optionLabel="label"
               optionValue="value"
-              [control]="queryForm.controls.brandCode"
-              [submitted]="submitted"
-            ></app-dropdown>
+              [control]="queryForm.controls.LOGO_No"
+              [submitted]="submitted">
+            </app-multi-select>
           </div>
 
-          <!-- 安全庫存 -->
+          <!-- 只顯示低於安全庫存 -->
           <div class="col-12 md:col-6 lg:col-4 mt-5">
             <p-checkbox
-              binary="true"
+              [binary]="true"
               label="只顯示低於安全庫存"
-              formControlName="isSafetyStock"
-            ></p-checkbox>
+              formControlName="isSafetyStock">
+            </p-checkbox>
           </div>
         </div>
 
-        <div
-          class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
-        >
+        <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
           <app-button btnType="clear" />
           <app-button btnType="query" [loading]="loading" />
         </div>
@@ -120,16 +118,19 @@
 
 <div class="card">
   <app-table
-    tableKey="TLS2A020"
+    tableKey="TLS56010"
     [data]="data"
     [columns]="columns"
-    [showCheckBox]="true"
+    [showCheckBox]="false"
     dataKey="id"
-    [multiSortMeta]="[{ field: 'pendingApprovalRegisterCode', order: 1 }]"
+    [showSort]="true"
+    [multiSortMeta]="queryForm.value.SortBy || [{ field: 'PLU_MagNo', order: 1 }]"
     [totalRecords]="totalRecords"
     [lazy]="true"
     [loading]="loading"
     (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"
     [showManage]="false"
-  ></app-table>
+    [showDelete]="false"
+    >
+  </app-table>
 </div>

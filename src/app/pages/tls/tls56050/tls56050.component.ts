@@ -106,6 +106,11 @@ export class TLS56050Component extends BasicQueryPageComponent<any> implements O
 
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
+      this.loading = false;
+      this.data = [
+        { PLU_No: '123456789', PLU_MagNo: 'A123456789', PLU_Name: '商品A', PLU_Std: '10', PLU_Type: 'A', PLU_Unit: 'EA', PLU_Qty: '10', PLU_Price: '100', PLU_Amount: '1000', PLU_Remark: '備註' },
+        { PLU_No: '123456789', PLU_MagNo: 'A123456789', PLU_Name: '商品A', PLU_Std: '10', PLU_Type: 'A', PLU_Unit: 'EA', PLU_Qty: '10', PLU_Price: '100', PLU_Amount: '1000', PLU_Remark: '備註' },
+      ];
     });
   }
   // 管理編號

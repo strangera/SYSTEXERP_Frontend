@@ -48,21 +48,21 @@ export class TLS23110Component extends BasicQueryPageComponent<any> {
   totalRecords = 0;
 
 
-queryForm = this.formBuilder.group({
-  TXN_DateStart: [this.yesterday, Validators.required],
-  TXN_DateEnd: [this.yesterday, Validators.required],
 
-  tlt_term_type: this.formBuilder.control<any[]>([]), // e.g., 'st'
-  rece_yn: this.formBuilder.control<any[]>([]),       // e.g., 's'
-  IsNoPLU_No: [true],
+  queryForm = this.formBuilder.group({   
+    TXN_DateStart: [this.yesterday, Validators.required],
+    TXN_DateEnd: [this.yesterday, Validators.required],
+    tlt_term_type: [],       // e.g., 'st'
+    rece_yn: [],            // e.g., 's'
+    IsNoPLU_No: [true],        // 預設 true
+    TLT_No: [], // string[]
+    tlt_building: [],
+    tlt_floor: [], // string[]
+    org_id: [],  // string[]
 
-  TLT_No: this.formBuilder.control<any[]>([]),
-  tlt_building: this.formBuilder.control<any[]>([]),
-  tlt_floor: this.formBuilder.control<any[]>([]),
-  org_id: this.formBuilder.control<any[]>([]),
 
-  ...createPaginationConfig([{ field: 'Day', order: 1 }]),
-});
+    ...createPaginationConfig([{ field: 'Day', order: 1 }])
+  });
   IsNoPLU_NoOptions = [
     { label: '使用業主發票', value: true },
     { label: '非使用業主發票', value: false }

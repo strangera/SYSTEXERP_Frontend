@@ -18,6 +18,7 @@ import { createPaginationConfig, Column } from 'src/app/shared/componentkit/tabl
 import { ButtonModule } from 'primeng/button';
 import { Router } from '@angular/router';
 import { yesterday } from '@shared/models/system/query-form.model';
+import { take } from 'rxjs';
 
 const SKIP_AUTO_QUERY_KEY = 'TLS22010:SKIP_AUTO_QUERY';
 
@@ -107,19 +108,14 @@ export class TLS22010Component extends BasicQueryPageComponent<any> implements O
 
   // --------- 生命週期 ----------
   ngOnInit(): void {
-    // 檢查是否剛從 CRU 返回：若是，僅跳過這次自動查詢（表單值仍會被還原）
-    this.skipAutoQueryOnce = sessionStorage.getItem(SKIP_AUTO_QUERY_KEY) === '1';
-    sessionStorage.removeItem(SKIP_AUTO_QUERY_KEY);
-
     // initializePage 會還原 queryState（我們在 onSubmit 內用 frm.value 存），包含 TXN_Date
-    this.initializePage('TLS22010', '/TLS/TLS22010cru', this.queryForm, (form) => {
-      if (this.skipAutoQueryOnce) {
-        this.skipAutoQueryOnce = false;
-        this.loading = false; // 保險：避免殘留 loading
-        return; // 不自動查詢
+    this.initializePage('TLS22010', '/TLS/TLS22010cru');
+    this.queryStateService.getQueryState(this.ProgNo)?.pipe(take(1)).subscribe((query) => {
+      if (query && this.queryForm) {
+        this.queryForm?.patchValue(query);
+        this.queryForm?.patchValue({ pageIndex: 1 });
+        this.onSubmit(this.queryForm);
       }
-      // 正常進頁時，維持原本自動查詢
-      this.onSubmit(form);
     });
 
     // 載入下拉選項
@@ -182,12 +178,5 @@ export class TLS22010Component extends BasicQueryPageComponent<any> implements O
         },
       });
     });
-  }
-
-  /** 進入 CRU（查看/編輯）前，設定返回時跳過自動查詢的一次性旗標 */
-  goToCRU(row?: any) {
-    sessionStorage.setItem(SKIP_AUTO_QUERY_KEY, '1');
-    // 依你的實際路由/參數調整
-    this.router.navigate(['/TLS/TLS22010cru'], { state: { id: row?.id } });
   }
 }

@@ -21,9 +21,9 @@ import { ControlMessagesComponent } from '../../component/control-messages/contr
 })
 export class DropdownComponent extends BasicKitComponent implements OnInit {
   // 必填
-  @Input() label = '';
+  @Input() override label = '';
   @Input() showLabel = true;
-  @Input() controlName = '';
+  @Input() override controlName = '';
   @Input() control = new FormControl();
   @Input() options: unknown[] = [];
   @Input() optionLabel = ''; // 資料的 Label

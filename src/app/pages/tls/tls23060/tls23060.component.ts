@@ -60,15 +60,16 @@ export class TLS23060Component extends BasicQueryPageComponent<any> {
 
   // ✅ 陣列型欄位改用 control<any[]>([])，避免 never[] 型別
   queryForm = this.formBuilder.group({
+  
     TXN_DateStart: [this.yesterday, [Validators.required]],
     TXN_DateEnd: [this.yesterday, [Validators.required]],
     rece_yn: [null],
-    ECR_No: this.formBuilder.control<any[]>([]),
-    tlt_no: this.formBuilder.control<any[]>([]),
-    tlt_building: this.formBuilder.control<any[]>([]),
-    tlt_floor: this.formBuilder.control<any[]>([]),
-    org_id: this.formBuilder.control<any[]>([]),
-    ...createPaginationConfig([{ field: 'ECR_No', order: 1 }]),
+    ECR_No: [],
+    tlt_no: [],
+    tlt_building: [],
+    tlt_floor: [],
+    org_id: [],
+    ...createPaginationConfig([{ field: 'ECR_No', order: 1 }])
   });
 
   WhetherOptions: any[] = [];

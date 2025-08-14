@@ -23,35 +23,36 @@ export interface TLS26010Query {
   pod_edate_E?: Date;
 }
 
-export interface EcrTable {
+export interface EcrItem {
   area_name?: string;
   area_no?: string;
   building_name?: string;
   building_no?: string;
   ecr_name: string;
   ecr_no: string;
-  ecr_type: string;
+  ecr_type?: string;
   floor_name?: string;
   floor_no?: string;
+  talent_id?: number;
   tlt_name: string;
   tlt_no: string;
   /** 操作狀態 */
   Status?: ItemOperationStatus;
 }
 
-export interface TltTable {
-  VEN_Name: string;
-  apply_no: string;
+export interface TltItem {
+  VEN_Name?: string;
+  apply_no?: string;
   area_name?: string;
   area_no?: string;
   building_name?: string;
   building_no?: string;
   floor_name?: string;
   floor_no?: string;
-  talent_id: number;
+  talent_id?: number;
   tlt_name: string;
   tlt_no: string;
-  ven_no: string;
+  ven_no?: string;
   /** 操作狀態 */
   Status?: ItemOperationStatus;
 }
@@ -86,12 +87,12 @@ export interface TLS26010Data {
   pod_no: string;
   pod_sdate: Date;
   pod_status: '0' | '1' | '9';
-  ecr_nos?: string[];
+  ecr_nos: string[];
   area_no?: string;
   build_no?: string;
   floor_no?: string;
   talent_id?: number;
-  tlt_nos?: string[];
+  tlt_nos: string[];
 }
 
 export interface TLS26010DetailResponse extends Omit<BaseQueryResponse<TLS26010Detail>, 'Data'> {
@@ -106,7 +107,7 @@ export interface TLS26010DetailResponse extends Omit<BaseQueryResponse<TLS26010D
 export interface TLS26010Detail {
   ecr_list: EcrItem[];
   pod_info: PodInfo;
-  talent_list: TalentItem[];
+  talent_list: TltItem[];
 }
 
 /** * @description
@@ -126,28 +127,6 @@ export interface PodInfo {
   pod_status?: '0' | '1' | '9';
 }
 
-export interface EcrItem {
-  id?: number;
-  building_name?: string;
-  floor_name?: string;
-  area_name?: string;
-  ecr_no: string;
-  ecr_name?: string;
-  tlt_no: string;
-  tlt_name: string;
-  Status: ItemOperationStatus;
-}
-
-export interface TalentItem {
-  id?: number;
-  building_name?: string;
-  floor_name?: string;
-  area_name?: string;
-  tlt_no: string;
-  tlt_name: string;
-  Status: ItemOperationStatus;
-}
-
 /** * @description
  * - pod_info: 活動基本資訊
  * - ecr_list: ECR 清單
@@ -156,7 +135,7 @@ export interface TalentItem {
 export interface PodCreateRequest {
   pod_info: PodInfo;
   ecr_list: EcrItem[];
-  talent_list: TalentItem[];
+  talent_list: TltItem[];
 }
 
 /** * @description
@@ -167,7 +146,7 @@ export interface PodCreateRequest {
 export interface PodUpdateRequest {
   pod_info: PodInfo;
   ecr_list: EcrItem[];
-  talent_list: TalentItem[];
+  talent_list: TltItem[];
 }
 
 export type PodRequest = PodCreateRequest | PodUpdateRequest;

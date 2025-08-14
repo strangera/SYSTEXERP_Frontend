@@ -10,6 +10,8 @@ import { LazyLoadEvent } from '../../componentkit/table/table.model';
 import { CRUDStatus } from '../../models/system/CRUDstatus';
 import { FunsrightInfo, PermissionsInfo } from '../../models/system/funsrightInfo';
 import { UserInfo } from '../../models/system/userInfo';
+import { FormLabelService } from '@shared/service/form-label.service';
+import { ValidationService } from '@shared/service/validation.service';
 @UntilDestroy()
 export abstract class BasicCruPageComponent<T> {
   // Page No
@@ -35,6 +37,8 @@ export abstract class BasicCruPageComponent<T> {
   confirmationService: ConfirmationService = inject(ConfirmationService);
   activatedRoute = inject(ActivatedRoute);
   previousRoute: string | null = null; // 新增用於儲存前一個路由的屬性
+  private formLabelService = inject(FormLabelService);
+  private valid = inject(ValidationService);
   // 判斷目前頁面是新增、修改、明細--------------------------------
   get isFormEditable(): boolean {
     return (this.crudstatus === CRUDStatus.Edit && this.canEdit());
@@ -57,6 +61,7 @@ export abstract class BasicCruPageComponent<T> {
     return this.funInfo?.PrivilegeBehavior?.some(behavior => behavior.function_code === action) || false;
   }
   initializePage(progNo: string, form?: FormGroup) {
+    this.formLabelService.clearLabels();
     if (this.authService.currentUserValue) {
       this.user = this.authService.currentUserValue;
     }
@@ -95,7 +100,6 @@ export abstract class BasicCruPageComponent<T> {
     this.loading = true;
     if (frm?.invalid) {
       this.logValidationErrors(frm);
-      this.messageService.errorBubble('表單驗證失敗，請檢查輸入資料', '表單驗證失敗');
       this.loading = false;
       return;
     }
@@ -111,8 +115,11 @@ export abstract class BasicCruPageComponent<T> {
     Object.keys(form.controls).forEach(key => {
       const controlErrors = form.get(key)?.errors;
       if (controlErrors) {
+        const fieldName = this.formLabelService.getLabel(key) || key;
         Object.keys(controlErrors).forEach(errorKey => {
-          console.log(`控件 ${key} 的驗證錯誤: ${errorKey}, 錯誤值:`, controlErrors[errorKey]);
+          const errorMessage = this.valid.getValidatorErrorMessage(errorKey, controlErrors[errorKey]);
+          this.messageService.errorBubble(`此欄位 ${errorMessage}，請檢查輸入資料`, `「${fieldName}」驗證失敗`);
+          // console.log(`欄位 [${fieldName}] 的驗證錯誤: ${errorMessage} (驗證器: ${errorKey}), 錯誤值:`, controlErrors[errorKey]);
         });
       }
     });
