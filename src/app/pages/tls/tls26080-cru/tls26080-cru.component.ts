@@ -19,13 +19,13 @@ import { Column } from '@shared/componentkit/table/table.model';
 import { CRUDStatus } from '@shared/models/system/CRUDstatus';
 import { ApprovalStatus } from '@shared/models/tls/approval-status.model';
 import { PanelModule } from 'primeng/panel';
-import { CounterData, TLS26080Data, TLS26080Detail } from '../tls26080/tls26080.model';
+import { TLS26080Data, TLS26080Detail } from '../tls26080/tls26080.model';
 
 @Component({
   selector: 'app-tls26080-cru',
   templateUrl: './tls26080-cru.component.html',
   styleUrl: './tls26080-cru.component.scss',
-  standalone: !0,
+  standalone: true,
   imports: [
     NgIf,
     FormsModule,
@@ -45,7 +45,6 @@ import { CounterData, TLS26080Data, TLS26080Detail } from '../tls26080/tls26080.
 })
 export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> implements OnInit {
 
-  // 主表單：活動基本資料
   public dataForm = this.formBuilder.nonNullable.group({
     pod_no: new FormControl<string>('自動給號', [Validators.maxLength(10)]), // 活動單號
     pod_desc: new FormControl<string | undefined>(void 0, [Validators.required]), // 活動名稱
@@ -56,7 +55,7 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
     pod_type: new FormControl<string | undefined>(void 0), // 扣款名稱
     org_id: new FormControl<string | undefined>(void 0), // 部門
   });
-  private df = this.dataForm.controls;
+  public readonly df = computed(() => this.dataForm.controls);
 
   public calcDateType = [
     { label: '活動起始日至截止日', value: 'Y' },
@@ -188,7 +187,7 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
       this.staticDetailData = [...this.service.TLS26080Detail()];
     }
     this.service.loadAPS1003(['E']);
-    this.service.loadTLS26080({ pod_sdate: this.df.pod_sdate.value!, pod_edate: this.df.pod_edate.value! });
+    this.service.loadTLS26080({ pod_sdate: this.df().pod_sdate.value!, pod_edate: this.df().pod_edate.value! });
     this.staticData = this.dataForm.value as TLS26080Data;
     console.log(`init:`, [this.rowdata, this.crudstatus, this.dataForm.value]);
   }

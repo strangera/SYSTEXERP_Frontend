@@ -21,7 +21,7 @@
         <div class="col-12 md:col-6 lg:col-4">
           <app-input-text label="活動編號"
                           controlName="pod_no"
-                          [control]="dataForm.controls.pod_no"
+                          [control]="df().pod_no"
                           [disabled]="true"
                           [submitted]="submitted"></app-input-text>
         </div>
@@ -33,13 +33,13 @@
                         [options]="service.campaignData()"
                         optionLabel="CampaignName"
                         optionValue="CampaignId"
-                        [control]="dataForm.controls.pod_desc"
+                        [control]="df().pod_desc"
                         [submitted]="submitted"></app-dropdown>
         </div>
         <!-- <div class="col-12 md:col-6 lg:col-8">
           <app-input-text label="活動名稱"
                           controlName="pod_desc"
-                          [control]="dataForm.controls.pod_desc"
+                          [control]="df().pod_desc"
                           [disabled]="false"
                           [submitted]="submitted">
           </app-input-text>
@@ -51,14 +51,14 @@
         <div class="col-12 md:col-6 lg:col-4">
           <!-- <app-radiobutton label="活動起始日期"
                            groupname="calcDateType"
-                           [control]="dataForm.controls.calcDateType"
+                           [control]="df().calcDateType"
                            [options]="calcDateType"
                            [submitted]="submitted">
           </app-radiobutton> -->
           <app-calendar-range calendarType="dateRange"
                               label="活動日期"
-                              [startControl]="dataForm.controls.pod_sdate"
-                              [endControl]="dataForm.controls.pod_edate"
+                              [startControl]="df().pod_sdate"
+                              [endControl]="df().pod_edate"
                               [submitted]="submitted">
           </app-calendar-range>
         </div>
@@ -67,7 +67,7 @@
         <div class="col-12 md:col-6 lg:col-4">
           <app-calendar label="活動正檔日期"
                         controlName="pod_busdate"
-                        [control]="dataForm.controls.pod_busdate"
+                        [control]="df().pod_busdate"
                         [disabled]="false"
                         [submitted]="submitted"></app-calendar>
         </div>
