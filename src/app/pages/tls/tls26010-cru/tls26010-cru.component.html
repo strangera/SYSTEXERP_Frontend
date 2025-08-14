@@ -75,7 +75,7 @@
                [showManage]="false"
                [showReportMode]="false"
                [isRowSelectable]="service.isRowSelectable"
-               [data]="ecrTableFiltered"
+               [data]="ecrTableData()"
                [dataKey]="'ecr_no'"
                [tableKey]="'TLS26010_ECR'"
                [columns]="columns">
@@ -102,7 +102,7 @@
                [showExcel]="isFormEditable"
                (exportExcel)="onExportExcel()"
                (importExcel)="onImportExcel($event)"
-               [data]="tltTableFiltered"
+               [data]="tltTableData()"
                [dataKey]="'tlt_no'"
                [tableKey]="'TLS26010_TLT'"
                [columns]="columns2">
