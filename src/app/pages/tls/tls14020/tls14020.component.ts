@@ -1,3 +1,4 @@
+/* eslint-disable no-sparse-arrays */
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { ContractStatusService } from '../../../service/basic/contract-status.service';
@@ -7,7 +8,7 @@ import { CooperationMethodService } from '../../../service/basic/cooperation-met
 import { PaymentMethod2Service } from '../../../service/basic/payment-method2.service';
 import { Sysb800DropdownService } from '../../../service/api/sys/sysb800-dropdown.service';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { TLS14020Service } from '../../../service/api/tls/tls14020.service';
+import { DialogItem, TLS14020Service } from '../../../service/api/tls/tls14020.service';
 import { VendorCategoryOptionsService } from '../../../service/api/dropdownservice/vendor-category-options.service';
 import { LocationOptionsService } from '../../../service/api/dropdownservice/location-options.service';
 import { forkJoin } from 'rxjs';
@@ -31,104 +32,39 @@ import { DialogComponent } from '../../../shared/componentkit/dialog/dialog.comp
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { RadiobuttonYNComponent } from '@shared/componentkit/radiobutton-yn/radiobutton-yn.component';
 import { yesterday } from '@shared/models/system/query-form.model';
+import { ContractItem } from '@service/api/tls/tls14020.service';
+import { CheckboxModule } from 'primeng/checkbox';
 
-interface ContractItem {
-  id: string;
-  talent_id: string;            // 合約id
-  contract_no: string;          // 合約編號
-  tlt_no: string;               // 專櫃編號
-  tlt_name: string;             // 專櫃名稱
-  // ven_no: string;            // 廠商編號 (DB漏開欄位)
-  ven_uniform: string;          // 廠商統編
-  VEN_Name: string;             // 廠商名稱
-  contract_subno: number;       // 版本編號
-  tlt_bdate: string;            // 契約起始日
-  tlt_edate: string;            // 契約截止日
-  tlt_contract_bdate: string;   // 營運起始日
-  tlt_contract_edate: string;   // 營運截止日
-  bus_type: string;             // 大分類代碼
-  bus_type_name: string;        // 大分類名稱
-  deco_type: string;            // 裝潢方式
-  money_type: string;           // 結帳方式
-  check_type: string;           // 對帳方式
-  tlt_term_type: string;        // 抽成別
-  store_way: string;            // 配合方式
-  rece_yn: string;              // 開立業主發票
-  pos_yn: string;               // 使用業主收銀機
-  cash_yn: string;              // 業主收現
-  contract_type: string;        // 合約種類
-  approve_status: string;       // 合約狀態
-  tlt_openflag: string;         // 營運狀態
-}
-interface DialogItem {
-  id: string;
-  talent_id: string;
-  contract_no: string;
-  contract_subno: string;
-  contract_version: string;
-  contract_filename: string;
-}
 //專櫃契約書列印
 @Component({
   selector: 'app-tls14020',
   templateUrl: './tls14020.component.html',
   styleUrl: './tls14020.component.scss',
   standalone: true,
-  imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputNumberComponent, DropdownComponent, InputTextComponent, InputNumberRangeComponent, CalendarRangeComponent, ButtonComponent, TranslateModule, TableComponent, MultiSelectComponent, DialogComponent, RadiobuttonYNComponent]
+  imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputNumberComponent, DropdownComponent, InputTextComponent, InputNumberRangeComponent, CalendarRangeComponent, ButtonComponent, TranslateModule, TableComponent, MultiSelectComponent, DialogComponent, RadiobuttonYNComponent, CheckboxModule]
 })
 export class TLS14020Component extends BasicQueryPageComponent<ContractItem> implements OnInit {
-  // ProgNo: string = '210018';
-  // 權限
-  // funInfo?: FunsrightInfo;
-  // 查詢
-  // loading: boolean = false;
-  // submitted: boolean = false;
-  queryForm = this.formBuilder.group({
-    contract_no: [, [Validators.maxLength(12)]], // 合約編號
-    bus_typeList: [[]], // 大分類
-    // businessTypeCode: [],
-    tlt_no: [, [Validators.maxLength(12)]], // 專櫃編號
-    tlt_name: [, [Validators.maxLength(100)]], // 專櫃名稱
-    ven_uniform_List: [[]], // 廠商統一編號
-    locationList: [[]], // 位置
-    contract_subno_Start: [, [Validators.maxLength(4)]], // 版本編號起
-    contract_subno_End: [, [Validators.maxLength(4)]], // 版本編號迄
-    approve_status_List: [[]],
-    area_no_List: [[]],
-    tlt_floor_List: [[]],
-    contact_USR_No_List: [[]],
-    org_id_List: [[]],
-    tlt_openflag_List: [[]],
-    comm_comp_type_List: [['2']],// 預設值為除稅
-    feedback_date_Start: [],
-    feedback_date_End: [],
-    due_date_Start: [],
-    due_date_End: [],
-    contact_Date_Start: [],
-    contact_Date_End: [],
-    paper_type_List: [[]],
-    tlt_bdate_Start: [yesterday],
-    tlt_bdate_End: [yesterday],
-    tlt_edate_Start: [yesterday],
-    tlt_edate_End: [yesterday],
-    tlt_contract_bdate_Start: [],
-    tlt_contract_bdate_End: [],
-    tlt_contract_edate_Start: [],
-    tlt_contract_edate_End: [],
-    tlt_kind_List: [[]],
-    deco_type_List: [[]],
-    tlt_term_type_List: [[]],
-    money_type_List: [[]],
-    paytype_List: [[]],
-    store_way_List: [[]],
-    rece_yn: [],
-    pos_yn: [],
-    cash_yn: [],
-    ...createPaginationConfig([{ field: 'contract_no', order: 1 }]),
-  });
+
+  constructor(
+    private vendorCategoryService: VendorCategoryOptionsService,
+    private contractStatusService: ContractStatusService,
+    private counterCategoryService: CounterCategoryService,
+    private settlementMethodService: SettlementMethodService,
+    private paymentMethodService: PaymentMethod2Service,
+    private cooperationMethodService: CooperationMethodService,
+    // private negotiatorService: UserCodeService,
+    private sysb800Service: Sysb800DropdownService,
+    private tls14020Service: TLS14020Service,
+    private locationService: LocationOptionsService,
+    private negotiatorService: NegotiatorOptionsService,
+    private apiService: TLS13010Service,
+
+  ) {
+    super();
+  }
+
   // 查詢的table參數
   data: ContractItem[] = [];
-  filteredData: any[] = [...this.data];
   selectedItems: ContractItem[] = [];// 多選項目
   totalRecords = 0;// 分頁和排序參數 // 排序需要
 
@@ -136,7 +72,8 @@ export class TLS14020Component extends BasicQueryPageComponent<ContractItem> imp
   dialogData: DialogItem[] = []; // 顯示合約的開窗table資料
   dialogTotalRecords = 0; // 分頁和排序參數 // 排序需要
   dialogLoading = false; // 開窗內table加載動畫
-  dialogVisible = false; // 開窗顯示
+  dialogVisible_log = false; // 列印記錄開窗顯示
+  dialogVisible_print = false; // 列印開窗顯示
 
 
   columns: Column[] = [
@@ -197,42 +134,75 @@ export class TLS14020Component extends BasicQueryPageComponent<ContractItem> imp
   ownerCashCollectionOptions: any[] = [];
   whetherOptions: any[] = [];
   businessTypeCodeOptions: any[] = [];
-
+  selectedRowData: ContractItem | null = null;
   addButton: AddButton[] = [
     {
       label: '列印',
       icon: 'pi pi-print text-green-500',
       action: (rowData: ContractItem) => {
-        this.onPrint(rowData);
+        this.selectedRowData = rowData;
+        this.dialogVisible_print = true;
+        // this.onPrint(rowData);
       },
     },
     {
       label: '顯示合約',
       icon: 'pi pi-file-word text-orange-500',
       action: (rowData: ContractItem) => {
-        this.dialogVisible = true;
+        this.dialogVisible_log = true;
         this.queryContractLog(rowData);
       },
     },
   ];
 
-  constructor(
-    private vendorCategoryService: VendorCategoryOptionsService,
-    private contractStatusService: ContractStatusService,
-    private counterCategoryService: CounterCategoryService,
-    private settlementMethodService: SettlementMethodService,
-    private paymentMethodService: PaymentMethod2Service,
-    private cooperationMethodService: CooperationMethodService,
-    // private negotiatorService: UserCodeService,
-    private sysb800Service: Sysb800DropdownService,
-    private tls14020Service: TLS14020Service,
-    private locationService: LocationOptionsService,
-    private negotiatorService: NegotiatorOptionsService,
-    private apiService: TLS13010Service,
+  queryForm = this.formBuilder.group({
+    contract_no: [, [Validators.maxLength(12)]], // 合約編號
+    bus_typeList: [[]], // 大分類
+    // businessTypeCode: [],
+    tlt_no: [, [Validators.maxLength(12)]], // 專櫃編號
+    tlt_name: [, [Validators.maxLength(100)]], // 專櫃名稱
+    ven_uniform_List: [[]], // 廠商統一編號
+    locationList: [[]], // 位置
+    contract_subno_Start: [, [Validators.maxLength(4)]], // 版本編號起
+    contract_subno_End: [, [Validators.maxLength(4)]], // 版本編號迄
+    approve_status_List: [[]],
+    area_no_List: [[]],
+    tlt_floor_List: [[]],
+    contact_USR_No_List: [[]],
+    org_id_List: [[]],
+    tlt_openflag_List: [[]],
+    comm_comp_type_List: [['2']],// 預設值為除稅
+    feedback_date_Start: [],
+    feedback_date_End: [],
+    due_date_Start: [],
+    due_date_End: [],
+    contact_Date_Start: [],
+    contact_Date_End: [],
+    paper_type_List: [[]],
+    tlt_bdate_Start: [yesterday],
+    tlt_bdate_End: [yesterday],
+    tlt_edate_Start: [yesterday],
+    tlt_edate_End: [yesterday],
+    tlt_contract_bdate_Start: [],
+    tlt_contract_bdate_End: [],
+    tlt_contract_edate_Start: [],
+    tlt_contract_edate_End: [],
+    tlt_kind_List: [[]],
+    deco_type_List: [[]],
+    tlt_term_type_List: [[]],
+    money_type_List: [[]],
+    paytype_List: [[]],
+    store_way_List: [[]],
+    rece_yn: [],
+    pos_yn: [],
+    cash_yn: [],
+    ...createPaginationConfig([{ field: 'contract_no', order: 1 }]),
+  });
 
-  ) {
-    super();
-  }
+  dialogQueryForm = this.formBuilder.group({
+    exportContract: [true], // 是否列印契約書
+    exportRules: [true], // 是否列印進駐廠商營運管理規範
+  })
 
   ngOnInit(): void {
     this.initializePage('TLS14020', '/TLS/TLS13010cru', this.queryForm, (form) => this.onSubmit(form));
@@ -276,8 +246,6 @@ export class TLS14020Component extends BasicQueryPageComponent<ContractItem> imp
         this.floorOptions = results.floor; // 樓層
         this.organizationOptions = results.org; // 組織
         this.businessTypeOptions = results.paperType; // 營業型態
-      },
-      error: (error) => {
       }
     });
     //洽談者
@@ -318,7 +286,6 @@ export class TLS14020Component extends BasicQueryPageComponent<ContractItem> imp
         next: (response: any) => {
           if (response.Status === '0000') {
             this.data = response.Data || [];
-            this.filteredData = [...this.data];
             this.totalRecords = response.TotalCount || response.Data.length;
             // 儲存查詢條件（成功查詢後）
             this.queryStateService.setQueryState(this.ProgNo, frm.value);
@@ -348,8 +315,34 @@ export class TLS14020Component extends BasicQueryPageComponent<ContractItem> imp
     });
   }
 
-  // 合約列印
-  onPrint(data: any): void {
+  // 下載以往列印過的契約書
+  downloadContractLog(data: any): void {
+    this.tls14020Service.downloadContractLog(data).subscribe(response => {
+      this.downloadFile(response.Data.FileData, response.Data.FileName);
+    });
+  }
+
+  // 匯出檔案
+  async onDialogSubmit(frm: FormGroup) {
+    if (frm.getRawValue().exportContract && this.selectedRowData) {
+      await this.onPrint(this.selectedRowData); // 契約書下載
+    }
+    if (frm.getRawValue().exportRules) {
+      await this.downloadRule();  // 管理規範下載
+    }
+    this.selectedRowData = null;
+    this.dialogVisible_print = false;
+  }
+
+  // 管理規範下載
+  async downloadRule() {
+    this.tls14020Service.downloadRule().subscribe(response => {
+      this.downloadFile(response.Data.FileData, '進駐廠商營運管理規範.docx');
+    });
+  }
+
+  // 列印契約書
+  onPrint(data: ContractItem): void {
     this.loading = true;
     this.messageService.blockUi();
     // 調後端來產生 Word 文檔
@@ -369,43 +362,28 @@ export class TLS14020Component extends BasicQueryPageComponent<ContractItem> imp
   }
 
   // 下載檔案的輔助函數
-  private downloadFile(fileData: any, filename: string): void {
-    try {
-      // 如果後端回傳的是base64字串
-      if (typeof fileData === 'string') {
-        const byteCharacters = atob(fileData);
-        const byteNumbers = new Array(byteCharacters.length);
-        for (let i = 0; i < byteCharacters.length; i++) {
-          byteNumbers[i] = byteCharacters.charCodeAt(i);
-        }
-        const byteArray = new Uint8Array(byteNumbers);
-        const blob = new Blob([byteArray], {
-          type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
-        });
+  private downloadFile(fileData: string, filename: string): void {
+    if (!fileData) return;
 
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = filename;
-        document.body.appendChild(a);
-        a.click();
-
-        // 清理
-        window.URL.revokeObjectURL(url);
-        document.body.removeChild(a);
-      }
-      // 如果後端直接回傳blob或其他格式，可以在這裡處理
-    } catch (error) {
+    const byteCharacters = atob(fileData);
+    const byteNumbers = new Array(byteCharacters.length);
+    for (let i = 0; i < byteCharacters.length; i++) {
+      byteNumbers[i] = byteCharacters.charCodeAt(i);
     }
-  }
-
-  // 下載以往列印過的契約書
-  downloadContractLog(data: any): void {
-    this.tls14020Service.downloadContractLog(data).subscribe({
-      next: (response: any) => {
-        this.downloadFile(response.Data.FileData, response.Data.FileName);
-      },
+    const byteArray = new Uint8Array(byteNumbers);
+    const blob = new Blob([byteArray], {
+      type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
     });
+
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+
+    window.URL.revokeObjectURL(url);
+    document.body.removeChild(a);
   }
 
   onClearForm() {
@@ -416,18 +394,10 @@ export class TLS14020Component extends BasicQueryPageComponent<ContractItem> imp
       talent_id: data.talent_id.toString(),
       SortBy: [{ field: 'apply_no', order: 1 }],
     };
-    this.apiService.queryTLS13010(item).subscribe({
-      next: (response: any) => {
-        if (response.Status === '0000') {
-          const rowData = response.Data || [];
-          if (rowData.length !== 0) {
-            this.navigateWithState(CRUDStatus.Read, rowData[0]);
-          }
-        } else {
-        }
-      },
-      complete: () => {
-        this.loading = false;
+    this.apiService.queryTLS13010(item).subscribe(response => {
+      const rowData = response.Data || [];
+      if (rowData.length !== 0) {
+        this.navigateWithState(CRUDStatus.Read, rowData[0]);
       }
     });
   }
