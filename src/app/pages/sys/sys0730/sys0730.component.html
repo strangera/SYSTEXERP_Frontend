@@ -7,10 +7,9 @@
       [headerStyleClass]="'query-accordionTab'">
       <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
-          <app-input-text class="col-12 md:col-6 lg:col-4" label="角色代號" controlName="roleCode"
-            [control]="queryForm.controls.Role_No" [submitted]="submitted" />
-          <app-input-text class="col-12 md:col-6 lg:col-4" label="角色名稱" controlName="roleCode"
-            [control]="queryForm.controls.Role_Name" [submitted]="submitted" />
+          <app-dropdown class="col-12 md:col-6 lg:col-4" label="角色代號" controlName="roleCode"
+            [control]="queryForm.controls.Role_No" [submitted]="submitted" [options]="roleCodeOptions"
+            optionLabel="label" optionValue="Role_No"></app-dropdown>
         </div>
         <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
           <app-button btnType="clear"></app-button>

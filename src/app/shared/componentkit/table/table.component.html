@@ -194,7 +194,7 @@
         </td>
       </ng-container>
       <ng-template #loadingTemplate>
-        <td *ngFor="let _ of [].constructor(getVisibleHeaderCount)">
+        <td *ngFor="let _ of [].constructor(getVisibleHeaderCount - 1)">
           <p-skeleton />
         </td>
       </ng-template>

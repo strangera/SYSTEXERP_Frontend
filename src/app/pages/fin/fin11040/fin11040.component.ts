@@ -11,6 +11,7 @@ import { AccordionModule } from 'primeng/accordion';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { TranslateModule } from '@ngx-translate/core';
+import { ValidationService } from '@shared/service/validation.service';
 @Component({
   selector: 'app-fin11040',
   templateUrl: './fin11040.component.html',
@@ -29,7 +30,7 @@ import { TranslateModule } from '@ngx-translate/core';
 //1.1.1.4 銷項品項資料設定
 export class FIN11040Component extends BasicQueryPageComponent<TDS1008Data> implements OnInit {
   queryForm = this.formBuilder.group({
-    INV_ItemNo: ['', [Validators.maxLength(2)]], // 品項代號
+    INV_ItemNo: ['', [Validators.maxLength(2), this.validationService.alphanumericValidator]], // 品項代號
     INV_ItemName: ['', [Validators.maxLength(30)]], // 品項名稱
     ...createPaginationConfig([{ field: 'ID', order: 1 }]), // 分頁和排序參數
   });
@@ -38,7 +39,8 @@ export class FIN11040Component extends BasicQueryPageComponent<TDS1008Data> impl
   selectedRows: TDS1008Data[] = [];
   columns = columns;
   constructor(
-    private fin11040Service: Fin11040Service
+    private fin11040Service: Fin11040Service,
+    private validationService: ValidationService
   ) {
     super(); // 呼叫父類建構子
   }

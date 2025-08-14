@@ -7,11 +7,11 @@ import { TableComponent } from '../../../shared/componentkit/table/table.compone
 import { TranslateModule } from '@ngx-translate/core';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { Role } from '@shared/models/sys/role.model';
-import { Column, createPaginationConfig, formatDateTime } from '@shared/componentkit/table/table.model';
+import { Column, createPaginationConfig } from '@shared/componentkit/table/table.model';
 import { Sys0210Service } from '@service/api/sys/sys0210.service';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { finalize } from 'rxjs';
-import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
+import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 
 @Component({
   selector: 'app-sys0730',
@@ -25,36 +25,24 @@ import { InputTextComponent } from '@shared/componentkit/input-text/input-text.c
     ButtonComponent,
     TableComponent,
     TranslateModule,
-    InputTextComponent
+    DropdownComponent
   ],
 })
 // 角色系統權限列表
-export class SYS0730Component extends BasicQueryPageComponent<Role> implements OnInit {
+export class SYS0730Component extends BasicQueryPageComponent<any> implements OnInit {
   queryForm = this.formBuilder.group({
     Role_No: ['', [Validators.maxLength(10)]], // 角色代號
-    Role_Name: ['', [Validators.maxLength(30)]], // 角色名稱
     ...createPaginationConfig([{ field: 'Role_No', order: 1 }]), // 分頁和排序參數
   });
   totalRecords = 0;// 分頁和排序參數 // 排序需要
-  data: Role[] = [];
+  data: any[] = [];
   columns: Column[] = [
-    { field: 'Role_No', header: '角色代號', visible: true },
-    { field: 'Role_Name', header: '角色名稱', visible: true },
-    { field: 'Description', header: '描述', visible: true },
-    { field: 'CRT_Date', header: '建立日期', visible: false, format: formatDateTime },
-    { field: 'CRT_USR_No', header: '建立人員編號', visible: false },
-    { field: 'CRT_USR_Name', header: '建立人員姓名', visible: false },
-    { field: 'UPD_Date', header: '變更日期', visible: false, format: formatDateTime },
-    { field: 'UPD_USR_No', header: '變更人員編號', visible: false },
-    { field: 'UPD_USR_Name', header: '變更人員姓名', visible: false },
+    { field: '', header: '主系統', visible: true },
+    { field: '', header: '子系統項目', visible: true },
+    { field: '', header: '作業代碼', visible: true },
+    { field: '', header: '具有限額之功能授權', visible: true },
   ];
-  //TODO 把它放在CRU
-  // columns: any[] = [
-  //   { field: 'mainSystem', header: '主系統', visible: true },
-  //   { field: 'subSystem', header: '子系統項目', visible: true },
-  //   { field: 'operationCode', header: '作業代碼', visible: true },
-  //   { field: 'authorization', header: '具有限額之功能授權', visible: true },
-  // ];
+  roleCodeOptions: Role[] = [];
   constructor(
     private sys0210Service: Sys0210Service
   ) {
@@ -63,6 +51,16 @@ export class SYS0730Component extends BasicQueryPageComponent<Role> implements O
 
   ngOnInit(): void {
     this.initializePage('SYS0730', '/SYS/SYS0730cru', this.queryForm);
+    this.sys0210Service.queryAllRole().pipe(untilDestroyed(this)).subscribe(response => {
+      if (response.Data) {
+        this.roleCodeOptions = response.Data.map((role: Role) => {
+          return {
+            ...role,
+            label: role.Role_No + ' - ' + role.Role_Name
+          }
+        });
+      }
+    })
   }
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {

@@ -6,12 +6,12 @@ import { ButtonComponent } from '../../../shared/componentkit/button/button.comp
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { TranslateModule } from '@ngx-translate/core';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
-import { UserData } from '@shared/models/sys/user.model';
-import { Column, createPaginationConfig, formatDateTime } from '@shared/componentkit/table/table.model';
-import { Sys0110Service } from '@service/api/sys/sys0110.service';
+import { Column, createPaginationConfig } from '@shared/componentkit/table/table.model';
+import { IUserResponse, Sys0110Service } from '@service/api/sys/sys0110.service';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { finalize } from 'rxjs';
-import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
+import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
+import { Sys0710Response, Sys0710Service } from '@service/api/sys/sys0710.service';
 
 @Component({
   selector: 'app-sys0710',
@@ -25,56 +25,54 @@ import { InputTextComponent } from '@shared/componentkit/input-text/input-text.c
     ButtonComponent,
     TableComponent,
     TranslateModule,
-    InputTextComponent
+    DropdownComponent
   ],
 })
 // 使用者系統權限列表
-export class SYS0710Component extends BasicQueryPageComponent<UserData> implements OnInit {
+export class SYS0710Component extends BasicQueryPageComponent<Sys0710Response> implements OnInit {
   queryForm = this.formBuilder.group({
-    user_No: ['', [Validators.maxLength(10)]], // 使用者編號
-    user_Name: ['', [Validators.maxLength(30)]], // 使用者名稱
-    ...createPaginationConfig([{ field: 'user_No', order: 1 }]), // 分頁和排序參數
+    user_No: ['', [Validators.required]], // 使用者編號
+    ...createPaginationConfig([{ field: 'MainSystemCode', order: 1 }]), // 分頁和排序參數
   });
   totalRecords = 0;// 分頁和排序參數 // 排序需要
-  data: UserData[] = [];
+  data: Sys0710Response[] = [];
+  userNoOptions: IUserResponse[] = [];
   columns: Column[] = [
-    { field: 'user_No', header: '使用者編號', visible: true },
-    { field: 'user_Name', header: '使用者名稱', visible: true },
-    { field: 'status', header: '使用者狀態', visible: true, format: (value: string) => value === '1' ? '有效' : value === '2' ? '停用' : value },
-    { field: 'CRT_Date', header: '建立日期', visible: false, format: formatDateTime },
-    { field: 'CRT_USR_No', header: '建立人員編號', visible: false },
-    { field: 'CRT_USR_Name', header: '建立人員名稱', visible: false },
-    { field: 'UPD_Date', header: '變更日期', visible: false, format: formatDateTime },
-    { field: 'UPD_USR_No', header: '變更人員編號', visible: false },
-    { field: 'UPD_USR_Name', header: '變更人員名稱', visible: false },
+    { field: 'User_No', header: '使用者代碼', visible: true, showSort: false },
+    { field: 'User_Name', header: '使用者名稱', visible: true, showSort: false },
+    { field: 'MainSystemCode', header: '主系統代碼', visible: true },
+    { field: 'MainSystemName', header: '主系統名稱', visible: true },
+    { field: 'SubsystemCode', header: '子系統代碼', visible: true },
+    { field: 'SubsystemName', header: '子系統名稱', visible: true },
+    { field: 'Prog_No', header: '作業代碼', visible: true },
+    { field: 'Prog_Name', header: '作業名稱', visible: true },
+    { field: 'FunctionButtons', header: '具有權限之功能按鍵', visible: true },
   ];
-  //TODO: 把它放在cru
-  // columns: any[] = [
-  //   // { field: 'serialNumber', header: '序號', visible: true },
-  //   { field: 'userCode', header: '使用者代碼', visible: true },
-  //   { field: 'userName', header: '使用者名稱', visible: true },
-  //   { field: 'mainSystemCode', header: '主系統代碼', visible: true },
-  //   { field: 'mainSystemName', header: '主系統名稱', visible: true },
-  //   { field: 'subSystemCode', header: '子系統代碼', visible: true },
-  //   { field: 'subSystemName', header: '子系統名稱', visible: true },
-  //   { field: 'operationCode', header: '作業代碼', visible: true },
-  //   { field: 'operationName', header: '作業名稱', visible: true },
-  //   { field: 'authorization', header: '具有權限之功能按鍵', visible: true },
-  // ];
   constructor(
-    private sys0110Service: Sys0110Service,
+    private readonly sys0110Service: Sys0110Service,
+    private readonly sys0710Service: Sys0710Service
   ) {
     super();
   }
 
   ngOnInit(): void {
     this.initializePage('SYS0710', '/SYS/sys0710cru', this.queryForm);
+    this.sys0110Service.queryAllUsers().pipe(untilDestroyed(this)).subscribe(response => {
+      if (response.Data) {
+        this.userNoOptions = response.Data.map((user: IUserResponse) => {
+          return {
+            ...user,
+            label: user.user_No + ' - ' + user.user_Name
+          }
+        });
+      }
+    })
   }
 
   // 表單提交邏輯
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
-      this.sys0110Service.queryUser(frm.value).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe((response) => {
+      this.sys0710Service.querySys0710(frm.value).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe((response) => {
         if (response.Data) {
           this.data = response.Data
           this.totalRecords = response.TotalCount || response.Data.length;
