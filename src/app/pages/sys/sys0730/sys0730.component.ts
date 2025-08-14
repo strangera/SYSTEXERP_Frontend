@@ -1,158 +1,82 @@
-import { Component } from '@angular/core';
-import { FormBuilder, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { NavigationExtras, Router } from '@angular/router';
-// Permissions
-import {
-  FunsrightInfo,
-  PermissionsInfo,
-} from '../../../shared/models/system/funsrightInfo';
-// Shared
-import { AuthService } from '../../../service/system/auth.service';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-
-import { RoleCodeService } from '../../../service/basic/role-code.service';
+import { Component, OnInit } from '@angular/core';
+import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { AccordionModule } from 'primeng/accordion';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { TranslateModule } from '@ngx-translate/core';
+import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
+import { Role } from '@shared/models/sys/role.model';
+import { Column, createPaginationConfig, formatDateTime } from '@shared/componentkit/table/table.model';
+import { Sys0210Service } from '@service/api/sys/sys0210.service';
+import { untilDestroyed } from '@ngneat/until-destroy';
+import { finalize } from 'rxjs';
+import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
 
 @Component({
   selector: 'app-sys0730',
   templateUrl: './sys0730.component.html',
-  styleUrl: './sys0730.component.scss',
   standalone: true,
   imports: [
     MenubarComponent,
     AccordionModule,
     FormsModule,
     ReactiveFormsModule,
-    DropdownComponent,
     ButtonComponent,
     TableComponent,
     TranslateModule,
+    InputTextComponent
   ],
 })
 // 角色系統權限列表
-export class SYS0730Component {
-  ProgNo: string = '420010';
-  // 權限
-  funInfo?: FunsrightInfo;
-
-
-
-
-  // 查詢
-  loading: boolean = false;
-  submitted: boolean = false;
+export class SYS0730Component extends BasicQueryPageComponent<Role> implements OnInit {
   queryForm = this.formBuilder.group({
-    roleCode: [, [Validators.required]], // DropDown
+    Role_No: ['', [Validators.maxLength(10)]], // 角色代號
+    Role_Name: ['', [Validators.maxLength(30)]], // 角色名稱
+    ...createPaginationConfig([{ field: 'Role_No', order: 1 }]), // 分頁和排序參數
   });
-
-  // 表格
-  data: any[] = [
-
+  totalRecords = 0;// 分頁和排序參數 // 排序需要
+  data: Role[] = [];
+  columns: Column[] = [
+    { field: 'Role_No', header: '角色代號', visible: true },
+    { field: 'Role_Name', header: '角色名稱', visible: true },
+    { field: 'Description', header: '描述', visible: true },
+    { field: 'CRT_Date', header: '建立日期', visible: false, format: formatDateTime },
+    { field: 'CRT_USR_No', header: '建立人員編號', visible: false },
+    { field: 'CRT_USR_Name', header: '建立人員姓名', visible: false },
+    { field: 'UPD_Date', header: '變更日期', visible: false, format: formatDateTime },
+    { field: 'UPD_USR_No', header: '變更人員編號', visible: false },
+    { field: 'UPD_USR_Name', header: '變更人員姓名', visible: false },
   ];
-  filteredData: any[] = [...this.data];
-  columns: any[] = [
-    { field: 'mainSystem', header: '主系統', visible: true },
-    { field: 'subSystem', header: '子系統項目', visible: true },
-    { field: 'operationCode', header: '作業代碼', visible: true },
-    { field: 'authorization', header: '具有限額之功能授權', visible: true },
-  ];
-
-  // 選項
-  roleCodeOptions: any[] = [];
-
+  //TODO 把它放在CRU
+  // columns: any[] = [
+  //   { field: 'mainSystem', header: '主系統', visible: true },
+  //   { field: 'subSystem', header: '子系統項目', visible: true },
+  //   { field: 'operationCode', header: '作業代碼', visible: true },
+  //   { field: 'authorization', header: '具有限額之功能授權', visible: true },
+  // ];
   constructor(
-    private router: Router,
-    private formBuilder: FormBuilder,
-    private messageService: NotificationService,
-    private authService: AuthService,
-    private roleCodeService: RoleCodeService
-  ) { }
+    private sys0210Service: Sys0210Service
+  ) {
+    super();
+  }
 
   ngOnInit(): void {
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
-
-    this.roleCodeService.getRoleCodes().subscribe((data) => {
-      this.roleCodeOptions = data;
-    });
+    this.initializePage('SYS0730', '/SYS/SYS0730cru', this.queryForm);
   }
-
-  canQuery(): boolean {
-    return true;
-  }
-
-  canAdd(): boolean {
-    return true;
-  }
-
-  canEdit(): boolean {
-    return true;
-  }
-
   onSubmit(frm: FormGroup) {
-    console.log(frm.value);
-    this.submitted = true;
-    this.loading = true;
-    this.messageService.blockUi();
-
-    if (frm.valid && this.canQuery()) {
-      // 提交邏輯
-    }
-
-    this.loading = false;
-    this.messageService.unblockUi();
-  }
-
-  onSubmitQuery(frm: FormGroup) {
-    // 查詢邏輯
-    this.onSubmit(frm);
-  }
-
-  onClearForm() {
-    this.queryForm.reset();  // 重置表單
-  }
-
-  onCreate() {
-    if (this.canAdd()) {
-      let extras: NavigationExtras = {
-        state: {
-          crudstatus: CRUDStatus.Create,
-          queryform: this.queryForm,
-        },
-        skipLocationChange: true,
-      };
-      this.router.navigate(['/demoCRU'], extras);
-    }
-  }
-
-  onEdit(data: any) {
-    if (this.canEdit()) {
-      let extras: NavigationExtras = {
-        state: {
-          crudstatus: CRUDStatus.Edit,
-          rowdata: data,
-          queryform: this.queryForm,
-        },
-        skipLocationChange: true,
-      };
-      this.router.navigate(['/demoCRU'], extras);
-    }
-  }
-
-  onDetail(data: any) {
-    let extras: NavigationExtras = {
-      state: {
-        crudstatus: CRUDStatus.Read,
-        rowdata: data,
-        queryform: this.queryForm,
-      },
-      skipLocationChange: true,
-    };
-    this.router.navigate(['/demoCRU'], extras);
+    this.handleSubmit(frm, () => {
+      this.sys0210Service.queryRole(frm.value).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(response => {
+        if (response.Data) {
+          this.data = response.Data
+          this.totalRecords = response.TotalCount || response.Data.length;
+          this.queryStateService.setQueryState(this.ProgNo, frm.value);
+        } else {
+          this.data = [];
+          this.totalRecords = 0;
+          this.messageService.warnBubble(response.Message);
+        }
+      });
+    });
   }
 }
