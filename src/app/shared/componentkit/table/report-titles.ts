@@ -20,4 +20,6 @@ export const REPORT_TITLES: Record<string, string> = {
   querySYS0730: 'tblRoleBehavior角色系統權限列表',
   querySYS0740: 'tblRoleBehavior角色系統權限列表',
   querySYS0750: 'tblUserRole使用者角色列表',
+  querySYS0770AllUsers: 'tblUserRole使用者角色列表',
+  querySYS0770UserRoles: 'tblUserRole使用者角色列表',
 };
