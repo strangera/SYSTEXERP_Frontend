@@ -32,10 +32,10 @@ import { InputTextModule } from 'primeng/inputtext';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { DialogModule } from 'primeng/dialog';
 import { RadioButtonModule } from 'primeng/radiobutton';
-import { PrimeTemplate } from 'primeng/api';
-import { ButtonDirective } from 'primeng/button';
+import { finalize } from 'rxjs/operators';
 import { TranslateModule } from '@ngx-translate/core';
-import { Subscription, EMPTY, throwError, of, Subject } from 'rxjs'; // ✅ Subject 用於 takeUntil
+
+import { TableComponent } from '@shared/componentkit/table/table.component';
 
 type DisplayMode = 'Report' | 'SummaryReport';
 
@@ -59,20 +59,16 @@ type DisplayMode = 'Report' | 'SummaryReport';
     ButtonComponent,
     DialogModule,
     RadioButtonModule,
-    PrimeTemplate,
-    ButtonDirective,
     TranslateModule,
+    TableComponent,
+
   ],
 })
 export class TLS23030Component extends BasicQueryPageComponent<any> {
-  private readonly STORAGE_KEY = 'TLS23030:queryForm';
-  private destroy$ = new Subject<void>();           // ✅ 統一退訂的開關
-  querySubscription: Subscription | null = null;
 
-  displayMode: DisplayMode = 'Report';
   data: any[] = [];
   totalRecords = 0;
-  useSummaryMode = false;
+
 
   readonly yesterday: Date = (() => {
     const d = new Date();
@@ -83,7 +79,7 @@ export class TLS23030Component extends BasicQueryPageComponent<any> {
 
   // ✅ 陣列型欄位用 control<any[]>([])，避免 never[] 型別問題
    queryForm = this.formBuilder.group({
-    DisplayMode: this.displayMode, // 預設為明細表模式
+    
     TXN_DateStart: [this.yesterday, [Validators.required]],
     TXN_DateEnd: [this.yesterday, [Validators.required]],
     ECR_No: [], // ✅ 修正為 []
@@ -197,6 +193,7 @@ export class TLS23030Component extends BasicQueryPageComponent<any> {
   OrganizationCodeOptions: any[] = [];
   ECRNoOptions: any[] = [];
   CounterOptions: any[] = [];
+  
 
   constructor(
     private whetherService: WhetherService,
@@ -210,8 +207,8 @@ export class TLS23030Component extends BasicQueryPageComponent<any> {
     private deductionbigCategoryService: DeductionbigCategoryService,
     private commissionTypeService: CommissionTypeService,
     private floorService: FloorService,
-    private tls11010Service: Tls11010Service,
     private tls23030Service: TLS23030Service,
+    private tls11010Service: Tls11010Service,
     private txnStatusService: TxnStatusService,
     private ECRNoService: ECRNoService,
     private counterNameService: CounterNameService,
@@ -220,17 +217,9 @@ export class TLS23030Component extends BasicQueryPageComponent<any> {
   }
 
   ngOnInit(): void {
-    this.initializePage('TLS23030', '', this.queryForm);
+    this.initializePage('TLS23030', 'tls/tls23030cru', this.queryForm, (form) => this.onSubmit(form));
 
-    // ✅ 從 localStorage 還原
-    this.restoreQueryFromStorage();
-
-    // ✅ valueChanges 儲存 + 自動退訂
-    this.queryForm.valueChanges
-      .pipe(debounceTime(300), timeout(30000), catchError(() => of(null)))
-      .subscribe(() => this.saveQueryToStorage());
-
-    // ✅ 下拉資料全數 takeUntil，避免記憶體洩漏
+    
     this.displayModeService.getDisplayModes()
       .pipe()
       .subscribe((data) => (this.displayModeOptions = data));
@@ -334,109 +323,73 @@ export class TLS23030Component extends BasicQueryPageComponent<any> {
     };
   }
 
+  onSubmit(form: FormGroup): void {
+  this.handleSubmit(form, () => this.doQuery());
+}
+
+/** 後端要 yyyy-MM-ddTHH:mm:ss（本地時區、去偏移） */
+private toIso(val: any): string | undefined {
+  if (!val) return undefined;
+  const d = typeof val === 'string' ? new Date(val) : (val as Date);
+  if (isNaN(d.getTime())) return undefined;
+  return new Date(d.getTime() - d.getTimezoneOffset() * 60000)
+    .toISOString()
+    .slice(0, 19);
+}
+
+/** 組查詢 payload + 清掉空值與空陣列 */
+private buildPayload(val: any) {
+  const o: any = {
+    ...val,
+    TXN_DateStart: this.toIso(val?.TXN_DateStart),
+    TXN_DateEnd:   this.toIso(val?.TXN_DateEnd),
+    TXN_No_Start:  val?.TXN_No_Start != null && val?.TXN_No_Start !== '' ? Number(val.TXN_No_Start) : undefined,
+    TXN_No_End:    val?.TXN_No_End   != null && val?.TXN_No_End   !== '' ? Number(val.TXN_No_End)   : undefined,
+    TXN_PayAmt_Start: val?.TXN_PayAmt_Start != null && val?.TXN_PayAmt_Start !== '' ? Number(val.TXN_PayAmt_Start) : undefined,
+    TXN_PayAmt_End:   val?.TXN_PayAmt_End   != null && val?.TXN_PayAmt_End   !== '' ? Number(val.TXN_PayAmt_End)   : undefined,
+  };
+
+  Object.keys(o).forEach((k) => {
+    const v = o[k];
+    if (v === '' || v === null || v === undefined) delete o[k];
+    if (Array.isArray(v) && v.length === 0) delete o[k];
+  });
+
+  return o;
+}
+
+/** 單一入口查詢（不傳 displayMode 第二參數） */
+private doQuery(): void {
+  const payload = this.buildPayload(this.queryForm.value);
+  this.loading = true;
+  this.messageService?.blockUi();
+
+  this.tls23030Service
+    .queryTLS23030(payload) // 👈 只傳 body，displayMode 不用
+    .pipe(finalize(() => {
+      this.loading = false;
+      this.messageService?.unblockUi();
+    }))
+    .subscribe({
+      next: (res) => {
+        const raw = res?.Data ?? [];
+        this.data = raw.map((item: any, idx: number) => ({
+          ...item,
+          _rowKey: `${item.SYS_StoreNo ?? ''}|${String(item.TXN_Date ?? '').slice(0, 19)}|${item.ECR_No ?? ''}|${item.TXN_No ?? idx}`,
+        }));
+        this.totalRecords = res?.TotalCount ?? this.data.length;
+      },
+      error: (err) => {
+        console.error('TLS23030 查詢失敗', err);
+      },
+    });
+}
+
+
   getLabelFromOptions(value: any, options: any[]): string {
     const found = options?.find((opt) => String(opt.value) === String(value));
     return found ? found.label : value;
   }
 
-  // 報表
-  showPageSizeDialog = false;
-  customPageSize = 1000;
 
-  goToReportMode(): void {
-    this.useSummaryMode = true;
-    if (!this.customPageSize || this.customPageSize <= 0) {
-      this.customPageSize = 1000;
-    }
-    this.showPageSizeDialog = true;
-  }
-
-  confirmPageSizeAndNavigate(): void {
-    this.submitted = true;
-    if (this.queryForm.invalid) {
-      this.messageService.warnBubble('請確認欄位資料是否完整');
-      this.queryForm.markAllAsTouched();
-      return;
-    }
-
-    const queryFormValue = this.cleanFormPayload({
-      ...this.queryForm.value,
-      pageSize: this.customPageSize,
-      DisplayMode: this.displayMode,
-    });
-
-    this.loading = true;
-    this.messageService.blockUi();
-
-    this.tls23030Service
-      .queryTLS23030(queryFormValue)
-      .pipe(
-        timeout(30000),
-        catchError((err) => {
-          if (err?.name === 'TimeoutError') {
-            this.messageService.warnBubble('查詢時間過久，請嘗試縮小查詢條件範圍');
-          } else {
-            this.messageService.errorBubble('查詢失敗');
-          }
-          this.loading = false;
-          this.messageService.unblockUi();
-          return of({ Status: '9999', Data: [] });
-        })
-      )
-      .subscribe({
-        next: (res) => {
-          if (res.Status === '0000') {
-            const resultData = res.Data || [];
-            this.queryStateService.setQueryState(this.ProgNo, queryFormValue);
-            this.router.navigate(['account/tls/tls23030cru'], {
-              state: {
-                queryFormValue,
-                pageSize: this.customPageSize,
-                data: resultData,
-              },
-            });
-          } else if (res.Status !== '9999') {
-            this.messageService.errorBubble('查詢失敗');
-          }
-        },
-        complete: () => {
-          this.loading = false;
-          this.messageService.unblockUi();
-          this.showPageSizeDialog = false;
-        },
-      });
-  }
-
-  /** 儲存查詢條件（日期轉 ISO） */
-  private saveQueryToStorage(): void {
-    const raw = this.queryForm.getRawValue();
-    const payload = JSON.stringify(raw, (k, v) => (v instanceof Date ? v.toISOString() : v));
-    localStorage.setItem(this.STORAGE_KEY, payload);
-  }
-
-  /** 從 LocalStorage 還原查詢條件（ISO -> Date） */
-  private restoreQueryFromStorage(): void {
-    const json = localStorage.getItem(this.STORAGE_KEY);
-    if (!json) return;
-    const parsed = JSON.parse(json, (_k, v) => {
-      if (typeof v === 'string' && /^\d{4}-\d{2}-\d{2}T/.test(v)) {
-        const d = new Date(v);
-        return isNaN(d.getTime()) ? v : d;
-      }
-      return v;
-    });
-    this.queryForm.patchValue(parsed, { emitEvent: false });
-  }
-
-  /** 清除 LocalStorage 內儲存的查詢條件 */
-  private clearQueryStorage(): void {
-    localStorage.removeItem(this.STORAGE_KEY);
-  }
-
-  ngOnDestroy(): void {
-    this.destroy$.next();
-    this.destroy$.complete();
-
-    this.querySubscription?.unsubscribe();
-  }
 }

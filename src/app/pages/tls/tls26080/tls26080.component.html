@@ -15,7 +15,6 @@
             id="queryForm"
             (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
-          <!-- 活動單號 -->
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-text label="活動單號"
                             controlName="pod_no"
@@ -25,7 +24,6 @@
             </app-input-text>
           </div>
 
-          <!-- 活動名稱 -->
           <div class="col-12 md:col-6 lg:col-8">
             <app-input-text label="活動名稱"
                             controlName="pod_desc"
@@ -36,9 +34,7 @@
           </div>
         </div>
 
-
         <div class="grid p-fluid">
-          <!-- 活動起始日 -->
           <div class="col-12 md:col-6 lg:col-4">
             <app-calendar-range calendarType="dateRange"
                                 label="活動起始日期"
@@ -48,7 +44,6 @@
             </app-calendar-range>
           </div>
 
-          <!-- 活動正檔 -->
           <div class="col-12 md:col-6 lg:col-4">
             <app-calendar label="活動正檔日期"
                           controlName="pod_busdate"

@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { Validators, FormsModule, ReactiveFormsModule, FormGroup } from '@angular/forms';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { TaxableService } from '../../../service/basic/taxable.service';
 import { DiscountService } from '../../../service/basic/discount.service';
@@ -27,81 +27,69 @@ import { InputTextModule } from 'primeng/inputtext';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { DialogModule } from 'primeng/dialog';
 import { RadioButtonModule } from 'primeng/radiobutton';
-import { PrimeTemplate } from 'primeng/api';
-import { ButtonDirective } from 'primeng/button';
 import { TranslateModule } from '@ngx-translate/core';
-import { Subscription, EMPTY, throwError, BehaviorSubject } from 'rxjs';
-import { Subject } from 'rxjs';      // ✅ 新增
-import { takeUntil, debounceTime } from 'rxjs/operators'; // ✅ 新增
-
-const now = new Date();
+import { TableComponent } from '@shared/componentkit/table/table.component';
 
 @Component({
-    selector: 'app-tls23020',
-    templateUrl: './tls23020.component.html',
-    styleUrls: ['./tls23020.component.scss'],
-    standalone: true,
-    imports: [
-        MenubarComponent,
-        AccordionModule,
-        FormsModule,
-        ReactiveFormsModule,
-        CalendarRangeQuickComponent,
-        MultiSelectComponent,
-        InputNumberRangeComponent,
-        InputTextComponent,
-        DropdownComponent,
-        CheckboxModule,
-        InputTextModule,
-        ButtonComponent,
-        DialogModule,
-        RadioButtonModule,
-        PrimeTemplate,
-        ButtonDirective,
-        TranslateModule,
-    ],
+  selector: 'app-tls23020',
+  templateUrl: './tls23020.component.html',
+  styleUrls: ['./tls23020.component.scss'],
+  standalone: true,
+  imports: [
+    MenubarComponent,
+    AccordionModule,
+    FormsModule,
+    ReactiveFormsModule,
+    CalendarRangeQuickComponent,
+    MultiSelectComponent,
+    InputNumberRangeComponent,
+    InputTextComponent,
+    DropdownComponent,
+    CheckboxModule,
+    InputTextModule,
+    ButtonComponent,
+    DialogModule,
+    RadioButtonModule,
+    TranslateModule,
+    TableComponent,
+  ],
 })
 export class TLS23020Component extends BasicQueryPageComponent<any> {
-  
-  //所需參數
-  private readonly STORAGE_KEY = 'TLS23020:queryForm';
-  private destroy$ = new Subject<void>();   // ✅ 新增
-  querySubscription: Subscription | null = null;
-  displayMode: 'Detail' | 'Summary' = 'Detail'; // 預設顯示明細報表
   data: any[] = [];
-  totalRecords: number = 0;
-    readonly yesterday: Date = (() => {
+  totalRecords = 0;
+
+  readonly yesterday: Date = (() => {
     const d = new Date();
     d.setHours(0, 0, 0, 0);
     d.setDate(d.getDate() - 1);
     return d;
   })();
-  //Request
- queryForm = this.formBuilder.group({
+
+  // Request
+  queryForm = this.formBuilder.group({
     TXN_DateStart: [this.yesterday, [Validators.required]], // 交易日期起
-    TXN_DateEnd: [this.yesterday, [Validators.required]], // 交易日期訖
-    ECR_No: [], // 收銀機機號
-    TXN_No_Start: [null, [this.validationService.numberValidator]], // 交易序號起
-    TXN_No_End: [null, [this.validationService.numberValidator]], // 交易序號訖
+    TXN_DateEnd:   [this.yesterday, [Validators.required]], // 交易日期訖
+    ECR_No: [],                       // 收銀機機號
+    TXN_No_Start: [null, [this.validationService.numberValidator]],
+    TXN_No_End:   [null, [this.validationService.numberValidator]],
     TLT_No: [],
-    TXN_GUINo: [''], // 發票號碼
-    PLU_SalePrc_Start: [null], // 售價起
-    PLU_SalePrc_End: [null], // 售價訖
-    TXN_TaxType: [], // 稅別
-    TXN_DiscCode: [], // 原始折扣代碼
-    tlt_id: [], // 分類抽成類別
-    PLU_MagNo: [], // 商品管理編號
-    ACT_DiscCode: [], // 專櫃折數代碼
-    IsNoPLU_No: [false], // 是否無條碼商品
-    rece_yn: [], // 是否代收(顯示方式)
-    cash_yn: [], // 是否代售(顯示方式)
-    tlt_building: [], // 所屬大樓
-    tlt_floor: [], // 所屬樓層
-    org_id: [], // 組織代碼
-    isSummary: false,
+    TXN_GUINo: [''],                  // 發票號碼
+    PLU_SalePrc_Start: [null],
+    PLU_SalePrc_End:   [null],
+    TXN_TaxType: [],
+    TXN_DiscCode: [],
+    tlt_id: [],
+    PLU_MagNo: [],
+    ACT_DiscCode: [],
+    IsNoPLU_No: [false],
+    rece_yn: [],
+    cash_yn: [],
+    tlt_building: [],
+    tlt_floor: [],
+    org_id: [],
+    isSummary: false,                 // 保留欄位，但本畫面不切換模式
     ...createPaginationConfig([{ field: 'ECR_No', order: 1 }]),
   });
-
 
   // 下拉選單選項
   taxableOptions: any[] = [];
@@ -112,13 +100,9 @@ export class TLS23020Component extends BasicQueryPageComponent<any> {
   commissionTypeOptions: any[] = [];
   whetherOptions: any[] = [];
   txnStatusOptions: any[] = [];
-  checkTotalAmount = [
-    { value: 1, label: '是' },
-    { value: 2, label: '否' },
-  ];
   OrganizationCodeOptions: any[] = [];
-  ECRNoOptions: any[] = []; // 收銀機號下拉選單
-  CounterOptions: any[] = []; // 專櫃選項
+  ECRNoOptions: any[] = [];
+  CounterOptions: any[] = [];
 
   constructor(
     private tls23020Service: TLS23020Service,
@@ -138,49 +122,17 @@ export class TLS23020Component extends BasicQueryPageComponent<any> {
   }
 
   ngOnInit(): void {
-  this.initializePage('TLS23020', 'TLS23020cru', this.queryForm);
+    this.initializePage('TLS23020', 'tls/tls23020cru', this.queryForm, (form) => this.onSubmit(form));
 
-  this.restoreQueryFromStorage();
+    this.tls11010Service.getBuildingOptions().subscribe(res => this.BUILDING_NO_Options = res);
+    this.taxableService.getSystemTypes().subscribe(data => this.taxableOptions = data);
+    this.discountService.getLocalDiscountOptions().subscribe(data => this.discountOptions = data);
+    this.deductionbigCategoryService.getLocalDeductionCategories().subscribe(data => this.deductionbigCategoryOptions = data);
+    this.whetherService.getWhetherOptions().subscribe(data => this.whetherOptions = data);
+    this.txnStatusService.getTxnStatusOptions().subscribe(data => this.txnStatusOptions = data);
+    this.floorService.getFloors().subscribe(data => this.floorOptions = data);
 
-  // ✅ 用 takeUntil，不再需要 this.formValueSub
-  this.queryForm.valueChanges
-    .pipe(debounceTime(300), takeUntil(this.destroy$))
-    .subscribe(() => this.saveQueryToStorage());
-
-  // ❌ 刪掉這段混用 key 的讀取
-  // const savedQuery = localStorage.getItem('TLS23010_queryForm') ...
-
-  this.tls11010Service.getBuildingOptions()
-    .pipe(takeUntil(this.destroy$))
-    .subscribe(res => this.BUILDING_NO_Options = res);
-
-  this.taxableService.getSystemTypes()
-    .pipe(takeUntil(this.destroy$))
-    .subscribe(data => this.taxableOptions = data);
-
-  this.discountService.getLocalDiscountOptions()
-    .pipe(takeUntil(this.destroy$))
-    .subscribe(data => this.discountOptions = data);
-
-  this.deductionbigCategoryService.getLocalDeductionCategories()
-    .pipe(takeUntil(this.destroy$))
-    .subscribe(data => this.deductionbigCategoryOptions = data);
-
-  this.whetherService.getWhetherOptions()
-    .pipe(takeUntil(this.destroy$))
-    .subscribe(data => this.whetherOptions = data);
-
-  this.txnStatusService.getTxnStatusOptions()
-    .pipe(takeUntil(this.destroy$))
-    .subscribe(data => this.txnStatusOptions = data);
-
-  this.floorService.getFloors()
-    .pipe(takeUntil(this.destroy$))
-    .subscribe(data => this.floorOptions = data);
-
-  this.tls11010Service.getOrgOptions()
-    .pipe(takeUntil(this.destroy$))
-    .subscribe(res => {
+    this.tls11010Service.getOrgOptions().subscribe(res => {
       this.OrganizationCodeOptions = (res ?? []).map((x: any) => ({
         label: x.label,
         formLabel: `${x.value} - ${x.label}`,
@@ -188,9 +140,7 @@ export class TLS23020Component extends BasicQueryPageComponent<any> {
       }));
     });
 
-  this.commissionTypeService.getCommissionTypes()
-    .pipe(takeUntil(this.destroy$))
-    .subscribe(res => {
+    this.commissionTypeService.getCommissionTypes().subscribe(res => {
       this.commissionTypeOptions = (res ?? []).map((x: any) => ({
         label: x.label,
         formLabel: `${x.value} - ${x.label}`,
@@ -198,9 +148,7 @@ export class TLS23020Component extends BasicQueryPageComponent<any> {
       }));
     });
 
-  this.ECRNoService.getECRNo()
-    .pipe(takeUntil(this.destroy$))
-    .subscribe(res => {
+    this.ECRNoService.getECRNo().subscribe(res => {
       this.ECRNoOptions = (res ?? []).map((x: any) => ({
         label: x.label,
         formLabel: `${x.value} - ${x.label}`,
@@ -208,127 +156,156 @@ export class TLS23020Component extends BasicQueryPageComponent<any> {
       }));
     });
 
-  this.counterNameService.getCounters()
-    .pipe(takeUntil(this.destroy$))
-    .subscribe(res => {
+    this.counterNameService.getCounters().subscribe(res => {
       this.CounterOptions = (res ?? []).map((x: any) => ({
         label: x.label,
         formLabel: `${x.value} - ${x.label}`,
         value: x.value,
       }));
     });
-}
-
-
-  
-  getLabelFromOptions(value: any, options: any[]): string {
-    const found = options?.find((opt) => String(opt.value) === String(value));
-    return found ? found.label : value;
   }
 
-  showPageSizeDialog = false;
-  customPageSize = 1000;
-
-  goToReportMode(): void {
-    if (this.queryForm.invalid) {
-      this.messageService.warnBubble('請先完成查詢條件');
-      this.queryForm.markAllAsTouched();
-      return;
-    }
-
-    if (!this.customPageSize || this.customPageSize <= 0) {
-      this.customPageSize = 1000;
-    }
-    this.showPageSizeDialog = true;
+  onSubmit(form: FormGroup): void {
+    this.handleSubmit(form, () => this.doQuery());
   }
 
-  confirmPageSizeAndNavigate(): void {
-    console.log('✅ displayMode 傳送前:', this.displayMode);
-    this.submitted = true;
-    if (this.queryForm.invalid) {
-      this.messageService.warnBubble('請確認欄位資料是否完整');
-      this.queryForm.markAllAsTouched();
-      return;
-    }
+  // 將 lazy 的分頁/排序寫回表單後，呼叫同一支查詢
+  runQueryFromTable(event: any) {
+    this.queryForm.patchValue(
+      {
+        pageIndex: event?.pageIndex ?? this.queryForm.value.pageIndex,
+        pageSize:  event?.pageSize  ?? this.queryForm.value.pageSize,
+        SortBy:    event?.SortBy    ?? this.queryForm.value.SortBy,
+      },
+      { emitEvent: false },
+    );
+    this.doQuery();
+  }
 
-    const rawFormValue = { ...this.queryForm.value } as any;
-    for (const key in rawFormValue) {
-      if (rawFormValue[key] === '') rawFormValue[key] = null;
-    }
+  /** 將日期控制項轉成後端要的 yyyy-MM-ddTHH:mm:ss（本地時間、去時區偏移） */
+  private toIso(val: any): string | undefined {
+    if (!val) return undefined;
+    const d = typeof val === 'string' ? new Date(val) : (val as Date);
+    if (isNaN(d.getTime())) return undefined;
+    return new Date(d.getTime() - d.getTimezoneOffset() * 60000)
+      .toISOString()
+      .slice(0, 19);
+  }
 
-    const queryFormValue = {
-      ...rawFormValue,
-      pageSize: this.customPageSize,
+  /** 組查詢 payload，並清掉空值/空陣列，避免干擾後端繫結 */
+  private buildPayload(val: any) {
+    const o: any = {
+      ...val,
+      TXN_DateStart: this.toIso(val?.TXN_DateStart),
+      TXN_DateEnd:   this.toIso(val?.TXN_DateEnd),
+      TXN_No_Start:  val?.TXN_No_Start != null && val?.TXN_No_Start !== '' ? Number(val.TXN_No_Start) : undefined,
+      TXN_No_End:    val?.TXN_No_End   != null && val?.TXN_No_End   !== '' ? Number(val.TXN_No_End)   : undefined,
     };
 
+    Object.keys(o).forEach((k) => {
+      const v = o[k];
+      if (v === '' || v === null || v === undefined) delete o[k];
+      if (Array.isArray(v) && v.length === 0) delete o[k];
+    });
+
+    return o;
+  }
+
+  private doQuery(): void {
+    const payload = this.buildPayload(this.queryForm.value);
     this.loading = true;
-    this.messageService.blockUi();
+    this.messageService?.blockUi();
 
     this.tls23020Service
-      .queryTLS23020(queryFormValue, this.displayMode)
+      .queryTLS23020(payload) // ✅ 注意大小寫：queryTLS23020
+      .pipe(finalize(() => {
+        this.loading = false;
+        this.messageService?.unblockUi();
+      }))
       .subscribe({
         next: (res) => {
-          if (res.Status === '0000') {
-            this.queryStateService.setQueryState(this.ProgNo, queryFormValue);
-            this.router.navigate(['account/tls/tls23020cru'], {
-              state: {
-                queryFormValue,
-                pageSize: this.customPageSize,
-                data: res.Data || [],
-                displayMode: this.displayMode,
-              },
-            });
-            
-          } else {
-            this.messageService.errorBubble('查詢失敗');
-          }
+          const raw = res?.Data ?? [];
+          this.data = raw.map((item: any, idx: number) => ({
+            ...item,
+            _rowKey: `${item.SYS_StoreNo ?? ''}|${String(item.TXN_Date ?? '').slice(0, 19)}|${item.ECR_No ?? ''}|${item.TXN_No ?? idx}`,
+          }));
+          this.totalRecords = res?.TotalCount ?? this.data.length;
         },
-        error: () => {
-          this.messageService.errorBubble('查詢錯誤');
-          this.loading = false;
-          this.messageService.unblockUi();
-        },
-        complete: () => {
-          this.loading = false;
-          this.messageService.unblockUi();
-          this.showPageSizeDialog = false;
+        error: (err) => {
+          console.error('TLS23020 查詢失敗', err);
         },
       });
   }
 
-  /** 立即把目前表單狀態存進 LocalStorage（日期會轉 ISO 字串） */
-private saveQueryToStorage(): void {
-  const raw = this.queryForm.getRawValue();
-  const payload = JSON.stringify(raw, (k, v) => (v instanceof Date ? v.toISOString() : v));
-  localStorage.setItem(this.STORAGE_KEY, payload);
-}
+  getLabelFromOptions(value: any, options: any[]): string {
+    const found = options?.find(opt => String(opt.value) === String(value));
+    return found ? found.label : value;
+  }
 
-    /** 從 LocalStorage 還原進表單（把 ISO 字串還原成 Date 物件） */
-private restoreQueryFromStorage(): void {
-  const json = localStorage.getItem(this.STORAGE_KEY);
-  if (!json) return;
-
-  const parsed = JSON.parse(json, (_k, v) => {
-    if (typeof v === 'string' && /^\d{4}-\d{2}-\d{2}T/.test(v)) {
-      const d = new Date(v);
-      return isNaN(d.getTime()) ? v : d;
-    }
-    return v;
-  });
-
-  this.queryForm.patchValue(parsed, { emitEvent: false });
-}
-
-/** 清除 LocalStorage 內儲存的查詢條件 */
-private clearQueryStorage(): void {
-  localStorage.removeItem(this.STORAGE_KEY);
-}
-
-ngOnDestroy(): void {
-  this.destroy$.next();
-  this.destroy$.complete();
-
-  this.querySubscription?.unsubscribe(); // 若你之後也加「中途取消」需求
-}
-
+  // columns（修正名稱＆保留你原本格式器）
+  columns: any[] = [
+    {
+      field: 'TXN_Date',
+      header: '銷售日期',
+      visible: true,
+      format: (val: string) => {
+        const date = new Date(val);
+        return isNaN(date.getTime())
+          ? val
+          : `${date.getFullYear()}/${(date.getMonth() + 1).toString().padStart(2, '0')}/${date.getDate().toString().padStart(2, '0')}`;
+      },
+    },
+    { field: 'ECR_No', header: '收銀機號', visible: true },
+    { field: 'TXN_No', header: '交易序號', visible: true },
+    { field: 'tlt_no', header: '專櫃編號', visible: true },
+    { field: 'tlt_name', header: '櫃位名稱', visible: true, style: 'text-left' },
+    { field: 'TXN_GUINo', header: '發票號碼', visible: true },
+    {
+      field: 'PLU_SalePrc', header: '單項售價', visible: true,
+      style: 'text-right',
+      format: (val: number) => val?.toLocaleString('en-US') || '0',
+    },
+    {
+      field: 'TXN_Net', header: '未稅(免稅)金額', visible: true,
+      style: 'text-right',
+      format: (val: number) => val?.toLocaleString('en-US') || '0',
+    },
+    {
+      field: 'TXN_Tax', header: '稅額', visible: true,
+      style: 'text-right',
+      format: (val: number) => val?.toLocaleString('en-US') || '0',
+    },
+    {
+      field: 'TXN_Disc', header: '折扣金額', visible: true,
+      style: 'text-right',
+      format: (val: number) => val?.toLocaleString('en-US') || '0',
+    },
+    {
+      field: 'tlt_id',
+      header: '商品抽成類別',
+      visible: true,
+      format: (val: any) => this.getLabelFromOptions(val, this.deductionbigCategoryOptions),
+    },
+    {
+      field: 'ORG_TXN_DiscCode', header: '原折扣', visible: true,
+      format: (val: any) => this.getLabelFromOptions(val, this.discountOptions),
+    },
+    {
+      field: 'TXN_DiscCode', header: '歸屬折扣', visible: true,
+      format: (val: any) => this.getLabelFromOptions(val, this.discountOptions),
+    },
+    {
+      field: 'PLU_TaxType',
+      header: '稅別',
+      visible: true,
+      format: (val: any) => this.getLabelFromOptions(val, this.taxableOptions),
+    },
+    { field: 'PLU_MagNo', header: '單品編號', visible: true },
+    {
+      field: 'TXN_Status',
+      header: '狀態',
+      visible: true,
+      format: (val: any) => this.getLabelFromOptions(val, this.txnStatusOptions),
+    },
+  ];
 }

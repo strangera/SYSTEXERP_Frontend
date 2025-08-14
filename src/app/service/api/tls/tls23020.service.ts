@@ -13,13 +13,13 @@ export class TLS23020Service {
   constructor(
     private http: HttpClient,
     private errorHandler: ErrorHandlerService
-  ) { }
+  ) {}
 
-  queryTLS23020(body: any, displayMode: 'Detail' | 'Summary' = 'Detail'): Observable<any> {
+  // ✅ 只有一支查詢，不帶 displayMode
+  queryTLS23020(body: any): Observable<any> {
     const url = `${this.apiUrl}/TLS0000/TLS2000/queryTLS23020`;
-
     return this.http.post<any>(url, body).pipe(
-      tap(response => console.log(`🎯 TLS23020 ${displayMode} 查詢結果:`, response)),
+      tap(response => console.log('🎯 TLS23020 查詢結果:', response)),
       catchError((error) => this.errorHandler.handleError(error))
     );
   }

@@ -8,8 +8,8 @@ import { CalendarModule } from 'primeng/calendar';
 import { DropdownModule } from 'primeng/dropdown';
 import { InputNumberModule } from 'primeng/inputnumber';
 import { InputTextModule } from 'primeng/inputtext';
-import { Column } from '../table.model';
 import { TableUtilityService } from '../table-utility.service';
+import { Column } from '../table.model';
 
 @Component({
   selector: 'app-table-input',
@@ -24,7 +24,30 @@ import { TableUtilityService } from '../table-utility.service';
     CommonModule,
     PrimeTemplate,
   ],
-  templateUrl: './table-input.component.html'
+  templateUrl: './table-input.component.html',
+  styles: [
+    `
+    .input-wrapper {
+      position: relative;
+      display: inline-block;
+      width: 100%;
+    }
+    .input-wrapper[data-suffix]:not([data-suffix=""]):after {
+      content: attr(data-suffix);
+      position: absolute;
+      right: 8px;
+      top: 50%;
+      transform: translateY(-50%);
+      pointer-events: none;
+      color: #6b7280;
+      font-size: 0.875rem;
+      z-index: 10;
+    }
+    :host ::ng-deep .input-wrapper input.p-inputtext[data-suffix]:not([data-suffix=""]) {
+      padding-right: 40px;
+    }
+    `
+  ]
 })
 export class TableInputComponent {
   // 接收父元件傳來的資料與欄位設定
@@ -35,8 +58,8 @@ export class TableInputComponent {
   @Input() disabled = false;
 
   // 輸出事件，通知父元件資料已變動或失去焦點
-  @Output() fieldChange = new EventEmitter<{ field: string, value: any, rowIndex?: number }>();
-  @Output() fieldBlur = new EventEmitter<{ field: string, value: any }>();
+  @Output() fieldChange = new EventEmitter<{ field: string, value: any, rowIndex?: number; }>();
+  @Output() fieldBlur = new EventEmitter<{ field: string, value: any; }>();
   @Output() filterChange = new EventEmitter<AutoCompleteCompleteEvent>();
 
   constructor(private tableUtilityService: TableUtilityService) { }

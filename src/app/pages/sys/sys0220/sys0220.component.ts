@@ -78,15 +78,16 @@ export class SYS0220Component extends BasicQueryPageComponent<UserData> implemen
         this.SYS3100_Options.find((option) => option.No === value)?.Label ||
         value
     },
-    { field: 'str_dateStart', header: '帳號有效開始日期', visible: true, format: (value: string) => value ? new Date(value).toLocaleDateString() : '' },
-    { field: 'str_dateEnd', header: '帳號有效結束日期', visible: true, format: (value: string) => value ? new Date(value).toLocaleDateString() : '' },
+    { field: 'str_date', header: '帳號有效開始日期', visible: true, format: (value: string) => value ? new Date(value).toLocaleDateString() : '' },
+    { field: 'end_date', header: '帳號有效結束日期', visible: true, format: (value: string) => value ? new Date(value).toLocaleDateString() : '' },
     {
       field: 'user_type', header: '使用者型態', visible: true, format: (value: string) =>
         this.userTypeOptions.find((option) => option.value === value)?.label ||
         value
     },
     { field: 'user_email', header: '使用者email帳號', visible: true },
-    { field: 'TLT_No', header: '備註', visible: true },
+    { field: 'TLT_No', header: '所屬專櫃編號', visible: true },
+    { field: 'remarks', header: '備註', visible: true },
     { field: 'user_priority', header: '使用者等級', visible: true },
     { field: 'USER_PwdExpireDate', header: '密碼到期日', visible: true, format: (value: string) => value ? new Date(value).toLocaleDateString() : '' },
   ];
@@ -154,6 +155,7 @@ export class SYS0220Component extends BasicQueryPageComponent<UserData> implemen
           this.queryStateService.setQueryState(this.ProgNo, frm.value);
           this.data = response.Data;
           this.totalRecords = response.TotalCount;
+          console.log('0220response', response.Data);
         } else {
           this.data = [];
           this.totalRecords = 0;
