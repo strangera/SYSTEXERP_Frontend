@@ -63,7 +63,7 @@ jobs:
     - name: Build Production Environment
       run: |
         echo "=== Building Production (無DEV後綴) ==="
-        npx ng build --configuration production --base-href /TSRDWEBDEV/
+        npx ng build --configuration production --base-href /TSRDWEB/
       env:
         NODE_OPTIONS: "--max_old_space_size=4096"
     
