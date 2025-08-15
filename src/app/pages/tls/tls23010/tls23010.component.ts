@@ -137,9 +137,7 @@ export class TLS23010Component
   }
 
   ngOnInit(): void {
-    this.initializePage('TLS23010', 'tls/tls23010', this.queryForm, (form) =>
-      this.onSubmit(form),
-    );
+    this.initializePage('TLS23010', 'tls/tls23010', this.queryForm, (form) => this.onSubmit(form));
 
     this.floorService
       .getFloors()

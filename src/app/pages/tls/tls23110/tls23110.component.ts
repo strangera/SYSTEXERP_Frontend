@@ -1,5 +1,10 @@
 import { Component } from '@angular/core';
-import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import {
+  FormGroup,
+  Validators,
+  FormsModule,
+  ReactiveFormsModule,
+} from '@angular/forms';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { DeductionbigCategoryService } from '../../../service/basic/deductionbig-category.service';
 import { OrganizationNumberService } from '../../../service/basic/organization-number.service';
@@ -23,57 +28,64 @@ import { ButtonComponent } from '../../../shared/componentkit/button/button.comp
 import { TranslateModule } from '@ngx-translate/core';
 import { Subject, Subscription, of } from 'rxjs';
 import { debounceTime, takeUntil, timeout, catchError } from 'rxjs/operators';
+import { TableComponent } from '@shared/componentkit/table/table.component';
 
 @Component({
-    selector: 'app-tls23110',
-    templateUrl: './tls23110.component.html',
-    styleUrls: ['./tls23110.component.scss'],
-    standalone: true,
-    imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarRangeQuickComponent, DropdownComponent, RadiobuttonComponent, MultiSelectComponent, InputTextModule, ButtonComponent, TranslateModule]
+  selector: 'app-tls23110',
+  templateUrl: './tls23110.component.html',
+  styleUrls: ['./tls23110.component.scss'],
+  standalone: true,
+  imports: [
+    MenubarComponent,
+    AccordionModule,
+    FormsModule,
+    ReactiveFormsModule,
+    CalendarRangeQuickComponent,
+    DropdownComponent,
+    RadiobuttonComponent,
+    MultiSelectComponent,
+    InputTextModule,
+    ButtonComponent,
+    TranslateModule,
+    TableComponent,
+  ],
 })
 export class TLS23110Component extends BasicQueryPageComponent<any> {
-  private destroy$ = new Subject<void>();
-  showPageSizeDialog = false;
-  customPageSize = 1000;
-  querySubscription: Subscription | null = null;
-   readonly yesterday: Date = (() => {
+
+  readonly yesterday: Date = (() => {
     const d = new Date();
     d.setHours(0, 0, 0, 0);
     d.setDate(d.getDate() - 1);
     return d;
   })();
-  private readonly STORAGE_KEY = 'TLS23110:queryForm';
-  private formValueSub?: Subscription;
+
   data: any[] = [];
   totalRecords = 0;
 
-
-
-  queryForm = this.formBuilder.group({   
+  queryForm = this.formBuilder.group({
     TXN_DateStart: [this.yesterday, Validators.required],
     TXN_DateEnd: [this.yesterday, Validators.required],
-    tlt_term_type: [],       // e.g., 'st'
-    rece_yn: [],            // e.g., 's'
-    IsNoPLU_No: [true],        // 預設 true
+    tlt_term_type: [], // e.g., 'st'
+    rece_yn: [], // e.g., 's'
+    IsNoPLU_No: [true], // 預設 true
     TLT_No: [], // string[]
     tlt_building: [],
     tlt_floor: [], // string[]
-    org_id: [],  // string[]
+    org_id: [], // string[]
 
-
-    ...createPaginationConfig([{ field: 'Day', order: 1 }])
+    ...createPaginationConfig([{ field: 'Day', order: 1 }]),
   });
+
+
   IsNoPLU_NoOptions = [
     { label: '使用業主發票', value: true },
-    { label: '非使用業主發票', value: false }
+    { label: '非使用業主發票', value: false },
   ];
   receYnOptions = [
     { label: '全部', value: null },
     { label: '不包含自營櫃', value: 'Y' },
-    { label: '只顯示自營櫃', value: 'N' }
+    { label: '只顯示自營櫃', value: 'N' },
   ];
-
-
 
   DeductionbigCategoryOptions: any[] = [];
   TypeOptions: any[] = [];
@@ -96,147 +108,132 @@ export class TLS23110Component extends BasicQueryPageComponent<any> {
     private organizationNumberService: OrganizationNumberService,
     private floorService: FloorService,
     private whetherService: WhetherService,
-    private tls11010Service: Tls11010Service
+    private tls11010Service: Tls11010Service,
   ) {
     super();
   }
 
   ngOnInit(): void {
-    this.loading = false; // ✅ 保險起見，先還原 loading
-    this.messageService.unblockUi();  // <-- 🔓 關鍵解除畫面卡住
-    this.initializePage('TLS23110', 'TLS23110cru', this.queryForm);
-    this.restoreQueryFromStorage();
-this.queryForm.valueChanges
-  .pipe(debounceTime(300), takeUntil(this.destroy$))
-  .subscribe(() => this.saveQueryToStorage());
 
-    this.whetherService.getWhetherOptions().pipe(takeUntil(this.destroy$)).subscribe(data => this.WhetherOptions = data);
-    this.deductionbigCategoryService.getLocalDeductionCategories().pipe(takeUntil(this.destroy$)).subscribe(data => this.DeductionbigCategoryOptions = data);
-    this.typeService.getTypeOptions().pipe(takeUntil(this.destroy$)).subscribe(data => this.TypeOptions = data);
-    this.categoryService.getCategories().pipe(takeUntil(this.destroy$)).subscribe(data => this.CategoryOptions = data);
-    this.counterNameService.getCounters().pipe(takeUntil(this.destroy$)).subscribe(res => {
-      this.CounterOptions = res?.map(x => ({ label: x.label, formLabel: `${x.value} - ${x.label}`, value: x.value })) || [];
-    });
-    this.organizationNumberService.getOrganizationNumbers().pipe(takeUntil(this.destroy$)).subscribe(data => this.OrganizationNumberOptions = data);
-    this.counterOpCatService.getCounterOpCat().pipe(takeUntil(this.destroy$)).subscribe(data => this.CounterOpCatOptions = data);
-    this.floorService.getFloors().pipe(takeUntil(this.destroy$)).subscribe(data => this.floorOptions = data);
-    this.tls11010Service.getBuildingOptions().pipe(takeUntil(this.destroy$)).subscribe(data => this.BUILDING_NO_Options = data);
-    this.tls11010Service.getOrgOptions().pipe(takeUntil(this.destroy$)).subscribe(res => {
-      this.OrganizationCodeOptions = res?.map(x => ({ label: x.label, formLabel: `${x.value} - ${x.label}`, value: x.value })) || [];
-    });
+    this.initializePage('TLS23110', 'tls/tls23110', this.queryForm, (form) => this.onSubmit(form));
+   
+    this.whetherService
+      .getWhetherOptions().subscribe((data) => (this.WhetherOptions = data));
+    this.deductionbigCategoryService
+      .getLocalDeductionCategories().subscribe((data) => (this.DeductionbigCategoryOptions = data));
+    this.typeService
+      .getTypeOptions().subscribe((data) => (this.TypeOptions = data));
+    this.categoryService
+      .getCategories().subscribe((data) => (this.CategoryOptions = data));
+    this.counterNameService
+      .getCounters().subscribe((res) => {
+        this.CounterOptions =
+          res?.map((x) => ({
+            label: x.label,
+            formLabel: `${x.value} - ${x.label}`,
+            value: x.value,
+          })) || [];
+      });
+    this.organizationNumberService
+      .getOrganizationNumbers().subscribe((data) => (this.OrganizationNumberOptions = data));
+    this.counterOpCatService
+      .getCounterOpCat().subscribe((data) => (this.CounterOpCatOptions = data));
+    this.floorService
+      .getFloors().subscribe((data) => (this.floorOptions = data));
+    this.tls11010Service
+      .getBuildingOptions().subscribe((data) => (this.BUILDING_NO_Options = data));
+    this.tls11010Service
+      .getOrgOptions().subscribe((res) => {
+        this.OrganizationCodeOptions =
+          res?.map((x) => ({
+            label: x.label,
+            formLabel: `${x.value} - ${x.label}`,
+            value: x.value,
+          })) || [];
+      });
   }
+// 送出查詢（無 doQuery / buildPayload）
+onSubmit(form: FormGroup): void {
+  this.handleSubmit(form, () => {
+    const val = this.queryForm.value as any;
 
-
-  confirmPageSizeAndNavigate(): void {
-    this.submitted = true;
-    if (this.queryForm.invalid) {
-      this.messageService.warnBubble('請確認欄位資料是否完整');
-      this.queryForm.markAllAsTouched();
-      return;
-    }
-
-    const queryFormValue = {
-      ...this.queryForm.value,
-      pageSize: this.customPageSize
+    // 本地 ISO(yyyy-MM-ddTHH:mm:ss) — 去掉時區偏移
+    const toIso = (x: any) => {
+      if (!x) return undefined;
+      const d = typeof x === 'string' ? new Date(x) : (x as Date);
+      if (isNaN(d.getTime())) return undefined;
+      return new Date(d.getTime() - d.getTimezoneOffset() * 60000)
+        .toISOString()
+        .slice(0, 19);
     };
 
+    // 直接在這裡組 payload（保留分頁/排序）
+    const payload: any = {
+      ...val,
+      TXN_DateStart: toIso(val?.TXN_DateStart),
+      TXN_DateEnd:   toIso(val?.TXN_DateEnd),
+      pageSize:  val?.pageSize,
+      pageIndex: val?.pageIndex,
+      SortBy:    val?.SortBy,
+      OrderBy:   val?.OrderBy,
+      Offset:    val?.Offset,
+    };
+
+    // 移除空字串 / null / undefined / 空陣列，避免干擾後端繫結
+    Object.keys(payload).forEach((k) => {
+      const v = payload[k];
+      if (v === '' || v === null || v === undefined) delete payload[k];
+      if (Array.isArray(v) && v.length === 0) delete payload[k];
+    });
+
     this.loading = true;
-    this.messageService.blockUi();
+    this.messageService?.blockUi();
 
-   this.tls23110Service.queryTLS23110(queryFormValue)
-  .pipe(
-    timeout(30000),
-    catchError(() => {
-      this.messageService.errorBubble('查詢失敗');
-      this.loading = false;
-      this.messageService.unblockUi();
-      this.showPageSizeDialog = false;
-      return of({ Status: '9999', Data: [] });
-    })
-  )
-  .subscribe({
-    next: (res) => {
-      if (res.Status === '0000') {
-        this.queryStateService.setQueryState(this.ProgNo, queryFormValue);
-
-        const flatData = (res.Data || []).map((row: any) => {
-          const d = row.Discount_List || {};
-          return {
-            Day: row.Day,
-            OriginalPrice_TXN_SaleNoTax: d.OriginalPrice?.TXN_SaleNoTax ?? 0,
-            OriginalPrice_TXN_Tax: d.OriginalPrice?.TXN_Tax ?? 0,
-            OriginalPrice_Total: d.OriginalPrice?.Total ?? 0,
-            Discount90_TXN_SaleNoTax: d.Discount90?.TXN_SaleNoTax ?? 0,
-            Discount90_TXN_Tax: d.Discount90?.TXN_Tax ?? 0,
-            Discount90_Total: d.Discount90?.Total ?? 0,
-            Discount80_TXN_SaleNoTax: d.Discount80?.TXN_SaleNoTax ?? 0,
-            Discount80_TXN_Tax: d.Discount80?.TXN_Tax ?? 0,
-            Discount80_Total: d.Discount80?.Total ?? 0,
-            SpecialPrice_TXN_SaleNoTax: d.SpecialPrice?.TXN_SaleNoTax ?? 0,
-            SpecialPrice_TXN_Tax: d.SpecialPrice?.TXN_Tax ?? 0,
-            SpecialPrice_Total: d.SpecialPrice?.Total ?? 0,
-            Total_TXN_SaleNoTax: d.Total?.TXN_SaleNoTax ?? 0,
-            Total_TXN_Tax: d.Total?.TXN_Tax ?? 0,
-            Total_Total: d.Total?.Total ?? 0,
-          };
-        });
-
-        this.router.navigate(['account/tls/tls23110cru'], {
-          state: {
-            queryFormValue,
-            pageSize: this.customPageSize,
-            data: flatData,
-          }
-        }).then(() => {
-          this.loading = false;
-          this.messageService.unblockUi();
-          this.showPageSizeDialog = false;
-        });
-      } else {
-        this.messageService.errorBubble('查詢失敗');
+    this.tls23110Service.queryTLS23110(payload).subscribe({
+      next: (res) => {
+        const raw = res?.Data ?? [];
+        this.data = Array.isArray(raw) ? raw : [];
+        this.totalRecords = typeof res?.TotalCount === 'number'
+          ? res.TotalCount
+          : this.data.length; // ✅ 沒有 res.total
+      },
+      error: (err) => {
+        console.error('TLS23110 查詢失敗', err);
+        this.messageService?.errorBubble?.('查詢失敗，請稍後再試');
+      },
+      complete: () => {
+        this.loading = false;
+        this.messageService?.unblockUi();
       }
-    },
-    complete: () => {
-      this.loading = false;
-      this.messageService.unblockUi();
-      this.showPageSizeDialog = false;
-    }
+    });
   });
+}
 
+  moneyFormat(value: number): string {
+    return value != null ? value.toLocaleString('en-US') : '0';
   }
 
-  /** 立即把目前表單狀態存進 LocalStorage（日期會轉 ISO 字串） */
-private saveQueryToStorage(): void {
-  const raw = this.queryForm.getRawValue();
-  const payload = JSON.stringify(raw, (k, v) => (v instanceof Date ? v.toISOString() : v));
-  localStorage.setItem(this.STORAGE_KEY, payload);
-}
+columns = [
+      { field: 'Day', header: '日期', visible: true },
+      { field: 'OriginalPrice_TXN_SaleNoTax', header: '正品-未稅', visible: true, style: 'text-right', format: this.moneyFormat },
+      { field: 'OriginalPrice_TXN_Tax', header: '正品-稅額', visible: true, style: 'text-right', format: this.moneyFormat },
+      { field: 'OriginalPrice_Total', header: '正品-合計', visible: true, style: 'text-right', format: this.moneyFormat },
 
-    /** 從 LocalStorage 還原進表單（把 ISO 字串還原成 Date 物件） */
-private restoreQueryFromStorage(): void {
-  const json = localStorage.getItem(this.STORAGE_KEY);
-  if (!json) return;
+      { field: 'Discount90_TXN_SaleNoTax', header: '9折-未稅', visible: true, style: 'text-right', format: this.moneyFormat },
+      { field: 'Discount90_TXN_Tax', header: '9折-稅額', visible: true, style: 'text-right', format: this.moneyFormat },
+      { field: 'Discount90_Total', header: '9折-合計', visible: true, style: 'text-right', format: this.moneyFormat },
 
-  const parsed = JSON.parse(json, (_k, v) => {
-    if (typeof v === 'string' && /^\d{4}-\d{2}-\d{2}T/.test(v)) {
-      const d = new Date(v);
-      return isNaN(d.getTime()) ? v : d;
-    }
-    return v;
-  });
+      { field: 'Discount80_TXN_SaleNoTax', header: '8折-未稅', visible: true, style: 'text-right', format: this.moneyFormat },
+      { field: 'Discount80_TXN_Tax', header: '8折-稅額', visible: true, style: 'text-right', format: this.moneyFormat },
+      { field: 'Discount80_Total', header: '8折-合計', visible: true, style: 'text-right', format: this.moneyFormat },
 
-  this.queryForm.patchValue(parsed, { emitEvent: false });
-}
+      { field: 'SpecialPrice_TXN_SaleNoTax', header: '特價-未稅', visible: true, style: 'text-right', format: this.moneyFormat },
+      { field: 'SpecialPrice_TXN_Tax', header: '特價-稅額', visible: true, style: 'text-right', format: this.moneyFormat },
+      { field: 'SpecialPrice_Total', header: '特價-合計', visible: true, style: 'text-right', format: this.moneyFormat },
 
-/** 清除 LocalStorage 內儲存的查詢條件 */
-private clearQueryStorage(): void {
-  localStorage.removeItem(this.STORAGE_KEY);
-}
-ngOnDestroy(): void {
-  this.destroy$.next();
-  this.destroy$.complete();
-
-  this.querySubscription?.unsubscribe();
-}
+      { field: 'Total_TXN_SaleNoTax', header: '總計-未稅', visible: true, style: 'text-right', format: this.moneyFormat },
+      { field: 'Total_TXN_Tax', header: '總計-稅額', visible: true, style: 'text-right', format: this.moneyFormat },
+      { field: 'Total_Total', header: '總計-合計', visible: true, style: 'text-right', format: this.moneyFormat },
+    ];
 
 }

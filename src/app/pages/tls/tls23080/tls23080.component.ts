@@ -19,6 +19,8 @@ import { ButtonComponent } from '../../../shared/componentkit/button/button.comp
 import { TranslateModule } from '@ngx-translate/core';
 import { Subject, Subscription, of, firstValueFrom } from 'rxjs';
 import { debounceTime, takeUntil, timeout, catchError } from 'rxjs/operators';
+import { TableComponent } from '@shared/componentkit/table/table.component';
+import { ColumnLabelService } from '../../../service/basic/column-label.service';
 
 @Component({
   selector: 'app-tls23080',
@@ -36,16 +38,12 @@ import { debounceTime, takeUntil, timeout, catchError } from 'rxjs/operators';
     DropdownComponent,
     InputTextModule,
     ButtonComponent,
-    TranslateModule
+    TranslateModule,
+    TableComponent,
   ]
 })
 export class TLS23080Component extends BasicQueryPageComponent<any> {
-  private readonly STORAGE_KEY = 'TLS23080:queryForm';
-  private destroy$ = new Subject<void>();         // ✅ 自動退訂
-  querySubscription: Subscription | null = null;
 
-  showPageSizeDialog = false;
-  customPageSize = 1000;
 
   data: any[] = [];
   totalRecords = 0;
@@ -74,9 +72,7 @@ export class TLS23080Component extends BasicQueryPageComponent<any> {
     tlt_building: [],
     tlt_floor: [],
     org_id: [],
-    // TXN_Year: [],
-    // TXN_Month: [],
-    // queryMonthYear: [],
+
     ...createPaginationConfig([{ field: 'TXN_Date', order: 1 }])
   });
   constructor(
@@ -85,42 +81,25 @@ export class TLS23080Component extends BasicQueryPageComponent<any> {
     private floorService: FloorService,
     private ECRNoService: ECRNoService,
     private counterNameService: CounterNameService,
-    private tls11010Service: Tls11010Service
+    private tls11010Service: Tls11010Service,
+    private columnLabelService: ColumnLabelService 
   ) {
     super();
   }
 
   ngOnInit(): void {
-    this.initializePage('TLS23080', 'TLS23080cru', this.queryForm);
-
-    // 從 localStorage 還原
-    this.restoreQueryFromStorage();
-
-    // ✅ 表單變更 300ms 後存檔 + 自動退訂
-    this.queryForm.valueChanges
-      .pipe(debounceTime(300), takeUntil(this.destroy$))
-      .subscribe(() => this.saveQueryToStorage());
-
-    // ❌ 刪除錯誤的 'TLS23010_queryForm' 讀取
+    this.initializePage('TLS23080', 'tls/tls23080', this.queryForm, (form) => this.onSubmit(form));
 
     // ✅ 下拉資料：全部 takeUntil
-    this.whetherService.getWhetherOptions()
-      .pipe(takeUntil(this.destroy$))
-      .subscribe(data => {
+    this.whetherService.getWhetherOptions().subscribe(data => {
         this.WhetherOptions = (data || []).filter((opt: any) => opt.value !== null);
       });
 
-    this.floorService.getFloors()
-      .pipe(takeUntil(this.destroy$))
-      .subscribe(data => this.floorOptions = data);
+    this.floorService.getFloors().subscribe(data => this.floorOptions = data);
 
-    this.tls11010Service.getBuildingOptions()
-      .pipe(takeUntil(this.destroy$))
-      .subscribe(data => this.BUILDING_NO_Options = data);
+    this.tls11010Service.getBuildingOptions().subscribe(data => this.BUILDING_NO_Options = data);
 
-    this.tls11010Service.getOrgOptions()
-      .pipe(takeUntil(this.destroy$))
-      .subscribe(res => {
+    this.tls11010Service.getOrgOptions().subscribe(res => {
         this.OrganizationCodeOptions = (res ?? []).map((x: any) => ({
           label: x.label,
           formLabel: `${x.value} - ${x.label}`,
@@ -128,9 +107,7 @@ export class TLS23080Component extends BasicQueryPageComponent<any> {
         }));
       });
 
-    this.ECRNoService.getECRNo()
-      .pipe(takeUntil(this.destroy$))
-      .subscribe(res => {
+    this.ECRNoService.getECRNo().subscribe(res => {
         this.ECRNoOptions = (res ?? []).map((x: any) => ({
           label: x.label,
           formLabel: `${x.value} - ${x.label}`,
@@ -138,9 +115,7 @@ export class TLS23080Component extends BasicQueryPageComponent<any> {
         }));
       });
 
-    this.counterNameService.getCounters()
-      .pipe(takeUntil(this.destroy$))
-      .subscribe(res => {
+    this.counterNameService.getCounters().subscribe(res => {
         this.CounterOptions = (res ?? []).map((x: any) => ({
           label: x.label,
           formLabel: `${x.value} - ${x.label}`,
@@ -148,114 +123,100 @@ export class TLS23080Component extends BasicQueryPageComponent<any> {
         }));
       });
   }
+moneyFormat(value: number): string {
+  return value != null ? value.toLocaleString('en-US') : '0';
+}
+get columns() {
+  const fixedCols = [
+    {
+      field: 'TXN_Date',
+      header: '銷售日期',
+      visible: true,
+      format: (val: string) => {
+        const date = new Date(val);
+        return isNaN(date.getTime())
+          ? val
+          : `${date.getFullYear()}/${(date.getMonth() + 1).toString().padStart(2, '0')}/${date.getDate().toString().padStart(2, '0')}`;
+      }
+    },
+  ];
 
-  goToReportMode(): void {
-    this.customPageSize = 1000;
-    this.showPageSizeDialog = true;
-  }
+  const dynamicCols = [
+    'TXN_TotPayAmt', 'TXN_PayAmt10', 'TXN_PayAmt41', 'TXN_PayAmt42', 'TXN_PayAmt12',
+    'TXN_PayAmt81', 'TXN_PayAmt43', 'TXN_PayAmt44', 'TXN_PayAmt14', 'TXN_PayAmt82',
+    'TXN_PayAmt52', 'TXN_PayAmt20', 'TXN_PayAmt62', 'TXN_PayAmt77', 'TXN_PayAmt71',
+    'TXN_PayAmt30', 'TXN_PayAmt73', 'TXN_PayAmt72', 'TXN_PayAmt74', 'TXN_PayAmt75',
+    'TXN_PayAmt76', 'TXN_PayAmt24', 'TXN_PayAmt25', 'TXN_PayAmt07', 'TXN_PayAmt55',
+    'TXN_PayAmt83', 'TXN_PayAmt78', 'TXN_PayAmt79', 'TXN_PayAmt21', 'TXN_PayAmt53',
+    'TXN_PayAmt56', 'TXN_PayAmt57', 'TXN_PayAmt58', 'TXN_PayAmt59', 'TXN_PayAmt60',
+    'TXN_PayAmt22', 'TXN_PayAmt23', 'TXN_CancelAmt'
+  ];
 
-  confirmPageSizeAndNavigate(): void {
-    this.submitted = true;
-    if (this.queryForm.invalid) {
-      this.messageService.warnBubble('請確認欄位資料是否完整');
-      this.queryForm.markAllAsTouched();
-      return;
-    }
+  return [
+    ...fixedCols,
+    ...dynamicCols.map(field => ({
+      field,
+      header: this.columnLabelService.getLabel(field),
+      visible: true,
+      style: 'text-right',
+      format: this.moneyFormat.bind(this),
+    })),
+  ];
+}
+onSubmit(form: FormGroup): void {
+  this.handleSubmit(form, () => {
+    const val = this.queryForm.value as any;
 
-    const queryFormValue = {
-      ...this.queryForm.value,
-      pageSize: this.customPageSize
+    // 本地 ISO(yyyy-MM-ddTHH:mm:ss) — 去掉時區偏移
+    const toIso = (x: any) => {
+      if (!x) return undefined;
+      const d = typeof x === 'string' ? new Date(x) : (x as Date);
+      if (isNaN(d.getTime())) return undefined;
+      return new Date(d.getTime() - d.getTimezoneOffset() * 60000)
+        .toISOString()
+        .slice(0, 19);
     };
 
-    this.loading = true;
-    this.messageService.blockUi();
+    // 直接在這裡組 payload（保留分頁/排序）
+    const payload: any = {
+      ...val,
+      TXN_DateStart: toIso(val?.TXN_DateStart),
+      TXN_DateEnd:   toIso(val?.TXN_DateEnd),
+      pageSize:  val?.pageSize,
+      pageIndex: val?.pageIndex,
+      SortBy:    val?.SortBy,
+      OrderBy:   val?.OrderBy,
+      Offset:    val?.Offset,
+    };
 
-    this.tls23080Service.queryTLS23080(queryFormValue)
-      .pipe(
-        timeout(30000),
-        catchError(() => {
-          this.messageService.errorBubble('查詢失敗');
-          this.loading = false;
-          this.messageService.unblockUi();
-          return of({ Status: '9999', Data: [] });
-        })
-      )
-      .subscribe({
-        next: (res) => {
-          if (res.Status === '0000') {
-            this.queryStateService.setQueryState(this.ProgNo, queryFormValue);
-            this.router.navigate(['account/tls/tls23080cru'], {
-              state: {
-                queryFormValue,
-                pageSize: this.customPageSize,
-                data: res.Data || [],
-              }
-            });
-          } else {
-            this.messageService.errorBubble('查詢失敗');
-          }
-        },
-        complete: () => {
-          this.loading = false;
-          this.messageService.unblockUi();
-          this.showPageSizeDialog = false;
-        }
-      });
-  }
-
-  // ✅ 改用 firstValueFrom；並加上 takeUntil
-  fetchDetailFn = async (payload: { TXN_Date: string }): Promise<any[]> => {
-    if (!payload?.TXN_Date) return [];
-    try {
-      const result = await firstValueFrom(
-        this.tls23080Service
-          .queryTLS23080Detail({ TXN_Date: payload.TXN_Date })
-          .pipe(takeUntil(this.destroy$))
-      );
-      if (result?.Status === '0000') {
-        return result.Data ?? [];
-      } else {
-        this.messageService.warnBubble('查詢明細失敗');
-        return [];
-      }
-    } catch {
-      this.messageService.errorBubble('明細查詢錯誤');
-      return [];
-    }
-  };
-
-  /** 立即把目前表單狀態存進 LocalStorage（日期會轉 ISO 字串） */
-  private saveQueryToStorage(): void {
-    const raw = this.queryForm.getRawValue();
-    const payload = JSON.stringify(raw, (k, v) => (v instanceof Date ? v.toISOString() : v));
-    localStorage.setItem(this.STORAGE_KEY, payload);
-  }
-
-  /** 從 LocalStorage 還原進表單（把 ISO 字串還原成 Date 物件） */
-  private restoreQueryFromStorage(): void {
-    const json = localStorage.getItem(this.STORAGE_KEY);
-    if (!json) return;
-
-    const parsed = JSON.parse(json, (_k, v) => {
-      if (typeof v === 'string' && /^\d{4}-\d{2}-\d{2}T/.test(v)) {
-        const d = new Date(v);
-        return isNaN(d.getTime()) ? v : d;
-      }
-      return v;
+    // 移除空字串 / null / undefined / 空陣列
+    Object.keys(payload).forEach(k => {
+      const v = payload[k];
+      if (v === '' || v === null || v === undefined) delete payload[k];
+      if (Array.isArray(v) && v.length === 0) delete payload[k];
     });
 
-    this.queryForm.patchValue(parsed, { emitEvent: false });
-  }
+    this.loading = true;
+    this.messageService?.blockUi();
 
-  /** 清除 LocalStorage 內儲存的查詢條件 */
-  private clearQueryStorage(): void {
-    localStorage.removeItem(this.STORAGE_KEY);
-  }
+    this.tls23080Service.queryTLS23080(payload).subscribe({
+      next: (res) => {
+        const raw = res?.Data ?? [];
+        this.data = Array.isArray(raw) ? raw : [];
+        this.totalRecords = typeof res?.TotalCount === 'number'
+          ? res.TotalCount
+          : this.data.length;
+      },
+      error: (err) => {
+        console.error('TLS23080 查詢失敗', err);
+        this.messageService?.errorBubble?.('查詢失敗，請稍後再試');
+      },
+      complete: () => {
+        this.loading = false;
+        this.messageService?.unblockUi();
+      }
+    });
+  });
+}
 
-  ngOnDestroy(): void {
-    this.destroy$.next();
-    this.destroy$.complete();
-
-    this.querySubscription?.unsubscribe();
-  }
 }

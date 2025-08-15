@@ -14,18 +14,12 @@ export class TLS23040Service {
     private errorHandler: ErrorHandlerService
   ) {}
 
-  queryTLS23040(query: any): Observable<ApiResponse<TLS23040Grouped[]>> {
-    const storeNo = JSON.parse(localStorage.getItem('UserInfo') || '{}')?.SYS_StoreNo;
-    if (storeNo) query.SYS_StoreNo = storeNo;
+   queryTLS23040(body: any): Observable<any> {
+    const url = `${this.apiUrl}/TLS0000/TLS2000/queryTLS23040`;
 
-    return this.http
-      .post<ApiResponse<TLS23040Grouped[]>>(
-        `${this.apiUrl}/TLS0000/TLS2000/queryTLS23040`,
-        query
-      )
-      .pipe(
-        tap(resp => console.log('查詢結果:', resp)),
-        catchError((error) => this.errorHandler.handleError(error))
-      );
+    return this.http.post<any>(url, body).pipe(
+      tap(response => console.log(`🎯 TLS23040  查詢結果:`, response)),
+      catchError((error) => this.errorHandler.handleError(error))
+    );
   }
 }
