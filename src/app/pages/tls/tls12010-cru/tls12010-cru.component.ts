@@ -12,7 +12,7 @@ import { RadiobuttonComponent } from '../../../shared/componentkit/radiobutton/r
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
 import { EditorTextComponent } from '../../../shared/componentkit/editor-text/editor-text.component';
-import { NgFor, NgIf } from '@angular/common';
+import { CommonModule, NgFor, NgIf } from '@angular/common';
 import { ButtonDynamicallydeleteComponent } from '../../../shared/componentkit/button-dynamicallydelete/button-dynamicallydelete.component';
 import { ButtonDynamicallyaddComponent } from '../../../shared/componentkit/button-dynamicallyadd/button-dynamicallyadd.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
@@ -89,7 +89,7 @@ export interface POS2013 {
   templateUrl: './tls12010-cru.component.html',
   styleUrl: './tls12010-cru.component.scss',
   standalone: true,
-  imports: [MenubarComponent, PanelModule, FormsModule, ReactiveFormsModule, CalendarComponent, DropdownComponent, RadiobuttonComponent, EditorTextComponent, ExpandableEditTableComponent, InputTextComponent, InputNumberComponent, EditorTextComponent, NgFor, ButtonDynamicallydeleteComponent, ButtonDynamicallyaddComponent, ButtonComponent, NgIf, TranslateModule]
+  imports: [MenubarComponent, PanelModule, FormsModule, ReactiveFormsModule, CalendarComponent, CommonModule, DropdownComponent, RadiobuttonComponent, EditorTextComponent, ExpandableEditTableComponent, InputTextComponent, InputNumberComponent, EditorTextComponent, NgFor, ButtonDynamicallydeleteComponent, ButtonDynamicallyaddComponent, ButtonComponent, NgIf, TranslateModule]
 })
 export class TLS12010CRUComponent extends BasicCruPageComponent<Potential_Customer> implements OnInit {
   @ViewChild('detailTable') detailTable!: ExpandableEditTableComponent;
@@ -243,8 +243,6 @@ export class TLS12010CRUComponent extends BasicCruPageComponent<Potential_Custom
       if (this.dataForm.get('cus_type')?.value === '1') {
         const match = this.cus_uniform_Option.find(opt => opt.No === value);
         if (match) {
-          this.dataForm.get('VEN_Name')?.disable();
-          this.dataForm.get('VEN_EngName')?.disable();
           this.dataForm.get('VEN_Name')?.setValue(match.Name);
           this.dataForm.get('VEN_EngName')?.setValue(match.VEN_EngName);
         } else {
@@ -464,11 +462,6 @@ export class TLS12010CRUComponent extends BasicCruPageComponent<Potential_Custom
         VEN_Name.setValidators([Validators.required, Validators.maxLength(100)]);
         VEN_EngName.setValidators([Validators.maxLength(100)]);
 
-        //內容重設
-        cus_uniform_id.enable();
-        VEN_Name.enable();
-        VEN_EngName.enable();
-
         cus_uniform_id.setValue('');
         VEN_Name.setValue('');
         VEN_EngName.setValue('');
@@ -488,10 +481,9 @@ export class TLS12010CRUComponent extends BasicCruPageComponent<Potential_Custom
           const userNo = this.authService.getUserInfo()?.user_No ?? ''
           const userName = this.authService.getUserInfo()?.user_Name ?? ''
           if (userNo && userName) { //有用戶名不允許編輯
-            // console.log('用戶資料',userNo,"/", userName);
-            cus_uniform_id.disable();
+            cus_uniform_id.enable();
+            
             cus_uniform_id.setValue(userNo);
-            VEN_Name.disable();
             VEN_Name.setValue(userName);
 
             VEN_EngName.setValue('');
