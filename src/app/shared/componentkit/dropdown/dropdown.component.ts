@@ -1,9 +1,9 @@
+import { NgClass, NgIf } from '@angular/common';
 import { ChangeDetectionStrategy, Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { BasicKitComponent } from '../../componentextends/basic-kit/basic-kit.component';
 import { DropdownChangeEvent, DropdownModule } from 'primeng/dropdown';
-import { NgIf, NgClass } from '@angular/common';
 import { ControlMessagesComponent } from '../../component/control-messages/control-messages.component';
+import { BasicKitComponent } from '../../componentextends/basic-kit/basic-kit.component';
 @Component({
   selector: 'app-dropdown',
   templateUrl: './dropdown.component.html',
@@ -24,7 +24,7 @@ export class DropdownComponent extends BasicKitComponent implements OnInit {
   @Input() override label = '';
   @Input() showLabel = true;
   @Input() override controlName = '';
-  @Input() control = new FormControl();
+  @Input() set control(value: FormControl) { this._control = value; }
   @Input() options: unknown[] = [];
   @Input() optionLabel = ''; // 資料的 Label
   @Input() optionValue = ''; // 資料的 Value
@@ -33,11 +33,15 @@ export class DropdownComponent extends BasicKitComponent implements OnInit {
   // PrimeNG 下拉選單屬性
   @Input() showClear = true; // 是否顯示清除按鈕
   @Input() filter = true; // 是否啟用過濾功能
+  @Input() disabled = false; // 是否禁用
   // 自訂屬性
   @Input() showErrorMessage = true;
   @Input() templateLabel = ''; // 自訂 Label 模板
   // 觸發事件
   @Output() changeEvent = new EventEmitter<DropdownChangeEvent>();
+
+  private _control: FormControl = new FormControl();
+  public get control(): FormControl { this.disabled && this._control.disable(); return this._control; }
 
   ngOnInit(): void {
     this.initControl(this.control);
