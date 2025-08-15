@@ -36,6 +36,8 @@ export class SsoDashboardService {
     return this.http.get<ApiResponse<any>>(`${this.apiUrl}/Inner`);
   }
 
-
+Outer(token: string): Observable<ApiResponse<any>> {
+  return this.http.get<ApiResponse<any>>(`${this.apiUrl}/Outer?oneTimeToken=${encodeURIComponent(token)}`);
+}
 }
 
