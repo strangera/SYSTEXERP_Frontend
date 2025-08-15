@@ -1,160 +1,83 @@
 <div class="card">
-  <div class="grid align-items-center">
-    <div class="col" style="flex: 1">
-      <app-menubar [ProgNo]="ProgNo"></app-menubar>
-    </div>
+  <div class="flex gap-2 mb-2">
+    <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
   </div>
   <p-accordion>
-    <p-accordionTab
-      header="{{ 'query-conditions' | translate }}"
-      [selected]="true"
-      class="line-height-3 m-0"
-      [headerStyleClass]="'query-accordionTab'"
-    >
-      <form
-        [formGroup]="queryForm"
-        id="queryForm"
-        (ngSubmit)="onSubmit(queryForm)"
-      >
+    <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'">
+      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
+        <div class="grid p-fluid">
+          <app-dropdown class="col-12 md:col-6 lg:col-4" label="品牌名稱" controlName="brandCode"
+            [options]="brandCodeOptions" optionLabel="label" optionValue="value"
+            [control]="queryForm.controls.brandCode" [submitted]="submitted"></app-dropdown>
+
+          <app-dropdown-table class="col-12 md:col-6 lg:col-4" [control]="queryForm.controls.managementID"
+            [submitted]="submitted" optionLabel="PLU_MagNo" optionValue="PLU_MagNo" [suggestions]="suggestions"
+            [fieldsConfig]="fieldsConfig" (inputValueChanged)="onAutoCompleteInputChange($event)"
+            (formValueChanged)="onformValueChanged($event)" [formGroup]="opForm" [dialogData]="opData"
+            [dialogColumns]="opColumns" [loading]="opLoading" [totalRecords]="opTotalRecords">
+            <app-input-text class="col-12 md:col-6" label="管理編號" controlName="queryNo"
+              [control]="opForm.controls.queryNo" />
+            <app-input-text class="col-12 md:col-6" label="商品名稱" controlName="PLU_Name"
+              [control]="opForm.controls.PLU_Name" />
+          </app-dropdown-table>
+
+          <app-input-text class="col-12 md:col-6 lg:col-4" label="國際條碼" controlName="PLU_No"
+            [control]="queryForm.controls.PLU_No" [submitted]="submitted"></app-input-text>
+          <app-input-text class="col-12 md:col-6 lg:col-4" label="廠商貨號" controlName="vendorItemNumber"
+            [control]="queryForm.controls.vendorItemNumber" [submitted]="submitted"></app-input-text>
+          <app-dropdown class="col-12 md:col-6 lg:col-4" label="大分類代碼" controlName="bigCategoryCode"
+            [options]="bigCategoryOptions" optionLabel="label" optionValue="value"
+            [control]="queryForm.controls.bigCategoryCode" [submitted]="submitted"></app-dropdown>
+
+          <app-dropdown class="col-12 md:col-6 lg:col-4" label="中分類代碼" controlName="midCategoryCode"
+            [options]="midCategoryOptions" optionLabel="label" optionValue="value"
+            [control]="queryForm.controls.midCategoryCode" [submitted]="submitted"></app-dropdown>
+
+          <app-dropdown class="col-12 md:col-6 lg:col-4" label="小分類代碼" controlName="smallCategoryCode"
+            [options]="smallCategoryOptions" optionLabel="label" optionValue="value"
+            [control]="queryForm.controls.smallCategoryCode" [submitted]="submitted"></app-dropdown>
+
+          <app-input-textarea class="col-12 md:col-6 lg:col-4" label="系列" controlName="series"
+            [control]="queryForm.controls.series" [submitted]="submitted"></app-input-textarea>
+
+        </div>
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="品牌名稱(中文)"
-              controlName="brandName"
-              [options]="brandCodeOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.brandName"
-              [submitted]="submitted"
-            ></app-dropdown>
+            <div class="field-checkbox">
+              <p-checkbox formControlName="displayEmptyStock" binary="true" id="displayEmptyStock"></p-checkbox>
+              <label for="displayEmptyStock" class="ml-2">顯示庫存為零</label>
+            </div>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="管理編號"
-              controlName="managementID"
-              [options]="managementIDOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.managementID"
-              [submitted]="submitted"
-            ></app-dropdown>
+            <div class="field-checkbox">
+              <p-checkbox formControlName="displayStandardCost" binary="true" id="displayStandardCost"></p-checkbox>
+              <label for="displayStandardCost" class="ml-2">顯示標準進價</label>
+            </div>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
-              label="管理編號
-                  (管編,管編,管編)"
-              controlName="managementIDText"
-              [control]="queryForm.controls.managementIDText"
-              [submitted]="submitted"
-            ></app-input-text>
+            <div class="field-checkbox">
+              <p-checkbox formControlName="displayImage" binary="true" id="displayImage"></p-checkbox>
+              <label for="displayImage" class="ml-2">顯示圖片</label>
+            </div>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
-              label="國際條碼"
-              controlName="barcode"
-              [control]="queryForm.controls.barcode"
-              [submitted]="submitted"
-            ></app-input-text>
+            <app-input-text label="顯示行數" controlName="rows" [control]="queryForm.controls.rows"
+              [submitted]="submitted"></app-input-text>
           </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
-              label="廠商貨號"
-              controlName="vendorItemNumber"
-              [control]="queryForm.controls.vendorItemNumber"
-              [submitted]="submitted"
-            ></app-input-text>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="大分類代碼"
-              controlName="bigCategoryCode"
-              [options]="bigCategoryOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.bigCategoryCode"
-              [submitted]="submitted"
-            ></app-dropdown>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="中分類代碼"
-              controlName="midCategoryCode"
-              [options]="midCategoryOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.midCategoryCode"
-              [submitted]="submitted"
-            ></app-dropdown>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="小分類代碼"
-              controlName="smallCategoryCode"
-              [options]="smallCategoryOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.smallCategoryCode"
-              [submitted]="submitted"
-            ></app-dropdown>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-editor-text
-              label="系列"
-              controlName="series"
-              [style]="{ height: '100px' }"
-              [control]="queryForm.controls.series"
-              [submitted]="submitted"
-            ></app-editor-text>
-          </div>
-          <!-- Additional fields for checkboxes and input fields -->
-          <div class="col-12 md:col-6 lg:col-4">
-            <p-checkbox
-              label="顯示庫存為零"
-              formControlName="displayEmptyStock"
-            ></p-checkbox>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <p-checkbox
-              label="顯示標準進價"
-              formControlName="displayStandardCost"
-            ></p-checkbox>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <p-checkbox
-              label="顯示圖片"
-              formControlName="displayImage"
-            ></p-checkbox>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
-              label="顯示行數"
-              controlName="rows"
-              [control]="queryForm.controls.rows"
-              [submitted]="submitted"
-            ></app-input-text>
-          </div>
+        </div>
+        <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+          <app-button btnType="clear"></app-button>
+          <app-button btnType="query" [loading]="loading"></app-button>
         </div>
       </form>
-      <div>
-        <div class="grid justify-content-end">
-          <app-button btnType="clear" (onClick)="onClearForm()"></app-button>
-          <app-button
-            btnType="query"
-            (onClick)="onSubmitQuery(queryForm)"
-            [loading]="loading"
-          ></app-button>
-        </div>
-      </div>
     </p-accordionTab>
   </p-accordion>
 </div>
+
 <div class="card">
-  <div class="col-12">
-    <app-table
-      [data]="data"
-      [columns]="columns"
-      (edit)="onEdit($event)"
-      (detail)="onDetail($event)"
-    ></app-table>
-  </div>
+  <app-table [data]="data" [columns]="columns" [totalRecords]="totalRecords"
+    (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [lazy]="true" [loading]="loading"
+    [showManage]="false">
+  </app-table>
 </div>

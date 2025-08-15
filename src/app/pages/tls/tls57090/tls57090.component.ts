@@ -1,7 +1,5 @@
-import { Component } from '@angular/core';
-import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { NavigationExtras, Router } from '@angular/router';
-// Services
+import { Component, OnInit } from '@angular/core';
+import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { WarehouseService } from '../../../service/basic/warehouse.service';
 import { BrandCodeService } from '../../../service/basic/brand-code.service';
 import { ManagementIDService } from '../../../service/basic/management-id.service';
@@ -9,12 +7,7 @@ import { VendorService } from '../../../service/basic/vendor.service';
 import { DocumentTypeService } from '../../../service/basic/document-type.service';
 import { PriceChangeStatusService } from '../../../service/basic/price-change-status.service';
 import { DisplayModeService } from '../../../service/basic/display-mode.service';
-// Shared
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-
-import { FunsrightInfo, PermissionsInfo } from '../../../shared/models/system/funsrightInfo';
-import { AuthService } from '../../../service/system/auth.service';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { AccordionModule } from 'primeng/accordion';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
@@ -22,11 +15,12 @@ import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-ra
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { TranslateModule } from '@ngx-translate/core';
+import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
+import { Column } from '@shared/componentkit/table/table.model';
 
 @Component({
   selector: 'app-tls57090',
   templateUrl: './tls57090.component.html',
-  styleUrls: ['./tls57090.component.scss'],
   standalone: true,
   imports: [
     MenubarComponent,
@@ -40,15 +34,7 @@ import { TranslateModule } from '@ngx-translate/core';
     TranslateModule,
   ],
 })
-export class TLS57090Component {
-  ProgNo: string = '250048';
-  funInfo?: FunsrightInfo;
-
-
-
-  loading: boolean = false;
-  submitted: boolean = false;
-
+export class TLS57090Component extends BasicQueryPageComponent<any> implements OnInit {
   queryForm = this.formBuilder.group({
     warehouseCode: [],
     brandCode: [],
@@ -56,14 +42,13 @@ export class TLS57090Component {
     vendorCode: [],
     documentType: [],
     priceChangeStatus: [],
-    displayMode: [],
+    displayMode: [1],
     applicationDateFrom: [],
     applicationDateTo: [],
     approvalDateFrom: [],
     approvalDateTo: [],
   });
-
-  // Dropdown options
+  totalRecords = 0
   warehouseOptions: any[] = [];
   brandCodeOptions: any[] = [];
   managementIDOptions: any[] = [];
@@ -71,14 +56,8 @@ export class TLS57090Component {
   documentTypeOptions: any[] = [];
   priceChangeStatusOptions: any[] = [];
   displayModeOptions: any[] = [];
-
-  // Table data
-  data: any[] = [
-
-    // Other data
-  ];
-  filteredData: any[] = [...this.data];
-  columns: any[] = [
+  data: any[] = [];
+  columns: Column[] = [
     { field: 'warehouse', header: '倉別', visible: true },
     { field: 'brand', header: '品牌', visible: true },
     { field: 'applicationDate', header: '申請日期', visible: true },
@@ -94,8 +73,6 @@ export class TLS57090Component {
 
 
   constructor(
-    private router: Router,
-    private formBuilder: FormBuilder,
     private notificationService: NotificationService,
     private warehouseService: WarehouseService,
     private brandCodeService: BrandCodeService,
@@ -104,12 +81,10 @@ export class TLS57090Component {
     private documentTypeService: DocumentTypeService,
     private priceChangeStatusService: PriceChangeStatusService,
     private displayModeService: DisplayModeService,
-    private authService: AuthService,
-  ) { }
+  ) { super(); }
 
   ngOnInit(): void {
-    // Initialize dropdown options
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
+    this.initializePage('TLS57090', 'tls/tls57090cru', this.queryForm, (form) => this.onSubmit(form));
     this.warehouseService.getWarehouseOptions().subscribe((data) => (this.warehouseOptions = data));
     this.brandCodeService.getSystemTypes().subscribe((data) => (this.brandCodeOptions = data));
     this.managementIDService.getSystemTypes().subscribe((data) => (this.managementIDOptions = data));
@@ -119,77 +94,7 @@ export class TLS57090Component {
     this.displayModeService.getDisplayModes().subscribe((data) => (this.displayModeOptions = data));
   }
 
-  canQuery(): boolean {
-    return true;
-  }
-
-  canAdd(): boolean {
-    return true;
-  }
-
-  canEdit(): boolean {
-    return true;
-  }
-
   onSubmit(frm: FormGroup) {
-    console.log(frm.value);
-    this.submitted = true;
-    this.loading = true;
-    this.notificationService.blockUi();
-
-    if (frm.valid && this.canQuery()) {
-      // Submit logic here
-    }
-
-    this.loading = false;
-    this.notificationService.unblockUi();
-  }
-
-  onSubmitQuery(frm: FormGroup) {
-    // 查詢邏輯
-    this.onSubmit(frm);
-  }
-
-  onClearForm() {
-    this.queryForm.reset();  // 重置表單
-  }
-
-  onCreate() {
-    if (this.canAdd()) {
-      let extras: NavigationExtras = {
-        state: {
-          crudstatus: CRUDStatus.Create,
-          queryform: this.queryForm,
-        },
-        skipLocationChange: true,
-      };
-      this.router.navigate(['/demoCRU'], extras);
-    }
-  }
-
-  onEdit(data: any) {
-    if (this.canEdit()) {
-      let extras: NavigationExtras = {
-        state: {
-          crudstatus: CRUDStatus.Edit,
-          rowdata: data,
-          queryform: this.queryForm,
-        },
-        skipLocationChange: true,
-      };
-      this.router.navigate(['/demoCRU'], extras);
-    }
-  }
-
-  onDetail(data: any) {
-    let extras: NavigationExtras = {
-      state: {
-        crudstatus: CRUDStatus.Read,
-        rowdata: data,
-        queryform: this.queryForm,
-      },
-      skipLocationChange: true,
-    };
-    this.router.navigate(['/demoCRU'], extras);
+    this.handleSubmit(frm, () => { });
   }
 }

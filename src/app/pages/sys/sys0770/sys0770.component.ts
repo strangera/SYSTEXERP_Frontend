@@ -91,6 +91,7 @@ export class SYS0770Component extends BasicQueryPageComponent<QueryUsersResponse
         { field: 'User_No', header: '使用者代碼', visible: true, showSort: true },
         { field: 'User_Name', header: '使用者名稱', visible: true, showSort: true },
       ];
+      this.data = [];
     } else { // AuthorizationType.Role
       this.columns = [
         { field: 'User_No', header: '使用者代碼', visible: true, showSort: true },
@@ -98,6 +99,7 @@ export class SYS0770Component extends BasicQueryPageComponent<QueryUsersResponse
         { field: 'Role_No', header: '角色代號', visible: true, showSort: true },
         { field: 'Role_Name', header: '角色名稱', visible: true, showSort: true },
       ];
+      this.data = [];
     }
   }
 
