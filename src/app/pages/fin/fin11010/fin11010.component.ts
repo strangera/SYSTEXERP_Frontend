@@ -39,7 +39,7 @@ export class FIN11010Component extends BasicQueryPageComponent<FIN11010Data> imp
     STO_TaxName: ['', [Validators.maxLength(60)]],          // 營業人名稱
     STO_Addr: ['', [Validators.maxLength(100)]],            // 營業地址
     REP_OrgCodeList: [[]],                                  // 總繳代號
-    STO_StatusList: [[]],                                   // 審核狀態 (多選)
+    STO_StatusList: [[]],                                   // 狀態 (多選)
     REP_GUIYM_start: [''],                                  // 申報年月(起)
     REP_GUIYM_end: [''],                                    // 申報年月(訖)
     ...createPaginationConfig([{ field: 'id', order: 1 }]) // 分頁和排序參數
@@ -57,7 +57,7 @@ export class FIN11010Component extends BasicQueryPageComponent<FIN11010Data> imp
     { No: '2', Name: '各單位(分支機構)分別申報' }
   ];
 
-  // 審核狀態選項
+  // 狀態選項
   reviewStatusOptions = [
     { No: '0', Name: '未確認' },
     { No: '1', Name: '使用中' },
@@ -104,7 +104,7 @@ export class FIN11010Component extends BasicQueryPageComponent<FIN11010Data> imp
     { field: 'STO_Direct', header: '直接扣抵法(Y/N)', visible: true, format: (value: string) => value === 'Y' ? '是' : '否' },
     {
       field: 'STO_Status',
-      header: '審核狀態',
+      header: '狀態',
       visible: true,
       format(value) {
         switch (value) {
