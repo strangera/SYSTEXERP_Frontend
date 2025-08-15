@@ -204,9 +204,18 @@ export class AuthService {
       return null;
     }
   }
-getOuterToken(): Observable<ApiResponse<string>> {
-  return this.http.get<ApiResponse<string>>(
-    `${environment.ApiUrl}/SSOLogin/getOuterToken`
-  );
-}
+   private ssoUrl = `${environment.ApiUrl}/SSOLogin`;
+  getOuterToken(): Observable<{
+    token: string;
+    expiresAt: string;         // UTC ISO
+    expiresInSeconds: number;  // e.g., 300
+    tokenType: string;         // "Bearer"
+  }> {
+    return this.http.get<{
+      token: string;
+      expiresAt: string;
+      expiresInSeconds: number;
+      tokenType: string;
+    }>(`${this.ssoUrl}/getOuterToken`);
+  }
 }
