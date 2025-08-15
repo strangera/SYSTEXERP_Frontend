@@ -13,6 +13,7 @@ import { finalize } from 'rxjs';
 import { InputNumberComponent } from '@shared/componentkit/input-number/input-number.component';
 import { ButtonModule } from 'primeng/button';
 import { NgStyle } from '@angular/common';
+import { ExecSpFuncService } from '@service/utility/execSpFunc.service';
 
 @Component({
   selector: 'app-cpm13010',
@@ -57,7 +58,8 @@ export class CPM13010Component extends BasicQueryPageComponent<QueryCPM13010Resp
   ];
 
   constructor(
-    private cpm13010Service: Cpm13010Service
+    private readonly cpm13010Service: Cpm13010Service,
+    private readonly ExecSpFunc: ExecSpFuncService
   ) {
     super(); // 呼叫父類建構子
   }
@@ -107,9 +109,22 @@ export class CPM13010Component extends BasicQueryPageComponent<QueryCPM13010Resp
   }
   btnLoading = false;
   onUpload() {
+    const storeNo = this.authService.currentUserValue?.SYS_StoreNo;
+    const userNo = this.authService.currentUserValue?.user_No;
+    if (!storeNo || !userNo) { return; }
     const params = {
+      SYS_StoreNo: storeNo,
+      EXP_StoreNo: storeNo,
+      EXP_Type: "DSC2010",
+      EXP_DocNo: userNo,
+      EXP_DataFlag: "S2P",
+      EXP_Desc: ""
     }
     this.btnLoading = true;
+    this.ExecSpFunc.ExecSpFunc(params).pipe(untilDestroyed(this), finalize(() => this.btnLoading = false)).subscribe(res => {
+      this.messageService.successBubble(res.Message);
+      this.selectedRows = [];
+    })
   }
   // 狀態為刪除禁止下傳
   get isDisabled(): boolean {

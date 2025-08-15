@@ -1,6 +1,5 @@
-
 import { DatePipe, NgIf } from '@angular/common';
-import { Component, OnInit, computed, effect } from '@angular/core';
+import { Component, OnInit, computed, effect, signal, viewChild } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
@@ -11,6 +10,7 @@ import { ButtonComponent } from '@shared/componentkit/button/button.component';
 import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/calendar-range.component';
 import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
+import { FileUploadComponent } from '@shared/componentkit/file-upload/file-upload.component';
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
 import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
 import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
@@ -18,7 +18,10 @@ import { TableComponent } from '@shared/componentkit/table/table.component';
 import { Column } from '@shared/componentkit/table/table.model';
 import { CRUDStatus } from '@shared/models/system/CRUDstatus';
 import { ApprovalStatus } from '@shared/models/tls/approval-status.model';
+import { ExcelImportService } from '@shared/service/excel-import.service';
+import { FileUpload, FileUploadEvent, FileUploadHandlerEvent, FileUploadModule } from 'primeng/fileupload';
 import { PanelModule } from 'primeng/panel';
+import * as XLSX from 'xlsx';
 import { TLS26080Data, TLS26080Detail } from '../tls26080/tls26080.model';
 
 @Component({
@@ -32,6 +35,7 @@ import { TLS26080Data, TLS26080Detail } from '../tls26080/tls26080.model';
     PanelModule,
     ReactiveFormsModule,
     TranslateModule,
+    FileUploadModule,
     ButtonComponent,
     CalendarComponent,
     CalendarRangeComponent,
@@ -41,6 +45,7 @@ import { TLS26080Data, TLS26080Detail } from '../tls26080/tls26080.model';
     MenubarComponent,
     MultiSelectComponent,
     TableComponent,
+    FileUploadComponent,
   ]
 })
 export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> implements OnInit {
@@ -61,6 +66,9 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
     { label: '活動起始日至截止日', value: 'Y' },
     { label: '正檔日至截止日', value: 'N' }
   ];
+
+  private fileSignal = signal<any[]>([]);
+  public fileUpload = viewChild.required<FileUpload>('fileUpload');
 
   private podNoSignal = toSignal(this.dataForm.controls.pod_no.valueChanges);
   private podDescSignal = toSignal(this.dataForm.controls.pod_desc.valueChanges);
@@ -118,6 +126,7 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
     }
     this.service.TLS26080Detail.set(result);
   }, { allowSignalWrites: !0 });
+
   /** 初始化靜態資料 */
   public readonly staticDataEffect = effect(() => {
     const detail = this.service.TLS26080Detail();
@@ -181,6 +190,7 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
   constructor(
     public readonly service: TLS26080Service,
     private readonly datePipe: DatePipe,
+    private readonly excelImportService: ExcelImportService,
   ) {
     super();
   }
@@ -188,15 +198,11 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
   public ngOnInit(): void {
     this.initializePage('TLS26080', this.dataForm);
     if (this.crudstatus !== CRUDStatus.Create) this.service.loadTLS26080Detail(this.rowdata!.pod_no || '');
-    this.service.loadTLS26080({ pod_sdate: this.df().pod_sdate.value!, pod_edate: this.df().pod_edate.value! });
+    // this.service.loadTLS26080({ pod_sdate: this.df().pod_sdate.value!, pod_edate: this.df().pod_edate.value! });
     this.service.loadAPS1003(['E']);
+    this.service.loadCampaignData();
     TLS26080CRUComponent.staticData = this.dataForm.value as TLS26080Data;
     console.log(`init:`, [this.rowdata, this.crudstatus, this.dataForm.value]);
-  }
-
-  /** 讀取環友資料 */
-  public queryCampaign(): void {
-    this.service.loadCampaignData();
   }
 
   public onClear(): void {
@@ -255,6 +261,23 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
       ? this.messageService.successBubble('專櫃資料已更新')
       : this.messageService.warnBubble('請檢查專櫃資料是否正確');
     console.log(`onBlurCounter:`, [event, this.dataForm.value]);
+  }
+
+  public async handleUpload(event: FileUploadHandlerEvent): Promise<void> {
+    const data = await this.excelImportService.importExcel(event.files[0], ['專櫃編號', '櫃位名稱', '抽成類別', '抽成類別名稱', '正檔起日計算', 'D16', 'D17', '備註']);
+    this.fileSignal.set(data);
+    this.fileUpload().clear();
+    console.log(`excel import:`, [data]);
+  }
+
+  public onExportExcelTemplate(): void {
+    const ws: XLSX.WorkSheet = XLSX.utils.json_to_sheet([
+      ['專櫃編號', '櫃位名稱', '抽成類別', '抽成類別名稱', '正檔起日計算', 'D16', 'D17', '備註'],
+    ]);
+    const wb: XLSX.WorkBook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Template');
+    XLSX.writeFile(wb, 'export_template.xlsx');
+    console.log(`export excel template:`, []);
   }
 
 
