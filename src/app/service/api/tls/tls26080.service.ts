@@ -27,11 +27,11 @@ export class TLS26080Service {
   public campaignCounterData = signal<CampaignCounterData[]>([]);
 
   // 讀取狀態
-  private tableLoading = !1;
-  private approvalStatusLoading = !1;
-  private campaignLoading = !1;
-  private campaignCounterLoading = !1;
-  private capItemsLoading = !1;
+  public tableLoading = !1;
+  public approvalStatusLoading = !1;
+  public campaignLoading = !1;
+  public campaignCounterLoading = !1;
+  public capItemsLoading = !1;
 
   // 下拉選單資料
   public departmentItems = signal<DropdownOption[]>([]);
