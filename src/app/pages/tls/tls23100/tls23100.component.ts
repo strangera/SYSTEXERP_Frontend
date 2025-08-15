@@ -23,6 +23,7 @@ import { ButtonComponent } from '../../../shared/componentkit/button/button.comp
 import { TranslateModule } from '@ngx-translate/core';
 import { Subject, Subscription, of } from 'rxjs';
 import { debounceTime, takeUntil, timeout, catchError } from 'rxjs/operators';
+import { TableComponent } from '@shared/componentkit/table/table.component';
 @Component({
   selector: 'app-tls23100',
   templateUrl: './tls23100.component.html',
@@ -39,17 +40,14 @@ import { debounceTime, takeUntil, timeout, catchError } from 'rxjs/operators';
     InputTextModule,
     ButtonComponent,
     TranslateModule,
-  ],
+    TableComponent,
+  ]
 })
 export class TLS23100Component extends BasicQueryPageComponent<any> {
-  private destroy$ = new Subject<void>();
-  private readonly STORAGE_KEY = 'TLS23100:queryForm';
-  private formValueSub?: Subscription;
-  querySubscription: Subscription | null = null;
+
   //此頁面所需參數
-  showPageSizeDialog = false;
-  customPageSize = 1000;
-  Data: any[] = [];
+
+  data: any[] = [];
   totalRecords = 0;
    readonly yesterday: Date = (() => {
     const d = new Date();
@@ -58,7 +56,7 @@ export class TLS23100Component extends BasicQueryPageComponent<any> {
     return d;
   })();
 
-  //request
+
   //request
   queryForm = this.formBuilder.group({
     TXN_DateStart: [this.yesterday as Date, [Validators.required]],
@@ -70,6 +68,7 @@ export class TLS23100Component extends BasicQueryPageComponent<any> {
     tlt_building: [],
     tlt_floor: [[]],
     org_id: [[]],
+    
     ...createPaginationConfig([{ field: 'TLT_No', order: 1 }]),
   });
 
@@ -93,15 +92,10 @@ export class TLS23100Component extends BasicQueryPageComponent<any> {
   }
   //頁面起始
   ngOnInit(): void {
-    this.initializePage('TLS23100', 'tls/tls23100cru', this.queryForm);
-
-    this.restoreQueryFromStorage();
-this.queryForm.valueChanges
-  .pipe(debounceTime(300), takeUntil(this.destroy$))
-  .subscribe(() => this.saveQueryToStorage());
+    this.initializePage('TLS23100', 'tls/tls23100', this.queryForm, (form) => this.onSubmit(form));
 
     //收銀機號下拉
-    this.ECRNoService.getECRNo().pipe(takeUntil(this.destroy$)).subscribe((res) => {
+    this.ECRNoService.getECRNo().subscribe((res) => {
       this.ECRNoOptions =
         res?.map((x) => ({
           label: x.label,
@@ -110,7 +104,7 @@ this.queryForm.valueChanges
         })) || [];
     });
     //專櫃編號下拉
-    this.counterNameService.getCounters().pipe(takeUntil(this.destroy$)).subscribe((res) => {
+    this.counterNameService.getCounters().subscribe((res) => {
       this.CounterOptions =
         res?.map((x) => ({
           label: x.label,
@@ -120,19 +114,19 @@ this.queryForm.valueChanges
     });
     //付款別下拉
     this.paymentTypeService
-      .getPaymentTypes().pipe(takeUntil(this.destroy$))
+      .getPaymentTypes()
       .subscribe((data) => (this.paymentTypeOptions = data));
     //館別下拉
     this.tls11010Service
-      .getBuildingOptions().pipe(takeUntil(this.destroy$))
+      .getBuildingOptions()
       .subscribe((data) => (this.BUILDING_NO_Options = data));
     //樓層下拉
     this.floorService
-      .getFloors().pipe(takeUntil(this.destroy$))
+      .getFloors()
       .subscribe((data) => (this.floorOptions = data));
 
     //組織代碼下拉
-    this.tls11010Service.getOrgOptions().pipe(takeUntil(this.destroy$)).subscribe((res) => {
+    this.tls11010Service.getOrgOptions().subscribe((res) => {
       this.OrganizationCodeOptions =
         res?.map((x) => ({
           label: x.label,
@@ -142,112 +136,73 @@ this.queryForm.valueChanges
     });
   }
 
-  confirmPageSizeAndNavigate(): void {
-    this.submitted = true;
+      columns = [
+      { field: 'ECR_No', header: '收銀機號', visible: true },
+      { field: 'TXN_No', header: '交易序號', visible: true },
+      { field: 'tlt_no', header: '專櫃編號', visible: true, style: 'text-left' },
+      { field: 'tlt_name', header: '櫃位名稱', visible: true, style: 'text-left' },
+      { field: 'PAY_NO', header: '付款別', visible: true },
+      { field: 'PAY_NAME', header: '付款名稱', visible: true },
+      { field: 'CRD_Type', header: '信用卡卡別', visible: true },
+      { field: 'CRD_Name', header: '信用卡', visible: true },
+      { field: 'CRD_No', header: '信用卡卡號', visible: true },
+      { field: 'TXN_PayAmt', header: '金額', visible: true, style: 'text-right', format: (val: number) => val?.toLocaleString('en-US') || '0' },
+    ];
+// 送出查詢（無 doQuery / buildPayload）
+onSubmit(form: FormGroup): void {
+  this.handleSubmit(form, () => {
+    const val = this.queryForm.value as any;
 
-    // ✅ 驗證查詢表單是否有效
-    if (this.queryForm.invalid) {
-      this.messageService.warnBubble('請確認欄位資料是否完整');
-      this.queryForm.markAllAsTouched();
-      return;
-    }
-
-    // ✅ 取出表單值並處理空字串 => null
-    const rawFormValue: Record<string, any> = { ...this.queryForm.value };
-
-    for (const key in rawFormValue) {
-      const value = rawFormValue[key];
-
-      if (typeof value === 'string' && value.trim() === '') {
-        rawFormValue[key] = null;
-      }
-    }
-
-    // ✅ 加入自定義筆數參數（PageSize 是後端預期欄位）
-    const queryFormValue = {
-      ...rawFormValue,
-      pageSize: this.customPageSize, // 前端使用的
-      PageSize: this.customPageSize, // 傳給後端
-      PageIndex: 1, // 預設查詢第 1 頁
+    // 本地 ISO(yyyy-MM-ddTHH:mm:ss) — 去掉時區偏移
+    const toIso = (x: any) => {
+      if (!x) return undefined;
+      const d = typeof x === 'string' ? new Date(x) : (x as Date);
+      if (isNaN(d.getTime())) return undefined;
+      return new Date(d.getTime() - d.getTimezoneOffset() * 60000)
+        .toISOString()
+        .slice(0, 19);
     };
 
-    // ✅ 啟用 loading 與畫面鎖定
+    // 直接在這裡組 payload（保留分頁/排序）
+    const payload: any = {
+      ...val,
+      TXN_DateStart: toIso(val?.TXN_DateStart),
+      TXN_DateEnd:   toIso(val?.TXN_DateEnd),
+      pageSize:  val?.pageSize,
+      pageIndex: val?.pageIndex,
+      SortBy:    val?.SortBy,
+      OrderBy:   val?.OrderBy,
+      Offset:    val?.Offset,
+    };
+
+    // 移除空字串 / null / undefined / 空陣列，避免干擾後端繫結
+    Object.keys(payload).forEach((k) => {
+      const v = payload[k];
+      if (v === '' || v === null || v === undefined) delete payload[k];
+      if (Array.isArray(v) && v.length === 0) delete payload[k];
+    });
+
     this.loading = true;
-    this.messageService.blockUi();
+    this.messageService?.blockUi();
 
-    // ✅ 呼叫查詢 API
-    this.tls23100Service
-  .queryTLS23100(queryFormValue)
-  .pipe(
-    timeout(30000),
-    catchError(() => {
-      this.messageService.errorBubble('查詢失敗');
-      this.loading = false;
-      this.messageService.unblockUi();
-      this.showPageSizeDialog = false;
-      return of({ Status: '9999', Data: [] });
-    })
-  )
-  .subscribe({
-    next: (res) => {
-      if (res.Status === '0000') {
-        this.queryStateService.setQueryState(this.ProgNo, queryFormValue);
-        this.router.navigate(['account/tls/tls23100cru'], {
-          state: {
-            queryFormValue,
-            pageSize: this.customPageSize,
-            data: res.Data || [],
-          },
-        }).then(() => {
-          this.loading = false;
-          this.messageService.unblockUi();
-          this.showPageSizeDialog = false;
-        });
-      } else {
-        this.messageService.errorBubble('查詢失敗');
+    this.tls23100Service.queryTLS23100(payload).subscribe({
+      next: (res) => {
+        const raw = res?.Data ?? [];
+        this.data = Array.isArray(raw) ? raw : [];
+        this.totalRecords = typeof res?.TotalCount === 'number'
+          ? res.TotalCount
+          : this.data.length; // ✅ 沒有 res.total
+      },
+      error: (err) => {
+        console.error('TLS23100 查詢失敗', err);
+        this.messageService?.errorBubble?.('查詢失敗，請稍後再試');
+      },
+      complete: () => {
+        this.loading = false;
+        this.messageService?.unblockUi();
       }
-    },
-    complete: () => {
-      // 若上面已導航成功會在 then() 解鎖；這裡保險再解一次
-      this.loading = false;
-      this.messageService.unblockUi();
-      this.showPageSizeDialog = false;
-    },
+    });
   });
-  }
-
-    /** 立即把目前表單狀態存進 LocalStorage（日期會轉 ISO 字串） */
-private saveQueryToStorage(): void {
-  const raw = this.queryForm.getRawValue();
-  const payload = JSON.stringify(raw, (k, v) => (v instanceof Date ? v.toISOString() : v));
-  localStorage.setItem(this.STORAGE_KEY, payload);
-}
-
-    /** 從 LocalStorage 還原進表單（把 ISO 字串還原成 Date 物件） */
-private restoreQueryFromStorage(): void {
-  const json = localStorage.getItem(this.STORAGE_KEY);
-  if (!json) return;
-
-  const parsed = JSON.parse(json, (_k, v) => {
-    if (typeof v === 'string' && /^\d{4}-\d{2}-\d{2}T/.test(v)) {
-      const d = new Date(v);
-      return isNaN(d.getTime()) ? v : d;
-    }
-    return v;
-  });
-
-  this.queryForm.patchValue(parsed, { emitEvent: false });
-}
-
-/** 清除 LocalStorage 內儲存的查詢條件 */
-private clearQueryStorage(): void {
-  localStorage.removeItem(this.STORAGE_KEY);
-}
-ngOnDestroy(): void {
-  this.destroy$.next();
-  this.destroy$.complete();
-
-  this.querySubscription?.unsubscribe();
 }
 
 }

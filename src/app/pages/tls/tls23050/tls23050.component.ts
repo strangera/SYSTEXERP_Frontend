@@ -19,6 +19,7 @@ import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdow
 import { InputTextModule } from 'primeng/inputtext';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { TranslateModule } from '@ngx-translate/core';
+import { TableComponent } from '@shared/componentkit/table/table.component';
 
 @Component({
   selector: 'app-tls23050',
@@ -37,17 +38,15 @@ import { TranslateModule } from '@ngx-translate/core';
     InputTextModule,
     ButtonComponent,
     TranslateModule,
+    TableComponent,
   ],
 })
 export class TLS23050Component extends BasicQueryPageComponent<any> {
-  private readonly STORAGE_KEY = 'TLS23050:queryForm';
-  private destroy$ = new Subject<void>();              // ✅ 統一退訂
-  querySubscription: Subscription | null = null;
+
 
   data: any[] = [];
   totalRecords = 0;
   showPageSizeDialog = false;
-  customPageSize = 1000;
 
   readonly yesterday: Date = (() => {
     const d = new Date();
@@ -58,7 +57,6 @@ export class TLS23050Component extends BasicQueryPageComponent<any> {
 
   // ✅ 陣列欄位改用 control<any[]>([])，避免 never[] 型別錯誤
   queryForm = this.formBuilder.group({
-
     TXN_DateStart: [this.yesterday, [Validators.required]],
     TXN_DateEnd: [this.yesterday, [Validators.required]],
     rece_yn: [null],
@@ -88,40 +86,31 @@ export class TLS23050Component extends BasicQueryPageComponent<any> {
   }
 
   ngOnInit(): void {
-    this.initializePage('TLS23050', '', this.queryForm);
+    this.initializePage('TLS23050', 'tls/tls23050', this.queryForm, (form) => this.onSubmit(form));
 
-    // ✅ 從 localStorage 還原
-    this.restoreQueryFromStorage();
 
-    // ✅ debounce + 自動退訂：儲存查詢條件
-    this.queryForm.valueChanges
-      .pipe(debounceTime(300), takeUntil(this.destroy$))
-      .subscribe(() => this.saveQueryToStorage());
 
-    // ✅ 回上一頁後不保留 loading 狀態
-    if (history.state?.fromCru) {
-      this.loading = false;
-    }
+
 
     // ✅ 下拉資料：全部加 takeUntil，避免 memory leak
     this.whetherService.getWhetherOptions()
-      .pipe(takeUntil(this.destroy$))
+      
       .subscribe(data => this.WhetherOptions = data);
 
     this.typeService.getTypeOptions()
-      .pipe(takeUntil(this.destroy$))
+      
       .subscribe(data => this.typeOptions = data);
 
     this.floorService.getFloors()
-      .pipe(takeUntil(this.destroy$))
+      
       .subscribe(data => this.floorOptions = data);
 
     this.tls11010Service.getBuildingOptions()
-      .pipe(takeUntil(this.destroy$))
+      
       .subscribe(data => this.BUILDING_NO_Options = data);
 
     this.tls11010Service.getOrgOptions()
-      .pipe(takeUntil(this.destroy$))
+      
       .subscribe(data => {
         this.OrganizationCodeOptions = (data ?? []).map((x: any) => ({
           label: x.label,
@@ -131,7 +120,7 @@ export class TLS23050Component extends BasicQueryPageComponent<any> {
       });
 
     this.ECRNoService.getECRNo()
-      .pipe(takeUntil(this.destroy$))
+      
       .subscribe(data => {
         this.ECRNoOptions = (data ?? []).map((x: any) => ({
           label: x.label,
@@ -141,111 +130,126 @@ export class TLS23050Component extends BasicQueryPageComponent<any> {
       });
   }
 
-  confirmPageSizeAndNavigate(): void {
-    this.submitted = true;
-    if (this.queryForm.invalid) {
-      this.messageService.warnBubble('請確認欄位資料是否完整');
-      this.queryForm.markAllAsTouched();
-      return;
-    }
+  // 送出查詢
+// 送出查詢（無 doQuery / buildPayload）
+onSubmit(form: FormGroup): void {
+  this.handleSubmit(form, () => {
+    const val = this.queryForm.value as any;
 
-    const queryFormValue = this.cleanFormPayload({
-      ...this.queryForm.value,
-      pageSize: this.customPageSize,
-    });
-
-    this.loading = true;
-    this.messageService.blockUi();
-
-    this.tls23050Service
-      .queryTLS23050(queryFormValue)
-      .pipe(
-        timeout(30000),
-        catchError(() => {
-          this.messageService.errorBubble('查詢失敗');
-          this.loading = false;
-          this.messageService.unblockUi();
-          return of({ Status: '9999', Data: [] });
-        }),
-      )
-      .subscribe({
-        next: (res) => {
-          if (res.Status === '0000') {
-            const resultData = res.Data || [];
-
-            this.queryStateService.setQueryState(this.ProgNo, queryFormValue);
-
-            this.router.navigate(['account/tls/tls23050cru'], {
-              state: {
-                queryFormValue,
-                pageSize: this.customPageSize,
-                data: resultData,
-                fromCru: true,
-              },
-            });
-          } else {
-            this.messageService.errorBubble('查詢失敗');
-          }
-        },
-        complete: () => {
-          this.loading = false;
-          this.messageService.unblockUi();
-          this.showPageSizeDialog = false;
-        },
-      });
-  }
-
-  private cleanFormPayload(payload: any): any {
-    for (const key in payload) {
-      const val = payload[key];
-      if (val === '' || val === null || (Array.isArray(val) && val.length === 0)) {
-        payload[key] = null;
-      }
-    }
-    return {
-      ...payload,
-      pageSize: payload.pageSize ?? 30,
-      pageIndex: (payload.pageIndex ?? 1) - 1,
-      Offset: 0,
-      OrderBy: '',
-      SortBy: payload.SortBy ?? [{ field: 'ECR_No', order: 1 }],
+    // 直接在這裡組 payload（沿用 toIso）
+    const payload: any = {
+      ...val,
+      TXN_DateStart: this.toIso(val?.TXN_DateStart),
+      TXN_DateEnd:   this.toIso(val?.TXN_DateEnd),
+      // 若有序號區間且非空字串就轉數字
+      TXN_No_Start:  (val?.TXN_No_Start ?? '') !== '' ? Number(val.TXN_No_Start) : undefined,
+      TXN_No_End:    (val?.TXN_No_End ?? '')   !== '' ? Number(val.TXN_No_End)   : undefined,
+      // 分頁/排序沿用表單裡的（createPaginationConfig 會放進去）
+      pageSize:  val?.pageSize,
+      pageIndex: val?.pageIndex,
+      SortBy:    val?.SortBy,
+      OrderBy:   val?.OrderBy,
+      Offset:    val?.Offset,
     };
-  }
 
-
-
-  /** 立即把目前表單狀態存進 LocalStorage（日期會轉 ISO 字串） */
-  private saveQueryToStorage(): void {
-    const raw = this.queryForm.getRawValue();
-    const payload = JSON.stringify(raw, (k, v) => (v instanceof Date ? v.toISOString() : v));
-    localStorage.setItem(this.STORAGE_KEY, payload);
-  }
-
-  /** 從 LocalStorage 還原進表單（把 ISO 字串還原成 Date 物件） */
-  private restoreQueryFromStorage(): void {
-    const json = localStorage.getItem(this.STORAGE_KEY);
-    if (!json) return;
-
-    const parsed = JSON.parse(json, (_k, v) => {
-      if (typeof v === 'string' && /^\d{4}-\d{2}-\d{2}T/.test(v)) {
-        const d = new Date(v);
-        return isNaN(d.getTime()) ? v : d;
-      }
-      return v;
+    // 清理空值/空陣列，避免干擾後端繫結
+    Object.keys(payload).forEach((k) => {
+      const v = payload[k];
+      if (v === '' || v === null || v === undefined) delete payload[k];
+      if (Array.isArray(v) && v.length === 0) delete payload[k];
     });
 
-    this.queryForm.patchValue(parsed, { emitEvent: false });
+    // 呼叫 API
+    this.loading = true;
+    this.messageService?.blockUi();
+
+    this.tls23050Service.queryTLS23050(payload).subscribe({
+      next: (res) => {
+        const raw = res?.Data ?? [];
+        this.data = Array.isArray(raw) ? raw : [];
+        this.totalRecords = typeof res?.TotalCount === 'number'
+          ? res.TotalCount
+          : this.data.length; // ✅ 沒有 res.total
+      },
+      error: (err) => {
+        console.error('TLS23050 查詢失敗', err);
+        this.messageService?.errorBubble?.('查詢失敗，請稍後再試');
+      },
+      complete: () => {
+        this.loading = false;
+        this.messageService?.unblockUi();
+      }
+    });
+  });
+}
+
+
+// 日期轉後端要的 yyyy-MM-ddTHH:mm:ss（以本地時間為準，去掉時區偏移）
+private toIso(val: any): string | undefined {
+  if (!val) return undefined;
+  const d = typeof val === 'string' ? new Date(val) : (val as Date);
+  if (isNaN(d.getTime())) return undefined;
+  return new Date(d.getTime() - d.getTimezoneOffset() * 60000)
+    .toISOString()
+    .slice(0, 19);
+}
+
+
+
+
+
+
+    moneyFormat(value: number): string {
+    return value != null ? value.toLocaleString('en-US') : '0';
   }
 
-  /** 清除 LocalStorage 內儲存的查詢條件 */
-  private clearQueryStorage(): void {
-    localStorage.removeItem(this.STORAGE_KEY);
-  }
-
-  ngOnDestroy(): void {
-    this.destroy$.next();
-    this.destroy$.complete();
-
-    this.querySubscription?.unsubscribe();
-  }
+ columns=
+     [
+      { field: 'ECR_No', header: '收銀機號', visible: true },
+      { field: 'tlt_no', header: '專櫃編號', visible: true },
+      { field: 'tlt_name', header: '櫃位名稱', visible: true, style: 'text-left' },
+      { field: 'TXN_TotPayAmt', header: '總金額', visible: true, style: 'text-right', format: this.moneyFormat },
+      { field: 'TXN_PayAmt10', header: '現金', visible: true, style: 'text-right', format: this.moneyFormat },
+      { field: 'TXN_PayAmt41', header: '聯合連線', visible: true, style: 'text-right', format: this.moneyFormat },
+      { field: 'TXN_PayAmt42', header: '聯合離線', visible: true, style: 'text-right', format: this.moneyFormat },
+      { field: 'TXN_PayAmt12', header: '聯合紅利', visible: true, style: 'text-right', format: this.moneyFormat },
+      { field: 'TXN_PayAmt81', header: '[信用卡]中信停車場', visible: true, style: 'text-right', format: this.moneyFormat },
+      { field: 'TXN_PayAmt43', header: '中信連線', visible: true, style: 'text-right', format: this.moneyFormat },
+      { field: 'TXN_PayAmt44', header: '中信離線', visible: true, style: 'text-right', format: this.moneyFormat },
+      { field: 'TXN_PayAmt14', header: '中信紅利', visible: true, style: 'text-right', format: this.moneyFormat },
+      { field: 'TXN_PayAmt82', header: '[一卡通]停車場', visible: true, style: 'text-right', format: this.moneyFormat },
+      { field: 'TXN_PayAmt52', header: '一卡通', visible: true, style: 'text-right', format: this.moneyFormat },
+      { field: 'TXN_PayAmt20', header: '禮券', visible: true, style: 'text-right', format: this.moneyFormat },
+      { field: 'TXN_PayAmt62', header: '商品提貨單', visible: true, style: 'text-right', format: this.moneyFormat },
+      { field: 'TXN_PayAmt77', header: '感熱紙抵用券', visible: true, style: 'text-right', format: this.moneyFormat },
+      { field: 'TXN_PayAmt71', header: '商品抵用券', visible: true, style: 'text-right', format: this.moneyFormat },
+      { field: 'TXN_PayAmt30', header: '貴賓提貨單(應收帳款)', visible: true, style: 'text-right', format: this.moneyFormat },
+      { field: 'TXN_PayAmt73', header: '外來禮券(抵用券)', visible: true, style: 'text-right', format: this.moneyFormat },
+      { field: 'TXN_PayAmt72', header: '外來提貨單(抵用券)', visible: true, style: 'text-right', format: this.moneyFormat },
+      { field: 'TXN_PayAmt74', header: '活動券(自營)', visible: true, style: 'text-right', format: this.moneyFormat },
+      { field: 'TXN_PayAmt75', header: '折價券', visible: true, style: 'text-right', format: this.moneyFormat },
+      { field: 'TXN_PayAmt76', header: '現抵', visible: true, style: 'text-right', format: this.moneyFormat },
+      { field: 'TXN_PayAmt24', header: '禮券餘額代卡', visible: true, style: 'text-right', format: this.moneyFormat },
+      { field: 'TXN_PayAmt25', header: '提貨單餘代卡', visible: true, style: 'text-right', format: this.moneyFormat },
+      { field: 'TXN_PayAmt07', header: '會員折抵', visible: true, style: 'text-right', format: this.moneyFormat },
+      { field: 'TXN_PayAmt55', header: 'LINE Pay', visible: true, style: 'text-right', format: this.moneyFormat },
+      { field: 'TXN_PayAmt83', header: '[LINE Pay]停車場', visible: true, style: 'text-right', format: this.moneyFormat },
+      { field: 'TXN_PayAmt78', header: 'APP抵用券', visible: true, style: 'text-right', format: this.moneyFormat },
+      { field: 'TXN_PayAmt79', header: 'APP提貨單', visible: true, style: 'text-right', format: this.moneyFormat },
+      { field: 'TXN_PayAmt21', header: 'APP禮券', visible: true, style: 'text-right', format: this.moneyFormat },
+      { field: 'TXN_PayAmt53', header: '悠遊卡', visible: true, style: 'text-right', format: this.moneyFormat },
+      { field: 'TXN_PayAmt56', header: '一卡通錢包', visible: true, style: 'text-right', format: this.moneyFormat },
+      { field: 'TXN_PayAmt57', header: '台灣Pay', visible: true, style: 'text-right', format: this.moneyFormat },
+      { field: 'TXN_PayAmt58', header: '南紡錢包', visible: true, style: 'text-right', format: this.moneyFormat },
+      { field: 'TXN_PayAmt59', header: '即享券', visible: true, style: 'text-right', format: this.moneyFormat },
+      { field: 'TXN_PayAmt60', header: '喜客券', visible: true, style: 'text-right', format: this.moneyFormat },
+      { field: 'TXN_PayAmt22', header: '[外來提貨單]高夢', visible: true, style: 'text-right', format: this.moneyFormat },
+      { field: 'TXN_PayAmt23', header: '[外來禮券]高夢', visible: true, style: 'text-right', format: this.moneyFormat },
+      { field: 'PreSale_Received', header: '預售訂金', visible: true, style: 'text-right', format: this.moneyFormat },
+      { field: 'PreSale_Checkout', header: '預售實收結帳', visible: true, style: 'text-right', format: this.moneyFormat },
+      { field: 'TXN_OverAmt', header: '溢收金額', visible: true, style: 'text-right', format: this.moneyFormat },
+      { field: 'TXN_ReturnAmt', header: '退貨金額', visible: true, style: 'text-right', format: this.moneyFormat },
+      { field: 'TXN_ExchangeAmt', header: '換貨金額', visible: true, style: 'text-right', format: this.moneyFormat },
+      { field: 'TXN_CancelAmt', header: '作廢金額', visible: true, style: 'text-right', format: this.moneyFormat }
+    ];
 }

@@ -15,28 +15,9 @@ export class TLS23090Service {
     private errorHandler: ErrorHandlerService
   ) { }
 
-  /**
-   * 根據查詢模式呼叫對應 API
-   * @param query 查詢條件
-   * @param mode 'CreditCardDetail' 或 'CounterCardAnalysis'
-   */
-  queryTLS23090(query: any, mode: 'CreditCardDetail' | 'CounterCardAnalysis'): Observable<any> {
-    let endpoint = '';
-
-    if (mode === 'CreditCardDetail') {
-      endpoint = '/TLS0000/TLS2000/queryTLS23090_CreditCard';
-    } else if (mode === 'CounterCardAnalysis') {
-      endpoint = '/TLS0000/TLS2000/queryTLS23090_CounterCard';
-    } else {
-      console.error('查詢模式錯誤:', mode);
-      return new Observable(observer => {
-        observer.error('查詢模式錯誤');
-      });
-    }
-
-    return this.http.post<any>(`${this.apiUrl}${endpoint}`, query).pipe(
+  queryTLS23090(query: any): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/TLS0000/TLS2000/queryTLS23090`, query).pipe(
       tap(response => console.log('查詢結果:', response)),
-      catchError((error) => this.errorHandler.handleError(error))
-    );
-  }
+      catchError((error) => this.errorHandler.handleError(error))  // ✅ 正確
+    );}
 }
