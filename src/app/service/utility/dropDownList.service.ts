@@ -368,4 +368,5 @@ export class DropDownListService {
   queryTDS1007_DropDownList(params: ITDS1007Request): Observable<ApiResponse<ITDS1007Response>> {
     return this.http.post<ApiResponse<ITDS1007Response>>(`${this.apiUrl}/Share/queryTDS1007_DropDownList`, params);
   }
+
 }

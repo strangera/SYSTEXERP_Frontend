@@ -1,126 +1,118 @@
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
-// Shared
-import { AuthService } from '../../../service/system/auth.service';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-import { ValidationService } from '../../../shared/service/validation.service';
-import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
+import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
+import { createPaginationConfig, Column, formatDateTime } from '../../../shared/componentkit/table/table.model';
+import { untilDestroyed } from '@ngneat/until-destroy';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { AccordionModule } from 'primeng/accordion';
-import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { AccordionModule } from 'primeng/accordion';
+import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { TranslateModule } from '@ngx-translate/core';
-//
+import { Cpm13010Service, QueryCPM13010Request, QueryCPM13010Response } from '@service/api/cpm/cpm13010.service';
+import { finalize } from 'rxjs';
+import { InputNumberComponent } from '@shared/componentkit/input-number/input-number.component';
+import { ButtonModule } from 'primeng/button';
+import { NgStyle } from '@angular/common';
 
-//5.1.3.1  停車費折抵補登作業
 @Component({
-    selector: 'app-cpm13010',
-    templateUrl: './cpm13010.component.html',
-    styleUrl: './cpm13010.component.scss',
-    standalone: true,
-    imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputNumberComponent, ButtonComponent, TranslateModule]
+  selector: 'app-cpm13010',
+  templateUrl: './cpm13010.component.html',
+  standalone: true,
+  imports: [
+    MenubarComponent,
+    ButtonComponent,
+    AccordionModule,
+    FormsModule,
+    ReactiveFormsModule,
+    TableComponent,
+    TranslateModule,
+    InputNumberComponent,
+    ButtonModule,
+    NgStyle
+  ],
 })
-export class CPM13010Component extends BasicQpageComponent implements OnInit {
-  //
+// 5.11.7 專櫃停車費折抵設定作業
+export class CPM13010Component extends BasicQueryPageComponent<QueryCPM13010Response> implements OnInit {
   queryForm = this.formBuilder.group({
-    parkingCode: [, [Validators.required, Validators.maxLength(10)]], // 停車卡號
+    PKNG_DiscHour: [null, [Validators.max(999), Validators.min(0)]], // 折抵時數，允許小數一位
+    PKNG_SaleAmt: [null, [Validators.max(99999999), Validators.min(0)]], // 消費金額，允許小數兩位
+    ...createPaginationConfig([{ field: 'PKNG_SeqNo', order: 1 }]), // 預設依序號排序
   });
-  // 下拉資料多個呈現
-  // ----------------------------------------------------------------
-  roles: any[] = [
-    { id: 1, roleCode: 'ADMIN', roleName: 'Administrator' },
-    { id: 2, roleCode: 'USER', roleName: 'User' },
-    { id: 3, roleCode: 'GUEST', roleName: 'Guest' },
+
+  totalRecords = 0;
+  data: QueryCPM13010Response[] = [];
+  selectedRows: QueryCPM13010Response[] = []; // 用於表格多選/刪除
+
+  columns: Column[] = [
+    { field: 'PKNG_SeqNo', header: '序號', visible: false },
+    { field: 'PKNG_DiscHour', header: '折抵時數', visible: true },
+    { field: 'PKNG_SaleAmt', header: '折抵金額', visible: true },
+    { field: 'PKNG_Status', header: '狀態', visible: true, format: (val: string) => val === 'A' ? '生效' : (val === 'D' ? '刪除' : val) },
+    { field: 'CRT_Date', header: '建立日期', visible: false, format: formatDateTime },
+    { field: 'CRT_USR_No', header: '建立人員', visible: false },
+    { field: 'CRT_USR_Name', header: '建立人員姓名', visible: false },
+    { field: 'UPD_Date', header: '變更日期', visible: false, format: formatDateTime },
+    { field: 'UPD_USR_No', header: '變更人員', visible: false },
+    { field: 'UPD_USR_Name', header: '變更人員姓名', visible: false },
   ];
-  // 表格
-  // ----------------------------------------------------------------
-  data: any[] = [
-    // { 'name': 'Emily', 'age': 28, 'email': 'emily@example.com', 'city': 'Kaohsiung' },
-    // { 'name': 'Michael', 'age': 31, 'email': 'michael@example.com', 'city': 'Taipei' },
-    // { 'name': 'Sarah', 'age': 24, 'email': 'sarah@example.com', 'city': 'Tainan' },
-    // 其他資料
-  ];
-  columns: any[] = [
-    { field: 'col1', header: '客戶意見類別代號', visible: true },
-    { field: 'col2', header: '客戶意見類別名稱', visible: true },
-    { field: 'col3', header: '總件數', visible: true },
-    { field: 'col4', header: '完成件數', visible: true },
-    { field: 'col5', header: '待處理件數', visible: true },
-    // { field: 'col6', header: '處理者', visible: true },
-    // { field: 'col7', header: '處理情況', visible: true },
-    // { field: 'col8', header: '是否結案', visible: true },
-    // { field: 'col9', header: '電子信箱', visible: true },
-    // { field: 'col10', header: '顧客意見內容', visible: true },
-    // 其他欄位
-  ];
-  // ----------------------------------------------------------------
 
   constructor(
-    private router: Router,
-    private formBuilder: FormBuilder,
-    private messageService: NotificationService,
-    private authService: AuthService,
-    private validationService: ValidationService,
-    //
+    private cpm13010Service: Cpm13010Service
   ) {
     super(); // 呼叫父類建構子
   }
 
   ngOnInit(): void {
-    // 初始化
-    this.ProgNo = '510015';
-    this.cruPage = '/CPM1000/CPM13010CRU';
-    //
-    // ----------------------------------------------------------------
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
-    //
-    // ----------------------------------------------------------------
+    // 初始化頁面，設定程式代號和新增/修改頁面路由
+    this.initializePage('CPM13010', '/CPM/CPM13010cru', this.queryForm, (frm) => this.onSubmit(frm));
   }
 
-  // ----------------------------------------------------------------
+  // 表單提交邏輯 (查詢)
   onSubmit(frm: FormGroup) {
-    console.log(frm.value);
-    this.submitted = true;
-    this.loading = true;
-    this.messageService.blockUi();
+    this.handleSubmit(frm, () => {
+      this.loading = true;
+      this.cpm13010Service.queryCPM13010(frm.value as QueryCPM13010Request)
+        .pipe(untilDestroyed(this), finalize(() => this.loading = false))
+        .subscribe({
+          next: (response) => {
+            if (response.Data) {
+              this.data = response.Data;
+              this.totalRecords = response.TotalCount || response.Data.length;
+              this.queryStateService.setQueryState(this.ProgNo, frm.value);
+            } else {
+              this.data = [];
+              this.totalRecords = 0;
+              this.messageService.warnBubble(response.Message);
+            }
+          },
+          error: (error) => {
+            this.messageService.errorBubble("查詢失敗：" + error.message);
+          },
+        });
+    });
+  }
 
-    if (frm.valid && this.canQuery()) {
-      // 提交邏輯
-      // Service
-      // this.xxxService.queryMachine(frm.value as xxxInterface)
-      //  .subscribe((response: any) => {
-      //    this.rows = response.xxx;
-      // });
+  // onDelete (刪除功能，此處僅為模板，需根據實際需求實現)
+  onDelete(selectedRows: QueryCPM13010Response[]) {
+    const IDs = selectedRows.map(row => row.ID);
+    this.cpm13010Service.deleteCPM13010({ IDs }).pipe(untilDestroyed(this)).subscribe(res => {
+      if (res.Status === '0000') {
+        this.onSubmit(this.queryForm);
+        this.selectedRows = [];
+        this.messageService.successBubble(res.Message);
+      } else {
+        this.messageService.errorBubble(res.Message);
+      }
+    });
+  }
+  btnLoading = false;
+  onUpload() {
+    const params = {
     }
-
-    this.loading = false;
-    this.messageService.unblockUi();
+    this.btnLoading = true;
   }
-
-  onSubmitQuery(frm: FormGroup) {
-    // 查詢邏輯
-    this.onSubmit(frm);
-  }
-
-  onClearForm() {
-    this.queryForm.reset();  // 重置表單
-  }
-  // ----------------------------------------------------------------
-  onCreate() {
-    if (this.canAdd()) {
-      this.navigateWithState(this.router, CRUDStatus.Create, null, this.cruPage);
-    }
-  }
-
-  onEdit(data: any) {
-    if (this.canEdit()) {
-      this.navigateWithState(this.router, CRUDStatus.Edit, data, this.cruPage);
-    }
-  }
-
-  onDetail(data: any) {
-    this.navigateWithState(this.router, CRUDStatus.Read, data, this.cruPage);
+  // 狀態為刪除禁止下傳
+  get isDisabled(): boolean {
+    return this.selectedRows.some(row => row.PKNG_Status === 'D');
   }
 }

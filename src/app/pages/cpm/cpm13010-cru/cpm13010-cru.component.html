@@ -1,1 +1,49 @@
-<p>cpm13010-cru works!</p>
+<div class="card">
+  <div class="flex gap-2 mb-2">
+    <app-menubar [ProgNo]="ProgNo" class="flex-1" />
+    <app-button btnType="back" (click)="onCancel()" />
+  </div>
+  <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
+    <form [formGroup]="dataForm" (ngSubmit)="onSubmit(dataForm)">
+      <div class="grid p-fluid">
+        <!-- 折抵時數 -->
+        <app-input-number class="col-12 md:col-6 lg:col-4" label="折抵時數" controlName="PKNG_DiscHour"
+          [control]="dataForm.controls.PKNG_DiscHour" [submitted]="submitted">
+        </app-input-number>
+
+        <!-- 折抵金額 -->
+        <app-input-number class="col-12 md:col-6 lg:col-4" label="折抵金額" controlName="PKNG_SaleAmt"
+          [control]="dataForm.controls.PKNG_SaleAmt" [submitted]="submitted">
+        </app-input-number>
+      </div>
+
+      <hr *ngIf="!isFormCreateable">
+      <div *ngIf="!isFormCreateable" class="grid p-fluid">
+        <!-- 建立日期 -->
+        <app-calendar class="col-12 md:col-6 lg:col-4" calendarType="dateTimeOne" label="建立日期"
+          [control]="dataForm.controls.CRT_Date" />
+        <!-- 建立人員 -->
+        <app-input-text class="col-12 md:col-6 lg:col-4" label="建立人員" controlName="CRT_USR_No"
+          [control]="dataForm.controls.CRT_USR_No" />
+        <!-- 建立人員姓名 -->
+        <app-input-text class="col-12 md:col-6 lg:col-4" label="建立人員姓名" controlName="CRT_USR_Name"
+          [control]="dataForm.controls.CRT_USR_Name" />
+
+        <!-- 變更日期 -->
+        <app-calendar class="col-12 md:col-6 lg:col-4" calendarType="dateTimeOne" label="變更日期"
+          [control]="dataForm.controls.UPD_Date" />
+        <!-- 變更人員 -->
+        <app-input-text class="col-12 md:col-6 lg:col-4" label="變更人員" controlName="UPD_USR_No"
+          [control]="dataForm.controls.UPD_USR_No" />
+        <!-- 變更人員姓名 -->
+        <app-input-text class="col-12 md:col-6 lg:col-4" label="變更人員姓名" controlName="UPD_USR_Name"
+          [control]="dataForm.controls.UPD_USR_Name" />
+      </div>
+
+      <div *ngIf="!isFormReadable" class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+        <app-button btnType="cancel"></app-button>
+        <app-button btnType="submit" [loading]="loading" />
+      </div>
+    </form>
+  </p-panel>
+</div>
