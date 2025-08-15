@@ -85,6 +85,35 @@ export class FIN11010CRUComponent extends BasicCruPageComponent<FIN11010Data> im
     { No: '2', Name: '記帳及報稅代理業務人申報(委託申報)' }
   ];
 
+  // 縣市別選項
+  cityOptions = [
+    { No: 'A', Name: '台北市' },
+    { No: 'B', Name: '台中市' },
+    { No: 'C', Name: '基隆市' },
+    { No: 'D', Name: '台南市' },
+    { No: 'E', Name: '高雄市' },
+    { No: 'F', Name: '新北市' },
+    { No: 'G', Name: '宜蘭縣' },
+    { No: 'H', Name: '桃園縣' },
+    { No: 'I', Name: '嘉義市' },
+    { No: 'J', Name: '新竹縣' },
+    { No: 'K', Name: '苗栗縣' },
+    { No: 'L', Name: '台中縣' },
+    { No: 'M', Name: '南投縣' },
+    { No: 'N', Name: '彰化縣' },
+    { No: 'O', Name: '新竹市' },
+    { No: 'P', Name: '雲林縣' },
+    { No: 'Q', Name: '嘉義縣' },
+    { No: 'R', Name: '台南縣' },
+    { No: 'S', Name: '高雄縣' },
+    { No: 'T', Name: '屏東縣' },
+    { No: 'U', Name: '花蓮縣' },
+    { No: 'V', Name: '台東縣' },
+    { No: 'W', Name: '金門縣' },
+    { No: 'X', Name: '澎湖縣' },
+    { No: 'Z', Name: '連江縣' }
+  ];
+
 
   constructor(
     private fin11010Service: FIN11010Service,

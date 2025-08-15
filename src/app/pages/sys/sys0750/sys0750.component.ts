@@ -1,161 +1,124 @@
-import { Component } from '@angular/core';
-import { FormBuilder, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { NavigationExtras, Router } from '@angular/router';
-// Permissions
-import {
-  FunsrightInfo,
-  PermissionsInfo,
-} from '../../../shared/models/system/funsrightInfo';
-// Shared
-import { AuthService } from '../../../service/system/auth.service';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-
-import { RoleCodeService } from '../../../service/basic/role-code.service';
+import { Component, OnInit } from '@angular/core';
+import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { AccordionModule } from 'primeng/accordion';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { TranslateModule } from '@ngx-translate/core';
+import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
+import { Column, createPaginationConfig, formatDate, formatDateTime } from '@shared/componentkit/table/table.model';
+import { untilDestroyed } from '@ngneat/until-destroy';
+import { finalize } from 'rxjs';
+import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
+
+// 導入新的 SYS0750 服務和模型
+import { QuerySYS0750Request, QuerySYS0750Response, Sys0750Service } from '@service/api/sys/sys0750.service';
+import { Sys0210Service } from '@service/api/sys/sys0210.service'; // 用於查詢角色下拉選單
+import { SystemOptionsService } from '@service/system/sys1000.service';
+
+// 假設 Role 模型是這樣定義的 (來自 sys0210.service 或 shared/models/sys/role.model)
+export interface Role {
+  Role_No: string;
+  Role_Name: string;
+  label?: string; // 為下拉選單添加的顯示屬性
+  // ... 其他角色屬性
+}
 
 @Component({
   selector: 'app-sys0750',
   templateUrl: './sys0750.component.html',
-  styleUrl: './sys0750.component.scss',
   standalone: true,
   imports: [
     MenubarComponent,
     AccordionModule,
     FormsModule,
     ReactiveFormsModule,
-    DropdownComponent,
     ButtonComponent,
     TableComponent,
     TranslateModule,
+    DropdownComponent
   ],
 })
-// 角色之使用者列表
-export class SYS0750Component {
-  ProgNo: string = '420013';
-  // 權限
-  funInfo?: FunsrightInfo;
-
-
-
-
-  // 查詢
-  loading: boolean = false;
-  submitted: boolean = false;
+// 角色使用者權限列表
+export class SYS0750Component extends BasicQueryPageComponent<QuerySYS0750Response> implements OnInit {
+  // 查詢表單，包含角色代碼和分頁/排序參數
   queryForm = this.formBuilder.group({
-    roleCode: [, [Validators.required]], // DropDown
+    Role_No: ['', [Validators.required, Validators.maxLength(10)]], // 角色代號，必填且限制長度
+    // 預設排序欄位為 User_No，排序順序為 ASC (1)
+    ...createPaginationConfig([{ field: 'User_No', order: 1 }]),
   });
 
-  // 表格
-  data: any[] = [
+  totalRecords = 0;
+  data: QuerySYS0750Response[] = [];
+  roleCodeOptions: Role[] = []; // 用於角色代號下拉選單
 
+
+  columns: Column[] = [
+    { field: 'User_Type', header: '使用者型態', visible: true, format: (value) => value === '1' ? '公司內部人員' : value === '2' ? '專櫃人員' : '其他' },
+    { field: 'User_No', header: '使用者代碼', visible: true },
+    { field: 'User_Name', header: '使用者名稱', visible: true },
+    { field: 'Str_Date', header: '有效起始日期', visible: false, format: formatDate },
+    { field: 'End_Date', header: '有效截止日期', visible: false, format: formatDate },
+    { field: 'Status', header: '使用者狀態', visible: true, format: (value) => value === '1' ? '有效' : '停用' },
+    { field: 'Title', header: '職稱代碼', visible: true, format: (value) => SystemOptionsService.getOptions('T103').find((option) => option.SYS_Code === value)?.SYS_Name || value },
+    { field: 'Org_ID', header: '組織代碼', visible: true },
+    { field: 'User_Email', header: '使用者Email', visible: false },
+    { field: 'TLT_No', header: '所屬專櫃編號', visible: false },
+    { field: 'Remarks', header: '備註', visible: false },
+    { field: 'User_Priority', header: '使用者等級', visible: false },
+    { field: 'USER_PwdExpireDate', header: '密碼到期日', visible: false, format: formatDateTime },
+    { field: 'CRT_Date', header: '建立日期', visible: false, format: formatDateTime },
+    { field: 'CRT_USR_No', header: '建立人員代碼', visible: false },
+    { field: 'CRT_USR_Name', header: '建立人員名稱', visible: false },
+    { field: 'UPD_Date', header: '變更日期', visible: false, format: formatDateTime },
+    { field: 'UPD_USR_No', header: '變更人員代碼', visible: false },
+    { field: 'UPD_USR_Name', header: '變更人員名稱', visible: false },
   ];
-  filteredData: any[] = [...this.data];
-  columns: any[] = [
-    { field: 'userType', header: '使用者型態', visible: true },
-    { field: 'userCode', header: '使用者代碼', visible: true },
-    { field: 'userName', header: '使用者名稱', visible: true },
-    { field: 'userStatus', header: '使用者狀態', visible: true },
-    { field: 'positionName', header: '職稱名稱', visible: true },
-    { field: 'organizationName', header: '組織名稱', visible: true },
-  ];
-
-
-  // 選項
-  roleCodeOptions: any[] = [];
 
   constructor(
-    private router: Router,
-    private formBuilder: FormBuilder,
-    private messageService: NotificationService,
-    private authService: AuthService,
-    private roleCodeService: RoleCodeService
-  ) { }
+    private readonly sys0210Service: Sys0210Service, // 用於取得角色列表
+    private readonly sys0750Service: Sys0750Service // 用於查詢使用者角色權限
+  ) {
+    super();
+  }
 
   ngOnInit(): void {
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
+    // 初始化頁面
+    this.initializePage('SYS0750', '/SYS/SYS0750cru', this.queryForm);
 
-    this.roleCodeService.getRoleCodes().subscribe((data) => {
-      this.roleCodeOptions = data;
+    // 取得角色下拉選單資料
+    this.sys0210Service.queryAllRole().pipe(untilDestroyed(this)).subscribe(response => {
+      if (response.Data) {
+        this.roleCodeOptions = response.Data.map((role: Role) => {
+          return {
+            ...role,
+            label: `${role.Role_No} - ${role.Role_Name}` // 組合顯示文字
+          };
+        });
+      }
     });
   }
 
-  canQuery(): boolean {
-    return true;
-  }
-
-  canAdd(): boolean {
-    return true;
-  }
-
-  canEdit(): boolean {
-    return true;
-  }
-
+  // 表單提交邏輯
   onSubmit(frm: FormGroup) {
-    console.log(frm.value);
-    this.submitted = true;
-    this.loading = true;
-    this.messageService.blockUi();
-
-    if (frm.valid && this.canQuery()) {
-      // 提交邏輯
-    }
-
-    this.loading = false;
-    this.messageService.unblockUi();
-  }
-
-  onSubmitQuery(frm: FormGroup) {
-    // 查詢邏輯
-    this.onSubmit(frm);
-  }
-
-  onClearForm() {
-    this.queryForm.reset();  // 重置表單
-  }
-
-  onCreate() {
-    if (this.canAdd()) {
-      let extras: NavigationExtras = {
-        state: {
-          crudstatus: CRUDStatus.Create,
-          queryform: this.queryForm,
-        },
-        skipLocationChange: true,
-      };
-      this.router.navigate(['/demoCRU'], extras);
-    }
-  }
-
-  onEdit(data: any) {
-    if (this.canEdit()) {
-      let extras: NavigationExtras = {
-        state: {
-          crudstatus: CRUDStatus.Edit,
-          rowdata: data,
-          queryform: this.queryForm,
-        },
-        skipLocationChange: true,
-      };
-      this.router.navigate(['/demoCRU'], extras);
-    }
-  }
-
-  onDetail(data: any) {
-    let extras: NavigationExtras = {
-      state: {
-        crudstatus: CRUDStatus.Read,
-        rowdata: data,
-        queryform: this.queryForm,
-      },
-      skipLocationChange: true,
-    };
-    this.router.navigate(['/demoCRU'], extras);
+    this.handleSubmit(frm, () => {
+      // 呼叫 sys0750Service 查詢方法
+      this.sys0750Service.querySys0750(frm.value as QuerySYS0750Request)
+        .pipe(
+          untilDestroyed(this),
+          finalize(() => this.loading = false)
+        )
+        .subscribe((response) => {
+          if (response.Data) {
+            this.data = response.Data;
+            this.totalRecords = response.TotalCount || response.Data.length;
+            this.queryStateService.setQueryState(this.ProgNo, frm.value);
+          } else {
+            this.data = [];
+            this.totalRecords = 0;
+            this.messageService.warnBubble(response.Message);
+          }
+        });
+    });
   }
 }

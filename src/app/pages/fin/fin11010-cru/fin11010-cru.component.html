@@ -15,7 +15,11 @@
                 <app-input-text class="col-12 md:col-6 lg:col-4" label="負責人姓名" controlName="STO_ManagerName"
                     [control]="dataForm.controls.STO_ManagerName" [submitted]="submitted"></app-input-text>
 
-                <app-input-text class="col-12 md:col-6 lg:col-4" label="營業地址" controlName="STO_Addr"
+                <app-dropdown class="col-12 md:col-4 lg:col-2" label="縣市別" controlName="STO_City"
+                    [options]="cityOptions" optionLabel="Name" optionValue="No" [control]="dataForm.controls.STO_City"
+                    [submitted]="submitted"></app-dropdown>
+
+                <app-input-text class="col-12 md:col-8 lg:col-6" label="營業地址" controlName="STO_Addr"
                     [control]="dataForm.controls.STO_Addr" [submitted]="submitted"></app-input-text>
 
                 <app-dropdown class="col-12 md:col-6 lg:col-4" label="總繳代號" controlName="REP_OrgCode"

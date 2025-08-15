@@ -15,4 +15,11 @@ export const REPORT_TITLES: Record<string, string> = {
   queryTLS23110: '折扣別月報表',
   queryTLS23120: '專櫃日對帳單',
   queryTLS23130: '信用卡銷貨月報表',
+
+  querySYS0710: 'UserBehavior 使用者權限列表',
+  querySYS0730: 'tblRoleBehavior角色系統權限列表',
+  querySYS0740: 'tblRoleBehavior角色系統權限列表',
+  querySYS0750: 'tblUserRole使用者角色列表',
+  querySYS0770AllUsers: 'tblUserRole使用者角色列表',
+  querySYS0770UserRoles: 'tblUserRole使用者角色列表',
 };

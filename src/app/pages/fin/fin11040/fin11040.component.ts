@@ -32,7 +32,7 @@ export class FIN11040Component extends BasicQueryPageComponent<TDS1008Data> impl
   queryForm = this.formBuilder.group({
     INV_ItemNo: ['', [Validators.maxLength(2), this.validationService.alphanumericValidator]], // 品項代號
     INV_ItemName: ['', [Validators.maxLength(30)]], // 品項名稱
-    ...createPaginationConfig([{ field: 'ID', order: 1 }]), // 分頁和排序參數
+    ...createPaginationConfig([{ field: 'INV_ItemNo', order: 1 }]), // 分頁和排序參數
   });
   totalRecords = 0;// 分頁和排序參數 // 排序需要
   data: TDS1008Data[] = [];

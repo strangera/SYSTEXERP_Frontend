@@ -48,7 +48,7 @@ export class TLS24010Component extends BasicQueryPageComponent<TLS24010Data> imp
     TXN_Date: [null as Date | null, [Validators.required]],    /*銷售日期 → POS5006.TXN_Date */
     ECR_No: ['', [Validators.required]], /*收銀機號 → ECR_No */
     TLT_No: ['', [Validators.required]], /*櫃編 → TLT_No */
-    TXN_No: [null as number | null, [Validators.maxLength(8), Validators.max(99999999)]],  /*交易序號 → TXN_No */
+    TXN_No: [null as string | number | null, [Validators.maxLength(8), Validators.max(99999999)]],  /*交易序號 → TXN_No */
     TLT_Name: [''], /*櫃名 → TLT_Name */
     store_way: [''], /*櫃位類型 → store_way */
     talent_id: [0], /*專櫃代號 → talent_id */
@@ -104,6 +104,12 @@ export class TLS24010Component extends BasicQueryPageComponent<TLS24010Data> imp
       this.queryForm.get('store_way')?.setValue(data.store_way);
       this.queryForm.get('TLT_Name')?.setValue(data?.Name);
       this.queryForm.get('talent_id')?.setValue(data?.talent_id);
+    }
+    const txn_no = frm.get('TXN_No')?.value;
+    if (txn_no) {
+      this.queryForm.get('TXN_No')?.setValue(txn_no);
+    } else {
+      this.queryForm.get('TXN_No')?.setValue('系統自動產生');
     }
     this.isTXN_GUIPaper = frm.get('TXN_GUIPaper')?.value === 'R' || frm.get('TXN_GUIPaper')?.value === 'C';
     this.queryStateService.setQueryState(this.ProgNo, frm.value);
