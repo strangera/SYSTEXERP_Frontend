@@ -43,6 +43,8 @@ export class ValidationService {
       invalidEnglishNumberSymbol: '只能輸入英文和數字和符號',
       invalidPhoneNumber: '電話號碼格式錯誤',
       warehouseMismatch: '調出倉別與調入倉別必需不同',
+      max: `最大值為${validatorValue.max}`,
+      min: `最小值為${validatorValue.min}`,
     };
     return config[validatorName];
   }

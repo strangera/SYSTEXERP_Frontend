@@ -17,7 +17,7 @@ export const pagesRoutes: Routes = [
       { path: 'tls', loadChildren: () => import('./tls/tls.routing').then(m => m.tlsRoutes) },// 銷售管理系統 (TLS)
       { path: 'sys', loadChildren: () => import('./sys/sys.routing').then(m => m.sysRoutes) },// 系統管理 (SYS)
       { path: 'ass', loadChildren: () => import('./ass/ass.routing').then(m => m.assRoutes) },// 資產管理系統 (ASS)
-      // { path: 'cpm', loadChildren: () => import('./cpm/cpm.routing').then(m => m.cpmRoutes) },// 客戶關係管理 (CPM)
+      { path: 'cpm', loadChildren: () => import('./cpm/cpm.routing').then(m => m.cpmRoutes) },// 客戶關係管理 (CPM)
       { path: '**', loadComponent: () => import('./base/notfound/notfound.component').then(m => m.NotfoundComponent) },
     ]
   }

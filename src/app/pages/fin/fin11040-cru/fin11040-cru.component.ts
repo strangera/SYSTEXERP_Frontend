@@ -1,7 +1,7 @@
 import { Component, OnInit, } from '@angular/core';
 import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
-import { INV_UsageTypeOptions, TDS1008Data } from '../fin11040/fin11040.model';
+import { TDS1008Data } from '../fin11040/fin11040.model';
 import { Fin11040Service } from '../../../service/api/fin/fin11040.service';
 import { finalize } from 'rxjs';
 import { untilDestroyed } from '@ngneat/until-destroy';
@@ -14,6 +14,7 @@ import { NgIf } from '@angular/common';
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
 import { TranslateModule } from '@ngx-translate/core';
 import { ValidationService } from '@shared/service/validation.service';
+import { SystemOptionsService } from '@service/system/sys1000.service';
 //1.1.1.4 發票格式代號維護 CRU
 @Component({
   selector: 'app-fin11040-cru',
@@ -45,7 +46,7 @@ export class FIN11040CRUComponent extends BasicCruPageComponent<TDS1008Data> imp
     UPD_USR_No: [{ value: '', disabled: true }],       // 變更人員
     UPD_USR_Name: [{ value: '', disabled: true }],     // 變更人員姓名
   });
-  INV_UsageTypeOptions = INV_UsageTypeOptions;
+  INV_UsageTypeOptions = SystemOptionsService.getOptions('T205');
   constructor(
     private fin11040Service: Fin11040Service,
     private validationService: ValidationService

@@ -119,7 +119,7 @@ export abstract class BasicCruPageComponent<T> {
         Object.keys(controlErrors).forEach(errorKey => {
           const errorMessage = this.valid.getValidatorErrorMessage(errorKey, controlErrors[errorKey]);
           this.messageService.errorBubble(`此欄位 ${errorMessage}，請檢查輸入資料`, `「${fieldName}」驗證失敗`);
-          // console.log(`欄位 [${fieldName}] 的驗證錯誤: ${errorMessage} (驗證器: ${errorKey}), 錯誤值:`, controlErrors[errorKey]);
+          console.log(`欄位 [${fieldName}] 的驗證錯誤: ${errorMessage} (驗證器: ${errorKey}), 錯誤值:`, controlErrors[errorKey]);
         });
       }
     });
