@@ -116,8 +116,9 @@ export class TableComponent extends BasicPrintDataComponent implements OnChanges
   @Input() scrollable = true;                        // 是否要滾輪
   @Input() showPaginator = true;                    // 是否顯示 分頁器
   @Input() totalRecords = 0;                        // 記錄總數
+  @Input() rowsPerPageOptions: any[] | undefined = [10, 30, 50];// 分頁選項
   totalPages = 0;                                   // 共幾頁數
-  rows = 10;                                         // 每頁顯示的行數
+  @Input() rows = 10;                                         // 每頁顯示的行數
   first = 0;                                        // 當前表格的起始索引
   pages: { label: string, value: number; }[] = [];   // (右上)下拉選單 頁數選項
   selectedPage: number | null = 1;                  // (右上)下拉選單 當前選擇的頁數
@@ -135,6 +136,7 @@ export class TableComponent extends BasicPrintDataComponent implements OnChanges
     if (changes['data']) {
       setTimeout(() => {
         this.dt.totalRecords = this.totalRecords !== 0 ? this.totalRecords : this.data.length;
+        this.rows = this.data.length;
         this.selectedItems = []
         this.selectionChange.emit(this.selectedItems);
       });
