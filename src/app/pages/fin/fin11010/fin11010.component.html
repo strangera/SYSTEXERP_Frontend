@@ -24,8 +24,8 @@
             [options]="orgCodeOptions" optionLabel="Name" optionValue="No"
             [control]="queryForm.controls.REP_OrgCodeList" [submitted]="submitted"
             placeholder="各單位(分支機構)分別申報, 單一機構報總"></app-multi-select>
-          <!-- 審核狀態 -->
-          <app-multi-select class="col-12 md:col-6 lg:col-4" label="審核狀態" controlName="STO_StatusList"
+          <!-- 狀態 -->
+          <app-multi-select class="col-12 md:col-6 lg:col-4" label="狀態" controlName="STO_StatusList"
             [options]="reviewStatusOptions" optionLabel="Name" optionValue="No"
             [control]="queryForm.controls.STO_StatusList" [submitted]="submitted" placeholder="是, 否"></app-multi-select>
           <!-- 申報年月起迄 -->
