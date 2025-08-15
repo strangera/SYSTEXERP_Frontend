@@ -20,7 +20,7 @@ import { CalendarComponent } from '../../../shared/componentkit/calendar/calenda
 import { ButtonDynamicallyaddComponent } from '../../../shared/componentkit/button-dynamicallyadd/button-dynamicallyadd.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 
-// 1.1.4.1 補登進項稅額 CRU
+// 1.1.4.1 申報書維護 CRU (此作業僅供修改)
 @Component({
     selector: 'app-fin14010-cru',
     templateUrl: './fin14010-cru.component.html',
