@@ -7,7 +7,13 @@
         </label>
         <p-autoComplete [formControl]="control" [id]="field.field" [optionLabel]="optionLabel"
           (input)="onInputChange();op.hide()" (onFocus)="op.toggle($event)" [suggestions]="suggestions"
-          [optionValue]="optionValue" [placeholder]="control.disabled ? '' : placeholder"></p-autoComplete>
+          [optionValue]="optionValue" [placeholder]="control.disabled ? '' : placeholder">
+          <ng-template let-options pTemplate="item">
+            <div class="flex align-items-center gap-2">
+              <div>{{ templateLabel !== '' ? options[templateLabel] : options[optionLabel] }}</div>
+            </div>
+          </ng-template>
+        </p-autoComplete>
         <app-control-messages [onerror]="submitted || (control.touched && control.invalid)"
           [control]="control"></app-control-messages>
       </ng-container>
