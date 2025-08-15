@@ -1,10 +1,8 @@
 import { Component, Input, OnInit } from '@angular/core';
 import { BasicKitComponent } from '../../componentextends/basic-kit/basic-kit.component';
 import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { NgIf, NgClass, NgStyle } from '@angular/common';
+import { NgIf, NgStyle } from '@angular/common';
 import { CalendarModule } from 'primeng/calendar';
-import { PrimeTemplate } from 'primeng/api';
-import { ControlMessagesComponent } from '../../component/control-messages/control-messages.component';
 import { CalendarComponent } from '../calendar/calendar.component';
 
 @Component({
@@ -12,7 +10,7 @@ import { CalendarComponent } from '../calendar/calendar.component';
   templateUrl: './calendar-range.component.html',
   styleUrl: './calendar-range.component.scss',
   standalone: true,
-  imports: [NgIf, NgStyle, CalendarModule, FormsModule, ReactiveFormsModule, NgClass, PrimeTemplate, ControlMessagesComponent, CalendarComponent]
+  imports: [NgIf, NgStyle, CalendarModule, FormsModule, ReactiveFormsModule, CalendarComponent]
 })
 export class CalendarRangeComponent extends BasicKitComponent implements OnInit {
   // 基本設置
@@ -45,6 +43,7 @@ export class CalendarRangeComponent extends BasicKitComponent implements OnInit 
     const config = this.calendarConfig[this.calendarType];
     this.placeholder = config.placeholder;
     this.placeholder2 = config.placeholder;
+    this.calendarOneType = config.calendarOneType as 'timeOne' | 'dateOne' | 'dateTimeOne' | 'dateMonthOne' | 'dateYearOne';
     this.checkRequiredValidator(this.startControl, 0);
     this.checkRequiredValidator(this.endControl, 1);
   }
