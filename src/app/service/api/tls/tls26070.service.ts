@@ -6,90 +6,63 @@ import { environment } from '../../../../environments/environment';
 
 // 查詢參數 Model
 export interface TLS26070QueryRequest extends BaseQueryRequest {
+  // 報表類型
+  reportType?: string; // 報表類型
+
   // 日期查詢條件
-  reportType?: string;
-  inputDate?: string;
-  year?: string;
-  week?: string;
-  weekDateRange?: string;
-  month?: string;
-  halfYear?: string;
-  startDate?: string;
-  endDate?: string;
+  onedatedd?: string; // 日期（日報表）
+  onedateyy?: string[]; // 年度（週報表）
+  weeks?: string[]; // 週數
+  startdate?: string; // 開始日期（週報表用）
+  enddate?: string; // 結束日期（週報表用）
+  onedatemm?: string[]; // 年月（月報表）
+  halfyear_onedateyy?: string[]; // 半年報表年度
+  halfyear?: string[]; // 半年別
+  year_onedateyy?: string[]; // 年報表年度
+  sad_startdate?: string; // 區間開始日期
+  sad_enddate?: string; // 區間結束日期
+  eventID?: string[]; // 活動ID
+  event_startdate?: string; // 活動開始日期
+  event_enddate?: string; // 活動結束日期
+
   // 合約查詢條件
-  team?: string[];
-  area?: string[];
-  categoryMain?: string[];
-  categorySub?: string[];
-  type?: string[];
-  serial?: string[];
-  item?: string[];
-  taxType?: string;
+  floor?: string[]; // 樓層
+  region?: string[]; // 區域
+  bus_type?: string[]; // 大分類/中分類
+  tlt_kind?: string[]; // 櫃別
+  tlt_term_type?: string[]; // 抽成別
+  org_id?: string[]; // 組織代號
+  tlt_no?: string[]; // 專櫃編號
+  tax?: boolean; // 是否含稅
 }
 
 // 查詢結果 Model
 export interface TLS26070Data {
-  TEAM: string;
-  GROUP: string;
-  TARGET_2024: number;
-  SALES_2024: number;
-  ACHIEVEMENT_RATE: string;
-  TX_COUNT_2024: number;
-  AVG_TX_2024: number;
-  SALES_2023: number;
-  TX_COUNT_2023: number;
-  AVG_TX_2023: number;
-  GROWTH_RATE: string;
-  SALES_DIFF: number;
-  TX_COUNT_DIFF: number;
-  AVG_TX_DIFF: number;
-  SALES_YIELD: number;
-  MONTHLY_PERFORMANCE: number;
+  id: number; // ID
+  talent_id: string; // 專櫃編號
+  tlt_building: string; // 樓別
+  TEAM: string; // TEAM
+  tlt_kind: string; // 櫃別
+  bus_class_name: string; // 大分類/中分類名稱
+  bus_sclass_name: string; // 業種中分類名稱
+  tlt_name: string; // 專櫃名稱
+  total_amt: number; // 合約總金額
+  sad_preorder_amts: number; // 預售金額(含稅)
+  sad_preorder_notaxamts: number; // 預售金額(未稅)
+  sad_preorder_custs: number; // 預售客數
+  tlt_space: number; // 坪數
 }
 
 @Injectable({
   providedIn: 'root'
 })
 export class TLS26070Service {
-  private apiUrl: string = environment.ApiUrl + '/TLS26070';
+  private apiUrl: string = environment.ApiUrl + '/TLS0000/TLS2000';
 
   constructor(private http: HttpClient) { }
 
-  // 查詢
+  // 查詢各櫃預售業績總表資料
   queryTLS26070(data: TLS26070QueryRequest): Observable<BaseQueryResponse<TLS26070Data>> {
-    // return this.http.post<BaseQueryResponse<TLS26070Data>>(`${this.apiUrl}/queryTLS26070`, data);
-
-    // 假資料範例
-    return new Observable<BaseQueryResponse<TLS26070Data>>(observer => {
-      const Data: BaseQueryResponse<TLS26070Data> = {
-        TotalCount: 3,
-        Data: [
-          // {
-          //   TEAM: '商街Team',
-          //   GROUP: '1F',
-          //   TARGET_2024: 61900000,
-          //   SALES_2024: 56471122,
-          //   ACHIEVEMENT_RATE: '91.2%',
-          //   TX_COUNT_2024: 9430,
-          //   AVG_TX_2024: 5988,
-          //   SALES_2023: 65064344,
-          //   TX_COUNT_2023: 10621,
-          //   AVG_TX_2023: 6126,
-          //   GROWTH_RATE: '-13.2%',
-          //   SALES_DIFF: -8593121,
-          //   TX_COUNT_DIFF: -1191,
-          //   AVG_TX_DIFF: -138,
-          //   SALES_YIELD: 2349.37,
-          //   MONTHLY_PERFORMANCE: 24043
-          // },
-          // ... (請依據查詢結果圖擴充)
-        ],
-        Status: '',
-        Message: '',
-        TotalPage: 0
-      };
-      observer.next(Data);
-      observer.complete();
-    });
+    return this.http.post<BaseQueryResponse<TLS26070Data>>(`${this.apiUrl}/queryTLS26070`, data);
   }
 }
