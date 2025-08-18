@@ -47,22 +47,24 @@ export interface TLS26060Data {
   budget_now: number; // 當期預算
   preorder_amt_now: number; // 當期預售金額(含稅)
   preorder_namt_now: number; // 當期預售金額(未稅)
-  Achievement_rate_now: number; // 當期達成率(含稅)
-  nAchievement_rate_now: number; // 當期達成率(未稅)
-  preorder_custcnt_now: number; // 當期預售客數
-  avg_ordervalue_now: number; // 當期平均客單價(含稅)
-  navg_ordervalue_now: number; // 當期平均客單價(未稅)
+  Achievement_rate_now: number; // 目標達成率(含稅)
+  nAchievement_rate_now: number; // 目標達成率(未稅)
+  preorder_custcnt_now: number; // 交易筆數
+  avg_ordervalue_now: number; // 當期客單價(含稅)
+  navg_ordervalue_now: number; // 當期客單價(未稅)
   preorder_amt_last: number; // 去年同期預售金額(含稅)
   preorder_namt_last: number; // 去年同期預售金額(未稅)
-  preorder_custcnt_last: number; // 去年同期預售客數
-  avg_ordervalue_last: number; // 去年同期平均客單價(含稅)
-  navg_ordervalue_last: number; // 去年同期平均客單價(未稅)
-  Growth: number; // 成長率(含稅)
-  nGrowth: number; // 成長率(未稅)
+  preorder_custcnt_last: number; // 去年同期交易筆數
+  avg_ordervalue_last: number; // 去年同期客單價(含稅)
+  navg_ordervalue_last: number; // 去年同期客單價(未稅)
+  Growth: number; // 成長比(含稅)
+  nGrowth: number; // 成長比(未稅)
   PerformanceDiff: number; // 業績差異(含稅)
   nPerformanceDiff: number; // 業績差異(未稅)
-  TransactionsNumber: number; // 交易筆數
-  tlt_space: number; // 坪數
+  TransactionsNumber: number; // 交易筆數差異
+  OrdervalueDiff: number; // 客單差異(含稅)
+  nOrdervalueDiff: number; // 客單差異(未稅)
+  tlt_space: number; // 營業坪數
   MonthlyFloorEffect: number; // 月坪效(含稅)
   nMonthlyFloorEffect: number; // 月坪效(未稅)
 }
