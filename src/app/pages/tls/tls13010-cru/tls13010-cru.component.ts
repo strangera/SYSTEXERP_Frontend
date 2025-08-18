@@ -190,99 +190,102 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
 
   // ==========  主要表單定義 ==========
   dataForm = this.formBuilder.group({
-    // 基本資訊
-    talent_id: [''],
-    apply_no: [''],
-    tlt_name: [''],
-    tlt_no: [''],
-    ven_uniform: [''],
-    VEN_Name: [''],
-    paper_type: [''],
-    bus_type: [''],
-    bus_class: [''],
-    bus_sclass: [''],
-    contract_subno: [''],
+    talent_id: [''], // 必填但系統自動給號
+    apply_no: [{ value: '系統自動給號', disabled: true }], // 必填但系統自動給號
+    approve_status: ['1', [Validators.required]], // 必填，預設未審核
+    tlt_name: ['', [Validators.required, Validators.maxLength(100)]], // 必填
+    tlt_no: [{ value: '系統自動給號', disabled: true }], // 必填但系統自動給號
+    ven_no: ['', [Validators.required, Validators.maxLength(16)]], // 必填
+    ven_uniform: ['', [Validators.required, Validators.maxLength(10)]], // 必填
+    VEN_Name: [{ value: '選擇廠商統一編號自動帶入', disabled: true }, [Validators.required]], // 必填但自動帶入
+    paper_type: ['', [Validators.maxLength(2)]],
+    bus_type: ['', [Validators.required, Validators.maxLength(2)]], // 必填
+    bus_class: ['', [Validators.required, Validators.maxLength(2)]], // 必填
+    bus_sclass: ['', [Validators.maxLength(2)]],
+    contract_no: ['', [Validators.required, Validators.maxLength(12)]], // 必填
+    contract_subno: ['', [Validators.required]], // 必填
 
     // 洽談階段資訊
-    tlt_bdate: [''],
-    tlt_edate: [''],
+    tlt_bdate: ['', [Validators.required]], // 必填
+    tlt_edate: ['', [Validators.required]], // 必填
     contact_Date: [''],
-    contact_USR_No: [''],
-    contact_USR_Name: [''],
+    contact_USR_No: ['', [Validators.maxLength(16)]],
+    contact_USR_Name: ['', [Validators.maxLength(20)]],
     feedback_date: [''],
     due_date: [''],
 
     // 營運資訊
-    org_id: [''],
-    tlt_contract_bdate: [''],
-    tlt_contract_edate: [''],
+    org_id: ['', [Validators.required, Validators.maxLength(20)]], // 必填
+    tlt_contract_bdate: ['', [Validators.required]], // 必填
+    tlt_contract_edate: ['', [Validators.required]], // 必填
 
     // 商務條件
     tlt_kind: [''],
     deco_type: [''],
-    tlt_term_type: [''],
-    comm_comp_type: ['2', [Validators.required]], // 預設為除稅
+    tlt_term_type: ['', [Validators.required, Validators.maxLength(2)]], // 必填
+    comm_comp_type: ['2', [Validators.required]], // 必填，預設值 '2'
     edc_yn: [''],
     tlt_ctype_mtotal: [''],
     overall_status: [''],
-    rent_ahead: [''],
-    rent_period: [''],
-    base_rent: [''],
-    deposit: [''],
+    rent_ahead: ['N'],
+    rent_period: [0],
+    base_rent: [0],
+    deposit: [0],
     total_amt: [''],
     total_amt_vendor: [''],
-    construct_fees: [''],
-    check_day: [''],
+
+    check_day: [0, [Validators.required]], // 必填，預設值 0
 
     // 業務設定
-    comm_yn: [''],
-    rece_yn: [''],
-    pos_yn: [''],
-    cash_yn: [''],
-    money_type: [''],
+    comm_yn: ['N'],
+    rece_yn: ['N'],
+    pos_yn: ['N'],
+    cash_yn: ['N'],
+    money_type: ['', [Validators.maxLength(2)]],
     store_way: [''],
-    check_type: [''],
+    check_type: ['', [Validators.maxLength(10)]],
     paytype: [''],
     vip_yn: [''],
     credit_card: [''],
-    invoice_type: [''],
+    invoice_type: ['', [Validators.required]], // 必填
 
     // 其他設定
-    water_flag: ['N'],
-    electric_flag: ['N'],
-    gas_flag: ['N'],
-
+    water_flag: [''],
+    electric_flag: [''],
+    gas_flag: [''],
 
     paymentMethods: [[]],
-    ticket_remarks: [''],
+    ticket_remarks: ['', [Validators.maxLength(1000)]],
 
     // 聯絡資訊
-    email: ['', [Validators.email]],
-    invoice_email: ['', [Validators.email]],
-    CHECK_TITLE: [''],
-    store_tel: [''],
-    bank_id: [''],
-    vendor_acct_name: [''],
-    vendor_acct_no: [''],
-    contact_tel: [''],
-    contact_fax: [''],
-    contact_addr: [''],
-    tlt_remark: [''],
+    email: ['', [Validators.email, Validators.maxLength(100)]],
+    invoice_email: ['', [Validators.email, Validators.maxLength(100)]],
+    CHECK_TITLE: ['', [Validators.maxLength(100)]],
+    store_tel: ['', [Validators.maxLength(50)]],
+    bank_id: ['', [Validators.maxLength(10)]],
+    vendor_acct_name: ['', [Validators.maxLength(60)]],
+    vendor_acct_no: ['', [Validators.maxLength(20)]],
+    contact_tel: ['', [Validators.maxLength(20)]],
+    contact_fax: ['', [Validators.maxLength(15)]],
+    contact_addr: ['', [Validators.maxLength(100)]],
+    tlt_remark: ['', [Validators.maxLength(2000)]],
 
     // 狀態欄位
-    tlt_openflag: [''],
-    cap_saletype1: ['N'],
-    cap_saletype2: ['N'],
-    cap_saletype3: ['N'],
-    cap_saletype4: ['N'],
-    activity3: [false],
-    activity4: [false],
+    tlt_openflag: [{ value: '9', disabled: true }],
+    cap_saletype1: [''],
+    cap_saletype2: [''],
+    cap_saletype3: [''],
+    cap_saletype4: [''],
     open_deposit: [''],
+    open_fees: [0], //準時開業保證金
+    construct_deposit: [''],
+    construct_fees: [0], //施工保證金額
+    expiration_deposit: [''],
+    expiration_fees: [0], //契約屆滿保證金金額
     total_amt_unit: [''],
     total_amt_vendor_unit: [''],
     company_register_address: [''],
-    // 銀行 AutoComplete
-    selectedBankInfo: null
+    selectedBankInfo: [null]
   });
 
   meterReadingOptions = [
@@ -713,7 +716,7 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
 
     // 🎯 設定預設值
     this.dataForm.patchValue({
-      talent_id: '', // 🎯 新增模式 talent_id 為空
+      talent_id: '',
       apply_no: '',
       tlt_name: '',
       tlt_no: '',
@@ -723,7 +726,7 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
       bus_type: '',
       bus_class: '',
       bus_sclass: '',
-      contract_subno: '',
+      contract_subno: '1', // 預設版次為 1
 
       // 🎯 預設值
       tlt_term_type: '3', // 一般抽成
@@ -734,18 +737,27 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
       org_id: '',
       tlt_kind: '',
       deco_type: '',
-      edc_yn: '',
+      edc_yn: 'Y',
       tlt_ctype_mtotal: '',
-      overall_status: '',
-
+      overall_status: '1',
+      deposit: 0,
+      rece_yn: 'N',
+      pos_yn: 'N',
+      cash_yn: 'N',
+      comm_yn: 'N',
+      rent_ahead: 'N', //預收租金, 當抽成別為【固定租金】、 【底租抽成取高者】時, default 是 TODO:
       // 🎯 Y/N 欄位預設值
-      rece_yn: '',
-      pos_yn: '',
-      cash_yn: '',
-      vip_yn: '',
+      invoice_type: '0', /*請款單據別 0:發票 1:收據*/
+      vip_yn: 'Y',
       credit_card: '',
       total_amt_unit: 'M', // 預設為月
       total_amt_vendor_unit: 'M', // 預設為月
+      paytype: '1',
+      money_type: '30',
+      store_way: '1',
+      water_flag: 'N',
+      electric_flag: 'N',
+      gas_flag: 'N'
     });
 
     // 🎯 清空位置資料
