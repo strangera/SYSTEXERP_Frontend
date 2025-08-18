@@ -7,8 +7,8 @@
 <div class="input-group">
   <ng-container *ngIf="!showStar; else starredInput">
     <input class="w-full" [id]="controlName" type="text" [formControl]="control"
-      [placeholder]="control.disabled ? '' : customPlaceholder || placeholder" [attr.minlength]="minLength ?? null"
-      [attr.maxlength]="weightedMax ? null : maxLength"
+      [placeholder]="(alwaysShowPlaceholder || !control.disabled) ? (customPlaceholder || placeholder) : ''"
+      [attr.minlength]="minLength ?? null" [attr.maxlength]="weightedMax ? null : maxLength"
       [ngClass]="{ 'ng-invalid ng-dirty': (submitted && control.errors) || (errorForGroup && control.parent?.errors) }"
       pInputText [attr.aria-label]="label || placeholder" [title]="label || placeholder"
       (compositionstart)="onCompositionStart()" (compositionend)="onCompositionEnd($event)" (input)="onInput($event)" />

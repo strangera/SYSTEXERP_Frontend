@@ -476,7 +476,7 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
     },
     {
       field: 'tpy_rate',
-      header: '比率或元',
+      header: '比率',
       type: 'number',
       editable: true,
       width: '100px'
@@ -555,7 +555,7 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
     },
     {
       field: 'tpy_rate',
-      header: '比率或元',
+      header: '比率',
       type: 'number',
       editable: true,
       width: '100px'
