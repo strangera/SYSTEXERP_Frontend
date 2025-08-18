@@ -1,4 +1,4 @@
-import { DatePipe, NgIf } from '@angular/common';
+import { DatePipe } from '@angular/common';
 import { Component, OnInit, computed, effect, signal, viewChild } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
@@ -10,16 +10,13 @@ import { ButtonComponent } from '@shared/componentkit/button/button.component';
 import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/calendar-range.component';
 import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
-import { FileUploadComponent } from '@shared/componentkit/file-upload/file-upload.component';
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
-import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
-import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
 import { TableComponent } from '@shared/componentkit/table/table.component';
 import { Column } from '@shared/componentkit/table/table.model';
 import { CRUDStatus } from '@shared/models/system/CRUDstatus';
 import { ApprovalStatus } from '@shared/models/tls/approval-status.model';
 import { ExcelImportService } from '@shared/service/excel-import.service';
-import { FileUpload, FileUploadEvent, FileUploadHandlerEvent, FileUploadModule } from 'primeng/fileupload';
+import { FileUpload, FileUploadHandlerEvent, FileUploadModule } from 'primeng/fileupload';
 import { PanelModule } from 'primeng/panel';
 import * as XLSX from 'xlsx';
 import { TLS26080Data, TLS26080Detail } from '../tls26080/tls26080.model';
@@ -28,24 +25,20 @@ import { TLS26080Data, TLS26080Detail } from '../tls26080/tls26080.model';
   selector: 'app-tls26080-cru',
   templateUrl: './tls26080-cru.component.html',
   styleUrl: './tls26080-cru.component.scss',
-  standalone: true,
+  standalone: !0,
   imports: [
-    NgIf,
+    FileUploadModule,
     FormsModule,
     PanelModule,
     ReactiveFormsModule,
     TranslateModule,
-    FileUploadModule,
     ButtonComponent,
     CalendarComponent,
     CalendarRangeComponent,
     DropdownComponent,
     InputTextComponent,
-    RadiobuttonComponent,
     MenubarComponent,
-    MultiSelectComponent,
     TableComponent,
-    FileUploadComponent,
   ]
 })
 export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> implements OnInit {
@@ -70,8 +63,8 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
   private fileSignal = signal<any[]>([]);
   public fileUpload = viewChild.required<FileUpload>('fileUpload');
 
-  private podNoSignal = toSignal(this.dataForm.controls.pod_no.valueChanges);
-  private podDescSignal = toSignal(this.dataForm.controls.pod_desc.valueChanges);
+  private podNoSignal = toSignal(this.df().pod_no.valueChanges);
+  private podDescSignal = toSignal(this.df().pod_desc.valueChanges);
 
   private readonly selectedCampaign = computed(() => {
     const podDesc = this.podDescSignal();

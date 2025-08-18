@@ -11,10 +11,15 @@ const apiUrl: string = `${environment.ApiUrl}`;
 @Injectable({ providedIn: 'root' })
 export class ASS21010Service implements OnDestroy {
 
+  public readonly isRowSelectable = (rowData: unknown) =>
+    !!rowData;
+  // (Reflect.has(rowData, 'CanDelete') && rowData.CanDelete == '1') || rowData.pod_status === ApprovalStatus.未核准;
+
+  public readonly ASS21010Data = signal<unknown[]>([]);
+  public readonly ASS21010Detail = signal<unknown[]>([]);
   public readonly engTypeSignal = signal<DropdownOption[]>([]);
   public readonly engMeterNoSignal = signal<DropdownOption[]>([]);
   public readonly locationSignal = signal<IPOS2002LocationItem[]>([]);
-  public readonly ASS21010Data = signal<unknown[]>([]);
 
   public engTypeLoading = !1;
   public engMeterNoLoading = !1;
@@ -45,7 +50,7 @@ export class ASS21010Service implements OnDestroy {
     ).subscribe();
   };
 
-  public loadEngMeterNo(): void {
+  public loadEngMeterNo(types: EngType[]): void {
     this.engMeterNoCancel$.next();
     this.engMeterNoLoading = !0;
     of(engMeterNoMock).pipe(
@@ -96,13 +101,18 @@ export class ASS21010Service implements OnDestroy {
   }
 }
 
+export enum EngType {
+  水 = 'G01',
+  電 = 'G02',
+  瓦斯 = 'G03',
+}
 
-const engTypeMock: BaseQueryResponse<DropdownOption> = {
+export const engTypeMock: BaseQueryResponse<DropdownOption> = {
   Status: 'success',
   Data: [
-    { No: 'G01', Name: '水' },
-    { No: 'G02', Name: '電' },
-    { No: 'G03', Name: '瓦斯' },
+    { No: EngType.水, Name: '水' },
+    { No: EngType.電, Name: '電' },
+    { No: EngType.瓦斯, Name: '瓦斯' },
   ],
   Error: undefined,
   Meta: undefined,
@@ -110,7 +120,7 @@ const engTypeMock: BaseQueryResponse<DropdownOption> = {
   TotalCount: 3,
   TotalPage: 1,
 };
-const engMeterNoMock: BaseQueryResponse<DropdownOption> = {
+export const engMeterNoMock: BaseQueryResponse<DropdownOption> = {
   Status: 'success',
   Data: [
     { No: 'AB001', Name: 'AB001' },

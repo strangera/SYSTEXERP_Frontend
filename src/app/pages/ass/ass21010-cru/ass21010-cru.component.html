@@ -153,3 +153,23 @@
     </div>
   </p-panel>
 </div>
+
+
+<div class="card">
+  <div class="grid p-fluid">
+    <div class="col-12">
+      <p-panel header="資料"
+               class="line-height-3 m-0 mb-3">
+        <app-table [showCheckBox]="true"
+                   [showRowEdit]="true"
+                   [alwaysEdit]="true"
+                   [alwaysBlurValidate]="true"
+                   [insertRowData]="true"
+                   [data]="service.ASS21010Detail()"
+                   [dataKey]="'tlt_no'"
+                   [tableKey]="'ASS21010_Counter'"
+                   [columns]="columns"></app-table>
+      </p-panel>
+    </div>
+  </div>
+</div>

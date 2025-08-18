@@ -17,38 +17,69 @@
             id="queryForm"
             (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
-          <!-- <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="能源類型"
-                          controlName="Energytype"
-                          [options]="Energytype"
-                          optionLabel="label"
-                          optionValue="value"
-                          [control]="queryForm.controls.Energytype"
-                          [submitted]="submitted"></app-dropdown>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-multi-select label="能源類型"
+                              controlName="eng_type"
+                              [options]="service.engTypeSignal()"
+                              optionLabel="Name"
+                              optionValue="No"
+                              [control]="qf().eng_type"
+                              [submitted]="submitted"></app-multi-select>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown label="錶號"
-                          controlName="ironNumberOptions"
-                          [options]="ironNumberOptions"
-                          optionLabel="label"
-                          optionValue="value"
-                          [control]="queryForm.controls.ironNumberOptions"
+                          controlName="eng_meterNo"
+                          [options]="service.engMeterNoSignal()"
+                          optionLabel="Name"
+                          optionValue="No"
+                          [control]="qf().eng_meterNo"
                           [submitted]="submitted"></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="設備位置編號"
-                          controlName="equipmentLocationOptions"
-                          [options]="equipmentLocationOptions"
-                          optionLabel="label"
-                          optionValue="value"
-                          [control]="queryForm.controls.equipmentLocationOptions"
+            <app-dropdown label="專櫃編號"
+                          controlName="tlt_no"
+                          [options]="service.tltNoSignal()"
+                          optionLabel="Name"
+                          optionValue="No"
+                          [control]="qf().tlt_no"
                           [submitted]="submitted"></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text label="備註"
-                            controlName="remark"
-                            [control]="queryForm.controls.remark"
+            <app-input-text label="設備位置編號"
+                            controlName="location_no"
+                            [control]="qf().location_no"
+                            [disabled]="true"
                             [submitted]="submitted"></app-input-text>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-text label="部別名稱"
+                            controlName="department_name"
+                            [control]="qf().department_name"
+                            [disabled]="true"
+                            [submitted]="submitted"></app-input-text>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-text label="營業面積"
+                            controlName="business_area"
+                            [control]="qf().business_area"
+                            [disabled]="true"
+                            [submitted]="submitted"></app-input-text>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-text label="面積比例(%)"
+                            controlName="business_area_ratio"
+                            [control]="qf().business_area_ratio"
+                            [disabled]="true"
+                            [submitted]="submitted"></app-input-text>
+          </div>
+          <!-- <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown label="設備位置編號"
+                          controlName="location_no"
+                          [options]="service.locationSignal()"
+                          optionLabel="location_no"
+                          optionValue="location_no"
+                          [control]="qf().location_no"
+                          [submitted]="submitted"></app-dropdown>
           </div> -->
         </div>
       </form>

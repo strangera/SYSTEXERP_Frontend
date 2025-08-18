@@ -1,233 +1,144 @@
-import { FloorService } from './../../../service/basic/floor.service';
-import { Component, OnInit } from '@angular/core';
-import { FormArray, FormBuilder, FormControl, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-import { AuthService } from '../../../service/system/auth.service';
-import { BasicCrupageComponent } from '../../../shared/componentextends/basic-crupage/basic-crupage.component';
-import { TranslateService, TranslateModule } from '@ngx-translate/core';
-import { UserCodeService } from '../../../service/basic/user-code.service';
-import { OrganizationNumberService } from '../../../service/basic/organization-number.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { PanelModule } from 'primeng/panel';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { EditorTextComponent } from '../../../shared/componentkit/editor-text/editor-text.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+
 import { NgIf } from '@angular/common';
-// Services
+import { Component, OnInit, signal } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { FormControl, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { TranslateModule } from '@ngx-translate/core';
+import { ASS21020Service } from '@service/api/ass/ass21020.service';
+import { MenubarComponent } from '@shared/component/menubar/menubar.component';
+import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
+import { ButtonComponent } from '@shared/componentkit/button/button.component';
+import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
+import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
+import { TableComponent } from '@shared/componentkit/table/table.component';
+import { Column } from '@shared/componentkit/table/table.model';
+import { CRUDStatus } from '@shared/models/system/CRUDstatus';
+import { FileSelectEvent } from 'primeng/fileupload';
+import { PanelModule } from 'primeng/panel';
 
 @Component({
-    selector: 'app-ass21020-cru',
-    templateUrl: './ass21020-cru.component.html',
-    styleUrl: './ass21020-cru.component.scss',
-    standalone: true,
-    imports: [MenubarComponent, PanelModule, FormsModule, ReactiveFormsModule, DropdownComponent, InputTextComponent, EditorTextComponent, ButtonComponent, NgIf, TranslateModule]
+  selector: 'app-ass21020-cru',
+  templateUrl: './ass21020-cru.component.html',
+  styleUrl: './ass21020-cru.component.scss',
+  standalone: !0,
+  imports: [
+    NgIf,
+    TranslateModule,
+    ReactiveFormsModule,
+    PanelModule,
+    FormsModule,
+    ButtonComponent,
+    DropdownComponent,
+    InputTextComponent,
+    MenubarComponent,
+    TableComponent,
+  ]
 })
-export class ASS21020CRUComponent
-  extends BasicCrupageComponent
-  implements OnInit {
-  ngOnInit(): void {
-    // 網站導覽設定
-    this.ProgNo = '320002';
-    // ----------------------------------------------------------------
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
-    // 下拉選單--------------------------------------------------------
-    //  this.userCodeService.getUserCode().subscribe((data) => (this.Applicantcode = data));
-    this.organizationNumberService.getOrganizationNumbers().subscribe((data) => (this.Departmentcode = data));
-    this.floorService.getFloors().subscribe((data) => (this.floor = data));
-    // ----------------------------------------------------------------
-    const state = this.router.lastSuccessfulNavigation?.extras.state as {
-      crudstatus: CRUDStatus;
-      rowdata: any;
-    };
+export class ASS21020CRUComponent extends BasicCruPageComponent<unknown> implements OnInit {
+  public readonly CRUDStatus = CRUDStatus;
 
-    switch (state.crudstatus) {
-      // 創建
-      case CRUDStatus.Create:
-        this.formTitle = 'create-conditions';
-        this.accordionTabCss = 'create-accordionTab';
-        this.crudstatus = CRUDStatus.Create;
-        this.showConfirm = this.canAdd();
-        break;
-      // 修改
-      case CRUDStatus.Edit:
-        this.formTitle = 'edit-conditions';
-        this.accordionTabCss = 'edit-accordionTab';
-        this.crudstatus = CRUDStatus.Edit;
-        this.showConfirm = this.canEdit();
-        this.Edit(state.rowdata);
-        break;
-      // 讀檔
-      case CRUDStatus.Read:
-        this.formTitle = 'display-conditions';
-        this.crudstatus = CRUDStatus.Read;
-        this.Read(state.rowdata);
-        break;
-    }
+  public readonly dataForm = this.formBuilder.nonNullable.group({
+    eng_meterNo: new FormControl<string | undefined>(void 0),
+    location_no: new FormControl<string | undefined>(void 0),
+    floor_no: new FormControl<string | undefined>(void 0),
+    floor_name: new FormControl<string | undefined>(void 0),
+    floor_cat_no: new FormControl<string | undefined>(void 0),
+    floor_cat_name: new FormControl<string | undefined>(void 0),
+    x_coord: new FormControl<string | undefined>(void 0),
+    y_coord: new FormControl<string | undefined>(void 0),
+  });
+  public readonly df = signal(this.dataForm.controls);
 
-    console.log(this.accordionTabCss);
+  public readonly dfSignal = toSignal(this.dataForm.valueChanges);
+
+  public readonly columns: Column[] = [
+    { field: 'tlt_no', header: '專櫃編號' },
+    { field: 'tlt_name', header: '專櫃名稱', disabled: () => !0 },
+    { field: 'location_no', header: '位置編號', disabled: () => !0 },
+    { field: 'business_area', header: '營業面積', disabled: () => !0 },
+    { field: 'ratio', header: '比率', type: 'inputNumber' },
+    { field: 'remark', header: '備註', type: 'input' },
+  ];
+
+  constructor(
+    public readonly service: ASS21020Service,
+  ) {
+    super();
   }
 
-  //動態新增----------------------------------------------------------
-  createItem(): FormGroup {
-    return this.formBuilder.group({
+  public ngOnInit(): void {
+    this.initializePage('ASS21010', this.dataForm);
 
-      itemCodeOptions: [],
-      unit: [],
-      returnQty: [],
-      desc: [],
+    this.service.loadEngType();
+    this.service.loadLocationNo();
+  }
+
+  /** 處理 excel 匯入 */
+  public async onImportExcel(event: FileSelectEvent): Promise<void> {
+    // try {
+    //   const file = event.files?.[0];
+    //   if (!file) return;
+
+    //   // 使用中文欄位名稱匯入，然後手動對應到資料欄位
+    //   const rawData = await this.excelImport.importExcel(file, ['專櫃編號', '專櫃名稱']);
+
+    //   // 將中文欄位對應到資料欄位
+    //   const data: TltItem[] = rawData.map((item: any) => ({
+    //     ...item,
+    //     tlt_no: item['專櫃編號'] || '',
+    //     tlt_name: item['專櫃名稱'] || '',
+    //     Status: ItemOperationStatus.New
+    //   }));
+
+    //   const importedTltNos = data.filter(i => i.tlt_no?.trim() && i.tlt_name?.trim());
+    //   if (!importedTltNos.length) return void this.messageService.errorBubble('匯入檔案沒有有效資料');
+
+    //   const existingSet = new Set(this.tltTableFiltered().map(i => i.tlt_no));
+    //   const merged = new Map<string, TltItem>(this.tltTableFiltered().map(i => [i.tlt_no, { ...i, Status: ItemOperationStatus.Original }]));
+
+    //   let newCount = 0;
+    //   for (const item of importedTltNos) {
+    //     if (!existingSet.has(item.tlt_no)) {
+    //       newCount++;
+    //       merged.set(item.tlt_no, { ...item, Status: ItemOperationStatus.New });
+    //     }
+    //   }
+
+    //   this.tltTableFiltered.set(Array.from(merged.values(), (i => ({ ...i, Status: i.Status ?? ItemOperationStatus.Original }))));
+
+    //   console.log(`importExcel:`, [event, this.tltTableFiltered]);
+    //   this.messageService.successBubble(`匯入成功：新增 ${newCount} 筆資料`);
+    // } catch (error) {
+    //   console.error('Excel 匯入錯誤:', error);
+    //   this.messageService.errorBubble('Excel 檔案讀取失敗，請檢查檔案格式');
+    // }
+  };
+
+  /** 下載範例檔案 */
+  public onExportExcel(): void {
+    // // 建立工作簿
+    // const wb = XLSX.utils.book_new();
+    // // 建立工作表
+    // const ws = XLSX.utils.aoa_to_sheet([['專櫃編號', '專櫃名稱'],]);
+    // console.log(`onExportExcel:`, [wb, ws]);
+    // // 將工作表加入工作簿
+    // XLSX.utils.book_append_sheet(wb, ws, '專櫃範本');
+    // // 生成並下載檔案
+    // XLSX.writeFile(wb, `專櫃範本_${new Date().toISOString().split('T')[0]}.xlsx`);
+  }
+
+  public onSubmitQuery(): void {
+    console.log(`submit:`, [this.dataForm.value]);
+    this.onSubmit(this.dataForm);
+  };
+
+  public onSubmit(frm: FormGroup): void {
+    this.handleSubmit(frm, () => {
 
     });
   }
 
-  //非動態新增 ----------------------------------------------------------
-  dataForm = this.formBuilder.nonNullable.group({
-    meterPosCode: [],
-    floor: [],
-    area: [],
-    SN: [],
-    xCoordinate: [],
-    yCoordinate: [],
-    desc: [],
-    placementDesc: [],
-    Energytype: [],
-    meterNo: [],
-    floorCat: [],
-    VFP: [],
-    // ----------------------------------------------------------------
-    items: this.formBuilder.array([this.createItem()]),
-  });
-  // Dropdown options
-  VFP: any[] = [];
-  floor: any[] = [];
-  area: any[] = [];
-  Departmentcode: any[] = [];
-  itemCodeOptions: any[] = [
-    { value: 1, label: '3A24210000001' },
-    { value: 2, label: '3A24210000002' },
-    { value: 3, label: '3A24210000003' },
-    { value: 4, label: '3A24210000004' },
-    { value: 5, label: '3A24210000005' },
-    { value: 6, label: '3A24210000006' },
-    { value: 7, label: '3A24210000007' },
-    { value: 8, label: '3A24210000008' },
-    { value: 9, label: '3A24210000009' },
-    { value: 10, label: '3A24210000010' },
-  ];
-  Energytype: any[] = [{ value: 1, label: '水費' },
-  { value: 2, label: '電費' },
-  { value: 3, label: '瓦斯費' },];
-  meterPosCode: any[] = [
-    { value: 1, label: '3A24210000001' },
-    { value: 2, label: '3A24210000002' },
-    { value: 3, label: '3A24210000003' },
-    { value: 4, label: '3A24210000004' },
-    { value: 5, label: '3A24210000005' },
-    { value: 6, label: '3A24210000006' },
-    { value: 7, label: '3A24210000007' },
-    { value: 8, label: '3A24210000008' },
-    { value: 9, label: '3A24210000009' },
-    { value: 10, label: '3A24210000010' },
-  ];
-  equipmentLocationOptions: any[] = [
-    { value: 1, label: '010A000001' },
-    { value: 2, label: '010A000002' },
-    { value: 3, label: '010A000003' },
-    { value: 4, label: '010A000004' },
-    { value: 5, label: '010B000001' },
-    { value: 6, label: '010B000002' },
-    { value: 7, label: '010B000003' },
-    { value: 8, label: '010B000004' },
-    { value: 9, label: '010B000005' },
-    { value: 10, label: '010B000006' },
-  ];
-
-
-  // ----------------------------------------------------------------
-  constructor(
-    private router: Router,
-    private formBuilder: FormBuilder,
-    private messageService: NotificationService,
-    private authService: AuthService,
-    private translate: TranslateService,
-    private userCodeService: UserCodeService,
-    private organizationNumberService: OrganizationNumberService,
-    private floorService: FloorService,
-
-  ) {
-    super(); // 呼叫父類建構子
-  }
-
-  // ----------------------------------------------------------------
-  get items(): FormArray {
-    return this.dataForm.get('items') as FormArray;
-  }
-
-  getFormControl(index: number, controlName: string): FormControl {
-    return this.items.at(index).get(controlName) as FormControl;
-  }
-  // ----------------------------------------------------------------
-
-  onRemoveItem(index: number) {
-    this.items.removeAt(index);
-  }
-  // ----------------------------------------------------------------
-  Edit(rowdata: any) {
-    this.dataForm.patchValue(rowdata);
-  }
-
-  Read(rowdata: any) {
-    this.dataForm.patchValue(rowdata);
-    this.dataForm.disable();
-  }
-
-  onAddItem(): void {
-    this.items.push(this.createItem());
-  }
-
-  onSubmit(frm: FormGroup) {
-    this.messageService.blockUi();
-    this.submitted = true;
-
-    if (this.dataForm.invalid) {
-      this.messageService.errorBubble(
-        this.translate.instant('form_error_message')
-      );
-      this.messageService.unblockUi();
-      return;
-    }
-
-    switch (this.crudstatus) {
-      case CRUDStatus.Create:
-        if (this.canAdd()) {
-          // this.storeService.addMachine(frm.value as MachineForm).subscribe((response: any) => {
-          this.messageService.successBubble(
-            this.translate.instant('success_message')
-          );
-        }
-        break;
-      case CRUDStatus.Edit:
-        if (this.canEdit()) {
-          // this.storeService.updateMachine(frm.value as MachineForm).subscribe((response: any) => {
-          this.messageService.successBubble(
-            this.translate.instant('updated-successfully')
-          );
-        }
-        break;
-    }
-
-    this.messageService.unblockUi();
-    this.submitted = false;
-  }
-
-  submitForm(frm: FormGroup) {
-    // 查詢邏輯
-    this.onSubmit(frm);
-  } //CRU
-
-  onCancel() {
-    this.router.navigate(['ASS2000/ASS21020']);
+  public onClear(): void {
+    this.dataForm.reset();
   }
 }

@@ -9,14 +9,12 @@ import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/ba
 import { ButtonComponent } from '@shared/componentkit/button/button.component';
 import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/calendar-range.component';
 import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
-import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
-import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
 import { TableComponent } from '@shared/componentkit/table/table.component';
 import { Column } from '@shared/componentkit/table/table.model';
 import { ApprovalStatus } from '@shared/models/tls/approval-status.model';
 import { AccordionModule } from 'primeng/accordion';
-import { TLS26080Data } from './tls26080.model';
+import { TLS26080Data, TLS26080Query } from './tls26080.model';
 
 @Component({
   selector: 'app-tls26080',
@@ -31,10 +29,8 @@ import { TLS26080Data } from './tls26080.model';
     ButtonComponent,
     CalendarComponent,
     CalendarRangeComponent,
-    DropdownComponent,
     InputTextComponent,
     MenubarComponent,
-    MultiSelectComponent,
     TableComponent,
   ],
 })
@@ -62,9 +58,9 @@ export class TLS26080Component extends BasicQueryPageComponent<TLS26080Data> imp
 
   private queryTLS26080 = computed(() => {
     const { pod_no, pod_desc, pod_status, pod_sdate, pod_edate, pod_busdate } = this.queryForm.value;
-    return {
-      pod_sdate: pod_sdate!,
-      pod_edate: pod_edate!,
+    return <TLS26080Query>{
+      pod_sdate_start: pod_sdate!,
+      pod_sdate_end: pod_edate!,
       ...(pod_no && { pod_no }),
       ...(pod_desc && { pod_desc }),
       ...(pod_status && { pod_status }),

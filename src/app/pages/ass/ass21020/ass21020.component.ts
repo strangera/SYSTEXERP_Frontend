@@ -1,28 +1,19 @@
-import { NgIf } from '@angular/common';
-import { Component, computed, OnInit, signal } from '@angular/core';
+
+import { Component, OnInit, computed, effect } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { NavigationExtras, Router } from '@angular/router';
+import { FormControl, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 import { ASS21020Service } from '@service/api/ass/ass21020.service';
-import { BigCategoryService } from '@service/basic/big-category.service';
-import { FloorService } from '@service/basic/floor.service';
-import { MidCategoryService } from '@service/basic/mid-category.service';
-import { OrganizationNumberService } from '@service/basic/organization-number.service';
-import { SmallCategoryService } from '@service/basic/small-category.service';
-import { AuthService } from '@service/system/auth.service';
 import { MenubarComponent } from '@shared/component/menubar/menubar.component';
-import { NotificationService } from '@shared/component/notification-message/notification.service';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '@shared/componentkit/button/button.component';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
+import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
 import { TableComponent } from '@shared/componentkit/table/table.component';
 import { Column } from '@shared/componentkit/table/table.model';
-import { CRUDStatus } from '@shared/models/system/CRUDstatus';
 import { AccordionModule } from 'primeng/accordion';
 import { PanelModule } from 'primeng/panel';
-import { columns } from './../../tls/tls46020/tls46020.model';
 
 @Component({
   selector: 'app-ass21020',
@@ -30,7 +21,6 @@ import { columns } from './../../tls/tls46020/tls46020.model';
   styleUrl: './ass21020.component.scss',
   standalone: true,
   imports: [
-    NgIf,
     PanelModule,
     AccordionModule,
     TranslateModule,
@@ -38,6 +28,7 @@ import { columns } from './../../tls/tls46020/tls46020.model';
     ReactiveFormsModule,
     InputTextComponent,
     DropdownComponent,
+    MultiSelectComponent,
     MenubarComponent,
     ButtonComponent,
     TableComponent,
@@ -46,28 +37,31 @@ import { columns } from './../../tls/tls46020/tls46020.model';
 export class ASS21020Component extends BasicQueryPageComponent<unknown> implements OnInit {
 
   public readonly queryForm = this.formBuilder.group({
-    //   bigCategoryCode: [],
-    //   midCategoryCode: [],
-    //   smallCategoryCode: [],
-    //   Querybystatus: [],
-    //   propertynumber: [],
-    //   propertytype: [],
-    //   Itemnumber: [],
-    //   Sdate: [],
-    //   Edate: [],
-    //   Departmentcode: [],
-    //   Kurabe: [],
-    //   code: [],
-    //   floor: [],
-    //   location: [],
-    //   illustrate: [],
-    //   Placementinstructions: [],
-    //   Energytype: [],
-    //   equipmentLocationOptions: [],
-    //   ironNumberOptions: [],
-    //   remark: [],
+    eng_type: new FormControl<string[] | undefined>(void 0),
+    eng_meterNo: new FormControl<string | undefined>(void 0),
+    location_no: new FormControl<string | undefined>(void 0),
+    tlt_no: new FormControl<string | undefined>(void 0),
+    eng_rate: new FormControl<number | undefined>(0),
+    department_name: new FormControl<string | undefined>(void 0),
+    business_area: new FormControl<string | undefined>(void 0),
+    business_area_ratio: new FormControl<number | undefined>(void 0),
   });
   public readonly qf = computed(() => this.queryForm.controls);
+
+  private readonly meterNoSignal = toSignal(this.qf().eng_meterNo.valueChanges);
+  private readonly tltNoSignal = toSignal(this.qf().tlt_no.valueChanges);
+
+  public readonly meterNoEffect = effect(() => {
+    const meterNo = this.meterNoSignal();
+    if (!meterNo) return void this.qf().location_no.patchValue(void 0);
+    this.service.queryByMeterNo(meterNo);
+  }, { allowSignalWrites: !0 });
+
+  public readonly tltNoEffect = effect(() => {
+    const tltNo = this.tltNoSignal();
+    if (!tltNo) return;
+    this.service.queryByTltNo(tltNo);
+  });
 
   public readonly columns: Column[] = [
     { field: 'energyType', header: '能源類型' },
@@ -82,8 +76,13 @@ export class ASS21020Component extends BasicQueryPageComponent<unknown> implemen
     super();
   }
 
-  ngOnInit(): void {
+  public ngOnInit(): void {
     this.initializePage('ASS21020', '/ASS/ASS21020CRU', this.queryForm, this.onSubmit.bind(this));
+
+    this.service.loadEngType();
+    this.service.loadLocationNo();
+    this.service.loadASS21020({});
+
     // this.ProgNo = '320002';
     // Initialize dropdown options
     // this.funInfo = this.authService.getUserPermissions(this.ProgNo);

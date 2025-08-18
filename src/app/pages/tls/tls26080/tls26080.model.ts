@@ -49,9 +49,10 @@ export interface TLS2608InsertPayload {
 export interface TLS26080Query {
   pod_no?: string;            // 活動申請編號
   pod_desc?: string;          // 活動名稱
-  pod_sdate: Date;           // 活動日期 (起)
-  pod_edate: Date;           // 活動日期 (迄)
+  pod_sdate_start?: Date;     // 活動日期 (起)
+  pod_sdate_end?: Date;       // 活動日期 (迄)
   pod_busdate?: Date;         // 活動正檔日期
+  cap_itemList?: string[];    // 活動項目列表
 }
 
 // 活動資料模型

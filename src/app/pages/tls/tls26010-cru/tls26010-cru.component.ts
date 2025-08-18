@@ -9,7 +9,6 @@ import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/ba
 import { ButtonComponent } from '@shared/componentkit/button/button.component';
 import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/calendar-range.component';
 import { DialogComponent } from '@shared/componentkit/dialog/dialog.component';
-import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
 import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
 import { TableComponent } from '@shared/componentkit/table/table.component';
@@ -31,18 +30,17 @@ import { EcrItem, PodRequest, TLS26010Data, TLS26010Detail, TltItem } from '../t
   standalone: !0,
   imports: [
     NgIf,
-    PanelModule,
-    TranslateModule,
-    ReactiveFormsModule,
     FileUploadModule,
-    MenubarComponent,
-    CalendarRangeComponent,
+    PanelModule,
+    ReactiveFormsModule,
+    TranslateModule,
     ButtonComponent,
-    TableComponent,
-    InputTextComponent,
-    MultiSelectComponent,
-    DropdownComponent,
+    CalendarRangeComponent,
     DialogComponent,
+    InputTextComponent,
+    MenubarComponent,
+    MultiSelectComponent,
+    TableComponent,
   ]
 })
 export class TLS26010CRUComponent extends BasicCruPageComponent<TLS26010Data> implements OnInit {
