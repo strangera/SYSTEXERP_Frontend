@@ -1,6 +1,6 @@
 import { inject } from '@angular/core';
 import { FormBuilder, FormGroup } from '@angular/forms';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute, NavigationExtras, Router } from '@angular/router';
 import { UntilDestroy } from '@ngneat/until-destroy';
 import { ConfirmationService } from 'primeng/api';
 import { CurrentPageService } from '../../../layout/app.menulist/current-page.service';
@@ -125,7 +125,10 @@ export abstract class BasicCruPageComponent<T> {
     });
   }
   onCancel() {
-    this.router.navigate([this.previousRoute]);
+    const extras: NavigationExtras = {
+      state: { fromRoute: this.router.url },
+    };
+    this.router.navigate([this.previousRoute], extras);
   }
 
   onLazyLoadData(event: LazyLoadEvent, dataForm: FormGroup) {
