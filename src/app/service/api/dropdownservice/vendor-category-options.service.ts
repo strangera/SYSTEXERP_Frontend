@@ -40,7 +40,7 @@ export class VendorCategoryOptionsService {
       .post<any>(`${this.apiUrl}/queryPOS2013_DropDownList`, requestBody)
       .pipe(
         map((res) => res?.Data?.map((x: any) => ({
-          label: `${x.No}`,  // 改這裡
+          label: `${x.No} - ${x.Name}`,  // 改這裡
           value: x.No
         })) ?? [])
       );

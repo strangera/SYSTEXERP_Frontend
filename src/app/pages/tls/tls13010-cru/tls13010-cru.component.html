@@ -16,11 +16,11 @@
           <div class="grid p-fluid">
             <div class="col-12 md:col-6 lg:col-4">
               <app-input-text label="專櫃招募編號" controlName="apply_no" [control]="dataForm.controls.apply_no"
-                [submitted]="submitted"></app-input-text>
+                [customPlaceholder]="'系統自動產生'" [alwaysShowPlaceholder]="true"> [submitted]="submitted"></app-input-text>
             </div>
             <div class="col-12 md:col-6 lg:col-4">
               <app-input-text label="專櫃編號" controlName="tlt_no" [control]="dataForm.controls.tlt_no"
-                [submitted]="submitted" [customPlaceholder]="isNewContractMode() ? '系統自動給號' : ''"></app-input-text>
+                [submitted]="submitted" [customPlaceholder]="'系統自動產生'" [alwaysShowPlaceholder]="true"></app-input-text>
             </div>
             <div class="col-12 md:col-6 lg:col-4">
               <app-dropdown label="廠商統一編號" controlName="ven_uniform" [options]="pos2013Options" optionLabel="label"
@@ -28,8 +28,8 @@
             </div>
             <div class="col-12 md:col-6 lg:col-4">
               <app-input-text label="廠商名稱" controlName="VEN_Name" [control]="dataForm.controls.VEN_Name"
-                [submitted]="submitted"
-                [customPlaceholder]="isNewContractMode() ? '選擇廠商統一編號自動帶入' : ''"></app-input-text>
+                [submitted]="submitted" [customPlaceholder]="'選擇廠商統一編號自動帶入'"
+                [alwaysShowPlaceholder]="true"></app-input-text>
             </div>
             <div class="col-12 md:col-6 lg:col-4">
               <app-input-text label="櫃位名稱" controlName="tlt_name" [control]="dataForm.controls.tlt_name"

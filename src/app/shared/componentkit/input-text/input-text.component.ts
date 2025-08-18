@@ -34,6 +34,8 @@ export class InputTextComponent extends BasicKitComponent implements OnInit {
   @Input() submitted = false;
   @Input() showCopyButton = false;
   @Input() customPlaceholder?: string;
+
+  @Input() alwaysShowPlaceholder?: boolean = false; //總是顯示placeholder  [customPlaceholder]="'選擇'" [alwaysShowPlaceholder]="true"
   @Input() errorForGroup = false;
   @Input() showStar = false;
   @Input() showButton = false;

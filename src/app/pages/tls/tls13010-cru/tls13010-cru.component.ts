@@ -2374,4 +2374,11 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
       console.log('✅ Selector 面板選項更新完成');
     }
   }
+
+  getApplyNoPlaceholder(): string {
+    if (this.contractFlowService.isNewContractMode()) {
+      return "'系統自動產生'";
+    }
+    return '';
+  }
 }
