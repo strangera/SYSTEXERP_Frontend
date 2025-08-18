@@ -1,6 +1,6 @@
 // import { formatDate, formatDateTime } from "../../../shared/componentkit/table/table.model";
 import { SystemOptionsService } from '../../../service/system/sys1000.service';
-import { Column, formatDateTime, formatTimeHHMM } from "../../../shared/componentkit/table/table.model";
+import { Column, formatDate, formatTimeHHMM,formatDateTime } from "../../../shared/componentkit/table/table.model";
 
 export const statusOptions = [
   { label: '啟用', value: 'A' },
@@ -271,9 +271,9 @@ export const columns: Column[] = [
   { field: 'ECR_TLT_Name', header: '機台所屬專櫃名稱', visible: true },
   { field: 'ECR_USR_No', header: '機台所屬收銀員', visible: true },
   { field: 'ECR_USR_Name', header: '機台所屬收銀員姓名', visible: true },
-  { field: 'ECR_ActiveDate', header: '啟用日期', visible: true, format: formatDateTime },
-  { field: 'ECR_ExpireDate', header: '到期日期', visible: true, format: formatDateTime },
-  { field: 'ECR_CloseDate', header: '停用日期', visible: true, format: formatDateTime },
+  { field: 'ECR_ActiveDate', header: '啟用日期', visible: true, format: formatDate },
+  { field: 'ECR_ExpireDate', header: '到期日期', visible: true, format: formatDate  },
+  { field: 'ECR_CloseDate', header: '停用日期', visible: true, format: formatDate  },
   {
     field: 'ECR_Status',
     header: '收銀機狀態',
