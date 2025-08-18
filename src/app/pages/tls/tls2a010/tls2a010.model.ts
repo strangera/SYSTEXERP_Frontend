@@ -3,6 +3,8 @@ import { Column, ColumnGroup } from "@shared/componentkit/table/table.model";
 export interface TLS2A010Data {
   TXN_Date: string;         // 日期，例如：'2024/05/08'
   ECR_No: string;           // 收銀機代號，例如：'000081'
+  ECR_No_Start: string;    // 收銀機代號起始，例如：'000081'
+  ECR_No_End: string;      // 收銀機代號結束，例如：'000081'
   TXN_No: string;           // 交易序號
   TLT_NO: string;           // 專櫃編號
   tlt_name: string;         // 專櫃名稱

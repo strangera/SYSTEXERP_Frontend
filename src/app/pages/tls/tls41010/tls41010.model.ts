@@ -40,6 +40,7 @@ export const sernoTypeOptions = [
 ];
 
 export interface TLS41010QueryParams {
+  id: number;
   PageSize?: number;
   PageIndex?: number;
   SortBy?: { field: string; order: number }[];
@@ -270,7 +271,7 @@ export const columns: Column[] = [
   { field: 'ECR_TLT_Name', header: '機台所屬專櫃名稱', visible: true },
   { field: 'ECR_USR_No', header: '機台所屬收銀員', visible: true },
   { field: 'ECR_USR_Name', header: '機台所屬收銀員姓名', visible: true },
-  { field: 'ECR_ActiveDate', header: '啟用日期', visible: true, format: formatDateTime},
+  { field: 'ECR_ActiveDate', header: '啟用日期', visible: true, format: formatDateTime },
   { field: 'ECR_ExpireDate', header: '到期日期', visible: true, format: formatDateTime },
   { field: 'ECR_CloseDate', header: '停用日期', visible: true, format: formatDateTime },
   {

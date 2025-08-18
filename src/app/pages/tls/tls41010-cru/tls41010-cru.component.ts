@@ -1,4 +1,3 @@
-
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
@@ -29,6 +28,7 @@ import { InputNumberComponent } from '../../../shared/componentkit/input-number/
 import { NgIf } from '@angular/common';
 import { TranslateModule } from '@ngx-translate/core';
 import { Tls46010Service } from '../../../service/api/tls/tls46010.service';
+
 @Component({
   selector: 'app-tls41010-cru',
   templateUrl: './tls41010-cru.component.html',
@@ -50,12 +50,14 @@ import { Tls46010Service } from '../../../service/api/tls/tls46010.service';
 })
 export class TLS41010CRUComponent extends BasicCruPageComponent<TLS41010Data> implements OnInit {
 
+  /** 預設 11:10 的時間 */
   private defaultTime1110(): Date {
     const d = new Date();
     d.setHours(11, 10, 0, 0);
     return d;
   }
 
+  /** 表單定義 */
   dataForm = this.formBuilder.nonNullable.group({
     ECR_No: ['', [Validators.required, Validators.maxLength(10)]],
     ECR_Name: ['', [Validators.required, Validators.maxLength(20)]],
@@ -137,8 +139,6 @@ export class TLS41010CRUComponent extends BasicCruPageComponent<TLS41010Data> im
     ECR_EDCCom: [0, [Validators.min(0), Validators.max(99)]],
     ECR_EDC2: ['', [Validators.maxLength(20)]],
     ECR_EDC2Com: [0, [Validators.min(0), Validators.max(99)]],
-    // ECR_EDC3: ['', [Validators.maxLength(20)]],
-    // ECR_EDC3Com: [0, [Validators.min(0), Validators.max(99)]],
     ECR_ElecSVCrdA: ['', [Validators.maxLength(20)]],
     ECR_ElecSVCrdACom: [0, [Validators.min(0), Validators.max(99)]],
     ECR_ElecSVCrdB: ['', [Validators.maxLength(20)]],
@@ -182,124 +182,77 @@ export class TLS41010CRUComponent extends BasicCruPageComponent<TLS41010Data> im
   }
 
   ngOnInit(): void {
-    const now = new Date();
-    now.setHours(11);
-    now.setMinutes(10);
-    now.setSeconds(0);
-    now.setMilliseconds(0);
     this.initializePage('TLS41010', this.dataForm);
-    const disableFields = [
-      'ECR_KBLevel',
-      'ECR_KBType',
-      'ECR_Scanner',
-      'ECR_MSR',
-      'ECR_ScrType',
-      'ECR_CD',
-      'ECR_ExtScr',
-      'ECR_GUIPrn',
-      'ECR_SlipPrn',
-      'ECR_OrderPrn',
-      'ECR_LablePrn',
-      'ECR_EDC',
-      'ECR_EDC2',
-      'ECR_ElecSVCrdA',
-      'ECR_ElecSVCrdB',
-      'ECR_ElecSVCrdC',
-      'ECR_ElecPay',
-      'ECR_Drawer',
-      'CRT_Date',
-      'CRT_USR_No',
-      'CRT_USR_Name',
-      'UPD_Date',
-      'UPD_USR_No',
-      'UPD_USR_Name',
-    ];
 
-    disableFields.forEach(field => {
-      this.dataForm.get(field)?.disable();
-    });
+    // Disable 一些欄位
+    [
+      'ECR_KBLevel', 'ECR_KBType', 'ECR_Scanner', 'ECR_MSR', 'ECR_ScrType', 'ECR_CD', 'ECR_ExtScr',
+      'ECR_GUIPrn', 'ECR_SlipPrn', 'ECR_OrderPrn', 'ECR_LablePrn', 'ECR_EDC', 'ECR_EDC2',
+      'ECR_ElecSVCrdA', 'ECR_ElecSVCrdB', 'ECR_ElecSVCrdC', 'ECR_ElecPay', 'ECR_Drawer',
+      'CRT_Date', 'CRT_USR_No', 'CRT_USR_Name', 'UPD_Date', 'UPD_USR_No', 'UPD_USR_Name',
+    ].forEach(field => this.dataForm.get(field)?.disable());
 
+    if (this.isFormCreateable) {
+      this.dataForm.get('ECR_No')?.enable();
+      this.dataForm.get('ECR_No')?.reset('');
+      this.dataForm.get('ECR_Status')?.setValue('A');
+      this.dataForm.get('ECR_Status')?.disable();
+    } else if (this.isFormEditable) {
+      this.dataForm.get('ECR_No')?.disable();
+    }
+
+    // 下拉選單
     this.dropDownListService.queryPOS1002TML_DropDownList().subscribe(option => {
       this.ECR_TmplNo_Option = option.Data;
     });
-
     this.dropDownListService.queryPOS10015_DropDownList().subscribe(option => {
       this.ECR_SrvIP_Option = option.Data.map(item => ({
         ...item, label: `${item.No} ${item.Name}`,
       }));
     });
+
+
+
+    // 監聽欄位變化
     this.dataForm.get('ECR_TmplNo')?.valueChanges.subscribe((tmplNo) => {
-      if (tmplNo) {
-        this.callTLS46020Api(tmplNo);
-      }
+      if (tmplNo) this.callTLS46020Api(tmplNo);
     });
-    this.dataForm.get('ECR_Type')?.valueChanges.subscribe((value) => {
+    this.dataForm.get('ECR_Type')?.valueChanges.subscribe(value => {
       this.checkTltNoRequired(value);
     });
     this.checkTltNoRequired(this.dataForm.get('ECR_Type')?.value ?? '');
-    if (this.isFormCreateable) {
-      this.dataForm.get('ECR_No')?.setValue('');
-      this.dataForm.get('ECR_Status')?.setValue('A');
-      this.dataForm.get('ECR_Status')?.disable();
-    }
   }
 
+  /** 套用範本資料 */
   callTLS46020Api(tmplNo: string) {
-    const params = { ECR_TmplNo: tmplNo };
-    this.tls46020Service.queryTLS46020(params).subscribe({
+    this.tls46020Service.queryTLS46020({ ECR_TmplNo: tmplNo }).subscribe({
       next: (res) => {
-        if (res.Data && res.Data.length > 0) {
-          const patchData = res.Data[0]
-
+        if (res.Data?.length) {
+          const patchData = res.Data[0];
           delete patchData.ECR_TmplNo;
 
-          const convertToNullIfNumber = (val: any) => (typeof val === 'number' ? null : val);
 
-          if ('ECR_GUICom' in patchData) {
-            patchData.ECR_GUICom = convertToNullIfNumber(patchData.ECR_GUICom);
-          }
-          if ('ECR_SlipPrnCom' in patchData) {
-            patchData.ECR_SlipPrnCom = convertToNullIfNumber(patchData.ECR_SlipPrnCom);
-          }
-          if ('ECR_OrderPrnCom' in patchData) {
-            patchData.ECR_OrderPrnCom = convertToNullIfNumber(patchData.ECR_OrderPrnCom);
-          }
-          if ('ECR_LablePrnCom' in patchData) {
-            patchData.ECR_LablePrnCom = convertToNullIfNumber(patchData.ECR_LablePrnCom);
-          }
-          if ('ECR_MSRCom' in patchData) {
-            patchData.ECR_MSRCom = convertToNullIfNumber(patchData.ECR_MSRCom);
-          }
           if ('ECR_SettleHHNN' in patchData) {
             const val = patchData.ECR_SettleHHNN;
-
             if (typeof val === 'string' && /^\d{4}$/.test(val)) {
-              // 後端傳回 "HHmm" 字串 → 轉成 Date
               const hh = parseInt(val.substring(0, 2), 10);
               const mm = parseInt(val.substring(2, 4), 10);
               const d = new Date();
               d.setHours(hh, mm, 0, 0);
               patchData.ECR_SettleHHNN = d;
-            } else if (val instanceof Date) {
-              // 已經是 Date → 保持不動
-              patchData.ECR_SettleHHNN = val;
-            } else {
-              // 後端沒給或是 null → 設成預設 11:10
+            } else if (!(val instanceof Date)) {
               patchData.ECR_SettleHHNN = this.defaultTime1110();
             }
           }
 
-          this.dataForm.patchValue(patchData as any);
+
         }
       },
-      error: (err) => {
-        console.error('查詢 TLS46020 失敗', err);
-      },
+      error: (err) => console.error('查詢 TLS46020 失敗', err),
     });
   }
 
-
-
+  /** 判斷 TLT 必填 */
   checkTltNoRequired(value: string) {
     const tltControl = this.dataForm.get('ECR_TLT_No');
     if (!tltControl) return;
@@ -310,49 +263,55 @@ export class TLS41010CRUComponent extends BasicCruPageComponent<TLS41010Data> im
     }
     tltControl.updateValueAndValidity();
   }
+
+  /** 送出 */
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
       this.loading = true;
+      const body = this.createBody(frm);
       const serviceCall = this.isFormCreateable
-        ? this.tls41010Service.insertTLS41010(this.createBody(frm))
-        : this.tls41010Service.updateTLS41010(this.createBody(frm));
-      serviceCall.pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe({
-        next: (res) => {
-          this.messageService.successBubble(res.Message);
-          if (this.isFormCreateable) {
-            this.dataForm.reset();
-          } else if (this.isFormEditable) {
-            this.onCancel();
-          }
-        },
-      });
+        ? this.tls41010Service.insertTLS41010(body)
+        : this.tls41010Service.updateTLS41010(body);
+
+      serviceCall
+        .pipe(finalize(() => this.loading = false), untilDestroyed(this))
+        .subscribe({
+          next: (res) => {
+            this.messageService.successBubble(res.Message);
+            if (this.isFormCreateable) {
+              this.dataForm.reset();
+            } else if (this.isFormEditable) {
+              this.onCancel();
+            }
+          },
+        });
     });
   }
+
+  /** 組裝 Body */
   private createBody(frm: FormGroup): TLS41010Item {
     const rawValue = frm.getRawValue();
     const storeNo = this.authService.currentUserValue?.SYS_StoreNo ?? '';
-    let settleHHNN: string | undefined = undefined;
+
+    let settleHHNN: string | undefined;
     if (rawValue.ECR_SettleHHNN) {
       const date = new Date(rawValue.ECR_SettleHHNN);
-      const hh = String(date.getHours()).padStart(2, '0');
-      const mm = String(date.getMinutes()).padStart(2, '0');
-      settleHHNN = `${hh}${mm}`;
+      settleHHNN = `${String(date.getHours()).padStart(2, '0')}${String(date.getMinutes()).padStart(2, '0')}`;
     }
+
     return {
       ...rawValue,
       SYS_StoreNo: storeNo,
-
-      ECR_Logo1: rawValue.ECR_Logo1 === null ? undefined : rawValue.ECR_Logo1,
-      ECR_Logo2: rawValue.ECR_Logo2 === null ? undefined : rawValue.ECR_Logo2,
-      ECR_Logo3: rawValue.ECR_Logo3 === null ? undefined : rawValue.ECR_Logo3,
-      ECR_Logo4: rawValue.ECR_Logo4 === null ? undefined : rawValue.ECR_Logo4,
-      ECR_Logo5: rawValue.ECR_Logo5 === null ? undefined : rawValue.ECR_Logo5,
-      ECR_Logo6: rawValue.ECR_Logo6 === null ? undefined : rawValue.ECR_Logo6,
+      ECR_Logo1: rawValue.ECR_Logo1 ?? undefined,
+      ECR_Logo2: rawValue.ECR_Logo2 ?? undefined,
+      ECR_Logo3: rawValue.ECR_Logo3 ?? undefined,
+      ECR_Logo4: rawValue.ECR_Logo4 ?? undefined,
+      ECR_Logo5: rawValue.ECR_Logo5 ?? undefined,
+      ECR_Logo6: rawValue.ECR_Logo6 ?? undefined,
       ECR_ActiveDate: rawValue.ECR_ActiveDate ?? undefined,
       CRT_Date: rawValue.CRT_Date ?? undefined,
       UPD_Date: rawValue.UPD_Date ?? undefined,
       ECR_SettleHHNN: settleHHNN,
     } as TLS41010Item;
   }
-
 }
