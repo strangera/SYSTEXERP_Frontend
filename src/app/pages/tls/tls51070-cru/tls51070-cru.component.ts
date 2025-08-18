@@ -26,6 +26,39 @@ import { DividerModule } from 'primeng/divider';
 import { ImgUploadComponent } from '../../../shared/componentkit/img-upload/img-upload.component';
 import { TranslateModule } from '@ngx-translate/core';
 
+// 每個欄位對應的區塊名稱
+export type SectionName = 
+  | '基本資料'
+  | '商品規格'
+  | '商品規格(二)'
+  | '商品資訊'
+  | '其他';
+
+export type FieldSectionMap = Record<string, SectionName>;
+
+export const fieldSectionMap: FieldSectionMap = {
+  PLU_MagNo: '基本資料',
+  PLU_Name: '基本資料',
+  VEN_No: '基本資料',
+  CAT_LNo: '基本資料',
+  CAT_MNo: '基本資料',
+  CAT_SNo: '基本資料',
+
+  PLU_Attribute: '商品規格',
+  PLU_StockTaxType: '商品規格',
+  PLU_Unit: '商品規格',
+  PLU_TaxType: '商品規格',
+  PLU_Type: '商品規格',
+
+  PLU_Reserve2: '商品規格(二)',
+  PLU_Reserve3: '商品規格(二)',
+
+  LOGO_No: '商品資訊',
+  PLU_SalePrc: '商品資訊',
+  PLU_Status: '商品資訊',
+  PLU_OpenPrc: '商品資訊',
+};
+
 @UntilDestroy()
 // 2.5.1.7  商品基本資料 CRU
 @Component({
@@ -423,6 +456,24 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
 
     if (this.dataForm.invalid) {
       this.messageService.unblockUi();
+
+      // 收集有錯誤的區塊
+      const invalidSections = new Set<string>();
+
+      Object.keys(this.dataForm.controls).forEach(key => {
+        const control = this.dataForm.get(key);
+        if (control && control.invalid) {
+          const section = fieldSectionMap[key] || '其他';
+          invalidSections.add(section);
+        }
+      });
+
+      if (invalidSections.size > 0) {
+        this.messageService.errorBubble(
+          '必填項目未填寫:\n' + Array.from(invalidSections).join(', ')
+        );
+      }
+
       return;
     }
 
@@ -473,7 +524,6 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
         if (this.canAdd()) {
           console.log('讀取表單', frm);
           const formValue = frm.getRawValue();
-
           //
           // POS2005Data 中所有的 PLU_No
           // 沒有輸入國際條碼時，國際條碼=商品管理編號 (bubble跳出提示)

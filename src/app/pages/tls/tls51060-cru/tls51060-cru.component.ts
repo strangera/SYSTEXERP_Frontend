@@ -81,7 +81,7 @@ export class TLS51060CRUComponent extends BasicCruPageComponent<PluLogo>
       case CRUDStatus.Create:
         if (this.canAdd()) {
           const formValue = frm.getRawValue();
-          console.log('insert', formValue);
+          console.log('insert', JSON.stringify(formValue, null, 2));
           this.tls51060Service.insertTLS51060(formValue).subscribe(() => {
             this.messageService.successBubble('新增成功');
             // this.onCancel(); // 儲存後，會清除資料留在原頁面，不返回列表
@@ -92,7 +92,7 @@ export class TLS51060CRUComponent extends BasicCruPageComponent<PluLogo>
       case CRUDStatus.Edit:
         if (this.canEdit()) {
           const formValue = frm.getRawValue();
-          console.log('update', formValue);
+          console.log('update', JSON.stringify(formValue, null, 2));
           this.tls51060Service.updateTLS51060(formValue).subscribe(() => {
             // this.messageService.successBubble('更新成功');
             this.onCancel(); // 儲存後，會返回列表
