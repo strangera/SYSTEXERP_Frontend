@@ -65,13 +65,13 @@
     </div>
 
     <!-- 操作按鈕區 -->
-    <div class="flex justify-content-between align-items-center mt-3 pt-3 border-top-1 border-gray-200">
+    <div class="flex justify-content-between align-items-center mt-3 pt-3">
       <div class="flex align-items-center gap-2">
-        <span class="text-sm text-gray-600" *ngIf="dataLoaded">
+        <!-- <span class="text-sm text-gray-600" *ngIf="dataLoaded">
           目前共有
           <span class="font-semibold">{{ getCommissionItemCount() }}</span>
           個抽成項目
-        </span>
+        </span> -->
         <!-- 🎯 保留：資料載入狀態指示 -->
         <span *ngIf="!dataLoaded" class="text-xs text-orange-500">
           (載入中...)
@@ -80,6 +80,18 @@
           (載入失敗)
         </span>
       </div>
+    </div>
+    <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+      <app-button btnType="back" label="上一步" (click)="onCancel()"></app-button>
+      <app-button *ngIf="isGeneralCommissionMode && !isViewMode" btnType="submit" label="確認" (click)="onSubmitNext()"
+        [disabled]="!hasCommissionData()" [loading]="loading">
+      </app-button>
+
+      <!-- 其他抽成：編輯模式和檢視模式都顯示下一步 -->
+      <app-button *ngIf="!isGeneralCommissionMode" btnType="create" label="下一步(租金設定)" (click)="onSubmitNext()"
+        [disabled]="!isViewMode && !hasCommissionData()" [loading]="loading">
+      </app-button>
+      <app-button btnType="back" (click)="onClearAndExit()"></app-button>
     </div>
   </div>
 </div>
@@ -90,11 +102,6 @@
       <i class="pi pi-exclamation-triangle text-orange-500 mr-2"></i>
       確定要提交契約資料嗎？提交後將無法修改。
     </p>
-
-    <!-- <div class="text-sm text-gray-600 mb-4">
-      <p>• 抽成設定項目：{{ getCommissionItemCount() }} 個</p>
-      <p>• 扣款設定項目：{{ getDeductionItemCount() }} 個</p>
-    </div> -->
   </div>
 
   <ng-template pTemplate="footer">

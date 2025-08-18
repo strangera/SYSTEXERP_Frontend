@@ -5,21 +5,6 @@
     <app-button btnType="create" label="下一步(抽成設定)" (click)="onSubmitNext()"
       [disabled]="getTotalSelectedCount() === 0"></app-button>
     <app-button btnType="back" (click)="onClearAndExit()"></app-button>
-    <!-- <app-button
-      label="🔍 檢查暫存"
-      (click)="debugCheckSavedData()"
-      [outlined]="true"
-    ></app-button>
-    <app-button
-      label="🔍 檢查狀態分布"
-      (click)="debugStatusDistribution()"
-      [outlined]="true"
-    ></app-button>
-    <app-button
-      label="🔍 檢查 ID"
-      (click)="debugCheckIds()"
-      [outlined]="true"
-    ></app-button> -->
   </div>
 
   <!-- 載入中指示器 -->
@@ -121,14 +106,23 @@
               </div>
 
               <div class="flex gap-2">
-                <app-button label="全部選擇" icon="pi pi-check-square" (click)="selectAllByType(capType)"></app-button>
+                <app-button label="全部選擇" icon="pi pi-check-square" styleClass="green-button"
+                  (click)="selectAllByType(capType)">
+                </app-button>
 
-                <app-button label="取消選擇" icon="pi pi-times" [outlined]="true"
-                  (click)="deselectAllByType(capType)"></app-button>
+                <app-button label="取消選擇" icon="pi pi-times" styleClass="red-button" [outlined]="true"
+                  (click)="deselectAllByType(capType)">
+                </app-button>
               </div>
             </div>
           </p-accordionTab>
         </p-accordion>
+      </div>
+      <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+        <app-button btnType="back" label="上一步" (click)="onCancel()"></app-button>
+        <app-button btnType="create" label="下一步(抽成設定)" (click)="onSubmitNext()"
+          [disabled]="getTotalSelectedCount() === 0"></app-button>
+        <app-button btnType="back" (click)="onClearAndExit()"></app-button>
       </div>
     </div>
   </div>

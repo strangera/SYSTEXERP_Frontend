@@ -424,6 +424,11 @@
                 [submitted]="submitted"></app-input-textarea>
             </div>
           </div>
+          <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+            <app-button btnType="back" label="上一步" (click)="onCancel()"></app-button>
+            <app-button btnType="next" label="下一步(代扣款)" (click)="onSubmitNext()"></app-button>
+            <app-button btnType="back" (click)="onCancel()"></app-button>
+          </div>
         </form>
       </p-accordionTab>
     </p-accordion>
