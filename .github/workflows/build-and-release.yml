@@ -23,7 +23,7 @@ jobs:
       run: |
         npm install --legacy-peer-deps
     
-    # ✨ 修正縮排的版本號更新步驟
+    # ✨ 修正縮排和正則表達式的版本號更新步驟
     - name: Update version in login component
       run: |
         echo "=== Updating version number ==="
@@ -52,7 +52,7 @@ jobs:
           console.log('Current tag:', tagName);
           
           // 從 tag 名稱中提取序號 (例如: v1.0.0-20250818.3 -> 3)
-          const tagPattern = /v\\\\d+\\\\.\\\\d+\\\\.\\\\d+-\\\\d{8}\\\\.(\\\d+)/;
+          const tagPattern = /v\\d+\\.\\d+\\.\\d+-\\d{8}\\.(\\d+)/;
           const match = tagName.match(tagPattern);
           
           if (match) {
@@ -64,7 +64,7 @@ jobs:
         const newVersion = \`\${year}/\${month}/\${day}_V\${versionNumber} \${hours}:\${minutes}\`;
         
         // 使用正則表達式替換版本字串
-        const versionRegex = /(\\\\d{4}\\\\/\\\\d{2}\\\\/\\\\d{2}_V\\\\d+\\\\s+\\\\d{2}:\\\\d{2})/;
+        const versionRegex = /\\d{4}\\/\\d{2}\\/\\d{2}_V\\d+\\s+\\d{2}:\\d{2}/;
         content = content.replace(versionRegex, newVersion);
         
         // 寫回檔案
