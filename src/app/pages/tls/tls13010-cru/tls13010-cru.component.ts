@@ -1,18 +1,20 @@
+import { CurrentPageService } from './../../../layout/app.menulist/current-page.service';
 import { Component, OnInit, OnDestroy } from '@angular/core';
-import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormGroup, Validators, FormsModule, ReactiveFormsModule, FormBuilder } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { distinctUntilChanged, map, Observable, Subscription, debounceTime } from 'rxjs';
+// 🎯 直接導入需要的服務，不再繼承
+import { AuthService } from '@service/system/auth.service';
+import { NotificationService } from '@shared/component/notification-message/notification.service';
+// import { CurrentPageService } from '@core/services/current-page.service';
 
-// 基礎組件
-import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
-
-// 工作流程服務
+// 工作流程服務 - 保持不變
 import { ContractFlowService } from '../tls13010/services/contract-flow.service';
 
-// 下拉選單服務和選項
+// 下拉選單服務和選項 - 保持不變
 import { TLS13010_DROPDOWN_OPTIONS, TLS13010DropdownService } from '../tls13010/tls13010.dropdown';
 
-// API 服務
+// API 服務 - 保持不變
 import { VendorService } from '../../../service/basic/vendor.service';
 import { ContractStatusService } from '../../../service/basic/contract-status.service';
 import { SettlementMethodService } from '../../../service/basic/settlement-method.service';
@@ -28,6 +30,8 @@ import { LocationOptionsService } from '../../../service/api/dropdownservice/loc
 import { TLS13010Service } from '../../../service/api/tls/tls13010.service';
 import { CategoryItem, ContractInfo, LocationItem } from '../tls13010/tls13010.model';
 import { DropdownOption } from '../tls13010/tls13010.dropdown';
+
+// UI 組件 - 保持不變
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { AccordionModule } from 'primeng/accordion';
@@ -69,7 +73,19 @@ import { CRUDStatus } from '@shared/models/system/CRUDstatus';
   ],
 
 })
-export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> implements OnInit, OnDestroy {
+export class TLS13010CRUComponent implements OnInit, OnDestroy {
+  // ========== 🎯 核心屬性（取代繼承的部分） ==========
+  ProgNo = 'TLS13010';
+  formTitle = '';
+  submitted = false;
+  loading = false;
+  crudstatus = CRUDStatus.Edit; // 固定為 Edit，避免表單被 disable
+
+  // 用戶和權限
+  user: any;
+  funInfo: any;
+
+  // ========== 🎯 檢視模式管理 ==========
   isViewMode = false;
   private viewModeSubscription?: Subscription;
   // 位置選項資料
@@ -310,7 +326,12 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
   selectedBankInfo: AutoCompleteOption | null = null;
 
   constructor(
-    public override router: Router,
+    public router: Router,
+    private route: ActivatedRoute,
+    private formBuilder: FormBuilder, // ← 新增這行
+    private authService: AuthService,
+    private messageService: NotificationService,
+    private currentPageService: CurrentPageService,
     private contractFlowService: ContractFlowService,
     public tls13010DropdownService: TLS13010DropdownService,
     private vendorService: VendorService,
@@ -324,36 +345,75 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
     private bankService: BankOptionsService,
     private locationOptionsService: LocationOptionsService,
     private tls13010Service: TLS13010Service,
-    private route: ActivatedRoute,
-  ) {
-    super();
-  }
+  ) { }
 
   // ==========  生命週期方法 ==========
   ngOnInit(): void {
-    this.initializePage('TLS13010', this.dataForm);
+    // 🎯 自定義初始化，完全控制流程
+    this.initializeBasics();
+    this.initializeViewMode();
+    this.initializeWorkflow();
+    this.initializeData();
+    this.setupListeners();
+  }
+
+  ngOnDestroy(): void {
+    // 🎯 清理訂閱
+    if (this.viewModeSubscription) {
+      this.viewModeSubscription.unsubscribe();
+    }
+    this.subscriptions.forEach(sub => sub.unsubscribe());
+  }
+
+
+  private initializeBasics(): void {
+    // 🎯 基本設定
+    if (this.authService.currentUserValue) {
+      this.user = this.authService.currentUserValue;
+    }
+    this.currentPageService.setCurrentProgNo(this.ProgNo);
     this.funInfo = this.authService.getUserPermissions(this.ProgNo);
 
-    // 🎯 從服務取得狀態
+    // 🎯 固定為 Edit，避免表單被 disable
+    this.crudstatus = CRUDStatus.Edit;
+
+    // 🎯 設定標題
+    this.formTitle = this.getCustomTitle();
+  }
+
+  private initializeViewMode(): void {
+    // 🎯 從服務取得檢視模式狀態
     this.isViewMode = this.contractFlowService.isViewMode();
 
-    //關鍵：一定要在這裡設定檢視模式 UI 監聽
+    // 🎯 設定檢視模式 UI 監聽
     this.setupViewModeUI();
 
+    // 🎯 如果是檢視模式，設定表單為唯讀
+    if (this.isViewMode) {
+      setTimeout(() => {
+        this.setFormReadonly(true);
+      }, 0);
+    }
+  }
 
-    // 檢查 router state（在現有的 loadWorkflowData() 之前）
+  private initializeWorkflow(): void {
+    // 🎯 處理 router state
     this.handleRouterState();
 
-    // 載入下拉選單和位置選項
+    // 🎯 載入工作流程資料
+    this.loadWorkflowData();
+  }
+
+  private initializeData(): void {
+    // 🎯 載入下拉選單和位置選項
     this.loadDropdownOptions();
     this.loadLocationWithDetailsOptions();
     this.loadPOS2013Options();
     this.loadNegotiatorOptions();
+  }
 
-    // 載入工作流程資料
-    this.loadWorkflowData();
-
-    // 設定監聽
+  private setupListeners(): void {
+    // 🎯 設定監聽
     this.setupAutoSave();
     this.setupBusTypeListener();
 
@@ -368,46 +428,11 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
         this.ensureClassificationDataLoaded(currentBusType);
       }
     }, 500);
+
     setTimeout(() => {
       this.updateSelectorPanelOptions();
-    }, 1000); // 給足夠時間讓 dropdown 服務載入完成
+    }, 1000);
   }
-
-  ngOnDestroy(): void {
-    // 🎯 新增：清理檢視模式訂閱
-    if (this.viewModeSubscription) {
-      this.viewModeSubscription.unsubscribe();
-    }
-    this.subscriptions.forEach(sub => sub.unsubscribe());
-  }
-
-  override initializePage(progNo: string, form?: FormGroup): void {
-    // 只取父類的基礎功能
-    if (this.authService.currentUserValue) {
-      this.user = this.authService.currentUserValue;
-    }
-    this.ProgNo = progNo;
-    this.currentPageService.setCurrentProgNo(this.ProgNo);
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
-
-    // 🎯 固定為 Edit，避免表單被 disable
-    this.crudstatus = CRUDStatus.Edit;
-
-    // 🎯 從服務取得檢視模式狀態，並設定標題
-    this.isViewMode = this.contractFlowService.isViewMode();
-    this.formTitle = this.getCustomTitle();
-
-    // 🎯 如果是檢視模式，設定表單為唯讀
-    if (this.isViewMode && form) {
-      form.disable();
-    }
-
-    console.log('📋 頁面初始化完成:', {
-      isViewMode: this.isViewMode,
-      title: this.formTitle
-    });
-  }
-
   private getCustomTitle(): string {
     if (this.contractFlowService.isViewMode()) {
       return '檢視契約資料';
@@ -1226,7 +1251,7 @@ export class TLS13010CRUComponent extends BasicCruPageComponent<CategoryItem> im
     }
   }
 
-  override onCancel(): void {
+  onCancel(): void {
     if (this.isViewMode) {
       this.contractFlowService.clearViewMode();
       this.router.navigate(['account/tls/tls13010']);
