@@ -62,8 +62,65 @@ export class TLS2A050Component extends BasicQueryPageComponent<any> implements O
 
   salesMinDate: Date | null = null;
   salesMaxDate: Date | null = null;
-  columns: any[] = [];
-  columnGroup: ColumnGroup[] = [];
+  columns: any[] = [
+    { field: "TXN_Date", header: '交易日期', visible: true},
+    { field: "0_BOOK_PayCnt", header: '系統筆數', visible: true, groupField: '0' },
+    { field: "0_ACT_PayCnt", header: '系統筆數', visible: true, groupField: '0' },
+    { field: "0_BOOK_PayAmt", header: '系統筆數', visible: true, groupField: '0' },
+    { field: "0_ACT_PayAmt", header: '系統筆數', visible: true, groupField: '0' },
+    { field: "0_OVER_PayAmt", header: '系統筆數', visible: true, groupField: '0' },
+    { field: "1_BOOK_PayCnt", header: '系統筆數', visible: true, groupField: '1' },
+    { field: "1_ACT_PayCnt", header: '系統筆數', visible: true, groupField: '1' },
+    { field: "1_BOOK_PayAmt", header: '系統筆數', visible: true, groupField: '1' },
+    { field: "1_ACT_PayAmt", header: '系統筆數', visible: true, groupField: '1' },
+    { field: "1_OVER_PayAmt", header: '系統筆數', visible: true, groupField: '1' },
+    { field: "2_BOOK_PayCnt", header: '系統筆數', visible: true, groupField: '2' },
+    { field: "2_ACT_PayCnt", header: '系統筆數', visible: true, groupField: '2' },
+    { field: "2_BOOK_PayAmt", header: '系統筆數', visible: true, groupField: '2' },
+    { field: "2_ACT_PayAmt", header: '系統筆數', visible: true, groupField: '2' },
+    { field: "2_OVER_PayAmt", header: '系統筆數', visible: true, groupField: '2' },
+    { field: "3_BOOK_PayCnt", header: '系統筆數', visible: true, groupField: '3' },
+    { field: "3_ACT_PayCnt", header: '系統筆數', visible: true, groupField: '3' },
+    { field: "3_BOOK_PayAmt", header: '系統筆數', visible: true, groupField: '3' },
+    { field: "3_ACT_PayAmt", header: '系統筆數', visible: true, groupField: '3' },
+    { field: "3_OVER_PayAmt", header: '系統筆數', visible: true, groupField: '3' },
+    { field: "4_BOOK_PayCnt", header: '系統筆數', visible: true, groupField: '4' },
+    { field: "4_ACT_PayCnt", header: '系統筆數', visible: true, groupField: '4' },
+    { field: "4_BOOK_PayAmt", header: '系統筆數', visible: true, groupField: '4' },
+    { field: "4_ACT_PayAmt", header: '系統筆數', visible: true, groupField: '4' },
+    { field: "4_OVER_PayAmt", header: '系統筆數', visible: true, groupField: '4' },
+    { field: "5_BOOK_PayCnt", header: '系統筆數', visible: true, groupField: '5' },
+    { field: "5_ACT_PayCnt", header: '系統筆數', visible: true, groupField: '5' },
+    { field: "5_BOOK_PayAmt", header: '系統筆數', visible: true, groupField: '5' },
+    { field: "5_ACT_PayAmt", header: '系統筆數', visible: true, groupField: '5' },
+    { field: "5_OVER_PayAmt", header: '系統筆數', visible: true, groupField: '5' },
+    { field: "6_BOOK_PayCnt", header: '系統筆數', visible: true, groupField: '6' },
+    { field: "6_ACT_PayCnt", header: '系統筆數', visible: true, groupField: '6' },
+    { field: "6_BOOK_PayAmt", header: '系統筆數', visible: true, groupField: '6' },
+    { field: "6_ACT_PayAmt", header: '系統筆數', visible: true, groupField: '6' },
+    { field: "6_OVER_PayAmt", header: '系統筆數', visible: true, groupField: '6' },
+    { field: "7_BOOK_PayCnt", header: '系統筆數', visible: true, groupField: '7' },
+    { field: "7_ACT_PayCnt", header: '系統筆數', visible: true, groupField: '7' },
+    { field: "7_BOOK_PayAmt", header: '系統筆數', visible: true, groupField: '7' },
+    { field: "7_ACT_PayAmt", header: '系統筆數', visible: true, groupField: '7' },
+    { field: "7_OVER_PayAmt", header: '系統筆數', visible: true, groupField: '7' },
+    { field: "8_BOOK_PayCnt", header: '系統筆數', visible: true, groupField: '8' },
+    { field: "8_ACT_PayCnt", header: '系統筆數', visible: true, groupField: '8' },
+    { field: "8_BOOK_PayAmt", header: '系統筆數', visible: true, groupField: '8' },
+    { field: "8_ACT_PayAmt", header: '系統筆數', visible: true, groupField: '8' },
+    { field: "8_OVER_PayAmt", header: '系統筆數', visible: true, groupField: '8' }
+  ];
+  columnGroup: ColumnGroup[] = [
+    { field: '0', header: '[一卡通] 行動支付' },
+    { field: '1', header: '[LINE Pay] 行動支付' },
+    { field: '2', header: '[iPASS MONEY] 行動支付' },
+    { field: '3', header: '[台灣Pay] 行動支付'},
+    { field: '4', header: '[南紡錢包] 行動支付'},
+    { field: '5', header: '[即享券] 行動支付'},
+    { field: '6', header: '[喜客券] 行動支付'},
+    { field: '7', header: '[一卡通-停車場] 行動支付'},
+    { field: '8', header: '[LINE Pay-停車場] 行動支付'}
+  ];
   exportExcelLoading = false;
 
   constructor(
@@ -152,9 +209,12 @@ export class TLS2A050Component extends BasicQueryPageComponent<any> implements O
             columnGroup.push({ field: name, header: `[${name}] 行動支付` });
           });
 
-          this.columns = columns;
+          this.columns = [...columns];
+          this.cdr.markForCheck();
           this.columnGroup = columnGroup;
           this.data = flatData;
+          console.log(this.data);
+
           this.totalRecords = res.TotalCount ?? 0;
           this.queryStateService.setQueryState(this.ProgNo, frm.value);
           this.loading = false;
