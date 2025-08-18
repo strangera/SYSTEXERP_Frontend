@@ -4,13 +4,18 @@ import { Column, ColumnGroup } from './table.model';
 import { finalize, Observable, tap } from 'rxjs';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { NotificationService } from '@shared/component/notification-message/notification.service';
+import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
+import { environment } from 'src/environments/environment';
 
 @Injectable({
   providedIn: 'root'
 })
 export class TableUtilityService {
 
-  constructor(private messageService: NotificationService) { }
+  constructor(
+    private readonly messageService: NotificationService,
+    private readonly sanitizer: DomSanitizer
+  ) { }
 
   // 判斷欄位是否可見
   isColumnVisible(col: Column): boolean {
@@ -210,5 +215,31 @@ export class TableUtilityService {
 
     // 回傳新資料和更新後的資料陣列
     return { newRowData, data: updatedData };
+  }
+  private safeUrlCache = new Map<string, SafeUrl>();
+  getImage(url: string): SafeUrl | undefined {
+    if (!url) { return undefined; }
+    if (this.safeUrlCache.has(url)) {
+      return this.safeUrlCache.get(url);
+    }
+    const match = url.match(/(.*\/)([^/]*)/);
+    let finalUrl: string;
+
+    if (match && match.length === 3) {
+      const path = match[1].replace(/~/g, '');
+      const filename = match[2];
+      const baseUrl = environment.ApiUrl.endsWith('/') ? environment.ApiUrl.slice(0, -1) : environment.ApiUrl;
+      const sanitizedPath = path.startsWith('/') ? path.slice(1) : path;
+      finalUrl = `${baseUrl}/${sanitizedPath}${filename}`;
+    } else {
+      const sanitizedUrl = url.replace(/~/g, '');
+      const baseUrl = environment.ApiUrl.endsWith('/') ? environment.ApiUrl.slice(0, -1) : environment.ApiUrl;
+      const imagePath = sanitizedUrl.startsWith('/') ? sanitizedUrl.slice(1) : sanitizedUrl;
+      finalUrl = `${baseUrl}/${imagePath}`;
+    }
+    const safeUrl = this.sanitizer.bypassSecurityTrustUrl(finalUrl);
+    this.safeUrlCache.set(url, safeUrl);
+
+    return safeUrl;
   }
 }

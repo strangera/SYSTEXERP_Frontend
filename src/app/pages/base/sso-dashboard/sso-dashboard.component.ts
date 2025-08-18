@@ -24,7 +24,6 @@ import { DividerModule } from 'primeng/divider';
 import { TranslateModule } from '@ngx-translate/core';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { environment } from '../../../../environments/environment';
-type ExternalItem = ApiItem & { Redirect_URL: string };
 @UntilDestroy()
 @Component({
   selector: 'app-sso-dashboard',
@@ -51,12 +50,7 @@ type ExternalItem = ApiItem & { Redirect_URL: string };
     TranslateModule,
   ],
 })
-
-
-
-
 export class SsoDashboardComponent implements OnInit, OnDestroy { // 實現 OnDestroy
-  
   logo = 'assets/layout/images/logo.webp';
   user: UserInfo | null = null;
   private subscriptions: Subscription[] = [];
@@ -172,73 +166,60 @@ export class SsoDashboardComponent implements OnInit, OnDestroy { // 實現 OnDe
       })
     );
   }
-  // sso-dashboard.component.ts（新增這個 helper）
-private getSavedRedirect(): string {
-  const fromLS = (localStorage.getItem('redirectURL') || '').trim();
-  if (fromLS) return fromLS;
 
-  // 備援：從目前網址 query 撈（因為你可能有 preserve 過來），大小寫不敏感
-  const sp = new URLSearchParams(window.location.search);
-  for (const [k, v] of sp.entries()) {
-    if (k.toLowerCase() === 'redirecturl') {
-      const cleaned = v.trim();
-      if (cleaned) {
-        localStorage.setItem('redirectURL', cleaned); // 補存一份
+  navigateToUrl(item: ApiItem): void {
+    this.loading = true;
+
+    if (this.urlItems.length > 0 && item === this.urlItems[0]) {
+      // 🔁 內部系統流程
+      this.subscriptions.push(
+        this.ssoDashboardService.Inner().pipe(
+          untilDestroyed(this),
+          concatMap((innerResponse: ApiResponse<any>) => {
+            if (innerResponse.Status === '0000') {
+              return this.authService.getFunRightsInfo().pipe(
+                concatMap(() => this.authService.queryAllSystemCode())
+              );
+            } else {
+              return throwError(() => new Error(innerResponse.Message || 'Inner API failed'));
+            }
+          })
+        ).subscribe({
+          next: () => { this.router.navigate([item.System_Url]); },
+        })
+      );
+    } else {
+      // ✅ 外部系統流程（不再呼叫 /Outer）
+      const userNo = this.user?.user_No || '';
+      if (!userNo) {
+        this.messageService.errorBubble('找不到登入使用者資訊');
+        return;
       }
-      return cleaned;
+
+      this.subscriptions.push(
+        this.authService.getOuterToken().pipe(
+          untilDestroyed(this),
+          finalize(() => this.loading = false),
+          concatMap((tokenResponse) => {
+            if (tokenResponse.Status !== '0000' || !tokenResponse.Data) {
+              throw new Error('取得一次性 Token 失敗');
+            }
+
+            const token = tokenResponse.Data;
+            const targetUrl = `${item.System_Url}?token=${encodeURIComponent(token)}`;
+
+            // ✅ 開新頁面導向外部系統（直接帶 token）
+            window.open(targetUrl, '_blank');
+            return [];
+          })
+        ).subscribe({
+          error: () => {
+            this.messageService.errorBubble('無法前往外部系統，請稍後再試');
+          }
+        })
+      );
     }
   }
-  return '';
-}
-
-
-// sso-dashboard.component.ts（外部流程改用上面的值）
-navigateToUrl(item: ApiItem): void {
-  this.loading = true;
-
-  if (this.urlItems.length > 0 && item === this.urlItems[0]) {
-    // 內部流程 …
-  } else {
-    const redirect = this.getSavedRedirect();  // ✅ 從 localStorage/網址取得
-    this.subscriptions.push(
-      this.authService.getOuterToken().pipe(
-        untilDestroyed(this),
-        finalize(() => this.loading = false)
-      ).subscribe({
-        next: (res) => {
-          let targetUrl = this.appendOrReplaceParam(item.System_Url, 'token', res.token);
-          targetUrl = this.appendOrReplaceParam(targetUrl, 'redirectURL', redirect); // ✅ 一定帶上
-
-          // console.log('[DEBUG dash] redirectURL =', redirect);
-          // console.log('[DEBUG dash] final URL =', targetUrl);
-
-          window.open(targetUrl, '_blank');
-
-          // （可選）如果你只想用一次，打開這行：
-          // localStorage.removeItem('redirectURL');
-        },
-        error: () => this.messageService.errorBubble('無法前往外部系統，請稍後再試')
-      })
-    );
-  }
-}
-
-
-
-private appendOrReplaceParam(url: string, key: string, value: string): string {
-  try {
-    const u = new URL(url, window.location.origin);
-    u.searchParams.set(key, value);
-    return u.toString();
-  } catch {
-    const sep = url.includes('?') ? '&' : '?';
-    return `${url}${sep}${encodeURIComponent(key)}=${encodeURIComponent(value)}`;
-  }
-}
-
-
-
-
 
 
 

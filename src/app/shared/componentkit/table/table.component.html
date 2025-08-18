@@ -159,6 +159,9 @@
               </app-table-input>
             </ng-template>
           </p-cellEditor>
+          <ng-container *ngIf="col.type === 'image'">
+            <p-image [src]="getImage(rowData[col.field])" alt="Image" width="50" [preview]="true" />
+          </ng-container>
           <ng-container *ngIf="col.type === 'button'">
             <p-button *ngIf="IsPrint" label="{{ col.buttonLabel }}" severity="info" (click)="onSelectButton(rowData)"
               [disabled]="col.disabled ? col.disabled(rowData) : false"></p-button>
