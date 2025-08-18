@@ -2,18 +2,13 @@
   <!-- 固定操作按鈕 -->
   <div class="flex gap-2 mb-2">
     <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
-    <ng-container *ngIf="isViewMode">
-    </ng-container>
     <ng-container>
       <app-button btnType="back" label="上一步" (click)="onCancel()"></app-button>
       <app-button btnType="next" label="下一步(代扣款)" (click)="onSubmitNext()"></app-button>
       <app-button btnType="back" (click)="onCancel()"></app-button>
     </ng-container>
-    <ng-container *ngIf="isViewMode">
-      <app-button btnType="back">沒有功能</app-button>
-    </ng-container>
   </div>
-  <fieldset [disabled]="isViewMode" style="border: none; padding: 0; margin: 0">
+  <fieldset style="border: none; padding: 0; margin: 0">
     <p-accordion [multiple]="true">
       <p-accordionTab header="基本資訊" [selected]="true" class="line-height-3 m-0"
         [headerStyleClass]="'query-accordionTab'">

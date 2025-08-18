@@ -199,7 +199,8 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
     tlt_no: [''], // 必填但系統自動給號
     ven_no: ['', [Validators.required, Validators.maxLength(16)]], // 必填
     ven_uniform: ['', [Validators.required, Validators.maxLength(10)]], // 必填
-    VEN_Name: [''], // 必填但自動帶入
+    VEN_Name: ['']
+    , // 必填但自動帶入
     paper_type: ['', [Validators.maxLength(2)]],
     bus_type: ['', [Validators.required, Validators.maxLength(2)]], // 必填
     bus_class: ['', [Validators.required, Validators.maxLength(2)]], // 必填
@@ -386,6 +387,35 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
 
     // 🎯 設定標題
     this.formTitle = this.getCustomTitle();
+
+    // 🎯 延遲設定初始控制狀態
+    setTimeout(() => {
+      this.setFormControlsState();
+    }, 100);
+  }
+
+  /**
+ * 🎯 檢查特定欄位的 readonly 狀態（供 UI 參考）
+ */
+  isFieldReadonly(fieldName: string): boolean {
+    // 永遠 readonly 的欄位
+    const alwaysReadonlyFields = ['apply_no', 'tlt_no', 'VEN_Name', 'contract_subno', 'company_register_address'];
+
+    if (alwaysReadonlyFields.includes(fieldName)) {
+      return true;
+    }
+
+    // 檢視模式下全部 readonly
+    if (this.isViewMode) {
+      return true;
+    }
+
+    // 營運狀況的特殊邏輯
+    if (fieldName === 'tlt_openflag') {
+      return this.contractFlowService.isNewContractMode(); // 新增模式下 readonly
+    }
+
+    return false;
   }
 
   private initializeViewMode(): void {
@@ -657,7 +687,6 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
       console.log('🏦 恢復銀行選擇資訊:', savedFormData.selectedBankInfo);
       this.selectedBankInfo = savedFormData.selectedBankInfo;
     } else if (savedFormData.bank_id) {
-      // 🎯 備援邏輯：如果只有 bank_id，嘗試重建 selectedBankInfo
       console.log('🔄 嘗試根據 bank_id 重建銀行資訊:', savedFormData.bank_id);
       this.reconstructBankInfo(savedFormData.bank_id);
     } else {
@@ -671,7 +700,7 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
       }, 100);
     }
 
-    // 🎯 改進位置資料載入邏輯
+    // 🎯 載入位置資料
     if (savedFormData.locationInfo && Array.isArray(savedFormData.locationInfo) && savedFormData.locationInfo.length > 0) {
       console.log('📍 載入暫存位置資料');
       this.locationData = savedFormData.locationInfo.map((item: any) => ({
@@ -680,7 +709,6 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
         _isNew: item._isNew || false
       }));
     } else {
-      // ✅ 沒有暫存位置時，嘗試載入既有位置
       const currentTalentId = this.contractFlowService.getCurrentTalentId();
       if (currentTalentId && !this.contractFlowService.isNewContractMode()) {
         console.log('📍 沒有暫存位置，載入既有位置資料');
@@ -689,6 +717,11 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
         this.locationData = [];
       }
     }
+
+    // 🎯 重新設定控制狀態
+    setTimeout(() => {
+      this.setFormControlsState();
+    }, 100);
   }
 
   private reconstructBankInfo(bankId: string): void {
@@ -713,6 +746,75 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
         }
       }
     });
+  }
+
+  /**
+   * 🎯 統一設定表單欄位的 disabled 狀態
+   */
+  private setFormControlsState(): void {
+    console.log('🔧 開始設定表單控制狀態...');
+
+    const isNewMode = this.contractFlowService.isNewContractMode();
+    const isViewMode = this.isViewMode;
+
+    console.log('📊 當前模式:', {
+      isNewMode,
+      isViewMode,
+      mode: isViewMode ? '檢視' : (isNewMode ? '新增' : '編輯')
+    });
+
+    // 🎯 第一步：先啟用所有欄位
+    Object.keys(this.dataForm.controls).forEach(key => {
+      const control = this.dataForm.get(key);
+      if (control && control.disabled) {
+        control.enable();
+      }
+    });
+
+    // 🎯 第二步：設定永遠 readonly 的欄位
+    const alwaysReadonlyFields = [
+      'apply_no',                    // 專櫃招募編號
+      'tlt_no',                      // 專櫃編號
+      'VEN_Name',                    // 廠商名稱
+      'contract_subno',              // 版次
+      'company_register_address'     // 公司登記地址
+    ];
+
+    alwaysReadonlyFields.forEach(fieldName => {
+      const control = this.dataForm.get(fieldName);
+      if (control) {
+        control.disable();
+        console.log(`🔒 永遠 readonly: ${fieldName}`);
+      }
+    });
+
+    // 🎯 第三步：處理條件 readonly - 營運狀況
+    const tltOpenflagControl = this.dataForm.get('tlt_openflag');
+    if (tltOpenflagControl) {
+      if (isNewMode) {
+        // 新增模式：設定為 '9' 且 readonly
+        tltOpenflagControl.setValue('9');
+        tltOpenflagControl.disable();
+        console.log('🔒 新增模式：營運狀況設為 "9" 且 readonly');
+      } else if (!isViewMode) {
+        // 編輯模式：可以編輯
+        tltOpenflagControl.enable();
+        console.log('🔓 編輯模式：營運狀況可編輯');
+      }
+    }
+
+    // 🎯 第四步：檢視模式 - 全部 readonly
+    if (isViewMode) {
+      Object.keys(this.dataForm.controls).forEach(key => {
+        const control = this.dataForm.get(key);
+        if (control) {
+          control.disable();
+        }
+      });
+      console.log('🔒 檢視模式：全部欄位 readonly');
+    }
+
+    console.log('✅ 表單控制狀態設定完成');
   }
 
   private initializeEmptyForm(): void {
@@ -870,6 +972,11 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
         this.loadBusinessClassifications(busType);
       }, 100);
     }
+
+    // 🎯 重新設定控制狀態
+    setTimeout(() => {
+      this.setFormControlsState();
+    }, 100);
   }
 
   private loadBusinessClassifications(busType: string | undefined): void {
@@ -2031,26 +2138,19 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
     console.log('🔄 處理檢視模式變更:', isViewMode);
 
     if (isViewMode) {
-      // 🎯 檢視模式：設定表單為唯讀
-      // this.setFormReadonly(true);
-
-      // 🎯 更新頁面標題
       this.formTitle = '檢視契約資料';
-
-      console.log('🔒 已設定為檢視模式');
+      console.log('🔒 切換到檢視模式');
     } else {
-      // 🎯 編輯模式：恢復表單可編輯性
-      // this.setFormReadonly(false);
-
-      // 🎯 恢復欄位的特殊狀態（某些欄位永遠禁用）
-      // this.restoreFieldConstraints();
-
-      // 🎯 更新頁面標題
       this.formTitle = this.contractFlowService.isNewContractMode() ? '新增契約資料' : '編輯契約資料';
-
-      console.log('🔓 已設定為編輯模式');
+      console.log('🔓 切換到編輯模式');
     }
+
+    // 🎯 重新設定控制狀態
+    setTimeout(() => {
+      this.setFormControlsState();
+    }, 0);
   }
+
 
   // /**
   //  * 🎯 新增：設定表單為唯讀
