@@ -316,6 +316,8 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
 
   total_amt_vendor_unit_options = [...TLS13010_DROPDOWN_OPTIONS.total_amt_vendor_unit];
 
+  depositPaymentOptions = [...TLS13010_DROPDOWN_OPTIONS.depositPayment];
+
   // ==========  API 載入的下拉選單選項 ==========
   vendorOptions: DropdownOption[] = [];
   contractStatusOptions: DropdownOption[] = [];
