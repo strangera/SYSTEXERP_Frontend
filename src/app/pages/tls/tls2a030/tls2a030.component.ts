@@ -1,104 +1,74 @@
-import { Component } from '@angular/core';
-import {
-  Validators,
-  FormsModule,
-  ReactiveFormsModule,
-} from '@angular/forms';
+import { Component, OnInit } from '@angular/core';
+import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 import { LocationOptionsService } from '../../../service/api/dropdownservice/location-options.service';
 import { ECRNoService } from '../../../service/basic/ECRNo.service';
-import { TLS2A030Service } from '../../../service/api/tls/tls2a030.service';
-import { HttpClient } from '@angular/common/http';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { AccordionModule } from 'primeng/accordion';
 import { CalendarRangeQuickComponent } from '../../../shared/componentkit/calendar-range-quick/calendar-range-quick.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { DropdownRangeComponent } from '@shared/componentkit/dropdown-range/dropdown-range.component';
 import { TranslateModule } from '@ngx-translate/core';
+import { TLS2A030Service } from '../../../service/api/tls/tls2a030.service';
+import { DropdownRangeComponent } from '@shared/componentkit/dropdown-range/dropdown-range.component';
+import { HttpClient } from '@angular/common/http';
+import { environment } from '../../../../environments/environment';
 import { yesterday } from '@shared/models/system/query-form.model';
+
+
+interface SalesRecord {
+  paymentTool: string;
+  actualShortfallAmount: number;
+  preAuditShortfallAmount: number;
+  receiptTotal: number;
+  systemTotal: number;
+  compareCD: 'Y' | 'N';
+  compareAB: 'Y' | 'N';
+}
 
 @Component({
   selector: 'app-tls2a030',
   templateUrl: './tls2a030.component.html',
-  styleUrls: ['./tls2a030.component.scss'],
   standalone: true,
-  imports: [
-    MenubarComponent,
-    AccordionModule,
-    FormsModule,
-    ReactiveFormsModule,
-    CalendarRangeQuickComponent,
-    DropdownRangeComponent,
-    ButtonComponent,
-    TableComponent,
-    TranslateModule,
-  ],
+  imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarRangeQuickComponent, DropdownRangeComponent,
+    ButtonComponent, TableComponent, TranslateModule]
 })
-export class TLS2A030Component extends BasicQueryPageComponent<any> {
+export class TLS2A030Component extends BasicQueryPageComponent<any> implements OnInit {
   queryForm = this.formBuilder.group({
     SaleDateStart: [yesterday, Validators.required],
     SaleDateEnd: [yesterday, Validators.required],
+    ECR_No: [null as string | null],
     ECR_No_Start: [null as string | null],
     ECR_No_End: [null as string | null],
-    ...createPaginationConfig,
+    ...createPaginationConfig([{ field: 'PAY_NAME', order: 1 }])
   });
 
-  data: any[] = [];
+  data: SalesRecord[] = [];
   totalRecords = 0;
-  selectedItems: any[] = [];
+  selectedItems: SalesRecord[] = [];
   ECRNoOptions: any[] = [];
-
+  // 表格欄位
   columns = [
     { field: 'PAY_NAME', header: '支付工具', visible: true },
-    {
-      field: 'OVER_PayAmt',
-      header: '實際淨欠總額 (A)',
-      visible: true,
-      format: this.moneyFormat,
-      style: 'text-right'
-    },
-    {
-      field: 'PreAudit_OVER_PayAmt',
-      header: '審核前淨欠總額 (B)',
-      visible: true,
-      format: this.moneyFormat,
-      style: 'text-right'
-    },
-    {
-      field: 'Actual_ReceivedAmt',
-      header: '實收總額 (C)',
-      visible: true,
-      format: this.moneyFormat,
-      style: 'text-right'
-    },
-    {
-      field: 'BOOK_PayAmt',
-      header: '系統帳 (D)',
-      visible: true,
-      format: this.moneyFormat,
-      style: 'text-right'
-    },
+    { field: 'OVER_PayAmt', header: '實際淨欠總額 (A)', visible: true },
+    { field: 'PreAudit_OVER_PayAmt', header: '審核前淨欠總額 (B)', visible: true },
+    { field: 'Actual_ReceivedAmt', header: '實收總額 (C)', visible: true },
+    { field: 'BOOK_PayAmt', header: '系統帳 (D)', visible: true },
     {
       field: 'Compare_CD',
       header: '(C) 與 (D) 比較',
-      format: (v: boolean) => (v ? `Y` : `N`),
-      visible: true,
-
+      format: (v: boolean) => v ? 'Y' : 'N',
+      visible: true
     },
     {
       field: 'Compare_AB',
       header: '(A) 與 (B) 比較',
-      format: (v: boolean) => (v ? `Y` : `N`),
-      visible: true,
-
-    },
+      format: (v: boolean) => v ? 'Y' : 'N',
+      visible: true
+    }
   ];
 
-  moneyFormat(value: number): string {
-    return value != null ? value.toLocaleString('en-US') : '0'; // ✅ 使用美式格式
-  }
 
   constructor(
     private locationOptionsService: LocationOptionsService,
@@ -110,59 +80,98 @@ export class TLS2A030Component extends BasicQueryPageComponent<any> {
   }
 
   ngOnInit(): void {
-    this.initializePage(
-      'TLS2A030',
-      '/tls/tls2A030cru',
-      this.queryForm,
-      (form) => this.onSubmit(),
-    );
-    this.ECRNoService.getECRNo().subscribe(
-      (data) => (this.ECRNoOptions = data),
-    );
-  }
+    this.initializePage('TLS2A030', '/TLS/TLS2A030cru', this.queryForm, (form) => this.onSubmit(form));
+    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
 
-  onSubmit(): void {
-    this.submitted = true;
-    if (this.queryForm.invalid) {
-      this.messageService.warnBubble('請完整填寫查詢條件');
-      return;
-    }
-
-    const formValue = this.queryForm.value;
-
-    const payload = {
-      SaleDateStart:
-        formValue.SaleDateStart instanceof Date
-          ? formValue.SaleDateStart.toISOString()
-          : null,
-      SaleDateEnd:
-        formValue.SaleDateEnd instanceof Date
-          ? formValue.SaleDateEnd.toISOString()
-          : null,
-      ECR_No_Start: formValue.ECR_No_Start?.trim() || '',
-      ECR_No_End: formValue.ECR_No_End?.trim() || '',
-    };
-
-    this.loading = true;
-    this.messageService.blockUi();
-
-    this.tls2a030Service.queryTLS2A030({ request: payload }).subscribe({
-      next: (res) => {
-        this.data = res?.Data ?? [];
-        this.totalRecords = res?.TotalCount ?? this.data.length;
-
-        // 如果只要記錄查詢條件，也可以只存 payload
-        this.queryStateService.setQueryState(this.ProgNo, payload);
-
-        this.messageService.successBubble('查詢成功');
-      },
-      error: () => {
-        this.messageService.errorBubble('查詢失敗');
-      },
-      complete: () => {
-        this.loading = false;
-        this.messageService.unblockUi();
-      },
+    this.ECRNoService.getECRNo().subscribe((data) => {
+      this.ECRNoOptions = data;
     });
   }
+  onImportExcel(event: any): void {
+    const file = event.files[0];
+    if (!file) {
+      console.error('No file selected for import');
+      return;
+    }
+  }
+
+  onExportExcel(): void {
+    const raw = this.queryForm.getRawValue();
+
+    const condition = {
+      ...raw,
+      SaleDateStart:
+        raw.SaleDateStart instanceof Date
+          ? raw.SaleDateStart.toISOString()
+          : raw.SaleDateStart ?? null,
+      SaleDateEnd:
+        raw.SaleDateEnd instanceof Date
+          ? raw.SaleDateEnd.toISOString()
+          : raw.SaleDateEnd ?? null,
+      ECR_No: raw.ECR_No?.trim() ?? '',
+      ECR_No_Start: raw.ECR_No_Start?.trim() ?? '',
+      ECR_No_End: raw.ECR_No_End?.trim() ?? '',
+    };
+
+    const payload = {
+      query_condition: {
+        ServiceName: 'queryTLS2A030',
+        Conditions: [condition],
+      },
+      report_title: '溢欠彙總表',
+      file_name: `TLS22030_${new Date().toISOString().slice(0, 10)}`,
+      columns: this.columns.filter(c => c.visible),
+      config: {
+        print_reportTitle: 'Y',
+        print_reportTitle_per_page: 'N',
+        print_eject: 'Y',
+        print_field_title: 'Y',
+        print_field_title_per_page: 'N',
+      }
+    };
+
+    console.log('匯出 payload:', payload);
+
+    this.http.post(`${environment.ApiUrl}/exportExcel`, payload, {
+      responseType: 'blob'
+    }).subscribe({
+      next: (blob) => {
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${payload.file_name}.xlsx`;
+        a.click();
+      },
+      error: (err) => {
+        console.error('Excel 匯出失敗', err);
+      }
+    });
+  }
+
+onSubmit(form: FormGroup): void {
+  this.handleSubmit(form, () => {
+
+    this.tls2a030Service.queryTLS2A030(form.value).subscribe({
+      next: (res) => {
+        const list = res?.Data ?? [];
+
+
+        this.data = list.map((it: any) => ({
+          ...it,
+          Compare_CD: it?.Compare_CD === true || it?.Compare_CD === 'Y',
+          Compare_AB: it?.Compare_AB === true || it?.Compare_AB === 'Y',
+        }));
+
+        this.totalRecords = res?.TotalCount ?? this.data.length;
+        this.loading = false;
+      },
+      error: (err) => {
+        console.error('TLS2A030 查詢失敗', err);
+        this.loading = false;
+      }
+    });
+  });
+}
+
+
 }
