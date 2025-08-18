@@ -53,7 +53,7 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
   // 2004 最主要"PLU_No": [""], > 指定給 2005 多筆"PLU_No": [""], -- 新增時增加提示這樣使用者也不用輸入兩次 --ok
   // 修改 標準進價 不要連動到 目前進價 --ok 新增重算的標準進價會另外送出，不會影響到舊的 --ok
 
-  // 品牌編號 ---PLULOGO 站存試算資料 --ok
+  // 品牌代碼 ---PLULOGO 站存試算資料 --ok
   // 標籤檔 新增 預覽 (規格書藍色字) > 然後再確認 --ok
   // 變價表單拆成 主資料 變價前後 組合
 
@@ -99,7 +99,7 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
     PLU_Reserve3: ['', [Validators.maxLength(400)]], // 系列
 
     // 商品資訊 顯示畫面
-    LOGO_No: ['', [Validators.required, Validators.maxLength(4)]], // 品牌編號 ---PLULOGO
+    LOGO_No: ['', [Validators.required, Validators.maxLength(4)]], // 品牌代碼 ---PLULOGO
     PLU_SalePrc: [0, [Validators.required, Validators.maxLength(10)]], // 商品售價
     STK_CurrentQty: [{ value: 0, disabled: true }], // 庫存量 讀POS2099 新增固定0 ---後端直接提供(不允許編輯)---
     PLU_OrderPrc: [{ value: 0, disabled: true }], // 標準進價 商品售價＊進貨折數/1.05 ，計算到小數點以下2位，必填 (不可編輯 新增遵循此規則)
@@ -326,13 +326,13 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
       }
     });
 
-    // 觀察 品牌編號 是否為變更(更新 進價折數、 標準進價)
+    // 觀察 品牌代碼 是否為變更(更新 進價折數、 標準進價)
     this.dataForm.get('LOGO_No')!.valueChanges.subscribe((newValue) => {
 
       if (newValue) {
         // 找到符合的品牌資料 (依照newValue 找到pluLogoOption對應的No)
         const matched = this.pluLogoOption.find(item => item.No === newValue);
-        console.log('監聽品牌編號變化', newValue, matched);
+        console.log('監聽品牌代碼變化', newValue, matched);
 
         // 讀取整份 重新設置 進價折數、 標準進價
         if (matched) {
@@ -350,8 +350,8 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
             this.dataForm.get('PLU_OrderPrc')?.setValue(result);
           }
         } else {
-          // 若品牌編號為空 不進行操作
-          this.cachedBrand = null; // 若清空品牌編號，也清空暫存
+          // 若品牌代碼為空 不進行操作
+          this.cachedBrand = null; // 若清空品牌代碼，也清空暫存
         }
       }
     });
@@ -595,7 +595,7 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
         console.log('商品單位:', this.unitOptions);
       });
 
-    // 品牌編號與折扣別
+    // 品牌代碼與折扣別
     this.tls51060Service.queryPLULOGO_OrderPrcRate_DropDownList({}).subscribe((response) => {
       this.pluLogoOption = response.Data.map((item: any) => ({
         No: item.No, // 品牌代碼

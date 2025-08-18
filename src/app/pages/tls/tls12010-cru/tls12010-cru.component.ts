@@ -352,7 +352,7 @@ export class TLS12010CRUComponent extends BasicCruPageComponent<Potential_Custom
         LOGO_EN_NAME: item.LOGO_EN_NAME, // 品牌英文名稱
         Label: item.No + '-' + item.Name, // 組合成顯示用的Label
       }));
-      console.log('品牌代號:', this.tlt_name_Option);
+      console.log('品牌代碼:', this.tlt_name_Option);
     });
 
     // 查 統編
@@ -482,7 +482,7 @@ export class TLS12010CRUComponent extends BasicCruPageComponent<Potential_Custom
           const userName = this.authService.getUserInfo()?.user_Name ?? ''
           if (userNo && userName) { //有用戶名不允許編輯
             cus_uniform_id.enable();
-            
+
             cus_uniform_id.setValue(userNo);
             VEN_Name.setValue(userName);
 

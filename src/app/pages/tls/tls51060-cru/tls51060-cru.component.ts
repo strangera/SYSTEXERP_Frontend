@@ -29,7 +29,7 @@ export class TLS51060CRUComponent extends BasicCruPageComponent<PluLogo>
   dataForm = this.formBuilder.nonNullable.group({
     // PLULOGO  商品品牌設定檔
     id: [],
-    LOGO_No: ['', [Validators.required, Validators.maxLength(4)]], // 品牌編碼
+    LOGO_No: ['', [Validators.required, Validators.maxLength(4)]], // 品牌代碼
     LOGO_CH_NAME: ['', [Validators.required, Validators.maxLength(50)]], // 品牌中文名稱
     LOGO_EN_NAME: ['', [Validators.maxLength(100)]], // 品牌英文名稱
     LOGO_Remark: ['', [Validators.maxLength(100)]], // 備註說明
@@ -56,7 +56,7 @@ export class TLS51060CRUComponent extends BasicCruPageComponent<PluLogo>
     // 0626新增 卡控 編輯的卡控 同 [刪除] ，若不可刪除也不可編輯 品牌代碼、標準進貨折數
     const canDelValue = this.dataForm.get('CanDel')?.value as unknown as boolean;
     if (canDelValue === false) {
-      this.dataForm.get('LOGO_No')?.disable();            // 品牌編碼不可編輯
+      this.dataForm.get('LOGO_No')?.disable();            // 品牌代碼不可編輯
       this.dataForm.get('PLU_OrderPrcRate')?.disable();   // 標準進貨折數不可編輯
     }
   }
@@ -71,7 +71,7 @@ export class TLS51060CRUComponent extends BasicCruPageComponent<PluLogo>
     }
 
     //--檢查--
-    // 品牌編號：為唯一值。
+    // 品牌代碼：為唯一值。
     // 品牌標準進貨折數：文字型態，長度１０，可輸入數字及小數點。例如91.25折時，輸入91.25
     //                                    預設１００，若為７７折時，輸入７７。
     //                                    可輸入到小數點以下2位。

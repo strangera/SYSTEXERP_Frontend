@@ -13,7 +13,7 @@ import { InputNumberComponent } from '../../../shared/componentkit/input-number/
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { debounceTime } from 'rxjs';
 
-export interface Label{
+export interface Label {
   id: number,
   PLU_MagNo: string, // 商品管理碼
   PLU_Name: string,// 商品名稱
@@ -37,15 +37,15 @@ export function atLeastOneFieldRequired(fields: string[]): ValidatorFn {
 }
 
 @Component({
-    selector: 'app-tls51070-os',
-    templateUrl: './tls51070-os.component.html',
-    styleUrl: './tls51070-os.component.scss',
-    standalone: true,
-    imports: [MenubarComponent, ButtonComponent, AccordionModule, NgIf, FormsModule, ReactiveFormsModule, InputTextComponent, InputNumberComponent, ExpandableEditTableComponent, TableComponent]
+  selector: 'app-tls51070-os',
+  templateUrl: './tls51070-os.component.html',
+  styleUrl: './tls51070-os.component.scss',
+  standalone: true,
+  imports: [MenubarComponent, ButtonComponent, AccordionModule, NgIf, FormsModule, ReactiveFormsModule, InputTextComponent, InputNumberComponent, ExpandableEditTableComponent, TableComponent]
 })
 //處理 變價歷史紀錄/產生標籤檔
 export class Tls51070OsComponent extends BasicQueryPageComponent<Label>
-  implements OnInit{
+  implements OnInit {
 
   @ViewChild('labelTable') labelTable!: ExpandableEditTableComponent;
   @ViewChild('priceAlterTable') priceAlterTable!: ExpandableEditTableComponent;
@@ -64,7 +64,7 @@ export class Tls51070OsComponent extends BasicQueryPageComponent<Label>
     //分頁查詢
     ...createPaginationConfig([{ field: 'PLU_MagNo', order: 1 }]), // 分頁和排序參數
   }, {
-  validators: atLeastOneFieldRequired(['PLU_MagNo', 'PLU_No', 'PLU_OrgPLUNo']) //至少要填寫其中一項
+    validators: atLeastOneFieldRequired(['PLU_MagNo', 'PLU_No', 'PLU_OrgPLUNo']) //至少要填寫其中一項
   });
 
   // 查詢 變價歷史紀錄
@@ -79,75 +79,75 @@ export class Tls51070OsComponent extends BasicQueryPageComponent<Label>
   totalRecords = 0;// 分頁和排序參數 // 排序需要
 
   // ---------標籤檔 (label) 編輯表格 至少要一筆-------------------------------------------------------
-    // label	資料
-    labelData: Label[] = [];
-    // label 展開式表格的欄位定義
-    labelColumn: ColumnDef[] = [
-      { field: 'PLU_MagNo', header: '商品管理碼', editable: false, type: 'text' },
-      { field: 'PLU_Name', header: '商品名稱', editable: false, type: 'text' },
-      { field: 'Label_Qty', header: '標籤數量', editable: true, type: 'number' },
-      { field: 'PLU_SalePrc', header: '商品售價', editable: false, type: 'number'},
-      { field: 'PLU_Unit', header: '商品單位', editable: false, type: 'text' },
-      { field: 'PLU_OrgPLUNo', header: '廠商貨號', editable: false, type: 'text' },
-      { field: 'PLU_No', header: '國際條碼', editable: false, type: 'text' },
-    ];
+  // label	資料
+  labelData: Label[] = [];
+  // label 展開式表格的欄位定義
+  labelColumn: ColumnDef[] = [
+    { field: 'PLU_MagNo', header: '商品管理碼', editable: false, type: 'text' },
+    { field: 'PLU_Name', header: '商品名稱', editable: false, type: 'text' },
+    { field: 'Label_Qty', header: '標籤數量', editable: true, type: 'number' },
+    { field: 'PLU_SalePrc', header: '商品售價', editable: false, type: 'number' },
+    { field: 'PLU_Unit', header: '商品單位', editable: false, type: 'text' },
+    { field: 'PLU_OrgPLUNo', header: '廠商貨號', editable: false, type: 'text' },
+    { field: 'PLU_No', header: '國際條碼', editable: false, type: 'text' },
+  ];
 
-    // 展開式表格的載入狀態
-    expandlabelLoading = false;
+  // 展開式表格的載入狀態
+  expandlabelLoading = false;
 
-    //預覽標籤資料
-    previewLabelData: Label | null = null;
+  //預覽標籤資料
+  previewLabelData: Label | null = null;
 
-    selectedItems: Label[] = [];// 多選項目
+  selectedItems: Label[] = [];// 多選項目
   // ----------------------------------------------------------------
 
   // ---------變價記錄 (price) 編輯表格 -------------------------------------------------------
-    // label	資料
-    priceData: Label[] = [];
-    // label 展開式表格的欄位定義
-    priceColumn1: Column[] = [
-      //---基本資料---
-      { field: 'LOGO_Name', header: '品牌編號', visible: true },
-      { field: 'PLU_MagNo', header: '商品編號', visible: true },
-      { field: 'PLU_Name', header: '品名', visible: true },
-      { field: 'PLU_NO', header: '國際條碼', visible: true },
-      { field: 'PLU_OrgPLUNo', header: '商品貨號', visible: true },
-      { field: 'CAT_LName', header: '大分類', visible: true },
-      { field: 'CAT_MName', header: '中分類', visible: true },
-      { field: 'CAT_SName', header: '小分類', visible: true },
+  // label	資料
+  priceData: Label[] = [];
+  // label 展開式表格的欄位定義
+  priceColumn1: Column[] = [
+    //---基本資料---
+    { field: 'LOGO_Name', header: '品牌代碼', visible: true },
+    { field: 'PLU_MagNo', header: '商品編號', visible: true },
+    { field: 'PLU_Name', header: '品名', visible: true },
+    { field: 'PLU_NO', header: '國際條碼', visible: true },
+    { field: 'PLU_OrgPLUNo', header: '商品貨號', visible: true },
+    { field: 'CAT_LName', header: '大分類', visible: true },
+    { field: 'CAT_MName', header: '中分類', visible: true },
+    { field: 'CAT_SName', header: '小分類', visible: true },
 
-      { field: 'PLU_OrderPrc_POS2004', header: '標準進價', visible: true, format: formatAmount },
-      { field: 'PLU_SalePrc_POS2004', header: '商品售價', visible: true, format: formatAmount },
-    ];
+    { field: 'PLU_OrderPrc_POS2004', header: '標準進價', visible: true, format: formatAmount },
+    { field: 'PLU_SalePrc_POS2004', header: '商品售價', visible: true, format: formatAmount },
+  ];
 
-    priceColumn2: Column[] = [
-      //---基本資料---
-      { field: 'LOGO_Name', header: '品牌編號', visible: false },
-      { field: 'PLU_MagNo', header: '商品編號', visible: false },
-      { field: 'PLU_Name', header: '品名', visible: false },
-      { field: 'PLU_NO', header: '國際條碼', visible: false },
-      { field: 'PLU_OrgPLUNo', header: '商品貨號', visible: false },
-      { field: 'CAT_LName', header: '大分類', visible: false },
-      { field: 'CAT_MName', header: '中分類', visible: false },
-      { field: 'CAT_SName', header: '小分類', visible: false },
+  priceColumn2: Column[] = [
+    //---基本資料---
+    { field: 'LOGO_Name', header: '品牌代碼', visible: false },
+    { field: 'PLU_MagNo', header: '商品編號', visible: false },
+    { field: 'PLU_Name', header: '品名', visible: false },
+    { field: 'PLU_NO', header: '國際條碼', visible: false },
+    { field: 'PLU_OrgPLUNo', header: '商品貨號', visible: false },
+    { field: 'CAT_LName', header: '大分類', visible: false },
+    { field: 'CAT_MName', header: '中分類', visible: false },
+    { field: 'CAT_SName', header: '小分類', visible: false },
 
-      { field: 'PLU_OrderPrc_POS2004', header: '標準進價', visible: false, format: formatAmount },
-      { field: 'PLU_SalePrc_POS2004', header: '商品售價', visible: false, format: formatAmount },
-      //---變價歷程---
-      { field: 'MAM_Date', header: '變價日期', visible: true,  format: formatDate},
-      { field: 'MAM_NO', header: '變價單號', visible: true },
+    { field: 'PLU_OrderPrc_POS2004', header: '標準進價', visible: false, format: formatAmount },
+    { field: 'PLU_SalePrc_POS2004', header: '商品售價', visible: false, format: formatAmount },
+    //---變價歷程---
+    { field: 'MAM_Date', header: '變價日期', visible: true, format: formatDate },
+    { field: 'MAM_NO', header: '變價單號', visible: true },
 
-      { field: 'PLU_SalePrc', header: '變價前售價', visible: true, format: formatAmount },
-      { field: 'MAM_UnitPrc', header: '變價後售價', visible: true, format: formatAmount },
+    { field: 'PLU_SalePrc', header: '變價前售價', visible: true, format: formatAmount },
+    { field: 'MAM_UnitPrc', header: '變價後售價', visible: true, format: formatAmount },
 
-      { field: 'PLU_OrderPrc', header: '變價前進價', visible: true, format: formatAmount },
-      { field: 'MAM_OrderPrc', header: '變價後進價', visible: true, format: formatAmount },
-    ];
+    { field: 'PLU_OrderPrc', header: '變價前進價', visible: true, format: formatAmount },
+    { field: 'MAM_OrderPrc', header: '變價後進價', visible: true, format: formatAmount },
+  ];
 
-    // 展開式表格的載入狀態
-    expandpriceLoading = false;
+  // 展開式表格的載入狀態
+  expandpriceLoading = false;
 
-    // selectedItems: Label[] = [];// 多選項目
+  // selectedItems: Label[] = [];// 多選項目
   // ----------------------------------------------------------------
   constructor(private tls51070Service: Tls51070Service) {
     super();
@@ -158,11 +158,11 @@ export class Tls51070OsComponent extends BasicQueryPageComponent<Label>
 
     //更新顯示表頭部
     console.log(this.state.destination); // 標籤檔或歷史紀錄查詢
-    if(this.state.destination == 'history'){
+    if (this.state.destination == 'history') {
       this.formTitle = '商品變價紀錄';
-    }else if(this.state.destination == 'label'){
+    } else if (this.state.destination == 'label') {
       this.formTitle = '產生標籤檔';
-    }else{
+    } else {
       return
     }
 
@@ -172,7 +172,7 @@ export class Tls51070OsComponent extends BasicQueryPageComponent<Label>
       this.queryForm.get(field)?.valueChanges.pipe(debounceTime(300)).subscribe(() => {
         if (this.hasAnySearchInput()) {
           this.previewLabel();
-        }else {
+        } else {
           this.previewLabelData = null;
         }
       });
@@ -195,7 +195,7 @@ export class Tls51070OsComponent extends BasicQueryPageComponent<Label>
           // console.log('回傳階層:', response.Data);
           if (response.Status === '0000') {
             const apiData = response.Data || [];
-            console.log('標籤',apiData);
+            console.log('標籤', apiData);
 
             // 賦值給 labelData（你想顯示的表格資料）
             const newLabelData = apiData.map((item: any) => ({
@@ -203,12 +203,12 @@ export class Tls51070OsComponent extends BasicQueryPageComponent<Label>
               ...item
             }));
 
-            this.baseId+=1;
+            this.baseId += 1;
 
             // ✅ 疊加進 labelData，允許重複
             this.labelData = [...this.labelData, ...newLabelData];
 
-            console.log('標籤資料',this.labelData);
+            console.log('標籤資料', this.labelData);
 
 
           } else {
@@ -236,8 +236,8 @@ export class Tls51070OsComponent extends BasicQueryPageComponent<Label>
         next: (response) => {
           // console.log('回傳階層:', response.Data);
           if (response.Status === '0000') {
-            this.priceData  = response.Data;
-            console.log('變價資料',this.priceData);
+            this.priceData = response.Data;
+            console.log('變價資料', this.priceData);
 
             // ✅ 新增：如果沒有資料，顯示提示訊息
             if (!this.priceData || this.priceData.length === 0) {
@@ -264,7 +264,7 @@ export class Tls51070OsComponent extends BasicQueryPageComponent<Label>
   }
 
   // 匯出標籤檔
-  exportLabel(){
+  exportLabel() {
     if (!this.labelData || this.labelData.length === 0) {
       this.messageService.errorBubble('尚未產生標籤資料，請先查詢後再匯出');
       return;
@@ -275,7 +275,7 @@ export class Tls51070OsComponent extends BasicQueryPageComponent<Label>
     this.tls51070Service.exportLabel(exportData)
       .subscribe((response) => {
         // 處理匯出完成後的邏輯（如有需要）
-         const result = response;
+        const result = response;
         // console.log('匯出標籤檔',result);
 
         // 建立 blob 對象
@@ -291,7 +291,7 @@ export class Tls51070OsComponent extends BasicQueryPageComponent<Label>
 
         // 釋放資源
         window.URL.revokeObjectURL(url);
-    });
+      });
   }
 
   //預覽標籤檔
@@ -314,7 +314,7 @@ export class Tls51070OsComponent extends BasicQueryPageComponent<Label>
         this.previewLabelData = null;
       }
     });
-}
+  }
 
   // label 明細檔案操作
   onRowSave(event: any) {
@@ -354,15 +354,15 @@ export class Tls51070OsComponent extends BasicQueryPageComponent<Label>
 
   //---label 新ID---
   generateLabelId(data: Label[]): number {
-      const maxId = Math.max(...data.map(p => p.id), 0);
-      return maxId + 1;
+    const maxId = Math.max(...data.map(p => p.id), 0);
+    return maxId + 1;
   }
 
   // 標籤檢查(三者其中之一不為空才執行)
   hasAnySearchInput(): boolean {
-  const form = this.queryForm;
-  return !!form.get('PLU_MagNo')?.value?.trim() ||
-         !!form.get('PLU_No')?.value?.trim() ||
-         !!form.get('PLU_OrgPLUNo')?.value?.trim();
-}
+    const form = this.queryForm;
+    return !!form.get('PLU_MagNo')?.value?.trim() ||
+      !!form.get('PLU_No')?.value?.trim() ||
+      !!form.get('PLU_OrgPLUNo')?.value?.trim();
+  }
 }

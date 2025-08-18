@@ -29,31 +29,31 @@ export const enum MAMStatus {
 }
 
 @Component({
-    selector: 'app-tls52050',
-    templateUrl: './tls52050.component.html',
-    styleUrls: ['./tls52050.component.scss'],
-    standalone: true,
-    imports: [
-        MenubarComponent,
-        FileUploadModule,
-        ButtonComponent,
-        AccordionModule,
-        FormsModule,
-        ReactiveFormsModule,
-        InputTextComponent,
-        DropdownComponent,
-        MultiSelectComponent,
-        CalendarRangeComponent,
-        CheckboxModule,
-        TableComponent,
-        TranslateModule,
-    ],
+  selector: 'app-tls52050',
+  templateUrl: './tls52050.component.html',
+  styleUrls: ['./tls52050.component.scss'],
+  standalone: true,
+  imports: [
+    MenubarComponent,
+    FileUploadModule,
+    ButtonComponent,
+    AccordionModule,
+    FormsModule,
+    ReactiveFormsModule,
+    InputTextComponent,
+    DropdownComponent,
+    MultiSelectComponent,
+    CalendarRangeComponent,
+    CheckboxModule,
+    TableComponent,
+    TranslateModule,
+  ],
 })
 export class TLS52050Component extends BasicQueryPageComponent<ITLS52050Data> implements OnInit {
   queryForm = this.formBuilder.group({
     MAM_No: ['', [Validators.maxLength(16)]],// 變價單號
     VEN_No: [null],              // 廠商代號
-    LOGO_No: [null],             // 品牌代號
+    LOGO_No: [null],             // 品牌代碼
     MAM_Status: [null, [Validators.required]],// 進價變價單狀態
     APPLY_USR_No: [null],        // 申請人
     APRV_USR_No: [null],         // 審核人
