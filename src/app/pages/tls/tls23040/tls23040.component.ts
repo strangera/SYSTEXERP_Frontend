@@ -178,7 +178,7 @@ onSubmit(form: FormGroup): void {
     { field: 'GUIEndNo', header: '發票結束號碼', visible: true },
     { field: 'TXN_TotGUI',header: '發票金額',visible: true,style: 'text-right',format: (val: number) => val?.toLocaleString('en-US') || '0',},
     { field: 'TXN_TotSaleAmt',header: '業績金額',visible: true,style: 'text-right',format: (val: number) => val?.toLocaleString('en-US') || '0',},
-    { field: 'TXN_Status',header: '交易型態',visible: true,format: (val: any) =>  this.getLabelFromOptions(val, this.txnStatusOptions),},
+    { field: 'TXN_StatusName',header: '交易型態',visible: true,format: (val: any) =>  this.getLabelFromOptions(val, this.txnStatusOptions),},
     { field: 'TXN_TaxFreeCertNo',header: '外交官免稅卡號',visible: true,},
     { field: 'USR_No', header: '收銀員', visible: true },
     { field: 'TXN_PkngUID', header: '停車卡號', visible: true },
