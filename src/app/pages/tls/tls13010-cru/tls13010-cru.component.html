@@ -371,10 +371,6 @@
                 [submitted]="submitted"></app-input-text>
             </div>
             <div class="col-12 md:col-6 lg:col-4">
-              <!-- <app-autocomplete label="廠商匯款銀行代號" controlName="bank_id" placeholder="請輸入銀行代號或銀行名稱..."
-                [control]="dataForm.controls.bank_id" [submitted]="submitted" [forceSelection]="true"
-                [searchMethod]="searchBankOptions.bind(this)" [selectedOption]="selectedBankInfo"
-                (selectEvent)="onBankSelect($event)" (unselectEvent)="onBankUnselect()"></app-autocomplete> -->
               <app-dropdown label="廠商匯款銀行代號" controlName="bank_id" [options]="bankDropdownOptions" optionLabel="label"
                 optionValue="value" [control]="dataForm.controls.bank_id" [submitted]="submitted"></app-dropdown>
             </div>

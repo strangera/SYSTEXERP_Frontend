@@ -15,14 +15,6 @@ import { ContractFlowService } from '../tls13010/services/contract-flow.service'
 import { TLS13010_DROPDOWN_OPTIONS, TLS13010DropdownService } from '../tls13010/tls13010.dropdown';
 
 // API 服務 - 保持不變
-import { VendorService } from '../../../service/basic/vendor.service';
-import { ContractStatusService } from '../../../service/basic/contract-status.service';
-import { SettlementMethodService } from '../../../service/basic/settlement-method.service';
-import { PaymentMethod2Service } from '../../../service/basic/payment-method2.service';
-import { CooperationMethodService } from '../../../service/basic/cooperation-method.service';
-import { CounterCategoryService } from '../../../service/basic/counter-category.service';
-import { BusinessTypeCodeService } from '../../../service/basic/business-type-code-service.service';
-import { OrganizationNumberService } from '../../../service/basic/organization-number.service';
 import { BankOptionsService } from '../../../service/api/dropdownservice/bank-option.service';
 import { AutoCompleteOption, AutoCompleteComponent } from '../../../shared/componentkit/app-autocomplete/app-autocomplete.component';
 import { ColumnDef, ExpandableEditTableComponent, SelectorTableColumn } from '../../../shared/componentkit/expandable-edit-table/expandable-edit-table.component';
@@ -343,14 +335,6 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
     private currentPageService: CurrentPageService,
     private contractFlowService: ContractFlowService,
     public tls13010DropdownService: TLS13010DropdownService,
-    private vendorService: VendorService,
-    private contractStatusService: ContractStatusService,
-    private settlementMethodService: SettlementMethodService,
-    private paymentMethodService: PaymentMethod2Service,
-    private cooperationMethodService: CooperationMethodService,
-    private counterCategoryService: CounterCategoryService,
-    private businessTypeCodeService: BusinessTypeCodeService,
-    private organizationNumberService: OrganizationNumberService,
     private bankService: BankOptionsService,
     private locationOptionsService: LocationOptionsService,
     private tls13010Service: TLS13010Service,
