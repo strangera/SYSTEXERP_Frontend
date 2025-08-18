@@ -22,6 +22,7 @@ import { TLS2B030Service } from '../../../service/api/tls/tls2-b030.service';
 import { AbstractControl, ValidationErrors, ValidatorFn } from '@angular/forms';
 import { startWith, distinctUntilChanged } from 'rxjs/operators';
 
+
 @Component({
   selector: 'app-tls2b030',
   templateUrl: './tls2b030.component.html',
@@ -77,9 +78,9 @@ export class TLS2B030Component extends BasicQueryPageComponent<any> {
   // 查詢表單
   // ... 你原本的 queryForm
   queryForm = this.formBuilder.group({
-    TXN_Date_Start: [this.yesterday as Date | null],
-    TXN_Date_End:   [this.yesterday as Date | null],
-    TXN_YearMonth:  [null as Date | null],
+    TXN_Date_Start: [this.yesterday as Date | null, Validators.required],
+    TXN_Date_End:   [this.yesterday as Date | null, Validators.required],
+    TXN_YearMonth:  [null as Date | null, Validators.required],
     TLT_No_List: this.formBuilder.control([] as string[]),
     ECR_No_List: this.formBuilder.control([] as string[]),
     tlt_floor:   this.formBuilder.control([] as string[]),
@@ -286,6 +287,10 @@ private markAllAsTouchedAndShowError(): void {
       val.TXN_Date_End = this.asEndOfDay(new Date(val.TXN_Date_End));
     }
 
+    val.OnlyShowOverAmount = !!val.OnlyShowOverAmount;
+    val.PageIndex = Number.isFinite(+val.PageIndex) && +val.PageIndex > 0 ? +val.PageIndex : 1;
+val.PageSize  = Number.isFinite(+val.PageSize)  && +val.PageSize  > 0 ? +val.PageSize  : 10;
+
     // 送出查詢（沿用你原本邏輯）
     this.handleSubmit(frm, () => {
       this.loading = true;
@@ -307,5 +312,32 @@ private markAllAsTouchedAndShowError(): void {
       });
     });
   }
+  onClear(frm: FormGroup) {
+  // 你要的預設值：昨天~昨天、月份空、勾選為 false、其餘空集合/空字串
+  const yesterday = this.yesterday;
+
+  frm.reset({
+    TXN_Date_Start: yesterday,
+    TXN_Date_End:   yesterday,
+    TXN_YearMonth:  null,
+    TLT_No_List:    [],
+    ECR_No_List:    [],
+    tlt_floor:      [],
+    area_no:        [],
+    ECR_Type:       '',
+    tlt_building:   '',
+    OnlyShowOverAmount: false,
+    // 分頁 & 排序（維持你初始化時的預設）
+    ...createPaginationConfig([{ field: 'TLT_Name', order: 1 }]),
+  });
+
+  // 讓互斥狀態、驗證重新套用
+  this.submitted = false;
+  this.applyExclusiveEnableDisable();
+
+  // 如果你想清掉畫面資料
+  this.data = [];
+  this.totalRecords = 0;
+}
 }
 

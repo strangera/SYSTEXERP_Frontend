@@ -18,7 +18,7 @@
               [startControl]="queryForm.controls.TXN_Date_Start"
               [endControl]="queryForm.controls.TXN_Date_End"
               [submitted]="submitted"  
-              [disabled]="queryForm.controls.TXN_Date_Start.disabled && queryForm.controls.TXN_Date_End.disabled">
+             >
               
             </app-calendar-range>
           </div>
@@ -29,7 +29,7 @@
               controlName="TXN_YearMonth"
               [calendarType]="'dateMonthOne'"
               [control]="queryForm.controls.TXN_YearMonth"
-              [submitted]="submitted" [disabled]="queryForm.controls.TXN_YearMonth.disabled">
+              [submitted]="submitted" >
             </app-calendar>
           </div>
 
@@ -115,7 +115,7 @@
         </div>
 
         <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
-          <app-button btnType="clear"></app-button>
+          <app-button btnType="clear" [type]="'button'" (clickEvent)="onClear(queryForm)"></app-button>
           <app-button btnType="query" [loading]="loading"></app-button>
         </div>
       </form>
