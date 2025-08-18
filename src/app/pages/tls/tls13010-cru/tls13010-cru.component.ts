@@ -40,6 +40,7 @@ import { RadiobuttonComponent } from "@shared/componentkit/radiobutton/radiobutt
 import { CRUDStatus } from '@shared/models/system/CRUDstatus';
 import { InputNumberComponent } from "@shared/componentkit/input-number/input-number.component";
 import { VendorCategoryOptionsService } from '@service/api/dropdownservice/vendor-category-options.service';
+import { NegotiatorOptionsService } from '@service/api/dropdownservice/negotiator-options.service';
 
 @Component({
   selector: 'app-tls13010-cru',
@@ -340,6 +341,7 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
     private locationOptionsService: LocationOptionsService,
     private tls13010Service: TLS13010Service,
     private vendorCategoryService: VendorCategoryOptionsService,
+    private negotiatorService: NegotiatorOptionsService,
   ) { }
 
   // ==========  生命週期方法 ==========
@@ -591,28 +593,38 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
   }
 
   private loadPOS2013Options(): void {
-    // 直接從服務取得
-    this.pos2013Options = this.tls13010DropdownService.pos2013Options;
+    console.log('🏭 開始載入廠商統一編號選項...');
 
-    // 或者等服務載入完成
-    if (this.pos2013Options.length === 0) {
-      setTimeout(() => {
-        this.pos2013Options = this.tls13010DropdownService.getPOS2013Options();
-      }, 500);
-    }
+    // 🔧 直接呼叫 API
+    this.vendorCategoryService.getVendorCategoryNoNameOptions("1").subscribe({
+      next: (response: any[]) => {
+        this.pos2013Options = response;
+        console.log('✅ POS2013選項載入完成:', this.pos2013Options.length);
+      },
+      error: (error) => {
+        console.error('❌ 載入POS2013選項失敗:', error);
+        this.pos2013Options = [];
+        this.messageService.warnBubble('載入廠商選項失敗，請重新整理頁面');
+      }
+    });
   }
 
-  private loadNegotiatorOptions(): void {
-    // 直接從服務取得
-    this.negotiatorOptions = this.tls13010DropdownService.negotiatorOptions;
 
-    // 或者等服務載入完成
-    if (this.negotiatorOptions.length === 0) {
-      setTimeout(() => {
-        this.negotiatorOptions = this.tls13010DropdownService.getNegotiatorOptionsData();
-        console.log('洽談者選項載入完成 (CRU頁面):', this.negotiatorOptions.length);
-      }, 500);
-    }
+  private loadNegotiatorOptions(): void {
+    console.log('👥 開始載入協商者選項...');
+
+    // 🔧 直接呼叫 API
+    this.negotiatorService.getNegotiatorOptions().subscribe({
+      next: (response: any[]) => {
+        this.negotiatorOptions = response;
+        console.log('✅ 協商者選項載入完成:', this.negotiatorOptions.length);
+      },
+      error: (error) => {
+        console.error('❌ 載入協商者選項失敗:', error);
+        this.negotiatorOptions = [];
+        this.messageService.warnBubble('載入協商者選項失敗');
+      }
+    });
   }
 
   // 更新位置欄位的下拉選單選項
