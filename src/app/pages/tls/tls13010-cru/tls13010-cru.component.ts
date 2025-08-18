@@ -503,8 +503,6 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
             company_register_address: matchedVendor.VEN_Address || ''  // 使用API返回的VEN_Address
           });
 
-          this.messageService.infoBubble(`已載入廠商資訊：${matchedVendor.Name || matchedVendor.label}`);
-
           // 🎯 立即儲存到工作流程
           this.saveToWorkflow();
 
