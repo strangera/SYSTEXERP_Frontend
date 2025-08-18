@@ -17,7 +17,9 @@
               label="銷售日期-日報表"
               [startControl]="queryForm.controls.TXN_Date_Start"
               [endControl]="queryForm.controls.TXN_Date_End"
-              [submitted]="submitted">
+              [submitted]="submitted"  
+              [disabled]="queryForm.controls.TXN_Date_Start.disabled && queryForm.controls.TXN_Date_End.disabled">
+              
             </app-calendar-range>
           </div>
 
@@ -27,7 +29,7 @@
               controlName="TXN_YearMonth"
               [calendarType]="'dateMonthOne'"
               [control]="queryForm.controls.TXN_YearMonth"
-              [submitted]="submitted">
+              [submitted]="submitted" [disabled]="queryForm.controls.TXN_YearMonth.disabled">
             </app-calendar>
           </div>
 

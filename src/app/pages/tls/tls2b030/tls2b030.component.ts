@@ -19,6 +19,8 @@ import { Tls11010Service } from '../../../service/api/tls/tls11010.service';
 import { ECRNoService } from '../../../service/basic/ECRNo.service';
 import { CounterNameService } from '../../../service/basic/counter-name.service';
 import { TLS2B030Service } from '../../../service/api/tls/tls2-b030.service';
+import { AbstractControl, ValidationErrors, ValidatorFn } from '@angular/forms';
+import { startWith, distinctUntilChanged } from 'rxjs/operators';
 
 @Component({
   selector: 'app-tls2b030',
@@ -55,22 +57,47 @@ export class TLS2B030Component extends BasicQueryPageComponent<any> {
   // 金額格式化（用箭頭函式確保 this）
   moneyFormat = (value: number): string => (value != null ? value.toLocaleString('en-US') : '0');
 
+    // ✅ NEW: 群組驗證器：月份 XOR 日期，且日期要成對
+  private oneOfMonthOrDateValidator: ValidatorFn = (group: AbstractControl): ValidationErrors | null => {
+    const ym = group.get('TXN_YearMonth')?.value;
+    const s  = group.get('TXN_Date_Start')?.value;
+    const e  = group.get('TXN_Date_End')?.value;
+
+    const hasMonth = !!ym;
+    const hasAnyDate = !!s || !!e;
+    const hasBothDates = !!s && !!e;
+
+    if (hasMonth && hasAnyDate) return { bothFilled: true };        // 兩組都填
+    if (!hasMonth && !hasAnyDate) return { oneRequired: true };      // 皆未填
+    if (hasAnyDate && !hasBothDates) return { rangeIncomplete: true }; // 日期不成對
+    return null;
+  };
+
+
   // 查詢表單
+  // ... 你原本的 queryForm
   queryForm = this.formBuilder.group({
-    TXN_Date_Start: [this.yesterday as Date | null],   // Date
-    TXN_Date_End: [this.yesterday as Date | null],     // Date
-    TXN_YearMonth: [null as Date | null],              // 用 Date，送出轉 yyyyMM
-    // 多選
+    TXN_Date_Start: [this.yesterday as Date | null],
+    TXN_Date_End:   [this.yesterday as Date | null],
+    TXN_YearMonth:  [null as Date | null],
     TLT_No_List: this.formBuilder.control([] as string[]),
     ECR_No_List: this.formBuilder.control([] as string[]),
-    tlt_floor: this.formBuilder.control([] as string[]),
-    area_no: this.formBuilder.control([] as string[]),
-    // 單值
+    tlt_floor:   this.formBuilder.control([] as string[]),
+    area_no:     this.formBuilder.control([] as string[]),
     ECR_Type: ['' as string],
     tlt_building: ['' as string],
     OnlyShowOverAmount: [false as boolean],
-    ...createPaginationConfig([{ field: 'TLT_Name', order: 1 }]), 
-  });
+    ...createPaginationConfig([{ field: 'TLT_Name', order: 1 }]),
+  }, { validators: [] as ValidatorFn[] }); // 先空，ngOnInit 裡面掛
+
+  // ✅ NEW: 方便存取控制項
+  private get c() {
+    return {
+      s:  this.queryForm.controls.TXN_Date_Start,
+      e:  this.queryForm.controls.TXN_Date_End,
+      ym: this.queryForm.controls.TXN_YearMonth,
+    };
+  }
 
   // 下拉選項
   floorOptions: any[] = [];
@@ -139,7 +166,14 @@ export class TLS2B030Component extends BasicQueryPageComponent<any> {
 
   ngOnInit(): void {
     this.initializePage('TLS2B030', 'tls/tls2B030cru', this.queryForm, (form) => this.onSubmit(form));
-    // 下拉資料
+
+    // 掛群組驗證器
+    this.queryForm.addValidators(this.oneOfMonthOrDateValidator);
+
+    // 互斥啟用/停用監聽
+    this.setupMutualExclusiveInputs(); // ✅ NEW
+
+    // 下拉資料（維持你原本邏輯）
     this.ECRNoService.getECRNo().subscribe((res) => { this.ECRNoOptions = res?.map((x: any) => ({ label: x.label, formLabel: `${x.value} - ${x.label}`, value: x.value })) || []; });
     this.counterNameService.getCounters().subscribe((res) => { this.CounterOptions = res?.map((x: any) => ({ label: x.label, formLabel: `${x.value} - ${x.label}`, value: x.value })) || []; });
     this.cahserTypeService.getSystemTypes().subscribe((res) => (this.cahserTypeOptions = res));
@@ -147,6 +181,75 @@ export class TLS2B030Component extends BasicQueryPageComponent<any> {
     this.floorService.getFloors().subscribe((data) => (this.floorOptions = data));
     this.tls11010Service.getBuildingOptions().subscribe((data) => (this.BUILDING_NO_Options = data));
   }
+
+  // ✅ NEW: 互斥邏輯
+  private setupMutualExclusiveInputs(): void {
+    // 初始同步一次
+    this.applyExclusiveEnableDisable();
+
+    // 監聽 月份
+    this.c.ym.valueChanges
+      .pipe(startWith(this.c.ym.value), distinctUntilChanged())
+      .subscribe(() => this.applyExclusiveEnableDisable());
+
+    // 監聽 日期（起/訖任一變更都觸發）
+    this.c.s.valueChanges
+      .pipe(startWith(this.c.s.value), distinctUntilChanged())
+      .subscribe(() => this.applyExclusiveEnableDisable());
+    this.c.e.valueChanges
+      .pipe(startWith(this.c.e.value), distinctUntilChanged())
+      .subscribe(() => this.applyExclusiveEnableDisable());
+  }
+
+  // ✅ NEW: 根據目前輸入情況，動態 disable/enable + 清空另一組
+  private applyExclusiveEnableDisable(): void {
+    const ymHas = !!this.c.ym.value;
+    const sHas  = !!this.c.s.value;
+    const eHas  = !!this.c.e.value;
+    const anyDate = sHas || eHas;
+
+    if (ymHas) {
+      // 有選月份 → 停用日期，清掉日期值；啟用月份
+      if (this.c.s.enabled) this.c.s.disable({ emitEvent: false });
+      if (this.c.e.enabled) this.c.e.disable({ emitEvent: false });
+      if (sHas) this.c.s.setValue(null, { emitEvent: false });
+      if (eHas) this.c.e.setValue(null, { emitEvent: false });
+      if (this.c.ym.disabled) this.c.ym.enable({ emitEvent: false });
+    } else if (anyDate) {
+      // 有輸入任一日期 → 停用月份，清掉月份值；啟用日期
+      if (this.c.ym.enabled) this.c.ym.disable({ emitEvent: false });
+      if (this.c.ym.value) this.c.ym.setValue(null, { emitEvent: false });
+      if (this.c.s.disabled) this.c.s.enable({ emitEvent: false });
+      if (this.c.e.disabled) this.c.e.enable({ emitEvent: false });
+    } else {
+      // 都沒輸入 → 都啟用，讓使用者擇一
+      if (this.c.ym.disabled) this.c.ym.enable({ emitEvent: false });
+      if (this.c.s.disabled) this.c.s.enable({ emitEvent: false });
+      if (this.c.e.disabled) this.c.e.enable({ emitEvent: false });
+    }
+
+    // 重新驗證
+    this.c.ym.updateValueAndValidity({ emitEvent: false });
+    this.c.s.updateValueAndValidity({ emitEvent: false });
+    this.c.e.updateValueAndValidity({ emitEvent: false });
+    this.queryForm.updateValueAndValidity({ emitEvent: false });
+  }
+
+  // ✅ NEW: 提示錯誤用
+private markAllAsTouchedAndShowError(): void {
+  this.queryForm.markAllAsTouched();
+
+  const err = this.queryForm.errors as Record<string, any> | null; // ← 型別縮小
+
+  if (err?.['bothFilled']) {
+    this.messageService?.errorBubble('請擇一輸入，勿同時填「年月」與「日期」', '條件錯誤');
+  } else if (err?.['oneRequired']) {
+    this.messageService?.errorBubble('請至少填「銷售年月」或「銷售日期區間」其一', '必填');
+  } else if (err?.['rangeIncomplete']) {
+    this.messageService?.errorBubble('請把「起日」與「迄日」都填寫完整', '日期不完整');
+  }
+}
+
 
   /** 工具：Date -> yyyyMM */
   private toYYYYMM(d: Date): string {
@@ -162,39 +265,28 @@ export class TLS2B030Component extends BasicQueryPageComponent<any> {
     return e;
   }
 
-  onSubmit(frm: FormGroup) {
-    // 清理、互斥、預設，與簡單驗證
+ onSubmit(frm: FormGroup) {
+    // ✅ NEW: 送出前先檢查 XOR 規則
+    this.submitted = true;
+    if (this.queryForm.invalid) {
+      this.markAllAsTouchedAndShowError();
+      return;
+    }
+
     const val = { ...frm.value };
 
-    // 互斥處理：若有選月份，清空起訖日
+    // 保留你原本送出前轉換，但因為互斥邏輯已清另一組，這裡就簡化：
     if (val.TXN_YearMonth instanceof Date) {
       val.TXN_YearMonth = this.toYYYYMM(val.TXN_YearMonth);
       val.TXN_Date_Start = null;
       val.TXN_Date_End = null;
-    } else if (val.TXN_YearMonth == null || val.TXN_YearMonth === '') {
-      // 沒選月份，使用日期區間；若只有其一就補另一個
-      const start = val.TXN_Date_Start ? new Date(val.TXN_Date_Start) : null;
-      const end = val.TXN_Date_End ? new Date(val.TXN_Date_End) : null;
-
-      if (!start && !end) {
-        // 都沒填 → 預設昨天~昨天
-        val.TXN_Date_Start = this.yesterday;
-        val.TXN_Date_End = this.asEndOfDay(this.yesterday);
-      } else {
-        const s = start ?? end;
-        const e = end ?? start;
-        if (s && e && s > e) {
-          this.messageService.errorBubble('起日不可大於迄日', '日期區間錯誤');
-          return;
-        }
-        val.TXN_Date_Start = s;
-        val.TXN_Date_End = this.asEndOfDay(e!);
-      }
-      // 保證月份欄位為 null（給後端擇一判斷）
+    } else {
+      // 使用日期區間（群組驗證已確保兩者都有）
       val.TXN_YearMonth = null;
+      val.TXN_Date_End = this.asEndOfDay(new Date(val.TXN_Date_End));
     }
 
-    // 送出查詢
+    // 送出查詢（沿用你原本邏輯）
     this.handleSubmit(frm, () => {
       this.loading = true;
       this.tls2b030Service.queryTLS2B030(val).subscribe({
@@ -205,16 +297,15 @@ export class TLS2B030Component extends BasicQueryPageComponent<any> {
             this.queryStateService.setQueryState(this.ProgNo, frm.value);
           } else {
             console.error('API error:', response?.Status, response?.Message);
-            
           }
           this.loading = false;
         },
         error: (err: any) => {
           console.error('API error:', err);
-         
           this.loading = false;
         },
       });
     });
   }
 }
+
