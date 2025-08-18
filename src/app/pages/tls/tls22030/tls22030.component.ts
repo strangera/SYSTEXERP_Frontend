@@ -57,8 +57,8 @@ export class TLS22030Component extends BasicQueryPageComponent<any> implements O
     { field: 'SLE_TxnEndNo', header: '前台清機記錄', visible: true },
     { field: 'SLE_GUIBegNo', header: '發票起始號碼', visible: true },
     { field: 'SLE_GUIEndNo', header: '發票結束號碼', visible: true },
-    { field: 'IsPerDayLoss', header: '當日是否欠發', visible: true },
-    { field: 'IsCrossDayLoss', header: '跨日是否欠發', visible: true },
+    { field: 'IsPerDayLoss', header: '當日是否欠落', visible: true },
+    { field: 'IsCrossDayLoss', header: '跨日是否欠落', visible: true },
   ];
 
 
@@ -147,37 +147,40 @@ export class TLS22030Component extends BasicQueryPageComponent<any> implements O
       }
     });
   }
-  /** "MM/DD/YYYY HH:mm:ss" -> "YYYY/MM/DD" */
-  private toSlashYMD(dateStr?: string | null): string | null {
-    if (!dateStr) return null;
-    const onlyDate = String(dateStr).split(' ')[0]; // 08/01/2025
-    const parts = onlyDate.split('/');
-    if (parts.length !== 3) return dateStr as any;
-    const [mm, dd, yyyy] = parts;
-    return `${yyyy}/${mm.padStart(2, '0')}/${dd.padStart(2, '0')}`;
-  }
+
 
   onSubmit(form: FormGroup): void {
-    this.handleSubmit(form, () => {
-      this.tls22030Service.queryTLS22030(form.value).subscribe({
-        next: (res) => {
-          const raw = res?.Data ?? [];
-          this.data = raw.map((item: any) => ({
-            ...item,
-            // 將 "08/01/2025 00:00:00" 轉為 "2025/08/01"
-            TXN_Date: this.toSlashYMD(item?.TXN_Date),
-          }));
-          this.totalRecords = res?.TotalCount ?? this.data.length;
-          this.loading = false;
-          this.queryStateService.setQueryState(this.ProgNo, this.queryForm.value);
-        },
-        error: (err) => {
-          console.error('TLS22030 查詢失敗', err);
-          this.loading = false;
-        }
-      });
+  this.handleSubmit(form, () => {
+    this.tls22030Service.queryTLS22030(form.value).subscribe({
+      next: (res) => {
+        // 把 Data 取出來
+        this.data = (res?.Data ?? []).map((item: { TXN_Date?: string }) => {
+          // 預設直接回傳
+          const newItem = { ...item };
+
+          // 日期轉換 (08/05/2025 00:00:00 → 2025/08/05)
+          if (item.TXN_Date) {
+            const [month, day, year] = item.TXN_Date.split(" ")[0].split("/");
+            newItem.TXN_Date = `${year}/${month}/${day}`;
+          }
+
+          return newItem;
+        });
+
+        this.totalRecords = res?.TotalCount ?? this.data.length;
+        this.loading = false;
+
+        // 儲存查詢條件
+        this.queryStateService.setQueryState(this.ProgNo, this.queryForm.value);
+      },
+      error: (err) => {
+        console.error('TLS22030 查詢失敗', err);
+        this.loading = false;
+      }
     });
-  }
+  });
+}
+
 
 }
 
