@@ -91,10 +91,9 @@
       }
     }
 
-    // .p-datatable-tbody > tr.p-highlight {
-    //   background-color: #c5e4fc;
-    //   color: #000000;
-    // }
+    .p-datatable-tbody > tr .p-highlight.p-disabled {
+      background-color: #38a8ff !important;
+    }
 
     .p-selectable-row:not(.p-disabled-row):hover {
       background-color: #d5edff !important;

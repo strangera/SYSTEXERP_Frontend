@@ -117,8 +117,6 @@ export class TLS21030Component extends BasicQueryPageComponent<TLS21030Data> imp
               this.messageService.successBubble('刪除成功');
               this.selectedItems = []; // 清空選取狀態
               this.onSubmit(this.queryForm);
-            } else {
-              console.error('刪除失敗響應:', response);
             }
           }
         });

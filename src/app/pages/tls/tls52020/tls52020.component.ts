@@ -68,7 +68,6 @@ export class TLS52020Component extends BasicQueryPageComponent<ITLS52020Data> im
   selectedItems: ITLS52020Data[] = [];
   columns: Column[] = [
     { field: 'CRN_No', header: '退貨單號', visible: true }, // 採購單號
-    { field: 'SYS_StoreNo', header: '門店編號', visible: true }, // 門店編號 (系統)
     { field: 'VEN_No', header: '廠商編號', visible: true }, // 廠商代號
     { field: 'LOGO_No', header: '品牌代碼', visible: true }, // LOGO代碼
     { field: 'HOS_No', header: '倉庫代碼', visible: true }, // 倉庫代碼
@@ -220,7 +219,10 @@ export class TLS52020Component extends BasicQueryPageComponent<ITLS52020Data> im
       SortBy: [{ field: 'PLU_MagNo', order: 1 }],
     }
     this.tls52010Service.queryPOS2004Detail(body).pipe(untilDestroyed(this)).subscribe((results) => {
-      this.suggestions = [...results.Data];
+      this.suggestions = [...results.Data.map(item => ({
+        ...item,
+        label: item.PLU_MagNo + ' - ' + item.PLU_Name + ' - ' + item.PLU_No + ' - ' + item.PLU_OrgPLUNo
+      }))];
     });
   }
   onformValueChanged(event: IQueryPOS2004DetailRequest) {

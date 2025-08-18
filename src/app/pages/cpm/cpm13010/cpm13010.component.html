@@ -33,9 +33,8 @@
       <div class="flex gap-2 align-items-center">
         <p-button [ngStyle]="{ width: '35px', height: '35px' }" [style]="{ width: '35px', height: '35px' }"
           pTooltip="下傳" tooltipPosition="top" pButton icon="pi pi-upload" severity="success"
-          class="p-button-rounded p-button-text" [disabled]="selectedRows.length === 0 || isDisabled"
-          (click)="onUpload()" [loading]="btnLoading" />
-        <span>狀態為「刪除」不可下傳</span>
+          class="p-button-rounded p-button-text" [disabled]="selectedRows.length === 0" (click)="onUpload()"
+          [loading]="btnLoading" />
       </div>
     </header>
   </app-table>

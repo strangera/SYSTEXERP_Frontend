@@ -2,7 +2,6 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { ApiResponse } from '@service/system/auth.service';
 
 export interface IExportLabelRequest {
   SYS_StoreNo: string, // 登入者StoreNo
@@ -23,7 +22,7 @@ export class ExecSpFuncService {
     private http: HttpClient,
   ) { }
 
-  ExecSpFunc(data: IExportLabelRequest): Observable<ApiResponse<boolean>> {
-    return this.http.post<ApiResponse<boolean>>(`${this.apiUrl}/ExecSpFunc/ExecSpFunc`, data);
+  ExecSpFunc(data: IExportLabelRequest): Observable<{ Success: boolean; ErrCode: number; ErrMsg: string }> {
+    return this.http.post<{ Success: boolean; ErrCode: number; ErrMsg: string }>(`${this.apiUrl}/ExecSpFunc/ExecSpFunc`, data);
   }
 }

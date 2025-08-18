@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { IQueryPOS2004DetailRequest, IQueryPOS2004DetailResponse, ITLS52010Data, Tls52010Service } from '../../../service/api/tls/tls52010.service';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { AddButton, Column, createPaginationConfig, formatAmount, formatDateTime } from '../../../shared/componentkit/table/table.model';
+import { AddButton, Column, createPaginationConfig, formatAmount, formatDate, formatDateTime } from '../../../shared/componentkit/table/table.model';
 import { DropDownListService } from '../../../service/utility/dropDownList.service'; // 導入 DropDownListService 和所需介面
 import { finalize, map } from 'rxjs'; // 只需要 map 運算符，因為我們將直接訂閱
 import { ExportLabelService, IExportLabelRequest } from '../../../service/utility/exportLabel.service';
@@ -77,7 +77,6 @@ export class TLS52010Component extends BasicQueryPageComponent<ITLS52010Data> im
   ];
   columns: Column[] = [
     { field: 'PO_No', header: '採購單號', visible: true }, // 採購單號
-    { field: 'SYS_StoreNo', header: '門店編號', visible: true }, // 門店編號 (系統)
     { field: 'VEN_No', header: '廠商編號', visible: true }, // 廠商代號
     { field: 'LOGO_No', header: '品牌代碼', visible: true }, // LOGO代碼
     { field: 'HOS_No', header: '倉庫代碼', visible: true }, // 倉庫代碼
@@ -85,7 +84,7 @@ export class TLS52010Component extends BasicQueryPageComponent<ITLS52010Data> im
     { field: 'org_id', header: '組織代碼', visible: true }, // 組織代碼
     { field: 'ODM_TaxType', header: '稅別', visible: true, format: value => value === '1' ? '應稅' : '免稅' }, // 稅別
     { field: 'PO_Status', header: '採購單狀態', visible: true, format: value => this.poStatusOptions.find(x => x.value === value)?.label || value }, // 採購單狀態
-    { field: 'APPLY_Date', header: '申請日期', visible: true, format: formatDateTime }, // 申請日期 (ISO 格式字串)
+    { field: 'APPLY_Date', header: '申請日期', visible: true, format: formatDate }, // 申請日期 (ISO 格式字串)
     { field: 'APPLY_USR_No', header: '申請人員編號', visible: true }, // 申請人員編號
     { field: 'APPLY_USR_Name', header: '申請人員姓名', visible: true }, // 申請人員姓名
     { field: 'PO_TotalSubQty', header: '採購總數量', visible: true, format: formatAmount }, // 採購總數量
@@ -95,13 +94,13 @@ export class TLS52010Component extends BasicQueryPageComponent<ITLS52010Data> im
     { field: 'PO_TotalSaleNet', header: '銷售總淨額', visible: true, format: formatAmount }, // 銷售總淨額
     { field: 'PO_TotalSaleTax', header: '銷售總稅額', visible: true, format: formatAmount }, // 銷售總稅額
     { field: 'PO_TotalSaleAmt', header: '銷售總金額', visible: true, format: formatAmount }, // 銷售總金額
-    { field: 'APRV_Date', header: '審核日期', visible: true, format: formatDateTime }, // 核准日期 (ISO 格式字串)
+    { field: 'APRV_Date', header: '審核日期', visible: true, format: formatDate }, // 核准日期 (ISO 格式字串)
     { field: 'APRV_USR_No', header: '審核人員編號', visible: true }, // 核准人員編號
     { field: 'APRV_USR_Name', header: '審核人員姓名', visible: true }, // 核准人員姓名
-    { field: 'VOID_Date', header: '作廢日期', visible: true, format: formatDateTime }, // 作廢日期 (ISO 格式字串)
+    { field: 'VOID_Date', header: '作廢日期', visible: true, format: formatDate }, // 作廢日期 (ISO 格式字串)
     { field: 'VOID_USR_No', header: '作廢人員編號', visible: true }, // 作廢人員編號
     { field: 'VOID_USR_Name', header: '作廢人員姓名', visible: true }, // 作廢人員姓名
-    { field: 'CLOS_Date', header: '結案日期', visible: true, format: formatDateTime }, // 結案日期 (ISO 格式字串)
+    { field: 'CLOS_Date', header: '結案日期', visible: true, format: formatDate }, // 結案日期 (ISO 格式字串)
     { field: 'CLOS_USR_No', header: '結案人員編號', visible: true }, // 結案人員編號
     { field: 'CLOS_USR_Name', header: '結案人員姓名', visible: true }, // 結案人員姓名
     { field: 'PO_Remark', header: '採購單備註', visible: true }, // 採購單備註
@@ -279,7 +278,10 @@ export class TLS52010Component extends BasicQueryPageComponent<ITLS52010Data> im
       SortBy: [{ field: 'PLU_MagNo', order: 1 }],
     }
     this.tls52010Service.queryPOS2004Detail(body).pipe(untilDestroyed(this)).subscribe((results) => {
-      this.suggestions = [...results.Data];
+      this.suggestions = [...results.Data.map(item => ({
+        ...item,
+        label: item.PLU_MagNo + ' - ' + item.PLU_Name + ' - ' + item.PLU_No + ' - ' + item.PLU_OrgPLUNo,
+      }))];
     });
   }
   onformValueChanged(event: IQueryPOS2004DetailRequest) {

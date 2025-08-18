@@ -9,7 +9,7 @@ import { AccordionModule } from 'primeng/accordion';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { TranslateModule } from '@ngx-translate/core';
 import { Cpm13010Service, QueryCPM13010Request, QueryCPM13010Response } from '@service/api/cpm/cpm13010.service';
-import { finalize } from 'rxjs';
+import { concatMap, finalize, from } from 'rxjs';
 import { InputNumberComponent } from '@shared/componentkit/input-number/input-number.component';
 import { ButtonModule } from 'primeng/button';
 import { NgStyle } from '@angular/common';
@@ -109,21 +109,33 @@ export class CPM13010Component extends BasicQueryPageComponent<QueryCPM13010Resp
   btnLoading = false;
   onUpload() {
     const storeNo = this.authService.currentUserValue?.SYS_StoreNo;
-    const userNo = this.authService.currentUserValue?.user_No;
-    if (!storeNo || !userNo) { return; }
-    const params = {
-      SYS_StoreNo: storeNo,
-      EXP_StoreNo: storeNo,
-      EXP_Type: "DSC2010",
-      EXP_DocNo: userNo,
-      EXP_DataFlag: "S2P",
-      EXP_Desc: ""
-    }
+    const userNo = this.authService.currentUserValue?.user_No; // 雖然這裡沒用到，但習慣上會取
+    const itemsToUpload = this.selectedRows; // 確保處理的是選取的項目
+    if (!storeNo || !userNo || !itemsToUpload.length) { return; }
     this.btnLoading = true;
-    this.ExecSpFunc.ExecSpFunc(params).pipe(untilDestroyed(this), finalize(() => this.btnLoading = false)).subscribe(res => {
-      this.messageService.successBubble(res.Message);
+    from(itemsToUpload).pipe(
+      concatMap((item) => {
+        // 為每個選定的 item 建立 params
+        const params = {
+          SYS_StoreNo: storeNo,
+          EXP_StoreNo: storeNo,
+          EXP_Type: "DSC2010",
+          EXP_DocNo: storeNo + ";" + item.PKNG_SeqNo,
+          EXP_DataFlag: item.PKNG_Status === 'D' ? "SDP" : "S2P",
+          EXP_Desc: ""
+        };
+        return this.ExecSpFunc.ExecSpFunc(params);
+      }),
+      finalize(() => this.btnLoading = false),
+      untilDestroyed(this)
+    ).subscribe(response => {
+      if (response.ErrCode !== 0) {
+        this.messageService.errorBubble(response.ErrMsg);
+        return;
+      }
       this.selectedRows = [];
-    })
+      this.onSubmit(this.queryForm);
+    });
   }
   // 狀態為刪除禁止下傳
   get isDisabled(): boolean {

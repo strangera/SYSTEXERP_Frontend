@@ -85,7 +85,7 @@
       <tr>
         <th class="w-1rem">序號</th>
         <th class="w-1rem" *ngIf="IsPrint && showCheckBox && !rowEditing && selectionMode === 'multiple'">
-          <p-tableHeaderCheckbox />
+          <p-tableHeaderCheckbox [disabled]="disabled" />
         </th>
         <th class="w-1rem" *ngIf="expansionColumns.length && IsPrint">收合/展開</th>
         <th *ngFor="let col of columns"
@@ -124,14 +124,14 @@
   <ng-template pTemplate="body" let-rowIndex="rowIndex" let-rowData let-columns="columns" let-expanded="expanded"
     let-editing="editing" let-ri="rowIndex">
     <tr #htmlTableRowElement [attr.data-key]="rowData[dataKey]" [pSelectableRow]="rowData" style="height: 35px"
-      [pSelectableRowDisabled]="!isRowSelectable(rowData)" [ngClass]="{ 'p-disabled-row': !isRowSelectable(rowData) }"
-      [pEditableRow]="rowData" [pSelectableRow]="rowData" [pSelectableRowIndex]="rowIndex"
-      (click)="itemClick.emit(rowData)">
+      [pSelectableRowDisabled]="!isRowSelectable(rowData) || disabled"
+      [ngClass]="{ 'p-disabled-row': !isRowSelectable(rowData) }" [pEditableRow]="rowData" [pSelectableRow]="rowData"
+      [pSelectableRowIndex]="rowIndex" (click)="itemClick.emit(rowData)">
       <ng-container *ngIf="!loading; else loadingTemplate">
         <td class="text-center">{{ rowIndex + 1 }}</td>
         <td *ngIf="IsPrint &&showCheckBox &&!rowEditing &&selectionMode === 'multiple'">
           <p-tableCheckbox class="flex justify-content-center pointer-events-none" [pSelectableRow]="rowData"
-            [value]="rowData" [disabled]="!isRowSelectable(rowData)" />
+            [value]="rowData" [disabled]="!isRowSelectable(rowData) || disabled" />
         </td>
         <td *ngIf="expansionColumns.length && IsPrint" class="text-center">
           <p-button pRipple [text]="true" [rounded]="true" [plain]="true" severity="secondary"

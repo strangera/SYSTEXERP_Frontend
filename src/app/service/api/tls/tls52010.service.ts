@@ -118,6 +118,7 @@ export interface IQueryPOS2004DetailResponse {
   PLU_MagNo: string,
   PLU_Name: string,
   PLU_No: string,
+  PLU_OrgPLUNo: string,
   PLU_Unit: string,
   UNIT_NAME: string,
   PLU_BoxQty: number,
