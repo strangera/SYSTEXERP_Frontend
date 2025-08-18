@@ -39,6 +39,7 @@ import { InputTextModule } from 'primeng/inputtext';
 import { RadiobuttonComponent } from "@shared/componentkit/radiobutton/radiobutton.component";
 import { CRUDStatus } from '@shared/models/system/CRUDstatus';
 import { InputNumberComponent } from "@shared/componentkit/input-number/input-number.component";
+import { VendorCategoryOptionsService } from '@service/api/dropdownservice/vendor-category-options.service';
 
 @Component({
   selector: 'app-tls13010-cru',
@@ -338,6 +339,7 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
     private bankService: BankOptionsService,
     private locationOptionsService: LocationOptionsService,
     private tls13010Service: TLS13010Service,
+    private vendorCategoryService: VendorCategoryOptionsService,
   ) { }
 
   // ==========  生命週期方法 ==========
@@ -439,7 +441,7 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
     // 🎯 設定監聽
     this.setupAutoSave();
     this.setupBusTypeListener();
-    // this.setupContractDateListeners();
+    this.setupVendorUniformListener();
 
     setTimeout(() => {
       this.validateWorkflowData();
@@ -458,7 +460,75 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
     }, 1000);
   }
 
+  private setupVendorUniformListener(): void {
+    const venUniformSubscription = this.dataForm.get('ven_uniform')?.valueChanges.subscribe(venUniform => {
+      if (venUniform && venUniform.trim()) {
+        console.log('🏢 廠商統一編號變更:', venUniform);
+        this.loadVendorInfo(venUniform);
+      } else {
+        // 🎯 清空相關欄位
+        this.dataForm.patchValue({
+          VEN_Name: '',
+          company_register_address: ''
+        });
+        console.log('🗑️ 廠商統一編號清空，清空相關欄位');
+      }
+    });
 
+    if (venUniformSubscription) this.subscriptions.push(venUniformSubscription);
+  }
+
+  private loadVendorInfo(venUniform: string): void {
+    console.log('🔄 開始載入廠商資訊:', venUniform);
+
+    // 🎯 使用 VendorCategoryOptionsService 載入廠商資料
+    this.tls13010DropdownService.pos2013Options.find(vendor => vendor.value === venUniform);
+
+    // 如果pos2013Options還沒載入，直接呼叫API
+    this.vendorCategoryService.getVendorCategoryNoNameOptions("1").subscribe({
+      next: (vendors: any[]) => {
+        console.log('📋 廠商API回傳資料:', vendors);
+
+        // 🎯 尋找匹配的廠商
+        const matchedVendor = vendors.find((vendor: { value: string; }) => vendor.value === venUniform);
+
+        if (matchedVendor) {
+          console.log('✅ 找到匹配廠商:', matchedVendor);
+
+          // 🎯 更新廠商名稱和公司地址
+          this.dataForm.patchValue({
+            VEN_Name: matchedVendor.Name || '',              // 使用API返回的Name
+            company_register_address: matchedVendor.VEN_Address || ''  // 使用API返回的VEN_Address
+          });
+
+          this.messageService.infoBubble(`已載入廠商資訊：${matchedVendor.Name || matchedVendor.label}`);
+
+          // 🎯 立即儲存到工作流程
+          this.saveToWorkflow();
+
+        } else {
+          console.warn('⚠️ 找不到匹配的廠商');
+          this.messageService.warnBubble('找不到該廠商統一編號的資料');
+
+          // 🎯 清空相關欄位
+          this.dataForm.patchValue({
+            VEN_Name: '',
+            company_register_address: ''
+          });
+        }
+      },
+      error: (err: any) => {
+        console.error('❌ 載入廠商資訊失敗:', err);
+        this.messageService.errorBubble('載入廠商資訊失敗，請檢查統一編號是否正確');
+
+        // 🎯 發生錯誤時清空相關欄位
+        this.dataForm.patchValue({
+          VEN_Name: '',
+          company_register_address: ''
+        });
+      }
+    });
+  }
 
   private getCustomTitle(): string {
     if (this.contractFlowService.isViewMode()) {
@@ -2229,7 +2299,14 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
  */
   getCompanyAddress(): string {
     const address = this.dataForm.get('company_register_address')?.value;
-    return address?.trim() || '';
+    const trimmedAddress = address?.trim() || '';
+
+    console.log('📍 取得公司地址:', {
+      raw: address,
+      trimmed: trimmedAddress
+    });
+
+    return trimmedAddress;
   }
 
   /**
@@ -2281,7 +2358,18 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
    * 🎯 新增：檢查按鈕是否可用
    */
   canCopyAddress(): boolean {
-    return !this.isViewMode && !!this.getCompanyAddress();
+    // 🎯 只要有公司登記地址且不是檢視模式就可以複製
+    const hasAddress = !!this.getCompanyAddress();
+    const canEdit = !this.isViewMode;
+
+    console.log('🔍 檢查複製按鈕狀態:', {
+      hasAddress,
+      canEdit,
+      isViewMode: this.isViewMode,
+      address: this.getCompanyAddress()
+    });
+
+    return hasAddress && canEdit;
   }
 
   searchLocationOptions(searchParams: any): Observable<any[]> {
