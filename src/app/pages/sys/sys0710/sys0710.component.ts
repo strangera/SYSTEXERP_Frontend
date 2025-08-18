@@ -38,7 +38,7 @@ export class SYS0710Component extends BasicQueryPageComponent<Sys0710Response> i
   data: Sys0710Response[] = [];
   userNoOptions: IUserResponse[] = [];
   columns: Column[] = [
-    { field: 'User_No', header: '使用者代碼', visible: true, showSort: false },
+    { field: 'User_No', header: '使用者編號', visible: true, showSort: false },
     { field: 'User_Name', header: '使用者名稱', visible: true, showSort: false },
     { field: 'MainSystemCode', header: '主系統代碼', visible: true },
     { field: 'MainSystemName', header: '主系統名稱', visible: true },
@@ -80,7 +80,6 @@ export class SYS0710Component extends BasicQueryPageComponent<Sys0710Response> i
         } else {
           this.data = [];
           this.totalRecords = 0;
-          this.messageService.warnBubble(response.Message);
         }
       });
     });

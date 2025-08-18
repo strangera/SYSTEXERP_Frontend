@@ -41,7 +41,7 @@ export class TLS56050CRUComponent extends BasicCruPageComponent<any> implements 
   // 主檔表單定義
   dataForm = this.formBuilder.group({
     MVM_No: [{ value: '', disabled: true }], // 調撥單編號，readonly
-    LOGO_No: [{ value: null, disabled: true }], // 品牌編號，readonly
+    LOGO_No: [{ value: null, disabled: true }], // 品牌代碼，readonly
     OUT_HOS_No: [{ value: null, disabled: true }], // 調出倉別，readonly
     IN_HOS_No: [{ value: null, disabled: true }], // 調入倉別，readonly
     OUTGODS_TotQty: [{ value: 0, disabled: true }], // 發貨數量合計，readonly

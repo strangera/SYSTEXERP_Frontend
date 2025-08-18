@@ -39,7 +39,7 @@ export class TLS21030CRUComponent extends BasicCruPageComponent<TLS21030Data> im
   dataForm = this.formBuilder.group({
     money_type: [null, Validators.required],       // 結帳方式
     term_no: [1, Validators.required],       // 帳次
-    rece_yn: [null, Validators.required],        // 是否使用業主發票
+    rece_yn: ['Y', Validators.required],        // 是否使用業主發票
     bill_remark1: [''],           // 說明1
     bill_remark2: [''],           // 說明2
     bill_remark3: [''],           // 說明3

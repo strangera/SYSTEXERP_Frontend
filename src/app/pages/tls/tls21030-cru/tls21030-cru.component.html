@@ -34,7 +34,7 @@
       </div>
       <app-table title="專櫃清單" dataKey="talent_id" [data]="data" [columns]="columns"
         (selectionChange)="selectedRows = $event" (unSelect)="onUnSelect($event)" [selectedItems]="selectedRows"
-        [showManage]="false" [disabled]="isFormReadable" [loading]="loading"
+        [showManage]="false" [disabled]="isFormReadable" [loading]="loading" [showCheckBox]="true"
         [multiSortMeta]="[{ field: 'talent_id', order: 1 }]" [totalRecords]="totalRecords"
         (lazyLoadData)="onLazyLoadData($event, dataForm); onQuery(dataForm)" [lazy]="true" [showCaption]="false" />
       <div *ngIf="!isFormReadable" class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">

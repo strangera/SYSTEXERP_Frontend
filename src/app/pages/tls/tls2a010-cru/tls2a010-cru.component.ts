@@ -77,14 +77,14 @@ export class TLS2A010CRUComponent extends BasicCruPageComponent<TLS2A010Data> im
     }
 
   ];
-  addButtons = [
-    {
-      label: '缺單審核',
-      icon: 'pi pi-exclamation-triangle',
-      action: (rowData: any) => this.onEdit(rowData),
-      disabled: (rowData: any) => rowData.isMissing !== 'Y'
-    }
-  ];
+  // addButtons = [
+  //   {
+  //     label: '缺單審核',
+  //     icon: 'pi pi-exclamation-triangle',
+  //     action: (rowData: any) => this.onEdit(rowData),
+  //     disabled: (rowData: any) => rowData.isMissing !== 'Y'
+  //   }
+  // ];
   totalRecords = 0;
   data: any[] = [];
   dataForm!: FormGroup;
@@ -103,48 +103,6 @@ export class TLS2A010CRUComponent extends BasicCruPageComponent<TLS2A010Data> im
   ngOnInit(): void {
     this.initializePage('TLS2A010', this.dataForm);
 
-    // 假資料
-    this.data = [
-      {
-        id: 1,
-        TXN_Date: '2025-07-24',
-        ECR_No: 'ECR001',
-        TXN_No: '000123',
-        TLT_NO: 'A01',
-        tlt_name: '貓咪飾品專櫃',
-        TXN_GUINo: 'AB12345678',
-        CRD_No: '12345678',
-        TXN_PayAmt: 1200,
-        check_status: 2, // 信用卡缺單
-        check_Remark: '缺收據'
-      },
-      {
-        id: 2,
-        TXN_Date: '2025-07-23',
-        ECR_No: 'ECR002',
-        TXN_No: '000124',
-        TLT_NO: 'A02',
-        tlt_name: '狗狗用品專櫃',
-        TXN_GUINo: 'CD87654321',
-        CRD_No: '55551234',
-        TXN_PayAmt: 980,
-        check_status: 1, // 已撥回
-        check_Remark: '已手動補登'
-      },
-      {
-        id: 3,
-        TXN_Date: '2025-07-22',
-        ECR_No: 'ECR003',
-        TXN_No: '000125',
-        TLT_NO: 'A03',
-        tlt_name: '鳥類玩具專櫃',
-        TXN_GUINo: 'EF56781234',
-        CRD_No: '12344321',
-        TXN_PayAmt: 500,
-        check_status: 3, // 信用卡未簽
-        check_Remark: '簽單遺失'
-      }
-    ];
 
     this.totalRecords = this.data.length;
   }

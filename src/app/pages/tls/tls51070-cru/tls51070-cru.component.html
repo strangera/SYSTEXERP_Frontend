@@ -33,7 +33,7 @@
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown label="廠商編號" controlName="VEN_No" [options]="vendorOptions" optionLabel="label"
-              optionValue="value" [control]="dataForm.controls.VEN_No" [submitted]="submitted"></app-dropdown>  
+              optionValue="value" [control]="dataForm.controls.VEN_No" [submitted]="submitted"></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-text label="廠商貨號" controlName="PLU_OrgPLUNo" [control]="dataForm.controls.PLU_OrgPLUNo"
@@ -67,8 +67,7 @@
               [submitted]="submitted"></app-input-number>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
-              label="標籤名稱" controlName="PLU_Lable" [control]="dataForm.controls.PLU_Lable"
+            <app-input-text label="標籤名稱" controlName="PLU_Lable" [control]="dataForm.controls.PLU_Lable"
               [submitted]="submitted">
             </app-input-text>
           </div>
@@ -111,25 +110,25 @@
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-number label="長cm" controlName="PLU_Length" [control]="dataForm.controls.PLU_Length"
-            [maxFractionDigits]="2"  [submitted]="submitted"></app-input-number>
+              [maxFractionDigits]="2" [submitted]="submitted"></app-input-number>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-number label="重量(g)" controlName="PLU_Weight" [control]="dataForm.controls.PLU_Weight"
-            [maxFractionDigits]="2"  [submitted]="submitted"></app-input-number>
+              [maxFractionDigits]="2" [submitted]="submitted"></app-input-number>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-number label="高(cm)" controlName="PLU_Height" [control]="dataForm.controls.PLU_Height"
-            [maxFractionDigits]="2"  [submitted]="submitted"></app-input-number>
+              [maxFractionDigits]="2" [submitted]="submitted"></app-input-number>
           </div>
         </div>
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-number label="容量(ml)" controlName="PLU_Volume" [control]="dataForm.controls.PLU_Volume"
-            [maxFractionDigits]="2"  [submitted]="submitted"></app-input-number>
+              [maxFractionDigits]="2" [submitted]="submitted"></app-input-number>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-number label="寬度(cm)" controlName="PLU_Width" [control]="dataForm.controls.PLU_Width"
-            [maxFractionDigits]="2"  [submitted]="submitted"></app-input-number>
+              [maxFractionDigits]="2" [submitted]="submitted"></app-input-number>
           </div>
         </div>
       </ng-container>
@@ -151,12 +150,12 @@
       <ng-container *ngIf="buttonID === 4">
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="品牌編號" controlName="LOGO_No" [options]="pluLogoOption" optionLabel="Label"
+            <app-dropdown label="品牌代碼" controlName="LOGO_No" [options]="pluLogoOption" optionLabel="Label"
               optionValue="No" [control]="dataForm.controls.LOGO_No" [submitted]="submitted"></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-number label="商品售價" controlName="PLU_SalePrc" [control]="dataForm.controls.PLU_SalePrc"
-            [maxFractionDigits]="2"  [submitted]="submitted"></app-input-number>
+              [maxFractionDigits]="2" [submitted]="submitted"></app-input-number>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-number label="庫存量" controlName="STK_CurrentQty" [control]="dataForm.controls.STK_CurrentQty"
@@ -202,19 +201,21 @@
         <!-- 國際條碼 POS2005 -->
         <app-expandable-edit-table #pos2005Table title="多筆國際條碼" [mainColumns]="POS2005DataColumn" [data]="POS2005Data"
           [loading]="expand2005Loading" detailKey="" dataKey="id" [showCheckBox]="true" [showPaginator]="false"
-          [showAddButton]="true" [showDetailTabs]="false" [showDetailAddButton]="false" [readonly]="crudstatus === 'Read'"
-          [defaultNewItem]="defaultNew2005" (save)="onRowSavePOS2005($event)" (cancel)="onRowCancelPOS2005($event)"
-          (batchDelete)="onBatchDelete2005($event)" (addMainItem)="onAddPOS2005()"></app-expandable-edit-table>
+          [showAddButton]="true" [showDetailTabs]="false" [showDetailAddButton]="false"
+          [readonly]="crudstatus === 'Read'" [defaultNewItem]="defaultNew2005" (save)="onRowSavePOS2005($event)"
+          (cancel)="onRowCancelPOS2005($event)" (batchDelete)="onBatchDelete2005($event)"
+          (addMainItem)="onAddPOS2005()"></app-expandable-edit-table>
         <h6>與POS2004之廠商編號相同的項目不可刪除</h6>
         <!-- 輸入廠商編號才能填寫   -->
         <ng-container *ngIf="dataForm.get('VEN_No')?.value !== null">
           <!-- 商品採購廠商 POS2020 -->
           <app-expandable-edit-table #pos2020Table title="商品採購廠商" [mainColumns]="POS2020DataColumn" [data]="POS2020Data"
             [loading]="expand2020Loading" detailKey="" dataKey="id" [showCheckBox]="true" [showPaginator]="false"
-            [showAddButton]="true" [showDetailTabs]="false" [showDetailAddButton]="false" [readonly]="crudstatus === 'Read'"
-            [defaultNewItem]="defaultNew2020" (save)="onRowSavePOS2020($event)" (cancel)="onRowCancelPOS2020($event)"
-            (batchDelete)="onBatchDelete2020($event)" (addMainItem)="onAddPOS2020()"></app-expandable-edit-table>
-        </ng-container>  
+            [showAddButton]="true" [showDetailTabs]="false" [showDetailAddButton]="false"
+            [readonly]="crudstatus === 'Read'" [defaultNewItem]="defaultNew2020" (save)="onRowSavePOS2020($event)"
+            (cancel)="onRowCancelPOS2020($event)" (batchDelete)="onBatchDelete2020($event)"
+            (addMainItem)="onAddPOS2020()"></app-expandable-edit-table>
+        </ng-container>
       </ng-container>
       <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3" *ngIf="!isFormReadable">
         <app-button btnType="cancel" [form]="dataForm"></app-button>

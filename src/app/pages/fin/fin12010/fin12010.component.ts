@@ -55,8 +55,8 @@ export class FIN12010Component extends BasicQueryPageComponent<IFin12010Data> im
   columns: Column[] = [
     { field: 'SAL_GUIYYYYMM', header: '發票年月', visible: true, format: formatYYYYMM },
     { field: 'SAL_GUITrack', header: '字軌', visible: true },
-    { field: 'SAL_GUIBegNo', header: '發票起號', visible: true },
-    { field: 'SAL_GUIEndNo', header: '發票迄號', visible: true },
+    { field: 'SAL_GUIBegNo', header: '發票起始號碼', visible: true },
+    { field: 'SAL_GUIEndNo', header: '發票結束號碼', visible: true },
     { field: 'SAL_LastUsedGUINo', header: '已使用的發票號', visible: true },
     { field: 'SAL_Type', header: '使用別', visible: true, format: value => this.usageTypeOptions.find(x => x.SYS_Code === value)?.SYS_Name || value }, // 修正為 '發票用途'
     { field: 'GUI_DingType', header: '是否為丁種發票', visible: true, format: formatYN },

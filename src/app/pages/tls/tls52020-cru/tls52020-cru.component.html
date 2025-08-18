@@ -18,8 +18,8 @@
         <app-input-text *ngIf="dataForm.controls.VEN_No.value" class="col-12 md:col-6 lg:col-2" label="廠商簡稱"
           controlName="vendorShortName" [control]="dataForm.controls.vendorShortName" [submitted]="submitted" />
 
-        <app-dropdown class="col-12 md:col-6 lg:col-4" label="品牌編號" controlName="LOGO_No" [options]="brandOptions"
-          optionLabel="Name" optionValue="No" [control]="dataForm.controls.LOGO_No" [submitted]="submitted" />
+        <app-dropdown class="col-12 md:col-6 lg:col-4" label="品牌代碼/名稱" controlName="LOGO_No" [options]="brandOptions"
+          optionLabel="label" optionValue="No" [control]="dataForm.controls.LOGO_No" [submitted]="submitted" />
 
         <app-dropdown class="col-12 md:col-6 lg:col-4" label="倉別" controlName="HOS_No" [options]="warehouseOptions"
           optionLabel="Name" optionValue="No" [control]="dataForm.controls.HOS_No" [submitted]="submitted" />

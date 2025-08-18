@@ -42,7 +42,7 @@ interface Column {
 
   validate?: ((value: string, rowData: any, data: any[], field: string, header: string) => { isValid: boolean, errorMessage: string[] })[]; // 驗證規則(如果是可輸入的欄位)
 
-  type?: 'input' | 'inputNumber' | 'dropdown' | 'button' | 'html' | 'date' | 'autoComplete' | 'default'; // 欄位類型
+  type?: 'input' | 'inputNumber' | 'dropdown' | 'button' | 'html' | 'date' | 'autoComplete' | 'image' | 'default'; // 欄位類型
   prefix?: string;
   fractionDigits?: number;
   useGrouping?: boolean;
@@ -130,50 +130,50 @@ export class ReportTableGroupComponent implements OnInit {
   @Input() showGrandTotal: boolean = false; // 預設不顯示
   @Output() reachBottom = new EventEmitter<void>();
 
-@ViewChild('body',  { static: false }) bodyRef?: ElementRef<HTMLElement>;
+  @ViewChild('body', { static: false }) bodyRef?: ElementRef<HTMLElement>;
 
-@ViewChild('fakeV', { static: false }) fakeVRef?: ElementRef<HTMLElement>;
-@ViewChild('host', { static: false }) hostRef?: ElementRef<HTMLElement>;
-@ViewChild('fakeH', { static: false }) fakeHRef?: ElementRef<HTMLElement>;
-trackByMergedGroup = (i: number, _group: any[]) => i;
+  @ViewChild('fakeV', { static: false }) fakeVRef?: ElementRef<HTMLElement>;
+  @ViewChild('host', { static: false }) hostRef?: ElementRef<HTMLElement>;
+  @ViewChild('fakeH', { static: false }) fakeHRef?: ElementRef<HTMLElement>;
+  trackByMergedGroup = (i: number, _group: any[]) => i;
 
 
   // 📌 資料 getter / setter
   private _data: any[] = [];
 
-@Input()
-set data(value: any[]) {
-  const host = this.hostRef?.nativeElement;
-  const prevTop = host?.scrollTop ?? null;
+  @Input()
+  set data(value: any[]) {
+    const host = this.hostRef?.nativeElement;
+    const prevTop = host?.scrollTop ?? null;
 
-  this._data = value;
-  this.groupBodyExpanded = {};
+    this._data = value;
+    this.groupBodyExpanded = {};
 
-  if (this.groupByField) {
-    this._data = [...this._data].sort((a, b) => {
-      const va = a[this.groupByField!], vb = b[this.groupByField!];
-      if (va == null) return 1;
-      if (vb == null) return -1;
-      return String(va).localeCompare(String(vb));
-    });
-  }
-  this.splitData();
-
-  // ✅ 等到下一畫面幀再還原，避免回到頂端或抖動
-  if (host && prevTop != null) {
-    requestAnimationFrame(() => {
-      requestAnimationFrame(() => {
-        host.scrollTop = prevTop;
+    if (this.groupByField) {
+      this._data = [...this._data].sort((a, b) => {
+        const va = a[this.groupByField!], vb = b[this.groupByField!];
+        if (va == null) return 1;
+        if (vb == null) return -1;
+        return String(va).localeCompare(String(vb));
       });
-    });
-  }
-}
-trackByRow = (_: number, row: any) => row?.[this.dataKey] ?? _;
-private emitLock = false; // 👈 節流鎖
+    }
+    this.splitData();
 
-get data(): any[] {
-  return this._data;
-}
+    // ✅ 等到下一畫面幀再還原，避免回到頂端或抖動
+    if (host && prevTop != null) {
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          host.scrollTop = prevTop;
+        });
+      });
+    }
+  }
+  trackByRow = (_: number, row: any) => row?.[this.dataKey] ?? _;
+  private emitLock = false; // 👈 節流鎖
+
+  get data(): any[] {
+    return this._data;
+  }
 
 
   expandedRows: { [key: string]: boolean } = {};
@@ -525,44 +525,99 @@ get data(): any[] {
     this.showPdfDialog = false;
   }
 
-private exportMergedPDF(
-  doc: jsPDF,
-  currentY: number,
-  marginLeft: number,
-): void {
-  const headers = this.selectedColumns.map((col) => col.header);
-  const columnStyles: { [key: string]: any } = {};
-  this.selectedColumns.forEach((col, index) => {
-    let halign: 'left' | 'right' | 'center' = 'center';
-    if (col.style === 'text-left') halign = 'left';
-    else if (col.style === 'text-right' || this.subtotalFields.includes(col.field)) halign = 'right';
-    columnStyles[index] = { halign };
-  });
+  private exportMergedPDF(
+    doc: jsPDF,
+    currentY: number,
+    marginLeft: number,
+  ): void {
+    const headers = this.selectedColumns.map((col) => col.header);
+    const columnStyles: { [key: string]: any } = {};
+    this.selectedColumns.forEach((col, index) => {
+      let halign: 'left' | 'right' | 'center' = 'center';
+      if (col.style === 'text-left') halign = 'left';
+      else if (col.style === 'text-right' || this.subtotalFields.includes(col.field)) halign = 'right';
+      columnStyles[index] = { halign };
+    });
 
-  const sourceData = this.sortedData.length > 0 ? this.sortedData : this._data;
+    const sourceData = this.sortedData.length > 0 ? this.sortedData : this._data;
 
-  // ✅ 沒資料：表頭 + 查無資料 + 總計 0
-  if (!sourceData || sourceData.length === 0) {
-    const body: any[] = [];
+    // ✅ 沒資料：表頭 + 查無資料 + 總計 0
+    if (!sourceData || sourceData.length === 0) {
+      const body: any[] = [];
 
-    // 空訊息列（跨欄）
-body.push([
-  {
-    content: this.emptyMessage || '查無資料',
-    colSpan: headers.length,
-    styles: {
-      font: 'Noto Sans TC',               
-      halign: 'center',
-      
-      textColor: [33, 150, 243],
-    },
-  },
-]);
+      // 空訊息列（跨欄）
+      body.push([
+        {
+          content: this.emptyMessage || '查無資料',
+          colSpan: headers.length,
+          styles: {
+            font: 'Noto Sans TC',
+            halign: 'center',
 
-    // 總計列
+            textColor: [33, 150, 243],
+          },
+        },
+      ]);
+
+      // 總計列
+      const totalRow = this.selectedColumns.map((col) => {
+        if (col.field === '__index') return '總計';
+        if (this.subtotalFields.includes(col.field)) return (0).toLocaleString();
+        return '';
+      });
+      body.push(totalRow);
+
+      autoTable(doc, {
+        startY: currentY,
+        head: [headers],
+        body,
+        margin: { left: marginLeft, right: marginLeft },
+        styles: { font: 'Noto Sans TC', fontSize: 9 },
+        columnStyles,
+        headStyles: {
+          font: 'Noto Sans TC',
+          fontStyle: 'normal',
+          fontSize: 10,
+          fillColor: [212, 222, 254],
+          textColor: [0, 0, 0],
+          halign: 'center',
+        },
+        didParseCell(data) {
+          const raw = Array.isArray(data.row.raw) ? data.row.raw : [];
+          if (raw[0] && typeof raw[0] === 'object' && 'colSpan' in raw[0]) {
+            data.cell.styles.fillColor = [240, 240, 255];
+            data.cell.styles.font = 'Noto Sans TC';
+          }
+          if (raw[0] === '總計') {
+            data.cell.styles.fillColor = [250, 250, 210];
+            data.cell.styles.font = 'Noto Sans TC';
+          }
+        },
+      });
+
+      let summaryY = (doc as any).lastAutoTable.finalY + 20;
+      this.printSummaryText(doc, summaryY);
+      return;
+    }
+
+    // 🔻 原本「有資料」流程保持不變
+    const body = sourceData.map((row, rowIndex) =>
+      this.selectedColumns.map((col) => {
+        if (col.field === '__index') return String(rowIndex + 1);
+        const value = col.format ? col.format(row[col.field]) : row[col.field];
+        return String(value ?? '');
+      }),
+    );
+
     const totalRow = this.selectedColumns.map((col) => {
       if (col.field === '__index') return '總計';
-      if (this.subtotalFields.includes(col.field)) return (0).toLocaleString();
+      if (this.subtotalFields.includes(col.field)) {
+        const sum = sourceData.reduce(
+          (acc, row) => acc + (parseFloat(row[col.field]) || 0),
+          0,
+        );
+        return sum.toLocaleString();
+      }
       return '';
     });
     body.push(totalRow);
@@ -584,111 +639,127 @@ body.push([
       },
       didParseCell(data) {
         const raw = Array.isArray(data.row.raw) ? data.row.raw : [];
-        if (raw[0] && typeof raw[0] === 'object' && 'colSpan' in raw[0]) {
-          data.cell.styles.fillColor = [240, 240, 255];
-          data.cell.styles.font = 'Noto Sans TC';
-        }
         if (raw[0] === '總計') {
           data.cell.styles.fillColor = [250, 250, 210];
           data.cell.styles.font = 'Noto Sans TC';
+          data.cell.styles.fontStyle = 'normal';
         }
       },
     });
 
     let summaryY = (doc as any).lastAutoTable.finalY + 20;
     this.printSummaryText(doc, summaryY);
-    return;
   }
 
-  // 🔻 原本「有資料」流程保持不變
-  const body = sourceData.map((row, rowIndex) =>
-    this.selectedColumns.map((col) => {
-      if (col.field === '__index') return String(rowIndex + 1);
-      const value = col.format ? col.format(row[col.field]) : row[col.field];
-      return String(value ?? '');
-    }),
-  );
 
-  const totalRow = this.selectedColumns.map((col) => {
-    if (col.field === '__index') return '總計';
-    if (this.subtotalFields.includes(col.field)) {
-      const sum = sourceData.reduce(
-        (acc, row) => acc + (parseFloat(row[col.field]) || 0),
-        0,
-      );
-      return sum.toLocaleString();
-    }
-    return '';
-  });
-  body.push(totalRow);
-
-  autoTable(doc, {
-    startY: currentY,
-    head: [headers],
-    body,
-    margin: { left: marginLeft, right: marginLeft },
-    styles: { font: 'Noto Sans TC', fontSize: 9 },
-    columnStyles,
-    headStyles: {
-      font: 'Noto Sans TC',
-      fontStyle: 'normal',
-      fontSize: 10,
-      fillColor: [212, 222, 254],
-      textColor: [0, 0, 0],
-      halign: 'center',
-    },
-    didParseCell(data) {
-      const raw = Array.isArray(data.row.raw) ? data.row.raw : [];
-      if (raw[0] === '總計') {
-        data.cell.styles.fillColor = [250, 250, 210];
-        data.cell.styles.font = 'Noto Sans TC';
-        data.cell.styles.fontStyle = 'normal';
-      }
-    },
-  });
-
-  let summaryY = (doc as any).lastAutoTable.finalY + 20;
-  this.printSummaryText(doc, summaryY);
-}
-
-
-private exportGroupedPDF(
-  doc: jsPDF,
-  startY: number,
-  marginLeft: number,
-): void {
-  const headers = this.selectedColumns.map((col) => col.header);
-  const columnStyles: { [key: string]: any } = {};
-  this.selectedColumns.forEach((col, index) => {
-    let halign: 'left' | 'right' | 'center' = 'center';
-    if (col.style === 'text-left') halign = 'left';
-    else if (col.style === 'text-right' || this.subtotalFields.includes(col.field)) halign = 'right';
-    columnStyles[index] = { halign };
-  });
-
-  // ✅ 沒任何群組資料：表頭 + 查無資料 + 總計 0
-  if (!this.groupedData || this.groupedData.length === 0) {
-    const body: any[] = [];
-
-    body.push([
-      {
-        content: this.emptyMessage || '查無資料',
-        colSpan: headers.length,
-        styles: { halign: 'center', fontStyle: 'bold', textColor: [33, 150, 243] },
-      },
-    ]);
-
-    const totalRow = this.selectedColumns.map((col) => {
-      if (col.field === '__index') return '總計';
-      if (this.subtotalFields.includes(col.field)) return (0).toLocaleString();
-      return '';
+  private exportGroupedPDF(
+    doc: jsPDF,
+    startY: number,
+    marginLeft: number,
+  ): void {
+    const headers = this.selectedColumns.map((col) => col.header);
+    const columnStyles: { [key: string]: any } = {};
+    this.selectedColumns.forEach((col, index) => {
+      let halign: 'left' | 'right' | 'center' = 'center';
+      if (col.style === 'text-left') halign = 'left';
+      else if (col.style === 'text-right' || this.subtotalFields.includes(col.field)) halign = 'right';
+      columnStyles[index] = { halign };
     });
-    body.push(totalRow);
+
+    // ✅ 沒任何群組資料：表頭 + 查無資料 + 總計 0
+    if (!this.groupedData || this.groupedData.length === 0) {
+      const body: any[] = [];
+
+      body.push([
+        {
+          content: this.emptyMessage || '查無資料',
+          colSpan: headers.length,
+          styles: { halign: 'center', fontStyle: 'bold', textColor: [33, 150, 243] },
+        },
+      ]);
+
+      const totalRow = this.selectedColumns.map((col) => {
+        if (col.field === '__index') return '總計';
+        if (this.subtotalFields.includes(col.field)) return (0).toLocaleString();
+        return '';
+      });
+      body.push(totalRow);
+
+      autoTable(doc, {
+        startY,
+        head: [headers],
+        body,
+        margin: { left: marginLeft, right: marginLeft },
+        styles: { font: 'Noto Sans TC', fontSize: 9 },
+        columnStyles,
+        headStyles: {
+          font: 'Noto Sans TC',
+          fontStyle: 'normal',
+          fontSize: 10,
+          fillColor: [212, 222, 254],
+          textColor: [0, 0, 0],
+          halign: 'center',
+        },
+        didParseCell(data) {
+          const raw = Array.isArray(data.row.raw) ? data.row.raw : [];
+          if (raw[0] && typeof raw[0] === 'object' && 'colSpan' in raw[0]) {
+            data.cell.styles.fillColor = [240, 240, 255];
+            data.cell.styles.font = 'Noto Sans TC';
+            data.cell.styles.fontStyle = 'normal';
+          }
+          if (raw[0] === '總計') {
+            data.cell.styles.fillColor = [250, 250, 210];
+            data.cell.styles.font = 'Noto Sans TC';
+          }
+        },
+      });
+
+      const finalY = (doc as any).lastAutoTable.finalY + 20;
+      this.printSummaryText(doc, finalY);
+      return;
+    }
+
+    // 🔻 原本「有資料」流程保持不變
+    let allRows: any[] = [];
+    this.groupedData.forEach((group, groupIndex) => {
+      const groupKey = group[0]?.__groupKey ?? `群組${groupIndex + 1}`;
+      const groupTitle = this.groupByLabel || this.groupByField || '群組';
+      allRows.push([
+        {
+          content: `${groupTitle}：${groupKey}`,
+          colSpan: headers.length,
+          styles: { halign: 'left', fontStyle: 'bold' },
+        },
+      ]);
+
+      group.forEach((row, rowIndex) => {
+        allRows.push(
+          this.selectedColumns.map((col) => {
+            if (col.field === '__index') return String(this.getRowIndex(groupIndex, rowIndex));
+            const value = col.format ? col.format(row[col.field]) : row[col.field];
+            return String(value ?? '');
+          }),
+        );
+      });
+
+      const subtotalRow = this.selectedColumns.map((col) => {
+        if (col.field === '__index') return '小計';
+        if (this.subtotalFields.includes(col.field)) {
+          const sum = group.reduce(
+            (acc, row) => acc + (parseFloat(row[col.field]) || 0),
+            0,
+          );
+          return sum.toLocaleString();
+        }
+        return '';
+      });
+      allRows.push(subtotalRow);
+    });
 
     autoTable(doc, {
       startY,
       head: [headers],
-      body,
+      body: allRows,
       margin: { left: marginLeft, right: marginLeft },
       styles: { font: 'Noto Sans TC', fontSize: 9 },
       columnStyles,
@@ -702,12 +773,12 @@ private exportGroupedPDF(
       },
       didParseCell(data) {
         const raw = Array.isArray(data.row.raw) ? data.row.raw : [];
-        if (raw[0] && typeof raw[0] === 'object' && 'colSpan' in raw[0]) {
+        if (raw && raw[0] && typeof raw[0] === 'object' && 'colSpan' in raw[0]) {
           data.cell.styles.fillColor = [240, 240, 255];
           data.cell.styles.font = 'Noto Sans TC';
           data.cell.styles.fontStyle = 'normal';
         }
-        if (raw[0] === '總計') {
+        if (raw[0] === '小計') {
           data.cell.styles.fillColor = [250, 250, 210];
           data.cell.styles.font = 'Noto Sans TC';
         }
@@ -716,78 +787,7 @@ private exportGroupedPDF(
 
     const finalY = (doc as any).lastAutoTable.finalY + 20;
     this.printSummaryText(doc, finalY);
-    return;
   }
-
-  // 🔻 原本「有資料」流程保持不變
-  let allRows: any[] = [];
-  this.groupedData.forEach((group, groupIndex) => {
-    const groupKey = group[0]?.__groupKey ?? `群組${groupIndex + 1}`;
-    const groupTitle = this.groupByLabel || this.groupByField || '群組';
-    allRows.push([
-      {
-        content: `${groupTitle}：${groupKey}`,
-        colSpan: headers.length,
-        styles: { halign: 'left', fontStyle: 'bold' },
-      },
-    ]);
-
-    group.forEach((row, rowIndex) => {
-      allRows.push(
-        this.selectedColumns.map((col) => {
-          if (col.field === '__index') return String(this.getRowIndex(groupIndex, rowIndex));
-          const value = col.format ? col.format(row[col.field]) : row[col.field];
-          return String(value ?? '');
-        }),
-      );
-    });
-
-    const subtotalRow = this.selectedColumns.map((col) => {
-      if (col.field === '__index') return '小計';
-      if (this.subtotalFields.includes(col.field)) {
-        const sum = group.reduce(
-          (acc, row) => acc + (parseFloat(row[col.field]) || 0),
-          0,
-        );
-        return sum.toLocaleString();
-      }
-      return '';
-    });
-    allRows.push(subtotalRow);
-  });
-
-  autoTable(doc, {
-    startY,
-    head: [headers],
-    body: allRows,
-    margin: { left: marginLeft, right: marginLeft },
-    styles: { font: 'Noto Sans TC', fontSize: 9 },
-    columnStyles,
-    headStyles: {
-      font: 'Noto Sans TC',
-      fontStyle: 'normal',
-      fontSize: 10,
-      fillColor: [212, 222, 254],
-      textColor: [0, 0, 0],
-      halign: 'center',
-    },
-    didParseCell(data) {
-      const raw = Array.isArray(data.row.raw) ? data.row.raw : [];
-      if (raw && raw[0] && typeof raw[0] === 'object' && 'colSpan' in raw[0]) {
-        data.cell.styles.fillColor = [240, 240, 255];
-        data.cell.styles.font = 'Noto Sans TC';
-        data.cell.styles.fontStyle = 'normal';
-      }
-      if (raw[0] === '小計') {
-        data.cell.styles.fillColor = [250, 250, 210];
-        data.cell.styles.font = 'Noto Sans TC';
-      }
-    },
-  });
-
-  const finalY = (doc as any).lastAutoTable.finalY + 20;
-  this.printSummaryText(doc, finalY);
-}
 
 
   private printSummaryText(doc: jsPDF, startY: number): void {
@@ -878,60 +878,60 @@ private exportGroupedPDF(
   }
 
   // 計算內容尺寸
-getScrollWidth(bodyEl: HTMLElement): number {
-  return bodyEl?.scrollWidth ?? 0;
-}
-getScrollHeight(bodyEl: HTMLElement): number {
-  return bodyEl?.scrollHeight ?? 0;
-}
-// 是否需要顯示浮空捲軸
-needsHScroll(bodyEl: HTMLElement): boolean {
-  return (bodyEl?.scrollWidth ?? 0) > (bodyEl?.clientWidth ?? 0) + 1;
-}
-needsVScroll(bodyEl: HTMLElement): boolean {
-  return (bodyEl?.scrollHeight ?? 0) > (bodyEl?.clientHeight ?? 0) + 1;
-}
-
-// 由「浮空水平捲軸」同步到主容器
-syncFromFakeH(hostEl: HTMLElement, fakeH: HTMLElement): void {
-  if (!hostEl || !fakeH) return;
-  hostEl.scrollLeft = fakeH.scrollLeft;
-}
-
-syncFromFakeV(): void {
-  const hostEl = this.hostRef?.nativeElement;
-  const fakeV  = this.fakeVRef?.nativeElement;
-  if (!hostEl || !fakeV) return;
-  hostEl.scrollTop = fakeV.scrollTop;
-}
-// 由主容器捲動時，同步兩個浮空捲軸
-onHostScroll(): void {
-  const host = this.hostRef?.nativeElement;
-  const fakeH = this.fakeHRef?.nativeElement;
-  if (!host) return;
-
-  // 同步水平浮空捲軸
-  if (fakeH) fakeH.scrollLeft = host.scrollLeft;
-
-  // 底部觸發載入
-  const nearBottom = host.scrollTop + host.clientHeight >= host.scrollHeight - 80;
-  if (nearBottom && !this.emitLock) {
-    this.emitLock = true;
-    this.reachBottom.emit();
-    setTimeout(() => (this.emitLock = false), 150);
+  getScrollWidth(bodyEl: HTMLElement): number {
+    return bodyEl?.scrollWidth ?? 0;
   }
-}
-// 讓父層可讀/寫捲動值
-public getHostScrollTop(): number {
-  return this.hostRef?.nativeElement?.scrollTop ?? 0;
-}
-public setHostScrollTop(top: number): void {
-  const host = this.hostRef?.nativeElement;
-  if (!host) return;
-  host.scrollTop = top;
-}
+  getScrollHeight(bodyEl: HTMLElement): number {
+    return bodyEl?.scrollHeight ?? 0;
+  }
+  // 是否需要顯示浮空捲軸
+  needsHScroll(bodyEl: HTMLElement): boolean {
+    return (bodyEl?.scrollWidth ?? 0) > (bodyEl?.clientWidth ?? 0) + 1;
+  }
+  needsVScroll(bodyEl: HTMLElement): boolean {
+    return (bodyEl?.scrollHeight ?? 0) > (bodyEl?.clientHeight ?? 0) + 1;
+  }
 
-defaultTrackBy: TrackByFunction<any> = (_: number, row: any) => row?.[this.dataKey] ?? _;
+  // 由「浮空水平捲軸」同步到主容器
+  syncFromFakeH(hostEl: HTMLElement, fakeH: HTMLElement): void {
+    if (!hostEl || !fakeH) return;
+    hostEl.scrollLeft = fakeH.scrollLeft;
+  }
+
+  syncFromFakeV(): void {
+    const hostEl = this.hostRef?.nativeElement;
+    const fakeV = this.fakeVRef?.nativeElement;
+    if (!hostEl || !fakeV) return;
+    hostEl.scrollTop = fakeV.scrollTop;
+  }
+  // 由主容器捲動時，同步兩個浮空捲軸
+  onHostScroll(): void {
+    const host = this.hostRef?.nativeElement;
+    const fakeH = this.fakeHRef?.nativeElement;
+    if (!host) return;
+
+    // 同步水平浮空捲軸
+    if (fakeH) fakeH.scrollLeft = host.scrollLeft;
+
+    // 底部觸發載入
+    const nearBottom = host.scrollTop + host.clientHeight >= host.scrollHeight - 80;
+    if (nearBottom && !this.emitLock) {
+      this.emitLock = true;
+      this.reachBottom.emit();
+      setTimeout(() => (this.emitLock = false), 150);
+    }
+  }
+  // 讓父層可讀/寫捲動值
+  public getHostScrollTop(): number {
+    return this.hostRef?.nativeElement?.scrollTop ?? 0;
+  }
+  public setHostScrollTop(top: number): void {
+    const host = this.hostRef?.nativeElement;
+    if (!host) return;
+    host.scrollTop = top;
+  }
+
+  defaultTrackBy: TrackByFunction<any> = (_: number, row: any) => row?.[this.dataKey] ?? _;
 
 
 }

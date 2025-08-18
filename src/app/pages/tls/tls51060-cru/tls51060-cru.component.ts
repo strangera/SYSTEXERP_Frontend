@@ -29,11 +29,11 @@ export class TLS51060CRUComponent extends BasicCruPageComponent<PluLogo>
   dataForm = this.formBuilder.nonNullable.group({
     // PLULOGO  商品品牌設定檔
     id: [],
-    LOGO_No: ['', [Validators.required, Validators.maxLength(4)]], // 品牌編碼
+    LOGO_No: ['', [Validators.required, Validators.maxLength(4)]], // 品牌代碼
     LOGO_CH_NAME: ['', [Validators.required, Validators.maxLength(50)]], // 品牌中文名稱
     LOGO_EN_NAME: ['', [Validators.maxLength(100)]], // 品牌英文名稱
     LOGO_Remark: ['', [Validators.maxLength(100)]], // 備註說明
-    PLU_OrderPrcRate: [100, [Validators.required, Validators.maxLength(10)]], // 標準進貨折數 預設100
+    PLU_OrderPrcRate: [100, [Validators.maxLength(10)]], // 標準進貨折數 預設100
     HOS_No: ['', [Validators.maxLength(10)]], // 建議倉別代碼/名稱 POS2034倉庫設定檔(O)
     // VEN_No: ['', [Validators.maxLength(16)]], // 廠商編號 保留目前不使用
 
@@ -56,7 +56,7 @@ export class TLS51060CRUComponent extends BasicCruPageComponent<PluLogo>
     // 0626新增 卡控 編輯的卡控 同 [刪除] ，若不可刪除也不可編輯 品牌代碼、標準進貨折數
     const canDelValue = this.dataForm.get('CanDel')?.value as unknown as boolean;
     if (canDelValue === false) {
-      this.dataForm.get('LOGO_No')?.disable();            // 品牌編碼不可編輯
+      this.dataForm.get('LOGO_No')?.disable();            // 品牌代碼不可編輯
       this.dataForm.get('PLU_OrderPrcRate')?.disable();   // 標準進貨折數不可編輯
     }
   }
@@ -71,7 +71,7 @@ export class TLS51060CRUComponent extends BasicCruPageComponent<PluLogo>
     }
 
     //--檢查--
-    // 品牌編號：為唯一值。
+    // 品牌代碼：為唯一值。
     // 品牌標準進貨折數：文字型態，長度１０，可輸入數字及小數點。例如91.25折時，輸入91.25
     //                                    預設１００，若為７７折時，輸入７７。
     //                                    可輸入到小數點以下2位。
@@ -81,7 +81,7 @@ export class TLS51060CRUComponent extends BasicCruPageComponent<PluLogo>
       case CRUDStatus.Create:
         if (this.canAdd()) {
           const formValue = frm.getRawValue();
-          console.log('insert', formValue);
+          console.log('insert', JSON.stringify(formValue, null, 2));
           this.tls51060Service.insertTLS51060(formValue).subscribe(() => {
             this.messageService.successBubble('新增成功');
             // this.onCancel(); // 儲存後，會清除資料留在原頁面，不返回列表
@@ -92,7 +92,7 @@ export class TLS51060CRUComponent extends BasicCruPageComponent<PluLogo>
       case CRUDStatus.Edit:
         if (this.canEdit()) {
           const formValue = frm.getRawValue();
-          console.log('update', formValue);
+          console.log('update', JSON.stringify(formValue, null, 2));
           this.tls51060Service.updateTLS51060(formValue).subscribe(() => {
             // this.messageService.successBubble('更新成功');
             this.onCancel(); // 儲存後，會返回列表

@@ -24,34 +24,34 @@ import { DropdownTableComponent } from '../../../shared/componentkit/dropdown-ta
 import { TranslateModule } from '@ngx-translate/core';
 
 @Component({
-    selector: 'app-tls52050-cru',
-    templateUrl: './tls52050-cru.component.html',
-    standalone: true,
-    imports: [
-        MenubarComponent,
-        ButtonComponent,
-        PanelModule,
-        FormsModule,
-        ReactiveFormsModule,
-        InputTextComponent,
-        DropdownComponent,
-        InputTextareaComponent,
-        CalendarRangeComponent,
-        CheckboxModule,
-        CalendarComponent,
-        InputNumberComponent,
-        TableComponent,
-        NgIf,
-        DialogComponent,
-        DropdownTableComponent,
-        TranslateModule,
-    ],
+  selector: 'app-tls52050-cru',
+  templateUrl: './tls52050-cru.component.html',
+  standalone: true,
+  imports: [
+    MenubarComponent,
+    ButtonComponent,
+    PanelModule,
+    FormsModule,
+    ReactiveFormsModule,
+    InputTextComponent,
+    DropdownComponent,
+    InputTextareaComponent,
+    CalendarRangeComponent,
+    CheckboxModule,
+    CalendarComponent,
+    InputNumberComponent,
+    TableComponent,
+    NgIf,
+    DialogComponent,
+    DropdownTableComponent,
+    TranslateModule,
+  ],
 })
 export class TLS52050CRUComponent extends BasicCruPageComponent<ITLS52050Data> implements OnInit {
   dataForm = this.formBuilder.nonNullable.group({
     MAM_No: [{ value: '系統自動產生', disabled: true }],  // 變價單號
     VEN_No: ['', Validators.required], // 廠商代號
-    LOGO_No: ['', Validators.required], // 品牌代號
+    LOGO_No: ['', Validators.required], // 品牌代碼
     MAM_InvDesc: ['', Validators.required], // 進價變價單說明
     MAM_Method: [null, Validators.required], // 是否為永久變價
     MAM_BegDate: [(() => {

@@ -35,9 +35,9 @@ export interface TLS26020DetailData {
   TXN_DATE: string;             // 交易日期 - ISO 8601 格式
   ECR_NO: string;               // 收銀機號
   TXN_NO: number;               // 交易序號
-  TXN_GUIBegNo_Pre: string;     // 發票起號前綴
-  TXN_GUIBegNo: string;         // 發票起號
-  TXN_GUIEndNo: string;         // 發票迄號
+  TXN_GUIBegNo_Pre: string;     // 發票起始號碼前綴
+  TXN_GUIBegNo: string;         // 發票起始號碼
+  TXN_GUIEndNo: string;         // 發票結束號碼
   TXN_TotGUI: number;           // 發票總數
   TXN_TotSaleAmt: number;       // 銷售總金額
 }

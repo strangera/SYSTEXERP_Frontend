@@ -1,6 +1,6 @@
 import { inject } from '@angular/core';
 import { FormBuilder, FormGroup } from '@angular/forms';
-import { NavigationExtras, Router } from '@angular/router';
+import { ActivatedRoute, NavigationExtras, Router } from '@angular/router';
 import { UntilDestroy } from '@ngneat/until-destroy';
 import { ConfirmationService } from 'primeng/api';
 import { take } from 'rxjs';
@@ -28,6 +28,7 @@ export abstract class BasicQueryPageComponent<T> {
   queryStateService: QueryStateService = inject(QueryStateService);
   currentPageService: CurrentPageService = inject(CurrentPageService);
   confirmationService: ConfirmationService = inject(ConfirmationService);
+  activatedRoute = inject(ActivatedRoute);
 
   language = navigator.language;
   loading = false;
@@ -47,14 +48,15 @@ export abstract class BasicQueryPageComponent<T> {
     // 在初始化頁面後，通知選單更新選中狀態
     this.currentPageService.setCurrentProgNo(this.ProgNo);
     // 取得歷史紀錄(如果有的話)
-    if (this.canPerformAction('10')) { // '查詢' 的 function_code 是 "10"
-      this.queryStateService.getQueryState(this.ProgNo)?.pipe(take(1)).subscribe((query) => {
-        if (query && queryForm) {
-          queryForm?.patchValue(query);
-          queryForm?.patchValue({ pageIndex: 1 });
-          if (onSubmit) { onSubmit(queryForm); }
-        }
-      });
+    const state = this.router.lastSuccessfulNavigation?.extras.state;
+    const previousRoute = state?.['fromRoute'] || this.activatedRoute.snapshot.queryParams['fromRoute'] || document.referrer || '/account/dashboard';
+    if (this.canPerformAction('10') && previousRoute === `/account/${this.cruPage.toLocaleLowerCase()}`) { // '查詢' 的 function_code 是 "10"
+      const query = this.queryStateService.getQueryStateValue(this.ProgNo);
+      if (query && queryForm) {
+        queryForm?.patchValue(query);
+        queryForm?.patchValue({ pageIndex: 1 });
+        if (onSubmit) { onSubmit(queryForm); }
+      }
     }
   }
   canPerformAction(action: string): boolean {
@@ -138,11 +140,10 @@ export abstract class BasicQueryPageComponent<T> {
   }
 
   onLazyLoadData(event: LazyLoadEvent, queryForm: FormGroup) {
-    this.queryStateService.getQueryState(this.ProgNo)?.pipe(take(1)).subscribe((query) => {
-      if (query) {
-        queryForm.patchValue(query);
-      }
-    });
+    const query = this.queryStateService.getQueryStateValue(this.ProgNo)
+    if (query) {
+      queryForm.patchValue(query);
+    }
     queryForm.patchValue({
       pageSize: event.pageSize,
       pageIndex: event.pageIndex,

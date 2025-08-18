@@ -210,12 +210,12 @@ export class AuthService {
       return null;
     }
   }
-// 改 getOuterToken 回傳型別
+  // 改 getOuterToken 回傳型別
 
-getOuterToken(): Observable<OuterTokenResponse> {
-  return this.http.get<OuterTokenResponse>(
-    `${this.apiUrl}/SSOLogin/getOuterToken`,
-    { headers: { Accept: 'application/json' } }
-  );
-}
+  getOuterToken(): Observable<OuterTokenResponse> {
+    return this.http.get<OuterTokenResponse>(
+      `${this.apiUrl}/SSOLogin/getOuterToken`,
+      { headers: { Accept: 'application/json' } }
+    );
+  }
 }

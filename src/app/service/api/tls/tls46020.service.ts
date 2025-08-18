@@ -40,7 +40,7 @@ export interface TLS46020Item {
   ECR_ClerkEntry?: string;
   ECR_ForceMember?: string;
   ECR_SettleDD?: string;
-  ECR_SettleHHNN?: string;
+  ECR_SettleHHNN?: string | null | Date;
   ECR_VoidTxn?: string;
   ECR_VoidRstDay?: number;
   ECR_CreditNote?: string;

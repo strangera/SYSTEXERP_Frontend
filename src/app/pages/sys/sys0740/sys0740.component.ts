@@ -44,7 +44,7 @@ export class SYS0740Component extends BasicQueryPageComponent<QuerySYS0740Respon
 
   // 定義表格的欄位
   columns: Column[] = [
-    { field: 'Role_No', header: '角色代碼', visible: true, showSort: true },
+    { field: 'Role_No', header: '角色代號', visible: true, showSort: true },
     { field: 'Role_Name', header: '角色名稱', visible: true, showSort: true },
     { field: 'FunctionBehaviors', header: '角色權限之功能行為', visible: true, showSort: true },
   ];
@@ -89,7 +89,6 @@ export class SYS0740Component extends BasicQueryPageComponent<QuerySYS0740Respon
           } else {
             this.data = [];
             this.totalRecords = 0;
-            this.messageService.warnBubble(response.Message);
           }
         });
     });

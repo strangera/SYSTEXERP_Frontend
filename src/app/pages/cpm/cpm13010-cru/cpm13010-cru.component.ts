@@ -34,8 +34,8 @@ import { InputNumberComponent } from '@shared/componentkit/input-number/input-nu
 export class CPM13010CRUComponent extends BasicCruPageComponent<QueryCPM13010Response> implements OnInit {
   dataForm = this.formBuilder.nonNullable.group({
     PKNG_SeqNo: [{ value: null as number | null, disabled: true }], // 序號，自動產生，不可編輯
-    PKNG_SaleAmt: [0, [Validators.required, Validators.min(1), Validators.max(99999999)]],
-    PKNG_DiscHour: [0, [Validators.required, Validators.min(1), Validators.max(999)]],
+    PKNG_SaleAmt: [0, [Validators.required, Validators.min(0), Validators.max(99999999)]],
+    PKNG_DiscHour: [0, [Validators.required, Validators.min(0), Validators.max(999)]],
     PKNG_Status: [{ value: 'A', disabled: true }], // 狀態，新增時為 'A'，不可編輯
 
     CRT_Date: [{ value: null as Date | null, disabled: true }],

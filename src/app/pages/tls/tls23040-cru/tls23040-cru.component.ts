@@ -126,7 +126,7 @@ export class TLS23040CRUComponent extends BasicCruPageComponent<any> {
             visible: true,
             style: 'text-left',
           },
-          { field: 'gui_track', header: '發票起號(字軌)', visible: true },
+          { field: 'gui_track', header: '發票起始號碼(字軌)', visible: true },
           { field: 'GUIBegNo', header: '發票起始號碼', visible: true },
           { field: 'GUIEndNo', header: '發票結束號碼', visible: true },
           {

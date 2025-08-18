@@ -45,11 +45,11 @@ export class TLS2A010Component extends BasicQueryPageComponent<any> implements O
 
   queryForm = this.formBuilder.group({
     TXN_Date: [yesterday, Validators.required],
-    tlt_floor: [''],
-    ECR_No_Start: [null, Validators.required],
-    ECR_No_End: [null, Validators.required],
+    Floor_No: [''],
+    ECR_No_Start: ['', Validators.required],
+    ECR_No_End: ['', Validators.required],
     PAY_NO: ['', Validators.required],
-    tlt_building: [''],
+    Building_No: [''],
     SYS_StoreNo: [this.authService.currentUserValue?.SYS_StoreNo ?? ''],
     ...createPaginationConfig([{ field: 'ECR_No', order: 1 }]),
   }, { validators: this.validateRangeStartBeforeEnd });
@@ -72,8 +72,7 @@ export class TLS2A010Component extends BasicQueryPageComponent<any> implements O
     {
       label: '缺單審核',
       icon: 'pi pi-exclamation-triangle',
-      action: (rowData: any) => this.onEdit(rowData),
-      disabled: (rowData: any) => rowData.isMissing !== 'Y'
+      action: (rowData: any) => this.onAbnormalClick(rowData)
     }
   ];
   IsPrint = true;
@@ -115,10 +114,41 @@ export class TLS2A010Component extends BasicQueryPageComponent<any> implements O
 
 
   ngOnInit(): void {
-    this.initializePage('TLS2A010', 'TLS/TLS2A010cru', this.queryForm, (form) => this.onSubmit(form));
+    this.initializePage('TLS2A010', 'TLS/TLS2A010CRU', this.queryForm, (form) => this.onSubmit(form));
     this.loadDropdownOptions();
     this.selectedColumns = this.defaultColumns;
     this.columnGroup = [];
+    this.dropDownListService.queryPOS1002_DropDownList()
+      .pipe(untilDestroyed(this))
+      .subscribe(res => {
+        if (res && res.Data) {
+          this.systemTypeOptions = res.Data.map(item => ({
+            label: `${item.No ?? ''}-${item.Name ?? ''}`,
+            value: Number(item.No),   // 確保是數字
+            No: String(item.No),      // Convert to string to match IDropdownItem type
+            Name: item.Name
+          }));
+
+          if (this.systemTypeOptions.length > 0) {
+            // 僅保留「全部是數字」的字串
+            const values = this.systemTypeOptions
+              .map(opt => opt.No)
+              .filter(v => /^\d+$/.test(v ?? ''));
+
+            if (values.length > 0) {
+              const minVal = values.reduce((a, b) => a < b ? a : b);
+              const maxVal = values.reduce((a, b) => a > b ? a : b);
+
+              this.queryForm.patchValue({
+                ECR_No_Start: minVal,
+                ECR_No_End: maxVal
+              });
+            }
+          }
+
+        }
+      });
+
 
     this.dropDownListService.querySYS3900_DropDownList().pipe(untilDestroyed(this)).subscribe(res => {
       this.floorOptions = res.Data.map(item => ({ ...item, label: item.Name, value: item.No }));
@@ -128,30 +158,23 @@ export class TLS2A010Component extends BasicQueryPageComponent<any> implements O
       this.buildingNoOptions = res.Data.map(x => ({ label: x.Name, value: x.No, Name: x.Name, No: x.No }));
     });
 
-    this.dropDownListService.queryPOS1006_DropDownList().pipe(untilDestroyed(this)).subscribe(res => {
-      this.paymentToolOptions = res.Data.map(x => {
-        this.payNoToTypeMap.set(x.No ?? '', x.PAY_Type ?? '');
-        return {
-          label: x.Name,
-          value: x.No,
-          Name: x.Name,
-          No: x.No,
-          PAY_Type: x.PAY_Type ?? ''
-        };
-      });
-    });
-    this.dropDownListService.queryPOS1002_DropDownList()
+    this.dropDownListService.queryPOS1006_DropDownList()
       .pipe(untilDestroyed(this))
       .subscribe(res => {
-        if (res && res.Data) {
-          this.systemTypeOptions = res.Data.map(item => ({
-            label: item.Name,
-            value: item.No,
-            Name: item.Name,
-            No: item.No
-          }));
-        }
+        this.paymentToolOptions = res.Data.map(x => {
+          this.payNoToTypeMap.set(x.No ?? '', x.PAY_Type ?? '');
+          return {
+            label: `${x.No ?? ''}-${x.Name ?? ''}`,
+            value: x.No,   // 這裡保持字串，因為下拉選單通常用字串當 value
+            Name: x.Name,
+            No: x.No,
+            PAY_Type: x.PAY_Type ?? ''
+          };
+        });
+
+
       });
+
 
     const today = new Date();
     const mm = today.getMonth() + 1; // 月份是從 0 開始的
@@ -176,8 +199,9 @@ export class TLS2A010Component extends BasicQueryPageComponent<any> implements O
   }
   onAbnormalClick(row: any): void {
     console.log('缺單被點擊:', row);
-
+    this.onEdit(row);
   }
+
 
   onSubmit(form: FormGroup): void {
     this.submitted = true;
@@ -188,12 +212,6 @@ export class TLS2A010Component extends BasicQueryPageComponent<any> implements O
     const raw = form.value;
 
     const payload = {
-      PageSize: raw.PageSize ?? 0,
-      PageIndex: raw.PageIndex ?? 0,
-      OrderBy: raw.OrderBy ?? '',
-      Offset: raw.Offset ?? 0,
-      SortBy: raw.SortBy ?? [],
-
       SYS_StoreNo: raw.SYS_StoreNo ?? '',
       TXN_Date: raw.TXN_Date ? new Date(raw.TXN_Date).toISOString().split('T')[0] : '',
       ECR_No_Start: raw.ECR_No_Start ?? '',
@@ -201,20 +219,66 @@ export class TLS2A010Component extends BasicQueryPageComponent<any> implements O
       PAY_NO: raw.PAY_NO ?? '',
       tlt_floor: raw.tlt_floor ?? '',
       tlt_building: raw.tlt_building ?? '',
-
     };
-
 
     this.tls2a010Service.queryTLS2A010(payload).pipe(untilDestroyed(this)).subscribe({
       next: (res) => {
-        this.data = res?.Data ?? [];
+        interface TLS2A010Item {
+          System_Amt?: number;
+          Real_Amt?: number;
+          TXN_Date?: string;
+          Check_Status?: string;
+          [key: string]: any; // Add additional properties as needed
+        }
+
+        this.data = (res?.Data ?? []).map((item: TLS2A010Item) => {
+          const systemAmt = Number(item.System_Amt ?? 0);
+          const realAmt = Number(item.Real_Amt ?? 0);
+          const diff = systemAmt - realAmt;
+
+          let status = '';
+          if (diff < 0) {
+            status = '欠';   // 欠收
+          } else if (diff === 0) {
+            status = '平';   // 平帳
+          } else {
+            status = '溢';   // 多收
+          }
+
+          return {
+            ...item,
+            OVER_PayAmt: diff,   // 差異數
+            OVER_Status: status  // 欠 / 平 / 溢
+          };
+        });
+        this.data = (res?.Data ?? []).map((item: TLS2A010Item) => {
+          // 先取原始日期字串
+          const rawDate = item.TXN_Date;
+          let formattedDate = rawDate;
+
+          if (rawDate) {
+            const dateObj = new Date(rawDate);
+            if (!isNaN(dateObj.getTime())) {
+              const yyyy = dateObj.getFullYear();
+              const dd = String(dateObj.getDate()).padStart(2, '0');
+              const mm = String(dateObj.getMonth() + 1).padStart(2, '0'); // 月份從0開始
+              formattedDate = `${yyyy}/${dd}/${mm}`;
+            }
+          }
+
+          return {
+            ...item,
+            TXN_Date: formattedDate,
+          };
+        });
+
 
         const first = this.data[0];
         this.PAY_NO = this.queryForm.value.PAY_NO || '';
         this.TXN_Date = first?.TXN_Date || '';
-        this.onPayNoChange(this.PAY_NO);
 
         this.totalRecords = res.TotalCount ?? this.data.length;
+        this.queryStateService.setQueryState(this.ProgNo, this.queryForm.value);
         this.loading = false;
       },
       error: (err) => {
@@ -222,6 +286,7 @@ export class TLS2A010Component extends BasicQueryPageComponent<any> implements O
         this.loading = false;
       }
     });
+
   }
 
   onReview(selectedItems: any[]): void {
@@ -246,5 +311,8 @@ export class TLS2A010Component extends BasicQueryPageComponent<any> implements O
 
   }
 
-
+  isRowSelectable(rowData: any): boolean {
+    return rowData.Check_Status !== 'Y';
+  }
 }
+

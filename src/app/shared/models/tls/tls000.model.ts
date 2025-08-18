@@ -29,6 +29,7 @@ export interface PluUnit {
   'UNIT_No': string;
   'UNIT_NAME': string;
   'UNIT_Attribute': string;
+  'UNIT_Attribute_Name': string; // 報表顯示的名稱
   'CHILD_UNIT': string; // 子項單位代號 --沒有使用
   'CHILD_QTY': number; // 子項單位數量 --沒有使用
   'UNIT_Remark': string;
@@ -208,7 +209,7 @@ export interface POS2034 {
   'STO_No': string; // 公司編號/店號
   'HOS_No': string; // 倉庫代碼 STO_NO+HOS_NO唯一值 STO_NO+HOS_NO唯一值
   'HOS_NAME': string; // 倉庫名稱
-  'org_id': string; // 組織代碼/所屬部門
+  'org_id': string; // 組織代碼/組織名稱
   'org_name': string; // 部門名稱
   'building_no': string; // 館別代碼
   'HOS_Remark'?: string; // 備註說明

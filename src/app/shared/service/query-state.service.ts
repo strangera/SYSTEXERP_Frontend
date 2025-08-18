@@ -11,7 +11,17 @@ export class QueryStateService {
     }
     this.queryStates.get(key)?.next(value);
   }
-  // 獲取查詢條件
+  // 獲取查詢條件 (直接回傳值)
+  getQueryStateValue(key: string | undefined): any | undefined {
+    if (!key) return undefined;
+    // 如果 key 不存在，返回 undefined
+    if (!this.queryStates.has(key)) {
+      return undefined;
+    }
+    // 返回 BehaviorSubject 的當前值
+    return this.queryStates.get(key)?.value;
+  }
+  // 獲取查詢條件 (回傳 BehaviorSubject)
   getQueryState(key: string | undefined): BehaviorSubject<any> | undefined {
     if (!key) return undefined;
     if (!this.queryStates.has(key)) {

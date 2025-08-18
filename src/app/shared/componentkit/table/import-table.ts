@@ -19,6 +19,7 @@ import { TooltipModule } from 'primeng/tooltip';
 import { TableExpansionComponent } from './table-expansion/table-expansion.component';
 import { TableCaptionComponent } from './table-caption/table-caption.component';
 import { TableInputComponent } from './table-input/table-input.component';
+import { ImageModule } from 'primeng/image';
 
 // 將所有需要的模組/元件/指令導出為一個常數陣列
 export const COMMON_IMPORTS = [
@@ -43,7 +44,7 @@ export const COMMON_IMPORTS = [
   NgStyle,
   SkeletonModule,
   AutoCompleteModule,
-
+  ImageModule,
 
   TableExpansionComponent, // 自定義元件
   TableCaptionComponent,

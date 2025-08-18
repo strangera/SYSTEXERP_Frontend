@@ -84,7 +84,6 @@ export class CPM13010Component extends BasicQueryPageComponent<QueryCPM13010Resp
             } else {
               this.data = [];
               this.totalRecords = 0;
-              this.messageService.warnBubble(response.Message);
             }
           },
           error: (error) => {

@@ -153,12 +153,12 @@ export class TLS24010Component extends BasicQueryPageComponent<TLS24010Data> imp
   // 查看補登資料
   onDetailData(rowdata: TLS24010Data): void {
     if (this.isTXN_GUIPaper) { return; }
-    const history = this.queryStateService.getQueryState(this.ProgNo);
+    const history = this.queryStateService.getQueryStateValue(this.ProgNo);
     this.onDetail({
       ...rowdata,
-      TXN_GUIPaper: history?.value.TXN_GUIPaper,
-      store_way: history?.value.store_way,
-      talent_id: history?.value.talent_id
+      TXN_GUIPaper: history?.TXN_GUIPaper,
+      store_way: history?.store_way,
+      talent_id: history?.talent_id
     });
   }
   // 編輯補登資料

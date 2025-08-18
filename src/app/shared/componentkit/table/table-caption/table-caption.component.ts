@@ -95,7 +95,7 @@ export class TableCaptionComponent extends BasicPrintDataComponent implements On
       // 恢復歷史紀錄，如果沒有就使用預設值
       setTimeout(() => {
         if (!this.isColumnsInitialized) {
-          const storedFilter = this.queryStateService.getQueryState(this.tableKey + 'Filter')?.value;
+          const storedFilter = this.queryStateService.getQueryStateValue(this.tableKey + 'Filter');
           if (storedFilter) {
             this.columns = storedFilter;
             const validFilteredColumns = this.columns.filter(col => col.visible !== false);// 只保留可見的欄位

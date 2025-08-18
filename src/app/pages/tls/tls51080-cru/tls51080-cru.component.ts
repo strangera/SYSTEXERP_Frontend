@@ -107,7 +107,7 @@ export class TLS51080CRUComponent extends BasicCruPageComponent<POS2034>
   // 讀取dopropdown選項
   loadOptions() {
     {
-      // 組織代碼/所屬部門 SYS3100 JOIN POS1001
+      // 組織代碼/組織名稱 SYS3100 JOIN POS1001
       this.tls51080Service
         .querySYS3100_join_POS1001_DropDownList({})
         .subscribe((response) => {
