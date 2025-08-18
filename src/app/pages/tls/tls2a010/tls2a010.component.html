@@ -27,11 +27,11 @@
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown
               label="樓層"
-              controlName="tlt_floor"
+              controlName="Floor_No"
               [options]="floorOptions"
               optionLabel="label"
               optionValue="value"
-              [control]="queryForm.controls.tlt_floor"
+              [control]="queryForm.controls.Floor_No"
               [submitted]="submitted"
             ></app-dropdown>
           </div>
@@ -45,7 +45,7 @@
               [submitted]="submitted"
               [options]="systemTypeOptions"
               optionLabel="label"
-              optionValue="value"
+              optionValue="No"
             ></app-dropdown-range>
             <small
               class="p-error"
@@ -73,11 +73,11 @@
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown
               label="館別"
-              controlName="tlt_building"
+              controlName="Building_No"
               [options]="buildingNoOptions"
               optionLabel="label"
               optionValue="value"
-              [control]="queryForm.controls.tlt_building"
+              [control]="queryForm.controls.Building_No"
               [submitted]="submitted"
             ></app-dropdown>
           </div>
@@ -143,10 +143,10 @@
           <span class="text-red-600" *ngIf="TXN_Date">{{ TXN_Date }}</span>
         </span>
 
-        <span class="ml-3">
+        <!-- <span class="ml-3">
           對帳日期：
-          <span class="text-red-600">{{ todayDisplay }}</span>
-        </span>
+          <span class="text-red-600">{{ TXN_Date }}</span>
+        </span> -->
       </div>
     </header>
   </app-table>

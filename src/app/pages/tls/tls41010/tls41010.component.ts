@@ -1,4 +1,5 @@
 import { Component, OnInit } from '@angular/core';
+import { Router } from '@angular/router';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { AddButton, Column, createPaginationConfig } from '../../../shared/componentkit/table/table.model';
@@ -50,7 +51,7 @@ export class TLS41010Component extends BasicQueryPageComponent<TLS41010Data> imp
   columns: Column[] = columns;
   queryForm = this.formBuilder.group({
     ECR_No: ['', [Validators.maxLength(10)]],
-    ECR_Type: ['1', [Validators.maxLength(2)]], // 收銀機號
+    ECR_Type: ['', [Validators.maxLength(2)]], // 收銀機號
     ECR_Name: ['', [Validators.maxLength(20)]],
     ECR_TLT_No: ['', [Validators.maxLength(20)]],
     ECR_TLT_Name: ['', [Validators.maxLength(60)]],
@@ -58,11 +59,11 @@ export class TLS41010Component extends BasicQueryPageComponent<TLS41010Data> imp
     ECR_ActiveDateEnd: [null],
     ECR_CloseDateStart: [null],
     ECR_CloseDateEnd: [null],
-    ECR_Status: ['A'],
+    ECR_Status: [''],
     ECR_SubGroup: ['', [Validators.maxLength(20)]],
     ECR_LocNo: ['', [Validators.maxLength(10)]],
-    ECR_SAL_Type: ['', [Validators.maxLength(8)]],
-    ECR_GUI_Type: ['07', [Validators.maxLength(2)]],
+    ECR_SAL_Type: [null, [Validators.maxLength(8)]],
+    ECR_GUI_Type: ['', [Validators.maxLength(2)]],
     ECR_USR_No: ['', [Validators.maxLength(8)]],
     ECR_USR_Name: ['', [Validators.maxLength(20)]],
     ECR_ComName: ['', [Validators.maxLength(64)]],
@@ -110,6 +111,7 @@ export class TLS41010Component extends BasicQueryPageComponent<TLS41010Data> imp
     private tls46020Service: TLS46020Service,
     private tls11010Service: Tls11010Service,
     private dropDownListService: DropDownListService,
+    private Router: Router,
     private http: HttpClient
   ) {
     super();
@@ -279,11 +281,13 @@ export class TLS41010Component extends BasicQueryPageComponent<TLS41010Data> imp
     const Target_ECR_No = this.dialogQueryForm.value.Target_ECR_No ?? '';
     return (Source_ECR_No !== '' && Target_ECR_No !== '') && (Source_ECR_No === Target_ECR_No);
   }
-
   openCru(data: TLS41010Item, mode: string): void {
     console.log(`Opening CRU page with mode: ${mode}`, data);
 
-    // Add logic to handle opening the CRU page here
+    // 帶id去 CRU 頁
+    this.router.navigate([`/TLS/TLS41010cru`], {
+      queryParams: { id: data.id, mode }
+    });
   }
 
 }
