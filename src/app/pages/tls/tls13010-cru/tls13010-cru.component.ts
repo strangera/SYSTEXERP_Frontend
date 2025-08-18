@@ -193,13 +193,13 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
   // ==========  主要表單定義 ==========
   dataForm = this.formBuilder.group({
     talent_id: [''], // 必填但系統自動給號
-    apply_no: [{ value: '系統自動給號', disabled: true }], // 必填但系統自動給號
+    apply_no: [''], // 必填但系統自動給號
     approve_status: ['1', [Validators.required]], // 必填，預設未審核
     tlt_name: ['', [Validators.required, Validators.maxLength(100)]], // 必填
-    tlt_no: [{ value: '系統自動給號', disabled: true }], // 必填但系統自動給號
+    tlt_no: [''], // 必填但系統自動給號
     ven_no: ['', [Validators.required, Validators.maxLength(16)]], // 必填
     ven_uniform: ['', [Validators.required, Validators.maxLength(10)]], // 必填
-    VEN_Name: [{ value: '選擇廠商統一編號自動帶入', disabled: true }, [Validators.required]], // 必填但自動帶入
+    VEN_Name: [''], // 必填但自動帶入
     paper_type: ['', [Validators.maxLength(2)]],
     bus_type: ['', [Validators.required, Validators.maxLength(2)]], // 必填
     bus_class: ['', [Validators.required, Validators.maxLength(2)]], // 必填
@@ -273,7 +273,7 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
     tlt_remark: ['', [Validators.maxLength(2000)]],
 
     // 狀態欄位
-    tlt_openflag: [{ value: '9', disabled: true }],
+    tlt_openflag: [''],
     cap_saletype1: [''],
     cap_saletype2: [''],
     cap_saletype3: [''],
@@ -398,7 +398,7 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
     // 🎯 如果是檢視模式，設定表單為唯讀
     if (this.isViewMode) {
       setTimeout(() => {
-        this.setFormReadonly(true);
+        // this.setFormReadonly(true);
       }, 0);
     }
   }
@@ -463,7 +463,7 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
 
       // 🎯 立即設定表單為 disabled
       setTimeout(() => {
-        this.setFormReadonly(true);
+        // this.setFormReadonly(true);
       }, 0);
     } else {
       console.log('📝 URL 未檢測到檢視模式，設定為編輯模式');
@@ -1060,7 +1060,7 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
 
     // 🎯 準備符合 ContractInfo 介面的資料
     const contractInfo: ContractInfo = {
-      id: formData.talent_id || this.generateTempTalentId(),
+      id: formData.talent_id || '',
       talent_id: formData.talent_id || '',
       apply_no: formData.apply_no || '',
       tlt_name: formData.tlt_name || '',
@@ -1162,10 +1162,6 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
     };
     this.contractFlowService.saveStep1Data(contractInfo);
     console.log('✅ 已暫存到工作流程');
-  }
-
-  private generateTempTalentId(): string {
-    return 'new_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
   }
 
   // 檢查位置資料是否有變更
@@ -2036,7 +2032,7 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
 
     if (isViewMode) {
       // 🎯 檢視模式：設定表單為唯讀
-      this.setFormReadonly(true);
+      // this.setFormReadonly(true);
 
       // 🎯 更新頁面標題
       this.formTitle = '檢視契約資料';
@@ -2044,10 +2040,10 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
       console.log('🔒 已設定為檢視模式');
     } else {
       // 🎯 編輯模式：恢復表單可編輯性
-      this.setFormReadonly(false);
+      // this.setFormReadonly(false);
 
       // 🎯 恢復欄位的特殊狀態（某些欄位永遠禁用）
-      this.restoreFieldConstraints();
+      // this.restoreFieldConstraints();
 
       // 🎯 更新頁面標題
       this.formTitle = this.contractFlowService.isNewContractMode() ? '新增契約資料' : '編輯契約資料';
@@ -2056,74 +2052,74 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
     }
   }
 
-  /**
-   * 🎯 新增：設定表單為唯讀
-   */
-  private setFormReadonly(readonly: boolean): void {
-    if (readonly) {
-      this.dataForm.disable();
-      console.log('🔒 表單已設為唯讀');
-    } else {
-      this.dataForm.enable();
-      console.log('🔓 表單已設為可編輯');
+  // /**
+  //  * 🎯 新增：設定表單為唯讀
+  //  */
+  // private setFormReadonly(readonly: boolean): void {
+  //   if (readonly) {
+  //     this.dataForm.disable();
+  //     console.log('🔒 表單已設為唯讀');
+  //   } else {
+  //     this.dataForm.enable();
+  //     console.log('🔓 表單已設為可編輯');
 
-      // 🎯 立即恢復必要的欄位約束
-      setTimeout(() => {
-        this.restoreFieldConstraints();
-      }, 0);
-    }
-  }
+  //     // 🎯 立即恢復必要的欄位約束
+  //     setTimeout(() => {
+  //       this.restoreFieldConstraints();
+  //     }, 0);
+  //   }
+  // }
 
-  /**
-   * 🎯 新增：恢復欄位約束（不破壞 selector-panel）
-   */
-  private restoreFieldConstraints(): void {
-    console.log('🔄 恢復欄位約束');
+  // /**
+  //  * 🎯 新增：恢復欄位約束（不破壞 selector-panel）
+  //  */
+  // private restoreFieldConstraints(): void {
+  //   console.log('🔄 恢復欄位約束');
 
-    // 🎯 版次永遠禁用
-    const contractSubnoControl = this.dataForm.get('contract_subno');
-    if (contractSubnoControl) {
-      contractSubnoControl.disable();
-      console.log('🔒 版次欄位已禁用');
-    }
+  //   // 🎯 版次永遠禁用
+  //   const contractSubnoControl = this.dataForm.get('contract_subno');
+  //   if (contractSubnoControl) {
+  //     contractSubnoControl.disable();
+  //     console.log('🔒 版次欄位已禁用');
+  //   }
 
-    // 🎯 公司登記地址永遠禁用（因為是從其他系統帶入的）
-    const companyAddressControl = this.dataForm.get('company_register_address');
-    if (companyAddressControl) {
-      companyAddressControl.disable();
-      console.log('🔒 公司登記地址欄位已禁用');
-    }
+  //   // 🎯 公司登記地址永遠禁用（因為是從其他系統帶入的）
+  //   const companyAddressControl = this.dataForm.get('company_register_address');
+  //   if (companyAddressControl) {
+  //     companyAddressControl.disable();
+  //     console.log('🔒 公司登記地址欄位已禁用');
+  //   }
 
-    // 🎯 如果不是新增模式，某些欄位禁用
-    if (!this.contractFlowService.isNewContractMode()) {
-      const nonEditableFields = [
-        'talent_id',    // 專櫃ID
-        'apply_no',     // 專櫃招募編號
-        'tlt_no',       // 專櫃編號
-        'VEN_Name',     // 廠商名稱
-        'tlt_name'      // 櫃位名稱
-      ];
+  //   // 🎯 如果不是新增模式，某些欄位禁用
+  //   if (!this.contractFlowService.isNewContractMode()) {
+  //     const nonEditableFields = [
+  //       'talent_id',    // 專櫃ID
+  //       'apply_no',     // 專櫃招募編號
+  //       'tlt_no',       // 專櫃編號
+  //       'VEN_Name',     // 廠商名稱
+  //       'tlt_name'      // 櫃位名稱
+  //     ];
 
-      nonEditableFields.forEach(fieldName => {
-        const control = this.dataForm.get(fieldName);
-        if (control) {
-          control.disable();
-          console.log(`🔒 編輯模式禁用欄位: ${fieldName}`);
-        }
-      });
-    } else {
-      // 🎯 新增模式下，確保這些欄位是可編輯的
-      const editableInNewMode = ['apply_no', 'tlt_no', 'VEN_Name', 'tlt_name'];
+  //     nonEditableFields.forEach(fieldName => {
+  //       const control = this.dataForm.get(fieldName);
+  //       if (control) {
+  //         control.disable();
+  //         console.log(`🔒 編輯模式禁用欄位: ${fieldName}`);
+  //       }
+  //     });
+  //   } else {
+  //     // 🎯 新增模式下，確保這些欄位是可編輯的
+  //     const editableInNewMode = ['apply_no', 'tlt_no', 'VEN_Name', 'tlt_name'];
 
-      editableInNewMode.forEach(fieldName => {
-        const control = this.dataForm.get(fieldName);
-        if (control && control.disabled) {
-          control.enable();
-          console.log(`🔓 新增模式啟用欄位: ${fieldName}`);
-        }
-      });
-    }
-  }
+  //     editableInNewMode.forEach(fieldName => {
+  //       const control = this.dataForm.get(fieldName);
+  //       if (control && control.disabled) {
+  //         control.enable();
+  //         console.log(`🔓 新增模式啟用欄位: ${fieldName}`);
+  //       }
+  //     });
+  //   }
+  // }
 
   /**
    * 🎯 新增：處理初始化失敗
