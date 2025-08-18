@@ -2,7 +2,6 @@ import { Component, OnInit } from '@angular/core';
 import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { Column, convertDateToYYYYMM, createPaginationConfig, formatDateTime, formatYYYYMM } from '../../../shared/componentkit/table/table.model';
-import { FileUploadModule } from 'primeng/fileupload';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { AccordionModule } from 'primeng/accordion';
@@ -12,7 +11,6 @@ import { InputTextRangeComponent } from '../../../shared/componentkit/input-text
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { TranslateModule } from '@ngx-translate/core';
 import { ValidationService } from '@shared/service/validation.service';
-import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
 import { Fin14010Service } from '@service/api/fin/fin14010.service';
 
 /** TDS1002 營業人銷售額與稅額申報書檔 */
@@ -255,14 +253,25 @@ export interface TDS1002 {
     templateUrl: './fin14010.component.html',
     styleUrl: './fin14010.component.scss',
     standalone: true,
-    imports: [MenubarComponent, FileUploadModule, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarRangeComponent, CalendarRangeQuickComponent, InputTextComponent, InputTextRangeComponent, TableComponent, TranslateModule]
+    imports: [
+      MenubarComponent,
+      ButtonComponent,
+      AccordionModule,
+      FormsModule,
+      ReactiveFormsModule,
+      CalendarRangeComponent,
+      InputTextComponent,
+      InputTextRangeComponent,
+      TableComponent,
+      TranslateModule
+    ]
 })
 export class FIN14010Component extends BasicQueryPageComponent<TDS1002> implements OnInit {
   queryForm = this.formBuilder.group({
       // TDS1002 營業人銷售額與稅額申報書檔 參考11020
-      GUI_YYMM_start: [null, [Validators.required]], // 發票年月
-      GUI_YYMM_end: [null, [Validators.required]], // 發票年月
-      ...createPaginationConfig([{ field: 'GUI_YYMM', order: 1 }]), // 分頁和排序參數
+      REP_GUIYM_start: [null, [Validators.required]], // 資料所屬年月
+      REP_GUIYM_end: [null, [Validators.required]], // 資料所屬年月
+      ...createPaginationConfig([{ field: 'REP_GUIYM', order: 1 }]), // 分頁和排序參數
     });
 
     totalRecords = 0;// 分頁和排序參數 // 排序需要

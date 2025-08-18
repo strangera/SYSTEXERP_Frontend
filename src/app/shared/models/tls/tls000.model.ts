@@ -29,6 +29,7 @@ export interface PluUnit {
   'UNIT_No': string;
   'UNIT_NAME': string;
   'UNIT_Attribute': string;
+  'UNIT_Attribute_Name': string; // 報表顯示的名稱
   'CHILD_UNIT': string; // 子項單位代號 --沒有使用
   'CHILD_QTY': number; // 子項單位數量 --沒有使用
   'UNIT_Remark': string;

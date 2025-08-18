@@ -4,7 +4,6 @@ import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { PluUnit } from '../../../shared/models/tls/tls000.model';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { option } from '../../../shared/models/sys/sysb000.model';
-import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 import { Tls51050Service } from '../../../service/api/tls/tls51050.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
@@ -29,18 +28,13 @@ export class TLS51050CRUComponent extends BasicCruPageComponent<PluUnit>
   dataForm = this.formBuilder.nonNullable.group({
     // PLUUNIT  商品單位設定檔
     id: [],
-    UNIT_No: ['', [Validators.maxLength(2)]], // 單位代碼
-    UNIT_NAME: ['', [Validators.maxLength(40)]], // 單位名稱
-    UNIT_Attribute: ["1", [Validators.maxLength(1)]], // 單位屬性 1基本單位 2包裝單位 (預設1，目前只有基本單位沒有包裝單位)
+    UNIT_No: ['', [Validators.required, Validators.maxLength(2)]], // 單位代碼
+    UNIT_NAME: ['', [Validators.required, Validators.maxLength(40)]], // 單位名稱
+    UNIT_Attribute: ["1", [Validators.required, Validators.maxLength(1)]], // 單位屬性 1基本單位 2包裝單位 (預設1，目前只有基本單位沒有包裝單位)
     // CHILD_UNIT: ['', [Validators.maxLength(2)]], // 子項單位代號 --沒有使用
     // CHILD_QTY: [, [this.validationService.numberValidator]], // 子項單位數量 --沒有使用
 
     UNIT_Remark: ['', [Validators.maxLength(100)]], // 備註說明
-
-    CanDel: [null], // 刪除(僅顯示)
-
-    //分頁查詢
-    ...createPaginationConfig([{ field: 'UNIT_No', order: 1 }]), // 分頁和排序參數
   });
 
   //
@@ -65,7 +59,6 @@ export class TLS51050CRUComponent extends BasicCruPageComponent<PluUnit>
     if (canDelValue === false) {
       this.dataForm.get('UNIT_No')?.disable();            // 單位代碼不可編輯
     }
-
   }
 
   onSubmit(frm: FormGroup) {
@@ -84,8 +77,9 @@ export class TLS51050CRUComponent extends BasicCruPageComponent<PluUnit>
     switch (this.crudstatus) {
       case CRUDStatus.Create:
         if (this.canAdd()) {
-          console.log('insert', frm.value);
-          this.tls51050Service.insertTLS51050(frm.value).subscribe(() => {
+          const formValue = frm.getRawValue();
+          console.log('insert', JSON.stringify(formValue, null, 2));
+          this.tls51050Service.insertTLS51050(formValue).subscribe(() => {
             this.messageService.successBubble('新增成功');
             // this.onCancel(); // 儲存後，會清除資料留在原頁面，不返回列表
             this.dataForm.reset(); // 重置表單
@@ -94,8 +88,9 @@ export class TLS51050CRUComponent extends BasicCruPageComponent<PluUnit>
         break;
       case CRUDStatus.Edit:
         if (this.canEdit()) {
-          console.log('update', frm.value);
-          this.tls51050Service.updateTLS51050(frm.value).subscribe(() => {
+          const formValue = frm.getRawValue();
+          console.log('update', JSON.stringify(formValue, null, 2));
+          this.tls51050Service.updateTLS51050(formValue).subscribe(() => {
             // this.messageService.successBubble('更新成功');
             this.onCancel(); // 儲存後，會返回列表
           });

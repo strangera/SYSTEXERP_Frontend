@@ -71,7 +71,7 @@ export class TLS51060Component extends BasicQueryPageComponent<PluLogo>
 
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
-      console.log('query condition', frm.value);
+      console.log('query', JSON.stringify(frm.value, null, 2));
       this.tls51060Service.queryTLS51060(frm.value).subscribe({
         next: (response) => {
           // console.log('回傳階層:', response.Data);
