@@ -13,8 +13,7 @@
           </div>
           <div class="col-12 md:col-6 lg:col-12">
             <app-radiobutton groupname="reportType" [control]="queryForm.controls.reportType"
-              [options]="reportTypeOptions" [submitted]="submitted"
-              (valueChange)="onReportTypeChange($event)"></app-radiobutton>
+              [options]="reportTypeOptions" [submitted]="submitted"></app-radiobutton>
           </div>
           <!-- 日營業報表 -->
           <div style="display: flex" class="col-12 md:col-6 lg:col-12"
@@ -39,8 +38,9 @@
             </div>
             <!-- 日期範圍 -->
             <div class="col-12 md:col-6 lg:col-4">
-              <app-calendar-range calendarType="dateRange" label="日期範圍" [startControl]="queryForm.controls.startdate"
-                [endControl]="queryForm.controls.enddate" [submitted]="submitted"></app-calendar-range>
+
+              <app-calendar-range-quick label="日期範圍" [startControl]="queryForm.controls.startdate"
+                [endControl]="queryForm.controls.enddate" [submitted]="submitted" />
             </div>
           </div>
           <!-- 月營業報表 -->
@@ -80,9 +80,8 @@
             *ngIf="queryForm.controls.reportType.value == '6'">
             <!-- 日期範圍 -->
             <div class="col-12 md:col-6 lg:col-4">
-              <app-calendar-range calendarType="dateRange" label="日期範圍"
-                [startControl]="queryForm.controls.sad_startdate" [endControl]="queryForm.controls.sad_enddate"
-                [submitted]="submitted"></app-calendar-range>
+              <app-calendar-range-quick label="日期範圍" [startControl]="queryForm.controls.sad_startdate"
+                [endControl]="queryForm.controls.sad_enddate" [submitted]="submitted" />
             </div>
           </div>
           <!-- 活動區間營業報表 -->
@@ -95,9 +94,8 @@
             </div>
             <!-- 日期範圍 -->
             <div class="col-12 md:col-6 lg:col-4">
-              <app-calendar-range calendarType="dateRange" label="日期範圍"
-                [startControl]="queryForm.controls.event_startdate" [endControl]="queryForm.controls.event_enddate"
-                [submitted]="submitted"></app-calendar-range>
+              <app-calendar-range-quick label="日期範圍" [startControl]="queryForm.controls.event_startdate"
+                [endControl]="queryForm.controls.event_enddate" [submitted]="submitted" />
             </div>
           </div>
         </div>
@@ -158,7 +156,7 @@
   </p-accordion>
 </div>
 <div class="card">
-  <app-table tableKey="TLS26070" dataKey="id" [data]="data" [columns]="columns" [showCheckBox]="false"
+  <app-table tableKey="TLS26070" dataKey="talent_id" [data]="data" [columns]="columns" [showCheckBox]="false"
     [showDelete]="false" [showManage]="false" [selectedItems]="selectedItems" (selectionChange)="selectedItems = $event"
     [multiSortMeta]="[{ field: 'talent_id', order: 1 }]" [totalRecords]="totalRecords"
     (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [lazy]="true" [loading]="loading">

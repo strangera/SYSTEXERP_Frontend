@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
-import { BaseQueryRequest, BaseQueryResponse, DropdownOption } from '../../../shared/models/api/base-api.interface';
+import { BaseQueryRequest, BaseQueryResponse } from '../../../shared/models/api/base-api.interface';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../../environments/environment';
 
@@ -9,48 +9,64 @@ export interface TLS26070QueryRequest extends BaseQueryRequest {
   // 報表類型
   reportType?: string; // 報表類型
 
-  // 日期查詢條件
-  onedatedd?: string; // 日期（日報表）
-  onedateyy?: string[]; // 年度（週報表）
-  weeks?: string[]; // 週數
-  startdate?: string; // 開始日期（週報表用）
-  enddate?: string; // 結束日期（週報表用）
-  onedatemm?: string[]; // 年月（月報表）
-  halfyear_onedateyy?: string[]; // 半年報表年度
-  halfyear?: string[]; // 半年別
-  year_onedateyy?: string[]; // 年報表年度
-  sad_startdate?: string; // 區間開始日期
-  sad_enddate?: string; // 區間結束日期
-  eventID?: string[]; // 活動ID
-  event_startdate?: string; // 活動開始日期
-  event_enddate?: string; // 活動結束日期
+  // 日期查詢條件 (改為單一字串，不是陣列)
+  onedatedd?: string; // 日期（日報表）- ISO 格式
+  onedateyy?: string; // 年度（週報表）
+  weeks?: string; // 週數
+  startdate?: string; // 開始日期（週報表用）- ISO 格式
+  enddate?: string; // 結束日期（週報表用）- ISO 格式
+  onedatemm?: string; // 年月（月報表）
+  halfyear_onedateyy?: string; // 半年報表年度
+  halfyear?: string; // 半年別
+  year_onedateyy?: string; // 年報表年度
+  sad_startdate?: string; // 區間開始日期 - ISO 格式
+  sad_enddate?: string; // 區間結束日期 - ISO 格式
+  eventID?: string; // 活動ID
+  event_startdate?: string; // 活動開始日期 - ISO 格式
+  event_enddate?: string; // 活動結束日期 - ISO 格式
 
-  // 合約查詢條件
-  floor?: string[]; // 樓層
-  region?: string[]; // 區域
-  bus_type?: string[]; // 大分類/中分類
-  tlt_kind?: string[]; // 櫃別
-  tlt_term_type?: string[]; // 抽成別
-  org_id?: string[]; // 組織代號
-  tlt_no?: string[]; // 專櫃編號
+  // 合約查詢條件 (改為單一字串，不是陣列)
+  floor?: string; // 樓層
+  region?: string; // 區域
+  bus_type?: string; // 大分類/中分類
+  tlt_kind?: string; // 櫃別
+  tlt_term_type?: string; // 抽成別
+  org_id?: string; // 組織代號
+  tlt_no?: string; // 專櫃編號
   tax?: boolean; // 是否含稅
 }
 
-// 查詢結果 Model
+// 查詢結果 Model (根據新的 response data 更新)
 export interface TLS26070Data {
   id: number; // ID
   talent_id: string; // 專櫃編號
-  tlt_building: string; // 樓別
-  TEAM: string; // TEAM
+  team_name: string; // TEAM名稱
+  division_name: string; // 部門名稱
   tlt_kind: string; // 櫃別
   bus_class_name: string; // 大分類/中分類名稱
   bus_sclass_name: string; // 業種中分類名稱
   tlt_name: string; // 專櫃名稱
-  total_amt: number; // 合約總金額
-  sad_preorder_amts: number; // 預售金額(含稅)
-  sad_preorder_notaxamts: number; // 預售金額(未稅)
-  sad_preorder_custs: number; // 預售客數
+  budget_now: number; // 當期預算
+  preorder_amt_now: number; // 當期預售金額(含稅)
+  preorder_namt_now: number; // 當期預售金額(未稅)
+  Achievement_rate_now: number; // 當期達成率(含稅)
+  nAchievement_rate_now: number; // 當期達成率(未稅)
+  preorder_custcnt_now: number; // 當期預售客數
+  avg_ordervalue_now: number; // 當期平均客單價(含稅)
+  navg_ordervalue_now: number; // 當期平均客單價(未稅)
+  preorder_amt_last: number; // 去年同期預售金額(含稅)
+  preorder_namt_last: number; // 去年同期預售金額(未稅)
+  preorder_custcnt_last: number; // 去年同期預售客數
+  avg_ordervalue_last: number; // 去年同期平均客單價(含稅)
+  navg_ordervalue_last: number; // 去年同期平均客單價(未稅)
+  Growth: number; // 成長率(含稅)
+  nGrowth: number; // 成長率(未稅)
+  PerformanceDiff: number; // 業績差異(含稅)
+  nPerformanceDiff: number; // 業績差異(未稅)
+  TransactionsNumber: number; // 交易筆數
   tlt_space: number; // 坪數
+  MonthlyFloorEffect: number; // 月坪效(含稅)
+  nMonthlyFloorEffect: number; // 月坪效(未稅)
 }
 
 @Injectable({

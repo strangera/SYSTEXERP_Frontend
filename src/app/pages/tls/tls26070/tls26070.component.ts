@@ -17,8 +17,6 @@ import { BusinessTypeCodeService } from '@service/basic/business-type-code-servi
 import { CommissionTypeService } from '@service/basic/commission-type.service';
 import { OrganizationNumberService } from '@service/basic/organization-number.service';
 import { CooperationMethodService } from '@service/basic/cooperation-method.service';
-import { TypeService } from '@service/basic/type.service';
-import { TaxableService } from '@service/basic/taxable.service';
 import { FloorService } from '@service/basic/floor.service';
 import { RegionService } from '@service/basic/region-code.service';
 import { CounterCodeService } from '@service/basic/counter-code.service';
@@ -27,13 +25,14 @@ import { InputNumberComponent } from '@shared/componentkit/input-number/input-nu
 import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
 import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
 import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
+import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
 
 @Component({
   selector: 'app-tls26070',
   templateUrl: './tls26070.component.html',
   styleUrl: './tls26070.component.scss',
   standalone: true,
-  imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputTextComponent, CalendarRangeComponent, TableComponent, TranslateModule, RadiobuttonComponent, CalendarComponent, InputNumberComponent, DropdownComponent, NgIf, MultiSelectComponent]
+  imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputTextComponent, CalendarRangeComponent, TableComponent, TranslateModule, RadiobuttonComponent, CalendarComponent, InputNumberComponent, DropdownComponent, NgIf, MultiSelectComponent, CalendarRangeQuickComponent]
 })
 export class TLS26070Component extends BasicQueryPageComponent<TLS26070Data> implements OnInit {
   queryForm = this.formBuilder.group({
@@ -69,18 +68,28 @@ export class TLS26070Component extends BasicQueryPageComponent<TLS26070Data> imp
   selectedItems: TLS26070Data[] = [];
 
   columns: Column[] = [
-    { field: 'talent_id', header: '專櫃編號', visible: true }, // 專櫃編號
-    { field: 'tlt_building', header: '樓別', visible: true }, // 樓別
-    { field: 'TEAM', header: 'TEAM', visible: true }, // TEAM
-    { field: 'tlt_kind', header: '櫃別', visible: true }, // 櫃別
-    { field: 'bus_class_name', header: '大分類/中分類', visible: true }, // 大分類/中分類名稱
-    { field: 'bus_sclass_name', header: '業種中分類', visible: true }, // 業種中分類名稱
-    { field: 'tlt_name', header: '專櫃名稱', visible: true }, // 專櫃名稱
-    { field: 'total_amt', header: '合約總金額', visible: true, format: formatAmount }, // 合約總金額
-    { field: 'sad_preorder_amts', header: '預售金額(含稅)', visible: true, format: formatAmount }, // 預售金額(含稅)
-    { field: 'sad_preorder_notaxamts', header: '預售金額(未稅)', visible: true, format: formatAmount }, // 預售金額(未稅)
-    { field: 'sad_preorder_custs', header: '預售客數', visible: true }, // 預售客數
-    { field: 'tlt_space', header: '坪數', visible: true }, // 坪數
+    { field: 'talent_id', header: '專櫃編號', visible: true },
+    { field: 'team_name', header: 'TEAM', visible: true },
+    { field: 'division_name', header: '部門', visible: true },
+    { field: 'tlt_kind', header: '櫃別', visible: true },
+    { field: 'bus_class_name', header: '大分類', visible: true },
+    { field: 'bus_sclass_name', header: '中分類', visible: true },
+    { field: 'tlt_name', header: '專櫃名稱', visible: true },
+    { field: 'budget_now', header: '當期預算', visible: true, format: formatAmount },
+    { field: 'preorder_amt_now', header: '當期預售金額(含稅)', visible: true, format: formatAmount },
+    { field: 'preorder_namt_now', header: '當期預售金額(未稅)', visible: true, format: formatAmount },
+    { field: 'Achievement_rate_now', header: '當期達成率(含稅)', visible: true, format: (value: number) => value ? `${value.toFixed(2)}%` : '0%' },
+    { field: 'nAchievement_rate_now', header: '當期達成率(未稅)', visible: true, format: (value: number) => value ? `${value.toFixed(2)}%` : '0%' },
+    { field: 'preorder_custcnt_now', header: '當期預售客數', visible: true },
+    { field: 'avg_ordervalue_now', header: '當期平均客單價(含稅)', visible: true, format: formatAmount },
+    { field: 'navg_ordervalue_now', header: '當期平均客單價(未稅)', visible: true, format: formatAmount },
+    { field: 'preorder_amt_last', header: '去年同期預售金額(含稅)', visible: true, format: formatAmount },
+    { field: 'preorder_namt_last', header: '去年同期預售金額(未稅)', visible: true, format: formatAmount },
+    { field: 'Growth', header: '成長率(含稅)', visible: true, format: (value: number) => value ? `${value.toFixed(2)}%` : '0%' },
+    { field: 'nGrowth', header: '成長率(未稅)', visible: true, format: (value: number) => value ? `${value.toFixed(2)}%` : '0%' },
+    { field: 'tlt_space', header: '坪數', visible: true },
+    { field: 'MonthlyFloorEffect', header: '月坪效(含稅)', visible: true, format: formatAmount },
+    { field: 'nMonthlyFloorEffect', header: '月坪效(未稅)', visible: true, format: formatAmount }
   ];
 
   //#region 選項
@@ -91,7 +100,10 @@ export class TLS26070Component extends BasicQueryPageComponent<TLS26070Data> imp
   commissionTypeOptions: any[] = [];
   typeOptions: any[] = [];
   counterCodeOptions: any[] = [];
-  taxOptions: any[] = [];
+  taxOptions: any[] = [
+    { value: '1', label: '含稅' },
+    { value: '2', label: '未稅' }
+  ];
   operationsOptions: any[] = [];
   reportTypeOptions: any[] = [
     { value: '1', label: '日營業報表' },
@@ -120,8 +132,6 @@ export class TLS26070Component extends BasicQueryPageComponent<TLS26070Data> imp
     private organizationNumberService: OrganizationNumberService,
     private commissionTypeService: CommissionTypeService,
     private cooperationMethodService: CooperationMethodService,
-    private typeService: TypeService,
-    private taxableService: TaxableService,
     private floorService: FloorService,
     private regionService: RegionService,
     private counterCodeService: CounterCodeService,
@@ -139,9 +149,7 @@ export class TLS26070Component extends BasicQueryPageComponent<TLS26070Data> imp
       this.tls26070Service.queryTLS26070(frm.getRawValue())
         .pipe(finalize(() => this.loading = false))
         .subscribe(response => {
-          // this.data = response.Data;
-          // FIXME: 先只取前10筆
-          this.data = response.Data.slice(0, 10);
+          this.data = response.Data;
           this.totalRecords = response.TotalCount;
           this.queryStateService.setQueryState(this.ProgNo, frm.getRawValue());
         });
@@ -186,6 +194,7 @@ export class TLS26070Component extends BasicQueryPageComponent<TLS26070Data> imp
       }));
     });
     // 組織代號下拉選項
+    // TODO: service是寫死的
     this.organizationNumberService.getOrganizationNumbers().subscribe((data) => {
       this.organizationOptions = data.map(item => ({
         ...item,
@@ -200,33 +209,5 @@ export class TLS26070Component extends BasicQueryPageComponent<TLS26070Data> imp
         value: typeof item.value === 'number' ? item.value.toString() : item.value
       }));
     });
-    // 是否含稅下拉選項
-    // TODO: service是寫死的
-    this.taxableService.getSystemTypes().subscribe(data => {
-      this.taxOptions = data.map(item => ({
-        ...item,
-        value: item.value === '1' ? true : false
-      }));
-    });
-  }
-
-  // 清空其他日期相關欄位 // TODO: 待確認
-  onReportTypeChange(event: any): void {
-    // this.queryForm.patchValue({
-    //   onedatedd: null,
-    //   onedateyy: null,
-    //   weeks: null,
-    //   onedatemm: null,
-    //   halfyear_onedateyy: null,
-    //   halfyear: null,
-    //   year_onedateyy: null,
-    //   startdate: null,
-    //   enddate: null,
-    //   sad_startdate: null,
-    //   sad_enddate: null,
-    //   eventID: null,
-    //   event_startdate: null,
-    //   event_enddate: null
-    // });
   }
 }
