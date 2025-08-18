@@ -80,8 +80,9 @@ export class TLS51060CRUComponent extends BasicCruPageComponent<PluLogo>
     switch (this.crudstatus) {
       case CRUDStatus.Create:
         if (this.canAdd()) {
-          console.log('insert', frm.value);
-          this.tls51060Service.insertTLS51060(frm.value).subscribe(() => {
+          const formValue = frm.getRawValue();
+          console.log('insert', formValue);
+          this.tls51060Service.insertTLS51060(formValue).subscribe(() => {
             this.messageService.successBubble('新增成功');
             // this.onCancel(); // 儲存後，會清除資料留在原頁面，不返回列表
             this.dataForm.reset(); // 重置表單
@@ -90,8 +91,9 @@ export class TLS51060CRUComponent extends BasicCruPageComponent<PluLogo>
         break;
       case CRUDStatus.Edit:
         if (this.canEdit()) {
-          console.log('update', frm.value);
-          this.tls51060Service.updateTLS51060(frm.value).subscribe(() => {
+          const formValue = frm.getRawValue();
+          console.log('update', formValue);
+          this.tls51060Service.updateTLS51060(formValue).subscribe(() => {
             // this.messageService.successBubble('更新成功');
             this.onCancel(); // 儲存後，會返回列表
           });

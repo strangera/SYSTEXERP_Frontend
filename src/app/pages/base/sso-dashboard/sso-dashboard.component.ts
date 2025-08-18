@@ -24,6 +24,8 @@ import { DividerModule } from 'primeng/divider';
 import { TranslateModule } from '@ngx-translate/core';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { environment } from '../../../../environments/environment';
+import type { OuterTokenResponse } from '../../../service/system/auth.service';
+
 @UntilDestroy()
 @Component({
   selector: 'app-sso-dashboard',
@@ -166,6 +168,17 @@ export class SsoDashboardComponent implements OnInit, OnDestroy { // 實現 OnDe
       })
     );
   }
+  private appendOrReplaceParam(url: string, key: string, value: string): string {
+    try {
+      const u = new URL(url, window.location.origin);
+      u.searchParams.set(key, value);
+      return u.toString();
+    } catch {
+      const sep = url.includes('?') ? '&' : '?';
+      return `${url}${sep}${encodeURIComponent(key)}=${encodeURIComponent(value)}`;
+    }
+  }
+
 
   navigateToUrl(item: ApiItem): void {
     this.loading = true;
@@ -189,37 +202,59 @@ export class SsoDashboardComponent implements OnInit, OnDestroy { // 實現 OnDe
         })
       );
     } else {
-      // ✅ 外部系統流程（不再呼叫 /Outer）
+      // ✅ 外部系統流程
       const userNo = this.user?.user_No || '';
       if (!userNo) {
         this.messageService.errorBubble('找不到登入使用者資訊');
         return;
       }
 
+      // ➊ 讀取 preLoginUrlOnce 的 redirect（若沒有就空字串）
+      const redirect = this.getRedirectFromPreLogin();
+
       this.subscriptions.push(
         this.authService.getOuterToken().pipe(
           untilDestroyed(this),
-          finalize(() => this.loading = false),
-          concatMap((tokenResponse) => {
-            if (tokenResponse.Status !== '0000' || !tokenResponse.Data) {
-              throw new Error('取得一次性 Token 失敗');
-            }
-
-            const token = tokenResponse.Data;
-            const targetUrl = `${item.System_Url}?token=${encodeURIComponent(token)}`;
-
-            // ✅ 開新頁面導向外部系統（直接帶 token）
-            window.open(targetUrl, '_blank');
-            return [];
-          })
+          finalize(() => this.loading = false)
         ).subscribe({
-          error: () => {
-            this.messageService.errorBubble('無法前往外部系統，請稍後再試');
-          }
+          next: (res: OuterTokenResponse) => {
+            let targetUrl = this.appendOrReplaceParam(item.System_Url, 'token', res.token);
+            if (redirect) {
+              targetUrl = this.appendOrReplaceParam(targetUrl, 'redirectURL', redirect);
+            }
+            window.open(targetUrl, '_blank');
+
+            // 若只想用一次，開啟這行：
+            // localStorage.removeItem('preLoginUrlOnce');
+          },
+          error: () => this.messageService.errorBubble('無法前往外部系統，請稍後再試')
         })
       );
     }
   }
+  /** 從 localStorage 的 preLoginUrlOnce 取出 redirecturl/redirectURL，並解碼回原網址 */
+  /** 從 localStorage 的 preLoginUrlOnce 取出 redirecturl/redirectURL/redirect，並解碼回原網址 */
+  private getRedirectFromPreLogin(): string {
+    const raw = localStorage.getItem('preLoginUrlOnce');
+    if (!raw) return '';
+
+    // 只取 ? 後的查詢字串；不使用 URLSearchParams.get()，避免自動 decode 取不到「原始值」的需求
+    const q = raw.indexOf('?');
+    if (q === -1) return '';
+
+    const qs = raw.slice(q + 1);
+    for (const kv of qs.split('&')) {
+      if (!kv) continue;
+      const [k, v = ''] = kv.split('=');
+      if (!k) continue;
+      const key = k.toLowerCase();
+      if (key === 'redirecturl' || key === 'redirect') {
+        try { return decodeURIComponent(v); } catch { return v; }
+      }
+    }
+    return '';
+  }
+
 
 
 
