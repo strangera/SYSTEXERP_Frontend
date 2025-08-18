@@ -12,7 +12,7 @@ import { ButtonComponent } from '@shared/componentkit/button/button.component';
 import { CheckboxModule } from 'primeng/checkbox';
 import { TranslateModule } from '@ngx-translate/core';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
-import { Column, createPaginationConfig } from '@shared/componentkit/table/table.model';
+import { Column, createPaginationConfig, formatAmount } from '@shared/componentkit/table/table.model';
 import { InputTextareaComponent } from "@shared/componentkit/input-textarea/input-textarea.component";
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { DropDownListService, IDropdownItem } from '@service/utility/dropDownList.service';
@@ -50,9 +50,10 @@ export class TLS57040Component extends BasicQueryPageComponent<any> implements O
   });
   totalRecords = 0;
   rowsPerPageOptions?: any[];
+  rows = 0;
   data: any[] = [];
   columns: Column[] = [
-    { field: 'PLU_Image', header: '圖片', visible: false },
+    { field: 'PLU_Image', header: '圖片', visible: false, type: 'image' },
     { field: 'LOGO_No', header: '品牌代碼', visible: true },
     { field: 'LOGO_CH_NAME', header: '品牌名稱', visible: true }, // 新增品牌名稱欄位
     { field: 'PLU_MagNo', header: '商品管理編號', visible: true },
@@ -60,10 +61,10 @@ export class TLS57040Component extends BasicQueryPageComponent<any> implements O
     { field: 'PLU_OrgPLUNo', header: '廠商貨號', visible: true },
     { field: 'PLU_Name', header: '品名', visible: true },
     { field: 'PLU_Reserve2', header: '規格說明', visible: true },
-    { field: 'STK_CurrentQty', header: '庫存數量', visible: true },
-    { field: 'PLU_SalePrc', header: '售價', visible: true },
-    { field: 'TotSaleAmt', header: '售價小計', visible: true },// 售價小計欄位
-    { field: 'PLU_OrderPrc', header: '標準進價', visible: false },// 標準進價欄位
+    { field: 'STK_CurrentQty', header: '庫存數量', visible: true, format: formatAmount },
+    { field: 'PLU_SalePrc', header: '售價', visible: true, format: formatAmount },
+    { field: 'TotSaleAmt', header: '售價小計', visible: true, format: formatAmount },// 售價小計欄位
+    { field: 'PLU_OrderPrc', header: '標準進價', visible: false, format: formatAmount },// 標準進價欄位
   ];
 
   // 下拉選單資料
@@ -157,6 +158,7 @@ export class TLS57040Component extends BasicQueryPageComponent<any> implements O
       });
       this.tls57040Service.queryTLS57040(frm.value).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(response => {
         this.rowsPerPageOptions = [response.Data.length];
+        this.rows = response.Data.length;
         this.data = response.Data;
         this.totalRecords = response.TotalCount;
         this.queryStateService.setQueryState(this.ProgNo, frm.value);

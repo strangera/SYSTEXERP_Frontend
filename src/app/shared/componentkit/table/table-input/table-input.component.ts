@@ -10,6 +10,7 @@ import { InputNumberModule } from 'primeng/inputnumber';
 import { InputTextModule } from 'primeng/inputtext';
 import { TableUtilityService } from '../table-utility.service';
 import { Column } from '../table.model';
+import { ImageModule } from 'primeng/image';
 
 @Component({
   selector: 'app-table-input',
@@ -23,6 +24,7 @@ import { Column } from '../table.model';
     FormsModule,
     CommonModule,
     PrimeTemplate,
+    ImageModule
   ],
   templateUrl: './table-input.component.html',
   styles: [

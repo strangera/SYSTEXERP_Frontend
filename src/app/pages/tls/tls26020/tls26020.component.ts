@@ -77,8 +77,8 @@ export class TLS26020Component extends BasicQueryPageComponent<TLS26020Data> imp
     { field: 'ECR_NO', header: '機號', visible: true },
     { field: 'TXN_NO', header: '交易序號', visible: true },
     { field: 'TXN_GUIBegNo_Pre', header: '字軌', visible: true },
-    { field: 'TXN_GUIBegNo', header: '發票起號', visible: true },
-    { field: 'TXN_GUIEndNo', header: '發票迄號', visible: true },
+    { field: 'TXN_GUIBegNo', header: '發票起始號碼', visible: true },
+    { field: 'TXN_GUIEndNo', header: '發票結束號碼', visible: true },
     { field: 'TXN_TotGUI', header: '發票金額', visible: true, format: (value: number) => value.toLocaleString() },
     { field: 'TXN_TotSaleAmt', header: '業績金額', visible: true, format: (value: number) => value.toLocaleString() }
   ];

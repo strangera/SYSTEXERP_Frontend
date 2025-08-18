@@ -265,7 +265,7 @@ export class TLS12010Component extends BasicQueryPageComponent<Potential_Custome
         No: item.No, // 專櫃主代碼
         Label: item.No + '/' + item.Name, // 組合成顯示用的Label
       }));
-      console.log('品牌代號:', this.tlt_name_Option);
+      console.log('品牌代碼:', this.tlt_name_Option);
     });
     // 查 統編
     this.tls12010Service.queryPOS2013_DropDownList({ "VEN_Flag": '1' }).subscribe((response) => {

@@ -29,7 +29,7 @@ import { Observable } from 'rxjs';
     DropdownModule,
     TableExportComponent
   ],
-  templateUrl: './table-caption.component.html'
+  templateUrl: './table-caption.component.html',
 })
 export class TableCaptionComponent extends BasicPrintDataComponent implements OnChanges {
   @ViewChild('fileUpload') fileUpload!: FileUpload; // 檔案上傳 元件
@@ -76,7 +76,7 @@ export class TableCaptionComponent extends BasicPrintDataComponent implements On
   @Output() expandEvent = new EventEmitter<any>();
   @Input() pages: { label: string, value: number; }[] = [];   // (右上)下拉選單 頁數選項
   @Input() selectedPage: number | null = 1;                  // (右上)下拉選單 當前選擇的頁數
-  @Input() totalRecords = 0;                        // 記錄總數
+  @Input() totalRecords = 0;                                 // 記錄總數
   @Input() rows = 10;                                         // 每頁顯示的行數
   @Input() first = 0;                                        // 當前表格的起始索引
   constructor(
@@ -87,7 +87,9 @@ export class TableCaptionComponent extends BasicPrintDataComponent implements On
   // 當 data 發生變化時，重置分頁與頁碼
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['totalRecords']) {
-      this.calculateTotalPages(); // 計算總頁數
+      setTimeout(() => {
+        this.calculateTotalPages(); // 計算總頁數
+      }, 300);
     }
     // 僅在 columns 首次被設定時執行初始化邏輯
     // 這樣就不會在每次 data 變動時都重置 filter 狀態
@@ -95,7 +97,7 @@ export class TableCaptionComponent extends BasicPrintDataComponent implements On
       // 恢復歷史紀錄，如果沒有就使用預設值
       setTimeout(() => {
         if (!this.isColumnsInitialized) {
-          const storedFilter = this.queryStateService.getQueryState(this.tableKey + 'Filter')?.value;
+          const storedFilter = this.queryStateService.getQueryStateValue(this.tableKey + 'Filter');
           if (storedFilter) {
             this.columns = storedFilter;
             const validFilteredColumns = this.columns.filter(col => col.visible !== false);// 只保留可見的欄位
@@ -127,6 +129,7 @@ export class TableCaptionComponent extends BasicPrintDataComponent implements On
   calculateTotalPages() {
     this.totalPages = Math.ceil(this.totalRecords / this.rows);
     this.pages = Array.from({ length: this.totalPages }, (_, index) => ({ label: `第 ${index + 1} 頁`, value: index + 1 }));
+    this.pages = [...this.pages];
     // 若當前頁數超過最大頁數，則移動到最大頁數，但至少為 1
     if (this.selectedPage && this.selectedPage > this.totalPages && this.totalRecords !== 0) {
       this.pageChange.emit(Math.max(this.totalPages, 1));

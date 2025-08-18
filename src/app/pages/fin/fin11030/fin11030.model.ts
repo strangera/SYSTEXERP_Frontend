@@ -6,8 +6,8 @@ export interface APS2001Data {
   SAL_GUIBegMM: string; // 起始月份
   SAL_GUIEndMM: string; // 終止月份
   SAL_GUITrack: string; // 字軌
-  SAL_GUIBegNo: string; // 發票起號
-  SAL_GUIEndNo: string; // 發票迄號
+  SAL_GUIBegNo: string; // 發票起始號碼
+  SAL_GUIEndNo: string; // 發票結束號碼
   SAL_GUIPaper: string; // 發票類別
   SAL_LastUsedGUINo?: string; // 已使用的發票號 (可為空)
   SAL_VoidGUICnt?: number; // 作廢發票張數 (可為空)

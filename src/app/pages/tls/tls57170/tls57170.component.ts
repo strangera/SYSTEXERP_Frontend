@@ -63,7 +63,7 @@ export class TLS57170Component {
   columns: any[] = [
     { field: 'vendorDescription', header: '廠商編號說明', visible: true },
     { field: 'vendorName', header: '廠商名稱', visible: true },
-    { field: 'brandCodeDescription', header: '品牌編號說明', visible: true },
+    { field: 'brandCodeDescription', header: '品牌代碼說明', visible: true },
     { field: 'managementDescription', header: '管理編號', visible: true },
     { field: 'productName', header: '品名', visible: true },
     { field: 'image', header: '圖像', visible: true },

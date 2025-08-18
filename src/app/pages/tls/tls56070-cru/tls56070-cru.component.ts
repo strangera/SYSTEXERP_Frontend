@@ -46,7 +46,7 @@ export class TLS56070CRUComponent extends BasicCruPageComponent<any> implements 
   // 主檔表單定義
   dataForm = this.formBuilder.group({
     SCRP_No: [{ value: '系統自動取號', disabled: true }], // 報廢單編號，readonly, 系統自動取號
-    LOGO_No: [null, Validators.required], // 品牌編號，下拉選項，必填
+    LOGO_No: [null, Validators.required], // 品牌代碼，下拉選項，必填
     HOS_No: [null, Validators.required], // 報廢倉別，下拉選項，必填
     SCRP_Reason: [null, [Validators.maxLength(200)]], // 報廢案由說明
     APPLY_Date: [{ value: new Date(), disabled: true }], // 申請日期，預帶系統日期

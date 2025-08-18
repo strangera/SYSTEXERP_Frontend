@@ -11,6 +11,8 @@ import { BasicPrintDataComponent } from '../../componentextends/basic-print/basi
 import { AddButton, Column, ColumnGroup, FieldChangeEvent, LazyLoadEvent, RowEditSaveEvent } from './table.model';
 import { COMMON_IMPORTS } from './import-table';
 import { TableUtilityService } from './table-utility.service';
+import { SafeUrl } from '@angular/platform-browser';
+
 @Component({
   selector: 'app-table',
   templateUrl: './table.component.html',
@@ -136,7 +138,6 @@ export class TableComponent extends BasicPrintDataComponent implements OnChanges
     if (changes['data']) {
       setTimeout(() => {
         this.dt.totalRecords = this.totalRecords !== 0 ? this.totalRecords : this.data.length;
-        this.rows = this.data.length;
         this.selectedItems = []
         this.selectionChange.emit(this.selectedItems);
       });
@@ -342,5 +343,9 @@ export class TableComponent extends BasicPrintDataComponent implements OnChanges
   // 全表總計
   getTotal(field: string): number {
     return this.tableUtilityService.getTotal(this.data, field);
+  }
+  // 獲取後端圖片
+  getImage(url: string): string | SafeUrl | undefined {
+    return this.tableUtilityService.getImage(url);
   }
 }

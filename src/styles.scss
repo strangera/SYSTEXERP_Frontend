@@ -144,6 +144,10 @@ input[disabled],
   }
 }
 
+.p-scroller {
+  overflow-anchor: none;
+}
+
 @media print {
   body * {
     visibility: hidden;

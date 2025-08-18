@@ -40,7 +40,7 @@ export class SYS0620Component extends BasicQpageComponent implements OnInit {
   // 查詢
   queryForm = this.formBuilder.group({
     roleCode: [], // 角色代號
-    userCodeMod: [], // 異動使用者代碼
+    userCodeMod: [], // 異動使用者編號
     changeStartTime: [, [Validators.required]], // 變更時間起始 (日期範圍)
     changeEndTime: [, [Validators.required]], // 變更時間結束 (日期範圍)
   });

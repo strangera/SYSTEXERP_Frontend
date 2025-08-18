@@ -66,6 +66,7 @@ export class SYSB400CRUComponent
   filtered_p_level_Options: apiOption[] = [];   //依據組織階層代碼 動態變化的 上層組織階層代碼
   // 0806新增 組織階層代碼 (篩選)
   filteredUpgroupOptions: apiOption[] = [];
+  filteredOptions: apiOption[] = [];
   org_Option: orgOption[] = [];
   whetherOptions: option[] = [
     { value: 'Y', label: '是' },
@@ -95,69 +96,64 @@ export class SYSB400CRUComponent
       });
     }
 
-    this.loadOptions().then(() => {
-      const levelId = this.dataForm.controls.level_id.value;
-      if (this.crudstatus !== 'Create' && levelId) {
-        this.handleLevelIdChange(levelId);
+    this.loadOptions();
+
+    // 監聽 [組織階層 level_id] 的變化，自動篩選[上層組織階層]選項
+    this.dataForm.controls.level_id.valueChanges.subscribe((levelId) => {
+      if (levelId) {
+        // 篩選 upgroup_Options：No <= level_id
+        this.filteredOptions = this.upgroup_Options.filter(opt => parseInt(opt.No, 10) < parseInt(levelId, 10));
+
+        // console.log('篩選檢查',this.filteredOptions);
+
+        // 如果目前選的 p_level_id 比新的 level_id 大，清空
+        const currentPLevel = this.dataForm.controls.p_level_id.value;
+        if (currentPLevel && parseInt(currentPLevel, 10) > parseInt(levelId, 10)) {
+          this.dataForm.controls.p_level_id.setValue('');
+        }
+
+        //選到'全公司'都設null
+        if(levelId ==='10'){
+          this.dataForm.get('p_level_id')?.setValue('');
+          this.dataForm.get('p_org_id')?.setValue('');
+          this.dataForm.controls.p_level_id.disable();
+          this.dataForm.controls.p_org_id.disable();
+        }else{
+          this.dataForm.controls.p_level_id.enable();
+          this.dataForm.controls.p_org_id.enable();
+        }
+        
+      } else {
+        // level_id 清空時，恢復完整選項
+        this.filteredOptions = [...this.upgroup_Options];
+        this.dataForm.controls.p_level_id.setValue('');
       }
     });
 
-    // 監聽組織階層代碼的變化 (決定p_level_id代碼的選項)
-    this.dataForm.controls.level_id.valueChanges.subscribe((levelId) => {
-      this.handleLevelIdChange(levelId);
-    });
-
-    // 監聽組織階層代碼的變化 (決定上p_org_id的選項)
+    // 監聽 [上層組織階層(p_level_id)] 的變化，自動篩選 [上層組織(org_Option)]
     this.dataForm.controls.p_level_id.valueChanges.subscribe((pLevelId) => {
       if (pLevelId) {
+        // 篩選 org_Option：Level 與 p_level_id 相同
+        this.org_Option = this.raw_org_Option.filter(item => item.Level === pLevelId);
+
+        // 啟用上層組織代碼欄位
         this.dataForm.controls.p_org_id.enable();
-        if (this.crudstatus == 'Read') {
+        if (this.crudstatus === 'Read') {
           this.dataForm.controls.p_org_id.disable();
         }
       } else {
-        this.dataForm.controls.p_org_id.disable();
+        // p_level_id 清空時，清空 org_Option 與 p_org_id
+        this.org_Option = [...this.raw_org_Option];
         this.dataForm.controls.p_org_id.setValue('');
+        this.dataForm.controls.p_org_id.disable();
       }
+
+      // ✅ 使用者變更時清空已選擇的 p_org_id
+      if (!this.isFirstLevelChange) {
+        this.dataForm.get('p_org_id')?.setValue('');
+      }
+      this.isFirstLevelChange = false;
     });
-  }
-
-  // 上層階層內容選項控制
-  handleLevelIdChange(levelId: string) {
-    console.log('上層階層代碼', levelId);
-    if (!levelId) {
-      return;
-    }
-
-    // 從已載入的上層階層代碼選項中，找出小於當前 levelId 的最大值
-    const parentOption = this.upgroup_Options
-      .filter(item => parseInt(item.No, 10) < parseInt(levelId, 10))
-      .sort((a, b) => parseInt(b.No, 10) - parseInt(a.No, 10))[0];
-
-    if (parentOption) {
-      this.dataForm.controls.p_level_id.setValue(parentOption.No);
-      this.filtered_p_level_Options = [parentOption];
-    } else {
-      // 沒有上層階層時，清空
-      this.dataForm.controls.p_level_id.setValue("");
-      this.filtered_p_level_Options = [];
-    }
-
-    // 先定義 filteredNos
-    const filteredNos = this.filtered_p_level_Options.map(item => item.No);
-
-    // 每次都從原始 orgOption 做篩選（避免累積過濾）
-    this.org_Option = this.raw_org_Option.filter(item =>
-      item.Level && filteredNos.includes(item.Level)
-    );
-
-    // ✅ 如果不是第一次進入頁面（使用者變更才清空）
-    if (!this.isFirstLevelChange) {
-      this.dataForm.get('p_org_id')?.setValue("");
-    }
-
-    this.isFirstLevelChange = false; // ✅ 將旗標設為 false，之後就會套用清空邏輯
-
-    // console.log('org_Option', this.org_Option); // 檢查[上層階層] 預帶的 [上層組織代碼/名稱] 是否正確
   }
 
   loadOptions(): Promise<void> {

@@ -60,7 +60,7 @@ export class TLS56080CRUComponent extends BasicCruPageComponent<any> implements 
   // 主檔表單定義
   dataForm = this.formBuilder.group({
     TRD_No: [{ value: '系統自動取號', disabled: true }], // 同業調撥編號，readonly
-    LOGO_No: [null, Validators.required], // 品牌編號，必填
+    LOGO_No: [null, Validators.required], // 品牌代碼，必填
     HOS_No: [null, Validators.required], // 倉別，必填
     VEN_No: [null, Validators.required], // 廠商編號，必填
     IN_TotBuyAmt: [{ value: 0, disabled: true }], // 調入總金額，readonly

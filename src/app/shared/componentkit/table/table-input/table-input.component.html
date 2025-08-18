@@ -1,8 +1,8 @@
 <ng-container [ngSwitch]="col.type">
   <div *ngSwitchCase="'input'" class="input-wrapper" [attr.data-suffix]="col.suffix">
-    <input pInputText class="w-full min-w-max" [placeholder]="'請輸入' + col.header"
-      [(ngModel)]="rowData[col.field]" [ngModelOptions]="{ standalone: true }" [disabled]="disabled"
-      (ngModelChange)="onValueChange($event)" (blur)="onBlur()" />
+    <input pInputText class="w-full min-w-max" [placeholder]="'請輸入' + col.header" [(ngModel)]="rowData[col.field]"
+      [ngModelOptions]="{ standalone: true }" [disabled]="disabled" (ngModelChange)="onValueChange($event)"
+      (blur)="onBlur()" />
   </div>
 
   <p-inputNumber *ngSwitchCase="'inputNumber'" class="w-full min-w-max" styleClass="w-full" mode="decimal"
@@ -38,4 +38,5 @@
     [(ngModel)]="rowData[col.field]" [ngModelOptions]="{ standalone: true }" appendTo="body"
     [placeholder]="'請選擇' + col.header" [dateFormat]="col.dateFormat || 'yy-mm-dd'" [disabled]="disabled"
     (ngModelChange)="onValueChange($event)" />
+
 </ng-container>

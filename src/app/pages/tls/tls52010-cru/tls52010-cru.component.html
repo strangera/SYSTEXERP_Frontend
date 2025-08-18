@@ -17,8 +17,8 @@
         <app-input-text *ngIf="dataForm.controls.VEN_No.value" class="col-12 md:col-6 lg:col-2" label="廠商簡稱"
           controlName="vendorShortName" [control]="dataForm.controls.vendorShortName" [submitted]="submitted" />
 
-        <app-dropdown class="col-12 md:col-6 lg:col-2" label="品牌編號" controlName="LOGO_No" [options]="brandOptions"
-          optionLabel="Name" optionValue="No" [control]="dataForm.controls.LOGO_No" [submitted]="submitted" />
+        <app-dropdown class="col-12 md:col-6 lg:col-2" label="品牌代碼/名稱" controlName="LOGO_No" [options]="brandOptions"
+          optionLabel="label" optionValue="No" [control]="dataForm.controls.LOGO_No" [submitted]="submitted" />
         <app-input-number class="col-12 md:col-6 lg:col-2" label="剩餘預算金額" controlName="remainingBudgetAmount"
           [control]="dataForm.controls.remainingBudgetAmount" [useGrouping]="true" [minFractionDigits]="0"
           [maxFractionDigits]="2" [submitted]="submitted" />
@@ -49,7 +49,7 @@
           [control]="dataForm.controls.PO_TotalSaleAmt" [useGrouping]="true" [minFractionDigits]="0"
           [maxFractionDigits]="2" [submitted]="submitted" />
 
-        <app-input-textarea class="col-12" label="採購單說明" controlName="PO_Remark" [control]="dataForm.controls.PO_Remark"
+        <app-input-textarea class="col-12" label="採購單備註" controlName="PO_Remark" [control]="dataForm.controls.PO_Remark"
           [submitted]="submitted" />
       </div>
 

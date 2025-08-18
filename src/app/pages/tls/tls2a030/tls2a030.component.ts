@@ -1,6 +1,5 @@
 import { Component } from '@angular/core';
 import {
-  FormGroup,
   Validators,
   FormsModule,
   ReactiveFormsModule,
@@ -11,8 +10,6 @@ import { LocationOptionsService } from '../../../service/api/dropdownservice/loc
 import { ECRNoService } from '../../../service/basic/ECRNo.service';
 import { TLS2A030Service } from '../../../service/api/tls/tls2a030.service';
 import { HttpClient } from '@angular/common/http';
-import { environment } from '../../../../environments/environment';
-
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { AccordionModule } from 'primeng/accordion';
 import { CalendarRangeQuickComponent } from '../../../shared/componentkit/calendar-range-quick/calendar-range-quick.component';
@@ -86,14 +83,14 @@ export class TLS2A030Component extends BasicQueryPageComponent<any> {
     {
       field: 'Compare_CD',
       header: '(C) 與 (D) 比較',
-      format: (v: boolean) => (v ? `⭕` : `❌`),
+      format: (v: boolean) => (v ? `Y` : `N`),
       visible: true,
 
     },
     {
       field: 'Compare_AB',
       header: '(A) 與 (B) 比較',
-      format: (v: boolean) => (v ? `⭕` : `❌`),
+      format: (v: boolean) => (v ? `Y` : `N`),
       visible: true,
 
     },

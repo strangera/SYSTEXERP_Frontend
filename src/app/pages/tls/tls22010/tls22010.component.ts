@@ -70,7 +70,7 @@ export class TLS22010Component extends BasicQueryPageComponent<any> implements O
     { field: 'TXN_TotExtraAmt', header: '代收/付金額 (L)', visible: true, format: formatAmount },
     { field: 'TXN_TotHaveTax', header: '已開發票金額 (E)', visible: true, format: formatAmount },
     { field: 'TXN_ChangeHaveTax', header: '已開溢付 (K)', visible: true, format: formatAmount },
-    { field: 'TXN_TotOver', header: '已匯送付 (I)', visible: true, format: formatAmount},
+    { field: 'TXN_TotOver', header: '已匯送付 (I)', visible: true, format: formatAmount },
     { field: 'TXN_TotGUI', header: '發票總金額 (F)', visible: true, format: formatAmount },
     { field: 'GUI_NET', header: '發票未稅金額 (M)', visible: true, format: formatAmount },
     { field: 'TXN_TotTax', header: '發票稅額 (N)', visible: true, format: formatAmount },
@@ -109,15 +109,7 @@ export class TLS22010Component extends BasicQueryPageComponent<any> implements O
   // --------- 生命週期 ----------
   ngOnInit(): void {
     // initializePage 會還原 queryState（我們在 onSubmit 內用 frm.value 存），包含 TXN_Date
-    this.initializePage('TLS22010', '/TLS/TLS22010cru');
-    this.queryStateService.getQueryState(this.ProgNo)?.pipe(take(1)).subscribe((query) => {
-      if (query && this.queryForm) {
-        this.queryForm?.patchValue(query);
-        this.queryForm?.patchValue({ pageIndex: 1 });
-        this.onSubmit(this.queryForm);
-      }
-    });
-
+    this.initializePage('TLS22010', '/TLS/TLS22010cru', this.queryForm, (frm) => this.onSubmit(frm));
     // 載入下拉選項
     this.floorService.getFloors().subscribe((data) => (this.floorOptions = data));
     this.machineDisplayService.getMachinedisplay().subscribe((data) => (this.machinedisplayOptions = data));
@@ -135,7 +127,7 @@ export class TLS22010Component extends BasicQueryPageComponent<any> implements O
       const value = this.queryForm.value as any;
 
       const params = {
-       TXN_DATE: value.TXN_DATE ? this.toYMD(value.TXN_DATE) : null,
+        TXN_DATE: value.TXN_DATE ? this.toYMD(value.TXN_DATE) : null,
         ECR_No: value.ECR_No,
         floor_noList: value.floor_noList,
         ShowStatus: value.ShowStatus,

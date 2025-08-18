@@ -38,28 +38,27 @@ interface LogoOption {
   label?: string;
 }
 @Component({
-    selector: 'app-tls51110-cru',
-    templateUrl: './tls51110-cru.component.html',
-    styleUrls: ['./tls51110-cru.component.scss'],
-    standalone: true,
-    imports: [
-        MenubarComponent,
-        ButtonComponent,
-        PanelModule,
-        FormsModule,
-        ReactiveFormsModule,
-        CalendarComponent,
-        DropdownComponent,
-        InputNumberComponent,
-        InputTextComponent,
-        NgIf,
-        TranslateModule,
-    ],
+  selector: 'app-tls51110-cru',
+  templateUrl: './tls51110-cru.component.html',
+  styleUrls: ['./tls51110-cru.component.scss'],
+  standalone: true,
+  imports: [
+    MenubarComponent,
+    ButtonComponent,
+    PanelModule,
+    FormsModule,
+    ReactiveFormsModule,
+    CalendarComponent,
+    DropdownComponent,
+    InputNumberComponent,
+    InputTextComponent,
+    NgIf,
+    TranslateModule,
+  ],
 })
 export class TLS51110CRUComponent
   extends BasicCruPageComponent<LogoBudget>
-  implements OnInit
-{
+  implements OnInit {
   dataForm = this.formBuilder.nonNullable.group({
     id: [0],
     LOGO_No: ['', Validators.required],
@@ -179,7 +178,7 @@ export class TLS51110CRUComponent
   }
   onFileChange(event: any) {
     const file = event.target.files[0];
-    const columns = ['品牌編號', '品牌名稱', '年月(YYYYMM)', '預算', '成本', '備註(100字元)'];
+    const columns = ['品牌代碼', '品牌名稱', '年月(YYYYMM)', '預算', '成本', '備註(100字元)'];
     this.excelImportService.importExcel(file, columns).then((data) => {
       console.log('匯入資料', data);
     });

@@ -105,7 +105,6 @@ export class SYS0730Component extends BasicQueryPageComponent<QuerySYS0730Respon
           } else {
             this.data = [];
             this.totalRecords = 0;
-            this.messageService.warnBubble(response.Message);
           }
         });
     });

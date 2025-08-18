@@ -16,6 +16,12 @@ import zhHant from '@angular/common/locales/zh-Hant';
 import { InactivityService } from './inactivity.service';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 registerLocaleData(zhHant, 'zh-Hant-TW');
+export type OuterTokenResponse = {
+  token: string;
+  expiresAt: string;
+  expiresInSeconds: number;
+  tokenType: string;
+};
 
 export interface ApiResponse<T> {
   Status: string;
@@ -204,9 +210,12 @@ export class AuthService {
       return null;
     }
   }
-getOuterToken(): Observable<ApiResponse<string>> {
-  return this.http.get<ApiResponse<string>>(
-    `${environment.ApiUrl}/SSOLogin/getOuterToken`
-  );
-}
+  // 改 getOuterToken 回傳型別
+
+  getOuterToken(): Observable<OuterTokenResponse> {
+    return this.http.get<OuterTokenResponse>(
+      `${this.apiUrl}/SSOLogin/getOuterToken`,
+      { headers: { Accept: 'application/json' } }
+    );
+  }
 }

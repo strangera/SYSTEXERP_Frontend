@@ -68,7 +68,6 @@ export class SYS0310Component extends BasicQueryPageComponent<Role> implements O
         } else {
           this.data = [];
           this.totalRecords = 0;
-          this.messageService.warnBubble(response.Message);
         }
       });
     });

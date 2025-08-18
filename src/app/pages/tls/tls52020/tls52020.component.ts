@@ -69,12 +69,12 @@ export class TLS52020Component extends BasicQueryPageComponent<ITLS52020Data> im
   columns: Column[] = [
     { field: 'CRN_No', header: '退貨單號', visible: true }, // 採購單號
     { field: 'SYS_StoreNo', header: '門店編號', visible: true }, // 門店編號 (系統)
-    { field: 'VEN_No', header: '廠商代號', visible: true }, // 廠商代號
+    { field: 'VEN_No', header: '廠商編號', visible: true }, // 廠商代號
     { field: 'LOGO_No', header: '品牌代碼', visible: true }, // LOGO代碼
     { field: 'HOS_No', header: '倉庫代碼', visible: true }, // 倉庫代碼
     { field: 'HOS_NAME', header: '倉庫名稱', visible: true }, // 倉庫名稱
     { field: 'org_id', header: '組織代碼', visible: true }, // 組織代碼
-    { field: 'CRN_Status', header: '採購單狀態', visible: true, format: value => this.crnstatusOptions.find(x => x.value === value)?.label || value }, // 採購單狀態
+    { field: 'CRN_Status', header: '退貨單狀態', visible: true, format: value => this.crnstatusOptions.find(x => x.value === value)?.label || value }, // 採購單狀態
     { field: 'APPLY_Date', header: '申請日期', visible: true, format: formatDate }, // 申請日期 (ISO 格式字串)
     { field: 'APPLY_USR_No', header: '申請人員編號', visible: true }, // 申請人員編號
     { field: 'APPLY_USR_Name', header: '申請人員姓名', visible: true }, // 申請人員姓名
@@ -121,7 +121,7 @@ export class TLS52020Component extends BasicQueryPageComponent<ITLS52020Data> im
   ngOnInit(): void {
     this.initializePage('TLS52020', 'tls/tls52020cru', this.queryForm, (form) => this.onSubmit(form));
     // 倉別 (HOS_No)
-    this.dropDownListService.getPOS2034Options().pipe(untilDestroyed(this), map(response => response.Data.map(item => ({ label: item.Name, value: item.No })))
+    this.dropDownListService.getPOS2034Options().pipe(untilDestroyed(this), map(response => response.Data.map(item => ({ label: item.No + ' - ' + item.Name, value: item.No })))
     ).subscribe(options => { this.warehouseOptions = options; });
     // 品牌代碼 (LOGO_No)
     this.dropDownListService.queryPLULOGO_DropDownList().pipe(untilDestroyed(this), map(response => response.Data.map(item => ({ label: item.Name, value: item.No })))

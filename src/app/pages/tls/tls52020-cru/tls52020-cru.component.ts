@@ -51,7 +51,7 @@ export class TLS52020CRUComponent extends BasicCruPageComponent<ITLS52020Data> i
     CRN_No: [{ value: '系統自動產生', disabled: true }], // 採購單號 (與 POS2016.PO_No 對應)
     VEN_No: ['84445301-1', [Validators.required]], // 廠商編號 (與 POS2016.VEN_No 對應)
     vendorShortName: [{ value: '', disabled: true }], // 廠商簡稱 (前端專用，不對應資料庫欄位，顯示在 VEN_No 下一欄)
-    LOGO_No: ['0001', [Validators.required]], // 品牌編號 (與 POS2016.LOGO_No 對應)
+    LOGO_No: ['0001', [Validators.required]], // 品牌代碼 (與 POS2016.LOGO_No 對應)
     HOS_No: [{ value: null as string | null, disabled: true }, [Validators.required]], // 倉別 (與 POS2016.HOS_No 對應)
     CRN_TotalBuyNet: [{ value: 0, disabled: true }], // 採購金額
     CRN_TotalBuyTax: [{ value: 0, disabled: true }], //稅額
@@ -135,8 +135,8 @@ export class TLS52020CRUComponent extends BasicCruPageComponent<ITLS52020Data> i
       });
     });
     this.dropDownListService.queryPLULOGO_HOS_No_DropDownList().pipe(untilDestroyed(this)).subscribe(response => {
-      this.brandOptions = response.Data;// 品牌
-      // 監聽品牌編號變化，用於顯示剩餘預算金額和建議倉別
+      this.brandOptions = response.Data.map(brand => ({ ...brand, label: `${brand.No} - ${brand.Name}` }));// 品牌
+      // 監聽品牌代碼變化，用於顯示剩餘預算金額和建議倉別
       this.dataForm.controls.LOGO_No.valueChanges.pipe(debounceTime(300), untilDestroyed(this)).subscribe(logoNo => {
         if (logoNo && this.dataForm.controls.APPLY_Date.value) {
           const HOS_No = this.brandOptions.find(opt => opt.No === logoNo)?.HOS_No || null;
