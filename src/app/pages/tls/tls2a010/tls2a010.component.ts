@@ -72,8 +72,7 @@ export class TLS2A010Component extends BasicQueryPageComponent<any> implements O
     {
       label: '缺單審核',
       icon: 'pi pi-exclamation-triangle',
-      action: (rowData: any) => this.onEdit(rowData),
-      disabled: (rowData: any) => rowData.isMissing !== 'Y'
+      action: (rowData: any) => this.onAbnormalClick(rowData)
     }
   ];
   IsPrint = true;
@@ -115,7 +114,7 @@ export class TLS2A010Component extends BasicQueryPageComponent<any> implements O
 
 
   ngOnInit(): void {
-    this.initializePage('TLS2A010', 'TLS/TLS2A010cru', this.queryForm, (form) => this.onSubmit(form));
+    this.initializePage('TLS2A010', 'TLS/TLS2A010CRU', this.queryForm, (form) => this.onSubmit(form));
     this.loadDropdownOptions();
     this.selectedColumns = this.defaultColumns;
     this.columnGroup = [];
@@ -200,8 +199,9 @@ export class TLS2A010Component extends BasicQueryPageComponent<any> implements O
   }
   onAbnormalClick(row: any): void {
     console.log('缺單被點擊:', row);
-
+    this.onEdit(row);
   }
+
 
   onSubmit(form: FormGroup): void {
     this.submitted = true;
@@ -212,10 +212,6 @@ export class TLS2A010Component extends BasicQueryPageComponent<any> implements O
     const raw = form.value;
 
     const payload = {
-      PageSize: raw.PageSize ?? 0,
-      PageIndex: raw.PageIndex ?? 0,
-      SortBy: raw.SortBy ?? [{ field: 'ECR_No', order: 1 }],
-
       SYS_StoreNo: raw.SYS_StoreNo ?? '',
       TXN_Date: raw.TXN_Date ? new Date(raw.TXN_Date).toISOString().split('T')[0] : '',
       ECR_No_Start: raw.ECR_No_Start ?? '',
@@ -223,33 +219,66 @@ export class TLS2A010Component extends BasicQueryPageComponent<any> implements O
       PAY_NO: raw.PAY_NO ?? '',
       tlt_floor: raw.tlt_floor ?? '',
       tlt_building: raw.tlt_building ?? '',
-
     };
-
 
     this.tls2a010Service.queryTLS2A010(payload).pipe(untilDestroyed(this)).subscribe({
       next: (res) => {
-        this.data = res?.Data ?? [];
+        interface TLS2A010Item {
+          System_Amt?: number;
+          Real_Amt?: number;
+          TXN_Date?: string;
+          Check_Status?: string;
+          [key: string]: any; // Add additional properties as needed
+        }
 
-        // if (this.data.length > 0) {
-        //   const ecrNos = this.data.map(x => Number(x.ECR_No)).filter(n => !isNaN(n));
-        //   const minEcrNo = Math.min(...ecrNos);
-        //   const maxEcrNo = Math.max(...ecrNos);
+        this.data = (res?.Data ?? []).map((item: TLS2A010Item) => {
+          const systemAmt = Number(item.System_Amt ?? 0);
+          const realAmt = Number(item.Real_Amt ?? 0);
+          const diff = systemAmt - realAmt;
 
-        //   // 最小值、最大值設回表單
-        //   this.queryForm.patchValue({
-        //     ECR_No_Start: minEcrNo,
-        //     ECR_No_End: maxEcrNo
-        //   });
-        // }
+          let status = '';
+          if (diff < 0) {
+            status = '欠';   // 欠收
+          } else if (diff === 0) {
+            status = '平';   // 平帳
+          } else {
+            status = '溢';   // 多收
+          }
+
+          return {
+            ...item,
+            OVER_PayAmt: diff,   // 差異數
+            OVER_Status: status  // 欠 / 平 / 溢
+          };
+        });
+        this.data = (res?.Data ?? []).map((item: TLS2A010Item) => {
+          // 先取原始日期字串
+          const rawDate = item.TXN_Date;
+          let formattedDate = rawDate;
+
+          if (rawDate) {
+            const dateObj = new Date(rawDate);
+            if (!isNaN(dateObj.getTime())) {
+              const yyyy = dateObj.getFullYear();
+              const dd = String(dateObj.getDate()).padStart(2, '0');
+              const mm = String(dateObj.getMonth() + 1).padStart(2, '0'); // 月份從0開始
+              formattedDate = `${yyyy}/${dd}/${mm}`;
+            }
+          }
+
+          return {
+            ...item,
+            TXN_Date: formattedDate,
+          };
+        });
+
 
         const first = this.data[0];
         this.PAY_NO = this.queryForm.value.PAY_NO || '';
         this.TXN_Date = first?.TXN_Date || '';
-        // Replace with intended functionality or remove if unnecessary
-        console.log('PAY_NO:', this.PAY_NO);
 
         this.totalRecords = res.TotalCount ?? this.data.length;
+        this.queryStateService.setQueryState(this.ProgNo, this.queryForm.value);
         this.loading = false;
       },
       error: (err) => {
@@ -257,6 +286,7 @@ export class TLS2A010Component extends BasicQueryPageComponent<any> implements O
         this.loading = false;
       }
     });
+
   }
 
   onReview(selectedItems: any[]): void {
@@ -281,6 +311,8 @@ export class TLS2A010Component extends BasicQueryPageComponent<any> implements O
 
   }
 
-
+  isRowSelectable(rowData: any): boolean {
+    return rowData.Check_Status !== 'Y';
+  }
 }
 

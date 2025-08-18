@@ -19,37 +19,39 @@ export const defaultColumns = [
   { header: '收銀機代號', field: 'ECR_No' },
   { header: '專櫃編號', field: 'TLT_NO' },
   { header: '專櫃名稱', field: 'tlt_name' },
-  // { header: '付款別', field: 'PAY_NO' },
   { header: '系統帳', field: 'BOOK_PayAmt' },
   { header: '實收帳', field: 'ACT_PayAmt' },
   { header: '系統/實收帳差異', field: 'OVER_PayAmt' },
-  // { header: '修正後金額', field: 'MOD_PayAmt' },
+
   {
     header: '審核狀態',
-    field: 'Check_Status',
-    format: (v: string) => v === 'Y' ? '已審核' : v === 'N' ? '未審核' : v
+    field: 'OVER_PayAmt',
+    format: (v: number) => {
+      if (v < 0) return '欠';
+      if (v === 0) return '平';
+      if (v > 0) return '溢';
+      return v; // 預設 fallback
+    }
   },
   { header: '審核人員', field: 'check_usr_name' },
-  {
-    header: '是否有缺單',
-    field: 'isMissing',
-    format: (v: string) => v === 'Y' ? '是' : v === 'N' ? '否' : v
-  }
+
 ];
+
 export const creditCardColumns: Column[] = [
   { header: '收銀機代號', field: 'ECR_No' },
   { header: '專櫃編號', field: 'TLT_NO' },
   { header: '專櫃名稱', field: 'tlt_name' },
 
-  { header: '信用卡', field: 'SYS_Credit', groupField: 'SYS' },  // if CRD_Type!=A、D 顯示BOOK_PayAmt的值否則0
-  { header: 'AE', field: 'SYS_AE', groupField: 'SYS' }, 	      // if CRD_Type=A 顯示BOOK_PayAmt的值否則0
-  { header: 'DINER', field: 'SYS_DINER', groupField: 'SYS' },   // if CRD_Type=D 顯示BOOK_PayAmt的值否則0
-  { header: '總金額', field: 'SYS_Total' }, 					          // 上面三個加總
+  { header: '信用卡', field: 'SYS_Credit', groupField: 'SYS' }, // if CRD_Type!=A、D 顯示BOOK_PayAmt的值否則0
+  { header: 'AE', field: 'SYS_AE', groupField: 'SYS' },     // if CRD_Type=A 顯示BOOK_PayAmt的值否則0
+  { header: 'DINER', field: 'SYS_DINER', groupField: 'SYS' },  // if CRD_Type=D 顯示BOOK_PayAmt的值否則0
+  { header: '總金額', field: 'SYS_Total' },         // 上面三個加總
 
   { header: '信用卡', field: 'ACT_Credit', groupField: 'ACT' }, // if CRD_Type!=A、D 顯示ACT_PayAmt的值否則0
-  { header: 'AE', field: 'ACT_AE', groupField: 'ACT' }, 	     // if CRD_Type=A 顯示ACT_PayAmt的值否則0
+  { header: 'AE', field: 'ACT_AE', groupField: 'ACT' },     // if CRD_Type=A 顯示ACT_PayAmt的值否則0
   { header: 'DINER', field: 'ACT_DINER', groupField: 'ACT' },  // if CRD_Type=D 顯示ACT_PayAmt的值否則0
-  { header: '總金額', field: 'ACT_Total' },                     // 上面三個加總
+  { header: '總金額', field: 'ACT_Total' },        // 上面三個加總
+
 
   { header: '信用卡', field: 'ACT_SYS_Credit', groupField: 'ACT_SYS' },
   { header: 'AE', field: 'ACT_SYS_AE', groupField: 'ACT_SYS' },
@@ -57,13 +59,19 @@ export const creditCardColumns: Column[] = [
   { header: '總金額', field: 'ACT_SYS_Total' },
   {
     header: '審核狀態',
-    field: 'Check_Status',
-    format: (v) => v === 'Y' ? '已審核' : v === 'N' ? '未審核' : v
+    field: 'OVER_PayAmt',
+    format: (v) => {
+      if (v < 0) return '欠';
+      if (v === 0) return '平';
+      if (v > 0) return '溢';
+      return v; // 預設 fallback
+    }
   },
+
   { header: '審核人員', field: 'check_usr_name' },
   {
     header: '是否有缺單',
-    field: 'isMissing',
+    field: 'onAbnormalClick',
     format: (v) => v === 'Y' ? '是' : v === 'N' ? '否' : v
   }
 ];
