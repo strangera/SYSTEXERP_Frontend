@@ -70,6 +70,21 @@
   }
 }
 
+.grid {
+  align-items: start; /* 讓所有項目從頂部對齊 */
+}
+
+.field-checkbox {
+  margin-bottom: 1rem; /* 統一間距 */
+  min-height: auto; /* 移除最小高度限制 */
+}
+
+.col-12.md\:col-6 {
+  padding-bottom: 0 !important;
+  /* 或者 */
+  padding: 0.5rem 0.75rem 0 0.75rem !important; /* 只保留左右和上方的 padding */
+}
+
 // 🎯 響應式調整
 @media (max-width: 768px) {
   .copy-address-button {
