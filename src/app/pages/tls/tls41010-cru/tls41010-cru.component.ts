@@ -301,6 +301,7 @@ export class TLS41010CRUComponent extends BasicCruPageComponent<TLS41010Data> im
 
     return {
       ...rawValue,
+      id: this.isFormEditable ? this.rowdata?.id : undefined,
       SYS_StoreNo: storeNo,
       ECR_Logo1: rawValue.ECR_Logo1 ?? undefined,
       ECR_Logo2: rawValue.ECR_Logo2 ?? undefined,

@@ -7,7 +7,7 @@
   <div class="col pb-0">
     <app-calendar class="w-full" [label]="startLabel || ''" [controlName]="startControlName" [control]="startControl"
       [submitted]="submitted" [calendarType]="calendarOneType" [minDate]="startMinDate"
-      [maxDate]="startMaxDate"></app-calendar>
+      [maxDate]="startMaxDate"  [disabled]="isEndDisabled"></app-calendar>
   </div>
   <div class="flex justify-content-center align-items-center"
     [ngStyle]="{ 'margin-top': startLabel ? '27px' : '7px', 'height': '43px' }">
@@ -16,7 +16,7 @@
   <div class="col pb-0">
     <app-calendar class="w-full" [label]="endLabel || ''" [controlName]="endControlName" [control]="endControl"
       [submitted]="submitted" [calendarType]="calendarOneType" [minDate]="endMinDate"
-      [maxDate]="endMaxDate"></app-calendar>
+      [maxDate]="endMaxDate"  [disabled]="isEndDisabled"></app-calendar>
   </div>
 </div>
 <ng-content select="footer"></ng-content>

@@ -381,7 +381,7 @@ export class TLS23010Component
     const day = String(d.getDate()).padStart(2, '0');
     const hh = String(d.getHours()).padStart(2, '0');
     const mm = String(d.getMinutes()).padStart(2, '0');
-    return `${y}/${m}/${day} ${hh}:${mm}`;
+    return `${y}/${m}/${day}`;
   }
 
   columns: any[] = [
@@ -467,10 +467,10 @@ export class TLS23010Component
 
       format: (val: any) => this.getYesNoLabel(val),
     },
-    { field: 'TXN_PrintGUI', header: '信用卡別' },
-    { field: 'TXN_PrintGUI', header: '號碼' },
-    { field: 'TXN_PrintGUI', header: '分期期數' },
-    { field: 'TXN_PrintGUI', header: '金額' },
+    { field: 'CRD_Type', header: '信用卡別' },
+    { field: 'CRD_No', header: '號碼' },
+    { field: 'TERM_No', header: '分期期數' },
+    { field: 'TXN_PayAmt', header: '金額' },
   ];
   // 將 ISO 或日期字串轉成 yyyy-MM-dd（後端明細多半吃純日期）
   private toYMD(val: string | Date): string {
@@ -524,7 +524,7 @@ export class TLS23010Component
   };
 
   detailcolumns = [
-    { field: 'TXN_Date',header: '交易日期',
+    { field: 'TXN_Date',header: '銷售日期',
       format: this.formatDateTimeYMDHM.bind(this),
     },
     { field: 'ECR_No', header: '收銀機號' },
@@ -532,15 +532,15 @@ export class TLS23010Component
     { field: 'tlt_no', header: '專櫃編號' },
     { field: 'tlt_name', header: '櫃位名稱' },
 
-    { field: 'PAY_NO', header: '付款代號' },
-    { field: 'PAY_NAME', header: '付款名稱' },
-    { field: 'CRD_Type', header: '卡別代碼' },
-    { field: 'CRD_Name', header: '卡別名稱' },
-    { field: 'CRD_No',header: '卡號',
+    // { field: 'PAY_NO', header: '付款別代號' },
+    { field: 'PAY_NAME', header: '付款別' },
+    // { field: 'CRD_Type', header: '卡別代碼' },
+    { field: 'CRD_Name', header: '卡別' },
+    { field: 'CRD_No',header: '號碼',
       format: (v: string) => (v ? `**** ${v.slice(-4)}` : ''),
     },
-    { field: 'TERM_No', header: '端末機號', style: 'text-right' },
-    { field: 'TXN_PayAmt',header: '付款金額',
+    { field: 'TERM_No', header: '分期期數', style: 'text-right' },
+    { field: 'TXN_PayAmt',header: '金額',
       style: 'text-right',
       format: (v: number) =>
         v === null || v === undefined ? '0' : v.toLocaleString('en-US'),

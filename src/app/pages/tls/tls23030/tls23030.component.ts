@@ -34,7 +34,7 @@ import { DialogModule } from 'primeng/dialog';
 import { RadioButtonModule } from 'primeng/radiobutton';
 import { finalize } from 'rxjs/operators';
 import { TranslateModule } from '@ngx-translate/core';
-
+import { Observable } from 'rxjs';
 import { TableComponent } from '@shared/componentkit/table/table.component';
 
 type DisplayMode = 'Report' | 'SummaryReport';
@@ -77,7 +77,7 @@ export class TLS23030Component extends BasicQueryPageComponent<any> {
     return d;
   })();
 
-  // ✅ 陣列型欄位用 control<any[]>([])，避免 never[] 型別問題
+  // 
    queryForm = this.formBuilder.group({
     
     TXN_DateStart: [this.yesterday, [Validators.required]],
@@ -106,76 +106,28 @@ export class TLS23030Component extends BasicQueryPageComponent<any> {
     ...createPaginationConfig([{ field: 'ECR_No', order: 1 }]),
   });
 
-  columns: any[] = [
-    {
-      field: 'TXN_Date',
-      header: '銷售日期',
-      visible: true,
-      format: (val: string) => {
-        const date = new Date(val);
-        return isNaN(date.getTime())
-          ? val
-          : `${date.getFullYear()}/${(date.getMonth() + 1).toString().padStart(2, '0')}/${date.getDate().toString().padStart(2, '0')}`;
-      },
-    },
-    { field: 'ECR_No', header: '收銀機號', visible: true },
-    { field: 'TXN_No', header: '交易序號', visible: true },
-    { field: 'tlt_no', header: '專櫃編號', visible: true },
-    {
-      field: 'tlt_name',
-      header: '櫃位名稱',
-      visible: true,
-      style: 'text-left',
-    },
-    {
-      field: 'TXN_Status',
-      header: '交易型態',
-      visible: true,
-      format: (val: any) => this.getLabelFromOptions(val, this.txnStatusOptions),
-    },
-    {
-      field: 'PAY_Type',
-      header: '付款別',
-      visible: true,
-      format: (val: any) => this.getLabelFromOptions(val, this.paymentTypeOptions),
-    },
-    {
-      field: 'TXN_PayAmt',
-      header: '金額',
-      visible: true,
-      style: 'text-right',
-      format: (val: number) => val?.toLocaleString('en-US') || '0',
-    },
-    {
-      field: 'TXN_TaxAlwnc',
-      header: '備抵稅額',
-      visible: true,
-      style: 'text-right',
-      format: (val: number) => val?.toLocaleString('en-US') || '0',
-    },
-    { field: 'TXN_GUINo', header: '發票號碼', visible: true },
-    {
-      field: 'TXN_Time',
-      header: '交易時間',
-      visible: true,
-      format: (val: string) => {
-        const date = new Date(val);
-        if (isNaN(date.getTime())) return val;
-        const yyyy = date.getFullYear();
-        const MM = (date.getMonth() + 1).toString().padStart(2, '0');
-        const dd = date.getDate().toString().padStart(2, '0');
-        const HH = date.getHours().toString().padStart(2, '0');
-        const mm = date.getMinutes().toString().padStart(2, '0');
-        return `${yyyy}/${MM}/${dd} ${HH}:${mm}`;
-      },
-    },
-    { field: 'CRD_Type', header: '信用卡別', visible: true },
-    { field: 'CRD_No', header: '信用卡卡號/條碼', visible: true, style: 'text-right' },
-    { field: 'IsHaveTERM_No', header: '是否分期', visible: true, format: (v: any) => this.getLabelFromOptions(v, this.WhetherOptions) },
-    { field: 'TXN_MemCard', header: '會員卡號', visible: true },
-    { field: 'org_id', header: '組織編號', visible: true },
-    { field: 'org_id', header: '組織名稱', visible: true, format: (v: any) => this.getLabelFromOptions(v, this.OrganizationCodeOptions) },
-  ];
+columns: any[] = [
+  { field: 'TXN_Date', header: '銷售日期', visible: true, format: (val: string) => this.formatDate(val) },
+  { field: 'ECR_No', header: '收銀機號', visible: true },
+  { field: 'TXN_No', header: '交易序號', visible: true },
+  { field: 'tlt_no', header: '專櫃編號', visible: true },
+  { field: 'tlt_name', header: '櫃位名稱', visible: true, style: 'text-left' },
+  { field: 'TXN_StatusName', header: '交易型態', visible: true, },
+  { field: 'PAY_NAME', header: '付款別', visible: true,},
+  { field: 'TXN_PayAmt', header: '金額', visible: true, style: 'text-right', format: (val: number) => this.formatNumber(val) },
+  { field: 'TXN_TaxAlwnc', header: '備抵稅額', visible: true, style: 'text-right', format: (val: number) => this.formatNumber(val) },
+  { field: 'TXN_GUIBegNo', header: '發票號碼', visible: true },
+  { field: 'TXN_Time', header: '交易時間', visible: true, format: (val: string) => this.formatDateTime(val) },
+  { field: 'CRD_Name', header: '信用卡別', visible: true },
+  { field: 'CRD_No', header: '信用卡卡號/條碼', visible: true, style: 'text-right' },
+  // { field: 'IsHaveTERM_No', header: '是否分期', visible: true, format: (v: any) => this.getLabelFromOptions(v, this.WhetherOptions) },
+   { field: 'TERM_No', header: '分期', visible: true },
+  { field: 'TERM_Name', header: '是否分期', visible: true },
+  { field: 'TXN_MemCard', header: '會員卡號', visible: true },
+  { field: 'org_id', header: '組織編號', visible: true },
+  { field: 'Org_Name', header: '組織名稱', visible: true,},
+];
+
 
   displayModeOptions: any[] = [];
   WhetherOptions: any[] = [];
@@ -215,93 +167,48 @@ export class TLS23030Component extends BasicQueryPageComponent<any> {
   ) {
     super();
   }
+    private loadOptions<K extends keyof TLS23030Component>(
+      serviceCall: Observable<any[]>,
+      target: K,
+      mapFn?: (x: any) => any
+    ) {
+      serviceCall.subscribe((res: any[] = []) => {
+        (this as any)[target] = mapFn ? res.map(mapFn) : res;
+      });
+    }
+
 
   ngOnInit(): void {
-    this.initializePage('TLS23030', 'tls/tls23030cru', this.queryForm, (form) => this.onSubmit(form));
+  this.initializePage('TLS23030', 'tls/tls23030cru', this.queryForm, (form) => this.onSubmit(form));
 
-    
-    this.displayModeService.getDisplayModes()
-      .pipe()
-      .subscribe((data) => (this.displayModeOptions = data));
+  this.loadOptions(this.displayModeService.getDisplayModes(), 'displayModeOptions');
+  this.loadOptions(this.whetherService.getWhetherOptions(), 'WhetherOptions');
+  this.loadOptions(this.paymentTypeService.getPaymentTypes(), 'paymentTypeOptions');
+  this.loadOptions(this.transactionTypeService.getTransactionTypes(), 'transactionTypeOptions');
+  this.loadOptions(this.cardTypeService.getCardType(), 'cardTypeOptions');
+  this.loadOptions(this.ticketStatusService.getTicketStatuses(), 'ticketStatusOptions');
+  this.loadOptions(this.taxableService.getSystemTypes(), 'taxableOptions');
+  this.loadOptions(this.discountService.getLocalDiscountOptions(), 'discountOptions');
+  this.loadOptions(this.deductionbigCategoryService.getLocalDeductionCategories(), 'deductionbigCategoryOptions');
+  this.loadOptions(this.commissionTypeService.getCommissionTypes(), 'commissionTypeOptions');
+  this.loadOptions(this.floorService.getFloors(), 'floorOptions');
+  this.loadOptions(this.tls11010Service.getBuildingOptions(), 'BUILDING_NO_Options');
+  this.loadOptions(this.txnStatusService.getTxnStatusOptions(), 'txnStatusOptions');
 
-    this.whetherService.getWhetherOptions()
-      .pipe()
-      .subscribe((data) => (this.WhetherOptions = data));
+  // ✅ 保留 formLabel 的一行寫法
+  this.loadOptions(this.tls11010Service.getOrgOptions(), 'OrganizationCodeOptions', 
+    (x) => ({ label: x.label, formLabel: `${x.value} - ${x.label}`, value: x.value })
+  );
 
-    this.paymentTypeService.getPaymentTypes()
-      .pipe()
-      .subscribe((data) => (this.paymentTypeOptions = data));
+  this.loadOptions(this.ECRNoService.getECRNo(), 'ECRNoOptions', 
+    (x) => ({ label: x.label, formLabel: `${x.value} - ${x.label}`, value: x.value })
+  );
 
-    this.transactionTypeService.getTransactionTypes()
-      .pipe()
-      .subscribe((data) => (this.transactionTypeOptions = data));
+  this.loadOptions(this.counterNameService.getCounters(), 'CounterOptions', 
+    (x) => ({ label: x.label, formLabel: `${x.value} - ${x.label}`, value: x.value })
+  );
+}
 
-    this.cardTypeService.getCardType()
-      .pipe()
-      .subscribe((data) => (this.cardTypeOptions = data));
-
-    this.ticketStatusService.getTicketStatuses()
-      .pipe()
-      .subscribe((data) => (this.ticketStatusOptions = data));
-
-    this.taxableService.getSystemTypes()
-      .pipe()
-      .subscribe((data) => (this.taxableOptions = data));
-
-    this.discountService.getLocalDiscountOptions()
-      .pipe()
-      .subscribe((data) => (this.discountOptions = data));
-
-    this.deductionbigCategoryService.getLocalDeductionCategories()
-      .pipe()
-      .subscribe((data) => (this.deductionbigCategoryOptions = data));
-
-    this.commissionTypeService.getCommissionTypes()
-      .pipe()
-      .subscribe((data) => (this.commissionTypeOptions = data));
-
-    this.floorService.getFloors()
-      .pipe()
-      .subscribe((data) => (this.floorOptions = data));
-
-    this.tls11010Service.getBuildingOptions()
-      .pipe()
-      .subscribe((data) => (this.BUILDING_NO_Options = data));
-
-    this.tls11010Service.getOrgOptions()
-      .pipe()
-      .subscribe((res) => {
-        this.OrganizationCodeOptions = (res || []).map((x: any) => ({
-          label: x.label,
-          formLabel: `${x.value} - ${x.label}`,
-          value: x.value,
-        }));
-      });
-
-    this.txnStatusService.getTxnStatusOptions()
-      .pipe()
-      .subscribe((data) => (this.txnStatusOptions = data));
-
-    this.ECRNoService.getECRNo()
-      .pipe()
-      .subscribe((res) => {
-        this.ECRNoOptions = (res || []).map((x: any) => ({
-          label: x.label,
-          formLabel: `${x.value} - ${x.label}`,
-          value: x.value,
-        }));
-      });
-
-    this.counterNameService.getCounters()
-      .pipe()
-      .subscribe((res) => {
-        this.CounterOptions = (res || []).map((x: any) => ({
-          label: x.label,
-          formLabel: `${x.value} - ${x.label}`,
-          value: x.value,
-        }));
-      });
-  }
 
   private cleanFormPayload(payload: any): any {
     for (const key in payload) {
@@ -390,6 +297,31 @@ private doQuery(): void {
     const found = options?.find((opt) => String(opt.value) === String(value));
     return found ? found.label : value;
   }
+
+  /** yyyy/MM/dd */
+private formatDate(val: string): string {
+  const date = new Date(val);
+  if (isNaN(date.getTime())) return val;
+  return `${date.getFullYear()}/${(date.getMonth() + 1).toString().padStart(2, '0')}/${date.getDate().toString().padStart(2, '0')}`;
+}
+
+/** yyyy/MM/dd HH:mm */
+private formatDateTime(val: string): string {
+  const date = new Date(val);
+  if (isNaN(date.getTime())) return val;
+  const yyyy = date.getFullYear();
+  const MM = (date.getMonth() + 1).toString().padStart(2, '0');
+  const dd = date.getDate().toString().padStart(2, '0');
+  const HH = date.getHours().toString().padStart(2, '0');
+  const mm = date.getMinutes().toString().padStart(2, '0');
+  return `${yyyy}/${MM}/${dd} ${HH}:${mm}`;
+}
+
+/** 千分位 */
+private formatNumber(val: number): string {
+  return val?.toLocaleString('en-US') || '0';
+}
+
 
 
 }

@@ -33,7 +33,7 @@ export class TLS51060CRUComponent extends BasicCruPageComponent<PluLogo>
     LOGO_CH_NAME: ['', [Validators.required, Validators.maxLength(50)]], // 品牌中文名稱
     LOGO_EN_NAME: ['', [Validators.maxLength(100)]], // 品牌英文名稱
     LOGO_Remark: ['', [Validators.maxLength(100)]], // 備註說明
-    PLU_OrderPrcRate: [100, [Validators.required, Validators.maxLength(10)]], // 標準進貨折數 預設100
+    PLU_OrderPrcRate: [100, [Validators.maxLength(10)]], // 標準進貨折數 預設100
     HOS_No: ['', [Validators.maxLength(10)]], // 建議倉別代碼/名稱 POS2034倉庫設定檔(O)
     // VEN_No: ['', [Validators.maxLength(16)]], // 廠商編號 保留目前不使用
 
@@ -81,7 +81,7 @@ export class TLS51060CRUComponent extends BasicCruPageComponent<PluLogo>
       case CRUDStatus.Create:
         if (this.canAdd()) {
           const formValue = frm.getRawValue();
-          console.log('insert', formValue);
+          console.log('insert', JSON.stringify(formValue, null, 2));
           this.tls51060Service.insertTLS51060(formValue).subscribe(() => {
             this.messageService.successBubble('新增成功');
             // this.onCancel(); // 儲存後，會清除資料留在原頁面，不返回列表
@@ -92,7 +92,7 @@ export class TLS51060CRUComponent extends BasicCruPageComponent<PluLogo>
       case CRUDStatus.Edit:
         if (this.canEdit()) {
           const formValue = frm.getRawValue();
-          console.log('update', formValue);
+          console.log('update', JSON.stringify(formValue, null, 2));
           this.tls51060Service.updateTLS51060(formValue).subscribe(() => {
             // this.messageService.successBubble('更新成功');
             this.onCancel(); // 儲存後，會返回列表

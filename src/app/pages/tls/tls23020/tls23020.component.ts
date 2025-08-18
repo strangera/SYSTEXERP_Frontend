@@ -286,10 +286,10 @@ export class TLS23020Component extends BasicQueryPageComponent<any> {
       visible: true,
       format: (val: any) => this.getLabelFromOptions(val, this.deductionbigCategoryOptions),
     },
-    {
-      field: 'ORG_TXN_DiscCode', header: '原折扣', visible: true,
-      format: (val: any) => this.getLabelFromOptions(val, this.discountOptions),
-    },
+    // {
+    //   field: 'ORG_TXN_DiscCode', header: '原折扣', visible: true,
+    //   format: (val: any) => this.getLabelFromOptions(val, this.discountOptions),
+    // },
     {
       field: 'TXN_DiscCode', header: '歸屬折扣', visible: true,
       format: (val: any) => this.getLabelFromOptions(val, this.discountOptions),
