@@ -49,12 +49,8 @@ export class TLS51050Component extends BasicQueryPageComponent<PluUnit>
   columns: Column[] = [
     { field: 'UNIT_No', header: '單位代碼', visible: true },
     { field: 'UNIT_NAME', header: '單位名稱', visible: true },
-    {
-      field: 'UNIT_Attribute', header: '單位屬性', visible: true,
-      format: (value: string) =>
-        this.attributeOptions.find((option) => option.value === value)?.label ||
-        value,
-    },
+    { field: 'UNIT_Attribute', header: '單位屬性代碼', visible: true },
+    { field: 'UNIT_Attribute_NAME', header: '單位屬性名稱', visible: true },
     { field: 'UNIT_Remark', header: '備註說明', visible: true },
   ];
 
