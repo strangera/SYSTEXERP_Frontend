@@ -79,6 +79,6 @@
   <app-table [data]="data" [columns]="columns" [totalRecords]="totalRecords"
     [multiSortMeta]="[{ field: 'LOGO_No', order: 1 },{ field: 'PLU_MagNo', order: 1 }]"
     (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [lazy]="true" [loading]="loading"
-    [showManage]="false" [rowsPerPageOptions]="rowsPerPageOptions">
+    [showManage]="false" [rowsPerPageOptions]="rowsPerPageOptions" [rows]="rows">
   </app-table>
 </div>

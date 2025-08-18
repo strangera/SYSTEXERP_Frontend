@@ -37,7 +37,8 @@
         severity="info" (onSelect)="onImportExcel($event)" [auto]="true" chooseLabel="Excel匯入" />
     </div>
     <p-dropdown *ngIf="showPage && IsPrint && data.length > 0" [options]="pages" [ngModel]="selectedPage"
-      optionValue="value" (onChange)="pageChange.emit($event.value)" appendTo="body" />
+      optionValue="value" (onChange)="pageChange.emit($event.value)" appendTo="body" [virtualScroll]="true"
+      [virtualScrollItemSize]="40" [filter]="true" />
   </div>
 </div>
 

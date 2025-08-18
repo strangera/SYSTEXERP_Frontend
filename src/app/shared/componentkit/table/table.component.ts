@@ -138,7 +138,6 @@ export class TableComponent extends BasicPrintDataComponent implements OnChanges
     if (changes['data']) {
       setTimeout(() => {
         this.dt.totalRecords = this.totalRecords !== 0 ? this.totalRecords : this.data.length;
-        this.rows = this.data.length;
         this.selectedItems = []
         this.selectionChange.emit(this.selectedItems);
       });

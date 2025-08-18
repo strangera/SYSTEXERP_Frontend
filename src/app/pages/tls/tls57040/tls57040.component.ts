@@ -50,6 +50,7 @@ export class TLS57040Component extends BasicQueryPageComponent<any> implements O
   });
   totalRecords = 0;
   rowsPerPageOptions?: any[];
+  rows = 0;
   data: any[] = [];
   columns: Column[] = [
     { field: 'PLU_Image', header: '圖片', visible: false, type: 'image' },
@@ -157,6 +158,7 @@ export class TLS57040Component extends BasicQueryPageComponent<any> implements O
       });
       this.tls57040Service.queryTLS57040(frm.value).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(response => {
         this.rowsPerPageOptions = [response.Data.length];
+        this.rows = response.Data.length;
         this.data = response.Data;
         this.totalRecords = response.TotalCount;
         this.queryStateService.setQueryState(this.ProgNo, frm.value);

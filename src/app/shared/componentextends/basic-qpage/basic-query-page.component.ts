@@ -50,7 +50,11 @@ export abstract class BasicQueryPageComponent<T> {
     // 取得歷史紀錄(如果有的話)
     const state = this.router.lastSuccessfulNavigation?.extras.state;
     const previousRoute = state?.['fromRoute'] || this.activatedRoute.snapshot.queryParams['fromRoute'] || document.referrer || '/account/dashboard';
-    if (this.canPerformAction('10') && previousRoute === `/account/${this.cruPage.toLocaleLowerCase()}`) { // '查詢' 的 function_code 是 "10"
+
+    // 處理 cruPage，移除開頭的斜線
+    const sanitizedCruPage = this.cruPage.toLocaleLowerCase().startsWith('/') ? this.cruPage.toLocaleLowerCase().substring(1) : this.cruPage.toLocaleLowerCase();
+
+    if (this.canPerformAction('10') && previousRoute === `/account/${sanitizedCruPage}`) { // '查詢' 的 function_code 是 "10"
       const query = this.queryStateService.getQueryStateValue(this.ProgNo);
       if (query && queryForm) {
         queryForm?.patchValue(query);
