@@ -249,8 +249,7 @@ export class TLS41010CRUComponent extends BasicCruPageComponent<TLS41010Data> im
     this.tls46020Service.queryTLS46020(params).subscribe({
       next: (res) => {
         if (res.Data && res.Data.length > 0) {
-          const data = res.Data[0];
-          const patchData = { ...data };
+          const patchData = res.Data[0]
 
           delete patchData.ECR_TmplNo;
 
@@ -270,6 +269,24 @@ export class TLS41010CRUComponent extends BasicCruPageComponent<TLS41010Data> im
           }
           if ('ECR_MSRCom' in patchData) {
             patchData.ECR_MSRCom = convertToNullIfNumber(patchData.ECR_MSRCom);
+          }
+          if ('ECR_SettleHHNN' in patchData) {
+            const val = patchData.ECR_SettleHHNN;
+
+            if (typeof val === 'string' && /^\d{4}$/.test(val)) {
+              // 後端傳回 "HHmm" 字串 → 轉成 Date
+              const hh = parseInt(val.substring(0, 2), 10);
+              const mm = parseInt(val.substring(2, 4), 10);
+              const d = new Date();
+              d.setHours(hh, mm, 0, 0);
+              patchData.ECR_SettleHHNN = d;
+            } else if (val instanceof Date) {
+              // 已經是 Date → 保持不動
+              patchData.ECR_SettleHHNN = val;
+            } else {
+              // 後端沒給或是 null → 設成預設 11:10
+              patchData.ECR_SettleHHNN = this.defaultTime1110();
+            }
           }
 
           this.dataForm.patchValue(patchData as any);
