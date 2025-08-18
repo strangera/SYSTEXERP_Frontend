@@ -394,7 +394,7 @@ export class TLS23010Component
       },
     },
     { field: 'ECR_No', header: '收銀機號' },
-    { field: 'TXN_No', header: '交易序號', style: 'text-right' },
+    { field: 'TXN_No', header0: '交易序號', style: 'text-right' },
     { field: 'tlt_no', header: '專櫃編號' },
     { field: 'tlt_name', header: '櫃位名稱', style: 'text-left' }, // 非 POS5006 欄位，UI 顯示用
     { field: 'TXN_Uniform', header: '統一編號' },
