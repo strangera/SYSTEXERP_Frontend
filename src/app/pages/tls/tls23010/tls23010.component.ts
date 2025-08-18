@@ -138,7 +138,8 @@ export class TLS23010Component
 
   ngOnInit(): void {
     this.initializePage('TLS23010', 'tls/tls23010', this.queryForm, (form) => this.onSubmit(form));
-
+    this.totalRecords = 0;
+    
     this.floorService
       .getFloors()
       .subscribe((data) => (this.floorOptions = data));
@@ -398,8 +399,8 @@ export class TLS23010Component
     { field: 'tlt_name', header: '櫃位名稱', style: 'text-left' }, // 非 POS5006 欄位，UI 顯示用
     { field: 'TXN_Uniform', header: '統一編號' },
     { field: 'gui_track', header: '字軌' }, // 假設為字軌顯示
-    { field: 'GUIBegNo', header: '起始發票號碼' },
-    { field: 'GUIEndNo', header: '結束發票號碼' },
+    { field: 'GUIBegNo', header: '發票起始號碼' },
+    { field: 'GUIEndNo', header: '發票結束號碼' },
     { field: 'TXN_TotGUI',header: '發票金額',
       style: 'text-right',
       format: (val: number) => val?.toLocaleString('en-US') || '0',
