@@ -316,7 +316,10 @@ export interface ContractInfo {
   tlt_term_type?: string;
   _isNewContract?: boolean;
 
-  // 🎯 補充其他欄位以支援完整的表單
+  // 🎯 根據 FormBuilder 補充的欄位
+  approve_status?: string;        // FormBuilder 有但介面缺少
+  ven_no?: string;               // FormBuilder 有但介面缺少
+  contract_no?: string;          // FormBuilder 有但介面缺少
   paper_type?: string;
   bus_sclass?: string;
   contact_USR_No?: string;
@@ -365,10 +368,16 @@ export interface ContractInfo {
   open_deposit?: string;
   cap_saletype1?: string;
   cap_saletype2?: string;
+  cap_saletype3?: string;         // FormBuilder 有但介面缺少
+  cap_saletype4?: string;         // FormBuilder 有但介面缺少
   water_flag?: string;
   electric_flag?: string;
   gas_flag?: string;
   check_day?: string;
+  construct_deposit?: string;     // FormBuilder 有但介面缺少
+  expiration_deposit?: string;    // FormBuilder 有但介面缺少
+  expiration_fees?: string;       // FormBuilder 有但介面缺少
+  paymentMethods?: any[];         // FormBuilder 有但介面缺少
 
   total_amt_unit?: string;        // 目標營業額單位(業主)
   total_amt_vendor_unit?: string; // 目標營業額單位(廠商)

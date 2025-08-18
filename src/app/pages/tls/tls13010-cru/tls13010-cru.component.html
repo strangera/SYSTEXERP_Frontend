@@ -3,18 +3,7 @@
   <div class="flex gap-2 mb-2">
     <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
     <ng-container *ngIf="isViewMode">
-      <!-- <app-button
-        btnType="back"
-        label="返回查詢"
-        (click)="exitViewMode()"
-      ></app-button>
-      <app-button
-        btnType="edit"
-        label="切換編輯"
-        (click)="switchToEditMode()"
-      ></app-button> -->
     </ng-container>
-    <!-- <ng-container *ngIf="!isViewMode"> -->
     <ng-container>
       <app-button btnType="back" label="上一步" (click)="onCancel()"></app-button>
       <app-button btnType="next" label="下一步(代扣款)" (click)="onSubmitNext()"></app-button>
@@ -32,11 +21,11 @@
           <div class="grid p-fluid">
             <div class="col-12 md:col-6 lg:col-4">
               <app-input-text label="專櫃招募編號" controlName="apply_no" [control]="dataForm.controls.apply_no"
-                [submitted]="submitted" [disabled]="isViewMode || !isNewContractMode()"></app-input-text>
+                [submitted]="submitted"></app-input-text>
             </div>
             <div class="col-12 md:col-6 lg:col-4">
               <app-input-text label="專櫃編號" controlName="tlt_no" [control]="dataForm.controls.tlt_no"
-                [submitted]="submitted" [disabled]="isViewMode || !isNewContractMode()"></app-input-text>
+                [submitted]="submitted" [customPlaceholder]="isNewContractMode() ? '系統自動給號' : ''"></app-input-text>
             </div>
             <div class="col-12 md:col-6 lg:col-4">
               <app-dropdown label="廠商統一編號" controlName="ven_uniform" [options]="pos2013Options" optionLabel="label"
@@ -44,15 +33,16 @@
             </div>
             <div class="col-12 md:col-6 lg:col-4">
               <app-input-text label="廠商名稱" controlName="VEN_Name" [control]="dataForm.controls.VEN_Name"
-                [submitted]="submitted" [disabled]="isViewMode || !isNewContractMode()"></app-input-text>
+                [submitted]="submitted"
+                [customPlaceholder]="isNewContractMode() ? '選擇廠商統一編號自動帶入' : ''"></app-input-text>
             </div>
             <div class="col-12 md:col-6 lg:col-4">
               <app-input-text label="櫃位名稱" controlName="tlt_name" [control]="dataForm.controls.tlt_name"
-                [submitted]="submitted" [disabled]="isViewMode || !isNewContractMode()"></app-input-text>
+                [submitted]="submitted"></app-input-text>
             </div>
             <div class="col-12 md:col-6 lg:col-4">
               <app-input-text label="版次" controlName="contract_subno" [control]="dataForm.controls.contract_subno"
-                [submitted]="submitted" [disabled]="true"></app-input-text>
+                [submitted]="submitted"></app-input-text>
             </div>
             <div class="col-12 md:col-6 lg:col-4">
               <app-dropdown label="營運狀況" controlName="tlt_openflag" [options]="tltopenflagOption" optionLabel="label"
@@ -188,12 +178,12 @@
                 [submitted]="submitted"></app-input-text>
             </div>
             <div class="col-12 md:col-6 lg:col-4">
-              <app-input-text label="固定租金" controlName="base_rent" [control]="dataForm.controls.base_rent"
-                [submitted]="submitted"></app-input-text>
+              <app-input-number label="固定租金" controlName="base_rent" [control]="dataForm.controls.base_rent"
+                [submitted]="submitted"></app-input-number>
             </div>
             <div class="col-12 md:col-6 lg:col-4">
-              <app-input-text label="押金" controlName="deposit" [control]="dataForm.controls.deposit"
-                [submitted]="submitted"></app-input-text>
+              <app-input-number label="押金" controlName="deposit" [control]="dataForm.controls.deposit"
+                [submitted]="submitted"></app-input-number>
             </div>
             <div class="col-12 md:col-6 lg:col-4">
               <app-dropdown label="是否開立業主發票" controlName="issueOwnerInvoice" [options]="yesNoOptions"
@@ -221,8 +211,8 @@
                 optionValue="value" [control]="dataForm.controls.store_way" [submitted]="submitted"></app-dropdown>
             </div>
             <div class="col-12 md:col-6 lg:col-4">
-              <app-dropdown label="對帳方式" controlName="check_type" [options]="checkTypeOptions" optionLabel="label"
-                optionValue="value" [control]="dataForm.controls.check_type" [submitted]="submitted"></app-dropdown>
+              <app-multi-select label="對帳方式" controlName="check_type" [options]="checkTypeOptions" optionLabel="label"
+                optionValue="value" [control]="dataForm.controls.check_type" [submitted]="submitted"></app-multi-select>
             </div>
             <div class="col-12 md:col-6 lg:col-4">
               <app-dropdown label="付款方式" controlName="paytype" [options]="paytypeOptions" optionLabel="label"
@@ -234,12 +224,12 @@
                 [submitted]="submitted"></app-dropdown>
             </div>
             <div class="col-12 md:col-6 lg:col-4">
-              <app-input-text label="聯名卡折數" controlName="credit_card" [control]="dataForm.controls.credit_card"
-                [submitted]="submitted"></app-input-text>
+              <app-input-number label="聯名卡折數" controlName="credit_card" [control]="dataForm.controls.credit_card"
+                [minFractionDigits]="0" [maxFractionDigits]="2" [submitted]="submitted"></app-input-number>
             </div>
             <div class="col-12 md:col-6 lg:col-4">
-              <app-input-text label="目標營業額(業主)" controlName="total_amt" [control]="dataForm.controls.total_amt"
-                [submitted]="submitted"></app-input-text>
+              <app-input-number label="目標營業額(業主)" controlName="total_amt" [control]="dataForm.controls.total_amt"
+                [submitted]="submitted"></app-input-number>
             </div>
             <div class="col-12 md:col-6 lg:col-4">
               <app-dropdown label="目標營業額單位(業主)" controlName="total_amt_unit" [options]="total_amt_unitOptions"
@@ -247,8 +237,8 @@
                 [submitted]="submitted"></app-dropdown>
             </div>
             <div class="col-12 md:col-6 lg:col-4">
-              <app-input-text label="預估營業額(廠商)" controlName="total_amt_vendor"
-                [control]="dataForm.controls.total_amt_vendor" [submitted]="submitted"></app-input-text>
+              <app-input-number label="預估營業額(廠商)" controlName="total_amt_vendor"
+                [control]="dataForm.controls.total_amt_vendor" [submitted]="submitted"></app-input-number>
             </div>
             <div class="col-12 md:col-6 lg:col-4">
               <app-dropdown label="目標營業額單位(廠商)" controlName="total_amt_vendor_unit"
@@ -256,35 +246,32 @@
                 [control]="dataForm.controls.total_amt_vendor_unit" [submitted]="submitted"></app-dropdown>
             </div>
             <div class="col-12 md:col-6 lg:col-4">
-              <app-dropdown label="履約保證金付款方式" controlName="paymentMethods" [options]="paymentMethodOptions"
-                optionLabel="label" optionValue="value" [control]="dataForm.controls.paymentMethods"
+              <app-dropdown label="準時開業保證金付款方式" controlName="open_deposit" [options]="depositPaymentOptions"
+                optionLabel="label" optionValue="value" [control]="dataForm.controls.open_deposit"
                 [submitted]="submitted"></app-dropdown>
             </div>
             <div class="col-12 md:col-6 lg:col-4">
-              <app-input-text label="履約保證金" controlName="performanceBond" [control]="dataForm.controls.paymentMethods"
-                [submitted]="submitted"></app-input-text>
+              <app-input-number label="履約保證金" controlName="performanceBond" [control]="dataForm.controls.open_fees"
+                [submitted]="submitted"></app-input-number>
             </div>
             <div class="col-12 md:col-6 lg:col-4">
-              <app-dropdown label="施工保證金付款方式" controlName="paytype" [options]="paytypeOptions" optionLabel="label"
-                optionValue="value" [control]="dataForm.controls.paytype" [submitted]="submitted"></app-dropdown>
+              <app-dropdown label="施工保證金付款方式" controlName="construct_deposit" [options]="depositPaymentOptions"
+                optionLabel="label" optionValue="value" [control]="dataForm.controls.construct_deposit"
+                [submitted]="submitted"></app-dropdown>
             </div>
             <div class="col-12 md:col-6 lg:col-4">
-              <app-input-text label="施工保證金" controlName="construct_fees" [control]="dataForm.controls.construct_fees"
-                [submitted]="submitted"></app-input-text>
+              <app-input-number label="施工保證金" controlName="construct_fees" [control]="dataForm.controls.construct_fees"
+                [submitted]="submitted"></app-input-number>
             </div>
             <div class="col-12 md:col-6 lg:col-4">
-              <app-dropdown label="契約屆滿保證金付款方式" controlName="paytype" [options]="paytypeOptions" optionLabel="label"
-                optionValue="value" [control]="dataForm.controls.paytype" [submitted]="submitted"></app-dropdown>
+              <app-dropdown label="契約屆滿保證金付款方式" controlName="expiration_deposit" [options]="depositPaymentOptions"
+                optionLabel="label" optionValue="value" [control]="dataForm.controls.expiration_deposit"
+                [submitted]="submitted"></app-dropdown>
             </div>
             <div class="col-12 md:col-6 lg:col-4">
-              <app-input-text label="契約屆滿保證金" controlName="construct_fees" [control]="dataForm.controls.construct_fees"
-                [submitted]="submitted"></app-input-text>
+              <app-input-number label="契約屆滿保證金" controlName="expiration_fees"
+                [control]="dataForm.controls.expiration_fees" [submitted]="submitted"></app-input-number>
             </div>
-            <!-- <div class="col-12 md:col-6 lg:col-4">
-              <app-multi-select label="是否抄錶" controlName="meterReading" [options]="meterTypeOptions" optionLabel="label"
-                optionValue="value" [control]="dataForm.controls.meter_typeList"
-                [submitted]="submitted"></app-multi-select>
-            </div> -->
             <div class="col-12 md:col-6 lg:col-4">
               <app-radiobutton label="水錶抄錶" groupname="waterFlag" [control]="dataForm.controls.water_flag"
                 [options]="meterReadingOptions" [submitted]="submitted"></app-radiobutton>
@@ -299,10 +286,6 @@
               <app-radiobutton label="瓦斯錶抄錶" groupname="gasFlag" [control]="dataForm.controls.gas_flag"
                 [options]="meterReadingOptions" [submitted]="submitted"></app-radiobutton>
             </div>
-            <!-- <div class="col-12 md:col-6 lg:col-4">
-              <app-dropdown label="有無保證金" controlName="guaranteeNote" [options]="depositTypeOptions" optionLabel="label"
-                optionValue="value" [control]="dataForm.controls.open_deposit" [submitted]="submitted"></app-dropdown>
-            </div> -->
             <div class="col-12 md:col-6 lg:col-4">
               <app-input-text label="保證金備註" controlName="ticket_remarks" [control]="dataForm.controls.ticket_remarks"
                 [submitted]="submitted"></app-input-text>
@@ -321,48 +304,6 @@
       <p-accordionTab header="參加活動資訊" [selected]="true" class="line-height-3 m-0"
         [headerStyleClass]="'query-accordionTab'">
         <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
-          <!-- <div class="grid p-fluid">
-          <div class="col-12 md:col-6 lg:col-4">
-            <p-checkbox
-              inputId="activity1"
-              name="activity1"
-              label="全館消費滿額集點活動"
-              formControlName="activity1"
-              [binary]="true"
-            />
-          </div>
-
-          <div class="col-12 md:col-6 lg:col-4">
-            <p-checkbox
-              inputId="activity2"
-              name="activity2"
-              label="滿仟送佰"
-              formControlName="activity2"
-              [binary]="true"
-            />
-          </div>
-
-          <div class="col-12 md:col-6 lg:col-4">
-            <p-checkbox
-              inputId="activity3"
-              name="activity3"
-              label="有價券"
-              formControlName="activity3"
-              [binary]="true"
-            />
-          </div>
-
-          <div class="col-12 md:col-6 lg:col-4">
-            <p-checkbox
-              inputId="activity4"
-              name="activity4"
-              label="會員卡"
-              formControlName="activity4"
-              [binary]="true"
-            />
-          </div>
-        </div> -->
-
           <!-- 或者使用 fieldset 來組織多個 checkbox -->
           <fieldset class="mt-3">
             <!-- <legend>參加活動選項</legend> -->
@@ -450,7 +391,7 @@
             <div class="col-12 md:col-6 lg:col-6 flex flex-column gap-3">
               <!-- 公司登記地址 -->
               <app-input-text label="公司登記地址" controlName="company_register_address"
-                [control]="dataForm.controls.company_register_address" [submitted]="submitted" [disabled]="true">
+                [control]="dataForm.controls.company_register_address" [submitted]="submitted">
               </app-input-text>
 
               <!-- 郵寄地址 -->

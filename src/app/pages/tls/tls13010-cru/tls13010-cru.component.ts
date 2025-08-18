@@ -46,6 +46,7 @@ import { ButtonModule } from 'primeng/button';
 import { InputTextModule } from 'primeng/inputtext';
 import { RadiobuttonComponent } from "@shared/componentkit/radiobutton/radiobutton.component";
 import { CRUDStatus } from '@shared/models/system/CRUDstatus';
+import { InputNumberComponent } from "@shared/componentkit/input-number/input-number.component";
 
 @Component({
   selector: 'app-tls13010-cru',
@@ -69,7 +70,8 @@ import { CRUDStatus } from '@shared/models/system/CRUDstatus';
     InputTextareaComponent,
     ButtonModule,
     InputTextModule,
-    RadiobuttonComponent
+    RadiobuttonComponent,
+    InputNumberComponent
   ],
 
 })
@@ -825,18 +827,18 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
 
       // 其他欄位
       comm_yn: queryData['comm_yn'] as string,
-      base_rent: queryData['base_rent'] as string,
+      base_rent: queryData['base_rent'] as number,
       tlt_kind: queryData['tlt_kind'] as string,
       edc_yn: queryData['edc_yn'] as string,
       tlt_ctype_mtotal: queryData['tlt_ctype_mtotal'] as string,
       rent_ahead: queryData['rent_ahead'] as string,
-      rent_period: queryData['rent_period'] as string,
-      deposit: queryData['deposit'] as string,
+      rent_period: queryData['rent_period'] as number,
+      deposit: queryData['deposit'] as number,
       vip_yn: queryData['vip_yn'] as string,
       credit_card: queryData['credit_card'] as string,
       total_amt: queryData['total_amt'] as string,
       total_amt_vendor: queryData['total_amt_vendor'] as string,
-      construct_fees: queryData['construct_fees'] as string,
+      construct_fees: queryData['construct_fees'] as number,
       ticket_remarks: queryData['ticket_remarks'] as string,
       cap_saletype1: queryData['cap_saletype1'] as string,
       cap_saletype2: queryData['cap_saletype2'] as string,
@@ -1044,36 +1046,121 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
 
   // ==========  表單操作方法 ==========
   private saveToWorkflow(): void {
-    // 移除條件檢查，總是儲存
     const formData = this.dataForm.getRawValue();
 
-
     console.log('💾 準備儲存工作流程資料...');
-    console.log('📋 表單資料:', {
-      talent_id: formData.talent_id,
-      apply_no: formData.apply_no,
-      tlt_name: formData.tlt_name,
-      isNewMode: this.contractFlowService.isNewContractMode()
-    });
 
-    // 🎯 準備位置資料
-    const workflowData = {
-      ...formData,
+    // 🎯 型別轉換輔助函數
+    const convertToString = (value: any): string | undefined => {
+      if (value === null || value === undefined) return undefined;
+      return String(value);
+    };
+
+    // 🎯 準備符合 ContractInfo 介面的資料
+    const contractInfo: ContractInfo = {
+      id: formData.talent_id || this.generateTempTalentId(),
+      talent_id: formData.talent_id || '',
+      apply_no: formData.apply_no || '',
+      tlt_name: formData.tlt_name || '',
+      VEN_Name: formData.VEN_Name || '',
+      contract_subno: formData.contract_subno || '',
+
+      // 🎯 補充 FormBuilder 有但之前缺少的欄位
+      approve_status: formData.approve_status || '',
+      ven_no: formData.ven_no || '',
+      contract_no: formData.contract_no || '',
+
+      // 🎯 日期欄位
+      tlt_bdate: formData.tlt_bdate || '',
+      tlt_edate: formData.tlt_edate || '',
+      tlt_contract_bdate: formData.tlt_contract_bdate || '',
+      tlt_contract_edate: formData.tlt_contract_edate || '',
+      feedback_date: formData.feedback_date || '',
+      due_date: formData.due_date || '',
+      contact_Date: formData.contact_Date || '',
+
+      // 🎯 業務欄位
+      ven_uniform: formData.ven_uniform || '',
+      paper_type: formData.paper_type || '',
+      bus_type: formData.bus_type || '',
+      bus_class: formData.bus_class || '',
+      bus_sclass: formData.bus_sclass || '',
+      tlt_term_type: formData.tlt_term_type || '',
+      comm_comp_type: formData.comm_comp_type || '',
+      org_id: formData.org_id || '',
+      contact_USR_No: formData.contact_USR_No || '',
+      contact_USR_Name: formData.contact_USR_Name || '',
+
+      // 🎯 數值欄位轉字串
+      base_rent: convertToString(formData.base_rent),
+      deposit: convertToString(formData.deposit),
+      credit_card: convertToString(formData.credit_card),
+      rent_period: convertToString(formData.rent_period),
+      open_fees: convertToString(formData.open_fees),
+      total_amt: convertToString(formData.total_amt),
+      total_amt_vendor: convertToString(formData.total_amt_vendor),
+      construct_fees: convertToString(formData.construct_fees),
+      check_day: convertToString(formData.check_day),
+      construct_deposit: convertToString(formData.construct_deposit),    // 🎯 新增
+      expiration_fees: convertToString(formData.expiration_fees),        // 🎯 新增
+
+      // 🎯 其他字串欄位
+      deco_type: formData.deco_type || '',
+      money_type: formData.money_type || '',
+      check_type: formData.check_type || '',
+      edc_yn: formData.edc_yn || '',
+      tlt_openflag: formData.tlt_openflag || '',
+      comm_yn: formData.comm_yn || '',
+      rece_yn: formData.rece_yn || '',
+      pos_yn: formData.pos_yn || '',
+      cash_yn: formData.cash_yn || '',
+      store_way: formData.store_way || '',
+      paytype: formData.paytype || '',
+      vip_yn: formData.vip_yn || '',
+      invoice_type: formData.invoice_type || '',
+
+      // 🎯 聯絡資訊
+      email: formData.email || '',
+      invoice_email: formData.invoice_email || '',
+      CHECK_TITLE: formData.CHECK_TITLE || '',
+      store_tel: formData.store_tel || '',
+      bank_id: formData.bank_id || '',
+      vendor_acct_name: formData.vendor_acct_name || '',
+      vendor_acct_no: formData.vendor_acct_no || '',
+      contact_tel: formData.contact_tel || '',
+      contact_fax: formData.contact_fax || '',
+      contact_addr: formData.contact_addr || '',
+      company_register_address: formData.company_register_address || '',
+      tlt_remark: formData.tlt_remark || '',
+      ticket_remarks: formData.ticket_remarks || '',
+
+      // 🎯 其他設定
+      tlt_kind: formData.tlt_kind || '',
+      tlt_ctype_mtotal: formData.tlt_ctype_mtotal || '',
+      overall_status: formData.overall_status || '',
+      rent_ahead: formData.rent_ahead || '',
+      open_deposit: formData.open_deposit || '',
+      expiration_deposit: formData.expiration_deposit || '',              // 🎯 新增
+      cap_saletype1: formData.cap_saletype1 || '',
+      cap_saletype2: formData.cap_saletype2 || '',
+      cap_saletype3: formData.cap_saletype3 || '',                       // 🎯 新增
+      cap_saletype4: formData.cap_saletype4 || '',                       // 🎯 新增
+      water_flag: formData.water_flag || '',
+      electric_flag: formData.electric_flag || '',
+      gas_flag: formData.gas_flag || '',
+      total_amt_unit: formData.total_amt_unit || '',
+      total_amt_vendor_unit: formData.total_amt_vendor_unit || '',
+
+      // 🎯 陣列欄位
+      paymentMethods: formData.paymentMethods || [],                     // 🎯 新增
+
+      // 🎯 特殊欄位
       locationInfo: this.prepareLocationDataForSubmit(),
       selectedBankInfo: this.selectedBankInfo
     };
-
-    const contractInfo = {
-      id: formData.talent_id || '',
-      ...workflowData
-    } as ContractInfo;
-
-    // 🎯 移除自訂處理，讓 ContractFlowService 統一處理 talent_id
     this.contractFlowService.saveStep1Data(contractInfo);
-
     console.log('✅ 已暫存到工作流程');
   }
-
 
   private generateTempTalentId(): string {
     return 'new_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
