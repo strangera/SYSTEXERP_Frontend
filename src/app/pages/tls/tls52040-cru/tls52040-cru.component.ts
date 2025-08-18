@@ -44,7 +44,7 @@ import { TranslateModule } from '@ngx-translate/core';
 })
 export class TLS52040CRUComponent extends BasicCruPageComponent<ITLS52040Data> implements OnInit {
   dataForm = this.formBuilder.nonNullable.group({
-    RJM_No: [{ value: '系統自動產生', disabled: true }], // 進貨驗收單號
+    RJM_No: [{ value: '系統自動產生', disabled: true }], // 退貨驗收單號
     VEN_No: ['', [Validators.required]], // 廠商編號
     LOGO_No: ['', [Validators.required]], // 品牌代碼 (與 POS2016.LOGO_No 對應)
     HOS_No: [{ value: null as string | null, disabled: true }, [Validators.required]], // 倉別 (與 POS2016.HOS_No 對應)

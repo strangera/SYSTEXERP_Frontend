@@ -31,7 +31,7 @@ export interface ITLS52030Data {
   LOGO_CH_NAME: string; // LOGO中文名稱
   HOS_No: string; // 倉庫代碼
   HOS_NAME: string; // 倉庫名稱
-  org_id: string; // 組織代碼/所屬部門
+  org_id: string; // 組織代碼/組織名稱
   ODM_Date: string; // 申請日期
   ODM_USR_No: string; // 申請人員
   ODM_USR_Name: string; // 申請人員姓名
@@ -98,7 +98,7 @@ export interface ITLS52030Request {
   VEN_No: string; // 廠商代號
   LOGO_No: string; // 品牌代碼
   HOS_No: string; // 倉庫代碼
-  org_id: string | null; // 組織代碼/所屬部門
+  org_id: string | null; // 組織代碼/組織名稱
   ODM_Date: string | Date; // 申請日期
   ODM_USR_No: string; // 申請人員
   ODM_USR_Name: string; // 申請人員姓名

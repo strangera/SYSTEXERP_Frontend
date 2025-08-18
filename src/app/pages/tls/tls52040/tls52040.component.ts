@@ -85,7 +85,7 @@ export class TLS52040Component extends BasicQueryPageComponent<ITLS52040Data> im
     { field: 'LOGO_CH_NAME', header: '品牌名稱', visible: true },
     { field: 'HOS_No', header: '倉庫代碼', visible: true },
     { field: 'HOS_NAME', header: '倉庫名稱', visible: true },
-    { field: 'org_id', header: '組織代碼/所屬部門', visible: true },
+    { field: 'org_id', header: '組織代碼/組織名稱', visible: true },
     { field: 'APPLY_Date', header: '申請日期', visible: true, format: formatDateTime, sortField: 'APPLY_Date' },
     { field: 'APPLY_USR_No', header: '申請人員', visible: true, sortField: 'APPLY_USR_No' },
     { field: 'APPLY_USR_Name', header: '申請人員姓名', visible: true, sortField: 'APPLY_USR_Name' },

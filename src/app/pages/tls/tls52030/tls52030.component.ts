@@ -86,7 +86,7 @@ export class TLS52030Component extends BasicQueryPageComponent<ITLS52030Data> im
     { field: 'LOGO_CH_NAME', header: '品牌名稱', visible: true },
     { field: 'HOS_No', header: '倉庫代碼', visible: true },
     { field: 'HOS_NAME', header: '倉庫名稱', visible: true },
-    { field: 'org_id', header: '組織代碼/所屬部門', visible: true },
+    { field: 'org_id', header: '組織代碼/組織名稱', visible: true },
     { field: 'ODM_Status', header: '驗收狀態', visible: true, format: value => this.poStatusOptions.find(x => x.value === value)?.label || value },
     { field: 'ODM_Date', header: '申請日期', visible: true, format: formatDate },
     { field: 'ODM_USR_No', header: '申請人員', visible: true },
