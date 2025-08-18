@@ -45,11 +45,11 @@ export class TLS2A010Component extends BasicQueryPageComponent<any> implements O
 
   queryForm = this.formBuilder.group({
     TXN_Date: [yesterday, Validators.required],
-    tlt_floor: [''],
-    ECR_No_Start: [null, Validators.required],
-    ECR_No_End: [null, Validators.required],
+    Floor_No: [''],
+    ECR_No_Start: ['', Validators.required],
+    ECR_No_End: ['', Validators.required],
     PAY_NO: ['', Validators.required],
-    tlt_building: [''],
+    Building_No: [''],
     SYS_StoreNo: [this.authService.currentUserValue?.SYS_StoreNo ?? ''],
     ...createPaginationConfig([{ field: 'ECR_No', order: 1 }]),
   }, { validators: this.validateRangeStartBeforeEnd });
@@ -119,6 +119,37 @@ export class TLS2A010Component extends BasicQueryPageComponent<any> implements O
     this.loadDropdownOptions();
     this.selectedColumns = this.defaultColumns;
     this.columnGroup = [];
+    this.dropDownListService.queryPOS1002_DropDownList()
+      .pipe(untilDestroyed(this))
+      .subscribe(res => {
+        if (res && res.Data) {
+          this.systemTypeOptions = res.Data.map(item => ({
+            label: `${item.No ?? ''}-${item.Name ?? ''}`,
+            value: Number(item.No),   // 確保是數字
+            No: String(item.No),      // Convert to string to match IDropdownItem type
+            Name: item.Name
+          }));
+
+          if (this.systemTypeOptions.length > 0) {
+            // 僅保留「全部是數字」的字串
+            const values = this.systemTypeOptions
+              .map(opt => opt.No)
+              .filter(v => /^\d+$/.test(v ?? ''));
+
+            if (values.length > 0) {
+              const minVal = values.reduce((a, b) => a < b ? a : b);
+              const maxVal = values.reduce((a, b) => a > b ? a : b);
+
+              this.queryForm.patchValue({
+                ECR_No_Start: minVal,
+                ECR_No_End: maxVal
+              });
+            }
+          }
+
+        }
+      });
+
 
     this.dropDownListService.querySYS3900_DropDownList().pipe(untilDestroyed(this)).subscribe(res => {
       this.floorOptions = res.Data.map(item => ({ ...item, label: item.Name, value: item.No }));
@@ -128,30 +159,23 @@ export class TLS2A010Component extends BasicQueryPageComponent<any> implements O
       this.buildingNoOptions = res.Data.map(x => ({ label: x.Name, value: x.No, Name: x.Name, No: x.No }));
     });
 
-    this.dropDownListService.queryPOS1006_DropDownList().pipe(untilDestroyed(this)).subscribe(res => {
-      this.paymentToolOptions = res.Data.map(x => {
-        this.payNoToTypeMap.set(x.No ?? '', x.PAY_Type ?? '');
-        return {
-          label: x.Name,
-          value: x.No,
-          Name: x.Name,
-          No: x.No,
-          PAY_Type: x.PAY_Type ?? ''
-        };
-      });
-    });
-    this.dropDownListService.queryPOS1002_DropDownList()
+    this.dropDownListService.queryPOS1006_DropDownList()
       .pipe(untilDestroyed(this))
       .subscribe(res => {
-        if (res && res.Data) {
-          this.systemTypeOptions = res.Data.map(item => ({
-            label: item.Name,
-            value: item.No,
-            Name: item.Name,
-            No: item.No
-          }));
-        }
+        this.paymentToolOptions = res.Data.map(x => {
+          this.payNoToTypeMap.set(x.No ?? '', x.PAY_Type ?? '');
+          return {
+            label: `${x.No ?? ''}-${x.Name ?? ''}`,
+            value: x.No,   // 這裡保持字串，因為下拉選單通常用字串當 value
+            Name: x.Name,
+            No: x.No,
+            PAY_Type: x.PAY_Type ?? ''
+          };
+        });
+
+
       });
+
 
     const today = new Date();
     const mm = today.getMonth() + 1; // 月份是從 0 開始的
@@ -190,9 +214,7 @@ export class TLS2A010Component extends BasicQueryPageComponent<any> implements O
     const payload = {
       PageSize: raw.PageSize ?? 0,
       PageIndex: raw.PageIndex ?? 0,
-      OrderBy: raw.OrderBy ?? '',
-      Offset: raw.Offset ?? 0,
-      SortBy: raw.SortBy ?? [],
+      SortBy: raw.SortBy ?? [{ field: 'ECR_No', order: 1 }],
 
       SYS_StoreNo: raw.SYS_StoreNo ?? '',
       TXN_Date: raw.TXN_Date ? new Date(raw.TXN_Date).toISOString().split('T')[0] : '',
@@ -209,10 +231,23 @@ export class TLS2A010Component extends BasicQueryPageComponent<any> implements O
       next: (res) => {
         this.data = res?.Data ?? [];
 
+        // if (this.data.length > 0) {
+        //   const ecrNos = this.data.map(x => Number(x.ECR_No)).filter(n => !isNaN(n));
+        //   const minEcrNo = Math.min(...ecrNos);
+        //   const maxEcrNo = Math.max(...ecrNos);
+
+        //   // 最小值、最大值設回表單
+        //   this.queryForm.patchValue({
+        //     ECR_No_Start: minEcrNo,
+        //     ECR_No_End: maxEcrNo
+        //   });
+        // }
+
         const first = this.data[0];
         this.PAY_NO = this.queryForm.value.PAY_NO || '';
         this.TXN_Date = first?.TXN_Date || '';
-        this.onPayNoChange(this.PAY_NO);
+        // Replace with intended functionality or remove if unnecessary
+        console.log('PAY_NO:', this.PAY_NO);
 
         this.totalRecords = res.TotalCount ?? this.data.length;
         this.loading = false;
@@ -248,3 +283,4 @@ export class TLS2A010Component extends BasicQueryPageComponent<any> implements O
 
 
 }
+
