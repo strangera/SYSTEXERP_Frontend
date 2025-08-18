@@ -23,6 +23,37 @@ jobs:
       run: |
         npm install --legacy-peer-deps
     
+    # ✨ 新增：自動更新版本號
+    - name: Update version in login component
+      run: |
+        echo "=== Updating version number ==="
+        node -e "
+        const fs = require('fs');
+        const filePath = 'src/app/pages/base/login/login.component.html';
+        
+        // 讀取檔案
+        let content = fs.readFileSync(filePath, 'utf8');
+        
+        // 產生新的版本字串
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = String(now.getMonth() + 1).padStart(2, '0');
+        const day = String(now.getDate()).padStart(2, '0');
+        const hours = String(now.getHours()).padStart(2, '0');
+        const minutes = String(now.getMinutes()).padStart(2, '0');
+        
+        const newVersion = \`\${year}/\${month}/\${day}_V2 \${hours}:\${minutes}\`;
+        
+        // 使用正則表達式替換版本字串
+        const versionRegex = /(\\d{4}\\/\\d{2}\\/\\d{2}_V\\d+\\s+\\d{2}:\\d{2})/;
+        content = content.replace(versionRegex, newVersion);
+        
+        // 寫回檔案
+        fs.writeFileSync(filePath, content, 'utf8');
+        
+        console.log(\`✅ 版本號已更新為: \${newVersion}\`);
+        "
+    
     - name: Add staging configuration to angular.json
       run: |
         echo "=== Adding staging configuration ==="
