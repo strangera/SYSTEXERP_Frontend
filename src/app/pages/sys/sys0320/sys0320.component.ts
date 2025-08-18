@@ -68,7 +68,6 @@ export class SYS0320Component extends BasicQueryPageComponent<UserData> implemen
         } else {
           this.data = [];
           this.totalRecords = 0;
-          this.messageService.warnBubble(response.Message);
         }
       });
     });

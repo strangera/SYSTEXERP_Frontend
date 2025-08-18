@@ -55,7 +55,7 @@ export class SYS0750Component extends BasicQueryPageComponent<QuerySYS0750Respon
 
   columns: Column[] = [
     { field: 'User_Type', header: '使用者型態', visible: true, format: (value) => value === '1' ? '公司內部人員' : value === '2' ? '專櫃人員' : '其他' },
-    { field: 'User_No', header: '使用者代碼', visible: true },
+    { field: 'User_No', header: '使用者編號', visible: true },
     { field: 'User_Name', header: '使用者名稱', visible: true },
     { field: 'Str_Date', header: '有效起始日期', visible: false, format: formatDate },
     { field: 'End_Date', header: '有效截止日期', visible: false, format: formatDate },
@@ -116,7 +116,6 @@ export class SYS0750Component extends BasicQueryPageComponent<QuerySYS0750Respon
           } else {
             this.data = [];
             this.totalRecords = 0;
-            this.messageService.warnBubble(response.Message);
           }
         });
     });

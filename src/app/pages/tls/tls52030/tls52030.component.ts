@@ -81,13 +81,13 @@ export class TLS52030Component extends BasicQueryPageComponent<ITLS52030Data> im
   columns: Column[] = [
     { field: 'ODM_No', header: '進貨驗收編號', visible: true },
     { field: 'SYS_StoreNo', header: '公司編號/店號', visible: false },
-    { field: 'VEN_No', header: '廠商代號', visible: true },
+    { field: 'VEN_No', header: '廠商編號', visible: true },
     { field: 'LOGO_No', header: '品牌代碼', visible: true },
     { field: 'LOGO_CH_NAME', header: '品牌名稱', visible: true },
     { field: 'HOS_No', header: '倉庫代碼', visible: true },
     { field: 'HOS_NAME', header: '倉庫名稱', visible: true },
     { field: 'org_id', header: '組織代碼/組織名稱', visible: true },
-    { field: 'ODM_Status', header: '驗收狀態', visible: true, format: value => this.poStatusOptions.find(x => x.value === value)?.label || value },
+    { field: 'ODM_Status', header: '進貨驗收單狀態', visible: true, format: value => this.poStatusOptions.find(x => x.value === value)?.label || value },
     { field: 'ODM_Date', header: '申請日期', visible: true, format: formatDate },
     { field: 'ODM_USR_No', header: '申請人員', visible: true },
     { field: 'ODM_USR_Name', header: '申請人員姓名', visible: true },
@@ -149,7 +149,10 @@ export class TLS52030Component extends BasicQueryPageComponent<ITLS52030Data> im
     this.initializePage('TLS52030', 'TLS/TLS52030cru', this.queryForm, (f) => this.onSubmit(f));
     // 倉別 (HOS_No)
     this.dropDownListService.getPOS2034Options().pipe(untilDestroyed(this)).subscribe(response => {
-      this.warehouseOptions = response.Data;
+      this.warehouseOptions = response.Data.map(warehouse => ({
+        ...warehouse,
+        label: `${warehouse.No} - ${warehouse.Name}`,
+      }));
     });
     // 品牌代碼 (LOGO_No)
     this.dropDownListService.queryPLULOGO_DropDownList().pipe(untilDestroyed(this)).subscribe(response => {

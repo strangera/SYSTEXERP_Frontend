@@ -78,7 +78,7 @@ export class TLS52010Component extends BasicQueryPageComponent<ITLS52010Data> im
   columns: Column[] = [
     { field: 'PO_No', header: '採購單號', visible: true }, // 採購單號
     { field: 'SYS_StoreNo', header: '門店編號', visible: true }, // 門店編號 (系統)
-    { field: 'VEN_No', header: '廠商代號', visible: true }, // 廠商代號
+    { field: 'VEN_No', header: '廠商編號', visible: true }, // 廠商代號
     { field: 'LOGO_No', header: '品牌代碼', visible: true }, // LOGO代碼
     { field: 'HOS_No', header: '倉庫代碼', visible: true }, // 倉庫代碼
     { field: 'HOS_NAME', header: '倉庫名稱', visible: true }, // 倉庫名稱
@@ -126,7 +126,7 @@ export class TLS52010Component extends BasicQueryPageComponent<ITLS52010Data> im
     this.initializePage('TLS52010', 'TLS/TLS52010cru', this.queryForm, (form) => this.onSubmit(form));
     // 倉別 (HOS_No)
     this.dropDownListService.getPOS2034Options().pipe(untilDestroyed(this),
-      map(response => response.Data.map(item => ({ label: item.Name, value: item.No })))
+      map(response => response.Data.map(item => ({ label: item.No + ' - ' + item.Name, value: item.No })))
     ).subscribe(options => { this.warehouseOptions = options; });
     // 品牌代碼 (LOGO_No)
     this.dropDownListService.queryPLULOGO_DropDownList().pipe(untilDestroyed(this),

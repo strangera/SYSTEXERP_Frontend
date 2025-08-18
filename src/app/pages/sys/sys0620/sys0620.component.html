@@ -9,9 +9,9 @@
       [headerStyleClass]="'query-accordionTab'">
       <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
-          <!-- 異動使用者代碼 -->
+          <!-- 異動使用者編號 -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="異動使用者代碼" controlName="userCodeMod" [options]="userCodeModOptions" optionLabel="label"
+            <app-dropdown label="異動使用者編號" controlName="userCodeMod" [options]="userCodeModOptions" optionLabel="label"
               optionValue="value" [control]="queryForm.controls.userCodeMod" [submitted]="submitted"></app-dropdown>
           </div>
           <!-- 角色代號 -->

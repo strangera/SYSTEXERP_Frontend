@@ -12,7 +12,7 @@
           <app-input-text class="col-12 md:col-6 lg:col-4" label="採購單號" controlName="PO_No"
             [control]="queryForm.controls.PO_No" [submitted]="submitted" />
           <!-- 單據狀態 (採購單狀態) -->
-          <app-multi-select class="col-12 md:col-6 lg:col-4" label="單據狀態" controlName="PO_Status"
+          <app-multi-select class="col-12 md:col-6 lg:col-4" label="採購單狀態" controlName="PO_Status"
             [options]="poStatusOptions" optionLabel="label" optionValue="value"
             [control]="queryForm.controls.PO_StatusList" [submitted]="submitted" />
           <!-- 管理編號 -->
@@ -27,7 +27,7 @@
               [control]="opForm.controls.PLU_Name" />
           </app-dropdown-table>
           <!-- 倉別 (對應 HOS_No) -->
-          <app-multi-select class="col-12 md:col-6 lg:col-4" label="倉別" controlName="HOS_No"
+          <app-multi-select class="col-12 md:col-6 lg:col-4" label="倉庫代碼/名稱" controlName="HOS_No"
             [options]="warehouseOptions" optionLabel="label" optionValue="value"
             [control]="queryForm.controls.HOS_NoList" [submitted]="submitted" />
           <!-- 品牌代碼 (對應 LOGO_No) -->
@@ -75,8 +75,9 @@
   </p-accordion>
 </div>
 <div class="card">
-  <app-table tableKey="TLS52010" dataKey="PO_No" [data]="data" [columns]="columns" (edit)="onEdit($event)"
-    (detail)="onDetail($event)" [showCheckBox]="true" [editDisabled]="editDisabled" [multiSortMeta]="[
+  <app-table apiUrl="queryTLS52010" tableKey="TLS52010" dataKey="PO_No" [data]="data" [columns]="columns"
+    (edit)="onEdit($event)" (detail)="onDetail($event)" [showCheckBox]="true" [editDisabled]="editDisabled"
+    [multiSortMeta]="[
       { field: 'APPLY_Date', order: -1 },
       { field: 'PO_No', order: 1 },
     ]" [totalRecords]="totalRecords" (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"

@@ -28,22 +28,22 @@ interface AbnormalCode {
 }
 
 @Component({
-    selector: 'app-sys0760',
-    templateUrl: './sys0760.component.html',
-    styleUrls: ['./sys0760.component.scss'],
-    standalone: true,
-    imports: [
-        MenubarComponent,
-        AccordionModule,
-        FormsModule,
-        ReactiveFormsModule,
-        DropdownComponent,
-        InputNumberComponent,
-        CalendarRangeComponent,
-        ButtonComponent,
-        TableComponent,
-        TranslateModule,
-    ],
+  selector: 'app-sys0760',
+  templateUrl: './sys0760.component.html',
+  styleUrls: ['./sys0760.component.scss'],
+  standalone: true,
+  imports: [
+    MenubarComponent,
+    AccordionModule,
+    FormsModule,
+    ReactiveFormsModule,
+    DropdownComponent,
+    InputNumberComponent,
+    CalendarRangeComponent,
+    ButtonComponent,
+    TableComponent,
+    TranslateModule,
+  ],
 })
 // 使用者異常登入報表
 export class SYS0760Component extends BasicQpageComponent implements OnInit {
@@ -92,7 +92,7 @@ export class SYS0760Component extends BasicQpageComponent implements OnInit {
   columns: any[] = [
     { field: 'eventCode', header: '事件代碼', visible: true },
     { field: 'userName', header: '使用者名稱', visible: true },
-    { field: 'userCode', header: '使用者代碼', visible: true },
+    { field: 'userCode', header: '使用者編號', visible: true },
     { field: 'loginAddress', header: '登入者位址', visible: true },
     { field: 'loginTime', header: '登入時間', visible: true },
   ];
