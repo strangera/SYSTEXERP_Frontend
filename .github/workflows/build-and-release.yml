@@ -24,35 +24,54 @@ jobs:
         npm install --legacy-peer-deps
     
     # ✨ 新增：自動更新版本號
-    - name: Update version in login component
-      run: |
-        echo "=== Updating version number ==="
-        node -e "
-        const fs = require('fs');
-        const filePath = 'src/app/pages/base/login/login.component.html';
-        
-        // 讀取檔案
-        let content = fs.readFileSync(filePath, 'utf8');
-        
-        // 產生新的版本字串
-        const now = new Date();
-        const year = now.getFullYear();
-        const month = String(now.getMonth() + 1).padStart(2, '0');
-        const day = String(now.getDate()).padStart(2, '0');
-        const hours = String(now.getHours()).padStart(2, '0');
-        const minutes = String(now.getMinutes()).padStart(2, '0');
-        
-        const newVersion = \`\${year}/\${month}/\${day}_V2 \${hours}:\${minutes}\`;
-        
-        // 使用正則表達式替換版本字串
-        const versionRegex = /(\\d{4}\\/\\d{2}\\/\\d{2}_V\\d+\\s+\\d{2}:\\d{2})/;
-        content = content.replace(versionRegex, newVersion);
-        
-        // 寫回檔案
-        fs.writeFileSync(filePath, content, 'utf8');
-        
-        console.log(\`✅ 版本號已更新為: \${newVersion}\`);
-        "
+   - name: Update version in login component
+  run: |
+    echo "=== Updating version number ==="
+    node -e "
+    const fs = require('fs');
+    const filePath = 'src/app/pages/base/login/login.component.html';
+    
+    // 讀取檔案
+    let content = fs.readFileSync(filePath, 'utf8');
+    
+    // 產生新的版本字串
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    const hours = String(now.getHours()).padStart(2, '0');
+    const minutes = String(now.getMinutes()).padStart(2, '0');
+    
+    // 🔥 從 GitHub tag 中提取今天的發布次數
+    let versionNumber = 1; // 預設值
+    
+    // 檢查是否有 GITHUB_REF (tag 資訊)
+    const githubRef = process.env.GITHUB_REF;
+    if (githubRef && githubRef.includes('refs/tags/')) {
+      const tagName = githubRef.replace('refs/tags/', '');
+      console.log('Current tag:', tagName);
+      
+      // 從 tag 名稱中提取序號 (例如: v1.0.0-20250818.3 -> 3)
+      const tagPattern = /v\\d+\\.\\d+\\.\\d+-\\d{8}\\.(\\d+)/;
+      const match = tagName.match(tagPattern);
+      
+      if (match) {
+        versionNumber = parseInt(match[1]);
+        console.log('Extracted version number from tag:', versionNumber);
+      }
+    }
+    
+    const newVersion = \`\${year}/\${month}/\${day}_V\${versionNumber} \${hours}:\${minutes}\`;
+    
+    // 使用正則表達式替換版本字串
+    const versionRegex = /(\\d{4}\\/\\d{2}\\/\\d{2}_V\\d+\\s+\\d{2}:\\d{2})/;
+    content = content.replace(versionRegex, newVersion);
+    
+    // 寫回檔案
+    fs.writeFileSync(filePath, content, 'utf8');
+    
+    console.log(\`✅ 版本號已更新為: \${newVersion}\`);
+    "
     
     - name: Add staging configuration to angular.json
       run: |
