@@ -365,6 +365,7 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
     this.initializeData();
     this.setupListeners();
     this.setupDynamicValidators();
+    this.loadBankDropdownOptions();
   }
 
   ngOnDestroy(): void {
@@ -454,6 +455,7 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
     // 🎯 設定監聽
     this.setupAutoSave();
     this.setupBusTypeListener();
+    // this.setupContractDateListeners();
 
     setTimeout(() => {
       this.validateWorkflowData();
@@ -471,6 +473,9 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
       this.updateSelectorPanelOptions();
     }, 1000);
   }
+
+
+
   private getCustomTitle(): string {
     if (this.contractFlowService.isViewMode()) {
       return '檢視契約資料';
@@ -673,6 +678,23 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
     setTimeout(() => {
       this.setFormControlsState();
     }, 100);
+  }
+
+  private loadBankDropdownOptions(): void {
+    console.log('🏦 開始載入銀行下拉選單選項...');
+
+    // 載入所有銀行選項（不帶搜尋條件）
+    this.bankService.getBankOptions('').subscribe({
+      next: (options: DropdownOption[]) => {
+        this.bankDropdownOptions = options;
+        console.log('✅ 銀行選項載入完成:', this.bankDropdownOptions.length, '筆');
+      },
+      error: (err) => {
+        console.warn('⚠️ 載入銀行選項失敗:', err);
+        this.bankDropdownOptions = [];
+        this.messageService.warnBubble('載入銀行選項失敗');
+      }
+    });
   }
 
   private reconstructBankInfo(bankId: string): void {
@@ -2359,6 +2381,8 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
       this.updateCreditCardValidators();
     });
 
+    this.setupDateValidators();
+
     // 設定保證金付款方式變更監聽
     ['open_deposit', 'construct_deposit', 'expiration_deposit'].forEach(fieldName => {
       this.dataForm.get(fieldName)?.valueChanges.subscribe(() => {
@@ -2368,6 +2392,106 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
 
     // 初始驗證器設定
     this.updateFieldValidators();
+    this.updateInitialRequiredFields();
+  }
+
+  // 🎯 新增：設定日期驗證器
+  private setupDateValidators(): void {
+    // 契約起始日和截止日監聽
+    this.dataForm.get('tlt_bdate')?.valueChanges.subscribe(() => {
+      this.validateContractDates();
+    });
+
+    this.dataForm.get('tlt_edate')?.valueChanges.subscribe(() => {
+      this.validateContractDates();
+    });
+
+    // 營運起始日和截止日監聽
+    this.dataForm.get('tlt_contract_bdate')?.valueChanges.subscribe(() => {
+      this.validateOperationDates();
+    });
+
+    this.dataForm.get('tlt_contract_edate')?.valueChanges.subscribe(() => {
+      this.validateOperationDates();
+    });
+
+    // 回函日期和截止日監聽
+    this.dataForm.get('feedback_date')?.valueChanges.subscribe(() => {
+      this.validateFeedbackDates();
+    });
+
+    this.dataForm.get('due_date')?.valueChanges.subscribe(() => {
+      this.validateFeedbackDates();
+    });
+  }
+
+  // 🎯 新增：驗證契約日期
+  private validateContractDates(): void {
+    const startDate = this.dataForm.get('tlt_bdate')?.value;
+    const endDate = this.dataForm.get('tlt_edate')?.value;
+    const endDateControl = this.dataForm.get('tlt_edate');
+
+    if (startDate && endDate) {
+      const start = new Date(startDate);
+      const end = new Date(endDate);
+
+      if (start >= end) {
+        console.warn('⚠️ 契約截止日不可早於或等於起始日');
+        endDateControl?.setValue('');
+        this.messageService.warnBubble('契約截止日必須晚於起始日，已清空截止日');
+      }
+    }
+  }
+
+  // 🎯 新增：驗證營運日期
+  private validateOperationDates(): void {
+    const startDate = this.dataForm.get('tlt_contract_bdate')?.value;
+    const endDate = this.dataForm.get('tlt_contract_edate')?.value;
+    const endDateControl = this.dataForm.get('tlt_contract_edate');
+
+    if (startDate && endDate) {
+      const start = new Date(startDate);
+      const end = new Date(endDate);
+
+      if (start >= end) {
+        console.warn('⚠️ 營運截止日不可早於或等於起始日');
+        endDateControl?.setValue('');
+        this.messageService.warnBubble('營運截止日必須晚於起始日，已清空截止日');
+      }
+    }
+
+    // 🎯 如果是固定租金或底租抽成取高者，重新計算預收租金期數
+    // const tltTermType = this.dataForm.get('tlt_term_type')?.value;
+    // if (['1', '2'].includes(tltTermType || '')) {
+    //   this.calculateAndSetRentPeriod();
+    // }
+  }
+
+  // 🎯 新增：驗證回函日期
+  private validateFeedbackDates(): void {
+    const feedbackDate = this.dataForm.get('feedback_date')?.value;
+    const dueDate = this.dataForm.get('due_date')?.value;
+    const dueDateControl = this.dataForm.get('due_date');
+
+    if (feedbackDate && dueDate) {
+      const feedback = new Date(feedbackDate);
+      const due = new Date(dueDate);
+
+      if (feedback >= due) {
+        console.warn('⚠️ 回函截止日不可早於或等於回函日期');
+        dueDateControl?.setValue('');
+        this.messageService.warnBubble('回函截止日必須晚於回函日期');
+      }
+    }
+  }
+
+  // 🎯 新增：設定初始必填欄位
+  private updateInitialRequiredFields(): void {
+    // 聯名卡折數 - 預設 vip_yn = 'Y'，所以一開始就設為必填
+    this.updateCreditCardValidators();
+
+    // 銀行相關欄位 - 預設 paytype = '1' (匯款)，所以一開始就設為必填
+    this.updatePaymentValidators();
   }
 
   /**
@@ -2504,10 +2628,8 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
     const vendorAcctNoControl = this.dataForm.get('vendor_acct_no');
 
     // 清除現有驗證器
-    checkTitleControl?.clearValidators();
-    bankIdControl?.clearValidators();
-    vendorAcctNameControl?.clearValidators();
-    vendorAcctNoControl?.clearValidators();
+    [checkTitleControl, bankIdControl, vendorAcctNameControl, vendorAcctNoControl]
+      .forEach(control => control?.clearValidators());
 
     if (paytype === '1') { // 匯款
       bankIdControl?.setValidators([Validators.required]);
@@ -2531,18 +2653,22 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
     const vipYn = this.dataForm.get('vip_yn')?.value;
     const creditCardControl = this.dataForm.get('credit_card');
 
-    creditCardControl?.clearValidators();
+    if (!creditCardControl) return;
+
+    creditCardControl.clearValidators();
 
     if (vipYn === 'Y') {
-      creditCardControl?.setValidators([
+      creditCardControl.setValidators([
         Validators.required,
-        Validators.min(0.01),
-        Validators.max(1.00)
       ]);
-      console.log('✅ 配合聯名卡：聯名卡折數為必填');
+      console.log('✅ 配合聯名卡：聯名卡折數為必填 (0.01-1.00)');
+    } else {
+      // vip_yn = 'N' 時，清空數值並設為非必填
+      creditCardControl.setValue(null);
+      console.log('❌ 不配合聯名卡：聯名卡折數非必填並清空');
     }
 
-    creditCardControl?.updateValueAndValidity();
+    creditCardControl.updateValueAndValidity();
   }
 
   /**
