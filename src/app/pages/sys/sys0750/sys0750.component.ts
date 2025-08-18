@@ -41,7 +41,7 @@ export interface Role {
 })
 // 角色使用者權限列表
 export class SYS0750Component extends BasicQueryPageComponent<QuerySYS0750Response> implements OnInit {
-  // 查詢表單，包含角色代碼和分頁/排序參數
+  // 查詢表單，包含角色代號和分頁/排序參數
   queryForm = this.formBuilder.group({
     Role_No: ['', [Validators.required, Validators.maxLength(10)]], // 角色代號，必填且限制長度
     // 預設排序欄位為 User_No，排序順序為 ASC (1)
