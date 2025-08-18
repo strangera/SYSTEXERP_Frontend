@@ -1,6 +1,6 @@
 import { CurrentPageService } from './../../../layout/app.menulist/current-page.service';
 import { Component, OnInit, OnDestroy } from '@angular/core';
-import { FormGroup, Validators, FormsModule, ReactiveFormsModule, FormBuilder } from '@angular/forms';
+import { FormGroup, Validators, FormsModule, ReactiveFormsModule, FormBuilder, ValidatorFn, AbstractControl, ValidationErrors } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { distinctUntilChanged, map, Observable, Subscription, debounceTime } from 'rxjs';
 // 🎯 直接導入需要的服務，不再繼承
@@ -331,6 +331,7 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
 
   // 訂閱管理
   private subscriptions: Subscription[] = [];
+  bankDropdownOptions: DropdownOption[] = [];
   selectedBankInfo: AutoCompleteOption | null = null;
 
   constructor(
@@ -363,6 +364,7 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
     this.initializeWorkflow();
     this.initializeData();
     this.setupListeners();
+    this.setupDynamicValidators();
   }
 
   ngOnDestroy(): void {
@@ -443,7 +445,6 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
 
   private initializeData(): void {
     // 🎯 載入下拉選單和位置選項
-    this.loadDropdownOptions();
     this.loadLocationWithDetailsOptions();
     this.loadPOS2013Options();
     this.loadNegotiatorOptions();
@@ -503,56 +504,6 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
   }
 
   // ==========  資料載入方法 ==========
-  private loadDropdownOptions(): void {
-    // 廠商選項
-    this.vendorService.getVendors().subscribe({
-      next: (data) => this.vendorOptions = data,
-      error: (err) => console.warn('載入廠商選項失敗:', err)
-    });
-
-    // 合約狀態選項
-    this.contractStatusService.getContractStatuses().subscribe({
-      next: (data) => this.contractStatusOptions = data,
-      error: (err) => console.warn('載入合約狀態選項失敗:', err)
-    });
-
-    // 結帳方式選項
-    this.settlementMethodService.getSettlementMethods().subscribe({
-      next: (data) => this.settlementMethodOptions = data,
-      error: (err) => console.warn('載入結帳方式選項失敗:', err)
-    });
-
-    // 付款方式選項
-    this.paymentMethodService.getPaymentMethods().subscribe({
-      next: (data) => this.paymentMethodOptions = data,
-      error: (err) => console.warn('載入付款方式選項失敗:', err)
-    });
-
-    // 配合方式選項
-    this.cooperationMethodService.getCooperationMethods().subscribe({
-      next: (data) => this.cooperationMethodOptions = data,
-      error: (err) => console.warn('載入配合方式選項失敗:', err)
-    });
-
-    // 櫃別選項
-    this.counterCategoryService.getCounterCategories().subscribe({
-      next: (data) => this.counterCategoryOptions = data,
-      error: (err) => console.warn('載入櫃別選項失敗:', err)
-    });
-
-    // 大分類選項
-    this.businessTypeCodeService.getBusinessTypeCodes().subscribe({
-      next: (data) => this.businessTypeCodeOptions = data,
-      error: (err) => console.warn('載入大分類選項失敗:', err)
-    });
-
-    // 組織選項
-    this.organizationNumberService.getOrganizationNumbers().subscribe({
-      next: (data) => this.organizationOptions = data,
-      error: (err) => console.warn('載入組織選項失敗:', err)
-    });
-
-  }
 
   private loadLocationWithDetailsOptions(): void {
     console.log('🔄 開始載入位置選項...');
@@ -870,7 +821,11 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
     this.locationData = [];
     this.selectedBankInfo = null;
 
-    console.log('✅ 空表單初始化完成');
+    setTimeout(() => {
+      this.setFormControlsState();
+      // ✅ 查詢資料載入後觸發所有動態驗證器
+      this.triggerAllDynamicValidators();
+    }, 100);
   }
 
 
@@ -1875,15 +1830,15 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
     return !!(field && field.invalid && (field.dirty || field.touched || this.submitted));
   }
 
-  getFieldErrorMessage(fieldName: string): string {
-    const field = this.dataForm.get(fieldName);
-    if (field && field.errors) {
-      if (field.errors['required']) return '此欄位為必填';
-      if (field.errors['email']) return '請輸入正確的 Email 格式';
-      if (field.errors['maxlength']) return `最多可輸入 ${field.errors['maxlength'].requiredLength} 個字元`;
-    }
-    return '';
-  }
+  // getFieldErrorMessage(fieldName: string): string {
+  //   const field = this.dataForm.get(fieldName);
+  //   if (field && field.errors) {
+  //     if (field.errors['required']) return '此欄位為必填';
+  //     if (field.errors['email']) return '請輸入正確的 Email 格式';
+  //     if (field.errors['maxlength']) return `最多可輸入 ${field.errors['maxlength'].requiredLength} 個字元`;
+  //   }
+  //   return '';
+  // }
 
   onRefreshBusClass(): void {
     const busType = this.dataForm.get('bus_type')?.value;
@@ -2380,5 +2335,336 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
       return "'系統自動產生'";
     }
     return '';
+  }
+
+  //=================動態驗證====================================
+  /**
+   * 🎯 新增：設定動態驗證器
+   */
+  private setupDynamicValidators(): void {
+    console.log('🔧 設定動態驗證器...');
+
+    // 設定抽成別變更監聽
+    this.dataForm.get('tlt_term_type')?.valueChanges.subscribe(() => {
+      this.updateFieldValidators();
+    });
+
+    // 設定付款方式變更監聽
+    this.dataForm.get('paytype')?.valueChanges.subscribe(() => {
+      this.updatePaymentValidators();
+    });
+
+    // 設定聯名卡配合變更監聽
+    this.dataForm.get('vip_yn')?.valueChanges.subscribe(() => {
+      this.updateCreditCardValidators();
+    });
+
+    // 設定保證金付款方式變更監聽
+    ['open_deposit', 'construct_deposit', 'expiration_deposit'].forEach(fieldName => {
+      this.dataForm.get(fieldName)?.valueChanges.subscribe(() => {
+        this.updateDepositValidators();
+      });
+    });
+
+    // 初始驗證器設定
+    this.updateFieldValidators();
+  }
+
+  /**
+   * 🎯 新增：更新欄位驗證器（根據抽成別）
+   */
+  private updateFieldValidators(): void {
+    const tltTermType = this.dataForm.get('tlt_term_type')?.value;
+    console.log('🔄 更新欄位驗證器，當前抽成別:', tltTermType);
+
+    // 包底類別驗證
+    this.updateBaodiValidators(tltTermType ?? '');
+
+    // 預收租金相關驗證
+    this.updateRentAheadValidators(tltTermType ?? '');
+
+    // 是否為抽成驗證
+    this.updateCommissionValidators(tltTermType ?? '');
+
+    // 觸發表單驗證重新計算
+    this.dataForm.updateValueAndValidity();
+  }
+
+  /**
+   * 🎯 新增：更新包底類別驗證器
+   */
+  private updateBaodiValidators(tltTermType: string): void {
+    const baodiControl = this.dataForm.get('tlt_ctype_mtotal');
+
+    if (!baodiControl) return;
+
+    // 清除現有驗證器
+    baodiControl.clearValidators();
+
+    // 包底抽成(4)、包底加階梯(6)、底租抽成取高者(2) 需要包底類別
+    if (['2', '4', '6'].includes(tltTermType)) {
+      baodiControl.setValidators([Validators.required]);
+      console.log('✅ 包底類別設為必填');
+    } else {
+      console.log('❌ 包底類別設為非必填');
+    }
+
+    baodiControl.updateValueAndValidity();
+  }
+
+  /**
+   * 🎯 新增：更新預收租金相關驗證器
+   */
+  private updateRentAheadValidators(tltTermType: string): void {
+    const rentAheadControl = this.dataForm.get('rent_ahead');
+    const rentPeriodControl = this.dataForm.get('rent_period');
+    const baseRentControl = this.dataForm.get('base_rent');
+
+    // 固定租金(1)、底租抽成取高者(2) 的預設值和驗證
+    if (['1', '2'].includes(tltTermType)) {
+      // 設定預收租金為是
+      if (rentAheadControl?.value !== 'Y') {
+        rentAheadControl?.setValue('Y');
+      }
+
+      // 計算並設定預收租金期數
+      this.calculateAndSetRentPeriod();
+
+      // 固定租金必填
+      if (rentAheadControl?.value === 'Y') {
+        baseRentControl?.setValidators([Validators.required, Validators.min(1)]);
+        console.log('✅ 固定租金設為必填');
+      }
+    } else {
+      // 其他抽成別：移除固定租金必填
+      baseRentControl?.clearValidators();
+      baseRentControl?.setValidators([Validators.min(0)]);
+    }
+
+    // 更新驗證狀態
+    baseRentControl?.updateValueAndValidity();
+  }
+
+  /**
+   * 🎯 新增：計算並設定預收租金期數
+   */
+  private calculateAndSetRentPeriod(): void {
+    const startDate = this.dataForm.get('tlt_contract_bdate')?.value;
+    const endDate = this.dataForm.get('tlt_contract_edate')?.value;
+
+    if (startDate && endDate) {
+      try {
+        const start = new Date(startDate);
+        const end = new Date(endDate);
+
+        // 計算月數差（包含起始月）
+        const months = this.calculateMonthsDifference(start, end) + 1;
+
+        this.dataForm.get('rent_period')?.setValue(months);
+        console.log('📅 自動計算預收租金期數:', months);
+      } catch (error) {
+        console.warn('❌ 計算預收租金期數失敗:', error);
+      }
+    }
+  }
+
+  /**
+   * 🎯 新增：計算月數差異
+   */
+  private calculateMonthsDifference(startDate: Date, endDate: Date): number {
+    const yearDiff = endDate.getFullYear() - startDate.getFullYear();
+    const monthDiff = endDate.getMonth() - startDate.getMonth();
+    return yearDiff * 12 + monthDiff;
+  }
+
+  /**
+   * 🎯 新增：更新是否為抽成
+   */
+  private updateCommissionValidators(tltTermType: string): void {
+    const commYnControl = this.dataForm.get('comm_yn');
+
+    // 包底抽成(4)、底租抽成取高者(2)、一般抽成(3)、階梯式抽成(5) = 是
+    if (['2', '3', '4', '5'].includes(tltTermType)) {
+      commYnControl?.setValue('Y');
+      console.log('✅ 是否為抽成設為：是');
+    } else {
+      commYnControl?.setValue('N');
+      console.log('❌ 是否為抽成設為：否');
+    }
+  }
+
+  /**
+   * 🎯 新增：更新付款方式相關驗證器
+   */
+  private updatePaymentValidators(): void {
+    const paytype = this.dataForm.get('paytype')?.value;
+    const checkTitleControl = this.dataForm.get('CHECK_TITLE');
+    const bankIdControl = this.dataForm.get('bank_id');
+    const vendorAcctNameControl = this.dataForm.get('vendor_acct_name');
+    const vendorAcctNoControl = this.dataForm.get('vendor_acct_no');
+
+    // 清除現有驗證器
+    checkTitleControl?.clearValidators();
+    bankIdControl?.clearValidators();
+    vendorAcctNameControl?.clearValidators();
+    vendorAcctNoControl?.clearValidators();
+
+    if (paytype === '1') { // 匯款
+      bankIdControl?.setValidators([Validators.required]);
+      vendorAcctNameControl?.setValidators([Validators.required, Validators.maxLength(60)]);
+      vendorAcctNoControl?.setValidators([Validators.required, Validators.maxLength(20)]);
+      console.log('✅ 匯款付款：銀行相關欄位為必填');
+    } else if (paytype === '2') { // 支票
+      checkTitleControl?.setValidators([Validators.required, Validators.maxLength(100)]);
+      console.log('✅ 支票付款：票據抬頭為必填');
+    }
+
+    // 更新驗證狀態
+    [checkTitleControl, bankIdControl, vendorAcctNameControl, vendorAcctNoControl]
+      .forEach(control => control?.updateValueAndValidity());
+  }
+
+  /**
+   * 🎯 新增：更新聯名卡相關驗證器
+   */
+  private updateCreditCardValidators(): void {
+    const vipYn = this.dataForm.get('vip_yn')?.value;
+    const creditCardControl = this.dataForm.get('credit_card');
+
+    creditCardControl?.clearValidators();
+
+    if (vipYn === 'Y') {
+      creditCardControl?.setValidators([
+        Validators.required,
+        Validators.min(0.01),
+        Validators.max(1.00)
+      ]);
+      console.log('✅ 配合聯名卡：聯名卡折數為必填');
+    }
+
+    creditCardControl?.updateValueAndValidity();
+  }
+
+  /**
+   * 🎯 新增：更新保證金相關驗證器
+   */
+  private updateDepositValidators(): void {
+    // 履約保證金
+    this.validateDepositPair('open_deposit', 'open_fees', '履約保證金');
+
+    // 施工保證金
+    this.validateDepositPair('construct_deposit', 'construct_fees', '施工保證金');
+
+    // 契約屆滿保證金
+    this.validateDepositPair('expiration_deposit', 'expiration_fees', '契約屆滿保證金');
+  }
+
+  /**
+   * 🎯 新增：驗證保證金配對
+   */
+  private validateDepositPair(paymentMethodField: string, amountField: string, displayName: string): void {
+    const paymentMethodControl = this.dataForm.get(paymentMethodField);
+    const amountControl = this.dataForm.get(amountField);
+
+    if (!paymentMethodControl || !amountControl) return;
+
+    const hasPaymentMethod = paymentMethodControl.value && paymentMethodControl.value.trim() !== '';
+
+    amountControl.clearValidators();
+
+    if (hasPaymentMethod) {
+      amountControl.setValidators([Validators.required, Validators.min(1)]);
+      console.log(`✅ ${displayName}付款方式有值：${displayName}必填`);
+    } else {
+      amountControl.setValidators([Validators.min(0)]);
+    }
+
+    amountControl.updateValueAndValidity();
+  }
+
+  /**
+   * 🎯 新增：自訂驗證器 - 保證金依賴驗證
+   */
+  private createDepositDependencyValidator(paymentMethodField: string): ValidatorFn {
+    return (control: AbstractControl): ValidationErrors | null => {
+      const form = control.parent;
+      if (!form) return null;
+
+      const paymentMethodControl = form.get(paymentMethodField);
+      const hasPaymentMethod = paymentMethodControl?.value && paymentMethodControl.value.trim() !== '';
+
+      if (hasPaymentMethod && (!control.value || control.value <= 0)) {
+        return { depositRequired: { requiredFor: paymentMethodField } };
+      }
+
+      return null;
+    };
+  }
+
+  /**
+   * 🎯 新增：自訂錯誤訊息處理
+   */
+  getFieldErrorMessage(fieldName: string): string {
+    const field = this.dataForm.get(fieldName);
+    if (field && field.errors) {
+      if (field.errors['required']) {
+        return this.getRequiredErrorMessage(fieldName);
+      }
+      if (field.errors['email']) return '請輸入正確的 Email 格式';
+      if (field.errors['maxlength']) {
+        return `最多可輸入 ${field.errors['maxlength'].requiredLength} 個字元`;
+      }
+      if (field.errors['min']) {
+        return `最小值為 ${field.errors['min'].min}`;
+      }
+      if (field.errors['max']) {
+        return `最大值為 ${field.errors['max'].max}`;
+      }
+      if (field.errors['depositRequired']) {
+        return '付款方式有值時此欄位為必填';
+      }
+    }
+    return '';
+  }
+
+  /**
+   * 🎯 新增：根據欄位獲取必填錯誤訊息
+   */
+  private getRequiredErrorMessage(fieldName: string): string {
+    const requiredMessages: { [key: string]: string } = {
+      'tlt_ctype_mtotal': '當前抽成別需要選擇包底類別',
+      'base_rent': '預收租金為是時固定租金為必填',
+      'CHECK_TITLE': '支票付款時票據抬頭為必填',
+      'bank_id': '匯款付款時銀行代號為必填',
+      'vendor_acct_name': '匯款付款時帳戶名稱為必填',
+      'vendor_acct_no': '匯款付款時銀行帳號為必填',
+      'credit_card': '配合聯名卡時聯名卡折數為必填',
+      'open_fees': '履約保證金付款方式有值時此欄位為必填',
+      'construct_fees': '施工保證金付款方式有值時此欄位為必填',
+      'expiration_fees': '契約屆滿保證金付款方式有值時此欄位為必填'
+    };
+
+    return requiredMessages[fieldName] || '此欄位為必填';
+  }
+
+  /**
+ * 🎯 觸發所有動態驗證器（用於初始化和資料載入後）
+ */
+  private triggerAllDynamicValidators(): void {
+    console.log('🔥 觸發所有動態驗證器');
+
+    // 付款方式相關驗證
+    this.updatePaymentValidators();
+
+    // 抽成別相關驗證
+    this.updateFieldValidators();
+
+    // 會員卡相關驗證
+    this.updateCreditCardValidators();
+
+    // 保證金相關驗證
+    this.updateDepositValidators();
+
+    console.log('✅ 所有動態驗證器觸發完成');
   }
 }

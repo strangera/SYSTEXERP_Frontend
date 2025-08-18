@@ -158,6 +158,10 @@
               <app-dropdown label="包底類別" controlName="tlt_ctype_mtotal" [options]="tltctypemtotalOption"
                 optionLabel="label" optionValue="value" [control]="dataForm.controls.tlt_ctype_mtotal"
                 [submitted]="submitted"></app-dropdown>
+              <!-- <small class="block mt-1 text-red-600 text-base"
+                *ngIf="['2','4','6'].includes((dataForm.get('tlt_term_type')?.value ?? ''))">
+                當抽成別為 {{ dataForm.get('tlt_term_type')?.value }} 需要選擇包底類別
+              </small> -->
             </div>
             <div class="col-12 md:col-6 lg:col-4">
               <app-dropdown label="超出部份處理方式" controlName="overall_status" [options]="overallStatusOptions"
@@ -221,6 +225,9 @@
             <div class="col-12 md:col-6 lg:col-4">
               <app-input-number label="聯名卡折數" controlName="credit_card" [control]="dataForm.controls.credit_card"
                 [minFractionDigits]="0" [maxFractionDigits]="2" [submitted]="submitted"></app-input-number>
+              <small class="block mt-1 text-blue-600 text-base" *ngIf="dataForm.get('vip_yn')?.value === 'Y'">
+                💡配合聯名卡時必填 (例：0.95 為 95折)
+              </small>
             </div>
             <div class="col-12 md:col-6 lg:col-4">
               <app-input-number label="目標營業額(業主)" controlName="total_amt" [control]="dataForm.controls.total_amt"
@@ -355,16 +362,21 @@
             <div class="col-12 md:col-6 lg:col-4">
               <app-input-text label="票據抬頭" controlName="CHECK_TITLE" [control]="dataForm.controls.CHECK_TITLE"
                 [submitted]="submitted"></app-input-text>
+              <!-- <small class="block mt-1 text-blue-600 text-base" *ngIf="dataForm.get('paytype')?.value === '1'">
+                💡支票付款時必填
+              </small> -->
             </div>
             <div class="col-12 md:col-6 lg:col-4">
               <app-input-text label="專櫃電話號碼" controlName="store_tel" [control]="dataForm.controls.store_tel"
                 [submitted]="submitted"></app-input-text>
             </div>
             <div class="col-12 md:col-6 lg:col-4">
-              <app-autocomplete label="廠商匯款銀行代號" controlName="bank_id" placeholder="請輸入銀行代號或銀行名稱..."
+              <!-- <app-autocomplete label="廠商匯款銀行代號" controlName="bank_id" placeholder="請輸入銀行代號或銀行名稱..."
                 [control]="dataForm.controls.bank_id" [submitted]="submitted" [forceSelection]="true"
                 [searchMethod]="searchBankOptions.bind(this)" [selectedOption]="selectedBankInfo"
-                (selectEvent)="onBankSelect($event)" (unselectEvent)="onBankUnselect()"></app-autocomplete>
+                (selectEvent)="onBankSelect($event)" (unselectEvent)="onBankUnselect()"></app-autocomplete> -->
+              <app-dropdown label="廠商匯款銀行代號" controlName="bank_id" [options]="bankDropdownOptions" optionLabel="label"
+                optionValue="value" [control]="dataForm.controls.bank_id" [submitted]="submitted"></app-dropdown>
             </div>
             <div class="col-12 md:col-6 lg:col-4">
               <app-input-text label="廠商帳戶名稱" controlName="vendor_acct_name"
