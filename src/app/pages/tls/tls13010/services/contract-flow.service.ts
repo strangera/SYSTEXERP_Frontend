@@ -175,9 +175,9 @@ export class ContractFlowService {
       errors.push('編輯模式必須有 talent_id');
     }
 
-    if (!cleanData.contractInfo.data.apply_no) {
-      errors.push('專櫃招募編號不能為空');
-    }
+    // if (!cleanData.contractInfo.data.apply_no) {
+    //   errors.push('專櫃招募編號不能為空');
+    // }
 
     if (!cleanData.contractInfo.data.tlt_name) {
       errors.push('品牌名稱不能為空');
