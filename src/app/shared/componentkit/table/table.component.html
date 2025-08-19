@@ -225,7 +225,7 @@
   </ng-template>
   <ng-template *ngIf="expansionColumns.length" pTemplate="rowexpansion" let-rowData>
     <tr id="expansion-row">
-      <td [attr.colspan]="expansionColumns.length">
+      <td [attr.colspan]="getVisibleHeaderCount + 1">
         <app-table-expansion [rowData]="rowData" [expansionDataKey]="expansionDataKey"
           [expansionColumns]="expansionColumns" [expansionMultiSortMeta]="expansionMultiSortMeta"
           [showPaginator]="expansionShowPaginator" [rows]="expansionRows" [scrollHeight]="expansionScrollHeight"
