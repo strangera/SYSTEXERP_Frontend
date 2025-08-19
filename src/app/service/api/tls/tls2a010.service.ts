@@ -11,12 +11,22 @@ export class Tls2a010Service {
 
   constructor(private http: HttpClient) {}
 
-  // 查詢各支付工具審核作業
+  /** 查詢 各支付工具審核作業 */
   queryTLS2A010(data: any): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/queryTLS2A010`, data);
   }
 
-  // 更新資料
+  /** 查詢明細 */
+  queryDetailTLS2A010(data: any): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/queryDetailTLS2A010`, data);
+  }
+
+  /** 新增 */
+  insertTLS2A010(data: any): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/insertTLS2A010`, data);
+  }
+
+  /** 更新 */
   updateTLS2A010(data: any): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/updateTLS2A010`, data);
   }
