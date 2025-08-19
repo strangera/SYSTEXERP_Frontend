@@ -128,9 +128,22 @@
 
 <div class="card">
   <div class="col-12">
-    <app-table tableKey="TLS23010" [data]="data" [dataKey]="'_rowKey'" [columns]="columns" [showEdit]="false"
-      [showManage]="false" [showDelete]="false" [expansionColumns]="detailcolumns" expansionDataKey="DetailList"
-      (detail)="onDetail($event)" [multiSortMeta]="[{ field: 'tlt_no', order: 1 }]" [totalRecords]="totalRecords"
-      (lazyLoadData)="runQueryFromTable($event)" [lazy]="true"></app-table>
+    <app-table
+      tableKey="TLS23010"
+      [data]="data"
+      [dataKey]="'_rowKey'"
+      [columns]="columns"
+      [showEdit]="false"
+      [showManage]="false"
+      [showDelete]="false"
+      [expansionColumns]="detailcolumns"
+      expansionDataKey="DetailList"
+      (detail)="onDetail($event)"
+      [multiSortMeta]="[{ field: 'tlt_no', order: 1 }]"
+      [totalRecords]="totalRecords"
+      (lazyLoadData)="runQueryFromTable($event)"
+      [showReportMode]="false"
+      [lazy]="true"
+    ></app-table>
   </div>
 </div>
