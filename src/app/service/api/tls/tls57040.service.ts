@@ -17,6 +17,7 @@ export interface QueryTLS57040Request {
   CAT_MNo?: string;      // 中分類代碼
   CAT_SNo?: string;      // 小分類代碼
   PLU_Reserve3?: string; // 系列 (左右模糊)
+  queryNo?: string;      // 商品管理編號 (下拉選單/Auto-complete 使用)
   IncludeZeroStock?: boolean; // 是否包含庫存為零的商品 (對應後端 ShowCurrentQty)
   ShowOrderPrc?: boolean; // 是否顯示標準進價 (主要用於前端控制)
   ShowImage?: boolean;    // 是否顯示圖片 (主要用於前端控制)
