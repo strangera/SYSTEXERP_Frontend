@@ -9,31 +9,41 @@
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown label="顯示方式" controlName="displayMode" [options]="displayModeOptions" optionLabel="label"
-              optionValue="value" [control]="queryForm.controls.displayMode" [submitted]="submitted"></app-dropdown>
+              optionValue="value" [control]="queryForm.controls.displayMode" [filter]="false"
+              [submitted]="submitted"></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text label="銷售單號" controlName="salesNo" [control]="queryForm.controls.salesNo"
+            <app-input-text label="銷售單號" controlName="TXN_SaleNoteNo" [control]="queryForm.controls.TXN_SaleNoteNo"
               [submitted]="submitted"></app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar-range calendarType="dateRange" label="銷售日期" [startControl]="queryForm.controls.salesDateFrom"
-              [endControl]="queryForm.controls.salesDateTo" [submitted]="submitted"></app-calendar-range>
+            <app-calendar-range calendarType="dateRange" startLabel="銷售起始日期" endLabel="銷售結束日期"
+              startControlName="TXN_DateStart" endControlName="TXN_DateEnd" [submitted]="submitted"
+              [startControl]="queryForm.controls.TXN_DateStart" [endControl]="queryForm.controls.TXN_DateEnd" />
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="品牌" controlName="brandCode" [options]="brandCodeOptions" optionLabel="label"
-              optionValue="value" [control]="queryForm.controls.brandCode" [submitted]="submitted"></app-dropdown>
+            <app-dropdown label="品牌代碼/名稱" controlName="TLT_Name" [options]="brandCodeOptions" optionLabel="label"
+              optionValue="No" [control]="queryForm.controls.TLT_Name" [submitted]="submitted"></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="管理編號" controlName="managementID" [options]="managementIDOptions" optionLabel="label"
-              optionValue="value" [control]="queryForm.controls.managementID" [submitted]="submitted"></app-dropdown>
+            <app-dropdown-table [control]="queryForm.controls.PLU_MagNo" [submitted]="submitted" optionLabel="PLU_MagNo"
+              optionValue="PLU_MagNo" templateLabel="label" [suggestions]="suggestions" [fieldsConfig]="fieldsConfig"
+              (inputValueChanged)="onAutoCompleteInputChange($event)" (formValueChanged)="onformValueChanged($event)"
+              [formGroup]="opForm" [dialogData]="opData" [dialogColumns]="opColumns" [loading]="opLoading"
+              [totalRecords]="opTotalRecords">
+              <app-input-text class="col-12 md:col-6" label="商品管理編號" controlName="queryNo"
+                [control]="opForm.controls.queryNo" />
+              <app-input-text class="col-12 md:col-6" label="商品名稱" controlName="PLU_Name"
+                [control]="opForm.controls.PLU_Name" />
+            </app-dropdown-table>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text label="國際條碼" controlName="countryCode" [control]="queryForm.controls.countryCode"
+            <app-input-text label="國際條碼" controlName="PLU_No" [control]="queryForm.controls.PLU_No"
               [submitted]="submitted"></app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text label="廠商編號" controlName="warehouseNo" [control]="queryForm.controls.warehouseNo"
-              [submitted]="submitted"></app-input-text>
+            <app-dropdown label="廠商貨號/名稱" controlName="VEN_No" [control]="queryForm.controls.VEN_No"
+              [submitted]="submitted" optionLabel="label" optionValue="VEN_No" [options]="vendorOptions"></app-dropdown>
           </div>
         </div>
         <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">

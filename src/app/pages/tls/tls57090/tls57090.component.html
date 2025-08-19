@@ -7,46 +7,37 @@
       [headerStyleClass]="'query-accordionTab'">
       <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="倉別" controlName="warehouseCode" [options]="warehouseOptions" optionLabel="label"
-              optionValue="value" [control]="queryForm.controls.warehouseCode" [submitted]="submitted"></app-dropdown>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="品牌" controlName="brandCode" [options]="brandCodeOptions" optionLabel="label"
-              optionValue="value" [control]="queryForm.controls.brandCode" [submitted]="submitted"></app-dropdown>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="廠商編號" controlName="vendorCode" [options]="vendorOptions" optionLabel="label"
-              optionValue="value" [control]="queryForm.controls.vendorCode" [submitted]="submitted"></app-dropdown>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar-range calendarType="dateRange" label="申請日期"
-              [startControl]="queryForm.controls.applicationDateFrom"
-              [endControl]="queryForm.controls.applicationDateTo" [submitted]="submitted"></app-calendar-range>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar-range calendarType="dateRange" label="審核日期"
-              [startControl]="queryForm.controls.approvalDateFrom" [endControl]="queryForm.controls.approvalDateTo"
-              [submitted]="submitted"></app-calendar-range>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="單據類型" controlName="documentType" [options]="documentTypeOptions" optionLabel="label"
-              optionValue="value" [control]="queryForm.controls.documentType" [submitted]="submitted"></app-dropdown>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="單據類型" controlName="documentType" [options]="documentTypeOptions" optionLabel="label"
-              optionValue="value" [control]="queryForm.controls.documentType" [submitted]="submitted"></app-dropdown>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="單據狀態" controlName="priceChangeStatus" [options]="priceChangeStatusOptions"
-              optionLabel="label" optionValue="value" [control]="queryForm.controls.priceChangeStatus"
-              [submitted]="submitted"></app-dropdown>
-          </div>
-
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="顯示方式" controlName="displayMode" [options]="displayModeOptions" optionLabel="label"
-              optionValue="value" [control]="queryForm.controls.displayMode" [submitted]="submitted"></app-dropdown>
-          </div>
+          <!-- 倉別 (對應 HOS_No) -->
+          <app-multi-select class="col-12 md:col-6 lg:col-4" label="倉庫代碼/名稱" controlName="HOS_No"
+            [options]="warehouseOptions" optionLabel="label" optionValue="value" [control]="queryForm.controls.HOS_No"
+            [submitted]="submitted" />
+          <!-- 品牌代碼 (對應 LOGO_No) -->
+          <app-multi-select class="col-12 md:col-6 lg:col-4" label="品牌代碼/名稱" controlName="LOGO_No"
+            [options]="brandCodeOptions" optionLabel="label" optionValue="value" [control]="queryForm.controls.LOGO_No"
+            [submitted]="submitted" />
+          <!-- 廠商編號 -->
+          <app-dropdown class="col-12 md:col-6 lg:col-4" label="廠商編號/名稱" controlName="VEN_No" [options]="vendorOptions"
+            optionLabel="label" optionValue="value" [control]="queryForm.controls.VEN_No" [submitted]="submitted" />
+          <!-- 申請日期 -->
+          <app-calendar-range-quick class="col-12 md:col-6 lg:col-4" calendarType="dateRange" label="申請日期"
+            [startControl]="queryForm.controls.APPLY_Date_Start" [endControl]="queryForm.controls.APPLY_Date_End"
+            [submitted]="submitted" />
+          <!-- 審核日期 -->
+          <app-calendar-range-quick class="col-12 md:col-6 lg:col-4" calendarType="dateRange" label="審核日期"
+            [startControl]="queryForm.controls.APRV_Date_Start" [endControl]="queryForm.controls.APRV_Date_End"
+            [submitted]="submitted" />
+          <!-- 單據類型 -->
+          <app-dropdown class="col-12 md:col-6 lg:col-4" label="單據類型" controlName="documentType"
+            [options]="documentTypeOptions" optionLabel="label" optionValue="value" [filter]="false"
+            [control]="queryForm.controls.documentType" [submitted]="submitted"></app-dropdown>
+          <!-- 單據狀態 -->
+          <app-dropdown label="單據狀態" class="col-12 md:col-6 lg:col-4" controlName="priceChangeStatus"
+            [options]="priceChangeStatusOptions" optionLabel="label" optionValue="value" [filter]="false"
+            [control]="queryForm.controls.priceChangeStatus" [submitted]="submitted"></app-dropdown>
+          <!-- 顯示方式 -->
+          <app-dropdown class="col-12 md:col-6 lg:col-4" label="顯示方式" controlName="displayMode"
+            [options]="displayModeOptions" optionLabel="label" optionValue="value" [filter]="false"
+            [control]="queryForm.controls.displayMode" [submitted]="submitted"></app-dropdown>
         </div>
         <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
           <app-button btnType="clear" [form]="queryForm"></app-button>

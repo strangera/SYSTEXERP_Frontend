@@ -38,7 +38,7 @@ export class TLS57050Component extends BasicQueryPageComponent<any> implements O
   queryForm = this.formBuilder.group({
     displayMode: [null],
     HOS_No: [null],
-    123: ['', Validators.maxLength(8)],
+    TXN_SaleNoteNo: ['', Validators.maxLength(8)],
     TXN_DateStart: [null],
     TXN_DateEnd: [null],
     ECR_No: [''],
@@ -100,13 +100,13 @@ export class TLS57050Component extends BasicQueryPageComponent<any> implements O
   ngOnInit(): void {
     this.initializePage('TLS57050', 'tls/tls57050cru', this.queryForm, (form) => this.onSubmit(form));
     this.dropDownListService.getPOS2034Options().pipe(untilDestroyed(this)).subscribe(response => {
-      this.warehouseOptions = response.Data;// 倉別
+      this.warehouseOptions = response.Data.map(item => ({ ...item, label: `${item.No} - ${item.Name}` }));// 倉別
     });
     this.dropDownListService.queryPOS1002_DropDownList().pipe(untilDestroyed(this)).subscribe(response => {
       this.ECR_NoOptions = response.Data.map(item => ({ ...item, label: `${item.No} - ${item.Name}` }));// 收銀機
     })
     this.dropDownListService.queryPLULOGO_DropDownList().pipe(untilDestroyed(this)).subscribe(response => {
-      this.brandCodeOptions = response.Data;// 品牌
+      this.brandCodeOptions = response.Data.map(item => ({ ...item, label: `${item.No} - ${item.Name}` }));// 品牌
     })
     this.dropDownListService.queryPOS2013_DropDownList().pipe(untilDestroyed(this)).subscribe(response => {
       this.vendorOptions = response.Data.map(item => ({ ...item, label: `${item.No} - ${item.Name}` })); // 廠商
