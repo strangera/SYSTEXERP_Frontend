@@ -216,20 +216,6 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
     { label: '免稅', value: 2 }
   ];
 
-  discounts: any[] = [
-    { value: 1, label: '正品' },
-    { value: 2, label: '95折' },
-    { value: 3, label: '90折' },
-    { value: 4, label: '85折' },
-    { value: 5, label: '80折' },
-    { value: 6, label: '75折' },
-    { value: 7, label: '70折' },
-    { value: 8, label: '65折' },
-    { value: 9, label: '60折' },
-    { value: 10, label: '55折' },
-    { value: 11, label: '50折' },
-    { value: 12, label: '特價' }
-  ];
   private discountOptions: any[] = [];
 
   constructor(
@@ -393,7 +379,7 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
         next: (options: any[]) => {
           console.log('📥 API 回傳的折扣選項:', options);
           this.discountOptions = options;
-          this.discounts = [...this.discountOptions];
+          // this.discounts = [...this.discountOptions];
           console.log('🔄 設定折扣選項:', this.discountOptions);
           this.updateDiscountColumnOptions();
           resolve();
@@ -401,7 +387,7 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
         error: (error: any) => {
           console.error('❌ 載入折數選項失敗:', error);
           this.discountOptions = [];
-          this.discounts = [];
+          // this.discounts = [];
           this.updateDiscountColumnOptions();
           resolve();
         }
