@@ -55,27 +55,12 @@
         <p-accordion>
           <p-accordionTab [header]="getCapTypeName(capType)" [selected]="true">
             <!-- 特殊說明（針對特定類型） -->
-            <div *ngIf="capType === 'D' || capType === 'E'" class="mb-3 p-2 bg-yellow-50 border-round">
-              <span class="text-yellow-800">
-                <i class="pi pi-info-circle mr-2"></i>
-                {{
-                capType === "D" ? "比率分攤" : "活動扣款"
-                }}(比率或元欄位如輸入比率請輸入1以下數字，如2%請輸入0.02!!)
-              </span>
-            </div>
+            <!-- <div *ngIf="capType === 'D' || capType === 'E'" class="mb-3 p-2 bg-gray-50 border-round">
+            </div> -->
 
             <!-- 無資料顯示 -->
             <div *ngIf="!hasDataForType(capType)" class="text-center p-4 bg-gray-50 border-round">
               <i class="pi pi-inbox text-3xl text-gray-400 mb-2"></i>
-              <p class="text-gray-500 m-0">
-                目前沒有 {{ getCapTypeName(capType) }} 項目
-                <span *ngIf="showMode === 'common'">
-                  （僅顯示契約項目 + 常用項目）
-                </span>
-                <span *ngIf="showMode === 'all'">
-                  （顯示全部項目）
-                </span>
-              </p>
             </div>
 
             <!-- 使用 expandable-edit-table 組件 -->
@@ -91,15 +76,6 @@
             <!-- 底部操作按鈕 -->
             <div *ngIf="hasDataForType(capType)"
               class="flex justify-content-between align-items-center mt-3 pt-3 border-top-1 border-gray-200">
-              <div class="flex align-items-center gap-2">
-                <span class="text-sm text-gray-600">
-                  目前顯示模式:
-                  <span class="font-semibold">
-                    {{ getCurrentDisplayMode() }}
-                  </span>
-                </span>
-              </div>
-
               <div class="flex gap-2">
                 <app-button label="全部選擇" icon="pi pi-check-square" styleClass="green-button"
                   (click)="selectAllByType(capType)">
