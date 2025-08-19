@@ -502,7 +502,7 @@ nullpToYesNo = (val: unknown): string => {
 
   { field: 'CRD_Type',       header: '信用卡別',      visible: true },
   { field: 'CRD_Name',       header: '卡別',         visible: true },
-  { field: 'CRD_No',         header: '號碼',         visible: true, format: (v: string) => (v ? `**** ${v.slice(-4)}` : '') },
+  { field: 'CRD_No',         header: '號碼',         visible: true },
   { field: 'TERM_No',        header: '分期期數',      visible: true, style: 'text-right' },
   { field: 'TXN_PayAmt',     header: '金額',         visible: true, style: 'text-right', format: this.moneyFormat },
 ];
@@ -572,7 +572,7 @@ nullpToYesNo = (val: unknown): string => {
     // { field: 'CRD_Type', header: '卡別代碼' },
     { field: 'CRD_Name', header: '卡別' },
     { field: 'CRD_No',header: '號碼',
-      format: (v: string) => (v ? `**** ${v.slice(-4)}` : ''),
+      
     },
     { field: 'TERM_No', header: '分期期數', style: 'text-right' },
     { field: 'TXN_PayAmt',header: '金額',
