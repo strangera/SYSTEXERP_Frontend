@@ -1,218 +1,87 @@
 <div class="card">
-  <div class="grid align-items-center">
-    <div class="col">
-      <app-menubar [ProgNo]="ProgNo"></app-menubar>
+    <div class="flex gap-2 mb-2">
+        <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
+        <app-button btnType="back" (click)="onCancel()"></app-button>
     </div>
-    <div class="flex gap-2">
-      <app-button btnType="back"
-                  (click)="onCancel()"></app-button>
-    </div>
-  </div>
-
-  <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
-    <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit()">
-      <div class="grid p-fluid">
-        <!-- <div class="col-12 md:col-6 lg:col-4">
-          <app-dropdown
-            label="水錶編號編號"
-            controlName="meterPosCode"
-            [options]="meterPosCode"
-            optionLabel="label"
-            optionValue="value"
-            [control]="dataForm.controls.meterPosCode"
-            [submitted]="submitted"
-          ></app-dropdown>
-        </div>
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text
-            label="設備位置編號"
-            controlName="meterNo"
-            [control]="dataForm.controls.meterNo"
-            [submitted]="submitted"
-          ></app-input-text>
-        </div>
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text
-            label="樓層編號"
-            controlName="floorCat"
-            [control]="dataForm.controls.floorCat"
-            [submitted]="submitted"
-          ></app-input-text>
-        </div>
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-dropdown
-            label="樓層名稱"
-            controlName="floor"
-            [options]="floor"
-            optionLabel="label"
-            optionValue="value"
-            [control]="dataForm.controls.floor"
-            [submitted]="submitted"
-          ></app-dropdown>
-        </div>
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-dropdown
-            label="樓別編號"
-            controlName="floor"
-            [options]="floor"
-            optionLabel="label"
-            optionValue="value"
-            [control]="dataForm.controls.floor"
-            [submitted]="submitted"
-          ></app-dropdown>
-        </div>
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-dropdown
-            label="樓別名稱"
-            controlName="floor"
-            [options]="floor"
-            optionLabel="label"
-            optionValue="value"
-            [control]="dataForm.controls.floor"
-            [submitted]="submitted"
-          ></app-dropdown>
-        </div>
-
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text
-            label="平面圖X座標"
-            controlName="xCoordinate"
-            [control]="dataForm.controls.xCoordinate"
-            [submitted]="submitted"
-          ></app-input-text>
-        </div>
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text
-            label="平面圖Y座標"
-            controlName="yCoordinate"
-            [control]="dataForm.controls.yCoordinate"
-            [submitted]="submitted"
-          ></app-input-text>
-        </div>
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-dropdown
-            label="查看平面圖"
-            controlName="VFP"
-            [options]="VFP"
-            optionLabel="label"
-            optionValue="value"
-            [control]="dataForm.controls.VFP"
-            [submitted]="submitted"
-          ></app-dropdown>
-        </div>
-      </div>
-      <hr />
-      <ng-container formArrayName="items">
-        <ng-container
-          *ngFor="let item of items.controls; let i = index"
-          [formGroupName]="i"
-        >
-          <div class="grid align-items-center">
-            <div class="col" style="flex: 1">
-              <p>{{ i + 1 }}</p>
+    <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
+        <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
+            <div class="grid p-fluid">
+                <div class="col-12 md:col-6 lg:col-4">
+                  <app-calendar calendarType="dateOne"
+                    label="抄表日期"
+                    controlName="ENG_Date"
+                    [control]="dataForm.controls.ENG_Date"
+                    [submitted]="submitted">
+                  </app-calendar>
+                </div>
+                <div class="col-12 md:col-6 lg:col-4">
+                  <app-dropdown label="能源類型"
+                    controlName="ENG_Type"
+                    [options]="ENG_Type_Option"
+                    optionLabel="label"
+                    optionValue="value"
+                    [control]="dataForm.controls.ENG_Type"
+                    [submitted]="submitted"></app-dropdown>
+                </div>
+                <div class="col-12 md:col-6 lg:col-4">
+                  <app-input-text
+                    label="Mid"
+                    controlName="Mid"
+                    [control]="dataForm.controls.Mid"
+                    [submitted]="submitted"
+                  ></app-input-text>
+                </div>
             </div>
-            <div>
-              <app-button-dynamicallydelete
-                (click)="onRemoveItem(i)"
-                [crudstatus]="crudstatus"
-                class="col"
-              ></app-button-dynamicallydelete>
+            <div class="grid p-fluid">
+              <div class="col-12 md:col-6 lg:col-4">
+                  <app-calendar calendarType="dateMonthOne"
+                    label="結算年月"
+                    controlName="ENG_YYMM"
+                    [control]="dataForm.controls.ENG_YYMM"
+                    [submitted]="submitted">
+                  </app-calendar>
+                </div>
+                <div class="col-12 md:col-6 lg:col-4">
+                  <app-input-text
+                    label="本期抄錶度"
+                    controlName="ENG_CurrentReading"
+                    [control]="dataForm.controls.ENG_CurrentReading"
+                    [submitted]="submitted"
+                  ></app-input-text>
+                </div>
+                <div class="col-12 md:col-6 lg:col-4">
+                  <app-input-text
+                    label="本期抄錶金額"
+                    controlName="ENG_Amount"
+                    [control]="dataForm.controls.ENG_Amount"
+                    [submitted]="submitted"
+                  ></app-input-text>
+                </div>
             </div>
-          </div>
-          <div class="grid p-fluid">
-            <div class="col-12 md:col-6 lg:col-4">
-              <app-dropdown
-                label="專櫃編號/櫃位名稱/位置編號/招募編號"
-                controlName="Pettycashcustodian"
-                [options]="itemCodeOptions"
-                optionLabel="label"
-                optionValue="value"
-                [control]="getFormControl(i, 'itemCodeOptions')"
-                [submitted]="submitted"
-              ></app-dropdown>
+            <div class="grid p-fluid">
+              <div class="col-12 md:col-6 lg:col-4">
+                  <app-input-text
+                    label="分店編號"
+                    controlName="SYS_StoreNo"
+                    [control]="dataForm.controls.SYS_StoreNo"
+                    [submitted]="submitted"
+                  ></app-input-text>
+                </div>
+                <div class="col-12 md:col-6 lg:col-4">
+                  <app-input-text
+                    label="本期抄錶金額"
+                    controlName="ENG_Amount"
+                    [control]="dataForm.controls.ENG_Amount"
+                    [submitted]="submitted"
+                  ></app-input-text>
+                </div>
             </div>
 
-            <div class="col-12 md:col-6 lg:col-4">
-              <app-input-text
-                label="營業面積"
-                controlName="unit"
-                [control]="getFormControl(i, 'unit')"
-                [submitted]="submitted"
-              ></app-input-text>
+            <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
+                *ngIf="!isFormReadable">
+                <app-button btnType="cancel" [form]="dataForm"></app-button>
+                <app-button btnType="submit"></app-button>
             </div>
-            <div class="col-12 md:col-6 lg:col-4">
-              <app-input-text
-                label="比率(%)"
-                controlName="returnQty"
-                [control]="getFormControl(i, 'returnQty')"
-                [submitted]="submitted"
-              ></app-input-text>
-            </div>
-            <div class="col-12 md:col-6 lg:col-4">
-              <app-dropdown
-                label="專櫃分類"
-                controlName="cCat"
-                [options]="cCat"
-                optionLabel="label"
-                optionValue="value"
-                [control]="getFormControl(i, 'cCat')"
-                [submitted]="submitted"
-              ></app-dropdown>
-            </div>
-            <div class="col-12 md:col-6 lg:col-4">
-              <app-input-text
-                label="備註"
-                controlName="returnQty"
-                [control]="getFormControl(i, 'returnQty')"
-                [submitted]="submitted"
-              ></app-input-text>
-            </div>
-          </div>
-
-          <hr />
-        </ng-container>
-      </ng-container>
-      <div class="pt-1">
-        <app-button-dynamicallyadd
-          (click)="onAddItem()"
-        ></app-button-dynamicallyadd> -->
-      </div>
-    </form>
-    <div class="col pt-4">
-      <div class="grid justify-content-end">
-        <app-button btnType="clear"
-                    (click)="onClear()"
-                    *ngIf="!isFormReadable"></app-button>
-        <app-button btnType="submit"
-                    (click)="onSubmit()"
-                    *ngIf="!isFormReadable"></app-button>
-      </div>
-    </div>
-  </p-panel>
-</div>
-
-
-<div class="card">
-  <div class="grid p-fluid">
-    <div class="col-12">
-      <p-panel header="資料"
-               class="line-height-3 m-0 mb-3">
-        <!-- <app-table [showCheckBox]="false"
-                   [showEdit]="false"
-                   [showDetail]="false"
-                   [showDelete]="false"
-                   [showManage]="false"
-                   [showReportMode]="false"
-                   [isRowSelectable]="service.isRowSelectable"
-                   [showExcel]="isFormEditable"
-                   (exportExcel)="onExportExcel()"
-                   (importExcel)="onImportExcel($event)"
-                   [data]="service.ASS21020Detail()"
-                   [dataKey]="'tlt_no'"
-                   [tableKey]="'ASS21020_detail'"
-                   [columns]="columns">
-        </app-table> -->
-      </p-panel>
-    </div>
-  </div>
+        </form>
+    </p-panel>
 </div>

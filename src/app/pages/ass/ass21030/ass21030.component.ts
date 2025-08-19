@@ -1,306 +1,247 @@
-
-import { Component, OnInit, computed, effect } from '@angular/core';
-import { toSignal } from '@angular/core/rxjs-interop';
-import { FormControl, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { TranslateModule } from '@ngx-translate/core';
 import { ASS21030Service } from '@service/api/ass/ass21030.service';
-import { MenubarComponent } from '@shared/component/menubar/menubar.component';
-import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
-import { ButtonComponent } from '@shared/componentkit/button/button.component';
-import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
-import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
-import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
-import { TableComponent } from '@shared/componentkit/table/table.component';
-import { Column } from '@shared/componentkit/table/table.model';
-import { CRUDStatus } from '@shared/models/system/CRUDstatus';
+import { Component, OnInit } from '@angular/core';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
+import { createPaginationConfig, Column, formatDate } from '../../../shared/componentkit/table/table.model';
+import { option } from '../../../shared/models/sys/sysb000.model';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { AccordionModule } from 'primeng/accordion';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { TableComponent } from '../../../shared/componentkit/table/table.component';
+import { TranslateModule } from '@ngx-translate/core';
+import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
+import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
+import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
+import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
+import { CalendarRangeQuickComponent } from '../../../shared/componentkit/calendar-range-quick/calendar-range-quick.component';
 
+// ENG2001 抄錶明細檔
+export interface ENG2001 {
+  id: number; // 主鍵，自動編號,
+  mid: number,  // 外鍵，對應 ENG2001.id
+  SYS_StoreNo: string, // 分店編號
+  ENG_YYMM: string, // 結算年月
+  ENG_Type: string, // 能源類型：水錶G01、電錶G02、瓦斯錶G03
+  ENG_MeterNo: string, // 錶號
+  ENG_Date: Date; // 本次抄錶日
+  ENG_CurrentReading: number; // 本次抄錶度數
+  ENG_Amount: number; // 本次結算金額
+  ENG_Status: string; // 抄錶狀態：0=未抄錶、1=已抄錶、2=已結算
+  ENG_ImpFileName?: string; // 匯入檔案名稱
+
+  CRT_Date: string; // 建立日期 (ISO 字串格式: YYYY-MM-DD)
+  CRT_USR_No?: string; // 建立人員代碼
+  CRT_USR_Name?: string; // 建立人員姓名
+  UPD_Date?: string; // 變更日期 (ISO 格式: YYYY-MM-DDTHH:mm:ss)
+  UPD_USR_No?: string; // 變更人員代碼
+  UPD_USR_Name?: string; // 變更人員姓名
+
+  CanDel?: boolean;  //能否刪除(僅顯示)
+}
+
+// ENG1001 能源錶號明細檔
+export interface ENG1001 {
+  id: number; // 主鍵，自動編號,
+  mid: number,  // 外鍵，對應 ENG2001.id
+  SYS_StoreNo: string, // 分店編號
+  ENG_Type: string, // 能源類型：水錶G01、電錶G02、瓦斯錶G03
+  ENG_MeterNo: string, // 錶號
+  Location_No: string; // 設備位置編號，對應 POS2002.LOCATION_No
+  ENG_Remarks?: string; // 備註
+
+  CRT_Date: string; // 建立日期 (ISO 字串格式: YYYY-MM-DD)
+  CRT_USR_No?: string; // 建立人員代碼
+  CRT_USR_Name?: string; // 建立人員姓名
+  UPD_Date?: string; // 變更日期 (ISO 格式: YYYY-MM-DDTHH:mm:ss)
+  UPD_USR_No?: string; // 變更人員代碼
+  UPD_USR_Name?: string; // 變更人員姓名
+}
 @Component({
   selector: 'app-ass21030',
   templateUrl: './ass21030.component.html',
   styleUrl: './ass21030.component.scss',
-  standalone: !0,
+  standalone: true,
   imports: [
+    MenubarComponent,
+    ButtonComponent,
+    InputTextComponent,
+    InputNumberComponent,
     AccordionModule,
     FormsModule,
     ReactiveFormsModule,
-    TranslateModule,
-    ButtonComponent,
     CalendarComponent,
+    CalendarRangeComponent,
+    CalendarRangeQuickComponent,
     DropdownComponent,
+    MultiSelectComponent,
     InputTextComponent,
-    MenubarComponent,
     TableComponent,
-  ],
+    TranslateModule]
+
 })
-export class ASS21030Component extends BasicQueryPageComponent<unknown> implements OnInit {
-  public readonly CRUDStatus = CRUDStatus;
+export class ASS21030Component extends BasicQueryPageComponent<ENG1001 | ENG2001> implements OnInit {
+  // 查詢
+    queryForm = this.formBuilder.group({
+      // ENG2001 抄錶明細檔 + ENG1001 能源錶號明細檔
+      EngTypes: [null, [Validators.maxLength(3)]], // 能源類型：水錶G01、電錶G02、瓦斯錶G03
+      ENG_MeterNo: [null, [Validators.maxLength(5)]], // 錶號
+      SYS_StoreNo: [null, [Validators.maxLength(10)]], // 分店編號
+      Mid: [null, [Validators.maxLength(19)]], // 外鍵，對應 ENG2001.id
+      ENG_YYMM: [null, [Validators.maxLength(6)]], // 結算年月
+      ENG_Status: [null, [Validators.maxLength(1)]], // 抄錶狀態：0=未抄錶、1=已抄錶、2=已結算
 
-  public readonly queryForm = new FormGroup({
-    settlement_date: new FormControl<Date | undefined>(void 0),
-    eng_type: new FormControl<string[] | undefined>(void 0),
-    eng_meterNo: new FormControl<string | undefined>(void 0),
-    settlement_status: new FormControl<string | undefined>(void 0),
-  });
-  public readonly qf = computed(() => this.queryForm.controls);
-
-  private readonly qfSignal = toSignal(this.queryForm.valueChanges);
-
-  private qfEffect = effect(() => {
-    console.log(`qfEffect:`, [this.qfSignal()]);
-  });
-
-  private readonly queryPayload = computed(() => {
-    const payload: Record<string, any> = {};
-
-    if (this.qf().settlement_date.value) payload['settlement_date'] = this.qf().settlement_date.value;
-    if (this.qf().eng_type.value) payload['eng_type'] = this.qf().eng_type.value;
-    if (this.qf().eng_meterNo.value) payload['eng_meterNo'] = this.qf().eng_meterNo.value;
-    if (this.qf().settlement_status.value) payload['settlement_status'] = this.qf().settlement_status.value;
-
-    return payload;
-  });
-
-  public readonly columns: Column[] = [
-    { field: 'settlement_date', header: '結算年月' },
-    { field: 'eng_type', header: '能源類型' },
-    { field: 'eng_meterNo', header: '能源錶號' },
-    { field: 'settlement_status', header: '結算狀態' },
-  ];
-
-  constructor(
-    public readonly service: ASS21030Service,
-  ) {
-    super();
-  }
-
-  public ngOnInit(): void {
-    this.initializePage('ASS21030', '/ASS/ASS21030CRU', this.queryForm, this.onSubmit.bind(this));
-
-  }
-
-  public onSubmit(): void {
-    this.handleSubmit(this.queryForm, () => {
-      this.service.loadASS21030(this.queryPayload());
-      this.loading = !1;
+      //分頁查詢
+      ...createPaginationConfig([{ field: 'ENG_MeterNo', order: 1 }]), // 分頁和排序參數
     });
-  }
+    // 表格
+    // ----------------------------------------------------------------
+    totalRecords = 0;// 分頁和排序參數 // 排序需要
+    ENG_Type_Option: option[] = [ // 能源類型選項
+      { value: 'G01', label: '水錶' },
+      { value: 'G02', label: '電錶' },
+      { value: 'G03', label: '瓦斯錶' }
+    ];
+    ENG_Status_Option: option[] = [ // 抄錶狀態選項
+      { value: '0', label: '未抄錶' },
+      { value: '1', label: '已抄錶' },
+      { value: '2', label: '已結算' }
+    ];
 
-  public onClear(): void {
+    data: ENG1001[] | ENG2001[] = [];
+    columns: Column[] = [
+      { field: 'ID', header: 'ID', visible: false },
+      { field: 'ENG_Type', header: '能源類型', visible: true, options: this.ENG_Type_Option },
+      { field: 'ENG_MeterNo', header: '錶號', visible: true },
+      { field: 'Location_No', header: '位置編號', visible: true },
+      { field: 'TLT_No', header: '專櫃編號', visible: true },
+      { field: 'ENG_YYMM', header: '結算年月', visible: true },
+      { field: 'ENG_CurrentReading_Last', header: '上期抄錶度', visible: true },
+      { field: 'ENG_CurrentReading', header: '本期抄錶度', visible: true },
+      { field: 'ENG_Date', header: '抄表日期', visible: true, format: formatDate },
+      { field: 'ENG_ImpFileName', header: '匯入檔案名稱', visible: true },
+      { field: 'ENG_Remarks', header: '備註', visible: true },
 
-  }
+      { field: 'CRT_Date', header: '建立日期', visible: true, format: formatDate },
+      { field: 'CRT_USR_No', header: '建立人員代碼', visible: false },
+      { field: 'CRT_USR_Name', header: '建立人員姓名', visible: false },
+      { field: 'UPD_Date', header: '變更日期', visible: false, format: formatDate },
+      { field: 'UPD_USR_No', header: '變更人員代碼', visible: false },
+      { field: 'UPD_USR_Name', header: '變更人員姓名', visible: false },
+    ];
+  
+    selectedItems: ENG1001|ENG2001[] = [];// 多選項目
+  
+    // ----------------------------------------------------------------
+    constructor(private ass21030Service: ASS21030Service) {
+      super();
+    }
+  
+    ngOnInit(): void {
+      this.initializePage('ASS21030', 'ASS/ASS21030cru', this.queryForm, (form) => this.onSubmit(form));
+      this.loadOptions();
+    }
+  
+    onSubmit(frm: FormGroup) {
+      // 取出原始值
+      const formValue = { ...frm.value };
 
+      // 假設 ENG_YYMM 是 Date 物件，就轉成 YYYYMM
+      if (formValue.ENG_YYMM instanceof Date) {
+        const year = formValue.ENG_YYMM.getFullYear();
+        const month = String(formValue.ENG_YYMM.getMonth() + 1).padStart(2, '0');
+        formValue.ENG_YYMM = `${year}${month}`;
+      }
 
+      console.log('送出查詢條件', formValue);
 
+      this.handleSubmit(frm, () => {
+        this.ass21030Service.queryASS21030(formValue).subscribe({
+          next: (response) => {
+            if (response.Status === '0000') {
+              this.data = response.Data || [];
+              console.log('Result', this.data);
+              this.totalRecords = response.TotalCount || response.Data.length;
+              this.queryStateService.setQueryState(this.ProgNo, formValue);
+            } else {
+              console.error('API error:', response.Status, response.Message);
+            }
+            this.loading = false;
+            this.messageService.unblockUi();
+          },
+          error: (err: string) => {
+            console.error('API error:', err);
+            this.loading = false;
+            this.messageService.unblockUi();
+          },
+        });
+      });
+    }
+  
+    // 刪除項目
+    onDelete(data: ENG2001 | ENG2001[]): void {
+      console.log('Delete data:', JSON.stringify(data, null, 2));
+  
+      const items = Array.isArray(data) ? data : [data];
+      if (items.length === 0) {
+        console.error('No items to delete');
+        this.messageService.errorBubble('無法刪除：沒有選中的項目');
+        return;
+      }
+  
+      // 收集所有有效的 ID
+      const idList = items
+        .filter((item) => item && item.id != null && item.id !== undefined)
+        .map((item) => item.id);
+  
+      if (idList.length === 0) {
+        console.error('No valid IDs to delete');
+        this.messageService.errorBubble('無法刪除：選中的項目缺少有效 ID');
+        return;
+      }
+  
+      const deleteBody = {
+        idList: idList, // 符合 API 的 idList 格式
+      };
+  
+      console.log('deleteBody', deleteBody);
+  
+      // this.ass21030Service.deleteASS21030(deleteBody).subscribe({
+      //   next: (response) => {
+      //     if (response.Status === '0000') {
+      //       this.messageService.successBubble('選中項目刪除成功');
+      //     } else {
+      //       console.error('API error:', response.Status, response.Message);
+      //       this.messageService.errorBubble(`刪除失敗: ${response.Message}`);
+      //     }
+      //   },
+      //   error: (err: string) => {
+      //     console.error('API error:', err);
+      //     this.messageService.errorBubble('刪除失敗');
+      //   },
+      //   complete: () => {
+      //     this.onSubmit(this.queryForm);
+      //   },
+      // });
+  
+      this.selectedItems = [];
+    }
+  
+  
+    isRowSelectable(rowData: ENG2001): boolean {
+      return rowData.CanDel ?? false;
+    }
+  
+    loadOptions() {
+      // 查 大分類(專櫃)
+      // this.tls12010Service.queryTLTBUSTYPE_DropDownList({}).subscribe((response) => {
+      //   this.bus_type_Option = response.Data.map((item: any) => ({
+      //     No: item.No, // 大分類(專櫃) 號
+      //     Label: item.No + '/' + item.Name, // 組合成顯示用的Label
+      //   }));
+      //   console.log('大分類代號:', this.bus_type_Option);
+      // });
+    }
 
-
-  // queryForm = this.formBuilder.group({
-  //   bigCategoryCode: [],
-  //   midCategoryCode: [],
-  //   smallCategoryCode: [],
-  //   Querybystatus: [],
-  //   propertynumber: [],
-  //   propertytype: [],
-  //   Itemnumber: [],
-  //   Sdate: [],
-  //   Edate: [],
-  //   Departmentcode: [],
-  //   Kurabe: [],
-  //   code: [],
-  //   floor: [],
-  //   location: [],
-  //   illustrate: [],
-  //   Placementinstructions: [],
-  //   Energytype: [],
-  //   equipmentLocationOptions: [],
-  //   ironNumberOptions: [],
-  //   remark: [],
-  //   Counternumber: [],
-  //   Counterclassification: [],
-  // });
-  // // Table data
-  // Energytype: any[] = [{ value: 1, label: '水費' },
-  // { value: 2, label: '電費' },
-  // { value: 3, label: '瓦斯費' },];
-  // Counternumber: any[] = [{ value: 1, label: '000001' },
-  // { value: 2, label: '000002' },
-  // { value: 3, label: '000003' },];
-  // Counterclassification: any[] = [{ value: 1, label: '商場' },
-  // ];
-  // data: any[] = [];
-  // equipmentLocationOptions: any[] = [
-  //   { value: 1, label: '010A000001' },
-  //   { value: 2, label: '010A000002' },
-  //   { value: 3, label: '010A000003' },
-  //   { value: 4, label: '010A000004' },
-  //   { value: 5, label: '010B000001' },
-  //   { value: 6, label: '010B000002' },
-  //   { value: 7, label: '010B000003' },
-  // ];
-  // ironNumberOptions: any[] = [
-  //   { value: 1, label: 'WB102' },
-  //   { value: 2, label: 'WB103' },
-  //   { value: 3, label: 'WB105' },
-  //   { value: 4, label: 'WB106' },
-  //   { value: 5, label: 'WB107' },
-  //   { value: 6, label: 'WB108' },
-  //   { value: 7, label: 'WB109' },
-  //   { value: 8, label: 'WB110' },
-  //   { value: 9, label: 'WB111' },
-  //   { value: 10, label: 'WB112' },
-  // ];
-
-  // location: any[] = [];
-  // filteredData: any[] = [...this.data];
-  // columns: any[] = [
-  //   { field: 'waterCourseCode', header: '水錶編號', visible: true },
-  //   { field: 'counterCode', header: '專櫃編號', visible: true },
-  //   { field: 'areaRatio', header: '面積比率(%)', visible: true },
-  //   { field: 'counterCategory', header: '專櫃分類', visible: true },
-  //   { field: 'remarks', header: '備註', visible: true },
-  // ];
-
-
-
-
-
-
-  // // Dropdown options
-  // floor: any[] = [];
-  // Kurabe: any[] = [
-  //   { value: 1, label: '001' },
-  //   { value: 2, label: '002' },
-  // ];
-  // Departmentcode: any[] = [];
-  // usercode: any[] = [];
-  // bigCategoryOptions: any[] = [
-  //   { value: 1, label: '裝潢工程' },
-  //   { value: 2, label: '其他工程' },
-  //   { value: 3, label: '電腦及電子零件產品' },
-  //   { value: 4, label: '電力及照明系統' },
-  //   { value: 5, label: '家電家俱設備' },
-  //   { value: 6, label: '機消空電水零配件' },
-  //   { value: 7, label: '辦公及營運庶務' },
-  //   { value: 8, label: '印刷品(非廣告行銷)' },
-  //   { value: 9, label: '印刷品(廣告行銷)' },
-  //   { value: 10, label: '衛生及醫療庶務用品' },
-  // ];
-  // midCategoryOptions: any[] = [
-  //   { value: 1, label: '室內裝潢工程' },
-  //   { value: 2, label: '室內裝潢備品' },
-  //   { value: 3, label: '弱電系統' },
-  //   { value: 4, label: '房屋及建築設備' },
-  //   { value: 5, label: '停車場設備' },
-  //   { value: 6, label: '其他工程' },
-  //   { value: 7, label: '機電消防工程' },
-  //   { value: 8, label: '電子產品及零件' },
-  //   { value: 9, label: '電子儀器設備' },
-  //   { value: 10, label: '電子儀器設備-資產' },
-  // ];
-  // smallCategoryOptions: any[] = [
-  //   { value: 1, label: '機電空調工程' },
-  //   { value: 2, label: '水電消防工程' },
-  //   { value: 3, label: '排油煙工程' },
-  //   { value: 4, label: '商場高壓電節能工程' },
-  //   { value: 5, label: '商場弱電系統工程' },
-  //   { value: 6, label: '網路佈線工程' },
-  //   { value: 7, label: '鐵路自動測試儀' },
-  //   { value: 8, label: '風車零件' },
-  //   { value: 9, label: '資收場回收用品' },
-  //   { value: 10, label: '瓦斯鍋及滅斷設備工程' },
-  // ];
-  // Querybystatus: any[] = [
-  //   { value: 1, label: '全部' },
-  //   { value: 2, label: '只顯示低於安全庫存' },
-
-
-  // ];
-  // assetCodeOptions: any[] = [
-  //   { value: 1, label: '1A232300000010000001' },
-  //   { value: 2, label: '1A232300000020000001' },
-  //   { value: 3, label: '1A232300000040000001' },
-  //   { value: 4, label: '1A232300000050000001' },
-  //   { value: 5, label: '1A232300000060000001' },
-  //   { value: 6, label: '1A232300000090000001' },
-  //   { value: 7, label: '1A232400000010000001' },
-  //   { value: 8, label: '1A232400000040000001' },
-  //   { value: 9, label: '1A232400000060000001' },
-  // ];
-  // propertytype
-  //   : any[] = [
-  //     { value: 1, label: '資產' },
-  //     { value: 2, label: '列管品' },
-  //   ];
-  // Itemnumber
-  //   : any[] = [
-
-  //     { value: 1, label: '3A24210000001' },
-  //     { value: 2, label: '3A24210000002' },
-  //     { value: 3, label: '3A24210000003' },
-  //     { value: 4, label: '3A24210000004' },
-  //     { value: 5, label: '3A24210000005' },
-  //     { value: 6, label: '3A24210000006' },
-  //     { value: 7, label: '3A24210000007' },
-  //     { value: 8, label: '3A24210000008' },
-  //     { value: 9, label: '3A24210000009' },
-  //     { value: 10, label: '3A24210000010' },
-  //   ];
-
-
-
-  // constructor(
-  //   private router: Router,
-  //   private formBuilder: FormBuilder,
-  //   private notificationService: NotificationService,
-  //   private authService: AuthService,
-  //   private bigCategoryService: BigCategoryService,
-  //   private midCategoryService: MidCategoryService,
-  //   private smallCategoryService: SmallCategoryService,
-  //   private organizationNumberService: OrganizationNumberService,
-  //   private floorService: FloorService,
-  //   private locationCodeService: LocationCodeService
-  // ) {
-  //   super(); // 呼叫父類建構子
-  // }
-
-
-
-  // onCreate() {
-  //   if (this.canAdd()) {
-  //     let extras: NavigationExtras = {
-  //       state: {
-  //         crudstatus: CRUDStatus.Create,
-  //         queryform: this.queryForm,
-  //       },
-  //       skipLocationChange: true,
-  //     };
-  //     this.router.navigate(['ASS2000/ASS21030CRU'], extras);
-  //   }
-  // }
-
-  // onEdit(data: any) {
-  //   if (this.canEdit()) {
-  //     let extras: NavigationExtras = {
-  //       state: {
-  //         crudstatus: CRUDStatus.Edit,
-  //         rowdata: data,
-  //         queryform: this.queryForm,
-  //       },
-  //       skipLocationChange: true,
-  //     };
-  //     this.router.navigate(['/demoCRU'], extras);
-  //   }
-  // }
-
-  // onDetail(data: any) {
-  //   let extras: NavigationExtras = {
-  //     state: {
-  //       crudstatus: CRUDStatus.Read,
-  //       rowdata: data,
-  //       queryform: this.queryForm,
-  //     },
-  //     skipLocationChange: true,
-  //   };
-  //   this.router.navigate(['/demoCRU'], extras);
-  // }
 }
