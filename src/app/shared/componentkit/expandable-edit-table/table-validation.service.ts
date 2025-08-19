@@ -122,13 +122,16 @@ export class TableValidationService {
    * 🎯 格式化驗證錯誤訊息
    */
   formatValidationErrors(errors: string[]): string {
+    console.log('🔍 formatValidationErrors 被呼叫:', errors);
     if (errors.length === 0) return '';
 
     if (errors.length === 1) {
       return errors[0];
     }
 
-    return `請修正以下問題：\n${errors.map((error, index) => `${index + 1}. ${error}`).join('\n')}`;
+    // 🎯 優化多個錯誤的顯示格式
+    const errorList = errors.map((error, index) => `${index + 1}. ${error}`).join('\n');
+    return `請修正以下問題：\n\n${errorList}`;
   }
 
   /**

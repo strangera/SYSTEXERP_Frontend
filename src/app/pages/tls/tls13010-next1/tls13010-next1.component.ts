@@ -168,7 +168,7 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
       editable: true,
       autoWidth: true,
       dateFormat: 'year-month',
-      maxLength: 7,
+      // maxLength: 8,
       required: true,
     },
     {
@@ -178,27 +178,33 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
       editable: true,
       width: '70px',
       options: TLS13010_DROPDOWN_OPTIONS.tpyTypeOption,
+      required: true,
     },
     {
       field: 'tpy_unitamt',
       header: '單價',
       type: 'number',
       editable: true,
-      width: '90px'
+      width: '90px',
+      required: true,
+      validators: [TableValidators.positive('單價必須大於0')]
     },
     {
       field: 'tpy_qty',
       header: '數量',
       type: 'number',
       editable: true,
-      width: '70px'
+      width: '70px',
+      required: true,
+      validators: [TableValidators.positive('數量必須大於0')]
     },
     {
       field: 'tpy_amount',
       header: '扣款金額',
       type: 'number',
       editable: false,
-      autoWidth: true
+      autoWidth: true,
+      required: true,
     },
     {
       field: 'org_id',
@@ -206,7 +212,8 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
       type: 'dropdown',
       editable: true,
       width: '90px',
-      options: []
+      options: [],
+      required: true,
     },
     {
       field: 'gui_flag',
@@ -217,7 +224,8 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
       options: [
         { label: '開立', value: 'Y' },
         { label: '未開立', value: 'N' }
-      ]
+      ],
+      required: true,
     }
   ];
 
@@ -253,7 +261,8 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
       editable: true,
       width: '130px',
       dateFormat: 'year-month',
-      maxLength: 7
+      // maxLength: 7
+      required: true,
     },
     {
       field: 'tpy_edate',
@@ -262,7 +271,9 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
       editable: true,
       width: '130px',
       dateFormat: 'year-month',
-      maxLength: 7
+      // maxLength: 7
+      required: true,
+      validators: [TableValidators.positive('數量必須大於0')]
     },
     {
       field: 'tpy_type',
@@ -288,7 +299,9 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
       type: 'number',
       allowDecimal: true,
       editable: true,
-      width: '70px'
+      width: '70px',
+      required: true,
+      validators: [TableValidators.positive('數量必須大於0')]
     },
     {
       field: 'tpy_amount',
@@ -306,7 +319,8 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
       options: [
         { label: '開立', value: 'Y' },
         { label: '未開立', value: 'N' }
-      ]
+      ],
+      required: true,
     },
     {
       field: 'day_account',
@@ -317,14 +331,16 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
       options: [
         { label: '是', value: 'Y' },
         { label: '否', value: 'N' }
-      ]
+      ],
+      required: true,
     },
     {
       field: 'interval',
       header: '扣款週期數(月)',
       type: 'number',
       editable: true,
-      width: '120px'
+      width: '120px',
+      required: true,
     }
   ];
 
@@ -360,7 +376,9 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
       editable: true,
       width: '130px',
       dateFormat: 'year-month',
-      maxLength: 7
+      // maxLength: 7
+      required: true,
+
     },
     {
       field: 'tpy_edate',
@@ -369,21 +387,27 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
       editable: true,
       width: '130px',
       dateFormat: 'year-month',
-      maxLength: 7
+      // maxLength: 7
+      required: true,
+
     },
     {
       field: 'tpy_totalamt',
       header: '總金額',
       type: 'number',
       editable: true,
-      width: '100px'
+      width: '100px',
+      required: true,
+
     },
     {
       field: 'down_payment',
       header: '預收款',
       type: 'number',
       editable: true,
-      width: '90px'
+      width: '90px',
+      required: true,
+
     },
     {
       field: 'period_nos',
@@ -397,14 +421,18 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
       header: '每月金額',
       type: 'number',
       editable: true,
-      width: '100px'
+      width: '100px',
+      required: true,
+
     },
     {
       field: 'tpy_1stamt',
       header: '首期金額',
       type: 'number',
       editable: true,
-      width: '100px'
+      width: '100px',
+      required: true,
+
     },
     {
       field: 'org_id',
@@ -412,7 +440,9 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
       type: 'dropdown',
       editable: true,
       width: '90px',
-      options: []
+      options: [],
+      required: true,
+
     },
     {
       field: 'gui_flag',
@@ -423,7 +453,9 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
       options: [
         { label: '開立', value: 'Y' },
         { label: '未開立', value: 'N' }
-      ]
+      ],
+      required: true,
+
     }
   ];
 
@@ -459,7 +491,9 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
       editable: true,
       width: '130px',
       dateFormat: 'year-month',
-      maxLength: 7
+      // maxLength: 7
+      required: true,
+
     },
     {
       field: 'tpy_edate',
@@ -468,7 +502,9 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
       editable: true,
       width: '130px',
       dateFormat: 'year-month',
-      maxLength: 7
+      // maxLength: 7
+      required: true,
+
     },
     {
       field: 'tpy_type',
@@ -477,13 +513,17 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
       editable: true,
       options: TLS13010_DROPDOWN_OPTIONS.tpyTypeOption,
       autoWidth: true,
+      required: true,
+
     },
     {
       field: 'tpy_rate',
       header: '比率',
       type: 'number',
       editable: true,
-      width: '100px'
+      width: '100px',
+      required: true,
+
     },
     {
       field: 'org_id',
@@ -491,7 +531,9 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
       type: 'dropdown',
       editable: true,
       width: '90px',
-      options: []
+      options: [],
+      required: true,
+
     },
     {
       field: 'gui_flag',
@@ -502,7 +544,9 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
       options: [
         { label: '開立', value: 'Y' },
         { label: '未開立', value: 'N' }
-      ]
+      ],
+      required: true,
+
     }
   ];
 
@@ -538,7 +582,9 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
       editable: true,
       width: '130px',
       dateFormat: 'year-month',
-      maxLength: 7
+      // maxLength: 7
+      required: true,
+
     },
     {
       field: 'tpy_edate',
@@ -547,7 +593,9 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
       editable: true,
       width: '130px',
       dateFormat: 'year-month',
-      maxLength: 7
+      // maxLength: 7
+      required: true,
+
     },
     {
       field: 'tpy_type',
@@ -556,13 +604,17 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
       editable: true,
       options: TLS13010_DROPDOWN_OPTIONS.tpyTypeOption,
       autoWidth: true,
+      required: true,
+
     },
     {
       field: 'tpy_rate',
       header: '比率',
       type: 'number',
       editable: true,
-      width: '100px'
+      width: '100px',
+      required: true,
+
     },
     {
       field: 'org_id',
@@ -570,7 +622,9 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
       type: 'dropdown',
       editable: true,
       width: '90px',
-      options: []
+      options: [],
+      required: true,
+
     },
     {
       field: 'gui_flag',
@@ -581,7 +635,9 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
       options: [
         { label: '開立', value: 'Y' },
         { label: '未開立', value: 'N' }
-      ]
+      ],
+      required: true,
+
     }
   ];
 

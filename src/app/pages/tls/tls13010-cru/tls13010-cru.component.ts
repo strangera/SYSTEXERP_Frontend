@@ -391,7 +391,7 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
  */
   isFieldReadonly(fieldName: string): boolean {
     // 永遠 readonly 的欄位
-    const alwaysReadonlyFields = ['apply_no', 'tlt_no', 'VEN_Name', 'contract_subno', 'company_register_address'];
+    const alwaysReadonlyFields = ['apply_no', 'tlt_no', 'approve_status', 'VEN_Name', 'contract_subno', 'company_register_address'];
 
     if (alwaysReadonlyFields.includes(fieldName)) {
       return true;
@@ -739,7 +739,8 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
       'tlt_no',                      // 專櫃編號
       'VEN_Name',                    // 廠商名稱
       'contract_subno',              // 版次
-      'company_register_address'     // 公司登記地址
+      'company_register_address',     // 公司登記地址
+      'approve_status'
     ];
 
     alwaysReadonlyFields.forEach(fieldName => {
