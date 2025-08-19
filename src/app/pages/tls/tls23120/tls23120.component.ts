@@ -71,7 +71,7 @@ export class TLS23120Component extends BasicQueryPageComponent<any> {
     org_id: [],
     area_no: [],
     TLT_No: [],
-    ...createPaginationConfig
+   ...createPaginationConfig([{ field: 'TLT_No', order: 1 }])
   });
 
   organizationOptions: any[] = [];
@@ -140,32 +140,43 @@ export class TLS23120Component extends BasicQueryPageComponent<any> {
   // 送出查詢（無 doQuery / buildPayload）
 onSubmit(form: FormGroup): void {
   this.handleSubmit(form, () => {
-    const val = this.queryForm.value as any;
+    const val = this.queryForm.getRawValue() as any;
 
-    // 轉本地 ISO(yyyy-MM-ddTHH:mm:ss) — 去掉時區偏移
+    // ✅ 沒有就給預設
+    const pageSize  = Number.isFinite(val?.pageSize)  ? val.pageSize  : 10;
+    const pageIndex = Number.isFinite(val?.pageIndex) ? val.pageIndex : 1;
+
+    const offset = Math.max(0, (pageIndex - 1) * pageSize);
+    const orderBy =
+      Array.isArray(val?.SortBy) && val.SortBy.length
+        ? val.SortBy.map((s: any) => `${s.field} ${s.order === 1 ? 'ASC' : 'DESC'}`).join(',')
+        : undefined;
+
     const toIso = (x: any) => {
       if (!x) return undefined;
       const d = typeof x === 'string' ? new Date(x) : (x as Date);
       if (isNaN(d.getTime())) return undefined;
-      return new Date(d.getTime() - d.getTimezoneOffset() * 60000)
-        .toISOString()
-        .slice(0, 19);
+      return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 19);
     };
 
-    // 直接組 payload（保留分頁/排序）
     const payload: any = {
-      ...val,
       TXN_DateStart: toIso(val?.TXN_DateStart),
       TXN_DateEnd:   toIso(val?.TXN_DateEnd),
-      pageSize:  val?.pageSize,
-      pageIndex: val?.pageIndex,
-      SortBy:    val?.SortBy,
-      OrderBy:   val?.OrderBy,
-      Offset:    val?.Offset,
+      bus_type:      val?.bus_type,
+      ShowBusType:   val?.ShowBusType,
+      tlt_building:  val?.tlt_building,
+      tlt_floor:     val?.tlt_floor,
+      org_id:        val?.org_id,
+      area_no:       val?.area_no,
+      TLT_No:        val?.TLT_No,
+      pageSize,
+      pageIndex,
+      SortBy:        val?.SortBy ?? [],
+      ...(orderBy ? { OrderBy: orderBy } : {}),
+      Offset:        offset,
     };
 
-    // 移除空字串 / null / undefined / 空陣列
-    Object.keys(payload).forEach((k) => {
+    Object.keys(payload).forEach(k => {
       const v = payload[k];
       if (v === '' || v === null || v === undefined) delete payload[k];
       if (Array.isArray(v) && v.length === 0) delete payload[k];
@@ -173,14 +184,14 @@ onSubmit(form: FormGroup): void {
 
     this.loading = true;
     this.messageService?.blockUi();
-
     this.tls23120Service.queryTLS23120(payload).subscribe({
-      next: (res) => {
-        const raw = res?.Data ?? [];
-        this.data = Array.isArray(raw) ? raw : [];
-        this.totalRecords = typeof res?.TotalCount === 'number'
-          ? res.TotalCount
-          : this.data.length;
+      next: (res: any) => {
+        const data = res?.Data;
+        const wrapper = Array.isArray(data) ? data[0] : data;
+        const details =
+          wrapper?.tLS23120Details ?? wrapper?.TLS23120Details ?? wrapper?.tls23120Details ?? [];
+        this.data = Array.isArray(details) ? details : [];
+        this.totalRecords = typeof res?.TotalCount === 'number' ? res.TotalCount : this.data.length;
       },
       error: (err) => {
         console.error('TLS23120 查詢失敗', err);
@@ -193,6 +204,8 @@ onSubmit(form: FormGroup): void {
     });
   });
 }
+
+
 
   
   moneyFormat(value: number): string {

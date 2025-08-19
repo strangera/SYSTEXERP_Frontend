@@ -155,7 +155,19 @@ export class TLS23110Component extends BasicQueryPageComponent<any> {
 // 送出查詢（無 doQuery / buildPayload）
 onSubmit(form: FormGroup): void {
   this.handleSubmit(form, () => {
-    const val = this.queryForm.value as any;
+    const val = this.queryForm.getRawValue() as any;
+
+    // 由 pageIndex/pageSize 推 Offset (0-based)
+    const offset =
+      Number.isFinite(val?.pageIndex) && Number.isFinite(val?.pageSize)
+        ? Math.max(0, (val.pageIndex - 1) * val.pageSize)
+        : undefined;
+
+    // SortMeta[] -> "field ASC,DESC"
+    const orderBy =
+      Array.isArray(val?.SortBy) && val.SortBy.length
+        ? val.SortBy.map((s: any) => `${s.field} ${s.order === 1 ? 'ASC' : 'DESC'}`).join(',')
+        : undefined;
 
     // 本地 ISO(yyyy-MM-ddTHH:mm:ss) — 去掉時區偏移
     const toIso = (x: any) => {
@@ -167,35 +179,82 @@ onSubmit(form: FormGroup): void {
         .slice(0, 19);
     };
 
-    // 直接在這裡組 payload（保留分頁/排序）
-    const payload: any = {
-      ...val,
-      TXN_DateStart: toIso(val?.TXN_DateStart),
-      TXN_DateEnd:   toIso(val?.TXN_DateEnd),
-      pageSize:  val?.pageSize,
-      pageIndex: val?.pageIndex,
-      SortBy:    val?.SortBy,
-      OrderBy:   val?.OrderBy,
-      Offset:    val?.Offset,
-    };
+    // 組 payload（保留分頁/排序）
+   const toBool = (x: any) => {
+  if (x === true || x === 'true' || x === 1 || x === '1') return true;
+  if (x === false || x === 'false' || x === 0 || x === '0') return false;
+  return undefined; // 沒選就不傳
+};
 
-    // 移除空字串 / null / undefined / 空陣列，避免干擾後端繫結
-    Object.keys(payload).forEach((k) => {
-      const v = payload[k];
-      if (v === '' || v === null || v === undefined) delete payload[k];
-      if (Array.isArray(v) && v.length === 0) delete payload[k];
-    });
+const payload: any = {
+  TXN_DateStart: toIso(val?.TXN_DateStart),
+  TXN_DateEnd:   toIso(val?.TXN_DateEnd),
+  tlt_term_type: val?.tlt_term_type,
+  rece_yn:       val?.rece_yn,
+  TLT_No:        val?.TLT_No,
+  tlt_building:  val?.tlt_building,
+  tlt_floor:     val?.tlt_floor,
+  org_id:        val?.org_id,
+  pageSize:      val?.pageSize,
+  pageIndex:     val?.pageIndex,
+  SortBy:        val?.SortBy,
+  ...(offset  !== undefined ? { Offset:  offset } : {}),
+  ...(orderBy ? { OrderBy: orderBy } : {}),
+};
+const b = toBool(val?.IsNoPLU_No);
+if (b !== undefined) payload.IsNoPLU_No = b;
+    // 移除空值/空陣列
+Object.keys(payload).forEach((k) => {
+  const v = payload[k];
+  if (v === '' || v === null || v === undefined) delete payload[k];
+  if (Array.isArray(v) && v.length === 0) delete payload[k];
+});
 
     this.loading = true;
     this.messageService?.blockUi();
 
     this.tls23110Service.queryTLS23110(payload).subscribe({
-      next: (res) => {
-        const raw = res?.Data ?? [];
-        this.data = Array.isArray(raw) ? raw : [];
-        this.totalRecords = typeof res?.TotalCount === 'number'
-          ? res.TotalCount
-          : this.data.length; // ✅ 沒有 res.total
+      next: (res: any) => {
+        // res.Data 形如：[{ Day, Discount_List: { OriginalPrice: {...}, Discount90: {...}, ... , Total: {...} } }, ...]
+        const src = Array.isArray(res?.Data) ? res.Data : (res?.Data ? [res.Data] : []);
+
+        const pick = (obj: any, path: string[], def = 0) =>
+          path.reduce((o, k) => (o && o[k] != null ? o[k] : undefined), obj) ?? def;
+
+        this.data = src.map((row: any) => {
+          const d = row?.Discount_List ?? {};
+          return {
+            Day: row?.Day ?? '',
+
+            // OriginalPrice
+            OriginalPrice_TXN_SaleNoTax: pick(d, ['OriginalPrice','TXN_SaleNoTax']),
+            OriginalPrice_TXN_Tax:       pick(d, ['OriginalPrice','TXN_Tax']),
+            OriginalPrice_Total:         pick(d, ['OriginalPrice','Total']),
+
+            // 9折
+            Discount90_TXN_SaleNoTax:    pick(d, ['Discount90','TXN_SaleNoTax']),
+            Discount90_TXN_Tax:          pick(d, ['Discount90','TXN_Tax']),
+            Discount90_Total:            pick(d, ['Discount90','Total']),
+
+            // 8折
+            Discount80_TXN_SaleNoTax:    pick(d, ['Discount80','TXN_SaleNoTax']),
+            Discount80_TXN_Tax:          pick(d, ['Discount80','TXN_Tax']),
+            Discount80_Total:            pick(d, ['Discount80','Total']),
+
+            // 特價
+            SpecialPrice_TXN_SaleNoTax:  pick(d, ['SpecialPrice','TXN_SaleNoTax']),
+            SpecialPrice_TXN_Tax:        pick(d, ['SpecialPrice','TXN_Tax']),
+            SpecialPrice_Total:          pick(d, ['SpecialPrice','Total']),
+
+            // 總計
+            Total_TXN_SaleNoTax:         pick(d, ['Total','TXN_SaleNoTax']),
+            Total_TXN_Tax:               pick(d, ['Total','TXN_Tax']),
+            Total_Total:                 pick(d, ['Total','Total']),
+          };
+        });
+
+        this.totalRecords =
+          typeof res?.TotalCount === 'number' ? res.TotalCount : this.data.length;
       },
       error: (err) => {
         console.error('TLS23110 查詢失敗', err);
@@ -204,10 +263,11 @@ onSubmit(form: FormGroup): void {
       complete: () => {
         this.loading = false;
         this.messageService?.unblockUi();
-      }
+      },
     });
   });
 }
+
 
   moneyFormat(value: number): string {
     return value != null ? value.toLocaleString('en-US') : '0';

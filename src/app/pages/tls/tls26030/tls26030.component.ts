@@ -57,7 +57,8 @@ export class TLS26030Component extends BasicQueryPageComponent<TLS26030Data> imp
     Org_ID: [[]],                                     // 組織代號
     Org_Name: [''],                                   // 組織名稱
     tlt_floor: [[]],                                  // 樓層
-    ...createPaginationConfig([{ field: 'TXN_DATE', order: -1 }, { field: 'ECR_NO', order: 1 }, { field: 'TXN_NO', order: -1 }])
+    SYS_StoreNo: ['10'],                               // 新增：店號
+    ...createPaginationConfig([{ field: 'TXN_Date', order: -1 }, { field: 'ECR_No', order: 1 }, { field: 'TXN_No', order: -1 }])
   });
 
   totalRecords = 0;

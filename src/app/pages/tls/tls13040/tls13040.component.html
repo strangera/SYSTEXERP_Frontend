@@ -3,116 +3,57 @@
     <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
   </div>
   <p-accordion>
-    <p-accordionTab
-      header="{{ 'query-conditions' | translate }}"
-      [selected]="true"
-      class="line-height-3 m-0"
-      [headerStyleClass]="'query-accordionTab'"
-    >
-      <form
-        [formGroup]="queryForm"
-        id="queryForm"
-        (ngSubmit)="onSubmit(queryForm)"
-      >
+    <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'">
+      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
-              label="專櫃編號"
-              controlName="tlt_no"
-              [control]="queryForm.controls.tlt_no"
-              [submitted]="submitted"
-            ></app-input-text>
+            <app-input-text label="專櫃編號" controlName="tlt_no" [control]="queryForm.controls.tlt_no"
+              [submitted]="submitted"></app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
-              label="櫃位名稱"
-              controlName="tlt_name"
-              [control]="queryForm.controls.tlt_name"
-              [submitted]="submitted"
-            ></app-input-text>
+            <app-input-text label="櫃位名稱" controlName="tlt_name" [control]="queryForm.controls.tlt_name"
+              [submitted]="submitted"></app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select
-              label="大分類"
-              [options]="bus_typeOptions"
-              [control]="queryForm.controls.bus_typeList"
-              optionLabel="label"
-              optionValue="value"
-              [submitted]="submitted"
-            ></app-multi-select>
+            <app-multi-select label="大分類" [options]="bus_typeOptions" [control]="queryForm.controls.bus_typeList"
+              optionLabel="label" optionValue="value" [submitted]="submitted"></app-multi-select>
           </div>
           <div class="col-12">
-            <app-multi-location-filter
-              [form]="queryForm"
-              [submitted]="submitted"
-            ></app-multi-location-filter>
+            <app-multi-location-filter [form]="queryForm" [submitted]="submitted"></app-multi-location-filter>
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select
-              label="營運狀況"
-              [options]="operationStatusOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.tlt_openflagList"
-              [submitted]="submitted"
-            ></app-multi-select>
+            <app-multi-select label="營運狀況" [options]="operationStatusOptions" optionLabel="label" optionValue="value"
+              [control]="queryForm.controls.tlt_openflagList" [submitted]="submitted"></app-multi-select>
           </div>
-          <app-calendar-range-quick
-            class="col-12 md:col-6 lg:col-4"
-            label="合約起始日"
-            [startControl]="queryForm.controls.tlt_bdate_start"
-            [endControl]="queryForm.controls.tlt_bdate_end"
-            [submitted]="submitted"
-          />
-          <app-calendar-range-quick
-            class="col-12 md:col-6 lg:col-4"
-            label="合約截止日"
-            [startControl]="queryForm.controls.tlt_edate_start"
-            [endControl]="queryForm.controls.tlt_edate_end"
-            [submitted]="submitted"
-          />
+          <app-calendar-range-quick class="col-12 md:col-6 lg:col-4" label="合約起始日"
+            [startControl]="queryForm.controls.tlt_bdate_start" [endControl]="queryForm.controls.tlt_bdate_end"
+            [submitted]="submitted" />
+          <app-calendar-range-quick class="col-12 md:col-6 lg:col-4" label="合約截止日"
+            [startControl]="queryForm.controls.tlt_edate_start" [endControl]="queryForm.controls.tlt_edate_end"
+            [submitted]="submitted" />
 
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select
-              label="抽成別"
-              [options]="commissionTypeOptions"
-              [control]="queryForm.controls.tlt_term_typeList"
-              [submitted]="submitted"
-            ></app-multi-select>
+            <app-multi-select label="抽成別" [options]="commissionTypeOptions"
+              [control]="queryForm.controls.tlt_term_typeList" [submitted]="submitted"></app-multi-select>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select
-              label="抽成類別"
-              [options]="DeductionbigCategoryOptions"
-              [control]="queryForm.controls.tlt_idList"
-              [submitted]="submitted"
-            ></app-multi-select>
+            <app-multi-select label="抽成類別" [options]="DeductionbigCategoryOptions"
+              [control]="queryForm.controls.tlt_idList" [submitted]="submitted"></app-multi-select>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select
-              label="折扣"
-              [options]="discountOptions"
-              [control]="queryForm.controls.cag_barcodeList"
-              [submitted]="submitted"
-            ></app-multi-select>
+            <app-multi-select label="折扣" [options]="discountOptions" [control]="queryForm.controls.cag_barcodeList"
+              [submitted]="submitted"></app-multi-select>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select
-              label="組織代碼/名稱"
-              [options]="OrganizationCodeOptions"
-              optionLabel="formLabel"
-              optionValue="value"
-              [control]="queryForm.controls.org_idList"
-              [submitted]="submitted"
-            ></app-multi-select>
+            <app-multi-select label="組織代碼/名稱" [options]="OrganizationCodeOptions" optionLabel="formLabel"
+              optionValue="value" [control]="queryForm.controls.org_idList" [submitted]="submitted"></app-multi-select>
           </div>
         </div>
 
-        <div
-          class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
-        >
-          <app-button btnType="clear"></app-button>
+        <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+          <app-button btnType="clear" [form]="queryForm"></app-button>
           <app-button btnType="query" [loading]="loading"></app-button>
         </div>
       </form>
@@ -120,24 +61,9 @@
   </p-accordion>
 </div>
 <div class="card">
-  <app-table
-  apiUrl='queryTLS13040'
-    tableKey="TLS13040"
-    [data]="data"
-    [columns]="columns"
-    [selectedItems]="selectedItems"
-    (selectionChange)="selectedItems = $event"
-    [showCheckBox]="true"
-    dataKey="tlt_no"
-    [multiSortMeta]="[{ field: 'tlt_no', order: 1 }]"
-    [totalRecords]="totalRecords"
-    [lazy]="true"
-    [loading]="loading"
-    [showCheckBox]="false"
-    (edit)="onEdit($event)"
-    (detail)="onDetail($event)"
-    [showManage]="false"
-    [showDelete]="false"
-    (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"
-  ></app-table>
+  <app-table apiUrl='queryTLS13040' tableKey="TLS13040" [data]="data" [columns]="columns"
+    [selectedItems]="selectedItems" (selectionChange)="selectedItems = $event" [showCheckBox]="true" dataKey="tlt_no"
+    [multiSortMeta]="[{ field: 'tlt_no', order: 1 }]" [totalRecords]="totalRecords" [lazy]="true" [loading]="loading"
+    [showCheckBox]="false" (edit)="onEdit($event)" (detail)="onDetail($event)" [showManage]="false" [showDelete]="false"
+    (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"></app-table>
 </div>

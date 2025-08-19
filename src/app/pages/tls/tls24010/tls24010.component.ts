@@ -2,7 +2,7 @@ import { AddButton, formatDateToYYYY_MM_DD } from './../../../shared/componentki
 import { Component, OnInit, ViewChild } from '@angular/core';
 import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { Column, createPaginationConfig } from '../../../shared/componentkit/table/table.model';
+import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 import { DropDownListService, IDropdownItem } from '../../../service/utility/dropDownList.service';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { TLS24010Data, Tls24010Service } from '../../../service/api/tls/tls24010.service';
@@ -62,7 +62,7 @@ export class TLS24010Component extends BasicQueryPageComponent<TLS24010Data> imp
   TLT_NoOptions: IDropdownItem[] = [];
   data: TLS24010Data[] = [];
   selectedRowData?: TLS24010Data;
-  columns: Column[] = columns
+  columns = columns
   addButton: AddButton[] = []
   constructor(
     private readonly dropDownList: DropDownListService,
@@ -76,7 +76,10 @@ export class TLS24010Component extends BasicQueryPageComponent<TLS24010Data> imp
     this.dropDownList.queryTLTTALENT_ByContractDate_DropDownList(this.today.toISOString().split('T')[0]).pipe(untilDestroyed(this)).subscribe(options => {
       this.TLT_NoOptions = options.Data.map(item => ({ ...item, label: `${item.No} - ${item.Name}` }));
     });
-    this.queryForm.get('TXN_Date')?.setValue(new Date(this.today.getFullYear(), this.today.getMonth(), this.today.getDate(), 0, 0, 0));
+    const txnDate = this.queryForm.get('TXN_Date')?.value;
+    if (!txnDate) {
+      this.queryForm.get('TXN_Date')?.setValue(new Date(this.today.getFullYear(), this.today.getMonth(), this.today.getDate(), 0, 0, 0));
+    }
   }
   onDateSelect(event: Date): void {
     this.queryForm.get('TXN_Date')?.setValue(event);
@@ -108,8 +111,6 @@ export class TLS24010Component extends BasicQueryPageComponent<TLS24010Data> imp
     const txn_no = frm.get('TXN_No')?.value;
     if (txn_no) {
       this.queryForm.get('TXN_No')?.setValue(txn_no);
-    } else {
-      this.queryForm.get('TXN_No')?.setValue('系統自動產生');
     }
     this.isTXN_GUIPaper = frm.get('TXN_GUIPaper')?.value === 'R' || frm.get('TXN_GUIPaper')?.value === 'C';
     this.queryStateService.setQueryState(this.ProgNo, frm.value);
@@ -148,7 +149,11 @@ export class TLS24010Component extends BasicQueryPageComponent<TLS24010Data> imp
     this.submitted = true;
     if (!this.queryForm.valid) { return; }
     this.updateData(frm);
-    this.onCreate(frm.value);
+    const inertData = {
+      ...frm.value,
+      TXN_No: '系統自動產生',
+    };
+    this.onCreate(inertData);
   }
   // 查看補登資料
   onDetailData(rowdata: TLS24010Data): void {

@@ -15,6 +15,13 @@ export interface IDropdownItem {
   talent_id?: number;
   PAY_Type?: string;
   label?: string; // 用於顯示的標籤
+  CAT_LNo?: string;
+  CAT_LName?: string;
+  CAT_MNo?: string;
+  CAT_MName?: string;
+  items?: IDropdownItem[];
+  ECR_TmplNo?: string; // 環境變數編號 模板編號
+  ECR_TmplName?: string; // 環境變數編號 模板備註
 }
 
 // 針對 querySYS3100_tree_DropDownList 的資料結構

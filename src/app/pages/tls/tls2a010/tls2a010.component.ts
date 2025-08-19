@@ -5,6 +5,7 @@ import { TranslateModule } from '@ngx-translate/core';
 import { AccordionModule } from 'primeng/accordion';
 import { DropDownListService, IDropdownItem } from 'src/app/service/utility/dropDownList.service';
 import { Column, ColumnGroup, createPaginationConfig } from 'src/app/shared/componentkit/table/table.model';
+import { CRUDStatus } from '@shared/models/system/CRUDstatus';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { Button } from 'primeng/button';
 import { NgStyle, NgIf } from '@angular/common';
@@ -17,6 +18,8 @@ import { ButtonComponent } from '@shared/componentkit/button/button.component';
 import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { TableComponent } from '@shared/componentkit/table/table.component';
+import { ValidationService } from '@shared/service/validation.service';
+
 
 const yesterday = new Date();
 yesterday.setDate(yesterday.getDate() - 1);
@@ -52,8 +55,8 @@ export class TLS2A010Component extends BasicQueryPageComponent<any> implements O
     Building_No: [''],
     SYS_StoreNo: [this.authService.currentUserValue?.SYS_StoreNo ?? ''],
     ...createPaginationConfig([{ field: 'ECR_No', order: 1 }]),
-  }, { validators: this.validateRangeStartBeforeEnd });
-
+  });
+  //  { validators: this.validateRangeStartBeforeEnd });
   ECR_Options: { label: string; value: string }[] = [];
   floorOptions: IDropdownItem[] = [];
   paymentToolOptions: IDropdownItem[] = [];
@@ -72,7 +75,7 @@ export class TLS2A010Component extends BasicQueryPageComponent<any> implements O
     {
       label: '缺單審核',
       icon: 'pi pi-exclamation-triangle',
-      action: (rowData: any) => this.onAbnormalClick(rowData)
+      action: (rowData: any) => this.onDetail(rowData)
     }
   ];
   IsPrint = true;
@@ -85,7 +88,8 @@ export class TLS2A010Component extends BasicQueryPageComponent<any> implements O
 
   constructor(
     private dropDownListService: DropDownListService,
-    private tls2a010Service: Tls2a010Service
+    private tls2a010Service: Tls2a010Service,
+    private readonly validationService: ValidationService
 
   ) {
     super();
@@ -114,7 +118,7 @@ export class TLS2A010Component extends BasicQueryPageComponent<any> implements O
 
 
   ngOnInit(): void {
-    this.initializePage('TLS2A010', 'TLS/TLS2A010CRU', this.queryForm, (form) => this.onSubmit(form));
+    this.initializePage('TLS2A010', 'TLS/TLS2A010cru', this.queryForm, (form) => this.onSubmit(form));
     this.loadDropdownOptions();
     this.selectedColumns = this.defaultColumns;
     this.columnGroup = [];
@@ -197,11 +201,6 @@ export class TLS2A010Component extends BasicQueryPageComponent<any> implements O
       this.contact_USR_NameOptions = res.Data.map(item => ({ ...item, label: item.Name, value: item.No }));
     });
   }
-  onAbnormalClick(row: any): void {
-    console.log('缺單被點擊:', row);
-    this.onEdit(row);
-  }
-
 
   onSubmit(form: FormGroup): void {
     this.submitted = true;
@@ -212,14 +211,16 @@ export class TLS2A010Component extends BasicQueryPageComponent<any> implements O
     const raw = form.value;
 
     const payload = {
-      SYS_StoreNo: raw.SYS_StoreNo ?? '',
-      TXN_Date: raw.TXN_Date ? new Date(raw.TXN_Date).toISOString().split('T')[0] : '',
+      PageSize: raw.PageSize ?? 0,
+      PageIndex: raw.PageIndex ?? 0,
+      SortBy: raw.SortBy ?? [],
+      TXN_Date: raw.TXN_Date.toISOString().split('T')[0], // 格式化日期為 YYYY-MM-DD
+      Floor_No: raw.Floor_No ?? '',
       ECR_No_Start: raw.ECR_No_Start ?? '',
       ECR_No_End: raw.ECR_No_End ?? '',
       PAY_NO: raw.PAY_NO ?? '',
-      tlt_floor: raw.tlt_floor ?? '',
-      tlt_building: raw.tlt_building ?? '',
-    };
+      Building_No: raw.Building_No ?? ''
+    }
 
     this.tls2a010Service.queryTLS2A010(payload).pipe(untilDestroyed(this)).subscribe({
       next: (res) => {
@@ -262,7 +263,7 @@ export class TLS2A010Component extends BasicQueryPageComponent<any> implements O
               const yyyy = dateObj.getFullYear();
               const dd = String(dateObj.getDate()).padStart(2, '0');
               const mm = String(dateObj.getMonth() + 1).padStart(2, '0'); // 月份從0開始
-              formattedDate = `${yyyy}/${dd}/${mm}`;
+              formattedDate = `${yyyy}-${mm}-${dd}`;
             }
           }
 
@@ -310,9 +311,27 @@ export class TLS2A010Component extends BasicQueryPageComponent<any> implements O
 
 
   }
+  override onDetail(row: any): void {
+    console.log('缺單審核被點擊:', row);
 
-  isRowSelectable(rowData: any): boolean {
-    return rowData.Check_Status !== 'Y';
-  }
+  this.tls2a010Service.queryDetailTLS2A010(row).subscribe({
+    next: (res) => {
+      const detailData = res?.Data ?? [];
+
+      const rowdataWithDetail = {
+        ...row,
+        details: detailData
+      };
+
+      // 呼叫共通的 navigateWithState (不會覆蓋底層)
+      this.navigateWithState(CRUDStatus.Read, rowdataWithDetail);
+    },
+    error: (err) => {
+      console.error('查詢明細失敗:', err);
+    }
+  });
+}
+
+
 }
 

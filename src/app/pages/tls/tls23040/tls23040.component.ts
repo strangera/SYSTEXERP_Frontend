@@ -55,7 +55,8 @@ import { TableComponent } from '@shared/componentkit/table/table.component';
 export class TLS23040Component extends BasicQueryPageComponent<any> {
   totalRecords = 0;
   data: any[] = [];
-
+  
+backendTotals: Record<string, number> | null = null;
   readonly yesterday: Date = (() => { const d = new Date(); d.setHours(0, 0, 0, 0); d.setDate(d.getDate() - 1); return d; })();
 
   queryForm = this.formBuilder.group({
@@ -146,20 +147,30 @@ export class TLS23040Component extends BasicQueryPageComponent<any> {
       this.messageService?.blockUi();
 
       this.tls23040Service.queryTLS23040(payload).subscribe({
-        next: (res) => {
-          // 可能有多個分組，把所有 item 的 InvoiceDetail 串接起來
-          const groups = Array.isArray(res?.Data) ? res.Data : [];
-          const invoiceRows = groups
-            .map((g: any) => g?.InvoiceDetail ?? [])
-            .flat();
 
-          // 如果你想以 PaymentDetail 或 DiscountDetail 為主，可以改這兩行來源
-          // const payRows = groups.map(g => g?.PaymentDetail ?? []).flat();
-          // const discRows = groups.map(g => g?.DiscountDetail ?? []).flat();
 
-          this.data = invoiceRows;
-          this.totalRecords = this.data.length; // 或者保留後端回傳的 TotalCount 視你的 TableComponent 需求
-        }, error: (err) => { console.error('TLS23040 查詢失敗', err); this.messageService?.errorBubble?.('查詢失敗，請稍後再試'); }, complete: () => { this.loading = false; this.messageService?.unblockUi(); }
+  next: (res) => {
+    const groups = Array.isArray(res?.Data) ? res.Data : [];
+    const invoiceRows = groups.map((g: any) => g?.InvoiceDetail ?? []).flat();
+
+    const totalSrc =
+      invoiceRows.find((r: any) => r?.totalGUI != null || r?.totalSaleAmt != null) ?? (res as any);
+
+    // ✅ 提供給 footer 的外部總計（key 要對到 columns 的 field）
+    this.backendTotals = {
+      TXN_TotGUI:     Number(totalSrc?.totalGUI ?? 0),
+      TXN_TotSaleAmt: Number(totalSrc?.totalSaleAmt ?? 0),
+    };
+
+    // ✅ 只放一般列，不要把「總計列」塞進 data，避免影響分頁 & 避免 footer 再相加一次
+    this.data = invoiceRows.map((r: any, i: number) => ({
+      ...r,
+      _rowKey: `${r.TXN_Date ?? ''}|${r.ECR_No ?? ''}|${r.TXN_No ?? ''}|${i}`,
+    }));
+
+    this.totalRecords = Number(res?.TotalCount ?? this.data.length);
+  },
+ error: (err) => { console.error('TLS23040 查詢失敗', err); this.messageService?.errorBubble?.('查詢失敗，請稍後再試'); }, complete: () => { this.loading = false; this.messageService?.unblockUi(); }
       });
     });
   }
@@ -180,8 +191,8 @@ export class TLS23040Component extends BasicQueryPageComponent<any> {
     { field: 'gui_track', header: '發票起始號碼(字軌)', visible: true },
     { field: 'GUIBegNo', header: '發票起始號碼', visible: true },
     { field: 'GUIEndNo', header: '發票結束號碼', visible: true },
-    { field: 'TXN_TotGUI',header: '發票金額',visible: true,style: 'text-right',format: (val: number) => val?.toLocaleString('en-US') || '0',},
-    { field: 'TXN_TotSaleAmt',header: '業績金額',visible: true,style: 'text-right',format: (val: number) => val?.toLocaleString('en-US') || '0',},
+    { field: 'TXN_TotGUI',header: '發票金額', isTotal: true,visible: true,style: 'text-right',format: (val: number) => val?.toLocaleString('en-US') || '0',},
+    { field: 'TXN_TotSaleAmt',header: '業績金額', isTotal: true,visible: true,style: 'text-right',format: (val: number) => val?.toLocaleString('en-US') || '0',},
     { field: 'TXN_StatusName',header: '交易型態',visible: true,format: (val: any) =>  this.getLabelFromOptions(val, this.txnStatusOptions),},
     { field: 'TXN_TaxFreeCertNo',header: '外交官免稅卡號',visible: true,},
     { field: 'USR_No', header: '收銀員', visible: true },

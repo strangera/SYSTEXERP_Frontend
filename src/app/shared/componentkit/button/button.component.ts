@@ -4,6 +4,7 @@ import { CurrentPageService } from '../../../layout/app.menulist/current-page.se
 import { Subject, takeUntil } from 'rxjs';
 import { FormGroup } from '@angular/forms';
 import { Button } from 'primeng/button';
+import { NotificationService } from '@shared/component/notification-message/notification.service';
 interface ButtonConfig {
   label: string;
   icon?: string;
@@ -45,7 +46,7 @@ export class ButtonComponent implements OnInit, OnDestroy {
   private readonly buttonConfig: Record<string, ButtonConfig> = {
     default: { label: '標籤', icon: undefined, class: '', disabled: false, type: 'button', severity: undefined },           // 預設
     create: { label: '新增', icon: 'pi pi-plus', class: '', disabled: false, type: 'button', severity: undefined, permissionCode: '20' },   // 新增
-    clear: { label: '清除', icon: undefined, class: 'button-clear', text: true, disabled: false, type: 'reset', severity: undefined },                   // 清除
+    clear: { label: '清除', icon: undefined, class: 'button-clear', text: true, disabled: false, type: 'button', severity: undefined },        // 清除
     cancel: { label: '清除', icon: 'pi pi-times', class: 'button-cancel', outlined: true, disabled: false, type: 'button', severity: 'secondary' },       // 取消
     delete: { label: '刪除', icon: 'pi pi-trash', class: 'p-button-danger', disabled: false, type: 'button', severity: 'danger', permissionCode: '40' },// 刪除
     edit: { label: '編輯', icon: 'pi pi-pencil', class: '', disabled: false, type: 'button', severity: undefined, permissionCode: '30' },     // 編輯
@@ -58,6 +59,8 @@ export class ButtonComponent implements OnInit, OnDestroy {
     report: { label: '報表模式', icon: 'pi pi-file', class: '', disabled: false, type: 'button', severity: undefined },// 報表模式
     textclear: { label: '清除', icon: undefined, class: 'p-button-text p-button-sm', text: true, disabled: false, type: 'button', severity: null },  //無背景按鈕
   };
+
+  messageService: NotificationService = inject(NotificationService);
 
   ngOnInit() {
     const config = this.buttonConfig[this.btnType];
@@ -89,16 +92,21 @@ export class ButtonComponent implements OnInit, OnDestroy {
   handleClick() {
     if (this.disabled) return;
 
-    if (this.btnType === 'cancel' && this.form) {
+    // 針對 'cancel' 和 'clear' 兩種按鈕類型進行處理
+    if (this.btnType === 'cancel' || this.btnType === 'clear') {
+      if (!this.form) {
+        // 如果沒有提供 form，則顯示錯誤訊息
+        this.messageService.warnBubble('工程師請在按鈕上加入參數[form]：清除/取消按鈕需要綁定表單 (form Input)。');
+        return; // 阻止後續操作
+      }
+
       Object.keys(this.form.controls).forEach(key => {
         const control = this.form?.get(key);
         if (control && !control.disabled) {
-          control.reset();
+          control.reset(); // 這會將 control 設回其初始值
         }
       });
-      this.clickEvent.emit();
-    } else {
-      this.clickEvent.emit();
     }
+    this.clickEvent.emit();
   }
 }

@@ -79,7 +79,6 @@ export class TLS22030Component extends BasicQueryPageComponent<any> implements O
 
   ngOnInit(): void {
     this.initializePage('TLS22030', '/TLS/TLS22030cru', this.queryForm);
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
     this.whetherService.getWhetherOptions().subscribe((data) => {
       this.listZeroDifferenceOptions = data;
     });
@@ -149,37 +148,44 @@ export class TLS22030Component extends BasicQueryPageComponent<any> implements O
   }
 
 
+  private toYMD(date: Date | string | null): string | null {
+    if (!date) return null;
+    const d = new Date(date);
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${year}/${month}/${day}`;
+  }
+
   onSubmit(form: FormGroup): void {
-  this.handleSubmit(form, () => {
-    this.tls22030Service.queryTLS22030(form.value).subscribe({
-      next: (res) => {
-        // 把 Data 取出來
-        this.data = (res?.Data ?? []).map((item: { TXN_Date?: string }) => {
-          // 預設直接回傳
-          const newItem = { ...item };
+    this.handleSubmit(form, () => {
+      const raw = form.getRawValue();
 
-          // 日期轉換 (08/05/2025 00:00:00 → 2025/08/05)
-          if (item.TXN_Date) {
-            const [month, day, year] = item.TXN_Date.split(" ")[0].split("/");
-            newItem.TXN_Date = `${year}/${month}/${day}`;
-          }
+      // 組 payload，日期轉 yyyy/MM/dd
+      const payload = {
+        ...raw,
+        TXN_DateStart: this.toYMD(raw.TXN_DateStart),
+        TXN_DateEnd: this.toYMD(raw.TXN_DateEnd),
+      };
 
-          return newItem;
-        });
+      this.tls22030Service.queryTLS22030(payload).subscribe({
+        next: (res) => {
+          this.data = res?.Data ?? [];
+          this.totalRecords = res?.TotalCount ?? this.data.length;
+          this.loading = false;
 
-        this.totalRecords = res?.TotalCount ?? this.data.length;
-        this.loading = false;
-
-        // 儲存查詢條件
-        this.queryStateService.setQueryState(this.ProgNo, this.queryForm.value);
-      },
-      error: (err) => {
-        console.error('TLS22030 查詢失敗', err);
-        this.loading = false;
-      }
+          // 儲存查詢條件
+          this.queryStateService.setQueryState(this.ProgNo, payload);
+        },
+        error: (err) => {
+          console.error('TLS22030 查詢失敗', err);
+          this.loading = false;
+        }
+      });
     });
-  });
-}
+  }
+
+
 
 
 }

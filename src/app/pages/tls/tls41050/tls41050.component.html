@@ -9,7 +9,7 @@
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
             <app-multi-select label="收銀機號" controlName="ECR_NoList" [options]="POS1002_Option" optionLabel="Label"
-              optionValue="No" [control]="queryForm.controls.ECR_NoList" [submitted]="submitted"></app-multi-select>    
+              optionValue="No" [control]="queryForm.controls.ECR_NoList" [submitted]="submitted"></app-multi-select>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-text label="收銀機名稱" controlName="ECR_GUI_PeriodQty" [control]="queryForm.controls.ECR_Name"
@@ -22,8 +22,9 @@
         </div>
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select label="機台所屬專櫃代碼/名稱" controlName="ECR_TLT_NoList" [options]="TLTTALENT_Option" optionLabel="Label"
-              optionValue="No" [control]="queryForm.controls.ECR_TLT_NoList" [submitted]="submitted"></app-multi-select> 
+            <app-multi-select label="機台所屬專櫃代碼/名稱" controlName="ECR_TLT_NoList" [options]="TLTTALENT_Option"
+              optionLabel="Label" optionValue="No" [control]="queryForm.controls.ECR_TLT_NoList"
+              [submitted]="submitted"></app-multi-select>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-text label="專櫃名稱" controlName="ECR_TLT_Name" [control]="queryForm.controls.ECR_TLT_Name"
@@ -37,16 +38,16 @@
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-number label="每期電子發票預設配號數量" controlName="ECR_GUI_PeriodQty"
-            [control]="queryForm.controls.ECR_GUI_PeriodQty" [submitted]="submitted" />
+              [control]="queryForm.controls.ECR_GUI_PeriodQty" [submitted]="submitted" />
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-number label="電子發票最小安全存量" controlName="ECR_GUI_MinQty"
-            [control]="queryForm.controls.ECR_GUI_MinQty" [submitted]="submitted" />
+              [control]="queryForm.controls.ECR_GUI_MinQty" [submitted]="submitted" />
           </div>
         </div>
         <!-- <div> -->
         <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
-          <app-button btnType="clear"></app-button>
+          <app-button btnType="clear" [form]="queryForm"></app-button>
           <app-button btnType="query" [loading]="loading"></app-button>
         </div>
         <!-- </div> -->
@@ -56,29 +57,16 @@
 </div>
 <div class="card">
   <div class="col-13">
-    <app-table
-      tableKey="TLS41050"
-      [data]="data"
-      [columns]="columns"
-      (edit)="onEdit($event)"
-      (detail)="onDetail($event)"
-      [selectedItems]="selectedItems"
-      (selectionChange)="selectedItems = $event"
-      [showCheckBox]="true"
-      [showDelete]="false"
-      dataKey="id"
-      [multiSortMeta]="[{ field: 'ECR_No', order: 1 }]"
-      [totalRecords]="totalRecords"
-      (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"
-      [lazy]="true"
-      [loading]="loading"
-      [isRowSelectable]="isRowSelectable"
-    >
-    <header>
-      <p-button [ngStyle]="{ width: '35px', height: '35px' }" [style]="{ width: '35px', height: '35px' }" pTooltip="下傳"
-        tooltipPosition="top" pButton icon="pi pi-upload" severity="success" class="p-button-rounded p-button-text"
-        [disabled]="selectedItems.length === 0" (click)="onUpload()"/>
-    </header>
-  </app-table>
+    <app-table tableKey="TLS41050" [data]="data" [columns]="columns" (edit)="onEdit($event)" (detail)="onDetail($event)"
+      [selectedItems]="selectedItems" (selectionChange)="selectedItems = $event" [showCheckBox]="true"
+      [showDelete]="false" dataKey="id" [multiSortMeta]="[{ field: 'ECR_No', order: 1 }]" [totalRecords]="totalRecords"
+      (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [lazy]="true" [loading]="loading"
+      [isRowSelectable]="isRowSelectable">
+      <header>
+        <p-button [ngStyle]="{ width: '35px', height: '35px' }" [style]="{ width: '35px', height: '35px' }"
+          pTooltip="下傳" tooltipPosition="top" pButton icon="pi pi-upload" severity="success"
+          class="p-button-rounded p-button-text" [disabled]="selectedItems.length === 0" (click)="onUpload()" />
+      </header>
+    </app-table>
   </div>
 </div>

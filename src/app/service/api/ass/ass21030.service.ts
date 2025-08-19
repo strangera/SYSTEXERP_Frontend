@@ -1,150 +1,34 @@
 import { HttpClient } from '@angular/common/http';
-import { Injectable, OnDestroy, signal } from '@angular/core';
-import { ErrorHandlerService } from '@service/system/error-handler.service';
-import { IPOS2002LocationItem } from '@service/utility/dropDownList.service';
-import { BaseQueryResponse, DropdownOption } from '@shared/models/api/base-api.interface';
-import { catchError, finalize, of, Subject, take, takeUntil, tap } from 'rxjs';
-import { environment } from 'src/environments/environment';
-import { engMeterNoMock, EngType, engTypeMock } from './ass21010.service';
+import { Injectable } from '@angular/core';
+import { Observable } from 'rxjs';
+import { environment } from '../../../../environments/environment';
 
-const apiUrl: string = `${environment.ApiUrl}`;
+@Injectable({
+  providedIn: 'root'
+})
 
-@Injectable({ providedIn: 'root' })
-export class ASS21030Service implements OnDestroy {
+export class ASS21030Service {
+  // 能源抄表作業
+  apiUrl: string = environment.ApiUrl + '/ASS0000/ASS2000';
+  constructor(private http: HttpClient) { }
 
-  public readonly isRowSelectable = (rowData: unknown) =>
-    !!rowData;
-  // (Reflect.has(rowData, 'CanDelete') && rowData.CanDelete == '1') || rowData.pod_status === ApprovalStatus.未核准;
-
-  // 儲存資料
-  public readonly ASS21030Data = signal<unknown[]>([]);
-  public readonly ASS21030Detail = signal<unknown[]>([]);
-  public readonly queryByMeterNoData = signal<unknown[]>([]);
-  public readonly queryByTltNoData = signal<unknown[]>([]);
-  public readonly engTypeSignal = signal<DropdownOption[]>([]);
-  public readonly engMeterNoSignal = signal<DropdownOption[]>([]);
-  public readonly locationSignal = signal<IPOS2002LocationItem[]>([]);
-  public readonly tltNoSignal = signal<DropdownOption[]>([]);
-  public readonly settlementStatusSignal = signal<DropdownOption[]>([]);
-  public readonly engRateSignal = signal<number>(0);
-
-  public ass21030Loading = !1;
-  public engTypeLoading = !1;
-  public engMeterNoLoading = !1;
-  public locationLoading = !1;
-  public tltNoLoading = !1;
-  public tableLoading = !1;
-  public queryByMeterNoLoading = !1;
-  public queryByTltNoLoading = !1;
-
-  private readonly engTypeCancel$ = new Subject<void>();
-  private readonly engMeterNoCancel$ = new Subject<void>();
-  private readonly locationCancel$ = new Subject<void>();
-  private readonly tableCancel$ = new Subject<void>();
-  private readonly queryByMeterNoCancel$ = new Subject<void>();
-  private readonly queryByTltNoCancel$ = new Subject<void>();
-
-  constructor(
-    private http: HttpClient,
-    private errorHandler: ErrorHandlerService
-  ) { }
-
-  public loadEngType(): void {
-    this.engTypeCancel$.next();
-    this.engTypeLoading = !0;
-    of(engTypeMock).pipe(
-      take(1),
-      takeUntil(this.engTypeCancel$),
-      tap(response => this.engTypeSignal.set(response.Data)),
-      catchError(error => this.errorHandler.handleError(error)),
-      finalize(() => {
-        this.engTypeLoading = !1;
-        console.log('查詢EngType結果:', [this.engTypeSignal()]);
-      })
-    ).subscribe();
-  };
-
-  public loadEngMeterNo(types: EngType[]): void {
-    this.engMeterNoCancel$.next();
-    this.engMeterNoLoading = !0;
-    // this.http.post<BaseQueryResponse<unknown>>(`${apiUrl}/ASS0000/ASS2000/loadEngMeterNo`, { types }).pipe(
-    of(engMeterNoMock).pipe(
-      take(1),
-      takeUntil(this.engMeterNoCancel$),
-      tap(response => this.engMeterNoSignal.set(response.Data)),
-      catchError(error => this.errorHandler.handleError(error)),
-      finalize(() => {
-        this.engMeterNoLoading = !1;
-        console.log('查詢EngMeterNo結果:', [this.engMeterNoSignal()]);
-      })
-    ).subscribe();
-  };
-
-  public loadLocationNo(): void {
-    this.locationCancel$.next();
-    this.locationLoading = !0;
-    this.http.post<any>(`${apiUrl}/queryPOS2002_DropDownList`, {}).pipe(
-      take(1),
-      takeUntil(this.locationCancel$),
-      tap(response => this.locationSignal.set(response.Data)),
-      catchError(error => this.errorHandler.handleError(error)),
-      finalize(() => {
-        this.locationLoading = !1;
-        console.log('查詢Location結果:', [this.locationSignal()]);
-      })
-    ).subscribe();
-  };
-
-  /** 取資料 */
-  public loadASS21030(query: unknown): void {
-    this.tableCancel$.next();
-    this.tableLoading = !0;
-    this.http.post<BaseQueryResponse<unknown>>(`${apiUrl}/ASS0000/ASS2000/queryASS21030`, query).pipe(
-      take(1),
-      takeUntil(this.tableCancel$),
-      tap(response => this.ASS21030Data.set(response.Data)),
-      catchError(error => this.errorHandler.handleError(error)),
-      finalize(() => {
-        this.tableLoading = !1;
-        console.log('查詢ASS21030結果:', [this.ASS21030Data()]);
-      })
-    ).subscribe();
-  };
-
-  public queryByMeterNo(eng_meterNo: string): void {
-    this.queryByMeterNoCancel$.next();
-    this.queryByMeterNoLoading = !0;
-    this.http.post<BaseQueryResponse<unknown>>(`${apiUrl}/ASS0000/ASS2000/queryByMeterNo`, { eng_meterNo }).pipe(
-      take(1),
-      takeUntil(this.queryByMeterNoCancel$),
-      tap(response => this.queryByMeterNoData.set(response.Data)),
-      catchError(error => this.errorHandler.handleError(error)),
-      finalize(() => {
-        this.queryByMeterNoLoading = !1;
-        console.log('查詢queryByMeterNo結果:', [this.queryByMeterNoData()]);
-      })
-    ).subscribe();
+  // 查詢 能源抄表作業
+  queryASS21030(body: any): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/queryASS21030`, body);
   }
 
-  public queryByTltNo(tlt_no: string): void {
-    this.queryByTltNoCancel$.next();
-    this.queryByTltNoLoading = !0;
-    this.http.post<BaseQueryResponse<unknown>>(`${apiUrl}/ASS0000/ASS2000/queryByTltNo`, { tlt_no }).pipe(
-      take(1),
-      takeUntil(this.queryByTltNoCancel$),
-      tap(response => this.queryByTltNoData.set(response.Data)),
-      catchError(error => this.errorHandler.handleError(error)),
-      finalize(() => {
-        this.queryByTltNoLoading = !1;
-        console.log('查詢queryByTltNo結果:', [this.queryByTltNoData()]);
-      })
-    ).subscribe();
+  // 新增 能源抄表作業
+  insertASS21030(body: any): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/insertASS21030`, body);
   }
 
-  ngOnDestroy(): void {
-    this.engTypeCancel$.next();
-    this.engMeterNoCancel$.next();
-    this.locationCancel$.next();
-    this.tableCancel$.next();
+  // 更新 能源抄表作業
+  updateASS21030(body: any): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/updateASS21030`, body);
+  }
+
+  // 刪除 能源抄表作業
+  deleteASS21030(body: any): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/deleteASS21030`, body);
   }
 }

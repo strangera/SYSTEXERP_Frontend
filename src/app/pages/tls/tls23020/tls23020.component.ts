@@ -64,6 +64,7 @@ export class TLS23020Component extends BasicQueryPageComponent<any> {
     d.setDate(d.getDate() - 1);
     return d;
   })();
+  isRowSelectable = (row: any) => !row?.__isBackendTotal;
 
   // Request
   queryForm = this.formBuilder.group({
@@ -131,9 +132,8 @@ export class TLS23020Component extends BasicQueryPageComponent<any> {
     this.whetherService.getWhetherOptions().subscribe(data => this.whetherOptions = data);
     this.txnStatusService.getTxnStatusOptions().subscribe(data => this.txnStatusOptions = data);
     this.floorService.getFloors().subscribe(data => this.floorOptions = data);
-
     this.tls11010Service.getOrgOptions().subscribe(res => {
-      this.OrganizationCodeOptions = (res ?? []).map((x: any) => ({
+    this.OrganizationCodeOptions = (res ?? []).map((x: any) => ({
         label: x.label,
         formLabel: `${x.value} - ${x.label}`,
         value: x.value,
@@ -165,9 +165,100 @@ export class TLS23020Component extends BasicQueryPageComponent<any> {
     });
   }
 
-  onSubmit(form: FormGroup): void {
-    this.handleSubmit(form, () => this.doQuery());
-  }
+onSubmit(form: FormGroup): void {
+  this.handleSubmit(form, () => {
+    const val = this.queryForm.getRawValue() as any;
+
+    // 預設分頁
+    const pageSize  = Number.isFinite(val?.pageSize)  ? val.pageSize  : 10;
+    const pageIndex = Number.isFinite(val?.pageIndex) ? val.pageIndex : 1;
+    const offset = Math.max(0, (pageIndex - 1) * pageSize);
+
+    // 排序字串
+    const orderBy =
+      Array.isArray(val?.SortBy) && val.SortBy.length
+        ? val.SortBy.map((s: any) => `${s.field} ${s.order === 1 ? 'ASC' : 'DESC'}`).join(',')
+        : undefined;
+
+    // 日期轉 yyyy-MM-ddTHH:mm:ss（本地時區，去掉時區偏移）
+    const toIso = (x: any) => {
+      if (!x) return undefined;
+      const d = typeof x === 'string' ? new Date(x) : (x as Date);
+      if (isNaN(d.getTime())) return undefined;
+      return new Date(d.getTime() - d.getTimezoneOffset() * 60000)
+        .toISOString()
+        .slice(0, 19);
+    };
+
+    // 組 payload
+    const payload: any = {
+      TXN_DateStart: toIso(val?.TXN_DateStart),
+      TXN_DateEnd:   toIso(val?.TXN_DateEnd),
+      bus_type:      val?.bus_type,
+      ShowBusType:   val?.ShowBusType,
+      tlt_building:  val?.tlt_building,
+      tlt_floor:     val?.tlt_floor,
+      org_id:        val?.org_id,
+      area_no:       val?.area_no,
+      TLT_No:        val?.TLT_No,
+      pageSize,
+      pageIndex,
+      SortBy:        val?.SortBy ?? [],
+      Offset:        offset,
+      ...(orderBy ? { OrderBy: orderBy } : {}),
+    };
+
+    // 移除空值/空陣列
+    Object.keys(payload).forEach((k) => {
+      const v = payload[k];
+      if (v === '' || v === null || v === undefined) delete payload[k];
+      if (Array.isArray(v) && v.length === 0) delete payload[k];
+    });
+
+    this.loading = true;
+    this.messageService?.blockUi();
+
+    this.tls23020Service.queryTLS23020(payload).subscribe({
+      next: (res: any) => {
+        // res.Data 可能是陣列（你給的範例是 [ { Total..., tLS23020_SubTotals: [...] } ]）
+        const dataArray = Array.isArray(res?.Data) ? res.Data : (res?.Data ? [res.Data] : []);
+
+        // 把所有小計底下的 tLS23020_Details 攤平成一個陣列
+        const details = dataArray.flatMap((wrapper: any) => {
+          const subTotals =
+            wrapper?.tLS23020_SubTotals ??
+            wrapper?.TLS23020_SubTotals ??
+            wrapper?.tls23020_SubTotals ??
+            [];
+          if (!Array.isArray(subTotals)) return [];
+          return subTotals.flatMap((st: any) =>
+            st?.tLS23020_Details ??
+            st?.TLS23020_Details ??
+            st?.tls23020_Details ??
+            []
+          );
+        });
+
+        this.data = details;
+        this.totalRecords =
+          typeof res?.TotalCount === 'number' ? res.TotalCount : this.data.length;
+
+        // 若之後要用得到，也可以把總計/小計存起來
+        // this.totalSummary = dataArray[0] ?? null;
+        // this.subTotals = Array.isArray(dataArray[0]?.tLS23020_SubTotals) ? dataArray[0].tLS23020_SubTotals : [];
+      },
+      error: (err) => {
+        console.error('TLS23120 查詢失敗', err);
+        this.messageService?.errorBubble?.('查詢失敗，請稍後再試');
+      },
+      complete: () => {
+        this.loading = false;
+        this.messageService?.unblockUi();
+      },
+    });
+  });
+}
+
 
   // 將 lazy 的分頁/排序寫回表單後，呼叫同一支查詢
   runQueryFromTable(event: any) {
@@ -223,17 +314,27 @@ export class TLS23020Component extends BasicQueryPageComponent<any> {
         this.messageService?.unblockUi();
       }))
       .subscribe({
-        next: (res) => {
-          const raw = res?.Data ?? [];
-          this.data = raw.map((item: any, idx: number) => ({
-            ...item,
-            _rowKey: `${item.SYS_StoreNo ?? ''}|${String(item.TXN_Date ?? '').slice(0, 19)}|${item.ECR_No ?? ''}|${item.TXN_No ?? idx}`,
-          }));
-          this.totalRecords = res?.TotalCount ?? this.data.length;
-        },
-        error: (err) => {
-          console.error('TLS23020 查詢失敗', err);
-        },
+next: (res) => {
+  const raw = res?.Data ?? [];
+
+  const mapped = raw.map((item: any, idx: number) => ({
+    ...item,
+    _rowKey: `${item.SYS_StoreNo ?? ''}|${String(item.TXN_Date ?? '').slice(0, 19)}|${item.ECR_No ?? ''}|${item.TXN_No ?? idx}`,
+  }));
+
+  // 從回傳資料找一筆帶有 Subtotal 欄位的來源（常見是每筆都帶同值或只有一筆帶）
+const totalSrc = raw.find((x: any) =>
+  x?.Subtotal_PLU_SalePrc != null ||
+  x?.Subtotal_TXN_Net     != null ||
+  x?.Subtotal_TXN_Tax     != null ||
+  x?.Subtotal_TXN_Disc    != null
+);
+
+  this.data = totalSrc ? [...mapped, this.makeBackendTotalRow(totalSrc)] : mapped;
+
+  // 注意 totalRecords 用後端提供的（不要 +1），避免分頁數被影響
+  this.totalRecords = res?.TotalCount ?? mapped.length;
+},
       });
   }
 
@@ -241,71 +342,65 @@ export class TLS23020Component extends BasicQueryPageComponent<any> {
     const found = options?.find(opt => String(opt.value) === String(value));
     return found ? found.label : value;
   }
+  formatYMD = (val: unknown): string => {
+  if (val == null) return '';
+  if (val instanceof Date && !isNaN(val.getTime())) {
+    const y = val.getFullYear();
+    const m = String(val.getMonth() + 1).padStart(2, '0');
+    const d = String(val.getDate()).padStart(2, '0');
+    return `${y}/${m}/${d}`;
+  }
+  const s = String(val);
+  // 直接抓 YYYY-MM-DD，避免時區位移
+  const m = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (m) return `${m[1]}/${m[2]}/${m[3]}`;
+
+  const dt = new Date(s);
+  if (!isNaN(dt.getTime())) {
+    const y = dt.getFullYear();
+    const mm = String(dt.getMonth() + 1).padStart(2, '0');
+    const dd = String(dt.getDate()).padStart(2, '0');
+    return `${y}/${mm}/${dd}`;
+  }
+  return s;
+};
+money = (val: any) => Number(val || 0).toLocaleString('en-US');
+// 👇 放在 component 內
+private makeBackendTotalRow(src: any) {
+  return {
+    _rowKey: '__TOTAL__',          // 方便辨識 & 做樣式
+    tlt_name: '總計',              // 你要顯示標題的欄位：可改成別欄
+    PLU_SalePrc: Number(src?.Subtotal_PLU_SalePrc ?? 0),
+    TXN_Net:     Number(src?.Subtotal_TXN_Net      ?? 0),
+    TXN_Tax:     Number(src?.Subtotal_TXN_Tax      ?? 0),
+    TXN_Disc:    Number(src?.Subtotal_TXN_Disc     ?? 0),
+    __isBackendTotal: true,        // 特殊旗標，方便禁用勾選/動作
+  };
+}
+
 
   // columns（修正名稱＆保留你原本格式器）
-  columns: any[] = [
-    {
-      field: 'TXN_Date',
-      header: '銷售日期',
-      visible: true,
-      format: (val: string) => {
-        const date = new Date(val);
-        return isNaN(date.getTime())
-          ? val
-          : `${date.getFullYear()}/${(date.getMonth() + 1).toString().padStart(2, '0')}/${date.getDate().toString().padStart(2, '0')}`;
-      },
-    },
+  columns: any[] = [ 
+    { field: 'TXN_Date',header: '銷售日期',visible: true,format: this.formatYMD    },
     { field: 'ECR_No', header: '收銀機號', visible: true },
     { field: 'TXN_No', header: '交易序號', visible: true },
     { field: 'tlt_no', header: '專櫃編號', visible: true },
     { field: 'tlt_name', header: '櫃位名稱', visible: true, style: 'text-left' },
     { field: 'TXN_GUINo', header: '發票號碼', visible: true },
-    {
-      field: 'PLU_SalePrc', header: '單項售價', visible: true,
-      style: 'text-right',
-      format: (val: number) => val?.toLocaleString('en-US') || '0',
-    },
-    {
-      field: 'TXN_Net', header: '未稅(免稅)金額', visible: true,
-      style: 'text-right',
-      format: (val: number) => val?.toLocaleString('en-US') || '0',
-    },
-    {
-      field: 'TXN_Tax', header: '稅額', visible: true,
-      style: 'text-right',
-      format: (val: number) => val?.toLocaleString('en-US') || '0',
-    },
-    {
-      field: 'TXN_Disc', header: '折扣金額', visible: true,
-      style: 'text-right',
-      format: (val: number) => val?.toLocaleString('en-US') || '0',
-    },
-    {
-      field: 'tlt_id',
-      header: '商品抽成類別',
-      visible: true,
-      format: (val: any) => this.getLabelFromOptions(val, this.deductionbigCategoryOptions),
-    },
+    { field: 'PLU_SalePrc', header: '單項售價', visible: true,style: 'text-right',format:this.money},
+    { field: 'TXN_Net', header: '未稅(免稅)金額', visible: true, style: 'text-right',format:this.money,},
+    { field: 'TXN_Tax', header: '稅額', visible: true,style: 'text-right',format:this.money},
+    { field: 'TXN_Disc', header: '折扣金額', visible: true,style: 'text-right',format:this.money},
+    { field: 'tlt_id_desc',header: '商品抽成類別',visible: true},
     // {
     //   field: 'ORG_TXN_DiscCode', header: '原折扣', visible: true,
     //   format: (val: any) => this.getLabelFromOptions(val, this.discountOptions),
     // },
-    {
-      field: 'TXN_DiscCode', header: '歸屬折扣', visible: true,
-      format: (val: any) => this.getLabelFromOptions(val, this.discountOptions),
-    },
-    {
-      field: 'PLU_TaxType',
-      header: '稅別',
-      visible: true,
-      format: (val: any) => this.getLabelFromOptions(val, this.taxableOptions),
-    },
+    { field: 'TXN_DiscCode', header: '歸屬折扣代號', visible: true},
+    { field: 'TXN_DiscName', header: '歸屬折扣名稱', visible: true},
+    { field: 'PLU_TaxType',header: '稅別代號',visible: true},
+    { field: 'PLU_TaxTypeName',header: '稅別名稱',visible: true},
     { field: 'PLU_MagNo', header: '單品編號', visible: true },
-    {
-      field: 'TXN_Status',
-      header: '狀態',
-      visible: true,
-      format: (val: any) => this.getLabelFromOptions(val, this.txnStatusOptions),
-    },
+    { field: 'TXN_StatusName',header: '狀態',visible: true},
   ];
 }

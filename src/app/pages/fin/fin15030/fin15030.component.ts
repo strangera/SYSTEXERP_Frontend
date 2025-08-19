@@ -136,9 +136,9 @@ export class FIN15030Component extends BasicQueryPageComponent<FIN15030Data> imp
 
       this.fin15030Service.queryFIN15030(requestData)
         .pipe(finalize(() => this.loading = false))
-        .subscribe(response => {
-          this.data = response.Data.FIN15030s;
-          this.totalRecords = response.Data.FIN15030s.length;
+        .subscribe((res) => {
+          this.data = res.Data;
+          this.totalRecords = res.TotalCount;
           this.queryStateService.setQueryState(this.ProgNo, frm.getRawValue());
         });
     });
@@ -165,18 +165,8 @@ export class FIN15030Component extends BasicQueryPageComponent<FIN15030Data> imp
 
     this.fin15030Service.printFIN15030(exportRequest)
       .pipe(finalize(() => this.btnLoading = false))
-      .subscribe({
-        next: (response) => {
-          if (response.Status === '0000') {
-            this.openDownloadWindow(response.Data.Print_URL);
-          } else {
-            this.messageService.errorBubble('產生報表失敗');
-          }
-        },
-        error: (error) => {
-          console.error('列印報表錯誤:', error);
-          this.messageService.errorBubble('產生報表時發生錯誤');
-        }
+      .subscribe((response) => {
+        this.openDownloadWindow(response.Data.Print_URL);
       });
   }
 

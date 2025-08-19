@@ -132,19 +132,17 @@ export class TLS23050Component extends BasicQueryPageComponent<any> {
 
   // 送出查詢
 // 送出查詢（無 doQuery / buildPayload）
+// 送出查詢（顯示 tLS23050Details）
 onSubmit(form: FormGroup): void {
   this.handleSubmit(form, () => {
     const val = this.queryForm.value as any;
 
-    // 直接在這裡組 payload（沿用 toIso）
     const payload: any = {
       ...val,
       TXN_DateStart: this.toIso(val?.TXN_DateStart),
       TXN_DateEnd:   this.toIso(val?.TXN_DateEnd),
-      // 若有序號區間且非空字串就轉數字
       TXN_No_Start:  (val?.TXN_No_Start ?? '') !== '' ? Number(val.TXN_No_Start) : undefined,
       TXN_No_End:    (val?.TXN_No_End ?? '')   !== '' ? Number(val.TXN_No_End)   : undefined,
-      // 分頁/排序沿用表單裡的（createPaginationConfig 會放進去）
       pageSize:  val?.pageSize,
       pageIndex: val?.pageIndex,
       SortBy:    val?.SortBy,
@@ -152,28 +150,32 @@ onSubmit(form: FormGroup): void {
       Offset:    val?.Offset,
     };
 
-    // 清理空值/空陣列，避免干擾後端繫結
     Object.keys(payload).forEach((k) => {
       const v = payload[k];
       if (v === '' || v === null || v === undefined) delete payload[k];
       if (Array.isArray(v) && v.length === 0) delete payload[k];
     });
 
-    // 呼叫 API
     this.loading = true;
     this.messageService?.blockUi();
 
     this.tls23050Service.queryTLS23050(payload).subscribe({
       next: (res) => {
-        const raw = res?.Data ?? [];
-        this.data = Array.isArray(raw) ? raw : [];
-        this.totalRecords = typeof res?.TotalCount === 'number'
-          ? res.TotalCount
-          : this.data.length; // ✅ 沒有 res.total
+        // 安全抓取 Data[0]，並把表格資料設為 tLS23050Details
+        const first = Array.isArray(res?.Data) && res.Data.length > 0 ? res.Data[0] : null;
+        const details = Array.isArray(first?.tLS23050Details) ? first.tLS23050Details : [];
+
+        this.data = details;
+        this.totalRecords = typeof res?.TotalCount === 'number' ? res.TotalCount : details.length;
+
+        // 如果之後要用總計可留著（不影響目前畫面顯示）
+        // this.summary = first ?? null;
       },
       error: (err) => {
         console.error('TLS23050 查詢失敗', err);
         this.messageService?.errorBubble?.('查詢失敗，請稍後再試');
+        this.data = [];
+        this.totalRecords = 0;
       },
       complete: () => {
         this.loading = false;
@@ -182,6 +184,7 @@ onSubmit(form: FormGroup): void {
     });
   });
 }
+
 
 
 // 日期轉後端要的 yyyy-MM-ddTHH:mm:ss（以本地時間為準，去掉時區偏移）

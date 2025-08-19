@@ -1,10 +1,6 @@
 <div class="flex gap-2 mb-2">
   <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
-      <app-button
-      btnType="create"
-      (click)="onCreate()"
-      
-    ></app-button>
+  <app-button btnType="create" (click)="onCreate()"></app-button>
 </div>
 <p-accordion>
   <p-accordionTab header="查詢條件" [selected]="true" class="line-height-3 m-0" [headerStyleClass]="'query-accordionTab'">
@@ -18,7 +14,7 @@
           [control]="queryForm.controls.City_Group" [submitted]="submitted"></app-input-text>
       </div>
       <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
-        <app-button btnType="clear"></app-button>
+        <app-button btnType="clear" [form]="queryForm"></app-button>
         <app-button btnType="query" [loading]="loading"></app-button>
       </div>
     </form>
@@ -29,8 +25,8 @@
     [columns]="columns" [data]="data" [loading]="loading" [showCheckBox]="true" (edit)="onEdit($event)"
     (detail)="onDetail($event)" [selectedItems]="selectedItems" (selectionChange)="selectedItems = $event"
     [showCheckBox]="true" (delete)="deleteRow($event)">
-  <header>
-    
-  </header>
+    <header>
+
+    </header>
   </app-table>
 </div>

@@ -35,9 +35,8 @@
             [options]="POS_NOSOptions" optionLabel="label" optionValue="value" [control]="queryForm.controls.ECR_NoEnd"
             [submitted]="submitted" />
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="查詢條件依據" controlName="Query_Cond" [options]="contact_type_Option"
-              optionLabel="label" optionValue="value" [control]="queryForm.controls.Query_Cond"
-              [submitted]="submitted"></app-dropdown>
+            <app-dropdown label="查詢條件依據" controlName="Query_Cond" [options]="contact_type_Option" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.Query_Cond" [submitted]="submitted"></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-radiobutton label="是否只顯示異常" groupname="Is_ShowErr" [control]="queryForm.controls.Is_ShowErr"
@@ -46,7 +45,7 @@
         </div>
         <!-- <div> -->
         <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
-          <app-button btnType="clear"></app-button>
+          <app-button btnType="clear" [form]="queryForm"></app-button>
           <app-button btnType="query" [loading]="loading"></app-button>
         </div>
         <!-- </div> -->

@@ -1,98 +1,50 @@
 <div class="card">
   <div class="flex gap-2 mb-2">
     <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
-    <app-button
-      btnType="create"
-      (click)="onCreate()"
-      label="{{ 'create' | translate }}"
-    ></app-button>
+    <app-button btnType="create" (click)="onCreate()" label="{{ 'create' | translate }}"></app-button>
   </div>
   <p-accordion>
-    <p-accordionTab
-      header="{{ 'query-conditions' | translate }}"
-      [selected]="true"
-      class="line-height-3 m-0"
-      [headerStyleClass]="'query-accordionTab'"
-    >
-      <form
-        [formGroup]="queryForm"
-        id="queryForm"
-        (ngSubmit)="onSubmit(queryForm)"
-      >
+    <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'">
+      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text-range
-              label="退出/折讓單號"
-              [startControl]="queryForm.controls.TXN_Ret_NoStart"
-              [endControl]="queryForm.controls.TXN_Ret_NoEnd"
-              [submitted]="submitted"
-            ></app-input-text-range>
+            <app-input-text-range label="退出/折讓單號" [startControl]="queryForm.controls.TXN_Ret_NoStart"
+              [endControl]="queryForm.controls.TXN_Ret_NoEnd" [submitted]="submitted"></app-input-text-range>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
-              label="字軌"
-              [control]="queryForm.controls.GUI_Track"
-              [submitted]="submitted"
-            ></app-input-text>
+            <app-input-text label="字軌" [control]="queryForm.controls.GUI_Track"
+              [submitted]="submitted"></app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text-range
-              label="發票號碼"
-              [startControl]="queryForm.controls.InvoiceNumberStart"
-              [endControl]="queryForm.controls.InvoiceNumberEnd"
-              [submitted]="submitted"
-            ></app-input-text-range>
+            <app-input-text-range label="發票號碼" [startControl]="queryForm.controls.InvoiceNumberStart"
+              [endControl]="queryForm.controls.InvoiceNumberEnd" [submitted]="submitted"></app-input-text-range>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar-range
-              calendarType="dateRange"
-              label="退出/折讓日期"
-              [startControl]="queryForm.controls.InvoiceDateStart"
-              [endControl]="queryForm.controls.InvoiceDateEnd"
-              [submitted]="submitted"
-            ></app-calendar-range>
+            <app-calendar-range calendarType="dateRange" label="退出/折讓日期"
+              [startControl]="queryForm.controls.InvoiceDateStart" [endControl]="queryForm.controls.InvoiceDateEnd"
+              [submitted]="submitted"></app-calendar-range>
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="發票格式"
-              controlName="InvoiceType"
-              [options]="PUR_VoucherTypeOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.InvoiceType"
-              [submitted]="submitted"
-            ></app-dropdown>
+            <app-dropdown label="發票格式" controlName="InvoiceType" [options]="PUR_VoucherTypeOptions" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.InvoiceType" [submitted]="submitted"></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-query-year-month
-              [label]="'申報年月'"
-              [control]="queryForm.controls.INV_DeclareYM"
-              [submitted]="submitted"
-              [onlyOddMonths]="true"
-            ></app-query-year-month>
+            <app-query-year-month [label]="'申報年月'" [control]="queryForm.controls.INV_DeclareYM" [submitted]="submitted"
+              [onlyOddMonths]="true"></app-query-year-month>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text-range
-              label="憑證單號"
-              [startControl]="queryForm.controls.Source_Doc_NoStart"
-              [endControl]="queryForm.controls.Source_Doc_NoEnd"
-              [submitted]="submitted"
-            ></app-input-text-range>
+            <app-input-text-range label="憑證單號" [startControl]="queryForm.controls.Source_Doc_NoStart"
+              [endControl]="queryForm.controls.Source_Doc_NoEnd" [submitted]="submitted"></app-input-text-range>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text-range
-              label="傳票編號"
-              [startControl]="queryForm.controls.Voucher_NoStart"
-              [endControl]="queryForm.controls.Voucher_NoEnd"
-              [submitted]="submitted"
-            ></app-input-text-range>
+            <app-input-text-range label="傳票編號" [startControl]="queryForm.controls.Voucher_NoStart"
+              [endControl]="queryForm.controls.Voucher_NoEnd" [submitted]="submitted"></app-input-text-range>
           </div>
         </div>
-        <div
-          class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
-        >
-          <app-button btnType="clear"></app-button>
+        <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+          <app-button btnType="clear" [form]="queryForm"></app-button>
           <app-button btnType="query" [loading]="loading"></app-button>
         </div>
       </form>
@@ -101,21 +53,8 @@
 </div>
 
 <div class="card">
-  <app-table
-    tableKey="FIN13020"
-    [data]="data"
-    [columns]="columns"
-    dataKey="PUR_RepYYYYMM"
-    [multiSortMeta]="[{ field: 'PUR_RepYYYYMM', order: 1 }]"
-    [totalRecords]="totalRecords"
-    [lazy]="true"
-    [loading]="loading"
-    (edit)="onEdit($event)"
-    (detail)="onDetail($event)"
-    [showManage]="true"
-    [showDelete]="true"
-    [showCheckBox]="true"
-    (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"
-  ></app-table>
+  <app-table tableKey="FIN13020" [data]="data" [columns]="columns" dataKey="PUR_RepYYYYMM"
+    [multiSortMeta]="[{ field: 'PUR_RepYYYYMM', order: 1 }]" [totalRecords]="totalRecords" [lazy]="true"
+    [loading]="loading" (edit)="onEdit($event)" (detail)="onDetail($event)" [showManage]="true" [showDelete]="true"
+    [showCheckBox]="true" (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"></app-table>
 </div>
-

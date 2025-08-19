@@ -225,7 +225,7 @@
   </ng-template>
   <ng-template *ngIf="expansionColumns.length" pTemplate="rowexpansion" let-rowData>
     <tr id="expansion-row">
-      <td [attr.colspan]="expansionColumns.length">
+      <td [attr.colspan]="getVisibleHeaderCount + 1">
         <app-table-expansion [rowData]="rowData" [expansionDataKey]="expansionDataKey"
           [expansionColumns]="expansionColumns" [expansionMultiSortMeta]="expansionMultiSortMeta"
           [showPaginator]="expansionShowPaginator" [rows]="expansionRows" [scrollHeight]="expansionScrollHeight"
@@ -236,7 +236,7 @@
   </ng-template>
   <ng-template pTemplate="emptymessage">
     <div class="flex flex-wrap justify-content-center min-h-full" [ngStyle]="{ height: '62px' }">
-      <p class="empty-message text-xl font-bold text-center">
+      <p class="empty-message text-xl font-bold text-center" [ngStyle]="columnGroup ? { top: '77%' } : { top: '66%' }">
         {{ emptyMessage }}
       </p>
     </div>

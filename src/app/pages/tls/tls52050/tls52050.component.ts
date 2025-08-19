@@ -20,6 +20,7 @@ import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-ra
 import { CheckboxModule } from 'primeng/checkbox';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { TranslateModule } from '@ngx-translate/core';
+import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
 export const enum MAMStatus {
   已申請 = '0',
   已審核 = '1',
@@ -43,7 +44,7 @@ export const enum MAMStatus {
     InputTextComponent,
     DropdownComponent,
     MultiSelectComponent,
-    CalendarRangeComponent,
+    CalendarRangeQuickComponent,
     CheckboxModule,
     TableComponent,
     TranslateModule,
