@@ -15,7 +15,7 @@
                     [headerStyleClass]="'query-accordionTab'">
       <form [formGroup]="queryForm"
             id="queryForm"
-            (ngSubmit)="onSubmit(queryForm)">
+            (ngSubmit)="onSubmit()">
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
             <app-multi-select label="能源類型"
@@ -61,7 +61,7 @@
         <app-button btnType="clear"
                     (click)="onClear()"></app-button>
         <app-button btnType="query"
-                    (click)="onSubmitQuery()"
+                    (click)="onSubmit()"
                     [loading]="loading"></app-button>
       </div>
     </p-accordionTab>

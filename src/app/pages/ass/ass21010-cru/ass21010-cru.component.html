@@ -13,7 +13,7 @@
            class="line-height-3 m-0">
     <form [formGroup]="dataForm"
           id="dataForm"
-          (ngSubmit)="onSubmit(dataForm)">
+          (ngSubmit)="onSubmit()">
       <div class="grid p-fluid">
         <div class="col-12 md:col-6 lg:col-4">
           <app-multi-select label="能源類型"
@@ -147,9 +147,29 @@
                     (click)="onClear()"
                     *ngIf="!isFormReadable"></app-button>
         <app-button btnType="submit"
-                    (click)="onSubmitQuery()"
+                    (click)="onSubmit()"
                     *ngIf="!isFormReadable"></app-button>
       </div>
     </div>
   </p-panel>
+</div>
+
+
+<div class="card">
+  <div class="grid p-fluid">
+    <div class="col-12">
+      <p-panel header="資料"
+               class="line-height-3 m-0 mb-3">
+        <app-table [showCheckBox]="true"
+                   [showRowEdit]="true"
+                   [alwaysEdit]="true"
+                   [alwaysBlurValidate]="true"
+                   [insertRowData]="true"
+                   [data]="service.ASS21010Detail()"
+                   [dataKey]="'tlt_no'"
+                   [tableKey]="'ASS21010_Counter'"
+                   [columns]="columns"></app-table>
+      </p-panel>
+    </div>
+  </div>
 </div>

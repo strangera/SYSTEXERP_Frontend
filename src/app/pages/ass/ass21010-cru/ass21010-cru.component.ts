@@ -4,15 +4,15 @@ import { Component, OnInit, computed, effect } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
-import { ASS21010Service } from '@service/api/ass/ass21010.service';
+import { ASS21010Service, EngType } from '@service/api/ass/ass21010.service';
 import { MenubarComponent } from '@shared/component/menubar/menubar.component';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
 import { ButtonComponent } from '@shared/componentkit/button/button.component';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
-import { EditorTextComponent } from '@shared/componentkit/editor-text/editor-text.component';
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
 import { InputTextareaComponent } from '@shared/componentkit/input-textarea/input-textarea.component';
 import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
+import { TableComponent } from '@shared/componentkit/table/table.component';
 import { Column } from '@shared/componentkit/table/table.model';
 import { PanelModule } from 'primeng/panel';
 
@@ -20,26 +20,26 @@ import { PanelModule } from 'primeng/panel';
   selector: 'app-ass21010-cru',
   templateUrl: './ass21010-cru.component.html',
   styleUrl: './ass21010-cru.component.scss',
-  standalone: true,
+  standalone: !0,
   imports: [
     NgIf,
-    PanelModule,
-    TranslateModule,
     FormsModule,
+    PanelModule,
     ReactiveFormsModule,
-    InputTextComponent,
-    DropdownComponent,
-    MenubarComponent,
-    EditorTextComponent,
+    TranslateModule,
     ButtonComponent,
-    MultiSelectComponent,
+    DropdownComponent,
+    InputTextComponent,
     InputTextareaComponent,
+    MenubarComponent,
+    MultiSelectComponent,
+    TableComponent,
   ]
 })
 export class ASS21010CRUComponent extends BasicCruPageComponent<unknown> implements OnInit {
 
   public readonly dataForm = this.formBuilder.nonNullable.group({
-    eng_type: new FormControl<string[]>([], [Validators.required]),
+    eng_type: new FormControl<EngType[]>([], [Validators.required]),
     eng_meterNo: new FormControl<string>('', [Validators.required, Validators.minLength(5), Validators.maxLength(5)]),
     location_no: new FormControl<string[]>([], [Validators.required]),
     eng_remark: new FormControl<string>('', [Validators.maxLength(500)]),
@@ -48,6 +48,14 @@ export class ASS21010CRUComponent extends BasicCruPageComponent<unknown> impleme
 
   // 變化追蹤
   private readonly dfSignal = toSignal(this.dataForm.valueChanges);
+  private readonly engTypeSignal = toSignal(this.df().eng_type.valueChanges);
+
+  public readonly engTypeEffect = effect(() => {
+    const types = this.engTypeSignal();
+    if (!types?.length) return;
+    this.service.loadEngMeterNo(types);
+    console.log(`Engine type changes:`, [types]);
+  });
 
   public readonly columns: Column[] = [
     { field: 'eng_type', header: '能源類型' },
@@ -71,23 +79,18 @@ export class ASS21010CRUComponent extends BasicCruPageComponent<unknown> impleme
     this.initializePage('ASS21010', this.dataForm);
 
     this.service.loadEngType();
-    this.service.loadEngMeterNo();
     this.service.loadLocationNo();
   }
 
-  public onSubmitQuery(): void {
-    console.log(`submit:`, [this.dataForm.value]);
-    this.onSubmit(this.dataForm);
-  };
+  public onSubmit(): void {
+    this.handleSubmit(this.dataForm, () => {
 
-  onSubmit(frm: FormGroup): void {
-    this.handleSubmit(frm, () => {
-
+      this.loading = !1;
     });
   }
 
-  onClear(): void {
-    this.dataForm.reset(); // 重置表單
+  public onClear(): void {
+    this.dataForm.reset();
   }
 
 

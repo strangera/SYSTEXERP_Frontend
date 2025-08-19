@@ -1,13 +1,12 @@
 
 import { Component, computed, effect, OnInit } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { FormControl, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
-import { ASS21010Service } from '@service/api/ass/ass21010.service';
+import { ASS21010Service, EngType } from '@service/api/ass/ass21010.service';
 import { MenubarComponent } from '@shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '@shared/componentkit/button/button.component';
-import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
 import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
 import { TableComponent } from '@shared/componentkit/table/table.component';
@@ -18,7 +17,7 @@ import { AccordionModule } from 'primeng/accordion';
   selector: 'app-ass21010',
   templateUrl: './ass21010.component.html',
   styleUrl: './ass21010.component.scss',
-  standalone: true,
+  standalone: !0,
   imports: [
     AccordionModule,
     FormsModule,
@@ -27,7 +26,6 @@ import { AccordionModule } from 'primeng/accordion';
     MenubarComponent,
     ButtonComponent,
     InputTextComponent,
-    DropdownComponent,
     MultiSelectComponent,
     TableComponent,
   ],
@@ -35,33 +33,26 @@ import { AccordionModule } from 'primeng/accordion';
 export class ASS21010Component extends BasicQueryPageComponent<unknown> implements OnInit {
 
   public queryForm = this.formBuilder.group({
-    eng_type: new FormControl<string[]>([]),
-    eng_meterNo: new FormControl<string[]>([]),
-    location_no: new FormControl<string[]>([]),
-    eng_remark: new FormControl<string>(''),
-    // bigCategoryCode: new FormControl([]),
-    // midCategoryCode: new FormControl([]),
-    // smallCategoryCode: new FormControl([]),
-    // Querybystatus: new FormControl([]),
-    // propertynumber: new FormControl([]),
-    // propertytype: new FormControl([]),
-    // Itemnumber: new FormControl([]),
-    // Sdate: new FormControl([]),
-    // Edate: new FormControl([]),
-    // Departmentcode: new FormControl([]),
-    // Kurabe: new FormControl([]),
-    // code: new FormControl([]),
-    // floor: new FormControl([]),
-    // location: new FormControl([]),
-    // illustrate: new FormControl([]),
-    // Placementinstructions: new FormControl([]),
+    eng_type: new FormControl<EngType[] | undefined>(void 0),
+    eng_meterNo: new FormControl<string[] | undefined>(void 0),
+    location_no: new FormControl<string[] | undefined>(void 0),
+    eng_remark: new FormControl<string | undefined>(void 0),
   });
   public readonly qf = computed(() => this.queryForm.controls);
 
-  private readonly dfChanges = toSignal(this.queryForm.valueChanges);
+  // 變化追蹤
+  private readonly qfSignal = toSignal(this.queryForm.valueChanges);
+  private readonly engTypeSignal = toSignal(this.qf().eng_type.valueChanges);
+
+  public readonly engTypeEffect = effect(() => {
+    const types = this.engTypeSignal();
+    if (!types?.length) return;
+    this.service.loadEngMeterNo(types);
+    console.log(`Engine type changes:`, [types]);
+  });
 
   public readonly queryEffect = effect(() => {
-    const data = this.dfChanges();
+    const data = this.qfSignal();
     console.log(`Query form changes:`, [data]);
   });
 
@@ -78,7 +69,7 @@ export class ASS21010Component extends BasicQueryPageComponent<unknown> implemen
   // location: any[] = [];
   // filteredData: any[] = [...this.data];
   // columns: any[] = [
-  //   { field: 'slotLocationCode', header: '錢號位置編號', visible: true },
+  //   { field: 'slotLocationCode', header: '錶號位置編號', visible: true },
   //   { field: 'floor', header: '樓層', visible: true },
   //   { field: 'zone', header: '區域', visible: true },
   //   { field: 'xCoordinate', header: '平面圖X座標', visible: true },
@@ -183,7 +174,6 @@ export class ASS21010Component extends BasicQueryPageComponent<unknown> implemen
     this.initializePage('ASS21010', '/ASS/ASS21010CRU', this.queryForm, this.onSubmit.bind(this));
 
     this.service.loadEngType();
-    this.service.loadEngMeterNo();
     this.service.loadLocationNo();
     this.service.loadASS21010({});
 
@@ -210,14 +200,10 @@ export class ASS21010Component extends BasicQueryPageComponent<unknown> implemen
     return !0;
   }
 
-  public onSubmitQuery(): void {
-    console.log(`submit:`, [this.queryForm.value]);
-    this.onSubmit(this.queryForm);
-  };
+  onSubmit() {
+    this.handleSubmit(this.queryForm, () => {
 
-  onSubmit(frm: FormGroup) {
-    this.handleSubmit(frm, () => {
-
+      this.loading = !1;
     });
   }
 
