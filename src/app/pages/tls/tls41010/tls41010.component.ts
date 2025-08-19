@@ -26,6 +26,7 @@ import { TranslateModule } from '@ngx-translate/core';
 import { DialogComponent } from '../../../shared/componentkit/dialog/dialog.component';
 import { QueryTLS41010Request } from '../../../service/api/tls/tls41010.service';
 import { NgIf } from '@angular/common';
+import { CounterNameService } from '../../../service/basic/counter-name.service';
 
 @Component({
   selector: 'app-tls41010',
@@ -89,10 +90,14 @@ export class TLS41010Component extends BasicQueryPageComponent<TLS41010Data> imp
     Source_ECR_No: ['', [Validators.required]],
     Target_ECR_No: ['', [Validators.required]],
   });
+  SrvIPOptions: IDropdownItem[] = [];
 
+  CashierOptions: IDropdownItem[] = [];
   dialogSelectItem: TLS41010Data | null = null;
   dialogSelectTargetItem: TLS41010Data | null = null;
   dialogOptions: { No?: string; Name?: string; label?: string }[] = [];
+  CounterOptions: any[] = [];
+  LocOptions: IDropdownItem[] = [];
 
   addButton: AddButton[] = [
     {
@@ -111,6 +116,7 @@ export class TLS41010Component extends BasicQueryPageComponent<TLS41010Data> imp
     private tls46020Service: TLS46020Service,
     private tls11010Service: Tls11010Service,
     private dropDownListService: DropDownListService,
+    private counterNameService: CounterNameService,
     private Router: Router,
     private http: HttpClient
   ) {
@@ -171,23 +177,70 @@ export class TLS41010Component extends BasicQueryPageComponent<TLS41010Data> imp
 
   ngOnInit(): void {
     this.initializePage('TLS41010', 'TLS/TLS41010cru', this.queryForm, (form) => this.onSubmit(form));
+    this.counterNameService.getCounters().subscribe((res) => {
+      this.CounterOptions =
+        res?.map((x: any) => ({
+          No: x.value,              // 編號
+          Name: x.label,            // 名稱
+          formLabel: `${x.value} - ${x.label}`, // 下拉顯示
+          value: x.value            // 存值
+        })) || [];
+    });
+    this.queryForm.get('ECR_TLT_No')?.valueChanges.subscribe((selectedNo) => {
+      const selected = this.CounterOptions.find((c) => c.value === selectedNo);
+      this.queryForm.patchValue(
+        {
+          ECR_TLT_Name: selected ? selected.Name : ''
+        },
+        { emitEvent: false }
+      );
+    });
 
+    //後台主機ip
+    this.dropDownListService.queryPOS10015_DropDownList().subscribe(res => {
+      if (res?.Data) {
+        this.SrvIPOptions = res.Data.map(item => ({
+          No: item.No,
+          Name: item.Name,
+          label: item.No,   // 顯示 IP (或改成 item.Name)
+          value: item.No    // 存 IP 編號
+        }));
+      }
+    });
     this.queryForm.get('ECR_SrvIP')?.valueChanges.subscribe((ip) => {
       if (ip) {
         this.callOtherApi(ip);
       }
     });
-
-    this.dropDownListService.queryPOS1002TML_DropDownList().subscribe(option => {
-      this.ECR_TmplNo_Option = option.Data;
+    // 環境變數下拉選單
+    this.dropDownListService.queryPOS1002TML_DropDownList().subscribe(res => {
+      if (res?.Data) {
+        this.ECR_TmplNo_Option = res.Data.map(item => ({
+          No: item.No,
+          Name: item.Name,
+          label: item.No,     // 下拉顯示
+          value: item.No      // 下拉值
+        }));
+      }
     });
+
 
     this.queryForm.get('ECR_TmplNo')?.valueChanges.subscribe((tmplNo) => {
       if (tmplNo) {
         this.callTLS46020Api(tmplNo);
       }
     });
-
+    //收銀員下拉選單
+    this.dropDownListService.queryPOS2001_DropDownList().subscribe(res => {
+      if (res?.Data) {
+        this.CashierOptions = res.Data.map(item => ({
+          No: item.No,
+          Name: item.Name,
+          label: `${item.No} - ${item.Name}`, // 顯示時更清楚
+          value: item.No
+        }));
+      }
+    });
     this.locationOptionsService.getFloorOptions().subscribe({
       next: (res) => {
         this.floorOptions = res.map((item: any) => ({
@@ -209,6 +262,17 @@ export class TLS41010Component extends BasicQueryPageComponent<TLS41010Data> imp
         label: `${item.Name}`,
       }));
     });
+    //位置編號
+    this.dropDownListService.queryPOS2002_DropDownList().subscribe(res => {
+      if (res?.Data) {
+        this.LocOptions = res.Data.map(item => ({
+          No: item.No,
+          Name: item.Name,
+          label: `${item.No} - ${item.Name}`,
+          value: item.No
+        }));
+      }
+    });
   }
   //  Submit 查詢
   onSubmit(frm: FormGroup) {
@@ -222,12 +286,15 @@ export class TLS41010Component extends BasicQueryPageComponent<TLS41010Data> imp
             if (typeof item.ECR_SettleHHNN === 'string' && item.ECR_SettleHHNN.length === 4) {
               dateValue = new Date(`1970-01-01T${item.ECR_SettleHHNN.substring(0, 2)}:${item.ECR_SettleHHNN.substring(2, 4)}:00`);
             }
-
+            // 找對應的櫃位
+            const counter = this.CounterOptions.find(c => c.No === item.ECR_TLT_No);
             return {
               ...item,
               ECR_SettleHHNN: dateValue,
+              ECR_TLT_Name: counter ? counter.Name : item.ECR_TLT_Name
             };
           });
+
           this.totalRecords = res.TotalCount;
           this.queryStateService.setQueryState(this.ProgNo, frm);
         });

@@ -244,6 +244,15 @@ export class TLS23010Component
     const day = String(d.getDate()).padStart(2, '0');
     return `${y}-${m}-${day}`;
   }
+  formatISOToHHMMSS = (val: string): string => {
+  if (!val) return '';
+  const d = new Date(val);
+  if (isNaN(d.getTime())) return '';
+  const hh = String(d.getHours()).padStart(2,'0');
+  const mm = String(d.getMinutes()).padStart(2,'0');
+  const ss = String(d.getSeconds()).padStart(2,'0');
+  return `${hh}:${mm}:${ss}`;
+};
 
   private buildDetailBody(row: TLS23010Data) {
     return {
@@ -253,71 +262,89 @@ export class TLS23010Component
       TXN_No: Number(row.TXN_No),
     };
   }
+private extractQueryAndTotal(res: any) {
+  const data = res?.Data;
+
+  // 兼容：
+  // 1) Data: { QueryData: [...] , TotalCount? }
+  // 2) Data: [...]
+  // 3) 根節點就有 QueryData / TotalCount
+  const queryData =
+    (Array.isArray(data) ? data
+      : (data?.QueryData ?? data?.queryData)) ??
+    res?.QueryData ??
+    [];
+
+  const totalCount =
+    (typeof res?.TotalCount === 'number' && res.TotalCount) ||
+    (typeof data?.TotalCount === 'number' && data.TotalCount) ||
+    (Array.isArray(queryData) ? queryData.length : 0);
+
+  return {
+    list: Array.isArray(queryData) ? queryData : [],
+    total: totalCount,
+  };
+}
 
   private doQuery(): void {
-    const payload = this.buildPayload(this.queryForm.value);
-    this.loading = true;
-    this.messageService?.blockUi(); // ✅ 跟 SYSBR10 一樣查完全部再解鎖（避免用戶先點展開）
+  const payload = this.buildPayload(this.queryForm.value);
+  this.loading = true;
+  this.messageService?.blockUi();
 
-    this.tls23010Service.queryTLS23010(payload).subscribe({
-      next: (res) => {
-        const raw = res?.Data ?? [];
-        this.data = raw.map((item: any, idx: number) => ({
-          ...item,
-          _rowKey: `${item.SYS_StoreNo ?? ''}|${String(item.TXN_Date ?? '').slice(0, 19)}|${item.ECR_No ?? ''}|${item.TXN_No ?? idx}`,
-        }));
-        this.totalRecords = res?.TotalCount ?? this.data.length;
+  this.tls23010Service.queryTLS23010(payload).subscribe({
+    next: (res) => {
+      const { list, total } = this.extractQueryAndTotal(res);
 
-        // ✅ 只預抓「目前頁」的明細
-        const pageSize = this.queryForm.value.pageSize ?? 30;
-        const pageIndex = this.queryForm.value.pageIndex ?? 1;
-        const start = (pageIndex - 1) * pageSize;
-        const end = Math.min(start + pageSize, this.data.length);
-        const currentPageRows = this.data.slice(start, end);
+      // 建立 table 唯一鍵
+      this.data = list.map((item: any, idx: number) => ({
+        ...item,
+        _rowKey: `${item.SYS_StoreNo ?? ''}|${String(item.TXN_Date ?? '').slice(0, 19)}|${item.ECR_No ?? ''}|${item.TXN_No ?? idx}`,
+      }));
+      this.totalRecords = total;
 
-        // 為每列建立明細請求
-        const detailRequests = currentPageRows.map((row) =>
-          this.tls23010Service
-            .queryTLS23010Detail(this.buildDetailBody(row))
-            .pipe(
-              tap((detailRes) => {
-                // 填入 DetailList（即可被展開）
-                (row as any).DetailList = Array.isArray(detailRes)
-                  ? detailRes
-                  : detailRes?.Data ?? [];
-              }),
-            ),
-        );
+      // （可留用你原本的「只抓目前頁的明細」邏輯）
+      const pageSize = this.queryForm.value.pageSize ?? 10;
+      const pageIndex = this.queryForm.value.pageIndex ?? 1;
+      const start = (pageIndex - 1) * pageSize;
+      const end = Math.min(start + pageSize, this.data.length);
+      const currentPageRows = this.data.slice(start, end);
 
-        // 全部明細完成後再解鎖
-        if (detailRequests.length) {
-          forkJoin(detailRequests).subscribe({
-            next: () => {
-              // 觸發變更偵測（若有 OnPush）
-              this.data = [...this.data];
-              this.cdr?.markForCheck?.();
-            },
-            error: () => {
-              // 即使部分失敗也讓使用者操作
-            },
-            complete: () => {
-              this.loading = false;
-              this.messageService?.unblockUi();
-            },
-          });
-        } else {
-          this.loading = false;
-          this.messageService?.unblockUi();
-        }
-      },
-      error: (err) => {
-        console.error('TLS23010 查詢失敗', err);
+      const detailRequests = currentPageRows.map((row) =>
+        this.tls23010Service
+          .queryTLS23010Detail(this.buildDetailBody(row))
+          .pipe(
+            tap((detailRes) => {
+              (row as any).DetailList = Array.isArray(detailRes)
+                ? detailRes
+                : detailRes?.Data ?? [];
+            }),
+          ),
+      );
+
+      if (detailRequests.length) {
+        forkJoin(detailRequests).subscribe({
+          next: () => {
+            this.data = [...this.data];
+            this.cdr?.markForCheck?.();
+          },
+          error: () => {},
+          complete: () => {
+            this.loading = false;
+            this.messageService?.unblockUi();
+          },
+        });
+      } else {
         this.loading = false;
         this.messageService?.unblockUi();
-      },
-    });
-  }
-
+      }
+    },
+    error: (err) => {
+      console.error('TLS23010 查詢失敗', err);
+      this.loading = false;
+      this.messageService?.unblockUi();
+    },
+  });
+}
   /** 將日期控制項轉成後端要的 yyyy-MM-ddTHH:mm:ss（本地時間、去時區偏移） */
   private toIso(val: any): string | undefined {
     if (!val) return undefined;
@@ -428,47 +455,58 @@ nullpToYesNo = (val: unknown): string => {
   return trimmed.length === 0 ? '否' : '是';
 };
 
-  columns: any[] = [
-    { field: 'TXN_Date',header: '銷售日期',format: this.formatYMD},
-    { field: 'ECR_No', header: '收銀機號' },
-    { field: 'TXN_No', header0: '交易序號', style: 'text-right' },
-    { field: 'tlt_no', header: '專櫃編號' },
-    { field: 'tlt_name', header: '櫃位名稱', style: 'text-left' }, 
-    { field: 'TXN_Uniform', header: '統一編號' },
-    { field: 'gui_track', header: '字軌' }, 
-    { field: 'GUIBegNo', header: '發票起始號碼' },
-    { field: 'GUIEndNo', header: '發票結束號碼' },
-    { field: 'TXN_TotGUI',header: '發票金額',style: 'text-right', format: this.moneyFormat},    
-    { field: 'TXN_TotSaleAmt',header: '銷售金額',style: 'text-right',format: this.moneyFormat},
-    { field: 'TXN_TotOver',header: '溢收金額',style: 'text-right',format: this.moneyFormat},
-    { field: 'TXN_VIP',header: '外交官零稅',format: this.nyToYesNo },
-    { field: 'TXN_Mode',header: '事後登錄', format: this.pToYesNo},
-    { field: 'TXN_PreOrder',header: '預售',format:this.nullpToYesNo},
-    { field: 'TXN_StatusName',header: '交易型態',format: (val: any) =>  this.getLabelFromOptions(val, this.txnStatusOptions)},
-    { field: 'TXN_TaxFreeCertNo', header: '外交官免稅卡號'},
-    { field: 'TXN_Time',header: '交易時間',format: this.formatTimeToHHMM.bind(this),},
-    { field: 'USR_No', header: '收銀員', style: 'text-left'},
-    { field: 'TXN_PreOrderNo', header: '預售/訂金單號'},
-    { field: 'ORG_TXN_Date', header: '原交易日期'},
-    { field: 'ORG_ECR_No', header: '原收銀機號'},
-    { field: 'ORG_TXN_No', header: '原交易序號'},
-    { field: 'TXN_PkngUID', header: '停車車牌'},
-    { field: 'TXN_MemID', header: '會員卡號'},
-    { field: 'TXN_TotDisc',header: '折扣/讓金額',style: 'text-right',format: this.moneyFormat},
-    { field: 'TXN_YN',header: '銷貨清單列印狀態',format: () => '是',},
-    { field: 'TXN_DonateType',header: '捐贈狀態',format: (val: any) => this.getLabelFromOptions(val, this.whetherOptions),},
-    { field: 'TXN_GUILoveCode', header: '捐贈社福團體代碼' },
-    { field: 'TXN_GUIRemark', header: '防偽隨機碼' },
-    { field: 'TXN_GUI_CarrType',header: '載具種類',format: (val: any) =>  this.getLabelFromOptions(val, this.carrierTypeOptions),},
-    { field: 'DonateType', header: '捐贈類別' },
-    { field: 'TXN_GUI_CarrId', header: '共通性載具號碼' },
-    { field: 'TXN_PrintTimes', header: '發票列印時間' },
-    { field: 'TXN_PrintGUI',header: '電子發票是否列印', format: (val: any) => this.getYesNoLabel(val),},
-    { field: 'CRD_Type', header: '信用卡別' },
-    { field: 'CRD_No', header: '號碼' },
-    { field: 'TERM_No', header: '分期期數' },
-    { field: 'TXN_PayAmt', header: '金額' },
-  ];
+ columns = [
+  { field: 'TXN_Date',       header: '銷售日期',      visible: true, format: this.formatYMD },
+  { field: 'ECR_No',         header: '收銀機號',      visible: true },
+  { field: 'TXN_No',         header: '交易序號',      visible: true, style: 'text-right' },
+  { field: 'tlt_no',         header: '專櫃編號',      visible: true },
+  { field: 'tlt_name',       header: '櫃位名稱',      visible: true, style: 'text-left' },
+  { field: 'TXN_Uniform',    header: '統一編號',      visible: true },
+  { field: 'gui_track',      header: '字軌',         visible: true },
+  { field: 'GUIBegNo',       header: '發票起始號碼',   visible: true },
+  { field: 'GUIEndNo',       header: '發票結束號碼',   visible: true },
+  { field: 'TXN_TotGUI',     header: '發票金額',      visible: true, style: 'text-right', format: this.moneyFormat },
+  { field: 'TXN_TotSaleAmt', header: '銷售金額',      visible: true, style: 'text-right', format: this.moneyFormat },
+  { field: 'TXN_TotOver',    header: '溢收金額',      visible: true, style: 'text-right', format: this.moneyFormat },
+
+  { field: 'TXN_VIP',        header: '外交官零稅',     visible: true, format: this.nyToYesNo },
+  { field: 'TXN_Mode',       header: '事後登錄',      visible: true, format: this.pToYesNo },
+  { field: 'TXN_PreOrder',   header: '預售',         visible: true, format: this.nullpToYesNo },
+
+  { field: 'TXN_StatusName', header: '交易型態',      visible: true },
+  { field: 'TXN_TaxFreeCertNo', header: '外交官免稅卡號', visible: true },
+
+  { field: 'TXN_Time',       header: '交易時間',      visible: true, format: this.formatISOToHHMMSS },
+  { field: 'USR_No',         header: '收銀員',       visible: true, style: 'text-left' },
+  { field: 'TXN_PreOrderNo', header: '預售/訂金單號',  visible: true },
+
+  { field: 'ORG_TXN_Date',   header: '原交易日期',     visible: true, format: this.formatYMD },
+  { field: 'ORG_ECR_No',     header: '原收銀機號',     visible: true },
+  { field: 'ORG_TXN_No',     header: '原交易序號',     visible: true, style: 'text-right' },
+
+  { field: 'TXN_PkngUID',    header: '停車車牌',      visible: true },
+  { field: 'TXN_MemID',      header: '會員卡號',      visible: true },
+
+  { field: 'TXN_TotDisc',    header: '折扣/讓金額',    visible: true, style: 'text-right', format: this.moneyFormat },
+
+  { field: 'GUILoveStatus',  header: '捐贈狀態',      visible: true,format: this.nyToYesNo },
+  { field: 'TXN_GUILoveCode',header: '捐贈社福團體代碼', visible: true },
+  { field: 'TXN_GUIRemark',  header: '防偽隨機碼',     visible: true },
+
+  { field: 'TXN_GUI_CarrType', header: '載具種類',     visible: true, format: (v: any) => this.getLabelFromOptions(v, this.carrierTypeOptions) },
+  { field: 'DonateType',     header: '捐贈類別',      visible: true },
+  { field: 'TXN_GUI_CarrId', header: '共通性載具號碼',  visible: true },
+
+  { field: 'TXN_PrintTimes', header: '發票列印次數',    visible: true, style: 'text-right' },
+  { field: 'TXN_PrintGUI',   header: '電子發票是否列印', visible: true, format: this.getYesNoLabel },
+
+  { field: 'CRD_Type',       header: '信用卡別',      visible: true },
+  { field: 'CRD_Name',       header: '卡別',         visible: true },
+  { field: 'CRD_No',         header: '號碼',         visible: true, format: (v: string) => (v ? `**** ${v.slice(-4)}` : '') },
+  { field: 'TERM_No',        header: '分期期數',      visible: true, style: 'text-right' },
+  { field: 'TXN_PayAmt',     header: '金額',         visible: true, style: 'text-right', format: this.moneyFormat },
+];
+
 
   private toYMD(val: string | Date): string {
     const d = typeof val === 'string' ? new Date(val) : val;

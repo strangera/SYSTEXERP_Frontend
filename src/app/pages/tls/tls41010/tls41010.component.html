@@ -16,36 +16,33 @@
             [control]="queryForm.controls.ECR_Name" [submitted]="submitted"></app-input-text>
         </div>
         <div class="grid p-fluid">
-          <app-input-text class="col-12 md:col-6 lg:col-4" label="機台所屬專櫃編號" controlName="ECR_TLT_No"
-            [control]="queryForm.controls.ECR_TLT_No" [submitted]="submitted"></app-input-text>
-          <app-input-text class="col-12 md:col-6 lg:col-4" label="機台所屬專櫃名稱" controlName="ECR_TLT_Name"
-            [control]="queryForm.controls.ECR_TLT_Name" [submitted]="submitted"></app-input-text>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown label="機台所屬專櫃編號" controlName="ECR_TLT_No" [control]="queryForm.controls.ECR_TLT_No"
+              [options]="CounterOptions" optionLabel="formLabel" optionValue="value"
+              [submitted]="submitted"></app-dropdown>
+          </div>
         </div>
-        <hr />
+
         <div class="grid p-fluid">
           <app-calendar-range class="col-12 md:col-6 lg:col-4" label="啟用日期"
             [startControl]="queryForm.controls.ECR_ActiveDateStart" [endControl]="queryForm.controls.ECR_ActiveDateEnd"
-            calendarType="dateRange" [submitted]="submitted">
-          </app-calendar-range>
+            calendarType="dateRange" [submitted]="submitted"></app-calendar-range>
 
           <app-calendar-range class="col-12 md:col-6 lg:col-4" label="停用日期"
             [startControl]="queryForm.controls.ECR_CloseDateStart" [endControl]="queryForm.controls.ECR_CloseDateEnd"
-            calendarType="dateRange" [submitted]="submitted">
-          </app-calendar-range>
-
+            calendarType="dateRange" [submitted]="submitted"></app-calendar-range>
 
           <app-dropdown class="col-12 md:col-6 lg:col-4" label="收銀機狀態" controlName="ECR_Status"
             [options]="statusOptions" optionLabel="label" optionValue="value" [control]="queryForm.controls.ECR_Status"
             [submitted]="submitted"></app-dropdown>
 
-
           <app-multi-select class="col-12 md:col-6 lg:col-4" label="樓層" controlName="ECR_SubGroup"
             [options]="floorOptions" [control]="queryForm.controls.ECR_SubGroup"
             [submitted]="submitted"></app-multi-select>
-
-          <app-dropdown class="col-12 md:col-6 lg:col-4" label="位置編號" controlName="ECR_LocNo"
-            [control]="queryForm.controls.ECR_LocNo" [submitted]="submitted"></app-dropdown>
-
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown label="位置編號" controlName="ECR_LocNo" [control]="queryForm.controls.ECR_LocNo"
+              [options]="LocOptions" optionLabel="Name" optionValue="No" [submitted]="submitted"></app-dropdown>
+          </div>
           <app-dropdown class="col-12 md:col-6 lg:col-4" label="機台類型" controlName="ECR_Type"
             [control]="queryForm.controls.ECR_Type" [options]="typeOptions" optionLabel="label" optionValue="value"
             [submitted]="submitted"></app-dropdown>
@@ -60,9 +57,10 @@
         </div>
         <hr />
         <div class="grid p-fluid">
-          <app-input-text class="col-12 md:col-6 lg:col-4" label="機台所屬收銀員" controlName="ECR_USR_No"
-            [control]="queryForm.controls.ECR_USR_No" [submitted]="submitted"></app-input-text>
-
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown label="機台所屬收銀員" controlName="ECR_USR_No" [control]="queryForm.controls.ECR_USR_No"
+              [options]="CashierOptions" optionLabel="Name" optionValue="No" [submitted]="submitted"></app-dropdown>
+          </div>
           <app-input-text class="col-12 md:col-6 lg:col-4" label="機台所屬收銀員姓名" controlName="ECR_USR_Name"
             [control]="queryForm.controls.ECR_USR_Name" [submitted]="submitted"></app-input-text>
         </div>
@@ -74,12 +72,13 @@
             [control]="queryForm.controls.ECR_IP" [submitted]="submitted"></app-input-text>
 
           <app-dropdown class="col-12 md:col-6 lg:col-4" label="後台主機IP" controlName="ECR_SrvIP"
-            [control]="queryForm.controls.ECR_SrvIP" [submitted]="submitted"></app-dropdown>
+            [control]="queryForm.controls.ECR_SrvIP" [options]="SrvIPOptions" optionLabel="Name" optionValue="No"
+            [submitted]="submitted"></app-dropdown>
         </div>
         <hr />
         <div class="col-12 md:col-6 lg:col-4">
-          <app-dropdown label="環境變數編號" controlName="ECR_TmplNo" [control]="queryForm.controls.ECR_TmplNo"
-            [submitted]="submitted" [options]="ECR_TmplNo_Option" optionLabel="Name" optionValue="No"></app-dropdown>
+          <app-dropdown label="環境變數編號" controlName="ECR_TmplNo" [options]="ECR_TmplNo_Option" optionLabel="label"
+            optionValue="value" [control]="queryForm.controls.ECR_TmplNo" [submitted]="submitted"></app-dropdown>
         </div>
         <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
           <app-button btnType="clear" [form]="queryForm"></app-button>
@@ -94,8 +93,8 @@
   <app-table dataKey="id" [data]="data" [columns]="columns" (detail)="onDetail($event)" (edit)="onEdit($event)"
     [showCheckBox]="true" (selectionChange)="selectedItems = $event" [selectedItems]="selectedItems"
     [multiSortMeta]="[{ field: 'ECR_No', order: 1 }]" [totalRecords]="totalRecords" [addButton]="addButton"
-    (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [lazy]="true" [loading]="loading">
-  </app-table>
+    (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [lazy]="true"
+    [loading]="loading"></app-table>
 </div>
 
 <app-dialog [visible]="dialogVisible" header="複製收銀機號" (visibleChange)="dialogVisible = $event"
@@ -107,7 +106,6 @@
     <app-dropdown (changeEvent)="onDialogChange2($event)" class="flex-1" label="目標收銀機號" controlName="Target_ECR_No"
       [control]="dialogQueryForm.controls.Target_ECR_No" [options]="dialogOptions" optionLabel="label" optionValue="No"
       [submitted]="submitted"></app-dropdown>
-
   </form>
   <span class="required" *ngIf="submitted && isValid">
     無法複製到相同的收銀機號

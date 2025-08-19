@@ -6,71 +6,76 @@ import { ErrorHandlerService } from '../../system/error-handler.service';
 import { BaseQueryRequest, BaseQueryResponse } from '../../../shared/models/api/base-api.interface';
 
 export interface TLS23010QueryRequest extends BaseQueryRequest {
-  TXN_DateStart?: string;      // 交易日期起 (yyyy-MM-ddTHH:mm:ss)
-  TXN_DateEnd?: string;        // 交易日期訖 (yyyy-MM-ddTHH:mm:ss)
-  ECR_No?: string[];           // 收銀機號
-  TXN_No_Start?: number;       // 交易序號(起)
-  TXN_No_End?: number;         // 交易序號(迄)
-  TLT_No?: string[];           // 專櫃編號
-  TXN_GUIBegNo?: string;       // 發票起始號碼
-  TXN_GUIEndNo?: string;       // 發票結束號碼
-  TXN_Status?: string[];       // 交易狀態
-  TXN_FlagStatus?: string[];   // 狀態旗標
-  USR_No?: string;             // 收銀員編號
-  TXN_PreOrderNo?: string;     // 預售/訂金編號
-  TXN_PkngUID?: string;        // 停車卡號
-  TXN_MemCard?: string;        // 會員卡號
-  TXN_Uniform?: string;        // 統一編號
-  TXN_GUILoveCode?: string;    // 愛心碼
-  TXN_GUI_CarrType?: string[]; // 載具種類
-  TXN_GUI_CarrId?: string;     // 載具號碼
-  rece_yn?: 's' | '';          // 是否開立業主發票 (s/空)
-  cash_yn?: 's' | '';          // 是否為業主收現 (s/空)
-  tlt_building?: string;       // 館別
-  tlt_floor?: string[];        // 樓層
-  org_id?: string[];           // 組織代碼
+  TXN_DateStart?: string;
+  TXN_DateEnd?: string;
+  ECR_No?: string[];
+  TXN_No_Start?: number;
+  TXN_No_End?: number;
+  TLT_No?: string[];
+  TXN_GUIBegNo?: string;
+  TXN_GUIEndNo?: string;
+  TXN_Status?: string[];
+  TXN_FlagStatus?: string[];
+  USR_No?: string;
+  TXN_PreOrderNo?: string;
+  TXN_PkngUID?: string;
+  TXN_MemCard?: string;        // ✅ 後端是 TXN_MemCard (查詢用)，回傳是 TXN_MemID
+  TXN_Uniform?: string;
+  TXN_GUILoveCode?: string;
+  TXN_GUI_CarrType?: string[];
+  TXN_GUI_CarrId?: string;
+  rece_yn?: 's' | '';
+  cash_yn?: 's' | '';
+  tlt_building?: string;
+  tlt_floor?: string[];
+  org_id?: string[];
 }
 
 
 export interface TLS23010Data {
-  ID: number;                 // 流水號
-  SYS_StoreNo: string;        // 店號
-  TXN_Date: string;           // 交易日期 (ISO 字串，如 2025-08-14T03:52:25.282Z)
-  ECR_No: string;             // 收銀機號
-  TXN_No: number;             // 交易序號
-  tlt_no: string;             // 專櫃編號
-  tlt_name: string;           // 專櫃名稱
-  TXN_Uniform: string;        // 統一編號
-  TXN_GUIBegNo: string;       // 發票起始號碼 (交易層)
-  gui_track: string;          // 發票字軌
-  GUIBegNo: string;           // 發票號碼(起)
-  GUIEndNo: string;           // 發票號碼(迄)
-  TXN_TotGUI: number;         // 發票總金額
-  TXN_TotSaleAmt: number;     // 銷售總額
-  TXN_TotOver: number;        // 溢短金額(總計)
-  TXN_VIP: string;            // VIP/會員識別
-  TXN_Mode: string;           // 交易模式
-  TXN_PreOrder: string;       // 是否為預售/訂金 (Y/N 或代碼)
-  TXN_Status: string;         // 交易狀態代碼
-  TXN_StatusName: string;     // 交易狀態名稱
-  TXN_TaxFreeCertNo: string;  // 免稅證號
-  TXN_Time: string;           // 交易時間 (ISO 字串)
-  USR_No: string;             // 收銀員編號
-  TXN_PreOrderNo: string;     // 預售/訂金編號
-  ORG_TXN_Date: string;       // 原交易日期 (ISO 字串)
-  ORG_ECR_No: string;         // 原收銀機號
-  ORG_TXN_No: number;         // 原交易序號
-  TXN_PkngUID: string;        // 停車卡號
-  TXN_MemID: string;          // 會員 ID
-  TXN_TotDisc: number;        // 折扣總額
-  GUILoveStatus: string;      // 愛心捐狀態
-  TXN_GUILoveCode: string;    // 愛心碼
-  TXN_GUIRemark: string;      // 發票備註
-  TXN_GUI_CarrType: string;   // 載具種類
-  DonateType: string;         // 捐贈別
-  TXN_GUI_CarrId: string;     // 載具號碼
-  TXN_PrintTimes: number;     // 發票列印次數
-  TXN_PrintGUI: string;       // 是否補印發票 (例: "s" 表示是)
+  // ID?: number; // ⚠️回應沒有 ID，若 table 需要唯一鍵，改用 _rowKey（下方已組）
+  SYS_StoreNo: string;
+  TXN_Date: string;
+  ECR_No: string;
+  TXN_No: number;
+  tlt_no: string;
+  tlt_name: string;
+  TXN_Uniform: string;
+  TXN_GUIBegNo: string;
+  gui_track: string;
+  GUIBegNo: string;
+  GUIEndNo: string;
+  TXN_TotGUI: number;
+  TXN_TotSaleAmt: number;
+  TXN_TotOver: number;
+  TXN_VIP: string;
+  TXN_Mode: string;
+  TXN_PreOrder: string;
+  TXN_Status: string;
+  TXN_StatusName: string;
+  TXN_TaxFreeCertNo: string;
+  TXN_Time: string;
+  USR_No: string;
+  TXN_PreOrderNo: string;
+  ORG_TXN_Date: string;
+  ORG_ECR_No: string;
+  ORG_TXN_No: number;
+  TXN_PkngUID: string;
+  TXN_MemID: string;          // ✅ 回應欄位名
+  TXN_TotDisc: number;
+  GUILoveStatus: string;
+  TXN_GUILoveCode: string;
+  TXN_GUIRemark: string;
+  TXN_GUI_CarrType: string;
+  DonateType: string;
+  TXN_GUI_CarrId: string;
+  TXN_PrintTimes: number;
+  TXN_PrintGUI: string;
+  CRD_Type: string;
+  CRD_Name: string;
+  CRD_No: string;
+  TERM_No: number;
+  TXN_PayAmt: number;
 }
 @Injectable({
   providedIn: 'root'

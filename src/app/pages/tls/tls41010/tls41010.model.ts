@@ -267,8 +267,8 @@ export const columns: Column[] = [
     field: 'ECR_Type', header: '機台類型', visible: true,
     format: (value) => SystemOptionsService.getOptions('ECR_Type')?.find((v) => v.SYS_Code === value)?.SYS_Name || value
   },
-  { field: 'ECR_TLT_No', header: '機台所屬專櫃編號', visible: true },
-  { field: 'ECR_TLT_Name', header: '機台所屬專櫃名稱', visible: true },
+  { field: 'ECR_TLT_No', header: '機台所屬專櫃編號' },
+  { field: 'ECR_TLT_Name', header: '機台所屬專櫃名稱' },
   { field: 'ECR_USR_No', header: '機台所屬收銀員', visible: true },
   { field: 'ECR_USR_Name', header: '機台所屬收銀員姓名', visible: true },
   { field: 'ECR_ActiveDate', header: '啟用日期', visible: true, format: formatDate },

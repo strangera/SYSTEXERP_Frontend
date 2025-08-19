@@ -8,6 +8,8 @@ import { TLS46020Service } from '../../../service/api/tls/tls46020.service';
 import { TLS41010Data, TLS41010Item } from '../tls41010/tls41010.model';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { finalize } from 'rxjs';
+import { CounterNameService } from '../../../service/basic/counter-name.service';
+
 import {
   salTypeOptions,
   sernoTypeOptions,
@@ -169,13 +171,17 @@ export class TLS41010CRUComponent extends BasicCruPageComponent<TLS41010Data> im
   ECR_GUI_Type_Option = ECR_GUI_Type_Option;
   ECR_TmplNo_Option: IDropdownItem[] = [];
   ECR_SrvIP_Option: IDropdownItem[] = [];
-
+  CounterOptions: any[] = [];
+  CashierOptions: IDropdownItem[] = [];
+  LocOptions: IDropdownItem[] = [];
   constructor(
     public override formBuilder: FormBuilder,
     private tls46010Service: Tls46010Service,
     private tls46020Service: TLS46020Service,
     private dropDownListService: DropDownListService,
     private tls41010Service: TLS41010Service,
+    private counterNameService: CounterNameService,
+
     private route: ActivatedRoute
   ) {
     super();
@@ -183,6 +189,7 @@ export class TLS41010CRUComponent extends BasicCruPageComponent<TLS41010Data> im
 
   ngOnInit(): void {
     this.initializePage('TLS41010', this.dataForm);
+    this.counterNameService.getCounters().subscribe((res) => { this.CounterOptions = res?.map((x: any) => ({ label: x.label, formLabel: `${x.value} - ${x.label}`, value: x.value })) || []; });
 
     // Disable 一些欄位
     [
@@ -201,18 +208,55 @@ export class TLS41010CRUComponent extends BasicCruPageComponent<TLS41010Data> im
       this.dataForm.get('ECR_No')?.disable();
     }
 
-    // 下拉選單
-    this.dropDownListService.queryPOS1002TML_DropDownList().subscribe(option => {
-      this.ECR_TmplNo_Option = option.Data;
+    // 環境變數下拉選單
+    this.dropDownListService.queryPOS1002TML_DropDownList().subscribe(res => {
+      if (res?.Data) {
+        this.ECR_TmplNo_Option = res.Data.map(item => ({
+          No: item.No,
+          Name: item.Name,
+          label: item.No,     // 下拉顯示
+          value: item.No      // 下拉值
+        }));
+      }
     });
+
+
     this.dropDownListService.queryPOS10015_DropDownList().subscribe(option => {
       this.ECR_SrvIP_Option = option.Data.map(item => ({
         ...item, label: `${item.No} ${item.Name}`,
       }));
     });
+    //收銀員下拉選單
+    this.dropDownListService.queryPOS2001_DropDownList().subscribe(res => {
+      if (res?.Data) {
+        this.CashierOptions = res.Data.map(item => ({
+          No: item.No,
+          Name: item.Name,
+          label: `${item.No} - ${item.Name}`, // 顯示時更清楚
+          value: item.No
+        }));
+      }
+    });
 
+    // 綁定下拉選單選取 → 自動帶出姓名
+    this.dataForm.get('ECR_USR_No')?.valueChanges.subscribe(selectedNo => {
+      const selected = this.CashierOptions.find(c => c.No === selectedNo);
+      this.dataForm.patchValue({
+        ECR_USR_Name: selected ? selected.Name : ''
+      }, { emitEvent: false });
+    });
 
-
+    //位置編號
+    this.dropDownListService.queryPOS2002_DropDownList().subscribe(res => {
+      if (res?.Data) {
+        this.LocOptions = res.Data.map(item => ({
+          No: item.No,
+          Name: item.Name,
+          label: `${item.No} - ${item.Name}`,
+          value: item.No
+        }));
+      }
+    });
     // 監聽欄位變化
     this.dataForm.get('ECR_TmplNo')?.valueChanges.subscribe((tmplNo) => {
       if (tmplNo) this.callTLS46020Api(tmplNo);
