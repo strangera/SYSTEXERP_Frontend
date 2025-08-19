@@ -1,7 +1,8 @@
 import { Component } from '@angular/core';
 import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
+import { createPaginationConfig, formatDateToYYYY_MM_DD } from '../../../shared/componentkit/table/table.model';
+
 import { WhetherService } from '../../../service/basic/whether.service';
 import { TLS23080Service } from '../../../service/api/tls/tls23080.service';
 import { FloorService } from '../../../service/basic/floor.service';
@@ -62,13 +63,12 @@ export class TLS23080Component extends BasicQueryPageComponent<any> {
     return d;
   })();
 
-  // ✅ 陣列欄位用 control<any[]>([])
+ 
   queryForm = this.formBuilder.group({
     TXN_DateStart: [this.yesterday, [Validators.required]],
     TXN_DateEnd: [this.yesterday, [Validators.required]],
     tlt_openflag: ['Y'],
     ECR_No: [],
-
     tlt_building: [],
     tlt_floor: [],
     org_id: [],
@@ -129,31 +129,37 @@ moneyFormat(value: number): string {
 
 onSubmit(form: FormGroup): void {
   this.handleSubmit(form, () => {
-    const val = this.queryForm.value as any;
+    const val = this.queryForm.getRawValue() as any;
 
-    // 本地 ISO(yyyy-MM-ddTHH:mm:ss) — 去掉時區偏移
-    const toIso = (x: any) => {
-      if (!x) return undefined;
-      const d = typeof x === 'string' ? new Date(x) : (x as Date);
-      if (isNaN(d.getTime())) return undefined;
-      return new Date(d.getTime() - d.getTimezoneOffset() * 60000)
-        .toISOString()
-        .slice(0, 19);
-    };
+    // 由 pageIndex/pageSize 推 Offset (0-based)
+    const offset =
+      Number.isFinite(val?.pageIndex) && Number.isFinite(val?.pageSize)
+        ? Math.max(0, (val.pageIndex - 1) * val.pageSize)
+        : undefined;
 
-    // 直接在這裡組 payload（保留分頁/排序）
+    // SortMeta[] -> "field ASC,DESC..."
+    const orderBy =
+      Array.isArray(val?.SortBy) && val.SortBy.length
+        ? val.SortBy.map((s: any) => `${s.field} ${s.order === 1 ? 'ASC' : 'DESC'}`).join(',')
+        : undefined;
+
+    // 組 payload（用 YYYY-MM-DD，避免 toISOString 少一天）
     const payload: any = {
-      ...val,
-      TXN_DateStart: toIso(val?.TXN_DateStart),
-      TXN_DateEnd:   toIso(val?.TXN_DateEnd),
-      pageSize:  val?.pageSize,
-      pageIndex: val?.pageIndex,
-      SortBy:    val?.SortBy,
-      OrderBy:   val?.OrderBy,
-      Offset:    val?.Offset,
+      TXN_DateStart: formatDateToYYYY_MM_DD(val?.TXN_DateStart),
+      TXN_DateEnd:   formatDateToYYYY_MM_DD(val?.TXN_DateEnd),
+      tlt_openflag:  val?.tlt_openflag,
+      ECR_No:        val?.ECR_No,
+      tlt_building:  val?.tlt_building,
+      tlt_floor:     val?.tlt_floor,
+      org_id:        val?.org_id,
+      pageSize:      val?.pageSize,
+      pageIndex:     val?.pageIndex,
+      SortBy:        val?.SortBy,
+      ...(offset  !== undefined ? { Offset:  offset } : {}),
+      ...(orderBy ? { OrderBy: orderBy } : {}),
     };
 
-    // 移除空字串 / null / undefined / 空陣列
+    // 去除空值/空陣列
     Object.keys(payload).forEach(k => {
       const v = payload[k];
       if (v === '' || v === null || v === undefined) delete payload[k];
@@ -164,17 +170,20 @@ onSubmit(form: FormGroup): void {
     this.messageService?.blockUi();
 
     this.tls23080Service.queryTLS23080(payload).subscribe({
-      next: (res) => {
-        const raw = res?.Data ?? [];
-        this.data = Array.isArray(raw) ? raw : [];
-        this.totalRecords = typeof res?.TotalCount === 'number'
-          ? res.TotalCount
-          : this.data.length;
+      next: (res: any) => {
+        // 你的回傳：{ Status, Data: [ {...}, ... ], TotalCount, ... }
+        const list = Array.isArray(res?.Data)
+          ? res.Data
+          : (res?.Data ? [res.Data] : []);
+        this.data = list;
+        this.totalRecords =
+          typeof res?.TotalCount === 'number' ? res.TotalCount : this.data.length;
       },
       error: (err) => {
         console.error('TLS23080 查詢失敗', err);
         this.messageService?.errorBubble?.('查詢失敗，請稍後再試');
         this.loading = false;
+        this.messageService?.unblockUi();
       },
       complete: () => {
         this.loading = false;
@@ -183,6 +192,7 @@ onSubmit(form: FormGroup): void {
     });
   });
 }
+
 columns = [
   { field: 'ECR_No', header: '收銀機號', visible: true },
   { field: 'tlt_no', header: '專櫃編號', visible: true },
