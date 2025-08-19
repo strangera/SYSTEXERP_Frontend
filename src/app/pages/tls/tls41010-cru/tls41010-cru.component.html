@@ -26,21 +26,24 @@
       </div>
       <div class="grid p-fluid">
         <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text
+          <app-dropdown
             label="機台所屬專櫃編號"
             controlName="ECR_TLT_No"
             [control]="dataForm.controls.ECR_TLT_No"
+            [options]="CounterOptions"
+            optionLabel="formLabel"
+            optionValue="value"
             [submitted]="submitted"
-          ></app-input-text>
+          ></app-dropdown>
         </div>
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text
+        <!-- <div class="col-12 md:col-6 lg:col-4">
+          <app-dropdown
             label="機台所屬專櫃名稱"
             controlName="ECR_TLT_Name"
             [control]="dataForm.controls.ECR_TLT_Name"
             [submitted]="submitted"
-          ></app-input-text>
-        </div>
+          ></app-dropdown>
+        </div> -->
       </div>
       <hr />
       <div class="grid p-fluid">
@@ -67,23 +70,30 @@
           ></app-dropdown>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text
+          <app-dropdown
             label="位置編號"
             controlName="ECR_LocNo"
             [control]="dataForm.controls.ECR_LocNo"
+            [options]="LocOptions"
+            optionLabel="Name"
+            optionValue="No"
             [submitted]="submitted"
-          ></app-input-text>
+          ></app-dropdown>
         </div>
       </div>
       <div class="grid p-fluid">
         <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text
+          <app-dropdown
             label="機台所屬收銀員"
             controlName="ECR_USR_No"
             [control]="dataForm.controls.ECR_USR_No"
+            [options]="CashierOptions"
+            optionLabel="Name"
+            optionValue="No"
             [submitted]="submitted"
-          ></app-input-text>
+          ></app-dropdown>
         </div>
+
         <div class="col-12 md:col-6 lg:col-4">
           <app-input-text
             label="機台所屬收銀員姓名"
@@ -654,6 +664,8 @@
               [control]="dataForm.controls.ECR_ExtScr"
               [submitted]="submitted"
             />
+          </div>
+          <div class="grid p-fluid">
             <app-input-number
               class="col-12 md:col-6 lg:col-4"
               label="收銀外接顯示器連接埠"
@@ -661,8 +673,7 @@
               [control]="dataForm.controls.ECR_ExtScrCom"
               [submitted]="submitted"
             />
-          </div>
-          <div class="grid p-fluid">
+
             <app-input-text
               class="col-12 md:col-6 lg:col-4"
               label="客戶顯示器型態"
@@ -670,6 +681,8 @@
               [control]="dataForm.controls.ECR_CD"
               [submitted]="submitted"
             />
+          </div>
+          <div class="grid p-fluid">
             <app-input-number
               class="col-12 md:col-6 lg:col-4"
               label="客戶顯示器連接埠"
