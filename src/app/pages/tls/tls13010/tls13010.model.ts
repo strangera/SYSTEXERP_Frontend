@@ -82,7 +82,7 @@ export interface CleanContractData {
   // 🎯 重要：補齊後端期望的所有欄位
   deco_type?: string;
   money_type?: string;
-  check_type?: string;
+  check_typeList?: string[];
   edc_yn?: string;
   tlt_openflag?: string;
   comm_yn?: string;
@@ -292,6 +292,7 @@ export interface ContractDataStructure {
 export interface ContractInfo {
   id: string | number;
   talent_id: string;
+  tlt_no: string;
   apply_no: string;
   tlt_name: string;
   VEN_Name: string;
@@ -329,7 +330,7 @@ export interface ContractInfo {
   contact_Date?: string;
   deco_type?: string;
   money_type?: string;
-  check_type?: string;
+  check_typeList?: string[];
   edc_yn?: string;
   tlt_openflag?: string;
   comm_yn?: string;
@@ -603,7 +604,7 @@ export class DataCleaner {
       contact_USR_Name: rawData.contact_USR_Name,
       deco_type: rawData.deco_type,
       money_type: rawData.money_type,
-      check_type: rawData.check_type,
+      check_typeList: rawData.check_typeList || [],
       edc_yn: rawData.edc_yn,
       tlt_openflag: rawData.tlt_openflag,
       comm_yn: rawData.comm_yn,

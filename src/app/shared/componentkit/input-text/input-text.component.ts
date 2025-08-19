@@ -46,6 +46,11 @@ export class InputTextComponent extends BasicKitComponent implements OnInit {
   @Input() disabled = false;
   @Input() weightedMax: number | null = null;
 
+  @Input() autoPadZero = false; // 新增：是否自動補零
+  @Input() padLength = 16; // 新增：補零後的總長度
+  @Input() padOnBlur = true; // 新增：是否在失焦時補零（而非即時補零）
+  @Input() textAlign: 'left' | 'center' | 'right' = 'left'; // 新增：文字對齊方式
+
   @Output() clickButton = new EventEmitter<unknown>();
   @Output() inputChange = new EventEmitter<Event>();
 
@@ -82,6 +87,17 @@ export class InputTextComponent extends BasicKitComponent implements OnInit {
 
     this.atMaxLength = false;
 
+    // 如果啟用自動補零，只允許數字輸入
+    if (this.autoPadZero) {
+      // 移除非數字字符
+      value = value.replace(/\D/g, '');
+      // 限制最大長度
+      if (value.length > this.padLength) {
+        value = value.slice(0, this.padLength);
+        this.atMaxLength = true;
+      }
+    }
+
     // 處理加權長度或一般長度
     if (this.weightedMax !== null) {
       const { trimmedValue, isMaxLength } = this.inputTextService.trimToWeighted(value, this.weightedMax);
@@ -106,5 +122,31 @@ export class InputTextComponent extends BasicKitComponent implements OnInit {
 
   onClick(): void {
     this.clickButton.emit();
+  }
+
+  // 新增：處理失焦事件
+  onBlur(event: FocusEvent): void {
+    if (!this.autoPadZero || !this.padOnBlur) return;
+
+    const inputElement = event.target as HTMLInputElement;
+    let value = inputElement.value.trim();
+
+    // 如果有值且小於指定長度，則補零
+    if (value && value.length < this.padLength) {
+      value = value.padStart(this.padLength, '0');
+      this.control.setValue(value);
+      inputElement.value = value;
+    }
+  }
+
+  // 新增：處理即時補零（如果不想在失焦時補零）
+  private padZeroIfNeeded(value: string): string {
+    if (!this.autoPadZero || this.padOnBlur) return value;
+
+    // 如果值不為空且長度小於指定長度，補零
+    if (value && value.length > 0 && value.length < this.padLength) {
+      return value.padStart(this.padLength, '0');
+    }
+    return value;
   }
 }

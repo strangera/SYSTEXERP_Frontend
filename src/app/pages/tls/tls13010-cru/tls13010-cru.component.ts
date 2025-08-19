@@ -240,7 +240,7 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
     cash_yn: ['N'],
     money_type: ['', [Validators.maxLength(2)]],
     store_way: [''],
-    check_type: ['', [Validators.maxLength(10)]],
+    check_typeList: [[] as string[]],
     paytype: [''],
     vip_yn: [''],
     credit_card: [''],
@@ -261,7 +261,7 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
     store_tel: ['', [Validators.maxLength(50)]],
     bank_id: ['', [Validators.maxLength(10)]],
     vendor_acct_name: ['', [Validators.maxLength(60)]],
-    vendor_acct_no: ['', [Validators.maxLength(20)]],
+    vendor_acct_no: ['', [Validators.maxLength(16)]],
     contact_tel: ['', [Validators.maxLength(20)]],
     contact_fax: ['', [Validators.maxLength(15)]],
     contact_addr: ['', [Validators.maxLength(100)]],
@@ -704,11 +704,7 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
     this.dataForm.patchValue(savedFormData);
 
     if (savedFormData.selectedBankInfo) {
-      console.log('🏦 恢復銀行選擇資訊:', savedFormData.selectedBankInfo);
       this.selectedBankInfo = savedFormData.selectedBankInfo;
-    } else if (savedFormData.bank_id) {
-      console.log('🔄 嘗試根據 bank_id 重建銀行資訊:', savedFormData.bank_id);
-      this.reconstructBankInfo(savedFormData.bank_id);
     } else {
       this.selectedBankInfo = null;
     }
@@ -761,29 +757,6 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
     });
   }
 
-  private reconstructBankInfo(bankId: string): void {
-    if (!bankId) {
-      this.selectedBankInfo = null;
-      return;
-    }
-
-    this.bankService.getBankOptions(bankId).subscribe({
-      next: (options) => {
-        // API 回傳：[{ label: "臺灣銀行營業部", value: "0040037" }]
-        const matchedBank = options.find(option => option.value === bankId);
-
-        if (matchedBank) {
-          // 🎯 重建完整格式
-          const fullText = `${matchedBank.value}${matchedBank.label}`;
-          this.selectedBankInfo = {
-            value: matchedBank.value,     // "0040037"
-            label: fullText,              // "0040037臺灣銀行營業部"
-            fullText: fullText            // "0040037臺灣銀行營業部"
-          };
-        }
-      }
-    });
-  }
 
   /**
    * 🎯 統一設定表單欄位的 disabled 狀態
@@ -900,7 +873,7 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
       store_way: '1',
       water_flag: 'N',
       electric_flag: 'N',
-      gas_flag: 'N'
+      gas_flag: 'N',
     });
 
     // 🎯 清空位置資料
@@ -943,7 +916,7 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
       // 商務條件
       deco_type: queryData['deco_type'] as string,
       money_type: queryData['money_type'] as string,
-      check_type: queryData['check_type'] as string,
+      check_typeList: (queryData['check_typeList'] as string[]) || [],
       tlt_term_type: (queryData['tlt_term_type'] as string)?.trim() || '',
       comm_comp_type: queryData['comm_comp_type'] as string || '2',
       store_way: queryData['store_way'] as string,
@@ -969,7 +942,6 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
       contact_addr: queryData['contact_addr'] as string,
       company_register_address: queryData['company_register_address'] as string,
       tlt_remark: queryData['tlt_remark'] as string,
-
       // 其他欄位
       comm_yn: queryData['comm_yn'] as string,
       base_rent: queryData['base_rent'] as number,
@@ -997,14 +969,6 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
       electric_flag: queryData['electric_flag'] as string || 'N',
       gas_flag: queryData['gas_flag'] as string || 'N',
     });
-
-    const bankId = queryData['bank_id'] as string;
-    if (bankId) {
-      console.log('🏦 載入查詢結果的銀行資訊:', bankId);
-      this.reconstructBankInfo(bankId);
-    } else {
-      this.selectedBankInfo = null;
-    }
 
     const busType = queryData['bus_type'] as string;
     if (busType) {
@@ -1210,16 +1174,16 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
     const contractInfo: ContractInfo = {
       id: formData.talent_id || '',
       talent_id: formData.talent_id || '',
+
       apply_no: formData.apply_no || '',
       tlt_name: formData.tlt_name || '',
       VEN_Name: formData.VEN_Name || '',
       contract_subno: formData.contract_subno || '',
-
+      tlt_no: formData.tlt_no || '',
       // 🎯 補充 FormBuilder 有但之前缺少的欄位
       approve_status: formData.approve_status || '',
       ven_no: formData.ven_no || '',
       contract_no: formData.contract_no || '',
-
       // 🎯 日期欄位
       tlt_bdate: formData.tlt_bdate || '',
       tlt_edate: formData.tlt_edate || '',
@@ -1251,13 +1215,12 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
       total_amt_vendor: convertToString(formData.total_amt_vendor),
       construct_fees: convertToString(formData.construct_fees),
       check_day: convertToString(formData.check_day),
-      construct_deposit: convertToString(formData.construct_deposit),    // 🎯 新增
-      expiration_fees: convertToString(formData.expiration_fees),        // 🎯 新增
-
+      construct_deposit: convertToString(formData.construct_deposit),
+      expiration_fees: convertToString(formData.expiration_fees),
       // 🎯 其他字串欄位
       deco_type: formData.deco_type || '',
       money_type: formData.money_type || '',
-      check_type: formData.check_type || '',
+      // check_type: formData.check_type || '',
       edc_yn: formData.edc_yn || '',
       tlt_openflag: formData.tlt_openflag || '',
       comm_yn: formData.comm_yn || '',
@@ -1283,18 +1246,16 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
       company_register_address: formData.company_register_address || '',
       tlt_remark: formData.tlt_remark || '',
       ticket_remarks: formData.ticket_remarks || '',
-
-      // 🎯 其他設定
       tlt_kind: formData.tlt_kind || '',
       tlt_ctype_mtotal: formData.tlt_ctype_mtotal || '',
       overall_status: formData.overall_status || '',
       rent_ahead: formData.rent_ahead || '',
       open_deposit: formData.open_deposit || '',
-      expiration_deposit: formData.expiration_deposit || '',              // 🎯 新增
+      expiration_deposit: formData.expiration_deposit || '',
       cap_saletype1: formData.cap_saletype1 || '',
       cap_saletype2: formData.cap_saletype2 || '',
-      cap_saletype3: formData.cap_saletype3 || '',                       // 🎯 新增
-      cap_saletype4: formData.cap_saletype4 || '',                       // 🎯 新增
+      cap_saletype3: formData.cap_saletype3 || '',
+      cap_saletype4: formData.cap_saletype4 || '',
       water_flag: formData.water_flag || '',
       electric_flag: formData.electric_flag || '',
       gas_flag: formData.gas_flag || '',
@@ -1302,11 +1263,11 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
       total_amt_vendor_unit: formData.total_amt_vendor_unit || '',
 
       // 🎯 陣列欄位
-      paymentMethods: formData.paymentMethods || [],                     // 🎯 新增
-
+      // 🎯 陣列欄位
+      paymentMethods: formData.paymentMethods || [],
+      check_typeList: formData.check_typeList || [],
       // 🎯 特殊欄位
       locationInfo: this.prepareLocationDataForSubmit(),
-      selectedBankInfo: this.selectedBankInfo
     };
     this.contractFlowService.saveStep1Data(contractInfo);
     console.log('✅ 已暫存到工作流程');
@@ -1884,41 +1845,6 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
     }
   }
 
-  // ==========  銀行相關事件處理 ==========
-  onBankSelect(selectedBank: AutoCompleteOption): void {
-    console.log('🏦 銀行選擇事件:', selectedBank);
-
-    // 🎯 確保 selectedBank 有完整的屬性
-    // AutoComplete 組件應該已經提供完整的 AutoCompleteOption 物件
-    this.selectedBankInfo = {
-      value: selectedBank.value,      // 例如: "0040037"
-      label: selectedBank.label,      // 例如: "臺灣銀行營業部"
-      fullText: selectedBank.fullText // 例如: "0040037臺灣銀行營業部"
-    };
-
-    this.dataForm.patchValue({ bank_id: selectedBank.value });
-
-    // 🎯 立即儲存到工作流程
-    this.saveToWorkflow();
-
-    console.log('✅ 銀行選擇完成並儲存:', {
-      bank_id: selectedBank.value,
-      selectedBankInfo: this.selectedBankInfo
-    });
-  }
-
-  onBankUnselect(): void {
-    console.log('🏦 銀行取消選擇');
-
-    this.selectedBankInfo = null;
-    this.dataForm.patchValue({ bank_id: '' });
-
-    // 🎯 立即儲存到工作流程
-    this.saveToWorkflow();
-
-    console.log('✅ 銀行取消選擇並儲存');
-  }
-
   searchBankOptions(searchKeyword: string): Observable<string[]> {
     return this.bankService.getBankOptions(searchKeyword).pipe(
       map((data: DropdownOption[]) => data.map(item => `${item.value}${item.label}`))
@@ -2226,76 +2152,6 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
       this.setFormControlsState();
     }, 0);
   }
-
-
-  // /**
-  //  * 🎯 新增：設定表單為唯讀
-  //  */
-  // private setFormReadonly(readonly: boolean): void {
-  //   if (readonly) {
-  //     this.dataForm.disable();
-  //     console.log('🔒 表單已設為唯讀');
-  //   } else {
-  //     this.dataForm.enable();
-  //     console.log('🔓 表單已設為可編輯');
-
-  //     // 🎯 立即恢復必要的欄位約束
-  //     setTimeout(() => {
-  //       this.restoreFieldConstraints();
-  //     }, 0);
-  //   }
-  // }
-
-  // /**
-  //  * 🎯 新增：恢復欄位約束（不破壞 selector-panel）
-  //  */
-  // private restoreFieldConstraints(): void {
-  //   console.log('🔄 恢復欄位約束');
-
-  //   // 🎯 版次永遠禁用
-  //   const contractSubnoControl = this.dataForm.get('contract_subno');
-  //   if (contractSubnoControl) {
-  //     contractSubnoControl.disable();
-  //     console.log('🔒 版次欄位已禁用');
-  //   }
-
-  //   // 🎯 公司登記地址永遠禁用（因為是從其他系統帶入的）
-  //   const companyAddressControl = this.dataForm.get('company_register_address');
-  //   if (companyAddressControl) {
-  //     companyAddressControl.disable();
-  //     console.log('🔒 公司登記地址欄位已禁用');
-  //   }
-
-  //   // 🎯 如果不是新增模式，某些欄位禁用
-  //   if (!this.contractFlowService.isNewContractMode()) {
-  //     const nonEditableFields = [
-  //       'talent_id',    // 專櫃ID
-  //       'apply_no',     // 專櫃招募編號
-  //       'tlt_no',       // 專櫃編號
-  //       'VEN_Name',     // 廠商名稱
-  //       'tlt_name'      // 櫃位名稱
-  //     ];
-
-  //     nonEditableFields.forEach(fieldName => {
-  //       const control = this.dataForm.get(fieldName);
-  //       if (control) {
-  //         control.disable();
-  //         console.log(`🔒 編輯模式禁用欄位: ${fieldName}`);
-  //       }
-  //     });
-  //   } else {
-  //     // 🎯 新增模式下，確保這些欄位是可編輯的
-  //     const editableInNewMode = ['apply_no', 'tlt_no', 'VEN_Name', 'tlt_name'];
-
-  //     editableInNewMode.forEach(fieldName => {
-  //       const control = this.dataForm.get(fieldName);
-  //       if (control && control.disabled) {
-  //         control.enable();
-  //         console.log(`🔓 新增模式啟用欄位: ${fieldName}`);
-  //       }
-  //     });
-  //   }
-  // }
 
   /**
    * 🎯 新增：處理初始化失敗
