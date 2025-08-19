@@ -221,7 +221,7 @@ export class FIN15020Component extends BasicQueryPageComponent<FIN15020Data> imp
       STO_No: '10',
       GUI_Type: this.queryForm.controls.PUR_VoucherType.value ?? ''
     }).subscribe(r => {
-      this.guiTrackOptions = r.Data[0].GuiTracks.map((track: string) => ({ label: track, value: track }));
+      this.guiTrackOptions = r.Data.GuiTracks.map((track: string) => ({ label: track, value: track }));
     });
   }
 }
