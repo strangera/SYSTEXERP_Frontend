@@ -12,6 +12,7 @@ export interface TLS26030QueryRequest extends BaseQueryRequest {
   Org_ID?: string[];            // 組織代號
   Org_Name?: string;            // 組織名稱
   tlt_floor?: string[];         // 樓層
+  SYS_StoreNo?: string;         // 新增：店號
 }
 
 // Data result interface for TLS26030 (預售明細表資料)

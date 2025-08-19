@@ -68,27 +68,24 @@ export class FIN15040Component extends BasicQueryPageComponent<FIN15040Data> imp
   });
 
   totalRecords = 0;
-  data: any[] = [];
-  selectedItems: any[] = [];
+  data: FIN15040Data[] = [];
+  selectedItems: FIN15040Data[] = [];
   btnLoading = false;
 
   columns: Column[] = [
-    { field: 'No', header: '序號', visible: false },
-    { field: 'TXN_Date', header: '發票日期', visible: true, format: (value: any) => value ? this.datePipe.transform(value, 'yyyy/MM/dd') : '' },
-    { field: 'PUR_VoucherType', header: '發票格式', visible: true, format: (value: string) => this.invoiceFormatOptions.find(opt => opt.value === value)?.label ?? '' },
-    { field: 'GUI_Track', header: '字軌', visible: true },
+    { field: 'INV_GUIType', header: '發票格式', visible: true, format: (value: string) => this.invoiceFormatOptions.find(opt => opt.value === value)?.label ?? '' },
+    { field: 'INV_GUITrack', header: '字軌', visible: true },
     { field: 'INV_GUINumber', header: '發票號碼', visible: true },
+    { field: 'TXN_Date', header: '發票日期', visible: true, format: (value: any) => value ? this.datePipe.transform(value, 'yyyy/MM/dd') : '' },
     { field: 'INV_YM1', header: '資料所屬年月', visible: true },
     { field: 'INV_YM2', header: '申報年月', visible: true },
-    { field: 'PUR_Uniform', header: '廠商編號(統一編號)', visible: true },
-    { field: 'PUR_TaxType', header: '課稅別', visible: true, format: (value: string) => this.taxTypeOptions.find(opt => opt.value === value)?.label ?? '' },
-    { field: 'Source_Doc_No', header: '憑證單號', visible: true },
-    { field: 'Voucher_No', header: '傳票號碼', visible: true },
-    { field: 'SAL_Type', header: '系統別', visible: true, format: (value: string) => this.systemTypeOptions.find(opt => opt.value === value)?.label ?? '' },
-    { field: 'Voucher_no', header: '傳票建立者', visible: true },
-    { field: 'Asset_Notation', header: '資產註記', visible: true, format: (value: string) => this.assetNotationOptions.find(opt => opt.value === value)?.label ?? '' },
-    { field: 'HasUniform', header: '是否有統一編號', visible: true, format: (value: boolean) => value === true ? '有' : value === false ? '無' : '' },
-    { field: 'PUR_DiscNo', header: '折抵代號', visible: true, format: (value: string) => this.discountOptions.find(opt => opt.value === value)?.label ?? '' }
+    { field: 'TXN_Uniform', header: '統一編號', visible: true },
+    { field: 'TXN_Net', header: '發票金額', visible: true, format: (value: number) => value ? value.toLocaleString() : '0' },
+    { field: 'TXN_Tax', header: '發票稅額', visible: true, format: (value: number) => value ? value.toLocaleString() : '0' },
+    { field: 'TXN_SaleAmt', header: '發票總金額', visible: true, format: (value: number) => value ? value.toLocaleString() : '0' },
+    { field: 'PLU_TaxType', header: '課稅別', visible: true, format: (value: string) => this.taxTypeOptions.find(opt => opt.value === value)?.label ?? '' },
+    { field: 'Voucher_No', header: '傳票編號', visible: true },
+    { field: 'SAL_Type', header: '系統別', visible: true, format: (value: string) => this.systemTypeOptions.find(opt => opt.value === value)?.label ?? '' }
   ];
 
   // 下拉選項
@@ -143,18 +140,18 @@ export class FIN15040Component extends BasicQueryPageComponent<FIN15040Data> imp
         MID: 0,
         STO_No: '10',
         ...frm.value,
-        TXN_Date_S: frm.get('TXN_Date_S')?.value ? this.datePipe.transform(frm.get('TXN_Date_S')?.value, 'yyyy-MM-dd') : undefined,
-        TXN_Date_E: frm.get('TXN_Date_E')?.value ? this.datePipe.transform(frm.get('TXN_Date_E')?.value, 'yyyy-MM-dd') : undefined,
-        INV_YM1_S: this.datePipe.transform(frm.get('INV_YM1_S')?.value, 'yyyyMM') ?? undefined,
-        INV_YM1_E: this.datePipe.transform(frm.get('INV_YM1_E')?.value, 'yyyyMM') ?? undefined,
-        INV_YM2: this.datePipe.transform(frm.get('INV_YM2')?.value, 'yyyyMM') ?? undefined,
+        TXN_Date_S: frm.get('TXN_Date_S')?.value ? this.datePipe.transform(frm.get('TXN_Date_S')?.value, 'yyyy-MM-dd') ?? '' : '',
+        TXN_Date_E: frm.get('TXN_Date_E')?.value ? this.datePipe.transform(frm.get('TXN_Date_E')?.value, 'yyyy-MM-dd') ?? '' : '',
+        INV_YM1_S: this.datePipe.transform(frm.get('INV_YM1_S')?.value, 'yyyyMM') ?? '',
+        INV_YM1_E: this.datePipe.transform(frm.get('INV_YM1_E')?.value, 'yyyyMM') ?? '',
+        INV_YM2: this.datePipe.transform(frm.get('INV_YM2')?.value, 'yyyyMM') ?? '',
       };
 
       this.fin15040Service.queryFIN15040(requestData)
         .pipe(finalize(() => this.loading = false))
-        .subscribe(response => {
-          this.data = response.Data.POS4023_FIN15040s;
-          this.totalRecords = response.Data.POS4023_FIN15040s.length;
+        .subscribe((res) => {
+          this.data = res.Data;
+          this.totalRecords = res.TotalCount;
           this.queryStateService.setQueryState(this.ProgNo, frm.getRawValue());
         });
     });
@@ -170,29 +167,19 @@ export class FIN15040Component extends BasicQueryPageComponent<FIN15040Data> imp
       MID: 0,
       STO_No: '10',
       ...frm1.value,
-      TXN_Date_S: frm1.get('TXN_Date_S')?.value ? this.datePipe.transform(frm1.get('TXN_Date_S')?.value, 'yyyy-MM-dd') : undefined,
-      TXN_Date_E: frm1.get('TXN_Date_E')?.value ? this.datePipe.transform(frm1.get('TXN_Date_E')?.value, 'yyyy-MM-dd') : undefined,
-      INV_YM1_S: this.datePipe.transform(frm1.get('INV_YM1_S')?.value, 'yyyyMM') ?? undefined,
-      INV_YM1_E: this.datePipe.transform(frm1.get('INV_YM1_E')?.value, 'yyyyMM') ?? undefined,
-      INV_YM2: this.datePipe.transform(frm1.get('INV_YM2')?.value, 'yyyyMM') ?? undefined,
+      TXN_Date_S: frm1.get('TXN_Date_S')?.value ? this.datePipe.transform(frm1.get('TXN_Date_S')?.value, 'yyyy-MM-dd') ?? '' : '',
+      TXN_Date_E: frm1.get('TXN_Date_E')?.value ? this.datePipe.transform(frm1.get('TXN_Date_E')?.value, 'yyyy-MM-dd') ?? '' : '',
+      INV_YM1_S: this.datePipe.transform(frm1.get('INV_YM1_S')?.value, 'yyyyMM') ?? '',
+      INV_YM1_E: this.datePipe.transform(frm1.get('INV_YM1_E')?.value, 'yyyyMM') ?? '',
+      INV_YM2: this.datePipe.transform(frm1.get('INV_YM2')?.value, 'yyyyMM') ?? '',
       IsMerge: frm2.get('IsMerge')?.value === '1' || false,
       IsExcel: frm2.get('IsExcel')?.value === '1' || false
     };
 
     this.fin15040Service.printFIN15040(exportRequest)
       .pipe(finalize(() => this.btnLoading = false))
-      .subscribe({
-        next: (response) => {
-          if (response.Status === '0000') {
-            this.openDownloadWindow(response.Data.Print_URL);
-          } else {
-            this.messageService.errorBubble('產生報表失敗');
-          }
-        },
-        error: (error) => {
-          console.error('列印報表錯誤:', error);
-          this.messageService.errorBubble('產生報表時發生錯誤');
-        }
+      .subscribe((response) => {
+        this.openDownloadWindow(response.Data.Print_URL);
       });
   }
 
@@ -208,9 +195,8 @@ export class FIN15040Component extends BasicQueryPageComponent<FIN15040Data> imp
     return true;
   }
 
-  // FIXME: 這個回傳網址跟 fin15020 fin15030不一樣
   private openDownloadWindow(printUrl: string): void {
-    const downloadUrl = `${environment.ApiUrl}/temp/${printUrl}`;
+    const downloadUrl = `${environment.ApiUrl}${printUrl}`;
     window.open(downloadUrl, '_blank');
   }
 
@@ -223,7 +209,6 @@ export class FIN15040Component extends BasicQueryPageComponent<FIN15040Data> imp
     this.dropDownListService.querySYS1000_DropDownList({ SYS_Type: 'T207' }).subscribe(r => {
       this.systemTypeOptions = r.Data.map(item => ({ label: item.Name, value: item.No }));
     });
-    // 其餘下拉選項如有API請依需求補上
   }
 
   // 申報年月改變時載入字軌

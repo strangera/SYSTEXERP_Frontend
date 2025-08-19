@@ -83,7 +83,7 @@ export class FIN15020Component extends BasicQueryPageComponent<FIN15020Data> imp
     { field: 'PUR_Tax', header: '退出折讓單稅額', visible: true, format: (value: number) => value ? value.toLocaleString() : '0' },
     { field: 'Source_Doc_No', header: '憑證單號', visible: true },
     { field: 'Voucher_No', header: '傳票編號', visible: true },
-    { field: 'SAL_Type', header: '系統別', visible: true, format: (value: string) => this.systemTypeOptions.find(opt => opt.value === value)?.label ?? '' },
+    { field: 'SAL_Type', header: '系統別', visible: true },
     {
       field: 'PUR_DiscNo',
       header: '折抵代號',
@@ -149,9 +149,9 @@ export class FIN15020Component extends BasicQueryPageComponent<FIN15020Data> imp
 
       this.fin15020Service.queryFIN15020(requestData)
         .pipe(finalize(() => this.loading = false))
-        .subscribe(response => {
-          this.data = response.Data.APS2002_FIN15020s;
-          this.totalRecords = response.Data.APS2002_FIN15020s.length;
+        .subscribe((res) => {
+          this.data = res.Data;
+          this.totalRecords = res.TotalCount;
           this.queryStateService.setQueryState(this.ProgNo, frm.getRawValue());
         });
     });
@@ -161,7 +161,6 @@ export class FIN15020Component extends BasicQueryPageComponent<FIN15020Data> imp
     if (!this.validateRequiredFields()) {
       return;
     }
-
     this.btnLoading = true;
     const exportRequest: FIN15020PrintRequest = {
       MID: 0,
@@ -178,18 +177,8 @@ export class FIN15020Component extends BasicQueryPageComponent<FIN15020Data> imp
 
     this.fin15020Service.printFIN15020(exportRequest)
       .pipe(finalize(() => this.btnLoading = false))
-      .subscribe({
-        next: (response) => {
-          if (response.Status === '0000') {
-            this.openDownloadWindow(response.Data.Print_URL);
-          } else {
-            this.messageService.errorBubble('產生報表失敗');
-          }
-        },
-        error: (error) => {
-          console.error('列印報表錯誤:', error);
-          this.messageService.errorBubble('產生報表時發生錯誤');
-        }
+      .subscribe((response) => {
+        this.openDownloadWindow(response.Data.Print_URL);
       });
   }
 
