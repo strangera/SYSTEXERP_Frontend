@@ -102,11 +102,12 @@
                 [placeholder]="col.placeholder || ''" class="text-input" />
 
               <!-- 數字輸入 -->
-              <p-inputNumber *ngSwitchCase="'number'" [(ngModel)]="rowData[col.field]" [minFractionDigits]="
+              <p-inputNumber *ngSwitchCase="'number'" [(ngModel)]="rowData[col.field]"
+                (onBlur)="onNumberFieldBlur($event, col.field, rowData)" [minFractionDigits]="
                     getNumberInputConfig(col).minFractionDigits
                   " [maxFractionDigits]="
                     getNumberInputConfig(col).maxFractionDigits
-                  " [step]="getNumberInputConfig(col).step" mode="decimal" [useGrouping]="false"></p-inputNumber>
+                  " [step]="getNumberInputConfig(col).step" mode="decimal"></p-inputNumber>
 
               <!-- 下拉選單 -->
               <p-dropdown *ngSwitchCase="'dropdown'" [options]="getFieldOptions(rowData, col.field)"
@@ -273,12 +274,12 @@
                 [maxlength]="col.maxLength ?? null" [placeholder]="col.placeholder || ''" class="text-input" />
 
               <!-- 數字輸入 -->
-              <p-inputNumber *ngSwitchCase="'number'" [(ngModel)]="detailData[col.field]" [minFractionDigits]="
+              <p-inputNumber *ngSwitchCase="'number'" [(ngModel)]="detailData[col.field]"
+                (onBlur)="onNumberFieldBlur($event, col.field, rowData)" [minFractionDigits]="
                             getNumberInputConfig(col).minFractionDigits
                           " [maxFractionDigits]="
                             getNumberInputConfig(col).maxFractionDigits
-                          " [step]="getNumberInputConfig(col).step" mode="decimal"
-                [useGrouping]="false"></p-inputNumber>
+                          " [step]="getNumberInputConfig(col).step" mode="decimal"></p-inputNumber>
 
               <!-- 下拉選單 -->
               <p-dropdown *ngSwitchCase="'dropdown'" [options]="getFieldOptions(detailData, col.field)"

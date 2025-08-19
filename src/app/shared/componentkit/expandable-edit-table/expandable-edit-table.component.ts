@@ -224,6 +224,12 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
     selectedOption?: any
   }>();
 
+  @Output() fieldChange = new EventEmitter<{
+    fieldName: string,
+    newValue: any,
+    rowData: any
+  }>();
+
   expandedRows: { [key: string]: boolean } = {};
   selectedItems: any[] = [];
   clonedItems: { [s: string]: any } = {};
@@ -1246,22 +1252,26 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
 
   // 取得數字輸入的設定
   getNumberInputConfig(col: ColumnDef): any {
+    const baseConfig = {
+      mode: 'decimal',
+      useGrouping: true,  // 🎯 這是關鍵！確保千分位顯示
+      min: 0
+    };
+
     if (col.allowDecimal) {
       return {
-        mode: 'decimal',
+        ...baseConfig,
         minFractionDigits: 0,
         maxFractionDigits: col.decimalPlaces || 2,
-        step: col.decimalPlaces === 1 ? 0.1 : 0.01,
-        useGrouping: false
+        step: col.decimalPlaces === 1 ? 0.1 : 0.01
       };
     }
 
     return {
-      mode: 'decimal',
+      ...baseConfig,
       minFractionDigits: 0,
       maxFractionDigits: 0,
-      step: 1,
-      useGrouping: false
+      step: 1
     };
   }
 
@@ -1647,5 +1657,31 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
   hasRowValidationErrors(rowData: any): boolean {
     return this.validationService.hasRowValidationErrors(rowData, this.dataKey);
   }
+  //=================處理數字欄位 blur 事件==================================
+  onNumberFieldBlur(event: any, fieldName: string, rowData: any): void {
+    const newValue = event.target.value || rowData[fieldName];
 
+    console.log(`🔢 數字欄位 blur: ${fieldName} = ${newValue}`);
+
+    // 確保資料已更新
+    rowData[fieldName] = newValue;
+
+    // 檢查是否需要觸發計算（只有單價和數量需要）
+    if (fieldName === 'tpy_unitamt' || fieldName === 'tpy_qty') {
+      // 發出欄位變更事件給父組件處理計算
+      this.fieldChange.emit({
+        fieldName,
+        newValue,
+        rowData
+      });
+    }
+
+    // 如果是直接編輯模式，觸發保存
+    const column = this.mainColumns.find(col => col.field === fieldName) ||
+      this.detailColumns.find(col => col.field === fieldName);
+
+    if (column?.directEdit) {
+      this.onDirectEditChange(rowData, fieldName, newValue);
+    }
+  }
 }
