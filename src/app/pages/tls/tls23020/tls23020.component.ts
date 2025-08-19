@@ -165,9 +165,100 @@ export class TLS23020Component extends BasicQueryPageComponent<any> {
     });
   }
 
-  onSubmit(form: FormGroup): void {
-    this.handleSubmit(form, () => this.doQuery());
-  }
+onSubmit(form: FormGroup): void {
+  this.handleSubmit(form, () => {
+    const val = this.queryForm.getRawValue() as any;
+
+    // 預設分頁
+    const pageSize  = Number.isFinite(val?.pageSize)  ? val.pageSize  : 10;
+    const pageIndex = Number.isFinite(val?.pageIndex) ? val.pageIndex : 1;
+    const offset = Math.max(0, (pageIndex - 1) * pageSize);
+
+    // 排序字串
+    const orderBy =
+      Array.isArray(val?.SortBy) && val.SortBy.length
+        ? val.SortBy.map((s: any) => `${s.field} ${s.order === 1 ? 'ASC' : 'DESC'}`).join(',')
+        : undefined;
+
+    // 日期轉 yyyy-MM-ddTHH:mm:ss（本地時區，去掉時區偏移）
+    const toIso = (x: any) => {
+      if (!x) return undefined;
+      const d = typeof x === 'string' ? new Date(x) : (x as Date);
+      if (isNaN(d.getTime())) return undefined;
+      return new Date(d.getTime() - d.getTimezoneOffset() * 60000)
+        .toISOString()
+        .slice(0, 19);
+    };
+
+    // 組 payload
+    const payload: any = {
+      TXN_DateStart: toIso(val?.TXN_DateStart),
+      TXN_DateEnd:   toIso(val?.TXN_DateEnd),
+      bus_type:      val?.bus_type,
+      ShowBusType:   val?.ShowBusType,
+      tlt_building:  val?.tlt_building,
+      tlt_floor:     val?.tlt_floor,
+      org_id:        val?.org_id,
+      area_no:       val?.area_no,
+      TLT_No:        val?.TLT_No,
+      pageSize,
+      pageIndex,
+      SortBy:        val?.SortBy ?? [],
+      Offset:        offset,
+      ...(orderBy ? { OrderBy: orderBy } : {}),
+    };
+
+    // 移除空值/空陣列
+    Object.keys(payload).forEach((k) => {
+      const v = payload[k];
+      if (v === '' || v === null || v === undefined) delete payload[k];
+      if (Array.isArray(v) && v.length === 0) delete payload[k];
+    });
+
+    this.loading = true;
+    this.messageService?.blockUi();
+
+    this.tls23020Service.queryTLS23020(payload).subscribe({
+      next: (res: any) => {
+        // res.Data 可能是陣列（你給的範例是 [ { Total..., tLS23020_SubTotals: [...] } ]）
+        const dataArray = Array.isArray(res?.Data) ? res.Data : (res?.Data ? [res.Data] : []);
+
+        // 把所有小計底下的 tLS23020_Details 攤平成一個陣列
+        const details = dataArray.flatMap((wrapper: any) => {
+          const subTotals =
+            wrapper?.tLS23020_SubTotals ??
+            wrapper?.TLS23020_SubTotals ??
+            wrapper?.tls23020_SubTotals ??
+            [];
+          if (!Array.isArray(subTotals)) return [];
+          return subTotals.flatMap((st: any) =>
+            st?.tLS23020_Details ??
+            st?.TLS23020_Details ??
+            st?.tls23020_Details ??
+            []
+          );
+        });
+
+        this.data = details;
+        this.totalRecords =
+          typeof res?.TotalCount === 'number' ? res.TotalCount : this.data.length;
+
+        // 若之後要用得到，也可以把總計/小計存起來
+        // this.totalSummary = dataArray[0] ?? null;
+        // this.subTotals = Array.isArray(dataArray[0]?.tLS23020_SubTotals) ? dataArray[0].tLS23020_SubTotals : [];
+      },
+      error: (err) => {
+        console.error('TLS23120 查詢失敗', err);
+        this.messageService?.errorBubble?.('查詢失敗，請稍後再試');
+      },
+      complete: () => {
+        this.loading = false;
+        this.messageService?.unblockUi();
+      },
+    });
+  });
+}
+
 
   // 將 lazy 的分頁/排序寫回表單後，呼叫同一支查詢
   runQueryFromTable(event: any) {
