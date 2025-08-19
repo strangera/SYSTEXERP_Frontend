@@ -1,7 +1,6 @@
 import { Component, OnInit } from '@angular/core';
-import { NgIf } from '@angular/common';
 import { Column } from '../../../shared/componentkit/table/table.model';
-import { ReactiveFormsModule, FormGroup } from '@angular/forms';
+import { ReactiveFormsModule, FormGroup, FormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { AccordionModule } from 'primeng/accordion';
@@ -12,8 +11,8 @@ import { MenubarComponent } from '@shared/component/menubar/menubar.component';
 import { ButtonComponent } from '@shared/componentkit/button/button.component';
 import { TableComponent } from '@shared/componentkit/table/table.component';
 import { Tls2a010Service } from 'src/app/service/api/tls/tls2a010.service';
-import {createPaginationConfig } from 'src/app/shared/componentkit/table/table.model';
-
+import { createPaginationConfig } from 'src/app/shared/componentkit/table/table.model';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-tls2a010-cru',
@@ -28,7 +27,8 @@ import {createPaginationConfig } from 'src/app/shared/componentkit/table/table.m
     ReactiveFormsModule,
     TableComponent,
     TooltipModule,
-    NgIf,
+    FormsModule
+
 
   ],
 })
@@ -90,22 +90,29 @@ export class TLS2A010CRUComponent extends BasicCruPageComponent<TLS2A010Data> im
   totalRecords = 0;
   data: any[] = [];
 
-
   onEdit(rowData: any): void {
-    // Implement the logic for editing the row data here
     console.log('Editing row:', rowData);
   }
 
-  constructor(private tls2a010Service: Tls2a010Service,) {
+  constructor(
+    private tls2a010Service: Tls2a010Service,
+    private Router: Router
+  ) {
     super(); // 呼叫父類 BasicCruPageComponent 的建構子
   }
 
-  ngOnInit(): void {
-    this.initializePage('TLS2A010', this.dataForm);
+ngOnInit(): void {
+  this.initializePage('TLS2A010', this.dataForm);
 
+  const nav = history.state as any;
+  if (nav?.rowdata) {
+    const row = nav.rowdata;
+
+    this.data = row.details ?? [];
 
     this.totalRecords = this.data.length;
   }
+}
 
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
@@ -118,9 +125,9 @@ export class TLS2A010CRUComponent extends BasicCruPageComponent<TLS2A010Data> im
       }, 1000);
     });
   }
+
   onFieldChange(event: any) {
     console.log('欄位變更:', event);
   }
-
 }
 

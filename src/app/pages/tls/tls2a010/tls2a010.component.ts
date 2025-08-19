@@ -5,6 +5,7 @@ import { TranslateModule } from '@ngx-translate/core';
 import { AccordionModule } from 'primeng/accordion';
 import { DropDownListService, IDropdownItem } from 'src/app/service/utility/dropDownList.service';
 import { Column, ColumnGroup, createPaginationConfig } from 'src/app/shared/componentkit/table/table.model';
+import { CRUDStatus } from '@shared/models/system/CRUDstatus';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { Button } from 'primeng/button';
 import { NgStyle, NgIf } from '@angular/common';
@@ -74,7 +75,7 @@ export class TLS2A010Component extends BasicQueryPageComponent<any> implements O
     {
       label: '缺單審核',
       icon: 'pi pi-exclamation-triangle',
-      action: (rowData: any) => this.onAbnormalClick(rowData)
+      action: (rowData: any) => this.onDetail(rowData)
     }
   ];
   IsPrint = true;
@@ -200,10 +201,6 @@ export class TLS2A010Component extends BasicQueryPageComponent<any> implements O
       this.contact_USR_NameOptions = res.Data.map(item => ({ ...item, label: item.Name, value: item.No }));
     });
   }
-  onAbnormalClick(row: any): void {
-    console.log('Abnormal click triggered for row:', row);
-
-  }
 
   onSubmit(form: FormGroup): void {
     this.submitted = true;
@@ -314,9 +311,27 @@ export class TLS2A010Component extends BasicQueryPageComponent<any> implements O
 
 
   }
+  override onDetail(row: any): void {
+    console.log('缺單審核被點擊:', row);
 
-  isRowSelectable(rowData: any): boolean {
-    return rowData.Check_Status !== 'Y';
-  }
+  this.tls2a010Service.queryDetailTLS2A010(row).subscribe({
+    next: (res) => {
+      const detailData = res?.Data ?? [];
+
+      const rowdataWithDetail = {
+        ...row,
+        details: detailData
+      };
+
+      // 呼叫共通的 navigateWithState (不會覆蓋底層)
+      this.navigateWithState(CRUDStatus.Read, rowdataWithDetail);
+    },
+    error: (err) => {
+      console.error('查詢明細失敗:', err);
+    }
+  });
+}
+
+
 }
 
