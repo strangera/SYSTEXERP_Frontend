@@ -71,7 +71,7 @@ export class TLS23120Component extends BasicQueryPageComponent<any> {
     org_id: [],
     area_no: [],
     TLT_No: [],
-   ...createPaginationConfig([{ field: 'SYS_Name', order: 1 }])
+   ...createPaginationConfig([{ field: 'TLT_No', order: 1 }])
   });
 
   organizationOptions: any[] = [];
@@ -142,29 +142,23 @@ onSubmit(form: FormGroup): void {
   this.handleSubmit(form, () => {
     const val = this.queryForm.getRawValue() as any;
 
-    // 由 pageIndex/pageSize 推 Offset (0-based)
-    const offset =
-      Number.isFinite(val?.pageIndex) && Number.isFinite(val?.pageSize)
-        ? Math.max(0, (val.pageIndex - 1) * val.pageSize)
-        : undefined;
+    // ✅ 沒有就給預設
+    const pageSize  = Number.isFinite(val?.pageSize)  ? val.pageSize  : 10;
+    const pageIndex = Number.isFinite(val?.pageIndex) ? val.pageIndex : 1;
 
-    // SortMeta[] -> "field ASC,DESC"
+    const offset = Math.max(0, (pageIndex - 1) * pageSize);
     const orderBy =
       Array.isArray(val?.SortBy) && val.SortBy.length
         ? val.SortBy.map((s: any) => `${s.field} ${s.order === 1 ? 'ASC' : 'DESC'}`).join(',')
         : undefined;
 
-    // 本地 ISO(yyyy-MM-ddTHH:mm:ss) — 去掉時區偏移
     const toIso = (x: any) => {
       if (!x) return undefined;
       const d = typeof x === 'string' ? new Date(x) : (x as Date);
       if (isNaN(d.getTime())) return undefined;
-      return new Date(d.getTime() - d.getTimezoneOffset() * 60000)
-        .toISOString()
-        .slice(0, 19);
+      return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 19);
     };
 
-    // 組 payload（保留分頁/排序）
     const payload: any = {
       TXN_DateStart: toIso(val?.TXN_DateStart),
       TXN_DateEnd:   toIso(val?.TXN_DateEnd),
@@ -175,15 +169,14 @@ onSubmit(form: FormGroup): void {
       org_id:        val?.org_id,
       area_no:       val?.area_no,
       TLT_No:        val?.TLT_No,
-      pageSize:      val?.pageSize,
-      pageIndex:     val?.pageIndex,
-      SortBy:        val?.SortBy,
-      ...(offset  !== undefined ? { Offset:  offset } : {}),
+      pageSize,
+      pageIndex,
+      SortBy:        val?.SortBy ?? [],
       ...(orderBy ? { OrderBy: orderBy } : {}),
+      Offset:        offset,
     };
 
-    // 移除空字串 / null / undefined / 空陣列
-    Object.keys(payload).forEach((k) => {
+    Object.keys(payload).forEach(k => {
       const v = payload[k];
       if (v === '' || v === null || v === undefined) delete payload[k];
       if (Array.isArray(v) && v.length === 0) delete payload[k];
@@ -191,40 +184,27 @@ onSubmit(form: FormGroup): void {
 
     this.loading = true;
     this.messageService?.blockUi();
-
     this.tls23120Service.queryTLS23120(payload).subscribe({
       next: (res: any) => {
-        // 期待：{ Data: [{ Totals, SubTotals, tLS23120Details: [...] }], TotalCount, ... }
         const data = res?.Data;
         const wrapper = Array.isArray(data) ? data[0] : data;
-
         const details =
-          wrapper?.tLS23120Details ??
-          wrapper?.TLS23120Details ??
-          wrapper?.tls23120Details ??
-          [];
-
+          wrapper?.tLS23120Details ?? wrapper?.TLS23120Details ?? wrapper?.tls23120Details ?? [];
         this.data = Array.isArray(details) ? details : [];
-        this.totalRecords =
-          typeof res?.TotalCount === 'number' ? res.TotalCount : this.data.length;
-
-        // 若未來要顯示總表/小計，可額外存起來：
-        // this.totals = wrapper?.Totals ?? null;
-        // this.subTotals = Array.isArray(wrapper?.SubTotals) ? wrapper.SubTotals : [];
+        this.totalRecords = typeof res?.TotalCount === 'number' ? res.TotalCount : this.data.length;
       },
       error: (err) => {
         console.error('TLS23120 查詢失敗', err);
         this.messageService?.errorBubble?.('查詢失敗，請稍後再試');
-        this.loading = false;
-        this.messageService?.unblockUi();
       },
       complete: () => {
         this.loading = false;
         this.messageService?.unblockUi();
-      },
+      }
     });
   });
 }
+
 
 
   
