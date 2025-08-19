@@ -162,11 +162,11 @@
           <app-dropdown
             label="環境變數編號"
             controlName="ECR_TmplNo"
+            [options]="ECR_TmplNo_Option"
+            optionLabel="label"
+            optionValue="value"
             [control]="dataForm.controls.ECR_TmplNo"
             [submitted]="submitted"
-            [options]="ECR_TmplNo_Option"
-            optionLabel="Name"
-            optionValue="No"
           ></app-dropdown>
         </div>
         <hr />

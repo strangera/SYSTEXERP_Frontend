@@ -202,9 +202,18 @@ export class TLS41010CRUComponent extends BasicCruPageComponent<TLS41010Data> im
     }
 
     // 下拉選單
-    this.dropDownListService.queryPOS1002TML_DropDownList().subscribe(option => {
-      this.ECR_TmplNo_Option = option.Data;
+    this.dropDownListService.queryPOS1002TML_DropDownList().subscribe(res => {
+      if (res?.Data) {
+        this.ECR_TmplNo_Option = res.Data.map(item => ({
+          No: item.No,
+          Name: item.Name,
+          label: item.No,     // 下拉顯示
+          value: item.No      // 下拉值
+        }));
+      }
     });
+
+
     this.dropDownListService.queryPOS10015_DropDownList().subscribe(option => {
       this.ECR_SrvIP_Option = option.Data.map(item => ({
         ...item, label: `${item.No} ${item.Name}`,
