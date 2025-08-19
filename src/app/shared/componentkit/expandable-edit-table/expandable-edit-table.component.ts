@@ -119,6 +119,10 @@ export interface ColumnDef {
   style?: string;
   options?: any[];
 
+  defaultValue?: any;  // 預設值
+
+  defaultValueFunction?: () => any;
+
   required?: boolean;                    // 是否為必填欄位
   requiredMessage?: string;              // 自定義必填錯誤訊息
   validators?: ValidatorFn[];            // 自定義驗證器陣列
@@ -780,6 +784,31 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
   onRowEditInit(rowData: any, rowIndex: number) {
     this.editingRow = rowIndex;
     this.clonedItems[rowData[this.dataKey]] = { ...rowData };
+
+    // 🎯 在進入編輯模式時套用預設值（包括動態預設值）
+    this.mainColumns.forEach(column => {
+      const currentValue = rowData[column.field];
+
+      // 如果欄位沒有值且有預設值函數
+      if ((currentValue === undefined || currentValue === null || currentValue === '') && column.defaultValueFunction) {
+        try {
+          const defaultValue = column.defaultValueFunction();
+          if (defaultValue !== null && defaultValue !== undefined) {
+            rowData[column.field] = defaultValue;
+            console.log(`🎯 編輯模式套用動態預設值 ${column.field}: ${defaultValue}`);
+          }
+        } catch (error) {
+          console.error(`❌ 動態預設值函數執行失敗 ${column.field}:`, error);
+        }
+      }
+
+      // 如果欄位沒有值且有靜態預設值
+      else if ((currentValue === undefined || currentValue === null || currentValue === '') && column.defaultValue !== undefined) {
+        rowData[column.field] = column.defaultValue;
+        console.log(`🎯 編輯模式套用靜態預設值 ${column.field}: ${column.defaultValue}`);
+      }
+    });
+
     this.edit.emit(rowData);
 
     if (!rowData[this.detailKey]) {
@@ -1659,16 +1688,44 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
   }
   //=================處理數字欄位 blur 事件==================================
   onNumberFieldBlur(event: any, fieldName: string, rowData: any): void {
-    const newValue = event.target.value || rowData[fieldName];
+    // 🎯 關鍵修正：正確取得 PrimeNG InputNumber 的值
+    let inputValue = event.target.value;
 
-    console.log(`🔢 數字欄位 blur: ${fieldName} = ${newValue}`);
+    // 如果是 PrimeNG InputNumber，它的實際值可能在不同的屬性中
+    if (event.value !== undefined) {
+      inputValue = event.value; // PrimeNG 的實際數值
+    } else if (typeof inputValue === 'string') {
+      // 移除千分位逗號
+      inputValue = inputValue.replace(/,/g, '');
+    }
 
-    // 確保資料已更新
+    console.log(`🔢 數字欄位 blur: ${fieldName}`, {
+      原始輸入: event.target.value,
+      事件值: event.value,
+      處理後: inputValue
+    });
+
+    let newValue;
+
+    // 處理空值
+    if (inputValue === '' || inputValue === null || inputValue === undefined) {
+      newValue = null;
+    } else {
+      const numericValue = parseFloat(inputValue);
+
+      if (isNaN(numericValue)) {
+        console.error(`❌ 無法轉換為數字: "${inputValue}"`);
+        newValue = 0;
+      } else {
+        newValue = numericValue;
+      }
+    }
+
+    // 確保資料已更新為純數字（不含逗號）
     rowData[fieldName] = newValue;
 
-    // 檢查是否需要觸發計算（只有單價和數量需要）
+    // 檢查是否需要觸發計算
     if (fieldName === 'tpy_unitamt' || fieldName === 'tpy_qty') {
-      // 發出欄位變更事件給父組件處理計算
       this.fieldChange.emit({
         fieldName,
         newValue,
@@ -1683,5 +1740,31 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
     if (column?.directEdit) {
       this.onDirectEditChange(rowData, fieldName, newValue);
     }
+  }
+
+  //=====================預設值=====================
+  getFieldDefaultValue(column: ColumnDef, rowData: any): any {
+    // 如果有值就使用現有值
+    const currentValue = rowData[column.field];
+    if (currentValue !== undefined && currentValue !== null && currentValue !== '') {
+      return currentValue;
+    }
+
+    // 🎯 新增：檢查是否有動態預設值函數
+    if (column.defaultValueFunction && typeof column.defaultValueFunction === 'function') {
+      return column.defaultValueFunction();
+    }
+
+    // 使用靜態預設值
+    return column.defaultValue || '';
+  }
+
+  // 🎯 設定新增項目的預設值
+  private applyDefaultValues(newItem: any, columns: ColumnDef[]): void {
+    columns.forEach(column => {
+      if (column.defaultValue !== undefined && (newItem[column.field] === undefined || newItem[column.field] === null || newItem[column.field] === '')) {
+        newItem[column.field] = column.defaultValue;
+      }
+    });
   }
 }

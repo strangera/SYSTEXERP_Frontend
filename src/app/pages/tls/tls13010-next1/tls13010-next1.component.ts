@@ -170,6 +170,13 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
       dateFormat: 'year-month',
       // maxLength: 8,
       required: true,
+      defaultValueFunction: () => {
+        const contractInfo = this.contractInfoData[0];
+        if (contractInfo?.tlt_contract_bdate) {
+          return new Date(contractInfo.tlt_contract_bdate);
+        }
+        return null;
+      }
     },
     {
       field: 'tpy_type',
@@ -196,7 +203,8 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
       editable: true,
       width: '70px',
       required: true,
-      validators: [TableValidators.positive('數量必須大於0')]
+      validators: [TableValidators.positive('數量必須大於0')],
+      defaultValue: 1
     },
     {
       field: 'tpy_amount',
@@ -226,6 +234,7 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
         { label: '未開立', value: 'N' }
       ],
       required: true,
+      defaultValue: 'Y'  // 🎯 預設開立發票
     }
   ];
 
@@ -263,6 +272,13 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
       dateFormat: 'year-month',
       // maxLength: 7
       required: true,
+      defaultValueFunction: () => {
+        const contractInfo = this.contractInfoData[0];
+        if (contractInfo?.tlt_contract_bdate) {
+          return new Date(contractInfo.tlt_contract_bdate);
+        }
+        return null;
+      }
     },
     {
       field: 'tpy_edate',
@@ -271,9 +287,14 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
       editable: true,
       width: '130px',
       dateFormat: 'year-month',
-      // maxLength: 7
       required: true,
-      validators: [TableValidators.positive('數量必須大於0')]
+      defaultValueFunction: () => {
+        const contractInfo = this.contractInfoData[0];
+        if (contractInfo?.tlt_contract_edate) {
+          return new Date(contractInfo.tlt_contract_edate);
+        }
+        return null;
+      }
     },
     {
       field: 'tpy_type',
@@ -291,7 +312,8 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
       editable: true,
       width: '90px',
       required: true,
-      validators: [TableValidators.positive('單價必須大於0')]
+      validators: [TableValidators.positive('單價必須大於0')],
+      defaultValue: 0
     },
     {
       field: 'tpy_qty',
@@ -301,14 +323,17 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
       editable: true,
       width: '70px',
       required: true,
-      validators: [TableValidators.positive('數量必須大於0')]
+      validators: [TableValidators.positive('數量必須大於0')],
+      defaultValue: 1
     },
     {
       field: 'tpy_amount',
       header: '扣款金額(未稅)',
       type: 'number',
       editable: false,
-      width: '120px'
+      width: '120px',
+      defaultValue: 0
+
     },
     {
       field: 'gui_flag',
@@ -321,6 +346,7 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
         { label: '未開立', value: 'N' }
       ],
       required: true,
+      defaultValue: 'Y'
     },
     {
       field: 'day_account',
@@ -333,6 +359,7 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
         { label: '否', value: 'N' }
       ],
       required: true,
+      defaultValue: 'Y'
     },
     {
       field: 'interval',
@@ -341,6 +368,7 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
       editable: true,
       width: '120px',
       required: true,
+      defaultValue: 1
     }
   ];
 
@@ -378,7 +406,13 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
       dateFormat: 'year-month',
       // maxLength: 7
       required: true,
-
+      defaultValueFunction: () => {
+        const contractInfo = this.contractInfoData[0];
+        if (contractInfo?.tlt_contract_bdate) {
+          return new Date(contractInfo.tlt_contract_bdate);
+        }
+        return null;
+      }
     },
     {
       field: 'tpy_edate',
@@ -389,7 +423,13 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
       dateFormat: 'year-month',
       // maxLength: 7
       required: true,
-
+      defaultValueFunction: () => {
+        const contractInfo = this.contractInfoData[0];
+        if (contractInfo?.tlt_contract_edate) {
+          return new Date(contractInfo.tlt_contract_edate);
+        }
+        return null;
+      }
     },
     {
       field: 'tpy_totalamt',
@@ -455,7 +495,7 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
         { label: '未開立', value: 'N' }
       ],
       required: true,
-
+      defaultValue: 'Y'
     }
   ];
 
@@ -493,7 +533,13 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
       dateFormat: 'year-month',
       // maxLength: 7
       required: true,
-
+      defaultValueFunction: () => {
+        const contractInfo = this.contractInfoData[0];
+        if (contractInfo?.tlt_contract_bdate) {
+          return new Date(contractInfo.tlt_contract_bdate);
+        }
+        return null;
+      }
     },
     {
       field: 'tpy_edate',
@@ -504,7 +550,13 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
       dateFormat: 'year-month',
       // maxLength: 7
       required: true,
-
+      defaultValueFunction: () => {
+        const contractInfo = this.contractInfoData[0];
+        if (contractInfo?.tlt_contract_edate) {
+          return new Date(contractInfo.tlt_contract_edate);
+        }
+        return null;
+      }
     },
     {
       field: 'tpy_type',
@@ -546,7 +598,7 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
         { label: '未開立', value: 'N' }
       ],
       required: true,
-
+      defaultValue: 'Y'
     }
   ];
 
@@ -584,7 +636,13 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
       dateFormat: 'year-month',
       // maxLength: 7
       required: true,
-
+      defaultValueFunction: () => {
+        const contractInfo = this.contractInfoData[0];
+        if (contractInfo?.tlt_contract_bdate) {
+          return new Date(contractInfo.tlt_contract_bdate);
+        }
+        return null;
+      }
     },
     {
       field: 'tpy_edate',
@@ -595,7 +653,13 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
       dateFormat: 'year-month',
       // maxLength: 7
       required: true,
-
+      defaultValueFunction: () => {
+        const contractInfo = this.contractInfoData[0];
+        if (contractInfo?.tlt_contract_edate) {
+          return new Date(contractInfo.tlt_contract_edate);
+        }
+        return null;
+      }
     },
     {
       field: 'tpy_type',
@@ -637,7 +701,7 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
         { label: '未開立', value: 'N' }
       ],
       required: true,
-
+      defaultValue: 'Y'
     }
   ];
 
@@ -1637,6 +1701,9 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
 
   onFareTableEdit(rowData: any, capType: string): void {
     console.log(`開始編輯 ${capType} 類型扣款資料:`, rowData);
+
+    // 🎯 在編輯時確保預設值已套用
+    this.ensureDefaultValues(rowData, capType);
   }
 
   onFareTableCancel(rowData: any, capType: string): void {
@@ -1648,6 +1715,9 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
 
     this.fareData[capType].forEach(item => {
       // 🎯 直接用 data_source 判斷是否為合約原有項目
+      if (item.is_selected && capType === 'C') {
+        this.ensureDefaultValues(item, capType);
+      }
       const isContractExisting = item.data_source === 'CONTRACT_EXISTING';
 
       if (item.is_selected) {
@@ -1962,4 +2032,30 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
 
     console.log(`✅ 所有表格欄位已設為${readonly ? '唯讀' : '可編輯'}模式`);
   }
+
+  // 🎯 套用動態預設值到新項目
+  private applyDynamicDefaults(item: any, columns: ColumnDef[]): void {
+    columns.forEach(column => {
+      // 如果欄位沒有值且有動態預設值函數
+      if ((item[column.field] === undefined || item[column.field] === null || item[column.field] === '')
+        && column.defaultValueFunction) {
+        try {
+          const defaultValue = column.defaultValueFunction();
+          if (defaultValue !== null && defaultValue !== undefined) {
+            item[column.field] = defaultValue;
+            console.log(`🎯 套用動態預設值 ${column.field}: ${defaultValue}`);
+          }
+        } catch (error) {
+          console.error(`❌ 動態預設值函數執行失敗 ${column.field}:`, error);
+        }
+      }
+    });
+  }
+
+  // 🎯 在進入編輯模式時套用預設值
+  private ensureDefaultValues(item: any, capType: string): void {
+    const columns = this.getColumnsForType(capType);
+    this.applyDynamicDefaults(item, columns);
+  }
+
 }
