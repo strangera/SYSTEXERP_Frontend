@@ -151,7 +151,19 @@ export class TLS23100Component extends BasicQueryPageComponent<any> {
 // 送出查詢（無 doQuery / buildPayload）
 onSubmit(form: FormGroup): void {
   this.handleSubmit(form, () => {
-    const val = this.queryForm.value as any;
+    const val = this.queryForm.getRawValue() as any;
+
+    // 由 pageIndex/pageSize 推算 Offset（0-based）
+    const offset =
+      Number.isFinite(val?.pageIndex) && Number.isFinite(val?.pageSize)
+        ? Math.max(0, (val.pageIndex - 1) * val.pageSize)
+        : undefined;
+
+    // SortMeta[] -> "field ASC,DESC"
+    const orderBy =
+      Array.isArray(val?.SortBy) && val.SortBy.length
+        ? val.SortBy.map((s: any) => `${s.field} ${s.order === 1 ? 'ASC' : 'DESC'}`).join(',')
+        : undefined;
 
     // 本地 ISO(yyyy-MM-ddTHH:mm:ss) — 去掉時區偏移
     const toIso = (x: any) => {
@@ -163,19 +175,25 @@ onSubmit(form: FormGroup): void {
         .slice(0, 19);
     };
 
-    // 直接在這裡組 payload（保留分頁/排序）
+    // 組 payload（保留分頁/排序）
     const payload: any = {
-      ...val,
       TXN_DateStart: toIso(val?.TXN_DateStart),
       TXN_DateEnd:   toIso(val?.TXN_DateEnd),
-      pageSize:  val?.pageSize,
-      pageIndex: val?.pageIndex,
-      SortBy:    val?.SortBy,
-      OrderBy:   val?.OrderBy,
-      Offset:    val?.Offset,
+      ECR_No:        val?.ECR_No,
+      TLT_No:        val?.TLT_No,
+      CRD_Type:      val?.CRD_Type,
+      CRD_No:        val?.CRD_No,
+      tlt_building:  val?.tlt_building,
+      tlt_floor:     val?.tlt_floor,
+      org_id:        val?.org_id,
+      pageSize:      val?.pageSize,
+      pageIndex:     val?.pageIndex,
+      SortBy:        val?.SortBy,
+      ...(offset  !== undefined ? { Offset:  offset } : {}),
+      ...(orderBy ? { OrderBy: orderBy } : {}),
     };
 
-    // 移除空字串 / null / undefined / 空陣列，避免干擾後端繫結
+    // 移除空字串 / null / undefined / 空陣列
     Object.keys(payload).forEach((k) => {
       const v = payload[k];
       if (v === '' || v === null || v === undefined) delete payload[k];
@@ -186,12 +204,23 @@ onSubmit(form: FormGroup): void {
     this.messageService?.blockUi();
 
     this.tls23100Service.queryTLS23100(payload).subscribe({
-      next: (res) => {
-        const raw = res?.Data ?? [];
-        this.data = Array.isArray(raw) ? raw : [];
-        this.totalRecords = typeof res?.TotalCount === 'number'
-          ? res.TotalCount
-          : this.data.length; // ✅ 沒有 res.total
+      next: (res: any) => {
+        // 期待：{ Data: [{ totalPayAmt, tLS23100Details: [...] }], TotalCount, ... }
+        const data = res?.Data;
+        const wrapper = Array.isArray(data) ? data[0] : data;
+
+        const details =
+          wrapper?.tLS23100Details ??
+          wrapper?.TLS23100Details ??
+          wrapper?.tls23100Details ??
+          [];
+
+        this.data = Array.isArray(details) ? details : [];
+
+        this.totalRecords =
+          typeof res?.TotalCount === 'number' ? res.TotalCount : this.data.length;
+
+        // 如需總計可自行加欄位接：this.totalPayAmt = wrapper?.totalPayAmt ?? 0;
       },
       error: (err) => {
         console.error('TLS23100 查詢失敗', err);
@@ -200,7 +229,7 @@ onSubmit(form: FormGroup): void {
       complete: () => {
         this.loading = false;
         this.messageService?.unblockUi();
-      }
+      },
     });
   });
 }

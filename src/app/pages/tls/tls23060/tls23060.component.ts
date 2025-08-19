@@ -20,6 +20,7 @@ import { InputTextModule } from 'primeng/inputtext';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { TranslateModule } from '@ngx-translate/core';
 import { TableComponent } from '@shared/componentkit/table/table.component';
+import { formatDateToYYYY_MM_DD } from '../../../shared/componentkit/table/table.model';
 
 @Component({
   selector: 'app-tls23060',
@@ -52,7 +53,7 @@ export class TLS23060Component extends BasicQueryPageComponent<any> {
     d.setDate(d.getDate() - 1);
     return d;
   })();
-
+totals: any | null = null;   // 伺服器回傳的 totals（含 totalPayAmt… 等）
   // ✅ 陣列型欄位改用 control<any[]>([])，避免 never[] 型別
   queryForm = this.formBuilder.group({
   
@@ -128,36 +129,76 @@ export class TLS23060Component extends BasicQueryPageComponent<any> {
       });
   }
 
-  
-  // 送出查詢
+
 // 送出查詢
 onSubmit(form: FormGroup): void {
   this.handleSubmit(form, () => {
-    const formValue = this.queryForm.value;
+    const val = this.queryForm.getRawValue() as any;
 
-    // 直接組 payload
-    const payload: any = { ...formValue };
+    // 由 pageIndex/pageSize 推算 Offset（後端常見 0-based）
+    const offset =
+      Number.isFinite(val?.pageIndex) && Number.isFinite(val?.pageSize)
+        ? Math.max(0, (val.pageIndex - 1) * val.pageSize)
+        : undefined;
 
-    if (payload.TXN_DateStart instanceof Date) {
-      payload.TXN_DateStart = payload.TXN_DateStart.toISOString().slice(0, 10);
-    }
-    if (payload.TXN_DateEnd instanceof Date) {
-      payload.TXN_DateEnd = payload.TXN_DateEnd.toISOString().slice(0, 10);
-    }
+    // 將 SortBy: SortMeta[] 轉成 "field ASC/DESC,field2 ASC..."
+    const orderBy =
+      Array.isArray(val?.SortBy) && val.SortBy.length
+        ? val.SortBy
+            .map((s: any) => `${s.field} ${s.order === 1 ? 'ASC' : 'DESC'}`)
+            .join(',')
+        : undefined;
 
-   
+    // 組 payload（用本地 YYYY-MM-DD，避免 toISOString 位移）
+    const payload: any = {
+      TXN_DateStart: formatDateToYYYY_MM_DD(val?.TXN_DateStart),
+      TXN_DateEnd:   formatDateToYYYY_MM_DD(val?.TXN_DateEnd),
+      rece_yn:       val?.rece_yn,
+      ECR_No:        val?.ECR_No,
+      tlt_no:        val?.tlt_no,
+      tlt_building:  val?.tlt_building,
+      tlt_floor:     val?.tlt_floor,
+      org_id:        val?.org_id,
+      pageSize:      val?.pageSize,
+      pageIndex:     val?.pageIndex,
+      SortBy:        val?.SortBy,
+      ...(offset  !== undefined ? { Offset:  offset } : {}),
+      ...(orderBy ? { OrderBy: orderBy } : {}),
+    };
 
-    // 呼叫 API
+    // 清掉空值/空陣列，避免後端模型繫結混亂
+    Object.keys(payload).forEach((k) => {
+      const v = payload[k];
+      if (v === '' || v === null || v === undefined) delete payload[k];
+      if (Array.isArray(v) && v.length === 0) delete payload[k];
+    });
+
     this.loading = true;
     this.messageService?.blockUi();
 
     this.tls23060Service.queryTLS23060(payload).subscribe({
-      next: (res) => {
-        const raw = res?.Data ?? [];
-        this.data = Array.isArray(raw) ? raw : [];
-        this.totalRecords = typeof res?.TotalCount === 'number'
-          ? res.TotalCount
-          : this.data.length;
+      next: (res: any) => {
+        // 期望格式：{ Status, Data: [{ totalPayAmt..., tLS23060Details: [...] }], TotalCount, ... }
+        const data = res?.Data;
+        const wrapper = Array.isArray(data) ? data[0] : data;
+
+        // 明細
+        const details =
+          wrapper?.tLS23060Details ??
+          wrapper?.TLS23060Details ??
+          wrapper?.tls23060Details ??
+          [];
+
+        this.data = Array.isArray(details) ? details : [];
+
+        // 總筆數（分頁需要）
+        this.totalRecords =
+          typeof res?.TotalCount === 'number'
+            ? res.TotalCount
+            : this.data.length;
+
+        // 若要顯示總計，可用 this.totals
+        this.totals = wrapper ?? null;
       },
       error: (err) => {
         console.error('TLS23060 查詢失敗', err);
@@ -166,10 +207,11 @@ onSubmit(form: FormGroup): void {
       complete: () => {
         this.loading = false;
         this.messageService?.unblockUi();
-      }
+      },
     });
   });
 }
+
 
 
   

@@ -223,11 +223,16 @@
   [showEdit]="false"
   [showManage]="false"
   [showDelete]="false"
-  [multiSortMeta]="[{ field: 'ECR_No', order: 1 }]"
+    [multiSortMeta]="[
+    { field: '_sortLast', order: 1 },   
+    { field: 'ECR_No', order: 1 }
+  ]"
   [totalRecords]="totalRecords"
   (lazyLoadData)="runQueryFromTable($event)"
   [lazy]="true"
   [loading]="loading"
+  
+  [isRowSelectable]="isRowSelectable" 
 ></app-table>
   </div>
 </div>
