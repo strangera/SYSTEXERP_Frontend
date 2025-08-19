@@ -27,12 +27,12 @@
           <app-dropdown class="col-12 md:col-6 lg:col-4" class="col-12 md:col-6 lg:col-4" n label="審核人編號"
             controlName="APRV_USR_No" [options]="userOptions" optionLabel="user_Name" optionValue="user_No"
             [control]="queryForm.controls.APRV_USR_No" [submitted]="submitted"></app-dropdown>
-          <app-calendar-range class="col-12 md:col-6 lg:col-4" calendarType="dateRange" label="申請日期"
+          <app-calendar-range-quick class="col-12 md:col-6 lg:col-4" calendarType="dateRange" label="申請日期"
             [startControl]="queryForm.controls.APPLY_Date_Start" [endControl]="queryForm.controls.APPLY_Date_End"
-            [submitted]="submitted"></app-calendar-range>
-          <app-calendar-range class="col-12 md:col-6 lg:col-4" calendarType="dateRange" label="審核日期"
+            [submitted]="submitted"></app-calendar-range-quick>
+          <app-calendar-range-quick class="col-12 md:col-6 lg:col-4" calendarType="dateRange" label="審核日期"
             [startControl]="queryForm.controls.APRV_Date_Start" [endControl]="queryForm.controls.APRV_Date_End"
-            [submitted]="submitted"></app-calendar-range>
+            [submitted]="submitted"></app-calendar-range-quick>
           <div class="col-12 md:col-6 lg:col-4 flex align-items-center">
             <p-checkbox formControlName="showReturnPriceOrdersOnly" [binary]="true"
               inputId="showReturnPriceOrdersOnlyCheckbox" />
