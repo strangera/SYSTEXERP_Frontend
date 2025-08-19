@@ -302,8 +302,8 @@ export class TableComponent extends BasicPrintDataComponent implements OnChanges
     if (this.deleteData) {
       this.data = this.data.filter(item => !selectedItems.includes(item));
       this.dataChange.emit(this.data);
+      this.selectedItems = [];
     }
-    this.selectedItems = [];
   }
   // Edit 按鈕 事件
   editRow(rowData: any) { this.edit.emit(rowData); }

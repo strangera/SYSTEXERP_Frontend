@@ -86,15 +86,24 @@ export class DropdownTableComponent extends BasicKitComponent implements OnInit,
   }
 
   getFieldValue(field: FieldsConfig): string {
+    // 新增空值檢查
+    if (this.control.value === null || this.control.value === undefined) {
+      return '';
+    }
+
     let selectedValue: string;
     if (typeof this.control.value === 'string') {
       selectedValue = this.control.value;
     } else if (typeof this.control.value === 'object') {
+      // 這裡也需要檢查 this.control.value 是否為 null 或 undefined
+      // 在最前面已經檢查過了，所以這裡可以放心地使用
       selectedValue = this.control.value[this.optionValue];
     } else {
-      return ''; // 如果 control.value 不是字串也不是包含 controlName 屬性的物件，則返回空字串
+      return ''; // 如果 control.value 不是字串也不是物件，則返回空字串
     }
+
     const selectedSuggestion = this.suggestions.find((item: any) => item[this.optionValue] === selectedValue);
+
     if (selectedValue && selectedSuggestion && this.suggestions && this.optionValue) {
       if (selectedSuggestion[field.field] !== undefined) {
         if (field.format) {
@@ -104,6 +113,7 @@ export class DropdownTableComponent extends BasicKitComponent implements OnInit,
         }
       }
     }
+
     return '';
   }
 

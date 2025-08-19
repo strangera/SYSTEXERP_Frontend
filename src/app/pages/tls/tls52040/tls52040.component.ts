@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ITLS52040Data, Tls52040Service } from '../../../service/api/tls/tls52040.service';
-import { AddButton, Column, createPaginationConfig, formatAmount, formatDateTime } from '../../../shared/componentkit/table/table.model';
+import { AddButton, Column, createPaginationConfig, formatAmount, formatDate, formatDateTime } from '../../../shared/componentkit/table/table.model';
 import { finalize, map } from 'rxjs';
 import { DropDownListService, IDropdownItem } from '../../../service/utility/dropDownList.service';
 import { untilDestroyed } from '@ngneat/until-destroy';
@@ -14,7 +14,6 @@ import { AccordionModule } from 'primeng/accordion';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { Button } from 'primeng/button';
 import { TooltipModule } from 'primeng/tooltip';
@@ -79,14 +78,13 @@ export class TLS52040Component extends BasicQueryPageComponent<ITLS52040Data> im
   selectedItems: ITLS52040Data[] = [];
   columns: Column[] = [
     { field: 'RJM_No', header: '退貨驗收編號', visible: true },
-    { field: 'SYS_StoreNo', header: '公司編號/店號', visible: false },
     { field: 'VEN_No', header: '廠商編號', visible: true },
     { field: 'LOGO_No', header: '品牌代碼', visible: true },
     { field: 'LOGO_CH_NAME', header: '品牌名稱', visible: true },
     { field: 'HOS_No', header: '倉庫代碼', visible: true },
     { field: 'HOS_NAME', header: '倉庫名稱', visible: true },
     { field: 'org_id', header: '組織代碼/組織名稱', visible: true },
-    { field: 'APPLY_Date', header: '申請日期', visible: true, format: formatDateTime, sortField: 'APPLY_Date' },
+    { field: 'APPLY_Date', header: '申請日期', visible: true, format: formatDate, sortField: 'APPLY_Date' },
     { field: 'APPLY_USR_No', header: '申請人員', visible: true, sortField: 'APPLY_USR_No' },
     { field: 'APPLY_USR_Name', header: '申請人員姓名', visible: true, sortField: 'APPLY_USR_Name' },
     { field: 'RJM_Status', header: '退貨驗收單狀態', visible: true, format: value => this.poStatusOptions.find(x => x.value === value)?.label || value },
@@ -97,13 +95,13 @@ export class TLS52040Component extends BasicQueryPageComponent<ITLS52040Data> im
     { field: 'RJM_TotalSaleTax', header: '售價稅額小計', visible: true, format: formatAmount },
     { field: 'RJM_TotalSaleAmt', header: '售價合計', visible: true, format: formatAmount },
     // { field: 'RJM_TaxType', header: '單據稅別', visible: true, format: value => value === '1' ? '應稅' : '免稅' },
-    { field: 'APRV_Date', header: '審核(驗收)日期', visible: true, format: formatDateTime },
+    { field: 'APRV_Date', header: '審核(驗收)日期', visible: true, format: formatDate },
     { field: 'APRV_USR_No', header: '審核人員', visible: true },
     { field: 'APRV_USR_Name', header: '審核人員姓名', visible: true },
-    { field: 'ReAPRV_Date', header: '反審核日期', visible: true, format: formatDateTime },
+    { field: 'ReAPRV_Date', header: '反審核日期', visible: true, format: formatDate },
     { field: 'ReAPRV_USR_No', header: '反審核人員', visible: true },
     { field: 'ReAPRV_USR_Name', header: '反審核人員姓名', visible: true },
-    { field: 'Void_Date', header: '作廢日期', visible: true, format: formatDateTime },
+    { field: 'Void_Date', header: '作廢日期', visible: true, format: formatDate },
     { field: 'Void_USR_No', header: '作廢人員', visible: true },
     { field: 'Void_USR_Name', header: '作廢人員姓名', visible: true },
     { field: 'RJM_Remark', header: '備註', visible: true },

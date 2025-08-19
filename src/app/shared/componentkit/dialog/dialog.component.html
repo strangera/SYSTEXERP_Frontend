@@ -1,4 +1,4 @@
-<p-dialog [(visible)]="visible" position="center"
+<p-dialog [(visible)]="visible" position="center" [focusOnShow]="false"
   [style]="{ width: width, height: height, maxWidth: maxWidth, minHeight: minHeight }" [header]="header" [modal]="true"
   [styleClass]="styleClass + ' p-fluid'" (visibleChange)="visibleChange.emit($event)">
   <ng-template pTemplate="content">

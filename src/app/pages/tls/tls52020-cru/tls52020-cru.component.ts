@@ -69,8 +69,7 @@ export class TLS52020CRUComponent extends BasicCruPageComponent<ITLS52020Data> i
     { field: 'PLU_MagNo', header: '商品管理編號' },
     { field: 'PLU_Name', header: '商品名稱' },
     { field: 'PLU_No', header: '國際條碼' },
-    { field: 'PLU_Unit', header: '單位編號' },
-    { field: 'UNIT_NAME', header: '單位名稱' },
+    { field: 'UNIT_NAME', header: '單位' },
     { field: 'PLU_BoxQty', header: '包裝入數' },
     { field: 'PLU_StockTaxType', header: '稅別', format: (value) => value === '0' ? '免稅' : value === '1' ? '應稅' : '' },
     { field: 'CRN_SubQty', header: '數量', type: 'inputNumber', validate: [validateMinNumber(0)] },
@@ -186,8 +185,7 @@ export class TLS52020CRUComponent extends BasicCruPageComponent<ITLS52020Data> i
     { field: 'PLU_MagNo', header: '商品管理編號' },
     { field: 'PLU_Name', header: '商品名稱' },
     { field: 'PLU_No', header: '國際條碼' },
-    { field: 'PLU_Unit', header: '單位編號' },
-    { field: 'UNIT_NAME', header: '單位名稱' },
+    { field: 'UNIT_NAME', header: '單位' },
     { field: 'PLU_BoxQty', header: '包裝入數' },
     { field: 'PLU_StockTaxType', header: '稅別', format: (value) => value === '0' ? '免稅' : '應稅' },
     { field: 'PLU_SalePrc_UNI', header: '單價', showSort: false },
@@ -409,7 +407,10 @@ export class TLS52020CRUComponent extends BasicCruPageComponent<ITLS52020Data> i
       SortBy: [{ field: 'PLU_MagNo', order: 1 }],
     }
     this.tls52010Service.queryPOS2004Detail(body).pipe(untilDestroyed(this)).subscribe((results) => {
-      this.suggestions = [...results.Data];
+      this.suggestions = [...results.Data.map(item => ({
+        ...item,
+        label: item.PLU_MagNo + ' - ' + item.PLU_Name + ' - ' + item.PLU_No + ' - ' + item.PLU_OrgPLUNo
+      }))];
     });
   }
   onformValueChanged(event: IQueryPOS2004DetailRequest) {

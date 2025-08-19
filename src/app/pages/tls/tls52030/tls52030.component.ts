@@ -80,7 +80,6 @@ export class TLS52030Component extends BasicQueryPageComponent<ITLS52030Data> im
   selectedItems: ITLS52030Data[] = [];
   columns: Column[] = [
     { field: 'ODM_No', header: '進貨驗收編號', visible: true },
-    { field: 'SYS_StoreNo', header: '公司編號/店號', visible: false },
     { field: 'VEN_No', header: '廠商編號', visible: true },
     { field: 'LOGO_No', header: '品牌代碼', visible: true },
     { field: 'LOGO_CH_NAME', header: '品牌名稱', visible: true },

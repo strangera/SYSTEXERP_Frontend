@@ -73,8 +73,7 @@ export class TLS52010CRUComponent extends BasicCruPageComponent<ITLS52010Data> i
     { field: 'PLU_MagNo', header: '商品管理編號' },
     { field: 'PLU_Name', header: '商品名稱' },
     { field: 'PLU_No', header: '國際條碼' },
-    { field: 'PLU_Unit', header: '單位編號' },
-    { field: 'UNIT_NAME', header: '單位名稱' },
+    { field: 'UNIT_NAME', header: '單位' },
     { field: 'PLU_BoxQty', header: '包裝入數' },
     { field: 'PLU_StockTaxType', header: '稅別', format: (value) => value === '0' ? '免稅' : '應稅' },
     { field: 'POD_SubQty', header: '數量', type: 'inputNumber', validate: [validateMinNumber(0)] },
@@ -208,10 +207,9 @@ export class TLS52010CRUComponent extends BasicCruPageComponent<ITLS52010Data> i
     { field: 'PLU_MagNo', header: '商品管理編號' },
     { field: 'PLU_Name', header: '商品名稱' },
     { field: 'PLU_No', header: '國際條碼' },
-    { field: 'PLU_Unit', header: '單位編號' },
-    { field: 'UNIT_NAME', header: '單位名稱' },
+    { field: 'UNIT_NAME', header: '單位' },
     { field: 'PLU_BoxQty', header: '包裝入數' },
-    { field: 'PLU_StockTaxType', header: '稅別', format: (value) => value === '0' ? '免稅' : '應稅' },
+    { field: 'PLU_StockTaxType', header: '稅別', format: (value) => value === '0' ? '免稅' : value === '1' ? '應稅' : '' },
     { field: 'PLU_SalePrc_UNI', header: '單價', showSort: false },
     { field: 'PLU_SalePrc', header: '售價' },
   ]
@@ -303,7 +301,7 @@ export class TLS52010CRUComponent extends BasicCruPageComponent<ITLS52010Data> i
   }
 
   // 總計計算邏輯
-  private calculateTotals(): void {
+  calculateTotals(): void {
     let totalBuyNet = 0; // 採購金額(即所有明細的「小計」加總)
     let totalBuyTax = 0; // 採購金額(即所有明細的「小計」加總)
     let totalSaleAmt = 0; // 售價總計(即所有明細的「售價小計」加總)
@@ -317,6 +315,7 @@ export class TLS52010CRUComponent extends BasicCruPageComponent<ITLS52010Data> i
     this.dataForm.controls.PO_TotalBuyTax.setValue(Math.round(totalBuyTax));
     this.dataForm.controls.PO_TotalBuyAmt.setValue(Math.round(totalBuyAmt));
     this.dataForm.controls.PO_TotalSaleAmt.setValue(Math.round(totalSaleAmt));
+    this.cdr.detectChanges();
   }
 
   onSubmit(frm: FormGroup) {
@@ -426,7 +425,10 @@ export class TLS52010CRUComponent extends BasicCruPageComponent<ITLS52010Data> i
       SortBy: [{ field: 'PLU_MagNo', order: 1 }],
     }
     this.tls52010Service.queryPOS2004Detail(body).pipe(untilDestroyed(this)).subscribe((results) => {
-      this.suggestions = [...results.Data];
+      this.suggestions = [...results.Data.map(item => ({
+        ...item,
+        label: item.PLU_MagNo + ' - ' + item.PLU_Name + ' - ' + item.PLU_No + ' - ' + item.PLU_OrgPLUNo
+      }))];
     });
   }
   onformValueChanged(event: IQueryPOS2004DetailRequest) {

@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 import { PanelModule } from 'primeng/panel';
 import { NgIf } from '@angular/common';
@@ -17,6 +17,7 @@ import { Sys0110Service } from '@service/api/sys/sys0110.service';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
 import { DropDownListService } from '@service/utility/dropDownList.service';
+import { Tls43040Service } from '@service/api/tls/tls43040.service';
 
 // 只用到欄位
 interface SYS1000 {
@@ -48,7 +49,8 @@ export class TLS43040CRUComponent extends BasicCruPageComponent<any> implements 
   constructor(
     private locationOptionsService: LocationOptionsService,
     private sys0110Service: Sys0110Service,
-    private dropDownListService: DropDownListService
+    private dropDownListService: DropDownListService,
+    private tls43040Service: Tls43040Service
   ) {
     super();
   }
@@ -58,19 +60,15 @@ export class TLS43040CRUComponent extends BasicCruPageComponent<any> implements 
     ECR_GrpNo: [{ value: '自動編號', disabled: true }],
     ECR_GrpName: ['', [Validators.required, Validators.maxLength(64)]],
     ECR_GrpDesc: ['', [Validators.maxLength(255)]],
-    ECR_DtlLimit: [0, [Validators.maxLength(1)]],
-    CRT_Date: [],
-    CRT_USR_No: ['', [Validators.maxLength(8)]],
-    CRT_USR_Name: ['', [Validators.maxLength(20)]],
-    UPD_Date: [],
-    UPD_USR_No: ['', [Validators.maxLength(8)]],
+    ECR_DtlLimit: ['', Validators.required],
+
   });
 
   // ===== 下拉資料源 =====
   ECR_DtlLimit_Options = [
-    { value: 0, label: '不限制' },
-    { value: 1, label: '符合明細設定的機台才列入群組' },
-    { value: 2, label: '不符合明細設定的機台才列入群組' },
+    { value: "0", label: '不限制' },
+    { value: "1", label: '符合明細設定的機台才列入群組' },
+    { value: "2", label: '不符合明細設定的機台才列入群組' },
   ];
   POS1002_ECR_Options: { label: string; value: string }[] = [];
   SYS1000_ECRType_Options: { label: string; value: string }[] = [];
@@ -91,7 +89,6 @@ export class TLS43040CRUComponent extends BasicCruPageComponent<any> implements 
 
   // ===== 載入下拉並設定 columns =====
   private loadAndSetupColumns(): void {
-    // 1) POS1002.ECR_No
     const pos1002Options$ = this.dropDownListService.queryPOS1002_DropDownList().pipe(
       map((res: any) => (res?.Data ?? []).map((x: any) => {
         const no = x.No ?? x.ECR_No ?? x.value ?? '';
@@ -100,7 +97,6 @@ export class TLS43040CRUComponent extends BasicCruPageComponent<any> implements 
       }))
     );
 
-    // 2) SYS1000 機台類型 (SYS_Type='ECR_Type')
     const ecrTypeOptions$ = this.sys0110Service.queryAllSystemCode({}).pipe(
       map((res: any) =>
         (res?.Data ?? [])
@@ -109,12 +105,10 @@ export class TLS43040CRUComponent extends BasicCruPageComponent<any> implements 
       )
     );
 
-    // 3) 館別/樓層/區域
-    const buildingOptions$ = this.locationOptionsService.getBuildingOptions(); // -> 館別
-    const floorOptions$ = this.locationOptionsService.getFloorOptions();    // -> 樓層
-    const regionOptions$ = this.locationOptionsService.getRegionOptions();   // -> 區域
+    const buildingOptions$ = this.locationOptionsService.getBuildingOptions();
+    const floorOptions$ = this.locationOptionsService.getFloorOptions();
+    const regionOptions$ = this.locationOptionsService.getRegionOptions();
 
-    // 4) 專櫃 TLT_No
     const tltTalentOptions$ = this.sys0110Service.queryTLTTALENT_DropDownList({}).pipe(
       map((res: any) => (res?.Data ?? []).map((i: any) => ({
         ...i,
@@ -123,7 +117,6 @@ export class TLS43040CRUComponent extends BasicCruPageComponent<any> implements 
       })))
     );
 
-    // RxJS v8：forkJoin 用 rest 參數
     forkJoin(
       pos1002Options$,
       ecrTypeOptions$,
@@ -133,15 +126,8 @@ export class TLS43040CRUComponent extends BasicCruPageComponent<any> implements 
       tltTalentOptions$,
     )
       .pipe(untilDestroyed(this))
-      .subscribe(([
-        POS1002_ECR_Options,
-        SYS1000_ECRType_Options,
-        SYS3700_Options,
-        SYS3900_Options,
-        SYS3A00_Options,
-        TLTTALENT_OPTIONS,
-      ]) => {
-        this.POS1002_ECR_Options = POS1002_ECR_Options ?? ([] as { label: string; value: string }[]);
+      .subscribe(([POS1002_ECR_Options, SYS1000_ECRType_Options, SYS3700_Options, SYS3900_Options, SYS3A00_Options, TLTTALENT_OPTIONS]) => {
+        this.POS1002_ECR_Options = POS1002_ECR_Options ?? [];
         this.SYS1000_ECRType_Options = SYS1000_ECRType_Options ?? [];
         this.SYS3700_Options = SYS3700_Options ?? [];
         this.SYS3900_Options = SYS3900_Options ?? [];
@@ -149,35 +135,12 @@ export class TLS43040CRUComponent extends BasicCruPageComponent<any> implements 
         this.TLTTALENT_OPTIONS = TLTTALENT_OPTIONS ?? [];
 
         this.columns = [
-          {
-            field: 'ECR_No', header: '收銀機號', type: 'dropdown',
-            options: this.POS1002_ECR_Options, optionLabel: 'label', optionValue: 'value'
-          },
-
-          {
-            field: 'ECR_Type', header: '機台類型', type: 'dropdown',
-            options: this.SYS1000_ECRType_Options, optionLabel: 'label', optionValue: 'value'
-          },
-
-          {
-            field: 'TLT_No', header: '專櫃編號', type: 'dropdown',
-            options: this.TLTTALENT_OPTIONS, optionLabel: 'label', optionValue: 'No'
-          },
-
-          {
-            field: 'Building_No', header: '館別代碼', type: 'dropdown',
-            options: this.SYS3700_Options, optionLabel: 'label', optionValue: 'value'
-          },
-
-          {
-            field: 'Floor_No', header: '樓層代碼', type: 'dropdown',
-            options: this.SYS3900_Options, optionLabel: 'label', optionValue: 'value'
-          },
-
-          {
-            field: 'Area_No', header: '區域', type: 'dropdown',
-            options: this.SYS3A00_Options, optionLabel: 'label', optionValue: 'value'
-          },
+          { field: 'ECR_No', header: '收銀機號', type: 'dropdown', options: this.POS1002_ECR_Options, optionLabel: 'label', optionValue: 'value' },
+          { field: 'ECR_Type', header: '機台類型', type: 'dropdown', options: this.SYS1000_ECRType_Options, optionLabel: 'label', optionValue: 'value' },
+          { field: 'TLT_No', header: '專櫃編號', type: 'dropdown', options: this.TLTTALENT_OPTIONS, optionLabel: 'label', optionValue: 'No' },
+          { field: 'Building_No', header: '館別代碼', type: 'dropdown', options: this.SYS3700_Options, optionLabel: 'label', optionValue: 'value' },
+          { field: 'Floor_No', header: '樓層代碼', type: 'dropdown', options: this.SYS3900_Options, optionLabel: 'label', optionValue: 'value' },
+          { field: 'Area_No', header: '區域', type: 'dropdown', options: this.SYS3A00_Options, optionLabel: 'label', optionValue: 'value' },
         ];
       });
   }
@@ -187,12 +150,44 @@ export class TLS43040CRUComponent extends BasicCruPageComponent<any> implements 
     const ids = new Set(rows.map(r => r.ID));
     this.data = this.data.filter(x => !ids.has(x.ID));
     this.selectedRows = [];
+
+    // 呼叫 API 刪除
+    rows.forEach(r => {
+      this.tls43040Service.deleteTLS43040({ ID: r.ID }).subscribe({
+        next: () => console.log('刪除成功:', r.ID),
+        error: err => console.error('刪除失敗:', err)
+      });
+    });
   }
 
   onSubmit(form: FormGroup): void {
     if (form.valid) {
-      console.log('提交成功:', form.value);
-      // TODO: 串接新增/更新 API
+      const payload = {
+        ...form.getRawValue(),
+        details: this.data   // 把明細表格一起送
+      };
+
+      if (!payload.ECR_GrpNo || payload.ECR_GrpNo === '自動編號') {
+        // 新增
+        this.tls43040Service.insertTLS43040(payload).subscribe({
+          next: (res) => {
+            console.log('新增成功:', res);
+          },
+          error: (err) => {
+            console.error('新增失敗:', err);
+          }
+        });
+      } else {
+        // 更新
+        this.tls43040Service.updateTLS43040(payload).subscribe({
+          next: (res) => {
+            console.log('更新成功:', res);
+          },
+          error: (err) => {
+            console.error('更新失敗:', err);
+          }
+        });
+      }
     } else {
       console.log('表單驗證未通過');
     }

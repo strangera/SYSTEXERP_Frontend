@@ -69,11 +69,10 @@ export class TLS21030CRUComponent extends BasicCruPageComponent<TLS21030Data> im
   ngOnInit(): void {
     this.initializePage('TLS21030', this.dataForm);
     if (!this.isFormCreateable) {
+      this.dataForm.get('money_type')?.disable();
+      this.dataForm.get('term_no')?.disable();
+      this.dataForm.get('rece_yn')?.disable();
       this.onQuery(this.dataForm);
-      this.loading = true;
-      this.tls21030Service.queryTLS21030Detail({ BILL_NOTES_id: this.rowdata?.id }).pipe(finalize(() => this.loading = false)).pipe(untilDestroyed(this)).subscribe(res => {
-        this.selectedRows = res.Data;
-      });
     }
   }
   onUnSelect(event: TableRowUnSelectEvent) {
@@ -89,6 +88,12 @@ export class TLS21030CRUComponent extends BasicCruPageComponent<TLS21030Data> im
     this.tls21030Service.queryTLTTALENT_By_money_type(frm.getRawValue()).pipe(finalize(() => this.loading = false)).pipe(untilDestroyed(this)).subscribe(res => {
       this.data = res.Data;
       this.totalRecords = res.TotalCount;
+      if (!this.isFormCreateable) {
+        this.loading = true;
+        this.tls21030Service.queryTLS21030Detail({ BILL_NOTES_id: this.rowdata?.id }).pipe(finalize(() => this.loading = false)).pipe(untilDestroyed(this)).subscribe(res => {
+          this.selectedRows = res.Data;
+        });
+      }
     });
   }
   onSubmit(frm: FormGroup) {
@@ -105,7 +110,7 @@ export class TLS21030CRUComponent extends BasicCruPageComponent<TLS21030Data> im
         return this.messageService.errorBubble('請至少選擇一個專櫃');
       }
       const body = {
-        ...frm.value,
+        ...frm.getRawValue(),
         ID: this.rowdata?.id || undefined,
         bill_remark1: Base64Service.encode(frm.value.bill_remark1),
         bill_remark2: Base64Service.encode(frm.value.bill_remark2),
