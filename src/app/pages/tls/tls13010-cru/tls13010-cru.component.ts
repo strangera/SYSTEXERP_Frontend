@@ -848,7 +848,7 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
       bus_class: queryData['bus_class'] as string,
       bus_sclass: queryData['bus_sclass'] as string,
       contract_subno: queryData['contract_subno'] as string,
-
+      approve_status: queryData['approve_status'] as string,
       // 合約資訊
       feedback_date: queryData['feedback_date'] as string,
       due_date: queryData['due_date'] as string,
