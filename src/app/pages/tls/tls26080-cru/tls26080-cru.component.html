@@ -14,7 +14,7 @@
            class="line-height-3 m-0 mb-3">
     <form [formGroup]="dataForm"
           id="dataForm"
-          (ngSubmit)="onSubmit(dataForm)">
+          (ngSubmit)="onSubmit()">
       <div class="grid p-fluid">
         <div class="col-12 md:col-6 lg:col-4">
           <app-input-text label="活動編號"
@@ -93,7 +93,7 @@
                   (click)="onExportExcelTemplate()"></app-button>
       <app-button btnType="submit"
                   label="存檔"
-                  (click)="onSubmit(dataForm)"></app-button>
+                  (click)="onSubmit()"></app-button>
     </div>
   </p-panel>
 </div>

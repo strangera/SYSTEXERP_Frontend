@@ -1,29 +1,58 @@
 <div class="card">
   <div class="grid align-items-center">
-    <div class="col" style="flex: 1">
+    <div class="col">
       <app-menubar [ProgNo]="ProgNo"></app-menubar>
     </div>
-    <div >
-      <app-button
-        btnType="create"
-        (click)="onCreate()"
-        class="col"
-      ></app-button>
+    <div class="flex gap-2">
+      <app-button btnType="create"
+                  (click)="onCreate()"></app-button>
     </div>
   </div>
+
   <p-accordion>
-    <p-accordionTab
-      header="{{ 'query-conditions' | translate }}"
-      [selected]="true"
-      class="line-height-3 m-0"
-      [headerStyleClass]="'query-accordionTab'"
-    >
-      <form
-        [formGroup]="queryForm"
-        id="queryForm"
-        (ngSubmit)="onSubmit(queryForm)"
-      >
+    <p-accordionTab header="{{ 'query-conditions' | translate }}"
+                    [selected]="true"
+                    class="line-height-3 m-0"
+                    [headerStyleClass]="'query-accordionTab'">
+      <form [formGroup]="queryForm"
+            id="queryForm"
+            (ngSubmit)="onSubmit()">
         <div class="grid p-fluid">
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-calendar calendarType="dateMonthOne"
+                          label="結算年月"
+                          controlName="settlement_date"
+                          [control]="qf().settlement_date"
+                          [submitted]="submitted">
+            </app-calendar>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown label="能源類型"
+                          controlName="eng_type"
+                          [options]="service.engTypeSignal()"
+                          optionLabel="Name"
+                          optionValue="No"
+                          [control]="qf().eng_type"
+                          [submitted]="submitted"></app-dropdown>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown label="能源錶號"
+                          controlName="eng_meterNo"
+                          [options]="service.engMeterNoSignal()"
+                          optionLabel="Name"
+                          optionValue="No"
+                          [control]="qf().eng_meterNo"
+                          [submitted]="submitted"></app-dropdown>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown label="結算狀態"
+                          controlName="settlement_status"
+                          [options]="service.settlementStatusSignal()"
+                          optionLabel="Name"
+                          optionValue="No"
+                          [control]="qf().settlement_status"
+                          [submitted]="submitted"></app-dropdown>
+          </div>
           <!-- <div class="col-12 md:col-6 lg:col-4">
                 <app-radiobutton
                   label="資料顯示"
@@ -33,71 +62,57 @@
                 >
                 </app-radiobutton>
               </div> -->
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="水錶編號"
-              controlName="ironNumberOptions"
-              [options]="ironNumberOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.ironNumberOptions"
-              [submitted]="submitted"
-            ></app-dropdown>
+          <!-- <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown label="水錶編號"
+                          controlName="ironNumberOptions"
+                          [options]="ironNumberOptions"
+                          optionLabel="label"
+                          optionValue="value"
+                          [control]="queryForm.controls.ironNumberOptions"
+                          [submitted]="submitted"></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="專櫃編號"
-              controlName="Counternumber"
-              [options]="Counternumber"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.Counternumber"
-              [submitted]="submitted"
-            ></app-dropdown>
+            <app-dropdown label="專櫃編號"
+                          controlName="Counternumber"
+                          [options]="Counternumber"
+                          optionLabel="label"
+                          optionValue="value"
+                          [control]="queryForm.controls.Counternumber"
+                          [submitted]="submitted"></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="專櫃分類"
-              controlName="Counterclassification"
-              [options]="Counterclassification"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.Counterclassification"
-              [submitted]="submitted"
-            ></app-dropdown>
+            <app-dropdown label="專櫃分類"
+                          controlName="Counterclassification"
+                          [options]="Counterclassification"
+                          optionLabel="label"
+                          optionValue="value"
+                          [control]="queryForm.controls.Counterclassification"
+                          [submitted]="submitted"></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
-              label="設備位置編號"
-              controlName="remark"
-              [control]="queryForm.controls.remark"
-              [submitted]="submitted"
-            ></app-input-text>
+            <app-input-text label="設備位置編號"
+                            controlName="remark"
+                            [control]="queryForm.controls.remark"
+                            [submitted]="submitted"></app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
-              label="部別名稱"
-              controlName="remark"
-              [control]="queryForm.controls.remark"
-              [submitted]="submitted"
-            ></app-input-text>
+            <app-input-text label="部別名稱"
+                            controlName="remark"
+                            [control]="queryForm.controls.remark"
+                            [submitted]="submitted"></app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
-              label="營業面積"
-              controlName="remark"
-              [control]="queryForm.controls.remark"
-              [submitted]="submitted"
-            ></app-input-text>
+            <app-input-text label="營業面積"
+                            controlName="remark"
+                            [control]="queryForm.controls.remark"
+                            [submitted]="submitted"></app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
-              label="面積比例(%)"
-              controlName="remark"
-              [control]="queryForm.controls.remark"
-              [submitted]="submitted"
-            ></app-input-text>
-          </div>
+            <app-input-text label="面積比例(%)"
+                            controlName="remark"
+                            [control]="queryForm.controls.remark"
+                            [submitted]="submitted"></app-input-text>
+          </div> -->
           <!-- <div class="col-12 md:col-6 lg:col-4">
                   <app-datemm-one
                     label="統計年月"
@@ -132,15 +147,12 @@
             </div> -->
         </div>
       </form>
-      <div>
-        <div class="grid justify-content-end">
-          <app-button btnType="clear" (onClick)="onClearForm()"></app-button>
-          <app-button
-            btnType="query"
-            (onClick)="onSubmitQuery(queryForm)"
-            [loading]="loading"
-          ></app-button>
-        </div>
+      <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+        <app-button btnType="clear"
+                    (click)="onClear()"></app-button>
+        <app-button btnType="query"
+                    (click)="onSubmit()"
+                    [loading]="loading"></app-button>
       </div>
     </p-accordionTab>
   </p-accordion>
@@ -148,11 +160,9 @@
 
 <div class="card">
   <div class="col-12">
-    <app-table
-      [data]="data"
-      [columns]="columns"
-      (edit)="onEdit($event)"
-      (detail)="onDetail($event)"
-    ></app-table>
+    <app-table [data]="service.ASS21030Data()"
+               [columns]="columns"
+               (edit)="onEdit($event)"
+               (detail)="onDetail($event)"></app-table>
   </div>
 </div>

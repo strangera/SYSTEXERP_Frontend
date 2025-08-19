@@ -246,7 +246,7 @@ export class TLS26010CRUComponent extends BasicCruPageComponent<TLS26010Data> im
   private static staticData: TLS26010Detail;
 
   constructor(
-    public service: TLS26010Service,
+    public readonly service: TLS26010Service,
     private readonly excelImport: ExcelImportService,
   ) {
     super();

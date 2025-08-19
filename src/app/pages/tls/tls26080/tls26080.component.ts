@@ -112,15 +112,10 @@ export class TLS26080Component extends BasicQueryPageComponent<TLS26080Data> imp
     });
   };
 
-  public onSubmitQuery(): void {
-    console.log(`submit:`, [this.queryForm.value]);
-    this.onSubmit(this.queryForm);
-  };
-
   // 提交查詢
-  public onSubmit(frm: FormGroup): void {
-    this.handleSubmit(frm, () => {
-      frm.valid && this.canQuery() && this.service.loadTLS26080(this.queryTLS26080());
+  public onSubmit(): void {
+    this.handleSubmit(this.queryForm, () => {
+      this.queryForm.valid && this.canQuery() && this.service.loadTLS26080(this.queryTLS26080());
       this.loading = !1;
     });
   };

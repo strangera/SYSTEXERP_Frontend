@@ -82,14 +82,10 @@ export class ASS21010CRUComponent extends BasicCruPageComponent<unknown> impleme
     this.service.loadLocationNo();
   }
 
-  public onSubmitQuery(): void {
-    console.log(`submit:`, [this.dataForm.value]);
-    this.onSubmit(this.dataForm);
-  };
+  public onSubmit(): void {
+    this.handleSubmit(this.dataForm, () => {
 
-  public onSubmit(frm: FormGroup): void {
-    this.handleSubmit(frm, () => {
-
+      this.loading = !1;
     });
   }
 

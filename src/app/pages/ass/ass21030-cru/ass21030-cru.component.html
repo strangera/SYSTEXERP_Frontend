@@ -1,13 +1,18 @@
 <div class="card">
   <div class="grid align-items-center">
-    <div class="col" style="flex: 1">
+    <div class="col">
       <app-menubar [ProgNo]="ProgNo"></app-menubar>
     </div>
+    <div class="flex gap-2">
+      <app-button btnType="back"
+                  (click)="onCancel()"></app-button>
+    </div>
   </div>
+
   <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
-    <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
+    <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit()">
       <div class="grid p-fluid">
-        <div class="col-12 md:col-6 lg:col-4">
+        <!-- <div class="col-12 md:col-6 lg:col-4">
           <app-dropdown
             label="水錶編號編號"
             controlName="meterPosCode"
@@ -170,18 +175,44 @@
       <div class="pt-1">
         <app-button-dynamicallyadd
           (click)="onAddItem()"
-        ></app-button-dynamicallyadd>
+        ></app-button-dynamicallyadd> -->
       </div>
     </form>
     <div class="col pt-4">
       <div class="grid justify-content-end">
-        <app-button btnType="cancel" (click)="onCancel()"></app-button>
-        <app-button
-          btnType="submit"
-          (click)="submitForm(dataForm)"
-          *ngIf="isFormEditable"
-        ></app-button>
+        <app-button btnType="clear"
+                    (click)="onClear()"
+                    *ngIf="!isFormReadable"></app-button>
+        <app-button btnType="submit"
+                    (click)="onSubmit()"
+                    *ngIf="!isFormReadable"></app-button>
       </div>
     </div>
   </p-panel>
+</div>
+
+
+<div class="card">
+  <div class="grid p-fluid">
+    <div class="col-12">
+      <p-panel header="資料"
+               class="line-height-3 m-0 mb-3">
+        <!-- <app-table [showCheckBox]="false"
+                   [showEdit]="false"
+                   [showDetail]="false"
+                   [showDelete]="false"
+                   [showManage]="false"
+                   [showReportMode]="false"
+                   [isRowSelectable]="service.isRowSelectable"
+                   [showExcel]="isFormEditable"
+                   (exportExcel)="onExportExcel()"
+                   (importExcel)="onImportExcel($event)"
+                   [data]="service.ASS21020Detail()"
+                   [dataKey]="'tlt_no'"
+                   [tableKey]="'ASS21020_detail'"
+                   [columns]="columns">
+        </app-table> -->
+      </p-panel>
+    </div>
+  </div>
 </div>

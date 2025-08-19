@@ -212,19 +212,21 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
       : this.service.TLS26080Detail.set([]);
   };
 
-  public onSubmitQuery(): void {
-    this.onSubmit(this.dataForm);
-  };
-
   // 表單提交
-  public onSubmit(frm: FormGroup): void {
-    this.handleSubmit(frm, () => {
-      console.log(`submit:`, [frm.value, this.service.TLS26080Detail()]);
+  public onSubmit(): void {
+    this.handleSubmit(this.dataForm, () => {
+      console.log(`submit:`, [this.dataForm.value, this.service.TLS26080Detail()]);
       this.confirmationService.confirm({
         message: '是否確認存檔?',
         accept: () => {
           this.service.insertTLS26080({
-            ...frm.value,
+            ...this.df(),
+            pod_no: this.df().pod_no.value!,
+            pod_desc: this.df().pod_desc.value!,
+            pod_sdate: this.df().pod_sdate.value!,
+            pod_edate: this.df().pod_edate.value!,
+            pod_busdate: this.df().pod_busdate.value!,
+            pod_type: this.df().pod_type.value!,
             TALPORDERD_VOUCHERDetails: Array.from(this.service.TLS26080Detail()),
           });
           // this.messageService.successBubble('存檔成功');

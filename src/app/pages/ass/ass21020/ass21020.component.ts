@@ -64,14 +64,14 @@ export class ASS21020Component extends BasicQueryPageComponent<unknown> implemen
   });
 
   public readonly columns: Column[] = [
-    { field: 'energyType', header: '能源類型' },
-    { field: 'slotNumber', header: '錢號' },
-    { field: 'deviceLocationCode', header: '設備位置編號' },
+    { field: 'eng_type', header: '能源類型' },
+    { field: 'eng_meterNo', header: '錶號' },
+    { field: 'location_no', header: '設備位置編號' },
     { field: 'remarks', header: '備註' },
   ];
 
   constructor(
-    public service: ASS21020Service,
+    public readonly service: ASS21020Service,
   ) {
     super();
   }
@@ -120,7 +120,7 @@ export class ASS21020Component extends BasicQueryPageComponent<unknown> implemen
   // filteredData: any[] = [...this.data];
   // columns: any[] = [
   //   { field: 'energyType', header: '能源類型', visible: true },
-  //   { field: 'slotNumber', header: '錢號', visible: true },
+  //   { field: 'slotNumber', header: '錶號', visible: true },
   //   { field: 'deviceLocationCode', header: '設備位置編號', visible: true },
   //   { field: 'remarks', header: '備註', visible: true },
   // ];
@@ -210,12 +210,11 @@ export class ASS21020Component extends BasicQueryPageComponent<unknown> implemen
   //     { value: 10, label: '3A24210000010' },
   //   ];
 
-  public onSubmitQuery(): void {
-    this.onSubmit(this.queryForm);
-  }
+  public onSubmit(): void {
+    this.handleSubmit(this.queryForm, () => {
 
-  public onSubmit(frm: FormGroup): void {
-    console.log(frm.value);
+      this.loading = !1;
+    });
   }
 
   public onClear(): void {

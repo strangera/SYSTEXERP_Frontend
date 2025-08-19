@@ -1,7 +1,7 @@
 
 import { Component, computed, effect, OnInit } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { FormControl, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 import { ASS21010Service, EngType } from '@service/api/ass/ass21010.service';
 import { MenubarComponent } from '@shared/component/menubar/menubar.component';
@@ -69,7 +69,7 @@ export class ASS21010Component extends BasicQueryPageComponent<unknown> implemen
   // location: any[] = [];
   // filteredData: any[] = [...this.data];
   // columns: any[] = [
-  //   { field: 'slotLocationCode', header: '錢號位置編號', visible: true },
+  //   { field: 'slotLocationCode', header: '錶號位置編號', visible: true },
   //   { field: 'floor', header: '樓層', visible: true },
   //   { field: 'zone', header: '區域', visible: true },
   //   { field: 'xCoordinate', header: '平面圖X座標', visible: true },
@@ -200,14 +200,10 @@ export class ASS21010Component extends BasicQueryPageComponent<unknown> implemen
     return !0;
   }
 
-  public onSubmitQuery(): void {
-    console.log(`submit:`, [this.queryForm.value]);
-    this.onSubmit(this.queryForm);
-  };
+  onSubmit() {
+    this.handleSubmit(this.queryForm, () => {
 
-  onSubmit(frm: FormGroup) {
-    this.handleSubmit(frm, () => {
-
+      this.loading = !1;
     });
   }
 

@@ -1,6 +1,6 @@
 
 import { NgIf } from '@angular/common';
-import { Component, OnInit, signal } from '@angular/core';
+import { Component, computed, OnInit, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { FormControl, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
@@ -47,9 +47,9 @@ export class ASS21020CRUComponent extends BasicCruPageComponent<unknown> impleme
     x_coord: new FormControl<string | undefined>(void 0),
     y_coord: new FormControl<string | undefined>(void 0),
   });
-  public readonly df = signal(this.dataForm.controls);
+  public readonly df = computed(() => this.dataForm.controls);
 
-  public readonly dfSignal = toSignal(this.dataForm.valueChanges);
+  private readonly dfSignal = toSignal(this.dataForm.valueChanges);
 
   public readonly columns: Column[] = [
     { field: 'tlt_no', header: '專櫃編號' },
@@ -127,14 +127,10 @@ export class ASS21020CRUComponent extends BasicCruPageComponent<unknown> impleme
     // XLSX.writeFile(wb, `專櫃範本_${new Date().toISOString().split('T')[0]}.xlsx`);
   }
 
-  public onSubmitQuery(): void {
-    console.log(`submit:`, [this.dataForm.value]);
-    this.onSubmit(this.dataForm);
-  };
+  public onSubmit(): void {
+    this.handleSubmit(this.dataForm, () => {
 
-  public onSubmit(frm: FormGroup): void {
-    this.handleSubmit(frm, () => {
-
+      this.loading = !1;
     });
   }
 
