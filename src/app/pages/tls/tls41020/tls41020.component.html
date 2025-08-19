@@ -1,57 +1,28 @@
 <div class="card">
   <div class="flex gap-2 mb-2">
     <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
-    <app-button
-      btnType="create"
-      (click)="onCreate()"
-      label="{{ 'create' | translate }}"
-    ></app-button>
+    <app-button btnType="create" (click)="onCreate()" label="{{ 'create' | translate }}"></app-button>
   </div>
   <p-accordion>
-    <p-accordionTab
-      header="{{ 'query-conditions' | translate }}"
-      [selected]="true"
-      class="line-height-3 m-0"
-      [headerStyleClass]="'query-accordionTab'"
-    >
-      <form
-        [formGroup]="queryForm"
-        id="queryForm"
-        (ngSubmit)="onSubmit(queryForm)"
-      >
+    <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'">
+      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
           <!-- <div class="col-12 md:col-6 lg:col-4">
                                 <app-input-number [useGrouping]="false" label="收銀機所屬門市店號" controlName="SYS_StoreNo" [control]="queryForm.controls.SYS_StoreNo" [submitted]="submitted">
                                 </app-input-number>
                             </div> -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select
-              label="收銀機號"
-              controlName="ECR_No"
-              [options]="ECRNoOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.ECR_No"
-              [submitted]="submitted"
-            ></app-multi-select>
+            <app-multi-select label="收銀機號" controlName="ECR_No" [options]="ECRNoOptions" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.ECR_No" [submitted]="submitted"></app-multi-select>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-number
-              [useGrouping]="false"
-              label="信用卡刷卡機代碼"
-              controlName="EDC_No"
-              [control]="queryForm.controls.EDC_No"
-              [submitted]="submitted"
-            ></app-input-number>
+            <app-input-number [useGrouping]="false" label="信用卡刷卡機代碼" controlName="EDC_No"
+              [control]="queryForm.controls.EDC_No" [submitted]="submitted"></app-input-number>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-number
-              [useGrouping]="false"
-              label="機台所屬專櫃編號"
-              controlName="ECR_TLT_No"
-              [control]="queryForm.controls.ECR_TLT_No"
-              [submitted]="submitted"
-            ></app-input-number>
+            <app-input-number [useGrouping]="false" label="機台所屬專櫃編號" controlName="ECR_TLT_No"
+              [control]="queryForm.controls.ECR_TLT_No" [submitted]="submitted"></app-input-number>
           </div>
           <!-- <div class="col-12 md:col-6 lg:col-4">
                                 <app-input-number [useGrouping]="false" label="收銀機位置" controlName="ECR_LocNo" [control]="queryForm.controls.ECR_LocNo" [submitted]="submitted">
@@ -59,34 +30,19 @@
                             </div> -->
 
           <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar-range
-              calendarType="dateRange"
-              label="啟用日期"
-              [startControl]="queryForm.controls.EDC_BegDate_From"
-              [endControl]="queryForm.controls.EDC_BegDate_To"
-              [submitted]="submitted"
-            ></app-calendar-range>
+            <app-calendar-range calendarType="dateRange" label="啟用日期"
+              [startControl]="queryForm.controls.EDC_BegDate_From" [endControl]="queryForm.controls.EDC_BegDate_To"
+              [submitted]="submitted"></app-calendar-range>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar-range
-              calendarType="dateRange"
-              label="停用日期"
-              [startControl]="queryForm.controls.EDC_EdnDate_From"
-              [endControl]="queryForm.controls.EDC_EdnDate_To"
-              [submitted]="submitted"
-            ></app-calendar-range>
+            <app-calendar-range calendarType="dateRange" label="停用日期"
+              [startControl]="queryForm.controls.EDC_EdnDate_From" [endControl]="queryForm.controls.EDC_EdnDate_To"
+              [submitted]="submitted"></app-calendar-range>
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="信用卡刷卡機狀態"
-              controlName="EDC_Status"
-              [options]="EDC_Status_Option"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.EDC_Status"
-              [submitted]="submitted"
-            ></app-dropdown>
+            <app-dropdown label="信用卡刷卡機狀態" controlName="EDC_Status" [options]="EDC_Status_Option" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.EDC_Status" [submitted]="submitted"></app-dropdown>
           </div>
 
           <!-- <div class="col-12 md:col-6 lg:col-4">
@@ -95,41 +51,21 @@
                             </div> -->
 
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-number
-              [useGrouping]="false"
-              label="第一台信用卡刷卡機IP"
-              controlName="EDC_IP1"
-              [control]="queryForm.controls.EDC_IP1"
-              [submitted]="submitted"
-            ></app-input-number>
+            <app-input-number [useGrouping]="false" label="第一台信用卡刷卡機IP" controlName="EDC_IP1"
+              [control]="queryForm.controls.EDC_IP1" [submitted]="submitted"></app-input-number>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-number
-              [useGrouping]="false"
-              label="第一台信用卡刷卡機端末機代碼"
-              controlName="EDC_TmID1"
-              [control]="queryForm.controls.EDC_TmID1"
-              [submitted]="submitted"
-            ></app-input-number>
+            <app-input-number [useGrouping]="false" label="第一台信用卡刷卡機端末機代碼" controlName="EDC_TmID1"
+              [control]="queryForm.controls.EDC_TmID1" [submitted]="submitted"></app-input-number>
           </div>
           <div class="col-12 md:col-6 lg:col-4"></div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-number
-              [useGrouping]="false"
-              label="第二台信用卡刷卡機IP"
-              controlName="EDC_IP2"
-              [control]="queryForm.controls.EDC_IP2"
-              [submitted]="submitted"
-            ></app-input-number>
+            <app-input-number [useGrouping]="false" label="第二台信用卡刷卡機IP" controlName="EDC_IP2"
+              [control]="queryForm.controls.EDC_IP2" [submitted]="submitted"></app-input-number>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-number
-              [useGrouping]="false"
-              label="第二台信用卡刷卡機端末機代碼"
-              controlName="EDC_TmID2"
-              [control]="queryForm.controls.EDC_TmID2"
-              [submitted]="submitted"
-            ></app-input-number>
+            <app-input-number [useGrouping]="false" label="第二台信用卡刷卡機端末機代碼" controlName="EDC_TmID2"
+              [control]="queryForm.controls.EDC_TmID2" [submitted]="submitted"></app-input-number>
           </div>
           <div class="col-12 md:col-6 lg:col-4"></div>
           <!-- <div class="col-12 md:col-6 lg:col-4">
@@ -152,10 +88,8 @@
         </div>
         <div class="col-12 md:col-6 lg:col-4"></div> -->
         </div>
-        <div
-          class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
-        >
-          <app-button btnType="clear"></app-button>
+        <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+          <app-button btnType="clear" [form]="queryForm"></app-button>
           <app-button btnType="query" [loading]="loading"></app-button>
         </div>
       </form>
@@ -164,22 +98,9 @@
 </div>
 
 <div class="card">
-  <app-table
-    tableKey="TLS41020"
-    [data]="data"
-    [columns]="columns"
-    [selectedItems]="selectedItems"
-    (selectionChange)="selectedItems = $event"
-    (delete)="onDelete($event)"
-    dataKey="ECR_No"
-    [multiSortMeta]="[{ field: 'tlt_no', order: 1 }]"
-    [totalRecords]="totalRecords"
-    [lazy]="true"
-    [showManage]="true"
-    (edit)="onEdit($event)"
-    [loading]="loading"
-    [showCheckBox]="true"
-    [showDelete]="true"
-    (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"
-  ></app-table>
+  <app-table tableKey="TLS41020" [data]="data" [columns]="columns" [selectedItems]="selectedItems"
+    (selectionChange)="selectedItems = $event" (delete)="onDelete($event)" dataKey="ECR_No"
+    [multiSortMeta]="[{ field: 'tlt_no', order: 1 }]" [totalRecords]="totalRecords" [lazy]="true" [showManage]="true"
+    (edit)="onEdit($event)" [loading]="loading" [showCheckBox]="true" [showDelete]="true"
+    (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"></app-table>
 </div>

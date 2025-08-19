@@ -236,7 +236,7 @@
   </ng-template>
   <ng-template pTemplate="emptymessage">
     <div class="flex flex-wrap justify-content-center min-h-full" [ngStyle]="{ height: '62px' }">
-      <p class="empty-message text-xl font-bold text-center">
+      <p class="empty-message text-xl font-bold text-center" [ngStyle]="columnGroup ? { top: '77%' } : { top: '66%' }">
         {{ emptyMessage }}
       </p>
     </div>

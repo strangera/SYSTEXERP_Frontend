@@ -12,3 +12,24 @@
 ::ng-deep .p-multiselect-panel .p-multiselect-item {
   padding-left: 2rem;
 }
+:host ::ng-deep {
+  &::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: transparent;
+    border: 5px solid transparent;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: #9f9f9f;
+    border-radius: 12px;
+    border: 2px solid var(--surface-d);
+  }
+
+  &::-webkit-scrollbar-thumb:hover {
+    background: #949494;
+  }
+}

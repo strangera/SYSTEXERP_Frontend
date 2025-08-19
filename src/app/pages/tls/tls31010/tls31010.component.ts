@@ -41,9 +41,9 @@ export class TLS31010Component extends BasicQueryPageComponent<any> implements O
     tlt_building: [[]],// 館別
     tlt_floor: [[]],// 樓層
     area_no: [[]],// 區域
-    bus_type: [[]],//大分類
-    bus_class: [[]],//中分類
-    bus_sclass: [[]],//小分類
+    bus_type: [[] as string[]],//大分類
+    bus_class: [[] as IDropdownItem[]],//中分類
+    bus_sclass: [[] as IDropdownItem[]],//小分類
     tlt_kind: [[]], //櫃別 (1.正櫃 2.臨時櫃 3.特賣會 4.虛擬櫃)
     tlt_term_type: [[]], // 抽成別 1:固定租金 2:底租抽成取高者3:一般抽成     4:包底抽成     5:階梯式抽成   6:包底加階梯   "
     org_id: [[]],  // 組織
@@ -143,12 +143,12 @@ export class TLS31010Component extends BasicQueryPageComponent<any> implements O
 
           // 最後，將分組物件的值轉換為陣列，得到最終的分組下拉清單格式
           this.bus_class_Option = Object.values(groupedData);
-          console.log(this.bus_class_Option);
-
         });
       } else {
         this.bus_class_Option = [];
         this.bus_sclass_Option = [];
+        this.queryForm.controls.bus_sclass.setValue([]);
+        this.queryForm.controls.bus_class.setValue([]);
       }
     });
     // 監聽中分類變化，獲取小分類並分組
@@ -157,32 +157,30 @@ export class TLS31010Component extends BasicQueryPageComponent<any> implements O
       // 使用 switchMap 取消前一次的請求，確保只處理最新的選取
       switchMap((selectedMValues: IDropdownItem[]) => {
         if (selectedMValues.length === 0) {
+          this.bus_sclass_Option = [];
+          this.queryForm.controls.bus_sclass.setValue([]);
           return of([]);// 如果沒有選取任何中分類，直接回傳空陣列
         }
         const requests = [];
         // 根據選取的中分類，為每一個中分類組建一個 API 請求
         for (const mValue of selectedMValues) {
-          const matchedItem = this.findDropdownItem(mValue);
-          if (matchedItem) {
+          if (mValue && mValue.CAT_LNo) {
             requests.push(
-              this.dropDownListService.queryPOS20032_DropDownList({ CAT_LNo: [matchedItem.CAT_LNo], CAT_MNo: [matchedItem.No] }).pipe(
+              this.dropDownListService.queryPOS20032_DropDownList({ CAT_LNo: [mValue.CAT_LNo], CAT_MNo: [mValue.No] }).pipe(
                 map(res => ({
-                  LNo: matchedItem.CAT_LNo,
-                  LName: matchedItem.CAT_LName,
-                  MNo: matchedItem.No,
-                  MName: matchedItem.Name,
+                  LNo: mValue.CAT_LNo,
+                  LName: mValue.CAT_LName,
+                  MNo: mValue.No,
+                  MName: mValue.Name,
                   Data: res.Data
                 }))
               )
             );
           }
         }
-
-        // 使用 forkJoin 並行發送所有請求
         return forkJoin(requests);
       }),
       tap(results => {
-        // results 是所有 API 回傳結果的陣列
         console.log('所有 API 呼叫結果：', results);
       })
     ).subscribe(results => {
@@ -228,21 +226,9 @@ export class TLS31010Component extends BasicQueryPageComponent<any> implements O
       this.org_id_Option = res.Data.map(item => ({ ...item, label: `${item.No} - ${item.Name}`, }));
     })
   }
-  // 新增一個輔助方法，用來從中分類選項中找到完整的物件
-  private findDropdownItem(mValue: IDropdownItem): any | undefined {
-    for (const group of this.bus_class_Option) {
-      if (!group.items) {
-        return undefined;
-      }
-      const item = group.items.find((i: { No: string; }) => i.No === mValue.No);
-      if (item) {
-        return item;
-      }
-    }
-    return undefined;
-  }
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
+      this.loading = false;
     })
   }
 }

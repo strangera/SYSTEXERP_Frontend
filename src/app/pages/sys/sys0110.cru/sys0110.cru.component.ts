@@ -44,7 +44,6 @@ import { TranslateModule } from '@ngx-translate/core';
 })
 export class SYS0110CRUComponent extends BasicCruPageComponent<UserInfo> implements OnInit {
   dataForm = this.formBuilder.nonNullable.group({
-    id: [null], // 序號
     user_No: ['', [Validators.required, Validators.maxLength(10), this.validationService.englishNumberSymbolValidator]], // 使用者編號
     user_Name: ['', [Validators.required, Validators.maxLength(20)]], // 使用者名稱
     user_Password: ['', [Validators.required, this.validationService.englishNumberSymbolValidator]], // 使用者密碼-加密
@@ -222,6 +221,7 @@ export class SYS0110CRUComponent extends BasicCruPageComponent<UserInfo> impleme
       expireDate.setDate(today.getDate() + 90);
       const body = {
         ...frm.value,
+        id: this.rowdata?.id,
         user_Password: this.isFormCreateable ? this.encrypt.getPassword(frm.value.user_No, frm.value.user_Password) : undefined,
         user_No: frm.get('user_No')?.value,
         USER_PwdExpireDate: expireDate.toISOString(),

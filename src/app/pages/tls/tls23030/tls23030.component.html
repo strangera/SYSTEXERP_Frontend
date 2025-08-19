@@ -3,167 +3,81 @@
     <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
   </div>
   <p-accordion>
-    <p-accordionTab
-      header="{{ 'query-conditions' | translate }}"
-      [selected]="true"
-      class="line-height-3 m-0"
-      [headerStyleClass]="'query-accordionTab'"
-    >
-      <form
-        [formGroup]="queryForm"
-        id="queryForm"
-        (ngSubmit)="onSubmit(queryForm)"
-      >
+    <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'">
+      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
-          <app-calendar-range-quick
-            class="col-12 md:col-6 lg:col-4"
-            label="銷售日期"
-            [startControl]="queryForm.controls.TXN_DateStart"
-            [endControl]="queryForm.controls.TXN_DateEnd"
-            [submitted]="submitted"
-          ></app-calendar-range-quick>
+          <app-calendar-range-quick class="col-12 md:col-6 lg:col-4" label="銷售日期"
+            [startControl]="queryForm.controls.TXN_DateStart" [endControl]="queryForm.controls.TXN_DateEnd"
+            [submitted]="submitted"></app-calendar-range-quick>
 
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select
-              label="收銀機號"
-              controlName="ECR_No"
-              [options]="ECRNoOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.ECR_No"
-              [submitted]="submitted"
-            ></app-multi-select>
+            <app-multi-select label="收銀機號" controlName="ECR_No" [options]="ECRNoOptions" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.ECR_No" [submitted]="submitted"></app-multi-select>
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-number-range
-              [useGrouping]="false"
-              label="交易序號(起/迄)"
-              [startControl]="queryForm.controls.TXN_No_Start"
-              [endControl]="queryForm.controls.TXN_No_End"
-              [submitted]="submitted"
-            ></app-input-number-range>
+            <app-input-number-range [useGrouping]="false" label="交易序號(起/迄)"
+              [startControl]="queryForm.controls.TXN_No_Start" [endControl]="queryForm.controls.TXN_No_End"
+              [submitted]="submitted"></app-input-number-range>
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select
-              label="專櫃編號"
-              controlName="TLT_No"
-              [options]="CounterOptions"
-              optionLabel="formLabel"
-              optionValue="value"
-              [control]="queryForm.controls.TLT_No"
-              [submitted]="submitted"
-            ></app-multi-select>
+            <app-multi-select label="專櫃編號" controlName="TLT_No" [options]="CounterOptions" optionLabel="formLabel"
+              optionValue="value" [control]="queryForm.controls.TLT_No" [submitted]="submitted"></app-multi-select>
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="付款別"
-              controlName="PAY_Type"
-              [options]="paymentTypeOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.PAY_Type"
-              [submitted]="submitted"
-            ></app-dropdown>
+            <app-dropdown label="付款別" controlName="PAY_Type" [options]="paymentTypeOptions" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.PAY_Type" [submitted]="submitted"></app-dropdown>
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-number-range
-              [useGrouping]="false"
-              label="金額"
-              [startControl]="queryForm.controls.TXN_PayAmt_Start"
-              [endControl]="queryForm.controls.TXN_PayAmt_End"
-              [submitted]="submitted"
-            ></app-input-number-range>
+            <app-input-number-range [useGrouping]="false" label="金額"
+              [startControl]="queryForm.controls.TXN_PayAmt_Start" [endControl]="queryForm.controls.TXN_PayAmt_End"
+              [submitted]="submitted"></app-input-number-range>
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select
-              label="交易型態"
-              controlName="TXN_Status"
-              [options]="txnStatusOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.TXN_Status"
-              [submitted]="submitted"
-            ></app-multi-select>
+            <app-multi-select label="交易型態" controlName="TXN_Status" [options]="txnStatusOptions" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.TXN_Status" [submitted]="submitted"></app-multi-select>
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
-              label="會員卡號"
-              controlName="TXN_MemCard"
-              [control]="queryForm.controls.TXN_MemCard"
-              [submitted]="submitted"
-            ></app-input-text>
+            <app-input-text label="會員卡號" controlName="TXN_MemCard" [control]="queryForm.controls.TXN_MemCard"
+              [submitted]="submitted"></app-input-text>
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="信用卡別"
-              controlName="CRD_Type"
-              [options]="cardTypeOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.CRD_Type"
-              [submitted]="submitted"
-            ></app-dropdown>
+            <app-dropdown label="信用卡別" controlName="CRD_Type" [options]="cardTypeOptions" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.CRD_Type" [submitted]="submitted"></app-dropdown>
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
-              label="信用卡卡號"
-              controlName="CRD_No"
-              [control]="queryForm.controls.CRD_No"
-              [submitted]="submitted"
-            ></app-input-text>
+            <app-input-text label="信用卡卡號" controlName="CRD_No" [control]="queryForm.controls.CRD_No"
+              [submitted]="submitted"></app-input-text>
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="是否分期"
-              controlName="IsHaveTERM_No"
-              [options]="WhetherOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.IsHaveTERM_No"
-              [submitted]="submitted"
-            ></app-dropdown>
+            <app-dropdown label="是否分期" controlName="IsHaveTERM_No" [options]="WhetherOptions" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.IsHaveTERM_No" [submitted]="submitted"></app-dropdown>
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="券類(已開/未開)"
-              controlName="pay_taxtype"
-              [options]="ticketStatusOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.pay_taxtype"
-              [submitted]="submitted"
-            ></app-dropdown>
+            <app-dropdown label="券類(已開/未開)" controlName="pay_taxtype" [options]="ticketStatusOptions"
+              optionLabel="label" optionValue="value" [control]="queryForm.controls.pay_taxtype"
+              [submitted]="submitted"></app-dropdown>
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select
-              label="組織代碼/名稱"
-              [options]="OrganizationCodeOptions"
-              optionLabel="formLabel"
-              optionValue="value"
-              [control]="queryForm.controls.org_id"
-              [submitted]="submitted"
-            ></app-multi-select>
+            <app-multi-select label="組織代碼/名稱" [options]="OrganizationCodeOptions" optionLabel="formLabel"
+              optionValue="value" [control]="queryForm.controls.org_id" [submitted]="submitted"></app-multi-select>
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
             <div class="flex flex-column">
               <label class="mb-1">是否查詢券類大批</label>
-              <p-checkbox
-                binary="true"
-                formControlName="IsPayType"
-                inputId="isNoPLU"
-              ></p-checkbox>
+              <p-checkbox binary="true" formControlName="IsPayType" inputId="isNoPLU"></p-checkbox>
               <label for="isNoPLU" class="ml-2 mt-1 text-sm text-gray-600">
                 是(此條件必須配合付款別選擇[商品券]或[紙張禮券])
               </label>
@@ -171,73 +85,38 @@
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="是否開立業主發票"
-              controlName="rece_yn"
-              [options]="WhetherOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.rece_yn"
-              [submitted]="submitted"
-            ></app-dropdown>
+            <app-dropdown label="是否開立業主發票" controlName="rece_yn" [options]="WhetherOptions" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.rece_yn" [submitted]="submitted"></app-dropdown>
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="是否為業主收現"
-              controlName="cash_yn"
-              [options]="WhetherOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.cash_yn"
-              [submitted]="submitted"
-            ></app-dropdown>
+            <app-dropdown label="是否為業主收現" controlName="cash_yn" [options]="WhetherOptions" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.cash_yn" [submitted]="submitted"></app-dropdown>
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="館別"
-              controlName="tlt_building"
-              [options]="BUILDING_NO_Options"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.tlt_building"
-              [submitted]="submitted"
-            ></app-dropdown>
+            <app-dropdown label="館別" controlName="tlt_building" [options]="BUILDING_NO_Options" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.tlt_building" [submitted]="submitted"></app-dropdown>
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select
-              label="樓層"
-              [options]="floorOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.tlt_floor"
-              [submitted]="submitted"
-            ></app-multi-select>
+            <app-multi-select label="樓層" [options]="floorOptions" optionLabel="label" optionValue="value"
+              [control]="queryForm.controls.tlt_floor" [submitted]="submitted"></app-multi-select>
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select
-              label="組織代碼/名稱"
-              [options]="OrganizationCodeOptions"
-              optionLabel="formLabel"
-              optionValue="value"
-              [control]="queryForm.controls.org_id"
-              [submitted]="submitted"
-            ></app-multi-select>
+            <app-multi-select label="組織代碼/名稱" [options]="OrganizationCodeOptions" optionLabel="formLabel"
+              optionValue="value" [control]="queryForm.controls.org_id" [submitted]="submitted"></app-multi-select>
           </div>
         </div>
-    
 
-      <div
-        class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
-      >
-        <app-button btnType="clear"></app-button>
-        <app-button btnType="query" [loading]="loading"></app-button>
-        
-      </div>
-        </form>
+
+        <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+          <app-button btnType="clear" [form]="queryForm"></app-button>
+          <app-button btnType="query" [loading]="loading"></app-button>
+
+        </div>
+      </form>
     </p-accordionTab>
   </p-accordion>
 </div>
@@ -248,4 +127,3 @@
     (edit)="onEdit($event)" (detail)="onDetail($event)" [showManage]="false" [showDelete]="false" [showCheckBox]="false"
     (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"></app-table>
 </div>
-

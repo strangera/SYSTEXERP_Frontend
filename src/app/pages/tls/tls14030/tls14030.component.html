@@ -9,160 +9,87 @@
       <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select
-              label="專櫃編號/名稱"
-              [options]="tlt_noListOption"
-              optionLabel="Label"
-              optionValue="No"
-              [control]="queryForm.controls.tlt_noList"
-              [submitted]="submitted"
-            ></app-multi-select>  
+            <app-multi-select label="專櫃編號/名稱" [options]="tlt_noListOption" optionLabel="Label" optionValue="No"
+              [control]="queryForm.controls.tlt_noList" [submitted]="submitted"></app-multi-select>
           </div>
           <!-- <div class="col-12 md:col-6 lg:col-4">
             <app-input-text label="專櫃名稱" controlName="tlt_name" [control]="queryForm.controls.tlt_name"
               [submitted]="submitted"></app-input-text>
           </div> -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select
-              label="位置編號"
-              [options]="locationOption"
-              optionLabel="Name"
-              optionValue="No"
-              [control]="queryForm.controls.location_noList"
-              [submitted]="submitted"
-            ></app-multi-select>  
+            <app-multi-select label="位置編號" [options]="locationOption" optionLabel="Name" optionValue="No"
+              [control]="queryForm.controls.location_noList" [submitted]="submitted"></app-multi-select>
           </div>
         </div>
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select
-              label="區域"
-              [options]="areaOption"
-              optionLabel="Name"
-              optionValue="No"
-              [control]="queryForm.controls.area_noList"
-              [submitted]="submitted"
-            ></app-multi-select>  
+            <app-multi-select label="區域" [options]="areaOption" optionLabel="Name" optionValue="No"
+              [control]="queryForm.controls.area_noList" [submitted]="submitted"></app-multi-select>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select
-              label="樓層"
-              [options]="floorOption"
-              optionLabel="Name"
-              optionValue="No"
-              [control]="queryForm.controls.tlt_floorList"
-              [submitted]="submitted"
-            ></app-multi-select>  
+            <app-multi-select label="樓層" [options]="floorOption" optionLabel="Name" optionValue="No"
+              [control]="queryForm.controls.tlt_floorList" [submitted]="submitted"></app-multi-select>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select
-              label="大分類代碼/名稱"
-              [options]="bus_typeOption"
-              optionLabel="Label"
-              optionValue="No"
-              [control]="queryForm.controls.bus_typeList"
-              [submitted]="submitted"
-            ></app-multi-select>  
+            <app-multi-select label="大分類代碼/名稱" [options]="bus_typeOption" optionLabel="Label" optionValue="No"
+              [control]="queryForm.controls.bus_typeList" [submitted]="submitted"></app-multi-select>
           </div>
         </div>
 
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar-range-quick label="合約期間"
-            [startControl]="queryForm.controls.tlt_bdate" [endControl]="queryForm.controls.tlt_edate"
-            [submitted]="submitted" />
+            <app-calendar-range-quick label="合約期間" [startControl]="queryForm.controls.tlt_bdate"
+              [endControl]="queryForm.controls.tlt_edate" [submitted]="submitted" />
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select
-              label="組織代碼/名稱"
-              [options]="orgOption"
-              optionLabel="Label"
-              optionValue="No"
-              [control]="queryForm.controls.org_idList"
-              [submitted]="submitted"
-            ></app-multi-select>
+            <app-multi-select label="組織代碼/名稱" [options]="orgOption" optionLabel="Label" optionValue="No"
+              [control]="queryForm.controls.org_idList" [submitted]="submitted"></app-multi-select>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select
-              label="營運狀況"
-              [options]="tlt_openflagOption"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.tlt_openflagList"
-              [submitted]="submitted"
-            ></app-multi-select>
+            <app-multi-select label="營運狀況" [options]="tlt_openflagOption" optionLabel="label" optionValue="value"
+              [control]="queryForm.controls.tlt_openflagList" [submitted]="submitted"></app-multi-select>
           </div>
         </div>
 
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text label="合約附號_起始" controlName="contract_subno_start" [control]="queryForm.controls.contract_subno_start"
-              [submitted]="submitted"></app-input-text>
+            <app-input-text label="合約附號_起始" controlName="contract_subno_start"
+              [control]="queryForm.controls.contract_subno_start" [submitted]="submitted"></app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text label="合約附號_終止" controlName="contract_subno_end" [control]="queryForm.controls.contract_subno_end"
-              [submitted]="submitted"></app-input-text>
+            <app-input-text label="合約附號_終止" controlName="contract_subno_end"
+              [control]="queryForm.controls.contract_subno_end" [submitted]="submitted"></app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select
-              label="申請案件狀態"
-              [options]="apply_statusOption"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.apply_statusList"
-              [submitted]="submitted"
-            ></app-multi-select>
-          </div>    
-        </div>
-
-        <div class="grid p-fluid">
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select
-              label="審核狀態"
-              [options]="approveOption"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.approve_statusList"
-              [submitted]="submitted"
-            ></app-multi-select>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select
-              label="票據收票狀態"
-              [options]="get_ticket_statusOption"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.get_ticket_status_List"
-              [submitted]="submitted"
-            ></app-multi-select>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select
-              label="保證票型態"
-              [options]="ticket_typeOption"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.ticket_type_List"
-              [submitted]="submitted"
-            ></app-multi-select>
+            <app-multi-select label="申請案件狀態" [options]="apply_statusOption" optionLabel="label" optionValue="value"
+              [control]="queryForm.controls.apply_statusList" [submitted]="submitted"></app-multi-select>
           </div>
         </div>
 
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select
-              label="票據種類"
-              [options]="ticket_kindOption"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.ticket_kind_List"
-              [submitted]="submitted"
-            ></app-multi-select>
+            <app-multi-select label="審核狀態" [options]="approveOption" optionLabel="label" optionValue="value"
+              [control]="queryForm.controls.approve_statusList" [submitted]="submitted"></app-multi-select>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-multi-select label="票據收票狀態" [options]="get_ticket_statusOption" optionLabel="label" optionValue="value"
+              [control]="queryForm.controls.get_ticket_status_List" [submitted]="submitted"></app-multi-select>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-multi-select label="保證票型態" [options]="ticket_typeOption" optionLabel="label" optionValue="value"
+              [control]="queryForm.controls.ticket_type_List" [submitted]="submitted"></app-multi-select>
           </div>
         </div>
-        
+
+        <div class="grid p-fluid">
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-multi-select label="票據種類" [options]="ticket_kindOption" optionLabel="label" optionValue="value"
+              [control]="queryForm.controls.ticket_kind_List" [submitted]="submitted"></app-multi-select>
+          </div>
+        </div>
+
         <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
-          <app-button btnType="clear"></app-button>
+          <app-button btnType="clear" [form]="queryForm"></app-button>
           <app-button btnType="query" [loading]="loading"></app-button>
         </div>
       </form>

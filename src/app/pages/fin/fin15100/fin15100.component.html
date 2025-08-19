@@ -4,53 +4,31 @@
   </div>
 
   <p-accordion>
-    <p-accordionTab
-      header="{{ 'query-conditions' | translate }}"
-      [selected]="true"
-      class="line-height-3 m-0"
-      [headerStyleClass]="'query-accordionTab'"
-    >
+    <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'">
       <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit()">
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-query-year-month
-              label="申報年月"
-              [control]="queryForm.controls.DeclareYM"
-              [submitted]="submitted"
-              [onlyOddMonths]="true"
-            ></app-query-year-month>
+            <app-query-year-month label="申報年月" [control]="queryForm.controls.DeclareYM" [submitted]="submitted"
+              [onlyOddMonths]="true"></app-query-year-month>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text-range
-              label="退出/折讓單號"
-              [startControl]="queryForm.controls.TXN_Ret_NoStart"
-              [endControl]="queryForm.controls.TXN_Ret_NoEnd"
-              [submitted]="submitted"
-            ></app-input-text-range>
+            <app-input-text-range label="退出/折讓單號" [startControl]="queryForm.controls.TXN_Ret_NoStart"
+              [endControl]="queryForm.controls.TXN_Ret_NoEnd" [submitted]="submitted"></app-input-text-range>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
-              label="字軌"
-              controlName="track"
-              [control]="queryForm.controls.SAL_GUITrack"
-              [submitted]="submitted"
-            ></app-input-text>
-            </div>
-            <div class="col-12 md:col-6 lg:col-4">
-              <app-input-text-range
-                label="發票號碼"
-                [startControl]="queryForm.controls.SAL_GUINo_start"
-                [endControl]="queryForm.controls.SAL_GUINo_end"
-                [submitted]="submitted"
-                [errorForGroup]="true"
-              ></app-input-text-range>
-            </div>
-         </div>
+            <app-input-text label="字軌" controlName="track" [control]="queryForm.controls.SAL_GUITrack"
+              [submitted]="submitted"></app-input-text>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-text-range label="發票號碼" [startControl]="queryForm.controls.SAL_GUINo_start"
+              [endControl]="queryForm.controls.SAL_GUINo_end" [submitted]="submitted"
+              [errorForGroup]="true"></app-input-text-range>
+          </div>
+        </div>
 
-        <div
-          class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
-        >
-          <app-button btnType="clear"></app-button>
+        <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+          <app-button btnType="clear" [form]="queryForm"></app-button>
           <app-button btnType="query" [loading]="loading"></app-button>
         </div>
       </form>
@@ -120,7 +98,7 @@
   <div class="affix-area">
     <div class="affix-title">貼立發票</div>
     <div class="datebox">
-      <div class="cell label">銷<br/>售<br/>年<br/>月<br/>日</div>
+      <div class="cell label">銷<br />售<br />年<br />月<br />日</div>
       <div class="cell">
         <p-inputNumber [(ngModel)]="invoice().year" [useGrouping]="false"></p-inputNumber>
       </div>
@@ -139,11 +117,8 @@
 
   <!-- 主表：退貨或折讓內容 -->
   <div class="table-title">退　貨　或　折　讓　內　容</div>
-  <p-table
-    [value]="items()"
-    [tableStyle]="{ 'min-width': '100%', 'border-collapse':'collapse' }"
-    styleClass="print-table"
-  >
+  <p-table [value]="items()" [tableStyle]="{ 'min-width': '100%', 'border-collapse':'collapse' }"
+    styleClass="print-table">
     <ng-template pTemplate="header">
       <tr>
         <th style="width: 50%">品名</th>
@@ -177,8 +152,7 @@
         </td>
         <td class="num">{{ rowTax(row) | number:'1.0-0' }}</td>
         <td class="op">
-          <button pButton icon="pi pi-trash" class="p-button-text p-button-sm"
-                  (click)="removeRow(rowIndex)"></button>
+          <button pButton icon="pi pi-trash" class="p-button-text p-button-sm" (click)="removeRow(rowIndex)"></button>
         </td>
       </tr>
     </ng-template>

@@ -69,7 +69,7 @@
         </div>
 
         <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
-          <app-button btnType="clear"></app-button>
+          <app-button btnType="clear" [form]="queryForm"></app-button>
           <app-button btnType="query" [loading]="loading"></app-button>
         </div>
       </form>
@@ -79,7 +79,7 @@
 <div class="card">
   <app-report-table-group [columns]="columns" [data]="data"
     [subtotalFields]="['open_fees','construct_fees','expiration_fees']" [enableGrouping]="false"
-    [reportTitle]="'保證票彙總表'" [currentPage]="1" [dateStart]="'SalesDateStart'" [dateEnd]="'SalesDateEnd'" [showTotalOnly]="false"
-    [defaultMergedView]="true">
+    [reportTitle]="'保證票彙總表'" [currentPage]="1" [dateStart]="'SalesDateStart'" [dateEnd]="'SalesDateEnd'"
+    [showTotalOnly]="false" [defaultMergedView]="true">
   </app-report-table-group>
 </div>

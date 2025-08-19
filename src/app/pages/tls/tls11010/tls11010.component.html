@@ -1,132 +1,60 @@
 <div class="card">
   <div class="flex gap-2 mb-2">
     <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
-    <app-button
-      btnType="create"
-      (click)="onCreate()"
-      label="{{ 'create' | translate }}"
-    ></app-button>
+    <app-button btnType="create" (click)="onCreate()" label="{{ 'create' | translate }}"></app-button>
   </div>
   <p-accordion>
-    <p-accordionTab
-      header="{{ 'query-conditions' | translate }}"
-      [selected]="true"
-      class="line-height-3 m-0"
-      [headerStyleClass]="'query-accordionTab'"
-    >
-      <form
-        [formGroup]="queryForm"
-        id="queryForm"
-        (ngSubmit)="onSubmit(queryForm)"
-      >
+    <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'">
+      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown
-              label="館別"
-              controlName="BUILDING_NO"
-              [options]="BUILDING_NO_Options"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.building_no"
-              [submitted]="submitted"
-            ></app-dropdown>
+            <app-dropdown label="館別" controlName="BUILDING_NO" [options]="BUILDING_NO_Options" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.building_no" [submitted]="submitted"></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select
-              label="樓層"
-              controlName="FLOOR_NO"
-              [options]="floorOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.FLOOR_NO"
-              [submitted]="submitted"
-            ></app-multi-select>
+            <app-multi-select label="樓層" controlName="FLOOR_NO" [options]="floorOptions" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.FLOOR_NO" [submitted]="submitted"></app-multi-select>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select
-              label="區域"
-              controlName="AREA_NO"
-              [options]="RegionCodeOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.AREA_NO"
-              [submitted]="submitted"
-            ></app-multi-select>
+            <app-multi-select label="區域" controlName="AREA_NO" [options]="RegionCodeOptions" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.AREA_NO" [submitted]="submitted"></app-multi-select>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
-              label="位置代碼"
-              [control]="queryForm.controls.LOCATION_No"
-              [submitted]="submitted"
-            ></app-input-text>
+            <app-input-text label="位置代碼" [control]="queryForm.controls.LOCATION_No"
+              [submitted]="submitted"></app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select
-              label="組織代碼/名稱"
-              controlName="OrganizationCodeOptions"
-              [options]="OrganizationCodeOptions"
-              optionLabel="formLabel"
-              optionValue="value"
-              [control]="queryForm.controls.org_id"
-              [submitted]="submitted"
-            ></app-multi-select>
+            <app-multi-select label="組織代碼/名稱" controlName="OrganizationCodeOptions" [options]="OrganizationCodeOptions"
+              optionLabel="formLabel" optionValue="value" [control]="queryForm.controls.org_id"
+              [submitted]="submitted"></app-multi-select>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select
-              label="用途代碼/名稱"
-              controlName="Location_Purpose"
-              [options]="usageOptions"
-              optionLabel="formLabel"
-              optionValue="value"
-              [control]="queryForm.controls.Purpose_no"
-              [submitted]="submitted"
-            ></app-multi-select>
+            <app-multi-select label="用途代碼/名稱" controlName="Location_Purpose" [options]="usageOptions"
+              optionLabel="formLabel" optionValue="value" [control]="queryForm.controls.Purpose_no"
+              [submitted]="submitted"></app-multi-select>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-number-range
-              label="簽約坪數"
-              [startControl]="queryForm.controls.GROSS_SPACE_Start"
-              [endControl]="queryForm.controls.GROSS_SPACE_End"
-              [submitted]="submitted"
-              [step]="0.1"
-              [minFractionDigits]="1"
-              [maxFractionDigits]="3"
-            ></app-input-number-range>
+            <app-input-number-range label="簽約坪數" [startControl]="queryForm.controls.GROSS_SPACE_Start"
+              [endControl]="queryForm.controls.GROSS_SPACE_End" [submitted]="submitted" [step]="0.1"
+              [minFractionDigits]="1" [maxFractionDigits]="3"></app-input-number-range>
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-number-range
-              label="營業坪數"
-              [startControl]="queryForm.controls.NET_SPACE_Start"
-              [endControl]="queryForm.controls.NET_SPACE_End"
-              [submitted]="submitted"
-              [step]="0.1"
-              [minFractionDigits]="1"
-              [maxFractionDigits]="3"
-            ></app-input-number-range>
+            <app-input-number-range label="營業坪數" [startControl]="queryForm.controls.NET_SPACE_Start"
+              [endControl]="queryForm.controls.NET_SPACE_End" [submitted]="submitted" [step]="0.1"
+              [minFractionDigits]="1" [maxFractionDigits]="3"></app-input-number-range>
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select
-              label="狀態"
-              controlName="LOCATION_Status"
-              [options]="LOCATION_Status_Options"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.LOCATION_Status"
-              [submitted]="submitted"
-            ></app-multi-select>
+            <app-multi-select label="狀態" controlName="LOCATION_Status" [options]="LOCATION_Status_Options"
+              optionLabel="label" optionValue="value" [control]="queryForm.controls.LOCATION_Status"
+              [submitted]="submitted"></app-multi-select>
           </div>
         </div>
-        <div
-          class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
-        >
-          <app-button btnType="clear"></app-button>
-          <app-button
-            btnType="query"
-            (onClick)="onSubmit(queryForm)"
-            [loading]="loading"
-          ></app-button>
+        <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+          <app-button btnType="clear" [form]="queryForm"></app-button>
+          <app-button btnType="query" (onClick)="onSubmit(queryForm)" [loading]="loading"></app-button>
         </div>
       </form>
     </p-accordionTab>
@@ -134,21 +62,9 @@
 </div>
 
 <div class="card">
-  <app-table
-    tableKey="TLS11010"
-    [data]="data"
-    [columns]="columns"
-    (edit)="onEdit($event)"
-    (detail)="onDetail($event)"
-    [selectedItems]="selectedItems"
-    (selectionChange)="selectedItems = $event"
-    (delete)="onDelete($event)"
-    [showCheckBox]="true"
-    dataKey="id"
-    [multiSortMeta]="[{ field: 'LOCATION_No', order: 1 }]"
-    [totalRecords]="totalRecords"
-    (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"
-    [lazy]="true"
-    [loading]="loading"
-  ></app-table>
+  <app-table tableKey="TLS11010" [data]="data" [columns]="columns" (edit)="onEdit($event)" (detail)="onDetail($event)"
+    [selectedItems]="selectedItems" (selectionChange)="selectedItems = $event" (delete)="onDelete($event)"
+    [showCheckBox]="true" dataKey="id" [multiSortMeta]="[{ field: 'LOCATION_No', order: 1 }]"
+    [totalRecords]="totalRecords" (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [lazy]="true"
+    [loading]="loading"></app-table>
 </div>
