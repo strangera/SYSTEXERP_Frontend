@@ -126,6 +126,17 @@ export class TLS23080Component extends BasicQueryPageComponent<any> {
 moneyFormat(value: number): string {
   return value != null ? value.toLocaleString('en-US') : '0';
 }
+// formatDate：輸出 2024/05/27
+ formatDate = (val: string | Date | number): string => {
+  if (!val) return '';
+  const d = val instanceof Date ? val : new Date(val);
+  if (isNaN(d.getTime())) return '';
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}/${m}/${day}`;
+};
+
 
 onSubmit(form: FormGroup): void {
   this.handleSubmit(form, () => {
@@ -193,21 +204,32 @@ onSubmit(form: FormGroup): void {
   });
 }
 
+// 建議也把 formatDate 引進來：
+// import { formatDate } from '@shared/componentkit/table/table.model';
+
 columns = [
-  { field: 'ECR_No', header: '收銀機號', visible: true },
-  { field: 'tlt_no', header: '專櫃編號', visible: true },
-  { field: 'tlt_name', header: '櫃位名稱', visible: true, style: 'text-left' },
+  { field: 'TXN_Date', header: '日期', visible: true, style: 'text-left', format: this.formatDate },
 
   { field: 'TXN_PayAmt10', header: '現金', visible: true, style: 'text-right', format: this.moneyFormat.bind(this) },
-  { field: 'TXN_PayAmt41', header: '聯信連線', visible: true, style: 'text-right', format: this.moneyFormat.bind(this) },
-  { field: 'TXN_PayAmt42', header: '聯信離線', visible: true, style: 'text-right', format: this.moneyFormat.bind(this) },
-  { field: 'TXN_PayAmt12', header: '聯信紅利', visible: true, style: 'text-right', format: this.moneyFormat.bind(this) },
-  { field: 'TXN_PayAmt81', header: '中信-停車場', visible: true, style: 'text-right', format: this.moneyFormat.bind(this) },
-  { field: 'TXN_PayAmt43', header: '中信連線', visible: true, style: 'text-right', format: this.moneyFormat.bind(this) },
-  { field: 'TXN_PayAmt44', header: '中信離線', visible: true, style: 'text-right', format: this.moneyFormat.bind(this) },
-  { field: 'TXN_PayAmt14', header: '中信紅利', visible: true, style: 'text-right', format: this.moneyFormat.bind(this) },
-  { field: 'TXN_PayAmt82', header: '一卡通-停車場', visible: true, style: 'text-right', format: this.moneyFormat.bind(this) },
+
+  // 聯信（41/42/12）
+  { field: 'UnionGeneral', header: '聯信(一般)',  visible: true, style: 'text-right', format: this.moneyFormat.bind(this) },
+  { field: 'UnionAE',      header: '聯信(AE)',    visible: true, style: 'text-right', format: this.moneyFormat.bind(this) },
+  { field: 'UnionDiner',   header: '聯信(Diners)',visible: true, style: 'text-right', format: this.moneyFormat.bind(this) },
+
+  // 中信（43/44/14）
+  { field: 'CTBCGeneral', header: '中信(一般)',  visible: true, style: 'text-right', format: this.moneyFormat.bind(this) },
+  { field: 'CTBCAE',      header: '中信(AE)',    visible: true, style: 'text-right', format: this.moneyFormat.bind(this) },
+  { field: 'CTBCDiner',   header: '中信(Diners)',visible: true, style: 'text-right', format: this.moneyFormat.bind(this) },
+
+  // 中信-停車場（81）
+  { field: 'CTBCParkingGeneral', header: '中信-停車場(一般)',  visible: true, style: 'text-right', format: this.moneyFormat.bind(this) },
+  { field: 'CTBCParkingAE',      header: '中信-停車場(AE)',    visible: true, style: 'text-right', format: this.moneyFormat.bind(this) },
+  { field: 'CTBCParkingDiner',   header: '中信-停車場(Diners)',visible: true, style: 'text-right', format: this.moneyFormat.bind(this) },
+
+  // 其他付款別（與 Swagger 一致）
   { field: 'TXN_PayAmt52', header: '一卡通', visible: true, style: 'text-right', format: this.moneyFormat.bind(this) },
+  { field: 'TXN_PayAmt82', header: '一卡通-停車場', visible: true, style: 'text-right', format: this.moneyFormat.bind(this) },
   { field: 'TXN_PayAmt20', header: '禮券', visible: true, style: 'text-right', format: this.moneyFormat.bind(this) },
   { field: 'TXN_PayAmt62', header: '商品提貨單', visible: true, style: 'text-right', format: this.moneyFormat.bind(this) },
   { field: 'TXN_PayAmt77', header: '感熱紙抵用券', visible: true, style: 'text-right', format: this.moneyFormat.bind(this) },
@@ -234,6 +256,9 @@ columns = [
   { field: 'TXN_PayAmt60', header: '喜客券', visible: true, style: 'text-right', format: this.moneyFormat.bind(this) },
   { field: 'TXN_PayAmt22', header: '外來提貨單-高夢', visible: true, style: 'text-right', format: this.moneyFormat.bind(this) },
   { field: 'TXN_PayAmt23', header: '外來禮券-高夢', visible: true, style: 'text-right', format: this.moneyFormat.bind(this) },
-  { field: 'TXN_CancelAmt', header: '作廢', visible: true, style: 'text-right', format: this.moneyFormat.bind(this) },
+
+  { field: 'TXN_TotPayAmt', header: '總金額', visible: true, style: 'text-right', format: this.moneyFormat.bind(this) },
 ];
+
+
 }
