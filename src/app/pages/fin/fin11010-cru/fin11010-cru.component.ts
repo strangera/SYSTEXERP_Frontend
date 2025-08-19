@@ -221,18 +221,20 @@ export class FIN11010CRUComponent extends BasicCruPageComponent<FIN11010Data> im
   }
 
   setFieldFormat() {
-    // 設定日期格式
-    const year = this.dataForm.get('REP_BegGUIYM')?.value.substring(0, 4);
-    const month = this.dataForm.get('REP_BegGUIYM')?.value.substring(4, 6);
-    if (year && month) {
-      this.dataForm.get('REP_BegGUIYM')?.setValue(`${year}/${month}`);
-    }
+    const formatDateField = (fieldName: string) => {
+      const reg = /^(19|20)\d{2}(0[1-9]|1[0-2])$/;
+      const value = this.dataForm.get(fieldName)?.value ?? '';
 
-    const year2 = this.dataForm.get('REP_EndGUIYM')?.value.substring(0, 4);
-    const month2 = this.dataForm.get('REP_EndGUIYM')?.value.substring(4, 6);
-    if (year2 && month2) {
-      this.dataForm.get('REP_EndGUIYM')?.setValue(`${year2}/${month2}`);
-    }
+      if (reg.test(value)) {
+        const year = value.substring(0, 4);
+        const month = value.substring(4, 6);
+        this.dataForm.get(fieldName)?.setValue(`${year}/${month}`);
+      } else {
+        this.dataForm.get(fieldName)?.setValue('');
+      }
+    };
+
+    formatDateField('REP_BegGUIYM');
+    formatDateField('REP_EndGUIYM');
   }
-
 }
