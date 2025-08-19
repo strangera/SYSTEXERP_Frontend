@@ -14,7 +14,7 @@ import { RadiobuttonYNComponent } from '@shared/componentkit/radiobutton-yn/radi
 import { yesterday } from '@shared/models/system/query-form.model';
 import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
 import { untilDestroyed } from '@ngneat/until-destroy';
-import { debounceTime } from 'rxjs';
+import { debounceTime, forkJoin, map, of, switchMap, tap } from 'rxjs';
 
 @Component({
   selector: 'app-tls31010',
@@ -136,7 +136,6 @@ export class TLS31010Component extends BasicQueryPageComponent<any> implements O
             accumulator[groupKey].items.push({
               ...currentItem,
               label: `${currentItem.No} - ${currentItem.Name}`,
-              datakey: currentItem.CAT_LName + currentItem.No
             });
 
             return accumulator;
@@ -144,51 +143,103 @@ export class TLS31010Component extends BasicQueryPageComponent<any> implements O
 
           // 最後，將分組物件的值轉換為陣列，得到最終的分組下拉清單格式
           this.bus_class_Option = Object.values(groupedData);
+          console.log(this.bus_class_Option);
+
         });
       } else {
         this.bus_class_Option = [];
         this.bus_sclass_Option = [];
       }
     });
-    // 監聽中分類變化
-    this.queryForm.controls.bus_class.valueChanges.pipe(debounceTime(300), untilDestroyed(this)).subscribe((value: string[]) => {
-      if (value && value.length > 0) {
-        // 傳送大分類和中分類的代碼給後端
-        this.dropDownListService.queryPOS20032_DropDownList({ CAT_LNo: this.queryForm.controls.bus_type.value, CAT_MNo: value }).pipe(untilDestroyed(this)).subscribe(response => {
-          // 步驟1: 使用 reduce 方法來對資料進行分組
-          const groupedData = response.Data.reduce((accumulator, currentItem) => {
-            // 建立一個組合鍵，包含大分類和中分類的代碼
-            const groupKey = `${currentItem.CAT_LNo}_${currentItem.CAT_MNo}`;
+    // 監聽中分類變化，獲取小分類並分組
+    this.queryForm.controls.bus_class.valueChanges.pipe(debounceTime(300), untilDestroyed(this),
+      map(selectedMValues => selectedMValues || []),
+      // 使用 switchMap 取消前一次的請求，確保只處理最新的選取
+      switchMap((selectedMValues: IDropdownItem[]) => {
+        if (selectedMValues.length === 0) {
+          return of([]);// 如果沒有選取任何中分類，直接回傳空陣列
+        }
+        const requests = [];
+        // 根據選取的中分類，為每一個中分類組建一個 API 請求
+        for (const mValue of selectedMValues) {
+          const matchedItem = this.findDropdownItem(mValue);
+          if (matchedItem) {
+            requests.push(
+              this.dropDownListService.queryPOS20032_DropDownList({ CAT_LNo: [matchedItem.CAT_LNo], CAT_MNo: [matchedItem.No] }).pipe(
+                map(res => ({
+                  LNo: matchedItem.CAT_LNo,
+                  LName: matchedItem.CAT_LName,
+                  MNo: matchedItem.No,
+                  MName: matchedItem.Name,
+                  Data: res.Data
+                }))
+              )
+            );
+          }
+        }
 
-            // 如果這個組合鍵的群組還不存在，就建立一個新的群組
-            if (!accumulator[groupKey]) {
-              accumulator[groupKey] = {
-                // 群組標籤格式為: 大分類名稱 - 中分類名稱
-                label: `${currentItem.CAT_LName} - ${currentItem.CAT_MName}`,
-                items: []
-              };
-            }
+        // 使用 forkJoin 並行發送所有請求
+        return forkJoin(requests);
+      }),
+      tap(results => {
+        // results 是所有 API 回傳結果的陣列
+        console.log('所有 API 呼叫結果：', results);
+      })
+    ).subscribe(results => {
+      // 處理合併和分組的邏輯
+      const groupedData = results.reduce((accumulator, group) => {
+        const groupKey = `${group.LNo}_${group.MNo}`;
 
-            // 將當前的項目加入到對應的群組中
-            accumulator[groupKey].items.push({
-              ...currentItem,
-              // 下拉選單中顯示的標籤格式
-              label: `${currentItem.No} - ${currentItem.Name}`
-            });
+        if (!accumulator[groupKey]) {
+          accumulator[groupKey] = {
+            label: `${group.LName} - ${group.MName}`,
+            items: []
+          };
+        }
 
-            return accumulator;
-          }, {} as Record<string, any>);
+        const newItems = group.Data.map(item => ({
+          ...item,
+          label: `${item.No} - ${item.Name}`,
+          CAT_LNo: group.LNo,
+          CAT_LName: group.LName,
+          CAT_MNo: group.MNo,
+          CAT_MName: group.MName
+        }));
+        const existingItems = accumulator[groupKey].items;
+        const allItems = [...existingItems, ...newItems];
 
-          // 步驟2: 將分組物件的值轉換為陣列，得到最終的分組下拉清單格式
-          this.bus_sclass_Option = Object.values(groupedData);
+        const uniqueItemsMap = new Map();
+        allItems.forEach(item => {
+          // 使用 No 作為鍵來去重
+          if (!uniqueItemsMap.has(item.No)) {
+            uniqueItemsMap.set(item.No, item);
+          }
         });
-      } else {
-        this.bus_sclass_Option = [];
-      }
+
+        accumulator[groupKey].items = Array.from(uniqueItemsMap.values());
+
+        return accumulator;
+      }, {} as Record<string, any>);
+
+      this.bus_sclass_Option = Object.values(groupedData);
+      console.log('最終分組後的小分類選項：', this.bus_sclass_Option);
     });
     this.dropDownListService.querySYS3100_DropDownList().pipe(untilDestroyed(this)).subscribe(res => {
       this.org_id_Option = res.Data.map(item => ({ ...item, label: `${item.No} - ${item.Name}`, }));
     })
+  }
+  // 新增一個輔助方法，用來從中分類選項中找到完整的物件
+  private findDropdownItem(mValue: IDropdownItem): any | undefined {
+    for (const group of this.bus_class_Option) {
+      if (!group.items) {
+        return undefined;
+      }
+      const item = group.items.find((i: { No: string; }) => i.No === mValue.No);
+      if (item) {
+        return item;
+      }
+    }
+    return undefined;
   }
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {

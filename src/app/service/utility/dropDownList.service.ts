@@ -19,6 +19,7 @@ export interface IDropdownItem {
   CAT_LName?: string;
   CAT_MNo?: string;
   CAT_MName?: string;
+  items?: IDropdownItem[];
 }
 
 // 針對 querySYS3100_tree_DropDownList 的資料結構

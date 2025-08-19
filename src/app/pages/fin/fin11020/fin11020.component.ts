@@ -90,7 +90,11 @@ export class FIN11020Component extends BasicQueryPageComponent<MainInvoiceData> 
   onFileUpload(event: FileSelectEvent) {
     const file = event.files[0];
     this.fin11020Service.uploadFIN11020(file).pipe(untilDestroyed(this)).subscribe(res => {
-      this.messageService.successBubble(res.Message);
+      if (res.Data) {
+        this.messageService.successBubble(res.Message);
+      } else {
+        this.messageService.errorBubble(res.Message);
+      }
     });
   }
 

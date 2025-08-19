@@ -29,7 +29,7 @@
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-multi-select label="中分類代碼/名稱" controlName="bus_class" [options]="bus_class_Option" optionLabel="label"
-              optionValue="No" [control]="queryForm.controls.bus_class" [submitted]="submitted" [group]="true"
+              [control]="queryForm.controls.bus_class" [submitted]="submitted" [group]="true"
               optionGroupLabel="CAT_LName" optionGroupChildren="items"></app-multi-select>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
