@@ -489,7 +489,7 @@ nullpToYesNo = (val: unknown): string => {
 
   { field: 'TXN_TotDisc',    header: '折扣/讓金額',    visible: true, style: 'text-right', format: this.moneyFormat },
 
-  { field: 'GUILoveStatus',  header: '捐贈狀態',      visible: true },
+  { field: 'GUILoveStatus',  header: '捐贈狀態',      visible: true,format: this.nyToYesNo },
   { field: 'TXN_GUILoveCode',header: '捐贈社福團體代碼', visible: true },
   { field: 'TXN_GUIRemark',  header: '防偽隨機碼',     visible: true },
 
