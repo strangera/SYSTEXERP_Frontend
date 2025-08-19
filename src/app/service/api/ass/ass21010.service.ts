@@ -2,7 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable, OnDestroy, signal } from '@angular/core';
 import { IPOS2002LocationItem } from '@service/utility/dropDownList.service';
 import { BaseQueryResponse, DropdownOption } from '@shared/models/api/base-api.interface';
-import { catchError, finalize, of, Subject, take, tap } from 'rxjs';
+import { catchError, finalize, of, Subject, take, takeUntil, tap } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import { ErrorHandlerService } from '../../system/error-handler.service';
 
@@ -41,6 +41,7 @@ export class ASS21010Service implements OnDestroy {
     this.engTypeLoading = !0;
     of(engTypeMock).pipe(
       take(1),
+      takeUntil(this.engTypeCancel$),
       tap(response => this.engTypeSignal.set(response.Data)),
       catchError(error => this.errorHandler.handleError(error)),
       finalize(() => {
@@ -55,6 +56,7 @@ export class ASS21010Service implements OnDestroy {
     this.engMeterNoLoading = !0;
     of(engMeterNoMock).pipe(
       take(1),
+      takeUntil(this.engMeterNoCancel$),
       tap(response => this.engMeterNoSignal.set(response.Data)),
       catchError(error => this.errorHandler.handleError(error)),
       finalize(() => {
@@ -69,6 +71,7 @@ export class ASS21010Service implements OnDestroy {
     this.locationLoading = !0;
     this.http.post<any>(`${apiUrl}/queryPOS2002_DropDownList`, {}).pipe(
       take(1),
+      takeUntil(this.locationCancel$),
       tap(response => this.locationSignal.set(response.Data)),
       catchError(error => this.errorHandler.handleError(error)),
       finalize(() => {
@@ -84,6 +87,7 @@ export class ASS21010Service implements OnDestroy {
     this.tableLoading = !0;
     this.http.post<BaseQueryResponse<unknown>>(`${apiUrl}/ASS0000/ASS2000/queryASS21010`, query).pipe(
       take(1),
+      takeUntil(this.tableCancel$),
       tap(response => this.ASS21010Data.set(response.Data)),
       catchError(error => this.errorHandler.handleError(error)),
       finalize(() => {

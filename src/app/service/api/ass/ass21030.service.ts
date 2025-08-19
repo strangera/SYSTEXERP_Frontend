@@ -3,7 +3,7 @@ import { Injectable, OnDestroy, signal } from '@angular/core';
 import { ErrorHandlerService } from '@service/system/error-handler.service';
 import { IPOS2002LocationItem } from '@service/utility/dropDownList.service';
 import { BaseQueryResponse, DropdownOption } from '@shared/models/api/base-api.interface';
-import { catchError, finalize, of, Subject, take, tap } from 'rxjs';
+import { catchError, finalize, of, Subject, take, takeUntil, tap } from 'rxjs';
 import { environment } from 'src/environments/environment';
 import { engMeterNoMock, EngType, engTypeMock } from './ass21010.service';
 
@@ -41,6 +41,8 @@ export class ASS21030Service implements OnDestroy {
   private readonly engMeterNoCancel$ = new Subject<void>();
   private readonly locationCancel$ = new Subject<void>();
   private readonly tableCancel$ = new Subject<void>();
+  private readonly queryByMeterNoCancel$ = new Subject<void>();
+  private readonly queryByTltNoCancel$ = new Subject<void>();
 
   constructor(
     private http: HttpClient,
@@ -52,6 +54,7 @@ export class ASS21030Service implements OnDestroy {
     this.engTypeLoading = !0;
     of(engTypeMock).pipe(
       take(1),
+      takeUntil(this.engTypeCancel$),
       tap(response => this.engTypeSignal.set(response.Data)),
       catchError(error => this.errorHandler.handleError(error)),
       finalize(() => {
@@ -67,6 +70,7 @@ export class ASS21030Service implements OnDestroy {
     // this.http.post<BaseQueryResponse<unknown>>(`${apiUrl}/ASS0000/ASS2000/loadEngMeterNo`, { types }).pipe(
     of(engMeterNoMock).pipe(
       take(1),
+      takeUntil(this.engMeterNoCancel$),
       tap(response => this.engMeterNoSignal.set(response.Data)),
       catchError(error => this.errorHandler.handleError(error)),
       finalize(() => {
@@ -81,6 +85,7 @@ export class ASS21030Service implements OnDestroy {
     this.locationLoading = !0;
     this.http.post<any>(`${apiUrl}/queryPOS2002_DropDownList`, {}).pipe(
       take(1),
+      takeUntil(this.locationCancel$),
       tap(response => this.locationSignal.set(response.Data)),
       catchError(error => this.errorHandler.handleError(error)),
       finalize(() => {
@@ -96,6 +101,7 @@ export class ASS21030Service implements OnDestroy {
     this.tableLoading = !0;
     this.http.post<BaseQueryResponse<unknown>>(`${apiUrl}/ASS0000/ASS2000/queryASS21030`, query).pipe(
       take(1),
+      takeUntil(this.tableCancel$),
       tap(response => this.ASS21030Data.set(response.Data)),
       catchError(error => this.errorHandler.handleError(error)),
       finalize(() => {
@@ -106,8 +112,11 @@ export class ASS21030Service implements OnDestroy {
   };
 
   public queryByMeterNo(eng_meterNo: string): void {
+    this.queryByMeterNoCancel$.next();
+    this.queryByMeterNoLoading = !0;
     this.http.post<BaseQueryResponse<unknown>>(`${apiUrl}/ASS0000/ASS2000/queryByMeterNo`, { eng_meterNo }).pipe(
       take(1),
+      takeUntil(this.queryByMeterNoCancel$),
       tap(response => this.queryByMeterNoData.set(response.Data)),
       catchError(error => this.errorHandler.handleError(error)),
       finalize(() => {
@@ -118,8 +127,11 @@ export class ASS21030Service implements OnDestroy {
   }
 
   public queryByTltNo(tlt_no: string): void {
+    this.queryByTltNoCancel$.next();
+    this.queryByTltNoLoading = !0;
     this.http.post<BaseQueryResponse<unknown>>(`${apiUrl}/ASS0000/ASS2000/queryByTltNo`, { tlt_no }).pipe(
       take(1),
+      takeUntil(this.queryByTltNoCancel$),
       tap(response => this.queryByTltNoData.set(response.Data)),
       catchError(error => this.errorHandler.handleError(error)),
       finalize(() => {
