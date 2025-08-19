@@ -28,7 +28,7 @@ export class FIN11020Component extends BasicQueryPageComponent<MainInvoiceData> 
   queryForm = this.formBuilder.group({
     GUI_YYMM_start: [new Date(), [Validators.required]], // 發票年月
     GUI_YYMM_end: [new Date(), [Validators.required]], // 發票年月
-    GUI_Track: ['', [Validators.required, this.validationService.guiTrackValidator, Validators.maxLength(2), Validators.minLength(2)]], // 字軌
+    GUI_Track: ['', [this.validationService.guiTrackValidator, Validators.maxLength(2), Validators.minLength(2)]], // 字軌
     GUI_No_start: [null, [Validators.maxLength(8), Validators.minLength(8), Validators.max(99999950)]], // 發票起始號碼
     GUI_No_end: [null, [Validators.maxLength(8), Validators.minLength(8), Validators.max(99999999)]], // 發票結束號碼
     ...createPaginationConfig([{ field: 'GUI_YYMM', order: 1 }]), // 分頁和排序參數
@@ -89,15 +89,8 @@ export class FIN11020Component extends BasicQueryPageComponent<MainInvoiceData> 
 
   onFileUpload(event: FileSelectEvent) {
     const file = event.files[0];
-    this.fin11020Service.uploadFIN11020(file).pipe(untilDestroyed(this)).subscribe({
-      next: (res) => {
-        if (res.Data) {
-          this.onSubmit(this.queryForm);
-        }
-      },
-      error: (err) => {
-        console.error(err);
-      },
+    this.fin11020Service.uploadFIN11020(file).pipe(untilDestroyed(this)).subscribe(res => {
+      this.messageService.successBubble(res.Message);
     });
   }
 

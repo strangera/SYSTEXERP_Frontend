@@ -1,264 +1,197 @@
-import { Component } from '@angular/core';
-import { FormBuilder, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { NavigationExtras, Router } from '@angular/router';
-// Permissions
-import { FunsrightInfo, PermissionsInfo } from '../../../shared/models/system/funsrightInfo';
-// Shared
-import { AuthService } from '../../../service/system/auth.service';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-
-import { ValidationService } from '../../../shared/service/validation.service';
-
-import { FloorService } from '../../../service/basic/floor.service';
-import { RegionService } from './../../../service/basic/region-code.service';
-import { OrganizationNumberService } from '../../../service/basic/organization-number.service';
-import { BusinessTypeCodeService } from '../../../service/basic/business-type-code-service.service';
-import { CommissionTypeService } from '../../../service/basic/commission-type.service';
-import { TypeService } from './../../../service/basic/type.service';
-import { TaxableService } from './../../../service/basic/taxable.service';
-import { CounterCodeService } from '../../../service/basic/counter-code.service';
-import { CooperationMethodService } from '../../../service/basic/cooperation-method.service';
+import { DropDownListService, IDropdownItem } from '@service/utility/dropDownList.service';
+import { Component, OnInit } from '@angular/core';
+import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { AccordionModule } from 'primeng/accordion';
-import { RadiobuttonComponent } from '../../../shared/componentkit/radiobutton/radiobutton.component';
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { TableModule } from 'primeng/table';
-import { PrimeTemplate } from 'primeng/api';
-import { NgFor } from '@angular/common';
 import { TranslateModule } from '@ngx-translate/core';
+import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
+import { Column, ColumnGroup, createPaginationConfig } from '@shared/componentkit/table/table.model';
+import { TableComponent } from '@shared/componentkit/table/table.component';
+import { RadiobuttonYNComponent } from '@shared/componentkit/radiobutton-yn/radiobutton-yn.component';
+import { yesterday } from '@shared/models/system/query-form.model';
+import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
+import { untilDestroyed } from '@ngneat/until-destroy';
+import { debounceTime } from 'rxjs';
 
 @Component({
   selector: 'app-tls31010',
   templateUrl: './tls31010.component.html',
-  styleUrl: './tls31010.component.scss',
   standalone: true,
-  imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, RadiobuttonComponent, CalendarComponent, DropdownComponent, ButtonComponent, TableModule, PrimeTemplate, NgFor, TranslateModule]
+  imports: [
+    MenubarComponent,
+    AccordionModule,
+    FormsModule,
+    ReactiveFormsModule,
+    CalendarComponent,
+    ButtonComponent,
+    TableModule,
+    RadiobuttonYNComponent,
+    TranslateModule,
+    TableComponent,
+    MultiSelectComponent
+  ]
 })
 
-export class TLS31010Component {
-
-  // 程式編號
-  ProgNo: string = '230001';
-  // 權限變數
-  funInfo?: FunsrightInfo;
-
-
-
-
-  // 查詢表單
-  loading: boolean = false;
-  submitted: boolean = false;
-  queryForm = this.formBuilder.group({
-    radiolist: [1, []], // 條件篩選, radioButton
-    floor: [],  // 樓層
-    region: [], //區域
-    tax: [], //稅別
-    type: [],
-    organizationCode: [],  // 專櫃編號
-    businessTypeCode: [],  // 大分類
-    commissionType: [], // 抽成方式
-    onedatedd: [],
-    counterCode: [],  // 專櫃編號
+export class TLS31010Component extends BasicQueryPageComponent<any> implements OnInit {
+  queryForm = this.formBuilder.nonNullable.group({
+    txn_date: [yesterday],//交易日期
+    tlt_building: [[]],// 館別
+    tlt_floor: [[]],// 樓層
+    area_no: [[]],// 區域
+    bus_type: [[]],//大分類
+    bus_class: [[]],//中分類
+    bus_sclass: [[]],//小分類
+    tlt_kind: [[]], //櫃別 (1.正櫃 2.臨時櫃 3.特賣會 4.虛擬櫃)
+    tlt_term_type: [[]], // 抽成別 1:固定租金 2:底租抽成取高者3:一般抽成     4:包底抽成     5:階梯式抽成   6:包底加階梯   "
+    org_id: [[]],  // 組織
+    tax: [null],  // 銷售金額是否含稅
+    rece_yn: [null],  // 是否開立業主發票(是否開立業主發票(Y:是 N:否))
+    ...createPaginationConfig([{ field: 'tlt_building', order: 1 }])
   });
-
-  daterangeOptions: any[] = [
-    { value: 1, label: '日營業報表' },
+  totalRecords = 0;
+  data: any[] = [];
+  columns: Column[] = [
+    { field: 'tlt_building', header: '館別', visible: true },
+    { field: 'org_id', header: '組織名稱', visible: true },
+    { field: 'tlt_kind', header: '櫃別', visible: true },
+    { field: 'tlt_no', header: '專櫃編號', visible: true },
+    { field: 'location_no', header: '位置編號', visible: true },
+    { field: 'tlt_name', header: '專櫃名稱', visible: true },
+    { field: 'budget', header: '營業目標', visible: true, groupField: 'budgetAmt' },
+    { field: 'AVN_TotSaleAmt', header: '營業實績', visible: true, groupField: 'budgetAmt' },
+    { field: '', header: '達成率', visible: true, groupField: 'budgetAmt' },
+    { field: '', header: '營業目標佔比', visible: true, groupField: 'sum' },
+    { field: '', header: '營業實績佔比', visible: true, groupField: 'sum' },
+    { field: 'AVN_TotCustCnt', header: '交易筆數', visible: true, groupField: 'custCnt' },
+    { field: '', header: '客單價', visible: true, groupField: 'custCnt' },
+    { field: 'tlt_space', header: '坪數', visible: true, groupField: 'space' },
+    { field: '', header: '坪效', visible: true, groupField: 'space' },
+    { field: 'budget', header: '月營業目標', visible: true, groupField: 'month' },
+    { field: 'AVN_TotSaleAmt', header: '營業實績', visible: true, groupField: 'month' },
+    { field: '', header: '完成率', visible: true, groupField: 'month' },
   ];
-
-  organizationOptions: any[] = [];
-  regionOptions: any[] = [];
-  floorOptions: any[] = [];
-  businessTypeCodeOptions: any[] = [];
-  commissionTypeOptions: any[] = [];
-  TypeOptions: any[] = [];
-  counterCodeOptions: any[] = [];
-  taxOptions: any[] = [];
-  operationsOptions: any[] = [];
-
-
-  // 表格資料
-  data: any[] = [
-    { 'BOTag': '9876', },
-  ];
-  filteredData: any[] = [...this.data];
-
-  columns: any[] = [
-    { field: '1', header: '樓層名稱', visible: true },
-    { field: '2', header: '營業目標', visible: true },
-    { field: '3', header: '營業實績', visible: true },
-    { field: '4', header: '達成率', visible: true },
-    { field: '5', header: '營業目標佔比', visible: true },
-    { field: '6', header: '營業實績佔比', visible: true },
-    { field: '7', header: '交易筆數', visible: true },
-    { field: '8', header: '客單價', visible: true },
-    { field: '9', header: '坪數', visible: true },
-    { field: '10', header: '坪效', visible: true },
-    { field: '11', header: '營業實績', visible: true },
-    { field: '12', header: '營業實績佔比', visible: true },
-    { field: '13', header: '臨時櫃業績佔比', visible: true },
-    { field: '14', header: '月營業目標', visible: true },
-    { field: '15', header: '營業實績', visible: true },
-    { field: '16', header: '完成率', visible: true },
-  ];
-
-  headerRows: any[] = [
-    [
-      { field: '', header: '樓層名稱', visible: true, rowspan: 2, colspan: 1 },
-      { field: '', header: '營業額', visible: true, rowspan: 1, colspan: 3 },
-      { field: '', header: '營業佔比', visible: true, rowspan: 1, colspan: 2 },
-      { field: '', header: '客單價', visible: true, rowspan: 1, colspan: 2 },
-      { field: '', header: '營業坪效', visible: true, rowspan: 1, colspan: 2 },
-      { field: '', header: '臨時櫃', visible: true, rowspan: 1, colspan: 3 },
-      { field: '', header: '月累積', visible: true, rowspan: 1, colspan: 3 },
-    ],
-    [
-      { field: 'floorName', header: '樓層名稱', visible: true },
-      { field: 'BOTag', header: '營業目標', visible: true },
-      { field: 'salesPerformance', header: '營業實績', visible: true },
-      { field: 'achievementRate', header: '達成率', visible: true },
-      { field: 'targetRatio', header: '營業目標佔比', visible: true },
-      { field: 'performanceRatio', header: '營業實績佔比', visible: true },
-      { field: 'transactionCount', header: '交易筆數', visible: true },
-      { field: 'averageOrderValue', header: '客單價', visible: true },
-      { field: 'area', header: '坪數', visible: true },
-      { field: 'areaEfficiency', header: '坪效', visible: true },
-      { field: 'salesPerformance', header: '營業實績', visible: true },
-      { field: 'performanceRatio', header: '營業實績佔比', visible: true },
-      { field: 'temporaryBoothRatio', header: '臨時櫃業績佔比', visible: true },
-      { field: 'monthlyTarget', header: '月營業目標', visible: true },
-      { field: 'monthlyPerformance', header: '營業實績', visible: true },
-      { field: 'completionRate', header: '完成率', visible: true },
-    ]
-  ];
-
-
-
+  columnGroup: ColumnGroup[] = [
+    { field: 'budgetAmt', header: '營業額' },
+    { field: 'sum', header: '營業佔比' },
+    { field: 'custCnt', header: '客單價' },
+    { field: 'space', header: '營業坪效' },
+    { field: 'month', header: '月累計' },
+  ]
+  tlt_kind_Option = [
+    { value: "1", label: "正櫃" },
+    { value: "2", label: "臨時櫃" },
+    { value: "3", label: "特賣會" },
+    { value: "4", label: "虛擬櫃" },
+  ]
+  tlt_term_type = [
+    { value: "1", label: "固定租金" },
+    { value: "2", label: "底租抽成取高者" },
+    { value: "3", label: "一般抽成" },
+    { value: "4", label: "包底抽成" },
+    { value: "5", label: "階梯式抽成" },
+    { value: "6", label: "包底加階梯" },
+  ]
+  tlt_building_Option: IDropdownItem[] = []; // 館別
+  tlt_floor_Option: IDropdownItem[] = []; // 樓層
+  area_no_Option: IDropdownItem[] = []; // 區域
+  bus_type_Option: IDropdownItem[] = []; // 大分類
+  bus_class_Option: IDropdownItem[] = []; // 中分類
+  bus_sclass_Option: IDropdownItem[] = []; // 小分類
+  org_id_Option: IDropdownItem[] = []; // 組織
   constructor(
-    private router: Router,
-    private formBuilder: FormBuilder,
-    private messageService: NotificationService,
-    private authService: AuthService,
-    private validationService: ValidationService,
-    private floorService: FloorService,
-    private RegionService: RegionService,
-    private businessTypeCodeService: BusinessTypeCodeService,
-    private organizationNumberService: OrganizationNumberService,
-    private commissionTypeService: CommissionTypeService,
-    private TypeService: TypeService,
-    private TaxableService: TaxableService,
-    private cooperationMethodService: CooperationMethodService,
-    private counterCodeService: CounterCodeService,  // 專櫃編號
-  ) { }
-
+    private readonly dropDownListService: DropDownListService
+  ) { super(); }
 
   ngOnInit(): void {
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
+    this.initializePage('TLS31010', 'TLS/TLS31010cru', this.queryForm, (frm) => this.onSubmit(frm));
+    this.dropDownListService.querySYS3800_DropDownList().pipe(untilDestroyed(this)).subscribe(res => {
+      this.tlt_building_Option = res.Data;
+    })
+    this.dropDownListService.querySYS3900_DropDownList().pipe(untilDestroyed(this)).subscribe(res => {
+      this.tlt_floor_Option = res.Data;
+    })
+    this.dropDownListService.querySYS3A00_DropDownList().pipe(untilDestroyed(this)).subscribe(res => {
+      this.area_no_Option = res.Data;
+    })
+    // 獲取大分類下拉選項
+    this.dropDownListService.queryPOS2003_DropDownList().pipe(untilDestroyed(this)).subscribe(response => {
+      this.bus_type_Option = response.Data.map(item => ({ ...item, label: `${item.No} - ${item.Name}`, }));
+    });
+    // 監聽大分類變化
+    this.queryForm.controls.bus_type.valueChanges.pipe(debounceTime(300), untilDestroyed(this)).subscribe((value: string[]) => {
+      if (value && value.length > 0) {
+        this.dropDownListService.queryPOS20031_DropDownList({ CAT_LNo: value }).pipe(untilDestroyed(this)).subscribe(response => {
+          const groupedData = response.Data.reduce((accumulator, currentItem) => {
+            const groupKey = currentItem.CAT_LNo || '';
+            if (!accumulator[groupKey]) {
+              accumulator[groupKey] = {
+                label: currentItem.CAT_LName,
+                items: []
+              };
+            }
 
-    // Initialize dropdown options
-    this.floorService.getFloors().subscribe(data => {
-      this.floorOptions = data;
-    });
-    this.RegionService.getRegionOptions().subscribe(data => {
-      this.regionOptions = data;
-    });
-    this.organizationNumberService.getOrganizationNumbers().subscribe((data) => {
-      this.organizationOptions = data;
-    });
-    this.businessTypeCodeService.getBusinessTypeCodes().subscribe((data) => {
-      this.businessTypeCodeOptions = data;
-    });
-    this.commissionTypeService.getCommissionTypes().subscribe((data) => {
-      this.commissionTypeOptions = data;
-    });
-    this.TypeService.getTypeOptions().subscribe(data => {
-      this.TypeOptions = data;
-    });
-    this.cooperationMethodService.getCooperationMethods().subscribe(data => {
-      this.operationsOptions = data;
-    });
-    this.TaxableService.getSystemTypes().subscribe(data => {
-      this.taxOptions = data;
-    });
+            accumulator[groupKey].items.push({
+              ...currentItem,
+              label: `${currentItem.No} - ${currentItem.Name}`,
+              datakey: currentItem.CAT_LName + currentItem.No
+            });
 
-    this.counterCodeService.getCounterCodes().subscribe((data) => {
-      this.counterCodeOptions = data;
+            return accumulator;
+          }, {} as Record<string, any>);
+
+          // 最後，將分組物件的值轉換為陣列，得到最終的分組下拉清單格式
+          this.bus_class_Option = Object.values(groupedData);
+        });
+      } else {
+        this.bus_class_Option = [];
+        this.bus_sclass_Option = [];
+      }
     });
+    // 監聽中分類變化
+    this.queryForm.controls.bus_class.valueChanges.pipe(debounceTime(300), untilDestroyed(this)).subscribe((value: string[]) => {
+      if (value && value.length > 0) {
+        // 傳送大分類和中分類的代碼給後端
+        this.dropDownListService.queryPOS20032_DropDownList({ CAT_LNo: this.queryForm.controls.bus_type.value, CAT_MNo: value }).pipe(untilDestroyed(this)).subscribe(response => {
+          // 步驟1: 使用 reduce 方法來對資料進行分組
+          const groupedData = response.Data.reduce((accumulator, currentItem) => {
+            // 建立一個組合鍵，包含大分類和中分類的代碼
+            const groupKey = `${currentItem.CAT_LNo}_${currentItem.CAT_MNo}`;
+
+            // 如果這個組合鍵的群組還不存在，就建立一個新的群組
+            if (!accumulator[groupKey]) {
+              accumulator[groupKey] = {
+                // 群組標籤格式為: 大分類名稱 - 中分類名稱
+                label: `${currentItem.CAT_LName} - ${currentItem.CAT_MName}`,
+                items: []
+              };
+            }
+
+            // 將當前的項目加入到對應的群組中
+            accumulator[groupKey].items.push({
+              ...currentItem,
+              // 下拉選單中顯示的標籤格式
+              label: `${currentItem.No} - ${currentItem.Name}`
+            });
+
+            return accumulator;
+          }, {} as Record<string, any>);
+
+          // 步驟2: 將分組物件的值轉換為陣列，得到最終的分組下拉清單格式
+          this.bus_sclass_Option = Object.values(groupedData);
+        });
+      } else {
+        this.bus_sclass_Option = [];
+      }
+    });
+    this.dropDownListService.querySYS3100_DropDownList().pipe(untilDestroyed(this)).subscribe(res => {
+      this.org_id_Option = res.Data.map(item => ({ ...item, label: `${item.No} - ${item.Name}`, }));
+    })
   }
-
-  canQuery(): boolean {
-    return true;
-  }
-
-  canAdd(): boolean {
-    return true;
-  }
-
-  canEdit(): boolean {
-    return true;
-  }
-
   onSubmit(frm: FormGroup) {
-    console.log(frm.value);
-    this.submitted = true;
-    this.loading = true;
-    this.messageService.blockUi();
-
-    if (frm.valid && this.canQuery()) {
-      // 提交邏輯
-    }
-
-    this.loading = false;
-    this.messageService.unblockUi();
-  }
-
-  onSubmitQuery(frm: FormGroup) {
-    // 查詢邏輯
-    this.onSubmit(frm);
-  }
-
-  onClearForm() {
-    this.queryForm.reset();  // 重置表單
-  }
-
-  onCreate() {
-    if (this.canAdd()) {
-      let extras: NavigationExtras = {
-        state: {
-          crudstatus: CRUDStatus.Create,
-          queryform: this.queryForm
-        },
-        skipLocationChange: true
-      };
-      this.router.navigate(['/demoCRU'], extras);
-    }
-  }
-
-  onEdit(data: any) {
-    if (this.canEdit()) {
-      let extras: NavigationExtras = {
-        state: {
-          crudstatus: CRUDStatus.Edit,
-          rowdata: data,
-          queryform: this.queryForm
-        },
-        skipLocationChange: true
-      };
-      this.router.navigate(['/demoCRU'], extras);
-    }
-  }
-
-  onDetail(data: any) {
-    let extras: NavigationExtras = {
-      state: {
-        crudstatus: CRUDStatus.Read,
-        rowdata: data,
-        queryform: this.queryForm
-      },
-      skipLocationChange: true
-    };
-    this.router.navigate(['/demoCRU'], extras);
+    this.handleSubmit(frm, () => {
+    })
   }
 }
