@@ -568,10 +568,13 @@ export class DataCleaner {
   /**
    * 🎯 修正：清理合約基本資料以配合後端
    */
+  /**
+   * 🎯 修正：清理合約基本資料（確保日期為字串格式）
+   */
   static cleanContractInfo(rawData: any): CleanContractData {
+    console.log('🎯 開始清理合約基本資料的日期欄位...');
 
-
-    return {
+    const cleanedData = {
       // 基本資料
       talent_id: rawData.talent_id || '',
       apply_no: rawData.apply_no || '',
@@ -581,7 +584,7 @@ export class DataCleaner {
       VEN_Name: rawData.VEN_Name || '',
       contract_subno: rawData.contract_subno,
 
-      // 日期欄位
+      // 🎯 重要：確保日期欄位為字串格式
       tlt_bdate: this.formatDate(rawData.tlt_bdate),
       tlt_edate: this.formatDate(rawData.tlt_edate),
       tlt_contract_bdate: this.formatDate(rawData.tlt_contract_bdate),
@@ -598,7 +601,7 @@ export class DataCleaner {
       bus_class: rawData.bus_class,
       bus_sclass: rawData.bus_sclass,
 
-      // 🎯 重要：補齊所有後端期望的欄位
+      // 其他所有欄位保持不變...
       org_id: rawData.org_id,
       contact_USR_No: rawData.contact_USR_No,
       contact_USR_Name: rawData.contact_USR_Name,
@@ -615,7 +618,7 @@ export class DataCleaner {
       paytype: rawData.paytype,
       vip_yn: rawData.vip_yn,
 
-      // 費用相關 - 確保數值類型正確
+      // 費用相關
       base_rent: this.parseNumber(rawData.base_rent),
       deposit: this.parseNumber(rawData.deposit),
       credit_card: this.parseNumber(rawData.credit_card),
@@ -662,6 +665,16 @@ export class DataCleaner {
       // 位置資訊
       locationInfo: this.cleanLocationInfo(rawData.locationInfo || [])
     };
+
+    console.log('🎯 合約日期欄位清理完成:', {
+      tlt_bdate: cleanedData.tlt_bdate,
+      tlt_edate: cleanedData.tlt_edate,
+      tlt_contract_bdate: cleanedData.tlt_contract_bdate,
+      tlt_contract_edate: cleanedData.tlt_contract_edate,
+      說明: '格式為 YYYYMMDD (例如: 20250101)'
+    });
+
+    return cleanedData;
   }
 
   /**
@@ -689,24 +702,26 @@ export class DataCleaner {
     const toDelete: CleanFareItem[] = [];
 
     rawItems.forEach(item => {
-      // 🎯 修正：先處理刪除狀態，再處理其他狀態
+      // 刪除的項目處理
       if (item._status === 'deleted') {
-        // 刪除的項目：只要有有效 ID 就可以刪除，不管是否被勾選
         if (this.hasValidId(item.id)) {
           toDelete.push({ id: Number(item.id) } as CleanFareItem);
         }
-        return; // 刪除項目處理完畢，不需要進一步處理
+        return;
       }
 
-      // 🎯 修正：只有被勾選的項目才處理新增/修改
+      // 只有被勾選的項目才處理新增/修改
       if (!item.is_selected) return;
 
       const cleanItem: CleanFareItem = {
         ...(this.hasValidId(item.id) ? { id: Number(item.id) } : {}),
         cap_type: item.cap_type || '',
         cap_item: item.cap_item || '',
-        tpy_bdate: (item.tpy_bdate),
-        tpy_edate: (item.tpy_edate),
+
+        // 🎯 關鍵修正：代扣款日期使用緊湊格式
+        tpy_bdate: this.formatCompactDate(item.tpy_bdate),
+        tpy_edate: this.formatCompactDate(item.tpy_edate),
+
         tpy_type: item.tpy_type,
         tpy_qty: this.parseNumber(item.tpy_qty),
         tpy_unitamt: this.parseNumber(item.tpy_unitamt),
@@ -732,8 +747,110 @@ export class DataCleaner {
       }
     });
 
+    console.log('🎯 代扣款日期格式化完成:', {
+      插入項目: toInsert.length,
+      更新項目: toUpdate.length,
+      刪除項目: toDelete.length,
+      範例日期格式: toInsert[0]?.tpy_bdate || toUpdate[0]?.tpy_bdate,
+      說明: '代扣款日期格式為緊湊年月格式 YYYYMM (例如: 202504, 不含日期)'
+    });
+
     return { toInsert, toUpdate, toDelete };
   }
+
+
+  private static formatCompactDate(date: any): string {
+    if (!date) return '';
+
+    try {
+      let dateObj: Date;
+
+      if (date instanceof Date) {
+        dateObj = date;
+      } else if (typeof date === 'string') {
+        // 處理各種可能的輸入格式
+        if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/.test(date)) {
+          // ISO 格式: 2025-01-15T00:00:00
+          dateObj = new Date(date);
+        } else if (/^\d{6}$/.test(date)) {
+          // 已經是 YYYYMM 格式，直接返回
+          return date;
+        } else if (/^\d{8}$/.test(date)) {
+          // YYYYMMDD 格式，取前6位
+          return date.substring(0, 6);
+        } else {
+          dateObj = new Date(date);
+        }
+      } else {
+        dateObj = new Date(date);
+      }
+
+      if (isNaN(dateObj.getTime())) {
+        console.warn('無效的代扣款日期值:', date);
+        return '';
+      }
+
+      // 🎯 格式化為緊湊年月格式 YYYYMM (只要年月，不要日期)
+      const year = dateObj.getFullYear();
+      const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+
+      return `${year}${month}`;  // 202504
+
+    } catch (error) {
+      console.error('代扣款日期格式化錯誤:', error, date);
+      return '';
+    }
+  }
+
+  /**
+ * 🎯 新增：根據扣款類型決定日期格式
+ */
+  private static formatDateForBackend(date: any, capType?: string): string {
+    if (!date) return '';
+
+    try {
+      let dateObj: Date;
+
+      if (date instanceof Date) {
+        dateObj = date;
+      } else if (typeof date === 'string') {
+        // 處理緊湊格式
+        if (/^\d{6}$/.test(date)) {
+          // YYYYMM 格式
+          const year = parseInt(date.substring(0, 4), 10);
+          const month = parseInt(date.substring(4, 6), 10) - 1;
+          dateObj = new Date(year, month, 1);
+        } else if (/^\d{8}$/.test(date)) {
+          // YYYYMMDD 格式
+          const year = parseInt(date.substring(0, 4), 10);
+          const month = parseInt(date.substring(4, 6), 10) - 1;
+          const day = parseInt(date.substring(6, 8), 10);
+          dateObj = new Date(year, month, day);
+        } else {
+          dateObj = new Date(date);
+        }
+      } else {
+        dateObj = new Date(date);
+      }
+
+      if (isNaN(dateObj.getTime())) {
+        console.warn('無效的日期值:', date);
+        return '';
+      }
+
+      // 🎯 統一格式化為 YYYY-MM-DD
+      const year = dateObj.getFullYear();
+      const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+      const day = String(dateObj.getDate()).padStart(2, '0');
+
+      return `${year}-${month}-${day}`;
+
+    } catch (error) {
+      console.error('後端日期格式化錯誤:', error, date);
+      return '';
+    }
+  }
+
   /**
    * 🎯 修正：清理抽成設定資料以配合後端
    */
@@ -1031,28 +1148,59 @@ export class DataCleaner {
       Number(id) > 0;
   }
 
+  // 🎯 只要改這一個方法就夠了！
   private static formatDate(date: any): string {
     if (!date) return '';
     try {
       if (date instanceof Date) {
-        return date.toISOString().split('T')[0];
+        return date.toISOString().split('T')[0];  // 保持原本的 YYYY-MM-DD 格式
       }
       return new Date(date).toISOString().split('T')[0];
     } catch {
       return '';
     }
   }
-
   private static formatNullableDate(date: any): string | null {
     if (!date || date === '') return null;
+
+    const formatted = this.formatDate(date);
+    return formatted === '' ? null : formatted;
+  }
+  private static formatYearMonth(date: any): string {
+    if (!date) return '';
+
     try {
+      let dateObj: Date;
+
       if (date instanceof Date) {
-        return date.toISOString().split('T')[0];
+        dateObj = date;
+      } else if (typeof date === 'string') {
+        // 處理緊湊格式 YYYYMM
+        if (/^\d{6}$/.test(date)) {
+          const year = parseInt(date.substring(0, 4), 10);
+          const month = parseInt(date.substring(4, 6), 10) - 1;
+          dateObj = new Date(year, month, 1);
+        } else {
+          dateObj = new Date(date);
+        }
+      } else {
+        dateObj = new Date(date);
       }
-      const formatted = new Date(date).toISOString().split('T')[0];
-      return formatted === 'Invalid Date' ? null : formatted;
-    } catch {
-      return null;
+
+      if (isNaN(dateObj.getTime())) {
+        console.warn('無效的年月值:', date);
+        return '';
+      }
+
+      // 🎯 格式化為 YYYYMM 緊湊字串
+      const year = dateObj.getFullYear();
+      const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+
+      return `${year}${month}`;
+
+    } catch (error) {
+      console.error('年月格式化錯誤:', error, date);
+      return '';
     }
   }
 

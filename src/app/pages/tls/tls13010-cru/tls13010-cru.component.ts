@@ -1415,9 +1415,9 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
 
     // 編輯模式：使用父類邏輯或自訂
     if (this.dataForm.dirty) {
-      if (confirm('是否要儲存目前的編輯內容？')) {
-        this.saveToWorkflow();
-      }
+      // if (confirm('是否要儲存目前的編輯內容？')) {
+      this.saveToWorkflow();
+      // }
     }
     this.router.navigate(['account/tls/tls13010']);
   }
