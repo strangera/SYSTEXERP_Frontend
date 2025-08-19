@@ -453,7 +453,6 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
       // 🎯 檢查並重新載入分類資料
       const currentBusType = this.dataForm.get('bus_type')?.value;
       if (currentBusType) {
-        console.log('🔄 重新確認分類資料載入');
         this.ensureClassificationDataLoaded(currentBusType);
       }
     }, 500);
@@ -466,7 +465,6 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
   private setupVendorUniformListener(): void {
     const venUniformSubscription = this.dataForm.get('ven_uniform')?.valueChanges.subscribe(venUniform => {
       if (venUniform && venUniform.trim()) {
-        console.log('🏢 廠商統一編號變更:', venUniform);
         this.loadVendorInfo(venUniform);
       } else {
         // 🎯 清空相關欄位
@@ -474,7 +472,6 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
           VEN_Name: '',
           company_register_address: ''
         });
-        console.log('🗑️ 廠商統一編號清空，清空相關欄位');
       }
     });
 
@@ -482,7 +479,6 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
   }
 
   private loadVendorInfo(venUniform: string): void {
-    console.log('🔄 開始載入廠商資訊:', venUniform);
 
     // 🎯 使用 VendorCategoryOptionsService 載入廠商資料
     this.tls13010DropdownService.pos2013Options.find(vendor => vendor.value === venUniform);
@@ -490,13 +486,11 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
     // 如果pos2013Options還沒載入，直接呼叫API
     this.vendorCategoryService.getVendorCategoryNoNameOptions("1").subscribe({
       next: (vendors: any[]) => {
-        console.log('📋 廠商API回傳資料:', vendors);
 
         // 🎯 尋找匹配的廠商
         const matchedVendor = vendors.find((vendor: { value: string; }) => vendor.value === venUniform);
 
         if (matchedVendor) {
-          console.log('✅ 找到匹配廠商:', matchedVendor);
 
           // 🎯 更新廠商名稱和公司地址
           this.dataForm.patchValue({
@@ -545,10 +539,8 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
     const queryParams = this.route.snapshot.queryParams;
     const mode = queryParams['mode'];
 
-    console.log('🔍 檢查 URL 參數:', { mode });
 
     if (mode === 'view') {
-      console.log('🔒 URL 檢測到檢視模式，設定為唯讀');
       this.isViewMode = true;
       this.contractFlowService.setViewMode(true);
 
@@ -557,7 +549,6 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
         // this.setFormReadonly(true);
       }, 0);
     } else {
-      console.log('📝 URL 未檢測到檢視模式，設定為編輯模式');
       this.isViewMode = false;
       this.contractFlowService.setViewMode(false);
     }
@@ -566,7 +557,6 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
   // ==========  資料載入方法 ==========
 
   private loadLocationWithDetailsOptions(): void {
-    console.log('🔄 開始載入位置選項...');
 
     // 取得目前的 talentId（如果是編輯模式）
     const workflowData = this.contractFlowService.getCurrentData();
@@ -574,7 +564,6 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
 
     this.locationOptionsService.getLocationWithDetailsOptions(talentId).subscribe({
       next: (data) => {
-        console.log('📥 API回傳的位置資料:', data);
         this.locationWithDetailsOptions = data;
 
         // 🎯 資料載入完成後，更新 selector 面板選項
@@ -582,7 +571,6 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
           this.updateSelectorPanelOptions();
         }, 100);
 
-        console.log('✅ 位置選項載入完成，共', this.locationWithDetailsOptions.length, '筆');
       },
       error: (err) => {
         console.warn('❌ 載入位置選項失敗:', err);
@@ -592,13 +580,11 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
   }
 
   private loadPOS2013Options(): void {
-    console.log('🏭 開始載入廠商統一編號選項...');
 
     // 🔧 直接呼叫 API
     this.vendorCategoryService.getVendorCategoryNoNameOptions("1").subscribe({
       next: (response: any[]) => {
         this.pos2013Options = response;
-        console.log('✅ POS2013選項載入完成:', this.pos2013Options.length);
       },
       error: (error) => {
         console.error('❌ 載入POS2013選項失敗:', error);
@@ -610,13 +596,11 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
 
 
   private loadNegotiatorOptions(): void {
-    console.log('👥 開始載入協商者選項...');
 
     // 🔧 直接呼叫 API
     this.negotiatorService.getNegotiatorOptions().subscribe({
       next: (response: any[]) => {
         this.negotiatorOptions = response;
-        console.log('✅ 協商者選項載入完成:', this.negotiatorOptions.length);
       },
       error: (error) => {
         console.error('❌ 載入協商者選項失敗:', error);
@@ -625,36 +609,15 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
       }
     });
   }
-
-  // 更新位置欄位的下拉選單選項
-  private updateLocationColumnOptions(): void {
-    console.log('開始更新表格欄位選項...');
-
-    // const locationColumn = this.locationColumns.find(col => col.field === 'location_no');
-    // if (locationColumn) {
-    //   locationColumn.options = this.locationWithDetailsOptions.map(option => ({
-    //     label: option.label,  // 用 service 轉換後的 label
-    //     value: option.value   // 用 service 轉換後的 value
-    //   }));
-
-    //   console.log('已更新表格下拉選單選項:', locationColumn.options.length, '筆');
-    // } else {
-    //   console.warn('找不到 location_no 欄位！'); // 改回原本的訊息
-    // }
-  }
-
   // 載入工作流程資料（修改，正確載入位置資料）
   private loadWorkflowData(): void {
     const workflowData = this.contractFlowService.getCurrentData();
-    console.log('🚀 CRU 載入工作流程資料:', workflowData);
 
     if (workflowData.contractId) {
       // 🎯 統一使用 ContractFlowService 的模式判定
       if (this.contractFlowService.isNewContractMode()) {
-        console.log('🆕 新增模式：檢查是否有暫存資料');
         this.loadNewModeData();
       } else {
-        console.log('📝 編輯模式：載入資料');
         this.loadEditModeData(workflowData);
       }
     } else {
@@ -664,17 +627,13 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
   }
 
   private loadNewModeData(): void {
-    console.log('🆕 載入新增模式資料');
 
     // 🎯 檢查是否有暫存的 Step1 資料
     const savedFormData = this.contractFlowService.getStep1Data();
-    console.log('📦 檢查 Step1 暫存資料:', savedFormData);
 
     if (savedFormData && Object.keys(savedFormData).length > 0) {
-      console.log('📝 載入新增模式暫存表單資料');
       this.loadSavedFormData(savedFormData);
     } else {
-      console.log('🆕 新增模式：初始化空表單');
       this.initializeEmptyForm();
     }
   }
@@ -684,16 +643,13 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
     const savedFormData = this.contractFlowService.getStep1Data();
 
     if (savedFormData && Object.keys(savedFormData).length > 0) {
-      console.log('📝 載入編輯模式暫存表單資料');
       this.loadSavedFormData(savedFormData);
     } else if (workflowData.queryRowData) {
-      console.log('📋 載入查詢結果資料');
       this.loadDataFromQueryResult(workflowData.queryRowData);
 
       // ✅ 確保載入既有位置資料
       const currentTalentId = this.contractFlowService.getCurrentTalentId();
       if (currentTalentId) {
-        console.log('🔄 載入既有位置資料 (編輯模式)');
         this.loadExistingLocationData(currentTalentId);
       }
     }
@@ -719,7 +675,6 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
 
     // 🎯 載入位置資料
     if (savedFormData.locationInfo && Array.isArray(savedFormData.locationInfo) && savedFormData.locationInfo.length > 0) {
-      console.log('📍 載入暫存位置資料');
       this.locationData = savedFormData.locationInfo.map((item: any) => ({
         ...item,
         _status: item._status || 'original',
@@ -728,7 +683,6 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
     } else {
       const currentTalentId = this.contractFlowService.getCurrentTalentId();
       if (currentTalentId && !this.contractFlowService.isNewContractMode()) {
-        console.log('📍 沒有暫存位置，載入既有位置資料');
         this.loadExistingLocationData(currentTalentId);
       } else {
         this.locationData = [];
@@ -742,13 +696,11 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
   }
 
   private loadBankDropdownOptions(): void {
-    console.log('🏦 開始載入銀行下拉選單選項...');
 
     // 載入所有銀行選項（不帶搜尋條件）
     this.bankService.getBankOptions('').subscribe({
       next: (options: DropdownOption[]) => {
         this.bankDropdownOptions = options;
-        console.log('✅ 銀行選項載入完成:', this.bankDropdownOptions.length, '筆');
       },
       error: (err) => {
         console.warn('⚠️ 載入銀行選項失敗:', err);
@@ -763,7 +715,6 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
    * 🎯 統一設定表單欄位的 disabled 狀態
    */
   private setFormControlsState(): void {
-    console.log('🔧 開始設定表單控制狀態...');
 
     const isNewMode = this.contractFlowService.isNewContractMode();
     const isViewMode = this.isViewMode;
@@ -795,7 +746,6 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
       const control = this.dataForm.get(fieldName);
       if (control) {
         control.disable();
-        console.log(`🔒 永遠 readonly: ${fieldName}`);
       }
     });
 
@@ -806,11 +756,9 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
         // 新增模式：設定為 '9' 且 readonly
         tltOpenflagControl.setValue('9');
         tltOpenflagControl.disable();
-        console.log('🔒 新增模式：營運狀況設為 "9" 且 readonly');
       } else if (!isViewMode) {
         // 編輯模式：可以編輯
         tltOpenflagControl.enable();
-        console.log('🔓 編輯模式：營運狀況可編輯');
       }
     }
 
@@ -822,15 +770,10 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
           control.disable();
         }
       });
-      console.log('🔒 檢視模式：全部欄位 readonly');
     }
-
-    console.log('✅ 表單控制狀態設定完成');
   }
 
   private initializeEmptyForm(): void {
-    console.log('🆕 初始化空表單');
-
     // 🎯 設定預設值
     this.dataForm.patchValue({
       talent_id: '',
@@ -990,18 +933,12 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
 
     const currentBusClass = this.dataForm.get('bus_class')?.value;
     const currentBusSClass = this.dataForm.get('bus_sclass')?.value;
-
-    console.log('🔍 載入業務分類:', { busType, currentBusClass, currentBusSClass });
-
     // 先載入中分類
     this.tls13010DropdownService.loadBusClassOptions(busType).subscribe({
       next: (busClassOptions: DropdownOption[]) => {
-        console.log('📋 中分類選項載入完成:', busClassOptions.length);
-
         const validBusClass = busClassOptions.find(option => option.value === currentBusClass);
 
         if (currentBusClass && validBusClass) {
-          console.log('✅ 中分類有效，載入小分類');
           // 中分類有效，載入小分類
           this.loadBusSClassWithValidation(busType, currentBusClass, currentBusSClass ?? undefined);
         } else if (currentBusClass && !validBusClass) {
@@ -1020,17 +957,14 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
   }
 
   private loadBusSClassWithValidation(busType: string, busClass: string, currentBusSClass?: string): void {
-    console.log('🔍 載入小分類:', { busType, busClass, currentBusSClass });
 
     this.tls13010DropdownService.loadBusSClassOptions(busType, busClass).subscribe({
       next: (busSClassOptions: DropdownOption[]) => {
-        console.log('📋 小分類選項載入完成:', busSClassOptions.length);
 
         if (currentBusSClass) {
           const validBusSClass = busSClassOptions.find(option => option.value === currentBusSClass);
 
           if (validBusSClass) {
-            console.log('✅ 小分類有效，保持原值');
             // 小分類有效，確保表單值正確
             this.dataForm.get('bus_sclass')?.setValue(currentBusSClass);
           } else {
@@ -1064,29 +998,24 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
     // 監聽大分類變化
     const busTypeSubscription = this.dataForm.get('bus_type')?.valueChanges.subscribe(busType => {
       if (busType) {
-        console.log('🔄 大分類變更，載入中分類選項:', busType);
 
         this.tls13010DropdownService.loadBusClassOptions(busType).subscribe({
           next: (options: DropdownOption[]) => {
-            console.log('📋 中分類選項載入完成:', options.length);
 
             const currentBusClass = this.dataForm.get('bus_class')?.value;
             const validBusClass = options.find(option => option.value === currentBusClass);
 
             if (currentBusClass && !validBusClass) {
               // 🎯 中分類無效時，清空中分類和小分類
-              console.log('❌ 中分類無效，清空中分類和小分類');
               this.dataForm.get('bus_class')?.setValue('');
               this.dataForm.get('bus_sclass')?.setValue('');
               // 清空小分類選項
               this.tls13010DropdownService.clearBusSClassOptions();
             } else if (currentBusClass && validBusClass) {
               // 🎯 中分類有效時，檢查並載入小分類
-              console.log('✅ 中分類有效，檢查小分類');
               this.loadAndValidateBusSClass(busType, currentBusClass);
             } else {
               // 🎯 沒有中分類值時，清空小分類
-              console.log('📝 沒有中分類值，清空小分類');
               this.dataForm.get('bus_sclass')?.setValue('');
               this.tls13010DropdownService.clearBusSClassOptions();
             }
@@ -1102,7 +1031,6 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
         });
       } else {
         // 🎯 大分類清空時，清空所有下級分類
-        console.log('🗑️ 大分類清空，清空所有下級分類');
         this.tls13010DropdownService.clearBusClassOptions();
         this.tls13010DropdownService.clearBusSClassOptions();
         this.dataForm.get('bus_class')?.setValue('');
@@ -1115,11 +1043,9 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
       const busType = this.dataForm.get('bus_type')?.value;
 
       if (busType && busClass) {
-        console.log('🔄 中分類變更，載入小分類選項:', { busType, busClass });
         this.loadAndValidateBusSClass(busType, busClass);
       } else {
         // 🎯 中分類清空時，清空小分類
-        console.log('🗑️ 中分類清空，清空小分類');
         this.tls13010DropdownService.clearBusSClassOptions();
         this.dataForm.get('bus_sclass')?.setValue('');
       }
@@ -1135,7 +1061,6 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
   private loadAndValidateBusSClass(busType: string, busClass: string): void {
     this.tls13010DropdownService.loadBusSClassOptions(busType, busClass).subscribe({
       next: (options: DropdownOption[]) => {
-        console.log('📋 小分類選項載入完成:', options.length);
 
         const currentBusSClass = this.dataForm.get('bus_sclass')?.value;
 
@@ -1144,7 +1069,6 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
 
           if (!validBusSClass) {
             // 🎯 小分類無效時清空
-            console.log('❌ 小分類無效，清空小分類');
             this.dataForm.get('bus_sclass')?.setValue('');
           } else {
             console.log('✅ 小分類有效，保持原值');
@@ -1162,9 +1086,6 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
   // ==========  表單操作方法 ==========
   private saveToWorkflow(): void {
     const formData = this.dataForm.getRawValue();
-
-    console.log('💾 準備儲存工作流程資料...');
-
     // 🎯 型別轉換輔助函數
     const convertToString = (value: any): string | undefined => {
       if (value === null || value === undefined) return undefined;
@@ -1318,7 +1239,6 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
 
           // ✅ 強制觸發變更檢測
           this.locationData = [...this.locationData];
-          console.log('載入既有位置資料完成:', this.locationData);
         }
       },
       error: (err) => {
@@ -1452,7 +1372,6 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
 
     if (this.isViewMode) {
       // 檢視模式：直接導航，不帶參數
-      console.log('👁️ 檢視模式，直接導航');
       this.router.navigate(['account/tls/tls13010next1']);
       return;
     }
@@ -1463,16 +1382,10 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
       const control = this.dataForm.get(key);
       if (control && control.invalid && control.enabled) { // 只檢查啟用的控件
         invalidControls.push(key);
-        console.log(`❌ 無效欄位: ${key}`, {
-          value: control.value,
-          errors: control.errors,
-          disabled: control.disabled
-        });
       }
     });
 
     if (invalidControls.length > 0) {
-      console.log('❌ 發現無效欄位:', invalidControls);
       // this.messageService.warnBubble(`請檢查以下欄位: ${invalidControls.join(', ')}`);
       this.messageService.warnBubble(`請檢查必填`);
       this.markFormGroupTouched(this.dataForm);
@@ -1481,11 +1394,9 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
 
     // 編輯模式的原有邏輯
     if (this.dataForm.valid) {
-      console.log('✅ 表單驗證通過，準備導航');
       this.saveToWorkflow();
       this.router.navigate(['account/tls/tls13010next1']);
     } else {
-      console.log('❌ 表單驗證失敗，但找不到具體錯誤');
       // 🚨 臨時解決方案：強制通過
       console.warn('🔧 強制通過驗證（臨時解決方案）');
       this.saveToWorkflow();
@@ -1527,11 +1438,6 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
 
   onAddLocationItem(): void {
     if (this.isViewMode) return;
-    console.log('➕ 新增位置項目');
-    console.log('🔍 新增前狀態:', {
-      總數: this.locationData.length,
-      可顯示: this.getDisplayLocationData().length
-    });
     this.updateDisplayLocationData(); // ✅ 手動更新
     const newLocationItem: LocationItem = {
       id: this.generateTempId(),

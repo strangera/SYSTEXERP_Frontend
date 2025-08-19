@@ -43,7 +43,6 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
   private routerSubscription: any;
 
   // 顯示模式控制
-  showOnlySelected = false;  // 控制是否只顯示已勾選項目
   isShowingAll = false;
 
   // 當前合約資料
@@ -149,7 +148,7 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
     },
     {
       field: 'cap_item',
-      header: '代號',
+      header: '扣款代號',
       type: 'text',
       editable: false,
       autoWidth: true
@@ -606,6 +605,7 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
   }
 
   ngOnInit(): void {
+    this.showMode = 'common';  // 預設為常用模式
     this.initializeViewModeFromService();
     this.initializeDataStructure();
     this.initializePage('TLS13010', this.dataForm);
@@ -1142,22 +1142,29 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
 
       let filteredData = [...this.originalFareData[capType]];
 
-      // 根據常用/全部模式過濾
+      // 🎯 根據常用/全部模式過濾，已勾選項目一定顯示
       if (this.showMode === 'common') {
-        // 常用模式：顯示契約已有的項目 + 常用項目
+        // 常用模式：合約項目 + 常用項目 + 已勾選項目
         filteredData = filteredData.filter(item =>
-          item.data_source === 'CONTRACT_EXISTING' || item.is_commonly_used === 'Y'
+          item.data_source === 'CONTRACT_EXISTING' ||
+          item.is_commonly_used === 'Y' ||
+          item.is_selected === true
         );
       }
-      // 全部模式：顯示所有項目（契約已有的 + 常用 + 不常用）
-
-      // 根據已勾選模式過濾
-      if (this.showOnlySelected) {
-        // 只顯示已勾選的項目
-        filteredData = filteredData.filter(item => item.is_selected);
-      }
+      // 全部模式：顯示所有項目（本來就包含已勾選）
 
       this.fareData[capType] = filteredData;
+    });
+
+    console.log('🔍 過濾後結果:', {
+      顯示模式: this.showMode,
+      各類型數量: Object.keys(this.fareData).reduce((acc, type) => {
+        acc[type] = {
+          總數: this.fareData[type].length,
+          已勾選: this.fareData[type].filter(item => item.is_selected).length
+        };
+        return acc;
+      }, {} as any)
     });
   }
 
@@ -1825,51 +1832,39 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
     return this.fareData[capType] && Array.isArray(this.fareData[capType]) && this.fareData[capType].length > 0;
   }
 
-  getCurrentDisplayMode(): string {
-    let mode = '';
-
-    // 常用/全部模式
-    if (this.showMode === 'common') {
-      mode += '契約項目 + 常用項目';
-    } else {
-      mode += '全部項目';
-    }
-
-    // 已勾選模式
-    if (this.showOnlySelected) {
-      mode += '（已勾選）';
-    }
-
-    return mode;
-  }
-
   // 切換常用/全部模式
   toggleCommonMode(): void {
     if (this.showMode === 'common') {
       // 從常用模式切換到全部模式
       this.showMode = 'all';
+      console.log('🔄 切換到全部模式（包含已勾選項目）');
     } else {
       // 從全部模式切換到常用模式
       this.showMode = 'common';
+      console.log('🔄 切換到常用模式（包含已勾選項目）');
     }
     this.filterData();
   }
 
-  // 切換已勾選模式
-  toggleSelectedMode(): void {
-    this.showOnlySelected = !this.showOnlySelected;
-    this.filterData();
+
+  // 簡化的按鈕文字
+  getDisplayModeText(): string {
+    return this.showMode === 'common' ? '顯示全部項目' : '顯示常用項目';
   }
 
+  // 簡化的顯示模式描述
+  getCurrentDisplayMode(): string {
+    if (this.showMode === 'common') {
+      return '合約項目 + 常用項目 + 已勾選項目';
+    } else {
+      return '全部項目';
+    }
+  }
   // 取得常用模式按鈕文字
   getCommonModeText(): string {
-    return this.showMode === 'common' ? '顯示全部項目' : '只顯示常用';
+    return this.showMode === 'common' ? '顯示全部項目' : '顯示常用項目';
   }
 
-  // 取得已勾選模式按鈕文字
-  getSelectedModeText(): string {
-    return this.showOnlySelected ? '顯示全部項目' : '只顯示已勾選';
-  }
 
   private updateColumnsReadonly(readonly: boolean): void {
     console.log(`📋 設定表格欄位為${readonly ? '唯讀' : '可編輯'}模式`);
