@@ -1574,27 +1574,44 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
   // 位置表格儲存事件
   onLocationTableSave(event: { oldData: LocationItem; newData: LocationItem }): void {
     const { oldData, newData } = event;
-    this.updateDisplayLocationData();
-    console.log('💾 表格儲存事件:', {
+
+    console.log('💾 位置表格儲存事件:', {
       ID: newData.id,
       位置編號: `${oldData.location_no} → ${newData.location_no}`,
       原狀態: oldData._status,
       新狀態: newData._status
     });
 
-    // ✅ 詳細的狀態判斷邏輯
+    // 🎯 重點：檢查位置編號是否重複
+    if (newData.location_no && newData.location_no.trim() !== '') {
+      const isDuplicate = this.checkLocationDuplicate(newData);
+
+      if (isDuplicate) {
+        console.log('❌ 發現重複位置，準備移除');
+
+        // 顯示錯誤訊息
+        this.messageService.errorBubble(`位置編號 ${newData.location_no} 重複！`);
+
+        // 🎯 直接從陣列中移除這筆資料
+        this.removeLocationItem(String(newData.id));
+
+        return; // 不繼續後續處理
+      }
+    }
+
+    // 🎯 沒有重複，正常處理儲存邏輯
+    this.updateDisplayLocationData();
+
+    // 詳細的狀態判斷邏輯
     if (newData._status === 'new' || newData._isNew) {
-      // 新增的資料保持 new 狀態
       newData._status = 'new';
       console.log('✅ 保持新增狀態');
     } else if (this.hasLocationDataChanged(oldData, newData)) {
-      // 既有資料有變更時設為 modified
       newData._status = 'modified';
       console.log('📝 設為修改狀態');
     } else {
-      // 既有資料無變更保持 original
       newData._status = 'original';
-      console.log('🔄 保持原始狀態');
+      console.log('📄 保持原始狀態');
     }
 
     // 找到對應項目並更新
@@ -1602,8 +1619,6 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
     if (index > -1) {
       console.log(`🎯 找到對應項目，索引: ${index}`);
       this.locationData[index] = { ...newData };
-
-      // ✅ 強制觸發變更檢測
       this.locationData = [...this.locationData];
     } else {
       console.error(`❌ 找不到對應項目: ID=${newData.id}`);
@@ -1616,6 +1631,56 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
       總數: this.locationData.length,
       可顯示: this.getDisplayLocationData().length
     });
+  }
+
+  private checkLocationDuplicate(newData: LocationItem): boolean {
+    const newLocationNo = newData.location_no?.trim();
+
+    if (!newLocationNo) return false;
+
+    // 檢查是否與其他項目重複（排除自己）
+    const duplicateCount = this.locationData.filter(item =>
+      item.id !== newData.id &&
+      item._status !== 'deleted' &&
+      item.location_no?.trim() === newLocationNo
+    ).length;
+
+    console.log('🔍 重複檢查結果:', {
+      位置編號: newLocationNo,
+      重複數量: duplicateCount,
+      是否重複: duplicateCount > 0
+    });
+
+    return duplicateCount > 0;
+  }
+
+  // 🎯 新增：移除位置項目
+  private removeLocationItem(itemId: string): void {
+    console.log('🗑️ 開始移除位置項目:', itemId);
+
+    const beforeLength = this.locationData.length;
+
+    // 從陣列中移除
+    this.locationData = this.locationData.filter(item => item.id !== itemId);
+
+    const afterLength = this.locationData.length;
+
+    console.log('📊 移除結果:', {
+      移除前數量: beforeLength,
+      移除後數量: afterLength,
+      是否成功: beforeLength > afterLength
+    });
+
+    // 🎯 更新顯示資料
+    this.updateDisplayLocationData();
+
+    // 🎯 強制觸發變更檢測
+    this.locationData = [...this.locationData];
+
+    // 儲存到工作流程
+    this.saveToWorkflow();
+
+    console.log('✅ 位置項目移除完成');
   }
 
   private hasLocationDataChanged(oldData: LocationItem, newData: LocationItem): boolean {
