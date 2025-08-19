@@ -43,6 +43,11 @@
               <app-dropdown label="營運狀況" controlName="tlt_openflag" [options]="tltopenflagOption" optionLabel="label"
                 optionValue="value" [control]="dataForm.controls.tlt_openflag" [submitted]="submitted"></app-dropdown>
             </div>
+            <!-- <div class="col-12 md:col-6 lg:col-4">
+              <app-dropdown label="審核狀態" controlName="approve_status" [options]="approveStatusOptions"
+                optionLabel="label" optionValue="value" [control]="dataForm.controls.approve_status"
+                [submitted]="submitted"></app-dropdown>
+            </div> -->
           </div>
         </form>
       </p-accordionTab>
@@ -210,8 +215,9 @@
                 optionValue="value" [control]="dataForm.controls.store_way" [submitted]="submitted"></app-dropdown>
             </div>
             <div class="col-12 md:col-6 lg:col-4">
-              <app-multi-select label="對帳方式" controlName="check_type" [options]="checkTypeOptions" optionLabel="label"
-                optionValue="value" [control]="dataForm.controls.check_type" [submitted]="submitted"></app-multi-select>
+              <app-multi-select label="對帳方式" controlName="check_typeList" [options]="checkTypeOptions"
+                optionLabel="label" optionValue="value" [control]="dataForm.controls.check_typeList"
+                [submitted]="submitted"></app-multi-select>
             </div>
             <div class="col-12 md:col-6 lg:col-4">
               <app-dropdown label="付款方式" controlName="paytype" [options]="paytypeOptions" optionLabel="label"
@@ -380,7 +386,8 @@
             </div>
             <div class="col-12 md:col-6 lg:col-4">
               <app-input-text label="廠商銀行帳號" controlName="vendor_acct_no" [control]="dataForm.controls.vendor_acct_no"
-                [submitted]="submitted"></app-input-text>
+                [submitted]="submitted" [autoPadZero]="true" [padLength]="16" [padOnBlur]="true" [textAlign]="'right'">
+              </app-input-text>
             </div>
             <div class="col-12 md:col-6 lg:col-4">
               <app-input-text label="公司電話號碼(O)" controlName="contact_tel" [control]="dataForm.controls.contact_tel"

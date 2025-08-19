@@ -761,6 +761,7 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
     // 🎯 準備合約資訊
     const contractInfo = {
       talent_id: step1Data?.talent_id || this.currentContractData?.talent_id || '',
+      tlt_no: step1Data?.tlt_no || this.currentContractData?.tlt_no || '',
       apply_no: step1Data?.apply_no || this.currentContractData?.apply_no || '',
       tlt_name: step1Data?.tlt_name || this.currentContractData?.tlt_name || '',
       VEN_Name: step1Data?.VEN_Name || this.currentContractData?.VEN_Name || '',

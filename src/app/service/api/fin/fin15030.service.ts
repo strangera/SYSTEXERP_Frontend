@@ -57,8 +57,8 @@ export class FIN15030Service {
   constructor(private http: HttpClient) { }
 
   // 查詢銷貨退回或折讓明細表
-  queryFIN15030(data: FIN15030QueryRequest): Observable<any> {
-    return this.http.post<any>(`${this.apiUrl}/queryFIN15030`, data);
+  queryFIN15030(data: FIN15030QueryRequest): Observable<BaseQueryResponse<FIN15030Data>> {
+    return this.http.post<BaseQueryResponse<FIN15030Data>>(`${this.apiUrl}/queryFIN15030`, data);
   }
 
   // 列印銷貨退回或折讓明細表

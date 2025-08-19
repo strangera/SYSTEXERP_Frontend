@@ -153,19 +153,17 @@
 </div>
 
 <div class="card">
-  <app-table
-    tableKey="TLS23040"
-    [data]="data"
-    [columns]="columns"
-    [showCheckBox]="false"
-    [multiSortMeta]="[{ field: 'ECR_No', order: 1 }]"
-    [lazy]="true"
-    [loading]="loading"
-    (edit)="onEdit($event)"
-    (detail)="onDetail($event)"
-    [showManage]="false"
-    [showDelete]="false"
-    [showCheckBox]="false"
-    (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"
-  ></app-table>
+<app-table
+  tableKey="TLS23040"
+  [dataKey]="'_rowKey'"
+  [data]="data"
+  [columns]="columns"
+  [showTotal]="true"
+  [totalRecords]="totalRecords"   
+  [loading]="loading"
+  [showManage]="false"
+  [showDelete]="false"
+  [showCheckBox]="false"
+  (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"
+></app-table>
 </div>

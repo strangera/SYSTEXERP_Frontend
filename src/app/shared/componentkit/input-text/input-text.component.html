@@ -6,12 +6,14 @@
 
 <div class="input-group">
   <ng-container *ngIf="!showStar; else starredInput">
-    <input class="w-full" [id]="controlName" type="text" [formControl]="control"
+    <input class="w-full" [id]="controlName" type="text" [formControl]="control" [style.text-align]="textAlign"
       [placeholder]="(alwaysShowPlaceholder || !control.disabled) ? (customPlaceholder || placeholder) : ''"
-      [attr.minlength]="minLength ?? null" [attr.maxlength]="weightedMax ? null : maxLength"
+      [attr.minlength]="minLength ?? null" [attr.maxlength]="autoPadZero ? padLength : (weightedMax ? null : maxLength)"
+      [attr.inputmode]="autoPadZero ? 'numeric' : null" [attr.pattern]="autoPadZero ? '[0-9]*' : null"
       [ngClass]="{ 'ng-invalid ng-dirty': (submitted && control.errors) || (errorForGroup && control.parent?.errors) }"
       pInputText [attr.aria-label]="label || placeholder" [title]="label || placeholder"
-      (compositionstart)="onCompositionStart()" (compositionend)="onCompositionEnd($event)" (input)="onInput($event)" />
+      (compositionstart)="onCompositionStart()" (compositionend)="onCompositionEnd($event)" (input)="onInput($event)"
+      (blur)="onBlur($event)" />
   </ng-container>
 
   <ng-template #starredInput>
