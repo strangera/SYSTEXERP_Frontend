@@ -180,29 +180,35 @@ onSubmit(form: FormGroup): void {
     };
 
     // 組 payload（保留分頁/排序）
-    const payload: any = {
-      TXN_DateStart: toIso(val?.TXN_DateStart),
-      TXN_DateEnd:   toIso(val?.TXN_DateEnd),
-      tlt_term_type: val?.tlt_term_type,
-      rece_yn:       val?.rece_yn,
-      IsNoPLU_No:    val?.IsNoPLU_No,
-      TLT_No:        val?.TLT_No,
-      tlt_building:  val?.tlt_building,
-      tlt_floor:     val?.tlt_floor,
-      org_id:        val?.org_id,
-      pageSize:      val?.pageSize,
-      pageIndex:     val?.pageIndex,
-      SortBy:        val?.SortBy,
-      ...(offset  !== undefined ? { Offset:  offset } : {}),
-      ...(orderBy ? { OrderBy: orderBy } : {}),
-    };
+   const toBool = (x: any) => {
+  if (x === true || x === 'true' || x === 1 || x === '1') return true;
+  if (x === false || x === 'false' || x === 0 || x === '0') return false;
+  return undefined; // 沒選就不傳
+};
 
+const payload: any = {
+  TXN_DateStart: toIso(val?.TXN_DateStart),
+  TXN_DateEnd:   toIso(val?.TXN_DateEnd),
+  tlt_term_type: val?.tlt_term_type,
+  rece_yn:       val?.rece_yn,
+  TLT_No:        val?.TLT_No,
+  tlt_building:  val?.tlt_building,
+  tlt_floor:     val?.tlt_floor,
+  org_id:        val?.org_id,
+  pageSize:      val?.pageSize,
+  pageIndex:     val?.pageIndex,
+  SortBy:        val?.SortBy,
+  ...(offset  !== undefined ? { Offset:  offset } : {}),
+  ...(orderBy ? { OrderBy: orderBy } : {}),
+};
+const b = toBool(val?.IsNoPLU_No);
+if (b !== undefined) payload.IsNoPLU_No = b;
     // 移除空值/空陣列
-    Object.keys(payload).forEach((k) => {
-      const v = payload[k];
-      if (v === '' || v === null || v === undefined) delete payload[k];
-      if (Array.isArray(v) && v.length === 0) delete payload[k];
-    });
+Object.keys(payload).forEach((k) => {
+  const v = payload[k];
+  if (v === '' || v === null || v === undefined) delete payload[k];
+  if (Array.isArray(v) && v.length === 0) delete payload[k];
+});
 
     this.loading = true;
     this.messageService?.blockUi();
