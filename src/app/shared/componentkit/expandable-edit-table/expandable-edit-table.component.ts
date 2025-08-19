@@ -1,6 +1,6 @@
 import { Component, Input, Output, EventEmitter, ViewChild, ChangeDetectorRef, TemplateRef, ContentChild, ElementRef, OnInit, OnChanges } from '@angular/core';
 import { Table, TableModule } from 'primeng/table';
-import { FormBuilder, FormControl, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormBuilder, FormControl, FormGroup, FormsModule, ReactiveFormsModule, ValidatorFn } from '@angular/forms';
 import { NgIf, NgClass, NgFor, NgStyle, NgSwitch, NgSwitchCase, NgSwitchDefault, DecimalPipe } from '@angular/common';
 import { PrimeTemplate } from 'primeng/api';
 import { ButtonDirective } from 'primeng/button';
@@ -17,6 +17,7 @@ import { NotificationService } from '@shared/component/notification-message/noti
 // import { Column } from '../table/table.model';
 import { Observable } from 'rxjs';
 import { SelectorPanelComponent } from '../selector-panel/selector-panel.component';
+import { TableValidationService } from './table-validation.service';
 
 export interface DisplayFieldConfig {
   fieldName: string;
@@ -117,6 +118,10 @@ export interface ColumnDef {
   hidden?: boolean;
   style?: string;
   options?: any[];
+
+  required?: boolean;                    // 是否為必填欄位
+  requiredMessage?: string;              // 自定義必填錯誤訊息
+  validators?: ValidatorFn[];            // 自定義驗證器陣列
 
   selectorConfig?: {
     valuePropertyName: string; // 取值用的屬性名稱
@@ -243,7 +248,8 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
   constructor(
     private cdr: ChangeDetectorRef,
     private messageService: NotificationService,
-    private fb: FormBuilder
+    private fb: FormBuilder,
+    private validationService: TableValidationService
   ) { }
 
   ngOnInit() {
@@ -275,6 +281,8 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
     if (this.inputTimeout) {
       clearTimeout(this.inputTimeout);
     }
+    // 🆕 重置驗證狀態
+    this.validationService.reset();
   }
 
   private userInputValue = '';
@@ -803,15 +811,29 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
 
   onRowEditSave(rowData: any) {
     try {
+      // 🆕 使用驗證服務執行驗證
+      const validationResult = this.validationService.validateRow(rowData, this.mainColumns, this.dataKey);
+
+      if (!validationResult.isValid) {
+        const errorMessage = this.validationService.formatValidationErrors(validationResult.errors);
+        this.messageService.warnBubble(errorMessage);
+        return; // 阻止儲存
+      }
+
+      // 原有的儲存邏輯
       const oldData = this.clonedItems[rowData[this.dataKey]];
       delete this.clonedItems[rowData[this.dataKey]];
       this.editingRow = null;
-      // 清理欄位狀態
+
+      // 清除驗證錯誤
+      this.validationService.clearRowValidationErrors(rowData, this.dataKey);
       this.cleanupFieldStates(rowData);
+
       this.save.emit({ oldData, newData: rowData });
       this.cdr.detectChanges();
     } catch (error) {
       console.error('保存行時出錯：', error);
+      this.messageService.warnBubble('儲存失敗，請檢查輸入內容');
     }
   }
 
@@ -820,8 +842,11 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
       this.data[rowIndex] = this.clonedItems[rowData[this.dataKey]];
       delete this.clonedItems[rowData[this.dataKey]];
       this.editingRow = null;
-      // 清理欄位狀態
+
+      // 🆕 清除驗證錯誤
+      this.validationService.clearRowValidationErrors(rowData, this.dataKey);
       this.cleanupFieldStates(rowData);
+
       this.cancel.emit(rowData);
       this.cdr.detectChanges();
     } catch (error) {
@@ -1625,6 +1650,28 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
 
     // 🎯 與 itemSelected 使用相同的處理邏輯
     this.onSelectorItemSelected(selectedItem, rowData, column);
+  }
+
+  //=================欄位必填用===================
+  /**
+  * 🎯 檢查欄位是否為必填
+  */
+  isFieldRequired(column: ColumnDef): boolean {
+    return this.validationService.isFieldRequired(column);
+  }
+
+  /**
+   * 🎯 取得列的驗證錯誤訊息
+   */
+  getRowValidationErrors(rowData: any): string[] {
+    return this.validationService.getRowValidationErrors(rowData, this.dataKey);
+  }
+
+  /**
+  * 🎯 檢查列是否有驗證錯誤
+  */
+  hasRowValidationErrors(rowData: any): boolean {
+    return this.validationService.hasRowValidationErrors(rowData, this.dataKey);
   }
 
 }

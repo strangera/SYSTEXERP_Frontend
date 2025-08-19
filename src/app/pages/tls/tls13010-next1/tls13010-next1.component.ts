@@ -15,6 +15,7 @@ import { NgIf, NgFor } from '@angular/common';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { AccordionModule } from 'primeng/accordion';
 import { LocationOptionsService } from '../../../service/api/dropdownservice/location-options.service';
+import { TableValidators } from '@shared/componentkit/expandable-edit-table/table-validation.interface';
 
 // 介面定義
 interface CategoryItem {
@@ -168,6 +169,7 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
       autoWidth: true,
       dateFormat: 'year-month',
       maxLength: 7,
+      required: true,
     },
     {
       field: 'tpy_type',
@@ -269,13 +271,16 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
       editable: true,
       options: TLS13010_DROPDOWN_OPTIONS.tpyTypeOption,
       autoWidth: true,
+      required: true
     },
     {
       field: 'tpy_unitamt',
       header: '單價',
       type: 'number',
       editable: true,
-      width: '90px'
+      width: '90px',
+      required: true,
+      validators: [TableValidators.positive('單價必須大於0')]
     },
     {
       field: 'tpy_qty',
