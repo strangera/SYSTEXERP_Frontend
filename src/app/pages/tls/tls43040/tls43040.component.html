@@ -1,7 +1,11 @@
 <div class="card">
   <div class="flex gap-2 mb-2">
     <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
-    <app-button btnType="create" (click)="onCreate()" label="{{ 'create' | translate }}"></app-button>
+    <app-button
+      btnType="create"
+      (click)="onCreate()"
+      label="{{ 'create' | translate }}"
+    ></app-button>
   </div>
   <p-accordion>
     <p-accordionTab
@@ -58,7 +62,8 @@
 <div class="card">
   <div class="col-12">
     <app-table
-      tableKey="TLS22010"
+      tableKey="TLS43040"
+      dataKey="ECR_GrpNo"
       [data]="data"
       [multiSortMeta]="[{ field: 'ECR_No', order: 1 }]"
       [totalRecords]="totalRecords"
@@ -70,7 +75,9 @@
       (detail)="onDetail($event)"
       [showRowEdit]="false"
       [showEdit]="false"
-      [columns]="columns"
+      [columns]="columns7"
+      expansionDataKey="details"
+      [expansionColumns]="expansionColumns7"
     ></app-table>
   </div>
 </div>
