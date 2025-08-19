@@ -70,25 +70,25 @@ export class TLS23020Component extends BasicQueryPageComponent<any> {
   queryForm = this.formBuilder.group({
     TXN_DateStart: [this.yesterday, [Validators.required]], // 交易日期起
     TXN_DateEnd:   [this.yesterday, [Validators.required]], // 交易日期訖
-    ECR_No: [[]],                       // 收銀機機號
-    TXN_No_Start: [ ],
-    TXN_No_End:   [ ],
-    TLT_No: [[]],
+    ECR_No: [],                       // 收銀機機號
+    TXN_No_Start: [null, [this.validationService.numberValidator]],
+    TXN_No_End:   [null, [this.validationService.numberValidator]],
+    TLT_No: [],
     TXN_GUINo: [''],                  // 發票號碼
-    PLU_SalePrc_Start: [],
-    PLU_SalePrc_End:   [],
+    PLU_SalePrc_Start: [null],
+    PLU_SalePrc_End:   [null],
     TXN_TaxType: [],
-    TXN_DiscCode: [[]],
-    tlt_id: [[]],
+    TXN_DiscCode: [],
+    tlt_id: [],
     PLU_MagNo: [],
-    
+    ACT_DiscCode: [],
     IsNoPLU_No: [false],
     rece_yn: [],
     cash_yn: [],
     tlt_building: [],
-    tlt_floor: [[]],
-    org_id: [[]],
-  
+    tlt_floor: [],
+    org_id: [],
+    isSummary: false,                 // 保留欄位，但本畫面不切換模式
     ...createPaginationConfig([{ field: 'ECR_No', order: 1 }]),
   });
 
@@ -165,10 +165,178 @@ export class TLS23020Component extends BasicQueryPageComponent<any> {
     });
   }
 
+onSubmit(form: FormGroup): void {
+  this.handleSubmit(form, () => {
+    const val = this.queryForm.getRawValue() as any;
+
+    // 預設分頁
+    const pageSize  = Number.isFinite(val?.pageSize)  ? val.pageSize  : 10;
+    const pageIndex = Number.isFinite(val?.pageIndex) ? val.pageIndex : 1;
+    const offset = Math.max(0, (pageIndex - 1) * pageSize);
+
+    // 排序字串
+    const orderBy =
+      Array.isArray(val?.SortBy) && val.SortBy.length
+        ? val.SortBy.map((s: any) => `${s.field} ${s.order === 1 ? 'ASC' : 'DESC'}`).join(',')
+        : undefined;
+
+    // 日期轉 yyyy-MM-ddTHH:mm:ss（本地時區，去掉時區偏移）
+    const toIso = (x: any) => {
+      if (!x) return undefined;
+      const d = typeof x === 'string' ? new Date(x) : (x as Date);
+      if (isNaN(d.getTime())) return undefined;
+      return new Date(d.getTime() - d.getTimezoneOffset() * 60000)
+        .toISOString()
+        .slice(0, 19);
+    };
+
+    // 組 payload
+    const payload: any = {
+      TXN_DateStart: toIso(val?.TXN_DateStart),
+      TXN_DateEnd:   toIso(val?.TXN_DateEnd),
+      bus_type:      val?.bus_type,
+      ShowBusType:   val?.ShowBusType,
+      tlt_building:  val?.tlt_building,
+      tlt_floor:     val?.tlt_floor,
+      org_id:        val?.org_id,
+      area_no:       val?.area_no,
+      TLT_No:        val?.TLT_No,
+      pageSize,
+      pageIndex,
+      SortBy:        val?.SortBy ?? [],
+      Offset:        offset,
+      ...(orderBy ? { OrderBy: orderBy } : {}),
+    };
+
+    // 移除空值/空陣列
+    Object.keys(payload).forEach((k) => {
+      const v = payload[k];
+      if (v === '' || v === null || v === undefined) delete payload[k];
+      if (Array.isArray(v) && v.length === 0) delete payload[k];
+    });
+
+    this.loading = true;
+    this.messageService?.blockUi();
+
+    this.tls23020Service.queryTLS23020(payload).subscribe({
+      next: (res: any) => {
+        // res.Data 可能是陣列（你給的範例是 [ { Total..., tLS23020_SubTotals: [...] } ]）
+        const dataArray = Array.isArray(res?.Data) ? res.Data : (res?.Data ? [res.Data] : []);
+
+        // 把所有小計底下的 tLS23020_Details 攤平成一個陣列
+        const details = dataArray.flatMap((wrapper: any) => {
+          const subTotals =
+            wrapper?.tLS23020_SubTotals ??
+            wrapper?.TLS23020_SubTotals ??
+            wrapper?.tls23020_SubTotals ??
+            [];
+          if (!Array.isArray(subTotals)) return [];
+          return subTotals.flatMap((st: any) =>
+            st?.tLS23020_Details ??
+            st?.TLS23020_Details ??
+            st?.tls23020_Details ??
+            []
+          );
+        });
+
+        this.data = details;
+        this.totalRecords =
+          typeof res?.TotalCount === 'number' ? res.TotalCount : this.data.length;
+
+        // 若之後要用得到，也可以把總計/小計存起來
+        // this.totalSummary = dataArray[0] ?? null;
+        // this.subTotals = Array.isArray(dataArray[0]?.tLS23020_SubTotals) ? dataArray[0].tLS23020_SubTotals : [];
+      },
+      error: (err) => {
+        console.error('TLS23120 查詢失敗', err);
+        this.messageService?.errorBubble?.('查詢失敗，請稍後再試');
+      },
+      complete: () => {
+        this.loading = false;
+        this.messageService?.unblockUi();
+      },
+    });
+  });
+}
 
 
+  // 將 lazy 的分頁/排序寫回表單後，呼叫同一支查詢
+  runQueryFromTable(event: any) {
+    this.queryForm.patchValue(
+      {
+        pageIndex: event?.pageIndex ?? this.queryForm.value.pageIndex,
+        pageSize:  event?.pageSize  ?? this.queryForm.value.pageSize,
+        SortBy:    event?.SortBy    ?? this.queryForm.value.SortBy,
+      },
+      { emitEvent: false },
+    );
+    this.doQuery();
+  }
 
+  /** 將日期控制項轉成後端要的 yyyy-MM-ddTHH:mm:ss（本地時間、去時區偏移） */
+  private toIso(val: any): string | undefined {
+    if (!val) return undefined;
+    const d = typeof val === 'string' ? new Date(val) : (val as Date);
+    if (isNaN(d.getTime())) return undefined;
+    return new Date(d.getTime() - d.getTimezoneOffset() * 60000)
+      .toISOString()
+      .slice(0, 19);
+  }
 
+  /** 組查詢 payload，並清掉空值/空陣列，避免干擾後端繫結 */
+  private buildPayload(val: any) {
+    const o: any = {
+      ...val,
+      TXN_DateStart: this.toIso(val?.TXN_DateStart),
+      TXN_DateEnd:   this.toIso(val?.TXN_DateEnd),
+      TXN_No_Start:  val?.TXN_No_Start != null && val?.TXN_No_Start !== '' ? Number(val.TXN_No_Start) : undefined,
+      TXN_No_End:    val?.TXN_No_End   != null && val?.TXN_No_End   !== '' ? Number(val.TXN_No_End)   : undefined,
+    };
+
+    Object.keys(o).forEach((k) => {
+      const v = o[k];
+      if (v === '' || v === null || v === undefined) delete o[k];
+      if (Array.isArray(v) && v.length === 0) delete o[k];
+    });
+
+    return o;
+  }
+
+  private doQuery(): void {
+    const payload = this.buildPayload(this.queryForm.value);
+    this.loading = true;
+    this.messageService?.blockUi();
+
+    this.tls23020Service
+      .queryTLS23020(payload) // ✅ 注意大小寫：queryTLS23020
+      .pipe(finalize(() => {
+        this.loading = false;
+        this.messageService?.unblockUi();
+      }))
+      .subscribe({
+next: (res) => {
+  const raw = res?.Data ?? [];
+
+  const mapped = raw.map((item: any, idx: number) => ({
+    ...item,
+    _rowKey: `${item.SYS_StoreNo ?? ''}|${String(item.TXN_Date ?? '').slice(0, 19)}|${item.ECR_No ?? ''}|${item.TXN_No ?? idx}`,
+  }));
+
+  // 從回傳資料找一筆帶有 Subtotal 欄位的來源（常見是每筆都帶同值或只有一筆帶）
+const totalSrc = raw.find((x: any) =>
+  x?.Subtotal_PLU_SalePrc != null ||
+  x?.Subtotal_TXN_Net     != null ||
+  x?.Subtotal_TXN_Tax     != null ||
+  x?.Subtotal_TXN_Disc    != null
+);
+
+  this.data = totalSrc ? [...mapped, this.makeBackendTotalRow(totalSrc)] : mapped;
+
+  // 注意 totalRecords 用後端提供的（不要 +1），避免分頁數被影響
+  this.totalRecords = res?.TotalCount ?? mapped.length;
+},
+      });
+  }
 
   getLabelFromOptions(value: any, options: any[]): string {
     const found = options?.find(opt => String(opt.value) === String(value));
@@ -209,178 +377,6 @@ private makeBackendTotalRow(src: any) {
     __isBackendTotal: true,        // 特殊旗標，方便禁用勾選/動作
   };
 }
-
-// ✅ 新增：把 Data 轉成細項列 + 每組小計
-private flattenTLS23020(list: any[]): { rows: any[]; detailCount: number } {
-  const rows: any[] = [];
-  let detailCount = 0;
-
-  list.forEach((g: any, gi: number) => {
-    const details = Array.isArray(g?.tLS23020_Details) ? g.tLS23020_Details : null;
-
-    if (details && details.length) {
-      details.forEach((d: any, di: number) => {
-        rows.push({
-          _rowKey: `${d?.ECR_No ?? ''}-${d?.TXN_No ?? `${gi}-${di}`}`,
-          ...d,
-        });
-      });
-      detailCount += details.length;
-
-      // 每組加一筆「小計」列（使用你原本的 makeBackendTotalRow，吃 group 的 Subtotal_*）
-      rows.push(this.makeBackendTotalRow(g));
-    } else {
-      // 後端若已是扁平明細（沒有 tLS23020_Details）
-      rows.push({
-        _rowKey: `${g?.ECR_No ?? ''}-${g?.TXN_No ?? gi}`,
-        ...g,
-      });
-      detailCount += 1;
-    }
-  });
-
-  return { rows, detailCount };
-}
-
-onSubmit(form: FormGroup): void {
-  this.submitted = true;
-
-  // 1) 補預設日期：未選就用昨天；只選一邊就補另一邊
-  const y = this.yesterday; // 你原本就有
-  const s0 = form.controls.TXN_DateStart.value;
-  const e0 = form.controls.TXN_DateEnd.value;
-
-  if (!s0 && !e0) {
-    form.patchValue({ TXN_DateStart: y, TXN_DateEnd: y }, { emitEvent: false });
-  } else if (s0 && !e0) {
-    form.patchValue({ TXN_DateEnd: s0 }, { emitEvent: false });
-  } else if (!s0 && e0) {
-    form.patchValue({ TXN_DateStart: e0 }, { emitEvent: false });
-  }
-
-  if (form.invalid) {
-    form.markAllAsTouched();
-    return;
-  }
-
-  const raw = form.getRawValue();
-
-  // 2) 日期轉本地字串（避免 Z 時區）
-  const toLocalYMDT = (v: any): string | null => {
-    if (!v && v !== 0) return null;
-    if (v instanceof Date && !isNaN(v.getTime())) {
-      const yy = v.getFullYear();
-      const mm = String(v.getMonth() + 1).padStart(2, '0');
-      const dd = String(v.getDate()).padStart(2, '0');
-      return `${yy}-${mm}-${dd}T00:00:00`;
-    }
-    const s = String(v);
-    const m = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
-    if (m) return `${m[1]}-${m[2]}-${m[3]}T00:00:00`;
-    const d = new Date(s);
-    if (!isNaN(d.getTime())) {
-      const yy = d.getFullYear();
-      const mm = String(d.getMonth() + 1).padStart(2, '0');
-      const dd = String(d.getDate()).padStart(2, '0');
-      return `${yy}-${mm}-${dd}T00:00:00`;
-    }
-    return null;
-  };
-
-  // 3) 你原本的 helpers（可留可改）
-  const strOrNull = (v: any) =>
-    v === undefined || v === null || v === '' ? null : String(v);
-  const intOrNull = (v: any) => {
-    if (v === undefined || v === null || v === '') return null;
-    const n = Number(v);
-    return Number.isFinite(n) ? Math.trunc(n) : null;
-  };
-  const numOrNull = (v: any) => {
-    if (v === undefined || v === null || v === '') return null;
-    const n = Number(v);
-    return Number.isFinite(n) ? n : null;
-  };
-  const boolOrNull = (v: any) =>
-    v === undefined || v === null || v === '' ? null : Boolean(v);
-  const toStringArray = (v: any): string[] => {
-    if (v === undefined || v === null || v === '') return [];
-    return (Array.isArray(v) ? v : [v]).map((x) => String(x));
-  };
-  const sortBy = Array.isArray(raw.SortBy)
-    ? raw.SortBy.map((s: any) => ({
-        field: strOrNull(s?.field),
-        order: intOrNull(s?.order) ?? 0,
-      }))
-    : [];
-
-  // 4) payload（日期用本地字串）
-  const payload: any = {
-    PageSize:   intOrNull(raw.PageSize) ?? 0,
-    PageIndex:  intOrNull(raw.PageIndex) ?? 0,
-    OrderBy:    strOrNull(raw.OrderBy) ?? '',
-    Offset:     intOrNull(raw.Offset) ?? 0,
-    SortBy:     sortBy,
-
-    TXN_DateStart: toLocalYMDT(raw.TXN_DateStart),
-    TXN_DateEnd:   toLocalYMDT(raw.TXN_DateEnd),
-
-    ECR_No:             toStringArray(raw.ECR_No),
-    TLT_No:             toStringArray(raw.TLT_No),
-    TXN_No_Start:       intOrNull(raw.TXN_No_Start),
-    TXN_No_End:         intOrNull(raw.TXN_No_End),
-    TXN_GUINo:          strOrNull(raw.TXN_GUINo),
-    PLU_SalePrc_Start:  numOrNull(raw.PLU_SalePrc_Start),
-    PLU_SalePrc_End:    numOrNull(raw.PLU_SalePrc_End),
-    TXN_TaxType:        strOrNull(raw.TXN_TaxType),
-    TXN_DiscCode:       toStringArray(raw.TXN_DiscCode),
-    tlt_id:             toStringArray(raw.tlt_id),
-    PLU_MagNo:          strOrNull(raw.PLU_MagNo),
-    IsNoPLU_No:         boolOrNull(raw.IsNoPLU_No),
-    rece_yn:            strOrNull(raw.rece_yn),
-    cash_yn:            strOrNull(raw.cash_yn),
-    tlt_building:       strOrNull(raw.tlt_building),
-    tlt_floor:          toStringArray(raw.tlt_floor),
-    org_id:             toStringArray(raw.org_id),
-  };
-
-  // 清掉 null 欄位
-  Object.keys(payload).forEach((k) => payload[k] === null && delete payload[k]);
-
-  this.loading = true;
-  this.tls23020Service.queryTLS23020(payload)
-    .pipe(finalize(() => (this.loading = false)))
-    .subscribe({
-      next: (res: any) => {
-        const dataList = Array.isArray(res?.Data) ? res.Data : [];
-        const rows: any[] = [];
-        // 只展開 tLS23020_Details
-        for (const item of dataList) {
-          const groups = Array.isArray(item?.tLS23020_SubTotals) ? item.tLS23020_SubTotals : [];
-          for (const g of groups) {
-            if (Array.isArray(g?.tLS23020_Details)) {
-              for (const d of g.tLS23020_Details) {
-                rows.push({ _rowKey: `${d?.ECR_No ?? ''}-${d?.TXN_No ?? ''}-${d?.TXN_GUINo ?? ''}`, ...d });
-              }
-            }
-          }
-          if (Array.isArray(item?.tLS23020_Details)) {
-            for (const d of item.tLS23020_Details) {
-              rows.push({ _rowKey: `${d?.ECR_No ?? ''}-${d?.TXN_No ?? ''}-${d?.TXN_GUINo ?? ''}`, ...d });
-            }
-          }
-        }
-        this.data = rows;
-        const tc = Number(res?.TotalCount);
-        this.totalRecords = Number.isFinite(tc) && tc >= 0 ? tc : rows.length;
-      },
-      error: () => {
-        this.data = [];
-        this.totalRecords = 0;
-      },
-    });
-}
-
-
 
 
   // columns（修正名稱＆保留你原本格式器）
