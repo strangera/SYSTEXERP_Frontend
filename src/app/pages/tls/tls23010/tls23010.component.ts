@@ -383,96 +383,93 @@ export class TLS23010Component
     const mm = String(d.getMinutes()).padStart(2, '0');
     return `${y}/${m}/${day}`;
   }
+  formatYMD = (val: unknown): string => {
+  if (val == null) return '';
+  if (val instanceof Date && !isNaN(val.getTime())) {
+    const y = val.getFullYear();
+    const m = String(val.getMonth() + 1).padStart(2, '0');
+    const d = String(val.getDate()).padStart(2, '0');
+    return `${y}/${m}/${d}`;
+  }
+  const s = String(val);
+  // 直接抓 YYYY-MM-DD，避免時區位移
+  const m = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (m) return `${m[1]}/${m[2]}/${m[3]}`;
+
+  const dt = new Date(s);
+  if (!isNaN(dt.getTime())) {
+    const y = dt.getFullYear();
+    const mm = String(dt.getMonth() + 1).padStart(2, '0');
+    const dd = String(dt.getDate()).padStart(2, '0');
+    return `${y}/${mm}/${dd}`;
+  }
+  return s;
+};
+// component.ts
+nyToYesNo = (val: unknown): string => {
+  // 去除前後空白：一般空白 \s + 不換行空白 \u00A0 + 全形空白 \u3000
+  const v = String(val ?? '').replace(/^[\s\u00A0\u3000]+|[\s\u00A0\u3000]+$/g, '').toUpperCase();
+
+  if (v === 'Y' || v === 'TRUE' || v === '1') return '是';
+  if (v === 'N' || v === 'FALSE' || v === '0') return '否';
+  return '';
+};
+
+// component.ts
+pToYesNo = (val: unknown): string => {
+  const v = String(val ?? '')
+    .replace(/^[\s\u00A0\u3000]+|[\s\u00A0\u3000]+$/g, '') // trim 含全形空白
+    .toUpperCase();
+  return v === 'P' ? '是' : '否';
+};
+nullpToYesNo = (val: unknown): string => {
+  if (val === null || val === undefined) return '否';
+  const trimmed = String(val).replace(/^[\s\u00A0\u3000]+|[\s\u00A0\u3000]+$/g, '');
+  return trimmed.length === 0 ? '否' : '是';
+};
 
   columns: any[] = [
-    { field: 'TXN_Date',header: '銷售日期',
-      format: (val: string) => {
-        const date = new Date(val);
-        return isNaN(date.getTime())
-          ? val
-          : `${date.getFullYear()}/${(date.getMonth() + 1).toString().padStart(2, '0')}/${date.getDate().toString().padStart(2, '0')}`;
-      },
-    },
+    { field: 'TXN_Date',header: '銷售日期',format: this.formatYMD},
     { field: 'ECR_No', header: '收銀機號' },
     { field: 'TXN_No', header0: '交易序號', style: 'text-right' },
     { field: 'tlt_no', header: '專櫃編號' },
-    { field: 'tlt_name', header: '櫃位名稱', style: 'text-left' }, // 非 POS5006 欄位，UI 顯示用
+    { field: 'tlt_name', header: '櫃位名稱', style: 'text-left' }, 
     { field: 'TXN_Uniform', header: '統一編號' },
-    { field: 'gui_track', header: '字軌' }, // 假設為字軌顯示
+    { field: 'gui_track', header: '字軌' }, 
     { field: 'GUIBegNo', header: '發票起始號碼' },
     { field: 'GUIEndNo', header: '發票結束號碼' },
-    { field: 'TXN_TotGUI',header: '發票金額',
-      style: 'text-right',
-      format: (val: number) => val?.toLocaleString('en-US') || '0',
-    },
-    { field: 'TXN_TotSaleAmt',header: '銷售金額',
-      style: 'text-right',
-      format: (val: number) => val?.toLocaleString('en-US') || '0',
-    },
-    { field: 'TXN_TotOver',header: '溢收金額',
-      style: 'text-right',
-      format: (val: number) => val?.toLocaleString('en-US') || '0',
-    },
-    { field: 'TXN_FlagStatus',header: '狀態旗標',
-      format: (val: any) =>
-        this.getLabelFromOptions(val, this.statusFlagOptions),
-    },
-    { field: 'TXN_StatusName',header: '交易型態',
-      format: (val: any) =>
-        this.getLabelFromOptions(val, this.txnStatusOptions),
-    },
-    { field: 'TXN_VIP',header: '外交官零稅'},
-    { field: 'TXN_Mode',header: '事後登錄'},
-    { field: 'TXN_PreOrder',header: '預售'},
-    { field: 'TXN_TotPayAmt',header: '訂金實收',
-      style: 'text-right',
-      format: (val: number) => val?.toLocaleString('en-US') || '0',
-    },
-    { field: 'TXN_TaxFreeCertNo', header: '外交官免稅卡號' },
-    { field: 'TXN_Time',header: '起始時間',
-      format: this.formatTimeToHHMM.bind(this),
-    },
-    { field: 'TXN_Time',header: '結束時間',
-      format: this.formatTimeToHHMM.bind(this),
-    },
-    { field: 'USR_No', header: '收銀員', style: 'text-left' },
-    { field: 'TXN_PreOrderNo', header: '預售/訂金單號' },
-    { field: 'ORG_TXN_Date', header: '原交易日期' },
-    { field: 'ORG_ECR_No', header: '原收銀機號' },
-    { field: 'ORG_TXN_No', header: '原交易序號' },
-    { field: 'TXN_PkngUID', header: '停車車牌' },
-    { field: 'TXN_MemID', header: '會員卡號' },
-    { field: 'TXN_TotDisc',header: '折扣/讓金額',
-      style: 'text-right',
-      format: (val: number) => val?.toLocaleString('en-US') || '0',
-    },
-    { field: 'TXN_YN',header: '銷貨清單列印狀態',
-
-      format: () => '是',
-    },
-
-    { field: 'TXN_DonateType',header: '捐贈狀態',
-
-      format: (val: any) => this.getLabelFromOptions(val, this.whetherOptions),
-    },
+    { field: 'TXN_TotGUI',header: '發票金額',style: 'text-right', format: this.moneyFormat},    
+    { field: 'TXN_TotSaleAmt',header: '銷售金額',style: 'text-right',format: this.moneyFormat},
+    { field: 'TXN_TotOver',header: '溢收金額',style: 'text-right',format: this.moneyFormat},
+    { field: 'TXN_VIP',header: '外交官零稅',format: this.nyToYesNo },
+    { field: 'TXN_Mode',header: '事後登錄', format: this.pToYesNo},
+    { field: 'TXN_PreOrder',header: '預售',format:this.nullpToYesNo},
+    { field: 'TXN_StatusName',header: '交易型態',format: (val: any) =>  this.getLabelFromOptions(val, this.txnStatusOptions)},
+    { field: 'TXN_TaxFreeCertNo', header: '外交官免稅卡號'},
+    { field: 'TXN_Time',header: '交易時間',format: this.formatTimeToHHMM.bind(this),},
+    { field: 'USR_No', header: '收銀員', style: 'text-left'},
+    { field: 'TXN_PreOrderNo', header: '預售/訂金單號'},
+    { field: 'ORG_TXN_Date', header: '原交易日期'},
+    { field: 'ORG_ECR_No', header: '原收銀機號'},
+    { field: 'ORG_TXN_No', header: '原交易序號'},
+    { field: 'TXN_PkngUID', header: '停車車牌'},
+    { field: 'TXN_MemID', header: '會員卡號'},
+    { field: 'TXN_TotDisc',header: '折扣/讓金額',style: 'text-right',format: this.moneyFormat},
+    { field: 'TXN_YN',header: '銷貨清單列印狀態',format: () => '是',},
+    { field: 'TXN_DonateType',header: '捐贈狀態',format: (val: any) => this.getLabelFromOptions(val, this.whetherOptions),},
     { field: 'TXN_GUILoveCode', header: '捐贈社福團體代碼' },
     { field: 'TXN_GUIRemark', header: '防偽隨機碼' },
-    { field: 'TXN_GUI_CarrType',header: '載具種類',
-
-      format: (val: any) =>
-        this.getLabelFromOptions(val, this.carrierTypeOptions),
-    },
+    { field: 'TXN_GUI_CarrType',header: '載具種類',format: (val: any) =>  this.getLabelFromOptions(val, this.carrierTypeOptions),},
+    { field: 'DonateType', header: '捐贈類別' },
     { field: 'TXN_GUI_CarrId', header: '共通性載具號碼' },
-    { field: 'TXN_PrintGUI',header: '電子發票是否列印', //是從 **POS5006.TXN_PrintTimes** 計算出來的結果。
-
-      format: (val: any) => this.getYesNoLabel(val),
-    },
+    { field: 'TXN_PrintTimes', header: '發票列印時間' },
+    { field: 'TXN_PrintGUI',header: '電子發票是否列印', format: (val: any) => this.getYesNoLabel(val),},
     { field: 'CRD_Type', header: '信用卡別' },
     { field: 'CRD_No', header: '號碼' },
     { field: 'TERM_No', header: '分期期數' },
     { field: 'TXN_PayAmt', header: '金額' },
   ];
-  // 將 ISO 或日期字串轉成 yyyy-MM-dd（後端明細多半吃純日期）
+
   private toYMD(val: string | Date): string {
     const d = typeof val === 'string' ? new Date(val) : val;
     if (isNaN(d.getTime())) return String(val ?? '');
@@ -482,7 +479,7 @@ export class TLS23010Component
     return `${y}-${m}-${day}`;
   }
 
-  // ✅ 提供給 <app-table> 的懶載入函式（展開時呼叫）
+
   loadDetail$ = (row: TLS23010Data) => {
     const body = this.buildDetailBody(row);
     return this.tls23010Service.queryTLS23010Detail(body).pipe(

@@ -139,11 +139,23 @@ export class TLS23130Component extends BasicQueryPageComponent<any> {
       });
   }
 
-  onSubmit(form: FormGroup): void {
+onSubmit(form: FormGroup): void {
   this.handleSubmit(form, () => {
-    const val = this.queryForm.value as any;
+    const val = this.queryForm.getRawValue() as any;
 
-    // 轉換日期成 yyyy-MM-ddTHH:mm:ss (本地時間，不含時區偏移)
+    // pageIndex/pageSize -> Offset（0-based）
+    const offset =
+      Number.isFinite(val?.pageIndex) && Number.isFinite(val?.pageSize)
+        ? Math.max(0, (val.pageIndex - 1) * val.pageSize)
+        : undefined;
+
+    // SortMeta[] -> "field ASC,DESC"
+    const orderBy =
+      Array.isArray(val?.SortBy) && val.SortBy.length
+        ? val.SortBy.map((s: any) => `${s.field} ${s.order === 1 ? 'ASC' : 'DESC'}`).join(',')
+        : undefined;
+
+    // 本地 ISO(yyyy-MM-ddTHH:mm:ss) — 去掉時區偏移
     const toIso = (x: any) => {
       if (!x) return undefined;
       const d = typeof x === 'string' ? new Date(x) : (x as Date);
@@ -153,18 +165,22 @@ export class TLS23130Component extends BasicQueryPageComponent<any> {
         .slice(0, 19);
     };
 
+    // 組 payload（保留分頁/排序）
     const payload: any = {
-      ...val,
       saleDateStart: toIso(val?.saleDateStart),
       saleDateEnd:   toIso(val?.saleDateEnd),
-      pageSize:  val?.pageSize,
-      pageIndex: val?.pageIndex,
-      SortBy:    val?.SortBy,
-      OrderBy:   val?.OrderBy,
-      Offset:    val?.Offset,
+      BNK_No:        val?.BNK_No,
+      tlt_building:  val?.tlt_building,
+      tlt_floor:     val?.tlt_floor,
+      org_id:        val?.org_id,
+      pageSize:      val?.pageSize,
+      pageIndex:     val?.pageIndex,
+      SortBy:        val?.SortBy,
+      ...(offset  !== undefined ? { Offset:  offset } : {}),
+      ...(orderBy ? { OrderBy: orderBy } : {}),
     };
 
-    // 移除空值和空陣列
+    // 清除空值/空陣列
     Object.keys(payload).forEach((k) => {
       const v = payload[k];
       if (v === '' || v === null || v === undefined) delete payload[k];
@@ -175,24 +191,48 @@ export class TLS23130Component extends BasicQueryPageComponent<any> {
     this.messageService?.blockUi();
 
     this.tls23130Service.queryTLS23130(payload).subscribe({
-      next: (res) => {
-        const raw = res?.Data ?? [];
-        this.data = Array.isArray(raw) ? raw : [];
-        this.totalRecords = typeof res?.TotalCount === 'number'
-          ? res.TotalCount
-          : this.data.length;
+      next: (res: any) => {
+        // 後端回傳的 Data：[{ CRD_No, TXN_No, tlt_no, tlt_name, TXN_PayAmt, TXN_Date, TXN_Time, TERM_No, EDC_InstHeadAmt, EDC_InstEachAmt, ... }]
+        const src = Array.isArray(res?.Data) ? res.Data : (res?.Data ? [res.Data] : []);
+
+        // 轉成表格 columns 需要的鍵
+        this.data = src.map((r: any) => ({
+          cardNumber:          r?.CRD_No ?? '',
+          transactionSequence: r?.TXN_No ?? '',
+          // 機號/名稱：用「機號 / 櫃位名稱」，也可改成 `${r?.tlt_no} / ${r?.tlt_name}`
+          machineNumber:       [r?.TERM_No, r?.tlt_name].filter(Boolean).join(' / '),
+
+          amount:              r?.TXN_PayAmt ?? 0,
+          TXN_Date:            r?.TXN_Date ?? '',
+          TXN_GUINo:           r?.TXN_GUINo ?? '',
+          TXN_Time:            r?.TXN_Time ?? '',
+
+          // 分期數（回傳未提供，先留空；若後端有 EDC_InstPeriod 就改這裡）
+          installmentPeriod:   r?.EDC_InstPeriod ?? '',
+
+          initialPayment:      r?.EDC_InstHeadAmt ?? 0,
+          monthlyPayment:      r?.EDC_InstEachAmt ?? 0,
+        }));
+
+        this.totalRecords =
+          typeof res?.TotalCount === 'number' ? res.TotalCount : this.data.length;
+
+        // 若要用總額：const total = res?.Data?.[0]?.TotalPayAmt;
       },
       error: (err) => {
         console.error('TLS23130 查詢失敗', err);
         this.messageService?.errorBubble?.('查詢失敗，請稍後再試');
+        this.loading = false;
+        this.messageService?.unblockUi();
       },
       complete: () => {
         this.loading = false;
         this.messageService?.unblockUi();
-      }
+      },
     });
   });
 }
+
 
     moneyFormat(value: number): string {
     return value != null ? value.toLocaleString('en-US') : '0';
