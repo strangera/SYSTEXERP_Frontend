@@ -146,27 +146,14 @@ export class TLS43040CRUComponent extends BasicCruPageComponent<any> implements 
           { field: 'ECR_No', header: '收銀機號', type: 'dropdown', options: this.POS1002_ECR_Options, optionLabel: 'label', optionValue: 'value' },
           { field: 'ECR_Type', header: '機台類型', type: 'dropdown', options: this.SYS1000_ECRType_Options, optionLabel: 'label', optionValue: 'value' },
           { field: 'TLT_No', header: '專櫃編號', type: 'dropdown', options: this.TLTTALENT_OPTIONS, optionLabel: 'label', optionValue: 'No' },
-          { field: 'Building_No', header: '館別代碼', type: 'dropdown', options: this.SYS3700_Options, optionLabel: 'label', optionValue: 'value' },
-          { field: 'Floor_No', header: '樓層代碼', type: 'dropdown', options: this.SYS3900_Options, optionLabel: 'label', optionValue: 'value' },
+          { field: 'BUILDING_No', header: '館別代碼', type: 'dropdown', options: this.SYS3700_Options, optionLabel: 'label', optionValue: 'value' },
+          { field: 'FLOOR_No', header: '樓層代碼', type: 'dropdown', options: this.SYS3900_Options, optionLabel: 'label', optionValue: 'value' },
           { field: 'Area_No', header: '區域', type: 'dropdown', options: this.SYS3A00_Options, optionLabel: 'label', optionValue: 'value' },
         ];
       });
   }
 
-  // ===== 事件 =====
-  onDelete(rows: any[]) {
-    const ids = new Set(rows.map(r => r.ID));
-    this.data = this.data.filter(x => !ids.has(x.ID));
-    this.selectedRows = [];
 
-    // 呼叫 API 刪除
-    rows.forEach(r => {
-      this.tls43040Service.deleteTLS43040({ ID: r.ID }).subscribe({
-        next: () => console.log('刪除成功:', r.ID),
-        error: err => console.error('刪除失敗:', err)
-      });
-    });
-  }
 onEcrDtlLimitChange(value: string) {
   this.isTableDisabled = value === "0";
   console.log("ECR_DtlLimit 選擇:", value, "→ tableDisabled:", this.isTableDisabled);

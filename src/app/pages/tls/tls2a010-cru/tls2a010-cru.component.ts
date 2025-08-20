@@ -136,7 +136,8 @@ export class TLS2A010CRUComponent extends BasicCruPageComponent<TLS2A010Data> im
       const row = nav.rowdata;
       this.data = (row.details ?? []).map((item: any) => ({
         ...item,
-        TXN_Date: this.formatDate(item.TXN_Date) // 改成 YYYY/MM/DD
+        TXN_Date: this.formatDate(item.TXN_Date), // 改成 YYYY/MM/DD
+        check_status: item.check_status ?? '1'
       }));
 
       this.totalRecords = this.data.length;
@@ -179,7 +180,7 @@ export class TLS2A010CRUComponent extends BasicCruPageComponent<TLS2A010Data> im
           CRD_No: item.CRD_No ?? '',
           TXN_PayDesc: item.TXN_PayDesc ?? '',
           TXN_PayAmt: item.TXN_PayAmt ?? 0,
-          check_status: item.check_status ?? '',
+          check_status: item.check_status ?? '1',
           check_remark: item.check_remark ?? ''
         }))
       };
