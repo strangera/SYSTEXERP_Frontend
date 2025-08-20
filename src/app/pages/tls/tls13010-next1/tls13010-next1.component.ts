@@ -1,3 +1,7 @@
+import { FareColumnDefinitions } from './Services/fare-column-definitions';
+import { FareStatusService } from './Services/fare-status.service';
+import { FareDataService } from './Services/fare-data.service';
+import { FareCalculationService } from './Services/fare-calculation.service';
 import { ColumnDef, ExpandableEditTableComponent } from '../../../shared/componentkit/expandable-edit-table/expandable-edit-table.component';
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { FormGroup } from '@angular/forms';
@@ -7,7 +11,6 @@ import { filter } from 'rxjs/operators';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { TLS13010Service } from '../../../service/api/tls/tls13010.service';
 import { ContractFlowService } from '../tls13010/services/contract-flow.service';
-import { TLS13010_DROPDOWN_OPTIONS } from '../tls13010/tls13010.dropdown';
 import { FareItem, ContractInfo, WorkflowStep } from '../tls13010/tls13010.model';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
@@ -15,7 +18,6 @@ import { NgIf, NgFor } from '@angular/common';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { AccordionModule } from 'primeng/accordion';
 import { LocationOptionsService } from '../../../service/api/dropdownservice/location-options.service';
-import { TableValidators } from '@shared/componentkit/expandable-edit-table/table-validation.interface';
 
 // 介面定義
 interface CategoryItem {
@@ -35,7 +37,7 @@ interface CategoryItem {
   imports: [MenubarComponent, ButtonComponent, NgIf, ProgressSpinnerModule, AccordionModule, ExpandableEditTableComponent, NgFor]
 })
 export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> implements OnInit, OnDestroy {
-  //檢視模式用
+  // 檢視模式用
   isViewMode = false;
 
   // 組織table下拉
@@ -43,667 +45,23 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
   private subscriptions: Subscription[] = [];
   private routerSubscription: any;
 
+  private _cachedContractInfoColumns: ColumnDef[] | null = null;
+  private _cachedDeductionAColumns: ColumnDef[] | null = null;
+  private _cachedDeductionBColumns: ColumnDef[] | null = null;
+  private _cachedDeductionCColumns: ColumnDef[] | null = null;
+  private _cachedDeductionDColumns: ColumnDef[] | null = null;
+  private _cachedDeductionEColumns: ColumnDef[] | null = null;
+  private _lastOrgOptionsLength = 0;
+  private _lastViewMode: boolean | null = null;
+  private _lastContractInfoLength = 0;
+
   // 顯示模式控制
-  isShowingAll = false;
+  showMode: 'common' | 'all' = 'common';
 
   // 當前合約資料
   currentTalentId: string = '';
   currentContractData: any = null;
   contractInfoData: ContractInfo[] = [];
-
-  // 🎯 簡化：只定義欄位結構，日期處理交給共通組件
-  contractInfoColumns: ColumnDef[] = [
-    {
-      field: 'apply_no',
-      header: '專櫃招募編號',
-      type: 'text',
-      editable: false,
-      autoWidth: true
-    },
-    {
-      field: 'talent_id',
-      header: '專櫃編號',
-      type: 'text',
-      editable: false,
-      autoWidth: true
-    },
-    {
-      field: 'tlt_name',
-      header: '品牌(專櫃)名稱',
-      type: 'text',
-      editable: false,
-      autoWidth: true
-    },
-    {
-      field: 'ven_uniform',
-      header: '廠商統編',
-      type: 'text',
-      editable: false,
-      autoWidth: true
-    },
-    {
-      field: 'VEN_Name',
-      header: '廠商名稱',
-      type: 'text',
-      editable: false,
-      autoWidth: true
-    },
-    {
-      field: 'contract_subno',
-      header: '版本編號',
-      type: 'text',
-      editable: false,
-      autoWidth: true
-    },
-    {
-      field: 'tlt_term_type',
-      header: '抽成別',
-      type: 'dropdown',
-      editable: false,
-      options: TLS13010_DROPDOWN_OPTIONS.tltTermType,
-      autoWidth: true
-    },
-    {
-      field: 'tlt_bdate',
-      header: '合約起始日',
-      type: 'date',
-      editable: false,
-      autoWidth: true,
-      dateFormat: 'full-date' // 🎯 只需要指定格式
-    },
-    {
-      field: 'tlt_edate',
-      header: '合約終止日',
-      type: 'date',
-      editable: false,
-      autoWidth: true,
-      dateFormat: 'full-date'
-    },
-    {
-      field: 'tlt_contract_bdate',
-      header: '營運起始日',
-      type: 'date',
-      editable: false,
-      autoWidth: true,
-      dateFormat: 'full-date'
-    },
-    {
-      field: 'tlt_contract_edate',
-      header: '營運終止日',
-      type: 'date',
-      editable: false,
-      autoWidth: true,
-      dateFormat: 'full-date'
-    }
-  ];
-
-  // A 類型（一次扣款）
-  deductionAColumns: ColumnDef[] = [
-    {
-      field: 'is_selected',
-      header: '是否新增',
-      type: 'checkbox',
-      editable: true,
-      autoWidth: true,
-      directEdit: true // 允許直接編輯checkbox
-    },
-    {
-      field: 'cap_item',
-      header: '扣款代號',
-      type: 'text',
-      editable: false,
-      autoWidth: true
-    },
-    {
-      field: 'cap_name',
-      header: '扣款名稱',
-      type: 'text',
-      editable: false,
-      autoWidth: true
-    },
-    {
-      field: 'tpy_bdate',
-      header: '起始年月',
-      type: 'date',
-      editable: true,
-      autoWidth: true,
-      dateFormat: 'year-month',
-      // maxLength: 8,
-      required: true,
-      defaultValueFunction: () => {
-        const contractInfo = this.contractInfoData[0];
-        if (contractInfo?.tlt_contract_bdate) {
-          return new Date(contractInfo.tlt_contract_bdate);
-        }
-        return null;
-      }
-    },
-    {
-      field: 'tpy_type',
-      header: '單位',
-      type: 'dropdown',
-      editable: true,
-      width: '70px',
-      options: TLS13010_DROPDOWN_OPTIONS.tpyTypeOption,
-      required: true,
-    },
-    {
-      field: 'tpy_unitamt',
-      header: '單價',
-      type: 'number',
-      editable: true,
-      width: '90px',
-      required: true,
-      validators: [TableValidators.positive('單價必須大於0')]
-    },
-    {
-      field: 'tpy_qty',
-      header: '數量',
-      type: 'number',
-      editable: true,
-      width: '70px',
-      required: true,
-      validators: [TableValidators.positive('數量必須大於0')],
-      defaultValue: 1
-    },
-    {
-      field: 'tpy_amount',
-      header: '扣款金額',
-      type: 'number',
-      editable: false,
-      autoWidth: true,
-      required: true,
-    },
-    {
-      field: 'org_id',
-      header: '組織',
-      type: 'dropdown',
-      editable: true,
-      width: '90px',
-      options: [],
-      required: true,
-    },
-    {
-      field: 'gui_flag',
-      header: '開立發票',
-      type: 'dropdown',
-      editable: true,
-      autoWidth: true,
-      options: [
-        { label: '開立', value: 'Y' },
-        { label: '未開立', value: 'N' }
-      ],
-      required: true,
-      defaultValue: 'Y'  // 🎯 預設開立發票
-    }
-  ];
-
-  // B 類型（每月扣款）
-  deductionBColumns: ColumnDef[] = [
-    {
-      field: 'is_selected',
-      header: '是否新增',
-      type: 'checkbox',
-      editable: true,
-      width: '80px',
-      directEdit: true // 允許直接編輯checkbox
-    },
-    {
-      field: 'cap_item',
-      header: '扣款代號',
-      type: 'text',
-      editable: false,
-      width: '100px'
-    },
-    {
-      field: 'cap_name',
-      header: '扣款名稱',
-      type: 'text',
-      editable: false,
-      minWidth: '120px',
-      flex: 2
-    },
-    {
-      field: 'tpy_bdate',
-      header: '扣款起始年月',
-      type: 'date',
-      editable: true,
-      width: '130px',
-      dateFormat: 'year-month',
-      // maxLength: 7
-      required: true,
-      defaultValueFunction: () => {
-        const contractInfo = this.contractInfoData[0];
-        if (contractInfo?.tlt_contract_bdate) {
-          return new Date(contractInfo.tlt_contract_bdate);
-        }
-        return null;
-      }
-    },
-    {
-      field: 'tpy_edate',
-      header: '扣款結束年月',
-      type: 'date',
-      editable: true,
-      width: '130px',
-      dateFormat: 'year-month',
-      required: true,
-      defaultValueFunction: () => {
-        const contractInfo = this.contractInfoData[0];
-        if (contractInfo?.tlt_contract_edate) {
-          return new Date(contractInfo.tlt_contract_edate);
-        }
-        return null;
-      }
-    },
-    {
-      field: 'tpy_type',
-      header: '單位',
-      type: 'dropdown',
-      editable: true,
-      options: TLS13010_DROPDOWN_OPTIONS.tpyTypeOption,
-      autoWidth: true,
-      required: true
-    },
-    {
-      field: 'tpy_unitamt',
-      header: '單價',
-      type: 'number',
-      editable: true,
-      width: '90px',
-      required: true,
-      validators: [TableValidators.positive('單價必須大於0')],
-      defaultValue: 0
-    },
-    {
-      field: 'tpy_qty',
-      header: '數量',
-      type: 'number',
-      allowDecimal: true,
-      editable: true,
-      width: '70px',
-      required: true,
-      validators: [TableValidators.positive('數量必須大於0')],
-      defaultValue: 1
-    },
-    {
-      field: 'tpy_amount',
-      header: '扣款金額(未稅)',
-      type: 'number',
-      editable: false,
-      width: '120px',
-      defaultValue: 0
-
-    },
-    {
-      field: 'gui_flag',
-      header: '是否開立發票',
-      type: 'dropdown',
-      editable: true,
-      width: '110px',
-      options: [
-        { label: '開立', value: 'Y' },
-        { label: '未開立', value: 'N' }
-      ],
-      required: true,
-      defaultValue: 'Y'
-    },
-    {
-      field: 'day_account',
-      header: '是否以日計算',
-      type: 'dropdown',
-      editable: true,
-      width: '110px',
-      options: [
-        { label: '是', value: 'Y' },
-        { label: '否', value: 'N' }
-      ],
-      required: true,
-      defaultValue: 'Y'
-    },
-    {
-      field: 'interval',
-      header: '扣款週期數(月)',
-      type: 'number',
-      editable: true,
-      width: '120px',
-      required: true,
-      defaultValue: 1
-    }
-  ];
-
-  // C 類型（平均分攤）
-  deductionCColumns: ColumnDef[] = [
-    {
-      field: 'is_selected',
-      header: '是否新增',
-      type: 'checkbox',
-      editable: true,
-      width: '80px',
-      directEdit: true // 允許直接編輯checkbox
-    },
-    {
-      field: 'cap_item',
-      header: '扣款代號',
-      type: 'text',
-      editable: false,
-      width: '100px'
-    },
-    {
-      field: 'cap_name',
-      header: '扣款名稱',
-      type: 'text',
-      editable: false,
-      minWidth: '120px',
-      flex: 2
-    },
-    {
-      field: 'tpy_bdate',
-      header: '扣款起始年月',
-      type: 'date',
-      editable: true,
-      width: '130px',
-      dateFormat: 'year-month',
-      // maxLength: 7
-      required: true,
-      defaultValueFunction: () => {
-        const contractInfo = this.contractInfoData[0];
-        if (contractInfo?.tlt_contract_bdate) {
-          return new Date(contractInfo.tlt_contract_bdate);
-        }
-        return null;
-      }
-    },
-    {
-      field: 'tpy_edate',
-      header: '扣款結束年月',
-      type: 'date',
-      editable: true,
-      width: '130px',
-      dateFormat: 'year-month',
-      // maxLength: 7
-      required: true,
-      defaultValueFunction: () => {
-        const contractInfo = this.contractInfoData[0];
-        if (contractInfo?.tlt_contract_edate) {
-          return new Date(contractInfo.tlt_contract_edate);
-        }
-        return null;
-      }
-    },
-    {
-      field: 'tpy_totalamt',
-      header: '總金額',
-      type: 'number',
-      editable: true,
-      width: '100px',
-      required: true,
-
-    },
-    {
-      field: 'down_payment',
-      header: '預收款',
-      type: 'number',
-      editable: true,
-      width: '90px',
-      required: true,
-
-    },
-    {
-      field: 'period_nos',
-      header: '期數',
-      type: 'number',
-      editable: true,
-      width: '70px'
-    },
-    {
-      field: 'tpy_amount',
-      header: '每月金額',
-      type: 'number',
-      editable: true,
-      width: '100px',
-      required: true,
-
-    },
-    // {
-    //   field: 'tpy_1stamt',
-    //   header: '首期金額',
-    //   type: 'number',
-    //   editable: true,
-    //   width: '100px',
-    //   required: true,
-    ////不知道為什麼沒有 所以先移除
-    // },
-    {
-      field: 'org_id',
-      header: '組織',
-      type: 'dropdown',
-      editable: true,
-      width: '90px',
-      options: [],
-      required: true,
-
-    },
-    {
-      field: 'gui_flag',
-      header: '是否開立發票',
-      type: 'dropdown',
-      editable: true,
-      width: '110px',
-      options: [
-        { label: '開立', value: 'Y' },
-        { label: '未開立', value: 'N' }
-      ],
-      required: true,
-      defaultValue: 'Y'
-    }
-  ];
-
-  // D 類型（比率分攤）
-  deductionDColumns: ColumnDef[] = [
-    {
-      field: 'is_selected',
-      header: '是否新增',
-      type: 'checkbox',
-      editable: true,
-      width: '80px',
-      directEdit: true // 允許直接編輯checkbox
-    },
-    {
-      field: 'cap_item',
-      header: '扣款代號',
-      type: 'text',
-      editable: false,
-      width: '100px'
-    },
-    {
-      field: 'cap_name',
-      header: '扣款名稱',
-      type: 'text',
-      editable: false,
-      minWidth: '120px',
-      flex: 2
-    },
-    {
-      field: 'tpy_bdate',
-      header: '扣款起始年月',
-      type: 'date',
-      editable: true,
-      width: '130px',
-      dateFormat: 'year-month',
-      // maxLength: 7
-      required: true,
-      defaultValueFunction: () => {
-        const contractInfo = this.contractInfoData[0];
-        if (contractInfo?.tlt_contract_bdate) {
-          return new Date(contractInfo.tlt_contract_bdate);
-        }
-        return null;
-      }
-    },
-    {
-      field: 'tpy_edate',
-      header: '扣款結束年月',
-      type: 'date',
-      editable: true,
-      width: '130px',
-      dateFormat: 'year-month',
-      // maxLength: 7
-      required: true,
-      defaultValueFunction: () => {
-        const contractInfo = this.contractInfoData[0];
-        if (contractInfo?.tlt_contract_edate) {
-          return new Date(contractInfo.tlt_contract_edate);
-        }
-        return null;
-      }
-    },
-    {
-      field: 'tpy_type',
-      header: '單位',
-      type: 'dropdown',
-      editable: true,
-      options: TLS13010_DROPDOWN_OPTIONS.tpyTypeOption,
-      autoWidth: true,
-      required: true,
-
-    },
-    {
-      field: 'tpy_rate',
-      header: '比率',
-      type: 'number',
-      editable: true,
-      width: '100px',
-      required: true,
-
-    },
-    {
-      field: 'org_id',
-      header: '組織',
-      type: 'dropdown',
-      editable: true,
-      width: '90px',
-      options: [],
-      required: true,
-
-    },
-    {
-      field: 'gui_flag',
-      header: '是否開立發票',
-      type: 'dropdown',
-      editable: true,
-      width: '110px',
-      options: [
-        { label: '開立', value: 'Y' },
-        { label: '未開立', value: 'N' }
-      ],
-      required: true,
-      defaultValue: 'Y'
-    }
-  ];
-
-  // E 類型（活動扣款）
-  deductionEColumns: ColumnDef[] = [
-    {
-      field: 'is_selected',
-      header: '是否新增',
-      type: 'checkbox',
-      editable: true,
-      width: '80px',
-      directEdit: true // 允許直接編輯checkbox
-    },
-    {
-      field: 'cap_item',
-      header: '扣款代號',
-      type: 'text',
-      editable: false,
-      width: '100px'
-    },
-    {
-      field: 'cap_name',
-      header: '扣款名稱',
-      type: 'text',
-      editable: false,
-      minWidth: '120px',
-      flex: 2
-    },
-    {
-      field: 'tpy_bdate',
-      header: '扣款起始年月',
-      type: 'date',
-      editable: true,
-      width: '130px',
-      dateFormat: 'year-month',
-      // maxLength: 7
-      required: true,
-      defaultValueFunction: () => {
-        const contractInfo = this.contractInfoData[0];
-        if (contractInfo?.tlt_contract_bdate) {
-          return new Date(contractInfo.tlt_contract_bdate);
-        }
-        return null;
-      }
-    },
-    {
-      field: 'tpy_edate',
-      header: '扣款結束年月',
-      type: 'date',
-      editable: true,
-      width: '130px',
-      dateFormat: 'year-month',
-      // maxLength: 7
-      required: true,
-      defaultValueFunction: () => {
-        const contractInfo = this.contractInfoData[0];
-        if (contractInfo?.tlt_contract_edate) {
-          return new Date(contractInfo.tlt_contract_edate);
-        }
-        return null;
-      }
-    },
-    {
-      field: 'tpy_type',
-      header: '單位',
-      type: 'dropdown',
-      editable: true,
-      options: TLS13010_DROPDOWN_OPTIONS.tpyTypeOption,
-      autoWidth: true,
-      required: true,
-
-    },
-    {
-      field: 'tpy_rate',
-      header: '比率',
-      type: 'number',
-      editable: true,
-      width: '100px',
-      required: true,
-
-    },
-    {
-      field: 'org_id',
-      header: '組織',
-      type: 'dropdown',
-      editable: true,
-      width: '90px',
-      options: [],
-      required: true,
-
-    },
-    {
-      field: 'gui_flag',
-      header: '是否開立發票',
-      type: 'dropdown',
-      editable: true,
-      width: '110px',
-      options: [
-        { label: '開立', value: 'Y' },
-        { label: '未開立', value: 'N' }
-      ],
-      required: true,
-      defaultValue: 'Y'
-    }
-  ];
 
   // 資料陣列
   originalFareData: { [key: string]: FareItem[] } = {
@@ -716,26 +74,147 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
 
   dataForm = this.formBuilder.group({});
 
-  // 顯示模式狀態，僅有 common 與 all
-  showMode: 'common' | 'all' = 'common';
-
   constructor(
     private route: ActivatedRoute,
     private tls13010Service: TLS13010Service,
     private contractFlowService: ContractFlowService,
     private locationOptionsService: LocationOptionsService,
-    public override router: Router
+    public override router: Router,
+    // 🆕 注入新的服務
+    private fareCalculationService: FareCalculationService,
+    private fareDataService: FareDataService,
+    private fareStatusService: FareStatusService
   ) {
     super();
   }
 
+  // ========== 🆕 欄位定義 getter (取代原有的屬性) ==========
+  get contractInfoColumns(): ColumnDef[] {
+    if (!this._cachedContractInfoColumns || this._lastContractInfoLength !== this.contractInfoData.length) {
+      console.log('🔄 重新生成 contractInfoColumns');
+      this._cachedContractInfoColumns = FareColumnDefinitions.getContractInfoColumns();
+      this._lastContractInfoLength = this.contractInfoData.length;
+    }
+    return this._cachedContractInfoColumns;
+  }
+
+  get deductionAColumns(): ColumnDef[] {
+    if (!this._cachedDeductionAColumns ||
+      this._lastOrgOptionsLength !== this.orgOptions.length ||
+      this._lastViewMode !== this.isViewMode ||
+      this._lastContractInfoLength !== this.contractInfoData.length) {
+
+      console.log('🔄 重新生成 deductionAColumns');
+      let columns = FareColumnDefinitions.getDeductionAColumns(this.contractInfoData);
+      columns = FareColumnDefinitions.updateOrgOptionsInColumns(columns, this.orgOptions);
+      if (this.isViewMode) {
+        columns = FareColumnDefinitions.setColumnsReadonly(columns, true);
+      }
+      this._cachedDeductionAColumns = columns;
+      this._updateCacheFlags();
+    }
+    return this._cachedDeductionAColumns;
+  }
+
+  get deductionBColumns(): ColumnDef[] {
+    if (!this._cachedDeductionBColumns ||
+      this._lastViewMode !== this.isViewMode ||
+      this._lastContractInfoLength !== this.contractInfoData.length) {
+
+      console.log('🔄 重新生成 deductionBColumns');
+      let columns = FareColumnDefinitions.getDeductionBColumns(this.contractInfoData);
+      if (this.isViewMode) {
+        columns = FareColumnDefinitions.setColumnsReadonly(columns, true);
+      }
+      this._cachedDeductionBColumns = columns;
+      this._updateCacheFlags();
+    }
+    return this._cachedDeductionBColumns;
+  }
+
+  get deductionCColumns(): ColumnDef[] {
+    if (!this._cachedDeductionCColumns ||
+      this._lastOrgOptionsLength !== this.orgOptions.length ||
+      this._lastViewMode !== this.isViewMode ||
+      this._lastContractInfoLength !== this.contractInfoData.length) {
+
+      console.log('🔄 重新生成 deductionCColumns');
+      let columns = FareColumnDefinitions.getDeductionCColumns(this.contractInfoData);
+      columns = FareColumnDefinitions.updateOrgOptionsInColumns(columns, this.orgOptions);
+      if (this.isViewMode) {
+        columns = FareColumnDefinitions.setColumnsReadonly(columns, true);
+      }
+      this._cachedDeductionCColumns = columns;
+      this._updateCacheFlags();
+    }
+    return this._cachedDeductionCColumns;
+  }
+
+  get deductionDColumns(): ColumnDef[] {
+    if (!this._cachedDeductionDColumns ||
+      this._lastOrgOptionsLength !== this.orgOptions.length ||
+      this._lastViewMode !== this.isViewMode ||
+      this._lastContractInfoLength !== this.contractInfoData.length) {
+
+      console.log('🔄 重新生成 deductionDColumns');
+      let columns = FareColumnDefinitions.getDeductionDColumns(this.contractInfoData);
+      columns = FareColumnDefinitions.updateOrgOptionsInColumns(columns, this.orgOptions);
+      if (this.isViewMode) {
+        columns = FareColumnDefinitions.setColumnsReadonly(columns, true);
+      }
+      this._cachedDeductionDColumns = columns;
+      this._updateCacheFlags();
+    }
+    return this._cachedDeductionDColumns;
+  }
+
+  get deductionEColumns(): ColumnDef[] {
+    if (!this._cachedDeductionEColumns ||
+      this._lastOrgOptionsLength !== this.orgOptions.length ||
+      this._lastViewMode !== this.isViewMode ||
+      this._lastContractInfoLength !== this.contractInfoData.length) {
+
+      console.log('🔄 重新生成 deductionEColumns');
+      let columns = FareColumnDefinitions.getDeductionEColumns(this.contractInfoData);
+      columns = FareColumnDefinitions.updateOrgOptionsInColumns(columns, this.orgOptions);
+      if (this.isViewMode) {
+        columns = FareColumnDefinitions.setColumnsReadonly(columns, true);
+      }
+      this._cachedDeductionEColumns = columns;
+      this._updateCacheFlags();
+    }
+    return this._cachedDeductionEColumns;
+  }
+
+  private _updateCacheFlags(): void {
+    this._lastOrgOptionsLength = this.orgOptions.length;
+    this._lastViewMode = this.isViewMode;
+    this._lastContractInfoLength = this.contractInfoData.length;
+  }
+
+  private _clearColumnCache(): void {
+    this._cachedContractInfoColumns = null;
+    this._cachedDeductionAColumns = null;
+    this._cachedDeductionBColumns = null;
+    this._cachedDeductionCColumns = null;
+    this._cachedDeductionDColumns = null;
+    this._cachedDeductionEColumns = null;
+  }
+
+  // ========== 生命週期方法 ==========
   ngOnInit(): void {
-    this.showMode = 'common';  // 預設為常用模式
+    this.showMode = 'common';
     this.initializeViewModeFromService();
     this.initializeDataStructure();
     this.initializePage('TLS13010', this.dataForm);
     this.loadOrgOptions();
-    this.loadWorkflowData();
+    console.log('📋 測試 loadWorkflowData...');
+    try {
+      this.loadWorkflowData();
+      console.log('✅ loadWorkflowData 成功');
+    } catch (error) {
+      console.error('❌ loadWorkflowData 失敗:', error);
+    }
     this.routerSubscription = this.router.events
       .pipe(filter(event => event instanceof NavigationEnd))
       .subscribe(() => {
@@ -744,9 +223,7 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
   }
 
   ngOnDestroy(): void {
-    console.log('🔄 NEXT1 組件銷毀，確保資料儲存');
-
-    // ✅ 確保退出前儲存
+    console.log('📄 NEXT1 組件銷毀，確保資料儲存');
     this.saveFareDataToWorkflow();
 
     if (this.routerSubscription) {
@@ -755,52 +232,120 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
     this.subscriptions.forEach(sub => sub.unsubscribe());
   }
 
+  // ========== 資料載入相關 ==========
+  // private loadWorkflowData(): void {
+  //   console.log('🚀 Next1 開始載入工作流程資料...');
 
+  //   const workflowData = this.contractFlowService.getCurrentData();
+  //   console.log('📋 工作流程資料:', workflowData);
+
+  //   if (workflowData.contractId || this.contractFlowService.isNewContractMode()) {
+  //     const modeInfo = this.contractFlowService.getWorkflowModeInfo();
+  //     this.currentTalentId = modeInfo.talentId;
+  //     this.currentContractData = workflowData?.queryRowData;
+
+  //     console.log('✅ 工作流程狀態確認:', {
+  //       mode: modeInfo.modeName,
+  //       currentTalentId: this.currentTalentId,
+  //       contractId: modeInfo.contractId
+  //     });
+
+  //     this.prepareContractInfoDisplay();
+  //     this.initializeDataStructure();
+  //     this.loadFareDataWithPriority();
+  //   } else {
+  //     console.warn('❌ 沒有工作流程資料，重導向到前一步');
+  //     this.router.navigate(['account/tls/tls13010cru']);
+  //   }
+  // }
 
   private loadWorkflowData(): void {
-    console.log('🚀 Next1 開始載入工作流程資料...');
+    console.log('🔍 loadWorkflowData 開始執行');
 
-    const workflowData = this.contractFlowService.getCurrentData();
-    console.log('📋 工作流程資料:', workflowData);
+    try {
+      console.log('📋 步驟 1: 檢查 contractFlowService...');
+      if (!this.contractFlowService) {
+        console.error('❌ contractFlowService 未注入');
+        return;
+      }
+      console.log('✅ contractFlowService 存在');
 
-    // 🎯 統一使用 ContractFlowService 的模式判定
-    if (workflowData.contractId || this.contractFlowService.isNewContractMode()) {
-      // 🎯 統一獲取 talent_id 和模式資訊
-      const modeInfo = this.contractFlowService.getWorkflowModeInfo();
-      this.currentTalentId = modeInfo.talentId;
-      this.currentContractData = workflowData?.queryRowData;
+      console.log('📋 步驟 2: 取得工作流程資料...');
+      const workflowData = this.contractFlowService.getCurrentData();
+      console.log('📋 工作流程資料:', workflowData);
 
-      console.log('✅ 工作流程狀態確認:', {
-        mode: modeInfo.modeName,
-        currentTalentId: this.currentTalentId,
-        contractId: modeInfo.contractId
-      });
+      console.log('📋 步驟 3: 檢查是否有有效資料...');
+      const hasContractId = workflowData.contractId;
+      const isNewMode = this.contractFlowService.isNewContractMode();
+      console.log('📋 hasContractId:', hasContractId);
+      console.log('📋 isNewMode:', isNewMode);
 
-      // 🎯 準備合約資訊顯示
-      this.prepareContractInfoDisplay();
+      if (hasContractId || isNewMode) {
+        console.log('📋 步驟 4: 有有效的工作流程資料，取得模式資訊...');
 
-      // 🎯 初始化資料結構
-      this.initializeDataStructure();
+        const modeInfo = this.contractFlowService.getWorkflowModeInfo();
+        console.log('📋 modeInfo:', modeInfo);
 
-      // 🎯 統一的資料載入邏輯
-      this.loadFareDataWithPriority();
-    } else {
-      console.warn('❌ 沒有工作流程資料，重導向到前一步');
-      this.router.navigate(['account/tls/tls13010cru']);
+        this.currentTalentId = modeInfo.talentId;
+        this.currentContractData = workflowData?.queryRowData;
+
+        console.log('✅ 工作流程狀態確認:', {
+          mode: modeInfo.modeName,
+          currentTalentId: this.currentTalentId,
+          contractId: modeInfo.contractId
+        });
+
+        console.log('📋 步驟 5: 準備執行子方法...');
+
+        // 🚨 逐一測試這些子方法
+        console.log('📋 測試 prepareContractInfoDisplay...');
+        try {
+          this.prepareContractInfoDisplay();
+          console.log('✅ prepareContractInfoDisplay 成功');
+        } catch (error) {
+          console.error('❌ prepareContractInfoDisplay 失敗:', error);
+          return; // 如果這個失敗就停止
+        }
+
+        console.log('📋 測試 initializeDataStructure...');
+        try {
+          this.initializeDataStructure();
+          console.log('✅ initializeDataStructure 成功');
+        } catch (error) {
+          console.error('❌ initializeDataStructure 失敗:', error);
+          return;
+        }
+
+        console.log('📋 測試 loadFareDataWithPriority...');
+        try {
+          this.loadFareDataWithPriority();
+          console.log('✅ loadFareDataWithPriority 成功');
+        } catch (error) {
+          console.error('❌ loadFareDataWithPriority 失敗:', error);
+          return;
+        }
+
+        console.log('✅ loadWorkflowData 所有子方法完成');
+      } else {
+        console.warn('❌ 沒有工作流程資料，重導向到前一步');
+        this.router.navigate(['account/tls/tls13010cru']);
+      }
+
+      console.log('✅ loadWorkflowData 主要邏輯完成');
+    } catch (error) {
+      console.error('❌ loadWorkflowData 頂層異常:', error);
     }
   }
 
-
   private loadOrgOptions(): void {
-    console.log('🔄 開始載入組織選項...');
+    console.log('📄 開始載入組織選項...');
 
     const subscription = this.locationOptionsService.getOrgOptions().subscribe({
       next: (options) => {
         console.log('✅ 組織選項載入成功:', options);
         this.orgOptions = options;
-
-        // 🎯 更新各類型欄位定義的組織選項
-        this.updateOrgOptionsInColumns();
+        // 🆕 載入完成後清除快取
+        this._clearColumnCache();
       },
       error: (error) => {
         console.error('❌ 載入組織選項失敗:', error);
@@ -812,78 +357,22 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
     this.subscriptions.push(subscription);
   }
 
-  // 🎯 新增：更新各類型欄位定義中的組織選項
-  private updateOrgOptionsInColumns(): void {
-    console.log('🔄 更新欄位定義中的組織選項...');
-
-    // 更新 A 類型的組織選項
-    const aOrgColumn = this.deductionAColumns.find(col => col.field === 'org_id');
-    if (aOrgColumn) {
-      aOrgColumn.options = [...this.orgOptions];
-      console.log('✅ 已更新 A 類型 org_id 選項');
-    }
-
-    // 更新 C 類型的組織選項
-    const cOrgColumn = this.deductionCColumns.find(col => col.field === 'org_id');
-    if (cOrgColumn) {
-      cOrgColumn.options = [...this.orgOptions];
-      console.log('✅ 已更新 C 類型 org_id 選項');
-    }
-
-    // 更新 D 類型的組織選項
-    const dOrgColumn = this.deductionDColumns.find(col => col.field === 'org_id');
-    if (dOrgColumn) {
-      dOrgColumn.options = [...this.orgOptions];
-      console.log('✅ 已更新 D 類型 org_id 選項');
-    }
-
-    // 更新 E 類型的組織選項
-    const eOrgColumn = this.deductionEColumns.find(col => col.field === 'org_id');
-    if (eOrgColumn) {
-      eOrgColumn.options = [...this.orgOptions];
-      console.log('✅ 已更新 E 類型 org_id 選項');
-    }
-
-    console.log('🎯 所有類型的組織選項更新完成');
-  }
-
   private initializeViewModeFromService(): void {
-    // 訂閱檢視模式狀態變更
     const viewModeSub = this.contractFlowService.isViewMode$.subscribe(isViewMode => {
       this.isViewMode = isViewMode;
       console.log('🔍 Next1 檢視模式狀態更新:', isViewMode);
-
-      if (isViewMode) {
-        this.applyViewModeSettings();
-      }
     });
 
     this.subscriptions.push(viewModeSub);
-
-    // 立即取得當前狀態
     this.isViewMode = this.contractFlowService.isViewMode();
-    if (this.isViewMode) {
-      this.applyViewModeSettings();
-    }
-  }
-
-  private applyViewModeSettings(): void {
-    console.log('🔍 套用 Next1 檢視模式設定');
-
-    // 設定表格欄位為唯讀
-    this.updateColumnsReadonly(true);
-
-    // 可以加入其他檢視模式設定...
   }
 
   private prepareContractInfoDisplay(): void {
     console.log('📊 準備合約資訊顯示...');
 
-    // 🎯 優先使用 Step1 編輯後的資料
     const step1Data = this.contractFlowService.getStep1Data();
-    console.log('📝 Step1 編輯資料:', step1Data);
+    console.log('🔍 Step1 編輯資料:', step1Data);
 
-    // 🎯 準備合約資訊
     const contractInfo = {
       talent_id: step1Data?.talent_id || this.currentContractData?.talent_id || '',
       tlt_no: step1Data?.tlt_no || this.currentContractData?.tlt_no || '',
@@ -908,11 +397,9 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
     console.log('📊 合約資訊顯示準備完成:', this.contractInfoData);
   }
 
-
   private loadFareDataWithPriority(): void {
     console.log('🔍 載入扣款資料優先順序判定...');
 
-    // 🎯 第一優先：檢查暫存資料
     const savedFareData = this.contractFlowService.getStepData(WorkflowStep.DEDUCTION);
     console.log('📦 檢查 Step2 暫存資料:', savedFareData);
 
@@ -922,12 +409,11 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
       return;
     }
 
-    // 🎯 第二優先：根據模式載入
     if (this.contractFlowService.isNewContractMode()) {
       console.log('🆕 新增模式：載入可用扣款項目');
       this.loadAvailableFareData();
     } else {
-      console.log('📝 編輯模式：從 API 載入');
+      console.log('🔍 編輯模式：從 API 載入');
       this.loadFareDataFromAPI();
     }
   }
@@ -936,20 +422,15 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
     console.log('📦 載入暫存扣款資料:', savedData);
 
     try {
-      // 🎯 驗證和修復資料格式
-      this.originalFareData = this.validateAndFixData(savedData);
+      // 🆕 使用服務驗證和修復資料
+      this.originalFareData = this.fareDataService.validateAndFixData(savedData);
       this.filterData();
 
       console.log('✅ 暫存扣款資料載入完成');
-      console.log('📊 載入的資料詳情:', this.originalFareData);
-
-      // 🎯 檢查資料完整性
       this.verifyStoredData();
-
     } catch (error) {
       console.error('❌ 暫存扣款資料處理失敗，重新載入:', error);
 
-      // 🎯 暫存資料有問題時的降級處理
       if (this.contractFlowService.isNewContractMode()) {
         this.loadAvailableFareData();
       } else {
@@ -958,29 +439,26 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
     }
   }
 
-
   private loadAvailableFareData(): void {
-    console.log('🔄 新增模式：載入可用扣款項目...');
+    console.log('📄 新增模式：載入可用扣款項目...');
 
     this.loading = true;
     this.messageService.blockUi();
 
     const subscription = this.tls13010Service.queryTLS13010Fare({
-      talentId: '', // 🎯 新增模式傳空字串，載入所有可用項目
-      showAll: true  // 載入全部可用項目
+      talentId: '',
+      showAll: true
     }).subscribe({
       next: (response) => {
         console.log('🆕 新增模式 API 回傳資料:', response);
 
         if (response && response.Data && response.Data.FaresByType) {
-          // 🎯 處理 API 資料，新增模式下所有項目都是未選中狀態
-          this.originalFareData = this.processNewContractAPIData(response.Data.FaresByType);
-          this.isShowingAll = true;
+          // 🆕 使用服務處理新增模式資料
+          this.originalFareData = this.fareDataService.processNewContractAPIData(response.Data.FaresByType);
           this.filterData();
           this.saveFareDataToWorkflow();
 
           console.log('🆕 新增模式：載入可用扣款項目成功');
-          console.log('📊 載入的可用項目數量:', this.getTotalItemCount());
         } else {
           console.log('🆕 新增模式：API 沒有回傳可用扣款項目');
           this.messageService.infoBubble('目前沒有可用的扣款項目');
@@ -1002,113 +480,32 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
     this.subscriptions.push(subscription);
   }
 
-
-
-  // 🆕 新增：處理新增模式的 API 資料
-  private processNewContractAPIData(faresByType: any): Record<string, FareItem[]> {
-    const capTypes = ['A', 'B', 'C', 'D', 'E'];
-    const processedData: Record<string, FareItem[]> = { A: [], B: [], C: [], D: [], E: [] };
-
-    console.log('🆕 處理新增模式 API 資料...');
-
-    capTypes.forEach(capType => {
-      if (Array.isArray(faresByType[capType])) {
-        console.log(`📊 新增模式處理 ${capType} 類型，共 ${faresByType[capType].length} 筆`);
-
-        processedData[capType] = faresByType[capType].map((item: FareItem, index: number) => {
-          // 🎯 新增模式：所有項目都是未選中的可用項目
-          const processedItem = {
-            ...item,
-            id: `temp_new_${capType}_${item.cap_item}_${Date.now()}_${index}`, // 生成新的臨時 ID
-            cap_type: item.cap_type || capType,
-            is_selected: false, // 🎯 新增模式預設都是未選中
-            data_source: 'APS_AVAILABLE', // 標記為可用項目
-            _status: undefined, // 新增模式初始無狀態
-            _originalSelected: false, // 新增模式原始都是未選中
-            _originalData: { ...item }
-          } as FareItem;
-
-          console.log(`🆕 新增模式項目 ${item.cap_item}: ID=${processedItem.id}`);
-
-          return processedItem;
-        });
-
-        console.log(`📊 新增模式 ${capType} 類型處理完成: ${processedData[capType].length} 筆`);
-      }
-    });
-
-    return processedData;
-  }
-
-  private validateAndFixData(data: any): Record<string, FareItem[]> {
-    const capTypes = ['A', 'B', 'C', 'D', 'E'];
-    const validatedData: Record<string, FareItem[]> = { A: [], B: [], C: [], D: [], E: [] };
-
-    console.log('🔍 驗證和修復暫存資料...');
-
-    if (Array.isArray(data)) {
-      data.forEach(item => {
-        if (item && item.cap_type && capTypes.includes(item.cap_type)) {
-
-          // 🎯 關鍵修改：確保 _originalSelected 存在
-          if (typeof item._originalSelected === 'undefined') {
-            item._originalSelected = item.data_source === 'CONTRACT_EXISTING' && item.is_selected;
-            console.warn(`⚠️ 補充暫存資料 ${item.cap_item}: 設定 _originalSelected = ${item._originalSelected}`);
-          }
-
-          // 🎯 關鍵修改：修正狀態邏輯
-          let validStatus = item._status;
-
-          if (item.is_selected && !validStatus && item._originalSelected) {
-            validStatus = 'original';
-            console.warn(`⚠️ 修復暫存資料 ${item.cap_item}: 已勾選的原有項目補上 original 狀態`);
-          }
-
-          const validatedItem: FareItem = {
-            ...item,
-            id: item.id ? item.id.toString() : `missing_id_${Date.now()}_${Math.random()}`,
-            cap_type: item.cap_type,
-            _status: validStatus,
-            _originalSelected: item._originalSelected,
-            _originalData: item._originalData || { ...item }
-          };
-
-          validatedData[item.cap_type].push(validatedItem);
-        }
-      });
-    }
-
-    return validatedData;
-  }
-
-  // 從 API 載入扣款資料（簡化版）
   private loadFareDataFromAPI(): void {
-    console.log('🔄 載入扣款資料，talent_id:', this.currentTalentId);
+    console.log('📄 載入扣款資料，talent_id:', this.currentTalentId);
 
     this.loading = true;
     this.messageService.blockUi();
 
     const subscription = this.tls13010Service.queryTLS13010Fare({
-      talentId: this.currentTalentId, // 🎯 直接傳遞，空字串也沒關係
-      showAll: true  // 固定載入全部資料
+      talentId: this.currentTalentId,
+      showAll: true
     }).subscribe({
       next: (response) => {
         console.log('API 回傳的扣款資料:', response);
 
         if (response && response.Data && response.Data.FaresByType) {
-          // 🎯 處理 API 資料，設定正確的初始狀態
-          this.originalFareData = this.processAPIData(response.Data.FaresByType);
-          this.isShowingAll = true;  // 標記為已載入全部資料
+          // 🆕 使用服務處理 API 資料
+          this.originalFareData = this.fareDataService.processAPIData(
+            response.Data.FaresByType,
+            this.contractFlowService.isNewContractMode()
+          );
           this.filterData();
           this.saveFareDataToWorkflow();
 
-          const workflowData = this.contractFlowService.getCurrentData();
-          const isNewContract = workflowData.queryRowData?._isNewContract;
-
-          if (isNewContract) {
+          if (this.contractFlowService.isNewContractMode()) {
             console.log('🆕 新增模式：載入可用扣款項目成功');
           } else {
-            console.log('📝 編輯模式：載入既有扣款資料成功');
+            console.log('🔍 編輯模式：載入既有扣款資料成功');
           }
         } else {
           console.log('API 沒有回傳扣款資料');
@@ -1131,111 +528,6 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
     this.subscriptions.push(subscription);
   }
 
-  // 🎯 新增：處理 API 資料，設定正確的初始狀態
-  private processAPIData(faresByType: any): Record<string, FareItem[]> {
-    const capTypes = ['A', 'B', 'C', 'D', 'E'];
-    const processedData: Record<string, FareItem[]> = { A: [], B: [], C: [], D: [], E: [] };
-
-    console.log('🔄 處理 API 資料，設定正確的初始狀態...');
-    console.log('🔍 API 原始資料檢查:', faresByType);
-
-    capTypes.forEach(capType => {
-      if (Array.isArray(faresByType[capType])) {
-        console.log(`📊 處理 ${capType} 類型，共 ${faresByType[capType].length} 筆`);
-
-        processedData[capType] = faresByType[capType].map((item: FareItem, index: number) => {
-
-          // 🔍 先記錄原始資料
-          console.log(`📋 ${capType}[${index}] ${item.cap_item}:`);
-          console.log(`   - 原始 ID: ${item.id} (type: ${typeof item.id})`);
-          console.log(`   - data_source: ${item.data_source}`);
-          console.log(`   - is_selected: ${item.is_selected}`);
-
-          // 🎯 關鍵修改：記錄初始選中狀態
-          const originalSelected = item.is_selected || false;
-
-          // 🎯 關鍵修改：正確設定初始 _status
-          let initialStatus: 'original' | 'new' | 'modified' | 'deleted' | undefined = undefined;
-
-          if (originalSelected && item.data_source === 'CONTRACT_EXISTING') {
-            // 合約原有且已選中的項目
-            initialStatus = 'original';
-            console.log(`📋 ${item.cap_item} (${capType}) - 合約原有資料，狀態: original`);
-          }
-
-          // 🎯 關鍵修正：根據 data_source 決定 ID 處理
-          let finalId: string;
-
-          if (item.data_source === 'CONTRACT_EXISTING') {
-            // 合約已有的項目：保持原有 ID
-            if (item.id && item.id.toString() !== '0' && item.id.toString() !== '') {
-              finalId = item.id.toString();
-              console.log(`🔑 保持合約原有 ID: ${finalId} (${item.cap_item})`);
-            } else {
-              console.error(`❌ 合約項目 ${item.cap_item} 缺少有效 ID！原始 ID: ${item.id}`);
-              finalId = `error_missing_id_${item.cap_item}_${Date.now()}`;
-            }
-          } else {
-            // APS 可用項目：生成臨時 ID
-            finalId = `temp_${this.currentTalentId}_${capType}_${item.cap_item}_${Date.now()}_${index}`;
-            console.log(`🆕 生成臨時 ID: ${finalId} (${item.cap_item})`);
-          }
-
-          const processedItem = {
-            ...item,
-            id: finalId,  // 🎯 使用正確的 ID
-            cap_type: item.cap_type || capType,
-            _status: initialStatus,
-
-            // 🎯 新增：記錄初始狀態用於後續比較
-            _originalSelected: originalSelected,
-            _originalData: { ...item }
-          } as FareItem;
-
-          console.log(`✅ 處理完成 ${item.cap_item}: ID=${finalId}, _status=${initialStatus}, _originalSelected=${originalSelected}`);
-
-          return processedItem;
-        });
-
-        console.log(`📊 ${capType} 類型處理完成: ${processedData[capType].length} 筆`);
-      }
-    });
-
-    // 🔍 驗證處理結果
-    this.verifyProcessedData(processedData);
-
-    return processedData;
-  }
-
-  private verifyProcessedData(processedData: Record<string, FareItem[]>): void {
-    console.log('=== 🔍 處理結果驗證 ===');
-
-    Object.keys(processedData).forEach(capType => {
-      if (processedData[capType].length > 0) {
-        console.log(`📊 ${capType} 類型驗證:`);
-
-        processedData[capType].forEach((item, index) => {
-          const idStr = item.id?.toString() || '';
-
-          if (item.data_source === 'CONTRACT_EXISTING') {
-            if (idStr.startsWith('temp_') || idStr.includes('new')) {
-              console.error(`❌ 合約項目 ${item.cap_item} 的 ID 不正確: ${item.id}`);
-            } else {
-              console.log(`✅ 合約項目 ${item.cap_item} ID 正確: ${item.id}`);
-            }
-          } else if (item.data_source === 'APS_AVAILABLE') {
-            if (!idStr.startsWith('temp_')) {
-              console.warn(`⚠️ APS 項目 ${item.cap_item} 的 ID 格式異常: ${item.id}`);
-            } else {
-              console.log(`✅ APS 項目 ${item.cap_item} 臨時 ID 正確: ${item.id}`);
-            }
-          }
-        });
-      }
-    });
-  }
-
-
   private initializeEmptyData(): void {
     this.originalFareData = {
       'A': [], 'B': [], 'C': [], 'D': [], 'E': []
@@ -1256,30 +548,13 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
     });
   }
 
+  // ========== 資料過濾和儲存 ==========
   filterData(): void {
     console.log('【DEBUG】originalFareData:', this.originalFareData);
     this.initializeDataStructure();
 
-    Object.keys(this.originalFareData).forEach(capType => {
-      if (!Array.isArray(this.originalFareData[capType])) {
-        this.originalFareData[capType] = [];
-      }
-
-      let filteredData = [...this.originalFareData[capType]];
-
-      // 🎯 根據常用/全部模式過濾，已勾選項目一定顯示
-      if (this.showMode === 'common') {
-        // 常用模式：合約項目 + 常用項目 + 已勾選項目
-        filteredData = filteredData.filter(item =>
-          item.data_source === 'CONTRACT_EXISTING' ||
-          item.is_commonly_used === 'Y' ||
-          item.is_selected === true
-        );
-      }
-      // 全部模式：顯示所有項目（本來就包含已勾選）
-
-      this.fareData[capType] = filteredData;
-    });
+    // 🆕 使用資料服務進行過濾
+    this.fareData = this.fareDataService.filterDataByMode(this.originalFareData, this.showMode);
 
     console.log('🔍 過濾後結果:', {
       顯示模式: this.showMode,
@@ -1293,150 +568,27 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
     });
   }
 
-  private cleanObjectKeys(obj: any): any {
-    if (obj === null || obj === undefined) {
-      return obj;
-    }
-
-    if (Array.isArray(obj)) {
-      return obj.map(item => this.cleanObjectKeys(item));
-    }
-
-    if (typeof obj === 'object') {
-      const cleaned: any = {};
-
-      Object.keys(obj).forEach(key => {
-        // ✅ 過濾空 key 和無效 key
-        if (key && key.trim() !== '' && key !== 'undefined' && key !== 'null') {
-          const value = obj[key];
-
-          // 遞迴清理嵌套物件
-          if (typeof value === 'object' && value !== null) {
-            cleaned[key] = this.cleanObjectKeys(value);
-          } else {
-            cleaned[key] = value;
-          }
-        } else {
-          console.warn(`⚠️ 發現並移除空/無效 key: "${key}"`);
-        }
-      });
-
-      return cleaned;
-    }
-
-    return obj;
-  }
-
-  // ✅ 新增：清理扣款項目用於儲存
-  private cleanFareItemForStorage(item: FareItem): FareItem {
-    // 🎯 修正：明確列出所有業務欄位，避免遺漏
-    const cleanedItem: FareItem = {
-      // 基本資訊
-      id: item.id,
-      cap_item: item.cap_item,
-      cap_name: item.cap_name,
-      cap_type: item.cap_type,
-      is_selected: item.is_selected,
-      data_source: item.data_source,
-      talent_id: item.talent_id,
-      is_new_item: item.is_new_item,
-
-      // 🎯 重點：明確保留所有日期和業務欄位
-      tpy_bdate: item.tpy_bdate,
-      tpy_edate: item.tpy_edate,
-      tpy_type: item.tpy_type,
-      tpy_qty: item.tpy_qty,
-      tpy_unitamt: item.tpy_unitamt,
-      tpy_amount: item.tpy_amount,
-      tpy_totalamt: item.tpy_totalamt,
-      tpy_rate: item.tpy_rate,
-      tpy_1stamt: item.tpy_1stamt,
-      down_payment: item.down_payment,
-      period_nos: item.period_nos,
-
-      // 🔥 關鍵修正：確保這兩個欄位被保留
-      day_account: item.day_account,
-      interval: item.interval,
-
-      gui_flag: item.gui_flag,
-      org_id: item.org_id,
-
-      // 系統欄位
-      _status: item._status,
-      _originalSelected: item._originalSelected,
-      _originalData: item._originalData,
-
-      // 🎯 新增：保留其他可能的業務欄位
-      cap_saletype: item.cap_saletype,
-      edc_bank: item.edc_bank,
-      instms_type: item.instms_type,
-      pay_no: item.pay_no,
-      is_commonly_used: item.is_commonly_used,
-      cap_tax_type: item.cap_tax_type,
-      acc_no: item.acc_no
-    };
-
-    console.log(`🔍 清理項目 ${item.cap_item}:`, {
-      原始day_account: item.day_account,
-      清理後day_account: cleanedItem.day_account,
-      原始interval: item.interval,
-      清理後interval: cleanedItem.interval,
-      原始gui_flag: item.gui_flag,
-      清理後gui_flag: cleanedItem.gui_flag
-    });
-
-    return cleanedItem;
-  }
-
-
   private saveFareDataToWorkflow(): void {
     try {
       console.log('💾 準備儲存暫存資料...');
 
-      let totalItems = 0;
-      let selectedItems = 0;
+      // 🆕 使用資料服務準備儲存資料
+      const mergedFareItems = this.fareDataService.prepareSaveData(this.originalFareData);
 
-      // 🎯 合併成陣列格式，但保留 cap_type 資訊
-      const mergedFareItems: FareItem[] = [];
-      Object.keys(this.originalFareData).forEach(capType => {
-        if (!Array.isArray(this.originalFareData[capType])) {
-          console.warn(`⚠️ 修正儲存資料：${capType} 不是陣列，重置為空陣列`);
-          this.originalFareData[capType] = [];
-        } else {
-          totalItems += this.originalFareData[capType].length;
-          const selected = this.originalFareData[capType].filter(item => item.is_selected);
-          selectedItems += selected.length;
-
-          // 🎯 確保每個項目都有 cap_type 並清理前端欄位
-          this.originalFareData[capType].forEach(item => {
-            if (!item.cap_type) {
-              item.cap_type = capType;
-            }
-
-            // 🎯 清理前端專用欄位和空 key
-            const cleanedItem = this.cleanFareItemForStorage(item);
-            mergedFareItems.push(cleanedItem);
-          });
-
-          console.log(`📝 ${capType} 類型: ${this.originalFareData[capType].length} 筆 (選中 ${selected.length} 筆)`);
-        }
-      });
+      const totalItems = mergedFareItems.length;
+      const selectedItems = mergedFareItems.filter(item => item.is_selected).length;
 
       console.log(`💾 總共要儲存 ${totalItems} 筆資料，其中 ${selectedItems} 筆已選中`);
 
-      // 🎯 儲存清理後的陣列格式
       this.contractFlowService.saveStep2Data(mergedFareItems);
       console.log('✅ 已成功暫存扣款資料到工作流程');
 
-      // 🎯 驗證儲存結果
       this.verifyStoredData();
-
     } catch (error) {
       console.error('❌ 儲存暫存資料時發生錯誤:', error);
       this.messageService.warnBubble('儲存暫存資料失敗');
     }
   }
-
 
   private verifyStoredData(): void {
     const savedData = this.contractFlowService.getStepData(WorkflowStep.DEDUCTION);
@@ -1459,51 +611,250 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
     }
   }
 
+  // ========== 表格事件處理 (使用服務) ==========
+  // onFareTableSave(event: { oldData: any, newData: any }, capType: string): void {
 
-  selectAllByType(capType: string): void {
-    console.log(`🔄 ${capType} 類型全部選擇`);
+  //   console.log('📄 表格資料更新事件:', {
+  //     capType: capType,
+  //     oldData: event.oldData,
+  //     newData: event.newData
+  //   });
 
-    this.fareData[capType].forEach(item => {
-      const wasSelected = item.is_selected;
-      item.is_selected = true;
+  //   const { newData } = event;
 
-      // 🎯 只有狀態改變時才更新 _status
-      if (!wasSelected) {
-        // 原本沒勾選，現在勾選
-        if (!item._status) {
-          item._status = 'new';
-          console.log(`✅ 項目 ${item.cap_item} 全部選擇，狀態: 無 → new`);
-        } else if (item._status === 'deleted') {
-          item._status = 'original';
-          console.log(`✅ 項目 ${item.cap_item} 全部選擇，狀態: deleted → original`);
+  //   // 🆕 使用計算服務
+  //   this.fareCalculationService.autoCalculateAmount(newData, capType);
+
+  //   // A類型特殊處理：自動設定結束日期等於開始日期
+  //   if (capType === 'A' && newData.tpy_bdate) {
+  //     newData.tpy_edate = newData.tpy_bdate;
+  //     console.log(`✅ A類型自動設定 tpy_edate = tpy_bdate: ${newData.tpy_edate}`);
+  //   }
+
+  //   // 🆕 使用狀態服務處理狀態更新
+  //   this.fareStatusService.handleTableDataUpdate(newData, capType);
+
+  //   // 更新原始資料
+  //   const originalIndex = this.originalFareData[capType].findIndex(item => item.id === newData.id);
+  //   if (originalIndex > -1) {
+  //     this.originalFareData[capType][originalIndex] = {
+  //       ...this.originalFareData[capType][originalIndex],
+  //       ...newData
+  //     };
+  //   }
+
+  //   this.saveFareDataToWorkflow();
+  // }
+
+  onFieldChange(fieldName: string, newValue: any, rowData: any, capType?: string): void {
+    console.log(`🔄 動態表格欄位變更: ${capType}.${fieldName} = ${newValue}`);
+
+    // 🎯 關鍵：根據 capType 進行不同的處理
+    switch (capType) {
+      case 'A':
+        this.handleTypeA(fieldName, newValue, rowData);
+        break;
+      case 'B':
+        this.handleTypeB(fieldName, newValue, rowData);
+        break;
+      case 'C':
+        this.handleTypeC(fieldName, newValue, rowData);
+        break;
+      case 'D':
+        this.handleTypeD(fieldName, newValue, rowData);
+        break;
+      case 'E':
+        this.handleTypeE(fieldName, newValue, rowData);
+        break;
+      default:
+        console.warn(`未知的扣款類型: ${capType}`);
+    }
+
+    // 統一的後續處理
+    this.updateRowDataState(rowData, capType || 'A');
+  }
+
+
+  /**
+   * 🅰️ A類型處理：一次扣款
+   */
+  private handleTypeA(fieldName: string, newValue: any, rowData: any): void {
+    // 使用計算服務
+    this.fareCalculationService.autoCalculateAmount(rowData, 'A', fieldName);
+
+    // A類型特殊邏輯：結束日期 = 開始日期
+    if (fieldName === 'tpy_bdate' && newValue) {
+      rowData.tpy_edate = newValue;
+      console.log(`✅ A類型自動設定結束日期: ${newValue}`);
+    }
+  }
+
+  /**
+   * 🅱️ B類型處理：每月扣款
+   */
+  private handleTypeB(fieldName: string, newValue: any, rowData: any): void {
+    // 使用計算服務
+    this.fareCalculationService.autoCalculateAmount(rowData, 'B', fieldName);
+    console.log(`💰 B類型計算完成: ${fieldName} = ${newValue}`);
+  }
+
+  /**
+   * 🆒 C類型處理：平均分攤（重點！）
+   */
+  private handleTypeC(fieldName: string, newValue: any, rowData: any): void {
+    console.log(`🧮 C類型平均分攤處理: ${fieldName} = ${newValue}`);
+
+    // 🎯 使用增強的計算服務處理C類型
+    this.fareCalculationService.autoCalculateAmount(rowData, 'C', fieldName);
+
+    // 🆕 特別處理日期欄位變更
+    if (fieldName === 'tpy_bdate' || fieldName === 'tpy_edate') {
+      console.log(`📅 C類型日期變更後: 期數=${rowData.period_nos}, 每月金額=${rowData.tpy_amount}, 首期金額=${rowData.down_payment}`);
+    }
+
+    // 🆕 特別處理金額欄位變更
+    if (['tpy_totalamt', 'tpy_amount', 'down_payment'].includes(fieldName)) {
+      console.log(`💰 C類型金額變更後: 總金額=${rowData.tpy_totalamt}, 每月=${rowData.tpy_amount}, 首期=${rowData.down_payment}`);
+    }
+
+    // 🆕 驗證計算結果
+    const isValid = this.fareCalculationService.isCalculationValid(rowData, 'C');
+    if (!isValid) {
+      console.warn(`⚠️ C類型計算結果可能有誤，請檢查`);
+    }
+  }
+
+  /**
+   * 🆕 D類型處理：比率分攤
+   */
+  private handleTypeD(fieldName: string, newValue: any, rowData: any): void {
+    this.fareCalculationService.autoCalculateAmount(rowData, 'D', fieldName);
+    console.log(`📊 D類型比率計算: ${fieldName} = ${newValue}`);
+  }
+
+  /**
+   * 🆔 E類型處理：活動扣款
+   */
+  private handleTypeE(fieldName: string, newValue: any, rowData: any): void {
+    this.fareCalculationService.autoCalculateAmount(rowData, 'E', fieldName);
+    console.log(`🎯 E類型活動扣款: ${fieldName} = ${newValue}`);
+  }
+
+  /**
+   * 🔄 統一的狀態更新處理
+   */
+  private updateRowDataState(rowData: any, capType: string): void {
+    // 更新選擇狀態
+    this.fareStatusService.handleTableDataUpdate(rowData, capType);
+
+    // 同步到原始資料
+    this.updateOriginalDataItem(rowData, capType);
+
+    // 儲存到工作流
+    this.saveFareDataToWorkflow();
+
+    console.log(`✅ ${capType}類型資料狀態更新完成`);
+  }
+
+  /**
+   * 🔄 更新原始資料項
+   */
+  private updateOriginalDataItem(updatedItem: any, capType: string): void {
+    const originalIndex = this.originalFareData[capType].findIndex(item => item.id === updatedItem.id);
+    if (originalIndex > -1) {
+      this.originalFareData[capType][originalIndex] = {
+        ...this.originalFareData[capType][originalIndex],
+        ...updatedItem
+      };
+      console.log(`🔄 已更新原始資料: ${capType}[${originalIndex}]`);
+    }
+  }
+
+  /**
+   * 🆕 增強的表格儲存處理
+   */
+  onFareTableSave(event: { oldData: any, newData: any }, capType: string): void {
+    console.log(`💾 ${capType}類型表格儲存:`, event.newData);
+
+    const { newData } = event;
+
+    // 🎯 根據類型執行最終計算
+    switch (capType) {
+      case 'A':
+        this.fareCalculationService.autoCalculateAmount(newData, 'A');
+        if (newData.tpy_bdate) {
+          newData.tpy_edate = newData.tpy_bdate;
         }
-      }
+        break;
+      case 'B':
+        this.fareCalculationService.autoCalculateAmount(newData, 'B');
+        break;
+      case 'C':
+        // C類型儲存時進行完整驗證
+        this.fareCalculationService.autoCalculateAmount(newData, 'C');
+        const isValid = this.fareCalculationService.isCalculationValid(newData, 'C');
+        if (!isValid) {
+          this.messageService.warnBubble('C類型資料計算有誤，請檢查輸入');
+          return;
+        }
+        console.log(`✅ C類型儲存驗證通過: 總額=${newData.tpy_totalamt}, 期數=${newData.period_nos}`);
+        break;
+      case 'D':
+      case 'E':
+        this.fareCalculationService.autoCalculateAmount(newData, capType);
+        break;
+    }
+
+    // 統一的狀態處理
+    this.fareStatusService.handleTableDataUpdate(newData, capType);
+
+    // 更新原始資料
+    const originalIndex = this.originalFareData[capType].findIndex(item => item.id === newData.id);
+    if (originalIndex > -1) {
+      this.originalFareData[capType][originalIndex] = {
+        ...this.originalFareData[capType][originalIndex],
+        ...newData
+      };
+    }
+
+    this.saveFareDataToWorkflow();
+  }
+
+  onFareTableEdit(rowData: any, capType: string): void {
+    console.log(`開始編輯 ${capType} 類型扣款資料:`, rowData);
+    this.ensureDefaultValues(rowData, capType);
+  }
+
+  onFareTableCancel(rowData: any, capType: string): void {
+    console.log(`取消編輯 ${capType} 類型扣款資料:`, rowData);
+  }
+
+  onItemSelectionChange(capType: string): void {
+    console.log(`📄 ${capType} 類型項目選擇狀態改變`);
+
+    // 🆕 使用狀態服務更新狀態
+    this.fareData[capType].forEach(item => {
+      this.fareStatusService.updateItemSelectionStatus(item);
     });
 
     this.updateOriginalData(capType);
     this.saveFareDataToWorkflow();
   }
 
+  selectAllByType(capType: string): void {
+    console.log(`📄 ${capType} 類型全部選擇`);
+
+    // 🆕 使用狀態服務
+    this.fareStatusService.selectAllItems(this.fareData[capType]);
+    this.updateOriginalData(capType);
+    this.saveFareDataToWorkflow();
+  }
+
   deselectAllByType(capType: string): void {
-    console.log(`🔄 ${capType} 類型取消全部選擇`);
+    console.log(`📄 ${capType} 類型取消全部選擇`);
 
-    this.fareData[capType].forEach(item => {
-      const wasSelected = item.is_selected;
-      item.is_selected = false;
-
-      // 🎯 只有狀態改變時才更新 _status
-      if (wasSelected) {
-        // 原本有勾選，現在取消
-        if (item._status === 'original' || item._status === 'modified') {
-          item._status = 'deleted';
-          console.log(`❌ 項目 ${item.cap_item} 取消選擇，狀態: ${item._status || 'original'} → deleted`);
-        } else if (item._status === 'new') {
-          delete item._status;
-          console.log(`❌ 項目 ${item.cap_item} 取消選擇，狀態: new → 無狀態`);
-        }
-      }
-    });
-
+    // 🆕 使用狀態服務
+    this.fareStatusService.deselectAllItems(this.fareData[capType]);
     this.updateOriginalData(capType);
     this.saveFareDataToWorkflow();
   }
@@ -1517,308 +868,33 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
     });
   }
 
-  // 表格事件處理
-  onFareTableSave(event: { oldData: any, newData: any }, capType: string): void {
-    console.log('🔄 表格資料更新事件:', {
-      capType: capType,
-      oldData: event.oldData,
-      newData: event.newData,
-      // 🎯 特別檢查重要欄位
-      oldFields: {
-        tpy_bdate: event.oldData?.tpy_bdate,
-        tpy_edate: event.oldData?.tpy_edate,
-        day_account: event.oldData?.day_account,
-        interval: event.oldData?.interval,
-        tpy_type: event.oldData?.tpy_type,
-        gui_flag: event.oldData?.gui_flag,
-        org_id: event.oldData?.org_id
-      },
-      newFields: {
-        tpy_bdate: event.newData?.tpy_bdate,
-        tpy_edate: event.newData?.tpy_edate,
-        day_account: event.newData?.day_account,
-        interval: event.newData?.interval,
-        tpy_type: event.newData?.tpy_type,
-        gui_flag: event.newData?.gui_flag,
-        org_id: event.newData?.org_id
-      }
-    });
-
-    const { newData } = event;
-    this.autoCalculateAmount(newData, capType);
-
-    // A類型特殊處理：自動設定結束日期等於開始日期
-    if (capType === 'A' && newData.tpy_bdate) {
-      newData.tpy_edate = newData.tpy_bdate;
-      console.log(`✅ A類型自動設定 tpy_edate = tpy_bdate: ${newData.tpy_edate}`);
-    }
-
-    // 🎯 關鍵修正：確保所有重要欄位都被正確保存
-    const criticalFields = [
-      'tpy_bdate', 'tpy_edate', 'tpy_type', 'tpy_qty', 'tpy_unitamt',
-      'tpy_amount', 'tpy_totalamt', 'day_account', 'interval',
-      'down_payment', 'period_nos', 'tpy_1stamt', 'gui_flag',
-      'tpy_rate', 'org_id'
-    ];
-
-    criticalFields.forEach(field => {
-      if (!newData[field] && event.oldData?.[field] !== undefined && event.oldData?.[field] !== null) {
-        console.warn(`⚠️ ${field} 遺失，從舊資料復原:`, event.oldData[field]);
-        newData[field] = event.oldData[field];
-      }
-    });
-
-    // 🔥 強制檢查是否有變更
-    const hasChanges = this.hasDataChanges(newData);
-    // 🎯 直接用 data_source 判斷是否為合約原有項目
-    const isContractExisting = newData.data_source === 'CONTRACT_EXISTING';
-
-    // 🎯 狀態邏輯判定
-    if (newData.is_selected) {
-      // ✅ 被勾選
-      if (isContractExisting) {
-        // 原本就存在於合約的項目
-        if (newData._status === 'deleted') {
-          // 從刪除狀態恢復
-          newData._status = hasChanges ? 'modified' : 'original';
-          console.log(`✅ 項目 ${newData.cap_item} 恢復勾選，狀態: deleted → ${newData._status}`);
-        } else {
-          // 檢查資料是否有變更
-          if (hasChanges) {
-            newData._status = 'modified';
-            console.log(`📝 項目 ${newData.cap_item} 資料已變更，狀態: → modified`);
-          } else {
-            newData._status = 'original';
-            console.log(`✅ 項目 ${newData.cap_item} 無變更，狀態: → original`);
-          }
-        }
-      } else {
-        // 原本不存在於合約的項目 → 新增
-        newData._status = 'new';
-        console.log(`✅ 項目 ${newData.cap_item} 勾選，狀態: 無 → new`);
-      }
-    } else {
-      // ❌ 取消勾選
-      if (isContractExisting) {
-        // 原本存在於合約的項目 → 刪除
-        newData._status = 'deleted';
-        console.log(`❌ 項目 ${newData.cap_item} 取消勾選，狀態: → deleted`);
-      } else {
-        // 原本不存在於合約的項目 → 回到無狀態
-        delete newData._status;
-        console.log(`❌ 項目 ${newData.cap_item} 取消勾選，狀態: new → 無狀態`);
-      }
-    }
-
-    // 更新原始資料
-    const originalIndex = this.originalFareData[capType].findIndex(item => item.id === newData.id);
-    if (originalIndex > -1) {
-      // 🎯 確保更新時保留所有欄位
-      const updatedItem = {
-        ...this.originalFareData[capType][originalIndex],
-        ...newData,
-        // 明確保留關鍵欄位
-        tpy_bdate: newData.tpy_bdate,
-        tpy_edate: newData.tpy_edate,
-        day_account: newData.day_account,
-        interval: newData.interval,
-        tpy_type: newData.tpy_type,
-        gui_flag: newData.gui_flag,
-        org_id: newData.org_id
-      };
-
-      this.originalFareData[capType][originalIndex] = updatedItem;
-
-      console.log('📝 更新原始資料:', {
-        項目: newData.cap_item,
-        更新後tpy_bdate: updatedItem.tpy_bdate,
-        更新後tpy_edate: updatedItem.tpy_edate,
-        更新後day_account: updatedItem.day_account,
-        更新後interval: updatedItem.interval,
-        更新後gui_flag: updatedItem.gui_flag
-      });
-    }
-
-    this.saveFareDataToWorkflow();
-  }
-
-  private autoCalculateAmount(data: any, capType: string): void {
-    // 只處理 A 和 B 類型
-    if (capType !== 'A' && capType !== 'B') {
-      return;
-    }
-
-    // 檢查是否有單價和數量
-    const unitPrice = parseFloat(data.tpy_unitamt) || 0;
-    const quantity = parseFloat(data.tpy_qty) || 0;
-
-    if (unitPrice > 0 && quantity > 0) {
-      // 計算金額：單價 × 數量
-      const calculatedAmount = unitPrice * quantity;
-      data.tpy_amount = calculatedAmount;
-
-      console.log(`💰 自動計算金額 (${capType}類型):`, {
-        項目: data.cap_item,
-        單價: unitPrice,
-        數量: quantity,
-        計算金額: calculatedAmount
-      });
-    } else {
-      // 如果單價或數量為 0，清空金額
-      if (unitPrice === 0 || quantity === 0) {
-        data.tpy_amount = 0;
-        console.log(`💰 清空金額 (${capType}類型): ${data.cap_item} - 單價或數量為0`);
-      }
-    }
-  }
-
-  // 🎯 即時計算方法（只處理 A 和 B 類型）
-  onFieldChange(fieldName: string, newValue: any, rowData: any, capType: string): void {
-    // 只處理 A 和 B 類型的單價和數量變更
-    if ((capType === 'A' || capType === 'B') && (fieldName === 'tpy_unitamt' || fieldName === 'tpy_qty')) {
-      rowData[fieldName] = newValue;
-
-      const unitPrice = parseFloat(rowData.tpy_unitamt) || 0;
-      const quantity = parseFloat(rowData.tpy_qty) || 0;
-
-      if (unitPrice > 0 && quantity > 0) {
-        const calculatedAmount = unitPrice * quantity;
-        rowData.tpy_amount = calculatedAmount;
-
-        console.log(`💰 即時計算金額 (${capType}類型):`, {
-          欄位: fieldName,
-          新值: newValue,
-          單價: unitPrice,
-          數量: quantity,
-          計算金額: calculatedAmount
-        });
-      } else {
-        // 單價或數量為 0 時，清空金額
-        rowData.tpy_amount = 0;
-      }
-    }
-  }
-
-  onFareTableEdit(rowData: any, capType: string): void {
-    console.log(`開始編輯 ${capType} 類型扣款資料:`, rowData);
-
-    // 🎯 在編輯時確保預設值已套用
-    this.ensureDefaultValues(rowData, capType);
-  }
-
-  onFareTableCancel(rowData: any, capType: string): void {
-    console.log(`取消編輯 ${capType} 類型扣款資料:`, rowData);
-  }
-
-  onItemSelectionChange(capType: string): void {
-    console.log(`🔄 ${capType} 類型項目選擇狀態改變`);
-
-    this.fareData[capType].forEach(item => {
-      // 🎯 直接用 data_source 判斷是否為合約原有項目
-      if (item.is_selected && capType === 'C') {
-        this.ensureDefaultValues(item, capType);
-      }
-      const isContractExisting = item.data_source === 'CONTRACT_EXISTING';
-
-      if (item.is_selected) {
-        // ✅ 被勾選
-        if (isContractExisting) {
-          // 原本就存在於合約的項目
-          if (item._status === 'deleted') {
-            // 從刪除狀態恢復
-            item._status = this.hasDataChanges(item) ? 'modified' : 'original';
-            console.log(`✅ 項目 ${item.cap_item} 恢復勾選，狀態: deleted → ${item._status}`);
-          } else {
-            // 🔥 關鍵修正：檢查資料是否有變更
-            if (this.hasDataChanges(item)) {
-              item._status = 'modified';
-              console.log(`📝 項目 ${item.cap_item} 資料已變更，狀態: → modified`);
-            } else {
-              item._status = 'original';
-              console.log(`✅ 項目 ${item.cap_item} 無變更，狀態: → original`);
-            }
-          }
-        } else {
-          // 原本不存在於合約的項目 → 新增
-          item._status = 'new';
-          console.log(`✅ 項目 ${item.cap_item} 勾選，狀態: 無 → new`);
-        }
-      } else {
-        // ❌ 取消勾選
-        if (isContractExisting) {
-          // 原本存在於合約的項目 → 刪除
-          item._status = 'deleted';
-          console.log(`❌ 項目 ${item.cap_item} 取消勾選，狀態: → deleted`);
-        } else {
-          // 原本不存在於合約的項目 → 回到無狀態
-          delete item._status;
-          console.log(`❌ 項目 ${item.cap_item} 取消勾選，狀態: new → 無狀態`);
-        }
-      }
-    });
-
-    this.updateOriginalData(capType);
-    this.saveFareDataToWorkflow();
-  }
-
-  // 🎯 新增：檢查資料是否有變更
-  private hasDataChanges(item: FareItem): boolean {
-    if (!item._originalData) {
-      console.log(`⚠️ 項目 ${item.cap_item} 沒有原始資料，視為無變更`);
-      return false;
-    }
-
-    // 🎯 擴充需要比較的欄位列表
-    const editableFields = [
-      'tpy_bdate', 'tpy_edate', 'tpy_type', 'tpy_qty', 'tpy_unitamt',
-      'tpy_amount', 'tpy_totalamt', 'day_account', 'interval',
-      'down_payment', 'period_nos', 'tpy_1stamt', 'gui_flag',
-      'tpy_rate', 'org_id'
-    ];
-
-    for (const field of editableFields) {
-      const currentValue = (item as any)[field];
-      const originalValue = (item._originalData as any)[field];
-
-      // 處理 null/undefined/空字串的比較
-      const normalizedCurrent = this.normalizeValue(currentValue);
-      const normalizedOriginal = this.normalizeValue(originalValue);
-
-      if (normalizedCurrent !== normalizedOriginal) {
-        console.log(`📝 項目 ${item.cap_item} 欄位 ${field} 有變更:`, {
-          原始: originalValue,
-          目前: currentValue,
-          標準化原始: normalizedOriginal,
-          標準化目前: normalizedCurrent
-        });
-        return true;
-      }
-    }
-
-    return false;
-  }
-
-  private normalizeValue(value: any): string {
-    if (value === null || value === undefined) return '';
-    if (typeof value === 'string') return value.trim();
-    return String(value);
-  }
-
-
-
-  // 輔助方法
+  // ========== 輔助方法 (使用服務) ==========
   getSelectedCount(capType: string): number {
-    if (!this.fareData[capType] || !Array.isArray(this.fareData[capType])) {
-      return 0;
-    }
-    return this.fareData[capType].filter(item => item && item.is_selected).length;
+    return this.fareStatusService.getSelectedCount(this.fareData[capType]);
   }
 
   getTotalCount(capType: string): number {
-    if (!this.fareData[capType] || !Array.isArray(this.fareData[capType])) {
-      return 0;
-    }
-    return this.fareData[capType].length;
+    return this.fareStatusService.getTotalCount(this.fareData[capType]);
+  }
+
+  hasUnsavedChanges(): boolean {
+    return this.fareStatusService.hasUnsavedChanges(this.originalFareData);
+  }
+
+  hasAnyData(): boolean {
+    return this.fareStatusService.hasAnyData(this.originalFareData);
+  }
+
+  getTotalSelectedCount(): number {
+    return this.fareStatusService.getTotalSelectedCount(this.originalFareData);
+  }
+
+  getTotalItemCount(): number {
+    return this.fareStatusService.getTotalItemCount(this.originalFareData);
+  }
+
+  hasDataForType(capType: string): boolean {
+    return this.fareStatusService.hasDataForType(this.fareData, capType);
   }
 
   getCapTypeName(capType: string): string {
@@ -1843,22 +919,45 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
     }
   }
 
-  // 導航
+  // ========== 模式切換 ==========
+  toggleCommonMode(): void {
+    if (this.showMode === 'common') {
+      this.showMode = 'all';
+      console.log('📄 切換到全部模式（包含已勾選項目）');
+    } else {
+      this.showMode = 'common';
+      console.log('📄 切換到常用模式（包含已勾選項目）');
+    }
+    this.filterData();
+  }
+
+  getDisplayModeText(): string {
+    return this.showMode === 'common' ? '顯示全部項目' : '顯示常用項目';
+  }
+
+  getCurrentDisplayMode(): string {
+    if (this.showMode === 'common') {
+      return '合約項目 + 常用項目 + 已勾選項目';
+    } else {
+      return '全部項目';
+    }
+  }
+
+  getCommonModeText(): string {
+    return this.showMode === 'common' ? '顯示全部項目' : '顯示常用項目';
+  }
+
+  // ========== 導航相關 ==========
   onSubmitNext(): void {
     if (this.isViewMode) {
-      // 🎯 檢視模式：導航到 Next2，不帶 URL 參數
       this.router.navigate(['account/tls/tls13010next2']);
       return;
     }
 
-    // 編輯模式：原有邏輯
     this.saveFareDataToWorkflow();
 
-    const hasSelectedItems = Object.keys(this.originalFareData).some(capType =>
-      this.originalFareData[capType].some(item => item.is_selected)
-    );
-
-    if (!hasSelectedItems) {
+    // 🆕 使用狀態服務驗證
+    if (!this.fareStatusService.validateHasSelectedItems(this.originalFareData)) {
       this.messageService.warnBubble('請至少選擇一個扣款項目');
       return;
     }
@@ -1868,12 +967,10 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
 
   override onCancel(): void {
     if (this.isViewMode) {
-      // 🎯 檢視模式：返回上一步，不帶 URL 參數
       this.router.navigate(['account/tls/tls13010cru']);
       return;
     }
 
-    // 編輯模式：原有邏輯
     this.saveFareDataToWorkflow();
     this.router.navigate(['account/tls/tls13010cru']);
   }
@@ -1892,7 +989,7 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
     }
   }
 
-  // 表單相關
+  // ========== 表單相關 ==========
   submitForm(frm: FormGroup): void {
     this.onSubmit(frm);
   }
@@ -1905,7 +1002,6 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
     if (frm.valid && this.canQuery()) {
       console.log('扣款資料提交:', this.originalFareData);
       this.saveFareDataToWorkflow();
-      // this.messageService.successBubble('扣款資料已儲存');
     }
 
     this.loading = false;
@@ -1916,19 +1012,7 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
     return true;
   }
 
-  // 匯出屬性
-  get capTypes(): string[] {
-    return ['A', 'B', 'C', 'D', 'E'];
-  }
-
-  hasUnsavedChanges(): boolean {
-    return Object.keys(this.originalFareData).some(capType =>
-      this.originalFareData[capType].some(item =>
-        item._status === 'new' || item._status === 'modified' || item._status === 'deleted'
-      )
-    );
-  }
-
+  // ========== 其他功能 ==========
   reloadData(): void {
     if (confirm('確定要重新載入資料嗎？未儲存的變更將會遺失。')) {
       this.loadFareDataFromAPI();
@@ -1938,124 +1022,41 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
 
   saveAllChanges(): void {
     this.saveFareDataToWorkflow();
-    // this.messageService.successBubble('所有變更已儲存');
   }
 
-  hasAnyData(): boolean {
-    return Object.keys(this.originalFareData).some(capType =>
-      this.originalFareData[capType].length > 0
-    );
-  }
-
-  getTotalSelectedCount(): number {
-    return Object.keys(this.originalFareData).reduce((total, capType) =>
-      total + this.getSelectedCount(capType), 0
-    );
-  }
-
-  getTotalItemCount(): number {
-    return Object.keys(this.originalFareData).reduce((total, capType) =>
-      total + this.getTotalCount(capType), 0
-    );
-  }
-
-  hasDataForType(capType: string): boolean {
-    return this.fareData[capType] && Array.isArray(this.fareData[capType]) && this.fareData[capType].length > 0;
-  }
-
-  // 切換常用/全部模式
-  toggleCommonMode(): void {
-    if (this.showMode === 'common') {
-      // 從常用模式切換到全部模式
-      this.showMode = 'all';
-      console.log('🔄 切換到全部模式（包含已勾選項目）');
-    } else {
-      // 從全部模式切換到常用模式
-      this.showMode = 'common';
-      console.log('🔄 切換到常用模式（包含已勾選項目）');
-    }
-    this.filterData();
-  }
-
-
-  // 簡化的按鈕文字
-  getDisplayModeText(): string {
-    return this.showMode === 'common' ? '顯示全部項目' : '顯示常用項目';
-  }
-
-  // 簡化的顯示模式描述
-  getCurrentDisplayMode(): string {
-    if (this.showMode === 'common') {
-      return '合約項目 + 常用項目 + 已勾選項目';
-    } else {
-      return '全部項目';
-    }
-  }
-  // 取得常用模式按鈕文字
-  getCommonModeText(): string {
-    return this.showMode === 'common' ? '顯示全部項目' : '顯示常用項目';
-  }
-
-
-  private updateColumnsReadonly(readonly: boolean): void {
-    console.log(`📋 設定表格欄位為${readonly ? '唯讀' : '可編輯'}模式`);
-
-    // 🎯 更新 A 類型（一次扣款）欄位
-    this.deductionAColumns = this.deductionAColumns.map(col => ({
-      ...col,
-      editable: readonly ? false : (col.field === 'is_selected' ? true : col.editable)
-    }));
-
-    // 🎯 更新 B 類型（每月扣款）欄位
-    this.deductionBColumns = this.deductionBColumns.map(col => ({
-      ...col,
-      editable: readonly ? false : (col.field === 'is_selected' ? true : col.editable)
-    }));
-
-    // 🎯 更新 C 類型（平均分攤）欄位
-    this.deductionCColumns = this.deductionCColumns.map(col => ({
-      ...col,
-      editable: readonly ? false : (col.field === 'is_selected' ? true : col.editable)
-    }));
-
-    // 🎯 更新 D 類型（比率分攤）欄位
-    this.deductionDColumns = this.deductionDColumns.map(col => ({
-      ...col,
-      editable: readonly ? false : (col.field === 'is_selected' ? true : col.editable)
-    }));
-
-    // 🎯 更新 E 類型（活動扣款）欄位
-    this.deductionEColumns = this.deductionEColumns.map(col => ({
-      ...col,
-      editable: readonly ? false : (col.field === 'is_selected' ? true : col.editable)
-    }));
-
-    console.log(`✅ 所有表格欄位已設為${readonly ? '唯讀' : '可編輯'}模式`);
-  }
-
-  // 🎯 套用動態預設值到新項目
-  private applyDynamicDefaults(item: any, columns: ColumnDef[]): void {
-    columns.forEach(column => {
-      // 如果欄位沒有值且有動態預設值函數
-      if ((item[column.field] === undefined || item[column.field] === null || item[column.field] === '')
-        && column.defaultValueFunction) {
-        try {
-          const defaultValue = column.defaultValueFunction();
-          if (defaultValue !== null && defaultValue !== undefined) {
-            item[column.field] = defaultValue;
-            console.log(`🎯 套用動態預設值 ${column.field}: ${defaultValue}`);
-          }
-        } catch (error) {
-          console.error(`❌ 動態預設值函數執行失敗 ${column.field}:`, error);
-        }
-      }
-    });
-  }
-
-  // 🎯 在進入編輯模式時套用預設值
   private ensureDefaultValues(item: any, capType: string): void {
-    const columns = this.getColumnsForType(capType);
-    this.applyDynamicDefaults(item, columns);
+    // 🆕 使用資料服務套用預設值
+    this.fareDataService.applyDynamicDefaults(item, this.contractInfoData);
   }
 
+  // ========== 匯出屬性 ==========
+  get capTypes(): string[] {
+    return ['A', 'B', 'C', 'D', 'E'];
+  }
+
+  // ========== 🆕 包裝原有方法使用服務 ==========
+  // 這些方法保持向後相容，內部使用服務
+  private autoCalculateAmount(data: any, capType: string): void {
+    this.fareCalculationService.autoCalculateAmount(data, capType);
+  }
+
+  private processAPIData(faresByType: any): Record<string, FareItem[]> {
+    return this.fareDataService.processAPIData(faresByType, this.contractFlowService.isNewContractMode());
+  }
+
+  private processNewContractAPIData(faresByType: any): Record<string, FareItem[]> {
+    return this.fareDataService.processNewContractAPIData(faresByType);
+  }
+
+  private validateAndFixData(data: any): Record<string, FareItem[]> {
+    return this.fareDataService.validateAndFixData(data);
+  }
+
+  private cleanFareItemForStorage(item: FareItem): FareItem {
+    return this.fareDataService.cleanFareItemForStorage(item);
+  }
+
+  private hasDataChanges(item: FareItem): boolean {
+    return this.fareDataService.hasDataChanges(item);
+  }
 }
