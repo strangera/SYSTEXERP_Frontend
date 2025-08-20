@@ -17,6 +17,8 @@ import { untilDestroyed } from '@ngneat/until-destroy';
 import { debounceTime, finalize, forkJoin, map, of, switchMap, tap } from 'rxjs';
 import { TLS31010Request, TLS31010Response, Tls31010Service } from '@service/api/tls/tls31010.service';
 import { ButtonModule } from 'primeng/button';
+import { formatDate } from '@angular/common';
+import { HttpClient } from '@angular/common/http';
 
 @Component({
   selector: 'app-tls31010',
@@ -106,7 +108,8 @@ export class TLS31010Component extends BasicQueryPageComponent<TLS31010Response>
   org_id_Option: IDropdownItem[] = []; // 組織
   constructor(
     private readonly dropDownListService: DropDownListService,
-    private readonly tls31010Service: Tls31010Service
+    private readonly tls31010Service: Tls31010Service,
+    private readonly httpClient: HttpClient
   ) { super(); }
 
   ngOnInit(): void {
@@ -236,6 +239,7 @@ export class TLS31010Component extends BasicQueryPageComponent<TLS31010Response>
         ...frm.getRawValue(),
         bus_class: frm.getRawValue().bus_class.map((item: IDropdownItem) => item.No),
         bus_sclass: frm.getRawValue().bus_sclass.map((item: IDropdownItem) => item.No),
+        TXN_Date: formatDate(frm.getRawValue().TXN_Date, 'yyyy-MM-dd', 'en-US'),
       } as TLS31010Request;
       this.tls31010Service.queryTLS31010(formValue).pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(res => {
         this.data = res.Data;
@@ -244,7 +248,7 @@ export class TLS31010Component extends BasicQueryPageComponent<TLS31010Response>
       })
     })
   }
-
+  btnLoading = false;
   onReport(frm: FormGroup) {
     const printData = this.queryStateService.getQueryStateValue(this.ProgNo);
     const formValue = {
@@ -252,9 +256,46 @@ export class TLS31010Component extends BasicQueryPageComponent<TLS31010Response>
       IsExcel: true,
       bus_class: frm.getRawValue().bus_class.map((item: IDropdownItem) => item.No),
       bus_sclass: frm.getRawValue().bus_sclass.map((item: IDropdownItem) => item.No),
+      TXN_Date: formatDate(frm.getRawValue().TXN_Date, 'yyyy-MM-dd', 'en-US'),
     } as TLS31010Request;
-    this.tls31010Service.printTLS31010(formValue).pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(res => {
 
-    })
+    this.btnLoading = true;
+    this.tls31010Service.printTLS31010(formValue).pipe(finalize(() => this.btnLoading = false), untilDestroyed(this))
+      .subscribe(res => {
+        this.messageService.successBubble(res.Message);
+        if (res.Data && res.Data.length > 0 && res.Data[0].Print_URL) {
+          // 呼叫下載方法
+          this.downloadFile(res.Data[0].Print_URL);
+        }
+      });
+  }
+
+  // 這是新的下載方法
+  downloadFile(url: string) {
+    const fileUrl = url;
+    const fileName = '即時業績查詢報表.xlsx'; // 預設檔名
+    this.httpClient.get(fileUrl, { observe: 'response', responseType: 'blob' }).pipe(untilDestroyed(this)).subscribe(response => {
+      const contentDisposition = response.headers.get('Content-Disposition');
+      let extractedFileName = fileName;
+      if (contentDisposition) {
+        const matches = /filename\*?=['"]?([^'"]*)['"]?/.exec(contentDisposition);
+        if (matches && matches.length > 1) {
+          try {
+            extractedFileName = decodeURIComponent(matches[1]);
+          } catch (e) {
+            extractedFileName = matches[1];
+          }
+        }
+      }
+      // 創建一個 Blob URL
+      const blob = new Blob([response.body as BlobPart], { type: response.body?.type });
+      const link = document.createElement('a');
+      link.href = window.URL.createObjectURL(blob);
+      link.download = extractedFileName;
+      // 觸發下載
+      link.click();
+      // 釋放 Blob URL
+      window.URL.revokeObjectURL(link.href);
+    });
   }
 }
