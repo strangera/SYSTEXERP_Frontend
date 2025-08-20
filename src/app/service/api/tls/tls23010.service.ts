@@ -1,9 +1,11 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { catchError, Observable, tap } from 'rxjs';
+import { Observable, of } from 'rxjs';
+import { catchError, map, tap } from 'rxjs/operators';
 import { environment } from '../../../../environments/environment';
 import { ErrorHandlerService } from '../../system/error-handler.service';
 import { BaseQueryRequest, BaseQueryResponse } from '../../../shared/models/api/base-api.interface';
+
 
 export interface TLS23010QueryRequest extends BaseQueryRequest {
   TXN_DateStart?: string;
@@ -19,7 +21,7 @@ export interface TLS23010QueryRequest extends BaseQueryRequest {
   USR_No?: string;
   TXN_PreOrderNo?: string;
   TXN_PkngUID?: string;
-  TXN_MemCard?: string;        // ✅ 後端是 TXN_MemCard (查詢用)，回傳是 TXN_MemID
+  TXN_MemCard?: string;        
   TXN_Uniform?: string;
   TXN_GUILoveCode?: string;
   TXN_GUI_CarrType?: string[];
@@ -33,7 +35,7 @@ export interface TLS23010QueryRequest extends BaseQueryRequest {
 
 
 export interface TLS23010Data {
-  // ID?: number; // ⚠️回應沒有 ID，若 table 需要唯一鍵，改用 _rowKey（下方已組）
+
   SYS_StoreNo: string;
   TXN_Date: string;
   ECR_No: string;
@@ -61,7 +63,7 @@ export interface TLS23010Data {
   ORG_ECR_No: string;
   ORG_TXN_No: number;
   TXN_PkngUID: string;
-  TXN_MemID: string;          // ✅ 回應欄位名
+  TXN_MemID: string;          
   TXN_TotDisc: number;
   GUILoveStatus: string;
   TXN_GUILoveCode: string;
@@ -98,19 +100,22 @@ export class TLS23010Service {
     );
   }
 
-  // ✅ 新增：點展開才打的明細 API
-  queryTLS23010Detail(body: {
-    SYS_StoreNo: string;
-    TXN_Date: string;
-    ECR_No: string;
-    TXN_No: number;
-  }): Observable<any> {
-    const url = `${this.apiUrl}/TLS0000/TLS2000/queryTLS23010_Detail`;
-    return this.http.post<any>(url, body).pipe(
-      tap(r => console.log('🎯 TLS23010 明細查詢結果:', r)),
-      catchError(err => this.errorHandler.handleError(err))
-    );
-  }
+queryTLS23010Detail(body: {
+  SYS_StoreNo: string;
+  TXN_Date: string;   // 後端接受 ISO 字串即可
+  ECR_No: string;
+  TXN_No: number;
+}): Observable<any[]> {
+  const url = `${this.apiUrl}/TLS0000/TLS2000/queryTLS23010_Detail`;
+
+  return this.http.post<BaseQueryResponse<any>>(url, body).pipe(
+    map(r => r?.Data ?? []),                // 明細放在回應的 Data 陣列
+    tap(list => console.log('📦 Detail count:', list?.length ?? 0)),
+    catchError(err => this.errorHandler.handleError(err))
+  );
+}
+
+
     // ✅ 新增：彙總（不帶 PageSize/PageIndex）
   queryTLS23010Summary(body: any): Observable<any> {
     const url = `${this.apiUrl}/TLS0000/TLS2000/queryTLS23010_Summary`;

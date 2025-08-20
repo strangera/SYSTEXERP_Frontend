@@ -34,10 +34,11 @@ import { DialogModule } from 'primeng/dialog';
 import { RadioButtonModule } from 'primeng/radiobutton';
 import { TranslateModule } from '@ngx-translate/core';
 import { TableComponent } from '@shared/componentkit/table/table.component';
-import { of, from, forkJoin } from 'rxjs';
-import { map, tap, catchError, mergeMap, toArray } from 'rxjs/operators';
+import { of, from, forkJoin, Observable } from 'rxjs';
+import { map, tap, catchError, mergeMap, toArray, finalize } from 'rxjs/operators';
 import { ChangeDetectorRef } from '@angular/core';
-
+import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
+@UntilDestroy()
 //型態別報表
 @Component({
   selector: 'app-tls23010',
@@ -63,12 +64,12 @@ import { ChangeDetectorRef } from '@angular/core';
   ],
 })
 export class TLS23010Component
-  extends BasicQueryPageComponent<TLS23010Data>
+  extends BasicQueryPageComponent<any>
   implements OnInit
 {
-  data: TLS23010Data[] = [];
+  data: any[] = [];
   totalRecords = 0;
-  selectedItems: TLS23010Data[] = [];
+  selectedItems: any[] = [];
 
   readonly yesterday: Date = (() => {
     const d = new Date();
@@ -140,88 +141,101 @@ export class TLS23010Component
     this.initializePage('TLS23010', 'tls/tls23010', this.queryForm, (form) => this.onSubmit(form));
     this.totalRecords = 0;
     
-    this.floorService
-      .getFloors()
-      .subscribe((data) => (this.floorOptions = data));
+    this.floorService.getFloors().subscribe((data) => (this.floorOptions = data));
 
-    this.statusFlagService
-      .getStatusFlags()
-      .subscribe((data) => (this.statusFlagOptions = data));
+    this.statusFlagService.getStatusFlags().subscribe((data) => (this.statusFlagOptions = data));
 
-    this.whetherService
-      .getWhetherOptions()
-      .subscribe((data) => (this.whetherOptions = data));
+    this.whetherService.getWhetherOptions().subscribe((data) => (this.whetherOptions = data));
 
-    this.TXN_SubtypeService.getTXNSubtype().subscribe(
-      (data) => (this.TXN_SubtypeOptions = data),
-    );
+    this.TXN_SubtypeService.getTXNSubtype().subscribe(      (data) => (this.TXN_SubtypeOptions = data),    );
 
-    this.carrierTypeService
-      .getCarrierType()
-      .subscribe((data) => (this.carrierTypeOptions = data));
+    this.carrierTypeService.getCarrierType().subscribe((data) => (this.carrierTypeOptions = data));
 
-    this.tls11010Service
-      .getBuildingOptions()
-      .subscribe((res) => (this.BUILDING_NO_Options = res));
+    this.tls11010Service.getBuildingOptions().subscribe((res) => (this.BUILDING_NO_Options = res));
 
-    this.tls11010Service.getOrgOptions().subscribe((res) => {
-      this.OrganizationCodeOptions =
-        res?.map((x: any) => ({
-          label: x.label, // 給 table 用
+    this.tls11010Service.getOrgOptions().subscribe((res) => {      this.OrganizationCodeOptions =        res?.map((x: any) => ({         
+      label: x.label,         formLabel: `${x.value} - ${x.label}`,          value: x.value,        })) || [];    });
+
+    this.txnStatusService.getTxnStatusOptions().subscribe((data) => (this.txnStatusOptions = data));
+
+    this.counterNameService.getCounters().subscribe((res) => {      this.CounterOptions =        res?.map((x: any) => ({
+          label: x.label, 
           formLabel: `${x.value} - ${x.label}`,
           value: x.value,
         })) || [];
     });
 
-    this.txnStatusService
-      .getTxnStatusOptions()
-      .subscribe((data) => (this.txnStatusOptions = data));
+    this.ECRNoService.getECRNo().subscribe((res) => {      this.ECRNoOptions =        res?.map((x: any) => ({
+          label: x.label,formLabel: `${x.value} - ${x.label}`,          value: x.value,        })) || [];    });
 
-    this.counterNameService.getCounters().subscribe((res) => {
-      this.CounterOptions =
-        res?.map((x: any) => ({
-          label: x.label, // 給 table 用
-          formLabel: `${x.value} - ${x.label}`,
-          value: x.value,
-        })) || [];
-    });
+    this.cashierService.getCashierOptions().subscribe((res) => {      this.cashierOptions =        res?.map((x: any) => ({
+          label: x.label,     formLabel: `${x.value} - ${x.label}`,value: x.value,        })) || [];    });
+  }
 
-    this.ECRNoService.getECRNo().subscribe((res) => {
-      this.ECRNoOptions =
-        res?.map((x: any) => ({
-          label: x.label, // 給 table 用
-          formLabel: `${x.value} - ${x.label}`,
-          value: x.value,
-        })) || [];
-    });
+onSubmit(frm: FormGroup) {
+  this.handleSubmit(frm, () => {
+    this.tls23010Service
+      .queryTLS23010(frm.value)
+      .pipe(
+        untilDestroyed(this),
+        finalize(() => (this.loading = false)),
+      )
+      .subscribe({
+        next: (resp) => {
+          // 後端新版：Data = { QueryData: [...], TotalSummary: {...} }
+          // 兼容舊版：Data = [...]
+          const queryData = Array.isArray(resp?.Data?.QueryData)
+            ? resp.Data.QueryData
+            : Array.isArray(resp?.Data)
+              ? resp.Data
+              : [];
 
-    this.cashierService.getCashierOptions().subscribe((res) => {
-      this.cashierOptions =
-        res?.map((x: any) => ({
-          label: x.label, // 給 table 用
-          formLabel: `${x.value} - ${x.label}`, // 給下拉選單用
-          value: x.value,
-        })) || [];
-    });
-  }
-  onSubmit(form: FormGroup): void {
-    this.handleSubmit(form, () => {
-      this.doQuery(); // ✅ 改成呼叫同一支
-    });
-  }
-  // 將 lazy 的分頁/排序寫回表單後，呼叫同一支查詢
-  runQueryFromTable(event: any) {
-    // event: { pageIndex, pageSize, SortBy }
-    this.queryForm.patchValue(
-      {
-        pageIndex: event?.pageIndex ?? this.queryForm.value.pageIndex,
-        pageSize: event?.pageSize ?? this.queryForm.value.pageSize,
-        SortBy: event?.SortBy ?? this.queryForm.value.SortBy,
-      },
-      { emitEvent: false },
-    );
-    this.doQuery(); // 單一入口
-  }
+          // 為每筆資料建立唯一鍵（給 dataKey 用）
+          this.data = queryData.map((row: any) => ({
+            ...row,
+            id: `${row.SYS_StoreNo}_${row.TXN_Date}_${row.ECR_No}_${row.TXN_No}`,
+          }));
+
+          // 總筆數：以後端回傳為主，否則退回前端資料長度
+          this.totalRecords = Number(resp?.TotalCount ?? this.data.length ?? 0);
+
+          // 若要用總計，可在 class 宣告 summary:any，再解除註解
+          // this.summary = resp?.Data?.TotalSummary ?? null;
+
+          // 清空已選取，避免殘留
+          this.selectedItems = [];
+
+          // 保存查詢條件
+          this.queryStateService.setQueryState(this.ProgNo, frm.value);
+
+          // 觸發變更偵測（避免 OnPush 時不更新）
+          this.cdr.markForCheck?.();
+        },
+        error: (_err) => {
+          this.data = [];
+          this.totalRecords = 0;
+          this.selectedItems = [];
+          this.cdr.markForCheck?.();
+        },
+      });
+  });
+}
+
+
+
+    isRowSelectable(row: TLS23010Data): boolean {
+      return true;
+    }
+ loadDetails = (row: TLS23010Data): Observable<any[]> => {
+    const body = {
+      SYS_StoreNo: row.SYS_StoreNo,
+      TXN_Date: row.TXN_Date,   // 後端要 ISO 時間字串：直接丟 row 的原始值即可
+      ECR_No: row.ECR_No,
+      TXN_No: row.TXN_No,
+    };
+    return this.tls23010Service.queryTLS23010Detail(body);
+  };
+
 
   private getStoreNo(): string {
     try {
@@ -233,17 +247,7 @@ export class TLS23010Component
     }
   }
 
-  /** 盡量用 ISO 前10碼，避免時區跨日 */
-  private toYMDFromIso(val: string | Date): string {
-    if (typeof val === 'string' && /^\d{4}-\d{2}-\d{2}T/.test(val)) {
-      return val.slice(0, 10);
-    }
-    const d = new Date(val);
-    const y = d.getFullYear();
-    const m = String(d.getMonth() + 1).padStart(2, '0');
-    const day = String(d.getDate()).padStart(2, '0');
-    return `${y}-${m}-${day}`;
-  }
+
   formatISOToHHMMSS = (val: string): string => {
   if (!val) return '';
   const d = new Date(val);
@@ -253,134 +257,6 @@ export class TLS23010Component
   const ss = String(d.getSeconds()).padStart(2,'0');
   return `${hh}:${mm}:${ss}`;
 };
-
-  private buildDetailBody(row: TLS23010Data) {
-    return {
-      SYS_StoreNo: this.getStoreNo(),
-      TXN_Date: this.toYMDFromIso(row.TXN_Date),
-      ECR_No: row.ECR_No,
-      TXN_No: Number(row.TXN_No),
-    };
-  }
-private extractQueryAndTotal(res: any) {
-  const data = res?.Data;
-
-  // 兼容：
-  // 1) Data: { QueryData: [...] , TotalCount? }
-  // 2) Data: [...]
-  // 3) 根節點就有 QueryData / TotalCount
-  const queryData =
-    (Array.isArray(data) ? data
-      : (data?.QueryData ?? data?.queryData)) ??
-    res?.QueryData ??
-    [];
-
-  const totalCount =
-    (typeof res?.TotalCount === 'number' && res.TotalCount) ||
-    (typeof data?.TotalCount === 'number' && data.TotalCount) ||
-    (Array.isArray(queryData) ? queryData.length : 0);
-
-  return {
-    list: Array.isArray(queryData) ? queryData : [],
-    total: totalCount,
-  };
-}
-
-  private doQuery(): void {
-  const payload = this.buildPayload(this.queryForm.value);
-  this.loading = true;
-  this.messageService?.blockUi();
-
-  this.tls23010Service.queryTLS23010(payload).subscribe({
-    next: (res) => {
-      const { list, total } = this.extractQueryAndTotal(res);
-
-      // 建立 table 唯一鍵
-      this.data = list.map((item: any, idx: number) => ({
-        ...item,
-        _rowKey: `${item.SYS_StoreNo ?? ''}|${String(item.TXN_Date ?? '').slice(0, 19)}|${item.ECR_No ?? ''}|${item.TXN_No ?? idx}`,
-      }));
-      this.totalRecords = total;
-
-      // （可留用你原本的「只抓目前頁的明細」邏輯）
-      const pageSize = this.queryForm.value.pageSize ?? 10;
-      const pageIndex = this.queryForm.value.pageIndex ?? 1;
-      const start = (pageIndex - 1) * pageSize;
-      const end = Math.min(start + pageSize, this.data.length);
-      const currentPageRows = this.data.slice(start, end);
-
-      const detailRequests = currentPageRows.map((row) =>
-        this.tls23010Service
-          .queryTLS23010Detail(this.buildDetailBody(row))
-          .pipe(
-            tap((detailRes) => {
-              (row as any).DetailList = Array.isArray(detailRes)
-                ? detailRes
-                : detailRes?.Data ?? [];
-            }),
-          ),
-      );
-
-      if (detailRequests.length) {
-        forkJoin(detailRequests).subscribe({
-          next: () => {
-            this.data = [...this.data];
-            this.cdr?.markForCheck?.();
-          },
-          error: () => {},
-          complete: () => {
-            this.loading = false;
-            this.messageService?.unblockUi();
-          },
-        });
-      } else {
-        this.loading = false;
-        this.messageService?.unblockUi();
-      }
-    },
-    error: (err) => {
-      console.error('TLS23010 查詢失敗', err);
-      this.loading = false;
-      this.messageService?.unblockUi();
-    },
-  });
-}
-  /** 將日期控制項轉成後端要的 yyyy-MM-ddTHH:mm:ss（本地時間、去時區偏移） */
-  private toIso(val: any): string | undefined {
-    if (!val) return undefined;
-    const d = typeof val === 'string' ? new Date(val) : (val as Date);
-    if (isNaN(d.getTime())) return undefined;
-    // 轉成本地時間字串再截到秒
-    return new Date(d.getTime() - d.getTimezoneOffset() * 60000)
-      .toISOString()
-      .slice(0, 19);
-  }
-
-  /** 組查詢 payload，並清掉空值/空陣列，避免干擾後端繫結 */
-  private buildPayload(val: any) {
-    const o: any = {
-      ...val,
-      TXN_DateStart: this.toIso(val?.TXN_DateStart),
-      TXN_DateEnd: this.toIso(val?.TXN_DateEnd),
-      TXN_No_Start:
-        val?.TXN_No_Start != null && val?.TXN_No_Start !== ''
-          ? Number(val.TXN_No_Start)
-          : undefined,
-      TXN_No_End:
-        val?.TXN_No_End != null && val?.TXN_No_End !== ''
-          ? Number(val.TXN_No_End)
-          : undefined,
-    };
-
-    // 清掉空字串 / null / undefined / 空陣列
-    Object.keys(o).forEach((k) => {
-      const v = o[k];
-      if (v === '' || v === null || v === undefined) delete o[k];
-      if (Array.isArray(v) && v.length === 0) delete o[k];
-    });
-
-    return o;
-  }
 
   getYesNoLabel(value: any): string {
     return value === 'Y' ? '是' : value === 'N' ? '否' : value;
@@ -410,6 +286,33 @@ private extractQueryAndTotal(res: any) {
     const mm = String(d.getMinutes()).padStart(2, '0');
     return `${y}/${m}/${day}`;
   }
+
+
+
+
+
+
+nyToYesNo = (val: unknown): string => {
+  // 去除前後空白：一般空白 \s + 不換行空白 \u00A0 + 全形空白 \u3000
+  const v = String(val ?? '').replace(/^[\s\u00A0\u3000]+|[\s\u00A0\u3000]+$/g, '').toUpperCase();
+
+  if (v === 'Y' || v === 'TRUE' || v === '1') return '是';
+  if (v === 'N' || v === 'FALSE' || v === '0') return '否';
+  return '';
+};
+
+
+pToYesNo = (val: unknown): string => {
+  const v = String(val ?? '')
+    .replace(/^[\s\u00A0\u3000]+|[\s\u00A0\u3000]+$/g, '') // trim 含全形空白
+    .toUpperCase();
+  return v === 'P' ? '是' : '否';
+};
+nullpToYesNo = (val: unknown): string => {
+  if (val === null || val === undefined) return '否';
+  const trimmed = String(val).replace(/^[\s\u00A0\u3000]+|[\s\u00A0\u3000]+$/g, '');
+  return trimmed.length === 0 ? '否' : '是';
+};
   formatYMD = (val: unknown): string => {
   if (val == null) return '';
   if (val instanceof Date && !isNaN(val.getTime())) {
@@ -432,28 +335,7 @@ private extractQueryAndTotal(res: any) {
   }
   return s;
 };
-// component.ts
-nyToYesNo = (val: unknown): string => {
-  // 去除前後空白：一般空白 \s + 不換行空白 \u00A0 + 全形空白 \u3000
-  const v = String(val ?? '').replace(/^[\s\u00A0\u3000]+|[\s\u00A0\u3000]+$/g, '').toUpperCase();
 
-  if (v === 'Y' || v === 'TRUE' || v === '1') return '是';
-  if (v === 'N' || v === 'FALSE' || v === '0') return '否';
-  return '';
-};
-
-// component.ts
-pToYesNo = (val: unknown): string => {
-  const v = String(val ?? '')
-    .replace(/^[\s\u00A0\u3000]+|[\s\u00A0\u3000]+$/g, '') // trim 含全形空白
-    .toUpperCase();
-  return v === 'P' ? '是' : '否';
-};
-nullpToYesNo = (val: unknown): string => {
-  if (val === null || val === undefined) return '否';
-  const trimmed = String(val).replace(/^[\s\u00A0\u3000]+|[\s\u00A0\u3000]+$/g, '');
-  return trimmed.length === 0 ? '否' : '是';
-};
 
  columns = [
   { field: 'TXN_Date',       header: '銷售日期',      visible: true, format: this.formatYMD },
@@ -508,55 +390,9 @@ nullpToYesNo = (val: unknown): string => {
 ];
 
 
-  private toYMD(val: string | Date): string {
-    const d = typeof val === 'string' ? new Date(val) : val;
-    if (isNaN(d.getTime())) return String(val ?? '');
-    const y = d.getFullYear();
-    const m = String(d.getMonth() + 1).padStart(2, '0');
-    const day = String(d.getDate()).padStart(2, '0');
-    return `${y}-${m}-${day}`;
-  }
+  
 
 
-  loadDetail$ = (row: TLS23010Data) => {
-    const body = this.buildDetailBody(row);
-    return this.tls23010Service.queryTLS23010Detail(body).pipe(
-      map((res) => (Array.isArray(res) ? res : res?.Data ?? [])),
-      tap((details) => {
-        const key = (row as any)._rowKey;
-        const idx = this.data.findIndex((r) => (r as any)._rowKey === key);
-        if (idx > -1) {
-          // 用新物件取代該列，並確保 DetailList 也是新陣列參考
-          const replaced = { ...this.data[idx], DetailList: [...details] };
-          this.data = [
-            ...this.data.slice(0, idx),
-            replaced,
-            ...this.data.slice(idx + 1),
-          ];
-          this.cdr.markForCheck(); // 或 this.cdr.detectChanges();
-        }
-        (row as any).__detailLoaded = true;
-        (row as any).__detailError = false;
-      }),
-      catchError((err) => {
-        console.error('明細載入失敗', err);
-        (row as any).__detailError = true;
-        // 也做一次 immutable 更新，避免 UI 卡在舊狀態
-        const key = (row as any)._rowKey;
-        const idx = this.data.findIndex((r) => (r as any)._rowKey === key);
-        if (idx > -1) {
-          const replaced = { ...this.data[idx], DetailList: [] };
-          this.data = [
-            ...this.data.slice(0, idx),
-            replaced,
-            ...this.data.slice(idx + 1),
-          ];
-          this.cdr.markForCheck();
-        }
-        return of([]); // 不中斷 UI
-      }),
-    );
-  };
 
   detailcolumns = [
     { field: 'TXN_Date',header: '銷售日期',
@@ -577,8 +413,7 @@ nullpToYesNo = (val: unknown): string => {
     { field: 'TERM_No', header: '分期期數', style: 'text-right' },
     { field: 'TXN_PayAmt',header: '金額',
       style: 'text-right',
-      format: (v: number) =>
-        v === null || v === undefined ? '0' : v.toLocaleString('en-US'),
+       format: this.moneyFormat
     },
   ];
 }
