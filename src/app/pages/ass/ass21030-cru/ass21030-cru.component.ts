@@ -1,7 +1,7 @@
 import { ASS21030Service } from '@service/api/ass/ass21030.service';
 import { ValidationService } from './../../../shared/service/validation.service';
 // --Commonly used imports--
-import { Component, OnInit, ViewChild, } from '@angular/core';
+import { Component, OnInit, } from '@angular/core';
 import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { TranslateModule } from '@ngx-translate/core';
@@ -14,9 +14,7 @@ import { ButtonDynamicallydeleteComponent } from '../../../shared/componentkit/b
 import { ButtonDynamicallyaddComponent } from '../../../shared/componentkit/button-dynamicallyadd/button-dynamicallyadd.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
-import { apiOption, option } from '../../../shared/models/sys/sysb000.model';
-import { Tls12010Service } from '../../../service/api/tls/tls12010.service';
-import { ColumnDef, ExpandableEditTableComponent } from '../../../shared/componentkit/expandable-edit-table/expandable-edit-table.component';
+import { option } from '../../../shared/models/sys/sysb000.model';
 import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
 
 // ENG2001 抄錶明細檔
@@ -128,7 +126,6 @@ export class ASS21030CRUComponent extends BasicCruPageComponent<ENG1001|ENG2001>
       this.initializePage('ASS21030', this.dataForm);
       this.loadOptions();
 
-      // 先把ENG_YYMM由"202507"轉回 2025-08-15T07:17:26.607 的形式
       console.log('取得資料',this.dataForm.value);
     }
   
@@ -141,25 +138,26 @@ export class ASS21030CRUComponent extends BasicCruPageComponent<ENG1001|ENG2001>
         return;
       }
   
+      //都用匯入(import excel)的方式進行編輯
       const formValue = frm.getRawValue();
       switch (this.crudstatus) {
         case CRUDStatus.Create:
           if (this.canAdd()) {
             console.log('insert:', JSON.stringify(formValue, null, 2));
-            this.ass21030Service.insertASS21030(formValue).subscribe(() => {
-              this.messageService.successBubble('新增成功');
-              // this.onCancel(); // 儲存後，會清除資料留在原頁面，不返回列表
-              this.dataForm.reset(); // 重置表單
-            });
+            // this.ass21030Service.insertASS21030(formValue).subscribe(() => {
+            //   this.messageService.successBubble('新增成功');
+            //   // this.onCancel(); // 儲存後，會清除資料留在原頁面，不返回列表
+            //   this.dataForm.reset(); // 重置表單
+            // });
           }
           break;
         case CRUDStatus.Edit:
           if (this.canEdit()) {
             console.log('update:', JSON.stringify(formValue, null, 2));
-            this.ass21030Service.updateASS21030(formValue).subscribe(() => {
-              this.messageService.successBubble('更新成功');
-              this.onCancel(); // 儲存後，會返回列表
-            });
+            // this.ass21030Service.updateASS21030(formValue).subscribe(() => {
+            //   this.messageService.successBubble('更新成功');
+            //   this.onCancel(); // 儲存後，會返回列表
+            // });
           }
           break;
       }

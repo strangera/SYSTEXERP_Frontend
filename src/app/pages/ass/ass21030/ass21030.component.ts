@@ -16,6 +16,11 @@ import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/
 import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
 import { CalendarRangeQuickComponent } from '../../../shared/componentkit/calendar-range-quick/calendar-range-quick.component';
+import { untilDestroyed } from '@ngneat/until-destroy';
+import { FileSelectEvent, FileUploadModule } from 'primeng/fileupload';
+import { environment } from 'src/environments/environment';
+import { formatYYYYMM } from '@shared/componentkit/table2/table2.model';
+import { apiOption } from '@shared/models/tls/tls000.model';
 
 // ENG2001 抄錶明細檔
 export interface ENG2001 {
@@ -76,6 +81,7 @@ export interface ENG1001 {
     CalendarRangeQuickComponent,
     DropdownComponent,
     MultiSelectComponent,
+    FileUploadModule,
     InputTextComponent,
     TableComponent,
     TranslateModule]
@@ -86,9 +92,9 @@ export class ASS21030Component extends BasicQueryPageComponent<ENG1001 | ENG2001
     queryForm = this.formBuilder.group({
       // ENG2001 抄錶明細檔 + ENG1001 能源錶號明細檔
       EngTypes: [null, [Validators.maxLength(3)]], // 能源類型：水錶G01、電錶G02、瓦斯錶G03
-      ENG_MeterNo: [null, [Validators.maxLength(5)]], // 錶號
-      SYS_StoreNo: [null, [Validators.maxLength(10)]], // 分店編號
-      Mid: [null, [Validators.maxLength(19)]], // 外鍵，對應 ENG2001.id
+      ENG_MeterNo: [null, [Validators.maxLength(5)]], // 錶號 (/Share/queryENG1001_ENG_MeterNo_DropDownList)
+      SYS_StoreNo: [this.authService.getUserInfo()?.SYS_StoreNo ?? '', [Validators.maxLength(10)]], // 分店編號 section抓
+      Mid: [this.authService.getUserInfo()?.mid ?? '', [Validators.maxLength(19)]], //  section抓
       ENG_YYMM: [null, [Validators.maxLength(6)]], // 結算年月
       ENG_Status: [null, [Validators.maxLength(1)]], // 抄錶狀態：0=未抄錶、1=已抄錶、2=已結算
 
@@ -109,6 +115,8 @@ export class ASS21030Component extends BasicQueryPageComponent<ENG1001 | ENG2001
       { value: '2', label: '已結算' }
     ];
 
+    ENG_MeterNo_Option: apiOption[] = [];
+
     data: ENG1001[] | ENG2001[] = [];
     columns: Column[] = [
       { field: 'ID', header: 'ID', visible: false },
@@ -116,7 +124,7 @@ export class ASS21030Component extends BasicQueryPageComponent<ENG1001 | ENG2001
       { field: 'ENG_MeterNo', header: '錶號', visible: true },
       { field: 'Location_No', header: '位置編號', visible: true },
       { field: 'TLT_No', header: '專櫃編號', visible: true },
-      { field: 'ENG_YYMM', header: '結算年月', visible: true },
+      { field: 'ENG_YYMM', header: '結算年月', visible: true, format: formatYYYYMM },
       { field: 'ENG_CurrentReading_Last', header: '上期抄錶度', visible: true },
       { field: 'ENG_CurrentReading', header: '本期抄錶度', visible: true },
       { field: 'ENG_Date', header: '抄表日期', visible: true, format: formatDate },
@@ -154,14 +162,28 @@ export class ASS21030Component extends BasicQueryPageComponent<ENG1001 | ENG2001
         formValue.ENG_YYMM = `${year}${month}`;
       }
 
-      console.log('送出查詢條件', formValue);
+      console.log('送出查詢條件',  JSON.stringify(formValue, null, 2));
 
       this.handleSubmit(frm, () => {
         this.ass21030Service.queryASS21030(formValue).subscribe({
           next: (response) => {
             if (response.Status === '0000') {
-              this.data = response.Data || [];
-              console.log('Result', this.data);
+              this.data = (response.Data || []).map((item: any) => {
+              let engDate: Date | null = null;
+
+              if (item.ENG_YYMM && typeof item.ENG_YYMM === 'string' && item.ENG_YYMM.length === 6) {
+                const year = parseInt(item.ENG_YYMM.substring(0, 4), 10);
+                const month = parseInt(item.ENG_YYMM.substring(4, 6), 10) - 1; // JS 的月份從 0 開始
+                engDate = new Date(year, month, 1); // 結算年月通常取當月第一天
+              }
+
+              return {
+                ...item,
+                ENG_YYMM: engDate, // 換成 Date 物件
+              } as ENG2001;
+            });
+
+            console.log('轉換後結果', this.data);
               this.totalRecords = response.TotalCount || response.Data.length;
               this.queryStateService.setQueryState(this.ProgNo, formValue);
             } else {
@@ -234,14 +256,47 @@ export class ASS21030Component extends BasicQueryPageComponent<ENG1001 | ENG2001
     }
   
     loadOptions() {
-      // 查 大分類(專櫃)
-      // this.tls12010Service.queryTLTBUSTYPE_DropDownList({}).subscribe((response) => {
-      //   this.bus_type_Option = response.Data.map((item: any) => ({
-      //     No: item.No, // 大分類(專櫃) 號
-      //     Label: item.No + '/' + item.Name, // 組合成顯示用的Label
-      //   }));
-      //   console.log('大分類代號:', this.bus_type_Option);
-      // });
+      // 查 取得能源表號
+      this.ass21030Service.queryENG1001_ENG_MeterNo_DropDownList({}).subscribe((response) => {
+        this.ENG_MeterNo_Option = response.Data.map((item: any) => ({
+          No: item.ENG_MeterNo, // 能源表號
+          Name: item.ENG_MeterNo,
+        }));
+        console.log('能源表號代號:', response.Data);
+      });
     }
+
+    //匯入excel並更新資料
+      onFileUpload(event: FileSelectEvent) {
+        const file = event.files[0];
+        const formData = new FormData();
+        formData.append('file', file);
+    
+        this.ass21030Service.importASS21030(formData).pipe(untilDestroyed(this)).subscribe({
+          next: (res) => {
+            const data = res?.Data;
+    
+            if (data) {
+              if (data.ErrorFilePath) {
+                // 有錯誤檔：顯示錯誤提示
+                this.messageService.errorBubble(`部分資料匯入失敗，請下載錯誤檔檢查`);
+                // 自動下載錯誤檔
+                this.downloadErrorFile(data.ErrorFilePath);
+              } else {
+                // 沒有錯誤檔：顯示成功筆數
+                this.messageService.infoBubble(`匯入成功，筆數：${data.SuccessCount}`);
+              }
+            }
+          },
+          error: (err) => {
+            console.error(err);
+            this.messageService.errorBubble('檔案上傳失敗，請稍後再試');
+          },
+        });
+      }
+    
+      downloadErrorFile(filePath: string) {
+        window.open(`${environment.ApiUrl}/${filePath}`, '_blank');
+      }
 
 }
