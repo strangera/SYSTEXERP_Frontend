@@ -264,7 +264,7 @@
       dataKey="id"
       [data]="data"
       [columns]="columns"
-      [expansionColumns]="detailcolumns"
+      
       (edit)="onEdit($event)"
       (detail)="onDetail($event)"
       [showCheckBox]="false"
@@ -276,7 +276,8 @@
       [loading]="loading"
       (selectionChange)="selectedItems= $event"
       [selectedItems]="selectedItems"
-      expansionDataKey="details"
+      [expansionColumns]="detailcolumns"
+      [expansionDataKey]="'details'"
       [expansionLoadFn]="loadDetails"
       [isRowSelectable]="isRowSelectable"
     ></app-table>

@@ -38,6 +38,7 @@ import { of, from, forkJoin, Observable } from 'rxjs';
 import { map, tap, catchError, mergeMap, toArray, finalize } from 'rxjs/operators';
 import { ChangeDetectorRef } from '@angular/core';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
+
 @UntilDestroy()
 //型態別報表
 @Component({
@@ -195,7 +196,15 @@ onSubmit(frm: FormGroup) {
             ...row,
             id: `${row.SYS_StoreNo}_${row.TXN_Date}_${row.ECR_No}_${row.TXN_No}`,
           }));
+          // ✅ 做完 this.data 映射之後，人工塞明細（先塞第一列就好）
 
+console.log('[MASTER] rows after mapping (id, keys):',
+  this.data.map(r => ({ id: r.id, keys: Object.keys(r) }))
+);
+console.log('[MASTER] first row sample:', this.data[0]);
+
+// 確認 expansionDataKey 設定正確
+console.log('[TABLE] expansionDataKey should be "details"');
           // 總筆數：以後端回傳為主，否則退回前端資料長度
           this.totalRecords = Number(resp?.TotalCount ?? this.data.length ?? 0);
 
@@ -226,15 +235,37 @@ onSubmit(frm: FormGroup) {
     isRowSelectable(row: TLS23010Data): boolean {
       return true;
     }
- loadDetails = (row: TLS23010Data): Observable<any[]> => {
-    const body = {
-      SYS_StoreNo: row.SYS_StoreNo,
-      TXN_Date: row.TXN_Date,   // 後端要 ISO 時間字串：直接丟 row 的原始值即可
-      ECR_No: row.ECR_No,
-      TXN_No: row.TXN_No,
-    };
-    return this.tls23010Service.queryTLS23010Detail(body);
+// 放在 component 裡（直接覆蓋你現在的 loadDetails）
+// ✅ 關鍵：回傳 { details: [...] }，鍵名要跟 expansionDataKey 一樣
+loadDetails = (row: TLS23010Data) => {
+  const body = {
+    SYS_StoreNo: row.SYS_StoreNo,
+    TXN_Date: row.TXN_Date, // 或 new Date(row.TXN_Date).toISOString()
+    ECR_No: row.ECR_No,
+    TXN_No: row.TXN_No,
   };
+
+  return this.tls23010Service.queryTLS23010Detail(body).pipe(
+    map((resp: any) => {
+      const list =
+        Array.isArray(resp) ? resp :
+        Array.isArray(resp?.Data) ? resp.Data :
+        Array.isArray(resp?.Data?.QueryData) ? resp.Data.QueryData :
+        [];
+
+      console.log('[DETAIL] final array length =', list.length, list);
+      // 關鍵：回傳 { Data: [...] } 給 TableUtilityService
+      return { Data: list };
+    })
+  );
+};
+
+
+
+
+
+
+
 
 
   private getStoreNo(): string {
