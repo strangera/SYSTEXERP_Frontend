@@ -4,44 +4,86 @@
   </div>
 
   <p-accordion>
-    <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
-      [headerStyleClass]="'query-accordionTab'">
-      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
+    <p-accordionTab
+      header="{{ 'query-conditions' | translate }}"
+      [selected]="true"
+      class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'"
+    >
+      <form
+        [formGroup]="queryForm"
+        id="queryForm"
+        (ngSubmit)="onSubmit(queryForm)"
+      >
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar calendarType="dateOne" label="銷售日期" [control]="queryForm.controls.TXN_Date"
-              [submitted]="submitted"></app-calendar>
+            <app-calendar
+              calendarType="dateOne"
+              label="銷售日期"
+              [control]="queryForm.controls.TXN_Date"
+              [submitted]="submitted"
+            ></app-calendar>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="樓層" controlName="Floor_No" [options]="floorOptions" optionLabel="label"
-              optionValue="value" [control]="queryForm.controls.Floor_No" [submitted]="submitted"></app-dropdown>
+            <app-dropdown
+              label="樓層"
+              controlName="Floor_No"
+              [options]="floorOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.Floor_No"
+              [submitted]="submitted"
+            ></app-dropdown>
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown-range label="收銀機號" controlName="dropdownRange"
-              [startControl]="queryForm.controls.ECR_No_Start" [endControl]="queryForm.controls.ECR_No_End"
-              [submitted]="submitted" [options]="systemTypeOptions" optionLabel="label"
-              optionValue="No"></app-dropdown-range>
-            <small class="p-error" *ngIf="
+            <app-dropdown-range
+              label="收銀機號"
+              controlName="dropdownRange"
+              [startControl]="queryForm.controls.ECR_No_Start"
+              [endControl]="queryForm.controls.ECR_No_End"
+              [submitted]="submitted"
+              [options]="systemTypeOptions"
+              optionLabel="label"
+              optionValue="No"
+            ></app-dropdown-range>
+            <small
+              class="p-error"
+              *ngIf="
                 queryForm.controls['ECR_No_End']?.errors?.['rangeInvalid'] &&
                 submitted
-              ">
+              "
+            >
               結束值必須大於等於起始值
             </small>
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="付款別" controlName="PAY_NO" [options]="paymentToolOptions" optionLabel="label"
-              optionValue="value" [control]="queryForm.controls.PAY_NO" [submitted]="submitted"
-              (changeEvent)="onPayNoChange($event.value)"></app-dropdown>
+            <app-dropdown
+              label="付款別"
+              controlName="PAY_NO"
+              [options]="paymentToolOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.PAY_NO"
+              [submitted]="submitted"
+              (changeEvent)="onPayNoChange($event.value)"
+            ></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="館別" controlName="Building_No" [options]="buildingNoOptions" optionLabel="label"
-              optionValue="value" [control]="queryForm.controls.Building_No" [submitted]="submitted"></app-dropdown>
+            <app-dropdown
+              label="館別"
+              controlName="Building_No"
+              [options]="buildingNoOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.Building_No"
+              [submitted]="submitted"
+            ></app-dropdown>
           </div>
 
           <div>
-            <div class="grid justify-content-end gap-2 m-0 mt-2  pt-3">
+            <div class="grid justify-content-end gap-2 m-0 mt-2 pt-3">
               <app-button btnType="clear" [form]="queryForm"></app-button>
               <app-button btnType="query" [loading]="loading"></app-button>
             </div>
@@ -53,26 +95,51 @@
 </div>
 
 <div class="card">
-  <app-table dataKey="ID" [data]="data" [columns]="selectedColumns" [columnGroup]="columnGroup" [showCheckBox]="true"
-    (selectionChange)="selectedItems = $event" [selectedItems]="selectedItems"
-    [multiSortMeta]="[{ field: 'ECR_No', order: 1 }]" [totalRecords]="totalRecords"
-    (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [lazy]="true" [loading]="loading"
-    [addButton]="addButtons" [showDelete]="false" [showDetail]="false" [showEdit]="false">
+  <app-table
+    dataKey="ID"
+    [data]="data"
+    [columns]="selectedColumns"
+    [columnGroup]="columnGroup"
+    [showCheckBox]="true"
+    (selectionChange)="selectedItems = $event"
+    [selectedItems]="selectedItems"
+    [multiSortMeta]="[{ field: 'ECR_No', order: 1 }]"
+    [totalRecords]="totalRecords"
+    (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"
+    [lazy]="true"
+    [loading]="loading"
+    [addButton]="addButtons"
+    [showDelete]="false"
+    [showDetail]="false"
+    [showEdit]="false"
+  >
     <header>
-      <div class="flex align-items-center  mb-4">
-        <p-button label="審核完成" severity="success" (click)="onReview(selectedItems)" [disabled]="selectedCount === 0"
-          [ngStyle]="{ height: '18px', fontSize: '12px', padding: '0 4px', marginRight: '7px' }"></p-button>
+      <div class="flex align-items-center mb-4">
+        <p-button
+          label="審核完成"
+          severity="success"
+          (click)="onReview(selectedItems)"
+          [disabled]="selectedCount === 0"
+          [ngStyle]="{
+            height: '18px',
+            fontSize: '12px',
+            padding: '0 4px',
+            marginRight: '7px',
+          }"
+        ></p-button>
 
         <span class="mt-4">
           審核支付工具：
-          <span class="text-pink-600 " *ngIf="PAY_NO">
+          <span class="text-pink-600" *ngIf="PAY_NO">
             【 {{ PAY_NO_NAME }} 】
           </span>
         </span>
 
         <span class="ml-3 mt-4">
           銷售日期：
-          <span class="text-red-600 " *ngIf="TXN_Date">{{ TXN_Date }}</span>
+          <span class="text-red-600" *ngIf="TXN_Date">
+            {{ TXN_Date | date: "yyyy-MM-dd" }}
+          </span>
         </span>
       </div>
     </header>
