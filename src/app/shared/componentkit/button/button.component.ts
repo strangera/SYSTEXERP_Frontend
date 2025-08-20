@@ -96,7 +96,7 @@ export class ButtonComponent implements OnInit, OnDestroy {
     if (this.btnType === 'cancel' || this.btnType === 'clear') {
       if (!this.form) {
         // 如果沒有提供 form，則顯示錯誤訊息
-        this.messageService.warnBubble('工程師請在按鈕上加入參數[form]：清除/取消按鈕需要綁定表單 (form Input)。');
+        // this.messageService.warnBubble('工程師請在按鈕上加入參數[form]：清除/取消按鈕需要綁定表單 (form Input)。');
         return; // 阻止後續操作
       }
 

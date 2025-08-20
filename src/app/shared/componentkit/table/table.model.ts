@@ -236,3 +236,23 @@ export const formatDateToYYYY_MM_DD = (value: string | Date): string | null => {
 };
 // addDaysToDate：增加天數後的日期
 export const addDaysToDate = (date: Date, days: number): Date => new Date(date.getTime() + days * 24 * 60 * 60 * 1000);
+
+// formatPercentage: 格式化為百分比，可指定小數點位數
+export const formatPercentage = (value: number | string | null | undefined, fractionDigits = 0): string => {
+  if (value === null || value === undefined || isNaN(Number(value))) {
+    return '';
+  }
+  // 將輸入值轉為數字，並四捨五入到指定小數點位數
+  const num = Number(value);
+  const roundedNum = num.toFixed(fractionDigits);
+  return `${roundedNum}%`;
+};
+
+// formatDivideBy100: 將數字除以 100
+export const formatDivideBy100 = (value: number | string | null | undefined): number | null => {
+  if (value === null || value === undefined || isNaN(Number(value))) {
+    return null;
+  }
+  const num = Number(value);
+  return num / 100;
+};

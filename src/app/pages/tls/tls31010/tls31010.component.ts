@@ -8,13 +8,15 @@ import { ButtonComponent } from '../../../shared/componentkit/button/button.comp
 import { TableModule } from 'primeng/table';
 import { TranslateModule } from '@ngx-translate/core';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
-import { Column, ColumnGroup, createPaginationConfig } from '@shared/componentkit/table/table.model';
+import { Column, ColumnGroup, createPaginationConfig, formatAmount, formatPercentage } from '@shared/componentkit/table/table.model';
 import { TableComponent } from '@shared/componentkit/table/table.component';
 import { RadiobuttonYNComponent } from '@shared/componentkit/radiobutton-yn/radiobutton-yn.component';
 import { yesterday } from '@shared/models/system/query-form.model';
 import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
 import { untilDestroyed } from '@ngneat/until-destroy';
-import { debounceTime, forkJoin, map, of, switchMap, tap } from 'rxjs';
+import { debounceTime, finalize, forkJoin, map, of, switchMap, tap } from 'rxjs';
+import { TLS31010Request, TLS31010Response, Tls31010Service } from '@service/api/tls/tls31010.service';
+import { ButtonModule } from 'primeng/button';
 
 @Component({
   selector: 'app-tls31010',
@@ -31,13 +33,14 @@ import { debounceTime, forkJoin, map, of, switchMap, tap } from 'rxjs';
     RadiobuttonYNComponent,
     TranslateModule,
     TableComponent,
-    MultiSelectComponent
+    MultiSelectComponent,
+    ButtonModule
   ]
 })
 
-export class TLS31010Component extends BasicQueryPageComponent<any> implements OnInit {
+export class TLS31010Component extends BasicQueryPageComponent<TLS31010Response> implements OnInit {
   queryForm = this.formBuilder.nonNullable.group({
-    txn_date: [yesterday],//交易日期
+    TXN_Date: [yesterday],//交易日期
     tlt_building: [[]],// 館別
     tlt_floor: [[]],// 樓層
     area_no: [[]],// 區域
@@ -47,31 +50,31 @@ export class TLS31010Component extends BasicQueryPageComponent<any> implements O
     tlt_kind: [[]], //櫃別 (1.正櫃 2.臨時櫃 3.特賣會 4.虛擬櫃)
     tlt_term_type: [[]], // 抽成別 1:固定租金 2:底租抽成取高者3:一般抽成     4:包底抽成     5:階梯式抽成   6:包底加階梯   "
     org_id: [[]],  // 組織
-    tax: [null],  // 銷售金額是否含稅
-    rece_yn: [null],  // 是否開立業主發票(是否開立業主發票(Y:是 N:否))
+    TaxType: [null],  // 銷售金額是否含稅
+    IsRece_Yn: [null],  // 是否開立業主發票(是否開立業主發票(Y:是 N:否))
     ...createPaginationConfig([{ field: 'tlt_building', order: 1 }])
   });
   totalRecords = 0;
-  data: any[] = [];
+  data: TLS31010Response[] = [];
   columns: Column[] = [
-    { field: 'tlt_building', header: '館別', visible: true },
-    { field: 'org_id', header: '組織名稱', visible: true },
+    { field: 'building_desc', header: '館別', visible: true },
+    { field: 'org_name', header: '組織名稱', visible: true },
     { field: 'tlt_kind', header: '櫃別', visible: true },
     { field: 'tlt_no', header: '專櫃編號', visible: true },
     { field: 'location_no', header: '位置編號', visible: true },
     { field: 'tlt_name', header: '專櫃名稱', visible: true },
-    { field: 'budget', header: '營業目標', visible: true, groupField: 'budgetAmt' },
-    { field: 'AVN_TotSaleAmt', header: '營業實績', visible: true, groupField: 'budgetAmt' },
-    { field: '', header: '達成率', visible: true, groupField: 'budgetAmt' },
-    { field: '', header: '營業目標佔比', visible: true, groupField: 'sum' },
-    { field: '', header: '營業實績佔比', visible: true, groupField: 'sum' },
-    { field: 'AVN_TotCustCnt', header: '交易筆數', visible: true, groupField: 'custCnt' },
-    { field: '', header: '客單價', visible: true, groupField: 'custCnt' },
+    { field: 'budget', header: '營業目標', visible: true, groupField: 'budgetAmt', format: formatAmount },
+    { field: 'AVN_TotSaleAmt', header: '營業實績', visible: true, groupField: 'budgetAmt', format: formatAmount },
+    { field: 'AchievementRate', header: '達成率', visible: true, groupField: 'budgetAmt', format: (value) => formatPercentage(value, 2) },
+    { field: 'BudgetRate', header: '營業目標佔比', visible: true, groupField: 'sum', format: (value) => formatPercentage(value, 2) },
+    { field: 'PerformanceRate', header: '營業實績佔比', visible: true, groupField: 'sum', format: (value) => formatPercentage(value, 2) },
+    { field: 'TxnCount', header: '交易筆數', visible: true, groupField: 'custCnt', format: formatAmount },
+    { field: 'AvgTicket', header: '客單價', visible: true, groupField: 'custCnt', format: formatAmount },
     { field: 'tlt_space', header: '坪數', visible: true, groupField: 'space' },
-    { field: '', header: '坪效', visible: true, groupField: 'space' },
-    { field: 'budget', header: '月營業目標', visible: true, groupField: 'month' },
-    { field: 'AVN_TotSaleAmt', header: '營業實績', visible: true, groupField: 'month' },
-    { field: '', header: '完成率', visible: true, groupField: 'month' },
+    { field: 'MonthlyPSM', header: '坪效', visible: true, groupField: 'space' },
+    { field: 'MonthlyBudgetTotal', header: '月營業目標', visible: true, groupField: 'month', format: formatAmount },
+    { field: 'MonthlySalesTotal', header: '營業實績', visible: true, groupField: 'month', format: formatAmount },
+    { field: 'CompletionRate', header: '完成率', visible: true, groupField: 'month', format: (value) => formatPercentage(value, 2) },
   ];
   columnGroup: ColumnGroup[] = [
     { field: 'budgetAmt', header: '營業額' },
@@ -102,7 +105,8 @@ export class TLS31010Component extends BasicQueryPageComponent<any> implements O
   bus_sclass_Option: IDropdownItem[] = []; // 小分類
   org_id_Option: IDropdownItem[] = []; // 組織
   constructor(
-    private readonly dropDownListService: DropDownListService
+    private readonly dropDownListService: DropDownListService,
+    private readonly tls31010Service: Tls31010Service
   ) { super(); }
 
   ngOnInit(): void {
@@ -228,7 +232,29 @@ export class TLS31010Component extends BasicQueryPageComponent<any> implements O
   }
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
-      this.loading = false;
+      const formValue = {
+        ...frm.getRawValue(),
+        bus_class: frm.getRawValue().bus_class.map((item: IDropdownItem) => item.No),
+        bus_sclass: frm.getRawValue().bus_sclass.map((item: IDropdownItem) => item.No),
+      } as TLS31010Request;
+      this.tls31010Service.queryTLS31010(formValue).pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(res => {
+        this.data = res.Data;
+        this.totalRecords = res.TotalCount;
+        this.queryStateService.setQueryState(this.ProgNo, frm.getRawValue());
+      })
+    })
+  }
+
+  onReport(frm: FormGroup) {
+    const printData = this.queryStateService.getQueryStateValue(this.ProgNo);
+    const formValue = {
+      ...printData,
+      IsExcel: true,
+      bus_class: frm.getRawValue().bus_class.map((item: IDropdownItem) => item.No),
+      bus_sclass: frm.getRawValue().bus_sclass.map((item: IDropdownItem) => item.No),
+    } as TLS31010Request;
+    this.tls31010Service.printTLS31010(formValue).pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(res => {
+
     })
   }
 }
