@@ -162,7 +162,7 @@ export class ASS21030Component extends BasicQueryPageComponent<ENG1001 | ENG2001
         formValue.ENG_YYMM = `${year}${month}`;
       }
 
-      console.log('送出查詢條件', formValue);
+      console.log('送出查詢條件',  JSON.stringify(formValue, null, 2));
 
       this.handleSubmit(frm, () => {
         this.ass21030Service.queryASS21030(formValue).subscribe({

@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { Column, convertDateToYYYYMM, createPaginationConfig, formatDateTime, formatYYYYMM } from '../../../shared/componentkit/table/table.model';
+import { Column, convertDateToYYYYMM, convertYYYYMMToDate, createPaginationConfig, formatDateTime, formatYYYYMM } from '../../../shared/componentkit/table/table.model';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { AccordionModule } from 'primeng/accordion';
@@ -12,6 +12,8 @@ import { TableComponent } from '../../../shared/componentkit/table/table.compone
 import { TranslateModule } from '@ngx-translate/core';
 import { ValidationService } from '@shared/service/validation.service';
 import { Fin14010Service } from '@service/api/fin/fin14010.service';
+import { untilDestroyed } from '@ngneat/until-destroy';
+import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
 
 /** TDS1002 營業人銷售額與稅額申報書檔 */
 export interface TDS1002 {
@@ -260,6 +262,7 @@ export interface TDS1002 {
       FormsModule,
       ReactiveFormsModule,
       CalendarRangeComponent,
+      CalendarComponent,
       InputTextComponent,
       InputTextRangeComponent,
       TableComponent,
@@ -269,8 +272,10 @@ export interface TDS1002 {
 export class FIN14010Component extends BasicQueryPageComponent<TDS1002> implements OnInit {
   queryForm = this.formBuilder.group({
       // TDS1002 營業人銷售額與稅額申報書檔 參考11020
-      REP_GUIYM_start: [null, [Validators.required]], // 資料所屬年月
-      REP_GUIYM_end: [null, [Validators.required]], // 資料所屬年月
+      // REP_GUIYM_start: [null, [Validators.required]], // 資料所屬年月
+      // REP_GUIYM_end: [null, [Validators.required]], // 資料所屬年月
+
+      REP_GUIYM: [null, [Validators.required]], // 資料所屬年月
       ...createPaginationConfig([{ field: 'REP_GUIYM', order: 1 }]), // 分頁和排序參數
     });
 
@@ -310,25 +315,24 @@ export class FIN14010Component extends BasicQueryPageComponent<TDS1002> implemen
       this.handleSubmit(frm, () => {
         const body = {
           ...frm.value,
-          GUI_YYMM_start: convertDateToYYYYMM(frm.value.GUI_YYMM_start),
-          GUI_YYMM_end: convertDateToYYYYMM(frm.value.GUI_YYMM_end),
+          REP_GUIYM: convertDateToYYYYMM(frm.value.REP_GUIYM),
         }
 
         console.log('申報request', body);
 
-
-        // this.fin14010Service.queryFIN11020(body).pipe(untilDestroyed(this)).subscribe({
-        //   next: (response) => {
-        //     this.data = response.Data.map((item: TDS1002) => ({
-        //       ...item,
-        //       REP_GUIYM: convertYYYYMMToDate(item.REP_GUIYM)
-        //     }));
-        //     this.totalRecords = response.TotalCount;
-        //     this.queryStateService.setQueryState(this.ProgNo, frm.value);
-        //     this.loading = false;
-        //   },
-        //   error: () => { this.loading = false; },
-        // });
+        this.fin14010Service.queryFIN14010(body).pipe(untilDestroyed(this)).subscribe({
+          next: (response) => {
+            this.data = response.Data.map((item: TDS1002) => ({
+              ...item,
+              REP_GUIYM: convertYYYYMMToDate(item.REP_GUIYM)
+            }));
+            console.log('申報response', this.data);
+            this.totalRecords = response.TotalCount;
+            this.queryStateService.setQueryState(this.ProgNo, frm.value);
+            this.loading = false;
+          },
+          error: () => { this.loading = false; },
+        });
       });
     }
     onDelete(selectedRows: TDS1002[]) {
