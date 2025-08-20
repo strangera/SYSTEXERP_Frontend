@@ -79,15 +79,12 @@
                        (uploadHandler)="handleUpload($event)"></app-file-upload> -->
       <p-fileUpload #fileUpload
                     [styleClass]="'p-3'"
-                    [accept]="'.xlsx,.xls,.csv'"
+                    [mode]="'basic'"
+                    [accept]="'.xlsx,.xls,.csv,.ods'"
                     chooseLabel="選擇 Excel 檔案"
-                    uploadLabel="上傳"
-                    cancelLabel="清除"
                     [auto]="true"
-                    [showCancelButton]="true"
-                    [showUploadButton]="true"
-                    mode="basic"
-                    (onSelect)="handleUpload($event)"></p-fileUpload>
+                    [customUpload]="true"
+                    (uploadHandler)="handleUpload($event)"></p-fileUpload>
       <app-button btnType="CSV"
                   label="匯出 Excel 樣本"
                   (click)="onExportExcelTemplate()"></app-button>
@@ -138,14 +135,13 @@
                class="line-height-3 m-0 mb-3">
         <app-table [showCheckBox]="true"
                    [showRowEdit]="true"
-                   [alwaysEdit]="true"
-                   [alwaysBlurValidate]="true"
+                   [showInsert]="true"
                    [insertRowData]="true"
                    [data]="service.TLS26080Detail()"
                    [dataKey]="'tlt_no'"
                    [tableKey]="'TLS26080_Counter'"
-                   (onBlur)="onBlurCounter($event)"
-                   [columns]="counterColumns"></app-table>
+                   [columns]="counterColumns"
+                   (rowEditSave)="onInsert($event)"></app-table>
 
         <!-- 選中專櫃提示 -->
         <!-- <div *ngIf="selectedCounter"

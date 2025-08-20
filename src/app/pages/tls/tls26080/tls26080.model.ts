@@ -1,5 +1,3 @@
-import { BaseQueryResponse } from "@shared/models/api/base-api.interface";
-
 export interface TLS26080Data {
   act_no: string;              // 活動編號
   approved_date: Date;         // 核准日期
@@ -103,14 +101,6 @@ export interface CampaignData {
   EndTime: Date;
   Remark: string;
   StartTime: Date;
-}
-
-export interface CampaignCounterData {
-  CampaignId: string;
-  CounterCode: string;
-  ProductType: string;
-  talent_id: number;
-  tlt_name: string;
 }
 
 // /** 活動類型 */
