@@ -37,7 +37,7 @@
     <app-table tableKey="TLS43040" dataKey="ECR_GrpNo" [data]="data" [multiSortMeta]="[{ field: 'ECR_No', order: 1 }]"
       [totalRecords]="totalRecords" (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"
       [lazy]="true" [showReportMode]="false" [showDelete]="false" [loading]="loading" (detail)="onDetail($event)"
-      [showRowEdit]="false" [showEdit]="false" [columns]="columns7" expansionDataKey="details"
+      [showRowEdit]="false" [showEdit]="false" [columns]="columns7" expansionDataKey="ECR_Details"
       [expansionColumns]="expansionColumns7"></app-table>
   </div>
 </div>
