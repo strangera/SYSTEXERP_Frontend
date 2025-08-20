@@ -16,7 +16,7 @@ import { Column } from '@shared/componentkit/table/table.model';
 import { CRUDStatus } from '@shared/models/system/CRUDstatus';
 import { ApprovalStatus } from '@shared/models/tls/approval-status.model';
 import { ExcelImportService } from '@shared/service/excel-import.service';
-import { FileSelectEvent, FileUpload, FileUploadEvent, FileUploadHandlerEvent, FileUploadModule } from 'primeng/fileupload';
+import { FileUpload, FileUploadHandlerEvent, FileUploadModule } from 'primeng/fileupload';
 import { PanelModule } from 'primeng/panel';
 import * as XLSX from 'xlsx';
 import { TLS26080Data, TLS26080Detail } from '../tls26080/tls26080.model';
@@ -134,9 +134,10 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
 
   // 專櫃資料表
   public counterColumns: Column[] = [
-    { field: 'tlt_no', header: '專櫃編號', type: 'inputNumber' },
+    { field: 'talent_id', header: '專櫃編號', type: 'inputNumber' },
     { field: 'tlt_name', header: '櫃位名稱', type: 'input' },
     { field: 'tlt_id', header: '抽成類別', type: 'inputNumber' },
+    { field: 'tlt_id_desc', header: '抽成類別名稱', type: 'input' },
     {
       field: 'calc_date_type',
       header: '預售起日計算',
@@ -146,14 +147,15 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
       options: () => this.calcDateType,
       format: v => v === 'Y' ? '活動起始日至截止日' : '正檔日至截止日',
     },
-    {
-      field: 'tpy_rate',
-      header: '抽成率',
-      visible: !0,
-      type: 'input',
-      validate: [this.numValidator],
-      suffix: '%',
-    },
+    { field: 'tpy_rate_D16', header: 'D16', groupField: 'groupField1', type: 'input' },
+    { field: 'tpy_rate_D17', header: 'D17', groupField: 'groupField1', type: 'input' },
+    { field: 'pod_status', header: '審核狀態', format: this.service.approvalStatus.bind(this) },
+    { field: 'approved_usr_name', header: '審核人員' },
+    { field: 'approved_date', header: '審核日期', format: v => this.datePipe.transform(v, 'YYYY/MM/dd HH:mm') },
+  ];
+
+  public readonly counterColumnsGroup: Column[] = [
+    { field: 'groupField1', header: '匯入分攤' },
   ];
 
   // 扣款項目資料表
@@ -251,9 +253,12 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
   }
 
   public onExportExcelTemplate(): void {
-    const headerRow1 = ['專櫃編號', '櫃位名稱', '抽成類別', '抽成類別名稱', '正檔起日計算', '匯入分攤', null];
-    const headerRow2 = [null, null, null, null, null, 'D16', 'D17'];
+    /** 手動控制 local 生成或從 api 下載 */
+    const exampleByApi = !0;
+    const headerRow1 = ['專櫃編號', '櫃位名稱', '抽成類別', '抽成類別名稱', '正檔起日計算', '匯入分攤', null, '合約建檔'];
+    const headerRow2 = [null, null, null, null, null, 'D16', 'D17', 'D16', 'D17'];
     const example = ['000064', 'gozo', '0', '少女裝', 'Y', '1.00%', '50.00%'];
+    if (exampleByApi) return void this.service.downloadXLSXExample();
 
     // 生成工作表
     const ws: XLSX.WorkSheet = XLSX.utils.aoa_to_sheet([headerRow1, headerRow2, example]);
@@ -266,6 +271,20 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
       { s: { r: 0, c: 3 }, e: { r: 1, c: 3 } }, // D1:D2
       { s: { r: 0, c: 4 }, e: { r: 1, c: 4 } }, // E1:E2
       { s: { r: 0, c: 5 }, e: { r: 0, c: 6 } }, // F1:G1（匯入分攤）
+      { s: { r: 0, c: 7 }, e: { r: 0, c: 8 } }, // H1:I1（合約建檔）
+    ];
+
+    // 修改欄位大小
+    ws['!cols'] = [
+      { wch: 8 },  // A
+      { wch: 8 },  // B
+      { wch: 8 },  // C
+      { wch: 12 }, // D
+      { wch: 12 }, // E
+      { wch: 8 },  // F
+      { wch: 8 },  // G
+      { wch: 8 },  // H
+      { wch: 8 },  // I
     ];
 
     const wb: XLSX.WorkBook = XLSX.utils.book_new();
