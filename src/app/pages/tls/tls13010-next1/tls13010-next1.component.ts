@@ -15,6 +15,7 @@ import { NgIf, NgFor } from '@angular/common';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { AccordionModule } from 'primeng/accordion';
 import { LocationOptionsService } from '../../../service/api/dropdownservice/location-options.service';
+import { TableValidators } from '@shared/componentkit/expandable-edit-table/table-validation.interface';
 
 // 介面定義
 interface CategoryItem {
@@ -43,7 +44,6 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
   private routerSubscription: any;
 
   // 顯示模式控制
-  showOnlySelected = false;  // 控制是否只顯示已勾選項目
   isShowingAll = false;
 
   // 當前合約資料
@@ -149,7 +149,7 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
     },
     {
       field: 'cap_item',
-      header: '代號',
+      header: '扣款代號',
       type: 'text',
       editable: false,
       autoWidth: true
@@ -168,7 +168,15 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
       editable: true,
       autoWidth: true,
       dateFormat: 'year-month',
-      maxLength: 7,
+      // maxLength: 8,
+      required: true,
+      defaultValueFunction: () => {
+        const contractInfo = this.contractInfoData[0];
+        if (contractInfo?.tlt_contract_bdate) {
+          return new Date(contractInfo.tlt_contract_bdate);
+        }
+        return null;
+      }
     },
     {
       field: 'tpy_type',
@@ -177,27 +185,34 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
       editable: true,
       width: '70px',
       options: TLS13010_DROPDOWN_OPTIONS.tpyTypeOption,
+      required: true,
     },
     {
       field: 'tpy_unitamt',
       header: '單價',
       type: 'number',
       editable: true,
-      width: '90px'
+      width: '90px',
+      required: true,
+      validators: [TableValidators.positive('單價必須大於0')]
     },
     {
       field: 'tpy_qty',
       header: '數量',
       type: 'number',
       editable: true,
-      width: '70px'
+      width: '70px',
+      required: true,
+      validators: [TableValidators.positive('數量必須大於0')],
+      defaultValue: 1
     },
     {
       field: 'tpy_amount',
       header: '扣款金額',
       type: 'number',
       editable: false,
-      autoWidth: true
+      autoWidth: true,
+      required: true,
     },
     {
       field: 'org_id',
@@ -205,7 +220,8 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
       type: 'dropdown',
       editable: true,
       width: '90px',
-      options: []
+      options: [],
+      required: true,
     },
     {
       field: 'gui_flag',
@@ -216,7 +232,9 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
       options: [
         { label: '開立', value: 'Y' },
         { label: '未開立', value: 'N' }
-      ]
+      ],
+      required: true,
+      defaultValue: 'Y'  // 🎯 預設開立發票
     }
   ];
 
@@ -252,7 +270,15 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
       editable: true,
       width: '130px',
       dateFormat: 'year-month',
-      maxLength: 7
+      // maxLength: 7
+      required: true,
+      defaultValueFunction: () => {
+        const contractInfo = this.contractInfoData[0];
+        if (contractInfo?.tlt_contract_bdate) {
+          return new Date(contractInfo.tlt_contract_bdate);
+        }
+        return null;
+      }
     },
     {
       field: 'tpy_edate',
@@ -261,7 +287,14 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
       editable: true,
       width: '130px',
       dateFormat: 'year-month',
-      maxLength: 7
+      required: true,
+      defaultValueFunction: () => {
+        const contractInfo = this.contractInfoData[0];
+        if (contractInfo?.tlt_contract_edate) {
+          return new Date(contractInfo.tlt_contract_edate);
+        }
+        return null;
+      }
     },
     {
       field: 'tpy_type',
@@ -270,13 +303,17 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
       editable: true,
       options: TLS13010_DROPDOWN_OPTIONS.tpyTypeOption,
       autoWidth: true,
+      required: true
     },
     {
       field: 'tpy_unitamt',
       header: '單價',
       type: 'number',
       editable: true,
-      width: '90px'
+      width: '90px',
+      required: true,
+      validators: [TableValidators.positive('單價必須大於0')],
+      defaultValue: 0
     },
     {
       field: 'tpy_qty',
@@ -284,14 +321,19 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
       type: 'number',
       allowDecimal: true,
       editable: true,
-      width: '70px'
+      width: '70px',
+      required: true,
+      validators: [TableValidators.positive('數量必須大於0')],
+      defaultValue: 1
     },
     {
       field: 'tpy_amount',
       header: '扣款金額(未稅)',
       type: 'number',
       editable: false,
-      width: '120px'
+      width: '120px',
+      defaultValue: 0
+
     },
     {
       field: 'gui_flag',
@@ -302,7 +344,9 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
       options: [
         { label: '開立', value: 'Y' },
         { label: '未開立', value: 'N' }
-      ]
+      ],
+      required: true,
+      defaultValue: 'Y'
     },
     {
       field: 'day_account',
@@ -313,14 +357,18 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
       options: [
         { label: '是', value: 'Y' },
         { label: '否', value: 'N' }
-      ]
+      ],
+      required: true,
+      defaultValue: 'Y'
     },
     {
       field: 'interval',
       header: '扣款週期數(月)',
       type: 'number',
       editable: true,
-      width: '120px'
+      width: '120px',
+      required: true,
+      defaultValue: 1
     }
   ];
 
@@ -356,7 +404,15 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
       editable: true,
       width: '130px',
       dateFormat: 'year-month',
-      maxLength: 7
+      // maxLength: 7
+      required: true,
+      defaultValueFunction: () => {
+        const contractInfo = this.contractInfoData[0];
+        if (contractInfo?.tlt_contract_bdate) {
+          return new Date(contractInfo.tlt_contract_bdate);
+        }
+        return null;
+      }
     },
     {
       field: 'tpy_edate',
@@ -365,21 +421,33 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
       editable: true,
       width: '130px',
       dateFormat: 'year-month',
-      maxLength: 7
+      // maxLength: 7
+      required: true,
+      defaultValueFunction: () => {
+        const contractInfo = this.contractInfoData[0];
+        if (contractInfo?.tlt_contract_edate) {
+          return new Date(contractInfo.tlt_contract_edate);
+        }
+        return null;
+      }
     },
     {
       field: 'tpy_totalamt',
       header: '總金額',
       type: 'number',
       editable: true,
-      width: '100px'
+      width: '100px',
+      required: true,
+
     },
     {
       field: 'down_payment',
       header: '預收款',
       type: 'number',
       editable: true,
-      width: '90px'
+      width: '90px',
+      required: true,
+
     },
     {
       field: 'period_nos',
@@ -393,14 +461,18 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
       header: '每月金額',
       type: 'number',
       editable: true,
-      width: '100px'
+      width: '100px',
+      required: true,
+
     },
     {
       field: 'tpy_1stamt',
       header: '首期金額',
       type: 'number',
       editable: true,
-      width: '100px'
+      width: '100px',
+      required: true,
+
     },
     {
       field: 'org_id',
@@ -408,7 +480,9 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
       type: 'dropdown',
       editable: true,
       width: '90px',
-      options: []
+      options: [],
+      required: true,
+
     },
     {
       field: 'gui_flag',
@@ -419,7 +493,9 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
       options: [
         { label: '開立', value: 'Y' },
         { label: '未開立', value: 'N' }
-      ]
+      ],
+      required: true,
+      defaultValue: 'Y'
     }
   ];
 
@@ -455,7 +531,15 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
       editable: true,
       width: '130px',
       dateFormat: 'year-month',
-      maxLength: 7
+      // maxLength: 7
+      required: true,
+      defaultValueFunction: () => {
+        const contractInfo = this.contractInfoData[0];
+        if (contractInfo?.tlt_contract_bdate) {
+          return new Date(contractInfo.tlt_contract_bdate);
+        }
+        return null;
+      }
     },
     {
       field: 'tpy_edate',
@@ -464,7 +548,15 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
       editable: true,
       width: '130px',
       dateFormat: 'year-month',
-      maxLength: 7
+      // maxLength: 7
+      required: true,
+      defaultValueFunction: () => {
+        const contractInfo = this.contractInfoData[0];
+        if (contractInfo?.tlt_contract_edate) {
+          return new Date(contractInfo.tlt_contract_edate);
+        }
+        return null;
+      }
     },
     {
       field: 'tpy_type',
@@ -473,13 +565,17 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
       editable: true,
       options: TLS13010_DROPDOWN_OPTIONS.tpyTypeOption,
       autoWidth: true,
+      required: true,
+
     },
     {
       field: 'tpy_rate',
       header: '比率',
       type: 'number',
       editable: true,
-      width: '100px'
+      width: '100px',
+      required: true,
+
     },
     {
       field: 'org_id',
@@ -487,7 +583,9 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
       type: 'dropdown',
       editable: true,
       width: '90px',
-      options: []
+      options: [],
+      required: true,
+
     },
     {
       field: 'gui_flag',
@@ -498,7 +596,9 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
       options: [
         { label: '開立', value: 'Y' },
         { label: '未開立', value: 'N' }
-      ]
+      ],
+      required: true,
+      defaultValue: 'Y'
     }
   ];
 
@@ -534,7 +634,15 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
       editable: true,
       width: '130px',
       dateFormat: 'year-month',
-      maxLength: 7
+      // maxLength: 7
+      required: true,
+      defaultValueFunction: () => {
+        const contractInfo = this.contractInfoData[0];
+        if (contractInfo?.tlt_contract_bdate) {
+          return new Date(contractInfo.tlt_contract_bdate);
+        }
+        return null;
+      }
     },
     {
       field: 'tpy_edate',
@@ -543,7 +651,15 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
       editable: true,
       width: '130px',
       dateFormat: 'year-month',
-      maxLength: 7
+      // maxLength: 7
+      required: true,
+      defaultValueFunction: () => {
+        const contractInfo = this.contractInfoData[0];
+        if (contractInfo?.tlt_contract_edate) {
+          return new Date(contractInfo.tlt_contract_edate);
+        }
+        return null;
+      }
     },
     {
       field: 'tpy_type',
@@ -552,13 +668,17 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
       editable: true,
       options: TLS13010_DROPDOWN_OPTIONS.tpyTypeOption,
       autoWidth: true,
+      required: true,
+
     },
     {
       field: 'tpy_rate',
       header: '比率',
       type: 'number',
       editable: true,
-      width: '100px'
+      width: '100px',
+      required: true,
+
     },
     {
       field: 'org_id',
@@ -566,7 +686,9 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
       type: 'dropdown',
       editable: true,
       width: '90px',
-      options: []
+      options: [],
+      required: true,
+
     },
     {
       field: 'gui_flag',
@@ -577,7 +699,9 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
       options: [
         { label: '開立', value: 'Y' },
         { label: '未開立', value: 'N' }
-      ]
+      ],
+      required: true,
+      defaultValue: 'Y'
     }
   ];
 
@@ -606,6 +730,7 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
   }
 
   ngOnInit(): void {
+    this.showMode = 'common';  // 預設為常用模式
     this.initializeViewModeFromService();
     this.initializeDataStructure();
     this.initializePage('TLS13010', this.dataForm);
@@ -1142,22 +1267,29 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
 
       let filteredData = [...this.originalFareData[capType]];
 
-      // 根據常用/全部模式過濾
+      // 🎯 根據常用/全部模式過濾，已勾選項目一定顯示
       if (this.showMode === 'common') {
-        // 常用模式：顯示契約已有的項目 + 常用項目
+        // 常用模式：合約項目 + 常用項目 + 已勾選項目
         filteredData = filteredData.filter(item =>
-          item.data_source === 'CONTRACT_EXISTING' || item.is_commonly_used === 'Y'
+          item.data_source === 'CONTRACT_EXISTING' ||
+          item.is_commonly_used === 'Y' ||
+          item.is_selected === true
         );
       }
-      // 全部模式：顯示所有項目（契約已有的 + 常用 + 不常用）
-
-      // 根據已勾選模式過濾
-      if (this.showOnlySelected) {
-        // 只顯示已勾選的項目
-        filteredData = filteredData.filter(item => item.is_selected);
-      }
+      // 全部模式：顯示所有項目（本來就包含已勾選）
 
       this.fareData[capType] = filteredData;
+    });
+
+    console.log('🔍 過濾後結果:', {
+      顯示模式: this.showMode,
+      各類型數量: Object.keys(this.fareData).reduce((acc, type) => {
+        acc[type] = {
+          總數: this.fareData[type].length,
+          已勾選: this.fareData[type].filter(item => item.is_selected).length
+        };
+        return acc;
+      }, {} as any)
     });
   }
 
@@ -1569,6 +1701,9 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
 
   onFareTableEdit(rowData: any, capType: string): void {
     console.log(`開始編輯 ${capType} 類型扣款資料:`, rowData);
+
+    // 🎯 在編輯時確保預設值已套用
+    this.ensureDefaultValues(rowData, capType);
   }
 
   onFareTableCancel(rowData: any, capType: string): void {
@@ -1580,6 +1715,9 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
 
     this.fareData[capType].forEach(item => {
       // 🎯 直接用 data_source 判斷是否為合約原有項目
+      if (item.is_selected && capType === 'C') {
+        this.ensureDefaultValues(item, capType);
+      }
       const isContractExisting = item.data_source === 'CONTRACT_EXISTING';
 
       if (item.is_selected) {
@@ -1825,51 +1963,39 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
     return this.fareData[capType] && Array.isArray(this.fareData[capType]) && this.fareData[capType].length > 0;
   }
 
-  getCurrentDisplayMode(): string {
-    let mode = '';
-
-    // 常用/全部模式
-    if (this.showMode === 'common') {
-      mode += '契約項目 + 常用項目';
-    } else {
-      mode += '全部項目';
-    }
-
-    // 已勾選模式
-    if (this.showOnlySelected) {
-      mode += '（已勾選）';
-    }
-
-    return mode;
-  }
-
   // 切換常用/全部模式
   toggleCommonMode(): void {
     if (this.showMode === 'common') {
       // 從常用模式切換到全部模式
       this.showMode = 'all';
+      console.log('🔄 切換到全部模式（包含已勾選項目）');
     } else {
       // 從全部模式切換到常用模式
       this.showMode = 'common';
+      console.log('🔄 切換到常用模式（包含已勾選項目）');
     }
     this.filterData();
   }
 
-  // 切換已勾選模式
-  toggleSelectedMode(): void {
-    this.showOnlySelected = !this.showOnlySelected;
-    this.filterData();
+
+  // 簡化的按鈕文字
+  getDisplayModeText(): string {
+    return this.showMode === 'common' ? '顯示全部項目' : '顯示常用項目';
   }
 
+  // 簡化的顯示模式描述
+  getCurrentDisplayMode(): string {
+    if (this.showMode === 'common') {
+      return '合約項目 + 常用項目 + 已勾選項目';
+    } else {
+      return '全部項目';
+    }
+  }
   // 取得常用模式按鈕文字
   getCommonModeText(): string {
-    return this.showMode === 'common' ? '顯示全部項目' : '只顯示常用';
+    return this.showMode === 'common' ? '顯示全部項目' : '顯示常用項目';
   }
 
-  // 取得已勾選模式按鈕文字
-  getSelectedModeText(): string {
-    return this.showOnlySelected ? '顯示全部項目' : '只顯示已勾選';
-  }
 
   private updateColumnsReadonly(readonly: boolean): void {
     console.log(`📋 設定表格欄位為${readonly ? '唯讀' : '可編輯'}模式`);
@@ -1906,4 +2032,30 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
 
     console.log(`✅ 所有表格欄位已設為${readonly ? '唯讀' : '可編輯'}模式`);
   }
+
+  // 🎯 套用動態預設值到新項目
+  private applyDynamicDefaults(item: any, columns: ColumnDef[]): void {
+    columns.forEach(column => {
+      // 如果欄位沒有值且有動態預設值函數
+      if ((item[column.field] === undefined || item[column.field] === null || item[column.field] === '')
+        && column.defaultValueFunction) {
+        try {
+          const defaultValue = column.defaultValueFunction();
+          if (defaultValue !== null && defaultValue !== undefined) {
+            item[column.field] = defaultValue;
+            console.log(`🎯 套用動態預設值 ${column.field}: ${defaultValue}`);
+          }
+        } catch (error) {
+          console.error(`❌ 動態預設值函數執行失敗 ${column.field}:`, error);
+        }
+      }
+    });
+  }
+
+  // 🎯 在進入編輯模式時套用預設值
+  private ensureDefaultValues(item: any, capType: string): void {
+    const columns = this.getColumnsForType(capType);
+    this.applyDynamicDefaults(item, columns);
+  }
+
 }

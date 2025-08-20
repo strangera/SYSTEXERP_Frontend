@@ -97,22 +97,24 @@
                 </div>
               </app-selector-panel>
               <!-- 基本文字輸入 -->
-              <input *ngSwitchCase="'text'" pInputText type="text" [ngModel]="rowData[col.field]"
+              <input *ngSwitchCase="'text'" pInputText type="text" [ngModel]="getFieldDefaultValue(col, rowData)"
                 (ngModelChange)="onTextInputChange(rowData, col, $event)" [maxlength]="col.maxLength ?? null"
                 [placeholder]="col.placeholder || ''" class="text-input" />
 
               <!-- 數字輸入 -->
-              <p-inputNumber *ngSwitchCase="'number'" [(ngModel)]="rowData[col.field]" [minFractionDigits]="
+              <p-inputNumber *ngSwitchCase="'number'" [ngModel]="getFieldDefaultValue(col, rowData)"
+                (onBlur)="onNumberFieldBlur($event, col.field, rowData)" [minFractionDigits]="
                     getNumberInputConfig(col).minFractionDigits
                   " [maxFractionDigits]="
                     getNumberInputConfig(col).maxFractionDigits
-                  " [step]="getNumberInputConfig(col).step" mode="decimal" [useGrouping]="false"></p-inputNumber>
+                  " [step]="getNumberInputConfig(col).step" mode="decimal"></p-inputNumber>
 
               <!-- 下拉選單 -->
               <p-dropdown *ngSwitchCase="'dropdown'" [options]="getFieldOptions(rowData, col.field)"
-                [(ngModel)]="rowData[col.field]" (ngModelChange)="onDropdownChange(rowData, col.field, $event)"
-                [style]="{ width: '100%' }" appendTo="body" [showClear]="true" optionLabel="label" optionValue="value"
-                [filter]="true" filterMatchMode="contains"></p-dropdown>
+                [ngModel]="getFieldDefaultValue(col, rowData)"
+                (ngModelChange)="onDropdownChange(rowData, col.field, $event)" [style]="{ width: '100%' }"
+                appendTo="body" [showClear]="true" optionLabel="label" optionValue="value" [filter]="true"
+                filterMatchMode="contains"></p-dropdown>
 
               <!-- 🎯 日期選擇 - 使用新的方法 -->
               <div *ngSwitchCase="'date'" class="date-selector-wrapper">
@@ -268,21 +270,21 @@
           <ng-container *ngIf="shouldShowInputControl(col, isDetailEditing(ri, di))">
             <ng-container [ngSwitch]="col.type">
               <!-- 基本文字輸入 -->
-              <input *ngSwitchCase="'text'" pInputText type="text" [ngModel]="detailData[col.field]"
+              <input *ngSwitchCase="'text'" pInputText type="text" [ngModel]="getFieldDefaultValue(col, rowData)"
                 (ngModelChange)="onDetailTextInputChange(detailData, col, $event, ri, di)"
                 [maxlength]="col.maxLength ?? null" [placeholder]="col.placeholder || ''" class="text-input" />
 
               <!-- 數字輸入 -->
-              <p-inputNumber *ngSwitchCase="'number'" [(ngModel)]="detailData[col.field]" [minFractionDigits]="
+              <p-inputNumber *ngSwitchCase="'number'" [ngModel]="getFieldDefaultValue(col, rowData)"
+                (onBlur)="onNumberFieldBlur($event, col.field, rowData)" [minFractionDigits]="
                             getNumberInputConfig(col).minFractionDigits
                           " [maxFractionDigits]="
                             getNumberInputConfig(col).maxFractionDigits
-                          " [step]="getNumberInputConfig(col).step" mode="decimal"
-                [useGrouping]="false"></p-inputNumber>
+                          " [step]="getNumberInputConfig(col).step" mode="decimal"></p-inputNumber>
 
               <!-- 下拉選單 -->
               <p-dropdown *ngSwitchCase="'dropdown'" [options]="getFieldOptions(detailData, col.field)"
-                [(ngModel)]="detailData[col.field]" (ngModelChange)="
+                [ngModel]="getFieldDefaultValue(col, rowData)" (ngModelChange)="
                             onDropdownChange(detailData, col.field, $event)
                           " [style]="{ width: '100%' }" appendTo="body"></p-dropdown>
 
