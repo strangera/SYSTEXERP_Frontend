@@ -181,7 +181,7 @@ export class TableComponent extends BasicPrintDataComponent implements OnChanges
   // 計算欄位總數(包含序號、勾選、管理、展開)
   get getVisibleHeaderCount(): number {
     const visibleColumnCount = this.tableUtilityService.getVisibleColumnCount(this.selectedColumns);
-    return 1 + Number(this.showCheckBox) + visibleColumnCount + Number(this.showManage) + (this.expansionDataKey ? 1 : 0);
+    return 1 + Number(this.showCheckBox) + visibleColumnCount + Number(this.showManage) + (this.expansionDataKey ? 1 : 0) + (this.showSubTotal || this.showTotal ? 0 : 1);
   }
   // 行是否可選
   rowSelectableWrapper = ({ data }: { data: any, index: number; }): boolean | undefined => { return this.isRowSelectable(data) && !this.rowEditing; };

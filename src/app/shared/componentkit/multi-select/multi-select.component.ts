@@ -38,6 +38,7 @@ export class MultiSelectComponent extends BasicKitComponent implements OnInit {
   @Input() optionGroupChildren = 'items'; // 分組的子項目欄位
   @Input() selectedItemsLabel?: string;
   @Input() maxSelectedLabels = 3; // 預設值，可被覆寫
+  @Input() filter = true;
   @Input() dataKey = this.optionValue;
   private _options: any[] = [];
 
