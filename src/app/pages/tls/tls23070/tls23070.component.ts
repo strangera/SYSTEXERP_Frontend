@@ -136,12 +136,10 @@ onSubmit(form: FormGroup): void {
     // 多欄排序 -> "field ASC,DESC..."
     const orderBy =
       Array.isArray(val?.SortBy) && val.SortBy.length
-        ? val.SortBy
-            .map((s: any) => `${s.field} ${s.order === 1 ? 'ASC' : 'DESC'}`)
-            .join(',')
+        ? val.SortBy.map((s: any) => `${s.field} ${s.order === 1 ? 'ASC' : 'DESC'}`).join(',')
         : undefined;
 
-    // 組 payload（使用 YYYY-MM-DD，避免 toISOString 時區造成少一天）
+    // 用 YYYY-MM-DD，避免時區造成少一天
     const payload: any = {
       TXN_DateStart: formatDateToYYYY_MM_DD(val?.TXN_DateStart),
       TXN_DateEnd:   formatDateToYYYY_MM_DD(val?.TXN_DateEnd),
@@ -156,7 +154,7 @@ onSubmit(form: FormGroup): void {
       ...(orderBy ? { OrderBy: orderBy } : {}),
     };
 
-    // 移除空值/空陣列，避免後端模型繫結混亂
+    // 移除空值/空陣列
     Object.keys(payload).forEach((k) => {
       const v = payload[k];
       if (v === '' || v === null || v === undefined) delete payload[k];
@@ -168,27 +166,29 @@ onSubmit(form: FormGroup): void {
 
     this.tls23070Service.queryTLS23070(payload).subscribe({
       next: (res: any) => {
-        // 期待格式：
-        // Data: [{
-        //   totalSummary: {...},
-        //   subsTotals: [{ TXN_Date, ..., tLS23070Details: [...] }],
-        //   LineAttach?: string
-        // }]
         const data = res?.Data;
         const wrapper = Array.isArray(data) ? data[0] : data;
 
+        // 總計（頂層）
         this.totalSummary = wrapper?.totalSummary ?? null;
-        this.subsTotals   = Array.isArray(wrapper?.subsTotals) ? wrapper.subsTotals : [];
 
-        // 攤平所有 subsTotals[i].tLS23070Details
-        const detailsFromSubs = this.subsTotals.flatMap((s: any) =>
-          (s?.tLS23070Details ??
-           s?.TLS23070Details ??
-           s?.tls23070Details ??
-           []) as any[]
+        // 群組 -> 每日小計 -> 明細
+        const tltGroups = Array.isArray(wrapper?.tltNoSubTotals) ? wrapper.tltNoSubTotals : [];
+
+        // 全部每日小計攤平（如果你需要顯示每日小計可直接用這個）
+        const allSubs = tltGroups.flatMap((g: any) => g?.subsTotals ?? []);
+        this.subsTotals = allSubs;
+
+        // 主要顯示資料：所有 tLS23070Details 攤平
+        const detailsFromSubs = allSubs.flatMap(
+          (s: any) =>
+            (s?.tLS23070Details ??
+             s?.TLS23070Details ??
+             s?.tls23070Details ??
+             []) as any[],
         );
 
-        // 若少數情況放在頂層，也一併相容
+        // 後援：若少數情況沒有 subsTotals，試頂層的 details
         const topLevelDetails =
           (wrapper?.tLS23070Details ??
            wrapper?.TLS23070Details ??
@@ -197,15 +197,20 @@ onSubmit(form: FormGroup): void {
 
         const details = detailsFromSubs.length ? detailsFromSubs : topLevelDetails;
 
-        this.data = Array.isArray(details) ? details : [];
+        // 設定表格資料
+        this.data = details.map((r: any, i: number) => ({
+          ...r,
+          _rowKey: `${r.TXN_Date ?? ''}|${r.ECR_No ?? ''}|${r.tlt_no ?? ''}|${i}`,
+        }));
+
         this.totalRecords =
           typeof res?.TotalCount === 'number' ? res.TotalCount : this.data.length;
       },
       error: (err) => {
         console.error('TLS23070 查詢失敗', err);
-        this.loading = false;
-        this.messageService?.unblockUi();           // ⬅ 確保錯誤時解除 block
         this.messageService?.errorBubble?.('查詢失敗，請稍後再試');
+        this.loading = false;
+        this.messageService?.unblockUi();
       },
       complete: () => {
         this.loading = false;

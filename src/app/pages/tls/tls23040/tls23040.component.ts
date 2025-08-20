@@ -120,60 +120,101 @@ backendTotals: Record<string, number> | null = null;
     this.counterNameService.getCounters().subscribe((res) => { this.CounterOptions = (res ?? []).map((x: any) => ({ label: x.label, formLabel: `${x.value} - ${x.label}`, value: x.value, })); });
   }
   // 送出查詢（無 doQuery / buildPayload）
-  onSubmit(form: FormGroup): void {
-    this.handleSubmit(form, () => {
-      const val = this.queryForm.value as any;
+  // 送出查詢（依新回傳結構 Data[].invoice.InvoiceDetail）
+onSubmit(form: FormGroup): void {
+  this.handleSubmit(form, () => {
+    const val = this.queryForm.value as any;
 
-      // 轉本地 ISO(yyyy-MM-ddTHH:mm:ss) — 去掉時區偏移
-      const toIso = (x: any) => {
-        if (!x) return undefined; const d = typeof x === 'string' ? new Date(x) : (x as Date); if (isNaN(d.getTime())) return undefined; return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 19);
-      };
-
-      // 組 payload（含分頁/排序）
-      const payload: any = {
-        ...val, TXN_DateStart: toIso(val?.TXN_DateStart), TXN_DateEnd: toIso(val?.TXN_DateEnd), pageSize: val?.pageSize, pageIndex: val?.pageIndex, SortBy: val?.SortBy, OrderBy: val?.OrderBy, Offset: val?.Offset,
-      };
-
-      // 數值欄位保險轉型
-      if ((val?.TXN_No_Start ?? '') !== '') payload.TXN_No_Start = Number(val.TXN_No_Start);
-      if ((val?.TXN_No_End ?? '') !== '') payload.TXN_No_End = Number(val.TXN_No_End);
-
-      // 清除空字串/null/undefined/空陣列
-      Object.keys(payload).forEach((k) => {
-        const v = payload[k]; if (v === '' || v === null || v === undefined) delete payload[k]; if (Array.isArray(v) && v.length === 0) delete payload[k];
-      });
-
-      this.loading = true;
-      this.messageService?.blockUi();
-
-      this.tls23040Service.queryTLS23040(payload).subscribe({
-
-
-  next: (res) => {
-    const groups = Array.isArray(res?.Data) ? res.Data : [];
-    const invoiceRows = groups.map((g: any) => g?.InvoiceDetail ?? []).flat();
-
-    const totalSrc =
-      invoiceRows.find((r: any) => r?.totalGUI != null || r?.totalSaleAmt != null) ?? (res as any);
-
-    // ✅ 提供給 footer 的外部總計（key 要對到 columns 的 field）
-    this.backendTotals = {
-      TXN_TotGUI:     Number(totalSrc?.totalGUI ?? 0),
-      TXN_TotSaleAmt: Number(totalSrc?.totalSaleAmt ?? 0),
+    // 轉本地 ISO(yyyy-MM-ddTHH:mm:ss) — 去掉時區偏移
+    const toIso = (x: any) => {
+      if (!x) return undefined;
+      const d = typeof x === 'string' ? new Date(x) : (x as Date);
+      if (isNaN(d.getTime())) return undefined;
+      return new Date(d.getTime() - d.getTimezoneOffset() * 60000)
+        .toISOString()
+        .slice(0, 19);
     };
 
-    // ✅ 只放一般列，不要把「總計列」塞進 data，避免影響分頁 & 避免 footer 再相加一次
-    this.data = invoiceRows.map((r: any, i: number) => ({
-      ...r,
-      _rowKey: `${r.TXN_Date ?? ''}|${r.ECR_No ?? ''}|${r.TXN_No ?? ''}|${i}`,
-    }));
+    // 組 payload（含分頁/排序）
+    const payload: any = {
+      ...val,
+      TXN_DateStart: toIso(val?.TXN_DateStart),
+      TXN_DateEnd: toIso(val?.TXN_DateEnd),
+      pageSize: val?.pageSize,
+      pageIndex: val?.pageIndex,
+      SortBy: val?.SortBy,
+      OrderBy: val?.OrderBy,
+      Offset: val?.Offset,
+    };
 
-    this.totalRecords = Number(res?.TotalCount ?? this.data.length);
-  },
- error: (err) => { console.error('TLS23040 查詢失敗', err); this.messageService?.errorBubble?.('查詢失敗，請稍後再試'); }, complete: () => { this.loading = false; this.messageService?.unblockUi(); }
-      });
+    // 數值欄位保險轉型
+    if ((val?.TXN_No_Start ?? '') !== '') payload.TXN_No_Start = Number(val.TXN_No_Start);
+    if ((val?.TXN_No_End ?? '') !== '') payload.TXN_No_End = Number(val.TXN_No_End);
+
+    // 清除空字串/null/undefined/空陣列
+    Object.keys(payload).forEach((k) => {
+      const v = payload[k];
+      if (v === '' || v === null || v === undefined) delete payload[k];
+      if (Array.isArray(v) && v.length === 0) delete payload[k];
     });
-  }
+
+    this.loading = true;
+    this.messageService?.blockUi();
+
+    this.tls23040Service.queryTLS23040(payload).subscribe({
+      next: (res) => {
+        const items = Array.isArray(res?.Data) ? res.Data : [];
+
+        // ⬇️ 直接取所有群組的發票明細做為顯示列
+        const invoiceRows = items.flatMap((x: any) => x?.invoice?.InvoiceDetail ?? []);
+
+        // ⬇️ 後端總計（優先取回傳的 TotalGUI / TotalSaleAmt，否則用明細加總）
+        let totalGUI = items.reduce(
+          (sum: number, x: any) => sum + Number(x?.invoice?.TotalGUI ?? 0),
+          0
+        );
+        let totalSaleAmt = items.reduce(
+          (sum: number, x: any) => sum + Number(x?.invoice?.TotalSaleAmt ?? 0),
+          0
+        );
+
+        if (invoiceRows.length && (totalGUI === 0 || totalSaleAmt === 0)) {
+          totalGUI = invoiceRows.reduce(
+            (s: number, r: any) => s + Number(r?.TXN_TotGUI ?? 0),
+            0
+          );
+          totalSaleAmt = invoiceRows.reduce(
+            (s: number, r: any) => s + Number(r?.TXN_TotSaleAmt ?? 0),
+            0
+          );
+        }
+
+        // ✅ 提供給 Table footer 用的外部總計（欄位名要對 columns 的 field）
+        this.backendTotals = {
+          TXN_TotGUI: Number(totalGUI ?? 0),
+          TXN_TotSaleAmt: Number(totalSaleAmt ?? 0),
+        };
+
+        // ✅ 只放一般列到 data（避免把總計列混進分頁）
+        this.data = invoiceRows.map((r: any, i: number) => ({
+          ...r,
+          _rowKey: `${r.TXN_Date ?? ''}|${r.ECR_No ?? ''}|${r.TXN_No ?? ''}|${i}`,
+        }));
+
+        this.totalRecords = Number(res?.TotalCount ?? this.data.length);
+      },
+      error: (err) => {
+        console.error('TLS23040 查詢失敗', err);
+        this.messageService?.errorBubble?.('查詢失敗，請稍後再試');
+      },
+      complete: () => {
+        this.loading = false;
+        this.messageService?.unblockUi();
+      },
+    });
+  });
+}
+
 
 
 
