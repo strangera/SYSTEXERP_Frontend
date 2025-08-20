@@ -16,7 +16,7 @@ import { Column } from '@shared/componentkit/table/table.model';
 import { CRUDStatus } from '@shared/models/system/CRUDstatus';
 import { ApprovalStatus } from '@shared/models/tls/approval-status.model';
 import { ExcelImportService } from '@shared/service/excel-import.service';
-import { FileUpload, FileUploadHandlerEvent, FileUploadModule } from 'primeng/fileupload';
+import { FileSelectEvent, FileUpload, FileUploadEvent, FileUploadHandlerEvent, FileUploadModule } from 'primeng/fileupload';
 import { PanelModule } from 'primeng/panel';
 import * as XLSX from 'xlsx';
 import { TLS26080Data, TLS26080Detail } from '../tls26080/tls26080.model';
@@ -44,6 +44,9 @@ import { TLS26080Data, TLS26080Detail } from '../tls26080/tls26080.model';
 export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> implements OnInit {
 
   public dataForm = this.formBuilder.nonNullable.group({
+    talent_id: new FormControl<number | undefined>(void 0), // 活動編號
+    tlt_id: new FormControl<string | undefined>(void 0), // 專櫃編號
+    tlt_id_desc: new FormControl<string | undefined>(void 0), // 專櫃名稱
     pod_no: new FormControl<string>('自動給號', [Validators.maxLength(10)]), // 活動單號
     pod_desc: new FormControl<string | undefined>(void 0, [Validators.required]), // 活動名稱
     pod_sdate: new FormControl<Date>(this.service.dateS, [Validators.required]), // 起始日期(起)
@@ -60,7 +63,7 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
     { label: '正檔日至截止日', value: 'N' }
   ];
 
-  private fileSignal = signal<any[]>([]);
+  private fileSignal = signal<FormData | undefined>(void 0);
   public fileUpload = viewChild.required<FileUpload>('fileUpload');
 
   private podNoSignal = toSignal(this.df().pod_no.valueChanges);
@@ -76,15 +79,22 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
 
   // public selectedCounter?: CounterData;
 
+  public readonly fileUploadEffect = effect(() => {
+    const file = this.fileSignal();
+    if (!file) return;
+    this.service.uploadFile(file);
+    console.log(`fileUploadEffect:`, [file]);
+  });
+
   /** 抓取全部podNos */
-  private readonly podNosEffect = effect(() => {
+  public readonly podNosEffect = effect(() => {
     this.podNos.clear();
     for (const item of this.service.TLS26080Data()) this.podNos.add(item.pod_no);
     console.log(`podNos:`, [this.service.TLS26080Data(), Array.from(this.podNos)]);
   });
 
   /** 根據選擇的活動名稱更新表單 */
-  private readonly campaignEffect = effect(() => {
+  public readonly campaignEffect = effect(() => {
     const podDesc = this.podDescSignal();
     if (!podDesc || !this.selectedCampaign()) return;
     const result = this.podNos.has(podDesc)
@@ -95,29 +105,7 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
       pod_sdate: new Date(this.selectedCampaign()!.StartTime),
       pod_edate: new Date(this.selectedCampaign()!.EndTime),
     }, { emitEvent: !0 });
-    this.service.loadCampaignCounter(result);
     console.log(`campaignEffect:`, [podDesc, result]);
-  }, { allowSignalWrites: !0 });
-
-  /** 根據選擇的活動名稱更新專櫃資料 */
-  private readonly campaignCounterEffect = effect(() => {
-    const data = this.service.campaignCounterData();
-    const formData = this.dataForm.value;
-    if (!data?.length || !this.selectedCampaign()) return;
-    let result: TLS26080Detail[] = [];
-    for (const item of data) {
-      result.push({
-        pod_no: this.selectedCampaign()!.CampaignId,
-        pod_type: this.selectedCampaign()!.AccountingType,
-        calc_date_type: 'Y',
-        talent_id: item.talent_id,
-        tlt_id: item.ProductType,
-        tlt_name: item.tlt_name,
-        tlt_no: item.CounterCode,
-        tpy_rate: 0.1,
-      });
-    }
-    this.service.TLS26080Detail.set(result);
   }, { allowSignalWrites: !0 });
 
   /** 初始化靜態資料 */
@@ -146,9 +134,9 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
 
   // 專櫃資料表
   public counterColumns: Column[] = [
-    { field: 'tlt_no', header: '專櫃編號' },
-    { field: 'tlt_name', header: '櫃位名稱' },
-    { field: 'tlt_id', header: '抽成類別' },
+    { field: 'tlt_no', header: '專櫃編號', type: 'inputNumber' },
+    { field: 'tlt_name', header: '櫃位名稱', type: 'input' },
+    { field: 'tlt_id', header: '抽成類別', type: 'inputNumber' },
     {
       field: 'calc_date_type',
       header: '預售起日計算',
@@ -196,6 +184,10 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
     this.service.loadCampaignData();
     TLS26080CRUComponent.staticData = this.dataForm.value as TLS26080Data;
     console.log(`init:`, [this.rowdata, this.crudstatus, this.dataForm.value]);
+  }
+
+  public onInsert(event: unknown): void {
+    console.log(`onInsert:`, [event]);
   }
 
   public onClear(): void {
@@ -251,29 +243,37 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
     return { isValid: decimalPlaces <= 1, errorMessage: ['請輸入有效的數字', '抽成率驗證錯誤'] };
   }
 
-  public onBlurCounter(event: any): void {
-    this.dataForm.valid
-      ? this.messageService.successBubble('專櫃資料已更新')
-      : this.messageService.warnBubble('請檢查專櫃資料是否正確');
-    console.log(`onBlurCounter:`, [event, this.dataForm.value]);
-  }
-
   public async handleUpload(event: FileUploadHandlerEvent): Promise<void> {
-    const data = await this.excelImportService.importExcel(event.files[0], ['專櫃編號', '櫃位名稱', '抽成類別', '抽成類別名稱', '正檔起日計算', 'D16', 'D17', '備註']);
-    this.fileSignal.set(data);
+    const formData = new FormData();
+    formData.append('file', event.files[0]);
+    this.fileSignal.set(formData);
     this.fileUpload().clear();
-    console.log(`excel import:`, [data]);
   }
 
   public onExportExcelTemplate(): void {
-    const ws: XLSX.WorkSheet = XLSX.utils.json_to_sheet([
-      ['專櫃編號', '櫃位名稱', '抽成類別', '抽成類別名稱', '正檔起日計算', 'D16', 'D17', '備註'],
-    ]);
+    const headerRow1 = ['專櫃編號', '櫃位名稱', '抽成類別', '抽成類別名稱', '正檔起日計算', '匯入分攤', null];
+    const headerRow2 = [null, null, null, null, null, 'D16', 'D17'];
+    const example = ['000064', 'gozo', '0', '少女裝', 'Y', '1.00%', '50.00%'];
+
+    // 生成工作表
+    const ws: XLSX.WorkSheet = XLSX.utils.aoa_to_sheet([headerRow1, headerRow2, example]);
+
+    // 合併儲存格
+    ws['!merges'] = [
+      { s: { r: 0, c: 0 }, e: { r: 1, c: 0 } }, // A1:A2
+      { s: { r: 0, c: 1 }, e: { r: 1, c: 1 } }, // B1:B2
+      { s: { r: 0, c: 2 }, e: { r: 1, c: 2 } }, // C1:C2
+      { s: { r: 0, c: 3 }, e: { r: 1, c: 3 } }, // D1:D2
+      { s: { r: 0, c: 4 }, e: { r: 1, c: 4 } }, // E1:E2
+      { s: { r: 0, c: 5 }, e: { r: 0, c: 6 } }, // F1:G1（匯入分攤）
+    ];
+
     const wb: XLSX.WorkBook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, 'Template');
-    XLSX.writeFile(wb, 'export_template.xlsx');
-    console.log(`export excel template:`, []);
-  }
+    XLSX.utils.book_append_sheet(wb, ws, '範本');
+    const name = `專櫃活動設定匯入範本.xlsx`;
+    // const name = `專櫃活動設定匯入範本-${new Date().toISOString().slice(0, 10)}.xlsx`;
+    XLSX.writeFile(wb, name);
+  };
 
 
 

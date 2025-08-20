@@ -220,106 +220,115 @@ export class TLS23030Component extends BasicQueryPageComponent<any> {
       }),
     );
   }
+private toBoolOrNull(v: any): boolean | null {
+  if (typeof v === 'boolean') return v;
+  if (v == null || v === '') return null;      // 不傳值
+  if (v === 'Y' || v === 'true' || v === 1 || v === '1') return true;
+  if (v === 'N' || v === 'false' || v === 0 || v === '0') return false;
+  return null; // 無法判斷就不傳
+}
+ // 放在 TLS23030Component 內
+onSubmit(form: FormGroup): void {
+  const raw: any = { ...form.getRawValue() };
 
-  private cleanFormPayload(payload: any): any {
-    for (const key in payload) {
-      const val = payload[key];
-      if (
-        val === '' ||
-        val === null ||
-        (Array.isArray(val) && val.length === 0)
-      ) {
-        payload[key] = null;
+  // 1) 日期轉 yyyy-MM-dd
+  raw['TXN_DateStart'] = this.toYMD(raw['TXN_DateStart']);
+  raw['TXN_DateEnd']   = this.toYMD(raw['TXN_DateEnd']);
+
+  // 2) 陣列/單值整理
+  const ensureArr = (v: any) => (Array.isArray(v) ? v : (v == null || v === '' ? [] : [v]));
+  raw['ECR_No']     = ensureArr(raw['ECR_No']);
+  raw['TLT_No']     = ensureArr(raw['TLT_No']);
+  raw['PAY_Type']   = ensureArr(raw['PAY_Type']);
+  raw['TXN_Status'] = ensureArr(raw['TXN_Status']);
+  raw['CRD_Type']   = ensureArr(raw['CRD_Type']);
+  raw['org_id']     = ensureArr(raw['org_id']);
+  raw['tlt_floor']  = ensureArr(raw['tlt_floor']);
+  raw['PAY_NO']     = ensureArr(raw['PAY_NO']);
+
+  // 3) 數字/空字串處理
+  const toNumOrNull = (v: any) => (v === '' || v == null ? null : Number(v));
+  const emptyToNull = (v: any) => (v === '' ? null : v);
+
+  raw['TXN_No_Start']      = toNumOrNull(raw['TXN_No_Start']);
+  raw['TXN_No_End']        = toNumOrNull(raw['TXN_No_End']);
+  raw['TXN_PayAmt_Start']  = toNumOrNull(raw['TXN_PayAmt_Start']);
+  raw['TXN_PayAmt_End']    = toNumOrNull(raw['TXN_PayAmt_End']);
+  raw['TXN_MemCard']       = emptyToNull(raw['TXN_MemCard']);
+  raw['CRD_No']            = emptyToNull(raw['CRD_No']);
+  raw['pay_taxtype']       = emptyToNull(raw['pay_taxtype']);
+  raw['rece_yn']           = emptyToNull(raw['rece_yn']);
+  raw['cash_yn']           = emptyToNull(raw['cash_yn']);
+  raw['tlt_building']      = emptyToNull(raw['tlt_building']);
+
+  // 4) 布林值改成字串（若後端要 'true'/'false' 或 'Y'/'N'，視需求調整）
+// 4) 布林值 —— 送 boolean 或 null（不要用 String(...)）
+raw['IsPayType']     = this.toBoolOrNull(raw['IsPayType']);
+raw['IsHaveTERM_No'] = this.toBoolOrNull(raw['IsHaveTERM_No']);
+
+  // 5) 分頁/排序（createPaginationConfig 已建的欄位）
+  // 若是新查詢可視需要把 PageIndex 歸 0
+  raw['PageIndex'] = raw['PageIndex'] ?? 0;
+  raw['PageSize']  = raw['PageSize']  ?? 10;
+  raw['SortBy']    = raw['SortBy']    ?? [{ field: 'ECR_No', order: 1 }];
+
+  this.tls23030Service.queryTLS23030(raw)
+    .pipe(
+      timeout(60000),
+      catchError(err => {
+        console.error('TLS23030 查詢失敗:', err);
+        // 失敗時清空資料以避免殘留
+        this.data = [];
+        this.totalRecords = 0;
+        return [];
+      }),
+      finalize(() => {
+        // 若有 loading 狀態可在這裡收起
+      })
+    )
+    .subscribe((res: any) => {
+      // 後端常見格式：{ Status, Data, TotalCount ... }
+      if (!res || (res.Status && res.Status !== '0000')) {
+        this.data = [];
+        this.totalRecords = 0;
+        return;
       }
-    }
-    if (payload['IsHaveTERM_No'] === 'Y') payload['IsHaveTERM_No'] = true;
-    if (payload['IsHaveTERM_No'] === 'N') payload['IsHaveTERM_No'] = false;
 
-    return {
-      ...payload,
-      pageSize: payload.pageSize ?? 30,
-      pageIndex: (payload.pageIndex ?? 1) - 1,
-      Offset: 0,
-      OrderBy: '',
-      SortBy: payload.SortBy ?? [{ field: 'ID', order: 1 }],
-    };
-  }
+      // 將 tLS23030_Details 攤平成一維陣列
+      const details = this.extractTLS23030Details(res);
 
-  onSubmit(form: FormGroup): void {
-    this.handleSubmit(form, () => this.doQuery());
-  }
-
-  /** 後端要 yyyy-MM-ddTHH:mm:ss（本地時區、去偏移） */
-  private toIso(val: any): string | undefined {
-    if (!val) return undefined;
-    const d = typeof val === 'string' ? new Date(val) : (val as Date);
-    if (isNaN(d.getTime())) return undefined;
-    return new Date(d.getTime() - d.getTimezoneOffset() * 60000)
-      .toISOString()
-      .slice(0, 19);
-  }
-
-  /** 組查詢 payload + 清掉空值與空陣列 */
-  private buildPayload(val: any) {
-    const o: any = {
-      ...val,
-      TXN_DateStart: this.toIso(val?.TXN_DateStart),
-      TXN_DateEnd: this.toIso(val?.TXN_DateEnd),
-      TXN_No_Start:
-        val?.TXN_No_Start != null && val?.TXN_No_Start !== ''
-          ? Number(val.TXN_No_Start)
-          : undefined,
-      TXN_No_End:
-        val?.TXN_No_End != null && val?.TXN_No_End !== ''
-          ? Number(val.TXN_No_End)
-          : undefined,
-      TXN_PayAmt_Start:
-        val?.TXN_PayAmt_Start != null && val?.TXN_PayAmt_Start !== ''
-          ? Number(val.TXN_PayAmt_Start)
-          : undefined,
-      TXN_PayAmt_End:
-        val?.TXN_PayAmt_End != null && val?.TXN_PayAmt_End !== ''
-          ? Number(val.TXN_PayAmt_End)
-          : undefined,
-    };
-
-    Object.keys(o).forEach((k) => {
-      const v = o[k];
-      if (v === '' || v === null || v === undefined) delete o[k];
-      if (Array.isArray(v) && v.length === 0) delete o[k];
+      this.data = details;
+      this.totalRecords = res?.TotalCount ?? details.length ?? 0;
     });
+}
 
-    return o;
-  }
+/** yyyy-MM-dd */
+private toYMD(d: any): string | null {
+  const date = d instanceof Date ? d : new Date(d);
+  return isNaN(date.getTime())
+    ? null
+    : `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, '0')}-${date
+        .getDate()
+        .toString()
+        .padStart(2, '0')}`;
+}
 
-  /** 單一入口查詢（不傳 displayMode 第二參數） */
-  private doQuery(): void {
-    const payload = this.buildPayload(this.queryForm.value);
-    this.loading = true;
-    this.messageService?.blockUi();
+/** 把回傳物件中的 tLS23030_Details 全部攤平 */
+private extractTLS23030Details(res: any): any[] {
+  const data = Array.isArray(res?.Data) ? res.Data : [];
 
-    this.tls23030Service
-      .queryTLS23030(payload) // 👈 只傳 body，displayMode 不用
-      .pipe(
-        finalize(() => {
-          this.loading = false;
-          this.messageService?.unblockUi();
-        }),
-      )
-      .subscribe({
-        next: (res) => {
-          const raw = res?.Data ?? [];
-          this.data = raw.map((item: any, idx: number) => ({
-            ...item,
-            _rowKey: `${item.SYS_StoreNo ?? ''}|${String(item.TXN_Date ?? '').slice(0, 19)}|${item.ECR_No ?? ''}|${item.TXN_No ?? idx}`,
-          }));
-          this.totalRecords = res?.TotalCount ?? this.data.length;
-        },
-        error: (err) => {
-          console.error('TLS23030 查詢失敗', err);
-        },
-      });
-  }
+  // Data[] → 每筆裡面的 tLS23030_SubTotals[] → 每小計裡的 tLS23030_Details[]
+  const flat = data.flatMap((grp: any) =>
+    (Array.isArray(grp?.tLS23030_SubTotals) ? grp.tLS23030_SubTotals : []).flatMap(
+      (st: any) => (Array.isArray(st?.tLS23030_Details) ? st.tLS23030_Details : [])
+    )
+  );
+
+  return flat;
+}
+
+
+
 
   getLabelFromOptions(value: any, options: any[]): string {
     const found = options?.find((opt) => String(opt.value) === String(value));
