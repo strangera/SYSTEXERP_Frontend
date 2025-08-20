@@ -189,7 +189,7 @@ onSubmit(form: FormGroup): void {
 const payload: any = {
   TXN_DateStart: toIso(val?.TXN_DateStart),
   TXN_DateEnd:   toIso(val?.TXN_DateEnd),
-  tlt_term_type: val?.tlt_term_type,
+  tlt_term_type: val?.tlt_term_type != null ? String(val.tlt_term_type) : undefined,
   rece_yn:       val?.rece_yn,
   TLT_No:        val?.TLT_No,
   tlt_building:  val?.tlt_building,
