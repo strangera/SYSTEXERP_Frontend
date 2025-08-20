@@ -117,16 +117,18 @@
         </form>
       </p-accordionTab>
       <!-- 櫃位地點資訊 -->
+      <!-- 位置表格部分 - 只修正表格設定 -->
       <p-accordionTab header="櫃位地點資訊" [selected]="true" class="line-height-3 m-0"
         [headerStyleClass]="'query-accordionTab'">
         <div class="col-12">
           <app-expandable-edit-table [data]="getDisplayLocationData()" [mainColumns]="locationColumns"
-            [showCheckBox]="true" [showPaginator]="false" [showAddButton]="true" [showBatchDelete]="true"
+            [showCheckBox]="true" [showPaginator]="false" [showAddButton]="!isViewMode" [showBatchDelete]="!isViewMode"
             [autoEditOnAdd]="true" [loading]="loading" dataKey="id" [readonly]="isViewMode" detailKey=""
             emptyMessage="尚未設定位置資訊，請點擊新增按鈕開始設定" (addMainItem)="onAddLocationItem()"
             (batchDelete)="onBatchDeleteLocation($event)" (save)="onLocationTableSave($event)"
             (edit)="onLocationTableEdit($event)" (cancel)="onLocationTableCancel($event)"
-            (dropdownChange)="onLocationDropdownChange($event)"></app-expandable-edit-table>
+            (dropdownChange)="onLocationDropdownChange($event)">
+          </app-expandable-edit-table>
         </div>
       </p-accordionTab>
 

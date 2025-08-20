@@ -2177,10 +2177,10 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
     const address = this.dataForm.get('company_register_address')?.value;
     const trimmedAddress = address?.trim() || '';
 
-    console.log('📍 取得公司地址:', {
-      raw: address,
-      trimmed: trimmedAddress
-    });
+    // console.log('📍 取得公司地址:', {
+    //   raw: address,
+    //   trimmed: trimmedAddress
+    // });
 
     return trimmedAddress;
   }
@@ -2238,12 +2238,12 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
     const hasAddress = !!this.getCompanyAddress();
     const canEdit = !this.isViewMode;
 
-    console.log('🔍 檢查複製按鈕狀態:', {
-      hasAddress,
-      canEdit,
-      isViewMode: this.isViewMode,
-      address: this.getCompanyAddress()
-    });
+    // console.log('🔍 檢查複製按鈕狀態:', {
+    //   hasAddress,
+    //   canEdit,
+    //   isViewMode: this.isViewMode,
+    //   address: this.getCompanyAddress()
+    // });
 
     return hasAddress && canEdit;
   }
