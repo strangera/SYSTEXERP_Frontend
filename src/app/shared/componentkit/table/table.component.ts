@@ -5,7 +5,7 @@ import { SortMeta } from 'primeng/api';
 import { AutoCompleteCompleteEvent } from 'primeng/autocomplete';
 import { FileSelectEvent } from 'primeng/fileupload';
 import { MultiSelectChangeEvent } from 'primeng/multiselect';
-import { Table, TableLazyLoadEvent, TablePageEvent, TableRowSelectEvent, TableRowUnSelectEvent } from 'primeng/table';
+import { Table, TableColumnReorderEvent, TableLazyLoadEvent, TablePageEvent, TableRowSelectEvent, TableRowUnSelectEvent } from 'primeng/table';
 import { Observable } from 'rxjs';
 import { BasicPrintDataComponent } from '../../componentextends/basic-print/basic-print-data.component';
 import { AddButton, Column, ColumnGroup, FieldChangeEvent, LazyLoadEvent, RowEditSaveEvent } from './table.model';
@@ -347,5 +347,10 @@ export class TableComponent extends BasicPrintDataComponent implements OnChanges
   // 獲取後端圖片
   getImage(url: string): string | SafeUrl | undefined {
     return this.tableUtilityService.getImage(url);
+  }
+  // 欄位調整
+  onColReorder(event: TableColumnReorderEvent) {
+    this.columns = event.columns as Column[];
+    this.queryState.setQueryState(this.tableKey + 'Filter', this.columns);
   }
 }

@@ -8,7 +8,7 @@
   [resizableColumns]="true" [paginator]="showPaginator && IsPrint && !rowEditing && !loading" [scrollable]="scrollable"
   [showCurrentPageReport]="IsPrint" [multiSortMeta]="multiSortMeta" [rowsPerPageOptions]="rowsPerPageOptions"
   [scrollHeight]="scrollHeight" [(rows)]="rows" [(first)]="first" (onLazyLoad)="loadDataLazy($event)"
-  [lazy]="lazy || !IsPrint" [reorderableColumns]="true"
+  [lazy]="lazy || !IsPrint" [reorderableColumns]="true" (onColReorder)="onColReorder($event)"
   [styleClass]="'p-datatable-sm' + (IsPrint ? ' p-datatable-gridlines' : ' ') + (!disabled ? ' p-datatable-striped' : ' ')"
   [virtualScroll]="!IsPrint" [virtualScrollItemSize]="35" [virtualScrollDelay]="250"
   currentPageReportTemplate="第{currentPage}頁 / 總共{totalPages}頁 (總筆數:{totalRecords})"
@@ -35,7 +35,7 @@
   <ng-template pTemplate="header" let-columns>
     <ng-container *ngIf="columnGroup && columnGroup.length > 0">
       <tr>
-        <th *ngIf="!showSubTotal && !showTotal" class="w-1rem" rowspan="2"></th>
+        <th *ngIf="!showSubTotal && !showTotal && data.length" class="w-1rem" rowspan="2"></th>
         <th class="w-1rem" rowspan="2">序號</th>
         <th class="w-1rem group-header" rowspan="2"
           *ngIf="IsPrint && showCheckBox && !rowEditing && selectionMode === 'multiple'">
@@ -84,7 +84,7 @@
     <!-- 非群組表頭 -->
     <ng-container *ngIf="!columnGroup?.length">
       <tr>
-        <th *ngIf="!showSubTotal && !showTotal" class="w-1rem"></th>
+        <th *ngIf="!showSubTotal && !showTotal && data.length" class="w-1rem"></th>
         <th class="w-1rem">序號</th>
         <th class="w-1rem" *ngIf="IsPrint && showCheckBox && !rowEditing && selectionMode === 'multiple'">
           <p-tableHeaderCheckbox [disabled]="disabled" />
@@ -130,7 +130,8 @@
       [ngClass]="{ 'p-disabled-row': !isRowSelectable(rowData) }" [pEditableRow]="rowData" [pSelectableRow]="rowData"
       [pSelectableRowIndex]="rowIndex" (click)="itemClick.emit(rowData)">
       <ng-container *ngIf="!loading; else loadingTemplate">
-        <td *ngIf="!showSubTotal && !showTotal"><span class="pi pi-bars" pReorderableRowHandle></span></td>
+        <td *ngIf="!showSubTotal && !showTotal && data.length"><span class="pi pi-bars" pReorderableRowHandle></span>
+        </td>
         <td class="text-center">{{ rowIndex + 1 }}</td>
         <td *ngIf="IsPrint &&showCheckBox &&!rowEditing &&selectionMode === 'multiple'">
           <p-tableCheckbox class="flex justify-content-center pointer-events-none" [pSelectableRow]="rowData"
