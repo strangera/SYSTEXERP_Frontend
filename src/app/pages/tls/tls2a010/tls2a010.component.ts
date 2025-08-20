@@ -305,7 +305,8 @@ export class TLS2A010Component extends BasicQueryPageComponent<any> implements O
     // 依照 API 格式，包成 selectList
     const payload = {
       selectList: selectedItems.map(item => ({
-        ID: item.ID
+        ID: item.ID,
+        PAY_NO: item.PAY_NO,
       }))
     };
 
