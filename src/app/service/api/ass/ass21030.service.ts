@@ -17,18 +17,23 @@ export class ASS21030Service {
     return this.http.post<any>(`${this.apiUrl}/queryASS21030`, body);
   }
 
-  // 新增 能源抄表作業
-  insertASS21030(body: any): Observable<any> {
-    return this.http.post<any>(`${this.apiUrl}/insertASS21030`, body);
-  }
-
-  // 更新 能源抄表作業
-  updateASS21030(body: any): Observable<any> {
-    return this.http.post<any>(`${this.apiUrl}/updateASS21030`, body);
-  }
+  // 更新 能源抄表作業 (都用匯入處理，暫時不用這支)
+  // updateASS21030(body: any): Observable<any> {
+  //   return this.http.post<any>(`${this.apiUrl}/updateASS21030`, body);
+  // }
 
   // 刪除 能源抄表作業
   deleteASS21030(body: any): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/deleteASS21030`, body);
+  }
+
+  // 匯入 能源抄表作業
+  importASS21030(body: any): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/ImportASS21030`, body);
+  }
+
+  // 取得能源表號
+  queryENG1001_ENG_MeterNo_DropDownList(body: any): Observable<any> {
+    return this.http.post<any>(`${environment.ApiUrl}/Share/queryENG1001_ENG_MeterNo_DropDownList`, body);
   }
 }
