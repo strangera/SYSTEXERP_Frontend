@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, signal } from '@angular/core';
-import { CampaignData, TLS26080Data, TLS26080Detail, TLS26080Query, TLS2608InsertPayload } from '@pages/tls/tls26080/tls26080.model';
+import { CampaignData, TLS26080Data, TLS26080Detail, TLS26080Query, TLS26080UploadResult, TLS2608InsertPayload } from '@pages/tls/tls26080/tls26080.model';
 import { ErrorHandlerService } from '@service/system/error-handler.service';
 import { NotificationService } from '@shared/component/notification-message/notification.service';
 import { BaseQueryResponse, DropdownOption } from '@shared/models/api/base-api.interface';
@@ -31,6 +31,7 @@ export class TLS26080Service {
   public campaignLoading = !1;
   public capItemsLoading = !1;
   public fileUploadLoading = !1;
+  public exampleDownloading = !1;
 
   private readonly fileUploadCancel$ = new Subject<void>();
 
@@ -173,20 +174,68 @@ export class TLS26080Service {
   public uploadFile(file: FormData): void {
     this.fileUploadLoading = !0;
     this.fileUploadCancel$.next();
-    this.http.post<BaseQueryResponse<any>>(`${apiUrl}/TLS0000/TLS2000/uploadTLS26080`, file).pipe(
+    this.http.post<Omit<BaseQueryResponse<unknown>, 'Data'> & { Data: TLS26080UploadResult; }>(`${apiUrl}/TLS0000/TLS2000/uploadTLS26080`, file).pipe(
       take(1),
       takeUntil(this.fileUploadCancel$),
-      map(response => {
+      tap(response => {
+        const data = response.Data;
         console.log(`uploadFile:`, [response]);
-        this.messageService.successBubble('上傳成功');
-        return response.Data as unknown as { 'queryTLS26080_DetailResponses': any[]; };
+        if (data.Success) {
+          // 如果資料量大用 for loop 比 map 快
+          const mapped = new Set<TLS26080Detail>();
+          for (let value of data.queryTLS26080_DetailResponses) {
+            mapped.add(<TLS26080Detail>{
+              id: value.id,
+              talent_id: value.talent_id,
+              tlt_id: value.tlt_id,
+              tlt_id_desc: value.tlt_id_desc,
+              tlt_no: value.tlt_no,
+              tlt_name: value.tlt_name,
+              calc_date_type: value.calc_date_type,
+              cap_item_D16: value.cap_item_D16,
+              tpy_rate_D16: value.tpy_rate_D16,
+              cap_item_D17: value.cap_item_D17,
+              tpy_rate_D17: value.tpy_rate_D17,
+              pod_status: value.pod_status,
+            });
+          }
+          this.TLS26080Detail.set(Array.from(mapped));
+          if (data.ErrorCount === 0) this.messageService.successBubble('上傳成功');
+          else {
+            window.open(`${apiUrl}${data.ErrorFilePath}`, '_blank');
+            this.messageService.errorBubble(`上傳失敗: ${data.ErrorCount} 筆資料錯誤`);
+          }
+          window.open(`${apiUrl}${data.ErrorFilePath}`, '_blank');
+        } else {
+          this.messageService.errorBubble('上傳失敗');
+        }
       }),
-      tap(response =>
-        this.TLS26080Detail.set(response.queryTLS26080_DetailResponses || [])
-      ),
       catchError(this.errorHandler.handleError),
       finalize(() => {
         console.log('上傳檔案結果:', [file]);
+      })
+    ).subscribe();
+  }
+
+  public downloadXLSXExample(): void {
+    this.exampleDownloading = !0;
+    this.http.get(`${apiUrl}/TLS0000/TLS2000/downloadTLS26080Template`, { responseType: 'blob', }).pipe(
+      take(1),
+      tap(response => {
+        // 建立下載連結
+        const url = window.URL.createObjectURL(response);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = 'TLS26080_範例檔案.xlsx';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
+      }),
+      catchError(error => this.errorHandler.handleError(error)),
+      finalize(() => {
+        this.exampleDownloading = !1;
+        console.log('範例下載');
       })
     ).subscribe();
   }

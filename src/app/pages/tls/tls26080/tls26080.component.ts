@@ -1,7 +1,7 @@
 
 import { DatePipe } from '@angular/common';
-import { Component, computed, OnInit, signal } from '@angular/core';
-import { FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { Component, computed, OnInit } from '@angular/core';
+import { FormControl, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 import { TLS26080Service } from '@service/api/tls/tls26080.service';
 import { MenubarComponent } from '@shared/component/menubar/menubar.component';
@@ -54,8 +54,6 @@ export class TLS26080Component extends BasicQueryPageComponent<TLS26080Data> imp
   public readonly isRowSelectable = (rowData: TLS26080Data) =>
     Reflect.has(rowData, 'CanDelete') && !!rowData || rowData.pod_status === ApprovalStatus.未核准;
 
-  public totalRecords = signal<number>(0);
-
   private queryTLS26080 = computed(() => {
     const { pod_no, pod_desc, pod_status, pod_sdate, pod_edate, pod_busdate } = this.queryForm.value;
     return <TLS26080Query>{
@@ -93,14 +91,6 @@ export class TLS26080Component extends BasicQueryPageComponent<TLS26080Data> imp
   }
 
   private canQuery(): boolean {
-    return !0;
-  }
-
-  private canAdd(): boolean {
-    return !0;
-  }
-
-  private canEdit(): boolean {
     return !0;
   }
 
