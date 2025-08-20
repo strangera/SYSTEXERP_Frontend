@@ -190,8 +190,8 @@ onSubmit(form: FormGroup): void {
 
     // 組 payload（保留分頁/排序）
     const payload: any = {
-      saleDateStart: toIso(val?.saleDateStart),
-      saleDateEnd:   toIso(val?.saleDateEnd),
+      TXN_DateStart: toIso(val?.TXN_DateStart),
+      TXN_DateEnd:   toIso(val?.TXN_DateEnd),
       BNK_No:        val?.BNK_No,
       tlt_building:  val?.tlt_building,
       tlt_floor:     val?.tlt_floor,
