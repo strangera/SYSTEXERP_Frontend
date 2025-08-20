@@ -465,15 +465,15 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
       required: true,
 
     },
-    {
-      field: 'tpy_1stamt',
-      header: '首期金額',
-      type: 'number',
-      editable: true,
-      width: '100px',
-      required: true,
-
-    },
+    // {
+    //   field: 'tpy_1stamt',
+    //   header: '首期金額',
+    //   type: 'number',
+    //   editable: true,
+    //   width: '100px',
+    //   required: true,
+    ////不知道為什麼沒有 所以先移除
+    // },
     {
       field: 'org_id',
       header: '組織',
