@@ -367,8 +367,8 @@ export class DropDownListService {
   }
 
   // 查詢字軌(POS1018)資料表下拉選單
-  queryPOS1018_GUI_TRACK_DropDownList(params: IPOS1018GUITrackRequest): Observable<ApiResponse<IPOS1018GUITrackResponse[]>> {
-    return this.http.post<ApiResponse<IPOS1018GUITrackResponse[]>>(`${this.apiUrl}/Share/queryPOS1018_GUI_TRACK_DropDownList`, params);
+  queryPOS1018_GUI_TRACK_DropDownList(params: IPOS1018GUITrackRequest): Observable<ApiResponse<IPOS1018GUITrackResponse>> {
+    return this.http.post<ApiResponse<IPOS1018GUITrackResponse>>(`${this.apiUrl}/Share/queryPOS1018_GUI_TRACK_DropDownList`, params);
   }
 
   // 查詢發票格式(TDS1007)資料表下拉選單
