@@ -2324,10 +2324,13 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
       this.updatePaymentValidators();
     });
 
-    // 設定聯名卡配合變更監聽
+    // 設定會員卡配合變更監聽
     this.dataForm.get('vip_yn')?.valueChanges.subscribe(() => {
       this.updateCreditCardValidators();
     });
+
+    // 🎯 修改：設定預收租金相關監聽
+    this.setupRentAheadCalculation();
 
     this.setupDateValidators();
 
@@ -2341,6 +2344,70 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
     // 初始驗證器設定
     this.updateFieldValidators();
     this.updateInitialRequiredFields();
+  }
+
+  // 🎯 新增：設定預收租金計算邏輯
+  private setupRentAheadCalculation(): void {
+    // 監聽預收租金選項變更
+    this.dataForm.get('rent_ahead')?.valueChanges.subscribe((rentAhead) => {
+      console.log('📊 預收租金選項變更:', rentAhead);
+
+      if (rentAhead === 'Y') {
+        this.calculateRentPeriodIfPossible();
+        // 設定固定租金為必填
+        this.updateBaseRentValidators();
+      } else {
+        // 預收租金為否時，清空期數
+        this.dataForm.get('rent_period')?.setValue(0);
+        this.updateBaseRentValidators();
+      }
+    });
+
+    // 監聽契約起始日變更（使用 blur 事件模擬）
+    this.dataForm.get('tlt_bdate')?.valueChanges.pipe(
+      debounceTime(500) // 延遲觸發，模擬 blur 效果
+    ).subscribe(() => {
+      console.log('📅 契約起始日變更，檢查是否需要重新計算');
+      this.validateContractDates();
+      this.calculateRentPeriodIfPossible();
+    });
+
+    // 監聽契約迄日變更（使用 blur 事件模擬）
+    this.dataForm.get('tlt_edate')?.valueChanges.pipe(
+      debounceTime(500) // 延遲觸發，模擬 blur 效果
+    ).subscribe(() => {
+      console.log('📅 契約迄日變更，檢查是否需要重新計算');
+      this.validateContractDates();
+      this.calculateRentPeriodIfPossible();
+    });
+  }
+
+  // 🎯 新增：檢查條件並計算預收租金期數
+  private calculateRentPeriodIfPossible(): void {
+    const rentAhead = this.dataForm.get('rent_ahead')?.value;
+    const startDate = this.dataForm.get('tlt_bdate')?.value;
+    const endDate = this.dataForm.get('tlt_edate')?.value;
+
+    console.log('🔍 檢查計算條件:', {
+      預收租金: rentAhead,
+      起始日: startDate,
+      迄日: endDate
+    });
+
+    // 🎯 關鍵條件：預收租金必須為"是"
+    if (rentAhead !== 'Y') {
+      console.log('❌ 預收租金不是"是"，不計算期數');
+      return;
+    }
+
+    // 檢查是否有完整的日期
+    if (!startDate || !endDate) {
+      console.log('❌ 缺少契約日期，無法計算期數');
+      return;
+    }
+
+    // 執行計算
+    this.calculateAndSetRentPeriod();
   }
 
   // 🎯 新增：設定日期驗證器
@@ -2489,40 +2556,46 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
    */
   private updateRentAheadValidators(tltTermType: string): void {
     const rentAheadControl = this.dataForm.get('rent_ahead');
-    const rentPeriodControl = this.dataForm.get('rent_period');
-    const baseRentControl = this.dataForm.get('base_rent');
 
     // 固定租金(1)、底租抽成取高者(2) 的預設值和驗證
     if (['1', '2'].includes(tltTermType)) {
-      // 設定預收租金為是
+      console.log('🎯 抽成別為固定租金或底租抽成，設定預收租金為"是"');
+
+      // 設定預收租金為是（這會觸發上面的監聽器）
       if (rentAheadControl?.value !== 'Y') {
         rentAheadControl?.setValue('Y');
       }
-
-      // 計算並設定預收租金期數
-      this.calculateAndSetRentPeriod();
-
-      // 固定租金必填
-      if (rentAheadControl?.value === 'Y') {
-        baseRentControl?.setValidators([Validators.required, Validators.min(1)]);
-        console.log('✅ 固定租金設為必填');
-      }
-    } else {
-      // 其他抽成別：移除固定租金必填
-      baseRentControl?.clearValidators();
-      baseRentControl?.setValidators([Validators.min(0)]);
     }
 
-    // 更新驗證狀態
-    baseRentControl?.updateValueAndValidity();
+    // 更新固定租金驗證器
+    this.updateBaseRentValidators();
+  }
+
+  private updateBaseRentValidators(): void {
+    const baseRentControl = this.dataForm.get('base_rent');
+    const rentAhead = this.dataForm.get('rent_ahead')?.value;
+
+    if (!baseRentControl) return;
+
+    baseRentControl.clearValidators();
+
+    if (rentAhead === 'Y') {
+      baseRentControl.setValidators([Validators.required, Validators.min(1)]);
+      console.log('✅ 預收租金為"是"：固定租金設為必填');
+    } else {
+      baseRentControl.setValidators([Validators.min(0)]);
+      console.log('ℹ️ 預收租金為"否"：固定租金非必填');
+    }
+
+    baseRentControl.updateValueAndValidity();
   }
 
   /**
    * 🎯 新增：計算並設定預收租金期數
    */
   private calculateAndSetRentPeriod(): void {
-    const startDate = this.dataForm.get('tlt_contract_bdate')?.value;
-    const endDate = this.dataForm.get('tlt_contract_edate')?.value;
+    const startDate = this.dataForm.get('tlt_bdate')?.value;
+    const endDate = this.dataForm.get('tlt_edate')?.value;
 
     if (startDate && endDate) {
       try {
@@ -2534,8 +2607,12 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
 
         this.dataForm.get('rent_period')?.setValue(months);
         console.log('📅 自動計算預收租金期數:', months);
+
+        // 顯示提示訊息
+        this.messageService.infoBubble(`已自動計算預收租金期數：${months} 個月`);
       } catch (error) {
         console.warn('❌ 計算預收租金期數失敗:', error);
+        this.messageService.warnBubble('計算預收租金期數失敗，請手動輸入');
       }
     }
   }
