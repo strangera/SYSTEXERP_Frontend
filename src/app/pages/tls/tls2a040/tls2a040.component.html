@@ -67,15 +67,8 @@
               [submitted]="submitted"
             ></app-multi-select>
           </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-number
-              label="信用卡卡號"
-              controlName="CRD_No"
-              [control]="queryForm.controls.CRD_No"
-              [submitted]="submitted"
-            ></app-input-number>
-          </div>
         </div>
+
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown
@@ -98,6 +91,29 @@
               [control]="queryForm.controls.Building_No"
               [submitted]="submitted"
             ></app-dropdown>
+          </div>
+        </div>
+        <div class="grid p-fluid">
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-radiobutton
+              label="查詢種類"
+              controlName="docType"
+              [control]="queryForm.controls.docType"
+              [options]="[
+                { label: '信用卡', value: 'creditcard' },
+                { label: '有價券', value: 'voucher' },
+                { label: '作廢發票', value: 'voidInvoice' },
+              ]"
+            ></app-radiobutton>
+          </div>
+
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-number
+              [label]="getDocLabel()"
+              controlName="CRD_No"
+              [control]="queryForm.controls.CRD_No"
+              [submitted]="submitted"
+            ></app-input-number>
           </div>
         </div>
         <div>
