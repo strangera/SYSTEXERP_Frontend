@@ -202,12 +202,12 @@ export class TLS26080Service {
           this.TLS26080Detail.set(Array.from(mapped));
           if (data.ErrorCount === 0) this.messageService.successBubble('上傳成功');
           else {
-            window.open(`${apiUrl}${data.ErrorFilePath}`, '_blank');
+            if (data.ErrorFilePath?.length) window.open(`${apiUrl}${data.ErrorFilePath}`, '_blank');
             this.messageService.errorBubble(`上傳失敗: ${data.ErrorCount} 筆資料錯誤`);
           }
-          window.open(`${apiUrl}${data.ErrorFilePath}`, '_blank');
         } else {
-          this.messageService.errorBubble('上傳失敗');
+          if (data.ErrorFilePath?.length) window.open(`${apiUrl}${data.ErrorFilePath}`, '_blank');
+          throw EMPTY;
         }
       }),
       catchError(this.errorHandler.handleError),
