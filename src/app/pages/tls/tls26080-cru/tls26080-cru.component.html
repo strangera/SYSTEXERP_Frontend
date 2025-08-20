@@ -63,35 +63,35 @@
                         [submitted]="submitted"></app-calendar>
         </div>
       </div>
+      <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+        <app-button btnType="clear"
+                    (click)="onClear()"></app-button>
+        <!-- <app-file-upload #fileUpload
+                         [accept]="'.xlsx,.xls,.csv'"
+                         chooseLabel="選擇 Excel 檔案"
+                         uploadLabel="上傳"
+                         cancelLabel="清除"
+                         [auto]="true"
+                         [customUpload]="true"
+                         mode="basic"
+                         [loading]="loading"
+                         (uploadHandler)="handleUpload($event)"></app-file-upload> -->
+        <p-fileUpload #fileUpload
+                      [styleClass]="'p-3'"
+                      [mode]="'basic'"
+                      [accept]="'.xlsx,.xls,.csv,.ods'"
+                      chooseLabel="選擇 Excel 檔案"
+                      [auto]="true"
+                      [customUpload]="true"
+                      (uploadHandler)="handleUpload($event)"></p-fileUpload>
+        <app-button btnType="CSV"
+                    label="匯出 Excel 樣本"
+                    (click)="onExportExcelTemplate()"></app-button>
+        <app-button btnType="submit"
+                    label="存檔"
+                    (click)="onSubmit()"></app-button>
+      </div>
     </form>
-    <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
-      <app-button btnType="clear"
-                  (click)="onClear()"></app-button>
-      <!-- <app-file-upload #fileUpload
-                       [accept]="'.xlsx,.xls,.csv'"
-                       chooseLabel="選擇 Excel 檔案"
-                       uploadLabel="上傳"
-                       cancelLabel="清除"
-                       [auto]="true"
-                       [customUpload]="true"
-                       mode="basic"
-                       [loading]="loading"
-                       (uploadHandler)="handleUpload($event)"></app-file-upload> -->
-      <p-fileUpload #fileUpload
-                    [styleClass]="'p-3'"
-                    [mode]="'basic'"
-                    [accept]="'.xlsx,.xls,.csv,.ods'"
-                    chooseLabel="選擇 Excel 檔案"
-                    [auto]="true"
-                    [customUpload]="true"
-                    (uploadHandler)="handleUpload($event)"></p-fileUpload>
-      <app-button btnType="CSV"
-                  label="匯出 Excel 樣本"
-                  (click)="onExportExcelTemplate()"></app-button>
-      <app-button btnType="submit"
-                  label="存檔"
-                  (click)="onSubmit()"></app-button>
-    </div>
   </p-panel>
 </div>
 

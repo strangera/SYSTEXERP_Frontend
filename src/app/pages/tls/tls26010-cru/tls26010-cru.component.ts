@@ -1,7 +1,7 @@
 import { NgIf } from '@angular/common';
 import { Component, computed, effect, OnInit, signal, Signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 import { TLS26010Service } from '@service/api/tls/tls26010.service';
 import { MenubarComponent } from '@shared/component/menubar/menubar.component';
@@ -347,9 +347,9 @@ export class TLS26010CRUComponent extends BasicCruPageComponent<TLS26010Data> im
     XLSX.writeFile(wb, `專櫃範本_${new Date().toISOString().split('T')[0]}.xlsx`);
   }
 
-  public onSubmit(): void {
-    this.handleSubmit(this.dataForm, () => {
-      const value = this.dataForm.value;
+  public onSubmit(frm: FormGroup): void {
+    this.handleSubmit(frm, () => {
+      const value = frm.value;
       const payload: PodRequest = {
         ecr_list: this.ecrTableFiltered(),
         talent_list: this.tltTableFiltered(),

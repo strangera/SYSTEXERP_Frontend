@@ -63,6 +63,59 @@ export class ASS21010Component extends BasicQueryPageComponent<unknown> implemen
     { field: 'eng_remark', header: '備註' },
   ];
 
+  constructor(
+    public readonly service: ASS21010Service,
+  ) {
+    super();
+  }
+
+  ngOnInit(): void {
+    this.initializePage('ASS21010', '/ASS/ASS21010CRU', this.queryForm, this.onSubmit.bind(this));
+
+    this.service.loadEngType();
+    this.service.loadLocationNo();
+    this.service.loadASS21010({});
+
+
+
+    // // Initialize dropdown options
+    // this.organizationNumberService.getOrganizationNumbers()
+    //   .subscribe((data) => (this.Departmentcode = data));
+    // this.floorService.getFloors()
+    //   .subscribe((data) => (this.floor = data));
+    // // this.locationCodeService.getSystemTypes()
+    // //   .subscribe((data) => (this.location = data));
+  }
+
+  public canQuery(): boolean {
+    return !0;
+  }
+
+  public canAdd(): boolean {
+    return !0;
+  }
+
+  public canEdit(): boolean {
+    return !0;
+  }
+
+  public onSubmit(): void {
+    this.handleSubmit(this.queryForm, () => {
+
+      this.queryStateService.setQueryState(this.ProgNo, this.queryForm.value);
+      this.loading = !1;
+    });
+  }
+
+  public override onCreate(data?: unknown): void {
+    this.queryStateService.setQueryState(this.ProgNo, this.queryForm.value);
+    super.onCreate(data);
+  }
+
+  onClear() {
+    this.queryForm.reset(); // 重置表單
+  }
+
 
   // // Table data
   // data: any[] = [];
@@ -161,53 +214,4 @@ export class ASS21010Component extends BasicQueryPageComponent<unknown> implemen
   //     { value: 9, label: '3A24210000009' },
   //     { value: 10, label: '3A24210000010' },
   //   ];
-
-
-
-  constructor(
-    public readonly service: ASS21010Service,
-  ) {
-    super();
-  }
-
-  ngOnInit(): void {
-    this.initializePage('ASS21010', '/ASS/ASS21010CRU', this.queryForm, this.onSubmit.bind(this));
-
-    this.service.loadEngType();
-    this.service.loadLocationNo();
-    this.service.loadASS21010({});
-
-
-
-    // // Initialize dropdown options
-    // this.organizationNumberService.getOrganizationNumbers()
-    //   .subscribe((data) => (this.Departmentcode = data));
-    // this.floorService.getFloors()
-    //   .subscribe((data) => (this.floor = data));
-    // // this.locationCodeService.getSystemTypes()
-    // //   .subscribe((data) => (this.location = data));
-  }
-
-  public canQuery(): boolean {
-    return !0;
-  }
-
-  public canAdd(): boolean {
-    return !0;
-  }
-
-  public canEdit(): boolean {
-    return !0;
-  }
-
-  onSubmit() {
-    this.handleSubmit(this.queryForm, () => {
-
-      this.loading = !1;
-    });
-  }
-
-  onClear() {
-    this.queryForm.reset(); // 重置表單
-  }
 }
