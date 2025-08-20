@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, OnDestroy } from '@angular/core';
 import {
   FormGroup,
   Validators,
@@ -49,8 +49,8 @@ import { TableComponent } from '@shared/componentkit/table/table.component';
     TableComponent,
   ],
 })
-export class TLS23120Component extends BasicQueryPageComponent<any> {
-
+export class TLS23120Component extends BasicQueryPageComponent<any> implements OnDestroy {
+ private destroy$ = new Subject<void>();
 
   readonly yesterday: Date = (() => {
     const d = new Date();
@@ -64,13 +64,15 @@ export class TLS23120Component extends BasicQueryPageComponent<any> {
   queryForm = this.formBuilder.group({
     TXN_DateStart: [this.yesterday, [Validators.required]],
     TXN_DateEnd: [this.yesterday, [Validators.required]],
+    TLT_No: [[]],
     bus_type: [],
     ShowBusType: true,
     tlt_building: [],
-    tlt_floor: [],
+     area_no: [[]],
+    tlt_floor: [[]],
     org_id: [],
-    area_no: [],
-    TLT_No: [],
+   
+    
    ...createPaginationConfig([{ field: 'TLT_No', order: 1 }])
   });
 
@@ -136,6 +138,19 @@ export class TLS23120Component extends BasicQueryPageComponent<any> {
             value: x.value,
           })) || [];
       });
+
+    // 依目前值初始化欄位可見性
+    this.syncBusTypeColumns(!!this.queryForm.controls.ShowBusType.value);
+
+    // 監聽切換，動態更新欄位
+    this.queryForm.controls.ShowBusType.valueChanges
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(v => this.syncBusTypeColumns(!!v));
+  }
+   ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+    
   }
   // 送出查詢（無 doQuery / buildPayload）
 onSubmit(form: FormGroup): void {
@@ -204,15 +219,46 @@ onSubmit(form: FormGroup): void {
     });
   });
 }
+  private syncBusTypeColumns(show: boolean): void {
+    const target = new Set(['bus_type', 'bus_type_name']);
+    this.columns = this.columns.map(col =>
+      target.has(col.field) ? { ...col, visible: !!show } : col
+    );
+  }
 
 
-
-  
+  formatDateTimeYMDHM(val: string | Date): string {
+    if (!val) return '';
+    const d = typeof val === 'string' ? new Date(val) : val;
+    if (isNaN(d.getTime())) return String(val ?? '');
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    const hh = String(d.getHours()).padStart(2, '0');
+    const mm = String(d.getMinutes()).padStart(2, '0');
+    return `${y}/${m}/${day}`;
+  }
   moneyFormat(value: number): string {
     return value != null ? value.toLocaleString('en-US') : '0';
   }
   columns = [
-    { field: 'SYS_Name', header: '區分', visible: true },
+    { field: 'bus_type', header: '大分類編號', visible: true },
+    
+     { field: 'bus_type_name', header: '大分類名稱', visible: true },
+     { field: 'TXN_DATE', header: '銷售日期', visible: true , format: this.formatDateTimeYMDHM.bind(this),},
+     
+     { field: 'TLT_NO', header: '專櫃編號', visible: true },
+      { field: 'tlt_name', header: '櫃位名稱', visible: true },
+      { field: 'FLOOR_NO', header: '樓層', visible: true },
+      { field: 'TLT_ID', header: '抽成類別', visible: true },
+   
+    
+    
+    { field: 'total_count', header: '總交易筆數', visible: true },
+    { field: 'return_qty', header: '退貨件數', visible: true },
+     { field: 'return_amt', header: '退貨金額', visible: true },
+      { field: 'AREA_NO', header: '區域', visible: true },
+      { field: 'SYS_Name', header: '區分', visible: true },
     { field: 'sad_sale_qty', header: '銷貨筆數', visible: true },
     {
       field: 'sad_sale_namt',
