@@ -775,7 +775,7 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
   }
 
   private initializeEmptyForm(): void {
-    // 🎯 設定預設值
+    // 🎯 設定預設值 - 根據 constants 檔案的正確值
     this.dataForm.patchValue({
       talent_id: '',
       apply_no: '',
@@ -783,39 +783,41 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
       tlt_no: '',
       ven_uniform: '',
       VEN_Name: '',
-      paper_type: '',
+      paper_type: '',                  // 這個欄位在 constants 中沒有定義，保持空白
       bus_type: '',
       bus_class: '',
       bus_sclass: '',
-      contract_subno: '1', // 預設版次為 1
+      contract_subno: '1',             // 預設版次為 1
 
       // 🎯 預設值
-      tlt_term_type: '3', // 一般抽成
-      comm_comp_type: '2', // 除稅
-      tlt_openflag: '9',
+      tlt_term_type: '3',              // 🎯 抽成別：一般抽成
+      comm_comp_type: '2',             // 除稅
+      tlt_openflag: '9',               // 合約未生效
 
       // 🎯 其他預設值
       org_id: '',
-      tlt_kind: '',
-      deco_type: '',
-      edc_yn: 'Y',
+      tlt_kind: '1',                   // 🎯 專櫃種類：正櫃
+      deco_type: '1',                  // 🎯 裝潢方式：統設統裝(A統)
+      edc_yn: 'Y',                     // 🎯 是否使用業主商店代號：是
       tlt_ctype_mtotal: '',
       overall_status: '1',
       deposit: 0,
-      rece_yn: 'N',
-      pos_yn: 'N',
+      rece_yn: 'Y',                    // 🎯 是否使用業主收銀機：是
+      pos_yn: 'Y',                     // 🎯 是否使用業主商店代號：是
       cash_yn: 'N',
-      comm_yn: 'N',
-      rent_ahead: 'N', //預收租金, 當抽成別為【固定租金】、 【底租抽成取高者】時, default 是 TODO:
+      comm_yn: 'Y',                    // 🎯 是否為抽成：是
+      rent_ahead: 'N',                 // 預收租金
+
       // 🎯 Y/N 欄位預設值
-      invoice_type: '0', /*請款單據別 0:發票 1:收據*/
+      invoice_type: '0',               // 請款單據別：發票
       vip_yn: 'Y',
       credit_card: '',
-      total_amt_unit: 'M', // 預設為月
-      total_amt_vendor_unit: 'M', // 預設為月
-      paytype: '1',
-      money_type: '30',
-      store_way: '1',
+      total_amt_unit: 'M',             // 預設為月
+      total_amt_vendor_unit: 'M',      // 預設為月
+      paytype: '1',                    // 付款方式：匯款
+      money_type: '30',                // 結帳方式：月結
+      store_way: '1',                  // 🎯 配合方式：專櫃
+      check_typeList: ['2', '3'],      // 🎯 對帳方式：郵寄 + 網路（複選）
       water_flag: 'N',
       electric_flag: 'N',
       gas_flag: 'N',
