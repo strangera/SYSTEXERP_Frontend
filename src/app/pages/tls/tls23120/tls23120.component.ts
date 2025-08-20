@@ -242,13 +242,14 @@ onSubmit(form: FormGroup): void {
     return value != null ? value.toLocaleString('en-US') : '0';
   }
   columns = [
-    { field: 'bus_type', header: '大分類編號', visible: true },
-    
-     { field: 'bus_type_name', header: '大分類名稱', visible: true },
+
      { field: 'TXN_DATE', header: '銷售日期', visible: true , format: this.formatDateTimeYMDHM.bind(this),},
      
      { field: 'TLT_NO', header: '專櫃編號', visible: true },
       { field: 'tlt_name', header: '櫃位名稱', visible: true },
+          { field: 'bus_type', header: '大分類編號', visible: true },
+    
+     { field: 'bus_type_name', header: '大分類名稱', visible: true },
       { field: 'FLOOR_NO', header: '樓層', visible: true },
       { field: 'TLT_ID', header: '抽成類別', visible: true },
    
