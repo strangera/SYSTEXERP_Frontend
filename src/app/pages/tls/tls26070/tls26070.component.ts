@@ -45,6 +45,7 @@ export class TLS26070Component extends BasicQueryPageComponent<TLS26070Data> imp
     org_id: [null], // 組織代號
     tlt_term_type: [null], // 抽成別
     onedatedd: ['2024/12/12'], // 日期（日報表）
+    onedatedd_c: [null], // 比較日期（日報表）
     onedateyy: [null], // 年度（週/半年/年報表）
     weeks: [null], // 週數
     onedatemm: [null], // 年月（月報表）
@@ -53,11 +54,24 @@ export class TLS26070Component extends BasicQueryPageComponent<TLS26070Data> imp
     year_onedateyy: [null], // 年報表年度
     startdate: [null], // 開始日期
     enddate: [null], // 結束日期
+    onedateyy_c: [null], // 比較年度（週報表）
+    weeks_c: [null], // 比較週數
+    startdate_c: [null], // 比較開始日期（週報表用）
+    enddate_c: [null], // 比較結束日期（週報表用）
+    onedatemm_c: [null], // 比較年月（月報表）
+    halfyear_onedateyy_c: [null], // 比較半年報表年度
+    halfyear_c: [null], // 比較半年別
+    year_onedateyy_c: [null], // 比較年報表年度
     sad_startdate: [null], // 區間開始日期
     sad_enddate: [null], // 區間結束日期
+    sad_startdate_c: [null], // 比較區間開始日期
+    sad_enddate_c: [null], // 比較區間結束日期
     eventID: [null], // 活動ID
     event_startdate: [null], // 活動開始日期
     event_enddate: [null], // 活動結束日期
+    eventID_c: [null], // 比較活動ID
+    event_startdate_c: [null], // 比較活動開始日期
+    event_enddate_c: [null], // 比較活動結束日期
     tlt_no: [null], // 專櫃編號
     tax: [true], // 是否含稅
     ...createPaginationConfig([{ field: 'talent_id', order: 1 }])
@@ -193,36 +207,37 @@ export class TLS26070Component extends BasicQueryPageComponent<TLS26070Data> imp
   // 根據銷售金額是否含稅設定顯示Header
   setColumns(tax: boolean) {
     this.columns = [
-      { field: 'talent_id', header: '專櫃編號', hidden: true },
+      { field: 'tlt_building', header: '館別', visible: true },
+      { field: 'talent_id', header: '專櫃編號', visible: true },
       { field: 'team_name', header: 'TEAM', visible: true },
       { field: 'division_name', header: '組別', visible: true },
       { field: 'tlt_kind', header: '櫃別', visible: true },
       { field: 'bus_class_name', header: '中分類', visible: true },
       { field: 'bus_sclass_name', header: '小分類', visible: true },
-      { field: 'tlt_name', header: '品牌', visible: true },
+      { field: 'tlt_name', header: '專櫃名稱', visible: true },
       { field: 'budget_now', header: '目標', visible: true, format: formatAmount, isSubTotal: true },
-      { field: 'preorder_amt_now', header: '當期預售金額', hidden: !tax, format: formatAmount, isSubTotal: true },
-      { field: 'preorder_namt_now', header: '當期預售金額', hidden: tax, format: formatAmount, isSubTotal: true },
-      { field: 'Achievement_rate_now', header: '目標達成率', hidden: !tax, format: (value: number) => value ? `${value.toFixed(2)}%` : '0%', isSubTotal: true },
-      { field: 'nAchievement_rate_now', header: '目標達成率', hidden: tax, format: (value: number) => value ? `${value.toFixed(2)}%` : '0%', isSubTotal: true },
-      { field: 'preorder_custcnt_now', header: '當期交易筆數', hidden: !tax, isSubTotal: true },
-      { field: 'avg_ordervalue_now', header: '當期客單價', hidden: !tax, format: formatAmount, isSubTotal: true },
-      { field: 'navg_ordervalue_now', header: '當期客單價', hidden: tax, format: formatAmount, isSubTotal: true },
-      { field: 'preorder_amt_last', header: '去年同期預售金額', hidden: !tax, format: formatAmount, isSubTotal: true },
-      { field: 'preorder_namt_last', header: '去年同期預售金額', hidden: tax, format: formatAmount, isSubTotal: true },
-      { field: 'preorder_custcnt_last', header: '去年同期交易筆數', hidden: !tax, isSubTotal: true },
-      { field: 'avg_ordervalue_last', header: '去年同期客單價', hidden: !tax, format: formatAmount, isSubTotal: true },
-      { field: 'navg_ordervalue_last', header: '去年同期客單價', hidden: tax, format: formatAmount, isSubTotal: true },
-      { field: 'Growth', header: '成長比', hidden: !tax, format: (value: number) => value ? `${value.toFixed(2)}%` : '0%', isSubTotal: true },
-      { field: 'nGrowth', header: '成長比', hidden: tax, format: (value: number) => value ? `${value.toFixed(2)}%` : '0%', isSubTotal: true },
-      { field: 'PerformanceDiff', header: '業績差異', hidden: !tax, format: formatAmount, isSubTotal: true },
-      { field: 'nPerformanceDiff', header: '業績差異', hidden: tax, format: formatAmount, isSubTotal: true },
+      { field: 'preorder_amt_now', header: '當期預售金額', hidden: tax, format: formatAmount, isSubTotal: true },
+      { field: 'preorder_namt_now', header: '當期預售金額', hidden: !tax, format: formatAmount, isSubTotal: true },
+      { field: 'Achievement_rate_now', header: '目標達成率', hidden: tax, format: (value: number) => value ? `${value.toFixed(2)}%` : '0%', isSubTotal: true },
+      { field: 'nAchievement_rate_now', header: '目標達成率', hidden: !tax, format: (value: number) => value ? `${value.toFixed(2)}%` : '0%', isSubTotal: true },
+      { field: 'preorder_custcnt_now', header: '當期交易筆數', visible: true, isSubTotal: true },
+      { field: 'avg_ordervalue_now', header: '當期客單價', hidden: tax, format: formatAmount, isSubTotal: true },
+      { field: 'navg_ordervalue_now', header: '當期客單價', hidden: !tax, format: formatAmount, isSubTotal: true },
+      { field: 'preorder_amt_last', header: '去年同期預售金額', hidden: tax, format: formatAmount, isSubTotal: true },
+      { field: 'preorder_namt_last', header: '去年同期預售金額', hidden: !tax, format: formatAmount, isSubTotal: true },
+      { field: 'preorder_custcnt_last', header: '去年同期交易筆數', visible: true, isSubTotal: true },
+      { field: 'avg_ordervalue_last', header: '去年同期客單價', hidden: tax, format: formatAmount, isSubTotal: true },
+      { field: 'navg_ordervalue_last', header: '去年同期客單價', hidden: !tax, format: formatAmount, isSubTotal: true },
+      { field: 'Growth', header: '成長比', hidden: tax, format: (value: number) => value ? `${value.toFixed(2)}%` : '0%', isSubTotal: true },
+      { field: 'nGrowth', header: '成長比', hidden: !tax, format: (value: number) => value ? `${value.toFixed(2)}%` : '0%', isSubTotal: true },
+      { field: 'PerformanceDiff', header: '業績差異', hidden: tax, format: formatAmount, isSubTotal: true },
+      { field: 'nPerformanceDiff', header: '業績差異', hidden: !tax, format: formatAmount, isSubTotal: true },
       { field: 'TransactionsNumber', header: '交易筆數差異', visible: true, isSubTotal: true },
-      { field: 'OrdervalueDiff', header: '客單差異', hidden: !tax, isSubTotal: true },
-      { field: 'nOrdervalueDiff', header: '客單差異', hidden: tax, isSubTotal: true },
+      { field: 'OrdervalueDiff', header: '客單差異', hidden: tax, isSubTotal: true },
+      { field: 'nOrdervalueDiff', header: '客單差異', hidden: !tax, isSubTotal: true },
       { field: 'tlt_space', header: '營業坪數', visible: true, isSubTotal: true },
-      { field: 'MonthlyFloorEffect', header: '月坪效', hidden: !tax, format: formatAmount, isSubTotal: true },
-      { field: 'nMonthlyFloorEffect', header: '月坪效', hidden: tax, format: formatAmount, isSubTotal: true }
+      { field: 'MonthlyFloorEffect', header: '月坪效', hidden: tax, format: formatAmount, isSubTotal: true },
+      { field: 'nMonthlyFloorEffect', header: '月坪效', hidden: !tax, format: formatAmount, isSubTotal: true }
     ]
   }
 }
