@@ -46,13 +46,13 @@
           <!-- 如果是第一次出現這個群組 -->
           <ng-container *ngIf="shouldRenderGroupHeader(col, i, columns)">
             <th [attr.colspan]="getColumnSpan(columns, col.groupField!)" [ngClass]="getGroupAlignClass(col.groupField!)"
-              class="group-header" pReorderableColumn>
+              class="group-header" pReorderableColumn pResizableColumn>
               {{ getGroupHeader(col.groupField!) }}
             </th>
           </ng-container>
           <!-- 如果是沒群組的欄位 -->
           <ng-container *ngIf="!col.groupField">
-            <th *ngIf="!col.hidden" rowspan="2" class="text-center"
+            <th *ngIf="!col.hidden" rowspan="2" class="text-center" pResizableColumn
               [pSortableColumn]="showSort && !rowEditing ? col.sortField ?? col.field : undefined"
               [pSortableColumnDisabled]="!showSort || rowEditing || col.showSort === false" pFrozenColumn
               [frozen]="IsPrint && !!col.frozen" [alignFrozen]="col.alignFrozen || 'right'">
@@ -70,7 +70,7 @@
       <!-- 第二層：實際欄位標題 -->
       <tr>
         <ng-container *ngFor="let col of columns">
-          <th *ngIf="!col.hidden && col.groupField" class="text-center" pReorderableColumn
+          <th *ngIf="!col.hidden && col.groupField" class="text-center" pReorderableColumn pResizableColumn
             [pSortableColumn]="showSort && !rowEditing ? col.sortField ?? col.field : undefined"
             [pSortableColumnDisabled]="!showSort || rowEditing || col.showSort === false" pFrozenColumn
             [frozen]="IsPrint && !!col.frozen" [alignFrozen]="col.alignFrozen || 'right'">
@@ -90,7 +90,7 @@
           <p-tableHeaderCheckbox [disabled]="disabled" />
         </th>
         <th class="w-1rem" *ngIf="expansionColumns.length && IsPrint">收合/展開</th>
-        <th *ngFor="let col of columns" pReorderableColumn
+        <th *ngFor="let col of columns" pReorderableColumn pResizableColumn
           [pSortableColumn]="showSort && !rowEditing ? col.sortField ?? col.field : undefined"
           [pSortableColumnDisabled]="!showSort || rowEditing || col.showSort === false" class="text-center"
           pFrozenColumn [frozen]="IsPrint && col.frozen" [alignFrozen]="col.alignFrozen || 'right'">
