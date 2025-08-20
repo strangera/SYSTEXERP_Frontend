@@ -15,6 +15,7 @@ import { untilDestroyed } from '@ngneat/until-destroy';
 import { QueryPLUResponse, QueryTLS57040Request, Tls57040Service } from '@service/api/tls/tls57040.service';
 import { DropdownTableComponent, FieldsConfig } from '@shared/componentkit/dropdown-table/dropdown-table.component';
 import { debounceTime } from 'rxjs';
+import { yesterday } from '@shared/models/system/query-form.model';
 
 @Component({
   selector: 'app-tls57050',
@@ -39,8 +40,8 @@ export class TLS57050Component extends BasicQueryPageComponent<any> implements O
     displayMode: [null],
     HOS_No: [null],
     TXN_SaleNoteNo: ['', Validators.maxLength(8)],
-    TXN_DateStart: [null],
-    TXN_DateEnd: [null],
+    TXN_DateStart: [yesterday],
+    TXN_DateEnd: [yesterday],
     ECR_No: [''],
     TXN_No: ['', Validators.maxLength(8)],
     TLT_Name: [null],
