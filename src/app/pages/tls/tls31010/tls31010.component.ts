@@ -254,6 +254,9 @@ export class TLS31010Component extends BasicQueryPageComponent<TLS31010Response>
     const formValue = {
       ...printData,
       IsExcel: true,
+      SortBy: undefined,
+      pageIndex: undefined,
+      pageSize: undefined,
       bus_class: frm.getRawValue().bus_class.map((item: IDropdownItem) => item.No),
       bus_sclass: frm.getRawValue().bus_sclass.map((item: IDropdownItem) => item.No),
       TXN_Date: formatDate(frm.getRawValue().TXN_Date, 'yyyy-MM-dd', 'en-US'),
