@@ -26,8 +26,9 @@ import { InputTextModule } from 'primeng/inputtext';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { TranslateModule } from '@ngx-translate/core';
 import { Subject, Subscription, of } from 'rxjs';
-import { debounceTime, takeUntil, timeout, catchError } from 'rxjs/operators';
+import { debounceTime, takeUntil, timeout, catchError, map } from 'rxjs/operators';
 import { TableComponent } from '@shared/componentkit/table/table.component';
+import { DropDownListService, IBankRequest } from '@service/utility/dropDownList.service';
 
 @Component({
   selector: 'app-tls23130',
@@ -61,8 +62,8 @@ export class TLS23130Component extends BasicQueryPageComponent<any> {
   totalRecords = 0;
 
   queryForm = this.formBuilder.group({
-    saleDateStart: [this.yesterday, [Validators.required]],
-    saleDateEnd: [this.yesterday, [Validators.required]],
+    TXN_DateStart: [this.yesterday, [Validators.required]],
+    TXN_DateEnd: [this.yesterday, [Validators.required]],
     BNK_No: [],
     tlt_building: [],
     tlt_floor: [],
@@ -93,18 +94,18 @@ export class TLS23130Component extends BasicQueryPageComponent<any> {
     private counterNameService: CounterNameService,
     private bigCategoryCodeService: BigCategoryCodeService,
     private tls11010Service: Tls11010Service,
+    private dropDownListService:DropDownListService
   ) {
     super();
   }
 
   ngOnInit(): void {
     this.initializePage('TLS23130', 'tls/tls23130', this.queryForm, (form) => this.onSubmit(form));
-    this.cardTypeService
-      .getCardType().subscribe((data) => (this.cardTypeOptions = data));
+    // this.cardTypeService
+    //   .getCardType().subscribe((data) => (this.cardTypeOptions = data));
     this.organizationNumberService
       .getOrganizationNumbers().subscribe((data) => (this.organizationOptions = data));
-    this.regionService
-      .getRegionOptions().subscribe((data) => (this.regionOptions = data));
+    this.regionService      .getRegionOptions().subscribe((data) => (this.regionOptions = data));
     this.floorService
       .getFloors().subscribe((data) => (this.floorOptions = data));
     this.bigCategoryCodeService
@@ -137,6 +138,28 @@ export class TLS23130Component extends BasicQueryPageComponent<any> {
             value: x.value,
           })) || [];
       });
+      // 小工具：從物件取第一個存在的鍵值
+const pick = (obj: any, keys: string[], fallback = '') =>
+  keys.find(k => obj?.[k] != null && obj?.[k] !== '')
+    ? obj[keys.find(k => obj?.[k] != null && obj?.[k] !== '') as string]
+    : fallback;
+
+this.dropDownListService
+  .queryAPS1001_DropDownList({ SearchKeyword: '' } as IBankRequest) // ✅ 用對型別，補上必填鍵
+  .pipe(
+    map(res => Array.isArray(res?.Data) ? (res.Data as any[]) : []),
+    map(list => list.map(x => {
+      const v = String(pick(x, ['value','Value','id','Id','ID','code','Code','no','No','BankNo','BNK_No']));
+      const l = String(pick(x, ['label','Label','text','Text','name','Name','desc','Desc','BankName'], v));
+      return { label: l, value: v, formLabel: `${v} - ${l}` };
+    })),
+    catchError(err => {
+      console.error('queryAPS1001_DropDownList 失敗', err);
+      this.messageService?.errorBubble?.('銀行下拉資料讀取失敗');
+      return of([] as any[]);
+    })
+  )
+  .subscribe(opts => this.cardTypeOptions = opts);
   }
 
 onSubmit(form: FormGroup): void {

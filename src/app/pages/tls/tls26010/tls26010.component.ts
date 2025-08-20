@@ -1,6 +1,6 @@
 
 import { DatePipe } from '@angular/common';
-import { Component, OnInit, computed, effect } from '@angular/core';
+import { Component, OnInit, computed, effect, untracked } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { FormControl, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
@@ -35,7 +35,7 @@ import { TLS26010Data, TLS26010Query } from './tls26010.model';
 })
 export class TLS26010Component extends BasicQueryPageComponent<TLS26010Data> implements OnInit {
 
-  public queryForm = this.formBuilder.group({
+  public queryForm = this.formBuilder.nonNullable.group({
     sys3800: new FormControl<string[] | undefined>(void 0), // 館別
     sys3900: new FormControl<string[] | undefined>(void 0), // 樓層
     sys3A00: new FormControl<string[] | undefined>(void 0), // 區域
@@ -91,7 +91,7 @@ export class TLS26010Component extends BasicQueryPageComponent<TLS26010Data> imp
   ];
 
   // 監聽館別、樓層及區域變化，載入相關資料
-  private readonly dependentDataEffect = effect(() => {
+  public readonly dependentDataEffect = effect(() => {
     const sys3800Value = this.sys3800Signal();
     const sys3900Value = this.sys3900Signal();
     const sys3A00Value = this.sys3A00Signal();
@@ -102,8 +102,10 @@ export class TLS26010Component extends BasicQueryPageComponent<TLS26010Data> imp
 
     console.log(`dependentDataEffect:`, [building_nos, floor_nos, area_nos]);
     if (!building_nos?.length && !floor_nos?.length && !area_nos?.length) return;
-    this.service.loadPreorderECRList({ building_nos, floor_nos, area_nos, ecr_type: '2' });
-    this.service.loadTLTTALENT({ building_nos, floor_nos, area_nos });
+    untracked(() => {
+      this.service.loadPreorderECRList({ building_nos, floor_nos, area_nos, ecr_type: '2' });
+      this.service.loadTLTTALENT({ building_nos, floor_nos, area_nos });
+    });
   }, { allowSignalWrites: !0 });
 
   private readonly queryTLS26010 = computed<TLS26010Query & { isValid: boolean; }>(() => {
@@ -142,7 +144,7 @@ export class TLS26010Component extends BasicQueryPageComponent<TLS26010Data> imp
       if (start > end) isValid = !1;
     }
 
-    return {
+    return <TLS26010Query & { isValid: boolean; }>{
       ecr_nos: Array.isArray(this.ecrNosSignal()) ? Array.from(this.ecrNosSignal()!) : [],
       tlt_nos: Array.isArray(this.tltNosSignal()) ? Array.from(this.tltNosSignal()!) : [],
       pod_sdate_S,
@@ -200,10 +202,16 @@ export class TLS26010Component extends BasicQueryPageComponent<TLS26010Data> imp
     });
   }
 
-  public onSubmit(frm: FormGroup): void {
-    this.handleSubmit(frm, () => {
+  public override onCreate(data?: unknown): void {
+    this.queryStateService.setQueryState(this.ProgNo, this.queryForm.value);
+    super.onCreate(data);
+  }
+
+  public onSubmit(): void {
+    this.handleSubmit(this.queryForm, () => {
       const query = this.queryTLS26010();
-      frm.valid && this.canQuery() && this.service.loadTLS26010(query);
+      this.queryForm.valid && this.canQuery() && this.service.loadTLS26010(query);
+      this.queryStateService.setQueryState(this.ProgNo, this.queryForm.value);
       this.loading = !1;
     });
   };
@@ -212,7 +220,7 @@ export class TLS26010Component extends BasicQueryPageComponent<TLS26010Data> imp
     const query = this.queryTLS26010();
     console.log(`submit:`, [this.queryForm.value, this.sys3900Signal(), query]);
     if (!query.isValid) return;
-    this.onSubmit(this.queryForm);
+    this.onSubmit();
   };
 
   /** 刪除選中的活動 */

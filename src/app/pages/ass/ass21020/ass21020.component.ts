@@ -1,7 +1,7 @@
 
 import { Component, OnInit, computed, effect } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { FormControl, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 import { ASS21020Service } from '@service/api/ass/ass21020.service';
 import { MenubarComponent } from '@shared/component/menubar/menubar.component';
@@ -93,6 +93,29 @@ export class ASS21020Component extends BasicQueryPageComponent<unknown> implemen
     // this.locationCodeService.getSystemTypes()
     //   .subscribe((data) => (this.location = data));
   }
+
+  public onSubmit(): void {
+    this.handleSubmit(this.queryForm, () => {
+
+      this.queryStateService.setQueryState(this.ProgNo, this.queryForm.value);
+      this.loading = !1;
+    });
+  }
+
+  public override onCreate(data?: unknown): void {
+    this.queryStateService.setQueryState(this.ProgNo, this.queryForm.value);
+    super.onCreate(data);
+  }
+
+
+  public onClear(): void {
+
+  }
+
+
+
+
+
   // // Table data
   // Energytype: any[] = [{ value: 1, label: '水費' },
   // { value: 2, label: '電費' },
@@ -209,17 +232,6 @@ export class ASS21020Component extends BasicQueryPageComponent<unknown> implemen
   //     { value: 9, label: '3A24210000009' },
   //     { value: 10, label: '3A24210000010' },
   //   ];
-
-  public onSubmit(): void {
-    this.handleSubmit(this.queryForm, () => {
-
-      this.loading = !1;
-    });
-  }
-
-  public onClear(): void {
-
-  }
 
   // onEdit(data: any) {
   //   if (this.canEdit()) {

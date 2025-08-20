@@ -12,6 +12,7 @@ import { CalendarComponent } from '@shared/componentkit/calendar/calendar.compon
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
 import { TableComponent } from '@shared/componentkit/table/table.component';
 import { Column } from '@shared/componentkit/table/table.model';
+import { CRUDStatus } from '@shared/models/system/CRUDstatus';
 import { ApprovalStatus } from '@shared/models/tls/approval-status.model';
 import { AccordionModule } from 'primeng/accordion';
 import { TLS26080Data, TLS26080Query } from './tls26080.model';
@@ -106,9 +107,15 @@ export class TLS26080Component extends BasicQueryPageComponent<TLS26080Data> imp
   public onSubmit(): void {
     this.handleSubmit(this.queryForm, () => {
       this.queryForm.valid && this.canQuery() && this.service.loadTLS26080(this.queryTLS26080());
+      this.queryStateService.setQueryState(this.ProgNo, this.queryForm.value);
       this.loading = !1;
     });
   };
+
+  public override onCreate(data?: unknown): void {
+    this.queryStateService.setQueryState(this.ProgNo, this.queryForm.value);
+    super.onCreate(data);
+  }
 
   // 刪除項目
   public onDelete(data: TLS26080Data | TLS26080Data[]): void {

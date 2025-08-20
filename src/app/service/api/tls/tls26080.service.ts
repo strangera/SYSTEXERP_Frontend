@@ -202,24 +202,47 @@ export class TLS26080Service {
           this.TLS26080Detail.set(Array.from(mapped));
           if (data.ErrorCount === 0) this.messageService.successBubble('上傳成功');
           else {
-            window.open(`${apiUrl}${data.ErrorFilePath}`, '_blank');
+            this.dealErrorFilePath(data);
             this.messageService.errorBubble(`上傳失敗: ${data.ErrorCount} 筆資料錯誤`);
           }
-          window.open(`${apiUrl}${data.ErrorFilePath}`, '_blank');
         } else {
-          this.messageService.errorBubble('上傳失敗');
+          this.dealErrorFilePath(data);
+          this.messageService.errorBubble(`上傳失敗`);
         }
+        this.dealErrorFilePath(data);
       }),
-      catchError(this.errorHandler.handleError),
+      catchError(error => this.errorHandler.handleError(error)),
       finalize(() => {
         console.log('上傳檔案結果:', [file]);
       })
     ).subscribe();
   }
 
+  private dealErrorFilePath(data: TLS26080UploadResult): void {
+    const path = data.ErrorFilePath;
+    if (data.Success || data.ErrorCount && !path?.length) return;
+    window.open(`${apiUrl}${path}`, '_blank', 'noopener noreferrer');
+    // this.http.get(`${apiUrl}${path}`, { responseType: 'blob' }).pipe(
+    //   take(1),
+    //   tap(response => {
+    //     // 建立下載連結
+    //     const url = window.URL.createObjectURL(response);
+    //     const link = document.createElement('a');
+    //     link.href = url;
+    //     link.download = path.split('/').pop() || 'error_file.xlsx';
+    //     document.body.appendChild(link);
+    //     link.click();
+    //     document.body.removeChild(link);
+    //     window.URL.revokeObjectURL(url);
+    //   }),
+    //   catchError(error => this.errorHandler.handleError(error)),
+    //   finalize(() => console.log('錯誤檔案下載'))
+    // ).subscribe();
+  }
+
   public downloadXLSXExample(): void {
     this.exampleDownloading = !0;
-    this.http.get(`${apiUrl}/TLS0000/TLS2000/downloadTLS26080Template`, { responseType: 'blob', }).pipe(
+    this.http.get(`${apiUrl}/TLS0000/TLS2000/downloadTLS26080Template`, { responseType: 'blob' }).pipe(
       take(1),
       tap(response => {
         // 建立下載連結
