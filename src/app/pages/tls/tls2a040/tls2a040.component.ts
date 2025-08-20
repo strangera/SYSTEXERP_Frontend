@@ -2,14 +2,12 @@ import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 import { Column } from '@shared/componentkit/table/table.model';
-// import { TLS2A010Service } from '@services/api/tls/tls2a010.service';
 import { AccordionModule } from 'primeng/accordion';
 import { DropdownModule } from 'primeng/dropdown';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { ECRNoService } from '@service/basic/ECRNo.service';
 import { WhetherService } from '@service/basic/whether.service';
 import { DisplayService } from '@service/basic/display.service';
-// import { Tls22030Service } from '@service/api/tls/tls22030.service';
 import { DropDownListService, IDropdownItem } from '@service/utility/dropDownList.service';
 import { HttpClient } from '@angular/common/http';
 import { LocationOptionsService } from '../../../service/api/dropdownservice/location-options.service';
@@ -23,6 +21,8 @@ import { InputNumberComponent } from '@shared/componentkit/input-number/input-nu
 import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
 import { InputNumberRangeComponent } from '@shared/componentkit/input-number-range/input-number-range.component';
 import { yesterday } from '@shared/models/system/query-form.model';
+import { Tls2a040Service } from '@service/api/tls/tls2a040.service';
+import { createPaginationConfig } from 'src/app/shared/componentkit/table/table.model';
 
 @Component({
   selector: 'app-tls22030',
@@ -43,21 +43,23 @@ import { yesterday } from '@shared/models/system/query-form.model';
     CalendarRangeQuickComponent,
     InputNumberRangeComponent
   ],
-
 })
 export class TLS2A040Component extends BasicQueryPageComponent<any> implements OnInit {
   queryForm = this.formBuilder.group({
-    ECR_No: [null],
-    TXN_No: [null],
-    TXN_DateStart: [yesterday, Validators.required],
-    TXN_DateEnd: [yesterday, Validators.required],
-    casherFrom: [null],
-    casherTo: [null],
-    status: [[]],
-    SYS_DisplayCredit: [null],
-    FLOOR_NO: [null],
-    building_no: [null],
+    ECR_No: [null],                // 收銀機號
+    TXN_No: [null],                // 交易序號
+    TXN_Date_Start: [yesterday, Validators.required],
+    TXN_Date_End: [yesterday, Validators.required],
+    TXN_PayAmt_Start: [null],         // 金額範圍起
+    TXN_PayAmt_End: [null],           // 金額範圍迄
+    check_statusList: [[]],                  // 狀況
+    CRD_No: [null],     // 信用卡卡號
+    Floor_No: [null],              // 樓層
+    Building_No: [null],           // 館別
+    ...createPaginationConfig([{ field: 'ECR_No', order: 1 }]),
+
   });
+
   data: any[] = [];
   totalRecords = 0;
   listZeroDifferenceOptions: any[] = [];
@@ -65,13 +67,14 @@ export class TLS2A040Component extends BasicQueryPageComponent<any> implements O
     { field: 'ECR_No', header: '收銀機號' },
     { field: 'TXN_No', header: '交易序號' },
     { field: 'TXN_Date', header: '銷售日期' },
-    { field: 'TXN_Amt', header: '金額' },
-    { field: 'status', header: '狀況' },
-    { field: 'SYS_DisplayCredit', header: '信用卡卡號' },
-    { field: 'FLOOR_NO', header: '樓層' },
-    { field: 'building_no', header: '館別' },
+    { field: 'tlt_name', header: '專櫃名稱' },
+    { field: 'TXN_PayAmt', header: '金額' },
+    { field: 'check_status', header: '狀況' },
+    { field: 'CRD_No', header: '信用卡卡號' },
+    { field: 'Floor_No', header: '樓層' },
+    { field: 'Building_No', header: '館別' },
+    { field: 'check_remark', header: '備註' }
   ];
-
 
   // 下拉選單資料
   ECRNoOptions: any[] = [];
@@ -85,16 +88,14 @@ export class TLS2A040Component extends BasicQueryPageComponent<any> implements O
   floorOptions: any[] = [];
   buildingNoOptions: IDropdownItem[] = [];
 
-
   constructor(
     private locationOptionsService: LocationOptionsService,
     private ECRNoService: ECRNoService,
     private whetherService: WhetherService,
     private displayService: DisplayService,
-    // private tls2a040Service: Tls2a040Service,
     private dropDownListService: DropDownListService,
-    // private service: Tls2a040Service,
     private http: HttpClient,
+    private tls2a040Service: Tls2a040Service
   ) {
     super();
   }
@@ -102,12 +103,15 @@ export class TLS2A040Component extends BasicQueryPageComponent<any> implements O
   ngOnInit(): void {
     this.initializePage('TLS2A040', '/TLS/TLS2A040cru', this.queryForm, (form) => this.onSubmit(form));
     this.funInfo = this.authService.getUserPermissions(this.ProgNo);
+
     this.whetherService.getWhetherOptions().subscribe((data) => {
       this.listZeroDifferenceOptions = data;
     });
+
     this.ECRNoService.getECRNo().subscribe((data) => {
       this.ECRNoOptions = data;
     });
+
     this.locationOptionsService.getFloorOptions().subscribe({
       next: (res) => {
         this.floorOptions = res.map((item: any) => ({
@@ -117,33 +121,39 @@ export class TLS2A040Component extends BasicQueryPageComponent<any> implements O
       },
       error: () => this.messageService.errorBubble('載入樓層選單失敗')
     });
-    //館別
-    this.dropDownListService.querySYS3800_DropDownList().pipe(untilDestroyed(this)).subscribe(res => {
-      this.buildingNoOptions = res.Data.map(x => ({ label: x.Name, value: x.No, Name: x.Name, No: x.No }));
-    });
 
+    // 館別
+    this.dropDownListService.querySYS3800_DropDownList()
+      .pipe(untilDestroyed(this))
+      .subscribe(res => {
+        this.buildingNoOptions = res.Data.map(x => ({
+          label: x.Name,
+          value: x.No,
+          Name: x.Name,
+          No: x.No
+        }));
+      });
   }
-
-
 
   onSubmit(form: FormGroup): void {
     this.handleSubmit(form, () => {
-      this.loading = false;
-      // this.tls2a040Service.queryTLS2a040(form.value).subscribe({
-      //   next: (res) => {
-      //     this.data = res.Data ?? [];
-      //     this.totalRecords = res.TotalCount;
-      //     this.loading = false;
-      //     this.queryStateService.setQueryState(this.ProgNo, this.queryForm.value);
-      //   },
-      //   error: (err) => {
-      //     console.error('TLS22030 查詢失敗', err);
-      //     this.loading = false;
-      //   }
-      // });
+      this.loading = true;
 
+      this.tls2a040Service.queryTLS2A040(form.value).subscribe({
+        next: (res) => {
+          this.data = res.Data ?? [];
+          this.totalRecords = res.TotalCount ?? this.data.length;
+          this.loading = false;
+
+          // 儲存查詢條件
+          this.queryStateService.setQueryState(this.ProgNo, this.queryForm.value);
+        },
+        error: (err) => {
+          console.error('TLS2A040 查詢失敗', err);
+          this.messageService.errorBubble('查詢失敗，請稍後再試');
+          this.loading = false;
+        }
+      });
     });
   }
 }
-
-
