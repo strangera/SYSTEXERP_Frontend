@@ -257,6 +257,9 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
   // 簡化狀態管理 - 只儲存使用者正在輸入的值
   private userInputValues: Map<string, string> = new Map();
 
+  private debounceTimers: Map<string, any> = new Map();
+  private readonly DEBOUNCE_DELAY = 300; // 300ms 防抖延遲
+
   constructor(
     private cdr: ChangeDetectorRef,
     private messageService: NotificationService,
@@ -288,9 +291,19 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
     }
   }
 
-  ngOnDestroy() {
+  ngOnDestroy(): void {
+    console.log('🧹 清理防抖計時器...');
+
+    // 清理所有防抖計時器
+    this.debounceTimers.forEach((timer, key) => {
+      console.log(`🗑️ 清除計時器: ${key}`);
+      clearTimeout(timer);
+    });
+    this.debounceTimers.clear();
+
+    // 原有的清理邏輯...
     this.cleanupSelectorResources();
-    this.userInputValues.clear(); // 🎯 新增：清理日期輸入狀態
+    this.userInputValues.clear();
     this.validationService.reset();
   }
 
@@ -1687,61 +1700,66 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
     return this.validationService.hasRowValidationErrors(rowData, this.dataKey);
   }
   //=================處理數字欄位 blur 事件==================================
-  onNumberFieldBlur(event: any, fieldName: string, rowData: any): void {
-    // 🎯 關鍵修正：正確取得 PrimeNG InputNumber 的值
-    let inputValue = event.target.value;
-
-    // 如果是 PrimeNG InputNumber，它的實際值可能在不同的屬性中
-    if (event.value !== undefined) {
-      inputValue = event.value; // PrimeNG 的實際數值
-    } else if (typeof inputValue === 'string') {
-      // 移除千分位逗號
-      inputValue = inputValue.replace(/,/g, '');
-    }
-
-    console.log(`🔢 數字欄位 blur: ${fieldName}`, {
-      原始輸入: event.target.value,
-      事件值: event.value,
-      處理後: inputValue
+  onDetailNumberModelChange(
+    newValue: any,
+    fieldName: string,
+    detailData: any,
+    rowIndex: number,
+    detailIndex: number
+  ): void {
+    console.log('🔄 詳細資料 ngModelChange:', {
+      fieldName,
+      newValue,
+      rowIndex,
+      detailIndex
     });
 
-    let newValue;
+    // 複用主要方法，但標記為詳細資料
+    this.onNumberModelChange(newValue, fieldName, detailData, true);
+  }
 
-    // 處理空值
-    if (inputValue === '' || inputValue === null || inputValue === undefined) {
-      newValue = null;
-    } else {
-      const numericValue = parseFloat(inputValue);
+  onNumberFieldBlur(event: any, fieldName: string, rowData: any): void {
+    console.log('🎯 數字欄位 Blur:', {
+      fieldName,
+      eventValue: event.value,
+      eventTarget: event.target?.value,
+      currentRowValue: rowData[fieldName]
+    });
 
-      if (isNaN(numericValue)) {
-        console.error(`❌ 無法轉換為數字: "${inputValue}"`);
-        newValue = 0;
-      } else {
-        newValue = numericValue;
+    const rowId = rowData[this.dataKey] || 'unknown';
+    const debounceKeyMain = `${rowId}_${fieldName}_main`;
+    const debounceKeyDetail = `${rowId}_${fieldName}_detail`;
+
+    // 立即執行任何待處理的計算
+    [debounceKeyMain, debounceKeyDetail].forEach(key => {
+      if (this.debounceTimers.has(key)) {
+        console.log(`⚡ Blur 立即執行防抖計算: ${key}`);
+        clearTimeout(this.debounceTimers.get(key));
+        this.debounceTimers.delete(key);
       }
+    });
+
+    // 確保最終值正確
+    let finalValue = event.value !== undefined ? event.value : event.target?.value;
+
+    if (typeof finalValue === 'string') {
+      finalValue = parseFloat(finalValue.replace(/,/g, '')) || 0;
+    } else if (typeof finalValue !== 'number') {
+      finalValue = rowData[fieldName] || 0;
     }
 
-    // 確保資料已更新為純數字（不含逗號）
-    rowData[fieldName] = newValue;
+    // 如果值有差異，同步並觸發最終計算
+    if (Math.abs((rowData[fieldName] || 0) - finalValue) > 0.001) {
+      console.log(`🔄 Blur 最終修正: ${rowData[fieldName]} → ${finalValue}`);
+      rowData[fieldName] = finalValue;
 
-    // 檢查是否需要觸發計算
-    if (fieldName === 'tpy_unitamt' || fieldName === 'tpy_qty') {
       this.fieldChange.emit({
         fieldName,
-        newValue,
+        newValue: finalValue,
         rowData
       });
     }
-
-    // 如果是直接編輯模式，觸發保存
-    const column = this.mainColumns.find(col => col.field === fieldName) ||
-      this.detailColumns.find(col => col.field === fieldName);
-
-    if (column?.directEdit) {
-      this.onDirectEditChange(rowData, fieldName, newValue);
-    }
   }
-
   //=====================預設值=====================
   getFieldDefaultValue(column: ColumnDef, rowData: any): any {
     // 如果有值就使用現有值
@@ -1766,5 +1784,216 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
         newItem[column.field] = column.defaultValue;
       }
     });
+  }
+
+  private debouncedCalculation(
+    fieldKey: string,
+    callback: () => void,
+    delay: number = this.DEBOUNCE_DELAY
+  ): void {
+    // 清除現有計時器
+    if (this.debounceTimers.has(fieldKey)) {
+      clearTimeout(this.debounceTimers.get(fieldKey));
+      console.log(`🔄 清除舊的防抖計時器: ${fieldKey}`);
+    }
+
+    // 設置新的計時器
+    const timer = setTimeout(() => {
+      console.log(`⏰ 防抖延遲結束，執行計算: ${fieldKey}`);
+      callback();
+      this.debounceTimers.delete(fieldKey);
+    }, delay);
+
+    this.debounceTimers.set(fieldKey, timer);
+    console.log(`⏱️ 設置防抖計時器: ${fieldKey} (${delay}ms)`);
+  }
+
+  // 🔄 重構數字欄位處理 - 使用 input 事件 + 防抖
+  onNumberInputChange(
+    event: any,
+    fieldName: string,
+    rowData: any,
+    isDetail: boolean = false
+  ): void {
+    // 🚨 關鍵診斷：檢查 event 結構
+    console.log('🔍 完整 event 物件:', event);
+    console.log('🔍 event.target:', event.target);
+    console.log('🔍 event.target.value:', event.target?.value);
+    console.log('🔍 event.value:', event.value);
+    console.log('🔍 event.originalEvent:', event.originalEvent);
+
+    // 🎯 方案 1: 優先使用 PrimeNG 的 value 屬性
+    let inputValue = event.value !== undefined ? event.value : event.target?.value;
+
+    // 🎯 方案 2: 如果還是 undefined，檢查其他可能的屬性
+    if (inputValue === undefined || inputValue === null) {
+      inputValue = event.originalEvent?.target?.value ||
+        event.target?.value ||
+        event.data ||
+        0;
+    }
+
+    console.log(`🔢 最終取得的輸入值: "${inputValue}" (類型: ${typeof inputValue})`);
+
+    // 處理數值轉換
+    let numericValue: number;
+
+    if (typeof inputValue === 'string') {
+      // 移除千分位逗號
+      const cleanValue = inputValue.replace(/,/g, '');
+      numericValue = parseFloat(cleanValue) || 0;
+    } else if (typeof inputValue === 'number') {
+      numericValue = inputValue;
+    } else {
+      console.warn(`⚠️ 無法處理的輸入類型: ${typeof inputValue}, 值: ${inputValue}`);
+      numericValue = 0;
+    }
+
+    console.log(`💰 轉換後的數值: ${numericValue}`);
+
+    // 立即更新 rowData（這很重要！）
+    const oldValue = rowData[fieldName];
+    rowData[fieldName] = numericValue;
+
+    console.log(`📝 更新 ${fieldName}: ${oldValue} → ${numericValue}`);
+
+    // 防抖觸發計算
+    const debounceKey = `${rowData[this.dataKey]}_${fieldName}_${isDetail ? 'detail' : 'main'}`;
+
+    this.debouncedCalculation(debounceKey, () => {
+      console.log(`⚡ 防抖計算觸發: ${fieldName} = ${numericValue}`);
+
+      this.fieldChange.emit({
+        fieldName,
+        newValue: numericValue,
+        rowData
+      });
+
+      // 直接編輯保存
+      const column = this.findColumnByField(fieldName);
+      if (column?.directEdit) {
+        if (isDetail) {
+          const parentData = this.findParentData(rowData);
+          if (parentData) {
+            this.onDetailDirectEditChange(rowData, parentData, fieldName, numericValue);
+          }
+        } else {
+          this.onDirectEditChange(rowData, fieldName, numericValue);
+        }
+      }
+    });
+  }
+
+  private findColumnByField(fieldName: string): ColumnDef | undefined {
+    // 先從主要欄位找
+    let column = this.mainColumns.find(col => col.field === fieldName);
+
+    if (!column) {
+      // 再從詳細欄位找
+      column = this.detailColumns.find(col => col.field === fieldName);
+    }
+
+    // 如果還沒找到且有分頁欄位
+    if (!column && this.showDetailTabs && this.detailColumnsMap) {
+      for (const tabColumns of Object.values(this.detailColumnsMap)) {
+        column = tabColumns.find(col => col.field === fieldName);
+        if (column) break;
+      }
+    }
+
+    return column;
+  }
+
+  // 🆕 輔助方法：查找父資料
+  private findParentData(detailData: any): any {
+    for (const mainItem of this.data) {
+      if (mainItem[this.detailKey] && Array.isArray(mainItem[this.detailKey])) {
+        if (mainItem[this.detailKey].includes(detailData)) {
+          return mainItem;
+        }
+      }
+    }
+    console.warn(`⚠️ 無法找到詳細資料的父項目:`, detailData);
+    return null;
+  }
+
+  onNumberModelChange(
+    newValue: any,
+    fieldName: string,
+    rowData: any,
+    isDetail: boolean = false
+  ): void {
+    console.log('🔄 ngModelChange 觸發:', {
+      fieldName,
+      newValue,
+      valueType: typeof newValue,
+      isDetail,
+      rowId: rowData[this.dataKey] || 'unknown'
+    });
+
+    // 🎯 數值處理
+    let numericValue: number;
+
+    if (newValue === null || newValue === undefined || newValue === '') {
+      numericValue = 0;
+    } else if (typeof newValue === 'number') {
+      numericValue = newValue;
+    } else if (typeof newValue === 'string') {
+      // 移除可能的千分位逗號
+      const cleanValue = newValue.replace(/,/g, '');
+      numericValue = parseFloat(cleanValue) || 0;
+    } else {
+      console.warn(`⚠️ 未預期的數值類型: ${typeof newValue}`, newValue);
+      numericValue = 0;
+    }
+
+    console.log(`💰 ${fieldName} 數值轉換: ${newValue} → ${numericValue}`);
+
+    // 🚨 立即更新 rowData（這是關鍵！）
+    const oldValue = rowData[fieldName];
+    rowData[fieldName] = numericValue;
+
+    console.log(`📝 更新 ${fieldName}: ${oldValue} → ${numericValue}`);
+
+    // 🎯 防抖計算邏輯
+    const debounceKey = `${rowData[this.dataKey] || 'unknown'}_${fieldName}_${isDetail ? 'detail' : 'main'}`;
+
+    this.debouncedCalculation(debounceKey, () => {
+      console.log(`⚡ 防抖計算觸發: ${fieldName} = ${numericValue}`);
+
+      // 觸發欄位變更事件
+      this.fieldChange.emit({
+        fieldName,
+        newValue: numericValue,
+        rowData
+      });
+
+      // 處理直接編輯模式
+      this.handleDirectEditForNumber(fieldName, numericValue, rowData, isDetail);
+    });
+  }
+
+  private handleDirectEditForNumber(
+    fieldName: string,
+    newValue: number,
+    rowData: any,
+    isDetail: boolean
+  ): void {
+    const column = this.findColumnByField(fieldName);
+
+    if (column?.directEdit) {
+      console.log(`🔧 直接編輯模式: ${fieldName} = ${newValue}`);
+
+      if (isDetail) {
+        const parentData = this.findParentData(rowData);
+        if (parentData) {
+          this.onDetailDirectEditChange(rowData, parentData, fieldName, newValue);
+        } else {
+          console.warn(`⚠️ 找不到詳細資料的父資料`);
+        }
+      } else {
+        this.onDirectEditChange(rowData, fieldName, newValue);
+      }
+    }
   }
 }
