@@ -5,7 +5,7 @@ import { FareCalculationService } from './Services/fare-calculation.service';
 import { ColumnDef, ExpandableEditTableComponent } from '../../../shared/componentkit/expandable-edit-table/expandable-edit-table.component';
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { FormGroup } from '@angular/forms';
-import { Router, NavigationEnd, ActivatedRoute } from '@angular/router';
+import { Router, NavigationEnd, ActivatedRoute, NavigationExtras } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { filter } from 'rxjs/operators';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
@@ -1003,11 +1003,12 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
   }
 
   onClearAndExit(): void {
-    if (confirm('確定要清空所有暫存資料並離開嗎？此操作無法復原。')) {
-      this.contractFlowService.clearTempData();
-      this.router.navigate(['account/tls/tls13010']);
-      this.messageService.infoBubble('已清空暫存資料並離開');
-    }
+    const extras: NavigationExtras = {
+      state: { fromRoute: this.router.url },
+    };
+    this.contractFlowService.clearTempData();
+    this.router.navigate(['account/tls/tls13010'], extras);
+    this.messageService.infoBubble('已清空暫存資料並離開');
   }
 
   // ========== 表單相關 ==========
