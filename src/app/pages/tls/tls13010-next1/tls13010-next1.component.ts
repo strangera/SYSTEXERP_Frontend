@@ -1107,30 +1107,4 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
   get capTypes(): string[] {
     return ['A', 'B', 'C', 'D', 'E'];
   }
-
-  // ========== 🆕 包裝原有方法使用服務 ==========
-  // 這些方法保持向後相容，內部使用服務
-  private autoCalculateAmount(data: any, capType: string): void {
-    this.fareCalculationService.autoCalculateAmount(data, capType);
-  }
-
-  private processAPIData(faresByType: any): Record<string, FareItem[]> {
-    return this.fareDataService.processAPIData(faresByType, this.contractFlowService.isNewContractMode());
-  }
-
-  private processNewContractAPIData(faresByType: any): Record<string, FareItem[]> {
-    return this.fareDataService.processNewContractAPIData(faresByType);
-  }
-
-  private validateAndFixData(data: any): Record<string, FareItem[]> {
-    return this.fareDataService.validateAndFixData(data);
-  }
-
-  private cleanFareItemForStorage(item: FareItem): FareItem {
-    return this.fareDataService.cleanFareItemForStorage(item);
-  }
-
-  private hasDataChanges(item: FareItem): boolean {
-    return this.fareDataService.hasDataChanges(item);
-  }
 }
