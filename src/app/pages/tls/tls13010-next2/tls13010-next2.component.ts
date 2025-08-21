@@ -74,7 +74,7 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
       autoWidth: true
     },
     {
-      field: 'talent_id',
+      field: 'tlt_no',
       header: '專櫃編號',
       type: 'text',
       editable: false,

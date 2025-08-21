@@ -67,7 +67,7 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionItem>
   // 契約資訊欄位定義
   contractInfoColumns: ColumnDef[] = [
     { field: 'apply_no', header: '專櫃招募編號', type: 'text', editable: false, autoWidth: true },
-    { field: 'talent_id', header: '專櫃編號', type: 'text', editable: false, autoWidth: true },
+    { field: 'tlt_no', header: '專櫃編號', type: 'text', editable: false, autoWidth: true },
     { field: 'tlt_name', header: '品牌(專櫃)名稱', type: 'text', editable: false, autoWidth: true },
     { field: 'ven_uniform', header: '廠商統編', type: 'text', editable: false, autoWidth: true },
     { field: 'VEN_Name', header: '廠商名稱', type: 'text', editable: false, autoWidth: true },
