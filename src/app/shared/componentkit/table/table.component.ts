@@ -5,7 +5,7 @@ import { SortMeta } from 'primeng/api';
 import { AutoCompleteCompleteEvent } from 'primeng/autocomplete';
 import { FileSelectEvent } from 'primeng/fileupload';
 import { MultiSelectChangeEvent } from 'primeng/multiselect';
-import { Table, TableLazyLoadEvent, TablePageEvent, TableRowSelectEvent, TableRowUnSelectEvent } from 'primeng/table';
+import { Table, TableColumnReorderEvent, TableLazyLoadEvent, TablePageEvent, TableRowSelectEvent, TableRowUnSelectEvent } from 'primeng/table';
 import { Observable } from 'rxjs';
 import { BasicPrintDataComponent } from '../../componentextends/basic-print/basic-print-data.component';
 import { AddButton, Column, ColumnGroup, FieldChangeEvent, LazyLoadEvent, RowEditSaveEvent } from './table.model';
@@ -86,11 +86,18 @@ export class TableComponent extends BasicPrintDataComponent implements OnChanges
   @Input() rowEditDisabled: (rowData: any) => boolean | undefined = () => false;// Row禁止編輯條件
   @Input() alwaysEdit = false;                                                  // 是否總是編輯
   @Input() alwaysBlurValidate = false;                                         // 是否總是驗證欄位 (true:總是驗證、false:只在送出時驗證)
-  @Input() insertRowData = false;             // 預設新增模式 (關聯：需要加入dataKey, dataChange)
-  @Input() defaultInsertData: any = {};       // 預設新增資料 (可選，預設為所有資料為null)
+  @Input() insertRowData = false;                   // 預設新增模式 (關聯：需要加入dataKey, dataChange)
+  @Input() defaultInsertData: any = {};             // 預設新增資料 (可選，預設為所有資料為null)
+  @Input() dataStatusField: string | undefined;     // 資料狀態 (如果有值增加狀態欄位；如果沒有值不增加狀態欄位)
+  @Input() dataStatusValue = {                      // 預設 original/new/modified/deleted (可選)
+    Original: 'original',
+    New: 'new',
+    Modified: 'modified',
+    Deleted: 'deleted'
+  };
   // expansion 收合展開
   @Input() expansionColumns: Column[] = [];  // 收合展開 欄位配置(expansion必需配置)
-  @Input() expansionDataKey = 'id';            // 收合展開 資料key(expansion必需配置)
+  @Input() expansionDataKey = 'details';            // 收合展開 資料key(expansion必需配置)
   @Input() expansionMultiSortMeta = [{ field: this.expansionDataKey, order: 1 }];// 收合展開 排序欄位(單一排序)
   @Input() expansionShowPaginator = false;   // expansion 是否顯示分頁器
   @Input() expansionRows = 10;               // expansion 每頁顯示行數
@@ -181,7 +188,7 @@ export class TableComponent extends BasicPrintDataComponent implements OnChanges
   // 計算欄位總數(包含序號、勾選、管理、展開)
   get getVisibleHeaderCount(): number {
     const visibleColumnCount = this.tableUtilityService.getVisibleColumnCount(this.selectedColumns);
-    return 1 + Number(this.showCheckBox) + visibleColumnCount + Number(this.showManage) + (this.expansionDataKey ? 1 : 0);
+    return 1 + Number(this.showCheckBox) + visibleColumnCount + Number(this.showManage) + (this.expansionDataKey ? 1 : 0) + (this.showSubTotal || this.showTotal ? 0 : 1);
   }
   // 行是否可選
   rowSelectableWrapper = ({ data }: { data: any, index: number; }): boolean | undefined => { return this.isRowSelectable(data) && !this.rowEditing; };
@@ -222,13 +229,18 @@ export class TableComponent extends BasicPrintDataComponent implements OnChanges
       // 產生一個新的已儲存的 ID，並更新資料
       const savedId = `saved-${new Date().getTime()}`;
       rowData[this.dataKey] = savedId;
-
       // 同時更新 clonedProducts 的 key，確保下次編輯時能找到正確的備份
       this.clonedProducts[savedId] = { ...oldData };
+      // 如果有dataStatusField,則更新該欄位的值 dataStatusValue
+      if (this.dataStatusField) {
+        rowData[this.dataStatusField] = this.dataStatusValue.New;
+      }
       delete this.clonedProducts[rowId];
     } else {
-      // 如果是舊資料，則刪除備份即可
-      delete this.clonedProducts[rowId];
+      if (this.dataStatusField) {
+        rowData[this.dataStatusField] = this.dataStatusValue.Modified;
+      }
+      delete this.clonedProducts[rowId]; // 如果是舊資料，則刪除備份即可
     }
 
     this.rowEditing = false;
@@ -298,6 +310,15 @@ export class TableComponent extends BasicPrintDataComponent implements OnChanges
   }
   // Delete 按鈕
   deleteRow(selectedItems: any) {
+    if (this.dataStatusField) {
+      selectedItems = selectedItems.map((item: any) => {
+        if (this.dataStatusField !== undefined) {
+          item[this.dataStatusField] = this.dataStatusValue.Deleted;
+        }
+        return item;
+      });
+      console.log('🚨 DEBUG - 刪除後的資料:', selectedItems);
+    }
     this.delete.emit(selectedItems);
     if (this.deleteData) {
       this.data = this.data.filter(item => !selectedItems.includes(item));
@@ -347,5 +368,10 @@ export class TableComponent extends BasicPrintDataComponent implements OnChanges
   // 獲取後端圖片
   getImage(url: string): string | SafeUrl | undefined {
     return this.tableUtilityService.getImage(url);
+  }
+  // 欄位調整
+  onColReorder(event: TableColumnReorderEvent) {
+    this.columns = event.columns as Column[];
+    this.queryState.setQueryState(this.tableKey + 'Filter', this.columns);
   }
 }

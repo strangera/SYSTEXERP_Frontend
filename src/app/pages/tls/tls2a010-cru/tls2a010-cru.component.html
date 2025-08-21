@@ -12,10 +12,10 @@
     >
       <div class="card">
         <app-table
-          dataKey="ID"
+          dataKey="TXN_No"
           [data]="data"
           [columns]="columns"
-          [showCheckBox]="true"
+          [showCheckBox]="false"
           [multiSortMeta]="[{ field: 'ECR_No', order: 1 }]"
           [totalRecords]="totalRecords"
           [lazy]="true"
@@ -31,7 +31,6 @@
       <div
         class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
       >
-        <app-button btnType="cancel" [form]="dataForm"></app-button>
         <app-button btnType="submit" [loading]="false" />
       </div>
     </form>

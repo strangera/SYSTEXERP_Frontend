@@ -15,7 +15,7 @@
                     [headerStyleClass]="'query-accordionTab'">
       <form [formGroup]="queryForm"
             id="queryForm"
-            (ngSubmit)="onSubmit(queryForm)">
+            (ngSubmit)="onSubmit()">
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
             <app-multi-select label="館別"
@@ -82,6 +82,7 @@
       <div>
         <div class="grid justify-content-end">
           <app-button btnType="clear"
+                      [form]="queryForm"
                       (click)="onClear()"></app-button>
           <app-button btnType="query"
                       (click)="onSubmitQuery()"
@@ -105,6 +106,10 @@
                (delete)="onDelete($event)"
                (edit)="onEdit($event)"
                (detail)="onDetail($event)"
-               [loading]="service.tableLoading"></app-table>
+               [columns]="columns"
+               [totalRecords]="totalRecords()"
+               [lazy]="true"
+               [loading]="service.tableLoading"
+               (lazyLoadData)="onSubmit()"></app-table>
   </div>
 </div>

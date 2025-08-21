@@ -8,7 +8,7 @@ import { Column, ColumnGroup, createPaginationConfig } from 'src/app/shared/comp
 import { CRUDStatus } from '@shared/models/system/CRUDstatus';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { Button } from 'primeng/button';
-import { NgStyle, NgIf } from '@angular/common';
+import { NgStyle, NgIf, DatePipe } from '@angular/common';
 import { TooltipModule } from 'primeng/tooltip';
 import { DropdownRangeComponent } from '@shared/componentkit/dropdown-range/dropdown-range.component';
 import { creditCardColumns, creditCardGroup, defaultColumns } from './tls2a010.model';
@@ -41,7 +41,8 @@ yesterday.setDate(yesterday.getDate() - 1);
     NgStyle,
     NgIf,
     TooltipModule,
-    DropdownRangeComponent
+    DropdownRangeComponent,
+    DatePipe
   ],
 })
 export class TLS2A010Component extends BasicQueryPageComponent<any> implements OnInit {
@@ -75,9 +76,11 @@ export class TLS2A010Component extends BasicQueryPageComponent<any> implements O
     {
       label: '缺單審核',
       icon: 'pi pi-exclamation-triangle',
-      action: (rowData: any) => this.onDetail(rowData)
+      action: (rowData: any) => this.onDetail(rowData),
+      disabled: (rowData: any) => rowData.PAY_NO === '10'  // ⬅ PAY_NO=10 禁用
     }
   ];
+
   IsPrint = true;
   selectedColumns: Column[] = [];     // 顯示哪些資料欄位
   columnGroup: ColumnGroup[] = [];    // 顯示上層群組欄位（分組標題）
@@ -89,6 +92,7 @@ export class TLS2A010Component extends BasicQueryPageComponent<any> implements O
   constructor(
     private dropDownListService: DropDownListService,
     private tls2a010Service: Tls2a010Service,
+
     private readonly validationService: ValidationService
 
   ) {
@@ -211,10 +215,12 @@ export class TLS2A010Component extends BasicQueryPageComponent<any> implements O
     const raw = form.value;
 
     const payload = {
-      PageSize: raw.PageSize ?? 0,
-      PageIndex: raw.PageIndex ?? 0,
+      PageSize: raw.pageSize ?? 0,
+      PageIndex: raw.pageIndex ?? 0,
       SortBy: raw.SortBy ?? [],
-      TXN_Date: raw.TXN_Date.toISOString().split('T')[0], // 格式化日期為 YYYY-MM-DD
+      TXN_Date: raw.TXN_Date && raw.TXN_Date instanceof Date
+        ? `${raw.TXN_Date.getFullYear()}-${String(raw.TXN_Date.getMonth() + 1).padStart(2, '0')}-${String(raw.TXN_Date.getDate()).padStart(2, '0')}`
+        : '',
       Floor_No: raw.Floor_No ?? '',
       ECR_No_Start: raw.ECR_No_Start ?? '',
       ECR_No_End: raw.ECR_No_End ?? '',
@@ -223,7 +229,7 @@ export class TLS2A010Component extends BasicQueryPageComponent<any> implements O
     }
 
     this.tls2a010Service.queryTLS2A010(payload).pipe(untilDestroyed(this)).subscribe({
-      next: (res) => {
+      next: (response) => {
         interface TLS2A010Item {
           System_Amt?: number;
           Real_Amt?: number;
@@ -232,7 +238,7 @@ export class TLS2A010Component extends BasicQueryPageComponent<any> implements O
           [key: string]: any; // Add additional properties as needed
         }
 
-        this.data = (res?.Data ?? []).map((item: TLS2A010Item) => {
+        this.data = (response?.Data ?? []).map((item: TLS2A010Item) => {
           const systemAmt = Number(item.System_Amt ?? 0);
           const realAmt = Number(item.Real_Amt ?? 0);
           const diff = systemAmt - realAmt;
@@ -252,33 +258,34 @@ export class TLS2A010Component extends BasicQueryPageComponent<any> implements O
             OVER_Status: status  // 欠 / 平 / 溢
           };
         });
-        this.data = (res?.Data ?? []).map((item: TLS2A010Item) => {
-          // 先取原始日期字串
-          const rawDate = item.TXN_Date;
-          let formattedDate = rawDate;
+        // this.data = (response?.Data ?? [])
+        // .map((item: TLS2A010Item) => {
+        //   // 先取原始日期字串
+        //   const rawDate = item.TXN_Date;
+        //   let formattedDate = item.TXN_Date;
 
-          if (rawDate) {
-            const dateObj = new Date(rawDate);
-            if (!isNaN(dateObj.getTime())) {
-              const yyyy = dateObj.getFullYear();
-              const dd = String(dateObj.getDate()).padStart(2, '0');
-              const mm = String(dateObj.getMonth() + 1).padStart(2, '0'); // 月份從0開始
-              formattedDate = `${yyyy}-${mm}-${dd}`;
-            }
-          }
+        //   if (rawDate) {
+        //     const dateObj = new Date(rawDate);
+        //     if (!isNaN(dateObj.getTime())) {
+        //       const yyyy = dateObj.getFullYear();
+        //       const dd = String(dateObj.getDate() + 1).padStart(2, '0');
+        //       const mm = String(dateObj.getMonth() + 1).padStart(2, '0'); // 月份從0開始
+        //       formattedDate = `${yyyy}-${mm}-${dd}`;
+        //     }
+        //   }
 
-          return {
-            ...item,
-            TXN_Date: formattedDate,
-          };
-        });
+        //   return {
+        //     ...item,
+        //     TXN_Date: formattedDate,
+        //   };
+        // });
 
 
         const first = this.data[0];
         this.PAY_NO = this.queryForm.value.PAY_NO || '';
         this.TXN_Date = first?.TXN_Date || '';
 
-        this.totalRecords = res.TotalCount ?? this.data.length;
+        this.totalRecords = response.TotalCount ?? this.data.length;
         this.queryStateService.setQueryState(this.ProgNo, this.queryForm.value);
         this.loading = false;
       },
@@ -289,11 +296,41 @@ export class TLS2A010Component extends BasicQueryPageComponent<any> implements O
     });
 
   }
-
   onReview(selectedItems: any[]): void {
-    console.log('Reviewing selected items:', selectedItems);
-    // Add your logic for reviewing the selected items here
+    if (!selectedItems || selectedItems.length === 0) {
+      this.messageService.warnBubble('請先勾選要審核的項目');
+      return;
+    }
+
+    // 依照 API 格式，包成 selectList
+    const payload = {
+      selectList: selectedItems.map(item => ({
+        ID: item.ID,
+        PAY_NO: item.PAY_NO,
+      }))
+    };
+
+    console.log('送出審核資料:', payload);
+
+    this.loading = true;
+
+    this.tls2a010Service.updateTLS2A010(payload).subscribe({
+      next: () => {
+        this.messageService.successBubble('審核完成');
+        this.onSubmit(this.queryForm);
+        this.loading = false;
+      },
+      error: (err) => {
+        console.error('更新審核狀態失敗:', err);
+        this.messageService.errorBubble('更新失敗，請稍後再試');
+        this.loading = false;
+      }
+    });
   }
+
+
+
+
   onPayNoChange(payNo: string): void {
     console.log(payNo);
     const payType = this.paymentToolOptions.find(opt => opt.No === payNo)?.PAY_Type ?? '';
@@ -314,23 +351,23 @@ export class TLS2A010Component extends BasicQueryPageComponent<any> implements O
   override onDetail(row: any): void {
     console.log('缺單審核被點擊:', row);
 
-  this.tls2a010Service.queryDetailTLS2A010(row).subscribe({
-    next: (res) => {
-      const detailData = res?.Data ?? [];
+    this.tls2a010Service.queryDetailTLS2A010(row).subscribe({
+      next: (res) => {
+        const detailData = res?.Data ?? [];
 
-      const rowdataWithDetail = {
-        ...row,
-        details: detailData
-      };
+        const rowdataWithDetail = {
+          ...row,
+          details: detailData
+        };
 
-      // 呼叫共通的 navigateWithState (不會覆蓋底層)
-      this.navigateWithState(CRUDStatus.Read, rowdataWithDetail);
-    },
-    error: (err) => {
-      console.error('查詢明細失敗:', err);
-    }
-  });
-}
+        // 呼叫共通的 navigateWithState (不會覆蓋底層)
+        this.navigateWithState(CRUDStatus.Edit, rowdataWithDetail);
+      },
+      error: (err) => {
+        console.error('查詢明細失敗:', err);
+      }
+    });
+  }
 
 
 }

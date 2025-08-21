@@ -25,15 +25,46 @@ export interface TLS26080Data {
 }
 
 export interface TLS26080Detail {
-  calc_date_type: 'Y' | 'N';  // 預購起日計算 ('Y'=活動起始日至截止日, 'N'=正檔日至截止日)
-  id?: number;                // 主鍵
-  pod_no?: string;            // 活動申請編號
-  pod_type?: string;          // 活動類型
-  talent_id: number;          // 專櫃 ID
-  tlt_id: string;             // 專櫃關聯 ID
-  tlt_name: string;           // 專櫃名稱
-  tlt_no: string;             // 專櫃編號
-  tpy_rate: number;           // 費用計算的比率
+  id: number;
+  talent_id: number;
+  tlt_id: string;
+  tlt_id_desc: string;
+  tlt_no: string;
+  tlt_name: string;
+  calc_date_type: string;
+  cap_item_D16: string; // 'D16'
+  tpy_rate_D16: string | number; // '100%' or 0~100
+  cap_item_D17: string; // 'D17'
+  tpy_rate_D17: string | number; // '100%' or 0~100
+  cap_item_3: string; // 'D16'
+  tpy_rate_3: string | number; // '100%' or 0~100
+  cap_item_4: string; // 'D17'
+  tpy_rate_4: string | number; // '100%' or 0~100
+  pod_no: string;
+  pod_status: string;
+  approved_userno: string;
+  approved_usr_name: string;
+  approved_date: string;
+}
+
+export interface TLS26080DetailResult {
+  approved_date?: Date;              // 核准日期
+  approved_userno?: string;          // 核准人員編號
+  approved_usr_name?: string;        // 核准人員姓名
+  calc_date_type: 'Y' | 'N';         // 正檔起日計算 ('Y'=活動起始日至截止日, 'N'=正檔日至截止日)
+  cap_item_D16: string;              // D16
+  cap_item_D17: string;              // D17
+  id: number;                        // 主鍵
+  pod_no?: string;                   // 活動申請編號
+  pod_status: '0' | '1' | '9';       // 活動狀態
+  pod_type?: string;                 // 活動類型
+  talent_id: number;                 // 專櫃 ID
+  tlt_id: string;                    // 抽成類別
+  tlt_id_desc: string;               // 抽成類別名稱
+  tlt_name: string;                  // 櫃位名稱
+  tlt_no: string;                    // 專櫃編號
+  tpy_rate_D16: string;              // D16 費用比率 (含'%')
+  tpy_rate_D17: string;              // D17 費用比率 (含'%')
 }
 
 export interface TLS2608InsertPayload {
@@ -43,6 +74,8 @@ export interface TLS2608InsertPayload {
   pod_sdate: Date;            // 活動起始日期
   pod_edate: Date;            // 活動終止日期
   pod_busdate: Date;          // 活動正檔日期
+  pod_back_sdate?: Date;      // 兌回起始日期
+  pod_back_edate?: Date;      // 兌回結束日期
   TALPORDERD_VOUCHERDetails: TLS26080Detail[]; // 活動專櫃資料
 }
 
@@ -54,6 +87,17 @@ export interface TLS26080Query {
   pod_busdate?: Date;         // 活動正檔日期
   cap_itemList?: string[];    // 活動項目列表
 }
+
+export interface TLS26080UploadResult {
+  Success: boolean;
+  SuccessCount: number;
+  ErrorCount: number;
+  ErrorFilePath: string;
+  Errors: string[];
+  queryTLS26080_DetailResponses: TLS26080DetailResult[];
+}
+
+export type TLS26080UploadResponse = Omit<BaseQueryResponse<unknown>, 'Data'> & { Data: TLS26080UploadResult; };
 
 // 活動資料模型
 export interface ActivityData {
@@ -103,14 +147,6 @@ export interface CampaignData {
   EndTime: Date;
   Remark: string;
   StartTime: Date;
-}
-
-export interface CampaignCounterData {
-  CampaignId: string;
-  CounterCode: string;
-  ProductType: string;
-  talent_id: number;
-  tlt_name: string;
 }
 
 // /** 活動類型 */

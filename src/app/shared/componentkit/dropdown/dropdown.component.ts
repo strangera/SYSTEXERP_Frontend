@@ -39,7 +39,7 @@ export class DropdownComponent extends BasicKitComponent implements OnInit {
   @Input() templateLabel = ''; // 自訂 Label 模板
   // 觸發事件
   @Output() changeEvent = new EventEmitter<DropdownChangeEvent>();
-
+  @Output() valueChange = new EventEmitter<any>(); //直接用 (valueChange) 拿到值
   private _control: FormControl = new FormControl();
   public get control(): FormControl { this.disabled && this._control.disable(); return this._control; }
 
@@ -48,5 +48,6 @@ export class DropdownComponent extends BasicKitComponent implements OnInit {
   }
   onDropdownChange(event: DropdownChangeEvent) {
     this.changeEvent.emit(event);
+    this.valueChange.emit(event.value);  // 同時 emit 純值
   }
 }

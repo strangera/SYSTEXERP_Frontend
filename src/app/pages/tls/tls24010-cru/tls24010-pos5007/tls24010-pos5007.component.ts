@@ -122,7 +122,7 @@ export class Tls24010Pos5007Component implements OnInit, OnChanges {
       PLU_MagNo: this.store_way === STORE_WAY.專櫃 ? this.POS2004Options[0] : undefined,
       PLU_No: this.store_way === STORE_WAY.專櫃 ? this.POS2004Options[0].PLU_No : undefined,
       PLU_Name: this.store_way === STORE_WAY.專櫃 ? this.TLT_Name : undefined,
-      TXN_Qty: 0,
+      TXN_Qty: 1,
       PLU_SalePrc: 0,
       TXN_Amt: 0,
       TXN_Disc: 0,

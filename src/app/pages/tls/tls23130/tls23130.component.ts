@@ -4,6 +4,7 @@ import {
   Validators,
   FormsModule,
   ReactiveFormsModule,
+  FormControl,
 } from '@angular/forms';
 import { RegionService } from '../../../service/basic/region-code.service';
 import { BusinessTypeCodeService } from '../../../service/basic/business-type-code-service.service';
@@ -26,8 +27,9 @@ import { InputTextModule } from 'primeng/inputtext';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { TranslateModule } from '@ngx-translate/core';
 import { Subject, Subscription, of } from 'rxjs';
-import { debounceTime, takeUntil, timeout, catchError } from 'rxjs/operators';
+import { debounceTime, takeUntil, timeout, catchError, map } from 'rxjs/operators';
 import { TableComponent } from '@shared/componentkit/table/table.component';
+import { DropDownListService, IBankRequest } from '@service/utility/dropDownList.service';
 
 @Component({
   selector: 'app-tls23130',
@@ -61,9 +63,9 @@ export class TLS23130Component extends BasicQueryPageComponent<any> {
   totalRecords = 0;
 
   queryForm = this.formBuilder.group({
-    saleDateStart: [this.yesterday, [Validators.required]],
-    saleDateEnd: [this.yesterday, [Validators.required]],
-    BNK_No: [],
+    TXN_DateStart: [this.yesterday, [Validators.required]],
+    TXN_DateEnd: [this.yesterday, [Validators.required]],
+      BNK_No:        [[], [Validators.required]],   // ✅ 多選 + 必填
     tlt_building: [],
     tlt_floor: [],
     org_id: [],
@@ -93,18 +95,18 @@ export class TLS23130Component extends BasicQueryPageComponent<any> {
     private counterNameService: CounterNameService,
     private bigCategoryCodeService: BigCategoryCodeService,
     private tls11010Service: Tls11010Service,
+    private dropDownListService:DropDownListService
   ) {
     super();
   }
 
   ngOnInit(): void {
     this.initializePage('TLS23130', 'tls/tls23130', this.queryForm, (form) => this.onSubmit(form));
-    this.cardTypeService
-      .getCardType().subscribe((data) => (this.cardTypeOptions = data));
+    // this.cardTypeService
+    //   .getCardType().subscribe((data) => (this.cardTypeOptions = data));
     this.organizationNumberService
       .getOrganizationNumbers().subscribe((data) => (this.organizationOptions = data));
-    this.regionService
-      .getRegionOptions().subscribe((data) => (this.regionOptions = data));
+    this.regionService      .getRegionOptions().subscribe((data) => (this.regionOptions = data));
     this.floorService
       .getFloors().subscribe((data) => (this.floorOptions = data));
     this.bigCategoryCodeService
@@ -137,6 +139,40 @@ export class TLS23130Component extends BasicQueryPageComponent<any> {
             value: x.value,
           })) || [];
       });
+      // 小工具：從物件取第一個存在的鍵值
+const pick = (obj: any, keys: string[], fallback = '') =>
+  keys.find(k => obj?.[k] != null && obj?.[k] !== '')
+    ? obj[keys.find(k => obj?.[k] != null && obj?.[k] !== '') as string]
+    : fallback;
+
+this.tls23130Service
+  .queryAPS1001_DropDownList({ SearchKeyword: '' })
+  .pipe(
+    map(res => (Array.isArray(res?.Data) ? res.Data : [])),
+    map(list =>
+      list.map((x: any) => {
+        const v = String(x.No ?? x.BNK_No ?? '');
+        const l = String(x.Name ?? x.BankName ?? '');
+        return { label: `${v} - ${l}`, value: v, formLabel: `${v} - ${l}` };
+      })
+    ),
+    catchError(err => {
+      console.error('queryAPS1001_DropDownList 失敗', err);
+      this.messageService?.errorBubble?.('銀行下拉資料讀取失敗');
+      return of([] as any[]);
+    })
+  )
+// … 前略 …
+.subscribe(opts => {
+  this.cardTypeOptions = opts;
+  if (opts.length > 0) {
+    const first = opts[0].value;
+    // ✅ 先轉 unknown 再轉目標型別，解掉 TS2352
+    (this.queryForm.get('BNK_No') as unknown as FormControl<string[]>)
+      .setValue([first]);
+    this.queryForm.get('BNK_No')!.updateValueAndValidity({ onlySelf: true });
+  }
+});
   }
 
 onSubmit(form: FormGroup): void {
@@ -165,59 +201,48 @@ onSubmit(form: FormGroup): void {
         .slice(0, 19);
     };
 
-    // 組 payload（保留分頁/排序）
-    const payload: any = {
-      saleDateStart: toIso(val?.saleDateStart),
-      saleDateEnd:   toIso(val?.saleDateEnd),
-      BNK_No:        val?.BNK_No,
-      tlt_building:  val?.tlt_building,
-      tlt_floor:     val?.tlt_floor,
-      org_id:        val?.org_id,
-      pageSize:      val?.pageSize,
-      pageIndex:     val?.pageIndex,
-      SortBy:        val?.SortBy,
-      ...(offset  !== undefined ? { Offset:  offset } : {}),
-      ...(orderBy ? { OrderBy: orderBy } : {}),
-    };
+   const payload: any = {
+  TXN_DateStart: toIso(val?.TXN_DateStart),
+  TXN_DateEnd:   toIso(val?.TXN_DateEnd),
+  BNK_No:        Array.isArray(val?.BNK_No) ? val.BNK_No.filter(Boolean) : undefined, // ✅ 多選
+  tlt_building:  val?.tlt_building,
+  tlt_floor:     val?.tlt_floor,
+  org_id:        val?.org_id,
+  pageSize:      val?.pageSize,
+  pageIndex:     val?.pageIndex,
+  SortBy:        val?.SortBy,
+  ...(offset  !== undefined ? { Offset:  offset } : {}),
+  ...(orderBy ? { OrderBy: orderBy } : {}),
+};
 
-    // 清除空值/空陣列
-    Object.keys(payload).forEach((k) => {
-      const v = payload[k];
-      if (v === '' || v === null || v === undefined) delete payload[k];
-      if (Array.isArray(v) && v.length === 0) delete payload[k];
-    });
+// 清除空值/空陣列
+Object.keys(payload).forEach((k) => {
+  const v = payload[k];
+  if (v === '' || v === null || v === undefined) delete payload[k];
+  if (Array.isArray(v) && v.length === 0) delete payload[k];
+});
 
     this.loading = true;
     this.messageService?.blockUi();
 
     this.tls23130Service.queryTLS23130(payload).subscribe({
       next: (res: any) => {
-        // 後端回傳的 Data：[{ CRD_No, TXN_No, tlt_no, tlt_name, TXN_PayAmt, TXN_Date, TXN_Time, TERM_No, EDC_InstHeadAmt, EDC_InstEachAmt, ... }]
+        // 先把外層 Data 正規化成陣列
         const src = Array.isArray(res?.Data) ? res.Data : (res?.Data ? [res.Data] : []);
 
-        // 轉成表格 columns 需要的鍵
-        this.data = src.map((r: any) => ({
-          cardNumber:          r?.CRD_No ?? '',
-          transactionSequence: r?.TXN_No ?? '',
-          // 機號/名稱：用「機號 / 櫃位名稱」，也可改成 `${r?.tlt_no} / ${r?.tlt_name}`
-          machineNumber:       [r?.TERM_No, r?.tlt_name].filter(Boolean).join(' / '),
+        // 攤平每筆的 tLS23130_Details（注意原始鍵名大小寫）
+        const details = src.flatMap((x: any) =>
+          Array.isArray(x?.['tLS23130_Details']) ? x['tLS23130_Details'] : []
+        );
 
-          amount:              r?.TXN_PayAmt ?? 0,
-          TXN_Date:            r?.TXN_Date ?? '',
-          TXN_GUINo:           r?.TXN_GUINo ?? '',
-          TXN_Time:            r?.TXN_Time ?? '',
+        // ✅ 直接把 details 餵給表格
+        this.data = details;
 
-          // 分期數（回傳未提供，先留空；若後端有 EDC_InstPeriod 就改這裡）
-          installmentPeriod:   r?.EDC_InstPeriod ?? '',
+        // 總筆數：優先用後端回傳，否則用 details 長度
+        this.totalRecords = typeof res?.TotalCount === 'number' ? res.TotalCount : details.length;
 
-          initialPayment:      r?.EDC_InstHeadAmt ?? 0,
-          monthlyPayment:      r?.EDC_InstEachAmt ?? 0,
-        }));
-
-        this.totalRecords =
-          typeof res?.TotalCount === 'number' ? res.TotalCount : this.data.length;
-
-        // 若要用總額：const total = res?.Data?.[0]?.TotalPayAmt;
+        // （可選）若你也要顯示總金額，可順便算一下：
+        // this.totalPayAmt = src.reduce((s: number, x: any) => s + (Number(x?.TotalPayAmt) || 0), 0);
       },
       error: (err) => {
         console.error('TLS23130 查詢失敗', err);
@@ -234,20 +259,53 @@ onSubmit(form: FormGroup): void {
 }
 
 
-    moneyFormat(value: number): string {
+  formatYMD = (val: unknown): string => {
+  if (val == null) return '';
+  if (val instanceof Date && !isNaN(val.getTime())) {
+    const y = val.getFullYear();
+    const m = String(val.getMonth() + 1).padStart(2, '0');
+    const d = String(val.getDate()).padStart(2, '0');
+    return `${y}/${m}/${d}`;
+  }
+  const s = String(val);
+  // 直接抓 YYYY-MM-DD，避免時區位移
+  const m = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (m) return `${m[1]}/${m[2]}/${m[3]}`;
+
+  const dt = new Date(s);
+  if (!isNaN(dt.getTime())) {
+    const y = dt.getFullYear();
+    const mm = String(dt.getMonth() + 1).padStart(2, '0');
+    const dd = String(dt.getDate()).padStart(2, '0');
+    return `${y}/${mm}/${dd}`;
+  }
+  return s;
+};  
+  moneyFormat(value: number): string {
     return value != null ? value.toLocaleString('en-US') : '0';
   }
+  
+  formatISOToHHMMSS = (val: string): string => {
+  if (!val) return '';
+  const d = new Date(val);
+  if (isNaN(d.getTime())) return '';
+  const hh = String(d.getHours()).padStart(2,'0');
+  const mm = String(d.getMinutes()).padStart(2,'0');
+  const ss = String(d.getSeconds()).padStart(2,'0');
+  return `${hh}:${mm}:${ss}`;
+};
     columns = [
-      { field: 'cardNumber', header: '卡號', visible: true },
-      { field: 'transactionSequence', header: '交易序號', visible: true },
-      { field: 'machineNumber', header: '機號/名稱', visible: true },
-      { field: 'amount', header: '金額', visible: true, style: 'text-right', format: this.moneyFormat },
-      { field: 'TXN_Date', header: '日期', visible: true },
+      { field: 'CRD_No', header: '卡號', visible: true },
+      { field: 'TXN_No', header: '交易序號', visible: true },
+      { field: 'tlt_no', header: '專櫃編號', visible: true },
+      { field: 'tlt_name', header: '櫃位名稱', visible: true },
+      { field: 'TXN_PayAmt', header: '金額', visible: true, style: 'text-right', format: this.moneyFormat },
+      { field: 'TXN_Date', header: '銷售日期', visible: true , format: this.formatYMD},
       { field: 'TXN_GUINo', header: '發票號碼', visible: true },
-      { field: 'TXN_Time', header: '交易時間', visible: true },
-      { field: 'installmentPeriod', header: '分期數', visible: true },
-      { field: 'initialPayment', header: '頭期', visible: true, style: 'text-right', format: this.moneyFormat },
-      { field: 'monthlyPayment', header: '每期', visible: true, style: 'text-right', format: this.moneyFormat }
+      { field: 'TXN_Time', header: '銷售時間', visible: true , format: this.formatISOToHHMMSS},
+      { field: 'TERM_No', header: '分期數', visible: true },
+      { field: 'EDC_InstHeadAmt', header: '頭期', visible: true, style: 'text-right', format: this.moneyFormat },
+      { field: 'EDC_InstEachAmt', header: '每期', visible: true, style: 'text-right', format: this.moneyFormat }
     ];
   
 }

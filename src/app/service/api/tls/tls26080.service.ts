@@ -1,12 +1,12 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, signal } from '@angular/core';
-import { CampaignCounterData, CampaignData, TLS26080Data, TLS26080Detail, TLS26080Query, TLS2608InsertPayload } from '@pages/tls/tls26080/tls26080.model';
+import { CampaignData, TLS26080Data, TLS26080Detail, TLS26080Query, TLS26080UploadResponse, TLS26080UploadResult, TLS2608InsertPayload } from '@pages/tls/tls26080/tls26080.model';
 import { ErrorHandlerService } from '@service/system/error-handler.service';
 import { NotificationService } from '@shared/component/notification-message/notification.service';
 import { BaseQueryResponse, DropdownOption } from '@shared/models/api/base-api.interface';
 import { ApprovalStatus } from '@shared/models/tls/approval-status.model';
 import { ConfirmationService } from 'primeng/api';
-import { catchError, EMPTY, finalize, take, tap } from 'rxjs';
+import { catchError, EMPTY, finalize, map, Subject, take, takeUntil, tap, throwError } from 'rxjs';
 import { environment } from 'src/environments/environment';
 
 const apiUrl: string = environment.ApiUrl;
@@ -24,14 +24,17 @@ export class TLS26080Service {
   public TLS26080Data = signal<TLS26080Data[]>([]);
   public TLS26080Detail = signal<TLS26080Detail[]>([]);
   public campaignData = signal<CampaignData[]>([]);
-  public campaignCounterData = signal<CampaignCounterData[]>([]);
 
   // 讀取狀態
   public tableLoading = !1;
   public approvalStatusLoading = !1;
   public campaignLoading = !1;
-  public campaignCounterLoading = !1;
   public capItemsLoading = !1;
+  public fileUploadLoading = !1;
+  public exampleDownloading = !1;
+
+  private readonly fileUploadCancel$ = new Subject<void>();
+  private readonly keyInCancel$ = new Subject<void>();
 
   // 下拉選單資料
   public departmentItems = signal<DropdownOption[]>([]);
@@ -112,18 +115,6 @@ export class TLS26080Service {
     ).subscribe();
   };
 
-  /** 查詢環友Counter資料 */
-  public loadCampaignCounter(query: string[]): void {
-    if (this.campaignCounterLoading) return void (this.campaignCounterLoading = !1);
-    this.campaignCounterLoading = !0;
-    this.http.post<BaseQueryResponse<CampaignCounterData>>(`${apiUrl}/TLS0000/TLS2000/queryCampaignCounter`, { CampaignIdList: query }).pipe(
-      take(1),
-      tap(response => this.campaignCounterData.set(response.Data)),
-      catchError(error => { this.errorHandler.handleError(error); return EMPTY; }),
-      finalize(() => console.log('查詢環友Counter資料:', [this.campaignCounterData()]))
-    ).subscribe();
-  };
-
   /** 專櫃活動 */
   public loadTLS26080Detail(query: string): void {
     if (this.tableLoading) return void (this.tableLoading = !1);
@@ -179,5 +170,129 @@ export class TLS26080Service {
       },
       reject: () => this.messageService.infoBubble(`${this.approvalCheck(data).confirm}已取消`)
     });
+  }
+
+  public uploadFile(file: FormData): void {
+    this.fileUploadLoading = !0;
+    this.fileUploadCancel$.next();
+    this.http.post<TLS26080UploadResponse>(`${apiUrl}/TLS0000/TLS2000/uploadTLS26080`, file).pipe(
+      take(1),
+      takeUntil(this.fileUploadCancel$),
+      tap(response => {
+        const data = response.Data;
+        console.log(`uploadFile:`, [response]);
+        if (data.Success) {
+          // 如果資料量大用 for loop 比 map 快
+          const mapped = new Set<TLS26080Detail>();
+          for (let value of data.queryTLS26080_DetailResponses) {
+            mapped.add(<TLS26080Detail>{
+              id: value.id,
+              talent_id: value.talent_id,
+              tlt_id: value.tlt_id,
+              tlt_id_desc: value.tlt_id_desc,
+              tlt_no: value.tlt_no,
+              tlt_name: value.tlt_name,
+              calc_date_type: value.calc_date_type,
+              cap_item_D16: value.cap_item_D16,
+              tpy_rate_D16: Number(value.tpy_rate_D16.replace('%', '')).toFixed(2),
+              cap_item_D17: value.cap_item_D17,
+              tpy_rate_D17: Number(value.tpy_rate_D17.replace('%', '')).toFixed(2),
+              pod_status: value.pod_status,
+            });
+          }
+          this.TLS26080Detail.set(Array.from(mapped));
+          if (data.ErrorCount === 0) this.messageService.successBubble('上傳成功');
+          else {
+            this.dealErrorFilePath(data);
+            this.messageService.errorBox(`上傳失敗: ${data.ErrorCount} 筆資料錯誤`);
+          }
+        } else {
+          this.dealErrorFilePath(data);
+          this.messageService.errorBox(`上傳失敗`);
+        }
+        this.dealErrorFilePath(data);
+      }),
+      catchError(error => this.errorHandler.handleError(error)),
+      finalize(() => {
+        console.log('上傳檔案結果:', [file]);
+      })
+    ).subscribe();
+  }
+
+  private dealErrorFilePath(data: TLS26080UploadResult): void {
+    const path = data.ErrorFilePath;
+    console.log(`dealErrorFilePath:`, [path, this.TLS26080Detail()]);
+    if (!path || data.Success || !data.ErrorCount) return;
+    window.open(`${apiUrl}${path}`, '_blank', 'noopener noreferrer');
+    // this.http.get(`${apiUrl}${path}`, { responseType: 'blob' }).pipe(
+    //   take(1),
+    //   tap(response => {
+    //     // 建立下載連結
+    //     const url = window.URL.createObjectURL(response);
+    //     const link = document.createElement('a');
+    //     link.href = url;
+    //     link.download = path.split('/').pop() || 'error_file.xlsx';
+    //     document.body.appendChild(link);
+    //     link.click();
+    //     document.body.removeChild(link);
+    //     window.URL.revokeObjectURL(url);
+    //   }),
+    //   catchError(error => this.errorHandler.handleError(error)),
+    //   finalize(() => console.log('錯誤檔案下載'))
+    // ).subscribe();
+  }
+
+  public downloadXLSXExample(): void {
+    this.exampleDownloading = !0;
+    this.http.get(`${apiUrl}/TLS0000/TLS2000/downloadTLS26080Template`, { responseType: 'blob' }).pipe(
+      take(1),
+      tap(response => {
+        // 建立下載連結
+        const url = window.URL.createObjectURL(response);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = 'TLS26080_範例檔案.xlsx';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
+      }),
+      catchError(error => this.errorHandler.handleError(error)),
+      finalize(() => {
+        this.exampleDownloading = !1;
+        console.log('範例下載');
+      })
+    ).subscribe();
+  }
+
+  public keyInTLS26080(data: TLS26080Detail): void {
+    this.http.post<TLS26080UploadResponse>(`${apiUrl}/TLS0000/TLS2000/keyInTLS26080`, {
+      queryTLS26080_DetailResponses: this.TLS26080Detail(),
+      keyiInTLS26080: data,
+    }).pipe(
+      take(1),
+      takeUntil(this.keyInCancel$),
+      tap(response => {
+        const d = response.Data;
+        if (!d.Success) {
+          this.dealErrorFilePath(d);
+          this.TLS26080Detail.update(v => v.filter(i => i.id !== data.id)); // 更新參照
+          this.keyInCancel$.next();
+          console.log(`keyInTLS26080 fail:`, [response, this.TLS26080Detail()]);
+          this.messageService.errorBox(response.Message || '鍵入失敗');
+        } else {
+          this.TLS26080Detail.update(val => [data, ...val.filter(i => i.id !== data.id)]);
+          console.log(`keyInTLS26080 success:`, [response, this.TLS26080Detail()]);
+        }
+      }),
+      catchError(error => this.errorHandler.handleError(error)),
+      finalize(() => {
+        console.log(`單筆鍵入檢查:`, [data]);
+      })
+    ).subscribe();
+  }
+
+  ngOnDestroy(): void {
+    this.fileUploadCancel$.next();
   }
 }

@@ -1,13 +1,23 @@
 <div class="card">
   <div class="flex gap-2 mb-2">
     <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
-    <app-button btnType="create" (click)="onCreate()" label="{{ 'create' | translate }}"></app-button>
+    <p-fileUpload id="customButton" #fileUpload mode="basic" chooseIcon="pi pi-upload" accept=".xls"
+      (onSelect)="onFileUpload($event);fileUpload.clear()" [auto]="true" chooseLabel="匯入EXCEL" />
+    <!-- <app-button btnType="create" (click)="onCreate()" label="{{ 'create' | translate }}"></app-button> -->
   </div>
   <p-accordion>
     <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
       [headerStyleClass]="'query-accordionTab'">
       <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-calendar calendarType="dateMonthOne"
+              label="結算年月"
+              controlName="ENG_YYMM"
+              [control]="queryForm.controls.ENG_YYMM"
+              [submitted]="submitted">
+            </app-calendar>
+          </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown label="能源類型"
               controlName="EngTypes"
@@ -18,39 +28,16 @@
               [submitted]="submitted"></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
-              label="錶號"
+            <app-dropdown label="錶號"
               controlName="ENG_MeterNo"
+              [options]="ENG_MeterNo_Option"
+              optionLabel="Name"
+              optionValue="No"
               [control]="queryForm.controls.ENG_MeterNo"
-              [submitted]="submitted"
-            ></app-input-text>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
-              label="分店編號"
-              controlName="SYS_StoreNo"
-              [control]="queryForm.controls.SYS_StoreNo"
-              [submitted]="submitted"
-            ></app-input-text>
+              [submitted]="submitted"></app-dropdown>
           </div>
         </div>
         <div class="grid p-fluid">
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-number
-              label="Mid"
-              controlName="Mid"
-              [control]="queryForm.controls.Mid"
-              [submitted]="submitted"
-            ></app-input-number>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar calendarType="dateMonthOne"
-              label="結算年月"
-              controlName="ENG_YYMM"
-              [control]="queryForm.controls.ENG_YYMM"
-              [submitted]="submitted">
-            </app-calendar>
-          </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown label="抄錶狀態"
               controlName="ENG_Status"
@@ -72,7 +59,16 @@
 </div>
 <div class="card">
   <div class="col-13">
-    <app-table
+    <app-table tableKey="ASS21030" [data]="data" [columns]="columns" (edit)="onEdit($event)" (detail)="onDetail($event)"
+      [selectedItems]="selectedItems" (selectionChange)="selectedItems = $event" (delete)="onDelete($event)"
+      [showCheckBox]="false" dataKey="ID" [showManage]="false" [multiSortMeta]="[{ field: 'ENG_MeterNo', order: 1 }]"
+      [totalRecords]="totalRecords" (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"
+      [lazy]="true" [loading]="loading" [isRowSelectable]="isRowSelectable"></app-table>
+  </div>
+</div>
+<div class="card">
+  <div class="col-13">
+    <!-- <app-table
       tableKey="ASS21030"
       [data]="data"
       [columns]="columns"
@@ -91,4 +87,4 @@
       [isRowSelectable]="isRowSelectable"
     ></app-table>
   </div>
-</div>
+</div> -->

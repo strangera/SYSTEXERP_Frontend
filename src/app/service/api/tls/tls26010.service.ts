@@ -244,11 +244,11 @@ export class TLS26010Service implements OnDestroy {
           });
           this.messageService.successBubble('更新成功');
         } else {
-          this.messageService.errorBubble('更新失敗: ' + response.Message);
+          this.messageService.errorBox('更新失敗: ' + response.Message);
         }
       }),
       catchError(error => {
-        this.messageService.errorBubble('更新失敗，請稍後再試');
+        this.messageService.errorBox('更新失敗，請稍後再試');
         return this.errorHandler.handleError(error);
       }),
       finalize(() => {

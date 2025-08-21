@@ -2,7 +2,7 @@
 import { NgIf } from '@angular/common';
 import { Component, computed, OnInit, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { FormControl, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 import { ASS21020Service } from '@service/api/ass/ass21020.service';
 import { MenubarComponent } from '@shared/component/menubar/menubar.component';

@@ -1,7 +1,7 @@
 import { ASS21030Service } from '@service/api/ass/ass21030.service';
 import { ValidationService } from './../../../shared/service/validation.service';
 // --Commonly used imports--
-import { Component, OnInit, ViewChild, } from '@angular/core';
+import { Component, OnInit, } from '@angular/core';
 import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { TranslateModule } from '@ngx-translate/core';
@@ -14,10 +14,9 @@ import { ButtonDynamicallydeleteComponent } from '../../../shared/componentkit/b
 import { ButtonDynamicallyaddComponent } from '../../../shared/componentkit/button-dynamicallyadd/button-dynamicallyadd.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
-import { apiOption, option } from '../../../shared/models/sys/sysb000.model';
-import { Tls12010Service } from '../../../service/api/tls/tls12010.service';
-import { ColumnDef, ExpandableEditTableComponent } from '../../../shared/componentkit/expandable-edit-table/expandable-edit-table.component';
+import { option } from '../../../shared/models/sys/sysb000.model';
 import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
+import { InputNumberComponent } from '@shared/componentkit/input-number/input-number.component';
 
 // ENG2001 抄錶明細檔
 export interface ENG2001 {
@@ -79,29 +78,32 @@ export interface ENG1001 {
     ButtonDynamicallydeleteComponent,
     DropdownComponent,
     InputTextComponent,
+    InputNumberComponent,
     MenubarComponent,
   ]
 })
+
+// 能源抄表作業
 export class ASS21030CRUComponent extends BasicCruPageComponent<ENG1001|ENG2001> implements OnInit {
     // ----------------------------------------------------------------
     dataForm = this.formBuilder.nonNullable.group({
       // ENG1001 能源錶號明細檔 + ENG2001 抄錶明細檔
       ID: [{value: null, label:''}], // ID (隱藏)
+      Mid: [{value: null, label:''}], // Mid (隱藏)
+      // SYS_StoreNo: ['', [Validators.maxLength(10)]], // 分店編號
       ENG_YYMM: ['', [Validators.required, Validators.maxLength(6)]], // 結算年月
       ENG_Type: ['', [Validators.required, Validators.maxLength(3)]], // 能源類型
       ENG_MeterNo: ['', [Validators.required, Validators.maxLength(5)]], // 錶號
-      ENG_Date: ['', []], // 抄表日期
+      ENG_Date: [''], // 抄表日期
       ENG_CurrentReading: [0], // 本期抄錶度
       ENG_Amount: [0], // 本期抄錶金額
-      SYS_StoreNo: ['', []], // 分店編號
-      Mid: ['', []], // 外鍵
 
-      CRT_Date: ['', []], // 建立日期
-      CRT_USR_No: ['', []], // 建立人員代碼 (隱藏)
-      CRT_USR_Name: ['', []], // 建立人員姓名 (隱藏)
-      UPD_Date: ['', []], // 變更日期 (隱藏)
-      UPD_USR_No: ['', []], // 變更人員代碼 (隱藏)
-      UPD_USR_Name: ['', []], // 變更人員姓名 (隱藏)
+      CRT_Date: [''], // 建立日期
+      CRT_USR_No: [''], // 建立人員代碼 (隱藏)
+      CRT_USR_Name: [''], // 建立人員姓名 (隱藏)
+      UPD_Date: [''], // 變更日期 (隱藏)
+      UPD_USR_No: [''], // 變更人員代碼 (隱藏)
+      UPD_USR_Name: [''], // 變更人員姓名 (隱藏)
     });
   
     //
@@ -118,8 +120,6 @@ export class ASS21030CRUComponent extends BasicCruPageComponent<ENG1001|ENG2001>
   
     // ----------------------------------------------------------------
     constructor(
-      private validationService: ValidationService,
-      private ass21030Service: ASS21030Service,
     ) {
       super(); // 呼叫父類建構子
     }
@@ -128,7 +128,6 @@ export class ASS21030CRUComponent extends BasicCruPageComponent<ENG1001|ENG2001>
       this.initializePage('ASS21030', this.dataForm);
       this.loadOptions();
 
-      // 先把ENG_YYMM由"202507"轉回 2025-08-15T07:17:26.607 的形式
       console.log('取得資料',this.dataForm.value);
     }
   
@@ -141,25 +140,26 @@ export class ASS21030CRUComponent extends BasicCruPageComponent<ENG1001|ENG2001>
         return;
       }
   
+      //都用匯入(import excel)的方式進行編輯
       const formValue = frm.getRawValue();
       switch (this.crudstatus) {
         case CRUDStatus.Create:
           if (this.canAdd()) {
             console.log('insert:', JSON.stringify(formValue, null, 2));
-            this.ass21030Service.insertASS21030(formValue).subscribe(() => {
-              this.messageService.successBubble('新增成功');
-              // this.onCancel(); // 儲存後，會清除資料留在原頁面，不返回列表
-              this.dataForm.reset(); // 重置表單
-            });
+            // this.ass21030Service.insertASS21030(formValue).subscribe(() => {
+            //   this.messageService.successBubble('新增成功');
+            //   // this.onCancel(); // 儲存後，會清除資料留在原頁面，不返回列表
+            //   this.dataForm.reset(); // 重置表單
+            // });
           }
           break;
         case CRUDStatus.Edit:
           if (this.canEdit()) {
             console.log('update:', JSON.stringify(formValue, null, 2));
-            this.ass21030Service.updateASS21030(formValue).subscribe(() => {
-              this.messageService.successBubble('更新成功');
-              this.onCancel(); // 儲存後，會返回列表
-            });
+            // this.ass21030Service.updateASS21030(formValue).subscribe(() => {
+            //   this.messageService.successBubble('更新成功');
+            //   this.onCancel(); // 儲存後，會返回列表
+            // });
           }
           break;
       }

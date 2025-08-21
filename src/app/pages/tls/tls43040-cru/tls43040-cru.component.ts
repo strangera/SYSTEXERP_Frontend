@@ -77,6 +77,9 @@ export class TLS43040CRUComponent extends BasicCruPageComponent<any> implements 
   SYS3A00_Options: { label: string; value: string }[] = []; // 區域
   TLTTALENT_OPTIONS: { label: string; No: string; Name?: string }[] = [];
 
+  isTableDisabled = false; // 控制 table 是否禁用
+
+
   // 表格
   data: any[] = [];
   selectedRows: any[] = [];
@@ -85,6 +88,11 @@ export class TLS43040CRUComponent extends BasicCruPageComponent<any> implements 
   ngOnInit(): void {
     this.initializePage('TLS43040', this.dataForm);
     this.loadAndSetupColumns();
+    console.log('選擇的資料 rowdata:', this.rowdata);
+    console.log('選擇的資料的Details ECR_Details:', this.rowdata?.ECR_Details);
+    console.log('表格資料data:', this.data);
+    this.data = this.rowdata?.ECR_Details ?? [];
+    console.log('表格資料data:', this.data);
   }
 
   // ===== 載入下拉並設定 columns =====
@@ -138,33 +146,31 @@ export class TLS43040CRUComponent extends BasicCruPageComponent<any> implements 
           { field: 'ECR_No', header: '收銀機號', type: 'dropdown', options: this.POS1002_ECR_Options, optionLabel: 'label', optionValue: 'value' },
           { field: 'ECR_Type', header: '機台類型', type: 'dropdown', options: this.SYS1000_ECRType_Options, optionLabel: 'label', optionValue: 'value' },
           { field: 'TLT_No', header: '專櫃編號', type: 'dropdown', options: this.TLTTALENT_OPTIONS, optionLabel: 'label', optionValue: 'No' },
-          { field: 'Building_No', header: '館別代碼', type: 'dropdown', options: this.SYS3700_Options, optionLabel: 'label', optionValue: 'value' },
-          { field: 'Floor_No', header: '樓層代碼', type: 'dropdown', options: this.SYS3900_Options, optionLabel: 'label', optionValue: 'value' },
+          { field: 'BUILDING_No', header: '館別代碼', type: 'dropdown', options: this.SYS3700_Options, optionLabel: 'label', optionValue: 'value' },
+          { field: 'FLOOR_No', header: '樓層代碼', type: 'dropdown', options: this.SYS3900_Options, optionLabel: 'label', optionValue: 'value' },
           { field: 'Area_No', header: '區域', type: 'dropdown', options: this.SYS3A00_Options, optionLabel: 'label', optionValue: 'value' },
         ];
       });
   }
 
-  // ===== 事件 =====
-  onDelete(rows: any[]) {
-    const ids = new Set(rows.map(r => r.ID));
-    this.data = this.data.filter(x => !ids.has(x.ID));
-    this.selectedRows = [];
 
-    // 呼叫 API 刪除
-    rows.forEach(r => {
-      this.tls43040Service.deleteTLS43040({ ID: r.ID }).subscribe({
-        next: () => console.log('刪除成功:', r.ID),
-        error: err => console.error('刪除失敗:', err)
-      });
-    });
-  }
+onEcrDtlLimitChange(value: string) {
+  this.isTableDisabled = value === "0";
+  console.log("ECR_DtlLimit 選擇:", value, "→ tableDisabled:", this.isTableDisabled);
+}
+
 
   onSubmit(form: FormGroup): void {
     if (form.valid) {
       const payload = {
         ...form.getRawValue(),
-        details: this.data   // 把明細表格一起送
+        ID: this.isFormCreateable ? 0 : this.rowdata?.ID,
+        Detail: this.data.map(item => ({
+          ...item,
+          // 這裡可以加入額外的屬性
+          ID: this.isFormCreateable ? 0 : item.ID,
+          status: this.isFormCreateable ? 'new' : item.status
+        }))
       };
 
       if (!payload.ECR_GrpNo || payload.ECR_GrpNo === '自動編號') {

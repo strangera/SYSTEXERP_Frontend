@@ -84,7 +84,7 @@ export class TLS24010CRUComponent extends BasicCruPageComponent<TLS24010Data | u
     TXN_VIP: ['N', [Validators.required]], //零稅 是/否,YN。若為y，TXN_TaxType變成2
     TXN_TaxFreeCertNo: [{ value: null, disabled: true }], // 免稅卡零稅卡號= 免稅證證號 欄位
     TXN_Status: ['N'],                                                    //交易狀態 (一般交易=N, 退貨交易=E, 作廢交易=D)
-    GUI_Track: ['', [Validators.required, Validators.maxLength(2), Validators.minLength(2), this.validationService.guiTrackValidator]], //發票字軌
+    GUI_Track: ['', [Validators.required, Validators.maxLength(2), Validators.minLength(2), this.validationService.alphanumericValidator]], //發票字軌
     TXN_GUIBegNo: ['', [Validators.required, Validators.maxLength(8), Validators.minLength(8), this.validationService.numberValidator]], //起始發票號碼
     TXN_GUIEndNo: ['', [Validators.maxLength(8), Validators.minLength(8)]], //結束發票號碼
     TXN_CustCnt: [1, [Validators.required, Validators.min(1), Validators.max(9999)]], //來客數
@@ -168,6 +168,7 @@ export class TLS24010CRUComponent extends BasicCruPageComponent<TLS24010Data | u
     const txnGuiCarrIdControl = this.dataForm.get('TXN_GUI_CarrId');
     const txnGuiDonateControl = this.dataForm.get('TXN_GUI_Donate');
     const txnGuiLoveCodeControl = this.dataForm.get('TXN_GUILoveCode');
+    const guiTrackControl = this.dataForm.get('GUI_Track');
     // 監聽 零稅 的變化
     txnVipControl?.valueChanges.pipe(untilDestroyed(this)).subscribe(begNoValue => {
       if (begNoValue === 'Y') {
@@ -212,6 +213,12 @@ export class TLS24010CRUComponent extends BasicCruPageComponent<TLS24010Data | u
       }
       txnGuiLoveCodeControl?.updateValueAndValidity(); // 更新驗證狀態
     });
+    guiTrackControl?.valueChanges.pipe(untilDestroyed(this)).subscribe(trackValue => {
+      if (trackValue && typeof trackValue === 'string') {
+        const upperCaseValue = trackValue.toUpperCase();
+        guiTrackControl.setValue(upperCaseValue, { emitEvent: false });
+      }
+    });
   }
   onSubmit(frm: FormGroup) {
     if (this.isFormEditable) {
@@ -219,14 +226,21 @@ export class TLS24010CRUComponent extends BasicCruPageComponent<TLS24010Data | u
       return;
     }
     this.handleSubmit(frm, () => {
+      this.pos5007Comp?.POS5007Data.forEach(item => {
+        if (item.TXN_Qty === null || item.TXN_Qty === undefined || item.TXN_Qty <= 0) {
+          this.messageService.errorBubble('請輸入正確的銷售數量', '銷售數量必須大於1');
+          this.loading = false;
+          return
+        }
+      });
       if (this.pos5008Comp?.POS5008SelectedItems.length === 0) {
-        this.messageService.errorBubble('請至少選擇一筆支付工具');
+        this.messageService.errorBubble('請至少選擇一筆支付工具', '支付工具必須選擇');
         this.loading = false;
         return
       }
       const childValid = this.pos5008Comp?.validate();
       if (!childValid) {
-        this.messageService.errorBubble('支付工具資料不完整');
+        this.messageService.errorBubble('支付工具資料不完整', '請檢查支付工具資料');
         this.loading = false;
         return;
       }
@@ -242,7 +256,7 @@ export class TLS24010CRUComponent extends BasicCruPageComponent<TLS24010Data | u
       }).filter(item => item.selected) ?? [];
       const pos5008total = pos5008Data.reduce((total, item) => total + (item.TXN_PayAmt ? item.TXN_PayAmt : 0), 0);
       if (pos5008total !== pos5007total) {
-        this.messageService.errorBubble('支付工具資料與商品總金額不符');
+        this.messageService.errorBubble('支付工具資料與商品總金額不符', '請檢查支付工具資料');
         this.loading = false;
         return
       }

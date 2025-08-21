@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, OnDestroy } from '@angular/core';
 import {
   FormGroup,
   Validators,
@@ -28,29 +28,39 @@ import { TranslateModule } from '@ngx-translate/core';
 import { Subject, Subscription, of } from 'rxjs';
 import { debounceTime, takeUntil, timeout, catchError } from 'rxjs/operators';
 import { TableComponent } from '@shared/componentkit/table/table.component';
-
+import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
+import { Button } from 'primeng/button';
+import { CommonModule } from '@angular/common';
+import { RadioButtonModule } from 'primeng/radiobutton';
+import { AbstractControl, ValidatorFn } from '@angular/forms';
+type FilterMode = 'location' | 'busType' | 'org';
 @Component({
   selector: 'app-tls23120',
   templateUrl: './tls23120.component.html',
   styleUrls: ['./tls23120.component.scss'],
   standalone: true,
-  imports: [
-    MenubarComponent,
-    AccordionModule,
-    FormsModule,
-    ReactiveFormsModule,
-    CalendarRangeQuickComponent,
-    MultiSelectComponent,
-    DropdownComponent,
-    RadiobuttonComponent,
-    InputTextModule,
-    ButtonComponent,
-    TranslateModule,
-    TableComponent,
-  ],
-})
-export class TLS23120Component extends BasicQueryPageComponent<any> {
+imports: [
+  CommonModule,          // ✅ 讓 *ngIf 可用
+   RadioButtonModule,       // ✅ 讓 p-radiobutton 有 value accessor
 
+  MenubarComponent,
+  AccordionModule,
+  FormsModule,
+  ReactiveFormsModule,
+  // CalendarRangeQuickComponent,   // 若沒用到就移除
+  MultiSelectComponent,
+  DropdownComponent,
+  RadiobuttonComponent,
+  InputTextModule,
+  ButtonComponent,        // 這是你自家的 <app-button>
+  TranslateModule,
+  TableComponent,
+  CalendarComponent,
+  // Button,               // ❌ 不要放這個
+]
+})
+export class TLS23120Component extends BasicQueryPageComponent<any> implements OnDestroy {
+ private destroy$ = new Subject<void>();
 
   readonly yesterday: Date = (() => {
     const d = new Date();
@@ -61,18 +71,22 @@ export class TLS23120Component extends BasicQueryPageComponent<any> {
   data: any[] = [];
   totalRecords = 0;
 
-  queryForm = this.formBuilder.group({
-    TXN_DateStart: [this.yesterday, [Validators.required]],
-    TXN_DateEnd: [this.yesterday, [Validators.required]],
-    bus_type: [],
-    ShowBusType: true,
-    tlt_building: [],
-    tlt_floor: [],
-    org_id: [],
-    area_no: [],
-    TLT_No: [],
-   ...createPaginationConfig([{ field: 'TLT_No', order: 1 }])
-  });
+queryForm = this.formBuilder.group({
+  TXN_Date: [this.yesterday, [Validators.required]],
+
+  // ▼ 單選模式：'location' | 'busType' | 'org'
+  filterMode: ['location'],
+
+  TLT_No: [[]],
+  bus_type: [],
+  ShowBusType: true,
+  tlt_building: [],
+  area_no: [[]],
+  tlt_floor: [[]],
+  org_id: [],
+
+  ...createPaginationConfig([{ field: 'TLT_No', order: 1 }])
+});
 
   organizationOptions: any[] = [];
   bus_typeOptions: any[] = [];
@@ -136,13 +150,49 @@ export class TLS23120Component extends BasicQueryPageComponent<any> {
             value: x.value,
           })) || [];
       });
+
+    // 依目前值初始化欄位可見性
+    this.syncBusTypeColumns(!!this.queryForm.controls.ShowBusType.value);
+
+    // 監聽切換，動態更新欄位
+    this.queryForm.controls.ShowBusType.valueChanges
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(v => this.syncBusTypeColumns(!!v));
+
+       // 依目前值初始化欄位可見性
+  this.syncBusTypeColumns(!!this.queryForm.controls.ShowBusType.value);
+
+  // 監聽 ShowBusType（原本的）
+  this.queryForm.controls.ShowBusType.valueChanges
+    .pipe(takeUntil(this.destroy$))
+    .subscribe(v => this.syncBusTypeColumns(!!v));
+
+  // ▼ 監聽三選一模式
+
+     // 讓整個表單套用「依 filterMode 必填」的規則
+  this.queryForm.setValidators(this.filterModeRequiredValidator);
+  this.queryForm.updateValueAndValidity({ emitEvent: false });
+
+  // ▼ 監聽三選一模式
+  const modeCtrl = this.queryForm.controls['filterMode'];
+  this.applyFilterMode((modeCtrl.value as any) ?? 'location');
+  modeCtrl.valueChanges
+    .pipe(takeUntil(this.destroy$))
+    .subscribe(value => {
+      const v = ((value ?? 'location') as FilterMode);
+      this.applyFilterMode(v);
+    });
+  }
+   ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+    
   }
   // 送出查詢（無 doQuery / buildPayload）
 onSubmit(form: FormGroup): void {
   this.handleSubmit(form, () => {
     const val = this.queryForm.getRawValue() as any;
 
-    // ✅ 沒有就給預設
     const pageSize  = Number.isFinite(val?.pageSize)  ? val.pageSize  : 10;
     const pageIndex = Number.isFinite(val?.pageIndex) ? val.pageIndex : 1;
 
@@ -184,17 +234,44 @@ onSubmit(form: FormGroup): void {
 
     this.loading = true;
     this.messageService?.blockUi();
+
     this.tls23120Service.queryTLS23120(payload).subscribe({
       next: (res: any) => {
-        const data = res?.Data;
-        const wrapper = Array.isArray(data) ? data[0] : data;
-        const details =
-          wrapper?.tLS23120Details ?? wrapper?.TLS23120Details ?? wrapper?.tls23120Details ?? [];
-        this.data = Array.isArray(details) ? details : [];
-        this.totalRecords = typeof res?.TotalCount === 'number' ? res.TotalCount : this.data.length;
+        // 期望結構：
+        // Data: [{ Totals: { SubTotals: [{ tLS23120Details: [...] }, ...] } }]
+        const dataArr = Array.isArray(res?.Data)
+          ? res.Data
+          : (res?.Data ? [res.Data] : []);
+
+        let details: any[] = [];
+
+        for (const item of dataArr) {
+          const totals = item?.Totals ?? item?.totals ?? {};
+          const subTotals =
+            totals?.SubTotals ?? totals?.subTotals ?? totals?.subtotals ?? [];
+
+          if (Array.isArray(subTotals)) {
+            for (const sub of subTotals) {
+              const list =
+                sub?.tLS23120Details ??
+                sub?.TLS23120Details ??
+                sub?.tls23120Details ??
+                [];
+
+              if (Array.isArray(list)) {
+                details = details.concat(list);
+              }
+            }
+          }
+        }
+
+        this.data = details;
+        this.totalRecords =
+          typeof res?.TotalCount === 'number' ? res.TotalCount : this.data.length;
       },
       error: (err) => {
         console.error('TLS23120 查詢失敗', err);
+        this.loading = false;
         this.messageService?.errorBubble?.('查詢失敗，請稍後再試');
       },
       complete: () => {
@@ -205,14 +282,108 @@ onSubmit(form: FormGroup): void {
   });
 }
 
+private filterModeRequiredValidator: ValidatorFn = (group: AbstractControl) => {
+  const fm = group.get('filterMode')?.value as FilterMode | null;
+  const hasVal = (name: string): boolean => {
+    const v = group.get(name)?.value;
+    if (Array.isArray(v)) return v.length > 0;
+    return v !== null && v !== undefined && v !== '';
+  };
 
+  if (fm === 'location') {
+    // 三個任一有值就過
+    return (hasVal('tlt_building') || hasVal('area_no') || hasVal('tlt_floor'))
+      ? null
+      : { filterModeRequired: true };
+  }
+  if (fm === 'busType') {
+    return hasVal('bus_type') ? null : { filterModeRequired: true };
+  }
+  if (fm === 'org') {
+    return hasVal('org_id') ? null : { filterModeRequired: true };
+  }
+  return null;
+};
 
-  
+// ➌ 小工具：切換 required
+private setRequired(controlName: string, on: boolean) {
+  const c = this.queryForm.get(controlName);
+  if (!c) return;
+  if (on) c.addValidators(Validators.required);
+  else    c.removeValidators(Validators.required);
+  c.updateValueAndValidity({ emitEvent: false });
+}
+  private syncBusTypeColumns(show: boolean): void {
+    const target = new Set(['bus_type', 'bus_type_name']);
+    this.columns = this.columns.map(col =>
+      target.has(col.field) ? { ...col, visible: !!show } : col
+    );
+  }
+private applyFilterMode(mode: 'location' | 'busType' | 'org'): void {
+  const setGroup = (names: string[], enabled: boolean) => {
+    names.forEach(n => {
+      const c = this.queryForm.get(n);
+      if (!c) return;
+      if (enabled) {
+        c.enable({ emitEvent: false });
+      } else {
+        c.reset(undefined, { emitEvent: false });
+        c.disable({ emitEvent: false });
+      }
+    });
+  };
+
+  // 各組欄位
+  const location = ['tlt_building', 'area_no', 'tlt_floor'];
+  const busType  = ['bus_type'];
+  const org      = ['org_id'];
+
+  setGroup(location, mode === 'location');
+  setGroup(busType,  mode === 'busType');
+  setGroup(org,      mode === 'org');
+
+  // 動態 required（Angular 對陣列的 required 也會檢查 length）
+  this.setRequired('bus_type', mode === 'busType');
+  this.setRequired('org_id',   mode === 'org');
+  // location 是三擇一 → 用 group-level 驗證，不逐一 required
+
+  // 重新計算整體驗證
+  this.queryForm.updateValueAndValidity({ emitEvent: false });
+}
+
+  formatDateTimeYMDHM(val: string | Date): string {
+    if (!val) return '';
+    const d = typeof val === 'string' ? new Date(val) : val;
+    if (isNaN(d.getTime())) return String(val ?? '');
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    const hh = String(d.getHours()).padStart(2, '0');
+    const mm = String(d.getMinutes()).padStart(2, '0');
+    return `${y}/${m}/${day}`;
+  }
   moneyFormat(value: number): string {
     return value != null ? value.toLocaleString('en-US') : '0';
   }
   columns = [
-    { field: 'SYS_Name', header: '區分', visible: true },
+
+     { field: 'TXN_DATE', header: '銷售日期', visible: true , format: this.formatDateTimeYMDHM.bind(this),},
+     
+     { field: 'TLT_NO', header: '專櫃編號', visible: true },
+      { field: 'tlt_name', header: '櫃位名稱', visible: true },
+          { field: 'bus_type', header: '大分類編號', visible: true },
+    
+     { field: 'bus_type_name', header: '大分類名稱', visible: true },
+      { field: 'FLOOR_NO', header: '樓層', visible: true },
+      { field: 'TLT_ID', header: '抽成類別', visible: true },
+   
+    
+    
+    { field: 'total_count', header: '總交易筆數', visible: true },
+    { field: 'return_qty', header: '退貨件數', visible: true },
+     { field: 'return_amt', header: '退貨金額', visible: true },
+      { field: 'AREA_NO', header: '區域', visible: true },
+      { field: 'SYS_Name', header: '區分', visible: true },
     { field: 'sad_sale_qty', header: '銷貨筆數', visible: true },
     {
       field: 'sad_sale_namt',

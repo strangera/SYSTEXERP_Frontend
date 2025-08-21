@@ -179,7 +179,7 @@ onSubmit(form: FormGroup): void {
     const payload: any = {
       TXN_DateStart: toIso(val?.TXN_DateStart),
       TXN_DateEnd:   toIso(val?.TXN_DateEnd),
-      ECR_No:        val?.ECR_No,
+      ECR_No:        val?.ECR_No,       // 可為陣列或字串，後端自理
       TLT_No:        val?.TLT_No,
       CRD_Type:      val?.CRD_Type,
       CRD_No:        val?.CRD_No,
@@ -217,10 +217,12 @@ onSubmit(form: FormGroup): void {
 
         this.data = Array.isArray(details) ? details : [];
 
+        // 總筆數（若 API 有回傳 TotalCount 則用之，否則用陣列長度）
         this.totalRecords =
           typeof res?.TotalCount === 'number' ? res.TotalCount : this.data.length;
 
-        // 如需總計可自行加欄位接：this.totalPayAmt = wrapper?.totalPayAmt ?? 0;
+        // 若前端需顯示總金額可自取：
+        // this.totalPayAmt = typeof wrapper?.totalPayAmt === 'number' ? wrapper.totalPayAmt : 0;
       },
       error: (err) => {
         console.error('TLS23100 查詢失敗', err);
@@ -233,5 +235,7 @@ onSubmit(form: FormGroup): void {
     });
   });
 }
+
+
 
 }

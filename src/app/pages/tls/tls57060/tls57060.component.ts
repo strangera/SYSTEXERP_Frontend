@@ -15,6 +15,7 @@ import { DropDownListService, IDropdownItem } from '@service/utility/dropDownLis
 import { QueryPLUResponse, QueryTLS57040Request, Tls57040Service } from '@service/api/tls/tls57040.service';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { debounceTime } from 'rxjs';
+import { yesterday } from '@shared/models/system/query-form.model';
 
 @Component({
   selector: 'app-tls57060',
@@ -38,8 +39,8 @@ export class TLS57060Component extends BasicQueryPageComponent<any> implements O
   queryForm = this.formBuilder.group({
     displayMode: [null],
     TXN_SaleNoteNo: ['', Validators.maxLength(8)],
-    TXN_DateStart: [null],
-    TXN_DateEnd: [null],
+    TXN_DateStart: [yesterday],
+    TXN_DateEnd: [yesterday],
     TLT_Name: [null],
     PLU_MagNo: ['', Validators.maxLength(20)],
     PLU_No: ['', Validators.maxLength(13)],

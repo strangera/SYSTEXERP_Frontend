@@ -8,7 +8,7 @@
   [resizableColumns]="true" [paginator]="showPaginator && IsPrint && !rowEditing && !loading" [scrollable]="scrollable"
   [showCurrentPageReport]="IsPrint" [multiSortMeta]="multiSortMeta" [rowsPerPageOptions]="rowsPerPageOptions"
   [scrollHeight]="scrollHeight" [(rows)]="rows" [(first)]="first" (onLazyLoad)="loadDataLazy($event)"
-  [lazy]="lazy || !IsPrint"
+  [lazy]="lazy || !IsPrint" [reorderableColumns]="true" (onColReorder)="onColReorder($event)"
   [styleClass]="'p-datatable-sm' + (IsPrint ? ' p-datatable-gridlines' : ' ') + (!disabled ? ' p-datatable-striped' : ' ')"
   [virtualScroll]="!IsPrint" [virtualScrollItemSize]="35" [virtualScrollDelay]="250"
   currentPageReportTemplate="第{currentPage}頁 / 總共{totalPages}頁 (總筆數:{totalRecords})"
@@ -35,7 +35,8 @@
   <ng-template pTemplate="header" let-columns>
     <ng-container *ngIf="columnGroup && columnGroup.length > 0">
       <tr>
-        <th class="w-1rem group-header" rowspan="2">序號</th>
+        <th *ngIf="!showSubTotal && !showTotal && data.length" class="w-1rem" rowspan="2"></th>
+        <th class="w-1rem" rowspan="2">序號</th>
         <th class="w-1rem group-header" rowspan="2"
           *ngIf="IsPrint && showCheckBox && !rowEditing && selectionMode === 'multiple'">
           <p-tableHeaderCheckbox />
@@ -45,18 +46,18 @@
           <!-- 如果是第一次出現這個群組 -->
           <ng-container *ngIf="shouldRenderGroupHeader(col, i, columns)">
             <th [attr.colspan]="getColumnSpan(columns, col.groupField!)" [ngClass]="getGroupAlignClass(col.groupField!)"
-              class="group-header">
+              class="group-header" pReorderableColumn pResizableColumn>
               {{ getGroupHeader(col.groupField!) }}
             </th>
           </ng-container>
           <!-- 如果是沒群組的欄位 -->
           <ng-container *ngIf="!col.groupField">
-            <th *ngIf="!col.hidden" rowspan="2" class="text-center"
+            <th *ngIf="!col.hidden" rowspan="2" class="text-center" pResizableColumn
               [pSortableColumn]="showSort && !rowEditing ? col.sortField ?? col.field : undefined"
               [pSortableColumnDisabled]="!showSort || rowEditing || col.showSort === false" pFrozenColumn
               [frozen]="IsPrint && !!col.frozen" [alignFrozen]="col.alignFrozen || 'right'">
               {{ col.header }}
-              <p-sortIcon *ngIf="showSort && !rowEditing && col.showSort !== false"
+              <p-sortIcon *ngIf="showSort && !rowEditing && col.showSort !== false && data.length"
                 [field]="col.sortField ?? col.field" />
             </th>
           </ng-container>
@@ -69,12 +70,12 @@
       <!-- 第二層：實際欄位標題 -->
       <tr>
         <ng-container *ngFor="let col of columns">
-          <th *ngIf="!col.hidden && col.groupField" class="text-center"
+          <th *ngIf="!col.hidden && col.groupField" class="text-center" pReorderableColumn pResizableColumn
             [pSortableColumn]="showSort && !rowEditing ? col.sortField ?? col.field : undefined"
             [pSortableColumnDisabled]="!showSort || rowEditing || col.showSort === false" pFrozenColumn
             [frozen]="IsPrint && !!col.frozen" [alignFrozen]="col.alignFrozen || 'right'">
             {{ col.header }}
-            <p-sortIcon *ngIf="showSort && !rowEditing && col.showSort !== false"
+            <p-sortIcon *ngIf="showSort && !rowEditing && col.showSort !== false && data.length"
               [field]="col.sortField ?? col.field" />
           </th>
         </ng-container>
@@ -83,17 +84,19 @@
     <!-- 非群組表頭 -->
     <ng-container *ngIf="!columnGroup?.length">
       <tr>
+        <th *ngIf="!showSubTotal && !showTotal && data.length" class="w-1rem"></th>
         <th class="w-1rem">序號</th>
         <th class="w-1rem" *ngIf="IsPrint && showCheckBox && !rowEditing && selectionMode === 'multiple'">
           <p-tableHeaderCheckbox [disabled]="disabled" />
         </th>
         <th class="w-1rem" *ngIf="expansionColumns.length && IsPrint">收合/展開</th>
-        <th *ngFor="let col of columns"
+        <th *ngFor="let col of columns" pReorderableColumn pResizableColumn
           [pSortableColumn]="showSort && !rowEditing ? col.sortField ?? col.field : undefined"
           [pSortableColumnDisabled]="!showSort || rowEditing || col.showSort === false" class="text-center"
           pFrozenColumn [frozen]="IsPrint && col.frozen" [alignFrozen]="col.alignFrozen || 'right'">
           {{ col.header }}
-          <p-sortIcon *ngIf="showSort && !rowEditing && col.showSort !== false" [field]="col.sortField ?? col.field" />
+          <p-sortIcon *ngIf="showSort && !rowEditing && col.showSort !== false && data.length"
+            [field]="col.sortField ?? col.field" />
         </th>
         <th *ngIf="!alwaysEdit || (alwaysEdit && rowEditing)" [hidden]="!IsPrint || !showManage"
           class="w-1rem text-center" alignFrozen="right" pFrozenColumn [frozen]="IsPrint">
@@ -122,12 +125,14 @@
     </tr>
   </ng-template>
   <ng-template pTemplate="body" let-rowIndex="rowIndex" let-rowData let-columns="columns" let-expanded="expanded"
-    let-editing="editing" let-ri="rowIndex">
+    let-editing="editing" let-ri="rowIndex" let-index="rowIndex">
     <tr #htmlTableRowElement [attr.data-key]="rowData[dataKey]" [pSelectableRow]="rowData" style="height: 35px"
-      [pSelectableRowDisabled]="!isRowSelectable(rowData) || disabled"
+      [pSelectableRowDisabled]="!isRowSelectable(rowData) || disabled" [pReorderableRow]="index"
       [ngClass]="{ 'p-disabled-row': !isRowSelectable(rowData) }" [pEditableRow]="rowData" [pSelectableRow]="rowData"
       [pSelectableRowIndex]="rowIndex" (click)="itemClick.emit(rowData)">
       <ng-container *ngIf="!loading; else loadingTemplate">
+        <td *ngIf="!showSubTotal && !showTotal && data.length"><span class="pi pi-bars" pReorderableRowHandle></span>
+        </td>
         <td class="text-center">{{ rowIndex + 1 }}</td>
         <td *ngIf="IsPrint &&showCheckBox &&!rowEditing &&selectionMode === 'multiple'">
           <p-tableCheckbox class="flex justify-content-center pointer-events-none" [pSelectableRow]="rowData"
@@ -235,11 +240,15 @@
     </tr>
   </ng-template>
   <ng-template pTemplate="emptymessage">
-    <div class="flex flex-wrap justify-content-center min-h-full" [ngStyle]="{ height: '62px' }">
-      <p class="empty-message text-xl font-bold text-center" [ngStyle]="columnGroup ? { top: '77%' } : { top: '66%' }">
-        {{ emptyMessage }}
-      </p>
-    </div>
+    <tr>
+      <td [attr.colspan]="getVisibleHeaderCount">
+        <div>
+          <div class="flex justify-content-center align-items-center h-5rem min-h-full p-2 font-bold text-xl">
+            {{emptyMessage}}
+          </div>
+        </div>
+      </td>
+    </tr>
   </ng-template>
   <ng-template pTemplate="summary">
     <div *ngIf="showFooter && IsPrint" class="p-2 font-semibold table-footer">
