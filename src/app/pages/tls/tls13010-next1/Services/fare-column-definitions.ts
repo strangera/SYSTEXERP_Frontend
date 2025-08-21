@@ -410,8 +410,52 @@ export class FareColumnDefinitions {
         field: 'period_nos',
         header: '期數',
         type: 'number',
-        editable: false,
-        width: '70px'
+        editable: false, // 🎯 設為不可編輯，因為要自動計算
+        width: '70px',
+        // 🎯 關鍵：為期數添加動態預設值函數
+        defaultValueFunction: () => {
+          const contractInfo = contractInfoData[0];
+          if (contractInfo?.tlt_contract_bdate && contractInfo?.tlt_contract_edate) {
+            try {
+              const startDate = new Date(contractInfo.tlt_contract_bdate);
+              const endDate = new Date(contractInfo.tlt_contract_edate);
+
+              // 檢查日期有效性
+              if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
+                console.warn('⚠️ 合約日期無效，期數預設為 1');
+                return 1;
+              }
+
+              // 計算期數
+              if (startDate <= endDate) {
+                const startYear = startDate.getFullYear();
+                const startMonth = startDate.getMonth();
+                const endYear = endDate.getFullYear();
+                const endMonth = endDate.getMonth();
+
+                const calculatedPeriods = (endYear - startYear) * 12 + (endMonth - startMonth) + 1;
+                const finalPeriods = Math.max(1, calculatedPeriods);
+
+                console.log('🎯 期數預設值計算:', {
+                  合約起始: `${startYear}/${startMonth + 1}`,
+                  合約結束: `${endYear}/${endMonth + 1}`,
+                  計算期數: finalPeriods
+                });
+
+                return finalPeriods;
+              } else {
+                console.warn('⚠️ 合約起始日期大於結束日期，期數預設為 1');
+                return 1;
+              }
+            } catch (error) {
+              console.error('❌ 期數預設值計算錯誤:', error);
+              return 1;
+            }
+          }
+
+          console.log('📝 沒有合約日期資訊，期數預設為 1');
+          return 1;
+        }
       },
       {
         field: 'tpy_amount',
