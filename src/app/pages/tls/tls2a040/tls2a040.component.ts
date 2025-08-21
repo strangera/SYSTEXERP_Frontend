@@ -24,6 +24,7 @@ import { yesterday } from '@shared/models/system/query-form.model';
 import { Tls2a040Service } from '@service/api/tls/tls2a040.service';
 import { createPaginationConfig } from 'src/app/shared/componentkit/table/table.model';
 import { RadiobuttonComponent } from "@shared/componentkit/radiobutton/radiobutton.component";
+import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
 
 @Component({
   selector: 'app-tls22030',
@@ -43,7 +44,9 @@ import { RadiobuttonComponent } from "@shared/componentkit/radiobutton/radiobutt
     InputNumberComponent,
     CalendarRangeQuickComponent,
     InputNumberRangeComponent,
+    InputTextComponent,
     RadiobuttonComponent
+
   ],
 })
 export class TLS2A040Component extends BasicQueryPageComponent<any> implements OnInit {
