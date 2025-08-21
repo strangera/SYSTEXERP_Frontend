@@ -74,7 +74,7 @@ export class TLS26060Component extends BasicQueryPageComponent<TLS26060Data> imp
     event_enddate_c: [null], // 比較活動結束日期
     tlt_no: [null], // 專櫃編號
     tax: [true], // 是否含稅
-    ...createPaginationConfig([{ field: 'team_name', order: 1 }])
+    ...createPaginationConfig([{ field: 'team_name', order: -1 }])
   });
 
   totalRecords = 0;
