@@ -269,7 +269,7 @@ export interface TDS1002 {
 })
 export class FIN14010CRUComponent extends BasicCruPageComponent<TDS1002> implements OnInit {
   dataForm = this.formBuilder.group({
-    id: [{ value: null, disabled: true }], // 主鍵ID
+    ID: [{ value: null, disabled: true }], // 主鍵ID
     // 儘可以針對
     // 申報書上的[進貨總金額之進貨及費用]、[進貨總金額之固定資產]、[進口免稅貨物]、[購買國外勞務給付額]、[專案退稅金額]
     // 欄位進行修改。
@@ -317,7 +317,7 @@ export class FIN14010CRUComponent extends BasicCruPageComponent<TDS1002> impleme
       this.loading = true;
       const body = {
         ...frm.value,
-        id: this.isFormCreateable ? undefined : frm.get('id')?.value ?? 0,
+        id: this.isFormCreateable ? undefined : frm.get('ID')?.value ?? 0,
         // GUI_YYMM: convertDateToYYYYMM(frm.value.GUI_YYMM),
       }
       console.log('送出body', body);

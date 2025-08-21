@@ -28,11 +28,30 @@
     </p-accordionTab>
   </p-accordion>
 </div>
+
+<!-- <div class="card">
+  <div class="col-13">
+    <app-table tableKey="TLS51070" [data]="data" [columns]="columns" (edit)="onEdit($event)" (detail)="onDetail($event)"
+      [selectedItems]="selectedRows" (selectionChange)="selectedRows = $event" (delete)="onDelete($event)"
+      [showCheckBox]="false" dataKey="ID" [multiSortMeta]="[{ field: 'REP_GUIYM', order: 1 }]"
+      [totalRecords]="totalRecords" (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"
+      [lazy]="true" [loading]="loading" [isRowSelectable]="isRowSelectable"></app-table>
+  </div>
+</div> -->
+
+<!-- <div class="card">
+  <app-table apiUrl='queryFIN14010' tableKey="TLS51070" [data]="data" [columns]="columns"
+    [selectedItems]="selectedRows" (selectionChange)="selectedRows = $event" [showCheckBox]="true" dataKey="ID"
+    [multiSortMeta]="[{ field: 'REP_GUIYM', order: 1 }]" [totalRecords]="totalRecords" [lazy]="true" [loading]="loading"
+    [showCheckBox]="false" (edit)="onEdit($event)" (detail)="onDetail($event)" [showManage]="false" [showDelete]="false"
+    (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"></app-table>
+</div> -->
+
 <div class="card">
-  <app-table dataKey="id" [data]="data" [columns]="columns" (edit)="onEdit($event)" expansionDataKey=""
-    (detail)="onDetail($event)" [showCheckBox]="true" (delete)="onDelete($event)"
-    (selectionChange)="selectedRows = $event" [selectedItems]="selectedRows" [isRowSelectable]="isRowSelectable"
-    [multiSortMeta]="[{ field: 'REP_GUIYM', order: 1 }]" [totalRecords]="totalRecords"
-    (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [lazy]="true" [loading]="loading">
+  <app-table dataKey="ID" [data]="data" [columns]="columns" (edit)="onEdit($event)" [showCheckBox]="true"
+    (delete)="onDelete($event)" [showDetail]="false" (selectionChange)="selectedRows = $event"
+    [selectedItems]="selectedRows" [multiSortMeta]="[{ field: 'ID', order: 1 }]"
+    [totalRecords]="totalRecords" (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [lazy]="true"
+    [loading]="loading">
   </app-table>
 </div>
