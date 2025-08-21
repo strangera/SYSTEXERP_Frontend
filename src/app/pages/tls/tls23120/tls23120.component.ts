@@ -30,28 +30,34 @@ import { debounceTime, takeUntil, timeout, catchError } from 'rxjs/operators';
 import { TableComponent } from '@shared/componentkit/table/table.component';
 import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
 import { Button } from 'primeng/button';
+import { CommonModule } from '@angular/common';
+import { RadioButtonModule } from 'primeng/radiobutton';
+import { AbstractControl, ValidatorFn } from '@angular/forms';
 type FilterMode = 'location' | 'busType' | 'org';
 @Component({
   selector: 'app-tls23120',
   templateUrl: './tls23120.component.html',
   styleUrls: ['./tls23120.component.scss'],
   standalone: true,
-  imports: [
-    MenubarComponent,
-    AccordionModule,
-    FormsModule,
-    ReactiveFormsModule,
-    CalendarRangeQuickComponent,
-    MultiSelectComponent,
-    DropdownComponent,
-    RadiobuttonComponent,
-    InputTextModule,
-    ButtonComponent,
-    TranslateModule,
-    TableComponent,
-    CalendarComponent,
-    Button
-  ],
+imports: [
+  CommonModule,          // ✅ 讓 *ngIf 可用
+   RadioButtonModule,       // ✅ 讓 p-radiobutton 有 value accessor
+
+  MenubarComponent,
+  AccordionModule,
+  FormsModule,
+  ReactiveFormsModule,
+  // CalendarRangeQuickComponent,   // 若沒用到就移除
+  MultiSelectComponent,
+  DropdownComponent,
+  RadiobuttonComponent,
+  InputTextModule,
+  ButtonComponent,        // 這是你自家的 <app-button>
+  TranslateModule,
+  TableComponent,
+  CalendarComponent,
+  // Button,               // ❌ 不要放這個
+]
 })
 export class TLS23120Component extends BasicQueryPageComponent<any> implements OnDestroy {
  private destroy$ = new Subject<void>();
@@ -162,9 +168,15 @@ queryForm = this.formBuilder.group({
     .subscribe(v => this.syncBusTypeColumns(!!v));
 
   // ▼ 監聽三選一模式
+
+     // 讓整個表單套用「依 filterMode 必填」的規則
+  this.queryForm.setValidators(this.filterModeRequiredValidator);
+  this.queryForm.updateValueAndValidity({ emitEvent: false });
+
+  // ▼ 監聽三選一模式
   const modeCtrl = this.queryForm.controls['filterMode'];
   this.applyFilterMode((modeCtrl.value as any) ?? 'location');
-   modeCtrl.valueChanges
+  modeCtrl.valueChanges
     .pipe(takeUntil(this.destroy$))
     .subscribe(value => {
       const v = ((value ?? 'location') as FilterMode);
@@ -181,7 +193,6 @@ onSubmit(form: FormGroup): void {
   this.handleSubmit(form, () => {
     const val = this.queryForm.getRawValue() as any;
 
-    // ✅ 沒有就給預設
     const pageSize  = Number.isFinite(val?.pageSize)  ? val.pageSize  : 10;
     const pageIndex = Number.isFinite(val?.pageIndex) ? val.pageIndex : 1;
 
@@ -223,14 +234,40 @@ onSubmit(form: FormGroup): void {
 
     this.loading = true;
     this.messageService?.blockUi();
+
     this.tls23120Service.queryTLS23120(payload).subscribe({
       next: (res: any) => {
-        const data = res?.Data;
-        const wrapper = Array.isArray(data) ? data[0] : data;
-        const details =
-          wrapper?.tLS23120Details ?? wrapper?.TLS23120Details ?? wrapper?.tls23120Details ?? [];
-        this.data = Array.isArray(details) ? details : [];
-        this.totalRecords = typeof res?.TotalCount === 'number' ? res.TotalCount : this.data.length;
+        // 期望結構：
+        // Data: [{ Totals: { SubTotals: [{ tLS23120Details: [...] }, ...] } }]
+        const dataArr = Array.isArray(res?.Data)
+          ? res.Data
+          : (res?.Data ? [res.Data] : []);
+
+        let details: any[] = [];
+
+        for (const item of dataArr) {
+          const totals = item?.Totals ?? item?.totals ?? {};
+          const subTotals =
+            totals?.SubTotals ?? totals?.subTotals ?? totals?.subtotals ?? [];
+
+          if (Array.isArray(subTotals)) {
+            for (const sub of subTotals) {
+              const list =
+                sub?.tLS23120Details ??
+                sub?.TLS23120Details ??
+                sub?.tls23120Details ??
+                [];
+
+              if (Array.isArray(list)) {
+                details = details.concat(list);
+              }
+            }
+          }
+        }
+
+        this.data = details;
+        this.totalRecords =
+          typeof res?.TotalCount === 'number' ? res.TotalCount : this.data.length;
       },
       error: (err) => {
         console.error('TLS23120 查詢失敗', err);
@@ -243,6 +280,38 @@ onSubmit(form: FormGroup): void {
       }
     });
   });
+}
+
+private filterModeRequiredValidator: ValidatorFn = (group: AbstractControl) => {
+  const fm = group.get('filterMode')?.value as FilterMode | null;
+  const hasVal = (name: string): boolean => {
+    const v = group.get(name)?.value;
+    if (Array.isArray(v)) return v.length > 0;
+    return v !== null && v !== undefined && v !== '';
+  };
+
+  if (fm === 'location') {
+    // 三個任一有值就過
+    return (hasVal('tlt_building') || hasVal('area_no') || hasVal('tlt_floor'))
+      ? null
+      : { filterModeRequired: true };
+  }
+  if (fm === 'busType') {
+    return hasVal('bus_type') ? null : { filterModeRequired: true };
+  }
+  if (fm === 'org') {
+    return hasVal('org_id') ? null : { filterModeRequired: true };
+  }
+  return null;
+};
+
+// ➌ 小工具：切換 required
+private setRequired(controlName: string, on: boolean) {
+  const c = this.queryForm.get(controlName);
+  if (!c) return;
+  if (on) c.addValidators(Validators.required);
+  else    c.removeValidators(Validators.required);
+  c.updateValueAndValidity({ emitEvent: false });
 }
   private syncBusTypeColumns(show: boolean): void {
     const target = new Set(['bus_type', 'bus_type_name']);
@@ -258,8 +327,8 @@ private applyFilterMode(mode: 'location' | 'busType' | 'org'): void {
       if (enabled) {
         c.enable({ emitEvent: false });
       } else {
-        c.reset(undefined, { emitEvent: false }); // 清空值
-        c.disable({ emitEvent: false });          // 禁用
+        c.reset(undefined, { emitEvent: false });
+        c.disable({ emitEvent: false });
       }
     });
   };
@@ -272,6 +341,14 @@ private applyFilterMode(mode: 'location' | 'busType' | 'org'): void {
   setGroup(location, mode === 'location');
   setGroup(busType,  mode === 'busType');
   setGroup(org,      mode === 'org');
+
+  // 動態 required（Angular 對陣列的 required 也會檢查 length）
+  this.setRequired('bus_type', mode === 'busType');
+  this.setRequired('org_id',   mode === 'org');
+  // location 是三擇一 → 用 group-level 驗證，不逐一 required
+
+  // 重新計算整體驗證
+  this.queryForm.updateValueAndValidity({ emitEvent: false });
 }
 
   formatDateTimeYMDHM(val: string | Date): string {
