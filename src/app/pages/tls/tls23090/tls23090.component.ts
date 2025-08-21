@@ -166,72 +166,70 @@ export class TLS23090Component extends BasicQueryPageComponent<any> {
 
   
   // 送出查詢（無 doQuery / buildPayload）
-  onSubmit(form: FormGroup): void {
-    this.handleSubmit(form, () => {
-      const val = this.queryForm.value as any;
+onSubmit(form: FormGroup): void {
+  this.handleSubmit(form, () => {
+    const val = this.queryForm.value as any;
 
-      // 本地 ISO(yyyy-MM-ddTHH:mm:ss) — 去掉時區偏移
-      const toIso = (x: any) => {
-        if (!x) return undefined;
-        const d = typeof x === 'string' ? new Date(x) : (x as Date);
-        if (isNaN(d.getTime())) return undefined;
-        return new Date(d.getTime() - d.getTimezoneOffset() * 60000)
-          .toISOString()
-          .slice(0, 19);
-      };
+    // 本地 ISO(yyyy-MM-ddTHH:mm:ss) — 去掉時區偏移
+    const toIso = (x: any) => {
+      if (!x) return undefined;
+      const d = typeof x === 'string' ? new Date(x) : (x as Date);
+      if (isNaN(d.getTime())) return undefined;
+      return new Date(d.getTime() - d.getTimezoneOffset() * 60000)
+        .toISOString()
+        .slice(0, 19);
+    };
 
-      // 直接在這裡組 payload（保留分頁/排序；可帶上報表模式）
-      const payload: any = {
-        ...val,
-        TXN_DateStart: toIso(val?.TXN_DateStart),
-        TXN_DateEnd: toIso(val?.TXN_DateEnd),
-        pageSize: val?.pageSize,
-        pageIndex: val?.pageIndex,
-        SortBy: val?.SortBy,
-        OrderBy: val?.OrderBy,
-        Offset: val?.Offset,
-        
-      };
+    const payload: any = {
+      ...val,
+      TXN_DateStart: toIso(val?.TXN_DateStart),
+      TXN_DateEnd: toIso(val?.TXN_DateEnd),
+      pageSize: val?.pageSize,
+      pageIndex: val?.pageIndex,
+      SortBy: val?.SortBy,
+      OrderBy: val?.OrderBy,
+      Offset: val?.Offset,
+    };
 
-      // 數值型欄位的保險轉型（避免空字串傳下去）
-      if ((val?.TXN_PayAmt ?? '') !== '') {
-        payload.TXN_PayAmt = Number(val.TXN_PayAmt);
-      } else {
-        delete payload.TXN_PayAmt;
-      }
+    if ((val?.TXN_PayAmt ?? '') !== '') {
+      payload.TXN_PayAmt = Number(val.TXN_PayAmt);
+    } else {
+      delete payload.TXN_PayAmt;
+    }
 
-      // 移除空字串 / null / undefined / 空陣列
-      Object.keys(payload).forEach((k) => {
-        const v = payload[k];
-        if (v === '' || v === null || v === undefined) delete payload[k];
-        if (Array.isArray(v) && v.length === 0) delete payload[k];
-      });
-
-      // 呼叫 API
-      this.loading = true;
-      this.messageService?.blockUi();
-
-      this.tls23090Service.queryTLS23090(payload).subscribe({
-        next: (res) => {
-          const raw = res?.Data ?? [];
-          this.data = Array.isArray(raw) ? raw : [];
-          this.totalRecords =
-            typeof res?.TotalCount === 'number'
-              ? res.TotalCount
-              : this.data.length; // ✅ 沒有 res.total
-        },
-        error: (err) => {
-          console.error('TLS23090 查詢失敗', err);
-          this.messageService?.errorBubble?.('查詢失敗，請稍後再試');
-          this.loading = false;
-        },
-        complete: () => {
-          this.loading = false;
-          this.messageService?.unblockUi();
-        },
-      });
+    Object.keys(payload).forEach((k) => {
+      const v = payload[k];
+      if (v === '' || v === null || v === undefined) delete payload[k];
+      if (Array.isArray(v) && v.length === 0) delete payload[k];
     });
-  }
+
+    this.loading = true;
+    this.messageService?.blockUi();
+
+    this.tls23090Service.queryTLS23090(payload).subscribe({
+      next: (res) => {
+        const raw = res?.Data ?? [];
+        // ✅ 取出所有 tLS23090_CreditDetails 攤平成一個陣列
+        this.data = raw.flatMap((item: any) => item?.tLS23090_CreditDetails ?? []);
+
+        this.totalRecords =
+          typeof res?.TotalCount === 'number'
+            ? res.TotalCount
+            : this.data.length;
+      },
+      error: (err) => {
+        console.error('TLS23090 查詢失敗', err);
+        this.messageService?.errorBubble?.('查詢失敗，請稍後再試');
+        this.loading = false;
+      },
+      complete: () => {
+        this.loading = false;
+        this.messageService?.unblockUi();
+      },
+    });
+  });
+}
+
   columns = [
     { field: 'TXN_Date', header: '銷售日期', format: this.formatDate },
     { field: 'ECR_No', header: '收銀機號' },

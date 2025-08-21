@@ -179,78 +179,81 @@ onSubmit(form: FormGroup): void {
         .slice(0, 19);
     };
 
-    // 組 payload（保留分頁/排序）
-   const toBool = (x: any) => {
-  if (x === true || x === 'true' || x === 1 || x === '1') return true;
-  if (x === false || x === 'false' || x === 0 || x === '0') return false;
-  return undefined; // 沒選就不傳
-};
+    // 混合型別 -> boolean
+    const toBool = (x: any) => {
+      if (x === true || x === 'true' || x === 1 || x === '1') return true;
+      if (x === false || x === 'false' || x === 0 || x === '0') return false;
+      return undefined; // 沒選就不傳
+    };
 
-const payload: any = {
-  TXN_DateStart: toIso(val?.TXN_DateStart),
-  TXN_DateEnd:   toIso(val?.TXN_DateEnd),
-  tlt_term_type: val?.tlt_term_type != null ? String(val.tlt_term_type) : undefined,
-  rece_yn:       val?.rece_yn,
-  TLT_No:        val?.TLT_No,
-  tlt_building:  val?.tlt_building,
-  tlt_floor:     val?.tlt_floor,
-  org_id:        val?.org_id,
-  pageSize:      val?.pageSize,
-  pageIndex:     val?.pageIndex,
-  SortBy:        val?.SortBy,
-  ...(offset  !== undefined ? { Offset:  offset } : {}),
-  ...(orderBy ? { OrderBy: orderBy } : {}),
-};
-const b = toBool(val?.IsNoPLU_No);
-if (b !== undefined) payload.IsNoPLU_No = b;
+    // 組 payload（保留分頁/排序）
+    const payload: any = {
+      TXN_DateStart: toIso(val?.TXN_DateStart),
+      TXN_DateEnd:   toIso(val?.TXN_DateEnd),
+      tlt_term_type: val?.tlt_term_type != null ? String(val.tlt_term_type) : undefined,
+      rece_yn:       val?.rece_yn,
+      TLT_No:        val?.TLT_No,
+      tlt_building:  val?.tlt_building,
+      tlt_floor:     val?.tlt_floor,
+      org_id:        val?.org_id,
+      pageSize:      val?.pageSize,
+      pageIndex:     val?.pageIndex,
+      SortBy:        val?.SortBy,
+      ...(offset  !== undefined ? { Offset:  offset } : {}),
+      ...(orderBy ? { OrderBy: orderBy } : {}),
+    };
+    const b = toBool(val?.IsNoPLU_No);
+    if (b !== undefined) payload.IsNoPLU_No = b;
+
     // 移除空值/空陣列
-Object.keys(payload).forEach((k) => {
-  const v = payload[k];
-  if (v === '' || v === null || v === undefined) delete payload[k];
-  if (Array.isArray(v) && v.length === 0) delete payload[k];
-});
+    Object.keys(payload).forEach((k) => {
+      const v = payload[k];
+      if (v === '' || v === null || v === undefined) delete payload[k];
+      if (Array.isArray(v) && v.length === 0) delete payload[k];
+    });
 
     this.loading = true;
     this.messageService?.blockUi();
 
     this.tls23110Service.queryTLS23110(payload).subscribe({
       next: (res: any) => {
-        // res.Data 形如：[{ Day, Discount_List: { OriginalPrice: {...}, Discount90: {...}, ... , Total: {...} } }, ...]
+        // res.Data: [{ Day, Discount_List: { OriginalPrice:{...}, Discount95:{...}, ... , Total:{...} } }, ...]
         const src = Array.isArray(res?.Data) ? res.Data : (res?.Data ? [res.Data] : []);
 
         const pick = (obj: any, path: string[], def = 0) =>
           path.reduce((o, k) => (o && o[k] != null ? o[k] : undefined), obj) ?? def;
 
+        // 想要的顯示順序（有就顯示；沒有就跳過）
+        const preferredOrder = [
+          'OriginalPrice','Discount95','Discount90','Discount85','Discount80',
+          'Discount75','Discount70','Discount60','Discount50','SpecialPrice','Total'
+        ] as const;
+        const metrics = ['TXN_Net','TXN_SaleNoTax','TXN_Tax','Total'] as const;
+
+        // 依第一筆含 Discount_List 的資料動態決定實際 keys
+        const firstList = src.find((r:any) => r?.Discount_List && typeof r.Discount_List === 'object')?.Discount_List ?? {};
+        const existingKeys = Object.keys(firstList);
+        const orderedKeys = [
+          ...preferredOrder.filter(k => existingKeys.includes(k)),
+          ...existingKeys.filter(k => !preferredOrder.includes(k as any)) // 任何額外的 key 也顯示
+        ];
+
+        // 若前端需要動態產欄位，可保存在元件屬性（可選）
+        (this as any).discountKeys = orderedKeys;
+        (this as any).discountMetrics = metrics;
+
+        // 把 Discount_List 完整攤平
         this.data = src.map((row: any) => {
           const d = row?.Discount_List ?? {};
-          return {
-            Day: row?.Day ?? '',
+          const flat: any = { Day: row?.Day ?? '' };
 
-            // OriginalPrice
-            OriginalPrice_TXN_SaleNoTax: pick(d, ['OriginalPrice','TXN_SaleNoTax']),
-            OriginalPrice_TXN_Tax:       pick(d, ['OriginalPrice','TXN_Tax']),
-            OriginalPrice_Total:         pick(d, ['OriginalPrice','Total']),
-
-            // 9折
-            Discount90_TXN_SaleNoTax:    pick(d, ['Discount90','TXN_SaleNoTax']),
-            Discount90_TXN_Tax:          pick(d, ['Discount90','TXN_Tax']),
-            Discount90_Total:            pick(d, ['Discount90','Total']),
-
-            // 8折
-            Discount80_TXN_SaleNoTax:    pick(d, ['Discount80','TXN_SaleNoTax']),
-            Discount80_TXN_Tax:          pick(d, ['Discount80','TXN_Tax']),
-            Discount80_Total:            pick(d, ['Discount80','Total']),
-
-            // 特價
-            SpecialPrice_TXN_SaleNoTax:  pick(d, ['SpecialPrice','TXN_SaleNoTax']),
-            SpecialPrice_TXN_Tax:        pick(d, ['SpecialPrice','TXN_Tax']),
-            SpecialPrice_Total:          pick(d, ['SpecialPrice','Total']),
-
-            // 總計
-            Total_TXN_SaleNoTax:         pick(d, ['Total','TXN_SaleNoTax']),
-            Total_TXN_Tax:               pick(d, ['Total','TXN_Tax']),
-            Total_Total:                 pick(d, ['Total','Total']),
-          };
+          for (const key of orderedKeys) {
+            for (const m of metrics) {
+              // 產生欄位：例如 Discount90_TXN_Net、Discount90_TXN_SaleNoTax、...
+              flat[`${key}_${m}`] = pick(d, [key, m as string], 0);
+            }
+          }
+          return flat;
         });
 
         this.totalRecords =
@@ -267,6 +270,7 @@ Object.keys(payload).forEach((k) => {
     });
   });
 }
+
 
 
   moneyFormat(value: number): string {

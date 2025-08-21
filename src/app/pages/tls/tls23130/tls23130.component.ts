@@ -4,6 +4,7 @@ import {
   Validators,
   FormsModule,
   ReactiveFormsModule,
+  FormControl,
 } from '@angular/forms';
 import { RegionService } from '../../../service/basic/region-code.service';
 import { BusinessTypeCodeService } from '../../../service/basic/business-type-code-service.service';
@@ -64,7 +65,7 @@ export class TLS23130Component extends BasicQueryPageComponent<any> {
   queryForm = this.formBuilder.group({
     TXN_DateStart: [this.yesterday, [Validators.required]],
     TXN_DateEnd: [this.yesterday, [Validators.required]],
-    BNK_No: [],
+      BNK_No:        [[], [Validators.required]],   // ✅ 多選 + 必填
     tlt_building: [],
     tlt_floor: [],
     org_id: [],
@@ -144,22 +145,34 @@ const pick = (obj: any, keys: string[], fallback = '') =>
     ? obj[keys.find(k => obj?.[k] != null && obj?.[k] !== '') as string]
     : fallback;
 
-this.dropDownListService
-  .queryAPS1001_DropDownList({ SearchKeyword: '' } as IBankRequest) // ✅ 用對型別，補上必填鍵
+this.tls23130Service
+  .queryAPS1001_DropDownList({ SearchKeyword: '' })
   .pipe(
-    map(res => Array.isArray(res?.Data) ? (res.Data as any[]) : []),
-    map(list => list.map(x => {
-      const v = String(pick(x, ['value','Value','id','Id','ID','code','Code','no','No','BankNo','BNK_No']));
-      const l = String(pick(x, ['label','Label','text','Text','name','Name','desc','Desc','BankName'], v));
-      return { label: l, value: v, formLabel: `${v} - ${l}` };
-    })),
+    map(res => (Array.isArray(res?.Data) ? res.Data : [])),
+    map(list =>
+      list.map((x: any) => {
+        const v = String(x.No ?? x.BNK_No ?? '');
+        const l = String(x.Name ?? x.BankName ?? '');
+        return { label: `${v} - ${l}`, value: v, formLabel: `${v} - ${l}` };
+      })
+    ),
     catchError(err => {
       console.error('queryAPS1001_DropDownList 失敗', err);
       this.messageService?.errorBubble?.('銀行下拉資料讀取失敗');
       return of([] as any[]);
     })
   )
-  .subscribe(opts => this.cardTypeOptions = opts);
+// … 前略 …
+.subscribe(opts => {
+  this.cardTypeOptions = opts;
+  if (opts.length > 0) {
+    const first = opts[0].value;
+    // ✅ 先轉 unknown 再轉目標型別，解掉 TS2352
+    (this.queryForm.get('BNK_No') as unknown as FormControl<string[]>)
+      .setValue([first]);
+    this.queryForm.get('BNK_No')!.updateValueAndValidity({ onlySelf: true });
+  }
+});
   }
 
 onSubmit(form: FormGroup): void {
@@ -188,37 +201,48 @@ onSubmit(form: FormGroup): void {
         .slice(0, 19);
     };
 
-    // ✅ 直接用 columns 的欄位，不做任何資料鍵名轉換
-    const payload: any = {
-      TXN_DateStart: toIso(val?.TXN_DateStart),
-      TXN_DateEnd:   toIso(val?.TXN_DateEnd),
-      BNK_No:        val?.BNK_No,
-      tlt_building:  val?.tlt_building,
-      tlt_floor:     val?.tlt_floor,
-      org_id:        val?.org_id,
-      pageSize:      val?.pageSize,
-      pageIndex:     val?.pageIndex,
-      SortBy:        val?.SortBy,
-      ...(offset  !== undefined ? { Offset:  offset } : {}),
-      ...(orderBy ? { OrderBy: orderBy } : {}),
-    };
+   const payload: any = {
+  TXN_DateStart: toIso(val?.TXN_DateStart),
+  TXN_DateEnd:   toIso(val?.TXN_DateEnd),
+  BNK_No:        Array.isArray(val?.BNK_No) ? val.BNK_No.filter(Boolean) : undefined, // ✅ 多選
+  tlt_building:  val?.tlt_building,
+  tlt_floor:     val?.tlt_floor,
+  org_id:        val?.org_id,
+  pageSize:      val?.pageSize,
+  pageIndex:     val?.pageIndex,
+  SortBy:        val?.SortBy,
+  ...(offset  !== undefined ? { Offset:  offset } : {}),
+  ...(orderBy ? { OrderBy: orderBy } : {}),
+};
 
-    // 清除空值/空陣列
-    Object.keys(payload).forEach((k) => {
-      const v = payload[k];
-      if (v === '' || v === null || v === undefined) delete payload[k];
-      if (Array.isArray(v) && v.length === 0) delete payload[k];
-    });
+// 清除空值/空陣列
+Object.keys(payload).forEach((k) => {
+  const v = payload[k];
+  if (v === '' || v === null || v === undefined) delete payload[k];
+  if (Array.isArray(v) && v.length === 0) delete payload[k];
+});
 
     this.loading = true;
     this.messageService?.blockUi();
 
     this.tls23130Service.queryTLS23130(payload).subscribe({
       next: (res: any) => {
-        // ✅ 不重映射，直接餵給 table
+        // 先把外層 Data 正規化成陣列
         const src = Array.isArray(res?.Data) ? res.Data : (res?.Data ? [res.Data] : []);
-        this.data = src;
-        this.totalRecords = typeof res?.TotalCount === 'number' ? res.TotalCount : src.length;
+
+        // 攤平每筆的 tLS23130_Details（注意原始鍵名大小寫）
+        const details = src.flatMap((x: any) =>
+          Array.isArray(x?.['tLS23130_Details']) ? x['tLS23130_Details'] : []
+        );
+
+        // ✅ 直接把 details 餵給表格
+        this.data = details;
+
+        // 總筆數：優先用後端回傳，否則用 details 長度
+        this.totalRecords = typeof res?.TotalCount === 'number' ? res.TotalCount : details.length;
+
+        // （可選）若你也要顯示總金額，可順便算一下：
+        // this.totalPayAmt = src.reduce((s: number, x: any) => s + (Number(x?.TotalPayAmt) || 0), 0);
       },
       error: (err) => {
         console.error('TLS23130 查詢失敗', err);
@@ -233,6 +257,7 @@ onSubmit(form: FormGroup): void {
     });
   });
 }
+
 
   formatYMD = (val: unknown): string => {
   if (val == null) return '';
