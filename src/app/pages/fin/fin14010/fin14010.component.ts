@@ -14,6 +14,7 @@ import { ValidationService } from '@shared/service/validation.service';
 import { Fin14010Service } from '@service/api/fin/fin14010.service';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
+import { option } from '@shared/models/sys/sysb000.model';
 
 /** TDS1002 營業人銷售額與稅額申報書檔 */
 export interface TDS1002 {
@@ -281,14 +282,29 @@ export class FIN14010Component extends BasicQueryPageComponent<TDS1002> implemen
 
     totalRecords = 0;// 分頁和排序參數 // 排序需要
     data: TDS1002[] = [];
-    selectedRows: TDS1002[] = [];
+    selectedRows: TDS1002[] = [];// 多選項目
+
+
+    REP_DataType_Option: option[] = [
+      {value: '1', label: '一般稅額計算之專營應稅'},
+      {value: '3', label: '一般稅額計算兼營免稅、特種稅額計算'},
+      {value: '4', label: '專營特種稅額計算'},
+    ];
+
+      
     columns: Column[] = [ //先放可視範圍內的
+      {
+        field: 'REP_DataType', header: '資料別', visible: true, // 資料別
+        format: (value: string) =>
+          this.REP_DataType_Option.find((option) => option.value === value)?.label ||
+          value
+      },
       { field: 'REP_GUIYM', header: '資料所屬年月', visible: true, format: formatYYYYMM }, // 資料所屬年月
-      { field: 'REP_OrgCode', header: '總繳代號', visible: true }, // 總繳代號 ---會有不同的申報書種類
-      { field: 'REP_PurAmt_fSum', header: '進貨及費用金額合計', visible: true }, // 進貨及費用金額合計
-      { field: 'REP_PurAmt_cSum', header: '固定資產金額合計', visible: true }, // 固定資產金額合計
-      { field: 'REP_PurImportNoTax', header: '進口免稅貨物', visible: true }, // 進口免稅貨物
+      
       { field: 'REP_PurBuyExternal', header: '購買國外勞務給付額', visible: true }, // 購買國外勞務給付額
+      { field: 'REP_PurImportNoTax', header: '進口免稅貨物', visible: true }, // 進口免稅貨物
+      { field: 'REP_PurcTotalSaleAmt', header: '固定資產', visible: true }, // 固定資產
+      { field: 'REP_PurfTotalSaleAmt', header: '進貨及費用', visible: true }, // 進貨及費用
       { field: 'REP_TaxSum08', header: '上期(月)累積留抵稅額', visible: true }, // 上期(月)累積留抵稅額
       { field: 'REP_TaxSum13', header: '得退稅限額合計', visible: true }, // 得退稅限額合計
 
@@ -318,7 +334,8 @@ export class FIN14010Component extends BasicQueryPageComponent<TDS1002> implemen
           REP_GUIYM: convertDateToYYYYMM(frm.value.REP_GUIYM),
         }
 
-        console.log('申報request', body);
+        console.log('申報request', JSON.stringify(body, null, 2));
+
 
         this.fin14010Service.queryFIN14010(body).pipe(untilDestroyed(this)).subscribe({
           next: (response) => {

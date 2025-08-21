@@ -15,4 +15,9 @@ export class Fin14010Service {
     queryFIN14010(body: any): Observable<any> {
       return this.http.post<any>(`${this.apiUrl}/queryFIN14010`, body);
     }
+
+    // 修改 TDS1002 營業人銷售額與稅額申報書檔
+    updateFIN14010(body: any): Observable<any> {
+      return this.http.post<any>(`${this.apiUrl}/updateFIN14010`, body);
+    }
 }
