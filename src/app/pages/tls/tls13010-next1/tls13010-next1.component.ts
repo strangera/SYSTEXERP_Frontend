@@ -610,42 +610,7 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
       }
     }
   }
-
   // ========== 表格事件處理 (使用服務) ==========
-  // onFareTableSave(event: { oldData: any, newData: any }, capType: string): void {
-
-  //   console.log('📄 表格資料更新事件:', {
-  //     capType: capType,
-  //     oldData: event.oldData,
-  //     newData: event.newData
-  //   });
-
-  //   const { newData } = event;
-
-  //   // 🆕 使用計算服務
-  //   this.fareCalculationService.autoCalculateAmount(newData, capType);
-
-  //   // A類型特殊處理：自動設定結束日期等於開始日期
-  //   if (capType === 'A' && newData.tpy_bdate) {
-  //     newData.tpy_edate = newData.tpy_bdate;
-  //     console.log(`✅ A類型自動設定 tpy_edate = tpy_bdate: ${newData.tpy_edate}`);
-  //   }
-
-  //   // 🆕 使用狀態服務處理狀態更新
-  //   this.fareStatusService.handleTableDataUpdate(newData, capType);
-
-  //   // 更新原始資料
-  //   const originalIndex = this.originalFareData[capType].findIndex(item => item.id === newData.id);
-  //   if (originalIndex > -1) {
-  //     this.originalFareData[capType][originalIndex] = {
-  //       ...this.originalFareData[capType][originalIndex],
-  //       ...newData
-  //     };
-  //   }
-
-  //   this.saveFareDataToWorkflow();
-  // }
-
   onFieldChange(fieldName: string, newValue: any, rowData: any, capType?: string): void {
     console.log(`🔄 立即欄位變更: ${capType}.${fieldName} = ${newValue}`);
 
