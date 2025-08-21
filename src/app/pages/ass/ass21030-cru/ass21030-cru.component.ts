@@ -82,13 +82,15 @@ export interface ENG1001 {
     MenubarComponent,
   ]
 })
+
+// 能源抄表作業
 export class ASS21030CRUComponent extends BasicCruPageComponent<ENG1001|ENG2001> implements OnInit {
     // ----------------------------------------------------------------
     dataForm = this.formBuilder.nonNullable.group({
       // ENG1001 能源錶號明細檔 + ENG2001 抄錶明細檔
       ID: [{value: null, label:''}], // ID (隱藏)
       Mid: [{value: null, label:''}], // Mid (隱藏)
-      SYS_StoreNo: ['', [Validators.maxLength(10)]], // 分店編號
+      // SYS_StoreNo: ['', [Validators.maxLength(10)]], // 分店編號
       ENG_YYMM: ['', [Validators.required, Validators.maxLength(6)]], // 結算年月
       ENG_Type: ['', [Validators.required, Validators.maxLength(3)]], // 能源類型
       ENG_MeterNo: ['', [Validators.required, Validators.maxLength(5)]], // 錶號

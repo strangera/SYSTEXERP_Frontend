@@ -6,16 +6,6 @@
     <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
         <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
             <div class="grid p-fluid">
-              <div class="col-12 md:col-6 lg:col-4">
-                  <app-input-text
-                    label="分店編號"
-                    controlName="SYS_StoreNo"
-                    [control]="dataForm.controls.SYS_StoreNo"
-                    [submitted]="submitted"
-                  ></app-input-text>
-              </div>
-            </div>
-            <div class="grid p-fluid">
                 <div class="col-12 md:col-6 lg:col-4">
                   <app-calendar calendarType="dateMonthOne"
                     label="結算年月"
