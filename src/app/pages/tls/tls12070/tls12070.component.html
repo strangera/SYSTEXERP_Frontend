@@ -29,21 +29,7 @@
   </p-accordion>
 </div>
 
-<div class="card" *ngIf="activeReport === 'query'">
-  <app-report-table-group [columns]="intervew_columns" [data]="interview_data" [enableGrouping]="false"
-    [reportTitle]="'專櫃訪談紀錄追蹤表'" [currentPage]="1" [dateStart]="'contact_Date_Start'" [dateEnd]="'contact_Date_End'"
-    [showTotalOnly]="false" [defaultMergedView]="true">
-  </app-report-table-group>
-</div>
-
-<div class="card" *ngIf="activeReport === 'willing'">
-  <app-report-table-group [columns]="willing_columns" [data]="willing_data" [enableGrouping]="false"
-    [subtotalFields]="['All_Counts']" [reportTitle]="'意願報表'" [currentPage]="1" [dateStart]="'contact_Date_Start'"
-    [dateEnd]="'contact_Date_End'" [showTotalOnly]="false" [defaultMergedView]="true">
-  </app-report-table-group>
-</div>
-
-<!-- <div class="card">
+<div class="card">
   <div class="col-13">
     <app-table
       tableKey="TLS12070"
@@ -65,4 +51,4 @@
       [isRowSelectable]="isRowSelectable"
     ></app-table>
   </div>
-</div> -->
+</div>
