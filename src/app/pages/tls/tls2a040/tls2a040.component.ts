@@ -23,6 +23,8 @@ import { InputNumberRangeComponent } from '@shared/componentkit/input-number-ran
 import { yesterday } from '@shared/models/system/query-form.model';
 import { Tls2a040Service } from '@service/api/tls/tls2a040.service';
 import { createPaginationConfig } from 'src/app/shared/componentkit/table/table.model';
+import { RadiobuttonComponent } from "@shared/componentkit/radiobutton/radiobutton.component";
+import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
 
 @Component({
   selector: 'app-tls22030',
@@ -41,11 +43,16 @@ import { createPaginationConfig } from 'src/app/shared/componentkit/table/table.
     DropdownComponent,
     InputNumberComponent,
     CalendarRangeQuickComponent,
-    InputNumberRangeComponent
+    InputNumberRangeComponent,
+    InputTextComponent,
+    RadiobuttonComponent
+
   ],
 })
 export class TLS2A040Component extends BasicQueryPageComponent<any> implements OnInit {
   queryForm = this.formBuilder.group({
+    referenceNo: [null],  // 信用卡卡號
+    docType: ['creditcard'],   // 預設選信用卡
     ECR_No: [null],                // 收銀機號
     TXN_No: [null],                // 交易序號
     TXN_Date_Start: [yesterday, Validators.required],
@@ -53,7 +60,6 @@ export class TLS2A040Component extends BasicQueryPageComponent<any> implements O
     TXN_PayAmt_Start: [null],         // 金額範圍起
     TXN_PayAmt_End: [null],           // 金額範圍迄
     check_statusList: [[]],                  // 狀況
-    CRD_No: [null],     // 信用卡卡號
     Floor_No: [null],              // 樓層
     Building_No: [null],           // 館別
     ...createPaginationConfig([{ field: 'ECR_No', order: 1 }]),
@@ -156,4 +162,18 @@ export class TLS2A040Component extends BasicQueryPageComponent<any> implements O
       });
     });
   }
+  getDocLabel(): string {
+    const docType = this.queryForm.get('docType')?.value;
+    switch (docType) {
+      case 'creditcard':
+        return '信用卡卡號';
+      case 'voucher':
+        return '有價券號';
+      case 'voidInvoice':
+        return '發票號碼';
+      default:
+        return '編號';
+    }
+  }
+
 }
