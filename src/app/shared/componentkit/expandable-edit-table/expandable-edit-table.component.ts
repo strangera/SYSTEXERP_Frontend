@@ -1750,7 +1750,7 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
 
     // 如果值有差異，同步並觸發最終計算
     if (Math.abs((rowData[fieldName] || 0) - finalValue) > 0.001) {
-      console.log(`🔄 Blur 最終修正: ${rowData[fieldName]} → ${finalValue}`);
+      console.log(`📄 Blur 最終修正: ${rowData[fieldName]} → ${finalValue}`);
       rowData[fieldName] = finalValue;
 
       this.fieldChange.emit({
@@ -1917,13 +1917,15 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
     return null;
   }
 
+  // 在 expandable-edit-table.component.ts 中修改以下方法：
+
   onNumberModelChange(
     newValue: any,
     fieldName: string,
     rowData: any,
     isDetail: boolean = false
   ): void {
-    console.log('🔄 ngModelChange 觸發:', {
+    console.log('📄 ngModelChange 觸發:', {
       fieldName,
       newValue,
       valueType: typeof newValue,
@@ -1939,38 +1941,100 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
     } else if (typeof newValue === 'number') {
       numericValue = newValue;
     } else if (typeof newValue === 'string') {
-      // 移除可能的千分位逗號
       const cleanValue = newValue.replace(/,/g, '');
       numericValue = parseFloat(cleanValue) || 0;
     } else {
-      console.warn(`⚠️ 未預期的數值類型: ${typeof newValue}`, newValue);
+      console.warn(`⚠️ ModelChange 未預期的數值類型: ${typeof newValue}`, newValue);
       numericValue = 0;
     }
 
-    console.log(`💰 ${fieldName} 數值轉換: ${newValue} → ${numericValue}`);
+    console.log(`💰 ModelChange 數值轉換: ${newValue} → ${numericValue}`);
 
-    // 🚨 立即更新 rowData（這是關鍵！）
+    // 🎯 檢查值是否真的有變化（避免重複計算）
+    const currentValue = rowData[fieldName] || 0;
+    if (Math.abs(currentValue - numericValue) < 0.001) {
+      console.log(`⏭️ ModelChange 值沒有變化，跳過: ${currentValue} ≈ ${numericValue}`);
+      return;
+    }
+
+    // 🚨 更新 rowData
     const oldValue = rowData[fieldName];
     rowData[fieldName] = numericValue;
 
-    console.log(`📝 更新 ${fieldName}: ${oldValue} → ${numericValue}`);
+    console.log(`📝 ModelChange 更新 ${fieldName}: ${oldValue} → ${numericValue}`);
 
-    // 🎯 防抖計算邏輯
-    const debounceKey = `${rowData[this.dataKey] || 'unknown'}_${fieldName}_${isDetail ? 'detail' : 'main'}`;
+    // 🎯 立即觸發計算
+    console.log(`⚡ ModelChange 立即觸發計算: ${fieldName} = ${numericValue}`);
 
-    this.debouncedCalculation(debounceKey, () => {
-      console.log(`⚡ 防抖計算觸發: ${fieldName} = ${numericValue}`);
-
-      // 觸發欄位變更事件
-      this.fieldChange.emit({
-        fieldName,
-        newValue: numericValue,
-        rowData
-      });
-
-      // 處理直接編輯模式
-      this.handleDirectEditForNumber(fieldName, numericValue, rowData, isDetail);
+    this.fieldChange.emit({
+      fieldName,
+      newValue: numericValue,
+      rowData
     });
+
+    this.handleDirectEditForNumber(fieldName, numericValue, rowData, isDetail);
+  }
+
+  onNumberInput(
+    event: any,
+    fieldName: string,
+    rowData: any,
+    isDetail: boolean = false
+  ): void {
+    console.log('⚡ onInput 即時觸發:', {
+      fieldName,
+      eventValue: event.value,
+      eventTarget: event.target?.value,
+      isDetail,
+      rowId: rowData[this.dataKey] || 'unknown'
+    });
+
+    // 🎯 從 PrimeNG InputNumber 的 onInput 事件取值
+    let inputValue = event.value;
+
+    // 🎯 如果 event.value 不存在，嘗試從其他來源取值
+    if (inputValue === undefined || inputValue === null) {
+      inputValue = event.target?.value || event.originalEvent?.target?.value;
+    }
+
+    console.log(`📝 Input 事件取得的值: "${inputValue}" (類型: ${typeof inputValue})`);
+
+    // 數值處理
+    let numericValue: number;
+
+    if (inputValue === null || inputValue === undefined || inputValue === '') {
+      numericValue = 0;
+    } else if (typeof inputValue === 'number') {
+      numericValue = inputValue;
+    } else if (typeof inputValue === 'string') {
+      // 移除可能的千分位逗號
+      const cleanValue = inputValue.replace(/,/g, '');
+      numericValue = parseFloat(cleanValue) || 0;
+    } else {
+      console.warn(`⚠️ Input 事件未預期的數值類型: ${typeof inputValue}`, inputValue);
+      numericValue = 0;
+    }
+
+    console.log(`💰 Input 事件數值轉換: ${inputValue} → ${numericValue}`);
+
+    // 🚨 立即更新 rowData
+    const oldValue = rowData[fieldName];
+    rowData[fieldName] = numericValue;
+
+    console.log(`📝 Input 事件更新 ${fieldName}: ${oldValue} → ${numericValue}`);
+
+    // 🎯 立即觸發計算（無延遲）
+    console.log(`⚡ Input 事件立即觸發計算: ${fieldName} = ${numericValue}`);
+
+    // 立即觸發欄位變更事件
+    this.fieldChange.emit({
+      fieldName,
+      newValue: numericValue,
+      rowData
+    });
+
+    // 處理直接編輯模式
+    this.handleDirectEditForNumber(fieldName, numericValue, rowData, isDetail);
   }
 
   private handleDirectEditForNumber(

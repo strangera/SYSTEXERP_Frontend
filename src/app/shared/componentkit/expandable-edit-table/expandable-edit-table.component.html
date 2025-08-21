@@ -104,6 +104,7 @@
               <!-- 數字輸入 -->
               <p-inputNumber *ngSwitchCase="'number'" [ngModel]="getFieldDefaultValue(col, rowData)"
                 (ngModelChange)="onNumberModelChange($event, col.field, rowData, false)"
+                (onInput)="onNumberInput($event, col.field, rowData, false)"
                 (onBlur)="onNumberFieldBlur($event, col.field, rowData)"
                 [minFractionDigits]="getNumberInputConfig(col).minFractionDigits"
                 [maxFractionDigits]="getNumberInputConfig(col).maxFractionDigits"
@@ -278,6 +279,7 @@
               <!-- 數字輸入 -->
               <p-inputNumber *ngSwitchCase="'number'" [ngModel]="getFieldDefaultValue(col, detailData)"
                 (ngModelChange)="onNumberModelChange($event, col.field, detailData, true)"
+                (onInput)="onNumberInput($event, col.field, detailData, true)"
                 (onBlur)="onNumberFieldBlur($event, col.field, detailData)"
                 [minFractionDigits]="getNumberInputConfig(col).minFractionDigits"
                 [maxFractionDigits]="getNumberInputConfig(col).maxFractionDigits"

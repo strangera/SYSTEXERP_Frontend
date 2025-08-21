@@ -647,7 +647,7 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
   // }
 
   onFieldChange(fieldName: string, newValue: any, rowData: any, capType?: string): void {
-    console.log(`🔄 防抖後的欄位變更: ${capType}.${fieldName} = ${newValue}`);
+    console.log(`🔄 立即欄位變更: ${capType}.${fieldName} = ${newValue}`);
 
     // 🎯 根據 capType 進行對應的計算處理
     switch (capType) {
@@ -673,7 +673,6 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
     // 統一的後續處理
     this.updateRowDataState(rowData, capType || 'A');
   }
-
 
   // 🎯 A類型計算優化
   private handleTypeACalculation(fieldName: string, newValue: any, rowData: any): void {
