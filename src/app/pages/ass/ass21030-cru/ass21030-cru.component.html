@@ -6,22 +6,25 @@
     <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
         <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
             <div class="grid p-fluid">
+              <div class="col-12 md:col-6 lg:col-4">
+                  <app-input-text
+                    label="分店編號"
+                    controlName="SYS_StoreNo"
+                    [control]="dataForm.controls.SYS_StoreNo"
+                    [submitted]="submitted"
+                  ></app-input-text>
+              </div>
+            </div>
+            <div class="grid p-fluid">
                 <div class="col-12 md:col-6 lg:col-4">
-                  <app-calendar calendarType="dateOne"
-                    label="抄表日期"
-                    controlName="ENG_Date"
-                    [control]="dataForm.controls.ENG_Date"
+                  <app-calendar calendarType="dateMonthOne"
+                    label="結算年月"
+                    controlName="ENG_YYMM"
+                    [control]="dataForm.controls.ENG_YYMM"
                     [submitted]="submitted">
                   </app-calendar>
                 </div>
                 <div class="col-12 md:col-6 lg:col-4">
-                  <!-- <app-dropdown label="能源類型"
-                    controlName="ENG_Type"
-                    [options]="ENG_Type_Option"
-                    optionLabel="label"
-                    optionValue="value"
-                    [control]="dataForm.controls.ENG_Type"
-                    [submitted]="submitted"></app-dropdown> -->
                     <app-input-text
                     label="能源類型"
                     controlName="ENG_Type"
@@ -31,62 +34,39 @@
                 </div>
                 <div class="col-12 md:col-6 lg:col-4">
                   <app-input-text
-                    label="Mid"
-                    controlName="Mid"
-                    [control]="dataForm.controls.Mid"
+                    label="錶號"
+                    controlName="ENG_MeterNo"
+                    [control]="dataForm.controls.ENG_MeterNo"
                     [submitted]="submitted"
                   ></app-input-text>
                 </div>
             </div>
             <div class="grid p-fluid">
               <div class="col-12 md:col-6 lg:col-4">
-                  <app-calendar calendarType="dateMonthOne"
-                    label="結算年月"
-                    controlName="ENG_YYMM"
-                    [control]="dataForm.controls.ENG_YYMM"
-                    [submitted]="submitted">
-                  </app-calendar>
-                  <!-- <app-input-text
-                    label="結算年月"
-                    controlName="ENG_YYMM"
-                    [control]="dataForm.controls.ENG_YYMM"
-                    [submitted]="submitted"
-                  ></app-input-text> -->
-                </div>
-                <div class="col-12 md:col-6 lg:col-4">
-                  <app-input-text
+                <app-calendar calendarType="dateOne"
+                  label="抄表日期"
+                  controlName="ENG_Date"
+                  [control]="dataForm.controls.ENG_Date"
+                  [submitted]="submitted">
+                </app-calendar>
+              </div>
+              <div class="col-12 md:col-6 lg:col-4">
+                  <app-input-number
                     label="本期抄錶度"
                     controlName="ENG_CurrentReading"
                     [control]="dataForm.controls.ENG_CurrentReading"
+                    [maxFractionDigits]="4"
                     [submitted]="submitted"
-                  ></app-input-text>
-                </div>
-                <div class="col-12 md:col-6 lg:col-4">
-                  <app-input-text
-                    label="本期抄錶金額"
-                    controlName="ENG_Amount"
-                    [control]="dataForm.controls.ENG_Amount"
-                    [submitted]="submitted"
-                  ></app-input-text>
-                </div>
-            </div>
-            <div class="grid p-fluid">
+                  ></app-input-number>
+              </div>
               <div class="col-12 md:col-6 lg:col-4">
                   <app-input-text
-                    label="分店編號"
-                    controlName="SYS_StoreNo"
-                    [control]="dataForm.controls.SYS_StoreNo"
-                    [submitted]="submitted"
-                  ></app-input-text>
-                </div>
-                <div class="col-12 md:col-6 lg:col-4">
-                  <app-input-text
                     label="本期抄錶金額"
                     controlName="ENG_Amount"
                     [control]="dataForm.controls.ENG_Amount"
                     [submitted]="submitted"
                   ></app-input-text>
-                </div>
+              </div>
             </div>
 
             <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
