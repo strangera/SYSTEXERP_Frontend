@@ -204,11 +204,11 @@ export class TLS26080Service {
           if (data.ErrorCount === 0) this.messageService.successBubble('上傳成功');
           else {
             this.dealErrorFilePath(data);
-            this.messageService.errorBubble(`上傳失敗: ${data.ErrorCount} 筆資料錯誤`);
+            this.messageService.errorBox(`上傳失敗: ${data.ErrorCount} 筆資料錯誤`);
           }
         } else {
           this.dealErrorFilePath(data);
-          this.messageService.errorBubble(`上傳失敗`);
+          this.messageService.errorBox(`上傳失敗`);
         }
         this.dealErrorFilePath(data);
       }),
@@ -279,7 +279,7 @@ export class TLS26080Service {
           this.TLS26080Detail.update(v => v.filter(i => i.id !== data.id)); // 更新參照
           this.keyInCancel$.next();
           console.log(`keyInTLS26080 fail:`, [response, this.TLS26080Detail()]);
-          this.messageService.errorBubble(response.Message || '鍵入失敗');
+          this.messageService.errorBox(response.Message || '鍵入失敗');
         } else {
           this.TLS26080Detail.update(val => [data, ...val.filter(i => i.id !== data.id)]);
           console.log(`keyInTLS26080 success:`, [response, this.TLS26080Detail()]);
