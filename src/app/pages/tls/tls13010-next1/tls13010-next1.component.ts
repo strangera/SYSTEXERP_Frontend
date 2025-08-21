@@ -658,6 +658,7 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
         this.handleTypeBCalculation(fieldName, newValue, rowData);
         break;
       case 'C':
+        // 🎯 關鍵：C類型的日期和金額計算
         this.handleTypeCCalculation(fieldName, newValue, rowData);
         break;
       case 'D':
@@ -705,9 +706,29 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
   private handleTypeCCalculation(fieldName: string, newValue: any, rowData: any): void {
     console.log(`🆂 C類型平均分攤計算: ${fieldName} = ${newValue}`);
 
-    // 只有相關欄位變更時才觸發計算
-    const calculationFields = ['tpy_totalamt', 'period_nos', 'tpy_amount', 'down_payment'];
+    // 🎯 日期變更時重新計算期數
+    if (['tpy_bdate', 'tpy_edate'].includes(fieldName)) {
+      console.log('📅 日期欄位變更，重新計算期數');
 
+      // 使用 setTimeout 確保日期值已經更新
+      setTimeout(() => {
+        this.updatePeriodNumbers(rowData);
+
+        // 期數更新後，重新計算C類型金額
+        const calculationFields = ['tpy_totalamt', 'tpy_amount', 'down_payment'];
+        const hasCalculationValue = calculationFields.some(field =>
+          rowData[field] && parseFloat(rowData[field]) > 0
+        );
+
+        if (hasCalculationValue) {
+          console.log('🔄 期數變更後重新計算金額分攤');
+          this.fareCalculationService.autoCalculateAmount(rowData, 'C', 'period_nos');
+        }
+      }, 10);
+    }
+
+    // 🎯 金額相關欄位變更時的計算
+    const calculationFields = ['tpy_totalamt', 'period_nos', 'tpy_amount', 'down_payment'];
     if (calculationFields.includes(fieldName)) {
       this.fareCalculationService.autoCalculateAmount(rowData, 'C', fieldName);
 
@@ -718,11 +739,6 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
       } else {
         console.warn(`⚠️ C類型計算結果可能有誤`);
       }
-    }
-
-    // 日期變更時重新計算期數
-    if (['tpy_bdate', 'tpy_edate'].includes(fieldName)) {
-      this.updatePeriodNumbers(rowData);
     }
   }
 
@@ -741,24 +757,96 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
 
   // 🆕 計算期數的輔助方法
   private updatePeriodNumbers(rowData: any): void {
-    if (rowData.tpy_bdate && rowData.tpy_edate) {
-      const startDate = new Date(rowData.tpy_bdate);
-      const endDate = new Date(rowData.tpy_edate);
+    console.log('📊 開始更新期數...', {
+      開始日期: rowData.tpy_bdate,
+      結束日期: rowData.tpy_edate
+    });
 
-      if (startDate <= endDate) {
-        const months = this.calculateMonthsBetween(startDate, endDate);
-        rowData.period_nos = Math.max(1, months);
-        console.log(`📅 C類型期數計算: ${months} 期`);
+    if (rowData.tpy_bdate && rowData.tpy_edate) {
+      let startDate: Date;
+      let endDate: Date;
+
+      // 🎯 智能日期解析
+      try {
+        if (rowData.tpy_bdate instanceof Date) {
+          startDate = rowData.tpy_bdate;
+        } else {
+          startDate = new Date(rowData.tpy_bdate);
+        }
+
+        if (rowData.tpy_edate instanceof Date) {
+          endDate = rowData.tpy_edate;
+        } else {
+          endDate = new Date(rowData.tpy_edate);
+        }
+
+        // 檢查日期有效性
+        if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
+          console.warn('⚠️ 無效的日期格式');
+          return;
+        }
+
+        // 計算期數
+        if (startDate <= endDate) {
+          const calculatedPeriods = this.calculateMonthsBetween(startDate, endDate);
+          const oldPeriods = rowData.period_nos;
+
+          rowData.period_nos = calculatedPeriods;
+
+          console.log(`✅ 期數更新: ${oldPeriods} → ${calculatedPeriods}`);
+
+          // 🎯 如果期數變化，觸發C類型重新計算
+          if (oldPeriods !== calculatedPeriods) {
+            console.log('🔄 期數變化，觸發C類型重新計算');
+            this.fareCalculationService.autoCalculateAmount(rowData, 'C', 'period_nos');
+          }
+        } else {
+          console.warn('⚠️ 開始日期大於結束日期');
+          rowData.period_nos = 1;
+        }
+      } catch (error) {
+        console.error('❌ 期數計算錯誤:', error);
+        rowData.period_nos = 1;
       }
+    } else {
+      console.log('📝 日期不完整，期數保持不變');
     }
   }
 
   // 🆕 計算兩個日期間的月數
   private calculateMonthsBetween(startDate: Date, endDate: Date): number {
-    const yearDiff = endDate.getFullYear() - startDate.getFullYear();
-    const monthDiff = endDate.getMonth() - startDate.getMonth();
-    return yearDiff * 12 + monthDiff + 1; // +1 包含起始月
+    console.log('📅 計算期數:', {
+      開始: startDate.toISOString().slice(0, 7),
+      結束: endDate.toISOString().slice(0, 7)
+    });
+
+    // 確保開始日期 <= 結束日期
+    if (startDate > endDate) {
+      console.warn('⚠️ 開始日期大於結束日期，期數為 0');
+      return 0;
+    }
+
+    const startYear = startDate.getFullYear();
+    const startMonth = startDate.getMonth(); // 0-based
+    const endYear = endDate.getFullYear();
+    const endMonth = endDate.getMonth(); // 0-based
+
+    // 🎯 正確的月份差計算公式
+    const months = (endYear - startYear) * 12 + (endMonth - startMonth) + 1;
+
+    console.log('🧮 期數計算詳情:', {
+      開始年: startYear,
+      開始月: startMonth + 1, // 顯示時轉為 1-based
+      結束年: endYear,
+      結束月: endMonth + 1,
+      計算公式: `(${endYear} - ${startYear}) * 12 + (${endMonth} - ${startMonth}) + 1`,
+      結果: months
+    });
+
+    return Math.max(1, months); // 至少1期
   }
+
+
 
   /**
    * 🔄 統一的狀態更新處理
