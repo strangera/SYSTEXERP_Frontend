@@ -15,7 +15,7 @@
     <!-- 銷售日期 -->
     <div class="col-12 md:col-6 lg:col-4">
       <app-calendar
-        label="銷售日期區間"
+        label="銷售日期"
         [control]="queryForm.controls.TXN_Date"
         [submitted]="submitted"
       ></app-calendar>
@@ -49,13 +49,13 @@
     <!-- A. 館別／區域／樓層（Radio：location） -->
     <div class="col-12">
       <div class="flex align-items-center gap-2 mb-2">
-        <!-- ✅ 使用正確標籤 p-radiobutton，且 value 直接字面值 -->
-        <p-radiobutton
+        <!-- ✅ 使用正確標籤 p-radioButton，且 value 直接字面值 -->
+        <p-radioButton
           name="filterMode"
           formControlName="filterMode"
           value="location"
           inputId="fm-location"
-        ></p-radiobutton>
+        ></p-radioButton>
         <label for="fm-location" class="font-medium">使用「館別／區域／樓層」條件</label>
       </div>
     </div>
@@ -98,12 +98,12 @@
     <!-- B. 大分類（Radio：busType） -->
     <div class="col-12 md:col-6 lg:col-4">
       <div class="flex align-items-center gap-2 mb-2">
-        <p-radiobutton
+        <p-radioButton
           name="filterMode"
           formControlName="filterMode"
           value="busType"
           inputId="fm-bus"
-        ></p-radiobutton>
+        ></p-radioButton>
         <label for="fm-bus" class="font-medium">使用「大分類」條件</label>
       </div>
 
@@ -122,12 +122,12 @@
     <!-- C. 組織代碼／名稱（Radio：org） -->
     <div class="col-12 md:col-6 lg:col-4">
       <div class="flex align-items-center gap-2 mb-2">
-        <p-radiobutton
+        <p-radioButton
           name="filterMode"
           formControlName="filterMode"
           value="org"
           inputId="fm-org"
-        ></p-radiobutton>
+        ></p-radioButton>
         <label for="fm-org" class="font-medium">使用「組織代碼／名稱」條件</label>
       </div>
 
