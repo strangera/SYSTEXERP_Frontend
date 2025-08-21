@@ -226,18 +226,35 @@ export class TLS57090Component extends BasicQueryPageComponent<QueryTLS57090Deta
   }
   getFilenameFromHeader(contentDisposition: string | null): string {
     if (!contentDisposition) {
-      return 'download.pdf'; // 如果 header 不存在，給一個預設檔名
+      return 'download.pdf';
     }
-    const filenameMatch = contentDisposition.match(/filename\*?=['"]?([^'"]*)['"]?/);
+
+    // 優先嘗試匹配新的 filename* 屬性
+    const filenameStarMatch = /filename\*=([^;]+)/.exec(contentDisposition);
+    if (filenameStarMatch && filenameStarMatch.length > 1) {
+      // 解析 filename* 的值，格式為 charset''encoded-string
+      const encodedFilename = filenameStarMatch[1];
+      try {
+        // 解碼 URL-encoded 的檔名，移除開頭的 UTF-8''
+        const decoded = decodeURIComponent(encodedFilename.replace(/^UTF-8''/, ''));
+        return decoded;
+      } catch (error) {
+        console.error('Failed to decode filename*', error);
+        return encodedFilename;
+      }
+    }
+
+    // 如果沒有 filename*，再嘗試匹配舊的 filename 屬性
+    const filenameMatch = /filename="([^"]+)"/.exec(contentDisposition);
     if (filenameMatch && filenameMatch.length > 1) {
       try {
-        // 解碼 URL-encoded 的檔名，例如 UTF-8''...
-        const decoded = decodeURIComponent(filenameMatch[1]);
-        return decoded.startsWith("UTF-8''") ? decoded.substring(7) : decoded;
+        // 這裡如果檔名有中文，可能會變成亂碼，但可以應急
+        return decodeURIComponent(filenameMatch[1].replace(/\+/g, ' '));
       } catch (error) {
         return filenameMatch[1];
       }
     }
+
     return 'download.pdf';
   }
 }
