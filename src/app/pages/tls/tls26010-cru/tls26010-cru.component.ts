@@ -347,9 +347,9 @@ export class TLS26010CRUComponent extends BasicCruPageComponent<TLS26010Data> im
     XLSX.writeFile(wb, `專櫃範本_${new Date().toISOString().split('T')[0]}.xlsx`);
   }
 
-  public onSubmit(frm: FormGroup): void {
-    this.handleSubmit(frm, () => {
-      const value = frm.value;
+  public onSubmit(): void {
+    this.handleSubmit(this.dataForm, () => {
+      const value = this.dataForm.value;
       const payload: PodRequest = {
         ecr_list: this.ecrTableFiltered(),
         talent_list: this.tltTableFiltered(),
