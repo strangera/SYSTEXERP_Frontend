@@ -118,6 +118,15 @@ export const APPROVE_STATUS_OPTIONS = {
   '3': '已作廢',
 } as const;
 
+//申請案件狀態
+export const APPLY_STATUS_OPTIONS = {
+  '1': '洽談中',
+  '2': '簽約中',
+  '3': '已轉合約',
+  '5': '已作廢',
+} as const;
+
+
 //目標營業額單位(業主)
 export const TOTAL_AMT_UNIT_OPTIONS = {
   'M': '月',
@@ -213,6 +222,11 @@ export const formatTltCtypeMototal = (value: string): string => {
 // 合約狀態格式化
 export const formatApproveStatus = (value: string): string => {
   return formatSingleOption(value, APPROVE_STATUS_OPTIONS);
+};
+
+// 合約狀態格式化
+export const formatApplyStatus = (value: string): string => {
+  return formatSingleOption(value, APPLY_STATUS_OPTIONS);
 };
 
 // 目標營業額單位(業主)
