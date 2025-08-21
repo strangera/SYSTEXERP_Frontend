@@ -1,12 +1,12 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, signal } from '@angular/core';
-import { CampaignData, TLS26080Data, TLS26080Detail, TLS26080Query, TLS26080UploadResult, TLS2608InsertPayload } from '@pages/tls/tls26080/tls26080.model';
+import { CampaignData, TLS26080Data, TLS26080Detail, TLS26080Query, TLS26080UploadResponse, TLS26080UploadResult, TLS2608InsertPayload } from '@pages/tls/tls26080/tls26080.model';
 import { ErrorHandlerService } from '@service/system/error-handler.service';
 import { NotificationService } from '@shared/component/notification-message/notification.service';
 import { BaseQueryResponse, DropdownOption } from '@shared/models/api/base-api.interface';
 import { ApprovalStatus } from '@shared/models/tls/approval-status.model';
 import { ConfirmationService } from 'primeng/api';
-import { catchError, EMPTY, finalize, map, Subject, take, takeUntil, tap } from 'rxjs';
+import { catchError, EMPTY, finalize, map, Subject, take, takeUntil, tap, throwError } from 'rxjs';
 import { environment } from 'src/environments/environment';
 
 const apiUrl: string = environment.ApiUrl;
@@ -34,6 +34,7 @@ export class TLS26080Service {
   public exampleDownloading = !1;
 
   private readonly fileUploadCancel$ = new Subject<void>();
+  private readonly keyInCancel$ = new Subject<void>();
 
   // 下拉選單資料
   public departmentItems = signal<DropdownOption[]>([]);
@@ -174,7 +175,7 @@ export class TLS26080Service {
   public uploadFile(file: FormData): void {
     this.fileUploadLoading = !0;
     this.fileUploadCancel$.next();
-    this.http.post<Omit<BaseQueryResponse<unknown>, 'Data'> & { Data: TLS26080UploadResult; }>(`${apiUrl}/TLS0000/TLS2000/uploadTLS26080`, file).pipe(
+    this.http.post<TLS26080UploadResponse>(`${apiUrl}/TLS0000/TLS2000/uploadTLS26080`, file).pipe(
       take(1),
       takeUntil(this.fileUploadCancel$),
       tap(response => {
@@ -193,9 +194,9 @@ export class TLS26080Service {
               tlt_name: value.tlt_name,
               calc_date_type: value.calc_date_type,
               cap_item_D16: value.cap_item_D16,
-              tpy_rate_D16: value.tpy_rate_D16,
+              tpy_rate_D16: Number(value.tpy_rate_D16.replace('%', '')).toFixed(2),
               cap_item_D17: value.cap_item_D17,
-              tpy_rate_D17: value.tpy_rate_D17,
+              tpy_rate_D17: Number(value.tpy_rate_D17.replace('%', '')).toFixed(2),
               pod_status: value.pod_status,
             });
           }
@@ -220,7 +221,8 @@ export class TLS26080Service {
 
   private dealErrorFilePath(data: TLS26080UploadResult): void {
     const path = data.ErrorFilePath;
-    if (data.Success || data.ErrorCount && !path?.length) return;
+    console.log(`dealErrorFilePath:`, [path, this.TLS26080Detail()]);
+    if (!path || data.Success || !data.ErrorCount) return;
     window.open(`${apiUrl}${path}`, '_blank', 'noopener noreferrer');
     // this.http.get(`${apiUrl}${path}`, { responseType: 'blob' }).pipe(
     //   take(1),
@@ -259,6 +261,33 @@ export class TLS26080Service {
       finalize(() => {
         this.exampleDownloading = !1;
         console.log('範例下載');
+      })
+    ).subscribe();
+  }
+
+  public keyInTLS26080(data: TLS26080Detail): void {
+    this.http.post<TLS26080UploadResponse>(`${apiUrl}/TLS0000/TLS2000/keyInTLS26080`, {
+      queryTLS26080_DetailResponses: this.TLS26080Detail(),
+      keyiInTLS26080: data,
+    }).pipe(
+      take(1),
+      takeUntil(this.keyInCancel$),
+      tap(response => {
+        const d = response.Data;
+        if (!d.Success) {
+          this.dealErrorFilePath(d);
+          this.TLS26080Detail.update(v => v.filter(i => i.id !== data.id)); // 更新參照
+          this.keyInCancel$.next();
+          console.log(`keyInTLS26080 fail:`, [response, this.TLS26080Detail()]);
+          this.messageService.errorBubble(response.Message || '鍵入失敗');
+        } else {
+          this.TLS26080Detail.update(val => [data, ...val.filter(i => i.id !== data.id)]);
+          console.log(`keyInTLS26080 success:`, [response, this.TLS26080Detail()]);
+        }
+      }),
+      catchError(error => this.errorHandler.handleError(error)),
+      finalize(() => {
+        console.log(`單筆鍵入檢查:`, [data]);
       })
     ).subscribe();
   }
