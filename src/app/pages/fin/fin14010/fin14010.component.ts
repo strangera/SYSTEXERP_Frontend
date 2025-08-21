@@ -282,7 +282,8 @@ export class FIN14010Component extends BasicQueryPageComponent<TDS1002> implemen
 
     totalRecords = 0;// 分頁和排序參數 // 排序需要
     data: TDS1002[] = [];
-    selectedRows: TDS1002[] = [];
+    selectedRows: TDS1002[] = [];// 多選項目
+
 
     REP_DataType_Option: option[] = [
       {value: '1', label: '一般稅額計算之專營應稅'},
@@ -333,7 +334,8 @@ export class FIN14010Component extends BasicQueryPageComponent<TDS1002> implemen
           REP_GUIYM: convertDateToYYYYMM(frm.value.REP_GUIYM),
         }
 
-        console.log('申報request', body);
+        console.log('申報request', JSON.stringify(body, null, 2));
+
 
         this.fin14010Service.queryFIN14010(body).pipe(untilDestroyed(this)).subscribe({
           next: (response) => {
