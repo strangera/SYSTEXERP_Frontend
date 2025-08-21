@@ -311,7 +311,7 @@ export class TLS26010CRUComponent extends BasicCruPageComponent<TLS26010Data> im
       }));
 
       const importedTltNos = data.filter(i => i.tlt_no?.trim() && i.tlt_name?.trim());
-      if (!importedTltNos.length) return void this.messageService.errorBubble('匯入檔案沒有有效資料');
+      if (!importedTltNos.length) return void this.messageService.errorBox('匯入檔案沒有有效資料');
 
       const existingSet = new Set(this.tltTableFiltered().map(i => i.tlt_no));
       const merged = new Map<string, TltItem>(this.tltTableFiltered().map(i => [i.tlt_no, { ...i, Status: ItemOperationStatus.Original }]));
@@ -330,7 +330,7 @@ export class TLS26010CRUComponent extends BasicCruPageComponent<TLS26010Data> im
       this.messageService.successBubble(`匯入成功：新增 ${newCount} 筆資料`);
     } catch (error) {
       console.error('Excel 匯入錯誤:', error);
-      this.messageService.errorBubble('Excel 檔案讀取失敗，請檢查檔案格式');
+      this.messageService.errorBox('Excel 檔案讀取失敗，請檢查檔案格式');
     }
   };
 
