@@ -647,24 +647,24 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
   // }
 
   onFieldChange(fieldName: string, newValue: any, rowData: any, capType?: string): void {
-    console.log(`🔄 動態表格欄位變更: ${capType}.${fieldName} = ${newValue}`);
+    console.log(`🔄 防抖後的欄位變更: ${capType}.${fieldName} = ${newValue}`);
 
-    // 🎯 關鍵：根據 capType 進行不同的處理
+    // 🎯 根據 capType 進行對應的計算處理
     switch (capType) {
       case 'A':
-        this.handleTypeA(fieldName, newValue, rowData);
+        this.handleTypeACalculation(fieldName, newValue, rowData);
         break;
       case 'B':
-        this.handleTypeB(fieldName, newValue, rowData);
+        this.handleTypeBCalculation(fieldName, newValue, rowData);
         break;
       case 'C':
-        this.handleTypeC(fieldName, newValue, rowData);
+        this.handleTypeCCalculation(fieldName, newValue, rowData);
         break;
       case 'D':
-        this.handleTypeD(fieldName, newValue, rowData);
+        this.handleTypeDCalculation(fieldName, newValue, rowData);
         break;
       case 'E':
-        this.handleTypeE(fieldName, newValue, rowData);
+        this.handleTypeECalculation(fieldName, newValue, rowData);
         break;
       default:
         console.warn(`未知的扣款類型: ${capType}`);
@@ -675,69 +675,90 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
   }
 
 
-  /**
-   * 🅰️ A類型處理：一次扣款
-   */
-  private handleTypeA(fieldName: string, newValue: any, rowData: any): void {
-    // 使用計算服務
-    this.fareCalculationService.autoCalculateAmount(rowData, 'A', fieldName);
+  // 🎯 A類型計算優化
+  private handleTypeACalculation(fieldName: string, newValue: any, rowData: any): void {
+    console.log(`🅰️ A類型計算: ${fieldName} = ${newValue}`);
 
-    // A類型特殊邏輯：結束日期 = 開始日期
+    // 只有相關欄位變更時才重新計算
+    if (['tpy_unitamt', 'tpy_qty'].includes(fieldName)) {
+      this.fareCalculationService.autoCalculateAmount(rowData, 'A', fieldName);
+      console.log(`💰 A類型計算完成: 金額 = ${rowData.tpy_amount}`);
+    }
+
+    // A類型特殊處理：開始日期變更時同步結束日期
     if (fieldName === 'tpy_bdate' && newValue) {
       rowData.tpy_edate = newValue;
-      console.log(`✅ A類型自動設定結束日期: ${newValue}`);
+      console.log(`📅 A類型同步結束日期: ${newValue}`);
     }
   }
 
-  /**
-   * 🅱️ B類型處理：每月扣款
-   */
-  private handleTypeB(fieldName: string, newValue: any, rowData: any): void {
-    // 使用計算服務
-    this.fareCalculationService.autoCalculateAmount(rowData, 'B', fieldName);
-    console.log(`💰 B類型計算完成: ${fieldName} = ${newValue}`);
-  }
+  // 🎯 B類型計算優化
+  private handleTypeBCalculation(fieldName: string, newValue: any, rowData: any): void {
+    console.log(`🅱️ B類型計算: ${fieldName} = ${newValue}`);
 
-  /**
-   * 🆒 C類型處理：平均分攤（重點！）
-   */
-  private handleTypeC(fieldName: string, newValue: any, rowData: any): void {
-    console.log(`🧮 C類型平均分攤處理: ${fieldName} = ${newValue}`);
-
-    // 🎯 使用增強的計算服務處理C類型
-    this.fareCalculationService.autoCalculateAmount(rowData, 'C', fieldName);
-
-    // 🆕 特別處理日期欄位變更
-    if (fieldName === 'tpy_bdate' || fieldName === 'tpy_edate') {
-      console.log(`📅 C類型日期變更後: 期數=${rowData.period_nos}, 每月金額=${rowData.tpy_amount}, 首期金額=${rowData.down_payment}`);
-    }
-
-    // 🆕 特別處理金額欄位變更
-    if (['tpy_totalamt', 'tpy_amount', 'down_payment'].includes(fieldName)) {
-      console.log(`💰 C類型金額變更後: 總金額=${rowData.tpy_totalamt}, 每月=${rowData.tpy_amount}, 首期=${rowData.down_payment}`);
-    }
-
-    // 🆕 驗證計算結果
-    const isValid = this.fareCalculationService.isCalculationValid(rowData, 'C');
-    if (!isValid) {
-      console.warn(`⚠️ C類型計算結果可能有誤，請檢查`);
+    if (['tpy_unitamt', 'tpy_qty'].includes(fieldName)) {
+      this.fareCalculationService.autoCalculateAmount(rowData, 'B', fieldName);
+      console.log(`💰 B類型計算完成: 金額 = ${rowData.tpy_amount}`);
     }
   }
 
-  /**
-   * 🆕 D類型處理：比率分攤
-   */
-  private handleTypeD(fieldName: string, newValue: any, rowData: any): void {
-    this.fareCalculationService.autoCalculateAmount(rowData, 'D', fieldName);
-    console.log(`📊 D類型比率計算: ${fieldName} = ${newValue}`);
+  // 🎯 C類型計算優化 - 最重要的優化
+  private handleTypeCCalculation(fieldName: string, newValue: any, rowData: any): void {
+    console.log(`🆂 C類型平均分攤計算: ${fieldName} = ${newValue}`);
+
+    // 只有相關欄位變更時才觸發計算
+    const calculationFields = ['tpy_totalamt', 'period_nos', 'tpy_amount', 'down_payment'];
+
+    if (calculationFields.includes(fieldName)) {
+      this.fareCalculationService.autoCalculateAmount(rowData, 'C', fieldName);
+
+      // 驗證計算結果
+      const isValid = this.fareCalculationService.isCalculationValid(rowData, 'C');
+      if (isValid) {
+        console.log(`✅ C類型計算成功: 總額=${rowData.tpy_totalamt}, 期數=${rowData.period_nos}, 月額=${rowData.tpy_amount}, 首期=${rowData.down_payment}`);
+      } else {
+        console.warn(`⚠️ C類型計算結果可能有誤`);
+      }
+    }
+
+    // 日期變更時重新計算期數
+    if (['tpy_bdate', 'tpy_edate'].includes(fieldName)) {
+      this.updatePeriodNumbers(rowData);
+    }
   }
 
-  /**
-   * 🆔 E類型處理：活動扣款
-   */
-  private handleTypeE(fieldName: string, newValue: any, rowData: any): void {
-    this.fareCalculationService.autoCalculateAmount(rowData, 'E', fieldName);
-    console.log(`🎯 E類型活動扣款: ${fieldName} = ${newValue}`);
+  // 🎯 D/E類型計算優化
+  private handleTypeDCalculation(fieldName: string, newValue: any, rowData: any): void {
+    if (fieldName === 'tpy_rate') {
+      this.fareCalculationService.autoCalculateAmount(rowData, 'D', fieldName);
+    }
+  }
+
+  private handleTypeECalculation(fieldName: string, newValue: any, rowData: any): void {
+    if (fieldName === 'tpy_rate') {
+      this.fareCalculationService.autoCalculateAmount(rowData, 'E', fieldName);
+    }
+  }
+
+  // 🆕 計算期數的輔助方法
+  private updatePeriodNumbers(rowData: any): void {
+    if (rowData.tpy_bdate && rowData.tpy_edate) {
+      const startDate = new Date(rowData.tpy_bdate);
+      const endDate = new Date(rowData.tpy_edate);
+
+      if (startDate <= endDate) {
+        const months = this.calculateMonthsBetween(startDate, endDate);
+        rowData.period_nos = Math.max(1, months);
+        console.log(`📅 C類型期數計算: ${months} 期`);
+      }
+    }
+  }
+
+  // 🆕 計算兩個日期間的月數
+  private calculateMonthsBetween(startDate: Date, endDate: Date): number {
+    const yearDiff = endDate.getFullYear() - startDate.getFullYear();
+    const monthDiff = endDate.getMonth() - startDate.getMonth();
+    return yearDiff * 12 + monthDiff + 1; // +1 包含起始月
   }
 
   /**
