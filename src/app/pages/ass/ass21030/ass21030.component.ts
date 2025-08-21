@@ -87,6 +87,8 @@ export interface ENG1001 {
     TranslateModule]
 
 })
+
+// 能源抄表作業
 export class ASS21030Component extends BasicQueryPageComponent<ENG1001 | ENG2001> implements OnInit {
   // 查詢
     queryForm = this.formBuilder.group({
