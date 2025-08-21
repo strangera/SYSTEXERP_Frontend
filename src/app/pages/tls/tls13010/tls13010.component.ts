@@ -141,6 +141,7 @@ export class TLS13010Component extends BasicQueryPageComponent<ContractItem> imp
     contract_subno_to: [],
     total_amt_unit: [''], // 目標營業額單位(業主)
     total_amt_vendor_unit: [''], // 目標營業額單位(廠商)
+    approve_statusList: [[]],
 
     // 分頁配置
     ...createPaginationConfig([{ field: 'apply_no', order: 1 }])
@@ -206,6 +207,8 @@ export class TLS13010Component extends BasicQueryPageComponent<ContractItem> imp
   PAYTYPE_OPTIONS = [...TLS13010_DROPDOWN_OPTIONS.paytype];
   STORE_WAY_OPTIONS = [...TLS13010_DROPDOWN_OPTIONS.storeWay];
   APPROVE_STATUS_OPTIONS = [...TLS13010_DROPDOWN_OPTIONS.approveStatusOptions];
+
+  APPLY_STATUS_OPTIONS = [...TLS13010_DROPDOWN_OPTIONS.applyStatusOptions];
 
   constructor(
     public override router: Router,
@@ -490,14 +493,28 @@ export class TLS13010Component extends BasicQueryPageComponent<ContractItem> imp
     return this.contractFlowService.getCurrentStatus();
   }
 
-  /**
-   * 取得進度百分比
-   */
-  getProgressPercentage(): number {
-    return this.contractFlowService.getProgressPercentage();
-  }
-
   isPOS2013OptionsLoaded(): boolean {
     return this.pos2013Options.length > 0;
   }
+
+  /**
+  * 判斷合約是否可編輯
+  */
+  canEditContract = (rowData: ContractItem): boolean => {
+    // 方法1: 使用後端傳來的 CanEdit 屬性
+    if (rowData.CanEdit !== undefined) {
+      return rowData.CanEdit;
+    }
+
+    // 方法2: 前端自行判斷 (備用方案)
+    return rowData.approve_status === '1'; // 只有未審核狀態可編輯
+  }
+
+  /**
+   * 編輯按鈕禁用條件
+   */
+  editDisabled = (rowData: ContractItem): boolean => {
+    return !this.canEditContract(rowData);
+  }
+
 }

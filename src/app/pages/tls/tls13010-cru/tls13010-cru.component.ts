@@ -20,7 +20,7 @@ import { AutoCompleteOption, AutoCompleteComponent } from '../../../shared/compo
 import { ColumnDef, ExpandableEditTableComponent, SelectorTableColumn } from '../../../shared/componentkit/expandable-edit-table/expandable-edit-table.component';
 import { LocationOptionsService } from '../../../service/api/dropdownservice/location-options.service';
 import { TLS13010Service } from '../../../service/api/tls/tls13010.service';
-import { CategoryItem, ContractInfo, LocationItem } from '../tls13010/tls13010.model';
+import { ContractInfo, LocationItem } from '../tls13010/tls13010.model';
 import { DropdownOption } from '../tls13010/tls13010.dropdown';
 
 // UI 組件 - 保持不變
@@ -1095,6 +1095,12 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
       return String(value);
     };
 
+    const convertBooleanToYN = (value: any): string => {
+      if (value === true || value === 'true' || value === 'Y') return 'Y';
+      if (value === false || value === 'false' || value === 'N') return 'N';
+      return String(value || '');
+    };
+
     // 🎯 準備符合 ContractInfo 介面的資料
     const contractInfo: ContractInfo = {
       id: formData.talent_id || '',
@@ -1140,7 +1146,7 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
       total_amt_vendor: convertToString(formData.total_amt_vendor),
       construct_fees: convertToString(formData.construct_fees),
       check_day: convertToString(formData.check_day),
-      construct_deposit: convertToString(formData.construct_deposit),
+      construct_deposit: formData.construct_deposit || '',
       expiration_fees: convertToString(formData.expiration_fees),
       // 🎯 其他字串欄位
       deco_type: formData.deco_type || '',
@@ -1179,8 +1185,8 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
       expiration_deposit: formData.expiration_deposit || '',
       cap_saletype1: formData.cap_saletype1 || '',
       cap_saletype2: formData.cap_saletype2 || '',
-      cap_saletype3: formData.cap_saletype3 || '',
-      cap_saletype4: formData.cap_saletype4 || '',
+      cap_saletype3: convertBooleanToYN(formData.cap_saletype3),
+      cap_saletype4: convertBooleanToYN(formData.cap_saletype4),
       water_flag: formData.water_flag || '',
       electric_flag: formData.electric_flag || '',
       gas_flag: formData.gas_flag || '',

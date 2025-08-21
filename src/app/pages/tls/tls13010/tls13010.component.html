@@ -56,6 +56,11 @@
             <app-input-text-range label="版次" [startControl]="queryForm.controls.contract_subno_from"
               [endControl]="queryForm.controls.contract_subno_to" [submitted]="submitted" />
           </div>
+          <div class="col-12 md:col-6 lg:col-6">
+            <app-multi-select label="審核狀態" controlName="approve_statusList" [options]="APPROVE_STATUS_OPTIONS"
+              optionLabel="label" optionValue="value" [control]="queryForm.controls.approve_statusList"
+              [submitted]="submitted"></app-multi-select>
+          </div>
         </div>
       </p-accordionTab>
 
@@ -91,7 +96,7 @@
         [headerStyleClass]="'query-accordionTab'">
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-6">
-            <app-multi-select label="合約狀態" controlName="apply_typeList" [options]="APPROVE_STATUS_OPTIONS"
+            <app-multi-select label="合約狀態" controlName="apply_typeList" [options]="APPLY_STATUS_OPTIONS"
               optionLabel="label" optionValue="value" [control]="queryForm.controls.apply_typeList"
               [submitted]="submitted"></app-multi-select>
           </div>
@@ -257,6 +262,6 @@
       [showCheckBox]="true" dataKey="talent_id" [multiSortMeta]="[{ field: 'apply_no', order: 1 }]"
       [totalRecords]="totalRecords" [lazy]="true"
       (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [isRowSelectable]="isRowSelectable"
-      [loading]="loading" [showDelete]="false" [showCheckBox]="false"></app-table>
+      [loading]="loading" [showDelete]="false" [editDisabled]="editDisabled" [showCheckBox]="false"></app-table>
   </div>
 </div>

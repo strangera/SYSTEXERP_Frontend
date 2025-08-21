@@ -19,7 +19,8 @@ import {
   APPROVE_STATUS_OPTIONS,
   CAG_TAXTYPE_OPTIONS,
   TOTAL_AMT_UNIT_OPTIONS,
-  TOTAL_AMT_VENDOR_UNIT_OPTIONS
+  TOTAL_AMT_VENDOR_UNIT_OPTIONS,
+  APPLY_STATUS_OPTIONS
 } from './tls13010.constants';
 import { Sysb800DropdownService } from '../../../service/api/sys/sysb800-dropdown.service';
 import { LocationOptionsService } from '../../../service/api/dropdownservice/location-options.service';
@@ -59,6 +60,7 @@ export const TLS13010_DROPDOWN_OPTIONS = {
   cagTaxTypeOption: convertToDropdownOptions(CAG_TAXTYPE_OPTIONS),
   commCompType: convertToDropdownOptions(COMM_COMP_TYPE_OPTIONS),         // 抽成額計算方式
   approveStatusOptions: convertToDropdownOptions(APPROVE_STATUS_OPTIONS),
+  applyStatusOptions: convertToDropdownOptions(APPLY_STATUS_OPTIONS),
   total_amt_unit: convertToDropdownOptions(TOTAL_AMT_UNIT_OPTIONS), //目標營業額單位(業主)
   total_amt_vendor_unit: convertToDropdownOptions(TOTAL_AMT_VENDOR_UNIT_OPTIONS),  //目標營業額單位(廠商)
   yesNo: [{ value: 'Y', label: '是' }, { value: 'N', label: '否' }],

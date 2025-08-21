@@ -119,6 +119,8 @@ export interface CleanContractData {
   gas_flag?: string;
   cap_saletype1?: string;
   cap_saletype2?: string;
+  cap_saletype3?: string;
+  cap_saletype4?: string;
 
   // 聯絡資訊
   email?: string;
@@ -136,6 +138,8 @@ export interface CleanContractData {
   ticket_remarks?: string;
   total_amt_unit?: string;        // 目標營業額單位(業主)
   total_amt_vendor_unit?: string; // 目標營業額單位(廠商)
+
+  approve_status: string;
 
   // 位置資訊
   locationInfo: CleanLocationInfo[];
@@ -626,9 +630,9 @@ export class DataCleaner {
       open_fees: this.parseNumber(rawData.open_fees),
       total_amt: this.parseNumber(rawData.total_amt),
       total_amt_vendor: this.parseNumber(rawData.total_amt_vendor),
-      construct_deposit: this.parseNumber(rawData.construct_deposit),
+      construct_deposit: rawData.construct_deposit,
       construct_fees: this.parseNumber(rawData.construct_fees),
-      expiration_deposit: this.parseNumber(rawData.expiration_deposit),
+      expiration_deposit: rawData.expiration_deposit,
       expiration_fees: this.parseNumber(rawData.expiration_fees),
       open_deposit: rawData.open_deposit,
 
@@ -644,7 +648,8 @@ export class DataCleaner {
       gas_flag: rawData.gas_flag || 'N',
       cap_saletype1: rawData.cap_saletype1,
       cap_saletype2: rawData.cap_saletype2,
-
+      cap_saletype3: rawData.cap_saletype3,
+      cap_saletype4: rawData.cap_saletype4,
       // 聯絡資訊
       email: rawData.email,
       invoice_email: rawData.invoice_email,
@@ -661,6 +666,7 @@ export class DataCleaner {
       ticket_remarks: rawData.ticket_remarks,
       total_amt_unit: rawData.total_amt_unit,
       total_amt_vendor_unit: rawData.total_amt_vendor_unit,
+      approve_status: rawData.approve_status,
 
       // 位置資訊
       locationInfo: this.cleanLocationInfo(rawData.locationInfo || [])
@@ -1495,24 +1501,9 @@ export interface ContractItem {
 
   total_amt_unit: string;
   total_amt_vendor_unit: string;
-}
+  approve_status: string;
 
-export interface CategoryItem {
-  id: number;
-  bus_type: string;
-  bus_type_name: string;
-  bus_class: string;
-  bus_class_name: string;
-  bus_sclass: string;
-  bus_sclass_name: string;
-  bus_sclass_desc: string;
-  CRT_Date: string;
-  CRT_USR_No: string;
-  CRT_USR_Name: string;
-  UPD_Date: string;
-  UPD_USR_No: string;
-  UPD_USR_Name: string;
-  _status?: 'new' | 'modified' | 'deleted' | 'original';
+  CanEdit?: boolean;
 }
 
 export interface FinalData {
@@ -1550,29 +1541,5 @@ export class Step3DataChangeTracker {
 
   static setCurrentTalentId(talentId: string): void {
     this.currentTalentId = talentId;
-  }
-
-  static generateStep3ChangeSummary(commissionItems: CommissionItem[], talentId?: string): any {
-    console.warn('Step3DataChangeTracker.generateStep3ChangeSummary is deprecated, use DataCleaner.cleanCommissionData instead');
-
-    if (talentId) {
-      this.currentTalentId = talentId;
-    }
-
-    return {
-      summary: {
-        insert: 0,
-        update: 0,
-        delete: 0,
-        unchanged: 0,
-        total: commissionItems.length
-      },
-      operations: {
-        commissionMaster: { toInsert: [], toUpdate: [], toDelete: [] },
-        discountSettings: { toInsert: [], toUpdate: [], toDelete: [] },
-        annualSettings: { toInsert: [], toUpdate: [], toDelete: [] },
-        levelSettings: { toInsert: [], toUpdate: [], toDelete: [] }
-      }
-    };
   }
 }
