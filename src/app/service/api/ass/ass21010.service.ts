@@ -1,10 +1,13 @@
+
 import { HttpClient } from '@angular/common/http';
 import { Injectable, OnDestroy, signal } from '@angular/core';
+import { ASS2100ENGMeterType, ASS21010Payload, ASS21010UpdateStatus } from '@pages/ass/ass21010/ass21010.model';
+import { ErrorHandlerService } from '@service/system/error-handler.service';
 import { IPOS2002LocationItem } from '@service/utility/dropDownList.service';
+import { NotificationService } from '@shared/component/notification-message/notification.service';
 import { BaseQueryResponse, DropdownOption } from '@shared/models/api/base-api.interface';
-import { catchError, finalize, of, Subject, take, takeUntil, tap } from 'rxjs';
-import { environment } from '../../../../environments/environment';
-import { ErrorHandlerService } from '../../system/error-handler.service';
+import { Subject, catchError, finalize, of, take, takeUntil, tap } from 'rxjs';
+import { environment } from 'src/environments/environment';
 
 const apiUrl: string = `${environment.ApiUrl}`;
 
@@ -15,13 +18,11 @@ export class ASS21010Service implements OnDestroy {
     !!rowData;
   // (Reflect.has(rowData, 'CanDelete') && rowData.CanDelete == '1') || rowData.pod_status === ApprovalStatus.未核准;
 
-  public readonly ASS21010Data = signal<unknown[]>([]);
   public readonly ASS21010Detail = signal<unknown[]>([]);
   public readonly engTypeSignal = signal<DropdownOption[]>([]);
-  public readonly engMeterNoSignal = signal<DropdownOption[]>([]);
+  public readonly engMeterNoSignal = signal<ASS2100ENGMeterType[]>([]);
   public readonly locationSignal = signal<IPOS2002LocationItem[]>([]);
 
-  public engTypeLoading = !1;
   public engMeterNoLoading = !1;
   public locationLoading = !1;
   public tableLoading = !1;
@@ -32,29 +33,24 @@ export class ASS21010Service implements OnDestroy {
   private readonly tableCancel$ = new Subject<void>();
 
   constructor(
-    private http: HttpClient,
-    private errorHandler: ErrorHandlerService
+    private readonly http: HttpClient,
+    private readonly errorHandler: ErrorHandlerService,
+    private readonly messageService: NotificationService,
   ) { }
 
   public loadEngType(): void {
     this.engTypeCancel$.next();
-    this.engTypeLoading = !0;
-    of(engTypeMock).pipe(
-      take(1),
-      takeUntil(this.engTypeCancel$),
-      tap(response => this.engTypeSignal.set(response.Data)),
-      catchError(error => this.errorHandler.handleError(error)),
-      finalize(() => {
-        this.engTypeLoading = !1;
-        console.log('查詢EngType結果:', [this.engTypeSignal()]);
-      })
-    ).subscribe();
+    this.engTypeSignal.set([
+      { No: EngType.水, Name: '水錶' },
+      { No: EngType.電, Name: '電錶' },
+      { No: EngType.瓦斯, Name: '瓦斯錶' },
+    ]);
   };
 
-  public loadEngMeterNo(types: EngType[]): void {
+  public loadEngMeterNo(types?: EngType): void {
     this.engMeterNoCancel$.next();
     this.engMeterNoLoading = !0;
-    of(engMeterNoMock).pipe(
+    this.http.post<BaseQueryResponse<ASS2100ENGMeterType>>(`${apiUrl}/Share/queryENG1001_ENG_MeterNo_DropDownList`, { types }).pipe(
       take(1),
       takeUntil(this.engMeterNoCancel$),
       tap(response => this.engMeterNoSignal.set(response.Data)),
@@ -81,21 +77,16 @@ export class ASS21010Service implements OnDestroy {
     ).subscribe();
   };
 
-  /** 取資料 */
-  public loadASS21010(query: unknown): void {
-    this.tableCancel$.next();
-    this.tableLoading = !0;
-    this.http.post<BaseQueryResponse<unknown>>(`${apiUrl}/ASS0000/ASS2000/queryASS21010`, query).pipe(
+  public updateASS21010(payload: ASS21010Payload): void {
+    this.http.post<ASS21010UpdateStatus>(`${apiUrl}/ASS0000/ASS2000/updateASS21010`, payload).pipe(
       take(1),
-      takeUntil(this.tableCancel$),
-      tap(response => this.ASS21010Data.set(response.Data)),
-      catchError(error => this.errorHandler.handleError(error)),
-      finalize(() => {
-        this.tableLoading = !1;
-        console.log('查詢結果:', [this.ASS21010Data()]);
-      })
+      tap(response => {
+        if (response.Data.IsUpdateSuccess) this.messageService.successBubble('更新成功');
+        else this.messageService.errorBox('更新失敗\n' + response.Data.ErrorMsg);
+      }),
+      catchError(error => this.errorHandler.handleError(error))
     ).subscribe();
-  };
+  }
 
   ngOnDestroy(): void {
     this.engTypeCancel$.next();
@@ -110,30 +101,3 @@ export enum EngType {
   電 = 'G02',
   瓦斯 = 'G03',
 }
-
-export const engTypeMock: BaseQueryResponse<DropdownOption> = {
-  Status: 'success',
-  Data: [
-    { No: EngType.水, Name: '水' },
-    { No: EngType.電, Name: '電' },
-    { No: EngType.瓦斯, Name: '瓦斯' },
-  ],
-  Error: undefined,
-  Meta: undefined,
-  Message: '查詢成功',
-  TotalCount: 3,
-  TotalPage: 1,
-};
-export const engMeterNoMock: BaseQueryResponse<DropdownOption> = {
-  Status: 'success',
-  Data: [
-    { No: 'AB001', Name: 'AB001' },
-    { No: 'AB002', Name: 'AB002' },
-    { No: 'AB003', Name: 'AB003' },
-  ],
-  Error: undefined,
-  Meta: undefined,
-  Message: '查詢成功',
-  TotalCount: 3,
-  TotalPage: 1,
-};

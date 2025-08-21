@@ -1,11 +1,12 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, OnDestroy, signal } from '@angular/core';
+import { ASS2100ENGMeterType } from '@pages/ass/ass21010/ass21010.model';
 import { ErrorHandlerService } from '@service/system/error-handler.service';
 import { IPOS2002LocationItem } from '@service/utility/dropDownList.service';
 import { BaseQueryResponse, DropdownOption } from '@shared/models/api/base-api.interface';
 import { catchError, finalize, of, Subject, take, takeUntil, tap } from 'rxjs';
 import { environment } from 'src/environments/environment';
-import { engMeterNoMock, EngType, engTypeMock } from './ass21010.service';
+import { EngType } from './ass21010.service';
 
 const apiUrl: string = `${environment.ApiUrl}`;
 
@@ -22,7 +23,7 @@ export class ASS21020Service implements OnDestroy {
   public readonly queryByMeterNoData = signal<unknown[]>([]);
   public readonly queryByTltNoData = signal<unknown[]>([]);
   public readonly engTypeSignal = signal<DropdownOption[]>([]);
-  public readonly engMeterNoSignal = signal<DropdownOption[]>([]);
+  public readonly engMeterNoSignal = signal<ASS2100ENGMeterType[]>([]);
   public readonly locationSignal = signal<IPOS2002LocationItem[]>([]);
   public readonly tltNoSignal = signal<DropdownOption[]>([]);
   public readonly engRateSignal = signal<number>(0);
@@ -50,9 +51,9 @@ export class ASS21020Service implements OnDestroy {
   public loadEngType(): void {
     this.engTypeCancel$.next();
     this.engTypeLoading = !0;
-    of(engTypeMock).pipe(
+    of().pipe(
       take(1),
-      tap(response => this.engTypeSignal.set(response.Data)),
+      tap(response => this.engTypeSignal.set(response)),
       catchError(error => this.errorHandler.handleError(error)),
       finalize(() => {
         this.engTypeLoading = !1;
@@ -64,8 +65,7 @@ export class ASS21020Service implements OnDestroy {
   public loadEngMeterNo(types: EngType[]): void {
     this.engMeterNoCancel$.next();
     this.engMeterNoLoading = !0;
-    // this.http.post<BaseQueryResponse<unknown>>(`${apiUrl}/ASS0000/ASS2000/loadEngMeterNo`, { types }).pipe(
-    of(engMeterNoMock).pipe(
+    this.http.post<BaseQueryResponse<ASS2100ENGMeterType>>(`${apiUrl}/Share/queryENG1001_ENG_MeterNo_DropDownList`, { types }).pipe(
       take(1),
       takeUntil(this.engMeterNoCancel$),
       tap(response => this.engMeterNoSignal.set(response.Data)),

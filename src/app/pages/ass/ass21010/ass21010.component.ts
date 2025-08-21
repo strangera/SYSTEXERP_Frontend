@@ -1,5 +1,5 @@
 
-import { Component, computed, effect, OnInit } from '@angular/core';
+import { Component, computed, effect, OnInit, signal, Signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
@@ -12,6 +12,7 @@ import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-se
 import { TableComponent } from '@shared/componentkit/table/table.component';
 import { Column } from '@shared/componentkit/table/table.model';
 import { AccordionModule } from 'primeng/accordion';
+import { ASS2100ENGMeterType } from './ass21010.model';
 
 @Component({
   selector: 'app-ass21010',
@@ -33,34 +34,52 @@ import { AccordionModule } from 'primeng/accordion';
 export class ASS21010Component extends BasicQueryPageComponent<unknown> implements OnInit {
 
   public queryForm = this.formBuilder.group({
-    eng_type: new FormControl<EngType[] | undefined>(void 0),
-    eng_meterNo: new FormControl<string[] | undefined>(void 0),
-    location_no: new FormControl<string[] | undefined>(void 0),
-    eng_remark: new FormControl<string | undefined>(void 0),
+    ENG_Type: new FormControl<EngType[] | undefined>(void 0),
+    ENG_MeterNo: new FormControl<string[] | undefined>(void 0),
+    Location_No: new FormControl<string[] | undefined>(void 0),
+    ENG_Remark: new FormControl<string | undefined>(void 0),
   });
   public readonly qf = computed(() => this.queryForm.controls);
 
   // 變化追蹤
   private readonly qfSignal = toSignal(this.queryForm.valueChanges);
-  private readonly engTypeSignal = toSignal(this.qf().eng_type.valueChanges);
+  private readonly engTypeSignal = toSignal(this.qf().ENG_Type.valueChanges);
+  private readonly engMeterSignal = toSignal(this.qf().ENG_MeterNo.valueChanges);
+  private readonly locationSignal = toSignal(this.qf().Location_No.valueChanges);
+  private readonly engRemarkSignal = toSignal(this.qf().ENG_Remark.valueChanges);
 
-  public readonly engTypeEffect = effect(() => {
-    const types = this.engTypeSignal();
-    if (!types?.length) return;
-    this.service.loadEngMeterNo(types);
-    console.log(`Engine type changes:`, [types]);
+  public readonly tableData = signal<ASS2100ENGMeterType[]>([]);
+
+  public readonly qfEffect = effect(() => {
+    console.log(`qfEffect:`, [this.qfSignal()]);
   });
 
-  public readonly queryEffect = effect(() => {
-    const data = this.qfSignal();
-    console.log(`Query form changes:`, [data]);
-  });
+  public readonly tableEffect = effect(() => {
+    const types = this.engTypeSignal() || [];
+    const meters = this.engMeterSignal() || [];
+    const locs = this.locationSignal() || [];
+    console.log(`tableEffect:`, [types, meters, locs]);
+
+    this.tableData.set(this.service.engMeterNoSignal().filter(item => {
+      const matchesType = !types?.length || types.includes(item.ENG_Type);
+      const matchesMeter = !meters?.length || meters.includes(item.ENG_MeterNo);
+      const matchesLocation = !locs?.length || locs.includes(item.Location_No);
+      return matchesType && matchesMeter && matchesLocation;
+    }));
+  }, { allowSignalWrites: !0 });
+
+  public readonly tableInitEffect = effect(() => {
+    const data = this.service.engMeterNoSignal();
+    if (!data?.length) return;
+    this.tableData.set(data);
+    this.tableInitEffect.destroy();
+  }, { allowSignalWrites: !0 });
 
   public readonly columns: Column[] = [
-    { field: 'eng_type', header: '能源類型' },
-    { field: 'eng_meterNo', header: '錶號' },
-    { field: 'location_no', header: '設備位置編號' },
-    { field: 'eng_remark', header: '備註' },
+    { field: 'ENG_Type', header: '能源類型' },
+    { field: 'ENG_MeterNo', header: '錶號' },
+    { field: 'Location_No', header: '設備位置編號' },
+    { field: 'ENG_Remark', header: '備註' },
   ];
 
   constructor(
@@ -73,18 +92,8 @@ export class ASS21010Component extends BasicQueryPageComponent<unknown> implemen
     this.initializePage('ASS21010', '/ASS/ASS21010CRU', this.queryForm, this.onSubmit.bind(this));
 
     this.service.loadEngType();
+    this.service.loadEngMeterNo();
     this.service.loadLocationNo();
-    this.service.loadASS21010({});
-
-
-
-    // // Initialize dropdown options
-    // this.organizationNumberService.getOrganizationNumbers()
-    //   .subscribe((data) => (this.Departmentcode = data));
-    // this.floorService.getFloors()
-    //   .subscribe((data) => (this.floor = data));
-    // // this.locationCodeService.getSystemTypes()
-    // //   .subscribe((data) => (this.location = data));
   }
 
   public canQuery(): boolean {
@@ -101,7 +110,6 @@ export class ASS21010Component extends BasicQueryPageComponent<unknown> implemen
 
   public onSubmit(): void {
     this.handleSubmit(this.queryForm, () => {
-
       this.queryStateService.setQueryState(this.ProgNo, this.queryForm.value);
       this.loading = !1;
     });
@@ -110,10 +118,10 @@ export class ASS21010Component extends BasicQueryPageComponent<unknown> implemen
   public override onCreate(data?: unknown): void {
     this.queryStateService.setQueryState(this.ProgNo, this.queryForm.value);
     super.onCreate(data);
-  }
+  };
 
   onClear() {
-    this.queryForm.reset(); // 重置表單
+    this.queryForm.reset();
   }
 
 
