@@ -20,6 +20,8 @@ import {
 } from '@service/api/tls/tls57090.service'; // 更新引入的介面
 import { finalize } from 'rxjs';
 import { DatePipe } from '@angular/common'; // 引入 DatePipe
+import { ButtonModule } from 'primeng/button';
+import { HttpResponse } from '@angular/common/http';
 
 @Component({
   selector: 'app-tls57090',
@@ -36,6 +38,7 @@ import { DatePipe } from '@angular/common'; // 引入 DatePipe
     ButtonComponent,
     TableComponent,
     TranslateModule,
+    ButtonModule
   ],
   providers: [DatePipe] // 提供 DatePipe
 })
@@ -176,6 +179,7 @@ export class TLS57090Component extends BasicQueryPageComponent<QueryTLS57090Deta
         .subscribe(response => {
           if (response.Data) { // 檢查是否成功且有 queryData
             this.totalRecords = response.TotalCount || 0; // 直接從 totalCount 獲取總筆數
+            this.historyRequestBody = requestBody;
             // 根據 ReportType 決定填充明細或彙總資料
             if (requestBody.ReportType === '明細') {
               this.data = response.Data.DetailData || [];
@@ -190,5 +194,50 @@ export class TLS57090Component extends BasicQueryPageComponent<QueryTLS57090Deta
           }
         });
     });
+  }
+  btnLoading = false;
+  historyRequestBody: QueryTLS57090Request | null = null;
+  onExport() {
+    if (!this.historyRequestBody) {
+      return;
+    }
+    this.tls57090Service.exportTLS57090(this.historyRequestBody)
+      .subscribe({
+        next: (response: HttpResponse<Blob>) => {
+          const contentDisposition = response.headers.get('Content-Disposition');
+          // 從 header 讀取檔案名稱
+          const filename = this.getFilenameFromHeader(contentDisposition);
+          const blob = response.body;
+
+          if (blob && blob.size > 0) {
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename; // 使用解析出的檔名
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+          } else {
+            this.messageService.warnBubble('沒有找到符合條件的資料，無法生成報表。');
+          }
+        },
+      });
+  }
+  getFilenameFromHeader(contentDisposition: string | null): string {
+    if (!contentDisposition) {
+      return 'download.pdf'; // 如果 header 不存在，給一個預設檔名
+    }
+    const filenameMatch = contentDisposition.match(/filename\*?=['"]?([^'"]*)['"]?/);
+    if (filenameMatch && filenameMatch.length > 1) {
+      try {
+        // 解碼 URL-encoded 的檔名，例如 UTF-8''...
+        const decoded = decodeURIComponent(filenameMatch[1]);
+        return decoded.startsWith("UTF-8''") ? decoded.substring(7) : decoded;
+      } catch (error) {
+        return filenameMatch[1];
+      }
+    }
+    return 'download.pdf';
   }
 }

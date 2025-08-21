@@ -119,7 +119,6 @@ export class AuthService {
         }
       }),
       catchError(err => {
-        this.notemessage.errorBubble('登入失敗，請確認帳號密碼');
         return throwError(() => err);
       })
     );
