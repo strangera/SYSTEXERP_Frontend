@@ -1,4 +1,4 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpResponse } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
@@ -102,6 +102,25 @@ export class Tls57090Service {
     return this.http.post<ApiResponse<QueryTLS57090ApiResponse>>(
       `${this.apiUrl}/queryTLS57090`,
       body
+    );
+  }
+
+  /**
+   * 匯出進貨/退貨單據統計報表 (PDF) 的 API 呼叫
+   * 請求參數與查詢介面 (QueryTLS57090Request) 相同
+   * @param body 統一的匯出請求物件 (QueryTLS57090Request)
+   * @returns 包含 PDF 檔案的 Blob 物件
+   */
+  exportTLS57090(
+    body: QueryTLS57090Request
+  ): Observable<HttpResponse<Blob>> { // 將回傳類型改為 HttpResponse<Blob>
+    return this.http.post(
+      `${this.apiUrl}/exportTLS57090`,
+      body,
+      {
+        observe: 'response', // 重要：指定觀察整個 HTTP Response
+        responseType: 'blob' // 指定回傳類型為 Blob
+      }
     );
   }
 }
