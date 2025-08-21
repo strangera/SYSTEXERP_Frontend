@@ -15,13 +15,19 @@
                   </app-calendar>
                 </div>
                 <div class="col-12 md:col-6 lg:col-4">
-                  <app-dropdown label="能源類型"
+                  <!-- <app-dropdown label="能源類型"
                     controlName="ENG_Type"
                     [options]="ENG_Type_Option"
                     optionLabel="label"
                     optionValue="value"
                     [control]="dataForm.controls.ENG_Type"
-                    [submitted]="submitted"></app-dropdown>
+                    [submitted]="submitted"></app-dropdown> -->
+                    <app-input-text
+                    label="能源類型"
+                    controlName="ENG_Type"
+                    [control]="dataForm.controls.ENG_Type"
+                    [submitted]="submitted"
+                  ></app-input-text>
                 </div>
                 <div class="col-12 md:col-6 lg:col-4">
                   <app-input-text
@@ -40,6 +46,12 @@
                     [control]="dataForm.controls.ENG_YYMM"
                     [submitted]="submitted">
                   </app-calendar>
+                  <!-- <app-input-text
+                    label="結算年月"
+                    controlName="ENG_YYMM"
+                    [control]="dataForm.controls.ENG_YYMM"
+                    [submitted]="submitted"
+                  ></app-input-text> -->
                 </div>
                 <div class="col-12 md:col-6 lg:col-4">
                   <app-input-text

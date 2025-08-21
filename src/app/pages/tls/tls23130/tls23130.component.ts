@@ -188,10 +188,10 @@ onSubmit(form: FormGroup): void {
         .slice(0, 19);
     };
 
-    // 組 payload（保留分頁/排序）
+    // ✅ 直接用 columns 的欄位，不做任何資料鍵名轉換
     const payload: any = {
-      saleDateStart: toIso(val?.saleDateStart),
-      saleDateEnd:   toIso(val?.saleDateEnd),
+      TXN_DateStart: toIso(val?.TXN_DateStart),
+      TXN_DateEnd:   toIso(val?.TXN_DateEnd),
       BNK_No:        val?.BNK_No,
       tlt_building:  val?.tlt_building,
       tlt_floor:     val?.tlt_floor,
@@ -215,32 +215,10 @@ onSubmit(form: FormGroup): void {
 
     this.tls23130Service.queryTLS23130(payload).subscribe({
       next: (res: any) => {
-        // 後端回傳的 Data：[{ CRD_No, TXN_No, tlt_no, tlt_name, TXN_PayAmt, TXN_Date, TXN_Time, TERM_No, EDC_InstHeadAmt, EDC_InstEachAmt, ... }]
+        // ✅ 不重映射，直接餵給 table
         const src = Array.isArray(res?.Data) ? res.Data : (res?.Data ? [res.Data] : []);
-
-        // 轉成表格 columns 需要的鍵
-        this.data = src.map((r: any) => ({
-          cardNumber:          r?.CRD_No ?? '',
-          transactionSequence: r?.TXN_No ?? '',
-          // 機號/名稱：用「機號 / 櫃位名稱」，也可改成 `${r?.tlt_no} / ${r?.tlt_name}`
-          machineNumber:       [r?.TERM_No, r?.tlt_name].filter(Boolean).join(' / '),
-
-          amount:              r?.TXN_PayAmt ?? 0,
-          TXN_Date:            r?.TXN_Date ?? '',
-          TXN_GUINo:           r?.TXN_GUINo ?? '',
-          TXN_Time:            r?.TXN_Time ?? '',
-
-          // 分期數（回傳未提供，先留空；若後端有 EDC_InstPeriod 就改這裡）
-          installmentPeriod:   r?.EDC_InstPeriod ?? '',
-
-          initialPayment:      r?.EDC_InstHeadAmt ?? 0,
-          monthlyPayment:      r?.EDC_InstEachAmt ?? 0,
-        }));
-
-        this.totalRecords =
-          typeof res?.TotalCount === 'number' ? res.TotalCount : this.data.length;
-
-        // 若要用總額：const total = res?.Data?.[0]?.TotalPayAmt;
+        this.data = src;
+        this.totalRecords = typeof res?.TotalCount === 'number' ? res.TotalCount : src.length;
       },
       error: (err) => {
         console.error('TLS23130 查詢失敗', err);
@@ -256,21 +234,53 @@ onSubmit(form: FormGroup): void {
   });
 }
 
+  formatYMD = (val: unknown): string => {
+  if (val == null) return '';
+  if (val instanceof Date && !isNaN(val.getTime())) {
+    const y = val.getFullYear();
+    const m = String(val.getMonth() + 1).padStart(2, '0');
+    const d = String(val.getDate()).padStart(2, '0');
+    return `${y}/${m}/${d}`;
+  }
+  const s = String(val);
+  // 直接抓 YYYY-MM-DD，避免時區位移
+  const m = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (m) return `${m[1]}/${m[2]}/${m[3]}`;
 
-    moneyFormat(value: number): string {
+  const dt = new Date(s);
+  if (!isNaN(dt.getTime())) {
+    const y = dt.getFullYear();
+    const mm = String(dt.getMonth() + 1).padStart(2, '0');
+    const dd = String(dt.getDate()).padStart(2, '0');
+    return `${y}/${mm}/${dd}`;
+  }
+  return s;
+};  
+  moneyFormat(value: number): string {
     return value != null ? value.toLocaleString('en-US') : '0';
   }
+  
+  formatISOToHHMMSS = (val: string): string => {
+  if (!val) return '';
+  const d = new Date(val);
+  if (isNaN(d.getTime())) return '';
+  const hh = String(d.getHours()).padStart(2,'0');
+  const mm = String(d.getMinutes()).padStart(2,'0');
+  const ss = String(d.getSeconds()).padStart(2,'0');
+  return `${hh}:${mm}:${ss}`;
+};
     columns = [
-      { field: 'cardNumber', header: '卡號', visible: true },
-      { field: 'transactionSequence', header: '交易序號', visible: true },
-      { field: 'machineNumber', header: '機號/名稱', visible: true },
-      { field: 'amount', header: '金額', visible: true, style: 'text-right', format: this.moneyFormat },
-      { field: 'TXN_Date', header: '日期', visible: true },
+      { field: 'CRD_No', header: '卡號', visible: true },
+      { field: 'TXN_No', header: '交易序號', visible: true },
+      { field: 'tlt_no', header: '專櫃編號', visible: true },
+      { field: 'tlt_name', header: '櫃位名稱', visible: true },
+      { field: 'TXN_PayAmt', header: '金額', visible: true, style: 'text-right', format: this.moneyFormat },
+      { field: 'TXN_Date', header: '銷售日期', visible: true , format: this.formatYMD},
       { field: 'TXN_GUINo', header: '發票號碼', visible: true },
-      { field: 'TXN_Time', header: '交易時間', visible: true },
-      { field: 'installmentPeriod', header: '分期數', visible: true },
-      { field: 'initialPayment', header: '頭期', visible: true, style: 'text-right', format: this.moneyFormat },
-      { field: 'monthlyPayment', header: '每期', visible: true, style: 'text-right', format: this.moneyFormat }
+      { field: 'TXN_Time', header: '銷售時間', visible: true , format: this.formatISOToHHMMSS},
+      { field: 'TERM_No', header: '分期數', visible: true },
+      { field: 'EDC_InstHeadAmt', header: '頭期', visible: true, style: 'text-right', format: this.moneyFormat },
+      { field: 'EDC_InstEachAmt', header: '每期', visible: true, style: 'text-right', format: this.moneyFormat }
     ];
   
 }
