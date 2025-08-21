@@ -12,13 +12,15 @@ import { InputTextComponent } from '../../../shared/componentkit/input-text/inpu
 import { InputTextRangeComponent } from '../../../shared/componentkit/input-text-range/input-text-range.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { TranslateModule } from '@ngx-translate/core';
-import { convertDateToYYYYMM } from '@shared/componentkit/table/table.model';
 import { Fin14010Service } from '@service/api/fin/fin14010.service';
+import { option } from '@shared/models/sys/sysb000.model';
+import { convertDateToYYYYMM } from '@shared/componentkit/table/table.model';
+import { CRUDStatus } from '@shared/models/system/CRUDstatus';
 
 /** TDS1002 營業人銷售額與稅額申報書檔 */
 export interface TDS1002 {
   // 這個table有點神奇，沒有id(先新增一個)
-  id: number;
+  ID: number;
 
   /** 分店編號 */
   STO_No: string;
@@ -269,52 +271,81 @@ export interface TDS1002 {
 })
 export class FIN14010CRUComponent extends BasicCruPageComponent<TDS1002> implements OnInit {
   dataForm = this.formBuilder.group({
-    id: [{ value: null, disabled: true }], // 主鍵ID
+    ID: [{ value: null, disabled: true }], // 主鍵ID
     // 儘可以針對
     // 申報書上的[進貨總金額之進貨及費用]、[進貨總金額之固定資產]、[進口免稅貨物]、[購買國外勞務給付額]、[專案退稅金額]
     // 欄位進行修改。
 
-    REP_GUIYM: [{ value: null, disabled: true }], // 資料所屬年月
-    // REP_TaxNo: [{ value: null, disabled: true }], // 稅籍編號(必填)
-    // REP_OrgCode: [{ value: null, disabled: true }], // 總繳代號
-    REP_PurAmt_fSum: [null], // 進貨及費用金額合計
-    REP_PurAmt_cSum: [null], // 固定資產金額合計
-    REP_PurImportNoTax: [null], // 進口免稅貨物
-    REP_PurBuyExternal: [null], // 購買國外勞務給付額
-    // REP_TaxSum08: [{ value: null, disabled: true }], // 上期(月)累積留抵稅額
-    REP_TaxSum13: [null], // 得退稅限額合計
+    REP_DataType: ['', [Validators.required, Validators.maxLength(1)]], // 資料別
+    REP_GUIYM: ['', [Validators.required, Validators.maxLength(6)]], // 資料所屬年月
+
+    REP_PurBuyExternal: [null, [Validators.maxLength(16)]], // 購買國外勞務給付額
+    REP_PurImportNoTax: [null, [Validators.maxLength(16)]], // 進口免稅貨物
+    REP_PurcTotalSaleAmt: [null, [Validators.maxLength(16)]], // 固定資產
+    REP_PurfTotalSaleAmt: [null, [Validators.maxLength(16)]], // 進貨及費用
+
+    REP_TaxSum08: [null, [Validators.maxLength(16)]], // 上期(月)累積留抵稅額
+    REP_TaxSum13: [null, [Validators.maxLength(16)]], // 得退稅限額合計
   });
 
   minDate?: Date;
+
   constructor(
     private validationService: ValidationService,
     private fin14010Service: Fin14010Service
   ) {
     super();  // 呼叫父類建構子
   }
+
+  REP_DataType_Option: option[] = [
+    {value: '1', label: '一般稅額計算之專營應稅'},
+    {value: '3', label: '一般稅額計算兼營免稅、特種稅額計算'},
+    {value: '4', label: '專營特種稅額計算'},
+  ];
+
   ngOnInit(): void {
     this.initializePage('FIN14010', this.dataForm);
+    console.log('取得表單資料', this.dataForm.value);
   }
+
   onSubmit(frm: FormGroup) {
-    this.handleSubmit(frm, () => {
-      this.loading = true;
-      const body = {
-        ...frm.value,
-        id: this.isFormCreateable ? undefined : frm.get('id')?.value ?? 0,
-        // GUI_YYMM: convertDateToYYYYMM(frm.value.GUI_YYMM),
+      this.messageService.blockUi();
+      this.submitted = true;
+  
+      if (this.dataForm.invalid) {
+        this.messageService.unblockUi();
+        return;
       }
-      console.log('送出body', body);
-      // const serviceCall = this.isFormCreateable
-      //    this.fin11020Service.insertFIN11020(body)
-      //   : this.fin11020Service.updateFIN11020(body);
-      // serviceCall.pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(res => {
-      //   this.messageService.successBubble(res.Message);
-      //   if (this.isFormCreateable) {
-      //     this.dataForm.reset();
-      //   } else if (this.isFormEditable) {
-      //     this.onCancel();
-      //   }
-      // });
-    });
-  }
+  
+      const raw = frm.getRawValue();
+      const body = {
+        ...raw,
+        REP_GUIYM: convertDateToYYYYMM(raw.REP_GUIYM),
+      };
+      
+      switch (this.crudstatus) {
+        case CRUDStatus.Create:
+          if (this.canAdd()) {
+            // console.log('insert', JSON.stringify(body, null, 2));
+            // this.fin14010Service.updateFIN14010(formValue).subscribe(() => {
+            //   this.messageService.successBubble('新增成功');
+            //   // this.onCancel(); // 儲存後，會清除資料留在原頁面，不返回列表
+            //   this.dataForm.reset(); // 重置表單
+            // });
+          }
+          break;
+        case CRUDStatus.Edit:
+          if (this.canEdit()) {
+            console.log('update', JSON.stringify(body, null, 2));
+            this.fin14010Service.updateFIN14010(body).subscribe(() => {
+              // this.messageService.successBubble('更新成功');
+              this.onCancel(); // 儲存後，會返回列表
+            });
+          }
+          break;
+      }
+  
+      this.messageService.unblockUi();
+      this.submitted = false;
+    }
 }

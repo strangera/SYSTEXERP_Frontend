@@ -16,6 +16,7 @@ import { ButtonComponent } from '../../../shared/componentkit/button/button.comp
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { option } from '../../../shared/models/sys/sysb000.model';
 import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
+import { InputNumberComponent } from '@shared/componentkit/input-number/input-number.component';
 
 // ENG2001 抄錶明細檔
 export interface ENG2001 {
@@ -77,6 +78,7 @@ export interface ENG1001 {
     ButtonDynamicallydeleteComponent,
     DropdownComponent,
     InputTextComponent,
+    InputNumberComponent,
     MenubarComponent,
   ]
 })
@@ -85,21 +87,21 @@ export class ASS21030CRUComponent extends BasicCruPageComponent<ENG1001|ENG2001>
     dataForm = this.formBuilder.nonNullable.group({
       // ENG1001 能源錶號明細檔 + ENG2001 抄錶明細檔
       ID: [{value: null, label:''}], // ID (隱藏)
+      Mid: [{value: null, label:''}], // Mid (隱藏)
+      SYS_StoreNo: ['', [Validators.maxLength(10)]], // 分店編號
       ENG_YYMM: ['', [Validators.required, Validators.maxLength(6)]], // 結算年月
       ENG_Type: ['', [Validators.required, Validators.maxLength(3)]], // 能源類型
       ENG_MeterNo: ['', [Validators.required, Validators.maxLength(5)]], // 錶號
-      ENG_Date: ['', []], // 抄表日期
+      ENG_Date: [''], // 抄表日期
       ENG_CurrentReading: [0], // 本期抄錶度
       ENG_Amount: [0], // 本期抄錶金額
-      SYS_StoreNo: ['', []], // 分店編號
-      Mid: ['', []], // 外鍵
 
-      CRT_Date: ['', []], // 建立日期
-      CRT_USR_No: ['', []], // 建立人員代碼 (隱藏)
-      CRT_USR_Name: ['', []], // 建立人員姓名 (隱藏)
-      UPD_Date: ['', []], // 變更日期 (隱藏)
-      UPD_USR_No: ['', []], // 變更人員代碼 (隱藏)
-      UPD_USR_Name: ['', []], // 變更人員姓名 (隱藏)
+      CRT_Date: [''], // 建立日期
+      CRT_USR_No: [''], // 建立人員代碼 (隱藏)
+      CRT_USR_Name: [''], // 建立人員姓名 (隱藏)
+      UPD_Date: [''], // 變更日期 (隱藏)
+      UPD_USR_No: [''], // 變更人員代碼 (隱藏)
+      UPD_USR_Name: [''], // 變更人員姓名 (隱藏)
     });
   
     //
@@ -116,8 +118,6 @@ export class ASS21030CRUComponent extends BasicCruPageComponent<ENG1001|ENG2001>
   
     // ----------------------------------------------------------------
     constructor(
-      private validationService: ValidationService,
-      private ass21030Service: ASS21030Service,
     ) {
       super(); // 呼叫父類建構子
     }
