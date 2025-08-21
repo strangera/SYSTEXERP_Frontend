@@ -15,11 +15,17 @@
           </div>
 
           <!-- 卡種 -->
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="卡種" controlName="CRD_Type" [options]="cardTypeOptions" optionLabel="label"
-              optionValue="value" [control]="queryForm.controls.BNK_No" [submitted]="submitted"></app-dropdown>
-          </div>
-
+     <div class="col-12 md:col-6 lg:col-4">
+  <app-multi-select
+    label="卡種"
+    controlName="BNK_No"
+    [options]="cardTypeOptions"
+    optionLabel="label"
+    optionValue="value"
+    [control]="queryForm.controls.BNK_No"
+    [submitted]="submitted">
+  </app-multi-select>
+</div>
           <!-- 館別 -->
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown label="館別" controlName="tlt_building" [options]="BUILDING_NO_Options" optionLabel="label"
