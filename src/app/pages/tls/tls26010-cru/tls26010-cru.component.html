@@ -12,7 +12,7 @@
            class="line-height-3 m-0">
     <form [formGroup]="dataForm"
           id="dataForm"
-          (ngSubmit)="onSubmit(dataForm)">
+          (ngSubmit)="onSubmit()">
       <div class="grid p-fluid">
         <div class="col-12 md:col-6 lg:col-4">
           <app-input-text label="預售活動編號"
@@ -53,7 +53,7 @@
                     (click)="onClear()"
                     *ngIf="!isFormReadable"></app-button>
         <app-button btnType="submit"
-                    (click)="onSubmit(dataForm)"
+                    (click)="onSubmit()"
                     *ngIf="!isFormReadable"></app-button>
       </div>
     </div>

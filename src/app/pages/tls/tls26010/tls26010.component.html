@@ -106,6 +106,10 @@
                (delete)="onDelete($event)"
                (edit)="onEdit($event)"
                (detail)="onDetail($event)"
-               [loading]="service.tableLoading"></app-table>
+               [columns]="columns"
+               [totalRecords]="totalRecords()"
+               [lazy]="true"
+               [loading]="service.tableLoading"
+               (lazyLoadData)="onSubmit()"></app-table>
   </div>
 </div>
