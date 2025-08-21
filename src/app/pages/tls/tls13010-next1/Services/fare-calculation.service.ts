@@ -155,6 +155,31 @@ export class FareCalculationService {
   }
 
   /**
+ * 🎯 新增：專門用於期數計算的方法
+ */
+  calculatePeriodsBetweenDates(startDate: Date, endDate: Date): number {
+    if (!startDate || !endDate || startDate > endDate) {
+      return 1;
+    }
+
+    const startYear = startDate.getFullYear();
+    const startMonth = startDate.getMonth();
+    const endYear = endDate.getFullYear();
+    const endMonth = endDate.getMonth();
+
+    // 計算月份差
+    const months = (endYear - startYear) * 12 + (endMonth - startMonth) + 1;
+
+    console.log('🗓️ 期數計算:', {
+      開始: `${startYear}/${startMonth + 1}`,
+      結束: `${endYear}/${endMonth + 1}`,
+      期數: months
+    });
+
+    return Math.max(1, months);
+  }
+
+  /**
    * D 類型計算：比率分攤
    */
   private calculateTypeD(data: any): void {

@@ -523,9 +523,14 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
 
     // 🎯 空值處理
     if (!inputValue || inputValue.trim() === '') {
+      const oldValue = rowData[column.field];
       rowData[column.field] = null;
       this.userInputValues.delete(fieldKey);
+
+      // 🔥 觸發欄位變更事件
+      this.triggerFieldChangeEvent(column.field, null, rowData, oldValue);
       this.triggerSaveIfNeeded(rowData, column, null, isDetail, detailIndex);
+
       console.log(`✅ 日期已清空`);
       return;
     }
@@ -543,6 +548,9 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
 
       console.log(`✅ 日期解析成功: "${inputValue}" -> ${this.formatDateForDisplay(parsedDate, formatType)}`);
 
+      // 🔥 觸發欄位變更事件
+      this.triggerFieldChangeEvent(column.field, parsedDate, rowData, oldValue);
+
       // 觸發儲存事件
       this.triggerSaveIfNeeded(rowData, column, parsedDate, isDetail, detailIndex);
 
@@ -558,6 +566,21 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
     }
 
     this.cdr.detectChanges();
+  }
+
+  private triggerFieldChangeEvent(fieldName: string, newValue: any, rowData: any, oldValue?: any): void {
+    console.log(`🔥 觸發欄位變更事件: ${fieldName}`, {
+      舊值: oldValue,
+      新值: newValue,
+      rowId: rowData[this.dataKey]
+    });
+
+    // 發出 fieldChange 事件
+    this.fieldChange.emit({
+      fieldName,
+      newValue,
+      rowData
+    });
   }
 
   // ✅ 這個方法和實作都要保留
@@ -963,6 +986,7 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
   confirmDateSelection() {
     if (this.currentDateField && this.temporaryDate) {
       const column = this.getCurrentEditingColumn();
+      const oldValue = this.currentDateField.data[this.currentDateField.field];
 
       if (column && column.dateFormat && column.dateFormat.includes('year-month')) {
         // 🎯 年月格式：將日期設為該月的第一天
@@ -972,10 +996,17 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
 
         this.currentDateField.data[this.currentDateField.field] = adjustedDate;
         console.log(`✅ 年月選擇完成: ${year}/${month + 1}`);
+
+        // 🔥 觸發欄位變更事件
+        this.triggerFieldChangeEvent(this.currentDateField.field, adjustedDate, this.currentDateField.data, oldValue);
+
       } else {
         // 🎯 完整日期格式：直接使用選擇的日期
         this.currentDateField.data[this.currentDateField.field] = this.temporaryDate;
         console.log(`✅ 日期選擇完成: ${this.temporaryDate}`);
+
+        // 🔥 觸發欄位變更事件
+        this.triggerFieldChangeEvent(this.currentDateField.field, this.temporaryDate, this.currentDateField.data, oldValue);
       }
 
       if (this.currentDateField.isDetail) {
