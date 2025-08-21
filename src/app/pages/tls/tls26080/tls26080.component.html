@@ -76,5 +76,9 @@
              [tableKey]="'TLS26080'"
              [data]="service.TLS26080Data()"
              [dataKey]="'pod_no'"
-             [columns]="columns"></app-table>
+             [columns]="columns"
+             [totalRecords]="totalRecords()"
+             [lazy]="true"
+             [loading]="loading"
+             (lazyLoadData)="onSubmit()"></app-table>
 </div>

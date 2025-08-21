@@ -1,3 +1,5 @@
+import { BaseQueryResponse } from "@shared/models/api/base-api.interface";
+
 export interface TLS26080Data {
   act_no: string;              // 活動編號
   approved_date: Date;         // 核准日期
@@ -30,10 +32,15 @@ export interface TLS26080Detail {
   tlt_no: string;
   tlt_name: string;
   calc_date_type: string;
-  cap_item_D16: string;
-  tpy_rate_D16: string;
-  cap_item_D17: string;
-  tpy_rate_D17: string;
+  cap_item_D16: string; // 'D16'
+  tpy_rate_D16: string | number; // '100%' or 0~100
+  cap_item_D17: string; // 'D17'
+  tpy_rate_D17: string | number; // '100%' or 0~100
+  cap_item_3: string; // 'D16'
+  tpy_rate_3: string | number; // '100%' or 0~100
+  cap_item_4: string; // 'D17'
+  tpy_rate_4: string | number; // '100%' or 0~100
+  pod_no: string;
   pod_status: string;
   approved_userno: string;
   approved_usr_name: string;
@@ -67,6 +74,8 @@ export interface TLS2608InsertPayload {
   pod_sdate: Date;            // 活動起始日期
   pod_edate: Date;            // 活動終止日期
   pod_busdate: Date;          // 活動正檔日期
+  pod_back_sdate?: Date;      // 兌回起始日期
+  pod_back_edate?: Date;      // 兌回結束日期
   TALPORDERD_VOUCHERDetails: TLS26080Detail[]; // 活動專櫃資料
 }
 
@@ -88,6 +97,7 @@ export interface TLS26080UploadResult {
   queryTLS26080_DetailResponses: TLS26080DetailResult[];
 }
 
+export type TLS26080UploadResponse = Omit<BaseQueryResponse<unknown>, 'Data'> & { Data: TLS26080UploadResult; };
 
 // 活動資料模型
 export interface ActivityData {

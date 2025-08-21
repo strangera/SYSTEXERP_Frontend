@@ -1,4 +1,4 @@
-import { DatePipe } from '@angular/common';
+import { DatePipe, DecimalPipe } from '@angular/common';
 import { Component, OnInit, computed, effect, signal, viewChild } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { FormControl, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
@@ -12,14 +12,13 @@ import { CalendarComponent } from '@shared/componentkit/calendar/calendar.compon
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
 import { TableComponent } from '@shared/componentkit/table/table.component';
-import { Column } from '@shared/componentkit/table/table.model';
+import { Column, RowEditSaveEvent } from '@shared/componentkit/table/table.model';
 import { CRUDStatus } from '@shared/models/system/CRUDstatus';
 import { ApprovalStatus } from '@shared/models/tls/approval-status.model';
-import { ExcelImportService } from '@shared/service/excel-import.service';
 import { FileUpload, FileUploadHandlerEvent, FileUploadModule } from 'primeng/fileupload';
 import { PanelModule } from 'primeng/panel';
 import * as XLSX from 'xlsx';
-import { TLS26080Data, TLS26080Detail } from '../tls26080/tls26080.model';
+import { TLS26080Data, TLS26080Detail, TLS2608InsertPayload } from '../tls26080/tls26080.model';
 
 @Component({
   selector: 'app-tls26080-cru',
@@ -43,7 +42,7 @@ import { TLS26080Data, TLS26080Detail } from '../tls26080/tls26080.model';
 })
 export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> implements OnInit {
 
-  public dataForm = this.formBuilder.nonNullable.group({
+  public dataForm = this.formBuilder.group({
     talent_id: new FormControl<number | undefined>(void 0), // 活動編號
     tlt_id: new FormControl<string | undefined>(void 0), // 專櫃編號
     tlt_id_desc: new FormControl<string | undefined>(void 0), // 專櫃名稱
@@ -66,8 +65,10 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
   private fileSignal = signal<FormData | undefined>(void 0);
   public fileUpload = viewChild.required<FileUpload>('fileUpload');
 
-  private podNoSignal = toSignal(this.df().pod_no.valueChanges);
+  private dfSignal = toSignal(this.dataForm.valueChanges);
   private podDescSignal = toSignal(this.df().pod_desc.valueChanges);
+  private podNoSignal = toSignal(this.df().pod_no.valueChanges);
+  private podTypeSignal = toSignal(this.df().pod_type.valueChanges);
 
   private readonly selectedCampaign = computed(() => {
     const podDesc = this.podDescSignal();
@@ -78,6 +79,24 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
   // private deductionData = new Map<string, DeductionItem>();
 
   // public selectedCounter?: CounterData;
+
+  public readonly dfEffect = effect(() => {
+    const value = this.dfSignal();
+    if (!value) return;
+    console.log(`dfEffect:`, [value, this.df()]);
+  });
+
+  public readonly podNoEffect = effect(() => {
+    const podNo = this.podNoSignal();
+    if (!podNo) return;
+    console.log(`podNoEffect:`, [podNo]);
+  });
+
+  public readonly podTypeEffect = effect(() => {
+    const podType = this.podTypeSignal();
+    if (!podType) return;
+    console.log(`podTypeEffect:`, [podType]);
+  });
 
   public readonly fileUploadEffect = effect(() => {
     const file = this.fileSignal();
@@ -97,15 +116,12 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
   public readonly campaignEffect = effect(() => {
     const podDesc = this.podDescSignal();
     if (!podDesc || !this.selectedCampaign()) return;
-    const result = this.podNos.has(podDesc)
-      ? Array.from(this.podNos).filter(podNo => podNo !== podDesc)
-      : Array.from(this.podNos);
     this.dataForm.patchValue({
       pod_no: this.selectedCampaign()!.CampaignId,
       pod_sdate: new Date(this.selectedCampaign()!.StartTime),
       pod_edate: new Date(this.selectedCampaign()!.EndTime),
-    }, { emitEvent: !0 });
-    console.log(`campaignEffect:`, [podDesc, result]);
+    });
+    console.log(`campaignEffect:`, [this.selectedCampaign(), podDesc]);
   }, { allowSignalWrites: !0 });
 
   /** 初始化靜態資料 */
@@ -115,6 +131,8 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
     TLS26080CRUComponent.staticDetailData = detail;
     this.staticDataEffect.destroy(); // 只需執行一次
   });
+
+  public readonly totalRecords = computed(() => this.service.TLS26080Detail().length);
 
   // 環友資料表
   campaignColumns: Column[] = [
@@ -126,14 +144,8 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
     { field: 'Remark', header: '活動備註' },
   ];
 
-  // 環友專櫃資料表
-  // campaignCounterColumns: Column[] = [
-  //   { field: 'CounterCode', header: '專櫃編號' },
-  //   { field: 'ProductType', header: '專櫃抽成類別' },
-  // ];
-
   // 專櫃資料表
-  public counterColumns: Column[] = [
+  public readonly counterColumns: Column[] = [
     { field: 'talent_id', header: '專櫃編號', type: 'inputNumber' },
     { field: 'tlt_name', header: '櫃位名稱', type: 'input' },
     { field: 'tlt_id', header: '抽成類別', type: 'inputNumber' },
@@ -141,21 +153,23 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
     {
       field: 'calc_date_type',
       header: '預售起日計算',
-      visible: !0,
       type: 'dropdown',
       optionShowClear: !1,
-      options: () => this.calcDateType,
+      options: this.calcDateType,
       format: v => v === 'Y' ? '活動起始日至截止日' : '正檔日至截止日',
     },
-    { field: 'tpy_rate_D16', header: 'D16', groupField: 'groupField1', type: 'input' },
-    { field: 'tpy_rate_D17', header: 'D17', groupField: 'groupField1', type: 'input' },
-    { field: 'pod_status', header: '審核狀態', format: this.service.approvalStatus.bind(this) },
+    { field: 'tpy_rate_D16', header: 'D16', groupField: 'groupField1', type: 'inputNumber', validate: [this.numVal], suffix: '%', fractionDigits: 2 },
+    { field: 'tpy_rate_D17', header: 'D17', groupField: 'groupField1', type: 'inputNumber', validate: [this.numVal], suffix: '%', fractionDigits: 2 },
+    { field: 'tpy_rate_3', header: 'D16', groupField: 'groupField2', suffix: '%', fractionDigits: 2 },
+    { field: 'tpy_rate_4', header: 'D17', groupField: 'groupField2', suffix: '%', fractionDigits: 2 },
+    { field: 'pod_status', header: '審核狀態', format: this.service.approvalStatus },
     { field: 'approved_usr_name', header: '審核人員' },
     { field: 'approved_date', header: '審核日期', format: v => this.datePipe.transform(v, 'YYYY/MM/dd HH:mm') },
   ];
 
   public readonly counterColumnsGroup: Column[] = [
     { field: 'groupField1', header: '匯入分攤' },
+    { field: 'groupField2', header: '合約建檔' },
   ];
 
   // 扣款項目資料表
@@ -173,7 +187,6 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
   constructor(
     public readonly service: TLS26080Service,
     private readonly datePipe: DatePipe,
-    private readonly excelImportService: ExcelImportService,
   ) {
     super();
   }
@@ -188,8 +201,20 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
     console.log(`init:`, [this.rowdata, this.crudstatus, this.dataForm.value]);
   }
 
-  public onInsert(event: unknown): void {
-    console.log(`onInsert:`, [event]);
+  public onInsert(event: RowEditSaveEvent): void {
+    const d = event.newData as TLS26080Detail;
+    const payload: TLS26080Detail = {
+      ...d,
+      tlt_id: String(d.tlt_id),
+      tlt_no: String(d.talent_id),
+      pod_status: '0',
+      cap_item_D16: 'D16',
+      cap_item_D17: 'D17',
+      tpy_rate_D16: String(d.tpy_rate_D16),
+      tpy_rate_D17: String(d.tpy_rate_D17),
+    };
+    this.service.keyInTLS26080(payload);
+    console.log(`onInsert:`, [d, event]);
   }
 
   public onClear(): void {
@@ -209,40 +234,41 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
   // 表單提交
   public onSubmit(): void {
     this.handleSubmit(this.dataForm, () => {
-      console.log(`submit:`, [this.dataForm.value, this.service.TLS26080Detail()]);
       this.confirmationService.confirm({
         message: '是否確認存檔?',
         accept: () => {
-          this.service.insertTLS26080({
-            ...this.df(),
-            pod_no: this.df().pod_no.value!,
-            pod_desc: this.df().pod_desc.value!,
-            pod_sdate: this.df().pod_sdate.value!,
-            pod_edate: this.df().pod_edate.value!,
-            pod_busdate: this.df().pod_busdate.value!,
-            pod_type: this.df().pod_type.value!,
-            TALPORDERD_VOUCHERDetails: Array.from(this.service.TLS26080Detail()),
-          });
-          // this.messageService.successBubble('存檔成功');
+          const value = this.dataForm.getRawValue();
+          const payload = <TLS2608InsertPayload>{
+            ...value,
+            pod_no: value.pod_no,
+            pod_desc: value.pod_desc,
+            pod_sdate: value.pod_sdate,
+            pod_edate: value.pod_edate,
+            pod_busdate: value.pod_busdate,
+            pod_type: value.pod_type,
+            TALPORDERD_VOUCHERDetails: this.service.TLS26080Detail().map(item => ({
+              ...item,
+              pod_no: value.pod_no,
+              pod_type: value.pod_type,
+            })),
+          };
+
+          console.log(`submit:`, [value, payload]);
+
+          this.service.insertTLS26080(payload);
+          this.loading = !1;
         },
         reject: () => this.messageService.infoBubble('已取消存檔')
       });
     });
   }
 
-  private numValidator(value: any): { isValid: boolean; errorMessage: string[]; } {
+  private numVal(value: string): { isValid: boolean; errorMessage: string[]; } {
     console.log(`numValidator:`, [value]);
-
-    // 檢查是否為有效數字
     const num = Number(value);
-    if (isNaN(num) || !isFinite(num)) return { isValid: !1, errorMessage: ['請輸入有效的數字', '抽成率驗證錯誤'] };
-
-    // 檢查範圍是否在 0~100 之間
-    if (num < 0 || num > 100) return { isValid: !1, errorMessage: ['請輸入有效的數字', '抽成率驗證錯誤'] };
-
-    // 檢查小數點位數是否不超過一位
-    const decimalPlaces = (num.toString().split('.')[1] || '').length;
-    return { isValid: decimalPlaces <= 1, errorMessage: ['請輸入有效的數字', '抽成率驗證錯誤'] };
+    if (isNaN(num) || !isFinite(num)) return { isValid: !1, errorMessage: ['請輸入有效的數字'] };
+    if (num < 0 || num > 100) return { isValid: !1, errorMessage: ['請輸入有效的數字'] };
+    return { isValid: !0, errorMessage: [] };
   }
 
   public async handleUpload(event: FileUploadHandlerEvent): Promise<void> {
@@ -293,88 +319,4 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
     // const name = `專櫃活動設定匯入範本-${new Date().toISOString().slice(0, 10)}.xlsx`;
     XLSX.writeFile(wb, name);
   };
-
-
-
-
-
-
-
-
-  // // 專櫃選擇事件
-  // private onCounterSelect(counter: CounterData): void {
-  //   this.selectedCounter = counter;
-  //   this.loadDeductionItems(counter.counterCode);
-  // }
-
-  // // 載入扣款項目
-  // private loadDeductionItems(counterCode: string): void {
-  //   // this.deductionData = this.mockDeductionData[counterCode] || [];
-  // }
-
-  // // 新增專櫃 - 修復加入 counterName
-  // private onAddCounter(): void {
-  //   const newId = this.counterData.size + 1;
-  //   const newCounter: CounterData = {
-  //     id: newId,
-  //     counterCode: '',
-  //     counterName: '',
-  //     itemCode: '',
-  //     commissionTypeCode: '',
-  //     commissionTypeName: '',
-  //     presaleStartCalculation: '',
-  //     contractStartDate: '',
-  //     contractEndDate: '',
-  //     operationStartDate: '',
-  //     operationEndDate: '',
-  //     deductionItems: ''
-  //   };
-  //   this.counterData.set(String(newId), newCounter);
-  // }
-
-  // // 刪除專櫃
-  // public onDeleteCounter(counter: CounterData): void {
-  //   for (const [key, value] of this.counterData.entries()) {
-  //     if (value.id === counter.id) { this.counterData.delete(key); break; }
-  //   }
-  //   if (this.selectedCounter?.id !== counter.id) return;
-  //   this.selectedCounter = void 0;
-  //   this.deductionData.clear();
-  // }
-
-  // // 新增扣款項目 - 修復加入 counterName
-  // private onAddDeductionItem(): void {
-  //   if (!this.selectedCounter) return void this.messageService.warnBubble('請先選擇專櫃');
-
-  //   const newItem: DeductionItem = {
-  //     id: new Date().getTime(), // 使用時間戳作為暫時 ID
-  //     counterCode: this.selectedCounter.counterCode,
-  //     counterName: this.selectedCounter.counterName, // 加入 counterName
-  //     itemCode: '',
-  //     itemName: '',
-  //     amountOrRate: 0,
-  //     isRate: !1
-  //   };
-
-  //   this.deductionData.set(String(newItem.id), newItem);
-
-  //   // 更新 mock 資料
-  //   // if (!this.mockDeductionData[this.selectedCounter.counterCode]) {
-  //   //   this.mockDeductionData[this.selectedCounter.counterCode] = [];
-  //   // }
-  //   // this.mockDeductionData[this.selectedCounter.counterCode].push(newItem);
-  // }
-
-  // // 刪除扣款項目
-  // private onDeleteDeductionItem(item: DeductionItem): void {
-  //   for (const [key, value] of this.deductionData.entries()) {
-  //     if (value.id === item.id) { this.deductionData.delete(key); break; }
-  //   }
-
-  //   // 更新 mock 資料
-  //   // if (this.selectedCounter) {
-  //   //   this.mockDeductionData[this.selectedCounter.counterCode] =
-  //   //     this.mockDeductionData[this.selectedCounter.counterCode]?.filter(d => d.id !== item.id) || [];
-  //   // }
-  // }
 }

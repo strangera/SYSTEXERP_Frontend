@@ -66,16 +66,6 @@
       <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
         <app-button btnType="clear"
                     (click)="onClear()"></app-button>
-        <!-- <app-file-upload #fileUpload
-                         [accept]="'.xlsx,.xls,.csv'"
-                         chooseLabel="選擇 Excel 檔案"
-                         uploadLabel="上傳"
-                         cancelLabel="清除"
-                         [auto]="true"
-                         [customUpload]="true"
-                         mode="basic"
-                         [loading]="loading"
-                         (uploadHandler)="handleUpload($event)"></app-file-upload> -->
         <p-fileUpload #fileUpload
                       [styleClass]="'p-3'"
                       [mode]="'basic'"
@@ -95,38 +85,6 @@
   </p-panel>
 </div>
 
-<!-- 環友資料表格 -->
-<!-- <div class="card">
-  <div class="grid p-fluid">
-    <div class="col-12">
-      <p-panel header="環友資料"
-               class="line-height-3 m-0 mb-3">
-        <app-table [showCheckBox]="true"
-                   [showManage]="false"
-                   [data]="service.campaignData()"
-                   [dataKey]="'CampaignId'"
-                   [columns]="campaignColumns"></app-table>
-      </p-panel>
-    </div>
-  </div>
-</div> -->
-
-<!-- 環友專櫃資料表格 -->
-<!-- <div class="card">
-  <div class="grid p-fluid">
-    <div class="col-12">
-      <p-panel header="環友專櫃資料"
-               class="line-height-3 m-0 mb-3">
-        <app-table [showCheckBox]="true"
-                   [showManage]="false"
-                   [data]="service.campaignCounterData()"
-                   [dataKey]="'campaignCounterId'"
-                   [columns]="campaignCounterColumns"></app-table>
-      </p-panel>
-    </div>
-  </div>
-</div> -->
-
 <!-- 專櫃資料表格 -->
 <div class="card">
   <div class="grid p-fluid">
@@ -142,53 +100,10 @@
                    [tableKey]="'TLS26080_Counter'"
                    [columns]="counterColumns"
                    [columnGroup]="counterColumnsGroup"
+                   [totalRecords]="totalRecords()"
+                   [loading]="loading"
                    (rowEditSave)="onInsert($event)"></app-table>
-
-        <!-- 選中專櫃提示 -->
-        <!-- <div *ngIf="selectedCounter"
-             class="mt-2 p-2 bg-blue-50 border-round">
-          <small class="text-blue-600">
-            <i class="pi pi-info-circle mr-1"></i>
-            已選擇專櫃：{{ selectedCounter.counterCode }} -
-            {{ selectedCounter.commissionTypeName }}
-          </small>
-        </div> -->
       </p-panel>
     </div>
   </div>
 </div>
-
-<!-- 扣款項目表格 -->
-<!-- <p-panel header="扣款項目明細" class="line-height-3 m-0 mb-3">
-    <div class="flex justify-content-between align-items-center mb-2">
-      <div *ngIf="selectedCounter" class="text-blue-600">
-        <i class="pi pi-tag mr-1"></i>
-        專櫃編號：{{ selectedCounter.counterCode }}
-      </div>
-    </div>
-
-    <app-table
-      [data]="deductionData"
-      [columns]="deductionColumns"
-      [showCheckBox]="false"
-      dataKey="id"
-      (delete)="onDeleteDeductionItem($event)"
-    ></app-table>
-
-    <div
-      *ngIf="selectedCounter && deductionData.length === 0"
-      class="text-center py-4 text-gray-500"
-    >
-      <i class="pi pi-inbox text-4xl mb-2 block"></i>
-      <p class="m-0">目前沒有扣款項目，請點擊「新增扣款項目」開始新增</p>
-    </div>
-  </p-panel> -->
-
-<!-- 操作按鈕 -->
-<!-- <div *ngIf="!isFormReadable"
-       class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
-    <app-button btnType="clear"
-                (click)="onClearForm()"></app-button>
-    <app-button btnType="submit"
-                (click)="onSubmit(dataForm)"></app-button>
-  </div> -->
