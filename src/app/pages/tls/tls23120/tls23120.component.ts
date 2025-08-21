@@ -28,7 +28,9 @@ import { TranslateModule } from '@ngx-translate/core';
 import { Subject, Subscription, of } from 'rxjs';
 import { debounceTime, takeUntil, timeout, catchError } from 'rxjs/operators';
 import { TableComponent } from '@shared/componentkit/table/table.component';
-
+import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
+import { Button } from 'primeng/button';
+type FilterMode = 'location' | 'busType' | 'org';
 @Component({
   selector: 'app-tls23120',
   templateUrl: './tls23120.component.html',
@@ -47,6 +49,8 @@ import { TableComponent } from '@shared/componentkit/table/table.component';
     ButtonComponent,
     TranslateModule,
     TableComponent,
+    CalendarComponent,
+    Button
   ],
 })
 export class TLS23120Component extends BasicQueryPageComponent<any> implements OnDestroy {
@@ -61,20 +65,22 @@ export class TLS23120Component extends BasicQueryPageComponent<any> implements O
   data: any[] = [];
   totalRecords = 0;
 
-  queryForm = this.formBuilder.group({
-    TXN_DateStart: [this.yesterday, [Validators.required]],
-    TXN_DateEnd: [this.yesterday, [Validators.required]],
-    TLT_No: [[]],
-    bus_type: [],
-    ShowBusType: true,
-    tlt_building: [],
-     area_no: [[]],
-    tlt_floor: [[]],
-    org_id: [],
-   
-    
-   ...createPaginationConfig([{ field: 'TLT_No', order: 1 }])
-  });
+queryForm = this.formBuilder.group({
+  TXN_Date: [this.yesterday, [Validators.required]],
+
+  // ▼ 單選模式：'location' | 'busType' | 'org'
+  filterMode: ['location'],
+
+  TLT_No: [[]],
+  bus_type: [],
+  ShowBusType: true,
+  tlt_building: [],
+  area_no: [[]],
+  tlt_floor: [[]],
+  org_id: [],
+
+  ...createPaginationConfig([{ field: 'TLT_No', order: 1 }])
+});
 
   organizationOptions: any[] = [];
   bus_typeOptions: any[] = [];
@@ -146,6 +152,24 @@ export class TLS23120Component extends BasicQueryPageComponent<any> implements O
     this.queryForm.controls.ShowBusType.valueChanges
       .pipe(takeUntil(this.destroy$))
       .subscribe(v => this.syncBusTypeColumns(!!v));
+
+       // 依目前值初始化欄位可見性
+  this.syncBusTypeColumns(!!this.queryForm.controls.ShowBusType.value);
+
+  // 監聽 ShowBusType（原本的）
+  this.queryForm.controls.ShowBusType.valueChanges
+    .pipe(takeUntil(this.destroy$))
+    .subscribe(v => this.syncBusTypeColumns(!!v));
+
+  // ▼ 監聽三選一模式
+  const modeCtrl = this.queryForm.controls['filterMode'];
+  this.applyFilterMode((modeCtrl.value as any) ?? 'location');
+   modeCtrl.valueChanges
+    .pipe(takeUntil(this.destroy$))
+    .subscribe(value => {
+      const v = ((value ?? 'location') as FilterMode);
+      this.applyFilterMode(v);
+    });
   }
    ngOnDestroy(): void {
     this.destroy$.next();
@@ -210,6 +234,7 @@ onSubmit(form: FormGroup): void {
       },
       error: (err) => {
         console.error('TLS23120 查詢失敗', err);
+        this.loading = false;
         this.messageService?.errorBubble?.('查詢失敗，請稍後再試');
       },
       complete: () => {
@@ -225,7 +250,29 @@ onSubmit(form: FormGroup): void {
       target.has(col.field) ? { ...col, visible: !!show } : col
     );
   }
+private applyFilterMode(mode: 'location' | 'busType' | 'org'): void {
+  const setGroup = (names: string[], enabled: boolean) => {
+    names.forEach(n => {
+      const c = this.queryForm.get(n);
+      if (!c) return;
+      if (enabled) {
+        c.enable({ emitEvent: false });
+      } else {
+        c.reset(undefined, { emitEvent: false }); // 清空值
+        c.disable({ emitEvent: false });          // 禁用
+      }
+    });
+  };
 
+  // 各組欄位
+  const location = ['tlt_building', 'area_no', 'tlt_floor'];
+  const busType  = ['bus_type'];
+  const org      = ['org_id'];
+
+  setGroup(location, mode === 'location');
+  setGroup(busType,  mode === 'busType');
+  setGroup(org,      mode === 'org');
+}
 
   formatDateTimeYMDHM(val: string | Date): string {
     if (!val) return '';

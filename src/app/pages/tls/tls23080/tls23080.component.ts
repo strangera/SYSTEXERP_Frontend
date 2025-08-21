@@ -182,13 +182,27 @@ onSubmit(form: FormGroup): void {
 
     this.tls23080Service.queryTLS23080(payload).subscribe({
       next: (res: any) => {
-        // 你的回傳：{ Status, Data: [ {...}, ... ], TotalCount, ... }
-        const list = Array.isArray(res?.Data)
-          ? res.Data
-          : (res?.Data ? [res.Data] : []);
-        this.data = list;
+        // res.Data 可能是單筆或多筆彙總，每筆都有 tLS23080_Details:[...]
+        const groups = Array.isArray(res?.Data) ? res.Data : (res?.Data ? [res.Data] : []);
+
+        // 合併所有細項並處理日期顯示
+        const details = groups.flatMap((g: any)=>
+          Array.isArray(g?.tLS23080_Details) ? g.tLS23080_Details : []
+        ).map((d: any) => ({
+          ...d,
+          // 若要在表格顯示 YYYY-MM-DD，可轉一下；不需要就拿掉這行
+          TXN_Date: d?.TXN_Date ? formatDateToYYYY_MM_DD(d.TXN_Date) : d?.TXN_Date
+        }));
+
+        // 只顯示細項
+        this.data = details;
+
+        // 總筆數：優先用 API 回傳，否則用細項長度
         this.totalRecords =
-          typeof res?.TotalCount === 'number' ? res.TotalCount : this.data.length;
+          typeof res?.TotalCount === 'number' ? res.TotalCount : details.length;
+
+        // 若你同時需要在頁面顯示彙總(總金額們)，可留存第一筆彙總資料(不影響表格顯示)
+        // this.headerTotals = groups[0]; // 之後自行在畫面讀用
       },
       error: (err) => {
         console.error('TLS23080 查詢失敗', err);
@@ -203,6 +217,7 @@ onSubmit(form: FormGroup): void {
     });
   });
 }
+
 
 // 建議也把 formatDate 引進來：
 // import { formatDate } from '@shared/componentkit/table/table.model';
