@@ -74,7 +74,7 @@ export class TLS26050Component extends BasicQueryPageComponent<TLS26050Data> imp
     event_enddate_c: [null], // 比較活動結束日期
     tlt_no: [null], // 專櫃編號
     tax: [true], // 是否含稅
-    ...createPaginationConfig([{ field: 'talent_id', order: 1 }])
+    ...createPaginationConfig([{ field: 'team_name', order: 1 }])
   });
 
   totalRecords = 0;
@@ -142,7 +142,7 @@ export class TLS26050Component extends BasicQueryPageComponent<TLS26050Data> imp
         .pipe(finalize(() => this.loading = false))
         .subscribe(response => {
           this.setColumns(frm.value.tax);
-          this.data = response.Data;
+          this.data = response.Data.QueryData;
           this.totalRecords = response.TotalCount;
           this.queryStateService.setQueryState(this.ProgNo, frm.getRawValue());
         });

@@ -74,7 +74,7 @@ export class TLS26070Component extends BasicQueryPageComponent<TLS26070Data> imp
     event_enddate_c: [null], // 比較活動結束日期
     tlt_no: [null], // 專櫃編號
     tax: [true], // 是否含稅
-    ...createPaginationConfig([{ field: 'talent_id', order: 1 }])
+    ...createPaginationConfig([{ field: 'team_name', order: 1 }])
   });
 
   totalRecords = 0;
