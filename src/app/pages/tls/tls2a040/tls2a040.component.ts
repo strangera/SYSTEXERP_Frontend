@@ -48,7 +48,7 @@ import { RadiobuttonComponent } from "@shared/componentkit/radiobutton/radiobutt
 })
 export class TLS2A040Component extends BasicQueryPageComponent<any> implements OnInit {
   queryForm = this.formBuilder.group({
-    CRD_No: [null],  // 信用卡卡號
+    referenceNo: [null],  // 信用卡卡號
     docType: ['creditcard'],   // 預設選信用卡
     ECR_No: [null],                // 收銀機號
     TXN_No: [null],                // 交易序號
