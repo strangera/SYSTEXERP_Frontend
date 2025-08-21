@@ -14,11 +14,13 @@ import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdow
 import { TranslateModule } from '@ngx-translate/core';
 import { Fin14010Service } from '@service/api/fin/fin14010.service';
 import { option } from '@shared/models/sys/sysb000.model';
+import { convertDateToYYYYMM } from '@shared/componentkit/table/table.model';
+import { CRUDStatus } from '@shared/models/system/CRUDstatus';
 
 /** TDS1002 營業人銷售額與稅額申報書檔 */
 export interface TDS1002 {
   // 這個table有點神奇，沒有id(先新增一個)
-  id: number;
+  ID: number;
 
   /** 分店編號 */
   STO_No: string;
@@ -275,7 +277,7 @@ export class FIN14010CRUComponent extends BasicCruPageComponent<TDS1002> impleme
     // 欄位進行修改。
 
     REP_DataType: ['', [Validators.required, Validators.maxLength(1)]], // 資料別
-    REP_GUIYM: [{ value: null, disabled: true }], // 資料所屬年月
+    REP_GUIYM: ['', [Validators.required, Validators.maxLength(6)]], // 資料所屬年月
 
     REP_PurBuyExternal: [null, [Validators.maxLength(16)]], // 購買國外勞務給付額
     REP_PurImportNoTax: [null, [Validators.maxLength(16)]], // 進口免稅貨物
@@ -284,13 +286,6 @@ export class FIN14010CRUComponent extends BasicCruPageComponent<TDS1002> impleme
 
     REP_TaxSum08: [null, [Validators.maxLength(16)]], // 上期(月)累積留抵稅額
     REP_TaxSum13: [null, [Validators.maxLength(16)]], // 得退稅限額合計
-
-    CRT_Date: [''], // 建立日期
-    CRT_USR_No: [''], // 建立人員代碼 (隱藏)
-    CRT_USR_Name: [''], // 建立人員姓名 (隱藏)
-    UPD_Date: [''], // 變更日期 (隱藏)
-    UPD_USR_No: [''], // 變更人員代碼 (隱藏)
-    UPD_USR_Name: [''], // 變更人員姓名 (隱藏)
   });
 
   minDate?: Date;
@@ -310,28 +305,47 @@ export class FIN14010CRUComponent extends BasicCruPageComponent<TDS1002> impleme
 
   ngOnInit(): void {
     this.initializePage('FIN14010', this.dataForm);
+    console.log('取得表單資料', this.dataForm.value);
   }
 
   onSubmit(frm: FormGroup) {
-    this.handleSubmit(frm, () => {
-      this.loading = true;
-      const body = {
-        ...frm.value,
-        id: this.isFormCreateable ? undefined : frm.get('ID')?.value ?? 0,
-        // GUI_YYMM: convertDateToYYYYMM(frm.value.GUI_YYMM),
+      this.messageService.blockUi();
+      this.submitted = true;
+  
+      if (this.dataForm.invalid) {
+        this.messageService.unblockUi();
+        return;
       }
-      console.log('送出body', body);
-      // const serviceCall = this.isFormCreateable
-      //    this.fin11020Service.insertFIN11020(body)
-      //   : this.fin11020Service.updateFIN11020(body);
-      // serviceCall.pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(res => {
-      //   this.messageService.successBubble(res.Message);
-      //   if (this.isFormCreateable) {
-      //     this.dataForm.reset();
-      //   } else if (this.isFormEditable) {
-      //     this.onCancel();
-      //   }
-      // });
-    });
-  }
+  
+      const raw = frm.getRawValue();
+      const body = {
+        ...raw,
+        REP_GUIYM: convertDateToYYYYMM(raw.REP_GUIYM),
+      };
+      
+      switch (this.crudstatus) {
+        case CRUDStatus.Create:
+          if (this.canAdd()) {
+            // console.log('insert', JSON.stringify(body, null, 2));
+            // this.fin14010Service.updateFIN14010(formValue).subscribe(() => {
+            //   this.messageService.successBubble('新增成功');
+            //   // this.onCancel(); // 儲存後，會清除資料留在原頁面，不返回列表
+            //   this.dataForm.reset(); // 重置表單
+            // });
+          }
+          break;
+        case CRUDStatus.Edit:
+          if (this.canEdit()) {
+            console.log('update', JSON.stringify(body, null, 2));
+            this.fin14010Service.updateFIN14010(body).subscribe(() => {
+              // this.messageService.successBubble('更新成功');
+              this.onCancel(); // 儲存後，會返回列表
+            });
+          }
+          break;
+      }
+  
+      this.messageService.unblockUi();
+      this.submitted = false;
+    }
 }
