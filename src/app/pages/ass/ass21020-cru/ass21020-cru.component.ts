@@ -38,8 +38,8 @@ export class ASS21020CRUComponent extends BasicCruPageComponent<unknown> impleme
   public readonly CRUDStatus = CRUDStatus;
 
   public readonly dataForm = this.formBuilder.nonNullable.group({
-    eng_meterNo: new FormControl<string | undefined>(void 0),
-    location_no: new FormControl<string | undefined>(void 0),
+    ENG_MeterNo: new FormControl<string | undefined>(void 0),
+    Location_No: new FormControl<string | undefined>(void 0),
     floor_no: new FormControl<string | undefined>(void 0),
     floor_name: new FormControl<string | undefined>(void 0),
     floor_cat_no: new FormControl<string | undefined>(void 0),
@@ -54,7 +54,7 @@ export class ASS21020CRUComponent extends BasicCruPageComponent<unknown> impleme
   public readonly columns: Column[] = [
     { field: 'tlt_no', header: '專櫃編號' },
     { field: 'tlt_name', header: '專櫃名稱', disabled: () => !0 },
-    { field: 'location_no', header: '位置編號', disabled: () => !0 },
+    { field: 'Location_No', header: '位置編號', disabled: () => !0 },
     { field: 'business_area', header: '營業面積', disabled: () => !0 },
     { field: 'ratio', header: '比率', type: 'inputNumber' },
     { field: 'remark', header: '備註', type: 'input' },
