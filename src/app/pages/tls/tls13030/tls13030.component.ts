@@ -318,7 +318,7 @@ processResultData(resData: any[]): any[] {
             this.data = this.processResultData(res.Data);
 
             this.totalRecords = res.TotalCount || this.data.length;
-            this.messageService.successBubble('查詢成功');
+            
             this.queryStateService.setQueryState(this.ProgNo, formValue);
           } else {
             this.messageService.errorBubble('查詢失敗');

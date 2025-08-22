@@ -245,6 +245,8 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
             pod_sdate: value.pod_sdate,
             pod_edate: value.pod_edate,
             pod_busdate: value.pod_busdate,
+            pod_back_sdate: value.pod_sdate, // how to
+            pod_back_edate: value.pod_edate,
             pod_type: value.pod_type,
             TALPORDERD_VOUCHERDetails: this.service.TLS26080Detail().map(item => ({
               ...item,

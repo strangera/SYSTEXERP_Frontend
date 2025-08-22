@@ -59,6 +59,7 @@ export class ASS21010Component extends BasicQueryPageComponent<unknown> implemen
     const meters = this.engMeterSignal() || [];
     const locs = this.locationSignal() || [];
     console.log(`tableEffect:`, [types, meters, locs]);
+    if (!0) return;
 
     this.tableData.set(this.service.engMeterNoSignal().filter(item => {
       const matchesType = !types?.length || types.includes(item.ENG_Type);
@@ -110,6 +111,18 @@ export class ASS21010Component extends BasicQueryPageComponent<unknown> implemen
 
   public onSubmit(): void {
     this.handleSubmit(this.queryForm, () => {
+      const types = this.engTypeSignal() || [];
+      const meters = this.engMeterSignal() || [];
+      const locs = this.locationSignal() || [];
+
+      this.tableData.set(this.service.engMeterNoSignal().filter(item => {
+        const matchesType = !types?.length || types.includes(item.ENG_Type);
+        const matchesMeter = !meters?.length || meters.includes(item.ENG_MeterNo);
+        const matchesLocation = !locs?.length || locs.includes(item.Location_No);
+        return matchesType && matchesMeter && matchesLocation;
+      }));
+
+      console.log(`onSubmit:`, [types, meters, locs, this.tableData]);
       this.queryStateService.setQueryState(this.ProgNo, this.queryForm.value);
       this.loading = !1;
     });

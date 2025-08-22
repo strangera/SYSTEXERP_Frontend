@@ -1,9 +1,10 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, OnDestroy, signal } from '@angular/core';
 import { ASS2100ENGMeterType } from '@pages/ass/ass21010/ass21010.model';
+import { ASS21020Data, ASS21020Payload, TLTByFlag } from '@pages/ass/ass21020/ass21020.model';
 import { ErrorHandlerService } from '@service/system/error-handler.service';
 import { IPOS2002LocationItem } from '@service/utility/dropDownList.service';
-import { BaseQueryResponse, DropdownOption } from '@shared/models/api/base-api.interface';
+import { BaseQueryRequest, BaseQueryResponse, DropdownOption } from '@shared/models/api/base-api.interface';
 import { catchError, finalize, of, Subject, take, takeUntil, tap } from 'rxjs';
 import { environment } from 'src/environments/environment';
 import { EngType } from './ass21010.service';
@@ -18,14 +19,13 @@ export class ASS21020Service implements OnDestroy {
   // (Reflect.has(rowData, 'CanDelete') && rowData.CanDelete == '1') || rowData.pod_status === ApprovalStatus.未核准;
 
   // 儲存資料
-  public readonly ASS21020Data = signal<unknown[]>([]);
+  public readonly ASS21020Data = signal<ASS21020Data[]>([]);
   public readonly ASS21020Detail = signal<unknown[]>([]);
-  public readonly queryByMeterNoData = signal<unknown[]>([]);
   public readonly queryByTltNoData = signal<unknown[]>([]);
   public readonly engTypeSignal = signal<DropdownOption[]>([]);
   public readonly engMeterNoSignal = signal<ASS2100ENGMeterType[]>([]);
   public readonly locationSignal = signal<IPOS2002LocationItem[]>([]);
-  public readonly tltNoSignal = signal<DropdownOption[]>([]);
+  public readonly tltNoSignal = signal<TLTByFlag[]>([]);
   public readonly engRateSignal = signal<number>(0);
 
   public engTypeLoading = !1;
@@ -50,22 +50,17 @@ export class ASS21020Service implements OnDestroy {
 
   public loadEngType(): void {
     this.engTypeCancel$.next();
-    this.engTypeLoading = !0;
-    of().pipe(
-      take(1),
-      tap(response => this.engTypeSignal.set(response)),
-      catchError(error => this.errorHandler.handleError(error)),
-      finalize(() => {
-        this.engTypeLoading = !1;
-        console.log('查詢EngType結果:', [this.engTypeSignal()]);
-      })
-    ).subscribe();
+    this.engTypeSignal.set([
+      { No: EngType.水, Name: '水錶' },
+      { No: EngType.電, Name: '電錶' },
+      { No: EngType.瓦斯, Name: '瓦斯錶' },
+    ]);
   };
 
-  public loadEngMeterNo(types: EngType[]): void {
+  public loadEngMeterNo(type?: EngType): void {
     this.engMeterNoCancel$.next();
     this.engMeterNoLoading = !0;
-    this.http.post<BaseQueryResponse<ASS2100ENGMeterType>>(`${apiUrl}/Share/queryENG1001_ENG_MeterNo_DropDownList`, { types }).pipe(
+    this.http.post<BaseQueryResponse<ASS2100ENGMeterType>>(`${apiUrl}/Share/queryENG1001_ENG_MeterNo_DropDownList`, { type }).pipe(
       take(1),
       takeUntil(this.engMeterNoCancel$),
       tap(response => this.engMeterNoSignal.set(response.Data)),
@@ -93,10 +88,10 @@ export class ASS21020Service implements OnDestroy {
   };
 
   /** 取資料 */
-  public loadASS21020(query: unknown): void {
+  public loadASS21020(query: BaseQueryRequest & ASS21020Payload): void {
     this.tableCancel$.next();
     this.tableLoading = !0;
-    this.http.post<BaseQueryResponse<unknown>>(`${apiUrl}/ASS0000/ASS2000/queryASS21020`, query).pipe(
+    this.http.post<BaseQueryResponse<ASS21020Data>>(`${apiUrl}/ASS0000/ASS2000/queryASS21020`, query).pipe(
       take(1),
       takeUntil(this.tableCancel$),
       tap(response => this.ASS21020Data.set(response.Data)),
@@ -108,17 +103,32 @@ export class ASS21020Service implements OnDestroy {
     ).subscribe();
   };
 
-  public queryByMeterNo(eng_meterNo: string): void {
+  public loadASS21020Detail(query: BaseQueryRequest & ASS21020Payload): void {
+    this.tableCancel$.next();
+    this.tableLoading = !0;
+    this.http.post<BaseQueryResponse<ASS21020Data>>(`${apiUrl}/ASS0000/ASS2000/queryASS21020Detail`, query).pipe(
+      take(1),
+      takeUntil(this.tableCancel$),
+      tap(response => this.ASS21020Detail.set(response.Data)),
+      catchError(error => this.errorHandler.handleError(error)),
+      finalize(() => {
+        this.tableLoading = !1;
+        console.log('查詢ASS21020Detail結果:', [this.ASS21020Detail()]);
+      })
+    ).subscribe();
+  };
+
+  public queryByMeterNo(ENG_MeterNo: string): void {
     this.queryByMeterNoCancel$.next();
     this.queryByMeterNoLoading = !0;
-    this.http.post<BaseQueryResponse<unknown>>(`${apiUrl}/ASS0000/ASS2000/queryByMeterNo`, { eng_meterNo }).pipe(
+    this.http.post<BaseQueryResponse<TLTByFlag>>(`${apiUrl}/Share/queryTLTTALENTByFlag_DropDownList`, { ENG_MeterNo }).pipe(
       take(1),
       takeUntil(this.queryByMeterNoCancel$),
-      tap(response => this.queryByMeterNoData.set(response.Data)),
+      tap(response => this.tltNoSignal.set(response.Data)),
       catchError(error => this.errorHandler.handleError(error)),
       finalize(() => {
         this.queryByMeterNoLoading = !1;
-        console.log('查詢queryByMeterNo結果:', [this.queryByMeterNoData()]);
+        console.log('查詢queryByMeterNo結果:', [this.tltNoSignal()]);
       })
     ).subscribe();
   }

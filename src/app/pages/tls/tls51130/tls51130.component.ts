@@ -100,7 +100,7 @@ export class TLS51130Component extends BasicQueryPageComponent<any> {
         if (res.Status === '0000') {
           this.data = res.Data || [];
           this.totalRecords = res.TotalCount || this.data.length;
-          this.messageService.successBubble('查詢成功');
+          
           this.queryStateService.setQueryState(this.ProgNo, formValue);
         } else {
           this.messageService.errorBubble(res.Message || '查詢失敗');
@@ -108,6 +108,7 @@ export class TLS51130Component extends BasicQueryPageComponent<any> {
       },
       error: () => {
         this.messageService.errorBubble('查詢錯誤');
+        this.loading = false;
       },
       complete: () => {
         this.loading = false;

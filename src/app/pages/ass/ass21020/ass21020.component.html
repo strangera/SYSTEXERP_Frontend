@@ -19,36 +19,36 @@
             (ngSubmit)="onSubmit()">
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select label="能源類型"
-                              controlName="eng_type"
-                              [options]="service.engTypeSignal()"
-                              optionLabel="Name"
-                              optionValue="No"
-                              [control]="qf().eng_type"
-                              [submitted]="submitted"></app-multi-select>
+            <app-dropdown label="能源類型"
+                          controlName="ENG_Type"
+                          [options]="service.engTypeSignal()"
+                          optionLabel="Name"
+                          optionValue="No"
+                          [control]="qf().ENG_Type"
+                          [submitted]="submitted"></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown label="錶號"
-                          controlName="eng_meterNo"
+                          controlName="ENG_MeterNo"
                           [options]="service.engMeterNoSignal()"
-                          optionLabel="Name"
-                          optionValue="No"
-                          [control]="qf().eng_meterNo"
+                          optionLabel="ENG_MeterNo"
+                          optionValue="ENG_MeterNo"
+                          [control]="qf().ENG_MeterNo"
                           [submitted]="submitted"></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown label="專櫃編號"
                           controlName="tlt_no"
                           [options]="service.tltNoSignal()"
-                          optionLabel="Name"
-                          optionValue="No"
+                          optionLabel="TLT_Name"
+                          optionValue="TLT_No"
                           [control]="qf().tlt_no"
                           [submitted]="submitted"></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-text label="設備位置編號"
-                            controlName="location_no"
-                            [control]="qf().location_no"
+                            controlName="Location_No"
+                            [control]="qf().Location_No"
                             [disabled]="true"
                             [submitted]="submitted"></app-input-text>
           </div>
@@ -75,11 +75,11 @@
           </div>
           <!-- <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown label="設備位置編號"
-                          controlName="location_no"
+                          controlName="Location_No"
                           [options]="service.locationSignal()"
-                          optionLabel="location_no"
-                          optionValue="location_no"
-                          [control]="qf().location_no"
+                          optionLabel="Location_No"
+                          optionValue="Location_No"
+                          [control]="qf().Location_No"
                           [submitted]="submitted"></app-dropdown>
           </div> -->
         </div>

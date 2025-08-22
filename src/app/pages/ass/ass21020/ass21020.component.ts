@@ -1,5 +1,4 @@
-
-import { Component, OnInit, computed, effect } from '@angular/core';
+import { Component, OnInit, computed, effect, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
@@ -11,9 +10,10 @@ import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.compon
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
 import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
 import { TableComponent } from '@shared/componentkit/table/table.component';
-import { Column } from '@shared/componentkit/table/table.model';
+import { Column, createPaginationConfig } from '@shared/componentkit/table/table.model';
 import { AccordionModule } from 'primeng/accordion';
 import { PanelModule } from 'primeng/panel';
+import { ASS21020Payload } from './ass21020.model';
 
 @Component({
   selector: 'app-ass21020',
@@ -37,37 +37,42 @@ import { PanelModule } from 'primeng/panel';
 export class ASS21020Component extends BasicQueryPageComponent<unknown> implements OnInit {
 
   public readonly queryForm = this.formBuilder.group({
-    eng_type: new FormControl<string[] | undefined>(void 0),
-    eng_meterNo: new FormControl<string | undefined>(void 0),
-    location_no: new FormControl<string | undefined>(void 0),
+    ENG_Type: new FormControl<string | undefined>(void 0),
+    ENG_MeterNo: new FormControl<string | undefined>(void 0),
+    Location_No: new FormControl<string | undefined>(void 0),
     tlt_no: new FormControl<string | undefined>(void 0),
     eng_rate: new FormControl<number | undefined>(0),
     department_name: new FormControl<string | undefined>(void 0),
     business_area: new FormControl<string | undefined>(void 0),
     business_area_ratio: new FormControl<number | undefined>(void 0),
+    ...createPaginationConfig([{ field: '', order: 1 }]),
   });
   public readonly qf = computed(() => this.queryForm.controls);
+  public readonly totalRecord = computed(() => this.service.ASS21020Data().length);
 
-  private readonly meterNoSignal = toSignal(this.qf().eng_meterNo.valueChanges);
+  private readonly engTypeSignal = toSignal(this.qf().ENG_Type.valueChanges);
+  private readonly meterNoSignal = toSignal(this.qf().ENG_MeterNo.valueChanges);
+  private readonly locationSignal = toSignal(this.qf().Location_No.valueChanges);
   private readonly tltNoSignal = toSignal(this.qf().tlt_no.valueChanges);
 
   public readonly meterNoEffect = effect(() => {
     const meterNo = this.meterNoSignal();
-    if (!meterNo) return void this.qf().location_no.patchValue(void 0);
+    if (!meterNo) return void this.qf().Location_No.patchValue(void 0);
     this.service.queryByMeterNo(meterNo);
   }, { allowSignalWrites: !0 });
 
   public readonly tltNoEffect = effect(() => {
     const tltNo = this.tltNoSignal();
     if (!tltNo) return;
+    if (!0) return;
     this.service.queryByTltNo(tltNo);
   });
 
   public readonly columns: Column[] = [
-    { field: 'eng_type', header: '能源類型' },
-    { field: 'eng_meterNo', header: '錶號' },
-    { field: 'location_no', header: '設備位置編號' },
-    { field: 'remarks', header: '備註' },
+    { field: 'ENG_Type', header: '能源類型' },
+    { field: 'ENG_MeterNo', header: '錶號' },
+    { field: 'Location_No', header: '設備位置編號' },
+    { field: 'ENG_Remark', header: '備註' },
   ];
 
   constructor(
@@ -80,22 +85,29 @@ export class ASS21020Component extends BasicQueryPageComponent<unknown> implemen
     this.initializePage('ASS21020', '/ASS/ASS21020CRU', this.queryForm, this.onSubmit.bind(this));
 
     this.service.loadEngType();
+    this.service.loadEngMeterNo();
     this.service.loadLocationNo();
-    this.service.loadASS21020({});
-
-    // this.ProgNo = '320002';
-    // Initialize dropdown options
-    // this.funInfo = this.authService.getUserPermissions(this.ProgNo);
-    // this.organizationNumberService.getOrganizationNumbers()
-    //   .subscribe((data) => (this.Departmentcode = data));
-    // this.floorService.getFloors()
-    //   .subscribe((data) => (this.floor = data));
-    // this.locationCodeService.getSystemTypes()
-    //   .subscribe((data) => (this.location = data));
+    this.service.loadASS21020({
+      EngTypes: '',
+      ENG_MeterNo: '',
+      Location_No: '',
+      SYS_StoreNo: '',
+      Mid: 0,
+      ENG_Rate: 0,
+    });
   }
 
   public onSubmit(): void {
     this.handleSubmit(this.queryForm, () => {
+      const payload = <ASS21020Payload>{
+        EngTypes: this.qf().ENG_Type.value || '',
+        ENG_MeterNo: this.qf().ENG_MeterNo.value || '',
+        Location_No: this.qf().Location_No.value || '',
+        SYS_StoreNo: '',
+        Mid: 0,
+        ENG_Rate: 0,
+      };
+      this.service.loadASS21020(payload);
 
       this.queryStateService.setQueryState(this.ProgNo, this.queryForm.value);
       this.loading = !1;
@@ -145,7 +157,7 @@ export class ASS21020Component extends BasicQueryPageComponent<unknown> implemen
   //   { field: 'energyType', header: '能源類型', visible: true },
   //   { field: 'slotNumber', header: '錶號', visible: true },
   //   { field: 'deviceLocationCode', header: '設備位置編號', visible: true },
-  //   { field: 'remarks', header: '備註', visible: true },
+  //   { field: 'ENG_Remark', header: '備註', visible: true },
   // ];
 
 

@@ -133,7 +133,7 @@ export class FIN13020Component extends BasicQueryPageComponent<any> {
       //     this.data = res.Data || [];
       //     this.totalRecords = res.TotalCount || this.data.length;
       //     this.queryStateService.setQueryState(this.ProgNo, payload);
-      //     this.messageService.successBubble('查詢成功');
+      
       //   } else {
       //     this.messageService.errorBubble('查詢失敗');
       //     this.loading = false;

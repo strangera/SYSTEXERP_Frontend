@@ -47,10 +47,10 @@ export class ASS21010Service implements OnDestroy {
     ]);
   };
 
-  public loadEngMeterNo(types?: EngType): void {
+  public loadEngMeterNo(type?: EngType): void {
     this.engMeterNoCancel$.next();
     this.engMeterNoLoading = !0;
-    this.http.post<BaseQueryResponse<ASS2100ENGMeterType>>(`${apiUrl}/Share/queryENG1001_ENG_MeterNo_DropDownList`, { types }).pipe(
+    this.http.post<BaseQueryResponse<ASS2100ENGMeterType>>(`${apiUrl}/Share/queryENG1001_ENG_MeterNo_DropDownList`, { type }).pipe(
       take(1),
       takeUntil(this.engMeterNoCancel$),
       tap(response => this.engMeterNoSignal.set(response.Data)),

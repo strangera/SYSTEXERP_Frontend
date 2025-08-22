@@ -65,6 +65,7 @@ export class TLS23020Component extends BasicQueryPageComponent<any> {
     return d;
   })();
   isRowSelectable = (row: any) => !row?.__isBackendTotal;
+  private readonly includePagingAndSorting = false;
 
   // Request
   queryForm = this.formBuilder.group({
@@ -88,8 +89,8 @@ export class TLS23020Component extends BasicQueryPageComponent<any> {
     tlt_building: [],
     tlt_floor: [],
     org_id: [],
-    isSummary: false,                 // 保留欄位，但本畫面不切換模式
-    ...createPaginationConfig([{ field: 'ECR_No', order: 1 }]),
+                 
+    ...createPaginationConfig
   });
 
   // 下拉選單選項
@@ -167,88 +168,32 @@ export class TLS23020Component extends BasicQueryPageComponent<any> {
 
 onSubmit(form: FormGroup): void {
   this.handleSubmit(form, () => {
-    const val = this.queryForm.getRawValue() as any;
-
-    // 預設分頁
-    const pageSize  = Number.isFinite(val?.pageSize)  ? val.pageSize  : 10;
-    const pageIndex = Number.isFinite(val?.pageIndex) ? val.pageIndex : 1;
-    const offset = Math.max(0, (pageIndex - 1) * pageSize);
-
-    // 排序字串
-    const orderBy =
-      Array.isArray(val?.SortBy) && val.SortBy.length
-        ? val.SortBy.map((s: any) => `${s.field} ${s.order === 1 ? 'ASC' : 'DESC'}`).join(',')
-        : undefined;
-
-    // 日期轉 yyyy-MM-ddTHH:mm:ss（本地時區，去掉時區偏移）
-    const toIso = (x: any) => {
-      if (!x) return undefined;
-      const d = typeof x === 'string' ? new Date(x) : (x as Date);
-      if (isNaN(d.getTime())) return undefined;
-      return new Date(d.getTime() - d.getTimezoneOffset() * 60000)
-        .toISOString()
-        .slice(0, 19);
-    };
-
-    // 組 payload
-    const payload: any = {
-      TXN_DateStart: toIso(val?.TXN_DateStart),
-      TXN_DateEnd:   toIso(val?.TXN_DateEnd),
-      bus_type:      val?.bus_type,
-      ShowBusType:   val?.ShowBusType,
-      tlt_building:  val?.tlt_building,
-      tlt_floor:     val?.tlt_floor,
-      org_id:        val?.org_id,
-      area_no:       val?.area_no,
-      TLT_No:        val?.TLT_No,
-      pageSize,
-      pageIndex,
-      SortBy:        val?.SortBy ?? [],
-      Offset:        offset,
-      ...(orderBy ? { OrderBy: orderBy } : {}),
-    };
-
-    // 移除空值/空陣列
-    Object.keys(payload).forEach((k) => {
-      const v = payload[k];
-      if (v === '' || v === null || v === undefined) delete payload[k];
-      if (Array.isArray(v) && v.length === 0) delete payload[k];
-    });
+    const payload = this.buildPayload(this.queryForm.getRawValue());
 
     this.loading = true;
     this.messageService?.blockUi();
 
     this.tls23020Service.queryTLS23020(payload).subscribe({
       next: (res: any) => {
-        // res.Data 可能是陣列（你給的範例是 [ { Total..., tLS23020_SubTotals: [...] } ]）
         const dataArray = Array.isArray(res?.Data) ? res.Data : (res?.Data ? [res.Data] : []);
-
-        // 把所有小計底下的 tLS23020_Details 攤平成一個陣列
         const details = dataArray.flatMap((wrapper: any) => {
           const subTotals =
             wrapper?.tLS23020_SubTotals ??
             wrapper?.TLS23020_SubTotals ??
-            wrapper?.tls23020_SubTotals ??
-            [];
+            wrapper?.tls23020_SubTotals ?? [];
           if (!Array.isArray(subTotals)) return [];
           return subTotals.flatMap((st: any) =>
             st?.tLS23020_Details ??
             st?.TLS23020_Details ??
-            st?.tls23020_Details ??
-            []
+            st?.tls23020_Details ?? []
           );
         });
 
         this.data = details;
-        this.totalRecords =
-          typeof res?.TotalCount === 'number' ? res.TotalCount : this.data.length;
-
-        // 若之後要用得到，也可以把總計/小計存起來
-        // this.totalSummary = dataArray[0] ?? null;
-        // this.subTotals = Array.isArray(dataArray[0]?.tLS23020_SubTotals) ? dataArray[0].tLS23020_SubTotals : [];
+        this.totalRecords = typeof res?.TotalCount === 'number' ? res.TotalCount : this.data.length;
       },
       error: (err) => {
-        console.error('TLS23120 查詢失敗', err);
+        console.error('TLS23020 查詢失敗', err);
         this.messageService?.errorBubble?.('查詢失敗，請稍後再試');
       },
       complete: () => {
@@ -259,19 +204,67 @@ onSubmit(form: FormGroup): void {
   });
 }
 
+/** 組查詢 payload（完整覆蓋需求欄位；轉型＆清空不必要值） */
+private buildPayload(val: any) {
+  const toIso = (x: any) => this.toIso(x);
+  const asStrArr = (x: any) =>
+    Array.isArray(x) ? x.map(String) : (x == null || x === '' ? undefined : [String(x)]);
+  const asNum = (x: any) => (x == null || x === '' || isNaN(Number(x)) ? undefined : Number(x));
+
+  // 原本的推算先保留，但不一定會放進去
+  const pageSize  = Number.isFinite(val?.pageSize)  ? Number(val.pageSize)  : 10;
+  const pageIndex = Number.isFinite(val?.pageIndex) ? Number(val.pageIndex) : 1;
+  const offset    = Math.max(0, (pageIndex - 1) * pageSize);
+  const sortByArr = Array.isArray(val?.SortBy) ? val.SortBy : [];
+  const orderBy   = sortByArr.length ? sortByArr.map((s: any) => `${s.field} ${s.order === 1 ? 'ASC' : 'DESC'}`).join(',') : undefined;
+
+  const o: any = {
+    // 其餘查詢條件（照你需求）
+    TXN_DateStart:     toIso(val?.TXN_DateStart),
+    TXN_DateEnd:       toIso(val?.TXN_DateEnd),
+    ECR_No:            asStrArr(val?.ECR_No),
+    TXN_No_Start:      asNum(val?.TXN_No_Start),
+    TXN_No_End:        asNum(val?.TXN_No_End),
+    TLT_No:            asStrArr(val?.TLT_No),
+    TXN_GUINo:         (val?.TXN_GUINo ?? '').toString().trim() || undefined,
+    PLU_SalePrc_Start: asNum(val?.PLU_SalePrc_Start),
+    PLU_SalePrc_End:   asNum(val?.PLU_SalePrc_End),
+    TXN_TaxType:       val?.TXN_TaxType == null || val?.TXN_TaxType === '' ? undefined : String(val.TXN_TaxType),
+    TXN_DiscCode:      asStrArr(val?.TXN_DiscCode),
+    tlt_id:            asStrArr(val?.tlt_id),
+    PLU_MagNo:         (val?.PLU_MagNo ?? '').toString().trim() || undefined,
+    IsNoPLU_No:        !!val?.IsNoPLU_No,
+    rece_yn:           val?.rece_yn == null || val?.rece_yn === '' ? undefined : String(val.rece_yn),
+    cash_yn:           val?.cash_yn == null || val?.cash_yn === '' ? undefined : String(val.cash_yn),
+    tlt_building:      val?.tlt_building == null || val?.tlt_building === '' ? undefined : String(val.tlt_building),
+    tlt_floor:         asStrArr(val?.tlt_floor),
+    org_id:            asStrArr(val?.org_id),
+  };
+
+  if (this.includePagingAndSorting) {
+    Object.assign(o, {
+      PageSize: pageSize,
+      PageIndex: pageIndex,
+      Offset: offset,
+      SortBy: sortByArr,
+      ...(orderBy ? { OrderBy: orderBy } : {}),
+    });
+  }
+
+  Object.keys(o).forEach(k => {
+    const v = o[k];
+    if (v === undefined || v === '') delete o[k];
+    if (Array.isArray(v) && v.length === 0) delete o[k];
+  });
+
+  return o;
+}
 
   // 將 lazy 的分頁/排序寫回表單後，呼叫同一支查詢
-  runQueryFromTable(event: any) {
-    this.queryForm.patchValue(
-      {
-        pageIndex: event?.pageIndex ?? this.queryForm.value.pageIndex,
-        pageSize:  event?.pageSize  ?? this.queryForm.value.pageSize,
-        SortBy:    event?.SortBy    ?? this.queryForm.value.SortBy,
-      },
-      { emitEvent: false },
-    );
-    this.doQuery();
-  }
+runQueryFromTable(event: any) {
+  // 後端自己排序，這裡只要重新查一次即可
+  this.doQuery();
+}
 
   /** 將日期控制項轉成後端要的 yyyy-MM-ddTHH:mm:ss（本地時間、去時區偏移） */
   private toIso(val: any): string | undefined {
@@ -283,24 +276,7 @@ onSubmit(form: FormGroup): void {
       .slice(0, 19);
   }
 
-  /** 組查詢 payload，並清掉空值/空陣列，避免干擾後端繫結 */
-  private buildPayload(val: any) {
-    const o: any = {
-      ...val,
-      TXN_DateStart: this.toIso(val?.TXN_DateStart),
-      TXN_DateEnd:   this.toIso(val?.TXN_DateEnd),
-      TXN_No_Start:  val?.TXN_No_Start != null && val?.TXN_No_Start !== '' ? Number(val.TXN_No_Start) : undefined,
-      TXN_No_End:    val?.TXN_No_End   != null && val?.TXN_No_End   !== '' ? Number(val.TXN_No_End)   : undefined,
-    };
 
-    Object.keys(o).forEach((k) => {
-      const v = o[k];
-      if (v === '' || v === null || v === undefined) delete o[k];
-      if (Array.isArray(v) && v.length === 0) delete o[k];
-    });
-
-    return o;
-  }
 
   private doQuery(): void {
     const payload = this.buildPayload(this.queryForm.value);

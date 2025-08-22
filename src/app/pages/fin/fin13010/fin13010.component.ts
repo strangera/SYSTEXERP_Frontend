@@ -56,8 +56,8 @@ export class FIN13010Component extends BasicQueryPageComponent<any> {
 
   columns: any[] = [
     { field: 'TXN_Ret_No', header: '退出/折讓單號', visible: true },
-    { field: 'PUR_GUINo', header: '字軌', visible: true }, //
-    { field: 'PUR_GUINo_Start', header: '發票號碼', visible: true },//
+    { field: 'GUI_Track', header: '字軌', visible: true }, //
+    { field: 'PUR_GUINo', header: '發票號碼', visible: true },//
     { field: 'PUR_GUIDate', header: '退出/折讓日期', visible: true, format: this.formatDateFromBackend },
     { field: 'PUR_VoucherType', header: '發票格式', visible: true },
     { field: 'Credit_Type', header: '區別', visible: true, format: this.formatCreditType },  //折讓/退出
