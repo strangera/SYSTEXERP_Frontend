@@ -1,280 +1,203 @@
-import { Component } from '@angular/core';
-import { FormBuilder, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { NavigationExtras, Router } from '@angular/router';
-// Permissions
-import { FunsrightInfo, PermissionsInfo } from '../../../shared/models/system/funsrightInfo';
-// Shared
-import { AuthService } from '../../../service/system/auth.service';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-
+import { Component, OnInit } from '@angular/core';
+import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { DatePipe, NgIf } from '@angular/common';
+import { finalize } from 'rxjs';
+import { TLS32010Service, TLS32010Data, TLS32010QueryRequest } from '../../../service/api/tls/tls32010.service';
 import { ValidationService } from '../../../shared/service/validation.service';
-
-import { FloorService } from '../../../service/basic/floor.service';
-import { RegionService } from './../../../service/basic/region-code.service';
-import { OrganizationNumberService } from '../../../service/basic/organization-number.service';
-import { BusinessTypeCodeService } from '../../../service/basic/business-type-code-service.service';
-import { CommissionTypeService } from '../../../service/basic/commission-type.service';
-import { TypeService } from './../../../service/basic/type.service';
-import { TaxableService } from './../../../service/basic/taxable.service';
-import { CounterCodeService } from '../../../service/basic/counter-code.service';
-import { CooperationMethodService } from '../../../service/basic/cooperation-method.service';
+import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { AccordionModule } from 'primeng/accordion';
-import { RadiobuttonComponent } from '../../../shared/componentkit/radiobutton/radiobutton.component';
-import { NgIf } from '@angular/common';
-import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
-import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
-import { InputTextModule } from 'primeng/inputtext';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
+import { AccordionModule } from 'primeng/accordion';
 import { TranslateModule } from '@ngx-translate/core';
+import { Column, createPaginationConfig, formatAmount } from '../../../shared/componentkit/table/table.model';
+import { BusinessTypeCodeService } from '@service/basic/business-type-code-service.service';
+import { CommissionTypeService } from '@service/basic/commission-type.service';
+import { OrganizationNumberService } from '@service/basic/organization-number.service';
+import { CooperationMethodService } from '@service/basic/cooperation-method.service';
+import { FloorService } from '@service/basic/floor.service';
+import { RegionService } from '@service/basic/region-code.service';
+import { CounterCodeService } from '@service/basic/counter-code.service';
+import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
+import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
+import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
+import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
 
 @Component({
   selector: 'app-tls32010',
   templateUrl: './tls32010.component.html',
   styleUrl: './tls32010.component.scss',
   standalone: true,
-  imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, RadiobuttonComponent, NgIf, CalendarComponent, InputNumberComponent, InputTextModule, DropdownComponent, CalendarRangeComponent, ButtonComponent, TableComponent, TranslateModule]
+  imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputTextComponent, CalendarRangeComponent, TableComponent, TranslateModule, RadiobuttonComponent, DropdownComponent, NgIf, MultiSelectComponent, CalendarRangeQuickComponent]
 })
-
-export class TLS32010Component {
-
-  // 程式編號
-  ProgNo: string = '230010';
-  // 權限變數
-  funInfo?: FunsrightInfo;
-
-
-
-
-  // 查詢表單
-  loading: boolean = false;
-  submitted: boolean = false;
+export class TLS32010Component extends BasicQueryPageComponent<TLS32010Data> implements OnInit {
   queryForm = this.formBuilder.group({
-    radiolist: [1, []], // 條件篩選, radioButton
-    floor: [],  // 樓層
-    region: [], //區域
-    tax: [], //稅別
-    type: [],
-    organizationCode: [],  // 專櫃編號
-    businessTypeCode: [],  // 大分類
-    commissionType: [], // 抽成方式
-    onedatedd: [],
-    onedateyy: [],
-    weeks: [],
-    radio1: [],
-    onedatemm: [],
-    halfyear: [],
-    startdate: [], enddate: [],
-    EventID: [],
-    counterCode: [],  // 專櫃編號
+    // 日期查詢條件
+    reportType: ['6'], // 報表類型（預設區間營業報表）
+    sad_startdate: [null], // 區間開始日期
+    sad_enddate: [null], // 區間結束日期
+    eventID: [null], // 活動ID
+    event_startdate: [null], // 活動開始日期
+    event_enddate: [null], // 活動結束日期
+    // 合約查詢條件
+    floor: [null], // 樓層
+    region: [null], // 區域
+    bus_type: [null], // 大分類/中分類
+    tlt_kind: [null], // 櫃別
+    org_id: [null], // 組織代號
+    tlt_term_type: [null], // 抽成別
+    tlt_no: [null], // 專櫃編號
+    tax: [true], // 是否含稅
+    ...createPaginationConfig([{ field: 'team_name', order: -1 }])
   });
 
-  daterangeOptions: any[] = [
-    { value: 1, label: '日營業報表' },
-    { value: 2, label: '週營業報表' },
-    { value: 3, label: '月營業報表' },
-    { value: 4, label: '半年營業報表' },
-    { value: 5, label: '年營業報表' },
-    { value: 6, label: '區間營業報表' },
-    { value: 7, label: '活動區間營業報表' },
+  totalRecords = 0;
+  data: TLS32010Data[] = [];
+  selectedItems: TLS32010Data[] = [];
+
+  columns: Column[] = [];
+  columnGroup = [
+    { field: 'dept', header: '單位' },
+    { field: 'tier', header: '排名順位' }
   ];
 
-  halfyearOptions: any[] = [
-    { value: 1, label: '上半年' },
-    { value: 2, label: '下半年' },
-  ];
-
-  EventIDOptions: any[] = [
-    { value: 1, label: '活動1' },
-    { value: 2, label: '活動2' },
-  ];
-
+  //#region 選項
   organizationOptions: any[] = [];
   regionOptions: any[] = [];
   floorOptions: any[] = [];
   businessTypeCodeOptions: any[] = [];
   commissionTypeOptions: any[] = [];
-  TypeOptions: any[] = [];
-  counterCodeOptions: any[] = [];
-  taxOptions: any[] = [];
   operationsOptions: any[] = [];
-  selectedOption: string = '1'; // 預設選擇的欄位
-
-  // 表格資料
-  data: any[] = [];
-  data2: any[] = [];
-  filteredData: any[] = [...this.data];
-  columns: any[] = [
-    { field: '1', header: '樓層名稱', visible: true },
-    { field: '2', header: '營業目標', visible: true },
-    { field: '3', header: '營業實績', visible: true },
-    { field: '4', header: '達成率', visible: true },
-    { field: '5', header: '營業目標佔比', visible: true },
-    { field: '6', header: '營業實績佔比', visible: true },
-    { field: '7', header: '交易筆數', visible: true },
-    { field: '8', header: '客單價', visible: true },
-    { field: '9', header: '坪數', visible: true },
-    { field: '10', header: '坪效', visible: true },
-    { field: '11', header: '營業實績', visible: true },
-    { field: '12', header: '營業實績佔比', visible: true },
-    { field: '13', header: '臨時櫃業績佔比', visible: true },
-    { field: '14', header: '月營業目標', visible: true },
-    { field: '15', header: '營業實績', visible: true },
-    { field: '16', header: '完成率', visible: true },
+  counterCodeOptions: any[] = [];
+  taxOptions: any[] = [
+    { value: true, label: '含稅' },
+    { value: false, label: '未稅' }
   ];
-
-
-  columns2: any[] = [
-    { field: '1', header: '樓層名稱', visible: true },
-    { field: '2', header: '營業目標', visible: true },
-    { field: '3', header: '營業實績', visible: true },
-    { field: '4', header: '達成率', visible: true },
-    { field: '5', header: '營業目標佔比', visible: true },
-    { field: '6', header: '營業實績佔比', visible: true },
-    { field: '7', header: '交易筆數', visible: true },
-    { field: '8', header: '客單價', visible: true },
-    { field: '9', header: '坪數', visible: true },
-    { field: '10', header: '坪效', visible: true },
-    { field: '11', header: '營業實績', visible: true },
-    { field: '12', header: '營業實績佔比', visible: true },
-    { field: '13', header: '臨時櫃業績佔比', visible: true },
+  reportTypeOptions: any[] = [
+    { value: '6', label: '區間營業報表' },
+    { value: '7', label: '活動區間營業報表' },
   ];
-
+  EventIDOptions: any[] = [
+    { value: '1', label: '活動1' },
+    { value: '2', label: '活動2' },
+  ];
+  //#endregion
 
   constructor(
-    private router: Router,
-    private formBuilder: FormBuilder,
-    private messageService: NotificationService,
-    private authService: AuthService,
+    private tls32010Service: TLS32010Service,
     private validationService: ValidationService,
-    private floorService: FloorService,
-    private RegionService: RegionService,
+    private datePipe: DatePipe,
     private businessTypeCodeService: BusinessTypeCodeService,
     private organizationNumberService: OrganizationNumberService,
     private commissionTypeService: CommissionTypeService,
-    private TypeService: TypeService,
-    private TaxableService: TaxableService,
     private cooperationMethodService: CooperationMethodService,
-    private counterCodeService: CounterCodeService,  // 專櫃編號
-  ) { }
-
+    private floorService: FloorService,
+    private regionService: RegionService,
+    private counterCodeService: CounterCodeService,
+  ) {
+    super();
+  }
 
   ngOnInit(): void {
-
-
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
-
-    // Initialize dropdown options
-    this.floorService.getFloors().subscribe(data => {
-      this.floorOptions = data;
-    });
-    this.RegionService.getRegionOptions().subscribe(data => {
-      this.regionOptions = data;
-    });
-    this.organizationNumberService.getOrganizationNumbers().subscribe((data) => {
-      this.organizationOptions = data;
-    });
-    this.businessTypeCodeService.getBusinessTypeCodes().subscribe((data) => {
-      this.businessTypeCodeOptions = data;
-    });
-    this.commissionTypeService.getCommissionTypes().subscribe((data) => {
-      this.commissionTypeOptions = data;
-    });
-    this.TypeService.getTypeOptions().subscribe(data => {
-      this.TypeOptions = data;
-    });
-    this.cooperationMethodService.getCooperationMethods().subscribe(data => {
-      this.operationsOptions = data;
-    });
-    this.TaxableService.getSystemTypes().subscribe(data => {
-      this.taxOptions = data;
-    });
-
-    this.counterCodeService.getCounterCodes().subscribe((data) => {
-      this.counterCodeOptions = data;
-    });
-  }
-
-  canQuery(): boolean {
-    return true;
-  }
-
-  canAdd(): boolean {
-    return true;
-  }
-
-  canEdit(): boolean {
-    return true;
+    this.initializePage('TLS32010', 'tls/tls32010cru', this.queryForm, (form) => this.onSubmit(form));
+    this.loadOptions();
+    this.setColumns(true);
   }
 
   onSubmit(frm: FormGroup) {
-    console.log(frm.value);
-    this.submitted = true;
-    this.loading = true;
-    this.messageService.blockUi();
-
-    if (frm.valid && this.canQuery()) {
-      // 提交邏輯
-    }
-
-    this.loading = false;
-    this.messageService.unblockUi();
+    this.handleSubmit(frm, () => {
+      this.tls32010Service.queryTLS32010(frm.getRawValue())
+        .pipe(finalize(() => this.loading = false))
+        .subscribe(response => {
+          this.setColumns(frm.value.tax);
+          this.data = response.Data;
+          this.totalRecords = response.TotalCount;
+          this.queryStateService.setQueryState(this.ProgNo, frm.getRawValue());
+        });
+    });
   }
 
-  onSubmitQuery(frm: FormGroup) {
-    // 查詢邏輯
-    this.onSubmit(frm);
+  // 載入下拉選項
+  loadOptions() {
+    // 樓層下拉選項
+    this.floorService.getFloors().subscribe(data => {
+      this.floorOptions = data;
+    });
+    // 區域下拉選項
+    this.regionService.getRegionOptions().subscribe(data => {
+      this.regionOptions = data.map(item => ({
+        ...item,
+        value: typeof item.value === 'number' ? item.value.toString() : item.value
+      }));
+    });
+    // 大分類/中分類下拉選項
+    this.businessTypeCodeService.getBusinessTypeCodes().subscribe((data) => {
+      this.businessTypeCodeOptions = data.map(item => ({
+        ...item,
+        value: typeof item.value === 'number' ? item.value.toString() : item.value
+      }));
+    });
+    // 櫃別下拉選項
+    this.cooperationMethodService.getCooperationMethods().subscribe(data => {
+      this.operationsOptions = data.map(item => ({
+        ...item,
+        value: typeof item.value === 'number' ? item.value.toString() : item.value
+      }));
+    });
+    // 抽成別下拉選項
+    this.commissionTypeService.getCommissionTypes().subscribe((data) => {
+      this.commissionTypeOptions = data.map(item => ({
+        ...item,
+        value: typeof item.value === 'number' ? item.value.toString() : item.value
+      }));
+    });
+    // 組織代號下拉選項
+    this.organizationNumberService.getOrganizationNumbers().subscribe((data) => {
+      this.organizationOptions = data.map(item => ({
+        ...item,
+        value: typeof item.value === 'number' ? item.value.toString() : item.value
+      }));
+    });
+    // 專櫃編號下拉選項
+    this.counterCodeService.getCounterCodes().subscribe((data) => {
+      this.counterCodeOptions = data.map(item => ({
+        ...item,
+        value: typeof item.value === 'number' ? item.value.toString() : item.value
+      }));
+    });
   }
 
-  onClearForm() {
-    this.queryForm.reset();  // 重置表單
-  }
-
-  onCreate() {
-    if (this.canAdd()) {
-      let extras: NavigationExtras = {
-        state: {
-          crudstatus: CRUDStatus.Create,
-          queryform: this.queryForm
-        },
-        skipLocationChange: true
-      };
-      this.router.navigate(['/demoCRU'], extras);
-    }
-  }
-
-  onEdit(data: any) {
-    if (this.canEdit()) {
-      let extras: NavigationExtras = {
-        state: {
-          crudstatus: CRUDStatus.Edit,
-          rowdata: data,
-          queryform: this.queryForm
-        },
-        skipLocationChange: true
-      };
-      this.router.navigate(['/demoCRU'], extras);
-    }
-  }
-
-  onDetail(data: any) {
-    let extras: NavigationExtras = {
-      state: {
-        crudstatus: CRUDStatus.Read,
-        rowdata: data,
-        queryform: this.queryForm
-      },
-      skipLocationChange: true
-    };
-    this.router.navigate(['/demoCRU'], extras);
-  }
-
-
-  onSystemTypeChange(selectedValue: any): void {
-    this.selectedOption = selectedValue
+  // 根據銷售金額是否含稅設定顯示Header
+  setColumns(tax: boolean) {
+    this.columns = [
+      { field: 'talent_id', header: '櫃位編號', hidden: true },
+      { field: 'tlt_building', header: '館別', visible: true },
+      { field: 'org_name', header: '組織名稱', visible: true },
+      { field: 'tlt_kind', header: '櫃別', visible: true },
+      { field: 'talent_id', header: '櫃位編號', visible: true, groupField: 'dept' },
+      { field: 'talent_name', header: '櫃位名稱', visible: true, groupField: 'dept' },
+      { field: 'position_no', header: '位置編號', visible: true, groupField: 'dept' },
+      { field: 'tlt_space', header: '坪數', visible: true, format: formatAmount },
+      { field: 'sales_target', header: '營業目標', visible: true, format: formatAmount },
+      { field: 'sales_actual', header: '營業實績', hidden: tax, format: formatAmount },
+      { field: 'sales_actual_tax', header: '營業實績', hidden: !tax, format: formatAmount },
+      { field: 'transaction_count', header: '交易筆數', visible: true },
+      { field: 'avg_unit_price', header: '客單價', hidden: tax, format: formatAmount },
+      { field: 'avg_unit_price_tax', header: '客單價', hidden: !tax, format: formatAmount },
+      { field: 'floor_efficiency', header: '坪效', hidden: tax, format: formatAmount },
+      { field: 'floor_efficiency_tax', header: '坪效', hidden: !tax, format: formatAmount },
+      { field: 'achievement_rate', header: '達成率', hidden: tax, format: (value: number) => value ? `${value.toFixed(2)}%` : '0%' },
+      { field: 'achievement_rate_tax', header: '達成率', hidden: !tax, format: (value: number) => value ? `${value.toFixed(2)}%` : '0%' },
+      // 排名順位
+      { field: 'tlt_space_t', header: '坪數', visible: true, format: formatAmount, groupField: 'tier' },
+      { field: 'sales_target_t', header: '營業目標', visible: true, format: formatAmount, groupField: 'tier' },
+      { field: 'sales_actual_t', header: '營業實績', visible: true, format: formatAmount, groupField: 'tier' },
+      { field: 'transaction_count_t', header: '交易筆數', visible: true, groupField: 'tier' },
+      { field: 'avg_unit_price_t', header: '客單價', visible: true, format: formatAmount, groupField: 'tier' },
+      { field: 'floor_efficiency_t', header: '日坪效', visible: true, format: formatAmount, groupField: 'tier' },
+      { field: 'achievement_rate_t', header: '達成率', visible: true, format: (value: number) => value ? `${value.toFixed(2)}%` : '0%', groupField: 'tier' },
+    ];
   }
 }
