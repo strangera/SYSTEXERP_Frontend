@@ -21,18 +21,7 @@
       ></app-calendar>
     </div>
 
-    <!-- 專櫃編號 -->
-    <div class="col-12 md:col-6 lg:col-4">
-      <app-multi-select
-        label="專櫃編號"
-        controlName="TLT_No"
-        [options]="CounterOptions"
-        optionLabel="formLabel"
-        optionValue="value"
-        [control]="queryForm.controls.TLT_No"
-        [submitted]="submitted"
-      ></app-multi-select>
-    </div>
+
 
     <!-- 顯示大分類 -->
     <div class="col-12 md:col-6 lg:col-4">
@@ -45,6 +34,30 @@
         [submitted]="submitted"
       ></app-radiobutton>
     </div>
+<div class="col-12 md:col-6 lg:col-4"></div>
+    <!-- D. 專櫃編號（Radio：counter） -->
+<div class="col-12 md:col-6 lg:col-4">
+  <div class="flex align-items-center gap-2 mb-2">
+    <p-radioButton
+      name="filterMode"
+      formControlName="filterMode"
+      value="counter"
+      inputId="fm-counter"
+    ></p-radioButton>
+    <label for="fm-counter" class="font-medium">使用「專櫃編號」條件</label>
+  </div>
+
+  <ng-container *ngIf="queryForm.get('filterMode')?.value === 'counter'">
+    <app-multi-select
+      label="專櫃編號"
+      [options]="CounterOptions"
+      optionLabel="formLabel"
+      optionValue="value"
+      [control]="queryForm.controls.TLT_No"
+      [submitted]="submitted"
+    ></app-multi-select>
+  </ng-container>
+</div>
 
     <!-- A. 館別／區域／樓層（Radio：location） -->
     <div class="col-12">
@@ -118,6 +131,7 @@
         ></app-dropdown>
       </ng-container>
     </div>
+    <div class="col-12 md:col-6 lg:col-8"></div>
 
     <!-- C. 組織代碼／名稱（Radio：org） -->
     <div class="col-12 md:col-6 lg:col-4">
