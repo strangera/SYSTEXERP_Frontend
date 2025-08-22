@@ -253,7 +253,7 @@ onSubmit(form: FormGroup): void {
       console.log('[✅ 欄位合計結果]', this.columnTotals);
       console.log('[✅ TotalAmt 合計]', this.columnTotals['TotalAmt']);
 
-      this.messageService.successBubble('查詢成功');
+      
     },
     error: () => {
       this.messageService.errorBubble('查詢失敗，請稍後再試');

@@ -223,7 +223,7 @@ export class TLS13040Component extends BasicQueryPageComponent<any> {
             this.data = res.Data || [];
             this.totalRecords = res.TotalCount || this.data.length;
             this.queryStateService.setQueryState(this.ProgNo, formValue);
-            this.messageService.successBubble('查詢成功');
+            
           } else {
             this.messageService.errorBubble('查詢失敗');
           }
