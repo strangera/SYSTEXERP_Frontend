@@ -39,7 +39,7 @@ import { DialogModule } from 'primeng/dialog';
 import { RadioButtonModule } from 'primeng/radiobutton';
 import { finalize } from 'rxjs/operators';
 import { TranslateModule } from '@ngx-translate/core';
-import { Observable } from 'rxjs';
+import { Observable, of } from 'rxjs';
 import { TableComponent } from '@shared/componentkit/table/table.component';
 
 type DisplayMode = 'Report' | 'SummaryReport';
@@ -229,6 +229,7 @@ private toBoolOrNull(v: any): boolean | null {
 }
  // 放在 TLS23030Component 內
 onSubmit(form: FormGroup): void {
+  this.loading = true;
   const raw: any = { ...form.getRawValue() };
 
   // 1) 日期轉 yyyy-MM-dd
@@ -250,24 +251,22 @@ onSubmit(form: FormGroup): void {
   const toNumOrNull = (v: any) => (v === '' || v == null ? null : Number(v));
   const emptyToNull = (v: any) => (v === '' ? null : v);
 
-  raw['TXN_No_Start']      = toNumOrNull(raw['TXN_No_Start']);
-  raw['TXN_No_End']        = toNumOrNull(raw['TXN_No_End']);
-  raw['TXN_PayAmt_Start']  = toNumOrNull(raw['TXN_PayAmt_Start']);
-  raw['TXN_PayAmt_End']    = toNumOrNull(raw['TXN_PayAmt_End']);
-  raw['TXN_MemCard']       = emptyToNull(raw['TXN_MemCard']);
-  raw['CRD_No']            = emptyToNull(raw['CRD_No']);
-  raw['pay_taxtype']       = emptyToNull(raw['pay_taxtype']);
-  raw['rece_yn']           = emptyToNull(raw['rece_yn']);
-  raw['cash_yn']           = emptyToNull(raw['cash_yn']);
-  raw['tlt_building']      = emptyToNull(raw['tlt_building']);
+  raw['TXN_No_Start']     = toNumOrNull(raw['TXN_No_Start']);
+  raw['TXN_No_End']       = toNumOrNull(raw['TXN_No_End']);
+  raw['TXN_PayAmt_Start'] = toNumOrNull(raw['TXN_PayAmt_Start']);
+  raw['TXN_PayAmt_End']   = toNumOrNull(raw['TXN_PayAmt_End']);
+  raw['TXN_MemCard']      = emptyToNull(raw['TXN_MemCard']);
+  raw['CRD_No']           = emptyToNull(raw['CRD_No']);
+  raw['pay_taxtype']      = emptyToNull(raw['pay_taxtype']);
+  raw['rece_yn']          = emptyToNull(raw['rece_yn']);
+  raw['cash_yn']          = emptyToNull(raw['cash_yn']);
+  raw['tlt_building']     = emptyToNull(raw['tlt_building']);
 
-  // 4) 布林值改成字串（若後端要 'true'/'false' 或 'Y'/'N'，視需求調整）
-// 4) 布林值 —— 送 boolean 或 null（不要用 String(...)）
-raw['IsPayType']     = this.toBoolOrNull(raw['IsPayType']);
-raw['IsHaveTERM_No'] = this.toBoolOrNull(raw['IsHaveTERM_No']);
+  // 4) 布林值
+  raw['IsPayType']     = this.toBoolOrNull(raw['IsPayType']);
+  raw['IsHaveTERM_No'] = this.toBoolOrNull(raw['IsHaveTERM_No']);
 
-  // 5) 分頁/排序（createPaginationConfig 已建的欄位）
-  // 若是新查詢可視需要把 PageIndex 歸 0
+  // 5) 分頁/排序
   raw['PageIndex'] = raw['PageIndex'] ?? 0;
   raw['PageSize']  = raw['PageSize']  ?? 10;
   raw['SortBy']    = raw['SortBy']    ?? [{ field: 'ECR_No', order: 1 }];
@@ -280,27 +279,27 @@ raw['IsHaveTERM_No'] = this.toBoolOrNull(raw['IsHaveTERM_No']);
         // 失敗時清空資料以避免殘留
         this.data = [];
         this.totalRecords = 0;
-        return [];
+        // 回傳空結果讓串流正常結束
+        return of({ Status: 'ERROR', Data: [], TotalCount: 0 } as any);
       }),
       finalize(() => {
-        // 若有 loading 狀態可在這裡收起
+        // ✅ 無論成功/失敗都關閉 loading
+        this.loading = false;
       })
     )
     .subscribe((res: any) => {
-      // 後端常見格式：{ Status, Data, TotalCount ... }
       if (!res || (res.Status && res.Status !== '0000')) {
         this.data = [];
         this.totalRecords = 0;
         return;
       }
 
-      // 將 tLS23030_Details 攤平成一維陣列
       const details = this.extractTLS23030Details(res);
-
       this.data = details;
       this.totalRecords = res?.TotalCount ?? details.length ?? 0;
     });
 }
+
 
 /** yyyy-MM-dd */
 private toYMD(d: any): string | null {
