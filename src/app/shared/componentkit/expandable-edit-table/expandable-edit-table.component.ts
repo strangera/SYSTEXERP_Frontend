@@ -127,6 +127,11 @@ export interface ColumnDef {
   requiredMessage?: string;              // 自定義必填錯誤訊息
   validators?: ValidatorFn[];            // 自定義驗證器陣列
 
+  // 自動編輯配置（更靈活）
+  autoEditOnSelect?: boolean;    // 當此欄位被勾選(true)時自動進入編輯模式
+  autoSaveOnUnselect?: boolean;  // 當此欄位被取消勾選(false)時自動儲存並退出編輯
+  autoEditOnChange?: boolean;    // 當此欄位有任何變更時自動進入編輯模式
+
   selectorConfig?: {
     valuePropertyName: string; // 取值用的屬性名稱
     labelPropertyName: string; // 顯示用的屬性名稱
@@ -2090,5 +2095,71 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
         this.onDirectEditChange(rowData, fieldName, newValue);
       }
     }
+  }
+
+  onCheckboxChange(rowData: any, field: string, newValue: any, rowIndex: number, column: ColumnDef): void {
+    console.log(`✅ Checkbox 變更: ${field} = ${newValue} (第${rowIndex + 1}行)`);
+
+    // 🎯 勾選時：立即更新 + 進入編輯模式
+    if (newValue === true) {
+      rowData[field] = newValue;
+
+      if (column.autoEditOnSelect && !this.isRowEditing(rowIndex)) {
+        console.log(`🎯 勾選，自動進入編輯模式`);
+        setTimeout(() => {
+          this.onRowEditInit(rowData, rowIndex);
+          this.cdr.detectChanges();
+        }, 150);
+      }
+    }
+
+    // 🎯 取消勾選時：特殊處理
+    else if (newValue === false) {
+      if (this.isRowEditing(rowIndex)) {
+        console.log(`❌ 取消勾選，退出編輯模式`);
+
+        // 🚨 關鍵：使用 Promise 確保時序正確
+        this.handleUnselectWithCancel(rowData, rowIndex, field, newValue);
+      } else {
+        // 如果不在編輯模式，直接更新
+        rowData[field] = newValue;
+      }
+    }
+
+    // 觸發直接編輯保存事件
+    if (column.directEdit) {
+      this.onDirectEditChange(rowData, field, newValue, rowIndex, column);
+    }
+  }
+
+  // 🎯 專門處理取消勾選的方法
+  private async handleUnselectWithCancel(rowData: any, rowIndex: number, field: string, newValue: any): Promise<void> {
+    try {
+      // 步驟1：執行取消編輯
+      this.onRowEditCancel(rowData, rowIndex);
+
+      // 步驟2：等待取消完成
+      await this.waitForEditCancel();
+
+      // 步驟3：確保 checkbox 狀態正確
+      rowData[field] = newValue;
+      this.cdr.detectChanges();
+
+      console.log(`🔧 取消勾選完成，${field} = ${newValue}`);
+    } catch (error) {
+      console.error('處理取消勾選時發生錯誤:', error);
+      // 容錯：強制設定狀態
+      rowData[field] = newValue;
+      this.cdr.detectChanges();
+    }
+  }
+
+  // 🎯 等待編輯取消完成的輔助方法
+  private waitForEditCancel(): Promise<void> {
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        resolve();
+      }, 100);
+    });
   }
 }

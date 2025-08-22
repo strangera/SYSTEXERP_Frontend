@@ -133,7 +133,7 @@
               <!-- Checkbox 核取方塊 -->
               <div *ngSwitchCase="'checkbox'" class="checkbox-wrapper">
                 <p-checkbox [(ngModel)]="rowData[col.field]" [binary]="true"
-                  (ngModelChange)="col.directEdit ? onDirectEditChange(rowData, col.field, $event, ri, col) : null"
+                  (ngModelChange)="onCheckboxChange(rowData, col.field, $event, ri, col)"
                   [disabled]="readonly || col.editable === false"></p-checkbox>
               </div>
 
