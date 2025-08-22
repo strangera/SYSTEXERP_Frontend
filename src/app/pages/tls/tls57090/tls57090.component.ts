@@ -201,7 +201,8 @@ export class TLS57090Component extends BasicQueryPageComponent<QueryTLS57090Deta
     if (!this.historyRequestBody) {
       return;
     }
-    this.tls57090Service.exportTLS57090(this.historyRequestBody)
+    this.btnLoading = true
+    this.tls57090Service.exportTLS57090(this.historyRequestBody).pipe(untilDestroyed(this), finalize(() => this.btnLoading = false))
       .subscribe({
         next: (response: HttpResponse<Blob>) => {
           const contentDisposition = response.headers.get('Content-Disposition');
