@@ -11,13 +11,14 @@
   letter-spacing: 2px;
 }
 
-.grid {
+.report .grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 6px 12px;
   margin-bottom: 14px;
 }
-.grid .col-span-2 { grid-column: span 2 / span 2; }
+.report .grid .col-span-2 { grid-column: span 2 / span 2; }
+
 
 .label {
   display: inline-block;
