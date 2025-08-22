@@ -245,8 +245,8 @@ Object.keys(payload).forEach((k) => {
         // this.totalPayAmt = src.reduce((s: number, x: any) => s + (Number(x?.TotalPayAmt) || 0), 0);
       },
       error: (err) => {
-        console.error('TLS23130 查詢失敗', err);
-        this.messageService?.errorBubble?.('查詢失敗，請稍後再試');
+        
+        
         this.loading = false;
         this.messageService?.unblockUi();
       },
