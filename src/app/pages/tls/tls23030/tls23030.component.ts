@@ -228,16 +228,21 @@ private toBoolOrNull(v: any): boolean | null {
   return null; // 無法判斷就不傳
 }
  // 放在 TLS23030Component 內
+// ✅ 放進 TLS23030Component 內，覆蓋原本的 onSubmit
 onSubmit(form: FormGroup): void {
   this.loading = true;
+
+  // 取表單值（不改動原表單）
   const raw: any = { ...form.getRawValue() };
 
-  // 1) 日期轉 yyyy-MM-dd
+  // 1) 日期 -> yyyy-MM-dd
   raw['TXN_DateStart'] = this.toYMD(raw['TXN_DateStart']);
   raw['TXN_DateEnd']   = this.toYMD(raw['TXN_DateEnd']);
 
   // 2) 陣列/單值整理
-  const ensureArr = (v: any) => (Array.isArray(v) ? v : (v == null || v === '' ? [] : [v]));
+  const ensureArr = (v: any) =>
+    Array.isArray(v) ? v : (v == null || v === '' ? [] : [v]);
+
   raw['ECR_No']     = ensureArr(raw['ECR_No']);
   raw['TLT_No']     = ensureArr(raw['TLT_No']);
   raw['PAY_Type']   = ensureArr(raw['PAY_Type']);
@@ -248,8 +253,8 @@ onSubmit(form: FormGroup): void {
   raw['PAY_NO']     = ensureArr(raw['PAY_NO']);
 
   // 3) 數字/空字串處理
-  const toNumOrNull = (v: any) => (v === '' || v == null ? null : Number(v));
-  const emptyToNull = (v: any) => (v === '' ? null : v);
+  const toNumOrNull  = (v: any) => (v === '' || v == null ? null : Number(v));
+  const emptyToNull  = (v: any) => (v === '' ? null : v);
 
   raw['TXN_No_Start']     = toNumOrNull(raw['TXN_No_Start']);
   raw['TXN_No_End']       = toNumOrNull(raw['TXN_No_End']);
@@ -262,28 +267,56 @@ onSubmit(form: FormGroup): void {
   raw['cash_yn']          = emptyToNull(raw['cash_yn']);
   raw['tlt_building']     = emptyToNull(raw['tlt_building']);
 
-  // 4) 布林值
-  raw['IsPayType']     = this.toBoolOrNull(raw['IsPayType']);
-  raw['IsHaveTERM_No'] = this.toBoolOrNull(raw['IsHaveTERM_No']);
+  // 4) 布林值（Y/N/1/0/true/false -> boolean|null）
+  const toBoolOrNull = (v: any): boolean | null => {
+    if (typeof v === 'boolean') return v;
+    if (v == null || v === '') return null;
+    if (v === 'Y' || v === 'true' || v === 1 || v === '1') return true;
+    if (v === 'N' || v === 'false' || v === 0 || v === '0') return false;
+    return null;
+  };
+  raw['IsPayType']     = toBoolOrNull(raw['IsPayType']);
+  raw['IsHaveTERM_No'] = toBoolOrNull(raw['IsHaveTERM_No']);
 
-  // 5) 分頁/排序
-  raw['PageIndex'] = raw['PageIndex'] ?? 0;
-  raw['PageSize']  = raw['PageSize']  ?? 10;
-  raw['SortBy']    = raw['SortBy']    ?? [{ field: 'ECR_No', order: 1 }];
+  // 5) 分頁/排序 — 只保留「大寫」鍵
+  // 若表單來源是小寫 pageIndex/pageSize，也會自動吃到並轉成大寫
+  raw['PageIndex'] = Number.isFinite(raw['PageIndex'])
+    ? raw['PageIndex']
+    : (Number.isFinite(raw['pageIndex']) ? raw['pageIndex'] : 0);
+
+  raw['PageSize'] = Number.isFinite(raw['PageSize'])
+    ? raw['PageSize']
+    : (Number.isFinite(raw['pageSize']) ? raw['pageSize'] : 10);
+
+  raw['SortBy'] = Array.isArray(raw['SortBy']) && raw['SortBy'].length
+    ? raw['SortBy']
+    : [{ field: 'ECR_No', order: 1 }];
+
+  // 🔒 移除小寫鍵，避免同時傳兩組
+  delete raw.pageIndex;
+  delete raw.pageSize;
+
+  // （如需一起傳，這裡可選擇性處理 Offset/OrderBy）
+  if (Number.isFinite(raw['PageIndex']) && Number.isFinite(raw['PageSize'])) {
+    const pi = Math.max(0, Number(raw['PageIndex']));
+    const ps = Math.max(0, Number(raw['PageSize']));
+    raw['Offset'] = Math.max(0, pi * ps);
+  } else {
+    delete raw['Offset'];
+  }
+  // 若後端不吃 OrderBy，可移除
+  if (!raw['OrderBy']) delete raw['OrderBy'];
 
   this.tls23030Service.queryTLS23030(raw)
     .pipe(
-      timeout(60000),
+      timeout(60_000),
       catchError(err => {
         console.error('TLS23030 查詢失敗:', err);
-        // 失敗時清空資料以避免殘留
         this.data = [];
         this.totalRecords = 0;
-        // 回傳空結果讓串流正常結束
         return of({ Status: 'ERROR', Data: [], TotalCount: 0 } as any);
       }),
       finalize(() => {
-        // ✅ 無論成功/失敗都關閉 loading
         this.loading = false;
       })
     )
@@ -299,6 +332,7 @@ onSubmit(form: FormGroup): void {
       this.totalRecords = res?.TotalCount ?? details.length ?? 0;
     });
 }
+
 
 
 /** yyyy-MM-dd */

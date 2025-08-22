@@ -192,6 +192,7 @@ onSubmit(form: FormGroup): void {
       TXN_DateEnd:   toIso(val?.TXN_DateEnd),
       tlt_term_type: val?.tlt_term_type != null ? String(val.tlt_term_type) : undefined,
       rece_yn:       val?.rece_yn,
+      IsNoPLU_No:    toBool(val?.IsNoPLU_No),
       TLT_No:        val?.TLT_No,
       tlt_building:  val?.tlt_building,
       tlt_floor:     val?.tlt_floor,
@@ -202,8 +203,6 @@ onSubmit(form: FormGroup): void {
       ...(offset  !== undefined ? { Offset:  offset } : {}),
       ...(orderBy ? { OrderBy: orderBy } : {}),
     };
-    const b = toBool(val?.IsNoPLU_No);
-    if (b !== undefined) payload.IsNoPLU_No = b;
 
     // 移除空值/空陣列
     Object.keys(payload).forEach((k) => {
@@ -220,10 +219,6 @@ onSubmit(form: FormGroup): void {
         // res.Data: [{ Day, Discount_List: { OriginalPrice:{...}, Discount95:{...}, ... , Total:{...} } }, ...]
         const src = Array.isArray(res?.Data) ? res.Data : (res?.Data ? [res.Data] : []);
 
-        const pick = (obj: any, path: string[], def = 0) =>
-          path.reduce((o, k) => (o && o[k] != null ? o[k] : undefined), obj) ?? def;
-
-        // 想要的顯示順序（有就顯示；沒有就跳過）
         const preferredOrder = [
           'OriginalPrice','Discount95','Discount90','Discount85','Discount80',
           'Discount75','Discount70','Discount60','Discount50','SpecialPrice','Total'
@@ -235,33 +230,49 @@ onSubmit(form: FormGroup): void {
         const existingKeys = Object.keys(firstList);
         const orderedKeys = [
           ...preferredOrder.filter(k => existingKeys.includes(k)),
-          ...existingKeys.filter(k => !preferredOrder.includes(k as any)) // 任何額外的 key 也顯示
+          ...existingKeys.filter(k => !preferredOrder.includes(k as any)) // 額外 key 也顯示
         ];
 
-        // 若前端需要動態產欄位，可保存在元件屬性（可選）
         (this as any).discountKeys = orderedKeys;
         (this as any).discountMetrics = metrics;
 
-        // 把 Discount_List 完整攤平
-        this.data = src.map((row: any) => {
-          const d = row?.Discount_List ?? {};
+        // 攤平 + 過濾：整列「沒有任何數字」或「所有數字都是 0」→ 不顯示
+        const mapped = src.map((row: any) => {
           const flat: any = { Day: row?.Day ?? '' };
+          const d = row?.Discount_List;
 
-          for (const key of orderedKeys) {
-            for (const m of metrics) {
-              // 產生欄位：例如 Discount90_TXN_Net、Discount90_TXN_SaleNoTax、...
-              flat[`${key}_${m}`] = pick(d, [key, m as string], 0);
+          let foundAnyNumber = false;  // 是否至少有一個數值
+          let foundNonZero   = false;  // 是否至少有一個非 0 數值
+
+          if (d && typeof d === 'object') {
+            for (const key of orderedKeys) {
+              const bucket = d[key];
+              if (!bucket) continue; // 該折扣節點不存在 → 整組欄位跳過
+              for (const m of metrics) {
+                const raw = bucket[m as string];
+                const num = Number(raw);
+                if (Number.isFinite(num)) {
+                  foundAnyNumber = true;
+                  if (num !== 0) foundNonZero = true;
+                  // 有值就寫入（0 也寫，後面用 foundNonZero 控制是否整列剔除）
+                  flat[`${key}_${m}`] = num;
+                }
+              }
             }
           }
+
+          // 若完全沒有數字，或所有數字皆為 0 → 返回 null，待後續 filter 移除
+          if (!foundAnyNumber || !foundNonZero) return null;
+
           return flat;
         });
 
-        this.totalRecords =
-          typeof res?.TotalCount === 'number' ? res.TotalCount : this.data.length;
+        this.data = mapped.filter((x: any) => x); // 移除 null
+        this.totalRecords = this.data.length;      // 以實際顯示列數為準
       },
       error: (err) => {
         console.error('TLS23110 查詢失敗', err);
-        this.messageService?.errorBubble?.('查詢失敗，請稍後再試');
+        this.messageService?.errorBubble?.(err?.error?.Message || '查詢失敗，請稍後再試');
       },
       complete: () => {
         this.loading = false;
@@ -273,9 +284,12 @@ onSubmit(form: FormGroup): void {
 
 
 
-  moneyFormat(value: number): string {
-    return value != null ? value.toLocaleString('en-US') : '0';
-  }
+
+moneyFormat(value: any): string {
+  if (value === null || value === undefined || value === '') return '';
+  const num = Number(value);
+  return Number.isFinite(num) ? num.toLocaleString('en-US') : '';
+}
 
 columns = [
       { field: 'Day', header: '日期', visible: true },
