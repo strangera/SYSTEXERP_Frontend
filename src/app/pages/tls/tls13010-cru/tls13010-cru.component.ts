@@ -191,10 +191,9 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
     approve_status: ['1', [Validators.required]], // 必填，預設未審核
     tlt_name: ['', [Validators.required, Validators.maxLength(100)]], // 必填
     tlt_no: [''], // 必填但系統自動給號
-    ven_no: ['', [Validators.maxLength(16)]], // 必填
+    ven_no: ['', [Validators.required, Validators.maxLength(16)]],
     ven_uniform: ['', [Validators.required, Validators.maxLength(10)]], // 必填
-    VEN_Name: ['']
-    , // 必填但自動帶入
+    VEN_Name: [''], // 必填但自動帶入
     paper_type: ['', [Validators.maxLength(2)]],
     bus_type: ['', [Validators.required, Validators.maxLength(2)]], // 必填
     bus_class: ['', [Validators.required, Validators.maxLength(2)]], // 必填
@@ -391,7 +390,7 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
  */
   isFieldReadonly(fieldName: string): boolean {
     // 永遠 readonly 的欄位
-    const alwaysReadonlyFields = ['apply_no', 'tlt_no', 'approve_status', 'VEN_Name', 'contract_subno', 'company_register_address'];
+    const alwaysReadonlyFields = ['apply_no', 'tlt_no', 'approve_status', 'VEN_Name', 'contract_subno', 'company_register_address', 'ven_no'];
 
     if (alwaysReadonlyFields.includes(fieldName)) {
       return true;
@@ -470,7 +469,8 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
         // 🎯 清空相關欄位
         this.dataForm.patchValue({
           VEN_Name: '',
-          company_register_address: ''
+          company_register_address: '',
+          ven_no: ''
         });
       }
     });
@@ -495,7 +495,8 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
           // 🎯 更新廠商名稱和公司地址
           this.dataForm.patchValue({
             VEN_Name: matchedVendor.Name || '',              // 使用API返回的Name
-            company_register_address: matchedVendor.VEN_Address || ''  // 使用API返回的VEN_Address
+            company_register_address: matchedVendor.VEN_Address || '',  // 使用API返回的VEN_Address
+            ven_no: matchedVendor.ven_no || matchedVendor.ven_no || ''
           });
 
           // 🎯 立即儲存到工作流程
@@ -508,7 +509,8 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
           // 🎯 清空相關欄位
           this.dataForm.patchValue({
             VEN_Name: '',
-            company_register_address: ''
+            company_register_address: '',
+            ven_no: ''
           });
         }
       },
@@ -740,7 +742,8 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
       'VEN_Name',                    // 廠商名稱
       'contract_subno',              // 版次
       'company_register_address',     // 公司登記地址
-      'approve_status'
+      'approve_status',
+      'ven_no'                       // 廠商編號
     ];
 
     alwaysReadonlyFields.forEach(fieldName => {
@@ -781,6 +784,7 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
       apply_no: '',
       tlt_name: '',
       tlt_no: '',
+      ven_no: '',
       ven_uniform: '',
       VEN_Name: '',
       paper_type: '',                  // 這個欄位在 constants 中沒有定義，保持空白
@@ -843,6 +847,7 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
       apply_no: queryData['apply_no'] as string,
       tlt_name: queryData['tlt_name'] as string,
       tlt_no: queryData['tlt_no'] as string,
+      ven_no: queryData['ven_no'] as string,
       VEN_Name: queryData['VEN_Name'] as string,
       ven_uniform: queryData['ven_uniform'] as string,
       paper_type: queryData['paper_type'] as string,

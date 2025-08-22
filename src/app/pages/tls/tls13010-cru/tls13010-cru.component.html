@@ -27,6 +27,10 @@
                 optionValue="value" [control]="dataForm.controls.ven_uniform" [submitted]="submitted"></app-dropdown>
             </div>
             <div class="col-12 md:col-6 lg:col-4">
+              <app-input-text label="廠商編號" controlName="ven_no" optionLabel="label" optionValue="value"
+                [control]="dataForm.controls.ven_no" [submitted]="submitted"></app-input-text>
+            </div>
+            <div class="col-12 md:col-6 lg:col-4">
               <app-input-text label="廠商名稱" controlName="VEN_Name" [control]="dataForm.controls.VEN_Name"
                 [submitted]="submitted" [customPlaceholder]="'選擇廠商統一編號自動帶入'"
                 [alwaysShowPlaceholder]="true"></app-input-text>

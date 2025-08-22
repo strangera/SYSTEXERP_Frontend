@@ -54,6 +54,8 @@ export interface CleanContractData {
   tlt_no?: string;
   tlt_name: string;
   ven_uniform: string;
+  ven_no: string;
+
   VEN_Name: string;
   contract_subno?: string;
 
@@ -585,6 +587,7 @@ export class DataCleaner {
       tlt_no: rawData.tlt_no,
       tlt_name: rawData.tlt_name || '',
       ven_uniform: rawData.ven_uniform || '',
+      ven_no: rawData.ven_no || '',
       VEN_Name: rawData.VEN_Name || '',
       contract_subno: rawData.contract_subno,
 

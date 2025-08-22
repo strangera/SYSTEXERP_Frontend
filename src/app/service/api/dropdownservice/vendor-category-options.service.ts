@@ -43,7 +43,8 @@ export class VendorCategoryOptionsService {
           label: `${x.No} - ${x.Name}`,
           value: x.No,
           Name: x.Name,                    // 🎯 新增：廠商名稱
-          VEN_Address: x.VEN_Address       // 🎯 新增：廠商地址
+          VEN_Address: x.VEN_Address,     // 🎯 新增：廠商地址
+          ven_no: x.VEN_No                 // 🎯 新增：廠商編號
         })) ?? [])
       );
   }
