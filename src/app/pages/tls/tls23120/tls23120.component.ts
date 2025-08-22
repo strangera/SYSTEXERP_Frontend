@@ -33,7 +33,7 @@ import { Button } from 'primeng/button';
 import { CommonModule } from '@angular/common';
 import { RadioButtonModule } from 'primeng/radiobutton';
 import { AbstractControl, ValidatorFn } from '@angular/forms';
-type FilterMode = 'location' | 'busType' | 'org';
+type FilterMode = 'location' | 'busType' | 'org' | 'counter';
 @Component({
   selector: 'app-tls23120',
   templateUrl: './tls23120.component.html',
@@ -73,11 +73,9 @@ export class TLS23120Component extends BasicQueryPageComponent<any> implements O
 
 queryForm = this.formBuilder.group({
   TXN_Date: [this.yesterday, [Validators.required]],
+  filterMode: ['counter'],   // ✅ 預設就是「專櫃編號」
 
-  // ▼ 單選模式：'location' | 'busType' | 'org'
-  filterMode: ['location'],
-
-  TLT_No: [[]],
+  TLT_No: [[]],        // ✅ 專櫃編號（多選）
   bus_type: [],
   ShowBusType: true,
   tlt_building: [],
@@ -87,6 +85,7 @@ queryForm = this.formBuilder.group({
 
   ...createPaginationConfig([{ field: 'TLT_No', order: 1 }])
 });
+
 
   organizationOptions: any[] = [];
   bus_typeOptions: any[] = [];
@@ -175,11 +174,11 @@ queryForm = this.formBuilder.group({
 
   // ▼ 監聽三選一模式
   const modeCtrl = this.queryForm.controls['filterMode'];
-  this.applyFilterMode((modeCtrl.value as any) ?? 'location');
+  this.applyFilterMode((modeCtrl.value as any) ?? 'counter');
   modeCtrl.valueChanges
     .pipe(takeUntil(this.destroy$))
     .subscribe(value => {
-      const v = ((value ?? 'location') as FilterMode);
+      const v = ((value ?? 'counter') as FilterMode);
       this.applyFilterMode(v);
     });
   }
@@ -291,10 +290,8 @@ private filterModeRequiredValidator: ValidatorFn = (group: AbstractControl) => {
   };
 
   if (fm === 'location') {
-    // 三個任一有值就過
     return (hasVal('tlt_building') || hasVal('area_no') || hasVal('tlt_floor'))
-      ? null
-      : { filterModeRequired: true };
+      ? null : { filterModeRequired: true };
   }
   if (fm === 'busType') {
     return hasVal('bus_type') ? null : { filterModeRequired: true };
@@ -302,8 +299,12 @@ private filterModeRequiredValidator: ValidatorFn = (group: AbstractControl) => {
   if (fm === 'org') {
     return hasVal('org_id') ? null : { filterModeRequired: true };
   }
+  if (fm === 'counter') {
+    return hasVal('TLT_No') ? null : { filterModeRequired: true };
+  }
   return null;
 };
+
 
 // ➌ 小工具：切換 required
 private setRequired(controlName: string, on: boolean) {
@@ -319,38 +320,32 @@ private setRequired(controlName: string, on: boolean) {
       target.has(col.field) ? { ...col, visible: !!show } : col
     );
   }
-private applyFilterMode(mode: 'location' | 'busType' | 'org'): void {
+private applyFilterMode(mode: FilterMode): void {
   const setGroup = (names: string[], enabled: boolean) => {
     names.forEach(n => {
       const c = this.queryForm.get(n);
       if (!c) return;
-      if (enabled) {
-        c.enable({ emitEvent: false });
-      } else {
-        c.reset(undefined, { emitEvent: false });
-        c.disable({ emitEvent: false });
-      }
+      if (enabled) c.enable({ emitEvent: false });
+      else { c.reset(undefined, { emitEvent: false }); c.disable({ emitEvent: false }); }
     });
   };
 
-  // 各組欄位
   const location = ['tlt_building', 'area_no', 'tlt_floor'];
   const busType  = ['bus_type'];
   const org      = ['org_id'];
+  const counter  = ['TLT_No'];
 
   setGroup(location, mode === 'location');
   setGroup(busType,  mode === 'busType');
   setGroup(org,      mode === 'org');
+  setGroup(counter,  mode === 'counter');
 
-  // 動態 required（Angular 對陣列的 required 也會檢查 length）
   this.setRequired('bus_type', mode === 'busType');
   this.setRequired('org_id',   mode === 'org');
-  // location 是三擇一 → 用 group-level 驗證，不逐一 required
+  this.setRequired('TLT_No',   mode === 'counter'); // ✅ 新增
 
-  // 重新計算整體驗證
   this.queryForm.updateValueAndValidity({ emitEvent: false });
 }
-
   formatDateTimeYMDHM(val: string | Date): string {
     if (!val) return '';
     const d = typeof val === 'string' ? new Date(val) : val;
