@@ -202,7 +202,7 @@ export class TLS41010Component extends BasicQueryPageComponent<TLS41010Data> imp
         this.SrvIPOptions = res.Data.map(item => ({
           No: item.No,
           Name: item.Name,
-          label: item.No,   // 顯示 IP (或改成 item.Name)
+          label: item.No,   // 顯示 IP    (或改成 item.Name)
           value: item.No    // 存 IP 編號
         }));
       }
@@ -213,16 +213,16 @@ export class TLS41010Component extends BasicQueryPageComponent<TLS41010Data> imp
       }
     });
     // 環境變數下拉選單
-    this.dropDownListService.queryPOS1002TML_DropDownList().subscribe(res => {
-      if (res?.Data) {
-        this.ECR_TmplNo_Option = res.Data.map(item => ({
-          No: item.No,
-          Name: item.Name,
-          label: item.No,     // 下拉顯示
-          value: item.No      // 下拉值
-        }));
-      }
-    });
+      this.dropDownListService.queryPOS1002TML_DropDownList().subscribe(res => {
+        if (res?.Data) {
+          this.ECR_TmplNo_Option = res.Data.map(item => ({
+            No: item.No,
+            Name: item.Name,
+            label: `${item.No}-${item.Name}`,
+            value: item.No
+          }));
+        }
+      });
 
 
     this.queryForm.get('ECR_TmplNo')?.valueChanges.subscribe((tmplNo) => {

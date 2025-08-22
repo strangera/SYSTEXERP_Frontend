@@ -51,8 +51,8 @@ import { InputTextComponent } from '@shared/componentkit/input-text/input-text.c
 })
 export class TLS2A040Component extends BasicQueryPageComponent<any> implements OnInit {
   queryForm = this.formBuilder.group({
-    referenceNo: [null],                              // 信用卡卡號、券號、發票號碼
-    docType: ['creditcard', Validators.required],     // 預設選信用卡
+    referenceNo: [null],                              // 信用卡卡號、券號、發票號碼.有價券.作廢發票
+    docType: ['creditcard', Validators.required, Validators.required],     // 預設選信用卡
     ECR_No: [null],                                   // 收銀機號
     TXN_No: [null],                                   // 交易序號
     TXN_Date_Start: [yesterday, Validators.required],
