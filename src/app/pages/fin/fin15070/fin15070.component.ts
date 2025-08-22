@@ -168,10 +168,11 @@ const payload = {
         this.data = res?.Data ?? [];
         this.totalRecords = res?.TotalCount ?? this.data.length;
         this.queryStateService.setQueryState(this.ProgNo, payload);
-        this.messageService.successBubble('查詢成功');
+        
       },
       error: () => {
         this.messageService.errorBubble('查詢失敗');
+        this.loading = false;
       },
       complete: () => {
         this.loading = false;
