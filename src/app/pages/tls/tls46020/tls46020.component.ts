@@ -82,11 +82,22 @@ export class TLS46020Component extends BasicQueryPageComponent<TLS46020Item> imp
         ECR_TmplEndDate: formatDateToYYYY_MM_DD(frm.value.ECR_TmplEndDate), // 環境變數截止日期
       }
       this.tls46020Service.queryTLS46020(body).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(res => {
-        this.data = res.Data;
+        this.data = res.Data.map(item => ({
+          ...item,
+          ECR_SettleHHNN: this.formatDateTime(item.ECR_SettleHHNN as string | null),
+        }));
         this.totalRecords = res.TotalCount;
         this.queryStateService.setQueryState(this.ProgNo, frm.value);
       });
     });
+  }
+  formatDateTime(ECR_SettleHHNN: string | null): Date | null {
+    if (!ECR_SettleHHNN) return null;
+    const hours = parseInt(ECR_SettleHHNN.slice(0, 2), 10);
+    const minutes = parseInt(ECR_SettleHHNN.slice(2, 4), 10);
+    const formattedHours = hours.toString().padStart(2, '0');
+    const formattedMinutes = minutes.toString().padStart(2, '0');
+    return new Date(`1970-01-01T${formattedHours}:${formattedMinutes}:00`);
   }
   onDelete(selectedRows: TLS46020Item[]) {
     const idList = selectedRows.map(row => row.id).filter((id): id is number => typeof id === 'number');

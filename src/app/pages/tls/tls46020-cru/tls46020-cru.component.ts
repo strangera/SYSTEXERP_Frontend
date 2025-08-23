@@ -177,6 +177,7 @@ export class TLS46020CRUComponent extends BasicCruPageComponent<TLS46020Item> im
 
   ngOnInit(): void {
     this.initializePage('TLS46020', this.dataForm);
+    console.log(this.rowdata?.ECR_SettleHHNN);
     if (this.isFormCreateable) {
       this.dataForm.get('ECR_TmplStatus')?.setValue('A');
       this.dataForm.get('ECR_TmplStatus')?.disable();
