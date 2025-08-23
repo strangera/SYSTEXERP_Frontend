@@ -17,6 +17,7 @@ import { CalendarComponent } from '../../../shared/componentkit/calendar/calenda
 import { NgIf } from '@angular/common';
 import { TranslateModule } from '@ngx-translate/core';
 import { SystemOptionsService } from '@service/system/sys1000.service';
+import { DropDownListService } from '@service/utility/dropDownList.service';
 
 // 2.4.6.2 POS環境變數維護作業 CRU
 @Component({
@@ -156,6 +157,7 @@ export class TLS46020CRUComponent extends BasicCruPageComponent<TLS46020Item> im
   ECR_GUI_Type_Option = ECR_GUI_Type_Option;
   YN_Option = YN_Option;
   ECR_SettleDD_Option = ECR_SettleDD_Option;
+  TSB_Name_Option: { TSB_Name: string }[] = [];
 
   ECR_Scanner_Option = SystemOptionsService.getOptions('ECR_Scanner');
   ECR_MSR_Option = SystemOptionsService.getOptions('ECR_MSR');
@@ -171,17 +173,24 @@ export class TLS46020CRUComponent extends BasicCruPageComponent<TLS46020Item> im
 
   constructor(
     private tls46020Service: TLS46020Service,
+    private dropDownListService: DropDownListService
   ) {
     super();  // 呼叫父類建構子
   }
 
   ngOnInit(): void {
     this.initializePage('TLS46020', this.dataForm);
-    console.log(this.rowdata?.ECR_SettleHHNN);
     if (this.isFormCreateable) {
       this.dataForm.get('ECR_TmplStatus')?.setValue('A');
       this.dataForm.get('ECR_TmplStatus')?.disable();
     }
+    this.dropDownListService.queryPOS1008DropDownList().pipe(untilDestroyed(this)).subscribe({
+      next: (res) => {
+        this.TSB_Name_Option = res.Data.map(item => ({
+          TSB_Name: item.TSB_Name
+        }));
+      },
+    });
     // 監聽 ECR_GUI_Type 的變化來動態調整 ECR_GUI_PeriodQty 和 ECR_GUI_MinQty 的驗證
     this.dataForm.get('ECR_GUI_Type')?.valueChanges.pipe(untilDestroyed(this)).subscribe(value => {
       this.setGuiQtyValidators(value === '07');
