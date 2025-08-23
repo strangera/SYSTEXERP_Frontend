@@ -13,15 +13,16 @@ import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range
 import { DropDownListService, IDropdownItem } from '@service/utility/dropDownList.service';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import {
-  QueryTLS57090Request, // 統一的請求介面
+  QueryTLS57090Request,
   QueryTLS57090DetailResponse,
   QueryTLS57090SummaryResponse,
   Tls57090Service
-} from '@service/api/tls/tls57090.service'; // 更新引入的介面
+} from '@service/api/tls/tls57090.service';
 import { finalize } from 'rxjs';
-import { DatePipe } from '@angular/common'; // 引入 DatePipe
+import { DatePipe } from '@angular/common';
 import { ButtonModule } from 'primeng/button';
 import { HttpResponse } from '@angular/common/http';
+import { tap } from 'rxjs/operators'; // 引入 tap operator
 
 @Component({
   selector: 'app-tls57090',
@@ -40,31 +41,28 @@ import { HttpResponse } from '@angular/common/http';
     TranslateModule,
     ButtonModule
   ],
-  providers: [DatePipe] // 提供 DatePipe
+  providers: [DatePipe]
 })
-export class TLS57090Component extends BasicQueryPageComponent<QueryTLS57090DetailResponse | QueryTLS57090SummaryResponse> implements OnInit { // 調整 data 類型
+export class TLS57090Component extends BasicQueryPageComponent<QueryTLS57090DetailResponse | QueryTLS57090SummaryResponse> implements OnInit {
   queryForm = this.formBuilder.group({
-    HOS_No: [null], // 倉別 multi-select
-    LOGO_No: [null], // 品牌 multi-select
-    VEN_No: [''], // 廠商編號 dropdown
-    // 將 APPLY_Date_Start/End 更改為 ODM_Date_Start/End 以與後端 Request 匹配
-    ODM_Date_Start: [null], // 申請日期 起 calendar-range
-    ODM_Date_End: [null], // 申請日期 迄
-    APRV_Date_Start: [null], // 審核日期 起 calendar-range
-    APRV_Date_End: [null], // 審核日期 迄
-    ODM_Type: [null], // 單據類型 multi-select，之前是 TypeOrder
-    Status: [null], // 單據狀態 multi-select，之前是 priceChangeStatusOptions
-    DisplayMode: [1, [Validators.required]], // 顯示方式 (1: 彙總, 2: 明細)
-    ...createPaginationConfig([{ field: 'HOS_NAME', order: 1 }]), // 分頁和排序參數
+    HOS_No: [null],
+    LOGO_No: [null],
+    VEN_No: [''],
+    ODM_Date_Start: [null],
+    ODM_Date_End: [null],
+    APRV_Date_Start: [null],
+    APRV_Date_End: [null],
+    ODM_Type: [null],
+    Status: [null],
+    DisplayMode: [1, [Validators.required]],
+    ...createPaginationConfig([{ field: 'HOS_NAME', order: 1 }]),
   });
   totalRecords = 0;
-  // 將 documentTypeOptions 的 value 調整為 number 型別，以符合後端要求 (1: 進貨單, 2: 退貨單)
   documentTypeOptions = [
     { value: 1, label: '進貨單' },
     { value: 2, label: '退貨單' }
   ];
-  // 修正 priceChangeStatusOptions 為單據狀態，並將 value 調整為 string 型別，以符合後端SQL ('1', '2', '9')
-  documentStatusOptions = [ // 將名稱改為 documentStatusOptions 更具描述性
+  documentStatusOptions = [
     { value: '1', label: '已申請' },
     { value: '2', label: '已審核' },
     { value: '9', label: '已作廢' },
@@ -76,40 +74,37 @@ export class TLS57090Component extends BasicQueryPageComponent<QueryTLS57090Deta
   warehouseOptions: IDropdownItem[] = [];
   brandCodeOptions: IDropdownItem[] = [];
   vendorOptions: IDropdownItem[] = [];
-  // 調整 data 類型為聯合類型，以處理兩種不同的響應結構
   data: (QueryTLS57090DetailResponse | QueryTLS57090SummaryResponse)[] = [];
-  columns: Column[] = []; // 初始化為空，等待 DisplayMode 變化設定
+  columns: Column[] = [];
+
+  btnLoading = false;
+  historyRequestBody: QueryTLS57090Request | null = null;
 
   constructor(
     private readonly dropDownListService: DropDownListService,
     private readonly tls57090Service: Tls57090Service,
-    private datePipe: DatePipe // 注入 DatePipe
+    private datePipe: DatePipe
   ) { super(); }
 
   ngOnInit(): void {
-    // 初始化 BasicQueryPageComponent，並傳入 queryForm 和 onSubmit 處理函式
     this.initializePage('TLS57090', 'tls/tls57090cru', this.queryForm, (form) => this.onSubmit(form));
 
-    // 監聽 DisplayMode 變化以更新表格欄位
     this.queryForm.controls.DisplayMode.valueChanges.pipe(untilDestroyed(this)).subscribe(mode => {
       this.updateTableColumns(mode);
     });
-    // 立即更新一次表格欄位，確保初始狀態正確
     this.updateTableColumns(this.queryForm.controls.DisplayMode.value);
 
-    // 載入下拉選單資料
     this.dropDownListService.getPOS2034Options().pipe(untilDestroyed(this)).subscribe(response => {
-      this.warehouseOptions = response.Data.map(item => ({ ...item, label: `${item.No} - ${item.Name}` })); // 倉別
+      this.warehouseOptions = response.Data.map(item => ({ ...item, label: `${item.No} - ${item.Name}` }));
     });
     this.dropDownListService.queryPLULOGO_DropDownList().pipe(untilDestroyed(this)).subscribe(response => {
-      this.brandCodeOptions = response.Data.map(item => ({ ...item, label: `${item.No} - ${item.Name}` })); // 品牌
+      this.brandCodeOptions = response.Data.map(item => ({ ...item, label: `${item.No} - ${item.Name}` }));
     });
     this.dropDownListService.queryPOS2013_DropDownList().pipe(untilDestroyed(this)).subscribe(response => {
-      this.vendorOptions = response.Data.map(item => ({ ...item, label: `${item.No} - ${item.Name}` })); // 廠商
+      this.vendorOptions = response.Data.map(item => ({ ...item, label: `${item.No} - ${item.Name}` }));
     });
   }
 
-  // 根據 DisplayMode 動態更新表格欄位
   updateTableColumns(displayMode: number | null) {
     if (displayMode === 1) { // 彙總模式
       this.columns = [
@@ -135,108 +130,127 @@ export class TLS57090Component extends BasicQueryPageComponent<QueryTLS57090Deta
         { field: 'ODM_No', header: '單號', visible: true, showSort: true },
         { field: 'ODM_Type', header: '單據類型', visible: true, showSort: true },
         { field: 'ODM_Status', header: '單據狀態', visible: true, showSort: true },
-        { field: 'PLU_MagNo', header: '商品管理編號', visible: true, showSort: true }, // 明細特有
-        { field: 'PLU_Name', header: '品名', visible: true, showSort: true }, // 明細特有
+        { field: 'PLU_MagNo', header: '商品管理編號', visible: true, showSort: true },
+        { field: 'PLU_Name', header: '品名', visible: true, showSort: true },
         { field: 'ODD_ConfirmQty', header: '數量', visible: true, showSort: true, format: formatAmount },
-        { field: 'ODD_BuyNet', header: '未稅金額', visible: true, showSort: true, format: formatAmount }, // 明細特有
-        { field: 'ODD_BuyTax', header: '稅額', visible: true, showSort: true, format: formatAmount }, // 明細特有
-        { field: 'ODD_BuyAmt', header: '應稅金額', visible: true, showSort: true, format: formatAmount }, // 明細特有
-        { field: 'ODD_SalePrc', header: '售價', visible: true, showSort: true, format: formatAmount }, // 明細特有
-        { field: 'ODD_SaleAmt', header: '售價小計', visible: true, showSort: true, format: formatAmount }, // 明細特有
+        { field: 'ODD_BuyNet', header: '未稅金額', visible: true, showSort: true, format: formatAmount },
+        { field: 'ODD_BuyTax', header: '稅額', visible: true, showSort: true, format: formatAmount },
+        { field: 'ODD_BuyAmt', header: '應稅金額', visible: true, showSort: true, format: formatAmount },
+        { field: 'ODD_SalePrc', header: '售價', visible: true, showSort: true, format: formatAmount },
+        { field: 'ODD_SaleAmt', header: '售價小計', visible: true, showSort: true, format: formatAmount },
       ];
       this.data = [];
     } else {
-      this.columns = []; // 預設或未知模式時清空欄位
+      this.columns = [];
       this.data = [];
     }
   }
 
-  // 提交查詢表單
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
       const formValue = frm.value;
-      const displayMode = formValue.DisplayMode; // 獲取顯示模式
+      const displayMode = formValue.DisplayMode;
 
-      // 構建統一的請求物件 QueryTLS57090Request
       const requestBody: QueryTLS57090Request = {
-        ReportType: displayMode === 1 ? '彙總' : '明細', // 根據 DisplayMode 動態設定 ReportType
+        ReportType: displayMode === 1 ? '彙總' : '明細',
         HOS_No: formValue.HOS_No,
         LOGO_No: formValue.LOGO_No,
         VEN_No: formValue.VEN_No,
-        // 日期物件轉換為 YYYY-MM-DD 字串，使用 DatePipe 處理日期格式
         ODM_Date_Start: formValue.ODM_Date_Start ? this.datePipe.transform(formValue.ODM_Date_Start, 'yyyy-MM-dd') ?? undefined : undefined,
         ODM_Date_End: formValue.ODM_Date_End ? this.datePipe.transform(formValue.ODM_Date_End, 'yyyy-MM-dd') ?? undefined : undefined,
         APRV_Date_Start: formValue.APRV_Date_Start ? this.datePipe.transform(formValue.APRV_Date_Start, 'yyyy-MM-dd') ?? undefined : undefined,
         APRV_Date_End: formValue.APRV_Date_End ? this.datePipe.transform(formValue.APRV_Date_End, 'yyyy-MM-dd') ?? undefined : undefined,
-        ODM_Type: formValue.ODM_Type, // 單據類型
-        Status: formValue.Status, // 單據狀態
+        ODM_Type: formValue.ODM_Type,
+        Status: formValue.Status,
         pageIndex: frm.value.pageIndex,
         pageSize: frm.value.pageSize,
         SortBy: frm.value.SortBy,
       };
 
-      this.tls57090Service.queryTLS57090(requestBody).pipe(untilDestroyed(this), finalize(() => this.loading = false))
-        .subscribe(response => {
-          if (response.Data) { // 檢查是否成功且有 queryData
-            this.totalRecords = response.TotalCount || 0; // 直接從 totalCount 獲取總筆數
-            this.historyRequestBody = requestBody;
-            // 根據 ReportType 決定填充明細或彙總資料
-            if (requestBody.ReportType === '明細') {
-              this.data = response.Data.DetailData || [];
-            } else { // '彙總'
-              this.data = response.Data.SummaryData || [];
-            }
-            this.queryStateService.setQueryState(this.ProgNo, frm.value);
+      this.tls57090Service.queryTLS57090(requestBody).pipe(
+        untilDestroyed(this),
+        finalize(() => this.loading = false)
+      ).subscribe(response => {
+        if (response.Data) {
+          this.totalRecords = response.TotalCount || 0;
+          this.historyRequestBody = requestBody;
+          if (requestBody.ReportType === '明細') {
+            this.data = response.Data.DetailData || [];
           } else {
-            this.data = [];
-            this.totalRecords = 0;
-            this.messageService.warnBubble(response.Message || '沒有找到符合條件的資料。'); // 使用 errorMessage
+            this.data = response.Data.SummaryData || [];
           }
-        });
+          this.queryStateService.setQueryState(this.ProgNo, frm.value);
+        } else {
+          this.data = [];
+          this.totalRecords = 0;
+          this.messageService.warnBubble(response.Message || '沒有找到符合條件的資料。');
+        }
+      });
     });
   }
-  btnLoading = false;
-  historyRequestBody: QueryTLS57090Request | null = null;
-  onExport() {
+
+  onExportPDF() {
     if (!this.historyRequestBody) {
+      this.messageService.warnBubble('請先執行查詢以產生報表。');
       return;
     }
-    this.btnLoading = true
-    this.tls57090Service.exportTLS57090(this.historyRequestBody).pipe(untilDestroyed(this), finalize(() => this.btnLoading = false))
-      .subscribe({
-        next: (response: HttpResponse<Blob>) => {
-          const contentDisposition = response.headers.get('Content-Disposition');
-          // 從 header 讀取檔案名稱
-          const filename = this.getFilenameFromHeader(contentDisposition);
-          const blob = response.body;
-
-          if (blob && blob.size > 0) {
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = filename; // 使用解析出的檔名
-            document.body.appendChild(a);
-            a.click();
-            window.URL.revokeObjectURL(url);
-            document.body.removeChild(a);
-          } else {
-            this.messageService.warnBubble('沒有找到符合條件的資料，無法生成報表。');
-          }
-        },
-      });
+    this.btnLoading = true;
+    this.tls57090Service.exportTLS57090PDF(this.historyRequestBody).pipe(
+      untilDestroyed(this),
+      finalize(() => this.btnLoading = false)
+    ).subscribe({
+      next: (response: HttpResponse<Blob>) => {
+        this.handleFileExport(response, '.pdf');
+      },
+    });
   }
-  getFilenameFromHeader(contentDisposition: string | null): string {
+
+  onExportXLSX() {
+    if (!this.historyRequestBody) {
+      this.messageService.warnBubble('請先執行查詢以產生報表。');
+      return;
+    }
+    this.btnLoading = true;
+    this.tls57090Service.exportTLS57090Excel(this.historyRequestBody).pipe(
+      untilDestroyed(this),
+      finalize(() => this.btnLoading = false)
+    ).subscribe({
+      next: (response: HttpResponse<Blob>) => {
+        this.handleFileExport(response, '.xlsx');
+      },
+    });
+  }
+
+  // 處理檔案匯出的通用邏輯
+  private handleFileExport(response: HttpResponse<Blob>, fileExtension: string): void {
+    const contentDisposition = response.headers.get('Content-Disposition');
+    const filename = this.getFilenameFromHeader(contentDisposition, fileExtension);
+    const blob = response.body;
+
+    if (blob && blob.size > 0) {
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } else {
+      this.messageService.warnBubble('沒有找到符合條件的資料，無法生成報表。');
+    }
+  }
+
+  // 輔助方法：從 header 獲取檔名
+  private getFilenameFromHeader(contentDisposition: string | null, defaultExtension: string): string {
     if (!contentDisposition) {
-      return 'download.pdf';
+      return `download${defaultExtension}`;
     }
 
-    // 優先嘗試匹配新的 filename* 屬性
     const filenameStarMatch = /filename\*=([^;]+)/.exec(contentDisposition);
     if (filenameStarMatch && filenameStarMatch.length > 1) {
-      // 解析 filename* 的值，格式為 charset''encoded-string
       const encodedFilename = filenameStarMatch[1];
       try {
-        // 解碼 URL-encoded 的檔名，移除開頭的 UTF-8''
         const decoded = decodeURIComponent(encodedFilename.replace(/^UTF-8''/, ''));
         return decoded;
       } catch (error) {
@@ -245,17 +259,15 @@ export class TLS57090Component extends BasicQueryPageComponent<QueryTLS57090Deta
       }
     }
 
-    // 如果沒有 filename*，再嘗試匹配舊的 filename 屬性
     const filenameMatch = /filename="([^"]+)"/.exec(contentDisposition);
     if (filenameMatch && filenameMatch.length > 1) {
       try {
-        // 這裡如果檔名有中文，可能會變成亂碼，但可以應急
         return decodeURIComponent(filenameMatch[1].replace(/\+/g, ' '));
       } catch (error) {
         return filenameMatch[1];
       }
     }
 
-    return 'download.pdf';
+    return `download${defaultExtension}`;
   }
 }
