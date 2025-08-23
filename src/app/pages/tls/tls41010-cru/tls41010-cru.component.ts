@@ -207,19 +207,17 @@ export class TLS41010CRUComponent extends BasicCruPageComponent<TLS41010Data> im
     } else if (this.isFormEditable) {
       this.dataForm.get('ECR_No')?.disable();
     }
-
     // 環境變數下拉選單
     this.dropDownListService.queryPOS1002TML_DropDownList().subscribe(res => {
       if (res?.Data) {
         this.ECR_TmplNo_Option = res.Data.map(item => ({
           No: item.No,
           Name: item.Name,
-          label: item.No,     // 下拉顯示
-          value: item.No      // 下拉值
+          label: `${item.No}-${item.Name}`,
+          value: item.No
         }));
       }
     });
-
 
     this.dropDownListService.queryPOS10015_DropDownList().subscribe(option => {
       this.ECR_SrvIP_Option = option.Data.map(item => ({
@@ -257,6 +255,13 @@ export class TLS41010CRUComponent extends BasicCruPageComponent<TLS41010Data> im
         }));
       }
     });
+      // 綁定位置編號選取 → 自動帶出名稱
+      this.dataForm.get('ECR_LocNo')?.valueChanges.subscribe(selectedNo => {
+        const selected = this.LocOptions.find(c => c.No === selectedNo);
+        this.dataForm.patchValue({
+          ECR_TLT_Name: selected ? selected.Name : ''
+        }, { emitEvent: false });
+      });
     // 監聽欄位變化
     this.dataForm.get('ECR_TmplNo')?.valueChanges.subscribe((tmplNo) => {
       if (tmplNo) this.callTLS46020Api(tmplNo);

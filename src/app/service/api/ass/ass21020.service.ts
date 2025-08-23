@@ -2,8 +2,11 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable, OnDestroy, signal } from '@angular/core';
 import { ASS2100ENGMeterType } from '@pages/ass/ass21010/ass21010.model';
 import { ASS21020Data, ASS21020Payload, TLTByFlag } from '@pages/ass/ass21020/ass21020.model';
+import { ASS2100ENGMeterType } from '@pages/ass/ass21010/ass21010.model';
+import { ASS21020Data, ASS21020Payload, TLTByFlag } from '@pages/ass/ass21020/ass21020.model';
 import { ErrorHandlerService } from '@service/system/error-handler.service';
 import { IPOS2002LocationItem } from '@service/utility/dropDownList.service';
+import { BaseQueryRequest, BaseQueryResponse, DropdownOption } from '@shared/models/api/base-api.interface';
 import { BaseQueryRequest, BaseQueryResponse, DropdownOption } from '@shared/models/api/base-api.interface';
 import { catchError, finalize, of, Subject, take, takeUntil, tap } from 'rxjs';
 import { environment } from 'src/environments/environment';
@@ -103,31 +106,17 @@ export class ASS21020Service implements OnDestroy {
     ).subscribe();
   };
 
-  public loadASS21020Detail(query: BaseQueryRequest & ASS21020Payload): void {
-    this.tableCancel$.next();
-    this.tableLoading = !0;
-    this.http.post<BaseQueryResponse<ASS21020Data>>(`${apiUrl}/ASS0000/ASS2000/queryASS21020Detail`, query).pipe(
-      take(1),
-      takeUntil(this.tableCancel$),
-      tap(response => this.ASS21020Detail.set(response.Data)),
-      catchError(error => this.errorHandler.handleError(error)),
-      finalize(() => {
-        this.tableLoading = !1;
-        console.log('查詢ASS21020Detail結果:', [this.ASS21020Detail()]);
-      })
-    ).subscribe();
-  };
-
   public queryByMeterNo(ENG_MeterNo: string): void {
     this.queryByMeterNoCancel$.next();
     this.queryByMeterNoLoading = !0;
-    this.http.post<BaseQueryResponse<TLTByFlag>>(`${apiUrl}/Share/queryTLTTALENTByFlag_DropDownList`, { ENG_MeterNo }).pipe(
+    this.http.post<BaseQueryResponse<TLTByFlag>>(`${apiUrl}/Share/queryTLTTALENTByFlag_DropDownList`, { MID: 0, ENG_MeterNo }).pipe(
       take(1),
       takeUntil(this.queryByMeterNoCancel$),
       tap(response => this.tltNoSignal.set(response.Data)),
       catchError(error => this.errorHandler.handleError(error)),
       finalize(() => {
         this.queryByMeterNoLoading = !1;
+        console.log('查詢queryByMeterNo結果:', [this.tltNoSignal()]);
         console.log('查詢queryByMeterNo結果:', [this.tltNoSignal()]);
       })
     ).subscribe();
