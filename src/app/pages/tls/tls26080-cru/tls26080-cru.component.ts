@@ -1,5 +1,4 @@
 import { DatePipe, DecimalPipe } from '@angular/common';
-import { DatePipe, DecimalPipe } from '@angular/common';
 import { Component, OnInit, computed, effect, signal, viewChild } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { FormControl, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
@@ -264,7 +263,6 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
     });
   }
 
-  private numVal(value: string): { isValid: boolean; errorMessage: string[]; } {
   private numVal(value: string): { isValid: boolean; errorMessage: string[]; } {
     console.log(`numValidator:`, [value]);
     const num = Number(value);
