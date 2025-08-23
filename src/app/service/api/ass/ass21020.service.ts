@@ -2,8 +2,11 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable, OnDestroy, signal } from '@angular/core';
 import { ASS2100ENGMeterType } from '@pages/ass/ass21010/ass21010.model';
 import { ASS21020Data, ASS21020Payload, TLTByFlag } from '@pages/ass/ass21020/ass21020.model';
+import { ASS2100ENGMeterType } from '@pages/ass/ass21010/ass21010.model';
+import { ASS21020Data, ASS21020Payload, TLTByFlag } from '@pages/ass/ass21020/ass21020.model';
 import { ErrorHandlerService } from '@service/system/error-handler.service';
 import { IPOS2002LocationItem } from '@service/utility/dropDownList.service';
+import { BaseQueryRequest, BaseQueryResponse, DropdownOption } from '@shared/models/api/base-api.interface';
 import { BaseQueryRequest, BaseQueryResponse, DropdownOption } from '@shared/models/api/base-api.interface';
 import { catchError, finalize, of, Subject, take, takeUntil, tap } from 'rxjs';
 import { environment } from 'src/environments/environment';
@@ -113,6 +116,7 @@ export class ASS21020Service implements OnDestroy {
       catchError(error => this.errorHandler.handleError(error)),
       finalize(() => {
         this.queryByMeterNoLoading = !1;
+        console.log('查詢queryByMeterNo結果:', [this.tltNoSignal()]);
         console.log('查詢queryByMeterNo結果:', [this.tltNoSignal()]);
       })
     ).subscribe();

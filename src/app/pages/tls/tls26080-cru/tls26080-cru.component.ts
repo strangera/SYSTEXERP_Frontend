@@ -1,4 +1,5 @@
 import { DatePipe, DecimalPipe } from '@angular/common';
+import { DatePipe, DecimalPipe } from '@angular/common';
 import { Component, OnInit, computed, effect, signal, viewChild } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { FormControl, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
@@ -264,8 +265,12 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
   }
 
   private numVal(value: string): { isValid: boolean; errorMessage: string[]; } {
+  private numVal(value: string): { isValid: boolean; errorMessage: string[]; } {
     console.log(`numValidator:`, [value]);
     const num = Number(value);
+    if (isNaN(num) || !isFinite(num)) return { isValid: !1, errorMessage: ['請輸入有效的數字'] };
+    if (num < 0 || num > 100) return { isValid: !1, errorMessage: ['請輸入有效的數字'] };
+    return { isValid: !0, errorMessage: [] };
     if (isNaN(num) || !isFinite(num)) return { isValid: !1, errorMessage: ['請輸入有效的數字'] };
     if (num < 0 || num > 100) return { isValid: !1, errorMessage: ['請輸入有效的數字'] };
     return { isValid: !0, errorMessage: [] };

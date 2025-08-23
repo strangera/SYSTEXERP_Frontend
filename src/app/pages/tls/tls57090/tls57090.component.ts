@@ -22,6 +22,8 @@ import { finalize } from 'rxjs';
 import { DatePipe } from '@angular/common'; // 引入 DatePipe
 import { ButtonModule } from 'primeng/button';
 import { HttpResponse } from '@angular/common/http';
+import { ButtonModule } from 'primeng/button';
+import { HttpResponse } from '@angular/common/http';
 
 @Component({
   selector: 'app-tls57090',
@@ -179,6 +181,7 @@ export class TLS57090Component extends BasicQueryPageComponent<QueryTLS57090Deta
         .subscribe(response => {
           if (response.Data) { // 檢查是否成功且有 queryData
             this.totalRecords = response.TotalCount || 0; // 直接從 totalCount 獲取總筆數
+            this.historyRequestBody = requestBody;
             this.historyRequestBody = requestBody;
             // 根據 ReportType 決定填充明細或彙總資料
             if (requestBody.ReportType === '明細') {

@@ -1,6 +1,6 @@
 
 import { NgIf } from '@angular/common';
-import { Component, computed, OnInit, signal } from '@angular/core';
+import { Component, computed, effect, OnInit, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
@@ -50,6 +50,13 @@ export class ASS21020CRUComponent extends BasicCruPageComponent<unknown> impleme
   public readonly df = computed(() => this.dataForm.controls);
 
   private readonly dfSignal = toSignal(this.dataForm.valueChanges);
+  private readonly meterNoSignal = toSignal(this.df().ENG_MeterNo.valueChanges);
+
+  public readonly meterNoEffect = effect(() => {
+    const meterNo = this.meterNoSignal();
+    if (!meterNo) return;
+    // this.service.loadASS21020Detail(meterNo);
+  });
 
   public readonly columns: Column[] = [
     { field: 'tlt_no', header: '專櫃編號' },
@@ -70,6 +77,7 @@ export class ASS21020CRUComponent extends BasicCruPageComponent<unknown> impleme
     this.initializePage('ASS21010', this.dataForm);
 
     this.service.loadEngType();
+    this.service.loadEngMeterNo();
     this.service.loadLocationNo();
   }
 
@@ -129,6 +137,8 @@ export class ASS21020CRUComponent extends BasicCruPageComponent<unknown> impleme
 
   public onSubmit(): void {
     this.handleSubmit(this.dataForm, () => {
+      const payload = {};
+
 
       this.loading = !1;
     });
