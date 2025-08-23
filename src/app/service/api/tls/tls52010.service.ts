@@ -78,8 +78,6 @@ export interface IGetBudgetAmountRequest {
 /** 取得預算金額 (GetBudgetAmount) 的響應數據介面 */
 export interface IBudgetAmountResponse {
   BudgetAmount: number; // 預算金額 (請根據實際響應調整，這裡假設是數字)
-  // Swagger 範例只給了 200 OK 沒有 Data 結構，這裡假設直接返回數字或包含 BudgetAmount 的物件
-  // 如果實際響應是像 ApiResponse 這種包裝，則返回值會是 ApiResponse<number> 或 ApiResponse<{BudgetAmount: number}>
 }
 
 

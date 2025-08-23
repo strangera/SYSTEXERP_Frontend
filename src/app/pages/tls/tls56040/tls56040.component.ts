@@ -7,15 +7,17 @@ import { InputTextComponent } from '../../../shared/componentkit/input-text/inpu
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { TranslateModule } from '@ngx-translate/core';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
-import { AddButton, Column, createPaginationConfig, formatDateTime } from '@shared/componentkit/table/table.model';
+import { AddButton, Column, createPaginationConfig, formatDate } from '@shared/componentkit/table/table.model';
 import { TableComponent } from '@shared/componentkit/table/table.component';
 import { CommonModule } from '@angular/common';
 import { MultiSelectComponent } from "@shared/componentkit/multi-select/multi-select.component";
 import { DropdownTableComponent, FieldsConfig } from '@shared/componentkit/dropdown-table/dropdown-table.component';
 import { untilDestroyed } from '@ngneat/until-destroy';
-import { IQueryPOS2004DetailRequest, IQueryPOS2004DetailResponse, Tls52010Service } from '@service/api/tls/tls52010.service';
 import { DropDownListService } from '@service/utility/dropDownList.service';
 import { CalendarRangeQuickComponent } from "@shared/componentkit/calendar-range-quick/calendar-range-quick.component";
+import { IQueryPOS2004DetailForTLS56040Request, IQueryPOS2004DetailForTLS56040Response, ITLS56040Data, Tls56040Service } from '@service/api/tls/tls56040.service';
+import { finalize } from 'rxjs';
+import { yesterday } from '@shared/models/system/query-form.model';
 
 export const enum MVMStatus {
   已申請 = '1',
@@ -24,6 +26,7 @@ export const enum MVMStatus {
   已收貨確認 = '4',
   已作廢 = '9',
 }
+
 @Component({
   selector: 'app-tls56040',
   templateUrl: './tls56040.component.html',
@@ -44,27 +47,27 @@ export const enum MVMStatus {
     CalendarRangeQuickComponent
   ],
 })
-export class TLS56040Component extends BasicQueryPageComponent<any> implements OnInit {
+export class TLS56040Component extends BasicQueryPageComponent<ITLS56040Data> implements OnInit {
   queryForm = this.formBuilder.group({
-    MVM_No: [null, [Validators.maxLength(12)]],               // varchar(12)
-    MVM_Status: [null, [Validators.maxLength(1)]],            // varchar(1)
-    PLU_MagNo: [null, [Validators.maxLength(20)]],          // 非 POS2021 欄位，保留不設驗證
-    LOGO_No: [null],                                         // 非 POS2021 欄位，保留不設驗證
-    OUT_HOS_No: [null, [Validators.maxLength(6)]],            // varchar(6)
-    IN_HOS_No: [null, [Validators.maxLength(6)]],            // varchar(6)
-    APPLY_USR_No: ['', [Validators.maxLength(8)]],            // varchar(8)
-    APPLY_Date_Start: [new Date()],                             // datetime，預設無驗證
-    APPLY_Date_End: [new Date()],                               // datetime，預設無驗證
-    APRV_USR_No: ['', [Validators.maxLength(8)]],            // varchar(8)
-    APRV_Date_Start: [null],                            // datetime，預設無驗證
-    APRV_Date_End: [null],                              // datetime，預設無驗證
-    ...createPaginationConfig([{ field: 'MVM_No', order: 1 }]),  // 分頁與排序參數，不需加驗證
+    MVM_No: [null, [Validators.maxLength(12)]],
+    MVM_StatusList: [null], // 使用 MVM_StatusList 陣列
+    queryNo: [null, [Validators.maxLength(20)]], // 對應 PLU_MagNo
+    LOGO_NoList: [null], // 使用 LOGO_NoList 陣列
+    OUT_HOS_NoList: [null], // 使用 OUT_HOS_NoList 陣列
+    IN_HOS_NoList: [null], // 使用 IN_HOS_NoList 陣列
+    APPLY_USR: [this.authService.currentUserValue?.user_No], // 對應 APPLY_USR
+    APPLY_Date_Start: [yesterday],
+    APPLY_Date_End: [yesterday],
+    APRV_USR: [null as string | null], // 對應 APRV_USR
+    APRV_Date_Start: [null],
+    APRV_Date_End: [null],
+    ...createPaginationConfig([{ field: 'MVM_No', order: 1 }]),
   });
   totalRecords = 0;
-  data: any[] = [];
+  data: ITLS56040Data[] = [];
   columns: Column[] = [
     { field: 'MVM_No', header: '調撥單編號', visible: true },
-    { field: 'APPLY_Date', header: '申請日期', visible: true, format: formatDateTime },
+    { field: 'APPLY_Date', header: '申請日期', visible: true, format: formatDate },
     { field: 'IN_HOS_No', header: '調入倉別', visible: true },
     { field: 'OUT_HOS_No', header: '調出倉別', visible: true },
     { field: 'LOGO_No', header: '品牌', visible: true },
@@ -73,13 +76,13 @@ export class TLS56040Component extends BasicQueryPageComponent<any> implements O
     { field: 'APPLY_USR_Name', header: '申請人姓名', visible: true },
     { field: 'APRV_USR_No', header: '審核人編號', visible: true },
     { field: 'APRV_USR_Name', header: '審核人姓名', visible: true },
-    { field: 'APRV_Date', header: '審核日期', visible: true, format: formatDateTime },
+    { field: 'APRV_Date', header: '審核日期', visible: true, format: formatDate },
     { field: 'MVM_Status', header: '調撥狀態', visible: true, format: (value) => this.issuanceNoteStatusOptions.find((item) => item.value === value)?.label || value },
   ];
   addButton: AddButton[] = [
-    { label: '審核', icon: 'pi pi-check-circle text-green-500', action: (rowData: any) => { this.statusChange(rowData, MVMStatus.已審核); }, disabled: (rowData: any) => rowData.PO_Status !== MVMStatus.已申請 }, // 審核
-    { label: '反審核', icon: 'pi pi-undo text-orange-500', action: (rowData: any) => { this.statusChange(rowData, MVMStatus.已申請); }, disabled: (rowData: any) => rowData.PO_Status !== MVMStatus.已審核 }, // 反審核
-    { label: '作廢', icon: 'pi pi-trash text-red-500', action: (rowData: any) => { this.statusChange(rowData, MVMStatus.已作廢); }, disabled: (rowData: any) => rowData.PO_Status !== MVMStatus.已審核 }, // 作廢
+    { label: '審核', icon: 'pi pi-check-circle text-green-500', action: (rowData: ITLS56040Data) => { this.statusChange(rowData, MVMStatus.已審核); }, disabled: (rowData: ITLS56040Data) => rowData.MVM_Status !== MVMStatus.已申請 }, // 審核
+    { label: '反審核', icon: 'pi pi-undo text-orange-500', action: (rowData: ITLS56040Data) => { this.statusChange(rowData, MVMStatus.已申請); }, disabled: (rowData: ITLS56040Data) => rowData.MVM_Status !== MVMStatus.已審核 }, // 反審核
+    { label: '作廢', icon: 'pi pi-trash text-red-500', action: (rowData: ITLS56040Data) => { this.statusChange(rowData, MVMStatus.已作廢); }, disabled: (rowData: ITLS56040Data) => rowData.MVM_Status !== MVMStatus.已申請 }, // 作廢
   ];
 
   // 倉別調撥單狀態選項
@@ -96,7 +99,7 @@ export class TLS56040Component extends BasicQueryPageComponent<any> implements O
   userOptions: { label: string; value: string }[] = [];
 
   constructor(
-    private tls52010Service: Tls52010Service,
+    private tls56040Service: Tls56040Service,
     private dropDownListService: DropDownListService,
   ) {
     super();
@@ -116,45 +119,38 @@ export class TLS56040Component extends BasicQueryPageComponent<any> implements O
     this.dropDownListService.queryTBLUSER_DropDownList().pipe(untilDestroyed(this)).subscribe(options => {
       this.userOptions = options.Data.map(item => ({ label: `${item.No} - ${item.Name}`, value: item.No }));
     });
-    this.queryForm.patchValue({ APPLY_USR_No: this.authService.currentUserValue?.user_No });
   }
 
   onSubmit(frm: FormGroup) {
-    // 處理查詢邏輯
     this.handleSubmit(frm, () => {
-      // 模擬API返回的數據 (實際應用中應從後端服務獲取)
-      const mockData = [
-        {
-          MVM_No: '234567',
-          CRT_Date: '2023-05-01',
-          IN_HOS_No: '12345',
-          OUT_HOS_No: '1234',
-          LOGO_No: '1234',
-          MVM_Remark: '說明',
-          CRT_USR_No: '001',
-          Confirm_USR_No: '001',
-          Confirm_USR_Name: 'ㄇㄑ施',
-          Confirm_DATE: '2023-05-01',
-          MVM_Status: '1',
-        }
-      ];
-      this.data = mockData;
-      this.totalRecords = mockData.length;
-      this.loading = false;
+      const params = {
+        ...frm.value,
+        OUT_HOS_NoList: Array.isArray(frm.value.OUT_HOS_NoList) ? frm.value.OUT_HOS_NoList : [frm.value.OUT_HOS_NoList].filter(Boolean),
+        IN_HOS_NoList: Array.isArray(frm.value.IN_HOS_NoList) ? frm.value.IN_HOS_NoList : [frm.value.IN_HOS_NoList].filter(Boolean),
+        MVM_StatusList: Array.isArray(frm.value.MVM_StatusList) ? frm.value.MVM_StatusList : [frm.value.MVM_StatusList].filter(Boolean),
+        LOGO_NoList: Array.isArray(frm.value.LOGO_NoList) ? frm.value.LOGO_NoList : [frm.value.LOGO_NoList].filter(Boolean),
+        APPLY_USR: frm.value.APPLY_USR,
+        APRV_USR: frm.value.APRV_USR,
+      };
+      this.tls56040Service.queryTLS56040(params).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(response => {
+        this.data = response.Data;
+        this.totalRecords = response.TotalCount;
+        this.queryStateService.setQueryState(this.ProgNo, frm.value);
+      });
     });
   }
-  // 管理編號
+
   opLoading = false;
   opForm = this.formBuilder.group({
     queryNo: ['', [Validators.maxLength(20)]], // 管理編號
     PLU_Name: ['', [Validators.maxLength(60)]], // 商品名稱
     ...createPaginationConfig([{ field: 'PLU_MagNo', order: 1 }]), // 分頁和排序參數
   });
-  suggestions: IQueryPOS2004DetailResponse[] = [];
+  suggestions: IQueryPOS2004DetailForTLS56040Response[] = [];
   fieldsConfig: FieldsConfig[] = [
     { field: 'PLU_MagNo', header: '管理編號', mainDataField: true },
   ];
-  opData: IQueryPOS2004DetailResponse[] = [];// overlayPanel 裡面的table
+  opData: IQueryPOS2004DetailForTLS56040Response[] = [];// overlayPanel 裡面的table
   opColumns: Column[] = [
     { field: 'PLU_MagNo', header: '商品管理編號' },
     { field: 'PLU_No', header: '國際條碼' },
@@ -163,47 +159,54 @@ export class TLS56040Component extends BasicQueryPageComponent<any> implements O
   ];
   opTotalRecords = 0;
   onAutoCompleteInputChange(event: any) {
-    const body = {
-      ...event,
-      VEN_No: '',
-      LOGO_No: '',
-      queryNo: event.PLU_MagNo || '',
-      pageSize: 30,
-      pageIndex: 1,
+    const body: IQueryPOS2004DetailForTLS56040Request = {
+      PageSize: 30,
+      PageIndex: 1,
       SortBy: [{ field: 'PLU_MagNo', order: 1 }],
-    }
-    this.tls52010Service.queryPOS2004Detail(body).pipe(untilDestroyed(this)).subscribe((results) => {
+      queryNo: event.PLU_MagNo || '',
+      LOGO_No: '',
+      HOS_No: '',
+      PLU_Name: ''
+    };
+    this.tls56040Service.queryPOS2004DetailForTLS56040(body).pipe(untilDestroyed(this)).subscribe((results) => {
       this.suggestions = [...results.Data];
     });
   }
-  onformValueChanged(event: IQueryPOS2004DetailRequest) {
+  onformValueChanged(event: any) {
     this.opLoading = true;
-    const body = {
-      queryNo: event.queryNo || '',
-      PLU_Name: event.PLU_Name || '',
-      VEN_No: '',
+    const body: IQueryPOS2004DetailForTLS56040Request = {
+      PageSize: event.pageSize,
+      PageIndex: event.pageIndex,
+      SortBy: event.SortBy,
+      queryNo: event.queryNo,
+      PLU_Name: event.PLU_Name,
       LOGO_No: '',
+      HOS_No: ''
     };
-    this.tls52010Service.queryPOS2004Detail(body).pipe(untilDestroyed(this)).subscribe((results) => {
-      this.opData = [...results.Data]; // 更新data資料
+    this.tls56040Service.queryPOS2004DetailForTLS56040(body).pipe(untilDestroyed(this)).subscribe((results) => {
+      this.opData = [...results.Data];
       this.opTotalRecords = results.TotalCount;
       this.opLoading = false;
     });
   }
   btnLoading = false;
-  statusChange(rowData: any, status: string) {
+  statusChange(rowData: ITLS56040Data, status: string) {
     this.btnLoading = true;
     const body = {
-      idList: [rowData.id],
-      PO_Status: status
-    }
-    // this.tls52010Service.updateStatusTLS52010(body).pipe(untilDestroyed(this), finalize(() => this.btnLoading = false)).subscribe(response => {
-    //   this.messageService.successBubble(response.Message);
-    //   this.onSubmit(this.queryForm);
-    // });
+      DetailList: [
+        {
+          MVM_No: rowData.MVM_No,
+          MVM_Status: status
+        }
+      ]
+    };
+    this.tls56040Service.updateStatusTLS56040(body).pipe(untilDestroyed(this), finalize(() => this.btnLoading = false)).subscribe(response => {
+      this.messageService.successBubble(response.Message);
+      this.onSubmit(this.queryForm);
+    });
   }
 
-  editDisabled(rowData: any) {
-    return rowData.PO_Status !== MVMStatus.已申請;
+  editDisabled(rowData: ITLS56040Data) {
+    return rowData.MVM_Status !== MVMStatus.已申請;
   }
 }
