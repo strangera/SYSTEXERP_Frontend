@@ -31,6 +31,18 @@
             [submitted]="submitted"></app-input-text>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text label="發貨稅額合計" controlName="OUTGODS_TotBuyTax" [control]="dataForm.controls.OUTGODS_TotBuyTax"
+            [submitted]="submitted"></app-input-text>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text label="發貨進價合計" controlName="OUTGODS_TotBuyAmt" [control]="dataForm.controls.OUTGODS_TotBuyAmt"
+            [submitted]="submitted"></app-input-text>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text label="發貨售價合計" controlName="OUTGODS_TotSaleAmt"
+            [control]="dataForm.controls.OUTGODS_TotSaleAmt" [submitted]="submitted"></app-input-text>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
           <app-calendar calendarType="dateOne" label="申請日期" [control]="dataForm.controls.APPLY_Date"
             [submitted]="submitted"></app-calendar>
         </div>
@@ -47,7 +59,7 @@
             [submitted]="submitted" [options]="userOptions" optionLabel="label" optionValue="value"></app-dropdown>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
-          <app-calendar calendarType="dateOne" label="發貨日期" [control]="dataForm.controls.OUTGODS_DATE"
+          <app-calendar calendarType="dateOne" label="發貨日期" [control]="dataForm.controls.OUTGODS_Date"
             [submitted]="submitted"></app-calendar>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
@@ -59,9 +71,9 @@
             [style]="{ height: '100px' }" [submitted]="submitted"></app-input-textarea>
         </div>
       </div>
-      <app-table dataKey="PLU_MagNo" [columns]="columns" [data]="data" [showManage]="!isFormReadable"
+      <app-table dataKey="MVD_SeqNo" [columns]="columns" [data]="data" [showManage]="!isFormReadable"
         [showRowEdit]="true" (rowEditSave)="onRowEditSave($event)" [showCaption]="false" [showEdit]="false"
-        [showInsert]="false" [showDetail]="false" [showDelete]="false" (dataChange)="data = $event"></app-table>
+        [showInsert]="false" [showDetail]="false" [showDelete]="false"></app-table>
       <div *ngIf="!isFormReadable" class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
         <app-button btnType="cancel" (click)="onCancel()"></app-button>
         <app-button btnType="submit" [loading]="loading" label="確認發貨"></app-button>

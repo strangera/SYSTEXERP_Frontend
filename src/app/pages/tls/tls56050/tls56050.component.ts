@@ -16,6 +16,9 @@ import { DropdownTableComponent, FieldsConfig } from '@shared/componentkit/dropd
 import { CommonModule } from '@angular/common';
 import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
 import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
+import { yesterday } from '@shared/models/system/query-form.model';
+import { finalize } from 'rxjs';
+import { ITLS56050Response, Tls56050Service } from '@service/api/tls/tls56050.service';
 
 @Component({
   selector: 'app-tls56050',
@@ -37,27 +40,27 @@ import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range
     CalendarRangeQuickComponent
   ],
 })
-export class TLS56050Component extends BasicQueryPageComponent<any> implements OnInit {
+export class TLS56050Component extends BasicQueryPageComponent<ITLS56050Response> implements OnInit {
   queryForm = this.formBuilder.group({
     MVM_No: [null, [Validators.maxLength(12)]],               // varchar(12)
-    MVM_Status: [null, [Validators.maxLength(1)]],            // varchar(1)
-    PLU_MagNo: [null, [Validators.maxLength(20)]],          // 非 POS2021 欄位，保留不設驗證
-    LOGO_No: [null],                                        // 非 POS2021 欄位，保留不設驗證
-    OUT_HOS_No: [null, [Validators.maxLength(6)]],          // varchar(6)
-    IN_HOS_No: [null, [Validators.maxLength(6)]],          // varchar(6)
-    CRT_USR_No: ['', [Validators.maxLength(8)]],            // varchar(8)
-    UPD_USR_No: ['', [Validators.maxLength(8)]],            // varchar(8)
-    MVM_SenderNo: ['', [Validators.maxLength(8)]],          // varchar(8)
-    MVM_Date_Start: [new Date()],                             // datetime，預設無驗證
-    MVM_Date_End: [new Date()],                               // datetime，預設無驗證
-    MVM_ConfirmDate_Start: [null],                            // datetime，預設無驗證
-    MVM_ConfirmDate_End: [null],                              // datetime，預設無驗證
-    MVM_Sender_Start: [null],                                 // datetime，預設無驗證
-    MVM_Sender_End: [null],                                 // datetime，預設無驗證
+    queryNo: [null, [Validators.maxLength(20)]],          // 非 POS2021 欄位，保留不設驗證
+    OUT_HOS_NoList: [null],          // varchar(6)
+    IN_HOS_NoList: [null],          // varchar(6)
+    LOGO_NoList: [null],                                        // 非 POS2021 欄位，保留不設驗證
+    MVM_StatusList: [null],            // varchar(1)
+    APPLY_Date_Start: [yesterday],                             // datetime，預設無驗證
+    APPLY_Date_End: [yesterday],                               // datetime，預設無驗證
+    APPLY_USR: [this.authService.currentUserValue?.user_No, [Validators.maxLength(8)]],            // varchar(8)
+    APRV_Date_Start: [null],                            // datetime，預設無驗證
+    APRV_Date_End: [null],                              // datetime，預設無驗證
+    APRV_USR: [''],          // varchar(8)
+    OUTGODS_Date_Start: [null],                                 // datetime，預設無驗證
+    OUTGODS_Date_End: [null],                                 // datetime，預設無驗證
+    OUTGODS_USR: [''],          // varchar(8)
     ...createPaginationConfig([{ field: 'MVM_No', order: 1 }]),  // 分頁與排序參數，不需加驗證
   });
   totalRecords = 0;
-  data: any[] = [];
+  data: ITLS56050Response[] = [];
   columns: Column[] = [
     { field: 'MVM_No', header: '調撥單編號', visible: true },
     { field: 'CRT_Date', header: '申請日期', visible: true, format: formatDateTime },
@@ -69,10 +72,19 @@ export class TLS56050Component extends BasicQueryPageComponent<any> implements O
     { field: 'Confirm_USR_No', header: '審核人編號', visible: true },
     { field: 'Confirm_USR_Name', header: '審核人姓名', visible: true },
     { field: 'Confirm_DATE', header: '審核日期', visible: true, format: formatDateTime },
-    { field: 'MVM_Status', header: '單據狀態', visible: true, format: (value) => this.issuanceNoteStatusOptions.find((item) => item.value === value)?.label || value },
+    { field: 'MVM_Status', header: '單據狀態', visible: true, format: (value) => this.issuanceNoteStatusOptions2.find((item) => item.value === value)?.label || value },
   ];
   // 倉別調撥單狀態選項
   issuanceNoteStatusOptions = [
+    { label: '已審核', value: '2' },
+    { label: '已發貨', value: '3' },
+    { label: '已收貨確認', value: '4' },
+    { label: '已作廢', value: '9' },
+  ];
+
+  // 倉別調撥單狀態選項
+  issuanceNoteStatusOptions2 = [
+    { label: '已申請', value: '1' },
     { label: '已審核', value: '2' },
     { label: '已發貨', value: '3' },
     { label: '已收貨確認', value: '4' },
@@ -86,6 +98,7 @@ export class TLS56050Component extends BasicQueryPageComponent<any> implements O
   constructor(
     private tls52010Service: Tls52010Service,
     private dropDownListService: DropDownListService,
+    private readonly tls56050Service: Tls56050Service
   ) { super(); }
   ngOnInit(): void {
     this.initializePage('TLS56050', '/TLS/TLS56050CRU', this.queryForm, (form) => this.onSubmit(form));
@@ -101,16 +114,24 @@ export class TLS56050Component extends BasicQueryPageComponent<any> implements O
     this.dropDownListService.queryTBLUSER_DropDownList().pipe(untilDestroyed(this)).subscribe(options => {
       this.userOptions = options.Data.map(item => ({ label: `${item.No} - ${item.Name}`, value: item.No }));
     });
-    this.queryForm.patchValue({ CRT_USR_No: this.authService.currentUserValue?.user_No });
   }
 
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
-      this.loading = false;
-      this.data = [
-        { PLU_No: '123456789', PLU_MagNo: 'A123456789', PLU_Name: '商品A', PLU_Std: '10', PLU_Type: 'A', PLU_Unit: 'EA', PLU_Qty: '10', PLU_Price: '100', PLU_Amount: '1000', PLU_Remark: '備註' },
-        { PLU_No: '123456789', PLU_MagNo: 'A123456789', PLU_Name: '商品A', PLU_Std: '10', PLU_Type: 'A', PLU_Unit: 'EA', PLU_Qty: '10', PLU_Price: '100', PLU_Amount: '1000', PLU_Remark: '備註' },
-      ];
+      const params = {
+        ...frm.value,
+        OUT_HOS_NoList: Array.isArray(frm.value.OUT_HOS_NoList) ? frm.value.OUT_HOS_NoList : [frm.value.OUT_HOS_NoList].filter(Boolean),
+        IN_HOS_NoList: Array.isArray(frm.value.IN_HOS_NoList) ? frm.value.IN_HOS_NoList : [frm.value.IN_HOS_NoList].filter(Boolean),
+        MVM_StatusList: Array.isArray(frm.value.MVM_StatusList) ? frm.value.MVM_StatusList : [frm.value.MVM_StatusList].filter(Boolean),
+        LOGO_NoList: Array.isArray(frm.value.LOGO_NoList) ? frm.value.LOGO_NoList : [frm.value.LOGO_NoList].filter(Boolean),
+        APPLY_USR: frm.value.APPLY_USR,
+        APRV_USR: frm.value.APRV_USR,
+      };
+      this.tls56050Service.queryTLS56050(params).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(response => {
+        this.data = response.Data;
+        this.totalRecords = response.TotalCount;
+        this.queryStateService.setQueryState(this.ProgNo, frm.value);
+      });
     });
   }
   // 管理編號
@@ -159,5 +180,9 @@ export class TLS56050Component extends BasicQueryPageComponent<any> implements O
       this.opTotalRecords = results.TotalCount;
       this.opLoading = false;
     });
+  }
+  editDisabled(rowData: ITLS56050Response): boolean {
+    // 如果狀態不是 '已審核'，則禁用行編輯
+    return rowData.MVM_Status !== '2';
   }
 }
