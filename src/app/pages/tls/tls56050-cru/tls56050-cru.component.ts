@@ -54,7 +54,7 @@ export class TLS56050CRUComponent extends BasicCruPageComponent<ITLS56050Respons
     APPLY_USR_No: [{ value: '', disabled: true }],
     APRV_Date: [{ value: null as Date | null, disabled: true }],
     APRV_USR_No: [{ value: '', disabled: true }],
-    OUTGODS_Date: [{ value: new Date(), disabled: true }],
+    OUTGODS_Date: [{ value: null as Date | null, disabled: true }],
     OUTGODS_USR_No: [{ value: '', disabled: true }],
     MVM_Remark: ['', [Validators.maxLength(200)]],
   });
@@ -87,7 +87,6 @@ export class TLS56050CRUComponent extends BasicCruPageComponent<ITLS56050Respons
   ngOnInit(): void {
     this.initializePage('TLS56050', this.dataForm);
     this.loadDropdownOptions();
-    this.dataForm.patchValue({ OUTGODS_USR_No: this.authService.currentUserValue?.user_No });
     this.loadData();
   }
 
@@ -110,6 +109,8 @@ export class TLS56050CRUComponent extends BasicCruPageComponent<ITLS56050Respons
           APPLY_USR_No: masterData.APPLY_USR_No,
           APRV_Date: masterData.APRV_Date ? new Date(masterData.APRV_Date) : null,
           APRV_USR_No: masterData.APRV_USR_No,
+          OUTGODS_Date: masterData.OUTGODS_Date ? new Date(masterData.OUTGODS_Date) : null,
+          OUTGODS_USR_No: masterData.OUTGODS_USR_No,
           MVM_Remark: masterData.MVM_Remark,
           // 這些欄位是後端回傳的總計，直接 patch
           OUTGODS_TotQty: masterData.OUTGODS_TotQty,
@@ -122,6 +123,7 @@ export class TLS56050CRUComponent extends BasicCruPageComponent<ITLS56050Respons
         this.data = detailsData.map(item => ({
           ...item,
           OUTGODS_QTY: item.APPLY_Qty, // 發貨量預設等於申請量
+          OUTGODS_BuyNet: item.APPLY_BuyAmt
         }));
         this.calculateTotals();
       });
@@ -175,12 +177,22 @@ export class TLS56050CRUComponent extends BasicCruPageComponent<ITLS56050Respons
   }
 
   calculateTotals(): void {
-    const totalQty = this.data.reduce((sum, item) => sum + (item.OUTGODS_QTY || 0), 0);
-    const totalBuyNet = this.data.reduce((sum, item) => sum + (item.OUTGODS_BuyNet || 0), 0);
-    const totalBuyTax = this.data.reduce((sum, item) => sum + (item.OUTGODS_BuyTax || 0), 0);
-    const totalBuyAmt = this.data.reduce((sum, item) => sum + (item.OUTGODS_BuyAmt || 0), 0);
-    const totalSaleAmt = this.data.reduce((sum, item) => sum + (item.OUTGODS_SaleAmt || 0), 0);
+    // 定義一個輔助函式，用於安全地獲取值
+    const getValue = (item: any, outgodsField: string, applyField: string) => {
+      // 檢查 OUTGODS 欄位是否有值 (非 null 或 undefined)
+      const outgodsValue = item[outgodsField];
+      // 如果 OUTGODS 欄位為 null，則使用 APPLY 欄位的值，否則使用 OUTGODS 欄位的值
+      return (outgodsValue !== null && outgodsValue !== undefined) ? outgodsValue : (item[applyField] || 0);
+    };
 
+    // 根據新的邏輯計算總和
+    const totalQty = this.data.reduce((sum, item) => sum + getValue(item, 'OUTGODS_QTY', 'APPLY_Qty'), 0);
+    const totalBuyNet = this.data.reduce((sum, item) => sum + getValue(item, 'OUTGODS_BuyNet', 'APPLY_BuyNet'), 0);
+    const totalBuyTax = this.data.reduce((sum, item) => sum + getValue(item, 'OUTGODS_BuyTax', 'APPLY_BuyTax'), 0);
+    const totalBuyAmt = this.data.reduce((sum, item) => sum + getValue(item, 'OUTGODS_BuyAmt', 'APPLY_BuyAmt'), 0);
+    const totalSaleAmt = this.data.reduce((sum, item) => sum + getValue(item, 'OUTGODS_SaleAmt', 'APPLY_SaleAmt'), 0);
+
+    // 更新表單值
     this.dataForm.patchValue({
       OUTGODS_TotQty: totalQty,
       OUTGODS_TotBuyNet: totalBuyNet,
@@ -216,10 +228,10 @@ export class TLS56050CRUComponent extends BasicCruPageComponent<ITLS56050Respons
           id: item.id, // 修正：將 item.id 包含進去
           MVM_No: item.MVM_No, // 修正：將 item.MVM_No 包含進去
           OUTGODS_Qty: item.OUTGODS_QTY,
-          OUTGODS_BuyNet: item.OUTGODS_BuyNet,
-          OUTGODS_BuyTax: item.OUTGODS_BuyTax,
-          OUTGODS_BuyAmt: item.OUTGODS_BuyAmt,
-          OUTGODS_SaleAmt: item.OUTGODS_SaleAmt,
+          OUTGODS_BuyNet: item.APPLY_BuyNet,
+          OUTGODS_BuyTax: item.APPLY_BuyTax,
+          OUTGODS_BuyAmt: item.APPLY_BuyAmt,
+          OUTGODS_SaleAmt: item.APPLY_SaleAmt,
           MVD_Remark: item.MVD_Remark,
         }))
       };

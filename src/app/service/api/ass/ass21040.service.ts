@@ -2,13 +2,9 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
-import { SortMeta } from 'primeng/api';
 import { ApiResponse } from '@service/system/auth.service';
 
 export interface ClearingASS21040 {
-  PageSize: number,
-  PageIndex: number,
-  SortBy: SortMeta[]
   SYS_StoreNo: string,
   Mid: number,
   EngTypes: string,

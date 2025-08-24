@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewChild } from '@angular/core';
+import { AfterViewInit, Component, OnInit, ViewChild } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
@@ -41,7 +41,7 @@ import { Tls27040POS6119pComponent } from './tls27040-pos6119p/tls27040-pos6119p
     NgTemplateOutlet,
   ]
 })
-export class TLS27040Component extends BasicQueryPageComponent<POS6118Data | POS6119Data | POS6119PData> implements OnInit {
+export class TLS27040Component extends BasicQueryPageComponent<POS6118Data | POS6119Data | POS6119PData> implements OnInit, AfterViewInit {
   @ViewChild('pos6118', { static: false }) pos6118!: Tls27040POS6118Component;
   @ViewChild('pos6119', { static: false }) pos6119!: Tls27040POS6119Component;
   @ViewChild('pos6119p', { static: false }) pos6119p!: Tls27040POS6119pComponent;
@@ -57,11 +57,15 @@ export class TLS27040Component extends BasicQueryPageComponent<POS6118Data | POS
 
   ngOnInit(): void {
     this.initializePage('TLS27040', 'TLS/TLS27040cru');
+  }
+
+  ngAfterViewInit(): void {
     const queryState = this.queryStateService.getQueryState(this.ProgNo);
     if (queryState?.value && queryState?.value.selectedBank) {
       this.selectedBank = this.queryStateService.getQueryState(this.ProgNo)?.value.selectedBank;
     }
   }
+
   dialogVisible = false;
   dialogLoading = false;
   dialogSubmitted = false;

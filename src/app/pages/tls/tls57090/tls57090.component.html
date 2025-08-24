@@ -53,7 +53,7 @@
 
 <div class="card">
   <app-table [data]="data" [columns]="columns" [totalRecords]="totalRecords"
-    [multiSortMeta]="[{ field: 'HOS_NAME', order: 1 }]"
+    [multiSortMeta]="[{ field: 'HOS_NAME', order: 1 }]" [showReportMode]="false"
     (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [lazy]="true" [loading]="loading"
     [showManage]="false" [showDelete]="false">
     <header>

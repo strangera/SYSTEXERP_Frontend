@@ -4,10 +4,8 @@ import { MenubarComponent } from '../../../shared/component/menubar/menubar.comp
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { AccordionModule } from 'primeng/accordion';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { TranslateModule } from '@ngx-translate/core';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
-import { Column, createPaginationConfig } from '@shared/componentkit/table/table.model';
 import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
 import { ASS21040Service } from '@service/api/ass/ass21040.service';
 import { untilDestroyed } from '@ngneat/until-destroy';
@@ -25,7 +23,6 @@ import { finalize } from 'rxjs';
     ReactiveFormsModule,
     DropdownComponent,
     CalendarComponent,
-    TableComponent,
     TranslateModule,
   ],
 })
@@ -33,19 +30,8 @@ export class ASS21040Component extends BasicQueryPageComponent<unknown> implemen
   queryForm = this.formBuilder.group({
     ENG_YYMM: [null, [Validators.required]],
     ENG_Type: [null, [Validators.required]],
-    ...createPaginationConfig([{ field: 'ENG_MeterNo', order: 1 }]), // 分頁和排序參數
   });
   totalRecords = 0;
-  // data: any = [];
-  // columns: Column[] = [
-  //   { field: 'ENG_MeterNo', header: '錶號' },
-  //   { field: 'ENG_Type', header: '能源種類' },
-  //   { field: 'TLT_Name', header: '專案名稱' },
-  //   { field: 'ENG_PriorReading', header: '上次抄錶度數' },
-  //   { field: 'ENG_CurrentReading', header: '本次抄錶度數' },
-  //   { field: 'ENG_ENG_Usage', header: '本月使用度數' },
-  //   { field: 'ENG_Amount', header: '金額合計' },
-  // ];
   ENG_TypeOptions: { value: string; label: string }[] = [
     { value: 'G01', label: '水錶' },
     { value: 'G02', label: '電錶' },
@@ -66,9 +52,8 @@ export class ASS21040Component extends BasicQueryPageComponent<unknown> implemen
     const mid = this.authService.currentUserValue?.mid;
     if (storeNo && mid) {
       const body = {
-        ...frm.value,
         SYS_StoreNo: storeNo,
-        Mid: mid,
+        Mid: Number(mid),
         EngTypes: frm.value.ENG_Type,
         ClearingYM: frm.value.ENG_YYMM
       };
