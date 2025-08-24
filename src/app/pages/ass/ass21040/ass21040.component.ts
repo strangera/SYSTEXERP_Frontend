@@ -1,31 +1,21 @@
-import { LocationCodeService } from './../../../service/basic/locationcode.service';
-import { FloorService } from './../../../service/basic/floor.service';
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { NavigationExtras, Router } from '@angular/router';
-// Services
-
-// Shared
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-import { AuthService } from '../../../service/system/auth.service';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
-import { BigCategoryService } from '../../../service/basic/big-category.service';
-import { MidCategoryService } from '../../../service/basic/mid-category.service';
-import { SmallCategoryService } from '../../../service/basic/small-category.service';
-import { OrganizationNumberService } from '../../../service/basic/organization-number.service';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { AccordionModule } from 'primeng/accordion';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { TranslateModule } from '@ngx-translate/core';
+import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
+import { Column, createPaginationConfig } from '@shared/componentkit/table/table.model';
+import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
+import { ASS21040Service } from '@service/api/ass/ass21040.service';
+import { untilDestroyed } from '@ngneat/until-destroy';
+import { finalize } from 'rxjs';
 
 @Component({
   selector: 'app-ass21040',
   templateUrl: './ass21040.component.html',
-  styleUrl: './ass21040.component.scss',
   standalone: true,
   imports: [
     MenubarComponent,
@@ -34,251 +24,83 @@ import { TranslateModule } from '@ngx-translate/core';
     FormsModule,
     ReactiveFormsModule,
     DropdownComponent,
-    InputTextComponent,
+    CalendarComponent,
     TableComponent,
     TranslateModule,
   ],
 })
-export class ASS21040Component extends BasicQpageComponent implements OnInit {
-  ngOnInit(): void {
-    this.ProgNo = '320004';
-    // Initialize dropdown options
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
-    this.organizationNumberService.getOrganizationNumbers()
-      .subscribe((data) => (this.Departmentcode = data));
-    this.floorService.getFloors()
-      .subscribe((data) => (this.floor = data));
-    this.locationCodeService.getSystemTypes()
-      .subscribe((data) => (this.location = data));
-  }
+export class ASS21040Component extends BasicQueryPageComponent<unknown> implements OnInit {
   queryForm = this.formBuilder.group({
-    bigCategoryCode: [],
-    midCategoryCode: [],
-    smallCategoryCode: [],
-    Querybystatus: [],
-    propertynumber: [],
-    propertytype: [],
-    Itemnumber: [],
-    Sdate: [],
-    Edate: [],
-    Departmentcode: [],
-    Kurabe: [],
-    code: [],
-    floor: [],
-    location: [],
-    illustrate: [],
-    Placementinstructions: [],
-    Energytype: [],
-    equipmentLocationOptions: [],
-    ironNumberOptions: [],
-    remark: [],
-    Counternumber: [],
-    Counterclassification: [],
+    ENG_YYMM: [null, [Validators.required]],
+    ENG_Type: [null, [Validators.required]],
+    ...createPaginationConfig([{ field: 'ENG_MeterNo', order: 1 }]), // 分頁和排序參數
   });
-  // Table data
-  Energytype: any[] = [{ value: 1, label: '水費' },
-  { value: 2, label: '電費' },
-  { value: 3, label: '瓦斯費' },];
-  Counternumber: any[] = [{ value: 1, label: '000001' },
-  { value: 2, label: '000002' },
-  { value: 3, label: '000003' },];
-  Counterclassification: any[] = [{ value: 1, label: '商場' },
+  totalRecords = 0;
+  // data: any = [];
+  // columns: Column[] = [
+  //   { field: 'ENG_MeterNo', header: '錶號' },
+  //   { field: 'ENG_Type', header: '能源種類' },
+  //   { field: 'TLT_Name', header: '專案名稱' },
+  //   { field: 'ENG_PriorReading', header: '上次抄錶度數' },
+  //   { field: 'ENG_CurrentReading', header: '本次抄錶度數' },
+  //   { field: 'ENG_ENG_Usage', header: '本月使用度數' },
+  //   { field: 'ENG_Amount', header: '金額合計' },
+  // ];
+  ENG_TypeOptions: { value: string; label: string }[] = [
+    { value: 'G01', label: '水錶' },
+    { value: 'G02', label: '電錶' },
+    { value: 'G03', label: '瓦斯' },
   ];
-  data: any[] = [];
-  equipmentLocationOptions: any[] = [
-    { value: 1, label: '010A000001' },
-    { value: 2, label: '010A000002' },
-    { value: 3, label: '010A000003' },
-    { value: 4, label: '010A000004' },
-    { value: 5, label: '010B000001' },
-    { value: 6, label: '010B000002' },
-    { value: 7, label: '010B000003' },
-  ];
-  ironNumberOptions: any[] = [
-    { value: 1, label: 'EB102' },
-    { value: 2, label: 'EB103' },
-    { value: 3, label: 'EB105' },
-    { value: 4, label: 'EB106' },
-    { value: 5, label: 'EB107' },
-    { value: 6, label: 'EB108' },
-    { value: 7, label: 'EB109' },
-    { value: 8, label: 'EB110' },
-    { value: 9, label: 'EB111' },
-    { value: 10, label: 'EB112' },
-  ];
-
-  location: any[] = [];
-  filteredData: any[] = [...this.data];
-  columns: any[] = [
-    { field: 'ElectricCourseCode', header: '電錶編號', visible: true },
-    { field: 'counterCode', header: '專櫃編號', visible: true },
-    { field: 'areaRatio', header: '面積比率(%)', visible: true },
-    { field: 'counterCategory', header: '專櫃分類', visible: true },
-    { field: 'remarks', header: '備註', visible: true },
-  ];
-
-
-
-
-
-
-  // Dropdown options
-  floor: any[] = [];
-  Kurabe: any[] = [
-    { value: 1, label: '001' },
-    { value: 2, label: '002' },
-  ];
-  Departmentcode: any[] = [];
-  usercode: any[] = [];
-  bigCategoryOptions: any[] = [
-    { value: 1, label: '裝潢工程' },
-    { value: 2, label: '其他工程' },
-    { value: 3, label: '電腦及電子零件產品' },
-    { value: 4, label: '電力及照明系統' },
-    { value: 5, label: '家電家俱設備' },
-    { value: 6, label: '機消空電水零配件' },
-    { value: 7, label: '辦公及營運庶務' },
-    { value: 8, label: '印刷品(非廣告行銷)' },
-    { value: 9, label: '印刷品(廣告行銷)' },
-    { value: 10, label: '衛生及醫療庶務用品' },
-  ];
-  midCategoryOptions: any[] = [
-    { value: 1, label: '室內裝潢工程' },
-    { value: 2, label: '室內裝潢備品' },
-    { value: 3, label: '弱電系統' },
-    { value: 4, label: '房屋及建築設備' },
-    { value: 5, label: '停車場設備' },
-    { value: 6, label: '其他工程' },
-    { value: 7, label: '機電消防工程' },
-    { value: 8, label: '電子產品及零件' },
-    { value: 9, label: '電子儀器設備' },
-    { value: 10, label: '電子儀器設備-資產' },
-  ];
-  smallCategoryOptions: any[] = [
-    { value: 1, label: '機電空調工程' },
-    { value: 2, label: '水電消防工程' },
-    { value: 3, label: '排油煙工程' },
-    { value: 4, label: '商場高壓電節能工程' },
-    { value: 5, label: '商場弱電系統工程' },
-    { value: 6, label: '網路佈線工程' },
-    { value: 7, label: '鐵路自動測試儀' },
-    { value: 8, label: '風車零件' },
-    { value: 9, label: '資收場回收用品' },
-    { value: 10, label: '瓦斯鍋及滅斷設備工程' },
-  ];
-  Querybystatus: any[] = [
-    { value: 1, label: '全部' },
-    { value: 2, label: '只顯示低於安全庫存' },
-
-
-  ];
-  assetCodeOptions: any[] = [
-    { value: 1, label: '1A232300000010000001' },
-    { value: 2, label: '1A232300000020000001' },
-    { value: 3, label: '1A232300000040000001' },
-    { value: 4, label: '1A232300000050000001' },
-    { value: 5, label: '1A232300000060000001' },
-    { value: 6, label: '1A232300000090000001' },
-    { value: 7, label: '1A232400000010000001' },
-    { value: 8, label: '1A232400000040000001' },
-    { value: 9, label: '1A232400000060000001' },
-  ];
-  propertytype
-    : any[] = [
-      { value: 1, label: '資產' },
-      { value: 2, label: '列管品' },
-    ];
-  Itemnumber
-    : any[] = [
-
-      { value: 1, label: '3A24210000001' },
-      { value: 2, label: '3A24210000002' },
-      { value: 3, label: '3A24210000003' },
-      { value: 4, label: '3A24210000004' },
-      { value: 5, label: '3A24210000005' },
-      { value: 6, label: '3A24210000006' },
-      { value: 7, label: '3A24210000007' },
-      { value: 8, label: '3A24210000008' },
-      { value: 9, label: '3A24210000009' },
-      { value: 10, label: '3A24210000010' },
-    ];
-
-
-
   constructor(
-    private router: Router,
-    private formBuilder: FormBuilder,
-    private notificationService: NotificationService,
-    private authService: AuthService,
-    private bigCategoryService: BigCategoryService,
-    private midCategoryService: MidCategoryService,
-    private smallCategoryService: SmallCategoryService,
-    private organizationNumberService: OrganizationNumberService,
-    private floorService: FloorService,
-    private locationCodeService: LocationCodeService
+    private aSS21040Service: ASS21040Service
   ) {
     super(); // 呼叫父類建構子
   }
 
-
+  ngOnInit(): void {
+    this.initializePage('ASS21040', 'ass/ass21040', this.queryForm, (frm) => this.onSubmit(frm));
+  }
 
   onSubmit(frm: FormGroup) {
-    console.log(frm.value);
-    this.submitted = true;
-    this.loading = true;
-    this.notificationService.blockUi();
-
-    if (frm.valid && this.canQuery()) {
-      // Submit logic here
-    }
-
-    this.loading = false;
-    this.notificationService.unblockUi();
-  }
-
-  onSubmitQuery(frm: FormGroup) {
-    this.onSubmit(frm);
-  }
-
-  onCreate() {
-    if (this.canAdd()) {
-      let extras: NavigationExtras = {
-        state: {
-          crudstatus: CRUDStatus.Create,
-          queryform: this.queryForm,
-        },
-        skipLocationChange: true,
+    const storeNo = this.authService.currentUserValue?.SYS_StoreNo;
+    const mid = this.authService.currentUserValue?.mid;
+    if (storeNo && mid) {
+      const body = {
+        ...frm.value,
+        SYS_StoreNo: storeNo,
+        Mid: mid,
+        EngTypes: frm.value.ENG_Type,
+        ClearingYM: frm.value.ENG_YYMM
       };
-      this.router.navigate(['ASS2000/ASS21040CRU'], extras);
+      this.handleSubmit(frm, () => {
+        this.aSS21040Service.ClearingASS21040(body).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(response => {
+          if (response.Data.IsClearingSuccess) {
+            this.messageService.successBubble('清帳成功');
+          }
+        });
+      });
     }
   }
 
-  onEdit(data: any) {
-    if (this.canEdit()) {
-      let extras: NavigationExtras = {
-        state: {
-          crudstatus: CRUDStatus.Edit,
-          rowdata: data,
-          queryform: this.queryForm,
-        },
-        skipLocationChange: true,
-      };
-      this.router.navigate(['/demoCRU'], extras);
-    }
-  }
-
-  onDetail(data: any) {
-    let extras: NavigationExtras = {
-      state: {
-        crudstatus: CRUDStatus.Read,
-        rowdata: data,
-        queryform: this.queryForm,
-      },
-      skipLocationChange: true,
-    };
-    this.router.navigate(['/demoCRU'], extras);
-  }
-  onClearForm() {
-    this.queryForm.reset(); // 重置表單
+  onGenerateReport(frm: FormGroup) {
+    this.handleSubmit(frm, () => {
+      const storeNo = this.authService.currentUserValue?.SYS_StoreNo;
+      const mid = this.authService.currentUserValue?.mid;
+      if (storeNo && mid) {
+        const body = {
+          SYS_StoreNo: storeNo,
+          Mid: Number(mid),
+          EngTypes: frm.value.ENG_Type,
+          ClearingYM: frm.value.ENG_YYMM
+        };
+        this.aSS21040Service.printASS21040(body).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(response => {
+          if (response.Data.Print_URL) {
+            this.messageService.successBubble('列印成功');
+          } else {
+            this.messageService.errorBubble(response.Message);
+          }
+        });
+      }
+    });
   }
 }
