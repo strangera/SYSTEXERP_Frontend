@@ -1063,10 +1063,10 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
   }
 
   onClearAndExit(): void {
+    this.contractFlowService.clearTempData();
     const extras: NavigationExtras = {
       state: { fromRoute: this.router.url },
     };
-    this.contractFlowService.clearTempData();
     this.router.navigate(['account/tls/tls13010'], extras);
     this.messageService.infoBubble('已清空暫存資料並離開');
   }
