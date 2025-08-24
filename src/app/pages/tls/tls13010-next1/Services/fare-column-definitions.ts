@@ -358,6 +358,17 @@ export class FareColumnDefinitions {
         autoSaveOnUnselect: false,     // ✅ 取消勾選 → 自動儲存並退出編輯
       },
       {
+        field: 'auto_calc',
+        header: '自動計算',
+        type: 'button',
+        width: '90px',
+        buttonLabel: '自動計算',
+        buttonIcon: 'pi pi-calculator',
+        buttonClass: 'p-button-sm p-button-info',
+        buttonTooltip: '根據總金額自動計算',
+        directEdit: true,
+      },
+      {
         field: 'cap_item',
         header: '扣款代號',
         type: 'text',

@@ -119,6 +119,11 @@ export interface ColumnDef {
   style?: string;
   options?: any[];
 
+  buttonLabel?: string;    // 按鈕文字
+  buttonIcon?: string;     // 按鈕圖示
+  buttonClass?: string;    // 按鈕樣式
+  buttonTooltip?: string;  // 提示文字
+
   defaultValue?: any;  // 預設值
 
   defaultValueFunction?: () => any;
@@ -237,6 +242,11 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
     fieldName: string,
     newValue: any,
     rowData: any
+  }>();
+
+  @Output() buttonClick = new EventEmitter<{
+    rowData: any;
+    field: string;  // 欄位名稱，您可以用這個判斷是哪個按鈕
   }>();
 
   expandedRows: { [key: string]: boolean } = {};
@@ -2161,5 +2171,9 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
         resolve();
       }, 100);
     });
+  }
+
+  onButtonClick(rowData: any, field: string): void {
+    this.buttonClick.emit({ rowData, field });
   }
 }

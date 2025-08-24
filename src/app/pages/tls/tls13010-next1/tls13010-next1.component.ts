@@ -1107,4 +1107,47 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
   get capTypes(): string[] {
     return ['A', 'B', 'C', 'D', 'E'];
   }
+
+  onButtonClick(event: { rowData: any; field: string }, capType: string): void {
+    const { rowData, field } = event;
+
+    console.log(`🔘 按鈕點擊: ${field}`, rowData);
+
+    // 🎯 直接根據 field 判斷要做什麼
+    if (field === 'auto_calc') {
+      this.doAutoCalculate(rowData, capType);
+    }
+    // // 如果還有其他按鈕，繼續加 else if
+    // else if (field === 'copy_button') {
+    //   this.doCopy(rowData);
+    // }
+  }
+
+  /**
+   * 🎯 您的自動計算邏輯 - 完全自由發揮！
+   */
+  private doAutoCalculate(rowData: any, capType: string): void {
+    console.log('🧮 開始自動計算');
+
+    // 🎯 您想怎麼寫就怎麼寫！
+    const totalAmount = parseFloat(rowData.tpy_totalamt) || 0;
+    const periods = parseInt(rowData.period_nos) || 0;
+
+    if (totalAmount <= 0 || periods <= 1) {
+      this.messageService.warnBubble('請檢查總金額和期數');
+      return;
+    }
+
+    const monthlyAmount = Math.round(totalAmount / periods);
+    const downPayment = totalAmount - (monthlyAmount * (periods - 1));
+
+    if (confirm(`自動計算結果：\n每月${monthlyAmount}元，首期${downPayment}元\n是否套用？`)) {
+      rowData.tpy_amount = monthlyAmount;
+      rowData.down_payment = downPayment;
+
+      // 您的更新邏輯
+      this.updateRowDataState(rowData, capType);
+      this.messageService.successBubble('計算完成！');
+    }
+  }
 }
