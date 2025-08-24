@@ -375,5 +375,9 @@ export class DropDownListService {
   queryTDS1007_DropDownList(params: ITDS1007Request): Observable<ApiResponse<ITDS1007Response>> {
     return this.http.post<ApiResponse<ITDS1007Response>>(`${this.apiUrl}/Share/queryTDS1007_DropDownList`, params);
   }
+  // 查詢收銀畫面名稱(POS1008)資料表下拉選單
+  queryPOS1008DropDownList(): Observable<ApiResponse<{ TSB_Name: string }[]>> {
+    return this.http.post<ApiResponse<{ TSB_Name: string }[]>>(`${this.apiUrl}/queryPOS1008DropDownList`, {});
+  }
 
 }

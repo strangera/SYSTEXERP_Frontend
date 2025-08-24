@@ -19,13 +19,13 @@
             (ngSubmit)="onSubmit()">
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="能源類型"
-                          controlName="ENG_Type"
-                          [options]="service.engTypeSignal()"
-                          optionLabel="Name"
-                          optionValue="No"
-                          [control]="qf().ENG_Type"
-                          [submitted]="submitted"></app-dropdown>
+            <app-multi-select label="能源類型"
+                              controlName="ENG_Type"
+                              [options]="service.engTypeSignal()"
+                              optionLabel="Name"
+                              optionValue="Name"
+                              [control]="qf().ENG_Type"
+                              [submitted]="submitted"></app-multi-select>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown label="錶號"

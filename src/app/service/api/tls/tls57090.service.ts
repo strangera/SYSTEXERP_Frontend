@@ -111,11 +111,29 @@ export class Tls57090Service {
    * @param body 統一的匯出請求物件 (QueryTLS57090Request)
    * @returns 包含 PDF 檔案的 Blob 物件
    */
-  exportTLS57090(
+  exportTLS57090PDF(
     body: QueryTLS57090Request
   ): Observable<HttpResponse<Blob>> { // 將回傳類型改為 HttpResponse<Blob>
     return this.http.post(
-      `${this.apiUrl}/exportTLS57090`,
+      `${this.apiUrl}/exportTLS57090PDF`,
+      body,
+      {
+        observe: 'response', // 重要：指定觀察整個 HTTP Response
+        responseType: 'blob' // 指定回傳類型為 Blob
+      }
+    );
+  }
+  /**
+   * 匯出進貨/退貨單據統計報表 (Excel) 的 API 呼叫
+   * 請求參數與查詢介面 (QueryTLS57090Request) 相同
+   * @param body 統一的匯出請求物件 (QueryTLS57090Request)
+   * @returns 包含 Excel 檔案的 Blob 物件
+   */
+  exportTLS57090Excel(
+    body: QueryTLS57090Request
+  ): Observable<HttpResponse<Blob>> { // 將回傳類型改為 HttpResponse<Blob>
+    return this.http.post(
+      `${this.apiUrl}/exportTLS57090Excel`,
       body,
       {
         observe: 'response', // 重要：指定觀察整個 HTTP Response

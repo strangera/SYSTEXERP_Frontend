@@ -37,7 +37,7 @@ import { ASS21020Payload } from './ass21020.model';
 export class ASS21020Component extends BasicQueryPageComponent<unknown> implements OnInit {
 
   public readonly queryForm = this.formBuilder.group({
-    ENG_Type: new FormControl<string | undefined>(void 0),
+    ENG_Type: new FormControl<string[] | undefined>(void 0),
     ENG_MeterNo: new FormControl<string | undefined>(void 0),
     Location_No: new FormControl<string | undefined>(void 0),
     tlt_no: new FormControl<string | undefined>(void 0),
