@@ -66,7 +66,7 @@
             <!-- 使用 expandable-edit-table 組件 -->
             <div *ngIf="hasDataForType(capType)" class="col-12">
               <app-expandable-edit-table [data]="fareData[capType]" [mainColumns]="getColumnsForType(capType)"
-                [showCheckBox]="false"
+                (buttonClick)="onButtonClick($event, capType)" [showCheckBox]="false"
                 (fieldChange)="onFieldChange($event.fieldName, $event.newValue, $event.rowData, capType)"
                 [showPaginator]="false" [showAddButton]="false" [showBatchDelete]="false" [loading]="loading"
                 [dataKey]="'id'" [readonly]="isViewMode" [detailKey]="''"
@@ -100,3 +100,37 @@
     </div>
   </div>
 </div>
+
+<app-dialog [visible]="showCalculationDialog" (visibleChange)="onCalculationDialogClose($event)"
+  (save)="onCalculationSave()" header="🧮 自動計算確認" width="500px" height="auto" maxWidth="600px" [showFooter]="true">
+
+  <!-- 對話框內容 - 🎯 極簡版 -->
+  <div class="calculation-content" *ngIf="calculationResult">
+    <!-- 🎯 只顯示最關鍵的計算結果 -->
+    <div class="result-summary text-center mb-4">
+      <h4 class="text-primary mb-3">📊 計算結果</h4>
+
+      <div class="result-cards flex gap-3 justify-content-center">
+        <div class="result-card bg-blue-50 p-3 border-round text-center flex-1">
+          <div class="text-sm text-gray-600 mb-1">每月金額</div>
+          <div class="text-2xl font-bold text-primary">{{ calculationResult.monthlyAmount }}</div>
+          <div class="text-sm text-gray-500">元</div>
+        </div>
+
+        <div class="result-card bg-green-50 p-3 border-round text-center flex-1">
+          <div class="text-sm text-gray-600 mb-1">首期金額</div>
+          <div class="text-2xl font-bold text-green-600">{{ calculationResult.downPayment }}</div>
+          <div class="text-sm text-gray-500">元</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 🎯 簡化的說明 -->
+    <div class="summary-info text-center">
+      <div class="text-lg text-gray-600">
+        總金額 <strong>{{ calculationResult.totalAmount }}</strong> 元 分 <strong>{{ calculationResult.periods
+          }}</strong> 期攤還
+      </div>
+    </div>
+  </div>
+</app-dialog>

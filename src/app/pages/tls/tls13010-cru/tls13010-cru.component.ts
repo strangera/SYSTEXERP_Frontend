@@ -254,8 +254,8 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
     ticket_remarks: ['', [Validators.maxLength(1000)]],
 
     // 聯絡資訊
-    email: ['', [Validators.email, Validators.maxLength(100)]],
-    invoice_email: ['', [Validators.email, Validators.maxLength(100)]],
+    email: ['', [Validators.maxLength(100)]],
+    invoice_email: ['', [Validators.maxLength(100)]],
     CHECK_TITLE: ['', [Validators.maxLength(100)]],
     store_tel: ['', [Validators.maxLength(50)]],
     bank_id: ['', [Validators.maxLength(10)]],

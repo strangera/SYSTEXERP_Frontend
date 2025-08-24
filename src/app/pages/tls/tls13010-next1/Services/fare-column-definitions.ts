@@ -215,7 +215,9 @@ export class FareColumnDefinitions {
         type: 'checkbox',
         editable: true,
         width: '80px',
-        directEdit: true
+        directEdit: true,
+        autoEditOnSelect: true,      // ✅ 勾選扣款項目 → 進入編輯模式設定單價、數量
+        autoSaveOnUnselect: false,     // ✅ 取消勾選 → 自動儲存並退出編輯
       },
       {
         field: 'cap_item',
@@ -351,7 +353,20 @@ export class FareColumnDefinitions {
         type: 'checkbox',
         editable: true,
         width: '80px',
-        directEdit: true
+        directEdit: true,
+        autoEditOnSelect: true,      // ✅ 勾選扣款項目 → 進入編輯模式設定單價、數量
+        autoSaveOnUnselect: false,     // ✅ 取消勾選 → 自動儲存並退出編輯
+      },
+      {
+        field: 'auto_calc',
+        header: '自動計算',
+        type: 'button',
+        width: '90px',
+        buttonLabel: '自動計算',
+        buttonIcon: 'pi pi-calculator',
+        buttonClass: 'p-button-sm p-button-info',
+        buttonTooltip: '根據總金額自動計算',
+        directEdit: true,
       },
       {
         field: 'cap_item',
@@ -405,7 +420,7 @@ export class FareColumnDefinitions {
         header: '總金額',
         type: 'number',
         editable: true,
-        width: '100px',
+        autoWidth: true,
         required: true,
       },
       {
@@ -464,14 +479,14 @@ export class FareColumnDefinitions {
         header: '每月金額',
         type: 'number',
         editable: true,
-        width: '100px',
+        autoWidth: true,
         required: true,
       },
       {
         field: 'down_payment',
         header: '首期金額',
         type: 'number',
-        editable: true,
+        editable: false,
         width: '100px',
         required: true,
       },
@@ -511,7 +526,9 @@ export class FareColumnDefinitions {
         type: 'checkbox',
         editable: true,
         width: '80px',
-        directEdit: true
+        directEdit: true,
+        autoEditOnSelect: true,      // ✅ 勾選扣款項目 → 進入編輯模式設定單價、數量
+        autoSaveOnUnselect: false,     // ✅ 取消勾選 → 自動儲存並退出編輯
       },
       {
         field: 'cap_item',
@@ -616,7 +633,9 @@ export class FareColumnDefinitions {
         type: 'checkbox',
         editable: true,
         width: '80px',
-        directEdit: true
+        directEdit: true,
+        autoEditOnSelect: true,      // ✅ 勾選扣款項目 → 進入編輯模式設定單價、數量
+        autoSaveOnUnselect: false,     // ✅ 取消勾選 → 自動儲存並退出編輯
       },
       {
         field: 'cap_item',
