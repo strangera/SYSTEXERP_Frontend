@@ -18,6 +18,8 @@ import { NgIf, NgFor } from '@angular/common';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { AccordionModule } from 'primeng/accordion';
 import { LocationOptionsService } from '../../../service/api/dropdownservice/location-options.service';
+import { DialogComponent } from "@shared/componentkit/dialog/dialog.component";
+
 
 // 介面定義
 interface CategoryItem {
@@ -34,9 +36,15 @@ interface CategoryItem {
   templateUrl: './tls13010-next1.component.html',
   styleUrls: ['./tls13010-next1.component.scss'],
   standalone: true,
-  imports: [MenubarComponent, ButtonComponent, NgIf, ProgressSpinnerModule, AccordionModule, ExpandableEditTableComponent, NgFor]
+  imports: [MenubarComponent, ButtonComponent, NgIf, ProgressSpinnerModule, AccordionModule, ExpandableEditTableComponent, NgFor, DialogComponent]
 })
 export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> implements OnInit, OnDestroy {
+  // 🆕 對話框相關屬性
+  showCalculationDialog: boolean = false;
+  calculationResult: any = null;
+  currentRowData: any = null;
+  currentCapType: string = '';
+
   // 檢視模式用
   isViewMode = false;
 
@@ -1129,7 +1137,6 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
   private doAutoCalculate(rowData: any, capType: string): void {
     console.log('🧮 開始自動計算');
 
-    // 🎯 您想怎麼寫就怎麼寫！
     const totalAmount = parseFloat(rowData.tpy_totalamt) || 0;
     const periods = parseInt(rowData.period_nos) || 0;
 
@@ -1141,13 +1148,47 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
     const monthlyAmount = Math.round(totalAmount / periods);
     const downPayment = totalAmount - (monthlyAmount * (periods - 1));
 
-    if (confirm(`自動計算結果：\n每月${monthlyAmount}元，首期${downPayment}元\n是否套用？`)) {
-      rowData.tpy_amount = monthlyAmount;
-      rowData.down_payment = downPayment;
+    // 🎯 設定對話框資料並顯示
+    this.calculationResult = {
+      totalAmount,
+      periods,
+      monthlyAmount,
+      downPayment,
+      verification: downPayment + (monthlyAmount * (periods - 1))
+    };
+    this.currentRowData = rowData;
+    this.currentCapType = capType;
+    this.showCalculationDialog = true;
+  }
 
-      // 您的更新邏輯
-      this.updateRowDataState(rowData, capType);
-      this.messageService.successBubble('計算完成！');
+  onCalculationSave(): void {
+    if (this.calculationResult && this.currentRowData) {
+      // 套用計算結果
+      this.currentRowData._skipAutoCalc = true;
+      this.currentRowData.tpy_amount = this.calculationResult.monthlyAmount;
+      this.currentRowData.down_payment = this.calculationResult.downPayment;
+
+      // 觸發您現有的狀態更新
+      this.updateRowDataState(this.currentRowData, this.currentCapType);
+      this.messageService.successBubble('✅ 自動計算完成！');
+    }
+
+    // 關閉對話框
+    this.closeCalculationDialog();
+  }
+
+  // 🆕 關閉對話框
+  onCalculationDialogClose(visible: boolean): void {
+    if (!visible) {
+      this.closeCalculationDialog();
     }
   }
+
+  private closeCalculationDialog(): void {
+    this.showCalculationDialog = false;
+    this.calculationResult = null;
+    this.currentRowData = null;
+    this.currentCapType = '';
+  }
+
 }
