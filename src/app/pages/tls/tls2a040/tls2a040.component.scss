@@ -1,0 +1,6 @@
+::ng-deep .small-btn .p-button {
+  height: 10px;        // 高度不要太小
+  font-size: 12px;     // 字體小一點
+  padding: 2px 4px;    // 內距縮小，避免擠壓
+  line-height: 1;    // 修正對齊
+}

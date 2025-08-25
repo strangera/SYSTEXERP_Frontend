@@ -25,13 +25,6 @@ export class TLS43040Component extends BasicQueryPageComponent<any> implements O
     ECR_GrpName: ['', [Validators.maxLength(30)]], // 機台群組名稱
     ECR_GrpDesc: ['', [Validators.maxLength(100)]], // 機台群組備註
 
-    // // 以下可以不用顯示於查詢頁
-    // CRT_Date: [], // 建立日期
-    // CRT_USR_No: [, [Validators.maxLength(8)]], // 建立人員
-    // CRT_USR_Name: ['', [Validators.maxLength(20)]], // 建立人員姓名
-    // UPD_Date: [], // 變更日期
-    // UPD_USR_No: [, [Validators.maxLength(8)]], // 變更人員
-    // UPD_USR_Name: ['', [Validators.maxLength(20)]], // 變更人員姓名
     ...createPaginationConfig([{ field: 'ECR_GrpNo', order: 1 }]),
 
   });

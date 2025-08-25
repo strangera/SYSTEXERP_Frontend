@@ -95,6 +95,7 @@
           [pSortableColumnDisabled]="!showSort || rowEditing || col.showSort === false" class="text-center"
           pFrozenColumn [frozen]="IsPrint && col.frozen" [alignFrozen]="col.alignFrozen || 'right'">
           {{ col.header }}
+          <span *ngIf="col.required" class="required">*</span>
           <p-sortIcon *ngIf="showSort && !rowEditing && col.showSort !== false && data.length"
             [field]="col.sortField ?? col.field" />
         </th>

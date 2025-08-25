@@ -70,8 +70,8 @@ export class TLS42020Component extends BasicQueryPageComponent<TLS42020Data> imp
   ];
 
   expansionColumns: Column[] = [
-    { field: 'SBM_BtnNo', header: '菜單案件序號', visible: true },
-    { field: 'PLU_MagNo', header: '商品貨號', visible: true },
+    { field: 'SBM_BtnNo', header: '菜單按鍵序號', visible: true },
+    { field: 'PLU_MagNo', header: '商品管理碼', visible: true },
     { field: 'PLU_No', header: '國際條碼', visible: true },
     { field: 'PLU_Name', header: '商品名稱', visible: true },
     { field: 'PLU_PrnName', header: '商品列印名稱', visible: true },
@@ -100,9 +100,9 @@ export class TLS42020Component extends BasicQueryPageComponent<TLS42020Data> imp
 
   loadFakeData() {
     this.data = [
-      { menuType: 'Type1', tltNo: '001', tltName: 'Name1', details: [] },
-      { menuType: 'Type2', tltNo: '002', tltName: 'Name2', details: [] },
-      { menuType: 'Type3', tltNo: '003', tltName: 'Name3', details: [] }
+      { menuType: '一般', tltNo: '001', tltName: 'Name1', details: [] },
+      { menuType: '一般', tltNo: '002', tltName: 'Name2', details: [] },
+      { menuType: '一般', tltNo: '003', tltName: 'Name3', details: [] }
     ];
     this.totalRecords = this.data.length;
   }

@@ -1,212 +1,173 @@
-import { ValidationService } from './../../../shared/service/validation.service';
-import { Component, OnInit, ViewEncapsulation, } from '@angular/core';
-import { FormArray, FormBuilder, FormControl, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-import { AuthService } from '../../../service/system/auth.service';
-import { BasicCrupageComponent } from '../../../shared/componentextends/basic-crupage/basic-crupage.component';
-import { TranslateService, TranslateModule } from '@ngx-translate/core';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { Component, OnInit } from '@angular/core';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+
+// PrimeNG modules
 import { PanelModule } from 'primeng/panel';
+
+// Shared components
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
+
+// Translation
+import { TranslateModule } from '@ngx-translate/core';
+
+// Common Angular
 import { NgIf } from '@angular/common';
 
-// 2.4.2.2 快速鍵名稱維護作業 CRU
+// Base class
+import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
+import { TLS42020Data } from '../tls42020/tls42020.component';
+import { DropDownListService } from '@service/utility/dropDownList.service';
+import { TableComponent } from '@shared/componentkit/table/table.component';
+import { Column } from '@shared/componentkit/table/table.model';
+
 @Component({
-    selector: 'app-tls42020-cru',
-    templateUrl: './tls42020-cru.component.html',
-    styleUrl: './tls42020-cru.component.scss',
-    standalone: true,
-    imports: [MenubarComponent, PanelModule, FormsModule, ReactiveFormsModule, ButtonComponent, NgIf, TranslateModule]
+  selector: 'app-tls42020-cru',
+  templateUrl: './tls42020-cru.component.html',
+  styleUrl: './tls42020-cru.component.scss',
+  standalone: true,
+  imports: [
+    MenubarComponent,
+    ButtonComponent,
+    PanelModule,
+    FormsModule,
+    ReactiveFormsModule,
+    DropdownComponent,
+    CalendarComponent,
+    TranslateModule,
+    NgIf,
+    TableComponent
+  ]
 })
-export class TLS42020CRUComponent extends BasicCrupageComponent implements OnInit {
-  // ----------------------------------------------------------------
+export class TLS42020CRUComponent extends BasicCruPageComponent<TLS42020Data> implements OnInit {
   dataForm = this.formBuilder.nonNullable.group({
-    // 先設定主檔再設定明細檔
-
-    // POS1004M_鍵盤設定主檔
-    ECR_KBType: ['', [Validators.required, Validators.maxLength(6)]], // 鍵盤型態
-    USR_Level: ['', [Validators.required, Validators.maxLength(6)]], // 鍵盤權限等級
-    ECR_KBDesc: [,], // 鍵盤備註
-    //
-    CRT_Date: [], // 建立日期
-    CRT_USR_No: [, [Validators.maxLength(8)]], // 建立人員
-    CRT_USR_Name: ['', [Validators.maxLength(20)]], // 建立人員姓名
-    UPD_Date: [], // 變更日期
-    UPD_USR_No: [, [Validators.maxLength(8)]], // 變更人員
-    UPD_USR_Name: ['', [Validators.maxLength(20)]], // 變更人員姓名
-
-    // POS1004_鍵盤設定明細檔 (ECR_KBType、USR_Level 與主檔一致)
-    KB_ScanCode: [, [Validators.required, Validators.maxLength(4)]], // 按鍵代碼 (Scan Code)
-    KB_Func: [, [Validators.maxLength(4)]], // 功能代碼
-    KB_Arg1: ['', [Validators.maxLength(20)]], // 參數(1)
-    KB_Arg2: ['', [Validators.maxLength(20)]], // 參數(2)
-    KB_Arg3: ['', [Validators.maxLength(20)]], // 參數(3)
-    KB_Display1: ['', [Validators.maxLength(20)]], // 按鍵顯示(第一行)
-    KB_Display2: ['', [Validators.maxLength(20)]], // 按鍵顯示(第二行)
-    //
-    KB_Font: ['', [Validators.required, Validators.maxLength(20)]], // 顯示字型
-    KB_Size: [, [Validators.required, Validators.maxLength(6)]], // 顯示字型大小
-    KB_Fonttyped: [[] as number[]], // 顯示字型(粗體/斜體/底線)
-    KB_Style: ['', [Validators.required, Validators.maxLength(1)]], // 按鍵型狀
-    KB_Switch: ['', [Validators.required, Validators.maxLength(1)]], // ON/OFF
-    KB_Width: [, [Validators.required, Validators.minLength(2), Validators.maxLength(10)]], // 寬度
-    KB_Height: [, [Validators.required, Validators.minLength(2), Validators.maxLength(10)]], // 高度
-    KB_Merge: ['', [Validators.required, Validators.maxLength(4)]], // 合併鍵的 按鍵代碼
-    KB_Color: ['', [Validators.maxLength(30)]], // 顏色
-    KB_FontColor: ['', [Validators.maxLength(30)]], // 字型顏色
-    // 下面這些和主檔應該是一致的
-    // CRT_Date: [], // 建立日期
-    // CRT_USR_No: ['', [Validators.maxLength(8)]], // 建立人員
-    // CRT_USR_Name: ['', [Validators.maxLength(20)]], // 建立人員姓名
-    // UPD_Date: [], // 變更日期
-    // UPD_USR_No: ['', [Validators.maxLength(8)]], // 變更人員
-    // UPD_USR_Name: ['', [Validators.maxLength(20)]], // 變更人員姓名
-    // ----------------------------------------------------------------
-    items: this.formBuilder.array([
-      this.createItem()
-    ]),
+    menuType: ['', Validators.required],
+    tltNo: ['', Validators.required],
+    SBM_BegDate: ['', Validators.required],
+    SBM_EndDate: ['', Validators.required]
   });
-  // ----------------------------------------------------------------
-  KB_Fonttyped_Options: any[] = [
-    { value: '1', label: '粗體' },
-    { value: '2', label: '斜體' },
-    { value: '3', label: '底線' },
-  ];
-  KB_Switch_Options: any[] = [
-    { value: '1', label: '啟用' },
-    { value: '2', label: '不啟用' },
-  ];
-  Color_Options: any[] = [
-    { value: '1', label: '紅色' },
-    { value: '2', label: '黃色' },
-    { value: '3', label: '綠色' },
-  ];
-  KB_Style_Options: any[] = [
-    { value: '1', label: '方形' },
-    { value: '2', label: '矩形' },
-    { value: '3', label: '橢圓' },
+
+  data: any[] = [];
+  selectedRows: any[] = [];
+
+
+  // 主檔下拉選項
+  menuTypeOptions: any[] = [];
+  tltNoOptions: any[] = [];
+
+  // 明細下拉選項
+  PLU_MagNoOptions: any[] = [
+    {
+      label: '商品1',
+      value: '1'
+    },
+    {
+      label: '商品2',
+      value: '2'
+    }
+  ]; // 商品管理碼
+
+  columns: Column[] = [
+    {
+      field: 'SBM_BtnNo',
+      header: '菜單按鍵序號',
+      type: 'input',
+      validate: [(value: string) => ({ isValid: !!value, errorMessage: ['菜單按鍵序號為必填欄位'] })],
+      required: true
+    },
+    {
+      field: 'PLU_MagNo',
+      header: '商品管理碼',
+      type: 'dropdown',
+      options: this.PLU_MagNoOptions,
+      optionLabel: 'label',
+      optionValue: 'value',
+    },
+    {
+      field: 'PLU_No',
+      header: '國際條碼',
+      type: 'input',
+      validate: [(value: string) => ({ isValid: !!value, errorMessage: ['國際條碼為必填欄位'] })],
+      required: true
+    },
+    {
+      field: 'PLU_Name',
+      header: '商品名稱',
+      type: 'input',
+      validate: [(value: string) => ({ isValid: !!value, errorMessage: ['商品名稱為必填欄位'] })],
+      required: true
+    },
+    {
+      field: 'PLU_PrnName',
+      header: '商品列印名稱',
+      type: 'input',
+      validate: [(value: string) => ({ isValid: !!value, errorMessage: ['商品列印名稱為必填欄位'] })],
+      required: true
+    },
+    {
+      field: 'PLU_FixPrc',
+      header: '商品定價',
+      type: 'input',
+      validate: [(value: string) => ({ isValid: !!value, errorMessage: ['商品定價為必填欄位'] })],
+      required: true
+    },
+    {
+      field: 'PLU_SalePrc',
+      header: '商品售價',
+      type: 'input',
+      validate: [(value: string) => ({ isValid: !!value, errorMessage: ['商品售價為必填欄位'] })],
+      required: true
+    }
   ];
 
   constructor(
-    private router: Router,
-    private formBuilder: FormBuilder,
-    private messageService: NotificationService,
-    private authService: AuthService,
-    private validationService: ValidationService,
-    private translate: TranslateService,
-    //
+    private dropDownListService: DropDownListService
   ) {
-    super();  // 呼叫父類建構子
+    super();
   }
 
   ngOnInit(): void {
-    // 初始化
-    this.ProgNo = '240008';
-    //
-    // ----------------------------------------------------------------
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
-    //
-    // ----------------------------------------------------------------
-    const state = this.router.lastSuccessfulNavigation?.extras.state as {
-      crudstatus: CRUDStatus,
-      rowdata: any,
-    };
-
-    switch (state.crudstatus) {
-      // 創建
-      case CRUDStatus.Create:
-        this.formTitle = 'create-conditions';
-        this.accordionTabCss = 'create-accordionTab';
-        this.crudstatus = CRUDStatus.Create;
-        this.showConfirm = this.canAdd();
-        break;
-      // 修改
-      case CRUDStatus.Edit:
-        this.formTitle = 'edit-conditions';
-        this.accordionTabCss = 'edit-accordionTab';
-        this.crudstatus = CRUDStatus.Edit;
-        this.showConfirm = this.canEdit();
-        this.Edit(state.rowdata);
-        break;
-      // 讀檔
-      case CRUDStatus.Read:
-        this.formTitle = 'display-conditions';
-        this.crudstatus = CRUDStatus.Read;
-        this.Read(state.rowdata);
-        break;
-    }
-
-    console.log(this.accordionTabCss);
-  }
-
-  // ----------------------------------------------------------------
-  get items(): FormArray {
-    return this.dataForm.get('items') as FormArray;
-  }
-
-  getFormControl(index: number, controlName: string): FormControl {
-    return this.items.at(index).get(controlName) as FormControl;
-  }
-  // ----------------------------------------------------------------
-  createItem(): FormGroup {
-    return this.formBuilder.group({
-      // name: ['', [Validators.required, Validators.maxLength(14)]], // Input Text
-    });
-  }
-  onRemoveItem(index: number) {
-    this.items.removeAt(index);
-  }
-  // ----------------------------------------------------------------
-  Edit(rowdata: any) {
-    this.dataForm.patchValue(rowdata);
-  }
-
-  Read(rowdata: any) {
-    this.dataForm.patchValue(rowdata);
-    this.dataForm.disable();
-  }
-
-  onAddItem(): void {
-    this.items.push(this.createItem());
+    this.initializePage('TLS42020', this.dataForm);
+    this.loadOptions();
   }
 
   onSubmit(frm: FormGroup) {
-    this.messageService.blockUi();
-    this.submitted = true;
+    this.handleSubmit(frm, () => {
 
-    if (this.dataForm.invalid) {
-      this.messageService.errorBubble(this.translate.instant('form_error_message'));
-      this.messageService.unblockUi();
-      return;
-    }
-
-    switch (this.crudstatus) {
-      case CRUDStatus.Create:
-        if (this.canAdd()) {
-          // this.storeService.addMachine(frm.value as MachineForm).subscribe((response: any) => {
-          this.messageService.successBubble(this.translate.instant('success_message'));
-        }
-        break;
-      case CRUDStatus.Edit:
-        if (this.canEdit()) {
-          // this.storeService.updateMachine(frm.value as MachineForm).subscribe((response: any) => {
-          this.messageService.successBubble(this.translate.instant('updated-successfully'));
-        }
-        break;
-    }
-
-    this.messageService.unblockUi();
-    this.submitted = false;
+    });
   }
 
-  submitForm(frm: FormGroup) {
-    // 查詢邏輯
-    this.onSubmit(frm);
-  }//CRU
+  loadOptions() {
+    this.menuTypeOptions = [
+      { label: '一般菜單', value: '1' },
+      { label: '員工菜單', value: '2' },
+    ];
 
-  onCancel() {
-    this.router.navigate(['/TLS4000/TLS42020']);
+    this.dropDownListService.queryTLTTALENT_DropDownList()
+      .subscribe(res => {
+        this.tltNoOptions = res.Data
+          .map((item: any) => ({
+            label: item.Name,
+            value: item.No
+          }));
+      });
+
+    this.dropDownListService.queryPOS2004_DropDownList("POS1027M")
+      .subscribe(res => {
+        this.PLU_MagNoOptions = res.Data
+          .map((item: any) => ({
+            label: item.Name,
+            value: item.No
+          }));
+      });
+  }
+
+
+  onDelete(rows: any[]) {
+    const idsToDelete = new Set(rows.map(item => item.SBM_SeqNo));
+    this.data = this.data.filter((item: any) => !idsToDelete.has(item.SBM_SeqNo));
+    this.selectedRows = [];
   }
 }
