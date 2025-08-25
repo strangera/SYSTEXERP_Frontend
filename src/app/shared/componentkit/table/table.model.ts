@@ -22,6 +22,7 @@ export interface Column {
   suffix?: string; // 後綴 (適用於 input 類型)
   fractionDigits?: number;
   useGrouping?: boolean;
+  required?: boolean; // 是否為必填欄位 (適用於輸入欄位)
 
   options?: any | ((rowData: any) => any); // 支持靜態數據或基於 rowData 生成
   optionLabel?: string; // 下拉選單 optionLabel
