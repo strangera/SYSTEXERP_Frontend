@@ -166,7 +166,8 @@ export class TLS2A040Component extends BasicQueryPageComponent<any> implements O
             return {
               ...item,
               TXN_GUIBegNo: item.TXN_GUIBegNo ?? '--',
-              check_status: statusOption ? statusOption.label : item.check_status  // 顯示中文
+              check_status: statusOption ? statusOption.label : item.check_status,  // 顯示中文
+              TXN_No: item.TXN_No != null ? item.TXN_No.toString().padStart(6, '0') : '' // 補零
             };
           });
 
