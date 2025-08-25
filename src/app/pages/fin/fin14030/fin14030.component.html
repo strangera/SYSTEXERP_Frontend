@@ -45,7 +45,7 @@
   <ng-template pTemplate="footer">
     <!-- <button pButton icon="pi pi-times" aria-label="取消" (click)="cancelAction()"></button>
     <button pButton icon="pi pi-check" aria-label="確認" (click)="confirmAction()"></button> -->
-    <app-button label="審核"></app-button>
-    <app-button label="反審核"></app-button>
+    <app-button label="審核" (click)="confirmCheck()"></app-button>
+    <app-button label="反審核" (click)="cancelRecheck()"></app-button>
   </ng-template>
 </p-dialog>

@@ -13,6 +13,7 @@ import { CalendarComponent } from '@shared/componentkit/calendar/calendar.compon
 import { Button } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
 import { JsonPipe } from '@angular/common';
+import { ConfirmDialogModule } from 'primeng/confirmdialog';
 //
 /** TDS1002 營業人銷售額與稅額申報書檔 */
 export interface TDS1002 {
@@ -309,6 +310,9 @@ export class FIN14030Component extends BasicQueryPageComponent<unknown> implemen
       
       console.log('申報request', body);
 
+      // 輸入申報年月和稅籍編號條件，按【申報書預覽】，即可預覽該申報年月的申報書，同時顯示「審核」
+      // 視窗，可以執行「審核」與「反審核」的功能。
+
       // 這裡彈窗顯示
       this.dialogData = body;
       this.auditMode = '審核';   // 或者根據狀態切換 '反審核'
@@ -329,13 +333,66 @@ export class FIN14030Component extends BasicQueryPageComponent<unknown> implemen
     });
   }
 
-  // 彈出視窗控制
-   confirmAction() {
-    console.log(`${this.auditMode} 確認`, this.dialogData);
+  // 確認審核
+   confirmCheck() {
+    this.confirmationService.confirm({
+          message: `是否執行審核?`,
+          header: `確認審核`,
+          icon: 'pi pi-exclamation-triangle',
+          accept: () => {
+            // 按【審核】鈕後，系統詢問【是否執行審核?】，按【是】，更新審核日期=系統日期、
+            // 審核人員=操作人員、設定狀態=已審核，並同時寫入操作記錄檔，執行審核後資料則不
+
+            // const idsToDelete = rows.map(item => item.id);
+            // this.loading = true; // 設置載入狀態
+            // this.sysbc00Service.deleteSYSBC00(idsToDelete).pipe(
+            //   untilDestroyed(this), // 確保在組件銷毀時取消訂閱
+            //   finalize(() => this.loading = false) // 無論成功失敗，都要關閉載入狀態
+            // ).subscribe({
+            //   next: (response) => {
+            //     if (response.Status === '0000') { // 假設 '0000' 為成功狀態碼
+            //       this.messageService.successBubble('刪除成功');
+            //       this.selectedRows = []; // 清空選取狀態
+            //       this.onSubmit(this.queryForm);
+            //     } else {
+            //       console.error('刪除失敗響應:', response);
+            //     }
+            //   }
+            // });
+          }
+        });
     this.showDialog = false;
   }
 
-  cancelAction() {
+  //確認反審核
+  cancelRecheck() {
+    this.confirmationService.confirm({
+          message: `是否確認反審核?`,
+          header: `確認反審核`,
+          icon: 'pi pi-exclamation-triangle',
+          accept: () => {
+            // 按【反審核】鈕，系統詢問【是否執行反審核?】，按【是】，清除該筆設定的審核日
+            // 期、審核人員、更新設定狀態=未審核，並同時寫入操作記錄檔。
+
+
+            // const idsToDelete = rows.map(item => item.id);
+            // this.loading = true; // 設置載入狀態
+            // this.sysbc00Service.deleteSYSBC00(idsToDelete).pipe(
+            //   untilDestroyed(this), // 確保在組件銷毀時取消訂閱
+            //   finalize(() => this.loading = false) // 無論成功失敗，都要關閉載入狀態
+            // ).subscribe({
+            //   next: (response) => {
+            //     if (response.Status === '0000') { // 假設 '0000' 為成功狀態碼
+            //       this.messageService.successBubble('刪除成功');
+            //       this.selectedRows = []; // 清空選取狀態
+            //       this.onSubmit(this.queryForm);
+            //     } else {
+            //       console.error('刪除失敗響應:', response);
+            //     }
+            //   }
+            // });
+          }
+        });
     this.showDialog = false;
   }
 }
