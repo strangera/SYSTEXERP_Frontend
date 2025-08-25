@@ -71,7 +71,7 @@ export class FIN15020Component extends BasicQueryPageComponent<FIN15020Data> imp
 
   columns: Column[] = [
     { field: 'No', header: '序號', visible: false },
-    { field: 'PUR_VoucherType', header: '發票格式代號', visible: true, format: (value: string) => this.invoiceFormatOptions.find(opt => opt.value === value)?.label ?? '' },
+    { field: 'PUR_VoucherType', header: '格式代號', visible: true, format: (value: string) => this.invoiceFormatOptions.find(opt => opt.value === value)?.label ?? '' },
     { field: 'GUI_Track', header: '字軌', visible: true },
     { field: 'InvoiceNo', header: '發票號碼', visible: true },
     { field: 'PUR_GUIDate', header: '退出折讓日期', visible: true, format: (value: any) => value ? this.datePipe.transform(value, 'yyyy/MM/dd') : '' },

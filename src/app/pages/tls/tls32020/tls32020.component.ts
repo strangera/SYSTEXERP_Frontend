@@ -1,275 +1,250 @@
-import { Component } from '@angular/core';
-import { FormBuilder, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { NavigationExtras, Router } from '@angular/router';
-// Permissions
-import { FunsrightInfo, PermissionsInfo } from '../../../shared/models/system/funsrightInfo';
-// Shared
-import { AuthService } from '../../../service/system/auth.service';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-
+import { Component, OnInit } from '@angular/core';
+import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { DatePipe, NgIf } from '@angular/common';
+import { finalize } from 'rxjs';
+import { TLS32020Service, TLS32020Data, TLS32020QueryRequest } from '../../../service/api/tls/tls32020.service';
 import { ValidationService } from '../../../shared/service/validation.service';
-
-import { FloorService } from '../../../service/basic/floor.service';
-import { RegionService } from './../../../service/basic/region-code.service';
-import { OrganizationNumberService } from '../../../service/basic/organization-number.service';
-import { BusinessTypeCodeService } from '../../../service/basic/business-type-code-service.service';
-import { CommissionTypeService } from '../../../service/basic/commission-type.service';
-import { TypeService } from './../../../service/basic/type.service';
-import { TaxableService } from './../../../service/basic/taxable.service';
-import { CounterCodeService } from '../../../service/basic/counter-code.service';
-import { CooperationMethodService } from '../../../service/basic/cooperation-method.service';
+import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { AccordionModule } from 'primeng/accordion';
-import { RadiobuttonComponent } from '../../../shared/componentkit/radiobutton/radiobutton.component';
-import { NgIf } from '@angular/common';
-import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
-import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
-import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
-import { InputTextModule } from 'primeng/inputtext';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
+import { AccordionModule } from 'primeng/accordion';
 import { TranslateModule } from '@ngx-translate/core';
+import { Column, createPaginationConfig, formatAmount } from '../../../shared/componentkit/table/table.model';
+import { BusinessTypeCodeService } from '@service/basic/business-type-code-service.service';
+import { CommissionTypeService } from '@service/basic/commission-type.service';
+import { OrganizationNumberService } from '@service/basic/organization-number.service';
+import { CooperationMethodService } from '@service/basic/cooperation-method.service';
+import { FloorService } from '@service/basic/floor.service';
+import { RegionService } from '@service/basic/region-code.service';
+import { CounterCodeService } from '@service/basic/counter-code.service';
+import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
+import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
+import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
+import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
+import { Tls11010Service } from '@service/api/tls/tls11010.service';
 
 @Component({
   selector: 'app-tls32020',
   templateUrl: './tls32020.component.html',
   styleUrl: './tls32020.component.scss',
   standalone: true,
-  imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, RadiobuttonComponent, NgIf, CalendarRangeComponent, CalendarComponent, InputNumberComponent, InputTextModule, DropdownComponent, ButtonComponent, TableComponent, TranslateModule]
+  imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputTextComponent, CalendarRangeComponent, TableComponent, TranslateModule, RadiobuttonComponent, DropdownComponent, NgIf, MultiSelectComponent, CalendarRangeQuickComponent]
 })
-
-export class TLS32020Component {
-
-  // 程式編號
-  ProgNo: string = '230011';
-  // 權限變數
-  funInfo?: FunsrightInfo;
-
-
-
-
-  // 查詢表單
-  loading: boolean = false;
-  submitted: boolean = false;
+export class TLS32020Component extends BasicQueryPageComponent<TLS32020Data> implements OnInit {
   queryForm = this.formBuilder.group({
-    radiolist: [1, []], // 條件篩選, radioButton
-    floor: [],  // 樓層
-    region: [], //區域
-    tax: [], //稅別
-    type: [],
-    organizationCode: [],  // 專櫃編號
-    businessTypeCode: [],  // 大分類
-    commissionType: [], // 抽成方式
-    onedatedd: [],
-    onedateyy: [],
-    weeks: [],
-    radio1: [],
-    onedatemm: [],
-    halfyear: [],
-    startdate: [], enddate: [],
-    EventID: [],
-    counterCode: [],  // 專櫃編號
+    // 日期查詢條件
+    reportType: ['6'], // 報表類型（預設區間營業報表）
+    sad_startdate: [null], // 區間開始日期
+    sad_enddate: [null], // 區間結束日期
+    eventID: [null], // 活動ID
+    event_startdate: [null], // 活動開始日期
+    event_enddate: [null], // 活動結束日期
+    // 合約查詢條件
+    floor: [null], // 樓層
+    region: [null], // 區域
+    bus_type: [null], // 大分類/中分類
+    tlt_kind: [null], // 櫃別
+    org_id: [null], // 組織代號
+    tlt_term_type: [null], // 抽成別
+    tlt_no: [null], // 專櫃編號
+    tlt_building: [null], // 館別
+    tax: [true], // 是否含稅
+    issue: ['2'], // 是否開立業主發票
+    ...createPaginationConfig([{ field: 'team_name', order: -1 }])
   });
 
-  daterangeOptions: any[] = [
-    { value: 1, label: '日營業報表' },
-    { value: 2, label: '週營業報表' },
-    { value: 3, label: '月營業報表' },
-    { value: 4, label: '半年營業報表' },
-    { value: 5, label: '年營業報表' },
+  totalRecords = 0;
+  data: TLS32020Data[] = [];
+  selectedItems: TLS32020Data[] = [];
 
+  columns: Column[] = [];
+  columnGroup = [
+    { field: 'target_diff', header: '目標差異' },
+    { field: 'sales_diff', header: '營業額差異' },
+    { field: 'transaction_diff', header: '交易筆數差異' },
+    { field: 'unit_price_diff', header: '客單價差異' },
+    { field: 'current_year', header: '2024年' },
+    { field: 'previous_year', header: '2023年' },
+    { field: 'comparison', header: '比較分析' }
   ];
 
-  halfyearOptions: any[] = [
-    { value: 1, label: '上半年' },
-    { value: 2, label: '下半年' },
-  ];
-
-
+  //#region 選項
   organizationOptions: any[] = [];
   regionOptions: any[] = [];
   floorOptions: any[] = [];
   businessTypeCodeOptions: any[] = [];
   commissionTypeOptions: any[] = [];
-  TypeOptions: any[] = [];
-  counterCodeOptions: any[] = [];
-  taxOptions: any[] = [];
   operationsOptions: any[] = [];
-  selectedOption: string = '1'; // 預設選擇的欄位
-
-  // 表格資料
-  data: any[] = [];
-  data2: any[] = [];
-  filteredData: any[] = [...this.data];
-  columns: any[] = [
-    { field: '1', header: '樓層名稱', visible: true },
-    { field: '2', header: '營業目標', visible: true },
-    { field: '3', header: '營業實績', visible: true },
-    { field: '4', header: '達成率', visible: true },
-    { field: '5', header: '營業目標佔比', visible: true },
-    { field: '6', header: '營業實績佔比', visible: true },
-    { field: '7', header: '交易筆數', visible: true },
-    { field: '8', header: '客單價', visible: true },
-    { field: '9', header: '坪數', visible: true },
-    { field: '10', header: '坪效', visible: true },
-    { field: '11', header: '營業實績', visible: true },
-    { field: '12', header: '營業實績佔比', visible: true },
-    { field: '13', header: '臨時櫃業績佔比', visible: true },
-    { field: '14', header: '月營業目標', visible: true },
-    { field: '15', header: '營業實績', visible: true },
-    { field: '16', header: '完成率', visible: true },
+  counterCodeOptions: any[] = [];
+  taxOptions: any[] = [
+    { value: true, label: '含稅' },
+    { value: false, label: '未稅' }
   ];
-
-
-  columns2: any[] = [
-    { field: '1', header: '樓層名稱', visible: true },
-    { field: '2', header: '營業目標', visible: true },
-    { field: '3', header: '營業實績', visible: true },
-    { field: '4', header: '達成率', visible: true },
-    { field: '5', header: '營業目標佔比', visible: true },
-    { field: '6', header: '營業實績佔比', visible: true },
-    { field: '7', header: '交易筆數', visible: true },
-    { field: '8', header: '客單價', visible: true },
-    { field: '9', header: '坪數', visible: true },
-    { field: '10', header: '坪效', visible: true },
-    { field: '11', header: '營業實績', visible: true },
-    { field: '12', header: '營業實績佔比', visible: true },
-    { field: '13', header: '臨時櫃業績佔比', visible: true },
+  reportTypeOptions: any[] = [
+    { value: '6', label: '區間營業報表' },
+    { value: '7', label: '活動區間營業報表' },
   ];
-
+  EventIDOptions: any[] = [
+    { value: '1', label: '活動1' },
+    { value: '2', label: '活動2' },
+  ];
+  BUILDING_NO_Options: any[] = [];
+  issueOptions: any[] = [
+    { value: '0', label: '是' },
+    { value: '1', label: '否' },
+    { value: '2', label: '全部' },
+  ];
+  //#endregion
 
   constructor(
-    private router: Router,
-    private formBuilder: FormBuilder,
-    private messageService: NotificationService,
-    private authService: AuthService,
+    private tls32020Service: TLS32020Service,
     private validationService: ValidationService,
-    private floorService: FloorService,
-    private RegionService: RegionService,
+    private datePipe: DatePipe,
     private businessTypeCodeService: BusinessTypeCodeService,
     private organizationNumberService: OrganizationNumberService,
     private commissionTypeService: CommissionTypeService,
-    private TypeService: TypeService,
-    private TaxableService: TaxableService,
     private cooperationMethodService: CooperationMethodService,
-    private counterCodeService: CounterCodeService,  // 專櫃編號
-  ) { }
-
+    private floorService: FloorService,
+    private regionService: RegionService,
+    private counterCodeService: CounterCodeService,
+    private tls11010Service: Tls11010Service,
+  ) {
+    super();
+  }
 
   ngOnInit(): void {
-
-
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
-
-    // Initialize dropdown options
-    this.floorService.getFloors().subscribe(data => {
-      this.floorOptions = data;
-    });
-    this.RegionService.getRegionOptions().subscribe(data => {
-      this.regionOptions = data;
-    });
-    this.organizationNumberService.getOrganizationNumbers().subscribe((data) => {
-      this.organizationOptions = data;
-    });
-    this.businessTypeCodeService.getBusinessTypeCodes().subscribe((data) => {
-      this.businessTypeCodeOptions = data;
-    });
-    this.commissionTypeService.getCommissionTypes().subscribe((data) => {
-      this.commissionTypeOptions = data;
-    });
-    this.TypeService.getTypeOptions().subscribe(data => {
-      this.TypeOptions = data;
-    });
-    this.cooperationMethodService.getCooperationMethods().subscribe(data => {
-      this.operationsOptions = data;
-    });
-    this.TaxableService.getSystemTypes().subscribe(data => {
-      this.taxOptions = data;
-    });
-
-    this.counterCodeService.getCounterCodes().subscribe((data) => {
-      this.counterCodeOptions = data;
-    });
-  }
-
-  canQuery(): boolean {
-    return true;
-  }
-
-  canAdd(): boolean {
-    return true;
-  }
-
-  canEdit(): boolean {
-    return true;
+    this.initializePage('TLS32020', 'tls/tls32020cru', this.queryForm, (form) => this.onSubmit(form));
+    this.loadOptions();
+    this.setColumns(true);
   }
 
   onSubmit(frm: FormGroup) {
-    console.log(frm.value);
-    this.submitted = true;
-    this.loading = true;
-    this.messageService.blockUi();
-
-    if (frm.valid && this.canQuery()) {
-      // 提交邏輯
-    }
-
-    this.loading = false;
-    this.messageService.unblockUi();
+    this.handleSubmit(frm, () => {
+      this.tls32020Service.queryTLS32020(frm.getRawValue())
+        .pipe(finalize(() => this.loading = false))
+        .subscribe(response => {
+          this.setColumns(frm.value.tax);
+          this.data = response.Data;
+          this.totalRecords = response.TotalCount;
+          this.queryStateService.setQueryState(this.ProgNo, frm.getRawValue());
+        });
+    });
   }
 
-  onSubmitQuery(frm: FormGroup) {
-    // 查詢邏輯
-    this.onSubmit(frm);
+  // 載入下拉選項
+  loadOptions() {
+    // 樓層下拉選項
+    this.floorService.getFloors().subscribe(data => {
+      this.floorOptions = data;
+    });
+    // 區域下拉選項
+    this.regionService.getRegionOptions().subscribe(data => {
+      this.regionOptions = data.map(item => ({
+        ...item,
+        value: typeof item.value === 'number' ? item.value.toString() : item.value
+      }));
+    });
+    // 大分類/中分類下拉選項
+    this.businessTypeCodeService.getBusinessTypeCodes().subscribe((data) => {
+      this.businessTypeCodeOptions = data.map(item => ({
+        ...item,
+        value: typeof item.value === 'number' ? item.value.toString() : item.value
+      }));
+    });
+    // 櫃別下拉選項
+    this.cooperationMethodService.getCooperationMethods().subscribe(data => {
+      this.operationsOptions = data.map(item => ({
+        ...item,
+        value: typeof item.value === 'number' ? item.value.toString() : item.value
+      }));
+    });
+    // 抽成別下拉選項
+    this.commissionTypeService.getCommissionTypes().subscribe((data) => {
+      this.commissionTypeOptions = data.map(item => ({
+        ...item,
+        value: typeof item.value === 'number' ? item.value.toString() : item.value
+      }));
+    });
+    // 組織代號下拉選項
+    this.organizationNumberService.getOrganizationNumbers().subscribe((data) => {
+      this.organizationOptions = data.map(item => ({
+        ...item,
+        value: typeof item.value === 'number' ? item.value.toString() : item.value
+      }));
+    });
+    // 專櫃編號下拉選項
+    this.counterCodeService.getCounterCodes().subscribe((data) => {
+      this.counterCodeOptions = data.map(item => ({
+        ...item,
+        value: typeof item.value === 'number' ? item.value.toString() : item.value
+      }));
+    });
+    //館別下拉
+    this.tls11010Service
+      .getBuildingOptions()
+      .subscribe((data) => (this.BUILDING_NO_Options = data));
   }
 
-  onClearForm() {
-    this.queryForm.reset();  // 重置表單
-  }
+  // 根據銷售金額是否含稅設定顯示Header
+  setColumns(tax: boolean) {
+    this.columns = [
+      // 基本資訊
+      { field: 'sequence', header: '序號', visible: false, },
+      { field: 'date', header: '日期', visible: true, },
 
-  onCreate() {
-    if (this.canAdd()) {
-      let extras: NavigationExtras = {
-        state: {
-          crudstatus: CRUDStatus.Create,
-          queryform: this.queryForm
-        },
-        skipLocationChange: true
-      };
-      this.router.navigate(['/demoCRU'], extras);
-    }
-  }
+      // 目標差異
+      { field: 'a1_target_diff', header: 'A1目標差異', visible: true, format: formatAmount, groupField: 'target_diff', isTotal: true },
+      { field: 'a2_target_diff', header: 'A2目標差異', visible: true, format: formatAmount, groupField: 'target_diff', isTotal: true },
+      { field: 'total_target_diff', header: 'A1+A2目標差異', visible: true, format: formatAmount, groupField: 'target_diff', isTotal: true },
 
-  onEdit(data: any) {
-    if (this.canEdit()) {
-      let extras: NavigationExtras = {
-        state: {
-          crudstatus: CRUDStatus.Edit,
-          rowdata: data,
-          queryform: this.queryForm
-        },
-        skipLocationChange: true
-      };
-      this.router.navigate(['/demoCRU'], extras);
-    }
-  }
+      // 營業額差異
+      { field: 'a1_sales_diff', header: 'A1營業實績差異', visible: true, format: formatAmount, groupField: 'sales_diff', isTotal: true },
+      { field: 'a2_sales_diff', header: 'A2營業實績差異', visible: true, format: formatAmount, groupField: 'sales_diff', isTotal: true },
+      { field: 'total_sales_diff', header: 'A1+A2營業實績差異', visible: true, format: formatAmount, groupField: 'sales_diff', isTotal: true },
 
-  onDetail(data: any) {
-    let extras: NavigationExtras = {
-      state: {
-        crudstatus: CRUDStatus.Read,
-        rowdata: data,
-        queryform: this.queryForm
-      },
-      skipLocationChange: true
-    };
-    this.router.navigate(['/demoCRU'], extras);
-  }
+      // 交易筆數差異
+      { field: 'a1_transaction_diff', header: 'A1交易筆數差異', visible: true, groupField: 'transaction_diff', isTotal: true },
+      { field: 'a2_transaction_diff', header: 'A2交易筆數差異', visible: true, groupField: 'transaction_diff', isTotal: true },
+      { field: 'total_transaction_diff', header: 'A1+A2交易筆數差異', visible: true, groupField: 'transaction_diff', isTotal: true },
 
+      // 客單價差異
+      { field: 'a1_unit_price_diff', header: 'A1客單價差異', visible: true, format: formatAmount, groupField: 'unit_price_diff', isTotal: true },
+      { field: 'a2_unit_price_diff', header: 'A2客單價差異', visible: true, format: formatAmount, groupField: 'unit_price_diff', isTotal: true },
+      { field: 'total_unit_price_diff', header: 'A1+A2客單價差異', visible: true, format: formatAmount, groupField: 'unit_price_diff', isTotal: true },
 
-  onSystemTypeChange(selectedValue: any): void {
-    this.selectedOption = selectedValue
+      // 2024年資料
+      { field: 'current_target_a1', header: 'A1營業目標', visible: true, format: formatAmount, groupField: 'current_year', isTotal: true },
+      { field: 'current_target_a2', header: 'A2營業目標', visible: true, format: formatAmount, groupField: 'current_year', isTotal: true },
+      { field: 'current_target_total', header: 'A1+A2營業目標', visible: true, format: formatAmount, groupField: 'current_year', isTotal: true },
+      { field: 'current_sales_a1', header: 'A1營業實績', visible: true, format: formatAmount, groupField: 'current_year', isTotal: true },
+      { field: 'current_sales_a2', header: 'A2營業實績', visible: true, format: formatAmount, groupField: 'current_year', isTotal: true },
+      { field: 'current_sales_total', header: 'A1+A2營業實績', visible: true, format: formatAmount, groupField: 'current_year', isTotal: true },
+      { field: 'current_transaction_a1', header: 'A1交易筆數', visible: true, groupField: 'current_year', isTotal: true },
+      { field: 'current_transaction_a2', header: 'A2交易筆數', visible: true, groupField: 'current_year', isTotal: true },
+      { field: 'current_transaction_total', header: 'A1+A2交易筆數', visible: true, groupField: 'current_year', isTotal: true },
+      { field: 'current_unit_price_a1', header: 'A1客單價', visible: true, format: formatAmount, groupField: 'current_year', isTotal: true },
+      { field: 'current_unit_price_a2', header: 'A2客單價', visible: true, format: formatAmount, groupField: 'current_year', isTotal: true },
+      { field: 'current_unit_price_total', header: 'A1+A2客單價', visible: true, format: formatAmount, groupField: 'current_year', isTotal: true },
+
+      // 2023年資料
+      { field: 'previous_sales_a1', header: 'A1營業實績', visible: true, format: formatAmount, groupField: 'previous_year', isTotal: true },
+      { field: 'previous_sales_a2', header: 'A2營業實績', visible: true, format: formatAmount, groupField: 'previous_year', isTotal: true },
+      { field: 'previous_sales_total', header: 'A1+A2營業實績', visible: true, format: formatAmount, groupField: 'previous_year', isTotal: true },
+      { field: 'previous_transaction_a1', header: 'A1交易筆數', visible: true, groupField: 'previous_year', isTotal: true },
+      { field: 'previous_transaction_a2', header: 'A2交易筆數', visible: true, groupField: 'previous_year', isTotal: true },
+      { field: 'previous_transaction_total', header: 'A1+A2交易筆數', visible: true, groupField: 'previous_year', isTotal: true },
+      { field: 'previous_unit_price_a1', header: 'A1客單價', visible: true, format: formatAmount, groupField: 'previous_year', isTotal: true },
+      { field: 'previous_unit_price_a2', header: 'A2客單價', visible: true, format: formatAmount, groupField: 'previous_year', isTotal: true },
+      { field: 'previous_unit_price_total', header: 'A1+A2客單價', visible: true, format: formatAmount, groupField: 'previous_year', isTotal: true },
+
+      // 比較分析
+      { field: 'sales_variance', header: '營業差異', visible: true, format: formatAmount, groupField: 'comparison', isTotal: true },
+      { field: 'achievement_rate', header: '達成率', visible: true, format: (value: number) => value ? `${value.toFixed(1)}%` : '0%', groupField: 'comparison', isTotal: true },
+      { field: 'transaction_variance', header: '交易筆數差異', visible: true, groupField: 'comparison', isTotal: true },
+      { field: 'unit_price_variance', header: '客單價差異', visible: true, format: formatAmount, groupField: 'comparison', isTotal: true }
+    ];
   }
 }

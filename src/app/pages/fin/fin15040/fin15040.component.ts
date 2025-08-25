@@ -55,7 +55,7 @@ export class FIN15040Component extends BasicQueryPageComponent<FIN15040Data> imp
     Voucher_No_S: ['', [Validators.maxLength(16)]],             // 傳票號碼起 (string(16))
     Voucher_No_E: ['', [Validators.maxLength(16)]],             // 傳票號碼訖 (string(16))
     SAL_Type: [null],                                           // 系統別 (dropdown)
-    Voucher_no: ['', [Validators.maxLength(20)]],               // 傳票建立者 (string(20))
+    Voucher_no: ['', [Validators.maxLength(20)]],               // 傳票傳票建立者 (string(20))
     Asset_Notation: [null],                                     // 資產註記 (dropdown)
     HasUniform: [null],                                         // 是否有統編 (dropdown)
     PUR_DiscNo: [null],                                         // 折抵代號 (dropdown)

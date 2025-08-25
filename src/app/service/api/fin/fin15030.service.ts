@@ -29,7 +29,7 @@ export interface FIN15030QueryRequest extends BaseQueryRequest {
 export interface FIN15030Data {
   No: number;                         // 序號
   INV_Remark: string;                 // 退回折讓單號
-  INV_GUIType: string;                // 發票格式代號
+  INV_GUIType: string;                // 格式代號
   GUI_Track: string;                  // 字軌
   TXN_GUINo: string;                  // 發票號碼
   TXN_Date: string;                   // 退回折讓日期
