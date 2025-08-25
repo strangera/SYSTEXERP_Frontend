@@ -84,7 +84,8 @@ export class TLS2A040Component extends BasicQueryPageComponent<any> implements O
     { field: 'TXN_Date', header: '銷售日期', format: formatDate },
     { field: 'ECR_No', header: '收銀機號' },
     { field: 'TXN_No', header: '交易序號' },
-    { field: 'tlt_name', header: '專櫃名稱' },
+    { field: 'TLT_No', header: '專櫃編號' },
+    { field: 'tlt_name', header: '櫃位名稱' },
     { field: 'TXN_GUIBegNo', header: '發票號碼' },
     { field: 'CRD_No', header: '信用卡卡號' },
     { field: 'TXN_PayAmt', header: '金額' },
@@ -158,11 +159,20 @@ export class TLS2A040Component extends BasicQueryPageComponent<any> implements O
 
       this.tls2a040Service.queryTLS2A040(form.value).subscribe({
         next: (res) => {
-          this.data = res.Data ?? [];
+          const rawData = res.Data ?? [];
+
+          this.data = rawData.map((item: any) => {
+            const statusOption = this.statusOptions.find(opt => opt.value === item.check_status);
+            return {
+              ...item,
+              TXN_GUIBegNo: item.TXN_GUIBegNo ?? '--',
+              check_status: statusOption ? statusOption.label : item.check_status  // 顯示中文
+            };
+          });
+
           this.totalRecords = res.TotalCount ?? this.data.length;
           this.loading = false;
 
-          // 儲存查詢條件
           this.queryStateService.setQueryState(this.ProgNo, this.queryForm.value);
         },
         error: (err) => {
@@ -173,6 +183,10 @@ export class TLS2A040Component extends BasicQueryPageComponent<any> implements O
       });
     });
   }
+
+
+
+
   getDocLabel(): string {
     const docType = this.queryForm.get('docType')?.value;
     switch (docType) {
