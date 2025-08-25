@@ -299,9 +299,11 @@ export class TLS24010CRUComponent extends BasicCruPageComponent<TLS24010Data | u
               };
             }),
           }
-          this.tls24010Service.insertTLS24010(body).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe((res) => {
-            this.messageService.successBubble(res.Message);
-          });
+          console.log(body);
+
+          // this.tls24010Service.insertTLS24010(body).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe((res) => {
+          //   this.messageService.successBubble(res.Message);
+          // });
         }
       });
     });
