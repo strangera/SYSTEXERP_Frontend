@@ -38,14 +38,15 @@ import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-ra
 import { CheckboxModule } from 'primeng/checkbox';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { TranslateModule } from '@ngx-translate/core';
+import { Column } from '@shared/componentkit/table/table.model';
 
 // 2.1.2.4 專櫃要約書維護
 @Component({
-    selector: 'app-tls12040',
-    templateUrl: './tls12040.component.html',
-    styleUrl: './tls12040.component.scss',
-    standalone: true,
-    imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputNumberComponent, DropdownComponent, InputTextComponent, InputNumberRangeComponent, MultiSelectComponent, CalendarRangeComponent, CheckboxModule, TableComponent, TranslateModule]
+  selector: 'app-tls12040',
+  templateUrl: './tls12040.component.html',
+  styleUrl: './tls12040.component.scss',
+  standalone: true,
+  imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputNumberComponent, DropdownComponent, InputTextComponent, InputNumberRangeComponent, MultiSelectComponent, CalendarRangeComponent, CheckboxModule, TableComponent, TranslateModule]
 })
 export class TLS12040Component {
   ProgNo: string = '210006';
@@ -57,45 +58,45 @@ export class TLS12040Component {
   loading: boolean = false;
   submitted: boolean = false;
   queryForm = this.formBuilder.group({
-    recruitmentNumber: [, [this.validationService.numberValidator, Validators.maxLength(8)]], // 專櫃招募編號
-    industryCode: [[] as number[]], // 大分類代號
-    counterID: [, [this.validationService.numberValidator]], // 專櫃編號
-    counterName: ['', [Validators.maxLength(50)]], // 櫃位名稱
-    vendorUID: [[] as number[]], // 廠商統一編號
-    locationNumber: [[] as number[]], // 位置編號
-    startVersionNumber: [, [this.validationService.numberValidator, Validators.max(99999999)]], // 版本編號
-    endVersionNumber: [, [this.validationService.numberValidator, Validators.max(99999999)]], // 版本編號
-    contractStatus: [[] as number[]], // 合約狀態
-    region: [[] as number[]], // 區域
-    floor: [[] as number[]], // 樓層
-    negotiator: [[] as number[]], // 洽談者
-    organizationCode: [], // 組織代碼
-    operatingStatus: [], // 營運狀況
-    calculationMethod: [[] as number[]], // 抽成額計算方式
-    replyStartDateFrom: [], // 回函日期
-    replyStartDateTo: [], // 回函日期
-    replyEndDateFrom: [], // 回函截止日
-    replyEndDateTo: [], // 回函截止日
-    negotiationDateFrom: [], // 洽談日期
-    negotiationDateTo: [], // 洽談日期
-    businessType: [[] as number[]], // 營業型態
-    contractStartDateFrom: [], // 契約起始日
-    contractStartDateTo: [], // 契約起始日
-    contractEndDateFrom: [], // 契約截止日
-    contractEndDateTo: [], // 契約截止日
-    operationStartDateFrom: [], // 營運起始日
-    operationStartDateTo: [], // 營運起始日
-    operationEndDateFrom: [], // 營運截止日
-    operationEndDateTo: [], // 營運截止日
-    counterType: [[] as number[]], // 櫃別
-    decorationStyle: [[] as number[]], // 裝潢方式
-    chargeType: [[] as number[]], // 抽成別
-    checkout: [[] as number[]], // 結帳方式
-    payment: [[] as number[]], // 付款方式
-    cooerationType: [[] as number[]], // 配合方式
-    venderInvoice: [,], // 是否開立業主發票
-    venderRegister: [,], // 是否使用業主收銀機
-    venderCash: [,], // 是否為業主收現
+    apply_no: [, [Validators.maxLength(8)]], // 專櫃招募編號
+    bus_type: [[] as number[]], // 大分類代號
+    tlt_no: [, []], // 專櫃編號
+    tlt_name: ['', [Validators.maxLength(50)]], // 櫃位名稱
+    ven_uniform: [[] as number[]], // 廠商統一編號
+    location_no: [[] as number[]], // 位置編號
+    contract_no: [, [Validators.max(12)]], // 版本編號
+    endcontract_no: [, [Validators.max(12)]], // 版本編號
+    approve_status: [[]], // 合約狀態
+    area_no: [[] as number[]], // 區域
+    tlt_floor: [[] as number[]], // 樓層
+    contact_USR_No: [[] as number[]], // 洽談者
+    org_id: [], // 組織代碼
+    operatingStatus: [], // 營運狀況 //TODO:目前不知道是什麼(待修)
+    comm_comp_type: [[]], // 抽成計算方式(1:含稅, 2:除稅)--畫面上只有2的選項
+    feedback_date_from: [], // 回函日期
+    feedback_date_to: [], // 回函日期
+    due_date_from: [], // 回函截止日
+    due_date_to: [], // 回函截止日
+    contact_Date_from: [], // 洽談日期
+    contact_Date_to: [], // 洽談日期
+    paper_typeList: [[]], // 營業型態
+    tlt_bdate_start_from: [], // 契約起始日
+    tlt_bdate_end_to: [], // 契約起始日
+    tlt_edate_start_from: [], // 契約截止日
+    tlt_edate_end_to: [], // 契約截止日
+    tlt_contract_bdate_from: [], // 營運起始日
+    tlt_contract_bdate_to: [], // 營運起始日
+    tlt_contract_edate_from: [], // 營運截止日
+    tlt_contract_edate_to: [], // 營運截止日
+    tlt_kindList: [[]], // 櫃別
+    deco_typeList: [[]], // 裝潢方式
+    tlt_term_typeList: [[]], // 抽成別
+    money_typeList: [[]], // 結帳方式
+    paytypeList: [[]], // 付款方式
+    store_wayList: [[]], // 配合方式
+    rece_yn: [false], // 是否開立業主發票
+    pos_yn: [false], // 是否使用業主收銀機
+    cash_yn: [false], // 是否為業主收現
   });
   // 表格
   // ----------------------------------------------------------------
@@ -106,14 +107,13 @@ export class TLS12040Component {
     // 其他資料
   ];
   filteredData: any[] = [...this.data];
-  columns: any[] = [
-    { field: 'recruitmentNumber', header: '專櫃招募編號', visible: true },
-    { field: 'brandCName', header: '專櫃編號', visible: true },
-    { field: 'vendorUID', header: '櫃位名稱', visible: true },
-    { field: 'versionNumber', header: '合約狀態', visible: true },
-    { field: 'contactor', header: '營運狀況', visible: true },
-    { field: 'industryCode', header: '回函狀態', visible: true },
-    // 其他欄位
+  columns: Column[] = [
+    { field: 'apply_no', header: '專櫃招募編號', visible: true },
+    { field: 'tlt_no', header: '專櫃編號', visible: true },
+    { field: 'tlt_name', header: '櫃位名稱', visible: true },
+    { field: 'apply_type', header: '合約狀態', visible: true },
+    { field: 'tlt_openflag', header: '營運狀況', visible: true },
+    { field: 'IDONTKNOWN', header: '回函狀態', visible: true },
   ];
   // ----------------------------------------------------------------
   vendorUIDOptions: any[] = [];
