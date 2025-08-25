@@ -13,7 +13,7 @@ import { TXN_SubtypeService } from '../../../service/basic/TXN_Subtype.service';
 import { FloorService } from '../../../service/basic/floor.service';
 import { Tls11010Service } from '../../../service/api/tls/tls11010.service';
 import { ECRNoService } from '../../../service/basic/ECRNo.service';
-import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
+import { createPaginationConfig, LazyLoadEvent } from '../../../shared/componentkit/table/table.model';
 import { CounterNameService } from '../../../service/basic/counter-name.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { AccordionModule } from 'primeng/accordion';
@@ -53,6 +53,17 @@ import { TableComponent } from '@shared/componentkit/table/table.component';
   ],
 })
 export class TLS23040Component extends BasicQueryPageComponent<any> {
+    private lastQuerySig: string | null = null;
+  private lazyTimer: any = null;
+
+  sortMeta: any[] = [];
+
+  // 组件內新增一個 timer 欄位
+  readonly defaultSort: any[] = [
+    { field: 'TXN_Date', order: -1 },
+    { field: 'ECR_No',   order:  1 },
+    { field: 'TXN_No',   order:  1 },
+  ];
   totalRecords = 0;
   data: any[] = [];
   
@@ -74,7 +85,7 @@ backendTotals: Record<string, number> | null = null;
     tlt_building: [''],
     tlt_floor: [[]],
     org_id: [[]],
-    ...createPaginationConfig([{ field: 'ECR_No', order: 1 }]),
+    ...createPaginationConfig
   });
 
   statusFlagOptions: any[] = [];
@@ -102,7 +113,7 @@ backendTotals: Record<string, number> | null = null;
 
   ngOnInit(): void {
     this.initializePage('TLS23040', 'tls/tls23040cru', this.queryForm, (form) => this.onSubmit(form),);
-
+ this.sortMeta = this.defaultSort.map(x => ({ ...x }));
     this.statusFlagService.getStatusFlags().subscribe((data) => (this.statusFlagOptions = data));
 
     this.TXN_SubtypeService.getTXNSubtype().subscribe((data) => (this.TXN_SubtypeOptions = data));
@@ -119,13 +130,38 @@ backendTotals: Record<string, number> | null = null;
 
     this.counterNameService.getCounters().subscribe((res) => { this.CounterOptions = (res ?? []).map((x: any) => ({ label: x.label, formLabel: `${x.value} - ${x.label}`, value: x.value, })); });
   }
-  // 送出查詢（無 doQuery / buildPayload）
-  // 送出查詢（依新回傳結構 Data[].invoice.InvoiceDetail）
+override onLazyLoadData(event: LazyLoadEvent, queryForm: FormGroup) {
+  // 1) 依是否更換排序，決定是否回到第 1 頁
+  const currentSort = JSON.stringify(queryForm.value?.SortBy ?? []);
+  const nextSort    = JSON.stringify(event.SortBy ?? []);
+  const nextPageIdx = currentSort !== nextSort ? 1 : event.pageIndex;
+
+  // 2) 只 patch 分頁/排序，不要動日期等條件
+  queryForm.patchValue({
+    pageSize: event.pageSize,
+    pageIndex: nextPageIdx,
+    SortBy: event.SortBy
+  }, { emitEvent: false });
+
+  // 3) 父層排序狀態同步（供 table 綁定）
+  this.sortMeta = (event.SortBy ?? []).map(s => ({ ...s }));
+
+  // 4) 去重 + 0ms debounce
+  const sig = JSON.stringify({ pageIndex: nextPageIdx, pageSize: event.pageSize, SortBy: event.SortBy });
+  if (sig === this.lastQuerySig) return;
+  this.lastQuerySig = sig;
+
+  if (this.lazyTimer) clearTimeout(this.lazyTimer);
+  this.lazyTimer = setTimeout(() => this.onSubmit(queryForm), 0);
+}
+
+
+
 onSubmit(form: FormGroup): void {
   this.handleSubmit(form, () => {
     const val = this.queryForm.value as any;
 
-    // 轉本地 ISO(yyyy-MM-ddTHH:mm:ss) — 去掉時區偏移
+    // 還原 toIso
     const toIso = (x: any) => {
       if (!x) return undefined;
       const d = typeof x === 'string' ? new Date(x) : (x as Date);
@@ -135,23 +171,29 @@ onSubmit(form: FormGroup): void {
         .slice(0, 19);
     };
 
-    // 組 payload（含分頁/排序）
+    // ★ 強保底日期：若表單值為空，用 yesterday（或你想要的預設）
+    const dateStart = val?.TXN_DateStart ?? this.yesterday;
+    const dateEnd   = val?.TXN_DateEnd   ?? this.yesterday;
+
     const payload: any = {
       ...val,
-      TXN_DateStart: toIso(val?.TXN_DateStart),
-      TXN_DateEnd: toIso(val?.TXN_DateEnd),
-      pageSize: val?.pageSize,
+      TXN_DateStart: toIso(dateStart),
+      TXN_DateEnd:   toIso(dateEnd),
+      pageSize:  val?.pageSize,
       pageIndex: val?.pageIndex,
-      SortBy: val?.SortBy,
-      OrderBy: val?.OrderBy,
-      Offset: val?.Offset,
+      SortBy:    val?.SortBy
     };
 
-    // 數值欄位保險轉型
-    if ((val?.TXN_No_Start ?? '') !== '') payload.TXN_No_Start = Number(val.TXN_No_Start);
-    if ((val?.TXN_No_End ?? '') !== '') payload.TXN_No_End = Number(val.TXN_No_End);
+    // SortBy 優先走當前 sortMeta，沒有才 fallback
+    if (!Array.isArray(payload.SortBy) || payload.SortBy.length === 0) {
+      payload.SortBy = this.sortMeta.length ? this.sortMeta : this.defaultSort;
+    }
 
-    // 清除空字串/null/undefined/空陣列
+    // 數值欄位轉型
+    if ((val?.TXN_No_Start ?? '') !== '') payload.TXN_No_Start = Number(val.TXN_No_Start);
+    if ((val?.TXN_No_End   ?? '') !== '') payload.TXN_No_End   = Number(val.TXN_No_End);
+
+    // 清空空值（會保留剛剛保底過後的日期）
     Object.keys(payload).forEach((k) => {
       const v = payload[k];
       if (v === '' || v === null || v === undefined) delete payload[k];
@@ -244,4 +286,7 @@ onSubmit(form: FormGroup): void {
     { field: 'TXN_MemCard', header: '會員卡號', visible: true },
     { field: 'TXN_TotPayScoreAmt', header: '會員積點折抵', visible: true, style: 'text-right', format: (val: number) => val?.toLocaleString('en-US') || '0', },
   ];
+
+
+
 }

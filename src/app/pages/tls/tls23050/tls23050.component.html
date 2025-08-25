@@ -9,9 +9,9 @@
         <div class="grid p-fluid">
           <!-- 銷售日期 -->
 
-          <app-calendar-range-quick class="col-12 md:col-6 lg:col-4" label="銷售日期"
-            [startControl]="queryForm.controls.TXN_DateStart" [endControl]="queryForm.controls.TXN_DateEnd"
-            [submitted]="submitted"></app-calendar-range-quick>
+          <app-calendar class="col-12 md:col-6 lg:col-4" label="銷售日期"
+            [control]="queryForm.controls.TXN_Date" 
+            [submitted]="submitted"></app-calendar>
 
           <!-- 是否收銀 -->
 

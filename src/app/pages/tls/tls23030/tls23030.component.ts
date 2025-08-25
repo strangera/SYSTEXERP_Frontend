@@ -24,7 +24,7 @@ import { Tls11010Service } from '../../../service/api/tls/tls11010.service';
 import { TxnStatusService } from '../../../service/basic/txn-status.service';
 import { ECRNoService } from '../../../service/basic/ECRNo.service';
 import { CounterNameService } from '../../../service/basic/counter-name.service';
-import { timeout, catchError, debounceTime } from 'rxjs/operators';
+
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { AccordionModule } from 'primeng/accordion';
 import { CalendarRangeQuickComponent } from '../../../shared/componentkit/calendar-range-quick/calendar-range-quick.component';
@@ -41,9 +41,12 @@ import { finalize } from 'rxjs/operators';
 import { TranslateModule } from '@ngx-translate/core';
 import { Observable, of } from 'rxjs';
 import { TableComponent } from '@shared/componentkit/table/table.component';
+import { timeout, catchError, debounceTime, map } from 'rxjs/operators';
+import { DropDownListService } from '@service/utility/dropDownList.service';
+import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 
 type DisplayMode = 'Report' | 'SummaryReport';
-
+@UntilDestroy()
 @Component({
   selector: 'app-tls23030',
   templateUrl: './tls23030.component.html',
@@ -71,7 +74,7 @@ type DisplayMode = 'Report' | 'SummaryReport';
 export class TLS23030Component extends BasicQueryPageComponent<any> {
   data: any[] = [];
   totalRecords = 0;
-
+payNoToTypeMap = new Map<string, string>();
   readonly yesterday: Date = (() => {
     const d = new Date();
     d.setHours(0, 0, 0, 0);
@@ -87,7 +90,7 @@ export class TLS23030Component extends BasicQueryPageComponent<any> {
     TXN_No_Start: [null],
     TXN_No_End: [null],
     TLT_No: [], // ✅ 修正為 []
-    PAY_Type: [], // ✅ 修正為 []
+    
     TXN_PayAmt_Start: [null],
     TXN_PayAmt_End: [null],
     TXN_Status: [], // ✅ 修正為 []
@@ -101,7 +104,7 @@ export class TLS23030Component extends BasicQueryPageComponent<any> {
     cash_yn: [''],
     tlt_building: [''],
     tlt_floor: [], // ✅ 修正為 []
-    PAY_NO: [], // ✅ 修正為 []
+    PAY_NO: [] as string[],
     IsHaveTERM_No: [false],
 
     ...createPaginationConfig([{ field: 'ECR_No', order: 1 }]),
@@ -131,10 +134,17 @@ export class TLS23030Component extends BasicQueryPageComponent<any> {
 
   displayModeOptions: any[] = [];
   WhetherOptions: any[] = [];
-  paymentTypeOptions: any[] = [];
+  paymentTypeOptions: Array<{
+  label: string;
+  value: string;
+  Name: string;
+  No: string;
+  PAY_Type: string;
+}> = [];
+
   transactionTypeOptions: any[] = [];
   cardTypeOptions: any[] = [];
-  ticketStatusOptions: any[] = [];
+ 
   taxableOptions: any[] = [];
   discountOptions: any[] = [];
   deductionbigCategoryOptions: any[] = [];
@@ -145,6 +155,10 @@ export class TLS23030Component extends BasicQueryPageComponent<any> {
   OrganizationCodeOptions: any[] = [];
   ECRNoOptions: any[] = [];
   CounterOptions: any[] = [];
+  ticketStatusOptions: any[] = [
+    { value: '1', label: '已開' },
+    { value: '0', label: '未開' },
+  ];
 
   constructor(
     private whetherService: WhetherService,
@@ -163,6 +177,7 @@ export class TLS23030Component extends BasicQueryPageComponent<any> {
     private txnStatusService: TxnStatusService,
     private ECRNoService: ECRNoService,
     private counterNameService: CounterNameService,
+    private  dropDownListService:DropDownListService
   ) {
     super();
   }
@@ -179,12 +194,33 @@ export class TLS23030Component extends BasicQueryPageComponent<any> {
   ngOnInit(): void {
     this.initializePage('TLS23030', 'tls/tls23030cru', this.queryForm, (form) =>this.onSubmit(form),);
 
+
+    this.dropDownListService
+    .queryPOS1006_DropDownList()
+    .pipe(untilDestroyed(this))
+    .subscribe(res => {
+      const rows = Array.isArray(res?.Data) ? res.Data : [];
+      this.paymentTypeOptions = rows.map(x => {
+        this.payNoToTypeMap.set(x.No ?? '', x.PAY_Type ?? '');
+        return {
+          label: `${x.No ?? ''}-${x.Name ?? ''}`,
+          value: x.No ?? '',
+          Name: x.Name ?? '',
+          No: x.No ?? '',
+          PAY_Type: x.PAY_Type ?? '',
+        };
+      });
+
+    
+    });
+
+
     this.loadOptions(this.displayModeService.getDisplayModes(),'displayModeOptions',);
     this.loadOptions(this.whetherService.getWhetherOptions(), 'WhetherOptions');
-    this.loadOptions(this.paymentTypeService.getPaymentTypes(),'paymentTypeOptions',);
+   
     this.loadOptions(this.transactionTypeService.getTransactionTypes(),'transactionTypeOptions',);
     this.loadOptions(this.cardTypeService.getCardType(), 'cardTypeOptions');
-    this.loadOptions(this.ticketStatusService.getTicketStatuses(),'ticketStatusOptions',);
+   
     this.loadOptions(this.taxableService.getSystemTypes(), 'taxableOptions');
     this.loadOptions(this.discountService.getLocalDiscountOptions(),'discountOptions',);
     this.loadOptions(this.deductionbigCategoryService.getLocalDeductionCategories(),'deductionbigCategoryOptions',);
@@ -219,14 +255,15 @@ export class TLS23030Component extends BasicQueryPageComponent<any> {
         value: x.value,
       }),
     );
-  }
+      }
 private toBoolOrNull(v: any): boolean | null {
   if (typeof v === 'boolean') return v;
-  if (v == null || v === '') return null;      // 不傳值
+  if (v == null || v === '') return null; // 不傳值
   if (v === 'Y' || v === 'true' || v === 1 || v === '1') return true;
   if (v === 'N' || v === 'false' || v === 0 || v === '0') return false;
   return null; // 無法判斷就不傳
 }
+
  // 放在 TLS23030Component 內
 // ✅ 放進 TLS23030Component 內，覆蓋原本的 onSubmit
 onSubmit(form: FormGroup): void {
@@ -275,8 +312,8 @@ onSubmit(form: FormGroup): void {
     if (v === 'N' || v === 'false' || v === 0 || v === '0') return false;
     return null;
   };
-  raw['IsPayType']     = toBoolOrNull(raw['IsPayType']);
-  raw['IsHaveTERM_No'] = toBoolOrNull(raw['IsHaveTERM_No']);
+raw['IsPayType']     = this.toBoolOrNull(raw['IsPayType']);
+raw['IsHaveTERM_No'] = this.toBoolOrNull(raw['IsHaveTERM_No']);
 
   // 5) 分頁/排序 — 只保留「大寫」鍵
   // 若表單來源是小寫 pageIndex/pageSize，也會自動吃到並轉成大寫
