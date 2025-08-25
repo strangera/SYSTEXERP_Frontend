@@ -302,8 +302,9 @@ export class TLS23040Component extends BasicQueryPageComponent<any> {
           this.setOrgColumnsVisibility(hasNonNormal);
         },
         error: (err) => {
-          console.error('TLS23040 查詢失敗', err);
-          this.messageService?.errorBubble?.('查詢失敗，請稍後再試');
+          
+          this.loading = false;
+        
         },
         complete: () => {
           this.loading = false;
