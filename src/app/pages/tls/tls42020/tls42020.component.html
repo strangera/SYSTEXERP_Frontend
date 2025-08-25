@@ -14,10 +14,10 @@
             [submitted]="submitted"></app-multi-select>
           <app-multi-select class="col-12 md:col-6 lg:col-6" label="專櫃編號/名稱" controlName="tltNo"
             [options]="tltNoOptions" [control]="queryForm.controls.tltNo" [submitted]="submitted"></app-multi-select>
-          <app-calendar-range class="col-12 md:col-6 lg:col-6" label="有效起始日期" calendarType="dateMonthRange"
+          <app-calendar-range class="col-12 md:col-6 lg:col-6" label="有效起始日期" calendarType="dateRange"
             [startControl]="queryForm.controls.SBM_BegDate_start" [endControl]="queryForm.controls.SBM_BegDate_end"
             [submitted]="submitted"></app-calendar-range>
-          <app-calendar-range class="col-12 md:col-6 lg:col-6" label="有效結束日期" calendarType="dateMonthRange"
+          <app-calendar-range class="col-12 md:col-6 lg:col-6" label="有效結束日期" calendarType="dateRange"
             [startControl]="queryForm.controls.SBM_EndDate_start" [endControl]="queryForm.controls.SBM_EndDate_end"
             [submitted]="submitted"></app-calendar-range>
         </div>
