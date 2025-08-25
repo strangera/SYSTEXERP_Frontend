@@ -20,6 +20,7 @@ import { InputTextModule } from 'primeng/inputtext';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { TranslateModule } from '@ngx-translate/core';
 import { TableComponent } from '@shared/componentkit/table/table.component';
+import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
 
 @Component({
   selector: 'app-tls23050',
@@ -39,6 +40,7 @@ import { TableComponent } from '@shared/componentkit/table/table.component';
     ButtonComponent,
     TranslateModule,
     TableComponent,
+    CalendarComponent
   ],
 })
 export class TLS23050Component extends BasicQueryPageComponent<any> {
@@ -57,8 +59,8 @@ export class TLS23050Component extends BasicQueryPageComponent<any> {
 
   // ✅ 陣列欄位改用 control<any[]>([])，避免 never[] 型別錯誤
   queryForm = this.formBuilder.group({
-    TXN_DateStart: [this.yesterday, [Validators.required]],
-    TXN_DateEnd: [this.yesterday, [Validators.required]],
+    TXN_Date: [this.yesterday, [Validators.required]],
+   
     rece_yn: [null],
     tlt_building: [],
     tlt_floor: [],
