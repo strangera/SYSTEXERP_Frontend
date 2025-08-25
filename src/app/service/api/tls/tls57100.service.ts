@@ -16,6 +16,7 @@ export interface QueryTLS57100Request extends LazyLoadEvent {
   APRV_Date_End?: string;
   ODM_Type?: number[];
   Status?: string[];
+  ODM_No?: string;
 }
 
 export interface QueryTLS57100DetailResponse {

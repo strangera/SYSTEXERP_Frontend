@@ -27,6 +27,8 @@
           <app-multi-select label="單據狀態" class="col-12 md:col-6 lg:col-4" controlName="Status"
             [options]="documentStatusOptions" optionLabel="label" optionValue="value"
             [control]="queryForm.controls.Status" [submitted]="submitted"></app-multi-select>
+          <app-input-text class="col-12 md:col-6 lg:col-4" label="驗收/驗退單號" controlName="ODM_No"
+            [control]="queryForm.controls.ODM_No" [submitted]="submitted"></app-input-text>
           <app-dropdown class="col-12 md:col-6 lg:col-4" label="顯示方式" controlName="DisplayMode"
             [options]="displayModeOptions" optionLabel="label" optionValue="value" [filter]="false"
             [control]="queryForm.controls.DisplayMode" [submitted]="submitted"></app-dropdown>

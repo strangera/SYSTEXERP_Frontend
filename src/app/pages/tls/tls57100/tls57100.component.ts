@@ -17,6 +17,7 @@ import { DatePipe } from '@angular/common';
 import { ButtonModule } from 'primeng/button';
 import { HttpResponse } from '@angular/common/http';
 import { QueryTLS57100DetailResponse, QueryTLS57100Request, QueryTLS57100SummaryResponse, Tls57100Service } from '@service/api/tls/tls57100.service';
+import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
 
 @Component({
   selector: 'app-tls57100',
@@ -33,7 +34,8 @@ import { QueryTLS57100DetailResponse, QueryTLS57100Request, QueryTLS57100Summary
     ButtonComponent,
     TableComponent,
     TranslateModule,
-    ButtonModule
+    ButtonModule,
+    InputTextComponent
   ],
   providers: [DatePipe]
 })
@@ -48,6 +50,7 @@ export class TLS57100Component extends BasicQueryPageComponent<QueryTLS57100Deta
     APRV_Date_End: [null],
     ODM_Type: [null],
     Status: [null],
+    ODM_No: ['', Validators.maxLength(16)],
     DisplayMode: [1, [Validators.required]],
     ...createPaginationConfig([{ field: 'ODM_Date', order: 1 }]), // 根據後端預設排序欄位調整
   });
@@ -152,6 +155,7 @@ export class TLS57100Component extends BasicQueryPageComponent<QueryTLS57100Deta
         APRV_Date_End: formValue.APRV_Date_End ? this.datePipe.transform(formValue.APRV_Date_End, 'yyyy-MM-dd') ?? undefined : undefined,
         ODM_Type: formValue.ODM_Type,
         Status: formValue.Status,
+        ODM_No: formValue.ODM_No,
         pageIndex: frm.value.pageIndex,
         pageSize: frm.value.pageSize,
         SortBy: frm.value.SortBy,
