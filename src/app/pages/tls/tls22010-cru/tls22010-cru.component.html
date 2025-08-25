@@ -10,21 +10,18 @@
         [data]="data"
         [columns]="columnscru"
         [showCheckBox]="false"
-        dataKey="id"
-        [multiSortMeta]="[{ field: 'id', order: 1 }]"
+        dataKey="TXN_No"
+        [multiSortMeta]="[{ field: 'TXN_No', order: 1 }]"
         [totalRecords]="totalRecords"
         (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"
         [lazy]="true"
         [loading]="loading"
         [selectedItems]="selectedItems"
         (selectionChange)="selectedItems = $event"
-        apiUrl="queryTLS22010_Detail"
         [showManage]="false"
         [showDelete]="false"
-
-      >
-
-      </app-table>
+        apiUrl="queryTLS22010_Detail"
+      ></app-table>
     </div>
   </div>
 </div>

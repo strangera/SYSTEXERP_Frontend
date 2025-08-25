@@ -18,7 +18,6 @@ import { createPaginationConfig, Column, formatAmount } from 'src/app/shared/com
 import { ButtonModule } from 'primeng/button';
 import { Router } from '@angular/router';
 import { yesterday } from '@shared/models/system/query-form.model';
-import { take } from 'rxjs';
 
 
 
@@ -41,7 +40,7 @@ import { take } from 'rxjs';
   ],
 })
 export class TLS22010Component extends BasicQueryPageComponent<any> implements OnInit {
-  // ------ UI 狀態 / 表單 ------
+
   queryForm = this.formBuilder.group({
     TXN_DATE: [yesterday, { validators: [Validators.required], updateOn: 'change' }],
     floor_noList: [[]],
@@ -49,7 +48,7 @@ export class TLS22010Component extends BasicQueryPageComponent<any> implements O
     ShowStatus: ['1'],
     status1: [''],
     status2: [''],
-    ...createPaginationConfig([{ field: 'ECR_No', order: 1 }]),
+    ...createPaginationConfig([{ field: 'TXN_Date', order: 1 }]),
   });
 
   selectedItems: any[] = [];
@@ -59,7 +58,7 @@ export class TLS22010Component extends BasicQueryPageComponent<any> implements O
 
   // ------ 欄位定義 ------
   columns7: Column[] = [
-    { field: 'ECR_No', header: '收據機代碼', visible: true },
+    { field: 'ECR_No', header: '收銀機號', visible: true },
     { field: 'TXN_DATE', header: '交易日期', visible: true },
     { field: 'AREA_NO', header: '區域', visible: true },
     { field: 'FLOOR_NO', header: '樓層', visible: true },
@@ -108,9 +107,8 @@ export class TLS22010Component extends BasicQueryPageComponent<any> implements O
 
   // --------- 生命週期 ----------
   ngOnInit(): void {
-    // initializePage 會還原 queryState（我們在 onSubmit 內用 frm.value 存），包含 TXN_Date
     this.initializePage('TLS22010', '/TLS/TLS22010cru', this.queryForm, (frm) => this.onSubmit(frm));
-    // 載入下拉選項
+    // 下拉選項
     this.floorService.getFloors().subscribe((data) => (this.floorOptions = data));
     this.machineDisplayService.getMachinedisplay().subscribe((data) => (this.machinedisplayOptions = data));
     this.ECRNoService.getECRNo().subscribe((data) => (this.ECRNoOptions = data));
@@ -124,16 +122,8 @@ export class TLS22010Component extends BasicQueryPageComponent<any> implements O
   // --------- 事件 ----------
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
-      const value = this.queryForm.value as any;
 
-      const params = {
-        TXN_DATE: value.TXN_DATE ? this.toYMD(value.TXN_DATE) : null,
-        ECR_No: value.ECR_No,
-        floor_noList: value.floor_noList,
-        ShowStatus: value.ShowStatus,
-      };
-
-      this.tls22010Service.queryTLS22010(params).subscribe({
+      this.tls22010Service.queryTLS22010(frm.value).subscribe({
         next: (res) => {
           this.data = (res?.Data ?? []).map((item: any) => ({
             ...item,

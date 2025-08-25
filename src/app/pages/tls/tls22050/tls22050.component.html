@@ -3,31 +3,59 @@
     <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
   </div>
   <p-accordion>
-    <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
-      [headerStyleClass]="'query-accordionTab'">
-      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
+    <p-accordionTab
+      header="{{ 'query-conditions' | translate }}"
+      [selected]="true"
+      class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'"
+    >
+      <form
+        [formGroup]="queryForm"
+        id="queryForm"
+        (ngSubmit)="onSubmit(queryForm)"
+      >
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar label="查詢年月" calendarType="dateMonthOne" [control]="queryForm.controls.salesDate"
-              [submitted]="submitted"></app-calendar>
+            <app-calendar
+              label="查詢年月"
+              calendarType="dateMonthOne"
+              [control]="queryForm.controls.salesDate"
+              [submitted]="submitted"
+            ></app-calendar>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar-range calendarType="dateRange" label="查詢日期" [startControl]="queryForm.controls.TXN_DateStart"
-              [endControl]="queryForm.controls.TXN_DateEnd" [submitted]="submitted"></app-calendar-range>
+            <app-calendar-range
+              calendarType="dateRange"
+              label="查詢日期"
+              [startControl]="queryForm.controls.TXN_DateStart"
+              [endControl]="queryForm.controls.TXN_DateEnd"
+              [submitted]="submitted"
+            ></app-calendar-range>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <label for="status1">POS類型</label>
-            <app-multi-select [options]="statusOptions" optionLabel="label" optionValue="value"
-              [control]="queryForm.controls.POS_TypeList"></app-multi-select>
+            <app-multi-select
+              [options]="statusOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.POS_TypeList"
+            ></app-multi-select>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <label for="status2">顯示條件</label>
-            <app-multi-select [options]="VOU_Check_Options" optionLabel="label" optionValue="value"
-              [control]="queryForm.controls.VOU_CheckList" placeholder="請選擇"></app-multi-select>
+            <app-multi-select
+              [options]="VOU_Check_Options"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.VOU_CheckList"
+              placeholder="請選擇"
+            ></app-multi-select>
           </div>
         </div>
         <div>
-          <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+          <div
+            class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
+          >
             <app-button btnType="clear" [form]="queryForm"></app-button>
             <app-button btnType="query" [loading]="loading"></app-button>
           </div>
@@ -38,14 +66,33 @@
 </div>
 <div class="card">
   <div class="col-12">
-    <app-table tableKey="TLS22050" [data]="data" [columns]="columns" [columnGroup]="columnGroup" [showTotal]="true"
-      [multiSortMeta]="[{ field: 'ECR_No', order: 1 }]" [totalRecords]="totalRecords"
-      (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [lazy]="true" [showManage]="false"
-      [showDelete]="false" [showReportMode]="false">
+    <app-table
+      tableKey="id"
+      [data]="data"
+      [columns]="columns"
+      [columnGroup]="columnGroup"
+      [showTotal]="true"
+      [multiSortMeta]="[{ field: 'TXN_Date', order: 1 }]"
+      [totalRecords]="totalRecords"
+      (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"
+      [lazy]="true"
+      [loading]="loading"
+      [showManage]="false"
+      [showDelete]="false"
+      [showReportMode]="false"
+    >
       <header>
-        <p-button pButton tooltipPosition="top" pTooltip="匯出Excel" [style.width]="'35px'" [style.height]="'35px'"
-          class="p-button-rounded p-button-text p-button-info" icon="fa-regular fa-file-lines"
-          [disabled]="!canPerformAction('70')" (click)="exportReport()" />
+        <p-button
+          pButton
+          tooltipPosition="top"
+          pTooltip="匯出Excel"
+          [style.width]="'35px'"
+          [style.height]="'35px'"
+          class="p-button-rounded p-button-text p-button-info"
+          icon="fa-regular fa-file-lines"
+          [disabled]="!canPerformAction('70')"
+          (click)="exportReport()"
+        />
       </header>
     </app-table>
   </div>
