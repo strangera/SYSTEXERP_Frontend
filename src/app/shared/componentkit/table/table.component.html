@@ -143,7 +143,7 @@
             [raised]="!expandedRows[rowData[dataKey]]"
             [icon]="rowData.expansionLoading ? 'pi pi-spin pi-spinner' : (expandedRows[rowData[dataKey]] ? 'pi pi-chevron-down' : 'pi pi-chevron-right')"
             pButton (click)="toggleRowExpansion(rowData)"
-            [disabled]="rowData.expansionLoading || (rowData[expansionDataKey]?.length === 0) || (!expansionLoadFn && !rowData[expansionDataKey]?.length)" />
+            [disabled]="rowData.expansionLoading || (!expansionLoadFn && !rowData[expansionDataKey]?.length)" />
         </td>
         <td *ngFor="let col of columns" class="text-center" style="text-overflow: ellipsis"
           (click)="editing ? $event.stopPropagation() : null" (dblclick)="detailRow(rowData)" [ngClass]="col.style"

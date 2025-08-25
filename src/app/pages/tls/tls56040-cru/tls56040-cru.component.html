@@ -89,6 +89,6 @@
     (selectionChange)="selectedItemsDialog = $event" [showHeader]="false" [showManage]="false" [showCheckBox]="true"
     [multiSortMeta]="[{ field: 'PLU_MagNo', order: 1 }]" [totalRecords]="totalRecords"
     (lazyLoadData)="onLazyLoadData($event, dialogQueryForm); onQuery(dialogQueryForm)" [lazy]="true"
-    [loading]="dialogLoading" [isRowSelectable]="isRowSelectable.bind(this)">
+    [loading]="dialogLoading" [isRowSelectable]="isRowSelectable.bind(this)" [scrollHeight]="'368px'">
   </app-table>
 </app-dialog>

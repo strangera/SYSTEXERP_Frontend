@@ -56,7 +56,7 @@ export interface LazyLoadEvent {
 
 export const createPaginationConfig = (defaultSortBy?: SortMeta[]) => {
   return {
-    pageSize: [10],
+    pageSize: [20],
     pageIndex: [1], // 你將初始頁碼改為 1
     SortBy: [defaultSortBy ?? []],
   };

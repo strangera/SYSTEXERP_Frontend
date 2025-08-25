@@ -203,13 +203,7 @@ export class TLS56050CRUComponent extends BasicCruPageComponent<ITLS56050Respons
   }
 
   onSubmit(frm: FormGroup): void {
-    const isQtyValid = this.data.every(item => item.OUTGODS_QTY === item.APPLY_Qty);
-    if (!isQtyValid) {
-      this.messageService.errorBubble('所有商品的發貨量必須與調撥申請量一致！');
-      return;
-    }
     this.handleSubmit(frm, () => {
-      this.loading = true;
       const rawFormValue = frm.getRawValue();
       const payload: ITLS56050Request = {
         id: this.rowdata?.id,
@@ -240,8 +234,30 @@ export class TLS56050CRUComponent extends BasicCruPageComponent<ITLS56050Respons
         untilDestroyed(this)
       ).subscribe(response => {
         this.messageService.successBubble(response.Message);
-        this.onCancel();
       });
+    });
+  }
+  onConfirm(frm: FormGroup): void {
+    const isQtyValid = this.data.every(item => item.OUTGODS_QTY === item.APPLY_Qty);
+    if (!isQtyValid) {
+      this.messageService.errorBubble('所有商品的發貨量必須與調撥申請量一致！');
+      return;
+    }
+    const body = {
+      DetailList: [
+        {
+          MVM_No: frm.getRawValue().MVM_No,
+          MVM_Status: '3',
+        }
+      ]
+    }
+    this.loading = true;
+    this.tls56050Service.updateStatusTLS56050(body).pipe(
+      finalize(() => this.loading = false),
+      untilDestroyed(this)
+    ).subscribe(response => {
+      this.messageService.successBubble(response.Message);
+      this.onCancel();
     });
   }
 }

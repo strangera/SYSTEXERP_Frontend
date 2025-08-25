@@ -100,8 +100,8 @@ export class TableComponent extends BasicPrintDataComponent implements OnChanges
   @Input() expansionDataKey = 'details';            // 收合展開 資料key(expansion必需配置)
   @Input() expansionMultiSortMeta = [{ field: this.expansionDataKey, order: 1 }];// 收合展開 排序欄位(單一排序)
   @Input() expansionShowPaginator = false;   // expansion 是否顯示分頁器
-  @Input() expansionRows = 10;               // expansion 每頁顯示行數
-  @Input() expansionRowsPerPageOptions = [10, 30, 50]; // expansion 分頁選項
+  @Input() expansionRows = 20;               // expansion 每頁顯示行數
+  @Input() expansionRowsPerPageOptions = [20, 40, 60, 80, 100]; // expansion 分頁選項
   @Input() expansionScrollHeight = '300px';  // expansion 表格高度
   @Input() expansionLoadFn?: (rowData: any) => Observable<any>; // 屬性來接收父層傳來的載入函數
   expandedRows: Record<string, boolean> = {};// 收合展開 已展開資料
@@ -125,9 +125,9 @@ export class TableComponent extends BasicPrintDataComponent implements OnChanges
   @Input() scrollable = true;                        // 是否要滾輪
   @Input() showPaginator = true;                    // 是否顯示 分頁器
   @Input() totalRecords = 0;                        // 記錄總數
-  @Input() rowsPerPageOptions: any[] | undefined = [10, 30, 50];// 分頁選項
+  @Input() rowsPerPageOptions: any[] | undefined = [20, 40, 60, 80, 100];// 分頁選項
   totalPages = 0;                                   // 共幾頁數
-  @Input() rows = 10;                                         // 每頁顯示的行數
+  @Input() rows = 20;                                         // 每頁顯示的行數
   first = 0;                                        // 當前表格的起始索引
   pages: { label: string, value: number; }[] = [];   // (右上)下拉選單 頁數選項
   selectedPage: number | null = 1;                  // (右上)下拉選單 當前選擇的頁數

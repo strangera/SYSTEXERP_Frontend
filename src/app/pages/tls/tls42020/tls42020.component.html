@@ -1,56 +1,42 @@
 <div class="card">
-  <div class="grid align-items-center">
-    <div class="col" style="flex: 1">
-      <app-menubar [ProgNo]="ProgNo"></app-menubar>
-    </div>
-    <div >
-      <app-button
-        btnType="create"
-        (click)="onCreate()"
-        class="col"
-      ></app-button>
-    </div>
+  <div class="flex gap-2 mb-2">
+    <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
+    <app-button btnType="create" (click)="onCreate(queryForm)" label="新增"></app-button>
   </div>
+
   <p-accordion>
-    <p-accordionTab
-      header="{{ 'query-conditions' | translate }}"
-      [selected]="true"
-      class="line-height-3 m-0"
-      [headerStyleClass]="'query-accordionTab'"
-    >
-      <form
-        [formGroup]="queryForm"
-        id="queryForm"
-        (ngSubmit)="onSubmit(queryForm)"
-      >
-        <h5>先不使用此頁面</h5>
-        <!-- <div class="grid p-fluid">
-                    <div class="col-12 md:col-6 lg:col-4">
-                        <app-input-text label="鍵盤型態" controlName="ECR_KBType" [control]="queryForm.controls.ECR_KBType" [submitted]="submitted">
-                        </app-input-text>
-                    </div>
-                    <div class="col-12 md:col-6 lg:col-4">
-                        <app-input-text label="鍵盤權限等級" controlName="USR_Level" [control]="queryForm.controls.USR_Level" [submitted]="submitted">
-                        </app-input-text>
-                    </div>
-                </div>
-                <hr/>
-                <app-editor-text label="鍵盤備註" controlName="ECR_KBDesc" [control]="queryForm.controls.ECR_KBDesc" [style]="{ height: '100px' }" [submitted]="submitted">
-                </app-editor-text>
-                <hr/>
-                <div>
-                    <div class="grid justify-content-end">
-                        <app-button btnType="clear" (onClick)="onClearForm()"></app-button>
-                        <app-button btnType="query" (onClick)="onSubmitQuery(queryForm)" [loading]="loading"></app-button>
-                    </div>
-                </div> -->
+    <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'">
+      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
+        <div class="grid p-fluid">
+          <app-multi-select class="col-12 md:col-6 lg:col-6" label="菜單類別" controlName="menuType"
+            [options]="menuTypeOptions" [control]="queryForm.controls.menuType"
+            [submitted]="submitted"></app-multi-select>
+          <app-multi-select class="col-12 md:col-6 lg:col-6" label="專櫃編號/名稱" controlName="tltNo"
+            [options]="tltNoOptions" [control]="queryForm.controls.tltNo" [submitted]="submitted"></app-multi-select>
+          <app-calendar-range class="col-12 md:col-6 lg:col-6" label="有效起始日期" calendarType="dateMonthRange"
+            [startControl]="queryForm.controls.SBM_BegDate_start" [endControl]="queryForm.controls.SBM_BegDate_end"
+            [submitted]="submitted"></app-calendar-range>
+          <app-calendar-range class="col-12 md:col-6 lg:col-6" label="有效結束日期" calendarType="dateMonthRange"
+            [startControl]="queryForm.controls.SBM_EndDate_start" [endControl]="queryForm.controls.SBM_EndDate_end"
+            [submitted]="submitted"></app-calendar-range>
+        </div>
+
+        <div class="justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3" style="display: flex;">
+          <app-button btnType="clear" [form]="queryForm"></app-button>
+          <app-button btnType="query" [loading]="loading"></app-button>
+        </div>
       </form>
     </p-accordionTab>
   </p-accordion>
 </div>
-<!-- <div class="card">
-    <div class="col-13">
-        <app-table [data]="data" [columns]="columns" (edit)="onEdit($event)" (detail)="onDetail($event)">
-        </app-table>
-    </div>
-</div> -->
+
+<div class="card">
+  <app-table tableKey="TLS42020" [dataKey]="'tltNo'" [data]="data" [columns]="columns" [multiSortMeta]="[]"
+    [totalRecords]="totalRecords" (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [lazy]="true"
+    [loading]="loading" [selectedItems]="selectedItems" (selectionChange)="selectedItems = $event" [showDelete]="true"
+    [showManage]="true" [showCheckBox]="true" [expansionColumns]="expansionColumns" [expansionDataKey]="'details'"
+    [expansionLoadFn]="loadDetails" [showExcel]="true" [showExcelImport]="true" [showExcelExport]="false"
+    (importExcel)="importExcel()">
+  </app-table>
+</div>
