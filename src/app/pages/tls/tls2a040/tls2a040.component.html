@@ -74,7 +74,20 @@
 
 <div class="card">
   <app-table dataKey="id" [data]="data" [columns]="columns" [showCheckBox]="true"
+    (selectionChange)="selectedItems = $event" [selectedItems]="selectedItems"
     [multiSortMeta]="[{ field: 'ECR_No', order: 1 }]" [totalRecords]="totalRecords" [lazy]="true" [loading]="loading"
-    [showPaginator]="true" [showReportMode]="false" [showDelete]="false" [showDetail]="false"
-    [showEdit]="false"></app-table>
+    [showPaginator]="true" [showReportMode]="false" [showDelete]="false" [showDetail]="false" [showEdit]="false"
+    [showManage]="false">
+    <header>
+      <div class="flex align-items-center mb-4">
+        <p-button label="匯出切結書" severity="success" (click)="exportReport(selectedItems)"
+          [disabled]="selectedCount === 0" [ngStyle]="{
+            height: '18px',
+            fontSize: '12px',
+            padding: '0 4px',
+            marginRight: '7px',
+          }"></p-button>
+      </div>
+    </header>
+  </app-table>
 </div>
