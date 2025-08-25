@@ -7,12 +7,12 @@
     <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
       <div class="grid p-fluid">
         <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text label="領用退回單編號" controlName="SPM_No" [control]="dataForm.controls.SPM_No"
+          <app-input-text label="領用退回單編號" controlName="RPM_No" [control]="dataForm.controls.RPM_No"
             [submitted]="submitted"></app-input-text>
         </div>
 
         <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text label="領用單說明" controlName="SPM_remark" [control]="dataForm.controls.SPM_remark"
+          <app-input-text label="領用單說明" controlName="RPM_Remark" [control]="dataForm.controls.RPM_Remark"
             [style]="{ height: '50px' }" [submitted]="submitted"></app-input-text>
         </div>
       </div>
@@ -22,7 +22,7 @@
             optionValue="value" [control]="dataForm.controls.APPLY_USR_No" [submitted]="submitted"></app-dropdown>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
-          <app-calendar calendarType="dateOne" label="申請日期" [control]="dataForm.controls.APPLY_Date_Start"
+          <app-calendar calendarType="dateOne" label="申請日期" [control]="dataForm.controls.APPLY_Date"
             [submitted]="submitted"></app-calendar>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
@@ -42,7 +42,7 @@
         [showDetail]="false" [showInsert]="true" (insert)="dialogVisible = true" [showRowEdit]="true"
         (delete)="onDelete()" [deleteData]="true" [showManage]="!isFormReadable" [showReportMode]="false"
         [insertDisabled]="
-          dataForm.controls.SPM_No.value && dataForm.controls.LOGO_No.value
+          dataForm.controls.RPM_No.value && dataForm.controls.LOGO_No.value
             ? false
             : true
         " (rowEditSave)="onRowEditSave($event)" [showCaption]="isFormCreateable" />
@@ -84,5 +84,6 @@
     [isRowSelectable]="isRowSelectable.bind(this)" [multiSortMeta]="[{ field: 'PLU_MagNo', order: 1 }]"
     [totalRecords]="totalRecords" (lazyLoadData)="
       onLazyLoadData($event, dialogQueryForm); onQuery(dialogQueryForm)
-    " [lazy]="true" [loading]="dialogLoading"></app-table>
+    " [lazy]="true" [loading]="dialogLoading"  ></app-table>
 </app-dialog>
+<!-- (edit)="onEdit($event)" (detail)="onDetail($event)" -->//代新增
