@@ -113,8 +113,8 @@ export class TLS46020Service {
   constructor(private http: HttpClient) { }
 
   /** 查詢 POS1002TML 資料 */
-  queryTLS46020(params: TLS46020QueryParams): Observable<ApiResponse<TLS46020Item[]>> {
-    return this.http.post<ApiResponse<TLS46020Item[]>>(`${this.apiUrl}/queryTLS46020`, params);
+  queryTLS46020(params: TLS46020QueryParams): Observable<ApiResponse<any[]>> {
+    return this.http.post<ApiResponse<any[]>>(`${this.apiUrl}/queryTLS46020`, params);
   }
 
   /** 新增 POS1002TML 資料 */

@@ -1,42 +1,41 @@
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormsModule, ReactiveFormsModule, Validators, FormGroup } from '@angular/forms';
+import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslateService, TranslateModule } from '@ngx-translate/core';
-import { Subscription } from 'rxjs';
-import { UserInfo } from '../../../shared/models/system/userInfo';
 import { Tls22010Service } from '../../../service/api/tls/tls22010.service';
+import { createPaginationConfig } from 'src/app/shared/componentkit/table/table.model';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { Column } from '../../../shared/componentkit/table/table.model';
-import { ValidationService } from '../../../shared/service/validation.service';
 import { ButtonModule } from 'primeng/button';
 import { AccordionModule } from 'primeng/accordion';
 import { ActivatedRoute } from '@angular/router';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
+
 export interface ITxnData {
-  TXN_DATE: string,
-  ECR_No: string,
-  building_no: string,
-  AREA_NO: string,
-  FLOOR_NO: string,
-  TXN_TotSaleAmt: number,
-  sad_preorder_Amt: number,
-  sad_settle_Amt: number,
-  TXN_TotSaleAmt_Sum: number,
-  TXN_TotExtraAmt: number,
-  TXN_TotHaveTax: number,
-  TXN_ChangeHaveTax: number,
-  TXN_TotOver: number,
-  TXN_TotGUI: number,
-  GUI_NET: number,
-  TXN_TotTax: number,
-  TXN_TotGUISaleNoTax: number,
-  TXN_TotOver_Sum: number,
-  GUI_REFUND: number,
-  TXN_TotPayAmt: number,
-  SLE_SaleAmt: number,
-  TXN_Mode_P: number,
-  Status_Code: string
+  TXN_DATE: string;
+  ECR_No: string;
+  building_no: string;
+  AREA_NO: string;
+  FLOOR_NO: string;
+  TXN_TotSaleAmt: number;
+  sad_preorder_Amt: number;
+  sad_settle_Amt: number;
+  TXN_TotSaleAmt_Sum: number;
+  TXN_TotExtraAmt: number;
+  TXN_TotHaveTax: number;
+  TXN_ChangeHaveTax: number;
+  TXN_TotOver: number;
+  TXN_TotGUI: number;
+  GUI_NET: number;
+  TXN_TotTax: number;
+  TXN_TotGUISaleNoTax: number;
+  TXN_TotOver_Sum: number;
+  GUI_REFUND: number;
+  TXN_TotPayAmt: number;
+  SLE_SaleAmt: number;
+  TXN_Mode_P: number;
+  Status_Code: string;
 }
 
 @Component({
@@ -53,22 +52,14 @@ export interface ITxnData {
     ButtonModule,
     AccordionModule,
     ButtonComponent,
-
   ]
 })
 export class TLS22010CRUComponent extends BasicCruPageComponent<ITxnData> implements OnInit {
-  formatNumber(value: any): string {
-    if (value === null || value === undefined || value === '') return '';
-    const num = typeof value === 'number' ? value : parseFloat(String(value));
-    if (Number.isNaN(num)) return String(value); // 不是數字就原樣回傳
-    // 不固定小數位，僅做千分位；小數若有就保留
-    return num.toLocaleString('en-US', { maximumFractionDigits: 20 });
-  }
-
   queryForm = this.formBuilder.group({
     TXN_Date: ['', Validators.required],
     ECR_No: [''],
-    FLOOR_NO: [null as string | null]
+    floor_no: [''],
+    ...createPaginationConfig([{ field: 'TXN_No', order: 1 }]),
   });
 
   data: ITxnData[] = [];
@@ -92,111 +83,71 @@ export class TLS22010CRUComponent extends BasicCruPageComponent<ITxnData> implem
     { field: 'TXN_TotGUISaleNoTax', header: '發票免稅金額 (O)', format: (v) => this.formatNumber(v) },
     { field: 'TXN_TotOver_Sum', header: '溢收 (G)', format: (v) => this.formatNumber(v) },
     { field: 'GUI_REFUND', header: '折讓 (J)', format: (v) => this.formatNumber(v) },
-    { field: 'TXN_TotPayAmt', header: '付款金額(H)', format: (v) => this.formatNumber(v) }
+    { field: 'TXN_TotPayAmt', header: '付款金額(H)', format: (v) => this.formatNumber(v) },
   ];
-  userInfo: UserInfo | null = null;
-  userSubscription: Subscription | null = null;
+
 
   constructor(
-    private validationService: ValidationService,
     private fb: FormBuilder,
     private translate: TranslateService,
     private apiService: Tls22010Service,
     private route: ActivatedRoute
-
   ) {
     super();
   }
+
   ngOnInit(): void {
     this.initializePage('TLS22010', this.queryForm);
-    this.queryForm.get('ECR_No')?.disable();
-    this.userSubscription = this.authService.user.subscribe((userInfo: UserInfo | null) => {
-      this.userInfo = userInfo;
-      console.log(this.userInfo);
-    });
+    this.onSubmit(this.queryForm);
+  }
 
-    const TXN_Date = this.rowdata?.TXN_DATE;
-    const ECR_No = this.rowdata?.ECR_No;
-    const FLOOR_NO = this.rowdata?.FLOOR_NO;
-
-
-    // if (!TXN_Date || !ECR_No || !FLOOR_NO) return;
-
-    // （可選）把參數帶回表單
-    this.queryForm.patchValue({
-      TXN_Date,
-      ECR_No,
-      FLOOR_NO
-    });
-
-    const body = {
-      TXN_Date: TXN_Date?.replace(/-/g, ''), // 後端若吃 yyyyMMdd
-      ECR_No,
-      FLOOR_NO
-
+  onSubmit(frm: FormGroup) {
+    const raw = frm.getRawValue();
+    const toApiDate = (v: any) => {
+      if (!v) return null;
+      if (v instanceof Date) {
+        const y = v.getFullYear();
+        const m = String(v.getMonth() + 1).padStart(2, '0');
+        const d = String(v.getDate()).padStart(2, '0');
+        return `${y}${m}${d}`;
+      }
+      return String(v).replace(/[-/]/g, ''); //轉成 20250801
     };
 
-    console.log('呼叫 body:', body);
+    const body = {
+      PageSize: raw.pageSize ?? 10,
+      PageIndex: raw.pageIndex ?? 1,
+      OrderBy: "",
+      Offset: ((raw.pageIndex ?? 1) - 1) * (raw.pageSize ?? 10),
+      SortBy: [],
+      TXN_Date: toApiDate(this.rowdata?.TXN_DATE),
+      ECR_No: this.rowdata?.ECR_No ?? "",
+      floor_no: this.rowdata?.FLOOR_NO ?? ""
+    };
+
 
     this.loading = true;
     this.apiService.queryTLS22010_Detail(body).subscribe({
       next: (res) => {
-        console.log('回傳:', res);
         this.data = res?.Data ?? [];
-        this.totalRecords = res?.TotalCount ?? this.data.length;
+        this.totalRecords = res?.TotalCount ?? 0;
         this.loading = false;
 
-
-        const viewOnly = true; // Set to true or false based on your requirements
-        if (viewOnly) this.queryForm.disable(); // 查看模式鎖表單
+        const viewOnly = true;
+        if (viewOnly) this.queryForm.disable();
       },
       error: (err) => {
-        console.error('失敗:', err);
+        console.error('查詢失敗:', err);
         this.loading = false;
       }
     });
   }
 
-
-
-
-  onSubmit(frm: FormGroup): void {
-    this.handleSubmit(frm, () => {
-      const raw = frm.getRawValue(); // 會把 disabled 的 ECR_No 一起拿到
-      const toYmd = (v: any) => {
-        if (!v) return null;
-        if (v instanceof Date) {
-          const y = v.getFullYear();
-          const m = String(v.getMonth() + 1).padStart(2, '0');
-          const d = String(v.getDate()).padStart(2, '0');
-          return `${y}${m}${d}`;
-        }
-        return v; // 已經是字串就直接帶過去
-      };
-
-      const body = {
-        request: {
-          TXN_Date: toYmd(raw.TXN_Date),
-          ECR_No: raw.ECR_No || null,
-          floor_noList: Array.isArray(raw.floor_noList) ? raw.floor_noList : []
-        }
-      };
-
-      this.loading = true;
-      this.apiService.queryTLS22010(body).subscribe({
-        next: (res) => {
-          this.data = res?.Data ?? [];
-          this.totalRecords = res?.TotalCount ?? this.data.length;
-          this.loading = false;
-          this.selectedItems = [];
-        },
-        error: (err) => {
-          console.error('TLS22010 查詢失敗', err);
-          this.loading = false;
-        }
-      });
-    });
+  /** 千分位格式化 */
+  formatNumber(value: any): string {
+    if (value === null || value === undefined || value === '') return '';
+    const num = typeof value === 'number' ? value : parseFloat(String(value));
+    if (Number.isNaN(num)) return String(value);
+    return num.toLocaleString('en-US', { maximumFractionDigits: 20 });
   }
-
-
 }

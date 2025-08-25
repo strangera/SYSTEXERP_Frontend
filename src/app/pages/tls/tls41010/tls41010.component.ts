@@ -213,16 +213,16 @@ export class TLS41010Component extends BasicQueryPageComponent<TLS41010Data> imp
       }
     });
     // 環境變數下拉選單
-      this.dropDownListService.queryPOS1002TML_DropDownList().subscribe(res => {
-        if (res?.Data) {
-          this.ECR_TmplNo_Option = res.Data.map(item => ({
-            No: item.No,
-            Name: item.Name,
-            label: `${item.No}-${item.Name}`,
-            value: item.No
-          }));
-        }
-      });
+    this.dropDownListService.queryPOS1002TML_DropDownList().subscribe(res => {
+      if (res?.Data) {
+        this.ECR_TmplNo_Option = res.Data.map(item => ({
+          No: item.No,
+          Name: item.Name,
+          label: `${item.No}-${item.Name}`,
+          value: item.No
+        }));
+      }
+    });
 
 
     this.queryForm.get('ECR_TmplNo')?.valueChanges.subscribe((tmplNo) => {
@@ -356,7 +356,34 @@ export class TLS41010Component extends BasicQueryPageComponent<TLS41010Data> imp
       queryParams: { id: data.id, mode }
     });
   }
+  // 刪除項目
+  onDelete(rowData: any[]): void {
+    const idList = rowData
+      .map((item) => item.id) // 主鍵欄位叫 ID
+      .filter((id) => id !== undefined && id !== null);
+
+    if (idList.length === 0) {
+      this.messageService.warnBubble('無有效的 ID 可供刪除');
+      return;
+    }
+
+    this.tls41010Service.deleteTLS41010(idList).subscribe({
+      next: (res) => {
+        if (res.Status === '0000') {
+          this.messageService.successBubble('選中項目刪除成功');
+          this.selectedItems = [];          // 清空選中項目
+          this.onSubmit(this.queryForm);    // 重新查詢刷新列表
+        } else {
+          console.error('API error:', res.Status, res.Message);
+          this.messageService.errorBubble(`刪除失敗: ${res.Message}`);
+        }
+      },
+      error: (err) => {
+        console.error('刪除失敗:', err);
+        this.messageService.errorBubble('刪除過程中發生錯誤');
+      }
+    });
+  }
+
 
 }
-
-
