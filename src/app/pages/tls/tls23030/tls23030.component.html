@@ -17,7 +17,7 @@
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-number-range [useGrouping]="false" label="交易序號(起/迄)"
+            <app-input-number-range [useGrouping]="false" label="交易序號"
               [startControl]="queryForm.controls.TXN_No_Start" [endControl]="queryForm.controls.TXN_No_End"
               [submitted]="submitted"></app-input-number-range>
           </div>
@@ -28,8 +28,8 @@
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="付款別" controlName="PAY_Type" [options]="paymentTypeOptions" optionLabel="label"
-              optionValue="value" [control]="queryForm.controls.PAY_Type" [submitted]="submitted"></app-dropdown>
+            <app-multi-select label="付款別" controlName="PAY_NO" [options]="paymentTypeOptions" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.PAY_NO" [submitted]="submitted"></app-multi-select>
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
