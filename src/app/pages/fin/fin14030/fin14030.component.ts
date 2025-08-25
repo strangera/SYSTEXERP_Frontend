@@ -1,16 +1,18 @@
 import { Component, OnInit } from '@angular/core';
-import { FormGroup, Validators, FormsModule, ReactiveFormsModule, AbstractControl, ValidationErrors, ValidatorFn } from '@angular/forms';
+import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { Column, convertDateToYYYYMM, createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { AccordionModule } from 'primeng/accordion';
-import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { TranslateModule } from '@ngx-translate/core';
 import { option } from '@shared/models/sys/sysb000.model';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
+import { Button } from 'primeng/button';
+import { DialogModule } from 'primeng/dialog';
+import { JsonPipe } from '@angular/common';
 //
 /** TDS1002 營業人銷售額與稅額申報書檔 */
 export interface TDS1002 {
@@ -255,6 +257,9 @@ export interface TDS1002 {
     imports: [
           MenubarComponent,
           ButtonComponent,
+          Button, // dialog
+          JsonPipe, // dialog
+          DialogModule, // dialog
           AccordionModule,
           FormsModule,
           ReactiveFormsModule,
@@ -270,6 +275,12 @@ export class FIN14030Component extends BasicQueryPageComponent<unknown> implemen
 
     ...createPaginationConfig([{ field: 'INV_DeclareYM', order: 1 }]), // 分頁和排序參數
   });
+
+  // ---彈出視窗控制選項---
+  showDialog = false;        // 控制 dialog 開關
+  dialogData: any = {};      // 用來存放送出後的 form 值
+  auditMode: '審核' | '反審核' = '審核'; // 標題用，可根據需求切換
+
   totalRecords = 0; // 總記錄數
   data: Record<string, string>[] = [];
   selectedItems: Record<string, string> = {}; // 用於儲存選中的項目
@@ -294,23 +305,37 @@ export class FIN14030Component extends BasicQueryPageComponent<unknown> implemen
       const body = {
         ...frm.value,
         INV_DeclareYM: convertDateToYYYYMM(frm.value.INV_DeclareYM),
-    }
-    
-    console.log('申報request', body);
-    
-    // this.fin14010Service.queryFIN11020(body).pipe(untilDestroyed(this)).subscribe({
-    //   next: (response) => {
-    //     this.data = response.Data.map((item: TDS1002) => ({
-    //       ...item,
-    //       REP_GUIYM: convertYYYYMMToDate(item.REP_GUIYM)
-    //     }));
-    //     this.totalRecords = response.TotalCount;
-    //     this.queryStateService.setQueryState(this.ProgNo, frm.value);
-    //     this.loading = false;
-    //   },
-    //   error: () => { this.loading = false; },
-    // });
-  });
-}
-          
+      }
+      
+      console.log('申報request', body);
+
+      // 這裡彈窗顯示
+      this.dialogData = body;
+      this.auditMode = '審核';   // 或者根據狀態切換 '反審核'
+      this.showDialog = true;
+      
+      // this.fin14010Service.queryFIN11020(body).pipe(untilDestroyed(this)).subscribe({
+      //   next: (response) => {
+      //     this.data = response.Data.map((item: TDS1002) => ({
+      //       ...item,
+      //       REP_GUIYM: convertYYYYMMToDate(item.REP_GUIYM)
+      //     }));
+      //     this.totalRecords = response.TotalCount;
+      //     this.queryStateService.setQueryState(this.ProgNo, frm.value);
+      //     this.loading = false;
+      //   },
+      //   error: () => { this.loading = false; },
+      // });
+    });
+  }
+
+  // 彈出視窗控制
+   confirmAction() {
+    console.log(`${this.auditMode} 確認`, this.dialogData);
+    this.showDialog = false;
+  }
+
+  cancelAction() {
+    this.showDialog = false;
+  }
 }
