@@ -69,6 +69,7 @@ export class TLS2A010Component extends BasicQueryPageComponent<any> implements O
   data: any[] = [];
   totalRecords = 0;
   PAY_NO = '';
+  PAY_Type = '';
   TXN_Date = '';
   todayDisplay = '';
   systemTypeOptions: IDropdownItem[] = [];
@@ -178,17 +179,18 @@ export class TLS2A010Component extends BasicQueryPageComponent<any> implements O
             No: x.No,
             PAY_Type: x.PAY_Type ?? ''
           };
-        });
+        }).filter(opt => ['0', '1', '6', 'B', 'M'].includes(opt.PAY_Type));  // <<== 過濾這些值
 
-
+        const payNo = this.queryForm.value.PAY_NO;
+        if (payNo) {
+          this.onPayNoChange(payNo);
+        }
       });
-
 
     const today = new Date();
     const mm = today.getMonth() + 1; // 月份是從 0 開始的
     const dd = today.getDate();
     this.todayDisplay = `${mm}/${dd}`;
-
 
   }
 
@@ -304,6 +306,7 @@ export class TLS2A010Component extends BasicQueryPageComponent<any> implements O
 
     // 依照 API 格式，包成 selectList
     const payload = {
+      PAY_Type: this.PAY_Type,
       selectList: selectedItems.map(item => ({
         ID: item.ID,
         PAY_NO: item.PAY_NO,
@@ -333,20 +336,16 @@ export class TLS2A010Component extends BasicQueryPageComponent<any> implements O
 
   onPayNoChange(payNo: string): void {
     console.log(payNo);
-    const payType = this.paymentToolOptions.find(opt => opt.No === payNo)?.PAY_Type ?? '';
-    console.log(payType);
-
+    this.PAY_Type = this.paymentToolOptions.find(opt => opt.No === payNo)?.PAY_Type ?? '';
     this.PAY_NO = payNo;
 
-    if (payType === '0') {
+    if (this.PAY_Type === '0') {
       this.selectedColumns = this.creditCardColumns;
       this.columnGroup = this.creditCardGroup;
     } else {
       this.selectedColumns = this.defaultColumns;
       this.columnGroup = [];
     }
-
-
   }
   override onDetail(row: any): void {
     console.log('缺單審核被點擊:', row);
@@ -354,7 +353,6 @@ export class TLS2A010Component extends BasicQueryPageComponent<any> implements O
     this.tls2a010Service.queryDetailTLS2A010(row).subscribe({
       next: (res) => {
         const detailData = res?.Data ?? [];
-
         const rowdataWithDetail = {
           ...row,
           details: detailData
