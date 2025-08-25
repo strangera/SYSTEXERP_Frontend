@@ -12,6 +12,7 @@ import { TableComponent } from '../../../shared/componentkit/table/table.compone
 import { TranslateModule } from '@ngx-translate/core';
 import { ValidationService } from '@shared/service/validation.service';
 import { Fin14010Service } from '@service/api/fin/fin14010.service';
+import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
 
 /** TDS1002 營業人銷售額與稅額申報書檔 */
 export interface TDS1002 {
@@ -259,7 +260,7 @@ export interface TDS1002 {
       AccordionModule,
       FormsModule,
       ReactiveFormsModule,
-      CalendarRangeComponent,
+      CalendarComponent,
       InputTextComponent,
       InputTextRangeComponent,
       TableComponent,
@@ -268,8 +269,7 @@ export interface TDS1002 {
 export class FIN14020Component extends BasicQueryPageComponent<TDS1002> implements OnInit {
   queryForm = this.formBuilder.group({
         // 不確定table
-        REP_GUIYM_start: [null, [Validators.required]], // 發票年月_不確定欄位名
-        REP_GUIYM_end: [null, [Validators.required]], // 發票年月
+        REP_GUIYM: [null, [Validators.required]], // 發票年月
         ...createPaginationConfig([{ field: 'REP_GUIYM', order: 1 }]), // 分頁和排序參數
       });
   
@@ -309,8 +309,7 @@ export class FIN14020Component extends BasicQueryPageComponent<TDS1002> implemen
         this.handleSubmit(frm, () => {
           const body = {
             ...frm.value,
-            GUI_YYMM_start: convertDateToYYYYMM(frm.value.GUI_YYMM_start),
-            GUI_YYMM_end: convertDateToYYYYMM(frm.value.GUI_YYMM_end),
+            REP_GUIYM: convertDateToYYYYMM(frm.value.REP_GUIYM),
           }
   
           console.log('申報request', body);
