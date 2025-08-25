@@ -91,6 +91,11 @@ export abstract class BasicCruPageComponent<T> {
         form?.disable();
         break;
     }
+    if (form) {
+      form.addControl('formInitFinished', this.formBuilder.control(true));
+      form.controls['formInitFinished'].setValue(true);
+      form.updateValueAndValidity();
+    }
   }
 
   // 提交

@@ -94,6 +94,11 @@ export abstract class BasicQueryPageComponent<T> {
     } else {
       console.warn('⚠️ No restore: canPerformAction=', this.canPerformAction('10'), 'isFromRelatedRoute=', isFromRelatedRoute, 'queryForm=', !!queryForm);
     }
+    if (queryForm) {
+      queryForm.addControl('formInitFinished', this.formBuilder.control(true));
+      queryForm.controls['formInitFinished'].setValue(true);
+      queryForm.updateValueAndValidity();
+    }
   }
   canPerformAction(action: string): boolean {
     return this.funInfo?.PrivilegeBehavior?.some(behavior => behavior.function_code === action) || false;

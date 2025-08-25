@@ -1,4 +1,4 @@
-import { Component, EventEmitter, inject, Input, OnDestroy, OnInit, Output } from '@angular/core';
+import { Component, EventEmitter, inject, Input, OnChanges, OnDestroy, OnInit, Output, SimpleChanges } from '@angular/core';
 import { AuthService } from '../../../service/system/auth.service';
 import { CurrentPageService } from '../../../layout/app.menulist/current-page.service';
 import { Subject, takeUntil } from 'rxjs';
@@ -23,7 +23,7 @@ interface ButtonConfig {
   standalone: true,
   imports: [Button]
 })
-export class ButtonComponent implements OnInit, OnDestroy {
+export class ButtonComponent implements OnInit, OnChanges, OnDestroy {
   @Input() btnType: 'default' | 'create' | 'edit' | 'delete' | 'query' | 'cancel' | 'clear' | 'submit' | 'next' | 'previous' | 'smartclear' | 'report' | 'back' | 'CSV' | 'textclear' = 'default';
   @Input() loading = false;
   @Output() clickEvent = new EventEmitter<void>();
@@ -84,28 +84,33 @@ export class ButtonComponent implements OnInit, OnDestroy {
     });
   }
 
+  private initialFormValue: any;
+  ngOnChanges(changes: SimpleChanges): void {
+    // 檢查 form 是否被賦值，如果已經賦值且還沒有儲存初始值
+    if (changes['form'] && this.form && !this.initialFormValue) {
+      // 在下一個微任務中儲存表單的初始值
+      // 這樣可以確保所有非同步的 patchValue 操作都已完成
+      Promise.resolve().then(() => {
+        this.initialFormValue = this.form?.getRawValue();
+      });
+    }
+  }
+
   ngOnDestroy(): void {
     this.ngUnsubscribe.next();
     this.ngUnsubscribe.complete();
   }
 
   handleClick() {
-    if (this.disabled) return;
-
-    // 針對 'cancel' 和 'clear' 兩種按鈕類型進行處理
+    console.log(this.form);
     if (this.btnType === 'cancel' || this.btnType === 'clear') {
-      if (!this.form) {
-        // 如果沒有提供 form，則顯示錯誤訊息
-        // this.messageService.warnBubble('工程師請在按鈕上加入參數[form]：清除/取消按鈕需要綁定表單 (form Input)。');
-        return; // 阻止後續操作
+      if (this.form && this.initialFormValue) {
+        // 重置表單到初始狀態
+        this.form.reset(this.initialFormValue);
+      } else if (this.form) {
+        // 如果沒有初始值，則使用預設的 reset
+        this.form.reset();
       }
-
-      Object.keys(this.form.controls).forEach(key => {
-        const control = this.form?.get(key);
-        if (control && !control.disabled) {
-          control.reset(); // 這會將 control 設回其初始值
-        }
-      });
     }
     this.clickEvent.emit();
   }
