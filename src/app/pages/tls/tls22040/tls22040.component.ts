@@ -36,14 +36,20 @@ export class TLS22040Component extends BasicQueryPageComponent<any> implements O
   data: any[] = [];
   totalRecords = 0;
 
+  columnGroup4 = [
+    { field: '111', header: '開立電子發票' },
+    { field: '222', header: '上送到Tumkey目錄' },
+    { field: '333', header: 'Tumkey DB 回覆時間' }
+  ];
+
   columns: Column[] = [
-    { field: 'TXN_Date', header: '交易日期', visible: true },
-    { field: 'MIG_Type', header: '發票類型', visible: true },
-    { field: 'MIG_Type_Name', header: '發票類型名稱', visible: true },
-    { field: 'InvoiceNum', header: '發票筆數', visible: true },
-    { field: 'UpMaxNum', header: '上送最大筆數', visible: true },
-    { field: 'LastBagTime', header: '最後產檔案時間', visible: true },
-    { field: 'LastUpTime', header: '最後上送時間', visible: true },
+    { field: 'TXN_Date', header: '銷售日期', visible: true  ,groupField: '111'},
+    { field: 'MIG_Type', header: '發票類型', visible: true , groupField: '111'},
+    { field: 'MIG_Type_Name', header: '發票類型名稱', visible: false},
+    { field: 'InvoiceNum', header: '發票張數', visible: true, groupField: '111' },
+    { field: 'UpMaxNum', header: '上傳大平台筆數', visible: true, groupField: '333' },
+    { field: 'LastBagTime', header: '最後打包時間', visible: true, groupField: '222' },
+    { field: 'LastUpTime', header: '最後上傳大平台筆數', visible: true, groupField: '333' },
     { field: 'DiffNum', header: '差異筆數', visible: true },
   ];
 
@@ -63,7 +69,7 @@ export class TLS22040Component extends BasicQueryPageComponent<any> implements O
     const d = new Date(dateStr);
     if (isNaN(d.getTime())) {
 
-      const parts = dateStr.split(' ')[0].replace(/\//g, '-'); // "2025-08-02"
+      const parts = dateStr.split(' ')[0].replace(/\//g, '/'); // "2025-08-02"
       return parts;
     }
     return d.toISOString().split('T')[0]; // "2025-08-02"
@@ -94,8 +100,8 @@ export class TLS22040Component extends BasicQueryPageComponent<any> implements O
           this.data = (res?.Data ?? []).map((x: any) => ({
             ...x,
             TXN_Date: this.formatToYMD(x.TXN_Date),
-            LastBagTime: this.formatToYMD(x.LastBagTime),
-            LastUpTime: this.formatToYMD(x.LastUpTime),
+            // LastBagTime: this.formatToYMD(x.LastBagTime),
+            // LastUpTime: this.formatToYMD(x.LastUpTime),
           }));
           this.totalRecords = res?.TotalCount ?? this.data.length;
           this.loading = false;
