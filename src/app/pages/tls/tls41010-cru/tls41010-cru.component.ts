@@ -255,17 +255,21 @@ export class TLS41010CRUComponent extends BasicCruPageComponent<TLS41010Data> im
         }));
       }
     });
-      // 綁定位置編號選取 → 自動帶出名稱
-      this.dataForm.get('ECR_LocNo')?.valueChanges.subscribe(selectedNo => {
-        const selected = this.LocOptions.find(c => c.No === selectedNo);
-        this.dataForm.patchValue({
-          ECR_TLT_Name: selected ? selected.Name : ''
-        }, { emitEvent: false });
-      });
+    // 綁定位置編號選取 → 自動帶出名稱
+    this.dataForm.get('ECR_LocNo')?.valueChanges.subscribe(selectedNo => {
+      const selected = this.LocOptions.find(c => c.No === selectedNo);
+      this.dataForm.patchValue({
+        ECR_TLT_Name: selected ? selected.Name : ''
+      }, { emitEvent: false });
+    });
     // 監聽欄位變化
     this.dataForm.get('ECR_TmplNo')?.valueChanges.subscribe((tmplNo) => {
       if (tmplNo) this.callTLS46020Api(tmplNo);
     });
+    if (this.dataForm.get('ECR_TmplNo')?.value && !this.isFormCreateable) {
+      this.callTLS46020Api(this.dataForm.get('ECR_TmplNo')?.value as string);
+
+    }
     this.dataForm.get('ECR_Type')?.valueChanges.subscribe(value => {
       this.checkTltNoRequired(value);
     });
@@ -293,7 +297,10 @@ export class TLS41010CRUComponent extends BasicCruPageComponent<TLS41010Data> im
               patchData.ECR_SettleHHNN = this.defaultTime1110();
             }
           }
-
+          // 這邊幫我有的值再patch
+          this.dataForm.patchValue({
+            ...patchData,
+          });
 
         }
       },
