@@ -2,9 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 import { PanelModule } from 'primeng/panel';
-import { NgIf } from '@angular/common';
 import { forkJoin, map } from 'rxjs';
-
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
@@ -40,7 +38,6 @@ interface SYS1000 {
     InputTextComponent,
     DropdownComponent,
     ButtonComponent,
-    NgIf,
     TranslateModule,
     TableComponent,
   ],
@@ -154,10 +151,10 @@ export class TLS43040CRUComponent extends BasicCruPageComponent<any> implements 
   }
 
 
-onEcrDtlLimitChange(value: string) {
-  this.isTableDisabled = value === "0";
-  console.log("ECR_DtlLimit 選擇:", value, "→ tableDisabled:", this.isTableDisabled);
-}
+  onEcrDtlLimitChange(value: string) {
+    this.isTableDisabled = value === "0";
+    console.log("ECR_DtlLimit 選擇:", value, "→ tableDisabled:", this.isTableDisabled);
+  }
 
 
   onSubmit(form: FormGroup): void {
@@ -167,9 +164,8 @@ onEcrDtlLimitChange(value: string) {
         ID: this.isFormCreateable ? 0 : this.rowdata?.ID,
         Detail: this.data.map(item => ({
           ...item,
-          // 這裡可以加入額外的屬性
-          ID: this.isFormCreateable ? 0 : item.ID,
-          status: this.isFormCreateable ? 'new' : item.status
+          // 這裡不用自己判斷 status
+          ECR_GrpSeqNo: item.ECR_GrpSeqNo ?? 0
         }))
       };
 
@@ -198,6 +194,7 @@ onEcrDtlLimitChange(value: string) {
       console.log('表單驗證未通過');
     }
   }
+
 
   resetTable() {
     this.data = [];
