@@ -317,7 +317,6 @@ export class TableComponent extends BasicPrintDataComponent implements OnChanges
         }
         return item;
       });
-      console.log('🚨 DEBUG - 刪除後的資料:', selectedItems);
     }
     this.delete.emit(selectedItems);
     if (this.deleteData) {

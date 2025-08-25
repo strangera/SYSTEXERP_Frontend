@@ -12,6 +12,7 @@ import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-se
 import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
 import { DropDownListService, IDropdownItem } from '@service/utility/dropDownList.service';
 import { untilDestroyed } from '@ngneat/until-destroy';
+import { Column, createPaginationConfig } from '@shared/componentkit/table/table.model';
 
 @Component({
   selector: 'app-tls57100',
@@ -40,29 +41,25 @@ export class TLS57100Component extends BasicQueryPageComponent<any> implements O
     APPLY_Date_End: [null], // 申請日期 迄
     APRV_Date_Start: [null], // 審核日期 起 calendar-range
     APRV_Date_End: [null], // 審核日期 迄
-    documentType: [],
-    inspectionReturnCode: ['', Validators.maxLength(16)],
-    displayMode: [1],
+    ODM_Type: [],
+    ODM_No: ['', Validators.maxLength(16)],
+    DisplayMode: [1, [Validators.required]],
+    ...createPaginationConfig([{ field: 'HOS_NAME', order: 1 }]),
   });
   totalRecords = 0;
+  documentTypeOptions = [
+    { value: 1, label: '進貨單' },
+    { value: 2, label: '退貨單' }
+  ];
+  displayModeOptions = [
+    { value: 1, label: '彙總' },
+    { value: 2, label: '明細' },
+  ];
   warehouseOptions: IDropdownItem[] = [];
   brandCodeOptions: IDropdownItem[] = [];
   vendorOptions: IDropdownItem[] = [];
-  documentTypeOptions = [
-    { value: 1, label: '進貨單' },
-    { value: 2, label: '進退單' },
-  ];
-  priceChangeStatusOptions = [
-    { value: 1, label: '已申請' },
-    { value: 2, label: '已確認' },
-    { value: 3, label: '已審核' }
-  ];
-  displayModeOptions = [
-    { value: 1, label: '匯總' },
-    { value: 2, label: '明細' },
-  ];
   data: any[] = [];
-  columns: any[] = [
+  columns: Column[] = [
     { field: 'warehouse', header: '倉別', visible: true },
     { field: 'brand', header: '品牌', visible: true },
     { field: 'applicationDate', header: '申請日期', visible: true },

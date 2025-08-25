@@ -154,6 +154,7 @@ export interface ITLS56040Request {
 /** 查詢 POS2022 (倉別調撥明細) 的請求介面 */
 export interface IQueryPOS2022Request {
   MVM_No: string; // 調撥單號
+  OUT_HOS_No: string;
 }
 
 /** POS2022 (倉別調撥明細) 的單筆響應資料介面 */

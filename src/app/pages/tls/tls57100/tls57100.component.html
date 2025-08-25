@@ -27,16 +27,16 @@
             [startControl]="queryForm.controls.APRV_Date_Start" [endControl]="queryForm.controls.APRV_Date_End"
             [submitted]="submitted" />
           <!-- 單據類型 -->
-          <app-dropdown class="col-12 md:col-6 lg:col-4" label="單據類型" controlName="documentType"
-            [options]="documentTypeOptions" optionLabel="label" optionValue="value" [filter]="false"
-            [control]="queryForm.controls.documentType" [submitted]="submitted"></app-dropdown>
+          <app-multi-select class="col-12 md:col-6 lg:col-4" label="單據類型" controlName="ODM_Type"
+            [options]="documentTypeOptions" optionLabel="label" optionValue="value"
+            [control]="queryForm.controls.ODM_Type" [submitted]="submitted"></app-multi-select>
           <!-- 驗收/驗退單號 -->
-          <app-input-text class="col-12 md:col-6 lg:col-4" label="驗收/驗退單號" controlName="inspectionReturnCode"
-            [control]="queryForm.controls.inspectionReturnCode" [submitted]="submitted"></app-input-text>
+          <app-input-text class="col-12 md:col-6 lg:col-4" label="驗收/驗退單號" controlName="ODM_No"
+            [control]="queryForm.controls.ODM_No" [submitted]="submitted"></app-input-text>
           <!-- 顯示方式 -->
-          <app-dropdown class="col-12 md:col-6 lg:col-4" label="顯示方式" controlName="displayMode"
+          <app-dropdown class="col-12 md:col-6 lg:col-4" label="顯示方式" controlName="DisplayMode"
             [options]="displayModeOptions" optionLabel="label" optionValue="value"
-            [control]="queryForm.controls.displayMode" [submitted]="submitted"></app-dropdown>
+            [control]="queryForm.controls.DisplayMode" [submitted]="submitted"></app-dropdown>
         </div>
         <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
           <app-button btnType="clear" [form]="queryForm"></app-button>
@@ -48,8 +48,8 @@
 </div>
 
 <div class="card">
-  <app-table [data]="data" [columns]="columns" [totalRecords]="totalRecords"
-    (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [lazy]="true" [loading]="loading"
-    [showManage]="false">
+  <app-table [data]="data" [columns]="columns" [totalRecords]="totalRecords" [showDelete]="false"
+    [showReportMode]="false" (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [lazy]="true"
+    [loading]="loading" [showManage]="false">
   </app-table>
 </div>

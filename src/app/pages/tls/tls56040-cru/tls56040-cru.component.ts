@@ -67,7 +67,7 @@ export class TLS56040CRUComponent extends BasicCruPageComponent<ITLS56040Data> i
     { field: 'PLU_MagNo', header: '商品管理編號', visible: true },
     { field: 'PLU_Name', header: '商品名稱', visible: true },
     { field: 'MVD_BuyPrc', header: '商品進價', visible: true, format: formatAmount },
-    { field: 'STK_CurrentQty', header: '目前庫存', visible: true },
+    { field: 'NowHaveQty', header: '目前庫存', visible: true },
     { field: 'APPLY_Qty', header: '數量', visible: true, type: 'inputNumber', validate: [validateRequired, validateMinNumber(1)] },
     { field: 'APPLY_BuyNet', header: '進價小計', visible: true, format: formatAmount },
     { field: 'MVD_Remark', header: '單項說明', visible: true, type: 'input' },
@@ -86,16 +86,14 @@ export class TLS56040CRUComponent extends BasicCruPageComponent<ITLS56040Data> i
 
   ngOnInit(): void {
     this.initializePage('TLS56040', this.dataForm);
-
     this.loadDropdownOptions();
     if (this.isFormCreateable) {
       this.dataForm.patchValue({ APPLY_USR_No: this.authService.currentUserValue?.user_No });
     } else {
-      this.tls56040Service.queryPOS2022({ MVM_No: this.rowdata?.MVM_No || '' }).pipe(untilDestroyed(this)).subscribe(response => {
+      this.tls56040Service.queryPOS2022({ MVM_No: this.rowdata?.MVM_No || '', OUT_HOS_No: this.rowdata?.OUT_HOS_No || '' }).pipe(untilDestroyed(this)).subscribe(response => {
         this.data = response.Data || [];
       });
     }
-
     this.dataForm.controls['OUT_HOS_No'].valueChanges.pipe(untilDestroyed(this)).subscribe(() => {
       this.validateWarehouseMismatch();
       this.clearDetailData();
