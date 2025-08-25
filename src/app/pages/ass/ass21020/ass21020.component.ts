@@ -39,8 +39,8 @@ export class ASS21020Component extends BasicQueryPageComponent<unknown> implemen
   public readonly queryForm = this.formBuilder.group({
     ENG_Type: new FormControl<string[] | undefined>(void 0),
     ENG_MeterNo: new FormControl<string | undefined>(void 0),
-    Location_No: new FormControl<string | undefined>(void 0),
     tlt_no: new FormControl<string | undefined>(void 0),
+    Location_No: new FormControl<string | undefined>(void 0),
     eng_rate: new FormControl<number | undefined>(0),
     department_name: new FormControl<string | undefined>(void 0),
     business_area: new FormControl<string | undefined>(void 0),
@@ -57,22 +57,32 @@ export class ASS21020Component extends BasicQueryPageComponent<unknown> implemen
 
   public readonly meterNoEffect = effect(() => {
     const meterNo = this.meterNoSignal();
-    if (!meterNo) return void this.qf().Location_No.patchValue(void 0);
+    if (!meterNo) return;
+
     this.service.queryByMeterNo(meterNo);
+    const selected = this.service.engMeterNoMap.get(meterNo);
+    this.service.queryTLT({
+      SYS3800s: [{ building_no: selected?.building_No ?? '', building_desc: selected?.building_DESC ?? '' }],
+      SYS3900s: [{ floor_no: selected?.Floor_No ?? '', floor_desc: selected?.Floor_Desc ?? '' }]
+    });
+    this.qf().Location_No.patchValue(selected?.Location_No ?? '');
   }, { allowSignalWrites: !0 });
 
   public readonly tltNoEffect = effect(() => {
     const tltNo = this.tltNoSignal();
     if (!tltNo) return;
-    if (!0) return;
     this.service.queryByTltNo(tltNo);
-  });
+  }, { allowSignalWrites: !0 });
 
   public readonly columns: Column[] = [
     { field: 'ENG_Type', header: '能源類型' },
-    { field: 'ENG_MeterNo', header: '錶號' },
-    { field: 'Location_No', header: '設備位置編號' },
+    { field: 'TLT_No', header: '專櫃編號' },
+    { field: 'ENG_Rate', header: '面積比率(%)' },
     { field: 'ENG_Remark', header: '備註' },
+    { field: 'CRT_Date', header: '建立日期' },
+    { field: 'CRT_USR_Name', header: '建立人員名稱' },
+    { field: 'UPD_Date', header: '變更日期' },
+    { field: 'UPD_USR_Name', header: '變更人員名稱' },
   ];
 
   constructor(
@@ -86,28 +96,14 @@ export class ASS21020Component extends BasicQueryPageComponent<unknown> implemen
 
     this.service.loadEngType();
     this.service.loadEngMeterNo();
-    this.service.loadLocationNo();
-    this.service.loadASS21020({
-      EngTypes: '',
-      ENG_MeterNo: '',
-      Location_No: '',
-      SYS_StoreNo: '',
-      Mid: 0,
-      ENG_Rate: 0,
-    });
   }
 
   public onSubmit(): void {
     this.handleSubmit(this.queryForm, () => {
-      const payload = <ASS21020Payload>{
-        EngTypes: this.qf().ENG_Type.value || '',
-        ENG_MeterNo: this.qf().ENG_MeterNo.value || '',
-        Location_No: this.qf().Location_No.value || '',
-        SYS_StoreNo: '',
-        Mid: 0,
-        ENG_Rate: 0,
-      };
-      this.service.loadASS21020(payload);
+      this.service.loadASS21020({
+        EngTypes: this.qf().ENG_Type.value ?? void 0,
+        ENG_MeterNo: this.qf().ENG_MeterNo.value ?? void 0,
+      });
 
       this.queryStateService.setQueryState(this.ProgNo, this.queryForm.value);
       this.loading = !1;

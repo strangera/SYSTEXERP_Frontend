@@ -14,12 +14,12 @@ export interface ASS21020Data {
 }
 
 export interface ASS21020Payload {
-  EngTypes: string;
-  ENG_MeterNo: string;
-  Location_No: string;
-  SYS_StoreNo: string;
-  Mid: number;
-  ENG_Rate: number;
+  EngTypes?: string;
+  ENG_MeterNo?: string;
+  Location_No?: string;
+  SYS_StoreNo?: string;
+  Mid?: number;
+  ENG_Rate?: number;
 }
 
 export interface TLTByFlag {
@@ -33,4 +33,16 @@ export interface TLTByFlag {
   Electric_Flag: string;
   Gas_Flag: string;
   Apply_No: string;
+}
+
+export interface QueryTLTPayload {
+  SYS3800s?: {
+    building_no: string;
+    building_desc?: string;
+  }[],
+  SYS3900s?: {
+    floor_no: string;
+    floor_desc?: string;
+  }[];
+
 }

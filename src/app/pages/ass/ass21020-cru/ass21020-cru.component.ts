@@ -55,7 +55,7 @@ export class ASS21020CRUComponent extends BasicCruPageComponent<unknown> impleme
   public readonly meterNoEffect = effect(() => {
     const meterNo = this.meterNoSignal();
     if (!meterNo) return;
-    // this.service.loadASS21020Detail(meterNo);
+    this.service.loadASS21020({ ENG_MeterNo: meterNo || '' });
   });
 
   public readonly columns: Column[] = [

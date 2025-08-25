@@ -1,7 +1,7 @@
 import { HttpClient } from '@angular/common/http';
-import { Injectable, OnDestroy, signal } from '@angular/core';
+import { effect, Injectable, OnDestroy, signal } from '@angular/core';
 import { ASS2100ENGMeterType } from '@pages/ass/ass21010/ass21010.model';
-import { ASS21020Data, ASS21020Payload, TLTByFlag } from '@pages/ass/ass21020/ass21020.model';
+import { ASS21020Data, ASS21020Payload, QueryTLTPayload, TLTByFlag } from '@pages/ass/ass21020/ass21020.model';
 import { ErrorHandlerService } from '@service/system/error-handler.service';
 import { IPOS2002LocationItem } from '@service/utility/dropDownList.service';
 import { BaseQueryRequest, BaseQueryResponse, DropdownOption } from '@shared/models/api/base-api.interface';
@@ -24,9 +24,12 @@ export class ASS21020Service implements OnDestroy {
   public readonly queryByTltNoData = signal<unknown[]>([]);
   public readonly engTypeSignal = signal<DropdownOption[]>([]);
   public readonly engMeterNoSignal = signal<ASS2100ENGMeterType[]>([]);
-  public readonly locationSignal = signal<IPOS2002LocationItem[]>([]);
-  public readonly tltNoSignal = signal<TLTByFlag[]>([]);
+  public readonly locationSignal = signal<string>('');
+  public readonly tltNoSignal = signal<{ tlt_nos: string; }[]>([]);
+  public readonly tltNoByFlagSignal = signal<TLTByFlag[]>([]);
   public readonly engRateSignal = signal<number>(0);
+
+  public readonly engMeterNoMap = new Map<string, ASS2100ENGMeterType>();
 
   public engTypeLoading = !1;
   public engMeterNoLoading = !1;
@@ -35,17 +38,19 @@ export class ASS21020Service implements OnDestroy {
   public tableLoading = !1;
   public queryByMeterNoLoading = !1;
   public queryByTltNoLoading = !1;
+  public queryTltLoading = !1;
 
   private readonly engTypeCancel$ = new Subject<void>();
   private readonly engMeterNoCancel$ = new Subject<void>();
   private readonly locationCancel$ = new Subject<void>();
   private readonly tableCancel$ = new Subject<void>();
+  private readonly queryTltCancel$ = new Subject<void>();
   private readonly queryByMeterNoCancel$ = new Subject<void>();
-  private readonly queryByTltNoCancel$ = new Subject<void>();
+  private readonly tltNoCancel$ = new Subject<void>();
 
   constructor(
     private http: HttpClient,
-    private errorHandler: ErrorHandlerService
+    private errorHandler: ErrorHandlerService,
   ) { }
 
   public loadEngType(): void {
@@ -57,13 +62,18 @@ export class ASS21020Service implements OnDestroy {
     ]);
   };
 
-  public loadEngMeterNo(type?: EngType): void {
+  public loadEngMeterNo(): void {
     this.engMeterNoCancel$.next();
     this.engMeterNoLoading = !0;
-    this.http.post<BaseQueryResponse<ASS2100ENGMeterType>>(`${apiUrl}/Share/queryENG1001_ENG_MeterNo_DropDownList`, { type }).pipe(
+    this.http.post<BaseQueryResponse<ASS2100ENGMeterType>>(`${apiUrl}/Share/queryENG1001_ENG_MeterNo_DropDownList`, {}).pipe(
       take(1),
       takeUntil(this.engMeterNoCancel$),
-      tap(response => this.engMeterNoSignal.set(response.Data)),
+      tap(response => {
+        this.engMeterNoSignal.set(response.Data);
+        response.Data.forEach(item => {
+          this.engMeterNoMap.set(item.ENG_MeterNo, item);
+        });
+      }),
       catchError(error => this.errorHandler.handleError(error)),
       finalize(() => {
         this.engMeterNoLoading = !1;
@@ -88,7 +98,7 @@ export class ASS21020Service implements OnDestroy {
   };
 
   /** 取資料 */
-  public loadASS21020(query: BaseQueryRequest & ASS21020Payload): void {
+  public loadASS21020(query: BaseQueryRequest & ASS21020Payload = {}): void {
     this.tableCancel$.next();
     this.tableLoading = !0;
     this.http.post<BaseQueryResponse<ASS21020Data>>(`${apiUrl}/ASS0000/ASS2000/queryASS21020`, query).pipe(
@@ -103,13 +113,28 @@ export class ASS21020Service implements OnDestroy {
     ).subscribe();
   };
 
+  public queryTLT(payload: QueryTLTPayload): void {
+    this.queryTltCancel$.next();
+    this.queryTltLoading = !0;
+    this.http.post<BaseQueryResponse<{ tlt_nos: string; }>>(`${apiUrl}/Share/queryTLTTALENT_DropDownList`, payload).pipe(
+      take(1),
+      takeUntil(this.queryTltCancel$),
+      tap(response => this.tltNoSignal.set(response.Data)),
+      catchError(error => this.errorHandler.handleError(error)),
+      finalize(() => {
+        this.queryTltLoading = !1;
+        console.log('查詢queryTlt結果:', [this.tltNoSignal()]);
+      })
+    ).subscribe();
+  }
+
   public queryByMeterNo(ENG_MeterNo: string): void {
     this.queryByMeterNoCancel$.next();
     this.queryByMeterNoLoading = !0;
     this.http.post<BaseQueryResponse<TLTByFlag>>(`${apiUrl}/Share/queryTLTTALENTByFlag_DropDownList`, { MID: 0, ENG_MeterNo }).pipe(
       take(1),
       takeUntil(this.queryByMeterNoCancel$),
-      tap(response => this.tltNoSignal.set(response.Data)),
+      tap(response => this.tltNoByFlagSignal.set(response.Data)),
       catchError(error => this.errorHandler.handleError(error)),
       finalize(() => {
         this.queryByMeterNoLoading = !1;
@@ -120,16 +145,16 @@ export class ASS21020Service implements OnDestroy {
   }
 
   public queryByTltNo(tlt_no: string): void {
-    this.queryByTltNoCancel$.next();
-    this.queryByTltNoLoading = !0;
-    this.http.post<BaseQueryResponse<unknown>>(`${apiUrl}/ASS0000/ASS2000/queryByTltNo`, { tlt_no }).pipe(
+    this.tltNoCancel$.next();
+    this.tltNoLoading = !0;
+    this.http.post<BaseQueryResponse<any>>(`${apiUrl}/ASS0000/ASS2000/queryByTltNo`, { tlt_no }).pipe(
       take(1),
-      takeUntil(this.queryByTltNoCancel$),
-      tap(response => this.queryByTltNoData.set(response.Data)),
+      takeUntil(this.tltNoCancel$),
+      tap(response => this.tltNoSignal.set(response.Data)),
       catchError(error => this.errorHandler.handleError(error)),
       finalize(() => {
-        this.queryByTltNoLoading = !1;
-        console.log('查詢queryByTltNo結果:', [this.queryByTltNoData()]);
+        this.tltNoLoading = !1;
+        console.log('查詢queryByTltNo結果:', [this.tltNoSignal()]);
       })
     ).subscribe();
   }
