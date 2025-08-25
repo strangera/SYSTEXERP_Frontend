@@ -7,7 +7,7 @@ import {
 } from '@angular/forms';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { TLS23070Service } from '../../../service/api/tls/tls23070.service';
-import { createPaginationConfig, formatDateToYYYY_MM_DD } from '../../../shared/componentkit/table/table.model';
+
 
 import { CounterNameService } from '../../../service/basic/counter-name.service';
 import { FloorService } from '../../../service/basic/floor.service';
@@ -21,6 +21,8 @@ import { InputTextModule } from 'primeng/inputtext';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { TranslateModule } from '@ngx-translate/core';
 import { TableComponent } from '@shared/componentkit/table/table.component';
+import { createPaginationConfig, formatDateToYYYY_MM_DD, LazyLoadEvent } 
+  from '../../../shared/componentkit/table/table.model';
 
 
 @Component({
@@ -43,6 +45,12 @@ import { TableComponent } from '@shared/componentkit/table/table.component';
   ],
 })
 export class TLS23070Component extends BasicQueryPageComponent<any> {
+    private lastQuerySig: string | null = null;
+  private lazyTimer: any = null;
+  private readonly defaultSort: Array<{ field: string; order: 1 | -1 }> = [
+  { field: 'TXN_Date', order: 1 },
+];
+    sortMeta: Array<{ field: string; order: 1 | -1 }> = [];
   data: any[] = [];
   totalRecords = 0;
   totalSummary: any | null = null;    // 總計區（Data[0].totalSummary）
@@ -63,7 +71,7 @@ subsTotals: any[] = [];             // 每日小計（Data[0].subsTotals）
     tlt_building: [],
     tlt_floor: [],
     org_id: [],
-    ...createPaginationConfig([{ field: 'tlt_no', order: 1 }]),
+    ...createPaginationConfig([{ field: 'TXN_Date', order: 1 }]),
   });
 
   CounterOptions: any[] = [];
@@ -86,7 +94,8 @@ subsTotals: any[] = [];             // 每日小計（Data[0].subsTotals）
     this.initializePage('TLS23070', 'tls/tls23070', this.queryForm, (form) =>
       this.onSubmit(form),
     );
-
+    this.sortMeta = this.defaultSort.map((s:any) => ({ ...s }));
+    this.queryForm.patchValue({ SortBy: this.sortMeta });
     // ✅ 下拉資料全加 takeUntil，避免 memory leak
     this.counterNameService
       .getCounters()
@@ -123,104 +132,111 @@ subsTotals: any[] = [];             // 每日小計（Data[0].subsTotals）
       });
   }
 
-onSubmit(form: FormGroup): void {
-  this.handleSubmit(form, () => {
-    const val = this.queryForm.getRawValue() as any;
+ onSubmit(form: FormGroup): void {
+    this.handleSubmit(form, () => {
+      const val = this.queryForm.getRawValue() as any;
 
-    // 分頁 Offset：0-based
-    const offset =
-      Number.isFinite(val?.pageIndex) && Number.isFinite(val?.pageSize)
-        ? Math.max(0, (val.pageIndex - 1) * val.pageSize)
-        : undefined;
+      // 分頁 Offset：0-based
+      const offset =
+        Number.isFinite(val?.pageIndex) && Number.isFinite(val?.pageSize)
+          ? Math.max(0, (val.pageIndex - 1) * val.pageSize)
+          : undefined;
 
-    // 多欄排序 -> "field ASC,DESC..."
-    const orderBy =
-      Array.isArray(val?.SortBy) && val.SortBy.length
-        ? val.SortBy.map((s: any) => `${s.field} ${s.order === 1 ? 'ASC' : 'DESC'}`).join(',')
-        : undefined;
+      // 多欄排序 -> "field ASC,DESC..."
+      const sortBy = Array.isArray(val?.SortBy) && val.SortBy.length ? val.SortBy : this.sortMeta;
+      const orderBy =
+        sortBy?.length
+          ? sortBy.map((s: any) => `${s.field} ${s.order === 1 ? 'ASC' : 'DESC'}`).join(',')
+          : undefined;
 
-    // 用 YYYY-MM-DD，避免時區造成少一天
-    const payload: any = {
-      TXN_DateStart: formatDateToYYYY_MM_DD(val?.TXN_DateStart),
-      TXN_DateEnd:   formatDateToYYYY_MM_DD(val?.TXN_DateEnd),
-      tlt_no:        val?.tlt_no,
-      tlt_building:  val?.tlt_building,
-      tlt_floor:     val?.tlt_floor,
-      org_id:        val?.org_id,
-      pageSize:      val?.pageSize,
-      pageIndex:     val?.pageIndex,
-      SortBy:        val?.SortBy,
-      ...(offset  !== undefined ? { Offset:  offset } : {}),
-      ...(orderBy ? { OrderBy: orderBy } : {}),
-    };
+      const payload: any = {
+        TXN_DateStart: formatDateToYYYY_MM_DD(val?.TXN_DateStart),
+        TXN_DateEnd:   formatDateToYYYY_MM_DD(val?.TXN_DateEnd),
+        tlt_no:        val?.tlt_no,
+        tlt_building:  val?.tlt_building,
+        tlt_floor:     val?.tlt_floor,
+        org_id:        val?.org_id,
+        pageSize:      val?.pageSize,
+        pageIndex:     val?.pageIndex,
+        SortBy:        sortBy?.length ? sortBy : this.defaultSort,     // ★ 後端也拿得到
+        ...(offset  !== undefined ? { Offset:  offset } : {}),
+        ...(orderBy ? { OrderBy: orderBy } : {}),
+      };
 
-    // 移除空值/空陣列
-    Object.keys(payload).forEach((k) => {
-      const v = payload[k];
-      if (v === '' || v === null || v === undefined) delete payload[k];
-      if (Array.isArray(v) && v.length === 0) delete payload[k];
+      // 移除空值/空陣列
+      Object.keys(payload).forEach((k) => {
+        const v = payload[k];
+        if (v === '' || v === null || v === undefined) delete payload[k];
+        if (Array.isArray(v) && v.length === 0) delete payload[k];
+      });
+
+      this.loading = true;
+      this.messageService?.blockUi();
+
+      this.tls23070Service.queryTLS23070(payload).subscribe({
+        next: (res: any) => {
+          const data = res?.Data;
+          const wrapper = Array.isArray(data) ? data[0] : data;
+
+          this.totalSummary = wrapper?.totalSummary ?? null;
+
+          const tltGroups = Array.isArray(wrapper?.tltNoSubTotals) ? wrapper.tltNoSubTotals : [];
+          const allSubs = tltGroups.flatMap((g: any) => g?.subsTotals ?? []);
+          this.subsTotals = allSubs;
+
+          const detailsFromSubs = allSubs.flatMap(
+            (s: any) => (s?.tLS23070Details ?? s?.TLS23070Details ?? s?.tls23070Details ?? []) as any[],
+          );
+          const topLevelDetails =
+            (wrapper?.tLS23070Details ?? wrapper?.TLS23070Details ?? wrapper?.tls23070Details ?? []) as any[];
+
+          const details = detailsFromSubs.length ? detailsFromSubs : topLevelDetails;
+
+          // ★ 改用三欄組合的 rowKey（你已經加了，保留）
+          this.data = details.map((r: any, i: number) => ({
+            ...r,
+            _rowKey: `${r.tlt_no ?? ''}|${r.TXN_Date ?? ''}|${r.ECR_No ?? ''}|${i}`,
+          }));
+
+          this.totalRecords = typeof res?.TotalCount === 'number' ? res.TotalCount : this.data.length;
+        },
+        error: (err) => {
+          console.error('TLS23070 查詢失敗', err);
+          this.messageService?.errorBubble?.('查詢失敗，請稍後再試');
+          this.loading = false;
+          this.messageService?.unblockUi();
+        },
+        complete: () => {
+          this.loading = false;
+          this.messageService?.unblockUi();
+        },
+      });
     });
-
-    this.loading = true;
-    this.messageService?.blockUi();
-
-    this.tls23070Service.queryTLS23070(payload).subscribe({
-      next: (res: any) => {
-        const data = res?.Data;
-        const wrapper = Array.isArray(data) ? data[0] : data;
-
-        // 總計（頂層）
-        this.totalSummary = wrapper?.totalSummary ?? null;
-
-        // 群組 -> 每日小計 -> 明細
-        const tltGroups = Array.isArray(wrapper?.tltNoSubTotals) ? wrapper.tltNoSubTotals : [];
-
-        // 全部每日小計攤平（如果你需要顯示每日小計可直接用這個）
-        const allSubs = tltGroups.flatMap((g: any) => g?.subsTotals ?? []);
-        this.subsTotals = allSubs;
-
-        // 主要顯示資料：所有 tLS23070Details 攤平
-        const detailsFromSubs = allSubs.flatMap(
-          (s: any) =>
-            (s?.tLS23070Details ??
-             s?.TLS23070Details ??
-             s?.tls23070Details ??
-             []) as any[],
-        );
-
-        // 後援：若少數情況沒有 subsTotals，試頂層的 details
-        const topLevelDetails =
-          (wrapper?.tLS23070Details ??
-           wrapper?.TLS23070Details ??
-           wrapper?.tls23070Details ??
-           []) as any[];
-
-        const details = detailsFromSubs.length ? detailsFromSubs : topLevelDetails;
-
-        // 設定表格資料
-        this.data = details.map((r: any, i: number) => ({
-          ...r,
-          _rowKey: `${r.TXN_Date ?? ''}|${r.ECR_No ?? ''}|${r.tlt_no ?? ''}|${i}`,
-        }));
-
-        this.totalRecords =
-          typeof res?.TotalCount === 'number' ? res.TotalCount : this.data.length;
-      },
-      error: (err) => {
-        console.error('TLS23070 查詢失敗', err);
-        this.messageService?.errorBubble?.('查詢失敗，請稍後再試');
-        this.loading = false;
-        this.messageService?.unblockUi();
-      },
-      complete: () => {
-        this.loading = false;
-        this.messageService?.unblockUi();
-      },
-    });
-  });
-}
+  }
 
 
+  formatYMD = (val: unknown): string => {
+  if (val == null) return '';
+  if (val instanceof Date && !isNaN(val.getTime())) {
+    const y = val.getFullYear();
+    const m = String(val.getMonth() + 1).padStart(2, '0');
+    const d = String(val.getDate()).padStart(2, '0');
+    return `${y}/${m}/${d}`;
+  }
+  const s = String(val);
+  // 直接抓 YYYY-MM-DD，避免時區位移
+  const m = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (m) return `${m[1]}/${m[2]}/${m[3]}`;
+
+  const dt = new Date(s);
+  if (!isNaN(dt.getTime())) {
+    const y = dt.getFullYear();
+    const mm = String(dt.getMonth() + 1).padStart(2, '0');
+    const dd = String(dt.getDate()).padStart(2, '0');
+    return `${y}/${mm}/${dd}`;
+  }
+  return s;
+};
 
   // 轉本地 ISO 字串 yyyy-MM-ddTHH:mm:ss（去掉時區偏移）
   private toIso(val: any): string | undefined {
@@ -232,6 +248,39 @@ onSubmit(form: FormGroup): void {
       .slice(0, 19);
   }
 
+   // ★ 只在這裡處理 lazy 事件，內部做簽章去重 + 0ms debounce + 同步 sort 狀態 + 回填表單
+  override onLazyLoadData(event: LazyLoadEvent, queryForm: FormGroup) {
+    const prev = this.queryStateService.getQueryStateValue(this.ProgNo);
+    const prevSort = JSON.stringify(prev?.SortBy ?? []);
+    const nextSort = JSON.stringify(event.SortBy ?? []);
+    const nextPageIndex = prevSort !== nextSort ? 1 : event.pageIndex;
+
+    if (prev) queryForm.patchValue(prev);
+
+    // 同步當前排序到父層（table 的箭頭會跟著動）
+    this.sortMeta = (event.SortBy ?? []).map((s: any) => ({ ...s }));
+
+    // 回填到表單（後端要用的）
+    queryForm.patchValue({
+      pageSize: event.pageSize,
+      pageIndex: nextPageIndex,
+      SortBy: this.sortMeta,
+    });
+
+    // 建立簽章：完全相同參數就不重打
+    const sig = JSON.stringify({
+      pageIndex: nextPageIndex,
+      pageSize: event.pageSize,
+      SortBy: this.sortMeta,
+    });
+    if (sig === this.lastQuerySig) return;
+    this.lastQuerySig = sig;
+
+    // 0ms debounce：合併排序+分頁的雙事件
+    if (this.lazyTimer) clearTimeout(this.lazyTimer);
+    this.lazyTimer = setTimeout(() => this.onSubmit(queryForm), 0);
+  }
+
   moneyFormat(value: number): string {
     return value != null ? value.toLocaleString('en-US') : '0';
   }
@@ -240,6 +289,7 @@ onSubmit(form: FormGroup): void {
   { field: 'ECR_No', header: '收銀機號', visible: true },
   { field: 'tlt_no', header: '專櫃編號', visible: true },
   { field: 'tlt_name', header: '櫃位名稱', visible: true, style: 'text-left' },
+  { field: 'TXN_Date', header: '銷售日期', visible: true,format:this.formatYMD },
 
   { field: 'TXN_PayAmt10', header: '現金', visible: true, style: 'text-right', format: this.moneyFormat.bind(this) },
   { field: 'TXN_PayAmt41', header: '聯信連線', visible: true, style: 'text-right', format: this.moneyFormat.bind(this) },
