@@ -81,6 +81,12 @@ payNoToTypeMap = new Map<string, string>();
     d.setDate(d.getDate() - 1);
     return d;
   })();
+  sortMeta: any[] = [];
+readonly defaultSort: any[] = [
+  { field: 'TXN_Date', order: 1 },
+  { field: 'ECR_No',   order: 1 },
+  { field: 'TXN_No',   order: 1 },
+];
 
   //
   queryForm = this.formBuilder.group({
@@ -107,7 +113,10 @@ payNoToTypeMap = new Map<string, string>();
     PAY_NO: [] as string[],
     IsHaveTERM_No: [false],
 
-    ...createPaginationConfig([{ field: 'ECR_No', order: 1 }]),
+   ...createPaginationConfig([
+  { field: 'TXN_Date', order: 1 },
+  { field: 'ECR_No',   order: 1 },
+  { field: 'TXN_No',   order: 1 },]),
   });
 
   columns: any[] = [
@@ -194,7 +203,7 @@ payNoToTypeMap = new Map<string, string>();
   ngOnInit(): void {
     this.initializePage('TLS23030', 'tls/tls23030cru', this.queryForm, (form) =>this.onSubmit(form),);
 
-
+this.sortMeta = this.defaultSort.map(x => ({ ...x }));
     this.dropDownListService
     .queryPOS1006_DropDownList()
     .pipe(untilDestroyed(this))
@@ -326,8 +335,8 @@ raw['IsHaveTERM_No'] = this.toBoolOrNull(raw['IsHaveTERM_No']);
     : (Number.isFinite(raw['pageSize']) ? raw['pageSize'] : 10);
 
   raw['SortBy'] = Array.isArray(raw['SortBy']) && raw['SortBy'].length
-    ? raw['SortBy']
-    : [{ field: 'ECR_No', order: 1 }];
+  ? raw['SortBy']
+  : (this.sortMeta.length ? this.sortMeta : this.defaultSort);
 
   // 🔒 移除小寫鍵，避免同時傳兩組
   delete raw.pageIndex;

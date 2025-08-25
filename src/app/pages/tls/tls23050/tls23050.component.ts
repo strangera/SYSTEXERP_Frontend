@@ -60,7 +60,6 @@ export class TLS23050Component extends BasicQueryPageComponent<any> {
   // ✅ 陣列欄位改用 control<any[]>([])，避免 never[] 型別錯誤
   queryForm = this.formBuilder.group({
     TXN_Date: [this.yesterday, [Validators.required]],
-   
     rece_yn: [null],
     tlt_building: [],
     tlt_floor: [],
