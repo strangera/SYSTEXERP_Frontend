@@ -20,7 +20,7 @@
                         controlName="ENG_Type"
                         [options]="service.engTypeSignal()"
                         optionLabel="Name"
-                        optionValue="No"
+                        optionValue="Name"
                         [control]="df().ENG_Type"
                         [submitted]="submitted"></app-dropdown>
         </div>
@@ -45,97 +45,6 @@
                               [control]="df().ENG_Remark"
                               [submitted]="submitted" />
         </div>
-
-
-        <!-- <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text label="錶號位置編號"
-                          controlName="meterPosCode "
-                          [control]="df().meterPosCode"
-                          [submitted]="submitted">
-          </app-input-text>
-        </div>
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-dropdown label="樓層"
-                        controlName="floor"
-                        [options]="floor"
-                        optionLabel="label"
-                        optionValue="value"
-                        [control]="df().floor"
-                        [submitted]="submitted"></app-dropdown>
-        </div>
-
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-dropdown label="區域"
-                        controlName="area"
-                        [options]="area"
-                        optionLabel="label"
-                        optionValue="value"
-                        [control]="df().area"
-                        [submitted]="submitted"></app-dropdown>
-        </div>
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text label="流水號"
-                          controlName="SN"
-                          [control]="df().SN"
-                          [submitted]="submitted">
-          </app-input-text>
-        </div>
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text label="平面圖X座標"
-                          controlName="xCoordinate"
-                          [control]="df().xCoordinate"
-                          [submitted]="submitted">
-          </app-input-text>
-        </div>
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text label="平面圖Y座標"
-                          controlName="yCoordinate"
-                          [control]="df().yCoordinate"
-                          [submitted]="submitted">
-          </app-input-text>
-        </div>
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-editor-text label="說明"
-                           controlName="desc"
-                           [control]="df().desc"
-                           [style]="{ height: '100px' }"
-                           [submitted]="submitted">
-          </app-editor-text>
-        </div>
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-editor-text label="置放位置說明"
-                           controlName="placementDesc"
-                           [control]="df().placementDesc"
-                           [style]="{ height: '100px' }"
-                           [submitted]="submitted">
-          </app-editor-text>
-        </div>
-      </div> -->
-        <!-- <hr />
-      <ng-container formArrayName="items">
-        <ng-container
-          *ngFor="let item of items.controls; let i = index"
-          [formGroupName]="i"
-        >
-          <div class="grid align-items-center">
-            <div class="col" style="flex: 1">
-              <p>{{ i + 1 }}</p>
-            </div>
-            <div>
-              <app-button-dynamicallydelete
-                (click)="onRemoveItem(i)"
-                [crudstatus]="crudstatus"
-                class="col"
-              ></app-button-dynamicallydelete>
-            </div>
-        </div>
-          <hr />
-        </ng-container>
-      </ng-container>
-      <div class="pt-1">
-        <app-button-dynamicallyadd
-          (click)="onAddItem()"
-        ></app-button-dynamicallyadd> -->
       </div>
     </form>
     <div class="col pt-4">
@@ -151,7 +60,7 @@
   </p-panel>
 </div>
 
-
+<!--
 <div class="card">
   <div class="grid p-fluid">
     <div class="col-12">
@@ -169,4 +78,4 @@
       </p-panel>
     </div>
   </div>
-</div>
+</div> -->

@@ -21,7 +21,7 @@ export class ASS21010Service implements OnDestroy {
   public readonly ASS21010Detail = signal<unknown[]>([]);
   public readonly engTypeSignal = signal<DropdownOption[]>([]);
   public readonly engMeterNoSignal = signal<ASS2100ENGMeterType[]>([]);
-  public readonly locationSignal = signal<IPOS2002LocationItem[]>([]);
+  public readonly locationSignal = signal<DropdownOption[]>([]);
 
   public engMeterNoLoading = !1;
   public locationLoading = !1;
