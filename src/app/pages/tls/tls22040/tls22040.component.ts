@@ -10,6 +10,7 @@ import { TableComponent } from '../../../shared/componentkit/table/table.compone
 import { TranslateModule } from '@ngx-translate/core';
 import { yesterday } from '@shared/models/system/query-form.model';
 import { Tls22040Service } from '../../../service/api/tls/tls22040.service';
+import { CRUDStatus } from '@shared/models/system/CRUDstatus';
 
 @Component({
   selector: 'app-tls22040',
@@ -43,9 +44,9 @@ export class TLS22040Component extends BasicQueryPageComponent<any> implements O
   ];
 
   columns: Column[] = [
-    { field: 'TXN_Date', header: '銷售日期', visible: true  ,groupField: '111'},
-    { field: 'MIG_Type', header: '發票類型', visible: true , groupField: '111'},
-    { field: 'MIG_Type_Name', header: '發票類型名稱', visible: false},
+    { field: 'TXN_Date', header: '銷售日期', visible: true, groupField: '111' },
+    { field: 'MIG_Type', header: '發票類型', visible: true, groupField: '111' },
+    { field: 'MIG_Type_Name', header: '發票類型名稱', visible: false },
     { field: 'InvoiceNum', header: '發票張數', visible: true, groupField: '111' },
     { field: 'UpMaxNum', header: '上傳大平台筆數', visible: true, groupField: '333' },
     { field: 'LastBagTime', header: '最後打包時間', visible: true, groupField: '222' },
@@ -59,10 +60,9 @@ export class TLS22040Component extends BasicQueryPageComponent<any> implements O
   }
 
   ngOnInit(): void {
-    this.initializePage('TLS22040', 'TLS/TLS22040', this.queryForm, (form) =>
-      this.onSubmit(form)
-    );
+    this.initializePage('TLS22040', 'TLS/TLS22040cru', this.queryForm, (form) => this.onSubmit(form));
   }
+
   // 格式化函式
   private formatToYMD(dateStr: string | null | undefined): string {
     if (!dateStr) return '';
@@ -78,6 +78,8 @@ export class TLS22040Component extends BasicQueryPageComponent<any> implements O
   /** 查詢主表 */
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
+      this.submitted = true;
+      if (frm.invalid) return;
       this.loading = true;
       const raw = frm.value;
 
@@ -113,19 +115,40 @@ export class TLS22040Component extends BasicQueryPageComponent<any> implements O
       });
     });
   }
-
-  /** 查詢明細，綁定到 [onDetail] */
   override onDetail(row: any): void {
-    if (!row) return;
-    this.tls22040Service
-      .queryTLS22040_Detail({ PAY_Name: row.PAY_Name })
-      .subscribe({
-        next: (res) => {
-          row.details = res?.Data ?? [];
-        },
-        error: (err) => {
-          console.error('查詢 TLS22040_Detail 失敗:', err);
-        },
-      });
+    console.log('電子發票上送筆數檢核表 被點擊:', row);
+
+    const formatDateForDetail = (dateStr: string) =>
+      dateStr ? dateStr.replace(/-/g, '/') : '';
+
+    // 打明細 API
+    const payload = {
+      PageSize: 0,
+      PageIndex: 0,
+      OrderBy: 'TXN_Date',
+      Offset: 0,
+      SortBy: [],
+      TXN_Date: formatDateForDetail(row.TXN_Date), // 轉回 yyyy/MM/dd
+      MIG_Type: row.MIG_Type
+    };
+
+    this.tls22040Service.queryTLS22040_Detail(payload).subscribe({
+      next: (res) => {
+        const detailData = res?.Data ?? [];
+
+        const rowdataWithDetail = {
+          ...row,
+          details: detailData
+        };
+
+        this.navigateWithState(CRUDStatus.Edit, rowdataWithDetail);
+      },
+      error: (err) => {
+        console.error('查詢 TLS22040 明細失敗:', err);
+      }
+    });
   }
+
+
+
 }
