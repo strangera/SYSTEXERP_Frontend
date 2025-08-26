@@ -48,7 +48,8 @@ export class TLS56030Component extends BasicQueryPageComponent<any> implements O
     RPM_StatusList: [[]],                      // 狀態
     APPLY_USRList: [[]],                       // 申請人
     APPLY_Date_Start: [null],                  // 申請日期 起
-    APPLY_Date_End: [null]                     // 申請日期 迄
+    APPLY_Date_End: [null],                    // 申請日期 迄
+    ...createPaginationConfig([{ field: 'RPM_No', order: 1 }]), // 分頁和排序參數
   });
 
 
@@ -104,7 +105,7 @@ export class TLS56030Component extends BasicQueryPageComponent<any> implements O
     ).subscribe(options => {
       this.userOptions = options;
     });
-    this.dropDownListService.querySYS3100_join_POS1001_DropDownList()
+    this.dropDownListService.querySYS3100_DropDownList()
       .pipe(untilDestroyed(this))
       .subscribe(response => {
         this.departmentOptions = (response.Data || []).map(item => ({
