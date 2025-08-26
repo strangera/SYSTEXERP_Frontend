@@ -3,7 +3,6 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable, OnDestroy, signal } from '@angular/core';
 import { ASS2100ENGMeterType, ASS21010Payload, ASS21010UpdateStatus } from '@pages/ass/ass21010/ass21010.model';
 import { ErrorHandlerService } from '@service/system/error-handler.service';
-import { IPOS2002LocationItem } from '@service/utility/dropDownList.service';
 import { NotificationService } from '@shared/component/notification-message/notification.service';
 import { BaseQueryResponse, DropdownOption } from '@shared/models/api/base-api.interface';
 import { Subject, catchError, finalize, of, take, takeUntil, tap } from 'rxjs';

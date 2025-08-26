@@ -14,6 +14,7 @@ import { InputTextareaComponent } from '@shared/componentkit/input-textarea/inpu
 // import { TableComponent } from '@shared/componentkit/table/table.component';
 import { Column } from '@shared/componentkit/table/table.model';
 import { CRUDStatus } from '@shared/models/system/CRUDstatus';
+import { NGXLogger } from 'ngx-logger';
 import { PanelModule } from 'primeng/panel';
 import { ASS2100ENGMeterType, ASS21010Payload } from '../ass21010/ass21010.model';
 
@@ -90,8 +91,8 @@ export class ASS21010CRUComponent extends BasicCruPageComponent<ASS2100ENGMeterT
     this.service.loadEngType();
     this.service.loadLocationNo();
 
-    if (this.crudstatus !== CRUDStatus.Create && !!this.rowdata) {
-      this.df().Location_No.setValue(this.rowdata.Location_No ?? '');
+    if (this.crudstatus !== CRUDStatus.Create && this.rowdata) {
+      Reflect.has(this.rowdata, 'Location_No') && this.df().Location_No.setValue(this.rowdata.Location_No);
     }
   }
 

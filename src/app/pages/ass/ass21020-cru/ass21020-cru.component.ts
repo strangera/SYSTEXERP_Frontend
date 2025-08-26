@@ -13,6 +13,7 @@ import { InputTextComponent } from '@shared/componentkit/input-text/input-text.c
 import { TableComponent } from '@shared/componentkit/table/table.component';
 import { Column } from '@shared/componentkit/table/table.model';
 import { CRUDStatus } from '@shared/models/system/CRUDstatus';
+import { NGXLogger } from 'ngx-logger';
 import { FileSelectEvent } from 'primeng/fileupload';
 import { PanelModule } from 'primeng/panel';
 
@@ -56,7 +57,7 @@ export class ASS21020CRUComponent extends BasicCruPageComponent<unknown> impleme
     const meterNo = this.meterNoSignal();
     if (!meterNo) return;
     this.service.loadASS21020({ ENG_MeterNo: meterNo || '' });
-    this.service.queryByMeterNo(meterNo);
+    this.service.queryTltByFlag(meterNo);
     const data = this.service.engMeterNoMap.get(meterNo);
     if (!data) return;
     this.dataForm.patchValue({
@@ -73,15 +74,16 @@ export class ASS21020CRUComponent extends BasicCruPageComponent<unknown> impleme
 
   public readonly columns: Column[] = [
     { field: 'TLT_No', header: '專櫃編號' },
-    { field: 'TTLT_Name', header: '專櫃名稱', disabled: () => !0 },
+    { field: 'TLT_Name', header: '專櫃名稱', disabled: () => !0 },
     { field: 'Location_No', header: '位置編號', disabled: () => !0 },
-    { field: 'NET_SPACE', header: '營業面積', disabled: () => !0, format: v => String(v * 100) + '%' },
-    { field: 'ENG_Rate', header: '比率', format: v => String(v) + ' %' },
+    { field: 'NET_SPACE', header: '營業面積', disabled: () => !0, format: v => String(v) + '%' },
+    { field: 'ENG_Rate', header: '比率' },
     { field: 'ENG_Remark', header: '備註', type: 'input' },
   ];
 
   constructor(
     public readonly service: ASS21020Service,
+    private readonly logger: NGXLogger,
   ) {
     super();
   }
@@ -92,6 +94,23 @@ export class ASS21020CRUComponent extends BasicCruPageComponent<unknown> impleme
     this.service.loadEngType();
     this.service.loadEngMeterNo();
     this.service.loadLocationNo();
+  }
+
+  public onSelectionChange(selected: any[]): void {
+    this.logger.debug(`onSelectionChange:`, [selected]);
+  }
+
+  public onSubmit(): void {
+    this.handleSubmit(this.dataForm, () => {
+      const payload = {};
+
+
+      this.loading = !1;
+    });
+  }
+
+  public onClear(): void {
+    this.dataForm.reset();
   }
 
   /** 處理 excel 匯入 */
@@ -146,18 +165,5 @@ export class ASS21020CRUComponent extends BasicCruPageComponent<unknown> impleme
     // XLSX.utils.book_append_sheet(wb, ws, '專櫃範本');
     // // 生成並下載檔案
     // XLSX.writeFile(wb, `專櫃範本_${new Date().toISOString().split('T')[0]}.xlsx`);
-  }
-
-  public onSubmit(): void {
-    this.handleSubmit(this.dataForm, () => {
-      const payload = {};
-
-
-      this.loading = !1;
-    });
-  }
-
-  public onClear(): void {
-    this.dataForm.reset();
   }
 }

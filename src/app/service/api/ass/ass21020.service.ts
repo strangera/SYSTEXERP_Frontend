@@ -23,20 +23,20 @@ export class ASS21020Service implements OnDestroy {
   public readonly engTypeSignal = signal<DropdownOption[]>([]);
   public readonly engMeterNoSignal = signal<ASS2100ENGMeterType[]>([]);
   public readonly locationSignal = signal<string>('');
-  public readonly tltNoByFlagSignal = signal<TLTByFlag[]>([]);
+  public readonly tltByFlagSignal = signal<TLTByFlag[]>([]);
 
   public readonly engMeterNoMap = new Map<string, ASS2100ENGMeterType>();
 
   public engMeterNoLoading = !1;
   public locationLoading = !1;
   public tableLoading = !1;
-  public queryByMeterNoLoading = !1;
+  public queryTltByFlagLoading = !1;
 
   private readonly engTypeCancel$ = new Subject<void>();
   private readonly engMeterNoCancel$ = new Subject<void>();
   private readonly locationCancel$ = new Subject<void>();
   private readonly tableCancel$ = new Subject<void>();
-  private readonly queryByMeterNoCancel$ = new Subject<void>();
+  private readonly queryTltByFlagCancel$ = new Subject<void>();
 
   constructor(
     private http: HttpClient,
@@ -103,17 +103,17 @@ export class ASS21020Service implements OnDestroy {
     ).subscribe();
   };
 
-  public queryByMeterNo(ENG_MeterNo: string): void {
-    this.queryByMeterNoCancel$.next();
-    this.queryByMeterNoLoading = !0;
+  public queryTltByFlag(ENG_MeterNo: string): void {
+    this.queryTltByFlagCancel$.next();
+    this.queryTltByFlagLoading = !0;
     this.http.post<BaseQueryResponse<TLTByFlag>>(`${apiUrl}/Share/queryTLTTALENTByFlag_DropDownList`, { MID: 0, ENG_MeterNo }).pipe(
       take(1),
-      takeUntil(this.queryByMeterNoCancel$),
-      tap(response => this.tltNoByFlagSignal.set(response.Data)),
+      takeUntil(this.queryTltByFlagCancel$),
+      tap(response => this.tltByFlagSignal.set(response.Data)),
       catchError(error => this.errorHandler.handleError(error)),
       finalize(() => {
-        this.queryByMeterNoLoading = !1;
-        console.log('查詢queryByMeterNo結果:', [this.tltNoByFlagSignal()]);
+        this.queryTltByFlagLoading = !1;
+        console.log('查詢queryTltByFlag結果:', [this.tltByFlagSignal()]);
       })
     ).subscribe();
   }
