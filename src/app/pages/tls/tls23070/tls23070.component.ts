@@ -286,10 +286,11 @@ subsTotals: any[] = [];             // 每日小計（Data[0].subsTotals）
   }
 
   columns = [
+  { field: 'TXN_Date', header: '銷售日期', visible: true,format:this.formatYMD },
   { field: 'ECR_No', header: '收銀機號', visible: true },
   { field: 'tlt_no', header: '專櫃編號', visible: true },
   { field: 'tlt_name', header: '櫃位名稱', visible: true, style: 'text-left' },
-  { field: 'TXN_Date', header: '銷售日期', visible: true,format:this.formatYMD },
+
 
   { field: 'TXN_PayAmt10', header: '現金', visible: true, style: 'text-right', format: this.moneyFormat.bind(this) },
   { field: 'TXN_PayAmt41', header: '聯信連線', visible: true, style: 'text-right', format: this.moneyFormat.bind(this) },

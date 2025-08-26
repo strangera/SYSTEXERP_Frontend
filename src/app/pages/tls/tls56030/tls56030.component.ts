@@ -1,27 +1,23 @@
+import { Tls56030Service } from './../../../service/api/tls/TLS56030.service';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { map } from 'rxjs/operators';
-// Services
 import { UserCodeService } from '../../../service/basic/user-code.service';
-// Shared
 import { Column, createPaginationConfig } from '../../../shared/componentkit/table/table.model';
-
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { AccordionModule } from 'primeng/accordion';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
 import { TranslateModule } from '@ngx-translate/core';
 import { TableComponent } from '@shared/componentkit/table/table.component';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
-import { InputNumberComponent } from '@shared/componentkit/input-number/input-number.component';
 import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { IQueryPOS2004DetailRequest, IQueryPOS2004DetailResponse, Tls52010Service } from '../../../service/api/tls/tls52010.service';
 import { DropDownListService } from '@service/utility/dropDownList.service';
-import { DropdownTableComponent, FieldsConfig } from '../../../shared/componentkit/dropdown-table/dropdown-table.component';
-
+import { FieldsConfig } from '../../../shared/componentkit/dropdown-table/dropdown-table.component';
+import { InputTextComponent } from "@shared/componentkit/input-text/input-text.component";
 @Component({
   selector: 'app-tls56030',
   templateUrl: './tls56030.component.html',
@@ -33,34 +29,28 @@ import { DropdownTableComponent, FieldsConfig } from '../../../shared/componentk
     AccordionModule,
     FormsModule,
     ReactiveFormsModule,
-    InputTextComponent,
     DropdownComponent,
     CalendarRangeComponent,
     TranslateModule,
     TableComponent,
-    InputNumberComponent,
+    InputTextComponent,
     MultiSelectComponent,
-    DropdownTableComponent,
-    ReactiveFormsModule
-
+    ReactiveFormsModule,
+    InputTextComponent
   ],
 })
 export class TLS56030Component extends BasicQueryPageComponent<any> implements OnInit {
   queryForm = this.formBuilder.group({
-    issuanceNoteCode: [],
-    HOS_NoList: [[]], // 倉別
-    queryNo: ['', [Validators.maxLength(20)]], // 查詢編號 input
-    LOGO_NoList: [[]], // 品牌代碼 multi-select
-    org_id: [],
-    issuanceType: [null],
-    issuanceNoteStatus: [null],
-    APPLY_USR: [null],
-    APRV_USR: [null],
-    APPLY_Date_Start: [null], // 申請日期 起
-    APPLY_Date_End: [null],   // 申請日期 迄
-    APRV_Date_Start: [null],  // 審核日期 起
-    APRV_Date_End: [null],    // 審核日期 迄
+    RPM_No: ['', [Validators.maxLength(20)]],   // 單號
+    HOS_NoList: [[]],                          // 倉別
+    org_idList: [[]],                          // 機構/單位
+    LOGO_NoList: [[]],                         // 品牌代碼 multi-select
+    RPM_StatusList: [[]],                      // 狀態
+    APPLY_USRList: [[]],                       // 申請人
+    APPLY_Date_Start: [null],                  // 申請日期 起
+    APPLY_Date_End: [null]                     // 申請日期 迄
   });
+
 
   // Dropdown options
   warehouseOptions: { label: string, value: string }[] = []; // 倉別
@@ -73,23 +63,25 @@ export class TLS56030Component extends BasicQueryPageComponent<any> implements O
   totalRecords = 0;
   data: any[] = [];
   columns: Column[] = [
-    { field: 'issuanceNoteCode', header: '領用單編號', visible: true },
+    { field: 'RPM_No', header: '領用單編號', visible: true },
     { field: 'APPLY_Date', header: '申請日期', visible: true },
-    { field: 'issuanceType', header: '領用類別', visible: true },
-    { field: 'HOS_No', header: '倉別', visible: true },
+    { field: 'RPM_Type_Name', header: '領用類別', visible: true },
+    { field: 'HOS_NAME', header: '倉別', visible: true },
     { field: 'LOGO_No', header: '品牌', visible: true },
-    { field: 'DEPT_No', header: '部門', visible: true },
-    { field: 'Remark', header: '說明', visible: true },
-    { field: 'APPLY_USR', header: '申請人', visible: true },
-    { field: 'APRV_USR', header: '審核人', visible: true },
+    { field: 'Org_Name', header: '部門', visible: true },
+    { field: 'RPM_Remark', header: '說明', visible: true },
+    { field: 'APPLY_USR_Name', header: '申請人', visible: true },
+    { field: 'APRV_USR_Name', header: '審核人', visible: true },
     { field: 'APRV_Date', header: '審核日期', visible: true },
-    { field: 'status', header: '單據狀態', visible: true },
+    { field: 'RPM_Status_Name', header: '單據狀態', visible: true },
   ];
+
 
   constructor(
     private userCodeService: UserCodeService,
     private tls52010Service: Tls52010Service,
-    private dropDownListService: DropDownListService
+    private dropDownListService: DropDownListService,
+    private tls56030Service: Tls56030Service
 
   ) {
     super();
@@ -132,31 +124,65 @@ export class TLS56030Component extends BasicQueryPageComponent<any> implements O
     ];
   }
 
-  canQuery(): boolean {
-    return true;
-  }
 
-  canAdd(): boolean {
-    return true;
-  }
-
-  canEdit(): boolean {
-    return true;
-  }
 
   onSubmit(frm: FormGroup) {
-    console.log(frm.value);
     this.submitted = true;
     this.loading = true;
+
+    this.tls56030Service.queryTLS56030(frm.value).pipe(untilDestroyed(this))
+      .subscribe({
+        next: (res) => {
+          this.data = res?.Data ?? [];
+          this.totalRecords = res?.TotalCount ?? this.data.length;
+          this.loading = false;
+        },
+        error: (err) => {
+          console.error('查詢失敗', err);
+          this.loading = false;
+        }
+      });
+  }
+  insertRecord(payload: any) {
+    this.tls56030Service.insertTLS56030(payload).pipe(untilDestroyed(this))
+      .subscribe({
+        next: (res) => {
+          console.log('新增成功', res);
+          this.onSubmit(this.queryForm); // 重新查詢
+        },
+        error: (err) => console.error('新增失敗', err)
+      });
+  }
+  updateRecord(payload: any) {
+    this.tls56030Service.updateTLS56030(payload).pipe(untilDestroyed(this))
+      .subscribe({
+        next: (res) => {
+          console.log('更新成功', res);
+          this.onSubmit(this.queryForm);
+        },
+        error: (err) => console.error('更新失敗', err)
+      });
+  }
+  updateStatus(payload: any) {
+    this.tls56030Service.updateStatusTLS56030(payload).pipe(untilDestroyed(this))
+      .subscribe({
+        next: (res) => {
+          console.log('狀態更新成功', res);
+          this.onSubmit(this.queryForm);
+        },
+        error: (err) => console.error('狀態更新失敗', err)
+      });
+  }
+  queryPOS2004Detail(body: any) {
+    this.tls56030Service.queryPOS2004Detail_TLS56030(body).pipe(untilDestroyed(this))
+      .subscribe({
+        next: (res) => {
+          console.log('商品明細', res.Data);
+        },
+        error: (err) => console.error('明細查詢失敗', err)
+      });
   }
 
-  onSubmitQuery(frm: FormGroup) {
-    this.onSubmit(frm);
-  }
-
-  onClearForm() {
-    this.queryForm.reset();
-  }
   // 管理編號
   opLoading = false;
   opForm = this.formBuilder.group({

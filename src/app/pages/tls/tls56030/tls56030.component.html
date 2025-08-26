@@ -10,14 +10,14 @@
       <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-number label="領用單退回編號" controlName="issuanceNoteCode"
-              [control]="queryForm.controls.issuanceNoteCode" [submitted]="submitted"></app-input-number>
+            <app-input-text label="領用單退回編號" controlName="RPM_No"
+              [control]="queryForm.controls.RPM_No" [submitted]="submitted"></app-input-text>
           </div>
           <app-multi-select class="col-12 md:col-6 lg:col-4" label="倉別" controlName="HOS_No"
             [options]="warehouseOptions" optionLabel="label" optionValue="value"
             [control]="queryForm.controls.HOS_NoList" [submitted]="submitted"></app-multi-select>
           <!-- 管理編號 -->
-          <app-dropdown-table class="col-12 md:col-6 lg:col-4" [control]="queryForm.controls.queryNo"
+          <!-- <app-dropdown-table class="col-12 md:col-6 lg:col-4" [control]="queryForm.controls.queryNo"
             [submitted]="submitted" optionLabel="PLU_MagNo" optionValue="PLU_MagNo" [suggestions]="suggestions"
             [fieldsConfig]="fieldsConfig" (inputValueChanged)="onAutoCompleteInputChange($event)"
             (formValueChanged)="onFormValueChanged($event)" [formGroup]="opForm" [dialogData]="opData"
@@ -26,7 +26,7 @@
               [control]="opForm.controls.queryNo" />
             <app-input-text class="col-12 md:col-6" label="商品名稱" controlName="PLU_Name"
               [control]="opForm.controls.PLU_Name" />
-          </app-dropdown-table>
+          </app-dropdown-table> -->
 
           <!-- 品牌代碼 (對應 LOGO_No) -->
           <app-multi-select class="col-12 md:col-6 lg:col-4" label="品牌代碼" controlName="LOGO_No" [options]="brandOptions"
@@ -35,12 +35,12 @@
           <!-- 廠商編號 -->
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown label="部門編號" controlName="org_id" [options]="departmentOptions" optionLabel="label"
-              optionValue="value" [control]="queryForm.controls.org_id" [submitted]="submitted"></app-dropdown>
+              optionValue="value" [control]="queryForm.controls.org_idList" [submitted]="submitted"></app-dropdown>
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown label="領用單退回狀態" controlName="issuanceNoteStatus" [options]="issuanceNoteStatusOptions"
-              optionLabel="label" optionValue="value" [control]="queryForm.controls.issuanceNoteStatus"
+              optionLabel="label" optionValue="value" [control]="queryForm.controls.RPM_StatusList"
               [submitted]="submitted"></app-dropdown>
           </div>
           <hr />
@@ -48,7 +48,7 @@
         <div class="grid p-fluid">
           <!-- 申請人員 -->
           <app-dropdown class="col-12 md:col-6 lg:col-4" label="申請人編號" controlName="APPLY_USR" [options]="userOptions"
-            optionLabel="label" optionValue="value" [control]="queryForm.controls.APPLY_USR" [submitted]="submitted" />
+            optionLabel="label" optionValue="value" [control]="queryForm.controls.APPLY_USRList" [submitted]="submitted" />
           <!-- 申請日期 -->
           <app-calendar-range class="col-12 md:col-6 lg:col-4" calendarType="dateRange" label="申請日期"
             [startControl]="queryForm.controls.APPLY_Date_Start" [endControl]="queryForm.controls.APPLY_Date_End"

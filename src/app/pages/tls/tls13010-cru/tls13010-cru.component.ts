@@ -821,7 +821,7 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
       paytype: '1',                    // 付款方式：匯款
       money_type: '30',                // 結帳方式：月結
       store_way: '1',                  // 🎯 配合方式：專櫃
-      check_typeList: ['2', '3'],      // 🎯 對帳方式：郵寄 + 網路（複選）
+      check_typeList: ['1', '2', '3'],      // 🎯 對帳方式：郵寄 + 網路（複選）
       water_flag: 'N',
       electric_flag: 'N',
       gas_flag: 'N',
@@ -907,7 +907,10 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
       credit_card: queryData['credit_card'] as string,
       total_amt: queryData['total_amt'] as string,
       total_amt_vendor: queryData['total_amt_vendor'] as string,
-      construct_fees: queryData['construct_fees'] as number,
+      check_day: Number(queryData['check_day']) || 0,
+      construct_fees: Number(queryData['construct_fees']) || 0,
+      expiration_fees: Number(queryData['expiration_fees']) || 0,
+      open_fees: Number(queryData['open_fees']) || 0,
       ticket_remarks: queryData['ticket_remarks'] as string,
       cap_saletype1: queryData['cap_saletype1'] as string,
       cap_saletype2: queryData['cap_saletype2'] as string,

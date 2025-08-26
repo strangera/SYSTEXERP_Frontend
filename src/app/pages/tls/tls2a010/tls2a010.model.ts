@@ -42,21 +42,21 @@ export const creditCardColumns: Column[] = [
   { header: '專櫃編號', field: 'TLT_NO' },
   { header: '專櫃名稱', field: 'tlt_name' },
 
-  { header: '信用卡', field: 'SYS_Credit', groupField: 'SYS' }, // if CRD_Type!=A、D 顯示BOOK_PayAmt的值否則0
-  { header: 'AE', field: 'SYS_AE', groupField: 'SYS' },     // if CRD_Type=A 顯示BOOK_PayAmt的值否則0
-  { header: 'DINER', field: 'SYS_DINER', groupField: 'SYS' },  // if CRD_Type=D 顯示BOOK_PayAmt的值否則0
-  { header: '總金額', field: 'SYS_Total' },         // 上面三個加總
+  { header: '信用卡', field: 'BOOK_PayAmt1', groupField: 'BOOK' },
+  { header: 'AE', field: 'BOOK_PayAmt2', groupField: 'BOOK' },
+  { header: 'DINER', field: 'BOOK_PayAmt3', groupField: 'BOOK' },
+  { header: '總金額', field: 'BOOK_PayAmt' },
 
-  { header: '信用卡', field: 'ACT_Credit', groupField: 'ACT' }, // if CRD_Type!=A、D 顯示ACT_PayAmt的值否則0
-  { header: 'AE', field: 'ACT_AE', groupField: 'ACT' },     // if CRD_Type=A 顯示ACT_PayAmt的值否則0
-  { header: 'DINER', field: 'ACT_DINER', groupField: 'ACT' },  // if CRD_Type=D 顯示ACT_PayAmt的值否則0
-  { header: '總金額', field: 'ACT_Total' },        // 上面三個加總
+  { header: '信用卡', field: 'ACT_PayAmt1', groupField: 'ACT' },
+  { header: 'AE', field: 'ACT_PayAmt2', groupField: 'ACT' },
+  { header: 'DINER', field: 'ACT_PayAmt3', groupField: 'ACT' },
+  { header: '總金額', field: 'ACT_PayAmt' },
 
 
-  { header: '信用卡', field: 'ACT_SYS_Credit', groupField: 'ACT_SYS' },
-  { header: 'AE', field: 'ACT_SYS_AE', groupField: 'ACT_SYS' },
-  { header: 'DINER', field: 'ACT_SYS_DINER', groupField: 'ACT_SYS' },
-  { header: '總金額', field: 'ACT_SYS_Total' },
+  { header: '信用卡', field: 'OVER_PayAmt1', groupField: 'OVER' },
+  { header: 'AE', field: 'OVER_PayAmt2', groupField: 'OVER' },
+  { header: 'DINER', field: 'OVER_PayAmt3', groupField: 'OVER' },
+  { header: '總金額', field: 'OVER_PayAmt' },
   {
     header: '審核狀態',
     field: 'OVER_PayAmt',
@@ -77,8 +77,8 @@ export const creditCardColumns: Column[] = [
 ];
 
 export const creditCardGroup: ColumnGroup[] = [
-  { field: 'SYS', header: '系統帳' },
+  { field: 'BOOK', header: '系統帳' },
   { field: 'ACT', header: '實收帳' },
-  { field: 'ACT_SYS', header: '實收帳 - 系統帳' },
+  { field: 'OVER', header: '實收帳 - 系統帳' },
 ];
 

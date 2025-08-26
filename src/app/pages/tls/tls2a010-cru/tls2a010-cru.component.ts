@@ -185,6 +185,7 @@ export class TLS2A010CRUComponent extends BasicCruPageComponent<TLS2A010Data> im
           PAY_NO: item.PAY_NO ?? '',
           TXN_Item: item.TXN_Item ?? 0,
           CRD_No: item.CRD_No ?? '',
+          CPN_No: item.CPN_No ?? '',
           TXN_PayDesc: item.TXN_PayDesc ?? '',
           TXN_PayAmt: item.TXN_PayAmt ?? 0,
           check_status: item.check_status ?? '1',

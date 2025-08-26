@@ -1,4 +1,4 @@
-import { Component, OnInit, computed, effect, signal } from '@angular/core';
+import { Component, OnInit, computed, effect } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
@@ -13,7 +13,6 @@ import { TableComponent } from '@shared/componentkit/table/table.component';
 import { Column, createPaginationConfig } from '@shared/componentkit/table/table.model';
 import { AccordionModule } from 'primeng/accordion';
 import { PanelModule } from 'primeng/panel';
-import { ASS21020Payload } from './ass21020.model';
 
 @Component({
   selector: 'app-ass21020',
@@ -50,28 +49,15 @@ export class ASS21020Component extends BasicQueryPageComponent<unknown> implemen
   public readonly qf = computed(() => this.queryForm.controls);
   public readonly totalRecord = computed(() => this.service.ASS21020Data().length);
 
-  private readonly engTypeSignal = toSignal(this.qf().ENG_Type.valueChanges);
   private readonly meterNoSignal = toSignal(this.qf().ENG_MeterNo.valueChanges);
-  private readonly locationSignal = toSignal(this.qf().Location_No.valueChanges);
-  private readonly tltNoSignal = toSignal(this.qf().tlt_no.valueChanges);
 
   public readonly meterNoEffect = effect(() => {
     const meterNo = this.meterNoSignal();
     if (!meterNo) return;
-
-    this.service.queryByMeterNo(meterNo);
+    this.service.queryTltByFlag(meterNo);
     const selected = this.service.engMeterNoMap.get(meterNo);
-    this.service.queryTLT({
-      SYS3800s: [{ building_no: selected?.building_No ?? '', building_desc: selected?.building_DESC ?? '' }],
-      SYS3900s: [{ floor_no: selected?.Floor_No ?? '', floor_desc: selected?.Floor_Desc ?? '' }]
-    });
     this.qf().Location_No.patchValue(selected?.Location_No ?? '');
-  }, { allowSignalWrites: !0 });
-
-  public readonly tltNoEffect = effect(() => {
-    const tltNo = this.tltNoSignal();
-    if (!tltNo) return;
-    this.service.queryByTltNo(tltNo);
+    console.log(`meterNo changes:`, [meterNo, selected]);
   }, { allowSignalWrites: !0 });
 
   public readonly columns: Column[] = [
@@ -117,156 +103,6 @@ export class ASS21020Component extends BasicQueryPageComponent<unknown> implemen
 
 
   public onClear(): void {
-
+    this.queryForm.reset();
   }
-
-
-
-
-
-  // // Table data
-  // Energytype: any[] = [{ value: 1, label: '水費' },
-  // { value: 2, label: '電費' },
-  // { value: 3, label: '瓦斯費' },];
-  // data: any[] = [];
-  // equipmentLocationOptions: any[] = [
-  //   { value: 1, label: '010A000001' },
-  //   { value: 2, label: '010A000002' },
-  //   { value: 3, label: '010A000003' },
-  //   { value: 4, label: '010A000004' },
-  //   { value: 5, label: '010B000001' },
-  //   { value: 6, label: '010B000002' },
-  //   { value: 7, label: '010B000003' },
-  // ];
-  // ironNumberOptions: any[] = [
-  //   { value: 1, label: 'EB101' },
-  //   { value: 2, label: 'EB103' },
-  //   { value: 3, label: 'EB105' },
-  //   { value: 4, label: 'EB107' },
-  //   { value: 5, label: 'EB109' },
-  //   { value: 6, label: 'EB110' },
-  //   { value: 7, label: 'EB111' },
-  // ];
-  // location: any[] = [];
-  // filteredData: any[] = [...this.data];
-  // columns: any[] = [
-  //   { field: 'energyType', header: '能源類型', visible: true },
-  //   { field: 'slotNumber', header: '錶號', visible: true },
-  //   { field: 'deviceLocationCode', header: '設備位置編號', visible: true },
-  //   { field: 'ENG_Remark', header: '備註', visible: true },
-  // ];
-
-
-
-
-
-  // // Dropdown options
-  // floor: any[] = [];
-  // Kurabe: any[] = [
-  //   { value: 1, label: '001' },
-  //   { value: 2, label: '002' },
-  // ];
-  // Departmentcode: any[] = [];
-  // usercode: any[] = [];
-  // bigCategoryOptions: any[] = [
-  //   { value: 1, label: '裝潢工程' },
-  //   { value: 2, label: '其他工程' },
-  //   { value: 3, label: '電腦及電子零件產品' },
-  //   { value: 4, label: '電力及照明系統' },
-  //   { value: 5, label: '家電家俱設備' },
-  //   { value: 6, label: '機消空電水零配件' },
-  //   { value: 7, label: '辦公及營運庶務' },
-  //   { value: 8, label: '印刷品(非廣告行銷)' },
-  //   { value: 9, label: '印刷品(廣告行銷)' },
-  //   { value: 10, label: '衛生及醫療庶務用品' },
-  // ];
-  // midCategoryOptions: any[] = [
-  //   { value: 1, label: '室內裝潢工程' },
-  //   { value: 2, label: '室內裝潢備品' },
-  //   { value: 3, label: '弱電系統' },
-  //   { value: 4, label: '房屋及建築設備' },
-  //   { value: 5, label: '停車場設備' },
-  //   { value: 6, label: '其他工程' },
-  //   { value: 7, label: '機電消防工程' },
-  //   { value: 8, label: '電子產品及零件' },
-  //   { value: 9, label: '電子儀器設備' },
-  //   { value: 10, label: '電子儀器設備-資產' },
-  // ];
-  // smallCategoryOptions: any[] = [
-  //   { value: 1, label: '機電空調工程' },
-  //   { value: 2, label: '水電消防工程' },
-  //   { value: 3, label: '排油煙工程' },
-  //   { value: 4, label: '商場高壓電節能工程' },
-  //   { value: 5, label: '商場弱電系統工程' },
-  //   { value: 6, label: '網路佈線工程' },
-  //   { value: 7, label: '鐵路自動測試儀' },
-  //   { value: 8, label: '風車零件' },
-  //   { value: 9, label: '資收場回收用品' },
-  //   { value: 10, label: '瓦斯鍋及滅斷設備工程' },
-  // ];
-  // Querybystatus: any[] = [
-  //   { value: 1, label: '全部' },
-  //   { value: 2, label: '只顯示低於安全庫存' },
-
-
-  // ];
-  // assetCodeOptions: any[] = [
-  //   { value: 1, label: '1A232300000010000001' },
-  //   { value: 2, label: '1A232300000020000001' },
-  //   { value: 3, label: '1A232300000040000001' },
-  //   { value: 4, label: '1A232300000050000001' },
-  //   { value: 5, label: '1A232300000060000001' },
-  //   { value: 6, label: '1A232300000090000001' },
-  //   { value: 7, label: '1A232400000010000001' },
-  //   { value: 8, label: '1A232400000040000001' },
-  //   { value: 9, label: '1A232400000060000001' },
-  // ];
-  // propertytype
-  //   : any[] = [
-  //     { value: 1, label: '資產' },
-  //     { value: 2, label: '列管品' },
-  //   ];
-  // Itemnumber
-  //   : any[] = [
-
-  //     { value: 1, label: '3A24210000001' },
-  //     { value: 2, label: '3A24210000002' },
-  //     { value: 3, label: '3A24210000003' },
-  //     { value: 4, label: '3A24210000004' },
-  //     { value: 5, label: '3A24210000005' },
-  //     { value: 6, label: '3A24210000006' },
-  //     { value: 7, label: '3A24210000007' },
-  //     { value: 8, label: '3A24210000008' },
-  //     { value: 9, label: '3A24210000009' },
-  //     { value: 10, label: '3A24210000010' },
-  //   ];
-
-  // onEdit(data: any) {
-  //   if (this.canEdit()) {
-  //     let extras: NavigationExtras = {
-  //       state: {
-  //         crudstatus: CRUDStatus.Edit,
-  //         rowdata: data,
-  //         queryform: this.queryForm,
-  //       },
-  //       skipLocationChange: true,
-  //     };
-  //     this.router.navigate(['/demoCRU'], extras);
-  //   }
-  // }
-
-  // onDetail(data: any) {
-  //   let extras: NavigationExtras = {
-  //     state: {
-  //       crudstatus: CRUDStatus.Read,
-  //       rowdata: data,
-  //       queryform: this.queryForm,
-  //     },
-  //     skipLocationChange: true,
-  //   };
-  //   this.router.navigate(['/demoCRU'], extras);
-  // }
-  // onClearForm() {
-  //   this.queryForm.reset(); // 重置表單
-  // }
 }
