@@ -69,9 +69,13 @@
 
 <div class="card">
   <div class="col-12">
-    <app-table [data]="tableData()"
+    <app-table [showCheckBox]="true"
+               [data]="tableData()"
+               [dataKey]="'Id'"
+               [tableKey]="'ASS21010_Data'"
                [columns]="columns"
                (edit)="onEdit($event)"
+               (delete)="onDelete($event)"
                (detail)="onDetail($event)"></app-table>
   </div>
 </div>

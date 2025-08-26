@@ -11,6 +11,15 @@ export interface ASS21010Payload {
   ENG_Remark: string;
 }
 
+export interface ASS21010Delete {
+  ID: number;
+  ENG_MeterNo: string;
+  Location_No: string;
+  ENG_Type: string;
+  SYS_StoreNo: string;
+  Mid: number;
+}
+
 export interface ASS21010UpdateStatus extends Omit<BaseQueryResponse<unknown>, 'Data'> {
   Data: {
     IsUpdateSuccess: boolean;

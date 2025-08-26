@@ -1,4 +1,3 @@
-
 import { Component, computed, effect, OnInit, signal, Signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
@@ -11,8 +10,9 @@ import { InputTextComponent } from '@shared/componentkit/input-text/input-text.c
 import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
 import { TableComponent } from '@shared/componentkit/table/table.component';
 import { Column } from '@shared/componentkit/table/table.model';
+import { NGXLogger } from 'ngx-logger';
 import { AccordionModule } from 'primeng/accordion';
-import { ASS2100ENGMeterType } from './ass21010.model';
+import { ASS2100ENGMeterType, ASS21010Delete } from './ass21010.model';
 
 @Component({
   selector: 'app-ass21010',
@@ -85,16 +85,20 @@ export class ASS21010Component extends BasicQueryPageComponent<unknown> implemen
 
   constructor(
     public readonly service: ASS21010Service,
+    private readonly logger: NGXLogger,
   ) {
     super();
   }
 
   ngOnInit(): void {
     this.initializePage('ASS21010', '/ASS/ASS21010CRU', this.queryForm, this.onSubmit.bind(this));
+    this.user = this.authService.currentUserValue;
 
     this.service.loadEngType();
     this.service.loadEngMeterNo();
     this.service.loadLocationNo();
+
+    this.logger.debug(`init:`, [this.user, this.queryForm]);
   }
 
   public canQuery(): boolean {
@@ -133,106 +137,20 @@ export class ASS21010Component extends BasicQueryPageComponent<unknown> implemen
     super.onCreate(data);
   };
 
-  onClear() {
-    this.queryForm.reset();
+  public onDelete(event: ASS2100ENGMeterType): void {
+    this.logger.debug(`Deleting ASS21010:`, [event, this.user]);
+
+    this.service.deleteASS21010(<ASS21010Delete>{
+      ID: event.Id,
+      ENG_MeterNo: event.ENG_MeterNo,
+      Location_No: event.Location_No,
+      ENG_Type: event.ENG_Type,
+      SYS_StoreNo: this.user!.SYS_StoreNo,
+      Mid: Number(this.user!.mid),
+    });
   }
 
-
-  // // Table data
-  // data: any[] = [];
-  // location: any[] = [];
-  // filteredData: any[] = [...this.data];
-  // columns: any[] = [
-  //   { field: 'slotLocationCode', header: '錶號位置編號', visible: true },
-  //   { field: 'floor', header: '樓層', visible: true },
-  //   { field: 'zone', header: '區域', visible: true },
-  //   { field: 'xCoordinate', header: '平面圖X座標', visible: true },
-  //   { field: 'yCoordinate', header: '平面圖Y座標', visible: true },
-  //   { field: 'remarks', header: '說明', visible: true },
-  // ];
-
-
-
-
-
-  // // Dropdown options
-  // floor: any[] = [];
-  // Kurabe: any[] = [
-  //   { value: 1, label: '001' },
-  //   { value: 2, label: '002' },
-  // ];
-  // Departmentcode: any[] = [];
-  // usercode: any[] = [];
-  // bigCategoryOptions: any[] = [
-  //   { value: 1, label: '裝潢工程' },
-  //   { value: 2, label: '其他工程' },
-  //   { value: 3, label: '電腦及電子零件產品' },
-  //   { value: 4, label: '電力及照明系統' },
-  //   { value: 5, label: '家電家俱設備' },
-  //   { value: 6, label: '機消空電水零配件' },
-  //   { value: 7, label: '辦公及營運庶務' },
-  //   { value: 8, label: '印刷品(非廣告行銷)' },
-  //   { value: 9, label: '印刷品(廣告行銷)' },
-  //   { value: 10, label: '衛生及醫療庶務用品' },
-  // ];
-  // midCategoryOptions: any[] = [
-  //   { value: 1, label: '室內裝潢工程' },
-  //   { value: 2, label: '室內裝潢備品' },
-  //   { value: 3, label: '弱電系統' },
-  //   { value: 4, label: '房屋及建築設備' },
-  //   { value: 5, label: '停車場設備' },
-  //   { value: 6, label: '其他工程' },
-  //   { value: 7, label: '機電消防工程' },
-  //   { value: 8, label: '電子產品及零件' },
-  //   { value: 9, label: '電子儀器設備' },
-  //   { value: 10, label: '電子儀器設備-資產' },
-  // ];
-  // smallCategoryOptions: any[] = [
-  //   { value: 1, label: '機電空調工程' },
-  //   { value: 2, label: '水電消防工程' },
-  //   { value: 3, label: '排油煙工程' },
-  //   { value: 4, label: '商場高壓電節能工程' },
-  //   { value: 5, label: '商場弱電系統工程' },
-  //   { value: 6, label: '網路佈線工程' },
-  //   { value: 7, label: '鐵路自動測試儀' },
-  //   { value: 8, label: '風車零件' },
-  //   { value: 9, label: '資收場回收用品' },
-  //   { value: 10, label: '瓦斯鍋及滅斷設備工程' },
-  // ];
-  // Querybystatus: any[] = [
-  //   { value: 1, label: '全部' },
-  //   { value: 2, label: '只顯示低於安全庫存' },
-
-
-  // ];
-  // assetCodeOptions: any[] = [
-  //   { value: 1, label: '1A232300000010000001' },
-  //   { value: 2, label: '1A232300000020000001' },
-  //   { value: 3, label: '1A232300000040000001' },
-  //   { value: 4, label: '1A232300000050000001' },
-  //   { value: 5, label: '1A232300000060000001' },
-  //   { value: 6, label: '1A232300000090000001' },
-  //   { value: 7, label: '1A232400000010000001' },
-  //   { value: 8, label: '1A232400000040000001' },
-  //   { value: 9, label: '1A232400000060000001' },
-  // ];
-  // propertytype
-  //   : any[] = [
-  //     { value: 1, label: '資產' },
-  //     { value: 2, label: '列管品' },
-  //   ];
-  // Itemnumber
-  //   : any[] = [
-
-  //     { value: 1, label: '3A24210000001' },
-  //     { value: 2, label: '3A24210000002' },
-  //     { value: 3, label: '3A24210000003' },
-  //     { value: 4, label: '3A24210000004' },
-  //     { value: 5, label: '3A24210000005' },
-  //     { value: 6, label: '3A24210000006' },
-  //     { value: 7, label: '3A24210000007' },
-  //     { value: 8, label: '3A24210000008' },
-  //     { value: 9, label: '3A24210000009' },
-  //     { value: 10, label: '3A24210000010' },
-  //   ];
+  public onClear(): void {
+    this.queryForm.reset();
+  }
 }
