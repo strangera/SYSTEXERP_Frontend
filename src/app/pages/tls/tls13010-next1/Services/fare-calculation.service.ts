@@ -218,7 +218,7 @@ export class FareCalculationService {
         return true;
       }
     }
-    return false;
+    return true;
   }
 
   /**

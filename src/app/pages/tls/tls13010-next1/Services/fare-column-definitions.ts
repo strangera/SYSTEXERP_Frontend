@@ -450,7 +450,7 @@ export class FareColumnDefinitions {
                 const endYear = endDate.getFullYear();
                 const endMonth = endDate.getMonth();
 
-                const calculatedPeriods = (endYear - startYear) * 12 + (endMonth - startMonth) + 1;
+                const calculatedPeriods = (endYear - startYear) * 12 + (endMonth - startMonth);
                 const finalPeriods = Math.max(1, calculatedPeriods);
 
                 console.log('🎯 期數預設值計算:', {

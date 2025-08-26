@@ -249,6 +249,11 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
     field: string;  // 欄位名稱，您可以用這個判斷是哪個按鈕
   }>();
 
+  @Output() beforeSave = new EventEmitter<{
+    data: any,
+    preventDefault: () => void
+  }>();
+
   expandedRows: { [key: string]: boolean } = {};
   selectedItems: any[] = [];
   clonedItems: { [s: string]: any } = {};
@@ -877,6 +882,20 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
       if (!validationResult.isValid) {
         const errorMessage = this.validationService.formatValidationErrors(validationResult.errors);
         this.messageService.warnBubble(errorMessage);
+        return;
+      }
+
+      // 新增：讓父元件決定是否可以儲存
+      let canSave = true;
+      const preventSave = () => { canSave = false; };
+
+      this.beforeSave.emit({
+        data: rowData,
+        preventDefault: preventSave
+      });
+
+      // 如果父元件阻止儲存，就停在這裡（保持編輯狀態）
+      if (!canSave) {
         return;
       }
 

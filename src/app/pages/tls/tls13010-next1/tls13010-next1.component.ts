@@ -805,7 +805,7 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
     const endMonth = endDate.getMonth(); // 0-based
 
     // 🎯 正確的月份差計算公式
-    const months = (endYear - startYear) * 12 + (endMonth - startMonth) + 1;
+    const months = (endYear - startYear) * 12 + (endMonth - startMonth);
 
     console.log('🧮 期數計算詳情:', {
       開始年: startYear,
@@ -871,14 +871,20 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
         this.fareCalculationService.autoCalculateAmount(newData, 'B');
         break;
       case 'C':
-        // C類型儲存時進行完整驗證
+        // 先檢查必填欄位
+        if (!newData.tpy_totalamt || !newData.period_nos) {
+          this.messageService.warnBubble('請完整填寫總金額和期數');
+          // 阻止退出編輯，保持在編輯狀態
+          throw new Error('validation_failed');
+        }
+
         this.fareCalculationService.autoCalculateAmount(newData, 'C');
         const isValid = this.fareCalculationService.isCalculationValid(newData, 'C');
         if (!isValid) {
           this.messageService.warnBubble('C類型資料計算有誤，請檢查輸入');
-          return;
+          // 阻止退出編輯
+          throw new Error('validation_failed');
         }
-        console.log(`✅ C類型儲存驗證通過: 總額=${newData.tpy_totalamt}, 期數=${newData.period_nos}`);
         break;
       case 'D':
       case 'E':
@@ -899,6 +905,16 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
     }
 
     this.saveFareDataToWorkflow();
+  }
+
+  onBeforeSave(event: { data: any, preventDefault: () => void }, capType: string): void {
+    if (capType === 'C') {
+      const isValid = this.fareCalculationService.isCalculationValid(event.data, 'C');
+      if (!isValid) {
+        this.messageService.warnBubble('C類型資料計算有誤，請檢查輸入');
+        event.preventDefault(); // 阻止儲存，保持編輯狀態
+      }
+    }
   }
 
   onFareTableEdit(rowData: any, capType: string): void {

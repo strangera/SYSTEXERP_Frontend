@@ -71,8 +71,8 @@
                 [showPaginator]="false" [showAddButton]="false" [showBatchDelete]="false" [loading]="loading"
                 [dataKey]="'id'" [readonly]="isViewMode" [detailKey]="''"
                 [emptyMessage]="'尚未設定' + getCapTypeName(capType) + '項目'" (save)="onFareTableSave($event, capType)"
-                (edit)="onFareTableEdit($event, capType)"
-                (cancel)="onFareTableCancel($event, capType)"></app-expandable-edit-table>
+                (edit)="onFareTableEdit($event, capType)" (cancel)="onFareTableCancel($event, capType)"
+                (beforeSave)="onBeforeSave($event, capType)"></app-expandable-edit-table>
             </div>
 
             <!-- 底部操作按鈕 -->
