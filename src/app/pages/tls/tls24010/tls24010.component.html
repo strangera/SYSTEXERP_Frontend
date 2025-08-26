@@ -20,7 +20,8 @@
             [submitted]="submitted" [maxDate]="today" (calendarEvent)="onDateSelect($event)"></app-calendar>
           <!-- 收銀機號 → POS5006.ECR_No -->
           <app-dropdown class="col-12 md:col-6" label="收銀機號" [control]="queryForm.controls.ECR_No"
-            [submitted]="submitted" [options]="ECR_NoOptions" optionLabel="label" optionValue="No" />
+            [submitted]="submitted" [options]="ECR_NoOptions" optionLabel="label" optionValue="No"
+            (changeEvent)="onECRNoChange($event)" />
           <!-- 專櫃編號 → POS5006.TLT_No -->
           <app-dropdown class="col-12 md:col-6" label="專櫃編號" [control]="queryForm.controls.TLT_No"
             [submitted]="submitted" [options]="TLT_NoOptions" optionLabel="label" optionValue="No" />
