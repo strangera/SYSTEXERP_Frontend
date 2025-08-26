@@ -139,6 +139,7 @@ export abstract class BasicQueryPageComponent<T> {
       this.navigateWithState(CRUDStatus.Create, data);
     }
   }
+
   // 送出查詢
   handleSubmit(queryForm: FormGroup, callback: () => void) {
     this.submitted = true;

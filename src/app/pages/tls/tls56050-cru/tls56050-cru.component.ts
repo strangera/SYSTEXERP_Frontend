@@ -143,7 +143,7 @@ export class TLS56050CRUComponent extends BasicCruPageComponent<ITLS56050Respons
     });
   }
   dataChanged = false;
-  onRowEditSave(event: any): void {
+  onRowEditSave(event: RowEditSaveEvent): void {
     this.dataChanged = true;
     // 取得被編輯的那一列資料的參考，以便直接修改它
     // 使用 MVD_SeqNo 作為唯一識別碼來找到對應的物件

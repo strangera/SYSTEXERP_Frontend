@@ -37,7 +37,7 @@ import { yesterday } from '@shared/models/system/query-form.model';
 })
 export class TLS57050Component extends BasicQueryPageComponent<any> implements OnInit {
   queryForm = this.formBuilder.group({
-    displayMode: [null],
+    DisplayMode: [null],
     HOS_No: [null],
     TXN_SaleNoteNo: ['', Validators.maxLength(8)],
     TXN_DateStart: [yesterday],
