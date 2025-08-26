@@ -10,178 +10,181 @@
       class="line-height-3 m-0"
       [headerStyleClass]="'query-accordionTab'"
     >
-   <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
-  <div class="grid p-fluid">
-    <!-- 銷售日期 -->
-    <div class="col-12 md:col-6 lg:col-4">
-      <app-calendar
-        label="銷售日期"
-        [control]="queryForm.controls.TXN_Date"
-        [submitted]="submitted"
-      ></app-calendar>
-    </div>
+      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
+        <div class="grid p-fluid">
+          <!-- 銷售日期（單日） -->
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-calendar
+              label="銷售日期"
+              [control]="queryForm.controls.TXN_Date"
+              [submitted]="submitted"
+            ></app-calendar>
+          </div>
 
+          <!-- 顯示大分類 -->
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-radiobutton
+              class="col-12"
+              label="顯示大分類"
+              groupname="show_bus_type"
+              [control]="queryForm.controls.ShowBusType"
+              [options]="WhetherOptions"
+              [submitted]="submitted"
+            ></app-radiobutton>
+          </div>
 
+          <div class="col-12 md:col-6 lg:col-4"></div>
 
-    <!-- 顯示大分類 -->
-    <div class="col-12 md:col-6 lg:col-4">
-      <app-radiobutton
-        class="col-12"
-        label="顯示大分類"
-        groupname="show_bus_type"
-        [control]="queryForm.controls.ShowBusType"
-        [options]="WhetherOptions"
-        [submitted]="submitted"
-      ></app-radiobutton>
-    </div>
-<div class="col-12 md:col-6 lg:col-4"></div>
-    <!-- D. 專櫃編號（Radio：counter） -->
-<div class="col-12 md:col-6 lg:col-4">
-  <div class="flex align-items-center gap-2 mb-2">
-    <p-radioButton
-      name="filterMode"
-      formControlName="filterMode"
-      value="counter"
-      inputId="fm-counter"
-    ></p-radioButton>
-    <label for="fm-counter" class="font-medium">使用「專櫃編號」條件</label>
-  </div>
+          <!-- D. 專櫃編號（Radio：counter） -->
+          <div class="col-12 md:col-6 lg:col-4">
+            <div class="flex align-items-center gap-2 mb-2">
+              <p-radioButton
+                name="filterMode"
+                formControlName="filterMode"
+                value="counter"
+                inputId="fm-counter"
+              ></p-radioButton>
+              <label for="fm-counter" class="font-medium">使用「專櫃編號」條件</label>
+            </div>
 
-  <ng-container *ngIf="queryForm.get('filterMode')?.value === 'counter'">
-    <app-multi-select
-      label="專櫃編號"
-      [options]="CounterOptions"
-      optionLabel="formLabel"
-      optionValue="value"
-      [control]="queryForm.controls.TLT_No"
-      [submitted]="submitted"
-    ></app-multi-select>
-  </ng-container>
-</div>
+            <ng-container *ngIf="queryForm.get('filterMode')?.value === 'counter'">
+              <app-multi-select
+                label="專櫃編號"
+                [options]="CounterOptions"
+                optionLabel="formLabel"
+                optionValue="value"
+                [control]="queryForm.controls.TLT_No"
+                [submitted]="submitted"
+              ></app-multi-select>
+            </ng-container>
+          </div>
 
-    <!-- A. 館別／區域／樓層（Radio：location） -->
-    <div class="col-12">
-      <div class="flex align-items-center gap-2 mb-2">
-        <!-- ✅ 使用正確標籤 p-radioButton，且 value 直接字面值 -->
-        <p-radioButton
-          name="filterMode"
-          formControlName="filterMode"
-          value="location"
-          inputId="fm-location"
-        ></p-radioButton>
-        <label for="fm-location" class="font-medium">使用「館別／區域／樓層」條件</label>
-      </div>
-    </div>
+          <!-- A. 館別／區域／樓層（Radio：location） -->
+          <div class="col-12">
+            <div class="flex align-items-center gap-2 mb-2">
+              <p-radioButton
+                name="filterMode"
+                formControlName="filterMode"
+                value="location"
+                inputId="fm-location"
+              ></p-radioButton>
+              <label for="fm-location" class="font-medium">使用「館別／區域／樓層」條件</label>
+            </div>
+          </div>
 
-    <ng-container *ngIf="queryForm.get('filterMode')?.value === 'location'">
-      <div class="col-12 md:col-6 lg:col-4">
-        <app-dropdown
-          label="館別"
-          controlName="tlt_building"
-          [options]="BUILDING_NO_Options"
-          optionLabel="label"
-          optionValue="value"
-          [control]="queryForm.controls.tlt_building"
-          [submitted]="submitted"
-        ></app-dropdown>
-      </div>
-      <div class="col-12 md:col-6 lg:col-4">
-        <app-multi-select
-          label="區域"
-          controlName="area_no"
-          [options]="regionOptions"
-          optionLabel="label"
-          optionValue="value"
-          [control]="queryForm.controls.area_no"
-          [submitted]="submitted"
-        ></app-multi-select>
-      </div>
-      <div class="col-12 md:col-6 lg:col-4">
-        <app-multi-select
-          label="樓層"
-          [options]="floorOptions"
-          optionLabel="label"
-          optionValue="value"
-          [control]="queryForm.controls.tlt_floor"
-          [submitted]="submitted"
-        ></app-multi-select>
-      </div>
-    </ng-container>
+          <ng-container *ngIf="queryForm.get('filterMode')?.value === 'location'">
+            <div class="col-12 md:col-6 lg:col-4">
+              <app-dropdown
+                label="館別"
+                controlName="tlt_building"
+                [options]="BUILDING_NO_Options"
+                optionLabel="label"
+                optionValue="value"
+                [control]="queryForm.controls.tlt_building"
+                [submitted]="submitted"
+              ></app-dropdown>
+            </div>
+            <div class="col-12 md:col-6 lg:col-4">
+              <app-multi-select
+                label="區域"
+                controlName="area_no"
+                [options]="regionOptions"
+                optionLabel="label"
+                optionValue="value"
+                [control]="queryForm.controls.area_no"
+                [submitted]="submitted"
+              ></app-multi-select>
+            </div>
+            <div class="col-12 md:col-6 lg:col-4">
+              <app-multi-select
+                label="樓層"
+                [options]="floorOptions"
+                optionLabel="label"
+                optionValue="value"
+                [control]="queryForm.controls.tlt_floor"
+                [submitted]="submitted"
+              ></app-multi-select>
+            </div>
+          </ng-container>
 
-    <!-- B. 大分類（Radio：busType） -->
-    <div class="col-12 md:col-6 lg:col-4">
-      <div class="flex align-items-center gap-2 mb-2">
-        <p-radioButton
-          name="filterMode"
-          formControlName="filterMode"
-          value="busType"
-          inputId="fm-bus"
-        ></p-radioButton>
-        <label for="fm-bus" class="font-medium">使用「大分類」條件</label>
-      </div>
+          <!-- B. 大分類（Radio：busType） -->
+          <div class="col-12 md:col-6 lg:col-4">
+            <div class="flex align-items-center gap-2 mb-2">
+              <p-radioButton
+                name="filterMode"
+                formControlName="filterMode"
+                value="busType"
+                inputId="fm-bus"
+              ></p-radioButton>
+              <label for="fm-bus" class="font-medium">使用「大分類」條件</label>
+            </div>
 
-      <ng-container *ngIf="queryForm.get('filterMode')?.value === 'busType'">
-        <app-dropdown
-          label="大分類"
-          [options]="bus_typeOptions"
-          [control]="queryForm.controls.bus_type"
-          optionLabel="label"
-          optionValue="value"
-          [submitted]="submitted"
-        ></app-dropdown>
-      </ng-container>
-    </div>
-    <div class="col-12 md:col-6 lg:col-8"></div>
+            <ng-container *ngIf="queryForm.get('filterMode')?.value === 'busType'">
+              <app-dropdown
+                label="大分類"
+                [options]="bus_typeOptions"
+                [control]="queryForm.controls.bus_type"
+                optionLabel="label"
+                optionValue="value"
+                [submitted]="submitted"
+              ></app-dropdown>
+            </ng-container>
+          </div>
 
-    <!-- C. 組織代碼／名稱（Radio：org） -->
-    <div class="col-12 md:col-6 lg:col-4">
-      <div class="flex align-items-center gap-2 mb-2">
-        <p-radioButton
-          name="filterMode"
-          formControlName="filterMode"
-          value="org"
-          inputId="fm-org"
-        ></p-radioButton>
-        <label for="fm-org" class="font-medium">使用「組織代碼／名稱」條件</label>
-      </div>
+          <div class="col-12 md:col-6 lg:col-8"></div>
 
-      <ng-container *ngIf="queryForm.get('filterMode')?.value === 'org'">
-        <app-multi-select
-          label="組織代碼/名稱"
-          [options]="OrganizationCodeOptions"
-          optionLabel="formLabel"
-          optionValue="value"
-          [control]="queryForm.controls.org_id"
-          [submitted]="submitted"
-        ></app-multi-select>
-      </ng-container>
-    </div>
-  </div>
+          <!-- C. 組織代碼／名稱（Radio：org） -->
+          <div class="col-12 md:col-6 lg:col-4">
+            <div class="flex align-items-center gap-2 mb-2">
+              <p-radioButton
+                name="filterMode"
+                formControlName="filterMode"
+                value="org"
+                inputId="fm-org"
+              ></p-radioButton>
+              <label for="fm-org" class="font-medium">使用「組織代碼／名稱」條件</label>
+            </div>
 
-  <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
-    <app-button btnType="clear" [form]="queryForm"></app-button>
-    <app-button btnType="query" [loading]="loading"></app-button>
-  </div>
-</form>
+            <ng-container *ngIf="queryForm.get('filterMode')?.value === 'org'">
+              <app-multi-select
+                label="組織代碼/名稱"
+                [options]="OrganizationCodeOptions"
+                optionLabel="formLabel"
+                optionValue="value"
+                [control]="queryForm.controls.org_id"
+                [submitted]="submitted"
+              ></app-multi-select>
+            </ng-container>
+          </div>
+        </div>
+
+        <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+          <app-button btnType="clear" [form]="queryForm"></app-button>
+          <app-button btnType="query" [form]="queryForm" [loading]="loading"></app-button>
+        </div>
+      </form>
     </p-accordionTab>
   </p-accordion>
 </div>
 
 <div class="card">
-  <app-table
-    tableKey="TLS23120"
-    [data]="data"
-    [columns]="columns"
-    [showCheckBox]="false"
-    dataKey="TXN_No"
-    [multiSortMeta]="[{ field: 'TLT_No', order: 1 }]"
-    [totalRecords]="totalRecords"
-    [lazy]="true"
-    [loading]="loading"
-    (edit)="onEdit($event)"
-    (detail)="onDetail($event)"
-    [showManage]="false"
-    [showDelete]="false"
-    (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"
-  ></app-table>
+<app-table
+  tableKey="TLS23120"
+  [data]="data"
+  [columns]="columns"
+  [showCheckBox]="false"
+  dataKey="_rowKey"                      
+  [multiSortMeta]="sortMeta"
+  [totalRecords]="0"                      
+  [lazy]="false"                          
+  [loading]="loading"
+  (edit)="onEdit($event)"
+  (detail)="onDetail($event)"
+  [showManage]="false"
+  [showDelete]="false"
+  [showPaginator]="false"                  
+  [showPage]="false"                       
+  [rowsPerPageOptions]="[]"                
+></app-table>
+
 </div>

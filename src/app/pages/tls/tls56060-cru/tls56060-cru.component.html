@@ -23,11 +23,11 @@
             optionValue="value" [control]="dataForm.controls.IN_HOS_No" [submitted]="submitted"></app-dropdown>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text label="驗收數量合計" controlName="Confirm_TotQty" [control]="dataForm.controls.Confirm_TotQty"
+          <app-input-text label="數量" controlName="Confirm_TotQty" [control]="dataForm.controls.Confirm_TotQty"
             [submitted]="submitted"></app-input-text>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text label="驗收金額合計" controlName="Confirm_TotBuyNet" [control]="dataForm.controls.Confirm_TotBuyNet"
+          <app-input-text label="金額" controlName="Confirm_TotBuyNet" [control]="dataForm.controls.Confirm_TotBuyNet"
             [submitted]="submitted"></app-input-text>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
@@ -71,8 +71,10 @@
         [showRowEdit]="true" (rowEditSave)="onRowEditSave($event)" [showCaption]="false" [showEdit]="false"
         [showInsert]="false" [showDetail]="false" [showDelete]="false" (dataChange)="data = $event"></app-table>
       <div *ngIf="!isFormReadable" class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
-        <app-button btnType="cancel" (click)="onCancel()"></app-button>
-        <app-button btnType="submit" [loading]="loading" label="確認驗收"></app-button>
+        <app-button btnType="cancel" [form]="dataForm"></app-button>
+        <app-button btnType="submit" [loading]="loading" label="儲存"></app-button>
+        <app-button [loading]="loading" label="確認收貨" (click)="onConfirm(dataForm)"
+          [disabled]="dataChanged"></app-button>
       </div>
     </form>
   </p-panel>

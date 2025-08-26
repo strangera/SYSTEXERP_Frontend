@@ -7,40 +7,65 @@
       [headerStyleClass]="'query-accordionTab'">
       <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
-          <!-- Radio + 銷售日期 -->
+          <!-- 日期 -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar-range-quick calendarType="dateRange" label="日期"
-              [startControl]="queryForm.controls.TXN_DateStart" [endControl]="queryForm.controls.TXN_DateEnd"
-              [submitted]="submitted"></app-calendar-range-quick>
+            <app-calendar-range-quick
+              calendarType="dateRange"
+              label="日期"
+              [startControl]="queryForm.controls.TXN_DateStart"
+              [endControl]="queryForm.controls.TXN_DateEnd"
+              [submitted]="submitted">
+            </app-calendar-range-quick>
           </div>
 
-          <!-- 卡種 -->
-     <div class="col-12 md:col-6 lg:col-4">
-  <app-multi-select
-    label="卡種"
-    controlName="BNK_No"
-    [options]="cardTypeOptions"
-    optionLabel="label"
-    optionValue="value"
-    [control]="queryForm.controls.BNK_No"
-    [submitted]="submitted">
-  </app-multi-select>
-</div>
+          <!-- 卡種（銀行代號） -->
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown
+              label="卡種"
+              controlName="BNK_No"
+              [options]="cardTypeOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.BNK_No"
+              [submitted]="submitted">
+            </app-dropdown>
+          </div>
+
           <!-- 館別 -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="館別" controlName="tlt_building" [options]="BUILDING_NO_Options" optionLabel="label"
-              optionValue="value" [control]="queryForm.controls.tlt_building" [submitted]="submitted"></app-dropdown>
+            <app-dropdown
+              label="館別"
+              controlName="tlt_building"
+              [options]="BUILDING_NO_Options"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.tlt_building"
+              [submitted]="submitted">
+            </app-dropdown>
           </div>
 
+          <!-- 樓層 -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select label="樓層" [options]="floorOptions" optionLabel="label" optionValue="value"
-              [control]="queryForm.controls.tlt_floor" [submitted]="submitted"></app-multi-select>
+            <app-multi-select
+              label="樓層"
+              [options]="floorOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.tlt_floor"
+              [submitted]="submitted">
+            </app-multi-select>
           </div>
 
           <!-- 組織代碼/名稱 -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select label="組織代碼/名稱" [options]="OrganizationCodeOptions" optionLabel="formLabel"
-              optionValue="value" [control]="queryForm.controls.org_id" [submitted]="submitted"></app-multi-select>
+            <app-multi-select
+              label="組織代碼/名稱"
+              [options]="OrganizationCodeOptions"
+              optionLabel="formLabel"
+              optionValue="value"
+              [control]="queryForm.controls.org_id"
+              [submitted]="submitted">
+            </app-multi-select>
           </div>
         </div>
 
@@ -54,8 +79,18 @@
 </div>
 
 <div class="card">
-  <app-table tableKey="TLS23130" [data]="data" [columns]="columns" [showCheckBox]="false" dataKey="BNK_No"
-    [multiSortMeta]="[{ field: 'BNK_No', order: 1 }]" [totalRecords]="totalRecords" [lazy]="true" [loading]="loading"
-    (edit)="onEdit($event)" (detail)="onDetail($event)" [showManage]="false" [showDelete]="false"
-    (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"></app-table>
+  <app-table
+    tableKey="TLS23130"
+    [data]="data"
+    [columns]="columns"
+    [showCheckBox]="false"
+    dataKey="BNK_No"
+    [multiSortMeta]="sortMeta"
+    [totalRecords]="totalRecords"
+    [lazy]="true"
+    [loading]="loading"
+    [showManage]="false"
+    [showDelete]="false"
+    (lazyLoadData)="onLazyLoadData($event, queryForm)">
+  </app-table>
 </div>

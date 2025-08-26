@@ -395,7 +395,7 @@ export class SYS0310CRUComponent extends BasicCruPageComponent<Role> implements 
     console.log('Generated Privilege List:', privilegeList);
 
     const body = {
-      Role_No: this.dataForm.value.Role_No,
+      Role_No: this.dataForm.getRawValue().Role_No,
       data: privilegeList
     };
     this.loading = true;

@@ -58,19 +58,20 @@ import { TableComponent } from '@shared/componentkit/table/table.component';
 export class TLS23040Component extends BasicQueryPageComponent<any> {
   private lastQuerySig: string | null = null;
   private lazyTimer: any = null;
+  private firstLazyFired = false;
 
+  data: any[] = [];
+  totalRecords = 0;
+  backendTotals: Record<string, number> | null = null;
+
+  // 🔽 排序設定
   sortMeta: any[] = [];
-
-  // 组件內新增一個 timer 欄位
   readonly defaultSort: any[] = [
     { field: 'TXN_Date', order: -1 },
-    { field: 'ECR_No', order: 1 },
-    { field: 'TXN_No', order: 1 },
+    { field: 'ECR_No',   order: 1 },
+    { field: 'TXN_No',   order: 1 },
   ];
-  totalRecords = 0;
-  data: any[] = [];
 
-  backendTotals: Record<string, number> | null = null;
   readonly yesterday: Date = (() => {
     const d = new Date();
     d.setHours(0, 0, 0, 0);
@@ -80,20 +81,25 @@ export class TLS23040Component extends BasicQueryPageComponent<any> {
 
   queryForm = this.formBuilder.group({
     TXN_DateStart: [this.yesterday, [Validators.required]],
-    TXN_DateEnd: [this.yesterday, [Validators.required]],
-    ECR_No: [null], // ✅ 初始為 null（不會出現預設選項）
+    TXN_DateEnd:   [this.yesterday, [Validators.required]],
+    ECR_No: [],
     TXN_No_Start: [null],
-    TXN_No_End: [null],
-    TLT_No: [[]],
-    TXN_Status: [[]],
-    TXN_FlagStatus: [[]],
+    TXN_No_End:   [null],
+    TLT_No: [],
+    TXN_Status: [],
+    TXN_FlagStatus: [],
     TXN_PkngUID: [''],
     TXN_MemCard: [''],
     TXN_GUIBegNo: [''],
     tlt_building: [''],
-    tlt_floor: [[]],
-    org_id: [[]],
-    ...createPaginationConfig,
+    tlt_floor: [],
+    org_id: [],
+    // 🔽 這裡帶入排序欄位
+    ...createPaginationConfig([
+      { field: 'TXN_Date', order: -1 },
+      { field: 'ECR_No',   order: 1 },
+      { field: 'TXN_No',   order: 1 },
+    ]),
   });
 
   statusFlagOptions: any[] = [];
@@ -123,7 +129,8 @@ export class TLS23040Component extends BasicQueryPageComponent<any> {
     this.initializePage('TLS23040', 'tls/tls23040cru', this.queryForm, (form) =>
       this.onSubmit(form),
     );
-    this.sortMeta = this.defaultSort.map((x) => ({ ...x }));
+      // 🔽 初始化排序 meta
+    this.sortMeta = this.defaultSort.map(x => ({ ...x }));
     this.statusFlagService
       .getStatusFlags()
       .subscribe((data) => (this.statusFlagOptions = data));
@@ -168,43 +175,47 @@ export class TLS23040Component extends BasicQueryPageComponent<any> {
       }));
     });
   }
-  override onLazyLoadData(event: LazyLoadEvent, queryForm: FormGroup) {
-    // 1) 依是否更換排序，決定是否回到第 1 頁
-    const currentSort = JSON.stringify(queryForm.value?.SortBy ?? []);
-    const nextSort = JSON.stringify(event.SortBy ?? []);
-    const nextPageIdx = currentSort !== nextSort ? 1 : event.pageIndex;
+  /** 子層 Table lazy 事件 */
+override onLazyLoadData(event: LazyLoadEvent, queryForm: FormGroup): void {
+  // 1) 當排序變更時回到第一頁
+  const currentSort = JSON.stringify(queryForm.value?.SortBy ?? []);
+  const nextSort    = JSON.stringify(event.SortBy ?? []);
+  const nextPageIdx = currentSort !== nextSort ? 1
+                    : (event.pageIndex ?? queryForm.value.pageIndex ?? 1);
 
-    // 2) 只 patch 分頁/排序，不要動日期等條件
-    queryForm.patchValue(
-      {
-        pageSize: event.pageSize,
-        pageIndex: nextPageIdx,
-        SortBy: event.SortBy,
-      },
-      { emitEvent: false },
-    );
-
-    // 3) 父層排序狀態同步（供 table 綁定）
-    this.sortMeta = (event.SortBy ?? []).map((s) => ({ ...s }));
-
-    // 4) 去重 + 0ms debounce
-    const sig = JSON.stringify({
+  // 2) 同步回表單（不觸發 valueChanges）
+  queryForm.patchValue(
+    {
       pageIndex: nextPageIdx,
-      pageSize: event.pageSize,
-      SortBy: event.SortBy,
-    });
-    if (sig === this.lastQuerySig) return;
-    this.lastQuerySig = sig;
+      pageSize : event.pageSize ?? queryForm.value.pageSize,
+      SortBy   : event.SortBy ?? queryForm.value.SortBy,
+    },
+    { emitEvent: false },
+  );
 
-    if (this.lazyTimer) clearTimeout(this.lazyTimer);
-    this.lazyTimer = setTimeout(() => this.onSubmit(queryForm), 0);
-  }
+  // 3) 更新表頭多欄位排序狀態
+  this.sortMeta = (event.SortBy ?? []).map(s => ({ ...s }));
+
+  // 4) 生成這次查詢的簽章，避免重複打 API
+  const sig = JSON.stringify({
+    pageIndex: queryForm.value.pageIndex,
+    pageSize : queryForm.value.pageSize,
+    SortBy   : queryForm.value.SortBy,
+  });
+  if (sig === this.lastQuerySig) return;
+  this.lastQuerySig = sig;
+
+  // 5) 只呼叫一次 onSubmit（無需在 HTML 再呼叫）
+  if (this.lazyTimer) clearTimeout(this.lazyTimer);
+  this.lazyTimer = setTimeout(() => this.onSubmit(queryForm), 0);
+}
+
 
   onSubmit(form: FormGroup): void {
     this.handleSubmit(form, () => {
       const val = this.queryForm.value as any;
 
-      // 還原 toIso
+      // 日期轉換
       const toIso = (x: any) => {
         if (!x) return undefined;
         const d = typeof x === 'string' ? new Date(x) : (x as Date);
@@ -214,17 +225,16 @@ export class TLS23040Component extends BasicQueryPageComponent<any> {
           .slice(0, 19);
       };
 
-      // ★ 強保底日期：若表單值為空，用 yesterday（或你想要的預設）
       const dateStart = val?.TXN_DateStart ?? this.yesterday;
-      const dateEnd = val?.TXN_DateEnd ?? this.yesterday;
+      const dateEnd   = val?.TXN_DateEnd   ?? this.yesterday;
 
       const payload: any = {
         ...val,
         TXN_DateStart: toIso(dateStart),
-        TXN_DateEnd: toIso(dateEnd),
-        pageSize: val?.pageSize,
-        pageIndex: val?.pageIndex,
-        SortBy: val?.SortBy,
+        TXN_DateEnd  : toIso(dateEnd),
+        SortBy       : Array.isArray(val?.SortBy) && val.SortBy.length
+          ? val.SortBy
+          : (this.sortMeta.length ? this.sortMeta : this.defaultSort),
       };
 
       // SortBy 優先走當前 sortMeta，沒有才 fallback

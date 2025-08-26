@@ -325,31 +325,17 @@ raw['IsPayType']     = this.toBoolOrNull(raw['IsPayType']);
 raw['IsHaveTERM_No'] = this.toBoolOrNull(raw['IsHaveTERM_No']);
 
   // 5) 分頁/排序 — 只保留「大寫」鍵
-  // 若表單來源是小寫 pageIndex/pageSize，也會自動吃到並轉成大寫
-  raw['PageIndex'] = Number.isFinite(raw['PageIndex'])
-    ? raw['PageIndex']
-    : (Number.isFinite(raw['pageIndex']) ? raw['pageIndex'] : 0);
 
-  raw['PageSize'] = Number.isFinite(raw['PageSize'])
-    ? raw['PageSize']
-    : (Number.isFinite(raw['pageSize']) ? raw['pageSize'] : 10);
+
+
 
   raw['SortBy'] = Array.isArray(raw['SortBy']) && raw['SortBy'].length
   ? raw['SortBy']
   : (this.sortMeta.length ? this.sortMeta : this.defaultSort);
 
-  // 🔒 移除小寫鍵，避免同時傳兩組
-  delete raw.pageIndex;
-  delete raw.pageSize;
 
-  // （如需一起傳，這裡可選擇性處理 Offset/OrderBy）
-  if (Number.isFinite(raw['PageIndex']) && Number.isFinite(raw['PageSize'])) {
-    const pi = Math.max(0, Number(raw['PageIndex']));
-    const ps = Math.max(0, Number(raw['PageSize']));
-    raw['Offset'] = Math.max(0, pi * ps);
-  } else {
-    delete raw['Offset'];
-  }
+
+  
   // 若後端不吃 OrderBy，可移除
   if (!raw['OrderBy']) delete raw['OrderBy'];
 

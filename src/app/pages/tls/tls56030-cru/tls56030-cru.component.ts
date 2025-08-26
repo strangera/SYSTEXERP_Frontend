@@ -2,6 +2,7 @@
 import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import {
   FormArray,
+  FormBuilder,
   FormControl,
   FormGroup,
   FormsModule,
@@ -43,6 +44,7 @@ import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/ba
 import { TableComponent } from '@shared/componentkit/table/table.component';
 import { Sys0110Service } from '@service/api/sys/sys0110.service';
 import { Tls56030Service } from './../../../service/api/tls/TLS56030.service';
+import { InputTextareaComponent } from '@shared/componentkit/input-textarea/input-textarea.component';
 
 @UntilDestroy()
 @Component({
@@ -64,6 +66,7 @@ import { Tls56030Service } from './../../../service/api/tls/TLS56030.service';
     TableComponent,
     DialogComponent,
     DropdownTableComponent,
+    InputTextareaComponent
   ],
 })
 export class TLS56030CRUComponent
@@ -72,17 +75,17 @@ export class TLS56030CRUComponent
   // -------------------- Form --------------------
   dataForm = this.formBuilder.group({
     id: [0],
-    SYS_StoreNo: ['', Validators.required],
+    SYS_StoreNo: [''],
     RPM_No: [{ value: '自動編號', disabled: true }],
     RPM_Type: [''],
     RPM_Status: [''],
-    RPM_Remark: [''],
-    APPLY_USR_No: [''],
-    APPLY_USR_Name: [''],
+    RPM_Remark: ['', [Validators.maxLength(200)]],
+    APPLY_USR_No: [this.authService.currentUserValue?.user_No ?? ''],
+    APPLY_USR_Name: [],
     org_id: [''],
-    APPLY_Date: [null],
-    HOS_No: [{ value: null as string | null, disabled: true }, [Validators.required]],
-    LOGO_No: ['0001', [Validators.required]],
+    APPLY_Date: [new Date()],
+    HOS_No: ['', [Validators.required]],
+    LOGO_No: ['', [Validators.required]],
     VEN_No: [''],
     Details: this.formBuilder.array([])
   });
@@ -98,21 +101,13 @@ export class TLS56030CRUComponent
   data: IPOS2004DetailData[] = [];
   selectedItems: IPOS2004DetailData[] = [];
   columns: Column[] = [
-    { field: 'PLU_MagNo', header: '商品管理編號' },
-    { field: 'PLU_Name', header: '商品名稱' },
+    { field: 'PLU_MagNo', header: '商品編號' },
     { field: 'PLU_No', header: '國際條碼' },
-    { field: 'PLU_Unit', header: '單位編號' },
-    { field: 'UNIT_NAME', header: '單位名稱' },
-    { field: 'PLU_BoxQty', header: '包裝入數' },
-    {
-      field: 'PLU_StockTaxType',
-      header: '稅別',
-      format: (v) => (v === '0' ? '免稅' : '應稅'),
-    },
-    { field: 'POD_SubQty', header: '數量' },
-    { field: 'PLU_SalePrc', header: '商品售價', type: 'inputNumber' },
-    { field: 'PLU_SalePrc_UNI', header: '商品進價', type: 'inputNumber' },
-    { field: 'POD_Remark', header: '備註', type: 'input' },
+    { field: 'PLU_Name', header: '商品名稱' },
+    { field: 'PLU_SalePrc', header: '商品售價' },
+    { field: 'PLU_StockTaxType', header: '目前庫存' },
+    { field: 'RPD_SaleAmt', header: '領退數量' },
+    { field: 'RPD_Remark', header: '備註', type: 'input' },
   ];
 
   // -------------------- Dialog --------------------
@@ -141,7 +136,7 @@ export class TLS56030CRUComponent
       header: '稅別',
       format: (v) => (v === '0' ? '免稅' : '應稅'),
     },
-    { field: 'PLU_SalePrc_UNI', header: '單價', showSort: false },
+    { field: 'RPD_SaleTax', header: '單價', showSort: false },
     { field: 'PLU_SalePrc', header: '售價' },
   ];
 
@@ -171,18 +166,48 @@ export class TLS56030CRUComponent
     private tls52010Service: Tls52010Service,
     private cdr: ChangeDetectorRef,
     private sys0110Service: Sys0110Service,
-    private tls56030Service: Tls56030Service
+    private tls56030Service: Tls56030Service,
+    private fb: FormBuilder// Inject FormBuilder
   ) {
     super();
   }
 
   // -------------------- Lifecycle --------------------
   ngOnInit(): void {
+
     this.initializePage('TLS56030', this.dataForm);
 
+    // 編輯狀態 → 部分欄位 disable
     if (this.isFormEditable) {
-      this.dataForm.controls.LOGO_No.disable();
+      this.dataForm.controls['RPM_No']?.disable();
     }
+
+
+    if (!this.isFormCreateable) {
+      const rpmNo = this.rowdata?.RPM_No ?? '';
+
+      if (rpmNo) {
+        const payload = { RPM_No: rpmNo };
+
+        this.tls56030Service.queryPOS2024RTN(payload).subscribe({
+          next: (res) => {
+            const rows = res?.Data ?? [];
+            this.data = rows.map((row: any) => ({
+              ...row,
+              // 關鍵：後端回傳的是 RPD_SalePrc，要對應到前端 Table 使用的 PLU_SalePrc
+              PLU_SalePrc: row.PLU_SalePrc ?? row.RPD_SalePrc ?? 0
+            }));
+            this.totalRecords = this.data.length;
+          },
+          error: (err) => {
+            console.error('查詢 POS2024RTN 失敗:', err);
+          }
+        });
+
+      }
+    }
+
+
 
     // 人員
     this.dropDownListService
@@ -225,7 +250,7 @@ export class TLS56030CRUComponent
       .pipe(untilDestroyed(this))
       .subscribe(response => this.warehouseOptions = response.Data);
 
-    this.dropDownListService.querySYS3100_join_POS1001_DropDownList()
+    this.dropDownListService.querySYS3100_DropDownList()
       .pipe(untilDestroyed(this))
       .subscribe(response => {
         this.departmentOptions = (response.Data || []).map(item => ({
@@ -252,7 +277,7 @@ export class TLS56030CRUComponent
       PLU_Name: [data?.PLU_Name ?? ''],
       PLU_StockTaxType: [data?.PLU_StockTaxType ?? ''],
       RPD_ConfirmQty: [data?.RPD_ConfirmQty ?? 0],
-      RPD_SalePrc: [data?.RPD_SalePrc ?? 0],
+      PLU_SalePrc: [data?.PLU_SalePrc ?? 0],
       RPD_Remark: [data?.RPD_Remark ?? ''],
       RPM_No: [data?.RPM_No ?? this.dataForm.controls.RPM_No.value],
       id: [data?.id ?? 0]
@@ -261,9 +286,9 @@ export class TLS56030CRUComponent
 
   // -------------------- Totals --------------------
   private calculateTotals(): void {
-    const totalQuantity = this.data.reduce((sum, item) => sum + (item.POD_SubQty || 0), 0);
+    const totalQuantity = this.data.reduce((sum, item) => sum + (item.POD_SaleAmt || 0), 0);
     const totalPrice = this.data.reduce(
-      (sum, item) => sum + (item.POD_SubQty || 0) * (item.PLU_SalePrc || 0),
+      (sum, item) => sum + (item.POD_SaleAmt || 0) * (item.PLU_SalePrc || 0),
       0
     );
     console.log(`Total Quantity: ${totalQuantity}`);
@@ -275,8 +300,10 @@ export class TLS56030CRUComponent
     const raw = this.dataForm.getRawValue();
     return {
       ...raw,
-      Details: raw.Details.map((x: any) => ({
-        SYS_StoreNo: raw.SYS_StoreNo,
+      SYS_StoreNo: this.authService.currentUserValue?.SYS_StoreNo ?? '',
+      Details: this.data.map((x: any) => ({
+        SYS_StoreNo: this.authService.currentUserValue?.SYS_StoreNo ?? '',
+        PLU_TaxType: x.PLU_TaxType ?? '',
         HOS_No: raw.HOS_No,
         PLU_MagNo: x.PLU_MagNo ?? '',
         PLU_No: x.PLU_No ?? '',
@@ -285,7 +312,8 @@ export class TLS56030CRUComponent
         PLU_Name: x.PLU_Name ?? '',
         PLU_StockTaxType: x.PLU_StockTaxType ?? '',
         RPD_ConfirmQty: x.RPD_ConfirmQty ?? 0,
-        RPD_SalePrc: x.RPD_SalePrc ?? 0,
+        // 關鍵：前端顯示 PLU_SalePrc，後端要 RPD_SalePrc
+        RPD_SalePrc: x.PLU_SalePrc ?? x.RPD_SalePrc ?? 0,
         RPD_Remark: x.RPD_Remark ?? '',
         RPM_No: raw.RPM_No,
         id: x.id ?? 0
@@ -314,7 +342,7 @@ export class TLS56030CRUComponent
             next: (res) => {
               if (res.Status === '0000') {
                 this.notificationService.successBubble(this.translate.instant('success_message'));
-                this.router.navigate(['/TLS/TLS56030']);
+                this.onCancel();
               } else {
                 this.notificationService.errorBubble(res.Message || '新增失敗');
               }
@@ -330,7 +358,7 @@ export class TLS56030CRUComponent
             next: (res) => {
               if (res.Status === '0000') {
                 this.notificationService.successBubble(this.translate.instant('updated-successfully'));
-                this.router.navigate(['/TLS/TLS56030']);
+                this.onCancel();
               } else {
                 this.notificationService.errorBubble(res.Message || '更新失敗');
               }
@@ -394,7 +422,7 @@ export class TLS56030CRUComponent
       ...this.data,
       ...this.selectedItemsDialog.map((item) => ({
         ...item,
-        POD_SubQty: 0,
+        RPD_SaleAmt: 0,
         POD_Remark: '',
       })),
     ];
@@ -431,8 +459,8 @@ export class TLS56030CRUComponent
   onRowEditSave(event: RowEditSaveEvent) {
     const newData: IPOS2004DetailData = event.newData;
 
-    const quantity = newData.POD_SubQty ? Math.max(0, newData.POD_SubQty) : 0;
-    const unitPriceNet = newData.PLU_SalePrc_UNI || 0;
+    const quantity = newData.POD_SaleAmt ? Math.max(0, newData.POD_SaleAmt) : 0;
+    const unitPriceNet = newData.POD_SaleAmt || 0;
     const subtotalNet = Math.round(unitPriceNet * quantity);
     const salePrice = newData.PLU_SalePrc || 0;
     const totalPrice = Math.round(salePrice * quantity);
@@ -441,7 +469,7 @@ export class TLS56030CRUComponent
     if (index > -1) {
       this.data[index] = {
         ...this.data[index],
-        POD_SubQty: quantity,
+        // POD_SaleAmt: quantity,
         POD_BuyNet: subtotalNet,
         POD_SaleAmt: totalPrice,
       };

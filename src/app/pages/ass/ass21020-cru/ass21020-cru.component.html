@@ -18,10 +18,9 @@
         <div class="col-12 md:col-6 lg:col-3">
           <app-dropdown label="錶號"
                         controlName="ENG_MeterNo"
-                        controlName="ENG_MeterNo"
                         [options]="service.engMeterNoSignal()"
-                        optionLabel="Name"
-                        optionValue="No"
+                        optionLabel="ENG_MeterNo"
+                        optionValue="ENG_MeterNo"
                         [control]="df().ENG_MeterNo"
                         [submitted]="submitted"></app-dropdown>
         </div>
@@ -104,7 +103,7 @@
     <div class="col-12">
       <p-panel header="資料"
                class="line-height-3 m-0 mb-3">
-        <app-table [showCheckBox]="false"
+        <app-table [showCheckBox]="true"
                    [showEdit]="false"
                    [showDetail]="false"
                    [showDelete]="false"
@@ -114,8 +113,9 @@
                    [showExcel]="isFormEditable"
                    (exportExcel)="onExportExcel()"
                    (importExcel)="onImportExcel($event)"
-                   [data]="service.ASS21020Detail()"
-                   [dataKey]="'tlt_no'"
+                   [data]="service.tltByFlagSignal()"
+                   (selectionChange)="onSelectionChange($event)"
+                   [dataKey]="'TLT_No'"
                    [tableKey]="'ASS21020_detail'"
                    [columns]="columns">
         </app-table>

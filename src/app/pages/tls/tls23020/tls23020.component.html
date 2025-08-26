@@ -13,7 +13,7 @@
         [formGroup]="queryForm"
         id="queryForm"
         (ngSubmit)="onSubmit(queryForm)"
-        >
+      >
         <div class="grid p-fluid">
           <app-calendar-range-quick
             class="col-12 md:col-6 lg:col-4"
@@ -21,7 +21,7 @@
             [startControl]="queryForm.controls.TXN_DateStart"
             [endControl]="queryForm.controls.TXN_DateEnd"
             [submitted]="submitted"
-          />
+          ></app-calendar-range-quick>
 
           <div class="col-12 md:col-6 lg:col-4">
             <app-multi-select
@@ -88,8 +88,6 @@
             ></app-dropdown>
           </div>
 
-
-
           <div class="col-12 md:col-6 lg:col-4">
             <app-multi-select
               label="商品抽成類別"
@@ -112,15 +110,15 @@
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
-      <app-multi-select
-  label="歸屬折扣別"
-  controlName="TXN_DiscCode"
-  [options]="discountOptions"
-  optionLabel="label"
-  optionValue="value"
-  [control]="queryForm.controls.TXN_DiscCode"
-  [submitted]="submitted">
-</app-multi-select>
+            <app-multi-select
+              label="歸屬折扣別"
+              controlName="TXN_DiscCode"
+              [options]="discountOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.TXN_DiscCode"
+              [submitted]="submitted"
+            ></app-multi-select>
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
@@ -190,27 +188,31 @@
             ></app-multi-select>
           </div>
         </div>
-  
-     
-      <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
-        <app-button btnType="clear" ></app-button>
-        <app-button btnType="query" [loading]="loading"></app-button>
-        
+
+        <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+          <app-button btnType="clear"></app-button>
+          <app-button btnType="query" [loading]="loading"></app-button>
         </div>
       </form>
     </p-accordionTab>
   </p-accordion>
 </div>
 
-
 <div class="card">
   <div class="col-12">
-  <app-table tableKey="TLS23020" [data]="data" [columns]="columns" [showCheckBox]="false" dataKey="ECR_No"
-    [multiSortMeta]="[{ field: 'ECR_No', order: 1 }]" [totalRecords]="totalRecords" [lazy]="true" [loading]="loading"
-    (edit)="onEdit($event)" (detail)="onDetail($event)" [showManage]="false" [showDelete]="false" [showCheckBox]="false"
-    (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"></app-table>
+    <app-table
+      tableKey="TLS23020"
+      [data]="data"
+      [columns]="columns"
+      [showCheckBox]="false"
+      dataKey="ECR_No"
+      [multiSortMeta]="sortMeta"
+      [totalRecords]="totalRecords"
+      [lazy]="true"
+      [loading]="loading"
+      [showManage]="false"
+      [showDelete]="false"
+      (lazyLoadData)="onLazyLoadData($event, queryForm)"
+    ></app-table>
   </div>
 </div>
-
-
-
