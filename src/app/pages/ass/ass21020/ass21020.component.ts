@@ -54,10 +54,10 @@ export class ASS21020Component extends BasicQueryPageComponent<unknown> implemen
   public readonly meterNoEffect = effect(() => {
     const meterNo = this.meterNoSignal();
     if (!meterNo) return;
-
     this.service.queryByMeterNo(meterNo);
     const selected = this.service.engMeterNoMap.get(meterNo);
     this.qf().Location_No.patchValue(selected?.Location_No ?? '');
+    console.log(`meterNo changes:`, [meterNo, selected]);
   }, { allowSignalWrites: !0 });
 
   public readonly columns: Column[] = [
