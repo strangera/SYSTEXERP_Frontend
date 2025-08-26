@@ -20,6 +20,7 @@ import { TableComponent } from '../../../shared/componentkit/table/table.compone
 import { TranslateModule } from '@ngx-translate/core';
 import { columns, FIX_TYPE, TXN_GUIPaperOptions, txnStatusOptions } from './tls24010.model';
 import { STORE_WAY, TLS24010_EDIT_TYPE } from '../tls24010-cru/tls24010-cru.model';
+import { yesterday } from '@shared/models/system/query-form.model';
 
 // 交易補登作業
 @Component({
@@ -73,12 +74,12 @@ export class TLS24010Component extends BasicQueryPageComponent<TLS24010Data> imp
     this.dropDownList.queryPOS1002_DropDownList().pipe(untilDestroyed(this)).subscribe(options => {
       this.ECR_NoOptions = options.Data.map(item => ({ ...item, label: `${item.No} - ${item.Name}` }));
     });
-    this.dropDownList.queryTLTTALENT_ByContractDate_DropDownList(this.today.toISOString().split('T')[0]).pipe(untilDestroyed(this)).subscribe(options => {
+    this.dropDownList.queryTLTTALENT_ByContractDate_DropDownList(yesterday.toISOString().split('T')[0]).pipe(untilDestroyed(this)).subscribe(options => {
       this.TLT_NoOptions = options.Data.map(item => ({ ...item, label: `${item.No} - ${item.Name}` }));
     });
     const txnDate = this.queryForm.get('TXN_Date')?.value;
     if (!txnDate) {
-      this.queryForm.get('TXN_Date')?.setValue(new Date(this.today.getFullYear(), this.today.getMonth(), this.today.getDate(), 0, 0, 0));
+      this.queryForm.get('TXN_Date')?.setValue(new Date(yesterday.getFullYear(), yesterday.getMonth(), yesterday.getDate(), 0, 0, 0));
     }
   }
   onDateSelect(event: Date): void {
