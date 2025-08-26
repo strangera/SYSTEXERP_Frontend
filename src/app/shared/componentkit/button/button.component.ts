@@ -102,7 +102,8 @@ export class ButtonComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   handleClick() {
-    console.log(this.form);
+    console.log(this.initialFormValue);
+
     if (this.btnType === 'cancel' || this.btnType === 'clear') {
       if (this.form && this.initialFormValue) {
         // 重置表單到初始狀態
