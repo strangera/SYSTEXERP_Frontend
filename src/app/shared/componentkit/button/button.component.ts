@@ -1,7 +1,7 @@
-import { Component, EventEmitter, inject, Input, OnChanges, OnDestroy, OnInit, Output, SimpleChanges } from '@angular/core';
+import { AfterViewInit, Component, EventEmitter, inject, Input, OnDestroy, OnInit, Output } from '@angular/core';
 import { AuthService } from '../../../service/system/auth.service';
 import { CurrentPageService } from '../../../layout/app.menulist/current-page.service';
-import { Subject, takeUntil } from 'rxjs';
+import { Subject, takeUntil, timer } from 'rxjs';
 import { FormGroup } from '@angular/forms';
 import { Button } from 'primeng/button';
 import { NotificationService } from '@shared/component/notification-message/notification.service';
@@ -23,7 +23,7 @@ interface ButtonConfig {
   standalone: true,
   imports: [Button]
 })
-export class ButtonComponent implements OnInit, OnChanges, OnDestroy {
+export class ButtonComponent implements OnInit, AfterViewInit, OnDestroy {
   @Input() btnType: 'default' | 'create' | 'edit' | 'delete' | 'query' | 'cancel' | 'clear' | 'submit' | 'next' | 'previous' | 'smartclear' | 'report' | 'back' | 'CSV' | 'textclear' = 'default';
   @Input() loading = false;
   @Output() clickEvent = new EventEmitter<void>();
@@ -85,13 +85,14 @@ export class ButtonComponent implements OnInit, OnChanges, OnDestroy {
   }
 
   private initialFormValue: any;
-  ngOnChanges(changes: SimpleChanges): void {
-    // 檢查 form 是否被賦值，如果已經賦值且還沒有儲存初始值
-    if (changes['form'] && this.form && !this.initialFormValue) {
-      // 在下一個微任務中儲存表單的初始值
-      // 這樣可以確保所有非同步的 patchValue 操作都已完成
-      Promise.resolve().then(() => {
+  public showButton = false;
+  ngAfterViewInit(): void { // 這個寫法有點爛，但是目前想到最簡單的解法了
+    // 在這裡使用 timer 延遲儲存初始值
+    if (this.btnType === 'cancel' || this.btnType === 'clear') {
+      // 延遲 300 毫秒，確保大多數情況下非同步資料已載入
+      timer(1000).pipe(takeUntil(this.ngUnsubscribe)).subscribe(() => {
         this.initialFormValue = this.form?.getRawValue();
+        this.showButton = true; // 顯示按鈕
       });
     }
   }
