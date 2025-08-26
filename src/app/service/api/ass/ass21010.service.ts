@@ -1,7 +1,6 @@
-
 import { HttpClient } from '@angular/common/http';
 import { Injectable, OnDestroy, signal } from '@angular/core';
-import { ASS2100ENGMeterType, ASS21010Payload, ASS21010UpdateStatus } from '@pages/ass/ass21010/ass21010.model';
+import { ASS2100ENGMeterType, ASS21010Delete, ASS21010Payload, ASS21010UpdateStatus } from '@pages/ass/ass21010/ass21010.model';
 import { ErrorHandlerService } from '@service/system/error-handler.service';
 import { NotificationService } from '@shared/component/notification-message/notification.service';
 import { BaseQueryResponse, DropdownOption } from '@shared/models/api/base-api.interface';
@@ -80,8 +79,19 @@ export class ASS21010Service implements OnDestroy {
     this.http.post<ASS21010UpdateStatus>(`${apiUrl}/ASS0000/ASS2000/updateASS21010`, payload).pipe(
       take(1),
       tap(response => {
-        if (response.Data.IsUpdateSuccess) this.messageService.successBubble('更新成功');
+        if (response.Data.IsUpdateSuccess) this.messageService.successBubble(`更新成功`);
         else this.messageService.errorBox('更新失敗\n' + response.Data.ErrorMsg);
+      }),
+      catchError(error => this.errorHandler.handleError(error))
+    ).subscribe();
+  }
+
+  public deleteASS21010(payload: ASS21010Delete): void {
+    this.http.post<ASS21010UpdateStatus>(`${apiUrl}/ASS0000/ASS2000/deleteASS21010`, payload).pipe(
+      take(1),
+      tap(res => {
+        if (res.Data.IsUpdateSuccess) this.messageService.successBubble(`${payload.ENG_MeterNo} 刪除成功`);
+        else this.messageService.errorBox('刪除失敗\n' + res.Data.ErrorMsg);
       }),
       catchError(error => this.errorHandler.handleError(error))
     ).subscribe();

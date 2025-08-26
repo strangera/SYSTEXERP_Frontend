@@ -8,7 +8,7 @@ import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/ba
 import { ButtonComponent } from '@shared/componentkit/button/button.component';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
-import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
+// import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
 import { TableComponent } from '@shared/componentkit/table/table.component';
 import { Column, createPaginationConfig } from '@shared/componentkit/table/table.model';
 import { AccordionModule } from 'primeng/accordion';
@@ -27,7 +27,7 @@ import { PanelModule } from 'primeng/panel';
     ReactiveFormsModule,
     InputTextComponent,
     DropdownComponent,
-    MultiSelectComponent,
+    // MultiSelectComponent,
     MenubarComponent,
     ButtonComponent,
     TableComponent,
@@ -100,7 +100,6 @@ export class ASS21020Component extends BasicQueryPageComponent<unknown> implemen
     this.queryStateService.setQueryState(this.ProgNo, this.queryForm.value);
     super.onCreate(data);
   }
-
 
   public onClear(): void {
     this.queryForm.reset();
