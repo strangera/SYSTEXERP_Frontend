@@ -344,7 +344,7 @@ export class TLS56020CRUComponent
       ...event,
       SPM_No: this.dataForm.controls.SPM_No.value,
       LOGO_No: this.dataForm.controls.LOGO_No.value,
-      VEN_No: this.dataForm.controls.VEN_No.value, // ⬅ 加上供應商
+      VEN_No: this.dataForm.controls.VEN_No.value,
     };
 
     this.tls52010Service
