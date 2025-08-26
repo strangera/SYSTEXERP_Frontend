@@ -805,7 +805,7 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
     const endMonth = endDate.getMonth(); // 0-based
 
     // 🎯 正確的月份差計算公式
-    const months = (endYear - startYear) * 12 + (endMonth - startMonth) + 1;
+    const months = (endYear - startYear) * 12 + (endMonth - startMonth);
 
     console.log('🧮 期數計算詳情:', {
       開始年: startYear,
