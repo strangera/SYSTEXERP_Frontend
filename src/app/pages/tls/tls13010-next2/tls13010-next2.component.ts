@@ -202,7 +202,10 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
     { field: 'commissionTypeName', header: '抽成類別名稱', editable: true },
     { field: 'taxType', header: '稅別', editable: true, type: 'dropdown', options: TLS13010_DROPDOWN_OPTIONS.cagTaxTypeOption },
     { field: 'transactionAmount', header: '單筆交易金額(含)以上', editable: true, type: 'number' },
-    { field: 'specialCommission', header: '特價抽成(%)', editable: true, type: 'number' },
+    {
+      field: 'specialCommission', header: '特價抽成(%)', editable: true, type: 'number', allowDecimal: true,
+      decimalPlaces: 3
+    },
     { field: 'fullPointActivity', header: '全館消費滿額集點活動', editable: true, type: 'checkbox' },
     { field: 'thousandDiscount', header: '滿仟送佰', editable: true, type: 'checkbox' },
   ];
