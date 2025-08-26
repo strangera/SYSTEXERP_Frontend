@@ -12,7 +12,7 @@
     >
       <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
-          <!-- 銷售日期 -->
+          <!-- 銷售日期（單日） -->
           <div class="col-12 md:col-6 lg:col-4">
             <app-calendar
               label="銷售日期"
@@ -160,7 +160,6 @@
 
         <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
           <app-button btnType="clear" [form]="queryForm"></app-button>
-          <!-- ✅ 綁定 form，統一走 (ngSubmit) 流程 -->
           <app-button btnType="query" [form]="queryForm" [loading]="loading"></app-button>
         </div>
       </form>
@@ -169,21 +168,23 @@
 </div>
 
 <div class="card">
-  <app-table
-    tableKey="TLS23120"
-    [data]="data"
-    [columns]="columns"
-    [showCheckBox]="false"
-    dataKey="TLT_No"
-    [multiSortMeta]="[{ field: 'TLT_No', order: 1 }]"
-    [totalRecords]="totalRecords"
-    [lazy]="true"
-    [loading]="loading"
-    (edit)="onEdit($event)"
-    (detail)="onDetail($event)"
-    [showManage]="false"
-    [showDelete]="false"
-   
-    (lazyLoadData)="onLazyLoadData($event, queryForm)"
-  ></app-table>
+<app-table
+  tableKey="TLS23120"
+  [data]="data"
+  [columns]="columns"
+  [showCheckBox]="false"
+  dataKey="_rowKey"                      
+  [multiSortMeta]="sortMeta"
+  [totalRecords]="0"                      
+  [lazy]="false"                          
+  [loading]="loading"
+  (edit)="onEdit($event)"
+  (detail)="onDetail($event)"
+  [showManage]="false"
+  [showDelete]="false"
+  [showPaginator]="false"                  
+  [showPage]="false"                       
+  [rowsPerPageOptions]="[]"                
+></app-table>
+
 </div>

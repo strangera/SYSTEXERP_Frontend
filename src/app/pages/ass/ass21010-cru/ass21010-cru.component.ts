@@ -72,6 +72,14 @@ export class ASS21010CRUComponent extends BasicCruPageComponent<ASS2100ENGMeterT
     console.log(`Location changes:`, [locations]);
   });
 
+  /** 初始化靜態資料 */
+  // public readonly staticDataEffect = effect(() => {
+  //   const detail = this.service.TLS26010Detail();
+  //   if (!detail) return;
+  //   ASS21010CRUComponent.staticData = detail as ASS21010Data;
+  //   this.staticDataEffect.destroy(); // 只需執行一次
+  // });
+
   public readonly columns: Column[] = [
     { field: 'ENG_Type', header: '能源類型' },
     { field: 'ENG_MeterNo', header: '錶號' },
@@ -79,8 +87,12 @@ export class ASS21010CRUComponent extends BasicCruPageComponent<ASS2100ENGMeterT
     { field: 'ENG_Remark', header: '備註' },
   ];
 
+  // 靜態資料: 用於表單初始化和重置
+  // private static staticData: ASS21010Data;
+
   constructor(
     public readonly service: ASS21010Service,
+    private readonly logger: NGXLogger,
   ) {
     super();
   }
@@ -93,6 +105,7 @@ export class ASS21010CRUComponent extends BasicCruPageComponent<ASS2100ENGMeterT
 
     if (this.crudstatus !== CRUDStatus.Create && this.rowdata) {
       Reflect.has(this.rowdata, 'Location_No') && this.df().Location_No.setValue(this.rowdata.Location_No);
+      this.logger.debug(`rowData:`, [this.rowdata]);
     }
   }
 
@@ -105,8 +118,8 @@ export class ASS21010CRUComponent extends BasicCruPageComponent<ASS2100ENGMeterT
         Location_No: d.Location_No ?? '',
         ENG_Remark: d.ENG_Remark ?? '',
         ID: this.rowdata?.Id ?? 0,
-        SYS_StoreNo: '',
-        Mid: 0,
+        SYS_StoreNo: this.user.SYS_StoreNo,
+        Mid: Number(this.user.mid),
       };
 
       this.service.updateASS21010(payload);
