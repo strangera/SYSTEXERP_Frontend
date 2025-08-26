@@ -27,8 +27,8 @@
 
           <!-- 信用卡卡別 -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="信用卡別" controlName="CRD_Type" [options]="cardTypeOptions" optionLabel="label"
-              optionValue="value" [control]="queryForm.controls.CRD_Type" [submitted]="submitted"></app-dropdown>
+            <app-multi-select label="信用卡別" controlName="CRD_Type" [options]="cardTypeOptions" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.CRD_Type" [submitted]="submitted"></app-multi-select>
           </div>
 
           <!-- 信用卡卡號 -->
