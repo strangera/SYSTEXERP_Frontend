@@ -73,7 +73,7 @@ export class TLS23090Component extends BasicQueryPageComponent<any> {
     TXN_DateEnd: [this.yesterday, [Validators.required]],
     ECR_No: [],
     tlt_no: [],
-    CRD_Type: [],
+    CRD_Type: [[]],
     CRD_No: [],
     TXN_PayAmt: [null],
     tlt_building: [],
@@ -236,7 +236,7 @@ onSubmit(form: FormGroup): void {
     { field: 'TXN_No', header: '交易序號' },
     { field: 'tlt_no', header: '專櫃編號' },
     { field: 'tlt_name', header: '櫃位名稱' },
-    { field: 'CRD_Type', header: '信用卡卡別' },
+    { field: 'CRD_Name', header: '信用卡卡別' },
     { field: 'CRD_No', header: '信用卡卡號' },
     {
       field: 'TXN_PayAmt',

@@ -20,7 +20,7 @@
 
           <!-- 卡種（銀行代號） -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select
+            <app-dropdown
               label="卡種"
               controlName="BNK_No"
               [options]="cardTypeOptions"
@@ -28,7 +28,7 @@
               optionValue="value"
               [control]="queryForm.controls.BNK_No"
               [submitted]="submitted">
-            </app-multi-select>
+            </app-dropdown>
           </div>
 
           <!-- 館別 -->

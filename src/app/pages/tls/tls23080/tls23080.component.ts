@@ -1,7 +1,7 @@
 import { Component } from '@angular/core';
 import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { createPaginationConfig, formatDateToYYYY_MM_DD } from '../../../shared/componentkit/table/table.model';
+import { createPaginationConfig, LazyLoadEvent, formatDateToYYYY_MM_DD } from '../../../shared/componentkit/table/table.model';
 
 import { WhetherService } from '../../../service/basic/whether.service';
 import { TLS23080Service } from '../../../service/api/tls/tls23080.service';
@@ -18,8 +18,6 @@ import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdow
 import { InputTextModule } from 'primeng/inputtext';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { TranslateModule } from '@ngx-translate/core';
-import { Subject, Subscription, of, firstValueFrom } from 'rxjs';
-import { debounceTime, takeUntil, timeout, catchError } from 'rxjs/operators';
 import { TableComponent } from '@shared/componentkit/table/table.component';
 import { ColumnLabelService } from '../../../service/basic/column-label.service';
 
@@ -44,8 +42,6 @@ import { ColumnLabelService } from '../../../service/basic/column-label.service'
   ]
 })
 export class TLS23080Component extends BasicQueryPageComponent<any> {
-
-
   data: any[] = [];
   totalRecords = 0;
 
@@ -56,6 +52,16 @@ export class TLS23080Component extends BasicQueryPageComponent<any> {
   ECRNoOptions: any[] = [];
   CounterOptions: any[] = [];
 
+  // --- 排序狀態 ---
+  sortMeta: any[] = [];
+  readonly defaultSort: any[] = [
+    { field: 'TXN_Date', order: -1 }, // 近到遠
+
+  ];
+  private lastQuerySig: string | null = null;
+  private lazyTimer: any = null;
+  private readonly includePagingAndSorting = true;
+
   readonly yesterday: Date = (() => {
     const d = new Date();
     d.setHours(0, 0, 0, 0);
@@ -63,7 +69,6 @@ export class TLS23080Component extends BasicQueryPageComponent<any> {
     return d;
   })();
 
- 
   queryForm = this.formBuilder.group({
     TXN_DateStart: [this.yesterday, [Validators.required]],
     TXN_DateEnd: [this.yesterday, [Validators.required]],
@@ -72,9 +77,10 @@ export class TLS23080Component extends BasicQueryPageComponent<any> {
     tlt_building: [],
     tlt_floor: [],
     org_id: [],
-
-    ...createPaginationConfig([{ field: 'TXN_Date', order: 1 }])
+    // ✅ 帶入預設排序
+    ...createPaginationConfig(this.defaultSort),
   });
+
   constructor(
     private whetherService: WhetherService,
     private tls23080Service: TLS23080Service,
@@ -82,141 +88,165 @@ export class TLS23080Component extends BasicQueryPageComponent<any> {
     private ECRNoService: ECRNoService,
     private counterNameService: CounterNameService,
     private tls11010Service: Tls11010Service,
-    private columnLabelService: ColumnLabelService 
+    private columnLabelService: ColumnLabelService
   ) {
     super();
   }
 
   ngOnInit(): void {
     this.initializePage('TLS23080', 'tls/tls23080', this.queryForm, (form) => this.onSubmit(form));
+    this.sortMeta = this.defaultSort.map(x => ({ ...x }));
 
-    // ✅ 下拉資料：全部 takeUntil
+    // 下拉選單
     this.whetherService.getWhetherOptions().subscribe(data => {
-        this.WhetherOptions = (data || []).filter((opt: any) => opt.value !== null);
-      });
-
+      this.WhetherOptions = (data || []).filter((opt: any) => opt.value !== null);
+    });
     this.floorService.getFloors().subscribe(data => this.floorOptions = data);
-
     this.tls11010Service.getBuildingOptions().subscribe(data => this.BUILDING_NO_Options = data);
-
     this.tls11010Service.getOrgOptions().subscribe(res => {
-        this.OrganizationCodeOptions = (res ?? []).map((x: any) => ({
-          label: x.label,
-          formLabel: `${x.value} - ${x.label}`,
-          value: x.value,
-        }));
-      });
-
+      this.OrganizationCodeOptions = (res ?? []).map((x: any) => ({
+        label: x.label,
+        formLabel: `${x.value} - ${x.label}`,
+        value: x.value,
+      }));
+    });
     this.ECRNoService.getECRNo().subscribe(res => {
-        this.ECRNoOptions = (res ?? []).map((x: any) => ({
-          label: x.label,
-          formLabel: `${x.value} - ${x.label}`,
-          value: x.value,
-        }));
-      });
-
+      this.ECRNoOptions = (res ?? []).map((x: any) => ({
+        label: x.label,
+        formLabel: `${x.value} - ${x.label}`,
+        value: x.value,
+      }));
+    });
     this.counterNameService.getCounters().subscribe(res => {
-        this.CounterOptions = (res ?? []).map((x: any) => ({
-          label: x.label,
-          formLabel: `${x.value} - ${x.label}`,
-          value: x.value,
-        }));
-      });
+      this.CounterOptions = (res ?? []).map((x: any) => ({
+        label: x.label,
+        formLabel: `${x.value} - ${x.label}`,
+        value: x.value,
+      }));
+    });
   }
-moneyFormat(value: number): string {
-  return value != null ? value.toLocaleString('en-US') : '0';
-}
-// formatDate：輸出 2024/05/27
- formatDate = (val: string | Date | number): string => {
-  if (!val) return '';
-  const d = val instanceof Date ? val : new Date(val);
-  if (isNaN(d.getTime())) return '';
-  const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, '0');
-  const day = String(d.getDate()).padStart(2, '0');
-  return `${y}/${m}/${day}`;
-};
 
+  /** 表格 lazy 事件（分頁/排序） */
+  override onLazyLoadData(event: LazyLoadEvent, form: FormGroup): void {
+    const currSort = JSON.stringify(form.value?.SortBy ?? []);
+    const nextSort = JSON.stringify(event.SortBy ?? []);
+    const nextPageIndex = currSort !== nextSort ? 1 : (event.pageIndex ?? form.value.pageIndex ?? 1);
 
-onSubmit(form: FormGroup): void {
-  this.handleSubmit(form, () => {
-    const val = this.queryForm.getRawValue() as any;
+    form.patchValue({
+      pageIndex: nextPageIndex,
+      pageSize : event.pageSize ?? form.value.pageSize,
+      SortBy   : event.SortBy ?? form.value.SortBy,
+    }, { emitEvent: false });
 
-    // 由 pageIndex/pageSize 推 Offset (0-based)
-    const offset =
-      Number.isFinite(val?.pageIndex) && Number.isFinite(val?.pageSize)
-        ? Math.max(0, (val.pageIndex - 1) * val.pageSize)
-        : undefined;
+    this.sortMeta = (event.SortBy ?? []).map(s => ({ ...s }));
 
-    // SortMeta[] -> "field ASC,DESC..."
-    const orderBy =
-      Array.isArray(val?.SortBy) && val.SortBy.length
-        ? val.SortBy.map((s: any) => `${s.field} ${s.order === 1 ? 'ASC' : 'DESC'}`).join(',')
-        : undefined;
+    const sig = JSON.stringify({
+      pageIndex: form.value.pageIndex,
+      pageSize : form.value.pageSize,
+      SortBy   : form.value.SortBy,
+    });
+    if (sig === this.lastQuerySig) return;
+    this.lastQuerySig = sig;
 
-    // 組 payload（用 YYYY-MM-DD，避免 toISOString 少一天）
-    const payload: any = {
-      TXN_DateStart: formatDateToYYYY_MM_DD(val?.TXN_DateStart),
-      TXN_DateEnd:   formatDateToYYYY_MM_DD(val?.TXN_DateEnd),
+    if (this.lazyTimer) clearTimeout(this.lazyTimer);
+    this.lazyTimer = setTimeout(() => this.onSubmit(form), 0);
+  }
+
+  onSubmit(form: FormGroup): void {
+    this.handleSubmit(form, () => {
+      const payload = this.buildPayload(this.queryForm.getRawValue());
+      this.loading = true;
+      this.messageService?.blockUi();
+
+      this.tls23080Service.queryTLS23080(payload).subscribe({
+        next: (res: any) => {
+          const groups = Array.isArray(res?.Data) ? res.Data : (res?.Data ? [res.Data] : []);
+          const details = groups.flatMap((g: any)=>
+            Array.isArray(g?.tLS23080_Details) ? g.tLS23080_Details : []
+          ).map((d: any) => ({
+            ...d,
+            TXN_Date: d?.TXN_Date ? formatDateToYYYY_MM_DD(d.TXN_Date) : d?.TXN_Date
+          }));
+          this.data = details;
+          this.totalRecords = typeof res?.TotalCount === 'number' ? res.TotalCount : details.length;
+        },
+        error: (err) => {
+          this.loading = false;
+
+        },
+        complete: () => {
+          this.loading = false;
+          this.messageService?.unblockUi();
+        }
+      });
+    });
+  }
+
+  /** 組查詢 payload（含排序＆分頁鍵） */
+  private buildPayload(val: any) {
+    const toIso = (x: any) => {
+      if (!x) return undefined;
+      const d = typeof x === 'string' ? new Date(x) : (x as Date);
+      if (isNaN(d.getTime())) return undefined;
+      return new Date(d.getTime() - d.getTimezoneOffset() * 60000)
+        .toISOString().slice(0, 19);
+    };
+
+    const pageSize  = Number.isFinite(val?.pageSize) ? Number(val.pageSize) : 10;
+    const pageIndex = Number.isFinite(val?.pageIndex) ? Number(val.pageIndex) : 1;
+    const offset    = Math.max(0, (pageIndex - 1) * pageSize);
+
+    const sortByArr = Array.isArray(val?.SortBy) && val.SortBy.length
+      ? val.SortBy
+      : (this.sortMeta.length ? this.sortMeta : this.defaultSort);
+
+    const orderBy = sortByArr.length
+      ? sortByArr.map((s: any) => `${s.field} ${s.order === 1 ? 'ASC' : 'DESC'}`).join(',')
+      : undefined;
+
+    const o: any = {
+      TXN_DateStart: toIso(val?.TXN_DateStart),
+      TXN_DateEnd:   toIso(val?.TXN_DateEnd),
       tlt_openflag:  val?.tlt_openflag,
       ECR_No:        val?.ECR_No,
       tlt_building:  val?.tlt_building,
       tlt_floor:     val?.tlt_floor,
       org_id:        val?.org_id,
-      pageSize:      val?.pageSize,
-      pageIndex:     val?.pageIndex,
-      SortBy:        val?.SortBy,
-      ...(offset  !== undefined ? { Offset:  offset } : {}),
-      ...(orderBy ? { OrderBy: orderBy } : {}),
     };
 
-    // 去除空值/空陣列
-    Object.keys(payload).forEach(k => {
-      const v = payload[k];
-      if (v === '' || v === null || v === undefined) delete payload[k];
-      if (Array.isArray(v) && v.length === 0) delete payload[k];
+    if (this.includePagingAndSorting) {
+      Object.assign(o, {
+        PageSize: pageSize,
+        PageIndex: pageIndex,
+        Offset: offset,
+        SortBy: sortByArr,
+        ...(orderBy ? { OrderBy: orderBy } : {}),
+      });
+    }
+
+    Object.keys(o).forEach(k => {
+      const v = o[k];
+      if (v === undefined || v === '') delete o[k];
+      if (Array.isArray(v) && v.length === 0) delete o[k];
     });
 
-    this.loading = true;
-    this.messageService?.blockUi();
+    return o;
+  }
 
-    this.tls23080Service.queryTLS23080(payload).subscribe({
-      next: (res: any) => {
-        // res.Data 可能是單筆或多筆彙總，每筆都有 tLS23080_Details:[...]
-        const groups = Array.isArray(res?.Data) ? res.Data : (res?.Data ? [res.Data] : []);
+  // ===== 工具 =====
+  moneyFormat(value: number): string {
+    return value != null ? value.toLocaleString('en-US') : '0';
+  }
 
-        // 合併所有細項並處理日期顯示
-        const details = groups.flatMap((g: any)=>
-          Array.isArray(g?.tLS23080_Details) ? g.tLS23080_Details : []
-        ).map((d: any) => ({
-          ...d,
-          // 若要在表格顯示 YYYY-MM-DD，可轉一下；不需要就拿掉這行
-          TXN_Date: d?.TXN_Date ? formatDateToYYYY_MM_DD(d.TXN_Date) : d?.TXN_Date
-        }));
-
-        // 只顯示細項
-        this.data = details;
-
-        // 總筆數：優先用 API 回傳，否則用細項長度
-        this.totalRecords =
-          typeof res?.TotalCount === 'number' ? res.TotalCount : details.length;
-
-        // 若你同時需要在頁面顯示彙總(總金額們)，可留存第一筆彙總資料(不影響表格顯示)
-        // this.headerTotals = groups[0]; // 之後自行在畫面讀用
-      },
-      error: (err) => {
-        console.error('TLS23080 查詢失敗', err);
-        this.messageService?.errorBubble?.('查詢失敗，請稍後再試');
-        this.loading = false;
-        this.messageService?.unblockUi();
-      },
-      complete: () => {
-        this.loading = false;
-        this.messageService?.unblockUi();
-      }
-    });
-  });
-}
+  formatDate = (val: string | Date | number): string => {
+    if (!val) return '';
+    const d = val instanceof Date ? val : new Date(val);
+    if (isNaN(d.getTime())) return '';
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${y}/${m}/${day}`;
+  };
 
 
 // 建議也把 formatDate 引進來：

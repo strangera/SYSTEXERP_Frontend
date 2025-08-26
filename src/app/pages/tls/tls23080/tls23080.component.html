@@ -60,8 +60,8 @@
 
 <!-- 資料表格 -->
 <div class="card">
-  <app-table tableKey="TLS23080" [data]="data" [columns]="columns" [showCheckBox]="false" dataKey="TXN_No"
-    [multiSortMeta]="[{ field: 'TXN_DateStart', order: 1 }]" [totalRecords]="totalRecords" [lazy]="true"
+  <app-table tableKey="TLS23080" [data]="data" [columns]="columns" [showCheckBox]="false" dataKey="TXN_Date"
+    [multiSortMeta]="[{ field: 'TXN_Date', order: 1 }]" [totalRecords]="totalRecords" [lazy]="true"
     [loading]="loading" [showManage]="false" [showDelete]="false"
     (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"></app-table>
 </div>
