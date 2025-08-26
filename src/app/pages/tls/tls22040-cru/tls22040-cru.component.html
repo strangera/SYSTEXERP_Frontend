@@ -1,0 +1,29 @@
+<div class="card">
+  <div class="flex gap-2 mb-2">
+    <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
+    <app-button btnType="back" (click)="onCancel()" />
+  </div>
+  <div class="card">
+    <app-table
+      dataKey="id"
+      [data]="data"
+      [columns]="columns"
+      [showCheckBox]="false"
+      (selectionChange)="selectedItems = $event"
+      [selectedItems]="selectedItems"
+      [multiSortMeta]="[{ field: 'ECR_No', order: 1 }]"
+      [totalRecords]="totalRecords"
+      (lazyLoadData)="onLazyLoadData($event, dataForm)"
+      [lazy]="true"
+      [loading]="loading"
+      [showEdit]="false"
+      [showDetail]="false"
+      [showDelete]="false"
+      [showManage]="false"
+      [showReportMode]="false"
+    ></app-table>
+    <div class="flex justify-content-end m-0 pt-3">
+      <p-button label="全部重送" (click)="onReview(data)"></p-button>
+    </div>
+  </div>
+</div>
