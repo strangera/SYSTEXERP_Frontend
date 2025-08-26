@@ -1,25 +1,27 @@
 /// <reference types="@angular/localize" />
-import { routes } from './app/app.routing';
+import { DatePipe } from '@angular/common';
+import { HTTP_INTERCEPTORS, HttpClient, provideHttpClient, withInterceptorsFromDi } from '@angular/common/http';
+import { importProvidersFrom } from '@angular/core';
 import { bootstrapApplication, BrowserModule } from '@angular/platform-browser';
-import { provideHttpClient, withInterceptorsFromDi, HTTP_INTERCEPTORS, HttpClient } from '@angular/common/http';
-import { MessageService, ConfirmationService, PrimeNGConfig } from 'primeng/api';
-import { CustomheaderinterceptorService } from './app/interceptors/customheaderinterceptor.service';
+import { provideAnimations } from '@angular/platform-browser/animations';
+import { provideRouter, UrlSerializer } from '@angular/router';
+import { JwtModule } from '@auth0/angular-jwt';
+import { QueryCacheInterceptorService } from '@interceptors/querycacheinterceptor.service';
+import { TranslateLoader, TranslateModule } from '@ngx-translate/core';
+import { TranslateHttpLoader } from '@ngx-translate/http-loader';
+import { LoggerModule, NgxLoggerLevel } from 'ngx-logger';
+import { ConfirmationService, MessageService, PrimeNGConfig } from 'primeng/api';
+import { ConfirmDialogModule } from 'primeng/confirmdialog';
+import { DialogModule } from 'primeng/dialog';
+import { ToastModule } from 'primeng/toast';
+import { AppComponent } from './app/app.component';
+import { routes } from './app/app.routing';
 import { AuthinterceptorService } from './app/interceptors/authinterceptor.service';
+import { CustomheaderinterceptorService } from './app/interceptors/customheaderinterceptor.service';
 import { DateToISOStringInterceptor } from './app/interceptors/dateToISOStringInterceptor.interceptor';
 import { ErrorinterceptorService } from './app/interceptors/errorinterceptor.service';
-import { UrlSerializer, provideRouter } from '@angular/router';
 import { LowerCaseUrlSerializer } from './app/utils/LowerCaseUrlSerializer';
-import { ConfirmDialogModule } from 'primeng/confirmdialog';
-import { ToastModule } from 'primeng/toast';
-import { DialogModule } from 'primeng/dialog';
-import { provideAnimations } from '@angular/platform-browser/animations';
-import { TranslateModule, TranslateLoader } from '@ngx-translate/core';
-import { TranslateHttpLoader } from '@ngx-translate/http-loader';
-import { JwtModule } from '@auth0/angular-jwt';
 import { environment } from './environments/environment';
-import { AppComponent } from './app/app.component';
-import { importProvidersFrom } from '@angular/core';
-import { QueryCacheInterceptorService } from '@interceptors/querycacheinterceptor.service';
 
 export function HttpLoaderFactory(http: HttpClient) {
   return new TranslateHttpLoader(http, './assets/i18n/', '.json');
@@ -35,19 +37,29 @@ export function tokenGetter() {
 
 bootstrapApplication(AppComponent, {
   providers: [
-    importProvidersFrom(ConfirmDialogModule, ToastModule, DialogModule, BrowserModule, TranslateModule.forRoot({
-      loader: {
-        provide: TranslateLoader,
-        useFactory: HttpLoaderFactory,
-        deps: [HttpClient]
-      }
-    }), JwtModule.forRoot({
-      config: {
-        tokenGetter: tokenGetter,
-        allowedDomains: [`${environment.ApiUrl}`], // 你的後端 API 網域
-        disallowedRoutes: [`${environment.ApiUrl}/login`], // 登入 API 不需要帶 Token
-      }
-    })),
+    importProvidersFrom(ConfirmDialogModule, ToastModule, DialogModule, BrowserModule,
+      TranslateModule.forRoot({
+        loader: {
+          provide: TranslateLoader,
+          useFactory: HttpLoaderFactory,
+          deps: [HttpClient]
+        }
+      }),
+      JwtModule.forRoot({
+        config: {
+          tokenGetter: tokenGetter,
+          allowedDomains: [`${environment.ApiUrl}`], // 你的後端 API 網域
+          disallowedRoutes: [`${environment.ApiUrl}/login`], // 登入 API 不需要帶 Token
+        }
+      }),
+      LoggerModule.forRoot({
+        level: NgxLoggerLevel.TRACE, // 設定log等級
+        serverLogLevel: NgxLoggerLevel.ERROR, // 設定伺服器log等級
+        // serverLoggingUrl: `${environment.ApiUrl}/log`, // 設定伺服器接收log的API
+        // enableSourceMaps: !environment.production,
+        timestampFormat: 'yyyy-MM-dd HH:mm:ss:SSS',
+      }),
+    ),
     provideRouter(routes), // 提供路由模組
     provideHttpClient(withInterceptorsFromDi()), // 啟用 HttpClient 並讓其支援 DI 提供的攔截器
     MessageService,
@@ -79,6 +91,7 @@ bootstrapApplication(AppComponent, {
       multi: true
     },
     { provide: UrlSerializer, useClass: LowerCaseUrlSerializer },
+    DatePipe,
     provideAnimations(),
   ]
 })
