@@ -64,9 +64,7 @@ export class TLS23130Component extends BasicQueryPageComponent<any> {
   // ---- 排序狀態 ----
   sortMeta: any[] = [];
   readonly defaultSort: any[] = [
-
-    { field: 'BNK_No',   order:  1 }, // 銀行代號
-  
+    { field: 'BNK_No', order: 1 }, // 銀行代號
   ];
   private lastQuerySig: string | null = null;
   private lazyTimer: any = null;
@@ -74,12 +72,15 @@ export class TLS23130Component extends BasicQueryPageComponent<any> {
   queryForm = this.formBuilder.group({
     TXN_DateStart: [this.yesterday, [Validators.required]],
     TXN_DateEnd:   [this.yesterday, [Validators.required]],
-    BNK_No:        [[], [Validators.required]],   // 多選＋必填
+
+    // ✅ 單選：用 string；仍保留必填
+    BNK_No:        this.formBuilder.control<string | null>(null, { validators: [Validators.required] }),
+
     tlt_building:  [],
     tlt_floor:     [],
     org_id:        [],
     ...createPaginationConfig([
-      { field: 'BNK_No',   order:  1 },
+      { field: 'BNK_No', order: 1 },
     ]),
   });
 
@@ -141,7 +142,7 @@ export class TLS23130Component extends BasicQueryPageComponent<any> {
       })) || [];
     });
 
-    // 銀行下拉
+    // 銀行下拉（卡種）— 單選，預設帶入第一筆
     this.tls23130Service
       .queryAPS1001_DropDownList({ SearchKeyword: '' })
       .pipe(
@@ -159,10 +160,10 @@ export class TLS23130Component extends BasicQueryPageComponent<any> {
       )
       .subscribe(opts => {
         this.cardTypeOptions = opts;
+        // ✅ 自動填入第一筆（單選）
         if (opts.length > 0) {
           const first = opts[0].value;
-          (this.queryForm.get('BNK_No') as unknown as FormControl<string[]>)
-            .setValue([first]);
+          (this.queryForm.get('BNK_No') as FormControl<string | null>).setValue(first);
           this.queryForm.get('BNK_No')!.updateValueAndValidity({ onlySelf: true });
         }
       });
@@ -215,10 +216,15 @@ export class TLS23130Component extends BasicQueryPageComponent<any> {
           .slice(0, 19);
       };
 
+      // ✅ 後端若仍吃陣列：把單選值包成陣列；無值則 undefined
+      const toArr = (v: any) =>
+        Array.isArray(v) ? (v.filter(Boolean).length ? v.filter(Boolean) : undefined)
+        : (v ? [v] : undefined);
+
       const payload: any = {
         TXN_DateStart: toIso(val?.TXN_DateStart),
         TXN_DateEnd:   toIso(val?.TXN_DateEnd),
-        BNK_No:        Array.isArray(val?.BNK_No) ? val.BNK_No.filter(Boolean) : undefined,
+        BNK_No:        toArr(val?.BNK_No),   // 👈 單選->陣列（相容後端）
         tlt_building:  val?.tlt_building,
         tlt_floor:     val?.tlt_floor,
         org_id:        val?.org_id,
@@ -226,7 +232,7 @@ export class TLS23130Component extends BasicQueryPageComponent<any> {
         pageIndex:     val?.pageIndex,
         SortBy:        sortByArr,
         Offset:        offset ?? 0,
-        OrderBy:       ""   // ✅ 固定都傳空字串
+        OrderBy:       ""                    // ✅ 固定都傳空字串
       };
 
       // ⚠️ 不刪除 OrderBy
