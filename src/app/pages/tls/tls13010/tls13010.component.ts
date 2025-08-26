@@ -5,7 +5,7 @@ import { Router } from '@angular/router';
 
 // 基礎服務
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { Column, createPaginationConfig, formatDate, formatYN } from '../../../shared/componentkit/table/table.model';
+import { AddButton, Column, createPaginationConfig, formatDate, formatYN } from '../../../shared/componentkit/table/table.model';
 
 // 格式化函數
 import {
@@ -68,6 +68,27 @@ import { InputTextRangeComponent } from '@shared/componentkit/input-text-range/i
   ],
 })
 export class TLS13010Component extends BasicQueryPageComponent<ContractItem> implements OnInit {
+
+  public readonly addButton: AddButton[] = [
+    {
+      label: '審核',
+      icon: 'pi pi-check-circle text-green-500',
+      action: (rowData: ContractItem) => this.onApprove(rowData),
+      disabled: (rowData: ContractItem) => rowData.approve_status !== '1' // 只有未審核狀態才能審核
+    },
+    {
+      label: '反審核',
+      icon: 'pi pi-undo text-orange-500',
+      action: (rowData: ContractItem) => this.onUnapprove(rowData),
+      disabled: (rowData: ContractItem) => rowData.approve_status !== '2' // 只有已審核狀態才能反審核
+    },
+    {
+      label: '作廢',
+      icon: 'pi pi-times-circle text-red-500',
+      action: (rowData: ContractItem) => this.onVoid(rowData),
+      disabled: (rowData: ContractItem) => this.isVoidDisabled(rowData)
+    }
+  ];
 
   // 表單定義
   queryForm = this.formBuilder.nonNullable.group({
@@ -517,4 +538,126 @@ export class TLS13010Component extends BasicQueryPageComponent<ContractItem> imp
     return !this.canEditContract(rowData);
   }
 
+
+  /**
+ * 判斷作廢按鈕是否應該被禁用
+ */
+  private isVoidDisabled(rowData: ContractItem): boolean {
+    // 已作廢的不能再作廢
+    if (rowData.approve_status === '3') {
+      return true;
+    }
+
+    // 未審核的可以作廢
+    if (rowData.approve_status === '1') {
+      return false;
+    }
+
+    // 已審核的需要檢查契約是否已生效
+    if (rowData.approve_status === '2') {
+      const today = new Date();
+      const contractStart = new Date(rowData.tlt_contract_bdate);
+      // 契約已生效就不能作廢
+      return contractStart <= today;
+    }
+
+    return true; // 其他情況都禁用
+  }
+
+  /**
+   * 審核功能
+   */
+  public onApprove(rowData: ContractItem): void {
+    // this.confirmationService.confirm({
+    //   message: `確定要審核合約 ${rowData.apply_no} 嗎？`,
+    //   accept: () => {
+    //     // 調用審核 API
+    //     this.apiService.approveTLS13010(rowData.talent_id).subscribe({
+    //       next: (response: any) => {
+    //         if (response.Status === '0000') {
+    //           this.messageService.successBubble('審核成功');
+    //           this.onSubmit(this.queryForm); // 重新查詢更新狀態
+    //         } else {
+    //           this.messageService.errorBubble(`審核失敗: ${response.Message || '未知錯誤'}`);
+    //         }
+    //       },
+    //       error: (err: any) => {
+    //         console.error('審核失敗:', err);
+    //         this.messageService.errorBubble('審核失敗，請檢查網路連線或聯繫管理員');
+    //       }
+    //     });
+    //   },
+    //   reject: () => {
+    //     this.messageService.infoBubble('已取消審核');
+    //   }
+    // });
+  }
+
+  /**
+   * 反審核功能
+   */
+  public onUnapprove(rowData: ContractItem): void {
+    // this.confirmationService.confirm({
+    //   message: `確定要反審核合約 ${rowData.apply_no} 嗎？`,
+    //   accept: () => {
+    //     // 調用反審核 API
+    //     this.apiService.unapproveTLS13010(rowData.talent_id).subscribe({
+    //       next: (response: any) => {
+    //         if (response.Status === '0000') {
+    //           this.messageService.successBubble('反審核成功');
+    //           this.onSubmit(this.queryForm); // 重新查詢更新狀態
+    //         } else {
+    //           this.messageService.errorBubble(`反審核失敗: ${response.Message || '未知錯誤'}`);
+    //         }
+    //       },
+    //       error: (err: any) => {
+    //         console.error('反審核失敗:', err);
+    //         this.messageService.errorBubble('反審核失敗，請檢查網路連線或聯繫管理員');
+    //       }
+    //     });
+    //   },
+    //   reject: () => {
+    //     this.messageService.infoBubble('已取消反審核');
+    //   }
+    // });
+  }
+
+  /**
+   * 作廢功能
+   */
+  public onVoid(rowData: ContractItem): void {
+    // 先檢查是否可以作廢
+    if (this.isVoidDisabled(rowData)) {
+      if (rowData.approve_status === '3') {
+        this.messageService.warnBubble('該合約已作廢');
+      } else if (rowData.approve_status === '2') {
+        this.messageService.warnBubble('合約已生效，無法作廢');
+      }
+      return;
+    }
+
+    // this.confirmationService.confirm({
+    //   message: `確定要作廢合約 ${rowData.apply_no} 嗎？作廢後無法恢復。`,
+    //   accept: () => {
+    //     // 調用作廢 API
+    //     this.apiService.voidTLS13010(rowData.talent_id).subscribe({
+    //       next: (response: any) => {
+    //         if (response.Status === '0000') {
+    //           this.messageService.successBubble('作廢成功');
+    //           this.onSubmit(this.queryForm); // 重新查詢更新狀態
+    //         } else {
+    //           this.messageService.errorBubble(`作廢失敗: ${response.Message || '未知錯誤'}`);
+    //         }
+    //       },
+    //       error: (err: any) => {
+    //         console.error('作廢失敗:', err);
+    //         this.messageService.errorBubble('作廢失敗，請檢查網路連線或聯繫管理員');
+    //       }
+    //     });
+    //   },
+    //   reject: () => {
+    //     this.messageService.infoBubble('已取消作廢');
+    //   }
+    // });
+  }
 }

@@ -257,11 +257,11 @@
 <!-- 資料表格 -->
 <div class="card">
   <div class="col-12">
-    <app-table tableKey="TLS13010" [data]="data" [columns]="columns" (edit)="onEdit($event)" (detail)="onDetail($event)"
-      [selectedItems]="selectedItems" (selectionChange)="selectedItems = $event" (delete)="onDelete($event)"
-      [showCheckBox]="true" dataKey="talent_id" [multiSortMeta]="[{ field: 'apply_no', order: 1 }]"
-      [totalRecords]="totalRecords" [lazy]="true"
+    <app-table tableKey="TLS13010" [data]="data" [columns]="columns" [addButton]="addButton" (edit)="onEdit($event)"
+      (detail)="onDetail($event)" [selectedItems]="selectedItems" (selectionChange)="selectedItems = $event"
+      (delete)="onDelete($event)" [showCheckBox]="true" dataKey="talent_id"
+      [multiSortMeta]="[{ field: 'apply_no', order: 1 }]" [totalRecords]="totalRecords" [lazy]="true"
       (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [isRowSelectable]="isRowSelectable"
-      [loading]="loading" [showDelete]="false" [editDisabled]="editDisabled" [showCheckBox]="false"></app-table>
+      [loading]="loading" [showDelete]="false" [editDisabled]="editDisabled" [showCheckBox]="true"></app-table>
   </div>
 </div>
