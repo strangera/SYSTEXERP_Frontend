@@ -11,13 +11,24 @@ import { InputTextareaComponent } from '@shared/componentkit/input-textarea/inpu
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { createPaginationConfig, Column } from '@shared/componentkit/table/table.model';
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
+import { Tls42010Service } from '../../../service/api/tls/tls42010.service';  // 引入 service
 
 @Component({
   selector: 'app-tls42010',
   templateUrl: './tls42010.component.html',
   styleUrl: './tls42010.component.scss',
   standalone: true,
-  imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputTextareaComponent, TableComponent, TranslateModule, InputTextComponent]
+  imports: [
+    MenubarComponent,
+    ButtonComponent,
+    AccordionModule,
+    FormsModule,
+    ReactiveFormsModule,
+    InputTextareaComponent,
+    TableComponent,
+    TranslateModule,
+    InputTextComponent
+  ]
 })
 export class TLS42010Component extends BasicQueryPageComponent<any> implements OnInit {
   queryForm = this.formBuilder.group({
@@ -34,23 +45,36 @@ export class TLS42010Component extends BasicQueryPageComponent<any> implements O
     { field: 'ECR_KBDesc', header: '鍵盤備註', visible: true },
   ];
   totalRecords = 0;
+  override loading = false;
+
 
   constructor(
     private validationService: ValidationService,
     private counterCodeService: CounterCodeService,
+    private tls42010Service: Tls42010Service //  注入 service
   ) {
     super();
   }
 
   ngOnInit(): void {
     this.initializePage('TLS42010', '/TLS/TLS42010cru', this.queryForm, (form) => this.onSubmit(form));
-
   }
-
 
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
-      console.log('Form submitted successfully:', frm.value);
+      this.loading = true;
+      this.tls42010Service.queryTLS42010M(frm.value).subscribe({
+        next: (res) => {
+          this.data = res?.Data ?? [];        // 塞資料到 table
+          this.totalRecords = res?.TotalCount ?? this.data.length;
+          this.loading = false;
+          console.log('查詢成功:', res);
+        },
+        error: (err) => {
+          this.loading = false;
+          console.error('TLS42010 查詢失敗', err);
+        }
+      });
     });
   }
 }
