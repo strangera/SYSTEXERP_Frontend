@@ -25,7 +25,7 @@
     <ng-content select="header"></ng-content>
   </div>
   <div *ngIf="IsPrint" class="flex gap-2 py-2">
-    <div *ngIf="expansionColumns.length > 0 && IsPrint" class="flex align-items-center">
+    <div *ngIf="showExpandCollapse && expansionColumns.length > 0 && IsPrint" class="flex align-items-center">
       <p-button [icon]="expression ? 'pi pi-angle-up' : 'pi pi-angle-down'" (onClick)="toggleExpandCollapse()"
         [label]="expression ? '收合' : '展開'" text />
     </div>

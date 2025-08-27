@@ -16,15 +16,13 @@ import { RadiobuttonComponent } from '../../../shared/componentkit/radiobutton/r
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { TranslateModule } from '@ngx-translate/core';
 import { columns, FIX_TYPE, TXN_GUIPaperOptions, txnStatusOptions } from './tls24010.model';
 import { STORE_WAY, TLS24010_EDIT_TYPE } from '../tls24010-cru/tls24010-cru.model';
 import { yesterday } from '@shared/models/system/query-form.model';
-import { TLS2B030Service } from '@service/api/tls/tls2-b030.service';
 import { DropdownChangeEvent } from 'primeng/dropdown';
 import { TLS41010Service } from '@service/api/tls/tls41010.service';
-
+import { TableReportComponent } from '@shared/componentkit/table/table-report/table-report.component';
 // 交易補登作業
 @Component({
   selector: 'app-tls24010',
@@ -40,7 +38,7 @@ import { TLS41010Service } from '@service/api/tls/tls41010.service';
     CalendarComponent,
     DropdownComponent,
     InputNumberComponent,
-    TableComponent,
+    TableReportComponent,
     MenuModule,
     TranslateModule,
   ],
@@ -50,14 +48,16 @@ export class TLS24010Component extends BasicQueryPageComponent<TLS24010Data> imp
   queryForm = this.formBuilder.nonNullable.group({
     TXN_GUIPaper: ['E', [Validators.required]],/*補登類別 → TXN_GUIPaper */
     TXN_Date: [null as Date | null, [Validators.required]],    /*銷售日期 → POS5006.TXN_Date */
-    ECR_No: ['', [Validators.required]], /*收銀機號 → ECR_No */
-    TLT_No: ['', [Validators.required]], /*櫃編 → TLT_No */
+    ECR_No: ['',], /*收銀機號 → ECR_No */
+    TLT_No: ['',], /*櫃編 → TLT_No */
     TXN_No: [null as string | number | null, [Validators.maxLength(8), Validators.max(99999999)]],  /*交易序號 → TXN_No */
     TLT_Name: [''], /*櫃名 → TLT_Name */
     store_way: [''], /*櫃位類型 → store_way */
     talent_id: [0], /*專櫃代號 → talent_id */
+    color: ['#ffffff'], /*顏色 */
     ...createPaginationConfig([{ field: 'TXN_Date', order: -1 }]), // 分頁和排序參數
   });
+  color: string | undefined;
   totalRecords = 0;
   today = new Date(); // 獲取當前日期
   TXN_GUIPaperOptions = TXN_GUIPaperOptions
@@ -83,20 +83,20 @@ export class TLS24010Component extends BasicQueryPageComponent<TLS24010Data> imp
     });
     const txnDate = this.queryForm.get('TXN_Date')?.value;
     if (!txnDate) {
-      this.queryForm.get('TXN_Date')?.setValue(new Date(yesterday.getFullYear(), yesterday.getMonth(), yesterday.getDate(), 0, 0, 0));
+      // yesterday.getFullYear(), yesterday.getMonth(), yesterday.getDate(), 0, 0, 0
+      this.queryForm.get('TXN_Date')?.setValue(new Date('2024/01/31'));
     }
-  }
-  onDateSelect(event: Date): void {
-    this.queryForm.get('TXN_Date')?.setValue(event);
-    this.dropDownList.queryTLTTALENT_ByContractDate_DropDownList(event.toISOString().split('T')[0]).pipe(untilDestroyed(this)).subscribe(options => {
-      this.TLT_NoOptions = options.Data.map(item => ({ ...item, label: `${item.No} - ${item.Name}` }));
+    this.queryForm.get('TXN_Date')?.valueChanges.pipe(untilDestroyed(this)).subscribe(value => {
+      const dateString = value ? formatDateToYYYY_MM_DD(value) : '';
+      if (!dateString) { return; }
+      this.dropDownList.queryTLTTALENT_ByContractDate_DropDownList(dateString).pipe(untilDestroyed(this)).subscribe(options => {
+        this.TLT_NoOptions = options.Data.map(item => ({ ...item, label: `${item.No} - ${item.Name}` }));
+      });
     });
   }
-
   onECRNoChange(event: DropdownChangeEvent): void {
-    const body = {
-      ECR_No: event.value || '',
-    }
+    if (!event.value || event.value === '') { return; }
+    const body = { ECR_No: event.value };
     this.tLS41010Service.queryTLS41010(body).pipe(untilDestroyed(this)).subscribe(res => {
       this.queryForm.get('TLT_No')?.setValue(res.Data[0].ECR_TLT_No || '');
     });
@@ -104,7 +104,11 @@ export class TLS24010Component extends BasicQueryPageComponent<TLS24010Data> imp
 
   onSubmit(frm: FormGroup): void {
     this.handleSubmit(frm, () => {
-      this.tls24010Service.queryTLS24010(frm.getRawValue()).pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(res => {
+      const body = {
+        ...frm.value,
+        TXN_Date: frm.value.TXN_Date ? formatDateToYYYY_MM_DD(frm.value.TXN_Date) : '',
+      }
+      this.tls24010Service.queryTLS24010(body).pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(res => {
         this.data = res.Data.map(item => ({
           ...item, TXN_No: item.TXN_No.toString(),
         }));

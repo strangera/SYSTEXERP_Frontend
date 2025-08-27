@@ -98,6 +98,7 @@ export class TableComponent extends BasicPrintDataComponent implements OnChanges
     Deleted: 'deleted'
   };
   // expansion 收合展開
+  @Input() showExpandCollapse = true;               // 是否顯示收合展開
   @Input() expansionColumns: Column[] = [];  // 收合展開 欄位配置(expansion必需配置)
   @Input() expansionDataKey = 'details';            // 收合展開 資料key(expansion必需配置)
   @Input() expansionMultiSortMeta = [{ field: this.expansionDataKey, order: 1 }];// 收合展開 排序欄位(單一排序)
@@ -123,7 +124,7 @@ export class TableComponent extends BasicPrintDataComponent implements OnChanges
   // Footer
   @Input() showFooter = false;                      // 是否顯示 Footer
   // 分頁器
-  @Input() scrollHeight = '650px';                  // table 高度
+  @Input() scrollHeight = '450px';                  // table 高度
   @Input() scrollable = true;                        // 是否要滾輪
   @Input() showPaginator = true;                    // 是否顯示 分頁器
   @Input() totalRecords = 0;                        // 記錄總數
