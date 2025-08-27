@@ -117,6 +117,7 @@ export class TLS27020CRUComponent extends BasicCruPageComponent<TLS27020Data> im
   updateTLS27020(frm: FormGroup): UpdateTLS27020 {
     return {
       id: this.rowdata?.id ?? 0,
+      ...frm.value,
       ACT_PayAmt_ori: this.rowdata?.ACT_PayAmt_ori ?? 0,
       BOOK_PayAmt: this.rowdata?.BOOK_PayAmt ?? 0,
       ACT_PayAmt: frm.getRawValue().ACT_PayAmt,
