@@ -238,6 +238,10 @@ export class TLS23120CRUComponent extends BasicCruPageComponent<any> {
   getRowIndex(groupIndex: number, rowIndex: number): number {
     return rowIndex + 1; // 不使用 groupIndex，直接從 1 開始
   }
+  // 放在 class TLS23120CRUComponent 內（任一方法之外）
+get showBusType(): boolean {
+  return !!this.dataForm.get('showBusType')?.value;
+}
 
   getSubtotal(group: any[], field: string): string {
     const sum = group.reduce((acc, row) => {
@@ -538,22 +542,6 @@ private drawReportHeader(
     return `${year}/${month}/${day}`;
   }
 
-  exportExcel(): void {
-    import('xlsx').then((xlsx) => {
-      const ws = xlsx.utils.json_to_sheet(
-        this.data.map((row) => {
-          const item: any = {};
-          this.columns.forEach((col) => {
-            item[col.header] = row[col.field];
-          });
-          return item;
-        }),
-      );
-      const wb = xlsx.utils.book_new();
-      xlsx.utils.book_append_sheet(wb, ws, '報表');
-      xlsx.writeFile(wb, `報表_${new Date().toISOString()}.xlsx`);
-    });
-  }
 
   exportSummaryPDF(): void {
     this.pdfService.exportReportPDF({
@@ -570,26 +558,55 @@ private drawReportHeader(
     });
   }
 
-  exportSummaryExcel(): void {
-    import('xlsx').then((xlsx) => {
-      const exportData = this.data.map((row: any) => {
-        const obj: { [key: string]: any } = {};
-        this.columns.forEach((col: any) => {
-          obj[col.header] =
-            typeof col.format === 'function'
-              ? col.format(row[col.field])
-              : row[col.field];
-        });
-        return obj;
-      });
+exportExcel(): void {
+  import('xlsx').then((xlsx) => {
+    const rows = this.data.map((row) => {
+      const o: Record<string, any> = {};
 
-      const ws = xlsx.utils.json_to_sheet(exportData);
-      const wb = xlsx.utils.book_new();
-      xlsx.utils.book_append_sheet(wb, ws, '專櫃日對帳單');
-      xlsx.writeFile(wb, `專櫃日對帳單${new Date().toISOString()}.xlsx`);
+      // 先放新增欄位
+      o['專櫃'] = `${row?.TLT_NO ?? ''} / ${row?.tlt_name ?? ''}`;
+      o['抽成類別'] = row?.TLT_ID ?? '';
+
+      // 再放原本 columns 的欄位（保持你既有的格式化）
+      this.columns.forEach((col) => {
+        o[col.header] =
+          typeof col.format === 'function'
+            ? col.format(row[col.field])
+            : row[col.field];
+      });
+      return o;
     });
-  }
-  get showBusType(): boolean {
-    return this.dataForm.get('showBusType')?.value ?? true;
-  }
+
+    const ws = xlsx.utils.json_to_sheet(rows);
+    const wb = xlsx.utils.book_new();
+    xlsx.utils.book_append_sheet(wb, ws, '專櫃日對帳單');
+    xlsx.writeFile(wb, `專櫃日對帳單_${new Date().toISOString()}.xlsx`);
+  });
+}
+
+exportSummaryExcel(): void {
+  import('xlsx').then((xlsx) => {
+    const rows = this.data.map((row: any) => {
+      const o: Record<string, any> = {};
+
+      // 新增欄位（置前）
+      o['專櫃'] = `${row?.TLT_NO ?? ''} / ${row?.tlt_name ?? ''}`;
+      o['抽成類別'] = row?.TLT_ID ?? '';
+
+      // 既有欄位
+      this.columns.forEach((col: any) => {
+        o[col.header] =
+          typeof col.format === 'function'
+            ? col.format(row[col.field])
+            : row[col.field];
+      });
+      return o;
+    });
+
+    const ws = xlsx.utils.json_to_sheet(rows);
+    const wb = xlsx.utils.book_new();
+    xlsx.utils.book_append_sheet(wb, ws, '專櫃日對帳單');
+    xlsx.writeFile(wb, `專櫃日對帳單_${new Date().toISOString()}.xlsx`);
+  });
+}
 }
