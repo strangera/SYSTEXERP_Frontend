@@ -55,6 +55,10 @@ export class TLS23100Component extends BasicQueryPageComponent<any> {
     d.setDate(d.getDate() - 1);
     return d;
   })();
+  /** 記錄最近一次 pageSize（保險用） */
+  private lastPageSize = 40;
+  /** 簡單的請求鎖，避免重複送出 */
+  private querying = false;
 
 
   //request
@@ -63,7 +67,7 @@ export class TLS23100Component extends BasicQueryPageComponent<any> {
     TXN_DateEnd: [this.yesterday, [Validators.required]],
     ECR_No: [[]],
     TLT_No: [[]],
-    CRD_Type: [[]],
+    Pay_No: [[]],
     CRD_No: [],
     tlt_building: [],
     tlt_floor: [[]],
@@ -143,7 +147,7 @@ export class TLS23100Component extends BasicQueryPageComponent<any> {
       { field: 'tlt_name', header: '櫃位名稱', visible: true, style: 'text-left' },
       { field: 'PAY_NO', header: '付款別', visible: true },
       { field: 'PAY_NAME', header: '付款名稱', visible: true },
-      { field: 'CRD_Type', header: '信用卡卡別', visible: true },
+      { field: 'Pay_No', header: '信用卡卡別', visible: true },
       { field: 'CRD_Name', header: '信用卡', visible: true },
       { field: 'CRD_No', header: '信用卡卡號', visible: true },
       { field: 'TXN_PayAmt', header: '金額', visible: true, style: 'text-right', format: (val: number) => val?.toLocaleString('en-US') || '0' },
@@ -181,7 +185,7 @@ onSubmit(form: FormGroup): void {
       TXN_DateEnd:   toIso(val?.TXN_DateEnd),
       ECR_No:        val?.ECR_No,       // 可為陣列或字串，後端自理
       TLT_No:        val?.TLT_No,
-      CRD_Type:      val?.CRD_Type,
+      Pay_No:      val?.Pay_No,
       CRD_No:        val?.CRD_No,
       tlt_building:  val?.tlt_building,
       tlt_floor:     val?.tlt_floor,
@@ -225,8 +229,7 @@ onSubmit(form: FormGroup): void {
         // this.totalPayAmt = typeof wrapper?.totalPayAmt === 'number' ? wrapper.totalPayAmt : 0;
       },
       error: (err) => {
-        console.error('TLS23100 查詢失敗', err);
-        this.messageService?.errorBubble?.('查詢失敗，請稍後再試');
+this.loading = false;
       },
       complete: () => {
         this.loading = false;

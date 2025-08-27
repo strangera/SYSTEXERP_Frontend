@@ -8,8 +8,8 @@ import { TLS41010Data } from '../../../pages/tls/tls41010/tls41010.model';
 const API_URL = `${environment.ApiUrl}/TLS0000/TLS4000`;
 
 export interface QueryTLS41010Request {
-  PageSize: number;
-  PageIndex: number;
+  PageSize?: number;
+  PageIndex?: number;
   SortBy?: { field: string; order: number }[];
   ECR_No?: string;
   ECR_Name?: string;

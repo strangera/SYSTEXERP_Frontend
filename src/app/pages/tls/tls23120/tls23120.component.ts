@@ -5,17 +5,22 @@ import {
   FormsModule,
   ReactiveFormsModule,
 } from '@angular/forms';
+import { CommonModule } from '@angular/common';
+import { Subject, takeUntil } from 'rxjs';
+
 import { RegionService } from '../../../service/basic/region-code.service';
 import { FloorService } from '../../../service/basic/floor.service';
 import { BusinessTypeCodeService } from '../../../service/basic/business-type-code-service.service';
 import { OrganizationNumberService } from '../../../service/basic/organization-number.service';
 import { WhetherService } from '../../../service/basic/whether.service';
 import { TLS23120Service } from '../../../service/api/tls/tls23120.service';
-import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 import { Tls11010Service } from '../../../service/api/tls/tls11010.service';
 import { CounterNameService } from '../../../service/basic/counter-name.service';
 import { BigCategoryCodeService } from '../../../service/basic/big-category-code.service';
+
+import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
+import { createPaginationConfig, LazyLoadEvent } from '../../../shared/componentkit/table/table.model';
+
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { AccordionModule } from 'primeng/accordion';
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
@@ -24,13 +29,20 @@ import { RadiobuttonComponent } from '../../../shared/componentkit/radiobutton/r
 import { InputTextModule } from 'primeng/inputtext';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { TranslateModule } from '@ngx-translate/core';
-import { Subject, takeUntil } from 'rxjs';
 import { TableComponent } from '@shared/componentkit/table/table.component';
 import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
-import { CommonModule } from '@angular/common';
 import { RadioButtonModule } from 'primeng/radiobutton';
+import { Router } from '@angular/router';
 
 type FilterMode = 'location' | 'busType' | 'org' | 'counter';
+
+// ====== 排序強型別與工具 ======
+type SortOrder = 1 | -1;
+type SortMeta = { field: string; order: SortOrder };
+
+const normalizeOrder = (o: any): SortOrder => (o === -1 ? -1 : 1);
+const toSortMeta = (arr: Array<{ field: string; order: any }> | null | undefined): SortMeta[] =>
+  Array.isArray(arr) ? arr.map(s => ({ field: String(s.field), order: normalizeOrder(s.order) })) : [];
 
 @Component({
   selector: 'app-tls23120',
@@ -54,8 +66,24 @@ type FilterMode = 'location' | 'busType' | 'org' | 'counter';
     CalendarComponent,
   ],
 })
-export class TLS23120Component extends BasicQueryPageComponent<any> implements OnDestroy {
+export class TLS23120Component
+  extends BasicQueryPageComponent<any>
+  implements OnDestroy
+{
   private destroy$ = new Subject<void>();
+
+  // ---- 排序狀態 ----
+  sortMeta: SortMeta[] = [];
+  readonly defaultSort: SortMeta[] = [
+    { field: 'TLT_NO', order: 1 as const },
+    // 若要次序：{ field: 'TXN_DATE', order: -1 as const },
+  ];
+  private lastQuerySig: string | null = null;
+  private lazyTimer: any = null;
+  private pendingNavigateAfterQuery = false; // ← 新增：查完要不要自動開 CRU
+
+  data: any[] = [];
+  totalRecords = 0;
 
   readonly yesterday: Date = (() => {
     const d = new Date();
@@ -64,14 +92,11 @@ export class TLS23120Component extends BasicQueryPageComponent<any> implements O
     return d;
   })();
 
-  data: any[] = [];
-  totalRecords = 0;
-
   // ---- 表單 ----
   queryForm = this.formBuilder.group({
     TXN_Date: [this.yesterday, [Validators.required]],
 
-    // 只控制 UI 顯示/啟用（預設用專櫃編號）
+    // UI 模式（僅控制啟用/顯示）
     filterMode: ['counter' as FilterMode],
 
     // 四組查詢條件（值可為空；僅 counter 模式才驗證 TLT_No 必填）
@@ -83,8 +108,11 @@ export class TLS23120Component extends BasicQueryPageComponent<any> implements O
     tlt_floor: [[] as string[]],  // 樓層（多選）
     org_id: [],                   // 組織
 
-    // 分頁/排序
-    ...createPaginationConfig([{ field: 'TLT_No', order: 1 }]),
+    // 分頁/排序（預設排序對齊 defaultSort）
+    ...createPaginationConfig([
+      { field: 'TLT_NO', order: 1 as const },
+      // { field: 'TXN_DATE', order: -1 as const },
+    ]),
   });
 
   // ---- 下拉選項 ----
@@ -112,12 +140,16 @@ export class TLS23120Component extends BasicQueryPageComponent<any> implements O
     private floorService: FloorService,
     private regionService: RegionService,
     private tls11010Service: Tls11010Service,
+    
   ) {
     super();
   }
 
   ngOnInit(): void {
-    this.initializePage('TLS23120', 'tls/tls23120', this.queryForm, (form) => this.onSubmit(form));
+    this.initializePage('TLS23120', 'tls/tls23120cru', this.queryForm, (form) => this.onSubmit(form));
+
+    // 初始化 sortMeta
+    this.sortMeta = this.defaultSort.map(s => ({ ...s }));
 
     // 選項載入
     this.organizationNumberService.getOrganizationNumbers().subscribe(data => this.organizationOptions = data);
@@ -161,21 +193,64 @@ export class TLS23120Component extends BasicQueryPageComponent<any> implements O
     this.destroy$.complete();
   }
 
+  /** 表格 lazy 事件（分頁/排序） */
+  override onLazyLoadData(event: LazyLoadEvent, form: FormGroup): void {
+    const incomingSort = toSortMeta(event.SortBy as any);
+
+    // 若排序變更 → 回到第 1 頁
+    const currSort = JSON.stringify(form.value?.SortBy ?? []);
+    const nextSort = JSON.stringify(incomingSort);
+    const nextPageIndex = currSort !== nextSort ? 1 : (event.pageIndex ?? form.value.pageIndex ?? 1);
+
+    // 同步回表單（不觸發 valueChanges）
+    form.patchValue(
+      {
+        pageIndex: nextPageIndex,
+        pageSize : event.pageSize ?? form.value.pageSize,
+        SortBy   : incomingSort,
+      },
+      { emitEvent: false },
+    );
+
+    // 更新表頭排序狀態（Table 的箭頭會跟著動）
+    this.sortMeta = incomingSort;
+
+    // 去重簽章（pageIndex/pageSize/SortBy）
+    const sig = JSON.stringify({
+      pageIndex: form.value.pageIndex,
+      pageSize : form.value.pageSize,
+      SortBy   : form.value.SortBy,
+    });
+    if (sig === this.lastQuerySig) return;
+    this.lastQuerySig = sig;
+
+    // 0ms debounce：合併排序與分頁的雙事件
+    if (this.lazyTimer) clearTimeout(this.lazyTimer);
+    this.lazyTimer = setTimeout(() => this.onSubmit(form), 0);
+  }
+
   // ===== 提交 =====
-// ===== 提交 =====
+ // ===== 提交 =====
 onSubmit(form: FormGroup): void {
   this.handleSubmit(form, () => {
     const val = this.queryForm.getRawValue() as any;
 
+    // --- 分頁參數 ---
     const pageSize  = Number.isFinite(val?.pageSize)  ? val.pageSize  : 10;
     const pageIndex = Number.isFinite(val?.pageIndex) ? val.pageIndex : 1;
     const offset    = Math.max(0, (pageIndex - 1) * pageSize);
 
-    const orderBy =
-      Array.isArray(val?.SortBy) && val.SortBy.length
-        ? val.SortBy.map((s: any) => `${s.field} ${s.order === 1 ? 'ASC' : 'DESC'}`).join(',')
-        : undefined;
+    // --- 排序（form.SortBy → sortMeta → defaultSort） ---
+    const sortByArr: SortMeta[] =
+      toSortMeta(val?.SortBy).length
+        ? toSortMeta(val?.SortBy)
+        : (this.sortMeta.length ? this.sortMeta : this.defaultSort);
 
+    const orderBy = sortByArr.length
+      ? sortByArr.map(s => `${s.field} ${s.order === 1 ? 'ASC' : 'DESC'}`).join(',')
+      : undefined;
+
+    // --- 時間轉 ISO（yyyy-MM-ddTHH:mm:ss） ---
     const toIsoOrNull = (x: any) => {
       if (!x) return null;
       const d = typeof x === 'string' ? new Date(x) : (x as Date);
@@ -185,6 +260,7 @@ onSubmit(form: FormGroup): void {
         .slice(0, 19);
     };
 
+    // --- 依 Radio 模式決定要帶哪些條件 ---
     const fm = this.queryForm.controls.filterMode.value as FilterMode;
 
     const payload: any = {
@@ -199,22 +275,27 @@ onSubmit(form: FormGroup): void {
 
       ShowBusType:  val?.ShowBusType ?? null,
 
-      pageSize,
-      pageIndex,
-      SortBy: val?.SortBy ?? [],
+      PageSize : pageSize,
+      PageIndex: pageIndex,
+      Offset   : offset,
+      SortBy   : sortByArr,
       ...(orderBy ? { OrderBy: orderBy } : {}),
-      Offset: offset,
     };
 
+    // --- 清除空值/空陣列/空字串，避免後端被空值覆蓋 ---
     Object.keys(payload).forEach((k) => {
-      if (payload[k] === '') delete payload[k];
+      const v = payload[k];
+      if (v === '' || v === null || v === undefined) delete payload[k];
+      if (Array.isArray(v) && v.length === 0) delete payload[k];
     });
 
+    // --- 送出查詢 ---
     this.loading = true;
     this.messageService?.blockUi();
 
     this.tls23120Service.queryTLS23120(payload).subscribe({
       next: (res: any) => {
+        // 收斂資料結構 → details[]
         const dataArr = Array.isArray(res?.Data) ? res.Data : (res?.Data ? [res.Data] : []);
         let details: any[] = [];
         for (const item of dataArr) {
@@ -225,29 +306,53 @@ onSubmit(form: FormGroup): void {
               const list =
                 sub?.tLS23120Details ??
                 sub?.TLS23120Details ??
-                sub?.tls23120Details ??
-                [];
+                sub?.tls23120Details ?? [];
               if (Array.isArray(list)) details = details.concat(list);
             }
           }
         }
 
-        this.data = details;
+        // 產生穩定 dataKey（若後端無唯一鍵）
+        this.data = details.map((r: any, i: number) => ({
+          ...r,
+          _rowKey: `${r?.TLT_NO ?? ''}|${r?.TXN_DATE ?? ''}|${i}`,
+        }));
+
         this.totalRecords =
           typeof res?.TotalCount === 'number' ? res.TotalCount : this.data.length;
-      },
-      error: () => {
-        this.loading = false;
-        this.messageService?.unblockUi();
-        this.messageService?.errorBubble?.('查詢失敗，請稍後再試');
-      },
-      complete: () => {
-        this.loading = false;
-        this.messageService?.unblockUi();
-      }
+
+        // ▶ 若是「查詢並開啟報表」流程：有資料才導到 CRU，否則提示
+        if (this.pendingNavigateAfterQuery) {
+            this.pendingNavigateAfterQuery = false;
+            if (!this.data?.length) {
+              this.messageService?.warnBubble?.('查無資料');
+              return;
+            }
+            const formRaw = this.queryForm.getRawValue() as any;
+            this.router.navigate(
+              ['/account/tls/tls23120cru'], // ✅ 直接導到你要的 URL
+              {
+                state: {
+                  data: this.data,
+                  queryFormValue: formRaw,
+                  pageSize: formRaw?.pageSize ?? 1000,
+                },
+              }
+            );
+          }
+        },
+        error: () => {
+          this.pendingNavigateAfterQuery = false;
+          this.messageService?.errorBubble?.('查詢失敗，請稍後再試');
+        },
+        complete: () => {
+          this.loading = false;
+          this.messageService?.unblockUi();
+        }
+      });
     });
-  });
-}
+  }
+
 
 
   // 顯示/隱藏欄位（僅影響 UI）
@@ -267,7 +372,6 @@ onSubmit(form: FormGroup): void {
         if (enabled) {
           c.enable({ emitEvent: false });
         } else {
-          // 關閉時清空值（多選→[]；單值→undefined）
           const next = Array.isArray(c.value) ? [] : undefined;
           c.reset(next, { emitEvent: false });
           c.disable({ emitEvent: false });
@@ -313,6 +417,11 @@ onSubmit(form: FormGroup): void {
   moneyFormat(value: number): string {
     return value != null ? value.toLocaleString('en-US') : '0';
   }
+  onQueryAndOpen(): void {
+  if (this.loading) return;
+  this.pendingNavigateAfterQuery = true;
+  this.onSubmit(this.queryForm);
+}
 
   columns = [
     { field: 'TXN_DATE', header: '銷售日期', visible: true , format: this.formatDateTimeYMDHM.bind(this) },
@@ -324,7 +433,7 @@ onSubmit(form: FormGroup): void {
     { field: 'TLT_ID', header: '抽成類別', visible: true },
     { field: 'total_count', header: '總交易筆數', visible: true },
     { field: 'return_qty', header: '退貨件數', visible: true },
-    { field: 'return_amt', header: '退貨金額', visible: true },
+    { field: 'return_amt', header: '退貨金額', visible: true, style: 'text-right', format: this.moneyFormat },
     { field: 'AREA_NO', header: '區域', visible: true },
     { field: 'SYS_Name', header: '區分', visible: true },
     { field: 'sad_sale_qty', header: '銷貨筆數', visible: true },

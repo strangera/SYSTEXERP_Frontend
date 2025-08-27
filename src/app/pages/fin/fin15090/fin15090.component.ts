@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { Column, convertDateToYYYYMM, convertYYYYMMToDate, createPaginationConfig, formatDateTime, formatYYYYMM } from '../../../shared/componentkit/table/table.model';
+import { Column, convertDateToYYYYMM, formatDateTime, formatYYYYMM } from '../../../shared/componentkit/table/table.model';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { AccordionModule } from 'primeng/accordion';
@@ -324,16 +324,16 @@ export class FIN15090Component extends BasicQueryPageComponent<TDS1002> implemen
     
             console.log('營業人媒體檔案遞送單 request', body);
     
-            // this.fin15090Service.PrintFIN15090(body).pipe(untilDestroyed(this)).subscribe({
-            //   next: (response) => {
-            //     this.data = response.Data;
-            //     console.log('營業人媒體檔案遞送單 response', response);
-            //     this.totalRecords = response.TotalCount;
-            //     this.queryStateService.setQueryState(this.ProgNo, frm.value);
-            //     this.loading = false;
-            //   },
-            //   error: () => { this.loading = false; },
-            // });
+            this.fin15090Service.PrintFIN15090(body).pipe(untilDestroyed(this)).subscribe({
+              next: (response) => {
+                this.data = response.Data;
+                console.log('營業人媒體檔案遞送單 response', response);
+                this.totalRecords = response.TotalCount;
+                this.queryStateService.setQueryState(this.ProgNo, frm.value);
+                this.loading = false;
+              },
+              error: () => { this.loading = false; },
+            });
           });
         }
         onDelete(selectedRows: TDS1002[]) {

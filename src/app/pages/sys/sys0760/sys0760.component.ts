@@ -1,36 +1,24 @@
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { NavigationExtras, Router } from '@angular/router';
-// Permissions
-import {
-  FunsrightInfo,
-  PermissionsInfo,
-} from '../../../shared/models/system/funsrightInfo';
-// Shared
-import { AuthService } from '../../../service/system/auth.service';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-
-import { ErroreventCodeService } from '../../../service/basic/errorevent-code.service';
-import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { AccordionModule } from 'primeng/accordion';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
-import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { TranslateModule } from '@ngx-translate/core';
-
-interface AbnormalCode {
-  name: string;
-  code: string;
-}
+import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
+import { Column, createPaginationConfig, formatDateTime } from '@shared/componentkit/table/table.model';
+import { SYS0760Service, userLoginErrorRequest, userLoginErrorResponse } from '@service/api/sys/sys0760.service';
+import { untilDestroyed } from '@ngneat/until-destroy';
+import { finalize } from 'rxjs';
+import { IUserResponse, Sys0110Service } from '@service/api/sys/sys0110.service';
+import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
+import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
 
 @Component({
   selector: 'app-sys0760',
   templateUrl: './sys0760.component.html',
-  styleUrls: ['./sys0760.component.scss'],
   standalone: true,
   imports: [
     MenubarComponent,
@@ -39,106 +27,68 @@ interface AbnormalCode {
     ReactiveFormsModule,
     DropdownComponent,
     InputNumberComponent,
-    CalendarRangeComponent,
+    CalendarRangeQuickComponent,
     ButtonComponent,
     TableComponent,
     TranslateModule,
+    InputTextComponent
   ],
 })
 // 使用者異常登入報表
-export class SYS0760Component extends BasicQpageComponent implements OnInit {
-  situation!: AbnormalCode[];
-  selectedsituation!: AbnormalCode;
-  // 查詢
+export class SYS0760Component extends BasicQueryPageComponent<userLoginErrorResponse> implements OnInit {
   queryForm = this.formBuilder.group({
-    erroreventCode: [1, [Validators.required]], // DropDown
-    systemTypeDetail: [], // DropDown
-    startdate: [], // 日期限制 (start-end datetime yyyy/mm/dd)
-    enddate: [], // 日期限制 (start-end datetime yyyy/mm/dd)
-    userCode: [], // Input Text
+    User_No: [''], // DropDown
+    Description: ['', [Validators.required]], // DropDown
+    From_IP: [''], // 日期限制 (start-end datetime yyyy/mm/dd)
+    Start_Date: [null], // 日期限制 (start-end datetime yyyy/mm/dd)
+    End_Date: [null], // Input Text
+    ...createPaginationConfig([{ field: 'User_No', order: 1 }]), // 分頁和排序參數
   });
-  // 表格
-  data: any[] = [
-    {
-      "eventCode": "密碼輸入錯誤",
-      "userName": "6666666611",
-      "userCode": "6666666611",
-      "loginAddress": "10.3.35.148",
-      "loginTime": "2024/10/27 下午 02:02:23"
-    },
-    {
-      "eventCode": "密碼輸入錯誤",
-      "userName": "6666666601",
-      "userCode": "6666666601",
-      "loginAddress": "10.3.35.24",
-      "loginTime": "2024/10/24 下午 01:27:26"
-    },
-    {
-      "eventCode": "密碼輸入錯誤",
-      "userName": "6666666691",
-      "userCode": "6666666691",
-      "loginAddress": "10.3.41.26",
-      "loginTime": "2024/10/22 下午 01:04:59"
-    },
-    {
-      "eventCode": "密碼輸入錯誤",
-      "userName": "6666666102",
-      "userCode": "6666666102",
-      "loginAddress": "10.3.35.159",
-      "loginTime": "2024/10/18 下午 05:36:38"
-    }
+  totalRecords = 0
+  userNoOptions: IUserResponse[] = [];
+  errotMsg: { value: string, label: string }[] = [
+    { label: "錯誤使用者", value: "錯誤使用者" },
+    { label: "密碼錯誤", value: "密碼錯誤" },
+    { label: "使用者登入停用帳號", value: "使用者登入停用帳號" },
+    { label: "密碼已過期", value: "密碼已過期" },
+    { label: "使用者不在允許登入時間區間", value: "使用者不在允許登入時間區間" },
+  ]
+  data: userLoginErrorResponse[] = [];
+  columns: Column[] = [
+    { field: 'User_No', header: '使用者編號', visible: true },
+    { field: 'Description', header: '使用者名稱', visible: true },
+    { field: 'From_IP', header: '登入者位址', visible: true },
+    { field: 'Login_time', header: '登入時間', visible: true, format: formatDateTime },
   ];
-  filteredData: any[] = [...this.data];
-  columns: any[] = [
-    { field: 'eventCode', header: '事件代碼', visible: true },
-    { field: 'userName', header: '使用者名稱', visible: true },
-    { field: 'userCode', header: '使用者編號', visible: true },
-    { field: 'loginAddress', header: '登入者位址', visible: true },
-    { field: 'loginTime', header: '登入時間', visible: true },
-  ];
-
-  // Options
-
-  erroreventCodeOptions: any[] = [];
   constructor(
-    private router: Router,
-    private formBuilder: FormBuilder,
-    private messageService: NotificationService,
-    private authService: AuthService,
-    private erroreventCodeService: ErroreventCodeService
+    private readonly sys0760Service: SYS0760Service,
+    private readonly sys0110Service: Sys0110Service
   ) {
     super();
   }
 
   ngOnInit(): void {
-    this.ProgNo = '420009';
-    // 初始化權限資訊
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
-    this.erroreventCodeService.getErroreventCode().subscribe((data) => {
-      this.erroreventCodeOptions = data;
-    });
+    this.initializePage('SYS0760', 'SYS/SYS0760CRU', this.queryForm, (form) => this.onSubmit(form));
+    this.sys0110Service.queryAllUsers().pipe(untilDestroyed(this)).subscribe(response => {
+      if (response.Data) {
+        this.userNoOptions = response.Data.map((user: IUserResponse) => {
+          return {
+            ...user,
+            label: user.user_No + ' - ' + user.user_Name
+          }
+        });
+      }
+    })
   }
 
   onSubmit(frm: FormGroup) {
-    console.log(frm.value);
-    this.submitted = true;
-    this.loading = true;
-    this.messageService.blockUi();
-
-    if (frm.valid && this.canQuery()) {
-      // 提交邏輯
-    }
-
-    this.loading = false;
-    this.messageService.unblockUi();
-  }
-
-  onSubmitQuery(frm: FormGroup) {
-    // 查詢邏輯
-    this.onSubmit(frm);
-  }
-
-  onClearForm() {
-    this.queryForm.reset(); // 重置表單
+    this.handleSubmit(frm, () => {
+      const frmValue = frm.getRawValue() as userLoginErrorRequest;
+      this.sys0760Service.queryUserLoginError(frmValue).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe((res) => {
+        this.data = res.Data ?? [];
+        this.totalRecords = res.TotalCount ?? 0;
+        this.queryStateService.setQueryState(this.ProgNo, frm.value);
+      })
+    });
   }
 }

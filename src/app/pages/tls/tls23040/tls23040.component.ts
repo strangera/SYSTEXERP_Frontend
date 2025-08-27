@@ -129,7 +129,7 @@ export class TLS23040Component extends BasicQueryPageComponent<any> {
     this.initializePage('TLS23040', 'tls/tls23040cru', this.queryForm, (form) =>
       this.onSubmit(form),
     );
-      // 🔽 初始化排序 meta
+    // 🔽 初始化排序 meta
     this.sortMeta = this.defaultSort.map(x => ({ ...x }));
     this.statusFlagService
       .getStatusFlags()
@@ -175,41 +175,41 @@ export class TLS23040Component extends BasicQueryPageComponent<any> {
       }));
     });
   }
+
   /** 子層 Table lazy 事件 */
-override onLazyLoadData(event: LazyLoadEvent, queryForm: FormGroup): void {
-  // 1) 當排序變更時回到第一頁
-  const currentSort = JSON.stringify(queryForm.value?.SortBy ?? []);
-  const nextSort    = JSON.stringify(event.SortBy ?? []);
-  const nextPageIdx = currentSort !== nextSort ? 1
-                    : (event.pageIndex ?? queryForm.value.pageIndex ?? 1);
+  override onLazyLoadData(event: LazyLoadEvent, queryForm: FormGroup): void {
+    // 1) 當排序變更時回到第一頁
+    const currentSort = JSON.stringify(queryForm.value?.SortBy ?? []);
+    const nextSort    = JSON.stringify(event.SortBy ?? []);
+    const nextPageIdx = currentSort !== nextSort ? 1
+                      : (event.pageIndex ?? queryForm.value.pageIndex ?? 1);
 
-  // 2) 同步回表單（不觸發 valueChanges）
-  queryForm.patchValue(
-    {
-      pageIndex: nextPageIdx,
-      pageSize : event.pageSize ?? queryForm.value.pageSize,
-      SortBy   : event.SortBy ?? queryForm.value.SortBy,
-    },
-    { emitEvent: false },
-  );
+    // 2) 同步回表單（不觸發 valueChanges）
+    queryForm.patchValue(
+      {
+        pageIndex: nextPageIdx,
+        pageSize : event.pageSize ?? queryForm.value.pageSize,
+        SortBy   : event.SortBy ?? queryForm.value.SortBy,
+      },
+      { emitEvent: false },
+    );
 
-  // 3) 更新表頭多欄位排序狀態
-  this.sortMeta = (event.SortBy ?? []).map(s => ({ ...s }));
+    // 3) 更新表頭多欄位排序狀態
+    this.sortMeta = (event.SortBy ?? []).map(s => ({ ...s }));
 
-  // 4) 生成這次查詢的簽章，避免重複打 API
-  const sig = JSON.stringify({
-    pageIndex: queryForm.value.pageIndex,
-    pageSize : queryForm.value.pageSize,
-    SortBy   : queryForm.value.SortBy,
-  });
-  if (sig === this.lastQuerySig) return;
-  this.lastQuerySig = sig;
+    // 4) 生成這次查詢的簽章，避免重複打 API
+    const sig = JSON.stringify({
+      pageIndex: queryForm.value.pageIndex,
+      pageSize : queryForm.value.pageSize,
+      SortBy   : queryForm.value.SortBy,
+    });
+    if (sig === this.lastQuerySig) return;
+    this.lastQuerySig = sig;
 
-  // 5) 只呼叫一次 onSubmit（無需在 HTML 再呼叫）
-  if (this.lazyTimer) clearTimeout(this.lazyTimer);
-  this.lazyTimer = setTimeout(() => this.onSubmit(queryForm), 0);
-}
-
+    // 5) 只呼叫一次 onSubmit（無需在 HTML 再呼叫）
+    if (this.lazyTimer) clearTimeout(this.lazyTimer);
+    this.lazyTimer = setTimeout(() => this.onSubmit(queryForm), 0);
+  }
 
   onSubmit(form: FormGroup): void {
     this.handleSubmit(form, () => {
@@ -296,25 +296,25 @@ override onLazyLoadData(event: LazyLoadEvent, queryForm: FormGroup): void {
             TXN_TotSaleAmt: Number(totalSaleAmt ?? 0),
           };
 
-          // ✅ 只放一般列到 data（避免把總計列混進分頁）
-          this.data = invoiceRows.map((r: any, i: number) => ({
-            ...r,
-            _rowKey: `${r.TXN_Date ?? ''}|${r.ECR_No ?? ''}|${r.TXN_No ?? ''}|${i}`,
-          }));
+          // ✅ 組資料：若為「正常交易」，清空原交易三欄的值（欄位仍保持 visible: true）
+          this.data = invoiceRows.map((r: any, i: number) => {
+            const isNormal = String(r?.TXN_StatusName ?? '') === '正常交易';
+            return {
+              ...r,
+              ORG_TXN_Date: isNormal ? '' : r?.ORG_TXN_Date ?? '',
+              ORG_ECR_No  : isNormal ? '' : r?.ORG_ECR_No ?? '',
+              ORG_TXN_No  : isNormal ? '' : r?.ORG_TXN_No ?? '',
+              _rowKey: `${r.TXN_Date ?? ''}|${r.ECR_No ?? ''}|${r.TXN_No ?? ''}|${i}`,
+            };
+          });
 
           this.totalRecords = Number(res?.TotalCount ?? this.data.length);
 
-          // ★ 依資料內容決定是否顯示三個「原交易*」欄位
-          //   只要有任何一列不是「正常交易」就顯示；若全部都是「正常交易」就隱藏
-          const hasNonNormal = this.data.some(
-            (r: any) => String(r?.TXN_StatusName ?? '') !== '正常交易',
-          );
-          this.setOrgColumnsVisibility(hasNonNormal);
+          // ★ 不再切換欄位可見度：欄位永遠顯示
+          // （若要還原舊行為，可再呼叫 setOrgColumnsVisibility(hasNonNormal)）
         },
         error: (err) => {
-          
           this.loading = false;
-        
         },
         complete: () => {
           this.loading = false;
@@ -328,6 +328,8 @@ override onLazyLoadData(event: LazyLoadEvent, queryForm: FormGroup): void {
     const found = options?.find((opt) => String(opt.value) === String(value));
     return found ? found.label : value;
   }
+
+  // 目前不再使用切換顯示的邏輯，但保留方法以備不時之需
   private setOrgColumnsVisibility(show: boolean): void {
     const keys = new Set(['ORG_TXN_Date', 'ORG_ECR_No', 'ORG_TXN_No']);
     this.columns = this.columns.map((col) =>

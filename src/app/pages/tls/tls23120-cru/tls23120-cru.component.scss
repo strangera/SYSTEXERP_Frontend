@@ -1,0 +1,44 @@
+/* 讓 footer 的小計/總計有顏色（作用在 <tfoot>） */
+:host ::ng-deep .p-datatable .p-datatable-tfoot > tr.subtotal-row > td {
+  background-color: #fff3cd !important; /* 淡黃 */
+  color: #5c3d00;
+  font-weight: 600;
+}
+:host ::ng-deep .p-datatable .p-datatable-tfoot > tr.total-row > td {
+  background-color: #cce5ff !important; /* 淡藍 */
+  color: #003a70;
+  font-weight: 700;
+  border-top: 2px solid #6aa9ff;
+}
+
+/* 你在某些區塊用的是 tbody 當總計列（例如「所有群組結束後的總計」） */
+:host ::ng-deep .p-datatable .p-datatable-tbody > tr.grandtotal-row > td {
+  background-color: #ffe08a !important; /* 更亮一些的黃，和小計區分 */
+  color: #5a4100;
+  font-weight: 700;
+}
+
+/* 如果你在 HTML 上用 tailwind like bg-yellow-100/bg-yellow-200，
+   也補一份針對 td 的套色，避免 tr 被 td 覆蓋 */
+:host ::ng-deep .p-datatable .p-datatable-tfoot > tr.bg-yellow-100 > td,
+:host ::ng-deep .p-datatable .p-datatable-tbody > tr.bg-yellow-100 > td {
+  background-color: #fff3cd !important;
+}
+:host ::ng-deep .p-datatable .p-datatable-tfoot > tr.bg-yellow-200 > td,
+:host ::ng-deep .p-datatable .p-datatable-tbody > tr.bg-yellow-200 > td {
+  background-color: #ffe08a !important;
+}
+
+/* 條紋不影響 footer，但避免 hover/active 蓋掉 footer/total 顏色 */
+:host ::ng-deep .p-datatable .p-datatable-tfoot > tr.total-row:hover > td,
+:host ::ng-deep .p-datatable .p-datatable-tfoot > tr.subtotal-row:hover > td,
+:host ::ng-deep .p-datatable .p-datatable-tbody > tr.grandtotal-row:hover > td {
+  filter: brightness(0.98);
+}
+/* 修改 p-table 的表頭顏色 */
+:host ::ng-deep .p-datatable thead th {
+  background-color: #aab0d8 !important; /* 你圖片的藍紫色 */
+  color: #000 !important;              /* 字體顏色（黑字可讀性較好） */
+  font-weight: 600;
+  text-align: center;
+}

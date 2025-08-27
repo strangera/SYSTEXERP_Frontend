@@ -257,3 +257,9 @@ export const formatDivideBy100 = (value: number | string | null | undefined): nu
   const num = Number(value);
   return num / 100;
 };
+// 金額格式化999,999,999，只取整數
+export const formatAmountWithFraction = (val: number | string): string => {
+  const num = Number(val);
+  if (isNaN(num)) return '0';
+  return num.toLocaleString(undefined, { maximumFractionDigits: 0 }); // eg. 1,000,000.00
+};

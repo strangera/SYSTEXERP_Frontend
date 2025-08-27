@@ -20,6 +20,10 @@ import { TableComponent } from '../../../shared/componentkit/table/table.compone
 import { TranslateModule } from '@ngx-translate/core';
 import { columns, FIX_TYPE, TXN_GUIPaperOptions, txnStatusOptions } from './tls24010.model';
 import { STORE_WAY, TLS24010_EDIT_TYPE } from '../tls24010-cru/tls24010-cru.model';
+import { yesterday } from '@shared/models/system/query-form.model';
+import { TLS2B030Service } from '@service/api/tls/tls2-b030.service';
+import { DropdownChangeEvent } from 'primeng/dropdown';
+import { TLS41010Service } from '@service/api/tls/tls41010.service';
 
 // 交易補登作業
 @Component({
@@ -67,24 +71,34 @@ export class TLS24010Component extends BasicQueryPageComponent<TLS24010Data> imp
   constructor(
     private readonly dropDownList: DropDownListService,
     private readonly tls24010Service: Tls24010Service,
+    private readonly tLS41010Service: TLS41010Service
   ) { super(); }
   ngOnInit(): void {
     this.initializePage('TLS24010', 'tls/tls24010cru', this.queryForm, (form) => this.onSubmit(form));
     this.dropDownList.queryPOS1002_DropDownList().pipe(untilDestroyed(this)).subscribe(options => {
       this.ECR_NoOptions = options.Data.map(item => ({ ...item, label: `${item.No} - ${item.Name}` }));
     });
-    this.dropDownList.queryTLTTALENT_ByContractDate_DropDownList(this.today.toISOString().split('T')[0]).pipe(untilDestroyed(this)).subscribe(options => {
+    this.dropDownList.queryTLTTALENT_ByContractDate_DropDownList(yesterday.toISOString().split('T')[0]).pipe(untilDestroyed(this)).subscribe(options => {
       this.TLT_NoOptions = options.Data.map(item => ({ ...item, label: `${item.No} - ${item.Name}` }));
     });
     const txnDate = this.queryForm.get('TXN_Date')?.value;
     if (!txnDate) {
-      this.queryForm.get('TXN_Date')?.setValue(new Date(this.today.getFullYear(), this.today.getMonth(), this.today.getDate(), 0, 0, 0));
+      this.queryForm.get('TXN_Date')?.setValue(new Date(yesterday.getFullYear(), yesterday.getMonth(), yesterday.getDate(), 0, 0, 0));
     }
   }
   onDateSelect(event: Date): void {
     this.queryForm.get('TXN_Date')?.setValue(event);
     this.dropDownList.queryTLTTALENT_ByContractDate_DropDownList(event.toISOString().split('T')[0]).pipe(untilDestroyed(this)).subscribe(options => {
       this.TLT_NoOptions = options.Data.map(item => ({ ...item, label: `${item.No} - ${item.Name}` }));
+    });
+  }
+
+  onECRNoChange(event: DropdownChangeEvent): void {
+    const body = {
+      ECR_No: event.value || '',
+    }
+    this.tLS41010Service.queryTLS41010(body).pipe(untilDestroyed(this)).subscribe(res => {
+      this.queryForm.get('TLT_No')?.setValue(res.Data[0].ECR_TLT_No || '');
     });
   }
 

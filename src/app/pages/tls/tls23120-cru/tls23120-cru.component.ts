@@ -1,5 +1,15 @@
 import { Component } from '@angular/core';
-import { Location, formatDate, NgFor, NgIf, NgClass, NgSwitch, NgSwitchCase, NgSwitchDefault, DatePipe } from '@angular/common';
+import {
+  Location,
+  formatDate,
+  NgFor,
+  NgIf,
+  NgClass,
+  NgSwitch,
+  NgSwitchCase,
+  NgSwitchDefault,
+  DatePipe,
+} from '@angular/common';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { PdfService } from '../../../service/basic/pdf.service';
 import { Tls11010Service } from '../../../service/api/tls/tls11010.service';
@@ -111,8 +121,6 @@ export class TLS23120CRUComponent extends BasicCruPageComponent<any> {
       console.warn('🚨 state.data 無效，無法顯示報表');
       this.messageService.warnBubble('⚠️ 無資料可顯示，請重新查詢。');
     }
-
-
 
     this.columns = [
       { field: 'SYS_Name', header: '區分', visible: true },
@@ -230,6 +238,10 @@ export class TLS23120CRUComponent extends BasicCruPageComponent<any> {
   getRowIndex(groupIndex: number, rowIndex: number): number {
     return rowIndex + 1; // 不使用 groupIndex，直接從 1 開始
   }
+  // 放在 class TLS23120CRUComponent 內（任一方法之外）
+get showBusType(): boolean {
+  return !!this.dataForm.get('showBusType')?.value;
+}
 
   getSubtotal(group: any[], field: string): string {
     const sum = group.reduce((acc, row) => {
@@ -251,7 +263,11 @@ export class TLS23120CRUComponent extends BasicCruPageComponent<any> {
       return;
     }
 
-    const popupWin = window.open('', '_blank', 'top=0,left=0,height=100%,width=auto');
+    const popupWin = window.open(
+      '',
+      '_blank',
+      'top=0,left=0,height=100%,width=auto',
+    );
     if (!popupWin) return;
 
     popupWin.document.open();
@@ -278,7 +294,6 @@ export class TLS23120CRUComponent extends BasicCruPageComponent<any> {
   `);
     popupWin.document.close();
   }
-
 
   splitData(): void {
     const groupedMap = new Map<string, Map<string, any[]>>();
@@ -328,46 +343,45 @@ exportPDF(orientation: 'p' | 'l' = 'p'): void {
   const doc = new jsPDF({ orientation, unit: 'pt', format: [customWidth, 842] });
   const pageWidth = doc.internal.pageSize.getWidth();
   const marginLeft = 40;
+  const HEADER_TOP = 200; // 預留較高的表頭空間
 
   // 字型
   doc.addFont('assets/fonts/NotoSansTC-VariableFont_wght.ttf', 'Noto Sans TC', 'normal');
   doc.setFont('Noto Sans TC');
 
-  // 取表頭用的資料（從第一筆 or query 狀態）
   const info = this.getHeaderInfo();
+  const printedHeaders = new Set<number>(); // 這一頁是否已畫過表頭
 
-  // 讓每頁都畫相同表頭 + 頁碼
-  let pageNo = 0;
-const drawHeader = () => {
-  pageNo += 1;
-  this.drawReportHeader(doc, info, marginLeft, pageWidth, pageNo);
-};
-
-  let currentY = 180; // 保留給表頭的高度
-  drawHeader();
-  currentY = 180; // 表頭大概佔到這個高度，下面開始畫表格
+  let currentY = HEADER_TOP;
 
   this.groupedData.forEach((group) => {
-    // 欄位定義
-    const tableColumns = this.selectedColumns.map(col => ({ header: col.header, dataKey: col.field }));
+    // 欄位定義：用 dataKey 對應物件欄位
+    const tableColumns = this.selectedColumns.map(col => ({
+      header: col.header,
+      dataKey: col.field,
+    }));
 
-    // 資料列
-    const tableData = group.rows.map((row, rowIndex) => {
+    // 主體資料（保留物件，不要轉成陣列）
+    const tableData: any[] = group.rows.map((row, rowIndex) => {
       const obj: any = {};
-      this.selectedColumns.forEach((col) => {
-        obj[col.field] = (col.field === '__index')
-          ? (rowIndex + 1)
-          : (col.format ? col.format(row[col.field]) : row[col.field]);
+      this.selectedColumns.forEach(col => {
+        obj[col.field] =
+          col.field === '__index'
+            ? rowIndex + 1
+            : col.format
+              ? col.format(row[col.field])
+              : row[col.field];
       });
       return obj;
     });
 
     // 小計
     if (group.showSubtotal) {
-      const subtotalRow: any = {};
-      this.selectedColumns.forEach((col) => {
+      const subtotalRow: any = { __type: 'subtotal' };
+      this.selectedColumns.forEach(col => {
         if (col.field === '__index') subtotalRow[col.field] = '小計';
-        else if (this.subtotalFields.includes(col.field)) subtotalRow[col.field] = this.getSubtotal(group.rows, col.field);
+        else if (this.subtotalFields.includes(col.field))
+          subtotalRow[col.field] = this.getSubtotal(group.rows, col.field);
         else subtotalRow[col.field] = '';
       });
       tableData.push(subtotalRow);
@@ -375,10 +389,11 @@ const drawHeader = () => {
 
     // 總計
     if (group.showTotal) {
-      const totalRow: any = {};
-      this.selectedColumns.forEach((col) => {
+      const totalRow: any = { __type: 'total' };
+      this.selectedColumns.forEach(col => {
         if (col.field === '__index') totalRow[col.field] = '總計';
-        else if (this.subtotalFields.includes(col.field)) totalRow[col.field] = this.getSubtotal(group.rows, col.field);
+        else if (this.subtotalFields.includes(col.field))
+          totalRow[col.field] = this.getSubtotal(group.rows, col.field);
         else totalRow[col.field] = '';
       });
       tableData.push(totalRow);
@@ -386,76 +401,108 @@ const drawHeader = () => {
 
     autoTable(doc, {
       startY: currentY,
-      head: [tableColumns.map(c => c.header)],
-      body: tableData.map(r => tableColumns.map(c => r[c.dataKey] ?? '')),
-      styles: { font: 'Noto Sans TC', fontSize: 9, halign: 'center', valign: 'middle' },
-      headStyles: { font: 'Noto Sans TC', fontStyle: 'normal', fontSize: 10, fillColor: [212, 222, 254], textColor: [0,0,0], halign: 'center' },
-      footStyles: { font: 'Noto Sans TC', fontStyle: 'normal', fontSize: 10, fillColor: [212, 222, 254], textColor: [0,0,0], halign: 'center' },
-      theme: 'grid',
-      margin: { left: marginLeft, right: marginLeft, top: 180 }, // 頂部留給表頭
-      didDrawCell: (data) => {
-        const rowIndex = data.row.index;
-        const isSubtotal = group.showSubtotal && rowIndex === group.rows.length;
-        const isTotal = group.showTotal && (group.showSubtotal ? rowIndex === group.rows.length + 1 : rowIndex === group.rows.length);
-        if (isSubtotal) { data.cell.styles.fillColor = [255, 245, 204]; data.cell.styles.fontStyle = 'bold'; }
-        if (isTotal) { data.cell.styles.fillColor = [204, 229, 255]; data.cell.styles.fontStyle = 'bold'; }
+      columns: tableColumns,      // ✅ 用 columns + body（物件形式）
+      body: tableData,            // ✅ 每列保留 raw，可在 hook 判斷 __type
+      styles: {
+        font: 'Noto Sans TC',
+        fontSize: 9,
+        halign: 'center',
+        valign: 'middle',
       },
-      didDrawPage: () => {
-        drawHeader(); // 每頁重畫表頭
+      headStyles: {
+        font: 'Noto Sans TC',
+        fontStyle: 'normal',
+        fontSize: 10,
+        fillColor: [170, 176, 216], // 你要的淡藍紫 header
+        textColor: [0, 0, 0],
+        halign: 'center',
+      },
+      theme: 'grid',
+      margin: { left: marginLeft, right: marginLeft, top: HEADER_TOP },
+
+      // ✅ 用 raw.__type 判斷列型別，上色不會因為跨頁失準
+      didParseCell: (data) => {
+        const raw: any = data?.row?.raw || {};
+        if (raw.__type === 'subtotal') {
+          data.cell.styles.fillColor = [255, 245, 204]; // 淡黃
+          
+        } else if (raw.__type === 'total') {
+          data.cell.styles.fillColor = [204, 229, 255]; // 淡藍
+          
+        }
+      },
+
+      // ✅ 每頁只畫一次表頭，避免重疊
+      didDrawPage: (hookData: any) => {
+        const pageNo =
+          (doc as any).internal?.getCurrentPageInfo?.().pageNumber ??
+          hookData?.pageNumber ?? 1;
+        if (!printedHeaders.has(pageNo)) {
+          printedHeaders.add(pageNo);
+          this.drawReportHeader(doc, info, marginLeft, pageWidth, pageNo);
+        }
       },
     });
 
-    // 下一段表格的起點
     currentY = (doc as any).lastAutoTable.finalY + 30;
   });
-
-
 
   doc.save(`專櫃日對帳單_${new Date().toISOString()}.pdf`);
 }
 
-/** 依「圖一」準備表頭資料 */
-private getHeaderInfo() {
-  const first = this.data?.[0] ?? {};
-  const salesDate = this.queryFormValue?.TXN_DateStart || first?.TXN_DATE || this.dateStart;
-  const biz = `${first?.bus_type ?? ''}/${first?.bus_type_name ?? ''}`.replace(/^\/$/, '');
-  const counter = `${first?.TLT_NO ?? ''}/${first?.TLT_NAME ?? ''}`.replace(/^\/$/, '');
-  const area = first?.AREA_NO ?? '';
-  const floor = first?.FLOOR_NO ?? '';
-  const cutType = first?.TLT_ID ?? '0';
-  const returnQty = first?.return_qty ?? 0;
-  const returnAmt = first?.return_amt ?? 0;
-  const totalTxns = this.data?.length ?? 0;
 
-  return {
-    company: '南紡流通事業股份有限公司',
-    title: '專櫃日對帳單',
-    biz, counter, area,
-    salesDate: this.formatDate(salesDate),
-    floor,
-    cutType,
-    madeAt: this.printedAt || new Date().toLocaleString('zh-TW'),
-    totalTxns,
-    returnQty,
-    returnAmt
-  };
-}
 
-/** 依「圖一」畫表頭（公司/標題置中 + 左右資訊列） */
-/** 依註解排版的表頭：三欄(左/中/右)，右側為「製表日期 + 頁數」 */
+  /** 依「圖一」準備表頭資料 */
+  private getHeaderInfo() {
+    const first = this.data?.[0] ?? {};
+    const salesDate =
+      this.queryFormValue?.TXN_DateStart || first?.TXN_DATE || this.dateStart;
+    const biz =
+      `${first?.bus_type ?? ''}/${first?.bus_type_name ?? ''}`.replace(
+        /^\/$/,
+        '',
+      );
+    const counter = `${first?.TLT_NO ?? ''}/${first?.tlt_name ?? ''}`.replace(
+      /^\/$/,
+      '',
+    );
+    const area = first?.AREA_NO ?? '';
+    const floor = first?.FLOOR_NO ?? '';
+    const cutType = first?.TLT_ID ?? '0';
+    const returnQty = first?.return_qty ?? 0;
+    const returnAmt = first?.return_amt ?? 0;
+    const totalTxns = this.data?.length ?? 0;
+
+    return {
+      company: '南紡流通事業股份有限公司',
+      title: '專櫃日對帳單',
+      biz,
+      counter,
+      area,
+      salesDate: this.formatDate(salesDate),
+      floor,
+      cutType,
+      madeAt: this.printedAt || new Date().toLocaleString('zh-TW'),
+      totalTxns,
+      returnQty,
+      returnAmt,
+    };
+  }
+
+  /** 依「圖一」畫表頭（公司/標題置中 + 左右資訊列） */
+  /** 依註解排版的表頭：三欄(左/中/右)，右側為「製表日期 + 頁數」 */
 private drawReportHeader(
   doc: jsPDF,
   info: any,
   marginLeft: number,
   pageWidth: number,
-  pageNo?: number // 目前頁數（可只顯示單一頁碼）
+  pageNo: number // 直接使用傳入的頁碼
 ) {
-  const leftX = marginLeft;             // 左欄
-  const midX  = leftX + 240;            // 左中欄（第二欄，依需要可調）
-  const rightX = pageWidth - marginLeft; // 右欄（靠右對齊）
+  const leftX = marginLeft;
+  const midX = leftX + 240;
+  const rightX = pageWidth - marginLeft;
   const lineGap = 18;
 
-  // 公司、標題置中
   doc.setFontSize(16);
   doc.text(info.company || '', pageWidth / 2, 50, { align: 'center' });
   doc.setFontSize(14);
@@ -464,41 +511,25 @@ private drawReportHeader(
   doc.setFontSize(10);
   let y = 110;
 
-  // ── 第 1 列 ───────────────────────────────────────────────
-  // 第 1 列 第 1 行
+  // 第1列
   doc.text(`業種：${info.biz || '－'}`, leftX, y);
-  // 第 1 列 第 2 行
-  doc.text(`銷售日期：${info.salesDate || '－'} `, midX, y);
-  // 第 1 列 第 3 行（右側）：製表日期 + 頁數
-  const pageLabel = (typeof pageNo === 'number') ? `   頁數：${pageNo}` : '';
-  doc.text(`製表日期：${info.madeAt}${pageLabel}`, rightX, y, { align: 'right' });
+  doc.text(`銷售日期：${info.salesDate || '－'}`, midX, y);
+  doc.text(`製表日期：${info.madeAt}`, rightX, y, { align: 'right' });
   y += lineGap;
 
-  // ── 第 2 列 ───────────────────────────────────────────────
-  // 第 2 列 第 1 行
+  // 第2列
   doc.text(`專櫃：${info.counter || '－'}`, leftX, y);
-  // 第 2 列 第 2 行
-  doc.text(`樓層：${info.floor || '－'}  抽成類別：${info.cutType} `, midX, y);
-  // 第 2 列 第 3 行（右側）：抽成類別 + 交易總件數/退貨件數（同一行）
-  doc.text(
-    `  交易總件數：${info.totalTxns} / 退貨件數：${info.returnQty}`,
-    rightX,
-    y,
-    { align: 'right' }
-  );
+  doc.text(`樓層：${info.floor || '－'}  抽成類別：${info.cutType}`, midX, y);
+  doc.text(`交易總件數：${info.totalTxns} / 退貨件數：${info.returnQty}`, rightX, y, { align: 'right' });
   y += lineGap;
 
-  // ── 第 3 列 ───────────────────────────────────────────────
-  // 第 3 列 第 1 行
+  // 第3列
   doc.text(`區域：${info.area || '－'}`, leftX, y);
-  // 第 3 列 第 3 行（右側）
   doc.text(`退貨金額：${info.returnAmt}`, rightX, y, { align: 'right' });
 
-  // 如果你想保留「第 4 列」空行以拉開表頭與表格距離，可再加：
-  // y += lineGap;
+  // 頁碼（放在右上角獨立一行，最穩）
+  doc.text(`頁數：${pageNo}`, rightX, 95, { align: 'right' });
 }
-
-
 
   formatDate(dateStr: string): string {
     if (!dateStr) return '';
@@ -511,22 +542,6 @@ private drawReportHeader(
     return `${year}/${month}/${day}`;
   }
 
-  exportExcel(): void {
-    import('xlsx').then((xlsx) => {
-      const ws = xlsx.utils.json_to_sheet(
-        this.data.map((row) => {
-          const item: any = {};
-          this.columns.forEach((col) => {
-            item[col.header] = row[col.field];
-          });
-          return item;
-        }),
-      );
-      const wb = xlsx.utils.book_new();
-      xlsx.utils.book_append_sheet(wb, ws, '報表');
-      xlsx.writeFile(wb, `報表_${new Date().toISOString()}.xlsx`);
-    });
-  }
 
   exportSummaryPDF(): void {
     this.pdfService.exportReportPDF({
@@ -543,26 +558,55 @@ private drawReportHeader(
     });
   }
 
-  exportSummaryExcel(): void {
-    import('xlsx').then((xlsx) => {
-      const exportData = this.data.map((row: any) => {
-        const obj: { [key: string]: any } = {};
-        this.columns.forEach((col: any) => {
-          obj[col.header] =
-            typeof col.format === 'function'
-              ? col.format(row[col.field])
-              : row[col.field];
-        });
-        return obj;
-      });
+exportExcel(): void {
+  import('xlsx').then((xlsx) => {
+    const rows = this.data.map((row) => {
+      const o: Record<string, any> = {};
 
-      const ws = xlsx.utils.json_to_sheet(exportData);
-      const wb = xlsx.utils.book_new();
-      xlsx.utils.book_append_sheet(wb, ws, '專櫃日對帳單');
-      xlsx.writeFile(wb, `專櫃日對帳單${new Date().toISOString()}.xlsx`);
+      // 先放新增欄位
+      o['專櫃'] = `${row?.TLT_NO ?? ''} / ${row?.tlt_name ?? ''}`;
+      o['抽成類別'] = row?.TLT_ID ?? '';
+
+      // 再放原本 columns 的欄位（保持你既有的格式化）
+      this.columns.forEach((col) => {
+        o[col.header] =
+          typeof col.format === 'function'
+            ? col.format(row[col.field])
+            : row[col.field];
+      });
+      return o;
     });
-  }
-  get showBusType(): boolean {
-    return this.dataForm.get('showBusType')?.value ?? true;
-  }
+
+    const ws = xlsx.utils.json_to_sheet(rows);
+    const wb = xlsx.utils.book_new();
+    xlsx.utils.book_append_sheet(wb, ws, '專櫃日對帳單');
+    xlsx.writeFile(wb, `專櫃日對帳單_${new Date().toISOString()}.xlsx`);
+  });
+}
+
+exportSummaryExcel(): void {
+  import('xlsx').then((xlsx) => {
+    const rows = this.data.map((row: any) => {
+      const o: Record<string, any> = {};
+
+      // 新增欄位（置前）
+      o['專櫃'] = `${row?.TLT_NO ?? ''} / ${row?.tlt_name ?? ''}`;
+      o['抽成類別'] = row?.TLT_ID ?? '';
+
+      // 既有欄位
+      this.columns.forEach((col: any) => {
+        o[col.header] =
+          typeof col.format === 'function'
+            ? col.format(row[col.field])
+            : row[col.field];
+      });
+      return o;
+    });
+
+    const ws = xlsx.utils.json_to_sheet(rows);
+    const wb = xlsx.utils.book_new();
+    xlsx.utils.book_append_sheet(wb, ws, '專櫃日對帳單');
+    xlsx.writeFile(wb, `專櫃日對帳單_${new Date().toISOString()}.xlsx`);
+  });
+}
 }
