@@ -23,11 +23,10 @@
     </p-accordionTab>
 </p-accordion>
 <div class="card">
-    <app-table tableKey="FIN14030" dataKey="field" [data]="data" [columns]="columns" (edit)="onEdit($event)"
-        (detail)="onDetail($event)" [showCheckBox]="false" [multiSortMeta]="[{ field: 'field', order: 1 }]"
-        [totalRecords]="totalRecords" (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"
-        [lazy]="true" [loading]="loading">
-    </app-table>
+  <!-- PDF 預覽區 -->
+  <div *ngIf="pdfUrl" style="height: 90vh;">
+    <iframe [src]="pdfUrl" width="100%" height="100%" style="border:none;"></iframe>
+  </div>
 </div>
 
 <!-- 彈出視窗 -->
@@ -35,22 +34,15 @@
   header="{{auditMode}}確認" 
   [(visible)]="showDialog" 
   modal
-  [style]="{width: '80vw'}">
+  [style]="{width: '50vw'}">
 
    <div class="p-3">
     <h5>申報年月: {{ dialogData?.REP_GUIYM }}</h5>
     <h5>稅籍編號: {{ dialogData?.REP_TaxNo }}</h5>
   </div>
 
-  <!-- PDF 預覽區 -->
-  <div *ngIf="pdfUrl" style="height: 90vh;">
-    <iframe [src]="pdfUrl" width="100%" height="100%" style="border:none;"></iframe>
-  </div>
-
   <ng-template pTemplate="footer">
-    <!-- <button pButton icon="pi pi-times" aria-label="取消" (click)="cancelAction()"></button>
-    <button pButton icon="pi pi-check" aria-label="確認" (click)="confirmAction()"></button> -->
-    <app-button label="審核" (click)="confirmCheck()"></app-button>
-    <app-button label="反審核" (click)="cancelRecheck()"></app-button>
+    <app-button label="審核" (click)="confirmCheck(queryForm)"></app-button>
+    <app-button label="反審核" (click)="cancelRecheck(queryForm)"></app-button>
   </ng-template>
 </p-dialog>

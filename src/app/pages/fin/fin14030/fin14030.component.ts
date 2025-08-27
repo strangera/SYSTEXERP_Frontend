@@ -357,6 +357,9 @@ export class FIN14030Component extends BasicQueryPageComponent<unknown> implemen
             ? response.Data.printURL
             : `${environment.BaseUrl}${response.Data.printURL}`;
 
+            // 直接在新分頁打開
+            // window.open(rawUrl, '_blank');
+
             // ⬇️ 用 sanitizer 包裝
             this.pdfUrl = this.sanitizer.bypassSecurityTrustResourceUrl(rawUrl);
             this.loading = false; 
@@ -368,65 +371,82 @@ export class FIN14030Component extends BasicQueryPageComponent<unknown> implemen
   }
 
   // 確認審核
-   confirmCheck() {
+   confirmCheck(frm: FormGroup) {
     this.confirmationService.confirm({
-          message: `是否執行審核?`,
-          header: `確認審核`,
-          icon: 'pi pi-exclamation-triangle',
-          accept: () => {
-            // 按【審核】鈕後，系統詢問【是否執行審核?】，按【是】，更新審核日期=系統日期、
-            // 審核人員=操作人員、設定狀態=已審核，並同時寫入操作記錄檔，執行審核後資料則不
+      message: `是否執行審核?`,
+      header: `確認審核`,
+      icon: 'pi pi-exclamation-triangle',
+      accept: () => {
+        // 按【審核】鈕後，系統詢問【是否執行審核?】，按【是】，更新審核日期=系統日期、
+        // 審核人員=操作人員、設定狀態=已審核，並同時寫入操作記錄檔，執行審核後資料則不
 
-            // const idsToDelete = rows.map(item => item.id);
-            // this.loading = true; // 設置載入狀態
-            // this.sysbc00Service.deleteSYSBC00(idsToDelete).pipe(
-            //   untilDestroyed(this), // 確保在組件銷毀時取消訂閱
-            //   finalize(() => this.loading = false) // 無論成功失敗，都要關閉載入狀態
-            // ).subscribe({
-            //   next: (response) => {
-            //     if (response.Status === '0000') { // 假設 '0000' 為成功狀態碼
-            //       this.messageService.successBubble('刪除成功');
-            //       this.selectedRows = []; // 清空選取狀態
-            //       this.onSubmit(this.queryForm);
-            //     } else {
-            //       console.error('刪除失敗響應:', response);
-            //     }
-            //   }
-            // });
+        const body = {
+          ...frm.value,
+          Mid: Number(frm.value.Mid),
+          REP_GUIYM: convertDateToYYYYMM(frm.value.REP_GUIYM),
+          REP_AuditStatus: '1' // 0=未審核, 1=已審核
+        }
+        // 可以用 202406 , 703902231 測試
+            
+        console.log('審核request', body);
+
+        this.fin14030Service.ApproveFIN14030(body).pipe(untilDestroyed(this)).subscribe({
+          next: (response) => {
+            if (response.Data.IsApproveSuccess) {
+              this.messageService.successBubble('審核成功');
+            } else {
+              this.messageService.errorBubble(response.Data.MsgApprove);
+              this.showDialog = false;
+            }
+          },
+          error: (error) => {
+            this.messageService.errorBubble('審核失敗，請稍後再試');
+            console.error('審核錯誤:', error);
+            this.showDialog = false;
           }
         });
+      }
+    });
     this.showDialog = false;
+    this.loading = false;
   }
 
   //確認反審核
-  cancelRecheck() {
+  cancelRecheck(frm: FormGroup) {
     this.confirmationService.confirm({
-          message: `是否確認反審核?`,
-          header: `確認反審核`,
-          icon: 'pi pi-exclamation-triangle',
-          accept: () => {
-            // 按【反審核】鈕，系統詢問【是否執行反審核?】，按【是】，清除該筆設定的審核日
-            // 期、審核人員、更新設定狀態=未審核，並同時寫入操作記錄檔。
+      message: `是否確認反審核?`,
+      header: `確認反審核`,
+      icon: 'pi pi-exclamation-triangle',
+      accept: () => {
+        // 按【反審核】鈕，系統詢問【是否執行反審核?】，按【是】，清除該筆設定的審核日
+        // 期、審核人員、更新設定狀態=未審核，並同時寫入操作記錄檔。
 
+        const body = {
+          ...frm.value,
+          Mid: Number(frm.value.Mid),
+          REP_GUIYM: convertDateToYYYYMM(frm.value.REP_GUIYM),
+          REP_AuditStatus: '0' // 0=未審核, 1=已審核
+        }
+        // 可以用 202406 , 703902231 測試
+            
+        console.log('反審核request', body);
 
-            // const idsToDelete = rows.map(item => item.id);
-            // this.loading = true; // 設置載入狀態
-            // this.sysbc00Service.deleteSYSBC00(idsToDelete).pipe(
-            //   untilDestroyed(this), // 確保在組件銷毀時取消訂閱
-            //   finalize(() => this.loading = false) // 無論成功失敗，都要關閉載入狀態
-            // ).subscribe({
-            //   next: (response) => {
-            //     if (response.Status === '0000') { // 假設 '0000' 為成功狀態碼
-            //       this.messageService.successBubble('刪除成功');
-            //       this.selectedRows = []; // 清空選取狀態
-            //       this.onSubmit(this.queryForm);
-            //     } else {
-            //       console.error('刪除失敗響應:', response);
-            //     }
-            //   }
-            // });
+        this.fin14030Service.ApproveFIN14030(body).pipe(untilDestroyed(this)).subscribe({
+          next: (response) => {
+            if (response.Data.IsApproveSuccess) {
+              this.messageService.successBubble('反審核成功');
+            } else {
+              this.messageService.errorBubble(response.Data.MsgApprove);
+            }
+          },
+          error: (error) => {
+            this.messageService.errorBubble('反審核失敗，請稍後再試');
+            console.error('審核錯誤:', error);
           }
         });
+      }
+    });
     this.showDialog = false;
+    this.loading = false;
   }
 }
