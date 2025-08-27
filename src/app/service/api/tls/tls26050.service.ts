@@ -50,6 +50,18 @@ export interface TLS26050QueryRequest extends BaseQueryRequest {
   tax?: boolean; // 是否含稅
 }
 
+// 週報表起訖日期查詢參數 Model
+export interface TLS26050WeekQueryRequest {
+  onedateyy: string; // 年度
+  weeks: string; // 週數
+}
+
+// 週報表起訖日期回應 Model
+export interface TLS26050WeekResponse {
+  WeekStart: string; // 週開始日期 - ISO 格式
+  WeekEnd: string; // 週結束日期 - ISO 格式
+}
+
 // 查詢結果 Model
 export interface TLS26050Data {
   id: number; // ID
@@ -95,5 +107,10 @@ export class TLS26050Service {
   // 查詢組織預售業績總表資料
   queryTLS26050(data: TLS26050QueryRequest): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/queryTLS26050`, data);
+  }
+
+  // 查詢週報表起訖日期
+  queryTLS26050Week(data: TLS26050WeekQueryRequest): Observable<BaseQueryResponse<TLS26050WeekResponse>> {
+    return this.http.post<BaseQueryResponse<TLS26050WeekResponse>>(`${this.apiUrl}/queryTLS26050Week`, data);
   }
 }

@@ -53,6 +53,7 @@ export class InputTextComponent extends BasicKitComponent implements OnInit {
 
   @Output() clickButton = new EventEmitter<unknown>();
   @Output() inputChange = new EventEmitter<Event>();
+  @Output() blurEvent = new EventEmitter<string>();
 
   value = '*****************************************';
   private isComposing = false;
@@ -126,17 +127,20 @@ export class InputTextComponent extends BasicKitComponent implements OnInit {
 
   // 新增：處理失焦事件
   onBlur(event: FocusEvent): void {
-    if (!this.autoPadZero || !this.padOnBlur) return;
-
     const inputElement = event.target as HTMLInputElement;
     let value = inputElement.value.trim();
 
-    // 如果有值且小於指定長度，則補零
-    if (value && value.length < this.padLength) {
-      value = value.padStart(this.padLength, '0');
-      this.control.setValue(value);
-      inputElement.value = value;
+    // 只有在啟用自動補零時才執行補零邏輯
+    if (this.autoPadZero && this.padOnBlur) {
+      // 如果有值且小於指定長度，則補零
+      if (value && value.length < this.padLength) {
+        value = value.padStart(this.padLength, '0');
+        this.control.setValue(value);
+        inputElement.value = value;
+      }
     }
+
+    this.blurEvent.emit(value);
   }
 
   // 新增：處理即時補零（如果不想在失焦時補零）

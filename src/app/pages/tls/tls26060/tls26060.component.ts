@@ -3,6 +3,7 @@ import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angula
 import { DatePipe, NgIf } from '@angular/common';
 import { finalize } from 'rxjs';
 import { TLS26060Service, TLS26060Data, TLS26060QueryRequest } from '../../../service/api/tls/tls26060.service';
+import { TLS26050Service } from '../../../service/api/tls/tls26050.service';
 import { ValidationService } from '../../../shared/service/validation.service';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
@@ -52,12 +53,12 @@ export class TLS26060Component extends BasicQueryPageComponent<TLS26060Data> imp
     halfyear_onedateyy: [null], // 半年報表年度
     halfyear: [null], // 半年別
     year_onedateyy: [null], // 年報表年度
-    startdate: [null], // 開始日期
-    enddate: [null], // 結束日期
+    startdate: [''], // 開始日期
+    enddate: [''], // 結束日期
     onedateyy_c: [null], // 比較年度（週報表）
     weeks_c: [null], // 比較週數
-    startdate_c: [null], // 比較開始日期（週報表用）
-    enddate_c: [null], // 比較結束日期（週報表用）
+    startdate_c: [''], // 比較開始日期（週報表用）
+    enddate_c: [''], // 比較結束日期（週報表用）
     onedatemm_c: [null], // 比較年月（月報表）
     halfyear_onedateyy_c: [null], // 比較半年報表年度
     halfyear_c: [null], // 比較半年別
@@ -117,6 +118,7 @@ export class TLS26060Component extends BasicQueryPageComponent<TLS26060Data> imp
 
   constructor(
     private tls26060Service: TLS26060Service,
+    private tls26050Service: TLS26050Service,
     private validationService: ValidationService,
     private datePipe: DatePipe,
     private businessTypeCodeService: BusinessTypeCodeService,
@@ -237,5 +239,29 @@ export class TLS26060Component extends BasicQueryPageComponent<TLS26060Data> imp
       { field: 'MonthlyFloorEffect', header: '月坪效', hidden: tax, format: formatAmount, isSubTotal: true },
       { field: 'nMonthlyFloorEffect', header: '月坪效', hidden: !tax, format: formatAmount, isSubTotal: true }
     ]
+  }
+
+  // 查詢週報表起訖日期
+  queryWeek(event: string, baseOrCompare: 'base' | 'compare') {
+    const control = this.queryForm.controls[baseOrCompare === 'base' ? 'onedateyy' : 'onedateyy_c'];
+    if (!control.value) return;
+
+    const payload = {
+      onedateyy: this.datePipe.transform(control.value, 'yyyy') ?? '',
+      weeks: event,
+    };
+
+    this.tls26050Service.queryTLS26050Week(payload).subscribe((response) => {
+      switch (baseOrCompare) {
+        case 'base':
+          this.queryForm.controls['startdate'].setValue(response.Data[0].WeekStart);
+          this.queryForm.controls['enddate'].setValue(response.Data[0].WeekEnd);
+          break;
+        case 'compare':
+          this.queryForm.controls['startdate_c'].setValue(response.Data[0].WeekStart);
+          this.queryForm.controls['enddate_c'].setValue(response.Data[0].WeekEnd);
+          break;
+      }
+    });
   }
 }
