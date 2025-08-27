@@ -70,7 +70,7 @@ export class TLS23070Component extends BasicQueryPageComponent<any> {
     tlt_floor: [],
     org_id: [],
     ...createPaginationConfig([
-      { field: 'TXN_Date', order: -1 },
+      { field: 'TXN_Date', order: 1 },
       { field: 'ECR_No',   order:  1 },
     ]),
   });
