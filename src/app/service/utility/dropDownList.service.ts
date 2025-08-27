@@ -350,7 +350,7 @@ export class DropDownListService {
   }
 
   // 查詢專櫃主檔(TLTTALENT)資料表下拉選單(依照契約日期取得合約資料)
-  queryTLTTALENT_ByContractDate_DropDownList(tlt_contract_date: string): Observable<ApiResponse<IDropdownItem[]>> {
+  queryTLTTALENT_ByContractDate_DropDownList(tlt_contract_date: string | null): Observable<ApiResponse<IDropdownItem[]>> {
     return this.http.post<ApiResponse<IDropdownItem[]>>(`${this.apiUrl}/queryTLTTALENT_ByContractDate_DropDownList`, { tlt_contract_date });
   }
   // 查詢付款別(POS1006)資料表下拉選單

@@ -477,8 +477,8 @@ export class TLS23010Component
     { field: 'TXN_PrintTimes', header: '發票列印次數',    visible: true, style: 'text-right' },
     { field: 'TXN_PrintGUI',   header: '電子發票是否列印', visible: true, format: this.getYesNoLabel },
 
-    { field: 'CRD_Type',       header: '信用卡別',      visible: true },
-    { field: 'CRD_Name',       header: '卡別',         visible: true },
+    
+    { field: 'CRD_Name',       header: '信用卡別',         visible: true },
     { field: 'CRD_No',         header: '號碼',         visible: true },
     { field: 'TERM_No',        header: '分期期數',      visible: true, style: 'text-right' },
     { field: 'TXN_PayAmt',     header: '金額',         visible: true, style: 'text-right', format: this.moneyFormat },

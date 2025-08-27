@@ -35,6 +35,7 @@ export class CalendarComponent extends BasicKitComponent implements OnInit {
   @Input() disabled = false;
   // 觸發事件
   @Output() calendarEvent = new EventEmitter<any>();
+  @Output() inputChange = new EventEmitter<string>();
   @Output() monthChangeEvent = new EventEmitter<CalendarMonthChangeEvent>();
   @Output() yearChangeEvent = new EventEmitter<CalendarYearChangeEvent>();
 
@@ -64,5 +65,35 @@ export class CalendarComponent extends BasicKitComponent implements OnInit {
   }
   onClose() {
     this.calendarEvent.emit(this.control.value);
+  }
+  // dateTimeOne
+  onInput(event: any) {
+    if (this.calendarType === 'timeOne') {
+      if (event.target.value.length === 2 && event.data && event.target.value.indexOf(':') === -1) {
+        event.target.value = event.target.value + ':';
+      }
+    }
+    if (this.calendarType === 'dateOne' || this.calendarType === 'dateTimeOne') {
+      if (event.target.value.length === 4 && event.data && event.target.value.indexOf('/') === -1) {
+        event.target.value = event.target.value + '/';
+      }
+      if (event.target.value.length === 7 && event.data && event.target.value.lastIndexOf('/') === event.target.value.indexOf('/')) {
+        event.target.value = event.target.value + '/';
+      }
+    }
+    if (this.calendarType === 'dateTimeOne') {
+      if (event.target.value.length === 10 && event.data && event.target.value.indexOf(' ') === -1) {
+        event.target.value = event.target.value + ' ';
+      }
+      if (event.target.value.length === 13 && event.data && event.target.value.lastIndexOf(':') === event.target.value.indexOf(':')) {
+        event.target.value = event.target.value + ':';
+      }
+    }
+    if (this.calendarType === 'dateMonthOne') {
+      if (event.target.value.length === 4 && event.data && event.target.value.indexOf('/') === -1) {
+        event.target.value = event.target.value + '/';
+      }
+    }
+    this.inputChange.emit(event.target.value);
   }
 }

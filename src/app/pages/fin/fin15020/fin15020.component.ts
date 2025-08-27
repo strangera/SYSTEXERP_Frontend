@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { DatePipe } from '@angular/common';
+import { CommonModule, DatePipe } from '@angular/common';
 import { finalize } from 'rxjs';
 
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
@@ -34,7 +34,7 @@ export interface Option {
   imports: [
     MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule,
     InputTextRangeComponent, CalendarRangeComponent, InputTextComponent, TableComponent,
-    TranslateModule, DropdownComponent, CalendarComponent
+    TranslateModule, DropdownComponent, CalendarComponent, CommonModule
   ]
 })
 export class FIN15020Component extends BasicQueryPageComponent<FIN15020Data> implements OnInit {

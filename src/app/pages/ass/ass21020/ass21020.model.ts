@@ -1,3 +1,5 @@
+import { BaseQueryRequest } from "@shared/models/api/base-api.interface";
+
 export interface ASS21020Data {
   ID: number;
   ENG_Type: string;
@@ -13,7 +15,7 @@ export interface ASS21020Data {
   UPD_USR_Name: string;
 }
 
-export interface ASS21020Payload {
+export interface ASS21020Payload extends BaseQueryRequest {
   EngTypes?: string;
   ENG_MeterNo?: string;
   Location_No?: string;

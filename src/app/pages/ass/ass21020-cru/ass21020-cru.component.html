@@ -17,10 +17,10 @@
       <div class="grid p-fluid">
         <div class="col-12 md:col-6 lg:col-3">
           <app-dropdown label="錶號"
-                        controlName="ENG_MeterNo"
+                        controlName="Id"
                         [options]="service.engMeterNoSignal()"
                         optionLabel="ENG_MeterNo"
-                        optionValue="ENG_MeterNo"
+                        optionValue="Id"
                         [control]="df().ENG_MeterNo"
                         [submitted]="submitted"></app-dropdown>
         </div>
@@ -113,7 +113,7 @@
                    [showExcel]="isFormEditable"
                    (exportExcel)="onExportExcel()"
                    (importExcel)="onImportExcel($event)"
-                   [data]="service.tltByFlagSignal()"
+                   [data]="[]"
                    (selectionChange)="onSelectionChange($event)"
                    [dataKey]="'TLT_No'"
                    [tableKey]="'ASS21020_detail'"
