@@ -3,7 +3,8 @@ import { Validators, FormsModule, ReactiveFormsModule, FormGroup } from '@angula
 import { TranslateModule } from '@ngx-translate/core';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { PanelModule } from 'primeng/panel';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { InputNumberComponent } from '@shared/componentkit/input-number/input-number.component';
+import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { InputTextareaComponent } from '@shared/componentkit/input-textarea/input-textarea.component';
 import { DropDownListService, IDropdownItem } from '../../../service/utility/dropDownList.service';
@@ -16,6 +17,8 @@ import { TabViewModule } from 'primeng/tabview';
 import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
 import { ColorPickerModule } from 'primeng/colorpicker';
+import { Tls42010Service } from '../../../service/api/tls/tls42010.service';
+
 
 export interface KeyItem {
   code: string;
@@ -41,11 +44,11 @@ export interface KeyItem {
     PanelModule,
     FormsModule,
     ReactiveFormsModule,
-    InputTextComponent,
     ButtonComponent,
     TranslateModule,
     InputTextareaComponent,
     DropdownComponent,
+    InputTextComponent,
     NgFor,
     NgClass,
     CommonModule,
@@ -54,7 +57,8 @@ export interface KeyItem {
     TabViewModule,
     ButtonModule,
     DialogModule,
-    ColorPickerModule
+    ColorPickerModule,
+    InputNumberComponent
   ]
 })
 export class TLS42010CRUComponent
@@ -107,7 +111,7 @@ export class TLS42010CRUComponent
   KG_KeyPageOptions: IDropdownItem[] = [];
   KB_ColorOptions: IDropdownItem[] = [];
   KB_StyleOptions: IDropdownItem[] = [];
-  KB_FontOptions: IDropdownItem[] = [];
+
   KB_FontColorOptions: IDropdownItem[] = [];
 
   KB_FuncOptions = [
@@ -127,7 +131,14 @@ export class TLS42010CRUComponent
     { label: '斜體', value: 'NYN' },
     { label: '底線', value: 'NNY' },
   ];
+  KB_FontOptions = [
+    { label: '微軟正黑體', value: 'Microsoft JhengHei' },
+    { label: '標楷體', value: 'DFKai-SB' },
+    { label: '新細明體', value: 'PMingLiU' },
+    { label: '毛毛粗體', value: 'PMingmeow' },
+    { label: '貓貓本體', value: 'meoww' },
 
+  ];
   selectedTab: 'func' | 'button' | 'font' | 'other' = 'func';
 
   // Pickr
@@ -135,7 +146,10 @@ export class TLS42010CRUComponent
   tempColor = 'rgba(213, 31, 14, 1)';
   pickr: any;
 
-  constructor(private dropDownListService: DropDownListService) {
+  constructor(
+    private dropDownListService: DropDownListService,
+    private tls42010Service: Tls42010Service
+  ) {
     super();
   }
 
@@ -152,6 +166,31 @@ export class TLS42010CRUComponent
   ngOnInit(): void {
     this.initializePage('TLS42010', this.dataForm);
     this.buildGrid();
+    // 載入收銀畫面名稱下拉
+    this.dropDownListService.queryPOS1008DropDownList().subscribe({
+      next: (res) => {
+        this.TSB_NameOptions = res?.Data?.map(item => ({
+          No: item.TSB_Name,   // 下拉的值
+          Name: item.TSB_Name  // 下拉顯示文字
+        })) ?? [];
+        console.log('TSB_NameOptions:', this.TSB_NameOptions);
+      },
+    });
+    this.dropDownListService.querySYS1000_DropDownList({ SYS_Type: 'ECR_KBType' }).subscribe({
+      next: (res) => {
+        this.ECR_KBTypeOptions = res?.Data ?? [];
+
+        // 預設值 = TCHBTN
+        this.dataForm.controls.ECR_KBType.setValue('TCHBTN');
+      },
+      error: (err) => {
+        console.error('載入鍵盤型態下拉失敗:', err);
+      }
+    });
+
+
+
+
 
     this.dataForm.valueChanges.subscribe(val => {
       if (this.selected) {
@@ -202,8 +241,39 @@ export class TLS42010CRUComponent
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
       this.loading = true;
+
+      const payload = {
+        USR_Level: frm.value.USR_Level,
+        TSB_Name: frm.value.TSB_Name,
+        ECR_KBType: frm.value.ECR_KBType,
+        ECR_KBDesc: frm.value.ECR_KBDesc,
+        KB_Switch: frm.value.KB_Switch,
+        KB_Display1: frm.value.KB_Display1,
+        KB_Display2: frm.value.KB_Display2,
+        KB_Color: frm.value.KB_Color,
+        KB_Style: frm.value.KB_Style,
+        KB_Font: frm.value.KB_Font,
+        KB_Size: frm.value.KB_Size,
+        KB_FontColor: frm.value.KB_FontColor,
+        KB_Arg1: frm.value.KB_Arg1,
+        KB_Arg2: frm.value.KB_Arg2,
+        KB_Arg3: frm.value.KB_Arg3,
+        Keys: this.keys  // 按鍵配置表也送出去
+      };
+
+      this.tls42010Service.insertTLS42010M(payload).subscribe({
+        next: (res) => {
+          this.loading = false;
+          console.log('新增成功:', res);
+        },
+        error: (err) => {
+          this.loading = false;
+          console.error('新增失敗:', err);
+        }
+      });
     });
   }
+
 
   onTabChange(e: any) {
     this.dataForm.controls.activePage.setValue(e.index);
