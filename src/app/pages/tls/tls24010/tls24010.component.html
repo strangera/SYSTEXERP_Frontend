@@ -38,9 +38,9 @@
   </p-accordion>
 </div>
 <div class="card">
-  <app-table-report tableKey="TLS24010Table" dataKey="TXN_No" [data]="data" [columns]="columns"
-    (detail)="onDetailData($event)" [multiSortMeta]="[{ field: 'TXN_Date', order: -1 }]" [totalRecords]="totalRecords"
-    [showDetail]="!isTXN_GUIPaper" (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"
-    [loading]="loading" [addButton]="addButton" [showEdit]="false"></app-table-report>
+  <app-table tableKey="TLS24010Table" dataKey="TXN_No" [data]="data" [columns]="columns" (detail)="onDetailData($event)"
+    [multiSortMeta]="[{ field: 'TXN_Date', order: -1 }]" [totalRecords]="totalRecords" [showDetail]="!isTXN_GUIPaper"
+    (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [loading]="loading" [addButton]="addButton"
+    [showEdit]="false"></app-table>
 </div>
 <p-menu #menu [model]="items" [popup]="true" styleClass="w-auto" />

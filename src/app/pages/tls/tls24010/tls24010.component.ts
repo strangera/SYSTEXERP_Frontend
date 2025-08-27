@@ -23,6 +23,7 @@ import { yesterday } from '@shared/models/system/query-form.model';
 import { DropdownChangeEvent } from 'primeng/dropdown';
 import { TLS41010Service } from '@service/api/tls/tls41010.service';
 import { TableReportComponent } from '@shared/componentkit/table/table-report/table-report.component';
+import { TableComponent } from '@shared/componentkit/table/table.component';
 // 交易補登作業
 @Component({
   selector: 'app-tls24010',
@@ -41,6 +42,7 @@ import { TableReportComponent } from '@shared/componentkit/table/table-report/ta
     TableReportComponent,
     MenuModule,
     TranslateModule,
+    TableComponent
   ],
 })
 export class TLS24010Component extends BasicQueryPageComponent<TLS24010Data> implements OnInit {

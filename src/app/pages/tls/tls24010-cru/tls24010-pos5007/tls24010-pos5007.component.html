@@ -133,7 +133,7 @@
   </ng-template>
   <ng-template pTemplate="footer">
     <tr>
-      <td [attr.colspan]="isFormCreateable ? 8 : 7" class="text-right">總計</td>
+      <td [attr.colspan]="isFormCreateable ? store_way === '2' ? 8 : 7 : 7" class="text-right">總計</td>
       <td class="text-right">$ {{TXN_SaleAmtTotal | number:'1.0-0'}}</td>
       <td *ngIf="store_way !== '2'" [attr.colspan]="3"></td>
     </tr>

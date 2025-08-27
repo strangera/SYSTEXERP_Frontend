@@ -52,7 +52,7 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
   @Input() exportExcelLoading = false;             // 匯出 Excel loading
   @Output() importExcel = new EventEmitter<FileSelectEvent>(); // 匯入 Excel 事件
   // Sort 相關
-  @Input() showSort = true;                                                     // 是否顯示排序
+  // @Input() showSort = true;                                                     // 是否顯示排序
   @Input() multiSortMeta: SortMeta[] = [{ field: this.dataKey, order: 1 }];     // table 排序依據 (多重排序 {field欄位、order排序方向} )
   // 欄位群組
   // @Input() columnGroup?: ColumnGroup[];                                         // table 群組欄位
@@ -68,15 +68,15 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
   // @Input() expansionLoadFn?: (rowData: any) => Observable<any>; // 屬性來接收父層傳來的載入函數
   // expandedRows: Record<string, boolean> = {};// 收合展開 已展開資料
   // 管理 欄位
-  @Input() showManage = true;                // 是否顯示 管理欄位
+  // @Input() showManage = true;                // 是否顯示 管理欄位
   @Input() showDetail = true;                // 是否顯示 管理欄位(明細按鈕)
-  @Output() detail = new EventEmitter<any>();// 明細事件
+  // @Output() detail = new EventEmitter<any>();// 明細事件
   @Input() showEdit = true;                  // 是否顯示 管理欄位(編輯按鈕)
-  @Input() editDisabled: (rowData: any) => boolean | undefined = () => false;// Row禁止編輯條件
-  @Output() edit = new EventEmitter<any>();  // 編輯事件
+  // @Input() editDisabled: (rowData: any) => boolean | undefined = () => false;// Row禁止編輯條件
+  // @Output() edit = new EventEmitter<any>();  // 編輯事件
   @Input() addButton: AddButton[] = [];      // 自定義 管理按鈕
-  @Input() buttonsLoading = false;           // 按鈕們 loading
-  @Output() selectButton = new EventEmitter<any>();             // 選擇 按鈕事件
+  // @Input() buttonsLoading = false;           // 按鈕們 loading
+  // @Output() selectButton = new EventEmitter<any>();             // 選擇 按鈕事件
   // Footer
   @Input() totalRecords = 0;                        // 記錄總數
   @Output() lazyLoadData = new EventEmitter<LazyLoadEvent>(); // Lazy 加載事件
@@ -86,21 +86,21 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
   ) { super(); }
   // 當 data 發生變化時，重置分頁與頁碼
   ngOnChanges(changes: SimpleChanges): void {
-    if (changes['data']) {
-      setTimeout(() => {
-        this.dt.totalRecords = this.totalRecords !== 0 ? this.totalRecords : this.data.length;
-        this.selectedItems = []
-        this.selectionChange.emit(this.selectedItems);
-      });
-    }
-    if (changes['columns'] && this.columns.length > 0) {
-      this.originalColumns = this.columns;
-      // this.showSubTotal = this.showSubTotal ? this.showSubTotal : this.columns.find(c => c.isSubTotal) !== undefined;
-      // this.showTotal = this.showTotal ? this.showTotal : this.columns.find(c => c.isTotal) !== undefined;
-      if (changes['columns'].firstChange) {
-        setTimeout(() => { this.multiSortMeta = this.queryState.getQueryState(this.tableKey + 'Sort')?.value ?? this.multiSortMeta; }, 300);
-      }
-    }
+    // if (changes['data']) {
+    //   setTimeout(() => {
+    //     this.dt.totalRecords = this.totalRecords !== 0 ? this.totalRecords : this.data.length;
+    //     this.selectedItems = []
+    //     this.selectionChange.emit(this.selectedItems);
+    //   });
+    // }
+    // if (changes['columns'] && this.columns.length > 0) {
+    //   this.originalColumns = this.columns;
+    //   // this.showSubTotal = this.showSubTotal ? this.showSubTotal : this.columns.find(c => c.isSubTotal) !== undefined;
+    //   // this.showTotal = this.showTotal ? this.showTotal : this.columns.find(c => c.isTotal) !== undefined;
+    //   if (changes['columns'].firstChange) {
+    //     setTimeout(() => { this.multiSortMeta = this.queryState.getQueryState(this.tableKey + 'Sort')?.value ?? this.multiSortMeta; }, 300);
+    //   }
+    // }
   }
   loadDataLazy(event: TableLazyLoadEvent) {
     if (this.totalRecords === 0 || !this.IsPrint) { return; }
@@ -117,30 +117,30 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
   //   const visibleColumnCount = this.tableUtilityService.getVisibleColumnCount(this.selectedColumns);
   //   return 1 + Number(this.showCheckBox) + visibleColumnCount + Number(this.showManage) + (this.expansionDataKey ? 1 : 0) + (this.showSubTotal || this.showTotal ? 0 : 1);
   // }
-  get getVisibleHeaderCount(): number {
-    const visibleColumnCount = this.tableUtilityService.getVisibleColumnCount(this.selectedColumns);
-    return 1 + Number(this.showCheckBox) + visibleColumnCount + Number(this.showManage);
-  }
+  // get getVisibleHeaderCount(): number {
+  //   const visibleColumnCount = this.tableUtilityService.getVisibleColumnCount(this.selectedColumns);
+  //   return 1 + Number(this.showCheckBox) + visibleColumnCount + Number(this.showManage);
+  // }
   // 行是否可選
-  rowSelectableWrapper = ({ data }: { data: any, index: number; }): boolean | undefined => { return this.isRowSelectable(data) };
+  // rowSelectableWrapper = ({ data }: { data: any, index: number; }): boolean | undefined => { return this.isRowSelectable(data) };
   // 切換行展開
   // toggleRowExpansion(rowData: any) {
   //   this.tableUtilityService.toggleRowExpansionLogic(rowData, this.dataKey, this.expansionDataKey, this.expansionLoadFn, this.expandedRows, this);
   // }
   // 過濾欄位記錄保存
-  onFilterChange(event: MultiSelectChangeEvent) {
-    this.columns.forEach(col => { col.visible = event.value.some((ev: any) => ev.field === col.field); });
-    this.queryState.setQueryState(this.tableKey + 'Filter', this.columns);
-  }
+  // onFilterChange(event: MultiSelectChangeEvent) {
+  //   this.columns.forEach(col => { col.visible = event.value.some((ev: any) => ev.field === col.field); });
+  //   this.queryState.setQueryState(this.tableKey + 'Filter', this.columns);
+  // }
   // 資料勾選
-  onSelectionChange(event: any) {
-    const selected = Array.isArray(event) ? event : event ? [event] : [];
-    this.selectedItems = selected.filter((item: any) => this.isRowSelectable(item));
-    this.selectionChange.emit(this.selectedItems);
-  }
-  editRow(rowData: any) { this.edit.emit(rowData); }// Edit 按鈕 事件
-  detailRow(rowData: any) { this.detail.emit(rowData); }// Detail 或 雙擊行 事件
-  onSelectButton(rowData: any) { this.selectButton.emit(rowData); }// 欄位Button 選擇 事件
+  // onSelectionChange(event: any) {
+  //   const selected = Array.isArray(event) ? event : event ? [event] : [];
+  //   this.selectedItems = selected.filter((item: any) => this.isRowSelectable(item));
+  //   this.selectionChange.emit(this.selectedItems);
+  // }
+  // editRow(rowData: any) { this.edit.emit(rowData); }// Edit 按鈕 事件
+  // detailRow(rowData: any) { this.detail.emit(rowData); }// Detail 或 雙擊行 事件
+  // onSelectButton(rowData: any) { this.selectButton.emit(rowData); }// 欄位Button 選擇 事件
   // 計算分組欄位跨度
   // getColumnSpan(columns: Column[], groupField: string): number {
   //   return this.tableUtilityService.getColumnSpan(columns, groupField);
@@ -170,11 +170,11 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
   // getTotal(field: string): number {
   //   return this.tableUtilityService.getTotal(this.data, field);
   // }
-  // 獲取後端圖片
-  getImage(url: string): string | SafeUrl | undefined { return this.tableUtilityService.getImage(url); }
-  // 欄位調整
-  onColReorder(event: TableColumnReorderEvent) {
-    this.columns = event.columns as Column[];
-    this.queryState.setQueryState(this.tableKey + 'Filter', this.columns);
-  }
+  // // 獲取後端圖片
+  // getImage(url: string): string | SafeUrl | undefined { return this.tableUtilityService.getImage(url); }
+  // // 欄位調整
+  // onColReorder(event: TableColumnReorderEvent) {
+  //   this.columns = event.columns as Column[];
+  //   this.queryState.setQueryState(this.tableKey + 'Filter', this.columns);
+  // }
 }
