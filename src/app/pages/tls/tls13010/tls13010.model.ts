@@ -447,14 +447,14 @@ export interface FareItem {
 
 export interface CommissionItem {
   id: number | string;
-  commissionType: string;
-  commissionTypeName: string;
-  taxType: number;
+  tlt_id: string;
+  tlt_id_desc: string;
+  cag_taxtype: number;
   discountSummary: string;
-  transactionAmount: number;
-  specialCommission: number;
-  fullPointActivity: boolean;
-  thousandDiscount: boolean;
+  sst_amount: number;
+  sst_rate: number;
+  cap_saletype2: boolean;
+  cap_saletype1: boolean;
   selectedSettingOption: string;
   discountSettingItems: DiscountSettingItem[];
   annualPerformanceItems: AnnualPerformanceItem[];
@@ -470,19 +470,19 @@ export interface DiscountSettingItem {
   id?: number | string;
   selected: boolean;
   cag_barcode: string;
-  startDate: Date;
-  endDate: Date;
-  rate?: number;
+  tlt_bdate: Date;
+  tlt_edate: Date;
+  cag_charge_rate?: number;
   _status?: 'original' | 'modified' | 'new' | 'deleted';
 }
 
 export interface AnnualPerformanceItem {
   id?: number | string;
   selected: boolean;
-  startDate: Date;
-  endDate: Date;
-  discountAmount: number;
-  rate: number;
+  tlt_bdate: Date;
+  tlt_edate: Date;
+  year_amount: number;
+  extra_rate: number;
   _status?: 'original' | 'modified' | 'new' | 'deleted';
 }
 
@@ -490,9 +490,9 @@ export interface DiscountLevelItem {
   id?: number | string;
   selected: boolean;
   cag_barcode: string;
-  startAmount: number;
-  endAmount: number;
-  rate: number;
+  level_bmount: number;
+  level_eamount: number;
+  level_charge_rate: number;
   _status?: 'original' | 'modified' | 'new' | 'deleted';
 }
 

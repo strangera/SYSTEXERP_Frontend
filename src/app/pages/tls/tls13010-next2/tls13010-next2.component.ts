@@ -159,16 +159,16 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
       editable: true,
       options: []
     },
-    { field: 'startDate', header: '合約起始日', type: 'date', editable: true, },
-    { field: 'endDate', header: '合約終止日', type: 'date', editable: true, },
-    { field: 'rate', header: '抽成率', type: 'number', editable: true, allowDecimal: true, decimalPlaces: 4 }
+    { field: 'tlt_bdate', header: '合約起始日', type: 'date', editable: true, },
+    { field: 'tlt_edate', header: '合約終止日', type: 'date', editable: true, },
+    { field: 'extra_rate', header: '抽成率', type: 'number', editable: true, allowDecimal: true, decimalPlaces: 4 }
   ];
 
   annualColumns: ColumnDef[] = [
-    { field: 'startDate', header: '帳務起', type: 'date', editable: true },
-    { field: 'endDate', header: '帳務迄', type: 'date', editable: true },
-    { field: 'discountAmount', header: '業績超過金額含', type: 'number', editable: true },
-    { field: 'rate', header: '抽成率', type: 'number', editable: true, allowDecimal: true, decimalPlaces: 4 }
+    { field: 'tlt_bdate', header: '帳務起', type: 'date', editable: true },
+    { field: 'tlt_edate', header: '帳務迄', type: 'date', editable: true },
+    { field: 'year_amount', header: '業績超過金額含', type: 'number', editable: true },
+    { field: 'extra_rate', header: '抽成率', type: 'number', editable: true, allowDecimal: true, decimalPlaces: 4 }
   ];
 
   levelColumns: ColumnDef[] = [
@@ -179,9 +179,9 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
       editable: true,
       options: []
     },
-    { field: 'startAmount', header: '業績計算金額(起)', type: 'number', editable: true },
-    { field: 'endAmount', header: '業績計算金額(迄)', type: 'number', editable: true },
-    { field: 'rate', header: '抽成率', type: 'number', editable: true, allowDecimal: true, decimalPlaces: 4 }
+    { field: 'level_bmount', header: '業績計算金額(起)', type: 'number', editable: true },
+    { field: 'level_eamount', header: '業績計算金額(迄)', type: 'number', editable: true },
+    { field: 'level_charge_rate', header: '抽成率', type: 'number', editable: true, allowDecimal: true, decimalPlaces: 4 }
   ];
 
   settingOptions: SelectItem[] = [
@@ -198,16 +198,16 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
 
   // 佣金表格列定義
   commissionColumns: ColumnDef[] = [
-    { field: 'commissionType', header: '抽成類別', editable: false },
-    { field: 'commissionTypeName', header: '抽成類別名稱', editable: true },
-    { field: 'taxType', header: '稅別', editable: true, type: 'dropdown', options: TLS13010_DROPDOWN_OPTIONS.cagTaxTypeOption },
-    { field: 'transactionAmount', header: '單筆交易金額(含)以上', editable: true, type: 'number' },
+    { field: 'tlt_id', header: '抽成類別', editable: false },
+    { field: 'tlt_id_desc', header: '抽成類別名稱', editable: true },
+    { field: 'cag_taxtype', header: '稅別', editable: true, type: 'dropdown', options: TLS13010_DROPDOWN_OPTIONS.cagTaxTypeOption },
+    { field: 'sst_amount', header: '單筆交易金額(含)以上', editable: true, type: 'number' },
     {
-      field: 'specialCommission', header: '特價抽成(%)', editable: true, type: 'number', allowDecimal: true,
+      field: 'sst_rate', header: '特價抽成(%)', editable: true, type: 'number', allowDecimal: true,
       decimalPlaces: 3
     },
-    { field: 'fullPointActivity', header: '全館消費滿額集點活動', editable: true, type: 'checkbox' },
-    { field: 'thousandDiscount', header: '滿仟送佰', editable: true, type: 'checkbox' },
+    { field: 'cap_saletype2', header: '全館消費滿額集點活動', editable: true, type: 'checkbox' },
+    { field: 'cap_saletype1', header: '滿仟送佰', editable: true, type: 'checkbox' },
   ];
 
   // 數據
@@ -566,7 +566,7 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
       const annualCount = item.annualPerformanceItems?.length || 0;
       const levelCount = item.discountLevelItems?.length || 0;
 
-      console.log(`📋 抽成項目 ${index + 1} (${item.commissionTypeName}):`, {
+      console.log(`📋 抽成項目 ${index + 1} (${item.tlt_id_desc}):`, {
         discountSettings: discountCount,
         annualPerformance: annualCount,
         discountLevel: levelCount,
@@ -721,14 +721,14 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
       apiData.ChargeSettings.forEach((chargeSetting: ChargeSettingApiItem, index: number) => {
         const commissionItem: CommissionItem = {
           id: chargeSetting.id || (index + 1),
-          commissionType: chargeSetting.tlt_id || '',
-          commissionTypeName: chargeSetting.tlt_id_desc || '抽成類別' + (index + 1),
-          taxType: chargeSetting.cag_taxtype === '1' ? 1 : 0,
+          tlt_id: chargeSetting.tlt_id || '',
+          tlt_id_desc: chargeSetting.tlt_id_desc || '抽成類別' + (index + 1),
+          cag_taxtype: chargeSetting.cag_taxtype === '1' ? 1 : 0,
           discountSummary: this.generateDiscountSummary(chargeSetting),
-          transactionAmount: chargeSetting.sst_amount || 0,
-          specialCommission: chargeSetting.sst_rate || 0,
-          fullPointActivity: chargeSetting.cap_saletype2 === 'Y',
-          thousandDiscount: chargeSetting.cap_saletype1 === 'Y',
+          sst_amount: chargeSetting.sst_amount || 0,
+          sst_rate: chargeSetting.sst_rate || 0,
+          cap_saletype2: chargeSetting.cap_saletype2 === 'Y',
+          cap_saletype1: chargeSetting.cap_saletype1 === 'Y',
           selectedSettingOption: 'discount',
 
           // 🎯 修正：確保每個項目都有 currentTab
@@ -846,14 +846,14 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
       apiData.ChargeSettings.forEach((chargeSetting: any, index: number) => {
         const commissionItem: CommissionItem = {
           id: chargeSetting.id || (index + 1),
-          commissionType: chargeSetting.tlt_id || '',
-          commissionTypeName: chargeSetting.tlt_id_desc || '抽成類別' + (index + 1),
-          taxType: chargeSetting.cag_taxtype === '1' ? 1 : 0,
+          tlt_id: chargeSetting.tlt_id || '',
+          tlt_id_desc: chargeSetting.tlt_id_desc || '抽成類別' + (index + 1),
+          cag_taxtype: chargeSetting.cag_taxtype === '1' ? 1 : 0,
           discountSummary: this.generateDiscountSummary(chargeSetting),
-          transactionAmount: chargeSetting.sst_amount || 0,
-          specialCommission: chargeSetting.sst_rate || 0,
-          fullPointActivity: chargeSetting.cap_saletype2 === 'Y',
-          thousandDiscount: chargeSetting.cap_saletype1 === 'Y',
+          sst_amount: chargeSetting.sst_amount || 0,
+          sst_rate: chargeSetting.sst_rate || 0,
+          cap_saletype2: chargeSetting.cap_saletype2 === 'Y',
+          cap_saletype1: chargeSetting.cap_saletype1 === 'Y',
           selectedSettingOption: 'discount',
           currentTab: 'discount',
 
@@ -888,9 +888,9 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
         id: detail.id || this.generateTempId(),
         selected: true,
         cag_barcode: cag_barcode,
-        startDate: detail.tlt_bdate ? new Date(detail.tlt_bdate) : new Date(),
-        endDate: detail.tlt_edate ? new Date(detail.tlt_edate) : new Date(),
-        rate: detail.cag_charge_rate || 0,
+        tlt_bdate: detail.tlt_bdate ? new Date(detail.tlt_bdate) : new Date(),
+        tlt_edate: detail.tlt_edate ? new Date(detail.tlt_edate) : new Date(),
+        cag_charge_rate: detail.cag_charge_rate || 0,
         _status: 'original'
       };
     });
@@ -905,10 +905,10 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
       return {
         id: detail.id || this.generateTempId(),
         selected: true,
-        startDate: detail.tlt_bdate ? new Date(detail.tlt_bdate) : new Date(),
-        endDate: detail.tlt_edate ? new Date(detail.tlt_edate) : new Date(),
-        discountAmount: detail.year_amount || 0,
-        rate: detail.extra_rate || 0,
+        tlt_bdate: detail.tlt_bdate ? new Date(detail.tlt_bdate) : new Date(),
+        tlt_edate: detail.tlt_edate ? new Date(detail.tlt_edate) : new Date(),
+        year_amount: detail.year_amount || 0,
+        extra_rate: detail.extra_rate || 0,
         _status: 'original'
       };
     });
@@ -925,9 +925,9 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
         id: detail.id || this.generateTempId(),
         selected: true,
         cag_barcode: cag_barcode,
-        startAmount: detail.level_bmount || 0,
-        endAmount: detail.level_eamount || 0,
-        rate: detail.level_charge_rate || 0,
+        level_bmount: detail.level_bmount || 0,
+        level_eamount: detail.level_eamount || 0,
+        level_charge_rate: detail.level_charge_rate || 0,
         _status: 'original'
       };
     });
@@ -1270,10 +1270,10 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
   }
 
   createDiscountSettingItem(): DiscountSettingItem {
-    const startDate = this.contractInfoData[0]?.tlt_bdate
+    const tlt_bdate = this.contractInfoData[0]?.tlt_bdate
       ? new Date(this.contractInfoData[0].tlt_bdate)
       : new Date();
-    const endDate = this.contractInfoData[0]?.tlt_edate
+    const tlt_edate = this.contractInfoData[0]?.tlt_edate
       ? new Date(this.contractInfoData[0].tlt_edate)
       : new Date();
 
@@ -1281,9 +1281,9 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
       id: this.generateTempId(),
       selected: false,
       cag_barcode: '',
-      startDate: startDate,
-      endDate: endDate,
-      rate: 0,
+      tlt_bdate: tlt_bdate,
+      tlt_edate: tlt_edate,
+      cag_charge_rate: 0,
       _status: 'new'
     };
   }
@@ -1292,10 +1292,10 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
     return {
       id: this.generateTempId(),
       selected: false,
-      startDate: new Date(),
-      endDate: new Date(),
-      discountAmount: 0,
-      rate: 0,
+      tlt_bdate: new Date(),
+      tlt_edate: new Date(),
+      year_amount: 0,
+      extra_rate: 0,
       _status: 'new'
     };
   }
@@ -1305,9 +1305,9 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
       id: this.generateTempId(),
       selected: false,
       cag_barcode: '',
-      startAmount: 0,
-      endAmount: 0,
-      rate: 0,
+      level_bmount: 0,
+      level_eamount: 0,
+      level_charge_rate: 0,
       _status: 'new'
     };
   }
@@ -1327,19 +1327,19 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
     }
 
     // 自動產生抽成類別編號和名稱
-    const commissionType = nextNumber.toString(); //數字自動產0 1 2 3 4 5 6
-    const commissionTypeName = `抽成類別${nextNumber}`;
+    const tlt_id = nextNumber.toString(); //數字自動產0 1 2 3 4 5 6
+    const tlt_id_desc = `抽成類別${nextNumber}`;
 
     const newCommissionItem: CommissionItem = {
       id: this.generateTempId(),
-      commissionType: commissionType, // 🎯 自動帶值
-      commissionTypeName: commissionTypeName, // 🎯 自動帶值
-      taxType: 1,
+      tlt_id: tlt_id, // 🎯 自動帶值
+      tlt_id_desc: tlt_id_desc, // 🎯 自動帶值
+      cag_taxtype: 1,
       discountSummary: '尚未設定',
-      transactionAmount: 0,
-      specialCommission: 0,
-      fullPointActivity: false,
-      thousandDiscount: false,
+      sst_amount: 0,
+      sst_rate: 0,
+      cap_saletype2: false,
+      cap_saletype1: false,
       selectedSettingOption: 'discount',
       currentTab: 'discount',
       discountSettingItems: [],
@@ -1355,8 +1355,8 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
     this.updateDetailItemsForDisplay();
     this.saveToWorkflow();
 
-    console.log('✅ 新增抽成項目完成，ID:', newCommissionItem.id, '類別:', commissionType);
-    this.notificationService.infoBubble(`已新增${commissionTypeName}`);
+    console.log('✅ 新增抽成項目完成，ID:', newCommissionItem.id, '類別:', tlt_id);
+    this.notificationService.infoBubble(`已新增${tlt_id_desc}`);
   }
 
 
@@ -1508,10 +1508,10 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
 
     if (hasMainDataChanges && oldData._status === 'original') {
       newData._status = 'modified';
-      console.log(`📝 主項目 ${newData.commissionType} 有變更，標記為 modified`);
+      console.log(`📝 主項目 ${newData.tlt_id} 有變更，標記為 modified`);
     } else if (!newData._status && !this.hasItemId(newData)) {
       newData._status = 'new';
-      console.log(`🆕 主項目 ${newData.commissionType} 是新項目，標記為 new`);
+      console.log(`🆕 主項目 ${newData.tlt_id} 是新項目，標記為 new`);
     }
 
     const index = this.commissionData.findIndex(item => item.id === newData.id);
@@ -1528,9 +1528,9 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
 
   private hasMainDataChanges(oldData: any, newData: any): boolean {
     const mainFields = [
-      'commissionType', 'commissionTypeName', 'taxType',
-      'transactionAmount', 'specialCommission',
-      'fullPointActivity', 'thousandDiscount'
+      'tlt_id', 'tlt_id_desc', 'cag_taxtype',
+      'sst_amount', 'sst_rate',
+      'cap_saletype2', 'cap_saletype1'
     ];
 
     return mainFields.some(field =>
@@ -1653,13 +1653,13 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
 
     switch (this.selectedSettingTab) {
       case 'discount':
-        fieldsToCheck = ['cag_barcode', 'startDate', 'endDate', 'rate'];
+        fieldsToCheck = ['cag_barcode', 'tlt_bdate', 'tlt_edate', 'cag_charge_rate'];
         break;
       case 'annual':
-        fieldsToCheck = ['startDate', 'endDate', 'discountAmount', 'rate'];
+        fieldsToCheck = ['tlt_bdate', 'tlt_edate', 'year_amount', 'extra_rate'];
         break;
       case 'level':
-        fieldsToCheck = ['cag_barcode', 'startAmount', 'endAmount', 'rate'];
+        fieldsToCheck = ['cag_barcode', 'level_bmount', 'level_eamount', 'level_charge_rate'];
         break;
     }
 
@@ -1682,39 +1682,39 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
         if (detailData.cag_barcode === undefined || detailData.cag_barcode === null) {
           detailData.cag_barcode = '';
         }
-        if (detailData.rate === undefined || detailData.rate === null || detailData.rate === '') {
-          detailData.rate = 0;
+        if (detailData.cag_charge_rate === undefined || detailData.cag_charge_rate === null || detailData.cag_charge_rate === '') {
+          detailData.cag_charge_rate = 0;
         } else {
-          detailData.rate = Number(detailData.rate);
+          detailData.cag_charge_rate = Number(detailData.cag_charge_rate);
         }
-        if (!detailData.startDate) {
-          detailData.startDate = this.contractInfoData[0]?.tlt_bdate
+        if (!detailData.tlt_bdate) {
+          detailData.tlt_bdate = this.contractInfoData[0]?.tlt_bdate
             ? new Date(this.contractInfoData[0].tlt_bdate)
             : new Date();
         }
-        if (!detailData.endDate) {
-          detailData.endDate = this.contractInfoData[0]?.tlt_edate
+        if (!detailData.tlt_edate) {
+          detailData.tlt_edate = this.contractInfoData[0]?.tlt_edate
             ? new Date(this.contractInfoData[0].tlt_edate)
             : new Date();
         }
         break;
 
       case 'annual':
-        if (!detailData.startDate) {
-          detailData.startDate = new Date();
+        if (!detailData.tlt_bdate) {
+          detailData.tlt_bdate = new Date();
         }
-        if (!detailData.endDate) {
-          detailData.endDate = new Date();
+        if (!detailData.tlt_edate) {
+          detailData.tlt_edate = new Date();
         }
-        if (detailData.discountAmount === undefined || detailData.discountAmount === null || detailData.discountAmount === '') {
-          detailData.discountAmount = 0;
+        if (detailData.year_amount === undefined || detailData.year_amount === null || detailData.year_amount === '') {
+          detailData.year_amount = 0;
         } else {
-          detailData.discountAmount = Number(detailData.discountAmount);
+          detailData.year_amount = Number(detailData.year_amount);
         }
-        if (detailData.rate === undefined || detailData.rate === null || detailData.rate === '') {
-          detailData.rate = 0;
+        if (detailData.extra_rate === undefined || detailData.extra_rate === null || detailData.extra_rate === '') {
+          detailData.extra_rate = 0;
         } else {
-          detailData.rate = Number(detailData.rate);
+          detailData.extra_rate = Number(detailData.extra_rate);
         }
         break;
 
@@ -1722,20 +1722,20 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
         if (detailData.cag_barcode === undefined || detailData.cag_barcode === null) {
           detailData.cag_barcode = '';
         }
-        if (detailData.startAmount === undefined || detailData.startAmount === null || detailData.startAmount === '') {
-          detailData.startAmount = 0;
+        if (detailData.level_bmount === undefined || detailData.level_bmount === null || detailData.level_bmount === '') {
+          detailData.level_bmount = 0;
         } else {
-          detailData.startAmount = Number(detailData.startAmount);
+          detailData.level_bmount = Number(detailData.level_bmount);
         }
-        if (detailData.endAmount === undefined || detailData.endAmount === null || detailData.endAmount === '') {
-          detailData.endAmount = 0;
+        if (detailData.level_eamount === undefined || detailData.level_eamount === null || detailData.level_eamount === '') {
+          detailData.level_eamount = 0;
         } else {
-          detailData.endAmount = Number(detailData.endAmount);
+          detailData.level_eamount = Number(detailData.level_eamount);
         }
-        if (detailData.rate === undefined || detailData.rate === null || detailData.rate === '') {
-          detailData.rate = 0;
+        if (detailData.level_charge_rate === undefined || detailData.level_charge_rate === null || detailData.level_charge_rate === '') {
+          detailData.level_charge_rate = 0;
         } else {
-          detailData.rate = Number(detailData.rate);
+          detailData.level_charge_rate = Number(detailData.level_charge_rate);
         }
         break;
     }
@@ -1750,52 +1750,58 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
 
     switch (currentTab) {
       case 'discount':
-        const discountIndex = parentData.discountSettingItems.findIndex(item => item.id === detailData.id);
-        if (discountIndex > -1) {
-          parentData.discountSettingItems[discountIndex] = {
-            ...parentData.discountSettingItems[discountIndex],
-            ...detailData,
-            cag_barcode: detailData.cag_barcode || '',
-            rate: detailData.rate || 0,
-            startDate: detailData.startDate || new Date(),
-            endDate: detailData.endDate || new Date(),
-            _status: detailData._status || 'original'
-          };
-          console.log(`✅ 已更新折扣設定項目 [${discountIndex}]:`, parentData.discountSettingItems[discountIndex]);
+        {
+          const discountIndex = parentData.discountSettingItems.findIndex(item => item.id === detailData.id);
+          if (discountIndex > -1) {
+            parentData.discountSettingItems[discountIndex] = {
+              ...parentData.discountSettingItems[discountIndex],
+              ...detailData,
+              cag_barcode: detailData.cag_barcode || '',
+              cag_charge_rate: detailData.cag_charge_rate || 0,
+              tlt_bdate: detailData.tlt_bdate || new Date(),
+              tlt_edate: detailData.tlt_edate || new Date(),
+              _status: detailData._status || 'original'
+            };
+            console.log(`✅ 已更新折扣設定項目 [${discountIndex}]:`, parentData.discountSettingItems[discountIndex]);
+          }
+          break;
         }
-        break;
 
       case 'annual':
-        const annualIndex = parentData.annualPerformanceItems.findIndex(item => item.id === detailData.id);
-        if (annualIndex > -1) {
-          parentData.annualPerformanceItems[annualIndex] = {
-            ...parentData.annualPerformanceItems[annualIndex],
-            ...detailData,
-            startDate: detailData.startDate || new Date(),
-            endDate: detailData.endDate || new Date(),
-            discountAmount: detailData.discountAmount || 0,
-            rate: detailData.rate || 0,
-            _status: detailData._status || 'original'
-          };
-          console.log(`✅ 已更新年度業績項目 [${annualIndex}]:`, parentData.annualPerformanceItems[annualIndex]);
+        {
+          const annualIndex = parentData.annualPerformanceItems.findIndex(item => item.id === detailData.id);
+          if (annualIndex > -1) {
+            parentData.annualPerformanceItems[annualIndex] = {
+              ...parentData.annualPerformanceItems[annualIndex],
+              ...detailData,
+              tlt_bdate: detailData.tlt_bdate || new Date(),
+              tlt_edate: detailData.tlt_edate || new Date(),
+              year_amount: detailData.year_amount || 0,
+              extra_rate: detailData.extra_rate || 0,
+              _status: detailData._status || 'original'
+            };
+            console.log(`✅ 已更新年度業績項目 [${annualIndex}]:`, parentData.annualPerformanceItems[annualIndex]);
+          }
+          break;
         }
-        break;
 
       case 'level':
-        const levelIndex = parentData.discountLevelItems.findIndex(item => item.id === detailData.id);
-        if (levelIndex > -1) {
-          parentData.discountLevelItems[levelIndex] = {
-            ...parentData.discountLevelItems[levelIndex],
-            ...detailData,
-            cag_barcode: detailData.cag_barcode || '',
-            startAmount: detailData.startAmount || 0,
-            endAmount: detailData.endAmount || 0,
-            rate: detailData.rate || 0,
-            _status: detailData._status || 'original'
-          };
-          console.log(`✅ 已更新層級抽成項目 [${levelIndex}]:`, parentData.discountLevelItems[levelIndex]);
+        {
+          const levelIndex = parentData.discountLevelItems.findIndex(item => item.id === detailData.id);
+          if (levelIndex > -1) {
+            parentData.discountLevelItems[levelIndex] = {
+              ...parentData.discountLevelItems[levelIndex],
+              ...detailData,
+              cag_barcode: detailData.cag_barcode || '',
+              level_bmount: detailData.level_bmount || 0,
+              level_eamount: detailData.level_eamount || 0,
+              level_charge_rate: detailData.level_charge_rate || 0,
+              _status: detailData._status || 'original'
+            };
+            console.log(`✅ 已更新層級抽成項目 [${levelIndex}]:`, parentData.discountLevelItems[levelIndex]);
+          }
+          break;
         }
-        break;
     }
 
     const mainIndex = this.commissionData.findIndex(item => item.id === parentData.id);
@@ -1812,13 +1818,13 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
 
     switch (this.selectedSettingTab) {
       case 'discount':
-        fieldsToCheck = ['cag_barcode', 'startDate', 'endDate', 'rate'];
+        fieldsToCheck = ['cag_barcode', 'tlt_bdate', 'tlt_edate', 'cag_charge_rate'];
         break;
       case 'annual':
-        fieldsToCheck = ['startDate', 'endDate', 'discountAmount', 'rate'];
+        fieldsToCheck = ['tlt_bdate', 'tlt_edate', 'year_amount', 'extra_rate'];
         break;
       case 'level':
-        fieldsToCheck = ['cag_barcode', 'startAmount', 'endAmount', 'rate'];
+        fieldsToCheck = ['cag_barcode', 'level_bmount', 'level_eamount', 'level_charge_rate'];
         break;
       default:
         return false;
@@ -1850,11 +1856,11 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
         item.discountSettingItems.forEach(i => {
           i.selected = false;
           i.cag_barcode = '';
-          i.rate = 0;
-          i.startDate = this.contractInfoData[0]?.tlt_bdate
+          i.cag_charge_rate = 0;
+          i.tlt_bdate = this.contractInfoData[0]?.tlt_bdate
             ? new Date(this.contractInfoData[0].tlt_bdate)
             : new Date();
-          i.endDate = this.contractInfoData[0]?.tlt_edate
+          i.tlt_edate = this.contractInfoData[0]?.tlt_edate
             ? new Date(this.contractInfoData[0].tlt_edate)
             : new Date();
         });
@@ -1862,19 +1868,19 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
       case 'annual':
         item.annualPerformanceItems.forEach(i => {
           i.selected = false;
-          i.discountAmount = 0;
-          i.rate = 0;
-          i.startDate = new Date();
-          i.endDate = new Date();
+          i.year_amount = 0;
+          i.extra_rate = 0;
+          i.tlt_bdate = new Date();
+          i.tlt_edate = new Date();
         });
         break;
       case 'level':
         item.discountLevelItems.forEach(i => {
           i.selected = false;
           i.cag_barcode = '';
-          i.startAmount = 0;
-          i.endAmount = 0;
-          i.rate = 0;
+          i.level_bmount = 0;
+          i.level_eamount = 0;
+          i.level_charge_rate = 0;
         });
         break;
     }
@@ -1939,9 +1945,9 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
             id: item.id,
             selected: item.selected || false,
             cag_barcode: item.cag_barcode || '',
-            startDate: item.startDate || new Date(),
-            endDate: item.endDate || new Date(),
-            rate: item.rate || 0,
+            tlt_bdate: item.tlt_bdate || new Date(),
+            tlt_edate: item.tlt_edate || new Date(),
+            cag_charge_rate: item.cag_charge_rate || 0,
             _status: item._status || (this.hasItemId(item) ? 'original' : 'new')
           }));
           break;
@@ -1950,10 +1956,10 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
           commissionItem.annualPerformanceItems = currentTypeItems.map(item => ({
             id: item.id,
             selected: item.selected || false,
-            startDate: item.startDate || new Date(),
-            endDate: item.endDate || new Date(),
-            discountAmount: item.discountAmount || 0,
-            rate: item.rate || 0,
+            tlt_bdate: item.tlt_bdate || new Date(),
+            tlt_edate: item.tlt_edate || new Date(),
+            year_amount: item.year_amount || 0,
+            extra_rate: item.extra_rate || 0,
             _status: item._status || (this.hasItemId(item) ? 'original' : 'new')
           }));
           break;
@@ -1963,9 +1969,9 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
             id: item.id,
             selected: item.selected || false,
             cag_barcode: item.cag_barcode || '',
-            startAmount: item.startAmount || 0,
-            endAmount: item.endAmount || 0,
-            rate: item.rate || 0,
+            level_bmount: item.level_bmount || 0,
+            level_eamount: item.level_eamount || 0,
+            level_charge_rate: item.level_charge_rate || 0,
             _status: item._status || (this.hasItemId(item) ? 'original' : 'new')
           }));
           break;
@@ -2444,10 +2450,10 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
   private getContractStartDate(): string {
     // 🎯 第一優先：從合約資訊表格取得（你上方顯示的 tlt_bdate）
     if (this.contractInfoData && this.contractInfoData.length > 0) {
-      const startDate = this.contractInfoData[0].tlt_bdate;
-      if (startDate) {
-        console.log('📅 從合約資訊表格取得起始日:', startDate);
-        return typeof startDate === 'string' ? startDate : this.formatDateToString(startDate);
+      const tlt_bdate = this.contractInfoData[0].tlt_bdate;
+      if (tlt_bdate) {
+        console.log('📅 從合約資訊表格取得起始日:', tlt_bdate);
+        return typeof tlt_bdate === 'string' ? tlt_bdate : this.formatDateToString(tlt_bdate);
       }
     }
 
@@ -2468,10 +2474,10 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
   private getContractEndDate(): string {
     // 🎯 第一優先：從合約資訊表格取得（你上方顯示的 tlt_edate）
     if (this.contractInfoData && this.contractInfoData.length > 0) {
-      const endDate = this.contractInfoData[0].tlt_edate;
-      if (endDate) {
-        console.log('📅 從合約資訊表格取得結束日:', endDate);
-        return typeof endDate === 'string' ? endDate : this.formatDateToString(endDate);
+      const tlt_edate = this.contractInfoData[0].tlt_edate;
+      if (tlt_edate) {
+        console.log('📅 從合約資訊表格取得結束日:', tlt_edate);
+        return typeof tlt_edate === 'string' ? tlt_edate : this.formatDateToString(tlt_edate);
       }
     }
 
