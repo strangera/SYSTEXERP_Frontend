@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, OnDestroy, signal } from '@angular/core';
-import { ASS2100ENGMeterType, ASS21010Delete, ASS21010Payload, ASS21010UpdateStatus } from '@pages/ass/ass21010/ass21010.model';
+import { ASS2100ENGMeterType, ASS21010Data, ASS21010Delete, ASS21010Payload, ASS21010UpdateStatus } from '@pages/ass/ass21010/ass21010.model';
 import { ErrorHandlerService } from '@service/system/error-handler.service';
 import { NotificationService } from '@shared/component/notification-message/notification.service';
 import { BaseQueryResponse, DropdownOption } from '@shared/models/api/base-api.interface';
@@ -16,7 +16,7 @@ export class ASS21010Service implements OnDestroy {
     !!rowData;
   // (Reflect.has(rowData, 'CanDelete') && rowData.CanDelete == '1') || rowData.pod_status === ApprovalStatus.未核准;
 
-  public readonly ASS21010Detail = signal<unknown[]>([]);
+  public readonly ASS21010Data = signal<ASS21010Data[]>([]);
   public readonly engTypeSignal = signal<DropdownOption[]>([]);
   public readonly engMeterNoSignal = signal<ASS2100ENGMeterType[]>([]);
   public readonly locationSignal = signal<DropdownOption[]>([]);
@@ -74,6 +74,19 @@ export class ASS21010Service implements OnDestroy {
       })
     ).subscribe();
   };
+
+  public loadASS21010(payload: ASS21010Payload): void {
+    this.tableCancel$.next();
+    this.tableLoading = !0;
+    this.http.post<Omit<BaseQueryResponse<unknown>, 'Data'> & { Data: { Data: ASS21010Data[]; TotalCount: number; }; }>(`${apiUrl}/ASS0000/ASS2000/queryASS21010`, payload).pipe(
+      take(1),
+      tap(response => this.ASS21010Data.set(response.Data.Data
+        .map(v => ({ ...v, ENGType: EngType[v.ENG_Type] }))
+      )),
+      catchError(error => this.errorHandler.handleError(error)),
+      finalize(() => this.tableLoading = !1),
+    ).subscribe();
+  }
 
   public updateASS21010(payload: ASS21010Payload): void {
     this.http.post<ASS21010UpdateStatus>(`${apiUrl}/ASS0000/ASS2000/updateASS21010`, payload).pipe(

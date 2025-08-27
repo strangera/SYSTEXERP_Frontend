@@ -16,7 +16,7 @@ import { Column } from '@shared/componentkit/table/table.model';
 import { CRUDStatus } from '@shared/models/system/CRUDstatus';
 import { NGXLogger } from 'ngx-logger';
 import { PanelModule } from 'primeng/panel';
-import { ASS2100ENGMeterType, ASS21010Payload } from '../ass21010/ass21010.model';
+import { ASS21010Data, ASS21010Payload } from '../ass21010/ass21010.model';
 
 @Component({
   selector: 'app-ass21010-cru',
@@ -38,10 +38,10 @@ import { ASS2100ENGMeterType, ASS21010Payload } from '../ass21010/ass21010.model
     // TableComponent,
   ]
 })
-export class ASS21010CRUComponent extends BasicCruPageComponent<ASS2100ENGMeterType> implements OnInit {
+export class ASS21010CRUComponent extends BasicCruPageComponent<ASS21010Data> implements OnInit {
 
   public readonly dataForm = this.formBuilder.nonNullable.group({
-    ENG_Type: new FormControl<string | undefined>(void 0, [Validators.required]),
+    ENGType: new FormControl<EngType | undefined>(void 0, [Validators.required]),
     ENG_MeterNo: new FormControl<string | undefined>(void 0, [Validators.required, Validators.minLength(5), Validators.maxLength(5)]),
     Location_No: new FormControl<string | undefined>(void 0, [Validators.required]),
     ENG_Remark: new FormControl<string>('', [Validators.maxLength(500)]),
@@ -55,14 +55,14 @@ export class ASS21010CRUComponent extends BasicCruPageComponent<ASS2100ENGMeterT
 
   // 變化追蹤
   private readonly dfSignal = toSignal(this.dataForm.valueChanges);
-  private readonly engTypeSignal = toSignal(this.df().ENG_Type.valueChanges);
+  private readonly engTypeSignal = toSignal(this.df().ENGType.valueChanges);
   private readonly locationSignal = toSignal(this.df().Location_No.valueChanges);
 
   /** 能源類型變更處理 */
   public readonly engTypeEffect = effect(() => {
     const types = this.engTypeSignal();
     if (!types?.length) return;
-    this.service.loadEngMeterNo(EngType[types as keyof typeof EngType]);
+    this.service.loadEngMeterNo(types);
     console.log(`Eng type changes:`, [types]);
   }, { allowSignalWrites: !0 });
 
@@ -72,23 +72,8 @@ export class ASS21010CRUComponent extends BasicCruPageComponent<ASS2100ENGMeterT
     console.log(`Location changes:`, [locations]);
   });
 
-  /** 初始化靜態資料 */
-  // public readonly staticDataEffect = effect(() => {
-  //   const detail = this.service.TLS26010Detail();
-  //   if (!detail) return;
-  //   ASS21010CRUComponent.staticData = detail as ASS21010Data;
-  //   this.staticDataEffect.destroy(); // 只需執行一次
-  // });
-
-  public readonly columns: Column[] = [
-    { field: 'ENG_Type', header: '能源類型' },
-    { field: 'ENG_MeterNo', header: '錶號' },
-    { field: 'Location_No', header: '能源位置編號' },
-    { field: 'ENG_Remark', header: '備註' },
-  ];
-
   // 靜態資料: 用於表單初始化和重置
-  // private static staticData: ASS21010Data;
+  private static staticData: ASS21010Data;
 
   constructor(
     public readonly service: ASS21010Service,
@@ -105,6 +90,7 @@ export class ASS21010CRUComponent extends BasicCruPageComponent<ASS2100ENGMeterT
 
     if (this.crudstatus !== CRUDStatus.Create && this.rowdata) {
       Reflect.has(this.rowdata, 'Location_No') && this.df().Location_No.setValue(this.rowdata.Location_No);
+      ASS21010CRUComponent.staticData = this.rowdata;
       this.logger.debug(`rowData:`, [this.rowdata]);
     }
   }
@@ -113,11 +99,11 @@ export class ASS21010CRUComponent extends BasicCruPageComponent<ASS2100ENGMeterT
     this.handleSubmit(this.dataForm, () => {
       const d = this.dataForm.value;
       const payload: ASS21010Payload = {
-        ENG_Type: this.service.engTypeSignal().find(t => t.Name === d.ENG_Type)?.No ?? '',
+        ENG_Type: d.ENGType! ?? '',
         ENG_MeterNo: d.ENG_MeterNo ?? '',
         Location_No: d.Location_No ?? '',
         ENG_Remark: d.ENG_Remark ?? '',
-        ID: this.rowdata?.Id ?? 0,
+        ID: (this.rowdata?.ID) ?? 0,
         SYS_StoreNo: this.user.SYS_StoreNo,
         Mid: Number(this.user.mid),
       };
@@ -129,6 +115,14 @@ export class ASS21010CRUComponent extends BasicCruPageComponent<ASS2100ENGMeterT
   }
 
   public onClear(): void {
-    this.dataForm.reset();
+    this.logger.debug(`onClear:`, [ASS21010CRUComponent.staticData]);
+    const d = ASS21010CRUComponent.staticData;
+    if (this.crudstatus === CRUDStatus.Create) this.dataForm.reset();
+    else this.dataForm.setValue({
+      ENGType: d.ENGType,
+      ENG_MeterNo: d.ENG_MeterNo,
+      Location_No: d.Location_No,
+      ENG_Remark: d.ENG_Remark,
+    }, { emitEvent: !1 });
   };
 }

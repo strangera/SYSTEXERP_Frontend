@@ -6,13 +6,15 @@ import { ASS21010Service, EngType } from '@service/api/ass/ass21010.service';
 import { MenubarComponent } from '@shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '@shared/componentkit/button/button.component';
+import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
+import { InputTextareaComponent } from '@shared/componentkit/input-textarea/input-textarea.component';
 import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
 import { TableComponent } from '@shared/componentkit/table/table.component';
-import { Column } from '@shared/componentkit/table/table.model';
+import { Column, createPaginationConfig } from '@shared/componentkit/table/table.model';
 import { NGXLogger } from 'ngx-logger';
 import { AccordionModule } from 'primeng/accordion';
-import { ASS2100ENGMeterType, ASS21010Delete } from './ass21010.model';
+import { ASS2100ENGMeterType, ASS21010Data, ASS21010Delete, ASS21010Payload } from './ass21010.model';
 
 @Component({
   selector: 'app-ass21010',
@@ -24,9 +26,11 @@ import { ASS2100ENGMeterType, ASS21010Delete } from './ass21010.model';
     FormsModule,
     ReactiveFormsModule,
     TranslateModule,
-    MenubarComponent,
     ButtonComponent,
+    DropdownComponent,
     InputTextComponent,
+    InputTextareaComponent,
+    MenubarComponent,
     MultiSelectComponent,
     TableComponent,
   ],
@@ -35,9 +39,10 @@ export class ASS21010Component extends BasicQueryPageComponent<unknown> implemen
 
   public queryForm = this.formBuilder.group({
     ENG_Type: new FormControl<EngType[] | undefined>(void 0),
-    ENG_MeterNo: new FormControl<string[] | undefined>(void 0),
-    Location_No: new FormControl<string[] | undefined>(void 0),
+    ENG_MeterNo: new FormControl<string | undefined>(void 0),
+    Location_No: new FormControl<string | undefined>(void 0),
     ENG_Remark: new FormControl<string | undefined>(void 0),
+    ...createPaginationConfig([{ field: 'ID', order: 1 }]),
   });
   public readonly qf = computed(() => this.queryForm.controls);
 
@@ -48,8 +53,6 @@ export class ASS21010Component extends BasicQueryPageComponent<unknown> implemen
   private readonly locationSignal = toSignal(this.qf().Location_No.valueChanges);
   private readonly engRemarkSignal = toSignal(this.qf().ENG_Remark.valueChanges);
 
-  public readonly tableData = signal<ASS2100ENGMeterType[]>([]);
-
   public readonly qfEffect = effect(() => {
     console.log(`qfEffect:`, [this.qfSignal()]);
   });
@@ -59,28 +62,13 @@ export class ASS21010Component extends BasicQueryPageComponent<unknown> implemen
     const meters = this.engMeterSignal() || [];
     const locs = this.locationSignal() || [];
     console.log(`tableEffect:`, [types, meters, locs]);
-    if (!0) return;
-
-    this.tableData.set(this.service.engMeterNoSignal().filter(item => {
-      const matchesType = !types?.length || types.includes(item.ENG_Type);
-      const matchesMeter = !meters?.length || meters.includes(item.ENG_MeterNo);
-      const matchesLocation = !locs?.length || locs.includes(item.Location_No);
-      return matchesType && matchesMeter && matchesLocation;
-    }));
-  }, { allowSignalWrites: !0 });
-
-  public readonly tableInitEffect = effect(() => {
-    const data = this.service.engMeterNoSignal();
-    if (!data?.length) return;
-    this.tableData.set(data);
-    this.tableInitEffect.destroy();
   }, { allowSignalWrites: !0 });
 
   public readonly columns: Column[] = [
-    { field: 'ENG_Type', header: '能源類型' },
+    { field: 'ENGType', header: '能源類型', format: v => this.service.engTypeSignal().find(t => t.No === v)?.Name || v },
     { field: 'ENG_MeterNo', header: '錶號' },
     { field: 'Location_No', header: '設備位置編號' },
-    { field: 'ENG_Remark', header: '備註' },
+    { field: 'ENG_Remark', header: '備註', disabled: () => !0 },
   ];
 
   constructor(
@@ -92,13 +80,12 @@ export class ASS21010Component extends BasicQueryPageComponent<unknown> implemen
 
   ngOnInit(): void {
     this.initializePage('ASS21010', '/ASS/ASS21010CRU', this.queryForm, this.onSubmit.bind(this));
-    this.user = this.authService.currentUserValue;
 
     this.service.loadEngType();
     this.service.loadEngMeterNo();
     this.service.loadLocationNo();
 
-    this.logger.debug(`init:`, [this.user, this.queryForm]);
+    this.logger.debug(`init:`, [this.queryForm]);
   }
 
   public canQuery(): boolean {
@@ -115,18 +102,18 @@ export class ASS21010Component extends BasicQueryPageComponent<unknown> implemen
 
   public onSubmit(): void {
     this.handleSubmit(this.queryForm, () => {
-      const types = this.engTypeSignal() || [];
-      const meters = this.engMeterSignal() || [];
-      const locs = this.locationSignal() || [];
+      const payload = <ASS21010Payload>{
+        ...this.queryForm.value,
+        ENG_Type: this.engTypeSignal(),
+        ENG_MeterNo: this.engMeterSignal(),
+        ENG_Remark: this.engRemarkSignal(),
+        Location_No: this.locationSignal(),
+        SYS_StoreNo: this.authService.currentUserValue!.SYS_StoreNo,
+        Mid: Number(this.authService.currentUserValue!.mid),
+      };
+      this.service.loadASS21010(payload);
 
-      this.tableData.set(this.service.engMeterNoSignal().filter(item => {
-        const matchesType = !types?.length || types.includes(item.ENG_Type);
-        const matchesMeter = !meters?.length || meters.includes(item.ENG_MeterNo);
-        const matchesLocation = !locs?.length || locs.includes(item.Location_No);
-        return matchesType && matchesMeter && matchesLocation;
-      }));
-
-      console.log(`onSubmit:`, [types, meters, locs, this.tableData]);
+      console.log(`onSubmit:`, [payload]);
       this.queryStateService.setQueryState(this.ProgNo, this.queryForm.value);
       this.loading = !1;
     });
@@ -137,17 +124,17 @@ export class ASS21010Component extends BasicQueryPageComponent<unknown> implemen
     super.onCreate(data);
   };
 
-  public onDelete(event: ASS2100ENGMeterType): void {
-    this.logger.debug(`Deleting ASS21010:`, [event, this.user]);
-
+  public onDelete(event: ASS21010Data): void {
+    this.logger.debug(`Deleting ASS21010:`, [event, this.authService.currentUserValue]);
     this.service.deleteASS21010(<ASS21010Delete>{
-      ID: event.Id,
+      ID: event.ID,
       ENG_MeterNo: event.ENG_MeterNo,
       Location_No: event.Location_No,
       ENG_Type: event.ENG_Type,
-      SYS_StoreNo: this.user!.SYS_StoreNo,
-      Mid: Number(this.user!.mid),
+      SYS_StoreNo: this.authService.currentUserValue!.SYS_StoreNo,
+      Mid: Number(this.authService.currentUserValue!.mid),
     });
+    this.service.ASS21010Data.set(this.service.ASS21010Data().filter(v => v.ID !== event.ID));
   }
 
   public onClear(): void {

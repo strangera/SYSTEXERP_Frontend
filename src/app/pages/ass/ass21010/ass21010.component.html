@@ -22,37 +22,34 @@
                               controlName="ENG_Type"
                               [options]="service.engTypeSignal()"
                               optionLabel="Name"
-                              optionValue="Name"
+                              optionValue="No"
                               [control]="qf().ENG_Type"
                               [submitted]="submitted"></app-multi-select>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select label="錶號"
-                              controlName="ENG_MeterNo"
-                              [options]="service.engMeterNoSignal()"
-                              optionLabel="ENG_MeterNo"
-                              optionValue="ENG_MeterNo"
-                              [control]="qf().ENG_MeterNo"
-                              [loading]="service.engMeterNoLoading"
-                              [submitted]="submitted"></app-multi-select>
+            <app-dropdown label="錶號"
+                          controlName="ENG_MeterNo"
+                          [options]="service.engMeterNoSignal()"
+                          optionLabel="ENG_MeterNo"
+                          optionValue="ENG_MeterNo"
+                          [control]="qf().ENG_MeterNo"
+                          [submitted]="submitted"></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select label="設備位置編號"
-                              controlName="Location_No"
-                              [options]="service.locationSignal()"
-                              optionLabel="Name"
-                              optionValue="No"
-                              [control]="qf().Location_No"
-                              [loading]="service.locationLoading"
-                              [submitted]="submitted"></app-multi-select>
+            <app-dropdown label="設備位置編號"
+                          controlName="Location_No"
+                          [options]="service.locationSignal()"
+                          optionLabel="Name"
+                          optionValue="No"
+                          [control]="qf().Location_No"
+                          [submitted]="submitted"></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text label="備註"
-                            controlName="ENG_Remark"
-                            [control]="qf().ENG_Remark"
-                            [disabled]="false"
-                            [submitted]="submitted">
-            </app-input-text>
+            <app-input-textarea label="備註"
+                                controlName="ENG_Remark"
+                                [control]="qf().ENG_Remark"
+                                [submitted]="submitted">
+            </app-input-textarea>
           </div>
         </div>
       </form>
@@ -70,8 +67,8 @@
 <div class="card">
   <div class="col-12">
     <app-table [showCheckBox]="true"
-               [data]="tableData()"
-               [dataKey]="'Id'"
+               [data]="service.ASS21010Data()"
+               [dataKey]="'ID'"
                [tableKey]="'ASS21010_Data'"
                [columns]="columns"
                (edit)="onEdit($event)"
