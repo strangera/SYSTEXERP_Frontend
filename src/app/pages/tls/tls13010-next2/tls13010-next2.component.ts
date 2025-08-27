@@ -2505,26 +2505,17 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
 
   private formatDateToString(date: any): string {
     if (!date) return '';
-
     try {
-      if (date instanceof Date) {
-        return date.toISOString().split('T')[0];
-      }
+      const dateObj = date instanceof Date ? date : new Date(date);
+      if (isNaN(dateObj.getTime())) return '';
 
-      if (typeof date === 'string') {
-        // 如果已經是 YYYY-MM-DD 格式就直接回傳
-        if (/^\d{4}-\d{2}-\d{2}$/.test(date)) {
-          return date;
-        }
-
-        // 否則嘗試轉換
-        return new Date(date).toISOString().split('T')[0];
-      }
-
-      return new Date(date).toISOString().split('T')[0];
+      const year = dateObj.getFullYear();
+      const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+      const day = String(dateObj.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
     } catch (error) {
       console.error('日期格式化失敗:', error, '原始日期:', date);
-      return new Date().toISOString().split('T')[0];
+      return new Date().toISOString().split('T')[0];  // 備援
     }
   }
 
