@@ -55,6 +55,10 @@ export class TLS23100Component extends BasicQueryPageComponent<any> {
     d.setDate(d.getDate() - 1);
     return d;
   })();
+  /** 記錄最近一次 pageSize（保險用） */
+  private lastPageSize = 40;
+  /** 簡單的請求鎖，避免重複送出 */
+  private querying = false;
 
 
   //request
@@ -225,8 +229,7 @@ onSubmit(form: FormGroup): void {
         // this.totalPayAmt = typeof wrapper?.totalPayAmt === 'number' ? wrapper.totalPayAmt : 0;
       },
       error: (err) => {
-        console.error('TLS23100 查詢失敗', err);
-        this.messageService?.errorBubble?.('查詢失敗，請稍後再試');
+this.loading = false;
       },
       complete: () => {
         this.loading = false;
