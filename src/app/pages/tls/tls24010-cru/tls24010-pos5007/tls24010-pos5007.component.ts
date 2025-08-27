@@ -141,9 +141,6 @@ export class Tls24010Pos5007Component implements OnInit, OnChanges {
 
   onInput(event: POS5007Data) {
     event.TXN_Amt = (event.TXN_Qty || 0) * (event.PLU_SalePrc || 0);
-    if (event.TXN_Disc !== undefined && event.TXN_Disc > 0) {
-      event.TXN_Disc = -Math.abs(event.TXN_Disc);
-    }
     event.TXN_SaleAmt = event.TXN_Amt + (event.TXN_Disc || 0);
     this.calculateLastYearTotal();
   }

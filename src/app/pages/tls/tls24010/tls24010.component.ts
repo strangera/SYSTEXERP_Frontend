@@ -1,5 +1,5 @@
 import { AddButton, formatDateToYYYY_MM_DD } from './../../../shared/componentkit/table/table.model';
-import { Component, OnInit, ViewChild } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit, ViewChild } from '@angular/core';
 import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
@@ -22,7 +22,6 @@ import { STORE_WAY, TLS24010_EDIT_TYPE } from '../tls24010-cru/tls24010-cru.mode
 import { yesterday } from '@shared/models/system/query-form.model';
 import { DropdownChangeEvent } from 'primeng/dropdown';
 import { TLS41010Service } from '@service/api/tls/tls41010.service';
-import { TableReportComponent } from '@shared/componentkit/table/table-report/table-report.component';
 import { TableComponent } from '@shared/componentkit/table/table.component';
 // 交易補登作業
 @Component({
@@ -39,7 +38,6 @@ import { TableComponent } from '@shared/componentkit/table/table.component';
     CalendarComponent,
     DropdownComponent,
     InputNumberComponent,
-    TableReportComponent,
     MenuModule,
     TranslateModule,
     TableComponent
@@ -50,8 +48,8 @@ export class TLS24010Component extends BasicQueryPageComponent<TLS24010Data> imp
   queryForm = this.formBuilder.nonNullable.group({
     TXN_GUIPaper: ['E', [Validators.required]],/*補登類別 → TXN_GUIPaper */
     TXN_Date: [null as Date | null, [Validators.required]],    /*銷售日期 → POS5006.TXN_Date */
-    ECR_No: ['',], /*收銀機號 → ECR_No */
-    TLT_No: ['',], /*櫃編 → TLT_No */
+    ECR_No: [''], /*收銀機號 → ECR_No */
+    TLT_No: [''], /*櫃編 → TLT_No */
     TXN_No: [null as string | number | null, [Validators.maxLength(8), Validators.max(99999999)]],  /*交易序號 → TXN_No */
     TLT_Name: [''], /*櫃名 → TLT_Name */
     store_way: [''], /*櫃位類型 → store_way */
@@ -73,7 +71,8 @@ export class TLS24010Component extends BasicQueryPageComponent<TLS24010Data> imp
   constructor(
     private readonly dropDownList: DropDownListService,
     private readonly tls24010Service: Tls24010Service,
-    private readonly tLS41010Service: TLS41010Service
+    private readonly tLS41010Service: TLS41010Service,
+    private readonly cdr: ChangeDetectorRef
   ) { super(); }
   ngOnInit(): void {
     this.initializePage('TLS24010', 'tls/tls24010cru', this.queryForm, (form) => this.onSubmit(form));
@@ -100,6 +99,9 @@ export class TLS24010Component extends BasicQueryPageComponent<TLS24010Data> imp
     if (!event.value || event.value === '') { return; }
     const body = { ECR_No: event.value };
     this.tLS41010Service.queryTLS41010(body).pipe(untilDestroyed(this)).subscribe(res => {
+      if (res.Data[0].ECR_Type === '1') {
+        return;
+      }
       this.queryForm.get('TLT_No')?.setValue(res.Data[0].ECR_TLT_No || '');
     });
   }
@@ -166,6 +168,14 @@ export class TLS24010Component extends BasicQueryPageComponent<TLS24010Data> imp
   // 補登資料
   onCreateData(frm: FormGroup): void {
     if (frm?.value.TXN_GUIPaper === 'R' || frm?.value.TXN_GUIPaper === 'C') { return; }
+    if (!frm || !frm.get('ECR_No')?.value) {
+      this.messageService.errorBubble('請選擇收銀機號');
+      return;
+    }
+    if (!frm.get('TLT_No')?.value) {
+      this.messageService.errorBubble('請選擇專櫃編號');
+      return;
+    }
     this.submitted = true;
     if (!this.queryForm.valid) { return; }
     this.updateData(frm);
