@@ -295,9 +295,10 @@
 
               <!-- 下拉選單 -->
               <p-dropdown *ngSwitchCase="'dropdown'" [options]="getFieldOptions(detailData, col.field)"
-                [ngModel]="getFieldDefaultValue(col, rowData)" (ngModelChange)="
-                            onDropdownChange(detailData, col.field, $event)
-                          " [style]="{ width: '100%' }" appendTo="body"></p-dropdown>
+                [ngModel]="getFieldDefaultValue(col, detailData)"
+                (ngModelChange)="onDropdownChange(detailData, col.field, $event)" [style]="{ width: '100%' }"
+                appendTo="body" [showClear]="true" optionLabel="label" optionValue="value" [filter]="true"
+                filterMatchMode="contains"></p-dropdown>
 
               <!-- 🎯 日期選擇 - 使用新的方法 -->
               <div *ngSwitchCase="'date'" class="date-selector-wrapper">
