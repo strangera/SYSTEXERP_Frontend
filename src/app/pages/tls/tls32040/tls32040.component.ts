@@ -28,6 +28,7 @@ import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-se
 import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
 import { CustomFooterTableComponent } from '@shared/componentkit/custom-footer-table/customFooterTable.component';
 import { untilDestroyed } from '@ngneat/until-destroy';
+import { Tls11010Service } from '@service/api/tls/tls11010.service';
 
 @Component({
   selector: 'app-tls32040',
@@ -90,6 +91,7 @@ export class TLS32040Component extends BasicQueryPageComponent<TLS32040Data> imp
     tlt_no: [null], // 專櫃編號
     tax: [true], // 是否含稅
     issue: [null], // 是否開立業主發票
+    tlt_building: [[]],
     ...createPaginationConfig([{ field: 'team_name', order: -1 }])
   });
 
@@ -135,6 +137,7 @@ export class TLS32040Component extends BasicQueryPageComponent<TLS32040Data> imp
     { value: '1', label: '否' },
     { value: '2', label: '全部' },
   ];
+  buildingOptions: any[] = [];
   //#endregion
 
   constructor(
@@ -148,6 +151,7 @@ export class TLS32040Component extends BasicQueryPageComponent<TLS32040Data> imp
     private floorService: FloorService,
     private regionService: RegionService,
     private counterCodeService: CounterCodeService,
+    private tls11010Service: Tls11010Service,
   ) {
     super();
   }
@@ -224,6 +228,10 @@ export class TLS32040Component extends BasicQueryPageComponent<TLS32040Data> imp
         ...item,
         value: typeof item.value === 'number' ? item.value.toString() : item.value
       }));
+    });
+    // 加載館別選項
+    this.tls11010Service.getBuildingOptions().subscribe((data) => {
+      this.buildingOptions = data;
     });
   }
 

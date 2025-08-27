@@ -225,6 +225,10 @@
               <B><u>合約查詢條件</u></B>
             </span>
           </div>
+          <!-- 館別(多選) -->
+          <app-multi-select class="col-12 md:col-6 lg:col-4" label="館別" controlName="tlt_building"
+            [options]="buildingOptions" optionLabel="label" optionValue="value"
+            [control]="queryForm.controls.tlt_building" [submitted]="submitted"></app-multi-select>
           <div class="col-12 md:col-6 lg:col-4">
             <app-multi-select label="樓層" controlName="floor" [options]="floorOptions" optionLabel="label"
               optionValue="value" [control]="queryForm.controls.floor" [submitted]="submitted"></app-multi-select>
