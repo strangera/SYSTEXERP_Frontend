@@ -46,6 +46,10 @@ import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdow
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { TranslateModule } from '@ngx-translate/core';
 import { InputTextRangeComponent } from '@shared/componentkit/input-text-range/input-text-range.component';
+import { Button } from "primeng/button";
+import { concatMap, finalize, from } from 'rxjs';
+import { untilDestroyed } from '@ngneat/until-destroy';
+import { ExecSpFuncService } from '@service/utility/execSpFunc.service';
 
 @Component({
   selector: 'app-tls13010',
@@ -64,7 +68,8 @@ import { InputTextRangeComponent } from '@shared/componentkit/input-text-range/i
     DropdownComponent,
     TableComponent,
     TranslateModule,
-    InputTextRangeComponent
+    InputTextRangeComponent,
+    Button
   ],
 })
 export class TLS13010Component extends BasicQueryPageComponent<ContractItem> implements OnInit {
@@ -174,6 +179,7 @@ export class TLS13010Component extends BasicQueryPageComponent<ContractItem> imp
   totalRecords: number = 0;
   selectedItems: ContractItem[] = [];
 
+
   // 表格欄位配置
   columns: Column[] = [
     { field: 'apply_no', header: '專櫃招募編號', visible: true },
@@ -242,6 +248,7 @@ export class TLS13010Component extends BasicQueryPageComponent<ContractItem> imp
     private cooperationMethodService: CooperationMethodService,
     private counterCategoryService: CounterCategoryService,
     private apiService: TLS13010Service,
+    private readonly ExecSpFunc: ExecSpFuncService
   ) {
     super();
   }
@@ -558,7 +565,7 @@ export class TLS13010Component extends BasicQueryPageComponent<ContractItem> imp
       const today = new Date();
       const contractStart = new Date(rowData.tlt_contract_bdate);
       // 契約已生效就不能作廢
-      return contractStart <= today;
+      return contractStart < today;
     }
 
     return true; // 其他情況都禁用
@@ -568,58 +575,58 @@ export class TLS13010Component extends BasicQueryPageComponent<ContractItem> imp
    * 審核功能
    */
   public onApprove(rowData: ContractItem): void {
-    // this.confirmationService.confirm({
-    //   message: `確定要審核合約 ${rowData.apply_no} 嗎？`,
-    //   accept: () => {
-    //     // 調用審核 API
-    //     this.apiService.approveTLS13010(rowData.talent_id).subscribe({
-    //       next: (response: any) => {
-    //         if (response.Status === '0000') {
-    //           this.messageService.successBubble('審核成功');
-    //           this.onSubmit(this.queryForm); // 重新查詢更新狀態
-    //         } else {
-    //           this.messageService.errorBubble(`審核失敗: ${response.Message || '未知錯誤'}`);
-    //         }
-    //       },
-    //       error: (err: any) => {
-    //         console.error('審核失敗:', err);
-    //         this.messageService.errorBubble('審核失敗，請檢查網路連線或聯繫管理員');
-    //       }
-    //     });
-    //   },
-    //   reject: () => {
-    //     this.messageService.infoBubble('已取消審核');
-    //   }
-    // });
+    this.confirmationService.confirm({
+      message: `確定要審核合約 ${rowData.apply_no} 嗎？`,
+      accept: () => {
+        // 調用審核 API
+        this.apiService.approveTLS13010({ talentId: rowData.talent_id }).subscribe({
+          next: (response: any) => {
+            if (response.Status === '0000') {
+              this.messageService.successBubble('審核成功');
+              this.onSubmit(this.queryForm); // 重新查詢更新狀態
+            } else {
+              this.messageService.errorBubble(`審核失敗: ${response.Message || '未知錯誤'}`);
+            }
+          },
+          error: (err: any) => {
+            console.error('審核失敗:', err);
+            this.messageService.errorBubble('審核失敗，請檢查網路連線或聯繫管理員');
+          }
+        });
+      },
+      reject: () => {
+        this.messageService.infoBubble('已取消審核');
+      }
+    });
   }
 
   /**
    * 反審核功能
    */
   public onUnapprove(rowData: ContractItem): void {
-    // this.confirmationService.confirm({
-    //   message: `確定要反審核合約 ${rowData.apply_no} 嗎？`,
-    //   accept: () => {
-    //     // 調用反審核 API
-    //     this.apiService.unapproveTLS13010(rowData.talent_id).subscribe({
-    //       next: (response: any) => {
-    //         if (response.Status === '0000') {
-    //           this.messageService.successBubble('反審核成功');
-    //           this.onSubmit(this.queryForm); // 重新查詢更新狀態
-    //         } else {
-    //           this.messageService.errorBubble(`反審核失敗: ${response.Message || '未知錯誤'}`);
-    //         }
-    //       },
-    //       error: (err: any) => {
-    //         console.error('反審核失敗:', err);
-    //         this.messageService.errorBubble('反審核失敗，請檢查網路連線或聯繫管理員');
-    //       }
-    //     });
-    //   },
-    //   reject: () => {
-    //     this.messageService.infoBubble('已取消反審核');
-    //   }
-    // });
+    this.confirmationService.confirm({
+      message: `確定要反審核合約 ${rowData.apply_no} 嗎？`,
+      accept: () => {
+        // 調用反審核 API
+        this.apiService.unapproveTLS13010({ talentId: rowData.talent_id }).subscribe({
+          next: (response: any) => {
+            if (response.Status === '0000') {
+              this.messageService.successBubble('反審核成功');
+              this.onSubmit(this.queryForm); // 重新查詢更新狀態
+            } else {
+              this.messageService.errorBubble(`反審核失敗: ${response.Message || '未知錯誤'}`);
+            }
+          },
+          error: (err: any) => {
+            console.error('反審核失敗:', err);
+            this.messageService.errorBubble('反審核失敗，請檢查網路連線或聯繫管理員');
+          }
+        });
+      },
+      reject: () => {
+        this.messageService.infoBubble('已取消反審核');
+      }
+    });
   }
 
   /**
@@ -636,28 +643,99 @@ export class TLS13010Component extends BasicQueryPageComponent<ContractItem> imp
       return;
     }
 
-    // this.confirmationService.confirm({
-    //   message: `確定要作廢合約 ${rowData.apply_no} 嗎？作廢後無法恢復。`,
-    //   accept: () => {
-    //     // 調用作廢 API
-    //     this.apiService.voidTLS13010(rowData.talent_id).subscribe({
-    //       next: (response: any) => {
-    //         if (response.Status === '0000') {
-    //           this.messageService.successBubble('作廢成功');
-    //           this.onSubmit(this.queryForm); // 重新查詢更新狀態
-    //         } else {
-    //           this.messageService.errorBubble(`作廢失敗: ${response.Message || '未知錯誤'}`);
-    //         }
-    //       },
-    //       error: (err: any) => {
-    //         console.error('作廢失敗:', err);
-    //         this.messageService.errorBubble('作廢失敗，請檢查網路連線或聯繫管理員');
-    //       }
-    //     });
-    //   },
-    //   reject: () => {
-    //     this.messageService.infoBubble('已取消作廢');
-    //   }
-    // });
+    this.confirmationService.confirm({
+      message: `確定要作廢合約 ${rowData.apply_no} 嗎？作廢後無法恢復。`,
+      accept: () => {
+        // 調用作廢 API
+        this.apiService.voidTLS13010({ talentId: rowData.talent_id }).subscribe({
+          next: (response: any) => {
+            if (response.Status === '0000') {
+              this.messageService.successBubble('作廢成功');
+              this.onSubmit(this.queryForm); // 重新查詢更新狀態
+            } else {
+              this.messageService.errorBubble(`作廢失敗: ${response.Message || '未知錯誤'}`);
+            }
+          },
+          error: (err: any) => {
+            console.error('作廢失敗:', err);
+            this.messageService.errorBubble('作廢失敗，請檢查網路連線或聯繫管理員');
+          }
+        });
+      },
+      reject: () => {
+        this.messageService.infoBubble('已取消作廢');
+      }
+    });
+  }
+
+  btnLoading = false;
+  onUpload() {
+    const storeNo = this.authService.currentUserValue?.SYS_StoreNo;
+    const userNo = this.authService.currentUserValue?.user_No;
+    const itemsToUpload = this.selectedItems;
+
+    if (!storeNo || !userNo || !itemsToUpload.length) {
+      return;
+    }
+
+    this.btnLoading = true;
+
+    from(itemsToUpload).pipe(
+      concatMap((item) => {
+        // 為每個選定的 item 建立三個不同的 params
+        const paramsArray = [
+          {
+            SYS_StoreNo: storeNo,
+            EXP_StoreNo: storeNo,
+            EXP_Type: "TLTTALENT",
+            EXP_DocNo: item.talent_id, // 假設你的資料結構中有 talent_id 欄位
+            EXP_DataFlag: "S2P",
+            EXP_Desc: ""
+          },
+          {
+            SYS_StoreNo: storeNo,
+            EXP_StoreNo: storeNo,
+            EXP_Type: "TLTTALENT_CHARGEM",
+            EXP_DocNo: item.talent_id,
+            EXP_DataFlag: "S2P",
+            EXP_Desc: ""
+          },
+          {
+            SYS_StoreNo: storeNo,
+            EXP_StoreNo: storeNo,
+            EXP_Type: "TLTTALENT_CHARGED",
+            EXP_DocNo: item.talent_id,
+            EXP_DataFlag: "S2P",
+            EXP_Desc: ""
+          }
+        ];
+
+        // 使用 from 將陣列轉換為 Observable，然後用 concatMap 依序執行
+        return from(paramsArray).pipe(
+          concatMap(params => this.ExecSpFunc.ExecSpFunc(params))
+        );
+      }),
+      finalize(() => this.btnLoading = false),
+      untilDestroyed(this)
+    ).subscribe({
+      next: (response) => {
+        if (response.ErrCode !== 0) {
+          this.messageService.errorBubble(response.ErrMsg);
+          return;
+        }
+        // 注意：這裡會收到多個 response，你可能需要調整處理邏輯
+        // 例如收集所有 response 或者只在最後一個完成時執行清理動作
+      },
+      error: (error) => {
+        // 處理錯誤情況
+        console.error('Upload error:', error);
+        this.messageService.errorBubble('上傳過程中發生錯誤');
+      },
+      complete: () => {
+        // 所有請求完成後的處理
+        this.selectedItems = [];
+        this.onSubmit(this.queryForm);
+      }
+    });
   }
 }
