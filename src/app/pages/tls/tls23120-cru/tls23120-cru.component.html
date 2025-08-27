@@ -170,41 +170,44 @@
           </tr>
         </ng-template>
 
-        <!-- 表尾：小計 or 總計 -->
-        <ng-template pTemplate="footer">
-          <tr *ngIf="group.showSubtotal" class="font-semibold bg-yellow-100">
-            <td
-              *ngFor="let col of selectedColumns"
-              class="text-center"
-              [ngClass]="col.style"
-            >
-              <ng-container [ngSwitch]="col.field">
-                <ng-container *ngSwitchCase="'__index'">小計</ng-container>
-                <ng-container *ngSwitchDefault>
-                  <ng-container *ngIf="subtotalFields.includes(col.field)">
-                    {{ getSubtotal(group.rows, col.field) }}
-                  </ng-container>
-                </ng-container>
-              </ng-container>
-            </td>
-          </tr>
-          <tr *ngIf="group.showTotal" class="font-semibold bg-orange-200">
-            <td
-              *ngFor="let col of selectedColumns"
-              class="text-center"
-              [ngClass]="col.style"
-            >
-              <ng-container [ngSwitch]="col.field">
-                <ng-container *ngSwitchCase="'__index'">總計</ng-container>
-                <ng-container *ngSwitchDefault>
-                  <ng-container *ngIf="subtotalFields.includes(col.field)">
-                    {{ getSubtotal(group.rows, col.field) }}
-                  </ng-container>
-                </ng-container>
-              </ng-container>
-            </td>
-          </tr>
-        </ng-template>
+      <!-- 表尾：小計 or 總計 -->
+<ng-template pTemplate="footer">
+  <!-- 小計列：背景黃色 -->
+  <tr *ngIf="group.showSubtotal" class="subtotal-row">
+    <td
+      *ngFor="let col of selectedColumns"
+      class="text-center"
+      [ngClass]="col.style"
+    >
+      <ng-container [ngSwitch]="col.field">
+        <ng-container *ngSwitchCase="'__index'">小計</ng-container>
+        <ng-container *ngSwitchDefault>
+          <ng-container *ngIf="subtotalFields.includes(col.field)">
+            {{ getSubtotal(group.rows, col.field) }}
+          </ng-container>
+        </ng-container>
+      </ng-container>
+    </td>
+  </tr>
+
+  <!-- 總計列：背景藍色 -->
+  <tr *ngIf="group.showTotal" class="total-row">
+    <td
+      *ngFor="let col of selectedColumns"
+      class="text-center"
+      [ngClass]="col.style"
+    >
+      <ng-container [ngSwitch]="col.field">
+        <ng-container *ngSwitchCase="'__index'">總計</ng-container>
+        <ng-container *ngSwitchDefault>
+          <ng-container *ngIf="subtotalFields.includes(col.field)">
+            {{ getSubtotal(group.rows, col.field) }}
+          </ng-container>
+        </ng-container>
+      </ng-container>
+    </td>
+  </tr>
+</ng-template>
       </p-table>
     </div>
   </div>

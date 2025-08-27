@@ -427,6 +427,7 @@ export class TLS23120CRUComponent extends BasicCruPageComponent<any> {
           fontSize: 10,
           fillColor: [212, 222, 254],
           textColor: [0, 0, 0],
+          
           halign: 'center',
         },
         footStyles: {
