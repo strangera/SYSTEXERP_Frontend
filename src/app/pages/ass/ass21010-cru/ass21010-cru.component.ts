@@ -50,7 +50,7 @@ export class ASS21010CRUComponent extends BasicCruPageComponent<ASS21010Data> im
 
   /** 表單變化追蹤 */
   public readonly dfEffect = effect(() => {
-    console.log(`dfEffect:`, [this.dfSignal()]);
+    this.logger.debug(`dfEffect:`, [this.dfSignal()]);
   });
 
   // 變化追蹤
@@ -63,13 +63,13 @@ export class ASS21010CRUComponent extends BasicCruPageComponent<ASS21010Data> im
     const types = this.engTypeSignal();
     if (!types?.length) return;
     this.service.loadEngMeterNo(types);
-    console.log(`Eng type changes:`, [types]);
+    this.logger.debug(`Eng type changes:`, [types]);
   }, { allowSignalWrites: !0 });
 
   public readonly locEffect = effect(() => {
     const locations = this.locationSignal();
     if (!locations?.length) return;
-    console.log(`Location changes:`, [locations]);
+    this.logger.debug(`Location changes:`, [locations]);
   });
 
   // 靜態資料: 用於表單初始化和重置
@@ -109,7 +109,7 @@ export class ASS21010CRUComponent extends BasicCruPageComponent<ASS21010Data> im
       };
 
       this.service.updateASS21010(payload);
-      console.log(`onSubmit:`, [d, payload]);
+      this.logger.debug(`onSubmit:`, [d, payload]);
       this.loading = !1;
     });
   }

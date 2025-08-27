@@ -54,14 +54,14 @@ export class ASS21010Component extends BasicQueryPageComponent<unknown> implemen
   private readonly engRemarkSignal = toSignal(this.qf().ENG_Remark.valueChanges);
 
   public readonly qfEffect = effect(() => {
-    console.log(`qfEffect:`, [this.qfSignal()]);
+    this.logger.debug(`qfEffect:`, [this.qfSignal()]);
   });
 
   public readonly tableEffect = effect(() => {
     const types = this.engTypeSignal() || [];
     const meters = this.engMeterSignal() || [];
     const locs = this.locationSignal() || [];
-    console.log(`tableEffect:`, [types, meters, locs]);
+    this.logger.debug(`tableEffect:`, [types, meters, locs]);
   }, { allowSignalWrites: !0 });
 
   public readonly columns: Column[] = [
@@ -113,7 +113,7 @@ export class ASS21010Component extends BasicQueryPageComponent<unknown> implemen
       };
       this.service.loadASS21010(payload);
 
-      console.log(`onSubmit:`, [payload]);
+      this.logger.debug(`onSubmit:`, [payload]);
       this.queryStateService.setQueryState(this.ProgNo, this.queryForm.value);
       this.loading = !1;
     });
@@ -127,6 +127,7 @@ export class ASS21010Component extends BasicQueryPageComponent<unknown> implemen
   public onDelete(event: ASS21010Data): void {
     this.logger.debug(`Deleting ASS21010:`, [event, this.authService.currentUserValue]);
     this.service.deleteASS21010(<ASS21010Delete>{
+      ...this.queryForm.value,
       ID: event.ID,
       ENG_MeterNo: event.ENG_MeterNo,
       Location_No: event.Location_No,

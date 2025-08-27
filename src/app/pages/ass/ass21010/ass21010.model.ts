@@ -1,5 +1,5 @@
 import { EngType } from '@service/api/ass/ass21010.service';
-import { BaseQueryResponse } from '@shared/models/api/base-api.interface';
+import { BaseQueryRequest, BaseQueryResponse } from '@shared/models/api/base-api.interface';
 
 export interface ASS21010Data {
   ID: number;
@@ -11,7 +11,7 @@ export interface ASS21010Data {
   ENG_Remark: string;
 }
 
-export interface ASS21010Payload {
+export interface ASS21010Payload extends BaseQueryRequest {
   ID?: number;
   ENG_MeterNo?: string;
   Location_No?: string;
