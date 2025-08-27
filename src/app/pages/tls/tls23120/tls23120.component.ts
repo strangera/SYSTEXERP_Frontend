@@ -32,6 +32,7 @@ import { TranslateModule } from '@ngx-translate/core';
 import { TableComponent } from '@shared/componentkit/table/table.component';
 import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
 import { RadioButtonModule } from 'primeng/radiobutton';
+import { Router } from '@angular/router';
 
 type FilterMode = 'location' | 'busType' | 'org' | 'counter';
 
@@ -79,6 +80,7 @@ export class TLS23120Component
   ];
   private lastQuerySig: string | null = null;
   private lazyTimer: any = null;
+  private pendingNavigateAfterQuery = false; // ← 新增：查完要不要自動開 CRU
 
   data: any[] = [];
   totalRecords = 0;
@@ -138,12 +140,13 @@ export class TLS23120Component
     private floorService: FloorService,
     private regionService: RegionService,
     private tls11010Service: Tls11010Service,
+    
   ) {
     super();
   }
 
   ngOnInit(): void {
-    this.initializePage('TLS23120', 'tls/tls23120', this.queryForm, (form) => this.onSubmit(form));
+    this.initializePage('TLS23120', 'tls/tls23120cru', this.queryForm, (form) => this.onSubmit(form));
 
     // 初始化 sortMeta
     this.sortMeta = this.defaultSort.map(s => ({ ...s }));
@@ -227,93 +230,119 @@ export class TLS23120Component
   }
 
   // ===== 提交 =====
-  onSubmit(form: FormGroup): void {
-    this.handleSubmit(form, () => {
-      const val = this.queryForm.getRawValue() as any;
+ // ===== 提交 =====
+onSubmit(form: FormGroup): void {
+  this.handleSubmit(form, () => {
+    const val = this.queryForm.getRawValue() as any;
 
-      const pageSize  = Number.isFinite(val?.pageSize)  ? val.pageSize  : 10;
-      const pageIndex = Number.isFinite(val?.pageIndex) ? val.pageIndex : 1;
-      const offset    = Math.max(0, (pageIndex - 1) * pageSize);
+    // --- 分頁參數 ---
+    const pageSize  = Number.isFinite(val?.pageSize)  ? val.pageSize  : 10;
+    const pageIndex = Number.isFinite(val?.pageIndex) ? val.pageIndex : 1;
+    const offset    = Math.max(0, (pageIndex - 1) * pageSize);
 
-      // 🔑 排序：form.SortBy → sortMeta → defaultSort（收斂為 SortMeta[]）
-      const sortByArr: SortMeta[] =
-        toSortMeta(val?.SortBy).length
-          ? toSortMeta(val?.SortBy)
-          : (this.sortMeta.length ? this.sortMeta : this.defaultSort);
+    // --- 排序（form.SortBy → sortMeta → defaultSort） ---
+    const sortByArr: SortMeta[] =
+      toSortMeta(val?.SortBy).length
+        ? toSortMeta(val?.SortBy)
+        : (this.sortMeta.length ? this.sortMeta : this.defaultSort);
 
-      const orderBy = sortByArr.length
-        ? sortByArr.map(s => `${s.field} ${s.order === 1 ? 'ASC' : 'DESC'}`).join(',')
-        : undefined;
+    const orderBy = sortByArr.length
+      ? sortByArr.map(s => `${s.field} ${s.order === 1 ? 'ASC' : 'DESC'}`).join(',')
+      : undefined;
 
-      const toIsoOrNull = (x: any) => {
-        if (!x) return null;
-        const d = typeof x === 'string' ? new Date(x) : (x as Date);
-        if (isNaN(d.getTime())) return null;
-        return new Date(d.getTime() - d.getTimezoneOffset() * 60000)
-          .toISOString()
-          .slice(0, 19);
-      };
+    // --- 時間轉 ISO（yyyy-MM-ddTHH:mm:ss） ---
+    const toIsoOrNull = (x: any) => {
+      if (!x) return null;
+      const d = typeof x === 'string' ? new Date(x) : (x as Date);
+      if (isNaN(d.getTime())) return null;
+      return new Date(d.getTime() - d.getTimezoneOffset() * 60000)
+        .toISOString()
+        .slice(0, 19);
+    };
 
-      const fm = this.queryForm.controls.filterMode.value as FilterMode;
+    // --- 依 Radio 模式決定要帶哪些條件 ---
+    const fm = this.queryForm.controls.filterMode.value as FilterMode;
 
-      const payload: any = {
-        TXN_Date: toIsoOrNull(val?.TXN_Date),
+    const payload: any = {
+      TXN_Date: toIsoOrNull(val?.TXN_Date),
 
-        TLT_No:       (fm === 'counter')  ? (Array.isArray(val?.TLT_No) ? val.TLT_No : null) : null,
-        tlt_building: (fm === 'location') ? (val?.tlt_building ?? null) : null,
-        area_no:      (fm === 'location') ? (Array.isArray(val?.area_no) ? val.area_no : null) : null,
-        tlt_floor:    (fm === 'location') ? (Array.isArray(val?.tlt_floor) ? val.tlt_floor : null) : null,
-        bus_type:     (fm === 'busType')  ? (val?.bus_type ?? null) : null,
-        org_id:       (fm === 'org')      ? (val?.org_id ?? null) : null,
+      TLT_No:       (fm === 'counter')  ? (Array.isArray(val?.TLT_No) ? val.TLT_No : null) : null,
+      tlt_building: (fm === 'location') ? (val?.tlt_building ?? null) : null,
+      area_no:      (fm === 'location') ? (Array.isArray(val?.area_no) ? val.area_no : null) : null,
+      tlt_floor:    (fm === 'location') ? (Array.isArray(val?.tlt_floor) ? val.tlt_floor : null) : null,
+      bus_type:     (fm === 'busType')  ? (val?.bus_type ?? null) : null,
+      org_id:       (fm === 'org')      ? (val?.org_id ?? null) : null,
 
-        ShowBusType:  val?.ShowBusType ?? null,
+      ShowBusType:  val?.ShowBusType ?? null,
 
-        PageSize : pageSize,
-        PageIndex: pageIndex,
-        Offset   : offset,
-        SortBy   : sortByArr,
-        ...(orderBy ? { OrderBy: orderBy } : {}),
-      };
+      PageSize : pageSize,
+      PageIndex: pageIndex,
+      Offset   : offset,
+      SortBy   : sortByArr,
+      ...(orderBy ? { OrderBy: orderBy } : {}),
+    };
 
-      // 清除空值/空陣列/空字串
-      Object.keys(payload).forEach((k) => {
-        const v = payload[k];
-        if (v === '' || v === null || v === undefined) delete payload[k];
-        if (Array.isArray(v) && v.length === 0) delete payload[k];
-      });
+    // --- 清除空值/空陣列/空字串，避免後端被空值覆蓋 ---
+    Object.keys(payload).forEach((k) => {
+      const v = payload[k];
+      if (v === '' || v === null || v === undefined) delete payload[k];
+      if (Array.isArray(v) && v.length === 0) delete payload[k];
+    });
 
-      this.loading = true;
-      this.messageService?.blockUi();
+    // --- 送出查詢 ---
+    this.loading = true;
+    this.messageService?.blockUi();
 
-      this.tls23120Service.queryTLS23120(payload).subscribe({
-        next: (res: any) => {
-          const dataArr = Array.isArray(res?.Data) ? res.Data : (res?.Data ? [res.Data] : []);
-          let details: any[] = [];
-          for (const item of dataArr) {
-            const totals = item?.Totals ?? item?.totals ?? {};
-            const subTotals = totals?.SubTotals ?? totals?.subTotals ?? totals?.subtotals ?? [];
-            if (Array.isArray(subTotals)) {
-              for (const sub of subTotals) {
-                const list =
-                  sub?.tLS23120Details ??
-                  sub?.TLS23120Details ??
-                  sub?.tls23120Details ??
-                  [];
-                if (Array.isArray(list)) details = details.concat(list);
-              }
+    this.tls23120Service.queryTLS23120(payload).subscribe({
+      next: (res: any) => {
+        // 收斂資料結構 → details[]
+        const dataArr = Array.isArray(res?.Data) ? res.Data : (res?.Data ? [res.Data] : []);
+        let details: any[] = [];
+        for (const item of dataArr) {
+          const totals = item?.Totals ?? item?.totals ?? {};
+          const subTotals = totals?.SubTotals ?? totals?.subTotals ?? totals?.subtotals ?? [];
+          if (Array.isArray(subTotals)) {
+            for (const sub of subTotals) {
+              const list =
+                sub?.tLS23120Details ??
+                sub?.TLS23120Details ??
+                sub?.tls23120Details ?? [];
+              if (Array.isArray(list)) details = details.concat(list);
             }
           }
+        }
 
-          // 建議有穩定 dataKey；若後端無唯一鍵，可加上 _rowKey
-          this.data = details.map((r: any, i: number) => ({
-            ...r,
-            _rowKey: `${r?.TLT_NO ?? ''}|${r?.TXN_DATE ?? ''}|${i}`,
-          }));
+        // 產生穩定 dataKey（若後端無唯一鍵）
+        this.data = details.map((r: any, i: number) => ({
+          ...r,
+          _rowKey: `${r?.TLT_NO ?? ''}|${r?.TXN_DATE ?? ''}|${i}`,
+        }));
 
-          this.totalRecords =
-            typeof res?.TotalCount === 'number' ? res.TotalCount : this.data.length;
+        this.totalRecords =
+          typeof res?.TotalCount === 'number' ? res.TotalCount : this.data.length;
+
+        // ▶ 若是「查詢並開啟報表」流程：有資料才導到 CRU，否則提示
+        if (this.pendingNavigateAfterQuery) {
+            this.pendingNavigateAfterQuery = false;
+            if (!this.data?.length) {
+              this.messageService?.warnBubble?.('查無資料');
+              return;
+            }
+            const formRaw = this.queryForm.getRawValue() as any;
+            this.router.navigate(
+              ['/account/tls/tls23120cru'], // ✅ 直接導到你要的 URL
+              {
+                state: {
+                  data: this.data,
+                  queryFormValue: formRaw,
+                  pageSize: formRaw?.pageSize ?? 1000,
+                },
+              }
+            );
+          }
         },
         error: () => {
+          this.pendingNavigateAfterQuery = false;
           this.messageService?.errorBubble?.('查詢失敗，請稍後再試');
         },
         complete: () => {
@@ -323,6 +352,8 @@ export class TLS23120Component
       });
     });
   }
+
+
 
   // 顯示/隱藏欄位（僅影響 UI）
   private syncBusTypeColumns(show: boolean): void {
@@ -386,6 +417,11 @@ export class TLS23120Component
   moneyFormat(value: number): string {
     return value != null ? value.toLocaleString('en-US') : '0';
   }
+  onQueryAndOpen(): void {
+  if (this.loading) return;
+  this.pendingNavigateAfterQuery = true;
+  this.onSubmit(this.queryForm);
+}
 
   columns = [
     { field: 'TXN_DATE', header: '銷售日期', visible: true , format: this.formatDateTimeYMDHM.bind(this) },

@@ -6,143 +6,206 @@
 
   <!-- 工具列區 -->
   <div class="flex flex-wrap justify-between items-center gap-3 mb-3">
-    <div class="flex items-center gap-2">
-      
-    </div>
+    <div class="flex items-center gap-2"></div>
 
     <p-dialog header="調整每表格列數" [(visible)]="showRowsPerTableDialog">
-      <input type="number" [(ngModel)]="tempRowsPerTable" min="1" class="p-inputtext p-component" />
-      <button pButton label="套用" (click)="applyRowsPerTableChange()" class="p-button-sm p-button-success"></button>
+      <input
+        type="number"
+        [(ngModel)]="tempRowsPerTable"
+        min="1"
+        class="p-inputtext p-component"
+      />
+      <button
+        pButton
+        label="套用"
+        (click)="applyRowsPerTableChange()"
+        class="p-button-sm p-button-success"
+      ></button>
     </p-dialog>
 
     <div class="flex items-center flex-wrap gap-2">
-      <button pButton type="button" label="顯示欄位" icon="pi pi-eye"
-              (click)="showColumnDialog = true"
-              class="p-button-sm p-button-info"></button>
+      <button
+        pButton
+        type="button"
+        label="顯示欄位"
+        icon="pi pi-eye"
+        (click)="showColumnDialog = true"
+        class="p-button-sm p-button-info"
+      ></button>
 
-      <button pButton type="button" label="匯出 PDF" icon="pi pi-file-pdf"
-              (click)="exportPDF('l')"
-              class="p-button-sm p-button-danger"></button>
+      <button
+        pButton
+        type="button"
+        label="匯出 PDF"
+        icon="pi pi-file-pdf"
+        (click)="exportPDF('l')"
+        class="p-button-sm p-button-danger"
+      ></button>
 
-      <button pButton type="button" label="匯出 Excel" icon="pi pi-file-excel"
-              (click)="exportExcel()"
-              class="p-button-sm p-button-success"></button>
+      <button
+        pButton
+        type="button"
+        label="匯出 Excel"
+        icon="pi pi-file-excel"
+        (click)="exportExcel()"
+        class="p-button-sm p-button-success"
+      ></button>
 
-      <button pButton type="button" label="列印" icon="pi pi-print"
-              (click)="printPage()"
-              class="p-button-sm p-button-secondary"></button>
+      <button
+        pButton
+        type="button"
+        label="列印"
+        icon="pi pi-print"
+        (click)="printPage()"
+        class="p-button-sm p-button-secondary"
+      ></button>
 
-      <button pButton type="button" icon="pi pi-arrow-left" label="回上頁"
-              class="p-button-sm p-button-secondary"
-              (click)="goBack()"></button>
-
-
+      <button
+        pButton
+        type="button"
+        icon="pi pi-arrow-left"
+        label="回上頁"
+        class="p-button-sm p-button-secondary"
+        (click)="goBack()"
+      ></button>
     </div>
   </div>
 
-
   <!-- 群組資料表區塊 -->
-  <div id="print-section"  class="grouped-view">
-    <div *ngFor="let group of groupedData; let i = index" class="report-table-wrapper mb-5">
-<div *ngIf="group?.rows?.length && !group.showTotal">
-  {{ groupByLabel }}：{{ group.tltKey }} / 抽成類別：{{ group.talentKey }}
-</div>
+  <div id="print-section" class="grouped-view">
+    <div
+      *ngFor="let group of groupedData; let i = index"
+      class="report-table-wrapper mb-5"
+    >
+      <div *ngIf="group?.rows?.length && !group.showTotal">
+        {{ groupByLabel }}：{{ group.tltKey }} / 抽成類別：{{ group.talentKey }}
+      </div>
       <!-- 標頭 Template -->
       <div class="grid p-fluid" *ngIf="group?.rows?.length">
         <!-- <div class="col-12 md:col-6 lg:col-4">
           資料區間：{{ dateStart | date: "yyyy/MM/dd" }} ~ {{ dateEnd | date: "yyyy/MM/dd" }}
         </div> -->
-<div class="col-12 md:col-6 lg:col-4" *ngIf="showBusType">
-  大分類：{{group.rows[0]?.bus_type }} / {{group.rows[0]?.bus_type_name }}
-</div>
-        <div class="col-12 md:col-6 lg:col-4">銷售日期：{{group.rows[0]?.TXN_DATE | date: "yyyy/MM/dd" }}</div>
-        <div class="col-12 md:col-6 lg:col-4">專櫃：{{group.rows[0]?.TLT_NO }} / {{group.rows[0]?.tlt_name }}</div>
+        <div class="col-12 md:col-6 lg:col-4" *ngIf="showBusType">
+          大分類：{{ group.rows[0]?.bus_type }} /
+          {{ group.rows[0]?.bus_type_name }}
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          銷售日期：{{ group.rows[0]?.TXN_DATE | date: "yyyy/MM/dd" }}
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          專櫃：{{ group.rows[0]?.TLT_NO }} / {{ group.rows[0]?.tlt_name }}
+        </div>
         <div class="col-12 md:col-6 lg:col-4">製表日期：{{ printedAt }}</div>
-        <div class="col-12 md:col-6 lg:col-4">區域：{{group.rows[0]?.AREA_NO ?? '－' }}</div>
         <div class="col-12 md:col-6 lg:col-4">
-          樓層：{{group.rows[0]?.FLOOR_NO ?? '－' }}
+          區域：{{ group.rows[0]?.AREA_NO ?? "－" }}
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          樓層：{{ group.rows[0]?.FLOOR_NO ?? "－" }}
           <span class="text-blue-600 ml-2">抽成類別：</span>
-          <span class="text-red-600">{{group.rows[0]?.TLT_ID ?? '無' }}</span>
+          <span class="text-red-600">{{ group.rows[0]?.TLT_ID ?? "無" }}</span>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
-          交易總件數：{{ group?.rows?.length ?? 0 }} / 退貨件數：{{group.rows[0]?.return_qty ?? 0 }}
+          交易總件數：{{ group?.rows?.length ?? 0 }} / 退貨件數：{{
+            group.rows[0]?.return_qty ?? 0
+          }}
         </div>
-        <div class="col-12 md:col-6 lg:col-4">退貨金額：{{group.rows[0]?.return_amt ?? 0 }}</div>
+        <div class="col-12 md:col-6 lg:col-4">
+          退貨金額：{{ group.rows[0]?.return_amt ?? 0 }}
+        </div>
       </div>
-<!-- 群組標題 -->
-<div class="text-xl font-bold text-blue-600 mb-2" *ngIf="group?.rows?.length && !group.showTotal">
-  {{ groupByLabel }}：{{ group.tltKey }} / 抽成類別：{{ group.talentKey }}
-</div>
+      <!-- 群組標題 -->
+      <div
+        class="text-xl font-bold text-blue-600 mb-2"
+        *ngIf="group?.rows?.length && !group.showTotal"
+      >
+        {{ groupByLabel }}：{{ group.tltKey }} / 抽成類別：{{ group.talentKey }}
+      </div>
 
-
-  <!-- 表格 -->
-  <p-table
-    [value]="group.rows"
-    [columns]="selectedColumns"
-    [paginator]="false"
-    scrollable="true"
-    [style]="{ width: '100%' }"
-    [styleClass]="'p-datatable-sm p-datatable-striped p-datatable-gridlines'">
-        
+      <!-- 表格 -->
+      <p-table
+        [value]="group.rows"
+        [columns]="selectedColumns"
+        [paginator]="false"
+        scrollable="true"
+        [style]="{ width: '100%' }"
+        [styleClass]="
+          'p-datatable-sm p-datatable-striped p-datatable-gridlines'
+        "
+      >
         <!-- 表頭 -->
-<ng-template pTemplate="header">
-  <tr>
-    <th *ngFor="let col of selectedColumns"
-        class="text-center"
-        [ngClass]="col.style"
-        [pSortableColumn]="col.field !== '__index' ? col.field : undefined">
-      
-      {{ col.header }}
-      <p-sortIcon *ngIf="col.field !== '__index'" [field]="col.field" />
-    </th>
-  </tr>
-</ng-template>
+        <ng-template pTemplate="header">
+          <tr>
+            <th
+              *ngFor="let col of selectedColumns"
+              class="text-center"
+              [ngClass]="col.style"
+              [pSortableColumn]="
+                col.field !== '__index' ? col.field : undefined
+              "
+            >
+              {{ col.header }}
+              <p-sortIcon *ngIf="col.field !== '__index'" [field]="col.field" />
+            </th>
+          </tr>
+        </ng-template>
 
         <!-- 資料列 -->
         <ng-template pTemplate="body" let-rowData let-rowIndex="rowIndex">
           <tr>
-            <td *ngFor="let col of selectedColumns" class="text-center" [ngClass]="col.style">
+            <td
+              *ngFor="let col of selectedColumns"
+              class="text-center"
+              [ngClass]="col.style"
+            >
               <ng-container *ngIf="col.field === '__index'">
                 {{ getRowIndex(i, rowIndex) }}
               </ng-container>
               <ng-container *ngIf="col.field !== '__index'">
-                <ng-container *ngIf="col.format; else raw">{{ col.format(rowData[col.field]) }}</ng-container>
+                <ng-container *ngIf="col.format; else raw">
+                  {{ col.format(rowData[col.field]) }}
+                </ng-container>
                 <ng-template #raw>{{ rowData[col.field] }}</ng-template>
               </ng-container>
             </td>
           </tr>
         </ng-template>
 
-      <!-- 表尾：小計 or 總計 -->
-    <ng-template pTemplate="footer">
-  <tr *ngIf="group.showSubtotal" class="font-semibold bg-yellow-100">
-    <td *ngFor="let col of selectedColumns" class="text-center" [ngClass]="col.style">
-      <ng-container [ngSwitch]="col.field">
-        <ng-container *ngSwitchCase="'__index'">小計</ng-container>
-        <ng-container *ngSwitchDefault>
-          <ng-container *ngIf="subtotalFields.includes(col.field)">
-            {{ getSubtotal(group.rows, col.field) }}
-          </ng-container>
-        </ng-container>
-      </ng-container>
-    </td>
-  </tr>
-  <tr *ngIf="group.showTotal" class="font-semibold bg-orange-200">
-    <td *ngFor="let col of selectedColumns" class="text-center" [ngClass]="col.style">
-      <ng-container [ngSwitch]="col.field">
-        <ng-container *ngSwitchCase="'__index'">總計</ng-container>
-        <ng-container *ngSwitchDefault>
-          <ng-container *ngIf="subtotalFields.includes(col.field)">
-            {{ getSubtotal(group.rows, col.field) }}
-          </ng-container>
-        </ng-container>
-      </ng-container>
-    </td>
-  </tr>
-</ng-template>
-  </p-table>
+        <!-- 表尾：小計 or 總計 -->
+        <ng-template pTemplate="footer">
+          <tr *ngIf="group.showSubtotal" class="font-semibold bg-yellow-100">
+            <td
+              *ngFor="let col of selectedColumns"
+              class="text-center"
+              [ngClass]="col.style"
+            >
+              <ng-container [ngSwitch]="col.field">
+                <ng-container *ngSwitchCase="'__index'">小計</ng-container>
+                <ng-container *ngSwitchDefault>
+                  <ng-container *ngIf="subtotalFields.includes(col.field)">
+                    {{ getSubtotal(group.rows, col.field) }}
+                  </ng-container>
+                </ng-container>
+              </ng-container>
+            </td>
+          </tr>
+          <tr *ngIf="group.showTotal" class="font-semibold bg-orange-200">
+            <td
+              *ngFor="let col of selectedColumns"
+              class="text-center"
+              [ngClass]="col.style"
+            >
+              <ng-container [ngSwitch]="col.field">
+                <ng-container *ngSwitchCase="'__index'">總計</ng-container>
+                <ng-container *ngSwitchDefault>
+                  <ng-container *ngIf="subtotalFields.includes(col.field)">
+                    {{ getSubtotal(group.rows, col.field) }}
+                  </ng-container>
+                </ng-container>
+              </ng-container>
+            </td>
+          </tr>
+        </ng-template>
+      </p-table>
     </div>
   </div>
-
-
 </div>
