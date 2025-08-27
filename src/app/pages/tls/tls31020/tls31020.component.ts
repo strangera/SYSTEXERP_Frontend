@@ -43,6 +43,7 @@ import { TLS31020Response } from '@service/api/tls/tls31020.service';
   ]
 })
 
+//
 export class TLS31020Component extends BasicQueryPageComponent<TLS31020Response> implements OnInit{
   queryForm = this.formBuilder.nonNullable.group({
     TXN_Date: [yesterday],//交易日期 (要支援區間，待進行)
