@@ -161,7 +161,7 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
     },
     { field: 'tlt_bdate', header: '合約起始日', type: 'date', editable: true, },
     { field: 'tlt_edate', header: '合約終止日', type: 'date', editable: true, },
-    { field: 'extra_rate', header: '抽成率', type: 'number', editable: true, allowDecimal: true, decimalPlaces: 4 }
+    { field: 'cag_charge_rate', header: '抽成率', type: 'number', editable: true, allowDecimal: true, decimalPlaces: 4 }
   ];
 
   annualColumns: ColumnDef[] = [
@@ -2146,32 +2146,38 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
 
     switch (currentTab) {
       case 'discount':
-        const discountItem = parentData.discountSettingItems.find(d => d.id === detail.id);
-        if (discountItem) {
-          discountItem._status = 'deleted';
-          console.log(`✅ 已標記 discountSettingItems 中的項目為已刪除`);
-        } else {
-          console.warn(`⚠️ 在 discountSettingItems 中找不到項目 ${detail.id}`);
+        {
+          const discountItem = parentData.discountSettingItems.find(d => d.id === detail.id);
+          if (discountItem) {
+            discountItem._status = 'deleted';
+            console.log(`✅ 已標記 discountSettingItems 中的項目為已刪除`);
+          } else {
+            console.warn(`⚠️ 在 discountSettingItems 中找不到項目 ${detail.id}`);
+          }
+          break;
         }
-        break;
       case 'annual':
-        const annualItem = parentData.annualPerformanceItems.find(d => d.id === detail.id);
-        if (annualItem) {
-          annualItem._status = 'deleted';
-          console.log(`✅ 已標記 annualPerformanceItems 中的項目為已刪除`);
-        } else {
-          console.warn(`⚠️ 在 annualPerformanceItems 中找不到項目 ${detail.id}`);
+        {
+          const annualItem = parentData.annualPerformanceItems.find(d => d.id === detail.id);
+          if (annualItem) {
+            annualItem._status = 'deleted';
+            console.log(`✅ 已標記 annualPerformanceItems 中的項目為已刪除`);
+          } else {
+            console.warn(`⚠️ 在 annualPerformanceItems 中找不到項目 ${detail.id}`);
+          }
+          break;
         }
-        break;
       case 'level':
-        const levelItem = parentData.discountLevelItems.find(d => d.id === detail.id);
-        if (levelItem) {
-          levelItem._status = 'deleted';
-          console.log(`✅ 已標記 discountLevelItems 中的項目為已刪除`);
-        } else {
-          console.warn(`⚠️ 在 discountLevelItems 中找不到項目 ${detail.id}`);
+        {
+          const levelItem = parentData.discountLevelItems.find(d => d.id === detail.id);
+          if (levelItem) {
+            levelItem._status = 'deleted';
+            console.log(`✅ 已標記 discountLevelItems 中的項目為已刪除`);
+          } else {
+            console.warn(`⚠️ 在 discountLevelItems 中找不到項目 ${detail.id}`);
+          }
+          break;
         }
-        break;
     }
   }
 
