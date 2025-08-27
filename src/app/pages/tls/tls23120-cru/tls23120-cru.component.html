@@ -4,72 +4,49 @@
     <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
   </div>
 
-  <!-- 工具列區 -->
-  <div class="flex flex-wrap justify-between items-center gap-3 mb-3">
-    <div class="flex items-center gap-2"></div>
+<!-- 工具列區 -->
+<div class="flex flex-wrap items-center justify-start gap-1 mb-3 toolbar">
+  <!-- （刪掉這個空的占位 div） -->
+  <!-- <div class="flex items-center gap-2"></div> -->
 
-    <p-dialog header="調整每表格列數" [(visible)]="showRowsPerTableDialog">
-      <input
-        type="number"
-        [(ngModel)]="tempRowsPerTable"
-        min="1"
-        class="p-inputtext p-component"
-      />
-      <button
-        pButton
-        label="套用"
-        (click)="applyRowsPerTableChange()"
-        class="p-button-sm p-button-success"
-      ></button>
-    </p-dialog>
+  <div class="flex items-center flex-wrap gap-1">
+    <button
+      pButton
+      type="button"
+      label="匯出 PDF"
+      icon="pi pi-file-pdf"
+      (click)="exportPDF('l')"
+      class="p-button-sm p-button-danger"
+    ></button>
 
-    <div class="flex items-center flex-wrap gap-2">
-      <button
-        pButton
-        type="button"
-        label="顯示欄位"
-        icon="pi pi-eye"
-        (click)="showColumnDialog = true"
-        class="p-button-sm p-button-info"
-      ></button>
+    <button
+      pButton
+      type="button"
+      label="匯出 Excel"
+      icon="pi pi-file-excel"
+      (click)="exportExcel()"
+      class="p-button-sm p-button-success"
+    ></button>
 
-      <button
-        pButton
-        type="button"
-        label="匯出 PDF"
-        icon="pi pi-file-pdf"
-        (click)="exportPDF('l')"
-        class="p-button-sm p-button-danger"
-      ></button>
+    <button
+      pButton
+      type="button"
+      label="列印"
+      icon="pi pi-print"
+      (click)="printPage()"
+      class="p-button-sm p-button-secondary"
+    ></button>
 
-      <button
-        pButton
-        type="button"
-        label="匯出 Excel"
-        icon="pi pi-file-excel"
-        (click)="exportExcel()"
-        class="p-button-sm p-button-success"
-      ></button>
-
-      <button
-        pButton
-        type="button"
-        label="列印"
-        icon="pi pi-print"
-        (click)="printPage()"
-        class="p-button-sm p-button-secondary"
-      ></button>
-
-      <button
-        pButton
-        type="button"
-        icon="pi pi-arrow-left"
-        label="回上頁"
-        class="p-button-sm p-button-secondary"
-        (click)="goBack()"
-      ></button>
-    </div>
+    <button
+      pButton
+      type="button"
+      icon="pi pi-arrow-left"
+      label="回上頁"
+      class="p-button-sm p-button-secondary"
+      (click)="goBack()"
+    ></button>
   </div>
+</div>
 
   <!-- 群組資料表區塊 -->
   <div id="print-section" class="grouped-view">
