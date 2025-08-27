@@ -57,7 +57,6 @@
         <!-- 左：鍵盤設定明細 -->
         <div class="col-12 md:col-8">
           <p-panel header="鍵盤設定明細">
-            <!-- 左上角分頁 -->
             <p-tabView
               [activeIndex]="dataForm.controls.activePage.value"
               (onChange)="onTabChange($event)"
@@ -72,7 +71,6 @@
                   [style.gridTemplateColumns]="'repeat(' + xCount + ', 1fr)'"
                   [style.gridTemplateRows]="'repeat(' + yCount + ', 60px)'"
                 >
-                  <!-- 重點：用 visibleKeys，而不是整個 keys -->
                   <button
                     *ngFor="let k of visibleKeys"
                     type="button"
@@ -92,7 +90,7 @@
           </p-panel>
         </div>
 
-        <!-- 右：頁數/按鈕/分頁切換 + 功能代碼/名稱 -->
+        <!-- 右：設定區 -->
         <div class="col-12 md:col-4">
           <div class="grid">
             <div class="col-12 md:col-4">
@@ -106,6 +104,7 @@
                 [submitted]="submitted"
               ></app-dropdown>
             </div>
+
             <div class="col-12 md:col-4">
               <app-input-text
                 label="按鈕"
@@ -164,13 +163,21 @@
             </div>
 
             <div class="col-12" *ngIf="selectedTab === 'button'">
-              <app-dropdown
-                label="按鍵顏色"
-                [control]="dataForm.controls.KB_Color"
-                [options]="KB_ColorOptions"
-                optionLabel="label"
-                optionValue="value"
-              ></app-dropdown>
+              <label for="kb-color">按鍵顏色</label>
+              <div class="flex align-items-center gap-2">
+                <input
+                  id="kb-color"
+                  type="text"
+                  class="p-inputtext p-component"
+                  [value]="dataForm.controls.KB_Color.value"
+                  readonly
+                />
+                <p-colorPicker
+                  formControlName="color"
+                  appendTo="body"
+                  format="rgb"
+                />
+              </div>
             </div>
 
             <div class="col-12" *ngIf="selectedTab === 'button'">
@@ -182,6 +189,7 @@
                 optionValue="value"
               ></app-dropdown>
             </div>
+
             <!-- 字型分頁 -->
             <div class="col-12" *ngIf="selectedTab === 'font'">
               <app-dropdown
@@ -193,6 +201,7 @@
                 [showClear]="true"
               ></app-dropdown>
             </div>
+
             <div class="col-12" *ngIf="selectedTab === 'font'">
               <app-dropdown
                 label="顯示字型大小"
@@ -203,16 +212,26 @@
                 [showClear]="true"
               ></app-dropdown>
             </div>
+
             <div class="col-12" *ngIf="selectedTab === 'font'">
-              <app-dropdown
-                label="字型顏色"
-                [control]="dataForm.controls.KB_FontColor"
-                [options]="KB_FontColorOptions"
-                optionLabel="label"
-                optionValue="value"
-                [showClear]="true"
-              ></app-dropdown>
+              <label for="KB_FontColor">字型顏色</label>
+              <div class="flex align-items-center gap-2">
+                <input
+                  id="KB_FontColor"
+                  type="text"
+                  class="p-inputtext p-component"
+                  [value]="dataForm.controls.KB_FontColor.value"
+                  readonly
+                />
+                <p-colorPicker
+                  formControlName="FontColor"
+                  appendTo="body"
+                  format="rgb"
+                />
+              </div>
             </div>
+
+            <!-- 其他分頁 -->
             <div class="col-12" *ngIf="selectedTab === 'other'">
               <app-input-text
                 label="參數1"

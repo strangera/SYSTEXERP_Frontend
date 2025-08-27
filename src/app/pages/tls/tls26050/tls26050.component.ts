@@ -36,6 +36,19 @@ import { CustomFooterTableComponent } from '@shared/componentkit/custom-footer-t
   imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputTextComponent, CalendarRangeComponent, TableComponent, TranslateModule, RadiobuttonComponent, CalendarComponent, InputNumberComponent, DropdownComponent, NgIf, MultiSelectComponent, CalendarRangeQuickComponent, CustomFooterTableComponent]
 })
 export class TLS26050Component extends BasicQueryPageComponent<TLS26050Data> implements OnInit {
+  readonly today: Date = (() => {
+    const d = new Date();
+    d.setHours(0, 0, 0, 0);
+    return d;
+  })();
+
+  readonly yesterday: Date = (() => {
+    const d = new Date();
+    d.setHours(0, 0, 0, 0);
+    d.setDate(d.getDate() - 1);
+    return d;
+  })();
+
   queryForm = this.formBuilder.group({
     // 日期查詢條件（單選報表類型）
     reportType: ['1'], // 報表類型
@@ -45,20 +58,20 @@ export class TLS26050Component extends BasicQueryPageComponent<TLS26050Data> imp
     tlt_kind: [null], // 櫃別
     org_id: [null], // 組織代號
     tlt_term_type: [null], // 抽成別
-    onedatedd: ['2024/12/12'], // 日期（日報表）
-    onedatedd_c: [null], // 比較日期（日報表）
+    onedatedd: [this.today, Validators.required], // 日期（日報表）
+    onedatedd_c: [this.yesterday, Validators.required], // 比較日期（日報表）
     onedateyy: [null], // 年度（週/半年/年報表）
     weeks: [null], // 週數
     onedatemm: [null], // 年月（月報表）
     halfyear_onedateyy: [null], // 半年報表年度
     halfyear: [null], // 半年別
     year_onedateyy: [null], // 年報表年度
-    startdate: [null], // 開始日期
-    enddate: [null], // 結束日期
+    startdate: [null as string | null], // 開始日期
+    enddate: [null as string | null], // 結束日期
     onedateyy_c: [null], // 比較年度（週報表）
     weeks_c: [null], // 比較週數
-    startdate_c: [null], // 比較開始日期（週報表用）
-    enddate_c: [null], // 比較結束日期（週報表用）
+    startdate_c: [null as string | null], // 比較開始日期（週報表用）
+    enddate_c: [null as string | null], // 比較結束日期（週報表用）
     onedatemm_c: [null], // 比較年月（月報表）
     halfyear_onedateyy_c: [null], // 比較半年報表年度
     halfyear_c: [null], // 比較半年別
@@ -240,5 +253,26 @@ export class TLS26050Component extends BasicQueryPageComponent<TLS26050Data> imp
       { field: 'MonthlyFloorEffect', header: '月坪效', hidden: tax, format: formatAmount, isSubTotal: true, isTotal: true },
       { field: 'nMonthlyFloorEffect', header: '月坪效', hidden: !tax, format: formatAmount, isSubTotal: true, isTotal: true }
     ]
+  }
+
+  queryWeek(event: string, baseOrCompare: 'base' | 'compare') {
+    const control = this.queryForm.controls[baseOrCompare === 'base' ? 'onedateyy' : 'onedateyy_c'];
+    if (!control.value) return;
+    const payload = {
+      onedateyy: this.datePipe.transform(control.value, 'yyyy') ?? '',
+      weeks: event,
+    };
+    this.tls26050Service.queryTLS26050Week(payload).subscribe((response) => {
+      switch (baseOrCompare) {
+        case 'base':
+          this.queryForm.controls['startdate'].setValue(response.Data[0].WeekStart);
+          this.queryForm.controls['enddate'].setValue(response.Data[0].WeekEnd);
+          break;
+        case 'compare':
+          this.queryForm.controls['startdate_c'].setValue(response.Data[0].WeekStart);
+          this.queryForm.controls['enddate_c'].setValue(response.Data[0].WeekEnd);
+          break;
+      }
+    });
   }
 }

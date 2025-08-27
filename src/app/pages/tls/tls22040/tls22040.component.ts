@@ -118,6 +118,14 @@ export class TLS22040Component extends BasicQueryPageComponent<any> implements O
   override onDetail(row: any): void {
     console.log('電子發票上送筆數檢核表 被點擊:', row);
 
+    // 差異筆數為 0 -> 禁止進入明細
+    if (!row.DiffNum || row.DiffNum === 0) {
+      console.warn('DiffNum 為 0，不允許檢視明細');
+      // 這邊如果你有通知元件可以用，例如：
+      // this.notificationService.warn('此筆資料無差異，不可檢視明細');
+      return;
+    }
+
     const formatDateForDetail = (dateStr: string) =>
       dateStr ? dateStr.replace(/-/g, '/') : '';
 
@@ -129,7 +137,7 @@ export class TLS22040Component extends BasicQueryPageComponent<any> implements O
       Offset: 0,
       SortBy: [],
       TXN_Date: formatDateForDetail(row.TXN_Date), // 轉回 yyyy/MM/dd
-      MIG_Type: row.MIG_Type
+      MIG_Type: row.MIG_Type,
     };
 
     this.tls22040Service.queryTLS22040_Detail(payload).subscribe({
@@ -138,14 +146,14 @@ export class TLS22040Component extends BasicQueryPageComponent<any> implements O
 
         const rowdataWithDetail = {
           ...row,
-          details: detailData
+          details: detailData,
         };
 
         this.navigateWithState(CRUDStatus.Edit, rowdataWithDetail);
       },
       error: (err) => {
         console.error('查詢 TLS22040 明細失敗:', err);
-      }
+      },
     });
   }
 

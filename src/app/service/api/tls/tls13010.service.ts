@@ -10,6 +10,18 @@ interface TLS13010FareRequest {
   showAll: boolean;
 }
 
+interface APPROVE_TLS13010Request {
+  talentId: string;
+}
+
+interface UNAPPROVE_TLS13010Request {
+  talentId: string;
+}
+
+interface VOID_TLS13010Request {
+  talentId: string;
+}
+
 @Injectable({
   providedIn: 'root',
 })
@@ -136,6 +148,27 @@ export class TLS13010Service {
         console.error('❌ TLS13010Service: 提交契約資料失敗:', error);
         return this.errorHandler.handleError(error);
       })
+    );
+  }
+
+  /** 審核 */
+  approveTLS13010(request: APPROVE_TLS13010Request) {
+    return this.http.post<any>(`${this.apiUrl}/TLS0000/TLS1000/approveTLS13010`, request).pipe(
+      tap((res) => console.log('審核結果:', res)),
+    );
+  }
+
+  /** 反審核 */
+  unapproveTLS13010(request: UNAPPROVE_TLS13010Request) {
+    return this.http.post<any>(`${this.apiUrl}/TLS0000/TLS1000/unapproveTLS13010`, request).pipe(
+      tap((res) => console.log('反審核結果:', res)),
+    );
+  }
+
+  /** 作廢 */
+  voidTLS13010(request: VOID_TLS13010Request) {
+    return this.http.post<any>(`${this.apiUrl}/TLS0000/TLS1000/voidTLS13010`, request).pipe(
+      tap((res) => console.log('作廢結果:', res)),
     );
   }
 }
