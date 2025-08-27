@@ -98,7 +98,7 @@
               [submitted]="submitted"
             ></app-multi-select>
           </div>
-
+<!-- 
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown
               label="交易附屬型態"
@@ -109,7 +109,7 @@
               [control]="queryForm.controls.TXN_Subtype"
               [submitted]="submitted"
             ></app-dropdown>
-          </div>
+          </div> -->
 
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown
@@ -267,6 +267,7 @@
       (edit)="onEdit($event)"
       (detail)="onDetail($event)"
       [showCheckBox]="false"
+      [showReportMode]="false"
       [showManage]="false"
       [multiSortMeta]="[{ field: 'ECR_No', order: 1 }]"
       [totalRecords]="totalRecords"
@@ -279,6 +280,7 @@
       [expansionDataKey]="'details'"
       [expansionLoadFn]="loadDetails"
       [isRowSelectable]="isRowSelectable"
+      
     >
       <!-- ✅ 匯出按鈕放這裡 -->
       <header>

@@ -64,7 +64,7 @@ export class TLS23130Component extends BasicQueryPageComponent<any> {
   // ---- 排序狀態 ----
   sortMeta: any[] = [];
   readonly defaultSort: any[] = [
-    { field: 'BNK_No', order: 1 }, // 銀行代號
+    { field: 'TXN_Date', order: 1 }, // 銀行代號
   ];
   private lastQuerySig: string | null = null;
   private lazyTimer: any = null;
@@ -81,7 +81,7 @@ export class TLS23130Component extends BasicQueryPageComponent<any> {
     tlt_building: [],
     tlt_floor:    [],
     org_id:       [],
-    ...createPaginationConfig([{ field: 'BNK_No', order: 1 }]),
+    ...createPaginationConfig([{ field: 'TXN_Date', order: 1 }]),
   });
 
   organizationOptions: any[] = [];
