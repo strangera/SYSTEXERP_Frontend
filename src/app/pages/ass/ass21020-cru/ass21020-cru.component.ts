@@ -39,7 +39,7 @@ export class ASS21020CRUComponent extends BasicCruPageComponent<unknown> impleme
   public readonly CRUDStatus = CRUDStatus;
 
   public readonly dataForm = this.formBuilder.nonNullable.group({
-    ENG_MeterNo: new FormControl<string | undefined>(void 0),
+    ENG_MeterNo: new FormControl<number | undefined>(void 0),
     Location_No: new FormControl<string | undefined>(void 0),
     floor_no: new FormControl<string | undefined>(void 0),
     floor_name: new FormControl<string | undefined>(void 0),
@@ -54,22 +54,21 @@ export class ASS21020CRUComponent extends BasicCruPageComponent<unknown> impleme
   private readonly meterNoSignal = toSignal(this.df().ENG_MeterNo.valueChanges);
 
   public readonly meterNoEffect = effect(() => {
-    const meterNo = this.meterNoSignal();
-    if (!meterNo) return;
-    this.service.loadASS21020({ ENG_MeterNo: meterNo || '' });
-    this.service.queryTltByFlag(meterNo);
-    const data = this.service.engMeterNoMap.get(meterNo);
-    if (!data) return;
+    const meterNo = String(this.meterNoSignal());
+    const selected = meterNo && this.service.engMeterNoMap.get(meterNo);
+    selected && this.service.loadASS21020({ ENG_MeterNo: selected.ENG_MeterNo });
+    selected && this.service.queryTltByFlag(selected.ENG_MeterNo);
+    if (!selected) return;
     this.dataForm.patchValue({
-      Location_No: data.Location_No,
-      floor_no: data.Floor_No,
-      floor_name: data.Floor_Desc,
-      floor_cat_no: data.building_No,
-      floor_cat_name: data.building_DESC,
-      x_coord: data.Draw_X,
-      y_coord: data.Draw_Y,
+      Location_No: selected.Location_No,
+      floor_no: selected.Floor_No,
+      floor_name: selected.Floor_Desc,
+      floor_cat_no: selected.building_No,
+      floor_cat_name: selected.building_DESC,
+      x_coord: selected.Draw_X,
+      y_coord: selected.Draw_Y,
     });
-    console.log(`meterNoEffect:`, [meterNo, data]);
+    this.logger.debug(`meterNoEffect:`, [meterNo, selected]);
   });
 
   public readonly columns: Column[] = [
@@ -90,6 +89,8 @@ export class ASS21020CRUComponent extends BasicCruPageComponent<unknown> impleme
 
   public ngOnInit(): void {
     this.initializePage('ASS21010', this.dataForm);
+
+    this.logger.debug(`init:`, [this.rowdata]);
 
     this.service.loadEngType();
     this.service.loadEngMeterNo();
@@ -146,7 +147,7 @@ export class ASS21020CRUComponent extends BasicCruPageComponent<unknown> impleme
 
     //   this.tltTableFiltered.set(Array.from(merged.values(), (i => ({ ...i, Status: i.Status ?? ItemOperationStatus.Original }))));
 
-    //   console.log(`importExcel:`, [event, this.tltTableFiltered]);
+    //   this.logger.debug(`importExcel:`, [event, this.tltTableFiltered]);
     //   this.messageService.successBubble(`匯入成功：新增 ${newCount} 筆資料`);
     // } catch (error) {
     //   console.error('Excel 匯入錯誤:', error);
@@ -160,7 +161,7 @@ export class ASS21020CRUComponent extends BasicCruPageComponent<unknown> impleme
     // const wb = XLSX.utils.book_new();
     // // 建立工作表
     // const ws = XLSX.utils.aoa_to_sheet([['專櫃編號', '專櫃名稱'],]);
-    // console.log(`onExportExcel:`, [wb, ws]);
+    // this.logger.debug(`onExportExcel:`, [wb, ws]);
     // // 將工作表加入工作簿
     // XLSX.utils.book_append_sheet(wb, ws, '專櫃範本');
     // // 生成並下載檔案

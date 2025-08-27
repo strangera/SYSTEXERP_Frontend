@@ -1053,11 +1053,7 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
 
     this.saveFareDataToWorkflow();
 
-    // 🆕 使用狀態服務驗證
-    if (!this.fareStatusService.validateHasSelectedItems(this.originalFareData)) {
-      this.messageService.warnBubble('請至少選擇一個扣款項目');
-      return;
-    }
+
 
     this.router.navigate(['account/tls/tls13010next2']);
   }

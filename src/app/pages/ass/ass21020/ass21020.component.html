@@ -19,30 +19,30 @@
             (ngSubmit)="onSubmit()">
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="能源類型"
-                          controlName="ENG_Type"
-                          [options]="service.engTypeSignal()"
-                          optionLabel="Name"
-                          optionValue="Name"
-                          [control]="qf().ENG_Type"
-                          [submitted]="submitted"></app-dropdown>
+            <app-multi-select label="能源類型"
+                              controlName="ENGType"
+                              [options]="service.engTypeSignal()"
+                              optionLabel="Name"
+                              optionValue="No"
+                              [control]="qf().ENGType"
+                              [submitted]="submitted"></app-multi-select>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown label="錶號"
-                          controlName="ENG_MeterNo"
-                          [options]="service.engMeterNoSignal()"
-                          optionLabel="ENG_MeterNo"
-                          optionValue="ENG_MeterNo"
+                          controlName="No"
+                          [options]="service.engMeterNoDropdownSignal()"
+                          optionLabel="Name"
+                          optionValue="No"
                           [control]="qf().ENG_MeterNo"
                           [submitted]="submitted"></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown label="專櫃編號"
-                          controlName="tlt_no"
-                          [options]="service.tltByFlagSignal()"
-                          optionLabel="TLT_Name"
-                          optionValue="TLT_No"
-                          [control]="qf().tlt_no"
+                          controlName="TLT_No"
+                          [options]="service.tltDropdownSignal()"
+                          optionLabel="Name"
+                          optionValue="No"
+                          [control]="qf().TLT_No"
                           [submitted]="submitted"></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
@@ -54,22 +54,22 @@
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-text label="部別名稱"
-                            controlName="department_name"
-                            [control]="qf().department_name"
+                            controlName="TLT_Name"
+                            [control]="qf().TLT_Name"
                             [disabled]="true"
                             [submitted]="submitted"></app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-text label="營業面積"
-                            controlName="business_area"
-                            [control]="qf().business_area"
+                            controlName="NET_SPACE"
+                            [control]="qf().NET_SPACE"
                             [disabled]="true"
                             [submitted]="submitted"></app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-text label="面積比例(%)"
-                            controlName="business_area_ratio"
-                            [control]="qf().business_area_ratio"
+                            controlName="NET_SPACE_Ratio"
+                            [control]="qf().NET_SPACE_Ratio"
                             [disabled]="true"
                             [submitted]="submitted"></app-input-text>
           </div>
@@ -97,9 +97,13 @@
 
 <div class="card">
   <div class="col-12">
-    <app-table [data]="service.ASS21020Data()"
+    <app-table [showCheckBox]="true"
+               [data]="service.ASS21020Data()"
+               [dataKey]="'ID'"
+               [tableKey]="'ASS21020_Data'"
                [columns]="columns"
                (edit)="onEdit($event)"
+               (delete)="onDelete($event)"
                (detail)="onDetail($event)"></app-table>
   </div>
 </div>

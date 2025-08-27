@@ -9,12 +9,13 @@
       <!-- 上方主表單 -->
       <div class="grid p-fluid">
         <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text
+          <app-input-number
             label="鍵盤編號"
             controlName="USR_Level"
             [control]="dataForm.controls.USR_Level"
             [submitted]="submitted"
-          ></app-input-text>
+            [useGrouping]="false"
+          ></app-input-number>
         </div>
 
         <div class="col-12 md:col-6 lg:col-4">
@@ -22,20 +23,19 @@
             label="收銀畫面名稱"
             controlName="TSB_Name"
             [options]="TSB_NameOptions"
-            optionLabel="label"
-            optionValue="value"
+            optionLabel="Name"
+            optionValue="No"
             [control]="dataForm.controls.TSB_Name"
             [submitted]="submitted"
           ></app-dropdown>
         </div>
-
         <div class="col-12 md:col-6 lg:col-4">
           <app-dropdown
             label="鍵盤型態"
             controlName="ECR_KBType"
             [options]="ECR_KBTypeOptions"
-            optionLabel="label"
-            optionValue="value"
+            optionLabel="Name"
+            optionValue="No"
             [control]="dataForm.controls.ECR_KBType"
             [submitted]="submitted"
           ></app-dropdown>
@@ -93,7 +93,7 @@
         <!-- 右：設定區 -->
         <div class="col-12 md:col-4">
           <div class="grid">
-            <div class="col-12 md:col-4">
+            <div class="col-12">
               <app-dropdown
                 label="頁數"
                 controlName="KG_KeyPage"
@@ -105,12 +105,16 @@
               ></app-dropdown>
             </div>
 
-            <div class="col-12 md:col-4">
-              <app-input-text
+            <div class="col-12">
+              <app-dropdown
                 label="按鈕"
                 controlName="KG_button"
+                [options]="KG_buttonOptions"
+                optionLabel="label"
+                optionValue="code"
                 [control]="dataForm.controls.KG_button"
-              ></app-input-text>
+                [submitted]="submitted"
+              ></app-dropdown>
             </div>
 
             <div class="col-12">

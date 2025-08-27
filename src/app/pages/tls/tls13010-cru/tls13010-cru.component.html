@@ -287,6 +287,18 @@
                 [control]="dataForm.controls.expiration_fees" [submitted]="submitted"></app-input-number>
             </div>
             <div class="col-12 md:col-6 lg:col-4">
+              <app-input-text label="保證金備註" controlName="ticket_remarks" [control]="dataForm.controls.ticket_remarks"
+                [submitted]="submitted"></app-input-text>
+            </div>
+            <div class="col-12 md:col-6 lg:col-4">
+              <app-input-text label="結帳後幾日付款" controlName="check_day" [control]="dataForm.controls.check_day"
+                [submitted]="submitted"></app-input-text>
+            </div>
+            <div class="col-12 md:col-6 lg:col-4">
+              <app-dropdown label="請款單據別" controlName="invoice_type" [options]="invoiceTypeOptions" optionLabel="label"
+                optionValue="value" [control]="dataForm.controls.invoice_type" [submitted]="submitted"></app-dropdown>
+            </div>
+            <div class="col-12 md:col-6 lg:col-4">
               <app-radiobutton label="水錶抄錶" groupname="waterFlag" [control]="dataForm.controls.water_flag"
                 [options]="meterReadingOptions" [submitted]="submitted"></app-radiobutton>
             </div>
@@ -299,18 +311,6 @@
             <div class="col-12 md:col-6 lg:col-4">
               <app-radiobutton label="瓦斯錶抄錶" groupname="gasFlag" [control]="dataForm.controls.gas_flag"
                 [options]="meterReadingOptions" [submitted]="submitted"></app-radiobutton>
-            </div>
-            <div class="col-12 md:col-6 lg:col-4">
-              <app-input-text label="保證金備註" controlName="ticket_remarks" [control]="dataForm.controls.ticket_remarks"
-                [submitted]="submitted"></app-input-text>
-            </div>
-            <div class="col-12 md:col-6 lg:col-4">
-              <app-input-text label="結帳後幾日付款" controlName="check_day" [control]="dataForm.controls.check_day"
-                [submitted]="submitted"></app-input-text>
-            </div>
-            <div class="col-12 md:col-6 lg:col-4">
-              <app-dropdown label="請款單據別" controlName="invoice_type" [options]="invoiceTypeOptions" optionLabel="label"
-                optionValue="value" [control]="dataForm.controls.invoice_type" [submitted]="submitted"></app-dropdown>
             </div>
           </div>
         </form>

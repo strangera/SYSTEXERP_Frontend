@@ -2542,6 +2542,9 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
     // 是否為抽成驗證
     this.updateCommissionValidators(tltTermType ?? '');
 
+    // 超出部份處理方式驗證
+    this.updateOverallStatusValidators(tltTermType ?? '');
+
     // 觸發表單驗證重新計算
     this.dataForm.updateValueAndValidity();
   }
@@ -2795,12 +2798,33 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
     return '';
   }
 
+  private updateOverallStatusValidators(tltTermType: string): void {
+    const overallStatusControl = this.dataForm.get('overall_status');
+
+    if (!overallStatusControl) return;
+
+    // 清除現有驗證器
+    overallStatusControl.clearValidators();
+
+    // 包底抽成(4)、階梯式抽成(5)、包底加階梯(6) 需要選擇超出部份處理方式
+    if (['4', '5', '6'].includes(tltTermType)) {
+      overallStatusControl.setValidators([Validators.required]);
+      console.log('✅ 超出部份處理方式設為必填');
+    } else {
+      console.log('ℹ️ 超出部份處理方式設為非必填');
+    }
+
+    overallStatusControl.updateValueAndValidity();
+  }
+
+
   /**
    * 🎯 新增：根據欄位獲取必填錯誤訊息
    */
   private getRequiredErrorMessage(fieldName: string): string {
     const requiredMessages: { [key: string]: string } = {
       'tlt_ctype_mtotal': '當前抽成別需要選擇包底類別',
+      'overall_status': '當前抽成別需要選擇超出部份處理方式',
       'base_rent': '預收租金為是時固定租金為必填',
       'CHECK_TITLE': '支票付款時票據抬頭為必填',
       'bank_id': '匯款付款時銀行代號為必填',
