@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { DatePipe } from '@angular/common';
+import { CommonModule, DatePipe } from '@angular/common';
 import { finalize } from 'rxjs';
 import { FIN15010Service, FIN15010Data, FIN15010QueryRequest, FIN15010PrintRequest } from '../../../service/api/fin/fin15010.service';
 import { ValidationService } from '../../../shared/service/validation.service';
@@ -32,7 +32,7 @@ export interface Option {
   templateUrl: './fin15010.component.html',
   styleUrl: './fin15010.component.scss',
   standalone: true,
-  imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputTextRangeComponent, CalendarRangeComponent, InputTextComponent, TableComponent, TranslateModule, MultiSelectComponent, DropdownComponent, CalendarComponent, TableComponent]
+  imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputTextRangeComponent, CalendarRangeComponent, InputTextComponent, TableComponent, TranslateModule, MultiSelectComponent, DropdownComponent, CalendarComponent, TableComponent, CommonModule]
 })
 export class FIN15010Component extends BasicQueryPageComponent<FIN15010Data> implements OnInit {
   queryForm = this.formBuilder.group({
