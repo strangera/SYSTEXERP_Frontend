@@ -85,6 +85,11 @@ export class Sys0110Service {
     return this.http.post<ApiResponse<UserData[]>>(`${this.apiUrl}/queryUser`, body);
   }
 
+  // 查詢 SYS3700 資料表
+  queryUserDetail(body: any): Observable<ApiResponse<UserData[]>> {
+    return this.http.post<ApiResponse<UserData[]>>(`${this.apiUrl}/queryUserDetail`, body);
+  }
+
   // 新增 tblUser 資料表
   createUser(body: any): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/createUser`, body);
