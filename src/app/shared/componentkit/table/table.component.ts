@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Component, EventEmitter, Input, OnChanges, Output, SimpleChanges, ViewChild } from '@angular/core';
-import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
+import { DomSanitizer, SafeHtml, SafeUrl } from '@angular/platform-browser';
 import { SortMeta } from 'primeng/api';
 import { AutoCompleteCompleteEvent } from 'primeng/autocomplete';
 import { FileSelectEvent } from 'primeng/fileupload';
@@ -8,10 +8,9 @@ import { MultiSelectChangeEvent } from 'primeng/multiselect';
 import { Table, TableColumnReorderEvent, TableLazyLoadEvent, TablePageEvent, TableRowSelectEvent, TableRowUnSelectEvent } from 'primeng/table';
 import { Observable } from 'rxjs';
 import { BasicPrintDataComponent } from '../../componentextends/basic-print/basic-print-data.component';
-import { AddButton, Column, ColumnGroup, FieldChangeEvent, LazyLoadEvent, RowEditSaveEvent } from './table.model';
 import { COMMON_IMPORTS } from './import-table';
 import { TableUtilityService } from './table-utility.service';
-import { SafeUrl } from '@angular/platform-browser';
+import { AddButton, Column, ColumnGroup, FieldChangeEvent, LazyLoadEvent, RowEditSaveEvent } from './table.model';
 
 @Component({
   selector: 'app-table',
@@ -40,6 +39,7 @@ export class TableComponent extends BasicPrintDataComponent implements OnChanges
   @Input() selectedItems: any = [];                                             // table 已勾選資料
   @Input() isRowSelectable: (rowData: any) => boolean | undefined = () => true; // 可選擇(條件)
   @Output() selectionChange = new EventEmitter<any>();                          // 資料變更(事件)
+  @Output() selectedItemsChange = new EventEmitter<any>();                      // 資料變更(雙向綁定用)
   @Output() select = new EventEmitter<TableRowSelectEvent>();                   // 資料勾選(事件)
   @Output() unSelect = new EventEmitter<TableRowUnSelectEvent>();               // 資料取消勾選(事件)
   @Output() itemClick = new EventEmitter<any>();                                // 資料點選(事件)
@@ -148,8 +148,9 @@ export class TableComponent extends BasicPrintDataComponent implements OnChanges
     if (changes['data']) {
       setTimeout(() => {
         this.dt.totalRecords = this.totalRecords !== 0 ? this.totalRecords : this.data.length;
-        this.selectedItems = []
+        this.selectedItems = [];
         this.selectionChange.emit(this.selectedItems);
+        this.selectedItemsChange.emit(this.selectedItems);
       });
     }
     // 僅在 columns 首次被設定時執行初始化邏輯// 這樣就不會在每次 data 變動時都重置 filter 狀態
@@ -214,6 +215,7 @@ export class TableComponent extends BasicPrintDataComponent implements OnChanges
     this.rowEditInit.emit(rowData); // 發射事件
     this.selectedItems = [];
     this.selectionChange.emit(this.selectedItems);
+    this.selectedItemsChange.emit(this.selectedItems);
   }
   // 行編輯保存
   onRowEditSave(rowData: any, ri: number, htmlTableRowElement: HTMLTableRowElement) {
@@ -288,6 +290,7 @@ export class TableComponent extends BasicPrintDataComponent implements OnChanges
     const selected = Array.isArray(event) ? event : event ? [event] : [];
     this.selectedItems = selected.filter((item: any) => this.isRowSelectable(item));
     this.selectionChange.emit(this.selectedItems);
+    this.selectedItemsChange.emit(this.selectedItems);
   }
   // (欄位是Dropdown使用): 獲取Dropdown的選項，支持function加入或直接給List
   getOptions(rowData: any, col: Column) { return typeof col.options === 'function' ? (col.options(rowData) || undefined) : col.options || undefined; }

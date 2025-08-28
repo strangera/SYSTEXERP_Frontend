@@ -7,32 +7,35 @@ import { ASS21020Service } from '@service/api/ass/ass21020.service';
 import { MenubarComponent } from '@shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '@shared/componentkit/button/button.component';
-import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
+import { DialogComponent } from '@shared/componentkit/dialog/dialog.component';
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
 import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
 import { TableComponent } from '@shared/componentkit/table/table.component';
 import { Column, createPaginationConfig } from '@shared/componentkit/table/table.model';
 import { NGXLogger } from 'ngx-logger';
 import { AccordionModule } from 'primeng/accordion';
+import { KeyFilterModule } from 'primeng/keyfilter';
 import { PanelModule } from 'primeng/panel';
-import { ASS21020Data } from './ass21020.model';
+import { ASS2100ENGMeterType } from '../ass21010/ass21010.model';
+import { ASS21020Data, TLTByFlag } from './ass21020.model';
 
 @Component({
   selector: 'app-ass21020',
   templateUrl: './ass21020.component.html',
   styleUrl: './ass21020.component.scss',
-  standalone: true,
+  standalone: !0,
   imports: [
     PanelModule,
     AccordionModule,
     TranslateModule,
     FormsModule,
-    ReactiveFormsModule,
-    InputTextComponent,
-    DropdownComponent,
-    MultiSelectComponent,
-    MenubarComponent,
+    KeyFilterModule,
     ButtonComponent,
+    DialogComponent,
+    InputTextComponent,
+    MenubarComponent,
+    MultiSelectComponent,
+    ReactiveFormsModule,
     TableComponent,
   ],
 })
@@ -53,16 +56,26 @@ export class ASS21020Component extends BasicQueryPageComponent<unknown> implemen
   public readonly totalRecord = computed(() => this.service.ASS21020Data().length);
 
   private readonly meterNoSignal = toSignal(this.qf().ENG_MeterNo.valueChanges);
+  private readonly locNoSignal = toSignal(this.qf().Location_No.valueChanges);
   private readonly tltNoSignal = toSignal(this.qf().TLT_No.valueChanges);
+
+  public dialogVisible: boolean | 'meterNo' | 'tltNo' = !1;
+
+  public selectedItemsDialog: (ASS2100ENGMeterType | TLTByFlag)[] = [];
+  public readonly ptn = /(?!)/;
 
   public readonly totalRecords = computed(() => this.service.ASS21020Data().length);
 
   public readonly meterNoEffect = effect(() => {
     const meterNo = this.meterNoSignal();
-    const selected = meterNo && this.service.engMeterNoMap.get(meterNo) || { Location_No: '', ENG_MeterNo: '' };
-    meterNo && this.service.queryTltByFlag(selected.ENG_MeterNo);
-    this.qf().Location_No.patchValue(selected.Location_No);
-    this.logger.debug(`meterNo changes:`, [meterNo, selected]);
+    meterNo?.length && this.service.queryTltByFlag(meterNo);
+    this.logger.debug(`meterNo changes:`, [meterNo]);
+  });
+
+  public readonly locNoEffect = effect(() => {
+    const locNo = this.locNoSignal();
+    locNo?.length && this.qf().Location_No.patchValue(locNo);
+    this.logger.debug(`locNo changes:`, [locNo]);
   });
 
   public readonly tltNoEffect = effect(() => {
@@ -95,6 +108,19 @@ export class ASS21020Component extends BasicQueryPageComponent<unknown> implemen
     { field: 'UPD_USR_Name', header: '變更人員名稱' },
   ];
 
+  public readonly meterColumns: Column[] = [
+    { field: 'ENG_MeterNo', header: '錶號' },
+    { field: 'Location_No', header: '設備位置編號' },
+    { field: 'ENG_Type', header: '能源類型' },
+  ];
+
+  public tltNoColumns: Column[] = [
+    { field: 'TLT_No', header: '專櫃編號' },
+    { field: 'TLT_Name', header: '專櫃名稱' },
+    { field: 'NET_SPACE', header: '專櫃面積坪數' },
+    { field: 'Apply_No', header: '招募編號' },
+  ];
+
   constructor(
     public readonly service: ASS21020Service,
     private readonly logger: NGXLogger,
@@ -113,8 +139,8 @@ export class ASS21020Component extends BasicQueryPageComponent<unknown> implemen
     this.handleSubmit(this.queryForm, () => {
       this.service.loadASS21020({
         EngTypes: this.qf().ENGType.value?.join() ?? '',
-        ENG_MeterNo: this.service.engMeterNoMap.get(this.qf().ENG_MeterNo.value!)?.ENG_MeterNo ?? '',
-        Location_No: this.service.engMeterNoMap.get(this.qf().ENG_MeterNo.value!)?.Location_No ?? '',
+        ENG_MeterNo: this.qf().ENG_MeterNo.value ?? '',
+        Location_No: this.qf().Location_No.value ?? '',
         SYS_StoreNo: this.authService.currentUserValue?.SYS_StoreNo ?? '',
         Mid: Number(this.authService.currentUserValue?.mid) ?? 0,
       });
@@ -135,5 +161,32 @@ export class ASS21020Component extends BasicQueryPageComponent<unknown> implemen
         this.loading = !1;
       },
     });
+  }
+
+  public onSaveDialog(): void {
+    this.logger.debug(`Saving ${this.dialogVisible} dialog:`, [this.selectedItemsDialog]);
+    if (this.dialogVisible === 'meterNo') {
+      const d = this.selectedItemsDialog[0] as ASS2100ENGMeterType;
+      this.queryForm.patchValue({
+        ENG_MeterNo: d?.ENG_MeterNo ?? '',
+        Location_No: d?.Location_No ?? '',
+      });
+      this.qf().TLT_No.reset();
+    } else if (this.dialogVisible === 'tltNo') {
+      const d = this.selectedItemsDialog[0] as TLTByFlag;
+      this.queryForm.patchValue({
+        TLT_No: d?.TLT_No ?? '',
+      });
+    }
+    this.dialogVisible = !1;
+  }
+
+  public onClearDialog(from: 'meterNo' | 'tltNo'): void {
+    if (from === 'meterNo') {
+      this.qf().ENG_MeterNo.reset();
+      this.qf().Location_No.reset();
+    } else if (from === 'tltNo') {
+      this.qf().TLT_No.reset();
+    }
   }
 }

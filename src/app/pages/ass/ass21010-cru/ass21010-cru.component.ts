@@ -10,12 +10,10 @@ import { ButtonComponent } from '@shared/componentkit/button/button.component';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
 import { InputTextareaComponent } from '@shared/componentkit/input-textarea/input-textarea.component';
-// import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
-// import { TableComponent } from '@shared/componentkit/table/table.component';
-import { Column } from '@shared/componentkit/table/table.model';
 import { CRUDStatus } from '@shared/models/system/CRUDstatus';
 import { NGXLogger } from 'ngx-logger';
 import { PanelModule } from 'primeng/panel';
+import { finalize } from 'rxjs';
 import { ASS21010Data, ASS21010Payload } from '../ass21010/ass21010.model';
 
 @Component({
@@ -34,8 +32,6 @@ import { ASS21010Data, ASS21010Payload } from '../ass21010/ass21010.model';
     InputTextComponent,
     InputTextareaComponent,
     MenubarComponent,
-    // MultiSelectComponent,
-    // TableComponent,
   ]
 })
 export class ASS21010CRUComponent extends BasicCruPageComponent<ASS21010Data> implements OnInit {
@@ -109,9 +105,15 @@ export class ASS21010CRUComponent extends BasicCruPageComponent<ASS21010Data> im
             Mid: Number(this.user.mid),
           };
 
-          this.service.updateASS21010(payload);
-          this.logger.debug(`onSubmit:`, [d, payload]);
-          this.loading = !1;
+          this.service.updateASS21010(payload)
+            .pipe(finalize(() => {
+              this.loading = !1;
+              this.logger.debug(`onSubmit:`, [d, payload]);
+            })).subscribe(res => {
+              if (!res.IsUpdateSuccess) return this.messageService.errorBox(this.isFormCreateable ? '新增失敗\n' + res.ErrorMsg : '更新失敗\n' + res.ErrorMsg);
+              this.isFormCreateable ? this.dataForm.reset() : this.onCancel();
+              this.messageService.successBubble(this.isFormCreateable ? '新增成功' : '更新成功');
+            });
         },
       });
     });

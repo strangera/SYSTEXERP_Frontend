@@ -210,7 +210,7 @@
   </ng-template>
   <ng-template pTemplate="footer" let-columns *ngIf="showTotal">
     <tr *ngFor="let data of footerData">
-      <td class="text-center font-bold">{{data.tlt_building}}</td>
+      <td class="text-center font-bold">{{data.group_name}}</td>
       <td *ngIf="IsPrint && showCheckBox && !rowEditing && selectionMode === 'multiple'"></td>
       <td *ngIf="expansionColumns.length && IsPrint"></td>
       <td *ngFor="let col of columns" class="text-center font-bold pr-2">

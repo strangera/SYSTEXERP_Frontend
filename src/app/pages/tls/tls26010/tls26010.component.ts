@@ -14,6 +14,7 @@ import { TableComponent } from '@shared/componentkit/table/table.component';
 import { AddButton, Column } from '@shared/componentkit/table/table.model';
 import { ApprovalStatus } from '@shared/models/tls/approval-status.model';
 import { AccordionModule } from 'primeng/accordion';
+import { finalize } from 'rxjs';
 import { TLS26010Data, TLS26010Query } from './tls26010.model';
 
 @Component({
@@ -197,9 +198,12 @@ export class TLS26010Component extends BasicQueryPageComponent<TLS26010Data> imp
     this.confirmationService.confirm({
       message: '是否確認刪除選中的預售活動?',
       accept: () => {
-        for (const item of data) this.service.deleteTLS26010(item);
-        this.messageService.successBubble('刪除成功');
-        this.loading = !1;
+        for (const item of data) this.service.deleteTLS26010(item)
+          .pipe(finalize(() => this.loading = !1))
+          .subscribe(res => {
+            if (res.Error) return this.messageService.errorBox('刪除失敗\n' + res.Message);
+            this.messageService.successBubble('刪除成功');
+          });
       },
     });
   }
