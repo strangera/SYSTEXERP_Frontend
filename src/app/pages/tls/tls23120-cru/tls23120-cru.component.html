@@ -4,49 +4,46 @@
     <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
   </div>
 
-<!-- 工具列區 -->
-<div class="flex flex-wrap items-center justify-start gap-1 mb-3 toolbar">
-  <!-- （刪掉這個空的占位 div） -->
-  <!-- <div class="flex items-center gap-2"></div> -->
+  <!-- 工具列區 -->
+  <div class="flex flex-wrap items-center justify-start gap-1 mb-3 toolbar">
+    <div class="flex items-center flex-wrap gap-1">
+      <button
+        pButton
+        type="button"
+        label="匯出 PDF"
+        icon="pi pi-file-pdf"
+        (click)="exportPDF('l')"
+        class="p-button-sm p-button-danger"
+      ></button>
 
-  <div class="flex items-center flex-wrap gap-1">
-    <button
-      pButton
-      type="button"
-      label="匯出 PDF"
-      icon="pi pi-file-pdf"
-      (click)="exportPDF('l')"
-      class="p-button-sm p-button-danger"
-    ></button>
+      <button
+        pButton
+        type="button"
+        label="匯出 Excel"
+        icon="pi pi-file-excel"
+        (click)="exportExcel()"
+        class="p-button-sm p-button-success"
+      ></button>
 
-    <button
-      pButton
-      type="button"
-      label="匯出 Excel"
-      icon="pi pi-file-excel"
-      (click)="exportExcel()"
-      class="p-button-sm p-button-success"
-    ></button>
+      <button
+        pButton
+        type="button"
+        label="列印"
+        icon="pi pi-print"
+        (click)="printPage()"
+        class="p-button-sm p-button-secondary"
+      ></button>
 
-    <button
-      pButton
-      type="button"
-      label="列印"
-      icon="pi pi-print"
-      (click)="printPage()"
-      class="p-button-sm p-button-secondary"
-    ></button>
-
-    <button
-      pButton
-      type="button"
-      icon="pi pi-arrow-left"
-      label="回上頁"
-      class="p-button-sm p-button-secondary"
-      (click)="goBack()"
-    ></button>
+      <button
+        pButton
+        type="button"
+        icon="pi pi-arrow-left"
+        label="回上頁"
+        class="p-button-sm p-button-secondary"
+        (click)="goBack()"
+      ></button>
+    </div>
   </div>
-</div>
 
   <!-- 群組資料表區塊 -->
   <div id="print-section" class="grouped-view">
@@ -57,11 +54,9 @@
       <div *ngIf="group?.rows?.length && !group.showTotal">
         {{ groupByLabel }}：{{ group.tltKey }} / 抽成類別：{{ group.talentKey }}
       </div>
+
       <!-- 標頭 Template -->
       <div class="grid p-fluid" *ngIf="group?.rows?.length">
-        <!-- <div class="col-12 md:col-6 lg:col-4">
-          資料區間：{{ dateStart | date: "yyyy/MM/dd" }} ~ {{ dateEnd | date: "yyyy/MM/dd" }}
-        </div> -->
         <div class="col-12 md:col-6 lg:col-4" *ngIf="showBusType">
           大分類：{{ group.rows[0]?.bus_type }} /
           {{ group.rows[0]?.bus_type_name }}
@@ -90,6 +85,7 @@
           退貨金額：{{ group.rows[0]?.return_amt ?? 0 }}
         </div>
       </div>
+
       <!-- 群組標題 -->
       <div
         class="text-xl font-bold text-blue-600 mb-2"
@@ -105,9 +101,7 @@
         [paginator]="false"
         scrollable="true"
         [style]="{ width: '100%' }"
-        [styleClass]="
-          'p-datatable-sm p-datatable-striped p-datatable-gridlines'
-        "
+        [styleClass]="'p-datatable-sm p-datatable-striped p-datatable-gridlines'"
       >
         <!-- 表頭 -->
         <ng-template pTemplate="header">
@@ -116,12 +110,10 @@
               *ngFor="let col of selectedColumns"
               class="text-center"
               [ngClass]="col.style"
-              [pSortableColumn]="
-                col.field !== '__index' ? col.field : undefined
-              "
+              [pSortableColumn]="col.field !== '__index' ? col.field : undefined"
             >
               {{ col.header }}
-              <p-sortIcon *ngIf="col.field !== '__index'" [field]="col.field" />
+              <p-sortIcon *ngIf="col.field !== '__index'" [field]="col.field"></p-sortIcon>
             </th>
           </tr>
         </ng-template>
@@ -147,44 +139,34 @@
           </tr>
         </ng-template>
 
-      <!-- 表尾：小計 or 總計 -->
-<ng-template pTemplate="footer">
-  <!-- 小計列：背景黃色 -->
-  <tr *ngIf="group.showSubtotal" class="subtotal-row">
-    <td
-      *ngFor="let col of selectedColumns"
-      class="text-center"
-      [ngClass]="col.style"
-    >
-      <ng-container [ngSwitch]="col.field">
-        <ng-container *ngSwitchCase="'__index'">小計</ng-container>
-        <ng-container *ngSwitchDefault>
-          <ng-container *ngIf="subtotalFields.includes(col.field)">
-            {{ getSubtotal(group.rows, col.field) }}
-          </ng-container>
-        </ng-container>
-      </ng-container>
-    </td>
-  </tr>
+        <!-- 表尾：小計 or 總計 -->
+        <ng-template pTemplate="footer">
+          <tr *ngIf="group.showSubtotal" class="subtotal-row">
+            <td *ngFor="let col of selectedColumns" class="text-center" [ngClass]="col.style">
+              <ng-container [ngSwitch]="col.field">
+                <ng-container *ngSwitchCase="'__index'">小計</ng-container>
+                <ng-container *ngSwitchDefault>
+                  <ng-container *ngIf="subtotalFields.includes(col.field)">
+                    {{ getSubtotal(group.rows, col.field) }}
+                  </ng-container>
+                </ng-container>
+              </ng-container>
+            </td>
+          </tr>
 
-  <!-- 總計列：背景藍色 -->
-  <tr *ngIf="group.showTotal" class="total-row">
-    <td
-      *ngFor="let col of selectedColumns"
-      class="text-center"
-      [ngClass]="col.style"
-    >
-      <ng-container [ngSwitch]="col.field">
-        <ng-container *ngSwitchCase="'__index'">總計</ng-container>
-        <ng-container *ngSwitchDefault>
-          <ng-container *ngIf="subtotalFields.includes(col.field)">
-            {{ getSubtotal(group.rows, col.field) }}
-          </ng-container>
-        </ng-container>
-      </ng-container>
-    </td>
-  </tr>
-</ng-template>
+          <tr *ngIf="group.showTotal" class="total-row">
+            <td *ngFor="let col of selectedColumns" class="text-center" [ngClass]="col.style">
+              <ng-container [ngSwitch]="col.field">
+                <ng-container *ngSwitchCase="'__index'">總計</ng-container>
+                <ng-container *ngSwitchDefault>
+                  <ng-container *ngIf="subtotalFields.includes(col.field)">
+                    {{ getSubtotal(group.rows, col.field) }}
+                  </ng-container>
+                </ng-container>
+              </ng-container>
+            </td>
+          </tr>
+        </ng-template>
       </p-table>
     </div>
   </div>
