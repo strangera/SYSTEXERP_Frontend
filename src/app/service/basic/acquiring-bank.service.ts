@@ -13,10 +13,9 @@ export class AcquiringBankService {
 
   // 本地數據的收單銀行選項，使用數字作為 value
   options: any[] = [
-    { value: 1, label: '聯合' },
-    { value: 2, label: '中信' },
-    { value: 3, label: '中信-停車場' },
-    // 可以繼續添加其他選項
+    { value: "1", label: '聯合' },
+    { value: "2", label: '中信' },
+  
   ];
 
   constructor(

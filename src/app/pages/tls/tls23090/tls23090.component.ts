@@ -9,7 +9,6 @@ import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-
 import { CardTypeService } from '../../../service/basic/card-type.service';
 import { TLS23090Service } from '../../../service/api/tls/tls23090.service';
 import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
-
 import { FloorService } from '../../../service/basic/floor.service';
 import { Tls11010Service } from '../../../service/api/tls/tls11010.service';
 import { ECRNoService } from '../../../service/basic/ECRNo.service';
@@ -28,11 +27,7 @@ import { InputTextModule } from 'primeng/inputtext';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { DialogModule } from 'primeng/dialog';
 import { RadioButtonModule } from 'primeng/radiobutton';
-import { PrimeTemplate } from 'primeng/api';
-import { ButtonDirective } from 'primeng/button';
 import { TranslateModule } from '@ngx-translate/core';
-import { Subject, Subscription, of } from 'rxjs';
-import { debounceTime, takeUntil, timeout, catchError } from 'rxjs/operators';
 import { TableComponent } from '@shared/componentkit/table/table.component';
 
 @Component({
@@ -79,8 +74,8 @@ export class TLS23090Component extends BasicQueryPageComponent<any> {
     tlt_building: [],
     tlt_floor: [],
     org_id: [],
-    IPeriod: [],
-    AcqBank: [],
+    TERM_No: [],
+    Acquirer: [[]],
     ConnStatus: [],
     IsHaveTERM_No: [null],
     ...createPaginationConfig([{ field: 'TXN_Date', order: 1 }]),
@@ -94,7 +89,11 @@ export class TLS23090Component extends BasicQueryPageComponent<any> {
   WhetherOptions: any[] = [];
   installmentPeriodOptions: any[] = [];
   acquiringBankOptions: any[] = [];
-  connectionStatusOptions: any[] = [];
+  connectionStatusOptions: any[] = [
+    { value: '1', label: '連線' },
+    { value: '2', label: '離線' }
+  ];
+
 
 
 
@@ -154,8 +153,7 @@ export class TLS23090Component extends BasicQueryPageComponent<any> {
       .getInstallmentPeriods().subscribe((data) => (this.installmentPeriodOptions = data));
     this.acquiringBankService
       .getAcquiringBanks().subscribe((data) => (this.acquiringBankOptions = data));
-    this.connectionStatusService
-      .getConnectionStatusOptions().subscribe((data) => (this.connectionStatusOptions = data));
+   
   }
 
 
@@ -242,8 +240,8 @@ const offset    = pageSize ? Math.max(0, (pageIndex - 1) * pageSize) : 0; // 沒
     // 兩個 API 會用到的剩餘鍵（命名依 CounterCard 規格）
     const extra = {
       IsHaveTERM_No: toBoolOrNull(val?.IsHaveTERM_No),
-      TERM_No:       ensureArr(val?.IPeriod),
-      Acquirer:      ensureArr(val?.AcqBank),
+      TERM_No:       ensureArr(val?.TERM_No),
+      Acquirer:      ensureArr(val?.Acquirer),
       Conn_Status:   (val?.ConnStatus ?? '') || undefined,
     };
 
@@ -320,10 +318,10 @@ const offset    = pageSize ? Math.max(0, (pageIndex - 1) * pageSize) : 0; // 沒
         }
       },
       error: (err) => {
-        console.error('TLS23090 查詢失敗', err);
-        this.messageService?.errorBubble?.('查詢失敗，請稍後再試');
+       
         this.data = [];
         this.totalRecords = 0;
+         this.loading = false;
       },
       complete: () => {
         this.loading = false;

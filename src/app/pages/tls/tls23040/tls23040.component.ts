@@ -110,7 +110,12 @@ discountRows: any[] = [];
 
   statusFlagOptions: any[] = [];
   TXN_SubtypeOptions: any[] = [];
-  txnStatusOptions: any[] = [];
+  txnStatusOptions: any[] = [
+    { value: '1', label: '正常交易' },
+    { value: '2', label: '作廢' },
+    { value: '3', label: '退貨' },
+  
+  ];
   BUILDING_NO_Options: any[] = [];
   floorOptions: any[] = [];
   OrganizationCodeOptions: any[] = [];
@@ -145,9 +150,9 @@ discountRows: any[] = [];
       (data) => (this.TXN_SubtypeOptions = data),
     );
 
-    this.txnStatusService
-      .getTxnStatusOptions()
-      .subscribe((data) => (this.txnStatusOptions = data));
+    // this.txnStatusService
+    //   .getTxnStatusOptions()
+    //   .subscribe((data) => (this.txnStatusOptions = data));
 
     this.floorService
       .getFloors()
