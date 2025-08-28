@@ -1606,40 +1606,17 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
     return null;
   }
 
-  onDetailSave(event: { oldData: any, newData: any, parentData: any }): void {
-    console.log('💾 明細表格儲存事件:', event);
+  onDetailSave(event: { oldDetail: any, newDetail: any, parentData: any }): void {
+    console.log('💾 外層處理詳細資料儲存事件:', event);
 
-    const { oldData, newData, parentData } = event;
+    const { oldDetail, newDetail, parentData } = event;
 
-    if (!newData.id) {
-      newData.id = oldData.id || this.generateTempId();
-    }
-
-    this.logFieldChanges(oldData, newData);
-    const hasDetailChanges = this.hasDetailDataChanges(oldData, newData);
-
-    if (hasDetailChanges || !newData._status) {
-      if (oldData._status === 'original' && hasDetailChanges) {
-        newData._status = 'modified';
-        console.log(`📝 明細項目有變更，標記為 modified`);
-      } else if (!newData._status || newData._status === 'new') {
-        newData._status = newData._status || 'new';
-        console.log(`🆕 明細項目標記為 ${newData._status}`);
-      }
-    }
-
-    this.ensureDetailFieldValues(newData);
-    this.syncDetailBackToSource(newData, parentData);
-    this.syncToDetailItems(newData, parentData);
-
-    // 🎯 不要在這裡調用 updateDetailItemsForDisplay，避免刷新其他項目
-    // this.updateDetailItemsForDisplay();
-
+    // 處理詳細資料的變更邏輯
+    this.syncDetailBackToSource(newDetail, parentData);
     this.saveToWorkflow();
 
-    console.log('💾 明細表格儲存完成，當前狀態:', newData._status);
+    console.log('💾 外層詳細資料儲存完成');
   }
-
   private syncToDetailItems(detailData: any, parentData: CommissionItem): void {
     const detailIndex = parentData.detailItems.findIndex(item => item.id === detailData.id);
     if (detailIndex > -1) {

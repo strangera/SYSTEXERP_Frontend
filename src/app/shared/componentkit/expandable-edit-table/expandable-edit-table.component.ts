@@ -841,7 +841,14 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
     this.editingRow = rowIndex;
     this.clonedItems[rowData[this.dataKey]] = { ...rowData };
 
-    // 🎯 在進入編輯模式時套用預設值（包括動態預設值）
+    // 深拷貝包括詳細資料
+    this.clonedItems[rowData[this.dataKey]] = {
+      ...rowData,
+      [this.detailKey]: rowData[this.detailKey] ?
+        JSON.parse(JSON.stringify(rowData[this.detailKey])) : []
+    };
+
+    //在進入編輯模式時套用預設值（包括動態預設值）
     this.mainColumns.forEach(column => {
       const currentValue = rowData[column.field];
 
@@ -918,11 +925,24 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
 
   onRowEditCancel(rowData: any, rowIndex: number) {
     try {
-      this.data[rowIndex] = this.clonedItems[rowData[this.dataKey]];
+      // 🎯 關鍵：完整還原包括詳細資料
+      const originalData = this.clonedItems[rowData[this.dataKey]];
+
+      // 還原主資料
+      Object.keys(originalData).forEach(key => {
+        if (key !== this.detailKey) {
+          rowData[key] = originalData[key];
+        }
+      });
+
+      // 🎯 重要：還原詳細資料
+      if (originalData[this.detailKey]) {
+        rowData[this.detailKey] = JSON.parse(JSON.stringify(originalData[this.detailKey]));
+      }
+
       delete this.clonedItems[rowData[this.dataKey]];
       this.editingRow = null;
 
-      // 🎯 清理日期輸入狀態
       this.cleanupDateInputStates(rowData);
       this.validationService.clearRowValidationErrors(rowData, this.dataKey);
 
