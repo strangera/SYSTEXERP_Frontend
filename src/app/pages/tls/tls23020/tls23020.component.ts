@@ -29,6 +29,7 @@ import { DialogModule } from 'primeng/dialog';
 import { RadioButtonModule } from 'primeng/radiobutton';
 import { TranslateModule } from '@ngx-translate/core';
 import { TableComponent } from '@shared/componentkit/table/table.component';
+import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'app-tls23020',
@@ -36,6 +37,7 @@ import { TableComponent } from '@shared/componentkit/table/table.component';
   styleUrls: ['./tls23020.component.scss'],
   standalone: true,
   imports: [
+    CommonModule, 
     MenubarComponent,
     AccordionModule,
     FormsModule,
@@ -57,7 +59,7 @@ import { TableComponent } from '@shared/componentkit/table/table.component';
 export class TLS23020Component extends BasicQueryPageComponent<any> {
   data: any[] = [];
   totalRecords = 0;
-
+showSummary = false;
   // --- 排序狀態 ---
   sortMeta: any[] = [];
   readonly defaultSort: any[] = [
@@ -218,14 +220,43 @@ export class TLS23020Component extends BasicQueryPageComponent<any> {
     this.lazyTimer = setTimeout(() => this.onSubmit(form), 0);
   }
 
-  onSubmit(form: FormGroup): void {
-    this.handleSubmit(form, () => {
-      const payload = this.buildPayload(this.queryForm.getRawValue());
+ onSubmit(form: FormGroup): void {
+  this.handleSubmit(form, () => {
+    const payload = this.buildPayload(this.queryForm.getRawValue());
 
-      this.loading = true;
-      this.messageService?.blockUi();
+    this.loading = true;
+    this.messageService?.blockUi();
 
-      this.tls23020Service.queryTLS23020(payload).subscribe({
+    if (this.showSummary) {
+      // ✅ 彙總查詢
+      this.tls23020Service.queryTLS23020Summary(payload).pipe(
+        finalize(() => { this.loading = false; this.messageService?.unblockUi(); })
+      ).subscribe({
+        next: (res) => {
+          const arr = Array.isArray(res?.Data) ? res.Data : [];
+          // 這裡保持扁平化資料，並加上 row key
+          this.summaryData = arr.map((r: any, i: number) => ({
+            ...r,
+            _rowKey: `${r?.tlt_no ?? ''}|${r?.tlt_name ?? ''}|${i}`,
+          }));
+          this.totalRecords = this.summaryData.length;
+
+          // 切換到彙總時，清空明細以免雙表混淆
+          this.data = [];
+        },
+        error: (err) => {
+          console.error('TLS23020 Summary 查詢失敗', err);
+          this.summaryData = [];
+          this.totalRecords = 0;
+          this.messageService?.errorBubble?.('彙總查詢失敗，請稍後再試');
+        },
+      });
+
+    } else {
+      // ✅ 原本明細查詢
+      this.tls23020Service.queryTLS23020(payload).pipe(
+        finalize(() => { this.loading = false; this.messageService?.unblockUi(); })
+      ).subscribe({
         next: (res: any) => {
           const dataArray = Array.isArray(res?.Data) ? res.Data : (res?.Data ? [res.Data] : []);
           const details = dataArray.flatMap((wrapper: any) => {
@@ -246,19 +277,18 @@ export class TLS23020Component extends BasicQueryPageComponent<any> {
             _rowKey: `${item.SYS_StoreNo ?? ''}|${String(item.TXN_Date ?? '').slice(0, 19)}|${item.ECR_No ?? ''}|${item.TXN_No ?? idx}`,
           }));
 
+          this.summaryData = []; // 清空彙總
           this.totalRecords = typeof res?.TotalCount === 'number' ? res.TotalCount : this.data.length;
         },
         error: (err) => {
           console.error('TLS23020 查詢失敗', err);
           this.messageService?.errorBubble?.('查詢失敗，請稍後再試');
         },
-        complete: () => {
-          this.loading = false;
-          this.messageService?.unblockUi();
-        },
       });
-    });
-  }
+    }
+  });
+}
+
 
   /** 組查詢 payload（含排序＆分頁鍵） */
   private buildPayload(val: any) {
@@ -372,6 +402,11 @@ export class TLS23020Component extends BasicQueryPageComponent<any> {
       __isBackendTotal: true,
     };
   }
+  onToggleSummary() {
+  // 切到另一種檢視時，重置頁碼；Offset 在 buildPayload 內會用 pageIndex/pageSize 計算
+  this.queryForm.patchValue({ pageIndex: 1 }, { emitEvent: false });
+  this.onSubmit(this.queryForm);
+}
 
   // columns
   columns: any[] = [
@@ -393,4 +428,22 @@ export class TLS23020Component extends BasicQueryPageComponent<any> {
     { field: 'PLU_MagNo', header: '單品編號', visible: true },
     { field: 'TXN_StatusName', header: '狀態', visible: true },
   ];
+  // 彙總資料與欄位
+summaryData: any[] = [];
+summaryColumns = [
+  { field: 'tlt_no',        header: '專櫃編號',  visible: true },
+  { field: 'tlt_name',      header: '櫃位名稱',  visible: true, style: 'text-left' },
+  // 若後端回一筆一日，可顯示日期；多日彙總可不顯示
+  // { field: 'TXN_Date',   header: '銷售日期',  visible: true, format: this.formatYMD },
+
+  // 後端提供的彙總欄位（你貼的 schema）
+  { field: 'TXN_TotSaleAmt', header: '銷售金額(含稅)', visible: true, style: 'text-right', format: this.money },
+  { field: 'TXN_TotNet',     header: '未稅(免稅)金額',  visible: true, style: 'text-right', format: this.money },
+  { field: 'TXN_TotTax',     header: '稅額',           visible: true, style: 'text-right', format: this.money },
+
+  // 若也要顯示「預售/訂金」彙總，可打開：
+  // { field: 'Pre_TotSaleAmt', header: '預售/訂金_銷售金額', visible: true, style: 'text-right', format: this.money },
+  // { field: 'Pre_TotNet',     header: '預售/訂金_未稅金額', visible: true, style: 'text-right', format: this.money },
+  // { field: 'Pre_TotTax',     header: '預售/訂金_稅額',     visible: true, style: 'text-right', format: this.money },
+];
 }
