@@ -198,9 +198,22 @@
   </p-accordion>
 </div>
 
+<div class="col-12 md:col-6 lg:col-4">
+  <p-checkbox
+    inputId="showSummary"
+    [ngModelOptions]="{ standalone: true }"
+    [(ngModel)]="showSummary"
+    binary="true"
+    (onChange)="onToggleSummary()"
+    label="顯示彙總"
+  ></p-checkbox>
+</div>
+
 <div class="card">
   <div class="col-12">
+    <!-- ✅ 明細表 -->
     <app-table
+      *ngIf="!showSummary"
       tableKey="TLS23020"
       [data]="data"
       [columns]="columns"
@@ -214,5 +227,19 @@
       [showDelete]="false"
       (lazyLoadData)="onLazyLoadData($event, queryForm)"
     ></app-table>
+
+    <!-- ✅ 彙總表 -->
+    <app-table
+      *ngIf="showSummary"
+      tableKey="TLS23020summary"
+      [data]="summaryData"
+      [columns]="summaryColumns"
+      [totalRecords]="summaryData.length || 0"
+      [loading]="loading"
+      [showCheckBox]="false"
+      [showManage]="false"
+      [showDelete]="false"
+    >
+    </app-table>
   </div>
 </div>
