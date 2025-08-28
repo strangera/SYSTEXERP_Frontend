@@ -17,8 +17,7 @@ import { ButtonComponent } from '../../../shared/componentkit/button/button.comp
 import { InputTextareaComponent } from '@shared/componentkit/input-textarea/input-textarea.component';
 import { Tls41040Service } from '../../../service/api/tls/tls41040.service';
 
-
-// 定義 TLS41040 明細型別 (符合後端需求)
+// 定義 TLS41040 明細型別
 export interface TLS41040Detail {
   ID?: number;           // 明細 ID (可選)
   NOT_SeqNo: number;     // 通告序號
@@ -79,12 +78,11 @@ export class TLS41040CRUComponent extends BasicCruPageComponent<any> implements 
   columns: Column[] = [];
 
   // 下拉選項
-  SYS3100_Options: { value: string; label: string }[] = [];
   SYS3700_Options: { value: string; label: string }[] = [];
   SYS3800_Options: { value: string; label: string }[] = [];
   SYS3A00_Options: { value: string; label: string }[] = [];
   ECR_Type_Options: { value: string; label: string }[] = [];
-  TLTTALENT_OPTIONS: { No: string; Name: string; label: string }[] = [];
+  TLTTALENT_OPTIONS: { value: string; label: string }[] = [];
   ECR_GrpNoOptions: { value: string; label: string }[] = [];
 
   // 明細資料
@@ -106,46 +104,45 @@ export class TLS41040CRUComponent extends BasicCruPageComponent<any> implements 
 
   // ===== 載入選項並設定 Table 欄位 =====
   private loadAndSetupColumns() {
-    const Org_ID$ = this.locationOptionsService.getOrgOptions().pipe(
-      map((res: any[]) => res.map(x => ({ value: x.value, label: x.label })))
-    );
-    const Building_No$ = this.locationOptionsService.getBuildingOptions().pipe(
-      map((res: any[]) => res.map(x => ({ value: x.value, label: x.label })))
-    );
-    const Floor_No$ = this.locationOptionsService.getFloorOptions().pipe(
-      map((res: any[]) => res.map(x => ({ value: x.value, label: x.label })))
-    );
-    const Area_No$ = this.locationOptionsService.getRegionOptions().pipe(
-      map((res: any[]) => res.map(x => ({ value: x.value, label: x.label })))
-    );
     const ECR_GrpNo$ = this.dropDownListService.queryPOS1002_DropDownList()
       .pipe(map(res => (res?.Data ?? []).map((it: any) => ({
-        value: it.value ?? it.No,
-        label: it.label ?? it.Name ?? `${it.No}-${it.Name}`,
+        value: it.No,
+        label: `${it.No}-${it.Name}`
       }))));
+
     const ECR_Type$ = this.dropDownListService
       .querySYS1000_DropDownList({ SYS_Type: 'ECR_Type', SYS_Status: 'A' } as any)
       .pipe(map(res => (res?.Data ?? []).map((it: any) => ({
-        value: it.No ?? it.value ?? it.SYS_Code,
-        label: it.Name ?? it.label ?? it.SYS_Name
+        value: it.No ?? it.SYS_Code,
+        label: it.Name ?? it.SYS_Name ?? ''
       }))));
 
     const TLTTALENT_OPTIONS$ = this.dropDownListService.queryTLTTALENT_DropDownList()
       .pipe(map(res => res.Data.map((item: any) => ({
-        ...item,
-        label: `${item.No}-${item.Name}`,
+        value: item.No,
+        label: `${item.No}-${item.Name}`
       }))));
 
+    const Building_No$ = this.locationOptionsService.getBuildingOptions().pipe(
+      map((res: any[]) => res.map(x => ({ value: x.No ?? x.value, label: x.Name ?? x.label })))
+    );
+
+    const Floor_No$ = this.locationOptionsService.getFloorOptions().pipe(
+      map((res: any[]) => res.map(x => ({ value: x.No ?? x.value, label: x.Name ?? x.label })))
+    );
+
+    const Area_No$ = this.locationOptionsService.getRegionOptions().pipe(
+      map((res: any[]) => res.map(x => ({ value: x.No ?? x.value, label: x.Name ?? x.label })))
+    );
+
     forkJoin({
-      Org_ID: Org_ID$,
       TLT_No: TLTTALENT_OPTIONS$,
       ECR_Type: ECR_Type$,
       ECR_GrpNo: ECR_GrpNo$,
       Building_No: Building_No$,
       Floor_No: Floor_No$,
       Area_No: Area_No$,
-    }).subscribe(({ Org_ID, TLT_No, ECR_Type, ECR_GrpNo, Building_No, Floor_No, Area_No }) => {
-      this.SYS3100_Options = Org_ID ?? [];
+    }).subscribe(({ TLT_No, ECR_Type, ECR_GrpNo, Building_No, Floor_No, Area_No }) => {
       this.TLTTALENT_OPTIONS = TLT_No ?? [];
       this.ECR_Type_Options = ECR_Type ?? [];
       this.ECR_GrpNoOptions = ECR_GrpNo ?? [];
@@ -155,7 +152,7 @@ export class TLS41040CRUComponent extends BasicCruPageComponent<any> implements 
 
       this.columns = [
         { field: 'NOT_SeqNo', header: '通告序號', type: 'input' },
-        { field: 'TLT_No', header: '專櫃編號', type: 'dropdown', options: this.TLTTALENT_OPTIONS, optionLabel: 'label', optionValue: 'No' },
+        { field: 'TLT_No', header: '專櫃編號', type: 'dropdown', options: this.TLTTALENT_OPTIONS, optionLabel: 'label', optionValue: 'value' },
         { field: 'ECR_Type', header: '機台類型', type: 'dropdown', options: this.ECR_Type_Options, optionLabel: 'label', optionValue: 'value' },
         { field: 'ECR_GrpNo', header: '機檯群組編號', type: 'dropdown', options: this.ECR_GrpNoOptions, optionLabel: 'label', optionValue: 'value' },
         { field: 'BUILDING_No', header: '館別代碼', type: 'dropdown', options: this.SYS3700_Options, optionLabel: 'label', optionValue: 'value' },
@@ -164,7 +161,6 @@ export class TLS41040CRUComponent extends BasicCruPageComponent<any> implements 
       ];
     });
   }
-
 
   /** Insert payload */
   private createInsertBody(frm: FormGroup) {
@@ -186,7 +182,6 @@ export class TLS41040CRUComponent extends BasicCruPageComponent<any> implements 
       Detail: this.data.map(d => {
         const clone = { ...d };
 
-        // === 套用互斥規則 ===
         if (clone.ECR_GrpNo) {
           clone.TLT_No = '';
           clone.ECR_Type = '';
@@ -232,7 +227,6 @@ export class TLS41040CRUComponent extends BasicCruPageComponent<any> implements 
       Detail: this.data.map((d, i) => {
         const clone = { ...d };
 
-        // === 套用互斥規則 ===
         if (clone.ECR_GrpNo) {
           clone.TLT_No = '';
           clone.ECR_Type = '';
@@ -258,8 +252,6 @@ export class TLS41040CRUComponent extends BasicCruPageComponent<any> implements 
     };
   }
 
-
-
   // ===== 儲存 =====
   onSubmit(frm: FormGroup): void {
     this.handleSubmit(frm, () => {
@@ -278,7 +270,7 @@ export class TLS41040CRUComponent extends BasicCruPageComponent<any> implements 
 
       serviceCall?.pipe(finalize(() => (this.loading = false))).subscribe({
         next: (res) => {
-          this.messageService.successBubble(res.Message ?? '操作成功');
+          this.messageService.successBubble(res.Message ?? '成功');
           if (this.isFormCreateable) {
             this.dataForm.reset();
           } else if (this.isFormEditable) {
@@ -286,11 +278,10 @@ export class TLS41040CRUComponent extends BasicCruPageComponent<any> implements 
           }
         },
         error: (err) => {
-          this.messageService.errorBubble('操作失敗');
+          this.messageService.errorBubble('失敗');
           console.error('TLS41040 API 失敗:', err);
         }
       });
     });
   }
-
 }

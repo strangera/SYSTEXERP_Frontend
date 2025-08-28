@@ -55,10 +55,21 @@ export class TLS41040Component extends BasicQueryPageComponent<any> implements O
 
   private statusLabel = (v: string) => (v === 'A' ? '已生效(A)' : v === 'D' ? '已刪除(D)' : v ?? '');
 
+  toColumnDateTimeFormat(dateInput: string | Date): string {
+    const date = typeof dateInput === 'string' ? new Date(dateInput) : dateInput;
+    if (isNaN(date.getTime())) return '';
+    const yyyy = date.getFullYear();
+    const mm = String(date.getMonth() + 1).padStart(2, '0');
+    const dd = String(date.getDate()).padStart(2, '0');
+    const hh = String(date.getHours()).padStart(2, '0');
+    const min = String(date.getMinutes()).padStart(2, '0');
+    const ss = String(date.getSeconds()).padStart(2, '0');
+    return `${yyyy}-${mm}-${dd}-${hh}:${min}:${ss}`;
+  }
   columns7: Column[] = [
-    { field: 'NOT_DateTime', header: '通告產生時間', visible: true },
-    { field: 'NOT_BegDateTime', header: '開始日期', visible: true },
-    { field: 'NOT_EndDateTime', header: '結束時間', visible: true },
+    { field: 'NOT_DateTime', header: '通告產生時間', visible: true, format: (v) => this.toColumnDateTimeFormat(v) },
+    { field: 'NOT_BegDateTime', header: '開始日期', visible: true, format: (v) => this.toColumnDateTimeFormat(v) },
+    { field: 'NOT_EndDateTime', header: '結束時間', visible: true, format: (v) => this.toColumnDateTimeFormat(v) },
     { field: 'NOT_Desc', header: '通告內容', visible: true },
     { field: 'NOT_Status', header: '通告狀態', visible: true, format: (v: string) => this.statusLabel(v) },
     { field: 'NOT_Remark', header: '通告備註', visible: true },
@@ -102,7 +113,7 @@ export class TLS41040Component extends BasicQueryPageComponent<any> implements O
         PageIndex: (lazyEvent?.pageIndex ?? 1) - 1,
         OrderBy: '',
         Offset: ((lazyEvent?.pageIndex ?? 1) - 1) * (lazyEvent?.pageSize || 10),
-        SortBy: lazyEvent?.SortBy || [{ field: '', order: 0 }],
+        SortBy: lazyEvent?.SortBy || [{ field: 'NOT_SeqNo', order: 0 }],
         ECR_No: frm.value.ECR_No || '',
         NOT_BegDateTime: frm.value.NOT_BegDateTime,
         NOT_EndDateTime: frm.value.NOT_EndDateTime,
