@@ -205,7 +205,7 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
   @Input() defaultNewDetailItem: any = {};
 
   @Input() showDetailTabs: boolean = false;
-  @Input() detailTabOptions: { id: string, label: string, allowAdd: boolean, allowBatchDelete: boolean }[] = [];
+  @Input() detailTabOptions: { id: string, label: string, allowAdd: boolean, allowBatchDelete: boolean, showCheckbox: boolean }[] = [];
   @Input() defaultDetailTab: string = '';
   @Input() detailColumnsMap: { [tabId: string]: ColumnDef[] } = {};
   @Input() showDetailBatchDelete: boolean = true;
@@ -2263,5 +2263,47 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
     const currentTab = this.getDetailSelectedTab(rowData);
     const tabConfig = this.detailTabOptions.find(tab => tab.id === currentTab);
     return tabConfig?.allowBatchDelete || false;
+  }
+
+  canShowCheckboxForCurrentTab(rowData: any): boolean {
+    const currentTab = this.getDetailSelectedTab(rowData);
+    const tabConfig = this.detailTabOptions.find(tab => tab.id === currentTab);
+    return tabConfig?.showCheckbox || false;
+  }
+
+  onDetailCheckboxChange(detailData: any, field: string, newValue: any, rowIndex: number, detailIndex: number, column: ColumnDef): void {
+    console.log(`內層 Checkbox 變更: ${field} = ${newValue} (主行${rowIndex + 1}, 詳細行${detailIndex + 1})`);
+
+    // 勾選時：立即更新 + 進入編輯模式
+    if (newValue === true) {
+      detailData[field] = newValue;
+
+      if (column.autoEditOnSelect && !this.isDetailEditing(rowIndex, detailIndex)) {
+        console.log(`勾選，自動進入詳細編輯模式`);
+        setTimeout(() => {
+          const parentData = this.data[rowIndex];
+          this.onDetailEditInit(detailData, parentData, rowIndex, detailIndex);
+          this.cdr.detectChanges();
+        }, 150);
+      }
+    }
+
+    // 取消勾選時：特殊處理
+    else if (newValue === false) {
+      if (column.autoSaveOnUnselect && this.isDetailEditing(rowIndex, detailIndex)) {
+        console.log(`取消勾選，自動儲存並退出詳細編輯模式`);
+        // 這裡需要處理詳細資料的自動儲存退出
+        const parentData = this.data[rowIndex];
+        this.onDetailEditSave(detailData, parentData);
+      } else {
+        detailData[field] = newValue;
+      }
+    }
+
+    // 觸發直接編輯儲存事件
+    if (column.directEdit) {
+      const parentData = this.data[rowIndex];
+      this.onDetailDirectEditChange(detailData, parentData, field, newValue, rowIndex, detailIndex);
+    }
   }
 }

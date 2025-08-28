@@ -246,7 +246,7 @@
               <ng-template pTemplate="header">
       <tr>
         <th style="width: 4rem; text-align: center">序號</th>
-        <th *ngIf="!readonly" style="width: 4rem; text-align: center">
+        <th *ngIf="!readonly && canShowCheckboxForCurrentTab(rowData)" style="width: 4rem; text-align: center">
           <p-tableHeaderCheckbox></p-tableHeaderCheckbox>
         </th>
         <th *ngFor="let col of getDetailColumnsForTab(rowData)" [hidden]="col.hidden" style="text-align: center">
@@ -270,7 +270,7 @@
       <tr>
         <td style="text-align: center">{{ di + 1 }}</td>
 
-        <td *ngIf="!readonly" style="text-align: center">
+        <td *ngIf="!readonly && canShowCheckboxForCurrentTab(rowData)" style="text-align: center">
           <p-tableCheckbox [value]="detailData"></p-tableCheckbox>
         </td>
 
@@ -313,10 +313,10 @@
                 </button>
               </div>
 
-              <!-- Checkbox -->
+              <!-- 內層Checkbox -->
               <div *ngSwitchCase="'checkbox'" class="checkbox-wrapper">
                 <p-checkbox [(ngModel)]="detailData[col.field]" [binary]="true"
-                  (ngModelChange)="col.directEdit ? onDirectEditChange(rowData, col.field, $event, ri, col) : null"
+                  (ngModelChange)="onDetailCheckboxChange(detailData, col.field, $event, ri, di, col)"
                   [disabled]="readonly || col.editable === false"></p-checkbox>
               </div>
 

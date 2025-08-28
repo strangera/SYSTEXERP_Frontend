@@ -158,7 +158,9 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
       type: 'checkbox',
       editable: true,
       directEdit: true, // 🎯 啟用直接編輯
-      width: '60px'
+      width: '60px',
+      autoEditOnSelect: true,      // ✅ 勾選扣款項目 → 進入編輯模式設定單價、數量
+      autoSaveOnUnselect: true,     // ✅ 取消勾選 → 自動儲存並退出編輯
     },
     {
       field: 'cag_barcode',
@@ -186,7 +188,9 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
       type: 'checkbox',
       editable: true,
       directEdit: true, // 🎯 啟用直接編輯
-      width: '60px'
+      width: '60px',
+      autoEditOnSelect: true,      // ✅ 勾選扣款項目 → 進入編輯模式設定單價、數量
+      autoSaveOnUnselect: true,     // ✅ 取消勾選 → 自動儲存並退出編輯
     },
     {
       field: 'cag_barcode',
@@ -211,19 +215,22 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
       id: 'discount',
       label: '折扣設定',
       allowAdd: false,
-      allowBatchDelete: false
+      allowBatchDelete: false,
+      showCheckbox: false
     },
     {
       id: 'annual',
       label: '年度總業績抽成設定',
       allowAdd: true,
-      allowBatchDelete: true
+      allowBatchDelete: true,
+      showCheckbox: true
     },
     {
       id: 'level',
       label: '折扣別層級抽成設定',
       allowAdd: false,
-      allowBatchDelete: false
+      allowBatchDelete: false,
+      showCheckbox: false
     }
   ];
 
