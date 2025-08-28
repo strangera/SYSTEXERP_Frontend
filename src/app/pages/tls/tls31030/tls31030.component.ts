@@ -1,6 +1,6 @@
 import { DropDownListService, IDropdownItem } from '@service/utility/dropDownList.service';
 import { Component, OnInit } from '@angular/core';
-import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
@@ -16,7 +16,6 @@ import { untilDestroyed } from '@ngneat/until-destroy';
 import { debounceTime, finalize, forkJoin, map, of, switchMap, tap } from 'rxjs';
 import { TLS31010Request, TLS31010Response } from '@service/api/tls/tls31010.service';
 import { ButtonModule } from 'primeng/button';
-import { formatDate } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { environment } from 'src/environments/environment';
 import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
@@ -48,8 +47,8 @@ import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range
 // 各大分類之營業報表
 export class TLS31030Component extends BasicQueryPageComponent<TLS31030Response> implements OnInit{
   queryForm = this.formBuilder.nonNullable.group({
-    TXN_DateS: [yesterday],//交易日期_起
-    TXN_DateE: [null],//交易日期_迄
+    TXN_DateS: [yesterday, [Validators.required]],//交易日期_起
+    TXN_DateE: [yesterday, [Validators.required]],//交易日期_迄
     // 合約查詢條件
     tlt_building: [[]],// 館別
     tlt_floor: [[]],// 樓層
@@ -69,12 +68,14 @@ export class TLS31030Component extends BasicQueryPageComponent<TLS31030Response>
   totalRecords = 0;
   data: TLS31010Response[] = [];
   columns: Column[] = [
-    { field: 'building_desc', header: '館別', visible: true },
-    { field: 'org_name', header: '組織名稱', visible: true },
-    { field: 'tlt_kind', header: '櫃別', visible: true },
-    { field: 'tlt_no', header: '專櫃編號', visible: true },
-    { field: 'location_no', header: '位置編號', visible: true },
-    { field: 'tlt_name', header: '專櫃名稱', visible: true },
+    // { field: 'building_desc', header: '館別', visible: true },
+    // { field: 'org_name', header: '組織名稱', visible: true },
+    // { field: 'tlt_kind', header: '櫃別', visible: true },
+    // { field: 'tlt_no', header: '專櫃編號', visible: true },
+    // { field: 'location_no', header: '位置編號', visible: true },
+    // { field: 'tlt_name', header: '專櫃名稱', visible: true },
+    { field: 'bus_type', header: '大分類', visible: true }, // queryTLS31030
+    { field: 'bus_type_name', header: '大分類名稱', visible: true }, // queryTLS31030
     { field: 'budget', header: '營業目標', visible: true, groupField: 'budgetAmt', format: formatAmount },
     { field: 'AVN_TotSaleAmt', header: '營業實績', visible: true, groupField: 'budgetAmt', format: formatAmount },
     { field: 'AchievementRate', header: '達成率', visible: true, groupField: 'budgetAmt', format: (value) => formatPercentage(value, 2) },
@@ -84,6 +85,11 @@ export class TLS31030Component extends BasicQueryPageComponent<TLS31030Response>
     { field: 'AvgTicket', header: '客單價', visible: true, groupField: 'custCnt', format: formatAmount },
     { field: 'tlt_space', header: '坪數', visible: true, groupField: 'space' },
     { field: 'MonthlyPSM', header: '坪效', visible: true, groupField: 'space' },
+
+    { field: 'TempCounterSaleAmt', header: '營業實績', visible: true, groupField: 'temp' }, // queryTLS31030
+    { field: 'TempCounterSalesRate', header: '營業實績佔比', visible: true, groupField: 'temp' }, // queryTLS31030
+    { field: 'TempCounterAmtRate', header: '臨時櫃業績佔比', visible: true, groupField: 'temp' }, // queryTLS31030
+
     { field: 'MonthlyBudgetTotal', header: '月營業目標', visible: true, groupField: 'month', format: formatAmount },
     { field: 'MonthlySalesTotal', header: '營業實績', visible: true, groupField: 'month', format: formatAmount },
     { field: 'CompletionRate', header: '完成率', visible: true, groupField: 'month', format: (value) => formatPercentage(value, 2) },
@@ -93,6 +99,7 @@ export class TLS31030Component extends BasicQueryPageComponent<TLS31030Response>
     { field: 'sum', header: '營業佔比' },
     { field: 'custCnt', header: '客單價' },
     { field: 'space', header: '營業坪效' },
+    { field: 'temp', header: '臨時櫃' }, // queryTLS31030
     { field: 'month', header: '月累計' },
   ]
   tlt_kind_Option = [
@@ -249,11 +256,12 @@ export class TLS31030Component extends BasicQueryPageComponent<TLS31030Response>
       const formValue = {
         ...frm.getRawValue(),
         bus_class: frm.getRawValue().bus_class.map((item: IDropdownItem) => item.No),
-        TXN_Date: formatDate(frm.getRawValue().TXN_Date, 'yyyy-MM-dd', 'en-US'),
+        bus_sclass: frm.getRawValue().bus_sclass.map((item: IDropdownItem) => item.No),
       } as TLS31010Request;
 
       console.log('送出請求',formValue);
       this.tls31030Service.queryTLS31030(formValue).pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(res => {
+        console.log('各大分類之營業報表response',res.Data);
         this.data = res.Data;
         this.totalRecords = res.TotalCount;
         this.queryStateService.setQueryState(this.ProgNo, frm.getRawValue());
@@ -266,13 +274,16 @@ export class TLS31030Component extends BasicQueryPageComponent<TLS31030Response>
     const formValue = {
       ...printData,
       IsExcel: true,
-      IsMerge: true,
-      SortBy: undefined,
-      pageIndex: undefined,
-      pageSize: undefined,
+      // IsMerge: true,
+      // SortBy: undefined,
+      // pageIndex: undefined,
+      // pageSize: undefined,
       bus_class: frm.getRawValue().bus_class.map((item: IDropdownItem) => item.No),
-      TXN_Date: formatDate(frm.getRawValue().TXN_Date, 'yyyy-MM-dd', 'en-US'),
+      bus_sclass: frm.getRawValue().bus_class.map((item: IDropdownItem) => item.No),
+      // TXN_Date: formatDate(frm.getRawValue().TXN_Date, 'yyyy-MM-dd', 'en-US'),
     } as TLS31010Request;
+
+    console.log('各大分類之營業報表print請求', JSON.stringify(formValue));
 
     this.btnLoading = true;
     this.tls31030Service.printTLS31030(formValue).pipe(finalize(() => this.btnLoading = false), untilDestroyed(this))
