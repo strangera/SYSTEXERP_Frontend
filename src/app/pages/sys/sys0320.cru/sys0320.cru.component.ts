@@ -384,7 +384,7 @@ export class SYS0320CRUComponent extends BasicCruPageComponent<UserData> impleme
     processModuleData(this.CPM0000Data);
 
     const body = {
-      user_no: this.dataForm.value.user_No,
+      user_no: this.dataForm.getRawValue().user_No || '',
       data: privilegeList
     };
     this.loading = true;
