@@ -152,7 +152,7 @@ export class TLS52020CRUComponent extends BasicCruPageComponent<ITLS52020Data> i
       });
     });
     this.dropDownListService.getPOS2034Options().pipe(untilDestroyed(this)).subscribe(response => {
-      this.warehouseOptions = response.Data;// 倉別
+      this.warehouseOptions = response.Data.map(warehouse => ({ ...warehouse, label: `${warehouse.No} - ${warehouse.Name}` }));
     });
   }
   private setInitialValuesAndWatchChanges(): void {

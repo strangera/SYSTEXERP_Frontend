@@ -121,7 +121,7 @@ export class TLS52030CRUComponent extends BasicCruPageComponent<ITLS52030Data> i
     });
     // 2. 品牌下拉選單
     this.dropDownListService.queryPLULOGO_HOS_No_DropDownList().pipe(untilDestroyed(this)).subscribe(response => {
-      this.brandOptions = response.Data;
+      this.brandOptions = response.Data.map(item => ({ ...item, label: `${item.No} - ${item.Name}` }));
       this.dataForm.controls.LOGO_No.valueChanges.pipe(debounceTime(300), untilDestroyed(this)).subscribe(logoNo => {
         const HOS_No = this.brandOptions.find(opt => opt.No === logoNo)?.HOS_No || null;
         this.dataForm.controls.HOS_No.setValue(HOS_No);
@@ -131,7 +131,7 @@ export class TLS52030CRUComponent extends BasicCruPageComponent<ITLS52030Data> i
     });
     // 3. 倉別下拉選單
     this.dropDownListService.getPOS2034Options().pipe(untilDestroyed(this)).subscribe(response => {
-      this.warehouseOptions = response.Data;
+      this.warehouseOptions = response.Data.map(item => ({ ...item, label: `${item.No} - ${item.Name}` }));// 倉別
       this.dataForm.controls.HOS_No.valueChanges.pipe(untilDestroyed(this)).subscribe(() => resetFormData());
     });
   }
