@@ -61,7 +61,7 @@ export class TLS52040Component extends BasicQueryPageComponent<ITLS52040Data> im
     APPLY_USR: [''], // 申請人員
     APPLY_Date_Start: [''], // 申請日期起
     APPLY_Date_End: [''], // 申請日期迄
-    PO_No: ['', [Validators.maxLength(16)]], // 採購單號
+    CRN_No: ['', [Validators.maxLength(16)]], // 採購單號
     APRV_USR: [''], // 審核人員
     APRV_Date_Start: [''], // 審核(驗收)日期起
     APRV_Date_End: [''], // 審核(驗收)日期迄
