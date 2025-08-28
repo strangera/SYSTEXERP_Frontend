@@ -70,7 +70,7 @@ export class TLS42010CRUComponent
 
     func: [''],
     KG_button: [''],
-    KG_KeyPage: [''],
+    KG_KeyPage: ['1'],   // 預設第一頁
 
     KB_Switch: [''],
     KB_Display1: ['', Validators.maxLength(5)],
@@ -78,11 +78,12 @@ export class TLS42010CRUComponent
     KB_Color: [''],
     color: [null as { r: number; g: number; b: number } | null],
     FontColor: [null as { r: number; g: number; b: number } | null],
-    KB_Style: [''],  // 粗體/斜體/底線放這裡
+    KB_Style: [''],
 
     KB_Font: [''],
     KB_Size: [14],   // 預設字體大小
     KB_FontColor: [''],
+    KB_Fonttyped: [''],
 
     KB_Arg1: [''],
     KB_Arg2: [''],
@@ -95,6 +96,7 @@ export class TLS42010CRUComponent
   yCount = 5;
   keys: KeyItem[] = [];
   selected?: KeyItem;
+
   KG_KeyPageOptions: { label: string; code: string }[] = [];
   KG_buttonOptions: { label: string; code: string }[] = [];
 
@@ -127,14 +129,19 @@ export class TLS42010CRUComponent
     { label: '大 (16)', value: 16 }
   ];
   KB_StyleOptions = [
-    { label: '粗體', value: 'BOLD' },
-    { label: '斜體', value: 'ITALIC' },
-    { label: '底線', value: 'UNDERLINE' }
+    { label: '圓形', value: 'CIRCLE' },
+    { label: '方形', value: 'SQUARE' },
+    { label: '愛心', value: 'HEART' }
   ];
   KB_FontOptions = [
     { label: '微軟正黑體', value: 'Microsoft JhengHei' },
     { label: '標楷體', value: 'DFKai-SB' },
     { label: '新細明體', value: 'PMingLiU' },
+  ];
+  KB_FonttypedOptions = [
+    { label: '粗體', value: 'YNN' },
+    { label: '斜體', value: 'NYN' },
+    { label: '底線', value: 'NNY' },
   ];
 
   constructor(
@@ -199,15 +206,6 @@ export class TLS42010CRUComponent
     }
     this.keys = [...onePage];
     this.selected = this.keys[0];
-
-    // 頁數下拉
-    this.KG_KeyPageOptions = Array.from({ length: this.totalPages }, (_, i) => ({
-      label: `第${i + 1}頁`,
-      code: (i + 1).toString()
-    }));
-
-    // 初始化按鈕下拉
-    this.updateButtonOptions({ value: '1' });
   }
 
   // ---------------- Tab Event ----------------
@@ -215,17 +213,10 @@ export class TLS42010CRUComponent
     this.dataForm.controls.activePage.setValue(e.index);
   }
 
-  // ---------------- 按鈕下拉 ----------------
-  updateButtonOptions(event: any) {
-    const pageValue = event?.value ?? '1';
-    const pageIndex = Number(pageValue) - 1;
-    const start = pageIndex * this.pageCapacity;
-    const currentPageKeys = this.keys.slice(start, start + this.pageCapacity);
-
-    this.KG_buttonOptions = currentPageKeys.map((k) => ({
-      label: k.code,
-      code: k.code
-    }));
+  onTabChangeTab(e: any) {
+    if (e.value && e.value !== this.selectedTab) {
+      this.selectedTab = e.value;
+    }
   }
 
   // ---------------- Submit ----------------
@@ -245,7 +236,7 @@ export class TLS42010CRUComponent
         KB_Display2: frm.value.KB_Display2,
         KB_Font: frm.value.KB_Font,
         KB_Size: Number(frm.value.KB_Size) || 0,
-        KB_Fonttyped: '',
+        KB_Fonttyped: frm.value.KB_Fonttyped,
         KB_Style: frm.value.KB_Style,
         KB_Switch: frm.value.KB_Switch,
         KB_Width: this.selected?.x ?? 0,
@@ -280,6 +271,9 @@ export class TLS42010CRUComponent
   // ---------------- Select ----------------
   selectKey(k: KeyItem): void {
     this.selected = k;
+    this.dataForm.patchValue({
+      KG_button: k.code
+    });
     console.log('選中按鍵:', k);
   }
 }

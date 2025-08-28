@@ -28,6 +28,7 @@
             [submitted]="submitted"
           ></app-dropdown>
         </div>
+
         <div class="col-12 md:col-6 lg:col-4">
           <app-dropdown
             label="鍵盤型態"
@@ -78,8 +79,9 @@
                     [ngClass]="'type-' + (k.type || 'normal')"
                     (click)="selectKey(k)"
                   >
-                    <div class="kb-label">{{ k.label || k.code }}</div>
-                    <div class="kb-sub" *ngIf="k.label && k.label !== k.code">
+                    <!-- 按鈕顯示 KB_Display1 優先，沒填才顯示代碼 -->
+                    <div class="kb-label">{{ k.KB_Display1 || k.code }}</div>
+                    <div class="kb-sub" *ngIf="k.KB_Display1 && k.KB_Display1 !== k.code">
                       {{ k.code }}
                     </div>
                   </button>
@@ -93,35 +95,10 @@
         <div class="col-12 md:col-4">
           <div class="grid">
             <div class="col-12">
-              <app-dropdown
-                label="頁數"
-                controlName="KG_KeyPage"
-                [options]="KG_KeyPageOptions"
-                optionLabel="label"
-                optionValue="code"
-                [control]="dataForm.controls.KG_KeyPage"
-                [submitted]="submitted"
-                (onChange)="updateButtonOptions($event)"
-              ></app-dropdown>
-            </div>
-
-            <div class="col-12">
-              <app-dropdown
-                label="按鈕"
-                controlName="KG_button"
-                [options]="KG_buttonOptions"
-                optionLabel="label"
-                optionValue="code"
-                [control]="dataForm.controls.KG_button"
-                [submitted]="submitted"
-              ></app-dropdown>
-            </div>
-
-            <div class="col-12">
               <p-selectButton
                 [options]="tabOptions"
                 [ngModel]="selectedTab"
-                (onChange)="selectedTab = $event.value"
+                (onChange)="onTabChangeTab($event)"
                 [multiple]="false"
                 [unselectable]="false"
                 [ngModelOptions]="{ standalone: true }"
@@ -211,6 +188,17 @@
                 label="顯示字型大小"
                 [control]="dataForm.controls.KB_Size"
                 [options]="KB_SizeOptions"
+                optionLabel="label"
+                optionValue="value"
+                [showClear]="true"
+              ></app-dropdown>
+            </div>
+
+            <div class="col-12" *ngIf="selectedTab === 'font'">
+              <app-dropdown
+                label="字型樣式"
+                [control]="dataForm.controls.KB_Fonttyped"
+                [options]="KB_FonttypedOptions"
                 optionLabel="label"
                 optionValue="value"
                 [showClear]="true"
