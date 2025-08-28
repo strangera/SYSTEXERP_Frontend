@@ -15,8 +15,10 @@ import { TableComponent } from '@shared/componentkit/table/table.component';
 import { Column, RowEditSaveEvent } from '@shared/componentkit/table/table.model';
 import { CRUDStatus } from '@shared/models/system/CRUDstatus';
 import { ApprovalStatus } from '@shared/models/tls/approval-status.model';
+import { NGXLogger } from 'ngx-logger';
 import { FileUpload, FileUploadHandlerEvent, FileUploadModule } from 'primeng/fileupload';
 import { PanelModule } from 'primeng/panel';
+import { finalize } from 'rxjs';
 import * as XLSX from 'xlsx';
 import { TLS26080Data, TLS26080Detail, TLS2608InsertPayload } from '../tls26080/tls26080.model';
 
@@ -86,33 +88,33 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
   public readonly dfEffect = effect(() => {
     const value = this.dfSignal();
     if (!value) return;
-    console.log(`dfEffect:`, [value, this.df()]);
+    this.logger.debug(`dfEffect:`, [value, this.df()]);
   });
 
   public readonly podNoEffect = effect(() => {
     const podNo = this.podNoSignal();
     if (!podNo) return;
-    console.log(`podNoEffect:`, [podNo]);
+    this.logger.debug(`podNoEffect:`, [podNo]);
   });
 
   public readonly podTypeEffect = effect(() => {
     const podType = this.podTypeSignal();
     if (!podType) return;
-    console.log(`podTypeEffect:`, [podType]);
+    this.logger.debug(`podTypeEffect:`, [podType]);
   });
 
   public readonly fileUploadEffect = effect(() => {
     const file = this.fileSignal();
     if (!file) return;
     this.service.uploadFile(file);
-    console.log(`fileUploadEffect:`, [file]);
+    this.logger.debug(`fileUploadEffect:`, [file]);
   });
 
   /** 抓取全部podNos */
   public readonly podNosEffect = effect(() => {
     this.podNos.clear();
     for (const item of this.service.TLS26080Data()) this.podNos.add(item.pod_no);
-    console.log(`podNos:`, [this.service.TLS26080Data(), Array.from(this.podNos)]);
+    this.logger.debug(`podNos:`, [this.service.TLS26080Data(), Array.from(this.podNos)]);
   });
 
   /** 根據選擇的活動名稱更新表單 */
@@ -124,7 +126,7 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
       pod_sdate: new Date(this.selectedCampaign()!.StartTime),
       pod_edate: new Date(this.selectedCampaign()!.EndTime),
     });
-    console.log(`campaignEffect:`, [this.selectedCampaign(), podDesc]);
+    this.logger.debug(`campaignEffect:`, [this.selectedCampaign(), podDesc]);
   }, { allowSignalWrites: !0 });
 
   // 環友資料表
@@ -177,6 +179,7 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
   constructor(
     public readonly service: TLS26080Service,
     private readonly datePipe: DatePipe,
+    private readonly logger: NGXLogger,
   ) {
     super();
   }
@@ -187,7 +190,7 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
     // this.service.loadTLS26080({ pod_sdate: this.df().pod_sdate.value!, pod_edate: this.df().pod_edate.value! });
     this.service.loadAPS1003(['E']);
     this.service.loadCampaignData();
-    console.log(`init:`, [this.rowdata, this.crudstatus, this.dataForm.value]);
+    this.logger.debug(`init:`, [this.rowdata, this.crudstatus, this.dataForm.value]);
   }
 
   public onInsert(event: RowEditSaveEvent): void {
@@ -203,7 +206,7 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
       tpy_rate_D17: String(d.tpy_rate_D17),
     };
     this.service.keyInTLS26080(payload);
-    console.log(`onInsert:`, [d, event]);
+    this.logger.debug(`onInsert:`, [d, event]);
   }
 
   // 表單提交
@@ -228,16 +231,21 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
             })),
           };
 
-          console.log(`submit:`, [d, payload]);
-          this.service.insertTLS26080(payload);
-          this.loading = !1;
+          this.service.insertTLS26080(payload).pipe(finalize(() => {
+            this.loading = !1;
+            this.logger.debug(`onSubmit:`, [d, payload]);
+          })).subscribe(res => {
+            if (res.Error) return this.messageService.errorBox('更新失敗\n' + res.Message);
+            this.dataForm.reset();
+            this.messageService.successBubble('更新成功');
+          });
         },
       });
     });
   }
 
   private numVal(value: string): { isValid: boolean; errorMessage: string[]; } {
-    console.log(`numValidator:`, [value]);
+    this.logger.debug(`numValidator:`, [value]);
     const num = Number(value);
     if (isNaN(num) || !isFinite(num)) return { isValid: !1, errorMessage: ['請輸入有效的數字'] };
     if (num < 0 || num > 100) return { isValid: !1, errorMessage: ['請輸入有效的數字'] };

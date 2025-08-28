@@ -14,6 +14,7 @@ import { TableComponent } from '@shared/componentkit/table/table.component';
 import { Column, createPaginationConfig } from '@shared/componentkit/table/table.model';
 import { ApprovalStatus } from '@shared/models/tls/approval-status.model';
 import { AccordionModule } from 'primeng/accordion';
+import { finalize } from 'rxjs';
 import { TLS26080Data, TLS26080Query } from './tls26080.model';
 
 @Component({
@@ -103,13 +104,17 @@ export class TLS26080Component extends BasicQueryPageComponent<TLS26080Data> imp
   }
 
   // 刪除項目
-  public onDelete(data: TLS26080Data | TLS26080Data[]): void {
+  public onDelete(event: TLS26080Data[]): void {
     this.confirmationService.confirm({
       message: '是否確認刪除?',
       accept: () => {
 
-        this.messageService.successBubble('刪除成功');
-        this.loading = !1;
+        this.service.deleteTLS26080(event.map(v => String(v.id)))
+          .pipe(finalize(() => this.loading = !1))
+          .subscribe({
+            next: () => this.messageService.successBubble('刪除成功'),
+            error: () => this.messageService.errorBox('刪除失敗')
+          });
       },
     });
     //   const items = Array.isArray(data) ? data : [data];
