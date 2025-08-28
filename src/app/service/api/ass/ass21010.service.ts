@@ -103,7 +103,10 @@ export class ASS21010Service implements OnDestroy {
     this.http.post<ASS21010UpdateStatus>(`${apiUrl}/ASS0000/ASS2000/deleteASS21010`, payload).pipe(
       take(1),
       tap(res => {
-        if (res.Data.IsUpdateSuccess) this.messageService.successBubble(`${payload.ENG_MeterNo} 刪除成功`);
+        if (res.Data.IsUpdateSuccess) {
+          this.messageService.successBubble(`${payload.ENG_MeterNo} 刪除成功`);
+          // this.loadASS21010()
+        }
         else this.messageService.errorBox('刪除失敗\n' + res.Data.ErrorMsg);
       }),
       catchError(error => this.errorHandler.handleError(error))

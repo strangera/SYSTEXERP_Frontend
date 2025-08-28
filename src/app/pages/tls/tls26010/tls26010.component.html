@@ -1,15 +1,13 @@
 <div class="card">
-  <div class="grid align-items-center">
-    <div class="col">
-      <app-menubar [ProgNo]="ProgNo"></app-menubar>
-    </div>
-    <div class="flex gap-2">
-      <app-button btnType="create"
-                  (click)="onCreate()"></app-button>
-    </div>
+  <div class="flex gap-2 mb-2">
+    <app-menubar [ProgNo]="ProgNo"
+                 class="flex-1"></app-menubar>
+    <app-button btnType="create"
+                (click)="onCreate()"></app-button>
   </div>
+
   <p-accordion>
-    <p-accordionTab header="{{ 'query-conditions' | translate }}"
+    <p-accordionTab header="'query-conditions' | translate"
                     [selected]="true"
                     class="line-height-3 m-0"
                     [headerStyleClass]="'query-accordionTab'">
@@ -17,78 +15,68 @@
             id="queryForm"
             (ngSubmit)="onSubmit()">
         <div class="grid p-fluid">
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select label="館別"
-                              controlName="sys3800"
-                              [options]="service.sys3800Data()"
-                              optionLabel="Name"
-                              optionValue="No"
-                              [control]="qf().sys3800"
-                              [submitted]="submitted"></app-multi-select>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select label="樓層"
-                              controlName="sys3900"
-                              [options]="service.sys3900Data()"
-                              optionLabel="Name"
-                              optionValue="No"
-                              [control]="qf().sys3900"
-                              [submitted]="submitted"></app-multi-select>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select label="區域"
-                              controlName="sys3A00"
-                              [options]="service.sys3A00Data()"
-                              optionLabel="Name"
-                              optionValue="No"
-                              [control]="qf().sys3A00"
-                              [submitted]="submitted"></app-multi-select>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select label="收銀機號"
-                              controlName="ecrNos"
-                              [options]="service.ecrData()"
-                              optionLabel="ecr_name"
-                              optionValue="ecr_no"
-                              [control]="qf().ecrNos"
-                              [submitted]="submitted"></app-multi-select>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select label="專櫃名稱"
-                              controlName="tltNos"
-                              [options]="service.tltData()"
-                              optionLabel="tlt_name"
-                              optionValue="tlt_no"
-                              [control]="qf().tltNos"
-                              [submitted]="submitted"></app-multi-select>
-          </div>
+          <app-multi-select class="col-12 md:col-6 lg:col-4"
+                            label="館別"
+                            controlName="sys3800"
+                            [options]="service.sys3800Data()"
+                            optionLabel="Name"
+                            optionValue="No"
+                            [control]="qf().sys3800"
+                            [submitted]="submitted"></app-multi-select>
+          <app-multi-select class="col-12 md:col-6 lg:col-4"
+                            label="樓層"
+                            controlName="sys3900"
+                            [options]="service.sys3900Data()"
+                            optionLabel="Name"
+                            optionValue="No"
+                            [control]="qf().sys3900"
+                            [submitted]="submitted"></app-multi-select>
+          <app-multi-select class="col-12 md:col-6 lg:col-4"
+                            label="區域"
+                            controlName="sys3A00"
+                            [options]="service.sys3A00Data()"
+                            optionLabel="Name"
+                            optionValue="No"
+                            [control]="qf().sys3A00"
+                            [submitted]="submitted"></app-multi-select>
+          <app-multi-select class="col-12 md:col-6 lg:col-4"
+                            label="收銀機號"
+                            controlName="ecrNos"
+                            [options]="service.ecrData()"
+                            optionLabel="ecr_name"
+                            optionValue="ecr_no"
+                            [control]="qf().ecrNos"
+                            [submitted]="submitted"></app-multi-select>
+          <app-multi-select class="col-12 md:col-6 lg:col-4"
+                            label="專櫃名稱"
+                            controlName="tltNos"
+                            [options]="service.tltData()"
+                            optionLabel="tlt_name"
+                            optionValue="tlt_no"
+                            [control]="qf().tltNos"
+                            [submitted]="submitted"></app-multi-select>
           <div class="lg:col-4 d-none"></div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar-range calendarType="dateRange"
-                                label="起始日期"
-                                [startControl]="qf().podSdateS"
-                                [endControl]="qf().podSdateE"
-                                [submitted]="submitted"></app-calendar-range>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar-range calendarType="dateRange"
-                                label="截止日期"
-                                [startControl]="qf().podEdateS"
-                                [endControl]="qf().podEdateE"
-                                [submitted]="submitted"></app-calendar-range>
-          </div>
+          <app-calendar-range class="col-12 md:col-6 lg:col-4"
+                              calendarType="dateRange"
+                              label="起始日期"
+                              [startControl]="qf().podSdateS"
+                              [endControl]="qf().podSdateE"
+                              [submitted]="submitted"></app-calendar-range>
+          <app-calendar-range class="col-12 md:col-6 lg:col-4"
+                              calendarType="dateRange"
+                              label="截止日期"
+                              [startControl]="qf().podEdateS"
+                              [endControl]="qf().podEdateE"
+                              [submitted]="submitted"></app-calendar-range>
         </div>
-      </form>
-      <div>
-        <div class="grid justify-content-end">
+        <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
           <app-button btnType="clear"
-                      [form]="queryForm"
-                      (click)="onClear()"></app-button>
+                      [form]="queryForm"></app-button>
           <app-button btnType="query"
-                      (click)="onSubmitQuery()"
+                      (click)="onSubmit()"
                       [loading]="loading"></app-button>
         </div>
-      </div>
+      </form>
     </p-accordionTab>
   </p-accordion>
 </div>
@@ -108,8 +96,9 @@
                (detail)="onDetail($event)"
                [columns]="columns"
                [totalRecords]="totalRecords()"
+               (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit()"
                [lazy]="true"
-               [loading]="service.tableLoading"
+               [loading]="loading"
                (lazyLoadData)="onSubmit()"></app-table>
   </div>
 </div>

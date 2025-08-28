@@ -1,12 +1,9 @@
 <div class="card">
-  <div class="grid align-items-center">
-    <div class="col">
-      <app-menubar [ProgNo]="ProgNo"></app-menubar>
-    </div>
-    <div class="flex gap-2">
-      <app-button btnType="back"
-                  (click)="onCancel()"></app-button>
-    </div>
+  <div class="flex gap-2 mb-2">
+    <app-menubar [ProgNo]="ProgNo"
+                 class="flex-1"></app-menubar>
+    <app-button btnType="back"
+                (click)="onCancel()"></app-button>
   </div>
 
   <p-panel [header]="formTitle | translate"
@@ -83,17 +80,14 @@
           </app-input-text>
         </div>
       </div>
-    </form>
-    <div class="col pt-4">
-      <div class="grid justify-content-end">
-        <app-button btnType="clear"
-                    (click)="onClear()"
-                    *ngIf="!isFormReadable"></app-button>
+      <div *ngIf="!isFormReadable"
+           class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+        <app-button btnType="cancel"
+                    [form]="dataForm"></app-button>
         <app-button btnType="submit"
-                    (click)="onSubmit()"
-                    *ngIf="!isFormReadable"></app-button>
+                    (click)="onSubmit()"></app-button>
       </div>
-    </div>
+    </form>
   </p-panel>
 </div>
 
@@ -115,6 +109,10 @@
                    (importExcel)="onImportExcel($event)"
                    [data]="[]"
                    (selectionChange)="onSelectionChange($event)"
+                   [totalRecords]="totalRecords()"
+                   (lazyLoadData)="onLazyLoadData($event, dataForm); onSubmit()"
+                   [lazy]="true"
+                   [loading]="loading"
                    [dataKey]="'TLT_No'"
                    [tableKey]="'ASS21020_detail'"
                    [columns]="columns">

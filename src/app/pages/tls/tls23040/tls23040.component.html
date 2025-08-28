@@ -153,21 +153,57 @@
     </p-accordionTab>
   </p-accordion>
 </div>
+<!-- 放在表格上一張卡片前端或條件區下方都可 -->
+<div class="card mb-2">
+  <div class="flex gap-4 align-items-center">
+    <p-radioButton
+      name="viewMode"
+      inputId="vm-invoice"
+      label="發票明細"
+      value="invoice"
+      [(ngModel)]="viewMode"
+      [ngModelOptions]="{ standalone: true }"
+      (onClick)="onViewChange()"
+    ></p-radioButton>
 
-<div class="card">
-<app-table
-  tableKey="TLS23040"
-  [dataKey]="'_rowKey'"
-  [data]="data"
-  [columns]="columns"
-  [showTotal]="true"
-  [totalRecords]="totalRecords"
-  [loading]="loading"
-  [showManage]="false"
-  [showDelete]="false"
-  [showCheckBox]="false"
-  [multiSortMeta]="sortMeta"
-  [lazy]="true"
-  (lazyLoadData)="onLazyLoadData($event, queryForm)"
-></app-table>
+    <p-radioButton
+      name="viewMode"
+      inputId="vm-payment"
+      label="付款明細"
+      value="payment"
+      [(ngModel)]="viewMode"
+      [ngModelOptions]="{ standalone: true }"
+      (onClick)="onViewChange()"
+    ></p-radioButton>
+
+    <p-radioButton
+      name="viewMode"
+      inputId="vm-discount"
+      label="折扣/金額明細"
+      value="discount"
+      [(ngModel)]="viewMode"
+      [ngModelOptions]="{ standalone: true }"
+      (onClick)="onViewChange()"
+    ></p-radioButton>
+  </div>
 </div>
+
+<!-- 單一張表，改成綁「動態資料/欄位」 -->
+<div class="card">
+  <app-table
+    tableKey="TLS23040"
+    [dataKey]="'_rowKey'"
+    [data]="activeData"
+    [columns]="activeColumns"
+    [showTotal]="true"
+    [totalRecords]="totalRecords"
+    [loading]="loading"
+    [showManage]="false"
+    [showDelete]="false"
+    [showCheckBox]="false"
+    [multiSortMeta]="sortMeta"
+    [lazy]="true"
+    (lazyLoadData)="onLazyLoadData($event, queryForm)"
+  ></app-table>
+</div>
+

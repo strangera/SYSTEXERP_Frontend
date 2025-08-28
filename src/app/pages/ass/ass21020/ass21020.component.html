@@ -1,12 +1,9 @@
 <div class="card">
-  <div class="grid align-items-center">
-    <div class="col">
-      <app-menubar [ProgNo]="ProgNo"></app-menubar>
-    </div>
-    <div class="flex gap-2">
-      <app-button btnType="create"
-                  (click)="onCreate()"></app-button>
-    </div>
+  <div class="flex gap-2 mb-2">
+    <app-menubar [ProgNo]="ProgNo"
+                 class="flex-1"></app-menubar>
+    <app-button btnType="create"
+                (click)="onCreate()"></app-button>
   </div>
 
   <p-accordion>
@@ -83,14 +80,14 @@
                           [submitted]="submitted"></app-dropdown>
           </div> -->
         </div>
+        <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+          <app-button btnType="clear"
+                      [form]="queryForm"></app-button>
+          <app-button btnType="query"
+                      (click)="onSubmit()"
+                      [loading]="loading"></app-button>
+        </div>
       </form>
-      <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
-        <app-button btnType="clear"
-                    (click)="onClear()"></app-button>
-        <app-button btnType="query"
-                    (click)="onSubmit()"
-                    [loading]="loading"></app-button>
-      </div>
     </p-accordionTab>
   </p-accordion>
 </div>
@@ -102,6 +99,10 @@
                [dataKey]="'ID'"
                [tableKey]="'ASS21020_Data'"
                [columns]="columns"
+               [totalRecords]="totalRecords()"
+               (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit()"
+               [lazy]="true"
+               [loading]="loading"
                (edit)="onEdit($event)"
                (delete)="onDelete($event)"
                (detail)="onDetail($event)"></app-table>

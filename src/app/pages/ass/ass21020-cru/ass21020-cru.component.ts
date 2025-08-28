@@ -53,6 +53,8 @@ export class ASS21020CRUComponent extends BasicCruPageComponent<unknown> impleme
   private readonly dfSignal = toSignal(this.dataForm.valueChanges);
   private readonly meterNoSignal = toSignal(this.df().ENG_MeterNo.valueChanges);
 
+  public readonly totalRecords = computed(() => [].length);
+
   public readonly meterNoEffect = effect(() => {
     const meterNo = String(this.meterNoSignal());
     const selected = meterNo && this.service.engMeterNoMap.get(meterNo);
@@ -104,14 +106,15 @@ export class ASS21020CRUComponent extends BasicCruPageComponent<unknown> impleme
   public onSubmit(): void {
     this.handleSubmit(this.dataForm, () => {
       const payload = {};
+      this.confirmationService.confirm({
+        message: '是否確認新增?',
+        accept: () => {
 
-
-      this.loading = !1;
+          this.messageService.successBubble('新增成功');
+          this.loading = !1;
+        },
+      });
     });
-  }
-
-  public onClear(): void {
-    this.dataForm.reset();
   }
 
   /** 處理 excel 匯入 */

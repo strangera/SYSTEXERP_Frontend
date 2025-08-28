@@ -55,6 +55,8 @@ export class ASS21020Component extends BasicQueryPageComponent<unknown> implemen
   private readonly meterNoSignal = toSignal(this.qf().ENG_MeterNo.valueChanges);
   private readonly tltNoSignal = toSignal(this.qf().TLT_No.valueChanges);
 
+  public readonly totalRecords = computed(() => this.service.ASS21020Data().length);
+
   public readonly meterNoEffect = effect(() => {
     const meterNo = this.meterNoSignal();
     const selected = meterNo && this.service.engMeterNoMap.get(meterNo) || { Location_No: '', ENG_MeterNo: '' };
@@ -117,21 +119,21 @@ export class ASS21020Component extends BasicQueryPageComponent<unknown> implemen
         Mid: Number(this.authService.currentUserValue?.mid) ?? 0,
       });
 
-      this.queryStateService.setQueryState(this.ProgNo, this.queryForm.value);
+      this.queryStateService.setQueryState(this.ProgNo, this.queryForm.getRawValue());
       this.loading = !1;
     });
   }
 
-  public override onCreate(data?: unknown): void {
-    this.queryStateService.setQueryState(this.ProgNo, this.queryForm.value);
-    super.onCreate(data);
-  }
-
   public onDelete(event: ASS21020Data): void {
     this.logger.debug(`Deleting:`, [event]);
-  }
 
-  public onClear(): void {
-    this.queryForm.reset();
+    this.confirmationService.confirm({
+      message: '是否確認刪除?',
+      accept: () => {
+
+        this.messageService.successBubble('刪除成功');
+        this.loading = !1;
+      },
+    });
   }
 }

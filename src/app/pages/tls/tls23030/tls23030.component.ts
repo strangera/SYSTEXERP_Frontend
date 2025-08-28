@@ -44,6 +44,7 @@ import { TableComponent } from '@shared/componentkit/table/table.component';
 import { timeout, catchError, debounceTime, map } from 'rxjs/operators';
 import { DropDownListService } from '@service/utility/dropDownList.service';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
+import { CommonModule } from '@angular/common'; // ⬅️ 新增
 
 type DisplayMode = 'Report' | 'SummaryReport';
 @UntilDestroy()
@@ -69,9 +70,11 @@ type DisplayMode = 'Report' | 'SummaryReport';
     RadioButtonModule,
     TranslateModule,
     TableComponent,
+    CommonModule,    
   ],
 })
 export class TLS23030Component extends BasicQueryPageComponent<any> {
+    showSummary = false;
   data: any[] = [];
   totalRecords = 0;
 payNoToTypeMap = new Map<string, string>();
@@ -275,95 +278,98 @@ private toBoolOrNull(v: any): boolean | null {
 
  // 放在 TLS23030Component 內
 // ✅ 放進 TLS23030Component 內，覆蓋原本的 onSubmit
-onSubmit(form: FormGroup): void {
-  this.loading = true;
+  // ✅ 修改：onSubmit 依 showSummary 分流
+  onSubmit(form: FormGroup): void {
+    this.loading = true;
 
-  // 取表單值（不改動原表單）
-  const raw: any = { ...form.getRawValue() };
+    const raw: any = { ...form.getRawValue() };
+    // ——— 依你原本處理：日期、陣列、數字、布林、排序 ———
+    raw['TXN_DateStart'] = this.toYMD(raw['TXN_DateStart']);
+    raw['TXN_DateEnd']   = this.toYMD(raw['TXN_DateEnd']);
 
-  // 1) 日期 -> yyyy-MM-dd
-  raw['TXN_DateStart'] = this.toYMD(raw['TXN_DateStart']);
-  raw['TXN_DateEnd']   = this.toYMD(raw['TXN_DateEnd']);
+    const ensureArr = (v: any) => (Array.isArray(v) ? v : (v == null || v === '' ? [] : [v]));
+    raw['ECR_No']     = ensureArr(raw['ECR_No']);
+    raw['TLT_No']     = ensureArr(raw['TLT_No']);
+    raw['TXN_Status'] = ensureArr(raw['TXN_Status']);
+    raw['CRD_Type']   = ensureArr(raw['CRD_Type']);
+    raw['org_id']     = ensureArr(raw['org_id']);
+    raw['tlt_floor']  = ensureArr(raw['tlt_floor']);
+    raw['PAY_NO']     = ensureArr(raw['PAY_NO']);
 
-  // 2) 陣列/單值整理
-  const ensureArr = (v: any) =>
-    Array.isArray(v) ? v : (v == null || v === '' ? [] : [v]);
+    const toNumOrNull = (v: any) => (v === '' || v == null ? null : Number(v));
+    const emptyToNull = (v: any) => (v === '' ? null : v);
+    raw['TXN_No_Start']     = toNumOrNull(raw['TXN_No_Start']);
+    raw['TXN_No_End']       = toNumOrNull(raw['TXN_No_End']);
+    raw['TXN_PayAmt_Start'] = toNumOrNull(raw['TXN_PayAmt_Start']);
+    raw['TXN_PayAmt_End']   = toNumOrNull(raw['TXN_PayAmt_End']);
+    raw['TXN_MemCard']      = emptyToNull(raw['TXN_MemCard']);
+    raw['CRD_No']           = emptyToNull(raw['CRD_No']);
+    raw['pay_taxtype']      = emptyToNull(raw['pay_taxtype']);
+    raw['rece_yn']          = emptyToNull(raw['rece_yn']);
+    raw['cash_yn']          = emptyToNull(raw['cash_yn']);
+    raw['tlt_building']     = emptyToNull(raw['tlt_building']);
+    raw['IsPayType']        = this.toBoolOrNull(raw['IsPayType']);
+    raw['IsHaveTERM_No']    = this.toBoolOrNull(raw['IsHaveTERM_No']);
 
-  raw['ECR_No']     = ensureArr(raw['ECR_No']);
-  raw['TLT_No']     = ensureArr(raw['TLT_No']);
-  raw['PAY_Type']   = ensureArr(raw['PAY_Type']);
-  raw['TXN_Status'] = ensureArr(raw['TXN_Status']);
-  raw['CRD_Type']   = ensureArr(raw['CRD_Type']);
-  raw['org_id']     = ensureArr(raw['org_id']);
-  raw['tlt_floor']  = ensureArr(raw['tlt_floor']);
-  raw['PAY_NO']     = ensureArr(raw['PAY_NO']);
+    // 排序：沿用你現有的 sort 邏輯
+    raw['SortBy'] = Array.isArray(raw['SortBy']) && raw['SortBy'].length
+      ? raw['SortBy'] : (this.sortMeta.length ? this.sortMeta : this.defaultSort);
+    if (!raw['OrderBy']) delete raw['OrderBy'];
 
-  // 3) 數字/空字串處理
-  const toNumOrNull  = (v: any) => (v === '' || v == null ? null : Number(v));
-  const emptyToNull  = (v: any) => (v === '' ? null : v);
+    // === 分流 ===
+    const done = () => (this.loading = false);
 
-  raw['TXN_No_Start']     = toNumOrNull(raw['TXN_No_Start']);
-  raw['TXN_No_End']       = toNumOrNull(raw['TXN_No_End']);
-  raw['TXN_PayAmt_Start'] = toNumOrNull(raw['TXN_PayAmt_Start']);
-  raw['TXN_PayAmt_End']   = toNumOrNull(raw['TXN_PayAmt_End']);
-  raw['TXN_MemCard']      = emptyToNull(raw['TXN_MemCard']);
-  raw['CRD_No']           = emptyToNull(raw['CRD_No']);
-  raw['pay_taxtype']      = emptyToNull(raw['pay_taxtype']);
-  raw['rece_yn']          = emptyToNull(raw['rece_yn']);
-  raw['cash_yn']          = emptyToNull(raw['cash_yn']);
-  raw['tlt_building']     = emptyToNull(raw['tlt_building']);
+    if (this.showSummary) {
+      // ✅ 彙總查詢
+      this.tls23030Service.queryTLS23030Summary(raw)
+        .pipe(timeout(60_000), catchError(err => {
+          console.error('TLS23030 Summary 失敗:', err);
+          this.summaryData = [];
+          this.summaryTotals = { totalPayAmt: 0, totalTaxAlwnc: 0 };
+          return of({ Data: [] } as any);
+        }), finalize(done))
+        .subscribe((res: any) => {
+          const packs = Array.isArray(res?.Data) ? res.Data : [];
+          // 累計總計
+          const totals = packs.reduce((acc: any, p: any) => ({
+            totalPayAmt:   acc.totalPayAmt   + Number(p?.totalPayAmt ?? 0),
+            totalTaxAlwnc: acc.totalTaxAlwnc + Number(p?.totalTaxAlwnc ?? 0),
+          }), { totalPayAmt: 0, totalTaxAlwnc: 0 });
 
-  // 4) 布林值（Y/N/1/0/true/false -> boolean|null）
-  const toBoolOrNull = (v: any): boolean | null => {
-    if (typeof v === 'boolean') return v;
-    if (v == null || v === '') return null;
-    if (v === 'Y' || v === 'true' || v === 1 || v === '1') return true;
-    if (v === 'N' || v === 'false' || v === 0 || v === '0') return false;
-    return null;
-  };
-raw['IsPayType']     = this.toBoolOrNull(raw['IsPayType']);
-raw['IsHaveTERM_No'] = this.toBoolOrNull(raw['IsHaveTERM_No']);
+          this.summaryTotals = totals;
 
-  // 5) 分頁/排序 — 只保留「大寫」鍵
+          // 展開 SummaryDetails
+          const details = packs.flatMap((p: any) =>
+            Array.isArray(p?.SummaryDetails) ? p.SummaryDetails : []
+          );
 
+          this.summaryData = details.map((r: any, i: number) => ({
+            ...r,
+            _rowKey: `${r?.TXN_Date ?? ''}|${r?.ECR_No ?? ''}|${r?.tlt_no ?? ''}|${r?.PAY_NO ?? ''}|${i}`,
+          }));
 
+          // 切到彙總 → 清空明細
+          this.data = [];
+          this.totalRecords = this.summaryData.length;
+        });
 
-
-  raw['SortBy'] = Array.isArray(raw['SortBy']) && raw['SortBy'].length
-  ? raw['SortBy']
-  : (this.sortMeta.length ? this.sortMeta : this.defaultSort);
-
-
-
-  
-  // 若後端不吃 OrderBy，可移除
-  if (!raw['OrderBy']) delete raw['OrderBy'];
-
-  this.tls23030Service.queryTLS23030(raw)
-    .pipe(
-      timeout(60_000),
-      catchError(err => {
-        console.error('TLS23030 查詢失敗:', err);
-        this.data = [];
-        this.totalRecords = 0;
-        return of({ Status: 'ERROR', Data: [], TotalCount: 0 } as any);
-      }),
-      finalize(() => {
-        this.loading = false;
-      })
-    )
-    .subscribe((res: any) => {
-      if (!res || (res.Status && res.Status !== '0000')) {
-        this.data = [];
-        this.totalRecords = 0;
-        return;
-      }
-
-      const details = this.extractTLS23030Details(res);
-      this.data = details;
-      this.totalRecords = res?.TotalCount ?? details.length ?? 0;
-    });
-}
+    } else {
+      // ✅ 原本明細查詢
+      this.tls23030Service.queryTLS23030(raw)
+        .pipe(timeout(60_000), catchError(err => {
+          console.error('TLS23030 查詢失敗:', err);
+          this.data = [];
+          this.totalRecords = 0;
+          return of({ Data: [], TotalCount: 0 } as any);
+        }), finalize(done))
+        .subscribe((res: any) => {
+          const details = this.extractTLS23030Details(res);
+          this.data = details;
+          this.summaryData = []; // 清空彙總
+          this.totalRecords = res?.TotalCount ?? details.length ?? 0;
+        });
+    }
+  }
 
 
 
@@ -423,4 +429,27 @@ private extractTLS23030Details(res: any): any[] {
   private formatNumber(val: number): string {
     return val?.toLocaleString('en-US') || '0';
   }
+  // （可選）若要在畫面上顯示總計，可保留
+  summaryTotals = { totalPayAmt: 0, totalTaxAlwnc: 0 };
+
+  // ✅ 新增：切換時回第 1 頁並重查
+  onToggleSummary() {
+    this.queryForm.patchValue({ pageIndex: 1 }, { emitEvent: false });
+    this.onSubmit(this.queryForm);
+  }
+    // ✅ 新增：彙總資料與欄位
+  summaryData: any[] = [];
+  summaryColumns = [
+    { field: 'TXN_Date',     header: '銷售日期',     visible: true,  format: (v: string) => this.formatDate(v) },
+    { field: 'ECR_No',       header: '收銀機號',     visible: true },
+    { field: 'tlt_no',       header: '專櫃編號',     visible: true },
+    { field: 'tlt_name',     header: '櫃位名稱',     visible: true,  style: 'text-left' },
+    { field: 'PAY_NO',       header: '付款別代號',   visible: true },
+    { field: 'PAY_NAME',     header: '付款別',       visible: true },
+    { field: 'TXN_PayAmt',   header: '金額',         visible: true,  style: 'text-right', format: (n: number) => this.formatNumber(n) },
+    { field: 'TXN_TaxAlwnc', header: '備抵稅額',     visible: true,  style: 'text-right', format: (n: number) => this.formatNumber(n) },
+    { field: 'org_id',       header: '組織編號',     visible: true },
+    { field: 'Org_Name',     header: '組織名稱',     visible: true },
+  ];
+
 }
