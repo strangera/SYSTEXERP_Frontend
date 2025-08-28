@@ -111,7 +111,7 @@ export class FareColumnDefinitions {
         autoWidth: true,
         directEdit: true,
         autoEditOnSelect: true,      // ✅ 勾選扣款項目 → 進入編輯模式設定單價、數量
-        autoSaveOnUnselect: false,     // ✅ 取消勾選 → 自動儲存並退出編輯
+        autoSaveOnUnselect: true,     // ✅ 取消勾選 → 自動儲存並退出編輯
       },
       {
         field: 'cap_item',
@@ -217,7 +217,7 @@ export class FareColumnDefinitions {
         width: '80px',
         directEdit: true,
         autoEditOnSelect: true,      // ✅ 勾選扣款項目 → 進入編輯模式設定單價、數量
-        autoSaveOnUnselect: false,     // ✅ 取消勾選 → 自動儲存並退出編輯
+        autoSaveOnUnselect: true,     // ✅ 取消勾選 → 自動儲存並退出編輯
       },
       {
         field: 'cap_item',
@@ -355,7 +355,7 @@ export class FareColumnDefinitions {
         width: '80px',
         directEdit: true,
         autoEditOnSelect: true,      // ✅ 勾選扣款項目 → 進入編輯模式設定單價、數量
-        autoSaveOnUnselect: false,     // ✅ 取消勾選 → 自動儲存並退出編輯
+        autoSaveOnUnselect: true,     // ✅ 取消勾選 → 自動儲存並退出編輯
       },
       {
         field: 'auto_calc',
@@ -528,7 +528,7 @@ export class FareColumnDefinitions {
         width: '80px',
         directEdit: true,
         autoEditOnSelect: true,      // ✅ 勾選扣款項目 → 進入編輯模式設定單價、數量
-        autoSaveOnUnselect: false,     // ✅ 取消勾選 → 自動儲存並退出編輯
+        autoSaveOnUnselect: true,     // ✅ 取消勾選 → 自動儲存並退出編輯
       },
       {
         field: 'cap_item',
@@ -635,7 +635,7 @@ export class FareColumnDefinitions {
         width: '80px',
         directEdit: true,
         autoEditOnSelect: true,      // ✅ 勾選扣款項目 → 進入編輯模式設定單價、數量
-        autoSaveOnUnselect: false,     // ✅ 取消勾選 → 自動儲存並退出編輯
+        autoSaveOnUnselect: true,     // ✅ 取消勾選 → 自動儲存並退出編輯
       },
       {
         field: 'cap_item',

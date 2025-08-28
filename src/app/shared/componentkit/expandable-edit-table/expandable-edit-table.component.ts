@@ -2146,15 +2146,51 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
     }
   }
 
+  // onCheckboxChange(rowData: any, field: string, newValue: any, rowIndex: number, column: ColumnDef): void {
+  //   console.log(`✅ Checkbox 變更: ${field} = ${newValue} (第${rowIndex + 1}行)`);
+
+  //   // 🎯 勾選時：立即更新 + 進入編輯模式
+  //   if (newValue === true) {
+  //     rowData[field] = newValue;
+
+  //     if (column.autoEditOnSelect && !this.isRowEditing(rowIndex)) {
+  //       console.log(`🎯 勾選，自動進入編輯模式`);
+  //       setTimeout(() => {
+  //         this.onRowEditInit(rowData, rowIndex);
+  //         this.cdr.detectChanges();
+  //       }, 150);
+  //     }
+  //   }
+
+  //   // 🎯 取消勾選時：特殊處理
+  //   else if (newValue === false) {
+  //     if (this.isRowEditing(rowIndex)) {
+  //       console.log(`❌ 取消勾選，退出編輯模式`);
+
+  //       // 🚨 關鍵：使用 Promise 確保時序正確
+  //       this.handleUnselectWithCancel(rowData, rowIndex, field, newValue);
+  //     } else {
+  //       // 如果不在編輯模式，直接更新
+  //       rowData[field] = newValue;
+  //     }
+  //   }
+
+  //   // 觸發直接編輯保存事件
+  //   if (column.directEdit) {
+  //     this.onDirectEditChange(rowData, field, newValue, rowIndex, column);
+  //   }
+  // }
+
   onCheckboxChange(rowData: any, field: string, newValue: any, rowIndex: number, column: ColumnDef): void {
     console.log(`✅ Checkbox 變更: ${field} = ${newValue} (第${rowIndex + 1}行)`);
 
-    // 🎯 勾選時：立即更新 + 進入編輯模式
+    // 勾選時：立即更新 + 進入編輯模式
     if (newValue === true) {
       rowData[field] = newValue;
 
+      // 檢查是否啟用自動編輯
       if (column.autoEditOnSelect && !this.isRowEditing(rowIndex)) {
-        console.log(`🎯 勾選，自動進入編輯模式`);
+        console.log(`勾選，自動進入編輯模式`);
         setTimeout(() => {
           this.onRowEditInit(rowData, rowIndex);
           this.cdr.detectChanges();
@@ -2162,15 +2198,14 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
       }
     }
 
-    // 🎯 取消勾選時：特殊處理
+    // 取消勾選時：特殊處理
     else if (newValue === false) {
-      if (this.isRowEditing(rowIndex)) {
-        console.log(`❌ 取消勾選，退出編輯模式`);
-
-        // 🚨 關鍵：使用 Promise 確保時序正確
+      // 新增：檢查是否啟用自動保存退出
+      if (column.autoSaveOnUnselect && this.isRowEditing(rowIndex)) {
+        console.log(`取消勾選，自動保存並退出編輯模式`);
         this.handleUnselectWithCancel(rowData, rowIndex, field, newValue);
       } else {
-        // 如果不在編輯模式，直接更新
+        // 如果沒有啟用自動保存退出，只更新值
         rowData[field] = newValue;
       }
     }

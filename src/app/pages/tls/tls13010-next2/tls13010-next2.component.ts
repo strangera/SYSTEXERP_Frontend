@@ -206,8 +206,21 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
       field: 'sst_rate', header: '特價抽成(%)', editable: true, type: 'number', allowDecimal: true,
       decimalPlaces: 3
     },
-    { field: 'cap_saletype2', header: '全館消費滿額集點活動', editable: true, type: 'checkbox' },
-    { field: 'cap_saletype1', header: '滿仟送佰', editable: true, type: 'checkbox' },
+    {
+      field: 'cap_saletype2',
+      header: '全館消費滿額集點活動',
+      editable: true, type: 'checkbox',
+      autoEditOnSelect: false,
+      autoSaveOnUnselect: false
+    },
+    {
+      field: 'cap_saletype1',
+      header: '滿仟送佰',
+      editable: true,
+      type: 'checkbox',
+      autoEditOnSelect: false,
+      autoSaveOnUnselect: false
+    },
   ];
 
   // 數據
