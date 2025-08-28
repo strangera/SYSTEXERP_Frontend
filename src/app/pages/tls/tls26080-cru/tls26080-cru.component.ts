@@ -1,4 +1,4 @@
-import { DatePipe, DecimalPipe } from '@angular/common';
+import { DatePipe, DecimalPipe, NgIf } from '@angular/common';
 import { Component, OnInit, computed, effect, signal, viewChild } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { FormControl, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
@@ -26,6 +26,7 @@ import { TLS26080Data, TLS26080Detail, TLS2608InsertPayload } from '../tls26080/
   styleUrl: './tls26080-cru.component.scss',
   standalone: !0,
   imports: [
+    NgIf,
     FileUploadModule,
     FormsModule,
     PanelModule,
@@ -124,14 +125,6 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
     console.log(`campaignEffect:`, [this.selectedCampaign(), podDesc]);
   }, { allowSignalWrites: !0 });
 
-  /** 初始化靜態資料 */
-  public readonly staticDataEffect = effect(() => {
-    const detail = this.service.TLS26080Detail();
-    if (!detail) return;
-    TLS26080CRUComponent.staticDetailData = detail;
-    this.staticDataEffect.destroy(); // 只需執行一次
-  });
-
   public readonly totalRecords = computed(() => this.service.TLS26080Detail().length);
 
   // 環友資料表
@@ -179,9 +172,6 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
   //   { field: 'amountOrRate', header: '金額/比率' }
   // ];
 
-  // 靜態資料: 用於表單初始化和重置
-  private static staticData: TLS26080Data;
-  private static staticDetailData: TLS26080Detail[];
   private podNos = new Set<string>();
 
   constructor(
@@ -197,7 +187,6 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
     // this.service.loadTLS26080({ pod_sdate: this.df().pod_sdate.value!, pod_edate: this.df().pod_edate.value! });
     this.service.loadAPS1003(['E']);
     this.service.loadCampaignData();
-    TLS26080CRUComponent.staticData = this.dataForm.value as TLS26080Data;
     console.log(`init:`, [this.rowdata, this.crudstatus, this.dataForm.value]);
   }
 
@@ -217,48 +206,33 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
     console.log(`onInsert:`, [d, event]);
   }
 
-  public onClear(): void {
-    this.crudstatus === CRUDStatus.Edit
-      ? this.dataForm.reset(TLS26080CRUComponent.staticData)
-      : this.dataForm.reset({
-        pod_no: '自動給號',
-        pod_sdate: this.service.dateS,
-        pod_edate: this.service.dateE,
-        pod_status: ApprovalStatus.未核准,
-      });
-    this.crudstatus === CRUDStatus.Edit
-      ? this.service.TLS26080Detail.set(TLS26080CRUComponent.staticDetailData)
-      : this.service.TLS26080Detail.set([]);
-  };
-
   // 表單提交
   public onSubmit(): void {
     this.handleSubmit(this.dataForm, () => {
       this.confirmationService.confirm({
         message: '是否確認存檔?',
         accept: () => {
-          const value = this.dataForm.getRawValue();
+          const d = this.dataForm.getRawValue();
           const payload = <TLS2608InsertPayload>{
-            ...value,
-            pod_no: value.pod_no,
-            pod_desc: value.pod_desc,
-            pod_sdate: value.pod_sdate,
-            pod_edate: value.pod_edate,
-            pod_busdate: value.pod_busdate,
-            pod_type: value.pod_type,
+            ...d,
+            pod_no: d.pod_no,
+            pod_desc: d.pod_desc,
+            pod_sdate: d.pod_sdate,
+            pod_edate: d.pod_edate,
+            pod_busdate: d.pod_busdate,
+            pod_type: d.pod_type,
             TALPORDERD_VOUCHERDetails: this.service.TLS26080Detail().map(item => ({
               ...item,
-              pod_no: value.pod_no,
-              pod_type: value.pod_type,
+              pod_no: d.pod_no,
+              pod_type: d.pod_type,
             })),
           };
 
-          console.log(`submit:`, [value, payload]);
-
+          console.log(`submit:`, [d, payload]);
           this.service.insertTLS26080(payload);
+          this.messageService.successBubble('存檔成功');
           this.loading = !1;
         },
-        reject: () => this.messageService.infoBubble('已取消存檔')
       });
     });
   }
@@ -266,9 +240,6 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
   private numVal(value: string): { isValid: boolean; errorMessage: string[]; } {
     console.log(`numValidator:`, [value]);
     const num = Number(value);
-    if (isNaN(num) || !isFinite(num)) return { isValid: !1, errorMessage: ['請輸入有效的數字'] };
-    if (num < 0 || num > 100) return { isValid: !1, errorMessage: ['請輸入有效的數字'] };
-    return { isValid: !0, errorMessage: [] };
     if (isNaN(num) || !isFinite(num)) return { isValid: !1, errorMessage: ['請輸入有效的數字'] };
     if (num < 0 || num > 100) return { isValid: !1, errorMessage: ['請輸入有效的數字'] };
     return { isValid: !0, errorMessage: [] };

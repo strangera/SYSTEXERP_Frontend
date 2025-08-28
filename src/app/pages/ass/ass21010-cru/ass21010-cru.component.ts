@@ -72,9 +72,6 @@ export class ASS21010CRUComponent extends BasicCruPageComponent<ASS21010Data> im
     this.logger.debug(`Location changes:`, [locations]);
   });
 
-  // 靜態資料: 用於表單初始化和重置
-  private static staticData: ASS21010Data;
-
   constructor(
     public readonly service: ASS21010Service,
     private readonly logger: NGXLogger,
@@ -90,39 +87,32 @@ export class ASS21010CRUComponent extends BasicCruPageComponent<ASS21010Data> im
 
     if (this.crudstatus !== CRUDStatus.Create && this.rowdata) {
       Reflect.has(this.rowdata, 'Location_No') && this.df().Location_No.setValue(this.rowdata.Location_No);
-      ASS21010CRUComponent.staticData = this.rowdata;
       this.logger.debug(`rowData:`, [this.rowdata]);
     }
   }
 
   public onSubmit(): void {
     this.handleSubmit(this.dataForm, () => {
-      const d = this.dataForm.value;
-      const payload: ASS21010Payload = {
-        ENG_Type: d.ENGType! ?? '',
-        ENG_MeterNo: d.ENG_MeterNo ?? '',
-        Location_No: d.Location_No ?? '',
-        ENG_Remark: d.ENG_Remark ?? '',
-        ID: (this.rowdata?.ID) ?? 0,
-        SYS_StoreNo: this.user.SYS_StoreNo,
-        Mid: Number(this.user.mid),
-      };
+      this.confirmationService.confirm({
+        message: '是否確認存檔?',
+        accept: () => {
+          const d = this.dataForm.getRawValue();
+          const payload: ASS21010Payload = {
+            ENG_Type: d.ENGType! ?? '',
+            ENG_MeterNo: d.ENG_MeterNo ?? '',
+            Location_No: d.Location_No ?? '',
+            ENG_Remark: d.ENG_Remark ?? '',
+            ID: (this.rowdata?.ID) ?? 0,
+            SYS_StoreNo: this.user.SYS_StoreNo,
+            Mid: Number(this.user.mid),
+          };
 
-      this.service.updateASS21010(payload);
-      this.logger.debug(`onSubmit:`, [d, payload]);
-      this.loading = !1;
+          this.service.updateASS21010(payload);
+          this.logger.debug(`onSubmit:`, [d, payload]);
+          this.loading = !1;
+          this.messageService.successBubble('存檔成功');
+        },
+      });
     });
   }
-
-  public onClear(): void {
-    this.logger.debug(`onClear:`, [ASS21010CRUComponent.staticData]);
-    const d = ASS21010CRUComponent.staticData;
-    if (this.crudstatus === CRUDStatus.Create) this.dataForm.reset();
-    else this.dataForm.setValue({
-      ENGType: d.ENGType,
-      ENG_MeterNo: d.ENG_MeterNo,
-      Location_No: d.Location_No,
-      ENG_Remark: d.ENG_Remark,
-    }, { emitEvent: !1 });
-  };
 }

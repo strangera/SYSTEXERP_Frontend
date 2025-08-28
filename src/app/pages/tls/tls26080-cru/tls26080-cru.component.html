@@ -16,56 +16,50 @@
           id="dataForm"
           (ngSubmit)="onSubmit()">
       <div class="grid p-fluid">
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text label="活動編號"
-                          controlName="pod_no"
-                          [control]="df().pod_no"
-                          [disabled]="true"
-                          [submitted]="submitted"></app-input-text>
-        </div>
-
-        <div class="col-12 md:col-6 lg:col-8">
-          <app-dropdown label="活動名稱"
-                        controlName="pod_desc"
-                        [options]="service.campaignData()"
-                        optionLabel="CampaignName"
-                        optionValue="CampaignId"
-                        [control]="df().pod_desc"
-                        [submitted]="submitted"></app-dropdown>
-        </div>
+        <app-input-text class="col-12 md:col-6 lg:col-4"
+                        label="活動編號"
+                        controlName="pod_no"
+                        [control]="df().pod_no"
+                        [disabled]="true"
+                        [submitted]="submitted"></app-input-text>
+        <app-dropdown class="col-12 md:col-6 lg:col-8"
+                      label="活動名稱"
+                      controlName="pod_desc"
+                      [options]="service.campaignData()"
+                      optionLabel="CampaignName"
+                      optionValue="CampaignId"
+                      [control]="df().pod_desc"
+                      [submitted]="submitted"></app-dropdown>
       </div>
 
       <div class="grid p-fluid">
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-dropdown label="活動類型"
-                        controlName="pod_type"
-                        [options]="service.podTypeItems()"
-                        optionLabel="Name"
-                        optionValue="No"
-                        [disabled]="true"
-                        [control]="df().pod_type"
-                        [submitted]="submitted"></app-dropdown>
-        </div>
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-calendar-range calendarType="dateRange"
-                              label="活動日期"
-                              [startControl]="df().pod_sdate"
-                              [endControl]="df().pod_edate"
-                              [submitted]="submitted">
-          </app-calendar-range>
-        </div>
-
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-calendar label="活動正檔日期"
-                        controlName="pod_busdate"
-                        [control]="df().pod_busdate"
-                        [disabled]="false"
-                        [submitted]="submitted"></app-calendar>
-        </div>
+        <app-dropdown class="col-12 md:col-6 lg:col-4"
+                      label="活動類型"
+                      controlName="pod_type"
+                      [options]="service.podTypeItems()"
+                      optionLabel="Name"
+                      optionValue="No"
+                      [disabled]="true"
+                      [control]="df().pod_type"
+                      [submitted]="submitted"></app-dropdown>
+        <app-calendar-range class="col-12 md:col-6 lg:col-4"
+                            calendarType="dateRange"
+                            label="活動日期"
+                            [startControl]="df().pod_sdate"
+                            [endControl]="df().pod_edate"
+                            [submitted]="submitted">
+        </app-calendar-range>
+        <app-calendar class="col-12 md:col-6 lg:col-4"
+                      label="活動正檔日期"
+                      controlName="pod_busdate"
+                      [control]="df().pod_busdate"
+                      [disabled]="false"
+                      [submitted]="submitted"></app-calendar>
       </div>
-      <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
-        <app-button btnType="clear"
-                    (click)="onClear()"></app-button>
+      <div *ngIf="!isFormReadable"
+           class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+        <app-button btnType="cancel"
+                    [form]="dataForm"></app-button>
         <p-fileUpload #fileUpload
                       [styleClass]="'p-3'"
                       [mode]="'basic'"

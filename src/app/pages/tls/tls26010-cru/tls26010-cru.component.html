@@ -14,49 +14,41 @@
           id="dataForm"
           (ngSubmit)="onSubmit()">
       <div class="grid p-fluid">
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text label="預售活動編號"
-                          controlName="pod_no"
-                          [control]="df().pod_no"
-                          [submitted]="submitted"
-                          [disabled]="true">
-          </app-input-text>
-        </div>
-        <div class="col-12 md:col-6 lg:col-8">
-          <app-calendar-range calendarType="dateRange"
-                              label="預售期間"
-                              [startControl]="df().pod_sdate"
-                              [endControl]="df().pod_edate"
-                              [submitted]="submitted">
-          </app-calendar-range>
-        </div>
-        <div class="col-12 md:col-8 lg:col-8">
-          <app-input-text label="預售名稱"
-                          controlName="pod_desc"
-                          [control]="df().pod_desc"
-                          [submitted]="submitted">
-          </app-input-text>
-        </div>
-        <div class="col-12 md:col-4 lg:col-4">
-          <app-input-text label="核准狀態"
-                          controlName="pod_status"
-                          [control]="df().pod_status"
-                          [disabled]="true">
-          </app-input-text>
-        </div>
+        <app-input-text class="col-12 md:col-6 lg:col-4"
+                        label="預售活動編號"
+                        controlName="pod_no"
+                        [control]="df().pod_no"
+                        [submitted]="submitted"
+                        [disabled]="true">
+        </app-input-text>
+        <app-calendar-range class="col-12 md:col-6 lg:col-8"
+                            calendarType="dateRange"
+                            label="預售期間"
+                            [startControl]="df().pod_sdate"
+                            [endControl]="df().pod_edate"
+                            [submitted]="submitted">
+        </app-calendar-range>
+        <app-input-text class="col-12 md:col-8 lg:col-8"
+                        label="預售名稱"
+                        controlName="pod_desc"
+                        [control]="df().pod_desc"
+                        [submitted]="submitted">
+        </app-input-text>
+        <app-input-text class="col-12 md:col-4 lg:col-4"
+                        label="核准狀態"
+                        controlName="pod_status"
+                        [control]="df().pod_status"
+                        [disabled]="true">
+        </app-input-text>
+      </div>
+      <div *ngIf="!isFormReadable"
+           class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+        <app-button btnType="cancel"
+                    [form]="dataForm"></app-button>
+        <app-button btnType="submit"
+                    (click)="onSubmit()"></app-button>
       </div>
     </form>
-    <div class="col pt-4">
-      <div class="grid justify-content-end">
-        <app-button btnType="clear"
-                    [form]="dataForm"
-                    (click)="onClear()"
-                    *ngIf="!isFormReadable"></app-button>
-        <app-button btnType="submit"
-                    (click)="onSubmit()"
-                    *ngIf="!isFormReadable"></app-button>
-      </div>
-    </div>
   </p-panel>
 </div>
 <div class="card">

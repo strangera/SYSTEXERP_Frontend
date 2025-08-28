@@ -104,14 +104,15 @@ export class ASS21020CRUComponent extends BasicCruPageComponent<unknown> impleme
   public onSubmit(): void {
     this.handleSubmit(this.dataForm, () => {
       const payload = {};
+      this.confirmationService.confirm({
+        message: '是否確認新增?',
+        accept: () => {
 
-
-      this.loading = !1;
+          this.messageService.successBubble('新增成功');
+          this.loading = !1;
+        },
+      });
     });
-  }
-
-  public onClear(): void {
-    this.dataForm.reset();
   }
 
   /** 處理 excel 匯入 */
