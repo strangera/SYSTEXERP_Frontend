@@ -12,8 +12,8 @@ import { Column, createPaginationConfig } from '@shared/componentkit/table/table
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { finalize } from 'rxjs';
-import { CalendarRangeQuickComponent } from "@shared/componentkit/calendar-range-quick/calendar-range-quick.component";
 import { QueryTls43010Response, Tls43010Service } from '@service/api/tls/tls43010.service';
+import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/calendar-range.component';
 
 // 2.4.3.1 訊息登錄作業
 @Component({
@@ -31,11 +31,10 @@ import { QueryTls43010Response, Tls43010Service } from '@service/api/tls/tls4301
     DropdownComponent,
     TableComponent,
     TranslateModule,
-    CalendarRangeQuickComponent
+    CalendarRangeComponent
   ]
 })
 export class TLS43010Component extends BasicQueryPageComponent<QueryTls43010Response> implements OnInit {
-
   queryForm = this.formBuilder.group({
     // POS50011 廣告資訊設定檔
     NOT_No: ['', [Validators.maxLength(20)]], // 通告編號
@@ -45,7 +44,7 @@ export class TLS43010Component extends BasicQueryPageComponent<QueryTls43010Resp
     NOT_EndDate_Start: [null as null | Date], // 有效結束日期
     NOT_EndDate_End: [null as null | Date], // 有效結束日期
     NOT_File: ['', [Validators.maxLength(200)]], // 媒體檔案名稱
-    NOT_Status: ['0', [Validators.maxLength(1)]], // 狀態 0=未確認(未審核) 1=已確認(已審核) 2=已刪除
+    NOT_Status: [null, [Validators.maxLength(1)]], // 狀態 0=未確認(未審核) 1=已確認(已審核) 2=已刪除
     ...createPaginationConfig([{ field: 'NOT_No', order: 1 }]), // 分頁和排序參數
   });
   totalRecords = 0;
@@ -54,8 +53,8 @@ export class TLS43010Component extends BasicQueryPageComponent<QueryTls43010Resp
   columns: Column[] = [
     { field: 'NOT_No', header: '通告編號', visible: true },
     { field: 'NOT_Date', header: '建立日期', visible: true },
-    { field: 'NOT_BegDate', header: '有效開始日期', visible: true },
-    { field: 'NOT_EndDate', header: '有效結束日期', visible: true },
+    { field: 'NOT_BegDate', header: '有效開始日期時間', visible: true },
+    { field: 'NOT_EndDate', header: '有效結束日期時間', visible: true },
     { field: 'NOT_File', header: '媒體檔案名稱', visible: true },
     { field: 'NOT_Status', header: '狀態', visible: true },
     { field: 'NOT_Priority', header: '優先順序', visible: true },
