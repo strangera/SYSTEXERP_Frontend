@@ -1,3 +1,4 @@
+import { Tls31030CruComponent } from './tls31030-cru/tls31030-cru.component';
 import { Routes } from '@angular/router';
 
 export const tlsRoutes: Routes = [
@@ -427,6 +428,8 @@ export const tlsRoutes: Routes = [
   { path: 'tls31020', loadComponent: () => import('./tls31020/tls31020.component').then(m => m.TLS31020Component) },
   // 各大分類之營業報表
   { path: 'tls31030', loadComponent: () => import('./tls31030/tls31030.component').then(m => m.TLS31030Component) },
+  // 各大分類之營業報表 CRU
+  { path: 'tls31030cru', loadComponent: () => import('./tls31030-cru/tls31030-cru.component').then(m => m.Tls31030CruComponent) },
   // 各櫃別之營業報表
   { path: 'tls31040', loadComponent: () => import('./tls31040/tls31040.component').then(m => m.TLS31040Component) },
   // 各抽成別之營業報表
