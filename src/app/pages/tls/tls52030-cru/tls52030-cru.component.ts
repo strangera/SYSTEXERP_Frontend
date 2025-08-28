@@ -71,16 +71,12 @@ export class TLS52030CRUComponent extends BasicCruPageComponent<ITLS52030Data> i
     { field: 'POD_SubQty', header: '應驗數量', format: formatAmount },
     { field: 'ODD_ConfirmQty', header: '驗收數量', type: 'inputNumber', validate: [validateConfirmQtySumNotExceedSubQty(), validateMinNumber(0)] },
     { field: 'ODD_ConfirmQty_Finished', header: '已驗收數量', format: formatAmount },
-    { field: 'UNIT_NAME', header: '單位' },
+    { field: 'UNIT_NAME', header: '商品單位' },
     { field: 'ODD_BuyPrc', header: '採購單價', format: formatAmount },
     { field: 'ODD_BuyPrc', header: '驗收單價', format: formatAmount },
     { field: 'PLU_StockTaxType', header: '稅別', format: (value) => value === '0' ? '免稅' : value === '1' ? '應稅' : '' },
     { field: 'ODD_BuyNet', header: '未稅金額', format: formatAmount }, //ODD_BuyPrc * ODD_ConfirmQty驗收數量，四捨五入取整數
-    { field: 'ODD_BuyTax', header: '稅額', format: formatAmount }, // =若PLU_StockTaxType =1應稅，未稅金額*0.05四捨五入取整數，若PLU_StockTaxType=0免稅，稅額0
-    { field: 'ODD_BuyAmt', header: '進價小計', format: formatAmount }, // =ODD_BuyNet+ODD_BuyTax
-    { field: 'PLU_TaxType', header: '售價稅別', format: (value) => value === '0' ? '免稅' : value === '1' ? '應稅' : '' },
     { field: 'ODD_SalePrc', header: '售價', format: formatAmount },
-    { field: 'ODD_SaleTax', header: '售價稅額', format: formatAmount }, // 若售價稅別 1應稅(ODD_SalePrc * ODD_ConfirmQty)/21，取整數，若稅別0免稅，稅額0
     { field: 'ODD_SaleAmt', header: '售價小計', format: formatAmount }, // ODD_SalePrc * ODD_ConfirmQty驗收數量
     { field: 'PO_No', header: '採購單編號' },
     { field: 'ODD_Remark', header: '單項備註', type: 'input' },
