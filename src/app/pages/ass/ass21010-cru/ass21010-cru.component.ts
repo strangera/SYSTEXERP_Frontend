@@ -110,7 +110,6 @@ export class ASS21010CRUComponent extends BasicCruPageComponent<ASS21010Data> im
           this.service.updateASS21010(payload);
           this.logger.debug(`onSubmit:`, [d, payload]);
           this.loading = !1;
-          this.messageService.successBubble('存檔成功');
         },
       });
     });

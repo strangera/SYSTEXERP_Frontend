@@ -123,7 +123,6 @@ export class ASS21010Component extends BasicQueryPageComponent<unknown> implemen
         });
         this.service.ASS21010Data.set(this.service.ASS21010Data().filter(v => v.ID !== event.ID));
         this.loading = !1;
-        this.messageService.successBubble('刪除成功');
       },
     });
   }

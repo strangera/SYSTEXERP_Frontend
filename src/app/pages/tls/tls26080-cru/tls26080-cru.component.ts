@@ -230,7 +230,6 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
 
           console.log(`submit:`, [d, payload]);
           this.service.insertTLS26080(payload);
-          this.messageService.successBubble('存檔成功');
           this.loading = !1;
         },
       });
