@@ -1,10 +1,8 @@
 <div class="card">
   <div class="flex gap-2 mb-2">
-    <app-menubar [ProgNo]="ProgNo"></app-menubar>
-  </div>
-  <div class="flex gap-2">
+    <app-menubar [ProgNo]="ProgNo"
+                 class="flex-1"></app-menubar>
     <app-button btnType="create"
-                label="新增"
                 (click)="onCreate()"></app-button>
   </div>
 
