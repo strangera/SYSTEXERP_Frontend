@@ -41,6 +41,8 @@ import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 
 import { ButtonModule } from 'primeng/button';            // ✅ 新增：p-button
 import { HttpResponse } from '@angular/common/http';      // ✅ 新增：匯出回應
+import { CheckboxModule } from 'primeng/checkbox';
+import { CommonModule } from '@angular/common';
 
 @UntilDestroy()
 //型態別報表
@@ -50,6 +52,7 @@ import { HttpResponse } from '@angular/common/http';      // ✅ 新增：匯出
   styleUrls: ['./tls23010.component.scss'],
   standalone: true,
   imports: [
+    CommonModule,   
     MenubarComponent,
     AccordionModule,
     FormsModule,
@@ -65,7 +68,8 @@ import { HttpResponse } from '@angular/common/http';      // ✅ 新增：匯出
     RadioButtonModule,
     TranslateModule,
     TableComponent,
-    ButtonModule, // ✅ 新增
+    ButtonModule,
+    CheckboxModule, 
   ],
 })
 export class TLS23010Component
@@ -75,7 +79,7 @@ export class TLS23010Component
   data: any[] = [];
   totalRecords = 0;
   selectedItems: any[] = [];
-
+showSummary = false;
   // ✅ 匯出用
   btnLoading = false;
   historyRequestBody: any | null = null;
@@ -149,6 +153,7 @@ export class TLS23010Component
   ngOnInit(): void {
     this.initializePage('TLS23010', 'tls/tls23010', this.queryForm, (form) => this.onSubmit(form));
     this.totalRecords = 0;
+     this.showSummary = false; // safety
 
     this.floorService.getFloors().subscribe((data) => (this.floorOptions = data));
     this.statusFlagService.getStatusFlags().subscribe((data) => (this.statusFlagOptions = data));
@@ -191,50 +196,110 @@ export class TLS23010Component
     });
   }
 
-  onSubmit(frm: FormGroup) {
-    this.handleSubmit(frm, () => {
-      // ✅ 匯出用：保存最後一次查詢參數（保持與查詢一致）
-      this.historyRequestBody = { ...frm.value };
+onSubmit(frm: FormGroup) {
+  this.handleSubmit(frm, () => {
+    const val = this.queryForm.getRawValue() as any;
 
+    // 1) 取出/預設分頁值
+    const pageSize  = Number(val?.pageSize)  || 40; // 自行決定預設
+    const pageIndex = Number(val?.pageIndex) || 1;
+
+    // 2) 計算 Offset（0-based）
+    const offset = Math.max(0, (pageIndex - 1) * pageSize);
+
+    // 3) 轉出 OrderBy
+    const sortByArr = Array.isArray(val?.SortBy) ? val.SortBy : [];
+    const orderBy   = sortByArr.length
+      ? sortByArr.map((s: any) => `${s.field} ${s.order === 1 ? 'ASC' : 'DESC'}`).join(',')
+      : '';
+
+    // 4) 日期轉 ISO(yyyy-MM-ddTHH:mm:ss)（若你需要）
+    const toIso = (x: any) => {
+      if (!x) return undefined;
+      const d = typeof x === 'string' ? new Date(x) : (x as Date);
+      if (isNaN(d.getTime())) return undefined;
+      return new Date(d.getTime() - d.getTimezoneOffset() * 60000)
+        .toISOString()
+        .slice(0, 19);
+    };
+
+    // 5) 組 payload（注意：Offset/OrderBy 放在 payload，不放進 form）
+    const payload: any = {
+      ...val,
+      TXN_DateStart: toIso(val?.TXN_DateStart),
+      TXN_DateEnd:   toIso(val?.TXN_DateEnd),
+      pageSize,
+      pageIndex,
+      Offset:  offset,
+      OrderBy: orderBy,
+    };
+
+    // 6) 清空空值（保留 0/false）
+    Object.keys(payload).forEach((k) => {
+      const v = payload[k];
+      if (v === null || v === undefined) delete payload[k];
+      if (Array.isArray(v) && v.length === 0) delete payload[k];
+      if (typeof v === 'string' && v.trim() === '') delete payload[k];
+    });
+
+    // 匯出沿用同一包參數
+    this.historyRequestBody = { ...payload };
+
+    this.loading = true;
+
+    if (this.showSummary) {
       this.tls23010Service
-        .queryTLS23010(frm.value)
-        .pipe(
-          untilDestroyed(this),
-          finalize(() => (this.loading = false)),
-        )
+        .queryTLS23010Summary(payload)
+        .pipe(finalize(() => (this.loading = false)))
+        .subscribe({
+          next: (resp) => {
+            const packs = Array.isArray(resp?.Data) ? resp.Data : [];
+            const details = packs.flatMap((p:any) =>
+              Array.isArray(p?.tLS23010Summary_Details) ? p.tLS23010Summary_Details : []
+            );
+            this.summaryData   = details.map((row: any, idx: number) => ({
+              ...row,
+              id: `${row.tlt_no || ''}_${row.TXN_DateStart || ''}_${idx}`,
+            }));
+            this.data          = [];
+            this.selectedItems = [];
+            this.totalRecords  = this.summaryData.length;
+            this.queryStateService.setQueryState(this.ProgNo, this.queryForm.value);
+          },
+          error: () => {
+            this.summaryData   = [];
+            this.totalRecords  = 0;
+            this.selectedItems = [];
+          },
+        });
+    } else {
+      this.tls23010Service
+        .queryTLS23010(payload)
+        .pipe(finalize(() => (this.loading = false)))
         .subscribe({
           next: (resp) => {
             const queryData = Array.isArray(resp?.Data?.QueryData)
               ? resp.Data.QueryData
-              : Array.isArray(resp?.Data)
-              ? resp.Data
-              : [];
-
+              : Array.isArray(resp?.Data) ? resp.Data : [];
             this.data = queryData.map((row: any) => ({
               ...row,
               id: `${row.SYS_StoreNo}_${row.TXN_Date}_${row.ECR_No}_${row.TXN_No}`,
             }));
-
-            // debug
-            console.log('[MASTER] rows after mapping (id, keys):',
-              this.data.map(r => ({ id: r.id, keys: Object.keys(r) })));
-            console.log('[MASTER] first row sample:', this.data[0]);
-            console.log('[TABLE] expansionDataKey should be "details"');
-
-            this.totalRecords = Number(resp?.TotalCount ?? this.data.length ?? 0);
+            this.summaryData   = [];
             this.selectedItems = [];
-            this.queryStateService.setQueryState(this.ProgNo, frm.value);
-            this.cdr.markForCheck?.();
+            this.totalRecords  = Number(resp?.TotalCount ?? this.data.length ?? 0);
+            this.queryStateService.setQueryState(this.ProgNo, this.queryForm.value);
           },
-          error: (_err) => {
-            this.data = [];
-            this.totalRecords = 0;
+          error: () => {
+            this.data          = [];
+            this.totalRecords  = 0;
             this.selectedItems = [];
-            this.cdr.markForCheck?.();
           },
         });
-    });
-  }
+    }
+  });
+}
+
 
   isRowSelectable(_row: TLS23010Data): boolean {
     return true;
@@ -429,6 +494,11 @@ export class TLS23010Component
 
     return `download${defaultExtension}`;
   }
+onToggleSummary() {
+  // 只重設頁碼就好，Offset 改在 onSubmit 計算
+  this.queryForm.patchValue({ pageIndex: 1 }, { emitEvent: false });
+  this.onSubmit(this.queryForm);
+}
 
   // ========= 欄位 =========
 
@@ -496,4 +566,15 @@ export class TLS23010Component
     { field: 'TERM_No', header: '分期期數', style: 'text-right' },
     { field: 'TXN_PayAmt', header: '金額', style: 'text-right', format: this.moneyFormat },
   ];
+  // ✅ 新增：顯示彙總的開關/資料/欄位
+
+summaryData: any[] = [];
+summaryColumns = [
+  { field: 'tlt_no',       header: '專櫃編號',  visible: true },
+  { field: 'tlt_name',     header: '櫃位名稱',  visible: true, style: 'text-left' },
+  { field: 'TXN_DateStart',header: '銷售日期(起)', visible: true, format: this.formatYMD },
+  { field: 'TXN_DateEnd',  header: '銷售日期(迄)', visible: true, format: this.formatYMD },
+  { field: 'TXN_TotGUI',   header: '發票金額',  visible: true, style: 'text-right', format: this.moneyFormat },
+];
+
 }
