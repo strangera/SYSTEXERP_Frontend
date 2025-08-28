@@ -36,9 +36,9 @@ export const columns: Column[] = [
   { field: 'ECR_GUI_Type', header: '發票使用類別', visible: true, format: value => ECR_GUI_Type_Option.find(item => item.value === value)?.label || value }, // 修正為資料庫註解的「發票使用類別」
   { field: 'ECR_TimeTickInvl', header: '系統對時間隔(秒)', visible: true },
   { field: 'ECR_Interval', header: '上下傳異動檔間隔(秒)', visible: true }, // 補上
-  { field: 'ECR_MaxQty', header: '單筆交易數量上限', visible: true },
+  { field: 'ECR_MaxQty', header: '單筆交易數量上限', visible: true, format: formatAmount },
   { field: 'ECR_MaxAmt', header: '單筆交易金額上限', visible: true, format: formatAmount },
-  { field: 'ECR_MaxItemAmt', header: '單一明細金額上限', visible: true }, // 修正為資料庫註解的「單一明細金額上限」
+  { field: 'ECR_MaxItemAmt', header: '單一明細金額上限', visible: true, format: formatAmount }, // 修正為資料庫註解的「單一明細金額上限」
   { field: 'ECR_MaxDisc', header: '單筆交易最大折扣比率限制', visible: true },
   { field: 'ECR_EdcTimeout', header: '信用卡刷卡機連線時限(秒)', visible: true },
   { field: 'ECR_EdcSettle', header: '信用卡刷卡機連動日結', visible: true, format: formatYN }, // 新增 format (Y/N)
