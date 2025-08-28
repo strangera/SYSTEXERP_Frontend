@@ -9,13 +9,12 @@
       <!-- 上方主表單 -->
       <div class="grid p-fluid">
         <div class="col-12 md:col-6 lg:col-4">
-          <app-input-number
+          <app-input-text
             label="鍵盤編號"
             controlName="USR_Level"
             [control]="dataForm.controls.USR_Level"
             [submitted]="submitted"
-            [useGrouping]="false"
-          ></app-input-number>
+          ></app-input-text>
         </div>
 
         <div class="col-12 md:col-6 lg:col-4">
@@ -102,6 +101,7 @@
                 optionValue="code"
                 [control]="dataForm.controls.KG_KeyPage"
                 [submitted]="submitted"
+                (onChange)="updateButtonOptions($event)"
               ></app-dropdown>
             </div>
 
