@@ -40,7 +40,8 @@ export const STORE_WAY_OPTIONS = {
 // 付款方式(1:匯款 2:支票)
 export const PAYTYPE_OPTIONS = {
   '1': '匯款',
-  '2': '支票'
+  '2': '支票',
+  '3': '現金',
 } as const;
 
 // 收款方式
