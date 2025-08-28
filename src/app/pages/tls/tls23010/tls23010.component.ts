@@ -201,11 +201,9 @@ onSubmit(frm: FormGroup) {
     const val = this.queryForm.getRawValue() as any;
 
     // 1) 取出/預設分頁值
-    const pageSize  = Number(val?.pageSize)  || 40; // 自行決定預設
-    const pageIndex = Number(val?.pageIndex) || 1;
-
-    // 2) 計算 Offset（0-based）
-    const offset = Math.max(0, (pageIndex - 1) * pageSize);
+const pageSize  = Number(val?.pageSize);        // ✅ 吃共用 table 丟上來的值
+const pageIndex = Number(val?.pageIndex) || 1;  // 頁碼預設 1 沒問題
+const offset    = pageSize ? Math.max(0, (pageIndex - 1) * pageSize) : 0; // 沒 pageSize 就 0
 
     // 3) 轉出 OrderBy
     const sortByArr = Array.isArray(val?.SortBy) ? val.SortBy : [];
@@ -214,21 +212,23 @@ onSubmit(frm: FormGroup) {
       : '';
 
     // 4) 日期轉 ISO(yyyy-MM-ddTHH:mm:ss)（若你需要）
-    const toIso = (x: any) => {
-      if (!x) return undefined;
-      const d = typeof x === 'string' ? new Date(x) : (x as Date);
-      if (isNaN(d.getTime())) return undefined;
-      return new Date(d.getTime() - d.getTimezoneOffset() * 60000)
-        .toISOString()
-        .slice(0, 19);
-    };
+const toIso = (x: any, endOfDay = false) => {
+  if (!x) return undefined;
+  const d = typeof x === 'string' ? new Date(x) : (x as Date);
+  if (isNaN(d.getTime())) return undefined;
+  if (endOfDay) d.setHours(23, 59, 59, 999);
+  return new Date(d.getTime() - d.getTimezoneOffset() * 60000)
+    .toISOString()
+    .slice(0, 19);
+};
 
     // 5) 組 payload（注意：Offset/OrderBy 放在 payload，不放進 form）
     const payload: any = {
       ...val,
-      TXN_DateStart: toIso(val?.TXN_DateStart),
-      TXN_DateEnd:   toIso(val?.TXN_DateEnd),
-      pageSize,
+      ...(pageSize ? { pageSize } : {}),
+    TXN_DateStart: toIso(val?.TXN_DateStart, false),
+TXN_DateEnd:   toIso(val?.TXN_DateEnd,   true),
+
       pageIndex,
       Offset:  offset,
       OrderBy: orderBy,
@@ -441,6 +441,11 @@ onSubmit(frm: FormGroup) {
       this.messageService?.warnBubble?.('請先執行查詢以產生報表。');
       return;
     }
+      const exportBody = { ...this.historyRequestBody };
+  delete exportBody.pageIndex;
+  delete exportBody.pageSize;
+  delete exportBody.Offset;
+  // 或者 exportBody.pageIndex = 
     this.btnLoading = true;
     this.tls23010Service
       .exportTLS23010Excel(this.historyRequestBody)

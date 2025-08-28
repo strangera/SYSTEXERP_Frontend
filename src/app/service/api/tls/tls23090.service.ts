@@ -20,4 +20,12 @@ export class TLS23090Service {
       tap(response => console.log('查詢結果:', response)),
       catchError((error) => this.errorHandler.handleError(error))  // ✅ 正確
     );}
+      // ✅ 新增：櫃位彙總
+  queryTLS23090CounterCard(body: any): Observable<any> {
+    const url = `${this.apiUrl}/TLS0000/TLS2000/queryTLS23090_CounterCard`;
+    return this.http.post<any>(url, body).pipe(
+      tap(res => console.log('🎯 TLS23090_CounterCard:', res)),
+      catchError(err => this.errorHandler.handleError(err))
+    );
+  }
 }
