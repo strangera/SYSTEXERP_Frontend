@@ -63,15 +63,12 @@ export abstract class BasicQueryPageComponent<T> {
   // }
 
   initializePage(progNo: string, cruPage?: string, queryForm?: FormGroup, onSubmit?: (form: FormGroup) => void) {
-    this.ProgNo = progNo;
+    this.ProgNo = progNo.toUpperCase();
     this.cruPage = cruPage ?? '';
     this.funInfo = this.authService.getUserPermissions(this.ProgNo);
     this.currentPageService.setCurrentProgNo(this.ProgNo);
-
     const state = this.router.lastSuccessfulNavigation?.extras.state;
     const previousRoute = state?.['fromRoute'] || this.activatedRoute.snapshot.queryParams['fromRoute'] || document.referrer || '/account/dashboard';
-    const sanitizedCruPage = this.cruPage.toLocaleLowerCase().startsWith('/') ? this.cruPage.toLocaleLowerCase().substring(1) : this.cruPage.toLocaleLowerCase();
-
     // 通用規則：檢查 previousRoute 是否包含 ProgNo（例如 tls13010），涵蓋 CRU 和所有 next 頁面
     const isFromRelatedRoute = previousRoute.includes(this.ProgNo.toLowerCase());
 
