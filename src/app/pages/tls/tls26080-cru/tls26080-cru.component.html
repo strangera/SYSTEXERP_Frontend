@@ -91,6 +91,8 @@
                    [columns]="counterColumns"
                    [columnGroup]="counterColumnsGroup"
                    [totalRecords]="totalRecords()"
+                   (lazyLoadData)="onLazyLoadData($event, dataForm); onSubmit()"
+                   [lazy]="true"
                    [loading]="loading"
                    (rowEditSave)="onInsert($event)"></app-table>
       </p-panel>

@@ -55,6 +55,8 @@ export class ASS21020Component extends BasicQueryPageComponent<unknown> implemen
   private readonly meterNoSignal = toSignal(this.qf().ENG_MeterNo.valueChanges);
   private readonly tltNoSignal = toSignal(this.qf().TLT_No.valueChanges);
 
+  public readonly totalRecords = computed(() => this.service.ASS21020Data().length);
+
   public readonly meterNoEffect = effect(() => {
     const meterNo = this.meterNoSignal();
     const selected = meterNo && this.service.engMeterNoMap.get(meterNo) || { Location_No: '', ENG_MeterNo: '' };

@@ -99,6 +99,10 @@
                [dataKey]="'ID'"
                [tableKey]="'ASS21020_Data'"
                [columns]="columns"
+               [totalRecords]="totalRecords()"
+               (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit()"
+               [lazy]="true"
+               [loading]="loading"
                (edit)="onEdit($event)"
                (delete)="onDelete($event)"
                (detail)="onDetail($event)"></app-table>

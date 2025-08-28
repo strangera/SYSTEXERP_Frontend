@@ -109,6 +109,10 @@
                    (importExcel)="onImportExcel($event)"
                    [data]="[]"
                    (selectionChange)="onSelectionChange($event)"
+                   [totalRecords]="totalRecords()"
+                   (lazyLoadData)="onLazyLoadData($event, dataForm); onSubmit()"
+                   [lazy]="true"
+                   [loading]="loading"
                    [dataKey]="'TLT_No'"
                    [tableKey]="'ASS21020_detail'"
                    [columns]="columns">

@@ -53,6 +53,8 @@ export class ASS21020CRUComponent extends BasicCruPageComponent<unknown> impleme
   private readonly dfSignal = toSignal(this.dataForm.valueChanges);
   private readonly meterNoSignal = toSignal(this.df().ENG_MeterNo.valueChanges);
 
+  public readonly totalRecords = computed(() => [].length);
+
   public readonly meterNoEffect = effect(() => {
     const meterNo = String(this.meterNoSignal());
     const selected = meterNo && this.service.engMeterNoMap.get(meterNo);

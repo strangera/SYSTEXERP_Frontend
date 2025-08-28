@@ -53,6 +53,8 @@ export class ASS21010Component extends BasicQueryPageComponent<unknown> implemen
   private readonly locationSignal = toSignal(this.qf().Location_No.valueChanges);
   private readonly engRemarkSignal = toSignal(this.qf().ENG_Remark.valueChanges);
 
+  public readonly totalRecords = computed(() => this.service.ASS21010Data().length);
+
   public readonly qfEffect = effect(() => {
     this.logger.debug(`qfEffect:`, [this.qfSignal()]);
   });

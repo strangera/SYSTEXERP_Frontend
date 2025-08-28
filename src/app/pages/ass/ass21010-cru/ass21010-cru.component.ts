@@ -58,6 +58,8 @@ export class ASS21010CRUComponent extends BasicCruPageComponent<ASS21010Data> im
   private readonly engTypeSignal = toSignal(this.df().ENGType.valueChanges);
   private readonly locationSignal = toSignal(this.df().Location_No.valueChanges);
 
+  public readonly totalRecords = computed(() => this.service.ASS21010Data().length);
+
   /** 能源類型變更處理 */
   public readonly engTypeEffect = effect(() => {
     const types = this.engTypeSignal();

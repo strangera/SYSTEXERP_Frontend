@@ -96,8 +96,9 @@
                (detail)="onDetail($event)"
                [columns]="columns"
                [totalRecords]="totalRecords()"
+               (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit()"
                [lazy]="true"
-               [loading]="service.tableLoading"
+               [loading]="loading"
                (lazyLoadData)="onSubmit()"></app-table>
   </div>
 </div>

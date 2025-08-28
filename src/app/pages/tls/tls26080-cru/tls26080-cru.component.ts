@@ -71,6 +71,8 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
   private podNoSignal = toSignal(this.df().pod_no.valueChanges);
   private podTypeSignal = toSignal(this.df().pod_type.valueChanges);
 
+  public readonly totalRecords = computed(() => this.service.TLS26080Detail().length);
+
   private readonly selectedCampaign = computed(() => {
     const podDesc = this.podDescSignal();
     return this.service.campaignData().find(campaign => campaign.CampaignId === podDesc);
@@ -124,8 +126,6 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
     });
     console.log(`campaignEffect:`, [this.selectedCampaign(), podDesc]);
   }, { allowSignalWrites: !0 });
-
-  public readonly totalRecords = computed(() => this.service.TLS26080Detail().length);
 
   // 環友資料表
   campaignColumns: Column[] = [
