@@ -10,7 +10,7 @@
         <div class="grid p-fluid">
           <!-- 申報年月 -->
           <app-calendar class="col-12 md:col-6 lg:col-4" label="申報年月" calendarType="dateMonthOne"
-            [control]="queryForm.controls.DeclareYearMonth" [submitted]="submitted" placeholder="請選擇月份"></app-calendar>
+            [control]="queryForm.controls.GUI_YYMM" [submitted]="submitted" placeholder="請選擇月份"></app-calendar>
         </div>
 
         <!-- 說明文字 -->
@@ -18,7 +18,7 @@
           <div class="col-12 pl-3">
             <ul class="mb-0 pl-3">
               <li>請注意：</li>
-              <li>1、申報年月頁小於各條件日申報年月。</li>
+              <li>1、申報年月需小於系統日申報期間。</li>
             </ul>
           </div>
         </div>
@@ -34,7 +34,8 @@
 
 <div class="card">
   <app-table tableKey="FIN11070" [data]="data" [columns]="columns" [selectedItems]="selectedItems"
-    (selectionChange)="selectedItems = $event" dataKey="UploadProcessTime" [totalRecords]="totalRecords"
-    [multiSortMeta]="[{field: 'ID', order: 1}]" (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"
-    [lazy]="true" [loading]="loading" [showManage]="false" [showDelete]="false"></app-table>
+    (selectionChange)="selectedItems = $event" dataKey="TXN_No" [totalRecords]="totalRecords"
+    [multiSortMeta]="[{field: 'TXN_No', order: -1}]"
+    (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [lazy]="true" [loading]="loading"
+    [showManage]="false" [showDelete]="false"></app-table>
 </div>
