@@ -205,7 +205,7 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
   @Input() defaultNewDetailItem: any = {};
 
   @Input() showDetailTabs: boolean = false;
-  @Input() detailTabOptions: { id: string, label: string }[] = [];
+  @Input() detailTabOptions: { id: string, label: string, allowAdd: boolean, allowBatchDelete: boolean }[] = [];
   @Input() defaultDetailTab: string = '';
   @Input() detailColumnsMap: { [tabId: string]: ColumnDef[] } = {};
   @Input() showDetailBatchDelete: boolean = true;
@@ -2249,5 +2249,19 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
 
   onButtonClick(rowData: any, field: string): void {
     this.buttonClick.emit({ rowData, field });
+  }
+
+
+  // 新增方法來檢查當前 tab 是否允許操作
+  canAddDetailForCurrentTab(rowData: any): boolean {
+    const currentTab = this.getDetailSelectedTab(rowData);
+    const tabConfig = this.detailTabOptions.find(tab => tab.id === currentTab);
+    return tabConfig?.allowAdd || false;
+  }
+
+  canDeleteDetailForCurrentTab(rowData: any): boolean {
+    const currentTab = this.getDetailSelectedTab(rowData);
+    const tabConfig = this.detailTabOptions.find(tab => tab.id === currentTab);
+    return tabConfig?.allowBatchDelete || false;
   }
 }

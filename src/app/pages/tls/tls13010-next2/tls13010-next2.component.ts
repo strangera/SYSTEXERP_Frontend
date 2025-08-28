@@ -153,10 +153,18 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
   // 各類型的列定義
   discountColumns: ColumnDef[] = [
     {
+      field: 'selected',
+      header: '選取',
+      type: 'checkbox',
+      editable: true,
+      directEdit: true, // 🎯 啟用直接編輯
+      width: '60px'
+    },
+    {
       field: 'cag_barcode',
       header: '折扣別',
       type: 'dropdown',
-      editable: true,
+      editable: false,
       options: []
     },
     { field: 'tlt_bdate', header: '合約起始日', type: 'date', editable: true, },
@@ -173,10 +181,18 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
 
   levelColumns: ColumnDef[] = [
     {
+      field: 'selected',
+      header: '選取',
+      type: 'checkbox',
+      editable: true,
+      directEdit: true, // 🎯 啟用直接編輯
+      width: '60px'
+    },
+    {
       field: 'cag_barcode',
       header: '折扣別',
       type: 'dropdown',
-      editable: true,
+      editable: false,
       options: []
     },
     { field: 'level_bmount', header: '業績計算金額(起)', type: 'number', editable: true },
@@ -191,9 +207,24 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
   ];
 
   settingTabs = [
-    { id: 'discount', label: '折扣設定' },
-    { id: 'annual', label: '年度總業績抽成設定' },
-    { id: 'level', label: '折扣別層級抽成設定' }
+    {
+      id: 'discount',
+      label: '折扣設定',
+      allowAdd: false,
+      allowBatchDelete: false
+    },
+    {
+      id: 'annual',
+      label: '年度總業績抽成設定',
+      allowAdd: true,
+      allowBatchDelete: true
+    },
+    {
+      id: 'level',
+      label: '折扣別層級抽成設定',
+      allowAdd: false,
+      allowBatchDelete: false
+    }
   ];
 
   // 佣金表格列定義
@@ -747,9 +778,9 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
           // 🎯 修正：確保每個項目都有 currentTab
           currentTab: 'discount',
 
-          discountSettingItems: this.convertChargeDetails(chargeSetting.ChargeDetails || []),
+          discountSettingItems: this.buildCompleteDiscountItems(chargeSetting.ChargeDetails || []),
           annualPerformanceItems: this.convertYearChargeDetails(chargeSetting.YearChargeDetails || []),
-          discountLevelItems: this.convertLevelChargeDetails(chargeSetting.LevelChargeDetails || []),
+          discountLevelItems: this.buildCompleteLevelItems(chargeSetting.LevelChargeDetails || []),
 
           detailItems: [],
           _status: 'original',
@@ -767,7 +798,88 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
     console.log('✅ 已轉換統一 API 資料為 CommissionItem 格式:', this.commissionData.length, '筆');
   }
 
+  private buildCompleteDiscountItems(existingChargeDetails: any[]): DiscountSettingItem[] {
+    const allDiscountItems: DiscountSettingItem[] = [];
+    const contractStartDate = this.getContractStartDate();
+    const contractEndDate = this.getContractEndDate();
+    // 為每個折扣別選項建立一個項目
+    this.discountOptions.forEach(option => {
+      // 檢查是否已經在資料庫中設定
+      const existingItem = existingChargeDetails.find(detail => detail.cag_barcode === option.value);
 
+      if (existingItem) {
+        // 已設定的項目
+        allDiscountItems.push({
+          id: existingItem.id || this.generateTempId(),
+          selected: true, // 🎯 已設定的項目預設勾選
+          cag_barcode: existingItem.cag_barcode,
+          tlt_bdate: existingItem.tlt_bdate ? new Date(existingItem.tlt_bdate) : new Date(),
+          tlt_edate: existingItem.tlt_edate ? new Date(existingItem.tlt_edate) : new Date(),
+          cag_charge_rate: existingItem.cag_charge_rate || 0,
+          _status: 'original',
+          is_configured: existingItem.is_configured || true,
+          is_enabled: existingItem.is_enabled || true
+        });
+      } else {
+        // 未設定的項目
+        allDiscountItems.push({
+          id: this.generateTempId(),
+          selected: false, // 🎯 未設定的項目預設不勾選
+          cag_barcode: option.value,
+          tlt_bdate: new Date(contractStartDate),
+          tlt_edate: new Date(contractEndDate),
+          cag_charge_rate: 0,
+          _status: 'new',
+          is_configured: false,
+          is_enabled: false
+        });
+      }
+    });
+
+    return allDiscountItems;
+  }
+
+  // 🎯 新增：建立完整的層級抽成項目（包含所有折扣別）
+  private buildCompleteLevelItems(existingLevelDetails: any[]): DiscountLevelItem[] {
+    const allLevelItems: DiscountLevelItem[] = [];
+
+
+    // 為每個折扣別選項建立一個項目
+    this.discountOptions.forEach(option => {
+      // 檢查是否已經在資料庫中設定
+      const existingItem = existingLevelDetails.find(detail => detail.cag_barcode === option.value);
+
+      if (existingItem) {
+        // 已設定的項目
+        allLevelItems.push({
+          id: existingItem.id || this.generateTempId(),
+          selected: true, // 🎯 已設定的項目預設勾選
+          cag_barcode: existingItem.cag_barcode,
+          level_bmount: existingItem.level_bmount || 0,
+          level_eamount: existingItem.level_eamount || 0,
+          level_charge_rate: existingItem.level_charge_rate || 0,
+          _status: 'original',
+          is_configured: existingItem.is_configured || true,
+          is_enabled: existingItem.is_enabled || true
+        });
+      } else {
+        // 未設定的項目
+        allLevelItems.push({
+          id: this.generateTempId(),
+          selected: false, // 🎯 未設定的項目預設不勾選
+          cag_barcode: option.value,
+          level_bmount: 0,
+          level_eamount: 0,
+          level_charge_rate: 0,
+          _status: 'new',
+          is_configured: false,
+          is_enabled: false
+        });
+      }
+    });
+
+    return allLevelItems;
+  }
   private loadCommissionDataFromAPI(): void {
     // 🎯 檢查是否為新增模式
     const workflowData = this.contractFlowService.getCurrentData();
@@ -904,7 +1016,9 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
         tlt_bdate: detail.tlt_bdate ? new Date(detail.tlt_bdate) : new Date(),
         tlt_edate: detail.tlt_edate ? new Date(detail.tlt_edate) : new Date(),
         cag_charge_rate: detail.cag_charge_rate || 0,
-        _status: 'original'
+        _status: 'original',
+        is_configured: detail.is_configured || true,
+        is_enabled: detail.is_enabled || true
       };
     });
   }
@@ -941,7 +1055,9 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
         level_bmount: detail.level_bmount || 0,
         level_eamount: detail.level_eamount || 0,
         level_charge_rate: detail.level_charge_rate || 0,
-        _status: 'original'
+        _status: 'original',
+        is_configured: detail.is_configured || true,
+        is_enabled: detail.is_enabled || true
       };
     });
   }
@@ -1283,12 +1399,10 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
   }
 
   createDiscountSettingItem(): DiscountSettingItem {
-    const tlt_bdate = this.contractInfoData[0]?.tlt_bdate
-      ? new Date(this.contractInfoData[0].tlt_bdate)
-      : new Date();
-    const tlt_edate = this.contractInfoData[0]?.tlt_edate
-      ? new Date(this.contractInfoData[0].tlt_edate)
-      : new Date();
+    const contractStartDate = this.getContractStartDate();
+    const contractEndDate = this.getContractEndDate();
+    const tlt_bdate = contractStartDate ? new Date(contractStartDate) : new Date();
+    const tlt_edate = contractEndDate ? new Date(contractEndDate) : new Date();
 
     return {
       id: this.generateTempId(),
@@ -1297,7 +1411,9 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
       tlt_bdate: tlt_bdate,
       tlt_edate: tlt_edate,
       cag_charge_rate: 0,
-      _status: 'new'
+      _status: 'new',
+      is_configured: false,
+      is_enabled: false
     };
   }
 
@@ -1321,7 +1437,9 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
       level_bmount: 0,
       level_eamount: 0,
       level_charge_rate: 0,
-      _status: 'new'
+      _status: 'new',
+      is_configured: false,
+      is_enabled: false
     };
   }
 
@@ -1364,6 +1482,22 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
       mainEndDate: this.getContractEndDate()
     };
 
+    // // 🎯 自動初始化所有折扣別到 discountSettingItems
+    // this.initializeDiscountSettingsForItem(newCommissionItem);
+    // 🎯 初始化折扣設定
+    newCommissionItem.discountSettingItems = this.initializeDetailItemsForType<DiscountSettingItem>(
+      newCommissionItem,
+      'discount',
+      this.discountOptions
+    );
+
+    // 🎯 初始化折扣別層級設定
+    newCommissionItem.discountLevelItems = this.initializeDetailItemsForType<DiscountLevelItem>(
+      newCommissionItem,
+      'level',
+      this.discountOptions
+    );
+
     this.commissionData = [...this.commissionData, newCommissionItem];
     this.updateDetailItemsForDisplay();
     this.saveToWorkflow();
@@ -1372,12 +1506,82 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
     this.notificationService.infoBubble(`已新增${tlt_id_desc}`);
   }
 
+  private initializeDiscountSettingsForItem(item: CommissionItem): void {
+    if (!this.discountOptions || this.discountOptions.length === 0) {
+      console.warn('⚠️ 折扣選項尚未載入，無法自動初始化');
+      return;
+    }
+
+    // 清空原有（雖然新項目是空的）
+    item.discountSettingItems = [];
+
+    // 從合約資訊取得預設日期
+    const defaultStartDate = this.getContractStartDate() ? new Date(this.getContractStartDate()) : new Date();
+    const defaultEndDate = this.getContractEndDate() ? new Date(this.getContractEndDate()) : new Date();
+
+    // 循環所有折扣選項，創建預設行
+    this.discountOptions.forEach((option, index) => {
+      const detailId = `temp_detail_${Date.now()}_${index}`;
+      const newDetail: DiscountSettingItem = {
+        id: detailId,
+        selected: false,  // 預設不選取
+        cag_barcode: option.value,
+        tlt_bdate: defaultStartDate,
+        tlt_edate: defaultEndDate,
+        cag_charge_rate: 0,  // 預設抽成率 0
+        _status: 'new',
+        is_configured: false,
+        is_enabled: false
+      };
+      item.discountSettingItems.push(newDetail);
+    });
+
+    console.log(`✅ 已為項目 ${item.id} 初始化 ${item.discountSettingItems.length} 筆折扣設定`);
+  }
+
+  private initializeDetailItemsForType<T>(item: CommissionItem, type: 'discount' | 'level', options: any[]): T[] {
+    const items: T[] = [];
+    const defaultStartDate = this.getContractStartDate() ? new Date(this.getContractStartDate()) : new Date();
+    const defaultEndDate = this.getContractEndDate() ? new Date(this.getContractEndDate()) : new Date();
+
+    options.forEach((option, index) => {
+      const detailId = `temp_${type}_${Date.now()}_${index}`;
+      const newDetail = type === 'discount' ? {
+        id: detailId,
+        selected: false,
+        cag_barcode: option.value,
+        tlt_bdate: defaultStartDate,
+        tlt_edate: defaultEndDate,
+        cag_charge_rate: 0,
+        _status: 'new',
+        is_configured: false,
+        is_enabled: false
+      } : {
+        id: detailId,
+        selected: false,
+        cag_barcode: option.value,
+        level_bmount: 0,
+        level_eamount: 0,
+        level_charge_rate: 0,
+        _status: 'new',
+        is_configured: false,
+        is_enabled: false
+      };
+      items.push(newDetail as T);
+    });
+    return items;
+  }
 
   addDiscountSettingItem(item: CommissionItem): void {
     if (this.isViewMode) {
       this.notificationService.infoBubble('檢視模式下無法新增明細項目');
       return;
     }
+
+    if (!item.discountSettingItems || item.discountSettingItems.length === 0) {
+      item.discountSettingItems = this.buildCompleteDiscountItems([]);
+    }
+    this.refreshSingleItemDetailDisplay(item);
 
     // 🎯 確保陣列存在
     if (!item.discountSettingItems) {
@@ -1452,6 +1656,13 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
       item.discountLevelItems = [];
       console.log('📝 初始化 discountLevelItems 陣列');
     }
+
+    if (!item.discountLevelItems || item.discountLevelItems.length === 0) {
+      item.discountLevelItems = this.buildCompleteLevelItems([]);
+    }
+
+    // 重新整理顯示
+    this.refreshSingleItemDetailDisplay(item);
 
     const newItem = this.createDiscountLevelItem();
     newItem._status = 'new';
@@ -1938,7 +2149,9 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
             tlt_bdate: item.tlt_bdate || new Date(),
             tlt_edate: item.tlt_edate || new Date(),
             cag_charge_rate: item.cag_charge_rate || 0,
-            _status: item._status || (this.hasItemId(item) ? 'original' : 'new')
+            _status: item._status || (this.hasItemId(item) ? 'original' : 'new'),
+            is_configured: item.is_configured || false,
+            is_enabled: item.is_enabled || false
           }));
           break;
 
@@ -1950,7 +2163,9 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
             tlt_edate: item.tlt_edate || new Date(),
             year_amount: item.year_amount || 0,
             extra_rate: item.extra_rate || 0,
-            _status: item._status || (this.hasItemId(item) ? 'original' : 'new')
+            _status: item._status || (this.hasItemId(item) ? 'original' : 'new'),
+            is_configured: item.is_configured || false,
+            is_enabled: item.is_enabled || false
           }));
           break;
 
@@ -1962,7 +2177,9 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
             level_bmount: item.level_bmount || 0,
             level_eamount: item.level_eamount || 0,
             level_charge_rate: item.level_charge_rate || 0,
-            _status: item._status || (this.hasItemId(item) ? 'original' : 'new')
+            _status: item._status || (this.hasItemId(item) ? 'original' : 'new'),
+            is_configured: item.is_configured || false,
+            is_enabled: item.is_enabled || false
           }));
           break;
       }

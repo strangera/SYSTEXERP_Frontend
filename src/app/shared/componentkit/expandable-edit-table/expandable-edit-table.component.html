@@ -221,16 +221,17 @@
                 </div>
 
                 <!-- 新增按鈕 -->
-                <button *ngIf="!readonly && showDetailAddButton" pButton pRipple type="button" icon="pi pi-plus"
-                  pTooltip="新增明細" severity="success" class="p-button-rounded"
-                  (click)="onAddDetailItem(rowData, ri)"></button>
+                <button *ngIf="!readonly && showDetailAddButton && canAddDetailForCurrentTab(rowData)" pButton pRipple
+                  type="button" icon="pi pi-plus" pTooltip="新增明細" (click)="onAddDetailItem(rowData, ri)"
+                  severity="success" class="p-button-rounded">
+                </button>
 
-                <!-- 明細批次刪除按鈕 -->
-                <button *ngIf="!readonly && showDetailBatchDelete" pButton pRipple type="button" icon="pi pi-trash"
-                  pTooltip="批次刪除明細" [disabled]="getDetailSelectedCount(rowData) === 0"
-                  (click)="onDetailBatchDelete(rowData, ri)" severity="danger" class="p-button-rounded" [ngClass]="{
-                    'p-button-outlined': getDetailSelectedCount(rowData) === 0,
-                  }"></button>
+                <!-- 批次刪除按鈕 -->
+                <button *ngIf="!readonly && showDetailBatchDelete && canDeleteDetailForCurrentTab(rowData)" pButton
+                  pRipple type="button" icon="pi pi-trash" pTooltip="批次刪除明細"
+                  [disabled]="getDetailSelectedCount(rowData) === 0" (click)="onDetailBatchDelete(rowData, ri)"
+                  severity="danger" class="p-button-rounded">
+                </button>
               </div>
               <div class="detail-table-header-right">
                 <ng-content select="[detail-header-right]"></ng-content>

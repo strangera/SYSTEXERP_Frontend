@@ -474,6 +474,9 @@ export interface DiscountSettingItem {
   tlt_edate: Date;
   cag_charge_rate?: number;
   _status?: 'original' | 'modified' | 'new' | 'deleted';
+
+  is_configured: boolean;
+  is_enabled: boolean;
 }
 
 export interface AnnualPerformanceItem {
@@ -494,6 +497,9 @@ export interface DiscountLevelItem {
   level_eamount: number;
   level_charge_rate: number;
   _status?: 'original' | 'modified' | 'new' | 'deleted';
+
+  is_configured: boolean;
+  is_enabled: boolean;
 }
 
 // 條件設定相關介面
