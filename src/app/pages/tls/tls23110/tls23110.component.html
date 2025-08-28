@@ -23,13 +23,13 @@
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
-            <app-radiobutton label="是否開立業主發票" controlName="IsNoPLU_No" [options]="IsNoPLU_NoOptions"
-              groupname="IsNoPLU_No" optionLabel="label" optionValue="value" [control]="queryForm.controls.IsNoPLU_No"
+            <app-radiobutton label="是否開立業主發票" controlName="rece_yn" [options]="receYnOptions"
+              groupname="rece_yn" optionLabel="label" optionValue="value" [control]="queryForm.controls.rece_yn"
               [submitted]="submitted"></app-radiobutton>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-radiobutton class="col-12" label="類型" groupname="rece_yn" [control]="queryForm.controls.rece_yn"
-              [options]="receYnOptions" [submitted]="submitted"></app-radiobutton>
+            <app-radiobutton class="col-12" label="類別" groupname="IsNoPLU_No" [control]="queryForm.controls.IsNoPLU_No"
+              [options]="IsNoPLU_NoOptions" [submitted]="submitted"></app-radiobutton>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-multi-select label="專櫃編號" controlName="TLT_No" [options]="CounterOptions" optionLabel="formLabel"

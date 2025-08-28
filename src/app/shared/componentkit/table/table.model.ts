@@ -57,7 +57,7 @@ export interface LazyLoadEvent {
 
 export const createPaginationConfig = (defaultSortBy?: SortMeta[]) => {
   return {
-    pageSize: [10],
+    pageSize: [20],
     pageIndex: [1], // 你將初始頁碼改為 1
     SortBy: [defaultSortBy ?? []],
   };
@@ -111,14 +111,30 @@ export const formatDateTime = (dateStr: string) => {
 };
 
 // formatYYYYMM 輸出為 YYYY/MM
-export const formatYYYYMM = (dateStr: string): string => {
-  if (!dateStr) return '';
-  const date = new Date(dateStr);
-  if (isNaN(date.getTime())) return '';
+export const formatYYYYMM = (value: string | Date | null): string => {
+  // 處理空值
+  if (value === null || value === undefined || value === '') {
+    return '';
+  }
 
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  return `${year}/${month}`;
+  // 檢查輸入是否為 Date 物件
+  if (value instanceof Date) {
+    const year = value.getFullYear().toString();
+    const month = String(value.getMonth() + 1).padStart(2, '0');
+    console.log(year, month);
+
+    return `${year}/${month}`;
+  }
+
+  // 檢查輸入是否為 YYYYMM 格式的字串
+  if (typeof value === 'string' && value.length === 6) {
+    const year = value.substring(0, 4);
+    const month = value.substring(4, 6);
+    return `${year}/${month}`;
+  }
+
+  // 如果輸入格式不符合預期，回傳空字串
+  return '';
 };
 
 // formatTimeHHMM 輸出為 HH:MM

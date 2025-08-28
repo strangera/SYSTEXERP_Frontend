@@ -16,12 +16,13 @@ export interface TLS2A010Data {
 }
 
 export const defaultColumns = [
+  { header: '總計', field: 'group_name', hidden: true },
   { header: '收銀機代號', field: 'ECR_No' },
   { header: '專櫃編號', field: 'TLT_NO' },
   { header: '專櫃名稱', field: 'tlt_name' },
-  { header: '系統帳', field: 'BOOK_PayAmt' },
-  { header: '實收帳', field: 'ACT_PayAmt' },
-  { header: '系統/實收帳差異', field: 'OVER_PayAmt' },
+  { header: '系統帳', field: 'BOOK_PayAmt', isTotal: true },
+  { header: '實收帳', field: 'ACT_PayAmt', isTotal: true },
+  { header: '系統/實收帳差異', field: 'OVER_PayAmt', isTotal: true },
 
   {
     header: '審核狀態',
@@ -38,6 +39,7 @@ export const defaultColumns = [
 ];
 
 export const creditCardColumns: Column[] = [
+  { header: '總計', field: 'group_name', hidden: true },
   { header: '收銀機代號', field: 'ECR_No' },
   { header: '專櫃編號', field: 'TLT_NO' },
   { header: '專櫃名稱', field: 'tlt_name' },
@@ -45,18 +47,18 @@ export const creditCardColumns: Column[] = [
   { header: '信用卡', field: 'BOOK_PayAmt1', groupField: 'BOOK' },
   { header: 'AE', field: 'BOOK_PayAmt2', groupField: 'BOOK' },
   { header: 'DINER', field: 'BOOK_PayAmt3', groupField: 'BOOK' },
-  { header: '總金額', field: 'BOOK_PayAmt' },
+  { header: '總金額', field: 'BOOK_PayAmt', isTotal: true },
 
   { header: '信用卡', field: 'ACT_PayAmt1', groupField: 'ACT' },
   { header: 'AE', field: 'ACT_PayAmt2', groupField: 'ACT' },
   { header: 'DINER', field: 'ACT_PayAmt3', groupField: 'ACT' },
-  { header: '總金額', field: 'ACT_PayAmt' },
+  { header: '總金額', field: 'ACT_PayAmt', isTotal: true },
 
 
   { header: '信用卡', field: 'OVER_PayAmt1', groupField: 'OVER' },
   { header: 'AE', field: 'OVER_PayAmt2', groupField: 'OVER' },
   { header: 'DINER', field: 'OVER_PayAmt3', groupField: 'OVER' },
-  { header: '總金額', field: 'OVER_PayAmt' },
+  { header: '總金額', field: 'OVER_PayAmt', isTotal: true },
   {
     header: '審核狀態',
     field: 'OVER_PayAmt',

@@ -259,16 +259,13 @@ export class TLS26010Service implements OnDestroy {
   }
 
   /** 刪除預購活動 */
-  public deleteTLS26010({ id }: TLS26010Data): void {
-    this.http.post<BaseQueryResponse<any>>(`${apiUrl}/TLS0000/TLS2000/deleteTLS26010`, { id }).pipe(
+  public deleteTLS26010({ id }: TLS26010Data): Observable<BaseQueryResponse<any>> {
+    return this.http.post<BaseQueryResponse<any>>(`${apiUrl}/TLS0000/TLS2000/deleteTLS26010`, { id }).pipe(
       take(1),
       tap(() => this.TLS26010Data.set(this.TLS26010Data())),
       catchError(error => this.errorHandler.handleError(error)),
-      finalize(() => {
-        this.tableLoading = !1;
-        console.log('刪除結果:', this.TLS26010Data());
-      })
-    ).subscribe();
+      finalize(() => this.tableLoading = !1)
+    );
   }
 
   /** 核准或反核准預購活動 */

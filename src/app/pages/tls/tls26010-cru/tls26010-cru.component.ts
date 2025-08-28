@@ -158,13 +158,6 @@ export class TLS26010CRUComponent extends BasicCruPageComponent<TLS26010Data> im
     console.log(`TLS26010DetailEffect:`, [this.ecrTableFiltered(), this.tltTableFiltered(), this.dataForm.value]);
     this.TLS26010DetailEffect.destroy(); // 只需執行一次
   }, { allowSignalWrites: !0 });
-  /** 初始化靜態資料 */
-  public readonly staticDataEffect = effect(() => {
-    const detail = this.service.TLS26010Detail();
-    if (!detail) return;
-    TLS26010CRUComponent.staticData = detail as TLS26010Detail;
-    this.staticDataEffect.destroy(); // 只需執行一次
-  });
   /** 表單變化追蹤 */
   public readonly dfEffect = effect(() => {
     console.log(`dfEffect:`, [this.dfSignal()]);
@@ -241,9 +234,6 @@ export class TLS26010CRUComponent extends BasicCruPageComponent<TLS26010Data> im
     { field: 'tlt_no', header: '專櫃編號' },
     { field: 'tlt_name', header: '櫃位名稱' },
   ];
-
-  // 靜態資料: 用於表單初始化和重置
-  private static staticData: TLS26010Detail;
 
   constructor(
     public readonly service: TLS26010Service,
@@ -349,34 +339,39 @@ export class TLS26010CRUComponent extends BasicCruPageComponent<TLS26010Data> im
 
   public onSubmit(): void {
     this.handleSubmit(this.dataForm, () => {
-      const value = this.dataForm.value;
+      this.loading = !0;
+      const d = this.dataForm.getRawValue();
       const payload: PodRequest = {
         ecr_list: this.ecrTableFiltered(),
         talent_list: this.tltTableFiltered(),
         pod_info: {
           ...(this.isFormCreateable ? {} : { pod_no: this.rowdata?.pod_no }),
           ...(this.isFormCreateable ? {} : { id: this.rowdata?.id }),
-          pod_desc: value.pod_desc || '',
-          pod_sdate: value.pod_sdate || new Date(),
-          pod_edate: value.pod_edate || this.service.dateE,
+          pod_desc: d.pod_desc || '',
+          pod_sdate: d.pod_sdate || new Date(),
+          pod_edate: d.pod_edate || this.service.dateE,
           pod_status: ApprovalStatus.未核准,
         },
       };
 
-      console.log(`submit:`, [value, payload]);
-      (this.isFormCreateable ? this.service.insertTLS26010(payload) : this.service.updateTLS26010(payload)).pipe(
-        tap(() => {
-          this.messageService.successBubble(this.isFormCreateable ? '新增成功' : '修改成功');
-          if (!this.dialogVisible()) this.isFormCreateable ? this.dataForm.reset() : this.onCancel();
-        }),
-        finalize(() => {
-          this.loading = !1;
-          if (this.dialogVisible()) {
-            this.dialogVisible.set(!1);
-            this.service.loadTLS26010Detail({ pod_no: this.rowdata?.pod_no || '' });
-          }
-        }),
-      ).subscribe();
+      console.log(`submit:`, [d, payload]);
+      this.confirmationService.confirm({
+        message: '是否確認?',
+        accept: () => {
+          (this.isFormCreateable ? this.service.insertTLS26010(payload) : this.service.updateTLS26010(payload))
+            .pipe(finalize(() => {
+              this.loading = !1;
+              if (this.dialogVisible()) {
+                this.dialogVisible.set(!1);
+                this.service.loadTLS26010Detail({ pod_no: this.rowdata?.pod_no || '' });
+              }
+            }))
+            .subscribe(() => {
+              this.messageService.successBubble(this.isFormCreateable ? '新增成功' : '修改成功');
+              if (!this.dialogVisible()) this.isFormCreateable ? this.dataForm.reset() : this.onCancel();
+            });
+        },
+      });
     });
   };
 
@@ -406,33 +401,6 @@ export class TLS26010CRUComponent extends BasicCruPageComponent<TLS26010Data> im
     }
 
     this.onVisibleChange(!1); // 關閉對話框並清除資料
-  }
-
-  /** 清除或重置表單資料 */
-  public onClear(): void {
-    const staticData = TLS26010CRUComponent.staticData;
-    console.log(`onClear:`, [staticData, this.crudstatus]);
-
-    if (this.crudstatus === CRUDStatus.Edit) {
-      this.dataForm.reset(staticData.pod_info);
-      this.ecrTableFiltered.set(staticData.ecr_list.map(item => ({ ...item, Status: ItemOperationStatus.Original })));
-      this.tltTableFiltered.set(staticData.talent_list.map(item => ({ ...item, Status: ItemOperationStatus.Original })));
-    } else {
-      this.dataForm.reset({
-        pod_no: '自動給號',
-        pod_desc: void 0,
-        pod_sdate: new Date(),
-        pod_edate: this.service.dateE,
-        pod_busdate: this.service.dateE,
-        pod_status: '未核准',
-        ecr_nos: [],
-        tlt_nos: [],
-        sys3800: void 0,
-        sys3900: void 0,
-      });
-      this.ecrTableFiltered.set([]);
-      this.tltTableFiltered.set([]);
-    }
   }
 
   /** 開啟對話框 */

@@ -1,11 +1,11 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, OnDestroy, signal } from '@angular/core';
 import { ASS2100ENGMeterType } from '@pages/ass/ass21010/ass21010.model';
-import { ASS21020Data, ASS21020Payload, QueryTLTPayload, TLTByFlag } from '@pages/ass/ass21020/ass21020.model';
+import { ASS21020Data, ASS21020Payload, ASS21020UpdateStatus, QueryTLTPayload, TLTByFlag } from '@pages/ass/ass21020/ass21020.model';
 import { EngType } from '@service/api/ass/ass21010.service';
 import { ErrorHandlerService } from '@service/system/error-handler.service';
 import { BaseQueryResponse, DropdownOption } from '@shared/models/api/base-api.interface';
-import { catchError, finalize, of, Subject, take, takeUntil, tap } from 'rxjs';
+import { catchError, finalize, map, Observable, of, Subject, take, takeUntil, tap } from 'rxjs';
 import { environment } from 'src/environments/environment';
 
 const apiUrl: string = `${environment.ApiUrl}`;
@@ -21,9 +21,8 @@ export class ASS21020Service implements OnDestroy {
   public readonly ASS21020Data = signal<ASS21020Data[]>([]);
   public readonly engTypeSignal = signal<DropdownOption[]>([]);
   public readonly engMeterNoSignal = signal<ASS2100ENGMeterType[]>([]);
+  public readonly tltNoSignal = signal<TLTByFlag[]>([]);
   public readonly locationSignal = signal<string>('');
-  public readonly engMeterNoDropdownSignal = signal<DropdownOption[]>([]);
-  public readonly tltDropdownSignal = signal<DropdownOption[]>([]);
 
   public readonly engMeterNoMap = new Map<string, ASS2100ENGMeterType>();
   public readonly tltByFlagMap = new Map<string, TLTByFlag>();
@@ -62,7 +61,6 @@ export class ASS21020Service implements OnDestroy {
       tap(response => {
         this.engMeterNoSignal.set(response.Data);
         !this.tltByFlagMap.size && this.queryTltByFlag(response.Data[0]?.ENG_MeterNo);
-        this.engMeterNoDropdownSignal.set(response.Data.map(v => ({ No: String(v.Id), Name: v.ENG_MeterNo + ' - ' + v.Location_No })));
         response.Data.forEach(item => this.engMeterNoMap.set(String(item.Id), item));
       }),
       catchError(error => this.errorHandler.handleError(error)),
@@ -113,15 +111,23 @@ export class ASS21020Service implements OnDestroy {
       take(1),
       takeUntil(this.queryTltByFlagCancel$),
       tap(response => {
+        this.tltNoSignal.set(response.Data);
         response.Data.forEach(item => this.tltByFlagMap.set(item.TLT_No, item));
-        this.tltDropdownSignal.set(response.Data.map(v => ({ Name: v.TLT_No + ' - ' + v.TLT_Name, No: v.TLT_No })));
       }),
       catchError(error => this.errorHandler.handleError(error)),
       finalize(() => {
         this.queryTltByFlagLoading = !1;
-        console.log('查詢queryTltByFlag結果:', [this.tltByFlagMap, this.tltDropdownSignal()]);
+        console.log('查詢queryTltByFlag結果:', [this.tltByFlagMap, this.tltNoSignal()]);
       })
     ).subscribe();
+  }
+
+  public updateASS21020(payload: ASS21020Payload): Observable<ASS21020UpdateStatus['Data']> {
+    return this.http.post<ASS21020UpdateStatus>(`${apiUrl}/ASS0000/ASS2000/updateASS21020`, payload).pipe(
+      take(1),
+      map(res => res.Data),
+      catchError(error => this.errorHandler.handleError(error)),
+    );
   }
 
   ngOnDestroy(): void {

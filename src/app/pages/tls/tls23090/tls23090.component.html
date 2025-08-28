@@ -21,7 +21,7 @@
 
           <!-- 專櫃編號 -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select label="專櫃編號" controlName="TLT_No" [options]="CounterOptions" optionLabel="formLabel"
+            <app-multi-select label="專櫃編號" controlName="tlt_no" [options]="CounterOptions" optionLabel="formLabel"
               optionValue="value" [control]="queryForm.controls.tlt_no" [submitted]="submitted"></app-multi-select>
           </div>
 
@@ -47,12 +47,12 @@
               optionValue="value" [control]="queryForm.controls.IsHaveTERM_No" [submitted]="submitted"></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select label="期別" controlName="IPeriod" [options]="installmentPeriodOptions" optionLabel="label"
-              optionValue="value" [control]="queryForm.controls.IPeriod" [submitted]="submitted"></app-multi-select>
+            <app-multi-select label="期別" controlName="TERM_No" [options]="installmentPeriodOptions" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.TERM_No" [submitted]="submitted"></app-multi-select>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="收單行" controlName="AcqBank" [options]="acquiringBankOptions" optionLabel="label"
-              optionValue="value" [control]="queryForm.controls.AcqBank" [submitted]="submitted"></app-dropdown>
+            <app-multi-select label="收單行" controlName="Acquirer" [options]="acquiringBankOptions" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.Acquirer" [submitted]="submitted"></app-multi-select>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown label="連線狀態" controlName="ConnStatus" [options]="connectionStatusOptions" optionLabel="label"
@@ -89,11 +89,46 @@
     </p-accordionTab>
   </p-accordion>
 </div>
+<div class="col-12 md:col-6 lg:col-4">
+  <div class="flex align-items-center gap-3">
+    <p-radioButton
+      name="viewMode"
+      inputId="vmCredit"
+      [value]="'credit'"
+      [(ngModel)]="viewMode"
+      [ngModelOptions]="{ standalone: true }"
+      (onClick)="onModeChange()"
+    ></p-radioButton>
+    <label for="vmCredit">信用卡明細</label>
+
+    <p-radioButton
+      name="viewMode"
+      inputId="vmCounter"
+      [value]="'counter'"
+      [(ngModel)]="viewMode"
+      [ngModelOptions]="{ standalone: true }"
+      (onClick)="onModeChange()"
+    ></p-radioButton>
+    <label for="vmCounter">櫃位信用卡彙總</label>
+  </div>
+</div>
 
 <!-- 查詢結果表格 -->
 <div class="card">
-  <app-table tableKey="TLS23090" [data]="data" [columns]="columns" [showCheckBox]="false" dataKey="TXN_No"
-    [multiSortMeta]="[{ field: 'ECR_No', order: 1 }]" [totalRecords]="totalRecords" [lazy]="true" [loading]="loading"
-    (edit)="onEdit($event)" (detail)="onDetail($event)" [showManage]="false" [showDelete]="false"
-    (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"></app-table>
+  <app-table
+    tableKey="TLS23090"
+    [data]="data"
+    [columns]="columns"
+    [showCheckBox]="false"
+    [dataKey]="'_rowKey'"
+    [multiSortMeta]="[{ field: 'TXN_Date', order: 1 }]"
+    [totalRecords]="totalRecords"
+    [lazy]="true"
+    [loading]="loading"
+    (edit)="onEdit($event)"
+    (detail)="onDetail($event)"
+    [showManage]="false"
+    [showDelete]="false"
+    (lazyLoadData)="onLazyLoadData($event, queryForm);"
+  ></app-table>
 </div>

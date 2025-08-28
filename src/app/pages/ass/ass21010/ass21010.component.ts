@@ -1,4 +1,4 @@
-import { Component, computed, effect, OnInit, signal, Signal } from '@angular/core';
+import { Component, computed, effect, OnInit } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
@@ -7,14 +7,14 @@ import { MenubarComponent } from '@shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '@shared/componentkit/button/button.component';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
-import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
 import { InputTextareaComponent } from '@shared/componentkit/input-textarea/input-textarea.component';
 import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
 import { TableComponent } from '@shared/componentkit/table/table.component';
 import { Column, createPaginationConfig } from '@shared/componentkit/table/table.model';
 import { NGXLogger } from 'ngx-logger';
 import { AccordionModule } from 'primeng/accordion';
-import { ASS2100ENGMeterType, ASS21010Data, ASS21010Delete, ASS21010Payload } from './ass21010.model';
+import { finalize } from 'rxjs';
+import { ASS21010Data, ASS21010Delete, ASS21010Payload } from './ass21010.model';
 
 @Component({
   selector: 'app-ass21010',
@@ -28,7 +28,6 @@ import { ASS2100ENGMeterType, ASS21010Data, ASS21010Delete, ASS21010Payload } fr
     TranslateModule,
     ButtonComponent,
     DropdownComponent,
-    InputTextComponent,
     InputTextareaComponent,
     MenubarComponent,
     MultiSelectComponent,
@@ -52,6 +51,8 @@ export class ASS21010Component extends BasicQueryPageComponent<unknown> implemen
   private readonly engMeterSignal = toSignal(this.qf().ENG_MeterNo.valueChanges);
   private readonly locationSignal = toSignal(this.qf().Location_No.valueChanges);
   private readonly engRemarkSignal = toSignal(this.qf().ENG_Remark.valueChanges);
+
+  public readonly totalRecords = computed(() => this.service.ASS21010Data().length);
 
   public readonly qfEffect = effect(() => {
     this.logger.debug(`qfEffect:`, [this.qfSignal()]);
@@ -88,22 +89,10 @@ export class ASS21010Component extends BasicQueryPageComponent<unknown> implemen
     this.logger.debug(`init:`, [this.queryForm]);
   }
 
-  public canQuery(): boolean {
-    return !0;
-  }
-
-  public canAdd(): boolean {
-    return !0;
-  }
-
-  public canEdit(): boolean {
-    return !0;
-  }
-
   public onSubmit(): void {
     this.handleSubmit(this.queryForm, () => {
       const payload = <ASS21010Payload>{
-        ...this.queryForm.value,
+        ...this.queryForm.getRawValue(),
         ENG_Type: this.engTypeSignal(),
         ENG_MeterNo: this.engMeterSignal(),
         ENG_Remark: this.engRemarkSignal(),
@@ -114,31 +103,29 @@ export class ASS21010Component extends BasicQueryPageComponent<unknown> implemen
       this.service.loadASS21010(payload);
 
       this.logger.debug(`onSubmit:`, [payload]);
-      this.queryStateService.setQueryState(this.ProgNo, this.queryForm.value);
+      this.queryStateService.setQueryState(this.ProgNo, this.queryForm.getRawValue());
       this.loading = !1;
     });
   }
 
-  public override onCreate(data?: unknown): void {
-    this.queryStateService.setQueryState(this.ProgNo, this.queryForm.value);
-    super.onCreate(data);
-  };
-
-  public onDelete(event: ASS21010Data): void {
-    this.logger.debug(`Deleting ASS21010:`, [event, this.authService.currentUserValue]);
-    this.service.deleteASS21010(<ASS21010Delete>{
-      ...this.queryForm.value,
-      ID: event.ID,
-      ENG_MeterNo: event.ENG_MeterNo,
-      Location_No: event.Location_No,
-      ENG_Type: event.ENG_Type,
-      SYS_StoreNo: this.authService.currentUserValue!.SYS_StoreNo,
-      Mid: Number(this.authService.currentUserValue!.mid),
+  public onDelete(data: ASS21010Data[]): void {
+    console.log(`onDelete:`, [data]);
+    this.confirmationService.confirm({
+      message: '是否確認刪除?',
+      accept: () => {
+        this.logger.debug(`Deleting ASS21010:`, [data, this.authService.currentUserValue]);
+        this.service.deleteASS21010(data.map(v => (<ASS21010Delete>{
+          ...v,
+          SYS_StoreNo: this.authService.currentUserValue!.SYS_StoreNo,
+          Mid: Number(this.authService.currentUserValue!.mid)
+        })))
+          .pipe(finalize(() => this.loading = !1))
+          .subscribe(res => {
+            if (!res.IsUpdateSuccess) return this.messageService.errorBox('刪除失敗\n' + res.ErrorMsg);
+            this.service.ASS21010Data.update(v => v.filter(d => data.some(item => d.ID !== item.ID)));
+            this.messageService.successBubble('刪除成功');
+          });
+      },
     });
-    this.service.ASS21010Data.set(this.service.ASS21010Data().filter(v => v.ID !== event.ID));
-  }
-
-  public onClear(): void {
-    this.queryForm.reset();
   }
 }

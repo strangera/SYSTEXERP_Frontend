@@ -1,11 +1,11 @@
 import { SystemOptionsService } from "@service/system/sys1000.service";
-import { Column, formatDate, formatDateTime, formatDateTimeToHHMMSS } from "@shared/componentkit/table/table.model"
+import { Column, formatAmount, formatDate, formatDateTime, formatDateTimeToHHMMSS } from "@shared/componentkit/table/table.model"
 // --- POS6118 聯信特店MIS LOG檔案 ---
 export const POS6118_columns: Column[] = [
   { field: 'ECR_No', header: '收銀機號' }, // 對應 POS6118.ECR_No
   { field: 'TXN_No', header: '交易流水號' }, // 對應 POS6118.TXN_No
   { field: 'TLT_No', header: '專櫃編號' }, // 對應 POS6118.TLT_No
-  { field: 'NCML_TxnAmt', header: '金額' }, // 對應 POS6118.NCML_TxnAmt
+  { field: 'NCML_TxnAmt', header: '金額', format: formatAmount }, // 對應 POS6118.NCML_TxnAmt
   { field: 'NCML_TmID', header: 'EDC號碼' }, // 對應 POS6118.NCML_TmID
   { field: 'NCML_BatCloseDate', header: '入帳日', format: formatDate }, // 對應 POS6118.NCML_BatCloseDate (DATE)
   { field: 'NCML_PayCrdType', header: '卡別', format: (value) => PayCrdTypeOptions.find(item => item.value === value)?.label || value }, // 對應 POS6118.NCML_PayCrdType
@@ -30,7 +30,7 @@ export const POS6119_columns: Column[] = [
   { field: 'ECR_No', header: '收銀機號' }, // 對應 POS6119.ECR_No
   { field: 'TXN_No', header: '交易流水號' }, // 對應 POS6119.TXN_No
   { field: 'TLT_No', header: '專櫃編號' }, // 對應 POS6119.TLT_No
-  { field: 'CTBC_TxnAmt', header: '金額' }, // 對應 POS6119.CTBC_TxnAmt
+  { field: 'CTBC_TxnAmt', header: '金額', format: formatAmount }, // 對應 POS6119.CTBC_TxnAmt
   { field: 'CTBC_TmID', header: 'EDC號碼' }, // 對應 POS6119.CTBC_TmID
   { field: 'CTBC_Date', header: '請款日期', format: formatDate }, // 對應 POS6119.CTBC_Date (DATE)
   { field: 'CTBC_PayDate', header: '入帳日', format: formatDate }, // 對應 POS6119.CTBC_PayDate (DATE), 應為 formatDate
@@ -53,7 +53,7 @@ export const POS6119P_columns: Column[] = [
   { field: 'ECR_No', header: '收銀機號' }, // 對應 POS6119P.ECR_No
   { field: 'TXN_No', header: '交易流水號' }, // 對應 POS6119P.TXN_No
   { field: 'TLT_No', header: '專櫃編號' }, // 對應 POS6119P.TLT_No
-  { field: 'CTBC_TxnAmt', header: '金額' }, // 對應 POS6119P.CTBC_TxnAmt
+  { field: 'CTBC_TxnAmt', header: '金額', format: formatAmount }, // 對應 POS6119P.CTBC_TxnAmt
   { field: 'CTBC_TmID', header: 'EDC號碼' }, // 對應 POS6119P.CTBC_TmID
   { field: 'CTBC_CrdNo', header: '卡號' }, // 對應 POS6119P.CTBC_CrdNo
   { field: 'CTBC_TxnDate', header: '銷售日期', format: formatDate }, // 對應 POS6119P.CTBC_TxnDate (DATE)
