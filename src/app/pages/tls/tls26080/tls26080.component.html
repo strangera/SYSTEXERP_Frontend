@@ -50,7 +50,6 @@
           <app-button btnType="clear"
                       [form]="queryForm"></app-button>
           <app-button btnType="query"
-                      (click)="onSubmit()"
                       [loading]="loading"></app-button>
         </div>
       </form>
@@ -72,7 +71,7 @@
              [dataKey]="'pod_no'"
              [columns]="columns"
              [totalRecords]="totalRecords()"
+             (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit()"
              [lazy]="true"
-             [loading]="loading"
-             (lazyLoadData)="onSubmit()"></app-table>
+             [loading]="loading"></app-table>
 </div>

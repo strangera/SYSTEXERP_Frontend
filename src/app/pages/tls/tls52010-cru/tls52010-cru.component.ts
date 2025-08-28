@@ -162,7 +162,7 @@ export class TLS52010CRUComponent extends BasicCruPageComponent<ITLS52010Data> i
       }
     });
     this.dropDownListService.getPOS2034Options().pipe(untilDestroyed(this)).subscribe(response => {
-      this.warehouseOptions = response.Data;// 倉別
+      this.warehouseOptions = response.Data.map(item => ({ ...item, label: `${item.No} - ${item.Name}` }));// 倉別
     });
   }
   GetBudgetAmount(logoNo: string): void {

@@ -358,19 +358,18 @@ export class TLS26010CRUComponent extends BasicCruPageComponent<TLS26010Data> im
       this.confirmationService.confirm({
         message: '是否確認?',
         accept: () => {
-          (this.isFormCreateable ? this.service.insertTLS26010(payload) : this.service.updateTLS26010(payload)).pipe(
-            tap(() => {
-              this.messageService.successBubble(this.isFormCreateable ? '新增成功' : '修改成功');
-              if (!this.dialogVisible()) this.isFormCreateable ? this.dataForm.reset() : this.onCancel();
-            }),
-            finalize(() => {
+          (this.isFormCreateable ? this.service.insertTLS26010(payload) : this.service.updateTLS26010(payload))
+            .pipe(finalize(() => {
               this.loading = !1;
               if (this.dialogVisible()) {
                 this.dialogVisible.set(!1);
                 this.service.loadTLS26010Detail({ pod_no: this.rowdata?.pod_no || '' });
               }
-            }),
-          ).subscribe();
+            }))
+            .subscribe(() => {
+              this.messageService.successBubble(this.isFormCreateable ? '新增成功' : '修改成功');
+              if (!this.dialogVisible()) this.isFormCreateable ? this.dataForm.reset() : this.onCancel();
+            });
         },
       });
     });

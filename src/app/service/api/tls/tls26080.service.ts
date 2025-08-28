@@ -6,7 +6,7 @@ import { NotificationService } from '@shared/component/notification-message/noti
 import { BaseQueryResponse, DropdownOption } from '@shared/models/api/base-api.interface';
 import { ApprovalStatus } from '@shared/models/tls/approval-status.model';
 import { ConfirmationService } from 'primeng/api';
-import { catchError, EMPTY, finalize, map, Subject, take, takeUntil, tap, throwError } from 'rxjs';
+import { catchError, EMPTY, finalize, map, Observable, Subject, take, takeUntil, tap, throwError } from 'rxjs';
 import { environment } from 'src/environments/environment';
 
 const apiUrl: string = environment.ApiUrl;
@@ -130,16 +130,11 @@ export class TLS26080Service {
     ).subscribe();
   };
 
-  public insertTLS26080(data: TLS2608InsertPayload): void {
-    this.http.post<BaseQueryResponse<any>>(`${apiUrl}/TLS0000/TLS2000/insertTLS26080`, data).pipe(
+  public insertTLS26080(data: TLS2608InsertPayload): Observable<BaseQueryResponse<any>> {
+    return this.http.post<BaseQueryResponse<any>>(`${apiUrl}/TLS0000/TLS2000/insertTLS26080`, data).pipe(
       take(1),
-      tap(response => {
-        console.log(`insertTLS26080:`, [response]);
-        this.messageService.successBubble('新增成功');
-      }),
       catchError(error => this.errorHandler.handleError(error)),
-      finalize(() => console.log('新增專櫃活動結果:', [data]))
-    ).subscribe();
+    );
   }
 
   /** 核准或反核准專櫃活動 */
@@ -217,6 +212,13 @@ export class TLS26080Service {
         console.log('上傳檔案結果:', [file]);
       })
     ).subscribe();
+  }
+
+  public deleteTLS26080(idList: string[]): Observable<BaseQueryResponse<unknown>> {
+    return this.http.post<BaseQueryResponse<unknown>>(`${apiUrl}/TLS0000/TLS2000/deleteTLS26080`, { idList }).pipe(
+      take(1),
+      catchError(error => this.errorHandler.handleError(error)),
+    );
   }
 
   private dealErrorFilePath(data: TLS26080UploadResult): void {

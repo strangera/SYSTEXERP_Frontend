@@ -45,8 +45,8 @@ export class SYSBC00CRUComponent extends BasicCruPageComponent<ISysbc00Data> imp
   selectedRows: Aps1004Request[] = [];
   deleteRows: Aps1004Request[] = [];
   columns: Column[] = [
-    { field: 'BNK_BranchNo', header: '分行代碼', type: 'input', validate: [validateDuplicate, validateRequired, validateMaxLength(10)] },
-    { field: 'BNK_BranchName', header: '分行名稱', type: 'input', validate: [validateRequired, validateMaxLength(100)] },
+    { field: 'BNK_BranchNo', header: '銀行分行代號', type: 'input', validate: [validateDuplicate, validateRequired, validateMaxLength(10)] },
+    { field: 'BNK_BranchName', header: '銀行分行名稱', type: 'input', validate: [validateRequired, validateMaxLength(100)] },
     { field: 'ACC_LEN', header: '該行帳號最小長度', type: 'inputNumber', useGrouping: false, validate: [validateRequired, validateMaxNumber(99999999)] },
     { field: 'ACC_LEN_MAX', header: '該行帳號最大長度', type: 'inputNumber', useGrouping: false, validate: [validateRequired, validateMaxNumber(99999999)] },
   ];

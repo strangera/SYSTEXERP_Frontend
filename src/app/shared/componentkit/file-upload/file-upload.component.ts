@@ -88,6 +88,8 @@ export class FileUploadComponent {
   @Input() chooseStyleClass = 'w-auto';
   // 上傳中。
   @Input() loading = false;
+  // 空狀態訊息。
+  @Input() emptyMessage = '拖曳檔案到此處或點擊「選擇檔案」按鈕。';
 
   // 檔案上傳完成時觸發的回調事件。
   @Output() upload: EventEmitter<FileUploadEvent> = new EventEmitter<FileUploadEvent>();

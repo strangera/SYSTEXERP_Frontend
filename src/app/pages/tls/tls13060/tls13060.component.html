@@ -11,14 +11,14 @@
             [control]="queryForm.controls.apply_no" [submitted]="submitted" />
           <app-multi-select class="col-12 md:col-6 lg:col-4" label="廠商統一編號" controlName="ven_uniform"
             [options]="vandorCategoryOptions" optionLabel="label" optionValue="value"
-            [control]="queryForm.controls.ven_uniform" [submitted]="submitted" />
+            [control]="queryForm.controls.ven_uniformList" [submitted]="submitted" />
           <app-input-text class="col-12 md:col-6 lg:col-4" label="專櫃編號" controlName="tlt_no"
             [control]="queryForm.controls.tlt_no" [submitted]="submitted" />
           <app-input-text class="col-12 md:col-6 lg:col-4" label="櫃位名稱" controlName="tlt_name"
             [control]="queryForm.controls.tlt_name" [submitted]="submitted" />
           <app-multi-select class="col-12 md:col-6 lg:col-4" label="位置編號" controlName="location_no"
             [options]="locationOptions" optionLabel="label" optionValue="value"
-            [control]="queryForm.controls.location_no" [submitted]="submitted" />
+            [control]="queryForm.controls.location_noList" [submitted]="submitted" />
           <app-multi-select class="col-12 md:col-6 lg:col-4" label="營運狀況" controlName="tlt_openflagList"
             [options]="tlt_openflagOptions" optionLabel="label" optionValue="value"
             [control]="queryForm.controls.tlt_openflagList" [submitted]="submitted" />
@@ -39,7 +39,7 @@
             [control]="queryForm.controls.tlt_term_typeList" [submitted]="submitted" />
           <app-multi-select class="col-12 md:col-6 lg:col-4" class="col-12 md:col-6 lg:col-4" label="付款方式"
             controlName="paytype" [options]="paytypeOptions" optionLabel="label" optionValue="value"
-            [control]="queryForm.controls.paytype" [submitted]="submitted" />
+            [control]="queryForm.controls.paytypeList" [submitted]="submitted" />
           <!-- 替換 app-multi-select 為 app-radiobutton-yn -->
           <app-radiobutton-yn class="col-12 md:col-6 lg:col-4" label="是否開立業主發票" controlName="rece_yn"
             [control]="queryForm.controls.rece_yn" [submitted]="submitted" [showAll]="true">
