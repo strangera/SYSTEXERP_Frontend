@@ -27,7 +27,7 @@ export function getToday2330(): Date {
   return new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 30, 0);
 }
 export const columns: Column[] = [
-  { field: 'ECR_TmplNo', header: '模版編號', visible: true },
+  { field: 'ECR_TmplNo', header: '環境變數編號', visible: true },
   { field: 'ECR_TmplDesc', header: '模版備註', visible: true },
   { field: 'ECR_TmplStatus', header: '模版狀態', visible: true, format: value => value === 'A' ? '啟用' : '停用' }, // 資料庫中有此欄位，前端資料也有
   { field: 'ECR_TmplBegDate', header: '模版有效啟始日期', visible: true, format: formatDate }, // 已有 format
