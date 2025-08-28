@@ -1,6 +1,6 @@
 
 import { NgIf } from '@angular/common';
-import { Component, computed, effect, OnInit, signal } from '@angular/core';
+import { Component, computed, effect, OnInit } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
@@ -16,6 +16,7 @@ import { CRUDStatus } from '@shared/models/system/CRUDstatus';
 import { NGXLogger } from 'ngx-logger';
 import { FileSelectEvent } from 'primeng/fileupload';
 import { PanelModule } from 'primeng/panel';
+import { finalize } from 'rxjs';
 
 @Component({
   selector: 'app-ass21020-cru',
@@ -109,9 +110,14 @@ export class ASS21020CRUComponent extends BasicCruPageComponent<unknown> impleme
       this.confirmationService.confirm({
         message: '是否確認新增?',
         accept: () => {
-
-          this.messageService.successBubble('新增成功');
-          this.loading = !1;
+          this.service.updateASS21020(payload).pipe(finalize(() => {
+            this.loading = !1;
+            this.logger.debug(`onSubmit:`, [this.dataForm, payload]);
+          })).subscribe(res => {
+            if (!res.IsUpdateSuccess) return this.messageService.errorBox('新增失敗\n' + res.ErrorMsg);
+            this.onCancel();
+            this.messageService.successBubble(`新增成功`);
+          });
         },
       });
     });
