@@ -20,6 +20,14 @@
   }
 
   .p-datatable {
+    .first-column .p-dropdown.p-component,
+    .first-column .p-inputtext {
+      background-color: var(--blue-50) !important;
+      border-style: dashed !important;
+      border-width: 2px !important;
+      border-color: var(--blue-400) !important;
+    }
+
     &.p-datatable-sm .p-datatable-footer {
       padding: 0;
     }
