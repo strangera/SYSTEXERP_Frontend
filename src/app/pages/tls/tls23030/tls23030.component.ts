@@ -314,7 +314,7 @@ private toBoolOrNull(v: any): boolean | null {
     raw['rece_yn']          = emptyToNull(raw['rece_yn']);
     raw['cash_yn']          = emptyToNull(raw['cash_yn']);
     raw['tlt_building']     = emptyToNull(raw['tlt_building']);
-    raw['IsPayType']        = this.toBoolOrNull(raw['IsPayType']);
+    raw['VOU_Check']        = this.toBoolOrNull(raw['VOU_Check']);
     raw['IsHaveTERM_No']    = this.toBoolOrNull(raw['IsHaveTERM_No']);
 
     // 排序：沿用你現有的 sort 邏輯
