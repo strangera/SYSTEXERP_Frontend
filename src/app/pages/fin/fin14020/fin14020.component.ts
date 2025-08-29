@@ -49,6 +49,10 @@ export class FIN14020Component extends BasicQueryPageComponent<clearResponse> im
       data: clearResponse[] = [];
       selectedRows: clearResponse[] = [];
 
+      //--20250829備註--
+      // SA還沒完成預存程式，但是後端API是可以呼叫的
+      //----
+
       constructor(
         private fin14020Service: Fin14020Service,
       ) {
