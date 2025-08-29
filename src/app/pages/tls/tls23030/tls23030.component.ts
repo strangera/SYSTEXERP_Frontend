@@ -106,7 +106,7 @@ readonly defaultSort: any[] = [
     TXN_MemCard: [''],
     CRD_Type: [], // ✅ 修正為 []
     CRD_No: [''],
-    IsHaveTERM_No: [false],
+    IsHaveTERM_No: [],
     pay_taxtype: [''],
     org_id: [], // ✅ 修正為 []
     VOU_Check: false,
