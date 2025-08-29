@@ -30,8 +30,8 @@ import { DatePipe } from '@angular/common';
 })
 export class FIN11070Component extends BasicQueryPageComponent<FIN11070Data> implements OnInit {
   queryForm = this.formBuilder.group({
-    GUI_YYMM: [null, Validators.required],    // 申報年月
-    ...createPaginationConfig([{ field: 'TXN_No', order: -1 }])
+    GUI_YYMM: [''],    // 申報年月
+    ...createPaginationConfig([])
   });
 
   totalRecords = 0;
@@ -46,7 +46,7 @@ export class FIN11070Component extends BasicQueryPageComponent<FIN11070Data> imp
     },
     {
       field: 'TXN_No',
-      header: '發票號碼',
+      header: '發票年月',
       visible: true,
     },
     {
@@ -109,7 +109,63 @@ export class FIN11070Component extends BasicQueryPageComponent<FIN11070Data> imp
     });
   }
 
-  onExport() {
-    // TODO: 待實作
+  downloadFIN11070() {
+    const requestData = {
+      MID: 0,
+      STO_No: '10',
+      GUI_YYMM: this.datePipe.transform(this.queryForm.value.GUI_YYMM, 'yyyyMM') ?? '',
+    };
+
+    this.fin11070Service.downloadFIN11070(requestData)
+      .pipe(finalize(() => this.loading = false))
+      .subscribe(response => {
+        // 預設檔名
+        let filename = 'download.txt';
+
+        // 嘗試從 Content-Disposition 取檔名
+        const contentDisposition = response.headers.get('content-disposition');
+        if (contentDisposition) {
+          const matches =
+            /filename\*?=['"]?UTF-8''?([^;\n]*)/i.exec(contentDisposition) ||
+            /filename="?([^;\n"]*)"?/i.exec(contentDisposition);
+
+          if (matches && matches[1]) {
+            filename = decodeURIComponent(matches[1]);
+          }
+        }
+
+        // 建立 Blob
+        const blob = new Blob([response.body!], { type: 'text/plain;charset=utf-8' });
+
+        // 用 <a> 動態下載
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+
+        // 清理
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+      });
+  }
+
+  insertFIN11070() {
+    const requestData = {
+      MID: 0,
+      SYS_StoreNo: '10',
+      GUI_YYMM: this.datePipe.transform(this.queryForm.value.GUI_YYMM, 'yyyyMM') ?? '',
+    };
+
+    this.fin11070Service.insertFIN11070(requestData)
+      .pipe(finalize(() => this.loading = false))
+      .subscribe(response => {
+        if (response.Data[0].Status === '0') {
+          this.messageService.errorBubble(response.Data[0].Errormsg);
+        } else {
+          this.messageService.successBubble('寫入產製空白發票成功');
+        }
+      });
   }
 }
