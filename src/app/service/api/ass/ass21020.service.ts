@@ -7,24 +7,21 @@ import { ErrorHandlerService } from '@service/system/error-handler.service';
 import { BaseQueryResponse, DropdownOption } from '@shared/models/api/base-api.interface';
 import { catchError, finalize, map, Observable, of, Subject, take, takeUntil, tap } from 'rxjs';
 import { environment } from 'src/environments/environment';
+import { DropdownItem } from './../../basic/acquiring-bank.service';
 
 const apiUrl: string = `${environment.ApiUrl}`;
 
 @Injectable({ providedIn: 'root' })
 export class ASS21020Service implements OnDestroy {
 
-  public readonly isRowSelectable = (rowData: unknown) =>
-    !!rowData;
-  // (Reflect.has(rowData, 'CanDelete') && rowData.CanDelete == '1') || rowData.pod_status === ApprovalStatus.未核准;
-
   // 儲存資料
   public readonly ASS21020Data = signal<ASS21020Data[]>([]);
   public readonly engTypeSignal = signal<DropdownOption[]>([]);
   public readonly engMeterNoSignal = signal<ASS2100ENGMeterType[]>([]);
   public readonly tltNoSignal = signal<TLTByFlag[]>([]);
-  public readonly locationSignal = signal<string>('');
+  public readonly locationSignal = signal<DropdownItem[]>([]);
 
-  public readonly engMeterNoMap = new Map<string, ASS2100ENGMeterType>();
+  public readonly engMeterNoMap = new Map<number, ASS2100ENGMeterType>();
   public readonly tltByFlagMap = new Map<string, TLTByFlag>();
 
   public engMeterNoLoading = !1;
@@ -60,7 +57,7 @@ export class ASS21020Service implements OnDestroy {
       takeUntil(this.engMeterNoCancel$),
       tap(response => {
         this.engMeterNoSignal.set(response.Data);
-        response.Data.forEach(item => this.engMeterNoMap.set(String(item.Id), item));
+        response.Data.forEach(item => this.engMeterNoMap.set(item.Id, item));
       }),
       catchError(error => this.errorHandler.handleError(error)),
       finalize(() => {

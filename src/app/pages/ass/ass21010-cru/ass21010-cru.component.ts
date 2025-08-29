@@ -37,7 +37,7 @@ import { ASS21010Data, ASS21010Payload } from '../ass21010/ass21010.model';
 export class ASS21010CRUComponent extends BasicCruPageComponent<ASS21010Data> implements OnInit {
 
   public readonly dataForm = this.formBuilder.nonNullable.group({
-    ENGType: new FormControl<EngType | undefined>(void 0, [Validators.required]),
+    ENG_Type: new FormControl<EngType | undefined>(void 0, [Validators.required]),
     ENG_MeterNo: new FormControl<string | undefined>(void 0, [Validators.required, Validators.minLength(5), Validators.maxLength(5)]),
     Location_No: new FormControl<string | undefined>(void 0, [Validators.required]),
     ENG_Remark: new FormControl<string>('', [Validators.maxLength(500)]),
@@ -45,7 +45,7 @@ export class ASS21010CRUComponent extends BasicCruPageComponent<ASS21010Data> im
   public readonly df = computed(() => this.dataForm.controls);
 
   // 變化追蹤
-  private readonly engTypeSignal = toSignal(this.df().ENGType.valueChanges);
+  private readonly engTypeSignal = toSignal(this.df().ENG_Type.valueChanges);
   private readonly locationSignal = toSignal(this.df().Location_No.valueChanges);
 
   public readonly totalRecords = computed(() => this.service.ASS21010Data().length);
@@ -88,7 +88,7 @@ export class ASS21010CRUComponent extends BasicCruPageComponent<ASS21010Data> im
     this.handleSubmit(this.dataForm, () => {
       const d = this.dataForm.getRawValue();
       const payload: ASS21010Payload = {
-        ENG_Type: d.ENGType! ?? void 0,
+        ENG_Type: d.ENG_Type! ?? void 0,
         ENG_MeterNo: d.ENG_MeterNo ?? void 0,
         Location_No: d.Location_No ?? void 0,
         ENG_Remark: d.ENG_Remark ?? void 0,
