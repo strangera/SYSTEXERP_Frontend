@@ -17,11 +17,11 @@
         <div class="grid p-fluid">
           <app-multi-select class="col-12 md:col-6 lg:col-4"
                             label="能源類型"
-                            controlName="ENGType"
+                            controlName="ENG_Type"
                             [options]="service.engTypeSignal()"
                             optionLabel="Name"
                             optionValue="No"
-                            [control]="qf().ENGType"
+                            [control]="qf().ENG_Type"
                             [submitted]="submitted"></app-multi-select>
           <div class="col-12 md:col-6 lg:col-4 flex align-items-end">
             <app-input-text class="flex-1"
@@ -65,12 +65,11 @@
                           [control]="qf().NET_SPACE"
                           [disabled]="true"
                           [submitted]="submitted"></app-input-text>
-          <app-input-text class="col-12 md:col-6 lg:col-4"
-                          label="面積比例(%)"
-                          controlName="NET_SPACE_Ratio"
-                          [control]="qf().NET_SPACE_Ratio"
-                          [disabled]="true"
-                          [submitted]="submitted"></app-input-text>
+          <app-input-number class="col-12 md:col-6 lg:col-4"
+                            label="面積比例(%)"
+                            controlName="ENG_Rate"
+                            [control]="qf().ENG_Rate"
+                            [submitted]="submitted"></app-input-number>
         </div>
         <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
           <app-button btnType="clear"
@@ -106,20 +105,46 @@
             [header]="dialogVisible === 'meterNo' ? '選擇錶號' : '選擇專櫃編號'"
             (save)="onSaveDialog()"
             [disable]="dialogVisible === 'meterNo' ? !service.engMeterNoMap.size : !service.tltByFlagMap.size">
-  <div class="row">
-    <div class="col-12">
-      <app-table [tableKey]="dialogVisible === 'meterNo' ? 'ASS21020_meterno_table' : 'ASS21020_locationno_table'"
-                 [dataKey]="dialogVisible === 'meterNo' ? 'Id' : 'TLT_No'"
-                 [data]="dialogVisible === 'meterNo' ? service.engMeterNoSignal() : service.tltNoSignal()"
-                 [columns]="dialogVisible === 'meterNo' ? meterColumns : tltNoColumns"
-                 [(selectedItems)]="selectedItemsDialog"
-                 [showHeader]="false"
-                 [showManage]="false"
-                 [showCheckBox]="true"
-                 [showCaption]="false"
-                 [selectionMode]="'single'"
-                 [emptyMessage]="dialogVisible === 'meterNo' ? '無可選擇的錶號' : '無可選擇的專櫃編號'">
-      </app-table>
-    </div>
+  <div class="grid p-fluid">
+    <ng-container *ngIf="dialogVisible === 'meterNo'">
+      <app-multi-select class="col-12 md:col-6 lg:col-4"
+                        label="設備位置編號"
+                        controlName="Location_No"
+                        [options]="allLoc()"
+                        [control]="df().Location_No"
+                        [submitted]="submitted"></app-multi-select>
+      <app-multi-select class="col-12 md:col-6 lg:col-4"
+                        label="能源類型"
+                        controlName="ENG_Type"
+                        [options]="allType()"
+                        [control]="df().ENG_Type"
+                        [submitted]="submitted"></app-multi-select>
+    </ng-container>
+    <ng-container *ngIf="dialogVisible === 'tltNo'">
+      <app-multi-select class="col-12 md:col-6 lg:col-4"
+                        label="專櫃編號"
+                        controlName="TLT_No"
+                        [options]="allTltNo()"
+                        [control]="df().TLT_No"
+                        [submitted]="submitted"></app-multi-select>
+      <app-multi-select class="col-12 md:col-6 lg:col-4"
+                        label="專櫃名稱"
+                        controlName="TLT_Name"
+                        [options]="allTltName()"
+                        [control]="df().TLT_Name"
+                        [submitted]="submitted"></app-multi-select>
+    </ng-container>
   </div>
+  <app-table [tableKey]="dialogVisible === 'meterNo' ? 'ASS21020_meterno_table' : 'ASS21020_locationno_table'"
+             [dataKey]="dialogVisible === 'meterNo' ? 'Id' : 'TLT_No'"
+             [data]="dialogVisible === 'meterNo' ? filteredMeterNo() : filteredTltNo()"
+             [columns]="dialogVisible === 'meterNo' ? meterColumns : tltNoColumns"
+             [(selectedItems)]="selectedItemsDialog"
+             [showHeader]="false"
+             [showManage]="false"
+             [showCheckBox]="true"
+             [showCaption]="false"
+             [selectionMode]="'single'"
+             [emptyMessage]="dialogVisible === 'meterNo' ? '無可選擇的錶號' : '無可選擇的專櫃編號'">
+  </app-table>
 </app-dialog>
