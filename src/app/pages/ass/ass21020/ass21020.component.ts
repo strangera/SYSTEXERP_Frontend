@@ -163,14 +163,14 @@ export class ASS21020Component extends BasicQueryPageComponent<unknown> implemen
 
   public onSubmit(): void {
     this.handleSubmit(this.queryForm, () => {
-      this.service.loadASS21020({
-        ENG_Type: this.qf().ENG_Type.value?.join() || void 0,
-        ENG_Rate: this.qf().ENG_Rate.value || void 0,
-        ENG_MeterNo: this.qf().ENG_MeterNo.value || void 0,
-        Location_No: this.qf().Location_No.value || void 0,
-        SYS_StoreNo: this.authService.currentUserValue?.SYS_StoreNo!,
-        Mid: Number(this.authService.currentUserValue?.mid)!,
-      });
+      // this.service.loadASS21020({
+      //   ENG_Type: this.qf().ENG_Type.value!.join(),
+      //   ENG_Rate: this.qf().ENG_Rate.value!,
+      //   ENG_MeterNo: this.qf().ENG_MeterNo.value!,
+      //   Location_No: this.qf().Location_No.value!,
+      //   SYS_StoreNo: this.authService.currentUserValue?.SYS_StoreNo!,
+      //   Mid: Number(this.authService.currentUserValue?.mid)!,
+      // });
 
       this.queryStateService.setQueryState(this.ProgNo, this.queryForm.getRawValue());
       this.loading = !1;

@@ -84,8 +84,8 @@
            class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
         <app-button btnType="cancel"
                     [form]="dataForm"></app-button>
-        <app-button btnType="submit"
-                    [loading]="loading"></app-button>
+        <!-- <app-button btnType="submit"
+                    [loading]="loading"></app-button> -->
       </div>
     </form>
   </p-panel>
@@ -98,18 +98,18 @@
       <p-panel header="資料"
                class="line-height-3 m-0 mb-3">
         <app-table [showCheckBox]="true"
-                   [showEdit]="false"
                    [showDetail]="false"
-                   [showDelete]="false"
-                   [showManage]="false"
-                   [showReportMode]="false"
-                   [isRowSelectable]="service.isRowSelectable"
+                   [showRowEdit]="true"
+                   [showInsert]="dataForm.valid"
+                   [insertRowData]="dataForm.valid"
                    [showExcel]="isFormEditable"
                    (exportExcel)="onExportExcel()"
                    (importExcel)="onImportExcel($event)"
-                   [data]="[]"
+                   [data]="service.tltNoSignal()"
                    (selectionChange)="onSelectionChange($event)"
                    [totalRecords]="totalRecords()"
+                   (rowEditInit)="onRowEditInit($event)"
+                   (rowEditSave)="onRowEdit($event)"
                    (lazyLoadData)="onLazyLoadData($event, dataForm); onSubmit()"
                    [lazy]="true"
                    [loading]="loading"
