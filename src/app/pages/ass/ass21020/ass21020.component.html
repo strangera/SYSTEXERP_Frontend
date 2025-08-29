@@ -67,8 +67,13 @@
                           [submitted]="submitted"></app-input-text>
           <app-input-number class="col-12 md:col-6 lg:col-4"
                             label="面積比例(%)"
+                            [pKeyFilter]="ratePtn"
                             controlName="ENG_Rate"
                             [control]="qf().ENG_Rate"
+                            [max]="100"
+                            [min]="0"
+                            [maxFractionDigits]="2"
+                            [suffix]="'%'"
                             [submitted]="submitted"></app-input-number>
         </div>
         <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">

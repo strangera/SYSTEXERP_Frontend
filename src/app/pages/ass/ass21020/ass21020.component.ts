@@ -74,6 +74,7 @@ export class ASS21020Component extends BasicQueryPageComponent<unknown> implemen
   public dialogVisible: boolean | 'meterNo' | 'tltNo' = !1;
 
   public readonly ptn = /(?!)/;
+  public readonly ratePtn = /^(100(?:\.0{1,2})?|0*(?:\d{1,2})(?:\.\d{1,2})?)$/;
   public selectedItemsDialog: (ASS2100ENGMeterType | TLTByFlag)[] = [];
 
   public readonly totalRecords = computed(() => this.service.ASS21020Data().length);
