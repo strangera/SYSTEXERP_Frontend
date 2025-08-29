@@ -132,7 +132,7 @@ export class FareColumnDefinitions {
         header: '起始年月',
         type: 'date',
         editable: true,
-        autoWidth: true,
+        width: '110px',
         dateFormat: 'year-month',
         required: true,
         defaultValueFunction: () => {
@@ -148,7 +148,7 @@ export class FareColumnDefinitions {
         header: '單位',
         type: 'dropdown',
         editable: true,
-        width: '70px',
+        width: '20px',
         options: TLS13010_DROPDOWN_OPTIONS.tpyTypeOption,
         required: true,
       },
@@ -241,6 +241,7 @@ export class FareColumnDefinitions {
         editable: true,
         autoWidth: true,
         dateFormat: 'year-month',
+        width: '110px',
         required: true,
         defaultValueFunction: () => {
           const contractInfo = contractInfoData[0];
@@ -255,7 +256,7 @@ export class FareColumnDefinitions {
         header: '扣款結束年月',
         type: 'date',
         editable: true,
-        autoWidth: true,
+        width: '110px',
         dateFormat: 'year-month',
         required: true,
         defaultValueFunction: () => {
@@ -271,6 +272,7 @@ export class FareColumnDefinitions {
         header: '單位',
         type: 'dropdown',
         editable: true,
+        width: '20px',
         options: TLS13010_DROPDOWN_OPTIONS.tpyTypeOption,
         autoWidth: true,
         required: true
@@ -361,7 +363,7 @@ export class FareColumnDefinitions {
         field: 'auto_calc',
         header: '自動計算',
         type: 'button',
-        width: '90px',
+        width: '5px',
         buttonLabel: '自動計算',
         buttonIcon: 'pi pi-calculator',
         buttonClass: 'p-button-sm p-button-info',
@@ -551,6 +553,7 @@ export class FareColumnDefinitions {
         type: 'date',
         editable: true,
         autoWidth: true,
+        width: '120px',
         dateFormat: 'year-month',
         required: true,
         defaultValueFunction: () => {
@@ -566,7 +569,7 @@ export class FareColumnDefinitions {
         header: '扣款結束年月',
         type: 'date',
         editable: true,
-        width: '130px',
+        width: '120px',
         dateFormat: 'year-month',
         required: true,
         defaultValueFunction: () => {
@@ -582,6 +585,7 @@ export class FareColumnDefinitions {
         header: '單位',
         type: 'dropdown',
         editable: true,
+        width: '20px',
         options: TLS13010_DROPDOWN_OPTIONS.tpyTypeOption,
         autoWidth: true,
         required: true,
@@ -657,7 +661,7 @@ export class FareColumnDefinitions {
         header: '扣款起始年月',
         type: 'date',
         editable: true,
-        width: '130px',
+        width: '110px',
         dateFormat: 'year-month',
         required: true,
         defaultValueFunction: () => {
@@ -673,7 +677,7 @@ export class FareColumnDefinitions {
         header: '扣款結束年月',
         type: 'date',
         editable: true,
-        width: '130px',
+        width: '110px',
         dateFormat: 'year-month',
         required: true,
         defaultValueFunction: () => {
@@ -689,6 +693,7 @@ export class FareColumnDefinitions {
         header: '單位',
         type: 'dropdown',
         editable: true,
+        width: '20px',
         options: TLS13010_DROPDOWN_OPTIONS.tpyTypeOption,
         autoWidth: true,
         required: true,
