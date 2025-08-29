@@ -16,6 +16,7 @@ import { Tls11010Service } from '@service/api/tls/tls11010.service';
 import { FloorService } from '@service/basic/floor.service';
 import { Tls51080Service } from '@service/api/tls/tls51080.service';
 import { DatePipe } from '@angular/common';
+import { untilDestroyed } from '@ngneat/until-destroy';
 
 @Component({
   selector: 'app-tls26030',
@@ -109,7 +110,7 @@ export class TLS26030Component extends BasicQueryPageComponent<TLS26030Data> imp
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
       this.tls26030Service.queryTLS26030(frm.value)
-        .pipe(finalize(() => this.loading = false))
+        .pipe(untilDestroyed(this), finalize(() => this.loading = false))
         .subscribe(response => {
           this.data = response.Data;
           this.totalRecords = response.TotalCount;

@@ -26,6 +26,7 @@ import { TranslateModule } from '@ngx-translate/core';
 import { Column, createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 import { DropdownOption } from '../../../shared/models/api/base-api.interface';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
+import { untilDestroyed } from '@ngneat/until-destroy';
 
 
 @Component({
@@ -127,7 +128,7 @@ export class FIN13030Component extends BasicQueryPageComponent<FIN13030Data> imp
 
     this.handleSubmit(frm, () => {
       this.fin13030Service.queryFIN13030(fIN13030QueryRequest)
-        .pipe(finalize(() => this.loading = false))
+        .pipe(untilDestroyed(this), finalize(() => this.loading = false))
         .subscribe(response => {
           this.data = response.Data;
           this.totalRecords = response.TotalCount;

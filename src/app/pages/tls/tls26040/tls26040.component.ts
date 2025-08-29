@@ -91,7 +91,7 @@ export class TLS26040Component extends BasicQueryPageComponent<TLS26040Data> imp
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
       this.tls26040Service.queryTLS26040(frm.value)
-        .pipe(finalize(() => this.loading = false))
+        .pipe(untilDestroyed(this), finalize(() => this.loading = false))
         .subscribe(response => {
           this.data = response.Data;
           this.totalRecords = response.TotalCount;

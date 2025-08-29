@@ -27,6 +27,7 @@ import { CalendarComponent } from '@shared/componentkit/calendar/calendar.compon
 import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
 import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
 import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
+import { untilDestroyed } from '@ngneat/until-destroy';
 
 @Component({
   selector: 'app-tls26070',
@@ -154,7 +155,7 @@ export class TLS26070Component extends BasicQueryPageComponent<TLS26070Data> imp
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
       this.tls26070Service.queryTLS26070(frm.getRawValue())
-        .pipe(finalize(() => this.loading = false))
+        .pipe(untilDestroyed(this), finalize(() => this.loading = false))
         .subscribe(response => {
           this.setColumns(frm.value.tax);
           this.data = response.Data;

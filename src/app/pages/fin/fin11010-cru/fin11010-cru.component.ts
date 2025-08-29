@@ -13,6 +13,7 @@ import { DatePipe, NgIf } from '@angular/common';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { finalize } from 'rxjs';
 import { ValidationService } from '@shared/service/validation.service';
+import { untilDestroyed } from '@ngneat/until-destroy';
 
 @Component({
   selector: 'app-fin11010-cru',
@@ -168,7 +169,7 @@ export class FIN11010CRUComponent extends BasicCruPageComponent<FIN11010Data> im
               REP_BegGUIYM: this.datePipe.transform(formValue.REP_BegGUIYM, 'yyyyMM') ?? '',
             };
             this.fin11010Service.insertFIN11010(rb)
-              .pipe(finalize(() => this.loading = false))
+              .pipe(untilDestroyed(this), finalize(() => this.loading = false))
               .subscribe(() => {
                 this.messageService.successBubble('新增成功');
                 this.dataForm.reset();
@@ -199,7 +200,7 @@ export class FIN11010CRUComponent extends BasicCruPageComponent<FIN11010Data> im
               REP_BegGUIYM: this.datePipe.transform(formValue.REP_BegGUIYM, 'yyyyMM') ?? '',
             };
             this.fin11010Service.updateFIN11010(rb)
-              .pipe(finalize(() => this.loading = false))
+              .pipe(untilDestroyed(this), finalize(() => this.loading = false))
               .subscribe(() => {
                 this.messageService.successBubble('更新成功');
                 this.onCancel();
