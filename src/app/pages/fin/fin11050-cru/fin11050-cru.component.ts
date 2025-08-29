@@ -9,6 +9,7 @@ import { InputTextComponent } from '../../../shared/componentkit/input-text/inpu
 import { NgIf } from '@angular/common';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { finalize } from 'rxjs';
+import { untilDestroyed } from '@ngneat/until-destroy';
 
 @Component({
   selector: 'app-fin11050-cru',
@@ -59,7 +60,7 @@ export class FIN11050CRUComponent extends BasicCruPageComponent<FIN11050Data> im
               INV_GUIName: formValue.INV_GUIName,
             };
             this.fin11050Service.insertFIN11050(rb)
-              .pipe(finalize(() => this.loading = false))
+              .pipe(untilDestroyed(this), finalize(() => this.loading = false))
               .subscribe(() => {
                 this.messageService.successBubble('新增成功');
                 this.dataForm.reset();
@@ -74,7 +75,7 @@ export class FIN11050CRUComponent extends BasicCruPageComponent<FIN11050Data> im
               INV_GUIName: formValue.INV_GUIName,
             };
             this.fin11050Service.updateFIN11050(rb)
-              .pipe(finalize(() => this.loading = false))
+              .pipe(untilDestroyed(this), finalize(() => this.loading = false))
               .subscribe(() => {
                 this.messageService.successBubble('更新成功');
                 this.onCancel();

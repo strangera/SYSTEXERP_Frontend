@@ -78,11 +78,9 @@ export class ASS21010Service implements OnDestroy {
   public loadASS21010(payload: ASS21010Payload): void {
     this.tableCancel$.next();
     this.tableLoading = !0;
-    this.http.post<Omit<BaseQueryResponse<unknown>, 'Data'> & { Data: { Data: ASS21010Data[]; TotalCount: number; }; }>(`${apiUrl}/ASS0000/ASS2000/queryASS21010`, payload).pipe(
+    this.http.post<Omit<BaseQueryResponse<unknown>, 'Data'> & { Data: { Data: ASS21010Data[]; TotalCount: number; }; }>(`${apiUrl}/ASS0000/ASS2000/QueryASS21010`, payload).pipe(
       take(1),
-      tap(response => this.ASS21010Data.set(response.Data.Data
-        .map(v => ({ ...v, ENGType: EngType[v.ENG_Type] }))
-      )),
+      tap(response => this.ASS21010Data.set(response.Data.Data)),
       catchError(error => this.errorHandler.handleError(error)),
       finalize(() => this.tableLoading = !1),
     ).subscribe();
@@ -96,7 +94,7 @@ export class ASS21010Service implements OnDestroy {
     );
   }
 
-  public deleteASS21010(payload: ASS21010Delete[]): Observable<ASS21010UpdateStatus['Data']> {
+  public deleteASS21010(payload: ASS21010Delete): Observable<ASS21010UpdateStatus['Data']> {
     return this.http.post<ASS21010UpdateStatus>(`${apiUrl}/ASS0000/ASS2000/deleteASS21010`, payload).pipe(
       take(1),
       map(res => res.Data),

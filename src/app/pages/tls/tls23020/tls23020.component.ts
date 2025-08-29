@@ -229,28 +229,25 @@ showSummary = false;
 
     if (this.showSummary) {
       // ✅ 彙總查詢
-      this.tls23020Service.queryTLS23020Summary(payload).pipe(
-        finalize(() => { this.loading = false; this.messageService?.unblockUi(); })
-      ).subscribe({
-        next: (res) => {
-          const arr = Array.isArray(res?.Data) ? res.Data : [];
-          // 這裡保持扁平化資料，並加上 row key
-          this.summaryData = arr.map((r: any, i: number) => ({
-            ...r,
-            _rowKey: `${r?.tlt_no ?? ''}|${r?.tlt_name ?? ''}|${i}`,
-          }));
-          this.totalRecords = this.summaryData.length;
-
-          // 切換到彙總時，清空明細以免雙表混淆
-          this.data = [];
-        },
-        error: (err) => {
-          console.error('TLS23020 Summary 查詢失敗', err);
-          this.summaryData = [];
-          this.totalRecords = 0;
-          this.messageService?.errorBubble?.('彙總查詢失敗，請稍後再試');
-        },
-      });
+this.tls23020Service.queryTLS23020Summary(payload).pipe(
+  finalize(() => { this.loading = false; this.messageService?.unblockUi(); })
+).subscribe({
+  next: (res) => {
+    const arr = Array.isArray(res?.Data?.QueryData) ? res.Data.QueryData : [];
+    this.summaryData = arr.map((r: any, i: number) => ({
+      ...r,
+      _rowKey: `${r?.tlt_no ?? ''}|${r?.tlt_name ?? ''}|${i}`,
+    }));
+    this.totalRecords = this.summaryData.length;
+    this.data = []; // 清空明細
+  },
+  error: (err) => {
+    console.error('TLS23020 Summary 查詢失敗', err);
+    this.summaryData = [];
+    this.totalRecords = 0;
+    this.messageService?.errorBubble?.('彙總查詢失敗，請稍後再試');
+  },
+});
 
     } else {
       // ✅ 原本明細查詢
@@ -281,8 +278,7 @@ showSummary = false;
           this.totalRecords = typeof res?.TotalCount === 'number' ? res.TotalCount : this.data.length;
         },
         error: (err) => {
-          console.error('TLS23020 查詢失敗', err);
-          this.messageService?.errorBubble?.('查詢失敗，請稍後再試');
+ this.loading = false;
         },
       });
     }

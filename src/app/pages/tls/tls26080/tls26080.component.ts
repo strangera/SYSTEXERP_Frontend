@@ -105,18 +105,12 @@ export class TLS26080Component extends BasicQueryPageComponent<TLS26080Data> imp
 
   // 刪除項目
   public onDelete(event: TLS26080Data[]): void {
-    this.confirmationService.confirm({
-      message: '是否確認刪除?',
-      accept: () => {
-
-        this.service.deleteTLS26080(event.map(v => String(v.id)))
-          .pipe(finalize(() => this.loading = !1))
-          .subscribe({
-            next: () => this.messageService.successBubble('刪除成功'),
-            error: () => this.messageService.errorBox('刪除失敗')
-          });
-      },
-    });
+    this.service.deleteTLS26080(event.map(v => String(v.id)))
+      .pipe(finalize(() => this.loading = !1))
+      .subscribe({
+        next: () => this.messageService.successBubble('刪除成功'),
+        error: () => this.messageService.errorBubble('刪除失敗')
+      });
     //   const items = Array.isArray(data) ? data : [data];
     //   if (items.length === 0) return;
 

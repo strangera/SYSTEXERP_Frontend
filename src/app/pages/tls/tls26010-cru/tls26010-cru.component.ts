@@ -16,6 +16,7 @@ import { Column } from '@shared/componentkit/table/table.model';
 import { CRUDStatus, ItemOperationStatus } from '@shared/models/system/CRUDstatus';
 import { ApprovalStatus } from '@shared/models/tls/approval-status.model';
 import { ExcelImportService } from '@shared/service/excel-import.service';
+import { NGXLogger } from 'ngx-logger';
 import { FileSelectEvent, FileUploadModule } from 'primeng/fileupload';
 import { PanelModule } from 'primeng/panel';
 import { debounceTime, finalize, pairwise, startWith, Subject, takeUntil, tap } from 'rxjs';
@@ -142,7 +143,7 @@ export class TLS26010CRUComponent extends BasicCruPageComponent<TLS26010Data> im
     else this.df().tlt_nos.patchValue(selectedData as TltItem[]);
 
     setTimeout(() => this.dialogSelectedData = selectedData, 100);
-    console.log(`dialogDataEffect [${dialog}]:`, [selectedData, this.dataForm.value]);
+    this.logger.debug(`dialogDataEffect [${dialog}]:`, [selectedData, this.dataForm.value]);
   });
   /** 初始化 ECR & TLT Table資料 */
   public readonly TLS26010DetailEffect = effect(() => {
@@ -155,12 +156,12 @@ export class TLS26010CRUComponent extends BasicCruPageComponent<TLS26010Data> im
     this.originalDetailData.set(detail);
     this.ecrTableFiltered.set(detail.ecr_list.map(item => ({ ...item, Status: item.Status || ItemOperationStatus.Original })));
     this.tltTableFiltered.set(detail.talent_list.map(item => ({ ...item, Status: item.Status || ItemOperationStatus.Original })));
-    console.log(`TLS26010DetailEffect:`, [this.ecrTableFiltered(), this.tltTableFiltered(), this.dataForm.value]);
+    this.logger.debug(`TLS26010DetailEffect:`, [this.ecrTableFiltered(), this.tltTableFiltered(), this.dataForm.value]);
     this.TLS26010DetailEffect.destroy(); // 只需執行一次
   }, { allowSignalWrites: !0 });
   /** 表單變化追蹤 */
   public readonly dfEffect = effect(() => {
-    console.log(`dfEffect:`, [this.dfSignal()]);
+    this.logger.debug(`dfEffect:`, [this.dfSignal()]);
   });
 
   public readonly dialogData = computed(() =>
@@ -238,6 +239,7 @@ export class TLS26010CRUComponent extends BasicCruPageComponent<TLS26010Data> im
   constructor(
     public readonly service: TLS26010Service,
     private readonly excelImport: ExcelImportService,
+    private readonly logger: NGXLogger,
   ) {
     super();
   }
@@ -252,7 +254,7 @@ export class TLS26010CRUComponent extends BasicCruPageComponent<TLS26010Data> im
       startWith({ dialog: '', payload: {} }),
       pairwise(),
       tap(([a, b]) => {
-        console.log(`dependency:`, [a, b, this.dataForm.value]);
+        this.logger.debug(`dependency:`, [a, b, this.dataForm.value]);
         if (JSON.stringify(a.payload) === JSON.stringify(b.payload)) return;
         if (b.dialog === 'ecr') { this.service.loadPreorderECRList({ ...b.payload, ecr_type: '1' }); }
         else if (b.dialog === 'tlt') { this.service.loadTLTTALENT(b.payload); }
@@ -280,7 +282,7 @@ export class TLS26010CRUComponent extends BasicCruPageComponent<TLS26010Data> im
       Status: ItemOperationStatus.Original
     })));
 
-    console.log(`init ${this.crudstatus}:`, [this.funInfo, this.rowdata, this.dataForm.value, this.service]);
+    this.logger.debug(`init ${this.crudstatus}:`, [this.funInfo, this.rowdata, this.dataForm.value, this.service]);
   };
 
   /** 處理 excel 匯入 */
@@ -301,7 +303,7 @@ export class TLS26010CRUComponent extends BasicCruPageComponent<TLS26010Data> im
       }));
 
       const importedTltNos = data.filter(i => i.tlt_no?.trim() && i.tlt_name?.trim());
-      if (!importedTltNos.length) return void this.messageService.errorBox('匯入檔案沒有有效資料');
+      if (!importedTltNos.length) return void this.messageService.errorBubble('匯入檔案沒有有效資料');
 
       const existingSet = new Set(this.tltTableFiltered().map(i => i.tlt_no));
       const merged = new Map<string, TltItem>(this.tltTableFiltered().map(i => [i.tlt_no, { ...i, Status: ItemOperationStatus.Original }]));
@@ -316,11 +318,11 @@ export class TLS26010CRUComponent extends BasicCruPageComponent<TLS26010Data> im
 
       this.tltTableFiltered.set(Array.from(merged.values(), (i => ({ ...i, Status: i.Status ?? ItemOperationStatus.Original }))));
 
-      console.log(`importExcel:`, [event, this.tltTableFiltered]);
+      this.logger.debug(`importExcel:`, [event, this.tltTableFiltered]);
       this.messageService.successBubble(`匯入成功：新增 ${newCount} 筆資料`);
     } catch (error) {
       console.error('Excel 匯入錯誤:', error);
-      this.messageService.errorBox('Excel 檔案讀取失敗，請檢查檔案格式');
+      this.messageService.errorBubble('Excel 檔案讀取失敗，請檢查檔案格式');
     }
   };
 
@@ -330,7 +332,7 @@ export class TLS26010CRUComponent extends BasicCruPageComponent<TLS26010Data> im
     const wb = XLSX.utils.book_new();
     // 建立工作表
     const ws = XLSX.utils.aoa_to_sheet([['專櫃編號', '專櫃名稱'],]);
-    console.log(`onExportExcel:`, [wb, ws]);
+    this.logger.debug(`onExportExcel:`, [wb, ws]);
     // 將工作表加入工作簿
     XLSX.utils.book_append_sheet(wb, ws, '專櫃範本');
     // 生成並下載檔案
@@ -354,24 +356,19 @@ export class TLS26010CRUComponent extends BasicCruPageComponent<TLS26010Data> im
         },
       };
 
-      console.log(`submit:`, [d, payload]);
-      this.confirmationService.confirm({
-        message: '是否確認?',
-        accept: () => {
-          (this.isFormCreateable ? this.service.insertTLS26010(payload) : this.service.updateTLS26010(payload))
-            .pipe(finalize(() => {
-              this.loading = !1;
-              if (this.dialogVisible()) {
-                this.dialogVisible.set(!1);
-                this.service.loadTLS26010Detail({ pod_no: this.rowdata?.pod_no || '' });
-              }
-            }))
-            .subscribe(() => {
-              this.messageService.successBubble(this.isFormCreateable ? '新增成功' : '修改成功');
-              if (!this.dialogVisible()) this.isFormCreateable ? this.dataForm.reset() : this.onCancel();
-            });
-        },
-      });
+      this.logger.debug(`submit:`, [d, payload]);
+      (this.isFormCreateable ? this.service.insertTLS26010(payload) : this.service.updateTLS26010(payload))
+        .pipe(finalize(() => {
+          this.loading = !1;
+          if (this.dialogVisible()) {
+            this.dialogVisible.set(!1);
+            this.service.loadTLS26010Detail({ pod_no: this.rowdata?.pod_no || '' });
+          }
+        }))
+        .subscribe(() => {
+          this.messageService.successBubble(this.isFormCreateable ? '新增成功' : '修改成功');
+          if (!this.dialogVisible()) this.isFormCreateable ? this.dataForm.reset() : this.onCancel();
+        });
     });
   };
 
@@ -390,14 +387,14 @@ export class TLS26010CRUComponent extends BasicCruPageComponent<TLS26010Data> im
       const originalData: Map<string, EcrItem> = this.detailDataMap().ecr_list;
       const changedData: Map<string, EcrItem> = this.ecrNosMap();
       this.ecrTableFiltered.set(this.buildCrudList<EcrItem>(originalData, changedData));
-      console.log(`ECR Dialog Submit:`, [originalData, changedData, this.ecrTableData()]);
+      this.logger.debug(`ECR Dialog Submit:`, [originalData, changedData, this.ecrTableData()]);
     }
 
     if (dialog === 'tlt') {
       const originalData: Map<string, TltItem> = this.detailDataMap().tlt_list;
       const changedData: Map<string, TltItem> = this.tltNosMap();
       this.tltTableFiltered.set(this.buildCrudList<TltItem>(originalData, changedData));
-      console.log(`TLT Dialog Submit:`, [originalData, changedData, this.tltTableData()]);
+      this.logger.debug(`TLT Dialog Submit:`, [originalData, changedData, this.tltTableData()]);
     }
 
     this.onVisibleChange(!1); // 關閉對話框並清除資料
@@ -405,7 +402,7 @@ export class TLS26010CRUComponent extends BasicCruPageComponent<TLS26010Data> im
 
   /** 開啟對話框 */
   public onOpenDialog(type: 'ecr' | 'tlt'): void {
-    console.log(`onOpenDialog:`, [type, this.dataForm.value]);
+    this.logger.debug(`onOpenDialog:`, [type, this.dataForm.value]);
     this.dialogVisible.set(type);
     this.submitted = !1;
   };
@@ -418,7 +415,7 @@ export class TLS26010CRUComponent extends BasicCruPageComponent<TLS26010Data> im
       sys3900: [],
       sys3A00: [],
     });
-    console.log(`onVisibleChange:`, [this.dialogVisible(), visible, this.dataForm.value]);
+    this.logger.debug(`onVisibleChange:`, [this.dialogVisible(), visible, this.dataForm.value]);
   }
 
   public onSelectionChange(event: (EcrItem | TltItem)[]): void {
@@ -426,7 +423,7 @@ export class TLS26010CRUComponent extends BasicCruPageComponent<TLS26010Data> im
     if (!dialog || this.service.ecrLoading || this.service.tltLoading) return;
     dialog === 'ecr' && this.df().ecr_nos.patchValue(<EcrItem[]>event);
     dialog === 'tlt' && this.df().tlt_nos.patchValue(<TltItem[]>event);
-    console.log(`onSelectionChange:`, [dialog, event, this.dataForm.value]);
+    this.logger.debug(`onSelectionChange:`, [dialog, event, this.dataForm.value]);
   }
 
   /**
@@ -467,7 +464,7 @@ export class TLS26010CRUComponent extends BasicCruPageComponent<TLS26010Data> im
       }
     }
 
-    console.log(`buildCrudList:`, [original, selected, result]);
+    this.logger.debug(`buildCrudList:`, [original, selected, result]);
     return Array.from(result.values());
   };
 

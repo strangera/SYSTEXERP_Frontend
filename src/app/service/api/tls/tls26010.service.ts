@@ -272,34 +272,28 @@ export class TLS26010Service implements OnDestroy {
   public loadApproval(data: TLS26010Data): void {
     if (this.approvalStatusLoading) return;
     this.approvalStatusLoading = !0;
-    this.confirmationService.confirm({
-      message: `是否確定${this.approvalCheck(data).confirm}選取項目？`,
-      accept: () => {
-        const id = data.id;
-        this.http.post<BaseQueryResponse<{ Status: ApprovalStatus; }>>(
-          `${apiUrl}/TLS0000/TLS2000/${this.approvalCheck(data).api}`, { id }).pipe(
-            take(1),
-            tap(() => this.TLS26010Data.update(currentData => {
-              const index = currentData.findIndex(item => item.id === id);
-              const usr = this.auth.getUserInfo();
-              const approval = this.approvalCheck(data).confirm === '核准';
-              if (index !== -1) {
-                currentData[index].approved_usr_name = approval ? usr!.user_Name : null;
-                currentData[index].approved_date = approval ? new Date() : null;
-                currentData[index].pod_status = approval ? ApprovalStatus.已核准 : ApprovalStatus.未核准;
-              }
-              return currentData;
-            })),
-            catchError(error => this.errorHandler.handleError(error)),
-            finalize(() => {
-              this.approvalStatusLoading = !1;
-              console.log('核准結果:',);
-            })
-          ).subscribe();
-        this.messageService.successBubble(`${this.approvalCheck(data).confirm}成功`);
-      },
-      reject: () => this.messageService.infoBubble(`${this.approvalCheck(data).confirm}已取消`)
-    });
+    const id = data.id;
+    this.http.post<BaseQueryResponse<{ Status: ApprovalStatus; }>>(
+      `${apiUrl}/TLS0000/TLS2000/${this.approvalCheck(data).api}`, { id }).pipe(
+        take(1),
+        tap(() => this.TLS26010Data.update(currentData => {
+          const index = currentData.findIndex(item => item.id === id);
+          const usr = this.auth.getUserInfo();
+          const approval = this.approvalCheck(data).confirm === '核准';
+          if (index !== -1) {
+            currentData[index].approved_usr_name = approval ? usr!.user_Name : null;
+            currentData[index].approved_date = approval ? new Date() : null;
+            currentData[index].pod_status = approval ? ApprovalStatus.已核准 : ApprovalStatus.未核准;
+          }
+          return currentData;
+        })),
+        catchError(error => this.errorHandler.handleError(error)),
+        finalize(() => {
+          this.approvalStatusLoading = !1;
+          console.log('核准結果:',);
+        })
+      ).subscribe();
+    this.messageService.successBubble(`${this.approvalCheck(data).confirm}成功`);
   }
 
   ngOnDestroy(): void {

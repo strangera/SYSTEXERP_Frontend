@@ -21,6 +21,7 @@ import { TranslateModule } from '@ngx-translate/core';
 import { Column, createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 import { environment } from '../../../../environments/environment';
 import { TableComponent } from '@shared/componentkit/table/table.component';
+import { untilDestroyed } from '@ngneat/until-destroy';
 
 export interface Option {
   label: string;
@@ -172,7 +173,7 @@ export class FIN15010Component extends BasicQueryPageComponent<FIN15010Data> imp
       };
 
       this.fin15010Service.queryFIN15010(requestData)
-        .pipe(finalize(() => this.loading = false))
+        .pipe(untilDestroyed(this), finalize(() => this.loading = false))
         .subscribe(response => {
           this.data = response.Data;
           this.totalRecords = response.TotalCount;

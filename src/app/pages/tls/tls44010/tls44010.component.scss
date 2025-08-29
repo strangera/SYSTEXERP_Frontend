@@ -1,23 +1,58 @@
-.hover-effect {
-
-  background-color: rgb(255, 255, 255);
-  transition: background-color 0.3s ease;
-}
-
-.hover-effect:hover {
-  background-color: rgb(236, 236, 236);
-}
-
-::ng-deep .p-toolbar {
-  background-color: #ffffff; /* 你想要的背景色 */
-}
-
-.container {
+.status-container {
   display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
 
+  .status-label {
+    font-weight: bold;
+    margin-right: 6px;
+  }
+
+  .status-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 13px;
+    background: #fff;
+    white-space: nowrap;
+
+    i {
+      font-size: 14px;
+    }
+
+    &.success {
+      border-color: #28a745;
+      color: #28a745;
+    }
+
+    &.logout {
+      border-color: #dc3545;
+      color: #dc3545;
+    }
+
+    &.warning {
+      border-color: #fd7e14;
+      color: #fd7e14;
+    }
+
+    &.purple {
+      border-color: #6f42c1;
+      color: #6f42c1;
+    }
+  }
 }
 
-.row {
-  flex-direction: row;
-  flex-wrap: wrap;
+.relative {
+  position: relative;
+
+  .status-icon {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    font-size: 18px;
+  }
 }

@@ -60,7 +60,6 @@ export class ASS21020Service implements OnDestroy {
       takeUntil(this.engMeterNoCancel$),
       tap(response => {
         this.engMeterNoSignal.set(response.Data);
-        !this.tltByFlagMap.size && this.queryTltByFlag(response.Data[0]?.ENG_MeterNo);
         response.Data.forEach(item => this.engMeterNoMap.set(String(item.Id), item));
       }),
       catchError(error => this.errorHandler.handleError(error)),
@@ -93,9 +92,7 @@ export class ASS21020Service implements OnDestroy {
     this.http.post<BaseQueryResponse<ASS21020Data>>(`${apiUrl}/ASS0000/ASS2000/queryASS21020`, query).pipe(
       take(1),
       takeUntil(this.tableCancel$),
-      tap(response => this.ASS21020Data.set(response.Data
-        .map(v => ({ ...v, EngType: EngType[v.ENG_Type as keyof typeof EngType], }))
-      )),
+      tap(response => this.ASS21020Data.set(response.Data)),
       catchError(error => this.errorHandler.handleError(error)),
       finalize(() => {
         this.tableLoading = !1;

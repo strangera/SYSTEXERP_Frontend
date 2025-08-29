@@ -44,13 +44,7 @@ export class ASS21010CRUComponent extends BasicCruPageComponent<ASS21010Data> im
   });
   public readonly df = computed(() => this.dataForm.controls);
 
-  /** 表單變化追蹤 */
-  public readonly dfEffect = effect(() => {
-    this.logger.debug(`dfEffect:`, [this.dfSignal()]);
-  });
-
   // 變化追蹤
-  private readonly dfSignal = toSignal(this.dataForm.valueChanges);
   private readonly engTypeSignal = toSignal(this.df().ENGType.valueChanges);
   private readonly locationSignal = toSignal(this.df().Location_No.valueChanges);
 
@@ -83,39 +77,35 @@ export class ASS21010CRUComponent extends BasicCruPageComponent<ASS21010Data> im
     this.service.loadEngType();
     this.service.loadLocationNo();
 
+    this.logger.debug(`init:`, [this.user, this.rowdata, this.crudstatus]);
+
     if (this.crudstatus !== CRUDStatus.Create && this.rowdata) {
       Reflect.has(this.rowdata, 'Location_No') && this.df().Location_No.setValue(this.rowdata.Location_No);
-      this.logger.debug(`rowData:`, [this.rowdata]);
     }
   }
 
   public onSubmit(): void {
     this.handleSubmit(this.dataForm, () => {
-      this.confirmationService.confirm({
-        message: '是否確認存檔?',
-        accept: () => {
-          const d = this.dataForm.getRawValue();
-          const payload: ASS21010Payload = {
-            ENG_Type: d.ENGType! ?? '',
-            ENG_MeterNo: d.ENG_MeterNo ?? '',
-            Location_No: d.Location_No ?? '',
-            ENG_Remark: d.ENG_Remark ?? '',
-            ID: (this.rowdata?.ID) ?? 0,
-            SYS_StoreNo: this.user.SYS_StoreNo,
-            Mid: Number(this.user.mid),
-          };
+      const d = this.dataForm.getRawValue();
+      const payload: ASS21010Payload = {
+        ENG_Type: d.ENGType! ?? void 0,
+        ENG_MeterNo: d.ENG_MeterNo ?? void 0,
+        Location_No: d.Location_No ?? void 0,
+        ENG_Remark: d.ENG_Remark ?? void 0,
+        ID: (this.rowdata?.ID) ?? 0,
+        SYS_StoreNo: this.user.SYS_StoreNo,
+        Mid: Number(this.user.mid),
+      };
 
-          this.service.updateASS21010(payload)
-            .pipe(finalize(() => {
-              this.loading = !1;
-              this.logger.debug(`onSubmit:`, [d, payload]);
-            })).subscribe(res => {
-              if (!res.IsUpdateSuccess) return this.messageService.errorBox(this.isFormCreateable ? '新增失敗\n' + res.ErrorMsg : '更新失敗\n' + res.ErrorMsg);
-              this.isFormCreateable ? this.dataForm.reset() : this.onCancel();
-              this.messageService.successBubble(this.isFormCreateable ? '新增成功' : '更新成功');
-            });
-        },
-      });
+      this.service.updateASS21010(payload)
+        .pipe(finalize(() => {
+          this.loading = !1;
+          this.logger.debug(`onSubmit:`, [d, payload]);
+        })).subscribe(res => {
+          if (!res.IsUpdateSuccess) return this.messageService.errorBubble(res.ErrorMsg, this.isFormCreateable ? '新增失敗' : '更新失敗');
+          this.isFormCreateable ? this.dataForm.reset() : this.onCancel();
+          this.messageService.successBubble(this.isFormCreateable ? '新增成功' : '更新成功');
+        });
     });
   }
 }

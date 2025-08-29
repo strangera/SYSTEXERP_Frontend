@@ -14,6 +14,7 @@ import { TableComponent } from '../../../shared/componentkit/table/table.compone
 import { TranslateModule } from '@ngx-translate/core';
 import { BaseDeleteRequest } from '../../../shared/models/api/base-api.interface';
 import { DatePipe } from '@angular/common';
+import { untilDestroyed } from '@ngneat/until-destroy';
 
 @Component({
   selector: 'app-fin11010',
@@ -160,7 +161,7 @@ export class FIN11010Component extends BasicQueryPageComponent<FIN11010Data> imp
     };
     this.handleSubmit(frm, () => {
       this.fin11010Service.queryFIN11010(queryRequest)
-        .pipe(finalize(() => this.loading = false))
+        .pipe(untilDestroyed(this), finalize(() => this.loading = false))
         .subscribe(response => {
           this.data = response.Data;
           this.totalRecords = response.TotalCount;

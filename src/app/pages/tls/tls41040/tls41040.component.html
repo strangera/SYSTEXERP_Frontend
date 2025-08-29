@@ -86,19 +86,16 @@
     <app-table
       tableKey="TLS41010"
       [data]="data"
-      [multiSortMeta]="[{ field: 'NOT_SeqNo', order: 1 }]"
+      [multiSortMeta]="queryForm.controls.SortBy.value"
       [totalRecords]="totalRecords"
       (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"
       [lazy]="true"
-      [showReportMode]="false"
-      [showDelete]="false"
       [loading]="loading"
       (detail)="onDetail($event)"
-      [showRowEdit]="false"
-      [showEdit]="false"
+      (edit)="onEdit($event)"
       [expansionColumns]="expansionColumns7"
       [columns]="columns7"
-      expansionDataKey="details"
+      expansionDataKey="Details"
     ></app-table>
   </div>
 </div>

@@ -19,26 +19,31 @@ export interface QuerySYSB200Request {
   SortBy?: SortMeta[];
   OrderBy?: string;
   Offset?: number;
+
   VEN_NoList?: string[];
   VEN_Status?: string;
   VEN_Uniform?: string;
   VEN_Name?: string;
   VEN_EngName?: string;
   VEN_ShortName?: string;
-  VEN_BNK_No?: string;
+  VEN_Address?: string;
   VEN_GUIAddr?: string;
   VEN_Boss?: string;
   VEN_BossTitle?: string;
   VEN_BossEmail?: string;
   VEN_BossTel?: string;
-  VEN_BossID?: string;
-  VEN_BossAddr?: string;
   VEN_Tel?: string;
   VEN_Fax?: string;
-  VEN_Address?: string;
+  VEN_Email?: string;
   VEN_PayConditionDay?: number | null;
+  VEN_PayType?: string;
+  VEN_BNK_No?: string;
+  VEN_BNK_BranchNo?: string;
+  VEN_BankAccountNo?: string;
+  VEN_AccountName?: string;
   VEN_Remark?: string;
 }
+
 
 
 export interface SYSB200DetailRequest {

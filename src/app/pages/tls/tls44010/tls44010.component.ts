@@ -1,107 +1,104 @@
-import { Component } from '@angular/core';
-import { Router } from '@angular/router';
-import { DataViewModule } from 'primeng/dataview';
-import { PrimeTemplate } from 'primeng/api';
-import { Button } from 'primeng/button';
-import { InputGroupAddonModule } from 'primeng/inputgroupaddon';
-import { InputTextModule } from 'primeng/inputtext';
-import { DropdownModule } from 'primeng/dropdown';
+import { Component, OnInit } from '@angular/core';
+import { FormBuilder, FormGroup, ReactiveFormsModule, FormsModule } from '@angular/forms';
+import { TabMenuModule } from 'primeng/tabmenu';
+import { ButtonModule } from 'primeng/button';
 import { TableModule } from 'primeng/table';
-import { NgFor } from '@angular/common';
-
-interface InventoryStatus {
-  label: string;
-  value: string;
-}
-export interface Product {
-  id?: string;
-  code?: string;
-  name?: string;
-  description?: string;
-  price?: number;
-  quantity?: number;
-  inventoryStatus?: InventoryStatus;
-  category?: string;
-  image?: string;
-  rating?: number;
-}
+import { AccordionModule } from 'primeng/accordion';
+import { MenuItem } from 'primeng/api';
+import { TranslateModule } from '@ngx-translate/core';
+import { DataViewModule } from 'primeng/dataview';
+import { CommonModule } from '@angular/common';
 
 @Component({
   selector: 'app-tls44010',
   templateUrl: './tls44010.component.html',
-  styleUrl: './tls44010.component.scss',
+  styleUrls: ['./tls44010.component.scss'],
   standalone: true,
-  imports: [DataViewModule, PrimeTemplate, Button, InputGroupAddonModule, InputTextModule, DropdownModule, TableModule, NgFor]
+  imports: [
+    FormsModule,
+    ReactiveFormsModule,
+    TabMenuModule,
+    TranslateModule,
+    ButtonModule,
+    TableModule,
+    AccordionModule,
+    CommonModule,
+    DataViewModule
+  ]
 })
+export class TLS44010Component implements OnInit {
+  queryForm: FormGroup;
+  items: MenuItem[] = [];
+  activeItem: MenuItem | undefined;
 
-export class TLS44010Component {
-
-  products: Product[] = [];
-
-  sortOrder: number = 0;
-
-  sortField: string = '';
-
-  sourceCities: any[] = [];
-
-  targetCities: any[] = [];
-
-  orderCities: any[] = [];
-
-  selectedImage: string = 'Screen.png';
-
-  dropdown3 = [
-    { label: '第1頁', value: '1' },
-
+  data: any[] = [
+    { ECR_LocNo: 'B1A01', TLT_No: '000001', TLT_Name: '小騎士', EOS_Status: '開機' },
+    { ECR_LocNo: 'B1A02', TLT_No: '000002', TLT_Name: '小騎士', EOS_Status: '登出' },
+    { ECR_LocNo: 'B1A03', TLT_No: '000003', TLT_Name: '小騎士', EOS_Status: '交易中' },
+    { ECR_LocNo: 'B1A04', TLT_No: '000004', TLT_Name: '小騎士', EOS_Status: '離線' },
+    { ECR_LocNo: 'B1A05', TLT_No: '000005', TLT_Name: '艾連葉卡', EOS_Status: '開機' },
+    { ECR_LocNo: 'B1A06', TLT_No: '000006', TLT_Name: '咪吉葉卡', EOS_Status: '登出' },
+    { ECR_LocNo: 'B1A07', TLT_No: '000007', TLT_Name: '炭治郎', EOS_Status: '交易中' },
   ];
+  filteredData: any[] = [];
+
+  // DataView layout 切換用
+  layout: 'list' | 'grid' = 'list';
+
+  constructor(private fb: FormBuilder) {
+    this.queryForm = this.fb.group({});
+  }
+
+  getStatusIcon(status: string): string {
+    switch (status) {
+      case '開機': return 'pi pi-desktop';
+      case '登出': return 'pi pi-sign-out';
+      case '交易中': return 'pi pi-sync';
+      case '完成交班': return 'pi pi-users';
+      case '暫停交易': return 'pi pi-pause';
+      case '完成清帳': return 'pi pi-wallet';
+      default: return 'pi pi-question-circle';
+    }
+  }
+
+  getStatusColor(status: string): string {
+    switch (status) {
+      case '開機': return '#6c757d';
+      case '登出': return '#dc3545';
+      case '交易中': return '#28a745';
+      case '完成交班': return '#0d6efd';
+      case '暫停交易': return '#fd7e14';
+      case '完成清帳': return '#6f42c1';
+      default: return '#6c757d';
+    }
+  }
 
   ngOnInit() {
-
-    this.products = [
-      { name: '全部', code: '108', image: 'logo.webp' },
-      { name: '樓層B1', code: '1', image: 'logo.webp' },
-      { name: '樓層B2', code: '5', image: 'logo.webp' },
-      { name: '樓層B3', code: '10', image: 'logo.webp' },
-      { name: '樓層B4', code: '8', image: 'logo.webp' },
-      { name: '樓層F1', code: '11', image: 'logo.webp' },
-      { name: '樓層F2', code: '0', image: 'logo.webp' },
-      { name: '樓層F3', code: '1', image: 'logo.webp' },
-      { name: '樓層F4', code: '5', image: 'logo.webp' },
-      { name: '樓層F5', code: '10', image: 'logo.webp' },
-      { name: '樓層F6', code: '8', image: 'logo.webp' },
-      { name: '樓層F7', code: '11', image: 'logo.webp' },
-      { name: '樓層F8', code: '0', image: 'logo.webp' },
-      { name: '樓層F9', code: '1', image: 'logo.webp' },
-      { name: '樓層F10', code: '5', image: 'logo.webp' },
-      { name: '樓層F11', code: '10', image: 'logo.webp' },
-      { name: '樓層F12', code: '8', image: 'logo.webp' },
-      { name: '樓層F13', code: '11', image: 'logo.webp' },
+    this.items = [
+      { label: '全部' },
+      { label: '連線機台' },
+      { label: '離線機台' }
     ];
-
+    this.activeItem = this.items[0];
+    this.filteredData = this.data; // 預設顯示全部
   }
 
-  constructor(
-    private router: Router
-  ) {
+  onSubmit(form: FormGroup) {
+    console.log('查詢條件', form.value);
   }
 
-  goToNextPage() {
-    this.router.navigate(['/TLS4000/TLS44010CRU']);
+  onTabChange(item: MenuItem) {
+    this.activeItem = item;
+    if (item.label?.includes('全部')) {
+      this.filteredData = this.data;
+    } else if (item.label?.includes('連線')) {
+      this.filteredData = this.data.filter(d => d.EOS_Status !== '離線');
+    } else if (item.label?.includes('離線')) {
+      this.filteredData = this.data.filter(d => d.EOS_Status === '離線');
+    }
   }
 
-  onRowSelect(event: any) {
-    const selectedItem = event.name;
-    // 導航到下一頁並將選中的資料作為參數傳遞
-    this.router.navigate(['/TLS4000/TLS44010CRU'], { state: { selectedItem } });
-  }
-
-  displayDialog: boolean = false;  // 控制 dialog 顯示的變數
-
-  showDialog() {
-    this.displayDialog = true;  // 設定變數為 true，顯示 dialog
-  }
-
-  closeDialog() {
-    this.displayDialog = false;  // 設定變數為 false，關閉 dialog
+  onCreate() {
+    console.log('新增');
   }
 }

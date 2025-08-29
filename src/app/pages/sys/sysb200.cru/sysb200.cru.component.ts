@@ -114,6 +114,25 @@ export class SYSB200CRUComponent extends BasicCruPageComponent<Tlsb200Model> imp
   ngOnInit(): void {
     this.initializePage('SYSB200', this.dataForm);
 
+    this.dataForm.get('VEN_Flag')?.valueChanges.subscribe(value => {
+      if (value === '1') {
+        this.dataForm.get('VEN_Uniform')?.setValidators([
+          Validators.required,
+          Validators.maxLength(10),
+          Validators.pattern(/^\d{8}$/) // 8 碼數字
+        ]);
+      } else if (value === '2') {
+        this.dataForm.get('VEN_Uniform')?.setValidators([
+          Validators.required,
+          Validators.maxLength(10),
+          Validators.pattern(/^[A-Z]{1}[0-9]{9}$/i) // 1 英文 + 9 碼數字
+        ]);
+      } else {
+        this.dataForm.get('VEN_Uniform')?.clearValidators();
+      }
+      this.dataForm.get('VEN_Uniform')?.updateValueAndValidity();
+    });
+
     const id = this.rowdata?.id
     if (id) {
       this.sysb200Service.querySYSB200Detail({ pos2013_id: id }).subscribe({
@@ -177,6 +196,9 @@ export class SYSB200CRUComponent extends BasicCruPageComponent<Tlsb200Model> imp
   }
 
   onSubmit(form: FormGroup): void {
+    this.handleSubmit(form, () => {
+
+    });
     console.log("表單 valid 狀態：", form.valid);
     if (!form.valid) {
       this.messageService.warnBubble("請確認所有必填欄位皆已正確填寫");

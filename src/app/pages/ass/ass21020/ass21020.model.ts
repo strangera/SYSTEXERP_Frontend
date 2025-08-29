@@ -16,7 +16,6 @@ export interface ASS21020Data {
 }
 
 export interface ASS21020Payload extends BaseQueryRequest {
-  EngTypes?: string;
   ENG_MeterNo?: string;
   Location_No?: string;
   SYS_StoreNo?: string;

@@ -106,7 +106,7 @@ readonly defaultSort: any[] = [
     TXN_MemCard: [''],
     CRD_Type: [], // ✅ 修正為 []
     CRD_No: [''],
-    IsHaveTERM_No: [false],
+    IsHaveTERM_No: [],
     pay_taxtype: [''],
     org_id: [], // ✅ 修正為 []
     VOU_Check: false,
@@ -139,7 +139,15 @@ readonly defaultSort: any[] = [
     { field: 'CRD_No',header: '信用卡卡號/條碼',visible: true,style: 'text-right',},
     // { field: 'IsHaveTERM_No', header: '是否分期', visible: true, format: (v: any) => this.getLabelFromOptions(v, this.WhetherOptions) },
     { field: 'TERM_No', header: '分期', visible: true },
-    { field: 'TERM_Name', header: '是否分期', visible: true },
+      { 
+    field: ' IsHaveTERM_No',
+    header: '是否分期',   // ✅ 改成英文
+    visible: true,
+    format: (_: any, row: any) => {
+      const term = Number(row?.TERM_No ?? 0);
+      return (!term || term === 0 || term === 1) ? '否' : '是';
+    }
+  },
     { field: 'TXN_MemCard', header: '會員卡號', visible: true },
     { field: 'org_id', header: '組織編號', visible: true },
     { field: 'Org_Name', header: '組織名稱', visible: true },
@@ -314,7 +322,7 @@ private toBoolOrNull(v: any): boolean | null {
     raw['rece_yn']          = emptyToNull(raw['rece_yn']);
     raw['cash_yn']          = emptyToNull(raw['cash_yn']);
     raw['tlt_building']     = emptyToNull(raw['tlt_building']);
-    raw['IsPayType']        = this.toBoolOrNull(raw['IsPayType']);
+    raw['VOU_Check']        = this.toBoolOrNull(raw['VOU_Check']);
     raw['IsHaveTERM_No']    = this.toBoolOrNull(raw['IsHaveTERM_No']);
 
     // 排序：沿用你現有的 sort 邏輯

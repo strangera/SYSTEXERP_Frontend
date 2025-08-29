@@ -1,3 +1,4 @@
+import { NgIf } from '@angular/common';
 import { Component, OnInit, computed, effect } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
@@ -8,6 +9,7 @@ import { MenubarComponent } from '@shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '@shared/componentkit/button/button.component';
 import { DialogComponent } from '@shared/componentkit/dialog/dialog.component';
+import { InputNumberComponent } from "@shared/componentkit/input-number/input-number.component";
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
 import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
 import { TableComponent } from '@shared/componentkit/table/table.component';
@@ -25,6 +27,7 @@ import { ASS21020Data, TLTByFlag } from './ass21020.model';
   styleUrl: './ass21020.component.scss',
   standalone: !0,
   imports: [
+    NgIf,
     PanelModule,
     AccordionModule,
     TranslateModule,
@@ -37,23 +40,32 @@ import { ASS21020Data, TLTByFlag } from './ass21020.model';
     MultiSelectComponent,
     ReactiveFormsModule,
     TableComponent,
+    InputNumberComponent,
   ],
 })
 export class ASS21020Component extends BasicQueryPageComponent<unknown> implements OnInit {
 
   public readonly queryForm = this.formBuilder.group({
-    ENGType: new FormControl<EngType[]>([]),
+    ENG_Type: new FormControl<EngType[]>([]),
     ENG_MeterNo: new FormControl<string | undefined>(void 0),
     TLT_No: new FormControl<string | undefined>(void 0),
     Location_No: new FormControl<string>(''),
-    ENG_Rate: new FormControl<number>(0),
+    ENG_Rate: new FormControl<number | undefined>(void 0),
     TLT_Name: new FormControl<string>(''),
-    NET_SPACE: new FormControl<number>(0),
-    NET_SPACE_Ratio: new FormControl<number>(0),
+    NET_SPACE: new FormControl<number | undefined>(void 0),
     ...createPaginationConfig([{ field: '', order: 1 }]),
   });
   public readonly qf = computed(() => this.queryForm.controls);
   public readonly totalRecord = computed(() => this.service.ASS21020Data().length);
+
+  public readonly dialogForm = this.formBuilder.group({
+    Location_No: new FormControl<string[]>([]),
+    ENG_Type: new FormControl<EngType[]>([]),
+    TLT_No: new FormControl<string[]>([]),
+    TLT_Name: new FormControl<string[]>([]),
+  });
+  public readonly df = computed(() => this.dialogForm.controls);
+  public readonly dfChange = toSignal(this.dialogForm.valueChanges);
 
   private readonly meterNoSignal = toSignal(this.qf().ENG_MeterNo.valueChanges);
   private readonly locNoSignal = toSignal(this.qf().Location_No.valueChanges);
@@ -61,10 +73,33 @@ export class ASS21020Component extends BasicQueryPageComponent<unknown> implemen
 
   public dialogVisible: boolean | 'meterNo' | 'tltNo' = !1;
 
-  public selectedItemsDialog: (ASS2100ENGMeterType | TLTByFlag)[] = [];
   public readonly ptn = /(?!)/;
+  public readonly ratePtn = /^(100(?:\.0{1,2})?|0*(?:\d{1,2})(?:\.\d{1,2})?)$/;
+  public selectedItemsDialog: (ASS2100ENGMeterType | TLTByFlag)[] = [];
 
   public readonly totalRecords = computed(() => this.service.ASS21020Data().length);
+  public readonly allLoc = computed(() => [...new Set(this.service.engMeterNoSignal().map(v => v.Location_No))]);
+  public readonly allType = computed(() => [...new Set(this.service.engMeterNoSignal().map(v => v.ENG_Type))]);
+  public readonly allTltNo = computed(() => [...new Set(this.service.tltNoSignal().map(v => v.TLT_No))]);
+  public readonly allTltName = computed(() => [...new Set(this.service.tltNoSignal().map(v => v.TLT_Name))]);
+
+  public readonly filteredMeterNo = computed(() => {
+    return this.service.engMeterNoSignal().filter(v => {
+      if (!this.dfChange()) return !0;
+      const locationMatch = !this.dfChange()!.Location_No?.length || !!this.dfChange()!.Location_No?.includes(v.Location_No);
+      const typeMatch = !this.dfChange()!.ENG_Type?.length || !!this.dfChange()!.ENG_Type?.some(type => type === v.ENG_Type);
+      return locationMatch && typeMatch;
+    });
+  });
+
+  public readonly filteredTltNo = computed(() => {
+    return this.service.tltNoSignal().filter(v => {
+      if (!this.dfChange()) return !0;
+      const noMatch = !this.dfChange()!.TLT_No?.length || !!this.dfChange()!.TLT_No?.includes(v.TLT_No);
+      const nameMatch = !this.dfChange()!.TLT_Name?.length || !!this.dfChange()!.TLT_Name?.includes(v.TLT_Name);
+      return noMatch && nameMatch;
+    });
+  });
 
   public readonly meterNoEffect = effect(() => {
     const meterNo = this.meterNoSignal();
@@ -80,20 +115,11 @@ export class ASS21020Component extends BasicQueryPageComponent<unknown> implemen
 
   public readonly tltNoEffect = effect(() => {
     const tltNo = this.tltNoSignal();
-    const selected = tltNo && this.service.tltByFlagMap.get(tltNo) || { TLT_Name: '', NET_SPACE: 0 };
+    if (!tltNo?.length) return;
+    const selected = this.service.tltByFlagMap.get(tltNo);
+    if (!selected) return;
     this.qf().TLT_Name.patchValue(selected.TLT_Name);
     this.qf().NET_SPACE.patchValue(selected.NET_SPACE);
-
-    // 計算所有專櫃面積總和
-    const totalNetSpace = Array.from(this.service.tltByFlagMap.values())
-      .reduce((sum, tlt) => sum + (tlt.NET_SPACE ?? 0), 0);
-
-    // 計算選中專櫃比例
-    const currentNetSpace = selected?.NET_SPACE ?? 0;
-    const ratio = totalNetSpace > 0 ? (currentNetSpace / totalNetSpace) * 100 : 0;
-
-    this.qf().NET_SPACE_Ratio.patchValue(Math.round(ratio * 100) / 100);
-    this.logger.debug(`tltNo changes:`, [tltNo, selected]);
   });
 
   public readonly columns: Column[] = [
@@ -138,11 +164,12 @@ export class ASS21020Component extends BasicQueryPageComponent<unknown> implemen
   public onSubmit(): void {
     this.handleSubmit(this.queryForm, () => {
       this.service.loadASS21020({
-        EngTypes: this.qf().ENGType.value?.join() ?? '',
-        ENG_MeterNo: this.qf().ENG_MeterNo.value ?? '',
-        Location_No: this.qf().Location_No.value ?? '',
-        SYS_StoreNo: this.authService.currentUserValue?.SYS_StoreNo ?? '',
-        Mid: Number(this.authService.currentUserValue?.mid) ?? 0,
+        ENG_Type: this.qf().ENG_Type.value?.join() || void 0,
+        ENG_Rate: this.qf().ENG_Rate.value || void 0,
+        ENG_MeterNo: this.qf().ENG_MeterNo.value || void 0,
+        Location_No: this.qf().Location_No.value || void 0,
+        SYS_StoreNo: this.authService.currentUserValue?.SYS_StoreNo!,
+        Mid: Number(this.authService.currentUserValue?.mid)!,
       });
 
       this.queryStateService.setQueryState(this.ProgNo, this.queryForm.getRawValue());

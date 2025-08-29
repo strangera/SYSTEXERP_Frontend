@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { finalize } from 'rxjs';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { createPaginationConfig, Column } from '../../../shared/componentkit/table/table.model';
+import { createPaginationConfig, Column, formatDate } from '../../../shared/componentkit/table/table.model';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { AccordionModule } from 'primeng/accordion';
@@ -10,6 +10,7 @@ import { TableComponent } from '../../../shared/componentkit/table/table.compone
 import { TranslateModule } from '@ngx-translate/core';
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
 import { FIN11070Data, FIN11070Service } from '@service/api/fin/fin11070.service';
+import { DatePipe } from '@angular/common';
 
 @Component({
   selector: 'app-fin11070',
@@ -29,8 +30,8 @@ import { FIN11070Data, FIN11070Service } from '@service/api/fin/fin11070.service
 })
 export class FIN11070Component extends BasicQueryPageComponent<FIN11070Data> implements OnInit {
   queryForm = this.formBuilder.group({
-    DeclareYearMonth: [null, Validators.required],    // 申報年月
-    ...createPaginationConfig([{ field: 'ID', order: 1 }])
+    GUI_YYMM: [''],    // 申報年月
+    ...createPaginationConfig([])
   });
 
   totalRecords = 0;
@@ -39,15 +40,48 @@ export class FIN11070Component extends BasicQueryPageComponent<FIN11070Data> imp
 
   columns: Column[] = [
     {
-      field: 'UploadProcessTime',
-      header: '上傳處理時間',
+      field: 'SYS_StoreNo',
+      header: '分店編號',
       visible: true,
     },
-    { field: 'ProcessResultDescription', header: '處理結果說明', visible: true }
+    {
+      field: 'TXN_No',
+      header: '發票年月',
+      visible: true,
+    },
+    {
+      field: 'TXN_Time',
+      header: '預計處理時間',
+      visible: true,
+      format: formatDate
+    },
+    {
+      field: 'TXN_ProcStatus',
+      header: '處理狀態',
+      visible: true,
+      format: (value: string) => value === 'Y' ? '已處理' : '待處理'
+    },
+    {
+      field: 'TXN_RspnTime',
+      header: '實際處理時間',
+      visible: true,
+      format: formatDate
+    },
+    {
+      field: 'TXN_RspnCode',
+      header: '回應代碼',
+      visible: true,
+    },
+    {
+      field: 'TXN_RspnMsg',
+      header: '回應訊息',
+      visible: true,
+    }
   ];
 
   constructor(
-    private fin11070Service: FIN11070Service
+    private fin11070Service: FIN11070Service,
+    private datePipe: DatePipe
   ) {
     super();
   }
@@ -58,7 +92,14 @@ export class FIN11070Component extends BasicQueryPageComponent<FIN11070Data> imp
 
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
-      this.fin11070Service.queryFIN11070(frm.value)
+      const requestData = {
+        ...frm.value,
+        MID: 0,                    // 固定為0
+        SYS_StoreNo: '10',        // 固定為 '10'
+        GUI_YYMM: this.datePipe.transform(frm.value.GUI_YYMM, 'yyyyMM'),  // 申報年月 (YYYYmm格式)
+      };
+
+      this.fin11070Service.queryFIN11070(requestData)
         .pipe(finalize(() => this.loading = false))
         .subscribe(response => {
           this.data = response.Data;
@@ -68,7 +109,63 @@ export class FIN11070Component extends BasicQueryPageComponent<FIN11070Data> imp
     });
   }
 
-  onExport() {
-    // TODO: 待實作
+  downloadFIN11070() {
+    const requestData = {
+      MID: 0,
+      STO_No: '10',
+      GUI_YYMM: this.datePipe.transform(this.queryForm.value.GUI_YYMM, 'yyyyMM') ?? '',
+    };
+
+    this.fin11070Service.downloadFIN11070(requestData)
+      .pipe(finalize(() => this.loading = false))
+      .subscribe(response => {
+        // 預設檔名
+        let filename = 'download.txt';
+
+        // 嘗試從 Content-Disposition 取檔名
+        const contentDisposition = response.headers.get('content-disposition');
+        if (contentDisposition) {
+          const matches =
+            /filename\*?=['"]?UTF-8''?([^;\n]*)/i.exec(contentDisposition) ||
+            /filename="?([^;\n"]*)"?/i.exec(contentDisposition);
+
+          if (matches && matches[1]) {
+            filename = decodeURIComponent(matches[1]);
+          }
+        }
+
+        // 建立 Blob
+        const blob = new Blob([response.body!], { type: 'text/plain;charset=utf-8' });
+
+        // 用 <a> 動態下載
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+
+        // 清理
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+      });
+  }
+
+  insertFIN11070() {
+    const requestData = {
+      MID: 0,
+      SYS_StoreNo: '10',
+      GUI_YYMM: this.datePipe.transform(this.queryForm.value.GUI_YYMM, 'yyyyMM') ?? '',
+    };
+
+    this.fin11070Service.insertFIN11070(requestData)
+      .pipe(finalize(() => this.loading = false))
+      .subscribe(response => {
+        if (response.Data[0].Status === '0') {
+          this.messageService.errorBubble(response.Data[0].Errormsg);
+        } else {
+          this.messageService.successBubble('寫入產製空白發票成功');
+        }
+      });
   }
 }

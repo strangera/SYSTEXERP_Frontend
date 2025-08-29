@@ -12,7 +12,7 @@
           [control]="dataForm.controls.Role_Name" [submitted]="submitted" [disabled]="true" />
         <app-input-group class="col-12 xl:col-6" label="目的角色代號/名稱" controlName="Target_No"
           [control]="dataForm.controls.Target_No" [submitted]="submitted" [options]="targetOptions" optionLabel="label"
-          optionValue="Role_No" [columns]="roleColumns" />
+          optionValue="Role_No" [columns]="roleColumns" [showReportMode]="false" />
         <p-checkbox class="col-12 sm:col-6" inputId="IsAllCopy" formControlName="IsAllCopy" label="是否複製使用者權限"
           binary="true" />
         <div class="col-12 sm:col-6 grid justify-content-end gap-2 m-0 mt-2">

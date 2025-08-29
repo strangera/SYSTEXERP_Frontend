@@ -128,8 +128,8 @@ export class TLS23110Component extends BasicQueryPageComponent<any> {
   ];
   IsNoPLU_NoOptions = [
     { label: '全部', value: null },
-    { label: '不包含自營櫃', value: true },
-    { label: '只顯示自營櫃', value: false },
+    { label: '不包含自營櫃', value: false }, 
+    { label: '只顯示自營櫃', value: true  },
   ];
 
   DeductionbigCategoryOptions: any[] = [];
