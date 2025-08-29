@@ -721,12 +721,6 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
     const isNewMode = this.contractFlowService.isNewContractMode();
     const isViewMode = this.isViewMode;
 
-    console.log('📊 當前模式:', {
-      isNewMode,
-      isViewMode,
-      mode: isViewMode ? '檢視' : (isNewMode ? '新增' : '編輯')
-    });
-
     // 🎯 第一步：先啟用所有欄位
     Object.keys(this.dataForm.controls).forEach(key => {
       const control = this.dataForm.get(key);
@@ -1201,8 +1195,6 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
       total_amt_unit: formData.total_amt_unit || '',
       total_amt_vendor_unit: formData.total_amt_vendor_unit || '',
 
-      // 🎯 陣列欄位
-      // 🎯 陣列欄位
       paymentMethods: formData.paymentMethods || [],
       check_typeList: formData.check_typeList || [],
       // 🎯 特殊欄位
@@ -1210,15 +1202,6 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
     };
     this.contractFlowService.saveStep1Data(contractInfo);
     console.log('✅ 已暫存到工作流程');
-  }
-
-  // 檢查位置資料是否有變更
-  private hasLocationChanges(): boolean {
-    return this.locationData.some(item =>
-      item._status === 'new' ||
-      item._status === 'modified' ||
-      item._status === 'deleted'
-    );
   }
 
   private markFormGroupTouched(formGroup: FormGroup): void {
@@ -1263,30 +1246,6 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
         this.messageService.warnBubble('載入位置資料失敗');
       }
     });
-  }
-
-  private validateLocationDataIntegrity(): boolean {
-    let hasErrors = false;
-
-    this.locationData.forEach((item, index) => {
-      // 檢查必要欄位
-      if (!item.id) {
-        console.error(`位置項目 ${index} 缺少 ID`);
-        hasErrors = true;
-      }
-
-      // 檢查狀態一致性
-      if (item._status === 'new' && !item._isNew) {
-        console.warn(`位置項目 ${index} 狀態不一致: _status=new 但 _isNew=false`);
-      }
-
-      // 檢查已刪除項目是否還在顯示列表中
-      if (item._status === 'deleted') {
-        console.warn(`位置項目 ${index} 已標記刪除但仍在列表中`);
-      }
-    });
-
-    return !hasErrors;
   }
 
   private prepareLocationDataForSubmit(): LocationItem[] {
@@ -1379,13 +1338,7 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
   }
 
   onSubmitNext(): void {
-    // 🔍 加入除錯代碼來找出問題
-    console.log('🚀 點擊下一步按鈕');
-    console.log('📋 表單狀態:', {
-      valid: this.dataForm.valid,
-      invalid: this.dataForm.invalid,
-      errors: this.dataForm.errors
-    });
+
 
     if (this.isViewMode) {
       // 檢視模式：直接導航，不帶參數

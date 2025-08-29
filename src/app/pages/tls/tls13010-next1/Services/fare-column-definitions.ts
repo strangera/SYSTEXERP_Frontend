@@ -118,7 +118,7 @@ export class FareColumnDefinitions {
         header: '扣款代號',
         type: 'text',
         editable: false,
-        autoWidth: true
+        width: '20px'
       },
       {
         field: 'cap_name',
@@ -214,7 +214,7 @@ export class FareColumnDefinitions {
         header: '是否新增',
         type: 'checkbox',
         editable: true,
-        width: '80px',
+        width: '5px',
         directEdit: true,
         autoEditOnSelect: true,      // ✅ 勾選扣款項目 → 進入編輯模式設定單價、數量
         autoSaveOnUnselect: true,     // ✅ 取消勾選 → 自動儲存並退出編輯
@@ -224,14 +224,14 @@ export class FareColumnDefinitions {
         header: '扣款代號',
         type: 'text',
         editable: false,
-        width: '100px'
+        width: '20px'
       },
       {
         field: 'cap_name',
         header: '扣款名稱',
         type: 'text',
         editable: false,
-        minWidth: '120px',
+        autoWidth: true,
         flex: 2
       },
       {
@@ -239,7 +239,7 @@ export class FareColumnDefinitions {
         header: '扣款起始年月',
         type: 'date',
         editable: true,
-        width: '130px',
+        autoWidth: true,
         dateFormat: 'year-month',
         required: true,
         defaultValueFunction: () => {
@@ -255,7 +255,7 @@ export class FareColumnDefinitions {
         header: '扣款結束年月',
         type: 'date',
         editable: true,
-        width: '130px',
+        autoWidth: true,
         dateFormat: 'year-month',
         required: true,
         defaultValueFunction: () => {
@@ -373,14 +373,14 @@ export class FareColumnDefinitions {
         header: '扣款代號',
         type: 'text',
         editable: false,
-        width: '100px'
+        width: '20px'
       },
       {
         field: 'cap_name',
         header: '扣款名稱',
         type: 'text',
         editable: false,
-        minWidth: '120px',
+        autoWidth: true,
         flex: 2
       },
       {
@@ -535,14 +535,14 @@ export class FareColumnDefinitions {
         header: '扣款代號',
         type: 'text',
         editable: false,
-        width: '100px'
+        width: '20px'
       },
       {
         field: 'cap_name',
         header: '扣款名稱',
         type: 'text',
         editable: false,
-        minWidth: '120px',
+        autoWidth: true,
         flex: 2
       },
       {
@@ -550,7 +550,7 @@ export class FareColumnDefinitions {
         header: '扣款起始年月',
         type: 'date',
         editable: true,
-        width: '130px',
+        autoWidth: true,
         dateFormat: 'year-month',
         required: true,
         defaultValueFunction: () => {
@@ -642,14 +642,14 @@ export class FareColumnDefinitions {
         header: '扣款代號',
         type: 'text',
         editable: false,
-        width: '100px'
+        width: '20px'
       },
       {
         field: 'cap_name',
         header: '扣款名稱',
         type: 'text',
         editable: false,
-        minWidth: '120px',
+        autoWidth: true,
         flex: 2
       },
       {
