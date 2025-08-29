@@ -5,7 +5,7 @@
   [minlength]="minLength" [maxlength]="maxLength" rows="5" cols="30" [autoResize]="true"
   [ngClass]="{'ng-invalid ng-dirty': submitted && control.errors}" pInputTextarea
   [attr.aria-label]="label || placeholder" title="{{ label || placeholder }}"
-  class="p-inputtextarea h-5rem overflow-y-auto">
+  [class]="'p-inputtextarea overflow-y-auto ' + styleClass">
 </textarea>
 <app-control-messages [onerror]="submitted || (control.touched && control.invalid)"
   [control]="control"></app-control-messages>

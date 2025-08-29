@@ -60,7 +60,7 @@ export class ASS21040Component extends BasicQueryPageComponent<unknown> implemen
       this.handleSubmit(frm, () => {
         this.aSS21040Service.ClearingASS21040(body).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(response => {
           if (response.Data.IsClearingSuccess) {
-            this.messageService.successBubble('清帳成功');
+            this.messageService.successBubble('結算成功');
           }
         });
       });

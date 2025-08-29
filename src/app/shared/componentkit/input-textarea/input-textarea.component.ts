@@ -18,6 +18,7 @@ export class InputTextareaComponent extends BasicKitComponent implements OnInit 
   @Input() control = new FormControl;
   @Input() submitted = false; // 檢查欄位是否標準
   @Input() customPlaceholder: string | undefined;
+  @Input() styleClass: string | undefined = 'h-5rem';
 
   ngOnInit(): void {
     if (this.customPlaceholder) {

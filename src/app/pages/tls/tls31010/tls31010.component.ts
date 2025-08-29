@@ -20,6 +20,7 @@ import { ButtonModule } from 'primeng/button';
 import { formatDate } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { environment } from 'src/environments/environment';
+import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
 
 @Component({
   selector: 'app-tls31010',
@@ -37,7 +38,8 @@ import { environment } from 'src/environments/environment';
     TranslateModule,
     TableComponent,
     MultiSelectComponent,
-    ButtonModule
+    ButtonModule,
+    RadiobuttonComponent
   ]
 })
 
@@ -53,7 +55,7 @@ export class TLS31010Component extends BasicQueryPageComponent<TLS31010Response>
     tlt_kind: [[]], //櫃別 (1.正櫃 2.臨時櫃 3.特賣會 4.虛擬櫃)
     tlt_term_type: [[]], // 抽成別 1:固定租金 2:底租抽成取高者3:一般抽成     4:包底抽成     5:階梯式抽成   6:包底加階梯   "
     org_id: [[]],  // 組織
-    TaxType: [null],  // 銷售金額是否含稅
+    TaxType: ['Y'],  // 銷售金額是否含稅
     IsRece_Yn: [null],  // 是否開立業主發票(是否開立業主發票(Y:是 N:否))
     ...createPaginationConfig([{ field: 'tlt_building', order: 1 }])
   });

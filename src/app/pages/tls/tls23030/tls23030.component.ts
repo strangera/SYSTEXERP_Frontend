@@ -99,22 +99,23 @@ readonly defaultSort: any[] = [
     TXN_No_Start: [null],
     TXN_No_End: [null],
     TLT_No: [], // ✅ 修正為 []
-    
+    PAY_NO: [] as string[],
     TXN_PayAmt_Start: [null],
     TXN_PayAmt_End: [null],
     TXN_Status: [], // ✅ 修正為 []
     TXN_MemCard: [''],
     CRD_Type: [], // ✅ 修正為 []
     CRD_No: [''],
+    IsHaveTERM_No: [false],
     pay_taxtype: [''],
     org_id: [], // ✅ 修正為 []
-    IsPayType: [false],
+    VOU_Check: false,
     rece_yn: [''],
     cash_yn: [''],
     tlt_building: [''],
     tlt_floor: [], // ✅ 修正為 []
-    PAY_NO: [] as string[],
-    IsHaveTERM_No: [false],
+    
+   
 
    ...createPaginationConfig([
   { field: 'TXN_Date', order: 1 },
@@ -163,7 +164,12 @@ readonly defaultSort: any[] = [
   floorOptions: any[] = [];
   BUILDING_NO_Options: any[] = [];
   commissionTypeOptions: any[] = [];
-  txnStatusOptions: any[] = [];
+    txnStatusOptions: any[] = [
+    { value: '1', label: '正常交易' },
+    { value: '2', label: '作廢' },
+    { value: '3', label: '退貨' },
+  
+  ];
   OrganizationCodeOptions: any[] = [];
   ECRNoOptions: any[] = [];
   CounterOptions: any[] = [];
@@ -239,7 +245,7 @@ this.sortMeta = this.defaultSort.map(x => ({ ...x }));
     this.loadOptions(this.commissionTypeService.getCommissionTypes(),'commissionTypeOptions',);
     this.loadOptions(this.floorService.getFloors(), 'floorOptions');
     this.loadOptions(this.tls11010Service.getBuildingOptions(),'BUILDING_NO_Options',);
-    this.loadOptions(this.txnStatusService.getTxnStatusOptions(),'txnStatusOptions',);
+    // this.loadOptions(this.txnStatusService.getTxnStatusOptions(),'txnStatusOptions',);
 
     // ✅ 保留 formLabel 的一行寫法
     this.loadOptions(
@@ -308,7 +314,7 @@ private toBoolOrNull(v: any): boolean | null {
     raw['rece_yn']          = emptyToNull(raw['rece_yn']);
     raw['cash_yn']          = emptyToNull(raw['cash_yn']);
     raw['tlt_building']     = emptyToNull(raw['tlt_building']);
-    raw['IsPayType']        = this.toBoolOrNull(raw['IsPayType']);
+    raw['VOU_Check']        = this.toBoolOrNull(raw['VOU_Check']);
     raw['IsHaveTERM_No']    = this.toBoolOrNull(raw['IsHaveTERM_No']);
 
     // 排序：沿用你現有的 sort 邏輯

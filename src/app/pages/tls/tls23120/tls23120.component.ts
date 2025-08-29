@@ -343,7 +343,8 @@ onSubmit(form: FormGroup): void {
         },
         error: () => {
           this.pendingNavigateAfterQuery = false;
-          this.messageService?.errorBubble?.('查詢失敗，請稍後再試');
+                    this.loading = false;
+
         },
         complete: () => {
           this.loading = false;

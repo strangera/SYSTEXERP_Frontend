@@ -128,7 +128,13 @@ showSummary = false;
   whetherOptions: any[] = [];
   transactionSubTypeOptions: any[] = [];
   carrierTypeOptions: any[] = [];
-  txnStatusOptions: any[] = [];
+  txnStatusOptions: any[] = [
+    { value: '1', label: '正常交易' },
+    { value: '2', label: '作廢' },
+    { value: '3', label: '退貨' },
+  
+  ];
+
   cashierOptions: any[] = []; // 收銀員下拉選單
   ECRNoOptions: any[] = []; // 收銀機號下拉選單
   CounterOptions: any[] = []; // 專櫃選項
@@ -169,7 +175,7 @@ showSummary = false;
           value: x.value,
         })) || [];
     });
-    this.txnStatusService.getTxnStatusOptions().subscribe((data) => (this.txnStatusOptions = data));
+    // this.txnStatusService.getTxnStatusOptions().subscribe((data) => (this.txnStatusOptions = data));
     this.counterNameService.getCounters().subscribe((res) => {
       this.CounterOptions =
         res?.map((x: any) => ({
