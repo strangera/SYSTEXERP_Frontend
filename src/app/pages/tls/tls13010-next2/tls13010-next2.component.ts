@@ -154,7 +154,7 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
   discountColumns: ColumnDef[] = [
     {
       field: 'selected',
-      header: '選取',
+      header: '是否新增',
       type: 'checkbox',
       editable: true,
       directEdit: true, // 🎯 啟用直接編輯
@@ -184,7 +184,7 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
   levelColumns: ColumnDef[] = [
     {
       field: 'selected',
-      header: '選取',
+      header: '是否新增',
       type: 'checkbox',
       editable: true,
       directEdit: true, // 🎯 啟用直接編輯

@@ -241,7 +241,7 @@ export class FareColumnDefinitions {
         editable: true,
         autoWidth: true,
         dateFormat: 'year-month',
-        width: '110px',
+        width: '130px',
         required: true,
         defaultValueFunction: () => {
           const contractInfo = contractInfoData[0];
@@ -256,7 +256,7 @@ export class FareColumnDefinitions {
         header: '扣款結束年月',
         type: 'date',
         editable: true,
-        width: '110px',
+        width: '130px',
         dateFormat: 'year-month',
         required: true,
         defaultValueFunction: () => {

@@ -721,29 +721,30 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
 
   // 🎯 對外接口：取得欄位的 placeholder
   getDatePlaceholder(column: ColumnDef): string {
-    if (column.placeholder) {
-      return column.placeholder;
-    }
+    // if (column.placeholder) {
+    //   return column.placeholder;
+    // }
 
-    const formatType = column.dateFormat || 'full-date';
+    // const formatType = column.dateFormat || 'full-date';
 
-    // 根據格式提供更明確的提示
-    switch (formatType) {
-      case 'year-month':
-        return '例：2024/01 或 202401';
-      case 'year-month-compact':
-        return '例：202401';
-      case 'year-month-dash':
-        return '例：2024-01';
-      case 'full-date':
-        return '例：2024/01/15 或 20240115';
-      case 'full-date-compact':
-        return '例：20240115';
-      case 'full-date-dash':
-        return '例：2024-01-15';
-      default:
-        return '請輸入日期';
-    }
+    // // 根據格式提供更明確的提示
+    // switch (formatType) {
+    //   case 'year-month':
+    //     return '例：2024/01 或 202401';
+    //   case 'year-month-compact':
+    //     return '例：202401';
+    //   case 'year-month-dash':
+    //     return '例：2024-01';
+    //   case 'full-date':
+    //     return '例：2024/01/15 或 20240115';
+    //   case 'full-date-compact':
+    //     return '例：20240115';
+    //   case 'full-date-dash':
+    //     return '例：2024-01-15';
+    //   default:
+    //     return '請輸入日期';
+    // }
+    return "";
   }
 
   // 🎯 輔助方法：日期有效性檢查
