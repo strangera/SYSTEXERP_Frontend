@@ -13,6 +13,7 @@ import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-se
 import { TableComponent } from '@shared/componentkit/table/table.component';
 import { AddButton, Column } from '@shared/componentkit/table/table.model';
 import { ApprovalStatus } from '@shared/models/tls/approval-status.model';
+import { NGXLogger } from 'ngx-logger';
 import { AccordionModule } from 'primeng/accordion';
 import { finalize } from 'rxjs';
 import { TLS26010Data, TLS26010Query } from './tls26010.model';
@@ -101,7 +102,7 @@ export class TLS26010Component extends BasicQueryPageComponent<TLS26010Data> imp
     const floor_nos = Array.isArray(sys3900Value) ? sys3900Value.filter((val): val is string => val != null) : [];
     const area_nos = Array.isArray(sys3A00Value) ? sys3A00Value.filter((val): val is string => val != null) : [];
 
-    console.log(`dependentDataEffect:`, [building_nos, floor_nos, area_nos]);
+    this.logger.debug(`dependentDataEffect:`, [building_nos, floor_nos, area_nos]);
     if (!building_nos?.length && !floor_nos?.length && !area_nos?.length) return;
     untracked(() => {
       this.service.loadPreorderECRList({ building_nos, floor_nos, area_nos, ecr_type: '2' });
@@ -171,6 +172,7 @@ export class TLS26010Component extends BasicQueryPageComponent<TLS26010Data> imp
   constructor(
     public readonly service: TLS26010Service,
     private readonly datePipe: DatePipe,
+    private readonly logger: NGXLogger,
   ) {
     super();
   }
@@ -194,17 +196,12 @@ export class TLS26010Component extends BasicQueryPageComponent<TLS26010Data> imp
 
   /** 刪除選中的活動 */
   public onDelete(data: TLS26010Data[]): void {
-    console.log(`刪除活動:`, data);
-    this.confirmationService.confirm({
-      message: '是否確認刪除選中的預售活動?',
-      accept: () => {
-        for (const item of data) this.service.deleteTLS26010(item)
-          .pipe(finalize(() => this.loading = !1))
-          .subscribe(res => {
-            if (res.Error) return this.messageService.errorBox('刪除失敗\n' + res.Message);
-            this.messageService.successBubble('刪除成功');
-          });
-      },
-    });
+    this.logger.debug(`刪除活動:`, data);
+    for (const item of data) this.service.deleteTLS26010(item)
+      .pipe(finalize(() => this.loading = !1))
+      .subscribe(res => {
+        if (res.Error) return this.messageService.errorBubble('刪除失敗', res.Message);
+        this.messageService.successBubble('刪除成功');
+      });
   }
 }
