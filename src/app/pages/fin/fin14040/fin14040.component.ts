@@ -14,8 +14,8 @@ import { CommonModule } from '@angular/common';
 import { DomSanitizer } from '@angular/platform-browser';
 import { Fin14040Service } from '@service/api/fin/fin14040.service';
 import { untilDestroyed } from '@ngneat/until-destroy';
+import { HttpClient } from '@angular/common/http';
 import { environment } from 'src/environments/environment';
-import { HttpClient, HttpResponse } from '@angular/common/http';
 
 // 形成媒體申報檔
 @Component({
@@ -103,66 +103,80 @@ export class FIN14040Component extends BasicQueryPageComponent<unknown> implemen
         .subscribe({
           next: (response) => {
             if (response.Status === '0000') {
-              console.log('形成媒體申報檔response', JSON.stringify(response.Data));
+            console.log('形成媒體申報檔 response', response.Data);
 
-              // 指定要抓的三個欄位
-              const fileKeys = ['T02Url', 'TETUrl.tet', 'TXTUrl.txt'];
+            // // T02 檔
+            // if (response.Data.T02Url) {
+            //   let url = response.Data.T02Url;
+            //   if (url.startsWith('/')) url = environment.ApiUrl + url;
 
-              fileKeys.forEach(key => {
-                const url = response.Data[key];
-                if (url) {
-                  // window.open(environment.BaseUrl + url, '_blank');
-                  // const url = window.URL.createObjectURL(blob);
-                  const a = document.createElement('a');
-                  a.href = url;
-                  a.download = key; // 指定下載的檔名
-                  document.body.appendChild(a);
-                  a.click();
+            //   this.http.get(url, { responseType: 'blob' }).subscribe(blob => {
+            //     this.downloadBlob(blob, '申報檔.T02');
+            //   });
+            // }
 
-                  window.URL.revokeObjectURL(url);
-                  document.body.removeChild(a);
+            // // TET 檔
+            // if (response.Data.TETUrl) {
+            //   const url = response.Data.TETUrl;
+            //   // ⚠️ 不要硬加 baseUrl，因為它已經是完整網址
+            //   this.http.get(url, { responseType: 'blob' }).subscribe(blob => {
+            //     this.downloadBlob(blob, '申報檔.tet');
+            //   });
+            // }
 
-                  // const finalUrl = url.startsWith('http') ? url
-                  //   : `${environment.BaseUrl}${url}`;
+            // // TXT 檔
+            // if (response.Data.TXTUrl) {
+            //   const url = response.Data.TXTUrl;
+            //   // if (url.startsWith('/')) url = environment.ApiUrl + url;
 
-                  // this.http.get(finalUrl, {
-                  //   responseType: 'blob',
-                  //   observe: 'response'
-                  // }).subscribe((response: HttpResponse<Blob>) => {
-                  //   console.log(response);
-                  //   const blob = response.body;
-                  //   if (!blob) return;
+            //   this.http.get(url, { responseType: 'blob' }).subscribe(blob => {
+            //     this.downloadBlob(blob, '申報檔.txt');
+            //   });
+            // }
 
-                  //   // 嘗試從後端 header 取得檔名
-                  //   const contentDisposition = response.headers.get('content-disposition');
-                  //   let filename = 'download';
-                  //   if (contentDisposition) {
-                  //     const match = /filename="?(.+?)"?($|;)/.exec(contentDisposition);
-                  //     if (match && match[1]) {
-                  //       filename = match[1];
-                  //     }
-                  //   } else {
-                  //     // 從 URL 取得檔名
-                  //     filename = finalUrl.split('/').pop() || 'download';
-                  //   }
+        const fileMap: { key: string; name: string }[] = [
+          { key: 'T02Url', name: '申報檔.T02' },
+          { key: 'TETUrl', name: '申報檔.tet' },
+          { key: 'TXTUrl', name: '申報檔.txt' },
+        ];
 
-                  //   // 建立下載連結並觸發
-                  //   const link = document.createElement('a');
-                  //   const objectUrl = URL.createObjectURL(blob);
-                  //   link.href = objectUrl;
-                  //   link.download = filename; // 指定下載檔名
-                  //   link.click();
+        fileMap.forEach(f => {
+          const url = response.Data[f.key];
+          if (url) {
+            // 這裡要用 HttpClient 再去抓檔案內容
+            this.http.get(url, { responseType: 'blob' }).subscribe(blob => {
+              const a = document.createElement('a');
+              const objectUrl = window.URL.createObjectURL(blob);
 
-                  //   // 釋放 URL
-                  //   URL.revokeObjectURL(objectUrl);
-                  // });
-                }
-              });
+              a.href = objectUrl;
+              a.download = f.name;
+              document.body.appendChild(a);
+              a.click();
 
-            }
+              // 清理資源
+              document.body.removeChild(a);
+              window.URL.revokeObjectURL(objectUrl);
+            });
+          }
+        });
+      }
           },
           error: () => { this.loading = false; },
         });
     });
+  }
+
+  // 抽成共用方法，避免重複
+  private downloadBlob(blob: Blob, filename: string) {
+    const a = document.createElement('a');
+    const objectUrl = window.URL.createObjectURL(blob);
+
+    a.href = objectUrl;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+
+    document.body.removeChild(a);
+    window.URL.revokeObjectURL(objectUrl);
   }
 }
