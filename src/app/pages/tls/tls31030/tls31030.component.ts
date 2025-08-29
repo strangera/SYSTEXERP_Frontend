@@ -16,7 +16,6 @@ import { untilDestroyed } from '@ngneat/until-destroy';
 import { debounceTime, finalize, forkJoin, map, of, switchMap, tap } from 'rxjs';
 import { TLS31010Request, TLS31010Response } from '@service/api/tls/tls31010.service';
 import { ButtonModule } from 'primeng/button';
-import { HttpClient } from '@angular/common/http';
 import { environment } from 'src/environments/environment';
 import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
 import { TLS31030Response, Tls31030Service } from '@service/api/tls/tls31030.service';
@@ -126,8 +125,7 @@ export class TLS31030Component extends BasicQueryPageComponent<TLS31030Response>
 
   constructor(
     private readonly dropDownListService: DropDownListService,
-    private readonly tls31030Service: Tls31030Service,
-    private readonly httpClient: HttpClient
+    private readonly tls31030Service: Tls31030Service
   ) { super(); }
 
   ngOnInit(): void {
@@ -269,11 +267,11 @@ export class TLS31030Component extends BasicQueryPageComponent<TLS31030Response>
     })
   }
   btnLoading = false;
-  onReport(frm: FormGroup) {
+  onReport(frm: FormGroup, isExcel :boolean) {
     const printData = this.queryStateService.getQueryStateValue(this.ProgNo);
     const formValue = {
       ...printData,
-      IsExcel: true,
+      IsExcel: isExcel,
       // IsMerge: true,
       // SortBy: undefined,
       // pageIndex: undefined,

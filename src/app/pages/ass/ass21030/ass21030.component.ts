@@ -93,7 +93,7 @@ export class ASS21030Component extends BasicQueryPageComponent<ENG1001 | ENG2001
   // 查詢
     queryForm = this.formBuilder.group({
       // ENG2001 抄錶明細檔 + ENG1001 能源錶號明細檔
-      EngTypes: [null, [Validators.maxLength(3)]], // 能源類型：水錶G01、電錶G02、瓦斯錶G03
+      EngTypes: [[], [Validators.maxLength(3)]], // 能源類型：水錶G01、電錶G02、瓦斯錶G03
       ENG_MeterNo: [null, [Validators.maxLength(5)]], // 錶號 (/Share/queryENG1001_ENG_MeterNo_DropDownList)
       SYS_StoreNo: [this.authService.getUserInfo()?.SYS_StoreNo ?? '', [Validators.maxLength(10)]], // 分店編號 section抓
       Mid: [this.authService.getUserInfo()?.mid ?? '', [Validators.maxLength(19)]], //  section抓
@@ -185,7 +185,7 @@ export class ASS21030Component extends BasicQueryPageComponent<ENG1001 | ENG2001
               } as ENG2001;
             });
 
-            console.log('轉換後結果', this.data);
+            console.log('轉換後結果', response.Data );
               this.totalRecords = response.TotalCount || response.Data.length;
               this.queryStateService.setQueryState(this.ProgNo, formValue);
             } else {
