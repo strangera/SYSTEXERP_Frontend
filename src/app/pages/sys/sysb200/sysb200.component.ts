@@ -6,7 +6,7 @@ import { map } from 'rxjs/operators';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { ValidationService } from '../../../shared/service/validation.service';
 
-import { AddButton, createPaginationConfig } from '../../../shared/componentkit/table/table.model';
+import { AddButton, createPaginationConfig, Column } from '../../../shared/componentkit/table/table.model';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { AccordionModule } from 'primeng/accordion';
@@ -94,31 +94,37 @@ export class SYSB200Component extends BasicQueryPageComponent<any> implements On
     { label: '已審核', value: '1' },
   ];
 
-  columns: any[] = [
+  columns: Column[] = [
     { field: 'VEN_No', header: '廠商編號', visible: true },
     {
       field: 'VEN_Status',
       header: '審核狀態',
       visible: true,
-      format: (value: string) => this.approvalOptions.find(x => x.value === value)?.label ?? value,
+      format: (value: string) =>
+        this.approvalOptions.find(x => x.value === value)?.label ?? value,
     },
     { field: 'VEN_Uniform', header: '統一編號', visible: true },
-    { field: 'VEN_CName', header: '廠商名稱(中文)', visible: false },
-    { field: 'VEN_EName', header: '廠商名稱(英文)', visible: false },
-    { field: 'VEN_SName', header: '廠商簡稱', visible: false },
+    { field: 'VEN_Name', header: '廠商名稱(中文)', visible: true },
+    { field: 'VEN_EngName', header: '廠商名稱(英文)', visible: true },
+    { field: 'VEN_ShortName', header: '廠商簡稱', visible: true },
     { field: 'VEN_Address', header: '通訊地址', visible: true },
+    { field: 'VEN_GUIAddr', header: '公司登記地址', visible: true },
     { field: 'VEN_Boss', header: '聯絡人', visible: false },
     { field: 'VEN_BossTitle', header: '聯絡人職稱', visible: false },
     { field: 'VEN_BossEmail', header: '聯絡人電子郵件', visible: false },
     { field: 'VEN_BossTel', header: '聯絡人電話', visible: false },
-    { field: 'VEN_BossID', header: '聯絡人身份證字號', visible: false },
-    { field: 'VEN_BossAddr', header: '聯絡人聯絡地址', visible: false },
     { field: 'VEN_Tel', header: '公司登記電話', visible: true },
-    { field: 'VEN_Fax', header: '公司傳真', visible: true },
-    { field: 'VEN_Remark', header: '備註', visible: false },
+    { field: 'VEN_Fax', header: '公司傳真', visible: false },
+    { field: 'VEN_Email', header: '公司電子郵件', visible: true },
     { field: 'VEN_PayConditionDay', header: '付款期限(天數)', visible: true },
-    { field: 'VEN_BNK_No', header: '廠商匯款銀行代號', visible: true },
+    { field: 'VEN_PayType', header: '付款方式', visible: true },
+    { field: 'VEN_BNK_No', header: '銀行代號', visible: false },
+    { field: 'VEN_BNK_BranchNo', header: '分行代號', visible: false },
+    { field: 'VEN_BankAccountNo', header: '銀行帳號', visible: false },
+    { field: 'VEN_AccountName', header: '戶名', visible: false },
+    { field: 'VEN_Remark', header: '備註', visible: true },
   ];
+
 
   // ====== State ======
   data: VendorData[] = [];
@@ -211,27 +217,31 @@ export class SYSB200Component extends BasicQueryPageComponent<any> implements On
         VEN_Status: raw.VEN_Status,
         VEN_Uniform: raw.VEN_Uniform,
         VEN_Name: raw.VEN_Name,
-        VEN_EngName: raw.VEN_EName,
-        VEN_ShortName: raw.VEN_SName,
-        VEN_BNK_No: raw.VEN_BNK_No,
+        VEN_EngName: raw.VEN_EngName,
+        VEN_ShortName: raw.VEN_ShortName,
         VEN_Address: raw.VEN_Address,
+        VEN_GUIAddr: raw.VEN_GUIAddr,
         VEN_Boss: raw.VEN_Boss,
         VEN_BossTitle: raw.VEN_BossTitle,
         VEN_BossEmail: raw.VEN_BossEmail,
         VEN_BossTel: raw.VEN_BossTel,
-        VEN_BossID: raw.VEN_BossID,
-        VEN_BossAddr: raw.VEN_BossAddr,
         VEN_Tel: raw.VEN_Tel,
         VEN_Fax: raw.VEN_Fax,
-        VEN_Remark: raw.VEN_Remark,
+        VEN_Email: raw.VEN_Email,
         VEN_PayConditionDay: raw.VEN_PayConditionDay === '' ? null : raw.VEN_PayConditionDay,
-        VEN_GUIAddr: raw.VEN_GUIAddr,
+        VEN_PayType: raw.VEN_PayType,
+        VEN_BNK_No: raw.VEN_BNK_No,
+        VEN_BNK_BranchNo: raw.VEN_BNK_BranchNo,
+        VEN_BankAccountNo: raw.VEN_BankAccountNo,
+        VEN_AccountName: raw.VEN_AccountName,
+        VEN_Remark: raw.VEN_Remark,
         PageSize: raw.pageSize,
         PageIndex: raw.pageIndex,
         SortBy: raw.SortBy,
         OrderBy: '',
         Offset: 0,
       };
+
 
       this.sysb200Service.querySYSB200(queryData).subscribe({
         next: (res) => {
@@ -258,34 +268,35 @@ export class SYSB200Component extends BasicQueryPageComponent<any> implements On
     this.messageService.successBubble('已刪除選取資料');
   }
 
-statusChange(row: VendorData, status: '0' | '1') {
-  const id = row.pos2013_id ?? row.id; // 只接受數字主鍵
-  if (id == null || Number.isNaN(Number(id))) {
-    this.messageService.errorBubble(`找不到有效的 id，請確認查詢結果是否有回主鍵欄位（pos2013_id / id）`);
-    return;
+  statusChange(row: VendorData, status: '0' | '1') {
+    const id = row.pos2013_id ?? row.id; // 只接受數字主鍵
+    if (id == null || Number.isNaN(Number(id))) {
+      this.messageService.errorBubble(`找不到有效的 id，請確認查詢結果是否有回主鍵欄位（pos2013_id / id）`);
+      return;
+    }
+
+    if (this.actionLoadingId) return;
+    this.actionLoadingId = id;
+
+    const prev = row.VEN_Status;
+    row.VEN_Status = status; // 樂觀更新
+
+    this.sysb200Service.updateStatusSYSB200({
+      id: Number(id),
+      VEN_Status: status
+    }).subscribe({
+      next: () => {
+        const msg = status === '1' ? '審核成功' : '反審核成功';
+        this.messageService.successBubble(`${msg}（ID: ${id}）`);
+        // this.onSubmit(this.queryForm); // 若要重查就打開
+      },
+      error: (err) => {
+        row.VEN_Status = prev; // 回滾
+        const apiMsg = err?.error?.Message || err?.message || '';
+        this.messageService.errorBubble(`更新失敗（ID: ${id}）：${apiMsg}`);
+      },
+      complete: () => (this.actionLoadingId = null),
+    });
+
   }
-
-  if (this.actionLoadingId) return;
-  this.actionLoadingId = id;
-
-  const prev = row.VEN_Status;
-  row.VEN_Status = status; // 樂觀更新
-
-  this.sysb200Service.updateStatusSYSB200({
-    id: Number(id),
-    VEN_Status: status
-  }).subscribe({
-    next: () => {
-      const msg = status === '1' ? '審核成功' : '反審核成功';
-      this.messageService.successBubble(`${msg}（ID: ${id}）`);
-      // this.onSubmit(this.queryForm); // 若要重查就打開
-    },
-    error: (err) => {
-      row.VEN_Status = prev; // 回滾
-      const apiMsg = err?.error?.Message || err?.message || '';
-      this.messageService.errorBubble(`更新失敗（ID: ${id}）：${apiMsg}`);
-    },
-    complete: () => (this.actionLoadingId = null),
-  });
-
-}}
+}

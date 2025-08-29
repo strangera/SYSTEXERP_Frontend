@@ -104,7 +104,7 @@ export class TLS41040CRUComponent extends BasicCruPageComponent<any> implements 
 
   // ===== 載入選項並設定 Table 欄位 =====
   private loadAndSetupColumns() {
-    const ECR_GrpNo$ = this.dropDownListService.queryPOS1002_DropDownList()
+    const ECR_GrpNo$ = this.dropDownListService.queryPOS1002GRM_DropDownList()
       .pipe(map(res => (res?.Data ?? []).map((it: any) => ({
         value: it.No,
         label: `${it.No}-${it.Name}`
@@ -167,40 +167,28 @@ export class TLS41040CRUComponent extends BasicCruPageComponent<any> implements 
     const raw = frm.getRawValue();
 
     return {
-      NOT_DateTime: raw.NOT_DateTime,
-      NOT_BegDateTime: raw.NOT_BegDateTime,
-      NOT_EndDateTime: raw.NOT_EndDateTime,
-      NOT_Status: raw.NOT_Status,
-      NOT_Remark: raw.NOT_Remark,
-      NOT_Desc: raw.NOT_Desc,
-      NOT_DispRt: raw.NOT_DispRt,
-      NOT_DispSpd: raw.NOT_DispSpd,
-      NOT_DispBtn: raw.NOT_DispBtn,
-      NOT_DispCd: raw.NOT_DispCd,
-      NOT_Prn: raw.NOT_Prn,
-      NOT_DtlLimit: raw.NOT_DtlLimit,
+      ...raw,
       Detail: this.data.map(d => {
         const clone = { ...d };
-
         if (clone.ECR_GrpNo) {
           clone.TLT_No = '';
           clone.ECR_Type = '';
           clone.BUILDING_No = '';
           clone.FLOOR_No = '';
           clone.Area_No = '';
-        } else if (clone.TLT_No || clone.BUILDING_No) {
+        } else {
           clone.ECR_GrpNo = '';
         }
 
         return {
-          NOT_SeqNo: Number(clone.NOT_SeqNo) || 0,
+          NOT_SeqNo: 0,
           TLT_No: clone.TLT_No ?? '',
           ECR_Type: clone.ECR_Type ?? '',
           ECR_GrpNo: clone.ECR_GrpNo ?? '',
           BUILDING_No: clone.BUILDING_No ?? '',
           FLOOR_No: clone.FLOOR_No ?? '',
           Area_No: clone.Area_No ?? '',
-          status: clone.status ?? 'A'
+          status: 'new'
         };
       })
     };
@@ -265,6 +253,8 @@ export class TLS41040CRUComponent extends BasicCruPageComponent<any> implements 
         serviceCall = this.tls41040Service.insertTLS41040(body);
       } else if (this.isFormEditable) {
         body = this.createUpdateBody(frm);
+        console.log(body);
+
         serviceCall = this.tls41040Service.updateTLS41040(body);
       }
 
