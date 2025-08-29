@@ -46,7 +46,6 @@ export class ASS21010Component extends BasicQueryPageComponent<unknown> implemen
   public readonly qf = computed(() => this.queryForm.controls);
 
   // 變化追蹤
-  private readonly qfSignal = toSignal(this.queryForm.valueChanges);
   private readonly engTypeSignal = toSignal(this.qf().ENG_Type.valueChanges);
   private readonly engMeterSignal = toSignal(this.qf().ENG_MeterNo.valueChanges);
   private readonly locationSignal = toSignal(this.qf().Location_No.valueChanges);
@@ -105,7 +104,7 @@ export class ASS21010Component extends BasicQueryPageComponent<unknown> implemen
   public onDelete(data: ASS21010Data[]): void {
     this.logger.debug(`Deleting ASS21010:`, [data, this.user, this.queryForm.getRawValue(), this.authService.currentUserValue]);
     for (const d of data) {
-      this.service.deleteASS21010({ ...d, ...this.usrData(), ENG_Type: EngType[d.ENG_Type] })
+      this.service.deleteASS21010({ ...d, ...this.usrData() })
         .pipe(finalize(() => this.loading = !1))
         .subscribe(res => {
           if (!res.IsUpdateSuccess) return this.messageService.errorBubble(res.ErrorMsg, '刪除失敗');

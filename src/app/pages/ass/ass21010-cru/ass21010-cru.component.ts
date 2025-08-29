@@ -44,13 +44,7 @@ export class ASS21010CRUComponent extends BasicCruPageComponent<ASS21010Data> im
   });
   public readonly df = computed(() => this.dataForm.controls);
 
-  /** 表單變化追蹤 */
-  public readonly dfEffect = effect(() => {
-    this.logger.debug(`dfEffect:`, [this.dfSignal()]);
-  });
-
   // 變化追蹤
-  private readonly dfSignal = toSignal(this.dataForm.valueChanges);
   private readonly engTypeSignal = toSignal(this.df().ENGType.valueChanges);
   private readonly locationSignal = toSignal(this.df().Location_No.valueChanges);
 

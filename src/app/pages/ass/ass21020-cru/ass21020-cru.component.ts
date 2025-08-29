@@ -51,7 +51,6 @@ export class ASS21020CRUComponent extends BasicCruPageComponent<unknown> impleme
   });
   public readonly df = computed(() => this.dataForm.controls);
 
-  private readonly dfSignal = toSignal(this.dataForm.valueChanges);
   private readonly meterNoSignal = toSignal(this.df().ENG_MeterNo.valueChanges);
 
   public readonly totalRecords = computed(() => [].length);
