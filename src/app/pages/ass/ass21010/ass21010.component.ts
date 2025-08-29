@@ -14,7 +14,7 @@ import { Column, createPaginationConfig } from '@shared/componentkit/table/table
 import { NGXLogger } from 'ngx-logger';
 import { AccordionModule } from 'primeng/accordion';
 import { finalize } from 'rxjs';
-import { ASS21010Data, ASS21010Delete, ASS21010Payload } from './ass21010.model';
+import { ASS21010Data, ASS21010Payload } from './ass21010.model';
 
 @Component({
   selector: 'app-ass21010',
@@ -50,13 +50,12 @@ export class ASS21010Component extends BasicQueryPageComponent<unknown> implemen
   private readonly engTypeSignal = toSignal(this.qf().ENG_Type.valueChanges);
   private readonly engMeterSignal = toSignal(this.qf().ENG_MeterNo.valueChanges);
   private readonly locationSignal = toSignal(this.qf().Location_No.valueChanges);
-  private readonly engRemarkSignal = toSignal(this.qf().ENG_Remark.valueChanges);
 
   public readonly totalRecords = computed(() => this.service.ASS21010Data().length);
-
-  public readonly qfEffect = effect(() => {
-    this.logger.debug(`qfEffect:`, [this.qfSignal()]);
-  });
+  public readonly usrData = computed(() => ({
+    SYS_StoreNo: this.authService.currentUserValue!.SYS_StoreNo,
+    Mid: Number(this.authService.currentUserValue!.mid),
+  }));
 
   public readonly tableEffect = effect(() => {
     const types = this.engTypeSignal() || [];
@@ -66,10 +65,10 @@ export class ASS21010Component extends BasicQueryPageComponent<unknown> implemen
   }, { allowSignalWrites: !0 });
 
   public readonly columns: Column[] = [
-    { field: 'ENGType', header: '能源類型', format: v => this.service.engTypeSignal().find(t => t.No === v)?.Name || v },
+    { field: 'ENG_Type', header: '能源類型' },
     { field: 'ENG_MeterNo', header: '錶號' },
     { field: 'Location_No', header: '設備位置編號' },
-    { field: 'ENG_Remark', header: '備註', disabled: () => !0 },
+    { field: 'ENG_Remark', header: '備註' },
   ];
 
   constructor(
@@ -93,12 +92,7 @@ export class ASS21010Component extends BasicQueryPageComponent<unknown> implemen
     this.handleSubmit(this.queryForm, () => {
       const payload = <ASS21010Payload>{
         ...this.queryForm.getRawValue(),
-        ENG_Type: this.engTypeSignal(),
-        ENG_MeterNo: this.engMeterSignal(),
-        ENG_Remark: this.engRemarkSignal(),
-        Location_No: this.locationSignal(),
-        SYS_StoreNo: this.authService.currentUserValue!.SYS_StoreNo,
-        Mid: Number(this.authService.currentUserValue!.mid),
+        ...this.usrData(),
       };
       this.service.loadASS21010(payload);
 
@@ -109,23 +103,19 @@ export class ASS21010Component extends BasicQueryPageComponent<unknown> implemen
   }
 
   public onDelete(data: ASS21010Data[]): void {
-    console.log(`onDelete:`, [data]);
-    this.confirmationService.confirm({
-      message: '是否確認刪除?',
-      accept: () => {
-        this.logger.debug(`Deleting ASS21010:`, [data, this.authService.currentUserValue]);
-        this.service.deleteASS21010(data.map(v => (<ASS21010Delete>{
-          ...v,
-          SYS_StoreNo: this.authService.currentUserValue!.SYS_StoreNo,
-          Mid: Number(this.authService.currentUserValue!.mid)
-        })))
-          .pipe(finalize(() => this.loading = !1))
-          .subscribe(res => {
-            if (!res.IsUpdateSuccess) return this.messageService.errorBox('刪除失敗\n' + res.ErrorMsg);
-            this.service.ASS21010Data.update(v => v.filter(d => data.some(item => d.ID !== item.ID)));
-            this.messageService.successBubble('刪除成功');
-          });
-      },
+    this.logger.debug(`Deleting ASS21010:`, [data, this.user, this.queryForm.getRawValue(), this.authService.currentUserValue]);
+    for (const d of data) {
+      this.service.deleteASS21010({ ...d, ...this.usrData(), ENG_Type: EngType[d.ENG_Type] })
+        .pipe(finalize(() => this.loading = !1))
+        .subscribe(res => {
+          if (!res.IsUpdateSuccess) return this.messageService.errorBubble(res.ErrorMsg, '刪除失敗');
+          this.service.ASS21010Data.update(v => v.filter(d => data.some(item => d.ID !== item.ID)));
+          this.messageService.successBubble('刪除成功');
+        });
+    }
+    this.service.loadASS21010(<ASS21010Payload>{
+      ...this.queryForm.getRawValue(),
+      ...this.usrData(),
     });
   }
 }

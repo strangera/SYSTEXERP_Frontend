@@ -36,7 +36,7 @@ import { Tls41040Service } from '../../../service/api/tls/tls41040.service'; // 
 export class TLS41040Component extends BasicQueryPageComponent<any> implements OnInit {
 
   // ---- 表單 ----
-  queryForm = this.formBuilder.group({
+  queryForm = this.formBuilder.nonNullable.group({
     ECR_No: [''], // 收銀機號
     NOT_BegDateTime: [yesterday], // 開始時間
     NOT_EndDateTime: [yesterday], // 結束時間

@@ -4,8 +4,7 @@ import { BaseQueryRequest, BaseQueryResponse } from '@shared/models/api/base-api
 export interface ASS21010Data {
   ID: number;
   No: number;
-  ENG_Type: keyof typeof EngType; // from API
-  ENGType: EngType;
+  ENG_Type: keyof typeof EngType;
   ENG_MeterNo: string;
   Location_No: string;
   ENG_Remark: string;
@@ -25,7 +24,7 @@ export interface ASS21010Delete {
   ID: number;
   ENG_MeterNo: string;
   Location_No: string;
-  ENG_Type: string;
+  ENG_Type: EngType;
   SYS_StoreNo: string;
   Mid: number;
 }

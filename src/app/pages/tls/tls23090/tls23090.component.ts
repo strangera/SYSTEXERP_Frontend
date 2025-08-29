@@ -347,12 +347,12 @@ columns: any[] = [];               // 目前使用的欄位
     { field: 'CRD_Name', header: '信用卡卡別' },
     { field: 'CRD_No', header: '信用卡卡號' },
     { field: 'TXN_PayAmt', header: '金額', style: 'text-right', format: (v: number) => this.money(v) },
-    { field: 'TXN_Bonus', header: '紅利', style: 'text-right', format: (v: number) => this.money(v) },
-    { field: 'TXN_Installment', header: '分期' },
-    { field: 'TXN_PeriodType', header: '分期期別' },
-    { field: 'TXN_Periods', header: '分期期數' },
-    { field: 'TXN_DownPayAmt', header: '頭期款分期金額', style: 'text-right', format: (v: number) => this.money(v) },
-    { field: 'TXN_MonthlyAmt', header: '每期分期金額', style: 'text-right', format: (v: number) => this.money(v) },
+    { field: 'TXN_Point', header: '紅利', style: 'text-right', format: (v: number) => this.money(v) },
+    { field: 'TERM_No', header: '分期' },
+    // { field: 'TXN_PeriodType', header: '分期期別' },
+    { field: 'TERM_Name', header: '分期期數' },
+    { field: 'EDC_InstHeadAmt', header: '頭期款分期金額', style: 'text-right', format: (v: number) => this.money(v) },
+    { field: 'EDC_InstEachAmt', header: '每期分期金額', style: 'text-right', format: (v: number) => this.money(v) },
   ];
 
   // ✅ 新增：彙總欄位（依 API 結構展開 CRD_Type_List）

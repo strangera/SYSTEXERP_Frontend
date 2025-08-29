@@ -35,27 +35,24 @@ import { yesterday } from '@shared/models/system/query-form.model';
   ],
 })
 export class TLS12020Component extends BasicQueryPageComponent<any> implements OnInit {
-  queryForm = this.formBuilder.group({
-    ECR_LocNo: [''],
-    vendorUID: ['', [Validators.required]], // 廠商統一編號（必填）
-    ven_name: ['', Validators.maxLength(60)],
-    VEN_EngName: ['', Validators.maxLength(60)],
-    brand: [''],
-    create_store: [''],
-    contact_person: [''],
-    contact_phone: [''],
-    contact_Datestart: [yesterday],
-    contact_Dateend: [yesterday],
-    contact_time: [''],
-    contact_USR_Name: ['', [Validators.required]], // 訪談人員（必填）
-    willing_level: [null],
-    ...createPaginationConfig([{ field: 'ECR_LocNo', order: 1 }]),
-  });
+queryForm = this.formBuilder.group({
+  location_no: [''], // 原本 ECR_LocNo
+  ven_uniform: ['', [Validators.required]], // 原本 vendorUID, 廠商統一編號（必填）
+  VEN_Name: ['', Validators.maxLength(60)], // 原本 ven_name
+  VEN_EngName: ['', Validators.maxLength(60)],
+  InterviewDateStart: [yesterday], // 原本 contact_Datestart
+  InterviewDateEnd: [yesterday],   // 原本 contact_Dateend
+  contact_USR_No: [''],            // 後端需要，原本沒有
+  contact_USR_Name: ['', [Validators.required]], // 訪談人員（必填）
+  willing_level: [''], // 後端要 string，不要 null
+  ...createPaginationConfig([{ field: 'location_no', order: 1 }]), // 原本是 ECR_LocNo
+});
+
 
 
   data: any[] = [];
   columns: Column[] = [
-    { header: '位置編號', field: 'LOCATION_No' },
+    { header: '位置編號', field: 'location_no' },
     { header: '廠商統一編號', field: 'ven_uniform' },
     { header: '廠商名稱(中文)', field: 'VEN_Name' },
     { header: '廠商名稱(英文)', field: 'VEN_EngName' },
@@ -147,16 +144,14 @@ export class TLS12020Component extends BasicQueryPageComponent<any> implements O
   onSubmit(form: FormGroup): void {
     this.handleSubmit(form, () => {
       const params = {
-        request: {
-          ...form.value,
-          willing_level: form.value.willing_level || null,
-          contact_Datestart: form.value.contact_Datestart
-            ? new Date(form.value.contact_Datestart).toISOString()
-            : null,
-          contact_Dateend: form.value.contact_Dateend
-            ? new Date(form.value.contact_Dateend).toISOString()
-            : null,
-        }
+        ...form.value,
+        willing_level: form.value.willing_level || null,
+        contact_Datestart: form.value.contact_Datestart
+          ? new Date(form.value.contact_Datestart).toISOString()
+          : null,
+        contact_Dateend: form.value.contact_Dateend
+          ? new Date(form.value.contact_Dateend).toISOString()
+          : null,
       };
 
       this.tls12020Service.queryTLS12020(params).subscribe({

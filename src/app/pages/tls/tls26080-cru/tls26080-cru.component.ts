@@ -212,34 +212,29 @@ export class TLS26080CRUComponent extends BasicCruPageComponent<TLS26080Data> im
   // 表單提交
   public onSubmit(): void {
     this.handleSubmit(this.dataForm, () => {
-      this.confirmationService.confirm({
-        message: '是否確認存檔?',
-        accept: () => {
-          const d = this.dataForm.getRawValue();
-          const payload = <TLS2608InsertPayload>{
-            ...d,
-            pod_no: d.pod_no,
-            pod_desc: d.pod_desc,
-            pod_sdate: d.pod_sdate,
-            pod_edate: d.pod_edate,
-            pod_busdate: d.pod_busdate,
-            pod_type: d.pod_type,
-            TALPORDERD_VOUCHERDetails: this.service.TLS26080Detail().map(item => ({
-              ...item,
-              pod_no: d.pod_no,
-              pod_type: d.pod_type,
-            })),
-          };
+      const d = this.dataForm.getRawValue();
+      const payload = <TLS2608InsertPayload>{
+        ...d,
+        pod_no: d.pod_no,
+        pod_desc: d.pod_desc,
+        pod_sdate: d.pod_sdate,
+        pod_edate: d.pod_edate,
+        pod_busdate: d.pod_busdate,
+        pod_type: d.pod_type,
+        TALPORDERD_VOUCHERDetails: this.service.TLS26080Detail().map(item => ({
+          ...item,
+          pod_no: d.pod_no,
+          pod_type: d.pod_type,
+        })),
+      };
 
-          this.service.insertTLS26080(payload).pipe(finalize(() => {
-            this.loading = !1;
-            this.logger.debug(`onSubmit:`, [d, payload]);
-          })).subscribe(res => {
-            if (res.Error) return this.messageService.errorBox('更新失敗\n' + res.Message);
-            this.dataForm.reset();
-            this.messageService.successBubble('更新成功');
-          });
-        },
+      this.service.insertTLS26080(payload).pipe(finalize(() => {
+        this.loading = !1;
+        this.logger.debug(`onSubmit:`, [d, payload]);
+      })).subscribe(res => {
+        if (res.Error) return this.messageService.errorBubble(res.Message, '更新失敗');
+        this.dataForm.reset();
+        this.messageService.successBubble('更新成功');
       });
     });
   }
