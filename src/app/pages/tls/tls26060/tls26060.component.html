@@ -274,10 +274,10 @@
   </p-accordion>
 </div>
 <div class="card">
-  <app-table tableKey="TLS26060" dataKey="talent_id" [data]="data" [columns]="columns" [showCheckBox]="false"
-    [showDelete]="false" [showManage]="false" [selectedItems]="selectedItems" (selectionChange)="selectedItems = $event"
-    [multiSortMeta]="[{ field: 'team_name', order: -1 }]" [totalRecords]="totalRecords"
-    (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [lazy]="true" [loading]="loading"
-    groupRowsBy="team_name">
-  </app-table>
+  <app-customFooter-table tableKey="TLS26060" dataKey="talent_id" [data]="data" [columns]="columns"
+    [showCheckBox]="false" [showDelete]="false" [showManage]="false" [selectedItems]="selectedItems"
+    (selectionChange)="selectedItems = $event" [multiSortMeta]="[{ field: 'team_name', order: -1 }]"
+    [totalRecords]="totalRecords" (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [lazy]="true"
+    [loading]="loading" groupRowsBy="team_name" [footerData]="footerData" [showTotal]="true">
+  </app-customFooter-table>
 </div>

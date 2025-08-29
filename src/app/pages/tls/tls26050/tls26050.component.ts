@@ -225,7 +225,7 @@ export class TLS26050Component extends BasicQueryPageComponent<TLS26050Data> imp
   setColumns(tax: boolean) {
     this.columns = [
       { field: 'talent_id', header: '專櫃編號', hidden: true },
-      { field: 'tlt_building', header: '館別', hidden: true },
+      { field: 'tlt_building', header: '館別', visible: true },
       { field: 'team_name', header: 'TEAM', visible: true },
       { field: 'division_name', header: '組別', visible: true },
       { field: 'tlt_kind', header: '櫃別', hidden: true },
