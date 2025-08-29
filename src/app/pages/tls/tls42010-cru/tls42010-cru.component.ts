@@ -66,7 +66,7 @@ export class TLS42010CRUComponent
     USR_Level: ['', Validators.maxLength(6)],
     TSB_Name: [''],
     ECR_KBType: ['TCHBTN'],  // 預設值
-    ECR_KBDesc: ['', Validators.required],
+    ECR_KBDesc: [''],
 
     func: [''],
     KG_button: [''],
