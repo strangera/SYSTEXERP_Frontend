@@ -389,7 +389,8 @@ export interface ContractInfo {
   total_amt_unit?: string;        // 目標營業額單位(業主)
   total_amt_vendor_unit?: string; // 目標營業額單位(廠商)
 
-  selectedBankInfo?: AutoCompleteOption | null;
+  // selectedBankInfo?: AutoCompleteOption | null;
+  totalLocationSpace?: number;
 }
 
 // 其他介面保持不變...

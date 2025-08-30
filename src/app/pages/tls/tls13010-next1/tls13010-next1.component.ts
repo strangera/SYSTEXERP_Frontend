@@ -621,7 +621,6 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
   // ========== 表格事件處理 (使用服務) ==========
   onFieldChange(fieldName: string, newValue: any, rowData: any, capType?: string): void {
     console.log(`🔄 立即欄位變更: ${capType}.${fieldName} = ${newValue}`);
-
     // 🎯 根據 capType 進行對應的計算處理
     switch (capType) {
       case 'A':
@@ -648,7 +647,12 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
     this.updateRowDataState(rowData, capType || 'A');
   }
 
-  // 🎯 A類型計算優化
+  private getTotalLocationSpace(): number {
+    const step1Data = this.contractFlowService.getStep1Data();
+    return step1Data?.totalLocationSpace || 0;
+  }
+
+  // A類型計算優化
   private handleTypeACalculation(fieldName: string, newValue: any, rowData: any): void {
     console.log(`🅰️ A類型計算: ${fieldName} = ${newValue}`);
 
