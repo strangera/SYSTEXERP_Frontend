@@ -30,7 +30,7 @@ import { AccordionModule } from 'primeng/accordion';
 import { DialogModule } from 'primeng/dialog';
 import { PrimeTemplate } from 'primeng/api';
 import { Button } from 'primeng/button';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, NavigationExtras } from '@angular/router';
 
 @Component({
   selector: 'app-tls13010-next3',
@@ -1255,11 +1255,13 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionItem>
     this.router.navigate(['account/tls/tls13010next2']);
   }
 
-  onRealCancel(): void {
-    if (!this.isViewMode) {
-      this.saveConditionDataToWorkflow();
-    }
-    this.router.navigate(['account/tls/tls13010']);
+  onClearAndExit(): void {
+    this.contractFlowService.clearTempData();
+    const extras: NavigationExtras = {
+      state: { fromRoute: this.router.url },
+    };
+    this.router.navigate(['account/tls/tls13010'], extras);
+    this.messageService.infoBubble('已清空暫存資料並離開');
   }
 
   // 🎯 工具方法

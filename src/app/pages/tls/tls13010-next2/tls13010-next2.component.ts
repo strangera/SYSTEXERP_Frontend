@@ -29,7 +29,7 @@ import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { AccordionModule } from 'primeng/accordion';
 import { DialogModule } from 'primeng/dialog';
 import { ButtonDirective } from 'primeng/button';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, NavigationExtras } from '@angular/router';
 
 @Component({
   selector: 'app-tls13010-next2',
@@ -2478,8 +2478,11 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
 
   onClearAndExit(): void {
     this.contractFlowService.clearTempData();
-    this.router.navigate(['account/tls/tls13010']);
-    this.notificationService.infoBubble('已清空暫存資料並離開');
+    const extras: NavigationExtras = {
+      state: { fromRoute: this.router.url },
+    };
+    this.router.navigate(['account/tls/tls13010'], extras);
+    this.messageService.infoBubble('已清空暫存資料並離開');
   }
 
   private hasItemId(item: any): boolean {

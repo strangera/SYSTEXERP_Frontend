@@ -2812,4 +2812,14 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
 
     console.log('✅ 所有動態驗證器觸發完成');
   }
+
+  onClearAndExit(): void {
+    this.contractFlowService.clearTempData();
+    const extras: NavigationExtras = {
+      state: { fromRoute: this.router.url },
+    };
+    this.router.navigate(['account/tls/tls13010'], extras);
+    this.messageService.infoBubble('已清空暫存資料並離開');
+  }
+
 }
