@@ -591,6 +591,7 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
       if (totalSpace > 0) {
         rowData.tpy_qty = totalSpace;
         console.log(`🏢 單位改為坪數，自動設定數量: ${totalSpace}`);
+        this.fareCalculationService.autoCalculateAmount(rowData, 'A', 'tpy_qty');
       }
     }
     // 🎯 根據 capType 進行對應的計算處理
