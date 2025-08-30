@@ -169,7 +169,9 @@ export class FareColumnDefinitions {
         width: '70px',
         required: true,
         validators: [TableValidators.positive('數量必須大於0')],
-        defaultValue: 1
+        defaultValue: 1,
+        allowDecimal: true, // 是否允許小數點
+        decimalPlaces: 3  // 小數位數，預設2位
       },
       {
         field: 'tpy_amount',
