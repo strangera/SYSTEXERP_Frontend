@@ -460,18 +460,26 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
   }
 
 
-  // ✅ 保留這個方法，但保持簡單
   onTextInputChange(rowData: any, column: ColumnDef, inputValue: string): void {
+    const oldValue = rowData[column.field];
     let processedValue = inputValue;
 
-    // 套用長度限制
     if (column.maxLength && inputValue.length > column.maxLength) {
       processedValue = inputValue.substring(0, column.maxLength);
     }
 
     rowData[column.field] = processedValue;
 
-    // 如果是直接編輯模式，觸發儲存
+    // 🔥 立即觸發 fieldChange 事件（與下拉選單一致）
+    this.fieldChange.emit({
+      fieldName: column.field,
+      newValue: processedValue,
+      rowData
+    });
+
+    // 🔥 強制變更檢測（與下拉選單一致）
+    this.cdr.detectChanges();
+
     if (column.directEdit) {
       this.onDirectEditChange(rowData, column.field, processedValue);
     }
@@ -1913,79 +1921,31 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
   }
 
   // 🔄 重構數字欄位處理 - 使用 input 事件 + 防抖
-  onNumberInputChange(
-    event: any,
-    fieldName: string,
-    rowData: any,
-    isDetail: boolean = false
-  ): void {
-    // 🚨 關鍵診斷：檢查 event 結構
-    console.log('🔍 完整 event 物件:', event);
-    console.log('🔍 event.target:', event.target);
-    console.log('🔍 event.target.value:', event.target?.value);
-    console.log('🔍 event.value:', event.value);
-    console.log('🔍 event.originalEvent:', event.originalEvent);
-
-    // 🎯 方案 1: 優先使用 PrimeNG 的 value 屬性
+  onNumberInputChange(event: any, fieldName: string, rowData: any, isDetail: boolean = false): void {
+    // 統一取值邏輯
     let inputValue = event.value !== undefined ? event.value : event.target?.value;
 
-    // 🎯 方案 2: 如果還是 undefined，檢查其他可能的屬性
-    if (inputValue === undefined || inputValue === null) {
-      inputValue = event.originalEvent?.target?.value ||
-        event.target?.value ||
-        event.data ||
-        0;
-    }
-
-    console.log(`🔢 最終取得的輸入值: "${inputValue}" (類型: ${typeof inputValue})`);
-
-    // 處理數值轉換
-    let numericValue: number;
-
     if (typeof inputValue === 'string') {
-      // 移除千分位逗號
-      const cleanValue = inputValue.replace(/,/g, '');
-      numericValue = parseFloat(cleanValue) || 0;
-    } else if (typeof inputValue === 'number') {
-      numericValue = inputValue;
-    } else {
-      console.warn(`⚠️ 無法處理的輸入類型: ${typeof inputValue}, 值: ${inputValue}`);
-      numericValue = 0;
+      inputValue = parseFloat(inputValue.replace(/,/g, '')) || 0;
+    } else if (typeof inputValue !== 'number') {
+      inputValue = 0;
     }
 
-    console.log(`💰 轉換後的數值: ${numericValue}`);
-
-    // 立即更新 rowData（這很重要！）
     const oldValue = rowData[fieldName];
-    rowData[fieldName] = numericValue;
+    rowData[fieldName] = inputValue;
 
-    console.log(`📝 更新 ${fieldName}: ${oldValue} → ${numericValue}`);
-
-    // 防抖觸發計算
-    const debounceKey = `${rowData[this.dataKey]}_${fieldName}_${isDetail ? 'detail' : 'main'}`;
-
-    this.debouncedCalculation(debounceKey, () => {
-      console.log(`⚡ 防抖計算觸發: ${fieldName} = ${numericValue}`);
-
-      this.fieldChange.emit({
-        fieldName,
-        newValue: numericValue,
-        rowData
-      });
-
-      // 直接編輯保存
-      const column = this.findColumnByField(fieldName);
-      if (column?.directEdit) {
-        if (isDetail) {
-          const parentData = this.findParentData(rowData);
-          if (parentData) {
-            this.onDetailDirectEditChange(rowData, parentData, fieldName, numericValue);
-          }
-        } else {
-          this.onDirectEditChange(rowData, fieldName, numericValue);
-        }
-      }
+    // 🔥 立即觸發計算（無防抖延遲）
+    this.fieldChange.emit({
+      fieldName,
+      newValue: inputValue,
+      rowData
     });
+
+    // 🔥 立即強制更新UI
+    this.cdr.detectChanges();
+
+    // 處理直接編輯
+    this.handleDirectEditForNumber(fieldName, inputValue, rowData, isDetail);
   }
 
   private findColumnByField(fieldName: string): ColumnDef | undefined {

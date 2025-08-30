@@ -643,18 +643,29 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
 
   // A類型計算優化
   private handleTypeACalculation(fieldName: string, newValue: any, rowData: any): void {
-    console.log(`🅰️ A類型計算: ${fieldName} = ${newValue}`);
-
-    // 只有相關欄位變更時才重新計算
-    if (['tpy_unitamt', 'tpy_qty'].includes(fieldName)) {
-      this.fareCalculationService.autoCalculateAmount(rowData, 'A', fieldName);
-      console.log(`💰 A類型計算完成: 金額 = ${rowData.tpy_amount}`);
+    // 選擇坪數單位時自動帶入總坪數
+    if (fieldName === 'tpy_type' && newValue === '01') {
+      const totalSpace = this.getTotalLocationSpace();
+      if (totalSpace > 0) {
+        rowData.tpy_qty = totalSpace;
+        console.log(`坪數單位選擇，自動設定數量: ${totalSpace}`);
+      }
     }
 
-    // A類型特殊處理：開始日期變更時同步結束日期
+    // A類型金額計算 - 只要相關欄位變更就重新計算
+    if (['tpy_unitamt', 'tpy_qty', 'tpy_type'].includes(fieldName)) {
+      const unitPrice = parseFloat(rowData.tpy_unitamt) || 0;
+      const quantity = parseFloat(rowData.tpy_qty) || 0;
+
+      if (unitPrice > 0 && quantity > 0) {
+        rowData.tpy_amount = unitPrice * quantity;
+        console.log(`A類型計算: ${unitPrice} × ${quantity} = ${rowData.tpy_amount}`);
+      }
+    }
+
+    // A類型特殊處理：結束日期等於開始日期
     if (fieldName === 'tpy_bdate' && newValue) {
       rowData.tpy_edate = newValue;
-      console.log(`📅 A類型同步結束日期: ${newValue}`);
     }
   }
 

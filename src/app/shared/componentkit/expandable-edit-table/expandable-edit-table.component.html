@@ -105,7 +105,6 @@
               <p-inputNumber *ngSwitchCase="'number'" [ngModel]="getFieldDefaultValue(col, rowData)"
                 (ngModelChange)="onNumberModelChange($event, col.field, rowData, false)"
                 (onInput)="onNumberInput($event, col.field, rowData, false)"
-                (onBlur)="onNumberFieldBlur($event, col.field, rowData)"
                 [minFractionDigits]="getNumberInputConfig(col).minFractionDigits"
                 [maxFractionDigits]="getNumberInputConfig(col).maxFractionDigits"
                 [step]="getNumberInputConfig(col).step" mode="decimal">
@@ -121,8 +120,7 @@
               <!-- 🎯 日期選擇 - 使用新的方法 -->
               <div *ngSwitchCase="'date'" class="date-selector-wrapper">
                 <input pInputText type="text" [ngModel]="getDateInputValue(rowData, col)"
-                  (ngModelChange)="onDateInputChange(rowData, col, $event)" (blur)="onDateInputBlur(rowData, col)"
-                  [placeholder]="getDatePlaceholder(col)"
+                  (ngModelChange)="onDateInputChange(rowData, col, $event)" [placeholder]="getDatePlaceholder(col)"
                   [maxlength]="col.maxLength || (col.dateFormat?.includes('year-month') ? 7 : 10)" class="date-input" />
                 <button pButton pRipple type="button" icon="pi pi-calendar"
                   class="p-button-text p-button-sm p-button-rounded date-picker-button"
@@ -288,7 +286,6 @@
               <p-inputNumber *ngSwitchCase="'number'" [ngModel]="getFieldDefaultValue(col, detailData)"
                 (ngModelChange)="onNumberModelChange($event, col.field, detailData, true)"
                 (onInput)="onNumberInput($event, col.field, detailData, true)"
-                (onBlur)="onNumberFieldBlur($event, col.field, detailData)"
                 [minFractionDigits]="getNumberInputConfig(col).minFractionDigits"
                 [maxFractionDigits]="getNumberInputConfig(col).maxFractionDigits"
                 [step]="getNumberInputConfig(col).step" mode="decimal">
@@ -305,7 +302,7 @@
               <div *ngSwitchCase="'date'" class="date-selector-wrapper">
                 <input pInputText type="text" [ngModel]="getDateInputValue(detailData, col, true, di)"
                   (ngModelChange)="onDateInputChange(detailData, col, $event, true, di)"
-                  (blur)="onDateInputBlur(detailData, col, true, di)" [placeholder]="getDatePlaceholder(col)"
+                  [placeholder]="getDatePlaceholder(col)"
                   [maxlength]="col.maxLength || (col.dateFormat?.includes('year-month') ? 7 : 10)" class="date-input" />
                 <button pButton pRipple type="button" icon="pi pi-calendar"
                   class="p-button-text p-button-sm p-button-rounded date-picker-button"
