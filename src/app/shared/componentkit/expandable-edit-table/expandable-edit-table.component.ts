@@ -1159,6 +1159,16 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
     const oldValue = rowData[field];
     rowData[field] = newValue;
 
+    // 立即觸發 fieldChange 事件
+    this.fieldChange.emit({
+      fieldName: field,
+      newValue,
+      rowData
+    });
+
+    // 強制變更檢測
+    this.cdr.detectChanges();
+
     this.dropdownChange.emit({
       rowData,
       field,

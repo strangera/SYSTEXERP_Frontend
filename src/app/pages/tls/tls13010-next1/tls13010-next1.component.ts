@@ -3,7 +3,7 @@ import { FareStatusService } from './Services/fare-status.service';
 import { FareDataService } from './Services/fare-data.service';
 import { FareCalculationService } from './Services/fare-calculation.service';
 import { ColumnDef, ExpandableEditTableComponent } from '../../../shared/componentkit/expandable-edit-table/expandable-edit-table.component';
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { FormGroup } from '@angular/forms';
 import { Router, NavigationEnd, ActivatedRoute, NavigationExtras } from '@angular/router';
 import { Subscription } from 'rxjs';
@@ -91,7 +91,8 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
     // 🆕 注入新的服務
     private fareCalculationService: FareCalculationService,
     private fareDataService: FareDataService,
-    private fareStatusService: FareStatusService
+    private fareStatusService: FareStatusService,
+    private cdr: ChangeDetectorRef,
   ) {
     super();
   }
@@ -586,14 +587,11 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
   // ========== 表格事件處理 (使用服務) ==========
   onFieldChange(fieldName: string, newValue: any, rowData: any, capType?: string): void {
     console.log(`🔄 立即欄位變更: ${capType}.${fieldName} = ${newValue}`);
-    if (fieldName === 'tpy_type' && newValue === '01') {
-      const totalSpace = this.fareCalculationService.getTotalLocationSpace();
-      if (totalSpace > 0) {
-        rowData.tpy_qty = totalSpace;
-        console.log(`🏢 單位改為坪數，自動設定數量: ${totalSpace}`);
-        this.fareCalculationService.autoCalculateAmount(rowData, 'A', 'tpy_qty');
-      }
-    }
+
+    rowData[fieldName] = newValue;
+
+    this.handleImmediateCalculation(fieldName, newValue, rowData, capType || 'A');
+
     // 🎯 根據 capType 進行對應的計算處理
     switch (capType) {
       case 'A':
@@ -618,6 +616,24 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
 
     // 統一的後續處理
     this.updateRowDataState(rowData, capType || 'A');
+  }
+
+  private handleImmediateCalculation(fieldName: string, newValue: any, rowData: any, capType: string): void {
+    if (capType === 'A' && fieldName === 'tpy_type' && newValue === '01') {
+      // 選擇坪數時立即帶入總坪數
+      const totalSpace = this.getTotalLocationSpace();
+      if (totalSpace > 0) {
+        rowData.tpy_qty = totalSpace;
+        console.log(`坪數單位選擇，自動設定數量: ${totalSpace}`);
+        this.cdr.detectChanges();
+        // 如果已有單價，同時計算金額
+        const unitPrice = parseFloat(rowData.tpy_unitamt) || 0;
+        if (unitPrice > 0) {
+          rowData.tpy_amount = unitPrice * totalSpace;
+          console.log(`同時計算金額: ${unitPrice} × ${totalSpace} = ${rowData.tpy_amount}`);
+        }
+      }
+    }
   }
 
   private getTotalLocationSpace(): number {

@@ -132,7 +132,7 @@ export class FareColumnDefinitions {
         header: '起始年月',
         type: 'date',
         editable: true,
-        width: '110px',
+        width: '130px',
         dateFormat: 'year-month',
         required: true,
         defaultValueFunction: () => {
