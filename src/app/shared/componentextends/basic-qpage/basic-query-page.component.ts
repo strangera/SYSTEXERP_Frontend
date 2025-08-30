@@ -63,36 +63,24 @@ export abstract class BasicQueryPageComponent<T> {
   // }
 
   initializePage(progNo: string, cruPage?: string, queryForm?: FormGroup, onSubmit?: (form: FormGroup) => void) {
-    this.ProgNo = progNo;
+    this.ProgNo = progNo.toUpperCase();
     this.cruPage = cruPage ?? '';
     this.funInfo = this.authService.getUserPermissions(this.ProgNo);
     this.currentPageService.setCurrentProgNo(this.ProgNo);
-
     const state = this.router.lastSuccessfulNavigation?.extras.state;
     const previousRoute = state?.['fromRoute'] || this.activatedRoute.snapshot.queryParams['fromRoute'] || document.referrer || '/account/dashboard';
-    const sanitizedCruPage = this.cruPage.toLocaleLowerCase().startsWith('/') ? this.cruPage.toLocaleLowerCase().substring(1) : this.cruPage.toLocaleLowerCase();
-
-    console.log('🔍 initializePage: ProgNo=', this.ProgNo, 'previousRoute=', previousRoute, 'query=', this.queryStateService.getQueryStateValue(this.ProgNo));
-
     // 通用規則：檢查 previousRoute 是否包含 ProgNo（例如 tls13010），涵蓋 CRU 和所有 next 頁面
     const isFromRelatedRoute = previousRoute.includes(this.ProgNo.toLowerCase());
 
     if (this.canPerformAction('10') && isFromRelatedRoute && queryForm) {
       const query = this.queryStateService.getQueryStateValue(this.ProgNo);
-      console.log('🔍 Restoring query:', query);
       if (query) {
         queryForm?.patchValue(query);
         queryForm?.patchValue({ pageIndex: 1 });
-        console.log('🔍 Patched form:', queryForm.value);
         if (onSubmit) {
           onSubmit(queryForm);
-          console.log('🔍 onSubmit triggered');
         }
-      } else {
-        console.warn('⚠️ No query state found for ProgNo:', this.ProgNo);
       }
-    } else {
-      console.warn('⚠️ No restore: canPerformAction=', this.canPerformAction('10'), 'isFromRelatedRoute=', isFromRelatedRoute, 'queryForm=', !!queryForm);
     }
   }
   canPerformAction(action: string): boolean {

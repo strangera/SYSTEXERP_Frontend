@@ -1,4 +1,4 @@
-import { BaseQueryRequest } from "@shared/models/api/base-api.interface";
+import { BaseQueryRequest, BaseQueryResponse } from "@shared/models/api/base-api.interface";
 
 export interface ASS21020Data {
   ID: number;
@@ -16,12 +16,22 @@ export interface ASS21020Data {
 }
 
 export interface ASS21020Payload extends BaseQueryRequest {
-  EngTypes?: string;
   ENG_MeterNo?: string;
   Location_No?: string;
   SYS_StoreNo?: string;
   Mid?: number;
   ENG_Rate?: number;
+  ID?: string;
+  ENG_Type?: string;
+  TLT_No?: string;
+  ENG_Remark?: string;
+}
+
+export interface ASS21020UpdateStatus extends Omit<BaseQueryResponse<unknown>, 'Data'> {
+  Data: {
+    IsUpdateSuccess: boolean;
+    ErrorMsg: string;
+  };
 }
 
 export interface TLTByFlag {

@@ -112,7 +112,7 @@ export class TLS26040CRUComponent extends BasicCruPageComponent<TLS26040Data> im
   onSubmit(frm: FormGroup): void {
     this.handleSubmit(frm, () => {
       this.tls26040Service.queryTLS26040Insert(frm.value)
-        .pipe(finalize(() => this.loading = false))
+        .pipe(untilDestroyed(this), finalize(() => this.loading = false))
         .subscribe(response => {
           this.data = response.Data;
           this.totalRecords = response.TotalCount;

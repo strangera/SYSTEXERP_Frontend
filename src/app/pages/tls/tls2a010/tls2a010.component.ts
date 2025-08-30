@@ -19,6 +19,7 @@ import { CalendarComponent } from '@shared/componentkit/calendar/calendar.compon
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { TableComponent } from '@shared/componentkit/table/table.component';
 import { ValidationService } from '@shared/service/validation.service';
+import { CustomFooterTableComponent } from '@shared/componentkit/custom-footer-table/customFooterTable.component';
 
 
 const yesterday = new Date();
@@ -42,7 +43,8 @@ yesterday.setDate(yesterday.getDate() - 1);
     NgIf,
     TooltipModule,
     DropdownRangeComponent,
-    DatePipe
+    DatePipe,
+    CustomFooterTableComponent
   ],
 })
 export class TLS2A010Component extends BasicQueryPageComponent<any> implements OnInit {
@@ -50,8 +52,8 @@ export class TLS2A010Component extends BasicQueryPageComponent<any> implements O
   queryForm = this.formBuilder.group({
     TXN_Date: [yesterday, Validators.required],
     Floor_No: [''],
-    ECR_No_Start: ['', Validators.required],
-    ECR_No_End: ['', Validators.required],
+    ECR_No_Start: [''],
+    ECR_No_End: [''],
     PAY_NO: ['', Validators.required],
     Building_No: [''],
     SYS_StoreNo: [this.authService.currentUserValue?.SYS_StoreNo ?? ''],
@@ -67,6 +69,7 @@ export class TLS2A010Component extends BasicQueryPageComponent<any> implements O
   selectedItems: any[] = [];
   selectionMode = 'single';
   data: any[] = [];
+  footerData: any[] = [];
   totalRecords = 0;
   PAY_NO = '';
   PAY_Type = '';
@@ -240,7 +243,7 @@ export class TLS2A010Component extends BasicQueryPageComponent<any> implements O
           [key: string]: any; // Add additional properties as needed
         }
 
-        this.data = (response?.Data ?? []).map((item: TLS2A010Item) => {
+        this.data = (response?.Data.mainData ?? []).map((item: TLS2A010Item) => {
           const systemAmt = Number(item.System_Amt ?? 0);
           const realAmt = Number(item.Real_Amt ?? 0);
           const diff = systemAmt - realAmt;
@@ -260,6 +263,7 @@ export class TLS2A010Component extends BasicQueryPageComponent<any> implements O
             OVER_Status: status  // 欠 / 平 / 溢
           };
         });
+        this.footerData = [...response.Data.totalData]; // table總計那列的資料
         // this.data = (response?.Data ?? [])
         // .map((item: TLS2A010Item) => {
         //   // 先取原始日期字串
@@ -281,8 +285,6 @@ export class TLS2A010Component extends BasicQueryPageComponent<any> implements O
         //     TXN_Date: formattedDate,
         //   };
         // });
-
-
         const first = this.data[0];
         this.PAY_NO = this.queryForm.value.PAY_NO || '';
         this.TXN_Date = first?.TXN_Date || '';

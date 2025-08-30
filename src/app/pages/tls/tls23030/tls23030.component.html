@@ -73,8 +73,8 @@
           <div class="col-12 md:col-6 lg:col-4">
             <div class="flex flex-column">
               <label class="mb-1">是否查詢券類大批</label>
-              <p-checkbox binary="true" formControlName="IsPayType" inputId="isNoPLU"></p-checkbox>
-              <label for="isNoPLU" class="ml-2 mt-1 text-sm text-gray-600">
+              <p-checkbox binary="false" formControlName="VOU_Check" inputId="VOU_Check"></p-checkbox>
+              <label for="VOU_Check" class="ml-2 mt-1 text-sm text-gray-600">
                 是(此條件必須配合付款別選擇[商品券]或[紙張禮券])
               </label>
             </div>
@@ -116,10 +116,54 @@
     </p-accordionTab>
   </p-accordion>
 </div>
+<!-- 查詢區保持不動；建議在條件區下方或表格上方加切換 -->
+<div class="col-12 md:col-6 lg:col-4">
+  <p-checkbox
+    inputId="showSummary"
+    [ngModelOptions]="{ standalone: true }"
+    [(ngModel)]="showSummary"
+    binary="true"
+    (onChange)="onToggleSummary()"
+    label="顯示彙總">
+  </p-checkbox>
+</div>
 
 <div class="card">
-  <app-table tableKey="TLS23030" [data]="data" [columns]="columns" [showCheckBox]="false" dataKey="TXN_No"
-    [multiSortMeta]="sortMeta" [totalRecords]="totalRecords" [lazy]="true" [loading]="loading"
-    (edit)="onEdit($event)" (detail)="onDetail($event)" [showManage]="false" [showDelete]="false" [showCheckBox]="false"
-    (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"></app-table>
+  <!-- ✅ 明細表 -->
+  <app-table
+    *ngIf="!showSummary"
+    tableKey="TLS23030"
+    [data]="data"
+    [columns]="columns"
+    [showCheckBox]="false"
+    dataKey="TXN_No"
+    [multiSortMeta]="sortMeta"
+    [totalRecords]="totalRecords"
+    [lazy]="true"
+    [loading]="loading"
+    (edit)="onEdit($event)"
+    (detail)="onDetail($event)"
+    [showManage]="false"
+    [showDelete]="false"
+    (lazyLoadData)="onLazyLoadData($event, queryForm)">
+  </app-table>
+
+  <!-- ✅ 彙總表（不需要 lazy） -->
+  <app-table
+    *ngIf="showSummary"
+    tableKey="TLS23030summary"
+    [data]="summaryData"
+    [columns]="summaryColumns"
+    [totalRecords]="summaryData.length || 0"
+    [loading]="loading"
+    [showCheckBox]="false"
+    [showManage]="false"
+    [showDelete]="false">
+    <header>
+      <div class="flex gap-4 justify-content-end align-items-center pr-2">
+        <span>總金額：{{ summaryTotals.totalPayAmt | number:'1.0-0' }}</span>
+        <span>總備抵稅額：{{ summaryTotals.totalTaxAlwnc | number:'1.0-0' }}</span>
+      </div>
+    </header>
+  </app-table>
 </div>

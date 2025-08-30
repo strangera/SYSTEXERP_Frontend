@@ -28,7 +28,7 @@ export class TLS27010Component extends BasicQueryPageComponent<unknown> implemen
   }
   handleCustomUpload(event: FileUploadHandlerEvent) {
     if (event.files && event.files.length > 0) {
-      const clientIp = this.authService.getUserInfo()?.client_ip || '';
+      const clientIp = this.authService.currentUserValue?.client_ip || '';
       this.loading = true;
       const renamedFiles: File[] = event.files.map(originalFile => {
         const uniform = this.authService.currentUserValue?.STR_Uniform || '';

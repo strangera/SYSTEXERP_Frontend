@@ -39,10 +39,10 @@ import { TranslateModule } from '@ngx-translate/core';
 export class TLS13060Component extends BasicQueryPageComponent<TLS13060ResponseItem> implements OnInit {
   queryForm = this.formBuilder.group({
     apply_no: ['', [Validators.maxLength(12)]], // 專櫃招募編號
-    ven_uniform: [null], // 廠商統一編號
+    ven_uniformList: [null], // 廠商統一編號
     tlt_no: ['', [Validators.maxLength(12)]], // 專櫃編號
     tlt_name: ['', [Validators.maxLength(100)]], // 櫃位名稱
-    location_no: [null], // 位置編號
+    location_noList: [null], // 位置編號
     tlt_openflagList: [null], // 營運狀況
     tlt_bdate_start: [null], // 契約起始日
     tlt_bdate_end: [null], // 契約起始日
@@ -53,11 +53,11 @@ export class TLS13060Component extends BasicQueryPageComponent<TLS13060ResponseI
     tlt_contract_edate_start: [null], // 營運截止日
     tlt_contract_edate_end: [null], // 營運截止日
     tlt_term_typeList: [null], // 抽成別
-    paytype: [null], // 付款方式
+    paytypeList: [null], // 付款方式
     rece_yn: [null], // 是否開立業主發票
     pos_yn: [null], // 是否使用業主收銀機
     cash_yn: [null], // 是否為業主收現
-    ...createPaginationConfig([{ field: 'apply_no', order: 1 }]), // 分頁和排序參數
+    ...createPaginationConfig([{ field: 'tlt_no', order: 1 }]), // 分頁和排序參數
   });
   totalRecords = 0;
   data: TLS13060ResponseItem[] = [];

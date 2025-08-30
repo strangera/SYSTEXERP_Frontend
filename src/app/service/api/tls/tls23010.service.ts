@@ -112,13 +112,13 @@ export class TLS23010Service {
   }
 
   /** 彙總查詢（不帶分頁） */
-  queryTLS23010Summary(body: any): Observable<any> {
-    const url = `${this.apiUrl}/TLS0000/TLS2000/queryTLS23010_Summary`;
-    return this.http.post<any>(url, body).pipe(
-      tap(r => console.log('🎯 TLS23010 Summary 查詢結果:', r)),
-      catchError(err => this.errorHandler.handleError(err))
-    );
-  }
+queryTLS23010Summary(body: any): Observable<any> {
+  const url = `${this.apiUrl}/TLS0000/TLS2000/queryTLS23010_Summary`;
+  return this.http.post<any>(url, body).pipe(
+    tap(r => console.log('🎯 TLS23010 Summary 查詢結果:', r)),
+    catchError(err => this.errorHandler.handleError(err))
+  );
+}
 
   // ================= 匯出 =================
 

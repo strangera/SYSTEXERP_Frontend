@@ -1,0 +1,101 @@
+<p-divider align="left" type="solid" *ngIf="title" styleClass="pb-2">
+  <span class="text-center text-xl font-bold text-primary">
+    {{ title }}
+  </span>
+</p-divider>
+<p-table #dt [value]="data" [columns]="columns" [(selection)]="selectedItems" selectionMode="multiple"
+  [dataKey]="dataKey" [rowTrackBy]="trackByRow" [resizableColumns]="true" [reorderableColumns]="true"
+  (onColReorder)="onColReorder($event)" (onRowReorder)="onRowReorder($event)"
+  styleClass="p-datatable-sm p-datatable-gridlines p-datatable-striped" (selectionChange)="selectionChange.emit($event)"
+  [rowSelectable]="rowSelectableWrapper" [loading]="loading && data.length === 0">
+  <ng-template pTemplate="caption">
+    <div class="grid align-items-center justify-content-between mx-0">
+      <div class="caption-left button-group flex gap-2 py-2">
+        <p-button (click)="deleteRow(selectedItems)" pTooltip="刪除" tooltipPosition="top" pButton icon="pi pi-trash"
+          severity="danger" class="p-button-text" [rounded]="true" [disabled]="selectedItems?.length <= 0" />
+      </div>
+      <div class="flex-grow-1 p-2">
+        <ng-content select="header"></ng-content>
+      </div>
+    </div>
+  </ng-template>
+  <ng-template pTemplate="header" let-columns>
+    <tr>
+      <th *ngIf="data.length" class="w-1rem"></th>
+      <th class="w-1rem">序號</th>
+      <th class="w-1rem">
+        <p-tableHeaderCheckbox [disabled]="disabled" />
+      </th>
+      <th *ngFor="let col of columns" pReorderableColumn pResizableColumn class="text-center">
+        {{ col.header }}
+        <span *ngIf="col.required" class="required">*</span>
+      </th>
+    </tr>
+  </ng-template>
+  <ng-template pTemplate="body" let-rowIndex="rowIndex" let-rowData let-columns="columns" let-index="rowIndex">
+    <tr [attr.data-key]="rowData[dataKey]" [pSelectableRowIndex]="rowIndex"
+      [pSelectableRowDisabled]="!isRowSelectable(rowData) || disabled" [pSelectableRow]="rowData"
+      [pReorderableRow]="rowIndex">
+      <td *ngIf="data.length">
+        <span *ngIf="index !== 0" class="pi pi-bars" pReorderableRowHandle></span>
+        <span *ngIf="index === 0" class="pi pi-plus"></span>
+      </td>
+      <td class="text-center">{{ rowIndex + 1 }}</td>
+      <td>
+        <p-tableCheckbox class="flex justify-content-center pointer-events-none" [pSelectableRow]="rowData"
+          [value]="rowData" [disabled]="!isRowSelectable(rowData) || disabled || rowIndex === 0" />
+      </td>
+      <td *ngFor="let col of columns" class="text-center" (click)="col.type ? $event.stopPropagation() : null"
+        [ngClass]="index === 0 ? 'first-column' : ''" (keydown)="$event.stopPropagation()">
+        <ng-container [ngSwitch]="col.type">
+          <p-iconField iconPosition="right">
+            <!-- input -->
+            <input *ngSwitchCase="'input'" pInputText class="w-full min-w-max" [placeholder]="'請輸入' + col.header"
+              [(ngModel)]="rowData[col.field]" [ngModelOptions]="{ standalone: true }" [disabled]="disabled"
+              (ngModelChange)="onValueChange(rowData,$event, col, index)"
+              (blur)="onValueChange(rowData,rowData[col.field], col, index)"
+              [ngClass]="{'ng-invalid ng-dirty': rowData._validationErrors?.[col.field]}" />
+            <!-- inputNumber -->
+            <p-inputNumber *ngSwitchCase="'inputNumber'" class="w-full min-w-max" styleClass="w-full" mode="decimal"
+              [(ngModel)]="rowData[col.field]" [ngModelOptions]="{ standalone: true }"
+              [placeholder]="'請輸入' + col.header" [disabled]="disabled"
+              (onInput)="onValueChange(rowData,$event.value, col, index)"
+              (onBlur)="onValueChange(rowData,rowData[col.field], col, index)"
+              [ngClass]="{'ng-invalid ng-dirty': rowData._validationErrors?.[col.field]}" />
+            <!-- dropdown -->
+            <p-dropdown *ngSwitchCase="'dropdown'" styleClass="w-full" appendTo="body" [(ngModel)]="rowData[col.field]"
+              [ngModelOptions]="{ standalone: true }" [placeholder]="'請輸入' + col.header"
+              [options]="getOptions(rowData, col)" [optionLabel]="col.optionLabel" [optionValue]="col.optionValue"
+              [disabled]="disabled" (onChange)="onValueChange(rowData,$event.value, col, index)"
+              (onHide)="onValueChange(rowData,rowData[col.field], col, index)" [virtualScroll]="true"
+              [virtualScrollItemSize]="40" [filter]="col.filter || true" [showClear]="col.showClear || true"
+              [ngClass]="{'ng-invalid ng-dirty': rowData._validationErrors?.[col.field]}">
+              <ng-template let-item pTemplate="item" *ngIf="col.templateLabel">
+                <div class="flex align-items-center gap-2">
+                  <span>{{ item[col.templateLabel] }}</span>
+                </div>
+              </ng-template>
+            </p-dropdown>
+            <p-inputIcon *ngIf="rowData._validationErrors?.[col.field]"
+              styleClass="pi pi-exclamation-circle text-red-500" [pTooltip]="rowData._validationErrors?.[col.field]"
+              tooltipPosition="bottom" />
+          </p-iconField>
+        </ng-container>
+        <span *ngIf="!col.type">
+          {{ col.format ? col.format(rowData[col.field]) : rowData[col.field]}}
+        </span>
+      </td>
+    </tr>
+  </ng-template>
+  <ng-template pTemplate="emptymessage">
+    <tr>
+      <td [attr.colspan]="columns.length  + 2">
+        <div>
+          <div class="flex justify-content-center align-items-center min-h-full p-2 font-bold text-xl">
+            查無資料
+          </div>
+        </div>
+      </td>
+    </tr>
+  </ng-template>
+</p-table>

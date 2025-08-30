@@ -4,7 +4,7 @@ import { ASS2100ENGMeterType, ASS21010Data, ASS21010Delete, ASS21010Payload, ASS
 import { ErrorHandlerService } from '@service/system/error-handler.service';
 import { NotificationService } from '@shared/component/notification-message/notification.service';
 import { BaseQueryResponse, DropdownOption } from '@shared/models/api/base-api.interface';
-import { Subject, catchError, finalize, of, take, takeUntil, tap } from 'rxjs';
+import { Observable, Subject, catchError, finalize, map, of, take, takeUntil, tap } from 'rxjs';
 import { environment } from 'src/environments/environment';
 
 const apiUrl: string = `${environment.ApiUrl}`;
@@ -78,36 +78,28 @@ export class ASS21010Service implements OnDestroy {
   public loadASS21010(payload: ASS21010Payload): void {
     this.tableCancel$.next();
     this.tableLoading = !0;
-    this.http.post<Omit<BaseQueryResponse<unknown>, 'Data'> & { Data: { Data: ASS21010Data[]; TotalCount: number; }; }>(`${apiUrl}/ASS0000/ASS2000/queryASS21010`, payload).pipe(
+    this.http.post<Omit<BaseQueryResponse<unknown>, 'Data'> & { Data: { Data: ASS21010Data[]; TotalCount: number; }; }>(`${apiUrl}/ASS0000/ASS2000/QueryASS21010`, payload).pipe(
       take(1),
-      tap(response => this.ASS21010Data.set(response.Data.Data
-        .map(v => ({ ...v, ENGType: EngType[v.ENG_Type] }))
-      )),
+      tap(response => this.ASS21010Data.set(response.Data.Data)),
       catchError(error => this.errorHandler.handleError(error)),
       finalize(() => this.tableLoading = !1),
     ).subscribe();
   }
 
-  public updateASS21010(payload: ASS21010Payload): void {
-    this.http.post<ASS21010UpdateStatus>(`${apiUrl}/ASS0000/ASS2000/updateASS21010`, payload).pipe(
+  public updateASS21010(payload: ASS21010Payload): Observable<ASS21010UpdateStatus['Data']> {
+    return this.http.post<ASS21010UpdateStatus>(`${apiUrl}/ASS0000/ASS2000/updateASS21010`, payload).pipe(
       take(1),
-      tap(response => {
-        if (response.Data.IsUpdateSuccess) this.messageService.successBubble(`更新成功`);
-        else this.messageService.errorBox('更新失敗\n' + response.Data.ErrorMsg);
-      }),
+      map(res => res.Data),
       catchError(error => this.errorHandler.handleError(error))
-    ).subscribe();
+    );
   }
 
-  public deleteASS21010(payload: ASS21010Delete): void {
-    this.http.post<ASS21010UpdateStatus>(`${apiUrl}/ASS0000/ASS2000/deleteASS21010`, payload).pipe(
+  public deleteASS21010(payload: ASS21010Delete): Observable<ASS21010UpdateStatus['Data']> {
+    return this.http.post<ASS21010UpdateStatus>(`${apiUrl}/ASS0000/ASS2000/deleteASS21010`, payload).pipe(
       take(1),
-      tap(res => {
-        if (res.Data.IsUpdateSuccess) this.messageService.successBubble(`${payload.ENG_MeterNo} 刪除成功`);
-        else this.messageService.errorBox('刪除失敗\n' + res.Data.ErrorMsg);
-      }),
+      map(res => res.Data),
       catchError(error => this.errorHandler.handleError(error))
-    ).subscribe();
+    );
   }
 
   ngOnDestroy(): void {

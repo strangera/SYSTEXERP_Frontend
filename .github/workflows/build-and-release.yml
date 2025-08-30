@@ -171,7 +171,7 @@ jobs:
       with:
         name: Angular_App_Production_v${{ steps.build_info.outputs.version }}_${{ steps.build_info.outputs.timestamp }}
         path: dist-production/
-        retention-days: 30
+        retention-days: 3
     
     # 上傳 Staging 資料夾（artifact 會自動 zip）
     - name: Upload Staging Build
@@ -179,4 +179,4 @@ jobs:
       with:
         name: Angular_App_Staging_v${{ steps.build_info.outputs.version }}_${{ steps.build_info.outputs.timestamp }}
         path: dist-staging/
-        retention-days: 30
+        retention-days: 3

@@ -6,7 +6,7 @@ import { Sys0110Service } from '../../../service/api/sys/sys0110.service';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { EncryptionService } from '../../../shared/service/encryption.service';
 import { LocationOptionsService } from '../../../service/api/dropdownservice/location-options.service';
-import { Column } from '../../../shared/componentkit/table/table.model';
+import { Column, createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 import { Sysb800DropdownService } from '../../../service/api/sys/sysb800-dropdown.service';
 import { finalize, forkJoin, map } from 'rxjs';
 import { user_priorityOptions, UserInfo, UserSys3700Detail } from '../sys0110/sys0110.model';
@@ -105,10 +105,14 @@ export class SYS0110CRUComponent extends BasicCruPageComponent<UserInfo> impleme
       this.dataForm.get('user_Password')?.disable();
     }
     if (!this.isFormCreateable) {
-      this.rowdata?.sys3700?.forEach((item: UserSys3700Detail) => {
-        this.data.push(item);
-      })
-
+      const body = {
+        user_No: this.rowdata?.user_No,
+      };
+      this.sys0110Service.queryUserDetail(body).subscribe({
+        next: (response: any) => {
+          this.data = [...response.Data];
+        },
+      });
     }
     this.loadAndSetupColumns(); // 呼叫新的方法來處理異步載入和 columns 設定
     this.dataForm.get('org_ID')?.valueChanges.pipe(untilDestroyed(this)).subscribe((value) => {

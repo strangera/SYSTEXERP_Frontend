@@ -1,10 +1,15 @@
 import { Component } from '@angular/core';
 import {
   FormGroup,
+  FormControl,
   Validators,
   FormsModule,
   ReactiveFormsModule,
+  ValidatorFn,
+  AbstractControl,
 } from '@angular/forms';
+import { takeUntil } from 'rxjs';
+
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { DeductionbigCategoryService } from '../../../service/basic/deductionbig-category.service';
 import { OrganizationNumberService } from '../../../service/basic/organization-number.service';
@@ -13,10 +18,15 @@ import { CategoryService } from '../../../service/basic/category.service';
 import { TLS23110Service } from '../../../service/api/tls/tls23110.service';
 import { FloorService } from '../../../service/basic/floor.service';
 import { Tls11010Service } from '../../../service/api/tls/tls11010.service';
+
+// ✅ 直接從 primeng 匯入 SortMeta，避免你現在的 2459 錯誤
+import { SortMeta } from 'primeng/api';
 import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
+
 import { CounterNameService } from '../../../service/basic/counter-name.service';
 import { CounterOpCatService } from '../../../service/basic/counter-op-cat.service';
 import { WhetherService } from '../../../service/basic/whether.service';
+
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { AccordionModule } from 'primeng/accordion';
 import { CalendarRangeQuickComponent } from '../../../shared/componentkit/calendar-range-quick/calendar-range-quick.component';
@@ -59,28 +69,67 @@ export class TLS23110Component extends BasicQueryPageComponent<any> {
   data: any[] = [];
   totalRecords = 0;
 
-  queryForm = this.formBuilder.group({
-    TXN_DateStart: [this.yesterday, Validators.required],
-    TXN_DateEnd: [this.yesterday, Validators.required],
-    tlt_term_type: [], // e.g., 'st'
-    rece_yn: [],       // e.g., 's'
-    IsNoPLU_No: [true], // 預設 true
-    TLT_No: [],        // string[]
-    tlt_building: [],
-    tlt_floor: [],     // string[]
-    org_id: [],        // string[]
+  // 👉 你不想用強型別，這裡就保留寬鬆 any；仍可用點語法 controls.TXN_DateStart
+  queryForm: any = this.formBuilder.group(
+    {
+      TXN_DateStart: this.formBuilder.control(this.yesterday, { validators: [Validators.required] }),
+      TXN_DateEnd:   this.formBuilder.control(this.yesterday, { validators: [Validators.required] }),
+      tlt_term_type: this.formBuilder.control(null),
+      rece_yn:       this.formBuilder.control(null),
+      IsNoPLU_No: this.formBuilder.control(null), // 預設「全部」
+      TLT_No:        this.formBuilder.control(null),
+      tlt_building:  this.formBuilder.control(null),
+      tlt_floor:     this.formBuilder.control(null),
+      org_id:        this.formBuilder.control(null),
+      // createPaginationConfig 內部若是 [ ... ] 形式就能直接合併
+      ...createPaginationConfig([{ field: 'Day', order: 1 as 1 } as SortMeta]),
+    },
+    { validators: [this.sameMonthValidator('TXN_DateStart', 'TXN_DateEnd')] }
+  ) as FormGroup;
 
-    ...createPaginationConfig([{ field: 'Day', order: 1 }]),
-  });
+  // ---- 同月驗證器（FormGroup 等級） ----
+  private sameMonthValidator(startKey: string, endKey: string): ValidatorFn {
+    return (group: AbstractControl) => {
+      const fg = group as FormGroup;
+      const start = fg.get(startKey)?.value as Date | string | null | undefined;
+      const end   = fg.get(endKey)?.value   as Date | string | null | undefined;
 
-  IsNoPLU_NoOptions = [
-    { label: '使用業主發票', value: true },
-    { label: '非使用業主發票', value: false },
-  ];
+      const clearOurError = () => {
+        const ctrl = fg.get(endKey);
+        if (!ctrl) return;
+        const err = ctrl.errors || {};
+        if ('notSameMonth' in err) {
+          delete err['notSameMonth'];
+          ctrl.setErrors(Object.keys(err).length ? err : null);
+        }
+      };
+
+      if (!start || !end) { clearOurError(); return null; }
+
+      const s = new Date(start);
+      const e = new Date(end);
+      if (isNaN(s.getTime()) || isNaN(e.getTime())) { clearOurError(); return null; }
+
+      const sameMonth = (s.getFullYear() === e.getFullYear()) && (s.getMonth() === e.getMonth());
+      if (!sameMonth) {
+        const exist = fg.get(endKey)?.errors || {};
+        fg.get(endKey)?.setErrors({ ...exist, notSameMonth: true });
+        return { notSameMonth: true };
+      } else {
+        clearOurError();
+        return null;
+      }
+    };
+  }
+//類別：只顯示自營櫃/不包含自營櫃 IsNoPLU_No 傳TF
   receYnOptions = [
+    { label: '使用業主發票', value: "Y" },
+    { label: '非使用業主發票', value: "N" },
+  ];
+  IsNoPLU_NoOptions = [
     { label: '全部', value: null },
-    { label: '不包含自營櫃', value: 'Y' },
-    { label: '只顯示自營櫃', value: 'N' },
+    { label: '不包含自營櫃', value: false }, 
+    { label: '只顯示自營櫃', value: true  },
   ];
 
   DeductionbigCategoryOptions: any[] = [];
@@ -112,13 +161,38 @@ export class TLS23110Component extends BasicQueryPageComponent<any> {
   ngOnInit(): void {
     this.initializePage('TLS23110', 'tls/tls23110', this.queryForm, (form) => this.onSubmit(form));
 
+    // ---- 限定日期同月（自動矯正） ----
+    const startCtrl = this.queryForm.controls.TXN_DateStart as FormControl;
+    const endCtrl   = this.queryForm.controls.TXN_DateEnd   as FormControl;
+
+    const clampEndToStartMonth = () => {
+      const s = startCtrl?.value ? new Date(startCtrl.value) : null;
+      const e = endCtrl?.value ? new Date(endCtrl.value) : null;
+      if (!s || !e || isNaN(s.getTime()) || isNaN(e.getTime())) return;
+
+      const sameMonth = (s.getFullYear() === e.getFullYear()) && (s.getMonth() === e.getMonth());
+      if (!sameMonth) {
+        const lastDay = new Date(s.getFullYear(), s.getMonth() + 1, 0);
+        endCtrl.patchValue(lastDay, { emitEvent: false });
+        this.queryForm.updateValueAndValidity({ onlySelf: false, emitEvent: false });
+      } else if (e.getTime() < s.getTime()) {
+        endCtrl.patchValue(s, { emitEvent: false });
+        this.queryForm.updateValueAndValidity({ onlySelf: false, emitEvent: false });
+      }
+    };
+
+    startCtrl.valueChanges.subscribe(clampEndToStartMonth);
+    endCtrl.valueChanges.subscribe(clampEndToStartMonth);
+    clampEndToStartMonth(); // 進頁先跑一次
+
+    // ---- 載入選項 ----
     this.whetherService.getWhetherOptions().subscribe((data) => (this.WhetherOptions = data));
     this.deductionbigCategoryService.getLocalDeductionCategories().subscribe((data) => (this.DeductionbigCategoryOptions = data));
     this.typeService.getTypeOptions().subscribe((data) => (this.TypeOptions = data));
     this.categoryService.getCategories().subscribe((data) => (this.CategoryOptions = data));
     this.counterNameService.getCounters().subscribe((res) => {
       this.CounterOptions =
-        res?.map((x) => ({
+        res?.map((x: any) => ({
           label: x.label,
           formLabel: `${x.value} - ${x.label}`,
           value: x.value,
@@ -130,7 +204,7 @@ export class TLS23110Component extends BasicQueryPageComponent<any> {
     this.tls11010Service.getBuildingOptions().subscribe((data) => (this.BUILDING_NO_Options = data));
     this.tls11010Service.getOrgOptions().subscribe((res) => {
       this.OrganizationCodeOptions =
-        res?.map((x) => ({
+        res?.map((x: any) => ({
           label: x.label,
           formLabel: `${x.value} - ${x.label}`,
           value: x.value,
@@ -138,10 +212,10 @@ export class TLS23110Component extends BasicQueryPageComponent<any> {
     });
   }
 
-  // 送出查詢（無 doQuery / buildPayload）
+  // ---- 送出查詢 ----
   onSubmit(form: FormGroup): void {
     this.handleSubmit(form, () => {
-      const val = this.queryForm.getRawValue() as any;
+      const val: any = this.queryForm.getRawValue();
 
       // 由 pageIndex/pageSize 推 Offset (0-based)
       const offset =
@@ -152,7 +226,7 @@ export class TLS23110Component extends BasicQueryPageComponent<any> {
       // SortMeta[] -> "field ASC,DESC"
       const orderBy =
         Array.isArray(val?.SortBy) && val.SortBy.length
-          ? val.SortBy.map((s: any) => `${s.field} ${s.order === 1 ? 'ASC' : 'DESC'}`).join(',')
+          ? val.SortBy.map((s: SortMeta) => `${s.field} ${s.order === 1 ? 'ASC' : 'DESC'}`).join(',')
           : undefined;
 
       // 本地 ISO(yyyy-MM-ddTHH:mm:ss) — 去掉時區偏移
@@ -165,32 +239,29 @@ export class TLS23110Component extends BasicQueryPageComponent<any> {
           .slice(0, 19);
       };
 
-      // 混合型別 -> boolean
       const toBool = (x: any) => {
         if (x === true || x === 'true' || x === 1 || x === '1') return true;
         if (x === false || x === 'false' || x === 0 || x === '0') return false;
-        return undefined; // 沒選就不傳
+        return undefined;
       };
 
-      // 組 payload（保留分頁/排序）
       const payload: any = {
         TXN_DateStart: toIso(val?.TXN_DateStart),
         TXN_DateEnd:   toIso(val?.TXN_DateEnd),
-        tlt_term_type: val?.tlt_term_type != null ? String(val.tlt_term_type) : undefined,
-        rece_yn:       val?.rece_yn,
+        tlt_term_type: val?.tlt_term_type ?? undefined, 
+        rece_yn:       val?.rece_yn ?? undefined,
         IsNoPLU_No:    toBool(val?.IsNoPLU_No),
-        TLT_No:        val?.TLT_No,
-        tlt_building:  val?.tlt_building,
-        tlt_floor:     val?.tlt_floor,
-        org_id:        val?.org_id,
-        pageSize:      val?.pageSize,
-        pageIndex:     val?.pageIndex,
-        SortBy:        val?.SortBy,
+        TLT_No:        val?.TLT_No ?? undefined,
+        tlt_building:  val?.tlt_building ?? undefined,
+        tlt_floor:     val?.tlt_floor ?? undefined,
+        org_id:        val?.org_id ?? undefined,
+        pageSize:      val?.pageSize ?? undefined,
+        pageIndex:     val?.pageIndex ?? undefined,
+        SortBy:        val?.SortBy ?? undefined,
         ...(offset  !== undefined ? { Offset:  offset } : {}),
         ...(orderBy ? { OrderBy: orderBy } : {}),
       };
 
-      // 移除空值/空陣列
       Object.keys(payload).forEach((k) => {
         const v = payload[k];
         if (v === '' || v === null || v === undefined) delete payload[k];
@@ -202,7 +273,6 @@ export class TLS23110Component extends BasicQueryPageComponent<any> {
 
       this.tls23110Service.queryTLS23110(payload).subscribe({
         next: (res: any) => {
-          // ✅ 這裡修正：資料在 Data.QueryData
           const src: any[] =
             Array.isArray(res?.Data?.QueryData) ? res.Data.QueryData :
             Array.isArray(res?.Data)            ? res.Data :
@@ -214,49 +284,45 @@ export class TLS23110Component extends BasicQueryPageComponent<any> {
           ] as const;
           const metrics = ['TXN_Net','TXN_SaleNoTax','TXN_Tax','Total'] as const;
 
-          // 依第一筆含 Discount_List 的資料動態決定實際 keys
           const firstList = src.find((r:any) => r?.Discount_List && typeof r.Discount_List === 'object')?.Discount_List ?? {};
           const existingKeys = Object.keys(firstList);
           const orderedKeys = [
             ...preferredOrder.filter(k => existingKeys.includes(k)),
-            ...existingKeys.filter(k => !preferredOrder.includes(k as any)) // 額外 key 也顯示
+            ...existingKeys.filter(k => !(preferredOrder as readonly string[]).includes(k))
           ];
 
           (this as any).discountKeys = orderedKeys;
           (this as any).discountMetrics = metrics;
 
-          // 攤平 + 過濾：整列「沒有任何數字」或「所有數字都是 0」→ 不顯示
           const mapped = src.map((row: any) => {
             const flat: any = { Day: row?.Day ?? '' };
             const d = row?.Discount_List;
 
-            let foundAnyNumber = false;  // 是否至少有一個數值
-            let foundNonZero   = false;  // 是否至少有一個非 0 數值
+            let foundAnyNumber = false;
+            let foundNonZero   = false;
 
             if (d && typeof d === 'object') {
               for (const key of orderedKeys) {
                 const bucket = d[key];
-                if (!bucket) continue; // 該折扣節點不存在 → 整組欄位跳過
+                if (!bucket) continue;
                 for (const m of metrics) {
-                  const raw = (bucket as any)[m as string];
+                  const raw = bucket[m as string];
                   const num = Number(raw);
                   if (Number.isFinite(num)) {
                     foundAnyNumber = true;
                     if (num !== 0) foundNonZero = true;
-                    flat[`${key}_${m}`] = num; // 包含 0；若要顯示空白可在 format 處理
+                    flat[`${key}_${m}`] = num;
                   }
                 }
               }
             }
 
-            // 若完全沒有數字，或所有數字皆為 0 → 返回 null，待後續 filter 移除
             if (!foundAnyNumber || !foundNonZero) return null;
-
             return flat;
           });
 
-          this.data = mapped.filter((x: any) => x); // 移除 null
-          this.totalRecords = this.data.length;      // 以實際顯示列數為準
+          this.data = mapped.filter((x: any) => x);
+          this.totalRecords = this.data.length;
         },
         error: () => {
           this.loading = false;
@@ -275,8 +341,7 @@ export class TLS23110Component extends BasicQueryPageComponent<any> {
     return Number.isFinite(num) ? num.toLocaleString('en-US') : '';
   }
 
-  // 固定欄位（有需要可再加上 Discount95… 等）
-  columns = [
+  columns: any[] = [
     { field: 'Day', header: '日期', visible: true },
     { field: 'OriginalPrice_TXN_SaleNoTax', header: '正品-未稅', visible: true, style: 'text-right', format: this.moneyFormat.bind(this) },
     { field: 'OriginalPrice_TXN_Tax',       header: '正品-稅額', visible: true, style: 'text-right', format: this.moneyFormat.bind(this) },

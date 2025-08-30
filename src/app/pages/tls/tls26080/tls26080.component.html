@@ -3,11 +3,11 @@
     <app-menubar [ProgNo]="ProgNo"
                  class="flex-1"></app-menubar>
     <app-button btnType="create"
-                (click)="onCreate()"
-                label="{{ 'create' | translate }}"></app-button>
+                (click)="onCreate()"></app-button>
   </div>
+
   <p-accordion>
-    <p-accordionTab header="{{ 'query-conditions' | translate }}"
+    <p-accordionTab [header]="'query-conditions' | translate"
                     [selected]="true"
                     class="line-height-3 m-0"
                     [headerStyleClass]="'query-accordionTab'">
@@ -15,48 +15,41 @@
             id="queryForm"
             (ngSubmit)="onSubmit()">
         <div class="grid p-fluid">
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text label="活動單號"
-                            controlName="pod_no"
-                            [control]="qf().pod_no"
-                            [disabled]="false"
-                            [submitted]="submitted">
-            </app-input-text>
-          </div>
-
-          <div class="col-12 md:col-6 lg:col-8">
-            <app-input-text label="活動名稱"
-                            controlName="pod_desc"
-                            [control]="qf().pod_desc"
-                            [disabled]="false"
-                            [submitted]="submitted">
-            </app-input-text>
-          </div>
+          <app-input-text class="col-12 md:col-6 lg:col-4"
+                          label="活動單號"
+                          controlName="pod_no"
+                          [control]="qf().pod_no"
+                          [disabled]="false"
+                          [submitted]="submitted">
+          </app-input-text>
+          <app-input-text class="col-12 md:col-6 lg:col-8"
+                          label="活動名稱"
+                          controlName="pod_desc"
+                          [control]="qf().pod_desc"
+                          [disabled]="false"
+                          [submitted]="submitted">
+          </app-input-text>
         </div>
 
         <div class="grid p-fluid">
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar-range calendarType="dateRange"
-                                label="活動起始日期"
-                                [startControl]="qf().pod_sdate"
-                                [endControl]="qf().pod_edate"
-                                [submitted]="submitted">
-            </app-calendar-range>
-          </div>
-
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar label="活動正檔日期"
-                          controlName="pod_busdate"
-                          [control]="qf().pod_busdate"
-                          [disabled]="false"
-                          [submitted]="submitted"></app-calendar>
-          </div>
+          <app-calendar-range class="col-12 md:col-6 lg:col-4"
+                              calendarType="dateRange"
+                              label="活動起始日期"
+                              [startControl]="qf().pod_sdate"
+                              [endControl]="qf().pod_edate"
+                              [submitted]="submitted">
+          </app-calendar-range>
+          <app-calendar class="col-12 md:col-6 lg:col-4"
+                        label="活動正檔日期"
+                        controlName="pod_busdate"
+                        [control]="qf().pod_busdate"
+                        [disabled]="false"
+                        [submitted]="submitted"></app-calendar>
         </div>
         <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
           <app-button btnType="clear"
-                      (click)="onClear()"></app-button>
+                      [form]="queryForm"></app-button>
           <app-button btnType="query"
-                      (click)="onSubmit()"
                       [loading]="loading"></app-button>
         </div>
       </form>
@@ -78,7 +71,7 @@
              [dataKey]="'pod_no'"
              [columns]="columns"
              [totalRecords]="totalRecords()"
+             (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit()"
              [lazy]="true"
-             [loading]="loading"
-             (lazyLoadData)="onSubmit()"></app-table>
+             [loading]="loading"></app-table>
 </div>

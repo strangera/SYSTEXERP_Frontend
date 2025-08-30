@@ -1,8 +1,8 @@
 
 import { NgIf } from '@angular/common';
-import { Component, computed, effect, OnInit, signal } from '@angular/core';
+import { Component, computed, effect, OnInit } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormControl, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 import { ASS21020Service } from '@service/api/ass/ass21020.service';
 import { MenubarComponent } from '@shared/component/menubar/menubar.component';
@@ -11,11 +11,13 @@ import { ButtonComponent } from '@shared/componentkit/button/button.component';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
 import { TableComponent } from '@shared/componentkit/table/table.component';
-import { Column } from '@shared/componentkit/table/table.model';
+import { Column, RowEditSaveEvent } from '@shared/componentkit/table/table.model';
 import { CRUDStatus } from '@shared/models/system/CRUDstatus';
 import { NGXLogger } from 'ngx-logger';
 import { FileSelectEvent } from 'primeng/fileupload';
 import { PanelModule } from 'primeng/panel';
+import { finalize } from 'rxjs';
+import { ASS21020Payload } from '../ass21020/ass21020.model';
 
 @Component({
   selector: 'app-ass21020-cru',
@@ -39,7 +41,7 @@ export class ASS21020CRUComponent extends BasicCruPageComponent<unknown> impleme
   public readonly CRUDStatus = CRUDStatus;
 
   public readonly dataForm = this.formBuilder.nonNullable.group({
-    ENG_MeterNo: new FormControl<number | undefined>(void 0),
+    ENG_MeterNo: new FormControl<number | undefined>(void 0, [Validators.required]),
     Location_No: new FormControl<string | undefined>(void 0),
     floor_no: new FormControl<string | undefined>(void 0),
     floor_name: new FormControl<string | undefined>(void 0),
@@ -50,33 +52,38 @@ export class ASS21020CRUComponent extends BasicCruPageComponent<unknown> impleme
   });
   public readonly df = computed(() => this.dataForm.controls);
 
-  private readonly dfSignal = toSignal(this.dataForm.valueChanges);
   private readonly meterNoSignal = toSignal(this.df().ENG_MeterNo.valueChanges);
 
+  private readonly rateValidate = /^(100|[1-9]?[0-9])(\.[0-9]{1,2})?$/;
+
+  public readonly totalRecords = computed(() => [].length);
+  private readonly getTltList = computed(() => this.service.tltNoSignal().map(i => ({ No: i.TLT_No, Name: i.TLT_Name })));
+  private readonly getLocList = computed(() => this.service.locationSignal());
+
   public readonly meterNoEffect = effect(() => {
-    const meterNo = String(this.meterNoSignal());
-    const selected = meterNo && this.service.engMeterNoMap.get(meterNo);
+    const meterNo = this.meterNoSignal();
+    if (!meterNo) return;
+    const selected = this.service.engMeterNoMap.get(meterNo);
     selected && this.service.loadASS21020({ ENG_MeterNo: selected.ENG_MeterNo });
     selected && this.service.queryTltByFlag(selected.ENG_MeterNo);
-    if (!selected) return;
     this.dataForm.patchValue({
-      Location_No: selected.Location_No,
-      floor_no: selected.Floor_No,
-      floor_name: selected.Floor_Desc,
-      floor_cat_no: selected.building_No,
-      floor_cat_name: selected.building_DESC,
-      x_coord: selected.Draw_X,
-      y_coord: selected.Draw_Y,
+      Location_No: selected?.Location_No || void 0,
+      floor_no: selected?.Floor_No || void 0,
+      floor_name: selected?.Floor_Desc || void 0,
+      floor_cat_no: selected?.building_No || void 0,
+      floor_cat_name: selected?.building_DESC || void 0,
+      x_coord: selected?.Draw_X || void 0,
+      y_coord: selected?.Draw_Y || void 0,
     });
     this.logger.debug(`meterNoEffect:`, [meterNo, selected]);
   });
 
   public readonly columns: Column[] = [
-    { field: 'TLT_No', header: '專櫃編號' },
-    { field: 'TLT_Name', header: '專櫃名稱', disabled: () => !0 },
-    { field: 'Location_No', header: '位置編號', disabled: () => !0 },
-    { field: 'NET_SPACE', header: '營業面積', disabled: () => !0, format: v => String(v) + '%' },
-    { field: 'ENG_Rate', header: '比率' },
+    { field: 'TLT_No', header: '專櫃編號', disabled: () => !0 },
+    { field: 'TLT_Name', header: '專櫃名稱', type: 'dropdown', options: () => this.getTltList(), optionLabel: 'Name', optionValue: 'No', required: !0, },
+    { field: 'Location_No', header: '位置編號', type: 'dropdown', options: () => this.getLocList(), optionLabel: 'Name', optionValue: 'No', required: !0 },
+    { field: 'NET_SPACE', header: '營業面積', type: 'inputNumber', required: !0 },
+    { field: 'ENG_Rate', header: '比率', type: 'inputNumber', format: v => v + '%', validate: [(v) => ({ isValid: !v || this.rateValidate.test(v), errorMessage: ['比率格式不正確'] })] },
     { field: 'ENG_Remark', header: '備註', type: 'input' },
   ];
 
@@ -92,26 +99,66 @@ export class ASS21020CRUComponent extends BasicCruPageComponent<unknown> impleme
 
     this.logger.debug(`init:`, [this.rowdata]);
 
-    this.service.loadEngType();
     this.service.loadEngMeterNo();
-    this.service.loadLocationNo();
   }
 
   public onSelectionChange(selected: any[]): void {
     this.logger.debug(`onSelectionChange:`, [selected]);
   }
 
-  public onSubmit(): void {
-    this.handleSubmit(this.dataForm, () => {
-      const payload = {};
+  public onRowEditInit(event: any): void {
+    this.logger.debug(`onRowEditInit:`, [event]);
+    this.service.loadEngType();
+    this.service.loadLocationNo();
+  }
 
+  public onRowEdit(event: RowEditSaveEvent): void {
+    if (Object.is(event.newData, event.oldData)) return;
 
+    const filterNonDates = (obj: any) => Object.fromEntries(
+      Object.entries(obj).filter(([, value]) => !(value instanceof Date))
+    );
+
+    if (JSON.stringify(filterNonDates(event.newData)) === JSON.stringify(filterNonDates(event.oldData))) return;
+
+    this.loading = !0;
+    const m = this.service.engMeterNoMap.get(this.meterNoSignal()!);
+    const t = event.newData;
+    const isNewRow = !this.service.ASS21020Data().some(item => item.TLT_No === t.TLT_No);
+    this.logger.debug(`onRowEdit:`, [event, m, t, 'isNewRow:', isNewRow]);
+
+    if (!m) return this.messageService.errorBubble('請選擇錶號', '更新失敗');
+    const payload: ASS21020Payload = {
+      ID: String(m.Id),
+      ENG_Type: m.ENG_Type,
+      ENG_MeterNo: m.ENG_MeterNo,
+      TLT_No: t.TLT_No,
+      ENG_Rate: t.ENG_Rate,
+      ENG_Remark: t.ENG_Remark,
+    };
+    this.service.updateASS21020(payload).pipe(finalize(() => {
       this.loading = !1;
+      this.logger.debug(`onSubmit:`, [this.dataForm, payload]);
+    })).subscribe(res => {
+      const stat = CRUDStatus.Create === this.crudstatus ? '新增' : '更新';
+      if (!res.IsUpdateSuccess) {
+        if (isNewRow) {
+          const currentData = this.service.tltNoSignal();
+          const filteredData = currentData.filter(item => item.TLT_No !== t.TLT_No);
+          this.service.tltNoSignal.set(filteredData);
+        }
+        return this.messageService.errorBubble(res.ErrorMsg, `${stat}失敗`);
+      }
+      this.onCancel();
+      this.messageService.successBubble(`${stat}成功`);
+      this.service.loadASS21020({ ENG_MeterNo: m.ENG_MeterNo });
     });
   }
 
-  public onClear(): void {
-    this.dataForm.reset();
+  public onSubmit(): void {
+    this.handleSubmit(this.dataForm, () => {
+      this.loading = !1;
+    });
   }
 
   /** 處理 excel 匯入 */

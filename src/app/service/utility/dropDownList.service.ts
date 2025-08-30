@@ -235,6 +235,11 @@ export class DropDownListService {
     return this.http.post<ApiResponse<IDropdownItem[]>>(`${this.apiUrl}/queryPOS1002TML_DropDownList`, {});
   }
 
+  // 查詢收銀機群組編號(POS1002GRM)資料表下拉選單
+  queryPOS1002GRM_DropDownList(): Observable<ApiResponse<IDropdownItem[]>> {
+    return this.http.post<ApiResponse<IDropdownItem[]>>(`${this.apiUrl}/queryPOS1002GRM_DropDownList`, {});
+  }
+
   // 查詢位置編號(SYS3A00)資料表下拉選單 (注意：Swagger 中寫 SYS3A00，但實際路徑是 POS2002)
   queryPOS2002_DropDownList(): Observable<ApiResponse<IDropdownItem[]>> {
     return this.http.post<ApiResponse<IDropdownItem[]>>(`${this.apiUrl}/queryPOS2002_DropDownList`, {});

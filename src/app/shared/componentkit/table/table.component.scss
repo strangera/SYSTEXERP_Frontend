@@ -23,32 +23,6 @@
     &.p-datatable-sm .p-datatable-footer {
       padding: 0;
     }
-    .p-selectbutton .p-button {
-      width: auto !important;
-      padding: 5px 10px !important;
-      &:first-child {
-        border-top-left-radius: 18px;
-        border-bottom-left-radius: 18px;
-      }
-      &:last-child {
-        border-top-right-radius: 18px;
-        border-bottom-right-radius: 18px;
-      }
-    }
-
-    .table-dropdown {
-      pointer-events: none;
-      .p-dropdown-trigger {
-        display: none;
-      }
-      .p-dropdown {
-        background: transparent;
-        border: none;
-      }
-      span {
-        padding: 0;
-      }
-    }
     // ----------------------------------------------------------------
     .p-datatable-header {
       background: transparent;
@@ -103,10 +77,6 @@
     .p-disabled-row {
       // background-color: #ffffffc4 !important;
       color: #495057 !important;
-
-      &.p-highlight {
-        // background-color: #ffffffc4 !important;
-      }
       // 禁用的 checkbox 樣式
       .p-checkbox {
         opacity: 0.5;
@@ -184,13 +154,6 @@
     word-break: break-word;
     max-width: 75px; /* 可選：限制寬度 */
   }
-
-  .empty-message {
-    position: absolute;
-    left: 50%;
-    top: 67%;
-    transform: translate(-50%, -50%);
-  }
   .no-wrap {
     white-space: nowrap;
     div {
@@ -202,10 +165,6 @@
   }
   .p-datatable .p-datatable-thead > tr > th {
     background: var(--table-header-bg);
-  }
-
-  .p-datatable .p-datatable-tbody > tr:nth-child(even) {
-    // background: #eef2ff;
   }
 
   .icon-button button {

@@ -20,6 +20,7 @@ import { TranslateModule } from '@ngx-translate/core';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
 import { DropDownListService } from '@service/utility/dropDownList.service';
+import { untilDestroyed } from '@ngneat/until-destroy';
 
 export interface Option {
   label: string;
@@ -148,7 +149,7 @@ export class FIN15040Component extends BasicQueryPageComponent<FIN15040Data> imp
       };
 
       this.fin15040Service.queryFIN15040(requestData)
-        .pipe(finalize(() => this.loading = false))
+        .pipe(untilDestroyed(this), finalize(() => this.loading = false))
         .subscribe((res) => {
           this.data = res.Data;
           this.totalRecords = res.TotalCount;

@@ -67,19 +67,15 @@ export class TLS52040CRUComponent extends BasicCruPageComponent<ITLS52040Data> i
     { field: 'PLU_MagNo', header: '商品管理編號' },
     { field: 'PLU_Name', header: '商品名稱' },
     { field: 'PLU_No', header: '國際條碼' },
-    { field: 'CRN_SubQty', header: '應驗數量', format: formatAmount },
-    { field: 'RJD_ConfirmQty', header: '驗收數量', type: 'inputNumber', validate: [validateConfirmQtySumNotExceedSubQty(), validateMinNumber(0)] },
-    { field: 'RJD_ConfirmQty_Finished', header: '已驗收數量', format: formatAmount },
-    { field: 'UNIT_NAME', header: '單位' },
-    { field: 'RJD_BuyPrc', header: '退貨單價', format: formatAmount },
-    { field: 'RJD_BuyPrc', header: '驗收單價', format: formatAmount },
+    { field: 'CRN_SubQty', header: '可退回數量', format: formatAmount },
+    { field: 'RJD_ConfirmQty', header: '退回數量', type: 'inputNumber', validate: [validateConfirmQtySumNotExceedSubQty(), validateMinNumber(0)] },
+    { field: 'RJD_ConfirmQty_Finished', header: '已驗退回數量' },
+    { field: 'UNIT_NAME', header: '商品單位' },
+    { field: 'RJD_BuyPrc', header: '單價', format: formatAmount },
     { field: 'PLU_StockTaxType', header: '稅別', format: (value) => value === '0' ? '免稅' : value === '1' ? '應稅' : '' },
     { field: 'RJD_BuyNet', header: '未稅金額', format: formatAmount }, //RJM_BuyPrc * RJM_ConfirmQty驗收數量，四捨五入取整數
-    { field: 'RJD_BuyTax', header: '稅額', format: formatAmount }, // =若PLU_StockTaxType =1應稅，未稅金額*0.05四捨五入取整數，若PLU_StockTaxType=0免稅，稅額0
-    { field: 'RJD_BuyAmt', header: '進價小計', format: formatAmount }, // =RJM_BuyNet+RJM_BuyTax
-    { field: 'PLU_TaxType', header: '售價稅別', format: (value) => value === '0' ? '免稅' : value === '1' ? '應稅' : '' },
+    { field: 'RJD_BuyTax', header: '稅額', format: formatAmount },
     { field: 'RJD_SalePrc', header: '售價', format: formatAmount },
-    { field: 'RJD_SaleTax', header: '售價稅額', format: formatAmount }, // 若售價稅別 1應稅(RJM_SalePrc * RJM_ConfirmQty)/21，取整數，若稅別0免稅，稅額0
     { field: 'RJD_SaleAmt', header: '售價小計', format: formatAmount }, // RJM_SalePrc * RJM_ConfirmQty驗收數量
     { field: 'CRN_No', header: '退貨單編號' },
     { field: 'RJD_Remark', header: '單項備註', type: 'input' },
@@ -124,7 +120,7 @@ export class TLS52040CRUComponent extends BasicCruPageComponent<ITLS52040Data> i
     });
     // 2. 品牌下拉選單
     this.dropDownListService.queryPLULOGO_HOS_No_DropDownList().pipe(untilDestroyed(this)).subscribe(response => {
-      this.brandOptions = response.Data;
+      this.brandOptions = response.Data.map(brand => ({ ...brand, label: `${brand.No} - ${brand.Name}` }));// 品牌
       this.dataForm.controls.LOGO_No.valueChanges.pipe(debounceTime(300), untilDestroyed(this)).subscribe(logoNo => {
         const HOS_No = this.brandOptions.find(opt => opt.No === logoNo)?.HOS_No || null;
         this.dataForm.controls.HOS_No.setValue(HOS_No);
@@ -134,7 +130,7 @@ export class TLS52040CRUComponent extends BasicCruPageComponent<ITLS52040Data> i
     });
     // 3. 倉別下拉選單
     this.dropDownListService.getPOS2034Options().pipe(untilDestroyed(this)).subscribe(response => {
-      this.warehouseOptions = response.Data;
+      this.warehouseOptions = response.Data.map(item => ({ ...item, label: `${item.No} - ${item.Name}` }));// 倉別
       this.dataForm.controls.HOS_No.valueChanges.pipe(untilDestroyed(this)).subscribe(() => resetFormData());
     });
   }
@@ -247,7 +243,9 @@ export class TLS52040CRUComponent extends BasicCruPageComponent<ITLS52040Data> i
         ...this.data,
         ...response.Data.Data.map((item: ITLS52040Detail) => ({
           ...item,
-          RJD_ConfirmQty: 0
+          RJD_ConfirmQty: 0,
+          RJD_BuyPrc: item.RJD_BuyNet,
+          RJD_BuyNet: 0,
         }))
       ];
     })
