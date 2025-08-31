@@ -71,13 +71,14 @@
   <form [formGroup]="dialogQueryForm" (ngSubmit)="onQuery(dialogQueryForm)">
     <div class="grid p-fluid">
       <app-dropdown-table class="col-12" [control]="dialogQueryForm.controls.PLU_MagNo" [submitted]="submitted"
-        templateLabel="label" optionLabel="PLU_MagNo" optionValue="PLU_MagNo" [suggestions]="suggestions"
+        templateLabel="label" optionLabel="label" optionValue="PLU_MagNo" [suggestions]="suggestions"
         [fieldsConfig]="fieldsConfig" (inputValueChanged)="onAutoCompleteInputChange($event)"
         (formValueChanged)="onformValueChanged($event)" [formGroup]="opForm" [dialogData]="opData"
         [dialogColumns]="opColumns" [loading]="opLoading" [totalRecords]="opTotalRecords">
         <app-input-text class="col-12 md:col-6" label="商品管理編號/國際條碼/廠商貨號" controlName="queryNo"
           [control]="opForm.controls.queryNo" />
-        <app-input-text class="col-12" label="商品名稱" controlName="PLU_Name" [control]="opForm.controls.PLU_Name" />
+        <app-input-text class="col-12 md:col-6" label="商品名稱" controlName="PLU_Name"
+          [control]="opForm.controls.PLU_Name" />
       </app-dropdown-table>
       <app-input-text class="col-12" label="商品名稱" controlName="PLU_Name"
         [control]="dialogQueryForm.controls.PLU_Name" />
