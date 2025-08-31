@@ -47,5 +47,5 @@
   <app-table dataKey="ECR_TmplNo" [data]="data" [columns]="columns" (edit)="onEdit($event)" (detail)="onDetail($event)"
     [multiSortMeta]="[{ field: 'ECR_TmplNo', order: 1 }]" [totalRecords]="totalRecords" [showCheckBox]="true"
     (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [lazy]="true" [loading]="loading"
-    [showCheckBox]="true" [selectedItems]="selectedItems" (selectionChange)="selectedItems = $event"></app-table>
+    [selectedItems]="selectedItems" (selectionChange)="selectedItems = $event"></app-table>
 </div>

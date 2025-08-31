@@ -48,7 +48,10 @@ export class TLS43010Component extends BasicQueryPageComponent<QueryTls43010Resp
     ...createPaginationConfig([{ field: 'NOT_No', order: 1 }]), // 分頁和排序參數
   });
   totalRecords = 0;
-  data: QueryTls43010Response[] = [];
+  data: QueryTls43010Response[] = [
+    { ID: 1, NOT_No: 'NTM250101', NOT_Date: '2025-01-01T00:00:00', NOT_BegDate: '2025-01-01T00:00:00', NOT_EndDate: '2025-01-30T00:00:00', NOT_File: 'IMG001', NOT_Status: '0', NOT_Priority: 0, NOT_Note: '備註', NOT_PlayTime: 1, NOT_DtlLimit: '0' },
+    { ID: 2, NOT_No: 'NTM250101', NOT_Date: '2025-01-01T00:00:00', NOT_BegDate: '2025-01-01T00:00:00', NOT_EndDate: '2025-01-30T00:00:00', NOT_File: 'IMG001', NOT_Status: '1', NOT_Priority: 1, NOT_Note: '備註', NOT_PlayTime: 1, NOT_DtlLimit: '1' },
+  ];
   selectedItems: QueryTls43010Response[] = [];
   columns: Column[] = [
     { field: 'NOT_No', header: '通告編號', visible: true },

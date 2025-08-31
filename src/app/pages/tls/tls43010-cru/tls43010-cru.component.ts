@@ -1,5 +1,5 @@
 import { DropDownListService, IDropdownItem } from '@service/utility/dropDownList.service';
-import { Component, OnInit, signal, ViewChild } from '@angular/core';
+import { Component, OnInit, signal } from '@angular/core';
 import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { PanelModule } from 'primeng/panel';
@@ -12,7 +12,6 @@ import { ButtonComponent } from '../../../shared/componentkit/button/button.comp
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
 import { QueryTls43010Response, Tls43010Service } from '@service/api/tls/tls43010.service';
 import { TranslateModule } from '@ngx-translate/core';
-import { TableComponent } from '@shared/componentkit/table/table.component';
 import { InputTextareaComponent } from '@shared/componentkit/input-textarea/input-textarea.component';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { SystemOptionsService } from '@service/system/sys1000.service';
@@ -54,15 +53,12 @@ interface MediaItem {
   ]
 })
 export class TLS43010CRUComponent extends BasicCruPageComponent<QueryTls43010Response> implements OnInit {
-  // 宣告共通元件Table
-  @ViewChild(TableComponent) table!: TableComponent;
   dataForm = this.formBuilder.nonNullable.group({
     NOT_No: [{ value: '系統自動給號', disabled: true }], // 通告編號
     NOT_Date: [{ value: new Date(), disabled: true }, [Validators.required]], // 通告日期
     NOT_BegDate: [null as null | Date, [Validators.required]], // 有效開始日期時間
     NOT_EndDate: [null as null | Date, [Validators.required]], // 有效結束日期時間
     NOT_Priority: [0, [Validators.required, Validators.min(0), Validators.max(9)]], // 優先順序，預設值為0(在同一段時間的優先順序9-0, 9最優先)
-    // NOT_Status: [{ value: '1', disabled: true }], // 狀態 0=未確認(未審核) 1=已確認(已審核) 2=已刪除
     NOT_Status: [{ value: '0', disabled: true }], // 狀態 0=未確認(未審核) 1=已確認(已審核) 2=已刪除
     NOT_PlayTime: [30, [Validators.min(0), Validators.max(999999)]], // 媒體檔播放秒數，預設值為30
     NOT_DtlLimit: ['0'], // 是否限制播放條件，POS50012 0=不限制(預設值) 1=符合明細設定的機台才播放 2=不符合明細設定的機台才播放*
@@ -105,8 +101,7 @@ export class TLS43010CRUComponent extends BasicCruPageComponent<QueryTls43010Res
   isEcrGrpNoSelected(rowData: any): boolean {
     return !!(rowData['ECR_No'] || rowData['TLT_No'] || rowData['ECR_Type'] || rowData['BUILDING_No'] || rowData['FLOOR_No'] || rowData['Area_No']);
   }
-  hiddenTable = false;
-  // hiddenTable = true;
+  hiddenTable = true;
 
   // ----------------------------------------------------------------
   constructor(
@@ -129,6 +124,9 @@ export class TLS43010CRUComponent extends BasicCruPageComponent<QueryTls43010Res
         this.hiddenTable = true;
       }
     })
+    if (!this.isFormCreateable) {
+      this.dataForm.get('NOT_DtlLimit')?.setValue(this.rowdata?.NOT_DtlLimit || '0');
+    }
   }
   loadDropdownOptions() {
     this.dropDownListService.queryPOS1002_DropDownList().pipe(untilDestroyed(this)).subscribe(options => {

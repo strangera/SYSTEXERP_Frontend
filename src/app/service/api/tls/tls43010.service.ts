@@ -30,19 +30,19 @@ export interface QueryTls43010Response {
   /*  0=不限制(預設值)*/
   /*  1=符合明細設定的機台才播放*/
   /*  2=不符合明細設定的機台才播放*/
-  NOT_AprvDate: string,      /*核准日期 YYYY/MM/DD*/
-  NOT_AprvUsrNo: string,    /*核准人員*/
-  NOT_AprvUsrName: string,  /*核准人員姓名*/
-  NOT_DelDate: string,      /*刪除日期 YYYY/MM/DD*/
-  NOT_DelUsrNo: string,   /*刪除人員*/
-  NOT_DelUsrName: string,  /*刪除人員姓名*/
+  NOT_AprvDate?: string,      /*核准日期 YYYY/MM/DD*/
+  NOT_AprvUsrNo?: string,    /*核准人員*/
+  NOT_AprvUsrName?: string,  /*核准人員姓名*/
+  NOT_DelDate?: string,      /*刪除日期 YYYY/MM/DD*/
+  NOT_DelUsrNo?: string,   /*刪除人員*/
+  NOT_DelUsrName?: string,  /*刪除人員姓名*/
 
-  CRT_Date: string,      /*建立日期*/
-  CRT_USR_No: string,   /*建立人員*/
-  CRT_USR_Name: string,  /*建立人員姓名*/
-  UPD_Date: string,     /*變更日期*/
-  UPD_USR_No: string,   /*變更人員*/
-  UPD_USR_Name: string,  /*變更人員姓名*/
+  CRT_Date?: string,      /*建立日期*/
+  CRT_USR_No?: string,   /*建立人員*/
+  CRT_USR_Name?: string,  /*建立人員姓名*/
+  UPD_Date?: string,     /*變更日期*/
+  UPD_USR_No?: string,   /*變更人員*/
+  UPD_USR_Name?: string,  /*變更人員姓名*/
 }
 
 @Injectable({
