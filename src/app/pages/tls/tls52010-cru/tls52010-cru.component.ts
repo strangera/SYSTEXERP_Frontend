@@ -257,7 +257,15 @@ export class TLS52010CRUComponent extends BasicCruPageComponent<ITLS52010Data> i
   }
   saveDialog() {
     this.dialogVisible = false;
-    this.data = [...this.data, ...this.selectedItemsDialog.map(item => ({ ...item, POD_SubQty: 0, POD_Remark: '' }))];
+    this.data = [
+      ...this.data,
+      ...this.selectedItemsDialog.map(item => ({
+        ...item,
+        PLU_BoxQty: item.PLU_BoxQty === undefined || item.PLU_BoxQty === null ? 0 : item.PLU_BoxQty,
+        POD_SubQty: 0,
+        POD_Remark: ''
+      }))
+    ];
     this.selectedItemsDialog = [];
     this.selectedItems = [];
     this.calculateTotals();

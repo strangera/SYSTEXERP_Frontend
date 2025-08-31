@@ -240,6 +240,7 @@ export class TLS52020CRUComponent extends BasicCruPageComponent<ITLS52020Data> i
     this.data = [...this.data, ...this.selectedItemsDialog.map(item => ({
       ...item,
       CRN_SubQty: 0,
+      PLU_BoxQty: item.PLU_BoxQty === undefined || item.PLU_BoxQty === null ? 0 : item.PLU_BoxQty,
       CRN_BuyPrc: item.PLU_SalePrc_UNI,
       CRN_SalePrc: item.PLU_SalePrc,
       CRN_Remark: ''
