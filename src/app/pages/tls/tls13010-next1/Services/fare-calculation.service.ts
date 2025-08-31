@@ -9,6 +9,22 @@ import { Injectable } from '@angular/core';
   providedIn: 'root'
 })
 export class FareCalculationService {
+  private totalLocationSpace = 0;
+  /**
+   * 設定總坪數（供其他組件呼叫）
+   */
+  setTotalLocationSpace(totalSpace: number): void {
+    this.totalLocationSpace = totalSpace;
+    console.log('🏢 設定總坪數:', totalSpace);
+  }
+
+  /**
+   * 取得總坪數
+   */
+  getTotalLocationSpace(): number {
+    return this.totalLocationSpace;
+  }
+
 
   /**
    * 根據扣款類型自動計算金額
@@ -44,7 +60,14 @@ export class FareCalculationService {
    */
   private calculateTypeA(data: any): void {
     const unitPrice = parseFloat(data.tpy_unitamt) || 0;
-    const quantity = parseFloat(data.tpy_qty) || 0;
+
+    // 坪數單位自動帶入總坪數
+    if (data.tpy_type === '01' && this.totalLocationSpace > 0) {
+      data.tpy_qty = this.totalLocationSpace;
+      console.log(`🏢 A類型坪數自動計算: 總坪數 = ${this.totalLocationSpace}`);
+    }
+
+    const quantity = parseFloat(data.tpy_qty) || 0; // 在條件判斷後才取值
 
     if (unitPrice > 0 && quantity > 0) {
       data.tpy_amount = unitPrice * quantity;

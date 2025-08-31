@@ -111,14 +111,14 @@ export class FareColumnDefinitions {
         autoWidth: true,
         directEdit: true,
         autoEditOnSelect: true,      // ✅ 勾選扣款項目 → 進入編輯模式設定單價、數量
-        autoSaveOnUnselect: false,     // ✅ 取消勾選 → 自動儲存並退出編輯
+        autoSaveOnUnselect: true,     // ✅ 取消勾選 → 自動儲存並退出編輯
       },
       {
         field: 'cap_item',
         header: '扣款代號',
         type: 'text',
         editable: false,
-        autoWidth: true
+        width: '20px'
       },
       {
         field: 'cap_name',
@@ -132,7 +132,7 @@ export class FareColumnDefinitions {
         header: '起始年月',
         type: 'date',
         editable: true,
-        autoWidth: true,
+        width: '110px',
         dateFormat: 'year-month',
         required: true,
         defaultValueFunction: () => {
@@ -148,7 +148,7 @@ export class FareColumnDefinitions {
         header: '單位',
         type: 'dropdown',
         editable: true,
-        width: '70px',
+        width: '20px',
         options: TLS13010_DROPDOWN_OPTIONS.tpyTypeOption,
         required: true,
       },
@@ -169,7 +169,9 @@ export class FareColumnDefinitions {
         width: '70px',
         required: true,
         validators: [TableValidators.positive('數量必須大於0')],
-        defaultValue: 1
+        defaultValue: 1,
+        allowDecimal: true, // 是否允許小數點
+        decimalPlaces: 3  // 小數位數，預設2位
       },
       {
         field: 'tpy_amount',
@@ -214,24 +216,24 @@ export class FareColumnDefinitions {
         header: '是否新增',
         type: 'checkbox',
         editable: true,
-        width: '80px',
+        width: '5px',
         directEdit: true,
         autoEditOnSelect: true,      // ✅ 勾選扣款項目 → 進入編輯模式設定單價、數量
-        autoSaveOnUnselect: false,     // ✅ 取消勾選 → 自動儲存並退出編輯
+        autoSaveOnUnselect: true,     // ✅ 取消勾選 → 自動儲存並退出編輯
       },
       {
         field: 'cap_item',
         header: '扣款代號',
         type: 'text',
         editable: false,
-        width: '100px'
+        width: '20px'
       },
       {
         field: 'cap_name',
         header: '扣款名稱',
         type: 'text',
         editable: false,
-        minWidth: '120px',
+        autoWidth: true,
         flex: 2
       },
       {
@@ -239,8 +241,9 @@ export class FareColumnDefinitions {
         header: '扣款起始年月',
         type: 'date',
         editable: true,
-        width: '130px',
+        autoWidth: true,
         dateFormat: 'year-month',
+        width: '130px',
         required: true,
         defaultValueFunction: () => {
           const contractInfo = contractInfoData[0];
@@ -271,6 +274,7 @@ export class FareColumnDefinitions {
         header: '單位',
         type: 'dropdown',
         editable: true,
+        width: '20px',
         options: TLS13010_DROPDOWN_OPTIONS.tpyTypeOption,
         autoWidth: true,
         required: true
@@ -355,13 +359,13 @@ export class FareColumnDefinitions {
         width: '80px',
         directEdit: true,
         autoEditOnSelect: true,      // ✅ 勾選扣款項目 → 進入編輯模式設定單價、數量
-        autoSaveOnUnselect: false,     // ✅ 取消勾選 → 自動儲存並退出編輯
+        autoSaveOnUnselect: true,     // ✅ 取消勾選 → 自動儲存並退出編輯
       },
       {
         field: 'auto_calc',
         header: '自動計算',
         type: 'button',
-        width: '90px',
+        width: '5px',
         buttonLabel: '自動計算',
         buttonIcon: 'pi pi-calculator',
         buttonClass: 'p-button-sm p-button-info',
@@ -373,14 +377,14 @@ export class FareColumnDefinitions {
         header: '扣款代號',
         type: 'text',
         editable: false,
-        width: '100px'
+        width: '20px'
       },
       {
         field: 'cap_name',
         header: '扣款名稱',
         type: 'text',
         editable: false,
-        minWidth: '120px',
+        autoWidth: true,
         flex: 2
       },
       {
@@ -528,21 +532,21 @@ export class FareColumnDefinitions {
         width: '80px',
         directEdit: true,
         autoEditOnSelect: true,      // ✅ 勾選扣款項目 → 進入編輯模式設定單價、數量
-        autoSaveOnUnselect: false,     // ✅ 取消勾選 → 自動儲存並退出編輯
+        autoSaveOnUnselect: true,     // ✅ 取消勾選 → 自動儲存並退出編輯
       },
       {
         field: 'cap_item',
         header: '扣款代號',
         type: 'text',
         editable: false,
-        width: '100px'
+        width: '20px'
       },
       {
         field: 'cap_name',
         header: '扣款名稱',
         type: 'text',
         editable: false,
-        minWidth: '120px',
+        autoWidth: true,
         flex: 2
       },
       {
@@ -550,7 +554,8 @@ export class FareColumnDefinitions {
         header: '扣款起始年月',
         type: 'date',
         editable: true,
-        width: '130px',
+        autoWidth: true,
+        width: '120px',
         dateFormat: 'year-month',
         required: true,
         defaultValueFunction: () => {
@@ -566,7 +571,7 @@ export class FareColumnDefinitions {
         header: '扣款結束年月',
         type: 'date',
         editable: true,
-        width: '130px',
+        width: '120px',
         dateFormat: 'year-month',
         required: true,
         defaultValueFunction: () => {
@@ -582,6 +587,7 @@ export class FareColumnDefinitions {
         header: '單位',
         type: 'dropdown',
         editable: true,
+        width: '20px',
         options: TLS13010_DROPDOWN_OPTIONS.tpyTypeOption,
         autoWidth: true,
         required: true,
@@ -635,21 +641,21 @@ export class FareColumnDefinitions {
         width: '80px',
         directEdit: true,
         autoEditOnSelect: true,      // ✅ 勾選扣款項目 → 進入編輯模式設定單價、數量
-        autoSaveOnUnselect: false,     // ✅ 取消勾選 → 自動儲存並退出編輯
+        autoSaveOnUnselect: true,     // ✅ 取消勾選 → 自動儲存並退出編輯
       },
       {
         field: 'cap_item',
         header: '扣款代號',
         type: 'text',
         editable: false,
-        width: '100px'
+        width: '20px'
       },
       {
         field: 'cap_name',
         header: '扣款名稱',
         type: 'text',
         editable: false,
-        minWidth: '120px',
+        autoWidth: true,
         flex: 2
       },
       {
@@ -657,7 +663,7 @@ export class FareColumnDefinitions {
         header: '扣款起始年月',
         type: 'date',
         editable: true,
-        width: '130px',
+        width: '110px',
         dateFormat: 'year-month',
         required: true,
         defaultValueFunction: () => {
@@ -673,7 +679,7 @@ export class FareColumnDefinitions {
         header: '扣款結束年月',
         type: 'date',
         editable: true,
-        width: '130px',
+        width: '110px',
         dateFormat: 'year-month',
         required: true,
         defaultValueFunction: () => {
@@ -689,6 +695,7 @@ export class FareColumnDefinitions {
         header: '單位',
         type: 'dropdown',
         editable: true,
+        width: '20px',
         options: TLS13010_DROPDOWN_OPTIONS.tpyTypeOption,
         autoWidth: true,
         required: true,

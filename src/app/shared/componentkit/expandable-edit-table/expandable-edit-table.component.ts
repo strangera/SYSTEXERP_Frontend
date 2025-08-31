@@ -173,6 +173,14 @@ export interface ColumnDef {
   };
   autoWidth?: boolean;
   readonly?: boolean;
+
+  customCheckboxHandler?: (event: {
+    rowData: any,
+    field: string,
+    newValue: boolean,
+    oldValue: boolean,
+    parentData?: any
+  }) => void;
 }
 
 @Component({
@@ -205,7 +213,7 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
   @Input() defaultNewDetailItem: any = {};
 
   @Input() showDetailTabs: boolean = false;
-  @Input() detailTabOptions: { id: string, label: string }[] = [];
+  @Input() detailTabOptions: { id: string, label: string, allowAdd: boolean, allowBatchDelete: boolean, showCheckbox: boolean }[] = [];
   @Input() defaultDetailTab: string = '';
   @Input() detailColumnsMap: { [tabId: string]: ColumnDef[] } = {};
   @Input() showDetailBatchDelete: boolean = true;
@@ -713,29 +721,30 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
 
   // 🎯 對外接口：取得欄位的 placeholder
   getDatePlaceholder(column: ColumnDef): string {
-    if (column.placeholder) {
-      return column.placeholder;
-    }
+    // if (column.placeholder) {
+    //   return column.placeholder;
+    // }
 
-    const formatType = column.dateFormat || 'full-date';
+    // const formatType = column.dateFormat || 'full-date';
 
-    // 根據格式提供更明確的提示
-    switch (formatType) {
-      case 'year-month':
-        return '例：2024/01 或 202401';
-      case 'year-month-compact':
-        return '例：202401';
-      case 'year-month-dash':
-        return '例：2024-01';
-      case 'full-date':
-        return '例：2024/01/15 或 20240115';
-      case 'full-date-compact':
-        return '例：20240115';
-      case 'full-date-dash':
-        return '例：2024-01-15';
-      default:
-        return '請輸入日期';
-    }
+    // // 根據格式提供更明確的提示
+    // switch (formatType) {
+    //   case 'year-month':
+    //     return '例：2024/01 或 202401';
+    //   case 'year-month-compact':
+    //     return '例：202401';
+    //   case 'year-month-dash':
+    //     return '例：2024-01';
+    //   case 'full-date':
+    //     return '例：2024/01/15 或 20240115';
+    //   case 'full-date-compact':
+    //     return '例：20240115';
+    //   case 'full-date-dash':
+    //     return '例：2024-01-15';
+    //   default:
+    //     return '請輸入日期';
+    // }
+    return "";
   }
 
   // 🎯 輔助方法：日期有效性檢查
@@ -841,7 +850,14 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
     this.editingRow = rowIndex;
     this.clonedItems[rowData[this.dataKey]] = { ...rowData };
 
-    // 🎯 在進入編輯模式時套用預設值（包括動態預設值）
+    // 深拷貝包括詳細資料
+    this.clonedItems[rowData[this.dataKey]] = {
+      ...rowData,
+      [this.detailKey]: rowData[this.detailKey] ?
+        JSON.parse(JSON.stringify(rowData[this.detailKey])) : []
+    };
+
+    //在進入編輯模式時套用預設值（包括動態預設值）
     this.mainColumns.forEach(column => {
       const currentValue = rowData[column.field];
 
@@ -918,11 +934,24 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
 
   onRowEditCancel(rowData: any, rowIndex: number) {
     try {
-      this.data[rowIndex] = this.clonedItems[rowData[this.dataKey]];
+      // 🎯 關鍵：完整還原包括詳細資料
+      const originalData = this.clonedItems[rowData[this.dataKey]];
+
+      // 還原主資料
+      Object.keys(originalData).forEach(key => {
+        if (key !== this.detailKey) {
+          rowData[key] = originalData[key];
+        }
+      });
+
+      // 🎯 重要：還原詳細資料
+      if (originalData[this.detailKey]) {
+        rowData[this.detailKey] = JSON.parse(JSON.stringify(originalData[this.detailKey]));
+      }
+
       delete this.clonedItems[rowData[this.dataKey]];
       this.editingRow = null;
 
-      // 🎯 清理日期輸入狀態
       this.cleanupDateInputStates(rowData);
       this.validationService.clearRowValidationErrors(rowData, this.dataKey);
 
@@ -2129,12 +2158,13 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
   onCheckboxChange(rowData: any, field: string, newValue: any, rowIndex: number, column: ColumnDef): void {
     console.log(`✅ Checkbox 變更: ${field} = ${newValue} (第${rowIndex + 1}行)`);
 
-    // 🎯 勾選時：立即更新 + 進入編輯模式
+    // 勾選時：立即更新 + 進入編輯模式
     if (newValue === true) {
       rowData[field] = newValue;
 
+      // 檢查是否啟用自動編輯
       if (column.autoEditOnSelect && !this.isRowEditing(rowIndex)) {
-        console.log(`🎯 勾選，自動進入編輯模式`);
+        console.log(`勾選，自動進入編輯模式`);
         setTimeout(() => {
           this.onRowEditInit(rowData, rowIndex);
           this.cdr.detectChanges();
@@ -2142,15 +2172,14 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
       }
     }
 
-    // 🎯 取消勾選時：特殊處理
+    // 取消勾選時：特殊處理
     else if (newValue === false) {
-      if (this.isRowEditing(rowIndex)) {
-        console.log(`❌ 取消勾選，退出編輯模式`);
-
-        // 🚨 關鍵：使用 Promise 確保時序正確
+      // 新增：檢查是否啟用自動保存退出
+      if (column.autoSaveOnUnselect && this.isRowEditing(rowIndex)) {
+        console.log(`取消勾選，自動保存並退出編輯模式`);
         this.handleUnselectWithCancel(rowData, rowIndex, field, newValue);
       } else {
-        // 如果不在編輯模式，直接更新
+        // 如果沒有啟用自動保存退出，只更新值
         rowData[field] = newValue;
       }
     }
@@ -2158,6 +2187,16 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
     // 觸發直接編輯保存事件
     if (column.directEdit) {
       this.onDirectEditChange(rowData, field, newValue, rowIndex, column);
+    }
+
+    if (column.customCheckboxHandler) {
+      column.customCheckboxHandler({
+        rowData,
+        field,
+        newValue,
+        oldValue: !newValue, // 簡單的反向邏輯
+        parentData: undefined // 主表格沒有父資料
+      });
     }
   }
 
@@ -2194,5 +2233,72 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
 
   onButtonClick(rowData: any, field: string): void {
     this.buttonClick.emit({ rowData, field });
+  }
+
+
+  // 新增方法來檢查當前 tab 是否允許操作
+  canAddDetailForCurrentTab(rowData: any): boolean {
+    const currentTab = this.getDetailSelectedTab(rowData);
+    const tabConfig = this.detailTabOptions.find(tab => tab.id === currentTab);
+    return tabConfig?.allowAdd || false;
+  }
+
+  canDeleteDetailForCurrentTab(rowData: any): boolean {
+    const currentTab = this.getDetailSelectedTab(rowData);
+    const tabConfig = this.detailTabOptions.find(tab => tab.id === currentTab);
+    return tabConfig?.allowBatchDelete || false;
+  }
+
+  canShowCheckboxForCurrentTab(rowData: any): boolean {
+    const currentTab = this.getDetailSelectedTab(rowData);
+    const tabConfig = this.detailTabOptions.find(tab => tab.id === currentTab);
+    return tabConfig?.showCheckbox || false;
+  }
+
+  onDetailCheckboxChange(detailData: any, field: string, newValue: any, rowIndex: number, detailIndex: number, column: ColumnDef): void {
+    console.log(`內層 Checkbox 變更: ${field} = ${newValue} (主行${rowIndex + 1}, 詳細行${detailIndex + 1})`);
+
+    // 勾選時：立即更新 + 進入編輯模式
+    if (newValue === true) {
+      detailData[field] = newValue;
+
+      if (column.autoEditOnSelect && !this.isDetailEditing(rowIndex, detailIndex)) {
+        console.log(`勾選，自動進入詳細編輯模式`);
+        setTimeout(() => {
+          const parentData = this.data[rowIndex];
+          this.onDetailEditInit(detailData, parentData, rowIndex, detailIndex);
+          this.cdr.detectChanges();
+        }, 150);
+      }
+    }
+
+    // 取消勾選時：特殊處理
+    else if (newValue === false) {
+      if (column.autoSaveOnUnselect && this.isDetailEditing(rowIndex, detailIndex)) {
+        console.log(`取消勾選，自動儲存並退出詳細編輯模式`);
+        // 這裡需要處理詳細資料的自動儲存退出
+        const parentData = this.data[rowIndex];
+        this.onDetailEditSave(detailData, parentData);
+      } else {
+        detailData[field] = newValue;
+      }
+    }
+
+    // 觸發直接編輯儲存事件
+    if (column.directEdit) {
+      const parentData = this.data[rowIndex];
+      this.onDetailDirectEditChange(detailData, parentData, field, newValue, rowIndex, detailIndex);
+    }
+
+    if (column.customCheckboxHandler) {
+      const parentData = this.data[rowIndex];
+      column.customCheckboxHandler({
+        rowData: detailData,
+        field,
+        newValue,
+        oldValue: !newValue,
+        parentData
+      });
+    }
   }
 }

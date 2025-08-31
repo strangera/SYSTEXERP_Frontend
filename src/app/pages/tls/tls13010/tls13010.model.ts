@@ -389,7 +389,8 @@ export interface ContractInfo {
   total_amt_unit?: string;        // 目標營業額單位(業主)
   total_amt_vendor_unit?: string; // 目標營業額單位(廠商)
 
-  selectedBankInfo?: AutoCompleteOption | null;
+  // selectedBankInfo?: AutoCompleteOption | null;
+  totalLocationSpace?: number;
 }
 
 // 其他介面保持不變...
@@ -447,14 +448,14 @@ export interface FareItem {
 
 export interface CommissionItem {
   id: number | string;
-  commissionType: string;
-  commissionTypeName: string;
-  taxType: number;
+  tlt_id: string;
+  tlt_id_desc: string;
+  cag_taxtype: number;
   discountSummary: string;
-  transactionAmount: number;
-  specialCommission: number;
-  fullPointActivity: boolean;
-  thousandDiscount: boolean;
+  sst_amount: number;
+  sst_rate: number;
+  cap_saletype2: boolean;
+  cap_saletype1: boolean;
   selectedSettingOption: string;
   discountSettingItems: DiscountSettingItem[];
   annualPerformanceItems: AnnualPerformanceItem[];
@@ -470,19 +471,22 @@ export interface DiscountSettingItem {
   id?: number | string;
   selected: boolean;
   cag_barcode: string;
-  startDate: Date;
-  endDate: Date;
-  rate?: number;
+  tlt_bdate: Date;
+  tlt_edate: Date;
+  cag_charge_rate?: number;
   _status?: 'original' | 'modified' | 'new' | 'deleted';
+
+  is_configured: boolean;
+  is_enabled: boolean;
 }
 
 export interface AnnualPerformanceItem {
   id?: number | string;
   selected: boolean;
-  startDate: Date;
-  endDate: Date;
-  discountAmount: number;
-  rate: number;
+  tlt_bdate: Date;
+  tlt_edate: Date;
+  year_amount: number;
+  extra_rate: number;
   _status?: 'original' | 'modified' | 'new' | 'deleted';
 }
 
@@ -490,10 +494,13 @@ export interface DiscountLevelItem {
   id?: number | string;
   selected: boolean;
   cag_barcode: string;
-  startAmount: number;
-  endAmount: number;
-  rate: number;
+  level_bmount: number;
+  level_eamount: number;
+  level_charge_rate: number;
   _status?: 'original' | 'modified' | 'new' | 'deleted';
+
+  is_configured: boolean;
+  is_enabled: boolean;
 }
 
 // 條件設定相關介面
@@ -880,15 +887,15 @@ export class DataCleaner {
       // 處理主檔
       const cleanMaster: CleanCommissionMaster = {
         ...(this.hasValidId(commission.id) ? { id: Number(commission.id) } : {}),
-        tlt_id: commission.commissionType || '',
-        tlt_id_desc: commission.commissionTypeName || '',
-        cag_taxtype: commission.taxType === 1 ? '1' : '0',
-        sst_amount: this.parseNumber(commission.transactionAmount),
-        sst_rate: this.parseNumber(commission.specialCommission),
-        cap_saletype1: commission.thousandDiscount ? 'Y' : 'N',
-        cap_saletype2: commission.fullPointActivity ? 'Y' : 'N',
-        cag_bdate: this.formatDate(commission.mainStartDate),
-        cag_edate: this.formatDate(commission.mainEndDate)
+        tlt_id: commission.tlt_id || '',
+        tlt_id_desc: commission.tlt_id_desc || '',
+        cag_taxtype: commission.cag_taxtype === 1 ? '1' : '0',
+        sst_amount: this.parseNumber(commission.sst_amount),
+        sst_rate: this.parseNumber(commission.sst_rate),
+        cap_saletype1: commission.cap_saletype1 ? 'Y' : 'N',
+        cap_saletype2: commission.cap_saletype2 ? 'Y' : 'N',
+        cag_bdate: this.formatDate(commission.cag_bdate),
+        cag_edate: this.formatDate(commission.cag_edate)
       };
 
       switch (commission._status) {
@@ -915,13 +922,17 @@ export class DataCleaner {
   ): void {
     // 處理折扣設定明細
     commission.discountSettingItems?.forEach((detail: any) => {
+      if (!detail.selected) {
+        console.log(`跳過未勾選的折扣項目: ${detail.cag_barcode}`);
+        return;
+      }
       const cleanDetail = {
         ...(this.hasValidId(detail.id) ? { id: Number(detail.id) } : {}),
-        tlt_id: commission.commissionType || '',
+        tlt_id: commission.tlt_id || '',
         cag_barcode: detail.cag_barcode || '',
-        tlt_bdate: this.formatDate(detail.startDate),
-        tlt_edate: this.formatDate(detail.endDate),
-        cag_charge_rate: this.parseNumber(detail.rate) || 0
+        tlt_bdate: this.formatDate(detail.tlt_bdate),
+        tlt_edate: this.formatDate(detail.tlt_edate),
+        cag_charge_rate: this.parseNumber(detail.cag_charge_rate) || 0
       };
 
       switch (detail._status) {
@@ -943,11 +954,11 @@ export class DataCleaner {
     commission.annualPerformanceItems?.forEach((detail: any) => {
       const cleanAnnual = {
         ...(this.hasValidId(detail.id) ? { id: Number(detail.id) } : {}),
-        tlt_id: commission.commissionType || '',
-        tlt_bdate: this.formatDate(detail.startDate),
-        tlt_edate: this.formatDate(detail.endDate),
-        year_amount: this.parseNumber(detail.discountAmount) || 0,
-        extra_rate: this.parseNumber(detail.rate) || 0
+        tlt_id: commission.tlt_id || '',
+        tlt_bdate: this.formatDate(detail.tlt_bdate),
+        tlt_edate: this.formatDate(detail.tlt_edate),
+        year_amount: this.parseNumber(detail.year_amount) || 0,
+        extra_rate: this.parseNumber(detail.extra_rate) || 0
       };
 
       switch (detail._status) {
@@ -967,14 +978,18 @@ export class DataCleaner {
 
     // 處理層級抽成明細
     commission.discountLevelItems?.forEach((detail: any, index: number) => {
+      if (!detail.selected) {
+        console.log(`跳過未勾選的層級抽成項目: ${detail.cag_barcode}`);
+        return;
+      }
       const cleanLevel = {
         ...(this.hasValidId(detail.id) ? { id: Number(detail.id) } : {}),
-        tlt_id: commission.commissionType || '',
+        tlt_id: commission.tlt_id || '',
         seq_no: index + 1,
         cag_barcode: detail.cag_barcode || '',
-        level_bmount: this.parseNumber(detail.startAmount) || 0,
-        level_eamount: this.parseNumber(detail.endAmount) || 0,
-        level_charge_rate: this.parseNumber(detail.rate) || 0
+        level_bmount: this.parseNumber(detail.level_bmount) || 0,
+        level_eamount: this.parseNumber(detail.level_eamount) || 0,
+        level_charge_rate: this.parseNumber(detail.level_charge_rate) || 0
       };
 
       switch (detail._status) {
@@ -1161,10 +1176,21 @@ export class DataCleaner {
   private static formatDate(date: any): string {
     if (!date) return '';
     try {
+      let dateObj: Date;
       if (date instanceof Date) {
-        return date.toISOString().split('T')[0];  // 保持原本的 YYYY-MM-DD 格式
+        dateObj = date;
+      } else if (typeof date === 'string') {
+        dateObj = new Date(date);  // 解析字串為本地 Date
+      } else {
+        dateObj = new Date(date);
       }
-      return new Date(date).toISOString().split('T')[0];
+      if (isNaN(dateObj.getTime())) return '';
+
+      // 使用本地時間組成 YYYY-MM-DD
+      const year = dateObj.getFullYear();
+      const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+      const day = String(dateObj.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
     } catch {
       return '';
     }

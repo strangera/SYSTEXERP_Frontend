@@ -216,10 +216,8 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
     this.initializeDataStructure();
     this.initializePage('TLS13010', this.dataForm);
     this.loadOrgOptions();
-    console.log('📋 測試 loadWorkflowData...');
     try {
       this.loadWorkflowData();
-      console.log('✅ loadWorkflowData 成功');
     } catch (error) {
       console.error('❌ loadWorkflowData 失敗:', error);
     }
@@ -268,10 +266,7 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
   // }
 
   private loadWorkflowData(): void {
-    console.log('🔍 loadWorkflowData 開始執行');
-
     try {
-      console.log('📋 步驟 1: 檢查 contractFlowService...');
       if (!this.contractFlowService) {
         console.error('❌ contractFlowService 未注入');
         return;
@@ -289,57 +284,19 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
       console.log('📋 isNewMode:', isNewMode);
 
       if (hasContractId || isNewMode) {
-        console.log('📋 步驟 4: 有有效的工作流程資料，取得模式資訊...');
 
         const modeInfo = this.contractFlowService.getWorkflowModeInfo();
-        console.log('📋 modeInfo:', modeInfo);
 
         this.currentTalentId = modeInfo.talentId;
         this.currentContractData = workflowData?.queryRowData;
+        this.setupTotalLocationSpace();
+        this.prepareContractInfoDisplay();
+        this.initializeDataStructure();
 
-        console.log('✅ 工作流程狀態確認:', {
-          mode: modeInfo.modeName,
-          currentTalentId: this.currentTalentId,
-          contractId: modeInfo.contractId
-        });
-
-        console.log('📋 步驟 5: 準備執行子方法...');
-
-        // 🚨 逐一測試這些子方法
-        console.log('📋 測試 prepareContractInfoDisplay...');
-        try {
-          this.prepareContractInfoDisplay();
-          console.log('✅ prepareContractInfoDisplay 成功');
-        } catch (error) {
-          console.error('❌ prepareContractInfoDisplay 失敗:', error);
-          return; // 如果這個失敗就停止
-        }
-
-        console.log('📋 測試 initializeDataStructure...');
-        try {
-          this.initializeDataStructure();
-          console.log('✅ initializeDataStructure 成功');
-        } catch (error) {
-          console.error('❌ initializeDataStructure 失敗:', error);
-          return;
-        }
-
-        console.log('📋 測試 loadFareDataWithPriority...');
-        try {
-          this.loadFareDataWithPriority();
-          console.log('✅ loadFareDataWithPriority 成功');
-        } catch (error) {
-          console.error('❌ loadFareDataWithPriority 失敗:', error);
-          return;
-        }
-
-        console.log('✅ loadWorkflowData 所有子方法完成');
+        this.loadFareDataWithPriority();
       } else {
-        console.warn('❌ 沒有工作流程資料，重導向到前一步');
         this.router.navigate(['account/tls/tls13010cru']);
       }
-
-      console.log('✅ loadWorkflowData 主要邏輯完成');
     } catch (error) {
       console.error('❌ loadWorkflowData 頂層異常:', error);
     }
@@ -373,6 +330,14 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
 
     this.subscriptions.push(viewModeSub);
     this.isViewMode = this.contractFlowService.isViewMode();
+  }
+
+  private setupTotalLocationSpace(): void {
+    const step1Data = this.contractFlowService.getStep1Data();
+    const totalSpace = step1Data?.totalLocationSpace || 0;
+
+    console.log('🏢 從 Step1 取得總坪數:', totalSpace);
+    this.fareCalculationService.setTotalLocationSpace(totalSpace);
   }
 
   private prepareContractInfoDisplay(): void {
@@ -621,7 +586,14 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
   // ========== 表格事件處理 (使用服務) ==========
   onFieldChange(fieldName: string, newValue: any, rowData: any, capType?: string): void {
     console.log(`🔄 立即欄位變更: ${capType}.${fieldName} = ${newValue}`);
-
+    if (fieldName === 'tpy_type' && newValue === '01') {
+      const totalSpace = this.fareCalculationService.getTotalLocationSpace();
+      if (totalSpace > 0) {
+        rowData.tpy_qty = totalSpace;
+        console.log(`🏢 單位改為坪數，自動設定數量: ${totalSpace}`);
+        this.fareCalculationService.autoCalculateAmount(rowData, 'A', 'tpy_qty');
+      }
+    }
     // 🎯 根據 capType 進行對應的計算處理
     switch (capType) {
       case 'A':
@@ -648,7 +620,12 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
     this.updateRowDataState(rowData, capType || 'A');
   }
 
-  // 🎯 A類型計算優化
+  private getTotalLocationSpace(): number {
+    const step1Data = this.contractFlowService.getStep1Data();
+    return step1Data?.totalLocationSpace || 0;
+  }
+
+  // A類型計算優化
   private handleTypeACalculation(fieldName: string, newValue: any, rowData: any): void {
     console.log(`🅰️ A類型計算: ${fieldName} = ${newValue}`);
 
