@@ -658,25 +658,20 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
 
   // 🎯 B類型計算優化
   private handleTypeBCalculation(fieldName: string, newValue: any, rowData: any): void {
-    console.log(`🅱️ B类型计算: ${fieldName} = ${newValue}`);
 
-    // 坪数单位选择时自动带入总坪数
     if (fieldName === 'tpy_type' && newValue === '01') {
       const totalSpace = this.getTotalLocationSpace();
       if (totalSpace > 0) {
         rowData.tpy_qty = totalSpace;
-        console.log(`坪数单位选择，自动设定数量: ${totalSpace}`);
       }
     }
 
-    // 直接在这里计算B类型金额，而不是依赖service
     if (['tpy_unitamt', 'tpy_qty', 'tpy_type'].includes(fieldName)) {
       const unitPrice = parseFloat(rowData.tpy_unitamt) || 0;
       const quantity = parseFloat(rowData.tpy_qty) || 0;
 
       if (unitPrice > 0 && quantity > 0) {
         rowData.tpy_amount = unitPrice * quantity;
-        console.log(`💰 B类型直接计算: ${unitPrice} × ${quantity} = ${rowData.tpy_amount}`);
       } else {
         rowData.tpy_amount = 0;
       }
