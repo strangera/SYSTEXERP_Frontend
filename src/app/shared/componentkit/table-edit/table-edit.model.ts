@@ -10,7 +10,6 @@ export interface Column {
   optionLabel?: string; // 下拉選單 optionLabel
   optionValue?: string; // 下拉選單 optionValue
   templateLabel?: string; // 模板欄位 label
-  filter?: boolean; // 是否顯示過濾器
   showClear?: boolean; // 是否顯示清除按鈕
 }
 // 欄位變更事件

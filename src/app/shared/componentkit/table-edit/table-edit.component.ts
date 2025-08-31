@@ -40,7 +40,7 @@ import { InputIconModule } from 'primeng/inputicon';
 export class TableEditComponent implements OnChanges, AfterContentInit {
   @ViewChild('dt', { static: false }) dt!: Table;         // table 元件
   // 基本設置
-  @Input() dataKey = 'TABLE_KEY';                                // table 資料key
+  @Input() dataKey = '_TABLE_KEY';                                // table 資料key
   @Input() tableKey: string | undefined = undefined;      // table 唯一標識 (必填)
   @Input() title: string | undefined = undefined;         // table 標題
   @Input() columns!: Column[];                            // table 欄位配置 (必填)
@@ -65,6 +65,14 @@ export class TableEditComponent implements OnChanges, AfterContentInit {
     Modified: 'modified',
     Deleted: 'deleted'
   };
+  // 驗證整行[rowValidate]，範例：
+  // validateEntireRow(rowData: T) {
+  //   if (驗證條件) {
+  //     return { isValid: false, errorMessage: '錯誤訊息' };
+  //   }
+  //   return { isValid: true, errorMessage: '' };
+  // }
+  @Input() rowValidate: ((rowData: any) => { isValid: boolean, errorMessage: string }) | undefined = undefined;
   @Output() fieldChange = new EventEmitter<FieldChangeEvent>(); // input 變更事件
   constructor(
     private readonly tableUtilityService: TableUtilityService,
@@ -75,6 +83,10 @@ export class TableEditComponent implements OnChanges, AfterContentInit {
       // 一開始先將無狀態的資料設為Original
       this.data = this.data.filter(item => item != null).map((item: any) => {
         if (item[this.dataStatusField] === undefined) { item[this.dataStatusField] = this.dataStatusValue.Original; }
+        // 載入資料時也執行整行驗證
+        if (this.rowValidate) {
+          item._rowValidationError = this.rowValidate(item);
+        }
         return item;
       });
       this.dataChange.emit(this.data);
@@ -82,12 +94,23 @@ export class TableEditComponent implements OnChanges, AfterContentInit {
   }
   ngAfterContentInit(): void {
     setTimeout(() => {
-      this.insertRow();
-      this.cdr.detectChanges();
+      if (!this.disabled) {
+        this.insertRow();
+        this.cdr.detectChanges();
+      }
     }, 0);
+  }
+  onSelectionChange(event: any) {
+    if (this.disabled) { return; }
+    event = event.filter((item: any) => !item._isAutoInsertCandidate);
+    this.selectionChange.emit(event)
   }
   // Insert 按鈕
   insertRow() {
+    if (this.disabled) { return; }
+    if (this.data.length === 0) {
+      this.insert.emit();
+    }
     const { newRowData, data } = this.tableUtilityService.insertNewRow(
       this.data,
       this.columns,
@@ -97,11 +120,11 @@ export class TableEditComponent implements OnChanges, AfterContentInit {
       this.dataStatusValue  // 將 dataStatusValue 傳給服務
     );
     this.data = data;
-    this.dataChange.emit(this.data);
     this.insert.emit();
   }
   // Delete 按鈕
   deleteRow(selectedItems: any) {
+    if (this.disabled) { return; }
     const itemsToDelete = new Set(selectedItems.map((item: any) => item[this.dataKey])); // 取得所有要刪除的 ID
     const updatedData = this.data.map(item => {
       if (itemsToDelete.has(item[this.dataKey])) {
@@ -109,8 +132,7 @@ export class TableEditComponent implements OnChanges, AfterContentInit {
         if (item[this.dataStatusField] === this.dataStatusValue.Original) {
           return { ...item, [this.dataStatusField]: this.dataStatusValue.Deleted };
         }
-        // 刪除時資料若為New 直接刪除
-        return null;
+        return null; // 刪除時資料若為New 直接刪除
       }
       return item;
     }).filter(item => item !== null);
@@ -118,9 +140,14 @@ export class TableEditComponent implements OnChanges, AfterContentInit {
     this.delete.emit(selectedItems);
     this.dataChange.emit(this.data);
     this.selectedItems = [];
+    // 如果表格資料為空，自動插入一筆新資料
+    if (this.data.length === 0) {
+      this.insertRow();
+    }
   }
   // 處理 ngModelChange 事件，並發送給父元件
   onValueChange(rowData: any, value: any, col: Column, index: number) {
+    if (this.disabled) { return; }
     // 如果資料是 Original 狀態，且有變更，則將狀態改為 Modified
     if (rowData[this.dataStatusField] === this.dataStatusValue.Original) {
       rowData[this.dataStatusField] = this.dataStatusValue.Modified;
@@ -146,8 +173,12 @@ export class TableEditComponent implements OnChanges, AfterContentInit {
         }
       }
     }
+    // 新增：執行整行驗證並儲存結果，除了第一行外
+    if (this.rowValidate && index !== 0) {
+      rowData._rowValidationError = this.rowValidate(rowData);
+    }
     // 觸發 fieldChange 事件，無論驗證是否通過 (父元件可以決定如何處理不通過的資料)
-    this.fieldChange.emit({ rowData, field: col.field, value: value, index });
+    this.fieldChange.emit({ rowData, field: col.field, value, index });
     // 由於數據綁定和驗證已經更新了 `this.data`，再次發送 `dataChange`
     this.dataChange.emit(this.data);
   }
@@ -186,6 +217,7 @@ export class TableEditComponent implements OnChanges, AfterContentInit {
     return isValidField;
   }
   onRowReorder(event: TableColumnReorderEvent) {
+    if (this.disabled) { return; }
     if (event.dropIndex === 0) {
       this.deleteRow(this.data.splice(1, 1));
       this.insertRow();

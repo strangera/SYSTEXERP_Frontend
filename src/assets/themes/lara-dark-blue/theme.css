@@ -69,6 +69,7 @@
   --sidebar-border-color: #4b5563; /* 一個較深的灰色作為邊框顏色 */
   --accordion-header-text: #dce2e5; /* 暗模式建議色：sky-900 */
   --accordion-header-bg: #004972; /* 淺藍字色，sky-200 左右 */
+  --table-invalid-row: var(--red-900);
 }
 
 :root {

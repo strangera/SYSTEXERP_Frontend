@@ -6,13 +6,14 @@
 <p-table #dt [value]="data" [columns]="columns" [(selection)]="selectedItems" selectionMode="multiple"
   [dataKey]="dataKey" [rowTrackBy]="trackByRow" [resizableColumns]="true" [reorderableColumns]="true"
   (onColReorder)="onColReorder($event)" (onRowReorder)="onRowReorder($event)"
-  styleClass="p-datatable-sm p-datatable-gridlines p-datatable-striped" (selectionChange)="selectionChange.emit($event)"
+  styleClass="p-datatable-sm p-datatable-gridlines p-datatable-striped" (selectionChange)="onSelectionChange($event)"
   [rowSelectable]="rowSelectableWrapper" [loading]="loading && data.length === 0">
   <ng-template pTemplate="caption">
     <div class="grid align-items-center justify-content-between mx-0">
       <div class="caption-left button-group flex gap-2 py-2">
-        <p-button (click)="deleteRow(selectedItems)" pTooltip="刪除" tooltipPosition="top" pButton icon="pi pi-trash"
-          severity="danger" class="p-button-text" [rounded]="true" [disabled]="selectedItems?.length <= 0" />
+        <p-button *ngIf="!disabled" (click)="deleteRow(selectedItems)" pTooltip="刪除" tooltipPosition="top" pButton
+          icon="pi pi-trash" severity="danger" class="p-button-text" [rounded]="true"
+          [disabled]="selectedItems?.length <= 0" />
       </div>
       <div class="flex-grow-1 p-2">
         <ng-content select="header"></ng-content>
@@ -23,7 +24,7 @@
     <tr>
       <th *ngIf="data.length" class="w-1rem"></th>
       <th class="w-1rem">序號</th>
-      <th class="w-1rem">
+      <th *ngIf="!disabled" class="w-1rem">
         <p-tableHeaderCheckbox [disabled]="disabled" />
       </th>
       <th *ngFor="let col of columns" pReorderableColumn pResizableColumn class="text-center">
@@ -35,13 +36,21 @@
   <ng-template pTemplate="body" let-rowIndex="rowIndex" let-rowData let-columns="columns" let-index="rowIndex">
     <tr [attr.data-key]="rowData[dataKey]" [pSelectableRowIndex]="rowIndex"
       [pSelectableRowDisabled]="!isRowSelectable(rowData) || disabled" [pSelectableRow]="rowData"
-      [pReorderableRow]="rowIndex">
+      [pReorderableRow]="rowIndex"
+      [ngClass]="{'invalid-row': rowIndex > 0 && rowData._rowValidationError?.isValid === false}">
       <td *ngIf="data.length">
-        <span *ngIf="index !== 0" class="pi pi-bars" pReorderableRowHandle></span>
-        <span *ngIf="index === 0" class="pi pi-plus"></span>
+        <span *ngIf="index !== 0 " class="pi pi-bars" pReorderableRowHandle></span>
+        <span *ngIf="index === 0 && !disabled" class="pi pi-plus"></span>
       </td>
-      <td class="text-center">{{ rowIndex + 1 }}</td>
-      <td>
+      <td class="text-center"
+        [pTooltip]="(rowIndex > 0 && rowData._rowValidationError?.errorMessage) ? rowData._rowValidationError.errorMessage : ''"
+        tooltipPosition="bottom">
+        <span [ngClass]="{'pi pi-exclamation-circle': rowIndex > 0 && rowData._rowValidationError?.isValid === false}">
+          {{rowIndex > 0 && rowData._rowValidationError?.isValid === false ? '' : rowIndex === 0 && !disabled ? '新增' :
+          rowIndex}}
+        </span>
+      </td>
+      <td *ngIf="!disabled">
         <p-tableCheckbox class="flex justify-content-center pointer-events-none" [pSelectableRow]="rowData"
           [value]="rowData" [disabled]="!isRowSelectable(rowData) || disabled || rowIndex === 0" />
       </td>
@@ -51,14 +60,14 @@
           <p-iconField iconPosition="right">
             <!-- input -->
             <input *ngSwitchCase="'input'" pInputText class="w-full min-w-max" [placeholder]="'請輸入' + col.header"
-              [(ngModel)]="rowData[col.field]" [ngModelOptions]="{ standalone: true }" [disabled]="disabled"
-              (ngModelChange)="onValueChange(rowData,$event, col, index)"
+              [(ngModel)]="rowData[col.field]" [ngModelOptions]="{ standalone: true }"
+              [disabled]="col.disabled(rowData) || disabled" (ngModelChange)="onValueChange(rowData,$event, col, index)"
               (blur)="onValueChange(rowData,rowData[col.field], col, index)"
               [ngClass]="{'ng-invalid ng-dirty': rowData._validationErrors?.[col.field]}" />
             <!-- inputNumber -->
             <p-inputNumber *ngSwitchCase="'inputNumber'" class="w-full min-w-max" styleClass="w-full" mode="decimal"
               [(ngModel)]="rowData[col.field]" [ngModelOptions]="{ standalone: true }"
-              [placeholder]="'請輸入' + col.header" [disabled]="disabled"
+              [placeholder]="'請輸入' + col.header" [disabled]="col.disabled(rowData) || disabled"
               (onInput)="onValueChange(rowData,$event.value, col, index)"
               (onBlur)="onValueChange(rowData,rowData[col.field], col, index)"
               [ngClass]="{'ng-invalid ng-dirty': rowData._validationErrors?.[col.field]}" />
@@ -66,9 +75,10 @@
             <p-dropdown *ngSwitchCase="'dropdown'" styleClass="w-full" appendTo="body" [(ngModel)]="rowData[col.field]"
               [ngModelOptions]="{ standalone: true }" [placeholder]="'請輸入' + col.header"
               [options]="getOptions(rowData, col)" [optionLabel]="col.optionLabel" [optionValue]="col.optionValue"
-              [disabled]="disabled" (onChange)="onValueChange(rowData,$event.value, col, index)"
+              [disabled]="col.disabled(rowData) || disabled" [editable]="true"
+              (onChange)="onValueChange(rowData,$event.value, col, index)"
               (onHide)="onValueChange(rowData,rowData[col.field], col, index)" [virtualScroll]="true"
-              [virtualScrollItemSize]="40" [filter]="col.filter || true" [showClear]="col.showClear || true"
+              [virtualScrollItemSize]="40" [showClear]="col.showClear || true"
               [ngClass]="{'ng-invalid ng-dirty': rowData._validationErrors?.[col.field]}">
               <ng-template let-item pTemplate="item" *ngIf="col.templateLabel">
                 <div class="flex align-items-center gap-2">
