@@ -212,6 +212,7 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
 
   // ========== 生命週期方法 ==========
   ngOnInit(): void {
+    window.scrollTo(0, 0);
     this.showMode = 'common';
     this.initializeViewModeFromService();
     this.initializeDataStructure();
