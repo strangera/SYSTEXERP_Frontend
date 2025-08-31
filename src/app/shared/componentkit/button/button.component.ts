@@ -1,4 +1,4 @@
-import { AfterViewInit, Component, EventEmitter, inject, Input, OnDestroy, OnInit, Output } from '@angular/core';
+import { AfterViewInit, ChangeDetectorRef, Component, EventEmitter, inject, Input, OnDestroy, OnInit, Output, signal } from '@angular/core';
 import { AuthService } from '../../../service/system/auth.service';
 import { CurrentPageService } from '../../../layout/app.menulist/current-page.service';
 import { Subject, takeUntil, timer } from 'rxjs';
@@ -38,6 +38,7 @@ export class ButtonComponent implements OnInit, AfterViewInit, OnDestroy {
   @Input() outlined: boolean | undefined; // 是否為輪廓按鈕
   @Input() form: FormGroup | undefined;
   @Input() styleClass = '';
+  public showButton = signal(false);
 
   private authService: AuthService = inject(AuthService);
   private currentPageService: CurrentPageService = inject(CurrentPageService);
@@ -60,6 +61,7 @@ export class ButtonComponent implements OnInit, AfterViewInit, OnDestroy {
   };
 
   messageService: NotificationService = inject(NotificationService);
+  cdr: ChangeDetectorRef = inject(ChangeDetectorRef);
 
   ngOnInit() {
     const config = this.buttonConfig[this.btnType];
@@ -84,15 +86,22 @@ export class ButtonComponent implements OnInit, AfterViewInit, OnDestroy {
   }
 
   private initialFormValue: any;
-  public showButton = false;
   ngAfterViewInit(): void { // 這個寫法有點爛，但是目前想到最簡單的解法了
     // 在這裡使用 timer 延遲儲存初始值
     if (this.btnType === 'cancel' || this.btnType === 'clear') {
-      // 延遲 300 毫秒，確保大多數情況下非同步資料已載入
-      timer(1000).pipe(takeUntil(this.ngUnsubscribe)).subscribe(() => {
+      setTimeout(() => {
+        if (this.btnType === 'cancel') {
+          this.disabled = true;
+        }
         this.initialFormValue = this.form?.getRawValue();
-        this.showButton = true; // 顯示按鈕
-      });
+        this.form?.valueChanges.pipe(takeUntil(this.ngUnsubscribe)).subscribe(() => {
+          if (this.btnType === 'cancel') {
+            this.disabled = false;
+          }
+        });
+
+        this.showButton.set(true);
+      }, 0);
     }
   }
 
