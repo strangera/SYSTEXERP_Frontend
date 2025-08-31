@@ -2,8 +2,7 @@
   <div class="flex gap-2 mb-2">
     <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
     <app-button btnType="back" label="上一步" (click)="onCancel()"></app-button>
-    <app-button btnType="create" label="下一步(抽成設定)" (click)="onSubmitNext()"
-      [disabled]="getTotalSelectedCount() === 0"></app-button>
+    <app-button btnType="create" label="下一步(抽成設定)" (click)="onSubmitNext()"></app-button>
     <app-button btnType="back" (click)="onClearAndExit()"></app-button>
   </div>
 
