@@ -586,13 +586,12 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
   }
   // ========== 表格事件處理 (使用服務) ==========
   onFieldChange(fieldName: string, newValue: any, rowData: any, capType?: string): void {
-    console.log(`🔄 立即欄位變更: ${capType}.${fieldName} = ${newValue}`);
+    console.log(`欄位變更: ${capType}.${fieldName} = ${newValue}`);
 
-    rowData[fieldName] = newValue;
+    // 🎯 關鍵：移除重複設值，expandable-edit-table 已經處理了
+    // rowData[fieldName] = newValue;  // 刪除這行
 
-    this.handleImmediateCalculation(fieldName, newValue, rowData, capType || 'A');
-
-    // 🎯 根據 capType 進行對應的計算處理
+    // 根據 capType 進行對應的計算處理
     switch (capType) {
       case 'A':
         this.handleTypeACalculation(fieldName, newValue, rowData);
@@ -601,7 +600,6 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
         this.handleTypeBCalculation(fieldName, newValue, rowData);
         break;
       case 'C':
-        // 🎯 關鍵：C類型的日期和金額計算
         this.handleTypeCCalculation(fieldName, newValue, rowData);
         break;
       case 'D':
@@ -614,26 +612,11 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
         console.warn(`未知的扣款類型: ${capType}`);
     }
 
+    // 移除立即的 detectChanges，讓表格組件處理
+    // this.cdr.detectChanges();  // 註解或移除這行
+
     // 統一的後續處理
     this.updateRowDataState(rowData, capType || 'A');
-  }
-
-  private handleImmediateCalculation(fieldName: string, newValue: any, rowData: any, capType: string): void {
-    if (capType === 'A' && fieldName === 'tpy_type' && newValue === '01') {
-      // 選擇坪數時立即帶入總坪數
-      const totalSpace = this.getTotalLocationSpace();
-      if (totalSpace > 0) {
-        rowData.tpy_qty = totalSpace;
-        console.log(`坪數單位選擇，自動設定數量: ${totalSpace}`);
-        this.cdr.detectChanges();
-        // 如果已有單價，同時計算金額
-        const unitPrice = parseFloat(rowData.tpy_unitamt) || 0;
-        if (unitPrice > 0) {
-          rowData.tpy_amount = unitPrice * totalSpace;
-          console.log(`同時計算金額: ${unitPrice} × ${totalSpace} = ${rowData.tpy_amount}`);
-        }
-      }
-    }
   }
 
   private getTotalLocationSpace(): number {
@@ -652,14 +635,16 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
       }
     }
 
-    // A類型金額計算 - 只要相關欄位變更就重新計算
+    // A類型金額計算 - 任何相關欄位變更都觸發
     if (['tpy_unitamt', 'tpy_qty', 'tpy_type'].includes(fieldName)) {
       const unitPrice = parseFloat(rowData.tpy_unitamt) || 0;
       const quantity = parseFloat(rowData.tpy_qty) || 0;
 
       if (unitPrice > 0 && quantity > 0) {
         rowData.tpy_amount = unitPrice * quantity;
-        console.log(`A類型計算: ${unitPrice} × ${quantity} = ${rowData.tpy_amount}`);
+        console.log(`A類型即時計算: ${unitPrice} × ${quantity} = ${rowData.tpy_amount}`);
+      } else {
+        rowData.tpy_amount = 0;
       }
     }
 
@@ -669,9 +654,18 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
     }
   }
 
+
   // 🎯 B類型計算優化
   private handleTypeBCalculation(fieldName: string, newValue: any, rowData: any): void {
     console.log(`🅱️ B類型計算: ${fieldName} = ${newValue}`);
+
+    if (fieldName === 'tpy_type' && newValue === '01') {
+      const totalSpace = this.getTotalLocationSpace();
+      if (totalSpace > 0) {
+        rowData.tpy_qty = totalSpace;
+        console.log(`坪數單位選擇，自動設定數量: ${totalSpace}`);
+      }
+    }
 
     if (['tpy_unitamt', 'tpy_qty'].includes(fieldName)) {
       this.fareCalculationService.autoCalculateAmount(rowData, 'B', fieldName);

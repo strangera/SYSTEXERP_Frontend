@@ -25,6 +25,16 @@ export class FareCalculationService {
     return this.totalLocationSpace;
   }
 
+  /**
+    * 🆕 統一處理坪數單位自動帶入邏輯
+    * 所有類型當選擇坪數單位時都會自動帶入總坪數
+    */
+  private handleLocationSpaceCalculation(data: any, capType: string): void {
+    if (data.tpy_type === '01' && this.totalLocationSpace > 0) {
+      data.tpy_qty = this.totalLocationSpace;
+      console.log(`🏢 ${capType}類型坪數自動計算: 總坪數 = ${this.totalLocationSpace}`);
+    }
+  }
 
   /**
    * 根據扣款類型自動計算金額
@@ -59,15 +69,11 @@ export class FareCalculationService {
    * 計算公式：金額 = 單價 × 數量
    */
   private calculateTypeA(data: any): void {
+    // 🆕 統一處理坪數邏輯
+    this.handleLocationSpaceCalculation(data, 'A');
+
     const unitPrice = parseFloat(data.tpy_unitamt) || 0;
-
-    // 坪數單位自動帶入總坪數
-    if (data.tpy_type === '01' && this.totalLocationSpace > 0) {
-      data.tpy_qty = this.totalLocationSpace;
-      console.log(`🏢 A類型坪數自動計算: 總坪數 = ${this.totalLocationSpace}`);
-    }
-
-    const quantity = parseFloat(data.tpy_qty) || 0; // 在條件判斷後才取值
+    const quantity = parseFloat(data.tpy_qty) || 0;
 
     if (unitPrice > 0 && quantity > 0) {
       data.tpy_amount = unitPrice * quantity;
@@ -87,6 +93,7 @@ export class FareCalculationService {
    * 計算公式：金額 = 單價 × 數量
    */
   private calculateTypeB(data: any): void {
+    this.handleLocationSpaceCalculation(data, 'B');
     const unitPrice = parseFloat(data.tpy_unitamt) || 0;
     const quantity = parseFloat(data.tpy_qty) || 0;
 
@@ -206,6 +213,7 @@ export class FareCalculationService {
    * D 類型計算：比率分攤
    */
   private calculateTypeD(data: any): void {
+    // this.handleLocationSpaceCalculation(data, 'D');
     const rate = parseFloat(data.tpy_rate) || 0;
     // D類型的具體計算邏輯根據業務需求實現
     console.log(`💰 D類型計算 - 比率: ${rate}`);
@@ -215,6 +223,7 @@ export class FareCalculationService {
    * E 類型計算：活動扣款
    */
   private calculateTypeE(data: any): void {
+    // this.handleLocationSpaceCalculation(data, 'E');
     const rate = parseFloat(data.tpy_rate) || 0;
     // E類型的具體計算邏輯根據業務需求實現
     console.log(`💰 E類型計算 - 比率: ${rate}`);
