@@ -20,6 +20,7 @@ import { DetailData, QueryTLS57050Request, SummaryData, Tls57050Service } from '
 import { DatePipe } from '@angular/common';
 import { ButtonModule } from 'primeng/button';
 import { HttpResponse } from '@angular/common/http';
+import { InputNumberComponent } from '@shared/componentkit/input-number/input-number.component';
 
 @Component({
   selector: 'app-tls57050',
@@ -37,7 +38,8 @@ import { HttpResponse } from '@angular/common/http';
     TableComponent,
     TranslateModule,
     DropdownTableComponent,
-    ButtonModule
+    ButtonModule,
+    InputNumberComponent
   ],
 })
 export class TLS57050Component extends BasicQueryPageComponent<DetailData | SummaryData> implements OnInit {
