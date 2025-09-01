@@ -109,7 +109,7 @@
             <div class="col-12" *ngIf="selectedTab === 'func'">
               <app-dropdown
                 label="功能代碼/名稱"
-                [control]="dataForm.controls.func"
+                [control]="getControl('KB_Func')" as FormControl
                 [options]="KB_FuncOptions"
                 optionLabel="label"
                 optionValue="value"
@@ -121,7 +121,7 @@
             <div class="col-12" *ngIf="selectedTab === 'button'">
               <app-dropdown
                 label="是否啟用"
-                [control]="dataForm.controls.KB_Switch"
+                [control]="getControl('KB_Switch')"
                 [options]="KB_SwitchOptions"
                 optionLabel="label"
                 optionValue="value"
@@ -132,14 +132,14 @@
             <div class="col-12" *ngIf="selectedTab === 'button'">
               <app-input-text
                 label="案鍵顯示(第一行)"
-                [control]="dataForm.controls.KB_Display1"
+                [control]="getControl('KB_Display1')"
               ></app-input-text>
             </div>
 
             <div class="col-12" *ngIf="selectedTab === 'button'">
               <app-input-text
                 label="案鍵顯示(第二行)"
-                [control]="dataForm.controls.KB_Display2"
+                [control]="getControl('KB_Display2')"
               ></app-input-text>
             </div>
 
@@ -150,24 +150,24 @@
                   id="kb-color"
                   type="text"
                   class="p-inputtext p-component"
-                  [value]="dataForm.controls.KB_Color.value"
+                  [value]="selectedKeyForm.get('KB_Color')?.value"
                   readonly
                 />
                 <p-colorPicker
-                  formControlName="color"
+                  [formControl]="getControl('color')"
                   appendTo="body"
                   format="rgb"
-                />
+                ></p-colorPicker>
               </div>
             </div>
 
             <div class="col-12" *ngIf="selectedTab === 'button'">
               <app-dropdown
                 label="按鍵形狀"
-                [control]="dataForm.controls.KB_Style"
+                [control]="getControl('KB_Style')"
                 [options]="KB_StyleOptions"
-                optionLabel="label"
-                optionValue="value"
+                optionLabel="SYS_Name"
+                optionValue="SYS_Code"
               ></app-dropdown>
             </div>
 
@@ -175,7 +175,7 @@
             <div class="col-12" *ngIf="selectedTab === 'font'">
               <app-dropdown
                 label="顯示字型"
-                [control]="dataForm.controls.KB_Font"
+                [control]="getControl('KB_Font')"
                 [options]="KB_FontOptions"
                 optionLabel="label"
                 optionValue="value"
@@ -186,7 +186,7 @@
             <div class="col-12" *ngIf="selectedTab === 'font'">
               <app-dropdown
                 label="顯示字型大小"
-                [control]="dataForm.controls.KB_Size"
+                [control]="getControl('KB_Size')"
                 [options]="KB_SizeOptions"
                 optionLabel="label"
                 optionValue="value"
@@ -197,7 +197,7 @@
             <div class="col-12" *ngIf="selectedTab === 'font'">
               <app-dropdown
                 label="字型樣式"
-                [control]="dataForm.controls.KB_Fonttyped"
+                [control]="getControl('KB_Fonttyped')"
                 [options]="KB_FonttypedOptions"
                 optionLabel="label"
                 optionValue="value"
@@ -212,14 +212,14 @@
                   id="KB_FontColor"
                   type="text"
                   class="p-inputtext p-component"
-                  [value]="dataForm.controls.KB_FontColor.value"
+                  [value]="selectedKeyForm.get('KB_FontColor')?.value"
                   readonly
                 />
                 <p-colorPicker
-                  formControlName="FontColor"
+                  [formControl]="getControl('FontColor')"
                   appendTo="body"
                   format="rgb"
-                />
+                ></p-colorPicker>
               </div>
             </div>
 
@@ -227,19 +227,19 @@
             <div class="col-12" *ngIf="selectedTab === 'other'">
               <app-input-text
                 label="參數1"
-                [control]="dataForm.controls.KB_Arg1"
+                [control]="getControl('KB_Arg1')"
               ></app-input-text>
             </div>
             <div class="col-12" *ngIf="selectedTab === 'other'">
               <app-input-text
                 label="參數2"
-                [control]="dataForm.controls.KB_Arg2"
+                [control]="getControl('KB_Arg2')"
               ></app-input-text>
             </div>
             <div class="col-12" *ngIf="selectedTab === 'other'">
               <app-input-text
                 label="參數3"
-                [control]="dataForm.controls.KB_Arg3"
+                [control]="getControl('KB_Arg3')"
               ></app-input-text>
             </div>
           </div>

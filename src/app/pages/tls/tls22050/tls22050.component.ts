@@ -39,7 +39,7 @@ import { createPaginationConfig } from '../../../shared/componentkit/table/table
 })
 export class TLS22050Component extends BasicQueryPageComponent<any> implements OnInit {
   queryForm = this.formBuilder.group({
-    POS_TypeList: [null],
+    POS_TypeList: [['']],
     VOU_CheckList: [null],
     salesDate: [null as Date | null, { disabled: true }],
     TXN_DateStart: [null as Date | null],
