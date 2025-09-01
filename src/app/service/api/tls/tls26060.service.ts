@@ -93,7 +93,7 @@ export class TLS26060Service {
   constructor(private http: HttpClient) { }
 
   // 查詢中分類預售業績總表資料
-  queryTLS26060(data: TLS26060QueryRequest): Observable<BaseQueryResponse<TLS26060Data>> {
-    return this.http.post<BaseQueryResponse<TLS26060Data>>(`${this.apiUrl}/queryTLS26060`, data);
+  queryTLS26060(data: TLS26060QueryRequest): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/queryTLS26060`, data);
   }
 }

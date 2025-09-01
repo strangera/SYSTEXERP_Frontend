@@ -13,13 +13,14 @@ import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdow
 import { QueryYearMonthComponent } from '../../../shared/componentkit/query-year-month/query-year-month.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { TranslateModule } from '@ngx-translate/core';
+import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
 
 @Component({
   selector: 'app-fin13010',
   templateUrl: './fin13010.component.html',
   styleUrls: ['./fin13010.component.scss'],
   standalone: true,
-  imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputTextRangeComponent, InputTextComponent, CalendarRangeComponent, DropdownComponent, QueryYearMonthComponent, TableComponent, TranslateModule]
+  imports: [MenubarComponent, ButtonComponent,CalendarComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputTextRangeComponent, InputTextComponent, CalendarRangeComponent, DropdownComponent,  TableComponent, TranslateModule]
 })
 export class FIN13010Component extends BasicQueryPageComponent<any> {
 
@@ -101,49 +102,84 @@ export class FIN13010Component extends BasicQueryPageComponent<any> {
 
   }
 
-  onSubmit(form: FormGroup): void {
-    this.submitted = true;
-    if (form.invalid) {
-      this.messageService.warnBubble('請完整填寫查詢條件');
-      return;
-    }
-
-    const payload = { ...form.value };
-    for (const key in payload) {
-      if (typeof payload[key] === 'string') {
-        payload[key] = payload[key].trim();
-        if (payload[key] === '') payload[key] = null;
-      }
-    }
-
-    this.loading = true;
-    this.messageService.blockUi();
-
-    this.fin13010Service.queryFIN13010(payload).subscribe({
-      next: (res) => {
-
-        this.data = res.Data || [];
-        this.totalRecords = res.TotalCount || this.data.length;
-        this.queryStateService.setQueryState(this.ProgNo, payload);
-
-
-      },
-      error: () => {
-        this.messageService.errorBubble('查詢錯誤');
-        this.loading = false;
-      },
-      complete: () => {
-        this.loading = false;
-        this.messageService.unblockUi();
-      }
-    });
+onSubmit(form: FormGroup): void {
+  this.submitted = true;
+  if (form.invalid) {
+    this.messageService.warnBubble('請完整填寫查詢條件');
+    return;
   }
+
+  const payload: any = { ...form.value };
+
+  // 先把字串欄位修剪
+  for (const key in payload) {
+    if (typeof payload[key] === 'string') {
+      payload[key] = payload[key].trim();
+      if (payload[key] === '') payload[key] = null;
+    }
+  }
+
+  // ★ 把月曆值轉成六碼 YYYYMM
+  payload.PUR_RepYYYYMM = this.toYYYYMM(payload.PUR_RepYYYYMM);
+
+  this.loading = true;
+  this.messageService.blockUi();
+
+  this.fin13010Service.queryFIN13010(payload).subscribe({
+    next: (res) => {
+      this.data = res.Data || [];
+      this.totalRecords = res.TotalCount || this.data.length;
+      this.queryStateService.setQueryState(this.ProgNo, payload);
+    },
+    error: () => {
+      this.messageService.errorBubble('查詢錯誤');
+      this.loading = false;
+    },
+    complete: () => {
+      this.loading = false;
+      this.messageService.unblockUi();
+    }
+  });
+}
 
 
 
   onClearForm(): void {
     this.queryForm.reset();
   }
+
+  private toYYYYMM(input: any): string | null {
+  if (!input) return null;
+
+  // 先處理常見字串：'2025/05'、'2025-05-01T00:00:00'
+  if (typeof input === 'string') {
+    const onlyDigits = input.replace(/\D/g, ''); // 拿掉所有非數字
+    if (onlyDigits.length >= 6) return onlyDigits.slice(0, 6); // '202505'
+    const d = new Date(input);
+    if (!isNaN(d.getTime())) {
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, '0');
+      return `${y}${m}`;
+    }
+    return null;
+  }
+
+  // Date 物件
+  if (input instanceof Date) {
+    const y = input.getFullYear();
+    const m = String(input.getMonth() + 1).padStart(2, '0');
+    return `${y}${m}`;
+  }
+
+  // 其他型別就試著 new Date 看看
+  const d = new Date(input);
+  if (!isNaN(d.getTime())) {
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    return `${y}${m}`;
+  }
+  return null;
+}
 
 
 

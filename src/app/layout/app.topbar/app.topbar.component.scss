@@ -179,3 +179,20 @@
   border-color: transparent;
   color: #607d8b;
 }
+
+@media (min-width: 992px) and (max-width: 1240px) {
+  .layout-topbar {
+    .topbar-menu {
+      .p-button {
+        padding: 0.5rem;
+        .p-button-icon-left {
+          margin-right: 0;
+          padding: 0.5rem;
+        }
+        .p-button-label {
+          display: none;
+        }
+      }
+    }
+  }
+}

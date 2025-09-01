@@ -15,7 +15,8 @@
   <div class="topbar-menu flex-grow-1  flex flex-row align-items-center">
     <ng-container *ngFor="let item of topLevelMenuItems">
       <p-button [label]="item.prog_name" [rounded]="true" [text]="true" severity="secondary" [icon]="item.icon"
-        (click)="onTopMenuItemClick(item)" [styleClass]="activeTopMenuItem === item ? 'active-top-menu-item' : ''">
+        (click)="onTopMenuItemClick(item)" [styleClass]="activeTopMenuItem === item ? 'active-top-menu-item' : ''"
+        tooltipPosition="bottom" pTooltip="{{item.prog_name}}">
       </p-button>
     </ng-container>
   </div>

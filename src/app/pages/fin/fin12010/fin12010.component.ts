@@ -19,6 +19,7 @@ import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { TranslateModule } from '@ngx-translate/core';
 import { ValidationService } from '@shared/service/validation.service';
+import { firstDayOfCurrentPeriod, lastDayOfCurrentPeriod } from '@shared/models/system/query-form.model';
 
 @Component({
   selector: 'app-fin12010',
@@ -41,8 +42,8 @@ import { ValidationService } from '@shared/service/validation.service';
 //1.1.2.1 電子式發票各系統配號維護
 export class FIN12010Component extends BasicQueryPageComponent<IFin12010Data> implements OnInit {
   queryForm = this.formBuilder.group({
-    SAL_GUIYYYYMM_start: [null, [Validators.required]], // 發票年月
-    SAL_GUIYYYYMM_end: [null, [Validators.required]], // 發票年月
+    SAL_GUIYYYYMM_start: [firstDayOfCurrentPeriod, [Validators.required]], // 發票年月
+    SAL_GUIYYYYMM_end: [lastDayOfCurrentPeriod, [Validators.required]], // 發票年月
     SAL_GUITrack: ['', [Validators.maxLength(2)]], // 字軌
     SAL_GUINo_start: [null, [Validators.maxLength(8), Validators.minLength(8), Validators.max(99999950)]], // 發票起始號碼
     SAL_GUINo_end: [null, [Validators.maxLength(8), Validators.minLength(8), Validators.max(99999999)]], // 發票結束號碼

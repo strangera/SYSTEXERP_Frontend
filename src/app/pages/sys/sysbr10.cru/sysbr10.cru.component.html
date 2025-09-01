@@ -34,7 +34,7 @@
       </div>
       <!-- 按鈕列 -->
       <div class="grid justify-content-end gap-2 mt-3 border-top-1 surface-border pt-3" *ngIf="!isFormReadable">
-        <app-button btnType="smartclear"></app-button>
+        <app-button btnType="cancel" [form]="dataForm"></app-button>
         <app-button btnType="submit"></app-button>
       </div>
     </form>
@@ -42,9 +42,32 @@
 </div>
 
 <div class="card">
-  <app-table tableKey="SYSBR10" [columns]="detailcolumns" dataKey="id" [multiSortMeta]="[{ field: 'id', order: 1 }]"
-    [insertRowData]="insertRowData" [defaultInsertData]="{ User_No: '', Org_ID: '', Role_No: '' }"
-    [showInsert]="showInsert" [showRowEdit]="showRowEdit" [showEdit]="false" [showDetail]="false"
-    [showReportMode]="false" [showDelete]="true" [showCheckBox]="true" [showPaginator]="false" [deleteData]="true"
-    [(data)]="detailList"></app-table>
+<app-table
+  tableKey="SYSBR10"
+    [columns]="detailColsForView"
+  [(data)]="detailList"
+
+
+
+
+
+  dataKey="id"
+  [multiSortMeta]="[{ field: 'id', order: 1 }]"
+  [insertRowData]="!isRead && insertRowData"
+  [defaultInsertData]="{ User_No: '', Org_ID: '', Role_No: '' }"
+  [showInsert]="!isRead && showInsert"
+  [showRowEdit]="!isRead && showRowEdit"
+  [showEdit]="false"
+  [showDetail]="false"
+  [showReportMode]="false"
+  [showDelete]="!isRead && showDelete"
+  [showCheckBox]="!isRead && showCheckBox"
+  [showPaginator]="false"
+  [deleteData]="!isRead && showDelete"
+  [showManage]="false"         
+  [disabled]="isRead"           
+  [(data)]="detailList">
+</app-table>
+
 </div>
+

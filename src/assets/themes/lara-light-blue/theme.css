@@ -192,6 +192,7 @@
   --primary-700: rgb(41.3, 91, 172.2);
   --primary-800: rgb(32.45, 71.5, 135.3);
   --primary-900: rgb(23.6, 52, 98.4);
+  --table-invalid-row: var(--red-50);
 }
 
 .p-editor-container .p-editor-toolbar {

@@ -1,1 +1,50 @@
-<p class="red-text">待開發</p>
+<div class="card">
+  <div class="flex gap-2 mb-2">
+    <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
+  </div>
+  <p-accordion>
+    <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'">
+      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
+        <div class="grid p-fluid">
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-text label="通告編號" controlName="NOT_No" [control]="queryForm.controls.NOT_No"
+              [submitted]="submitted"></app-input-text>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-calendar calendarType="dateOne" label="建立日期" controlName="NOT_Date"
+              [control]="queryForm.controls.NOT_Date" [submitted]="submitted"></app-calendar>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-calendar-range label="有效開始日期時間" calendarType="dateTimeRange" startControlName="NOT_BegDate_Start"
+              endControlName="NOT_BegDate_End" [startControl]="queryForm.controls.NOT_BegDate_Start"
+              [endControl]="queryForm.controls.NOT_BegDate_End" [submitted]="submitted"></app-calendar-range>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-calendar-range label="有效結束日期時間" calendarType="dateTimeRange" startControlName="NOT_EndDate_Start"
+              endControlName="NOT_EndDate_End" [startControl]="queryForm.controls.NOT_EndDate_Start"
+              [endControl]="queryForm.controls.NOT_EndDate_End" [submitted]="submitted"></app-calendar-range>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-text label="媒體檔案名稱" controlName="NOT_File" [control]="queryForm.controls.NOT_File"
+              [submitted]="submitted"></app-input-text>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown label="狀態" controlName="NOT_Status" [options]="NOT_Status_Options" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.NOT_Status" [submitted]="submitted"></app-dropdown>
+          </div>
+        </div>
+        <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+          <app-button btnType="clear" [form]="queryForm"></app-button>
+          <app-button btnType="query" [loading]="loading"></app-button>
+        </div>
+      </form>
+    </p-accordionTab>
+  </p-accordion>
+</div>
+<div class="card">
+  <app-table dataKey="ECR_TmplNo" [data]="data" [columns]="columns" (detail)="onDetail($event)" [showEdit]="false"
+    [multiSortMeta]="[{ field: 'ECR_TmplNo', order: 1 }]" [totalRecords]="totalRecords" [showDelete]="false"
+    (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [lazy]="true" [loading]="loading"
+    [addButton]="addButton" [buttonsLoading]="btnLoading"></app-table>
+</div>

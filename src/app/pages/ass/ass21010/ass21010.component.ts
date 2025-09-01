@@ -64,7 +64,7 @@ export class ASS21010Component extends BasicQueryPageComponent<unknown> implemen
   }, { allowSignalWrites: !0 });
 
   public readonly columns: Column[] = [
-    { field: 'ENG_Type', header: '能源類型' },
+    { field: 'ENG_Type', header: '能源類型', format: v => this.service.engTypeSignal().find(t => t.No === v)?.Name || v },
     { field: 'ENG_MeterNo', header: '錶號' },
     { field: 'Location_No', header: '設備位置編號' },
     { field: 'ENG_Remark', header: '備註' },

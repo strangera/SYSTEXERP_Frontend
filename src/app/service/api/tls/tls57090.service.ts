@@ -118,8 +118,8 @@ export class Tls57090Service {
       `${this.apiUrl}/exportTLS57090PDF`,
       body,
       {
-        observe: 'response', // 重要：指定觀察整個 HTTP Response
-        responseType: 'blob' // 指定回傳類型為 Blob
+        observe: 'response',
+        responseType: 'blob'
       }
     );
   }
@@ -136,8 +136,8 @@ export class Tls57090Service {
       `${this.apiUrl}/exportTLS57090Excel`,
       body,
       {
-        observe: 'response', // 重要：指定觀察整個 HTTP Response
-        responseType: 'blob' // 指定回傳類型為 Blob
+        observe: 'response',
+        responseType: 'blob'
       }
     );
   }

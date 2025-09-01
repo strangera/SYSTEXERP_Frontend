@@ -257,7 +257,15 @@ export class TLS52010CRUComponent extends BasicCruPageComponent<ITLS52010Data> i
   }
   saveDialog() {
     this.dialogVisible = false;
-    this.data = [...this.data, ...this.selectedItemsDialog.map(item => ({ ...item, POD_SubQty: 0, POD_Remark: '' }))];
+    this.data = [
+      ...this.data,
+      ...this.selectedItemsDialog.map(item => ({
+        ...item,
+        PLU_BoxQty: item.PLU_BoxQty === undefined || item.PLU_BoxQty === null ? 0 : item.PLU_BoxQty,
+        POD_SubQty: 0,
+        POD_Remark: ''
+      }))
+    ];
     this.selectedItemsDialog = [];
     this.selectedItems = [];
     this.calculateTotals();
@@ -401,8 +409,7 @@ export class TLS52010CRUComponent extends BasicCruPageComponent<ITLS52010Data> i
   });
   suggestions: IQueryPOS2004DetailResponse[] = [];
   fieldsConfig: FieldsConfig[] = [
-    { field: 'PLU_MagNo', header: '商品管理編號/國際條碼/廠商貨號', mainDataField: true },
-    { field: 'PLU_Name', header: '商品名稱' },
+    { field: 'PLU_MagNo', header: '商品管理編號/國際條碼/廠商貨號 - 商品名稱', mainDataField: true },
   ];
   opData: IQueryPOS2004DetailResponse[] = [];// overlayPanel 裡面的table
   opColumns: Column[] = [
@@ -425,7 +432,7 @@ export class TLS52010CRUComponent extends BasicCruPageComponent<ITLS52010Data> i
     this.tls52010Service.queryPOS2004Detail(body).pipe(untilDestroyed(this)).subscribe((results) => {
       this.suggestions = [...results.Data.map(item => ({
         ...item,
-        label: item.PLU_MagNo + ' - ' + item.PLU_Name + ' - ' + item.PLU_No + ' - ' + item.PLU_OrgPLUNo
+        label: item.PLU_MagNo + '/' + item.PLU_No + '/' + item.PLU_OrgPLUNo + ' - ' + item.PLU_Name
       }))];
     });
   }

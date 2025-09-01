@@ -54,7 +54,6 @@ export class TLS22040Component extends BasicQueryPageComponent<any> implements O
     { field: 'DiffNum', header: '差異筆數', visible: true },
   ];
 
-
   constructor(private tls22040Service: Tls22040Service) {
     super();
   }
@@ -63,16 +62,25 @@ export class TLS22040Component extends BasicQueryPageComponent<any> implements O
     this.initializePage('TLS22040', 'TLS/TLS22040cru', this.queryForm, (form) => this.onSubmit(form));
   }
 
-  // 格式化函式
+  /** yyyy/MM/dd 格式化 (避免時區錯位) */
+  private formatDate(d: any): string {
+    if (!d) return '';
+    const date = new Date(d);
+    const yyyy = date.getFullYear();
+    const mm = String(date.getMonth() + 1).padStart(2, '0');
+    const dd = String(date.getDate()).padStart(2, '0');
+    return `${yyyy}/${mm}/${dd}`;
+  }
+
+  /** 查詢結果顯示格式 yyyy-MM-dd */
   private formatToYMD(dateStr: string | null | undefined): string {
     if (!dateStr) return '';
     const d = new Date(dateStr);
     if (isNaN(d.getTime())) {
-
-      const parts = dateStr.split(' ')[0].replace(/\//g, '/'); // "2025-08-02"
+      const parts = dateStr.split(' ')[0].replace(/\//g, '/');
       return parts;
     }
-    return d.toISOString().split('T')[0]; // "2025-08-02"
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
   }
 
   /** 查詢主表 */
@@ -83,18 +91,14 @@ export class TLS22040Component extends BasicQueryPageComponent<any> implements O
       this.loading = true;
       const raw = frm.value;
 
-      // 日期轉換 yyyy/MM/dd
-      const formatDate = (d: any) =>
-        d ? new Date(d).toISOString().split('T')[0].replace(/-/g, '/') : '';
-
       const payload = {
         PageSize: 0,
         PageIndex: 0,
         OrderBy: 'PAY_Name',
         Offset: 0,
-        SortBy: [], // 後端不接受帶值，送空陣列
-        TXN_DateStart: formatDate(raw.TXN_DateStart),
-        TXN_DateEnd: formatDate(raw.TXN_DateEnd),
+        SortBy: [],
+        TXN_DateStart: this.formatDate(raw.TXN_DateStart),
+        TXN_DateEnd: this.formatDate(raw.TXN_DateEnd),
       };
 
       this.tls22040Service.queryTLS22040(payload).subscribe({
@@ -102,8 +106,6 @@ export class TLS22040Component extends BasicQueryPageComponent<any> implements O
           this.data = (res?.Data ?? []).map((x: any) => ({
             ...x,
             TXN_Date: this.formatToYMD(x.TXN_Date),
-            // LastBagTime: this.formatToYMD(x.LastBagTime),
-            // LastUpTime: this.formatToYMD(x.LastUpTime),
           }));
           this.totalRecords = res?.TotalCount ?? this.data.length;
           this.loading = false;
@@ -115,19 +117,14 @@ export class TLS22040Component extends BasicQueryPageComponent<any> implements O
       });
     });
   }
+
   override onDetail(row: any): void {
     console.log('電子發票上送筆數檢核表 被點擊:', row);
 
-    // 差異筆數為 0 -> 禁止進入明細
     if (!row.DiffNum || row.DiffNum === 0) {
       console.warn('DiffNum 為 0，不允許檢視明細');
-      // 這邊如果你有通知元件可以用，例如：
-      // this.notificationService.warn('此筆資料無差異，不可檢視明細');
       return;
     }
-
-    const formatDateForDetail = (dateStr: string) =>
-      dateStr ? dateStr.replace(/-/g, '/') : '';
 
     // 打明細 API
     const payload = {
@@ -136,19 +133,17 @@ export class TLS22040Component extends BasicQueryPageComponent<any> implements O
       OrderBy: 'TXN_Date',
       Offset: 0,
       SortBy: [],
-      TXN_Date: formatDateForDetail(row.TXN_Date), // 轉回 yyyy/MM/dd
+      TXN_Date: this.formatDate(row.TXN_Date), // yyyy/MM/dd
       MIG_Type: row.MIG_Type,
     };
 
     this.tls22040Service.queryTLS22040_Detail(payload).subscribe({
       next: (res) => {
         const detailData = res?.Data ?? [];
-
         const rowdataWithDetail = {
           ...row,
           details: detailData,
         };
-
         this.navigateWithState(CRUDStatus.Edit, rowdataWithDetail);
       },
       error: (err) => {
@@ -156,7 +151,4 @@ export class TLS22040Component extends BasicQueryPageComponent<any> implements O
       },
     });
   }
-
-
-
 }
