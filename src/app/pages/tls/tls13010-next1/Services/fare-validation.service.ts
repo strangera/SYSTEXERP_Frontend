@@ -145,9 +145,9 @@ export class FareValidationService {
           const item2Name = conflict.item2.cap_name || capItem;
 
           errors.push(
-            `${capType}類型扣款代號「${capItem}」時間重複：` +
-            `${item1Name}(${this.formatDateRange(conflict.item1)}) 與 ` +
-            `${item2Name}(${this.formatDateRange(conflict.item2)})`
+            `${capType}類型扣款代號「${capItem}」時間重複：`
+            // +`${item1Name}(${this.formatDateRange(conflict.item1)}) 與 ` +
+            // `${item2Name}(${this.formatDateRange(conflict.item2)})`
           );
 
           conflictItems.push(conflict.item1, conflict.item2);

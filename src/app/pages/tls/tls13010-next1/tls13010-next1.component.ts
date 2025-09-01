@@ -1272,7 +1272,7 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
     console.log(`複製 ${capType} 類型項目:`, originalItem.cap_item);
 
     try {
-      const newId = `copy_${capType}_${originalItem.cap_item}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      const newId = `copy_${capType}_${originalItem.cap_item}_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
 
       const copiedItem = {
         ...originalItem,
