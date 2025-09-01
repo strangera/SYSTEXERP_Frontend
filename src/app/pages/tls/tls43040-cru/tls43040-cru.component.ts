@@ -57,7 +57,7 @@ export class TLS43040CRUComponent extends BasicCruPageComponent<any> implements 
     ECR_GrpNo: [{ value: '自動編號', disabled: true }],
     ECR_GrpName: ['', [Validators.required, Validators.maxLength(64)]],
     ECR_GrpDesc: ['', [Validators.maxLength(255)]],
-    ECR_DtlLimit: ['', Validators.required],
+    ECR_DtlLimit: ['0', Validators.required],
 
   });
 
@@ -159,21 +159,38 @@ export class TLS43040CRUComponent extends BasicCruPageComponent<any> implements 
 
   onSubmit(form: FormGroup): void {
     if (form.valid) {
+      const raw = form.getRawValue();
+
       const payload = {
-        ...form.getRawValue(),
-        ID: this.isFormCreateable ? 0 : this.rowdata?.ID,
+        ID: this.isFormCreateable ? 0 : Number(this.rowdata?.ID ?? 0),
+        ECR_GrpNo: (!raw.ECR_GrpNo || raw.ECR_GrpNo === '自動編號') ? '' : raw.ECR_GrpNo, // 新增時送空字串
+        ECR_GrpName: raw.ECR_GrpName,
+        ECR_DtlLimit: raw.ECR_DtlLimit,
+        ECR_GrpDesc: raw.ECR_GrpDesc,
         Detail: this.data.map(item => ({
-          ...item,
-          // 這裡不用自己判斷 status
-          ECR_GrpSeqNo: item.ECR_GrpSeqNo ?? 0
+          ID: isNaN(Number(item.ID)) ? 0 : Number(item.ID),   // "saved-xxxx" → 0
+          ECR_GrpSeqNo: item.ECR_GrpSeqNo ?? 0,
+          ECR_No: item.ECR_No ?? '',
+          ECR_Type: item.ECR_Type ?? '',
+          TLT_No: item.TLT_No ?? '',
+          BUILDING_No: item.BUILDING_No ?? '',
+          FLOOR_No: item.FLOOR_No ?? '',
+          Area_No: item.Area_No ?? '',
+          status: item.status ?? 'A'  // 後端需要
         }))
       };
 
-      if (!payload.ECR_GrpNo || payload.ECR_GrpNo === '自動編號') {
+      console.log('送出的 payload:', payload);
+
+      if (!raw.ECR_GrpNo || raw.ECR_GrpNo === '自動編號') {
         // 新增
         this.tls43040Service.insertTLS43040(payload).subscribe({
           next: (res) => {
             console.log('新增成功:', res);
+            // 自動把回傳的編號填回表單，避免之後更新還是 "自動編號"
+            if (res?.Data?.ECR_GrpNo) {
+              this.dataForm.controls.ECR_GrpNo.setValue(res.Data.ECR_GrpNo);
+            }
           },
           error: (err) => {
             console.error('新增失敗:', err);
@@ -194,6 +211,7 @@ export class TLS43040CRUComponent extends BasicCruPageComponent<any> implements 
       console.log('表單驗證未通過');
     }
   }
+
 
 
   resetTable() {

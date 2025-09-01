@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { Validators, FormsModule, ReactiveFormsModule, FormGroup } from '@angular/forms';
+import { Validators, FormsModule, ReactiveFormsModule, FormGroup, FormBuilder, FormControl } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { PanelModule } from 'primeng/panel';
@@ -18,18 +18,23 @@ import { DialogModule } from 'primeng/dialog';
 import { ColorPickerModule } from 'primeng/colorpicker';
 import { Tls42010Service } from '../../../service/api/tls/tls42010.service';
 
-
 export interface KeyItem {
   code: string;
   x: number;
   y: number;
-  label?: string;
-  func?: string;
-  KB_Switch?: string | boolean;
+  KB_Func?: string;
+  KB_Switch?: string;
   KB_Display1?: string;
   KB_Display2?: string;
   KB_Color?: string;
   KB_Style?: string;
+  KB_Font?: string;
+  KB_Size?: number;
+  KB_Fonttyped?: string;
+  KB_FontColor?: string;
+  KB_Arg1?: string;
+  KB_Arg2?: string;
+  KB_Arg3?: string;
   type?: string;
 }
 
@@ -59,37 +64,35 @@ export interface KeyItem {
     ColorPickerModule
   ]
 })
-export class TLS42010CRUComponent
-  extends BasicCruPageComponent<any>
+export class TLS42010CRUComponent extends BasicCruPageComponent<any>
   implements OnInit {
 
+  // 主檔 form
   dataForm = this.formBuilder.nonNullable.group({
     USR_Level: ['', Validators.maxLength(6)],
     TSB_Name: [''],
-    ECR_KBType: ['TCHBTN'],  // 預設值
+    ECR_KBType: ['TCHBTN'],
     ECR_KBDesc: [''],
+    activePage: [0]
+  });
 
-    func: [''],
-    KG_button: [''],
-    KG_KeyPage: ['1'],   // 預設第一頁
-
-    KB_Switch: [''],
+  // 右側設定區 form
+  selectedKeyForm: FormGroup = this.formBuilder.group({
+    KB_Func: [''],
+    KB_Switch: ['Y'],
     KB_Display1: ['', Validators.maxLength(5)],
     KB_Display2: ['', Validators.maxLength(5)],
-    KB_Color: [''],
-    color: [null as { r: number; g: number; b: number } | null],
-    FontColor: [null as { r: number; g: number; b: number } | null],
+    KB_Color: ['RGB:0,0,0'],
+    color: [null],
     KB_Style: [''],
-
-    KB_Font: [''],
-    KB_Size: [14],   // 預設字體大小
-    KB_FontColor: [''],
+    KB_Font: ['微軟正黑體'],
+    KB_Size: [14],
+    KB_FontColor: ['RGB:0,0,0'],
+    FontColor: [null],
     KB_Fonttyped: [''],
-
     KB_Arg1: [''],
     KB_Arg2: [''],
-    KB_Arg3: [''],
-    activePage: [0]
+    KB_Arg3: ['']
   });
 
   // ---------------- Grid ----------------
@@ -97,9 +100,6 @@ export class TLS42010CRUComponent
   yCount = 5;
   keys: KeyItem[] = [];
   selected?: KeyItem;
-
-  KG_KeyPageOptions: { label: string; code: string }[] = [];
-  KG_buttonOptions: { label: string; code: string }[] = [];
 
   // ---------------- Tab Options ----------------
   tabOptions = [
@@ -113,6 +113,7 @@ export class TLS42010CRUComponent
   // ---------------- Dropdown Data ----------------
   TSB_NameOptions: IDropdownItem[] = [];
   ECR_KBTypeOptions: IDropdownItem[] = [];
+  KB_StyleOptions: IDropdownItem[] = [];
 
   KB_FuncOptions = [
     { label: '— 請選擇 —', value: '' },
@@ -129,15 +130,6 @@ export class TLS42010CRUComponent
     { label: '中 (14)', value: 14 },
     { label: '大 (16)', value: 16 }
   ];
-  KB_StyleOptions: IDropdownItem[] = [];
-  // KB_StyleOptions = [
-  //   { label: '正方形', value: '1' },
-  //   { label: '橢圓形', value: '2' },
-  //   { label: '菱形', value: '3' },
-  //   { label: '圓方形', value: '4' },
-  //   { label: '梯形', value: '5' },
-  //   { label: '三角形', value: '6' },
-  // ]
   KB_FontOptions = [
     { label: '微軟正黑體', value: 'Microsoft JhengHei' },
     { label: '標楷體', value: 'DFKai-SB' },
@@ -150,6 +142,7 @@ export class TLS42010CRUComponent
   ];
 
   constructor(
+    formBuilder: FormBuilder,
     private dropDownListService: DropDownListService,
     private tls42010Service: Tls42010Service
   ) {
@@ -185,41 +178,30 @@ export class TLS42010CRUComponent
     this.dropDownListService.querySYS1000_DropDownList({ SYS_Type: 'ECR_KBType' }).subscribe({
       next: (res) => {
         this.ECR_KBTypeOptions = res?.Data ?? [];
-        if (!this.dataForm.controls.ECR_KBType.value) {
-          this.dataForm.controls.ECR_KBType.setValue('TCHBTN');
-        }
       }
     });
 
     // 鍵盤樣式下拉
-    const params = { SYS_Type: 'KB_Style' };
+    const params = { SYS_Type: 'KB_Style', SYS_Status: 'A' };
     this.dropDownListService.querySYS1000_DropDownList(params).subscribe({
       next: (res) => {
-        if (res.Data) {
-          this.KB_StyleOptions = res.Data.map(item => ({
-            label: item.Name,
-            value: item.No,
-            No: item.No,
-            Name: item.Name
-          }));
-        } else {
-          this.KB_StyleOptions = [];
-        }
-      },
-      error: (err) => {
-        console.error('取得 KB_StyleOptions 失敗', err);
-      },
+        this.KB_StyleOptions = res?.Data?.map((item: any) => ({
+          No: item.No ?? item.SYS_Code,
+          Name: item.Name ?? item.SYS_Name
+        })) ?? [];
+      }
     });
 
-
-
-
-    // 顏色監聽
-    this.dataForm.controls.color.valueChanges.subscribe(value => {
-      if (value) this.dataForm.controls.KB_Color.setValue(`RGB:${value.r},${value.g},${value.b}`);
+    // 顏色監聽（selectedKeyForm）
+    this.selectedKeyForm.controls['color'].valueChanges.subscribe(value => {
+      if (value) {
+        this.selectedKeyForm.controls['KB_Color'].setValue(`RGB:${value.r},${value.g},${value.b}`);
+      }
     });
-    this.dataForm.controls.FontColor.valueChanges.subscribe(value => {
-      if (value) this.dataForm.controls.KB_FontColor.setValue(`RGB:${value.r},${value.g},${value.b}`);
+    this.selectedKeyForm.controls['FontColor'].valueChanges.subscribe(value => {
+      if (value) {
+        this.selectedKeyForm.controls['KB_FontColor'].setValue(`RGB:${value.r},${value.g},${value.b}`);
+      }
     });
   }
 
@@ -229,79 +211,104 @@ export class TLS42010CRUComponent
     for (let y = 1; y <= this.yCount; y++) {
       for (let x = 1; x <= this.xCount; x++) {
         const code = `${x.toString().padStart(2, '0')}${y.toString().padStart(2, '0')}`;
-        onePage.push({ code, x, y, label: code, type: 'normal' });
+        onePage.push({ code, x, y });
       }
     }
     this.keys = [...onePage];
     this.selected = this.keys[0];
   }
 
-  // ---------------- Tab Event ----------------
-  onTabChange(e: any) {
-    this.dataForm.controls.activePage.setValue(e.index);
-  }
-
-  onTabChangeTab(e: any) {
-    if (e.value && e.value !== this.selectedTab) {
-      this.selectedTab = e.value;
+  // 選中按鍵 → 把值帶進右側 form
+  selectKey(k: KeyItem) {
+    // 先存回上一顆的設定
+    if (this.selected) {
+      Object.assign(this.selected, this.selectedKeyForm.getRawValue());
     }
+
+    this.selected = k;
+
+    // 再把新選中的按鍵值 patch 進表單
+    this.selectedKeyForm.patchValue({
+      KB_Func: k.KB_Func ?? '',
+      KB_Switch: k.KB_Switch ?? 'Y',
+      KB_Display1: k.KB_Display1 ?? '',
+      KB_Display2: k.KB_Display2 ?? '',
+      KB_Color: k.KB_Color ?? 'RGB:0,0,0',
+      KB_Style: k.KB_Style ?? '',
+      KB_Font: k.KB_Font ?? '微軟正黑體',
+      KB_Size: k.KB_Size ?? 14,
+      KB_FontColor: k.KB_FontColor ?? 'RGB:0,0,0',
+      KB_Fonttyped: k.KB_Fonttyped ?? '',
+      KB_Arg1: k.KB_Arg1 ?? '',
+      KB_Arg2: k.KB_Arg2 ?? '',
+      KB_Arg3: k.KB_Arg3 ?? ''
+    });
   }
 
-  // ---------------- Submit ----------------
+  // 儲存主檔 + 全部按鍵
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
       this.loading = true;
 
-      const POS1004Disc = [{
-        ECR_KBType: frm.value.ECR_KBType || 'TCHBTN',
-        USR_Level: frm.value.USR_Level?.toString(),
-        KB_ScanCode: this.selected?.code ?? '',
-        KB_Func: frm.value.func,
-        KB_Arg1: frm.value.KB_Arg1,
-        KB_Arg2: frm.value.KB_Arg2,
-        KB_Arg3: frm.value.KB_Arg3,
-        KB_Display1: frm.value.KB_Display1,
-        KB_Display2: frm.value.KB_Display2,
-        KB_Font: frm.value.KB_Font,
-        KB_Size: Number(frm.value.KB_Size) || 0,
-        KB_Fonttyped: frm.value.KB_Fonttyped,
-        KB_Style: frm.value.KB_Style,
-        KB_Switch: frm.value.KB_Switch,
-        KB_Width: this.selected?.x ?? 0,
-        KB_Height: this.selected?.y ?? 0,
+      // 先同步目前選中的按鍵值
+      if (this.selected) {
+        Object.assign(this.selected, this.selectedKeyForm.getRawValue());
+      }
+
+      // 把有設定過的按鍵濾出來
+      const POS1004Disc = this.keys.filter(k =>
+        k.KB_Func || k.KB_Display1 || k.KB_Display2
+      ).map(k => ({
+        ECR_KBType: frm.value.ECR_KBType,
+        USR_Level: frm.value.USR_Level,
+        KB_ScanCode: k.code,
+        KB_Func: k.KB_Func,
+        KB_Arg1: k.KB_Arg1,
+        KB_Arg2: k.KB_Arg2,
+        KB_Arg3: k.KB_Arg3,
+        KB_Display1: k.KB_Display1,
+        KB_Display2: k.KB_Display2,
+        KB_Font: k.KB_Font,
+        KB_Size: k.KB_Size,
+        KB_Fonttyped: k.KB_Fonttyped,
+        KB_Style: k.KB_Style,
+        KB_Switch: k.KB_Switch,
+        KB_Width: k.x,
+        KB_Height: k.y,
         KB_Merge: '',
-        KB_Color: frm.value.KB_Color,
-        KB_FontColor: frm.value.KB_FontColor,
-        KG_KeyPage: parseInt(frm.value.KG_KeyPage || '1', 10)
-      }];
+        KB_Color: k.KB_Color,
+        KB_FontColor: k.KB_FontColor,
+        KG_KeyPage: frm.value.activePage + 1
+      }));
 
       const payload = {
-        USR_Level: frm.value.USR_Level?.toString(),
+        USR_Level: frm.value.USR_Level,
         TSB_Name: frm.value.TSB_Name,
-        ECR_KBType: frm.value.ECR_KBType || 'TCHBTN',
-        ECR_KBDesc: frm.value.ECR_KBDesc || '',
+        ECR_KBType: frm.value.ECR_KBType,
+        ECR_KBDesc: frm.value.ECR_KBDesc,
         POS1004Disc
       };
 
       this.tls42010Service.insertTLS42010M(payload).subscribe({
-        next: (res) => {
+        next: res => {
           this.loading = false;
-          console.log('新增成功:', res);
+          console.log('儲存成功:', res);
         },
-        error: (err) => {
+        error: err => {
           this.loading = false;
-          console.error('新增失敗:', err);
+          console.error('儲存失敗:', err);
         }
       });
     });
   }
 
-  // ---------------- Select ----------------
-  selectKey(k: KeyItem): void {
-    this.selected = k;
-    this.dataForm.patchValue({
-      KG_button: k.code
-    });
-    console.log('選中按鍵:', k);
+  onTabChange(event: any) {
+    this.selectedTab = event.value;
+  }
+  getControl(name: string): FormControl {
+    return this.selectedKeyForm.get(name) as FormControl;
+  }
+  onTabChangeTab(event: any) {
+    this.selectedTab = event.value;
   }
 }
