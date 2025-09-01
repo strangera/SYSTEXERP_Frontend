@@ -106,19 +106,18 @@ export class TLS41040Component extends BasicQueryPageComponent<any> implements O
 
 
   // ---- 查詢 ----
-  onSubmit(frm: FormGroup, lazyEvent?: any) {
+  onSubmit(frm: FormGroup) {
+    const frmValue = frm.value;
     this.handleSubmit(frm, () => {
       const payload = {
-        PageSize: lazyEvent?.pageSize || 10,
-        PageIndex: (lazyEvent?.pageIndex ?? 1) - 1,
-        OrderBy: '',
-        Offset: ((lazyEvent?.pageIndex ?? 1) - 1) * (lazyEvent?.pageSize || 10),
-        SortBy: lazyEvent?.SortBy || [{ field: 'NOT_SeqNo', order: 0 }],
-        ECR_No: frm.value.ECR_No || '',
-        NOT_BegDateTime: frm.value.NOT_BegDateTime,
-        NOT_EndDateTime: frm.value.NOT_EndDateTime,
-        NOT_Status: frm.value.NOT_Status || '',
-        NOT_Remark: frm.value.NOT_Remark || ''
+        PageSize: frmValue?.pageSize || 10,
+        PageIndex: (frmValue?.pageIndex ?? 1),
+        SortBy: frmValue?.SortBy || [{ field: 'NOT_SeqNo', order: 1 }],
+        ECR_No: frmValue.ECR_No || '',
+        NOT_BegDateTime: frmValue.NOT_BegDateTime,
+        NOT_EndDateTime: frmValue.NOT_EndDateTime,
+        NOT_Status: frmValue.NOT_Status || '',
+        NOT_Remark: frmValue.NOT_Remark || ''
       };
 
 

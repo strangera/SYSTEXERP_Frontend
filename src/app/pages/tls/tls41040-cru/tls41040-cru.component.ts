@@ -3,37 +3,38 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Validators, FormsModule, ReactiveFormsModule, FormGroup } from '@angular/forms';
 import { forkJoin, map, finalize } from 'rxjs';
-import { Column } from '../../../shared/componentkit/table/table.model';
 import { LocationOptionsService } from '../../../service/api/dropdownservice/location-options.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { PanelModule } from 'primeng/panel';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
 import { RadiobuttonComponent } from '../../../shared/componentkit/radiobutton/radiobutton.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { InputTextareaComponent } from '@shared/componentkit/input-textarea/input-textarea.component';
 import { Tls41040Service } from '../../../service/api/tls/tls41040.service';
+import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.component';
+import { Column } from '@shared/componentkit/table-edit/table-edit.model';
 
-// 定義 TLS41040 明細型別
+// ===== 定義 TLS41040 明細型別 =====
 export interface TLS41040Detail {
-  ID?: number;           // 明細 ID (可選)
-  NOT_SeqNo: number;     // 通告序號
-  TLT_No: string;        // 專櫃編號
-  ECR_Type: string;      // 機台類型
-  ECR_GrpNo: string;     // 機台群組編號
-  BUILDING_No: string;   // 館別
-  FLOOR_No: string;      // 樓層
-  Area_No: string;       // 區域
-  status: string;        // 狀態
+  ID?: number;            // 明細 ID
+  NOT_SeqNo?: string;     // 通告序號 (後端自動給號)
+  TLT_No?: string;        // 專櫃編號
+  ECR_Type?: string;      // 機台類型
+  ECR_GrpNo?: string | null;     // 機台群組編號
+  BUILDING_No?: string;   // 館別
+  FLOOR_No?: string;      // 樓層
+  Area_No?: string;       // 區域
+  status?: string;        // 狀態
 }
 
 @Component({
   selector: 'app-tls41040-cru',
   templateUrl: './tls41040-cru.component.html',
-  styleUrl: './tls41040-cru.component.scss',
+  styleUrls: ['./tls41040-cru.component.scss'],
   standalone: true,
   imports: [
     MenubarComponent,
@@ -47,12 +48,13 @@ export interface TLS41040Detail {
     ButtonComponent,
     CommonModule,
     TableComponent,
-    InputTextareaComponent
+    InputTextareaComponent,
+    TableEditComponent
   ]
 })
 export class TLS41040CRUComponent extends BasicCruPageComponent<any> implements OnInit {
 
-  // 表單
+  // ===== 主檔表單 =====
   dataForm = this.formBuilder.group({
     NOT_DateTime: [new Date(), [Validators.required]],
     NOT_BegDateTime: [new Date(), [Validators.required]],
@@ -100,6 +102,7 @@ export class TLS41040CRUComponent extends BasicCruPageComponent<any> implements 
   ngOnInit(): void {
     this.initializePage('TLS41040', this.dataForm);
     this.loadAndSetupColumns();
+    this.data = this.rowdata?.Details ?? [];
   }
 
   // ===== 載入選項並設定 Table 欄位 =====
@@ -151,15 +154,24 @@ export class TLS41040CRUComponent extends BasicCruPageComponent<any> implements 
       this.SYS3A00_Options = Area_No ?? [];
 
       this.columns = [
-        { field: 'NOT_SeqNo', header: '通告序號', type: 'input' },
-        { field: 'TLT_No', header: '專櫃編號', type: 'dropdown', options: this.TLTTALENT_OPTIONS, optionLabel: 'label', optionValue: 'value' },
-        { field: 'ECR_Type', header: '機台類型', type: 'dropdown', options: this.ECR_Type_Options, optionLabel: 'label', optionValue: 'value' },
-        { field: 'ECR_GrpNo', header: '機檯群組編號', type: 'dropdown', options: this.ECR_GrpNoOptions, optionLabel: 'label', optionValue: 'value' },
-        { field: 'BUILDING_No', header: '館別代碼', type: 'dropdown', options: this.SYS3700_Options, optionLabel: 'label', optionValue: 'value' },
-        { field: 'FLOOR_No', header: '樓層代碼', type: 'dropdown', options: this.SYS3800_Options, optionLabel: 'label', optionValue: 'value' },
-        { field: 'Area_No', header: '區域代碼', type: 'dropdown', options: this.SYS3A00_Options, optionLabel: 'label', optionValue: 'value' },
+        { field: 'NOT_SeqNo', header: '通告序號', format: (value) => this.isFormCreateable ? '自動給號' : value },
+        { field: 'TLT_No', header: '專櫃編號', type: 'dropdown', options: this.TLTTALENT_OPTIONS, optionLabel: 'label', optionValue: 'value', disabled: (rowData) => this.isOtherGroupSelected(rowData) },
+        { field: 'ECR_Type', header: '機台類型', type: 'dropdown', options: this.ECR_Type_Options, optionLabel: 'label', optionValue: 'value', disabled: (rowData) => this.isOtherGroupSelected(rowData) },
+        { field: 'ECR_GrpNo', header: '機檯群組編號', type: 'dropdown', options: this.ECR_GrpNoOptions, optionLabel: 'label', optionValue: 'value', disabled: (rowData) => this.isEcrGrpNoSelected(rowData) },
+        { field: 'BUILDING_No', header: '館別代碼', type: 'dropdown', options: this.SYS3700_Options, optionLabel: 'label', optionValue: 'value', disabled: (rowData) => this.isOtherGroupSelected(rowData) },
+        { field: 'FLOOR_No', header: '樓層代碼', type: 'dropdown', options: this.SYS3800_Options, optionLabel: 'label', optionValue: 'value', disabled: (rowData) => this.isOtherGroupSelected(rowData) },
+        { field: 'Area_No', header: '區域代碼', type: 'dropdown', options: this.SYS3A00_Options, optionLabel: 'label', optionValue: 'value', disabled: (rowData) => this.isOtherGroupSelected(rowData) },
       ];
     });
+  }
+
+  // 檢查其他互斥欄位是否有值
+  isOtherGroupSelected(rowData: any): boolean {
+    return !!(rowData['ECR_GrpNo'] && rowData['ECR_GrpNo'] !== '');
+  }
+  // 檢查機台群組編號是否有值
+  isEcrGrpNoSelected(rowData: any): boolean {
+    return !!(rowData['ECR_No'] || rowData['TLT_No'] || rowData['ECR_Type'] || rowData['BUILDING_No'] || rowData['FLOOR_No'] || rowData['Area_No']);
   }
 
   /** Insert payload */
@@ -170,6 +182,7 @@ export class TLS41040CRUComponent extends BasicCruPageComponent<any> implements 
       ...raw,
       Detail: this.data.map(d => {
         const clone = { ...d };
+
         if (clone.ECR_GrpNo) {
           clone.TLT_No = '';
           clone.ECR_Type = '';
@@ -177,14 +190,13 @@ export class TLS41040CRUComponent extends BasicCruPageComponent<any> implements 
           clone.FLOOR_No = '';
           clone.Area_No = '';
         } else {
-          clone.ECR_GrpNo = '';
+          clone.ECR_GrpNo = null;
         }
 
         return {
-          NOT_SeqNo: 0,
           TLT_No: clone.TLT_No ?? '',
           ECR_Type: clone.ECR_Type ?? '',
-          ECR_GrpNo: clone.ECR_GrpNo ?? '',
+          ECR_GrpNo: clone.ECR_GrpNo ?? null,
           BUILDING_No: clone.BUILDING_No ?? '',
           FLOOR_No: clone.FLOOR_No ?? '',
           Area_No: clone.Area_No ?? '',
@@ -227,14 +239,13 @@ export class TLS41040CRUComponent extends BasicCruPageComponent<any> implements 
 
         return {
           ID: clone.ID ?? this.rowdata?.Detail?.[i]?.ID ?? 0,
-          NOT_SeqNo: Number(clone.NOT_SeqNo) || 0,
           TLT_No: clone.TLT_No ?? '',
           ECR_Type: clone.ECR_Type ?? '',
           ECR_GrpNo: clone.ECR_GrpNo ?? '',
           BUILDING_No: clone.BUILDING_No ?? '',
           FLOOR_No: clone.FLOOR_No ?? '',
           Area_No: clone.Area_No ?? '',
-          status: clone.status ?? 'A'
+          status: clone.status
         };
       })
     };
@@ -253,8 +264,6 @@ export class TLS41040CRUComponent extends BasicCruPageComponent<any> implements 
         serviceCall = this.tls41040Service.insertTLS41040(body);
       } else if (this.isFormEditable) {
         body = this.createUpdateBody(frm);
-        console.log(body);
-
         serviceCall = this.tls41040Service.updateTLS41040(body);
       }
 
@@ -273,5 +282,11 @@ export class TLS41040CRUComponent extends BasicCruPageComponent<any> implements 
         }
       });
     });
+  }
+  validateEntireRow(rowData: any) {
+    if (!rowData.TLT_No && !rowData.ECR_Type && !rowData.ECR_GrpNo && !rowData.BUILDING_No && !rowData.FLOOR_No && !rowData.Area_No) {
+      return { isValid: false, errorMessage: '至少其中一個有值' };
+    }
+    return { isValid: true, errorMessage: '' };
   }
 }

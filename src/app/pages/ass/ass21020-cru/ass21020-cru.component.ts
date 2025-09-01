@@ -11,7 +11,7 @@ import { ButtonComponent } from '@shared/componentkit/button/button.component';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
 import { TableComponent } from '@shared/componentkit/table/table.component';
-import { Column, RowEditSaveEvent } from '@shared/componentkit/table/table.model';
+import { Column, createPaginationConfig, RowEditSaveEvent } from '@shared/componentkit/table/table.model';
 import { CRUDStatus } from '@shared/models/system/CRUDstatus';
 import { NGXLogger } from 'ngx-logger';
 import { FileSelectEvent } from 'primeng/fileupload';
@@ -41,7 +41,7 @@ export class ASS21020CRUComponent extends BasicCruPageComponent<unknown> impleme
   public readonly CRUDStatus = CRUDStatus;
 
   public readonly dataForm = this.formBuilder.nonNullable.group({
-    ENG_MeterNo: new FormControl<number | undefined>(void 0, [Validators.required]),
+    ENG_MeterNo: new FormControl<string | undefined>(void 0, [Validators.required]),
     Location_No: new FormControl<string | undefined>(void 0),
     floor_no: new FormControl<string | undefined>(void 0),
     floor_name: new FormControl<string | undefined>(void 0),
@@ -49,6 +49,7 @@ export class ASS21020CRUComponent extends BasicCruPageComponent<unknown> impleme
     floor_cat_name: new FormControl<string | undefined>(void 0),
     x_coord: new FormControl<string | undefined>(void 0),
     y_coord: new FormControl<string | undefined>(void 0),
+    ...createPaginationConfig([{ field: 'TLT_No', order: 1 }])
   });
   public readonly df = computed(() => this.dataForm.controls);
 
@@ -64,7 +65,7 @@ export class ASS21020CRUComponent extends BasicCruPageComponent<unknown> impleme
     const meterNo = this.meterNoSignal();
     if (!meterNo) return;
     const selected = this.service.engMeterNoMap.get(meterNo);
-    selected && this.service.loadASS21020({ ENG_MeterNo: selected.ENG_MeterNo });
+    selected && this.service.loadASS21020(selected);
     selected && this.service.queryTltByFlag(selected.ENG_MeterNo);
     this.dataForm.patchValue({
       Location_No: selected?.Location_No || void 0,
@@ -75,12 +76,11 @@ export class ASS21020CRUComponent extends BasicCruPageComponent<unknown> impleme
       x_coord: selected?.Draw_X || void 0,
       y_coord: selected?.Draw_Y || void 0,
     });
-    this.logger.debug(`meterNoEffect:`, [meterNo, selected]);
+    this.logger.debug(`meterNoEffect:`, [meterNo, selected, this.service.engMeterNoMap.entries(), this.dataForm.value]);
   });
 
   public readonly columns: Column[] = [
-    { field: 'TLT_No', header: '專櫃編號', disabled: () => !0 },
-    { field: 'TLT_Name', header: '專櫃名稱', type: 'dropdown', options: () => this.getTltList(), optionLabel: 'Name', optionValue: 'No', required: !0, },
+    { field: 'TLT_Name', header: '專櫃名稱', type: 'dropdown', options: () => this.getTltList(), optionLabel: 'Name', optionValue: 'No', required: !0 },
     { field: 'Location_No', header: '位置編號', type: 'dropdown', options: () => this.getLocList(), optionLabel: 'Name', optionValue: 'No', required: !0 },
     { field: 'NET_SPACE', header: '營業面積', type: 'inputNumber', required: !0 },
     { field: 'ENG_Rate', header: '比率', type: 'inputNumber', format: v => v + '%', validate: [(v) => ({ isValid: !v || this.rateValidate.test(v), errorMessage: ['比率格式不正確'] })] },
@@ -95,7 +95,7 @@ export class ASS21020CRUComponent extends BasicCruPageComponent<unknown> impleme
   }
 
   public ngOnInit(): void {
-    this.initializePage('ASS21010', this.dataForm);
+    this.initializePage('ASS21020', this.dataForm);
 
     this.logger.debug(`init:`, [this.rowdata]);
 
@@ -158,7 +158,42 @@ export class ASS21020CRUComponent extends BasicCruPageComponent<unknown> impleme
   public onSubmit(): void {
     this.handleSubmit(this.dataForm, () => {
       this.loading = !1;
+      const payload = <ASS21020Payload>{
+        ENG_MeterNo: this.df().ENG_MeterNo.value,
+        Location_No: this.df().Location_No.value,
+        floor_no: this.df().floor_no.value,
+        floor_name: this.df().floor_name.value,
+        floor_cat_no: this.df().floor_cat_no.value,
+        floor_cat_name: this.df().floor_cat_name.value,
+        x_coord: this.df().x_coord.value,
+        y_coord: this.df().y_coord.value,
+      };
+      this.service.updateASS21020(payload).pipe(finalize(() => {
+        this.loading = !1;
+        this.logger.debug(`onSubmit:`, [this.dataForm, payload]);
+      })).subscribe(res => {
+        if (!res.IsUpdateSuccess) return this.messageService.errorBubble(res.ErrorMsg, '新增失敗');
+        this.onCancel();
+        this.messageService.successBubble(`新增成功`);
+      });
     });
+  }
+
+  public onClear(): void {
+    this.service.tltNoSignal.set([]);
+  }
+
+  public onAutoCalculate(): void {
+    const data = this.service.tltNoSignal();
+    const totalSize = data.map(v => v.NET_SPACE).reduce((a, b) => a + (b ?? 0), 0);
+    this.service.tltNoSignal.update(v => {
+      for (const item of v) {
+        Reflect.set(item, 'ENG_Rate', totalSize ? Math.round((item.NET_SPACE ?? 0) / totalSize * 10000) / 100 : 0);
+      }
+      return v;
+    });
+
+    this.logger.debug(`onAutoCalculate:`, [data, totalSize]);
   }
 
   /** 處理 excel 匯入 */

@@ -123,9 +123,10 @@ export class ASS21020Component extends BasicQueryPageComponent<unknown> implemen
   });
 
   public readonly columns: Column[] = [
-    { field: 'EngType', header: '能源類型', format: v => this.service.engTypeSignal().find(t => t.No === v)?.Name || v },
+    { field: 'ENG_Type', header: '能源類型' },
     { field: 'ENG_MeterNo', header: '錶號' },
     { field: 'TLT_No', header: '專櫃編號' },
+    { field: 'TLT_Name', header: '專櫃名稱' },
     { field: 'ENG_Rate', header: '面積比率(%)', format: v => `${v}%` },
     { field: 'ENG_Remark', header: '備註' },
     { field: 'CRT_Date', header: '建立日期' },
@@ -163,14 +164,14 @@ export class ASS21020Component extends BasicQueryPageComponent<unknown> implemen
 
   public onSubmit(): void {
     this.handleSubmit(this.queryForm, () => {
-      // this.service.loadASS21020({
-      //   ENG_Type: this.qf().ENG_Type.value!.join(),
-      //   ENG_Rate: this.qf().ENG_Rate.value!,
-      //   ENG_MeterNo: this.qf().ENG_MeterNo.value!,
-      //   Location_No: this.qf().Location_No.value!,
-      //   SYS_StoreNo: this.authService.currentUserValue?.SYS_StoreNo!,
-      //   Mid: Number(this.authService.currentUserValue?.mid)!,
-      // });
+      this.service.loadASS21020({
+        ENG_Type: this.qf().ENG_Type.value!.join(),
+        ENG_Rate: this.qf().ENG_Rate.value!,
+        ENG_MeterNo: this.qf().ENG_MeterNo.value!,
+        Location_No: this.qf().Location_No.value!,
+        SYS_StoreNo: this.authService.currentUserValue?.SYS_StoreNo!,
+        Mid: Number(this.authService.currentUserValue?.mid)!,
+      });
 
       this.queryStateService.setQueryState(this.ProgNo, this.queryForm.getRawValue());
       this.loading = !1;

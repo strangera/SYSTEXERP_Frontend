@@ -21,7 +21,7 @@ export class ASS21020Service implements OnDestroy {
   public readonly tltNoSignal = signal<TLTByFlag[]>([]);
   public readonly locationSignal = signal<DropdownItem[]>([]);
 
-  public readonly engMeterNoMap = new Map<number, ASS2100ENGMeterType>();
+  public readonly engMeterNoMap = new Map<string, ASS2100ENGMeterType>();
   public readonly tltByFlagMap = new Map<string, TLTByFlag>();
 
   public engMeterNoLoading = !1;
@@ -29,7 +29,6 @@ export class ASS21020Service implements OnDestroy {
   public tableLoading = !1;
   public queryTltByFlagLoading = !1;
 
-  private readonly engTypeCancel$ = new Subject<void>();
   private readonly engMeterNoCancel$ = new Subject<void>();
   private readonly locationCancel$ = new Subject<void>();
   private readonly tableCancel$ = new Subject<void>();
@@ -41,7 +40,6 @@ export class ASS21020Service implements OnDestroy {
   ) { }
 
   public loadEngType(): void {
-    this.engTypeCancel$.next();
     this.engTypeSignal.set([
       { No: EngType.水, Name: '水錶' },
       { No: EngType.電, Name: '電錶' },
@@ -57,7 +55,7 @@ export class ASS21020Service implements OnDestroy {
       takeUntil(this.engMeterNoCancel$),
       tap(response => {
         this.engMeterNoSignal.set(response.Data);
-        response.Data.forEach(item => this.engMeterNoMap.set(item.Id, item));
+        for (const item of response.Data) this.engMeterNoMap.set(item.ENG_MeterNo, item);
       }),
       catchError(error => this.errorHandler.handleError(error)),
       finalize(() => {
@@ -125,7 +123,6 @@ export class ASS21020Service implements OnDestroy {
   }
 
   ngOnDestroy(): void {
-    this.engTypeCancel$.next();
     this.engMeterNoCancel$.next();
     this.locationCancel$.next();
     this.tableCancel$.next();

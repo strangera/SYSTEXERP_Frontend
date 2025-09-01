@@ -61,20 +61,34 @@ export class TLS42010Component extends BasicQueryPageComponent<any> implements O
   }
 
   onSubmit(frm: FormGroup) {
-    this.handleSubmit(frm, () => {
-      this.loading = true;
-      this.tls42010Service.queryTLS42010M(frm.value).subscribe({
-        next: (res) => {
-          this.data = res?.Data ?? [];        // 塞資料到 table
-          this.totalRecords = res?.TotalCount ?? this.data.length;
-          this.loading = false;
-          console.log('查詢成功:', res);
-        },
-        error: (err) => {
-          this.loading = false;
-          console.error('TLS42010 查詢失敗', err);
-        }
-      });
+  this.handleSubmit(frm, () => {
+    this.loading = true;
+
+    const queryParams = {
+      PageSize: frm.value.PageSize || 20,   // 預設 20 筆
+      PageIndex: frm.value.PageIndex || 1,
+      OrderBy: frm.value.OrderBy || '',
+      Offset: frm.value.Offset || 0,
+      SortBy: frm.value.SortBy || [{ field: 'USR_Level', order: 1 }],
+      USR_Level: frm.value.USR_Level || '',
+      ECR_KBDesc: frm.value.ECR_KBDesc || ''
+    };
+
+    console.log('查詢 payload:', queryParams);
+
+    this.tls42010Service.queryTLS42010M(queryParams).subscribe({
+      next: (res) => {
+        this.data = res?.Data ?? [];
+        this.totalRecords = res?.TotalCount ?? this.data.length;
+        this.loading = false;
+        console.log('查詢成功:', res);
+      },
+      error: (err) => {
+        this.loading = false;
+        console.error('TLS42010 查詢失敗', err);
+      }
     });
-  }
+  });
+}
+
 }

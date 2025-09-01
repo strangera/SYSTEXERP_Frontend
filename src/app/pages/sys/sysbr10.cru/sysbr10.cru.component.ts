@@ -149,59 +149,96 @@ export class SYSBR10CRUComponent
     return this.crudstatus === CRUDStatus.Create;
   }
 
-  onSubmit(form: FormGroup): void {
-    this.handleSubmit(form, () => {
-      const value = form.getRawValue();
+// sysbr10.cru.component.ts (僅示範 onSubmit 內關鍵段)
+onSubmit(form: FormGroup): void {
+  this.handleSubmit(form, () => {
+    const value = form.getRawValue();
 
-      // (略) 你的日期檢查...
+    const masterId = this.crudstatus === CRUDStatus.Edit ? (this.rowdata?.id ?? 0) : 0;
 
-      // ✅ 先決定主檔 id（編輯用原 id；新增為 0，由後端回填）
-      const masterId =
-        this.crudstatus === CRUDStatus.Edit ? (this.rowdata?.id ?? 0) : 0;
-
-      // ✅ 先產生 DetailList，不要參考到 payload
-      const detailList = this.detailList.map((row) => {
-        const detail: any = {};
-        this.detailcolumns.forEach((col) => (detail[col.field] = row[col.field] ?? null));
-
-        // 你的 id 規則原樣保留
-        detail.id =
-          typeof row.id === 'number' && row.id > 0 && String(row.id).length < 10
-            ? row.id
-            : 0;
-
-        // ✅ 直接用 masterId，別用 payload.id
-        detail.pos5101_id = masterId;
-        return detail;
-      });
-
-      // ✅ 最後才組 payload
-      const payload = {
-        id: masterId,
-        Pub_StartDate: value.Pub_StartDate,
-        Pub_EndDate: value.Pub_EndDate,
-        Pub_Type: value.Pub_Type,
-        Pub_Event: value.Pub_Event,
-        pub_enable: value.pub_enable,
-        Pub_Description: value.Pub_Description,
-        DetailList: detailList,
-      };
-
-      if (this.crudstatus === CRUDStatus.Edit && this.canEdit()) {
-        this.sysbr10Service.updateSYSBR10(payload).subscribe(() => {
-          this.messageService.successBubble('更新成功');
-          this.onCancel();
-        });
-      }
-
-      if (this.crudstatus === CRUDStatus.Create && this.canAdd()) {
-        this.sysbr10Service.insertSYSBR10(payload).subscribe(() => {
-          this.messageService.successBubble('新增成功');
-          this.dataForm.reset();
-        });
-      }
+    // 先組 DetailList（跟你原本的一樣）
+    const detailList = this.detailList.map((row) => {
+      const d: any = {};
+      this.detailcolumns.forEach((col) => (d[col.field] = row[col.field] ?? null));
+      d.id = (typeof row.id === 'number' && row.id > 0 && String(row.id).length < 10) ? row.id : 0;
+      d.pos5101_id = masterId;
+      return d;
     });
-  }
+
+    // ✅ 組 payload：不含 pub_enable
+    const payload = {
+      id: masterId,
+      Pub_StartDate: value.Pub_StartDate,
+      Pub_EndDate: value.Pub_EndDate,
+      Pub_Type: value.Pub_Type,
+      Pub_Event: value.Pub_Event,
+      Pub_Description: value.Pub_Description,
+      DetailList: detailList,
+    } as any;
+
+    const desiredEnable: 'Y' | 'N' = value.pub_enable as 'Y' | 'N';
+
+    // -------- 編輯流程 --------
+    if (this.crudstatus === CRUDStatus.Edit && this.canEdit()) {
+      this.loading = true;
+      this.sysbr10Service.updateSYSBR10(payload).subscribe({
+        next: (res) => {
+          // 主檔/明細 OK 後，再用「專用 API」切換啟用
+          this.sysbr10Service.updateSYSBR10_PubEable({ id: masterId, pub_enable: desiredEnable }).subscribe({
+            next: () => {
+              this.loading = false;
+              this.messageService.successBubble('更新成功（含啟用狀態）');
+              this.onCancel();
+            },
+            error: () => {
+              this.loading = false;
+              this.messageService.errorBubble('主檔已更新，但啟用狀態更新失敗');
+            },
+          });
+        },
+        error: () => {
+          this.loading = false;
+          this.messageService.errorBubble('更新失敗');
+        },
+      });
+      return;
+    }
+
+    // -------- 新增流程 --------
+    if (this.crudstatus === CRUDStatus.Create && this.canAdd()) {
+      this.loading = true;
+      this.sysbr10Service.insertSYSBR10(payload).subscribe({
+        next: (res) => {
+          const newId = res?.Data?.id ?? 0; // 依你後端回傳調整
+          if (!newId) {
+            this.loading = false;
+            this.messageService.successBubble('新增成功（未取得 id，略過啟用狀態設定）');
+            this.dataForm.reset();
+            return;
+          }
+
+          // 新增成功後，再設定啟用狀態
+          this.sysbr10Service.updateSYSBR10_PubEable({ id: newId, pub_enable: desiredEnable }).subscribe({
+            next: () => {
+              this.loading = false;
+              this.messageService.successBubble('新增成功（含啟用狀態）');
+              this.dataForm.reset();
+            },
+            error: () => {
+              this.loading = false;
+              this.messageService.errorBubble('新增成功，但啟用狀態設定失敗');
+            },
+          });
+        },
+        error: () => {
+          this.loading = false;
+          this.messageService.errorBubble('新增失敗');
+        },
+      });
+    }
+  });
+}
+
 
 
 }

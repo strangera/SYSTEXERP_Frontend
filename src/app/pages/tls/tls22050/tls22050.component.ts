@@ -14,7 +14,8 @@ import { Column, ColumnGroup } from 'src/app/shared/componentkit/table/table.mod
 import { ButtonModule } from 'primeng/button';
 import { NgClass } from '@angular/common';
 import { MultiSelectComponent } from "@shared/componentkit/multi-select/multi-select.component";
-import { yesterday } from '@shared/models/system/query-form.model';
+import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
+
 
 @Component({
   selector: 'app-tls22050',
@@ -40,9 +41,10 @@ export class TLS22050Component extends BasicQueryPageComponent<any> implements O
   queryForm = this.formBuilder.group({
     POS_TypeList: [null],
     VOU_CheckList: [null],
-    salesDate: [new Date()],
-    TXN_DateStart: [yesterday],
-    TXN_DateEnd: [yesterday],
+    salesDate: [null as Date | null, { disabled: true }],
+    TXN_DateStart: [null as Date | null],
+    TXN_DateEnd: [null as Date | null],
+    ...createPaginationConfig([{ field: 'ECR_No', order: 1 }]),
   });
 
   data: any[] = [];
@@ -60,6 +62,7 @@ export class TLS22050Component extends BasicQueryPageComponent<any> implements O
   statusOptions = [
     { label: '一般', value: '' },
     { label: '停管', value: 'PKNG' },
+    { label: '會員APP', value: 'APP' },
   ];
   VOU_Check_Options = [
     { label: '連線', value: "1" },
@@ -113,7 +116,7 @@ export class TLS22050Component extends BasicQueryPageComponent<any> implements O
       this.onSubmit(form)
     );
     this.queryForm.get('salesDate')?.valueChanges.subscribe((val) => {
-      if (val) {
+      if (val instanceof Date) {
         const year = val.getFullYear();
         const month = val.getMonth();
         this.salesMinDate = new Date(year, month, 1);
@@ -131,6 +134,7 @@ export class TLS22050Component extends BasicQueryPageComponent<any> implements O
         });
       }
     });
+    this.queryForm.patchValue({ salesDate: new Date() });
   }
 
   onSubmit(form: FormGroup): void {
