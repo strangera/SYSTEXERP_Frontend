@@ -65,20 +65,20 @@ export class ASS21020Component extends BasicQueryPageComponent<unknown> implemen
   private readonly locNoSignal = toSignal(this.qf().Location_No.valueChanges);
   private readonly tltNoSignal = toSignal(this.qf().TLT_No.valueChanges);
 
-  public readonly filteredMeterNo = signal<ASS2100ENGMeterType[]>([]);
-
   public readonly ratePtn = /^(100(?:\.0{1,2})?|0*(?:\d{1,2}))$/;
+
+  public filteredMeterNo: ASS2100ENGMeterType[] = [];
 
   public readonly totalRecords = computed(() => this.service.ASS21020Data().length);
 
   public readonly engTypeEffect = effect(() => {
-    this.filteredMeterNo.set(this.service.engMeterNoSignal().filter(i => {
+    this.filteredMeterNo = this.service.engMeterNoSignal().filter(i => {
       if (!this.engTypeSignal()?.length) return !0;
       return this.service.engTypeSignal()!.some(t => t.Name === i.ENG_Type
         && this.qf().ENG_Type.value?.some(v => v === t.No));
-    }));
-    this.logger.debug(`engTypeEffect:`, [this.filteredMeterNo()]);
-  }, { allowSignalWrites: !0 });
+    });
+    this.logger.debug(`engTypeEffect:`, [this.filteredMeterNo]);
+  });
 
   public readonly meterNoEffect = effect(() => {
     const meterNo = this.meterNoSignal();
@@ -92,8 +92,9 @@ export class ASS21020Component extends BasicQueryPageComponent<unknown> implemen
   }, { allowSignalWrites: !0 });
 
   public readonly locNoEffect = effect(() => {
-    const locNo = this.locNoSignal();
-    locNo?.length && this.qf().Location_No.patchValue(locNo);
+    const locNo = this.service.tltNoSignal().find(t => t.TLT_No === this.tltNoSignal());
+    if (!locNo?.Location_No) return;
+    this.qf().Location_No.patchValue(locNo!.Location_No);
     this.logger.debug(`locNo changes:`, [locNo]);
   });
 
@@ -109,8 +110,7 @@ export class ASS21020Component extends BasicQueryPageComponent<unknown> implemen
   public readonly columns: Column[] = [
     { field: 'ENG_Type', header: '能源類型' },
     { field: 'ENG_MeterNo', header: '錶號' },
-    { field: 'TLT_No', header: '專櫃編號' },
-    { field: 'TLT_Name', header: '專櫃名稱' },
+    { field: 'TLT_Name', header: '專櫃編號/名稱' },
     { field: 'ENG_Rate', header: '面積比率(%)', format: v => `${v}%` },
     { field: 'ENG_Remark', header: '備註' },
     { field: 'CRT_Date', header: '建立日期' },
@@ -162,9 +162,14 @@ export class ASS21020Component extends BasicQueryPageComponent<unknown> implemen
     });
   }
 
-  public onDelete(event: ASS21020Data): void {
-    this.logger.debug(`Deleting:`, [event]);
-    this.messageService.successBubble('刪除成功');
-    this.loading = !1;
+  public onDelete(items: ASS21020Data[]): void {
+    this.logger.debug(`Deleting:`, [items]);
+    for (const item of items) {
+      this.service.deleteASS21020(String(item.ID)).subscribe(res => {
+        if (res.IsUpdateSuccess) this.messageService.successBubble('刪除成功');
+        else this.messageService.errorBubble(res.ErrorMsg, '刪除失敗');
+        this.loading = !1;
+      });
+    }
   }
 }
