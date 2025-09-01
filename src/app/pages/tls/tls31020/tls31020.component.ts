@@ -44,10 +44,10 @@ import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range
   ]
 })
 
-//
+// 各樓層之營業報表
 export class TLS31020Component extends BasicQueryPageComponent<TLS31020Response> implements OnInit{
   queryForm = this.formBuilder.nonNullable.group({
-    TXN_DateS: [yesterday],//交易日期 (要支援區間，待進行)
+    TXN_DateS: [yesterday],//交易日期開始
     TXN_DateE: [yesterday],  // 交易日期結束
     // 合約查詢條件
     tlt_building: [[]],// 館別
@@ -68,12 +68,16 @@ export class TLS31020Component extends BasicQueryPageComponent<TLS31020Response>
   totalRecords = 0;
   data: TLS31020Response[] = [];
   columns: Column[] = [
-    { field: 'building_desc', header: '館別', visible: true },
-    { field: 'org_name', header: '組織名稱', visible: true },
-    { field: 'tlt_kind', header: '櫃別', visible: true },
-    { field: 'tlt_no', header: '專櫃編號', visible: true },
-    { field: 'location_no', header: '位置編號', visible: true },
-    { field: 'tlt_name', header: '專櫃名稱', visible: true },
+    // { field: 'building_desc', header: '館別', visible: true },
+    // { field: 'org_name', header: '組織名稱', visible: true },
+    // { field: 'tlt_kind', header: '櫃別', visible: true },
+    // { field: 'tlt_no', header: '專櫃編號', visible: true },
+    // { field: 'location_no', header: '位置編號', visible: true },
+    // { field: 'tlt_name', header: '專櫃名稱', visible: true },
+
+    { field: 'tlt_floor', header: '樓層', visible: true },
+    { field: 'floor_desc', header: '樓層說明', visible: true },
+
     { field: 'budget', header: '營業目標', visible: true, groupField: 'budgetAmt', format: formatAmount },
     { field: 'AVN_TotSaleAmt', header: '營業實績', visible: true, groupField: 'budgetAmt', format: formatAmount },
     { field: 'AchievementRate', header: '達成率', visible: true, groupField: 'budgetAmt', format: (value) => formatPercentage(value, 2) },
@@ -82,7 +86,12 @@ export class TLS31020Component extends BasicQueryPageComponent<TLS31020Response>
     { field: 'TxnCount', header: '交易筆數', visible: true, groupField: 'custCnt', format: formatAmount },
     { field: 'AvgTicket', header: '客單價', visible: true, groupField: 'custCnt', format: formatAmount },
     { field: 'tlt_space', header: '坪數', visible: true, groupField: 'space' },
-    { field: 'MonthlyPSM', header: '坪效', visible: true, groupField: 'space' },
+    { field: 'MonthlyPSM', header: '月坪效', visible: true, groupField: 'space' },
+
+    { field: 'TempCounterSaleAmt', header: '營業實績', visible: true, groupField: 'temp', format: formatAmount },
+    { field: 'TempCounterSalesRate', header: '營業實績佔比', visible: true, groupField: 'temp', format: formatAmount },
+    { field: 'TempCounterAmtRate', header: '臨時櫃業績佔比', visible: true, groupField: 'temp', format: formatAmount },
+
     { field: 'MonthlyBudgetTotal', header: '月營業目標', visible: true, groupField: 'month', format: formatAmount },
     { field: 'MonthlySalesTotal', header: '營業實績', visible: true, groupField: 'month', format: formatAmount },
     { field: 'CompletionRate', header: '完成率', visible: true, groupField: 'month', format: (value) => formatPercentage(value, 2) },
@@ -92,6 +101,7 @@ export class TLS31020Component extends BasicQueryPageComponent<TLS31020Response>
     { field: 'sum', header: '營業佔比' },
     { field: 'custCnt', header: '客單價' },
     { field: 'space', header: '營業坪效' },
+    { field: 'temp', header: '臨時櫃' },
     { field: 'month', header: '月累計' },
   ]
   tlt_kind_Option = [
