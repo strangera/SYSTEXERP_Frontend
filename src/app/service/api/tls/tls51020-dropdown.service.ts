@@ -67,12 +67,12 @@ export class Tls51020DropDownService {
     );
   }
   // 🔄 原有方法（保持單一大分類查詢功能）
-  getSystemTypesByCatLNo(catLNo: string): Observable<{ value: string, label: string }[]> {
+  getSystemTypesByCatLNo(catLNoList: string[]): Observable<{ value: string, label: string }[]> {
     const params = {
       id: 0,
       No: '',
       Name: '',
-      CAT_LNo: catLNo || '' // 傳遞大分類代碼
+      CAT_LNo: catLNoList || [] // 傳遞大分類代碼陣列
     };
 
     return this.http.post<any>(this.queryApiUrl, params).pipe(
@@ -98,9 +98,9 @@ export class Tls51020DropDownService {
   }
 
   // 🔄 原有方法（保留，供其他地方使用）
-  getSystemTypes(): Observable<{ value: string, label: string }[]> {
-    return this.getSystemTypesByCatLNo(''); // 重用新方法，傳空值表示不過濾
-  }
+  // getSystemTypes(): Observable<{ value: string, label: string }[]> {
+  //   return this.getSystemTypesByCatLNo(''); // 重用新方法，傳空值表示不過濾
+  // }
 
   getSystemTypeById(id: number): Observable<any> {
     return this.http.get<any>(`${this.apiUrl}/${id}`).pipe(

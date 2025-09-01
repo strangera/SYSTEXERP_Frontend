@@ -434,27 +434,6 @@ export class TLS13010Component extends BasicQueryPageComponent<ContractItem> imp
 
     this.messageService.infoBubble('進入檢視模式');
   }
-  /**
-   * 導航到指定步驟
-   */
-  private navigateToStep(step: WorkflowStep): void {
-    switch (step) {
-      case WorkflowStep.CONTRACT_INFO:
-        this.router.navigate(['account/tls/tls13010cru']);
-        break;
-      case WorkflowStep.DEDUCTION:
-        this.router.navigate(['account/tls/tls13010next1']);
-        break;
-      case WorkflowStep.COMMISSION:
-        this.router.navigate(['account/tls/tls13010next2']);
-        break;
-      case WorkflowStep.CONDITION:
-        this.router.navigate(['account/tls/tls13010next3']);
-        break;
-      default:
-        this.router.navigate(['account/tls/tls13010cru']);
-    }
-  }
 
   /**
    * 刪除功能
