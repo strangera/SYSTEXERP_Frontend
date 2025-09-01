@@ -57,22 +57,12 @@
     </p-accordionTab>
   </p-accordion>
 </div>
-<!-- <div class="card">
-  <div class="col-13">
-    <app-table tableKey="ASS21030" [apiUrl]="'queryASS21030'" [data]="data" [columns]="columns" (edit)="onEdit($event)" (detail)="onDetail($event)"
-      [selectedItems]="selectedItems" (selectionChange)="selectedItems = $event" (delete)="onDelete($event)"
-      [showCheckBox]="false" dataKey="ID" [showManage]="false" [multiSortMeta]="[{ field: 'ENG_MeterNo', order: 1 }]"
-      [totalRecords]="totalRecords" (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit()"
-      [lazy]="true" [loading]="loading" [isRowSelectable]="isRowSelectable"></app-table>
-  </div>
-</div> -->
 <div class="card">
   <div class="col-12">
     <app-table [showCheckBox]="true"
                [data]="data"
                [dataKey]="'ID'"
                [tableKey]="'ASS21030'"
-               [apiUrl]="'QueryASS21030'"
                [columns]="columns"
                [totalRecords]="totalRecords"
                [showManage]="false"
