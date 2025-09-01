@@ -8,7 +8,7 @@ import { CalendarComponent } from '../../../shared/componentkit/calendar/calenda
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { TranslateModule } from '@ngx-translate/core';
-import { Column, createPaginationConfig } from '@shared/componentkit/table/table.model';
+import { Column, createPaginationConfig, formatDate, formatDateTime } from '@shared/componentkit/table/table.model';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { finalize } from 'rxjs';
@@ -35,7 +35,7 @@ import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/cale
   ]
 })
 export class TLS43010Component extends BasicQueryPageComponent<QueryTls43010Response> implements OnInit {
-  queryForm = this.formBuilder.group({
+  queryForm = this.formBuilder.nonNullable.group({
     // POS50011 廣告資訊設定檔
     NOT_No: ['', [Validators.maxLength(20)]], // 通告編號
     NOT_Date: [null as null | Date], // 建立日期
@@ -53,11 +53,11 @@ export class TLS43010Component extends BasicQueryPageComponent<QueryTls43010Resp
   selectedItems: QueryTls43010Response[] = [];
   columns: Column[] = [
     { field: 'NOT_No', header: '通告編號', visible: true },
-    { field: 'NOT_Date', header: '建立日期', visible: true },
-    { field: 'NOT_BegDate', header: '有效開始日期時間', visible: true },
-    { field: 'NOT_EndDate', header: '有效結束日期時間', visible: true },
+    { field: 'NOT_Date', header: '建立日期', visible: true, format: formatDate },
+    { field: 'NOT_BegDate', header: '有效開始日期時間', visible: true, format: formatDateTime },
+    { field: 'NOT_EndDate', header: '有效結束日期時間', visible: true, format: formatDateTime },
     { field: 'NOT_File', header: '媒體檔案名稱', visible: true },
-    { field: 'NOT_Status', header: '狀態', visible: true },
+    { field: 'NOT_Status', header: '狀態', visible: true, format: (v: string) => this.NOT_Status_Options.find(o => o.value === v)?.label || v },
     { field: 'NOT_Priority', header: '優先順序', visible: true },
   ];
   NOT_Status_Options: { value: string, label: string }[] = [ // 0=未確認(未審核) 1=已確認(已審核) 2=已刪除
@@ -78,11 +78,23 @@ export class TLS43010Component extends BasicQueryPageComponent<QueryTls43010Resp
       const body = {
         ...frm.value,
       }
-      this.tls43010Service.queryTls43010(body).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(res => {
+      this.tls43010Service.queryTLS43010(body).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(res => {
         this.data = res.Data
         this.totalRecords = res.TotalCount || 0;
         this.queryStateService.setQueryState(this.ProgNo, frm.value);
       });
     });
+  }
+
+  onDelete(data: QueryTls43010Response[]) {
+    const idList = data.map(r => r.ID).filter(id => id !== undefined);
+    this.tls43010Service.deleteTLS43010(idList).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(res => {
+      this.messageService.successBubble(res.Message || '刪除成功');
+      this.onSubmit(this.queryForm);
+    });
+  }
+
+  isRowSelectable(row: QueryTls43010Response) {
+    return row.NOT_Status !== '2';
   }
 }

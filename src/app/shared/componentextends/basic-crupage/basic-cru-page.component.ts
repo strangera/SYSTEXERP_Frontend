@@ -37,7 +37,7 @@ export abstract class BasicCruPageComponent<T> {
   confirmationService: ConfirmationService = inject(ConfirmationService);
   activatedRoute = inject(ActivatedRoute);
   previousRoute: string | null = null; // 新增用於儲存前一個路由的屬性
-  private formLabelService = inject(FormLabelService);
+  formLabelService = inject(FormLabelService);
   private valid = inject(ValidationService);
   // 判斷目前頁面是新增、修改、明細--------------------------------
   get isFormEditable(): boolean {
