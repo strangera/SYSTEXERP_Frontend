@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormGroup,Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { FIN13020Service } from '../../../service/api/fin/fin13020.service';
 import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
@@ -30,26 +30,26 @@ export class FIN13020Component extends BasicQueryPageComponent<any> {
     { value: '703902223', label: '703902223' },
   ];
   PUR_VoucherTypeOptions: any[] = [
-    { value: '23', label: '三聯式、電子計算機及三聯式收銀機統一發票之進貨退出或折讓證明單' },
-    { value: '24', label: '二聯式收銀機統一發票及載有稅額之其他憑證之進貨退出或折讓證明單' },
+    { value: '33', label: '銷項三聯式銷貨退回或折讓證明單' },
+    { value: '34', label: '銷項二聯式銷貨退回或折讓證明單' },
   ];
 
   queryForm = this.formBuilder.group({
 
 
-    TXN_Ret_NoStart: [null], // 退出/折讓單號(起)
-    TXN_Ret_NoEnd: [null],   // 退出/折讓單號(迄)
-    GUI_Track: [null], // 字軌
-    InvoiceNumberStart: [null],
-    InvoiceNumberEnd: [null],
+    TXN_Ret_NoStart: [null, [Validators.maxLength(20)]], // 退出/折讓單號(起)
+    TXN_Ret_NoEnd: [null, [Validators.maxLength(20)]],   // 退出/折讓單號(迄)
+    GUI_Track: [null, [Validators.maxLength(2)]], // 字軌
+    InvoiceNumberStart: [null, [Validators.maxLength(10)]],
+    InvoiceNumberEnd: [null, [Validators.maxLength(10)]],
     InvoiceDateStart: [null], // 領用日期(起)
     InvoiceDateEnd: [null],   // 領用日期(迄)
     InvoiceType: [null], // 發票狀態
     INV_DeclareYM: [null], // 發票年月
-    Source_Doc_NoStart: [], // 憑證單號(起)
-    Source_Doc_NoEnd: [],   // 憑證單號(迄)
-    Voucher_NoStart: [], // 發票起始號碼
-    Voucher_NoEnd: [],   // 發票結束號碼
+    Source_Doc_NoStart: [, [Validators.maxLength(16)]], // 憑證單號(起)
+    Source_Doc_NoEnd: [, [Validators.maxLength(16)]],   // 憑證單號(迄)
+    Voucher_NoStart: [, [Validators.maxLength(16)]], // 發票起始號碼
+    Voucher_NoEnd: [, [Validators.maxLength(16)]],   // 發票結束號碼
     ...createPaginationConfig([{ field: 'id', order: 1 }])
   });
 
