@@ -376,4 +376,18 @@ export class CustomFooterTableComponent extends BasicPrintDataComponent implemen
     this.columns = event.columns as Column[];
     this.queryState.setQueryState(this.tableKey + 'Filter', this.columns);
   }
+
+  // 判斷是否為該組最後一筆
+  isLastRowOfGroup(rowData: any, rowIndex: number): boolean {
+    if (!this.groupRowsBy || !this.data?.length) return false;
+
+    const currentGroup = rowData[this.groupRowsBy];
+    const nextRow = this.data[rowIndex + 1];
+
+    // 如果下一筆不存在，表示是最後一筆
+    if (!nextRow) return true;
+
+    // 如果下一筆的 group 值不一樣，代表這筆就是該組最後一筆
+    return nextRow[this.groupRowsBy] !== currentGroup;
+  }
 }
