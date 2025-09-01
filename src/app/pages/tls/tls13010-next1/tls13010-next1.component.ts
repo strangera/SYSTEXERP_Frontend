@@ -19,6 +19,7 @@ import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { AccordionModule } from 'primeng/accordion';
 import { LocationOptionsService } from '../../../service/api/dropdownservice/location-options.service';
 import { DialogComponent } from "@shared/componentkit/dialog/dialog.component";
+import { FareValidationService } from './Services/fare-validation.service';
 
 
 // 介面定義
@@ -88,11 +89,11 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
     private contractFlowService: ContractFlowService,
     private locationOptionsService: LocationOptionsService,
     public override router: Router,
-    // 🆕 注入新的服務
     private fareCalculationService: FareCalculationService,
     private fareDataService: FareDataService,
     private fareStatusService: FareStatusService,
     private cdr: ChangeDetectorRef,
+    private fareValidationService: FareValidationService,
   ) {
     super();
   }
@@ -613,11 +614,31 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
         console.warn(`未知的扣款類型: ${capType}`);
     }
 
-    // 移除立即的 detectChanges，讓表格組件處理
-    // this.cdr.detectChanges();  // 註解或移除這行
-
+    if (rowData.is_selected && capType) {
+      this.performRealTimeValidation(rowData, capType);
+    }
     // 統一的後續處理
     this.updateRowDataState(rowData, capType || 'A');
+  }
+
+  /**
+    * 🆕 即時驗證單一項目
+    */
+  private performRealTimeValidation(rowData: any, capType: string): void {
+    const allItemsOfType = this.originalFareData[capType] || [];
+    const validationResult = this.fareValidationService.validateSingleItem(rowData, capType, allItemsOfType);
+
+    if (!validationResult.isValid) {
+      console.warn(`⚠️ ${capType} 類型項目驗證失敗:`, validationResult.errors);
+
+      // 可以在這裡標記該項目有錯誤
+      rowData._hasValidationError = true;
+      rowData._validationErrors = validationResult.errors;
+    } else {
+      // 清除錯誤標記
+      delete rowData._hasValidationError;
+      delete rowData._validationErrors;
+    }
   }
 
   private getTotalLocationSpace(): number {
@@ -911,11 +932,27 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
   }
 
   onBeforeSave(event: { data: any, preventDefault: () => void }, capType: string): void {
-    if (capType === 'C') {
-      const isValid = this.fareCalculationService.isCalculationValid(event.data, 'C');
+    const { data } = event;
+
+    // 只對已勾選的項目進行驗證
+    if (data.is_selected) {
+      const allItemsOfType = this.originalFareData[capType] || [];
+      const validationResult = this.fareValidationService.validateSingleItem(data, capType, allItemsOfType);
+
+      if (!validationResult.isValid) {
+        const errorMessage = validationResult.errors.join('\n');
+        this.messageService.warnBubble(`${this.getCapTypeName(capType)}資料有誤：\n${errorMessage}`);
+        event.preventDefault(); // 阻止儲存，保持編輯狀態
+        return;
+      }
+    }
+
+    // C 類型的特殊計算驗證
+    if (capType === 'C' && data.is_selected) {
+      const isValid = this.fareCalculationService.isCalculationValid(data, 'C');
       if (!isValid) {
         this.messageService.warnBubble('C類型資料計算有誤，請檢查輸入');
-        event.preventDefault(); // 阻止儲存，保持編輯狀態
+        event.preventDefault();
       }
     }
   }
@@ -930,14 +967,30 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
   }
 
   onItemSelectionChange(capType: string): void {
-    console.log(`📄 ${capType} 類型項目選擇狀態改變`);
+    console.log(`🔄 ${capType} 類型項目選擇狀態改變`);
 
-    // 🆕 使用狀態服務更新狀態
+    // 原有的狀態更新
     this.fareData[capType].forEach(item => {
       this.fareStatusService.updateItemSelectionStatus(item);
     });
 
     this.updateOriginalData(capType);
+
+    // 🆕 新增：對所有已選項目進行驗證
+    const selectedItems = this.fareData[capType].filter(item => item.is_selected);
+    if (selectedItems.length > 0) {
+      const validationResult = this.fareValidationService.validateFareTypeData(
+        this.originalFareData[capType],
+        capType
+      );
+
+      if (!validationResult.isValid) {
+        console.warn(`⚠️ ${capType} 類型選擇項目驗證失敗:`, validationResult.errors);
+        // 可以選擇是否立即顯示警告，或只在提交時檢查
+        // this.messageService.warnBubble(validationResult.errors.join('\n'));
+      }
+    }
+
     this.saveFareDataToWorkflow();
   }
 
@@ -1054,10 +1107,21 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
       return;
     }
 
+    console.log('🔍 開始進行完整驗證...');
+
+    // 儲存當前資料
     this.saveFareDataToWorkflow();
 
+    // 驗證所有已選中的扣款類型
+    const validationResults = this.validateAllSelectedFareTypes();
 
+    if (!validationResults.isValid) {
+      console.error('❌ 驗證失敗:', validationResults.errors);
+      this.showValidationErrors(validationResults.errors);
+      return;
+    }
 
+    console.log('✅ 驗證通過，跳轉到下一步');
     this.router.navigate(['account/tls/tls13010next2']);
   }
 
@@ -1203,99 +1267,118 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
     this.currentRowData = null;
     this.currentCapType = '';
   }
-
-  // 新增複製方法：
-  /**
-   * 複製扣款項目
-   */
+  //複製
   private copyFareItem(originalItem: any, capType: string): void {
     console.log(`複製 ${capType} 類型項目:`, originalItem.cap_item);
 
     try {
-      // 生成新的唯一 ID
       const newId = `copy_${capType}_${originalItem.cap_item}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 
-      // 建立複製項目，保持所有原始欄位值
       const copiedItem = {
         ...originalItem,
         id: newId,
-        is_selected: true,  // 複製的項目預設為選中
-        data_source: 'COPIED_ITEM',  // 標記為複製項目
-        _status: 'new',  // 設定為新增狀態
-        _originalSelected: false,  // 複製項目沒有原始選中狀態
-        _originalData: undefined,  // 清除原始資料記錄
-        _isCopiedItem: true  // 🆕 新增標記，表示這是複製的項目
+        is_selected: true,
+        data_source: 'COPIED_ITEM',
+        _status: 'new',
+        _isCopiedItem: true
       };
 
-      // 清除一些系統欄位，避免衝突
+      // 🎯 日期複製：只複製合理的日期，異常日期設為 null
+      ['tpy_bdate', 'tpy_edate'].forEach(dateField => {
+        if (originalItem[dateField]) {
+          if (originalItem[dateField] instanceof Date) {
+            if (this.isValidDateRange(originalItem[dateField])) {
+              copiedItem[dateField] = new Date(originalItem[dateField]);
+              console.log(`✅ ${dateField} 日期複製成功`);
+            } else {
+              copiedItem[dateField] = null;
+              console.warn(`⚠️ ${dateField} 日期異常，設為 null`);
+            }
+          } else {
+            // 非 Date 對象直接保持原值，讓顯示邏輯處理
+            copiedItem[dateField] = originalItem[dateField];
+            console.log(`📋 ${dateField} 保持原始格式`);
+          }
+        }
+      });
+
+      // 清理
       delete copiedItem._skipAutoCalc;
-
-      // 🎯 關鍵修正：正確處理日期欄位
-      if (copiedItem.tpy_bdate) {
-        // 保持原始日期值，不要強制重建
-        if (originalItem.tpy_bdate instanceof Date) {
-          copiedItem.tpy_bdate = new Date(originalItem.tpy_bdate.getTime());
-        } else if (typeof originalItem.tpy_bdate === 'string') {
-          // 如果是字串，嘗試解析但不強制格式化
-          copiedItem.tpy_bdate = new Date(originalItem.tpy_bdate);
-        }
-
-        console.log('✅ 複製項目開始日期保持:', copiedItem.tpy_bdate);
-      }
-
-      if (copiedItem.tpy_edate) {
-        // 保持原始日期值，不要強制重建
-        if (originalItem.tpy_edate instanceof Date) {
-          copiedItem.tpy_edate = new Date(originalItem.tpy_edate.getTime());
-        } else if (typeof originalItem.tpy_edate === 'string') {
-          // 如果是字串，嘗試解析但不強制格式化
-          copiedItem.tpy_edate = new Date(originalItem.tpy_edate);
-        }
-
-        console.log('✅ 複製項目結束日期保持:', copiedItem.tpy_edate);
-      }
-
-      // 🆕 如果日期解析失敗，使用當前月份作為預設值
-      if (copiedItem.tpy_bdate && isNaN(copiedItem.tpy_bdate.getTime())) {
-        const now = new Date();
-        copiedItem.tpy_bdate = new Date(now.getFullYear(), now.getMonth(), 1);
-        console.log('⚠️ 開始日期解析失敗，使用當前月份:', copiedItem.tpy_bdate);
-      }
-
-      if (copiedItem.tpy_edate && isNaN(copiedItem.tpy_edate.getTime())) {
-        const now = new Date();
-        copiedItem.tpy_edate = new Date(now.getFullYear(), now.getMonth(), 1);
-        console.log('⚠️ 結束日期解析失敗，使用當前月份:', copiedItem.tpy_edate);
-      }
-
-      // 清除可能干擾的日期相關屬性
       delete copiedItem._dateInitialized;
-      delete copiedItem._editingState;
 
-      // 加入到對應類型的陣列中
       this.originalFareData[capType].push(copiedItem);
-
-      // 重新過濾資料以更新顯示
       this.filterData();
-
-      // 儲存到工作流程
       this.saveFareDataToWorkflow();
 
-      // 顯示成功訊息
       this.messageService.successBubble(`已成功複製扣款項目「${originalItem.cap_name}」`);
-
-      // 強制更新檢測
       this.cdr.detectChanges();
 
-      console.log(`複製完成: ${originalItem.cap_item} → ${newId}`, {
-        原始日期: { 開始: originalItem.tpy_bdate, 結束: originalItem.tpy_edate },
-        複製日期: { 開始: copiedItem.tpy_bdate, 結束: copiedItem.tpy_edate },
-        檢視模式: this.isViewMode
-      });
+      console.log(`複製完成: ${originalItem.cap_item} → ${newId}`);
 
     } catch (error) {
       console.error('複製扣款項目時發生錯誤:', error);
       this.messageService.warnBubble('複製扣款項目失敗，請重試');
     }
   }
+
+  private isValidDateRange(date: Date): boolean {
+    if (!date || isNaN(date.getTime())) {
+      return false;
+    }
+
+    const year = date.getFullYear();
+    const isReasonable = year >= 1900 && year <= 2100;
+
+    if (!isReasonable) {
+      console.warn(`⚠️ 日期年份超出合理範圍: ${year}`);
+    }
+
+    return isReasonable;
+  }
+
+  /**
+  * 驗證所有已選中的扣款類型
+  */
+  private validateAllSelectedFareTypes(): { isValid: boolean, errors: string[] } {
+    const allErrors: string[] = [];
+    const capTypes = ['A', 'B', 'C', 'D', 'E'];
+
+    capTypes.forEach(capType => {
+      const typeData = this.originalFareData[capType] || [];
+      const selectedItems = typeData.filter(item => item.is_selected);
+
+      if (selectedItems.length > 0) {
+        console.log(`🔍 驗證 ${capType} 類型，已選項目: ${selectedItems.length} 筆`);
+
+        const validationResult = this.fareValidationService.validateFareTypeData(typeData, capType);
+
+        if (!validationResult.isValid) {
+          const typeName = this.getCapTypeName(capType);
+          allErrors.push(`【${typeName}】`);
+          allErrors.push(...validationResult.errors.map(error => `  • ${error}`));
+          allErrors.push(''); // 空行分隔
+        }
+      }
+    });
+
+    return {
+      isValid: allErrors.length === 0,
+      errors: allErrors
+    };
+  }
+
+  /**
+   * 顯示驗證錯誤訊息
+   */
+  private showValidationErrors(errors: string[]): void {
+    const errorMessage = [
+      '❌ 資料驗證失敗，請修正以下問題：',
+      '',
+      ...errors,
+      '請修正上述問題後再進行下一步。'
+    ].join('\n');
+
+    this.messageService.warnBubble(errorMessage);
+  }
+
 }

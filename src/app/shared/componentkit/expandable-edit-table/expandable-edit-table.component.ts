@@ -343,13 +343,12 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
     try {
       let dateObj: Date;
 
-      // 處理各種可能的輸入格式
+      // 🎯 統一日期對象創建邏輯
       if (rawValue instanceof Date) {
         dateObj = rawValue;
       } else if (typeof rawValue === 'string') {
-        // 🔧 處理你的 ISO 日期格式："2014-11-30T16:00:00.000Z"
+        // 處理 ISO 日期格式
         if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/.test(rawValue)) {
-          // 解析 ISO 字串但忽略時區，只取日期部分
           const match = rawValue.match(/^(\d{4})-(\d{2})-(\d{2})/);
           if (match) {
             const year = parseInt(match[1], 10);
@@ -373,7 +372,7 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
           const day = parseInt(rawValue.substring(6, 8), 10);
           dateObj = new Date(year, month, day);
         }
-        // 處理標準格式
+        // 標準格式
         else {
           dateObj = new Date(rawValue);
         }
@@ -383,13 +382,18 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
         return '';
       }
 
-      // 檢查日期有效性
+      // 🎯 檢查日期有效性和合理性
       if (isNaN(dateObj.getTime())) {
         console.warn('無效的日期值:', rawValue);
         return '';
       }
 
-      // 根據格式類型格式化
+      if (!this.isValidDateRange(dateObj)) {
+        console.warn('日期超出合理範圍:', dateObj);
+        return '';
+      }
+
+      // 🎯 根據格式類型格式化
       const year = dateObj.getFullYear();
       const month = String(dateObj.getMonth() + 1).padStart(2, '0');
       const day = String(dateObj.getDate()).padStart(2, '0');
@@ -445,44 +449,19 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
   }
 
 
-  // 🎯 對外接口：處理日期輸入變更
   onDateInputChange(rowData: any, column: ColumnDef, inputValue: string, isDetail: boolean = false, detailIndex?: number): void {
     const fieldKey = this.getFieldKey(rowData, column.field, isDetail, detailIndex);
 
-    // 套用長度限制
-    let processedValue = inputValue;
-    if (column.maxLength && inputValue.length > column.maxLength) {
-      processedValue = inputValue.substring(0, column.maxLength);
-    }
+    // 🎯 只暫存用戶輸入，不做任何解析或格式化
+    this.userInputValues.set(fieldKey, inputValue);
 
-    // 🎯 關鍵修正：立即嘗試解析並驗證
-    const formatType = column.dateFormat || 'full-date';
+    console.log(`📝 日期輸入暫存: ${column.field} = "${inputValue}"`);
 
-    // 如果是空值，直接清空
-    if (!processedValue || processedValue.trim() === '') {
+    // 如果是空值，立即清空
+    if (!inputValue || inputValue.trim() === '') {
       rowData[column.field] = null;
       this.userInputValues.delete(fieldKey);
       this.triggerFieldChangeEvent(column.field, null, rowData);
-      return;
-    }
-
-    // 🎯 立即嘗試解析輸入
-    const parsedDate = this.parseSmartDateInput(processedValue.trim(), formatType);
-
-    if (parsedDate) {
-      // ✅ 解析成功：立即更新 rowData 並清除用戶輸入狀態
-      const oldValue = rowData[column.field];
-      rowData[column.field] = parsedDate;
-      this.userInputValues.delete(fieldKey); // 清除用戶輸入狀態
-
-      this.triggerFieldChangeEvent(column.field, parsedDate, rowData, oldValue);
-      this.triggerSaveIfNeeded(rowData, column, parsedDate, isDetail, detailIndex);
-
-      console.log(`✅ 日期輸入立即解析成功: "${processedValue}" -> ${this.formatDateForDisplay(parsedDate, formatType)}`);
-    } else {
-      // ⚠️ 暫時保存用戶輸入，等待 blur 時最終處理
-      this.userInputValues.set(fieldKey, processedValue);
-      console.log(`⏳ 日期輸入暫存: "${processedValue}"，等待 blur 驗證`);
     }
   }
 
@@ -511,22 +490,24 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
     }
   }
 
-  // 🎯 獲取日期輸入值（編輯時使用）
+  // 獲取日期輸入值（編輯時使用）
   getDateInputValue(rowData: any, column: ColumnDef, isDetail: boolean = false, detailIndex?: number): string {
     const fieldKey = this.getFieldKey(rowData, column.field, isDetail, detailIndex);
 
-    // 🎯 優先顯示使用者正在輸入的值
+    // 🎯 優先顯示用戶正在輸入的值
     const userInput = this.userInputValues.get(fieldKey);
     if (userInput !== undefined) {
+      console.log(`📝 顯示用戶輸入: "${userInput}"`);
       return userInput;
     }
 
-    // 🎯 否則顯示格式化後的值
-    return this.getDateDisplayValue(rowData, column);
+    // 🎯 否則顯示格式化的值
+    const displayValue = this.getDateDisplayValue(rowData, column);
+    console.log(`📅 顯示格式化值: "${displayValue}"`);
+    return displayValue;
   }
-
   /**
-  * 🎯 觸發儲存事件（如果需要）
+  * 觸發儲存事件（如果需要）
   */
   private triggerSaveIfNeeded(rowData: any, column: ColumnDef, newValue: any, isDetail = false, detailIndex?: number): void {
     if (column.directEdit) {
@@ -572,19 +553,23 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
   }
 
 
-  // 🎯 Blur 時統一處理：驗證 → 轉換 → 格式化 → 儲存
+  // Blur 時統一處理：驗證 → 轉換 → 格式化 → 儲存
   onDateInputBlur(rowData: any, column: ColumnDef, isDetail: boolean = false, detailIndex?: number): void {
     const fieldKey = this.getFieldKey(rowData, column.field, isDetail, detailIndex);
     const userInput = this.userInputValues.get(fieldKey);
     const formatType = column.dateFormat || 'full-date';
 
-    // 如果沒有用戶輸入狀態，表示已經在 onChange 中處理過了
+    console.log(`🎯 日期 Blur 處理開始: ${column.field}`, {
+      userInput,
+      currentValue: rowData[column.field],
+      formatType
+    });
+
+    // 如果沒有用戶輸入，表示沒有修改，直接跳過
     if (userInput === undefined) {
-      console.log(`✅ 日期 blur 跳過，已在輸入時處理: ${column.field}`);
+      console.log(`⭐ 沒有用戶輸入，跳過處理`);
       return;
     }
-
-    console.log(`🎯 處理日期 Blur: ${column.field} = "${userInput}"`);
 
     // 空值處理
     if (!userInput || userInput.trim() === '') {
@@ -592,26 +577,25 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
       rowData[column.field] = null;
       this.userInputValues.delete(fieldKey);
       this.triggerFieldChangeEvent(column.field, null, rowData, oldValue);
-      this.triggerSaveIfNeeded(rowData, column, null, isDetail, detailIndex);
       console.log(`✅ 日期已清空`);
       return;
     }
 
-    // 嘗試解析用戶輸入
-    const parsedDate = this.parseSmartDateInput(userInput.trim(), formatType);
+    // 🎯 核心：統一日期解析邏輯
+    const parsedDate = this.parseUserDateInput(userInput.trim(), formatType);
 
-    if (parsedDate) {
-      // ✅ 解析成功
+    if (parsedDate && this.isValidDateRange(parsedDate)) {
+      // ✅ 解析成功且合理
       const oldValue = rowData[column.field];
       rowData[column.field] = parsedDate;
       this.userInputValues.delete(fieldKey);
 
-      console.log(`✅ 日期 blur 解析成功: "${userInput}" -> ${this.formatDateForDisplay(parsedDate, formatType)}`);
+      console.log(`✅ 日期解析成功: "${userInput}" -> ${this.formatDateForDisplay(parsedDate, formatType)}`);
 
       this.triggerFieldChangeEvent(column.field, parsedDate, rowData, oldValue);
       this.triggerSaveIfNeeded(rowData, column, parsedDate, isDetail, detailIndex);
     } else {
-      // ❌ 解析失敗：保持原值，但清除無效輸入狀態
+      // ❌ 解析失敗：保持原值，清除無效輸入，顯示錯誤提示
       this.userInputValues.delete(fieldKey);
       this.showDateFormatHint(userInput, formatType);
 
@@ -619,6 +603,42 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
     }
 
     this.cdr.detectChanges();
+  }
+
+  private parseUserDateInput(inputValue: string, formatType: DateFormatType): Date | null {
+    console.log(`🔍 解析用戶日期輸入: "${inputValue}" (期望格式: ${formatType})`);
+
+    if (!inputValue) return null;
+
+    try {
+      // 🎯 年月格式處理
+      if (formatType.includes('year-month')) {
+        return this.parseYearMonthInput(inputValue);
+      }
+      // 🎯 完整日期格式處理
+      else {
+        return this.parseFullDateInput(inputValue);
+      }
+    } catch (error) {
+      console.error('日期解析錯誤:', error, inputValue);
+      return null;
+    }
+  }
+
+  // 4. 新增：日期合理性驗證
+  private isValidDateRange(date: Date): boolean {
+    if (!date || isNaN(date.getTime())) {
+      return false;
+    }
+
+    const year = date.getFullYear();
+    const isReasonable = year >= 1900 && year <= 2100;
+
+    if (!isReasonable) {
+      console.warn(`⚠️ 日期年份超出合理範圍: ${year}`);
+    }
+
+    return isReasonable;
   }
 
   private triggerFieldChangeEvent(fieldName: string, newValue: any, rowData: any, oldValue?: any): void {
@@ -2324,5 +2344,11 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
         parentData
       });
     }
+  }
+
+  handleDateInput(event: Event, rowData: any, column: ColumnDef): void {
+    const target = event.target as HTMLInputElement;
+    const inputValue = target?.value || '';
+    this.onDateInputChange(rowData, column, inputValue);
   }
 }

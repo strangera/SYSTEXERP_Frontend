@@ -120,8 +120,8 @@
               <!-- 🎯 日期選擇 - 使用新的方法 -->
               <div *ngSwitchCase="'date'" class="date-selector-wrapper">
                 <input pInputText type="text" [ngModel]="getDateInputValue(rowData, col)"
-                  (ngModelChange)="onDateInputChange(rowData, col, $event)"
-                  (blur)="onDateInputBlur(rowData, col, false)" [placeholder]="getDatePlaceholder(col)"
+                  (input)="handleDateInput($event, rowData, col)" (blur)="onDateInputBlur(rowData, col, false)"
+                  [placeholder]="getDatePlaceholder(col)"
                   [maxlength]="col.maxLength || (col.dateFormat?.includes('year-month') ? 7 : 10)" class="date-input" />
                 <button pButton pRipple type="button" icon="pi pi-calendar"
                   class="p-button-text p-button-sm p-button-rounded date-picker-button"
@@ -302,8 +302,8 @@
               <!-- 🎯 日期選擇 - 使用新的方法 -->
               <div *ngSwitchCase="'date'" class="date-selector-wrapper">
                 <input pInputText type="text" [ngModel]="getDateInputValue(detailData, col, true, di)"
-                  (ngModelChange)="onDateInputChange(detailData, col, $event, true, di)"
-                  (blur)="onDateInputBlur(rowData, col, false)" [placeholder]="getDatePlaceholder(col)"
+                  (input)="handleDateInput($event, detailData, col)" (blur)="onDateInputBlur(detailData, col, false)"
+                  [placeholder]="getDatePlaceholder(col)"
                   [maxlength]="col.maxLength || (col.dateFormat?.includes('year-month') ? 7 : 10)" class="date-input" />
                 <button pButton pRipple type="button" icon="pi pi-calendar"
                   class="p-button-text p-button-sm p-button-rounded date-picker-button"
