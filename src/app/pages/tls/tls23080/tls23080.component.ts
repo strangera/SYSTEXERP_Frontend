@@ -72,7 +72,7 @@ export class TLS23080Component extends BasicQueryPageComponent<any> {
   queryForm = this.formBuilder.group({
     TXN_DateStart: [this.yesterday, [Validators.required]],
     TXN_DateEnd: [this.yesterday, [Validators.required]],
-    tlt_openflag: ['Y'],
+    tlt_openflag: ['N'],
     ECR_No: [],
     tlt_building: [],
     tlt_floor: [],
