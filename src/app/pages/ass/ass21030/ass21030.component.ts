@@ -24,17 +24,18 @@ import { apiOption } from '@shared/models/tls/tls000.model';
 
 // ENG2001 抄錶明細檔
 export interface ENG2001 {
-  id: number; // 主鍵，自動編號,
-  mid: number,  // 外鍵，對應 ENG2001.id
-  SYS_StoreNo: string, // 分店編號
-  ENG_YYMM: string, // 結算年月
+  ID: number; // 主鍵，自動編號,
   ENG_Type: string, // 能源類型：水錶G01、電錶G02、瓦斯錶G03
   ENG_MeterNo: string, // 錶號
+  Location_No: string, // 設備位置編號，對應 POS2002.LOCATION_No
+  TLT_No: string, // 專櫃編號，對應 POS2002.TLT_No
+  ENG_YYMM: string, // 結算年月
+  ENG_CurrentReading_Last: number, // 上次抄錶度數
+  ENG_CurrentReading: number, // 本次抄錶度數
+  UsageAmount: number; // 用量
   ENG_Date: Date; // 本次抄錶日
-  ENG_CurrentReading: number; // 本次抄錶度數
-  ENG_Amount: number; // 本次結算金額
-  ENG_Status: string; // 抄錶狀態：0=未抄錶、1=已抄錶、2=已結算
   ENG_ImpFileName?: string; // 匯入檔案名稱
+  ENG_Remark?: string; // 備註
 
   CRT_Date: string; // 建立日期 (ISO 字串格式: YYYY-MM-DD)
   CRT_USR_No?: string; // 建立人員代碼
@@ -44,24 +45,6 @@ export interface ENG2001 {
   UPD_USR_Name?: string; // 變更人員姓名
 
   CanDel?: boolean;  //能否刪除(僅顯示)
-}
-
-// ENG1001 能源錶號明細檔
-export interface ENG1001 {
-  id: number; // 主鍵，自動編號,
-  mid: number,  // 外鍵，對應 ENG2001.id
-  SYS_StoreNo: string, // 分店編號
-  ENG_Type: string, // 能源類型：水錶G01、電錶G02、瓦斯錶G03
-  ENG_MeterNo: string, // 錶號
-  Location_No: string; // 設備位置編號，對應 POS2002.LOCATION_No
-  ENG_Remarks?: string; // 備註
-
-  CRT_Date: string; // 建立日期 (ISO 字串格式: YYYY-MM-DD)
-  CRT_USR_No?: string; // 建立人員代碼
-  CRT_USR_Name?: string; // 建立人員姓名
-  UPD_Date?: string; // 變更日期 (ISO 格式: YYYY-MM-DDTHH:mm:ss)
-  UPD_USR_No?: string; // 變更人員代碼
-  UPD_USR_Name?: string; // 變更人員姓名
 }
 @Component({
   selector: 'app-ass21030',
@@ -89,14 +72,14 @@ export interface ENG1001 {
 })
 
 // 能源抄表作業
-export class ASS21030Component extends BasicQueryPageComponent<ENG1001 | ENG2001> implements OnInit {
+export class ASS21030Component extends BasicQueryPageComponent<ENG2001> implements OnInit {
   // 查詢
     queryForm = this.formBuilder.group({
       // ENG2001 抄錶明細檔 + ENG1001 能源錶號明細檔
       EngTypes: [[], [Validators.maxLength(3)]], // 能源類型：水錶G01、電錶G02、瓦斯錶G03
       ENG_MeterNo: [null, [Validators.maxLength(5)]], // 錶號 (/Share/queryENG1001_ENG_MeterNo_DropDownList)
       SYS_StoreNo: [this.authService.getUserInfo()?.SYS_StoreNo ?? '', [Validators.maxLength(10)]], // 分店編號 section抓
-      Mid: [this.authService.getUserInfo()?.mid ?? '', [Validators.maxLength(19)]], //  section抓
+      Mid: [Number(this.authService.getUserInfo()?.mid), [Validators.maxLength(19)]], //  section抓
       ENG_YYMM: [null, [Validators.maxLength(6)]], // 結算年月
       ENG_Status: [null, [Validators.maxLength(1)]], // 抄錶狀態：0=未抄錶、1=已抄錶、2=已結算
 
@@ -119,7 +102,7 @@ export class ASS21030Component extends BasicQueryPageComponent<ENG1001 | ENG2001
 
     ENG_MeterNo_Option: apiOption[] = [];
 
-    data: ENG1001[] | ENG2001[] = [];
+    data: ENG2001[] = [];
     columns: Column[] = [
       { field: 'ID', header: 'ID', visible: false },
       { field: 'ENG_Type', header: '能源類型', visible: true, options: this.ENG_Type_Option },
@@ -141,7 +124,7 @@ export class ASS21030Component extends BasicQueryPageComponent<ENG1001 | ENG2001
       { field: 'UPD_USR_Name', header: '變更人員姓名', visible: false },
     ];
   
-    selectedItems: ENG1001|ENG2001[] = [];// 多選項目
+    selectedItems: ENG2001[] = [];// 多選項目
   
     // ----------------------------------------------------------------
     constructor(private ass21030Service: ASS21030Service) {
@@ -216,9 +199,9 @@ export class ASS21030Component extends BasicQueryPageComponent<ENG1001 | ENG2001
   
       // 收集所有有效的 ID
       const idList = items
-        .filter((item) => item && item.id != null && item.id !== undefined)
-        .map((item) => item.id);
-  
+        .filter((item) => item && item.ID != null && item.ID !== undefined)
+        .map((item) => item.ID);
+
       if (idList.length === 0) {
         console.error('No valid IDs to delete');
         this.messageService.errorBubble('無法刪除：選中的項目缺少有效 ID');

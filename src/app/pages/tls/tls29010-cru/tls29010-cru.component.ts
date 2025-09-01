@@ -42,11 +42,11 @@ export interface TALPORDERM {
   // 8=期間開放折扣
 
   org_id?: string | null; // 組織-部門(SYS3100) //
-  act_no?: string | null; // 活動編號(群組) //
+  act_no?: string | null; // 活動編號(群組) // 券類才會用到
   pod_desc?: string | null; // 活動名稱
   pod_sdate: Date; // 活動起始日期
   pod_edate: Date; // 活動終止日期
-  pod_busdate?: Date | null; // 活動正檔日期
+  pod_busdate?: Date | null; // 活動正檔日期 // 券類才會用到
   pod_back_sdate?: Date | null;  //活動兌回起始日期
   pod_back_edate?: Date | null;  //活動兌回終止日期
   pod_status: '0' | '1' | '9';
@@ -113,8 +113,8 @@ export class TLS29010CRUComponent extends BasicCruPageComponent<TALPORDERD_OPEND
     pod_sdate: [null, [Validators.required]], // 活動起始日 (Date)
     pod_edate: [null, [Validators.required]], // 活動終止日 (Date)
     org_id: [''], // 組織-部門(SYS3100)
-    act_no: [''], // 活動編號(群組)
-    pod_busdate: [null], // 活動正檔日期
+    act_no: [''], // 活動編號(群組)  // 券類才會用到
+    // pod_busdate: [null], // 活動正檔日期  // 券類才會用到
     // pod_back_sdate: [null], // 活動兌回起始日期
     // pod_back_edate: [null], // 活動兌回終止日期
     pod_status: ['', Validators.required], // 活動狀態(0=未核准, 1=已核准, 9=刪除)
