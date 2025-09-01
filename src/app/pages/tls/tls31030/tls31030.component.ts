@@ -14,7 +14,7 @@ import { yesterday } from '@shared/models/system/query-form.model';
 import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { debounceTime, finalize, forkJoin, map, of, switchMap, tap } from 'rxjs';
-import { TLS31010Request, TLS31010Response } from '@service/api/tls/tls31010.service';
+import { TLS31010Request } from '@service/api/tls/tls31010.service';
 import { ButtonModule } from 'primeng/button';
 import { environment } from 'src/environments/environment';
 import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
@@ -65,7 +65,7 @@ export class TLS31030Component extends BasicQueryPageComponent<TLS31030Response>
     ...createPaginationConfig([{ field: 'tlt_no', order: 1 }])
   });
   totalRecords = 0;
-  data: TLS31010Response[] = [];
+  data: TLS31030Response[] = [];
   columns: Column[] = [
     // { field: 'building_desc', header: '館別', visible: true },
     // { field: 'org_name', header: '組織名稱', visible: true },

@@ -14,10 +14,11 @@ import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-se
 import { TLS31010Response } from '@service/api/tls/tls31010.service';
 import { ButtonModule } from 'primeng/button';
 import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
-import { Tls31030Service } from '@service/api/tls/tls31030.service';
+import { TLS31030Response, Tls31030Service } from '@service/api/tls/tls31030.service';
 import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
 import { CRUDStatus } from '@shared/models/system/CRUDstatus';
+import { QueryStateService } from '@shared/service/query-state.service';
 
 @Component({
   selector: 'app-tls31030-cru',
@@ -41,7 +42,7 @@ import { CRUDStatus } from '@shared/models/system/CRUDstatus';
 })
 
 // 各大分類之營業報表
-export class Tls31030CruComponent extends BasicCruPageComponent<unknown> implements OnInit {
+export class Tls31030CruComponent extends BasicCruPageComponent<TLS31030Response> implements OnInit {
   dataForm = this.formBuilder.nonNullable.group({
     bus_type: [''],//大分類
     bus_type_name: [''],//大分類名稱
@@ -122,17 +123,23 @@ export class Tls31030CruComponent extends BasicCruPageComponent<unknown> impleme
   bus_class_Option: IDropdownItem[] = []; // 中分類
   bus_sclass_Option: IDropdownItem[] = []; // 小分類
   org_id_Option: IDropdownItem[] = []; // 組織
-    
+
   // ----------------------------------------------------------------
   constructor(
     private readonly dropDownListService: DropDownListService,
-    private readonly tls31030Service: Tls31030Service
+    private readonly tls31030Service: Tls31030Service,
+    private readonly queryStateService: QueryStateService
   ) {
     super(); // 呼叫父類建構子
   }
 
   ngOnInit(): void {
     this.initializePage('TLS31030', this.dataForm);
+    this.queryStateService.getQueryStateValue(this.ProgNo);
+    console.log(this.queryStateService.getQueryStateValue(this.ProgNo));
+    console.log();
+    
+
     console.log('讀取資料', this.dataForm.value);
   }
 
