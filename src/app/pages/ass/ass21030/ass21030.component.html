@@ -75,6 +75,8 @@
                [apiUrl]="'QueryASS21030'"
                [columns]="columns"
                [totalRecords]="totalRecords"
+               [showManage]="false"
+               [showCheckBox]="false"
                (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"
                [lazy]="true"
                [loading]="loading"

@@ -15,6 +15,7 @@ import { BasicCruPageComponent } from '../../../shared/componentextends/basic-cr
 import { option } from '../../../shared/models/sys/sysb000.model';
 import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
 import { InputNumberComponent } from '@shared/componentkit/input-number/input-number.component';
+import { ASS21030Service } from '@service/api/ass/ass21030.service';
 
 // ENG2001 抄錶明細檔
 export interface ENG2001 {
@@ -68,8 +69,8 @@ export class ASS21030CRUComponent extends BasicCruPageComponent<ENG2001> impleme
     // ----------------------------------------------------------------
     dataForm = this.formBuilder.nonNullable.group({
       // ENG1001 能源錶號明細檔 + ENG2001 抄錶明細檔
-      ID: [{value: null, label:''}], // ID (隱藏)
-      Mid: [{value: null, label:''}], // Mid (隱藏)
+      ID: [this.authService.getUserInfo()?.SYS_StoreNo ?? ''], // ID (隱藏)
+      Mid: [Number(this.authService.getUserInfo()?.mid)], // Mid (隱藏)
       // SYS_StoreNo: ['', [Validators.maxLength(10)]], // 分店編號
       ENG_YYMM: ['', [Validators.required, Validators.maxLength(6)]], // 結算年月
       ENG_Type: ['', [Validators.required, Validators.maxLength(3)]], // 能源類型
@@ -99,8 +100,7 @@ export class ASS21030CRUComponent extends BasicCruPageComponent<ENG2001> impleme
     ];
   
     // ----------------------------------------------------------------
-    constructor(
-    ) {
+    constructor(private ass21030Service: ASS21030Service) {
       super(); // 呼叫父類建構子
     }
   
@@ -126,7 +126,7 @@ export class ASS21030CRUComponent extends BasicCruPageComponent<ENG2001> impleme
         case CRUDStatus.Create:
           if (this.canAdd()) {
             console.log('insert:', JSON.stringify(formValue, null, 2));
-            // this.ass21030Service.insertASS21030(formValue).subscribe(() => {
+            // this.ass21030Service.updateASS21030(formValue).subscribe(() => {
             //   this.messageService.successBubble('新增成功');
             //   // this.onCancel(); // 儲存後，會清除資料留在原頁面，不返回列表
             //   this.dataForm.reset(); // 重置表單

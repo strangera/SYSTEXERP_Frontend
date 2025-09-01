@@ -104,7 +104,6 @@ export class ASS21030Component extends BasicQueryPageComponent<ENG2001> implemen
 
     data: ENG2001[] = [];
     columns: Column[] = [
-      { field: 'ID', header: 'ID', visible: false },
       { field: 'ENG_Type', header: '能源類型', visible: true, options: this.ENG_Type_Option },
       { field: 'ENG_MeterNo', header: '錶號', visible: true },
       { field: 'Location_No', header: '位置編號', visible: true },
@@ -187,7 +186,7 @@ export class ASS21030Component extends BasicQueryPageComponent<ENG2001> implemen
     }
   
     // 刪除項目
-    onDelete(data: ENG2001 | ENG2001[]): void {
+    onDelete(data: ENG2001[]): void {
       console.log('Delete data:', JSON.stringify(data, null, 2));
   
       const items = Array.isArray(data) ? data : [data];
@@ -214,23 +213,23 @@ export class ASS21030Component extends BasicQueryPageComponent<ENG2001> implemen
   
       console.log('deleteBody', deleteBody);
   
-      // this.ass21030Service.deleteASS21030(deleteBody).subscribe({
-      //   next: (response) => {
-      //     if (response.Status === '0000') {
-      //       this.messageService.successBubble('選中項目刪除成功');
-      //     } else {
-      //       console.error('API error:', response.Status, response.Message);
-      //       this.messageService.errorBubble(`刪除失敗: ${response.Message}`);
-      //     }
-      //   },
-      //   error: (err: string) => {
-      //     console.error('API error:', err);
-      //     this.messageService.errorBubble('刪除失敗');
-      //   },
-      //   complete: () => {
-      //     this.onSubmit(this.queryForm);
-      //   },
-      // });
+      this.ass21030Service.deleteASS21030(deleteBody).subscribe({
+        next: (response) => {
+          if (response.Status === '0000') {
+            this.messageService.successBubble('選中項目刪除成功');
+          } else {
+            console.error('API error:', response.Status, response.Message);
+            this.messageService.errorBubble(`刪除失敗: ${response.Message}`);
+          }
+        },
+        error: (err: string) => {
+          console.error('API error:', err);
+          this.messageService.errorBubble('刪除失敗');
+        },
+        complete: () => {
+          this.onSubmit(this.queryForm);
+        },
+      });
   
       this.selectedItems = [];
     }

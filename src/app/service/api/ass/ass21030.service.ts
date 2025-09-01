@@ -18,9 +18,9 @@ export class ASS21030Service {
   }
 
   // 更新 能源抄表作業 (都用匯入處理，暫時不用這支)
-  // updateASS21030(body: any): Observable<any> {
-  //   return this.http.post<any>(`${this.apiUrl}/updateASS21030`, body);
-  // }
+  updateASS21030(body: any): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/updateASS21030`, body);
+  }
 
   // 刪除 能源抄表作業
   deleteASS21030(body: any): Observable<any> {
