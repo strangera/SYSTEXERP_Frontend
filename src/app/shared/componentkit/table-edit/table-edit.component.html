@@ -37,7 +37,10 @@
     <tr [attr.data-key]="rowData[dataKey]" [pSelectableRowIndex]="rowIndex"
       [pSelectableRowDisabled]="!isRowSelectable(rowData) || disabled" [pSelectableRow]="rowData"
       [pReorderableRow]="rowIndex"
-      [ngClass]="{'invalid-row': rowIndex > 0 && rowData._rowValidationError?.isValid === false}">
+      [ngClass]="{
+        'invalid-row': rowIndex > 0 && rowData._rowValidationError?.isValid === false,
+        'insert-row': rowIndex === 0,
+      }">
       <td *ngIf="data.length">
         <span *ngIf="index !== 0 " class="pi pi-bars" pReorderableRowHandle></span>
         <span *ngIf="index === 0 && !disabled" class="pi pi-plus"></span>
@@ -72,7 +75,7 @@
               (onBlur)="onValueChange(rowData,rowData[col.field], col, index)"
               [ngClass]="{'ng-invalid ng-dirty': rowData._validationErrors?.[col.field]}" />
             <!-- dropdown -->
-            <p-dropdown *ngSwitchCase="'dropdown'" styleClass="w-full" appendTo="body" [(ngModel)]="rowData[col.field]"
+            <p-dropdown *ngSwitchCase="'dropdown'" class="flex min-w-max" styleClass="w-full" appendTo="body" [(ngModel)]="rowData[col.field]"
               [ngModelOptions]="{ standalone: true }" [placeholder]="'請輸入' + col.header"
               [options]="getOptions(rowData, col)" [optionLabel]="col.optionLabel" [optionValue]="col.optionValue"
               [disabled]="col.disabled(rowData) || disabled" [editable]="true"

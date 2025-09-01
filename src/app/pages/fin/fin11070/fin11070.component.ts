@@ -11,6 +11,8 @@ import { TranslateModule } from '@ngx-translate/core';
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
 import { FIN11070Data, FIN11070Service } from '@service/api/fin/fin11070.service';
 import { DatePipe } from '@angular/common';
+import { untilDestroyed } from '@ngneat/until-destroy';
+import { ValidationService } from '@shared/service/validation.service';
 
 @Component({
   selector: 'app-fin11070',
@@ -30,7 +32,7 @@ import { DatePipe } from '@angular/common';
 })
 export class FIN11070Component extends BasicQueryPageComponent<FIN11070Data> implements OnInit {
   queryForm = this.formBuilder.group({
-    GUI_YYMM: [''],    // 申報年月
+    GUI_YYMM: ['', this.validationService.evenMonthValidator],    // 申報年月
     ...createPaginationConfig([])
   });
 
@@ -81,7 +83,8 @@ export class FIN11070Component extends BasicQueryPageComponent<FIN11070Data> imp
 
   constructor(
     private fin11070Service: FIN11070Service,
-    private datePipe: DatePipe
+    private datePipe: DatePipe,
+    private validationService: ValidationService
   ) {
     super();
   }
@@ -100,7 +103,7 @@ export class FIN11070Component extends BasicQueryPageComponent<FIN11070Data> imp
       };
 
       this.fin11070Service.queryFIN11070(requestData)
-        .pipe(finalize(() => this.loading = false))
+        .pipe(untilDestroyed(this), finalize(() => this.loading = false))
         .subscribe(response => {
           this.data = response.Data;
           this.totalRecords = response.TotalCount;
@@ -117,7 +120,7 @@ export class FIN11070Component extends BasicQueryPageComponent<FIN11070Data> imp
     };
 
     this.fin11070Service.downloadFIN11070(requestData)
-      .pipe(finalize(() => this.loading = false))
+      .pipe(untilDestroyed(this), finalize(() => this.loading = false))
       .subscribe(response => {
         // 預設檔名
         let filename = 'download.txt';
@@ -159,7 +162,7 @@ export class FIN11070Component extends BasicQueryPageComponent<FIN11070Data> imp
     };
 
     this.fin11070Service.insertFIN11070(requestData)
-      .pipe(finalize(() => this.loading = false))
+      .pipe(untilDestroyed(this), finalize(() => this.loading = false))
       .subscribe(response => {
         if (response.Data[0].Status === '0') {
           this.messageService.errorBubble(response.Data[0].Errormsg);

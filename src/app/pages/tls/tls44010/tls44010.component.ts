@@ -8,6 +8,9 @@ import { MenuItem } from 'primeng/api';
 import { TranslateModule } from '@ngx-translate/core';
 import { DataViewModule } from 'primeng/dataview';
 import { CommonModule } from '@angular/common';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
+
 
 @Component({
   selector: 'app-tls44010',
@@ -23,11 +26,12 @@ import { CommonModule } from '@angular/common';
     TableModule,
     AccordionModule,
     CommonModule,
+    MenubarComponent,
     DataViewModule
   ]
 })
-export class TLS44010Component implements OnInit {
-  queryForm: FormGroup;
+export class TLS44010Component extends BasicQueryPageComponent<any> implements OnInit {
+  queryForm: FormGroup = this.fb.group({});
   items: MenuItem[] = [];
   activeItem: MenuItem | undefined;
 
@@ -46,7 +50,7 @@ export class TLS44010Component implements OnInit {
   layout: 'list' | 'grid' = 'list';
 
   constructor(private fb: FormBuilder) {
-    this.queryForm = this.fb.group({});
+    super();
   }
 
   getStatusIcon(status: string): string {
@@ -74,6 +78,7 @@ export class TLS44010Component implements OnInit {
   }
 
   ngOnInit() {
+    this.initializePage('TLS44010', '/TLS/TLS44010cru', this.queryForm, (form) => this.onSubmit(form));
     this.items = [
       { label: '全部' },
       { label: '連線機台' },
@@ -98,7 +103,5 @@ export class TLS44010Component implements OnInit {
     }
   }
 
-  onCreate() {
-    console.log('新增');
-  }
+
 }

@@ -7,7 +7,7 @@ import { environment } from '../../../../environments/environment';
   providedIn: 'root'
 })
 export class Tls42010Service {
-  private apiUrl = `${environment.ApiUrl}/TLS0000/TLS2000`;
+  private apiUrl = `${environment.ApiUrl}/TLS0000/TLS4000`;
 
   constructor(private http: HttpClient) {}
 

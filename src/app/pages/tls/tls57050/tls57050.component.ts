@@ -10,7 +10,7 @@ import { ButtonComponent } from '../../../shared/componentkit/button/button.comp
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { TranslateModule } from '@ngx-translate/core';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
-import { Column, createPaginationConfig } from '@shared/componentkit/table/table.model';
+import { Column, createPaginationConfig, formatAmount } from '@shared/componentkit/table/table.model';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { QueryPLUResponse, QueryTLS57040Request, Tls57040Service } from '@service/api/tls/tls57040.service';
 import { DropdownTableComponent, FieldsConfig } from '@shared/componentkit/dropdown-table/dropdown-table.component';
@@ -41,18 +41,19 @@ import { HttpResponse } from '@angular/common/http';
   ],
 })
 export class TLS57050Component extends BasicQueryPageComponent<DetailData | SummaryData> implements OnInit {
-  queryForm = this.formBuilder.group({
-    ReportType: [null, [Validators.required]],
+  queryForm = this.formBuilder.nonNullable.group({
+    ReportType: [1, [Validators.required]],
     TXN_Date_Start: [yesterday, [Validators.required]],
     TXN_Date_End: [yesterday, [Validators.required]],
     LOGO_No: [null],
     VEN_No: [null],
     ECR_No: [null],
-    TXN_SaleNoteNo: [null, [Validators.maxLength(8)]],
+    TXN_SaleNoteNo: [null, [Validators.maxLength(30)]],
     TXN_No: [null, [Validators.maxLength(8)]],
-    PLU_MagNo: [null, [Validators.maxLength(20)]],
-    PLU_No: [null, [Validators.maxLength(13)]],
+    PLU_MagNo: ['', [Validators.maxLength(20)]],
+    PLU_No: [null, [Validators.maxLength(20)]],
     PLU_OrgPLUNo: [null],
+    ...createPaginationConfig([{ field: 'TXN_SaleNoteNo', order: 1 }]),
   });
   totalRecords = 0;
   displayModeOptions = [
@@ -95,6 +96,7 @@ export class TLS57050Component extends BasicQueryPageComponent<DetailData | Summ
 
   ngOnInit(): void {
     this.initializePage('TLS57050', 'tls/tls57050cru', this.queryForm, (form) => this.onSubmit(form));
+    this.updateTableColumns(this.queryForm.controls.ReportType.value);
     this.queryForm.controls.ReportType.valueChanges.pipe(untilDestroyed(this)).subscribe(mode => {
       this.updateTableColumns(mode);
     });
@@ -122,8 +124,8 @@ export class TLS57050Component extends BasicQueryPageComponent<DetailData | Summ
         { field: 'LOGO_CH_NAME', header: '品牌名稱' },
         { field: 'GUINO', header: '發票號碼' },
         { field: 'TXN_TotQty', header: '數量' },
-        { field: 'PLU_SalePrc', header: '銷售定價' },
-        { field: 'TXN_TotSaleAmt', header: '銷售金額' },
+        { field: 'PLU_SalePrc', header: '銷售定價', format: formatAmount },
+        { field: 'TXN_TotSaleAmt', header: '銷售金額', format: formatAmount },
         { field: 'TotRebate', header: '整張折讓' },
         { field: 'TotDisc', header: '整張折扣' },
       ];
@@ -141,8 +143,8 @@ export class TLS57050Component extends BasicQueryPageComponent<DetailData | Summ
         { field: 'PLU_No', header: '國際條碼' },
         { field: 'PLU_Name', header: '品名' },
         { field: 'TXN_Qty', header: '數量' },
-        { field: 'PLU_SalePrc', header: '銷售定價' },
-        { field: 'TXN_SaleAmt', header: '銷售金額' },
+        { field: 'PLU_SalePrc', header: '銷售定價', format: formatAmount },
+        { field: 'TXN_SaleAmt', header: '銷售金額', format: formatAmount },
         { field: 'TotRebate', header: '整張折讓' },
         { field: 'TotDisc', header: '整張折扣' },
       ];
@@ -156,7 +158,7 @@ export class TLS57050Component extends BasicQueryPageComponent<DetailData | Summ
     this.handleSubmit(frm, () => {
 
       const formValue = frm.value;
-      const displayMode = formValue.DisplayMode;
+      const displayMode = formValue.ReportType;
       const requestBody: QueryTLS57050Request = {
         ReportType: displayMode === 1 ? '彙總' : '明細',
         TXN_Date_Start: formValue.TXN_Date_Start ? this.datePipe.transform(formValue.TXN_Date_Start, 'yyyy-MM-dd') ?? undefined : undefined,
