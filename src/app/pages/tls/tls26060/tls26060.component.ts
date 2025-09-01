@@ -28,13 +28,14 @@ import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutt
 import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
 import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
 import { untilDestroyed } from '@ngneat/until-destroy';
+import { CustomFooterTableComponent } from '@shared/componentkit/custom-footer-table/customFooterTable.component';
 
 @Component({
   selector: 'app-tls26060',
   templateUrl: './tls26060.component.html',
   styleUrl: './tls26060.component.scss',
   standalone: true,
-  imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputTextComponent, CalendarRangeComponent, TableComponent, TranslateModule, RadiobuttonComponent, CalendarComponent, InputNumberComponent, DropdownComponent, NgIf, MultiSelectComponent, CalendarRangeQuickComponent]
+  imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputTextComponent, CalendarRangeComponent, TableComponent, TranslateModule, RadiobuttonComponent, CalendarComponent, InputNumberComponent, DropdownComponent, NgIf, MultiSelectComponent, CalendarRangeQuickComponent, CustomFooterTableComponent]
 })
 export class TLS26060Component extends BasicQueryPageComponent<TLS26060Data> implements OnInit {
   readonly today: Date = (() => {
@@ -94,6 +95,7 @@ export class TLS26060Component extends BasicQueryPageComponent<TLS26060Data> imp
 
   totalRecords = 0;
   data: TLS26060Data[] = [];
+  footerData: TLS26060Data[] = [];
   selectedItems: TLS26060Data[] = [];
 
   columns: Column[] = [];
@@ -158,7 +160,8 @@ export class TLS26060Component extends BasicQueryPageComponent<TLS26060Data> imp
         .pipe(untilDestroyed(this), finalize(() => this.loading = false))
         .subscribe(response => {
           this.setColumns(frm.value.tax);
-          this.data = response.Data;
+          this.data = response.Data.QueryData;
+          this.footerData = response.Data.AllData;
           this.totalRecords = response.TotalCount;
           this.queryStateService.setQueryState(this.ProgNo, frm.getRawValue());
         });
@@ -229,29 +232,29 @@ export class TLS26060Component extends BasicQueryPageComponent<TLS26060Data> imp
       { field: 'division_name', header: '組別', visible: true },
       { field: 'tlt_kind', header: '櫃別', visible: true },
       { field: 'bus_class_name', header: '中分類', visible: true },
-      { field: 'budget_now', header: '目標', visible: true, format: formatAmount, isSubTotal: true },
-      { field: 'preorder_amt_now', header: '當期預售金額', hidden: tax, format: formatAmount, isSubTotal: true },
-      { field: 'preorder_namt_now', header: '當期預售金額', hidden: !tax, format: formatAmount, isSubTotal: true },
-      { field: 'Achievement_rate_now', header: '目標達成率', hidden: tax, format: (value: number) => value ? `${value.toFixed(2)}%` : '0%', isSubTotal: true },
-      { field: 'nAchievement_rate_now', header: '目標達成率', hidden: !tax, format: (value: number) => value ? `${value.toFixed(2)}%` : '0%', isSubTotal: true },
-      { field: 'preorder_custcnt_now', header: '當期交易筆數', visible: true, isSubTotal: true },
-      { field: 'avg_ordervalue_now', header: '當期客單價', hidden: tax, format: formatAmount, isSubTotal: true },
-      { field: 'navg_ordervalue_now', header: '當期客單價', hidden: !tax, format: formatAmount, isSubTotal: true },
-      { field: 'preorder_amt_last', header: '去年同期預售金額', hidden: tax, format: formatAmount, isSubTotal: true },
-      { field: 'preorder_namt_last', header: '去年同期預售金額', hidden: !tax, format: formatAmount, isSubTotal: true },
-      { field: 'preorder_custcnt_last', header: '去年同期交易筆數', visible: true, isSubTotal: true },
-      { field: 'avg_ordervalue_last', header: '去年同期客單價', hidden: tax, format: formatAmount, isSubTotal: true },
-      { field: 'navg_ordervalue_last', header: '去年同期客單價', hidden: !tax, format: formatAmount, isSubTotal: true },
-      { field: 'Growth', header: '成長比', hidden: tax, format: (value: number) => value ? `${value.toFixed(2)}%` : '0%', isSubTotal: true },
-      { field: 'nGrowth', header: '成長比', hidden: !tax, format: (value: number) => value ? `${value.toFixed(2)}%` : '0%', isSubTotal: true },
-      { field: 'PerformanceDiff', header: '業績差異', hidden: tax, format: formatAmount, isSubTotal: true },
-      { field: 'nPerformanceDiff', header: '業績差異', hidden: !tax, format: formatAmount, isSubTotal: true },
-      { field: 'TransactionsNumber', header: '交易筆數差異', visible: true, isSubTotal: true },
-      { field: 'OrdervalueDiff', header: '客單差異', hidden: tax, isSubTotal: true },
-      { field: 'nOrdervalueDiff', header: '客單差異', hidden: !tax, isSubTotal: true },
-      { field: 'tlt_space', header: '營業坪數', visible: true, isSubTotal: true },
-      { field: 'MonthlyFloorEffect', header: '月坪效', hidden: tax, format: formatAmount, isSubTotal: true },
-      { field: 'nMonthlyFloorEffect', header: '月坪效', hidden: !tax, format: formatAmount, isSubTotal: true }
+      { field: 'budget_now', header: '目標', visible: true, format: formatAmount, isSubTotal: true, isTotal: true },
+      { field: 'preorder_amt_now', header: '當期預售金額', hidden: tax, format: formatAmount, isSubTotal: true, isTotal: true },
+      { field: 'preorder_namt_now', header: '當期預售金額', hidden: !tax, format: formatAmount, isSubTotal: true, isTotal: true },
+      { field: 'Achievement_rate_now', header: '目標達成率', hidden: tax, format: (value: number) => value ? `${value.toFixed(2)}%` : '0%', isSubTotal: true, isTotal: true },
+      { field: 'nAchievement_rate_now', header: '目標達成率', hidden: !tax, format: (value: number) => value ? `${value.toFixed(2)}%` : '0%', isSubTotal: true, isTotal: true },
+      { field: 'preorder_custcnt_now', header: '當期交易筆數', visible: true, isSubTotal: true, isTotal: true },
+      { field: 'avg_ordervalue_now', header: '當期客單價', hidden: tax, format: formatAmount, isSubTotal: true, isTotal: true },
+      { field: 'navg_ordervalue_now', header: '當期客單價', hidden: !tax, format: formatAmount, isSubTotal: true, isTotal: true },
+      { field: 'preorder_amt_last', header: '去年同期預售金額', hidden: tax, format: formatAmount, isSubTotal: true, isTotal: true },
+      { field: 'preorder_namt_last', header: '去年同期預售金額', hidden: !tax, format: formatAmount, isSubTotal: true, isTotal: true },
+      { field: 'preorder_custcnt_last', header: '去年同期交易筆數', visible: true, isSubTotal: true, isTotal: true },
+      { field: 'avg_ordervalue_last', header: '去年同期客單價', hidden: tax, format: formatAmount, isSubTotal: true, isTotal: true },
+      { field: 'navg_ordervalue_last', header: '去年同期客單價', hidden: !tax, format: formatAmount, isSubTotal: true, isTotal: true },
+      { field: 'Growth', header: '成長比', hidden: tax, format: (value: number) => value ? `${value.toFixed(2)}%` : '0%', isSubTotal: true, isTotal: true },
+      { field: 'nGrowth', header: '成長比', hidden: !tax, format: (value: number) => value ? `${value.toFixed(2)}%` : '0%', isSubTotal: true, isTotal: true },
+      { field: 'PerformanceDiff', header: '業績差異', hidden: tax, format: formatAmount, isSubTotal: true, isTotal: true },
+      { field: 'nPerformanceDiff', header: '業績差異', hidden: !tax, format: formatAmount, isSubTotal: true, isTotal: true },
+      { field: 'TransactionsNumber', header: '交易筆數差異', visible: true, isSubTotal: true, isTotal: true },
+      { field: 'OrdervalueDiff', header: '客單差異', hidden: tax, isSubTotal: true, isTotal: true },
+      { field: 'nOrdervalueDiff', header: '客單差異', hidden: !tax, isSubTotal: true, isTotal: true },
+      { field: 'tlt_space', header: '營業坪數', visible: true, isSubTotal: true, isTotal: true },
+      { field: 'MonthlyFloorEffect', header: '月坪效', hidden: tax, format: formatAmount, isSubTotal: true, isTotal: true },
+      { field: 'nMonthlyFloorEffect', header: '月坪效', hidden: !tax, format: formatAmount, isSubTotal: true, isTotal: true }
     ]
   }
 
