@@ -9,10 +9,9 @@ import { AccordionModule } from 'primeng/accordion';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { TranslateModule } from '@ngx-translate/core';
 import { Cpm13010Service, QueryCPM13010Request, QueryCPM13010Response } from '@service/api/cpm/cpm13010.service';
-import { concatMap, finalize, from } from 'rxjs';
+import { finalize } from 'rxjs';
 import { InputNumberComponent } from '@shared/componentkit/input-number/input-number.component';
 import { ButtonModule } from 'primeng/button';
-import { NgStyle } from '@angular/common';
 import { ExecSpFuncService } from '@service/utility/execSpFunc.service';
 
 @Component({
@@ -29,7 +28,6 @@ import { ExecSpFuncService } from '@service/utility/execSpFunc.service';
     TranslateModule,
     InputNumberComponent,
     ButtonModule,
-    NgStyle
   ],
 })
 // 5.11.7 專櫃停車費折抵設定作業
@@ -96,7 +94,8 @@ export class CPM13010Component extends BasicQueryPageComponent<QueryCPM13010Resp
   // onDelete (刪除功能，此處僅為模板，需根據實際需求實現)
   onDelete(selectedRows: QueryCPM13010Response[]) {
     const IDs = selectedRows.map(row => row.ID);
-    this.cpm13010Service.deleteCPM13010({ IDs }).pipe(untilDestroyed(this)).subscribe(res => {
+    this.loading = true;
+    this.cpm13010Service.deleteCPM13010({ IDs }).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(res => {
       if (res.Status === '0000') {
         this.onSubmit(this.queryForm);
         this.selectedRows = [];
@@ -107,38 +106,45 @@ export class CPM13010Component extends BasicQueryPageComponent<QueryCPM13010Resp
     });
   }
   btnLoading = false;
-  onUpload() {
-    const storeNo = this.authService.currentUserValue?.SYS_StoreNo;
-    const userNo = this.authService.currentUserValue?.user_No; // 雖然這裡沒用到，但習慣上會取
-    const itemsToUpload = this.selectedRows; // 確保處理的是選取的項目
-    if (!storeNo || !userNo || !itemsToUpload.length) { return; }
-    this.btnLoading = true;
-    from(itemsToUpload).pipe(
-      concatMap((item) => {
-        // 為每個選定的 item 建立 params
-        const params = {
-          SYS_StoreNo: storeNo,
-          EXP_StoreNo: storeNo,
-          EXP_Type: "DSC2010",
-          EXP_DocNo: storeNo + ";" + item.PKNG_SeqNo,
-          EXP_DataFlag: item.PKNG_Status === 'D' ? "SDP" : "S2P",
-          EXP_Desc: ""
-        };
-        return this.ExecSpFunc.ExecSpFunc(params);
-      }),
-      finalize(() => this.btnLoading = false),
-      untilDestroyed(this)
-    ).subscribe(response => {
-      if (response.ErrCode !== 0) {
-        this.messageService.errorBubble(response.ErrMsg);
-        return;
-      }
-      this.selectedRows = [];
-      this.onSubmit(this.queryForm);
-    });
-  }
+  // onUpload() {
+  //   const storeNo = this.authService.currentUserValue?.SYS_StoreNo;
+  //   const userNo = this.authService.currentUserValue?.user_No; // 雖然這裡沒用到，但習慣上會取
+  //   const itemsToUpload = this.selectedRows; // 確保處理的是選取的項目
+  //   if (!storeNo || !userNo || !itemsToUpload.length) { return; }
+  //   this.btnLoading = true;
+  //   from(itemsToUpload).pipe(
+  //     concatMap((item) => {
+  //       // 為每個選定的 item 建立 params
+  //       const params = {
+  //         SYS_StoreNo: storeNo,
+  //         EXP_StoreNo: storeNo,
+  //         EXP_Type: "DSC2010",
+  //         EXP_DocNo: storeNo + ";" + item.PKNG_SeqNo,
+  //         EXP_DataFlag: item.PKNG_Status === 'D' ? "SDP" : "S2P",
+  //         EXP_Desc: ""
+  //       };
+  //       return this.ExecSpFunc.ExecSpFunc(params);
+  //     }),
+  //     finalize(() => this.btnLoading = false),
+  //     untilDestroyed(this)
+  //   ).subscribe(response => {
+  //     if (response.ErrCode !== 0) {
+  //       this.messageService.errorBubble(response.ErrMsg);
+  //       return;
+  //     }
+  //     this.selectedRows = [];
+  //     this.onSubmit(this.queryForm);
+  //   });
+  // }
   // 狀態為刪除禁止下傳
   get isDisabled(): boolean {
     return this.selectedRows.some(row => row.PKNG_Status === 'D');
+  }
+
+  isRowSelectable(row: QueryCPM13010Response): boolean {
+    return row.PKNG_Status !== 'D';
+  }
+  editDisabled(row: QueryCPM13010Response): boolean {
+    return row.PKNG_Status === 'D';
   }
 }
