@@ -8,8 +8,8 @@
       <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar label="日期" controlName="TXN_Date" [control]="queryForm.controls.TXN_Date"
-              [submitted]="submitted"></app-calendar>
+            <app-calendar-range-quick label="日期" controlName="TXN_Date" [startControl]="queryForm.controls.TXN_DateS" [endControl]="queryForm.controls.TXN_DateE"
+              [submitted]="submitted"></app-calendar-range-quick>
           </div>
         </div>
         <hr>
@@ -36,6 +36,11 @@
               optionGroupLabel="CAT_LName" optionGroupChildren="items"></app-multi-select>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
+            <app-multi-select label="小分類代碼/名稱" controlName="bus_sclass" [options]="bus_sclass_Option"
+              optionLabel="label" [control]="queryForm.controls.bus_sclass" [submitted]="submitted"
+              optionGroupLabel="label" optionGroupChildren="items" [group]="true"></app-multi-select>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
             <app-multi-select label="櫃別" controlName="tlt_kind" [options]="tlt_kind_Option" optionLabel="label"
               optionValue="value" [control]="queryForm.controls.tlt_kind" [submitted]="submitted"></app-multi-select>
           </div>
@@ -47,10 +52,6 @@
           <div class="col-12 md:col-6 lg:col-4">
             <app-multi-select label="組織" controlName="org_id" [options]="org_id_Option" optionLabel="label"
               optionValue="No" [control]="queryForm.controls.org_id" [submitted]="submitted"></app-multi-select>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select label="專櫃編號" controlName="tlt_no" [options]="tlt_no_id_Option" optionLabel="label"
-              optionValue="No" [control]="queryForm.controls.tlt_no" [submitted]="submitted"></app-multi-select>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-radiobutton-yn label="銷售金額是否含稅" controlName="TaxType" [control]="queryForm.controls.TaxType"
