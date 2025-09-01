@@ -343,13 +343,12 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
     try {
       let dateObj: Date;
 
-      // 處理各種可能的輸入格式
+      // 🎯 統一日期對象創建邏輯
       if (rawValue instanceof Date) {
         dateObj = rawValue;
       } else if (typeof rawValue === 'string') {
-        // 🔧 處理你的 ISO 日期格式："2014-11-30T16:00:00.000Z"
+        // 處理 ISO 日期格式
         if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/.test(rawValue)) {
-          // 解析 ISO 字串但忽略時區，只取日期部分
           const match = rawValue.match(/^(\d{4})-(\d{2})-(\d{2})/);
           if (match) {
             const year = parseInt(match[1], 10);
@@ -373,7 +372,7 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
           const day = parseInt(rawValue.substring(6, 8), 10);
           dateObj = new Date(year, month, day);
         }
-        // 處理標準格式
+        // 標準格式
         else {
           dateObj = new Date(rawValue);
         }
@@ -383,13 +382,18 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
         return '';
       }
 
-      // 檢查日期有效性
+      // 🎯 檢查日期有效性和合理性
       if (isNaN(dateObj.getTime())) {
         console.warn('無效的日期值:', rawValue);
         return '';
       }
 
-      // 根據格式類型格式化
+      if (!this.isValidDateRange(dateObj)) {
+        console.warn('日期超出合理範圍:', dateObj);
+        return '';
+      }
+
+      // 🎯 根據格式類型格式化
       const year = dateObj.getFullYear();
       const month = String(dateObj.getMonth() + 1).padStart(2, '0');
       const day = String(dateObj.getDate()).padStart(2, '0');
@@ -445,54 +449,65 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
   }
 
 
-  // 🎯 對外接口：處理日期輸入變更
   onDateInputChange(rowData: any, column: ColumnDef, inputValue: string, isDetail: boolean = false, detailIndex?: number): void {
     const fieldKey = this.getFieldKey(rowData, column.field, isDetail, detailIndex);
 
-    // 套用長度限制
-    let processedValue = inputValue;
-    if (column.maxLength && inputValue.length > column.maxLength) {
-      processedValue = inputValue.substring(0, column.maxLength);
-    }
+    // 🎯 只暫存用戶輸入，不做任何解析或格式化
+    this.userInputValues.set(fieldKey, inputValue);
 
-    // 🎯 只儲存使用者輸入，不做任何處理
-    this.userInputValues.set(fieldKey, processedValue);
+    console.log(`📝 日期輸入暫存: ${column.field} = "${inputValue}"`);
+
+    // 如果是空值，立即清空
+    if (!inputValue || inputValue.trim() === '') {
+      rowData[column.field] = null;
+      this.userInputValues.delete(fieldKey);
+      this.triggerFieldChangeEvent(column.field, null, rowData);
+    }
   }
 
-
-  // ✅ 保留這個方法，但保持簡單
   onTextInputChange(rowData: any, column: ColumnDef, inputValue: string): void {
+    const oldValue = rowData[column.field];
     let processedValue = inputValue;
 
-    // 套用長度限制
     if (column.maxLength && inputValue.length > column.maxLength) {
       processedValue = inputValue.substring(0, column.maxLength);
     }
 
     rowData[column.field] = processedValue;
 
-    // 如果是直接編輯模式，觸發儲存
+    // 🔥 立即觸發 fieldChange 事件（與下拉選單一致）
+    this.fieldChange.emit({
+      fieldName: column.field,
+      newValue: processedValue,
+      rowData
+    });
+
+    // 🔥 強制變更檢測（與下拉選單一致）
+    this.cdr.detectChanges();
+
     if (column.directEdit) {
       this.onDirectEditChange(rowData, column.field, processedValue);
     }
   }
 
-  // 🎯 獲取日期輸入值（編輯時使用）
+  // 獲取日期輸入值（編輯時使用）
   getDateInputValue(rowData: any, column: ColumnDef, isDetail: boolean = false, detailIndex?: number): string {
     const fieldKey = this.getFieldKey(rowData, column.field, isDetail, detailIndex);
 
-    // 🎯 優先顯示使用者正在輸入的值
+    // 🎯 優先顯示用戶正在輸入的值
     const userInput = this.userInputValues.get(fieldKey);
     if (userInput !== undefined) {
+      console.log(`📝 顯示用戶輸入: "${userInput}"`);
       return userInput;
     }
 
-    // 🎯 否則顯示格式化後的值
-    return this.getDateDisplayValue(rowData, column);
+    // 🎯 否則顯示格式化的值
+    const displayValue = this.getDateDisplayValue(rowData, column);
+    console.log(`📅 顯示格式化值: "${displayValue}"`);
+    return displayValue;
   }
-
   /**
-  * 🎯 觸發儲存事件（如果需要）
+  * 觸發儲存事件（如果需要）
   */
   private triggerSaveIfNeeded(rowData: any, column: ColumnDef, newValue: any, isDetail = false, detailIndex?: number): void {
     if (column.directEdit) {
@@ -538,62 +553,92 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
   }
 
 
-  // 🎯 Blur 時統一處理：驗證 → 轉換 → 格式化 → 儲存
+  // Blur 時統一處理：驗證 → 轉換 → 格式化 → 儲存
   onDateInputBlur(rowData: any, column: ColumnDef, isDetail: boolean = false, detailIndex?: number): void {
     const fieldKey = this.getFieldKey(rowData, column.field, isDetail, detailIndex);
     const userInput = this.userInputValues.get(fieldKey);
     const formatType = column.dateFormat || 'full-date';
 
-    // 如果沒有使用者輸入，使用當前顯示值
-    const inputValue = userInput !== undefined ? userInput : this.getDateDisplayValue(rowData, column);
+    console.log(`🎯 日期 Blur 處理開始: ${column.field}`, {
+      userInput,
+      currentValue: rowData[column.field],
+      formatType
+    });
 
-    console.log(`🎯 處理日期 Blur: ${column.field} = "${inputValue}"`);
+    // 如果沒有用戶輸入，表示沒有修改，直接跳過
+    if (userInput === undefined) {
+      console.log(`⭐ 沒有用戶輸入，跳過處理`);
+      return;
+    }
 
-    // 🎯 空值處理
-    if (!inputValue || inputValue.trim() === '') {
+    // 空值處理
+    if (!userInput || userInput.trim() === '') {
       const oldValue = rowData[column.field];
       rowData[column.field] = null;
       this.userInputValues.delete(fieldKey);
-
-      // 🔥 觸發欄位變更事件
       this.triggerFieldChangeEvent(column.field, null, rowData, oldValue);
-      this.triggerSaveIfNeeded(rowData, column, null, isDetail, detailIndex);
-
       console.log(`✅ 日期已清空`);
       return;
     }
 
-    // 🎯 嘗試解析使用者輸入
-    const parsedDate = this.parseSmartDateInput(inputValue.trim(), formatType);
+    // 🎯 核心：統一日期解析邏輯
+    const parsedDate = this.parseUserDateInput(userInput.trim(), formatType);
 
-    if (parsedDate) {
-      // ✅ 解析成功：更新資料 + 格式化顯示
+    if (parsedDate && this.isValidDateRange(parsedDate)) {
+      // ✅ 解析成功且合理
       const oldValue = rowData[column.field];
       rowData[column.field] = parsedDate;
-
-      // 清除使用者輸入狀態（這樣 getDateInputValue 會顯示格式化後的值）
       this.userInputValues.delete(fieldKey);
 
-      console.log(`✅ 日期解析成功: "${inputValue}" -> ${this.formatDateForDisplay(parsedDate, formatType)}`);
+      console.log(`✅ 日期解析成功: "${userInput}" -> ${this.formatDateForDisplay(parsedDate, formatType)}`);
 
-      // 🔥 觸發欄位變更事件
       this.triggerFieldChangeEvent(column.field, parsedDate, rowData, oldValue);
-
-      // 觸發儲存事件
       this.triggerSaveIfNeeded(rowData, column, parsedDate, isDetail, detailIndex);
-
     } else {
-      // ❌ 解析失敗：恢復到原始值 + 顯示錯誤提示
-      console.warn(`❌ 日期格式錯誤: "${inputValue}"`);
-
-      // 清除無效輸入
+      // ❌ 解析失敗：保持原值，清除無效輸入，顯示錯誤提示
       this.userInputValues.delete(fieldKey);
+      this.showDateFormatHint(userInput, formatType);
 
-      // 顯示友善的錯誤提示
-      this.showDateFormatHint(inputValue, formatType);
+      console.warn(`❌ 日期格式錯誤，保持原值: "${userInput}"`);
     }
 
     this.cdr.detectChanges();
+  }
+
+  private parseUserDateInput(inputValue: string, formatType: DateFormatType): Date | null {
+    console.log(`🔍 解析用戶日期輸入: "${inputValue}" (期望格式: ${formatType})`);
+
+    if (!inputValue) return null;
+
+    try {
+      // 🎯 年月格式處理
+      if (formatType.includes('year-month')) {
+        return this.parseYearMonthInput(inputValue);
+      }
+      // 🎯 完整日期格式處理
+      else {
+        return this.parseFullDateInput(inputValue);
+      }
+    } catch (error) {
+      console.error('日期解析錯誤:', error, inputValue);
+      return null;
+    }
+  }
+
+  // 4. 新增：日期合理性驗證
+  private isValidDateRange(date: Date): boolean {
+    if (!date || isNaN(date.getTime())) {
+      return false;
+    }
+
+    const year = date.getFullYear();
+    const isReasonable = year >= 1900 && year <= 2100;
+
+    if (!isReasonable) {
+      console.warn(`⚠️ 日期年份超出合理範圍: ${year}`);
+    }
+
+    return isReasonable;
   }
 
   private triggerFieldChangeEvent(fieldName: string, newValue: any, rowData: any, oldValue?: any): void {
@@ -892,6 +937,9 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
 
   onRowEditSave(rowData: any) {
     try {
+      // 🎯 新增：保存前最後一次驗證所有日期欄位
+      this.validateAllDateFieldsBeforeSave(rowData);
+
       // 驗證
       const validationResult = this.validationService.validateRow(rowData, this.mainColumns, this.dataKey);
 
@@ -901,7 +949,7 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
         return;
       }
 
-      // 新增：讓父元件決定是否可以儲存
+      // 讓父元件決定是否可以儲存
       let canSave = true;
       const preventSave = () => { canSave = false; };
 
@@ -910,7 +958,6 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
         preventDefault: preventSave
       });
 
-      // 如果父元件阻止儲存，就停在這裡（保持編輯狀態）
       if (!canSave) {
         return;
       }
@@ -929,6 +976,38 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
     } catch (error) {
       console.error('儲存行時出錯：', error);
       this.messageService.warnBubble('儲存失敗，請檢查輸入內容');
+    }
+  }
+
+  /**
+ * 🎯 新增：保存前驗證所有日期欄位
+ */
+  private validateAllDateFieldsBeforeSave(rowData: any): void {
+    const rowKey = rowData[this.dataKey];
+
+    // 檢查是否有未處理的用戶輸入
+    const pendingDateInputs: string[] = [];
+
+    this.userInputValues.forEach((value, key) => {
+      if (key.startsWith(`${rowKey}_`)) {
+        pendingDateInputs.push(key);
+      }
+    });
+
+    if (pendingDateInputs.length > 0) {
+      console.log(`🔧 保存前處理待驗證的日期輸入:`, pendingDateInputs);
+
+      // 強制處理所有待驗證的日期輸入
+      pendingDateInputs.forEach(key => {
+        const fieldName = key.split('_')[1]; // 提取欄位名稱
+        const column = this.findColumnByField(fieldName);
+
+        if (column && column.type === 'date') {
+          console.log(`🔧 強制處理日期欄位: ${fieldName}`);
+          // 觸發 blur 處理
+          this.onDateInputBlur(rowData, column, false);
+        }
+      });
     }
   }
 
@@ -1158,6 +1237,16 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
   onDropdownChange(rowData: any, field: string, newValue: any): void {
     const oldValue = rowData[field];
     rowData[field] = newValue;
+
+    // 立即觸發 fieldChange 事件
+    this.fieldChange.emit({
+      fieldName: field,
+      newValue,
+      rowData
+    });
+
+    // 強制變更檢測
+    this.cdr.detectChanges();
 
     this.dropdownChange.emit({
       rowData,
@@ -1903,81 +1992,36 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
   }
 
   // 🔄 重構數字欄位處理 - 使用 input 事件 + 防抖
-  onNumberInputChange(
-    event: any,
-    fieldName: string,
-    rowData: any,
-    isDetail: boolean = false
-  ): void {
-    // 🚨 關鍵診斷：檢查 event 結構
-    console.log('🔍 完整 event 物件:', event);
-    console.log('🔍 event.target:', event.target);
-    console.log('🔍 event.target.value:', event.target?.value);
-    console.log('🔍 event.value:', event.value);
-    console.log('🔍 event.originalEvent:', event.originalEvent);
-
-    // 🎯 方案 1: 優先使用 PrimeNG 的 value 屬性
+  onNumberInputChange(event: any, fieldName: string, rowData: any, isDetail: boolean = false): void {
+    // 統一取值邏輯
     let inputValue = event.value !== undefined ? event.value : event.target?.value;
 
-    // 🎯 方案 2: 如果還是 undefined，檢查其他可能的屬性
-    if (inputValue === undefined || inputValue === null) {
-      inputValue = event.originalEvent?.target?.value ||
-        event.target?.value ||
-        event.data ||
-        0;
-    }
-
-    console.log(`🔢 最終取得的輸入值: "${inputValue}" (類型: ${typeof inputValue})`);
-
-    // 處理數值轉換
-    let numericValue: number;
-
     if (typeof inputValue === 'string') {
-      // 移除千分位逗號
-      const cleanValue = inputValue.replace(/,/g, '');
-      numericValue = parseFloat(cleanValue) || 0;
-    } else if (typeof inputValue === 'number') {
-      numericValue = inputValue;
-    } else {
-      console.warn(`⚠️ 無法處理的輸入類型: ${typeof inputValue}, 值: ${inputValue}`);
-      numericValue = 0;
+      inputValue = parseFloat(inputValue.replace(/,/g, '')) || 0;
+    } else if (typeof inputValue !== 'number') {
+      inputValue = 0;
     }
 
-    console.log(`💰 轉換後的數值: ${numericValue}`);
-
-    // 立即更新 rowData（這很重要！）
     const oldValue = rowData[fieldName];
-    rowData[fieldName] = numericValue;
+    rowData[fieldName] = inputValue;
 
-    console.log(`📝 更新 ${fieldName}: ${oldValue} → ${numericValue}`);
-
-    // 防抖觸發計算
-    const debounceKey = `${rowData[this.dataKey]}_${fieldName}_${isDetail ? 'detail' : 'main'}`;
-
-    this.debouncedCalculation(debounceKey, () => {
-      console.log(`⚡ 防抖計算觸發: ${fieldName} = ${numericValue}`);
-
-      this.fieldChange.emit({
-        fieldName,
-        newValue: numericValue,
-        rowData
-      });
-
-      // 直接編輯保存
-      const column = this.findColumnByField(fieldName);
-      if (column?.directEdit) {
-        if (isDetail) {
-          const parentData = this.findParentData(rowData);
-          if (parentData) {
-            this.onDetailDirectEditChange(rowData, parentData, fieldName, numericValue);
-          }
-        } else {
-          this.onDirectEditChange(rowData, fieldName, numericValue);
-        }
-      }
+    // 🔥 立即觸發計算（無防抖延遲）
+    this.fieldChange.emit({
+      fieldName,
+      newValue: inputValue,
+      rowData
     });
+
+    // 🔥 立即強制更新UI
+    this.cdr.detectChanges();
+
+    // 處理直接編輯
+    this.handleDirectEditForNumber(fieldName, inputValue, rowData, isDetail);
   }
 
+  /**
+ * 🎯 輔助方法：根據欄位名稱查找欄位定義
+ */
   private findColumnByField(fieldName: string): ColumnDef | undefined {
     // 先從主要欄位找
     let column = this.mainColumns.find(col => col.field === fieldName);
@@ -2300,5 +2344,11 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
         parentData
       });
     }
+  }
+
+  handleDateInput(event: Event, rowData: any, column: ColumnDef): void {
+    const target = event.target as HTMLInputElement;
+    const inputValue = target?.value || '';
+    this.onDateInputChange(rowData, column, inputValue);
   }
 }

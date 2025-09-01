@@ -13,13 +13,15 @@ import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdow
 import { QueryYearMonthComponent } from '../../../shared/componentkit/query-year-month/query-year-month.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { TranslateModule } from '@ngx-translate/core';
+import { ValidationService } from '@shared/service/validation.service';
+import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
 
 @Component({
   selector: 'app-fin13020',
   templateUrl: './fin13020.component.html',
   styleUrls: ['./fin13020.component.scss'],
   standalone: true,
-  imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputTextRangeComponent, InputTextComponent, CalendarRangeComponent, DropdownComponent, QueryYearMonthComponent, TableComponent, TranslateModule]
+  imports: [MenubarComponent, ButtonComponent, AccordionModule,CalendarComponent, FormsModule, ReactiveFormsModule, InputTextRangeComponent, InputTextComponent, CalendarRangeComponent, DropdownComponent,  TableComponent, TranslateModule]
 })
 export class FIN13020Component extends BasicQueryPageComponent<any> {
 
@@ -48,7 +50,7 @@ export class FIN13020Component extends BasicQueryPageComponent<any> {
     Source_Doc_NoEnd: [],   // 憑證單號(迄)
     Voucher_NoStart: [], // 發票起始號碼
     Voucher_NoEnd: [],   // 發票結束號碼
-    ...createPaginationConfig
+    ...createPaginationConfig([{ field: 'id', order: 1 }])
   });
 
   data: any[] = [];
@@ -71,7 +73,7 @@ export class FIN13020Component extends BasicQueryPageComponent<any> {
     { field: 'Voucher_No', header: '傳票編號', visible: true },
   ];
 
-  constructor(private fin13020Service: FIN13020Service) {
+  constructor(private fin13020Service: FIN13020Service, private validationService: ValidationService,) {
     super();
   }
   formatCreditType(value: string): string {
@@ -115,7 +117,7 @@ export class FIN13020Component extends BasicQueryPageComponent<any> {
         if (payload[key] === '') payload[key] = null;
       }
     }
-
+payload.INV_DeclareYM = this.toYYYYMM(payload.INV_DeclareYM);
     this.loading = true;
     this.messageService.blockUi();
 
@@ -156,6 +158,37 @@ export class FIN13020Component extends BasicQueryPageComponent<any> {
     this.queryForm.reset();
   }
 
+private toYYYYMM(input: any): string | null {
+  if (!input) return null;
 
+  // 先處理常見字串：'2025/05'、'2025-05-01T00:00:00'
+  if (typeof input === 'string') {
+    const onlyDigits = input.replace(/\D/g, ''); // 拿掉所有非數字
+    if (onlyDigits.length >= 6) return onlyDigits.slice(0, 6); // '202505'
+    const d = new Date(input);
+    if (!isNaN(d.getTime())) {
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, '0');
+      return `${y}${m}`;
+    }
+    return null;
+  }
+
+  // Date 物件
+  if (input instanceof Date) {
+    const y = input.getFullYear();
+    const m = String(input.getMonth() + 1).padStart(2, '0');
+    return `${y}${m}`;
+  }
+
+  // 其他型別就試著 new Date 看看
+  const d = new Date(input);
+  if (!isNaN(d.getTime())) {
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    return `${y}${m}`;
+  }
+  return null;
+}
 
 }
