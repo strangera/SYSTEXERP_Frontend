@@ -62,6 +62,35 @@ export interface TLS42020DetailData {
   SBM_BtnNo: string;              // 菜單按鍵序號
 }
 
+// Insert POS10271 detail data interface
+export interface TLS42020InsertDetailData {
+  STO_No: string;                 // 店舖編號
+  SBM_Type: number;               // 子菜單類別
+  TLT_No: string;                 // 專櫃編號
+  TLT_Name: string;               // 專櫃名稱
+  SBM_BegDate: string;            // 開始日期
+  SBM_EndDate: string;            // 結束日期
+  SBM_SeqNo: string;              // 序號
+  PLU_MagNo: string;              // 商品貨號
+  PLU_No: string;                 // 國際條碼
+  PLU_Name: string;               // 商品名稱
+  PLU_PrnName: string;            // 商品列印名稱
+  PLU_FixPrc: string;             // 商品定價
+  PLU_SalePrc: string;            // 商品售價
+  SBM_BtnNo: string;              // 菜單按鍵序號
+}
+
+// Insert request interface for TLS42020M
+export interface TLS42020InsertRequest {
+  STO_No: string;                 // 店舖編號
+  SBM_Type: number;               // 菜單類別
+  TLT_No: string;                 // 專櫃編號
+  TLT_Name: string;               // 專櫃名稱
+  SBM_BegDate: string;            // 開始日期
+  SBM_EndDate: string;            // 結束日期
+  POS10271: TLS42020InsertDetailData[];  // POS10271子資料
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -176,5 +205,10 @@ export class TLS42020Service {
       TotalCount: 2,
       TotalPage: 1
     });
+  }
+
+  // 新增POS1027M資料表
+  insertTLS42020M(data: TLS42020InsertRequest): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/insertTLS42020M`, data);
   }
 }

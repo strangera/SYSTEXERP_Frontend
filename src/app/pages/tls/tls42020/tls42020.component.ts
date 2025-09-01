@@ -52,8 +52,8 @@ export class TLS42020Component extends BasicQueryPageComponent<TLS42020Data> imp
   selectedItems: TLS42020Data[] = [];
 
   // 下拉選單選項
-  menuTypeOptions: { label: string, value: string }[] = [];
-  tltNoOptions: { label: string, value: string }[] = [];
+  menuTypeOptions: any[] = [];
+  tltNoOptions: any[] = [];
 
   columns: Column[] = [
     { field: 'SBM_Type', header: '菜單類別', visible: true, format: (value: string) => { return value === '1' ? '一般菜單' : '員工菜單' } },
@@ -123,8 +123,8 @@ export class TLS42020Component extends BasicQueryPageComponent<TLS42020Data> imp
 
   loadOptions() {
     this.menuTypeOptions = [
-      { label: '一般菜單', value: '1' },
-      { label: '員工菜單', value: '2' },
+      { label: '一般菜單', value: 1 },
+      { label: '員工菜單', value: 2 },
     ];
 
     this.dropDownListService.queryTLTTALENT_DropDownList()
