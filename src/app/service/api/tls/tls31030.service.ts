@@ -5,7 +5,8 @@ import { environment } from '../../../../environments/environment';
 import { ApiResponse } from '@service/system/auth.service';
 
 export interface TLS31030Request {
-  IsExcel?: boolean;
+  // TXN_DateS: string | Date;
+  // TXN_DateE: string | Date;
   TXN_Date: string | Date;
   tlt_building: string[]
   tlt_floor: string[]
@@ -21,24 +22,23 @@ export interface TLS31030Request {
 }
 
 export interface TLS31030Response {
-  building_desc: string
-  org_name: string
-  tlt_kind: string
-  tlt_no: string
-  location_no: string
-  tlt_name: string
-  budget: number
-  AVN_TotSaleAmt: number
-  AchievementRate: number
-  BudgetRate: number
-  PerformanceRate: number
-  TxnCount: number
-  AvgTicket: number
-  tlt_space: number
-  MonthlyPSM: number
-  MonthlyBudgetTotal: number
-  MonthlySalesTotal: number
-  CompletionRate: number
+  bus_type: string;
+  bus_type_name: string;
+  budget: number;
+  AVN_TotSaleAmt: number;
+  AchievementRate: number;
+  BudgetRate: number;
+  PerformanceRate: number;
+  TxnCount: number;
+  AvgTicket: number;
+  tlt_space: number;
+  MonthlyPSM: number;
+  TempCounterSaleAmt: number;
+  TempCounterSalesRate: number;
+  TempCounterAmtRate: number;
+  MonthlyBudgetTotal: number;
+  MonthlySalesTotal: number;
+  CompletionRate: number;
 }
 
 @Injectable({

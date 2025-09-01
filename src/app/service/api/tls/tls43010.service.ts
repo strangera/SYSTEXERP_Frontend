@@ -58,7 +58,11 @@ export class Tls43010Service {
     * @param body 統一的查詢請求物件 (QueryTls43010Request)
     * @returns 包含 QueryTls43010ApiResponse 結構的 API 回傳結果
     */
-  queryTls43010(body: QueryTls43010Request): Observable<ApiResponse<QueryTls43010Response>> {
-    return this.http.post<ApiResponse<QueryTls43010Response>>(`${this.apiUrl}/queryTls43010`, body);
+  queryTLS43010(body: QueryTls43010Request): Observable<ApiResponse<QueryTls43010Response>> {
+    return this.http.post<ApiResponse<QueryTls43010Response>>(`${this.apiUrl}/queryTLS43010`, body);
+  }
+
+  deleteTLS43010(idList: number[]): Observable<ApiResponse<number>> {
+    return this.http.post<ApiResponse<number>>(`${this.apiUrl}/deleteTLS43010`, { idList });
   }
 }

@@ -53,7 +53,7 @@ export class TLS52050CRUComponent extends BasicCruPageComponent<ITLS52050Data> i
     VEN_No: ['', Validators.required], // 廠商代號
     LOGO_No: ['', Validators.required], // 品牌代碼
     MAM_InvDesc: ['', Validators.required], // 進價變價單說明
-    MAM_Method: [null, Validators.required], // 是否為永久變價
+    MAM_Method: ['H'], // 是否為永久變價
     MAM_BegDate: [(() => {
       const tomorrow = new Date();
       tomorrow.setDate(tomorrow.getDate() + 1);
@@ -92,15 +92,16 @@ export class TLS52050CRUComponent extends BasicCruPageComponent<ITLS52050Data> i
     { field: 'MAD_Remark', header: '營運終止日', visible: true, type: 'input' }
   ];
   constructor(
-    private dropDownListService: DropDownListService,
-    private tls52050Service: Tls52050Service,
-    private sys0110Service: Sys0110Service
+    private readonly dropDownListService: DropDownListService,
+    private readonly tls52050Service: Tls52050Service,
+    private readonly sys0110Service: Sys0110Service,
   ) {
     super();
   }
 
   ngOnInit(): void {
     this.initializePage('TLS52050', this.dataForm);
+    this.formLabelService.registerLabel('MAM_Method', '僅顯示回價變價單');
     // 品牌代碼 (LOGO_No)
     this.dropDownListService.queryPLULOGO_DropDownList().pipe(untilDestroyed(this)).subscribe(response => {
       this.brandOptions = response.Data.map(brand => ({

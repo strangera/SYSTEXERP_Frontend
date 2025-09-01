@@ -31,7 +31,7 @@ export class TLS51080CRUComponent extends BasicCruPageComponent<POS2034>
     HOS_No: ['', [Validators.required, Validators.maxLength(10)]], // 倉庫代碼 STO_NO+HOS_NO唯一值
     HOS_NAME: ['', [Validators.required, Validators.maxLength(50)]], // 倉庫名稱
     org_id: ['', [Validators.required, Validators.maxLength(20)]], // 部門編號/分店
-    building_no: ['', [Validators.maxLength(1)]], // 館別
+    building_no: ['', [Validators.maxLength(1), Validators.required]], // 館別
     HOS_Remark: ['', [Validators.maxLength(100)]], // 備註說明
   });
   //

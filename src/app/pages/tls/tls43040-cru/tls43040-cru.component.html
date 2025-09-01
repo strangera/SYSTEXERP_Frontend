@@ -64,8 +64,10 @@
           (selectionChange)="selectedRows = $event"
           [selectedItems]="selectedRows"
           (dataChange)="data = $event"
-          dataStatusField="status"
-        ></app-table>
+          (update)="onSubmit(dataForm)"
+        >
+          dataStatusField="status" >
+        </app-table>
       </div>
 
       <div

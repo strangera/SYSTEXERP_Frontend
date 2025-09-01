@@ -205,13 +205,11 @@ export class TLS41040CRUComponent extends BasicCruPageComponent<any> implements 
       })
     };
   }
-
-  /** Update payload */
   private createUpdateBody(frm: FormGroup) {
     const raw = frm.getRawValue();
 
     return {
-      ID: this.rowdata?.ID ?? 0,
+      ID: Number(this.rowdata?.ID ?? 0),   // 確保是數字
       NOT_DateTime: raw.NOT_DateTime,
       NOT_BegDateTime: raw.NOT_BegDateTime,
       NOT_EndDateTime: raw.NOT_EndDateTime,
@@ -227,25 +225,16 @@ export class TLS41040CRUComponent extends BasicCruPageComponent<any> implements 
       Detail: this.data.map((d, i) => {
         const clone = { ...d };
 
-        if (clone.ECR_GrpNo) {
-          clone.TLT_No = '';
-          clone.ECR_Type = '';
-          clone.BUILDING_No = '';
-          clone.FLOOR_No = '';
-          clone.Area_No = '';
-        } else if (clone.TLT_No || clone.BUILDING_No) {
-          clone.ECR_GrpNo = '';
-        }
-
         return {
-          ID: clone.ID ?? this.rowdata?.Detail?.[i]?.ID ?? 0,
+          ID: isNaN(Number(clone.ID)) ? 0 : Number(clone.ID),
+          NOT_SeqNo: clone.NOT_SeqNo ? Number(clone.NOT_SeqNo) : 0,
           TLT_No: clone.TLT_No ?? '',
           ECR_Type: clone.ECR_Type ?? '',
           ECR_GrpNo: clone.ECR_GrpNo ?? '',
           BUILDING_No: clone.BUILDING_No ?? '',
           FLOOR_No: clone.FLOOR_No ?? '',
           Area_No: clone.Area_No ?? '',
-          status: clone.status
+          status: clone.status ?? 'A'
         };
       })
     };

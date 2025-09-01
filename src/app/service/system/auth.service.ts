@@ -217,4 +217,8 @@ export class AuthService {
       { headers: { Accept: 'application/json' } }
     );
   }
+
+  querySystemNotice(): Observable<ApiResponse<{ Pub_StartDate: string, Pub_EndDate: string, Pub_Type: string, Pub_Event: string, Pub_Description: string }[]>> {
+    return this.http.post<ApiResponse<{ Pub_StartDate: string, Pub_EndDate: string, Pub_Type: string, Pub_Event: string, Pub_Description: string }[]>>(`${this.apiUrl}/User/querySystemNotice`, {})
+  }
 }

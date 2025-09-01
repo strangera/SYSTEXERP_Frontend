@@ -30,10 +30,14 @@
             <app-dropdown label="發票格式" controlName="InvoiceType" [options]="PUR_VoucherTypeOptions" optionLabel="label"
               optionValue="value" [control]="queryForm.controls.InvoiceType" [submitted]="submitted"></app-dropdown>
           </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-query-year-month [label]="'申報年月'" [control]="queryForm.controls.INV_DeclareYM" [submitted]="submitted"
-              [onlyOddMonths]="true"></app-query-year-month>
+   
+
+                        <div class="col-12 md:col-6 lg:col-4">
+
+       <app-calendar  controlName="INV_DeclareYM" calendarType="dateMonthOne"
+          label="申報年月" [control]="queryForm.controls.INV_DeclareYM" [submitted]="submitted"  ></app-calendar>
           </div>
+       
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-text-range label="憑證單號" [startControl]="queryForm.controls.Source_Doc_NoStart"
               [endControl]="queryForm.controls.Source_Doc_NoEnd" [submitted]="submitted"></app-input-text-range>
@@ -53,8 +57,8 @@
 </div>
 
 <div class="card">
-  <app-table tableKey="FIN13020" [data]="data" [columns]="columns" dataKey="PUR_RepYYYYMM"
-    [multiSortMeta]="[{ field: 'PUR_RepYYYYMM', order: 1 }]" [totalRecords]="totalRecords" [lazy]="true"
+  <app-table tableKey="FIN13020" [data]="data" [columns]="columns" dataKey="id"
+    [multiSortMeta]="[{ field: 'id', order: 1 }]" [totalRecords]="totalRecords" [lazy]="true"
     [loading]="loading" (edit)="onEdit($event)" (detail)="onDetail($event)" [showManage]="true" [showDelete]="true"
     [showCheckBox]="true" (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"></app-table>
 </div>

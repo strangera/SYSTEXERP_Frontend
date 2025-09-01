@@ -21,8 +21,8 @@
           [endControl]="dataForm.controls.MAM_EndDate" [submitted]="submitted">
           <footer>
             <div class="flex align-items-center pt-2">
-              <p-checkbox [binary]="true" inputId="MAM_Method" [formControl]="dataForm.controls.MAM_Method"
-                [trueValue]="'1'" [falseValue]="'H'" label="僅顯示回價變價單">
+              <p-checkbox [binary]="true" formControlName="MAM_Method" inputId="MAM_Method"
+                [formControl]="dataForm.controls.MAM_Method" [trueValue]="'1'" [falseValue]="'H'" label="僅顯示回價變價單">
               </p-checkbox>
             </div>
           </footer>

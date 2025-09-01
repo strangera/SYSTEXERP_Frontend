@@ -8,7 +8,7 @@
     <form [formGroup]="dataForm" (ngSubmit)="onSubmit(dataForm)">
       <div class="grid p-fluid">
         <div class="col-12 md:col-6 lg:col-4">
-          <app-calendar-range startLabel="起始時間" endLabel="結束時間" [startControl]="dataForm.controls.Pub_StartDate"
+          <app-calendar-range calendarType="dateTimeRange"  startLabel="起始時間" endLabel="結束時間" [startControl]="dataForm.controls.Pub_StartDate"
             [endControl]="dataForm.controls.Pub_EndDate" [submitted]="submitted"
             [startMinDate]="isCreate ? minDateToday : null"></app-calendar-range>
         </div>

@@ -5,6 +5,7 @@ export interface ASS21020Data {
   ENG_Type: string;
   ENG_MeterNo: string;
   TLT_No: string;
+  TLT_Name: string;
   ENG_Rate: number;
   ENG_Remark: string;
   CRT_Date: string;
@@ -35,7 +36,6 @@ export interface ASS21020UpdateStatus extends Omit<BaseQueryResponse<unknown>, '
 }
 
 export interface TLTByFlag {
-  TLT_Label?: string;
   TLT_No: string;
   Location_No: string;
   TLT_Name: string;
