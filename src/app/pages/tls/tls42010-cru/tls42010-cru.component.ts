@@ -18,6 +18,7 @@ import { DialogModule } from 'primeng/dialog';
 import { ColorPickerModule } from 'primeng/colorpicker';
 import { Tls42010Service } from '../../../service/api/tls/tls42010.service';
 
+
 export interface KeyItem {
   code: string;
   x: number;
@@ -128,11 +129,15 @@ export class TLS42010CRUComponent
     { label: '中 (14)', value: 14 },
     { label: '大 (16)', value: 16 }
   ];
-  KB_StyleOptions = [
-    { label: '圓形', value: 'CIRCLE' },
-    { label: '方形', value: 'SQUARE' },
-    { label: '愛心', value: 'HEART' }
-  ];
+  KB_StyleOptions: IDropdownItem[] = [];
+  // KB_StyleOptions = [
+  //   { label: '正方形', value: '1' },
+  //   { label: '橢圓形', value: '2' },
+  //   { label: '菱形', value: '3' },
+  //   { label: '圓方形', value: '4' },
+  //   { label: '梯形', value: '5' },
+  //   { label: '三角形', value: '6' },
+  // ]
   KB_FontOptions = [
     { label: '微軟正黑體', value: 'Microsoft JhengHei' },
     { label: '標楷體', value: 'DFKai-SB' },
@@ -185,6 +190,29 @@ export class TLS42010CRUComponent
         }
       }
     });
+
+    // 鍵盤樣式下拉
+    const params = { SYS_Type: 'KB_Style' };
+    this.dropDownListService.querySYS1000_DropDownList(params).subscribe({
+      next: (res) => {
+        if (res.Data) {
+          this.KB_StyleOptions = res.Data.map(item => ({
+            label: item.Name,
+            value: item.No,
+            No: item.No,
+            Name: item.Name
+          }));
+        } else {
+          this.KB_StyleOptions = [];
+        }
+      },
+      error: (err) => {
+        console.error('取得 KB_StyleOptions 失敗', err);
+      },
+    });
+
+
+
 
     // 顏色監聽
     this.dataForm.controls.color.valueChanges.subscribe(value => {
