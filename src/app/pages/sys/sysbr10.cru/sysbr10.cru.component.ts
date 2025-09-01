@@ -111,49 +111,73 @@ export class SYSBR10CRUComponent
 ngOnInit(): void {
   this.initializePage('SYSBR10', this.dataForm);
 
-  // 1) 如果 rowdata 有帶明細
-  if (this.rowdata?.DetailList?.length) {
-    this.detailList = [...this.rowdata.DetailList];
-    this.forceEditorLookForRead();
-  } else {
-    // 2) 沒帶就查明細
-    this.sysbr10Service.querySYSBR10Detail(this.rowdata?.id ?? 0).subscribe({
+  // 只在父層使用的小工具：把目前 detailList 的每列標記為編輯外觀
+  const applyEditorLook = () => {
+    this.detailList = (this.detailList ?? []).map(r => ({ ...r, _editing: true }));
+  };
+
+  // 1) 明細來源：先吃 rowdata 帶進來的，沒有就用 id 查一次
+  const hasDetail =
+    Array.isArray(this.rowdata?.DetailList) && this.rowdata!.DetailList.length > 0;
+
+  if (hasDetail) {
+    this.detailList = [...this.rowdata!.DetailList];
+    applyEditorLook(); // ★ 直接讓表格以編輯樣渲染（才能看到 dropdown）
+  } else if (this.rowdata?.id) {
+    this.loading = true;
+    this.messageService?.blockUi?.();
+    this.sysbr10Service.querySYSBR10Detail(this.rowdata.id).subscribe({
       next: (res) => {
-        this.detailList = res?.Data || [];
-        this.forceEditorLookForRead();            // ★
+        this.detailList = res?.Data ?? [];
+        this.loading = false;
+        this.messageService?.unblockUi?.();
+        applyEditorLook(); // ★ 載入後套編輯樣
       },
-      error: () => { /* ... */ }
+      error: () => {
+        this.loading = false;
+        this.messageService?.unblockUi?.();
+        this.messageService?.errorBubble?.('讀取明細失敗');
+      },
     });
+  } else {
+    // 沒有 id / 沒有明細就維持現況（例如創建模式下用預設插入列）
+    applyEditorLook();
   }
 
-  // 3) options 載入完成後也重新 assign（見第 2 點）並再套一次
-  this.dropDownListService.queryTBLUSER_DropDownList().subscribe(res => {
-    const opts = (res?.Data ?? []).map(u => ({ value: u.No, label: u.Name }));
+  // 2) 上方「公告類別」選項
+  this.announcementCategoryService.Pub_TypeOptions()
+    .subscribe(data => (this.Pub_TypeOptions = data ?? []));
+
+  // 3) 表格三個 dropdown 的 options
+  this.dropDownListService.queryTBLUSER_DropDownList().subscribe((res) => {
+    const opts = (res?.Data ?? []).map((u: any) => ({ value: u.No, label: u.Name }));
     this.User_NoOptions = opts;
+    // 不可變賦值，觸發子層重渲染
     this.detailcolumns = this.detailcolumns.map(c =>
-      c.field === 'User_No' ? ({ ...c, options: opts }) : c
+      c.field === 'User_No' ? { ...c, options: opts } : c
     );
-    this.forceEditorLookForRead();                // ★
   });
 
-  this.dropDownListService.querySYS3100_DropDownList().subscribe(res => {
-    const opts = (res?.Data ?? []).map(u => ({ value: u.No, label: u.Name }));
+  this.dropDownListService.querySYS3100_DropDownList().subscribe((res) => {
+    const opts = (res?.Data ?? []).map((u: any) => ({ value: u.No, label: u.Name }));
     this.Org_IDOptions = opts;
     this.detailcolumns = this.detailcolumns.map(c =>
-      c.field === 'Org_ID' ? ({ ...c, options: opts }) : c
+      c.field === 'Org_ID' ? { ...c, options: opts } : c
     );
-    this.forceEditorLookForRead();                // ★
   });
 
-  this.dropDownListService.querytblRole_DropDownList().subscribe(res => {
-    const opts = (res?.Data ?? []).map(u => ({ value: u.No, label: u.Name }));
+  this.dropDownListService.querytblRole_DropDownList().subscribe((res) => {
+    const opts = (res?.Data ?? []).map((u: any) => ({ value: u.No, label: u.Name }));
     this.Role_NoOptions = opts;
     this.detailcolumns = this.detailcolumns.map(c =>
-      c.field === 'Role_No' ? ({ ...c, options: opts }) : c
+      c.field === 'Role_No' ? { ...c, options: opts } : c
     );
-    this.forceEditorLookForRead();                // ★
   });
+
+  // 4) 若一開始就有預設插入列（空白 1~N 列），也讓它們呈現 dropdown 外觀
+  applyEditorLook();
 }
+
 
   get isCreate(): boolean {
     return this.crudstatus === CRUDStatus.Create;
@@ -213,6 +237,9 @@ onSubmit(form: FormGroup): void {
       });
       return;
     }
+      this.announcementCategoryService
+      .Pub_TypeOptions()
+      .subscribe((data) => (this.Pub_TypeOptions = data));
 
     // -------- 新增流程 --------
     if (this.crudstatus === CRUDStatus.Create && this.canAdd()) {
