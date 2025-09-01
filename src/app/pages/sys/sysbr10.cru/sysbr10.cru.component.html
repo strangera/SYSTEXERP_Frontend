@@ -44,7 +44,13 @@
 <div class="card">
 <app-table
   tableKey="SYSBR10"
-  [columns]="detailColsForView"
+    [columns]="detailColsForView"
+  [(data)]="detailList"
+
+
+
+
+
   dataKey="id"
   [multiSortMeta]="[{ field: 'id', order: 1 }]"
   [insertRowData]="!isRead && insertRowData"
