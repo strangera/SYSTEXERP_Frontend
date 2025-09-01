@@ -23,40 +23,26 @@
                             optionValue="No"
                             [control]="qf().ENG_Type"
                             [submitted]="submitted"></app-multi-select>
-          <div class="col-12 md:col-6 lg:col-4 flex align-items-end">
-            <app-input-text class="flex-1"
-                            label="錶號"
-                            [pKeyFilter]="ptn"
-                            [customPlaceholder]="'請選擇錶號'"
-                            controlName="ENG_MeterNo"
-                            [control]="qf().ENG_MeterNo"
-                            (click)="dialogVisible = 'meterNo'"></app-input-text>
-            <app-button class="ml-1"
-                        btnType="clear"
-                        (click)="onClearDialog('meterNo')"></app-button>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4 flex align-items-end">
-            <app-input-text class="flex-1"
-                            label="專櫃編號"
-                            [pKeyFilter]="ptn"
-                            [customPlaceholder]="'請選擇專櫃編號'"
-                            controlName="TLT_No"
-                            [control]="qf().TLT_No"
-                            (click)="dialogVisible = 'tltNo'"></app-input-text>
-            <app-button class="ml-1"
-                        btnType="clear"
-                        (click)="onClearDialog('tltNo')"></app-button>
-          </div>
+          <app-dropdown class="col-12 md:col-6 lg:col-4"
+                        label="錶號"
+                        controlName="ENG_MeterNo"
+                        [options]="filteredMeterNo()"
+                        optionLabel="ENG_MeterNo"
+                        optionValue="ENG_MeterNo"
+                        [control]="qf().ENG_MeterNo"
+                        [submitted]="submitted"></app-dropdown>
+          <app-dropdown class="col-12 md:col-6 lg:col-4"
+                        label="專櫃編號/名稱"
+                        controlName="TLT_No"
+                        [options]="service.tltNoSignal()"
+                        optionLabel="TLT_Label"
+                        optionValue="TLT_No"
+                        [control]="qf().TLT_No"
+                        [submitted]="submitted"></app-dropdown>
           <app-input-text class="col-12 md:col-6 lg:col-4"
                           label="設備位置編號"
                           controlName="Location_No"
                           [control]="qf().Location_No"
-                          [disabled]="true"
-                          [submitted]="submitted"></app-input-text>
-          <app-input-text class="col-12 md:col-6 lg:col-4"
-                          label="部別名稱"
-                          controlName="TLT_Name"
-                          [control]="qf().TLT_Name"
                           [disabled]="true"
                           [submitted]="submitted"></app-input-text>
           <app-input-text class="col-12 md:col-6 lg:col-4"
@@ -72,7 +58,7 @@
                             [control]="qf().ENG_Rate"
                             [max]="100"
                             [min]="0"
-                            [maxFractionDigits]="2"
+                            [maxFractionDigits]="0"
                             [suffix]="'%'"
                             [submitted]="submitted"></app-input-number>
         </div>
@@ -103,53 +89,3 @@
                (detail)="onDetail($event)"></app-table>
   </div>
 </div>
-
-
-<app-dialog [visible]="!!dialogVisible"
-            (visibleChange)="dialogVisible = !1"
-            [header]="dialogVisible === 'meterNo' ? '選擇錶號' : '選擇專櫃編號'"
-            (save)="onSaveDialog()"
-            [disable]="dialogVisible === 'meterNo' ? !service.engMeterNoMap.size : !service.tltByFlagMap.size">
-  <div class="grid p-fluid">
-    <ng-container *ngIf="dialogVisible === 'meterNo'">
-      <app-multi-select class="col-12 md:col-6 lg:col-4"
-                        label="設備位置編號"
-                        controlName="Location_No"
-                        [options]="allLoc()"
-                        [control]="df().Location_No"
-                        [submitted]="submitted"></app-multi-select>
-      <app-multi-select class="col-12 md:col-6 lg:col-4"
-                        label="能源類型"
-                        controlName="ENG_Type"
-                        [options]="allType()"
-                        [control]="df().ENG_Type"
-                        [submitted]="submitted"></app-multi-select>
-    </ng-container>
-    <ng-container *ngIf="dialogVisible === 'tltNo'">
-      <app-multi-select class="col-12 md:col-6 lg:col-4"
-                        label="專櫃編號"
-                        controlName="TLT_No"
-                        [options]="allTltNo()"
-                        [control]="df().TLT_No"
-                        [submitted]="submitted"></app-multi-select>
-      <app-multi-select class="col-12 md:col-6 lg:col-4"
-                        label="專櫃名稱"
-                        controlName="TLT_Name"
-                        [options]="allTltName()"
-                        [control]="df().TLT_Name"
-                        [submitted]="submitted"></app-multi-select>
-    </ng-container>
-  </div>
-  <app-table [tableKey]="dialogVisible === 'meterNo' ? 'ASS21020_meterno_table' : 'ASS21020_locationno_table'"
-             [dataKey]="dialogVisible === 'meterNo' ? 'Id' : 'TLT_No'"
-             [data]="dialogVisible === 'meterNo' ? filteredMeterNo() : filteredTltNo()"
-             [columns]="dialogVisible === 'meterNo' ? meterColumns : tltNoColumns"
-             [(selectedItems)]="selectedItemsDialog"
-             [showHeader]="false"
-             [showManage]="false"
-             [showCheckBox]="true"
-             [showCaption]="false"
-             [selectionMode]="'single'"
-             [emptyMessage]="dialogVisible === 'meterNo' ? '無可選擇的錶號' : '無可選擇的專櫃編號'">
-  </app-table>
-</app-dialog>

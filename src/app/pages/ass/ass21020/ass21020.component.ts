@@ -1,5 +1,5 @@
 import { NgIf } from '@angular/common';
-import { Component, OnInit, computed, effect } from '@angular/core';
+import { Component, OnInit, computed, effect, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
@@ -8,7 +8,8 @@ import { ASS21020Service } from '@service/api/ass/ass21020.service';
 import { MenubarComponent } from '@shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '@shared/componentkit/button/button.component';
-import { DialogComponent } from '@shared/componentkit/dialog/dialog.component';
+// import { DialogComponent } from '@shared/componentkit/dialog/dialog.component';
+import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { InputNumberComponent } from "@shared/componentkit/input-number/input-number.component";
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
 import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
@@ -19,7 +20,7 @@ import { AccordionModule } from 'primeng/accordion';
 import { KeyFilterModule } from 'primeng/keyfilter';
 import { PanelModule } from 'primeng/panel';
 import { ASS2100ENGMeterType } from '../ass21010/ass21010.model';
-import { ASS21020Data, TLTByFlag } from './ass21020.model';
+import { ASS21020Data } from './ass21020.model';
 
 @Component({
   selector: 'app-ass21020',
@@ -34,7 +35,8 @@ import { ASS21020Data, TLTByFlag } from './ass21020.model';
     FormsModule,
     KeyFilterModule,
     ButtonComponent,
-    DialogComponent,
+    // DialogComponent,
+    DropdownComponent,
     InputTextComponent,
     MenubarComponent,
     MultiSelectComponent,
@@ -50,62 +52,44 @@ export class ASS21020Component extends BasicQueryPageComponent<unknown> implemen
     ENG_MeterNo: new FormControl<string | undefined>(void 0),
     TLT_No: new FormControl<string | undefined>(void 0),
     Location_No: new FormControl<string>(''),
-    ENG_Rate: new FormControl<number | undefined>(void 0),
     TLT_Name: new FormControl<string>(''),
     NET_SPACE: new FormControl<number | undefined>(void 0),
+    ENG_Rate: new FormControl<number | undefined>(void 0),
     ...createPaginationConfig([{ field: '', order: 1 }]),
   });
   public readonly qf = computed(() => this.queryForm.controls);
   public readonly totalRecord = computed(() => this.service.ASS21020Data().length);
 
-  public readonly dialogForm = this.formBuilder.group({
-    Location_No: new FormControl<string[]>([]),
-    ENG_Type: new FormControl<EngType[]>([]),
-    TLT_No: new FormControl<string[]>([]),
-    TLT_Name: new FormControl<string[]>([]),
-  });
-  public readonly df = computed(() => this.dialogForm.controls);
-  public readonly dfChange = toSignal(this.dialogForm.valueChanges);
-
+  private readonly engTypeSignal = toSignal(this.qf().ENG_Type.valueChanges);
   private readonly meterNoSignal = toSignal(this.qf().ENG_MeterNo.valueChanges);
   private readonly locNoSignal = toSignal(this.qf().Location_No.valueChanges);
   private readonly tltNoSignal = toSignal(this.qf().TLT_No.valueChanges);
 
-  public dialogVisible: boolean | 'meterNo' | 'tltNo' = !1;
+  public readonly filteredMeterNo = signal<ASS2100ENGMeterType[]>([]);
 
-  public readonly ptn = /(?!)/;
-  public readonly ratePtn = /^(100(?:\.0{1,2})?|0*(?:\d{1,2})(?:\.\d{1,2})?)$/;
-  public selectedItemsDialog: (ASS2100ENGMeterType | TLTByFlag)[] = [];
+  public readonly ratePtn = /^(100(?:\.0{1,2})?|0*(?:\d{1,2}))$/;
 
   public readonly totalRecords = computed(() => this.service.ASS21020Data().length);
-  public readonly allLoc = computed(() => [...new Set(this.service.engMeterNoSignal().map(v => v.Location_No))]);
-  public readonly allType = computed(() => [...new Set(this.service.engMeterNoSignal().map(v => v.ENG_Type))]);
-  public readonly allTltNo = computed(() => [...new Set(this.service.tltNoSignal().map(v => v.TLT_No))]);
-  public readonly allTltName = computed(() => [...new Set(this.service.tltNoSignal().map(v => v.TLT_Name))]);
 
-  public readonly filteredMeterNo = computed(() => {
-    return this.service.engMeterNoSignal().filter(v => {
-      if (!this.dfChange()) return !0;
-      const locationMatch = !this.dfChange()!.Location_No?.length || !!this.dfChange()!.Location_No?.includes(v.Location_No);
-      const typeMatch = !this.dfChange()!.ENG_Type?.length || !!this.dfChange()!.ENG_Type?.some(type => type === v.ENG_Type);
-      return locationMatch && typeMatch;
-    });
-  });
-
-  public readonly filteredTltNo = computed(() => {
-    return this.service.tltNoSignal().filter(v => {
-      if (!this.dfChange()) return !0;
-      const noMatch = !this.dfChange()!.TLT_No?.length || !!this.dfChange()!.TLT_No?.includes(v.TLT_No);
-      const nameMatch = !this.dfChange()!.TLT_Name?.length || !!this.dfChange()!.TLT_Name?.includes(v.TLT_Name);
-      return noMatch && nameMatch;
-    });
-  });
+  public readonly engTypeEffect = effect(() => {
+    this.filteredMeterNo.set(this.service.engMeterNoSignal().filter(i => {
+      if (!this.engTypeSignal()?.length) return !0;
+      return this.service.engTypeSignal()!.some(t => t.Name === i.ENG_Type
+        && this.qf().ENG_Type.value?.some(v => v === t.No));
+    }));
+    this.logger.debug(`engTypeEffect:`, [this.filteredMeterNo()]);
+  }, { allowSignalWrites: !0 });
 
   public readonly meterNoEffect = effect(() => {
     const meterNo = this.meterNoSignal();
-    meterNo?.length && this.service.queryTltByFlag(meterNo);
-    this.logger.debug(`meterNo changes:`, [meterNo]);
-  });
+    if (!meterNo) return;
+    this.service.queryTltByFlag(meterNo);
+    if (this.qf().ENG_Type.value?.length) return;
+    const type = this.service.engMeterNoMap.get(meterNo)?.ENG_Type;
+    const current = this.service.engTypeSignal().find(t => t.Name === type);
+    current && this.qf().ENG_Type.patchValue([current.No as EngType]);
+    this.logger.debug(`meterNo changes:`, [meterNo, current]);
+  }, { allowSignalWrites: !0 });
 
   public readonly locNoEffect = effect(() => {
     const locNo = this.locNoSignal();
@@ -180,41 +164,7 @@ export class ASS21020Component extends BasicQueryPageComponent<unknown> implemen
 
   public onDelete(event: ASS21020Data): void {
     this.logger.debug(`Deleting:`, [event]);
-
-    this.confirmationService.confirm({
-      message: '是否確認刪除?',
-      accept: () => {
-
-        this.messageService.successBubble('刪除成功');
-        this.loading = !1;
-      },
-    });
-  }
-
-  public onSaveDialog(): void {
-    this.logger.debug(`Saving ${this.dialogVisible} dialog:`, [this.selectedItemsDialog]);
-    if (this.dialogVisible === 'meterNo') {
-      const d = this.selectedItemsDialog[0] as ASS2100ENGMeterType;
-      this.queryForm.patchValue({
-        ENG_MeterNo: d?.ENG_MeterNo ?? '',
-        Location_No: d?.Location_No ?? '',
-      });
-      this.qf().TLT_No.reset();
-    } else if (this.dialogVisible === 'tltNo') {
-      const d = this.selectedItemsDialog[0] as TLTByFlag;
-      this.queryForm.patchValue({
-        TLT_No: d?.TLT_No ?? '',
-      });
-    }
-    this.dialogVisible = !1;
-  }
-
-  public onClearDialog(from: 'meterNo' | 'tltNo'): void {
-    if (from === 'meterNo') {
-      this.qf().ENG_MeterNo.reset();
-      this.qf().Location_No.reset();
-    } else if (from === 'tltNo') {
-      this.qf().TLT_No.reset();
-    }
+    this.messageService.successBubble('刪除成功');
+    this.loading = !1;
   }
 }
