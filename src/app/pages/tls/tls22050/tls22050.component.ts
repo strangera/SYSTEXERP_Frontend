@@ -40,9 +40,9 @@ export class TLS22050Component extends BasicQueryPageComponent<any> implements O
   queryForm = this.formBuilder.group({
     POS_TypeList: [null],
     VOU_CheckList: [null],
-    salesDate: [new Date()],
-    TXN_DateStart: [yesterday],
-    TXN_DateEnd: [yesterday],
+    salesDate: [null as Date | null],
+    TXN_DateStart: [null as Date | null],
+    TXN_DateEnd: [null as Date | null],
   });
 
   data: any[] = [];
@@ -131,6 +131,7 @@ export class TLS22050Component extends BasicQueryPageComponent<any> implements O
         });
       }
     });
+    this.queryForm.patchValue({ salesDate: new Date() });
   }
 
   onSubmit(form: FormGroup): void {
