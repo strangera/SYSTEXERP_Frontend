@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormGroup, Validators,FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { FIN13010Service } from '../../../service/api/fin/fin13010.service';
 import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
@@ -37,19 +37,19 @@ export class FIN13010Component extends BasicQueryPageComponent<any> {
   queryForm = this.formBuilder.group({
 
 
-    TXN_Ret_NoStart: [null], // 退出/折讓單號(起)
-    TXN_Ret_NoEnd: [null],   // 退出/折讓單號(迄)
-    GUI_Track: [null], // 字軌
-    PUR_GUINoStart: [null],
-    PUR_GUINoEnd: [null],
+    TXN_Ret_NoStart: [null, [Validators.maxLength(20)]], // 退出/折讓單號(起)
+    TXN_Ret_NoEnd: [null, [Validators.maxLength(20)]],   // 退出/折讓單號(迄)
+    GUI_Track: [null, [Validators.maxLength(2)]], // 字軌
+    PUR_GUINoStart: [null, [Validators.maxLength(10)]],
+    PUR_GUINoEnd: [null, [Validators.maxLength(10)]],
     PUR_GUIDateStart: [null], // 領用日期(起)
     PUR_GUIDateEnd: [null],   // 領用日期(迄)
     PUR_VoucherType: [null], // 發票狀態
     PUR_RepYYYYMM: [null], // 發票年月
-    Source_Doc_NoStart: [], // 憑證單號(起)
-    Source_Doc_NoEnd: [],   // 憑證單號(迄)
-    Voucher_NoStart: [], // 發票起始號碼
-    Voucher_NoEnd: [],   // 發票結束號碼
+    Source_Doc_NoStart: [, [Validators.maxLength(16)]], // 憑證單號(起)
+    Source_Doc_NoEnd: [, [Validators.maxLength(16)]],   // 憑證單號(迄)
+    Voucher_NoStart: [, [Validators.maxLength(16)]], // 發票起始號碼
+    Voucher_NoEnd: [, [Validators.maxLength(16)]],   // 發票結束號碼
     ...createPaginationConfig([{ field: 'id', order: 1 }])
   });
 
