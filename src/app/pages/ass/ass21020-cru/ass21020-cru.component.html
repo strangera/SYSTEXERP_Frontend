@@ -14,10 +14,10 @@
       <div class="grid p-fluid">
         <div class="col-12 md:col-6 lg:col-3">
           <app-dropdown label="錶號"
-                        controlName="Id"
+                        controlName="ENG_MeterNo"
                         [options]="service.engMeterNoSignal()"
                         optionLabel="ENG_MeterNo"
-                        optionValue="Id"
+                        optionValue="ENG_MeterNo"
                         [control]="df().ENG_MeterNo"
                         [submitted]="submitted"></app-dropdown>
         </div>
@@ -83,7 +83,8 @@
       <div *ngIf="!isFormReadable"
            class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
         <app-button btnType="cancel"
-                    [form]="dataForm"></app-button>
+                    [form]="dataForm"
+                    (click)="onClear()"></app-button>
         <!-- <app-button btnType="submit"
                     [loading]="loading"></app-button> -->
       </div>
@@ -102,7 +103,7 @@
                    [showRowEdit]="true"
                    [showInsert]="dataForm.valid"
                    [insertRowData]="dataForm.valid"
-                   [showExcel]="isFormEditable"
+                   [showExcel]="false"
                    (exportExcel)="onExportExcel()"
                    (importExcel)="onImportExcel($event)"
                    [data]="service.tltNoSignal()"
@@ -116,6 +117,13 @@
                    [dataKey]="'TLT_No'"
                    [tableKey]="'ASS21020_detail'"
                    [columns]="columns">
+          <header>
+            <div class="flex align-items-center justify-content-between w-full border-1 surface-border p-2">
+              <div></div>
+              <app-button label="自動依面積計算比率"
+                          (click)="onAutoCalculate()"></app-button>
+            </div>
+          </header>
         </app-table>
       </p-panel>
     </div>
