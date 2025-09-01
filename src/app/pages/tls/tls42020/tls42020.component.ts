@@ -1,31 +1,23 @@
 import { Component, OnInit } from '@angular/core';
-import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { finalize, of } from 'rxjs';
+import { FormGroup, Validators, FormBuilder, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { finalize } from 'rxjs/operators';
+import { Observable } from 'rxjs';
 
-// PrimeNG modules
-import { AccordionModule } from 'primeng/accordion';
+import { TLS42020Service, TLS42020DetailData, TLS42020Data } from '../../../service/api/tls/tls42020.service';
+import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
+import { Column, createPaginationConfig, formatAmount } from '@shared/componentkit/table/table.model';
 
-// Shared components
+// Shared & UI
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
 import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
-
-// Translation
-import { TranslateModule } from '@ngx-translate/core';
-
-// Base class and interfaces
-import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { Column, createPaginationConfig } from '@shared/componentkit/table/table.model';
-import { DropDownListService } from '@service/utility/dropDownList.service';
 import { TableComponent } from '@shared/componentkit/table/table.component';
-
-export interface TLS42020Data {
-  menuType: string;
-  tltNo: string;
-  tltName: string;
-  details: any[];
-}
+import { AccordionModule } from 'primeng/accordion';
+import { TranslateModule } from '@ngx-translate/core';
+import { validate } from 'uuid';
+import { DropDownListService } from '@service/utility/dropDownList.service';
+import { untilDestroyed } from '@ngneat/until-destroy';
 
 @Component({
   selector: 'app-tls42020',
@@ -40,46 +32,73 @@ export interface TLS42020Data {
     ReactiveFormsModule,
     MultiSelectComponent,
     CalendarRangeComponent,
-    TranslateModule,
-    TableComponent
+    TableComponent,
+    TranslateModule
   ]
 })
 export class TLS42020Component extends BasicQueryPageComponent<TLS42020Data> implements OnInit {
-  queryForm = this.formBuilder.group({
-    menuType: [[]], // 菜單類別
-    tltNo: [[]], // 專櫃編號/名稱
-    SBM_BegDate_start: [null], // 有效起始日期
-    SBM_BegDate_end: [null], // 有效結束日期
-    SBM_EndDate_start: [null], // 有效起始日期
-    SBM_EndDate_end: [null], // 有效結束日期
-    ...createPaginationConfig([]) // 分頁和排序參數
+  queryForm = this.fb.group({
+    menuType: [[]],           // 菜單類別(多選)
+    tltNo: [[]],              // 專櫃編號(多選)
+    SBM_BegDate_s: [null, Validators.required],    // 開始日期(起)
+    SBM_BegDate_e: [null, Validators.required],    // 開始日期(迄)
+    SBM_EndDate_s: [null, Validators.required],                         // 結束日期(起)
+    SBM_EndDate_e: [null, Validators.required],                         // 結束日期(迄)
+    ...createPaginationConfig([])
   });
 
   totalRecords = 0;
   data: TLS42020Data[] = [];
   selectedItems: TLS42020Data[] = [];
 
-  // 下拉選單
-  menuTypeOptions: any[] = [];
-  tltNoOptions: any[] = [];
+  // 下拉選單選項
+  menuTypeOptions: { label: string, value: string }[] = [];
+  tltNoOptions: { label: string, value: string }[] = [];
 
   columns: Column[] = [
-    { field: 'menuType', header: '菜單類別', visible: true },
-    { field: 'tltNo', header: '專櫃編號', visible: true },
-    { field: 'tltName', header: '專櫃名稱', visible: true }
+    { field: 'SBM_Type', header: '菜單類別', visible: true, format: (value: string) => { return value === '1' ? '一般菜單' : '員工菜單' } },
+    { field: 'TLT_No', header: '專櫃編號', visible: true },
+    { field: 'TLT_Name', header: '專櫃名稱', visible: true },
+    { field: 'CRT_Date', header: '建立日期', visible: false },
+    { field: 'CRT_USR_No', header: '建立者編號', visible: false },
+    { field: 'CRT_USR_Name', header: '建立者姓名', visible: false },
+    { field: 'UPD_Date', header: '更新日期', visible: false },
+    { field: 'UPD_USR_No', header: '更新者編號', visible: false },
+    { field: 'UPD_USR_Name', header: '更新者姓名', visible: false },
+    { field: 'id', header: 'ID', visible: false },
+    { field: 'mid', header: 'MID', visible: false },
+    { field: 'STO_No', header: '店舖編號', visible: false },
+    { field: 'SBM_BegDate', header: '開始日期', visible: false },
+    { field: 'SBM_EndDate', header: '結束日期', visible: false },
   ];
 
   expansionColumns: Column[] = [
+    { field: 'CRT_Date', header: '建立日期', hidden: true },
+    { field: 'CRT_USR_No', header: '建立者編號', hidden: true },
+    { field: 'CRT_USR_Name', header: '建立者姓名', hidden: true },
+    { field: 'UPD_Date', header: '更新日期', hidden: true },
+    { field: 'UPD_USR_No', header: '更新者編號', hidden: true },
+    { field: 'UPD_USR_Name', header: '更新者姓名', hidden: true },
+    { field: 'ID', header: 'ID', hidden: true },
+    { field: 'MID', header: 'MID', hidden: true },
+    { field: 'STO_No', header: '店舖編號', hidden: true },
+    { field: 'SBM_Type', header: '子菜單類別', hidden: true },
+    { field: 'TLT_No', header: '專櫃編號', hidden: true },
+    { field: 'SBM_BegDate', header: '開始日期', hidden: true },
+    { field: 'SBM_EndDate', header: '結束日期', hidden: true },
+    { field: 'SBM_SeqNo', header: '序號', hidden: true },
     { field: 'SBM_BtnNo', header: '菜單按鍵序號', visible: true },
-    { field: 'PLU_MagNo', header: '商品管理碼', visible: true },
+    { field: 'PLU_MagNo', header: '商品貨號', visible: true },
     { field: 'PLU_No', header: '國際條碼', visible: true },
     { field: 'PLU_Name', header: '商品名稱', visible: true },
     { field: 'PLU_PrnName', header: '商品列印名稱', visible: true },
-    { field: 'PLU_FixPrc', header: '商品定價', visible: true },
-    { field: 'PLU_SalePrc', header: '商品售價', visible: true }
+    { field: 'PLU_FixPrc', header: '商品定價', visible: true, format: formatAmount },
+    { field: 'PLU_SalePrc', header: '商品售價', visible: true, format: formatAmount },
   ];
 
   constructor(
+    private fb: FormBuilder,
+    private tls42020Service: TLS42020Service,
     private dropDownListService: DropDownListService
   ) {
     super();
@@ -92,20 +111,15 @@ export class TLS42020Component extends BasicQueryPageComponent<TLS42020Data> imp
 
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
-      this.loading = false
-      this.loadFakeData();
-      this.queryStateService.setQueryState(this.ProgNo, frm.value);
+      this.tls42020Service.queryTLS42020(frm.getRawValue())
+        .pipe(untilDestroyed(this), finalize(() => (this.loading = false)))
+        .subscribe(response => {
+          this.data = response.Data;
+          this.totalRecords = response.TotalCount;
+          this.queryStateService.setQueryState(this.ProgNo, frm.getRawValue());
+        });
     });
   };
-
-  loadFakeData() {
-    this.data = [
-      { menuType: '一般', tltNo: '001', tltName: 'Name1', details: [] },
-      { menuType: '一般', tltNo: '002', tltName: 'Name2', details: [] },
-      { menuType: '一般', tltNo: '003', tltName: 'Name3', details: [] }
-    ];
-    this.totalRecords = this.data.length;
-  }
 
   loadOptions() {
     this.menuTypeOptions = [
@@ -117,52 +131,15 @@ export class TLS42020Component extends BasicQueryPageComponent<TLS42020Data> imp
       .subscribe(res => {
         this.tltNoOptions = res.Data
           .map((item: any) => ({
-            label: item.Name,
+            label: `${item.No}-${item.Name}`,
             value: item.No
           }));
       });
   }
 
-  loadDetails = (rowData: any) => {
-    console.log('loadDetails');
-    return of({
-      Data: [
-        {
-          SBM_SeqNo: '001',
-          SBM_BtnNo: 'BTN001',
-          PLU_MagNo: 'MAG001',
-          PLU_No: '1234567890123',
-          PLU_Name: '商品名稱1',
-          PLU_PrnName: '列印名稱1',
-          PLU_FixPrc: 100,
-          PLU_SalePrc: 90
-        },
-        {
-          SBM_SeqNo: '002',
-          SBM_BtnNo: 'BTN002',
-          PLU_MagNo: 'MAG002',
-          PLU_No: '1234567890124',
-          PLU_Name: '商品名稱2',
-          PLU_PrnName: '列印名稱2',
-          PLU_FixPrc: 200,
-          PLU_SalePrc: 180
-        },
-        {
-          SBM_SeqNo: '003',
-          SBM_BtnNo: 'BTN003',
-          PLU_MagNo: 'MAG003',
-          PLU_No: '1234567890125',
-          PLU_Name: '商品名稱3',
-          PLU_PrnName: '列印名稱3',
-          PLU_FixPrc: 150,
-          PLU_SalePrc: 135
-        }
-      ]
+  loadDetails = (rowData: TLS42020Data): Observable<{ Data: TLS42020DetailData[] }> => {
+    return this.tls42020Service.queryTLS42020Detail({
+      STO_No: rowData.STO_No
     });
   };
-
-  // TODO: 待實作
-  importExcel() {
-    console.log('importExcel');
-  }
 }

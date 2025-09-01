@@ -18,10 +18,10 @@ import { NgIf } from '@angular/common';
 
 // Base class
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
-import { TLS42020Data } from '../tls42020/tls42020.component';
 import { DropDownListService } from '@service/utility/dropDownList.service';
 import { TableComponent } from '@shared/componentkit/table/table.component';
 import { Column } from '@shared/componentkit/table/table.model';
+import { TLS42020Data } from '@service/api/tls/tls42020.service';
 
 @Component({
   selector: 'app-tls42020-cru',
