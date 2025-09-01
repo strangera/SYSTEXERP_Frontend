@@ -346,6 +346,7 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
 
   // ==========  生命週期方法 ==========
   ngOnInit(): void {
+    window.scrollTo({ top: 0 });
     // 🎯 自定義初始化，完全控制流程
     this.initializeBasics();
     this.initializeViewMode();

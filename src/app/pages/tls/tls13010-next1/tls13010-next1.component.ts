@@ -20,6 +20,7 @@ import { AccordionModule } from 'primeng/accordion';
 import { LocationOptionsService } from '../../../service/api/dropdownservice/location-options.service';
 import { DialogComponent } from "@shared/componentkit/dialog/dialog.component";
 import { FareValidationService } from './Services/fare-validation.service';
+import { TLS13010_DROPDOWN_OPTIONS } from '../tls13010/tls13010.dropdown';
 
 
 // 介面定義
@@ -1283,6 +1284,27 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
         _isCopiedItem: true
       };
 
+      // 🎯 特殊處理 tpy_type 欄位
+      if (originalItem.tpy_type) {
+        // 確保複製的 tpy_type 值有效
+        const tpyTypeOptions = TLS13010_DROPDOWN_OPTIONS.tpyTypeOption || [];
+        const isValidOption = tpyTypeOptions.some(option => option.value === originalItem.tpy_type);
+
+        if (isValidOption) {
+          copiedItem.tpy_type = originalItem.tpy_type;
+          console.log(`✅ tpy_type 複製成功: ${originalItem.tpy_type}`);
+        } else {
+          // 如果原值無效，設定為第一個可用選項或預設值
+          copiedItem.tpy_type = tpyTypeOptions.length > 0 ? tpyTypeOptions[0].value : null;
+          console.warn(`⚠️ 原 tpy_type 值無效，設定為預設值: ${copiedItem.tpy_type}`);
+        }
+      } else {
+        // 如果原項目沒有 tpy_type，設定預設值
+        const tpyTypeOptions = TLS13010_DROPDOWN_OPTIONS.tpyTypeOption || [];
+        copiedItem.tpy_type = tpyTypeOptions.length > 0 ? tpyTypeOptions[0].value : null;
+        console.log(`📋 設定預設 tpy_type: ${copiedItem.tpy_type}`);
+      }
+
       // 🎯 日期複製：只複製合理的日期，異常日期設為 null
       ['tpy_bdate', 'tpy_edate'].forEach(dateField => {
         if (originalItem[dateField]) {
@@ -1295,17 +1317,43 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
               console.warn(`⚠️ ${dateField} 日期異常，設為 null`);
             }
           } else {
-            // 非 Date 對象直接保持原值，讓顯示邏輯處理
+            // 非 Date 物件直接保持原值，讓顯示邏輯處理
             copiedItem[dateField] = originalItem[dateField];
             console.log(`📋 ${dateField} 保持原始格式`);
           }
         }
       });
 
-      // 清理
+      // 🎯 確保必要的數值欄位有預設值
+      const numericFields = ['tpy_unitamt', 'tpy_qty', 'tpy_amount'];
+      numericFields.forEach(field => {
+        if (!copiedItem[field] || copiedItem[field] === null || isNaN(parseFloat(copiedItem[field]))) {
+          if (field === 'tpy_qty') {
+            copiedItem[field] = 1; // 數量預設為 1
+          } else {
+            copiedItem[field] = 0; // 其他數值欄位預設為 0
+          }
+          console.log(`📋 設定 ${field} 預設值: ${copiedItem[field]}`);
+        }
+      });
+
+      // 🎯 確保組織欄位有預設值
+      if (!copiedItem.org_id && this.orgOptions.length > 0) {
+        copiedItem.org_id = this.orgOptions[0].value;
+        console.log(`📋 設定預設組織: ${copiedItem.org_id}`);
+      }
+
+      // 🎯 確保發票欄位有預設值
+      if (!copiedItem.gui_flag) {
+        copiedItem.gui_flag = 'Y';
+        console.log(`📋 設定預設發票狀態: Y`);
+      }
+
+      // 清理不需要的屬性
       delete copiedItem._skipAutoCalc;
       delete copiedItem._dateInitialized;
 
+      // 添加到資料中
       this.originalFareData[capType].push(copiedItem);
       this.filterData();
       this.saveFareDataToWorkflow();
@@ -1313,7 +1361,7 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
       this.messageService.successBubble(`已成功複製扣款項目「${originalItem.cap_name}」`);
       this.cdr.detectChanges();
 
-      console.log(`複製完成: ${originalItem.cap_item} → ${newId}`);
+      console.log(`複製完成: ${originalItem.cap_item} → ${newId}`, copiedItem);
 
     } catch (error) {
       console.error('複製扣款項目時發生錯誤:', error);
