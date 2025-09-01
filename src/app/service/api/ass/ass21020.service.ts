@@ -1,12 +1,11 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, OnDestroy, signal } from '@angular/core';
 import { ASS2100ENGMeterType } from '@pages/ass/ass21010/ass21010.model';
-import { ASS21020Data, ASS21020Payload, ASS21020UpdateStatus, QueryTLTPayload, TLTByFlag } from '@pages/ass/ass21020/ass21020.model';
+import { ASS21020Data, ASS21020Payload, ASS21020UpdateStatus, TLTByFlag } from '@pages/ass/ass21020/ass21020.model';
 import { EngType } from '@service/api/ass/ass21010.service';
 import { ErrorHandlerService } from '@service/system/error-handler.service';
 import { BaseQueryResponse, DropdownOption } from '@shared/models/api/base-api.interface';
-import { DropdownItem } from 'primeng/dropdown';
-import { catchError, finalize, map, Observable, of, Subject, take, takeUntil, tap } from 'rxjs';
+import { catchError, finalize, map, Observable, Subject, take, takeUntil, tap } from 'rxjs';
 import { environment } from 'src/environments/environment';
 
 const apiUrl: string = `${environment.ApiUrl}`;
@@ -19,7 +18,8 @@ export class ASS21020Service implements OnDestroy {
   public readonly engTypeSignal = signal<DropdownOption[]>([]);
   public readonly engMeterNoSignal = signal<ASS2100ENGMeterType[]>([]);
   public readonly tltNoSignal = signal<TLTByFlag[]>([]);
-  public readonly locationSignal = signal<DropdownItem[]>([]);
+  public readonly tltNoListSignal = signal<DropdownOption[]>([]);
+  public readonly locationSignal = signal<DropdownOption[]>([]);
 
   public readonly engMeterNoMap = new Map<string, ASS2100ENGMeterType>();
   public readonly tltByFlagMap = new Map<string, TLTByFlag>();
@@ -65,13 +65,13 @@ export class ASS21020Service implements OnDestroy {
     ).subscribe();
   };
 
-  public loadLocationNo(): void {
+  public loadLocationNo(ENG_MeterNo: string): void {
     this.locationCancel$.next();
     this.locationLoading = !0;
-    this.http.post<any>(`${apiUrl}/queryPOS2002_DropDownList`, {}).pipe(
+    this.http.post<BaseQueryResponse<TLTByFlag>>(`${apiUrl}/Share/queryTLTTALENTByFlag_DropDownList`, { MID: 0, ENG_MeterNo }).pipe(
       take(1),
       takeUntil(this.locationCancel$),
-      tap(({ Data }) => this.locationSignal.set(Data)),
+      tap(({ Data }) => this.locationSignal.set(Data.map(v => ({ No: v.Location_No, Name: v.Location_No })))),
       catchError(error => this.errorHandler.handleError(error)),
       finalize(() => {
         this.locationLoading = !1;
@@ -87,7 +87,9 @@ export class ASS21020Service implements OnDestroy {
     this.http.post<BaseQueryResponse<ASS21020Data>>(`${apiUrl}/ASS0000/ASS2000/queryASS21020`, query).pipe(
       take(1),
       takeUntil(this.tableCancel$),
-      tap(({ Data }) => this.ASS21020Data.set(Data)),
+      tap(({ Data }) =>
+        this.ASS21020Data.set(Data.map(item => ({ ...item, TLT_Name: `${item.TLT_No}-${item.TLT_Name}` })))
+      ),
       catchError(error => this.errorHandler.handleError(error)),
       finalize(() => {
         this.tableLoading = !1;
@@ -103,9 +105,9 @@ export class ASS21020Service implements OnDestroy {
       take(1),
       takeUntil(this.queryTltByFlagCancel$),
       tap(({ Data }) => {
-        const items = Data.map(item => ({ ...item, TLT_Label: `${item.TLT_No}-${item.TLT_Name}` }));
-        this.tltNoSignal.set(items);
-        for (const item of items) this.tltByFlagMap.set(item.TLT_No, item);
+        this.tltNoListSignal.set(Data.map(item => ({ No: item.TLT_No, Name: `${item.TLT_No}-${item.TLT_Name}` })));
+        this.tltNoSignal.set(Data);
+        for (const item of Data) this.tltByFlagMap.set(item.TLT_No, item);
       }),
       catchError(error => this.errorHandler.handleError(error)),
       finalize(() => {
@@ -117,6 +119,14 @@ export class ASS21020Service implements OnDestroy {
 
   public updateASS21020(payload: ASS21020Payload): Observable<ASS21020UpdateStatus['Data']> {
     return this.http.post<ASS21020UpdateStatus>(`${apiUrl}/ASS0000/ASS2000/updateASS21020`, payload).pipe(
+      take(1),
+      map(({ Data }) => Data),
+      catchError(error => this.errorHandler.handleError(error)),
+    );
+  }
+
+  public deleteASS21020(ID: string): Observable<ASS21020UpdateStatus['Data']> {
+    return this.http.post<ASS21020UpdateStatus>(`${apiUrl}/ASS0000/ASS2000/deleteASS21020`, { ID }).pipe(
       take(1),
       map(({ Data }) => Data),
       catchError(error => this.errorHandler.handleError(error)),
