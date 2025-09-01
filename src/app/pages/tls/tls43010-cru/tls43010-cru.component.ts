@@ -1,5 +1,5 @@
 import { DropDownListService, IDropdownItem } from '@service/utility/dropDownList.service';
-import { Component, OnInit, signal } from '@angular/core';
+import { Component, OnInit, signal, ViewChild } from '@angular/core';
 import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { PanelModule } from 'primeng/panel';
@@ -10,17 +10,18 @@ import { InputNumberComponent } from '../../../shared/componentkit/input-number/
 import { NgIf } from '@angular/common';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
-import { QueryTls43010Response, Tls43010Service } from '@service/api/tls/tls43010.service';
+import { IUTls43010Request, QueryTls43010Response, Tls43010Detail, Tls43010Service } from '@service/api/tls/tls43010.service';
 import { TranslateModule } from '@ngx-translate/core';
 import { InputTextareaComponent } from '@shared/componentkit/input-textarea/input-textarea.component';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { SystemOptionsService } from '@service/system/sys1000.service';
 import { SystemOption } from '@shared/models/sys/sys1000.model';
-import { FileUploadModule } from 'primeng/fileupload';
+import { FileSelectEvent, FileUpload, FileUploadModule } from 'primeng/fileupload';
 import { ButtonModule } from 'primeng/button';
 import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.component';
 import { Column } from '@shared/componentkit/table-edit/table-edit.model';
 import { GalleriaModule } from 'primeng/galleria';
+import { finalize } from 'rxjs';
 
 interface MediaItem {
   url: string;
@@ -53,6 +54,7 @@ interface MediaItem {
   ]
 })
 export class TLS43010CRUComponent extends BasicCruPageComponent<QueryTls43010Response> implements OnInit {
+  @ViewChild('fileUpload') fileUpload!: FileUpload;
   dataForm = this.formBuilder.nonNullable.group({
     NOT_No: [{ value: '系統自動給號', disabled: true }], // 通告編號
     NOT_Date: [{ value: new Date(), disabled: true }, [Validators.required]], // 通告日期
@@ -62,7 +64,7 @@ export class TLS43010CRUComponent extends BasicCruPageComponent<QueryTls43010Res
     NOT_Status: [{ value: '0', disabled: true }], // 狀態 0=未確認(未審核) 1=已確認(已審核) 2=已刪除
     NOT_PlayTime: [30, [Validators.min(0), Validators.max(999999)]], // 媒體檔播放秒數，預設值為30
     NOT_DtlLimit: ['0'], // 是否限制播放條件，POS50012 0=不限制(預設值) 1=符合明細設定的機台才播放 2=不符合明細設定的機台才播放*
-    // NOT_File: ['', [Validators.required, Validators.maxLength(200)]], // 媒體檔案名稱
+    NOT_File: ['', [Validators.required, Validators.maxLength(200)]], // 媒體檔案名稱
     NOT_Note: ['', [Validators.maxLength(255)]], // 備註
   });
   uploadedFiles: any[] = [];
@@ -80,8 +82,8 @@ export class TLS43010CRUComponent extends BasicCruPageComponent<QueryTls43010Res
     { value: '1', label: '符合明細設定的機台才播放' },
     { value: '2', label: '不符合明細設定的機台才播放' },
   ];
-  data: any[] = [];
-  selectedItems: any[] = [];
+  data: Tls43010Detail[] = [];
+  selectedItems: Tls43010Detail[] = [];
   // 如果機台群組編號有值那其他要disable，反之亦然
   columns: Column[] = [
     { field: 'NOT_SeqNo', header: '通告序號', format: (value) => this.isFormCreateable ? '自動給號' : value, disabled: (rowData) => this.isOtherGroupSelected(rowData) },
@@ -94,11 +96,11 @@ export class TLS43010CRUComponent extends BasicCruPageComponent<QueryTls43010Res
     { field: 'Area_No', header: '區域', type: 'dropdown', optionLabel: 'Name', optionValue: 'No', disabled: (rowData) => this.isOtherGroupSelected(rowData) },
   ];
   // 檢查其他互斥欄位是否有值
-  isOtherGroupSelected(rowData: any): boolean {
+  isOtherGroupSelected(rowData: Tls43010Detail): boolean {
     return !!(rowData['ECR_GrpNo'] && rowData['ECR_GrpNo'] !== '');
   }
   // 檢查機台群組編號是否有值
-  isEcrGrpNoSelected(rowData: any): boolean {
+  isEcrGrpNoSelected(rowData: Tls43010Detail): boolean {
     return !!(rowData['ECR_No'] || rowData['TLT_No'] || rowData['ECR_Type'] || rowData['BUILDING_No'] || rowData['FLOOR_No'] || rowData['Area_No']);
   }
   hiddenTable = true;
@@ -126,6 +128,7 @@ export class TLS43010CRUComponent extends BasicCruPageComponent<QueryTls43010Res
     })
     if (!this.isFormCreateable) {
       this.dataForm.get('NOT_DtlLimit')?.setValue(this.rowdata?.NOT_DtlLimit || '0');
+      this.data = this.rowdata?.Details || [];
     }
   }
   loadDropdownOptions() {
@@ -156,17 +159,51 @@ export class TLS43010CRUComponent extends BasicCruPageComponent<QueryTls43010Res
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
       const body = {
-        ...frm.value,
-      }
+        NOT_No: this.dataForm.get('NOT_No')?.value,
+        NOT_Date: this.dataForm.get('NOT_Date')?.value,
+        NOT_BegDate: this.dataForm.get('NOT_BegDate')?.value,
+        NOT_EndDate: this.dataForm.get('NOT_EndDate')?.value,
+        NOT_Priority: this.dataForm.get('NOT_Priority')?.value,
+        NOT_Status: this.isFormCreateable ? '0' : this.dataForm.get('NOT_Status')?.value || this.dataForm.get('NOT_Status')?.value,
+        NOT_PlayTime: this.dataForm.get('NOT_PlayTime')?.value,
+        NOT_DtlLimit: this.dataForm.get('NOT_DtlLimit')?.value,
+        NOT_File: this.dataForm.get('NOT_File')?.value,
+        NOT_Note: this.dataForm.get('NOT_Note')?.value,
+        Detail: this.dataForm.get('NOT_DtlLimit')?.value !== '0' ? this.data.filter(item => !item['_isAutoInsertCandidate']).map(item => ({
+          ID: this.isFormCreateable ? 0 : item['ID'],
+          NOT_SeqNo: item['NOT_SeqNo'],
+          ECR_No: item['ECR_No'],
+          TLT_No: item['TLT_No'],
+          ECR_Type: item['ECR_Type'],
+          ECR_GrpNo: item['ECR_GrpNo'],
+          BUILDING_No: item['BUILDING_No'],
+          FLOOR_No: item['FLOOR_No'],
+          Area_No: item['Area_No'],
+          status: item['status']
+        })) : undefined,
+      } as IUTls43010Request;
+      this.loading = false;
+      const $res = this.isFormCreateable ? this.tls43010Service.insertTLS43010(body) : this.tls43010Service.updateTLS43010(body);
+      $res.pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(res => {
+        this.messageService.successBubble(res.Message || `${this.isFormCreateable ? '新增成功' : '修改成功'}`);
+        this.dataForm.reset();
+        this.data = [];
+        this.fileUpload.clear();
+      })
     });
   }
-  validateEntireRow(rowData: any) {
+  validateEntireRow(rowData: Tls43010Detail) {
     if (!rowData.ECR_No && !rowData.TLT_No && !rowData.ECR_Type && !rowData.ECR_GrpNo && !rowData.BUILDING_No && !rowData.FLOOR_No && !rowData.Area_No) {
       return { isValid: false, errorMessage: '至少其中一個有值' };
     }
     return { isValid: true, errorMessage: '' };
   }
   // !!! 以下為可參考之新方法
+  onSelectFile(event: FileSelectEvent) {
+    const fileName = event.files[0].name;
+    this.dataForm.get('NOT_File')?.setValue(fileName);
+  }
+
   mediaItems = signal<MediaItem[]>([]);
   visible = signal(false);
   onFileSelect(event: any) {

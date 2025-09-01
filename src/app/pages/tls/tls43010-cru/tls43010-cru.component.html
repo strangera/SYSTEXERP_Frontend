@@ -13,10 +13,10 @@
             [control]="dataForm.controls.NOT_Date" [submitted]="submitted" />
           <app-calendar class="col-12 md:col-6 lg:col-6" calendarType="dateTimeOne" label="有效開始日期時間"
             controlName="NOT_BegDate" [control]="dataForm.controls.NOT_BegDate" [submitted]="submitted"
-            [minDate]="today" />
+            [minDate]="isFormCreateable? today : null" />
           <app-calendar class="col-12 md:col-6 lg:col-6" calendarType="dateTimeOne" label="有效結束日期時間"
             controlName="NOT_EndDate" [control]="dataForm.controls.NOT_EndDate" [submitted]="submitted"
-            [minDate]="today" />
+            [minDate]="isFormCreateable? today : null" />
           <app-dropdown class="col-12 md:col-6 lg:col-6" label="狀態" controlName="NOT_Status"
             [options]="NOT_Status_Options" optionLabel="label" optionValue="value"
             [control]="dataForm.controls.NOT_Status" [submitted]="submitted" [filter]="false" />
@@ -31,9 +31,9 @@
         <div class="flex flex-column col-12 md:col-4">
           <div class="col-12">
             <label for="file">媒體檔案名稱</label>
-            <p-fileUpload id="file" name="demo[]" [multiple]="false" accept=".bmp,.jpg,.wmv,.avi,.mpeg,.mp4"
+            <p-fileUpload #fileUpload id="file" name="demo[]" [multiple]="false" accept=".bmp,.jpg,.wmv,.avi,.mpeg,.mp4"
               maxFileSize="1000000" mode="advanced" [showUploadButton]="false" [disabled]="isFormReadable"
-              chooseLabel="選擇檔案" [showCancelButton]="false" maxFileSize="1000000000"
+              chooseLabel="選擇檔案" [showCancelButton]="false" maxFileSize="1000000000" (onSelect)="onSelectFile($event)"
               [disabled]="dataForm.controls.NOT_Status.value === '1' || this.isFormReadable">
               <ng-template pTemplate="empty">
                 <div>請拖拉檔案至此上傳 或 點擊「選擇檔案」按鈕</div>
@@ -59,9 +59,9 @@
           <app-input-textarea class="col-12" label="備註" controlName="NOT_Note" [control]="dataForm.controls.NOT_Note"
             [submitted]="submitted" styleClass="h-10rem" />
         </div>
-        <app-table-edit *ngIf="!hiddenTable" title="廣告資訊設定" tableKey="TLS43010Detail" [data]="data" class="col-12"
+        <app-table-edit [hidden]="hiddenTable" title="廣告資訊設定" tableKey="TLS43010Detail" [data]="data" class="col-12"
           [data]="data" [columns]="columns" (selectionChange)="selectedItems = $event" [selectedItems]="selectedItems"
-          (dataChange)="data = $event" [rowValidate]="validateEntireRow"
+          (dataChange)="data = $event" [rowValidate]="validateEntireRow" dataStatusField="status"
           [disabled]="dataForm.controls.NOT_Status.value === '1' || isFormReadable">
         </app-table-edit>
       </div>

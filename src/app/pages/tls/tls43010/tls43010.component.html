@@ -48,5 +48,5 @@
     [multiSortMeta]="queryForm.controls.SortBy.value" [totalRecords]="totalRecords" [showCheckBox]="true"
     (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [lazy]="true" [loading]="loading"
     [selectedItems]="selectedItems" (selectionChange)="selectedItems = $event" (delete)="onDelete($event)"
-    [isRowSelectable]="isRowSelectable"></app-table>
+    [isRowSelectable]="isRowSelectable" [editDisabled]="editDisabled"></app-table>
 </div>

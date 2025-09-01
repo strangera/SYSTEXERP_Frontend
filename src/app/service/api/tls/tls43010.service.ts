@@ -17,32 +17,46 @@ export interface QueryTls43010Request {
 
 export interface QueryTls43010Response {
   ID: number,
-  NOT_No: string,               /*廣告案號，編號規則 NTM + 廣告日期YYMMDD + 流水號4碼，例如 MTN2401010001 */
-  NOT_Date: string,             /*廣告日期*/
-  NOT_BegDate: string,          /*有效開始日期時間*/
-  NOT_EndDate: string,          /*有效結束日期時間*/
-  NOT_Status: string,           /*狀態 0=未確認(未審核) 1=已確認(已審核) 2=已刪除*/
-  NOT_Priority: number,   /*優先順序，預設值為0(在同一段時間的優先順序9-0, 9最優先)*/
-  NOT_File: string,         /*媒體檔案名稱*/
-  NOT_Note: string,         /*備註*/
-  NOT_PlayTime: number,   /*媒體檔播放秒數，預設值為30*/
-  NOT_DtlLimit: string,       /*是否限制播放條件，POS50012*/
-  /*  0=不限制(預設值)*/
-  /*  1=符合明細設定的機台才播放*/
-  /*  2=不符合明細設定的機台才播放*/
-  NOT_AprvDate?: string,      /*核准日期 YYYY/MM/DD*/
-  NOT_AprvUsrNo?: string,    /*核准人員*/
-  NOT_AprvUsrName?: string,  /*核准人員姓名*/
-  NOT_DelDate?: string,      /*刪除日期 YYYY/MM/DD*/
-  NOT_DelUsrNo?: string,   /*刪除人員*/
-  NOT_DelUsrName?: string,  /*刪除人員姓名*/
+  STO_No: string,
+  NOT_No: string,
+  NOT_Date: string,
+  NOT_BegDate: string,
+  NOT_EndDate: string,
+  NOT_File: string,
+  NOT_Status: string,
+  NOT_Priority: number,
+  NOT_DtlLimit: string,
+  NOT_PlayTime: number,
+  NOT_Note: string,
+  Details: Tls43010Detail[]
+}
+export interface IUTls43010Request {
+  ID?: number, // 編輯用
+  NOT_No: string,
+  NOT_Date: string | Date | null,
+  NOT_BegDate: string | Date | null,
+  NOT_EndDate: string | Date | null,
+  NOT_Priority: number,
+  NOT_Status: string,
+  NOT_PlayTime: number,
+  NOT_DtlLimit: string,
+  NOT_File: string,
+  NOT_Note: string,
+  Detail: Tls43010Detail[]
+}
 
-  CRT_Date?: string,      /*建立日期*/
-  CRT_USR_No?: string,   /*建立人員*/
-  CRT_USR_Name?: string,  /*建立人員姓名*/
-  UPD_Date?: string,     /*變更日期*/
-  UPD_USR_No?: string,   /*變更人員*/
-  UPD_USR_Name?: string,  /*變更人員姓名*/
+export interface Tls43010Detail {
+  ID?: number, // 編輯用
+  NOT_SeqNo: number,
+  ECR_No: string,
+  TLT_No: string,
+  ECR_Type: string,
+  ECR_GrpNo: string,
+  BUILDING_No: string,
+  FLOOR_No: string,
+  Area_No: string,
+  status: string
+  [key: string]: any
 }
 
 @Injectable({
@@ -64,5 +78,13 @@ export class Tls43010Service {
 
   deleteTLS43010(idList: number[]): Observable<ApiResponse<number>> {
     return this.http.post<ApiResponse<number>>(`${this.apiUrl}/deleteTLS43010`, { idList });
+  }
+
+  insertTLS43010(data: IUTls43010Request): Observable<ApiResponse<number>> {
+    return this.http.post<ApiResponse<number>>(`${this.apiUrl}/insertTLS43010`, data);
+  }
+
+  updateTLS43010(data: IUTls43010Request): Observable<ApiResponse<number>> {
+    return this.http.post<ApiResponse<number>>(`${this.apiUrl}/updateTLS43010`, data);
   }
 }
