@@ -34,7 +34,7 @@
       </div>
       <!-- 按鈕列 -->
       <div class="grid justify-content-end gap-2 mt-3 border-top-1 surface-border pt-3" *ngIf="!isFormReadable">
-        <app-button btnType="smartclear"></app-button>
+        <app-button btnType="cancel" [form]="dataForm"></app-button>
         <app-button btnType="submit"></app-button>
       </div>
     </form>

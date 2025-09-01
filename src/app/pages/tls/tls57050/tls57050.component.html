@@ -9,8 +9,8 @@
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown label="顯示方式" controlName="ReportType" [options]="displayModeOptions" optionLabel="label"
-              optionValue="value" [control]="queryForm.controls.ReportType" [submitted]="submitted"
-              [filter]="false"></app-dropdown>
+              optionValue="value" [control]="queryForm.controls.ReportType" [submitted]="submitted" [filter]="false"
+              [showClear]="false"></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-text label="銷售單號" controlName="TXN_SaleNoteNo" [control]="queryForm.controls.TXN_SaleNoteNo"
@@ -65,6 +65,7 @@
 
 <div class="card">
   <app-table [data]="data" [columns]="columns" [totalRecords]="totalRecords" [showDelete]="false"
+    [multiSortMeta]="queryForm.controls.SortBy.value"
     (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [lazy]="true" [loading]="loading"
     [showManage]="false">
     <header>

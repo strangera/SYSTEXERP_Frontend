@@ -89,19 +89,11 @@ export class ButtonComponent implements OnInit, AfterViewInit, OnDestroy {
   ngAfterViewInit(): void { // 這個寫法有點爛，但是目前想到最簡單的解法了
     // 在這裡使用 timer 延遲儲存初始值
     if (this.btnType === 'cancel' || this.btnType === 'clear') {
-      setTimeout(() => {
-        if (this.btnType === 'cancel') {
-          this.disabled = true;
-        }
+      // 延遲 300 毫秒，確保大多數情況下非同步資料已載入
+      timer(1000).pipe(takeUntil(this.ngUnsubscribe)).subscribe(() => {
         this.initialFormValue = this.form?.getRawValue();
-        this.form?.valueChanges.pipe(takeUntil(this.ngUnsubscribe)).subscribe(() => {
-          if (this.btnType === 'cancel') {
-            this.disabled = false;
-          }
-        });
-
         this.showButton.set(true);
-      }, 0);
+      });
     }
   }
 
