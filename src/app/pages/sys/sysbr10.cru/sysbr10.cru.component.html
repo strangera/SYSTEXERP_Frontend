@@ -42,32 +42,30 @@
 </div>
 
 <div class="card">
-<app-table
-  tableKey="SYSBR10"
-    [columns]="detailColsForView"
-  [(data)]="detailList"
+  <app-table
+    tableKey="SYSBR10"
+    dataKey="id"
 
+    [columns]="detailcolumns"
+    [(data)]="detailList"
 
+    [multiSortMeta]="[{ field: 'id', order: 1 }]"
+    [showPaginator]="false"
 
+    [defaultInsertData]="{ User_No: '', Org_ID: '', Role_No: '' }"
+    [insertRowData]="!isRead && insertRowData"
 
+    [showInsert]="!isRead && showInsert"
+    [showRowEdit]="!isRead && showRowEdit"
+    [showDelete]="!isRead && showDelete"
+    [showCheckBox]="!isRead && showCheckBox"
 
-  dataKey="id"
-  [multiSortMeta]="[{ field: 'id', order: 1 }]"
-  [insertRowData]="!isRead && insertRowData"
-  [defaultInsertData]="{ User_No: '', Org_ID: '', Role_No: '' }"
-  [showInsert]="!isRead && showInsert"
-  [showRowEdit]="!isRead && showRowEdit"
-  [showEdit]="false"
-  [showDetail]="false"
-  [showReportMode]="false"
-  [showDelete]="!isRead && showDelete"
-  [showCheckBox]="!isRead && showCheckBox"
-  [showPaginator]="false"
-  [deleteData]="!isRead && showDelete"
-  [showManage]="false"         
-  [disabled]="isRead"           
-  [(data)]="detailList">
-</app-table>
+    [showEdit]="false"
+    [showDetail]="false"
+    [showReportMode]="false"
+    [deleteData]="!isRead && showDelete"
+    [showManage]="false"
 
+    [disabled]="isRead">
+  </app-table>
 </div>
-

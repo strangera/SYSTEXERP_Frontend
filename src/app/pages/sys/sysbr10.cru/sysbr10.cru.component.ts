@@ -5,12 +5,12 @@ import {
   FormsModule,
   ReactiveFormsModule,
 } from '@angular/forms';
+import { NgIf } from '@angular/common';
+import { TranslateModule } from '@ngx-translate/core';
+
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
-import { DropDownListService } from '../../../service/utility/dropDownList.service';
-import { AnnouncementCategoryService } from '../../../service/basic/announcement-category.service';
-import { SYSBR10Service } from '../../../service/api/sys/sysbr10.service';
-import { Column } from '../../../shared/componentkit/table/table.model';
+
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { PanelModule } from 'primeng/panel';
@@ -19,9 +19,12 @@ import { RadiobuttonComponent } from '../../../shared/componentkit/radiobutton/r
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { EditorTextComponent } from '../../../shared/componentkit/editor-text/editor-text.component';
-import { NgIf } from '@angular/common';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { TranslateModule } from '@ngx-translate/core';
+
+import { Column } from '../../../shared/componentkit/table/table.model';
+import { DropDownListService } from '../../../service/utility/dropDownList.service';
+import { AnnouncementCategoryService } from '../../../service/basic/announcement-category.service';
+import { SYSBR10Service } from '../../../service/api/sys/sysbr10.service';
 
 @Component({
   selector: 'app-sysbr10.cru',
@@ -46,14 +49,19 @@ import { TranslateModule } from '@ngx-translate/core';
 })
 export class SYSBR10CRUComponent
   extends BasicCruPageComponent<any>
-  implements OnInit {
+  implements OnInit
+{
+  // 是否進入表格時自動插入一列空白
+  insertRowData = true;
+
+  // —— 表格管理欄位開關（READ 模式會被自動關閉）——
   showInsert = true;
   showRowEdit = true;
-  insertRowData = true;
   showDelete = true;
   showCheckBox = true;
 
-  minDateToday: Date = new Date(); // 今天日期
+  // —— 其他 UI 與選項 —— 
+  minDateToday: Date = new Date();
   Pub_TypeOptions: any[] = [];
   User_NoOptions: any[] = [];
   Org_IDOptions: any[] = [];
@@ -64,15 +72,19 @@ export class SYSBR10CRUComponent
     { value: 'N', label: '否' },
   ];
 
+  // —— Master 表單 —— 
   dataForm = this.formBuilder.nonNullable.group({
     Pub_StartDate: [, Validators.required],
-    Pub_EndDate: [, Validators.required],
-    pub_enable: [, Validators.required],
-    Pub_Type: [, Validators.required],
-    Pub_Event: [, Validators.required],
+    Pub_EndDate:   [, Validators.required],
+    pub_enable:    [, Validators.required], // ★ 新增 & 編輯都必填
+    Pub_Type:      [, Validators.required],
+    Pub_Event:     [, Validators.required],
     Pub_Description: [, Validators.required],
   });
-  detailList: any[] = []; // 初始化空陣列
+
+  // —— Detail（表格） —— 
+  detailList: any[] = [];
+
   detailcolumns: Column[] = [
     {
       field: 'User_No',
@@ -80,7 +92,8 @@ export class SYSBR10CRUComponent
       visible: true,
       type: 'dropdown',
       options: [],
-      format: (_val: any, row?: any) => this.labelOrValue(row?.User_Name, row?.User_No),
+      format: (_val: any, row?: any) =>
+        this.labelOrValue(row?.User_Name, row?.User_No),
     },
     {
       field: 'Org_ID',
@@ -88,7 +101,8 @@ export class SYSBR10CRUComponent
       visible: true,
       type: 'dropdown',
       options: [],
-      format: (_val: any, row?: any) => this.labelOrValue(row?.Org_Name, row?.Org_ID),
+      format: (_val: any, row?: any) =>
+        this.labelOrValue(row?.Org_Name, row?.Org_ID),
     },
     {
       field: 'Role_No',
@@ -96,236 +110,239 @@ export class SYSBR10CRUComponent
       visible: true,
       type: 'dropdown',
       options: [],
-      format: (_val: any, row?: any) => this.labelOrValue(row?.Role_Name, row?.Role_No),
+      format: (_val: any, row?: any) =>
+        this.labelOrValue(row?.Role_Name, row?.Role_No),
     },
+  ];
+
+  // 如果改成 READ 顯示純文字，可切換到這組欄位
+  detailcolumnsRead: Column[] = [
+    { field: 'User_No', header: '使用者編號', visible: true },
+    { field: 'Org_ID', header: '組織代碼', visible: true },
+    { field: 'Role_No', header: '角色代號', visible: true },
   ];
 
   constructor(
     private dropDownListService: DropDownListService,
     private announcementCategoryService: AnnouncementCategoryService,
-    private sysbr10Service: SYSBR10Service,
+    private sysbr10Service: SYSBR10Service
   ) {
     super();
   }
 
+  // —— Lifecycle —— 
   ngOnInit(): void {
     this.initializePage('SYSBR10', this.dataForm);
 
-    // 只在父層使用的小工具：把目前 detailList 的每列標記為編輯外觀
-    const applyEditorLook = () => {
-      this.detailList = (this.detailList ?? []).map(r => ({ ...r, _editing: true }));
-    };
+    // ★ 依模式設定 pub_enable 預設值（新增預設 Y；編輯帶現值，不在就預設 Y）
+    const currentEnable =
+      (this.rowdata?.pub_enable ??
+       (this.rowdata as any)?.Pub_Enable ??
+       (this.rowdata as any)?.pub_Enable ??
+       null) as 'Y' | 'N' | null;
 
-    // 1) 明細來源：先吃 rowdata 帶進來的，沒有就用 id 查一次
-    const hasDetail =
-      Array.isArray(this.rowdata?.DetailList) && this.rowdata!.DetailList.length > 0;
-
-    if (hasDetail) {
-      this.detailList = [...this.rowdata!.DetailList];
-      applyEditorLook(); // ★ 直接讓表格以編輯樣渲染（才能看到 dropdown）
-    } else if (this.rowdata?.id) {
-      this.loading = true;
-      this.messageService?.blockUi?.();
-      this.sysbr10Service.querySYSBR10Detail(this.rowdata.id).subscribe({
-        next: (res) => {
-          this.detailList = res?.Data ?? [];
-          this.loading = false;
-          this.messageService?.unblockUi?.();
-          applyEditorLook(); // ★ 載入後套編輯樣
-        },
-        error: () => {
-          this.loading = false;
-          this.messageService?.unblockUi?.();
-          this.messageService?.errorBubble?.('讀取明細失敗');
-        },
-      });
+    if (this.isCreate) {
+      if (!this.dataForm.controls.pub_enable.value) {
+        this.dataForm.controls.pub_enable.setValue('Y' as any, { emitEvent: false });
+      }
     } else {
-      // 沒有 id / 沒有明細就維持現況（例如創建模式下用預設插入列）
-      applyEditorLook();
+      this.dataForm.controls.pub_enable.setValue((currentEnable ?? 'Y') as any, { emitEvent: false });
     }
 
-    // 2) 上方「公告類別」選項
-    this.announcementCategoryService.Pub_TypeOptions()
-      .subscribe(data => (this.Pub_TypeOptions = data ?? []));
+    // READ 模式關閉表格管理欄（但依然維持下拉外觀）
+    this.syncRowActionVisibility();
 
-    // 3) 表格三個 dropdown 的 options
+    // 明細載入（先用 rowdata，其次用 id 查）
+    this.loadDetailForReadOrEdit();
+
+    // 讓目前 detail 以「編輯外觀」呈現（READ/EDIT 都看得到 dropdown）
+    this.applyEditorLook();
+
+    // 上方「公告類別」選項
+    this.announcementCategoryService
+      .Pub_TypeOptions()
+      .subscribe((data) => (this.Pub_TypeOptions = data ?? []));
+
+    // 明細三個 dropdown 的 options
     this.dropDownListService.queryTBLUSER_DropDownList().subscribe((res) => {
-      const opts = (res?.Data ?? []).map((u: any) => ({ value: u.No, label: u.Name }));
+      const opts = (res?.Data ?? []).map((u: any) => ({
+        value: u.No,
+        label: u.Name,
+      }));
       this.User_NoOptions = opts;
-      // 不可變賦值，觸發子層重渲染
-      this.detailcolumns = this.detailcolumns.map(c =>
+      this.detailcolumns = this.detailcolumns.map((c) =>
         c.field === 'User_No' ? { ...c, options: opts } : c
       );
     });
 
     this.dropDownListService.querySYS3100_DropDownList().subscribe((res) => {
-      const opts = (res?.Data ?? []).map((u: any) => ({ value: u.No, label: u.Name }));
+      const opts = (res?.Data ?? []).map((u: any) => ({
+        value: u.No,
+        label: u.Name,
+      }));
       this.Org_IDOptions = opts;
-      this.detailcolumns = this.detailcolumns.map(c =>
+      this.detailcolumns = this.detailcolumns.map((c) =>
         c.field === 'Org_ID' ? { ...c, options: opts } : c
       );
     });
 
     this.dropDownListService.querytblRole_DropDownList().subscribe((res) => {
-      const opts = (res?.Data ?? []).map((u: any) => ({ value: u.No, label: u.Name }));
+      const opts = (res?.Data ?? []).map((u: any) => ({
+        value: u.No,
+        label: u.Name,
+      }));
       this.Role_NoOptions = opts;
-      this.detailcolumns = this.detailcolumns.map(c =>
+      this.detailcolumns = this.detailcolumns.map((c) =>
         c.field === 'Role_No' ? { ...c, options: opts } : c
       );
     });
-
-    // 4) 若一開始就有預設插入列（空白 1~N 列），也讓它們呈現 dropdown 外觀
-    applyEditorLook();
   }
 
-
+  // —— 便捷 Getter —— 
   get isCreate(): boolean {
     return this.crudstatus === CRUDStatus.Create;
   }
+  get isRead(): boolean {
+    return this.crudstatus === CRUDStatus.Read;
+  }
 
-  // sysbr10.cru.component.ts (僅示範 onSubmit 內關鍵段)
+  // 若你有在流程中切換 CRUD 狀態，可呼叫這個同步管理欄位顯示
+  private syncRowActionVisibility(): void {
+    if (this.isRead) {
+      this.showInsert = false;
+      this.showRowEdit = false;
+      this.showDelete = false;
+      this.showCheckBox = false;
+    } else {
+      this.showInsert = true;
+      this.showRowEdit = true;
+      this.showDelete = true;
+      this.showCheckBox = true;
+    }
+  }
+
+  // —— 提交流程 —— 
   onSubmit(form: FormGroup): void {
     this.handleSubmit(form, () => {
       const value = form.getRawValue();
 
-      const masterId = this.crudstatus === CRUDStatus.Edit ? (this.rowdata?.id ?? 0) : 0;
+      const masterId =
+        this.crudstatus === CRUDStatus.Edit ? this.rowdata?.id ?? 0 : 0;
 
-      // 先組 DetailList（跟你原本的一樣）
-      const detailList = this.detailList.map((row) => {
+      // 組 DetailList
+      const detailList = (this.detailList ?? []).map((row) => {
         const d: any = {};
         this.detailcolumns.forEach((col) => (d[col.field] = row[col.field] ?? null));
-        d.id = (typeof row.id === 'number' && row.id > 0 && String(row.id).length < 10) ? row.id : 0;
+        d.id =
+          typeof row.id === 'number' && row.id > 0 && String(row.id).length < 10
+            ? row.id
+            : 0;
         d.pos5101_id = masterId;
         return d;
       });
 
-      // ✅ 組 payload：不含 pub_enable
-      const payload = {
-        id: masterId,
+      const desiredEnable: 'Y' | 'N' = value.pub_enable as 'Y' | 'N';
+
+      // —— 基本 payload（不含 pub_enable；編輯用，新增會另外加上）——
+      const basePayload: any = {
         Pub_StartDate: value.Pub_StartDate,
         Pub_EndDate: value.Pub_EndDate,
         Pub_Type: value.Pub_Type,
         Pub_Event: value.Pub_Event,
         Pub_Description: value.Pub_Description,
         DetailList: detailList,
-      } as any;
+      };
 
-      const desiredEnable: 'Y' | 'N' = value.pub_enable as 'Y' | 'N';
-
-      // -------- 編輯流程 --------
+      // —— 編輯流程：主檔更新（不含 pub_enable），再呼叫 Eable API —— 
       if (this.crudstatus === CRUDStatus.Edit && this.canEdit()) {
+        const updatePayload = { id: masterId, ...basePayload };
+
         this.loading = true;
-        this.sysbr10Service.updateSYSBR10(payload).subscribe({
-          next: (res) => {
-            // 主檔/明細 OK 後，再用「專用 API」切換啟用
-            this.sysbr10Service.updateSYSBR10_PubEable({ id: masterId, pub_enable: desiredEnable }).subscribe({
-              next: () => {
-                this.loading = false;
-                this.messageService.successBubble('更新成功（含啟用狀態）');
-                this.onCancel();
-              },
-              error: () => {
-                this.loading = false;
-                this.messageService.errorBubble('主檔已更新，但啟用狀態更新失敗');
-              },
-            });
+        this.messageService?.blockUi?.();
+
+        this.sysbr10Service.updateSYSBR10(updatePayload).subscribe({
+          next: () => {
+            this.sysbr10Service
+              .updateSYSBR10_PubEable({ id: masterId, pub_enable: desiredEnable })
+              .subscribe({
+                next: () => {
+                  this.loading = false;
+                  this.messageService?.unblockUi?.();
+                  this.messageService?.successBubble?.('更新成功（含啟用狀態）');
+                  this.onCancel();
+                },
+                error: () => {
+                  this.loading = false;
+                  this.messageService?.unblockUi?.();
+                  this.messageService?.errorBubble?.('主檔已更新，但啟用狀態更新失敗');
+                },
+              });
           },
           error: () => {
             this.loading = false;
-            this.messageService.errorBubble('更新失敗');
+            this.messageService?.unblockUi?.();
+            this.messageService?.errorBubble?.('更新失敗');
           },
         });
         return;
       }
-      this.announcementCategoryService
-        .Pub_TypeOptions()
-        .subscribe((data) => (this.Pub_TypeOptions = data));
 
-      // -------- 新增流程 --------
+      // —— 新增流程：payload 需 **包含 pub_enable** —— 
       if (this.crudstatus === CRUDStatus.Create && this.canAdd()) {
-        this.loading = true;
-        this.sysbr10Service.insertSYSBR10(payload).subscribe({
-          next: (res) => {
-            const newId = res?.Data?.id ?? 0; // 依你後端回傳調整
-            if (!newId) {
-              this.loading = false;
-              this.messageService.successBubble('新增成功（未取得 id，略過啟用狀態設定）');
-              this.dataForm.reset();
-              return;
-            }
+        const insertPayload = { ...basePayload, pub_enable: desiredEnable };
 
-            // 新增成功後，再設定啟用狀態
-            this.sysbr10Service.updateSYSBR10_PubEable({ id: newId, pub_enable: desiredEnable }).subscribe({
-              next: () => {
-                this.loading = false;
-                this.messageService.successBubble('新增成功（含啟用狀態）');
-                this.dataForm.reset();
-              },
-              error: () => {
-                this.loading = false;
-                this.messageService.errorBubble('新增成功，但啟用狀態設定失敗');
-              },
-            });
+        this.loading = true;
+        this.messageService?.blockUi?.();
+
+        this.sysbr10Service.insertSYSBR10(insertPayload).subscribe({
+          next: () => {
+            this.loading = false;
+            this.messageService?.unblockUi?.();
+            this.messageService?.successBubble?.('新增成功');
+            this.dataForm.reset();
           },
           error: () => {
             this.loading = false;
-            this.messageService.errorBubble('新增失敗');
+            this.messageService?.unblockUi?.();
+            this.messageService?.errorBubble?.('新增失敗');
           },
         });
       }
     });
   }
 
-  private forceEditorLookForRead(): void {
-    if (!this.isRead) return;
-    this.detailList = (this.detailList ?? []).map(r => ({ ...r, _editing: true }));
+  // —— 輔助：讓目前 detail 以編輯外觀呈現（READ/EDIT 都顯示 dropdown）——
+  private applyEditorLook(): void {
+    this.detailList = (this.detailList ?? []).map((r) => ({ ...r, _editing: true }));
   }
 
-
-  // 讀取模式：純文字顯示（不依賴 options，不會空白）
-  detailcolumnsRead: Column[] = [
-    { field: 'User_No', header: '使用者編號', visible: true },
-    { field: 'Org_ID', header: '組織代碼', visible: true },
-    { field: 'Role_No', header: '角色代號', visible: true },
-  ];
-  get detailColsForView(): Column[] {
-    return this.isRead ? this.detailcolumnsRead : this.detailcolumns;
-  }
-
-  // ✅ 用 getter 判斷是否檢視模式
-  get isRead(): boolean {
-    return this.crudstatus === CRUDStatus.Read;
-  }
-  private labelOrValue(name: string | undefined, value: string | undefined) {
-    return name?.toString()?.trim() || value || '';
-  }
-
-  // ✅ 補在 class 裡
+  // —— 明細讀取（rowdata 優先，否則以 id 呼叫 API）——
   private loadDetailForReadOrEdit(): void {
-    // 已帶進來就直接用
-    if (this.rowdata?.DetailList?.length) {
-      this.detailList = [...this.rowdata.DetailList];
+    if (Array.isArray(this.rowdata?.DetailList) && this.rowdata!.DetailList.length > 0) {
+      this.detailList = [...this.rowdata!.DetailList];
       return;
     }
-
-    // 沒帶就用 id 查
     const id = this.rowdata?.id;
-    if (!id) return; // 沒 id 就不查（可視需求加提醒）
+    if (!id) return;
 
     this.loading = true;
-    this.messageService.blockUi();
+    this.messageService?.blockUi?.();
     this.sysbr10Service.querySYSBR10Detail(id).subscribe({
       next: (res) => {
-        this.detailList = res?.Data || [];
+        this.detailList = res?.Data ?? [];
         this.loading = false;
-        this.messageService.unblockUi();
+        this.messageService?.unblockUi?.();
       },
       error: () => {
         this.loading = false;
-        this.messageService.unblockUi();
-        this.messageService.errorBubble('讀取明細失敗');
+        this.messageService?.unblockUi?.();
+        this.messageService?.errorBubble?.('讀取明細失敗');
       },
     });
   }
 
+  // —— 小工具 —— 
+  private labelOrValue(name: string | undefined, value: string | undefined) {
+    return name?.toString()?.trim() || value || '';
+  }
 }
