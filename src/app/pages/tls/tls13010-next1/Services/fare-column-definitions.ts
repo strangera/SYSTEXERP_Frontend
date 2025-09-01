@@ -222,6 +222,17 @@ export class FareColumnDefinitions {
         autoSaveOnUnselect: true,     // ✅ 取消勾選 → 自動儲存並退出編輯
       },
       {
+        field: 'copy_button',
+        header: '複製',
+        type: 'button',
+        width: '60px',
+        buttonLabel: '複製',
+        buttonIcon: 'pi pi-copy',
+        buttonClass: 'p-button-sm p-button-secondary',
+        buttonTooltip: '複製此扣款項目',
+        directEdit: true,
+      },
+      {
         field: 'cap_item',
         header: '扣款代號',
         type: 'text',
@@ -246,6 +257,9 @@ export class FareColumnDefinitions {
         width: '130px',
         required: true,
         defaultValueFunction: () => {
+          if ((this as any)?._isCopiedItem) {
+            return null; // 保持現有值
+          }
           const contractInfo = contractInfoData[0];
           if (contractInfo?.tlt_contract_bdate) {
             return new Date(contractInfo.tlt_contract_bdate);
@@ -262,6 +276,9 @@ export class FareColumnDefinitions {
         dateFormat: 'year-month',
         required: true,
         defaultValueFunction: () => {
+          if ((this as any)?._isCopiedItem) {
+            return null; // 保持現有值
+          }
           const contractInfo = contractInfoData[0];
           if (contractInfo?.tlt_contract_edate) {
             return new Date(contractInfo.tlt_contract_edate);

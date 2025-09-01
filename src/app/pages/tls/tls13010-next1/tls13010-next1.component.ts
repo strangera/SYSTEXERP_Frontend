@@ -1139,11 +1139,9 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
     // 🎯 直接根據 field 判斷要做什麼
     if (field === 'auto_calc') {
       this.doAutoCalculate(rowData, capType);
+    } else if (field === 'copy_button') {
+      this.copyFareItem(rowData, capType);
     }
-    // // 如果還有其他按鈕，繼續加 else if
-    // else if (field === 'copy_button') {
-    //   this.doCopy(rowData);
-    // }
   }
 
   /**
@@ -1206,4 +1204,98 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
     this.currentCapType = '';
   }
 
+  // 新增複製方法：
+  /**
+   * 複製扣款項目
+   */
+  private copyFareItem(originalItem: any, capType: string): void {
+    console.log(`複製 ${capType} 類型項目:`, originalItem.cap_item);
+
+    try {
+      // 生成新的唯一 ID
+      const newId = `copy_${capType}_${originalItem.cap_item}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+
+      // 建立複製項目，保持所有原始欄位值
+      const copiedItem = {
+        ...originalItem,
+        id: newId,
+        is_selected: true,  // 複製的項目預設為選中
+        data_source: 'COPIED_ITEM',  // 標記為複製項目
+        _status: 'new',  // 設定為新增狀態
+        _originalSelected: false,  // 複製項目沒有原始選中狀態
+        _originalData: undefined,  // 清除原始資料記錄
+        _isCopiedItem: true  // 🆕 新增標記，表示這是複製的項目
+      };
+
+      // 清除一些系統欄位，避免衝突
+      delete copiedItem._skipAutoCalc;
+
+      // 🎯 關鍵修正：正確處理日期欄位
+      if (copiedItem.tpy_bdate) {
+        // 保持原始日期值，不要強制重建
+        if (originalItem.tpy_bdate instanceof Date) {
+          copiedItem.tpy_bdate = new Date(originalItem.tpy_bdate.getTime());
+        } else if (typeof originalItem.tpy_bdate === 'string') {
+          // 如果是字串，嘗試解析但不強制格式化
+          copiedItem.tpy_bdate = new Date(originalItem.tpy_bdate);
+        }
+
+        console.log('✅ 複製項目開始日期保持:', copiedItem.tpy_bdate);
+      }
+
+      if (copiedItem.tpy_edate) {
+        // 保持原始日期值，不要強制重建
+        if (originalItem.tpy_edate instanceof Date) {
+          copiedItem.tpy_edate = new Date(originalItem.tpy_edate.getTime());
+        } else if (typeof originalItem.tpy_edate === 'string') {
+          // 如果是字串，嘗試解析但不強制格式化
+          copiedItem.tpy_edate = new Date(originalItem.tpy_edate);
+        }
+
+        console.log('✅ 複製項目結束日期保持:', copiedItem.tpy_edate);
+      }
+
+      // 🆕 如果日期解析失敗，使用當前月份作為預設值
+      if (copiedItem.tpy_bdate && isNaN(copiedItem.tpy_bdate.getTime())) {
+        const now = new Date();
+        copiedItem.tpy_bdate = new Date(now.getFullYear(), now.getMonth(), 1);
+        console.log('⚠️ 開始日期解析失敗，使用當前月份:', copiedItem.tpy_bdate);
+      }
+
+      if (copiedItem.tpy_edate && isNaN(copiedItem.tpy_edate.getTime())) {
+        const now = new Date();
+        copiedItem.tpy_edate = new Date(now.getFullYear(), now.getMonth(), 1);
+        console.log('⚠️ 結束日期解析失敗，使用當前月份:', copiedItem.tpy_edate);
+      }
+
+      // 清除可能干擾的日期相關屬性
+      delete copiedItem._dateInitialized;
+      delete copiedItem._editingState;
+
+      // 加入到對應類型的陣列中
+      this.originalFareData[capType].push(copiedItem);
+
+      // 重新過濾資料以更新顯示
+      this.filterData();
+
+      // 儲存到工作流程
+      this.saveFareDataToWorkflow();
+
+      // 顯示成功訊息
+      this.messageService.successBubble(`已成功複製扣款項目「${originalItem.cap_name}」`);
+
+      // 強制更新檢測
+      this.cdr.detectChanges();
+
+      console.log(`複製完成: ${originalItem.cap_item} → ${newId}`, {
+        原始日期: { 開始: originalItem.tpy_bdate, 結束: originalItem.tpy_edate },
+        複製日期: { 開始: copiedItem.tpy_bdate, 結束: copiedItem.tpy_edate },
+        檢視模式: this.isViewMode
+      });
+
+    } catch (error) {
+      console.error('複製扣款項目時發生錯誤:', error);
+      this.messageService.warnBubble('複製扣款項目失敗，請重試');
+    }
+  }
 }
