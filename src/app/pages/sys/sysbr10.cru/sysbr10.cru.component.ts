@@ -200,17 +200,34 @@ onSubmit(form: FormGroup): void {
     });
 
     // ✅ 組 payload：不含 pub_enable
-    const payload = {
+  
+
+    const desiredEnable: 'Y' | 'N' = value.pub_enable as 'Y' | 'N';
+      const payload = {
       id: masterId,
       Pub_StartDate: value.Pub_StartDate,
       Pub_EndDate: value.Pub_EndDate,
       Pub_Type: value.Pub_Type,
       Pub_Event: value.Pub_Event,
       Pub_Description: value.Pub_Description,
+      pub_enable: desiredEnable,     
       DetailList: detailList,
     } as any;
-
-    const desiredEnable: 'Y' | 'N' = value.pub_enable as 'Y' | 'N';
+    if (this.crudstatus === CRUDStatus.Create && this.canAdd()) {
+  this.loading = true;
+  this.sysbr10Service.insertSYSBR10(payload).subscribe({
+    next: (res) => {
+      this.loading = false;
+      this.messageService.successBubble('新增成功');
+      this.dataForm.reset();
+    },
+    error: () => {
+      this.loading = false;
+      this.messageService.errorBubble('新增失敗');
+    },
+  });
+  return;
+}
 
     // -------- 編輯流程 --------
     if (this.crudstatus === CRUDStatus.Edit && this.canEdit()) {

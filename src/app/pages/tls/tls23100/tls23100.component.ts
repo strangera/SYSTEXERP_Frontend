@@ -147,8 +147,8 @@ export class TLS23100Component extends BasicQueryPageComponent<any> {
       { field: 'tlt_name', header: '櫃位名稱', visible: true, style: 'text-left' },
       { field: 'PAY_NO', header: '付款別', visible: true },
       { field: 'PAY_NAME', header: '付款名稱', visible: true },
-      { field: 'Pay_No', header: '信用卡卡別', visible: true },
-      { field: 'CRD_Name', header: '信用卡', visible: true },
+      { field: 'CRD_Name', header: '信用卡卡別', visible: true },
+
       { field: 'CRD_No', header: '信用卡卡號', visible: true },
       { field: 'TXN_PayAmt', header: '金額', visible: true, style: 'text-right', format: (val: number) => val?.toLocaleString('en-US') || '0' },
     ];

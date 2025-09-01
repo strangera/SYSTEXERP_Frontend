@@ -33,10 +33,11 @@
             optionLabel="label" optionValue="value" [options]="voucherTypeOptions"
             [submitted]="submitted"></app-dropdown>
         </div>
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-query-year-month label="申報年月" [control]="dataForm.controls.PUR_RepYYYYMM" [submitted]="submitted"
-            [onlyOddMonths]="true"></app-query-year-month>
-        </div>
+                <div class="col-12 md:col-6 lg:col-4">
+
+       <app-calendar  controlName="PUR_RepYYYYMM" calendarType="dateMonthOne"
+          label="申報年月" [control]="dataForm.controls.PUR_RepYYYYMM" [submitted]="submitted"  ></app-calendar>
+          </div>
         <div class="col-12 md:col-6 lg:col-4">
           <app-dropdown label="區別" controlName="Credit_Type" optionLabel="label" optionValue="value"
             [control]="dataForm.controls.Credit_Type" [options]="creditTypeOptions"
@@ -96,14 +97,27 @@
   </p-panel>
 </div>
 <div class="card">
-  <app-table tableKey="FIN13020CRU" [columns]="columns" dataKey="PUR_RepYYYYMM"
-    [multiSortMeta]="[{ field: 'PUR_RepYYYYMM', order: 1 }]" [lazy]="true" [loading]="loading"
-    (lazyLoadData)="onLazyLoadData($event, dataForm); onSubmit(dataForm)" [insertRowData]="true" [defaultInsertData]="{
-      User_No: '',
-      Org_ID: '',
-      Role_No: '',
-
-    }" [showInsert]="true" [showRowEdit]="true" [showEdit]="false" [showDetail]="false" [showReportMode]="false"
-    [showDelete]="false" [showCheckBox]="false" [showPaginator]="false" [(data)]="detailRows"
-    (fieldChange)="onFieldChange($event)"></app-table>
+  <app-table
+    tableKey="FIN13020CRU"
+    [columns]="columnsForView"
+    dataKey="PUR_RepYYYYMM"
+    [multiSortMeta]="[{ field: 'PUR_RepYYYYMM', order: 1 }]"
+    [lazy]="true"
+    [loading]="loading"
+    (lazyLoadData)="onLazyLoadData($event, dataForm); onSubmit(dataForm)"
+    [insertRowData]="!isRead"
+    [defaultInsertData]="{ User_No: '', Org_ID: '', Role_No: '' }"
+    [showInsert]="!isRead"
+    [showRowEdit]="!isRead"
+    [showManage]="!isRead"
+    [showEdit]="false"
+    [showDetail]="false"
+    [showReportMode]="false"
+    [showDelete]="false"
+    [showCheckBox]="false"
+    [showPaginator]="false"
+    [disabled]="isRead"
+    [(data)]="detailRows"
+    (fieldChange)="onFieldChange($event)">
+  </app-table>
 </div>

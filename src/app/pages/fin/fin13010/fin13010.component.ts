@@ -14,6 +14,7 @@ import { QueryYearMonthComponent } from '../../../shared/componentkit/query-year
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { TranslateModule } from '@ngx-translate/core';
 import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
+import { ValidationService } from '@shared/service/validation.service';
 
 @Component({
   selector: 'app-fin13010',
@@ -49,7 +50,7 @@ export class FIN13010Component extends BasicQueryPageComponent<any> {
     Source_Doc_NoEnd: [],   // 憑證單號(迄)
     Voucher_NoStart: [], // 發票起始號碼
     Voucher_NoEnd: [],   // 發票結束號碼
-    ...createPaginationConfig([{ field: 'PUR_RepYYYYMM', order: 1 }])
+    ...createPaginationConfig([{ field: 'id', order: 1 }])
   });
 
   data: any[] = [];
@@ -72,7 +73,10 @@ export class FIN13010Component extends BasicQueryPageComponent<any> {
     { field: 'Voucher_No', header: '傳票編號', visible: true },
   ];
 
-  constructor(private fin13010Service: FIN13010Service) {
+  constructor(
+    private fin13010Service: FIN13010Service,
+     private validationService: ValidationService,
+  ) {
     super();
   }
   formatCreditType(value: string): string {

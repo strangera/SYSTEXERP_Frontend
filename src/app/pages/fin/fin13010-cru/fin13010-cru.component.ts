@@ -13,6 +13,7 @@ import { QueryYearMonthComponent } from '../../../shared/componentkit/query-year
 import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
 import { NgIf } from '@angular/common';
 import { TranslateModule } from '@ngx-translate/core';
+import { ValidationService } from '@shared/service/validation.service';
 
 @Component({
     selector: 'app-fin13010-cru',
@@ -28,7 +29,7 @@ import { TranslateModule } from '@ngx-translate/core';
         InputTextComponent,
         DropdownComponent,
         CalendarComponent,
-        QueryYearMonthComponent,
+        
         InputNumberComponent,
         NgIf,
         TranslateModule,
@@ -61,7 +62,7 @@ export class FIN13010CRUComponent
     PUR_GUINo_Correspond: [''], // 發票號碼
     PUR_GUIDate: ['', Validators.required], // 領用日期
     PUR_VoucherType: [''], // 發票格式
-    PUR_RepYYYYMM: [''], // 發票年月
+      PUR_RepYYYYMM: [null,this.validationService.oddMonthValidator], // 發票年月
     Credit_Type: ['', Validators.required], // 區別（折讓/退出）
     PUR_TaxType: ['', Validators.required], // 稅別
     PUR_Net: [undefined as any],
@@ -77,10 +78,12 @@ export class FIN13010CRUComponent
     Voucher_No: [''], // 傳票編號
   });
 
-  constructor(private apiService: FIN13010Service) {
-    super();
-  }
-
+   constructor(
+     private fin13010Service: FIN13010Service,
+      private validationService: ValidationService,
+   ) {
+     super();
+   }
   ngOnInit(): void {
     this.initializePage('FIN13010', this.dataForm);
     this.updateDisabledState();
@@ -106,7 +109,7 @@ export class FIN13010CRUComponent
     if (trackControl) {
       trackControl.valueChanges.subscribe((trackNo) => {
         if (typeof trackNo === 'string' && trackNo.trim().length >= 2) {
-          this.apiService
+          this.fin13010Service
             .queryINV1000List({ GUI_Track: trackNo.trim() })
             .subscribe((res) => {
               this.guiNumberOptions = res.Data.map((item: any) => ({
@@ -139,7 +142,7 @@ export class FIN13010CRUComponent
             { emitEvent: false },
           );
 
-          this.apiService
+          this.fin13010Service
             .queryCorrespondByGUINoCorrespond({ PUR_GUINo_Correspond: full })
             .subscribe((res) => {
               const detail = res?.Data?.[0];
@@ -221,6 +224,10 @@ export class FIN13010CRUComponent
       this.dataForm.enable(); // Create 模式
     }
   }
+    formatRepYYYYMM(value: string): string {
+    if (!value || value.length !== 6) return value;
+    return `${value.substring(0, 4)}/${value.substring(4, 6)}`;
+  }
 
   onSubmit(form: FormGroup): void {
     this.handleSubmit(form, () => {
@@ -240,11 +247,11 @@ export class FIN13010CRUComponent
         Source_Doc_No: formValue.Source_Doc_No,
         Voucher_No: formValue.Voucher_No,
       };
-
+  payload.PUR_RepYYYYMM = this.toYYYYMM(payload.PUR_RepYYYYMM);
       switch (this.crudstatus) {
         case CRUDStatus.Create:
           if (this.canAdd()) {
-            this.apiService.insertFIN13010(payload).subscribe(() => {
+            this.fin13010Service.insertFIN13010(payload).subscribe(() => {
               this.messageService.successBubble('新增成功');
               this.dataForm.reset();
             });
@@ -253,7 +260,7 @@ export class FIN13010CRUComponent
 
         case CRUDStatus.Edit:
           if (this.canEdit()) {
-            this.apiService.updateFIN13010(payload).subscribe(() => {
+            this.fin13010Service.updateFIN13010(payload).subscribe(() => {
               this.messageService.successBubble('更新成功');
               this.onCancel();
             });
@@ -272,7 +279,38 @@ export class FIN13010CRUComponent
       taxControl.valueChanges.subscribe(() => this.calculateTotalAmount());
     }
   }
+private toYYYYMM(input: any): string | null {
+  if (!input) return null;
 
+  // 先處理常見字串：'2025/05'、'2025-05-01T00:00:00'
+  if (typeof input === 'string') {
+    const onlyDigits = input.replace(/\D/g, ''); // 拿掉所有非數字
+    if (onlyDigits.length >= 6) return onlyDigits.slice(0, 6); // '202505'
+    const d = new Date(input);
+    if (!isNaN(d.getTime())) {
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, '0');
+      return `${y}${m}`;
+    }
+    return null;
+  }
+
+  // Date 物件
+  if (input instanceof Date) {
+    const y = input.getFullYear();
+    const m = String(input.getMonth() + 1).padStart(2, '0');
+    return `${y}${m}`;
+  }
+
+  // 其他型別就試著 new Date 看看
+  const d = new Date(input);
+  if (!isNaN(d.getTime())) {
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    return `${y}${m}`;
+  }
+  return null;
+}
   private calculateTotalAmount(): void {
     const net = this.dataForm.get('PUR_Net')?.value || 0;
     const tax = this.dataForm.get('PUR_Tax')?.value || 0;
