@@ -520,9 +520,9 @@ onToggleSummary() {
     { field: 'gui_track',      header: '字軌',         visible: true },
     { field: 'GUIBegNo',       header: '發票起始號碼',   visible: true },
     { field: 'GUIEndNo',       header: '發票結束號碼',   visible: true },
-    { field: 'TXN_TotGUI',     header: '發票金額',      visible: true, style: 'text-right', format: this.moneyFormat },
-    { field: 'TXN_TotSaleAmt', header: '銷售金額',      visible: true, style: 'text-right', format: this.moneyFormat },
-    { field: 'TXN_TotOver',    header: '溢收金額',      visible: true, style: 'text-right', format: this.moneyFormat },
+    { field: 'TXN_TotGUI',     header: '發票金額',      visible: true, style: 'text-right', format: this.moneyFormat ,isTotal: true},
+    { field: 'TXN_TotSaleAmt', header: '銷售金額',      visible: true, style: 'text-right', format: this.moneyFormat ,isTotal: true},
+    { field: 'TXN_TotOver',    header: '溢收金額',      visible: true, style: 'text-right', format: this.moneyFormat ,isTotal: true},
 
     { field: 'TXN_VIP',        header: '外交官零稅',     visible: true, format: this.nyToYesNo },
     { field: 'TXN_Mode',       header: '事後登錄',      visible: true, format: this.pToYesNo },
@@ -542,7 +542,7 @@ onToggleSummary() {
     { field: 'TXN_PkngUID',    header: '停車車牌',      visible: true },
     { field: 'TXN_MemID',      header: '會員卡號',      visible: true },
 
-    { field: 'TXN_TotDisc',    header: '折扣/讓金額',    visible: true, style: 'text-right', format: this.moneyFormat },
+    { field: 'TXN_TotDisc',    header: '折扣/讓金額',    visible: true, style: 'text-right', format: this.moneyFormat,isTotal: true },
 
     { field: 'GUILoveStatus',  header: '捐贈狀態',      visible: true, format: this.nyToYesNo },
     { field: 'TXN_GUILoveCode',header: '捐贈社福團體代碼', visible: true },
@@ -559,7 +559,7 @@ onToggleSummary() {
     { field: 'CRD_Name',       header: '信用卡別',         visible: true },
     { field: 'CRD_No',         header: '號碼',         visible: true },
     { field: 'TERM_No',        header: '分期期數',      visible: true, style: 'text-right' },
-    { field: 'TXN_PayAmt',     header: '金額',         visible: true, style: 'text-right', format: this.moneyFormat },
+    { field: 'TXN_PayAmt',     header: '金額',         visible: true, style: 'text-right', format: this.moneyFormat ,isTotal: true},
   ];
 
   detailcolumns = [
@@ -572,7 +572,7 @@ onToggleSummary() {
     { field: 'CRD_Name', header: '卡別' },
     { field: 'CRD_No', header: '號碼' },
     { field: 'TERM_No', header: '分期期數', style: 'text-right' },
-    { field: 'TXN_PayAmt', header: '金額', style: 'text-right', format: this.moneyFormat },
+    { field: 'TXN_PayAmt', header: '金額', style: 'text-right', format: this.moneyFormat ,isTotal: true},
   ];
   // ✅ 新增：顯示彙總的開關/資料/欄位
 
@@ -582,7 +582,7 @@ summaryColumns = [
   { field: 'tlt_name',     header: '櫃位名稱',  visible: true, style: 'text-left' },
   { field: 'TXN_DateStart',header: '銷售日期(起)', visible: true, format: this.formatYMD },
   { field: 'TXN_DateEnd',  header: '銷售日期(迄)', visible: true, format: this.formatYMD },
-  { field: 'TXN_TotGUI',   header: '發票金額',  visible: true, style: 'text-right', format: this.moneyFormat },
+  { field: 'TXN_TotGUI',   header: '發票金額',  visible: true, style: 'text-right', format: this.moneyFormat ,isTotal: true},
 ];
 
 }
