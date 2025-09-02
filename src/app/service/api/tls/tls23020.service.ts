@@ -20,14 +20,14 @@ export class TLS23020Service {
     const url = `${this.apiUrl}/TLS0000/TLS2000/queryTLS23020`;
     return this.http.post<any>(url, body).pipe(
       tap(response => console.log('🎯 TLS23020 查詢結果:', response)),
-      catchError((error) => this.errorHandler.handleError(error))
+    
     );
   }
     queryTLS23020Summary(body: any): Observable<any> {
     const url = `${this.apiUrl}/TLS0000/TLS2000/queryTLS23020_Summary`;
     return this.http.post<any>(url, body).pipe(
       tap(r => console.log('🎯 TLS23020 Summary 結果:', r)),
-      catchError(err => this.errorHandler.handleError(err))
+      
     );
   }
 }

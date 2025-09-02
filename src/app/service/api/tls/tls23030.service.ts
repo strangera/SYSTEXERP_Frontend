@@ -34,7 +34,7 @@ export class TLS23030Service {
     const url = `${this.apiUrl}/TLS0000/TLS2000/queryTLS23030`;
     return this.http.post<any>(url, body).pipe(
       tap(res => console.log('🎯 TLS23030 查詢結果:', res)),
-      catchError(err => this.errorHandler.handleError(err))
+      
     );
   }
 
@@ -43,7 +43,7 @@ queryPOS1006_DropDownList(): Observable<ApiResponse<POS1006Item>> {
   const url = `${this.apiUrl}/TLS0000/TLS2000/queryPOS1006_DropDownList`;
   return this.http.post<ApiResponse<POS1006Item>>(url, {}).pipe(
     tap(res => console.log('🎯 POS1006 下拉原始資料:', res)),
-    catchError(err => this.errorHandler.handleError(err))
+    
   );
 }
 

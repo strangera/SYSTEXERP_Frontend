@@ -22,13 +22,13 @@ export class TLS23080Service {
   queryTLS23080(query: any): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/TLS0000/TLS2000/queryTLS23080`, query).pipe(
       tap(response => console.log('查詢結果:', response)),
-      catchError((error) => this.errorHandler.handleError(error))  // ✅ 正確
+      
     );
   }
   queryTLS23080Detail(query: { TXN_Date: string }): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/TLS0000/TLS2000/queryTLS23080_Detail`, query).pipe(
       tap(response => console.log('🔍 明細查詢結果:', response)),
-      catchError((error) => this.errorHandler.handleError(error))
+      
     );
   }
   // ✅ 提供 fetchDetailFn

@@ -92,7 +92,7 @@ export class TLS23010Service {
     const url = `${this.apiUrl}/TLS0000/TLS2000/queryTLS23010`;
     return this.http.post<any>(url, body).pipe(
       tap(response => console.log(`🎯 TLS23010 ${displayMode} 查詢結果:`, response)),
-      catchError((error) => this.errorHandler.handleError(error))
+      
     );
   }
 
@@ -107,7 +107,7 @@ export class TLS23010Service {
     return this.http.post<BaseQueryResponse<any>>(url, body).pipe(
       map(r => r?.Data ?? []),
       tap(list => console.log('📦 Detail count:', list?.length ?? 0)),
-      catchError(err => this.errorHandler.handleError(err))
+      
     );
   }
 
@@ -116,7 +116,7 @@ queryTLS23010Summary(body: any): Observable<any> {
   const url = `${this.apiUrl}/TLS0000/TLS2000/queryTLS23010_Summary`;
   return this.http.post<any>(url, body).pipe(
     tap(r => console.log('🎯 TLS23010 Summary 查詢結果:', r)),
-    catchError(err => this.errorHandler.handleError(err))
+    
   );
 }
 

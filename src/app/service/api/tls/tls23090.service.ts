@@ -25,7 +25,7 @@ export class TLS23090Service {
     const url = `${this.apiUrl}/TLS0000/TLS2000/queryTLS23090_CounterCard`;
     return this.http.post<any>(url, body).pipe(
       tap(res => console.log('🎯 TLS23090_CounterCard:', res)),
-      catchError(err => this.errorHandler.handleError(err))
+     
     );
   }
 }
