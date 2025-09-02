@@ -133,6 +133,14 @@ export class SYSBR10CRUComponent
   // —— Lifecycle —— 
   ngOnInit(): void {
     this.initializePage('SYSBR10', this.dataForm);
+    {
+  const src =
+    (this.rowdata?.Pub_Description as string | undefined) ??
+    (this.dataForm.controls.Pub_Description.value as string | undefined) ??
+    '';
+  const decoded = this.decodeIfBase64(src);
+  this.dataForm.controls.Pub_Description.setValue(decoded as any, { emitEvent: false });
+}
 
     // ★ 依模式設定 pub_enable 預設值（新增預設 Y；編輯帶現值，不在就預設 Y）
     const currentEnable =
@@ -315,6 +323,26 @@ export class SYSBR10CRUComponent
   private applyEditorLook(): void {
     this.detailList = (this.detailList ?? []).map((r) => ({ ...r, _editing: true }));
   }
+// —— Base64（支援 UTF-8）——
+private decodeIfBase64(input?: string | null): string {
+  if (!input) return '';
+  try {
+    // 嘗試以 Base64 解碼 -> UTF-8
+    const bin = atob(input);
+    const bytes = Uint8Array.from(bin, c => c.charCodeAt(0));
+    return new TextDecoder().decode(bytes);
+  } catch {
+    // 不是 Base64 或解碼失敗，就原樣回傳
+    return input ?? '';
+  }
+}
+private encodeToBase64(input?: string | null): string {
+  const text = input ?? '';
+  const bytes = new TextEncoder().encode(text);
+  let bin = '';
+  bytes.forEach(b => (bin += String.fromCharCode(b)));
+  return btoa(bin);
+}
 
   // —— 明細讀取（rowdata 優先，否則以 id 呼叫 API）——
   private loadDetailForReadOrEdit(): void {

@@ -32,7 +32,6 @@ import { CalendarComponent } from '@shared/componentkit/calendar/calendar.compon
     AccordionModule,
     FormsModule,
     ReactiveFormsModule,
-    CalendarRangeQuickComponent,
     RadiobuttonComponent,
     MultiSelectComponent,
     DropdownComponent,
