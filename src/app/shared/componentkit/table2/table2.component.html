@@ -355,15 +355,23 @@
       </td>
     </tr>
   </ng-template>
-  <ng-template *ngIf="expansionDataKey" pTemplate="rowexpansion" let-rowData>
-    <tr class="bg-gray-300" id="expansion-row">
-      <td [attr.colspan]="getVisibleHeaderCount">
-        <app-table-expansion2 [rowData]="rowData" [expansionDataKey]="expansionDataKey"
-          [expansionColumns]="expansionColumns" [expansionSortField]="expansionSortField"
-          [expansionSortOrder]="expansionSortOrder"></app-table-expansion2>
-      </td>
-    </tr>
-  </ng-template>
+<ng-template *ngIf="expansionDataKey" pTemplate="rowexpansion" let-rowData>
+  <tr id="expansion-row">
+    <td [attr.colspan]="getVisibleHeaderCount" class="p-0">
+      <div class="expansion-container overflow-x-auto">
+        <!-- 讓子表自己決定欄寬，不跟主表同步 -->
+        <app-table-expansion2
+          class="expansion-content"
+          [rowData]="rowData"
+          [expansionDataKey]="expansionDataKey"
+          [expansionColumns]="expansionColumns"
+          [expansionSortField]="expansionSortField"
+          [expansionSortOrder]="expansionSortOrder">
+        </app-table-expansion2>
+      </div>
+    </td>
+  </tr>
+</ng-template>
 
   <ng-template pTemplate="summary">
     <div *ngIf="showFooter && IsPrint" class="p-2 font-semibold table-footer">

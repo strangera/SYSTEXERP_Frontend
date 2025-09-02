@@ -1,28 +1,79 @@
-<div [@expandAnimation]="isExpanded ? 'expanded' : 'collapsed'" class="transition-all duration-300">
-  <p-table class="w-full" [value]="localRowData" [columns]="getFilterColumns(expansionColumns)"
-    [sortField]="expansionSortField" [sortOrder]="expansionSortOrder" [scrollHeight]="'300px'">
+<div
+  [@expandAnimation]="isExpanded ? 'expanded' : 'collapsed'"
+  class="transition-all duration-300"
+>
+  <!-- 外層容器：橫向/直向捲動都由這裡掌控 -->
+  <div
+    class="expansion-container overflow-x-auto"
+    [ngStyle]="{ 'max-height': scrollHeight, 'overflow-y': 'auto' }"
+  >
+    <p-table
+      styleClass="expansion-datatable p-datatable-sm p-datatable-gridlines"
+      [value]="localRowData"
+      [columns]="getFilterColumns(expansionColumns)"
+      [multiSortMeta]="expansionMultiSortMeta"
+      sortMode="multiple"
+      [paginator]="showPaginator"
+      [rows]="rows"
+      [totalRecords]="totalRecords"
+      [(first)]="first"
+      (onPage)="onPageChange($event)"
+      [rowsPerPageOptions]="rowsPerPageOptions"
+      [showCurrentPageReport]="true"
+      currentPageReportTemplate="第{currentPage}頁 / 總共{totalPages}頁 (總筆數:{totalRecords})"
+      paginatorStyleClass="p-paginator-sm"
+      [tableStyle]="{ 'table-layout': 'auto' }"
+    >
+      <!-- 表頭 -->
+      <ng-template pTemplate="header" let-columns>
+        <tr>
+          <th class="w-1rem">序號</th>
+          <th
+            *ngFor="let col of columns"
+            [pSortableColumn]="col.field"
+            class="text-center"
+          >
+            {{ col.header }}
+            <p-sortIcon [field]="col.field"></p-sortIcon>
+          </th>
+        </tr>
+      </ng-template>
 
-    <!-- 表頭 -->
-    <ng-template pTemplate="header" let-columns>
-      <tr>
-        <th class="w-1rem">序號</th>
-        <th *ngFor="let col of getFilterColumns(expansionColumns)" [pSortableColumn]="col.field" class="text-center">
-          {{ col.header }} <p-sortIcon [field]="col.field"></p-sortIcon>
-        </th>
-      </tr>
-    </ng-template>
+      <!-- 表身 -->
+      <ng-template
+        pTemplate="body"
+        let-rowData
+        let-columns="columns"
+        let-rowIndex="rowIndex"
+      >
+        <tr>
+          <td class="text-center">{{ first + rowIndex + 1 }}</td>
+          <td
+            *ngFor="let col of columns"
+            class="text-center"
+            [ngStyle]="col.style"
+          >
+            <span
+              *ngIf="
+                rowData[col.field] !== undefined &&
+                rowData[col.field] !== null &&
+                !col.type
+              "
+            >
+              {{ col.format ? col.format(rowData[col.field]) : rowData[col.field] }}
+            </span>
+          </td>
+        </tr>
+      </ng-template>
 
-    <!-- 表身 -->
-    <ng-template pTemplate="body" let-rowData let-columns="columns" let-rowIndex="rowIndex">
-      <tr>
-        <td class="text-center">{{ rowIndex + 1 }}</td>
-        <td *ngFor="let col of getFilterColumns(expansionColumns)" class="text-center">
-          <span *ngIf="rowData[col.field] !== undefined && rowData[col.field] !== null && !col.type">
-            {{ col.format ? col.format(rowData[col.field]) : rowData[col.field] }}
-          </span>
-        </td>
-      </tr>
-    </ng-template>
-
-  </p-table>
+      <!-- 空資料訊息（用 tr/td，避免破版） -->
+      <ng-template pTemplate="emptymessage" let-columns>
+        <tr>
+          <td [attr.colspan]="(columns?.length || 0) + 1" class="text-center">
+            <span class="text-xl font-bold">查無展開資料</span>
+          </td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
 </div>
