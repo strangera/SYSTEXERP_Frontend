@@ -86,30 +86,31 @@ export abstract class BasicQueryPageComponent<T> {
   canPerformAction(action: string): boolean {
     return this.funInfo?.PrivilegeBehavior?.some(behavior => behavior.function_code === action) || false;
   }
-  navigateWithState(crudstatus: CRUDStatus, rowdata?: T | unknown) {
+  navigateWithState(crudstatus: CRUDStatus, rowdata?: T | unknown, queryConditions?: any) {
     const extras: NavigationExtras = {
       state: {
         crudstatus: crudstatus,
         rowdata: rowdata,
         fromRoute: this.router.url, // 加入 fromRoute 並設定為目前頁面的 URL
+        queryConditions: queryConditions
       },
     };
     this.router.navigate([`account/${this.cruPage.toLocaleLowerCase()}`], extras);
   }
   // 移動路由
-  onCreate(data?: unknown) {
+  onCreate(data?: unknown, queryConditions?: any) {
     if (this.canPerformAction('20')) { // '新增' 的 function_code 是 "20"
-      this.navigateWithState(CRUDStatus.Create, data);
+      this.navigateWithState(CRUDStatus.Create, data, queryConditions);
     }
   }
-  onEdit(data: T) {
+  onEdit(data: T, queryConditions?: any) {
     if (this.canPerformAction('30')) { // '修改' 的 function_code 是 "30"
-      this.navigateWithState(CRUDStatus.Edit, data);
+      this.navigateWithState(CRUDStatus.Edit, data, queryConditions);
     }
   }
-  onDetail(data: T) {
+  onDetail(data: T, queryConditions?: any) {
     if (this.canPerformAction('10')) { // '查詢' 的 function_code 是 "10"
-      this.navigateWithState(CRUDStatus.Read, data);
+      this.navigateWithState(CRUDStatus.Read, data, queryConditions);
     }
   }
   canDelete() {

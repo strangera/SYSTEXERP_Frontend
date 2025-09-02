@@ -1,5 +1,4 @@
-import { NgIf } from '@angular/common';
-import { Component, OnInit, computed, effect, signal } from '@angular/core';
+import { Component, OnInit, computed, effect } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
@@ -8,7 +7,6 @@ import { ASS21020Service } from '@service/api/ass/ass21020.service';
 import { MenubarComponent } from '@shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '@shared/componentkit/button/button.component';
-// import { DialogComponent } from '@shared/componentkit/dialog/dialog.component';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { InputNumberComponent } from "@shared/componentkit/input-number/input-number.component";
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
@@ -28,14 +26,12 @@ import { ASS21020Data } from './ass21020.model';
   styleUrl: './ass21020.component.scss',
   standalone: !0,
   imports: [
-    NgIf,
     PanelModule,
     AccordionModule,
     TranslateModule,
     FormsModule,
     KeyFilterModule,
     ButtonComponent,
-    // DialogComponent,
     DropdownComponent,
     InputTextComponent,
     MenubarComponent,
@@ -62,7 +58,6 @@ export class ASS21020Component extends BasicQueryPageComponent<unknown> implemen
 
   private readonly engTypeSignal = toSignal(this.qf().ENG_Type.valueChanges);
   private readonly meterNoSignal = toSignal(this.qf().ENG_MeterNo.valueChanges);
-  private readonly locNoSignal = toSignal(this.qf().Location_No.valueChanges);
   private readonly tltNoSignal = toSignal(this.qf().TLT_No.valueChanges);
 
   public readonly ratePtn = /^(100(?:\.0{1,2})?|0*(?:\d{1,2}))$/;

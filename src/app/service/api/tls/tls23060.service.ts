@@ -19,7 +19,7 @@ export class TLS23060Service {
   queryTLS23060(query: any): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/TLS0000/TLS2000/querytls23060`, query).pipe(
       tap(response => console.log('查詢結果:', response)),
-      catchError((error) => this.errorHandler.handleError(error))  // ✅ 正確
+      
     );
   }
 }

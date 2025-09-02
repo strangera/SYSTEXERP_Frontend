@@ -55,7 +55,7 @@ export class TLS23080Component extends BasicQueryPageComponent<any> {
   // --- 排序狀態 ---
   sortMeta: any[] = [];
   readonly defaultSort: any[] = [
-    { field: 'TXN_Date', order: -1 }, // 近到遠
+    { field: 'TXN_Date', order:  1 }, // 近到遠
 
   ];
   private lastQuerySig: string | null = null;

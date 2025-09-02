@@ -30,14 +30,18 @@ import { RadioButtonModule } from 'primeng/radiobutton';
 import { TranslateModule } from '@ngx-translate/core';
 import { TableComponent } from '@shared/componentkit/table/table.component';
 import { CommonModule } from '@angular/common';
+import { ButtonModule } from 'primeng/button';
+import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
+import { HttpResponse } from '@angular/common/http';
 
+@UntilDestroy()
 @Component({
   selector: 'app-tls23020',
   templateUrl: './tls23020.component.html',
   styleUrls: ['./tls23020.component.scss'],
   standalone: true,
   imports: [
-    CommonModule, 
+    CommonModule,
     MenubarComponent,
     AccordionModule,
     FormsModule,
@@ -54,23 +58,29 @@ import { CommonModule } from '@angular/common';
     RadioButtonModule,
     TranslateModule,
     TableComponent,
+    ButtonModule,
   ],
 })
 export class TLS23020Component extends BasicQueryPageComponent<any> {
   data: any[] = [];
+  summaryData: any[] = [];
   totalRecords = 0;
-showSummary = false;
+
+  btnLoading = false;                 // ✅ 匯出按鈕 loading
+  historyRequestBody: any | null = null; // ✅ 記錄最近一次查詢 payload（匯出沿用）
+  showSummary = false;
+
   // --- 排序狀態 ---
   sortMeta: any[] = [];
   readonly defaultSort: any[] = [
-    { field: 'TXN_Date', order: -1 }, // 近到遠
+    { field: 'TXN_Date', order:  1 }, // 近到遠
     { field: 'ECR_No',   order:  1 },
     { field: 'TXN_No',   order:  1 },
   ];
   private lastQuerySig: string | null = null;
   private lazyTimer: any = null;
 
-  // 若後端要自行排序/分頁，設為 false；若要由前端傳 SortBy 給後端，設為 true
+  // 後端是否接收分頁/排序（提供 OrderBy & SortBy）
   private readonly includePagingAndSorting = true;
 
   readonly yesterday: Date = (() => {
@@ -104,9 +114,8 @@ showSummary = false;
     tlt_building: [],
     tlt_floor: [],
     org_id: [],
-    // ✅ 帶入預設排序（與 defaultSort 一致）
     ...createPaginationConfig([
-      { field: 'TXN_Date', order: -1 },
+      { field: 'TXN_Date', order:  1 },
       { field: 'ECR_No',   order:  1 },
       { field: 'TXN_No',   order:  1 },
     ]),
@@ -220,71 +229,73 @@ showSummary = false;
     this.lazyTimer = setTimeout(() => this.onSubmit(form), 0);
   }
 
- onSubmit(form: FormGroup): void {
-  this.handleSubmit(form, () => {
-    const payload = this.buildPayload(this.queryForm.getRawValue());
+  onSubmit(form: FormGroup): void {
+    this.handleSubmit(form, () => {
+      const payload = this.buildPayload(this.queryForm.getRawValue());
 
-    this.loading = true;
-    this.messageService?.blockUi();
+      // ✅ 匯出沿用同包參數（保留 SortBy，讓匯出排序一致）
+      this.historyRequestBody = { ...payload };
 
-    if (this.showSummary) {
-      // ✅ 彙總查詢
-this.tls23020Service.queryTLS23020Summary(payload).pipe(
-  finalize(() => { this.loading = false; this.messageService?.unblockUi(); })
-).subscribe({
-  next: (res) => {
-    const arr = Array.isArray(res?.Data?.QueryData) ? res.Data.QueryData : [];
-    this.summaryData = arr.map((r: any, i: number) => ({
-      ...r,
-      _rowKey: `${r?.tlt_no ?? ''}|${r?.tlt_name ?? ''}|${i}`,
-    }));
-    this.totalRecords = this.summaryData.length;
-    this.data = []; // 清空明細
-  },
-  error: (err) => {
-    console.error('TLS23020 Summary 查詢失敗', err);
-    this.summaryData = [];
-    this.totalRecords = 0;
-    
-  },
-});
+      this.loading = true;
+      this.messageService?.blockUi();
 
-    } else {
-      // ✅ 原本明細查詢
-      this.tls23020Service.queryTLS23020(payload).pipe(
-        finalize(() => { this.loading = false; this.messageService?.unblockUi(); })
-      ).subscribe({
-        next: (res: any) => {
-          const dataArray = Array.isArray(res?.Data) ? res.Data : (res?.Data ? [res.Data] : []);
-          const details = dataArray.flatMap((wrapper: any) => {
-            const subTotals =
-              wrapper?.tLS23020_SubTotals ??
-              wrapper?.TLS23020_SubTotals ??
-              wrapper?.tls23020_SubTotals ?? [];
-            if (!Array.isArray(subTotals)) return [];
-            return subTotals.flatMap((st: any) =>
-              st?.tLS23020_Details ??
-              st?.TLS23020_Details ??
-              st?.tls23020_Details ?? []
-            );
-          });
+      if (this.showSummary) {
+        // ✅ 彙總查詢
+        this.tls23020Service.queryTLS23020Summary(payload).pipe(
+          finalize(() => { this.loading = false; this.messageService?.unblockUi(); })
+        ).subscribe({
+          next: (res) => {
+            const arr = Array.isArray(res?.Data?.QueryData) ? res.Data.QueryData : [];
+            this.summaryData = arr.map((r: any, i: number) => ({
+              ...r,
+              _rowKey: `${r?.tlt_no ?? ''}|${r?.tlt_name ?? ''}|${i}`,
+            }));
+            this.totalRecords = this.summaryData.length;
+            this.data = []; // 清空明細
+          },
+          error: (err) => {
+            console.error('TLS23020 Summary 查詢失敗', err);
+            this.summaryData = [];
+            this.totalRecords = 0;
+          },
+        });
+      } else {
+        // ✅ 明細查詢
+        this.tls23020Service.queryTLS23020(payload).pipe(
+          finalize(() => { this.loading = false; this.messageService?.unblockUi(); })
+        ).subscribe({
+          next: (res: any) => {
+            const dataArray = Array.isArray(res?.Data) ? res.Data : (res?.Data ? [res.Data] : []);
+            const details = dataArray.flatMap((wrapper: any) => {
+              const subTotals =
+                wrapper?.tLS23020_SubTotals ??
+                wrapper?.TLS23020_SubTotals ??
+                wrapper?.tls23020_SubTotals ?? [];
+              if (!Array.isArray(subTotals)) return [];
+              return subTotals.flatMap((st: any) =>
+                st?.tLS23020_Details ??
+                st?.TLS23020_Details ??
+                st?.tls23020_Details ?? []
+              );
+            });
 
-          this.data = details.map((item: any, idx: number) => ({
-            ...item,
-            _rowKey: `${item.SYS_StoreNo ?? ''}|${String(item.TXN_Date ?? '').slice(0, 19)}|${item.ECR_No ?? ''}|${item.TXN_No ?? idx}`,
-          }));
+            this.data = details.map((item: any, idx: number) => ({
+              ...item,
+              _rowKey: `${item.SYS_StoreNo ?? ''}|${String(item.TXN_Date ?? '').slice(0, 19)}|${item.ECR_No ?? ''}|${item.TXN_No ?? idx}`,
+            }));
 
-          this.summaryData = []; // 清空彙總
-          this.totalRecords = typeof res?.TotalCount === 'number' ? res.TotalCount : this.data.length;
-        },
-        error: (err) => {
- this.loading = false;
-        },
-      });
-    }
-  });
-}
-
+            this.summaryData = []; // 清空彙總
+            this.totalRecords = typeof res?.TotalCount === 'number' ? res.TotalCount : this.data.length;
+          },
+          error: () => {
+            this.data = [];
+            this.summaryData = [];
+            this.totalRecords = 0;
+          },
+        });
+      }
+    });
+  }
 
   /** 組查詢 payload（含排序＆分頁鍵） */
   private buildPayload(val: any) {
@@ -357,12 +368,7 @@ this.tls23020Service.queryTLS23020Summary(payload).pipe(
       .slice(0, 19);
   }
 
-  // ===== 工具 =====
-  getLabelFromOptions(value: any, options: any[]): string {
-    const found = options?.find(opt => String(opt.value) === String(value));
-    return found ? found.label : value;
-  }
-
+  // ===== 小工具 =====
   formatYMD = (val: unknown): string => {
     if (val == null) return '';
     if (val instanceof Date && !isNaN(val.getTime())) {
@@ -398,13 +404,14 @@ this.tls23020Service.queryTLS23020Summary(payload).pipe(
       __isBackendTotal: true,
     };
   }
-  onToggleSummary() {
-  // 切到另一種檢視時，重置頁碼；Offset 在 buildPayload 內會用 pageIndex/pageSize 計算
-  this.queryForm.patchValue({ pageIndex: 1 }, { emitEvent: false });
-  this.onSubmit(this.queryForm);
-}
 
-  // columns
+  onToggleSummary() {
+    // 切換檢視時，重設頁碼並重新查詢；匯出按鈕在明細表 header，彙總不顯示
+    this.queryForm.patchValue({ pageIndex: 1 }, { emitEvent: false });
+    this.onSubmit(this.queryForm);
+  }
+
+  // ===== 表格欄位 =====
   columns: any[] = [
     { field: 'TXN_Date', header: '銷售日期', visible: true, format: this.formatYMD },
     { field: 'ECR_No', header: '收銀機號', visible: true },
@@ -424,22 +431,87 @@ this.tls23020Service.queryTLS23020Summary(payload).pipe(
     { field: 'PLU_MagNo', header: '單品編號', visible: true },
     { field: 'TXN_StatusName', header: '狀態', visible: true },
   ];
-  // 彙總資料與欄位
-summaryData: any[] = [];
-summaryColumns = [
-  { field: 'tlt_no',        header: '專櫃編號',  visible: true },
-  { field: 'tlt_name',      header: '櫃位名稱',  visible: true, style: 'text-left' },
-  // 若後端回一筆一日，可顯示日期；多日彙總可不顯示
-  // { field: 'TXN_Date',   header: '銷售日期',  visible: true, format: this.formatYMD },
 
-  // 後端提供的彙總欄位（你貼的 schema）
-  { field: 'TXN_TotSaleAmt', header: '銷售金額(含稅)', visible: true, style: 'text-right', format: this.money },
-  { field: 'TXN_TotNet',     header: '未稅(免稅)金額',  visible: true, style: 'text-right', format: this.money },
-  { field: 'TXN_TotTax',     header: '稅額',           visible: true, style: 'text-right', format: this.money },
+  summaryColumns = [
+    { field: 'tlt_no',        header: '專櫃編號',  visible: true },
+    { field: 'tlt_name',      header: '櫃位名稱',  visible: true, style: 'text-left' },
+    { field: 'TXN_TotSaleAmt', header: '銷售金額(含稅)', visible: true, style: 'text-right', format: this.money },
+    { field: 'TXN_TotNet',     header: '未稅(免稅)金額',  visible: true, style: 'text-right', format: this.money },
+    { field: 'TXN_TotTax',     header: '稅額',           visible: true, style: 'text-right', format: this.money },
+  ];
 
-  // 若也要顯示「預售/訂金」彙總，可打開：
-  // { field: 'Pre_TotSaleAmt', header: '預售/訂金_銷售金額', visible: true, style: 'text-right', format: this.money },
-  // { field: 'Pre_TotNet',     header: '預售/訂金_未稅金額', visible: true, style: 'text-right', format: this.money },
-  // { field: 'Pre_TotTax',     header: '預售/訂金_稅額',     visible: true, style: 'text-right', format: this.money },
-];
+  // ========= 匯出 =========
+  onExportPDF() {
+    if (!this.historyRequestBody) {
+      this.messageService?.warnBubble?.('請先執行查詢以產生報表。');
+      return;
+    }
+    this.btnLoading = true;
+    this.tls23020Service
+      .exportTLS23020PDF(this.historyRequestBody)
+      .pipe(untilDestroyed(this), finalize(() => (this.btnLoading = false)))
+      .subscribe({
+        next: (response: HttpResponse<Blob>) => this.handleFileExport(response, '.pdf'),
+      });
+  }
+
+  onExportXLSX() {
+    if (!this.historyRequestBody) {
+      this.messageService?.warnBubble?.('請先執行查詢以產生報表。');
+      return;
+    }
+    this.btnLoading = true;
+    // ✅ 不需要自己刪除分頁欄位，交由 service 的 stripPaging 處理
+    this.tls23020Service
+      .exportTLS23020Excel(this.historyRequestBody)
+      .pipe(untilDestroyed(this), finalize(() => (this.btnLoading = false)))
+      .subscribe({
+        next: (response: HttpResponse<Blob>) => this.handleFileExport(response, '.xlsx'),
+      });
+  }
+
+  private handleFileExport(response: HttpResponse<Blob>, fileExtension: string): void {
+    const contentDisposition = response.headers.get('Content-Disposition');
+    const filename = this.getFilenameFromHeader(contentDisposition, fileExtension);
+    const blob = response.body;
+
+    if (blob && blob.size > 0) {
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } else {
+      this.messageService?.warnBubble?.('沒有找到符合條件的資料，無法生成報表。');
+    }
+  }
+
+  private getFilenameFromHeader(contentDisposition: string | null, defaultExtension: string): string {
+    if (!contentDisposition) return `download${defaultExtension}`;
+
+    const filenameStarMatch = /filename\*=([^;]+)/.exec(contentDisposition);
+    if (filenameStarMatch && filenameStarMatch.length > 1) {
+      const encodedFilename = filenameStarMatch[1];
+      try {
+        const decoded = decodeURIComponent(encodedFilename.replace(/^UTF-8''/, ''));
+        return decoded;
+      } catch {
+        return encodedFilename;
+      }
+    }
+
+    const filenameMatch = /filename="([^"]+)"/.exec(contentDisposition);
+    if (filenameMatch && filenameMatch.length > 1) {
+      try {
+        return decodeURIComponent(filenameMatch[1].replace(/\+/g, ' '));
+      } catch {
+        return filenameMatch[1];
+      }
+    }
+
+    return `download${defaultExtension}`;
+  }
 }

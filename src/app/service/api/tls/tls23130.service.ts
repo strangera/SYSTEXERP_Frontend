@@ -22,7 +22,7 @@ export class TLS23130Service {
       .post<any>(`${this.apiUrl}/TLS0000/TLS2000/queryTLS23130`, query)
       .pipe(
         tap(res => console.log('查詢結果:', res)),
-        catchError(err => this.errorHandler.handleError(err))
+        
       );
   }
 
@@ -32,7 +32,7 @@ export class TLS23130Service {
     const url = `${this.apiUrl}/queryAPS1001NoBranch_DropDownList`;
     return this.http.post<any>(url, body).pipe(
       tap(res => console.log('[DDL] APS1001:', res)),
-      catchError(err => this.errorHandler.handleError(err))
+      
     );
   }
 }

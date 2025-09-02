@@ -64,6 +64,7 @@ const toSortMeta = (arr: Array<{ field: string; order: any }> | null | undefined
     TranslateModule,
     TableComponent,
     CalendarComponent,
+    DropdownComponent
   ],
 })
 export class TLS23120Component
@@ -108,11 +109,7 @@ export class TLS23120Component
     tlt_floor: [[] as string[]],  // 樓層（多選）
     org_id: [],                   // 組織
 
-    // 分頁/排序（預設排序對齊 defaultSort）
-    ...createPaginationConfig([
-      { field: 'TLT_NO', order: 1 as const },
-      // { field: 'TXN_DATE', order: -1 as const },
-    ]),
+   
   });
 
   // ---- 下拉選項 ----

@@ -4,6 +4,7 @@ import { ASS2100ENGMeterType, ASS21010Data, ASS21010Delete, ASS21010Payload, ASS
 import { ErrorHandlerService } from '@service/system/error-handler.service';
 import { NotificationService } from '@shared/component/notification-message/notification.service';
 import { BaseQueryResponse, DropdownOption } from '@shared/models/api/base-api.interface';
+import saveAs from 'file-saver';
 import { Observable, Subject, catchError, finalize, map, of, take, takeUntil, tap } from 'rxjs';
 import { environment } from 'src/environments/environment';
 
@@ -24,6 +25,7 @@ export class ASS21010Service implements OnDestroy {
   public engMeterNoLoading = !1;
   public locationLoading = !1;
   public tableLoading = !1;
+  public exportLoading = !1;
 
   private readonly engTypeCancel$ = new Subject<void>();
   private readonly engMeterNoCancel$ = new Subject<void>();
@@ -100,6 +102,50 @@ export class ASS21010Service implements OnDestroy {
       map(res => res.Data),
       catchError(error => this.errorHandler.handleError(error))
     );
+  }
+
+  public export(type: 'PDF' | 'Excel', payload: any): void {
+    this.exportLoading = !0;
+
+    const contentType = 'PDF' === type ? 'application/pdf' : 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+    const fileExtension = 'PDF' === type ? 'pdf' : 'xlsx';
+    const endpoint = 'PDF' === type ? 'exportPDF' : 'exportExcel';
+
+    const httpOptions = {
+      responseType: 'blob' as 'blob',
+      observe: 'response' as 'response',
+    };
+
+    this.http.post(`${apiUrl}/${endpoint}`, payload, httpOptions).pipe(
+      take(1),
+      tap(response => {
+        console.log(`onExport ${type} response:`, [response]);
+        if (response.body && response.body.size > 0) {
+          const contentDisposition = response.headers.get('content-disposition');
+          let filename = `${payload.file_name}.${fileExtension}`;
+
+          if (contentDisposition) {
+            const filenameRegex = /filename\*=UTF-8''([^;]+)|filename="([^"]+)"|filename=([^;]+)/;
+            const matches = contentDisposition.match(filenameRegex);
+            if (matches) {
+              filename = matches[1] || matches[2] || matches[3] || filename;
+              if (matches[1]) {
+                filename = decodeURIComponent(filename);
+              }
+              filename = filename.replace(/["']/g, '');
+            }
+          }
+
+          const blob = new Blob([response.body], { type: contentType });
+          saveAs(blob, filename);
+          this.messageService.successBubble(`${type} Export successful`);
+        } else {
+          this.messageService.errorBubble(`Response body is empty!`, `${type} Export Fail`);
+        }
+      }),
+      catchError(err => this.errorHandler.handleError(err)),
+      finalize(() => this.exportLoading = !1)
+    ).subscribe();
   }
 
   ngOnDestroy(): void {

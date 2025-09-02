@@ -19,7 +19,7 @@ export class TLS2C050Service {
   queryTLS2C050(query: any): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/TLS0000/TLS2000/queryTLS2C050`, query).pipe(
       tap(response => console.log('查詢結果:', response)),
-      catchError((error) => this.errorHandler.handleError(error))  // ✅ 正確
+       // ✅ 正確
     );
   }
 
@@ -29,7 +29,7 @@ export class TLS2C050Service {
   querySummaryDate(payload: any): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/TLS0000/TLS2000/querySummaryDate`, payload).pipe(
       tap(response => console.log('查詢最近匯總日:', response)),
-      catchError((error) => this.errorHandler.handleError(error))
+     
     );
   }
 }

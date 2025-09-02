@@ -5,7 +5,7 @@ import { ChangeDetectorRef, inject, Injectable } from '@angular/core';
 import { QueryStateService } from '../../service/query-state.service';
 import { TableService } from '../../componentkit/table/report.service';
 import { HttpResponse } from '@angular/common/http';
-import { Column2 } from '../../componentkit/table2/table2.model';
+import { Column } from '../../componentkit/table2/table2.model';
 import { AuthService } from '../../../service/system/auth.service';
 import { TableExport2 } from '../../componentkit/table2/table-export2/table-export2.component';
 import { REPORT_TITLES } from '../../componentkit/table/report-titles';
@@ -26,7 +26,7 @@ export class BasicPrintData2Component {
   tableService = inject(TableService);
   authService = inject(AuthService);
 
-  exportPDFDownload(event: TableExport2, columns: Column2[], apiUrl?: string): void {
+  exportPDFDownload(event: TableExport2, columns: Column[], apiUrl?: string): void {
     const ProgNo = this.currentPage.currentPageProgNoSubject.getValue() as string;
     const funInfo = this.authService.getUserPermissions(ProgNo); // 取得權限
     const queryState = this.queryState.getQueryState(`query${ProgNo}`);
@@ -85,7 +85,7 @@ export class BasicPrintData2Component {
       }
     });
   }
-  exportExcelDownload(event: TableExport2, columns: Column2[], apiUrl?: string): void {
+  exportExcelDownload(event: TableExport2, columns: Column[], apiUrl?: string): void {
     const ProgNo = this.currentPage.currentPageProgNoSubject.getValue() as string;
     const funInfo = this.authService.getUserPermissions(ProgNo); // 取得權限
     const queryState = this.queryState.getQueryState(`query${ProgNo}`);
