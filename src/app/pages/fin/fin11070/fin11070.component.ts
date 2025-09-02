@@ -95,11 +95,18 @@ export class FIN11070Component extends BasicQueryPageComponent<FIN11070Data> imp
 
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
+      let yyyyMM = this.datePipe.transform(frm.value.GUI_YYMM, 'yyyyMM') ?? '';
+      let year = parseInt(yyyyMM.substring(0, 4));
+      let month = parseInt(yyyyMM.substring(4, 6)) - 1;
+      let date = new Date(year, month, 1);
+      date.setMonth(date.getMonth() - 1);
+      yyyyMM = this.datePipe.transform(date, 'yyyyMM') ?? '';
+
       const requestData = {
         ...frm.value,
         MID: 0,                    // 固定為0
         SYS_StoreNo: '10',        // 固定為 '10'
-        GUI_YYMM: this.datePipe.transform(frm.value.GUI_YYMM, 'yyyyMM'),  // 申報年月 (YYYYmm格式)
+        GUI_YYMM: yyyyMM,  // 申報年月 (YYYYmm格式)
       };
 
       this.fin11070Service.queryFIN11070(requestData)

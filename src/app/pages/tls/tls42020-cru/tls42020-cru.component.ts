@@ -18,10 +18,12 @@ import { NgIf } from '@angular/common';
 
 // Base class
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
-import { TLS42020Data } from '../tls42020/tls42020.component';
 import { DropDownListService } from '@service/utility/dropDownList.service';
 import { TableComponent } from '@shared/componentkit/table/table.component';
 import { Column } from '@shared/componentkit/table/table.model';
+import { TLS42020Data, TLS42020InsertDetailData, TLS42020InsertRequest, TLS42020Service } from '@service/api/tls/tls42020.service';
+import { untilDestroyed } from '@ngneat/until-destroy';
+import { finalize } from 'rxjs';
 
 @Component({
   selector: 'app-tls42020-cru',
@@ -43,14 +45,14 @@ import { Column } from '@shared/componentkit/table/table.model';
 })
 export class TLS42020CRUComponent extends BasicCruPageComponent<TLS42020Data> implements OnInit {
   dataForm = this.formBuilder.nonNullable.group({
-    menuType: ['', Validators.required],
-    tltNo: ['', Validators.required],
+    SBM_Type: [null, Validators.required],
+    TLT_No: [null, Validators.required],
     SBM_BegDate: ['', Validators.required],
     SBM_EndDate: ['', Validators.required]
   });
 
-  data: any[] = [];
-  selectedRows: any[] = [];
+  data: TLS42020InsertDetailData[] = [];
+  selectedRows: TLS42020InsertDetailData[] = [];
 
 
   // 主檔下拉選項
@@ -123,7 +125,8 @@ export class TLS42020CRUComponent extends BasicCruPageComponent<TLS42020Data> im
   ];
 
   constructor(
-    private dropDownListService: DropDownListService
+    private dropDownListService: DropDownListService,
+    private tls42020Service: TLS42020Service
   ) {
     super();
   }
@@ -135,21 +138,28 @@ export class TLS42020CRUComponent extends BasicCruPageComponent<TLS42020Data> im
 
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
-
+      const payload = this.insertRequestBody;
+      // 呼叫insertTLS42020M
+      this.tls42020Service.insertTLS42020M(payload)
+        .pipe(untilDestroyed(this), finalize(() => (this.loading = false)))
+        .subscribe(response => {
+          this.messageService.successBubble('新增成功');
+          this.onCancel();
+        });
     });
   }
 
   loadOptions() {
     this.menuTypeOptions = [
-      { label: '一般菜單', value: '1' },
-      { label: '員工菜單', value: '2' },
+      { label: '一般菜單', value: 1 },
+      { label: '員工菜單', value: 2 },
     ];
 
     this.dropDownListService.queryTLTTALENT_DropDownList()
       .subscribe(res => {
         this.tltNoOptions = res.Data
           .map((item: any) => ({
-            label: item.Name,
+            label: `${item.No}-${item.Name}`,
             value: item.No
           }));
       });
@@ -165,9 +175,37 @@ export class TLS42020CRUComponent extends BasicCruPageComponent<TLS42020Data> im
   }
 
 
-  onDelete(rows: any[]) {
+  onDelete(rows: TLS42020InsertDetailData[]) {
     const idsToDelete = new Set(rows.map(item => item.SBM_SeqNo));
     this.data = this.data.filter((item: any) => !idsToDelete.has(item.SBM_SeqNo));
     this.selectedRows = [];
+  }
+
+  get insertRequestBody(): TLS42020InsertRequest {
+    const fmrValue = this.dataForm.getRawValue();
+    const mainData = {
+      STO_No: '10',
+      SBM_Type: fmrValue.SBM_Type!,
+      TLT_No: fmrValue.TLT_No!,
+      TLT_Name: this.tltNoOptions.find(item => item.value === fmrValue.TLT_No)?.label.split('-')[1],
+      SBM_BegDate: fmrValue.SBM_BegDate!,
+      SBM_EndDate: fmrValue.SBM_EndDate!
+    };
+    const detailData = this.data;
+
+    // 為每一筆明細資料加上主檔欄位
+    detailData.forEach(item => {
+      item.STO_No = '10';
+      item.SBM_Type = mainData.SBM_Type!;
+      item.TLT_No = mainData.TLT_No!;
+      item.TLT_Name = mainData.TLT_Name;
+      item.SBM_BegDate = mainData.SBM_BegDate;
+      item.SBM_EndDate = mainData.SBM_EndDate;
+    });
+
+    return {
+      ...mainData,
+      POS10271: detailData
+    };
   }
 }
