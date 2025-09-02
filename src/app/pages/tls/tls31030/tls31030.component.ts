@@ -14,11 +14,10 @@ import { yesterday } from '@shared/models/system/query-form.model';
 import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { debounceTime, finalize, forkJoin, map, of, switchMap, tap } from 'rxjs';
-import { TLS31010Request } from '@service/api/tls/tls31010.service';
 import { ButtonModule } from 'primeng/button';
 import { environment } from 'src/environments/environment';
 import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
-import { TLS31030Response, Tls31030Service } from '@service/api/tls/tls31030.service';
+import { TLS31030PrintRequest, TLS31030Request, TLS31030Response, Tls31030Service } from '@service/api/tls/tls31030.service';
 import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
 
 @Component({
@@ -44,7 +43,7 @@ import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range
 })
 
 // 各大分類之營業報表
-export class TLS31030Component extends BasicQueryPageComponent<TLS31030Response> implements OnInit{
+export class TLS31030Component extends BasicQueryPageComponent<TLS31030Response> implements OnInit {
   queryForm = this.formBuilder.nonNullable.group({
     TXN_DateS: [yesterday, [Validators.required]],//交易日期_起
     TXN_DateE: [yesterday, [Validators.required]],//交易日期_迄
@@ -60,8 +59,8 @@ export class TLS31030Component extends BasicQueryPageComponent<TLS31030Response>
     org_id: [[]],  // 組織
     TaxType: ["Y"],  // 銷售金額是否含稅(Y:是 N:否 預設含稅)
     IsRece_Yn: [null],  // 是否開立業主發票(是否開立業主發票(Y:是 N:否 預設全部))
-    
-    
+
+
     ...createPaginationConfig([{ field: 'tlt_no', order: 1 }])
   });
   totalRecords = 0;
@@ -175,79 +174,79 @@ export class TLS31030Component extends BasicQueryPageComponent<TLS31030Response>
       }
     });
     // 監聽中分類變化，獲取小分類並分組
-        this.queryForm.controls.bus_class.valueChanges.pipe(debounceTime(300), untilDestroyed(this),
-          map(selectedMValues => selectedMValues || []),
-          // 使用 switchMap 取消前一次的請求，確保只處理最新的選取
-          switchMap((selectedMValues: IDropdownItem[]) => {
-            if (selectedMValues.length === 0) {
-              this.bus_sclass_Option = [];
-              this.queryForm.controls.bus_sclass.setValue([]);
-              return of([]);// 如果沒有選取任何中分類，直接回傳空陣列
-            }
-            const requests = [];
-            // 根據選取的中分類，為每一個中分類組建一個 API 請求
-            for (const mValue of selectedMValues) {
-              if (mValue && mValue.CAT_LNo) {
-                requests.push(
-                  this.dropDownListService.queryPOS20032_DropDownList({ CAT_LNo: [mValue.CAT_LNo], CAT_MNo: [mValue.No] }).pipe(
-                    map(res => ({
-                      LNo: mValue.CAT_LNo,
-                      LName: mValue.CAT_LName,
-                      MNo: mValue.No,
-                      MName: mValue.Name,
-                      Data: res.Data
-                    }))
-                  )
-                );
-              }
-            }
-            return forkJoin(requests);
-          }),
-          tap(results => {
-            console.log('所有 API 呼叫結果：', results);
-          })
-        ).subscribe(results => {
-          // 處理合併和分組的邏輯
-          const groupedData = results.reduce((accumulator, group) => {
-            const groupKey = `${group.LNo}_${group.MNo}`;
-    
-            if (!accumulator[groupKey]) {
-              accumulator[groupKey] = {
-                label: `${group.LName} - ${group.MName}`,
-                items: []
-              };
-            }
-    
-            const newItems = group.Data.map(item => ({
-              ...item,
-              label: `${item.No} - ${item.Name}`,
-              CAT_LNo: group.LNo,
-              CAT_LName: group.LName,
-              CAT_MNo: group.MNo,
-              CAT_MName: group.MName
-            }));
-            const existingItems = accumulator[groupKey].items;
-            const allItems = [...existingItems, ...newItems];
-    
-            const uniqueItemsMap = new Map();
-            allItems.forEach(item => {
-              // 使用 No 作為鍵來去重
-              if (!uniqueItemsMap.has(item.No)) {
-                uniqueItemsMap.set(item.No, item);
-              }
-            });
-    
-            accumulator[groupKey].items = Array.from(uniqueItemsMap.values());
-    
-            return accumulator;
-          }, {} as Record<string, any>);
-    
-          this.bus_sclass_Option = Object.values(groupedData);
-          console.log('最終分組後的小分類選項：', this.bus_sclass_Option);
+    this.queryForm.controls.bus_class.valueChanges.pipe(debounceTime(300), untilDestroyed(this),
+      map(selectedMValues => selectedMValues || []),
+      // 使用 switchMap 取消前一次的請求，確保只處理最新的選取
+      switchMap((selectedMValues: IDropdownItem[]) => {
+        if (selectedMValues.length === 0) {
+          this.bus_sclass_Option = [];
+          this.queryForm.controls.bus_sclass.setValue([]);
+          return of([]);// 如果沒有選取任何中分類，直接回傳空陣列
+        }
+        const requests = [];
+        // 根據選取的中分類，為每一個中分類組建一個 API 請求
+        for (const mValue of selectedMValues) {
+          if (mValue && mValue.CAT_LNo) {
+            requests.push(
+              this.dropDownListService.queryPOS20032_DropDownList({ CAT_LNo: [mValue.CAT_LNo], CAT_MNo: [mValue.No] }).pipe(
+                map(res => ({
+                  LNo: mValue.CAT_LNo,
+                  LName: mValue.CAT_LName,
+                  MNo: mValue.No,
+                  MName: mValue.Name,
+                  Data: res.Data
+                }))
+              )
+            );
+          }
+        }
+        return forkJoin(requests);
+      }),
+      tap(results => {
+        console.log('所有 API 呼叫結果：', results);
+      })
+    ).subscribe(results => {
+      // 處理合併和分組的邏輯
+      const groupedData = results.reduce((accumulator, group) => {
+        const groupKey = `${group.LNo}_${group.MNo}`;
+
+        if (!accumulator[groupKey]) {
+          accumulator[groupKey] = {
+            label: `${group.LName} - ${group.MName}`,
+            items: []
+          };
+        }
+
+        const newItems = group.Data.map(item => ({
+          ...item,
+          label: `${item.No} - ${item.Name}`,
+          CAT_LNo: group.LNo,
+          CAT_LName: group.LName,
+          CAT_MNo: group.MNo,
+          CAT_MName: group.MName
+        }));
+        const existingItems = accumulator[groupKey].items;
+        const allItems = [...existingItems, ...newItems];
+
+        const uniqueItemsMap = new Map();
+        allItems.forEach(item => {
+          // 使用 No 作為鍵來去重
+          if (!uniqueItemsMap.has(item.No)) {
+            uniqueItemsMap.set(item.No, item);
+          }
         });
-        this.dropDownListService.querySYS3100_DropDownList().pipe(untilDestroyed(this)).subscribe(res => {
-          this.org_id_Option = res.Data.map(item => ({ ...item, label: `${item.No} - ${item.Name}`, }));
-        })
+
+        accumulator[groupKey].items = Array.from(uniqueItemsMap.values());
+
+        return accumulator;
+      }, {} as Record<string, any>);
+
+      this.bus_sclass_Option = Object.values(groupedData);
+      console.log('最終分組後的小分類選項：', this.bus_sclass_Option);
+    });
+    this.dropDownListService.querySYS3100_DropDownList().pipe(untilDestroyed(this)).subscribe(res => {
+      this.org_id_Option = res.Data.map(item => ({ ...item, label: `${item.No} - ${item.Name}`, }));
+    })
   }
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
@@ -255,11 +254,11 @@ export class TLS31030Component extends BasicQueryPageComponent<TLS31030Response>
         ...frm.getRawValue(),
         bus_class: frm.getRawValue().bus_class.map((item: IDropdownItem) => item.No),
         bus_sclass: frm.getRawValue().bus_sclass.map((item: IDropdownItem) => item.No),
-      } as TLS31010Request;
+      } as TLS31030Request;
 
-      console.log('送出請求',formValue);
+      console.log('送出請求', formValue);
       this.tls31030Service.queryTLS31030(formValue).pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(res => {
-        console.log('各大分類之營業報表response',res.Data);
+        console.log('各大分類之營業報表response', res.Data);
         this.data = res.Data;
         this.totalRecords = res.TotalCount;
         this.queryStateService.setQueryState(this.ProgNo, frm.getRawValue());
@@ -267,7 +266,7 @@ export class TLS31030Component extends BasicQueryPageComponent<TLS31030Response>
     })
   }
   btnLoading = false;
-  onReport(frm: FormGroup, isExcel :boolean) {
+  onReport(frm: FormGroup, isExcel: boolean) {
     const printData = this.queryStateService.getQueryStateValue(this.ProgNo);
     const formValue = {
       ...printData,
@@ -279,7 +278,7 @@ export class TLS31030Component extends BasicQueryPageComponent<TLS31030Response>
       bus_class: frm.getRawValue().bus_class.map((item: IDropdownItem) => item.No),
       bus_sclass: frm.getRawValue().bus_class.map((item: IDropdownItem) => item.No),
       // TXN_Date: formatDate(frm.getRawValue().TXN_Date, 'yyyy-MM-dd', 'en-US'),
-    } as TLS31010Request;
+    } as TLS31030PrintRequest;
 
     console.log('各大分類之營業報表print請求', JSON.stringify(formValue));
 
@@ -292,5 +291,10 @@ export class TLS31030Component extends BasicQueryPageComponent<TLS31030Response>
           window.open(downloadUrl, '_blank');
         }
       });
+  }
+
+  onDetail1(event: any) {
+    const queryConditions = this.queryStateService.getQueryStateValue(this.ProgNo);
+    this.onDetail(event, queryConditions);
   }
 }
