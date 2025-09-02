@@ -12,7 +12,7 @@ export class ErrorinterceptorService implements HttpInterceptor {
   intercept(req: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
     const maxRetries = 0;
     const retryDelayMs = 100000000;
-    const timeoutMs = 30000;
+    const timeoutMs = 300000;
 
     return next.handle(req).pipe(
       timeout(timeoutMs),

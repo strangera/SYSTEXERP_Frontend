@@ -16,12 +16,12 @@ import zhHant from '@angular/common/locales/zh-Hant';
 import { InactivityService } from './inactivity.service';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 registerLocaleData(zhHant, 'zh-Hant-TW');
-export type OuterTokenResponse = {
+export interface OuterTokenResponse {
   token: string;
   expiresAt: string;
   expiresInSeconds: number;
   tokenType: string;
-};
+}
 
 export interface ApiResponse<T> {
   Status: string;
