@@ -150,7 +150,7 @@ export class TLS11020Component extends BasicQueryPageComponent<any> {
           }
         },
         error: () => {
-          this.messageService.errorBubble('查詢錯誤');
+          
         },
         complete: () => {
           this.loading = false;

@@ -20,8 +20,7 @@ export class FIN13020Service {
   queryFIN13020(query: any): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/FIN0000/INV1000/queryFIN13020`, query).pipe(
       tap(res => console.log('查詢結果:', res)),
-      catchError(error => this.errorHandler.handleError(error))
-    );
+     );
   }
 
   // ✅ 新增
@@ -30,7 +29,7 @@ export class FIN13020Service {
       .post<any>(`${this.apiUrl}/FIN0000/INV1000/insertFIN13020`, data)
       .pipe(
         tap((res) => console.log('新增結果:', res)),
-        catchError((error) => this.errorHandler.handleError(error)),
+      
       );
   }
 
@@ -40,7 +39,7 @@ export class FIN13020Service {
       .post<any>(`${this.apiUrl}/FIN0000/INV1000/updateFIN13020`, data)
       .pipe(
         tap((res) => console.log('更新結果:', res)),
-        catchError((error) => this.errorHandler.handleError(error)),
+      
       );
   }
     queryINV1000List(param: { GUI_Track: string }) {

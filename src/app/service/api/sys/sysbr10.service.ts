@@ -23,7 +23,7 @@ export class SYSBR10Service {
       query
     ).pipe(
       tap(res => console.log('查詢結果:', res)),
-      catchError(error => this.errorHandler.handleError(error))
+     
     );
   }
 
@@ -34,7 +34,7 @@ export class SYSBR10Service {
       { pos5101_id }
     ).pipe(
       tap(res => console.log('明細結果:', res)),
-      catchError(error => this.errorHandler.handleError(error))
+      
     );
   }
 
@@ -45,7 +45,7 @@ export class SYSBR10Service {
       data
     ).pipe(
       tap(res => console.log('新增結果:', res)),
-      catchError(error => this.errorHandler.handleError(error))
+     
     );
   }
 
@@ -58,7 +58,7 @@ export class SYSBR10Service {
       data
     ).pipe(
       tap(res => console.log('更新結果:', res)),
-      catchError(error => this.errorHandler.handleError(error))
+      
     );
   }
 
@@ -69,7 +69,7 @@ export class SYSBR10Service {
       { idList }
     ).pipe(
       tap(res => console.log('刪除結果:', res)),
-      catchError(error => this.errorHandler.handleError(error))
+     
     );
   }
 updateSYSBR10_PubEable(payload: { id: number; pub_enable: 'Y' | 'N' }): Observable<ApiResponse<any>> {
@@ -77,7 +77,7 @@ updateSYSBR10_PubEable(payload: { id: number; pub_enable: 'Y' | 'N' }): Observab
     `${this.apiUrl}/SYS0000/BAS1000/updateSYSBR10_PubEable`,
     payload
   ).pipe(
-    catchError(error => this.errorHandler.handleError(error))
+   
   );
 }
 

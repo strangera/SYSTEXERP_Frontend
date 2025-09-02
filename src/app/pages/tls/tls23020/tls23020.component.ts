@@ -245,7 +245,7 @@ this.tls23020Service.queryTLS23020Summary(payload).pipe(
     console.error('TLS23020 Summary 查詢失敗', err);
     this.summaryData = [];
     this.totalRecords = 0;
-    this.messageService?.errorBubble?.('彙總查詢失敗，請稍後再試');
+    
   },
 });
 

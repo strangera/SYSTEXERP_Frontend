@@ -325,7 +325,7 @@ processResultData(resData: any[]): any[] {
           }
         },
         error: () => {
-          this.messageService.errorBubble('查詢錯誤');
+          
           this.loading = false;
           this.messageService.unblockUi();
         },

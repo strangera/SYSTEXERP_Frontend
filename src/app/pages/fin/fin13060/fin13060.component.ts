@@ -230,7 +230,7 @@ export class FIN13060Component extends BasicQueryPageComponent<any> {
         
       },
       error: () => {
-        this.messageService.errorBubble('查詢錯誤');
+        
         this.loading = false;
       },
       complete: () => {

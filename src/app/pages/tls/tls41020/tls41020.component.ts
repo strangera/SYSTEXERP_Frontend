@@ -159,7 +159,7 @@ export class TLS41020Component
         
       },
       error: () => {
-        this.messageService.errorBubble('查詢錯誤');
+        
         this.loading = false;
       },
       complete: () => {
