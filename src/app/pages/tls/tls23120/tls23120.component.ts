@@ -64,6 +64,7 @@ const toSortMeta = (arr: Array<{ field: string; order: any }> | null | undefined
     TranslateModule,
     TableComponent,
     CalendarComponent,
+    DropdownComponent
   ],
 })
 export class TLS23120Component
