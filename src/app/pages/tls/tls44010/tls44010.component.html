@@ -1,5 +1,5 @@
 <div class="card">
-    <div class="flex gap-2 mb-2">
+  <div class="flex gap-2 mb-2">
     <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
   </div>
   <p-accordion>
@@ -9,7 +9,11 @@
       class="line-height-3 m-0"
       [headerStyleClass]="'query-accordionTab'"
     >
-      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
+      <form
+        [formGroup]="queryForm"
+        id="queryForm"
+        (ngSubmit)="onSubmit(queryForm)"
+      >
         <div class="card">
           <!-- TabMenu 移到這裡 -->
           <p-tabMenu
@@ -20,25 +24,64 @@
           ></p-tabMenu>
 
           <!-- DataView 列表/卡片切換 -->
-          <p-dataView [value]="filteredData" [layout]="layout">
+          <p-dataView [value]="pagedData" [layout]="layout">
             <!-- 頂部 -->
             <ng-template pTemplate="header">
               <div class="w-full">
-                <!-- 標題 + 切換按鈕 -->
-                <div class="flex justify-content-between align-items-center mb-2">
-                  <span class="font-bold">機台列表</span>
-                  <p-dataViewLayoutOptions (layout)="layout"></p-dataViewLayoutOptions>
+                <!-- 標題 + 搜尋框 + 切換按鈕 -->
+                <div
+                  class="flex justify-content-between align-items-center mb-4 mt-2"
+                >
+                  <!-- 搜尋框靠左 -->
+                  <div class="search-bar-container flex-1">
+                    <span class="p-input-icon-left search-bar">
+                      <i class="pi pi-search"></i>
+                      <input
+                        pInputText
+                        type="text"
+                        name="globalFilter"
+                        class="w-full"
+                        placeholder="搜尋專櫃編號與名稱、收銀機代號、信用卡櫃代號、區域、樓層、位置編號、IP"
+                        [(ngModel)]="globalFilter"
+                        [ngModelOptions]="{ standalone: true }"
+                        (input)="applyFilter()"
+                      />
+                    </span>
+                  </div>
+
+                  <!-- 切換按鈕靠右 -->
+                  <p-dataViewLayoutOptions
+                    (layoutChange)="onLayoutChange($event)"
+                  ></p-dataViewLayoutOptions>
                 </div>
 
                 <!-- 狀態說明 -->
                 <div class="status-container mb-2">
                   <span class="status-label">狀態說明：</span>
-                  <div class="status-chip"><i class="pi pi-desktop"></i> 開機</div>
-                  <div class="status-chip logout"><i class="pi pi-sign-out"></i> 登出</div>
-                  <div class="status-chip success"><i class="pi pi-sync"></i> 交易中</div>
-                  <div class="status-chip"><i class="pi pi-users"></i> 完成交班</div>
-                  <div class="status-chip warning"><i class="pi pi-pause"></i> 暫停交易</div>
-                  <div class="status-chip purple"><i class="pi pi-wallet"></i> 完成清帳</div>
+                  <div class="status-chip">
+                    <i class="pi pi-desktop"></i>
+                    開機
+                  </div>
+                  <div class="status-chip logout">
+                    <i class="pi pi-sign-out"></i>
+                    登出
+                  </div>
+                  <div class="status-chip success">
+                    <i class="pi pi-sync"></i>
+                    交易中
+                  </div>
+                  <div class="status-chip">
+                    <i class="pi pi-users"></i>
+                    完成交班
+                  </div>
+                  <div class="status-chip warning">
+                    <i class="pi pi-pause"></i>
+                    暫停交易
+                  </div>
+                  <div class="status-chip purple">
+                    <i class="pi pi-wallet"></i>
+                    完成清帳
+                  </div>
                 </div>
               </div>
             </ng-template>
@@ -46,17 +89,36 @@
             <!-- List 模式 -->
             <ng-template pTemplate="list" let-data>
               <div class="grid grid-nogutter">
-                <div class="col-12" *ngFor="let row of data; let i = index">
-                  <div class="flex flex-row justify-content-between align-items-center p-3 border-bottom-1 surface-border">
+                <div
+                  class="col-12"
+                  *ngFor="let row of pagedData; let i = index"
+                >
+                  <div
+                    class="flex flex-row justify-content-between align-items-center p-3 border-bottom-1 surface-border"
+                  >
                     <div class="flex-1">
-                      <div><b>序號：</b>{{ i + 1 }}</div>
-                      <div><b>位置編號：</b>{{ row.ECR_LocNo }}</div>
-                      <div><b>專櫃編號：</b>{{ row.TLT_No }}</div>
-                      <div><b>櫃位名稱：</b>{{ row.TLT_Name }}</div>
+                      <div>
+                        <b>序號：</b>
+                        {{ first + i + 1 }}
+                      </div>
+                      <div>
+                        <b>位置編號：</b>
+                        {{ row.ECR_LocNo }}
+                      </div>
+                      <div>
+                        <b>專櫃編號：</b>
+                        {{ row.TLT_No }}
+                      </div>
+                      <div>
+                        <b>櫃位名稱：</b>
+                        {{ row.TLT_Name }}
+                      </div>
                     </div>
                     <div class="flex align-items-center gap-2">
-                      <i [ngClass]="getStatusIcon(row.EOS_Status)"
-                         [ngStyle]="{ color: getStatusColor(row.EOS_Status) }"></i>
+                      <i
+                        [ngClass]="getStatusIcon(row.EOS_Status)"
+                        [ngStyle]="{ color: getStatusColor(row.EOS_Status) }"
+                      ></i>
                     </div>
                   </div>
                 </div>
@@ -65,24 +127,41 @@
 
             <!-- Grid 模式 -->
             <ng-template pTemplate="grid" let-data>
-              <div class="grid grid-nogutter">
-                <div class="col-12 sm:col-6 md:col-4 xl:col-3 p-2" *ngFor="let row of data; let i = index">
-                  <div class="p-3 border-1 surface-border surface-card border-round relative">
+              <div class="custom-grid">
+                <div
+                  class="custom-grid-item"
+                  *ngFor="let row of pagedData; let i = index"
+                >
+                  <div
+                    class="p-3 border-1 surface-border surface-card relative"
+                  >
                     <!-- 狀態 Icon 右上角 -->
-                    <i class="status-icon"
-                       [ngClass]="getStatusIcon(row.EOS_Status)"
-                       [ngStyle]="{ color: getStatusColor(row.EOS_Status) }"></i>
+                    <i
+                      class="status-icon"
+                      [ngClass]="getStatusIcon(row.EOS_Status)"
+                      [ngStyle]="{ color: getStatusColor(row.EOS_Status) }"
+                    ></i>
 
                     <!-- 主要內容 -->
                     <div class="grid-content">
                       <div class="grid-title">{{ row.ECR_LocNo }}</div>
-                      <div class="grid-subtitle">{{ row.TLT_No }} {{ row.TLT_Name }}</div>
+                      <div class="grid-subtitle">
+                        {{ row.TLT_No }} {{ row.TLT_Name }}
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
             </ng-template>
           </p-dataView>
+
+          <!-- 分頁器 -->
+          <p-paginator
+            [rows]="rows"
+            [first]="first"
+            [totalRecords]="filteredData.length"
+            (onPageChange)="onPageChange($event)"
+          ></p-paginator>
         </div>
       </form>
     </p-accordionTab>

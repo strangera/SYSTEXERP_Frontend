@@ -1,3 +1,4 @@
+/* 狀態列 */
 .status-container {
   display: flex;
   align-items: center;
@@ -46,6 +47,7 @@
   }
 }
 
+/* 狀態圖示定位 */
 .relative {
   position: relative;
 
@@ -55,4 +57,50 @@
     right: 8px;
     font-size: 18px;
   }
+}
+
+/* List 模式 */
+:host ::ng-deep .p-dataview.p-dataview-list .grid.grid-nogutter {
+  display: block;
+}
+
+:host ::ng-deep .p-dataview.p-dataview-list .grid.grid-nogutter > div {
+  padding: 0;
+}
+/* grid 模式 */
+:host ::ng-deep .custom-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 1px;
+  background-color: #ddd;
+}
+
+:host ::ng-deep .custom-grid-item {
+  background: #fff !important;
+  border: none !important;
+}
+
+:host ::ng-deep .custom-grid-item .surface-card {
+  border: none !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+}
+
+:host ::ng-deep .search-bar-container {
+  flex: 1;
+  max-width: 800px;
+  display: flex;
+  justify-content: flex-start;
+}
+:host ::ng-deep .search-bar {
+  flex: 1;
+  display: flex;
+  align-items: center;
+}
+:host ::ng-deep .search-bar input {
+  border: 1px solid #e0dcdc !important;
+  background-color: #f9f7f7 !important;
+  padding: 0.5rem 0.75rem 0.5rem 2rem !important;
+  font-size: 1rem !important;
+  border-radius: 6px !important;
 }
