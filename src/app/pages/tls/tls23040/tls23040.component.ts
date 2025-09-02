@@ -239,15 +239,13 @@ onSubmit(form: FormGroup): void {
     // 1) 分頁 / 排序
     const pageSize  = Number(raw?.pageSize)  || 10;
     const pageIndex = Number(raw?.pageIndex) || 1;
-    const offset    = Math.max(0, (pageIndex - 1) * pageSize);
+  
 
     const sortByArr = Array.isArray(raw?.SortBy) && raw.SortBy.length
       ? raw.SortBy
       : (this.sortMeta.length ? this.sortMeta : this.defaultSort);
 
-    const orderBy = sortByArr.length
-      ? sortByArr.map((s: any) => `${s.field} ${s.order === 1 ? 'ASC' : 'DESC'}`).join(',')
-      : undefined;
+
 
     // 2) 組 payload
     const payload: any = {
@@ -260,9 +258,9 @@ onSubmit(form: FormGroup): void {
       // 分頁/排序鍵
       pageSize,
       pageIndex,
-      Offset: offset,
+      
       SortBy: sortByArr,
-      ...(orderBy ? { OrderBy: orderBy } : {}),
+      
     };
 
     // 3) 清空空值（保留 0/false）
@@ -322,6 +320,7 @@ onSubmit(form: FormGroup): void {
         this.paymentRows = [];
         this.discountRows = [];
         this.totalRecords = 0;
+        this.loading = false;
       },
       complete: () => {
         this.loading = false;
