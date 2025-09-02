@@ -91,6 +91,11 @@ export interface TLS42020InsertRequest {
   POS10271: TLS42020InsertDetailData[];  // POS10271子資料
 }
 
+// Delete request interface for TLS42020M
+export interface TLS42020DeleteRequest {
+  idList: number[];               // ID清單
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -211,5 +216,10 @@ export class TLS42020Service {
   insertTLS42020M(data: TLS42020InsertRequest): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/insertTLS42020M`, data);
     // return of({ Status: '0000', Message: '新增成功' });
+  }
+
+  // 刪除POS1027M資料表
+  deleteTLS42020(data: TLS42020DeleteRequest): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/deleteTLS42020`, data);
   }
 }

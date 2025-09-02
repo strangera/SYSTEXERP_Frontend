@@ -157,4 +157,22 @@ export class TLS42020Component extends BasicQueryPageComponent<TLS42020Data> imp
       tltNo: rowData.TLT_No
     });
   };
+
+  onDelete(rowData: TLS42020Data[]) {
+    this.messageService.confirm({
+      header: '是否確認刪除',
+      accept: () => {
+        this.tls42020Service.deleteTLS42020({
+          idList: rowData.map(item => item.id)
+        }).subscribe((res) => {
+          if (res.Status === '0000') {
+            this.messageService.successBubble('刪除成功');
+            this.onSubmit(this.queryForm);
+          } else {
+            this.messageService.errorBubble(res.Message);
+          }
+        });
+      }
+    });
+  }
 }

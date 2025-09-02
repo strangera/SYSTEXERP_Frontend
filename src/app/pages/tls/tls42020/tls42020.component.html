@@ -37,6 +37,7 @@
     (selectionChange)="selectedItems = $event" dataKey="id" [totalRecords]="totalRecords" (lazyLoadData)="onLazyLoadData($event, queryForm);
     onSubmit(queryForm)" [multiSortMeta]="[]" [lazy]="true" [loading]="loading" [showDelete]="false"
     [expansionColumns]="expansionColumns" expansionDataKey="details" [expansionShowPaginator]="false"
-    [expansionRows]="50" [expansionLoadFn]="loadDetails" [expansionMultiSortMeta]="[]">
+    [expansionRows]="50" [expansionLoadFn]="loadDetails" [expansionMultiSortMeta]="[]" [showDelete]="true"
+    [showCheckBox]="true" (delete)="onDelete(selectedItems)" (edit)="onEdit($event)" (detail)="onDetail($event)">
   </app-table>
 </div>

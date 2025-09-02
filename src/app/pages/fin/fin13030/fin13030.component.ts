@@ -150,10 +150,14 @@ export class FIN13030Component extends BasicQueryPageComponent<FIN13030Data> imp
       accept: () => {
         this.fin13030Service.deleteFIN13030({
           idList: rowData.map(item => item.ID)
-        }).subscribe(() => {
-          // 如果刪除成功，清除選擇的項目
-          this.messageService.successBubble('刪除成功');
-          this.onSubmit(this.queryForm);
+        }).subscribe((res) => {
+          if (res.Status === '0000') {
+            // 如果刪除成功，清除選擇的項目
+            this.messageService.successBubble('刪除成功');
+            this.onSubmit(this.queryForm);
+          } else {
+            this.messageService.errorBubble(res.Message);
+          }
         });
       }
     });
