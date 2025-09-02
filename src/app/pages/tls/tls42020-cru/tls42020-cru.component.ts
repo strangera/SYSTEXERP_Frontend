@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 
 // PrimeNG modules
@@ -18,9 +18,9 @@ import { NgIf } from '@angular/common';
 
 // Base class
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
-import { DropDownListService } from '@service/utility/dropDownList.service';
+import { DropDownListService, POS2004Item } from '@service/utility/dropDownList.service';
 import { TableComponent } from '@shared/componentkit/table/table.component';
-import { Column } from '@shared/componentkit/table/table.model';
+import { Column, FieldChangeEvent } from '@shared/componentkit/table/table.model';
 import { TLS42020Data, TLS42020InsertDetailData, TLS42020InsertRequest, TLS42020Service } from '@service/api/tls/tls42020.service';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { finalize, forkJoin, map } from 'rxjs';
@@ -72,10 +72,7 @@ export class TLS42020CRUComponent extends BasicCruPageComponent<TLS42020Data> im
   ];
 
   tltNoOptions: TLTOption[] = [];
-  PLU_MagNoOptions: DropdownOption[] = [
-    { label: '商品1', value: 'M001' },
-    { label: '商品2', value: 'M002' }
-  ];
+  PLU_MagNoOptions: POS2004Item[] = [];
 
   // 表格欄位定義
   columns: Column[] = [
@@ -90,9 +87,9 @@ export class TLS42020CRUComponent extends BasicCruPageComponent<TLS42020Data> im
       field: 'PLU_MagNo',
       header: '商品管理碼',
       type: 'dropdown',
-      options: this.PLU_MagNoOptions,
+      options: () => this.PLU_MagNoOptions, // 使用函數動態返回選項
       optionLabel: 'label',
-      optionValue: 'value',
+      optionValue: 'PLU_MagNo',
     },
     {
       field: 'PLU_No',
@@ -136,7 +133,9 @@ export class TLS42020CRUComponent extends BasicCruPageComponent<TLS42020Data> im
 
   constructor(
     private dropDownListService: DropDownListService,
-    private tls42020Service: TLS42020Service
+    private tls42020Service: TLS42020Service,
+    private changeDetectorRef: ChangeDetectorRef
+
   ) {
     super();
   }
@@ -149,7 +148,7 @@ export class TLS42020CRUComponent extends BasicCruPageComponent<TLS42020Data> im
   onSubmit(frm: FormGroup): void {
     this.handleSubmit(frm, () => {
       // 檢核 data 至少要有一筆
-      if (this.data.length === 0) {
+      if (this.data.filter(item => item.SBM_SeqNo.startsWith('save')).length === 0) {
         this.messageService.errorBubble('請至少新增一筆明細資料');
         this.loading = false;
         return;
@@ -165,30 +164,47 @@ export class TLS42020CRUComponent extends BasicCruPageComponent<TLS42020Data> im
     this.selectedRows = [];
   }
 
+  // 選擇商品管理碼後自動帶出其他欄位的資料
+  onFieldChange(event: FieldChangeEvent): void {
+    if (event.field === 'PLU_MagNo' && event.index !== undefined) {
+      // 當 PLU_MagNo (商品管理碼) 改變時，自動帶入相關資料
+      const selectedProduct = this.PLU_MagNoOptions.find(item => item.PLU_MagNo === event.value);
+      if (selectedProduct) {
+        // 更新該行的其他欄位
+        const rowData = this.data[event.index];
+        // FIXME: 欄位對應待確認
+        if (rowData) {
+          rowData.PLU_No = selectedProduct.PLU_No || '';
+          rowData.PLU_Name = selectedProduct.PLU_Name || '';
+          rowData.PLU_PrnName = selectedProduct.PLU_Name || '';
+          rowData.PLU_FixPrc = selectedProduct.PLU_SalePrc || '';
+          rowData.PLU_SalePrc = selectedProduct.PLU_SalePrc || '';
+
+          // 觸發變更檢測
+          this.changeDetectorRef.detectChanges();
+        }
+      }
+    }
+  }
+
   // 私有方法
   private loadOptions(): void {
-    const tltQuery$ = this.dropDownListService.queryTLTTALENT_DropDownList()
-      .pipe(
-        map(res => res.Data.map((item: any) => ({
+    // 載入專櫃編號選項
+    this.dropDownListService.queryTLTTALENT_DropDownList()
+      .pipe(untilDestroyed(this))
+      .subscribe(res => {
+        this.tltNoOptions = res.Data.map((item: any) => ({
           label: `${item.No}-${item.Name}`,
           value: item.No,
           name: item.Name
-        })))
-      );
+        }));
+      });
 
-    const pluQuery$ = this.dropDownListService.queryPOS2004_DropDownList("POS1027M")
-      .pipe(
-        map(res => res.Data.map((item: any) => ({
-          label: item.Name,
-          value: item.No
-        })))
-      );
-
-    forkJoin([tltQuery$, pluQuery$])
+    this.dropDownListService.queryPOS2004_DropDownList("POS1027M")
       .pipe(untilDestroyed(this))
-      .subscribe(([tltOptions, pluOptions]) => {
-        this.tltNoOptions = tltOptions;
-        // this.PLU_MagNoOptions = pluOptions;
+      .subscribe(res => {
+        this.PLU_MagNoOptions = res.Data
+        this.changeDetectorRef?.detectChanges();
       });
   }
 
@@ -224,14 +240,19 @@ export class TLS42020CRUComponent extends BasicCruPageComponent<TLS42020Data> im
     };
 
     // 深拷貝明細資料並加上主檔欄位
-    const detailData = this.data.map(item => ({
-      ...item,
-      STO_No: this.STORE_NO,
-      SBM_Type: mainData.SBM_Type,
-      TLT_No: mainData.TLT_No,
-      SBM_BegDate: mainData.SBM_BegDate,
-      SBM_EndDate: mainData.SBM_EndDate
-    }));
+    const detailData = this.data
+      .filter(item => item.SBM_SeqNo.startsWith('save'))
+      .map((item, index) => ({
+        ...item,
+        STO_No: this.STORE_NO,
+        SBM_Type: mainData.SBM_Type,
+        TLT_No: mainData.TLT_No,
+        SBM_BegDate: mainData.SBM_BegDate,
+        SBM_EndDate: mainData.SBM_EndDate,
+        PLU_MagNo: item.PLU_MagNo ?? `${mainData.TLT_No}${(index + 1).toString().padStart(4, '0')}`
+        // TODO: 流水號 邏輯待確認
+        // SBM_SeqNo:
+      }));
 
     return {
       ...mainData,

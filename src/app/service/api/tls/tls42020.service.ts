@@ -75,8 +75,8 @@ export interface TLS42020InsertDetailData {
   PLU_No: string;                 // 國際條碼
   PLU_Name: string;               // 商品名稱
   PLU_PrnName: string;            // 商品列印名稱
-  PLU_FixPrc: string;             // 商品定價
-  PLU_SalePrc: string;            // 商品售價
+  PLU_FixPrc: string | number;             // 商品定價
+  PLU_SalePrc: string | number;            // 商品售價
   SBM_BtnNo: string;              // 菜單按鍵序號
 }
 
