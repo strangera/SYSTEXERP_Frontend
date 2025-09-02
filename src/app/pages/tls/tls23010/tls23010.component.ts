@@ -89,7 +89,7 @@ export class TLS23010Component
   // ===== 排序（重點）=====
   sortMeta: any[] = [];
   readonly defaultSort: any[] = [
-    { field: 'TXN_Date', order: -1 }, // 近到遠
+    { field: 'TXN_Date', order:  1 }, // 近到遠
     { field: 'ECR_No',   order:  1 },
     { field: 'TXN_No',   order:  1 },
   ];
@@ -135,7 +135,7 @@ export class TLS23010Component
 
     // ✅ 帶入預設排序（與 defaultSort 一致）
     ...createPaginationConfig([
-      { field: 'TXN_Date', order: -1 },
+      { field: 'TXN_Date', order:  1 },
       { field: 'ECR_No',   order:  1 },
       { field: 'TXN_No',   order:  1 },
     ]),

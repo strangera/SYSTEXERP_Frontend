@@ -49,7 +49,7 @@ export class TLS23070Component extends BasicQueryPageComponent<any> {
 
   sortMeta: any[] = [];
   readonly defaultSort: any[] = [
-    { field: 'TXN_Date', order: -1 }, // 近到遠
+    { field: 'TXN_Date', order:  1 }, // 近到遠
     { field: 'ECR_No',   order:  1 },
   ];
   private lastQuerySig: string | null = null;

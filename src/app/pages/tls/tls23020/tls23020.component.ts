@@ -73,7 +73,7 @@ export class TLS23020Component extends BasicQueryPageComponent<any> {
   // --- 排序狀態 ---
   sortMeta: any[] = [];
   readonly defaultSort: any[] = [
-    { field: 'TXN_Date', order: -1 }, // 近到遠
+    { field: 'TXN_Date', order:  1 }, // 近到遠
     { field: 'ECR_No',   order:  1 },
     { field: 'TXN_No',   order:  1 },
   ];
@@ -115,7 +115,7 @@ export class TLS23020Component extends BasicQueryPageComponent<any> {
     tlt_floor: [],
     org_id: [],
     ...createPaginationConfig([
-      { field: 'TXN_Date', order: -1 },
+      { field: 'TXN_Date', order:  1 },
       { field: 'ECR_No',   order:  1 },
       { field: 'TXN_No',   order:  1 },
     ]),
