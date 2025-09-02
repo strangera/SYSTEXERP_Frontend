@@ -87,21 +87,21 @@ export class TLS43010CRUComponent extends BasicCruPageComponent<QueryTls43010Res
   // 如果機台群組編號有值那其他要disable，反之亦然
   columns: Column[] = [
     { field: 'NOT_SeqNo', header: '通告序號', format: (value) => this.isFormCreateable ? '自動給號' : value, disabled: (rowData) => this.isOtherGroupSelected(rowData) },
-    { field: 'ECR_No', header: '收銀機號', type: 'dropdown', optionLabel: 'label', optionValue: 'No', disabled: (rowData) => this.isOtherGroupSelected(rowData) },
-    { field: 'TLT_No', header: '專櫃編號', type: 'dropdown', optionLabel: 'label', optionValue: 'No', disabled: (rowData) => this.isOtherGroupSelected(rowData) },
-    { field: 'ECR_Type', header: '機台類型', type: 'dropdown', optionLabel: 'SYS_Name', optionValue: 'SYS_Code', disabled: (rowData) => this.isOtherGroupSelected(rowData) },
-    { field: 'ECR_GrpNo', header: '機台群組編號', type: 'dropdown', optionLabel: 'label', optionValue: 'No', disabled: (rowData) => this.isEcrGrpNoSelected(rowData) },
-    { field: 'BUILDING_No', header: '館別', type: 'dropdown', optionLabel: 'Name', optionValue: 'No', disabled: (rowData) => this.isOtherGroupSelected(rowData) },
-    { field: 'FLOOR_No', header: '樓層', type: 'dropdown', optionLabel: 'Name', optionValue: 'No', disabled: (rowData) => this.isOtherGroupSelected(rowData) },
-    { field: 'Area_No', header: '區域', type: 'dropdown', optionLabel: 'Name', optionValue: 'No', disabled: (rowData) => this.isOtherGroupSelected(rowData) },
+    { field: 'ECR_No', header: '收銀機號', type: 'dropdown', width: '12rem', optionLabel: 'label', optionValue: 'No', disabled: (rowData) => this.isOtherGroupSelected(rowData) },
+    { field: 'TLT_No', header: '專櫃編號', type: 'dropdown', width: '15rem', optionLabel: 'label', optionValue: 'No', disabled: (rowData) => this.isOtherGroupSelected(rowData) },
+    { field: 'ECR_Type', header: '機台類型', type: 'dropdown', width: '10rem', optionLabel: 'SYS_Name', optionValue: 'SYS_Code', disabled: (rowData) => this.isOtherGroupSelected(rowData) },
+    { field: 'ECR_GrpNo', header: '機台群組編號', type: 'dropdown', width: '15rem', optionLabel: 'label', optionValue: 'No', disabled: (rowData) => this.isEcrGrpNoSelected(rowData) },
+    { field: 'BUILDING_No', header: '館別', type: 'dropdown', width: '9rem', optionLabel: 'Name', optionValue: 'No', disabled: (rowData) => this.isOtherGroupSelected(rowData) },
+    { field: 'FLOOR_No', header: '樓層', type: 'dropdown', width: '9rem', optionLabel: 'Name', optionValue: 'No', disabled: (rowData) => this.isOtherGroupSelected(rowData) },
+    { field: 'Area_No', header: '區域', type: 'dropdown', width: '9rem', optionLabel: 'Name', optionValue: 'No', disabled: (rowData) => this.isOtherGroupSelected(rowData) },
   ];
   // 檢查其他互斥欄位是否有值
   isOtherGroupSelected(rowData: Tls43010Detail): boolean {
-    return !!(rowData['ECR_GrpNo'] && rowData['ECR_GrpNo'] !== '');
+    return !!(rowData?.['ECR_GrpNo'] && rowData?.['ECR_GrpNo'] !== '');
   }
   // 檢查機台群組編號是否有值
   isEcrGrpNoSelected(rowData: Tls43010Detail): boolean {
-    return !!(rowData['ECR_No'] || rowData['TLT_No'] || rowData['ECR_Type'] || rowData['BUILDING_No'] || rowData['FLOOR_No'] || rowData['Area_No']);
+    return !!(rowData?.['ECR_No'] || rowData?.['TLT_No'] || rowData?.['ECR_Type'] || rowData?.['BUILDING_No'] || rowData?.['FLOOR_No'] || rowData?.['Area_No']);
   }
   hiddenTable = true;
 
