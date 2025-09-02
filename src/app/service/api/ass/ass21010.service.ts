@@ -82,7 +82,7 @@ export class ASS21010Service implements OnDestroy {
     this.tableLoading = !0;
     this.http.post<Omit<BaseQueryResponse<unknown>, 'Data'> & { Data: { Data: ASS21010Data[]; TotalCount: number; }; }>(`${apiUrl}/ASS0000/ASS2000/QueryASS21010`, payload).pipe(
       take(1),
-      tap(response => this.ASS21010Data.set(response.Data.Data.map(d => ({ ...d, exportType: this.engTypeSignal().find(t => t.No === d.ENG_Type)?.Name || d.ENG_Type })))),
+      tap(response => this.ASS21010Data.set(response.Data.Data)),
       catchError(error => this.errorHandler.handleError(error)),
       finalize(() => this.tableLoading = !1),
     ).subscribe();

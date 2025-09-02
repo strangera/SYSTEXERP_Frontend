@@ -68,7 +68,7 @@ export class ASS21010Component extends BasicQueryPageComponent<unknown> implemen
       field: 'ENG_Type',
       header: '能源類型',
       format: v => this.service.engTypeSignal().find(t => t.No === v)?.Name || v,
-      exportFormat: [{ G01: "水錶" }, { G02: "電錶" }, { G03: "瓦斯錶" }],
+      exportFormat: [{ G01: '水錶' }, { G02: '電錶' }, { G03: '瓦斯錶' }],
     },
     { field: 'ENG_MeterNo', header: '錶號' },
     { field: 'Location_No', header: '設備位置編號' },
