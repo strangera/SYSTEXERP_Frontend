@@ -156,8 +156,19 @@ export class Table2Component
   @Input() expansionDataKey = ''; // 收合展開 資料key(expansion必需配置)
   @Input() expansionSortField = ''; // 收合展開 排序欄位(單一排序)
   @Input() expansionSortOrder = 0; // 收合展開 排序方向 (1:升序、-1:降序)
+
+    // expansion 收合展開
+    @Input() showExpandCollapse = true;               // 是否顯示收合展開
+
+    @Input() expansionMultiSortMeta = [{ field: this.expansionDataKey, order: 1 }];// 收合展開 排序欄位(單一排序)
+    @Input() expansionShowPaginator = false;   // expansion 是否顯示分頁器
+    @Input() expansionRows = 20;               // expansion 每頁顯示行數
+    @Input() expansionRowsPerPageOptions = [20, 40, 60, 80, 100]; // expansion 分頁選項
+    @Input() expansionScrollHeight = '300px';  // expansion 表格高度
+
+    expandedRows: Record<string, boolean> = {};// 收合展開 已展開資料
   expression = false; // 收合展開 狀態 (true:展開、false:收合)
-  expandedRows: Record<string, boolean> = {}; // 收合展開 已展開資料
+
   // Header(右) 相關
   @Input() showExcel = false; // 是否顯示 匯出Excel
   @Input() showExcelExport = true; // 是否顯示 匯出Excel按鈕
@@ -182,12 +193,12 @@ export class Table2Component
   // Footer
   @Input() showFooter = false; // 是否顯示 Footer
   // 分頁器
-  @Input() scrollHeight = '400px'; // table 高度
+  @Input() scrollHeight = '450px'; // table 高度
   @Input() scrollable = true; // 是否要滾輪
   @Input() showPaginator = true; // 是否顯示 分頁器
   @Input() totalRecords = 0; // 記錄總數
   totalPages = 0; // 共幾頁數
-  rows = 10; // 每頁顯示的行數
+  rows = 20; // 每頁顯示的行數
   first = 0; // 當前表格的起始索引
   pages: { label: string; value: number }[] = []; // (右上)下拉選單 頁數選項
   selectedPage: number | null = 1; // (右上)下拉選單 當前選擇的頁數
@@ -197,6 +208,11 @@ export class Table2Component
   @Input() emptyMessage = '查無資料'; // table 無資料時顯示文字
   @Input() showDelete = true; // 是否顯示刪除按鈕
   @Input() deleteIcon = 'pi pi-trash'; // 刪除按鈕圖示
+
+    // 分頁器
+
+    @Input() rowsPerPageOptions: any[] | undefined = [20, 40, 60, 80, 100];// 分頁選項
+ 
 
   // 權限
   private ngUnsubscribe = new Subject<void>();

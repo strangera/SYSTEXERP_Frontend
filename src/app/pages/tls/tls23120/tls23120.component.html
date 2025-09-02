@@ -48,14 +48,14 @@
             </div>
 
             <ng-container *ngIf="queryForm.get('filterMode')?.value === 'counter'">
-              <app-multi-select
+              <app-dropdown
                 label="專櫃編號"
                 [options]="CounterOptions"
                 optionLabel="formLabel"
                 optionValue="value"
                 [control]="queryForm.controls.TLT_No"
                 [submitted]="submitted"
-              ></app-multi-select>
+              ></app-dropdown>
             </ng-container>
           </div>
 

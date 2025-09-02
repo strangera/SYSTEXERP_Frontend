@@ -7,7 +7,7 @@
 <p-table #dt [value]="data" [columns]="selectedColumns" [(selection)]="selectedItems" sortMode="multiple"
   [selectionMode]="showCheckBox && IsPrint ? selectionMode : null" [dataKey]="dataKey" [rowTrackBy]="trackByRow"
   [resizableColumns]="true" [paginator]="showPaginator && IsPrint && !rowEditing && !loading" [scrollable]="scrollable"
-  [showCurrentPageReport]="IsPrint" [multiSortMeta]="multiSortMeta" [rowsPerPageOptions]="[10, 30, 50]"
+  [showCurrentPageReport]="IsPrint" [multiSortMeta]="multiSortMeta" [rowsPerPageOptions]="rowsPerPageOptions"
   [scrollHeight]="scrollHeight" [rows]="rows" [(first)]="first" (onPage)="onPageChange($event)"
   (onLazyLoad)="loadDataLazy($event)" [lazy]="lazy || !IsPrint"
   [styleClass]="'p-datatable-sm p-datatable-striped' + (IsPrint ? ' p-datatable-gridlines' : '')"
@@ -360,13 +360,10 @@
     <td [attr.colspan]="getVisibleHeaderCount" class="p-0">
       <div class="expansion-container overflow-x-auto">
         <!-- 讓子表自己決定欄寬，不跟主表同步 -->
-        <app-table-expansion2
-          class="expansion-content"
-          [rowData]="rowData"
-          [expansionDataKey]="expansionDataKey"
-          [expansionColumns]="expansionColumns"
-          [expansionSortField]="expansionSortField"
-          [expansionSortOrder]="expansionSortOrder">
+ <app-table-expansion2 [rowData]="rowData" [expansionDataKey]="expansionDataKey"
+          [expansionColumns]="expansionColumns" [expansionMultiSortMeta]="expansionMultiSortMeta"
+          [showPaginator]="expansionShowPaginator" [rows]="expansionRows" [scrollHeight]="expansionScrollHeight"
+          [rowsPerPageOptions]="expansionRowsPerPageOptions">
         </app-table-expansion2>
       </div>
     </td>

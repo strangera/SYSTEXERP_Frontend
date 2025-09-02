@@ -46,6 +46,8 @@ import { TranslateModule } from '@ngx-translate/core';
 import { TableComponent } from '@shared/componentkit/table/table.component';
 import { DropDownListService } from '@service/utility/dropDownList.service';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
+import { ButtonModule } from 'primeng/button';
+import { HttpResponse } from '@angular/common/http';
 
 type DisplayMode = 'Report' | 'SummaryReport';
 
@@ -73,6 +75,7 @@ type DisplayMode = 'Report' | 'SummaryReport';
     TranslateModule,
     TableComponent,
     CommonModule,
+    ButtonModule, // ✅ 匯出按鈕會用到 p-button
   ],
 })
 export class TLS23030Component extends BasicQueryPageComponent<any> {
@@ -83,6 +86,10 @@ export class TLS23030Component extends BasicQueryPageComponent<any> {
 
   summaryData: any[] = [];
   summaryTotals = { totalPayAmt: 0, totalTaxAlwnc: 0 };
+
+  // ✅ 匯出相關
+  btnLoading = false;
+  historyRequestBody: any | null = null;
 
   // 排序狀態
   sortMeta: any[] = [];
@@ -409,6 +416,9 @@ export class TLS23030Component extends BasicQueryPageComponent<any> {
       if (Array.isArray(v) && v.length === 0) delete payload[k];
     });
 
+    // ✅ 匯出沿用同一包參數
+    this.historyRequestBody = { ...payload };
+
     const done = () => (this.loading = false);
 
     if (this.showSummary) {
@@ -528,4 +538,77 @@ export class TLS23030Component extends BasicQueryPageComponent<any> {
     this.onSubmit(this.queryForm);
   }
 
+  // ========= 匯出 =========
+  onExportPDF() {
+    if (!this.historyRequestBody) {
+      this.messageService?.warnBubble?.('請先執行查詢以產生報表。');
+      return;
+    }
+    this.btnLoading = true;
+    this.tls23030Service
+      .exportTLS23030PDF(this.historyRequestBody)
+      .pipe(untilDestroyed(this), finalize(() => (this.btnLoading = false)))
+      .subscribe({
+        next: (response: HttpResponse<Blob>) => this.handleFileExport(response, '.pdf'),
+      });
+  }
+
+  onExportXLSX() {
+    if (!this.historyRequestBody) {
+      this.messageService?.warnBubble?.('請先執行查詢以產生報表。');
+      return;
+    }
+    this.btnLoading = true;
+    this.tls23030Service
+      .exportTLS23030Excel(this.historyRequestBody)
+      .pipe(untilDestroyed(this), finalize(() => (this.btnLoading = false)))
+      .subscribe({
+        next: (response: HttpResponse<Blob>) => this.handleFileExport(response, '.xlsx'),
+      });
+  }
+
+  private handleFileExport(response: HttpResponse<Blob>, fileExtension: string): void {
+    const contentDisposition = response.headers.get('Content-Disposition');
+    const filename = this.getFilenameFromHeader(contentDisposition, fileExtension);
+    const blob = response.body;
+
+    if (blob && blob.size > 0) {
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } else {
+      this.messageService?.warnBubble?.('沒有找到符合條件的資料，無法生成報表。');
+    }
+  }
+
+  private getFilenameFromHeader(contentDisposition: string | null, defaultExtension: string): string {
+    if (!contentDisposition) return `download${defaultExtension}`;
+
+    const filenameStarMatch = /filename\*=([^;]+)/.exec(contentDisposition);
+    if (filenameStarMatch && filenameStarMatch.length > 1) {
+      const encodedFilename = filenameStarMatch[1];
+      try {
+        const decoded = decodeURIComponent(encodedFilename.replace(/^UTF-8''/, ''));
+        return decoded;
+      } catch {
+        return encodedFilename;
+      }
+    }
+
+    const filenameMatch = /filename="([^"]+)"/.exec(contentDisposition);
+    if (filenameMatch && filenameMatch.length > 1) {
+      try {
+        return decodeURIComponent(filenameMatch[1].replace(/\+/g, ' '));
+      } catch {
+        return filenameMatch[1];
+      }
+    }
+
+    return `download${defaultExtension}`;
+  }
 }
