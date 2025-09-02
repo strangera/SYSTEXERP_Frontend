@@ -221,7 +221,7 @@ this.announcementCategoryService.Pub_TypeOptions().subscribe(res => {
         }
       },
       error: () => {
-        this.messageService.errorBubble('查詢錯誤');
+        
         this.loading = false;
         this.messageService.unblockUi();
       },

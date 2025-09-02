@@ -154,7 +154,7 @@ export class TLS23130Component extends BasicQueryPageComponent<any> {
         })),
         catchError(err => {
           console.error('queryAPS1001_DropDownList 失敗', err);
-          this.messageService?.errorBubble?.('銀行下拉資料讀取失敗');
+        
           return of([] as any[]);
         })
       )

@@ -19,7 +19,7 @@ export class TLS47010Service {
  ECROptions(query: any): Observable<any> {
   return this.http.post<any>(`${this.apiUrl}/queryPOS1002_Status_DropDownList`, query).pipe(
     tap(res => console.log('查詢結果:', res)),
-    catchError(error => this.errorHandler.handleError(error))
+    
   );
 }
 
@@ -27,7 +27,7 @@ export class TLS47010Service {
   insertTLS47010(data: any): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/TLS0000/TLS4000/insertTLS47010`, data).pipe(
       tap(res => console.log('新增結果:', res)),
-      catchError(error => this.errorHandler.handleError(error))
+      
     );
   }
 

@@ -136,7 +136,7 @@ onSubmit(form: FormGroup): void {
       this.queryStateService.setQueryState(this.ProgNo, payload);
     },
     error: () => {
-      this.messageService.errorBubble('查詢錯誤');
+      
       this.loading = false;
     },
     complete: () => {

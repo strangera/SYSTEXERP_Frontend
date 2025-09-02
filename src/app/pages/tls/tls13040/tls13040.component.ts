@@ -245,7 +245,7 @@ this.data = rows.map((r: any, i: number) => ({
         }
       },
       error: () => {
-        this.messageService.errorBubble('查詢錯誤');
+        
       },
       complete: () => {
         this.loading = false;

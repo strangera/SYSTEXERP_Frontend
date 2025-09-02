@@ -274,14 +274,14 @@ export class SYSBR10CRUComponent
                 error: () => {
                   this.loading = false;
                   this.messageService?.unblockUi?.();
-                  this.messageService?.errorBubble?.('主檔已更新，但啟用狀態更新失敗');
+
                 },
               });
           },
           error: () => {
             this.loading = false;
             this.messageService?.unblockUi?.();
-            this.messageService?.errorBubble?.('更新失敗');
+            
           },
         });
         return;
@@ -304,7 +304,7 @@ export class SYSBR10CRUComponent
           error: () => {
             this.loading = false;
             this.messageService?.unblockUi?.();
-            this.messageService?.errorBubble?.('新增失敗');
+            
           },
         });
       }
@@ -336,7 +336,7 @@ export class SYSBR10CRUComponent
       error: () => {
         this.loading = false;
         this.messageService?.unblockUi?.();
-        this.messageService?.errorBubble?.('讀取明細失敗');
+       
       },
     });
   }

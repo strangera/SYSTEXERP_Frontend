@@ -142,7 +142,7 @@ payload.INV_DeclareYM = this.toYYYYMM(payload.INV_DeclareYM);
       //   }
       // },
       error: () => {
-        this.messageService.errorBubble('查詢錯誤');
+        
         this.loading = false;
       },
       complete: () => {

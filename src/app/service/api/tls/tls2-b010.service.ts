@@ -19,7 +19,7 @@ export class TLS2B010Service {
   queryTLS2B010(query: any): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/TLS0000/TLS2000/queryTLS2B010`, query).pipe(
       tap(response => console.log('查詢結果:', response)),
-      catchError(error => this.errorHandler.handleError(error))
+      
     );
   }
 
@@ -27,14 +27,14 @@ export class TLS2B010Service {
   simpleTLS2B010(query: any): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/TLS0000/TLS2000/simpleTLS2B010`, query).pipe(
       tap(response => console.log('簡表結果:', response)),
-      catchError(error => this.errorHandler.handleError(error))
+      
     );
   }
 
   // ✅ 取得最近關帳日期（如果你後端真的有這個 API）
   getCloseDate(payload: any): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/TLS0000/TLS2000/getCloseDate`, payload).pipe(
-      catchError(error => this.errorHandler.handleError(error))
+      
     );
   }
 }

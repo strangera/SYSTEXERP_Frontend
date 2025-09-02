@@ -190,7 +190,7 @@ export class TLS11010Component extends BasicQueryPageComponent<any> {
           this.messageService.unblockUi();
         },
         error: () => {
-          this.messageService.errorBubble('查詢錯誤');
+          
           this.loading = false;
           this.messageService.unblockUi();
         },

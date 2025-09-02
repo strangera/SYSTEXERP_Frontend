@@ -207,7 +207,7 @@ export class TLS23070Component extends BasicQueryPageComponent<any> {
         },
         error: (err) => {
           console.error('TLS23070 查詢失敗', err);
-          this.messageService?.errorBubble?.('查詢失敗，請稍後再試');
+         
         },
         complete: () => {
           this.loading = false;

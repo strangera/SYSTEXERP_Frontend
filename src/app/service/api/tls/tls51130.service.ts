@@ -19,7 +19,7 @@ export class TLS51130Service {
   queryTLS51130(query: any): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/TLS0000/TLS5000/queryTLS51130`, query).pipe(
       tap(res => console.log('查詢結果:', res)),
-      catchError(error => this.errorHandler.handleError(error))
+      
     );
   }
 
@@ -27,7 +27,7 @@ export class TLS51130Service {
   insertTLS51130(data: any): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/TLS0000/TLS5000/insertTLS51130`, data).pipe(
       tap(res => console.log('新增結果:', res)),
-      catchError(error => this.errorHandler.handleError(error))
+      
     );
   }
 
@@ -35,7 +35,7 @@ export class TLS51130Service {
   updateTLS51130(data: any): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/TLS0000/TLS5000/updateTLS51130`, data).pipe(
       tap(res => console.log('更新結果:', res)),
-      catchError(error => this.errorHandler.handleError(error))
+      
     );
   }
 
@@ -43,7 +43,7 @@ export class TLS51130Service {
   deleteTLS51130(idList: number[]): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/TLS0000/TLS5000/deleteTLS51130`, { idList }).pipe(
       tap(res => console.log('刪除結果:', res)),
-      catchError(error => this.errorHandler.handleError(error))
+      
     );
   }
 }

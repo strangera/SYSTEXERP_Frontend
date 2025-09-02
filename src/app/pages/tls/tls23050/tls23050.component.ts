@@ -174,7 +174,7 @@ onSubmit(form: FormGroup): void {
       },
       error: (err) => {
         console.error('TLS23050 查詢失敗', err);
-        this.messageService?.errorBubble?.('查詢失敗，請稍後再試');
+       
         this.data = [];
         this.totalRecords = 0;
       },
