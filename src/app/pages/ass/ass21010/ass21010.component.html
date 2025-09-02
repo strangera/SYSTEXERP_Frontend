@@ -69,6 +69,9 @@
                (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit()"
                [lazy]="true"
                [loading]="loading"
+               [customReport]="true"
+               (exportEvent)="onExport($event)"
+               [exportExcelLoading]="service.exportLoading"
                (edit)="onEdit($event)"
                (delete)="onDelete($event)"
                (detail)="onDetail($event)"></app-table>

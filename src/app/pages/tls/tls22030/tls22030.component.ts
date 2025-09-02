@@ -1,24 +1,24 @@
-import { WhetherService } from './../../../service/basic/whether.service';
+import { HttpClient } from '@angular/common/http';
 import { Component, OnInit } from '@angular/core';
-import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { DisplayService } from '../../../service/basic/display.service';
-import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { ECRNoService } from '../../../service/basic/ECRNo.service';
-import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { untilDestroyed } from '@ngneat/until-destroy';
+import { TranslateModule } from '@ngx-translate/core';
+import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { AccordionModule } from 'primeng/accordion';
+import { environment } from '../../../../environments/environment';
+import { Tls22030Service } from '../../../service/api/tls/tls22030.service';
+import { DisplayService } from '../../../service/basic/display.service';
+import { ECRNoService } from '../../../service/basic/ECRNo.service';
+import { DropDownListService, IDropdownItem } from '../../../service/utility/dropDownList.service';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { CalendarRangeQuickComponent } from '../../../shared/componentkit/calendar-range-quick/calendar-range-quick.component';
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
 import { RadiobuttonComponent } from '../../../shared/componentkit/radiobutton/radiobutton.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { TranslateModule } from '@ngx-translate/core';
-import { Tls22030Service } from '../../../service/api/tls/tls22030.service';
-import { untilDestroyed } from '@ngneat/until-destroy';
-import { DropDownListService, IDropdownItem } from '../../../service/utility/dropDownList.service';
-import { HttpClient } from '@angular/common/http';
-import { environment } from '../../../../environments/environment';
-import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
+import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
+import { WhetherService } from './../../../service/basic/whether.service';
 
 const yesterday = new Date();
 yesterday.setDate(yesterday.getDate() - 1);
@@ -127,7 +127,7 @@ export class TLS22030Component extends BasicQueryPageComponent<any> implements O
         print_reportTitle_per_page: 'N',
         print_eject: 'Y',
         print_field_title: 'Y',
-        print_field_title_per_page: 'N'
+        print_field_title_per_page: 'N',
       }
     };
 
@@ -189,4 +189,3 @@ export class TLS22030Component extends BasicQueryPageComponent<any> implements O
 
 
 }
-
