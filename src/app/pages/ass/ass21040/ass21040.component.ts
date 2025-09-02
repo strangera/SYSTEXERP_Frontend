@@ -1,3 +1,4 @@
+import { convertDateToYYYYMM } from '@shared/componentkit/table/table.model';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
@@ -55,7 +56,7 @@ export class ASS21040Component extends BasicQueryPageComponent<unknown> implemen
         SYS_StoreNo: storeNo,
         Mid: Number(mid),
         EngTypes: frm.value.ENG_Type,
-        ClearingYM: frm.value.ENG_YYMM
+        ClearingYM: convertDateToYYYYMM(frm.value.ENG_YYMM)
       };
       this.handleSubmit(frm, () => {
         this.aSS21040Service.ClearingASS21040(body).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(response => {
@@ -76,7 +77,7 @@ export class ASS21040Component extends BasicQueryPageComponent<unknown> implemen
           SYS_StoreNo: storeNo,
           Mid: Number(mid),
           EngTypes: frm.value.ENG_Type,
-          ClearingYM: frm.value.ENG_YYMM
+          ClearingYM: convertDateToYYYYMM(frm.value.ENG_YYMM)
         };
         this.aSS21040Service.printASS21040(body).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(response => {
           if (response.Data.Print_URL) {
