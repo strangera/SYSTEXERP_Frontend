@@ -68,7 +68,6 @@ export interface TLS42020InsertDetailData {
   STO_No: string;                 // 店舖編號
   SBM_Type: number;               // 子菜單類別
   TLT_No: string;                 // 專櫃編號
-  TLT_Name: string;               // 專櫃名稱
   SBM_BegDate: string;            // 開始日期
   SBM_EndDate: string;            // 結束日期
   SBM_SeqNo: string;              // 序號
@@ -211,5 +210,6 @@ export class TLS42020Service {
   // 新增POS1027M資料表
   insertTLS42020M(data: TLS42020InsertRequest): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/insertTLS42020M`, data);
+    // return of({ Status: '0000', Message: '新增成功' });
   }
 }
