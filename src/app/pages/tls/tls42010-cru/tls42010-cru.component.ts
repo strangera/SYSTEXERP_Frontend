@@ -19,6 +19,7 @@ import { ColorPickerModule } from 'primeng/colorpicker';
 import { Tls42010Service } from '../../../service/api/tls/tls42010.service';
 import { CRUDStatus } from '@shared/models/system/CRUDstatus';
 import { CheckboxModule } from 'primeng/checkbox';
+
 export interface KeyItem {
   code: string;
   x: number;
@@ -73,7 +74,7 @@ export class TLS42010CRUComponent extends BasicCruPageComponent<any> implements 
     USR_Level: ['', [Validators.maxLength(6), Validators.required]],
     TSB_Name: ['', Validators.required],
     ECR_KBType: ['TCHBTN', Validators.required],
-    ECR_KBDesc: [''],
+    ECR_KBDesc: ['', Validators.required],
     activePage: [0]
   });
 
@@ -85,12 +86,12 @@ export class TLS42010CRUComponent extends BasicCruPageComponent<any> implements 
     KB_Display2: ['', Validators.maxLength(5)],
     KB_Color: ['RGB:0,0,0'],
     color: [null],
-    KB_Style: [''],
-    KB_Font: ['微軟正黑體'],
+    KB_Style: ['1'],
+    KB_Font: ['Microsoft JhengHei'],
     KB_Size: [14],
     KB_FontColor: ['RGB:0,0,0'],
     FontColor: [null],
-    KB_Fonttyped: [[]],
+    KB_Fonttyped: ['NNN'],
     KB_Arg1: [''],
     KB_Arg2: [''],
     KB_Arg3: ['']
@@ -138,9 +139,9 @@ export class TLS42010CRUComponent extends BasicCruPageComponent<any> implements 
     { label: '新細明體', value: 'PMingLiU' },
   ];
   KB_FonttypedOptions = [
-    { label: '粗體', value: 'YNN' },
-    { label: '斜體', value: 'NYN' },
-    { label: '底線', value: 'NNY' },
+    { label: '粗體', index: 0 },
+    { label: '斜體', index: 1 },
+    { label: '底線', index: 2 },
   ];
 
   constructor(
@@ -178,20 +179,27 @@ export class TLS42010CRUComponent extends BasicCruPageComponent<any> implements 
         this.selectedKeyForm.controls['KB_FontColor'].setValue(`RGB:${value.r},${value.g},${value.b}`);
       }
     });
-
     // === 編輯 / 檢視模式 ===
     if (this.crudstatus === CRUDStatus.Edit || this.crudstatus === CRUDStatus.Read) {
-      // 主檔直接用 rowdata
-      this.dataForm.patchValue({
-        USR_Level: this.rowdata?.USR_Level,
-        TSB_Name: this.rowdata?.TSB_Name,
-        ECR_KBType: this.rowdata?.ECR_KBType,
-        ECR_KBDesc: this.rowdata?.ECR_KBDesc,
-        activePage: (this.rowdata?.KG_KeyPage ?? 1) - 1
-      });
-
-      // 明細查詢，只帶 USR_Level
       if (this.rowdata?.USR_Level) {
+        // 先查主檔
+        this.tls42010Service.queryTLS42010M({ USR_Level: this.rowdata.USR_Level }).subscribe({
+          next: (res) => {
+            const master = res?.Data?.[0];
+            if (master) {
+              console.log('主檔資料:', master); // debug 看看有沒有 TSB_Name
+              this.dataForm.patchValue({
+                USR_Level: master.USR_Level,
+                TSB_Name: master.TSB_Name,   // ← 這裡應該要吃到
+                ECR_KBType: master.ECR_KBType,
+                ECR_KBDesc: master.ECR_KBDesc,
+                activePage: (master.kg_keypage ?? 1) - 1
+              });
+            }
+          }
+        });
+
+        // 再查明細
         this.tls42010Service.queryTLS42010_Detail({ USR_Level: this.rowdata.USR_Level }).subscribe({
           next: (res) => {
             this.applyDetail(res?.Data ?? []);
@@ -202,7 +210,10 @@ export class TLS42010CRUComponent extends BasicCruPageComponent<any> implements 
         });
       }
     }
+
+
   }
+
 
   private loadDropdowns() {
     // 收銀畫面名稱
@@ -213,7 +224,6 @@ export class TLS42010CRUComponent extends BasicCruPageComponent<any> implements 
           Name: item.TSB_Name
         })) ?? [];
 
-        // 同時建立一份 map，存每顆按鈕的 width/height
         res?.Data?.forEach((item: any) => {
           if (item.KB_ScanCode) {
             this.pos1008Map[item.KB_ScanCode] = {
@@ -244,7 +254,6 @@ export class TLS42010CRUComponent extends BasicCruPageComponent<any> implements 
     });
   }
 
-
   // ---------------- Grid ----------------
   private buildGrid() {
     const onePage: KeyItem[] = [];
@@ -262,7 +271,8 @@ export class TLS42010CRUComponent extends BasicCruPageComponent<any> implements 
     this.buildGrid();
 
     detailList.forEach((d: any) => {
-      const scanCode = d.KB_ScanCode?.slice(-4);
+      // 修正: 後端回來的 KB_ScanCode = USR_Level, 真正位置在 KB_Merge
+      const scanCode = d.KB_Merge;
       const key = this.keys.find(k => k.code === scanCode);
       if (key) {
         Object.assign(key, {
@@ -274,7 +284,7 @@ export class TLS42010CRUComponent extends BasicCruPageComponent<any> implements 
           KB_Style: d.KB_Style,
           KB_Font: d.KB_Font,
           KB_Size: d.KB_Size,
-          KB_Fonttyped: d.KB_Fonttyped, // 後端存的 "NYN"
+          KB_Fonttyped: d.KB_Fonttyped,
           KB_Arg1: d.KB_Arg1,
           KB_Arg2: d.KB_Arg2,
           KB_Arg3: d.KB_Arg3,
@@ -283,20 +293,18 @@ export class TLS42010CRUComponent extends BasicCruPageComponent<any> implements 
       }
     });
 
-    // 如果有設定過的，選第一顆帶到右側表單
     const first = this.keys.find(k => k.KB_Func || k.KB_Display1 || k.KB_Display2);
     if (first) {
       this.selectKey(first);
     } else {
-      // 沒有設定 → reset 右側 form
       this.selectedKeyForm.reset({
         KB_Func: '',
         KB_Switch: 'Y',
         KB_Display1: '',
         KB_Display2: '',
         KB_Color: 'RGB:0,0,0',
-        KB_Style: '',
-        KB_Font: '微軟正黑體',
+        KB_Style: '1',
+        KB_Font: 'Microsoft JhengHei',
         KB_Size: 14,
         KB_FontColor: 'RGB:0,0,0',
         KB_Fonttyped: 'NNN',
@@ -306,8 +314,6 @@ export class TLS42010CRUComponent extends BasicCruPageComponent<any> implements 
       });
     }
   }
-
-
 
   // ---------------- Key 選取 ----------------
   selectKey(k: KeyItem) {
@@ -321,11 +327,11 @@ export class TLS42010CRUComponent extends BasicCruPageComponent<any> implements 
       KB_Display1: k.KB_Display1 ?? '',
       KB_Display2: k.KB_Display2 ?? '',
       KB_Color: k.KB_Color ?? 'RGB:0,0,0',
-      KB_Style: k.KB_Style ?? '',
-      KB_Font: k.KB_Font ?? '微軟正黑體',
+      KB_Style: k.KB_Style ?? '1',
+      KB_Font: k.KB_Font ?? 'Microsoft JhengHei',
       KB_Size: k.KB_Size ?? 14,
       KB_FontColor: k.KB_FontColor ?? 'RGB:0,0,0',
-      KB_Fonttyped: k.KB_Fonttyped ?? '',
+      KB_Fonttyped: k.KB_Fonttyped ?? 'NNN',
       KB_Arg1: k.KB_Arg1 ?? '',
       KB_Arg2: k.KB_Arg2 ?? '',
       KB_Arg3: k.KB_Arg3 ?? ''
@@ -342,16 +348,13 @@ export class TLS42010CRUComponent extends BasicCruPageComponent<any> implements 
       }
 
       const POS1004Disc = this.keys.map(k => {
-        // 判斷是否有設定
         const hasConfig = k.KB_Func || k.KB_Display1 || k.KB_Display2;
-
-        // POS1008 預設寬高
         const pos1008 = this.pos1008Map[k.code] ?? { width: 1, height: 1 };
 
         return {
           ECR_KBType: frm.value.ECR_KBType,
           USR_Level: frm.value.USR_Level,
-          KB_ScanCode: k.code,
+          KB_ScanCode: k.code,  // insert/update 一律傳 code
           KB_Func: hasConfig ? k.KB_Func : '',
           KB_Arg1: hasConfig ? k.KB_Arg1 : '',
           KB_Arg2: hasConfig ? k.KB_Arg2 : '',
@@ -367,7 +370,7 @@ export class TLS42010CRUComponent extends BasicCruPageComponent<any> implements 
           KB_Switch: hasConfig ? (k.KB_Switch || 'Y') : 'Y',
           KB_Width: pos1008.width,
           KB_Height: pos1008.height,
-          KB_Merge: k.code, // 固定 = KB_ScanCode
+          KB_Merge: k.code,
           KB_Color: hasConfig ? k.KB_Color : 'RGB:0,0,0',
           KB_FontColor: hasConfig ? k.KB_FontColor : 'RGB:0,0,0',
           KG_KeyPage: frm.value.activePage + 1
@@ -375,11 +378,10 @@ export class TLS42010CRUComponent extends BasicCruPageComponent<any> implements 
       });
 
       const payload = {
-        ID: this.rowdata?.ID ?? 0,
-        USR_Level: frm.value.USR_Level,
-        TSB_Name: frm.value.TSB_Name,
         ECR_KBType: frm.value.ECR_KBType,
+        USR_Level: frm.value.USR_Level,
         ECR_KBDesc: frm.value.ECR_KBDesc,
+        TSB_Name: frm.value.TSB_Name,
         POS1004Disc
       };
 
@@ -410,5 +412,11 @@ export class TLS42010CRUComponent extends BasicCruPageComponent<any> implements 
   }
   onTabChangeTab(event: any) {
     this.selectedTab = event.value;
+  }
+  toggleFonttyped(index: number, checked: boolean) {
+    const current = this.selectedKeyForm.controls['KB_Fonttyped'].value || 'NNN';
+    const arr = current.split('');
+    arr[index] = checked ? 'Y' : 'N';
+    this.selectedKeyForm.controls['KB_Fonttyped'].setValue(arr.join(''));
   }
 }
