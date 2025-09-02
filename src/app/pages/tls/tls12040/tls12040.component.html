@@ -69,11 +69,11 @@
           </div>
         </div>
         <div class="grid p-fluid">
-          <div class="col-12 md:col-6 lg:col-4">
+          <!-- <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown label="營運狀況" controlName="tlt_openflagList" [options]="operatingStatusOptions"
               optionLabel="label" optionValue="value" [control]="queryForm.controls.tlt_openflagList"
               [submitted]="submitted"></app-dropdown>
-          </div>
+          </div> -->
           <div class="col-12 md:col-6 lg:col-4">
             <app-multi-select label="抽成額計算方式" controlName="comm_comp_type" [options]="calculationMethodOptions"
               optionLabel="label" optionValue="value" [control]="queryForm.controls.comm_comp_type"
@@ -182,6 +182,7 @@
 </div>
 <div class="card">
   <div class="col-13">
-    <app-table [data]="data" [columns]="columns" (edit)="onEdit($event)" (detail)="onDetail($event)"></app-table>
+    <app-table [data]="data" [columns]="columns" (edit)="onRowClick($event)"
+      (detail)="onDetailClick($event)"></app-table>
   </div>
 </div>

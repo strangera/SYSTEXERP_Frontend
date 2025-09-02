@@ -4,6 +4,7 @@ import { catchError, map, Observable, tap } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import { ErrorHandlerService } from '../../system/error-handler.service';
 import { CleanSubmitData } from '../../../pages/tls/tls13010/tls13010.model';
+import { TLS12040RequestModel } from '@pages/tls/tls12040-cru/models/tls12040-cru.model';
 
 interface TLS13010FareRequest {
   talentId: string;
@@ -36,13 +37,13 @@ export class TLS12040Service {
   }
 
   /** 查詢契約書維護地點資料 */
-  queryTLS13010Location(talentId: string) {
-    const payload = { TalentId: talentId };
-    return this.http.post<any>(`${this.apiUrl}/TLS0000/TLS1000/queryTLS13010Location`, payload).pipe(
-      tap((res) => console.log('查詢地點資料結果:', res)),
+  // 在 TLS12040Service 中添加
+  queryTLS12040Detail(request: TLS12040RequestModel): Observable<any> {
+    return this.http.post(`${this.apiUrl}/TLS0000/TLS1000/queryTLS12040Detail`, request).pipe(
+      tap((res) => console.log('查詢合約詳細資料結果:', res)),
+      catchError(this.errorHandler.handleError)
     );
   }
-
   /** 查詢契約書維護地點資料 */
   // Service 方法
   queryTLS13010Fare(request: TLS13010FareRequest) {

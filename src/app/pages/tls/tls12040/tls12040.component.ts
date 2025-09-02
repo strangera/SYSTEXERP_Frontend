@@ -35,9 +35,10 @@ import { Column } from '@shared/componentkit/table/table.model';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { TLS12040Service } from '@service/api/tls/tls12040.service';
 import { TLS12040QueryRequest } from './models/tls12040.model';
+import { CRUDStatus } from '@shared/models/system/CRUDstatus';
 
 // 2.1.2.4 專櫃要約書維護
-export interface ContractItem {
+export interface TLS12040Response {
   id: number;
   mid: number;
 
@@ -82,7 +83,7 @@ export interface ContractItem {
     TranslateModule
   ]
 })
-export class TLS12040Component extends BasicQueryPageComponent<ContractItem> implements OnInit {
+export class TLS12040Component extends BasicQueryPageComponent<TLS12040Response> implements OnInit {
 
   // 查詢表單
   queryForm = this.formBuilder.group({
@@ -128,15 +129,14 @@ export class TLS12040Component extends BasicQueryPageComponent<ContractItem> imp
   });
 
   // 表格資料
-  data: ContractItem[] = [];
-  filteredData: ContractItem[] = [...this.data];
+  data: TLS12040Response[] = [];
+  filteredData: TLS12040Response[] = [...this.data];
   totalRecords: number = 0;
   columns: Column[] = [
     { field: 'apply_no', header: '專櫃招募編號', visible: true },
     { field: 'tlt_no', header: '專櫃編號', visible: true },
     { field: 'tlt_name', header: '櫃位名稱', visible: true },
     { field: 'apply_type', header: '合約狀態', visible: true, format: formatApproveStatus },
-    { field: 'tlt_openflag', header: '營運狀況', visible: true, format: formatOpenflagStatus }
   ];
 
   // ========== 下拉選單選項 ==========
@@ -373,22 +373,17 @@ export class TLS12040Component extends BasicQueryPageComponent<ContractItem> imp
     this.queryForm.reset();
   }
 
-  /**
-   * 手動重新載入特定選項 - 給使用者重新整理功能
-   */
-  refreshVendorOptions(): void {
-    console.log('🔄 手動重新載入廠商選項');
+  //編輯權限
+  onRowClick(rowData: TLS12040Response): void {
+    if (this.canPerformAction('30')) { // '修改' 的 function_code 是 "30"
+      this.navigateWithState(CRUDStatus.Edit, rowData);
+      console.log('🔄 進入編輯模式:', rowData);
+    }
+  }
 
-    this.sharedDropdownService.getVendorOptions('1').subscribe({
-      next: (options) => {
-        this.vendorUIDOptions = options;
-        console.log('✅ 廠商選項重新載入完成:', options.length);
-        this.messageService.successBubble('廠商選項已更新');
-      },
-      error: (error) => {
-        console.error('❌ 廠商選項重新載入失敗:', error);
-        this.messageService.errorBubble('廠商選項更新失敗');
-      }
-    });
+  onDetailClick(rowData: TLS12040Response): void {
+    if (this.canPerformAction('10')) { // '查詢' 的 function_code 是 "10"
+      this.navigateWithState(CRUDStatus.Read, rowData);
+    }
   }
 }

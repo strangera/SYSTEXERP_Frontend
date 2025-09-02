@@ -2,12 +2,11 @@
 // --Commonly used imports--
 import { Component, OnInit, } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { AuthService } from '../../../service/system/auth.service';
 import { TranslateService, TranslateModule } from '@ngx-translate/core';
-import { BasicCrupageComponent } from '../../../shared/componentextends/basic-crupage/basic-crupage.component';
 import { ValidationService } from '../../../shared/service/validation.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
@@ -29,6 +28,9 @@ import { RadiobuttonComponent } from "@shared/componentkit/radiobutton/radiobutt
 import { MultiSelectComponent } from "@shared/componentkit/multi-select/multi-select.component";
 import { SharedDropdownService } from '@shared/services/shared-dropdown.service';
 import { forkJoin } from 'rxjs';
+import { TLS12040Service } from '@service/api/tls/tls12040.service';
+import { TLS12040DetailModel, TLS12040RequestModel } from './models/tls12040-cru.model';
+import { TLS12040Response } from '../tls12040/tls12040.component';
 
 // 2.1.2.4 專櫃要約書維護CRU
 @Component({
@@ -38,7 +40,18 @@ import { forkJoin } from 'rxjs';
   standalone: true,
   imports: [MenubarComponent, ButtonComponent, PanelModule, FormsModule, ReactiveFormsModule, InputNumberComponent, DropdownComponent, InputTextComponent, CalendarComponent, CheckboxModule, EditorTextComponent, NgFor, ButtonDynamicallydeleteComponent, CalendarRangeComponent, ButtonDynamicallyaddComponent, NgIf, TranslateModule, InputTextareaComponent, AccordionModule, ExpandableEditTableComponent, RadiobuttonComponent, MultiSelectComponent]
 })
-export class TLS12040CRUComponent extends BasicCrupageComponent implements OnInit {
+export class TLS12040CRUComponent implements OnInit {
+  ProgNo = 'TLS12040';
+  formTitle = '';
+  submitted = false;
+  loading = false;
+  crudstatus = CRUDStatus.Edit; // 固定為 Edit，避免表單被 disable
+
+  // 用戶和權限
+  user: any;
+  funInfo: any;
+
+
   //寫死用getter API 用附值
   get decorationOptions() { return this.sharedDropdownService.decorationOptions; }  // 裝潢方式
 
@@ -95,7 +108,6 @@ export class TLS12040CRUComponent extends BasicCrupageComponent implements OnIni
   // meterReadingOptions: any[] = [];
 
   tltctypemtotalOption: any[] = [];
-  loading = false;
 
   // ----------------------------------------------------------------
   dataForm = this.formBuilder.group({
@@ -139,8 +151,8 @@ export class TLS12040CRUComponent extends BasicCrupageComponent implements OnIni
     rent_period: [0],
     base_rent: [0],
     deposit: [0],
-    total_amt: [''],
-    total_amt_vendor: [''],
+    total_amt: [0],
+    total_amt_vendor: [0],
     check_day: [0, [Validators.required]], // 必填，預設值 0
     // 業務設定
     comm_yn: ['N'],
@@ -152,7 +164,7 @@ export class TLS12040CRUComponent extends BasicCrupageComponent implements OnIni
     check_typeList: [[] as string[]],
     paytype: [''],
     vip_yn: [''],
-    credit_card: [''],
+    credit_card: [0],
     invoice_type: ['', [Validators.required]], // 必填
 
     // 其他設定
@@ -184,9 +196,9 @@ export class TLS12040CRUComponent extends BasicCrupageComponent implements OnIni
     cap_saletype4: [''],
     open_deposit: [''],
     open_fees: [0], //準時開業保證金
-    construct_deposit: [''],
+    construct_deposit: [0],
     construct_fees: [0], //施工保證金額
-    expiration_deposit: [''],
+    expiration_deposit: [0],
     expiration_fees: [0], //契約屆滿保證金金額
     total_amt_unit: [''],
     total_amt_vendor_unit: [''],
@@ -200,15 +212,241 @@ export class TLS12040CRUComponent extends BasicCrupageComponent implements OnIni
     private authService: AuthService,
     private translate: TranslateService,
     private validationService: ValidationService,
-
     private sharedDropdownService: SharedDropdownService,
-
-  ) {
-    super();  // 呼叫父類建構子
-  }
+    private route: ActivatedRoute, // 新增
+    private tls12040Service: TLS12040Service, // 新增
+  ) { }
 
   ngOnInit() {
     this.initializeDropdownOptions();
+    this.handleRouterState(); // 處理路由狀態
+  }
+
+  private handleRouterState(): void {
+    console.log('🔍 開始處理路由狀態');
+
+    const state = this.router.lastSuccessfulNavigation?.extras?.state;
+    console.log('🔍 路由狀態:', state);
+
+    if (state) {
+      const rowdata = state['rowdata'] as TLS12040Response;
+      const crudstatus = state['crudstatus'] as CRUDStatus;
+
+      console.log('📋 rowdata:', rowdata);
+      console.log('🔧 crudstatus:', crudstatus);
+
+      if (rowdata && (rowdata.id || rowdata.apply_no)) {
+        this.crudstatus = crudstatus;
+
+        switch (crudstatus) {
+          case CRUDStatus.Create:
+            this.formTitle = '新增專櫃要約書';
+            break;
+          case CRUDStatus.Edit:
+            this.formTitle = '編輯專櫃要約書';
+            break;
+          case CRUDStatus.Read:
+            this.formTitle = '查看專櫃要約書';
+            break;
+          default:
+            this.formTitle = '專櫃要約書維護';
+            break;
+        }
+
+        console.log('✅ 準備調用 API 載入詳細資料');
+        this.loadContractDetail(rowdata);
+        return;
+      }
+    }
+
+    // 沒有路由狀態，直接跳轉回列表頁
+    console.warn('⚠️ 沒有找到路由狀態，返回列表頁面');
+    this.messageService.warnBubble('無法載入資料，將返回列表頁面');
+    setTimeout(() => {
+      this.router.navigate(['account/tls/tls12040']);
+    }, 2000);
+  }
+  /**
+   * 處理載入錯誤的情況
+   */
+  private handleLoadError(): void {
+    console.log('⚠️ 處理載入錯誤');
+
+    // 3秒後返回列表頁面
+    setTimeout(() => {
+      this.router.navigate(['account/tls/tls12040']);
+    }, 3000);
+  }
+
+  private loadContractDetail(rowData: TLS12040Response): void {
+    console.log('🔄 開始載入合約詳細資料:', rowData);
+
+    this.loading = true;
+
+    // 構建 TLS12040RequestModel - 增加更多除錯資訊
+    const request: TLS12040RequestModel = {
+      id: rowData.id,
+      apply_no: rowData.apply_no
+    };
+    // 檢查 tls12040Service 是否正確注入
+    if (!this.tls12040Service) {
+      console.error('❌ tls12040Service 未正確注入!');
+      this.messageService.errorBubble('服務未正確初始化');
+      this.loading = false;
+      return;
+    }
+    this.tls12040Service.queryTLS12040Detail(request).subscribe({
+      next: (response: any) => {
+        if (response && response.Status === '0000' && response.Data) {
+          console.log('✅ API 成功返回資料，開始填充表單');
+          // 填充表單
+          this.populateForm(response.Data);
+          // 載入相依的下拉選單
+          this.loadDependentDropdowns(response.Data);
+          console.log('✅ 合約資料載入完成');
+        } else {
+          const errorMessage = response?.Message || '未知錯誤';
+          console.error('❌ API 返回錯誤狀態:', {
+            status: response?.Status,
+            message: errorMessage,
+            hasData: !!response?.Data
+          });
+          this.messageService.errorBubble(`載入資料失敗：${errorMessage}`);
+          this.handleLoadError();
+        }
+      },
+      error: (error) => {
+        console.error('❌ API 請求發生錯誤:');
+        console.error('- error object:', error);
+        console.error('- error.status:', error.status);
+        console.error('- error.statusText:', error.statusText);
+        console.error('- error.message:', error.message);
+        console.error('- error.error:', error.error);
+        this.handleLoadError();
+      },
+      complete: () => {
+        this.loading = false;
+        console.log('🏁 API 請求流程完成');
+      }
+    });
+  }
+
+
+
+  private loadDependentDropdowns(data: TLS12040DetailModel): void {
+    // 如果有大分類，載入對應的中分類
+    if (data.bus_type) {
+      this.onBusTypeChange(data.bus_type);
+    }
+    // 其他相依的下拉選單載入邏輯可以在這裡添加
+    // 例如：根據組織載入對應的位置選項等
+  }
+
+  private populateForm(data: TLS12040DetailModel): void {
+    // 基本資訊
+    this.dataForm.patchValue({
+      talent_id: data.talent_id,
+      apply_no: data.apply_no,
+      tlt_no: data.tlt_no,
+      tlt_name: data.tlt_name,
+      ven_uniform: data.ven_uniform,
+      ven_no: data.ven_no,
+      VEN_Name: data.VEN_Name,
+      contract_subno: data.contract_subno,
+      approve_status: data.approve_status,
+
+      // 日期欄位
+      tlt_bdate: data.tlt_bdate,
+      tlt_edate: data.tlt_edate,
+      tlt_contract_bdate: data.tlt_contract_bdate,
+      tlt_contract_edate: data.tlt_contract_edate,
+      feedback_date: data.feedback_date,
+      due_date: data.due_date,
+      contact_Date: data.contact_Date,
+
+      // 分類與商務條件
+      tlt_term_type: data.tlt_term_type,
+      comm_comp_type: data.comm_comp_type,
+      paper_type: data.paper_type,
+      bus_type: data.bus_type,
+      bus_class: data.bus_class,
+      bus_sclass: data.bus_sclass,
+
+      // 組織與人員
+      org_id: data.org_id,
+      contact_USR_No: data.contact_USR_No,
+      contact_USR_Name: data.contact_USR_Name,
+
+      // 其他條件
+      deco_type: data.deco_type,
+      money_type: data.money_type,
+      check_typeList: data.check_typeList || [],
+      edc_yn: data.edc_yn,
+      tlt_openflag: data.tlt_openflag,
+      comm_yn: data.comm_yn,
+      rece_yn: data.rece_yn,
+      pos_yn: data.pos_yn,
+      cash_yn: data.cash_yn,
+      store_way: data.store_way,
+      paytype: data.paytype,
+      vip_yn: data.vip_yn,
+
+      // 費用相關
+      base_rent: data.base_rent,
+      deposit: data.deposit,
+      credit_card: data.credit_card,
+      check_day: data.check_day,
+      open_fees: data.open_fees,
+      total_amt: data.total_amt,
+      total_amt_vendor: data.total_amt_vendor,
+      construct_deposit: data.construct_deposit,
+      construct_fees: data.construct_fees,
+      expiration_deposit: data.expiration_deposit,
+      expiration_fees: data.expiration_fees,
+      open_deposit: data.open_deposit,
+
+      // 其他設定
+      invoice_type: data.invoice_type,
+      tlt_kind: data.tlt_kind,
+      tlt_ctype_mtotal: data.tlt_ctype_mtotal,
+      overall_status: data.overall_status,
+      rent_ahead: data.rent_ahead,
+      rent_period: data.rent_period,
+      water_flag: data.water_flag,
+      electric_flag: data.electric_flag,
+      gas_flag: data.gas_flag,
+
+      // 聯絡資訊
+      email: data.email,
+      invoice_email: data.invoice_email,
+      CHECK_TITLE: data.CHECK_TITLE,
+      store_tel: data.store_tel,
+      bank_id: data.bank_id,
+      vendor_acct_name: data.vendor_acct_name,
+      vendor_acct_no: data.vendor_acct_no,
+      contact_tel: data.contact_tel,
+      contact_fax: data.contact_fax,
+      contact_addr: data.contact_addr,
+      tlt_remark: data.tlt_remark,
+      ticket_remarks: data.ticket_remarks,
+      total_amt_unit: data.total_amt_unit,
+      total_amt_vendor_unit: data.total_amt_vendor_unit,
+      company_register_address: data.company_addr,
+
+      // 狀態欄位
+      cap_saletype1: data.cap_saletype1,
+      cap_saletype2: data.cap_saletype2,
+      cap_saletype3: data.cap_saletype3,
+      cap_saletype4: data.cap_saletype4,
+    });
+
+    // // 載入分類資料（如果有 bus_type）
+    // if (data.bus_type) {
+    //   this.loadBusinessClassifications(data.bus_type, data.bus_class, data.bus_sclass);
+    // }
+
+    // 處理位置資訊（如果需要的話）
+    // this.loadLocationData(data.locationInfo);
   }
 
   private initializeDropdownOptions() {
