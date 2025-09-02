@@ -262,9 +262,7 @@ export class TLS42010CRUComponent extends BasicCruPageComponent<any> implements 
     this.buildGrid();
 
     detailList.forEach((d: any) => {
-      // 取 KB_ScanCode 最後 4 碼 (對應 0101, 0102 這種)
       const scanCode = d.KB_ScanCode?.slice(-4);
-
       const key = this.keys.find(k => k.code === scanCode);
       if (key) {
         Object.assign(key, {
@@ -276,7 +274,7 @@ export class TLS42010CRUComponent extends BasicCruPageComponent<any> implements 
           KB_Style: d.KB_Style,
           KB_Font: d.KB_Font,
           KB_Size: d.KB_Size,
-          KB_Fonttyped: d.KB_Fonttyped,
+          KB_Fonttyped: d.KB_Fonttyped, // 後端存的 "NYN"
           KB_Arg1: d.KB_Arg1,
           KB_Arg2: d.KB_Arg2,
           KB_Arg3: d.KB_Arg3,
@@ -285,12 +283,30 @@ export class TLS42010CRUComponent extends BasicCruPageComponent<any> implements 
       }
     });
 
-    // 自動選第一顆有設定的按鍵
+    // 如果有設定過的，選第一顆帶到右側表單
     const first = this.keys.find(k => k.KB_Func || k.KB_Display1 || k.KB_Display2);
     if (first) {
       this.selectKey(first);
+    } else {
+      // 沒有設定 → reset 右側 form
+      this.selectedKeyForm.reset({
+        KB_Func: '',
+        KB_Switch: 'Y',
+        KB_Display1: '',
+        KB_Display2: '',
+        KB_Color: 'RGB:0,0,0',
+        KB_Style: '',
+        KB_Font: '微軟正黑體',
+        KB_Size: 14,
+        KB_FontColor: 'RGB:0,0,0',
+        KB_Fonttyped: 'NNN',
+        KB_Arg1: '',
+        KB_Arg2: '',
+        KB_Arg3: ''
+      });
     }
   }
+
 
 
   // ---------------- Key 選取 ----------------
