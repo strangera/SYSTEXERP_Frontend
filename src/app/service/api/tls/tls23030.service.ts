@@ -61,7 +61,7 @@ queryPOS1006Options(): Observable<Array<{ label: string; value: string; payload:
     const url = `${this.apiUrl}/TLS0000/TLS2000/queryTLS23030_Summary`;
     return this.http.post<any>(url, body).pipe(
       tap(res => console.log('🎯 TLS23030 Summary 結果:', res)),
-      catchError(err => this.errorHandler.handleError(err))
+      
     );
   }
 
