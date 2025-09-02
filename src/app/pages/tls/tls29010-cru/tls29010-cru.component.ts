@@ -120,9 +120,9 @@ export class TLS29010CRUComponent extends BasicCruPageComponent<TALPORDERD_OPEND
     pod_status: ['', Validators.required], // 活動狀態(0=未核准, 1=已核准, 9=刪除)
 
     // 核准不會再新增進行
-    approved_userno: [null, [Validators.maxLength(16), this.validationService.noChineseValidator]], // 核准人員編號
-    approved_usr_name: [null, [Validators.maxLength(20)]], // 核准人員姓名
-    approved_date: [null], // 核准日期
+    approved_userno: [{ value: null, disabled: true }], // 核准人員編號
+    approved_usr_name: [{ value: null, disabled: true }], // 核准人員姓名
+    approved_date: [{ value: null, disabled: true }], // 核准日期
   });
 
   whetherOption: option[] = [ // 是否使用 Y/N
