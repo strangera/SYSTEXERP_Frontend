@@ -112,6 +112,7 @@ export class TLS42010CRUComponent extends BasicCruPageComponent<any> implements 
   selectedTab: 'func' | 'button' | 'font' | 'other' = 'func';
 
   // ---------------- Dropdown Data ----------------
+  pos1008Map: Record<string, { width: number; height: number }> = {};
   TSB_NameOptions: IDropdownItem[] = [];
   ECR_KBTypeOptions: IDropdownItem[] = [];
   KB_StyleOptions: IDropdownItem[] = [];
@@ -204,21 +205,34 @@ export class TLS42010CRUComponent extends BasicCruPageComponent<any> implements 
   }
 
   private loadDropdowns() {
+    // 收銀畫面名稱
     this.dropDownListService.queryPOS1008DropDownList().subscribe({
       next: (res) => {
-        this.TSB_NameOptions = res?.Data?.map(item => ({
+        this.TSB_NameOptions = res?.Data?.map((item: any) => ({
           No: item.TSB_Name,
           Name: item.TSB_Name
         })) ?? [];
+
+        // 同時建立一份 map，存每顆按鈕的 width/height
+        res?.Data?.forEach((item: any) => {
+          if (item.KB_ScanCode) {
+            this.pos1008Map[item.KB_ScanCode] = {
+              width: item.KB_Width ?? 1,
+              height: item.KB_Height ?? 1
+            };
+          }
+        });
       }
     });
 
+    // 鍵盤型態
     this.dropDownListService.querySYS1000_DropDownList({ SYS_Type: 'ECR_KBType' }).subscribe({
       next: (res) => {
         this.ECR_KBTypeOptions = res?.Data ?? [];
       }
     });
 
+    // 鍵盤樣式
     const params = { SYS_Type: 'KB_Style', SYS_Status: 'A' };
     this.dropDownListService.querySYS1000_DropDownList(params).subscribe({
       next: (res) => {
@@ -229,6 +243,7 @@ export class TLS42010CRUComponent extends BasicCruPageComponent<any> implements 
       }
     });
   }
+
 
   // ---------------- Grid ----------------
   private buildGrid() {
@@ -310,30 +325,38 @@ export class TLS42010CRUComponent extends BasicCruPageComponent<any> implements 
         Object.assign(this.selected, this.selectedKeyForm.getRawValue());
       }
 
-      const POS1004Disc = this.keys.filter(k =>
-        k.KB_Func || k.KB_Display1 || k.KB_Display2
-      ).map(k => ({
-        ECR_KBType: frm.value.ECR_KBType,
-        USR_Level: frm.value.USR_Level,
-        KB_ScanCode: k.code,
-        KB_Func: k.KB_Func,
-        KB_Arg1: k.KB_Arg1,
-        KB_Arg2: k.KB_Arg2,
-        KB_Arg3: k.KB_Arg3,
-        KB_Display1: k.KB_Display1,
-        KB_Display2: k.KB_Display2,
-        KB_Font: k.KB_Font,
-        KB_Size: k.KB_Size,
-        KB_Fonttyped: k.KB_Fonttyped,
-        KB_Style: k.KB_Style,
-        KB_Switch: k.KB_Switch,
-        KB_Width: k.x,
-        KB_Height: k.y,
-        KB_Merge: '',
-        KB_Color: k.KB_Color,
-        KB_FontColor: k.KB_FontColor,
-        KG_KeyPage: frm.value.activePage + 1
-      }));
+      const POS1004Disc = this.keys.map(k => {
+        // 判斷是否有設定
+        const hasConfig = k.KB_Func || k.KB_Display1 || k.KB_Display2;
+
+        // POS1008 預設寬高
+        const pos1008 = this.pos1008Map[k.code] ?? { width: 1, height: 1 };
+
+        return {
+          ECR_KBType: frm.value.ECR_KBType,
+          USR_Level: frm.value.USR_Level,
+          KB_ScanCode: k.code,
+          KB_Func: hasConfig ? k.KB_Func : '',
+          KB_Arg1: hasConfig ? k.KB_Arg1 : '',
+          KB_Arg2: hasConfig ? k.KB_Arg2 : '',
+          KB_Arg3: hasConfig ? k.KB_Arg3 : '',
+          KB_Display1: hasConfig ? k.KB_Display1 : '',
+          KB_Display2: hasConfig ? k.KB_Display2 : '',
+          KB_Font: hasConfig ? k.KB_Font : 'Microsoft JhengHei',
+          KB_Size: hasConfig ? k.KB_Size : 14,
+          KB_Fonttyped: hasConfig
+            ? (Array.isArray(k.KB_Fonttyped) ? k.KB_Fonttyped.join(',') : (k.KB_Fonttyped || 'NNN'))
+            : 'NNN',
+          KB_Style: hasConfig ? (k.KB_Style || '1') : '1',
+          KB_Switch: hasConfig ? (k.KB_Switch || 'Y') : 'Y',
+          KB_Width: pos1008.width,
+          KB_Height: pos1008.height,
+          KB_Merge: k.code, // 固定 = KB_ScanCode
+          KB_Color: hasConfig ? k.KB_Color : 'RGB:0,0,0',
+          KB_FontColor: hasConfig ? k.KB_FontColor : 'RGB:0,0,0',
+          KG_KeyPage: frm.value.activePage + 1
+        };
+      });
 
       const payload = {
         ID: this.rowdata?.ID ?? 0,
