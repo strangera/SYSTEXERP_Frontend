@@ -18,7 +18,7 @@ import { DialogModule } from 'primeng/dialog';
 import { ColorPickerModule } from 'primeng/colorpicker';
 import { Tls42010Service } from '../../../service/api/tls/tls42010.service';
 import { CRUDStatus } from '@shared/models/system/CRUDstatus';
-
+import { CheckboxModule } from 'primeng/checkbox';
 export interface KeyItem {
   code: string;
   x: number;
@@ -62,16 +62,17 @@ export interface KeyItem {
     TabViewModule,
     ButtonModule,
     DialogModule,
-    ColorPickerModule
+    ColorPickerModule,
+    CheckboxModule
   ]
 })
 export class TLS42010CRUComponent extends BasicCruPageComponent<any> implements OnInit {
 
   // 主檔 form
   dataForm = this.formBuilder.nonNullable.group({
-    USR_Level: ['', Validators.maxLength(6)],
-    TSB_Name: [''],
-    ECR_KBType: ['TCHBTN'],
+    USR_Level: ['', [Validators.maxLength(6), Validators.required]],
+    TSB_Name: ['', Validators.required],
+    ECR_KBType: ['TCHBTN', Validators.required],
     ECR_KBDesc: [''],
     activePage: [0]
   });
@@ -89,7 +90,7 @@ export class TLS42010CRUComponent extends BasicCruPageComponent<any> implements 
     KB_Size: [14],
     KB_FontColor: ['RGB:0,0,0'],
     FontColor: [null],
-    KB_Fonttyped: [''],
+    KB_Fonttyped: [[]],
     KB_Arg1: [''],
     KB_Arg2: [''],
     KB_Arg3: ['']
