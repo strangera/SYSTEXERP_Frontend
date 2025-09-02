@@ -5,12 +5,22 @@ export interface Column {
   disabled?: (value: any, index?: number, rowData?: any) => boolean;  // 是否禁用 (是否為禁用欄位)
   validate?: ((value: any, rowData: any, data: any[], field: string, header: string) => { isValid: boolean, errorMessage: string[]; })[];
   type?: 'input' | 'inputNumber' | 'dropdown'; // 欄位類型
+  width?: string;
+  textAlign?: 'left' | 'right' | 'center' | 'justify' | 'match-parent' | 'initial' | 'inherit' | 'unset' | 'revert' | 'revert-layer' | 'unset';
+  // inputNumber
+  min?: number; // 最小值
+  max?: number; // 最大值
+  minLength?: number;
+  maxLength?: number;
   // dropdown
   options?: any | ((rowData: any) => any); // 支持靜態數據或基於 rowData 生成
   optionLabel?: string; // 下拉選單 optionLabel
   optionValue?: string; // 下拉選單 optionValue
   templateLabel?: string; // 模板欄位 label
   showClear?: boolean; // 是否顯示清除按鈕
+
+  onFocus?: (rowData: any, value: any, col: Column, index: number) => void;
+  onBlur?: (rowData: any, value: any, col: Column, index: number) => void;
 }
 // 欄位變更事件
 export interface FieldChangeEvent {

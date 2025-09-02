@@ -23,14 +23,14 @@
   <ng-template pTemplate="header" let-columns>
     <tr>
       <th *ngIf="data.length" class="w-1rem text-center"></th>
-      <th [attr.colspan]="!data[0]._isAutoInsertCandidate ? 1 : 2" class="w-1rem text-center">序號
+      <th [attr.colspan]="data.length === 1 ? 2 : 1" class="w-1rem text-center">序號
       </th>
       <th *ngIf="!disabled && data.length && !data[0]._isAutoInsertCandidate" class="w-1rem text-center">
         <p-tableHeaderCheckbox [disabled]="disabled" />
       </th>
       <th *ngFor="let col of columns" pReorderableColumn pResizableColumn class="text-center">
         {{ col.header }}
-        <span *ngIf="col.required" class="required">*</span>
+        <span *ngIf="isRequired(col)" class="required">*</span>
       </th>
     </tr>
   </ng-template>
@@ -67,26 +67,30 @@
         (keydown)="$event.stopPropagation()">
         <ng-container [ngSwitch]="col.type">
           <p-iconField iconPosition="right">
-            <input *ngSwitchCase="'input'" pInputText class="w-full min-w-max" [placeholder]="'請輸入' + col.header"
+            <input *ngSwitchCase="'input'" pInputText class="min-w-max" [placeholder]="'請輸入' + col.header"
               [(ngModel)]="rowData[col.field]" [ngModelOptions]="{ standalone: true }"
               [disabled]="(col.disabled && col.disabled(rowData[col.field], index, rowData)) || disabled"
               (ngModelChange)="onValueChange(rowData,$event, col, index)"
+              [style]="{'width': col.width, 'text-align': col.textAlign,'min-width':'-webkit-fill-available'}"
               [variant]="rowData._isAutoInsertCandidate ? 'filled' : 'outlined'"
               (blur)="onValueChange(rowData,rowData[col.field], col, index)"
               [ngClass]="{'ng-invalid ng-dirty': rowData._validationErrors?.[col.field] }" />
-            <p-inputNumber *ngSwitchCase="'inputNumber'" class="w-full min-w-max" styleClass="w-full" mode="decimal"
+            <p-inputNumber *ngSwitchCase="'inputNumber'" class="min-w-max" mode="decimal"
               [(ngModel)]="rowData[col.field]" [ngModelOptions]="{ standalone: true }"
-              [placeholder]="'請輸入' + col.header"
+              [placeholder]="'請輸入' + col.header" [min]="col.min" [max]="col.max"
               [disabled]="(col.disabled && col.disabled(rowData[col.field], index, rowData)) || disabled"
-              (onInput)="onValueChange(rowData,$event.value, col, index)"
+              (onInput)="onValueChange(rowData,$event.value, col, index)" [minlength]="col.minLength"
+              [maxlength]="col.maxLength" (onFocus)="col.onFocus?.(rowData, rowData[col.field], col, index)"
+              (onBlur)="col.onBlur?.(rowData, rowData[col.field], col, index); onValueChange(rowData,rowData[col.field], col, index)"
+              [style]="{'width': col.width, 'text-align': col.textAlign,'min-width':'-webkit-fill-available'}"
               [variant]="rowData._isAutoInsertCandidate ? 'filled' : 'outlined'"
-              (onBlur)="onValueChange(rowData,rowData[col.field], col, index)"
               [ngClass]="{'ng-invalid ng-dirty': rowData._validationErrors?.[col.field] }" />
-            <p-dropdown *ngSwitchCase="'dropdown'" class="flex min-w-max" styleClass="w-full" appendTo="body"
+            <p-dropdown *ngSwitchCase="'dropdown'" class="flex min-w-max" appendTo="body"
               [(ngModel)]="rowData[col.field]" [ngModelOptions]="{ standalone: true }"
               [placeholder]="'請輸入' + col.header" [options]="getOptions(rowData, col)" [optionLabel]="col.optionLabel"
               [optionValue]="col.optionValue"
-              [disabled]="(col.disabled && col.disabled(rowData[col.field], index, rowData)) || disabled"
+              [style]="{'width': col.width, 'text-align': col.textAlign,'min-width':'-webkit-fill-available'}"
+              [disabled]=" (col.disabled && col.disabled(rowData[col.field], index, rowData)) || disabled"
               [editable]="true" (onChange)="onValueChange(rowData,$event.value, col, index)"
               (onHide)="onValueChange(rowData,rowData[col.field], col, index)" [virtualScroll]="true"
               [virtualScrollItemSize]="40" [showClear]="col.showClear || true"
@@ -121,3 +125,4 @@
     </tr>
   </ng-template>
 </p-table>
+<span *ngIf="tableDataEmpty" class="block w-full text-right text-red-500">至少輸入一筆資料</span>

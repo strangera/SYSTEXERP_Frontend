@@ -17,6 +17,8 @@ import { TooltipModule } from 'primeng/tooltip';
 import { IconFieldModule } from 'primeng/iconfield';
 import { InputIconModule } from 'primeng/inputicon';
 import { BreadcrumbModule } from "primeng/breadcrumb";
+import { validateRequired } from './validate-field.model';
+import { NotificationService } from '@shared/component/notification-message/notification.service';
 @Component({
   selector: 'app-table-edit',
   templateUrl: './table-edit.component.html',
@@ -42,9 +44,11 @@ import { BreadcrumbModule } from "primeng/breadcrumb";
 export class TableEditComponent implements OnChanges, AfterContentInit {
   @ViewChild('dt', { static: false }) dt!: Table;         // table 元件
   // 基本設置
-  @Input() dataKey = '_TABLE_KEY';                                // table 資料key
+  @Input() dataKey = '_TABLE_KEY';                        // table 資料key
   @Input() tableKey: string | undefined = undefined;      // table 唯一標識 (必填)
   @Input() title: string | undefined = undefined;         // table 標題
+  @Input() tableRequired = false;                         // table 是否為必填
+  tableDataEmpty = false;                                 // table 資料是否為空
   @Input() columns!: Column[];                            // table 欄位配置 (必填)
   @Input() data: any[] = [];                              // table 資料 (必填)
   @Output() dataChange = new EventEmitter<any[]>();       // table 資料改變 (事件)
@@ -74,22 +78,23 @@ export class TableEditComponent implements OnChanges, AfterContentInit {
   //   }
   //   return { isValid: true, errorMessage: '' };
   // }
-  @Input() rowValidate: ((rowData: any) => { isValid: boolean, errorMessage: string }) | undefined = undefined;
+  @Input() rowValidate: ((rowData: any, index?: number) => { isValid: boolean, errorMessage: string }) | undefined = undefined;
   @Output() fieldChange = new EventEmitter<FieldChangeEvent>(); // input 變更事件
   constructor(
     private readonly tableUtilityService: TableUtilityService,
-    private readonly cdr: ChangeDetectorRef
+    private readonly cdr: ChangeDetectorRef,
+    private readonly messageService: NotificationService
   ) { }
   ngOnChanges(changes: SimpleChanges): void {
     if (changes['data'] && this.data.length > 0) {
       // 一開始先將無狀態的資料設為Original
-      this.data = this.data.filter(item => item != null).map((item: any) => {
+      this.data = this.data.filter(item => item != null).map((item: any, index) => {
         if (item[this.dataStatusField] === undefined) {
           item[this.dataStatusField] = this.dataStatusValue.Original;
         }
         // 載入資料時也執行整行驗證
         if (this.rowValidate) {
-          item._rowValidationError = this.rowValidate(item);
+          item._rowValidationError = this.rowValidate(item, index);
         }
         return item;
       });
@@ -156,7 +161,7 @@ export class TableEditComponent implements OnChanges, AfterContentInit {
     if (this.disabled) {
       return;
     }
-
+    this.tableDataEmpty = false;
     // 如果資料是 Original 狀態，且有變更，則將狀態改為 Modified
     if (rowData[this.dataStatusField] === this.dataStatusValue.Original) {
       rowData[this.dataStatusField] = this.dataStatusValue.Modified;
@@ -178,8 +183,7 @@ export class TableEditComponent implements OnChanges, AfterContentInit {
     // 執行整行驗證並儲存結果
     // 只有當行不再是自動插入的候選行時才執行整行驗證，以避免驗證空行
     if (this.rowValidate && !isAutoInsertCandidate) {
-      console.log('🚨 驗證整行資料:', rowData);
-      rowData._rowValidationError = this.rowValidate(rowData);
+      rowData._rowValidationError = this.rowValidate(rowData, index);
     } else if (isAutoInsertCandidate) {
       // 如果是新增行，確保清空所有驗證錯誤，避免顯示紅色
       if (rowData._rowValidationError) {
@@ -192,6 +196,33 @@ export class TableEditComponent implements OnChanges, AfterContentInit {
 
     // 由於數據綁定和驗證已經更新了 `this.data`，再次發送 `dataChange`
     this.dataChange.emit(this.data);
+  }
+
+  validateAllRows(): boolean {
+    // 排除自動插入的空行
+    const rowsToValidate = this.data.filter(row => !row._isAutoInsertCandidate);
+
+    // 遍歷每一行並檢查其驗證狀態
+    const isValid = rowsToValidate.every(row => {
+      // 執行單一欄位的驗證
+      const areFieldsValid = this.columns.every(col => {
+        // 確保欄位驗證函式存在
+        if (col.validate) {
+          // 執行每個欄位的驗證規則
+          const validationResults = col.validate.map(validateFn => validateFn(row[col.field], row, this.data, col.field, col.header));
+          // 檢查是否有任何一個驗證失敗
+          return validationResults.every(result => result.isValid);
+        }
+        return true; // 如果沒有驗證規則，則視為有效
+      });
+
+      // 執行整行驗證
+      const isRowValid = !this.rowValidate || (this.rowValidate(row)?.isValid ?? true);
+
+      return areFieldsValid && isRowValid;
+    });
+
+    return isValid;
   }
 
   // 對單一欄位執行驗證，並更新 rowData 中的錯誤狀態
@@ -228,6 +259,53 @@ export class TableEditComponent implements OnChanges, AfterContentInit {
     // }
     return isValidField;
   }
+  /** // !!! 整筆欄位使用，父層使用方法：
+   /* // !!! 1. 宣告：@ViewChild(TableEditComponent) tableEditComponent!: TableEditComponent;
+   /* // !!! 2. 在提交呼叫共通元件：const valid = this.tableEditComponent.validateAndShowErrors();
+   /* // !!! 3. 使用 valid 來判斷是否通過
+ * 執行完整的驗證並處理錯誤提示
+ * @returns {boolean} 整個表格是否有效
+ */
+  validateAndShowErrors(): boolean {
+    if (!this.disabled && this.data[0]._isAutoInsertCandidate && this.tableRequired) {
+      this.tableDataEmpty = true;
+      return false;
+    }
+    for (const rowData of this.data) {
+      if (rowData._isAutoInsertCandidate) { continue; }
+      for (const col of this.columns) {// 1. 執行單一欄位驗證
+        if (!rowData._validationErrors) { // 確保 _validationErrors 物件存在
+          rowData._validationErrors = {};
+        }
+        let hasError = false;
+        if (col.validate) {// 執行所有驗證規則
+          for (const validateFn of col.validate) {
+            const validationResult = validateFn(rowData[col.field], rowData, this.data, col.field, col.header);
+            if (!validationResult.isValid) {
+              rowData._validationErrors[col.field] = validationResult.errorMessage[0] || '欄位驗證失敗。';
+              hasError = true;
+              break; // 找到第一個欄位錯誤就跳出
+            }
+          }
+        }
+        if (!hasError) {// 如果該欄位沒有錯誤，確保清除錯誤訊息
+          delete rowData._validationErrors[col.field];
+        }
+        if (hasError) { // 如果有任何欄位錯誤，直接顯示並返回 false
+          this.messageService.errorBubble(`｢${col.header}」 ` + rowData._validationErrors[col.field], '表格欄位驗證失敗');
+          return false;
+        }
+      }
+      if (this.rowValidate) {// 2. 執行整行驗證
+        rowData._rowValidationError = this.rowValidate(rowData);
+      }
+      if (rowData._rowValidationError?.isValid === false) {// 如果整行驗證有錯誤，直接顯示並返回 false
+        this.messageService.errorBubble(rowData._rowValidationError.errorMessage, '表格驗證失敗');
+        return false;
+      }
+    }
+    return true;// 所有行都驗證通過
+  }
   onRowReorder(event: TableColumnReorderEvent) {
     if (this.disabled || !event.dragIndex) {
       return;
@@ -248,6 +326,10 @@ export class TableEditComponent implements OnChanges, AfterContentInit {
     }
   }
   // !!! 以下為核心
+  // 判斷此col的validate參數是否有validateRequired的fuction
+  isRequired(col: Column) {
+    return col.validate?.some(validate => validate === validateRequired);
+  }
   onColReorder(event: TableColumnReorderEvent) {
     this.columns = event.columns as Column[];// 欄位調整
   }
