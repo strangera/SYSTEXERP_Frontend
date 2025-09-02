@@ -182,12 +182,13 @@
       <p-tableCheckbox class="flex justify-content-center pointer-events-none" [pSelectableRow]="rowData"
         [value]="rowData" [disabled]="!isRowSelectable(rowData)" />
     </td>
-    <td *ngIf="expansionDataKey && IsPrint" rowspan="2">
-      <p-button pRipple [pRowToggler]="rowData" [text]="true" [rounded]="true" [plain]="true" severity="secondary"
-        [raised]="!expanded" [icon]="expanded? 'pi pi-chevron-down': 'pi pi-chevron-right'"
-        [disabled]="rowData[expansionDataKey]?.length === 0" pButton />
-    </td>
-
+    <td *ngIf="expansionColumns.length && IsPrint" class="text-center">
+          <p-button pRipple [text]="true" [rounded]="true" [plain]="true" severity="secondary"
+            [raised]="!expandedRows[rowData[dataKey]]"
+            [icon]="rowData.expansionLoading ? 'pi pi-spin pi-spinner' : (expandedRows[rowData[dataKey]] ? 'pi pi-chevron-down' : 'pi pi-chevron-right')"
+            pButton (click)="toggleRowExpansion(rowData)"
+            [disabled]="rowData.expansionLoading || (!expansionLoadFn && !rowData[expansionDataKey]?.length)" />
+        </td>
     <ng-container *ngFor="let col of columns">
       <td *ngIf="!col.hidden && (col.rowspan || col.headerRow === 1)" [attr.rowspan]="col.rowspan ? 2 : null"
         class="text-center" [ngClass]="col.style" [alignFrozen]="col.alignFrozen ?? 'right'" pFrozenColumn

@@ -21,7 +21,7 @@ import {
 import { SortMeta, PrimeTemplate } from 'primeng/api';
 import {
   AddButton,
-  Column2,
+  Column,
   ColumnGroup,
   FieldChangeEvent,
   LazyLoadEvent,
@@ -38,7 +38,7 @@ import { NotificationService } from '../../component/notification-message/notifi
 import { QueryStateService } from '../../service/query-state.service';
 import { BasicPrintData2Component } from '../../componentextends/basic-print/basic-print-data2.component';
 import { CurrentPageService } from '../../../layout/app.menulist/current-page.service';
-import { Subject, takeUntil } from 'rxjs';
+import { Observable, Subject, takeUntil } from 'rxjs';
 import { FunsrightInfo } from '../../models/system/funsrightInfo';
 import { NgIf, NgClass, NgFor, NgStyle } from '@angular/common';
 import { DividerModule } from 'primeng/divider';
@@ -60,6 +60,7 @@ import {
 } from './table-export2/table-export2.component';
 import { BlockUIModule } from 'primeng/blockui';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
+import { Table2UtilityService } from './table2-utility.service';
 @Component({
   selector: 'app-table2',
   templateUrl: './table2.component.html',
@@ -103,12 +104,13 @@ export class Table2Component
   @Input() tableKey: string | undefined = undefined; // table 唯一標識 (必填)
   @Input() apiUrl?: string; // table API URL (可選)
   @Input() title: string | undefined = undefined; // table 標題
-  @Input() columns!: Column2[]; // table 欄位配置 (必填)
-  selectedColumns!: Column2[]; // table 預設顯示欄位
+  @Input() columns!: Column[]; // table 欄位配置 (必填)
+  selectedColumns!: Column[]; // table 預設顯示欄位
   @Input() data: any[] = []; // table 資料 (必填)
   @Output() dataChange = new EventEmitter<any[]>(); // table 資料改變 (事件)
   @Input() loading = false; // 是否顯示 loading
   @Input() disabled = false; // 是否禁用 table
+    @Input() expansionLoadFn?: (rowData: any) => Observable<any>; // 屬性來接收父層傳來的載入函數
   // 欄位群組
   @Input() columnGroup?: ColumnGroup[]; // table 群組欄位
   // 資料小計
@@ -150,7 +152,7 @@ export class Table2Component
   @Input() deleteData = false; // 預先刪除資料
   @Output() delete = new EventEmitter<any>(); // 刪除事件
   // expansion 收合展開
-  @Input() expansionColumns: Column2[] = []; // 收合展開 欄位配置(expansion必需配置)
+  @Input() expansionColumns: Column[] = []; // 收合展開 欄位配置(expansion必需配置)
   @Input() expansionDataKey = ''; // 收合展開 資料key(expansion必需配置)
   @Input() expansionSortField = ''; // 收合展開 排序欄位(單一排序)
   @Input() expansionSortOrder = 0; // 收合展開 排序方向 (1:升序、-1:降序)
@@ -204,6 +206,7 @@ export class Table2Component
     private readonly queryStateService: QueryStateService,
     private readonly messageService: NotificationService,
     private readonly currentPageService: CurrentPageService,
+     private readonly table2UtilityService: Table2UtilityService,
     private sanitizer: DomSanitizer,
   ) {
     super();
@@ -306,6 +309,10 @@ ngOnChanges(changes: SimpleChanges): void {
       this.tableKey + 'Sort',
       this.multiSortMeta,
     );
+  }
+    // 切換行展開
+  toggleRowExpansion(rowData: any) {
+    this.table2UtilityService.toggleRowExpansionLogic(rowData, this.dataKey, this.expansionDataKey, this.expansionLoadFn, this.expandedRows, this);
   }
   loadDataLazy(event: TableLazyLoadEvent) {
     setTimeout(() => {
@@ -442,7 +449,7 @@ ngOnChanges(changes: SimpleChanges): void {
     this.selectionChange.emit(this.selectedItems);
   }
   // (欄位是Dropdown使用): 獲取Dropdown的選項，支持function加入或直接給List
-  getOptions(rowData: any, col: Column2) {
+  getOptions(rowData: any, col: Column) {
     return typeof col.options === 'function'
       ? col.options(rowData) || undefined
       : col.options || undefined;
@@ -510,7 +517,7 @@ ngOnChanges(changes: SimpleChanges): void {
     return this.sanitizer.bypassSecurityTrustHtml(html);
   }
 
-  getColumnSpan(columns: Column2[], groupField: string): number {
+  getColumnSpan(columns: Column[], groupField: string): number {
     return columns.filter(
       (col) =>
         col.groupField === groupField &&
@@ -520,9 +527,9 @@ ngOnChanges(changes: SimpleChanges): void {
   }
 
   getUngroupedColumns(
-    columns: Column2[],
+    columns: Column[],
     columnGroup: ColumnGroup[],
-  ): Column2[] {
+  ): Column[] {
     const groupFields = columnGroup.map((g) => g.field);
     return columns.filter(
       (col) =>
@@ -532,9 +539,9 @@ ngOnChanges(changes: SimpleChanges): void {
     );
   }
   shouldRenderGroupHeader(
-    col: Column2,
+    col: Column,
     index: number,
-    columns: Column2[],
+    columns: Column[],
   ): boolean {
     if (!col.groupField || col.hidden === true || col.visible === false)
       return false;

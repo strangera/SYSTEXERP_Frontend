@@ -43,6 +43,7 @@ import { ButtonModule } from 'primeng/button';            // ✅ 新增：p-butt
 import { HttpResponse } from '@angular/common/http';      // ✅ 新增：匯出回應
 import { CheckboxModule } from 'primeng/checkbox';
 import { CommonModule } from '@angular/common';
+import { Table2Component } from '@shared/componentkit/table2/table2.component';
 
 @UntilDestroy()
 //型態別報表
@@ -70,6 +71,7 @@ import { CommonModule } from '@angular/common';
     TableComponent,
     ButtonModule,
     CheckboxModule, 
+    Table2Component,
   ],
 })
 export class TLS23010Component

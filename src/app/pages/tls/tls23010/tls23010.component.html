@@ -269,7 +269,7 @@
 <div class="card">
   <div class="col-12">
     <!-- ✅ 明細表（原本） -->
-    <app-table
+    <app-table2
       *ngIf="!showSummary"
       apiUrl="queryTLS23010"
       tableKey="TLS23010query"
@@ -284,8 +284,8 @@
       [showManage]="false"
       [multiSortMeta]="[{ field: 'ECR_No', order: 1 }]"
       [totalRecords]="totalRecords"
-  (lazyLoadData)="onLazyLoadData($event, queryForm)"
-  [lazy]="true"
+      (lazyLoadData)="onLazyLoadData($event, queryForm)"
+      [lazy]="true"
       [loading]="loading"
       (selectionChange)="selectedItems= $event"
       [selectedItems]="selectedItems"
@@ -315,7 +315,7 @@
           ></p-button>
         </div>
       </header>
-    </app-table>
+    </app-table2>
 
     <!-- ✅ 彙總表（新增） -->
     <app-table
