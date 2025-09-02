@@ -458,7 +458,9 @@ export class TLS23010Component
 
   nullpToYesNo = (val: unknown): string => {
     if (val === null || val === undefined) return '否';
-    const trimmed = String(val).replace(/^[\s\u00A0\u3000]+|[\s\u00A0\u3000]+$/g, '');
+    const trimmed = String(val).replace(/^[\s\u00A0\u3000]+|[\s\u00A0\u3000]+$/g, '').toUpperCase();
+    if (trimmed === 'Y') return '是';
+    if (trimmed === 'N') return '否';
     return trimmed.length === 0 ? '否' : '是';
   };
 
