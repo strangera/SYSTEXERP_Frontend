@@ -73,7 +73,7 @@ discountRows: any[] = [];
   // 🔽 排序設定
   sortMeta: any[] = [];
   readonly defaultSort: any[] = [
-    { field: 'TXN_Date', order: -1 },
+    { field: 'TXN_Date', order: 1 },
     { field: 'ECR_No',   order: 1 },
     { field: 'TXN_No',   order: 1 },
   ];
@@ -102,7 +102,7 @@ discountRows: any[] = [];
     org_id: [],
     // 🔽 這裡帶入排序欄位
     ...createPaginationConfig([
-      { field: 'TXN_Date', order: -1 },
+      { field: 'TXN_Date', order: 1 },
       { field: 'ECR_No',   order: 1 },
       { field: 'TXN_No',   order: 1 },
     ]),
