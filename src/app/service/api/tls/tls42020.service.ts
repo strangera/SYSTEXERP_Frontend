@@ -8,6 +8,7 @@ import { Observable, of } from 'rxjs';
 export interface TLS42020QueryRequest extends BaseQueryRequest {
   menuType: string[];              // 菜單類別
   tltNo: string[];                 // 專櫃編號
+  tltName?: string[];               // 專櫃名稱 - 新增此欄位
   SBM_BegDate_s: string;          // 開始日期(起)
   SBM_BegDate_e: string;          // 開始日期(迄)
   SBM_EndDate_s: string;          // 結束日期(起)
@@ -16,12 +17,12 @@ export interface TLS42020QueryRequest extends BaseQueryRequest {
 
 // Data result interface for TLS42020 (POS1027M資料表)
 export interface TLS42020Data {
-  CRT_Date: string;               // 建立日期
-  CRT_USR_No: string;             // 建立者編號
-  CRT_USR_Name: string;           // 建立者姓名
-  UPD_Date: string;               // 更新日期
-  UPD_USR_No: string;             // 更新者編號
-  UPD_USR_Name: string;           // 更新者姓名
+  crt_date: string;               // 建立日期 - 改為小寫 snake_case
+  crt_usr_no: string;             // 建立者編號 - 改為小寫 snake_case
+  crt_usr_name: string;           // 建立者姓名 - 改為小寫 snake_case
+  upd_date: string;               // 更新日期 - 改為小寫 snake_case
+  upd_usr_no: string;             // 更新者編號 - 改為小寫 snake_case
+  upd_usr_name: string;           // 更新者姓名 - 改為小寫 snake_case
   id: number;                     // ID
   mid: number;                    // MID
   STO_No: string;                 // 店舖編號
@@ -34,7 +35,7 @@ export interface TLS42020Data {
 
 // Detail query request interface for TLS42020
 export interface TLS42020DetailQueryRequest {
-  STO_No: string;                 // 店舖編號
+  tltNo: string;                // 專櫃編號
 }
 
 // Detail data result interface for TLS42020 (POS10271資料表)
@@ -109,12 +110,12 @@ export class TLS42020Service {
       Message: '查詢成功',
       Data: [
         {
-          CRT_Date: '2024-01-15',
-          CRT_USR_No: 'U001',
-          CRT_USR_Name: '張三',
-          UPD_Date: '2024-01-16',
-          UPD_USR_No: 'U002',
-          UPD_USR_Name: '李四',
+          crt_date: '2024-01-15',
+          crt_usr_no: 'U001',
+          crt_usr_name: '張三',
+          upd_date: '2024-01-16',
+          upd_usr_no: 'U002',
+          upd_usr_name: '李四',
           id: 1,
           mid: 101,
           STO_No: 'S001',
@@ -122,15 +123,15 @@ export class TLS42020Service {
           TLT_No: 'T001',
           SBM_BegDate: '2024-01-01',
           SBM_EndDate: '2024-12-31',
-          TLT_Name: '美食專櫃'
+          TLT_Name: '美食專櫃',
         },
         {
-          CRT_Date: '2024-01-15',
-          CRT_USR_No: 'U001',
-          CRT_USR_Name: '張三',
-          UPD_Date: '2024-01-16',
-          UPD_USR_No: 'U002',
-          UPD_USR_Name: '李四',
+          crt_date: '2024-01-15',
+          crt_usr_no: 'U001',
+          crt_usr_name: '張三',
+          upd_date: '2024-01-16',
+          upd_usr_no: 'U002',
+          upd_usr_name: '李四',
           id: 2,
           mid: 102,
           STO_No: 'S002',
@@ -138,7 +139,7 @@ export class TLS42020Service {
           TLT_No: 'T002',
           SBM_BegDate: '2024-02-01',
           SBM_EndDate: '2024-12-31',
-          TLT_Name: '服飾專櫃'
+          TLT_Name: '服飾專櫃',
         }
       ],
       TotalCount: 2,
@@ -156,10 +157,10 @@ export class TLS42020Service {
       Message: '查詢成功',
       Data: [
         {
-          CRT_Date: '2024-01-15',
+          CRT_Date: '2024-01-15T00:00:00.000Z',
           CRT_USR_No: 'U001',
           CRT_USR_Name: '張三',
-          UPD_Date: '2024-01-16',
+          UPD_Date: '2024-01-16T00:00:00.000Z',
           UPD_USR_No: 'U002',
           UPD_USR_Name: '李四',
           ID: 1,
@@ -167,8 +168,8 @@ export class TLS42020Service {
           STO_No: 'S001',
           SBM_Type: 1,
           TLT_No: 'T001',
-          SBM_BegDate: '2024-01-01',
-          SBM_EndDate: '2024-12-31',
+          SBM_BegDate: '2024-01-01T00:00:00.000Z',
+          SBM_EndDate: '2024-12-31T00:00:00.000Z',
           SBM_SeqNo: '001',
           PLU_MagNo: 'M001',
           PLU_No: '1234567890123',
@@ -179,10 +180,10 @@ export class TLS42020Service {
           SBM_BtnNo: '01'
         },
         {
-          CRT_Date: '2024-01-15',
+          CRT_Date: '2024-01-15T00:00:00.000Z',
           CRT_USR_No: 'U001',
           CRT_USR_Name: '張三',
-          UPD_Date: '2024-01-16',
+          UPD_Date: '2024-01-16T00:00:00.000Z',
           UPD_USR_No: 'U002',
           UPD_USR_Name: '李四',
           ID: 2,
@@ -190,8 +191,8 @@ export class TLS42020Service {
           STO_No: 'S001',
           SBM_Type: 1,
           TLT_No: 'T001',
-          SBM_BegDate: '2024-01-01',
-          SBM_EndDate: '2024-12-31',
+          SBM_BegDate: '2024-01-01T00:00:00.000Z',
+          SBM_EndDate: '2024-12-31T00:00:00.000Z',
           SBM_SeqNo: '002',
           PLU_MagNo: 'M002',
           PLU_No: '1234567890124',

@@ -151,8 +151,8 @@ export class TLS42020CRUComponent extends BasicCruPageComponent<TLS42020Data> im
 
   loadOptions() {
     this.menuTypeOptions = [
-      { label: '一般菜單', value: 1 },
-      { label: '員工菜單', value: 2 },
+      { label: '一般菜單', value: '1' },
+      { label: '員工菜單', value: '2' },
     ];
 
     this.dropDownListService.queryTLTTALENT_DropDownList()
