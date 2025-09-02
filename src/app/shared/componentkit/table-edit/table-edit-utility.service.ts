@@ -50,7 +50,7 @@ export class TableUtilityService {
     newRowData[dataKey] = tempId;
     newRowData[dataStatusField] = dataStatusValue.New; // 現在使用傳入的參數設定狀態
     newRowData['_isAutoInsertCandidate'] = true; // 新增旗標
-    const updatedData = [newRowData, ...data];
+    const updatedData = [...data, newRowData];
     return { newRowData, data: updatedData };
   }
 }

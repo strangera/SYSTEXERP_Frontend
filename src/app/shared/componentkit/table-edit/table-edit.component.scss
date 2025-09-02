@@ -16,12 +16,6 @@
     background: #949494;
   }
   .p-datatable {
-    .first-column .p-dropdown.p-component,
-    .first-column .p-inputtext {
-      border-style: dashed !important;
-      border-width: 2px !important;
-      border-color: var(--blue-400) !important;
-    }
     .p-datatable-header {
       background: transparent;
       border: none;
@@ -35,7 +29,12 @@
       background-color: var(--table-invalid-row) !important;
     }
     .insert-row {
-      opacity: 0.6;
+      .p-dropdown.p-component,
+      .p-inputtext {
+        border-style: dashed !important;
+        // border-width: 2px !important;
+        // border-color: var(--blue-400) !important;
+      }
     }
     .p-datatable-wrapper {
       border: 1px solid var(--surface-d);

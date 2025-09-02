@@ -1,7 +1,7 @@
 // 必填
 export function validateRequired(value: string | number): { isValid: boolean; errorMessage: string[] } {
   return {
-    isValid: value !== null && value !== '' && value !== undefined,
+    isValid: value !== null && value !== '' && value !== undefined && value !== 0,
     errorMessage: ['必填'],
   };
 }

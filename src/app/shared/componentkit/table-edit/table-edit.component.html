@@ -22,9 +22,10 @@
   </ng-template>
   <ng-template pTemplate="header" let-columns>
     <tr>
-      <th *ngIf="data.length" class="w-1rem"></th>
-      <th class="w-1rem">序號</th>
-      <th *ngIf="!disabled" class="w-1rem">
+      <th *ngIf="data.length" class="w-1rem text-center"></th>
+      <th [attr.colspan]="!data[0]._isAutoInsertCandidate ? 1 : 2" class="w-1rem text-center">序號
+      </th>
+      <th *ngIf="!disabled && data.length && !data[0]._isAutoInsertCandidate" class="w-1rem text-center">
         <p-tableHeaderCheckbox [disabled]="disabled" />
       </th>
       <th *ngFor="let col of columns" pReorderableColumn pResizableColumn class="text-center">
@@ -36,53 +37,61 @@
   <ng-template pTemplate="body" let-rowIndex="rowIndex" let-rowData let-columns="columns" let-index="rowIndex">
     <tr [attr.data-key]="rowData[dataKey]" [pSelectableRowIndex]="rowIndex"
       [pSelectableRowDisabled]="!isRowSelectable(rowData) || disabled" [pSelectableRow]="rowData"
-      [pReorderableRow]="rowIndex"
-      [ngClass]="{
-        'invalid-row': rowIndex > 0 && rowData._rowValidationError?.isValid === false,
-        'insert-row': rowIndex === 0,
+      [pReorderableRow]="!rowData._isAutoInsertCandidate ? rowIndex : -1" [ngClass]="{
+        'invalid-row': rowData._rowValidationError?.isValid === false && !rowData._isAutoInsertCandidate,
+        'insert-row': rowData._isAutoInsertCandidate ,
       }">
-      <td *ngIf="data.length">
-        <span *ngIf="index !== 0 " class="pi pi-bars" pReorderableRowHandle></span>
-        <span *ngIf="index === 0 && !disabled" class="pi pi-plus"></span>
+      <td>
+        <span *ngIf="!rowData._isAutoInsertCandidate && data.length > 1" class="pi pi-bars"
+          pReorderableRowHandle></span>
+        <span *ngIf="rowData._isAutoInsertCandidate && !disabled" class="pi pi-plus" [ngClass]="{
+            'text-blue-500': rowData._isAutoInsertCandidate
+          }"></span>
       </td>
-      <td class="text-center"
-        [pTooltip]="(rowIndex > 0 && rowData._rowValidationError?.errorMessage) ? rowData._rowValidationError.errorMessage : ''"
+      <td class="text-center" [attr.colspan]="rowData._isAutoInsertCandidate ? 2 : 1"
+        [pTooltip]="rowData._rowValidationError?.errorMessage ? rowData._rowValidationError.errorMessage : ''"
         tooltipPosition="bottom">
-        <span [ngClass]="{'pi pi-exclamation-circle': rowIndex > 0 && rowData._rowValidationError?.isValid === false}">
-          {{rowIndex > 0 && rowData._rowValidationError?.isValid === false ? '' : rowIndex === 0 && !disabled ? '新增' :
-          rowIndex}}
+        <span [ngClass]="{
+            'pi pi-exclamation-circle': rowData._rowValidationError?.isValid === false && !rowData._isAutoInsertCandidate,
+            'text-blue-500': rowData._isAutoInsertCandidate
+          }">
+          {{ rowData._isAutoInsertCandidate ? (disabled ? '' : '新增資料') :
+          rowData._rowValidationError?.isValid === false ? '' : rowIndex + 1 }}
         </span>
       </td>
-      <td *ngIf="!disabled">
+      <td *ngIf="!disabled && !rowData._isAutoInsertCandidate">
         <p-tableCheckbox class="flex justify-content-center pointer-events-none" [pSelectableRow]="rowData"
-          [value]="rowData" [disabled]="!isRowSelectable(rowData) || disabled || rowIndex === 0" />
+          [value]="rowData" [disabled]="!isRowSelectable(rowData) || disabled" />
       </td>
       <td *ngFor="let col of columns" class="text-center" (click)="col.type ? $event.stopPropagation() : null"
-        [ngClass]="index === 0 ? 'first-column' : ''" (keydown)="$event.stopPropagation()">
+        (keydown)="$event.stopPropagation()">
         <ng-container [ngSwitch]="col.type">
           <p-iconField iconPosition="right">
-            <!-- input -->
             <input *ngSwitchCase="'input'" pInputText class="w-full min-w-max" [placeholder]="'請輸入' + col.header"
               [(ngModel)]="rowData[col.field]" [ngModelOptions]="{ standalone: true }"
-              [disabled]="col.disabled(rowData) || disabled" (ngModelChange)="onValueChange(rowData,$event, col, index)"
+              [disabled]="(col.disabled && col.disabled(rowData[col.field], index, rowData)) || disabled"
+              (ngModelChange)="onValueChange(rowData,$event, col, index)"
+              [variant]="rowData._isAutoInsertCandidate ? 'filled' : 'outlined'"
               (blur)="onValueChange(rowData,rowData[col.field], col, index)"
-              [ngClass]="{'ng-invalid ng-dirty': rowData._validationErrors?.[col.field]}" />
-            <!-- inputNumber -->
+              [ngClass]="{'ng-invalid ng-dirty': rowData._validationErrors?.[col.field] }" />
             <p-inputNumber *ngSwitchCase="'inputNumber'" class="w-full min-w-max" styleClass="w-full" mode="decimal"
               [(ngModel)]="rowData[col.field]" [ngModelOptions]="{ standalone: true }"
-              [placeholder]="'請輸入' + col.header" [disabled]="col.disabled(rowData) || disabled"
+              [placeholder]="'請輸入' + col.header"
+              [disabled]="(col.disabled && col.disabled(rowData[col.field], index, rowData)) || disabled"
               (onInput)="onValueChange(rowData,$event.value, col, index)"
+              [variant]="rowData._isAutoInsertCandidate ? 'filled' : 'outlined'"
               (onBlur)="onValueChange(rowData,rowData[col.field], col, index)"
-              [ngClass]="{'ng-invalid ng-dirty': rowData._validationErrors?.[col.field]}" />
-            <!-- dropdown -->
-            <p-dropdown *ngSwitchCase="'dropdown'" class="flex min-w-max" styleClass="w-full" appendTo="body" [(ngModel)]="rowData[col.field]"
-              [ngModelOptions]="{ standalone: true }" [placeholder]="'請輸入' + col.header"
-              [options]="getOptions(rowData, col)" [optionLabel]="col.optionLabel" [optionValue]="col.optionValue"
-              [disabled]="col.disabled(rowData) || disabled" [editable]="true"
-              (onChange)="onValueChange(rowData,$event.value, col, index)"
+              [ngClass]="{'ng-invalid ng-dirty': rowData._validationErrors?.[col.field] }" />
+            <p-dropdown *ngSwitchCase="'dropdown'" class="flex min-w-max" styleClass="w-full" appendTo="body"
+              [(ngModel)]="rowData[col.field]" [ngModelOptions]="{ standalone: true }"
+              [placeholder]="'請輸入' + col.header" [options]="getOptions(rowData, col)" [optionLabel]="col.optionLabel"
+              [optionValue]="col.optionValue"
+              [disabled]="(col.disabled && col.disabled(rowData[col.field], index, rowData)) || disabled"
+              [editable]="true" (onChange)="onValueChange(rowData,$event.value, col, index)"
               (onHide)="onValueChange(rowData,rowData[col.field], col, index)" [virtualScroll]="true"
               [virtualScrollItemSize]="40" [showClear]="col.showClear || true"
-              [ngClass]="{'ng-invalid ng-dirty': rowData._validationErrors?.[col.field]}">
+              [variant]="rowData._isAutoInsertCandidate ? 'filled' : 'outlined'"
+              [ngClass]="{'ng-invalid ng-dirty': rowData._validationErrors?.[col.field] }">
               <ng-template let-item pTemplate="item" *ngIf="col.templateLabel">
                 <div class="flex align-items-center gap-2">
                   <span>{{ item[col.templateLabel] }}</span>
@@ -102,7 +111,7 @@
   </ng-template>
   <ng-template pTemplate="emptymessage">
     <tr>
-      <td [attr.colspan]="columns.length  + 2">
+      <td [attr.colspan]="columns.length  + 2">
         <div>
           <div class="flex justify-content-center align-items-center min-h-full p-2 font-bold text-xl">
             查無資料

@@ -16,6 +16,7 @@ import { TableModule } from 'primeng/table';
 import { TooltipModule } from 'primeng/tooltip';
 import { IconFieldModule } from 'primeng/iconfield';
 import { InputIconModule } from 'primeng/inputicon';
+import { BreadcrumbModule } from "primeng/breadcrumb";
 @Component({
   selector: 'app-table-edit',
   templateUrl: './table-edit.component.html',
@@ -34,7 +35,8 @@ import { InputIconModule } from 'primeng/inputicon';
     InputNumberModule,
     AutoCompleteModule,
     IconFieldModule,
-    InputIconModule
+    InputIconModule,
+    BreadcrumbModule
   ],
 })
 export class TableEditComponent implements OnChanges, AfterContentInit {
@@ -82,7 +84,9 @@ export class TableEditComponent implements OnChanges, AfterContentInit {
     if (changes['data'] && this.data.length > 0) {
       // 一開始先將無狀態的資料設為Original
       this.data = this.data.filter(item => item != null).map((item: any) => {
-        if (item[this.dataStatusField] === undefined) { item[this.dataStatusField] = this.dataStatusValue.Original; }
+        if (item[this.dataStatusField] === undefined) {
+          item[this.dataStatusField] = this.dataStatusValue.Original;
+        }
         // 載入資料時也執行整行驗證
         if (this.rowValidate) {
           item._rowValidationError = this.rowValidate(item);
@@ -120,6 +124,8 @@ export class TableEditComponent implements OnChanges, AfterContentInit {
       this.dataStatusValue  // 將 dataStatusValue 傳給服務
     );
     this.data = data;
+    console.log(this.data);
+
     this.insert.emit();
   }
   // Delete 按鈕
@@ -147,41 +153,47 @@ export class TableEditComponent implements OnChanges, AfterContentInit {
   }
   // 處理 ngModelChange 事件，並發送給父元件
   onValueChange(rowData: any, value: any, col: Column, index: number) {
-    if (this.disabled) { return; }
+    if (this.disabled) {
+      return;
+    }
+
     // 如果資料是 Original 狀態，且有變更，則將狀態改為 Modified
     if (rowData[this.dataStatusField] === this.dataStatusValue.Original) {
       rowData[this.dataStatusField] = this.dataStatusValue.Modified;
     }
-    // 檢查是否是最上方且未變更的 "New" 資料列
-    // 只有在最上面 (index === 0) 且狀態為 'New' 並且尚未被修改過時才自動插入新行
-    if (index === 0 && rowData[this.dataStatusField] === this.dataStatusValue.New && rowData['_isAutoInsertCandidate'] && value !== undefined && value !== null && value !== '') {
+
+    const isAutoInsertCandidate = rowData['_isAutoInsertCandidate'];
+
+    // 檢查是否為「新增中的列」，並且有輸入值
+    // 只有在是候選列、有輸入值，且不是被禁用的情況下，才自動插入新行
+    if (isAutoInsertCandidate && value !== undefined && value !== null && value !== '' && !this.disabled) {
       this.insertRow();
       // 標記這行已不再是自動插入的候選行，防止重複觸發
       rowData['_isAutoInsertCandidate'] = false;
     }
-    // --- 針對第一行 (index === 0) 進行特殊處理，不執行驗證 ---
-    if (index !== 0) {
-      // 只有當行不是第一行時才執行欄位級別驗證
-      this.validateField(rowData, col, value);
-    } else {
-      // 如果是第一行，確保清除該欄位上可能存在的驗證錯誤
-      if (rowData._validationErrors && rowData._validationErrors[col.field]) {
-        delete rowData._validationErrors[col.field];
-        // 如果該行所有錯誤都清除了，可選擇移除 _validationErrors 物件
-        if (Object.keys(rowData._validationErrors).length === 0) {
-          delete rowData._validationErrors;
-        }
+
+    // 不論是不是新增列，都執行單一欄位的驗證
+    this.validateField(rowData, col, value);
+
+    // 執行整行驗證並儲存結果
+    // 只有當行不再是自動插入的候選行時才執行整行驗證，以避免驗證空行
+    if (this.rowValidate && !isAutoInsertCandidate) {
+      console.log('🚨 驗證整行資料:', rowData);
+      rowData._rowValidationError = this.rowValidate(rowData);
+    } else if (isAutoInsertCandidate) {
+      // 如果是新增行，確保清空所有驗證錯誤，避免顯示紅色
+      if (rowData._rowValidationError) {
+        delete rowData._rowValidationError;
       }
     }
-    // 新增：執行整行驗證並儲存結果，除了第一行外
-    if (this.rowValidate && index !== 0) {
-      rowData._rowValidationError = this.rowValidate(rowData);
-    }
-    // 觸發 fieldChange 事件，無論驗證是否通過 (父元件可以決定如何處理不通過的資料)
+
+    // 觸發 fieldChange 事件，無論驗證是否通過
     this.fieldChange.emit({ rowData, field: col.field, value, index });
+
     // 由於數據綁定和驗證已經更新了 `this.data`，再次發送 `dataChange`
     this.dataChange.emit(this.data);
   }
+
   // 對單一欄位執行驗證，並更新 rowData 中的錯誤狀態
   validateField(rowData: any, col: Column, value: any): boolean {
     // 確保 _validationErrors 物件存在
@@ -217,9 +229,20 @@ export class TableEditComponent implements OnChanges, AfterContentInit {
     return isValidField;
   }
   onRowReorder(event: TableColumnReorderEvent) {
-    if (this.disabled) { return; }
-    if (event.dropIndex === 0) {
-      this.deleteRow(this.data.splice(1, 1));
+    if (this.disabled || !event.dragIndex) {
+      return;
+    }
+    // 取得拖曳的列
+    const draggedItem = this.data[event.dragIndex];
+
+    // 如果拖曳的列是新增列，直接返回，不執行任何操作
+    if (draggedItem['_isAutoInsertCandidate']) {
+      return;
+    }
+
+    // 如果將資料拖曳到最後一筆，則將其視為刪除並重新插入一個新空行
+    if (event.dropIndex === this.lastRow()) {
+      this.deleteRow([draggedItem]);
       this.insertRow();
       return;
     }
@@ -228,12 +251,16 @@ export class TableEditComponent implements OnChanges, AfterContentInit {
   onColReorder(event: TableColumnReorderEvent) {
     this.columns = event.columns as Column[];// 欄位調整
   }
-  trackByRow = (index: number, item: any) => { return item?.[this.dataKey] || index; };// 行追蹤
+  trackByRow = (index: number, item: any) => item[this.dataKey];// 行追蹤
   // 行是否可選，還有第一筆也不能被點選
   rowSelectableWrapper = ({ data, index }: { data: any, index: number; }): boolean | undefined => {
-    // 否則，使用原始的 isRowSelectable 條件
-    return this.isRowSelectable(data) && index !== 0;
+    // 不允許選擇新增中的列
+    return this.isRowSelectable(data) && !data._isAutoInsertCandidate;
   };
   // (欄位是Dropdown使用): 獲取Dropdown的選項，支持function加入或直接給List
   getOptions(rowData: any, col: Column) { return typeof col.options === 'function' ? (col.options(rowData) || undefined) : col.options || undefined; }
+  // 最後一筆
+  lastRow() {
+    return this.data.length > 0 ? this.data.length - 1 : -1;
+  }
 }
