@@ -61,7 +61,7 @@ export class TLS31030Component extends BasicQueryPageComponent<TLS31030Response>
     IsRece_Yn: [null],  // 是否開立業主發票(是否開立業主發票(Y:是 N:否 預設全部))
 
 
-    ...createPaginationConfig([{ field: 'tlt_no', order: 1 }])
+    ...createPaginationConfig([{ field: 'bus_type', order: 1 }])
   });
   totalRecords = 0;
   data: TLS31030Response[] = [];
@@ -261,7 +261,7 @@ export class TLS31030Component extends BasicQueryPageComponent<TLS31030Response>
         console.log('各大分類之營業報表response', res.Data);
         this.data = res.Data;
         this.totalRecords = res.TotalCount;
-        this.queryStateService.setQueryState(this.ProgNo, frm.getRawValue());
+        this.queryStateService.setQueryState(this.ProgNo, formValue);
       })
     })
   }

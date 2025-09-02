@@ -1,5 +1,6 @@
 <div class="card">
-  <app-table [data]="data" [columns]="columns" [totalRecords]="totalRecords" [showReportMode]="true"
+  <app-table [data]="data" [columns]="columns" [totalRecords]="totalRecords" 
+    [showReportMode]="false" [showManage]="false" [showReportMode]="false" [showDetail]="false"
     [multiSortMeta]="[{ field: 'tlt_building', order: 1 }]" [columnGroup]="columnGroup"
     (lazyLoadData)="onLazyLoadData($event, dataForm)" [lazy]="true" [loading]="loading"
     [showManage]="true" [showEdit]="false" [showDelete]="false">

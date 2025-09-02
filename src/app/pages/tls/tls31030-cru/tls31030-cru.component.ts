@@ -10,10 +10,9 @@ import { Column, ColumnGroup, formatAmount, formatPercentage } from '@shared/com
 import { TableComponent } from '@shared/componentkit/table/table.component';
 import { RadiobuttonYNComponent } from '@shared/componentkit/radiobutton-yn/radiobutton-yn.component';
 import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
-import { TLS31010Response } from '@service/api/tls/tls31010.service';
 import { ButtonModule } from 'primeng/button';
 import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
-import { TLS31030DetailRequest, TLS31030PrintDetailRequest, TLS31030Response, Tls31030Service } from '@service/api/tls/tls31030.service';
+import { TLS31030DetailRequest, TLS31030DetailResponse, TLS31030PrintDetailRequest, TLS31030Response, Tls31030Service } from '@service/api/tls/tls31030.service';
 import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
 import { QueryStateService } from '@shared/service/query-state.service';
@@ -67,7 +66,7 @@ export class Tls31030CruComponent extends BasicCruPageComponent<TLS31030Response
 
   });
   totalRecords = 0;
-  data: TLS31010Response[] = [];
+  data: TLS31030DetailResponse[] = [];
   columns: Column[] = [
     { field: 'building_desc', header: '館別', visible: true },
     { field: 'org_name', header: '組織名稱', visible: true },
@@ -163,7 +162,7 @@ export class Tls31030CruComponent extends BasicCruPageComponent<TLS31030Response
       bus_type: this.dataForm.get('bus_type')?.value ?? '',
     } as TLS31030PrintDetailRequest;
 
-    console.log('各大分類之營業報表print請求', JSON.stringify(formValue));
+    console.log('單大分類之營業報表print請求', JSON.stringify(formValue, null, 2));
 
     this.btnLoading = true;
     this.tls31030Service.printTLS31030Detail(formValue).pipe(finalize(() => this.btnLoading = false), untilDestroyed(this))
@@ -183,13 +182,13 @@ export class Tls31030CruComponent extends BasicCruPageComponent<TLS31030Response
       bus_type: this.dataForm.get('bus_type')?.value ?? '',
     };
 
-    console.log('單大分類之營業報表request', request);
+    //用Json顯示request
+    console.log('單大分類之營業報表request', JSON.stringify(request));
 
     this.tls31030Service.queryTLS31030Detail(request).pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(res => {
       console.log('單大分類之營業報表response', res.Data);
       this.data = res.Data;
-      this.totalRecords = res.TotalCount;
-      this.queryStateService.setQueryState(this.ProgNo, this.dataForm.getRawValue());
+      // this.totalRecords = res.TotalCount;
     })
   }
 }
