@@ -53,7 +53,7 @@
       </div>
 
       <!-- 下方：左鍵盤 + 右設定 -->
-      <div class="grid p-fluid mt-5">
+      <div class="grid p-fluid mt-5" *ngIf="dataForm.controls.TSB_Name.value">
         <!-- 左：鍵盤設定明細 -->
         <div class="col-12 md:col-8">
           <p-panel header="鍵盤設定明細">
@@ -81,7 +81,10 @@
                   >
                     <!-- 按鈕顯示 KB_Display1 優先，沒填才顯示代碼 -->
                     <div class="kb-label">{{ k.KB_Display1 || k.code }}</div>
-                    <div class="kb-sub" *ngIf="k.KB_Display1 && k.KB_Display1 !== k.code">
+                    <div
+                      class="kb-sub"
+                      *ngIf="k.KB_Display1 && k.KB_Display1 !== k.code"
+                    >
                       {{ k.code }}
                     </div>
                   </button>
@@ -166,8 +169,8 @@
                 label="按鍵形狀"
                 [control]="getControl('KB_Style')"
                 [options]="KB_StyleOptions"
-                optionLabel="SYS_Name"
-                optionValue="SYS_Code"
+                optionLabel="Name"
+                optionValue="No"
               ></app-dropdown>
             </div>
 
@@ -195,17 +198,6 @@
             </div>
 
             <div class="col-12" *ngIf="selectedTab === 'font'">
-              <app-dropdown
-                label="字型樣式"
-                [control]="getControl('KB_Fonttyped')"
-                [options]="KB_FonttypedOptions"
-                optionLabel="label"
-                optionValue="value"
-                [showClear]="true"
-              ></app-dropdown>
-            </div>
-
-            <div class="col-12" *ngIf="selectedTab === 'font'">
               <label for="KB_FontColor">字型顏色</label>
               <div class="flex align-items-center gap-2">
                 <input
@@ -220,6 +212,21 @@
                   appendTo="body"
                   format="rgb"
                 ></p-colorPicker>
+              </div>
+            </div>
+            <div class="col-12" *ngIf="selectedTab === 'font'">
+              <label>字型樣式</label>
+              <div class="flex flex-row gap-3">
+                <p-checkbox
+                  *ngFor="let opt of KB_FonttypedOptions"
+                  [binary]="true"
+                  [inputId]="'ft-' + opt.index"
+                  [label]="opt.label"
+                  [ngModel]="
+                    getControl('KB_Fonttyped').value[opt.index] === 'Y'
+                  "
+                  (onChange)="toggleFonttyped(opt.index, $event.checked)"
+                ></p-checkbox>
               </div>
             </div>
 
