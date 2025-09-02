@@ -209,13 +209,11 @@ onSubmit(frm: FormGroup) {
     // 1) 取出/預設分頁值
 const pageSize  = Number(val?.pageSize);        // ✅ 吃共用 table 丟上來的值
 const pageIndex = Number(val?.pageIndex) || 1;  // 頁碼預設 1 沒問題
-const offset    = pageSize ? Math.max(0, (pageIndex - 1) * pageSize) : 0; // 沒 pageSize 就 0
+
 
     // 3) 轉出 OrderBy
     const sortByArr = Array.isArray(val?.SortBy) ? val.SortBy : [];
-    const orderBy   = sortByArr.length
-      ? sortByArr.map((s: any) => `${s.field} ${s.order === 1 ? 'ASC' : 'DESC'}`).join(',')
-      : '';
+    
 
     // 4) 日期轉 ISO(yyyy-MM-ddTHH:mm:ss)（若你需要）
 const toIso = (x: any, endOfDay = false) => {
@@ -236,8 +234,7 @@ const toIso = (x: any, endOfDay = false) => {
 TXN_DateEnd:   toIso(val?.TXN_DateEnd,   true),
 
       pageIndex,
-      Offset:  offset,
-      OrderBy: orderBy,
+
     };
 
     // 6) 清空空值（保留 0/false）

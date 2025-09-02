@@ -238,7 +238,7 @@ onSubmit(form: FormGroup): void {
     // --- 分頁參數 ---
     const pageSize  = Number.isFinite(val?.pageSize)  ? val.pageSize  : 10;
     const pageIndex = Number.isFinite(val?.pageIndex) ? val.pageIndex : 1;
-    const offset    = Math.max(0, (pageIndex - 1) * pageSize);
+    
 
     // --- 排序（form.SortBy → sortMeta → defaultSort） ---
     const sortByArr: SortMeta[] =
@@ -246,9 +246,7 @@ onSubmit(form: FormGroup): void {
         ? toSortMeta(val?.SortBy)
         : (this.sortMeta.length ? this.sortMeta : this.defaultSort);
 
-    const orderBy = sortByArr.length
-      ? sortByArr.map(s => `${s.field} ${s.order === 1 ? 'ASC' : 'DESC'}`).join(',')
-      : undefined;
+
 
     // --- 時間轉 ISO（yyyy-MM-ddTHH:mm:ss） ---
     const toIsoOrNull = (x: any) => {
@@ -277,9 +275,9 @@ onSubmit(form: FormGroup): void {
 
       PageSize : pageSize,
       PageIndex: pageIndex,
-      Offset   : offset,
+
       SortBy   : sortByArr,
-      ...(orderBy ? { OrderBy: orderBy } : {}),
+ 
     };
 
     // --- 清除空值/空陣列/空字串，避免後端被空值覆蓋 ---
