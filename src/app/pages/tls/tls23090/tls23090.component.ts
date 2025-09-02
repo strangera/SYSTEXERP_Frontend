@@ -61,12 +61,12 @@ export class TLS23090Component extends BasicQueryPageComponent<any> {
 
   // 預設排序（日期新到舊）
   readonly defaultSortCredit = [
-    { field: 'TXN_Date', order: -1 },
+    { field: 'TXN_Date', order: 1 },
     { field: 'ECR_No',   order: 1 },
     { field: 'TXN_No',   order: 1 },
   ];
   readonly defaultSortCounter = [
-    { field: 'TXN_Date', order: -1 },
+    { field: 'TXN_Date', order: 1 },
     { field: 'ECR_No',   order: 1 },
     { field: 'tlt_no',   order: 1 },
   ];
@@ -106,7 +106,7 @@ export class TLS23090Component extends BasicQueryPageComponent<any> {
     IsHaveTERM_No: [null],
     // 初始帶「信用卡明細」預設排序
     ...createPaginationConfig([
-      { field: 'TXN_Date', order: -1 },
+      { field: 'TXN_Date', order: 1 },
       { field: 'ECR_No',   order: 1 },
       { field: 'TXN_No',   order: 1 },
     ]),
