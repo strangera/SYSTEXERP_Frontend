@@ -93,25 +93,26 @@ export class TLS12070Component extends BasicQueryPageComponent<Customer_intervie
 
   interview_data: Customer_interview[] = []; //意願報表
   intervew_columns: Column[] = [
+    { field: 'contact_USR_No', header: '訪談人員代碼', visible: true },
+    { field: 'contact_USR_Name', header: '訪談人員姓名', visible: true },
+    { field: 'contact_Date', header: '訪談日期', visible: true, format: formatDate },
+    { field: 'contact_Time', header: '訪談時間', visible: true },
+    { field: 'willing_level', header: '意願等級', visible: true }, // SYS1000.T116 //中
+
     { field: 'ven_uniform', header: '廠商統一編號', visible: true }, // POS2013
     { field: 'VEN_Name', header: '廠商名稱', visible: true }, // POS2013.name
     // { field: 'VEN_EngName', header: '廠商英文名稱', visible: true },  // pos2013.EngName
     { field: 'tlt_name', header: '品牌(專櫃名稱)', visible: true },
-    { field: 'bus_type', header: '業種-大分類代碼', visible: true }, // tltbustype
+    { field: 'bus_type', header: '大分類代碼', visible: true }, // tltbustype /中
     { field: 'VEN_ContactPerson', header: '廠商聯絡姓名', visible: true },
     { field: 'VEN_BossTel', header: '廠商聯絡人電話', visible: true },
     { field: 'VEN_BossTitle', header: '廠商聯絡人頭銜', visible: true },
     { field: 'VEN_BossMobile', header: '廠商聯絡人行動電話', visible: true },
     { field: 'VEN_BossEmail', header: '廠商聯絡人電子郵件', visible: true },
     { field: 'VEN_Addr', header: '廠商公司地址', visible: true },
-    { field: 'contact_Date', header: '訪談日期', visible: true, format: formatDate },
-    { field: 'contact_Time', header: '訪談時間', visible: true },
-    { field: 'willing_level', header: '意願等級', visible: true }, // SYS1000.T116
-    { field: 'FLOOR_NO', header: '接洽樓層', visible: true }, // sys3900
-    { field: 'building_no', header: '接洽館別代碼', visible: true }, // sys3800
+    { field: 'FLOOR_NO', header: '接洽樓層', visible: true }, // sys3900 /中
+    { field: 'building_no', header: '接洽館別代碼', visible: true }, // sys3800 /中
     { field: 'LOCATION_No', header: '接洽店位代碼', visible: true }, //POS2002
-    { field: 'contact_USR_No', header: '訪談人員代碼', visible: true },
-    { field: 'contact_USR_Name', header: '訪談人員姓名', visible: true },
     { field: 'contact_record', header: '洽談重點及交換資料紀錄', visible: true },
     { field: 'contact_remarks', header: '備註', visible: true },
   ];
@@ -143,7 +144,6 @@ export class TLS12070Component extends BasicQueryPageComponent<Customer_intervie
 
   onSubmit(frm: FormGroup) {
     this.activeReport = 'query';
-    console.log('查詢條件', frm.value);
     this.handleSubmit(frm, () => {
       this.tls12070Service.queryTLS12070(frm.value).subscribe({
         next: (response) => {
