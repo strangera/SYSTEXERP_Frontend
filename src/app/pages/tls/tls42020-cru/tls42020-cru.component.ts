@@ -175,7 +175,7 @@ export class TLS42020CRUComponent extends BasicCruPageComponent<TLS42020Data> im
   }
 
 
-  onDelete(rows: any[]) {
+  onDelete(rows: TLS42020InsertDetailData[]) {
     const idsToDelete = new Set(rows.map(item => item.SBM_SeqNo));
     this.data = this.data.filter((item: any) => !idsToDelete.has(item.SBM_SeqNo));
     this.selectedRows = [];

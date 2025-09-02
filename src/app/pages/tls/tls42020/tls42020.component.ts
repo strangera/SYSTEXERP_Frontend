@@ -68,7 +68,7 @@ export class TLS42020Component extends BasicQueryPageComponent<TLS42020Data> imp
     { field: 'id', header: 'ID', visible: false },
     { field: 'mid', header: 'MID', visible: false },
     { field: 'STO_No', header: '店舖編號', visible: false },
-    { field: 'SBM_BegDate', header: '開始日期', visible: false },
+    { field: 'SBM_BegDate', header: '起始日期', visible: false },
     { field: 'SBM_EndDate', header: '結束日期', visible: false },
   ];
 
