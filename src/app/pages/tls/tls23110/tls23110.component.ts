@@ -75,7 +75,7 @@ export class TLS23110Component extends BasicQueryPageComponent<any> {
       TXN_DateStart: this.formBuilder.control(this.yesterday, { validators: [Validators.required] }),
       TXN_DateEnd:   this.formBuilder.control(this.yesterday, { validators: [Validators.required] }),
       tlt_term_type: this.formBuilder.control(null),
-      rece_yn:       this.formBuilder.control(null),
+      rece_yn:       this.formBuilder.control('Y'),
       IsNoPLU_No: this.formBuilder.control(null), // 預設「全部」
       TLT_No:        this.formBuilder.control(null),
       tlt_building:  this.formBuilder.control(null),
@@ -257,8 +257,6 @@ export class TLS23110Component extends BasicQueryPageComponent<any> {
         org_id:        val?.org_id ?? undefined,
         pageSize:      val?.pageSize ?? undefined,
         pageIndex:     val?.pageIndex ?? undefined,
-        SortBy:        val?.SortBy ?? undefined,
-        ...(offset  !== undefined ? { Offset:  offset } : {}),
         ...(orderBy ? { OrderBy: orderBy } : {}),
       };
 
@@ -317,7 +315,7 @@ export class TLS23110Component extends BasicQueryPageComponent<any> {
               }
             }
 
-            if (!foundAnyNumber || !foundNonZero) return null;
+           if (!foundAnyNumber) return null; // 👈 改這行就好
             return flat;
           });
 
