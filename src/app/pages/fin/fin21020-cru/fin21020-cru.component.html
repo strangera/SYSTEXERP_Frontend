@@ -1,72 +1,23 @@
 <div class="card">
-    <div class="grid align-items-center">
-        <div class="col" style="flex: 1;">
-            <app-menubar [ProgNo]="ProgNo"></app-menubar>
+  <div class="flex gap-2 mb-2">
+    <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
+    <app-button btnType="back" (click)="onCancel()"></app-button>
+  </div>
+  <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
+    <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
+      <div class="grid p-fluid">
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-dropdown label="公司銀行科目代號/名稱" controlName="BNK_No" [options]="bankCodeOptions" optionLabel="label"
+            optionValue="No" [control]="dataForm.controls.BNK_No" [submitted]="submitted"></app-dropdown>
         </div>
-    </div>
-    <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
-        <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
-            <div class="grid p-fluid">
-                <div class="col-12 md:col-6 lg:col-4">
-                    <app-dropdown label="公司銀行科目代號" controlName="companyBankCode" [options]="bankCodeOptions"
-                        optionLabel="label" optionValue="value" [control]="dataForm.controls.companyBankCode"
-                        [submitted]="submitted">
-                    </app-dropdown>
-                </div>
-            </div>
-            <hr />
-            <ng-container formArrayName="items">
-                <ng-container *ngFor="let item of items.controls; let i = index" [formGroupName]="i">
-                    <div class="grid align-items-center">
-                        <div class="col" style="flex: 1;">
-                            <h5>費率 {{i+1}}</h5>
-                        </div>
-                        <div>
-                            <app-button-dynamicallydelete (click)="onRemoveItem(i)" [crudstatus]="crudstatus"
-                                class="col"></app-button-dynamicallydelete>
-                        </div>
-                    </div>
-                    <div class="grid p-fluid">
-                        <div class="col-12 md:col-6 lg:col-4">
-                            <app-input-number [useGrouping]="false" label="金額上限" controlName="maxCash"
-                                [control]="getFormControl(i, 'maxCash')" [submitted]="submitted">
-                            </app-input-number>
-                        </div>
-                        <div class="col-12 md:col-6 lg:col-4">
-                            <app-input-number [useGrouping]="false" label="金額下限" controlName="minCash"
-                                [control]="getFormControl(i, 'minCash')" [submitted]="submitted">
-                            </app-input-number>
-                        </div>
-                        <div class="col-12 md:col-6 lg:col-4">
-                            <app-input-number [useGrouping]="false" label="廠商負擔電匯手續費" controlName="vendorFee"
-                                [control]="getFormControl(i, 'vendorFee')" [submitted]="submitted">
-                            </app-input-number>
-                        </div>
-                    </div>
-                    <div class="grid p-fluid">
-                        <div class="col-12 md:col-6 lg:col-4">
-                            <app-input-number [useGrouping]="false" label="廠商負擔電匯手續費回饋收入" controlName="vendorRevenue"
-                                [control]="getFormControl(i, 'vendorRevenue')" [submitted]="submitted">
-                            </app-input-number>
-                        </div>
-                        <div class="col-12 md:col-6 lg:col-4">
-                            <app-input-number [useGrouping]="false" label="公司負擔電匯手續費" controlName="companyFee"
-                                [control]="getFormControl(i, 'companyFee')" [submitted]="submitted">
-                            </app-input-number>
-                        </div>
-                    </div>
-                    <hr />
-                </ng-container>
-            </ng-container>
-            <div class="pt-1">
-                <app-button-dynamicallyadd (click)="onAddItem()"></app-button-dynamicallyadd>
-            </div>
-        </form>
-        <div class="col pt-4">
-            <div class="grid justify-content-end">
-                <app-button btnType="cancel" (click)="onCancel()"></app-button>
-                <app-button btnType="submit" (click)="submitForm(dataForm)" *ngIf="isFormEditable"></app-button>
-            </div>
-        </div>
-    </p-panel>
+        <app-table-edit class="col-12" title="費率對照明細" tableKey="FIN21020Detail" [columns]="columns" [data]="data"
+          (selectionChange)="selectedItems = $event" [selectedItems]="selectedItems" (dataChange)="onDataChange($event)"
+          [rowValidate]="validateEntireRow" />
+      </div>
+      <div *ngIf="!isFormReadable" class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+        <app-button btnType="cancel" [form]="dataForm"></app-button>
+        <app-button btnType="submit" [loading]="loading"></app-button>
+      </div>
+    </form>
+  </p-panel>
 </div>
