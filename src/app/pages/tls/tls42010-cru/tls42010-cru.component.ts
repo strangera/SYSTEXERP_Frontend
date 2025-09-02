@@ -17,6 +17,7 @@ import { ButtonModule } from 'primeng/button';
 import { DialogModule } from 'primeng/dialog';
 import { ColorPickerModule } from 'primeng/colorpicker';
 import { Tls42010Service } from '../../../service/api/tls/tls42010.service';
+import { CRUDStatus } from '@shared/models/system/CRUDstatus';
 
 export interface KeyItem {
   code: string;
@@ -64,8 +65,7 @@ export interface KeyItem {
     ColorPickerModule
   ]
 })
-export class TLS42010CRUComponent extends BasicCruPageComponent<any>
-  implements OnInit {
+export class TLS42010CRUComponent extends BasicCruPageComponent<any> implements OnInit {
 
   // 主檔 form
   dataForm = this.formBuilder.nonNullable.group({
@@ -163,8 +163,46 @@ export class TLS42010CRUComponent extends BasicCruPageComponent<any>
   ngOnInit(): void {
     this.initializePage('TLS42010', this.dataForm);
     this.buildGrid();
+    this.loadDropdowns();
 
-    // 收銀畫面名稱下拉
+    // 顏色監聽
+    this.selectedKeyForm.controls['color'].valueChanges.subscribe(value => {
+      if (value) {
+        this.selectedKeyForm.controls['KB_Color'].setValue(`RGB:${value.r},${value.g},${value.b}`);
+      }
+    });
+    this.selectedKeyForm.controls['FontColor'].valueChanges.subscribe(value => {
+      if (value) {
+        this.selectedKeyForm.controls['KB_FontColor'].setValue(`RGB:${value.r},${value.g},${value.b}`);
+      }
+    });
+
+    // === 編輯 / 檢視模式 ===
+    if (this.crudstatus === CRUDStatus.Edit || this.crudstatus === CRUDStatus.Read) {
+      // 主檔直接用 rowdata
+      this.dataForm.patchValue({
+        USR_Level: this.rowdata?.USR_Level,
+        TSB_Name: this.rowdata?.TSB_Name,
+        ECR_KBType: this.rowdata?.ECR_KBType,
+        ECR_KBDesc: this.rowdata?.ECR_KBDesc,
+        activePage: (this.rowdata?.KG_KeyPage ?? 1) - 1
+      });
+
+      // 明細查詢，只帶 USR_Level
+      if (this.rowdata?.USR_Level) {
+        this.tls42010Service.queryTLS42010_Detail({ USR_Level: this.rowdata.USR_Level }).subscribe({
+          next: (res) => {
+            this.applyDetail(res?.Data ?? []);
+          },
+          error: (err) => {
+            console.error('查詢明細失敗:', err);
+          }
+        });
+      }
+    }
+  }
+
+  private loadDropdowns() {
     this.dropDownListService.queryPOS1008DropDownList().subscribe({
       next: (res) => {
         this.TSB_NameOptions = res?.Data?.map(item => ({
@@ -174,14 +212,12 @@ export class TLS42010CRUComponent extends BasicCruPageComponent<any>
       }
     });
 
-    // 鍵盤型態下拉
     this.dropDownListService.querySYS1000_DropDownList({ SYS_Type: 'ECR_KBType' }).subscribe({
       next: (res) => {
         this.ECR_KBTypeOptions = res?.Data ?? [];
       }
     });
 
-    // 鍵盤樣式下拉
     const params = { SYS_Type: 'KB_Style', SYS_Status: 'A' };
     this.dropDownListService.querySYS1000_DropDownList(params).subscribe({
       next: (res) => {
@@ -189,18 +225,6 @@ export class TLS42010CRUComponent extends BasicCruPageComponent<any>
           No: item.No ?? item.SYS_Code,
           Name: item.Name ?? item.SYS_Name
         })) ?? [];
-      }
-    });
-
-    // 顏色監聽（selectedKeyForm）
-    this.selectedKeyForm.controls['color'].valueChanges.subscribe(value => {
-      if (value) {
-        this.selectedKeyForm.controls['KB_Color'].setValue(`RGB:${value.r},${value.g},${value.b}`);
-      }
-    });
-    this.selectedKeyForm.controls['FontColor'].valueChanges.subscribe(value => {
-      if (value) {
-        this.selectedKeyForm.controls['KB_FontColor'].setValue(`RGB:${value.r},${value.g},${value.b}`);
       }
     });
   }
@@ -218,16 +242,47 @@ export class TLS42010CRUComponent extends BasicCruPageComponent<any>
     this.selected = this.keys[0];
   }
 
-  // 選中按鍵 → 把值帶進右側 form
+  private applyDetail(detailList: any[]) {
+    this.buildGrid();
+
+    detailList.forEach((d: any) => {
+      // 取 KB_ScanCode 最後 4 碼 (對應 0101, 0102 這種)
+      const scanCode = d.KB_ScanCode?.slice(-4);
+
+      const key = this.keys.find(k => k.code === scanCode);
+      if (key) {
+        Object.assign(key, {
+          KB_Func: d.KB_Func,
+          KB_Switch: d.KB_Switch,
+          KB_Display1: d.KB_Display1,
+          KB_Display2: d.KB_Display2,
+          KB_Color: d.KB_Color,
+          KB_Style: d.KB_Style,
+          KB_Font: d.KB_Font,
+          KB_Size: d.KB_Size,
+          KB_Fonttyped: d.KB_Fonttyped,
+          KB_Arg1: d.KB_Arg1,
+          KB_Arg2: d.KB_Arg2,
+          KB_Arg3: d.KB_Arg3,
+          KB_FontColor: d.KB_FontColor
+        });
+      }
+    });
+
+    // 自動選第一顆有設定的按鍵
+    const first = this.keys.find(k => k.KB_Func || k.KB_Display1 || k.KB_Display2);
+    if (first) {
+      this.selectKey(first);
+    }
+  }
+
+
+  // ---------------- Key 選取 ----------------
   selectKey(k: KeyItem) {
-    // 先存回上一顆的設定
     if (this.selected) {
       Object.assign(this.selected, this.selectedKeyForm.getRawValue());
     }
-
     this.selected = k;
-
-    // 再把新選中的按鍵值 patch 進表單
     this.selectedKeyForm.patchValue({
       KB_Func: k.KB_Func ?? '',
       KB_Switch: k.KB_Switch ?? 'Y',
@@ -245,17 +300,15 @@ export class TLS42010CRUComponent extends BasicCruPageComponent<any>
     });
   }
 
-  // 儲存主檔 + 全部按鍵
+  // ---------------- 儲存 ----------------
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
       this.loading = true;
 
-      // 先同步目前選中的按鍵值
       if (this.selected) {
         Object.assign(this.selected, this.selectedKeyForm.getRawValue());
       }
 
-      // 把有設定過的按鍵濾出來
       const POS1004Disc = this.keys.filter(k =>
         k.KB_Func || k.KB_Display1 || k.KB_Display2
       ).map(k => ({
@@ -282,6 +335,7 @@ export class TLS42010CRUComponent extends BasicCruPageComponent<any>
       }));
 
       const payload = {
+        ID: this.rowdata?.ID ?? 0,
         USR_Level: frm.value.USR_Level,
         TSB_Name: frm.value.TSB_Name,
         ECR_KBType: frm.value.ECR_KBType,
@@ -289,19 +343,25 @@ export class TLS42010CRUComponent extends BasicCruPageComponent<any>
         POS1004Disc
       };
 
-      this.tls42010Service.insertTLS42010M(payload).subscribe({
-        next: res => {
+      const save$ =
+        this.crudstatus === CRUDStatus.Create
+          ? this.tls42010Service.insertTLS42010M(payload)
+          : this.tls42010Service.updateTLS42010M(payload);
+
+      save$.subscribe({
+        next: (res) => {
           this.loading = false;
-          console.log('儲存成功:', res);
+          console.log(`${this.crudstatus} 成功:`, res);
         },
-        error: err => {
+        error: (err) => {
           this.loading = false;
-          console.error('儲存失敗:', err);
+          console.error(`${this.crudstatus} 失敗:`, err);
         }
       });
     });
   }
 
+  // ---------------- 其他 ----------------
   onTabChange(event: any) {
     this.selectedTab = event.value;
   }
