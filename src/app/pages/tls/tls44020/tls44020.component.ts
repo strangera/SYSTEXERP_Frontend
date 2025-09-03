@@ -39,45 +39,45 @@ export class TLS44020Component extends BasicQueryPageComponent<any> implements O
   activeItem: MenuItem | undefined;
 
   data: any[] = [
-    { ECR_LocNo: 'B1A01', TLT_No: '000001', TLT_Name: '小騎士', EOS_Status: '開機' },
-    { ECR_LocNo: 'B1A02', TLT_No: '000002', TLT_Name: '彌豆子', EOS_Status: '登出' },
-    { ECR_LocNo: 'B1A03', TLT_No: '000003', TLT_Name: '我妻善逸', EOS_Status: '交易中' },
-    { ECR_LocNo: 'B1A04', TLT_No: '000004', TLT_Name: '小騎士', EOS_Status: '離線' },
-    { ECR_LocNo: 'B1A05', TLT_No: '000005', TLT_Name: '艾連葉卡', EOS_Status: '開機' },
+    { ECR_LocNo: 'B1A01', TLT_No: '000001', TLT_Name: '米卡莎·阿卡曼', EOS_Status: '關機' },
+    { ECR_LocNo: 'B1A02', TLT_No: '000002', TLT_Name: '阿爾敏·亞魯雷特', EOS_Status: '離線' },
+    { ECR_LocNo: 'B1A03', TLT_No: '000003', TLT_Name: '萊納·布朗', EOS_Status: '交易中' },
+    { ECR_LocNo: 'B1A04', TLT_No: '000004', TLT_Name: '亞妮', EOS_Status: '離線' },
+    { ECR_LocNo: 'B1A05', TLT_No: '000005', TLT_Name: '艾連葉卡', EOS_Status: '關機' },
     { ECR_LocNo: 'B1A06', TLT_No: '000006', TLT_Name: '咪吉葉卡', EOS_Status: '登出' },
     { ECR_LocNo: 'B1A07', TLT_No: '000007', TLT_Name: '炭治郎', EOS_Status: '交易中' },
-    { ECR_LocNo: 'B1A11', TLT_No: '000008', TLT_Name: '伊之助', EOS_Status: '登出' },
-    { ECR_LocNo: 'B1A12', TLT_No: '000009', TLT_Name: '小騎士', EOS_Status: '交易中' },
-    { ECR_LocNo: 'B1A13', TLT_No: '000010', TLT_Name: '彌豆子', EOS_Status: '離線' },
-    { ECR_LocNo: 'B1A14', TLT_No: '000002', TLT_Name: '伊之助', EOS_Status: '登出' },
-    { ECR_LocNo: 'B1A15', TLT_No: '000003', TLT_Name: '我妻善逸', EOS_Status: '交易中' },
-    { ECR_LocNo: 'B1A16', TLT_No: '000004', TLT_Name: '彌豆子', EOS_Status: '離線' },
-    { ECR_LocNo: 'B1A17', TLT_No: '000004', TLT_Name: '小騎士', EOS_Status: '離線', },
-    { ECR_LocNo: 'B1A18', TLT_No: '000002', TLT_Name: '伊之助', EOS_Status: '登出', },
-    { ECR_LocNo: 'B1A19', TLT_No: '000003', TLT_Name: '我妻善逸', EOS_Status: '交易中', },
-    { ECR_LocNo: 'B1A20', TLT_No: '000005', TLT_Name: '艾連葉卡', EOS_Status: '開機', },
-    { ECR_LocNo: 'B1A21', TLT_No: '000006', TLT_Name: '咪吉葉卡', EOS_Status: '登出', },
+    { ECR_LocNo: 'B1A11', TLT_No: '000008', TLT_Name: '亞妮', EOS_Status: '登出' },
+    { ECR_LocNo: 'B1A12', TLT_No: '000009', TLT_Name: '米卡莎·阿卡曼', EOS_Status: '交易中' },
+    { ECR_LocNo: 'B1A13', TLT_No: '000010', TLT_Name: '阿爾敏·亞魯雷特', EOS_Status: '離線' },
+    { ECR_LocNo: 'B1A14', TLT_No: '000002', TLT_Name: '亞妮', EOS_Status: '離線' },
+    { ECR_LocNo: 'B1A15', TLT_No: '000003', TLT_Name: '萊納·布朗', EOS_Status: '關機' },
+    { ECR_LocNo: 'B1A16', TLT_No: '000004', TLT_Name: '阿爾敏·亞魯雷特', EOS_Status: '離線' },
+    { ECR_LocNo: 'B1A17', TLT_No: '000004', TLT_Name: '米卡莎·阿卡曼', EOS_Status: '離線', },
+    { ECR_LocNo: 'B1A18', TLT_No: '000002', TLT_Name: '亞妮', EOS_Status: '離線', },
+    { ECR_LocNo: 'B1A19', TLT_No: '000003', TLT_Name: '萊納·布朗', EOS_Status: '交易中', },
+    { ECR_LocNo: 'B1A20', TLT_No: '000005', TLT_Name: '艾連葉卡', EOS_Status: '關機', },
+    { ECR_LocNo: 'B1A21', TLT_No: '000006', TLT_Name: '咪吉葉卡', EOS_Status: '離線', },
     { ECR_LocNo: 'B1A22', TLT_No: '000007', TLT_Name: '炭治郎', EOS_Status: '交易中', },
-    { ECR_LocNo: 'B1A19', TLT_No: '000003', TLT_Name: '我妻善逸', EOS_Status: '交易中', },
+    { ECR_LocNo: 'B1A19', TLT_No: '000003', TLT_Name: '萊納·布朗', EOS_Status: '交易中', },
     { ECR_LocNo: 'B1A06', TLT_No: '000006', TLT_Name: '咪吉葉卡', EOS_Status: '登出' },
     { ECR_LocNo: 'B1A07', TLT_No: '000007', TLT_Name: '炭治郎', EOS_Status: '交易中' },
-    { ECR_LocNo: 'B1A11', TLT_No: '000008', TLT_Name: '伊之助', EOS_Status: '登出' },
-    { ECR_LocNo: 'B1A12', TLT_No: '000009', TLT_Name: '小騎士', EOS_Status: '交易中' },
-    { ECR_LocNo: 'B1A13', TLT_No: '000010', TLT_Name: '彌豆子', EOS_Status: '離線' },
-    { ECR_LocNo: 'B1A14', TLT_No: '000002', TLT_Name: '伊之助', EOS_Status: '登出' },
-    { ECR_LocNo: 'B1A15', TLT_No: '000003', TLT_Name: '我妻善逸', EOS_Status: '交易中' },
-    { ECR_LocNo: 'B1A16', TLT_No: '000004', TLT_Name: '彌豆子', EOS_Status: '離線' },
-    { ECR_LocNo: 'B1A17', TLT_No: '000004', TLT_Name: '小騎士', EOS_Status: '離線', },
-    { ECR_LocNo: 'B1A18', TLT_No: '000002', TLT_Name: '伊之助', EOS_Status: '登出', },
-    { ECR_LocNo: 'B1A19', TLT_No: '000003', TLT_Name: '我妻善逸', EOS_Status: '交易中', },
-    { ECR_LocNo: 'B1A20', TLT_No: '000005', TLT_Name: '艾連葉卡', EOS_Status: '開機', },
+    { ECR_LocNo: 'B1A11', TLT_No: '000008', TLT_Name: '亞妮', EOS_Status: '登出' },
+    { ECR_LocNo: 'B1A12', TLT_No: '000009', TLT_Name: '米卡莎·阿卡曼', EOS_Status: '交易中' },
+    { ECR_LocNo: 'B1A13', TLT_No: '000010', TLT_Name: '阿爾敏·亞魯雷特', EOS_Status: '離線' },
+    { ECR_LocNo: 'B1A14', TLT_No: '000002', TLT_Name: '亞妮', EOS_Status: '關機' },
+    { ECR_LocNo: 'B1A15', TLT_No: '000003', TLT_Name: '萊納·布朗', EOS_Status: '交易中' },
+    { ECR_LocNo: 'B1A16', TLT_No: '000004', TLT_Name: '阿爾敏·亞魯雷特', EOS_Status: '離線' },
+    { ECR_LocNo: 'B1A17', TLT_No: '000004', TLT_Name: '米卡莎·阿卡曼', EOS_Status: '關機', },
+    { ECR_LocNo: 'B1A18', TLT_No: '000002', TLT_Name: '亞妮', EOS_Status: '交易中', },
+    { ECR_LocNo: 'B1A19', TLT_No: '000003', TLT_Name: '萊納·布朗', EOS_Status: '交易中', },
+    { ECR_LocNo: 'B1A20', TLT_No: '000005', TLT_Name: '艾連葉卡', EOS_Status: '關機', },
   ];
 
   globalFilter = '';
   filteredData: any[] = [];
 
   // DataView layout 切換用
-  layout: 'list' | 'grid' = 'list';
+  layout: 'list' | 'grid' = 'grid';
 
   // 分頁用
   rows = 15;   // 每頁筆數
@@ -88,29 +88,24 @@ export class TLS44020Component extends BasicQueryPageComponent<any> implements O
     super();
   }
 
-  getStatusIcon(status: string): string {
-    switch (status) {
-      case '開機': return 'pi pi-desktop';
-      case '登出': return 'pi pi-sign-out';
-      case '交易中': return 'pi pi-sync';
-      case '完成交班': return 'pi pi-users';
-      case '暫停交易': return 'pi pi-pause';
-      case '完成清帳': return 'pi pi-wallet';
-      default: return 'pi pi-question-circle';
-    }
+getStatusIcon(status: string): string {
+  switch (status) {
+    case '關機': return 'pi pi-desktop';
+    case '離線': return 'pi pi-sign-out';
+    case '交易中': return 'pi pi-sync';
+    default: return 'pi pi-question-circle';
   }
+}
 
-  getStatusColor(status: string): string {
-    switch (status) {
-      case '開機': return '#6c757d';
-      case '登出': return '#dc3545';
-      case '交易中': return '#28a745';
-      case '完成交班': return '#0d6efd';
-      case '暫停交易': return '#fd7e14';
-      case '完成清帳': return '#6f42c1';
-      default: return '#6c757d';
-    }
+getStatusColor(status: string): string {
+  switch (status) {
+    case '關機': return '#6c757d';
+    case '離線': return '#dc3545';
+    case '交易中': return '#28a745';
+    default: return '#6c757d';
   }
+}
+
 
   ngOnInit() {
     this.initializePage('TLS44020', '/TLS/TLS44020cru', this.queryForm, (form) => this.onSubmit(form));

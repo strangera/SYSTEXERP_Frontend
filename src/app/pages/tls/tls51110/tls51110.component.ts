@@ -3,6 +3,7 @@ import { Component, OnInit } from '@angular/core';
 import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import {
+  AddButton,
   Column,
   createPaginationConfig,
 } from '../../../shared/componentkit/table/table.model';
@@ -16,6 +17,7 @@ import { CalendarComponent } from '../../../shared/componentkit/calendar/calenda
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { TranslateModule } from '@ngx-translate/core';
+import { finalize } from 'rxjs';
 
 interface LogoOption {
   No: string;
@@ -25,29 +27,31 @@ interface LogoOption {
 
 interface LogoBudget {
   id: number;
+  LOGO_No: string;
   LOGO_CH_NAME?: string;
   YYYYMM: string;
   BUDGET: number;
-  BUDGET_Cost: number;
+  BUDGET_Cost: number | null;
   BUD_Status: string;
-  BUD_Remark: string;
+  BUD_Remark: string | null;
 }
 
+
 @Component({
-    selector: 'app-tls51110',
-    templateUrl: './tls51110.component.html',
-    standalone: true,
-    imports: [
-        MenubarComponent,
-        ButtonComponent,
-        AccordionModule,
-        FormsModule,
-        ReactiveFormsModule,
-        CalendarComponent,
-        DropdownComponent,
-        TableComponent,
-        TranslateModule,
-    ],
+  selector: 'app-tls51110',
+  templateUrl: './tls51110.component.html',
+  standalone: true,
+  imports: [
+    MenubarComponent,
+    ButtonComponent,
+    AccordionModule,
+    FormsModule,
+    ReactiveFormsModule,
+    CalendarComponent,
+    DropdownComponent,
+    TableComponent,
+    TranslateModule,
+  ],
 })
 export class TLS51110Component extends BasicQueryPageComponent<LogoBudget> implements OnInit {
   queryForm = this.formBuilder.group({
@@ -58,6 +62,11 @@ export class TLS51110Component extends BasicQueryPageComponent<LogoBudget> imple
     ...createPaginationConfig([{ field: 'LOGO_No', order: 1 }]),
   });
 
+  BUD_StatusOptions: { label: string; value: string }[] = [
+    { label: '未審核', value: "0" },
+    { label: '已審核', value: "1" },
+  ];
+
   columns: Column[] = [
     { field: 'LOGO_No', header: '品牌代碼', visible: true },
     { field: 'LOGO_CH_NAME', header: '品牌名稱', visible: true },
@@ -66,10 +75,10 @@ export class TLS51110Component extends BasicQueryPageComponent<LogoBudget> imple
     { field: 'BUDGET_Cost', header: '預算成本', visible: true },
     {
       field: 'BUD_Status',
-      header: '審校狀態',
+      header: '審核狀態',
       visible: true,
       format: (value: string) =>
-        this.BUD_Status_Option.find((item) => item.value === value)?.label || value,
+        this.BUD_StatusOptions.find(x => x.value === value)?.label ?? value,
     },
     { field: 'BUD_Remark', header: '備註說明', visible: true },
   ];
@@ -80,12 +89,37 @@ export class TLS51110Component extends BasicQueryPageComponent<LogoBudget> imple
   selectedItems: LogoBudget[] = [];
 
   editDisabled(rowData: LogoBudget) {
-    return rowData.BUD_Status === '1';
+    return rowData.BUD_Status === "1";
   }
+  actionLoadingId: string | number | null = null;
 
-  BUD_Status_Option = [
-    { value: '0', label: '未審核' },
-    { value: '1', label: '已審核' },
+  // ====== Row Buttons ======
+  addButton: AddButton[] = [
+    {
+      label: '單據審核',
+      icon: 'pi pi-check-circle text-green-500',
+      action: (row: LogoBudget) => {
+        if (this.actionLoadingId) return;
+        console.log(row);
+        if (row.BUD_Status !== "0") {
+          this.messageService.warnBubble('狀態不是「未審核」，無法審核');
+          return;
+        }
+        this.statusChange(row, "1");
+      },
+    },
+    {
+      label: '反審核',
+      icon: 'pi pi-undo text-orange-500',
+      action: (row: LogoBudget) => {
+        if (this.actionLoadingId) return;
+        if (row.BUD_Status !== "1") {
+          this.messageService.warnBubble('狀態不是「已審核」，無法反審核');
+          return;
+        }
+        this.statusChange(row, "0");
+      },
+    },
   ];
 
   constructor(
@@ -175,6 +209,38 @@ export class TLS51110Component extends BasicQueryPageComponent<LogoBudget> imple
       error: (err) => {
         console.error('下載範例檔案失敗', err);
       }
+    });
+  }
+  statusChange(row: LogoBudget, status: string) {
+    const id = row.id;
+    if (id == null || Number.isNaN(Number(id))) {
+      this.messageService.errorBubble(`找不到有效的 id`);
+      return;
+    }
+
+    if (this.actionLoadingId) return;
+    this.actionLoadingId = id;
+
+    const payload = {
+      id: Number(id),
+      LOGO_No: row.LOGO_No,
+      YYYYMM: row.YYYYMM,
+      BUDGET: row.BUDGET,
+      BUDGET_Cost: row.BUDGET_Cost ?? 0,
+      BUD_Remark: row.BUD_Remark ?? '',
+      BUD_Status: status === "1" ? "0" : "1"
+    };
+
+    this.apiService.updateTLS51110(payload).pipe(finalize(() => (this.actionLoadingId = null))).subscribe({
+      next: () => {
+        row.BUD_Status = status;
+        const msg = status === "1" ? '審核成功' : '反審核成功';
+        this.messageService.successBubble(`${msg}（ID: ${id}）`);
+      },
+      error: (err) => {
+        const apiMsg = err?.error?.Message || err?.message || '';
+        this.messageService.errorBubble(`更新失敗（ID: ${id}）：${apiMsg}`);
+      },
     });
   }
 }
