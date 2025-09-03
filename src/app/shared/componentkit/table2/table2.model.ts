@@ -2,41 +2,63 @@ import { animate, state, style, transition, trigger } from "@angular/animations"
 import { NotificationService } from "../../component/notification-message/notification.service";
 import { SortMeta } from "primeng/api";
 export interface Column {
-  field: string;     // 欄位名稱 (資料的欄位名稱)
-  header: string;    // 欄位標題 (顯示在表格上的標題)
-  visible?: boolean;  // 是否顯示 (可篩選欄位是否顯示？)
-  hidden?: boolean;  // 是否隱藏 (是否為無法篩選欄位)
-  format?: (value: any) => string | number | null; // 格式化(日期、時間...)
+  field: string;
+  header: string;
+  visible?: boolean;
+  hidden?: boolean;
+  format?: (value: any) => string | number | null;
 
+  // 群組/小計/總計
   groupField?: string;
-  isSubTotal?: boolean; // 是否為小計欄位
-  isTotal?: boolean; // 是否為總計欄位
+  isSubTotal?: boolean;
+  isTotal?: boolean;
 
+  // 排序
   showSort?: boolean;
-  sortField?: string; // 排序欄位(預設為 field)
-    /** ✅ 新增這兩個屬性 */
-  rowspan?: boolean;       // 如果此欄要橫跨兩列
-  headerRow?: 1 | 2;       // 第幾列顯示（1 或 2）
+  sortField?: string;
 
-  disabled?: (value: any) => boolean;  // 是否禁用 (是否為禁用欄位)
+  /** ✅ 表頭兩列控制；不用給預設（在 component 會用 ?? 1 補） */
+  rowspan?: boolean;
+  headerRow?: 1 | 2;
 
-  validate?: ((value: string, rowData: any, data: any[], field: string, header: string) => { isValid: boolean, errorMessage: string[] })[]; // 驗證規則(如果是可輸入的欄位)
+  /** ✅ 樣式在 template 有用到 [ngClass]="col.style" */
+  style?: string | string[] | Set<string> | { [klass: string]: any };
 
-  type?: 'input' | 'inputNumber' | 'dropdown' | 'button' | 'html' | 'date' | 'default'; // 欄位類型
+  /** ✅ 是否顯示「*」必填標記（template 有 col.required） */
+  required?: boolean;
+
+  /** ✅ 編輯/輸入相關 */
+  disabled?: (value: any) => boolean;
+  validate?: ((
+    value: string,
+    rowData: any,
+    data: any[],
+    field: string,
+    header: string
+  ) => { isValid: boolean; errorMessage: string[] })[];
+
+  /** ✅ 列型別：template 用到 'image'、'html'、'date'... */
+  type?: 'input' | 'inputNumber' | 'dropdown' | 'button' | 'html' | 'date' | 'image' | 'default';
   prefix?: string;
   fractionDigits?: number;
   useGrouping?: boolean;
 
-  options?: any | ((rowData: any) => any); // 支持靜態數據或基於 rowData 生成
-  optionLabel?: string; // 下拉選單 optionLabel
-  optionValue?: string; // 下拉選單 optionValue
+  /** ✅ dropdown 用 */
+  options?: any | ((rowData: any) => any);
+  optionLabel?: string;
+  optionValue?: string;
 
-  buttonLabel?: string; // 選擇按鈕 label
-  checkboxTrueLabel?: string; // checkbox 非編輯模式 true 顯示文字（適用於單一布林值）
-  checkboxFalseLabel?: string; // checkbox 非編輯模式 false 顯示文字（適用於單一布林值）
-  dateFormat?: string; // 日期格式（例如 'yy-mm-dd'，僅適用於 type='date'）
-  frozen?: boolean;  // 是否凍結 (是否為凍結欄位)
-  alignFrozen?: string; // 凍結欄位對齊方式
+  /** ✅ button / checkbox / date 額外屬性（template 有使用） */
+  buttonLabel?: string;
+  checkboxTrueLabel?: string;
+  checkboxFalseLabel?: string;
+  dateFormat?: string;
+  minDate?: Date;   // ← p-calendar 用
+  maxDate?: Date;   // ← p-calendar 用
+
+  /** ✅ 凍結欄位 */
+  frozen?: boolean;
+  alignFrozen?: 'left' | 'right';
 }
 
 export interface ColumnGroup {
@@ -90,10 +112,12 @@ export interface RowEditSaveEvent {
   data: any[];
 }
 // 欄位變更事件
+/** 若你之後可能需要帶 rowIndex，可做成可選屬性（不影響現在的呼叫） */
 export interface FieldChangeEvent {
   rowData: any;
   field: string;
   value: any;
+  rowIndex?: number;   // 可選，現在沒用到也不會報錯
 }
 
 // 新增一個方法來驗證行數據
