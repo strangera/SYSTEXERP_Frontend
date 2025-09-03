@@ -212,7 +212,7 @@
 <div class="card">
   <div class="col-12">
     <!-- ✅ 明細表 -->
-    <app-table
+    <app-table2
       *ngIf="!showSummary"
       tableKey="TLS23020"
       [data]="data"
@@ -221,11 +221,21 @@
       dataKey="ECR_No"
       [multiSortMeta]="sortMeta"
       [totalRecords]="totalRecords"
-      [lazy]="true"
+      [lazy]="false"
       [loading]="loading"
       [showManage]="false"
       [showDelete]="false"
       (lazyLoadData)="onLazyLoadData($event, queryForm)"
+       [showSubTotal]="true"
+  [showTotal]="true"
+  [groupRowsBy]="'tlt_no'"
+
+  
+  [externalTotals]="detailTotals"
+  [externalTotalFieldMap]="detailTotalFieldMap"
+  [externalSubtotals]="detailSubtotals"
+  [externalSubtotalFieldMap]="detailSubtotalFieldMap"
+      
     >      <header>
         <div class="flex justify-content-end gap-2">
           <p-button
@@ -247,7 +257,7 @@
           ></p-button>
         </div>
       </header>
-    </app-table>
+    </app-table2>
 
     <!-- ✅ 彙總表 -->
     <app-table

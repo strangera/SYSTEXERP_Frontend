@@ -316,6 +316,7 @@ export class Table2Component
   }
 
   ngOnChanges(changes: SimpleChanges): void {
+    this.groupedDataCache.clear();
     if (changes['data']) {
       setTimeout(() => {
         this.dt.totalRecords =
@@ -352,19 +353,28 @@ if (changes['columns'] && this.columns?.length > 0) {
   }
 
   /* ======================= 分頁 / 排序 ======================= */
-  calculateTotalPages() {
-    this.dt.totalRecords =
-      this.totalRecords !== 0 ? this.totalRecords : this.data.length;
-    this.totalPages = Math.ceil(this.dt.totalRecords / this.rows);
-    this.pages = Array.from({ length: this.totalPages }, (_, index) => ({
-      label: `第 ${index + 1} 頁`,
-      value: index + 1,
-    }));
-    if (this.selectedPage && this.selectedPage > this.totalPages) {
-      this.goToPage(Math.max(this.totalPages, 1));
-    }
+calculateTotalPages() {
+  this.dt.totalRecords = this.totalRecords !== 0 ? this.totalRecords : this.data.length;
+  this.totalPages = Math.ceil(this.dt.totalRecords / this.rows);
+  this.pages = Array.from({ length: this.totalPages }, (_, index) => ({
+    label: `第 ${index + 1} 頁`,
+    value: index + 1,
+  }));
+
+  // ⛳ 第一次不要自動 goToPage，避免一進頁就 emit
+  if (this._skipFirstCalc) {
+    this._skipFirstCalc = false;
     this.cdr.detectChanges?.();
+    return;
   }
+
+  // 之後只有在總頁數 > 0 且目前頁 > 總頁數時才修正頁碼（不 emit 第一次）
+  if (this.totalPages > 0 && this.selectedPage && this.selectedPage > this.totalPages) {
+    this.goToPage(this.totalPages);
+  }
+
+  this.cdr.detectChanges?.();
+}
 
   goToPage(pageNumber: number) {
     this.first = (pageNumber - 1) * this.rows;
@@ -384,9 +394,10 @@ if (changes['columns'] && this.columns?.length > 0) {
     this.calculateTotalPages();
   }
 
- onSort(event: any) {
-  const next = event.multisortmeta ?? event.multiSortMeta ?? [];
-  // 只告訴父層新的排序，不在子層 set this.multiSortMeta
+onSort(event: any) {
+  const raw = event.multisortmeta ?? event.multiSortMeta ?? [];
+  const next = this.ensureGroupFirst(raw);  // 群組欄位優先
+
   this.lazyLoadData.emit({
     pageIndex: this.selectedPage ?? 1,
     pageSize : this.rows,
@@ -395,17 +406,18 @@ if (changes['columns'] && this.columns?.length > 0) {
 }
 
 loadDataLazy(event: TableLazyLoadEvent) {
-  // 直接用事件裡的資料
+  // ⛳ 第一次初始化 p-table 會自動觸發 onLazyLoad；這裡把它吃掉
+  if (this._skipFirstLazy) {
+    this._skipFirstLazy = false;
+    return;
+  }
+
   const pageSize  = event.rows && event.rows > 0 ? event.rows : this.rows;
   const pageIndex = (event.first ?? 0) / pageSize + 1;
-  const sort      = event.multiSortMeta ?? []; // ★ 重點：用事件裡的新排序
+  const sortRaw   = event.multiSortMeta ?? [];
+  const sort      = this.ensureGroupFirst(sortRaw); // 群組排序永遠第一
 
-  // 不要在子層寫入/保存排序，交給父層單一來源管理
-  this.lazyLoadData.emit({
-    pageIndex,
-    pageSize,
-    SortBy: sort,
-  });
+  this.lazyLoadData.emit({ pageIndex, pageSize, SortBy: sort });
 }
 
 
@@ -730,4 +742,19 @@ onColReorder(event: any /* TableColumnReorderEvent */) {
   getImage(url: string): string | SafeUrl | undefined {
     return url;
   }
+
+// 跳過「第一次」p-table 初始化時自動觸發的 onLazyLoad
+private _skipFirstLazy = true;
+private _skipFirstCalc = true;
+
+// 如需保險，也幫父層沒做排序時把群組欄位塞到第一順位
+private ensureGroupFirst(sort: SortMeta[] | undefined): SortMeta[] {
+  const g = this.groupRowsBy;
+  if (!g) return sort ?? [];
+  const list = Array.isArray(sort) ? [...sort] : [];
+  const exist = list.find(s => s.field === g);
+  const rest  = list.filter(s => s.field !== g);
+  const order = exist?.order ?? 1; // 沒指定就 ASC
+  return [{ field: g, order }, ...rest];
+}
 }
