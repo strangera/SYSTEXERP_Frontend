@@ -23,7 +23,7 @@
         <td class="text-center">{{ first + rowIndex + 1 }}</td>
         <td *ngFor="let col of getFilterColumns(expansionColumns)" class="text-center">
           <span *ngIf="rowData[col.field] !== undefined && rowData[col.field] !== null && !col.type">
-            {{ col.format ? col.format(rowData[col.field]) : rowData[col.field] }}
+            {{ col.format ? col.format(rowData[col.field], rowIndex, rowData) : rowData[col.field] }}
           </span>
         </td>
       </tr>

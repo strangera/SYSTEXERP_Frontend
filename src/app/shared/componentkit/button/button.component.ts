@@ -1,7 +1,7 @@
-import { Component, EventEmitter, inject, Input, OnDestroy, OnInit, Output } from '@angular/core';
+import { AfterViewInit, ChangeDetectorRef, Component, EventEmitter, inject, Input, OnDestroy, OnInit, Output, signal } from '@angular/core';
 import { AuthService } from '../../../service/system/auth.service';
 import { CurrentPageService } from '../../../layout/app.menulist/current-page.service';
-import { Subject, takeUntil } from 'rxjs';
+import { Subject, takeUntil, timer } from 'rxjs';
 import { FormGroup } from '@angular/forms';
 import { Button } from 'primeng/button';
 import { NotificationService } from '@shared/component/notification-message/notification.service';
@@ -23,7 +23,7 @@ interface ButtonConfig {
   standalone: true,
   imports: [Button]
 })
-export class ButtonComponent implements OnInit, OnDestroy {
+export class ButtonComponent implements OnInit, AfterViewInit, OnDestroy {
   @Input() btnType: 'default' | 'create' | 'edit' | 'delete' | 'query' | 'cancel' | 'clear' | 'submit' | 'next' | 'previous' | 'smartclear' | 'report' | 'back' | 'CSV' | 'textclear' = 'default';
   @Input() loading = false;
   @Output() clickEvent = new EventEmitter<void>();
@@ -38,16 +38,16 @@ export class ButtonComponent implements OnInit, OnDestroy {
   @Input() outlined: boolean | undefined; // 是否為輪廓按鈕
   @Input() form: FormGroup | undefined;
   @Input() styleClass = '';
+  public showButton = signal(false);
 
   private authService: AuthService = inject(AuthService);
   private currentPageService: CurrentPageService = inject(CurrentPageService);
   private ngUnsubscribe = new Subject<void>();
-
   private readonly buttonConfig: Record<string, ButtonConfig> = {
     default: { label: '標籤', icon: undefined, class: '', disabled: false, type: 'button', severity: undefined },           // 預設
     create: { label: '新增', icon: 'pi pi-plus', class: '', disabled: false, type: 'button', severity: undefined, permissionCode: '20' },   // 新增
     clear: { label: '清除', icon: undefined, class: 'button-clear', text: true, disabled: false, type: 'button', severity: undefined },        // 清除
-    cancel: { label: '清除', icon: 'pi pi-times', class: 'button-cancel', outlined: true, disabled: false, type: 'button', severity: 'secondary' },       // 取消
+    cancel: { label: '取消', icon: 'fas fa-undo', class: 'button-cancel', outlined: true, disabled: false, type: 'button', severity: 'secondary' },       // 取消
     delete: { label: '刪除', icon: 'pi pi-trash', class: 'p-button-danger', disabled: false, type: 'button', severity: 'danger', permissionCode: '40' },// 刪除
     edit: { label: '編輯', icon: 'pi pi-pencil', class: '', disabled: false, type: 'button', severity: undefined, permissionCode: '30' },     // 編輯
     query: { label: '查詢', icon: 'pi pi-search', class: '', disabled: false, type: 'submit', severity: undefined, permissionCode: '10' },   // 查詢
@@ -61,6 +61,7 @@ export class ButtonComponent implements OnInit, OnDestroy {
   };
 
   messageService: NotificationService = inject(NotificationService);
+  cdr: ChangeDetectorRef = inject(ChangeDetectorRef);
 
   ngOnInit() {
     const config = this.buttonConfig[this.btnType];
@@ -84,28 +85,32 @@ export class ButtonComponent implements OnInit, OnDestroy {
     });
   }
 
+  private initialFormValue: any;
+  ngAfterViewInit(): void { // 這個寫法有點爛，但是目前想到最簡單的解法了
+    // 在這裡使用 timer 延遲儲存初始值
+    if (this.btnType === 'cancel' || this.btnType === 'clear') {
+      // 延遲 300 毫秒，確保大多數情況下非同步資料已載入
+      timer(1000).pipe(takeUntil(this.ngUnsubscribe)).subscribe(() => {
+        this.initialFormValue = this.form?.getRawValue();
+        this.showButton.set(true);
+      });
+    }
+  }
+
   ngOnDestroy(): void {
     this.ngUnsubscribe.next();
     this.ngUnsubscribe.complete();
   }
 
   handleClick() {
-    if (this.disabled) return;
-
-    // 針對 'cancel' 和 'clear' 兩種按鈕類型進行處理
     if (this.btnType === 'cancel' || this.btnType === 'clear') {
-      if (!this.form) {
-        // 如果沒有提供 form，則顯示錯誤訊息
-        // this.messageService.warnBubble('工程師請在按鈕上加入參數[form]：清除/取消按鈕需要綁定表單 (form Input)。');
-        return; // 阻止後續操作
+      if (this.form && this.initialFormValue) {
+        // 重置表單到初始狀態
+        this.form.reset(this.initialFormValue);
+      } else if (this.form) {
+        // 如果沒有初始值，則使用預設的 reset
+        this.form.reset();
       }
-
-      Object.keys(this.form.controls).forEach(key => {
-        const control = this.form?.get(key);
-        if (control && !control.disabled) {
-          control.reset(); // 這會將 control 設回其初始值
-        }
-      });
     }
     this.clickEvent.emit();
   }

@@ -26,7 +26,8 @@
   <p-dropdown *ngSwitchCase="'dropdown'" styleClass="w-full" [showClear]="col.optionShowClear" appendTo="body"
     [(ngModel)]="rowData[col.field]" [ngModelOptions]="{ standalone: true }" [filter]="col.filter"
     [placeholder]="'請輸入' + col.header" [options]="getOptions()" [optionLabel]="col.optionLabel"
-    [optionValue]="col.optionValue" [disabled]="disabled" (onChange)="onValueChange($event.value)">
+    [optionValue]="col.optionValue" [disabled]="disabled" (onChange)="onValueChange($event.value)"
+    [virtualScroll]="true" [virtualScrollItemSize]="40">
     <ng-template let-item pTemplate="item" *ngIf="col.templateLabel">
       <div class="flex align-items-center gap-2">
         <span>{{ item[col.templateLabel] }}</span>

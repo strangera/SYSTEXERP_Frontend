@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { DatePipe } from '@angular/common';
+import { CommonModule, DatePipe } from '@angular/common';
 import { finalize } from 'rxjs';
 
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
@@ -20,6 +20,7 @@ import { TranslateModule } from '@ngx-translate/core';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
 import { DropDownListService } from '@service/utility/dropDownList.service';
+import { untilDestroyed } from '@ngneat/until-destroy';
 
 export interface Option {
   label: string;
@@ -34,7 +35,7 @@ export interface Option {
   imports: [
     MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule,
     InputTextRangeComponent, CalendarRangeComponent, InputTextComponent, TableComponent,
-    TranslateModule, DropdownComponent, CalendarComponent
+    TranslateModule, DropdownComponent, CalendarComponent, CommonModule
   ]
 })
 export class FIN15030Component extends BasicQueryPageComponent<FIN15030Data> implements OnInit {
@@ -72,7 +73,7 @@ export class FIN15030Component extends BasicQueryPageComponent<FIN15030Data> imp
   columns: Column[] = [
     { field: 'No', header: '序號', visible: false },
     { field: 'INV_Remark', header: '退出折讓單號', visible: true },
-    { field: 'INV_GUIType', header: '發票格式代號', visible: true, format: (value: string) => this.invoiceFormatOptions.find(opt => opt.value === value)?.label ?? '' },
+    { field: 'INV_GUIType', header: '格式代號', visible: true, format: (value: string) => this.invoiceFormatOptions.find(opt => opt.value === value)?.label ?? '' },
     { field: 'GUI_Track', header: '字軌', visible: true },
     { field: 'TXN_GUINo', header: '發票號碼', visible: true },
     { field: 'TXN_Date', header: '退出折讓日期', visible: true, format: (value: any) => value ? this.datePipe.transform(value, 'yyyy/MM/dd') : '' },
@@ -135,7 +136,7 @@ export class FIN15030Component extends BasicQueryPageComponent<FIN15030Data> imp
       };
 
       this.fin15030Service.queryFIN15030(requestData)
-        .pipe(finalize(() => this.loading = false))
+        .pipe(untilDestroyed(this), finalize(() => this.loading = false))
         .subscribe((res) => {
           this.data = res.Data;
           this.totalRecords = res.TotalCount;

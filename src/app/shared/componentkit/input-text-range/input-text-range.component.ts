@@ -17,7 +17,6 @@ import { InputTextComponent } from '../input-text/input-text.component';
     FormsModule,
     InputTextModule,
     ReactiveFormsModule,
-    NgClass,
     InputTextComponent,
     NgStyle
   ]

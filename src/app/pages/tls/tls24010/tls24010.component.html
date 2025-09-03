@@ -17,10 +17,11 @@
         <div class="grid p-fluid">
           <!-- 銷售日期 → POS5006.SalesDate -->
           <app-calendar class="col-12 md:col-6" label="銷售日期" [control]="queryForm.controls.TXN_Date"
-            [submitted]="submitted" [maxDate]="today" (calendarEvent)="onDateSelect($event)"></app-calendar>
+            [submitted]="submitted" [maxDate]="today"></app-calendar>
           <!-- 收銀機號 → POS5006.ECR_No -->
           <app-dropdown class="col-12 md:col-6" label="收銀機號" [control]="queryForm.controls.ECR_No"
-            [submitted]="submitted" [options]="ECR_NoOptions" optionLabel="label" optionValue="No" />
+            [submitted]="submitted" [options]="ECR_NoOptions" optionLabel="label" optionValue="No"
+            (changeEvent)="onECRNoChange($event)" />
           <!-- 專櫃編號 → POS5006.TLT_No -->
           <app-dropdown class="col-12 md:col-6" label="專櫃編號" [control]="queryForm.controls.TLT_No"
             [submitted]="submitted" [options]="TLT_NoOptions" optionLabel="label" optionValue="No" />
@@ -39,7 +40,7 @@
 <div class="card">
   <app-table tableKey="TLS24010Table" dataKey="TXN_No" [data]="data" [columns]="columns" (detail)="onDetailData($event)"
     [multiSortMeta]="[{ field: 'TXN_Date', order: -1 }]" [totalRecords]="totalRecords" [showDetail]="!isTXN_GUIPaper"
-    (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [lazy]="true" [loading]="loading"
-    [showDelete]="false" [addButton]="addButton" [showEdit]="false"></app-table>
+    [lazy]="true" (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [loading]="loading"
+    [addButton]="addButton" [showEdit]="false"></app-table>
 </div>
 <p-menu #menu [model]="items" [popup]="true" styleClass="w-auto" />

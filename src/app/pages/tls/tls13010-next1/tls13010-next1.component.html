@@ -2,8 +2,7 @@
   <div class="flex gap-2 mb-2">
     <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
     <app-button btnType="back" label="上一步" (click)="onCancel()"></app-button>
-    <app-button btnType="create" label="下一步(抽成設定)" (click)="onSubmitNext()"
-      [disabled]="getTotalSelectedCount() === 0"></app-button>
+    <app-button btnType="create" label="下一步(抽成設定)" (click)="onSubmitNext()"></app-button>
     <app-button btnType="back" (click)="onClearAndExit()"></app-button>
   </div>
 
@@ -71,8 +70,8 @@
                 [showPaginator]="false" [showAddButton]="false" [showBatchDelete]="false" [loading]="loading"
                 [dataKey]="'id'" [readonly]="isViewMode" [detailKey]="''"
                 [emptyMessage]="'尚未設定' + getCapTypeName(capType) + '項目'" (save)="onFareTableSave($event, capType)"
-                (edit)="onFareTableEdit($event, capType)"
-                (cancel)="onFareTableCancel($event, capType)"></app-expandable-edit-table>
+                (edit)="onFareTableEdit($event, capType)" (cancel)="onFareTableCancel($event, capType)"
+                (beforeSave)="onBeforeSave($event, capType)"></app-expandable-edit-table>
             </div>
 
             <!-- 底部操作按鈕 -->

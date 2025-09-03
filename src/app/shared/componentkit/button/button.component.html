@@ -1,3 +1,4 @@
-<p-button id="customButton" (onClick)="handleClick()" [label]="label" [class]="class" [icon]="icon" [loading]="loading"
-  [disabled]="disabled" [type]="type" [severity]="severity" [text]="text" [outlined]="outlined"
+<p-button [hidden]="!showButton() && (btnType === 'cancel' || btnType === 'clear')" id="customButton"
+  (onClick)="handleClick()" [label]="label" [class]="class" [icon]="icon" [loading]="loading" [disabled]="disabled"
+  [type]="type" [severity]="severity" [text]="text" [outlined]="outlined"
   [styleClass]="'w-max ' + styleClass"></p-button>

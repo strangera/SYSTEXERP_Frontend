@@ -1,168 +1,157 @@
-import { Component, OnInit, } from '@angular/core';
-import { FormArray, FormBuilder, FormControl, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-import { AuthService } from '../../../service/system/auth.service';
-import { TranslateService, TranslateModule } from '@ngx-translate/core';
-import { BasicCrupageComponent } from '../../../shared/componentextends/basic-crupage/basic-crupage.component';
-import { ValidationService } from '../../../shared/service/validation.service';
-import { BankAccountCodeService } from '../../../service/basic/bank-account-code.service';
+// fin21020-cru.component.ts
+import { Component, OnInit, ViewChild, } from '@angular/core';
+import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { TranslateModule } from '@ngx-translate/core';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { PanelModule } from 'primeng/panel';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { NgFor, NgIf } from '@angular/common';
-import { ButtonDynamicallydeleteComponent } from '../../../shared/componentkit/button-dynamicallydelete/button-dynamicallydelete.component';
-import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
-import { ButtonDynamicallyaddComponent } from '../../../shared/componentkit/button-dynamicallyadd/button-dynamicallyadd.component';
+import { NgIf } from '@angular/common';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
+import { untilDestroyed } from '@ngneat/until-destroy';
+import { DropDownListService, IDropdownItem } from '@service/utility/dropDownList.service';
+import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.component';
+import { Column } from '@shared/componentkit/table-edit/table-edit.model';
+import { IFin21020Data, IFin21020Detail, Fin21020Service } from '@service/api/fin/fin21020.service';
+import { finalize } from 'rxjs';
+// 引入驗證函式
+import { validateRequired } from '@shared/componentkit/table-edit/validate-field.model';
 
 //1.2.1.2 費率對照維護 CRU
 @Component({
-    selector: 'app-fin21020-cru',
-    templateUrl: './fin21020-cru.component.html',
-    styleUrl: './fin21020-cru.component.scss',
-    standalone: true,
-    imports: [MenubarComponent, PanelModule, FormsModule, ReactiveFormsModule, DropdownComponent, NgFor, ButtonDynamicallydeleteComponent, InputNumberComponent, ButtonDynamicallyaddComponent, ButtonComponent, NgIf, TranslateModule]
+  selector: 'app-fin21020-cru',
+  templateUrl: './fin21020-cru.component.html',
+  standalone: true,
+  imports: [
+    MenubarComponent,
+    PanelModule,
+    FormsModule,
+    ReactiveFormsModule,
+    DropdownComponent,
+    ButtonComponent,
+    NgIf,
+    TranslateModule,
+    TableEditComponent
+  ]
 })
-export class FIN21020CRUComponent extends BasicCrupageComponent implements OnInit {
-  //
-  bankCodeOptions: any[] = [];
-  depositCodeOptions: any[] = [];
-  needPayTicketOptions: any[] = [];
-
-  // ----------------------------------------------------------------
+export class FIN21020CRUComponent extends BasicCruPageComponent<IFin21020Data> implements OnInit {
+  @ViewChild(TableEditComponent) tableEditComponent!: TableEditComponent; // 取得子元件實例
   dataForm = this.formBuilder.nonNullable.group({
-    companyBankCode: [, [Validators.required]], // 公司銀行科目代號
-    // ----------------------------------------------------------------
-    items: this.formBuilder.array([
-      this.createItem()
-    ]),
+    BNK_No: [null, [Validators.required]], // 公司銀行科目代號
   });
-  // ----------------------------------------------------------------
+  bankCodeOptions: IDropdownItem[] = [];
+  data: IFin21020Detail[] = [];
+  selectedItems: IFin21020Detail[] = [];
+  columns: Column[] = [
+    { field: 'Remit_BAmount', header: '金額下限', type: 'inputNumber', width: '9rem', maxLength: 10, min: 0, validate: [validateRequired], onFocus: (rowData, value, col, index) => { this.autoFillNextRow(rowData, value, col, index); } },
+    { field: 'Remit_UAmount', header: '金額上限', type: 'inputNumber', width: '9rem', maxLength: 10, min: 0, validate: [validateRequired] },
+    { field: 'Remit_Fee', header: '廠商負擔電匯手續費', type: 'inputNumber', width: '12rem', maxLength: 6, min: 0, validate: [validateRequired], onBlur: (rowData, value, col, index) => { this.autoFillCashBackAmt(rowData, value, col, index); } },
+    { field: 'Comp_Remit_Fee', header: '公司負擔電匯手續費', type: 'inputNumber', width: '12rem', maxLength: 6, min: 0, validate: [validateRequired] },
+    { field: 'Cash_Back_Amt', header: '廠商負擔電匯手續費回饋收入', type: 'inputNumber', width: '12rem', maxLength: 6, min: 0 },
+  ];
   constructor(
-    private router: Router,
-    private formBuilder: FormBuilder,
-    private messageService: NotificationService,
-    private authService: AuthService,
-    private translate: TranslateService,
-    private validationService: ValidationService,
-    //
-    private bankAccountCodeService: BankAccountCodeService,
+    private readonly dropDownListService: DropDownListService,
+    private readonly fin21020Service: Fin21020Service, // 注入服務
   ) {
-    super();  // 呼叫父類建構子
+    super(); // 呼叫父類建構子
   }
 
   ngOnInit(): void {
-    // 初始化
-    this.ProgNo = '120002';
-    //
-    // ----------------------------------------------------------------
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
-    //
-    this.bankAccountCodeService.getSystemTypes().subscribe(data => {
-      this.bankCodeOptions = data;
+    this.initializePage('FIN21020', this.dataForm);
+    this.dropDownListService.queryGLS1005_DropDownList().pipe(untilDestroyed(this)).subscribe(data => {
+      this.bankCodeOptions = data.Data.map(item => ({ ...item, label: `${item.No} - ${item.Name}` }));
     });
-    // ----------------------------------------------------------------
-    const state = this.router.lastSuccessfulNavigation?.extras.state as {
-      crudstatus: CRUDStatus,
-      rowdata: any,
-    };
+  }
 
-    switch (state.crudstatus) {
-      // 創建
-      case CRUDStatus.Create:
-        this.formTitle = 'create-conditions';
-        this.crudstatus = CRUDStatus.Create;
-        this.showConfirm = this.canAdd();
-        break;
-      // 修改
-      case CRUDStatus.Edit:
-        this.formTitle = 'edit-conditions';
-        this.crudstatus = CRUDStatus.Edit;
-        this.showConfirm = this.canEdit();
-        this.Edit(state.rowdata);
-        break;
-      // 讀檔
-      case CRUDStatus.Read:
-        this.formTitle = 'display-conditions';
-        this.crudstatus = CRUDStatus.Read;
-        this.Read(state.rowdata);
-        break;
+  // 新增一個 `validateEntireRow` 函式，用於整行驗證
+  validateEntireRow = (rowData: IFin21020Detail): { isValid: boolean, errorMessage: string } => {
+    // 檢查金額下限與上限是否為有效數字
+    if (rowData.Remit_BAmount == null || rowData.Remit_UAmount == null) {
+      return { isValid: false, errorMessage: '金額下限和金額上限都必須填寫' };
+    }
+
+    // 檢查金額上限是否大於下限
+    if (rowData.Remit_UAmount <= rowData.Remit_BAmount) {
+      return { isValid: false, errorMessage: '金額上限必須大於金額下限' };
+    }
+
+    const rowIndex = this.data.indexOf(rowData);
+
+    // 檢查第一行金額下限是否為0
+    if (rowIndex === 0 && rowData.Remit_BAmount !== 0) {
+      return { isValid: false, errorMessage: '第一筆的金額下限必需為0' };
+    }
+
+    // 檢查區間重疊邏輯 (使用 this.data)
+    const isOverlapping = this.data.some((item, index) => {
+      if (index === rowIndex) {
+        return false;
+      }
+
+      // 檢查新區間是否與現有區間重疊
+      return (
+        rowData.Remit_BAmount != null &&
+        rowData.Remit_UAmount != null &&
+        item.Remit_BAmount != null &&
+        item.Remit_UAmount != null &&
+        (rowData.Remit_BAmount <= item.Remit_UAmount && rowData.Remit_UAmount >= item.Remit_BAmount)
+      );
+    });
+
+    if (isOverlapping) {
+      return { isValid: false, errorMessage: `新增的金額區間與現有資料重疊 (${rowData.Remit_BAmount}-${rowData.Remit_UAmount})` };
+    }
+
+    // 檢查上一行的金額上限 + 1 是否等於這一行的金額下限
+    if (rowIndex > 0) {
+      const prevRow = this.data[rowIndex - 1];
+      if (prevRow.Remit_UAmount != null && rowData.Remit_BAmount !== (prevRow.Remit_UAmount + 1)) {
+        return { isValid: false, errorMessage: `金額下限必需等於上一筆的金額上限加1 (${prevRow.Remit_UAmount + 1})` };
+      }
+    }
+
+    return { isValid: true, errorMessage: '' };
+  };
+
+  // 依照上一筆自動帶入相同值+1
+  autoFillNextRow(rowData: IFin21020Detail, value: number, col: Column, index: number) {
+    const rowIndex = this.data.indexOf(rowData);
+    if (rowIndex > 0) {
+      const prevRow = this.data[rowIndex - 1];
+      rowData.Remit_BAmount = prevRow.Remit_UAmount ? prevRow.Remit_UAmount + 1 : undefined;
+    } else {
+      rowData.Remit_BAmount = 0;
     }
   }
 
-  // ----------------------------------------------------------------
-  get items(): FormArray {
-    return this.dataForm.get('items') as FormArray;
-  }
-
-  getFormControl(index: number, controlName: string): FormControl {
-    return this.items.at(index).get(controlName) as FormControl;
-  }
-  // ----------------------------------------------------------------
-  createItem(): FormGroup {
-    return this.formBuilder.group({
-      maxCash: [, [this.validationService.numberValidator, Validators.maxLength(8)]], // 金額上限
-      minCash: [, [this.validationService.numberValidator, Validators.maxLength(8)]], // 金額下限
-      vendorFee: [, [this.validationService.numberValidator, Validators.maxLength(8)]], // 廠商負擔電匯手續費
-      companyFee: [, [this.validationService.numberValidator, Validators.maxLength(8)]], // 公司負擔電匯手續費
-      vendorRevenue: [, [this.validationService.numberValidator, Validators.maxLength(8)]], // 廠商負擔電匯手續費回饋收入
-    });
-  }
-  onRemoveItem(index: number) {
-    this.items.removeAt(index);
-  }
-  // ----------------------------------------------------------------
-  Edit(rowdata: any) {
-    this.dataForm.patchValue(rowdata);
-  }
-
-  Read(rowdata: any) {
-    this.dataForm.patchValue(rowdata);
-    this.dataForm.disable();
-  }
-
-  onAddItem(): void {
-    this.items.push(this.createItem());
+  // 依照Remit_Fee自動帶入Cash_Back_Amt
+  autoFillCashBackAmt(rowData: IFin21020Detail, value: number, col: Column, index: number) {
+    rowData.Cash_Back_Amt = rowData.Remit_Fee;
   }
 
   onSubmit(frm: FormGroup) {
-    this.messageService.blockUi();
-    this.submitted = true;
+    this.handleSubmit(frm, () => {
+      const tableValid = this.tableEditComponent.validateAndShowErrors();
+      if (!tableValid) {
+        this.loading = false;
+        return;
+      }
+      const body = {
+        BNK_No: this.dataForm.get('BNK_No')?.value,
+        Details: this.data.map(item => ({
+          Remit_BAmount: item.Remit_BAmount,
+          Remit_UAmount: item.Remit_UAmount,
+          Remit_Fee: item.Remit_Fee,
+          Comp_Remit_Fee: item.Comp_Remit_Fee,
+          Cash_Back_Amt: item.Cash_Back_Amt,
+        })),
+      };
+      this.loading = false;
+      console.log(body);
 
-    if (this.dataForm.invalid) {
-      this.messageService.errorBubble(this.translate.instant('form_error_message'));
-      this.messageService.unblockUi();
-      return;
-    }
-
-    switch (this.crudstatus) {
-      case CRUDStatus.Create:
-        if (this.canAdd()) {
-          // this.storeService.addMachine(frm.value as MachineForm).subscribe((response: any) => {
-          this.messageService.successBubble(this.translate.instant('success_message'));
-        }
-        break;
-      case CRUDStatus.Edit:
-        if (this.canEdit()) {
-          // this.storeService.updateMachine(frm.value as MachineForm).subscribe((response: any) => {
-          this.messageService.successBubble(this.translate.instant('updated-successfully'));
-        }
-        break;
-    }
-
-    this.messageService.unblockUi();
-    this.submitted = false;
+      // this.fin21020Service.insertFin21020(body).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(res => {
+      //   this.messageService.successBubble(res.Message || '新增成功');
+      // });
+    });
   }
-
-  submitForm(frm: FormGroup) {
-    // 查詢邏輯
-    this.onSubmit(frm);
-  }//CRU
-
-  onCancel() {
-    this.router.navigate(['/FIN2000/FIN21020']);
-  }
-  //--------------------------------------------------------------------------------------------------------------
 }

@@ -105,7 +105,8 @@
       </tr>
     </ng-container>
   </ng-template>
-  <ng-template pTemplate="groupfooter" let-rowData *ngIf="showSubTotal">
+  <!-- 套件有bug 暫時不用 小計的顯示 寫法請參考第221行 -->
+  <!-- <ng-template pTemplate="groupfooter" let-rowData *ngIf="showSubTotal">
     <tr>
       <td class="text-center font-bold">小計</td>
       <td *ngIf="IsPrint && showCheckBox && !rowEditing && selectionMode === 'multiple'"></td>
@@ -123,7 +124,7 @@
       </ng-container>
       <td *ngIf="!alwaysEdit || (alwaysEdit && rowEditing)" [hidden]="!IsPrint || !showManage"></td>
     </tr>
-  </ng-template>
+  </ng-template> -->
   <ng-template pTemplate="body" let-rowIndex="rowIndex" let-rowData let-columns="columns" let-expanded="expanded"
     let-editing="editing" let-ri="rowIndex" let-index="rowIndex">
     <tr #htmlTableRowElement [attr.data-key]="rowData[dataKey]" [pSelectableRow]="rowData" style="height: 35px"
@@ -207,10 +208,27 @@
         </td>
       </ng-template>
     </tr>
+    <!-- 判斷是否要插入小計列 -->
+    <tr *ngIf="groupRowsBy && isLastRowOfGroup(rowData, rowIndex)">
+      <td class="text-center font-bold">小計</td>
+      <td *ngIf="IsPrint && showCheckBox && !rowEditing && selectionMode === 'multiple'"></td>
+      <td *ngIf="expansionColumns.length && IsPrint"></td>
+      <ng-container *ngFor="let col of columns">
+        <td class="text-center font-bold" *ngIf="!col.hidden">
+          <ng-container *ngIf="col.isSubTotal">
+            {{
+            col.format ?
+            col.format(getGroupSubtotal(rowData[groupRowsBy], col.field)) :
+            getGroupSubtotal(rowData[groupRowsBy], col.field)
+            }}
+          </ng-container>
+        </td>
+      </ng-container>
+    </tr>
   </ng-template>
   <ng-template pTemplate="footer" let-columns *ngIf="showTotal">
     <tr *ngFor="let data of footerData">
-      <td class="text-center font-bold">{{data.tlt_building}}</td>
+      <td class="text-center font-bold">{{data.group_name}}</td>
       <td *ngIf="IsPrint && showCheckBox && !rowEditing && selectionMode === 'multiple'"></td>
       <td *ngIf="expansionColumns.length && IsPrint"></td>
       <td *ngFor="let col of columns" class="text-center font-bold pr-2">

@@ -8,106 +8,54 @@
     <form [formGroup]="dataForm" (ngSubmit)="onSubmit(dataForm)">
       <div class="grid p-fluid">
         <div class="col-12 md:col-6 lg:col-4">
-          <app-dropdown
-            label="收銀機號"
-            controlName="ECR_No"
-            [options]="ECRNoOptions"
-            optionLabel="label"
-            optionValue="value"
-            [control]="dataForm.controls.ECR_No"
-            [submitted]="submitted"
-          ></app-dropdown>
+          <app-dropdown label="收銀機號" controlName="ECR_No" [options]="ECRNoOptions" optionLabel="label"
+            optionValue="value" [control]="dataForm.controls.ECR_No" [submitted]="submitted"></app-dropdown>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text
-            label="信用卡刷卡機代碼"
-            controlName="EDC_No"
-            [control]="dataForm.controls.EDC_No"
-            [submitted]="submitted"
-          ></app-input-text>
+          <app-input-text label="信用卡刷卡機代碼" controlName="EDC_No" [control]="dataForm.controls.EDC_No"
+            [submitted]="submitted"></app-input-text>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
-          <app-calendar-range
-            startLabel="啟用日期"
-            endLabel="停用日期"
-            [startControl]="dataForm.controls.EDC_BegDate"
-            [endControl]="dataForm.controls.EDC_EndDate"
-            [submitted]="submitted"
-          ></app-calendar-range>
+          <app-calendar-range startLabel="啟用日期" endLabel="停用日期" [startControl]="dataForm.controls.EDC_BegDate"
+            [endControl]="dataForm.controls.EDC_EndDate" [submitted]="submitted"></app-calendar-range>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
-          <app-dropdown
-            label="第一台信用卡刷卡機狀態"
-            controlName="EDC_Status"
-            [options]="EDC_Status_Option"
-            optionLabel="label"
-            optionValue="value"
-            [control]="dataForm.controls.EDC_Status1"
-            [submitted]="submitted"
-          ></app-dropdown>
+          <app-dropdown label="第一台信用卡刷卡機狀態" controlName="EDC_Status" [options]="EDC_Status_Option" optionLabel="label"
+            optionValue="value" [control]="dataForm.controls.EDC_Status1" [submitted]="submitted"></app-dropdown>
         </div>
 
         <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text
-            label="第一台信用卡刷卡機IP"
-            controlName="EDC_IP1"
-            [control]="dataForm.controls.EDC_IP1"
-            [submitted]="submitted"
-          ></app-input-text>
-          <small
-            *ngIf="
+          <app-input-text label="第一台信用卡刷卡機IP" controlName="EDC_IP1" [control]="dataForm.controls.EDC_IP1"
+            [submitted]="submitted"></app-input-text>
+          <small *ngIf="
               dataForm.get('EDC_IP1')?.errors?.['pattern'] &&
               dataForm.get('EDC_IP1')?.touched
-            "
-            class="p-error"
-          >
+            " class="p-error">
             請輸入有效的 IP 格式（例如：192.168.0.1）
           </small>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text
-            label="第一台信用卡刷卡機端末機代碼"
-            controlName="EDC_TmID1"
-            [control]="dataForm.controls.EDC_TmID1"
-            [submitted]="submitted"
-          ></app-input-text>
-        </div>
-      <div class="col-12 md:col-6 lg:col-4">
-          <app-dropdown
-            label="第二台信用卡刷卡機狀態"
-            controlName="EDC_Status"
-            [options]="EDC_Status_Option"
-            optionLabel="label"
-            optionValue="value"
-            [control]="dataForm.controls.EDC_Status2"
-            [submitted]="submitted"
-          ></app-dropdown>
+          <app-input-text label="第一台信用卡刷卡機端末機代碼" controlName="EDC_TmID1" [control]="dataForm.controls.EDC_TmID1"
+            [submitted]="submitted"></app-input-text>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text
-            label="第二台信用卡刷卡機IP"
-            controlName="EDC_IP2"
-            [control]="dataForm.controls.EDC_IP2"
-            [submitted]="submitted"
-          ></app-input-text>
-          <small
-            *ngIf="
+          <app-dropdown label="第二台信用卡刷卡機狀態" controlName="EDC_Status" [options]="EDC_Status_Option" optionLabel="label"
+            optionValue="value" [control]="dataForm.controls.EDC_Status2" [submitted]="submitted"></app-dropdown>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text label="第二台信用卡刷卡機IP" controlName="EDC_IP2" [control]="dataForm.controls.EDC_IP2"
+            [submitted]="submitted"></app-input-text>
+          <small *ngIf="
               dataForm.get('EDC_IP2')?.errors?.['pattern'] &&
               dataForm.get('EDC_IP2')?.touched
-            "
-            class="p-error"
-          >
+            " class="p-error">
             請輸入有效的 IP 格式（例如：192.168.0.1）
           </small>
         </div>
-  
+
         <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text
-            label="第二台信用卡刷卡機端末機代碼"
-            controlName="EDC_TmID2"
-            [control]="dataForm.controls.EDC_TmID2"
-            [submitted]="submitted"
-          ></app-input-text>
+          <app-input-text label="第二台信用卡刷卡機端末機代碼" controlName="EDC_TmID2" [control]="dataForm.controls.EDC_TmID2"
+            [submitted]="submitted"></app-input-text>
         </div>
         <!-- <div class="col-12 md:col-6 lg:col-4">
           <app-dropdown
@@ -148,11 +96,8 @@
       </div>
 
       <!-- 按鈕列 -->
-      <div
-        class="grid justify-content-end gap-2 mt-3 border-top-1 surface-border pt-3"
-        *ngIf="!isFormReadable"
-      >
-        <app-button btnType="smartclear" />
+      <div class="grid justify-content-end gap-2 mt-3 border-top-1 surface-border pt-3" *ngIf="!isFormReadable">
+        <app-button btnType="cancel" [form]="dataForm" />
         <app-button btnType="submit"></app-button>
       </div>
     </form>

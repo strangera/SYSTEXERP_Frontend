@@ -16,6 +16,7 @@ import { FloorService } from '@service/basic/floor.service';
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
 import { Tls51080Service } from '@service/api/tls/tls51080.service';
 import { DatePipe } from '@angular/common';
+import { untilDestroyed } from '@ngneat/until-destroy';
 
 @Component({
   selector: 'app-tls26020',
@@ -106,7 +107,7 @@ export class TLS26020Component extends BasicQueryPageComponent<TLS26020Data> imp
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
       this.tls26020Service.queryTLS26020(frm.value)
-        .pipe(finalize(() => this.loading = false))
+        .pipe(untilDestroyed(this), finalize(() => this.loading = false))
         .subscribe(response => {
           this.data = response.Data;
           this.totalRecords = response.TotalCount;

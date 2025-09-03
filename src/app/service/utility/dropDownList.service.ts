@@ -220,6 +220,11 @@ export class DropDownListService {
     return this.http.post<ApiResponse<IDropdownItem[]>>(`${this.apiUrl}/queryGLS1005_DropDownList`, {});
   }
 
+  // 查詢會計科目設定檔(GLS1005)下拉式選單 (只取1103科目)
+  queryGLS1005For1103_DropDownList(): Observable<ApiResponse<IDropdownItem[]>> {
+    return this.http.post<ApiResponse<IDropdownItem[]>>(`${this.apiUrl}/queryGLS1005For1103_DropDownList`, {});
+  }
+
   // 查詢扣款代碼檔(APS1003)資料表
   queryAPS1003_DropDownList(params: IAPS1003Request): Observable<ApiResponse<IDropdownItem[]>> {
     return this.http.post<ApiResponse<IDropdownItem[]>>(`${this.apiUrl}/queryAPS1003_DropDownList`, params);
@@ -233,6 +238,11 @@ export class DropDownListService {
   // 查詢環境變數編號(POS1002TML)資料表下拉選單
   queryPOS1002TML_DropDownList(): Observable<ApiResponse<IDropdownItem[]>> {
     return this.http.post<ApiResponse<IDropdownItem[]>>(`${this.apiUrl}/queryPOS1002TML_DropDownList`, {});
+  }
+
+  // 查詢收銀機群組編號(POS1002GRM)資料表下拉選單
+  queryPOS1002GRM_DropDownList(): Observable<ApiResponse<IDropdownItem[]>> {
+    return this.http.post<ApiResponse<IDropdownItem[]>>(`${this.apiUrl}/queryPOS1002GRM_DropDownList`, {});
   }
 
   // 查詢位置編號(SYS3A00)資料表下拉選單 (注意：Swagger 中寫 SYS3A00，但實際路徑是 POS2002)
@@ -350,7 +360,7 @@ export class DropDownListService {
   }
 
   // 查詢專櫃主檔(TLTTALENT)資料表下拉選單(依照契約日期取得合約資料)
-  queryTLTTALENT_ByContractDate_DropDownList(tlt_contract_date: string): Observable<ApiResponse<IDropdownItem[]>> {
+  queryTLTTALENT_ByContractDate_DropDownList(tlt_contract_date: string | null): Observable<ApiResponse<IDropdownItem[]>> {
     return this.http.post<ApiResponse<IDropdownItem[]>>(`${this.apiUrl}/queryTLTTALENT_ByContractDate_DropDownList`, { tlt_contract_date });
   }
   // 查詢付款別(POS1006)資料表下拉選單

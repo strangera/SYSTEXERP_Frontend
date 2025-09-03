@@ -2,83 +2,187 @@
   <div class="flex gap-2 mb-2">
     <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
   </div>
+
   <p-accordion>
-    <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
+    <p-accordionTab
+      header="{{ 'query-conditions' | translate }}"
+      [selected]="true"
+      class="line-height-3 m-0"
       [headerStyleClass]="'query-accordionTab'">
       <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
           <!-- 銷售日期 -->
-          <app-calendar-range-quick class="col-12 md:col-6 lg:col-4" label="銷售日期"
-            [startControl]="queryForm.controls.TXN_DateStart" [endControl]="queryForm.controls.TXN_DateEnd"
-            [submitted]="submitted"></app-calendar-range-quick>
+          <app-calendar-range-quick
+            class="col-12 md:col-6 lg:col-4"
+            label="銷售日期"
+            [startControl]="queryForm.controls.TXN_DateStart"
+            [endControl]="queryForm.controls.TXN_DateEnd"
+            [submitted]="submitted">
+          </app-calendar-range-quick>
 
           <!-- 收銀機號 -->
-
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select label="收銀機號" controlName="ECR_No" [options]="ECRNoOptions" optionLabel="label"
-              optionValue="value" [control]="queryForm.controls.ECR_No" [submitted]="submitted"></app-multi-select>
+            <app-multi-select
+              label="收銀機號"
+              controlName="ECR_No"
+              [options]="ECRNoOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.ECR_No"
+              [submitted]="submitted">
+            </app-multi-select>
           </div>
 
-          <!-- 專櫃編號 -->
+          <!-- 專櫃編號（表單欄位 tlt_no） -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select label="專櫃編號" controlName="TLT_No" [options]="CounterOptions" optionLabel="formLabel"
-              optionValue="value" [control]="queryForm.controls.tlt_no" [submitted]="submitted"></app-multi-select>
+            <app-multi-select
+              label="專櫃編號"
+              controlName="tlt_no"
+              [options]="CounterOptions"
+              optionLabel="formLabel"
+              optionValue="value"
+              [control]="queryForm.controls.tlt_no"
+              [submitted]="submitted">
+            </app-multi-select>
           </div>
 
           <!-- 信用卡卡別 -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="信用卡別" controlName="CRD_Type" [options]="cardTypeOptions" optionLabel="label"
-              optionValue="value" [control]="queryForm.controls.CRD_Type" [submitted]="submitted"></app-dropdown>
+            <app-multi-select
+              label="信用卡別"
+              controlName="CRD_Type"
+              [options]="cardTypeOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.CRD_Type"
+              [submitted]="submitted">
+            </app-multi-select>
           </div>
 
           <!-- 信用卡卡號 -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text label="信用卡號" controlName="CRD_No" [control]="queryForm.controls.CRD_No"
-              [submitted]="submitted"></app-input-text>
+            <app-input-text
+              label="信用卡號"
+              controlName="CRD_No"
+              [control]="queryForm.controls.CRD_No"
+              [submitted]="submitted">
+            </app-input-text>
           </div>
 
           <!-- 金額 -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text label="金額" controlName="TXN_PayAmt" [control]="queryForm.controls.TXN_PayAmt"
-              [submitted]="submitted"></app-input-text>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="是否分期" controlName="IsHaveTERM_No" [options]="WhetherOptions" optionLabel="label"
-              optionValue="value" [control]="queryForm.controls.IsHaveTERM_No" [submitted]="submitted"></app-dropdown>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select label="期別" controlName="IPeriod" [options]="installmentPeriodOptions" optionLabel="label"
-              optionValue="value" [control]="queryForm.controls.IPeriod" [submitted]="submitted"></app-multi-select>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="收單行" controlName="AcqBank" [options]="acquiringBankOptions" optionLabel="label"
-              optionValue="value" [control]="queryForm.controls.AcqBank" [submitted]="submitted"></app-dropdown>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="連線狀態" controlName="ConnStatus" [options]="connectionStatusOptions" optionLabel="label"
-              optionValue="value" [control]="queryForm.controls.ConnStatus" [submitted]="submitted"></app-dropdown>
+            <app-input-text
+              label="金額"
+              controlName="TXN_PayAmt"
+              [control]="queryForm.controls.TXN_PayAmt"
+              [submitted]="submitted">
+            </app-input-text>
           </div>
 
-          <!-- 館別 -->
+          <!-- 是否分期 / 期別 / 收單行 / 連線狀態 -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="館別" controlName="tlt_building" [options]="BUILDING_NO_Options" optionLabel="label"
-              optionValue="value" [control]="queryForm.controls.tlt_building" [submitted]="submitted"></app-dropdown>
+            <app-dropdown
+              label="是否分期"
+              controlName="IsHaveTERM_No"
+              [options]="WhetherOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.IsHaveTERM_No"
+              [submitted]="submitted">
+            </app-dropdown>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-multi-select
+              label="期別"
+              controlName="TERM_No"
+              [options]="installmentPeriodOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.TERM_No"
+              [submitted]="submitted">
+            </app-multi-select>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-multi-select
+              label="收單行"
+              controlName="Acquirer"
+              [options]="acquiringBankOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.Acquirer"
+              [submitted]="submitted">
+            </app-multi-select>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown
+              label="連線狀態"
+              controlName="ConnStatus"
+              [options]="connectionStatusOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.ConnStatus"
+              [submitted]="submitted">
+            </app-dropdown>
           </div>
 
-          <!-- 樓層 -->
+          <!-- 館別 / 樓層 / 組織 -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select label="樓層" [options]="floorOptions" optionLabel="label" optionValue="value"
-              [control]="queryForm.controls.tlt_floor" [submitted]="submitted"></app-multi-select>
+            <app-dropdown
+              label="館別"
+              controlName="tlt_building"
+              [options]="BUILDING_NO_Options"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.tlt_building"
+              [submitted]="submitted">
+            </app-dropdown>
           </div>
-
-          <!-- 組織代碼/名稱 -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select label="組織代碼/名稱" [options]="OrganizationCodeOptions" optionLabel="formLabel"
-              optionValue="value" [control]="queryForm.controls.org_id" [submitted]="submitted"></app-multi-select>
+            <app-multi-select
+              label="樓層"
+              [options]="floorOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.tlt_floor"
+              [submitted]="submitted">
+            </app-multi-select>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-multi-select
+              label="組織代碼/名稱"
+              [options]="OrganizationCodeOptions"
+              optionLabel="formLabel"
+              optionValue="value"
+              [control]="queryForm.controls.org_id"
+              [submitted]="submitted">
+            </app-multi-select>
           </div>
         </div>
 
+        <!-- 檢視模式切換 -->
+        <div class="col-12 md:col-6 lg:col-4 mt-2">
+          <div class="flex align-items-center gap-3">
+            <p-radioButton
+              name="viewMode"
+              inputId="vmCredit"
+              [value]="'credit'"
+              [(ngModel)]="viewMode"
+              [ngModelOptions]="{ standalone: true }"
+              (onClick)="onModeChange()">
+            </p-radioButton>
+            <label for="vmCredit">信用卡明細</label>
 
+            <p-radioButton
+              name="viewMode"
+              inputId="vmCounter"
+              [value]="'counter'"
+              [(ngModel)]="viewMode"
+              [ngModelOptions]="{ standalone: true }"
+              (onClick)="onModeChange()">
+            </p-radioButton>
+            <label for="vmCounter">櫃位信用卡彙總</label>
+          </div>
+        </div>
 
         <!-- 查詢按鈕區 -->
         <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
@@ -92,8 +196,18 @@
 
 <!-- 查詢結果表格 -->
 <div class="card">
-  <app-table tableKey="TLS23090" [data]="data" [columns]="columns" [showCheckBox]="false" dataKey="TXN_No"
-    [multiSortMeta]="[{ field: 'ECR_No', order: 1 }]" [totalRecords]="totalRecords" [lazy]="true" [loading]="loading"
-    (edit)="onEdit($event)" (detail)="onDetail($event)" [showManage]="false" [showDelete]="false"
-    (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"></app-table>
+  <app-table
+    tableKey="TLS23090"
+    [data]="data"
+    [columns]="columns"
+    [showCheckBox]="false"
+    dataKey="_rowKey"
+    [multiSortMeta]="sortMeta"
+    [totalRecords]="totalRecords"
+    [lazy]="true"
+    [loading]="loading"
+    [showManage]="false"
+    [showDelete]="false"
+    (lazyLoadData)="onLazyLoadData($event, queryForm)">
+  </app-table>
 </div>

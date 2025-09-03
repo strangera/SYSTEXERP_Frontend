@@ -1,23 +1,106 @@
-.hover-effect {
-
-  background-color: rgb(255, 255, 255);
-  transition: background-color 0.3s ease;
-}
-
-.hover-effect:hover {
-  background-color: rgb(236, 236, 236);
-}
-
-::ng-deep .p-toolbar {
-  background-color: #ffffff; /* 你想要的背景色 */
-}
-
-.container {
+/* 狀態列 */
+.status-container {
   display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
 
+  .status-label {
+    font-weight: bold;
+    margin-right: 6px;
+  }
+
+  .status-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 13px;
+    background: #fff;
+    white-space: nowrap;
+
+    i {
+      font-size: 14px;
+    }
+
+    &.success {
+      border-color: #28a745;
+      color: #28a745;
+    }
+
+    &.logout {
+      border-color: #dc3545;
+      color: #dc3545;
+    }
+
+    &.warning {
+      border-color: #fd7e14;
+      color: #fd7e14;
+    }
+
+    &.purple {
+      border-color: #6f42c1;
+      color: #6f42c1;
+    }
+  }
 }
 
-.row {
-  flex-direction: row;
-  flex-wrap: wrap;
+/* 狀態圖示定位 */
+.relative {
+  position: relative;
+
+  .status-icon {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    font-size: 18px;
+  }
+}
+
+/* List 模式 */
+:host ::ng-deep .p-dataview.p-dataview-list .grid.grid-nogutter {
+  display: block;
+}
+
+:host ::ng-deep .p-dataview.p-dataview-list .grid.grid-nogutter > div {
+  padding: 0;
+}
+/* grid 模式 */
+:host ::ng-deep .custom-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 1px;
+  background-color: #ddd;
+}
+
+:host ::ng-deep .custom-grid-item {
+  background: #fff !important;
+  border: none !important;
+}
+
+:host ::ng-deep .custom-grid-item .surface-card {
+  border: none !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+}
+
+:host ::ng-deep .search-bar-container {
+  flex: 1;
+  max-width: 800px;
+  display: flex;
+  justify-content: flex-start;
+}
+:host ::ng-deep .search-bar {
+  flex: 1;
+  display: flex;
+  align-items: center;
+}
+:host ::ng-deep .search-bar input {
+  border: 1px solid #e0dcdc !important;
+  background-color: #f9f7f7 !important;
+  padding: 0.5rem 0.75rem 0.5rem 2rem !important;
+  font-size: 1rem !important;
+  border-radius: 6px !important;
 }

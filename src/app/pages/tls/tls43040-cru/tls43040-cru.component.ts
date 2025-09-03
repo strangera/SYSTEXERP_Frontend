@@ -2,9 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
 import { PanelModule } from 'primeng/panel';
-import { NgIf } from '@angular/common';
 import { forkJoin, map } from 'rxjs';
-
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
@@ -40,7 +38,6 @@ interface SYS1000 {
     InputTextComponent,
     DropdownComponent,
     ButtonComponent,
-    NgIf,
     TranslateModule,
     TableComponent,
   ],
@@ -60,7 +57,7 @@ export class TLS43040CRUComponent extends BasicCruPageComponent<any> implements 
     ECR_GrpNo: [{ value: '自動編號', disabled: true }],
     ECR_GrpName: ['', [Validators.required, Validators.maxLength(64)]],
     ECR_GrpDesc: ['', [Validators.maxLength(255)]],
-    ECR_DtlLimit: ['', Validators.required],
+    ECR_DtlLimit: ['0', Validators.required],
 
   });
 
@@ -93,6 +90,15 @@ export class TLS43040CRUComponent extends BasicCruPageComponent<any> implements 
     console.log('表格資料data:', this.data);
     this.data = this.rowdata?.ECR_Details ?? [];
     console.log('表格資料data:', this.data);
+    // 初始值檢查
+    this.onEcrDtlLimitChange(this.dataForm.controls.ECR_DtlLimit.value);
+
+    // 監聽下拉選單變化
+    this.dataForm.controls.ECR_DtlLimit.valueChanges
+      .pipe(untilDestroyed(this))
+      .subscribe(value => {
+        this.onEcrDtlLimitChange(value);
+      });
   }
 
   // ===== 載入下拉並設定 columns =====
@@ -154,30 +160,44 @@ export class TLS43040CRUComponent extends BasicCruPageComponent<any> implements 
   }
 
 
-onEcrDtlLimitChange(value: string) {
-  this.isTableDisabled = value === "0";
-  console.log("ECR_DtlLimit 選擇:", value, "→ tableDisabled:", this.isTableDisabled);
-}
+  onEcrDtlLimitChange(value: string) {
+    this.isTableDisabled = value === "0";
+    console.log("ECR_DtlLimit 選擇:", value, "→ tableDisabled:", this.isTableDisabled);
+  }
 
 
   onSubmit(form: FormGroup): void {
     if (form.valid) {
+      const raw = form.getRawValue();
+
       const payload = {
-        ...form.getRawValue(),
-        ID: this.isFormCreateable ? 0 : this.rowdata?.ID,
+        ID: this.isFormCreateable ? 0 : Number(this.rowdata?.ID ?? 0),
+        ECR_GrpNo: (!raw.ECR_GrpNo || raw.ECR_GrpNo === '自動編號') ? '' : raw.ECR_GrpNo, // 新增時送空字串
+        ECR_GrpName: raw.ECR_GrpName,
+        ECR_DtlLimit: raw.ECR_DtlLimit,
+        ECR_GrpDesc: raw.ECR_GrpDesc,
         Detail: this.data.map(item => ({
-          ...item,
-          // 這裡可以加入額外的屬性
-          ID: this.isFormCreateable ? 0 : item.ID,
-          status: this.isFormCreateable ? 'new' : item.status
+          ID: isNaN(Number(item.ID)) ? 0 : Number(item.ID),   // "saved-xxxx" → 0
+          ECR_GrpSeqNo: item.ECR_GrpSeqNo ?? 0,
+          ECR_No: item.ECR_No ?? '',
+          ECR_Type: item.ECR_Type ?? '',
+          TLT_No: item.TLT_No ?? '',
+          BUILDING_No: item.BUILDING_No ?? '',
+          FLOOR_No: item.FLOOR_No ?? '',
+          Area_No: item.Area_No ?? '',
+          status: item.status ?? 'A'  // 後端需要
         }))
       };
 
-      if (!payload.ECR_GrpNo || payload.ECR_GrpNo === '自動編號') {
+      console.log('送出的 payload:', payload);
+
+      if (!raw.ECR_GrpNo || raw.ECR_GrpNo === '自動編號') {
         // 新增
         this.tls43040Service.insertTLS43040(payload).subscribe({
           next: (res) => {
             console.log('新增成功:', res);
+            this.onCancel(); // !!! 學習
+            this.messageService.successBubble(res.Message); // !!! 學習
           },
           error: (err) => {
             console.error('新增失敗:', err);
@@ -198,6 +218,8 @@ onEcrDtlLimitChange(value: string) {
       console.log('表單驗證未通過');
     }
   }
+
+
 
   resetTable() {
     this.data = [];

@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormGroup,Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { FIN13020Service } from '../../../service/api/fin/fin13020.service';
 import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
@@ -13,13 +13,15 @@ import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdow
 import { QueryYearMonthComponent } from '../../../shared/componentkit/query-year-month/query-year-month.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { TranslateModule } from '@ngx-translate/core';
+import { ValidationService } from '@shared/service/validation.service';
+import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
 
 @Component({
   selector: 'app-fin13020',
   templateUrl: './fin13020.component.html',
   styleUrls: ['./fin13020.component.scss'],
   standalone: true,
-  imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputTextRangeComponent, InputTextComponent, CalendarRangeComponent, DropdownComponent, QueryYearMonthComponent, TableComponent, TranslateModule]
+  imports: [MenubarComponent, ButtonComponent, AccordionModule,CalendarComponent, FormsModule, ReactiveFormsModule, InputTextRangeComponent, InputTextComponent, CalendarRangeComponent, DropdownComponent,  TableComponent, TranslateModule]
 })
 export class FIN13020Component extends BasicQueryPageComponent<any> {
 
@@ -28,27 +30,27 @@ export class FIN13020Component extends BasicQueryPageComponent<any> {
     { value: '703902223', label: '703902223' },
   ];
   PUR_VoucherTypeOptions: any[] = [
-    { value: '23', label: '三聯式、電子計算機及三聯式收銀機統一發票之進貨退出或折讓證明單' },
-    { value: '24', label: '二聯式收銀機統一發票及載有稅額之其他憑證之進貨退出或折讓證明單' },
+    { value: '33', label: '銷項三聯式銷貨退回或折讓證明單' },
+    { value: '34', label: '銷項二聯式銷貨退回或折讓證明單' },
   ];
 
   queryForm = this.formBuilder.group({
 
 
-    TXN_Ret_NoStart: [null], // 退出/折讓單號(起)
-    TXN_Ret_NoEnd: [null],   // 退出/折讓單號(迄)
-    GUI_Track: [null], // 字軌
-    InvoiceNumberStart: [null],
-    InvoiceNumberEnd: [null],
+    TXN_Ret_NoStart: [null, [Validators.maxLength(20)]], // 退出/折讓單號(起)
+    TXN_Ret_NoEnd: [null, [Validators.maxLength(20)]],   // 退出/折讓單號(迄)
+    GUI_Track: [null, [Validators.maxLength(2)]], // 字軌
+    InvoiceNumberStart: [null, [Validators.maxLength(10)]],
+    InvoiceNumberEnd: [null, [Validators.maxLength(10)]],
     InvoiceDateStart: [null], // 領用日期(起)
     InvoiceDateEnd: [null],   // 領用日期(迄)
     InvoiceType: [null], // 發票狀態
     INV_DeclareYM: [null], // 發票年月
-    Source_Doc_NoStart: [], // 憑證單號(起)
-    Source_Doc_NoEnd: [],   // 憑證單號(迄)
-    Voucher_NoStart: [], // 發票起始號碼
-    Voucher_NoEnd: [],   // 發票結束號碼
-    ...createPaginationConfig
+    Source_Doc_NoStart: [, [Validators.maxLength(16)]], // 憑證單號(起)
+    Source_Doc_NoEnd: [, [Validators.maxLength(16)]],   // 憑證單號(迄)
+    Voucher_NoStart: [, [Validators.maxLength(16)]], // 發票起始號碼
+    Voucher_NoEnd: [, [Validators.maxLength(16)]],   // 發票結束號碼
+    ...createPaginationConfig([{ field: 'id', order: 1 }])
   });
 
   data: any[] = [];
@@ -71,7 +73,7 @@ export class FIN13020Component extends BasicQueryPageComponent<any> {
     { field: 'Voucher_No', header: '傳票編號', visible: true },
   ];
 
-  constructor(private fin13020Service: FIN13020Service) {
+  constructor(private fin13020Service: FIN13020Service, private validationService: ValidationService,) {
     super();
   }
   formatCreditType(value: string): string {
@@ -115,7 +117,7 @@ export class FIN13020Component extends BasicQueryPageComponent<any> {
         if (payload[key] === '') payload[key] = null;
       }
     }
-
+payload.INV_DeclareYM = this.toYYYYMM(payload.INV_DeclareYM);
     this.loading = true;
     this.messageService.blockUi();
 
@@ -140,7 +142,7 @@ export class FIN13020Component extends BasicQueryPageComponent<any> {
       //   }
       // },
       error: () => {
-        this.messageService.errorBubble('查詢錯誤');
+        
         this.loading = false;
       },
       complete: () => {
@@ -156,6 +158,37 @@ export class FIN13020Component extends BasicQueryPageComponent<any> {
     this.queryForm.reset();
   }
 
+private toYYYYMM(input: any): string | null {
+  if (!input) return null;
 
+  // 先處理常見字串：'2025/05'、'2025-05-01T00:00:00'
+  if (typeof input === 'string') {
+    const onlyDigits = input.replace(/\D/g, ''); // 拿掉所有非數字
+    if (onlyDigits.length >= 6) return onlyDigits.slice(0, 6); // '202505'
+    const d = new Date(input);
+    if (!isNaN(d.getTime())) {
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, '0');
+      return `${y}${m}`;
+    }
+    return null;
+  }
+
+  // Date 物件
+  if (input instanceof Date) {
+    const y = input.getFullYear();
+    const m = String(input.getMonth() + 1).padStart(2, '0');
+    return `${y}${m}`;
+  }
+
+  // 其他型別就試著 new Date 看看
+  const d = new Date(input);
+  if (!isNaN(d.getTime())) {
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    return `${y}${m}`;
+  }
+  return null;
+}
 
 }

@@ -14,6 +14,7 @@ import { TableComponent } from '@shared/componentkit/table/table.component';
 import { Column, createPaginationConfig } from '@shared/componentkit/table/table.model';
 import { ApprovalStatus } from '@shared/models/tls/approval-status.model';
 import { AccordionModule } from 'primeng/accordion';
+import { finalize } from 'rxjs';
 import { TLS26080Data, TLS26080Query } from './tls26080.model';
 
 @Component({
@@ -58,7 +59,7 @@ export class TLS26080Component extends BasicQueryPageComponent<TLS26080Data> imp
   public readonly totalRecords = computed(() => this.service.TLS26080Data().length);
 
   private queryTLS26080 = computed(() => {
-    const { pod_no, pod_desc, pod_status, pod_sdate, pod_edate, pod_busdate } = this.queryForm.value;
+    const { pod_no, pod_desc, pod_status, pod_sdate, pod_edate, pod_busdate } = this.queryForm.getRawValue();
     return <TLS26080Query>{
       pod_sdate_start: pod_sdate!,
       pod_sdate_end: pod_edate!,
@@ -93,34 +94,23 @@ export class TLS26080Component extends BasicQueryPageComponent<TLS26080Data> imp
     this.service.loadAPS1003(['E']);
   }
 
-  private canQuery(): boolean {
-    return !0;
-  }
-
-  public onClear(): void {
-    this.queryForm.reset({
-      pod_sdate: this.service.dateS,
-      pod_edate: this.service.dateE,
-      pod_status: ApprovalStatus.未核准,
-    });
-  };
-
   // 提交查詢
   public onSubmit(): void {
     this.handleSubmit(this.queryForm, () => {
-      this.queryForm.valid && this.canQuery() && this.service.loadTLS26080(this.queryTLS26080());
-      this.queryStateService.setQueryState(this.ProgNo, this.queryForm.value);
+      this.service.loadTLS26080(this.queryTLS26080());
+      this.queryStateService.setQueryState(this.ProgNo, this.queryForm.getRawValue());
       this.loading = !1;
     });
   }
 
-  public override onCreate(data?: unknown): void {
-    this.queryStateService.setQueryState(this.ProgNo, this.queryForm.value);
-    super.onCreate(data);
-  }
-
   // 刪除項目
-  public onDelete(data: TLS26080Data | TLS26080Data[]): void {
+  public onDelete(event: TLS26080Data[]): void {
+    this.service.deleteTLS26080(event.map(v => String(v.id)))
+      .pipe(finalize(() => this.loading = !1))
+      .subscribe({
+        next: () => this.messageService.successBubble('刪除成功'),
+        error: () => this.messageService.errorBubble('刪除失敗')
+      });
     //   const items = Array.isArray(data) ? data : [data];
     //   if (items.length === 0) return;
 

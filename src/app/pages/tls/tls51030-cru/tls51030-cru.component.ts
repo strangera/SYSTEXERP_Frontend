@@ -37,11 +37,11 @@ interface CategoryItem {
 }
 
 @Component({
-    selector: 'app-tls51030-cru',
-    templateUrl: './tls51030-cru.component.html',
-    styleUrls: ['./tls51030-cru.component.scss'],
-    standalone: true,
-    imports: [MenubarComponent, ButtonComponent, PanelModule, FormsModule, ReactiveFormsModule, InputTextComponent, DropdownComponent, InputTextareaComponent, NgIf, TranslateModule]
+  selector: 'app-tls51030-cru',
+  templateUrl: './tls51030-cru.component.html',
+  styleUrls: ['./tls51030-cru.component.scss'],
+  standalone: true,
+  imports: [MenubarComponent, ButtonComponent, PanelModule, FormsModule, ReactiveFormsModule, InputTextComponent, DropdownComponent, InputTextareaComponent, NgIf, TranslateModule]
 })
 export class TLS51030CRUComponent extends BasicCruPageComponent<CategoryItem> implements OnInit {
   dataForm = this.formBuilder.nonNullable.group({
@@ -86,11 +86,10 @@ export class TLS51030CRUComponent extends BasicCruPageComponent<CategoryItem> im
       }
     });
 
-
-
     this.dataForm.controls.CAT_LNo.valueChanges.pipe(debounceTime(300)).subscribe(catLNo => {
       if (catLNo) {
-        this.middleCategoryCodeService.getSystemTypesByCatLNo(catLNo).subscribe({
+        // 直接傳遞字串陣列
+        this.middleCategoryCodeService.getSystemTypesByCatLNo([catLNo]).subscribe({
           next: (response) => {
             this.middleCategoryOptions = response;
             const currentCatMNo = this.dataForm.controls.CAT_MNo.value;
@@ -113,6 +112,32 @@ export class TLS51030CRUComponent extends BasicCruPageComponent<CategoryItem> im
 
     // 新增：在初始化後立即設置大分類代碼的禁用狀態
     this.updateCATSNoDisabledState();
+  }
+
+  private loadInitialData(): void {
+    if (this.crudstatus === CRUDStatus.Edit || this.crudstatus === CRUDStatus.Read) {
+      if (this.rowdata) {
+        const catLNo = this.rowdata.CAT_LNo;
+        if (catLNo) {
+          // 修改：傳遞字串陣列，與 valueChanges 中保持一致
+          this.middleCategoryCodeService.getSystemTypesByCatLNo([catLNo]).subscribe({
+            next: (response) => {
+              this.middleCategoryOptions = response;
+            },
+            error: (error) => {
+              console.error('初始載入中分類代碼失敗:', error);
+              this.messageService.errorBubble('無法載入中分類代碼，請稍後重試');
+              this.middleCategoryOptions = [];
+              this.dataForm.controls.CAT_MNo.setValue('');
+            }
+          });
+        }
+      } else {
+        console.error('rowdata is missing in Edit/View mode');
+        this.messageService.errorBubble('無法載入資料，請返回查詢頁面重試');
+        this.onCancel();
+      }
+    }
   }
 
   // 新增：自定義清空方法，保留大分類代碼
@@ -147,31 +172,6 @@ export class TLS51030CRUComponent extends BasicCruPageComponent<CategoryItem> im
         field.disable();
       } else {
         field.enable();
-      }
-    }
-  }
-
-  private loadInitialData(): void {
-    if (this.crudstatus === CRUDStatus.Edit || this.crudstatus === CRUDStatus.Read) {
-      if (this.rowdata) {
-        const catLNo = this.rowdata.CAT_LNo;
-        if (catLNo) {
-          this.middleCategoryCodeService.getSystemTypesByCatLNo(catLNo).subscribe({
-            next: (response) => {
-              this.middleCategoryOptions = response;
-            },
-            error: (error) => {
-              console.error('初始載入中分類代碼失敗:', error);
-              this.messageService.errorBubble('無法載入中分類代碼，請稍後重試');
-              this.middleCategoryOptions = [];
-              this.dataForm.controls.CAT_MNo.setValue('');
-            }
-          });
-        }
-      } else {
-        console.error('rowdata is missing in Edit/View mode');
-        this.messageService.errorBubble('無法載入資料，請返回查詢頁面重試');
-        this.onCancel();
       }
     }
   }

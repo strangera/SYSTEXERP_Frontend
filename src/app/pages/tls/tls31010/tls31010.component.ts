@@ -19,6 +19,8 @@ import { TLS31010Request, TLS31010Response, Tls31010Service } from '@service/api
 import { ButtonModule } from 'primeng/button';
 import { formatDate } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
+import { environment } from 'src/environments/environment';
+import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
 
 @Component({
   selector: 'app-tls31010',
@@ -36,7 +38,8 @@ import { HttpClient } from '@angular/common/http';
     TranslateModule,
     TableComponent,
     MultiSelectComponent,
-    ButtonModule
+    ButtonModule,
+    RadiobuttonComponent
   ]
 })
 
@@ -52,7 +55,7 @@ export class TLS31010Component extends BasicQueryPageComponent<TLS31010Response>
     tlt_kind: [[]], //櫃別 (1.正櫃 2.臨時櫃 3.特賣會 4.虛擬櫃)
     tlt_term_type: [[]], // 抽成別 1:固定租金 2:底租抽成取高者3:一般抽成     4:包底抽成     5:階梯式抽成   6:包底加階梯   "
     org_id: [[]],  // 組織
-    TaxType: [null],  // 銷售金額是否含稅
+    TaxType: ['Y'],  // 銷售金額是否含稅
     IsRece_Yn: [null],  // 是否開立業主發票(是否開立業主發票(Y:是 N:否))
     ...createPaginationConfig([{ field: 'tlt_building', order: 1 }])
   });
@@ -254,6 +257,7 @@ export class TLS31010Component extends BasicQueryPageComponent<TLS31010Response>
     const formValue = {
       ...printData,
       IsExcel: true,
+      IsMerge: true,
       SortBy: undefined,
       pageIndex: undefined,
       pageSize: undefined,
@@ -266,39 +270,10 @@ export class TLS31010Component extends BasicQueryPageComponent<TLS31010Response>
     this.tls31010Service.printTLS31010(formValue).pipe(finalize(() => this.btnLoading = false), untilDestroyed(this))
       .subscribe(res => {
         this.messageService.successBubble(res.Message);
-        if (res.Data && res.Data.length > 0 && res.Data[0].Print_URL) {
-          // 呼叫下載方法
-          this.downloadFile(res.Data[0].Print_URL);
+        if (res.Data && res.Data.Print_URL) {
+          const downloadUrl = environment.ApiUrl + res.Data.Print_URL;
+          window.open(downloadUrl, '_blank');
         }
       });
-  }
-
-  // 這是新的下載方法
-  downloadFile(url: string) {
-    const fileUrl = url;
-    const fileName = '即時業績查詢報表.xlsx'; // 預設檔名
-    this.httpClient.get(fileUrl, { observe: 'response', responseType: 'blob' }).pipe(untilDestroyed(this)).subscribe(response => {
-      const contentDisposition = response.headers.get('Content-Disposition');
-      let extractedFileName = fileName;
-      if (contentDisposition) {
-        const matches = /filename\*?=['"]?([^'"]*)['"]?/.exec(contentDisposition);
-        if (matches && matches.length > 1) {
-          try {
-            extractedFileName = decodeURIComponent(matches[1]);
-          } catch (e) {
-            extractedFileName = matches[1];
-          }
-        }
-      }
-      // 創建一個 Blob URL
-      const blob = new Blob([response.body as BlobPart], { type: response.body?.type });
-      const link = document.createElement('a');
-      link.href = window.URL.createObjectURL(blob);
-      link.download = extractedFileName;
-      // 觸發下載
-      link.click();
-      // 釋放 Blob URL
-      window.URL.revokeObjectURL(link.href);
-    });
   }
 }

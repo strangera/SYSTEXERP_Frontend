@@ -57,12 +57,13 @@
     (detail)="onDetail($event)"
     [showCheckBox]="false"
     dataKey="id"
-    [multiSortMeta]="[{ field: 'VEN_No', order: 1 }]"
+    [multiSortMeta]="[{ field: 'USR_Level', order: 1 }]"
     [totalRecords]="totalRecords"
     [lazy]="true"
     (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"
     [showManage]="true"
     [loading]="loading"
     [showDelete]="false"
+    [showDetail]="true"
   ></app-table>
 </div>

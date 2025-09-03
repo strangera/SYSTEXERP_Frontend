@@ -33,6 +33,16 @@ export abstract class BasicPrintDataComponent {
     this.getProgNo();
   }
 
+  export(status: 'PDF' | 'Excel'): void {
+    if (status === 'PDF') {
+      this.exportStatus = 'PDF';
+      this.exportDialog = true;
+    } else if (status === 'Excel') {
+      this.exportStatus = 'Excel';
+      this.exportDialog = true;
+    }
+  }
+
   exportPDFDownload(event: TableExport, columns: Column[], apiUrl?: string): void {
     const ProgNo = this.currentPage.currentPageProgNoSubject.getValue() as string;
     const funInfo = this.authService.getUserPermissions(ProgNo); // 取得權限

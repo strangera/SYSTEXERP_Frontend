@@ -46,7 +46,7 @@ export class TLS57040Component extends BasicQueryPageComponent<any> implements O
     ShowOrderPrc: [false], // 顯示標準進價
     ShowImage: [false], // 顯示圖片
     ...createPaginationConfig([{ field: 'LOGO_No', order: 1 }, { field: 'PLU_MagNo', order: 1 }]), // 分頁和排序參數
-    pageSize: [10, [Validators.min(1), Validators.max(500)]], // 顯示行數 (文字輸入，這裡應該是分頁參數 `pageSize`)
+    pageSize: [100, [Validators.min(1), Validators.max(500)]], // 顯示行數 (文字輸入，這裡應該是分頁參數 `pageSize`)
   });
   totalRecords = 0;
   rowsPerPageOptions?: any[];

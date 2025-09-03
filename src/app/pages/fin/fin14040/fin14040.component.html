@@ -1,127 +1,31 @@
-<div class="card">
-  <div class="grid align-items-center">
-    <div class="col" style="flex: 1">
-      <app-menubar [ProgNo]="ProgNo"></app-menubar>
-    </div>
-    <div >
-      <app-button
-        btnType="create"
-        (click)="onCreate()"
-        class="col"
-      ></app-button>
-    </div>
-  </div>
-  <p-accordion>
-    <p-accordionTab
-      header="{{ 'query-conditions' | translate }}"
-      [selected]="true"
-      class="line-height-3 m-0"
-      [headerStyleClass]="'query-accordionTab'"
-    >
-      <form
-        [formGroup]="queryForm"
-        id="queryForm"
-        (ngSubmit)="onSubmit(queryForm)"
-      >
-        <div class="grid p-fluid">
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-number-range
-              [useGrouping]="false"
-              label="退出/折讓單號"
-              [startControl]="queryForm.controls.startReturnTicket"
-              [endControl]="queryForm.controls.endReturnTicket"
-              [submitted]="submitted"
-            ></app-input-number-range>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
-              label="字軌"
-              controlName="wordTrack"
-              [control]="queryForm.controls.wordTrack"
-              [submitted]="submitted"
-            ></app-input-text>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-number-range
-              [useGrouping]="false"
-              label="發票號碼"
-              [startControl]="queryForm.controls.startInvoiceTicket"
-              [endControl]="queryForm.controls.endInvoiceTicket"
-              [submitted]="submitted"
-            ></app-input-number-range>
-          </div>
-        </div>
-        <div class="grid p-fluid">
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar-range
-              calendarType="dateRange"
-              label="退出/折讓日期"
-              [startControl]="queryForm.controls.startdate"
-              [endControl]="queryForm.controls.enddate"
-              [submitted]="submitted"
-            ></app-calendar-range>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select
-              label="發票格式"
-              controlName="invoiceFormat"
-              [options]="invoiceFormatOptions"
-              optionLabel="label"
-              optionValue="value"
-              [control]="queryForm.controls.invoiceFormat"
-              [submitted]="submitted"
-            ></app-multi-select>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar
-              calendarType="dateMonthOne"
-              label="申報年月"
-              [control]="queryForm.controls.onedatemm"
-              [submitted]="submitted"
-            ></app-calendar>
-          </div>
-        </div>
-        <div class="grid p-fluid">
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-number-range
-              [useGrouping]="false"
-              label="憑證單號"
-              [startControl]="queryForm.controls.startVoucherTicket"
-              [endControl]="queryForm.controls.startVoucherTicket"
-              [submitted]="submitted"
-            ></app-input-number-range>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-number-range
-              [useGrouping]="false"
-              label="傳票編號"
-              [startControl]="queryForm.controls.startSummonsTicket"
-              [endControl]="queryForm.controls.startSummonsTicket"
-              [submitted]="submitted"
-            ></app-input-number-range>
-          </div>
-        </div>
-        <div>
-          <div class="grid justify-content-end">
-            <app-button btnType="clear" (onClick)="onClearForm()"></app-button>
-            <app-button
-              btnType="query"
-              (onClick)="onSubmitQuery(queryForm)"
-              [loading]="loading"
-            ></app-button>
-          </div>
-        </div>
-      </form>
-    </p-accordionTab>
-  </p-accordion>
+<div class="flex gap-2 mb-2">
+    <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
+    <!-- <app-button btnType="create" (click)="onCreate()" label="{{ 'create' | translate }}"></app-button> -->
 </div>
+<p-accordion>
+    <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true">
+        <form [formGroup]="queryForm" (ngSubmit)="onSubmit(queryForm)">
+            <div class="grid p-fluid">
+              <div class="col-12 md:col-6 lg:col-4">
+                <app-calendar calendarType="dateMonthOne" label="申報年月"
+                [control]="queryForm.controls.INV_DeclareYM" [submitted]="submitted" />
+              </div>
+              <div class="col-12 md:col-6 lg:col-4">
+                <app-dropdown label="稅籍編號" controlName="Tax_No" [options]="REP_TaxNo_Options" optionLabel="Label"
+                  optionValue="No" [control]="queryForm.controls.Tax_No" [submitted]="submitted"></app-dropdown>
+              </div>
+            </div>
+            <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+                <app-button btnType="clear" [form]="queryForm"></app-button>
+                <app-button btnType="query" [loading]="loading"  label="{{ '下載媒體申報檔' | translate }}"></app-button>
+            </div>
+        </form>
+    </p-accordionTab>
+</p-accordion>
+
 <div class="card">
-  <div class="col-13">
-    <app-table
-      [data]="data"
-      [columns]="columns"
-      (edit)="onEdit($event)"
-      (detail)="onDetail($event)"
-    ></app-table>
+  <!-- PDF 預覽區 -->
+  <div *ngIf="pdfUrl" style="height: 90vh;">
+    <iframe [src]="pdfUrl" width="100%" height="100%" style="border:none;"></iframe>
   </div>
 </div>

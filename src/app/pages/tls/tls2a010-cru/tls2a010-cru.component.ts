@@ -120,6 +120,8 @@ export class TLS2A010CRUComponent extends BasicCruPageComponent<TLS2A010Data> im
 
   totalRecords = 0;
   data: any[] = [];
+  PAY_Type = '';
+  ID = '';
 
   constructor(
     private tls2a010Service: Tls2a010Service,
@@ -134,6 +136,8 @@ export class TLS2A010CRUComponent extends BasicCruPageComponent<TLS2A010Data> im
     const nav = history.state as any;
     if (nav?.rowdata) {
       const row = nav.rowdata;
+      this.PAY_Type = row.PAY_Type || '';
+      this.ID = row.ID || '';
       this.data = (row.details ?? []).map((item: any) => ({
         ...item,
         TXN_Date: this.formatDate(item.TXN_Date), // 改成 YYYY/MM/DD
@@ -171,13 +175,17 @@ export class TLS2A010CRUComponent extends BasicCruPageComponent<TLS2A010Data> im
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
       const payload = {
+        PAY_Type: this.PAY_Type,
+        ID: this.ID,
         selectList: this.data.map(item => ({
+          id: item.id,
           TXN_Date: item.TXN_Date, //  轉成 YYYY/MM/DD
           ECR_No: item.ECR_No ?? '',
           TXN_No: item.TXN_No ?? 0,
           PAY_NO: item.PAY_NO ?? '',
           TXN_Item: item.TXN_Item ?? 0,
           CRD_No: item.CRD_No ?? '',
+          CPN_No: item.CPN_No ?? '',
           TXN_PayDesc: item.TXN_PayDesc ?? '',
           TXN_PayAmt: item.TXN_PayAmt ?? 0,
           check_status: item.check_status ?? '1',

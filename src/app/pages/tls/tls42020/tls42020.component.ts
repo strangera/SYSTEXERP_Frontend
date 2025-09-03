@@ -1,201 +1,145 @@
-import { CounterCodeService } from './../../../service/basic/counter-code.service';
-import { Component } from '@angular/core';
-import { FormBuilder, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { NavigationExtras, Router } from '@angular/router';
-// Permissions
-import { FunsrightInfo, PermissionsInfo } from '../../../shared/models/system/funsrightInfo';
-// Shared
-import { AuthService } from '../../../service/system/auth.service';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
+import { Component, OnInit } from '@angular/core';
+import { FormGroup, Validators, FormBuilder, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { finalize } from 'rxjs/operators';
+import { Observable } from 'rxjs';
 
-import { ValidationService } from '../../../shared/service/validation.service';
+import { TLS42020Service, TLS42020DetailData, TLS42020Data } from '../../../service/api/tls/tls42020.service';
+import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
+import { Column, createPaginationConfig, formatAmount } from '@shared/componentkit/table/table.model';
+
+// Shared & UI
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
+import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
+import { TableComponent } from '@shared/componentkit/table/table.component';
 import { AccordionModule } from 'primeng/accordion';
 import { TranslateModule } from '@ngx-translate/core';
+import { validate } from 'uuid';
+import { DropDownListService } from '@service/utility/dropDownList.service';
+import { untilDestroyed } from '@ngneat/until-destroy';
 
-// 2.4.2.1 快速鍵維護作業
-
-//先新增主檔再新增明細檔
-//透過主檔查詢明細檔
 @Component({
-    selector: 'app-tls42020',
-    templateUrl: './tls42020.component.html',
-    styleUrl: './tls42020.component.scss',
-    standalone: true,
-    imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, TranslateModule]
+  selector: 'app-tls42020',
+  templateUrl: './tls42020.component.html',
+  styleUrl: './tls42020.component.scss',
+  standalone: true,
+  imports: [
+    MenubarComponent,
+    ButtonComponent,
+    AccordionModule,
+    FormsModule,
+    ReactiveFormsModule,
+    MultiSelectComponent,
+    CalendarRangeComponent,
+    TableComponent,
+    TranslateModule
+  ]
 })
-export class TLS42020Component {
-  ProgNo: string = '240008';
-  // 權限
-  funInfo?: FunsrightInfo;
-
-  // 查詢
-  // ----------------------------------------------------------------
-  loading: boolean = false;
-  submitted: boolean = false;
-  queryForm = this.formBuilder.group({
-    // POS1004M_鍵盤設定主檔
-    ECR_KBType: ['', [Validators.required, Validators.maxLength(6)]], // 鍵盤型態
-    USR_Level: ['', [Validators.required, Validators.maxLength(6)]], // 鍵盤權限等級
-    ECR_KBDesc: [,], // 鍵盤備註
-
-    // 以下可以不用顯示於查詢頁
-    CRT_Date: [], // 建立日期
-    CRT_USR_No: ['', [Validators.maxLength(8)]], // 建立人員
-    CRT_USR_Name: ['', [Validators.maxLength(20)]], // 建立人員姓名
-    UPD_Date: [], // 變更日期
-    UPD_USR_No: ['', [Validators.maxLength(8)]], // 變更人員
-    UPD_USR_Name: ['', [Validators.maxLength(20)]], // 變更人員姓名
+export class TLS42020Component extends BasicQueryPageComponent<TLS42020Data> implements OnInit {
+  queryForm = this.fb.group({
+    menuType: [[]],           // 菜單類別(多選)
+    tltNo: [[]],              // 專櫃編號(多選)
+    SBM_BegDate_s: [null, Validators.required],    // 開始日期(起)
+    SBM_BegDate_e: [null, Validators.required],    // 開始日期(迄)
+    SBM_EndDate_s: [null, Validators.required],                         // 結束日期(起)
+    SBM_EndDate_e: [null, Validators.required],                         // 結束日期(迄)
+    ...createPaginationConfig([])
   });
-  // 表格
-  // ----------------------------------------------------------------
-  data: any[] = [
-    {
-      ECR_KBType: '0', USR_Level: '0', KB_ScanCode: '0101', KB_Func: '3003',
-      KB_Arg1: '0', KB_Arg2: '\N', KB_Arg3: '\N', KB_Display1: '結帳', KB_Display2: '\N',
-      KB_Font: '細明體', KB_Size: 16, KB_Fonttyped: '101', KB_Style: '1', KB_Switch: 'Y',
-      KB_Width: 100, KB_Height: 50, KB_Merge: '0101', KB_Color: 'RGB: 255, 90, 90', KB_FontColor: 'Blue',
-    },
-    {
-      ECR_KBType: '0', USR_Level: '0', KB_ScanCode: '0102', KB_Func: '3003',
-      KB_Arg1: '1', KB_Arg2: '\N', KB_Arg3: '\N', KB_Display1: '商品', KB_Display2: '\N',
-      KB_Font: '細明體', KB_Size: 16, KB_Fonttyped: 'YNN', KB_Style: '1', KB_Switch: 'Y',
-      KB_Width: 100, KB_Height: 50, KB_Merge: '0102', KB_Color: 'RGB: 255, 180, 180', KB_FontColor: 'White',
-    },
-    {
-      ECR_KBType: '0', USR_Level: '0', KB_ScanCode: '0103', KB_Func: '3003',
-      KB_Arg1: '2', KB_Arg2: '\N', KB_Arg3: '\N', KB_Display1: '付款', KB_Display2: '\N',
-      KB_Font: '細明體', KB_Size: 16, KB_Fonttyped: 'YNN', KB_Style: '1', KB_Switch: 'Y',
-      KB_Width: 100, KB_Height: 50, KB_Merge: '0103', KB_Color: 'RGB: 255, 180, 180', KB_FontColor: 'White',
-    },
-    {
-      ECR_KBType: '0', USR_Level: '0', KB_ScanCode: '0104', KB_Func: '3003',
-      KB_Arg1: '3', KB_Arg2: '\N', KB_Arg3: '\N', KB_Display1: '管理', KB_Display2: '\N',
-      KB_Font: '細明體', KB_Size: 16, KB_Fonttyped: 'YNN', KB_Style: '1', KB_Switch: 'Y',
-      KB_Width: 100, KB_Height: 50, KB_Merge: '0104', KB_Color: 'RGB: 255, 180, 180', KB_FontColor: 'White',
-    },
-    {
-      ECR_KBType: '0', USR_Level: '0', KB_ScanCode: '0105', KB_Func: '1001',
-      KB_Arg1: '\N', KB_Arg2: '\N', KB_Arg3: '\N', KB_Display1: '登出', KB_Display2: '\N',
-      KB_Font: '細明體', KB_Size: 16, KB_Fonttyped: 'YNN', KB_Style: '1', KB_Switch: 'Y',
-      KB_Width: 100, KB_Height: 50, KB_Merge: '0105', KB_Color: 'Navy', KB_FontColor: 'White',
-    },
-    // 其他資料
+
+  totalRecords = 0;
+  data: TLS42020Data[] = [];
+  selectedItems: TLS42020Data[] = [];
+
+  // 下拉選單選項
+  menuTypeOptions: any[] = [];
+  tltNoOptions: any[] = [];
+
+  columns: Column[] = [
+    { field: 'SBM_Type', header: '菜單類別', visible: true, format: (value: string) => { return value === '1' ? '一般菜單' : '員工菜單' } },
+    { field: 'TLT_No', header: '專櫃編號', visible: true },
+    { field: 'TLT_Name', header: '專櫃名稱', visible: true },
+    { field: 'CRT_Date', header: '建立日期', visible: false },
+    { field: 'CRT_USR_No', header: '建立者編號', visible: false },
+    { field: 'CRT_USR_Name', header: '建立者姓名', visible: false },
+    { field: 'UPD_Date', header: '更新日期', visible: false },
+    { field: 'UPD_USR_No', header: '更新者編號', visible: false },
+    { field: 'UPD_USR_Name', header: '更新者姓名', visible: false },
+    { field: 'id', header: 'ID', visible: false },
+    { field: 'mid', header: 'MID', visible: false },
+    { field: 'STO_No', header: '店舖編號', visible: false },
+    { field: 'SBM_BegDate', header: '起始日期', visible: false },
+    { field: 'SBM_EndDate', header: '結束日期', visible: false },
   ];
-  filteredData: any[] = [...this.data];
-  columns: any[] = [
-    { field: 'ECR_KBType', header: '鍵盤型態', visible: true },
-    { field: 'USR_Level', header: '鍵盤權限等級', visible: true },
-    // { field: 'ECR_KBDesc', header: '鍵盤備註', visible: true },
 
-    { field: 'KB_ScanCode', header: '按鍵代碼', visible: true },
-    { field: 'KB_Func', header: '功能代碼', visible: true },
-    { field: 'KB_Arg1', header: '參數(1)', visible: true },
-    { field: 'KB_Arg2', header: '參數(2)', visible: true },
-    { field: 'KB_Arg3', header: '參數(3)', visible: true },
-    { field: 'KB_Display1', header: '按鍵顯示(第一行)', visible: true },
-    { field: 'KB_Display2', header: '按鍵顯示(第二行)', visible: true },
-
-    { field: 'KB_Font', header: '顯示字型', visible: true },
-    { field: 'KB_Size', header: '顯示字型大小', visible: true },
-    { field: 'KB_Fonttyped', header: '顯示字型(粗體/斜體/底線)', visible: true },
-    { field: 'KB_Style', header: '按鍵型狀', visible: true },
-    { field: 'KB_Switch', header: 'ON/OFF', visible: true },
-
-    { field: 'KB_Width', header: '寬度', visible: true },
-    { field: 'KB_Height', header: '高度', visible: true },
-    { field: 'KB_Merge', header: '合併鍵的 按鍵代碼', visible: true },
-    { field: 'KB_Color', header: '顏色', visible: true },
-    { field: 'KB_FontColor', header: '字型顏色', visible: true },
-    // 其他欄位
+  expansionColumns: Column[] = [
+    { field: 'CRT_Date', header: '建立日期', hidden: true },
+    { field: 'CRT_USR_No', header: '建立者編號', hidden: true },
+    { field: 'CRT_USR_Name', header: '建立者姓名', hidden: true },
+    { field: 'UPD_Date', header: '更新日期', hidden: true },
+    { field: 'UPD_USR_No', header: '更新者編號', hidden: true },
+    { field: 'UPD_USR_Name', header: '更新者姓名', hidden: true },
+    { field: 'ID', header: 'ID', hidden: true },
+    { field: 'MID', header: 'MID', hidden: true },
+    { field: 'STO_No', header: '店舖編號', hidden: true },
+    { field: 'SBM_Type', header: '子菜單類別', hidden: true },
+    { field: 'TLT_No', header: '專櫃編號', hidden: true },
+    { field: 'SBM_BegDate', header: '開始日期', hidden: true },
+    { field: 'SBM_EndDate', header: '結束日期', hidden: true },
+    { field: 'SBM_SeqNo', header: '序號', hidden: true },
+    { field: 'SBM_BtnNo', header: '菜單按鍵序號', visible: true },
+    { field: 'PLU_MagNo', header: '商品貨號', visible: true },
+    { field: 'PLU_No', header: '國際條碼', visible: true },
+    { field: 'PLU_Name', header: '商品名稱', visible: true },
+    { field: 'PLU_PrnName', header: '商品列印名稱', visible: true },
+    { field: 'PLU_FixPrc', header: '商品定價', visible: true, format: formatAmount },
+    { field: 'PLU_SalePrc', header: '商品售價', visible: true, format: formatAmount },
   ];
-  // ----------------------------------------------------------------
 
   constructor(
-    private router: Router,
-    private formBuilder: FormBuilder,
-    private messageService: NotificationService,
-    private authService: AuthService,
-    private validationService: ValidationService,
-    private counterCodeService: CounterCodeService,
+    private fb: FormBuilder,
+    private tls42020Service: TLS42020Service,
+    private dropDownListService: DropDownListService
   ) {
+    super();
   }
 
   ngOnInit(): void {
-    //
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
-    // ----------------------------------------------------------------
+    this.initializePage('TLS42020', 'tls/tls42020cru', this.queryForm, (form) => this.onSubmit(form));
+    this.loadOptions();
   }
 
-  // 權限
-  // ----------------------------------------------------------------
-  canQuery(): boolean {
-    return true;
-  }
-  canAdd(): boolean {
-    return true;
-  }
-  canEdit(): boolean {
-    return true;
-  }
-  // ----------------------------------------------------------------
   onSubmit(frm: FormGroup) {
-    console.log(frm.value);
-    this.submitted = true;
-    this.loading = true;
-    this.messageService.blockUi();
+    this.handleSubmit(frm, () => {
+      this.tls42020Service.queryTLS42020(frm.getRawValue())
+        .pipe(untilDestroyed(this), finalize(() => (this.loading = false)))
+        .subscribe(response => {
+          this.data = response.Data;
+          this.totalRecords = response.TotalCount;
+          this.queryStateService.setQueryState(this.ProgNo, frm.getRawValue());
+        });
+    });
+  };
 
-    if (frm.valid && this.canQuery()) {
-      // 提交邏輯
-      // Service
-      // this.xxxService.queryMachine(frm.value as xxxInterface)
-      //  .subscribe((response: any) => {
-      //    this.rows = response.xxx;
-      // });
-    }
+  loadOptions() {
+    this.menuTypeOptions = [
+      { label: '一般菜單', value: 1 },
+      { label: '員工菜單', value: 2 },
+    ];
 
-    this.loading = false;
-    this.messageService.unblockUi();
+    this.dropDownListService.queryTLTTALENT_DropDownList()
+      .subscribe(res => {
+        this.tltNoOptions = res.Data
+          .map((item: any) => ({
+            label: `${item.No}-${item.Name}`,
+            value: item.No
+          }));
+      });
   }
 
-  onSubmitQuery(frm: FormGroup) {
-    // 查詢邏輯
-    this.onSubmit(frm);
-  }
-
-  onClearForm() {
-    this.queryForm.reset();  // 重置表單
-  }
-  // ----------------------------------------------------------------
-  onCreate() {
-    if (this.canAdd()) {
-      this.navigateWithState(CRUDStatus.Create);
-    }
-  }
-
-  onEdit(data: any) {
-    if (this.canEdit()) {
-      this.navigateWithState(CRUDStatus.Edit, data);
-    }
-  }
-
-  onDetail(data: any) {
-    console.log(data);
-    this.navigateWithState(CRUDStatus.Read, data);
-  }
-
-  navigateWithState(crudstatus: CRUDStatus, rowdata?: any) {
-    let extras: NavigationExtras = {
-      state: {
-        crudstatus: crudstatus,
-        rowdata: rowdata,
-      },
-    };
-
-    console.log(crudstatus);
-
-    this.router.navigate(['/TLS4000/TLS42020CRU'], extras);
-  }
+  loadDetails = (rowData: TLS42020Data): Observable<{ Data: TLS42020DetailData[] }> => {
+    return this.tls42020Service.queryTLS42020Detail({
+      STO_No: rowData.STO_No
+    });
+  };
 }

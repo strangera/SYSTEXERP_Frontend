@@ -20,7 +20,7 @@ export class TLS2B030Service {
       .pipe(
         // 開發期想看 payload/response 再開啟
         // tap(res => console.log('TLS2B030 查詢結果:', res)),
-        catchError((error) => this.errorHandler.handleError(error))
+       
       );
   }
 }

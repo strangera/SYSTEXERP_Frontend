@@ -34,6 +34,7 @@ import { Observable } from 'rxjs';
 export class TableCaptionComponent extends BasicPrintDataComponent implements OnChanges {
   @ViewChild('fileUpload') fileUpload!: FileUpload; // 檔案上傳 元件
   @Input() dataKey = 'ID';                                                      // table 資料key
+  @Input() showExpandCollapse = true;         // 是否顯示 全展開/收合 按鈕
   @Input() expansionDataKey = 'id';            // 收合展開 資料key(expansion必需配置)
   @Input() expansionLoadFn?: (rowData: any) => Observable<any>; // 屬性來接收父層傳來的載入函數
   @Input() expandedRows: Record<string, boolean> = {};// 收合展開 已展開資料
@@ -55,6 +56,8 @@ export class TableCaptionComponent extends BasicPrintDataComponent implements On
   @Input() showHeader = true;                 // 是否顯示 Header
   @Input() showFilter = true;                 // 是否顯示 Filter
   @Input() showReportMode = true;             // 是否顯示 匯出按鈕
+  @Input() customReport = false;               // 是否自訂報表
+  @Output() exportEvent = new EventEmitter<string>(); // 自訂報表 事件
   @Input() showInsert = false;                // 是否顯示 Insert新增按鈕
   @Output() insert = new EventEmitter<any>(); // 新增事件
   @Input() insertDisabled = false;            // 新增按鈕是否禁用

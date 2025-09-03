@@ -12,6 +12,7 @@ import { NgIf } from '@angular/common';
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
 import { TranslateModule } from '@ngx-translate/core';
 import { InputNumberComponent } from '@shared/componentkit/input-number/input-number.component';
+import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 
 @Component({
   selector: 'app-cpm13010-cru',
@@ -27,7 +28,8 @@ import { InputNumberComponent } from '@shared/componentkit/input-number/input-nu
     NgIf,
     CalendarComponent,
     TranslateModule,
-    InputNumberComponent
+    InputNumberComponent,
+    DropdownComponent
   ],
 })
 // 5.11.7 專櫃停車費折抵設定作業 (新增/修改)
@@ -45,6 +47,8 @@ export class CPM13010CRUComponent extends BasicCruPageComponent<QueryCPM13010Res
     UPD_USR_No: [{ value: '', disabled: true }],
     UPD_USR_Name: [{ value: '', disabled: true }],
   });
+
+  PKNG_StatusOptions = [{ label: '生效', value: 'A' }, { label: '刪除', value: 'D' }];
 
   constructor(
     private cpm13010Service: Cpm13010Service,

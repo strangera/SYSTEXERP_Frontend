@@ -15,6 +15,11 @@
         <app-input-number class="col-12 md:col-6 lg:col-4" label="折抵金額" controlName="PKNG_SaleAmt"
           [control]="dataForm.controls.PKNG_SaleAmt" [submitted]="submitted">
         </app-input-number>
+
+        <!-- 狀態 -->
+        <app-dropdown class="col-12 md:col-6 lg:col-4" label="狀態" controlName="PKNG_Status"
+          [control]="dataForm.controls.PKNG_Status" [options]="PKNG_StatusOptions" optionLabel="label"
+          optionValue="value" [submitted]="submitted"></app-dropdown>
       </div>
 
       <hr *ngIf="!isFormCreateable">
@@ -41,7 +46,7 @@
       </div>
 
       <div *ngIf="!isFormReadable" class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
-        <app-button btnType="cancel"></app-button>
+        <app-button btnType="cancel" [form]="dataForm"></app-button>
         <app-button btnType="submit" [loading]="loading" />
       </div>
     </form>

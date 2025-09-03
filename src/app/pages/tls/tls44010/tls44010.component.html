@@ -1,61 +1,169 @@
-<h3><B>POS即時連線監看</B></h3>
-<div class="grid">
-	<div class="col-12">
-            <p-dataView #dv [value]="products" layout="list"  [rows]="50" [paginator]="true">
-                <ng-template pTemplate="header" >
-                    <div class="container m-1" >
+<div class="card">
+  <div class="flex gap-2 mb-2">
+    <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
+  </div>
+  <p-accordion>
+    <p-accordionTab
+      header="{{ 'query-conditions' | translate }}"
+      [selected]="true"
+      class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'"
+    >
+      <form
+        [formGroup]="queryForm"
+        id="queryForm"
+        (ngSubmit)="onSubmit(queryForm)"
+      >
+        <div class="card">
+          <!-- TabMenu 移到這裡 -->
+          <p-tabMenu
+            [model]="items"
+            [(activeItem)]="activeItem"
+            class="mb-3"
+            (activeItemChange)="onTabChange($event)"
+          ></p-tabMenu>
 
-                            <div class="m-0 container row justify-content-start" style="width:40%" >
-                                <div class="mt-2" ><B>樓層列表</B></div>
-                                <div><p-button label="過濾" [text]="true" icon="pi pi-eye" severity="secondary" /></div>
-                            </div>
+          <!-- DataView 列表/卡片切換 -->
+          <p-dataView [value]="pagedData" [layout]="layout">
+            <!-- 頂部 -->
+            <ng-template pTemplate="header">
+              <div class="w-full">
+                <!-- 標題 + 搜尋框 + 切換按鈕 -->
+                <div
+                  class="flex justify-content-between align-items-center mb-4 mt-2"
+                >
+                  <!-- 搜尋框靠左 -->
+                  <div class="search-bar-container flex-1">
+                    <span class="p-input-icon-left search-bar">
+                      <i class="pi pi-search"></i>
+                      <input
+                        pInputText
+                        type="text"
+                        name="globalFilter"
+                        class="w-full"
+                        placeholder="搜尋專櫃編號與名稱、收銀機代號、信用卡櫃代號、區域、樓層、位置編號、IP"
+                        [(ngModel)]="globalFilter"
+                        [ngModelOptions]="{ standalone: true }"
+                        (input)="applyFilter()"
+                      />
+                    </span>
+                  </div>
 
-                            <div class="m-0 container row justify-content-end" style="width:60%">
+                  <!-- 切換按鈕靠右 -->
+                  <p-dataViewLayoutOptions
+                    (layoutChange)="onLayoutChange($event)"
+                  ></p-dataViewLayoutOptions>
+                </div>
 
-                                <p-inputGroupAddon><i class="pi pi-search mr-1"></i>搜尋樓層</p-inputGroupAddon><input type="text" class="mr-2" pInputText
-                                    style="width:20rem" /><p-dropdown [options]="dropdown3" class="mr-2" ></p-dropdown><p-dataViewLayoutOptions />
+                <!-- 狀態說明 -->
+                <div class="status-container mb-2">
+                  <span class="status-label">狀態說明：</span>
+                  <div class="status-chip">
+                    <i class="pi pi-desktop"></i>
+                    開機
+                  </div>
+                  <div class="status-chip logout">
+                    <i class="pi pi-sign-out"></i>
+                    登出
+                  </div>
+                  <div class="status-chip success">
+                    <i class="pi pi-sync"></i>
+                    交易中
+                  </div>
+                  <div class="status-chip">
+                    <i class="pi pi-users"></i>
+                    完成交班
+                  </div>
+                  <div class="status-chip warning">
+                    <i class="pi pi-pause"></i>
+                    暫停交易
+                  </div>
+                  <div class="status-chip purple">
+                    <i class="pi pi-wallet"></i>
+                    完成清帳
+                  </div>
+                </div>
+              </div>
+            </ng-template>
 
-                            </div>
+            <!-- List 模式 -->
+            <ng-template pTemplate="list" let-data>
+              <div class="grid grid-nogutter">
+                <div
+                  class="col-12"
+                  *ngFor="let row of pagedData; let i = index"
+                >
+                  <div
+                    class="flex flex-row justify-content-between align-items-center p-3 border-bottom-1 surface-border"
+                  >
+                    <div class="flex-1">
+                      <div>
+                        <b>序號：</b>
+                        {{ first + i + 1 }}
+                      </div>
+                      <div>
+                        <b>位置編號：</b>
+                        {{ row.ECR_LocNo }}
+                      </div>
+                      <div>
+                        <b>專櫃編號：</b>
+                        {{ row.TLT_No }}
+                      </div>
+                      <div>
+                        <b>櫃位名稱：</b>
+                        {{ row.TLT_Name }}
+                      </div>
+                    </div>
+                    <div class="flex align-items-center gap-2">
+                      <i
+                        [ngClass]="getStatusIcon(row.EOS_Status)"
+                        [ngStyle]="{ color: getStatusColor(row.EOS_Status) }"
+                      ></i>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </ng-template>
 
-                        </div>
+            <!-- Grid 模式 -->
+            <ng-template pTemplate="grid" let-data>
+              <div class="custom-grid">
+                <div
+                  class="custom-grid-item"
+                  *ngFor="let row of pagedData; let i = index"
+                >
+                  <div
+                    class="p-3 border-1 surface-border surface-card relative"
+                  >
+                    <!-- 狀態 Icon 右上角 -->
+                    <i
+                      class="status-icon"
+                      [ngClass]="getStatusIcon(row.EOS_Status)"
+                      [ngStyle]="{ color: getStatusColor(row.EOS_Status) }"
+                    ></i>
 
-                </ng-template>
-                <ng-template pTemplate="list" let-poslist>
-                        <p-table [value]="poslist" [tableStyle]="{ 'min-width': '50rem' }" selectionMode="single" styleClass="p-datatable-gridlines"  [rows]="20"  (onRowSelect)="onRowSelect($event)">
-                            <ng-template pTemplate="header">
-                                <tr>
-                                    <th style="width:100px;background-color: #E0F2F1;">Cover</th>
-                                    <th style="width:200px;background-color: #E0F2F1;">樓層<p-sortIcon field="name" /></th>
-                                    <th style="background-color: #E0F2F1;">收銀機台數<p-sortIcon field="code" /></th>
-                                </tr>
-                            </ng-template>
-                            <ng-template pTemplate="body" let-poslist>
-                                <tr [pSelectableRow]="poslist" >
-                                    <td ><img [src]="'assets/layout/images/' + poslist.image" class="w-9 shadow-0 ml-2"/></td>
-                                    <td >{{poslist.name}}</td>
-                                    <td >{{poslist.code}}</td>
+                    <!-- 主要內容 -->
+                    <div class="grid-content">
+                      <div class="grid-title">{{ row.ECR_LocNo }}</div>
+                      <div class="grid-subtitle">
+                        {{ row.TLT_No }} {{ row.TLT_Name }}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </ng-template>
+          </p-dataView>
 
-
-                                </tr>
-                            </ng-template>
-                        </p-table>
-
-                </ng-template>
-                <ng-template  pTemplate="grid" let-poslist>
-                    <div class="grid grid-nogutter">
-                        <div class="col-12 md:col-2" *ngFor="let floor of poslist" >
-                            <div class="card m-0 border-1 surface-border hover-effect" (click)="goToNextPage()">
-                              <div ><img [src]="'assets/layout/images/' + floor.image" class="w-10 shadow-0 ml-2"/>
-                            </div>
-                              <div class="m-3"></div>
-                              <div ><span class="align-items-center text-center mb-0 text-l ">{{floor.name}} -       ({{floor.code}} 台)</span></div>
-                            </div>
-                        </div>
-                        </div>
-                </ng-template>
-            </p-dataView>
-		</div>
-
-
-
+          <!-- 分頁器 -->
+          <p-paginator
+            [rows]="rows"
+            [first]="first"
+            [totalRecords]="filteredData.length"
+            (onPageChange)="onPageChange($event)"
+          ></p-paginator>
+        </div>
+      </form>
+    </p-accordionTab>
+  </p-accordion>
 </div>

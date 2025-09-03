@@ -15,6 +15,7 @@ import { TranslateModule } from '@ngx-translate/core';
 import { ECRNoService } from '@service/basic/ECRNo.service';
 import { DatePipe } from '@angular/common';
 import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
+import { untilDestroyed } from '@ngneat/until-destroy';
 
 @Component({
   selector: 'app-fin12020',
@@ -88,7 +89,7 @@ export class FIN12020Component extends BasicQueryPageComponent<FIN12020Data> imp
           GUI_YYMM_start: this.datePipe.transform(frm.value.GUI_YYMM_start, 'yyyyMM'),
           GUI_YYMM_end: this.datePipe.transform(frm.value.GUI_YYMM_end, 'yyyyMM'),
         })
-        .pipe(finalize(() => this.loading = false))
+        .pipe(untilDestroyed(this), finalize(() => this.loading = false))
         .subscribe(response => {
           this.data = response.Data;
           this.totalRecords = response.TotalCount;

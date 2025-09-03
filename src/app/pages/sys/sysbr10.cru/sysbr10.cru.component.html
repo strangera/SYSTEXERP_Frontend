@@ -8,7 +8,7 @@
     <form [formGroup]="dataForm" (ngSubmit)="onSubmit(dataForm)">
       <div class="grid p-fluid">
         <div class="col-12 md:col-6 lg:col-4">
-          <app-calendar-range startLabel="起始時間" endLabel="結束時間" [startControl]="dataForm.controls.Pub_StartDate"
+          <app-calendar-range calendarType="dateTimeRange"  startLabel="起始時間" endLabel="結束時間" [startControl]="dataForm.controls.Pub_StartDate"
             [endControl]="dataForm.controls.Pub_EndDate" [submitted]="submitted"
             [startMinDate]="isCreate ? minDateToday : null"></app-calendar-range>
         </div>
@@ -34,7 +34,7 @@
       </div>
       <!-- 按鈕列 -->
       <div class="grid justify-content-end gap-2 mt-3 border-top-1 surface-border pt-3" *ngIf="!isFormReadable">
-        <app-button btnType="smartclear"></app-button>
+        <app-button btnType="cancel" [form]="dataForm"></app-button>
         <app-button btnType="submit"></app-button>
       </div>
     </form>
@@ -42,9 +42,30 @@
 </div>
 
 <div class="card">
-  <app-table tableKey="SYSBR10" [columns]="detailcolumns" dataKey="id" [multiSortMeta]="[{ field: 'id', order: 1 }]"
-    [insertRowData]="insertRowData" [defaultInsertData]="{ User_No: '', Org_ID: '', Role_No: '' }"
-    [showInsert]="showInsert" [showRowEdit]="showRowEdit" [showEdit]="false" [showDetail]="false"
-    [showReportMode]="false" [showDelete]="true" [showCheckBox]="true" [showPaginator]="false" [deleteData]="true"
-    [(data)]="detailList"></app-table>
+  <app-table
+    tableKey="SYSBR10"
+    dataKey="id"
+
+    [columns]="detailcolumns"
+    [(data)]="detailList"
+
+    [multiSortMeta]="[{ field: 'id', order: 1 }]"
+    [showPaginator]="false"
+
+    [defaultInsertData]="{ User_No: '', Org_ID: '', Role_No: '' }"
+    [insertRowData]="!isRead && insertRowData"
+
+    [showInsert]="!isRead && showInsert"
+    [showRowEdit]="!isRead && showRowEdit"
+    [showDelete]="!isRead && showDelete"
+    [showCheckBox]="!isRead && showCheckBox"
+
+    [showEdit]="false"
+    [showDetail]="false"
+    [showReportMode]="false"
+    [deleteData]="!isRead && showDelete"
+    [showManage]="false"
+
+    [disabled]="isRead">
+  </app-table>
 </div>

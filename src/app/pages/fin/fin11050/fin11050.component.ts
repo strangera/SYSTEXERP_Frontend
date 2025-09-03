@@ -10,6 +10,7 @@ import { AccordionModule } from 'primeng/accordion';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { TranslateModule } from '@ngx-translate/core';
+import { untilDestroyed } from '@ngneat/until-destroy';
 
 @Component({
   selector: 'app-fin11050',
@@ -68,7 +69,7 @@ export class FIN11050Component extends BasicQueryPageComponent<FIN11050Data> imp
 
     this.handleSubmit(frm, () => {
       this.fin11050Service.queryFIN11050(queryRequest)
-        .pipe(finalize(() => this.loading = false))
+        .pipe(untilDestroyed(this), finalize(() => this.loading = false))
         .subscribe(response => {
           if (response.Status === '0000') {
             this.data = response.Data || [];

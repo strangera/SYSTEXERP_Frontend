@@ -8,173 +8,89 @@
     <form [formGroup]="dataForm" (ngSubmit)="onSubmit(dataForm)">
       <div class="grid p-fluid">
         <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text
-            label="退出/折讓單號"
-            controlName="TXN_Ret_No"
-            [control]="dataForm.controls.TXN_Ret_No"
-            [submitted]="submitted"
-          ></app-input-text>
+          <app-input-text label="退出/折讓單號" controlName="TXN_Ret_No" [control]="dataForm.controls.TXN_Ret_No"
+            [submitted]="submitted"></app-input-text>
         </div>
 
         <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text
-            label="字軌"
-            controlName="GUI_Track"
-            [control]="dataForm.controls.GUI_Track"
-            [submitted]="submitted"
-          ></app-input-text>
+          <app-input-text label="字軌" controlName="GUI_Track" [control]="dataForm.controls.GUI_Track"
+            [submitted]="submitted"></app-input-text>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
-          <app-dropdown
-            label="發票號碼"
-            controlName="GUI_No"
-            [control]="dataForm.controls.PUR_GUINo"
-            optionLabel="label"
-            optionValue="value"
-            [options]="guiNumberOptions"
-            [submitted]="submitted"
-          ></app-dropdown>
+          <app-dropdown label="發票號碼" controlName="GUI_No" [control]="dataForm.controls.PUR_GUINo" optionLabel="label"
+            optionValue="value" [options]="guiNumberOptions" [submitted]="submitted"></app-dropdown>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
-          <app-calendar
-            label="發票日期"
-            controlName="Inv_Date"
-            [control]="dataForm.controls.Inv_Date"
-            [submitted]="submitted"
-          ></app-calendar>
+          <app-calendar label="發票日期" controlName="Inv_Date" [control]="dataForm.controls.Inv_Date"
+            [submitted]="submitted"></app-calendar>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
-          <app-calendar
-            label="退出/折讓日期"
-            controlName="PUR_GUIDate"
-            [control]="dataForm.controls.PUR_GUIDate"
-            [submitted]="submitted"
-          ></app-calendar>
+          <app-calendar label="退出/折讓日期" controlName="PUR_GUIDate" [control]="dataForm.controls.PUR_GUIDate"
+            [submitted]="submitted"></app-calendar>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
-          <app-dropdown
-            label="發票格式"
-            controlName="PUR_VoucherType"
-            [control]="dataForm.controls.PUR_VoucherType"
-            optionLabel="label"
-            optionValue="value"
-            [options]="voucherTypeOptions"
-            [submitted]="submitted"
-          ></app-dropdown>
+          <app-dropdown label="發票格式" controlName="PUR_VoucherType" [control]="dataForm.controls.PUR_VoucherType"
+            optionLabel="label" optionValue="value" [options]="voucherTypeOptions"
+            [submitted]="submitted"></app-dropdown>
+        </div>
+               <div class="col-12 md:col-6 lg:col-4">
+
+       <app-calendar  controlName="PUR_RepYYYYMM" calendarType="dateMonthOne"
+          label="申報年月" [control]="dataForm.controls.PUR_RepYYYYMM" [submitted]="submitted"  ></app-calendar>
+          </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-dropdown label="區別" controlName="Credit_Type" optionLabel="label" optionValue="value"
+            [control]="dataForm.controls.Credit_Type" [options]="creditTypeOptions"
+            [submitted]="submitted"></app-dropdown>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
-          <app-query-year-month
-            label="申報年月"
-            [control]="dataForm.controls.PUR_RepYYYYMM"
-            [submitted]="submitted"
-            [onlyOddMonths]="true"
-          ></app-query-year-month>
-        </div>
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-dropdown
-            label="區別"
-            controlName="Credit_Type"
-            optionLabel="label"
-            optionValue="value"
-            [control]="dataForm.controls.Credit_Type"
-            [options]="creditTypeOptions"
-            [submitted]="submitted"
-          ></app-dropdown>
-        </div>
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-dropdown
-            label="課稅別"
-            controlName="PUR_TaxType"
-            optionLabel="label"
-            optionValue="value"
-            [control]="dataForm.controls.PUR_TaxType"
-            [options]="taxTypeOptions"
-            [submitted]="submitted"
-          ></app-dropdown>
+          <app-dropdown label="課稅別" controlName="PUR_TaxType" optionLabel="label" optionValue="value"
+            [control]="dataForm.controls.PUR_TaxType" [options]="taxTypeOptions" [submitted]="submitted"></app-dropdown>
         </div>
 
         <div class="col-12 md:col-6 lg:col-4">
-          <app-input-number
-            label="銷售額"
-            controlName="Inv_Net"
-            [control]="dataForm.controls.Inv_Net"
-            [submitted]="submitted"
-          ></app-input-number>
+          <app-input-number label="銷售額" controlName="Inv_Net" [control]="dataForm.controls.Inv_Net"
+            [submitted]="submitted"></app-input-number>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
-          <app-input-number
-            label="稅額"
-            controlName="Inv_Tax"
-            [control]="dataForm.controls.Inv_Tax"
-            [submitted]="submitted"
-          ></app-input-number>
+          <app-input-number label="稅額" controlName="Inv_Tax" [control]="dataForm.controls.Inv_Tax"
+            [submitted]="submitted"></app-input-number>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
-          <app-input-number
-            label="退出/折讓金額"
-            controlName="PUR_Net"
-            [control]="dataForm.controls.PUR_Net"
-            [submitted]="submitted"
-          ></app-input-number>
+          <app-input-number label="退出/折讓金額" controlName="PUR_Net" [control]="dataForm.controls.PUR_Net"
+            [submitted]="submitted"></app-input-number>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
-          <app-input-number
-            label="退出/折讓稅額"
-            controlName="PUR_Tax"
-            [control]="dataForm.controls.PUR_Tax"
-            [submitted]="submitted"
-          ></app-input-number>
+          <app-input-number label="退出/折讓稅額" controlName="PUR_Tax" [control]="dataForm.controls.PUR_Tax"
+            [submitted]="submitted"></app-input-number>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
-          <app-input-number
-            label="退回/折讓總金額"
-            controlName="PUR_Amt"
-            [control]="dataForm.controls.PUR_Amt"
-            [submitted]="submitted"
-          ></app-input-number>
+          <app-input-number label="退回/折讓總金額" controlName="PUR_Amt" [control]="dataForm.controls.PUR_Amt"
+            [submitted]="submitted"></app-input-number>
         </div>
 
         <div class="col-12 md:col-6 lg:col-4">
-          <app-input-number
-            label="已退出/折讓歷史總金額"
-            controlName="Total_hitory_PUR_Amt"
-            [control]="dataForm.controls.Total_hitory_PUR_Amt"
-            [submitted]="submitted"
-          ></app-input-number>
+          <app-input-number label="已退出/折讓歷史總金額" controlName="Total_hitory_PUR_Amt"
+            [control]="dataForm.controls.Total_hitory_PUR_Amt" [submitted]="submitted"></app-input-number>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
-          <app-input-number
-            label="剩餘總金額"
-            controlName="Total_Amt"
-            [control]="dataForm.controls.Total_Amt"
-            [submitted]="submitted"
-          ></app-input-number>
+          <app-input-number label="剩餘總金額" controlName="Total_Amt" [control]="dataForm.controls.Total_Amt"
+            [submitted]="submitted"></app-input-number>
         </div>
 
         <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text
-            label="憑證單號"
-            controlName="Source_Doc_No"
-            [control]="dataForm.controls.Source_Doc_No"
-            [submitted]="submitted"
-          ></app-input-text>
+          <app-input-text label="憑證單號" controlName="Source_Doc_No" [control]="dataForm.controls.Source_Doc_No"
+            [submitted]="submitted"></app-input-text>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text
-            label="傳票編號"
-            controlName="Voucher_No"
-            [control]="dataForm.controls.Voucher_No"
-            [submitted]="submitted"
-          ></app-input-text>
+          <app-input-text label="傳票編號" controlName="Voucher_No" [control]="dataForm.controls.Voucher_No"
+            [submitted]="submitted"></app-input-text>
         </div>
       </div>
 
       <!-- 按鈕列 -->
-      <div
-        class="grid justify-content-end gap-2 mt-3 border-top-1 surface-border pt-3"
-        *ngIf="!isFormReadable"
-      >
-        <app-button btnType="smartclear" (clickEvent)="clearFormExcept()" />
+      <div class="grid justify-content-end gap-2 mt-3 border-top-1 surface-border pt-3" *ngIf="!isFormReadable">
+        <app-button btnType="cancel" [form]="dataForm" />
         <app-button btnType="submit"></app-button>
       </div>
     </form>

@@ -26,7 +26,7 @@ export class AppMenulistService {
           prog_ispage: 'Y',
           prog_sort: '1',
           selected: false,
-          isSubModule: false
+          isSubModule: true
         }
       ],
       prog_sort: 0 // 給寫死的首頁一個排序值
@@ -46,7 +46,7 @@ export class AppMenulistService {
           prog_ispage: 'Y',
           prog_sort: '1',
           selected: false,
-          isSubModule: false
+          isSubModule: true
         }],
       icon: 'pi pi-cog',
       prog_sort: 999 // 給寫死的測試一個排序值

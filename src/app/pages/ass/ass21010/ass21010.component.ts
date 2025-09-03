@@ -1,5 +1,4 @@
-
-import { Component, computed, effect, OnInit, signal, Signal } from '@angular/core';
+import { Component, computed, effect, OnInit } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
@@ -7,12 +6,15 @@ import { ASS21010Service, EngType } from '@service/api/ass/ass21010.service';
 import { MenubarComponent } from '@shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '@shared/componentkit/button/button.component';
-import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
+import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
+import { InputTextareaComponent } from '@shared/componentkit/input-textarea/input-textarea.component';
 import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
 import { TableComponent } from '@shared/componentkit/table/table.component';
-import { Column } from '@shared/componentkit/table/table.model';
+import { Column, createPaginationConfig } from '@shared/componentkit/table/table.model';
+import { NGXLogger } from 'ngx-logger';
 import { AccordionModule } from 'primeng/accordion';
-import { ASS2100ENGMeterType } from './ass21010.model';
+import { finalize } from 'rxjs';
+import { ASS21010Data, ASS21010Payload } from './ass21010.model';
 
 @Component({
   selector: 'app-ass21010',
@@ -24,9 +26,10 @@ import { ASS2100ENGMeterType } from './ass21010.model';
     FormsModule,
     ReactiveFormsModule,
     TranslateModule,
-    MenubarComponent,
     ButtonComponent,
-    InputTextComponent,
+    DropdownComponent,
+    InputTextareaComponent,
+    MenubarComponent,
     MultiSelectComponent,
     TableComponent,
   ],
@@ -35,49 +38,38 @@ export class ASS21010Component extends BasicQueryPageComponent<unknown> implemen
 
   public queryForm = this.formBuilder.group({
     ENG_Type: new FormControl<EngType[] | undefined>(void 0),
-    ENG_MeterNo: new FormControl<string[] | undefined>(void 0),
-    Location_No: new FormControl<string[] | undefined>(void 0),
+    ENG_MeterNo: new FormControl<string | undefined>(void 0),
+    Location_No: new FormControl<string | undefined>(void 0),
     ENG_Remark: new FormControl<string | undefined>(void 0),
+    ...createPaginationConfig([{ field: 'ID', order: 1 }]),
   });
   public readonly qf = computed(() => this.queryForm.controls);
 
   // 變化追蹤
-  private readonly qfSignal = toSignal(this.queryForm.valueChanges);
   private readonly engTypeSignal = toSignal(this.qf().ENG_Type.valueChanges);
   private readonly engMeterSignal = toSignal(this.qf().ENG_MeterNo.valueChanges);
   private readonly locationSignal = toSignal(this.qf().Location_No.valueChanges);
-  private readonly engRemarkSignal = toSignal(this.qf().ENG_Remark.valueChanges);
 
-  public readonly tableData = signal<ASS2100ENGMeterType[]>([]);
-
-  public readonly qfEffect = effect(() => {
-    console.log(`qfEffect:`, [this.qfSignal()]);
-  });
+  public readonly totalRecords = computed(() => this.service.ASS21010Data().length);
+  public readonly usrData = computed(() => ({
+    SYS_StoreNo: this.authService.currentUserValue!.SYS_StoreNo,
+    Mid: Number(this.authService.currentUserValue!.mid),
+  }));
 
   public readonly tableEffect = effect(() => {
     const types = this.engTypeSignal() || [];
     const meters = this.engMeterSignal() || [];
     const locs = this.locationSignal() || [];
-    console.log(`tableEffect:`, [types, meters, locs]);
-    if (!0) return;
-
-    this.tableData.set(this.service.engMeterNoSignal().filter(item => {
-      const matchesType = !types?.length || types.includes(item.ENG_Type);
-      const matchesMeter = !meters?.length || meters.includes(item.ENG_MeterNo);
-      const matchesLocation = !locs?.length || locs.includes(item.Location_No);
-      return matchesType && matchesMeter && matchesLocation;
-    }));
+    this.logger.debug(`tableEffect:`, [types, meters, locs]);
   }, { allowSignalWrites: !0 });
 
-  public readonly tableInitEffect = effect(() => {
-    const data = this.service.engMeterNoSignal();
-    if (!data?.length) return;
-    this.tableData.set(data);
-    this.tableInitEffect.destroy();
-  }, { allowSignalWrites: !0 });
-
-  public readonly columns: Column[] = [
-    { field: 'ENG_Type', header: '能源類型' },
+  public readonly columns: (Column & { exportFormat?: unknown[]; })[] = [
+    {
+      field: 'ENG_Type',
+      header: '能源類型',
+      format: v => this.service.engTypeSignal().find(t => t.No === v)?.Name || v,
+      exportFormat: [{ G01: '水錶' }, { G02: '電錶' }, { G03: '瓦斯錶' }],
+    },
     { field: 'ENG_MeterNo', header: '錶號' },
     { field: 'Location_No', header: '設備位置編號' },
     { field: 'ENG_Remark', header: '備註' },
@@ -85,6 +77,7 @@ export class ASS21010Component extends BasicQueryPageComponent<unknown> implemen
 
   constructor(
     public readonly service: ASS21010Service,
+    private readonly logger: NGXLogger,
   ) {
     super();
   }
@@ -95,144 +88,77 @@ export class ASS21010Component extends BasicQueryPageComponent<unknown> implemen
     this.service.loadEngType();
     this.service.loadEngMeterNo();
     this.service.loadLocationNo();
-  }
 
-  public canQuery(): boolean {
-    return !0;
-  }
-
-  public canAdd(): boolean {
-    return !0;
-  }
-
-  public canEdit(): boolean {
-    return !0;
+    this.logger.debug(`init:`, [this.queryForm]);
   }
 
   public onSubmit(): void {
     this.handleSubmit(this.queryForm, () => {
-      const types = this.engTypeSignal() || [];
-      const meters = this.engMeterSignal() || [];
-      const locs = this.locationSignal() || [];
+      const payload = <ASS21010Payload>{
+        ...this.queryForm.getRawValue(),
+        ...this.usrData(),
+      };
+      this.service.loadASS21010(payload);
 
-      this.tableData.set(this.service.engMeterNoSignal().filter(item => {
-        const matchesType = !types?.length || types.includes(item.ENG_Type);
-        const matchesMeter = !meters?.length || meters.includes(item.ENG_MeterNo);
-        const matchesLocation = !locs?.length || locs.includes(item.Location_No);
-        return matchesType && matchesMeter && matchesLocation;
-      }));
-
-      console.log(`onSubmit:`, [types, meters, locs, this.tableData]);
-      this.queryStateService.setQueryState(this.ProgNo, this.queryForm.value);
+      this.logger.debug(`onSubmit:`, [payload]);
+      this.queryStateService.setQueryState(this.ProgNo, this.queryForm.getRawValue());
       this.loading = !1;
     });
   }
 
-  public override onCreate(data?: unknown): void {
-    this.queryStateService.setQueryState(this.ProgNo, this.queryForm.value);
-    super.onCreate(data);
-  };
-
-  onClear() {
-    this.queryForm.reset();
+  public onDelete(data: ASS21010Data[]): void {
+    this.logger.debug(`Deleting ASS21010:`, [data, this.user, this.queryForm.getRawValue(), this.authService.currentUserValue]);
+    for (const d of data) {
+      this.service.deleteASS21010({ ...d, ...this.usrData() })
+        .pipe(finalize(() => this.loading = !1))
+        .subscribe(res => {
+          if (!res.IsUpdateSuccess) return this.messageService.errorBubble(res.ErrorMsg, '刪除失敗');
+          this.service.ASS21010Data.update(v => v.filter(d => data.some(item => d.ID !== item.ID)));
+          this.messageService.successBubble('刪除成功');
+        });
+    }
+    this.service.loadASS21010(<ASS21010Payload>{
+      ...this.queryForm.getRawValue(),
+      ...this.usrData(),
+    });
   }
 
+  public onExport(type: string): void {
+    const Conditions: any = this.queryForm.getRawValue();
+    Conditions.Mid = Number(this.authService.currentUserValue?.mid);
+    Conditions.SYS_StoreNo = this.authService.currentUserValue?.SYS_StoreNo;
 
-  // // Table data
-  // data: any[] = [];
-  // location: any[] = [];
-  // filteredData: any[] = [...this.data];
-  // columns: any[] = [
-  //   { field: 'slotLocationCode', header: '錶號位置編號', visible: true },
-  //   { field: 'floor', header: '樓層', visible: true },
-  //   { field: 'zone', header: '區域', visible: true },
-  //   { field: 'xCoordinate', header: '平面圖X座標', visible: true },
-  //   { field: 'yCoordinate', header: '平面圖Y座標', visible: true },
-  //   { field: 'remarks', header: '說明', visible: true },
-  // ];
+    const timeFormat = new Date().toLocaleString('sv-SE', {
+      timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit'
+    }).replace(/[-\s:]/g, '-');
 
+    const payload = {
+      report_title: '能源錶號基本維護',
+      // report_title: this.currentPageService.currentPageProgNoSubject.value,
+      file_name: `${this.authService.getUserInfo()?.user_No}-32110-${timeFormat}`,
+      columns: this.columns.map(c => (c.visible = !0) && c),
+      query_condition: { ServiceName: 'QueryASS21010', Conditions },
+      config: {
+        footer_DataType: "ASS21010",
+        page_lines: 10,
+        print_eject: 'Y',
+        print_field_title: 'Y',
+        print_field_title_per_page: 'N',
+        print_line_number: 'Y',
+        print_reportFooter: 'Y',
+        print_reportFooter_per_page: 'N',
+        print_reportTitle: 'Y',
+        print_reportTitle_per_page: 'N',
+      },
+    };
 
+    this.logger.debug(`onExport ${type} payload:`, [payload]);
 
-
-
-  // // Dropdown options
-  // floor: any[] = [];
-  // Kurabe: any[] = [
-  //   { value: 1, label: '001' },
-  //   { value: 2, label: '002' },
-  // ];
-  // Departmentcode: any[] = [];
-  // usercode: any[] = [];
-  // bigCategoryOptions: any[] = [
-  //   { value: 1, label: '裝潢工程' },
-  //   { value: 2, label: '其他工程' },
-  //   { value: 3, label: '電腦及電子零件產品' },
-  //   { value: 4, label: '電力及照明系統' },
-  //   { value: 5, label: '家電家俱設備' },
-  //   { value: 6, label: '機消空電水零配件' },
-  //   { value: 7, label: '辦公及營運庶務' },
-  //   { value: 8, label: '印刷品(非廣告行銷)' },
-  //   { value: 9, label: '印刷品(廣告行銷)' },
-  //   { value: 10, label: '衛生及醫療庶務用品' },
-  // ];
-  // midCategoryOptions: any[] = [
-  //   { value: 1, label: '室內裝潢工程' },
-  //   { value: 2, label: '室內裝潢備品' },
-  //   { value: 3, label: '弱電系統' },
-  //   { value: 4, label: '房屋及建築設備' },
-  //   { value: 5, label: '停車場設備' },
-  //   { value: 6, label: '其他工程' },
-  //   { value: 7, label: '機電消防工程' },
-  //   { value: 8, label: '電子產品及零件' },
-  //   { value: 9, label: '電子儀器設備' },
-  //   { value: 10, label: '電子儀器設備-資產' },
-  // ];
-  // smallCategoryOptions: any[] = [
-  //   { value: 1, label: '機電空調工程' },
-  //   { value: 2, label: '水電消防工程' },
-  //   { value: 3, label: '排油煙工程' },
-  //   { value: 4, label: '商場高壓電節能工程' },
-  //   { value: 5, label: '商場弱電系統工程' },
-  //   { value: 6, label: '網路佈線工程' },
-  //   { value: 7, label: '鐵路自動測試儀' },
-  //   { value: 8, label: '風車零件' },
-  //   { value: 9, label: '資收場回收用品' },
-  //   { value: 10, label: '瓦斯鍋及滅斷設備工程' },
-  // ];
-  // Querybystatus: any[] = [
-  //   { value: 1, label: '全部' },
-  //   { value: 2, label: '只顯示低於安全庫存' },
-
-
-  // ];
-  // assetCodeOptions: any[] = [
-  //   { value: 1, label: '1A232300000010000001' },
-  //   { value: 2, label: '1A232300000020000001' },
-  //   { value: 3, label: '1A232300000040000001' },
-  //   { value: 4, label: '1A232300000050000001' },
-  //   { value: 5, label: '1A232300000060000001' },
-  //   { value: 6, label: '1A232300000090000001' },
-  //   { value: 7, label: '1A232400000010000001' },
-  //   { value: 8, label: '1A232400000040000001' },
-  //   { value: 9, label: '1A232400000060000001' },
-  // ];
-  // propertytype
-  //   : any[] = [
-  //     { value: 1, label: '資產' },
-  //     { value: 2, label: '列管品' },
-  //   ];
-  // Itemnumber
-  //   : any[] = [
-
-  //     { value: 1, label: '3A24210000001' },
-  //     { value: 2, label: '3A24210000002' },
-  //     { value: 3, label: '3A24210000003' },
-  //     { value: 4, label: '3A24210000004' },
-  //     { value: 5, label: '3A24210000005' },
-  //     { value: 6, label: '3A24210000006' },
-  //     { value: 7, label: '3A24210000007' },
-  //     { value: 8, label: '3A24210000008' },
-  //     { value: 9, label: '3A24210000009' },
-  //     { value: 10, label: '3A24210000010' },
-  //   ];
+    this.service.export(type as 'PDF' | 'Excel', payload);
+  }
 }

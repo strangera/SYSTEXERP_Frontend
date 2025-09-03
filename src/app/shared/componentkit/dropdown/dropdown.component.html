@@ -6,8 +6,8 @@
   [placeholder]="customPlaceholder || placeholder" [options]="options" [optionLabel]="optionLabel"
   [optionValue]="optionValue" [showClear]="showClear" [ngClass]="{'ng-dirty ng-invalid': submitted && control.errors}"
   [dropdownIcon]="control.disabled ? 'hidden' : 'pi pi-angle-down'" (onChange)="onDropdownChange($event)"
-  [dataKey]="optionValue" [filter]="filter" appendTo="body" [resetFilterOnHide]="true" [virtualScroll]="true"
-  [virtualScrollItemSize]="40">
+  [dataKey]="optionValue" appendTo="body" [resetFilterOnHide]="true" [virtualScroll]="true" [virtualScrollItemSize]="40"
+  [editable]="editable">
   <ng-template let-options pTemplate="item">
     <div class="flex align-items-center gap-2">
       <div>{{ templateLabel !== '' ? options[templateLabel] : options[optionLabel] }}</div>

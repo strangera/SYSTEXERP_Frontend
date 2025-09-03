@@ -1,50 +1,56 @@
-import { Component, OnInit, computed, effect, signal } from '@angular/core';
+import { Component, OnInit, computed, effect } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
+import { EngType } from '@service/api/ass/ass21010.service';
 import { ASS21020Service } from '@service/api/ass/ass21020.service';
 import { MenubarComponent } from '@shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { ButtonComponent } from '@shared/componentkit/button/button.component';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
+import { InputNumberComponent } from "@shared/componentkit/input-number/input-number.component";
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
 import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
 import { TableComponent } from '@shared/componentkit/table/table.component';
 import { Column, createPaginationConfig } from '@shared/componentkit/table/table.model';
+import { NGXLogger } from 'ngx-logger';
 import { AccordionModule } from 'primeng/accordion';
+import { KeyFilterModule } from 'primeng/keyfilter';
 import { PanelModule } from 'primeng/panel';
-import { ASS21020Payload } from './ass21020.model';
+import { ASS2100ENGMeterType } from '../ass21010/ass21010.model';
+import { ASS21020Data } from './ass21020.model';
 
 @Component({
   selector: 'app-ass21020',
   templateUrl: './ass21020.component.html',
   styleUrl: './ass21020.component.scss',
-  standalone: true,
+  standalone: !0,
   imports: [
     PanelModule,
     AccordionModule,
     TranslateModule,
     FormsModule,
-    ReactiveFormsModule,
-    InputTextComponent,
-    DropdownComponent,
-    MultiSelectComponent,
-    MenubarComponent,
+    KeyFilterModule,
     ButtonComponent,
+    DropdownComponent,
+    InputTextComponent,
+    MenubarComponent,
+    MultiSelectComponent,
+    ReactiveFormsModule,
     TableComponent,
+    InputNumberComponent,
   ],
 })
 export class ASS21020Component extends BasicQueryPageComponent<unknown> implements OnInit {
 
   public readonly queryForm = this.formBuilder.group({
-    ENG_Type: new FormControl<string[] | undefined>(void 0),
+    ENG_Type: new FormControl<EngType[]>([]),
     ENG_MeterNo: new FormControl<string | undefined>(void 0),
-    Location_No: new FormControl<string | undefined>(void 0),
-    tlt_no: new FormControl<string | undefined>(void 0),
-    eng_rate: new FormControl<number | undefined>(0),
-    department_name: new FormControl<string | undefined>(void 0),
-    business_area: new FormControl<string | undefined>(void 0),
-    business_area_ratio: new FormControl<number | undefined>(void 0),
+    TLT_No: new FormControl<string | undefined>(void 0),
+    Location_No: new FormControl<string>(''),
+    TLT_Name: new FormControl<string>(''),
+    NET_SPACE: new FormControl<number | undefined>(void 0),
+    ENG_Rate: new FormControl<number | undefined>(void 0),
     ...createPaginationConfig([{ field: '', order: 1 }]),
   });
   public readonly qf = computed(() => this.queryForm.controls);
@@ -52,31 +58,78 @@ export class ASS21020Component extends BasicQueryPageComponent<unknown> implemen
 
   private readonly engTypeSignal = toSignal(this.qf().ENG_Type.valueChanges);
   private readonly meterNoSignal = toSignal(this.qf().ENG_MeterNo.valueChanges);
-  private readonly locationSignal = toSignal(this.qf().Location_No.valueChanges);
-  private readonly tltNoSignal = toSignal(this.qf().tlt_no.valueChanges);
+  private readonly tltNoSignal = toSignal(this.qf().TLT_No.valueChanges);
+
+  public readonly ratePtn = /^(100(?:\.0{1,2})?|0*(?:\d{1,2}))$/;
+
+  public filteredMeterNo: ASS2100ENGMeterType[] = [];
+
+  public readonly totalRecords = computed(() => this.service.ASS21020Data().length);
+
+  public readonly engTypeEffect = effect(() => {
+    this.filteredMeterNo = this.service.engMeterNoSignal().filter(i => {
+      if (!this.engTypeSignal()?.length) return !0;
+      return this.service.engTypeSignal()!.some(t => t.Name === i.ENG_Type
+        && this.qf().ENG_Type.value?.some(v => v === t.No));
+    });
+    this.logger.debug(`engTypeEffect:`, [this.filteredMeterNo]);
+  });
 
   public readonly meterNoEffect = effect(() => {
     const meterNo = this.meterNoSignal();
-    if (!meterNo) return void this.qf().Location_No.patchValue(void 0);
-    this.service.queryByMeterNo(meterNo);
+    if (!meterNo) return;
+    this.service.queryTltByFlag(meterNo);
+    if (this.qf().ENG_Type.value?.length) return;
+    const type = this.service.engMeterNoMap.get(meterNo)?.ENG_Type;
+    const current = this.service.engTypeSignal().find(t => t.Name === type);
+    current && this.qf().ENG_Type.patchValue([current.No as EngType]);
+    this.logger.debug(`meterNo changes:`, [meterNo, current]);
   }, { allowSignalWrites: !0 });
+
+  public readonly locNoEffect = effect(() => {
+    const locNo = this.service.tltNoSignal().find(t => t.TLT_No === this.tltNoSignal());
+    if (!locNo?.Location_No) return;
+    this.qf().Location_No.patchValue(locNo!.Location_No);
+    this.logger.debug(`locNo changes:`, [locNo]);
+  });
 
   public readonly tltNoEffect = effect(() => {
     const tltNo = this.tltNoSignal();
-    if (!tltNo) return;
-    if (!0) return;
-    this.service.queryByTltNo(tltNo);
+    if (!tltNo?.length) return;
+    const selected = this.service.tltByFlagMap.get(tltNo);
+    if (!selected) return;
+    this.qf().TLT_Name.patchValue(selected.TLT_Name);
+    this.qf().NET_SPACE.patchValue(selected.NET_SPACE);
   });
 
   public readonly columns: Column[] = [
     { field: 'ENG_Type', header: '能源類型' },
     { field: 'ENG_MeterNo', header: '錶號' },
-    { field: 'Location_No', header: '設備位置編號' },
+    { field: 'TLT_Name', header: '專櫃編號/名稱' },
+    { field: 'ENG_Rate', header: '面積比率(%)', format: v => `${v}%` },
     { field: 'ENG_Remark', header: '備註' },
+    { field: 'CRT_Date', header: '建立日期' },
+    { field: 'CRT_USR_Name', header: '建立人員名稱' },
+    { field: 'UPD_Date', header: '變更日期' },
+    { field: 'UPD_USR_Name', header: '變更人員名稱' },
+  ];
+
+  public readonly meterColumns: Column[] = [
+    { field: 'ENG_MeterNo', header: '錶號' },
+    { field: 'Location_No', header: '設備位置編號' },
+    { field: 'ENG_Type', header: '能源類型' },
+  ];
+
+  public tltNoColumns: Column[] = [
+    { field: 'TLT_No', header: '專櫃編號' },
+    { field: 'TLT_Name', header: '專櫃名稱' },
+    { field: 'NET_SPACE', header: '專櫃面積坪數' },
+    { field: 'Apply_No', header: '招募編號' },
   ];
 
   constructor(
     public readonly service: ASS21020Service,
+    private readonly logger: NGXLogger,
   ) {
     super();
   }
@@ -86,191 +139,32 @@ export class ASS21020Component extends BasicQueryPageComponent<unknown> implemen
 
     this.service.loadEngType();
     this.service.loadEngMeterNo();
-    this.service.loadLocationNo();
-    this.service.loadASS21020({
-      EngTypes: '',
-      ENG_MeterNo: '',
-      Location_No: '',
-      SYS_StoreNo: '',
-      Mid: 0,
-      ENG_Rate: 0,
-    });
   }
 
   public onSubmit(): void {
     this.handleSubmit(this.queryForm, () => {
-      const payload = <ASS21020Payload>{
-        EngTypes: this.qf().ENG_Type.value || '',
-        ENG_MeterNo: this.qf().ENG_MeterNo.value || '',
-        Location_No: this.qf().Location_No.value || '',
-        SYS_StoreNo: '',
-        Mid: 0,
-        ENG_Rate: 0,
-      };
-      this.service.loadASS21020(payload);
+      this.service.loadASS21020({
+        ENG_Type: this.qf().ENG_Type.value!.join(),
+        ENG_Rate: this.qf().ENG_Rate.value!,
+        ENG_MeterNo: this.qf().ENG_MeterNo.value!,
+        Location_No: this.qf().Location_No.value!,
+        SYS_StoreNo: this.authService.currentUserValue?.SYS_StoreNo!,
+        Mid: Number(this.authService.currentUserValue?.mid)!,
+      });
 
-      this.queryStateService.setQueryState(this.ProgNo, this.queryForm.value);
+      this.queryStateService.setQueryState(this.ProgNo, this.queryForm.getRawValue());
       this.loading = !1;
     });
   }
 
-  public override onCreate(data?: unknown): void {
-    this.queryStateService.setQueryState(this.ProgNo, this.queryForm.value);
-    super.onCreate(data);
+  public onDelete(items: ASS21020Data[]): void {
+    this.logger.debug(`Deleting:`, [items]);
+    for (const item of items) {
+      this.service.deleteASS21020(String(item.ID)).subscribe(res => {
+        if (res.IsUpdateSuccess) this.messageService.successBubble('刪除成功');
+        else this.messageService.errorBubble(res.ErrorMsg, '刪除失敗');
+        this.loading = !1;
+      });
+    }
   }
-
-
-  public onClear(): void {
-
-  }
-
-
-
-
-
-  // // Table data
-  // Energytype: any[] = [{ value: 1, label: '水費' },
-  // { value: 2, label: '電費' },
-  // { value: 3, label: '瓦斯費' },];
-  // data: any[] = [];
-  // equipmentLocationOptions: any[] = [
-  //   { value: 1, label: '010A000001' },
-  //   { value: 2, label: '010A000002' },
-  //   { value: 3, label: '010A000003' },
-  //   { value: 4, label: '010A000004' },
-  //   { value: 5, label: '010B000001' },
-  //   { value: 6, label: '010B000002' },
-  //   { value: 7, label: '010B000003' },
-  // ];
-  // ironNumberOptions: any[] = [
-  //   { value: 1, label: 'EB101' },
-  //   { value: 2, label: 'EB103' },
-  //   { value: 3, label: 'EB105' },
-  //   { value: 4, label: 'EB107' },
-  //   { value: 5, label: 'EB109' },
-  //   { value: 6, label: 'EB110' },
-  //   { value: 7, label: 'EB111' },
-  // ];
-  // location: any[] = [];
-  // filteredData: any[] = [...this.data];
-  // columns: any[] = [
-  //   { field: 'energyType', header: '能源類型', visible: true },
-  //   { field: 'slotNumber', header: '錶號', visible: true },
-  //   { field: 'deviceLocationCode', header: '設備位置編號', visible: true },
-  //   { field: 'ENG_Remark', header: '備註', visible: true },
-  // ];
-
-
-
-
-
-  // // Dropdown options
-  // floor: any[] = [];
-  // Kurabe: any[] = [
-  //   { value: 1, label: '001' },
-  //   { value: 2, label: '002' },
-  // ];
-  // Departmentcode: any[] = [];
-  // usercode: any[] = [];
-  // bigCategoryOptions: any[] = [
-  //   { value: 1, label: '裝潢工程' },
-  //   { value: 2, label: '其他工程' },
-  //   { value: 3, label: '電腦及電子零件產品' },
-  //   { value: 4, label: '電力及照明系統' },
-  //   { value: 5, label: '家電家俱設備' },
-  //   { value: 6, label: '機消空電水零配件' },
-  //   { value: 7, label: '辦公及營運庶務' },
-  //   { value: 8, label: '印刷品(非廣告行銷)' },
-  //   { value: 9, label: '印刷品(廣告行銷)' },
-  //   { value: 10, label: '衛生及醫療庶務用品' },
-  // ];
-  // midCategoryOptions: any[] = [
-  //   { value: 1, label: '室內裝潢工程' },
-  //   { value: 2, label: '室內裝潢備品' },
-  //   { value: 3, label: '弱電系統' },
-  //   { value: 4, label: '房屋及建築設備' },
-  //   { value: 5, label: '停車場設備' },
-  //   { value: 6, label: '其他工程' },
-  //   { value: 7, label: '機電消防工程' },
-  //   { value: 8, label: '電子產品及零件' },
-  //   { value: 9, label: '電子儀器設備' },
-  //   { value: 10, label: '電子儀器設備-資產' },
-  // ];
-  // smallCategoryOptions: any[] = [
-  //   { value: 1, label: '機電空調工程' },
-  //   { value: 2, label: '水電消防工程' },
-  //   { value: 3, label: '排油煙工程' },
-  //   { value: 4, label: '商場高壓電節能工程' },
-  //   { value: 5, label: '商場弱電系統工程' },
-  //   { value: 6, label: '網路佈線工程' },
-  //   { value: 7, label: '鐵路自動測試儀' },
-  //   { value: 8, label: '風車零件' },
-  //   { value: 9, label: '資收場回收用品' },
-  //   { value: 10, label: '瓦斯鍋及滅斷設備工程' },
-  // ];
-  // Querybystatus: any[] = [
-  //   { value: 1, label: '全部' },
-  //   { value: 2, label: '只顯示低於安全庫存' },
-
-
-  // ];
-  // assetCodeOptions: any[] = [
-  //   { value: 1, label: '1A232300000010000001' },
-  //   { value: 2, label: '1A232300000020000001' },
-  //   { value: 3, label: '1A232300000040000001' },
-  //   { value: 4, label: '1A232300000050000001' },
-  //   { value: 5, label: '1A232300000060000001' },
-  //   { value: 6, label: '1A232300000090000001' },
-  //   { value: 7, label: '1A232400000010000001' },
-  //   { value: 8, label: '1A232400000040000001' },
-  //   { value: 9, label: '1A232400000060000001' },
-  // ];
-  // propertytype
-  //   : any[] = [
-  //     { value: 1, label: '資產' },
-  //     { value: 2, label: '列管品' },
-  //   ];
-  // Itemnumber
-  //   : any[] = [
-
-  //     { value: 1, label: '3A24210000001' },
-  //     { value: 2, label: '3A24210000002' },
-  //     { value: 3, label: '3A24210000003' },
-  //     { value: 4, label: '3A24210000004' },
-  //     { value: 5, label: '3A24210000005' },
-  //     { value: 6, label: '3A24210000006' },
-  //     { value: 7, label: '3A24210000007' },
-  //     { value: 8, label: '3A24210000008' },
-  //     { value: 9, label: '3A24210000009' },
-  //     { value: 10, label: '3A24210000010' },
-  //   ];
-
-  // onEdit(data: any) {
-  //   if (this.canEdit()) {
-  //     let extras: NavigationExtras = {
-  //       state: {
-  //         crudstatus: CRUDStatus.Edit,
-  //         rowdata: data,
-  //         queryform: this.queryForm,
-  //       },
-  //       skipLocationChange: true,
-  //     };
-  //     this.router.navigate(['/demoCRU'], extras);
-  //   }
-  // }
-
-  // onDetail(data: any) {
-  //   let extras: NavigationExtras = {
-  //     state: {
-  //       crudstatus: CRUDStatus.Read,
-  //       rowdata: data,
-  //       queryform: this.queryForm,
-  //     },
-  //     skipLocationChange: true,
-  //   };
-  //   this.router.navigate(['/demoCRU'], extras);
-  // }
-  // onClearForm() {
-  //   this.queryForm.reset(); // 重置表單
-  // }
 }

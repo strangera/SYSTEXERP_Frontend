@@ -1,443 +1,302 @@
-import { Component } from '@angular/core';
-import { FormBuilder, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { NavigationExtras, Router } from '@angular/router';
-// Permissions
-import { FunsrightInfo, PermissionsInfo } from '../../../shared/models/system/funsrightInfo';
-// Shared
-import { AuthService } from '../../../service/system/auth.service';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-
-import { ValidationService } from '../../../shared/service/validation.service';
-
-import { FloorService } from '../../../service/basic/floor.service';
-import { RegionService } from './../../../service/basic/region-code.service';
-import { OrganizationNumberService } from '../../../service/basic/organization-number.service';
-import { BusinessTypeCodeService } from '../../../service/basic/business-type-code-service.service';
-import { CommissionTypeService } from '../../../service/basic/commission-type.service';
-import { TypeService } from './../../../service/basic/type.service';
-import { TaxableService } from './../../../service/basic/taxable.service';
-import { CounterCodeService } from '../../../service/basic/counter-code.service';
-import { CooperationMethodService } from '../../../service/basic/cooperation-method.service';
+import { DropDownListService, IDropdownItem } from '@service/utility/dropDownList.service';
+import { Component, OnInit } from '@angular/core';
+import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { AccordionModule } from 'primeng/accordion';
-import { RadiobuttonComponent } from '../../../shared/componentkit/radiobutton/radiobutton.component';
-import { NgIf } from '@angular/common';
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
-import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
-import { InputTextModule } from 'primeng/inputtext';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { TableModule } from 'primeng/table';
 import { TranslateModule } from '@ngx-translate/core';
+import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
+import { Column, ColumnGroup, createPaginationConfig, formatAmount, formatPercentage } from '@shared/componentkit/table/table.model';
+import { TableComponent } from '@shared/componentkit/table/table.component';
+import { RadiobuttonYNComponent } from '@shared/componentkit/radiobutton-yn/radiobutton-yn.component';
+import { yesterday } from '@shared/models/system/query-form.model';
+import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
+import { untilDestroyed } from '@ngneat/until-destroy';
+import { debounceTime, finalize, forkJoin, map, of, switchMap, tap } from 'rxjs';
+import { ButtonModule } from 'primeng/button';
+import { formatDate } from '@angular/common';
+import { HttpClient } from '@angular/common/http';
+import { environment } from 'src/environments/environment';
+import { TLS31020Request, TLS31020Response, Tls31020Service } from '@service/api/tls/tls31020.service';
+import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
 
 @Component({
   selector: 'app-tls31020',
   templateUrl: './tls31020.component.html',
   styleUrl: './tls31020.component.scss',
   standalone: true,
-  imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, RadiobuttonComponent, NgIf, CalendarComponent, InputNumberComponent, InputTextModule, DropdownComponent, CalendarRangeComponent, ButtonComponent, TranslateModule]
+  imports: [
+    MenubarComponent,
+    AccordionModule,
+    FormsModule,
+    ReactiveFormsModule,
+    CalendarComponent,
+    CalendarRangeQuickComponent,
+    ButtonComponent,
+    TableModule,
+    RadiobuttonYNComponent,
+    TranslateModule,
+    TableComponent,
+    MultiSelectComponent,
+    ButtonModule
+  ]
 })
 
-export class TLS31020Component {
-
-  // 程式編號
-  ProgNo: string = '230002';
-  // 權限變數
-  funInfo?: FunsrightInfo;
-
-
-
-
-  // 查詢表單
-  loading: boolean = false;
-  submitted: boolean = false;
-  queryForm = this.formBuilder.group({
-    radiolist: [1, []], // 條件篩選, radioButton
-    floor: [],  // 樓層
-    region: [], //區域
-    tax: [], //稅別
-    type: [],
-    organizationCode: [],  // 專櫃編號
-    businessTypeCode: [],  // 大分類
-    commissionType: [], // 抽成方式
-    onedatedd: [],
-    onedateyy: [],
-    weeks: [],
-    radio1: [],
-    onedatemm: [],
-    halfyear: [],
-    startdate: [], enddate: [],
-    EventID: [],
-    counterCode: [],  // 專櫃編號
+// 各樓層之營業報表
+export class TLS31020Component extends BasicQueryPageComponent<TLS31020Response> implements OnInit{
+  queryForm = this.formBuilder.nonNullable.group({
+    TXN_DateS: [yesterday],//交易日期開始
+    TXN_DateE: [yesterday],  // 交易日期結束
+    // 合約查詢條件
+    tlt_building: [[]],// 館別
+    tlt_floor: [[]],// 樓層
+    area_no: [[]],// 區域
+    bus_type: [[] as string[]],//大分類
+    bus_class: [[] as IDropdownItem[]],//中分類
+    bus_sclass: [[] as IDropdownItem[]],//小分類
+    tlt_kind: [[]], //櫃別 (1.正櫃 2.臨時櫃 3.特賣會 4.虛擬櫃)
+    tlt_term_type: [[]], // 抽成別 1:固定租金 2:底租抽成取高者3:一般抽成     4:包底抽成     5:階梯式抽成   6:包底加階梯   "
+    org_id: [[]],  // 組織
+    TaxType: ["Y"],  // 銷售金額是否含稅(Y:是 N:否 預設含稅)
+    IsRece_Yn: [null],  // 是否開立業主發票(是否開立業主發票(Y:是 N:否 預設全部))
+    
+    
+    ...createPaginationConfig([{ field: 'tlt_building', order: 1 }])
   });
+  totalRecords = 0;
+  data: TLS31020Response[] = [];
+  columns: Column[] = [
+    // { field: 'building_desc', header: '館別', visible: true },
+    // { field: 'org_name', header: '組織名稱', visible: true },
+    // { field: 'tlt_kind', header: '櫃別', visible: true },
+    // { field: 'tlt_no', header: '專櫃編號', visible: true },
+    // { field: 'location_no', header: '位置編號', visible: true },
+    // { field: 'tlt_name', header: '專櫃名稱', visible: true },
 
-  daterangeOptions: any[] = [
-    { value: 1, label: '日營業報表' },
-    { value: 2, label: '週營業報表' },
-    { value: 3, label: '月營業報表' },
-    { value: 4, label: '半年營業報表' },
-    { value: 5, label: '年營業報表' },
-    { value: 6, label: '區間營業報表' },
-    { value: 7, label: '活動區間營業報表' },
+    { field: 'tlt_floor', header: '樓層', visible: true },
+    { field: 'floor_desc', header: '樓層說明', visible: true },
+
+    { field: 'budget', header: '營業目標', visible: true, groupField: 'budgetAmt', format: formatAmount },
+    { field: 'AVN_TotSaleAmt', header: '營業實績', visible: true, groupField: 'budgetAmt', format: formatAmount },
+    { field: 'AchievementRate', header: '達成率', visible: true, groupField: 'budgetAmt', format: (value) => formatPercentage(value, 2) },
+    { field: 'BudgetRate', header: '營業目標佔比', visible: true, groupField: 'sum', format: (value) => formatPercentage(value, 2) },
+    { field: 'PerformanceRate', header: '營業實績佔比', visible: true, groupField: 'sum', format: (value) => formatPercentage(value, 2) },
+    { field: 'TxnCount', header: '交易筆數', visible: true, groupField: 'custCnt', format: formatAmount },
+    { field: 'AvgTicket', header: '客單價', visible: true, groupField: 'custCnt', format: formatAmount },
+    { field: 'tlt_space', header: '坪數', visible: true, groupField: 'space' },
+    { field: 'MonthlyPSM', header: '月坪效', visible: true, groupField: 'space' },
+
+    { field: 'TempCounterSaleAmt', header: '營業實績', visible: true, groupField: 'temp', format: formatAmount },
+    { field: 'TempCounterSalesRate', header: '營業實績佔比', visible: true, groupField: 'temp', format: formatAmount },
+    { field: 'TempCounterAmtRate', header: '臨時櫃業績佔比', visible: true, groupField: 'temp', format: formatAmount },
+
+    { field: 'MonthlyBudgetTotal', header: '月營業目標', visible: true, groupField: 'month', format: formatAmount },
+    { field: 'MonthlySalesTotal', header: '營業實績', visible: true, groupField: 'month', format: formatAmount },
+    { field: 'CompletionRate', header: '完成率', visible: true, groupField: 'month', format: (value) => formatPercentage(value, 2) },
   ];
-
-  halfyearOptions: any[] = [
-    { value: 1, label: '上半年' },
-    { value: 2, label: '下半年' },
-  ];
-
-  EventIDOptions: any[] = [
-    { value: 1, label: '活動1' },
-    { value: 2, label: '活動2' },
-  ];
-
-  organizationOptions: any[] = [];
-  regionOptions: any[] = [];
-  floorOptions: any[] = [];
-  businessTypeCodeOptions: any[] = [];
-  commissionTypeOptions: any[] = [];
-  TypeOptions: any[] = [];
-  counterCodeOptions: any[] = [];
-  taxOptions: any[] = [];
-  operationsOptions: any[] = [];
-  selectedOption: string = '1'; // 預設選擇的欄位
-  fileName = 'TableExport'; // 宣告 fileName 屬性
-  // 表格資料
-  data: any[] = [
-    {
-      "floorName": "B1",
-      "BOTag": 17596000,
-      "salesPerformance": 14112426,
-      "achievementRate": "80.2%",
-      "targetRatio": "22.7%",
-      "performanceRatio": "20.7%",
-      "transactionCount": 49118,
-      "averageOrderValue": 287,
-      "area": 1779.9,
-      "areaEfficiency": 7929,
-      "salesPerformanceTemp": 453605,
-      "performanceRatioTemp": "3.2%",
-      "temporaryBoothRatio": "18.2%"
-    },
-    {
-      "floorName": "1F",
-      "BOTag": 9709000,
-      "salesPerformance": 8915524,
-      "achievementRate": "91.8%",
-      "targetRatio": "12.5%",
-      "performanceRatio": "13.1%",
-      "transactionCount": 9618,
-      "averageOrderValue": 927,
-      "area": 2618.03,
-      "areaEfficiency": 3405,
-      "salesPerformanceTemp": 32990,
-      "performanceRatioTemp": "0.4%",
-      "temporaryBoothRatio": "1.3%"
-    },
-    {
-      "floorName": "2F",
-      "BOTag": 9210000,
-      "salesPerformance": 10659746,
-      "achievementRate": "115.7%",
-      "targetRatio": "11.9%",
-      "performanceRatio": "15.6%",
-      "transactionCount": 9420,
-      "averageOrderValue": 1132,
-      "area": 2707.56,
-      "areaEfficiency": 3937,
-      "salesPerformanceTemp": 509195,
-      "performanceRatioTemp": "4.8%",
-      "temporaryBoothRatio": "20.4%"
-    },
-    {
-      "floorName": "3F",
-      "BOTag": 17548800,
-      "salesPerformance": 12307554,
-      "achievementRate": "70.1%",
-      "targetRatio": "22.6%",
-      "performanceRatio": "18.0%",
-      "transactionCount": 8241,
-      "averageOrderValue": 1493,
-      "area": 2215.1,
-      "areaEfficiency": 5556,
-      "salesPerformanceTemp": 27329,
-      "performanceRatioTemp": "0.2%",
-      "temporaryBoothRatio": "1.1%"
-    },
-    {
-      "floorName": "4F",
-      "BOTag": 9951000,
-      "salesPerformance": 11108366,
-      "achievementRate": "111.6%",
-      "targetRatio": "12.8%",
-      "performanceRatio": "16.3%",
-      "transactionCount": 10769,
-      "averageOrderValue": 1032,
-      "area": 2097.9,
-      "areaEfficiency": 5295,
-      "salesPerformanceTemp": 1074942,
-      "performanceRatioTemp": "9.7%",
-      "temporaryBoothRatio": "43.1%"
-    },
-    {
-      "floorName": "5F",
-      "BOTag": 11092370,
-      "salesPerformance": 9392435,
-      "achievementRate": "84.7%",
-      "targetRatio": "14.3%",
-      "performanceRatio": "13.8%",
-      "transactionCount": 14351,
-      "averageOrderValue": 654,
-      "area": 3594.1,
-      "areaEfficiency": 2613,
-      "salesPerformanceTemp": 0,
-      "performanceRatioTemp": "0.0%",
-      "temporaryBoothRatio": "0.0%"
-    },
-    {
-      "floorName": "6F",
-      "BOTag": 2467630,
-      "salesPerformance": 1776299,
-      "achievementRate": "72.0%",
-      "targetRatio": "3.2%",
-      "performanceRatio": "2.6%",
-      "transactionCount": 4479,
-      "averageOrderValue": 397,
-      "area": 1444.7,
-      "areaEfficiency": 1230,
-      "salesPerformanceTemp": 398717,
-      "performanceRatioTemp": "22.4%",
-      "temporaryBoothRatio": "16.0%"
-    }
-  ];
-  // data2: any[] = [];
-  filteredData: any[] = [...this.data];
-  // columns: any[] = [
-  //   { field: 'floorName', header: '樓層名稱', visible: true },
-  //   { field: 'BOTag', header: '營業目標', visible: true },
-  //   { field: 'salesPerformance', header: '營業實績', visible: true },
-  //   { field: 'achievementRate', header: '達成率', visible: true },
-  //   { field: 'targetRatio', header: '營業目標佔比', visible: true },
-  //   { field: 'performanceRatio', header: '營業實績佔比', visible: true },
-  //   { field: 'transactionCount', header: '交易筆數', visible: true },
-  //   { field: 'averageOrderValue', header: '客單價', visible: true },
-  //   { field: 'area', header: '坪數', visible: true },
-  //   { field: 'areaEfficiency', header: '坪效', visible: true },
-  //   { field: 'salesPerformance', header: '營業實績', visible: true },
-  //   { field: 'performanceRatio', header: '營業實績佔比', visible: true },
-  //   { field: 'temporaryBoothRatio', header: '臨時櫃業績佔比', visible: true },
-  //   { field: 'monthlyTarget', header: '月營業目標', visible: true },
-  //   { field: 'monthlyPerformance', header: '營業實績', visible: true },
-  //   { field: 'completionRate', header: '完成率', visible: true },
-  // ];
-
-
-  // columns2: any[] = [
-  //   { field: '1', header: '樓層名稱', visible: true },
-  //   { field: '2', header: '營業目標', visible: true },
-  //   { field: '3', header: '營業實績', visible: true },
-  //   { field: '4', header: '達成率', visible: true },
-  //   { field: '5', header: '營業目標佔比', visible: true },
-  //   { field: '6', header: '營業實績佔比', visible: true },
-  //   { field: '7', header: '交易筆數', visible: true },
-  //   { field: '8', header: '客單價', visible: true },
-  //   { field: '9', header: '坪數', visible: true },
-  //   { field: '10', header: '坪效', visible: true },
-  //   { field: '11', header: '營業實績', visible: true },
-  //   { field: '12', header: '營業實績佔比', visible: true },
-  //   { field: '13', header: '臨時櫃業績佔比', visible: true },
-  // ];
-
-  headerRow1: any[] = [
-    [
-      { field: '', header: '樓層名稱', visible: true, rowspan: 1, colspan: 1 },
-      { field: '', header: '營業額', visible: true, rowspan: 1, colspan: 3 },
-      { field: '', header: '營業佔比', visible: true, rowspan: 1, colspan: 2 },
-      { field: '', header: '客單價', visible: true, rowspan: 1, colspan: 2 },
-      { field: '', header: '營業坪效', visible: true, rowspan: 1, colspan: 2 },
-      { field: '', header: '臨時櫃', visible: true, rowspan: 1, colspan: 3 },
-      { field: '', header: '月累積', visible: true, rowspan: 1, colspan: 3 },
-    ],
-    // [
-    //   { field: 'floorName', header: '樓層名稱', visible: true },
-    //   { field: 'BOTag', header: '營業目標', visible: true },
-    //   { field: 'salesPerformance', header: '營業實績', visible: true },
-    //   { field: 'achievementRate', header: '達成率', visible: true },
-    //   { field: 'targetRatio', header: '營業目標佔比', visible: true },
-    //   { field: 'performanceRatio', header: '營業實績佔比', visible: true },
-    //   { field: 'transactionCount', header: '交易筆數', visible: true },
-    //   { field: 'averageOrderValue', header: '客單價', visible: true },
-    //   { field: 'area', header: '坪數', visible: true },
-    //   { field: 'areaEfficiency', header: '坪效', visible: true },
-    //   { field: 'salesPerformance', header: '營業實績', visible: true },
-    //   { field: 'performanceRatio', header: '營業實績佔比', visible: true },
-    //   { field: 'temporaryBoothRatio', header: '臨時櫃業績佔比', visible: true },
-    //   { field: 'monthlyTarget', header: '月營業目標', visible: true },
-    //   { field: 'monthlyPerformance', header: '營業實績', visible: true },
-    //   { field: 'completionRate', header: '完成率', visible: true },
-    // ]
-  ];
-
-  // headerRow1: any[] = [
-  //   { field: '', header: '樓層名稱', visible: true, rowspan: 2, colspan: 1 },
-  //   { field: '', header: '營業額', visible: true, rowspan: 1, colspan: 3 },
-  //   { field: '', header: '營業佔比', visible: true, rowspan: 1, colspan: 2 },
-  //   { field: '', header: '客單價', visible: true, rowspan: 1, colspan: 2 },
-  //   { field: '', header: '營業坪效', visible: true, rowspan: 1, colspan: 2 },
-  //   { field: '', header: '臨時櫃', visible: true, rowspan: 1, colspan: 3 },
-  //   { field: '', header: '月累積', visible: true, rowspan: 1, colspan: 3 },
-  // ];
-
-  headerRow2: any[] = [
-    { field: 'floorName', header: '樓層名稱', visible: true },
-    { field: 'BOTag', header: '營業目標', visible: true },
-    { field: 'salesPerformance', header: '營業實績', visible: true },
-    { field: 'achievementRate', header: '達成率', visible: true },
-    { field: 'targetRatio', header: '營業目標佔比', visible: true },
-    { field: 'performanceRatio', header: '營業實績佔比', visible: true },
-    { field: 'transactionCount', header: '交易筆數', visible: true },
-    { field: 'averageOrderValue', header: '客單價', visible: true },
-    { field: 'area', header: '坪數', visible: true },
-    { field: 'areaEfficiency', header: '坪效', visible: true },
-    { field: 'salesPerformance', header: '營業實績', visible: true },
-    { field: 'performanceRatio', header: '營業實績佔比', visible: true },
-    { field: 'temporaryBoothRatio', header: '臨時櫃業績佔比', visible: true },
-    { field: 'monthlyTarget', header: '月營業目標', visible: true },
-    { field: 'monthlyPerformance', header: '營業實績', visible: true },
-    { field: 'completionRate', header: '完成率', visible: true },
-  ];
+  columnGroup: ColumnGroup[] = [
+    { field: 'budgetAmt', header: '營業額' },
+    { field: 'sum', header: '營業佔比' },
+    { field: 'custCnt', header: '客單價' },
+    { field: 'space', header: '營業坪效' },
+    { field: 'temp', header: '臨時櫃' },
+    { field: 'month', header: '月累計' },
+  ]
+  tlt_kind_Option = [
+    { value: "1", label: "正櫃" },
+    { value: "2", label: "臨時櫃" },
+    { value: "3", label: "特賣會" },
+    { value: "4", label: "虛擬櫃" },
+  ]
+  tlt_term_type = [
+    { value: "1", label: "固定租金" },
+    { value: "2", label: "底租抽成取高者" },
+    { value: "3", label: "一般抽成" },
+    { value: "4", label: "包底抽成" },
+    { value: "5", label: "階梯式抽成" },
+    { value: "6", label: "包底加階梯" },
+  ]
+  tlt_building_Option: IDropdownItem[] = []; // 館別
+  tlt_floor_Option: IDropdownItem[] = []; // 樓層
+  area_no_Option: IDropdownItem[] = []; // 區域
+  bus_type_Option: IDropdownItem[] = []; // 大分類
+  bus_class_Option: IDropdownItem[] = []; // 中分類
+  bus_sclass_Option: IDropdownItem[] = []; // 小分類
+  org_id_Option: IDropdownItem[] = []; // 組織
+  tlt_no_id_Option: IDropdownItem[] = []; // 專櫃編號
 
   constructor(
-    private router: Router,
-    private formBuilder: FormBuilder,
-    private messageService: NotificationService,
-    private authService: AuthService,
-    private validationService: ValidationService,
-    private floorService: FloorService,
-    private RegionService: RegionService,
-    private businessTypeCodeService: BusinessTypeCodeService,
-    private organizationNumberService: OrganizationNumberService,
-    private commissionTypeService: CommissionTypeService,
-    private TypeService: TypeService,
-    private TaxableService: TaxableService,
-    private cooperationMethodService: CooperationMethodService,
-    private counterCodeService: CounterCodeService,  // 專櫃編號
-  ) { }
-
+    private readonly dropDownListService: DropDownListService,
+    private readonly tls31020Service: Tls31020Service,
+    private readonly httpClient: HttpClient
+  ) { super(); }
 
   ngOnInit(): void {
+    this.initializePage('TLS31020', 'TLS/TLS31020cru', this.queryForm, (frm) => this.onSubmit(frm));
+    this.dropDownListService.querySYS3800_DropDownList().pipe(untilDestroyed(this)).subscribe(res => {
+      this.tlt_building_Option = res.Data;
+    })
+    this.dropDownListService.querySYS3900_DropDownList().pipe(untilDestroyed(this)).subscribe(res => {
+      this.tlt_floor_Option = res.Data;
+    })
+    this.dropDownListService.querySYS3A00_DropDownList().pipe(untilDestroyed(this)).subscribe(res => {
+      this.area_no_Option = res.Data;
+    })
+    // 獲取大分類下拉選項
+    this.dropDownListService.queryPOS2003_DropDownList().pipe(untilDestroyed(this)).subscribe(response => {
+      this.bus_type_Option = response.Data.map(item => ({ ...item, label: `${item.No} - ${item.Name}`, }));
+    });
+    // 獲取大分類下拉選項
+    this.dropDownListService.queryPOS2003_DropDownList().pipe(untilDestroyed(this)).subscribe(response => {
+      this.bus_type_Option = response.Data.map(item => ({ ...item, label: `${item.No} - ${item.Name}`, }));
+    });
+    // 監聽大分類變化
+    this.queryForm.controls.bus_type.valueChanges.pipe(debounceTime(300), untilDestroyed(this)).subscribe((value: string[]) => {
+      if (value && value.length > 0) {
+        this.dropDownListService.queryPOS20031_DropDownList({ CAT_LNo: value }).pipe(untilDestroyed(this)).subscribe(response => {
+          const groupedData = response.Data.reduce((accumulator, currentItem) => {
+            const groupKey = currentItem.CAT_LNo || '';
+            if (!accumulator[groupKey]) {
+              accumulator[groupKey] = {
+                label: currentItem.CAT_LName,
+                items: []
+              };
+            }
 
+            accumulator[groupKey].items.push({
+              ...currentItem,
+              label: `${currentItem.No} - ${currentItem.Name}`,
+            });
 
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
+            return accumulator;
+          }, {} as Record<string, any>);
 
-    // Initialize dropdown options
-    this.floorService.getFloors().subscribe(data => {
-      this.floorOptions = data;
+          // 最後，將分組物件的值轉換為陣列，得到最終的分組下拉清單格式
+          this.bus_class_Option = Object.values(groupedData);
+        });
+      } else {
+        this.bus_class_Option = [];
+        this.bus_sclass_Option = [];
+        this.queryForm.controls.bus_sclass.setValue([]);
+        this.queryForm.controls.bus_class.setValue([]);
+      }
     });
-    this.RegionService.getRegionOptions().subscribe(data => {
-      this.regionOptions = data;
-    });
-    this.organizationNumberService.getOrganizationNumbers().subscribe((data) => {
-      this.organizationOptions = data;
-    });
-    this.businessTypeCodeService.getBusinessTypeCodes().subscribe((data) => {
-      this.businessTypeCodeOptions = data;
-    });
-    this.commissionTypeService.getCommissionTypes().subscribe((data) => {
-      this.commissionTypeOptions = data;
-    });
-    this.TypeService.getTypeOptions().subscribe(data => {
-      this.TypeOptions = data;
-    });
-    this.cooperationMethodService.getCooperationMethods().subscribe(data => {
-      this.operationsOptions = data;
-    });
-    this.TaxableService.getSystemTypes().subscribe(data => {
-      this.taxOptions = data;
-    });
+    // 監聽中分類變化，獲取小分類並分組
+    this.queryForm.controls.bus_class.valueChanges.pipe(debounceTime(300), untilDestroyed(this),
+      map(selectedMValues => selectedMValues || []),
+      // 使用 switchMap 取消前一次的請求，確保只處理最新的選取
+      switchMap((selectedMValues: IDropdownItem[]) => {
+        if (selectedMValues.length === 0) {
+          this.bus_sclass_Option = [];
+          this.queryForm.controls.bus_sclass.setValue([]);
+          return of([]);// 如果沒有選取任何中分類，直接回傳空陣列
+        }
+        const requests = [];
+        // 根據選取的中分類，為每一個中分類組建一個 API 請求
+        for (const mValue of selectedMValues) {
+          if (mValue && mValue.CAT_LNo) {
+            requests.push(
+              this.dropDownListService.queryPOS20032_DropDownList({ CAT_LNo: [mValue.CAT_LNo], CAT_MNo: [mValue.No] }).pipe(
+                map(res => ({
+                  LNo: mValue.CAT_LNo,
+                  LName: mValue.CAT_LName,
+                  MNo: mValue.No,
+                  MName: mValue.Name,
+                  Data: res.Data
+                }))
+              )
+            );
+          }
+        }
+        return forkJoin(requests);
+      }),
+      tap(results => {
+        console.log('所有 API 呼叫結果：', results);
+      })
+    ).subscribe(results => {
+      // 處理合併和分組的邏輯
+      const groupedData = results.reduce((accumulator, group) => {
+        const groupKey = `${group.LNo}_${group.MNo}`;
 
-    this.counterCodeService.getCounterCodes().subscribe((data) => {
-      this.counterCodeOptions = data;
+        if (!accumulator[groupKey]) {
+          accumulator[groupKey] = {
+            label: `${group.LName} - ${group.MName}`,
+            items: []
+          };
+        }
+
+        const newItems = group.Data.map(item => ({
+          ...item,
+          label: `${item.No} - ${item.Name}`,
+          CAT_LNo: group.LNo,
+          CAT_LName: group.LName,
+          CAT_MNo: group.MNo,
+          CAT_MName: group.MName
+        }));
+        const existingItems = accumulator[groupKey].items;
+        const allItems = [...existingItems, ...newItems];
+
+        const uniqueItemsMap = new Map();
+        allItems.forEach(item => {
+          // 使用 No 作為鍵來去重
+          if (!uniqueItemsMap.has(item.No)) {
+            uniqueItemsMap.set(item.No, item);
+          }
+        });
+
+        accumulator[groupKey].items = Array.from(uniqueItemsMap.values());
+
+        return accumulator;
+      }, {} as Record<string, any>);
+
+      this.bus_sclass_Option = Object.values(groupedData);
+      console.log('最終分組後的小分類選項：', this.bus_sclass_Option);
     });
+    this.dropDownListService.querySYS3100_DropDownList().pipe(untilDestroyed(this)).subscribe(res => {
+      this.org_id_Option = res.Data.map(item => ({ ...item, label: `${item.No} - ${item.Name}`, }));
+    })
   }
-
-  canQuery(): boolean {
-    return true;
-  }
-
-  canAdd(): boolean {
-    return true;
-  }
-
-  canEdit(): boolean {
-    return true;
-  }
-
   onSubmit(frm: FormGroup) {
-    console.log(frm.value);
-    this.submitted = true;
-    this.loading = true;
-    this.messageService.blockUi();
+    this.handleSubmit(frm, () => {
+      const formValue = {
+        ...frm.getRawValue(),
+        bus_class: frm.getRawValue().bus_class.map((item: IDropdownItem) => item.No),
+        TXN_DateS: formatDate(frm.getRawValue().TXN_DateS, 'yyyy-MM-dd', 'en-US'),
+        TXN_DateE: formatDate(frm.getRawValue().TXN_DateE, 'yyyy-MM-dd', 'en-US'),
+      } as TLS31020Request;
 
-    if (frm.valid && this.canQuery()) {
-      // 提交邏輯
-    }
-
-    this.loading = false;
-    this.messageService.unblockUi();
+      console.log('送出請求',formValue);
+      this.tls31020Service.queryTLS31020(formValue).pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(res => {
+        this.data = res.Data;
+        this.totalRecords = res.TotalCount;
+        this.queryStateService.setQueryState(this.ProgNo, frm.getRawValue());
+      })
+    })
   }
+  btnLoading = false;
+  onReport(frm: FormGroup) {
+    const printData = this.queryStateService.getQueryStateValue(this.ProgNo);
+    const formValue = {
+      ...printData,
+      IsExcel: true,
+      IsMerge: true,
+      SortBy: undefined,
+      pageIndex: undefined,
+      pageSize: undefined,
+      bus_class: frm.getRawValue().bus_class.map((item: IDropdownItem) => item.No),
+      TXN_Date: formatDate(frm.getRawValue().TXN_Date, 'yyyy-MM-dd', 'en-US'),
+    } as TLS31020Request;
 
-  onSubmitQuery(frm: FormGroup) {
-    // 查詢邏輯
-    this.onSubmit(frm);
-  }
-
-  onClearForm() {
-    this.queryForm.reset();  // 重置表單
-  }
-
-  onCreate() {
-    if (this.canAdd()) {
-      let extras: NavigationExtras = {
-        state: {
-          crudstatus: CRUDStatus.Create,
-          queryform: this.queryForm
-        },
-        skipLocationChange: true
-      };
-      this.router.navigate(['/demoCRU'], extras);
-    }
-  }
-
-  onEdit(data: any) {
-    if (this.canEdit()) {
-      let extras: NavigationExtras = {
-        state: {
-          crudstatus: CRUDStatus.Edit,
-          rowdata: data,
-          queryform: this.queryForm
-        },
-        skipLocationChange: true
-      };
-      this.router.navigate(['/demoCRU'], extras);
-    }
-  }
-
-  onDetail(data: any) {
-    let extras: NavigationExtras = {
-      state: {
-        crudstatus: CRUDStatus.Read,
-        rowdata: data,
-        queryform: this.queryForm
-      },
-      skipLocationChange: true
-    };
-    this.router.navigate(['/demoCRU'], extras);
-  }
-
-
-  onSystemTypeChange(selectedValue: any): void {
-    this.selectedOption = selectedValue
+    this.btnLoading = true;
+    this.tls31020Service.printTLS31020(formValue).pipe(finalize(() => this.btnLoading = false), untilDestroyed(this))
+      .subscribe(res => {
+        this.messageService.successBubble(res.Message);
+        if (res.Data && res.Data.Print_URL) {
+          const downloadUrl = environment.ApiUrl + res.Data.Print_URL;
+          window.open(downloadUrl, '_blank');
+        }
+      });
   }
 }

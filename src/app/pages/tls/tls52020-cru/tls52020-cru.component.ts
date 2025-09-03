@@ -52,7 +52,7 @@ export class TLS52020CRUComponent extends BasicCruPageComponent<ITLS52020Data> i
     VEN_No: ['84445301-1', [Validators.required]], // 廠商編號 (與 POS2016.VEN_No 對應)
     vendorShortName: [{ value: '', disabled: true }], // 廠商簡稱 (前端專用，不對應資料庫欄位，顯示在 VEN_No 下一欄)
     LOGO_No: ['0001', [Validators.required]], // 品牌代碼 (與 POS2016.LOGO_No 對應)
-    HOS_No: [{ value: null as string | null, disabled: true }, [Validators.required]], // 倉別 (與 POS2016.HOS_No 對應)
+    HOS_No: ['' as string | null, [Validators.required]], // 倉別 (與 POS2016.HOS_No 對應)
     CRN_TotalBuyNet: [{ value: 0, disabled: true }], // 採購金額
     CRN_TotalBuyTax: [{ value: 0, disabled: true }], //稅額
     CRN_TotalBuyAmt: [{ value: 0, disabled: true }], // 合計金額
@@ -152,7 +152,7 @@ export class TLS52020CRUComponent extends BasicCruPageComponent<ITLS52020Data> i
       });
     });
     this.dropDownListService.getPOS2034Options().pipe(untilDestroyed(this)).subscribe(response => {
-      this.warehouseOptions = response.Data;// 倉別
+      this.warehouseOptions = response.Data.map(warehouse => ({ ...warehouse, label: `${warehouse.No} - ${warehouse.Name}` }));
     });
   }
   private setInitialValuesAndWatchChanges(): void {
@@ -240,6 +240,7 @@ export class TLS52020CRUComponent extends BasicCruPageComponent<ITLS52020Data> i
     this.data = [...this.data, ...this.selectedItemsDialog.map(item => ({
       ...item,
       CRN_SubQty: 0,
+      PLU_BoxQty: item.PLU_BoxQty === undefined || item.PLU_BoxQty === null ? 0 : item.PLU_BoxQty,
       CRN_BuyPrc: item.PLU_SalePrc_UNI,
       CRN_SalePrc: item.PLU_SalePrc,
       CRN_Remark: ''
@@ -385,8 +386,7 @@ export class TLS52020CRUComponent extends BasicCruPageComponent<ITLS52020Data> i
   });
   suggestions: IQueryPOS2004DetailResponse[] = [];
   fieldsConfig: FieldsConfig[] = [
-    { field: 'PLU_MagNo', header: '商品管理編號/國際條碼/廠商貨號', mainDataField: true },
-    { field: 'PLU_Name', header: '商品名稱' },
+    { field: 'PLU_MagNo', header: '商品管理編號/國際條碼/廠商貨號 - 商品名稱', mainDataField: true },
   ];
   opData: IQueryPOS2004DetailResponse[] = [];// overlayPanel 裡面的table
   opColumns: Column[] = [
@@ -409,7 +409,7 @@ export class TLS52020CRUComponent extends BasicCruPageComponent<ITLS52020Data> i
     this.tls52010Service.queryPOS2004Detail(body).pipe(untilDestroyed(this)).subscribe((results) => {
       this.suggestions = [...results.Data.map(item => ({
         ...item,
-        label: item.PLU_MagNo + ' - ' + item.PLU_Name + ' - ' + item.PLU_No + ' - ' + item.PLU_OrgPLUNo
+        label: item.PLU_MagNo + '/' + item.PLU_No + '/' + item.PLU_OrgPLUNo + ' - ' + item.PLU_Name
       }))];
     });
   }

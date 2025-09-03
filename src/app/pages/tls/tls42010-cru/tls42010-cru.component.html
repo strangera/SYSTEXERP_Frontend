@@ -22,8 +22,8 @@
             label="收銀畫面名稱"
             controlName="TSB_Name"
             [options]="TSB_NameOptions"
-            optionLabel="label"
-            optionValue="value"
+            optionLabel="Name"
+            optionValue="No"
             [control]="dataForm.controls.TSB_Name"
             [submitted]="submitted"
           ></app-dropdown>
@@ -34,8 +34,8 @@
             label="鍵盤型態"
             controlName="ECR_KBType"
             [options]="ECR_KBTypeOptions"
-            optionLabel="label"
-            optionValue="value"
+            optionLabel="Name"
+            optionValue="No"
             [control]="dataForm.controls.ECR_KBType"
             [submitted]="submitted"
           ></app-dropdown>
@@ -53,11 +53,10 @@
       </div>
 
       <!-- 下方：左鍵盤 + 右設定 -->
-      <div class="grid p-fluid mt-5">
+      <div class="grid p-fluid mt-5" *ngIf="dataForm.controls.TSB_Name.value">
         <!-- 左：鍵盤設定明細 -->
         <div class="col-12 md:col-8">
           <p-panel header="鍵盤設定明細">
-            <!-- 左上角分頁 -->
             <p-tabView
               [activeIndex]="dataForm.controls.activePage.value"
               (onChange)="onTabChange($event)"
@@ -72,7 +71,6 @@
                   [style.gridTemplateColumns]="'repeat(' + xCount + ', 1fr)'"
                   [style.gridTemplateRows]="'repeat(' + yCount + ', 60px)'"
                 >
-                  <!-- 重點：用 visibleKeys，而不是整個 keys -->
                   <button
                     *ngFor="let k of visibleKeys"
                     type="button"
@@ -81,8 +79,12 @@
                     [ngClass]="'type-' + (k.type || 'normal')"
                     (click)="selectKey(k)"
                   >
-                    <div class="kb-label">{{ k.label || k.code }}</div>
-                    <div class="kb-sub" *ngIf="k.label && k.label !== k.code">
+                    <!-- 按鈕顯示 KB_Display1 優先，沒填才顯示代碼 -->
+                    <div class="kb-label">{{ k.KB_Display1 || k.code }}</div>
+                    <div
+                      class="kb-sub"
+                      *ngIf="k.KB_Display1 && k.KB_Display1 !== k.code"
+                    >
                       {{ k.code }}
                     </div>
                   </button>
@@ -92,33 +94,14 @@
           </p-panel>
         </div>
 
-        <!-- 右：頁數/按鈕/分頁切換 + 功能代碼/名稱 -->
+        <!-- 右：設定區 -->
         <div class="col-12 md:col-4">
           <div class="grid">
-            <div class="col-12 md:col-4">
-              <app-dropdown
-                label="頁數"
-                controlName="KG_KeyPage"
-                [options]="KG_KeyPageOptions"
-                optionLabel="label"
-                optionValue="code"
-                [control]="dataForm.controls.KG_KeyPage"
-                [submitted]="submitted"
-              ></app-dropdown>
-            </div>
-            <div class="col-12 md:col-4">
-              <app-input-text
-                label="按鈕"
-                controlName="KG_button"
-                [control]="dataForm.controls.KG_button"
-              ></app-input-text>
-            </div>
-
             <div class="col-12">
               <p-selectButton
                 [options]="tabOptions"
                 [ngModel]="selectedTab"
-                (onChange)="selectedTab = $event.value"
+                (onChange)="onTabChangeTab($event)"
                 [multiple]="false"
                 [unselectable]="false"
                 [ngModelOptions]="{ standalone: true }"
@@ -129,7 +112,7 @@
             <div class="col-12" *ngIf="selectedTab === 'func'">
               <app-dropdown
                 label="功能代碼/名稱"
-                [control]="dataForm.controls.func"
+                [control]="getControl('KB_Func')"
                 [options]="KB_FuncOptions"
                 optionLabel="label"
                 optionValue="value"
@@ -141,7 +124,7 @@
             <div class="col-12" *ngIf="selectedTab === 'button'">
               <app-dropdown
                 label="是否啟用"
-                [control]="dataForm.controls.KB_Switch"
+                [control]="getControl('KB_Switch')"
                 [options]="KB_SwitchOptions"
                 optionLabel="label"
                 optionValue="value"
@@ -152,83 +135,118 @@
             <div class="col-12" *ngIf="selectedTab === 'button'">
               <app-input-text
                 label="案鍵顯示(第一行)"
-                [control]="dataForm.controls.KB_Display1"
+                [control]="getControl('KB_Display1')"
               ></app-input-text>
             </div>
 
             <div class="col-12" *ngIf="selectedTab === 'button'">
               <app-input-text
                 label="案鍵顯示(第二行)"
-                [control]="dataForm.controls.KB_Display2"
+                [control]="getControl('KB_Display2')"
               ></app-input-text>
             </div>
 
             <div class="col-12" *ngIf="selectedTab === 'button'">
-              <app-dropdown
-                label="按鍵顏色"
-                [control]="dataForm.controls.KB_Color"
-                [options]="KB_ColorOptions"
-                optionLabel="label"
-                optionValue="value"
-              ></app-dropdown>
+              <label for="kb-color">按鍵顏色</label>
+              <div class="flex align-items-center gap-2">
+                <input
+                  id="kb-color"
+                  type="text"
+                  class="p-inputtext p-component"
+                  [value]="selectedKeyForm.get('KB_Color')?.value"
+                  readonly
+                />
+                <p-colorPicker
+                  [formControl]="getControl('color')"
+                  appendTo="body"
+                  format="rgb"
+                ></p-colorPicker>
+              </div>
             </div>
 
             <div class="col-12" *ngIf="selectedTab === 'button'">
               <app-dropdown
                 label="按鍵形狀"
-                [control]="dataForm.controls.KB_Style"
+                [control]="getControl('KB_Style')"
                 [options]="KB_StyleOptions"
-                optionLabel="label"
-                optionValue="value"
+                optionLabel="Name"
+                optionValue="No"
               ></app-dropdown>
             </div>
+
             <!-- 字型分頁 -->
             <div class="col-12" *ngIf="selectedTab === 'font'">
               <app-dropdown
                 label="顯示字型"
-                [control]="dataForm.controls.KB_Font"
+                [control]="getControl('KB_Font')"
                 [options]="KB_FontOptions"
                 optionLabel="label"
                 optionValue="value"
                 [showClear]="true"
               ></app-dropdown>
             </div>
+
             <div class="col-12" *ngIf="selectedTab === 'font'">
               <app-dropdown
                 label="顯示字型大小"
-                [control]="dataForm.controls.KB_Size"
+                [control]="getControl('KB_Size')"
                 [options]="KB_SizeOptions"
                 optionLabel="label"
                 optionValue="value"
                 [showClear]="true"
               ></app-dropdown>
             </div>
+
             <div class="col-12" *ngIf="selectedTab === 'font'">
-              <app-dropdown
-                label="字型顏色"
-                [control]="dataForm.controls.KB_FontColor"
-                [options]="KB_FontColorOptions"
-                optionLabel="label"
-                optionValue="value"
-                [showClear]="true"
-              ></app-dropdown>
+              <label for="KB_FontColor">字型顏色</label>
+              <div class="flex align-items-center gap-2">
+                <input
+                  id="KB_FontColor"
+                  type="text"
+                  class="p-inputtext p-component"
+                  [value]="selectedKeyForm.get('KB_FontColor')?.value"
+                  readonly
+                />
+                <p-colorPicker
+                  [formControl]="getControl('FontColor')"
+                  appendTo="body"
+                  format="rgb"
+                ></p-colorPicker>
+              </div>
             </div>
+            <div class="col-12" *ngIf="selectedTab === 'font'">
+              <label>字型樣式</label>
+              <div class="flex flex-row gap-3">
+                <p-checkbox
+                  *ngFor="let opt of KB_FonttypedOptions"
+                  [binary]="true"
+                  [inputId]="'ft-' + opt.index"
+                  [label]="opt.label"
+                  [ngModel]="
+                    getControl('KB_Fonttyped').value[opt.index] === 'Y'
+                  "
+                  (onChange)="toggleFonttyped(opt.index, $event.checked)"
+                ></p-checkbox>
+              </div>
+            </div>
+
+            <!-- 其他分頁 -->
             <div class="col-12" *ngIf="selectedTab === 'other'">
               <app-input-text
                 label="參數1"
-                [control]="dataForm.controls.KB_Arg1"
+                [control]="getControl('KB_Arg1')"
               ></app-input-text>
             </div>
             <div class="col-12" *ngIf="selectedTab === 'other'">
               <app-input-text
                 label="參數2"
-                [control]="dataForm.controls.KB_Arg2"
+                [control]="getControl('KB_Arg2')"
               ></app-input-text>
             </div>
             <div class="col-12" *ngIf="selectedTab === 'other'">
               <app-input-text
                 label="參數3"
-                [control]="dataForm.controls.KB_Arg3"
+                [control]="getControl('KB_Arg3')"
               ></app-input-text>
             </div>
           </div>

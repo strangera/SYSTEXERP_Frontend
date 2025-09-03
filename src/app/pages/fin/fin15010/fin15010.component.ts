@@ -1,8 +1,8 @@
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { DatePipe } from '@angular/common';
+import { CommonModule, DatePipe } from '@angular/common';
 import { finalize } from 'rxjs';
-import { FIN15010Service, FIN15010Data, FIN15010QueryRequest } from '../../../service/api/fin/fin15010.service';
+import { FIN15010Service, FIN15010Data, FIN15010QueryRequest, FIN15010PrintRequest } from '../../../service/api/fin/fin15010.service';
 import { ValidationService } from '../../../shared/service/validation.service';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
@@ -10,109 +10,136 @@ import { ButtonComponent } from '../../../shared/componentkit/button/button.comp
 import { InputTextRangeComponent } from '../../../shared/componentkit/input-text-range/input-text-range.component';
 import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { InputNumberRangeComponent } from '../../../shared/componentkit/input-number-range/input-number-range.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
+import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
+import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
+import { DropDownListService } from '@service/utility/dropDownList.service';
 
 import { AccordionModule } from 'primeng/accordion';
 import { TranslateModule } from '@ngx-translate/core';
 
 import { Column, createPaginationConfig } from '../../../shared/componentkit/table/table.model';
-import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
+import { environment } from '../../../../environments/environment';
+import { TableComponent } from '@shared/componentkit/table/table.component';
+import { untilDestroyed } from '@ngneat/until-destroy';
+
+export interface Option {
+  label: string;
+  value: string | number;
+}
 
 @Component({
   selector: 'app-fin15010',
   templateUrl: './fin15010.component.html',
   styleUrl: './fin15010.component.scss',
   standalone: true,
-  imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputTextRangeComponent, CalendarRangeComponent, InputTextComponent, InputNumberRangeComponent, TableComponent, TranslateModule, MultiSelectComponent, DropdownComponent]
+  imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputTextRangeComponent, CalendarRangeComponent, InputTextComponent, TableComponent, TranslateModule, MultiSelectComponent, DropdownComponent, CalendarComponent, TableComponent, CommonModule]
 })
-// 申報書維護
 export class FIN15010Component extends BasicQueryPageComponent<FIN15010Data> implements OnInit {
   queryForm = this.formBuilder.group({
-    InvoiceDateStart: [null], // 發票日期_起
-    InvoiceDateEnd: [null], // 發票日期_迄
-    FormatCode: [null], // 發票格式 (多選)
-    Character: [null, [Validators.maxLength(2)]], // 字軌
-    InvoiceNumberStart: ['', [Validators.maxLength(10)]], // 發票號碼_起
-    InvoiceNumberEnd: ['', [Validators.maxLength(10)]], // 發票號碼_迄
-    DataYearMonthStart: [null], // 資料所屬年月_起
-    DataYearMonthEnd: [null], // 資料所屬年月_迄
-    DeclareYearMonthStart: [null], // 申報年月_起
-    DeclareYearMonthEnd: [null], // 申報年月_迄
-    SellerUniformStart: ['', [Validators.maxLength(10)]], // 廠商統一編號
-    SellerUniformEnd: ['', [Validators.maxLength(10)]], // 廠商統一編號
-    InvoiceType: [null], // 類別區分 (多選)
-    PrintType: [null], // 列印方式
-    BuyerUniform: ['', [Validators.maxLength(10)]], // 客戶編號(統一編號)
-    InvoiceUsage: [null], // 發票使用別
-    CarrierType: ['', [Validators.maxLength(10)]], // 傳票類立者
-    CarrierNumberStart: ['', [Validators.maxLength(10)]], // 傳票號碼_起
-    CarrierNumberEnd: ['', [Validators.maxLength(10)]], // 傳票號碼_迄
-    BuildDateStart: [null], // 建立日期_起
-    BuildDateEnd: [null], // 建立日期_迄
-    SystemType: ['', [Validators.maxLength(10)]], // 系統別
-    TaxType: [null], // 課稅別 (多選)
-    DeductionCode: [null, [Validators.maxLength(10)]], // 扣抵代碼
-    CertNumberStart: ['', [Validators.maxLength(20)]], // 憑證號碼_起
-    CertNumberEnd: ['', [Validators.maxLength(20)]], // 憑證號碼_迄
+    PUR_GUIDate_S: [null],                                      // 發票日期_起
+    PUR_GUIDate_E: [null],                                      // 發票日期_迄
+    PUR_VoucherType: [null],                                    // 發票格式
+    GUI_Track: [null],                                          // 字軌
+    InvoiceNo_S: ['', [Validators.maxLength(8)]],               // 發票號碼_起
+    InvoiceNo_E: ['', [Validators.maxLength(8)]],               // 發票號碼_迄
+    PUR_RepYYYYMM: [null, [Validators.required]],               // 申報年月 (必填)
+    PUR_GUIDateYYYYMM_S: [null, [Validators.required]],         // 資料所屬年月_起 (必填)
+    PUR_GUIDateYYYYMM_E: [null, [Validators.required]],         // 資料所屬年月_迄 (必填)
+    PUR_Uniform_S: ['', [Validators.maxLength(10)]],            // 廠商統一編號_起
+    PUR_Uniform_E: ['', [Validators.maxLength(10)]],            // 廠商統一編號_迄
+    PUR_DiscNo: [null],                                         // 扣抵代號
+    PUR_Type: [null],                                           // 類別區分
+    PUR_TaxType: [null],                                        // 課稅別
+    Source_Doc_No_S: ['', [Validators.maxLength(16)]],          // 憑證單號_起
+    Source_Doc_No_E: ['', [Validators.maxLength(16)]],          // 憑證單號_迄
+    Voucher_No_S: ['', [Validators.maxLength(16)]],             // 傳票號碼_起
+    Voucher_No_E: ['', [Validators.maxLength(16)]],             // 傳票號碼_迄
+    CRT_USR_Name: ['', [Validators.maxLength(10)]],             // 傳票建立者
+    SAL_Type: [null],                                           // 系統別
+    CRT_Date_S: [null],                                         // 建立日期_起
+    CRT_Date_D: [null],                                         // 建立日期_迄
     ...createPaginationConfig([{ field: 'Sequence', order: -1 }])
+  });
+
+  queryForm2 = this.formBuilder.group({
+    IsMerge: ['0'],  // 預設為 '0' (分開列印)
+    IsExcel: ['0']   // 預設為 '0' (PDF)
   });
 
   totalRecords = 0;
   data: FIN15010Data[] = [];
   selectedItems: FIN15010Data[] = [];
+  btnLoading = false;
 
   columns: Column[] = [
-    { field: 'Sequence', header: '序號', visible: true },
-    { field: 'FormatCode', header: '發票格式', visible: true },
-    { field: 'Character', header: '字軌', visible: true },
-    { field: 'InvoiceNumber', header: '發票號碼', visible: true },
-    { field: 'InvoiceDate', header: '發票日期', visible: true },
-    { field: 'DataYearMonth', header: '資料所屬年月', visible: true },
-    { field: 'DeclareYearMonth', header: '申報年月', visible: true },
-    { field: 'SellerUniform', header: '廠商編號(統一編號)', visible: true },
-    { field: 'BuyerUniform', header: '客戶編號(統一編號)', visible: true },
-    { field: 'InvoiceAmount', header: '發票金額', visible: true },
-    { field: 'InvoiceTax', header: '發票稅額', visible: true },
-    { field: 'DeductionAmount', header: '應稅總金額', visible: true },
-    { field: 'InvoiceType', header: '類別區分', visible: true },
-    { field: 'InvoiceUsage', header: '發票使用別', visible: true },
-    { field: 'CarrierType', header: '傳票類立者', visible: true },
-    { field: 'CarrierNumber', header: '傳票號碼', visible: true },
-    { field: 'BuildDate', header: '建立日期', visible: true },
-    { field: 'PrintType', header: '列印方式', visible: true },
-    { field: 'SystemType', header: '系統別', visible: true }
+    { field: 'Sequence', header: '序號', visible: false },
+    { field: 'PUR_VoucherType', header: '格式代號', visible: true, format: (value: string) => this.invoiceFormatOptions.find(opt => opt.value === value)?.label ?? '' },
+    { field: 'GUI_Track', header: '字軌', visible: true },
+    { field: 'InvoiceNo', header: '發票號碼', visible: true },
+    { field: 'PUR_GUIDate', header: '發票日期', visible: true, format: (value: any) => value ? this.datePipe.transform(value, 'yyyy/MM/dd') : '' },
+    { field: 'PUR_GUIDateYYYYMM', header: '資料所屬年月', visible: true },
+    { field: 'PUR_RepYYYYMM', header: '申報年月', visible: true },
+    { field: 'PUR_Uniform', header: '廠商統一編號', visible: true },
+    { field: 'PUR_Net', header: '發票金額', visible: true, format: (value: number) => value ? value.toLocaleString() : '0' },
+    { field: 'PUR_Tax', header: '發票稅額', visible: true, format: (value: number) => value ? value.toLocaleString() : '0' },
+    { field: 'PUR_Total', header: '發票總金額', visible: true, format: (value: number) => value ? value.toLocaleString() : '0' },
+    {
+      field: 'PUR_Type',
+      header: '類別區分',
+      visible: false,
+      format: (value: string) => this.invoiceTypeOptions.find(opt => opt.value === value)?.label ?? ''
+    },
+    {
+      field: 'PUR_TaxType',
+      header: '課稅別',
+      visible: true,
+      format: (value: string) => this.taxTypeOptions.find(opt => opt.value === value)?.label ?? ''
+    },
+    {
+      field: 'PUR_DiscNo',
+      header: '扣抵代號',
+      visible: false,
+      format: (value: string) => this.discountOptions.find(opt => opt.value === value)?.label ?? ''
+    },
+    { field: 'Source_Doc_No', header: '憑證單號', visible: true },
+    { field: 'Voucher_No', header: '傳票號碼', visible: true },
+    { field: 'CRT_USR_Name', header: '傳票建立者', visible: false },
+    { field: 'SAL_Type', header: '系統別', visible: true },
+    { field: 'CRT_Date', header: '建立日期', visible: false, format: (value: any) => value ? this.datePipe.transform(value, 'yyyy/MM/dd') : '' }
   ];
 
-  //#region 下拉選單選項
-  formatCodeOptions = [
-    { label: 'A01', value: 'A01' },
-    { label: 'A02', value: 'A02' }
+  //#region 下拉選項
+  invoiceFormatOptions: Option[] = [];        // 發票格式
+  invoiceTypeOptions: Option[] = [             // 類別區分
+    { value: '1', label: '二聯式收銀機發票' },
+    { value: '2', label: '二聯式手開' },
+    { value: '3', label: '三聯式手開' },
+    { value: '4', label: '二聯式電子發票' },
+    { value: '5', label: '電子-丁種字軌' },
   ];
-
-  invoiceTypeOptions = [
-    { value: 1, label: '二聯式收銀機發票' },
-    { value: 2, label: '二聯式手開' },
-    { value: 3, label: '三聯式手開' },
-    { value: 4, label: '二聯式電子發票' },
-    { value: 5, label: '電子-丁種字軌' },
-  ];
-
-  invoiceUsageOptions = [
-    { label: '1.自用', value: '1' },
-    { label: '2.外銷', value: '2' }
-  ];
-
-  printTypeOptions = [
-    { label: '合併列印', value: '1' },
-    { label: '分開列印', value: '2' }
-  ];
-
-  taxTypeOptions = [
+  taxTypeOptions: Option[] = [                 // 課稅別
     { label: '應稅', value: '1' },
     { label: '零稅率', value: '2' },
     { label: '免稅', value: '3' }
+  ];
+  discountOptions: Option[] = [                // 扣抵代號
+    { label: '進項可扣抵之進貨及費用', value: '1' },
+    { label: '進項可扣抵之固定資產', value: '2' },
+    { label: '進項不可扣抵之進貨及費用', value: '3' },
+    { label: '進項不可扣抵之固定資產', value: '4' }
+  ];
+  systemTypeOptions: Option[] = [];           // 系統別
+  guiTrackOptions: Option[] = [];             // 字軌
+
+  // 列印方式
+  mergeOptions: Option[] = [
+    { label: '分開列印', value: '0' },
+    { label: '合併列印', value: '1' }
+  ];
+  exportOptions: Option[] = [
+    { label: 'PDF', value: '0' },
+    { label: 'Excel', value: '1' }
   ];
   //#endregion
 
@@ -120,32 +147,108 @@ export class FIN15010Component extends BasicQueryPageComponent<FIN15010Data> imp
     private fin15010Service: FIN15010Service,
     private validationService: ValidationService,
     private datePipe: DatePipe,
+    private dropDownListService: DropDownListService
   ) {
     super();
   }
 
   ngOnInit(): void {
     this.initializePage('FIN15010', 'fin/fin15010cru', this.queryForm, (form) => this.onSubmit(form));
+    this.loadDropdownOptions();
   }
 
-  onSubmit(frm: FormGroup) {
-    const fin15010QueryRequest: FIN15010QueryRequest = {
-      ...frm.value,
-      // 日期格式轉換
-      DataYearMonthStart: this.datePipe.transform(frm.get('DataYearMonthStart')?.value, 'yyyyMM') ?? null,
-      DataYearMonthEnd: this.datePipe.transform(frm.get('DataYearMonthEnd')?.value, 'yyyyMM') ?? null,
-      DeclareYearMonthStart: this.datePipe.transform(frm.get('DeclareYearMonthStart')?.value, 'yyyyMM') ?? null,
-      DeclareYearMonthEnd: this.datePipe.transform(frm.get('DeclareYearMonthEnd')?.value, 'yyyyMM') ?? null,
-    };
-
+  onSubmit(frm: FormGroup): void {
     this.handleSubmit(frm, () => {
-      this.fin15010Service.queryFIN15010(fin15010QueryRequest)
-        .pipe(finalize(() => this.loading = false))
+      const requestData: FIN15010QueryRequest = {
+        MID: 0,
+        STO_No: '10',
+        ...frm.value,
+        PUR_GUIDate_S: this.datePipe.transform(frm.get('PUR_GUIDate_S')?.value, 'yyyy-MM-dd') ?? '',
+        PUR_GUIDate_E: this.datePipe.transform(frm.get('PUR_GUIDate_E')?.value, 'yyyy-MM-dd') ?? '',
+        PUR_RepYYYYMM: this.datePipe.transform(frm.get('PUR_RepYYYYMM')?.value, 'yyyyMM') ?? '',
+        PUR_GUIDateYYYYMM_S: this.datePipe.transform(frm.get('PUR_GUIDateYYYYMM_S')?.value, 'yyyyMM') ?? '',
+        PUR_GUIDateYYYYMM_E: this.datePipe.transform(frm.get('PUR_GUIDateYYYYMM_E')?.value, 'yyyyMM') ?? '',
+        CRT_Date_S: this.datePipe.transform(frm.get('CRT_Date_S')?.value, 'yyyy-MM-dd') ?? '',
+        CRT_Date_D: this.datePipe.transform(frm.get('CRT_Date_D')?.value, 'yyyy-MM-dd') ?? '',
+      };
+
+      this.fin15010Service.queryFIN15010(requestData)
+        .pipe(untilDestroyed(this), finalize(() => this.loading = false))
         .subscribe(response => {
           this.data = response.Data;
           this.totalRecords = response.TotalCount;
           this.queryStateService.setQueryState(this.ProgNo, frm.getRawValue());
         });
+    });
+  }
+
+  onExportReport(frm1: FormGroup, frm2: FormGroup): void {
+    if (!this.validateRequiredFields()) {
+      return;
+    }
+    this.btnLoading = true;
+    const exportRequest: FIN15010PrintRequest = {
+      MID: 0,
+      STO_No: '10',
+      ...frm1.value,
+      PUR_GUIDate_S: this.datePipe.transform(frm1.get('PUR_GUIDate_S')?.value, 'yyyy-MM-dd') ?? '',
+      PUR_GUIDate_E: this.datePipe.transform(frm1.get('PUR_GUIDate_E')?.value, 'yyyy-MM-dd') ?? '',
+      PUR_RepYYYYMM: this.datePipe.transform(frm1.get('PUR_RepYYYYMM')?.value, 'yyyyMM') ?? '',
+      PUR_GUIDateYYYYMM_S: this.datePipe.transform(frm1.get('PUR_GUIDateYYYYMM_S')?.value, 'yyyyMM') ?? '',
+      PUR_GUIDateYYYYMM_E: this.datePipe.transform(frm1.get('PUR_GUIDateYYYYMM_E')?.value, 'yyyyMM') ?? '',
+      CRT_Date_S: this.datePipe.transform(frm1.get('CRT_Date_S')?.value, 'yyyy-MM-dd') ?? '',
+      CRT_Date_D: this.datePipe.transform(frm1.get('CRT_Date_D')?.value, 'yyyy-MM-dd') ?? '',
+      IsMerge: frm2.get('IsMerge')?.value === '1' || false,
+      IsExcel: frm2.get('IsExcel')?.value === '1' || false
+    };
+
+    this.fin15010Service.printFIN15010(exportRequest)
+      .pipe(finalize(() => this.btnLoading = false))
+      .subscribe((response) => {
+        this.openDownloadWindow(response.Data.Print_URL);
+      });
+  }
+
+  private validateRequiredFields(): boolean {
+    if (this.queryForm.invalid) {
+      const errors: string[] = [];
+      if (!this.queryForm.get('PUR_RepYYYYMM')?.value) errors.push('請填寫申報年月');
+      if (!this.queryForm.get('PUR_GUIDateYYYYMM_S')?.value) errors.push('請填寫資料所屬年月_起');
+      if (!this.queryForm.get('PUR_GUIDateYYYYMM_E')?.value) errors.push('請填寫資料所屬年月_訖');
+
+      if (errors.length > 0) {
+        this.messageService.errorBubble(errors.join('<br>'));
+        return false;
+      }
+    }
+    return true;
+  }
+
+  private openDownloadWindow(printUrl: string): void {
+    const downloadUrl = `${environment.ApiUrl}${printUrl}`;
+    window.open(downloadUrl, '_blank');
+  }
+
+  private loadDropdownOptions(): void {
+    // 載入發票格式
+    this.dropDownListService.queryTDS1007_DropDownList({ mid: 0 }).subscribe(r => {
+      this.invoiceFormatOptions = r.Data.INV_GUITypes.map(item => ({ label: item.INV_GUIName, value: item.INV_GUIType }));
+    });
+    // 載入系統別
+    this.dropDownListService.querySYS1000_DropDownList({ SYS_Type: 'T207' }).subscribe(r => {
+      this.systemTypeOptions = r.Data.map(item => ({ label: item.Name, value: item.No }));
+    });
+  }
+
+  // 選完申報年月 載入字軌下拉
+  loadGuiTrackOptions(event: any): void {
+    this.dropDownListService.queryPOS1018_GUI_TRACK_DropDownList({
+      GUI_YYMM: this.datePipe.transform(event, 'yyyyMM') ?? '',
+      MID: 0,
+      STO_No: '10',
+      GUI_Type: this.queryForm.controls.PUR_VoucherType.value ?? ''
+    }).subscribe(r => {
+      this.guiTrackOptions = r.Data.GuiTracks.map((track: string) => ({ label: track, value: track }));
     });
   }
 }

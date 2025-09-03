@@ -48,7 +48,7 @@ export class TLS52030CRUComponent extends BasicCruPageComponent<ITLS52030Data> i
     ODM_No: [{ value: '系統自動產生', disabled: true }], // 進貨驗收單號
     VEN_No: ['', [Validators.required]], // 廠商編號
     LOGO_No: ['', [Validators.required]], // 品牌代碼 (與 POS2016.LOGO_No 對應)
-    HOS_No: [{ value: null as string | null, disabled: true }, [Validators.required]], // 倉別 (與 POS2016.HOS_No 對應)
+    HOS_No: ['' as string | null, [Validators.required]], // 倉別 (與 POS2016.HOS_No 對應)
     ODM_TotalBuyNet: [{ value: 0, disabled: true }], // 進貨驗收金額
     ODM_TotalBuyTax: [{ value: 0, disabled: true }], // 稅額
     ODM_TotalBuyAmt: [{ value: 0, disabled: true }], // 合計金額
@@ -71,16 +71,12 @@ export class TLS52030CRUComponent extends BasicCruPageComponent<ITLS52030Data> i
     { field: 'POD_SubQty', header: '應驗數量', format: formatAmount },
     { field: 'ODD_ConfirmQty', header: '驗收數量', type: 'inputNumber', validate: [validateConfirmQtySumNotExceedSubQty(), validateMinNumber(0)] },
     { field: 'ODD_ConfirmQty_Finished', header: '已驗收數量', format: formatAmount },
-    { field: 'UNIT_NAME', header: '單位' },
+    { field: 'UNIT_NAME', header: '商品單位' },
     { field: 'ODD_BuyPrc', header: '採購單價', format: formatAmount },
     { field: 'ODD_BuyPrc', header: '驗收單價', format: formatAmount },
     { field: 'PLU_StockTaxType', header: '稅別', format: (value) => value === '0' ? '免稅' : value === '1' ? '應稅' : '' },
     { field: 'ODD_BuyNet', header: '未稅金額', format: formatAmount }, //ODD_BuyPrc * ODD_ConfirmQty驗收數量，四捨五入取整數
-    { field: 'ODD_BuyTax', header: '稅額', format: formatAmount }, // =若PLU_StockTaxType =1應稅，未稅金額*0.05四捨五入取整數，若PLU_StockTaxType=0免稅，稅額0
-    { field: 'ODD_BuyAmt', header: '進價小計', format: formatAmount }, // =ODD_BuyNet+ODD_BuyTax
-    { field: 'PLU_TaxType', header: '售價稅別', format: (value) => value === '0' ? '免稅' : value === '1' ? '應稅' : '' },
     { field: 'ODD_SalePrc', header: '售價', format: formatAmount },
-    { field: 'ODD_SaleTax', header: '售價稅額', format: formatAmount }, // 若售價稅別 1應稅(ODD_SalePrc * ODD_ConfirmQty)/21，取整數，若稅別0免稅，稅額0
     { field: 'ODD_SaleAmt', header: '售價小計', format: formatAmount }, // ODD_SalePrc * ODD_ConfirmQty驗收數量
     { field: 'PO_No', header: '採購單編號' },
     { field: 'ODD_Remark', header: '單項備註', type: 'input' },
@@ -121,7 +117,7 @@ export class TLS52030CRUComponent extends BasicCruPageComponent<ITLS52030Data> i
     });
     // 2. 品牌下拉選單
     this.dropDownListService.queryPLULOGO_HOS_No_DropDownList().pipe(untilDestroyed(this)).subscribe(response => {
-      this.brandOptions = response.Data;
+      this.brandOptions = response.Data.map(item => ({ ...item, label: `${item.No} - ${item.Name}` }));
       this.dataForm.controls.LOGO_No.valueChanges.pipe(debounceTime(300), untilDestroyed(this)).subscribe(logoNo => {
         const HOS_No = this.brandOptions.find(opt => opt.No === logoNo)?.HOS_No || null;
         this.dataForm.controls.HOS_No.setValue(HOS_No);
@@ -131,7 +127,7 @@ export class TLS52030CRUComponent extends BasicCruPageComponent<ITLS52030Data> i
     });
     // 3. 倉別下拉選單
     this.dropDownListService.getPOS2034Options().pipe(untilDestroyed(this)).subscribe(response => {
-      this.warehouseOptions = response.Data;
+      this.warehouseOptions = response.Data.map(item => ({ ...item, label: `${item.No} - ${item.Name}` }));// 倉別
       this.dataForm.controls.HOS_No.valueChanges.pipe(untilDestroyed(this)).subscribe(() => resetFormData());
     });
   }

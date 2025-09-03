@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormGroup, Validators,FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { FIN13010Service } from '../../../service/api/fin/fin13010.service';
 import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
@@ -13,13 +13,15 @@ import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdow
 import { QueryYearMonthComponent } from '../../../shared/componentkit/query-year-month/query-year-month.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { TranslateModule } from '@ngx-translate/core';
+import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
+import { ValidationService } from '@shared/service/validation.service';
 
 @Component({
   selector: 'app-fin13010',
   templateUrl: './fin13010.component.html',
   styleUrls: ['./fin13010.component.scss'],
   standalone: true,
-  imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputTextRangeComponent, InputTextComponent, CalendarRangeComponent, DropdownComponent, QueryYearMonthComponent, TableComponent, TranslateModule]
+  imports: [MenubarComponent, ButtonComponent,CalendarComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputTextRangeComponent, InputTextComponent, CalendarRangeComponent, DropdownComponent,  TableComponent, TranslateModule]
 })
 export class FIN13010Component extends BasicQueryPageComponent<any> {
 
@@ -35,20 +37,20 @@ export class FIN13010Component extends BasicQueryPageComponent<any> {
   queryForm = this.formBuilder.group({
 
 
-    TXN_Ret_NoStart: [null], // 退出/折讓單號(起)
-    TXN_Ret_NoEnd: [null],   // 退出/折讓單號(迄)
-    GUI_Track: [null], // 字軌
-    PUR_GUINoStart: [null],
-    PUR_GUINoEnd: [null],
+    TXN_Ret_NoStart: [null, [Validators.maxLength(20)]], // 退出/折讓單號(起)
+    TXN_Ret_NoEnd: [null, [Validators.maxLength(20)]],   // 退出/折讓單號(迄)
+    GUI_Track: [null, [Validators.maxLength(2)]], // 字軌
+    PUR_GUINoStart: [null, [Validators.maxLength(10)]],
+    PUR_GUINoEnd: [null, [Validators.maxLength(10)]],
     PUR_GUIDateStart: [null], // 領用日期(起)
     PUR_GUIDateEnd: [null],   // 領用日期(迄)
     PUR_VoucherType: [null], // 發票狀態
     PUR_RepYYYYMM: [null], // 發票年月
-    Source_Doc_NoStart: [], // 憑證單號(起)
-    Source_Doc_NoEnd: [],   // 憑證單號(迄)
-    Voucher_NoStart: [], // 發票起始號碼
-    Voucher_NoEnd: [],   // 發票結束號碼
-    ...createPaginationConfig([{ field: 'PUR_RepYYYYMM', order: 1 }])
+    Source_Doc_NoStart: [, [Validators.maxLength(16)]], // 憑證單號(起)
+    Source_Doc_NoEnd: [, [Validators.maxLength(16)]],   // 憑證單號(迄)
+    Voucher_NoStart: [, [Validators.maxLength(16)]], // 發票起始號碼
+    Voucher_NoEnd: [, [Validators.maxLength(16)]],   // 發票結束號碼
+    ...createPaginationConfig([{ field: 'id', order: 1 }])
   });
 
   data: any[] = [];
@@ -71,7 +73,10 @@ export class FIN13010Component extends BasicQueryPageComponent<any> {
     { field: 'Voucher_No', header: '傳票編號', visible: true },
   ];
 
-  constructor(private fin13010Service: FIN13010Service) {
+  constructor(
+    private fin13010Service: FIN13010Service,
+     private validationService: ValidationService,
+  ) {
     super();
   }
   formatCreditType(value: string): string {
@@ -101,49 +106,84 @@ export class FIN13010Component extends BasicQueryPageComponent<any> {
 
   }
 
-  onSubmit(form: FormGroup): void {
-    this.submitted = true;
-    if (form.invalid) {
-      this.messageService.warnBubble('請完整填寫查詢條件');
-      return;
-    }
-
-    const payload = { ...form.value };
-    for (const key in payload) {
-      if (typeof payload[key] === 'string') {
-        payload[key] = payload[key].trim();
-        if (payload[key] === '') payload[key] = null;
-      }
-    }
-
-    this.loading = true;
-    this.messageService.blockUi();
-
-    this.fin13010Service.queryFIN13010(payload).subscribe({
-      next: (res) => {
-
-        this.data = res.Data || [];
-        this.totalRecords = res.TotalCount || this.data.length;
-        this.queryStateService.setQueryState(this.ProgNo, payload);
-
-
-      },
-      error: () => {
-        this.messageService.errorBubble('查詢錯誤');
-        this.loading = false;
-      },
-      complete: () => {
-        this.loading = false;
-        this.messageService.unblockUi();
-      }
-    });
+onSubmit(form: FormGroup): void {
+  this.submitted = true;
+  if (form.invalid) {
+    this.messageService.warnBubble('請完整填寫查詢條件');
+    return;
   }
+
+  const payload: any = { ...form.value };
+
+  // 先把字串欄位修剪
+  for (const key in payload) {
+    if (typeof payload[key] === 'string') {
+      payload[key] = payload[key].trim();
+      if (payload[key] === '') payload[key] = null;
+    }
+  }
+
+  // ★ 把月曆值轉成六碼 YYYYMM
+  payload.PUR_RepYYYYMM = this.toYYYYMM(payload.PUR_RepYYYYMM);
+
+  this.loading = true;
+  this.messageService.blockUi();
+
+  this.fin13010Service.queryFIN13010(payload).subscribe({
+    next: (res) => {
+      this.data = res.Data || [];
+      this.totalRecords = res.TotalCount || this.data.length;
+      this.queryStateService.setQueryState(this.ProgNo, payload);
+    },
+    error: () => {
+      
+      this.loading = false;
+    },
+    complete: () => {
+      this.loading = false;
+      this.messageService.unblockUi();
+    }
+  });
+}
 
 
 
   onClearForm(): void {
     this.queryForm.reset();
   }
+
+  private toYYYYMM(input: any): string | null {
+  if (!input) return null;
+
+  // 先處理常見字串：'2025/05'、'2025-05-01T00:00:00'
+  if (typeof input === 'string') {
+    const onlyDigits = input.replace(/\D/g, ''); // 拿掉所有非數字
+    if (onlyDigits.length >= 6) return onlyDigits.slice(0, 6); // '202505'
+    const d = new Date(input);
+    if (!isNaN(d.getTime())) {
+      const y = d.getFullYear();
+      const m = String(d.getMonth() + 1).padStart(2, '0');
+      return `${y}${m}`;
+    }
+    return null;
+  }
+
+  // Date 物件
+  if (input instanceof Date) {
+    const y = input.getFullYear();
+    const m = String(input.getMonth() + 1).padStart(2, '0');
+    return `${y}${m}`;
+  }
+
+  // 其他型別就試著 new Date 看看
+  const d = new Date(input);
+  if (!isNaN(d.getTime())) {
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    return `${y}${m}`;
+  }
+  return null;
+}
 
 
 

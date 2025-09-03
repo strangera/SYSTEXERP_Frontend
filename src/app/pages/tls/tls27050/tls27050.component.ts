@@ -7,7 +7,7 @@ import { ButtonComponent } from '../../../shared/componentkit/button/button.comp
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { TranslateModule } from '@ngx-translate/core';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
-import { Column, createPaginationConfig } from '@shared/componentkit/table/table.model';
+import { Column, createPaginationConfig, formatAmountWithFraction } from '@shared/componentkit/table/table.model';
 import { IDropdownItem } from '@service/utility/dropDownList.service';
 import { ITLS27050Data, TLS27050Service } from '@service/api/tls/tls27050.service';
 import { untilDestroyed } from '@ngneat/until-destroy';
@@ -38,7 +38,7 @@ export class TLS27050Component extends BasicQueryPageComponent<ITLS27050Data> im
     { field: 'PAY_Name', header: '付款別名稱' },
     { field: 'TLT_NO', header: '專櫃編號' },
     { field: 'ECR_No', header: '收銀機號' },
-    { field: 'ACT_PayAmt', header: '金額' }, // 實際金額(來自相關對帳檔)
+    { field: 'ACT_PayAmt', header: '金額', format: formatAmountWithFraction },
   ];
   constructor(
     private readonly tls27050Service: TLS27050Service,
@@ -47,6 +47,7 @@ export class TLS27050Component extends BasicQueryPageComponent<ITLS27050Data> im
   ngOnInit(): void {
     this.initializePage('TLS27050', 'TLS/TLS27050cru', this.queryForm, (form) => this.onSubmit(form));
   }
+
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
       this.tls27050Service.queryTLS27050(frm.value).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe((res) => {

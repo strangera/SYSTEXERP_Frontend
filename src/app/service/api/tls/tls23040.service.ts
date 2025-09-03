@@ -19,7 +19,7 @@ export class TLS23040Service {
 
     return this.http.post<any>(url, body).pipe(
       tap(response => console.log(`🎯 TLS23040  查詢結果:`, response)),
-      catchError((error) => this.errorHandler.handleError(error))
+      
     );
   }
 }

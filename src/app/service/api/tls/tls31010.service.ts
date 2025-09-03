@@ -52,7 +52,7 @@ export class Tls31010Service {
     return this.http.post<ApiResponse<TLS31010Response[]>>(`${this.apiUrl}/queryTLS31010`, body);
   }
 
-  printTLS31010(body: TLS31010Request): Observable<ApiResponse<{ Print_URL: string }[]>> {
-    return this.http.post<ApiResponse<{ Print_URL: string }[]>>(`${this.apiUrl}/printTLS31010`, body);
+  printTLS31010(body: TLS31010Request): Observable<ApiResponse<{ Print_URL: string }>> {
+    return this.http.post<ApiResponse<{ Print_URL: string }>>(`${this.apiUrl}/printTLS31010`, body);
   }
 }

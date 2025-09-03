@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpResponse } from '@angular/common/http';
 import { catchError, Observable, of, tap } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import { ErrorHandlerService } from '../../system/error-handler.service';
@@ -22,13 +22,13 @@ export class TLS23080Service {
   queryTLS23080(query: any): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/TLS0000/TLS2000/queryTLS23080`, query).pipe(
       tap(response => console.log('查詢結果:', response)),
-      catchError((error) => this.errorHandler.handleError(error))  // ✅ 正確
+      
     );
   }
   queryTLS23080Detail(query: { TXN_Date: string }): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/TLS0000/TLS2000/queryTLS23080_Detail`, query).pipe(
       tap(response => console.log('🔍 明細查詢結果:', response)),
-      catchError((error) => this.errorHandler.handleError(error))
+      
     );
   }
   // ✅ 提供 fetchDetailFn
@@ -46,5 +46,32 @@ export class TLS23080Service {
 
       return [];
     }
+  }
+  
+  /** 匯出 Excel（不分頁） */
+  exportTLS23080Excel(body: any): Observable<HttpResponse<Blob>> {
+    const url = `${this.apiUrl}/TLS0000/TLS2000/exportTLS23080`;
+    const payload = this.stripPaging(body);
+    return this.http.post(url, payload, {
+      observe: 'response',
+      responseType: 'blob' as 'json',
+    }) as Observable<HttpResponse<Blob>>;
+  }
+
+  /** 匯出 PDF（不分頁） */
+  exportTLS23080PDF(body: any): Observable<HttpResponse<Blob>> {
+    const url = `${this.apiUrl}/TLS0000/TLS2000/exportTLS23080PDF`;
+    const payload = this.stripPaging(body);
+    return this.http.post(url, payload, {
+      observe: 'response',
+      responseType: 'blob' as 'json',
+    }) as Observable<HttpResponse<Blob>>;
+  }
+
+  /** 匯出用：去掉分頁鍵（保留 SortBy/OrderBy 讓後端依前端排序） */
+  private stripPaging<T extends Record<string, any>>(input: T): Omit<T, 'PageSize' | 'PageIndex' | 'OrderBy' | 'Offset'> {
+    if (!input) return input as any;
+    const { PageSize, PageIndex, OrderBy, Offset, ...rest } = input;
+    return rest as any;
   }
 }

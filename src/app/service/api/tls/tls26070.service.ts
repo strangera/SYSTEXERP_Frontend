@@ -95,7 +95,7 @@ export class TLS26070Service {
   constructor(private http: HttpClient) { }
 
   // 查詢各櫃預售業績總表資料
-  queryTLS26070(data: TLS26070QueryRequest): Observable<BaseQueryResponse<TLS26070Data>> {
-    return this.http.post<BaseQueryResponse<TLS26070Data>>(`${this.apiUrl}/queryTLS26070`, data);
+  queryTLS26070(data: TLS26070QueryRequest): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/queryTLS26070`, data);
   }
 }

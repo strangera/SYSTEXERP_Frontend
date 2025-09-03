@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Component, EventEmitter, Input, OnChanges, Output, SimpleChanges, ViewChild } from '@angular/core';
-import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
+import { DomSanitizer, SafeHtml, SafeUrl } from '@angular/platform-browser';
 import { SortMeta } from 'primeng/api';
 import { AutoCompleteCompleteEvent } from 'primeng/autocomplete';
 import { FileSelectEvent } from 'primeng/fileupload';
@@ -8,10 +8,9 @@ import { MultiSelectChangeEvent } from 'primeng/multiselect';
 import { Table, TableColumnReorderEvent, TableLazyLoadEvent, TablePageEvent, TableRowSelectEvent, TableRowUnSelectEvent } from 'primeng/table';
 import { Observable } from 'rxjs';
 import { BasicPrintDataComponent } from '../../componentextends/basic-print/basic-print-data.component';
-import { AddButton, Column, ColumnGroup, FieldChangeEvent, LazyLoadEvent, RowEditSaveEvent } from './table.model';
 import { COMMON_IMPORTS } from './import-table';
 import { TableUtilityService } from './table-utility.service';
-import { SafeUrl } from '@angular/platform-browser';
+import { AddButton, Column, ColumnGroup, FieldChangeEvent, LazyLoadEvent, RowEditSaveEvent } from './table.model';
 
 @Component({
   selector: 'app-table',
@@ -40,6 +39,7 @@ export class TableComponent extends BasicPrintDataComponent implements OnChanges
   @Input() selectedItems: any = [];                                             // table 已勾選資料
   @Input() isRowSelectable: (rowData: any) => boolean | undefined = () => true; // 可選擇(條件)
   @Output() selectionChange = new EventEmitter<any>();                          // 資料變更(事件)
+  @Output() selectedItemsChange = new EventEmitter<any>();                      // 資料變更(雙向綁定用)
   @Output() select = new EventEmitter<TableRowSelectEvent>();                   // 資料勾選(事件)
   @Output() unSelect = new EventEmitter<TableRowUnSelectEvent>();               // 資料取消勾選(事件)
   @Output() itemClick = new EventEmitter<any>();                                // 資料點選(事件)
@@ -49,6 +49,8 @@ export class TableComponent extends BasicPrintDataComponent implements OnChanges
   @Input() showHeader = true;                 // 是否顯示 Header
   @Input() showFilter = true;                 // 是否顯示 Filter
   @Input() showReportMode = true;             // 是否顯示 匯出按鈕
+  @Input() customReport = false;               // 是否自訂報表
+  @Output() exportEvent = new EventEmitter<string>(); // 自訂報表 事件
   @Input() showInsert = false;                // 是否顯示 Insert新增按鈕
   @Output() insert = new EventEmitter<any>(); // 新增事件
   @Input() insertDisabled = false;            // 新增按鈕是否禁用
@@ -96,12 +98,13 @@ export class TableComponent extends BasicPrintDataComponent implements OnChanges
     Deleted: 'deleted'
   };
   // expansion 收合展開
+  @Input() showExpandCollapse = true;               // 是否顯示收合展開
   @Input() expansionColumns: Column[] = [];  // 收合展開 欄位配置(expansion必需配置)
   @Input() expansionDataKey = 'details';            // 收合展開 資料key(expansion必需配置)
   @Input() expansionMultiSortMeta = [{ field: this.expansionDataKey, order: 1 }];// 收合展開 排序欄位(單一排序)
   @Input() expansionShowPaginator = false;   // expansion 是否顯示分頁器
-  @Input() expansionRows = 10;               // expansion 每頁顯示行數
-  @Input() expansionRowsPerPageOptions = [10, 30, 50]; // expansion 分頁選項
+  @Input() expansionRows = 20;               // expansion 每頁顯示行數
+  @Input() expansionRowsPerPageOptions = [20, 40, 60, 80, 100]; // expansion 分頁選項
   @Input() expansionScrollHeight = '300px';  // expansion 表格高度
   @Input() expansionLoadFn?: (rowData: any) => Observable<any>; // 屬性來接收父層傳來的載入函數
   expandedRows: Record<string, boolean> = {};// 收合展開 已展開資料
@@ -121,13 +124,13 @@ export class TableComponent extends BasicPrintDataComponent implements OnChanges
   // Footer
   @Input() showFooter = false;                      // 是否顯示 Footer
   // 分頁器
-  @Input() scrollHeight = '650px';                  // table 高度
+  @Input() scrollHeight = '450px';                  // table 高度
   @Input() scrollable = true;                        // 是否要滾輪
   @Input() showPaginator = true;                    // 是否顯示 分頁器
   @Input() totalRecords = 0;                        // 記錄總數
-  @Input() rowsPerPageOptions: any[] | undefined = [10, 30, 50];// 分頁選項
+  @Input() rowsPerPageOptions: any[] | undefined = [20, 40, 60, 80, 100];// 分頁選項
   totalPages = 0;                                   // 共幾頁數
-  @Input() rows = 10;                                         // 每頁顯示的行數
+  @Input() rows = 20;                                         // 每頁顯示的行數
   first = 0;                                        // 當前表格的起始索引
   pages: { label: string, value: number; }[] = [];   // (右上)下拉選單 頁數選項
   selectedPage: number | null = 1;                  // (右上)下拉選單 當前選擇的頁數
@@ -145,8 +148,9 @@ export class TableComponent extends BasicPrintDataComponent implements OnChanges
     if (changes['data']) {
       setTimeout(() => {
         this.dt.totalRecords = this.totalRecords !== 0 ? this.totalRecords : this.data.length;
-        this.selectedItems = []
+        this.selectedItems = [];
         this.selectionChange.emit(this.selectedItems);
+        this.selectedItemsChange.emit(this.selectedItems);
       });
     }
     // 僅在 columns 首次被設定時執行初始化邏輯// 這樣就不會在每次 data 變動時都重置 filter 狀態
@@ -211,6 +215,7 @@ export class TableComponent extends BasicPrintDataComponent implements OnChanges
     this.rowEditInit.emit(rowData); // 發射事件
     this.selectedItems = [];
     this.selectionChange.emit(this.selectedItems);
+    this.selectedItemsChange.emit(this.selectedItems);
   }
   // 行編輯保存
   onRowEditSave(rowData: any, ri: number, htmlTableRowElement: HTMLTableRowElement) {
@@ -285,6 +290,7 @@ export class TableComponent extends BasicPrintDataComponent implements OnChanges
     const selected = Array.isArray(event) ? event : event ? [event] : [];
     this.selectedItems = selected.filter((item: any) => this.isRowSelectable(item));
     this.selectionChange.emit(this.selectedItems);
+    this.selectedItemsChange.emit(this.selectedItems);
   }
   // (欄位是Dropdown使用): 獲取Dropdown的選項，支持function加入或直接給List
   getOptions(rowData: any, col: Column) { return typeof col.options === 'function' ? (col.options(rowData) || undefined) : col.options || undefined; }
@@ -317,7 +323,6 @@ export class TableComponent extends BasicPrintDataComponent implements OnChanges
         }
         return item;
       });
-      console.log('🚨 DEBUG - 刪除後的資料:', selectedItems);
     }
     this.delete.emit(selectedItems);
     if (this.deleteData) {

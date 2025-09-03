@@ -2,11 +2,17 @@ import { Component, OnInit } from '@angular/core';
 import { COMMON_IMPORTS } from '../demo-imports';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { TableComponent } from '@shared/componentkit/table/table.component';
-import { AddButton, Column, formatAmount } from '@shared/componentkit/table/table.model';
+import { AddButton, Column, createPaginationConfig, formatAmount } from '@shared/componentkit/table/table.model';
 import { TabViewModule } from 'primeng/tabview';
-import { TableRowSelectEvent, TableRowUnSelectEvent } from 'primeng/table';
+import { TableLazyLoadEvent, TableModule, TableRowSelectEvent, TableRowUnSelectEvent } from 'primeng/table';
 import { validateRequired } from '@shared/componentkit/table/validate-field.model';
 import { ButtonModule } from 'primeng/button';
+import { CarService } from './carservice';
+import { SkeletonModule } from 'primeng/skeleton';
+import { DropDownListService, IDropdownItem } from '@service/utility/dropDownList.service';
+import { finalize } from 'rxjs';
+import { Sysbc00Service } from '@service/api/sys/sysbc00.service';
+import { Validators } from '@angular/forms';
 
 interface Data {
   id: number;
@@ -15,7 +21,6 @@ interface Data {
   field3: string;
   field4: string;
 }
-
 @Component({
   selector: 'app-example-table',
   standalone: true,
@@ -23,11 +28,21 @@ interface Data {
     COMMON_IMPORTS,
     TableComponent,
     TabViewModule,
-    ButtonModule
+    ButtonModule,
+    TableModule,
+    SkeletonModule
   ],
   templateUrl: './example-table.component.html',
 })
 export class ExampleTableComponent extends BasicQueryPageComponent<unknown> implements OnInit {
+
+  constructor(
+  ) {
+    super();
+  }
+  ngOnInit() {
+  }
+  // =====================================================================================
   queryForm = this.formBuilder.group({});
   // ==基本table===================================================================================
   data1: Data[] = [
@@ -265,11 +280,5 @@ export class ExampleTableComponent extends BasicQueryPageComponent<unknown> impl
   ];
   isRowSelectable(rowData: any): boolean {
     return rowData.isdelete;
-  }
-  constructor() {
-    super();
-  }
-  ngOnInit(): void {
-
   }
 }

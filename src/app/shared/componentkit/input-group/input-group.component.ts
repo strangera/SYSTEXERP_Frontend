@@ -34,6 +34,7 @@ export class InputGroupComponent<T> extends BasicKitComponent implements OnInit,
   @Input() optionValue = ''; // 資料的 Value
   @Input() optionValueAndLabel = ''; // 資料的 Value 和 Label
   @Input() columns: Column[] = [];
+  @Input() showReportMode = true; // 是否顯示 匯出按鈕
   @Output() changeEvent = new EventEmitter<DropdownChangeEvent>();
   @Output() selected = new EventEmitter<TableRowSelectEvent>();
   filteredData: T[] = []; // 過濾後的資料

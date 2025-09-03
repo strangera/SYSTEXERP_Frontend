@@ -6,7 +6,7 @@ import { NotificationService } from '@shared/component/notification-message/noti
 import { BaseQueryResponse, DropdownOption } from '@shared/models/api/base-api.interface';
 import { ApprovalStatus } from '@shared/models/tls/approval-status.model';
 import { ConfirmationService } from 'primeng/api';
-import { catchError, EMPTY, finalize, map, Subject, take, takeUntil, tap, throwError } from 'rxjs';
+import { catchError, EMPTY, finalize, map, Observable, Subject, take, takeUntil, tap } from 'rxjs';
 import { environment } from 'src/environments/environment';
 
 const apiUrl: string = environment.ApiUrl;
@@ -130,46 +130,35 @@ export class TLS26080Service {
     ).subscribe();
   };
 
-  public insertTLS26080(data: TLS2608InsertPayload): void {
-    this.http.post<BaseQueryResponse<any>>(`${apiUrl}/TLS0000/TLS2000/insertTLS26080`, data).pipe(
+  public insertTLS26080(data: TLS2608InsertPayload): Observable<BaseQueryResponse<any>> {
+    return this.http.post<BaseQueryResponse<any>>(`${apiUrl}/TLS0000/TLS2000/insertTLS26080`, data).pipe(
       take(1),
-      tap(response => {
-        console.log(`insertTLS26080:`, [response]);
-        this.messageService.successBubble('新增成功');
-      }),
       catchError(error => this.errorHandler.handleError(error)),
-      finalize(() => console.log('新增專櫃活動結果:', [data]))
-    ).subscribe();
+    );
   }
 
   /** 核准或反核准專櫃活動 */
   public loadApproval(data: TLS26080Data): void {
     if (this.approvalStatusLoading) return void (this.approvalStatusLoading = !1);
     this.approvalStatusLoading = !0;
-    this.confirmationService.confirm({
-      message: `是否確定${this.approvalCheck(data).confirm}選取項目？`,
-      accept: () => {
-        const id = data.id;
-        this.http.post<BaseQueryResponse<{ Status: ApprovalStatus; }>>(
-          `${apiUrl}/TLS0000/TLS2000/${this.approvalCheck(data).api}`, { id }).pipe(
-            take(1),
-            tap(() => this.TLS26080Data.update(currentData => {
-              const index = currentData.findIndex(item => item.id === id);
-              if (index !== -1) currentData[index].pod_status = this.approvalCheck(data).confirm === '核准'
-                ? ApprovalStatus.已核准
-                : ApprovalStatus.未核准;
-              return currentData;
-            })),
-            catchError(error => this.errorHandler.handleError(error)),
-            finalize(() => {
-              this.approvalStatusLoading = !1;
-              console.log('核准結果:', [this.approvalCheck(data).confirm]);
-            })
-          ).subscribe();
-        this.messageService.successBubble(`${this.approvalCheck(data).confirm}成功`);
-      },
-      reject: () => this.messageService.infoBubble(`${this.approvalCheck(data).confirm}已取消`)
-    });
+    const id = data.id;
+    this.http.post<BaseQueryResponse<{ Status: ApprovalStatus; }>>(
+      `${apiUrl}/TLS0000/TLS2000/${this.approvalCheck(data).api}`, { id }).pipe(
+        take(1),
+        tap(() => this.TLS26080Data.update(currentData => {
+          const index = currentData.findIndex(item => item.id === id);
+          if (index !== -1) currentData[index].pod_status = this.approvalCheck(data).confirm === '核准'
+            ? ApprovalStatus.已核准
+            : ApprovalStatus.未核准;
+          return currentData;
+        })),
+        catchError(error => this.errorHandler.handleError(error)),
+        finalize(() => {
+          this.approvalStatusLoading = !1;
+          console.log('核准結果:', [this.approvalCheck(data).confirm]);
+        })
+      ).subscribe();
+    this.messageService.successBubble(`${this.approvalCheck(data).confirm}成功`);
   }
 
   public uploadFile(file: FormData): void {
@@ -217,6 +206,13 @@ export class TLS26080Service {
         console.log('上傳檔案結果:', [file]);
       })
     ).subscribe();
+  }
+
+  public deleteTLS26080(idList: string[]): Observable<BaseQueryResponse<unknown>> {
+    return this.http.post<BaseQueryResponse<unknown>>(`${apiUrl}/TLS0000/TLS2000/deleteTLS26080`, { idList }).pipe(
+      take(1),
+      catchError(error => this.errorHandler.handleError(error)),
+    );
   }
 
   private dealErrorFilePath(data: TLS26080UploadResult): void {

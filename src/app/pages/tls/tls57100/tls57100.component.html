@@ -7,36 +7,31 @@
       [headerStyleClass]="'query-accordionTab'">
       <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
-          <!-- 倉別 (對應 HOS_No) -->
           <app-multi-select class="col-12 md:col-6 lg:col-4" label="倉庫代碼/名稱" controlName="HOS_No"
-            [options]="warehouseOptions" optionLabel="label" optionValue="value" [control]="queryForm.controls.HOS_No"
+            [options]="warehouseOptions" optionLabel="label" optionValue="No" [control]="queryForm.controls.HOS_No"
             [submitted]="submitted" />
-          <!-- 品牌代碼 (對應 LOGO_No) -->
           <app-multi-select class="col-12 md:col-6 lg:col-4" label="品牌代碼/名稱" controlName="LOGO_No"
-            [options]="brandCodeOptions" optionLabel="label" optionValue="value" [control]="queryForm.controls.LOGO_No"
+            [options]="brandCodeOptions" optionLabel="label" optionValue="No" [control]="queryForm.controls.LOGO_No"
             [submitted]="submitted" />
-          <!-- 廠商編號 -->
           <app-dropdown class="col-12 md:col-6 lg:col-4" label="廠商編號/名稱" controlName="VEN_No" [options]="vendorOptions"
-            optionLabel="label" optionValue="value" [control]="queryForm.controls.VEN_No" [submitted]="submitted" />
-          <!-- 申請日期 -->
+            optionLabel="label" optionValue="No" [control]="queryForm.controls.VEN_No" [submitted]="submitted" />
           <app-calendar-range-quick class="col-12 md:col-6 lg:col-4" calendarType="dateRange" label="申請日期"
-            [startControl]="queryForm.controls.APPLY_Date_Start" [endControl]="queryForm.controls.APPLY_Date_End"
+            [startControl]="queryForm.controls.ODM_Date_Start" [endControl]="queryForm.controls.ODM_Date_End"
             [submitted]="submitted" />
-          <!-- 審核日期 -->
           <app-calendar-range-quick class="col-12 md:col-6 lg:col-4" calendarType="dateRange" label="審核日期"
             [startControl]="queryForm.controls.APRV_Date_Start" [endControl]="queryForm.controls.APRV_Date_End"
             [submitted]="submitted" />
-          <!-- 單據類型 -->
-          <app-dropdown class="col-12 md:col-6 lg:col-4" label="單據類型" controlName="documentType"
-            [options]="documentTypeOptions" optionLabel="label" optionValue="value" [filter]="false"
-            [control]="queryForm.controls.documentType" [submitted]="submitted"></app-dropdown>
-          <!-- 驗收/驗退單號 -->
-          <app-input-text class="col-12 md:col-6 lg:col-4" label="驗收/驗退單號" controlName="inspectionReturnCode"
-            [control]="queryForm.controls.inspectionReturnCode" [submitted]="submitted"></app-input-text>
-          <!-- 顯示方式 -->
-          <app-dropdown class="col-12 md:col-6 lg:col-4" label="顯示方式" controlName="displayMode"
-            [options]="displayModeOptions" optionLabel="label" optionValue="value"
-            [control]="queryForm.controls.displayMode" [submitted]="submitted"></app-dropdown>
+          <app-multi-select class="col-12 md:col-6 lg:col-4" label="單據類型" controlName="ODM_Type"
+            [options]="documentTypeOptions" optionLabel="label" optionValue="value"
+            [control]="queryForm.controls.ODM_Type" [submitted]="submitted"></app-multi-select>
+          <app-multi-select label="單據狀態" class="col-12 md:col-6 lg:col-4" controlName="Status"
+            [options]="documentStatusOptions" optionLabel="label" optionValue="value"
+            [control]="queryForm.controls.Status" [submitted]="submitted"></app-multi-select>
+          <app-input-text class="col-12 md:col-6 lg:col-4" label="驗收/驗退單號" controlName="ODM_No"
+            [control]="queryForm.controls.ODM_No" [submitted]="submitted"></app-input-text>
+          <app-dropdown class="col-12 md:col-6 lg:col-4" label="顯示方式" controlName="DisplayMode"
+            [options]="displayModeOptions" optionLabel="label" optionValue="value" [filter]="false"
+            [control]="queryForm.controls.DisplayMode" [submitted]="submitted"></app-dropdown>
         </div>
         <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
           <app-button btnType="clear" [form]="queryForm"></app-button>
@@ -49,7 +44,16 @@
 
 <div class="card">
   <app-table [data]="data" [columns]="columns" [totalRecords]="totalRecords"
+    [multiSortMeta]="[{ field: 'ODM_Date', order: 1 }]" [showReportMode]="false"
     (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [lazy]="true" [loading]="loading"
-    [showManage]="false">
+    [showManage]="false" [showDelete]="false">
+    <header>
+      <div class="flex justify-content-end gap-2">
+        <p-button styleClass="p-2" label="產出驗收/驗退單據統計表.PDF" [loading]="btnLoading" icon="pi pi-file"
+          (click)="onExportPDF()" [disabled]="data.length === 0"></p-button>
+        <p-button styleClass="p-2" label="產出驗收/驗退單據統計表.XLSX" [loading]="btnLoading" icon="pi pi-file"
+          (click)="onExportXLSX()" [disabled]="data.length === 0"></p-button>
+      </div>
+    </header>
   </app-table>
 </div>

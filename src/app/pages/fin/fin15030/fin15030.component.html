@@ -85,9 +85,9 @@
 </div>
 
 <div class="card">
-  <form [formGroup]="queryForm2">
+  <form [formGroup]="queryForm2" *ngIf="canPerformAction('60') && canPerformAction('70')">
     <div class="grid justify-content-start gap-2 mb-2 p-2">
-      <app-dropdown label="合併列印" controlName="IsMerge" [options]="mergeOptions" [optionLabel]="'label'"
+      <app-dropdown label="列印方式" controlName="IsMerge" [options]="mergeOptions" [optionLabel]="'label'"
         [optionValue]="'value'" [control]="queryForm2.controls.IsMerge">
       </app-dropdown>
 

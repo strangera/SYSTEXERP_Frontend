@@ -5,81 +5,57 @@
   }
 
   &::-webkit-scrollbar-track {
-    background: #ffffff;
-    border: 5px solid #ffffff;
+    background: transparent;
+    border: 5px solid transparent;
   }
 
   &::-webkit-scrollbar-thumb {
     background: #9f9f9f;
     border-radius: 12px;
-    border: 2px solid #eaeaea;
+    border: 2px solid var(--surface-d);
   }
 
   &::-webkit-scrollbar-thumb:hover {
-    background: #cccccc;
+    background: #949494;
   }
 
   .p-datatable {
     &.p-datatable-sm .p-datatable-footer {
       padding: 0;
     }
-    .error-border {
-      border: 1px solid red;
-    }
-    .p-selectbutton .p-button {
-      width: auto !important;
-      padding: 5px 10px !important;
-      &:first-child {
-        border-top-left-radius: 18px;
-        border-bottom-left-radius: 18px;
-      }
-      &:last-child {
-        border-top-right-radius: 18px;
-        border-bottom-right-radius: 18px;
-      }
-    }
 
-    .table-dropdown {
-      pointer-events: none;
-      .p-dropdown-trigger {
-        display: none;
-      }
-      .p-dropdown {
-        background: transparent;
-        border: none;
-      }
-      span {
-        padding: 0;
-      }
-    }
-    // ----------------------------------------------------------------
+    /* -------- Header -------- */
     .p-datatable-header {
       background: transparent;
       border: none;
       padding: 0;
+
       p-multiselect {
         width: 35px;
         height: 35px;
-      }
-      p-multiselect {
+
         .p-multiselect-label {
           display: none;
         }
         .p-multiselect-trigger-icon {
           font-size: 1.4em;
-          color: #ffffff;
+          color: var(--surface-card);
         }
         .p-multiselect {
           border-radius: 50%;
-          border: 1px solid #989898;
+          border: 1px solid var(--surface-400);
           width: 100%;
           height: 100%;
-          background-color: #989898;
+          background-color: var(--surface-400);
+        }
+        .p-multiselect-trigger {
+          flex-shrink: unset;
         }
         .ng-trigger-overlayContentAnimation {
           width: 200px;
         }
       }
+
       .button-group {
         .p-button {
           width: 35px !important;
@@ -91,9 +67,8 @@
       }
     }
 
-    .p-datatable-tbody > tr.p-highlight {
-      background-color: #c5e4fc;
-      color: #000000;
+    .p-datatable-tbody > tr .p-highlight.p-disabled {
+      background-color: #38a8ff !important;
     }
 
     .p-selectable-row:not(.p-disabled-row):hover {
@@ -102,32 +77,28 @@
     }
 
     .p-disabled-row {
-      background-color: #ffffffc4 !important;
       color: #495057 !important;
 
-      &.p-highlight {
-        background-color: #ffffffc4 !important;
-      }
-      // 禁用的 checkbox 樣式
+      /* 禁用的 checkbox 樣式 */
       .p-checkbox {
         opacity: 0.5;
         cursor: not-allowed !important;
-        position: relative; // 為叉叉定位
+        position: relative;
 
         .p-checkbox-box {
           background-color: #e9ecef !important;
           border-color: #ced4da !important;
         }
-        // 叉叉效果
+        /* 叉叉效果 */
         &::before,
         &::after {
           content: "";
           position: absolute;
           top: 50%;
           left: 50%;
-          width: 100%; // 叉叉的宽度覆盖整个框
-          height: 2px; // 叉叉的厚度
-          background-color: #dc3545; // 红色
+          width: 100%;
+          height: 2px;
+          background-color: #dc3545;
           transform-origin: center;
           z-index: 2;
         }
@@ -139,21 +110,25 @@
         }
       }
     }
+
     .table-footer {
       background-color: #f8f9fa;
       border: 1px solid #e9ecef;
       border-width: 0 1px 1px 1px;
     }
+
     .p-datatable-wrapper {
-      border: 1px solid #e9ecef;
+      border: 1px solid var(--surface-d);
     }
-    // 可選行的hover效果
+
+    /* 可選行的 hover 效果 */
     .p-selectable-row:not(.p-disabled-row) {
       &:hover {
-        background-color: #e3f2fd !important;
+        background-color: var(--p-selectable-row-hover) !important;
         cursor: pointer;
       }
     }
+
     .p-paginator {
       padding: 0.2rem 0.2rem;
       background: transparent;
@@ -167,6 +142,7 @@
       background-color: rgb(217 217 217 / 40%) !important;
     }
   }
+
   .html-cell,
   .html-cell * {
     font-size: 14px !important;
@@ -180,44 +156,74 @@
     -webkit-box-orient: vertical;
     overflow: hidden;
     text-overflow: ellipsis;
-    max-height: 1.2em; /* 限制高度為一行 */
+    max-height: 1.2em;
     white-space: normal;
     word-break: break-word;
-    max-width: 75px; /* 可選：限制寬度 */
+    max-width: 75px;
   }
 
-  .empty-message {
-    position: absolute;
-    left: 50%;
-    top: 67%;
-    transform: translate(-50%, -50%);
-  }
   .no-wrap {
     white-space: nowrap;
     div {
       display: inline;
     }
   }
+
   .group-header {
-    background-color: #a5b4fc !important;
+    background-color: var(--table-header-bg-group) !important;
   }
+
   .p-datatable .p-datatable-thead > tr > th {
     background: var(--table-header-bg);
   }
 
-  .p-datatable .p-datatable-tbody > tr:nth-child(even) {
-    background: #eef2ff;
-  }
-
   .icon-button button {
-    background-color: rgba(239, 246, 255);
+    background-color: var(--icon-button-bg);
     border-radius: 5px;
-    border: 1px solid rgb(212 212 212);
+    border: var(--icon-button-border);
+
     &:hover {
       background-color: rgba(0, 123, 255, 0.2);
     }
     span.p-button-icon.pi {
-      color: #007bff;
+      color: var(--icon-button-span);
     }
+  }
+
+  /* =========================================================
+     表頭游標修正
+     - 可排序：手指游標(pointer)
+     - 欄寬調整把手：col-resize
+     - 列拖拉把手：move
+     - 避免 pReorderableColumn 把整個 th 變成 move
+     ========================================================= */
+
+  /* 預設把表頭游標還原成 default（避免被 pReorderable 設成 move） */
+  .p-datatable .p-datatable-thead > tr > th {
+    cursor: default !important;
+    user-select: none;
+  }
+
+  /* 可排序欄位 → 手指游標 */
+  .p-datatable .p-datatable-thead > tr > th.p-sortable-column,
+  .p-datatable .p-datatable-thead > tr > th.p-sortable-column .p-column-title,
+  .p-datatable .p-datatable-thead > tr > th.p-sortable-column .p-sortable-column-icon {
+    cursor: pointer !important;
+  }
+
+  /* 同時「可排序 + 可拖曳」時，優先用 pointer（覆蓋 move） */
+  .p-datatable .p-datatable-thead > tr > th.p-sortable-column.p-reorderable-column {
+    cursor: pointer !important;
+  }
+
+  /* 欄寬調整把手維持 col-resize */
+  .p-datatable .p-datatable-thead > tr > th .p-column-resizer {
+    cursor: col-resize !important;
+  }
+
+  /* 列的拖曳把手維持 move（不影響表頭） */
+  .p-datatable [pReorderableRowHandle],
+  .p-datatable .pi.pi-bars {
+    cursor: move !important;
   }
 }

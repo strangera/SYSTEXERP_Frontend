@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { DatePipe } from '@angular/common';
+import { CommonModule, DatePipe } from '@angular/common';
 import { finalize } from 'rxjs';
 
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
@@ -20,6 +20,7 @@ import { TranslateModule } from '@ngx-translate/core';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
 import { DropDownListService } from '@service/utility/dropDownList.service';
+import { untilDestroyed } from '@ngneat/until-destroy';
 
 export interface Option {
   label: string;
@@ -34,7 +35,7 @@ export interface Option {
   imports: [
     MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule,
     InputTextRangeComponent, CalendarRangeComponent, InputTextComponent, TableComponent,
-    TranslateModule, DropdownComponent, CalendarComponent
+    TranslateModule, DropdownComponent, CalendarComponent, CommonModule
   ]
 })
 export class FIN15040Component extends BasicQueryPageComponent<FIN15040Data> implements OnInit {
@@ -55,7 +56,7 @@ export class FIN15040Component extends BasicQueryPageComponent<FIN15040Data> imp
     Voucher_No_S: ['', [Validators.maxLength(16)]],             // 傳票號碼起 (string(16))
     Voucher_No_E: ['', [Validators.maxLength(16)]],             // 傳票號碼訖 (string(16))
     SAL_Type: [null],                                           // 系統別 (dropdown)
-    Voucher_no: ['', [Validators.maxLength(20)]],               // 傳票建立者 (string(20))
+    Voucher_no: ['', [Validators.maxLength(20)]],               // 傳票傳票建立者 (string(20))
     Asset_Notation: [null],                                     // 資產註記 (dropdown)
     HasUniform: [null],                                         // 是否有統編 (dropdown)
     PUR_DiscNo: [null],                                         // 折抵代號 (dropdown)
@@ -148,7 +149,7 @@ export class FIN15040Component extends BasicQueryPageComponent<FIN15040Data> imp
       };
 
       this.fin15040Service.queryFIN15040(requestData)
-        .pipe(finalize(() => this.loading = false))
+        .pipe(untilDestroyed(this), finalize(() => this.loading = false))
         .subscribe((res) => {
           this.data = res.Data;
           this.totalRecords = res.TotalCount;

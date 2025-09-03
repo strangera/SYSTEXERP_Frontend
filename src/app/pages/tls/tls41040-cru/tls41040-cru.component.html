@@ -167,7 +167,6 @@
           [showCheckBox]="true"
           [showInsert]="true"
           [showRowEdit]="true"
-          (delete)="onDelete($event)"
           (selectionChange)="selectedRows = $event"
           [selectedItems]="selectedRows"
           [showCaption]="!isFormReadable"
@@ -176,9 +175,20 @@
           [insertRowData]="true"
           (dataChange)="data = $event"
           [showReportMode]="false"
+          dataStatusField="status"
         ></app-table>
+        <!-- <app-table-edit
+          tableKey="tls41040Detail"
+          class="col-12"
+          [data]="data"
+          [columns]="columns"
+          (selectionChange)="selectedRows = $event"
+          [selectedItems]="selectedRows"
+          (dataChange)="data = $event"
+          [rowValidate]="validateEntireRow"
+          dataStatusField="status"
+        ></app-table-edit> -->
       </div>
-
       <div
         class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
       >

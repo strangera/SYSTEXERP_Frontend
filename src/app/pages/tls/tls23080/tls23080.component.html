@@ -2,56 +2,92 @@
   <div class="flex gap-2 mb-2">
     <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
   </div>
+
   <p-accordion>
-    <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
-      [headerStyleClass]="'query-accordionTab'">
+    <p-accordionTab
+      header="{{ 'query-conditions' | translate }}"
+      [selected]="true"
+      class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'"
+    >
       <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
-
           <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar-range-quick label="查詢日期" [startControl]="queryForm.controls.TXN_DateStart"
-              [endControl]="queryForm.controls.TXN_DateEnd" [submitted]="submitted"></app-calendar-range-quick>
+            <app-calendar-range-quick
+              label="查詢日期"
+              [startControl]="queryForm.controls.TXN_DateStart"
+              [endControl]="queryForm.controls.TXN_DateEnd"
+              [submitted]="submitted"
+            ></app-calendar-range-quick>
           </div>
 
           <!-- 收銀機號 -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select label="收銀機號" controlName="ECR_No" [options]="ECRNoOptions" optionLabel="label"
-              optionValue="value" [control]="queryForm.controls.ECR_No" [submitted]="submitted"></app-multi-select>
+            <app-multi-select
+              label="收銀機號"
+              controlName="ECR_No"
+              [options]="ECRNoOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.ECR_No"
+              [submitted]="submitted"
+            ></app-multi-select>
           </div>
 
-          <!-- 專櫃編號 -->
+          <!-- 顯示非營運的專櫃 -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-radiobutton class="col-12" label="顯示非營運的專櫃" groupname="rece_yn"
-              [control]="queryForm.controls.tlt_openflag" [options]="WhetherOptions"
-              [submitted]="submitted"></app-radiobutton>
+            <app-radiobutton
+              class="col-12"
+              label="顯示非營運的專櫃"
+              groupname="rece_yn"
+              [control]="queryForm.controls.tlt_openflag"
+              [options]="WhetherOptions"
+              [submitted]="submitted"
+            ></app-radiobutton>
           </div>
 
           <!-- 館別 -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="館別" controlName="tlt_building" [options]="BUILDING_NO_Options" optionLabel="label"
-              optionValue="value" [control]="queryForm.controls.tlt_building" [submitted]="submitted"></app-dropdown>
+            <app-dropdown
+              label="館別"
+              controlName="tlt_building"
+              [options]="BUILDING_NO_Options"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.tlt_building"
+              [submitted]="submitted"
+            ></app-dropdown>
           </div>
 
           <!-- 樓層 -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select label="樓層" [options]="floorOptions" optionLabel="label" optionValue="value"
-              [control]="queryForm.controls.tlt_floor" [submitted]="submitted"></app-multi-select>
+            <app-multi-select
+              label="樓層"
+              [options]="floorOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.tlt_floor"
+              [submitted]="submitted"
+            ></app-multi-select>
           </div>
 
           <!-- 組織代碼/名稱 -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select label="組織代碼/名稱" [options]="OrganizationCodeOptions" optionLabel="formLabel"
-              optionValue="value" [control]="queryForm.controls.org_id" [submitted]="submitted"></app-multi-select>
+            <app-multi-select
+              label="組織代碼/名稱"
+              [options]="OrganizationCodeOptions"
+              optionLabel="formLabel"
+              optionValue="value"
+              [control]="queryForm.controls.org_id"
+              [submitted]="submitted"
+            ></app-multi-select>
           </div>
         </div>
-
-
 
         <!-- 按鈕列 -->
         <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
           <app-button btnType="clear" [form]="queryForm"></app-button>
           <app-button btnType="query" [loading]="loading"></app-button>
-
         </div>
       </form>
     </p-accordionTab>
@@ -60,8 +96,40 @@
 
 <!-- 資料表格 -->
 <div class="card">
-  <app-table tableKey="TLS23080" [data]="data" [columns]="columns" [showCheckBox]="false" dataKey="TXN_No"
-    [multiSortMeta]="[{ field: 'TXN_DateStart', order: 1 }]" [totalRecords]="totalRecords" [lazy]="true"
-    [loading]="loading" [showManage]="false" [showDelete]="false"
-    (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"></app-table>
+  <app-table
+    tableKey="TLS23080"
+    [data]="data"
+    [columns]="columns"
+    [showCheckBox]="false"
+    dataKey="TXN_Date"
+    [multiSortMeta]="[{ field: 'TXN_Date', order: 1 }]"
+    [totalRecords]="totalRecords"
+    [lazy]="true"
+    [loading]="loading"
+    [showManage]="false"
+    [showDelete]="false"
+    (lazyLoadData)="onLazyLoadData($event, queryForm)"
+  >
+    <header>
+      <div class="flex justify-content-end gap-2">
+        <p-button
+          styleClass="p-2"
+          label="產出支付工具實收報表.PDF"
+          [loading]="btnLoading"
+          icon="pi pi-file"
+          (click)="onExportPDF()"
+          [disabled]="data.length === 0"
+        ></p-button>
+
+        <p-button
+          styleClass="p-2"
+          label="產出支付工具實收報表.XLSX"
+          [loading]="btnLoading"
+          icon="pi pi-file-excel"
+          (click)="onExportXLSX()"
+          [disabled]="data.length === 0"
+        ></p-button>
+      </div>
+    </header>
+  </app-table>
 </div>

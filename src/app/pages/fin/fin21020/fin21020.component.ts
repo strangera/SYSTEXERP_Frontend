@@ -1,13 +1,5 @@
-import { BankAccountCodeService } from './../../../service/basic/bank-account-code.service';
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
-// Shared
-import { AuthService } from '../../../service/system/auth.service';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-import { ValidationService } from '../../../shared/service/validation.service';
-import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
+import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { AccordionModule } from 'primeng/accordion';
@@ -15,129 +7,66 @@ import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdow
 import { InputNumberRangeComponent } from '../../../shared/componentkit/input-number-range/input-number-range.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { TranslateModule } from '@ngx-translate/core';
-//
+import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
+import { Column, createPaginationConfig, formatAmount } from '@shared/componentkit/table/table.model';
+import { Fin21020Service, IFin21020Data, IQueryFin21020Request } from '@service/api/fin/fin21020.service';
+import { finalize } from 'rxjs';
+import { untilDestroyed } from '@ngneat/until-destroy';
+import { DropDownListService, IDropdownItem } from '@service/utility/dropDownList.service';
 
-//1.2.1.2 費率對照維護
+// 1.2.1.2 費率對照維護
 @Component({
-    selector: 'app-fin21020',
-    templateUrl: './fin21020.component.html',
-    styleUrl: './fin21020.component.scss',
-    standalone: true,
-    imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, DropdownComponent, InputNumberRangeComponent, TableComponent, TranslateModule]
+  selector: 'app-fin21020',
+  templateUrl: './fin21020.component.html',
+  standalone: true,
+  imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, DropdownComponent, InputNumberRangeComponent, TableComponent, TranslateModule]
 })
-export class FIN21020Component extends BasicQpageComponent implements OnInit {
-  //
-  queryForm = this.formBuilder.group({
-    companyBankCode: [], // 公司銀行科目代號
-    startMaxCash: [, [this.validationService.numberValidator, Validators.max(99999999)]], // 金額上限
-    endMaxCash: [, [this.validationService.numberValidator, Validators.max(99999999)]], // 金額上限
-    startMinCash: [, [this.validationService.numberValidator, Validators.max(99999999)]], // 金額下限
-    endMinCash: [, [this.validationService.numberValidator, Validators.max(99999999)]], // 金額下限
-    startVendorFee: [, [this.validationService.numberValidator, Validators.max(99999999)]], // 廠商負擔電匯手續費
-    endVendorFee: [, [this.validationService.numberValidator, Validators.max(99999999)]], // 廠商負擔電匯手續費
-    startCompanyFee: [, [this.validationService.numberValidator, Validators.max(99999999)]], // 公司負擔電匯手續費
-    endCompanyFee: [, [this.validationService.numberValidator, Validators.max(99999999)]], // 公司負擔電匯手續費
-    startVendorRevenue: [, [this.validationService.numberValidator, Validators.max(99999999)]], // 廠商負擔電匯手續費回饋收入
-    endVendorRevenue: [, [this.validationService.numberValidator, Validators.max(99999999)]], // 廠商負擔電匯手續費回饋收入
+export class FIN21020Component extends BasicQueryPageComponent<IFin21020Data> implements OnInit {
+  queryForm = this.formBuilder.nonNullable.group({
+    BNK_No: [null], // 公司銀行科目代號
+    Remit_BAmount_Start: [null as number | null, [Validators.max(9999999999)]], // 金額下限 - 轉帳最低金額(起)
+    Remit_BAmount_End: [null as number | null, [Validators.max(9999999999)]], // 金額下限 - 轉帳最低金額(迄)
+    Remit_UAmount_Start: [null as number | null, [Validators.max(9999999999)]], // 金額上限 - 轉帳最高金額(起)
+    Remit_UAmount_End: [null as number | null, [Validators.max(9999999999)]], // 金額上限 - 轉帳最高金額(迄)
+    Remit_Fee: [null as number | null, [Validators.max(999999)]], // 廠商負擔電匯手續費
+    Comp_Remit_Fee: [null as number | null, [Validators.max(999999)]], // 公司負擔電匯手續費
+    Cash_Back_Amt: [null as number | null, [Validators.max(999999)]], // 廠商負擔電匯手續費回饋收入
+    ...createPaginationConfig([{ field: 'BNK_No', order: 1 }, { field: 'id', order: 1 }]), // 分頁和排序參數
   });
-  // 下拉資料多個呈現
-  // ----------------------------------------------------------------
-  roles: any[] = [
-    { id: 1, roleCode: 'ADMIN', roleName: 'Administrator' },
-    { id: 2, roleCode: 'USER', roleName: 'User' },
-    { id: 3, roleCode: 'GUEST', roleName: 'Guest' },
+  totalRecords = 0;
+  data: IFin21020Data[] = [];
+  columns: Column[] = [
+    { field: 'BNK_No', header: '公司銀行科目代號' },
+    { field: 'Remit_BAmount', header: '金額下限', format: formatAmount },
+    { field: 'Remit_UAmount', header: '金額上限', format: formatAmount },
+    { field: 'Remit_Fee', header: '廠商負擔電匯手續費', format: formatAmount },
+    { field: 'Comp_Remit_Fee', header: '公司負擔電匯手續費', format: formatAmount },
+    { field: 'Cash_Back_Amt', header: '廠商負擔電匯手續費回饋收入', format: formatAmount },
   ];
-  // 表格
-  // ----------------------------------------------------------------
-  data: any[] = [
-    // { 'name': 'Emily', 'age': 28, 'email': 'emily@example.com', 'city': 'Kaohsiung' },
-    // { 'name': 'Michael', 'age': 31, 'email': 'michael@example.com', 'city': 'Taipei' },
-    // { 'name': 'Sarah', 'age': 24, 'email': 'sarah@example.com', 'city': 'Tainan' },
-    // 其他資料
-  ];
-  columns: any[] = [
-    { field: 'col1', header: '公司銀行科目代號', visible: true },
-    { field: 'col2', header: '公司銀行科目名稱', visible: true },
-    { field: 'col3', header: '金額下限', visible: true },
-    { field: 'col4', header: '金額上限', visible: true },
-    { field: 'col5', header: '廠商負擔電匯手續費', visible: true },
-    { field: 'col6', header: '廠商負擔電匯手續費回饋收入', visible: true },
-    { field: 'col7', header: '公司負擔電匯手續費', visible: true },
-    // 其他欄位
-  ];
-  // ----------------------------------------------------------------
-  bankCodeOptions: any[] = [];
-  depositCodeOptions: any[] = [];
-  needPayTicketOptions: any[] = [];
+  bankCodeOptions: IDropdownItem[] = [];
 
   constructor(
-    private router: Router,
-    private formBuilder: FormBuilder,
-    private messageService: NotificationService,
-    private authService: AuthService,
-    private validationService: ValidationService,
-    //
-    private bankAccountCodeService: BankAccountCodeService,
+    private readonly dropDownListService: DropDownListService,
+    private readonly fin21020Service: Fin21020Service, // 注入新的 service
   ) {
-    super(); // 呼叫父類建構子
+    super();
   }
 
   ngOnInit(): void {
-    // 初始化
-    this.ProgNo = '120002';
-    this.cruPage = '/FIN2000/FIN21020CRU';
-    //
-    // ----------------------------------------------------------------
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
-    //
-    this.bankAccountCodeService.getSystemTypes().subscribe(data => {
-      this.bankCodeOptions = data;
+    this.initializePage('FIN21020', 'fin/fin21020cru', this.queryForm, (form) => this.fin21020Service.queryFIN21020(form as IQueryFin21020Request));
+    this.dropDownListService.queryGLS1005_DropDownList().pipe(untilDestroyed(this)).subscribe(data => {
+      this.bankCodeOptions = data.Data.map(item => ({ ...item, label: `${item.No} - ${item.Name}` }));
     });
-    // ----------------------------------------------------------------
   }
 
   // ----------------------------------------------------------------
   onSubmit(frm: FormGroup) {
-    console.log(frm.value);
-    this.submitted = true;
-    this.loading = true;
-    this.messageService.blockUi();
-
-    if (frm.valid && this.canQuery()) {
-      // 提交邏輯
-      // Service
-      // this.xxxService.queryMachine(frm.value as xxxInterface)
-      //  .subscribe((response: any) => {
-      //    this.rows = response.xxx;
-      // });
-    }
-
-    this.loading = false;
-    this.messageService.unblockUi();
-  }
-
-  onSubmitQuery(frm: FormGroup) {
-    // 查詢邏輯
-    this.onSubmit(frm);
-  }
-
-  onClearForm() {
-    this.queryForm.reset();  // 重置表單
-  }
-  // ----------------------------------------------------------------
-  onCreate() {
-    if (this.canAdd()) {
-      this.navigateWithState(this.router, CRUDStatus.Create, null, this.cruPage);
-    }
-  }
-
-  onEdit(data: any) {
-    if (this.canEdit()) {
-      this.navigateWithState(this.router, CRUDStatus.Edit, data, this.cruPage);
-    }
-  }
-
-  onDetail(data: any) {
-    this.navigateWithState(this.router, CRUDStatus.Read, data, this.cruPage);
+    this.handleSubmit(frm, () => {
+      this.fin21020Service.queryFIN21020(frm.value).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(res => {
+        this.data = res.Data;
+        this.totalRecords = res.TotalCount;
+        this.queryStateService.setQueryState(this.ProgNo, frm.value);
+      })
+    });
   }
 }

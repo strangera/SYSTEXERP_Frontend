@@ -13,7 +13,10 @@ import { TXN_SubtypeService } from '../../../service/basic/TXN_Subtype.service';
 import { FloorService } from '../../../service/basic/floor.service';
 import { Tls11010Service } from '../../../service/api/tls/tls11010.service';
 import { ECRNoService } from '../../../service/basic/ECRNo.service';
-import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
+import {
+  createPaginationConfig,
+  LazyLoadEvent,
+} from '../../../shared/componentkit/table/table.model';
 import { CounterNameService } from '../../../service/basic/counter-name.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { AccordionModule } from 'primeng/accordion';
@@ -53,33 +56,66 @@ import { TableComponent } from '@shared/componentkit/table/table.component';
   ],
 })
 export class TLS23040Component extends BasicQueryPageComponent<any> {
-  totalRecords = 0;
+  private lastQuerySig: string | null = null;
+  private lazyTimer: any = null;
+  private firstLazyFired = false;
+
   data: any[] = [];
-  
-backendTotals: Record<string, number> | null = null;
-  readonly yesterday: Date = (() => { const d = new Date(); d.setHours(0, 0, 0, 0); d.setDate(d.getDate() - 1); return d; })();
+  totalRecords = 0;
+  backendTotals: Record<string, number> | null = null;
+  // ===== 新增：檢視模式（預設 invoice）=====
+viewMode: 'invoice' | 'payment' | 'discount' = 'invoice';
+// ===== 新增：三組資料 =====
+invoiceRows: any[] = [];
+paymentRows: any[] = [];
+discountRows: any[] = [];
+
+  // 🔽 排序設定
+  sortMeta: any[] = [];
+  readonly defaultSort: any[] = [
+    { field: 'TXN_Date', order: 1 },
+    { field: 'ECR_No',   order: 1 },
+    { field: 'TXN_No',   order: 1 },
+  ];
+
+  readonly yesterday: Date = (() => {
+    const d = new Date();
+    d.setHours(0, 0, 0, 0);
+    d.setDate(d.getDate() - 1);
+    return d;
+  })();
 
   queryForm = this.formBuilder.group({
     TXN_DateStart: [this.yesterday, [Validators.required]],
-    TXN_DateEnd: [this.yesterday, [Validators.required]],
-    ECR_No: [null], // ✅ 初始為 null（不會出現預設選項）
+    TXN_DateEnd:   [this.yesterday, [Validators.required]],
+    ECR_No: [],
     TXN_No_Start: [null],
-    TXN_No_End: [null],
-    TLT_No: [[]],
-    TXN_Status: [[]],
-    TXN_FlagStatus: [[]],
+    TXN_No_End:   [null],
+    TLT_No: [],
+    TXN_Status: [],
+    TXN_FlagStatus: [],
     TXN_PkngUID: [''],
     TXN_MemCard: [''],
     TXN_GUIBegNo: [''],
     tlt_building: [''],
-    tlt_floor: [[]],
-    org_id: [[]],
-    ...createPaginationConfig([{ field: 'ECR_No', order: 1 }]),
+    tlt_floor: [],
+    org_id: [],
+    // 🔽 這裡帶入排序欄位
+    ...createPaginationConfig([
+      { field: 'TXN_Date', order: 1 },
+      { field: 'ECR_No',   order: 1 },
+      { field: 'TXN_No',   order: 1 },
+    ]),
   });
 
   statusFlagOptions: any[] = [];
   TXN_SubtypeOptions: any[] = [];
-  txnStatusOptions: any[] = [];
+  txnStatusOptions: any[] = [
+    { value: '1', label: '正常交易' },
+    { value: '2', label: '作廢' },
+    { value: '3', label: '退貨' },
+  
+  ];
   BUILDING_NO_Options: any[] = [];
   floorOptions: any[] = [];
   OrganizationCodeOptions: any[] = [];
@@ -101,31 +137,96 @@ backendTotals: Record<string, number> | null = null;
   }
 
   ngOnInit(): void {
-    this.initializePage('TLS23040', 'tls/tls23040cru', this.queryForm, (form) => this.onSubmit(form),);
+    this.initializePage('TLS23040', 'tls/tls23040cru', this.queryForm, (form) =>
+      this.onSubmit(form),
+    );
+    // 🔽 初始化排序 meta
+    this.sortMeta = this.defaultSort.map(x => ({ ...x }));
+    this.statusFlagService
+      .getStatusFlags()
+      .subscribe((data) => (this.statusFlagOptions = data));
 
-    this.statusFlagService.getStatusFlags().subscribe((data) => (this.statusFlagOptions = data));
+    this.TXN_SubtypeService.getTXNSubtype().subscribe(
+      (data) => (this.TXN_SubtypeOptions = data),
+    );
 
-    this.TXN_SubtypeService.getTXNSubtype().subscribe((data) => (this.TXN_SubtypeOptions = data));
+    // this.txnStatusService
+    //   .getTxnStatusOptions()
+    //   .subscribe((data) => (this.txnStatusOptions = data));
 
-    this.txnStatusService.getTxnStatusOptions().subscribe((data) => (this.txnStatusOptions = data));
+    this.floorService
+      .getFloors()
+      .subscribe((data) => (this.floorOptions = data));
 
-    this.floorService.getFloors().subscribe((data) => (this.floorOptions = data));
+    this.tls11010Service
+      .getBuildingOptions()
+      .subscribe((data) => (this.BUILDING_NO_Options = data));
 
-    this.tls11010Service.getBuildingOptions().subscribe((data) => (this.BUILDING_NO_Options = data));
+    this.tls11010Service.getOrgOptions().subscribe((res) => {
+      this.OrganizationCodeOptions = (res ?? []).map((x: any) => ({
+        label: x.label,
+        formLabel: `${x.value} - ${x.label}`,
+        value: x.value,
+      }));
+    });
 
-    this.tls11010Service.getOrgOptions().subscribe((res) => { this.OrganizationCodeOptions = (res ?? []).map((x: any) => ({ label: x.label, formLabel: `${x.value} - ${x.label}`, value: x.value, })); });
+    this.ECRNoService.getECRNo().subscribe((res) => {
+      this.ECRNoOptions = (res ?? []).map((x: any) => ({
+        label: x.label,
+        formLabel: `${x.value} - ${x.label}`,
+        value: x.value,
+      }));
+    });
 
-    this.ECRNoService.getECRNo().subscribe((res) => { this.ECRNoOptions = (res ?? []).map((x: any) => ({ label: x.label, formLabel: `${x.value} - ${x.label}`, value: x.value, })); });
-
-    this.counterNameService.getCounters().subscribe((res) => { this.CounterOptions = (res ?? []).map((x: any) => ({ label: x.label, formLabel: `${x.value} - ${x.label}`, value: x.value, })); });
+    this.counterNameService.getCounters().subscribe((res) => {
+      this.CounterOptions = (res ?? []).map((x: any) => ({
+        label: x.label,
+        formLabel: `${x.value} - ${x.label}`,
+        value: x.value,
+      }));
+    });
   }
-  // 送出查詢（無 doQuery / buildPayload）
-  // 送出查詢（依新回傳結構 Data[].invoice.InvoiceDetail）
+
+  /** 子層 Table lazy 事件 */
+  override onLazyLoadData(event: LazyLoadEvent, queryForm: FormGroup): void {
+    // 1) 當排序變更時回到第一頁
+    const currentSort = JSON.stringify(queryForm.value?.SortBy ?? []);
+    const nextSort    = JSON.stringify(event.SortBy ?? []);
+    const nextPageIdx = currentSort !== nextSort ? 1
+                      : (event.pageIndex ?? queryForm.value.pageIndex ?? 1);
+
+    // 2) 同步回表單（不觸發 valueChanges）
+    queryForm.patchValue(
+      {
+        pageIndex: nextPageIdx,
+        pageSize : event.pageSize ?? queryForm.value.pageSize,
+        SortBy   : event.SortBy ?? queryForm.value.SortBy,
+      },
+      { emitEvent: false },
+    );
+
+    // 3) 更新表頭多欄位排序狀態
+    this.sortMeta = (event.SortBy ?? []).map(s => ({ ...s }));
+
+    // 4) 生成這次查詢的簽章，避免重複打 API
+    const sig = JSON.stringify({
+      pageIndex: queryForm.value.pageIndex,
+      pageSize : queryForm.value.pageSize,
+      SortBy   : queryForm.value.SortBy,
+    });
+    if (sig === this.lastQuerySig) return;
+    this.lastQuerySig = sig;
+
+    // 5) 只呼叫一次 onSubmit（無需在 HTML 再呼叫）
+    if (this.lazyTimer) clearTimeout(this.lazyTimer);
+    this.lazyTimer = setTimeout(() => this.onSubmit(queryForm), 0);
+  }
+
 onSubmit(form: FormGroup): void {
   this.handleSubmit(form, () => {
-    const val = this.queryForm.value as any;
+    const raw = this.queryForm.getRawValue() as any;
 
-    // 轉本地 ISO(yyyy-MM-ddTHH:mm:ss) — 去掉時區偏移
+    // yyyy-MM-ddTHH:mm:ss（以本地時間、去掉時區偏移）
     const toIso = (x: any) => {
       if (!x) return undefined;
       const d = typeof x === 'string' ? new Date(x) : (x as Date);
@@ -135,77 +236,91 @@ onSubmit(form: FormGroup): void {
         .slice(0, 19);
     };
 
-    // 組 payload（含分頁/排序）
+    // 1) 分頁 / 排序
+    const pageSize  = Number(raw?.pageSize)  || 10;
+    const pageIndex = Number(raw?.pageIndex) || 1;
+  
+
+    const sortByArr = Array.isArray(raw?.SortBy) && raw.SortBy.length
+      ? raw.SortBy
+      : (this.sortMeta.length ? this.sortMeta : this.defaultSort);
+
+
+
+    // 2) 組 payload
     const payload: any = {
-      ...val,
-      TXN_DateStart: toIso(val?.TXN_DateStart),
-      TXN_DateEnd: toIso(val?.TXN_DateEnd),
-      pageSize: val?.pageSize,
-      pageIndex: val?.pageIndex,
-      SortBy: val?.SortBy,
-      OrderBy: val?.OrderBy,
-      Offset: val?.Offset,
+      ...raw,
+      TXN_DateStart: toIso(raw?.TXN_DateStart ?? this.yesterday),
+      TXN_DateEnd:   toIso(raw?.TXN_DateEnd   ?? this.yesterday),
+      // 數字欄位轉型
+      ...(raw?.TXN_No_Start !== '' && raw?.TXN_No_Start != null ? { TXN_No_Start: Number(raw.TXN_No_Start) } : {}),
+      ...(raw?.TXN_No_End   !== '' && raw?.TXN_No_End   != null ? { TXN_No_End:   Number(raw.TXN_No_End)   } : {}),
+      // 分頁/排序鍵
+      pageSize,
+      pageIndex,
+      
+      SortBy: sortByArr,
+      
     };
 
-    // 數值欄位保險轉型
-    if ((val?.TXN_No_Start ?? '') !== '') payload.TXN_No_Start = Number(val.TXN_No_Start);
-    if ((val?.TXN_No_End ?? '') !== '') payload.TXN_No_End = Number(val.TXN_No_End);
-
-    // 清除空字串/null/undefined/空陣列
+    // 3) 清空空值（保留 0/false）
     Object.keys(payload).forEach((k) => {
       const v = payload[k];
       if (v === '' || v === null || v === undefined) delete payload[k];
       if (Array.isArray(v) && v.length === 0) delete payload[k];
     });
 
+    // 4) 呼叫 API
     this.loading = true;
     this.messageService?.blockUi();
 
     this.tls23040Service.queryTLS23040(payload).subscribe({
       next: (res) => {
-        const items = Array.isArray(res?.Data) ? res.Data : [];
+        const packs = Array.isArray(res?.Data) ? res.Data : [];
 
-        // ⬇️ 直接取所有群組的發票明細做為顯示列
-        const invoiceRows = items.flatMap((x: any) => x?.invoice?.InvoiceDetail ?? []);
-
-        // ⬇️ 後端總計（優先取回傳的 TotalGUI / TotalSaleAmt，否則用明細加總）
-        let totalGUI = items.reduce(
-          (sum: number, x: any) => sum + Number(x?.invoice?.TotalGUI ?? 0),
-          0
+        // ===== 發票明細 =====
+        const invoiceDetails = packs.flatMap((p: any) =>
+          Array.isArray(p?.invoice?.InvoiceDetail) ? p.invoice.InvoiceDetail : []
         );
-        let totalSaleAmt = items.reduce(
-          (sum: number, x: any) => sum + Number(x?.invoice?.TotalSaleAmt ?? 0),
-          0
+        this.invoiceRows = invoiceDetails.map((r: any, i: number) => {
+          const isNormal = String(r?.TXN_StatusName ?? '') === '正常交易';
+          return {
+            ...r,
+            ORG_TXN_Date: isNormal ? '' : r?.ORG_TXN_Date ?? '',
+            ORG_ECR_No:   isNormal ? '' : r?.ORG_ECR_No   ?? '',
+            ORG_TXN_No:   isNormal ? '' : r?.ORG_TXN_No   ?? '',
+            _rowKey: `inv|${r.TXN_Date ?? ''}|${r.ECR_No ?? ''}|${r.TXN_No ?? ''}|${i}`,
+          };
+        });
+
+        // ===== 付款明細 =====
+        const paymentDetails = packs.flatMap((p: any) =>
+          Array.isArray(p?.payment?.PaymentDetail) ? p.payment.PaymentDetail : []
         );
-
-        if (invoiceRows.length && (totalGUI === 0 || totalSaleAmt === 0)) {
-          totalGUI = invoiceRows.reduce(
-            (s: number, r: any) => s + Number(r?.TXN_TotGUI ?? 0),
-            0
-          );
-          totalSaleAmt = invoiceRows.reduce(
-            (s: number, r: any) => s + Number(r?.TXN_TotSaleAmt ?? 0),
-            0
-          );
-        }
-
-        // ✅ 提供給 Table footer 用的外部總計（欄位名要對 columns 的 field）
-        this.backendTotals = {
-          TXN_TotGUI: Number(totalGUI ?? 0),
-          TXN_TotSaleAmt: Number(totalSaleAmt ?? 0),
-        };
-
-        // ✅ 只放一般列到 data（避免把總計列混進分頁）
-        this.data = invoiceRows.map((r: any, i: number) => ({
+        this.paymentRows = paymentDetails.map((r: any, i: number) => ({
           ...r,
-          _rowKey: `${r.TXN_Date ?? ''}|${r.ECR_No ?? ''}|${r.TXN_No ?? ''}|${i}`,
+          _rowKey: `pay|${r.TXN_Date ?? ''}|${r.ECR_No ?? ''}|${r.TXN_No ?? ''}|${i}`,
         }));
 
-        this.totalRecords = Number(res?.TotalCount ?? this.data.length);
+        // ===== 折扣明細 =====
+        const discountDetails = packs.flatMap((p: any) =>
+          Array.isArray(p?.discount?.DiscountDetail) ? p.discount.DiscountDetail : []
+        );
+        this.discountRows = discountDetails.map((r: any, i: number) => ({
+          ...r,
+          _rowKey: `disc|${r.TXN_Date ?? ''}|${r.ECR_No ?? ''}|${r.TXN_No ?? ''}|${i}`,
+        }));
+
+        // 依目前檢視模式更新總計與筆數
+        this.updateBackendTotalsForView();
+        this.totalRecords = Number(res?.TotalCount ?? this.activeData.length ?? 0);
       },
-      error: (err) => {
-        console.error('TLS23040 查詢失敗', err);
-        this.messageService?.errorBubble?.('查詢失敗，請稍後再試');
+      error: () => {
+        this.invoiceRows = [];
+        this.paymentRows = [];
+        this.discountRows = [];
+        this.totalRecords = 0;
+        this.loading = false;
       },
       complete: () => {
         this.loading = false;
@@ -217,31 +332,136 @@ onSubmit(form: FormGroup): void {
 
 
 
-
   getLabelFromOptions(value: any, options: any[]): string {
     const found = options?.find((opt) => String(opt.value) === String(value));
     return found ? found.label : value;
   }
 
-  columns = [
-    { field: 'TXN_Date', header: '銷售日期', visible: true, format: (val: string) => { const d = new Date(val); return isNaN(d.getTime()) ? val : `${d.getFullYear()}/${(d.getMonth() + 1).toString().padStart(2, '0')}/${d.getDate().toString().padStart(2, '0')}`; }, },
-    { field: 'ECR_No', header: '收銀機號', visible: true },
-    { field: 'TXN_No', header: '交易序號', visible: true },
-    { field: 'tlt_no', header: '專櫃編號', visible: true },
-    { field: 'tlt_name', header: '櫃位名稱', visible: true, style: 'text-left', },
-    { field: 'gui_track', header: '發票起始號碼(字軌)', visible: true },
-    { field: 'GUIBegNo', header: '發票起始號碼', visible: true },
-    { field: 'GUIEndNo', header: '發票結束號碼', visible: true },
-    { field: 'TXN_TotGUI',header: '發票金額', isTotal: true,visible: true,style: 'text-right',format: (val: number) => val?.toLocaleString('en-US') || '0',},
-    { field: 'TXN_TotSaleAmt',header: '業績金額', isTotal: true,visible: true,style: 'text-right',format: (val: number) => val?.toLocaleString('en-US') || '0',},
-    { field: 'TXN_StatusName',header: '交易型態',visible: true,format: (val: any) =>  this.getLabelFromOptions(val, this.txnStatusOptions),},
-    { field: 'TXN_TaxFreeCertNo',header: '外交官免稅卡號',visible: true,},
-    { field: 'USR_No', header: '收銀員', visible: true },
-    { field: 'TXN_PkngUID', header: '停車卡號', visible: true },
-    { field: 'ORG_TXN_Date', header: '原交易日期', visible: true, format: (val: string) => { const d = new Date(val); return isNaN(d.getTime()) ? val : `${d.getFullYear()}/${(d.getMonth() + 1).toString().padStart(2, '0')}/${d.getDate().toString().padStart(2, '0')}`; }, },
-    { field: 'ORG_ECR_No', header: '原收銀機號', visible: true },
-    { field: 'ORG_TXN_No', header: '原交易序號', visible: true },
-    { field: 'TXN_MemCard', header: '會員卡號', visible: true },
-    { field: 'TXN_TotPayScoreAmt', header: '會員積點折抵', visible: true, style: 'text-right', format: (val: number) => val?.toLocaleString('en-US') || '0', },
-  ];
+  
+  // ===== 新增：動態欄位/資料 getter =====
+get activeColumns() {
+  return this.viewMode === 'payment' ? this.paymentColumns
+       : this.viewMode === 'discount' ? this.discountColumns
+       : this.invoiceColumns;
+}
+get activeData() {
+  return this.viewMode === 'payment' ? this.paymentRows
+       : this.viewMode === 'discount' ? this.discountRows
+       : this.invoiceRows;
+}
+
+// ===== 新增：切換時更新總計與筆數 =====
+onViewChange() {
+  this.updateBackendTotalsForView();
+  this.totalRecords = this.activeData.length;
+}
+  private formatNumber(val: number): string {
+    return val?.toLocaleString('en-US') || '0';
+  }
+// ===== 新增：依檢視模式設定 backendTotals（欄位名需對應 columns 的 field）=====
+private updateBackendTotalsForView() {
+  if (this.viewMode === 'invoice') {
+    // 來自後端 invoice.TotalGUI / TotalSaleAmt，若沒有就用明細加總
+    const guiSum  = this.invoiceRows.reduce((s, r) => s + Number(r?.TXN_TotGUI ?? 0), 0);
+    const saleSum = this.invoiceRows.reduce((s, r) => s + Number(r?.TXN_TotSaleAmt ?? 0), 0);
+    this.backendTotals = { TXN_TotGUI: guiSum, TXN_TotSaleAmt: saleSum };
+  } else if (this.viewMode === 'payment') {
+    const amt = this.paymentRows.reduce((s, r) => s + Number(r?.TXN_PayAmt ?? 0), 0);
+    const tax = this.paymentRows.reduce((s, r) => s + Number(r?.TXN_TaxAlwnc ?? 0), 0);
+    this.backendTotals = { TXN_PayAmt: amt, TXN_TaxAlwnc: tax };
+  } else {
+    const salePrc = this.discountRows.reduce((s, r) => s + Number(r?.PLU_SalePrc ?? 0), 0);
+    const net     = this.discountRows.reduce((s, r) => s + Number(r?.TXN_Net ?? 0), 0);
+    const tax     = this.discountRows.reduce((s, r) => s + Number(r?.TXN_Tax ?? 0), 0);
+    this.backendTotals = { PLU_SalePrc: salePrc, TXN_Net: net, TXN_Tax: tax };
+  }
+}
+  /** yyyy/MM/dd */
+  private formatDate(val: string): string {
+    const date = new Date(val);
+    if (isNaN(date.getTime())) return val;
+    return `${date.getFullYear()}/${(date.getMonth() + 1).toString().padStart(2, '0')}/${date.getDate().toString().padStart(2, '0')}`;
+  }
+
+  // ★原本的 columns 改名：
+invoiceColumns = [
+  {
+    field: 'TXN_Date', header: '銷售日期', visible: true,
+    format: (val: string) => {
+      const d = new Date(val);
+      return isNaN(d.getTime()) ? val :
+        `${d.getFullYear()}/${(d.getMonth() + 1).toString().padStart(2, '0')}/${d.getDate().toString().padStart(2, '0')}`;
+    },
+  },
+  { field: 'ECR_No', header: '收銀機號', visible: true },
+  { field: 'TXN_No', header: '交易序號', visible: true },
+  { field: 'tlt_no', header: '專櫃編號', visible: true },
+  { field: 'tlt_name', header: '櫃位名稱', visible: true, style: 'text-left' },
+  { field: 'gui_track', header: '發票起始號碼(字軌)', visible: true },
+  { field: 'GUIBegNo', header: '發票起始號碼', visible: true },
+  { field: 'GUIEndNo', header: '發票結束號碼', visible: true },
+  { field: 'TXN_TotGUI', header: '發票金額', isTotal: true, visible: true, style: 'text-right',
+    format: (val: number) => val?.toLocaleString('en-US') || '0' },
+  { field: 'TXN_TotSaleAmt', header: '業績金額', isTotal: true, visible: true, style: 'text-right',
+    format: (val: number) => val?.toLocaleString('en-US') || '0' },
+  { field: 'TXN_StatusName', header: '交易型態', visible: true,
+    format: (val: any) => this.getLabelFromOptions(val, this.txnStatusOptions) },
+  { field: 'TXN_TaxFreeCertNo', header: '外交官免稅卡號', visible: true },
+  { field: 'USR_No', header: '收銀員', visible: true },
+  { field: 'TXN_PkngUID', header: '停車卡號', visible: true },
+  {
+    field: 'ORG_TXN_Date', header: '原交易日期', visible: true,
+    format: (val: string) => {
+      const d = new Date(val);
+      return isNaN(d.getTime()) ? val :
+        `${d.getFullYear()}/${(d.getMonth() + 1).toString().padStart(2, '0')}/${d.getDate().toString().padStart(2, '0')}`;
+    },
+  },
+  { field: 'ORG_ECR_No', header: '原收銀機號', visible: true },
+  { field: 'ORG_TXN_No', header: '原交易序號', visible: true },
+  { field: 'TXN_MemCard', header: '會員卡號', visible: true },
+  { field: 'TXN_TotPayScoreAmt', header: '會員積點折抵', visible: true, style: 'text-right',
+    format: (val: number) => val?.toLocaleString('en-US') || '0' },
+];
+
+
+// ===== 新增：Payment 欄位 =====
+paymentColumns = [
+  { field: 'TXN_Date', header: '銷售日期', visible: true, format: (v: string) => this.formatDate(v) },
+  { field: 'ECR_No', header: '收銀機號', visible: true },
+  { field: 'TXN_No', header: '交易序號', visible: true },
+  { field: 'tlt_no', header: '專櫃編號', visible: true },
+  { field: 'tlt_name', header: '櫃位名稱', visible: true, style: 'text-left' },
+  { field: 'PAY_NO', header: '付款別代號', visible: true },
+  { field: 'PAY_NAME', header: '付款別', visible: true },
+  { field: 'TXN_PayAmt', header: '金額', visible: true, isTotal: true, style: 'text-right',
+    format: (val: number) => this.formatNumber(val) },
+  { field: 'TXN_TaxAlwnc', header: '備抵稅額', visible: true, isTotal: true, style: 'text-right',
+    format: (val: number) => this.formatNumber(val) },
+  { field: 'CRD_Name', header: '信用卡別', visible: true },
+  { field: 'CRD_No', header: '信用卡卡號/條碼', visible: true, style: 'text-right' },
+  { field: 'TERM_No', header: '分期', visible: true },
+];
+
+// ===== 新增：Discount 欄位 =====
+discountColumns = [
+  { field: 'TXN_Date', header: '銷售日期', visible: true, format: (v: string) => this.formatDate(v) },
+  { field: 'ECR_No', header: '收銀機號', visible: true },
+  { field: 'TXN_No', header: '交易序號', visible: true },
+  { field: 'tlt_no', header: '專櫃編號', visible: true },
+  { field: 'tlt_name', header: '櫃位名稱', visible: true, style: 'text-left' },
+  { field: 'TXN_GUINo', header: '發票號碼', visible: true },
+  { field: 'PLU_SalePrc', header: '單項售價', visible: true, isTotal: true, style: 'text-right',
+    format: (val: number) => this.formatNumber(val) },
+  { field: 'TXN_Net', header: '未稅(免稅)金額', visible: true, isTotal: true, style: 'text-right',
+    format: (val: number) => this.formatNumber(val) },
+  { field: 'TXN_Tax', header: '稅額', visible: true, isTotal: true, style: 'text-right',
+    format: (val: number) => this.formatNumber(val) },
+  { field: 'tlt_id_desc', header: '商品抽成類別', visible: true },
+  { field: 'TXN_DiscCode', header: '歸屬折扣代號', visible: true },
+  { field: 'TXN_DiscName', header: '歸屬折扣名稱', visible: true },
+  { field: 'PLU_TaxTypeName', header: '稅別名稱', visible: true },
+  { field: 'PLU_MagNo', header: '單品編號', visible: true },
+  { field: 'TXN_StatusName', header: '狀態', visible: true },
+];
 }

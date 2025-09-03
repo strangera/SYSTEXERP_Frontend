@@ -19,6 +19,7 @@ import { CalendarComponent } from '@shared/componentkit/calendar/calendar.compon
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { TableComponent } from '@shared/componentkit/table/table.component';
 import { ValidationService } from '@shared/service/validation.service';
+import { CustomFooterTableComponent } from '@shared/componentkit/custom-footer-table/customFooterTable.component';
 
 
 const yesterday = new Date();
@@ -42,7 +43,8 @@ yesterday.setDate(yesterday.getDate() - 1);
     NgIf,
     TooltipModule,
     DropdownRangeComponent,
-    DatePipe
+    DatePipe,
+    CustomFooterTableComponent
   ],
 })
 export class TLS2A010Component extends BasicQueryPageComponent<any> implements OnInit {
@@ -50,8 +52,8 @@ export class TLS2A010Component extends BasicQueryPageComponent<any> implements O
   queryForm = this.formBuilder.group({
     TXN_Date: [yesterday, Validators.required],
     Floor_No: [''],
-    ECR_No_Start: ['', Validators.required],
-    ECR_No_End: ['', Validators.required],
+    ECR_No_Start: [''],
+    ECR_No_End: [''],
     PAY_NO: ['', Validators.required],
     Building_No: [''],
     SYS_StoreNo: [this.authService.currentUserValue?.SYS_StoreNo ?? ''],
@@ -67,8 +69,10 @@ export class TLS2A010Component extends BasicQueryPageComponent<any> implements O
   selectedItems: any[] = [];
   selectionMode = 'single';
   data: any[] = [];
+  footerData: any[] = [];
   totalRecords = 0;
   PAY_NO = '';
+  PAY_Type = '';
   TXN_Date = '';
   todayDisplay = '';
   systemTypeOptions: IDropdownItem[] = [];
@@ -178,17 +182,18 @@ export class TLS2A010Component extends BasicQueryPageComponent<any> implements O
             No: x.No,
             PAY_Type: x.PAY_Type ?? ''
           };
-        });
+        }).filter(opt => ['0', '1', '6', 'B', 'M'].includes(opt.PAY_Type));  // <<== 過濾這些值
 
-
+        const payNo = this.queryForm.value.PAY_NO;
+        if (payNo) {
+          this.onPayNoChange(payNo);
+        }
       });
-
 
     const today = new Date();
     const mm = today.getMonth() + 1; // 月份是從 0 開始的
     const dd = today.getDate();
     this.todayDisplay = `${mm}/${dd}`;
-
 
   }
 
@@ -238,7 +243,7 @@ export class TLS2A010Component extends BasicQueryPageComponent<any> implements O
           [key: string]: any; // Add additional properties as needed
         }
 
-        this.data = (response?.Data ?? []).map((item: TLS2A010Item) => {
+        this.data = (response?.Data.mainData ?? []).map((item: TLS2A010Item) => {
           const systemAmt = Number(item.System_Amt ?? 0);
           const realAmt = Number(item.Real_Amt ?? 0);
           const diff = systemAmt - realAmt;
@@ -258,6 +263,7 @@ export class TLS2A010Component extends BasicQueryPageComponent<any> implements O
             OVER_Status: status  // 欠 / 平 / 溢
           };
         });
+        this.footerData = [...response.Data.totalData]; // table總計那列的資料
         // this.data = (response?.Data ?? [])
         // .map((item: TLS2A010Item) => {
         //   // 先取原始日期字串
@@ -279,8 +285,6 @@ export class TLS2A010Component extends BasicQueryPageComponent<any> implements O
         //     TXN_Date: formattedDate,
         //   };
         // });
-
-
         const first = this.data[0];
         this.PAY_NO = this.queryForm.value.PAY_NO || '';
         this.TXN_Date = first?.TXN_Date || '';
@@ -304,6 +308,7 @@ export class TLS2A010Component extends BasicQueryPageComponent<any> implements O
 
     // 依照 API 格式，包成 selectList
     const payload = {
+      PAY_Type: this.PAY_Type,
       selectList: selectedItems.map(item => ({
         ID: item.ID,
         PAY_NO: item.PAY_NO,
@@ -333,20 +338,16 @@ export class TLS2A010Component extends BasicQueryPageComponent<any> implements O
 
   onPayNoChange(payNo: string): void {
     console.log(payNo);
-    const payType = this.paymentToolOptions.find(opt => opt.No === payNo)?.PAY_Type ?? '';
-    console.log(payType);
-
+    this.PAY_Type = this.paymentToolOptions.find(opt => opt.No === payNo)?.PAY_Type ?? '';
     this.PAY_NO = payNo;
 
-    if (payType === '0') {
+    if (this.PAY_Type === '0') {
       this.selectedColumns = this.creditCardColumns;
       this.columnGroup = this.creditCardGroup;
     } else {
       this.selectedColumns = this.defaultColumns;
       this.columnGroup = [];
     }
-
-
   }
   override onDetail(row: any): void {
     console.log('缺單審核被點擊:', row);
@@ -354,7 +355,6 @@ export class TLS2A010Component extends BasicQueryPageComponent<any> implements O
     this.tls2a010Service.queryDetailTLS2A010(row).subscribe({
       next: (res) => {
         const detailData = res?.Data ?? [];
-
         const rowdataWithDetail = {
           ...row,
           details: detailData

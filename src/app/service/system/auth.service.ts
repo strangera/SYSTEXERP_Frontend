@@ -16,12 +16,12 @@ import zhHant from '@angular/common/locales/zh-Hant';
 import { InactivityService } from './inactivity.service';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 registerLocaleData(zhHant, 'zh-Hant-TW');
-export type OuterTokenResponse = {
+export interface OuterTokenResponse {
   token: string;
   expiresAt: string;
   expiresInSeconds: number;
   tokenType: string;
-};
+}
 
 export interface ApiResponse<T> {
   Status: string;
@@ -216,5 +216,9 @@ export class AuthService {
       `${this.apiUrl}/SSOLogin/getOuterToken`,
       { headers: { Accept: 'application/json' } }
     );
+  }
+
+  querySystemNotice(): Observable<ApiResponse<{ Pub_StartDate: string, Pub_EndDate: string, Pub_Type: string, Pub_Event: string, Pub_Description: string }[]>> {
+    return this.http.post<ApiResponse<{ Pub_StartDate: string, Pub_EndDate: string, Pub_Type: string, Pub_Event: string, Pub_Description: string }[]>>(`${this.apiUrl}/User/querySystemNotice`, {})
   }
 }

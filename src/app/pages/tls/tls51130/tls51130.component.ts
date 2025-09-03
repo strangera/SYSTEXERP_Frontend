@@ -107,7 +107,7 @@ export class TLS51130Component extends BasicQueryPageComponent<any> {
         }
       },
       error: () => {
-        this.messageService.errorBubble('查詢錯誤');
+        
         this.loading = false;
       },
       complete: () => {

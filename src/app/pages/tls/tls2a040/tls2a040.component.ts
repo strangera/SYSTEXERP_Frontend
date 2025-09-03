@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
-import { Column } from '@shared/componentkit/table/table.model';
+import { Column, formatDate, formatDateToYYYYMMDD } from '@shared/componentkit/table/table.model';
 import { AccordionModule } from 'primeng/accordion';
 import { DropdownModule } from 'primeng/dropdown';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
@@ -25,6 +25,16 @@ import { Tls2a040Service } from '@service/api/tls/tls2a040.service';
 import { createPaginationConfig } from 'src/app/shared/componentkit/table/table.model';
 import { RadiobuttonComponent } from "@shared/componentkit/radiobutton/radiobutton.component";
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
+import { Button } from 'primeng/button';
+import { NgStyle } from '@angular/common';
+import JSZip from 'jszip';
+import saveAs from 'file-saver';
+
+export interface FileItem {
+  fileData: string; // Base64 字串
+  fileName: string; // 檔案名稱
+  contentType: string; // MIME 類型
+}
 
 @Component({
   selector: 'app-tls22030',
@@ -45,8 +55,9 @@ import { InputTextComponent } from '@shared/componentkit/input-text/input-text.c
     CalendarRangeQuickComponent,
     InputNumberRangeComponent,
     InputTextComponent,
-    RadiobuttonComponent
-
+    RadiobuttonComponent,
+    Button,
+    NgStyle
   ],
 })
 export class TLS2A040Component extends BasicQueryPageComponent<any> implements OnInit {
@@ -70,15 +81,15 @@ export class TLS2A040Component extends BasicQueryPageComponent<any> implements O
   totalRecords = 0;
   listZeroDifferenceOptions: any[] = [];
   columns: Column[] = [
+    { field: 'TXN_Date', header: '銷售日期', format: formatDate },
     { field: 'ECR_No', header: '收銀機號' },
     { field: 'TXN_No', header: '交易序號' },
-    { field: 'TXN_Date', header: '銷售日期' },
-    { field: 'tlt_name', header: '專櫃名稱' },
+    { field: 'TLT_No', header: '專櫃編號' },
+    { field: 'tlt_name', header: '櫃位名稱' },
+    { field: 'TXN_GUIBegNo', header: '發票號碼' },
+    { field: 'CRD_No', header: '信用卡卡號' },
     { field: 'TXN_PayAmt', header: '金額' },
     { field: 'check_status', header: '狀況' },
-    { field: 'CRD_No', header: '信用卡卡號' },
-    { field: 'Floor_No', header: '樓層' },
-    { field: 'Building_No', header: '館別' },
     { field: 'check_remark', header: '備註' }
   ];
 
@@ -93,6 +104,7 @@ export class TLS2A040Component extends BasicQueryPageComponent<any> implements O
   ];
   floorOptions: any[] = [];
   buildingNoOptions: IDropdownItem[] = [];
+  selectedItems: any[] = [];
 
   constructor(
     private locationOptionsService: LocationOptionsService,
@@ -147,11 +159,21 @@ export class TLS2A040Component extends BasicQueryPageComponent<any> implements O
 
       this.tls2a040Service.queryTLS2A040(form.value).subscribe({
         next: (res) => {
-          this.data = res.Data ?? [];
+          const rawData = res.Data ?? [];
+
+          this.data = rawData.map((item: any) => {
+            const statusOption = this.statusOptions.find(opt => opt.value === item.check_status);
+            return {
+              ...item,
+              TXN_GUIBegNo: item.TXN_GUIBegNo ?? '--',
+              check_status: statusOption ? statusOption.label : item.check_status,  // 顯示中文
+              TXN_No: item.TXN_No != null ? item.TXN_No.toString().padStart(6, '0') : '' // 補零
+            };
+          });
+
           this.totalRecords = res.TotalCount ?? this.data.length;
           this.loading = false;
 
-          // 儲存查詢條件
           this.queryStateService.setQueryState(this.ProgNo, this.queryForm.value);
         },
         error: (err) => {
@@ -162,6 +184,10 @@ export class TLS2A040Component extends BasicQueryPageComponent<any> implements O
       });
     });
   }
+
+
+
+
   getDocLabel(): string {
     const docType = this.queryForm.get('docType')?.value;
     switch (docType) {
@@ -175,5 +201,53 @@ export class TLS2A040Component extends BasicQueryPageComponent<any> implements O
         return '編號';
     }
   }
+  exportReport(selectedItems: any[]): void {
+    if (!selectedItems || selectedItems.length === 0) {
+      this.messageService.warnBubble('請先勾選要匯出的項目');
+      return;
+    }
+    const payload = {
+      selectList: selectedItems,
+      docType: this.queryForm.get('docType')?.value,
+    }
+    this.tls2a040Service.exportTLS2A040(payload).subscribe(response => {
+      if (response.Status !== '0000') {
+        return;
+      }
+      const fileList = response.Data;
+      if (fileList.length === 1) {
+        // 單檔直接下載
+        const file = fileList[0];
+        const fileData = atob(file.fileData); // 將 Base64 轉為二進位
+        const byteArray = new Uint8Array(fileData.length);
+        for (let i = 0; i < fileData.length; i++) {
+          byteArray[i] = fileData.charCodeAt(i);
+        }
+        const blob = new Blob([byteArray], { type: file.contentType });
+        saveAs(blob, file.fileName);
+      } else {
+        // 多檔壓縮成 ZIP
+        const zip = new JSZip();
+        fileList.forEach((file: FileItem) => {
+          const fileData = atob(file.fileData); // 將 Base64 轉為二進位
+          const byteArray = new Uint8Array(fileData.length);
+          for (let i = 0; i < fileData.length; i++) {
+            byteArray[i] = fileData.charCodeAt(i);
+          }
+          zip.file(file.fileName, byteArray);
+        });
 
+        // 生成 ZIP 並下載
+        const timestamp = formatDateToYYYYMMDD(new Date());
+        zip.generateAsync({ type: 'blob' }).then((content) => {
+          saveAs(content, `CRD-${timestamp}.zip`);
+        });
+      }
+      this.onSubmit(this.queryForm);
+    });
+  }
+
+  get selectedCount(): number {
+    return this.selectedItems?.length ?? 0;
+  }
 }

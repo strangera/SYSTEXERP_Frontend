@@ -1,12 +1,11 @@
-
 import { HttpClient } from '@angular/common/http';
 import { Injectable, OnDestroy, signal } from '@angular/core';
-import { ASS2100ENGMeterType, ASS21010Payload, ASS21010UpdateStatus } from '@pages/ass/ass21010/ass21010.model';
+import { ASS2100ENGMeterType, ASS21010Data, ASS21010Delete, ASS21010Payload, ASS21010UpdateStatus } from '@pages/ass/ass21010/ass21010.model';
 import { ErrorHandlerService } from '@service/system/error-handler.service';
-import { IPOS2002LocationItem } from '@service/utility/dropDownList.service';
 import { NotificationService } from '@shared/component/notification-message/notification.service';
 import { BaseQueryResponse, DropdownOption } from '@shared/models/api/base-api.interface';
-import { Subject, catchError, finalize, of, take, takeUntil, tap } from 'rxjs';
+import saveAs from 'file-saver';
+import { Observable, Subject, catchError, finalize, map, of, take, takeUntil, tap } from 'rxjs';
 import { environment } from 'src/environments/environment';
 
 const apiUrl: string = `${environment.ApiUrl}`;
@@ -18,14 +17,15 @@ export class ASS21010Service implements OnDestroy {
     !!rowData;
   // (Reflect.has(rowData, 'CanDelete') && rowData.CanDelete == '1') || rowData.pod_status === ApprovalStatus.未核准;
 
-  public readonly ASS21010Detail = signal<unknown[]>([]);
+  public readonly ASS21010Data = signal<ASS21010Data[]>([]);
   public readonly engTypeSignal = signal<DropdownOption[]>([]);
   public readonly engMeterNoSignal = signal<ASS2100ENGMeterType[]>([]);
-  public readonly locationSignal = signal<IPOS2002LocationItem[]>([]);
+  public readonly locationSignal = signal<DropdownOption[]>([]);
 
   public engMeterNoLoading = !1;
   public locationLoading = !1;
   public tableLoading = !1;
+  public exportLoading = !1;
 
   private readonly engTypeCancel$ = new Subject<void>();
   private readonly engMeterNoCancel$ = new Subject<void>();
@@ -77,14 +77,74 @@ export class ASS21010Service implements OnDestroy {
     ).subscribe();
   };
 
-  public updateASS21010(payload: ASS21010Payload): void {
-    this.http.post<ASS21010UpdateStatus>(`${apiUrl}/ASS0000/ASS2000/updateASS21010`, payload).pipe(
+  public loadASS21010(payload: ASS21010Payload): void {
+    this.tableCancel$.next();
+    this.tableLoading = !0;
+    this.http.post<Omit<BaseQueryResponse<unknown>, 'Data'> & { Data: { Data: ASS21010Data[]; TotalCount: number; }; }>(`${apiUrl}/ASS0000/ASS2000/QueryASS21010`, payload).pipe(
+      take(1),
+      tap(response => this.ASS21010Data.set(response.Data.Data)),
+      catchError(error => this.errorHandler.handleError(error)),
+      finalize(() => this.tableLoading = !1),
+    ).subscribe();
+  }
+
+  public updateASS21010(payload: ASS21010Payload): Observable<ASS21010UpdateStatus['Data']> {
+    return this.http.post<ASS21010UpdateStatus>(`${apiUrl}/ASS0000/ASS2000/updateASS21010`, payload).pipe(
+      take(1),
+      map(res => res.Data),
+      catchError(error => this.errorHandler.handleError(error))
+    );
+  }
+
+  public deleteASS21010(payload: ASS21010Delete): Observable<ASS21010UpdateStatus['Data']> {
+    return this.http.post<ASS21010UpdateStatus>(`${apiUrl}/ASS0000/ASS2000/deleteASS21010`, payload).pipe(
+      take(1),
+      map(res => res.Data),
+      catchError(error => this.errorHandler.handleError(error))
+    );
+  }
+
+  public export(type: 'PDF' | 'Excel', payload: any): void {
+    this.exportLoading = !0;
+
+    const contentType = 'PDF' === type ? 'application/pdf' : 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+    const fileExtension = 'PDF' === type ? 'pdf' : 'xlsx';
+    const endpoint = 'PDF' === type ? 'exportPDF' : 'exportExcel';
+
+    const httpOptions = {
+      responseType: 'blob' as 'blob',
+      observe: 'response' as 'response',
+    };
+
+    this.http.post(`${apiUrl}/${endpoint}`, payload, httpOptions).pipe(
       take(1),
       tap(response => {
-        if (response.Data.IsUpdateSuccess) this.messageService.successBubble('更新成功');
-        else this.messageService.errorBox('更新失敗\n' + response.Data.ErrorMsg);
+        console.log(`onExport ${type} response:`, [response]);
+        if (response.body && response.body.size > 0) {
+          const contentDisposition = response.headers.get('content-disposition');
+          let filename = `${payload.file_name}.${fileExtension}`;
+
+          if (contentDisposition) {
+            const filenameRegex = /filename\*=UTF-8''([^;]+)|filename="([^"]+)"|filename=([^;]+)/;
+            const matches = contentDisposition.match(filenameRegex);
+            if (matches) {
+              filename = matches[1] || matches[2] || matches[3] || filename;
+              if (matches[1]) {
+                filename = decodeURIComponent(filename);
+              }
+              filename = filename.replace(/["']/g, '');
+            }
+          }
+
+          const blob = new Blob([response.body], { type: contentType });
+          saveAs(blob, filename);
+          this.messageService.successBubble(`${type} Export successful`);
+        } else {
+          this.messageService.errorBubble(`Response body is empty!`, `${type} Export Fail`);
+        }
       }),
-      catchError(error => this.errorHandler.handleError(error))
+      catchError(err => this.errorHandler.handleError(err)),
+      finalize(() => this.exportLoading = !1)
     ).subscribe();
   }
 

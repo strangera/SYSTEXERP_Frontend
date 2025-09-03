@@ -63,65 +63,54 @@ export abstract class BasicQueryPageComponent<T> {
   // }
 
   initializePage(progNo: string, cruPage?: string, queryForm?: FormGroup, onSubmit?: (form: FormGroup) => void) {
-    this.ProgNo = progNo;
+    this.ProgNo = progNo.toUpperCase();
     this.cruPage = cruPage ?? '';
     this.funInfo = this.authService.getUserPermissions(this.ProgNo);
     this.currentPageService.setCurrentProgNo(this.ProgNo);
-
     const state = this.router.lastSuccessfulNavigation?.extras.state;
     const previousRoute = state?.['fromRoute'] || this.activatedRoute.snapshot.queryParams['fromRoute'] || document.referrer || '/account/dashboard';
-    const sanitizedCruPage = this.cruPage.toLocaleLowerCase().startsWith('/') ? this.cruPage.toLocaleLowerCase().substring(1) : this.cruPage.toLocaleLowerCase();
-
-    console.log('🔍 initializePage: ProgNo=', this.ProgNo, 'previousRoute=', previousRoute, 'query=', this.queryStateService.getQueryStateValue(this.ProgNo));
-
     // 通用規則：檢查 previousRoute 是否包含 ProgNo（例如 tls13010），涵蓋 CRU 和所有 next 頁面
     const isFromRelatedRoute = previousRoute.includes(this.ProgNo.toLowerCase());
 
     if (this.canPerformAction('10') && isFromRelatedRoute && queryForm) {
       const query = this.queryStateService.getQueryStateValue(this.ProgNo);
-      console.log('🔍 Restoring query:', query);
       if (query) {
         queryForm?.patchValue(query);
         queryForm?.patchValue({ pageIndex: 1 });
-        console.log('🔍 Patched form:', queryForm.value);
         if (onSubmit) {
           onSubmit(queryForm);
-          console.log('🔍 onSubmit triggered');
         }
-      } else {
-        console.warn('⚠️ No query state found for ProgNo:', this.ProgNo);
       }
-    } else {
-      console.warn('⚠️ No restore: canPerformAction=', this.canPerformAction('10'), 'isFromRelatedRoute=', isFromRelatedRoute, 'queryForm=', !!queryForm);
     }
   }
   canPerformAction(action: string): boolean {
     return this.funInfo?.PrivilegeBehavior?.some(behavior => behavior.function_code === action) || false;
   }
-  navigateWithState(crudstatus: CRUDStatus, rowdata?: T | unknown) {
+  navigateWithState(crudstatus: CRUDStatus, rowdata?: T | unknown, queryConditions?: any) {
     const extras: NavigationExtras = {
       state: {
         crudstatus: crudstatus,
         rowdata: rowdata,
         fromRoute: this.router.url, // 加入 fromRoute 並設定為目前頁面的 URL
+        queryConditions: queryConditions
       },
     };
     this.router.navigate([`account/${this.cruPage.toLocaleLowerCase()}`], extras);
   }
   // 移動路由
-  onCreate(data?: unknown) {
+  onCreate(data?: unknown, queryConditions?: any) {
     if (this.canPerformAction('20')) { // '新增' 的 function_code 是 "20"
-      this.navigateWithState(CRUDStatus.Create, data);
+      this.navigateWithState(CRUDStatus.Create, data, queryConditions);
     }
   }
-  onEdit(data: T) {
+  onEdit(data: T, queryConditions?: any) {
     if (this.canPerformAction('30')) { // '修改' 的 function_code 是 "30"
-      this.navigateWithState(CRUDStatus.Edit, data);
+      this.navigateWithState(CRUDStatus.Edit, data, queryConditions);
     }
   }
-  onDetail(data: T) {
+  onDetail(data: T, queryConditions?: any) {
     if (this.canPerformAction('10')) { // '查詢' 的 function_code 是 "10"
-      this.navigateWithState(CRUDStatus.Read, data);
+      this.navigateWithState(CRUDStatus.Read, data, queryConditions);
     }
   }
   canDelete() {
@@ -134,6 +123,7 @@ export abstract class BasicQueryPageComponent<T> {
       this.navigateWithState(CRUDStatus.Create, data);
     }
   }
+
   // 送出查詢
   handleSubmit(queryForm: FormGroup, callback: () => void) {
     this.submitted = true;

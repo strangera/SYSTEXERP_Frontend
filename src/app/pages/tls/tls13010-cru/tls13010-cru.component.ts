@@ -346,6 +346,7 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
 
   // ==========  生命週期方法 ==========
   ngOnInit(): void {
+    window.scrollTo({ top: 0 });
     // 🎯 自定義初始化，完全控制流程
     this.initializeBasics();
     this.initializeViewMode();
@@ -721,12 +722,6 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
     const isNewMode = this.contractFlowService.isNewContractMode();
     const isViewMode = this.isViewMode;
 
-    console.log('📊 當前模式:', {
-      isNewMode,
-      isViewMode,
-      mode: isViewMode ? '檢視' : (isNewMode ? '新增' : '編輯')
-    });
-
     // 🎯 第一步：先啟用所有欄位
     Object.keys(this.dataForm.controls).forEach(key => {
       const control = this.dataForm.get(key);
@@ -821,7 +816,7 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
       paytype: '1',                    // 付款方式：匯款
       money_type: '30',                // 結帳方式：月結
       store_way: '1',                  // 🎯 配合方式：專櫃
-      check_typeList: ['2', '3'],      // 🎯 對帳方式：郵寄 + 網路（複選）
+      check_typeList: ['1', '2', '3'],      // 🎯 對帳方式：郵寄 + 網路（複選）
       water_flag: 'N',
       electric_flag: 'N',
       gas_flag: 'N',
@@ -907,7 +902,10 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
       credit_card: queryData['credit_card'] as string,
       total_amt: queryData['total_amt'] as string,
       total_amt_vendor: queryData['total_amt_vendor'] as string,
-      construct_fees: queryData['construct_fees'] as number,
+      check_day: Number(queryData['check_day']) || 0,
+      construct_fees: Number(queryData['construct_fees']) || 0,
+      expiration_fees: Number(queryData['expiration_fees']) || 0,
+      open_fees: Number(queryData['open_fees']) || 0,
       ticket_remarks: queryData['ticket_remarks'] as string,
       cap_saletype1: queryData['cap_saletype1'] as string,
       cap_saletype2: queryData['cap_saletype2'] as string,
@@ -1093,6 +1091,7 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
 
   // ==========  表單操作方法 ==========
   private saveToWorkflow(): void {
+    const currentTotalSpace = this.getTotaltlt_space();
     const formData = this.dataForm.getRawValue();
     // 🎯 型別轉換輔助函數
     const convertToString = (value: any): string | undefined => {
@@ -1106,21 +1105,19 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
       return String(value || '');
     };
 
-    // 🎯 準備符合 ContractInfo 介面的資料
+    // 準備符合 ContractInfo 介面的資料
     const contractInfo: ContractInfo = {
       id: formData.talent_id || '',
       talent_id: formData.talent_id || '',
-
       apply_no: formData.apply_no || '',
       tlt_name: formData.tlt_name || '',
       VEN_Name: formData.VEN_Name || '',
       contract_subno: formData.contract_subno || '',
       tlt_no: formData.tlt_no || '',
-      // 🎯 補充 FormBuilder 有但之前缺少的欄位
       approve_status: formData.approve_status || '',
       ven_no: formData.ven_no || '',
       contract_no: formData.contract_no || '',
-      // 🎯 日期欄位
+      // 日期欄位
       tlt_bdate: formData.tlt_bdate || '',
       tlt_edate: formData.tlt_edate || '',
       tlt_contract_bdate: formData.tlt_contract_bdate || '',
@@ -1129,7 +1126,7 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
       due_date: formData.due_date || '',
       contact_Date: formData.contact_Date || '',
 
-      // 🎯 業務欄位
+      // 業務欄位
       ven_uniform: formData.ven_uniform || '',
       paper_type: formData.paper_type || '',
       bus_type: formData.bus_type || '',
@@ -1141,7 +1138,7 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
       contact_USR_No: formData.contact_USR_No || '',
       contact_USR_Name: formData.contact_USR_Name || '',
 
-      // 🎯 數值欄位轉字串
+      //數值欄位轉字串
       base_rent: convertToString(formData.base_rent),
       deposit: convertToString(formData.deposit),
       credit_card: convertToString(formData.credit_card),
@@ -1153,10 +1150,9 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
       check_day: convertToString(formData.check_day),
       construct_deposit: formData.construct_deposit || '',
       expiration_fees: convertToString(formData.expiration_fees),
-      // 🎯 其他字串欄位
+      // 其他字串欄位
       deco_type: formData.deco_type || '',
       money_type: formData.money_type || '',
-      // check_type: formData.check_type || '',
       edc_yn: formData.edc_yn || '',
       tlt_openflag: formData.tlt_openflag || '',
       comm_yn: formData.comm_yn || '',
@@ -1167,8 +1163,7 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
       paytype: formData.paytype || '',
       vip_yn: formData.vip_yn || '',
       invoice_type: formData.invoice_type || '',
-
-      // 🎯 聯絡資訊
+      // 聯絡資訊
       email: formData.email || '',
       invoice_email: formData.invoice_email || '',
       CHECK_TITLE: formData.CHECK_TITLE || '',
@@ -1197,25 +1192,14 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
       gas_flag: formData.gas_flag || '',
       total_amt_unit: formData.total_amt_unit || '',
       total_amt_vendor_unit: formData.total_amt_vendor_unit || '',
-
-      // 🎯 陣列欄位
-      // 🎯 陣列欄位
       paymentMethods: formData.paymentMethods || [],
       check_typeList: formData.check_typeList || [],
-      // 🎯 特殊欄位
-      locationInfo: this.prepareLocationDataForSubmit(),
+      //特殊欄位
+      totalLocationSpace: currentTotalSpace, // 計算總營業坪數
+      locationInfo: this.prepareLocationDataForSubmit(), // 新增總營業坪數
     };
     this.contractFlowService.saveStep1Data(contractInfo);
     console.log('✅ 已暫存到工作流程');
-  }
-
-  // 檢查位置資料是否有變更
-  private hasLocationChanges(): boolean {
-    return this.locationData.some(item =>
-      item._status === 'new' ||
-      item._status === 'modified' ||
-      item._status === 'deleted'
-    );
   }
 
   private markFormGroupTouched(formGroup: FormGroup): void {
@@ -1260,30 +1244,6 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
         this.messageService.warnBubble('載入位置資料失敗');
       }
     });
-  }
-
-  private validateLocationDataIntegrity(): boolean {
-    let hasErrors = false;
-
-    this.locationData.forEach((item, index) => {
-      // 檢查必要欄位
-      if (!item.id) {
-        console.error(`位置項目 ${index} 缺少 ID`);
-        hasErrors = true;
-      }
-
-      // 檢查狀態一致性
-      if (item._status === 'new' && !item._isNew) {
-        console.warn(`位置項目 ${index} 狀態不一致: _status=new 但 _isNew=false`);
-      }
-
-      // 檢查已刪除項目是否還在顯示列表中
-      if (item._status === 'deleted') {
-        console.warn(`位置項目 ${index} 已標記刪除但仍在列表中`);
-      }
-    });
-
-    return !hasErrors;
   }
 
   private prepareLocationDataForSubmit(): LocationItem[] {
@@ -1376,13 +1336,7 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
   }
 
   onSubmitNext(): void {
-    // 🔍 加入除錯代碼來找出問題
-    console.log('🚀 點擊下一步按鈕');
-    console.log('📋 表單狀態:', {
-      valid: this.dataForm.valid,
-      invalid: this.dataForm.invalid,
-      errors: this.dataForm.errors
-    });
+
 
     if (this.isViewMode) {
       // 檢視模式：直接導航，不帶參數
@@ -1546,7 +1500,8 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
     } else {
       console.error(`❌ 找不到對應項目: ID=${newData.id}`);
     }
-
+    const newTotalSpace = this.getTotaltlt_space();
+    console.log('📊 位置異動後總坪數:', newTotalSpace);
     this.saveToWorkflow();
     this.messageService.successBubble('位置資料已儲存');
 
@@ -1554,6 +1509,19 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
       總數: this.locationData.length,
       可顯示: this.getDisplayLocationData().length
     });
+  }
+
+  private updateTotalLocationSpace(): void {
+    const totalSpace = this.getTotaltlt_space();
+
+    // 立即更新到工作流程
+    const currentStep1Data = this.contractFlowService.getStep1Data();
+    if (currentStep1Data) {
+      currentStep1Data.totalLocationSpace = totalSpace;
+      this.contractFlowService.saveStep1Data(currentStep1Data);
+    }
+
+    console.log('🔄 總坪數已更新:', totalSpace);
   }
 
   private checkLocationDuplicate(newData: LocationItem): boolean {
@@ -1713,7 +1681,7 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
       }))
     });
     this.displayLocationData = this.getDisplayLocationData();
-
+    this.updateTotalLocationSpace();
     // 儲存並顯示訊息
     this.saveToWorkflow();
     this.messageService.successBubble(`已刪除 ${validItems.length} 個位置項目`);
@@ -2539,6 +2507,9 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
     // 是否為抽成驗證
     this.updateCommissionValidators(tltTermType ?? '');
 
+    // 超出部份處理方式驗證
+    this.updateOverallStatusValidators(tltTermType ?? '');
+
     // 觸發表單驗證重新計算
     this.dataForm.updateValueAndValidity();
   }
@@ -2792,12 +2763,33 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
     return '';
   }
 
+  private updateOverallStatusValidators(tltTermType: string): void {
+    const overallStatusControl = this.dataForm.get('overall_status');
+
+    if (!overallStatusControl) return;
+
+    // 清除現有驗證器
+    overallStatusControl.clearValidators();
+
+    // 包底抽成(4)、階梯式抽成(5)、包底加階梯(6) 需要選擇超出部份處理方式
+    if (['4', '5', '6'].includes(tltTermType)) {
+      overallStatusControl.setValidators([Validators.required]);
+      console.log('✅ 超出部份處理方式設為必填');
+    } else {
+      console.log('ℹ️ 超出部份處理方式設為非必填');
+    }
+
+    overallStatusControl.updateValueAndValidity();
+  }
+
+
   /**
    * 🎯 新增：根據欄位獲取必填錯誤訊息
    */
   private getRequiredErrorMessage(fieldName: string): string {
     const requiredMessages: { [key: string]: string } = {
       'tlt_ctype_mtotal': '當前抽成別需要選擇包底類別',
+      'overall_status': '當前抽成別需要選擇超出部份處理方式',
       'base_rent': '預收租金為是時固定租金為必填',
       'CHECK_TITLE': '支票付款時票據抬頭為必填',
       'bank_id': '匯款付款時銀行代號為必填',
@@ -2832,4 +2824,14 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
 
     console.log('✅ 所有動態驗證器觸發完成');
   }
+
+  onClearAndExit(): void {
+    this.contractFlowService.clearTempData();
+    const extras: NavigationExtras = {
+      state: { fromRoute: this.router.url },
+    };
+    this.router.navigate(['account/tls/tls13010'], extras);
+    this.messageService.infoBubble('已清空暫存資料並離開');
+  }
+
 }

@@ -1,31 +1,22 @@
 <div class="card fin11020">
   <div class="flex gap-2 mb-2">
     <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
-    <!-- <app-button btnType="create" (click)="onCreate()"></app-button> -->
   </div>
   <p-accordion>
     <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
       [headerStyleClass]="'query-accordionTab'">
       <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
-          <app-calendar-range calendarType="dateMonthRange" class="col-12 md:col-6 lg:col-4" label="結轉資料年月"
-            [startControl]="queryForm.controls.REP_GUIYM_start" [endControl]="queryForm.controls.REP_GUIYM_end"
+          <app-calendar calendarType="dateMonthOne" class="col-12 md:col-6 lg:col-4" label="結轉資料年月"
+            [control]="queryForm.controls.DeclareYM"
             [submitted]="submitted" />
         </div>
 
         <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
           <app-button btnType="clear" [form]="queryForm"></app-button>
-          <app-button btnType="query" [loading]="loading"></app-button>
+          <app-button btnType="query" [loading]="loading" label="結轉媒體申報資料"></app-button>
         </div>
       </form>
     </p-accordionTab>
   </p-accordion>
-</div>
-<div class="card">
-  <app-table dataKey="id" [data]="data" [columns]="columns" (edit)="onEdit($event)" expansionDataKey=""
-    (detail)="onDetail($event)" [showCheckBox]="true" (delete)="onDelete($event)"
-    (selectionChange)="selectedRows = $event" [selectedItems]="selectedRows" [isRowSelectable]="isRowSelectable"
-    [multiSortMeta]="[{ field: 'REP_GUIYM', order: 1 }]" [totalRecords]="totalRecords"
-    (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [lazy]="true" [loading]="loading">
-  </app-table>
 </div>

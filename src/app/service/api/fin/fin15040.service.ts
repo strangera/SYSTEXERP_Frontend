@@ -23,7 +23,7 @@ export interface FIN15040QueryRequest extends BaseQueryRequest {
   Voucher_No_S?: string;             // 傳票號碼起
   Voucher_No_E?: string;             // 傳票號碼訖
   SAL_Type?: string;                 // 系統別
-  Voucher_no?: string;               // 傳票建立者
+  Voucher_no?: string;               // 傳票傳票建立者
   Asset_Notation?: string;           // 資產註記 0:固定資產 1:土地
   HasUniform?: boolean;              // 是否有統一編號
 }

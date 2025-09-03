@@ -61,7 +61,7 @@ export class TLS56050CRUComponent extends BasicCruPageComponent<ITLS56050Respons
 
   data: ITLS56050Detail[] = [];
   columns: Column[] = [
-    { field: 'MVD_SeqNo', header: '項次', visible: true },
+    // { field: 'MVD_SeqNo', header: '項次', visible: true },
     { field: 'PLU_MagNo', header: '商品管理編號', visible: true },
     { field: 'PLU_No', header: '國際條碼', visible: true },
     { field: 'PLU_Name', header: '商品名稱', visible: true },
@@ -70,6 +70,10 @@ export class TLS56050CRUComponent extends BasicCruPageComponent<ITLS56050Respons
     { field: 'APPLY_Qty', header: '調撥申請數量', visible: true },
     { field: 'OUTGODS_QTY', header: '發貨量', visible: true, type: 'inputNumber' },
     { field: 'OUTGODS_BuyNet', header: '發貨未稅進價小計', visible: true },
+    // { field: 'PLU_StockTaxType', header: '稅別', visible: true },
+    // { field: 'OUTGODS_BuyTax', header: '調撥發貨進價稅額', visible: true },
+    // { field: 'OUTGODS_BuyAmt', header: '調撥發貨進價合計', visible: true },
+    // { field: 'OUTGODS_SaleAmt', header: '調撥發貨售價小計', visible: true },
     { field: 'MVD_Remark', header: '單項說明', visible: true, type: 'input' },
   ];
 
@@ -94,10 +98,7 @@ export class TLS56050CRUComponent extends BasicCruPageComponent<ITLS56050Respons
     const mvmNo = this.rowdata?.MVM_No;
     if (mvmNo) {
       this.loading = true;
-      this.tls56050Service.getTLS56050Info(mvmNo).pipe(
-        finalize(() => this.loading = false),
-        untilDestroyed(this)
-      ).subscribe(response => {
+      this.tls56050Service.getTLS56050Info(mvmNo).pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(response => {
         const masterData = response.Data.TLS56050Data;
         const detailsData = response.Data.detail_TLS56050;
         this.dataForm.patchValue({
@@ -122,10 +123,10 @@ export class TLS56050CRUComponent extends BasicCruPageComponent<ITLS56050Respons
 
         this.data = detailsData.map(item => ({
           ...item,
-          OUTGODS_QTY: item.APPLY_Qty, // 發貨量預設等於申請量
-          OUTGODS_BuyNet: item.APPLY_BuyAmt
+          OUTGODS_QTY: item.OUTGODS_QTY !== null && item.OUTGODS_QTY !== undefined && item.OUTGODS_QTY !== 0 ?
+            item.OUTGODS_QTY : item.APPLY_Qty,
+
         }));
-        this.calculateTotals();
       });
     }
   }
@@ -141,58 +142,53 @@ export class TLS56050CRUComponent extends BasicCruPageComponent<ITLS56050Respons
       this.userOptions = options.Data.map(item => ({ label: `${item.No} - ${item.Name}`, value: item.No }));
     });
   }
-
+  dataChanged = false;
   onRowEditSave(event: RowEditSaveEvent): void {
-    const editedItem = event.data;
-    // 驗證發貨量不能大於或小於申請量
-    if (editedItem.OUTGODS_QTY !== editedItem.APPLY_Qty) {
-      this.messageService.errorBubble('發貨量必須與調撥申請量一致！');
-      // 恢復原始值
-      const originalItem = this.data.find(item => item.MVD_SeqNo === editedItem.MVD_SeqNo);
-      if (originalItem) {
-        Object.assign(editedItem, originalItem);
+    this.dataChanged = true;
+    // 取得被編輯的那一列資料的參考，以便直接修改它
+    // 使用 MVD_SeqNo 作為唯一識別碼來找到對應的物件
+    const editedItem = this.data.find(item => item.MVD_SeqNo === event.newData.MVD_SeqNo);
+
+    // 檢查是否成功找到該筆資料
+    if (editedItem) {
+      // 從 newData 取得使用者輸入的發貨數量
+      const outgodsQty = event.newData.OUTGODS_QTY;
+
+      // 使用原始資料 (oldData 或 editedItem) 中的單價來計算小計
+      const buyPrice = editedItem.MVD_BuyPrc;
+      const salePrice = editedItem.MVD_SalePrc;
+
+      // 計算發貨相關小計
+      const buyNet = buyPrice * outgodsQty;
+      editedItem.OUTGODS_QTY = outgodsQty; // 更新發貨數量
+      editedItem.OUTGODS_BuyNet = buyNet; // 更新發貨未稅進價小計
+
+      // 根據商品稅別重新計算稅額
+      if (editedItem.PLU_StockTaxType === '1') { // 應稅
+        editedItem.OUTGODS_BuyTax = Math.floor(buyNet * 0.05);
+      } else { // 免稅
+        editedItem.OUTGODS_BuyTax = 0;
       }
-      return;
+
+      // 計算總金額
+      editedItem.OUTGODS_BuyAmt = editedItem.OUTGODS_BuyNet + editedItem.OUTGODS_BuyTax;
+      editedItem.OUTGODS_SaleAmt = salePrice * outgodsQty;
     }
 
-    // 重新計算發貨相關小計
-    const buyNet = editedItem.MVD_BuyPrc * editedItem.OUTGODS_QTY;
-    editedItem.OUTGODS_BuyNet = buyNet;
-
-    if (editedItem.PLU_StockTaxType === '1') { // 應稅
-      editedItem.OUTGODS_BuyTax = Math.floor(buyNet * 0.05);
-    } else { // 免稅
-      editedItem.OUTGODS_BuyTax = 0;
-    }
-    editedItem.OUTGODS_BuyAmt = editedItem.OUTGODS_BuyNet + editedItem.OUTGODS_BuyTax;
-    editedItem.OUTGODS_SaleAmt = editedItem.MVD_SalePrc * editedItem.OUTGODS_QTY;
-
-    // 更新 this.data 中的項目
-    const index = this.data.findIndex(item => item.MVD_SeqNo === editedItem.MVD_SeqNo);
-    if (index !== -1) {
-      this.data[index] = editedItem;
-    }
-
+    // 重新計算所有列的總計
     this.calculateTotals();
+
+    // 觸發 Angular 變更偵測，讓表格重新渲染
+    this.data = [...this.data];
   }
 
   calculateTotals(): void {
-    // 定義一個輔助函式，用於安全地獲取值
-    const getValue = (item: any, outgodsField: string, applyField: string) => {
-      // 檢查 OUTGODS 欄位是否有值 (非 null 或 undefined)
-      const outgodsValue = item[outgodsField];
-      // 如果 OUTGODS 欄位為 null，則使用 APPLY 欄位的值，否則使用 OUTGODS 欄位的值
-      return (outgodsValue !== null && outgodsValue !== undefined) ? outgodsValue : (item[applyField] || 0);
-    };
+    const totalQty = this.data.reduce((sum, item) => sum + (item.OUTGODS_QTY || 0), 0);
+    const totalBuyNet = this.data.reduce((sum, item) => sum + (item.OUTGODS_BuyNet || 0), 0);
+    const totalBuyTax = this.data.reduce((sum, item) => sum + (item.OUTGODS_BuyTax || 0), 0);
+    const totalBuyAmt = this.data.reduce((sum, item) => sum + (item.OUTGODS_BuyAmt || 0), 0);
+    const totalSaleAmt = this.data.reduce((sum, item) => sum + (item.OUTGODS_SaleAmt || 0), 0);
 
-    // 根據新的邏輯計算總和
-    const totalQty = this.data.reduce((sum, item) => sum + getValue(item, 'OUTGODS_QTY', 'APPLY_Qty'), 0);
-    const totalBuyNet = this.data.reduce((sum, item) => sum + getValue(item, 'OUTGODS_BuyNet', 'APPLY_BuyNet'), 0);
-    const totalBuyTax = this.data.reduce((sum, item) => sum + getValue(item, 'OUTGODS_BuyTax', 'APPLY_BuyTax'), 0);
-    const totalBuyAmt = this.data.reduce((sum, item) => sum + getValue(item, 'OUTGODS_BuyAmt', 'APPLY_BuyAmt'), 0);
-    const totalSaleAmt = this.data.reduce((sum, item) => sum + getValue(item, 'OUTGODS_SaleAmt', 'APPLY_SaleAmt'), 0);
-
-    // 更新表單值
     this.dataForm.patchValue({
       OUTGODS_TotQty: totalQty,
       OUTGODS_TotBuyNet: totalBuyNet,
@@ -202,14 +198,17 @@ export class TLS56050CRUComponent extends BasicCruPageComponent<ITLS56050Respons
     });
   }
 
+  isComponentReady = true; // 預設為 true，讓元件一開始就顯示
+  // 重新初始化元件的方法
+  reinitializeComponent(): void {
+    this.isComponentReady = false; // 隱藏元件，觸發銷毀
+    // 使用 setTimeout 確保 Angular 完成銷毀操作，然後再重建
+    setTimeout(() => {
+      this.isComponentReady = true; // 顯示元件，觸發重建和 ngOnInit
+    }, 0);
+  }
   onSubmit(frm: FormGroup): void {
-    const isQtyValid = this.data.every(item => item.OUTGODS_QTY === item.APPLY_Qty);
-    if (!isQtyValid) {
-      this.messageService.errorBubble('所有商品的發貨量必須與調撥申請量一致！');
-      return;
-    }
     this.handleSubmit(frm, () => {
-      this.loading = true;
       const rawFormValue = frm.getRawValue();
       const payload: ITLS56050Request = {
         id: this.rowdata?.id,
@@ -225,13 +224,13 @@ export class TLS56050CRUComponent extends BasicCruPageComponent<ITLS56050Respons
         MVM_Remark: rawFormValue.MVM_Remark,
         Details: this.data.map(item => ({
           ...item,
-          id: item.id, // 修正：將 item.id 包含進去
-          MVM_No: item.MVM_No, // 修正：將 item.MVM_No 包含進去
+          id: item.id,
+          MVM_No: item.MVM_No,
           OUTGODS_Qty: item.OUTGODS_QTY,
-          OUTGODS_BuyNet: item.APPLY_BuyNet,
-          OUTGODS_BuyTax: item.APPLY_BuyTax,
-          OUTGODS_BuyAmt: item.APPLY_BuyAmt,
-          OUTGODS_SaleAmt: item.APPLY_SaleAmt,
+          OUTGODS_BuyNet: item.OUTGODS_BuyNet,
+          OUTGODS_BuyTax: item.OUTGODS_BuyTax,
+          OUTGODS_BuyAmt: item.OUTGODS_BuyAmt,
+          OUTGODS_SaleAmt: item.OUTGODS_SaleAmt,
           MVD_Remark: item.MVD_Remark,
         }))
       };
@@ -240,8 +239,32 @@ export class TLS56050CRUComponent extends BasicCruPageComponent<ITLS56050Respons
         untilDestroyed(this)
       ).subscribe(response => {
         this.messageService.successBubble(response.Message);
-        this.onCancel();
+        this.reinitializeComponent();
+        this.dataChanged = false;
       });
+    });
+  }
+  onConfirm(frm: FormGroup): void {
+    const isQtyValid = this.data.every(item => item.OUTGODS_QTY === item.APPLY_Qty);
+    if (!isQtyValid) {
+      this.messageService.errorBubble('所有商品的發貨量必須與調撥申請量一致！');
+      return;
+    }
+    const body = {
+      DetailList: [
+        {
+          MVM_No: frm.getRawValue().MVM_No,
+          MVM_Status: '3',
+        }
+      ]
+    }
+    this.loading = true;
+    this.tls56050Service.updateStatusTLS56050(body).pipe(
+      finalize(() => this.loading = false),
+      untilDestroyed(this)
+    ).subscribe(response => {
+      this.messageService.successBubble(response.Message);
+      this.onCancel();
     });
   }
 }

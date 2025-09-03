@@ -1,5 +1,3 @@
-import { ASS21030Service } from '@service/api/ass/ass21030.service';
-import { ValidationService } from './../../../shared/service/validation.service';
 // --Commonly used imports--
 import { Component, OnInit, } from '@angular/core';
 import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
@@ -17,20 +15,22 @@ import { BasicCruPageComponent } from '../../../shared/componentextends/basic-cr
 import { option } from '../../../shared/models/sys/sysb000.model';
 import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
 import { InputNumberComponent } from '@shared/componentkit/input-number/input-number.component';
+import { ASS21030Service } from '@service/api/ass/ass21030.service';
 
 // ENG2001 抄錶明細檔
 export interface ENG2001 {
-  id: number; // 主鍵，自動編號,
-  mid: number,  // 外鍵，對應 ENG2001.id
-  SYS_StoreNo: string, // 分店編號
-  ENG_YYMM: string, // 結算年月
+  ID: number; // 主鍵，自動編號,
   ENG_Type: string, // 能源類型：水錶G01、電錶G02、瓦斯錶G03
   ENG_MeterNo: string, // 錶號
+  Location_No: string, // 設備位置編號，對應 POS2002.LOCATION_No
+  TLT_No: string, // 專櫃編號，對應 POS2002.TLT_No
+  ENG_YYMM: string, // 結算年月
+  ENG_CurrentReading_Last: number, // 上次抄錶度數
+  ENG_CurrentReading: number, // 本次抄錶度數
+  UsageAmount: number; // 用量
   ENG_Date: Date; // 本次抄錶日
-  ENG_CurrentReading: number; // 本次抄錶度數
-  ENG_Amount: number; // 本次結算金額
-  ENG_Status: string; // 抄錶狀態：0=未抄錶、1=已抄錶、2=已結算
   ENG_ImpFileName?: string; // 匯入檔案名稱
+  ENG_Remark?: string; // 備註
 
   CRT_Date: string; // 建立日期 (ISO 字串格式: YYYY-MM-DD)
   CRT_USR_No?: string; // 建立人員代碼
@@ -41,25 +41,6 @@ export interface ENG2001 {
 
   CanDel?: boolean;  //能否刪除(僅顯示)
 }
-
-// ENG1001 能源錶號明細檔
-export interface ENG1001 {
-  id: number; // 主鍵，自動編號,
-  mid: number,  // 外鍵，對應 ENG2001.id
-  SYS_StoreNo: string, // 分店編號
-  ENG_Type: string, // 能源類型：水錶G01、電錶G02、瓦斯錶G03
-  ENG_MeterNo: string, // 錶號
-  Location_No: string; // 設備位置編號，對應 POS2002.LOCATION_No
-  ENG_Remarks?: string; // 備註
-
-  CRT_Date: string; // 建立日期 (ISO 字串格式: YYYY-MM-DD)
-  CRT_USR_No?: string; // 建立人員代碼
-  CRT_USR_Name?: string; // 建立人員姓名
-  UPD_Date?: string; // 變更日期 (ISO 格式: YYYY-MM-DDTHH:mm:ss)
-  UPD_USR_No?: string; // 變更人員代碼
-  UPD_USR_Name?: string; // 變更人員姓名
-}
-
 @Component({
   selector: 'app-ass21030-cru',
   templateUrl: './ass21030-cru.component.html',
@@ -84,12 +65,12 @@ export interface ENG1001 {
 })
 
 // 能源抄表作業
-export class ASS21030CRUComponent extends BasicCruPageComponent<ENG1001|ENG2001> implements OnInit {
+export class ASS21030CRUComponent extends BasicCruPageComponent<ENG2001> implements OnInit {
     // ----------------------------------------------------------------
     dataForm = this.formBuilder.nonNullable.group({
       // ENG1001 能源錶號明細檔 + ENG2001 抄錶明細檔
-      ID: [{value: null, label:''}], // ID (隱藏)
-      Mid: [{value: null, label:''}], // Mid (隱藏)
+      ID: [this.authService.getUserInfo()?.SYS_StoreNo ?? ''], // ID (隱藏)
+      Mid: [Number(this.authService.getUserInfo()?.mid)], // Mid (隱藏)
       // SYS_StoreNo: ['', [Validators.maxLength(10)]], // 分店編號
       ENG_YYMM: ['', [Validators.required, Validators.maxLength(6)]], // 結算年月
       ENG_Type: ['', [Validators.required, Validators.maxLength(3)]], // 能源類型
@@ -119,8 +100,7 @@ export class ASS21030CRUComponent extends BasicCruPageComponent<ENG1001|ENG2001>
     ];
   
     // ----------------------------------------------------------------
-    constructor(
-    ) {
+    constructor(private ass21030Service: ASS21030Service) {
       super(); // 呼叫父類建構子
     }
   
@@ -146,7 +126,7 @@ export class ASS21030CRUComponent extends BasicCruPageComponent<ENG1001|ENG2001>
         case CRUDStatus.Create:
           if (this.canAdd()) {
             console.log('insert:', JSON.stringify(formValue, null, 2));
-            // this.ass21030Service.insertASS21030(formValue).subscribe(() => {
+            // this.ass21030Service.updateASS21030(formValue).subscribe(() => {
             //   this.messageService.successBubble('新增成功');
             //   // this.onCancel(); // 儲存後，會清除資料留在原頁面，不返回列表
             //   this.dataForm.reset(); // 重置表單

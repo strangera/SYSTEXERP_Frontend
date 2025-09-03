@@ -1,0 +1,42 @@
+/* Footer 小計/總計配色（作用在 <tfoot>） */
+:host ::ng-deep .p-datatable .p-datatable-tfoot > tr.subtotal-row > td {
+  background-color: #9cb1fb !important; /* 小計 */
+  color: #001a4d;
+  font-weight: 600;
+}
+:host ::ng-deep .p-datatable .p-datatable-tfoot > tr.total-row > td {
+  background-color: #c7d2fe !important; /* 總計 */
+  color: #001a4d;
+  font-weight: 700;
+  border-top: 2px solid #6aa9ff;
+}
+
+/* 若總計列出現在 tbody（視你的模板而定） */
+:host ::ng-deep .p-datatable .p-datatable-tbody > tr.grandtotal-row > td {
+  background-color: #ffe08a !important;
+  color: #5a4100;
+  font-weight: 700;
+}
+
+/* Header 顏色 */
+:host ::ng-deep .p-datatable thead th {
+  background-color: #c7d2fe !important; /* 指定的藍紫色 */
+  color: #000 !important;
+  font-weight: 600;
+  text-align: center;
+}
+
+/* Body 斑馬紋：奇數灰、偶數白 */
+:host ::ng-deep .p-datatable .p-datatable-tbody > tr:nth-child(odd) > td {
+  background-color: #e0e0e0 !important;  /* #FFE0E0E0 等效 */
+}
+:host ::ng-deep .p-datatable .p-datatable-tbody > tr:nth-child(even) > td {
+  background-color: #ffffff !important;
+}
+
+/* 滑過效果不要蓋掉 footer 的顏色 */
+:host ::ng-deep .p-datatable .p-datatable-tfoot > tr.total-row:hover > td,
+:host ::ng-deep .p-datatable .p-datatable-tfoot > tr.subtotal-row:hover > td,
+:host ::ng-deep .p-datatable .p-datatable-tbody > tr.grandtotal-row:hover > td {
+  filter: brightness(0.98);
+}

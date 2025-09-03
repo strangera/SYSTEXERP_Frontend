@@ -1,55 +1,45 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, OnDestroy, signal } from '@angular/core';
 import { ASS2100ENGMeterType } from '@pages/ass/ass21010/ass21010.model';
-import { ASS21020Data, ASS21020Payload, TLTByFlag } from '@pages/ass/ass21020/ass21020.model';
+import { ASS21020Data, ASS21020Payload, ASS21020UpdateStatus, TLTByFlag } from '@pages/ass/ass21020/ass21020.model';
+import { EngType } from '@service/api/ass/ass21010.service';
 import { ErrorHandlerService } from '@service/system/error-handler.service';
-import { IPOS2002LocationItem } from '@service/utility/dropDownList.service';
-import { BaseQueryRequest, BaseQueryResponse, DropdownOption } from '@shared/models/api/base-api.interface';
-import { catchError, finalize, of, Subject, take, takeUntil, tap } from 'rxjs';
+import { BaseQueryResponse, DropdownOption } from '@shared/models/api/base-api.interface';
+import { catchError, finalize, map, Observable, Subject, take, takeUntil, tap } from 'rxjs';
 import { environment } from 'src/environments/environment';
-import { EngType } from './ass21010.service';
 
 const apiUrl: string = `${environment.ApiUrl}`;
 
 @Injectable({ providedIn: 'root' })
 export class ASS21020Service implements OnDestroy {
 
-  public readonly isRowSelectable = (rowData: unknown) =>
-    !!rowData;
-  // (Reflect.has(rowData, 'CanDelete') && rowData.CanDelete == '1') || rowData.pod_status === ApprovalStatus.未核准;
-
   // 儲存資料
   public readonly ASS21020Data = signal<ASS21020Data[]>([]);
-  public readonly ASS21020Detail = signal<unknown[]>([]);
-  public readonly queryByTltNoData = signal<unknown[]>([]);
   public readonly engTypeSignal = signal<DropdownOption[]>([]);
   public readonly engMeterNoSignal = signal<ASS2100ENGMeterType[]>([]);
-  public readonly locationSignal = signal<IPOS2002LocationItem[]>([]);
   public readonly tltNoSignal = signal<TLTByFlag[]>([]);
-  public readonly engRateSignal = signal<number>(0);
+  public readonly tltNoListSignal = signal<DropdownOption[]>([]);
+  public readonly locationSignal = signal<DropdownOption[]>([]);
 
-  public engTypeLoading = !1;
+  public readonly engMeterNoMap = new Map<string, ASS2100ENGMeterType>();
+  public readonly tltByFlagMap = new Map<string, TLTByFlag>();
+
   public engMeterNoLoading = !1;
   public locationLoading = !1;
-  public tltNoLoading = !1;
   public tableLoading = !1;
-  public queryByMeterNoLoading = !1;
-  public queryByTltNoLoading = !1;
+  public queryTltByFlagLoading = !1;
 
-  private readonly engTypeCancel$ = new Subject<void>();
   private readonly engMeterNoCancel$ = new Subject<void>();
   private readonly locationCancel$ = new Subject<void>();
   private readonly tableCancel$ = new Subject<void>();
-  private readonly queryByMeterNoCancel$ = new Subject<void>();
-  private readonly queryByTltNoCancel$ = new Subject<void>();
+  private readonly queryTltByFlagCancel$ = new Subject<void>();
 
   constructor(
     private http: HttpClient,
-    private errorHandler: ErrorHandlerService
+    private errorHandler: ErrorHandlerService,
   ) { }
 
   public loadEngType(): void {
-    this.engTypeCancel$.next();
     this.engTypeSignal.set([
       { No: EngType.水, Name: '水錶' },
       { No: EngType.電, Name: '電錶' },
@@ -57,13 +47,16 @@ export class ASS21020Service implements OnDestroy {
     ]);
   };
 
-  public loadEngMeterNo(type?: EngType): void {
+  public loadEngMeterNo(): void {
     this.engMeterNoCancel$.next();
     this.engMeterNoLoading = !0;
-    this.http.post<BaseQueryResponse<ASS2100ENGMeterType>>(`${apiUrl}/Share/queryENG1001_ENG_MeterNo_DropDownList`, { type }).pipe(
+    this.http.post<BaseQueryResponse<ASS2100ENGMeterType>>(`${apiUrl}/Share/queryENG1001_ENG_MeterNo_DropDownList`, {}).pipe(
       take(1),
       takeUntil(this.engMeterNoCancel$),
-      tap(response => this.engMeterNoSignal.set(response.Data)),
+      tap(({ Data }) => {
+        this.engMeterNoSignal.set(Data);
+        for (const item of Data) this.engMeterNoMap.set(item.ENG_MeterNo, item);
+      }),
       catchError(error => this.errorHandler.handleError(error)),
       finalize(() => {
         this.engMeterNoLoading = !1;
@@ -72,13 +65,13 @@ export class ASS21020Service implements OnDestroy {
     ).subscribe();
   };
 
-  public loadLocationNo(): void {
+  public loadLocationNo(ENG_MeterNo: string): void {
     this.locationCancel$.next();
     this.locationLoading = !0;
-    this.http.post<any>(`${apiUrl}/queryPOS2002_DropDownList`, {}).pipe(
+    this.http.post<BaseQueryResponse<TLTByFlag>>(`${apiUrl}/Share/queryTLTTALENTByFlag_DropDownList`, { MID: 0, ENG_MeterNo }).pipe(
       take(1),
       takeUntil(this.locationCancel$),
-      tap(response => this.locationSignal.set(response.Data)),
+      tap(({ Data }) => this.locationSignal.set(Data.map(v => ({ No: v.Location_No, Name: v.Location_No })))),
       catchError(error => this.errorHandler.handleError(error)),
       finalize(() => {
         this.locationLoading = !1;
@@ -88,13 +81,15 @@ export class ASS21020Service implements OnDestroy {
   };
 
   /** 取資料 */
-  public loadASS21020(query: BaseQueryRequest & ASS21020Payload): void {
+  public loadASS21020(query: ASS21020Payload): void {
     this.tableCancel$.next();
     this.tableLoading = !0;
     this.http.post<BaseQueryResponse<ASS21020Data>>(`${apiUrl}/ASS0000/ASS2000/queryASS21020`, query).pipe(
       take(1),
       takeUntil(this.tableCancel$),
-      tap(response => this.ASS21020Data.set(response.Data)),
+      tap(({ Data }) =>
+        this.ASS21020Data.set(Data.map(item => ({ ...item, TLT_Name: `${item.TLT_No}-${item.TLT_Name}` })))
+      ),
       catchError(error => this.errorHandler.handleError(error)),
       finalize(() => {
         this.tableLoading = !1;
@@ -103,39 +98,42 @@ export class ASS21020Service implements OnDestroy {
     ).subscribe();
   };
 
-  public queryByMeterNo(ENG_MeterNo: string): void {
-    this.queryByMeterNoCancel$.next();
-    this.queryByMeterNoLoading = !0;
+  public queryTltByFlag(ENG_MeterNo: string): void {
+    this.queryTltByFlagCancel$.next();
+    this.queryTltByFlagLoading = !0;
     this.http.post<BaseQueryResponse<TLTByFlag>>(`${apiUrl}/Share/queryTLTTALENTByFlag_DropDownList`, { MID: 0, ENG_MeterNo }).pipe(
       take(1),
-      takeUntil(this.queryByMeterNoCancel$),
-      tap(response => this.tltNoSignal.set(response.Data)),
+      takeUntil(this.queryTltByFlagCancel$),
+      tap(({ Data }) => {
+        this.tltNoListSignal.set(Data.map(item => ({ No: item.TLT_No, Name: `${item.TLT_No}-${item.TLT_Name}` })));
+        this.tltNoSignal.set(Data);
+        for (const item of Data) this.tltByFlagMap.set(item.TLT_No, item);
+      }),
       catchError(error => this.errorHandler.handleError(error)),
       finalize(() => {
-        this.queryByMeterNoLoading = !1;
-        console.log('查詢queryByMeterNo結果:', [this.tltNoSignal()]);
-        console.log('查詢queryByMeterNo結果:', [this.tltNoSignal()]);
+        this.queryTltByFlagLoading = !1;
+        console.log('查詢queryTltByFlag結果:', [this.tltByFlagMap, this.tltNoSignal()]);
       })
     ).subscribe();
   }
 
-  public queryByTltNo(tlt_no: string): void {
-    this.queryByTltNoCancel$.next();
-    this.queryByTltNoLoading = !0;
-    this.http.post<BaseQueryResponse<unknown>>(`${apiUrl}/ASS0000/ASS2000/queryByTltNo`, { tlt_no }).pipe(
+  public updateASS21020(payload: ASS21020Payload): Observable<ASS21020UpdateStatus['Data']> {
+    return this.http.post<ASS21020UpdateStatus>(`${apiUrl}/ASS0000/ASS2000/updateASS21020`, payload).pipe(
       take(1),
-      takeUntil(this.queryByTltNoCancel$),
-      tap(response => this.queryByTltNoData.set(response.Data)),
+      map(({ Data }) => Data),
       catchError(error => this.errorHandler.handleError(error)),
-      finalize(() => {
-        this.queryByTltNoLoading = !1;
-        console.log('查詢queryByTltNo結果:', [this.queryByTltNoData()]);
-      })
-    ).subscribe();
+    );
+  }
+
+  public deleteASS21020(ID: string): Observable<ASS21020UpdateStatus['Data']> {
+    return this.http.post<ASS21020UpdateStatus>(`${apiUrl}/ASS0000/ASS2000/deleteASS21020`, { ID }).pipe(
+      take(1),
+      map(({ Data }) => Data),
+      catchError(error => this.errorHandler.handleError(error)),
+    );
   }
 
   ngOnDestroy(): void {
-    this.engTypeCancel$.next();
     this.engMeterNoCancel$.next();
     this.locationCancel$.next();
     this.tableCancel$.next();

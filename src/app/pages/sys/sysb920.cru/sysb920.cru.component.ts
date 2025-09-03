@@ -13,6 +13,7 @@ import { InputTextComponent } from '../../../shared/componentkit/input-text/inpu
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { InputTextareaComponent } from '../../../shared/componentkit/input-textarea/input-textarea.component';
 import { NgIf } from '@angular/common';
+import { debounceTime } from 'rxjs';
 
 // 資料模型：分類項目
 interface CategoryItem {
@@ -33,11 +34,11 @@ interface CategoryItem {
 }
 
 @Component({
-    selector: 'app-sysb920.cru',
-    templateUrl: './sysb920.cru.component.html',
-    styleUrl: './sysb920.cru.component.scss',
-    standalone: true,
-    imports: [MenubarComponent, ButtonComponent, PanelModule, FormsModule, ReactiveFormsModule, InputTextComponent, DropdownComponent, InputTextareaComponent, NgIf, TranslateModule]
+  selector: 'app-sysb920.cru',
+  templateUrl: './sysb920.cru.component.html',
+  styleUrl: './sysb920.cru.component.scss',
+  standalone: true,
+  imports: [MenubarComponent, ButtonComponent, PanelModule, FormsModule, ReactiveFormsModule, InputTextComponent, DropdownComponent, InputTextareaComponent, NgIf, TranslateModule]
 })
 // 小分類維護作業 CRU
 export class SYSB920CRUComponent extends BasicCruPageComponent<CategoryItem> implements OnInit {
@@ -65,11 +66,18 @@ export class SYSB920CRUComponent extends BasicCruPageComponent<CategoryItem> imp
   }
 
   ngOnInit(): void {
-    // this.ProgNo = '410009';
     this.initializePage('SYSB920', this.dataForm);
+
+    // 載入大分類選項
     this.Sysb800DropdownService.getSystemTypes().subscribe({
       next: (response) => {
         this.optionsBig = response;
+
+        // 檢查 bus_type 是否有初始值（例如編輯模式）
+        const initialBusType = this.dataForm.controls.bus_type.value;
+        if (initialBusType) {
+          this.loadMidCategories(initialBusType);
+        }
       },
       error: (error) => {
         console.error('獲取大分類代碼失敗:', error);
@@ -77,32 +85,42 @@ export class SYSB920CRUComponent extends BasicCruPageComponent<CategoryItem> imp
       }
     });
 
-
-    // // 監聽 變化，動態載入中分類代碼
-    // this.dataForm.controls.bus_type.valueChanges.pipe(debounceTime(300)).subscribe(busType => {
-    //   if (busType) {
-    //     this.Sysb900DropdownService.getSystemTypesByBustype(busType).subscribe({
-    //       next: (response) => {
-    //         this.optionsMid = response;
-    //         const currentData = this.dataForm.controls.bus_type.value;
-    //         if (currentData && !response.find(opt => opt.value === currentData)) {
-    //           this.dataForm.controls.bus_type.setValue('');
-    //         }
-    //       },
-    //       error: (error) => {
-    //         console.error('獲取中分類代碼失敗:', error);
-    //         this.messageService.errorBubble('無法載入中分類代碼，請稍後重試');
-    //         this.optionsMid = [];
-    //         this.dataForm.controls.bus_class.setValue('');
-    //       }
-    //     });
-    //   } else {
-    //     this.optionsMid = [];
-    //     this.dataForm.controls.bus_class.setValue('');
-    //   }
-    // });
+    // 監聽 bus_type 變化
+    this.dataForm.controls.bus_type.valueChanges.pipe(debounceTime(300)).subscribe(busType => {
+      if (busType) {
+        this.loadMidCategories(busType);
+      } else {
+        this.optionsMid = [];
+        this.dataForm.controls.bus_class.setValue('');
+        this.messageService.warnBubble('請選擇大分類');
+      }
+    });
   }
 
+  private loadMidCategories(busType: string): void {
+    this.Sysb900DropdownService.getSystemTypesByBustype([busType]).subscribe({
+      next: (response) => {
+        this.optionsMid = response;
+        if (response.length === 0) {
+          this.messageService.warnBubble('無可用中分類選項，請選擇其他大分類');
+          this.dataForm.controls.bus_class.setValue('');
+        } else {
+          // 檢查當前 bus_class 是否有效
+          const currentBusClass = this.dataForm.controls.bus_class.value;
+          if (currentBusClass && !response.find(opt => opt.value === currentBusClass)) {
+            this.dataForm.controls.bus_class.setValue('');
+            this.messageService.warnBubble('當前中分類無效，已重置');
+          }
+        }
+      },
+      error: (error) => {
+        console.error('獲取中分類代碼失敗:', error);
+        this.messageService.errorBubble('無法載入中分類代碼，請稍後重試');
+        this.optionsMid = [];
+        this.dataForm.controls.bus_class.setValue('');
+      }
+    });
+  }
   onSubmit(frm: FormGroup) {
     const formValue = frm.getRawValue();
     // 修改：使用父類的 handleSubmit 方法

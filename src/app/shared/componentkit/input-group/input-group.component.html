@@ -35,6 +35,6 @@
     </div>
     <app-table [tableKey]="'customInputGroup'" [columns]="columns" selectionMode="single" [data]="filteredData"
       [showHeader]="false" [showManage]="false" [showCheckBox]="true" (selectionChange)="onRowSelect($event)"
-      [multiSortMeta]="[{ field: controlName , order: 1 }]" />
+      [multiSortMeta]="[{ field: controlName , order: 1 }]" [showReportMode]="showReportMode" />
   </ng-template>
 </p-dialog>

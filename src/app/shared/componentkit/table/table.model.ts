@@ -4,7 +4,7 @@ export interface Column {
   header: string;    // 欄位標題 (顯示在表格上的標題)
   visible?: boolean;  // 是否顯示 (可篩選欄位是否顯示？)
   hidden?: boolean;  // 是否隱藏 (是否為無法篩選欄位)
-  format?: (value: any) => string | number | null; // 格式化(日期、時間...)
+  format?: (value: any, index?: number, rowData?: any) => string | number | null; // 格式化(日期、時間...)
 
   groupField?: string;
   isSubTotal?: boolean; // 是否為小計欄位
@@ -22,6 +22,7 @@ export interface Column {
   suffix?: string; // 後綴 (適用於 input 類型)
   fractionDigits?: number;
   useGrouping?: boolean;
+  required?: boolean; // 是否為必填欄位 (適用於輸入欄位)
 
   options?: any | ((rowData: any) => any); // 支持靜態數據或基於 rowData 生成
   optionLabel?: string; // 下拉選單 optionLabel
@@ -56,7 +57,7 @@ export interface LazyLoadEvent {
 
 export const createPaginationConfig = (defaultSortBy?: SortMeta[]) => {
   return {
-    pageSize: [10],
+    pageSize: [20],
     pageIndex: [1], // 你將初始頁碼改為 1
     SortBy: [defaultSortBy ?? []],
   };
@@ -110,14 +111,30 @@ export const formatDateTime = (dateStr: string) => {
 };
 
 // formatYYYYMM 輸出為 YYYY/MM
-export const formatYYYYMM = (dateStr: string): string => {
-  if (!dateStr) return '';
-  const date = new Date(dateStr);
-  if (isNaN(date.getTime())) return '';
+export const formatYYYYMM = (value: string | Date | null): string => {
+  // 處理空值
+  if (value === null || value === undefined || value === '') {
+    return '';
+  }
 
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0');
-  return `${year}/${month}`;
+  // 檢查輸入是否為 Date 物件
+  if (value instanceof Date) {
+    const year = value.getFullYear().toString();
+    const month = String(value.getMonth() + 1).padStart(2, '0');
+    console.log(year, month);
+
+    return `${year}/${month}`;
+  }
+
+  // 檢查輸入是否為 YYYYMM 格式的字串
+  if (typeof value === 'string' && value.length === 6) {
+    const year = value.substring(0, 4);
+    const month = value.substring(4, 6);
+    return `${year}/${month}`;
+  }
+
+  // 如果輸入格式不符合預期，回傳空字串
+  return '';
 };
 
 // formatTimeHHMM 輸出為 HH:MM
@@ -255,4 +272,10 @@ export const formatDivideBy100 = (value: number | string | null | undefined): nu
   }
   const num = Number(value);
   return num / 100;
+};
+// 金額格式化999,999,999，只取整數
+export const formatAmountWithFraction = (val: number | string): string => {
+  const num = Number(val);
+  if (isNaN(num)) return '0';
+  return num.toLocaleString(undefined, { maximumFractionDigits: 0 }); // eg. 1,000,000.00
 };

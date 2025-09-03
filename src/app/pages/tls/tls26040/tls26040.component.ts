@@ -27,21 +27,14 @@ import { untilDestroyed } from '@ngneat/until-destroy';
   ]
 })
 export class TLS26040Component extends BasicQueryPageComponent<TLS26040Data> implements OnInit {
-  readonly yesterday: Date = (() => {
-    const d = new Date();
-    d.setHours(0, 0, 0, 0);
-    d.setDate(d.getDate() - 1);
-    return d;
-  })();
-
   queryForm = this.formBuilder.group({
-    sad_date_start: [this.yesterday],                           // 銷售日期_起
-    sad_date_end: [this.yesterday],                             // 銷售日期_迄
+    sad_date_start: [''],                           // 銷售日期_起
+    sad_date_end: [''],                             // 銷售日期_迄
     tlt_noList: [[]],                                 // 專櫃編號(多選)
     sad_preorder_date_start: [null],                  // 結帳日期_起
     sad_preorder_date_end: [null],                    // 結帳日期_迄
     batch_no: ['', [Validators.maxLength(12)]],       // 批號
-    IsNotlt_no: [null, [Validators.required]],        // 篩選條件
+    IsNotlt_no: ['Y', [Validators.required]],        // 篩選條件
     ...createPaginationConfig([{ field: 'sad_date', order: -1 }])
   });
 
@@ -98,7 +91,7 @@ export class TLS26040Component extends BasicQueryPageComponent<TLS26040Data> imp
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
       this.tls26040Service.queryTLS26040(frm.value)
-        .pipe(finalize(() => this.loading = false))
+        .pipe(untilDestroyed(this), finalize(() => this.loading = false))
         .subscribe(response => {
           this.data = response.Data;
           this.totalRecords = response.TotalCount;

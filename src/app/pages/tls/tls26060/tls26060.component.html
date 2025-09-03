@@ -51,8 +51,8 @@
               </div>
               <!-- 基準週數 -->
               <div class="col-12">
-                <app-input-number label="基準週數" controlName="weeks" [control]="queryForm.controls.weeks"
-                  [submitted]="submitted"></app-input-number>
+                <app-input-text label="基準週數" controlName="weeks" [control]="queryForm.controls.weeks"
+                  [submitted]="submitted" (blurEvent)="queryWeek($event,'base')"></app-input-text>
               </div>
               <!-- 基準日期範圍 -->
               <div class="col-12">
@@ -71,8 +71,8 @@
               </div>
               <!-- 比較週數 -->
               <div class="col-12">
-                <app-input-number label="比較週數" controlName="weeks_c" [control]="queryForm.controls.weeks_c"
-                  [submitted]="submitted"></app-input-number>
+                <app-input-text label="比較週數" controlName="weeks_c" [control]="queryForm.controls.weeks_c"
+                  [submitted]="submitted" (blurEvent)="queryWeek($event,'compare')"></app-input-text>
               </div>
               <!-- 比較日期範圍 -->
               <div class="col-12">
@@ -274,10 +274,10 @@
   </p-accordion>
 </div>
 <div class="card">
-  <app-table tableKey="TLS26060" dataKey="talent_id" [data]="data" [columns]="columns" [showCheckBox]="false"
-    [showDelete]="false" [showManage]="false" [selectedItems]="selectedItems" (selectionChange)="selectedItems = $event"
-    [multiSortMeta]="[{ field: 'team_name', order: -1 }]" [totalRecords]="totalRecords"
-    (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [lazy]="true" [loading]="loading"
-    groupRowsBy="team_name">
-  </app-table>
+  <app-customFooter-table tableKey="TLS26060" dataKey="talent_id" [data]="data" [columns]="columns"
+    [showCheckBox]="false" [showDelete]="false" [showManage]="false" [selectedItems]="selectedItems"
+    (selectionChange)="selectedItems = $event" [multiSortMeta]="[{ field: 'team_name', order: -1 }]"
+    [totalRecords]="totalRecords" (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [lazy]="true"
+    [loading]="loading" groupRowsBy="team_name" [footerData]="footerData" [showTotal]="true">
+  </app-customFooter-table>
 </div>
