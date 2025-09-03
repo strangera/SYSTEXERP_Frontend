@@ -259,30 +259,34 @@
 <div class="card">
   <div class="col-12">
     <!-- ✅ 明細表 -->
-    <app-table
-      *ngIf="!showSummary"
-      apiUrl="queryTLS23010"
-      tableKey="TLS23010query"
-      dataKey="id"
-      [data]="data"
-      [columns]="columns"
-      (edit)="onEdit($event)"
-      (detail)="onDetail($event)"
-      [showCheckBox]="false"
-      [showReportMode]="false"
-      [showTotal]="true"
-      [showManage]="false"
-      [multiSortMeta]="sortMeta"            
-      [totalRecords]="totalRecords"
-      (lazyLoadData)="onLazyLoadData($event, queryForm)"
-      [lazy]="true"
-      [loading]="loading"
-      (selectionChange)="selectedItems = $event"
-      [selectedItems]="selectedItems"
-      [expansionColumns]="detailcolumns"
-      [expansionDataKey]="'details'"
-      [expansionLoadFn]="loadDetails"
-      [isRowSelectable]="isRowSelectable"
+    <app-table2
+  *ngIf="!showSummary"
+  apiUrl="queryTLS23010"
+  tableKey="TLS23010query"
+  dataKey="id"
+  [data]="data"
+  [columns]="columns"
+  (edit)="onEdit($event)"
+  (detail)="onDetail($event)"
+  [showCheckBox]="false"
+  [showReportMode]="false"
+  [showTotal]="true"
+  [showManage]="false"
+  [multiSortMeta]="sortMeta"
+  [totalRecords]="totalRecords"
+  (lazyLoadData)="onLazyLoadData($event, queryForm)"
+  [lazy]="true"
+  [loading]="loading"
+  (selectionChange)="selectedItems = $event"
+  [selectedItems]="selectedItems"
+  [expansionColumns]="detailcolumns"
+  [expansionDataKey]="'details'"
+  [expansionLoadFn]="loadDetails"
+  [isRowSelectable]="isRowSelectable"
+
+
+  [externalTotals]="detailTotals"
+  [externalTotalFieldMap]="detailTotalFieldMap"
     >
       <header>
         <div class="flex justify-content-end gap-2">
@@ -305,7 +309,7 @@
           ></p-button>
         </div>
       </header>
-    </app-table>
+    </app-table2>
 
     <!-- ✅ 彙總表 -->
     <app-table
