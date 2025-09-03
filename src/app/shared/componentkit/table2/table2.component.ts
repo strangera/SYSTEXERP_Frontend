@@ -384,33 +384,30 @@ if (changes['columns'] && this.columns?.length > 0) {
     this.calculateTotalPages();
   }
 
-  onSort(event: any) {
-    this.multiSortMeta =
-      event.multisortmeta ?? event.multiSortMeta ?? this.multiSortMeta;
-    this.queryStateService.setQueryState(
-      this.tableKey + 'Sort',
-      this.multiSortMeta,
-    );
-  }
+ onSort(event: any) {
+  const next = event.multisortmeta ?? event.multiSortMeta ?? [];
+  // 只告訴父層新的排序，不在子層 set this.multiSortMeta
+  this.lazyLoadData.emit({
+    pageIndex: this.selectedPage ?? 1,
+    pageSize : this.rows,
+    SortBy   : next,
+  });
+}
 
-  loadDataLazy(event: TableLazyLoadEvent) {
-    setTimeout(() => {
-      if (this.totalRecords === 0) return;
-      const pageSize = event.rows && event.rows > 0 ? event.rows : 30;
-      const pageIndex = (event.first ?? 0) / pageSize + 1;
+loadDataLazy(event: TableLazyLoadEvent) {
+  // 直接用事件裡的資料
+  const pageSize  = event.rows && event.rows > 0 ? event.rows : this.rows;
+  const pageIndex = (event.first ?? 0) / pageSize + 1;
+  const sort      = event.multiSortMeta ?? []; // ★ 重點：用事件裡的新排序
 
-      this.multiSortMeta =
-        event.multiSortMeta ?? this.multiSortMeta ?? [
-          { field: this.dataKey, order: 1 },
-        ];
-      this.queryStateService.setQueryState(
-        this.tableKey + 'Sort',
-        this.multiSortMeta,
-      );
+  // 不要在子層寫入/保存排序，交給父層單一來源管理
+  this.lazyLoadData.emit({
+    pageIndex,
+    pageSize,
+    SortBy: sort,
+  });
+}
 
-      this.lazyLoadData.emit({ pageIndex, pageSize, SortBy: this.multiSortMeta });
-    });
-  }
 
   /* ======================= Expansion ======================= */
   toggleRowExpansion(rowData: any) {
@@ -458,10 +455,7 @@ if (changes['columns'] && this.columns?.length > 0) {
       visible: event.value.some((ev: any) => ev.field === col.field),
     }));
     this.selectedColumns = this.columns.filter((col) => col.visible !== false);
-    this.queryStateService.setQueryState(
-      this.tableKey + 'Filter',
-      this.selectedColumns,
-    );
+
   }
 
   onRowEditInit(rowData: any) {
