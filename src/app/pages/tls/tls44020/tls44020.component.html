@@ -55,19 +55,27 @@
                   ></p-dataViewLayoutOptions>
                 </div>
 
-                <!-- 狀態說明 -->
                 <div class="status-container mb-2">
                   <span class="status-label">狀態說明：</span>
-                  <div class="status-chip">
-                    <i class="pi pi-desktop"></i>
+                  <div
+                    class="status-chip shutdown"
+                    style="background: #6c757d; color: #fff"
+                  >
+                    <i class="pi pi-desktop" style="color: #fff"></i>
                     關機
                   </div>
-                  <div class="status-chip logout">
-                    <i class="pi pi-sign-out"></i>
+                  <div
+                    class="status-chip logout"
+                    style="background: #dc3545; color: #fff"
+                  >
+                    <i class="pi pi-sign-out" style="color: #fff"></i>
                     離線
                   </div>
-                  <div class="status-chip success">
-                    <i class="pi pi-sync"></i>
+                  <div
+                    class="status-chip success"
+                    style="background: #28a745; color: #fff"
+                  >
+                    <i class="pi pi-sync" style="color: #fff"></i>
                     交易中
                   </div>
                 </div>
@@ -77,30 +85,22 @@
             <!-- Grid 模式 -->
             <ng-template pTemplate="grid" let-row>
               <div class="custom-grid">
-                <div class="custom-grid-item" *ngFor="let row of pagedData">
-                  <div
-                    class="p-3 border-1 surface-border surface-card relative"
-                  >
-                    <!-- 右上角：判斷是否顯示關機 icon 或 EDC chips -->
-                    <div class="status-container-grid">
-                      <i
-                        *ngIf="isShutdown(row)"
-                        class="pi pi-desktop shutdown-icon"
-                      ></i>
-
-                      <ng-container *ngIf="!isShutdown(row)">
-                        <span [ngClass]="getEdcStatusClass(row.EDC_Online1)">
-                          <i [ngClass]="getStatusIcon(row.EDC_Online1)"></i>
-                          中信
-                        </span>
-                        <span [ngClass]="getEdcStatusClass(row.EDC_Online2)">
-                          <i [ngClass]="getStatusIcon(row.EDC_Online2)"></i>
-                          聯信
-                        </span>
+                <div
+                  class="custom-grid-item"
+                  *ngFor="let row of pagedData"
+                    pTooltip="刷卡機編號(EDC_TmID)<br>刷卡機IP(ECR_IP)"
+                  tooltipPosition="top"
+                >
+                  <div class="p-3 border-1 surface-border surface-card relative">
+                    <div class="status-container-grid grid-status-fixed">
+                      <ng-container *ngIf="isShutdown(row); else edcChips">
+                        <i class="pi pi-desktop shutdown-icon"></i>
                       </ng-container>
+                      <ng-template #edcChips>
+                        <span [ngClass]="getEdcStatusClass(getBankStatus(row, '中信'))">中信</span>
+                        <span [ngClass]="getEdcStatusClass(getBankStatus(row, '聯信'))">聯信</span>
+                      </ng-template>
                     </div>
-
-                    <!-- 主要內容 -->
                     <div class="grid-content">
                       <div class="grid-title">{{ row.ECR_LocNo }}</div>
                       <div class="grid-subtitle">
@@ -112,58 +112,6 @@
               </div>
             </ng-template>
 
-            <!-- List 模式 -->
-            <ng-template pTemplate="list" let-row>
-              <div class="grid grid-nogutter">
-                <div
-                  class="col-12"
-                  *ngFor="let row of pagedData; let i = index"
-                >
-                  <div
-                    class="flex flex-row justify-content-between align-items-center p-3 border-bottom-1 surface-border"
-                  >
-                    <!-- 左側 -->
-                    <div class="flex-1">
-                      <div>
-                        <b>序號：</b>
-                        {{ first + i + 1 }}
-                      </div>
-                      <div>
-                        <b>位置編號：</b>
-                        {{ row.ECR_LocNo }}
-                      </div>
-                      <div>
-                        <b>專櫃編號：</b>
-                        {{ row.TLT_No }}
-                      </div>
-                      <div>
-                        <b>櫃位名稱：</b>
-                        {{ row.TLT_Name }}
-                      </div>
-                    </div>
-
-                    <!-- 右側：判斷是否顯示關機 icon 或 EDC chips -->
-                    <div class="status-container-list">
-                      <i
-                        *ngIf="isShutdown(row)"
-                        class="pi pi-desktop shutdown-icon"
-                      ></i>
-
-                      <ng-container *ngIf="!isShutdown(row)">
-                        <span [ngClass]="getEdcStatusClass(row.EDC_Online1)">
-                          <i [ngClass]="getStatusIcon(row.EDC_Online1)"></i>
-                          中信
-                        </span>
-                        <span [ngClass]="getEdcStatusClass(row.EDC_Online2)">
-                          <i [ngClass]="getStatusIcon(row.EDC_Online2)"></i>
-                          聯信
-                        </span>
-                      </ng-container>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </ng-template>
           </p-dataView>
 
           <!-- 分頁 -->

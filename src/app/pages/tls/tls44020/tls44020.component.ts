@@ -12,6 +12,7 @@ import { InputTextModule } from 'primeng/inputtext';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { PaginatorModule } from 'primeng/paginator';
+import { TooltipModule } from 'primeng/tooltip';
 
 @Component({
   selector: 'app-tls44020',
@@ -30,6 +31,7 @@ import { PaginatorModule } from 'primeng/paginator';
     MenubarComponent,
     InputTextModule,
     DataViewModule,
+    TooltipModule,
     PaginatorModule
   ]
 })
