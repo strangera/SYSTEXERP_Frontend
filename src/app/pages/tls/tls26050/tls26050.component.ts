@@ -34,7 +34,7 @@ import { untilDestroyed } from '@ngneat/until-destroy';
   templateUrl: './tls26050.component.html',
   styleUrl: './tls26050.component.scss',
   standalone: true,
-  imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputTextComponent, CalendarRangeComponent, TableComponent, TranslateModule, RadiobuttonComponent, CalendarComponent, InputNumberComponent, DropdownComponent, NgIf, MultiSelectComponent, CalendarRangeQuickComponent, CustomFooterTableComponent]
+  imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputTextComponent, TranslateModule, RadiobuttonComponent, CalendarComponent, DropdownComponent, NgIf, MultiSelectComponent, CalendarRangeQuickComponent, CustomFooterTableComponent]
 })
 export class TLS26050Component extends BasicQueryPageComponent<TLS26050Data> implements OnInit {
   readonly today: Date = (() => {
