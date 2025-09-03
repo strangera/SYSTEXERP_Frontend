@@ -53,7 +53,7 @@ export class TLS11020CRUComponent extends BasicCruPageComponent<any> {
     GUI_FLAG: ['Y', [Validators.required]],
     CAP_TaxType: ['1', [Validators.required]],
     IsCommonlyUsed: ['Y', [Validators.required]],
-    Print_Area: ['', [Validators.maxLength(5)]],
+   
     CAP_Remark: ['', [Validators.maxLength(160)]],
   });
   accountOptions: any[] = [];

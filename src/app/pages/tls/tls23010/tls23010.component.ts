@@ -70,7 +70,7 @@ import { Table2Component } from '@shared/componentkit/table2/table2.component';
     TableComponent,
     ButtonModule,
     CheckboxModule,
-    // Table2Component,
+    Table2Component,
   ],
 })
 export class TLS23010Component
@@ -321,19 +321,24 @@ export class TLS23010Component
           .pipe(finalize(() => (this.loading = false)))
           .subscribe({
             next: (resp) => {
-              const packs = Array.isArray(resp?.Data) ? resp.Data : [];
-              const details = packs.flatMap((p:any) =>
-                Array.isArray(p?.tLS23010Summary_Details) ? p.tLS23010Summary_Details : []
-              );
-              this.summaryData   = details.map((row: any, idx: number) => ({
-                ...row,
-                id: `${row.tlt_no || ''}_${row.TXN_DateStart || ''}_${idx}`,
-              }));
-              this.data          = [];
-              this.selectedItems = [];
-              this.totalRecords  = this.summaryData.length;
-              this.queryStateService.setQueryState(this.ProgNo, this.queryForm.value);
-            },
+  const queryData = Array.isArray(resp?.Data?.QueryData)
+    ? resp.Data.QueryData
+    : Array.isArray(resp?.Data) ? resp.Data : [];
+
+  this.data = queryData.map((row: any) => ({
+    ...row,
+    id: `${row.SYS_StoreNo}_${row.TXN_Date}_${row.ECR_No}_${row.TXN_No}`,
+  }));
+
+  // 💡 關鍵：把 API 的 TotalSummary 餵給 Table2
+  this.detailTotals = resp?.Data?.TotalSummary ?? {};
+
+  this.summaryData   = [];
+  this.selectedItems = [];
+  this.totalRecords  = Number(resp?.TotalCount ?? this.data.length ?? 0);
+
+  this.queryStateService.setQueryState(this.ProgNo, this.queryForm.value);
+},
             error: () => {
               this.summaryData   = [];
               this.totalRecords  = 0;
@@ -346,18 +351,24 @@ export class TLS23010Component
           .pipe(finalize(() => (this.loading = false)))
           .subscribe({
             next: (resp) => {
-              const queryData = Array.isArray(resp?.Data?.QueryData)
-                ? resp.Data.QueryData
-                : Array.isArray(resp?.Data) ? resp.Data : [];
-              this.data = queryData.map((row: any) => ({
-                ...row,
-                id: `${row.SYS_StoreNo}_${row.TXN_Date}_${row.ECR_No}_${row.TXN_No}`,
-              }));
-              this.summaryData   = [];
-              this.selectedItems = [];
-              this.totalRecords  = Number(resp?.TotalCount ?? this.data.length ?? 0);
-              this.queryStateService.setQueryState(this.ProgNo, this.queryForm.value);
-            },
+  const queryData = Array.isArray(resp?.Data?.QueryData)
+    ? resp.Data.QueryData
+    : Array.isArray(resp?.Data) ? resp.Data : [];
+
+  this.data = queryData.map((row: any) => ({
+    ...row,
+    id: `${row.SYS_StoreNo}_${row.TXN_Date}_${row.ECR_No}_${row.TXN_No}`,
+  }));
+
+  // 💡 關鍵：把 API 總計塞給 Table2（用新物件確保變更偵測）
+  this.detailTotals = this.coerceTotals(resp?.Data?.TotalSummary);
+
+  this.summaryData   = [];
+  this.selectedItems = [];
+  this.totalRecords  = Number(resp?.TotalCount ?? this.data.length ?? 0);
+
+  this.queryStateService.setQueryState(this.ProgNo, this.queryForm.value);
+},
             error: () => {
               this.data          = [];
               this.totalRecords  = 0;
@@ -402,6 +413,15 @@ export class TLS23010Component
       return '10';
     }
   }
+  private coerceTotals(src: any): Record<string, number> {
+  const out: Record<string, number> = {};
+  if (!src) return out;
+  for (const k of Object.keys(src)) {
+    const v = (src as any)[k];
+    out[k] = typeof v === 'number' ? v : Number(v) || 0;
+  }
+  return out;
+}
 
   formatISOToHHMMSS = (val: string): string => {
     if (!val) return '';
@@ -644,4 +664,12 @@ export class TLS23010Component
     { field: 'TXN_DateEnd',   header: '銷售日期(迄)', visible: true, format: this.formatYMD },
     { field: 'TXN_TotGUI',    header: '發票金額',  visible: true, style: 'text-right', format: this.moneyFormat ,isTotal: true},
   ];
+  detailTotals: Record<string, number> = {};
+detailTotalFieldMap: Record<string, string> = {
+  TXN_TotGUI:     'Total_TXN_TotGUI',
+  TXN_TotSaleAmt: 'Total_TXN_TotSaleAmt',
+  TXN_TotOver:    'Total_TXN_TotOver',
+  TXN_TotDisc:    'Total_TXN_TotDisc',
+  TXN_PayAmt:     'Total_TXN_PayAmt',
+};
 }
