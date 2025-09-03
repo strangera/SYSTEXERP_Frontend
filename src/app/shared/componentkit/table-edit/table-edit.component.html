@@ -23,7 +23,7 @@
   <ng-template pTemplate="header" let-columns>
     <tr>
       <th *ngIf="data.length" class="w-1rem text-center"></th>
-      <th [attr.colspan]="data.length === 1 ? 2 : 1" class="w-1rem text-center">序號
+      <th [attr.colspan]="data.length === 1 && canInsert ? 2 : 1" class="w-1rem text-center">序號
       </th>
       <th *ngIf="!disabled && data.length && !data[0]._isAutoInsertCandidate" class="w-1rem text-center">
         <p-tableHeaderCheckbox [disabled]="disabled" />
@@ -108,7 +108,7 @@
           </p-iconField>
         </ng-container>
         <span *ngIf="!col.type">
-          {{ col.format ? col.format(rowData[col.field]) : rowData[col.field]}}
+          {{ col.format ? col.format(rowData[col.field], index, rowData) : rowData[col.field]}}
         </span>
       </td>
     </tr>
