@@ -1,4 +1,3 @@
-// fin21020-cru.component.ts
 import { Component, OnInit, ViewChild, } from '@angular/core';
 import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
@@ -43,9 +42,9 @@ export class FIN21020CRUComponent extends BasicCruPageComponent<IFin21020Data> i
   data: IFin21020Detail[] = [];
   selectedItems: IFin21020Detail[] = [];
   columns: Column[] = [
-    { field: 'Remit_BAmount', header: '金額下限', type: 'inputNumber', width: '9rem', maxLength: 10, min: 0, validate: [validateRequired], onFocus: (rowData, value, col, index) => { this.autoFillNextRow(rowData, value, col, index); } },
+    { field: 'Remit_BAmount', header: '金額下限', type: 'inputNumber', width: '9rem', maxLength: 10, min: 0, validate: [validateRequired], onFocus: (rowData) => { this.autoFillNextRow(rowData); } },
     { field: 'Remit_UAmount', header: '金額上限', type: 'inputNumber', width: '9rem', maxLength: 10, min: 0, validate: [validateRequired] },
-    { field: 'Remit_Fee', header: '廠商負擔電匯手續費', type: 'inputNumber', width: '12rem', maxLength: 6, min: 0, validate: [validateRequired], onBlur: (rowData, value, col, index) => { this.autoFillCashBackAmt(rowData, value, col, index); } },
+    { field: 'Remit_Fee', header: '廠商負擔電匯手續費', type: 'inputNumber', width: '12rem', maxLength: 6, min: 0, validate: [validateRequired], onBlur: (rowData) => { this.autoFillCashBackAmt(rowData); } },
     { field: 'Comp_Remit_Fee', header: '公司負擔電匯手續費', type: 'inputNumber', width: '12rem', maxLength: 6, min: 0, validate: [validateRequired] },
     { field: 'Cash_Back_Amt', header: '廠商負擔電匯手續費回饋收入', type: 'inputNumber', width: '12rem', maxLength: 6, min: 0 },
   ];
@@ -58,9 +57,17 @@ export class FIN21020CRUComponent extends BasicCruPageComponent<IFin21020Data> i
 
   ngOnInit(): void {
     this.initializePage('FIN21020', this.dataForm);
-    this.dropDownListService.queryGLS1005_DropDownList().pipe(untilDestroyed(this)).subscribe(data => {
+    this.dropDownListService.queryGLS1005For1103_DropDownList().pipe(untilDestroyed(this)).subscribe(data => {
       this.bankCodeOptions = data.Data.map(item => ({ ...item, label: `${item.No} - ${item.Name}` }));
     });
+    if (!this.isFormCreateable) {
+      this.dataForm.get('BNK_No')?.disable();
+      this.loading = true;
+      const bnkNo = this.dataForm.value.BNK_No || '';
+      this.fin21020Service.queryByBnkNo(bnkNo).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(res => {
+        this.data = res.Data;
+      });
+    }
   }
 
   // 新增一個 `validateEntireRow` 函式，用於整行驗證
@@ -114,18 +121,20 @@ export class FIN21020CRUComponent extends BasicCruPageComponent<IFin21020Data> i
   };
 
   // 依照上一筆自動帶入相同值+1
-  autoFillNextRow(rowData: IFin21020Detail, value: number, col: Column, index: number) {
+  autoFillNextRow(rowData: IFin21020Detail) {
     const rowIndex = this.data.indexOf(rowData);
     if (rowIndex > 0) {
       const prevRow = this.data[rowIndex - 1];
-      rowData.Remit_BAmount = prevRow.Remit_UAmount ? prevRow.Remit_UAmount + 1 : undefined;
+      if (typeof prevRow.Remit_UAmount === 'number') {
+        rowData.Remit_BAmount = prevRow.Remit_UAmount + 1;
+      }
     } else {
       rowData.Remit_BAmount = 0;
     }
   }
 
   // 依照Remit_Fee自動帶入Cash_Back_Amt
-  autoFillCashBackAmt(rowData: IFin21020Detail, value: number, col: Column, index: number) {
+  autoFillCashBackAmt(rowData: IFin21020Detail) {
     rowData.Cash_Back_Amt = rowData.Remit_Fee;
   }
 
@@ -137,8 +146,8 @@ export class FIN21020CRUComponent extends BasicCruPageComponent<IFin21020Data> i
         return;
       }
       const body = {
-        BNK_No: this.dataForm.get('BNK_No')?.value,
-        Details: this.data.map(item => ({
+        BNK_No: frm.value.BNK_No,
+        Details: this.data.filter(item => !item['_isAutoInsertCandidate']).map(item => ({
           Remit_BAmount: item.Remit_BAmount,
           Remit_UAmount: item.Remit_UAmount,
           Remit_Fee: item.Remit_Fee,
@@ -147,11 +156,9 @@ export class FIN21020CRUComponent extends BasicCruPageComponent<IFin21020Data> i
         })),
       };
       this.loading = false;
-      console.log(body);
-
-      // this.fin21020Service.insertFin21020(body).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(res => {
-      //   this.messageService.successBubble(res.Message || '新增成功');
-      // });
+      this.fin21020Service.insertFIN21020(body).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(res => {
+        this.messageService.successBubble(res.Message || '新增成功');
+      });
     });
   }
 }
