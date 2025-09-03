@@ -5,7 +5,7 @@
   <p-accordion>
     <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
       [headerStyleClass]="'query-accordionTab'">
-      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
+      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onQueryClick(queryForm)">
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
             <app-calendar-range-quick label="訪談日期" [startControl]="queryForm.controls.contact_Date_Start"
@@ -21,14 +21,13 @@
         <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
           <app-button btnType="clear" [form]="queryForm"></app-button>
           <app-button label="意願報表" (click)="onWillingClick(queryForm)"></app-button>
-          <app-button btnType="query" [loading]="loading" (click)="onSubmit(queryForm)"></app-button>
+          <app-button btnType="query" [loading]="loading" (click)="onQueryClick(queryForm)"></app-button>
         </div>
         <!-- </div> -->
       </form>
     </p-accordionTab>
   </p-accordion>
 </div>
-<p>目前 activeReport: {{ activeReport }}</p>
 <div class="card" *ngIf="activeReport === 'query'">
   <div class="col-13">
     <h6>專櫃訪談紀錄追蹤表</h6>
@@ -47,7 +46,7 @@
       dataKey="id"
       [multiSortMeta]="[{ field: 'contact_USR_No', order: 1 }]"
       [totalRecords]="totalRecords"
-      (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"
+      (lazyLoadData)="onLazyLoadData($event, queryForm); onQueryClick(queryForm)"
       [lazy]="true"
       [loading]="loading"
       [isRowSelectable]="isRowSelectable"
@@ -73,7 +72,7 @@
       dataKey="id"
       [multiSortMeta]="[{ field: 'contact_USR_No', order: 1 }]"
       [totalRecords]="totalRecords"
-      (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"
+      (lazyLoadData)="onLazyLoadData($event, queryForm); onWillingClick(queryForm)"
       [lazy]="true"
       [loading]="loading"
       [isRowSelectable]="isRowSelectable"
