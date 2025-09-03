@@ -1,104 +1,44 @@
 <div class="card">
-  <div class="grid align-items-center">
-    <div class="col" style="flex: 1">
-      <app-menubar [ProgNo]="ProgNo"></app-menubar>
-    </div>
+  <div class="flex gap-2 mb-2">
+    <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
+    <app-button btnType="back" (click)="onCancel()"></app-button>
   </div>
   <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
     <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
       <div class="grid p-fluid">
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-calendar calendarType="dateOne" label="交易日期" controlName="TXN_Date"
-            [control]="dataForm.controls.TXN_Date" [submitted]="submitted">
-          </app-calendar>
-        </div>
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text label="收銀機號" controlName="ECR_No" [control]="dataForm.controls.ECR_No"
-            [submitted]="submitted">
-          </app-input-text>
-        </div>
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text label="收銀機所屬門市店號" controlName="SYS_StoreNo" [control]="dataForm.controls.SYS_StoreNo"
-            [submitted]="submitted">
-          </app-input-text>
-        </div>
+        <!-- 專櫃編號 -->
+        <app-dropdown class="col-12 md:col-6 lg:col-4" label="專櫃編號/名稱" [control]="dataForm.controls.TLT_No"
+          [submitted]="submitted" [options]="TLT_NoOptions" optionLabel="label" optionValue="No" />
+        <!-- 倉別 -->
+        <app-dropdown class="col-12 md:col-6 lg:col-4" label="倉別代碼/名稱" controlName="HOS_No" [options]="warehouseOptions"
+          optionLabel="label" optionValue="No" [control]="dataForm.controls.HOS_No"
+          [submitted]="submitted"></app-dropdown>
+        <app-table title="收銀機清單" dataKey="ecr_no" class="col-12" [columns]="columns" [data]="data" [showFilter]="false"
+          [deleteData]="true" (dataChange)="data = $event" [showInsert]="true" [showManage]="false"
+          (insert)="dialogVisible = true" [showCheckBox]="true" [selectedItems]="selectedItems"
+          (selectionChange)="selectedItems = $event" [showReportMode]="false"></app-table>
       </div>
-      <div class="grid p-fluid">
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text label="交易序號" controlName="TXN_No" [control]="dataForm.controls.TXN_No"
-            [submitted]="submitted">
-          </app-input-text>
-        </div>
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text label="班別" controlName="FNS_Class" [control]="dataForm.controls.FNS_Class"
-            [submitted]="submitted">
-          </app-input-text>
-        </div>
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-calendar calendarType="dateTimeOne" label="操作日期時間" controlName="FNS_DateTime"
-            [control]="dataForm.controls.FNS_DateTime" [submitted]="submitted">
-          </app-calendar>
-        </div>
+      <div *ngIf=" !isFormReadable" class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+        <app-button btnType="cancel" [form]="dataForm"></app-button>
+        <app-button btnType="submit" [loading]="loading"></app-button>
       </div>
-      <div class="grid p-fluid">
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-input-number [useGrouping]="false" label="收銀員編號" controlName="FNS_Op_Cod"
-            [control]="dataForm.controls.FNS_Op_Cod" [submitted]="submitted">
-          </app-input-number>
-        </div>
-        <div class="col-12 md:col-6 lg:col-4">
-          <!-- <app-dropdown label="方式" controlName="FNS_Flag" [options]="FNS_Flag_Option" optionLabel="label"
-            optionValue="value" [control]="dataForm.controls.FNS_Flag" [submitted]="submitted">
-          </app-dropdown> -->
-        </div>
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-input-number label="金額" controlName="FNS_Amount" [control]="dataForm.controls.FNS_Amount"
-            [submitted]="submitted">
-          </app-input-number>
-        </div>
-      </div>
-      <div class="grid p-fluid">
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text label="非銷售資料" controlName="FNS_Data" [control]="dataForm.controls.FNS_Data"
-            [submitted]="submitted">
-          </app-input-text>
-        </div>
-        <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text label="專櫃編號" controlName="TLT_No" [control]="dataForm.controls.TLT_No"
-            [submitted]="submitted">
-          </app-input-text>
-        </div>
-      </div>
-      <!---->
-      <!-- <hr />
-            <ng-container formArrayName="items">
-                <ng-container *ngFor="let item of items.controls; let i = index" [formGroupName]="i">
-                    <div class="grid align-items-center">
-                        <div class="col" style="flex: 1">
-                            <p>名稱 {{ i + 1 }}</p>
-                        </div>
-                        <div>
-                            <app-button-dynamicallydelete (click)="onRemoveItem(i)" [crudstatus]="crudstatus" class="col"></app-button-dynamicallydelete>
-                        </div>
-                    </div>
-                    <div class="grid p-fluid">
-                        <div class="col-6 md:col-4 lg:col-2">
-                            <app-dropdown label="系統別初始" controlName="CashRegisterType" [options]="CashRegisterTypeItems" optionLabel="label" optionValue="value" [control]="getFormControl(i, 'CashRegisterType')" [submitted]="submitted">
-                            </app-dropdown>
-                        </div>
-                    </div>
-                    <hr />
-                </ng-container>
-            </ng-container>
-            <div class="pt-1">
-                <app-button-dynamicallyadd (click)="onAddItem()"></app-button-dynamicallyadd>
-            </div> -->
     </form>
-    <div class="col pt-4">
-      <div class="grid justify-content-end">
-        <app-button btnType="cancel"></app-button>
-        <app-button btnType="submit" *ngIf="isFormEditable"></app-button>
-      </div>
-    </div>
   </p-panel>
 </div>
+
+<app-dialog [visible]="dialogVisible" header="選擇收銀機" (visibleChange)="dialogVisible = $event" (save)="saveDialog()"
+  [disable]="selectedItemsDialog.length === 0">
+  <form [formGroup]="dialogQueryForm" class="flex pb-2 align-items-end gap-2">
+    <app-input-text class="flex-grow-1" label="館別" controlName="building_no"
+      [control]="dialogQueryForm.controls.building_no" (input)="inputEnter()" />
+    <app-input-text class="flex-grow-1" label="樓層" controlName="floor_no" [control]="dialogQueryForm.controls.floor_no"
+      (input)="inputEnter()" />
+    <app-input-text class="flex-grow-1" label="區域" controlName="area_no" [control]="dialogQueryForm.controls.area_no"
+      (input)="inputEnter()" />
+  </form>
+  <app-table tableKey="tls51140DialogTable" dataKey="ecr_no" [data]="dialogData" [columns]="columns"
+    [selectedItems]="selectedItemsDialog" (selectionChange)="selectedItemsDialog = $event" [showHeader]="false"
+    [showManage]="false" [showCheckBox]="true" [emptyMessage]="'無可選擇的收銀機'" [loading]="dialogLoading"
+    [isRowSelectable]="isRowSelectable.bind(this)" scrollHeight="350px" [showCaption]="false">
+  </app-table>
+</app-dialog>

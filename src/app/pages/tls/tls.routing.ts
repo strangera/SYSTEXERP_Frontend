@@ -1,4 +1,3 @@
-import { Tls31030CruComponent } from './tls31030-cru/tls31030-cru.component';
 import { Routes } from '@angular/router';
 
 export const tlsRoutes: Routes = [
@@ -560,6 +559,8 @@ export const tlsRoutes: Routes = [
   { path: 'tls51110', loadComponent: () => import('./tls51110/tls51110.component').then(m => m.TLS51110Component) },
   // 品牌進貨折數設定作業
   { path: 'tls51130', loadComponent: () => import('./tls51130/tls51130.component').then(m => m.TLS51130Component) },
+  // 自營專櫃收銀扣庫維護作業
+  { path: 'tls51140', loadComponent: () => import('./tls51140/tls51140.component').then(m => m.Tls51140Component) },
   // 採購單維護作業
   { path: 'tls52010', loadComponent: () => import('./tls52010/tls52010.component').then(m => m.TLS52010Component) },
   // 退貨單維護作業
@@ -658,6 +659,8 @@ export const tlsRoutes: Routes = [
   { path: 'tls51110cru', loadComponent: () => import('./tls51110-cru/tls51110-cru.component').then(m => m.TLS51110CRUComponent) },
   // 品牌進貨折數設定作業 CRU
   { path: 'tls51130cru', loadComponent: () => import('./tls51130-cru/tls51130-cru.component').then(m => m.TLS51130CRUComponent) },
+  // 自營專櫃收銀扣庫維護作業 CRU
+  { path: 'tls51140cru', loadComponent: () => import('./tls51140-cru/tls51140-cru.component').then(m => m.Tls51140CruComponent) },
   // 採購單維護作業 CRU
   { path: 'tls52010cru', loadComponent: () => import('./tls52010-cru/tls52010-cru.component').then(m => m.TLS52010CRUComponent) },
   // 退貨單維護作業 CRU

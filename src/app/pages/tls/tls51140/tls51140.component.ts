@@ -1,3 +1,4 @@
+import { QueryTLS51140ResponseData, Tls51140Service } from '@service/api/tls/tls51140.service';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
@@ -10,7 +11,6 @@ import { Column, createPaginationConfig } from '@shared/componentkit/table/table
 import { DropDownListService, IDropdownItem } from '@service/utility/dropDownList.service';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
-import { QueryTLS45030ResponseData, Tls45030Service } from '@service/api/tls/tls45030.service';
 import { finalize } from 'rxjs';
 
 @Component({
@@ -28,14 +28,14 @@ import { finalize } from 'rxjs';
   ],
   templateUrl: './tls51140.component.html'
 })
-export class Tls51140Component extends BasicQueryPageComponent<QueryTLS45030ResponseData> implements OnInit {
+export class Tls51140Component extends BasicQueryPageComponent<QueryTLS51140ResponseData> implements OnInit {
   queryForm = this.formBuilder.nonNullable.group({
-    ECR_No: [''],
-    TLT_No: [''],
+    ECR_No: [null],
+    TLT_No: [null],
     ...createPaginationConfig([{ field: 'TLT_NO', order: 1 }]), // 分頁和排序參數，將預設排序改為 TLT_NO
   });
   totalRecords = 0;
-  data: QueryTLS45030ResponseData[] = [];
+  data: QueryTLS51140ResponseData[] = [];
   columns: Column[] = [
     { field: 'TLT_NO', header: '專櫃編號' },
     { field: 'TLT_Name', header: '專櫃名稱' },
@@ -58,13 +58,13 @@ export class Tls51140Component extends BasicQueryPageComponent<QueryTLS45030Resp
 
   constructor(
     private readonly dropDownListService: DropDownListService,
-    private readonly tls45030Service: Tls45030Service, // 注入 tls45030Service
+    private readonly tls51140Service: Tls51140Service, // 注入 tls51140Service
   ) {
     super();
   }
 
   ngOnInit(): void {
-    this.initializePage('TLS45030', 'tls/tls45030cru', this.queryForm, (form) => this.onSubmit(form));
+    this.initializePage('TLS51140', 'tls/tls51140cru', this.queryForm, (form) => this.onSubmit(form));
 
     this.dropDownListService.queryPOS1002_DropDownList().pipe(untilDestroyed(this)).subscribe(options => {
       if (options.Data) {
@@ -82,7 +82,7 @@ export class Tls51140Component extends BasicQueryPageComponent<QueryTLS45030Resp
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
       const request = this.queryForm.getRawValue();
-      this.tls45030Service.queryTLS45030(request).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(res => {
+      this.tls51140Service.queryTLS51140(request).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(res => {
         this.data = res.Data;
         this.totalRecords = res.TotalCount;
       });

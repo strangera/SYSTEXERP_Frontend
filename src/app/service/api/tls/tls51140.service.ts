@@ -9,18 +9,18 @@ import { ApiResponse } from '@service/system/auth.service';
 /**
  * 查詢 POS2034_ECR 資料的 Request 格式
  */
-export interface QueryTLS45030Request {
+export interface QueryTLS51140Request {
   PageSize?: number;
   PageIndex?: number;
   SortBy?: SortMeta[];
-  TLT_NO?: string;
-  ECR_No?: string;
+  TLT_NO?: string | null;
+  ECR_No?: string | null;
 }
 
 /**
  * 查詢 POS2034_ECR 資料的 Response 資料格式
  */
-export interface QueryTLS45030ResponseData {
+export interface QueryTLS51140ResponseData {
   ID: number;
   TLT_NO: string;
   TLT_Name: string;
@@ -54,8 +54,8 @@ export class Tls51140Service {
    * @param request 查詢條件
    * @returns 查詢結果的 Observable
    */
-  queryTLS45030(request: QueryTLS45030Request): Observable<ApiResponse<QueryTLS45030ResponseData[]>> {
-    const url = `${this.apiUrl}/queryTLS45030`;
-    return this.http.post<ApiResponse<QueryTLS45030ResponseData[]>>(url, request);
+  queryTLS51140(request: QueryTLS51140Request): Observable<ApiResponse<QueryTLS51140ResponseData[]>> {
+    const url = `${this.apiUrl}/queryTLS51140`;
+    return this.http.post<ApiResponse<QueryTLS51140ResponseData[]>>(url, request);
   }
 }
