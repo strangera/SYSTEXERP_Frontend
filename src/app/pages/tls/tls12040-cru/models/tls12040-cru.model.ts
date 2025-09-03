@@ -18,6 +18,13 @@ export interface TLS12040RequestModel {
   apply_no: string;
 }
 
+export interface Tls12040SelectorTableColumn {
+  field: string;
+  header: string;
+  sortable?: boolean;
+}
+
+
 export interface TLS12040DetailModel {
   // ========== 基本資訊 ==========
   talent_id: string;

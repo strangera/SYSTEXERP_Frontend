@@ -2,8 +2,7 @@
   <div class="flex gap-2 mb-2">
     <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
     <app-button btnType="back" label="上一步" (click)="onCancel()"></app-button>
-    <app-button btnType="create" label="下一步(抽成設定)" (click)="onSubmitNext()"
-      [disabled]="getTotalSelectedCount() === 0"></app-button>
+    <app-button btnType="create" label="下一步(抽成設定)" (click)="onSubmitNext()"></app-button>
     <app-button btnType="back" (click)="onClearAndExit()"></app-button>
   </div>
 
@@ -45,7 +44,7 @@
         <i class="pi pi-info-circle text-4xl text-gray-400 mb-3"></i>
         <h5 class="text-gray-600 mb-2">沒有找到扣款資料</h5>
         <p class="text-gray-500 mb-3">
-          目前合約（{{ currentTalentId }}）沒有設定任何扣款項目
+          目前合約（{{ currentApplyNo }}）沒有設定任何扣款項目
         </p>
         <app-button label="重新載入資料" icon="pi pi-refresh" (click)="reloadData()"></app-button>
       </div>
@@ -54,6 +53,11 @@
       <div *ngFor="let capType of capTypes" [hidden]="!hasDataForType(capType)">
         <p-accordion>
           <p-accordionTab [header]="getCapTypeName(capType)" [selected]="true">
+            <!-- 特殊說明（針對特定類型） -->
+            <!-- <div *ngIf="capType === 'D' || capType === 'E'" class="mb-3 p-2 bg-gray-50 border-round">
+            </div> -->
+
+            <!-- 無資料顯示 -->
             <div *ngIf="!hasDataForType(capType)" class="text-center p-4 bg-gray-50 border-round">
               <i class="pi pi-inbox text-3xl text-gray-400 mb-2"></i>
             </div>
@@ -66,7 +70,8 @@
                 [showPaginator]="false" [showAddButton]="false" [showBatchDelete]="false" [loading]="loading"
                 [dataKey]="'id'" [detailKey]="''" [emptyMessage]="'尚未設定' + getCapTypeName(capType) + '項目'"
                 (save)="onFareTableSave($event, capType)" (edit)="onFareTableEdit($event, capType)"
-                (cancel)="onFareTableCancel($event, capType)"></app-expandable-edit-table>
+                (cancel)="onFareTableCancel($event, capType)"
+                (beforeSave)="onBeforeSave($event, capType)"></app-expandable-edit-table>
             </div>
 
             <!-- 底部操作按鈕 -->
@@ -87,16 +92,16 @@
       </div>
       <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
         <app-button btnType="back" label="上一步" (click)="onCancel()"></app-button>
-        <app-button btnType="create" label="下一步(抽成設定)" (click)="onSubmitNext()"
-          [disabled]="getTotalSelectedCount() === 0"></app-button>
+        <app-button btnType="create" label="下一步(抽成設定)" (click)="onSubmitNext()"></app-button>
         <app-button btnType="back" (click)="onClearAndExit()"></app-button>
       </div>
     </div>
   </div>
 </div>
 
-<app-dialog [visible]="showCalculationDialog" (visibleChange)="onCalculationDialogClose($event)"
+<!-- <app-dialog [visible]="showCalculationDialog" (visibleChange)="onCalculationDialogClose($event)"
   (save)="onCalculationSave()" header="🧮 自動計算確認" width="500px" height="auto" maxWidth="600px" [showFooter]="true">
+
   <div class="calculation-content" *ngIf="calculationResult">
     <div class="result-summary text-center mb-4">
       <h4 class="text-primary mb-3">📊 計算結果</h4>
@@ -123,4 +128,4 @@
       </div>
     </div>
   </div>
-</app-dialog>
+</app-dialog> -->
