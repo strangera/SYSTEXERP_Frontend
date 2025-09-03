@@ -29,7 +29,7 @@ export class TLS51080Component extends BasicQueryPageComponent<POS2034> implemen
     HOS_No: ['', [Validators.maxLength(10)]], // 倉庫代碼 STO_NO+HOS_NO唯一值
     HOS_NAME: ['', [Validators.maxLength(50)]], // 倉庫名稱
     HOS_Remark: ['', [Validators.maxLength(100)]], // 備註說明
-    org_id: ['', [Validators.maxLength(20)]], // 所屬部門
+    org_id: ['', [Validators.maxLength(20)]], // 組織代碼/所屬部門
     // building_no: ['', [Validators.maxLength(1)]], // 館別代碼
 
     //分頁查詢
@@ -90,9 +90,11 @@ export class TLS51080Component extends BasicQueryPageComponent<POS2034> implemen
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
       //查詢時去除org_id中/以後的部分
-      if (frm.value.org_id) {
-        frm.value.org_id = frm.value.org_id.split('/')[0];
-      }
+      // if (frm.value.org_id) {
+      //   frm.value.org_id = frm.value.org_id.split('/')[0];
+      // }
+
+      console.log('分倉request:', JSON.stringify(frm.value, null, 2));
       this.tls51080Service.queryTLS51080(frm.value).subscribe({
         next: (response) => {
           if (response.Status === '0000') {
@@ -185,7 +187,7 @@ export class TLS51080Component extends BasicQueryPageComponent<POS2034> implemen
             Label: item.No + '-' + item.Name,
           }));
 
-          // this.org_idOptions = [{ No: '102130', Name: '測試', Label: '102130-測試' }];
+          // this.org_idOptions = [{ No: '102120', Name: '測試', Label: '102120-測試' }];
 
           console.log('org_idOptions:', this.org_idOptions);
         });

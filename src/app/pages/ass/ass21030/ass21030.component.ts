@@ -81,7 +81,7 @@ export class ASS21030Component extends BasicQueryPageComponent<ENG2001> implemen
       SYS_StoreNo: [this.authService.getUserInfo()?.SYS_StoreNo ?? '', [Validators.maxLength(10)]], // 分店編號 section抓
       Mid: [Number(this.authService.getUserInfo()?.mid), [Validators.maxLength(19)]], //  section抓
       ENG_YYMM: [null, [Validators.maxLength(6)]], // 結算年月
-      ENG_Status: [null, [Validators.maxLength(1)]], // 抄錶狀態：0=未抄錶、1=已抄錶、2=已結算
+      ENG_Status: [null, [Validators.maxLength(1)]], // 結算狀態：0=未抄錶、1=已抄錶、2=已結算
 
       //分頁查詢
       ...createPaginationConfig([{ field: 'ENG_MeterNo', order: 1 }]), // 分頁和排序參數
@@ -95,9 +95,8 @@ export class ASS21030Component extends BasicQueryPageComponent<ENG2001> implemen
       { value: 'G03', label: '瓦斯錶' }
     ];
     ENG_Status_Option: option[] = [ // 抄錶狀態選項
-      { value: '0', label: '未抄錶' },
-      { value: '1', label: '已抄錶' },
-      { value: '2', label: '已結算' }
+      { value: '0', label: '未結算' },
+      { value: '1', label: '已結算' }
     ];
 
     ENG_MeterNo_Option: apiOption[] = [];
