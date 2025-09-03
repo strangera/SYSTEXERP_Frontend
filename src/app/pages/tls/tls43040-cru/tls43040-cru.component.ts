@@ -90,6 +90,15 @@ export class TLS43040CRUComponent extends BasicCruPageComponent<any> implements 
     console.log('表格資料data:', this.data);
     this.data = this.rowdata?.ECR_Details ?? [];
     console.log('表格資料data:', this.data);
+    // 初始值檢查
+    this.onEcrDtlLimitChange(this.dataForm.controls.ECR_DtlLimit.value);
+
+    // 監聽下拉選單變化
+    this.dataForm.controls.ECR_DtlLimit.valueChanges
+      .pipe(untilDestroyed(this))
+      .subscribe(value => {
+        this.onEcrDtlLimitChange(value);
+      });
   }
 
   // ===== 載入下拉並設定 columns =====
@@ -187,10 +196,8 @@ export class TLS43040CRUComponent extends BasicCruPageComponent<any> implements 
         this.tls43040Service.insertTLS43040(payload).subscribe({
           next: (res) => {
             console.log('新增成功:', res);
-            // 自動把回傳的編號填回表單，避免之後更新還是 "自動編號"
-            if (res?.Data?.ECR_GrpNo) {
-              this.dataForm.controls.ECR_GrpNo.setValue(res.Data.ECR_GrpNo);
-            }
+            this.onCancel(); // !!! 學習
+            this.messageService.successBubble(res.Message); // !!! 學習
           },
           error: (err) => {
             console.error('新增失敗:', err);
