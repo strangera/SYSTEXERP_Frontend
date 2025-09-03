@@ -21,6 +21,7 @@ import { HttpClient } from '@angular/common/http';
 import { environment } from 'src/environments/environment';
 import { TLS31020PrintRequest, TLS31020Request, TLS31020Response, Tls31020Service } from '@service/api/tls/tls31020.service';
 import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
+import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
 
 @Component({
   selector: 'app-tls31020',
@@ -37,6 +38,7 @@ import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range
     ButtonComponent,
     TableModule,
     RadiobuttonYNComponent,
+    RadiobuttonComponent,
     TranslateModule,
     TableComponent,
     MultiSelectComponent,
@@ -59,11 +61,11 @@ export class TLS31020Component extends BasicQueryPageComponent<TLS31020Response>
     tlt_kind: [[]], //櫃別 (1.正櫃 2.臨時櫃 3.特賣會 4.虛擬櫃)
     tlt_term_type: [[]], // 抽成別 1:固定租金 2:底租抽成取高者3:一般抽成     4:包底抽成     5:階梯式抽成   6:包底加階梯   "
     org_id: [[]],  // 組織
-    TaxType: ["Y"],  // 銷售金額是否含稅(Y:是 N:否 預設含稅)
+    TaxType: ["0"],  // 銷售金額是否含稅(0:是 1:否 預設含稅)
     IsRece_Yn: [null],  // 是否開立業主發票(是否開立業主發票(Y:是 N:否 預設全部))
     
     
-    ...createPaginationConfig([{ field: 'tlt_building', order: 1 }])
+    ...createPaginationConfig([{ field: 'tlt_floor', order: 1 }])
   });
   totalRecords = 0;
   data: TLS31020Response[] = [];
@@ -117,6 +119,10 @@ export class TLS31020Component extends BasicQueryPageComponent<TLS31020Response>
     { value: "4", label: "包底抽成" },
     { value: "5", label: "階梯式抽成" },
     { value: "6", label: "包底加階梯" },
+  ]
+  TaxType_Option = [
+    { value: "0", label: "是" },
+    { value: "1", label: "否" },
   ]
   tlt_building_Option: IDropdownItem[] = []; // 館別
   tlt_floor_Option: IDropdownItem[] = []; // 樓層
@@ -267,7 +273,7 @@ export class TLS31020Component extends BasicQueryPageComponent<TLS31020Response>
         TXN_DateE: formatDate(frm.getRawValue().TXN_DateE, 'yyyy-MM-dd', 'en-US'),
       } as TLS31020Request;
 
-      console.log('送出請求',formValue);
+      console.log('送出print請求',formValue);
       this.tls31020Service.queryTLS31020(formValue).pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(res => {
         this.data = res.Data;
         this.totalRecords = res.TotalCount;
@@ -286,7 +292,7 @@ export class TLS31020Component extends BasicQueryPageComponent<TLS31020Response>
       pageIndex: undefined,
       pageSize: undefined,
       bus_class: frm.getRawValue().bus_class.map((item: IDropdownItem) => item.No),
-      TXN_Date: formatDate(frm.getRawValue().TXN_Date, 'yyyy-MM-dd', 'en-US'),
+      // TXN_Date: formatDate(frm.getRawValue().TXN_Date, 'yyyy-MM-dd', 'en-US'),
     } as TLS31020PrintRequest;
 
     this.btnLoading = true;
@@ -298,5 +304,10 @@ export class TLS31020Component extends BasicQueryPageComponent<TLS31020Response>
           window.open(downloadUrl, '_blank');
         }
       });
+  }
+
+  onDetail1(event: any) {
+    const queryConditions = this.queryStateService.getQueryStateValue(this.ProgNo);
+    this.onDetail(event, queryConditions);
   }
 }

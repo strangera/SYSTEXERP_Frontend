@@ -25,7 +25,7 @@ export interface TLS31020PrintRequest extends TLS31020Request {
   "IsExcel": boolean
 }
 
-export interface TLS31020DetialRequest {
+export interface TLS31020DetailRequest {
   TXN_DateS: string | Date;
   TXN_DateE: string | Date;
   tlt_building: string[]
@@ -41,7 +41,7 @@ export interface TLS31020DetialRequest {
   IsRece_Yn: string
 }
 
-export interface TLS31020DetialPrintRequest extends TLS31020DetialRequest {
+export interface TLS31020DetialPrintRequest extends TLS31020DetailRequest {
   "IsMerge": boolean,
   "IsExcel": boolean
 }
@@ -100,7 +100,7 @@ export class Tls31020Service {
     }
 
     //查詢 單樓層之營業報表
-    queryTLS31020Detail(body: TLS31020DetialRequest): Observable<ApiResponse<TLS31020DetailResponse[]>> {
+    queryTLS31020Detail(body: TLS31020DetailRequest): Observable<ApiResponse<TLS31020DetailResponse[]>> {
       return this.http.post<ApiResponse<TLS31020DetailResponse[]>>(`${this.apiUrl}/queryTLS31020Detail`, body);
     }
 
