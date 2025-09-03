@@ -57,6 +57,12 @@
 
       <!-- 標頭 Template -->
       <div class="grid p-fluid" *ngIf="group?.rows?.length">
+        <div class="col-12 text-center text-2xl font-bold">
+  南紡流通事業股份有限公司
+</div>
+<div class="col-12 text-center text-xl font-bold">
+  專櫃日對帳單
+</div>
         <div class="col-12 md:col-6 lg:col-4" *ngIf="showBusType">
           大分類：{{ group.rows[0]?.bus_type }} /
           {{ group.rows[0]?.bus_type_name }}
@@ -64,12 +70,9 @@
         <div class="col-12 md:col-6 lg:col-4">
           銷售日期：{{ group.rows[0]?.TXN_DATE | date: "yyyy/MM/dd" }}
         </div>
+         <div class="col-12 md:col-6 lg:col-4">製表日期：{{ printedAt }}</div>
         <div class="col-12 md:col-6 lg:col-4">
           專櫃：{{ group.rows[0]?.TLT_NO }} / {{ group.rows[0]?.tlt_name }}
-        </div>
-        <div class="col-12 md:col-6 lg:col-4">製表日期：{{ printedAt }}</div>
-        <div class="col-12 md:col-6 lg:col-4">
-          區域：{{ group.rows[0]?.AREA_NO ?? "－" }}
         </div>
         <div class="col-12 md:col-6 lg:col-4">
           樓層：{{ group.rows[0]?.FLOOR_NO ?? "－" }}
@@ -81,6 +84,12 @@
             group.rows[0]?.return_qty ?? 0
           }}
         </div>
+       
+        <div class="col-12 md:col-6 lg:col-4">
+          區域：{{ group.rows[0]?.AREA_NO ?? "－" }}
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">  </div>
+        
         <div class="col-12 md:col-6 lg:col-4">
           退貨金額：{{ group.rows[0]?.return_amt ?? 0 }}
         </div>
@@ -100,6 +109,8 @@
         [columns]="selectedColumns"
         [paginator]="false"
         scrollable="true"
+         [multiSortMeta]="multiSortMeta"
+         [sortMode]="'multiple'" 
         [style]="{ width: '100%' }"
         [styleClass]="'p-datatable-sm p-datatable-striped p-datatable-gridlines'"
       >

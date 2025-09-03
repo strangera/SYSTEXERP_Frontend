@@ -48,14 +48,14 @@
             </div>
 
             <ng-container *ngIf="queryForm.get('filterMode')?.value === 'counter'">
-              <app-dropdown
+              <app-multi-select
                 label="專櫃編號"
                 [options]="CounterOptions"
                 optionLabel="formLabel"
                 optionValue="value"
                 [control]="queryForm.controls.TLT_No"
                 [submitted]="submitted"
-              ></app-dropdown>
+              ></app-multi-select>
             </ng-container>
           </div>
 
@@ -74,7 +74,7 @@
 
           <ng-container *ngIf="queryForm.get('filterMode')?.value === 'location'">
             <div class="col-12 md:col-6 lg:col-4">
-              <app-dropdown
+              <app-multi-select
                 label="館別"
                 controlName="tlt_building"
                 [options]="BUILDING_NO_Options"
@@ -82,7 +82,7 @@
                 optionValue="value"
                 [control]="queryForm.controls.tlt_building"
                 [submitted]="submitted"
-              ></app-dropdown>
+              ></app-multi-select>
             </div>
             <div class="col-12 md:col-6 lg:col-4">
               <app-multi-select
@@ -120,14 +120,14 @@
             </div>
 
             <ng-container *ngIf="queryForm.get('filterMode')?.value === 'busType'">
-              <app-dropdown
+              <app-multi-select
                 label="大分類"
                 [options]="bus_typeOptions"
                 [control]="queryForm.controls.bus_type"
                 optionLabel="label"
                 optionValue="value"
                 [submitted]="submitted"
-              ></app-dropdown>
+              ></app-multi-select>
             </ng-container>
           </div>
 
