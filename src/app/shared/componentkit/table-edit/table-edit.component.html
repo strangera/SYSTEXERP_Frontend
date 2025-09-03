@@ -91,7 +91,7 @@
               [optionValue]="col.optionValue"
               [style]="{'width': col.width, 'text-align': col.textAlign,'min-width':'-webkit-fill-available'}"
               [disabled]=" (col.disabled && col.disabled(rowData[col.field], index, rowData)) || disabled"
-              (onChange)="onValueChange(rowData,$event.value, col, index)"
+              [editable]="true" (onChange)="onValueChange(rowData,$event.value, col, index)"
               (onHide)="onValueChange(rowData,rowData[col.field], col, index)" [virtualScroll]="true"
               [virtualScrollItemSize]="40" [showClear]="col.showClear || true"
               [variant]="rowData._isAutoInsertCandidate ? 'filled' : 'outlined'"
