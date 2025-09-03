@@ -19,7 +19,7 @@ import { ButtonModule } from 'primeng/button';
 import { formatDate } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
 import { environment } from 'src/environments/environment';
-import { TLS31020Request, TLS31020Response, Tls31020Service } from '@service/api/tls/tls31020.service';
+import { TLS31020PrintRequest, TLS31020Request, TLS31020Response, Tls31020Service } from '@service/api/tls/tls31020.service';
 import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
 
 @Component({
@@ -287,7 +287,7 @@ export class TLS31020Component extends BasicQueryPageComponent<TLS31020Response>
       pageSize: undefined,
       bus_class: frm.getRawValue().bus_class.map((item: IDropdownItem) => item.No),
       TXN_Date: formatDate(frm.getRawValue().TXN_Date, 'yyyy-MM-dd', 'en-US'),
-    } as TLS31020Request;
+    } as TLS31020PrintRequest;
 
     this.btnLoading = true;
     this.tls31020Service.printTLS31020(formValue).pipe(finalize(() => this.btnLoading = false), untilDestroyed(this))

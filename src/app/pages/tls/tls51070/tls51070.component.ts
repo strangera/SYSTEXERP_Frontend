@@ -74,12 +74,8 @@ export class TLS51070Component extends BasicQueryPageComponent<POS2004> implemen
     { field: 'PLU_Name', header: '商品名稱', visible: true },
     { field: 'PLU_No', header: '國際條碼', visible: true },
     { field: 'PLU_OrgPLUNo', header: '廠商貨號', visible: true },
-    {
-      field: 'LOGO_No', header: '品牌代碼', visible: true,
-      format: (value: string) =>
-        this.brandOption.find((option) => option.No === value)?.Label ||
-        value
-    },
+    { field: 'LOGO_No', header: '品牌代碼', visible: true },
+    { field: 'LOGO_Name', header: '品牌名稱', visible: true },
     {
       field: 'CAT_LNo', header: '大分類代碼', visible: true,
       format: (value: string) =>
