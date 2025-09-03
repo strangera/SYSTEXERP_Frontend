@@ -41,7 +41,7 @@ import { ASS21020Data } from './ass21020.model';
     InputNumberComponent,
   ],
 })
-export class ASS21020Component extends BasicQueryPageComponent<unknown> implements OnInit {
+export class ASS21020Component extends BasicQueryPageComponent<ASS21020Data> implements OnInit {
 
   public readonly queryForm = this.formBuilder.group({
     ENG_Type: new FormControl<EngType[]>([]),
@@ -105,13 +105,16 @@ export class ASS21020Component extends BasicQueryPageComponent<unknown> implemen
   public readonly columns: Column[] = [
     { field: 'ENG_Type', header: '能源類型' },
     { field: 'ENG_MeterNo', header: '錶號' },
-    { field: 'TLT_Name', header: '專櫃編號/名稱' },
-    { field: 'ENG_Rate', header: '面積比率(%)', format: v => `${v}%` },
-    { field: 'ENG_Remark', header: '備註' },
     { field: 'CRT_Date', header: '建立日期' },
     { field: 'CRT_USR_Name', header: '建立人員名稱' },
     { field: 'UPD_Date', header: '變更日期' },
     { field: 'UPD_USR_Name', header: '變更人員名稱' },
+  ];
+
+  public readonly extColumns: Column[] = [
+    { field: 'TLT_No', header: '專櫃編號/名稱', format: (v, i, r) => `${v}${r?.TLT_Name ? '-' + r.TLT_Name : ''}` },
+    { field: 'ENG_Rate', header: '面積比率(%)', format: v => `${v}%` },
+    { field: 'ENG_Remark', header: '備註' },
   ];
 
   public readonly meterColumns: Column[] = [
@@ -120,7 +123,7 @@ export class ASS21020Component extends BasicQueryPageComponent<unknown> implemen
     { field: 'ENG_Type', header: '能源類型' },
   ];
 
-  public tltNoColumns: Column[] = [
+  public readonly tltNoColumns: Column[] = [
     { field: 'TLT_No', header: '專櫃編號' },
     { field: 'TLT_Name', header: '專櫃名稱' },
     { field: 'NET_SPACE', header: '專櫃面積坪數' },
@@ -132,6 +135,7 @@ export class ASS21020Component extends BasicQueryPageComponent<unknown> implemen
     private readonly logger: NGXLogger,
   ) {
     super();
+    this.user = this.authService.currentUserValue!;
   }
 
   public ngOnInit(): void {
@@ -139,17 +143,20 @@ export class ASS21020Component extends BasicQueryPageComponent<unknown> implemen
 
     this.service.loadEngType();
     this.service.loadEngMeterNo();
+
+    this.logger.debug(`init:`, []);
   }
 
   public onSubmit(): void {
+    this.logger.debug(`onSubmit:`, [this.queryForm.getRawValue(), this.user]);
     this.handleSubmit(this.queryForm, () => {
       this.service.loadASS21020({
-        ENG_Type: this.qf().ENG_Type.value!.join(),
+        EngTypes: this.qf().ENG_Type.value!.join(),
         ENG_Rate: this.qf().ENG_Rate.value!,
         ENG_MeterNo: this.qf().ENG_MeterNo.value!,
         Location_No: this.qf().Location_No.value!,
-        SYS_StoreNo: this.authService.currentUserValue?.SYS_StoreNo!,
-        Mid: Number(this.authService.currentUserValue?.mid)!,
+        SYS_StoreNo: this.user?.SYS_StoreNo!,
+        Mid: Number(this.user?.mid)!,
       });
 
       this.queryStateService.setQueryState(this.ProgNo, this.queryForm.getRawValue());
@@ -160,11 +167,12 @@ export class ASS21020Component extends BasicQueryPageComponent<unknown> implemen
   public onDelete(items: ASS21020Data[]): void {
     this.logger.debug(`Deleting:`, [items]);
     for (const item of items) {
-      this.service.deleteASS21020(String(item.ID)).subscribe(res => {
-        if (res.IsUpdateSuccess) this.messageService.successBubble('刪除成功');
-        else this.messageService.errorBubble(res.ErrorMsg, '刪除失敗');
-        this.loading = !1;
-      });
+      this.service.deleteASS21020({ ENG_Type: item.ENG_Type, ENG_MeterNo: item.ENG_MeterNo })
+        .subscribe(res => {
+          if (res.IsUpdateSuccess) this.messageService.successBubble('刪除成功');
+          else this.messageService.errorBubble(res.ErrorMsg, '刪除失敗');
+          this.loading = !1;
+        });
     }
   }
 }
