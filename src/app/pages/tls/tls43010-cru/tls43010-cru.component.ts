@@ -128,6 +128,7 @@ export class TLS43010CRUComponent extends BasicCruPageComponent<QueryTls43010Res
     })
     if (!this.isFormCreateable) {
       this.dataForm.get('NOT_DtlLimit')?.setValue(this.rowdata?.NOT_DtlLimit || '0');
+      console.log(this.rowdata);
       this.data = this.rowdata?.Details || [];
     }
   }
@@ -159,6 +160,7 @@ export class TLS43010CRUComponent extends BasicCruPageComponent<QueryTls43010Res
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
       const body = {
+        ID: this.rowdata?.ID || 0,
         NOT_No: this.dataForm.get('NOT_No')?.value,
         NOT_Date: this.dataForm.get('NOT_Date')?.value,
         NOT_BegDate: this.dataForm.get('NOT_BegDate')?.value,
