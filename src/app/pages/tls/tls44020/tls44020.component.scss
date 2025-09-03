@@ -1,5 +1,5 @@
-/* 狀態列 */
-.status-container {
+/* 狀態列 (上方狀態說明用) */
+:host ::ng-deep .status-container {
   display: flex;
   align-items: center;
   gap: 6px;
@@ -34,11 +34,47 @@
       border-color: #dc3545;
       color: #dc3545;
     }
+
+    &.shutdown {
+      border-color: #6c757d;
+      color: #6c757d;
+    }
   }
 }
 
-/* 狀態圖示定位 */
-.relative {
+/* EDC 銀行 chip (卡片用) */
+:host ::ng-deep .edc-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 48px;
+  padding: 4px 10px;
+  border-radius: 20px; // 膠囊狀
+  font-size: 13px;
+  font-weight: 600;
+  color: #fff;
+  text-align: center;
+
+  i {
+    font-size: 12px;
+    margin-right: 4px;
+  }
+
+  &.success {
+    background-color: #28a745; // 綠色：交易中
+  }
+
+  &.logout {
+    background-color: #dc3545; // 紅色：離線
+  }
+
+  &.shutdown {
+    background-color: #6c757d; // 灰色：關機
+  }
+}
+
+/* 狀態圖示定位 (右上角 ICON) */
+:host ::ng-deep.relative {
   position: relative;
 
   .status-icon {
@@ -57,7 +93,8 @@
 :host ::ng-deep .p-dataview.p-dataview-list .grid.grid-nogutter > div {
   padding: 0;
 }
-/* grid 模式 */
+
+/* Grid 模式 */
 :host ::ng-deep .custom-grid {
   display: grid;
   grid-template-columns: repeat(5, 1fr);
@@ -76,17 +113,20 @@
   box-shadow: none !important;
 }
 
+/* 搜尋列 */
 :host ::ng-deep .search-bar-container {
   flex: 1;
   max-width: 800px;
   display: flex;
   justify-content: flex-start;
 }
+
 :host ::ng-deep .search-bar {
   flex: 1;
   display: flex;
   align-items: center;
 }
+
 :host ::ng-deep .search-bar input {
   border: 1px solid #e0dcdc !important;
   background-color: #f9f7f7 !important;

@@ -2,6 +2,7 @@
   <div class="flex gap-2 mb-2">
     <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
   </div>
+
   <p-accordion>
     <p-accordionTab
       header="{{ 'query-conditions' | translate }}"
@@ -15,6 +16,7 @@
         (ngSubmit)="onSubmit(queryForm)"
       >
         <div class="card">
+          <!-- TabMenu -->
           <p-tabMenu
             [model]="items"
             [(activeItem)]="activeItem"
@@ -22,15 +24,15 @@
             (activeItemChange)="onTabChange($event)"
           ></p-tabMenu>
 
-          <!-- DataView 列表/卡片切換 -->
+          <!-- DataView -->
           <p-dataView [value]="pagedData" [layout]="layout">
+            <!-- Header -->
             <ng-template pTemplate="header">
               <div class="w-full">
-                <!-- 標題 + 搜尋框 + 切換按鈕 -->
                 <div
                   class="flex justify-content-between align-items-center mb-4 mt-2"
                 >
-                  <!-- 搜尋框靠左 -->
+                  <!-- 搜尋框 -->
                   <div class="search-bar-container flex-1">
                     <span class="p-input-icon-left search-bar">
                       <i class="pi pi-search"></i>
@@ -39,7 +41,7 @@
                         type="text"
                         name="globalFilter"
                         class="w-full"
-                        placeholder="搜尋專櫃編號與名稱、收銀機代號、信用卡櫃代號、區域、樓層、位置編號、IP"
+                        placeholder="搜尋專櫃編號、名稱、收銀機代號"
                         [(ngModel)]="globalFilter"
                         [ngModelOptions]="{ standalone: true }"
                         (input)="applyFilter()"
@@ -47,7 +49,7 @@
                     </span>
                   </div>
 
-                  <!-- 切換按鈕靠右 -->
+                  <!-- 切換 layout -->
                   <p-dataViewLayoutOptions
                     (layoutChange)="onLayoutChange($event)"
                   ></p-dataViewLayoutOptions>
@@ -56,17 +58,14 @@
                 <!-- 狀態說明 -->
                 <div class="status-container mb-2">
                   <span class="status-label">狀態說明：</span>
-
                   <div class="status-chip">
                     <i class="pi pi-desktop"></i>
                     關機
                   </div>
-
                   <div class="status-chip logout">
                     <i class="pi pi-sign-out"></i>
                     離線
                   </div>
-
                   <div class="status-chip success">
                     <i class="pi pi-sync"></i>
                     交易中
@@ -74,22 +73,32 @@
                 </div>
               </div>
             </ng-template>
+
             <!-- Grid 模式 -->
-            <ng-template pTemplate="grid" let-data>
+            <ng-template pTemplate="grid" let-row>
               <div class="custom-grid">
-                <div
-                  class="custom-grid-item"
-                  *ngFor="let row of pagedData; let i = index"
-                >
+                <div class="custom-grid-item" *ngFor="let row of pagedData">
                   <div
                     class="p-3 border-1 surface-border surface-card relative"
                   >
-                    <!-- 狀態 Icon 右上角 -->
-                    <i
-                      class="status-icon"
-                      [ngClass]="getStatusIcon(row.EOS_Status)"
-                      [ngStyle]="{ color: getStatusColor(row.EOS_Status) }"
-                    ></i>
+                    <!-- 右上角：判斷是否顯示關機 icon 或 EDC chips -->
+                    <div class="status-container-grid">
+                      <i
+                        *ngIf="isShutdown(row)"
+                        class="pi pi-desktop shutdown-icon"
+                      ></i>
+
+                      <ng-container *ngIf="!isShutdown(row)">
+                        <span [ngClass]="getEdcStatusClass(row.EDC_Online1)">
+                          <i [ngClass]="getStatusIcon(row.EDC_Online1)"></i>
+                          中信
+                        </span>
+                        <span [ngClass]="getEdcStatusClass(row.EDC_Online2)">
+                          <i [ngClass]="getStatusIcon(row.EDC_Online2)"></i>
+                          聯信
+                        </span>
+                      </ng-container>
+                    </div>
 
                     <!-- 主要內容 -->
                     <div class="grid-content">
@@ -102,8 +111,9 @@
                 </div>
               </div>
             </ng-template>
+
             <!-- List 模式 -->
-            <ng-template pTemplate="list" let-data>
+            <ng-template pTemplate="list" let-row>
               <div class="grid grid-nogutter">
                 <div
                   class="col-12"
@@ -112,6 +122,7 @@
                   <div
                     class="flex flex-row justify-content-between align-items-center p-3 border-bottom-1 surface-border"
                   >
+                    <!-- 左側 -->
                     <div class="flex-1">
                       <div>
                         <b>序號：</b>
@@ -130,11 +141,24 @@
                         {{ row.TLT_Name }}
                       </div>
                     </div>
-                    <div class="flex align-items-center gap-2">
+
+                    <!-- 右側：判斷是否顯示關機 icon 或 EDC chips -->
+                    <div class="status-container-list">
                       <i
-                        [ngClass]="getStatusIcon(row.EOS_Status)"
-                        [ngStyle]="{ color: getStatusColor(row.EOS_Status) }"
+                        *ngIf="isShutdown(row)"
+                        class="pi pi-desktop shutdown-icon"
                       ></i>
+
+                      <ng-container *ngIf="!isShutdown(row)">
+                        <span [ngClass]="getEdcStatusClass(row.EDC_Online1)">
+                          <i [ngClass]="getStatusIcon(row.EDC_Online1)"></i>
+                          中信
+                        </span>
+                        <span [ngClass]="getEdcStatusClass(row.EDC_Online2)">
+                          <i [ngClass]="getStatusIcon(row.EDC_Online2)"></i>
+                          聯信
+                        </span>
+                      </ng-container>
                     </div>
                   </div>
                 </div>
@@ -142,7 +166,7 @@
             </ng-template>
           </p-dataView>
 
-          <!-- 分頁器 -->
+          <!-- 分頁 -->
           <p-paginator
             [rows]="rows"
             [first]="first"

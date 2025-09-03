@@ -37,41 +37,44 @@ export class TLS44020Component extends BasicQueryPageComponent<any> implements O
   queryForm: FormGroup = this.fb.group({});
   items: MenuItem[] = [];
   activeItem: MenuItem | undefined;
-
   data: any[] = [
-    { ECR_LocNo: 'B1A01', TLT_No: '000001', TLT_Name: '米卡莎·阿卡曼', EOS_Status: '關機' },
-    { ECR_LocNo: 'B1A02', TLT_No: '000002', TLT_Name: '阿爾敏·亞魯雷特', EOS_Status: '離線' },
-    { ECR_LocNo: 'B1A03', TLT_No: '000003', TLT_Name: '萊納·布朗', EOS_Status: '交易中' },
-    { ECR_LocNo: 'B1A04', TLT_No: '000004', TLT_Name: '亞妮', EOS_Status: '離線' },
-    { ECR_LocNo: 'B1A05', TLT_No: '000005', TLT_Name: '艾連葉卡', EOS_Status: '關機' },
-    { ECR_LocNo: 'B1A06', TLT_No: '000006', TLT_Name: '咪吉葉卡', EOS_Status: '登出' },
-    { ECR_LocNo: 'B1A07', TLT_No: '000007', TLT_Name: '炭治郎', EOS_Status: '交易中' },
-    { ECR_LocNo: 'B1A11', TLT_No: '000008', TLT_Name: '亞妮', EOS_Status: '登出' },
-    { ECR_LocNo: 'B1A12', TLT_No: '000009', TLT_Name: '米卡莎·阿卡曼', EOS_Status: '交易中' },
-    { ECR_LocNo: 'B1A13', TLT_No: '000010', TLT_Name: '阿爾敏·亞魯雷特', EOS_Status: '離線' },
-    { ECR_LocNo: 'B1A14', TLT_No: '000002', TLT_Name: '亞妮', EOS_Status: '離線' },
-    { ECR_LocNo: 'B1A15', TLT_No: '000003', TLT_Name: '萊納·布朗', EOS_Status: '關機' },
-    { ECR_LocNo: 'B1A16', TLT_No: '000004', TLT_Name: '阿爾敏·亞魯雷特', EOS_Status: '離線' },
-    { ECR_LocNo: 'B1A17', TLT_No: '000004', TLT_Name: '米卡莎·阿卡曼', EOS_Status: '離線', },
-    { ECR_LocNo: 'B1A18', TLT_No: '000002', TLT_Name: '亞妮', EOS_Status: '離線', },
-    { ECR_LocNo: 'B1A19', TLT_No: '000003', TLT_Name: '萊納·布朗', EOS_Status: '交易中', },
-    { ECR_LocNo: 'B1A20', TLT_No: '000005', TLT_Name: '艾連葉卡', EOS_Status: '關機', },
-    { ECR_LocNo: 'B1A21', TLT_No: '000006', TLT_Name: '咪吉葉卡', EOS_Status: '離線', },
-    { ECR_LocNo: 'B1A22', TLT_No: '000007', TLT_Name: '炭治郎', EOS_Status: '交易中', },
-    { ECR_LocNo: 'B1A19', TLT_No: '000003', TLT_Name: '萊納·布朗', EOS_Status: '交易中', },
-    { ECR_LocNo: 'B1A06', TLT_No: '000006', TLT_Name: '咪吉葉卡', EOS_Status: '登出' },
-    { ECR_LocNo: 'B1A07', TLT_No: '000007', TLT_Name: '炭治郎', EOS_Status: '交易中' },
-    { ECR_LocNo: 'B1A11', TLT_No: '000008', TLT_Name: '亞妮', EOS_Status: '登出' },
-    { ECR_LocNo: 'B1A12', TLT_No: '000009', TLT_Name: '米卡莎·阿卡曼', EOS_Status: '交易中' },
-    { ECR_LocNo: 'B1A13', TLT_No: '000010', TLT_Name: '阿爾敏·亞魯雷特', EOS_Status: '離線' },
-    { ECR_LocNo: 'B1A14', TLT_No: '000002', TLT_Name: '亞妮', EOS_Status: '關機' },
-    { ECR_LocNo: 'B1A15', TLT_No: '000003', TLT_Name: '萊納·布朗', EOS_Status: '交易中' },
-    { ECR_LocNo: 'B1A16', TLT_No: '000004', TLT_Name: '阿爾敏·亞魯雷特', EOS_Status: '離線' },
-    { ECR_LocNo: 'B1A17', TLT_No: '000004', TLT_Name: '米卡莎·阿卡曼', EOS_Status: '關機', },
-    { ECR_LocNo: 'B1A18', TLT_No: '000002', TLT_Name: '亞妮', EOS_Status: '交易中', },
-    { ECR_LocNo: 'B1A19', TLT_No: '000003', TLT_Name: '萊納·布朗', EOS_Status: '交易中', },
-    { ECR_LocNo: 'B1A20', TLT_No: '000005', TLT_Name: '艾連葉卡', EOS_Status: '關機', },
+    // ===== 關機 =====
+    { ECR_LocNo: 'B1A01', TLT_No: '000001', TLT_Name: '米卡莎', EOS_Status: 5, EOS_Online: 'N', EDC_Online1: 'N', EDC_Online2: 'N' },
+
+    // ===== 全部離線 =====
+    { ECR_LocNo: 'B1A02', TLT_No: '000002', TLT_Name: '艾爾文', EOS_Status: 1, EOS_Online: 'N', EDC_Online1: 'N', EDC_Online2: 'N' },
+
+    // ===== 中信離線 / 聯信交易中 =====
+    { ECR_LocNo: 'B1A03', TLT_No: '000003', TLT_Name: '萊納', EOS_Status: 1, EOS_Online: 'Y', EDC_Online1: 'N', EDC_Online2: 'Y' },
+
+    // ===== 中信交易中 / 聯信離線 =====
+    { ECR_LocNo: 'B1A04', TLT_No: '000004', TLT_Name: '吉克', EOS_Status: 1, EOS_Online: 'Y', EDC_Online1: 'Y', EDC_Online2: 'N' },
+
+    // ===== 中信交易中 / 聯信交易中 =====
+    { ECR_LocNo: 'B1A05', TLT_No: '000005', TLT_Name: '漢吉', EOS_Status: 1, EOS_Online: 'Y', EDC_Online1: 'Y', EDC_Online2: 'Y' },
+
+    // ===== 中信離線 / 聯信離線 (算關機) =====
+    { ECR_LocNo: 'B1A06', TLT_No: '000006', TLT_Name: '里維', EOS_Status: 1, EOS_Online: 'N', EDC_Online1: 'N', EDC_Online2: 'N' },
+
+    // ===== 中信關機 / 聯信交易中 =====
+    { ECR_LocNo: 'B1A07', TLT_No: '000007', TLT_Name: '阿爾敏', EOS_Status: 5, EOS_Online: 'N', EDC_Online1: 'N', EDC_Online2: 'Y' },
+
+    // ===== 中信交易中 / 聯信關機 =====
+    { ECR_LocNo: 'B1A08', TLT_No: '000008', TLT_Name: '亞妮', EOS_Status: 5, EOS_Online: 'N', EDC_Online1: 'Y', EDC_Online2: 'N' },
+
+    // ===== POS 離線，但刷卡機在線 =====
+    { ECR_LocNo: 'B1A09', TLT_No: '000009', TLT_Name: '柯尼', EOS_Status: 1, EOS_Online: 'N', EDC_Online1: 'Y', EDC_Online2: 'Y' },
+
+    // ===== POS 在線，但刷卡機都離線 (算離線) =====
+    { ECR_LocNo: 'B1A10', TLT_No: '000010', TLT_Name: '莎夏', EOS_Status: 1, EOS_Online: 'Y', EDC_Online1: 'N', EDC_Online2: 'N' },
+
+    // ===== POS 在線，中信在線，聯信離線 =====
+    { ECR_LocNo: 'B1A11', TLT_No: '000011', TLT_Name: '貝爾托特', EOS_Status: 1, EOS_Online: 'Y', EDC_Online1: 'Y', EDC_Online2: 'N' },
+
+    // ===== POS 在線，中信離線，聯信在線 =====
+    { ECR_LocNo: 'B1A12', TLT_No: '000012', TLT_Name: '皮克', EOS_Status: 1, EOS_Online: 'Y', EDC_Online1: 'N', EDC_Online2: 'Y' },
   ];
+
 
   globalFilter = '';
   filteredData: any[] = [];
@@ -88,23 +91,51 @@ export class TLS44020Component extends BasicQueryPageComponent<any> implements O
     super();
   }
 
-getStatusIcon(status: string): string {
-  switch (status) {
-    case '關機': return 'pi pi-desktop';
-    case '離線': return 'pi pi-sign-out';
-    case '交易中': return 'pi pi-sync';
-    default: return 'pi pi-question-circle';
-  }
-}
+  getBankStatus(row: any, bank: '中信' | '聯信'): '關機' | '離線' | '交易中' {
+    const edcKey = bank === '中信' ? 'EDC_Online1' : 'EDC_Online2';
 
-getStatusColor(status: string): string {
-  switch (status) {
-    case '關機': return '#6c757d';
-    case '離線': return '#dc3545';
-    case '交易中': return '#28a745';
-    default: return '#6c757d';
+    // 若兩個 EDC 都離線 → 視為關機
+    if (row.EDC_Online1 === 'N' && row.EDC_Online2 === 'N') {
+      return '關機';
+    }
+
+    // 判斷個別 EDC 狀態
+    if (row[edcKey] === 'Y') {
+      return '交易中';
+    } else {
+      return '離線';
+    }
   }
-}
+  isShutdown(row: any): boolean {
+    return row.EDC_Online1 === 'N' && row.EDC_Online2 === 'N';
+  }
+
+  getEdcStatusClass(status: string): string {
+    switch (status) {
+      case '交易中': return 'edc-chip success';
+      case '離線': return 'edc-chip logout';
+      case '關機': return 'edc-chip shutdown'; // chip 其實不會用到，因為用 icon
+      default: return 'edc-chip';
+    }
+  }
+
+  getStatusIcon(status: string): string {
+    switch (status) {
+      case '關機': return 'pi pi-desktop';
+      case '離線': return 'pi pi-sign-out';
+      case '交易中': return 'pi pi-sync';
+      default: return 'pi pi-question-circle';
+    }
+  }
+
+  getStatusColor(status: string): string {
+    switch (status) {
+      case '關機': return '#6c757d';
+      case '離線': return '#dc3545';
+      case '交易中': return '#28a745';
+      default: return '#6c757d';
+    }
+  }
 
 
   ngOnInit() {

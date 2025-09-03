@@ -9,7 +9,7 @@ import { Observable } from 'rxjs';
 export class Tls51110Service {
   apiUrl = `${environment.ApiUrl}/TLS0000/TLS5000`;
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient) { }
 
   queryTLS51110(data: any): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/queryTLS51110`, data);
@@ -26,7 +26,9 @@ export class Tls51110Service {
   deleteTLS51110(data: any): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/deleteTLS51110`, data);
   }
-
+  approveTLS51110(data: any): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/approveTLS51110`, data);
+  }
   /** 匯入 Excel 檔 */
   uploadTLS51110(file: File): Observable<any> {
     const formData = new FormData();

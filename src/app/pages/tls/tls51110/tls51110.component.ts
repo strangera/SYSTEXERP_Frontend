@@ -231,10 +231,10 @@ export class TLS51110Component extends BasicQueryPageComponent<LogoBudget> imple
       BUD_Status: status === "1" ? "0" : "1"
     };
 
-    this.apiService.updateTLS51110(payload).pipe(finalize(() => (this.actionLoadingId = null))).subscribe({
+    this.apiService.approveTLS51110(payload).pipe(finalize(() => (this.actionLoadingId = null))).subscribe({
       next: () => {
-        row.BUD_Status = status;
         const msg = status === "1" ? '審核成功' : '反審核成功';
+        this.onSubmit(this.queryForm);
         this.messageService.successBubble(`${msg}（ID: ${id}）`);
       },
       error: (err) => {
