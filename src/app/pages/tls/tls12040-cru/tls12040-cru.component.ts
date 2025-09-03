@@ -2,7 +2,7 @@
 // --Commonly used imports--
 import { Component, OnInit, } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute, NavigationExtras, Router } from '@angular/router';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { AuthService } from '../../../service/system/auth.service';
@@ -31,6 +31,7 @@ import { forkJoin } from 'rxjs';
 import { TLS12040Service } from '@service/api/tls/tls12040.service';
 import { TLS12040DetailModel, TLS12040RequestModel } from './models/tls12040-cru.model';
 import { TLS12040Response } from '../tls12040/tls12040.component';
+import { BusinessClassificationService } from './services/business-classification.service';
 
 // 2.1.2.4 專櫃要約書維護CRU
 @Component({
@@ -215,6 +216,7 @@ export class TLS12040CRUComponent implements OnInit {
     private sharedDropdownService: SharedDropdownService,
     private route: ActivatedRoute, // 新增
     private tls12040Service: TLS12040Service, // 新增
+    private businessClassificationService: BusinessClassificationService,
   ) { }
 
   ngOnInit() {
@@ -334,12 +336,34 @@ export class TLS12040CRUComponent implements OnInit {
 
 
   private loadDependentDropdowns(data: TLS12040DetailModel): void {
-    // 如果有大分類，載入對應的中分類
     if (data.bus_type) {
-      this.onBusTypeChange(data.bus_type);
+      this.onBusTypeChange(data.bus_type);  // 大分類變更邏輯（會清空中小分類，這在 load 時是OK的，因為我們會重新載入）
+      if (data.bus_class) {
+        this.businessClassificationService.getBusClassOptions(data.bus_type).subscribe({
+          next: (options) => {
+            this.busClassOptions = options;
+            this.dataForm.patchValue({ bus_class: data.bus_class });
+            if (data.bus_sclass) {
+              // 直接載入小分類，不要呼叫 onBusClassChange（避免清空）
+              this.businessClassificationService.getBusSClassOptions(data.bus_type, data.bus_class).subscribe({
+                next: (sOptions) => {
+                  this.busSClassOptions = sOptions;
+                  this.dataForm.patchValue({ bus_sclass: data.bus_sclass });
+                },
+                error: (error) => {
+                  console.error('載入小分類失敗:', error);
+                  // this.notificationService.errorBubble('載入小分類失敗');
+                }
+              });
+            }
+          },
+          error: (error) => {
+            console.error('載入中分類失敗:', error);
+            // this.notificationService.errorBubble('載入中分類失敗');
+          }
+        });
+      }
     }
-    // 其他相依的下拉選單載入邏輯可以在這裡添加
-    // 例如：根據組織載入對應的位置選項等
   }
 
   private populateForm(data: TLS12040DetailModel): void {
@@ -365,7 +389,7 @@ export class TLS12040CRUComponent implements OnInit {
       contact_Date: data.contact_Date,
 
       // 分類與商務條件
-      tlt_term_type: data.tlt_term_type,
+      tlt_term_type: data.tlt_term_type.trim(), // 去除前後空格 char(2)型別會自動產生
       comm_comp_type: data.comm_comp_type,
       paper_type: data.paper_type,
       bus_type: data.bus_type,
@@ -431,7 +455,7 @@ export class TLS12040CRUComponent implements OnInit {
       ticket_remarks: data.ticket_remarks,
       total_amt_unit: data.total_amt_unit,
       total_amt_vendor_unit: data.total_amt_vendor_unit,
-      company_register_address: data.company_addr,
+      company_register_address: data.company_register_address,
 
       // 狀態欄位
       cap_saletype1: data.cap_saletype1,
@@ -440,20 +464,17 @@ export class TLS12040CRUComponent implements OnInit {
       cap_saletype4: data.cap_saletype4,
     });
 
-    // // 載入分類資料（如果有 bus_type）
-    // if (data.bus_type) {
-    //   this.loadBusinessClassifications(data.bus_type, data.bus_class, data.bus_sclass);
-    // }
-
     // 處理位置資訊（如果需要的話）
     // this.loadLocationData(data.locationInfo);
   }
 
   private initializeDropdownOptions() {
     // 固定選項不需要任何處理，直接通過 getter 使用
-
     // API 選項需要載入
     this.loadApiOptions();
+    this.businessClassificationService.getBusTypeOptions().subscribe(options => {
+      this.bustypeOptions = options;
+    });
   }
 
   private loadApiOptions() {
@@ -496,40 +517,50 @@ export class TLS12040CRUComponent implements OnInit {
 
   // 大分類變更時載入中分類（需要屬性方式）
   onBusTypeChange(busType: string) {
-    this.busClassOptions = []; // 立即清空
+    this.busClassOptions = [];  // 清空中分類
+    this.busSClassOptions = [];  // 清空小分類（級聯清空）
 
     if (!busType) return;
 
-    this.sharedDropdownService.getBusClassOptions(busType).subscribe({
-      next: (options) => {
-        this.busClassOptions = options;
-      },
-      error: (error) => {
-        console.error('載入中分類失敗:', error);
-        this.busClassOptions = [];
-      }
+    this.businessClassificationService.getBusClassOptions(busType).subscribe(options => {
+      this.busClassOptions = options;
     });
   }
 
-  onCancel(): void {
-    // const extras: NavigationExtras = {
-    //   state: { fromRoute: this.router.url },
-    // };
-    // if (this.isViewMode) {
-    //   this.contractFlowService.clearViewMode();
-    //   this.router.navigate(['account/tls/tls13010'], extras);
-    //   this.messageService.infoBubble('已退出檢視模式');
-    //   return;
-    // }
+  onBusClassChange(busClass: string) {
+    const busType = this.dataForm.get('bus_type')?.value;
+    this.busSClassOptions = [];  // 清空小分類
 
-    // // 編輯模式：使用父類邏輯或自訂
+    if (!busType || !busClass) return;
+
+    this.businessClassificationService.getBusSClassOptions(busType, busClass).subscribe(options => {
+      this.busSClassOptions = options;
+    });
+  }
+
+  onBusSClassChange(busSClass: string): void {
+    // 如果需要處理小分類變更的邏輯，可以在這裡添加
+  }
+
+  onCancel(): void {
+    const extras: NavigationExtras = {
+      state: { fromRoute: this.router.url },
+    };
+    if (CRUDStatus.Read) {
+      // this.contractFlowService.clearViewMode();
+      this.router.navigate(['account/tls/tls12040'], extras);
+      this.messageService.infoBubble('已退出檢視模式');
+      return;
+    }
+
+    // 編輯模式：使用父類邏輯或自訂
     // if (this.dataForm.dirty) {
     //   // if (confirm('是否要儲存目前的編輯內容？')) {
     //   this.saveToWorkflow();
     //   // }
     // }
     // this.router.navigate(['account/tls/tls13010'], extras);
-    this.router.navigate(['account/tls/tls12040']);
+    this.router.navigate(['account/tls/tls12040'], extras);
   }
 
   onSubmitNext(): void {
@@ -644,17 +675,8 @@ export class TLS12040CRUComponent implements OnInit {
   canCopyAddress(): boolean {
     // 🎯 只要有公司登記地址且不是檢視模式就可以複製
     const hasAddress = !!this.getCompanyAddress();
-    // const canEdit = !this.isViewMode;
-
-    // console.log('🔍 檢查複製按鈕狀態:', {
-    //   hasAddress,
-    //   canEdit,
-    //   isViewMode: this.isViewMode,
-    //   address: this.getCompanyAddress()
-    // });
-
-    // return hasAddress && canEdit;
-    return hasAddress;
+    const canEdit = this.crudstatus !== CRUDStatus.Read;
+    return hasAddress && canEdit;
   }
 
   getCompanyAddress(): string {
@@ -672,19 +694,20 @@ export class TLS12040CRUComponent implements OnInit {
       return;
     }
 
-    // // 檢查是否為檢視模式
-    // if (this.isViewMode) {
-    //   this.messageService.warnBubble('檢視模式下無法修改資料');
-    //   return;
-    // }
+    // 檢查是否為檢視模式
+    if (this.crudstatus === CRUDStatus.Read) {
+      this.messageService.warnBubble('檢視模式下無法修改資料');
+      return;
+    }
 
-    // // 檢查郵寄地址是否已有值
-    // const currentContactAddr = this.dataForm.get('contact_addr')?.value?.trim();
-    // if (currentContactAddr) {
-    //   if (!confirm('郵寄地址已有內容，確定要覆蓋嗎？')) {
-    //     return;
-    //   }
-    // }
+    // 檢查郵寄地址是否已有值
+    const currentContactAddr = this.dataForm.get('contact_addr')?.value?.trim();
+    if (currentContactAddr) {
+      //TODO:到時候使用彈跳視窗元件 待實作
+      if (!confirm('郵寄地址已有內容，確定要覆蓋嗎？')) {
+        return;
+      }
+    }
 
     // 複製地址
     this.dataForm.patchValue({

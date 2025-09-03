@@ -42,14 +42,14 @@ export interface TLS12040DetailModel {
   tlt_term_type: string;   // 抽成別
   comm_comp_type: string;  // 抽成計算方式
   paper_type?: string;     // 營業型態
-  bus_type?: string;       // 大分類代號
-  bus_class?: string;
-  bus_sclass?: string;
+  bus_type: string;       // 大分類代號
+  bus_class: string; //中分類
+  bus_sclass?: string; //小分類
 
   // ========== 組織與人員 ==========
   org_id?: string;          // 組織代碼
-  contact_USR_No?: string;  // 洽談者
-  contact_USR_Name?: string;
+  contact_USR_No?: string;  // 洽談者代號
+  contact_USR_Name?: string; //TODO:需要傳送值到後端存取 洽談者姓名
 
   // ========== 其他條件 ==========
   deco_type?: string;             // 裝潢方式
@@ -112,6 +112,8 @@ export interface TLS12040DetailModel {
   total_amt_vendor_unit?: string; // 目標營業額單位(廠商)
 
   approve_status: string; // 合約狀態
+
+  company_register_address: string; // 公司登記地址
 
   // ========== 位置資訊 ==========
   locationInfo: LocationDetails[];

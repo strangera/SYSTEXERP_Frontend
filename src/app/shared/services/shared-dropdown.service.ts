@@ -9,6 +9,7 @@ import { LocationOptionsService } from '../../service/api/dropdownservice/locati
 import { VendorCategoryOptionsService } from '../../service/api/dropdownservice/vendor-category-options.service';
 import { NegotiatorOptionsService } from '../../service/api/dropdownservice/negotiator-options.service';
 import { BankOptionsService } from '@service/api/dropdownservice/bank-option.service';
+import { BussclassDropdownService } from '@service/api/dropdownservice/tltbussclass-options.service';
 
 @Injectable({
   providedIn: 'root'
@@ -47,7 +48,8 @@ export class SharedDropdownService {
     private locationService: LocationOptionsService,
     private vendorCategoryService: VendorCategoryOptionsService,
     private negotiatorService: NegotiatorOptionsService,
-    private bankService: BankOptionsService
+    private bankService: BankOptionsService,
+    private bussclassService: BussclassDropdownService,
   ) { }
 
   // ========== 工具方法 ==========
@@ -106,6 +108,17 @@ export class SharedDropdownService {
 
     return this.callApi(`中分類(${busType})`, () =>
       this.sysb900Service.getSystemTypesByBustype([busType])
+    );
+  }
+
+  getBusSClassOptions(busType: string, busClass: string): Observable<DropdownOption[]> {
+    if (!busType || !busClass) {
+      console.log('⚠️ 大分類或中分類為空，回傳空的小分類選項');
+      return of([]);
+    }
+
+    return this.callApi(`小分類(${busClass})`, () =>
+      this.bussclassService.getSystemTypesByBustype([busType], [busClass])
     );
   }
 
