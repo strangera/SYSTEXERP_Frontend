@@ -12,11 +12,9 @@
           <app-calendar class="col-12 md:col-6 lg:col-6" calendarType="dateOne" label="建立日期" controlName="NOT_Date"
             [control]="dataForm.controls.NOT_Date" [submitted]="submitted" />
           <app-calendar class="col-12 md:col-6 lg:col-6" calendarType="dateTimeOne" label="有效開始日期時間"
-            controlName="NOT_BegDate" [control]="dataForm.controls.NOT_BegDate" [submitted]="submitted"
-            [minDate]="today" />
+            controlName="NOT_BegDate" [control]="dataForm.controls.NOT_BegDate" [submitted]="submitted" />
           <app-calendar class="col-12 md:col-6 lg:col-6" calendarType="dateTimeOne" label="有效結束日期時間"
-            controlName="NOT_EndDate" [control]="dataForm.controls.NOT_EndDate" [submitted]="submitted"
-            [minDate]="today" />
+            controlName="NOT_EndDate" [control]="dataForm.controls.NOT_EndDate" [submitted]="submitted" />
           <app-dropdown class="col-12 md:col-6 lg:col-6" label="狀態" controlName="NOT_Status"
             [options]="NOT_Status_Options" optionLabel="label" optionValue="value"
             [control]="dataForm.controls.NOT_Status" [submitted]="submitted" [filter]="false" />

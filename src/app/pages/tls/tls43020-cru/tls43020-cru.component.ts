@@ -64,7 +64,6 @@ export class TLS43020CRUComponent extends BasicCruPageComponent<QueryTls43020Res
     // NOT_File: ['', [Validators.required, Validators.maxLength(200)]], // 媒體檔案名稱
     NOT_Note: ['', [Validators.maxLength(255)]], // 備註
   });
-  today = new Date();
   NOT_Status_Options: { value: string, label: string }[] = [ // 0=未確認(未審核) 1=已確認(已審核) 2=已刪除
     { value: '0', label: '未審核' },
     { value: '1', label: '已審核' },
@@ -78,7 +77,7 @@ export class TLS43020CRUComponent extends BasicCruPageComponent<QueryTls43020Res
     { value: '1', label: '符合明細設定的機台才播放' },
     { value: '2', label: '不符合明細設定的機台才播放' },
   ];
-  data: any[] = [];
+  data: QueryTls43020Response[] = [];
   // 如果機台群組編號有值那其他要disable，反之亦然
   columns: Column[] = [
     { field: 'NOT_SeqNo', header: '通告序號' },
