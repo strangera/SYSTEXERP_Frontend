@@ -6,8 +6,8 @@ import { ErrorHandlerService } from '../../system/error-handler.service';
 import { CleanSubmitData } from '../../../pages/tls/tls13010/tls13010.model';
 import { TLS12040RequestModel } from '@pages/tls/tls12040-cru/models/tls12040-cru.model';
 
-interface TLS13010FareRequest {
-  talentId: string;
+interface TLS12040FareRequest {
+  apply_no: string;
   showAll: boolean;
 }
 
@@ -46,8 +46,8 @@ export class TLS12040Service {
   }
   /** 查詢契約書維護地點資料 */
   // Service 方法
-  queryTLS13010Fare(request: TLS13010FareRequest) {
-    return this.http.post<any>(`${this.apiUrl}/TLS0000/TLS1000/queryTLS13010Fare`, request).pipe(
+  queryTLS12040Fare(request: TLS12040FareRequest) {
+    return this.http.post<any>(`${this.apiUrl}/TLS0000/TLS1000/queryTLS12040Fare`, request).pipe(
       tap((res) => console.log('查詢扣款資料結果:', res)),
     );
   }
