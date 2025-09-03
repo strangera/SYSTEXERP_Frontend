@@ -43,7 +43,7 @@ export class TLS43020Component extends BasicQueryPageComponent<QueryTls43020Resp
     NOT_EndDate_Start: [null as null | Date], // 有效結束日期
     NOT_EndDate_End: [null as null | Date], // 有效結束日期
     NOT_File: ['', [Validators.maxLength(200)]], // 媒體檔案名稱
-    NOT_Status: [null, [Validators.maxLength(1)]], // 狀態 0=未確認(未審核) 1=已確認(已審核) 2=已刪除
+    NOT_Status: [null], // 狀態 0=未確認(未審核) 1=已確認(已審核) 2=已刪除
     ...createPaginationConfig([{ field: 'NOT_No', order: 1 }]), // 分頁和排序參數
   });
   totalRecords = 0;

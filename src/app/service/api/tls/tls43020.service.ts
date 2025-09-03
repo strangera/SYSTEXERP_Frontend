@@ -26,30 +26,33 @@ export interface VerifyTls43020Request {
 
 export interface QueryTls43020Response {
   ID: number,
+  STO_No: string,
   NOT_No: string,
   NOT_Date: string,
   NOT_BegDate: string,
   NOT_EndDate: string,
+  NOT_File: string,
   NOT_Status: string,
   NOT_Priority: number,
-  NOT_File: string,
-  NOT_Note?: string,
-  NOT_PlayTime?: number,
-  NOT_DtlLimit?: string,
-  NOT_AprvDate?: string,
-  NOT_AprvUsrNo?: string,
-  NOT_AprvUsrName?: string,
-  NOT_DelDate?: string,
-  NOT_DelUsrNo?: string,
-  NOT_DelUsrName?: string,
-  CRT_Date?: string,
-  CRT_USR_No?: string,
-  CRT_USR_Name?: string,
-  UPD_Date?: string,
-  UPD_USR_No?: string,
-  UPD_USR_Name?: string,
+  NOT_DtlLimit: string,
+  NOT_PlayTime: number,
+  NOT_Note: string,
+  Details: Tls43010Detail[]
 }
 
+export interface Tls43010Detail {
+  ID?: number, // 編輯用
+  NOT_SeqNo: number,
+  ECR_No: string,
+  TLT_No: string,
+  ECR_Type: string,
+  ECR_GrpNo: string,
+  BUILDING_No: string,
+  FLOOR_No: string,
+  Area_No: string,
+  status: string
+  [key: string]: any
+}
 @Injectable({
   providedIn: 'root'
 })
