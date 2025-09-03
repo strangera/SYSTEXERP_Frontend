@@ -246,7 +246,7 @@ export class TLS26010CRUComponent extends BasicCruPageComponent<TLS26010Data> im
 
   public ngOnInit(): void {
     this.initializePage('TLS26010', this.dataForm);
-    this.crudstatus !== CRUDStatus.Create && this.service.loadTLS26010Detail({ pod_no: this.rowdata?.pod_no || '' });
+    this.isFormCreateable && this.service.loadTLS26010Detail({ pod_no: this.rowdata?.pod_no || '' });
 
     this.dependencyChangeSubject.pipe(
       debounceTime(400),

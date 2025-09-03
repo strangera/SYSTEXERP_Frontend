@@ -167,6 +167,12 @@ export class TLS12070Component extends BasicQueryPageComponent<Customer_intervie
     });
   }
 
+  // 查詢 一般報表
+  onQueryClick(frm: FormGroup) {
+  this.activeReport = 'query';
+  this.onSubmit(frm);
+}
+
   // 查詢 意願報表
   onWillingClick(frm: FormGroup) {
     // TODO: 呼叫意願報表查詢 API

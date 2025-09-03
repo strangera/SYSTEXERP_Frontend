@@ -62,7 +62,7 @@ const toSortMeta = (arr: Array<{ field: string; order: any }> | null | undefined
     InputTextModule,
     ButtonComponent,
     TranslateModule,
-    TableComponent,
+    // TableComponent,
     CalendarComponent,
     DropdownComponent
   ],

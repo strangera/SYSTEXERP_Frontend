@@ -4,7 +4,7 @@ export interface Column {
   header: string;    // 欄位標題 (顯示在表格上的標題)
   visible?: boolean;  // 是否顯示 (可篩選欄位是否顯示？)
   hidden?: boolean;  // 是否隱藏 (是否為無法篩選欄位)
-  format?: (value: any) => string | number | null; // 格式化(日期、時間...)
+  format?: (value: any, index?: number, rowData?: any) => string | number | null; // 格式化(日期、時間...)
 
   groupField?: string;
   isSubTotal?: boolean; // 是否為小計欄位

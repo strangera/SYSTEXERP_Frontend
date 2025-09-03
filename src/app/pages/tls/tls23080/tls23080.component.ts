@@ -1,5 +1,8 @@
 import { Component } from '@angular/core';
 import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { HttpResponse } from '@angular/common/http';
+import { finalize } from 'rxjs/operators';
+
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { createPaginationConfig, LazyLoadEvent, formatDateToYYYY_MM_DD } from '../../../shared/componentkit/table/table.model';
 
@@ -20,6 +23,7 @@ import { ButtonComponent } from '../../../shared/componentkit/button/button.comp
 import { TranslateModule } from '@ngx-translate/core';
 import { TableComponent } from '@shared/componentkit/table/table.component';
 import { ColumnLabelService } from '../../../service/basic/column-label.service';
+import { ButtonModule } from 'primeng/button';
 
 @Component({
   selector: 'app-tls23080',
@@ -39,6 +43,7 @@ import { ColumnLabelService } from '../../../service/basic/column-label.service'
     ButtonComponent,
     TranslateModule,
     TableComponent,
+    ButtonModule, // ✅ 用於匯出按鈕 p-button
   ]
 })
 export class TLS23080Component extends BasicQueryPageComponent<any> {
@@ -52,11 +57,14 @@ export class TLS23080Component extends BasicQueryPageComponent<any> {
   ECRNoOptions: any[] = [];
   CounterOptions: any[] = [];
 
+  // --- 匯出用 ---
+  btnLoading = false;
+  historyRequestBody: any | null = null;
+
   // --- 排序狀態 ---
   sortMeta: any[] = [];
   readonly defaultSort: any[] = [
-    { field: 'TXN_Date', order:  1 }, // 近到遠
-
+    { field: 'TXN_Date', order: 1 }, // 近到遠
   ];
   private lastQuerySig: string | null = null;
   private lazyTimer: any = null;
@@ -71,12 +79,12 @@ export class TLS23080Component extends BasicQueryPageComponent<any> {
 
   queryForm = this.formBuilder.group({
     TXN_DateStart: [this.yesterday, [Validators.required]],
-    TXN_DateEnd: [this.yesterday, [Validators.required]],
-    tlt_openflag: ['N'],
-    ECR_No: [],
-    tlt_building: [],
-    tlt_floor: [],
-    org_id: [],
+    TXN_DateEnd:   [this.yesterday, [Validators.required]],
+    tlt_openflag:  ['N'],
+    ECR_No:        [],
+    tlt_building:  [],
+    tlt_floor:     [],
+    org_id:        [],
     // ✅ 帶入預設排序
     ...createPaginationConfig(this.defaultSort),
   });
@@ -155,10 +163,19 @@ export class TLS23080Component extends BasicQueryPageComponent<any> {
   onSubmit(form: FormGroup): void {
     this.handleSubmit(form, () => {
       const payload = this.buildPayload(this.queryForm.getRawValue());
+
+      // ✅ 匯出沿用同一包參數
+      this.historyRequestBody = { ...payload };
+
       this.loading = true;
       this.messageService?.blockUi();
 
-      this.tls23080Service.queryTLS23080(payload).subscribe({
+      this.tls23080Service.queryTLS23080(payload).pipe(
+        finalize(() => {
+          this.loading = false;
+          this.messageService?.unblockUi();
+        })
+      ).subscribe({
         next: (res: any) => {
           const groups = Array.isArray(res?.Data) ? res.Data : (res?.Data ? [res.Data] : []);
           const details = groups.flatMap((g: any)=>
@@ -170,13 +187,9 @@ export class TLS23080Component extends BasicQueryPageComponent<any> {
           this.data = details;
           this.totalRecords = typeof res?.TotalCount === 'number' ? res.TotalCount : details.length;
         },
-        error: (err) => {
-          this.loading = false;
-
-        },
-        complete: () => {
-          this.loading = false;
-          this.messageService?.unblockUi();
+        error: () => {
+          this.data = [];
+          this.totalRecords = 0;
         }
       });
     });
@@ -248,62 +261,133 @@ export class TLS23080Component extends BasicQueryPageComponent<any> {
     return `${y}/${m}/${day}`;
   };
 
+  // ========= 匯出 =========
+  onExportPDF() {
+    if (!this.historyRequestBody) {
+      this.messageService?.warnBubble?.('請先執行查詢以產生報表。');
+      return;
+    }
+    this.btnLoading = true;
+    this.tls23080Service
+      .exportTLS23080PDF(this.historyRequestBody)
+      .pipe(finalize(() => (this.btnLoading = false)))
+      .subscribe({
+        next: (response: HttpResponse<Blob>) => this.handleFileExport(response, '.pdf'),
+      });
+  }
 
-// 建議也把 formatDate 引進來：
-// import { formatDate } from '@shared/componentkit/table/table.model';
+  onExportXLSX() {
+    if (!this.historyRequestBody) {
+      this.messageService?.warnBubble?.('請先執行查詢以產生報表。');
+      return;
+    }
+    this.btnLoading = true;
+    this.tls23080Service
+      .exportTLS23080Excel(this.historyRequestBody)
+      .pipe(finalize(() => (this.btnLoading = false)))
+      .subscribe({
+        next: (response: HttpResponse<Blob>) => this.handleFileExport(response, '.xlsx'),
+      });
+  }
 
-columns = [
-  { field: 'TXN_Date', header: '日期', visible: true, style: 'text-left', format: this.formatDate },
+  private handleFileExport(response: HttpResponse<Blob>, fileExtension: string): void {
+    const contentDisposition = response.headers.get('Content-Disposition');
+    const filename = this.getFilenameFromHeader(contentDisposition, fileExtension);
+    const blob = response.body;
 
-  { field: 'TXN_PayAmt10', header: '現金', visible: true, style: 'text-right', format: this.moneyFormat.bind(this) },
+    if (blob && blob.size > 0) {
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } else {
+      this.messageService?.warnBubble?.('沒有找到符合條件的資料，無法生成報表。');
+    }
+  }
 
-  // 聯信（41/42/12）
-  { field: 'UnionGeneral', header: '聯信(一般)',  visible: true, style: 'text-right', format: this.moneyFormat.bind(this) },
-  { field: 'UnionAE',      header: '聯信(AE)',    visible: true, style: 'text-right', format: this.moneyFormat.bind(this) },
-  { field: 'UnionDiner',   header: '聯信(Diners)',visible: true, style: 'text-right', format: this.moneyFormat.bind(this) },
+  private getFilenameFromHeader(contentDisposition: string | null, defaultExtension: string): string {
+    if (!contentDisposition) return `download${defaultExtension}`;
 
-  // 中信（43/44/14）
-  { field: 'CTBCGeneral', header: '中信(一般)',  visible: true, style: 'text-right', format: this.moneyFormat.bind(this) },
-  { field: 'CTBCAE',      header: '中信(AE)',    visible: true, style: 'text-right', format: this.moneyFormat.bind(this) },
-  { field: 'CTBCDiner',   header: '中信(Diners)',visible: true, style: 'text-right', format: this.moneyFormat.bind(this) },
+    const filenameStarMatch = /filename\*=([^;]+)/.exec(contentDisposition);
+    if (filenameStarMatch && filenameStarMatch.length > 1) {
+      const encodedFilename = filenameStarMatch[1];
+      try {
+        const decoded = decodeURIComponent(encodedFilename.replace(/^UTF-8''/, ''));
+        return decoded;
+      } catch {
+        return encodedFilename;
+      }
+    }
 
-  // 中信-停車場（81）
-  { field: 'CTBCParkingGeneral', header: '中信-停車場(一般)',  visible: true, style: 'text-right', format: this.moneyFormat.bind(this) },
-  { field: 'CTBCParkingAE',      header: '中信-停車場(AE)',    visible: true, style: 'text-right', format: this.moneyFormat.bind(this) },
-  { field: 'CTBCParkingDiner',   header: '中信-停車場(Diners)',visible: true, style: 'text-right', format: this.moneyFormat.bind(this) },
+    const filenameMatch = /filename="([^"]+)"/.exec(contentDisposition);
+    if (filenameMatch && filenameMatch.length > 1) {
+      try {
+        return decodeURIComponent(filenameMatch[1].replace(/\+/g, ' '));
+      } catch {
+        return filenameMatch[1];
+      }
+    }
 
-  // 其他付款別（與 Swagger 一致）
-  { field: 'TXN_PayAmt52', header: '一卡通', visible: true, style: 'text-right', format: this.moneyFormat.bind(this) },
-  { field: 'TXN_PayAmt82', header: '一卡通-停車場', visible: true, style: 'text-right', format: this.moneyFormat.bind(this) },
-  { field: 'TXN_PayAmt20', header: '禮券', visible: true, style: 'text-right', format: this.moneyFormat.bind(this) },
-  { field: 'TXN_PayAmt62', header: '商品提貨單', visible: true, style: 'text-right', format: this.moneyFormat.bind(this) },
-  { field: 'TXN_PayAmt77', header: '感熱紙抵用券', visible: true, style: 'text-right', format: this.moneyFormat.bind(this) },
-  { field: 'TXN_PayAmt71', header: '商品抵用券', visible: true, style: 'text-right', format: this.moneyFormat.bind(this) },
-  { field: 'TXN_PayAmt30', header: '貴賓提貨單(應收帳款)', visible: true, style: 'text-right', format: this.moneyFormat.bind(this) },
-  { field: 'TXN_PayAmt73', header: '外來禮券(抵用券)', visible: true, style: 'text-right', format: this.moneyFormat.bind(this) },
-  { field: 'TXN_PayAmt72', header: '外來提貨單(抵用券)', visible: true, style: 'text-right', format: this.moneyFormat.bind(this) },
-  { field: 'TXN_PayAmt74', header: '活動券(自營)', visible: true, style: 'text-right', format: this.moneyFormat.bind(this) },
-  { field: 'TXN_PayAmt75', header: '折價券', visible: true, style: 'text-right', format: this.moneyFormat.bind(this) },
-  { field: 'TXN_PayAmt76', header: '現抵', visible: true, style: 'text-right', format: this.moneyFormat.bind(this) },
-  { field: 'TXN_PayAmt24', header: '禮券餘代卡', visible: true, style: 'text-right', format: this.moneyFormat.bind(this) },
-  { field: 'TXN_PayAmt25', header: '提貨單餘代卡', visible: true, style: 'text-right', format: this.moneyFormat.bind(this) },
-  { field: 'TXN_PayAmt07', header: '會員折抵', visible: true, style: 'text-right', format: this.moneyFormat.bind(this) },
-  { field: 'TXN_PayAmt55', header: 'LINE Pay', visible: true, style: 'text-right', format: this.moneyFormat.bind(this) },
-  { field: 'TXN_PayAmt83', header: 'LINE Pay-停車場', visible: true, style: 'text-right', format: this.moneyFormat.bind(this) },
-  { field: 'TXN_PayAmt78', header: 'APP抵用券', visible: true, style: 'text-right', format: this.moneyFormat.bind(this) },
-  { field: 'TXN_PayAmt79', header: 'APP提貨單', visible: true, style: 'text-right', format: this.moneyFormat.bind(this) },
-  { field: 'TXN_PayAmt21', header: 'APP禮券', visible: true, style: 'text-right', format: this.moneyFormat.bind(this) },
-  { field: 'TXN_PayAmt53', header: '悠遊卡', visible: true, style: 'text-right', format: this.moneyFormat.bind(this) },
-  { field: 'TXN_PayAmt56', header: '一卡通錢包 iPASS MONEY', visible: true, style: 'text-right', format: this.moneyFormat.bind(this) },
-  { field: 'TXN_PayAmt57', header: '台灣Pay', visible: true, style: 'text-right', format: this.moneyFormat.bind(this) },
-  { field: 'TXN_PayAmt58', header: '南紡錢包', visible: true, style: 'text-right', format: this.moneyFormat.bind(this) },
-  { field: 'TXN_PayAmt59', header: '即享券', visible: true, style: 'text-right', format: this.moneyFormat.bind(this) },
-  { field: 'TXN_PayAmt60', header: '喜客券', visible: true, style: 'text-right', format: this.moneyFormat.bind(this) },
-  { field: 'TXN_PayAmt22', header: '外來提貨單-高夢', visible: true, style: 'text-right', format: this.moneyFormat.bind(this) },
-  { field: 'TXN_PayAmt23', header: '外來禮券-高夢', visible: true, style: 'text-right', format: this.moneyFormat.bind(this) },
+    return `download${defaultExtension}`;
+  }
 
-  { field: 'TXN_TotPayAmt', header: '總金額', visible: true, style: 'text-right', format: this.moneyFormat.bind(this) },
-];
+  // 建議也把 formatDate 引進來：
+  // import { formatDate } from '@shared/componentkit/table/table.model';
 
+  columns = [
+    { field: 'TXN_Date', header: '日期', visible: true, style: 'text-left', format: this.formatDate },
 
+    { field: 'TXN_PayAmt10', header: '現金', visible: true, style: 'text-right', format: this.moneyFormat.bind(this) },
+
+    // 聯信（41/42/12）
+    { field: 'UnionGeneral', header: '聯信(一般)',  visible: true, style: 'text-right', format: this.moneyFormat.bind(this) },
+    { field: 'UnionAE',      header: '聯信(AE)',    visible: true, style: 'text-right', format: this.moneyFormat.bind(this) },
+    { field: 'UnionDiner',   header: '聯信(Diners)',visible: true, style: 'text-right', format: this.moneyFormat.bind(this) },
+
+    // 中信（43/44/14）
+    { field: 'CTBCGeneral', header: '中信(一般)',  visible: true, style: 'text-right', format: this.moneyFormat.bind(this) },
+    { field: 'CTBCAE',      header: '中信(AE)',    visible: true, style: 'text-right', format: this.moneyFormat.bind(this) },
+    { field: 'CTBCDiner',   header: '中信(Diners)',visible: true, style: 'text-right', format: this.moneyFormat.bind(this) },
+
+    // 中信-停車場（81）
+    { field: 'CTBCParkingGeneral', header: '中信-停車場(一般)',  visible: true, style: 'text-right', format: this.moneyFormat.bind(this) },
+    { field: 'CTBCParkingAE',      header: '中信-停車場(AE)',    visible: true, style: 'text-right', format: this.moneyFormat.bind(this) },
+    { field: 'CTBCParkingDiner',   header: '中信-停車場(Diners)',visible: true, style: 'text-right', format: this.moneyFormat.bind(this) },
+
+    // 其他付款別（與 Swagger 一致）
+    { field: 'TXN_PayAmt52', header: '一卡通', visible: true, style: 'text-right', format: this.moneyFormat.bind(this) },
+    { field: 'TXN_PayAmt82', header: '一卡通-停車場', visible: true, style: 'text-right', format: this.moneyFormat.bind(this) },
+    { field: 'TXN_PayAmt20', header: '禮券', visible: true, style: 'text-right', format: this.moneyFormat.bind(this) },
+    { field: 'TXN_PayAmt62', header: '商品提貨單', visible: true, style: 'text-right', format: this.moneyFormat.bind(this) },
+    { field: 'TXN_PayAmt77', header: '感熱紙抵用券', visible: true, style: 'text-right', format: this.moneyFormat.bind(this) },
+    { field: 'TXN_PayAmt71', header: '商品抵用券', visible: true, style: 'text-right', format: this.moneyFormat.bind(this) },
+    { field: 'TXN_PayAmt30', header: '貴賓提貨單(應收帳款)', visible: true, style: 'text-right', format: this.moneyFormat.bind(this) },
+    { field: 'TXN_PayAmt73', header: '外來禮券(抵用券)', visible: true, style: 'text-right', format: this.moneyFormat.bind(this) },
+    { field: 'TXN_PayAmt72', header: '外來提貨單(抵用券)', visible: true, style: 'text-right', format: this.moneyFormat.bind(this) },
+    { field: 'TXN_PayAmt74', header: '活動券(自營)', visible: true, style: 'text-right', format: this.moneyFormat.bind(this) },
+    { field: 'TXN_PayAmt75', header: '折價券', visible: true, style: 'text-right', format: this.moneyFormat.bind(this) },
+    { field: 'TXN_PayAmt76', header: '現抵', visible: true, style: 'text-right', format: this.moneyFormat.bind(this) },
+    { field: 'TXN_PayAmt24', header: '禮券餘代卡', visible: true, style: 'text-right', format: this.moneyFormat.bind(this) },
+    { field: 'TXN_PayAmt25', header: '提貨單餘代卡', visible: true, style: 'text-right', format: this.moneyFormat.bind(this) },
+    { field: 'TXN_PayAmt07', header: '會員折抵', visible: true, style: 'text-right', format: this.moneyFormat.bind(this) },
+    { field: 'TXN_PayAmt55', header: 'LINE Pay', visible: true, style: 'text-right', format: this.moneyFormat.bind(this) },
+    { field: 'TXN_PayAmt83', header: 'LINE Pay-停車場', visible: true, style: 'text-right', format: this.moneyFormat.bind(this) },
+    { field: 'TXN_PayAmt78', header: 'APP抵用券', visible: true, style: 'text-right', format: this.moneyFormat.bind(this) },
+    { field: 'TXN_PayAmt79', header: 'APP提貨單', visible: true, style: 'text-right', format: this.moneyFormat.bind(this) },
+    { field: 'TXN_PayAmt21', header: 'APP禮券', visible: true, style: 'text-right', format: this.moneyFormat.bind(this) },
+    { field: 'TXN_PayAmt53', header: '悠遊卡', visible: true, style: 'text-right', format: this.moneyFormat.bind(this) },
+    { field: 'TXN_PayAmt56', header: '一卡通錢包 iPASS MONEY', visible: true, style: 'text-right', format: this.moneyFormat.bind(this) },
+    { field: 'TXN_PayAmt57', header: '台灣Pay', visible: true, style: 'text-right', format: this.moneyFormat.bind(this) },
+    { field: 'TXN_PayAmt58', header: '南紡錢包', visible: true, style: 'text-right', format: this.moneyFormat.bind(this) },
+    { field: 'TXN_PayAmt59', header: '即享券', visible: true, style: 'text-right', format: this.moneyFormat.bind(this) },
+    { field: 'TXN_PayAmt60', header: '喜客券', visible: true, style: 'text-right', format: this.moneyFormat.bind(this) },
+    { field: 'TXN_PayAmt22', header: '外來提貨單-高夢', visible: true, style: 'text-right', format: this.moneyFormat.bind(this) },
+    { field: 'TXN_PayAmt23', header: '外來禮券-高夢', visible: true, style: 'text-right', format: this.moneyFormat.bind(this) },
+
+    { field: 'TXN_TotPayAmt', header: '總金額', visible: true, style: 'text-right', format: this.moneyFormat.bind(this) },
+  ];
 }

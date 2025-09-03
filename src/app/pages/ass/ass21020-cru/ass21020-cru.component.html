@@ -16,6 +16,7 @@
                       label="能源類型"
                       controlName="ENG_Type"
                       [showClear]="false"
+                      [editable]="false"
                       [options]="service.engTypeSignal()"
                       optionLabel="Name"
                       optionValue="No"
@@ -25,7 +26,8 @@
                       label="錶號"
                       controlName="ENG_MeterNo"
                       [showClear]="false"
-                      [options]="filteredMeterNo"
+                      [editable]="false"
+                      [options]="filteredMeterNo()"
                       optionLabel="ENG_MeterNo"
                       optionValue="ENG_MeterNo"
                       [control]="df().ENG_MeterNo"
@@ -78,8 +80,8 @@
         <app-button btnType="cancel"
                     [form]="dataForm"
                     (click)="onClear()"></app-button>
-        <!-- <app-button btnType="submit"
-                    [loading]="loading"></app-button> -->
+        <app-button btnType="submit"
+                    [loading]="loading"></app-button>
       </div>
     </form>
   </p-panel>
@@ -100,7 +102,7 @@
                    [showInsert]="!isFormReadable"
                    [insertDisabled]="!dataForm.valid"
                    [insertRowData]="!isFormReadable"
-                   [data]="service.tltNoSignal()"
+                   [data]="filteredData()"
                    [totalRecords]="totalRecords()"
                    (rowEditInit)="onRowEditInit($event)"
                    (rowEditSave)="onRowEdit($event)"
