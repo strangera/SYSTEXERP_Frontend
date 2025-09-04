@@ -1,7 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, OnDestroy, signal } from '@angular/core';
 import { ASS2100ENGMeterType } from '@pages/ass/ass21010/ass21010.model';
-import { ASS21020Data, ASS21020Payload, ASS21020UpdateStatus, TLTByFlag } from '@pages/ass/ass21020/ass21020.model';
+import { ASS21020Data, ASS21020Delete, ASS21020Query, ASS21020Update, ASS21020UpdateStatus, TLTByFlag } from '@pages/ass/ass21020/ass21020.model';
 import { EngType } from '@service/api/ass/ass21010.service';
 import { ErrorHandlerService } from '@service/system/error-handler.service';
 import { BaseQueryResponse, DropdownOption } from '@shared/models/api/base-api.interface';
@@ -71,25 +71,24 @@ export class ASS21020Service implements OnDestroy {
     this.http.post<BaseQueryResponse<TLTByFlag>>(`${apiUrl}/Share/queryTLTTALENTByFlag_DropDownList`, { MID: 0, ENG_MeterNo }).pipe(
       take(1),
       takeUntil(this.locationCancel$),
-      tap(({ Data }) => this.locationSignal.set(Data.map(v => ({ No: v.Location_No, Name: v.Location_No })))),
-      catchError(error => this.errorHandler.handleError(error)),
-      finalize(() => {
-        this.locationLoading = !1;
+      tap(({ Data }) => {
+        this.locationSignal.set(Array
+          .from(new Set(Data.map(v => v.Location_No)))
+          .map(locationNo => ({ No: locationNo, Name: locationNo }))
+        );
         console.log('查詢Location結果:', [this.locationSignal()]);
       })
     ).subscribe();
   };
 
   /** 取資料 */
-  public loadASS21020(query: ASS21020Payload): void {
+  public loadASS21020(query: ASS21020Query): void {
     this.tableCancel$.next();
     this.tableLoading = !0;
     this.http.post<BaseQueryResponse<ASS21020Data>>(`${apiUrl}/ASS0000/ASS2000/queryASS21020`, query).pipe(
       take(1),
       takeUntil(this.tableCancel$),
-      tap(({ Data }) =>
-        this.ASS21020Data.set(Data.map(item => ({ ...item, TLT_Name: `${item.TLT_No}-${item.TLT_Name}` })))
-      ),
+      tap(({ Data }) => this.ASS21020Data.set(Data.map((item, index) => ({ ...item, Id: index + 1 })))),
       catchError(error => this.errorHandler.handleError(error)),
       finalize(() => {
         this.tableLoading = !1;
@@ -117,16 +116,16 @@ export class ASS21020Service implements OnDestroy {
     ).subscribe();
   }
 
-  public updateASS21020(payload: ASS21020Payload): Observable<ASS21020UpdateStatus['Data']> {
-    return this.http.post<ASS21020UpdateStatus>(`${apiUrl}/ASS0000/ASS2000/updateASS21020`, payload).pipe(
+  public updateASS21020(payload: ASS21020Update[]): Observable<ASS21020UpdateStatus['Data']> {
+    return this.http.post<ASS21020UpdateStatus>(`${apiUrl}/ASS0000/ASS2000/updateASS21020`, { UpdateASS21020Datas: payload }).pipe(
       take(1),
       map(({ Data }) => Data),
       catchError(error => this.errorHandler.handleError(error)),
     );
   }
 
-  public deleteASS21020(ID: string): Observable<ASS21020UpdateStatus['Data']> {
-    return this.http.post<ASS21020UpdateStatus>(`${apiUrl}/ASS0000/ASS2000/deleteASS21020`, { ID }).pipe(
+  public deleteASS21020(payload: ASS21020Delete): Observable<ASS21020UpdateStatus['Data']> {
+    return this.http.post<ASS21020UpdateStatus>(`${apiUrl}/ASS0000/ASS2000/deleteASS21020`, payload).pipe(
       take(1),
       map(({ Data }) => Data),
       catchError(error => this.errorHandler.handleError(error)),

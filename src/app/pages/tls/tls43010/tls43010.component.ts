@@ -88,6 +88,7 @@ export class TLS43010Component extends BasicQueryPageComponent<QueryTls43010Resp
 
   onDelete(data: QueryTls43010Response[]) {
     const idList = data.map(r => r.ID).filter(id => id !== undefined);
+    this.loading = true;
     this.tls43010Service.deleteTLS43010(idList).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(res => {
       this.messageService.successBubble(res.Message || '刪除成功');
       this.onSubmit(this.queryForm);

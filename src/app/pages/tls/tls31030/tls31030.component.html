@@ -54,8 +54,8 @@
               optionValue="No" [control]="queryForm.controls.org_id" [submitted]="submitted"></app-multi-select>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-radiobutton-yn label="銷售金額是否含稅" controlName="TaxType" [control]="queryForm.controls.TaxType"
-              [submitted]="submitted"></app-radiobutton-yn>
+            <app-radiobutton label="銷售金額是否含稅" controlName="TaxType" [control]="queryForm.controls.TaxType" [options]="TaxType_Option"
+              [submitted]="submitted"></app-radiobutton>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-radiobutton-yn label="是否開立業主發票" controlName="IsRece_Yn" [control]="queryForm.controls.IsRece_Yn"

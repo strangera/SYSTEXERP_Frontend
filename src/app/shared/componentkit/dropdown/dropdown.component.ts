@@ -37,7 +37,6 @@ export class DropdownComponent extends BasicKitComponent implements OnInit {
   // 自訂屬性
   @Input() showErrorMessage = true;
   @Input() templateLabel = ''; // 自訂 Label 模板
-  @Input() editable = true; // 是否允許輸入非選項值
   // 觸發事件
   @Output() changeEvent = new EventEmitter<DropdownChangeEvent>();
   @Output() valueChange = new EventEmitter<any>(); //直接用 (valueChange) 拿到值

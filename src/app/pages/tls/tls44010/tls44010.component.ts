@@ -77,7 +77,7 @@ export class TLS44010Component extends BasicQueryPageComponent<any> implements O
   filteredData: any[] = [];
 
   // DataView layout 切換用
-  layout: 'list' | 'grid' = 'list';
+  layout: 'list' | 'grid' = 'grid';
 
   // 分頁用
   rows = 15;   // 每頁筆數

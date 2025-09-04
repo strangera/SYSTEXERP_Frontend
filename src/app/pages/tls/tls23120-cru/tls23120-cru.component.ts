@@ -282,14 +282,99 @@ export class TLS23120CRUComponent extends BasicCruPageComponent<any> {
         showTotal: true,
       });
     });
+     this.applySortForGroups();
   }
 
   goBack(): void {
     this.location.back();
   }
 
+  /** 依群組第一列準備表頭資料（每張表各自的抬頭） */
+private getHeaderInfoByGroup(firstRow: any) {
+  const salesDate = firstRow?.TXN_DATE ?? this.dateStart;
+  const biz = `${firstRow?.bus_type ?? ''}/${firstRow?.bus_type_name ?? ''}`.replace(/^\/$/, '');
+  const counter = `${firstRow?.TLT_NO ?? ''}/${firstRow?.tlt_name ?? ''}`.replace(/^\/$/, '');
+  const area = firstRow?.AREA_NO ?? '';
+  const floor = firstRow?.FLOOR_NO ?? '';
+  const cutType = firstRow?.TLT_ID ?? '0';
+  const returnQty = firstRow?.return_qty ?? 0;
+  const returnAmt = firstRow?.return_amt ?? 0;
+
+  return {
+    company: '南紡流通事業股份有限公司',
+    title: '專櫃日對帳單',
+    biz,
+    counter,
+    area,
+    salesDate: this.formatDate(salesDate),
+    floor,
+    cutType,
+    madeAt: this.printedAt || new Date().toLocaleString('zh-TW'),
+    returnQty,
+    returnAmt,
+  };
+}
+/** 畫出某群組的表頭，回傳表格應開始的 Y 位置 */
+/** 畫出某群組的表頭，回傳表格應開始的 Y 位置 */
+private drawGroupHeaderOnce(
+  doc: jsPDF,
+  info: any,
+  pageWidth: number,
+  marginLeft: number,
+  currentY: number, // ← 新增
+): number {
+  const leftX = marginLeft;
+  const midX = leftX + 240;
+  const rightX = pageWidth - marginLeft;
+  const lineGap = 18;
+
+  // 最小安全頂部；實際起點：取「當前 Y」與安全頂部的較大值
+  const safeTop = 40;
+  let y = Math.max(currentY, safeTop + 10);
+
+  // 若剩餘空間不夠容納表頭（大約 90~110pt），先換頁再畫
+  const needed = 110; // 表頭大約高度
+  const pageHeight = doc.internal.pageSize.getHeight();
+  const remaining = pageHeight - y;
+  if (remaining < needed) {
+    doc.addPage();
+    y = safeTop + 10;
+  }
+
+  doc.setFontSize(16);
+  doc.text(info.company || '', pageWidth / 2, y, { align: 'center' });
+  y += 25;
+
+  doc.setFontSize(14);
+  doc.text(info.title || '', pageWidth / 2, y, { align: 'center' });
+  y += 25;
+
+  doc.setFontSize(10);
+
+  // 第1列
+  doc.text(`業種：${info.biz || '－'}`, leftX, y);
+  doc.text(`銷售日期：${info.salesDate || '－'}`, midX, y);
+  doc.text(`製表日期：${info.madeAt}`, rightX, y, { align: 'right' });
+  y += lineGap;
+
+  // 第2列
+  doc.text(`專櫃：${info.counter || '－'}`, leftX, y);
+  doc.text(`樓層：${info.floor || '－'}  抽成類別：${info.cutType}`, midX, y);
+  doc.text(`退貨件數：${info.returnQty}`, rightX, y, { align: 'right' });
+  y += lineGap;
+
+  // 第3列
+  doc.text(`區域：${info.area || '－'}`, leftX, y);
+  doc.text(`退貨金額：${info.returnAmt}`, rightX, y, { align: 'right' });
+
+  // 表格起始 Y（表頭下方再留一點距離）
+  return y + 20;
+}
+
+
   /** 匯出 PDF（含配色：Header/斑馬紋/小計/總計） */
- exportPDF(orientation: 'p' | 'l' = 'p'): void {
+/** 匯出 PDF：每個群組只畫一次表頭 */
+exportPDF(orientation: 'p' | 'l' = 'p'): void {
   const columnCount = this.selectedColumns.length;
   const columnWidth = 80;
   const customWidth = Math.max(595, columnCount * columnWidth);
@@ -297,24 +382,33 @@ export class TLS23120CRUComponent extends BasicCruPageComponent<any> {
   const doc = new jsPDF({ orientation, unit: 'pt', format: [customWidth, 842] });
   const pageWidth = doc.internal.pageSize.getWidth();
   const marginLeft = 40;
-  const HEADER_TOP = 200;
 
-  // ✅ 顏色：宣告為 tuple，而不是 number[]
-  const HEADER_COLOR: [number, number, number] = [199, 210, 254]; // #c7d2fe
-  const ODD_ROW_COLOR: [number, number, number] = [224, 224, 224]; // #E0E0E0
-  const EVEN_ROW_COLOR: [number, number, number] = [255, 255, 255]; // #FFFFFF
-  const SUBTOTAL_COLOR: [number, number, number] = [156, 177, 251]; // #9cb1fb
-  const TOTAL_COLOR: [number, number, number] = [199, 210, 254];   // #c7d2fe
+  const HEADER_COLOR: [number, number, number] = [199, 210, 254];
+  const ODD_ROW_COLOR: [number, number, number] = [224, 224, 224];
+  const EVEN_ROW_COLOR: [number, number, number] = [255, 255, 255];
+  const SUBTOTAL_COLOR: [number, number, number] = [156, 177, 251];
+  const TOTAL_COLOR: [number, number, number] = [199, 210, 254];
 
-  // 字型
   doc.addFont('assets/fonts/NotoSansTC-VariableFont_wght.ttf', 'Noto Sans TC', 'normal');
   doc.setFont('Noto Sans TC');
 
-  const info = this.getHeaderInfo();
-  const printedHeaders = new Set<number>();
-  let currentY = HEADER_TOP;
+  let currentY = 60; // ← 一開始 60 就好，之後都由流程推進
 
-  this.groupedData.forEach((group) => {
+  this.groupedData.forEach((group, gIdx) => {
+    // 若剩餘空間很小，先換頁（避免表頭被擠）
+    const pageHeight = doc.internal.pageSize.getHeight();
+    if (pageHeight - currentY < 160) {
+      doc.addPage();
+      currentY = 60;
+    } else if (gIdx > 0) {
+      currentY += 20; // 群組間留白
+    }
+
+    // 依該群組第一列畫一次表頭：回傳表格起始 Y
+    const firstRow = group?.rows?.[0] ?? {};
+    const info = this.getHeaderInfoByGroup(firstRow);
+    currentY = this.drawGroupHeaderOnce(doc, info, pageWidth, marginLeft, currentY);
+
     const tableColumns = this.selectedColumns.map(col => ({
       header: col.header,
       dataKey: col.field,
@@ -355,58 +449,60 @@ export class TLS23120CRUComponent extends BasicCruPageComponent<any> {
     }
 
     autoTable(doc, {
-      startY: currentY,
+      startY: currentY,                 // ← 直接用我們計算的 Y
       columns: tableColumns,
       body: tableData,
+      pageBreak: 'auto',                // ← 讓表格內部自己換頁
       styles: {
         font: 'Noto Sans TC',
         fontSize: 9,
         halign: 'center',
         valign: 'middle',
-        textColor: [0, 0, 0], // 這裡本來就是 tuple，OK
+        textColor: [0, 0, 0],
       },
       headStyles: {
         font: 'Noto Sans TC',
         fontStyle: 'normal',
         fontSize: 10,
-        fillColor: HEADER_COLOR,   // ✅ tuple
-        textColor: [0, 0, 0],      // ✅ tuple
+        fillColor: HEADER_COLOR,
+        textColor: [0, 0, 0],
         halign: 'center',
       },
       theme: 'grid',
-      margin: { left: marginLeft, right: marginLeft, top: HEADER_TOP },
+      margin: { left: marginLeft, right: marginLeft }, // ← 拿掉 top
 
-      // ✅ 用 tuple 顏色
       didParseCell: (data) => {
         const raw: any = data?.row?.raw || {};
         if (data.section === 'body') {
           if (raw.__type === 'subtotal') {
-            data.cell.styles.fillColor = SUBTOTAL_COLOR; // ✅ tuple
+            data.cell.styles.fillColor = SUBTOTAL_COLOR;
           } else if (raw.__type === 'total') {
-            data.cell.styles.fillColor = TOTAL_COLOR;    // ✅ tuple
+            data.cell.styles.fillColor = TOTAL_COLOR;
           } else {
-            const isOdd = (data.row.index % 2) === 0; // 第 1 列 index=0 -> 奇數行
-            data.cell.styles.fillColor = isOdd ? ODD_ROW_COLOR : EVEN_ROW_COLOR; // ✅ tuple
+            const isOdd = (data.row.index % 2) === 0;
+            data.cell.styles.fillColor = isOdd ? ODD_ROW_COLOR : EVEN_ROW_COLOR;
           }
         }
       },
 
       didDrawPage: (hookData: any) => {
+        // 只放頁碼，不畫表頭
+        const rightX = pageWidth - marginLeft;
         const pageNo =
           (doc as any).internal?.getCurrentPageInfo?.().pageNumber ??
           hookData?.pageNumber ?? 1;
-        if (!printedHeaders.has(pageNo)) {
-          printedHeaders.add(pageNo);
-          this.drawReportHeader(doc, info, marginLeft, pageWidth, pageNo);
-        }
+        doc.setFontSize(9);
+        doc.text(`頁數：${pageNo}`, rightX, 30, { align: 'right' });
       },
     });
 
+    // 下一段從表格結束後繼續
     currentY = (doc as any).lastAutoTable.finalY + 30;
   });
 
   doc.save(`專櫃日對帳單_${new Date().toISOString()}.pdf`);
 }
+
 
 
   /** 依「圖一」準備表頭資料 */
@@ -549,4 +645,40 @@ export class TLS23120CRUComponent extends BasicCruPageComponent<any> {
       xlsx.writeFile(wb, `專櫃日對帳單_${new Date().toISOString()}.xlsx`);
     });
   }
+  // component.ts
+multiSortMeta = [
+  { field: 'bus_type', order: 1 }, // 1=升冪
+  { field: 'TLT_NO', order: 1 },
+];
+  private compareNullable(a?: string | number | null, b?: string | number | null) {
+  const aa = (a ?? '').toString();
+  const bb = (b ?? '').toString();
+  // 用 localeCompare 的 numeric 模式，能把 "2" < "10" 視為數值比較
+  return aa.localeCompare(bb, undefined, { numeric: true, sensitivity: 'base' });
+}
+// 依「大分類 → 專櫃編號」的列比較子
+private rowComparator = (x: any, y: any) => {
+  const byBusType = this.compareNullable(x?.bus_type, y?.bus_type);
+  if (byBusType !== 0) return byBusType;
+  return this.compareNullable(x?.TLT_NO, y?.TLT_NO);
+};
+
+// 準備/更新 groupedData 後呼叫一次
+private applySortForGroups() {
+  if (!Array.isArray(this.groupedData)) return;
+
+  // 先把每個群組內的 rows 排好
+  this.groupedData.forEach(g => {
+    if (Array.isArray(g?.rows)) {
+      g.rows = [...g.rows].sort(this.rowComparator);
+    }
+  });
+
+  // 再依各群組第一列的關鍵欄位，決定群組顯示順序
+  this.groupedData = [...this.groupedData].sort((a, b) => {
+    const ra = a?.rows?.[0] ?? {};
+    const rb = b?.rows?.[0] ?? {};
+    return this.rowComparator(ra, rb);
+  });
+}
 }

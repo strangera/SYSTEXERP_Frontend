@@ -46,19 +46,29 @@ export interface IFin21020Detail {
   id?: number;
   mid?: number;
   BNK_No?: string;
-  Remit_BAmount?: number;
-  Remit_UAmount?: number;
-  Remit_Fee?: number;
-  Finance_Fee?: number;
-  Fax_Fee?: number;
-  Comp_Remit_Fee?: number;
-  Cash_Back_Amt?: number;
+  Remit_BAmount: number;
+  Remit_UAmount: number;
+  Remit_Fee: number;
+  Comp_Remit_Fee: number;
+  Cash_Back_Amt: number;
   CRT_Date?: string;
   CRT_USR_No?: string;
   CRT_USR_Name?: string;
   UPD_Date?: string;
   UPD_USR_No?: string;
   UPD_USR_Name?: string;
+  [key: string]: any;
+}
+
+export interface InsertFIN21020Request {
+  BNK_No: string,
+  Details: {
+    Remit_BAmount: number,
+    Remit_UAmount: number,
+    Remit_Fee: number,
+    Comp_Remit_Fee: number,
+    Cash_Back_Amt: number,
+  }[],
 }
 
 @Injectable({
@@ -76,5 +86,19 @@ export class Fin21020Service {
    */
   queryFIN21020(params: IQueryFin21020Request): Observable<ApiResponse<IFin21020Data[]>> {
     return this.http.post<ApiResponse<IFin21020Data[]>>(`${this.apiUrl}/queryFIN21020`, params);
+  }
+
+  insertFIN21020(params: InsertFIN21020Request): Observable<ApiResponse<boolean>> {
+    return this.http.post<ApiResponse<boolean>>(`${this.apiUrl}/insertFIN21020`, params);
+  }
+
+  /**
+   * 新增 API 方法：根據 BNK_No 查詢資料
+   * @param bnkNo 銀行科目代號
+   * @returns 包含 IFin21020Detail 陣列的 API 響應
+   */
+  queryByBnkNo(bnkNo: string): Observable<ApiResponse<IFin21020Detail[]>> {
+    // 依照後端 API 的格式，將 bnkNo 封裝成 JSON 物件傳送
+    return this.http.post<ApiResponse<IFin21020Detail[]>>(`${this.apiUrl}/queryByBnkNo`, { BNK_No: bnkNo });
   }
 }

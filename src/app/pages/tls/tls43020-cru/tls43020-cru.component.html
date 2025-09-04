@@ -4,7 +4,7 @@
     <app-button btnType="back" (click)="onCancel()"></app-button>
   </div>
   <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
-    <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
+    <form [formGroup]="dataForm" id="dataForm">
       <div class="grid p-fluid">
         <div class="flex flex-wrap col-12 md:col-8">
           <app-input-text class="col-12 md:col-6" label="通告編號" controlName="NOT_No" [control]="dataForm.controls.NOT_No"
@@ -29,27 +29,21 @@
         <div class="flex flex-column col-12 md:col-4">
           <div class="col-12">
             <label for="file">媒體檔案名稱</label>
-            <p-fileUpload id="file" name="demo[]" [multiple]="false" accept=".bmp,.jpg,.wmv,.avi,.mpeg,.mp4"
-              maxFileSize="1000000" mode="advanced" [showUploadButton]="false" [disabled]="isFormReadable"
-              chooseLabel="選擇檔案" [showCancelButton]="false" maxFileSize="1000000000"
-              [disabled]="dataForm.controls.NOT_Status.value === '1' || this.isFormReadable">
-              <ng-template pTemplate="empty">
-                <div>請拖拉檔案至此上傳 或 點擊「選擇檔案」按鈕</div>
-                <div>支持圖檔/影片類型：bmp、jpg、wmv、avi、mpeg、mp4</div>
-              </ng-template>
-              <ng-template pTemplate="content" let-files let-removeFileCallback="removeFileCallback"
-                let-removeUploadedFileCallback="removeUploadedFileCallback">
-                <div *ngIf="files && files.length > 0" class="flex align-items-center justify-content-between">
-                  <i class="pi pi-file text-blue-600 mr-3 text-xl"></i>
-                  <p-button label="{{ files[0].name }}" [link]="true" (click)="onFileSelect({ files: [files[0]] })" />
-                  <div>
-                    <button *ngIf="dataForm.controls.NOT_Status.value !== '1' && !this.isFormReadable" type="button"
-                      (click)="removeFileCallback(files[0], 0)"
-                      class="p-button p-button-text p-button-danger p-button-sm w-auto">
-                      <i class="pi pi-trash text-lg"></i>
-                    </button>
-                  </div>
+            <p-fileUpload #fileUpload [multiple]="false" accept=".bmp,.jpg,.wmv,.avi,.mpeg,.mp4" maxFileSize="100000000"
+              mode="advanced" [showUploadButton]="false" [disabled]="isFormReadable" chooseLabel="選擇檔案"
+              [showCancelButton]="false" [disabled]="dataForm.controls.NOT_Status.value === '1' || this.isFormReadable">
+              <ng-template pTemplate="content" let-files let-removeFileCallback="removeFileCallback">
+                <div *ngIf="mediaItems().length > 0; else noURL"
+                  class="flex align-items-center justify-content-between gap-2">
+                  <i class="pi pi-file text-blue-600 text-xl flex-shrink-0"></i>
+                  <p-button label="{{ mediaItems()[0].name }}" [link]="true" (click)="visible.set(true)"
+                    [ngClass]="{ 'flex-1': true, 'overflow-hidden': true }"
+                    [ngStyle]="{ 'text-overflow': 'ellipsis', 'white-space': 'nowrap' }">
+                  </p-button>
                 </div>
+                <ng-template #noURL>
+                  <div class="p-3">查無圖片</div>
+                </ng-template>
               </ng-template>
               <ng-template pTemplate="file"></ng-template>
             </p-fileUpload>
@@ -57,15 +51,10 @@
           <app-input-textarea class="col-12" label="備註" controlName="NOT_Note" [control]="dataForm.controls.NOT_Note"
             [submitted]="submitted" styleClass="h-10rem" />
         </div>
-        <app-table-edit *ngIf="!hiddenTable" title="廣告資訊設定" tableKey="TLS43010Detail" [data]="data" class="col-12"
-          [data]="data" [columns]="columns" (dataChange)="data = $event"
+        <app-table-edit *ngIf="dataForm.controls.NOT_Status.value !== '1'" title="廣告資訊設定" tableKey="TLS43010Detail"
+          [data]="data" class="col-12" [data]="data" [columns]="columns" (dataChange)="data = $event"
           [disabled]="dataForm.controls.NOT_Status.value === '1' || isFormReadable">
         </app-table-edit>
-      </div>
-      <div *ngIf="dataForm.controls.NOT_Status.value !== '1' && !isFormReadable"
-        class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
-        <app-button btnType="cancel" [form]="dataForm"></app-button>
-        <app-button btnType="submit" [loading]="loading"></app-button>
       </div>
     </form>
   </p-panel>

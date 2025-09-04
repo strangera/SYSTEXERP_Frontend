@@ -111,6 +111,20 @@ export interface POS2004Item {
   label?: string; // 用於顯示的標籤
 }
 
+export interface POS1002Item {
+  ecr_no: string,
+  ecr_name: string,
+  tlt_no: string,
+  tlt_name: string,
+  building_no: string,
+  building_name: string,
+  floor_no: string,
+  floor_name: string,
+  area_no: string,
+  area_name: string,
+  ecr_type: string
+}
+
 export interface TLTTALENT_CHARGEData {
   tlt_id: string,
   tlt_id_desc: string,
@@ -260,6 +274,10 @@ export class DropDownListService {
     return this.http.post<ApiResponse<IDropdownItem[]>>(`${this.apiUrl}/queryPOS1002_DropDownList`, {});
   }
 
+  queryPOS1002Group_SubGroup_AreaNo_DropDownList(body: { building_no: string, floor_no: string, area_no: string }): Observable<ApiResponse<POS1002Item[]>> {
+    return this.http.post<ApiResponse<POS1002Item[]>>(`${this.apiUrl}/queryPOS1002Group_SubGroup_AreaNo_DropDownList`, body);
+  }
+
   // 查詢電子發票配號作業(POS1002)資料表
   queryPOS1002_Bill_DropDownList(): Observable<ApiResponse<IDropdownItem[]>> {
     return this.http.post<ApiResponse<IDropdownItem[]>>(`${this.apiUrl}/queryPOS1002_Bill_DropDownList`, {});
@@ -322,6 +340,11 @@ export class DropDownListService {
   // 查詢專櫃主檔(TLTTALENT)資料表下拉選單 依狀態
   queryTLTTALENT_Status_DropDownList(approve_status: string): Observable<ApiResponse<IDropdownItem[]>> {
     return this.http.post<ApiResponse<IDropdownItem[]>>(`${this.apiUrl}/queryTLTTALENT_Status_DropDownList`, { approve_status });
+  }
+
+  // 查詢專櫃主檔(TLTTALENT)資料表下拉選單(Store_way=2自營and approve_status=2 已審核 and tlt_openflag != 0 非撤櫃)
+  queryTLTTALENT__StoreWay2_Approve_DropDownList(): Observable<ApiResponse<IDropdownItem[]>> {
+    return this.http.post<ApiResponse<IDropdownItem[]>>(`${this.apiUrl}/queryTLTTALENT__StoreWay2_Approve_DropDownList`, {});
   }
 
   // 查詢營業型態(SYS1000)資料表下拉選單

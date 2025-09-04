@@ -75,9 +75,9 @@ export class ASS21030CRUComponent extends BasicCruPageComponent<ENG2001> impleme
       ENG_YYMM: ['', [Validators.required, Validators.maxLength(6)]], // 結算年月
       ENG_Type: ['', [Validators.required, Validators.maxLength(3)]], // 能源類型
       ENG_MeterNo: ['', [Validators.required, Validators.maxLength(5)]], // 錶號
-      ENG_Date: [''], // 抄表日期
-      ENG_CurrentReading: [0], // 本期抄錶度
-      ENG_Amount: [0], // 本期抄錶金額
+      ENG_Date: [''], // 本次抄錶日
+      ENG_CurrentReading: [0, [Validators.max(9999999999)]], // 本次抄錶度數 (最多小數後4位)
+      ENG_Amount: [0, [Validators.max(9999999999)]], // 本次結算金額
 
       CRT_Date: [''], // 建立日期
       CRT_USR_No: [''], // 建立人員代碼 (隱藏)
@@ -94,9 +94,8 @@ export class ASS21030CRUComponent extends BasicCruPageComponent<ENG2001> impleme
       { value: 'G03', label: '瓦斯錶' }
     ];
     ENG_Status_Option: option[] = [ // 抄錶狀態選項
-      { value: '0', label: '未抄錶' },
-      { value: '1', label: '已抄錶' },
-      { value: '2', label: '已結算' }
+      { value: '0', label: '未結算' },
+      { value: '1', label: '已結算' }
     ];
   
     // ----------------------------------------------------------------

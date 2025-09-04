@@ -35,7 +35,7 @@
             <div class="grid p-fluid">
               <div class="col-12 md:col-6 lg:col-4">
                 <app-calendar calendarType="dateOne"
-                  label="抄表日期"
+                  label="本次抄錶日"
                   controlName="ENG_Date"
                   [control]="dataForm.controls.ENG_Date"
                   [submitted]="submitted">
@@ -43,7 +43,7 @@
               </div>
               <div class="col-12 md:col-6 lg:col-4">
                   <app-input-number
-                    label="本期抄錶度"
+                    label="本次抄錶度數"
                     controlName="ENG_CurrentReading"
                     [control]="dataForm.controls.ENG_CurrentReading"
                     [maxFractionDigits]="4"
@@ -52,7 +52,7 @@
               </div>
               <div class="col-12 md:col-6 lg:col-4">
                   <app-input-text
-                    label="本期抄錶金額"
+                    label="本次結算金額"
                     controlName="ENG_Amount"
                     [control]="dataForm.controls.ENG_Amount"
                     [submitted]="submitted"

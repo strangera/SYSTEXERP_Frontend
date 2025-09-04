@@ -22,6 +22,8 @@ import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.c
 import { Column } from '@shared/componentkit/table-edit/table-edit.model';
 import { GalleriaModule } from 'primeng/galleria';
 import { finalize } from 'rxjs';
+import { ImageQueryRequest, ImageService } from '@service/utility/image.service';
+import { environment } from 'src/environments/environment';
 
 interface MediaItem {
   url: string;
@@ -55,6 +57,7 @@ interface MediaItem {
 })
 export class TLS43010CRUComponent extends BasicCruPageComponent<QueryTls43010Response> implements OnInit {
   @ViewChild('fileUpload') fileUpload!: FileUpload;
+  @ViewChild(TableEditComponent) tableEditComponent!: TableEditComponent;
   dataForm = this.formBuilder.nonNullable.group({
     NOT_No: [{ value: '系統自動給號', disabled: true }], // 通告編號
     NOT_Date: [{ value: new Date(), disabled: true }, [Validators.required]], // 通告日期
@@ -64,7 +67,6 @@ export class TLS43010CRUComponent extends BasicCruPageComponent<QueryTls43010Res
     NOT_Status: [{ value: '0', disabled: true }], // 狀態 0=未確認(未審核) 1=已確認(已審核) 2=已刪除
     NOT_PlayTime: [30, [Validators.min(0), Validators.max(999999)]], // 媒體檔播放秒數，預設值為30
     NOT_DtlLimit: ['0'], // 是否限制播放條件，POS50012 0=不限制(預設值) 1=符合明細設定的機台才播放 2=不符合明細設定的機台才播放*
-    NOT_File: ['', [Validators.required, Validators.maxLength(200)]], // 媒體檔案名稱
     NOT_Note: ['', [Validators.maxLength(255)]], // 備註
   });
   uploadedFiles: any[] = [];
@@ -86,14 +88,14 @@ export class TLS43010CRUComponent extends BasicCruPageComponent<QueryTls43010Res
   selectedItems: Tls43010Detail[] = [];
   // 如果機台群組編號有值那其他要disable，反之亦然
   columns: Column[] = [
-    { field: 'NOT_SeqNo', header: '通告序號', format: (value) => this.isFormCreateable ? '自動給號' : value, disabled: (rowData) => this.isOtherGroupSelected(rowData) },
-    { field: 'ECR_No', header: '收銀機號', type: 'dropdown', width: '12rem', optionLabel: 'label', optionValue: 'No', disabled: (rowData) => this.isOtherGroupSelected(rowData) },
-    { field: 'TLT_No', header: '專櫃編號', type: 'dropdown', width: '15rem', optionLabel: 'label', optionValue: 'No', disabled: (rowData) => this.isOtherGroupSelected(rowData) },
-    { field: 'ECR_Type', header: '機台類型', type: 'dropdown', width: '10rem', optionLabel: 'SYS_Name', optionValue: 'SYS_Code', disabled: (rowData) => this.isOtherGroupSelected(rowData) },
-    { field: 'ECR_GrpNo', header: '機台群組編號', type: 'dropdown', width: '15rem', optionLabel: 'label', optionValue: 'No', disabled: (rowData) => this.isEcrGrpNoSelected(rowData) },
-    { field: 'BUILDING_No', header: '館別', type: 'dropdown', width: '9rem', optionLabel: 'Name', optionValue: 'No', disabled: (rowData) => this.isOtherGroupSelected(rowData) },
-    { field: 'FLOOR_No', header: '樓層', type: 'dropdown', width: '9rem', optionLabel: 'Name', optionValue: 'No', disabled: (rowData) => this.isOtherGroupSelected(rowData) },
-    { field: 'Area_No', header: '區域', type: 'dropdown', width: '9rem', optionLabel: 'Name', optionValue: 'No', disabled: (rowData) => this.isOtherGroupSelected(rowData) },
+    { field: 'NOT_SeqNo', header: '通告序號', format: (value, index, rowData) => rowData.status === 'new' ? '自動給號' : value, disabled: (value, index, rowData) => this.isOtherGroupSelected(rowData) },
+    { field: 'ECR_No', header: '收銀機號', type: 'dropdown', width: '12rem', optionLabel: 'label', optionValue: 'No', disabled: (value, index, rowData) => this.isOtherGroupSelected(rowData) },
+    { field: 'TLT_No', header: '專櫃編號', type: 'dropdown', width: '15rem', optionLabel: 'label', optionValue: 'No', disabled: (value, index, rowData) => this.isOtherGroupSelected(rowData) },
+    { field: 'ECR_Type', header: '機台類型', type: 'dropdown', width: '10rem', optionLabel: 'SYS_Name', optionValue: 'SYS_Code', disabled: (value, index, rowData) => this.isOtherGroupSelected(rowData) },
+    { field: 'ECR_GrpNo', header: '機台群組編號', type: 'dropdown', width: '15rem', optionLabel: 'label', optionValue: 'No', disabled: (value, index, rowData) => this.isEcrGrpNoSelected(rowData) },
+    { field: 'BUILDING_No', header: '館別', type: 'dropdown', width: '9rem', optionLabel: 'Name', optionValue: 'No', disabled: (value, index, rowData) => this.isOtherGroupSelected(rowData) },
+    { field: 'FLOOR_No', header: '樓層', type: 'dropdown', width: '9rem', optionLabel: 'Name', optionValue: 'No', disabled: (value, index, rowData) => this.isOtherGroupSelected(rowData) },
+    { field: 'Area_No', header: '區域', type: 'dropdown', width: '9rem', optionLabel: 'Name', optionValue: 'No', disabled: (value, index, rowData) => this.isOtherGroupSelected(rowData) },
   ];
   // 檢查其他互斥欄位是否有值
   isOtherGroupSelected(rowData: Tls43010Detail): boolean {
@@ -103,12 +105,14 @@ export class TLS43010CRUComponent extends BasicCruPageComponent<QueryTls43010Res
   isEcrGrpNoSelected(rowData: Tls43010Detail): boolean {
     return !!(rowData?.['ECR_No'] || rowData?.['TLT_No'] || rowData?.['ECR_Type'] || rowData?.['BUILDING_No'] || rowData?.['FLOOR_No'] || rowData?.['Area_No']);
   }
-  hiddenTable = true;
-
+  hiddenTable = signal(true);
+  mediaItems = signal<MediaItem[]>([]);
+  visible = signal(false);
   // ----------------------------------------------------------------
   constructor(
     private readonly dropDownListService: DropDownListService,
-    private readonly tls43010Service: Tls43010Service
+    private readonly tls43010Service: Tls43010Service,
+    private readonly imageService: ImageService
   ) {
     super();  // 呼叫父類建構子
   }
@@ -121,14 +125,15 @@ export class TLS43010CRUComponent extends BasicCruPageComponent<QueryTls43010Res
     }
     this.dataForm.get('NOT_DtlLimit')?.valueChanges.pipe(untilDestroyed(this)).subscribe(value => {
       if (value === '1' || value === '2') {
-        this.hiddenTable = false;
+        this.hiddenTable.set(false);
       } else {
-        this.hiddenTable = true;
+        this.hiddenTable.set(true);
       }
     })
     if (!this.isFormCreateable) {
       this.dataForm.get('NOT_DtlLimit')?.setValue(this.rowdata?.NOT_DtlLimit || '0');
       this.data = this.rowdata?.Details || [];
+      this.queryImages();
     }
   }
   loadDropdownOptions() {
@@ -152,44 +157,104 @@ export class TLS43010CRUComponent extends BasicCruPageComponent<QueryTls43010Res
       this.setColumnOptions('Area_No', options.Data);
     });
   }
+  queryImages() {
+    const queryRequest: ImageQueryRequest = {
+      IMG_Type: 'POS50011',
+      IMG_SeqNo: this.rowdata?.NOT_No || ''
+    };
+
+    this.imageService.queryImages(queryRequest).subscribe(res => {
+      // 檢查是否有回傳資料
+      if (!res.Data || res.Data.length === 0) {
+        this.mediaItems.set([]); // 清空預覽
+        return;
+      }
+
+      // 處理所有回傳的圖片
+      const items: MediaItem[] = res.Data.map(fileData => {
+        const fileExtension = fileData.IMG_File.split('.').pop()?.toLowerCase() || '';
+        let fileType: 'image' | 'video';
+        if (['bmp', 'jpg', 'jpeg', 'png', 'gif'].includes(fileExtension)) {
+          fileType = 'image';
+        } else if (['mp4', 'webm', 'ogg'].includes(fileExtension)) {
+          fileType = 'video';
+        } else {
+          // 如果檔案類型不符合，回傳 null 或 undefined，稍後過濾掉
+          return null;
+        }
+        return {
+          url: `${environment.ApiUrl}/${fileData.IMG_Path.replace('~', '')}/${fileData.IMG_File}`,
+          type: fileType,
+          name: fileData.IMG_File
+        };
+      }).filter(item => item !== null) as MediaItem[]; // 過濾掉無效的檔案
+
+      this.mediaItems.set(items);
+    });
+  }
   setColumnOptions(field: string, options: IDropdownItem[] | SystemOption[]) {
     const column = this.columns.find(col => col.field === field);
     if (column) { column.options = options; }
   }
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
-      const body = {
-        NOT_No: this.dataForm.get('NOT_No')?.value,
-        NOT_Date: this.dataForm.get('NOT_Date')?.value,
-        NOT_BegDate: this.dataForm.get('NOT_BegDate')?.value,
-        NOT_EndDate: this.dataForm.get('NOT_EndDate')?.value,
-        NOT_Priority: this.dataForm.get('NOT_Priority')?.value,
-        NOT_Status: this.isFormCreateable ? '0' : this.dataForm.get('NOT_Status')?.value || this.dataForm.get('NOT_Status')?.value,
-        NOT_PlayTime: this.dataForm.get('NOT_PlayTime')?.value,
-        NOT_DtlLimit: this.dataForm.get('NOT_DtlLimit')?.value,
-        NOT_File: this.dataForm.get('NOT_File')?.value,
-        NOT_Note: this.dataForm.get('NOT_Note')?.value,
+      const tableValid = this.tableEditComponent.validateAndShowErrors();
+      if (!tableValid) {
+        this.loading = false;
+        return;
+      }
+      // 檢查是否有選取檔案
+      if (this.uploadedFiles.length === 0 && this.mediaItems().length === 0) {
+        this.messageService.errorBubble('請選擇要上傳的媒體檔案。');
+        this.loading = false;
+        return;
+      }
+      // 建立 FormData 物件，用於發送 multipart/form-data
+      const formData = new FormData();
+      // 將檔案加到 FormData 中
+      this.uploadedFiles.forEach(file => {
+        formData.append('files', file, file.name);
+      });
+      // 將表單資料加到 FormData 中。
+      // 這裡我們將整個 JSON 物件轉成字串，再傳送到後端。
+      // 後端 Controller 負責解析這個字串。
+      const requestData = {
+        ...frm.getRawValue(),
         Detail: this.dataForm.get('NOT_DtlLimit')?.value !== '0' ? this.data.filter(item => !item['_isAutoInsertCandidate']).map(item => ({
           ID: this.isFormCreateable ? 0 : item['ID'],
-          NOT_SeqNo: item['NOT_SeqNo'],
-          ECR_No: item['ECR_No'],
-          TLT_No: item['TLT_No'],
-          ECR_Type: item['ECR_Type'],
-          ECR_GrpNo: item['ECR_GrpNo'],
-          BUILDING_No: item['BUILDING_No'],
-          FLOOR_No: item['FLOOR_No'],
-          Area_No: item['Area_No'],
-          status: item['status']
+          ...item
         })) : undefined,
       } as IUTls43010Request;
-      this.loading = false;
-      const $res = this.isFormCreateable ? this.tls43010Service.insertTLS43010(body) : this.tls43010Service.updateTLS43010(body);
-      $res.pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(res => {
-        this.messageService.successBubble(res.Message || `${this.isFormCreateable ? '新增成功' : '修改成功'}`);
-        this.dataForm.reset();
-        this.data = [];
-        this.fileUpload.clear();
-      })
+
+      // 將資料物件序列化成 JSON 字串，並附加到 FormData
+      formData.append('request', JSON.stringify(requestData));
+
+      this.loading = true;
+
+      // 呼叫新的服務方法
+      const $res = this.isFormCreateable
+        ? this.tls43010Service.insertTLS43010(formData)
+        : this.tls43010Service.updateTLS43010(requestData); // 更新不需要上傳檔案，所以保持原樣
+
+      $res.pipe(
+        finalize(() => this.loading = false)
+      ).subscribe({
+        next: res => {
+          this.messageService.successBubble(res.Message || `${this.isFormCreateable ? '新增成功' : '修改成功'}`);
+          if (this.isFormCreateable) {
+            this.dataForm.reset();
+            this.data = [];
+            this.uploadedFiles = [];
+            this.mediaItems.set([]);
+            this.fileUpload.clear();
+          } else {
+            this.onCancel();
+          }
+        },
+        error: err => {
+          this.messageService.errorBubble(err.Message || `${this.isFormCreateable ? '新增失敗' : '修改失敗'}`);
+        }
+      });
     });
   }
   validateEntireRow(rowData: Tls43010Detail) {
@@ -198,18 +263,14 @@ export class TLS43010CRUComponent extends BasicCruPageComponent<QueryTls43010Res
     }
     return { isValid: true, errorMessage: '' };
   }
-  // !!! 以下為可參考之新方法
   onSelectFile(event: FileSelectEvent) {
-    const fileName = event.files[0].name;
-    this.dataForm.get('NOT_File')?.setValue(fileName);
-  }
-
-  mediaItems = signal<MediaItem[]>([]);
-  visible = signal(false);
-  onFileSelect(event: any) {
-    const file: File = event.files[0];
-    if (file) {
-      const fileExtension = file.name.split('.').pop()?.toLowerCase() || '';
+    this.uploadedFiles = [...event.files];// 將 FileList 轉換成陣列並賦值給 uploadedFiles
+    // 確保只處理單一檔案
+    if (this.uploadedFiles.length > 0) {
+      const file = this.uploadedFiles[0];
+      const fileName = file.name;
+      // 觸發預覽邏輯
+      const fileExtension = fileName.split('.').pop()?.toLowerCase() || '';
       const reader = new FileReader();
       reader.onload = (e) => {
         const fileUrl = e.target?.result as string;
@@ -226,9 +287,11 @@ export class TLS43010CRUComponent extends BasicCruPageComponent<QueryTls43010Res
           type: fileType,
           name: file.name
         }]);
-        this.visible.set(true);
       };
       reader.readAsDataURL(file);
+    } else {
+      // 如果沒有檔案被選取，清空預覽和檔案名稱
+      this.mediaItems.set([]);
     }
   }
 }

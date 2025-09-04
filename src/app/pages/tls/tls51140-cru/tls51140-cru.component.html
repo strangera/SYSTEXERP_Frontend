@@ -1,0 +1,44 @@
+<div class="card">
+  <div class="flex gap-2 mb-2">
+    <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
+    <app-button btnType="back" (click)="onCancel()"></app-button>
+  </div>
+  <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
+    <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
+      <div class="grid p-fluid">
+        <!-- 專櫃編號 -->
+        <app-dropdown class="col-12 md:col-6 lg:col-4" label="專櫃編號/名稱" [control]="dataForm.controls.TLT_No"
+          [submitted]="submitted" [options]="TLT_NoOptions" optionLabel="label" optionValue="No" />
+        <!-- 倉別 -->
+        <app-dropdown class="col-12 md:col-6 lg:col-4" label="倉別代碼/名稱" controlName="HOS_No" [options]="warehouseOptions"
+          optionLabel="label" optionValue="No" [control]="dataForm.controls.HOS_No"
+          [submitted]="submitted"></app-dropdown>
+        <app-table title="收銀機清單" dataKey="ecr_no" class="col-12" [columns]="columns" [data]="data" [showFilter]="false"
+          [deleteData]="true" (dataChange)="data = $event" [showInsert]="true" [showManage]="false"
+          (insert)="dialogVisible = true" [showCheckBox]="true" [selectedItems]="selectedItems"
+          (selectionChange)="selectedItems = $event" [showReportMode]="false"></app-table>
+      </div>
+      <div *ngIf=" !isFormReadable" class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+        <app-button btnType="cancel" [form]="dataForm"></app-button>
+        <app-button btnType="submit" [loading]="loading"></app-button>
+      </div>
+    </form>
+  </p-panel>
+</div>
+
+<app-dialog [visible]="dialogVisible" header="選擇收銀機" (visibleChange)="dialogVisible = $event" (save)="saveDialog()"
+  [disable]="selectedItemsDialog.length === 0">
+  <form [formGroup]="dialogQueryForm" class="flex pb-2 align-items-end gap-2">
+    <app-input-text class="flex-grow-1" label="館別" controlName="building_no"
+      [control]="dialogQueryForm.controls.building_no" (input)="inputEnter()" />
+    <app-input-text class="flex-grow-1" label="樓層" controlName="floor_no" [control]="dialogQueryForm.controls.floor_no"
+      (input)="inputEnter()" />
+    <app-input-text class="flex-grow-1" label="區域" controlName="area_no" [control]="dialogQueryForm.controls.area_no"
+      (input)="inputEnter()" />
+  </form>
+  <app-table tableKey="tls51140DialogTable" dataKey="ecr_no" [data]="dialogData" [columns]="columns"
+    [selectedItems]="selectedItemsDialog" (selectionChange)="selectedItemsDialog = $event" [showHeader]="false"
+    [showManage]="false" [showCheckBox]="true" [emptyMessage]="'無可選擇的收銀機'" [loading]="dialogLoading"
+    [isRowSelectable]="isRowSelectable.bind(this)" scrollHeight="350px" [showCaption]="false">
+  </app-table>
+</app-dialog>

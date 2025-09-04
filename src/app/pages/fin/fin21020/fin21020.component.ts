@@ -54,7 +54,7 @@ export class FIN21020Component extends BasicQueryPageComponent<IFin21020Data> im
 
   ngOnInit(): void {
     this.initializePage('FIN21020', 'fin/fin21020cru', this.queryForm, (form) => this.fin21020Service.queryFIN21020(form as IQueryFin21020Request));
-    this.dropDownListService.queryGLS1005_DropDownList().pipe(untilDestroyed(this)).subscribe(data => {
+    this.dropDownListService.queryGLS1005For1103_DropDownList().pipe(untilDestroyed(this)).subscribe(data => {
       this.bankCodeOptions = data.Data.map(item => ({ ...item, label: `${item.No} - ${item.Name}` }));
     });
   }

@@ -406,19 +406,19 @@ onSort(event: any) {
 }
 
 loadDataLazy(event: TableLazyLoadEvent) {
-  // ⛳ 第一次初始化 p-table 會自動觸發 onLazyLoad；這裡把它吃掉
-  if (this._skipFirstLazy) {
-    this._skipFirstLazy = false;
-    return;
-  }
+  if (this._skipFirstLazy) { this._skipFirstLazy = false; return; }
 
   const pageSize  = event.rows && event.rows > 0 ? event.rows : this.rows;
   const pageIndex = (event.first ?? 0) / pageSize + 1;
-  const sortRaw   = event.multiSortMeta ?? [];
-  const sort      = this.ensureGroupFirst(sortRaw); // 群組排序永遠第一
+
+  const sortRaw = event.multiSortMeta
+    ?? (event as any).multisortmeta
+    ?? (event.sortField ? [{ field: event.sortField, order: event.sortOrder }] : []);
+  const sort = this.ensureGroupFirst(sortRaw);
 
   this.lazyLoadData.emit({ pageIndex, pageSize, SortBy: sort });
 }
+
 
 
   /* ======================= Expansion ======================= */

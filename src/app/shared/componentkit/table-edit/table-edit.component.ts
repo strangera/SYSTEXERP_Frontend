@@ -44,7 +44,7 @@ import { NotificationService } from '@shared/component/notification-message/noti
 export class TableEditComponent implements OnChanges, AfterContentInit {
   @ViewChild('dt', { static: false }) dt!: Table;         // table 元件
   // 基本設置
-  @Input() dataKey = '_TABLE_KEY';                        // table 資料key
+  dataKey = '_TABLE_KEY';                                 // table 資料key
   @Input() tableKey: string | undefined = undefined;      // table 唯一標識 (必填)
   @Input() title: string | undefined = undefined;         // table 標題
   @Input() tableRequired = false;                         // table 是否為必填
@@ -60,6 +60,8 @@ export class TableEditComponent implements OnChanges, AfterContentInit {
   @Output() selectionChange = new EventEmitter<any>();                          // 資料變更(事件)
   // Header(左) 相關
   @Output() insert = new EventEmitter<any>(); // 新增事件
+  // 禁止新增
+  @Input() canInsert = true;
   @Output() delete = new EventEmitter<any>(); // 刪除事件
   // rowEdit 相關
   @Input() rowEditDisabled: (rowData: any) => boolean | undefined = () => false;// Row禁止編輯條件
@@ -91,6 +93,9 @@ export class TableEditComponent implements OnChanges, AfterContentInit {
       this.data = this.data.filter(item => item != null).map((item: any, index) => {
         if (item[this.dataStatusField] === undefined) {
           item[this.dataStatusField] = this.dataStatusValue.Original;
+          item[this.dataKey] = `temp-${new Date().getTime()}`;
+          console.log('🎯 一開始先將無狀態的資料設為Original', item);
+
         }
         // 載入資料時也執行整行驗證
         if (this.rowValidate) {
@@ -98,12 +103,16 @@ export class TableEditComponent implements OnChanges, AfterContentInit {
         }
         return item;
       });
+      // 如果資料中沒有 _isAutoInsertCandidate 欄位則新增
+      if (!this.data.some(item => item['_isAutoInsertCandidate']) && this.canInsert) {
+        this.insertRow();
+      }
       this.dataChange.emit(this.data);
     }
   }
   ngAfterContentInit(): void {
     setTimeout(() => {
-      if (!this.disabled) {
+      if (!this.disabled && this.canInsert) {
         this.insertRow();
         this.cdr.detectChanges();
       }
@@ -129,8 +138,6 @@ export class TableEditComponent implements OnChanges, AfterContentInit {
       this.dataStatusValue  // 將 dataStatusValue 傳給服務
     );
     this.data = data;
-    console.log(this.data);
-
     this.insert.emit();
   }
   // Delete 按鈕
@@ -147,12 +154,13 @@ export class TableEditComponent implements OnChanges, AfterContentInit {
       }
       return item;
     }).filter(item => item !== null);
-    this.data = updatedData as any[];
-    this.delete.emit(selectedItems);
+    // data不包含狀態為已刪除資料
+    this.data = updatedData.filter(item => item[this.dataStatusField] !== this.dataStatusValue.Deleted);
+    this.delete.emit(updatedData);
     this.dataChange.emit(this.data);
     this.selectedItems = [];
     // 如果表格資料為空，自動插入一筆新資料
-    if (this.data.length === 0) {
+    if (this.data.length === 0 && this.canInsert) {
       this.insertRow();
     }
   }
@@ -171,7 +179,7 @@ export class TableEditComponent implements OnChanges, AfterContentInit {
 
     // 檢查是否為「新增中的列」，並且有輸入值
     // 只有在是候選列、有輸入值，且不是被禁用的情況下，才自動插入新行
-    if (isAutoInsertCandidate && value !== undefined && value !== null && value !== '' && !this.disabled) {
+    if (isAutoInsertCandidate && value !== undefined && value !== null && value !== '' && !this.disabled && this.canInsert) {
       this.insertRow();
       // 標記這行已不再是自動插入的候選行，防止重複觸發
       rowData['_isAutoInsertCandidate'] = false;
@@ -319,7 +327,7 @@ export class TableEditComponent implements OnChanges, AfterContentInit {
     }
 
     // 如果將資料拖曳到最後一筆，則將其視為刪除並重新插入一個新空行
-    if (event.dropIndex === this.lastRow()) {
+    if (event.dropIndex === this.lastRow() && this.canInsert) {
       this.deleteRow([draggedItem]);
       this.insertRow();
       return;

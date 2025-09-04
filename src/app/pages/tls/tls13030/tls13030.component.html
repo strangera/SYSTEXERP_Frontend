@@ -3,59 +3,104 @@
     <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
   </div>
   <p-accordion>
-    <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
+    <p-accordionTab
+      header="{{ 'query-conditions' | translate }}"
+      [selected]="true"
+      class="line-height-3 m-0"
       [headerStyleClass]="'query-accordionTab'">
       <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
 
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text label="專櫃編號" controlName="tlt_no" [control]="queryForm.controls.tlt_no"
-              [submitted]="submitted"></app-input-text>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text label="櫃位名稱" controlName="tlt_name" [control]="queryForm.controls.tlt_name"
+            <app-input-text
+              label="專櫃編號"
+              controlName="tlt_no"
+              [control]="queryForm.controls.tlt_no"
               [submitted]="submitted"></app-input-text>
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select label="大分類" [options]="bus_typeOptions" [control]="queryForm.controls.bus_typeList"
-              optionLabel="label" optionValue="value" [submitted]="submitted"></app-multi-select>
+            <app-input-text
+              label="櫃位名稱"
+              controlName="tlt_name"
+              [control]="queryForm.controls.tlt_name"
+              [submitted]="submitted"></app-input-text>
+          </div>
+
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-multi-select
+              label="大分類"
+              [options]="bus_typeOptions"
+              [control]="queryForm.controls.bus_typeList"
+              optionLabel="label"
+              optionValue="value"
+              [submitted]="submitted"></app-multi-select>
           </div>
 
           <div class="col-12">
-            <app-multi-location-filter [form]="queryForm" [submitted]="submitted"></app-multi-location-filter>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select label="營業狀態" [options]="operationStatusOptions"
-              [control]="queryForm.controls.tlt_openflagList" optionLabel="label" optionValue="value"
-              [submitted]="submitted"></app-multi-select>
-          </div>
-
-          <app-calendar-range-quick class="col-12 md:col-6 lg:col-4" label="合約起始日"
-            [startControl]="queryForm.controls.tlt_bdate_start" [endControl]="queryForm.controls.tlt_bdate_end"
-            [submitted]="submitted" />
-          <app-calendar-range-quick class="col-12 md:col-6 lg:col-4" label="合約截止日"
-            [startControl]="queryForm.controls.tlt_edate_start" [endControl]="queryForm.controls.tlt_edate_end"
-            [submitted]="submitted" />
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select label="扣款類別" [options]="deductionCategoryOptions"
-              [control]="queryForm.controls.cap_typeList" optionLabel="label" optionValue="value"
-              [submitted]="submitted"></app-multi-select>
+            <app-multi-location-filter
+              [form]="queryForm"
+              [submitted]="submitted"></app-multi-location-filter>
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select label="扣款代碼/名稱" [options]="deductionCodeNameServOptions"
-              [control]="queryForm.controls.cap_itemList" optionLabel="label" optionValue="value"
+            <app-multi-select
+              label="營業狀態"
+              [options]="operationStatusOptions"
+              [control]="queryForm.controls.tlt_openflagList"
+              optionLabel="label"
+              optionValue="value"
+              [submitted]="submitted"></app-multi-select>
+          </div>
+
+          <app-calendar-range-quick
+            class="col-12 md:col-6 lg:col-4"
+            label="合約起始日"
+            [startControl]="queryForm.controls.tlt_bdate_start"
+            [endControl]="queryForm.controls.tlt_bdate_end"
+            [submitted]="submitted"></app-calendar-range-quick>
+
+          <app-calendar-range-quick
+            class="col-12 md:col-6 lg:col-4"
+            label="合約截止日"
+            [startControl]="queryForm.controls.tlt_edate_start"
+            [endControl]="queryForm.controls.tlt_edate_end"
+            [submitted]="submitted"></app-calendar-range-quick>
+
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-multi-select
+              label="扣款類別"
+              [options]="deductionCategoryOptions"
+              [control]="queryForm.controls.cap_typeList"
+              optionLabel="label"
+              optionValue="value"
               [submitted]="submitted"></app-multi-select>
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar-range-quick label="扣款起日" [startControl]="queryForm.controls.tpy_bdate_start"
-              [endControl]="queryForm.controls.tpy_bdate_end" [submitted]="submitted"></app-calendar-range-quick>
+            <app-multi-select
+              label="扣款代碼/名稱"
+              [options]="deductionCodeNameServOptions"
+              [control]="queryForm.controls.cap_itemList"
+              optionLabel="label"
+              optionValue="value"
+              [submitted]="submitted"></app-multi-select>
           </div>
+
           <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar-range-quick label="扣款迄日" [startControl]="queryForm.controls.tpy_edate_start"
-              [endControl]="queryForm.controls.tpy_edate_end" [submitted]="submitted"></app-calendar-range-quick>
+            <app-calendar-range-quick
+              label="扣款起日"
+              [startControl]="queryForm.controls.tpy_bdate_start"
+              [endControl]="queryForm.controls.tpy_bdate_end"
+              [submitted]="submitted"></app-calendar-range-quick>
+          </div>
+
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-calendar-range-quick
+              label="扣款迄日"
+              [startControl]="queryForm.controls.tpy_edate_start"
+              [endControl]="queryForm.controls.tpy_edate_end"
+              [submitted]="submitted"></app-calendar-range-quick>
           </div>
         </div>
 
@@ -69,10 +114,22 @@
 </div>
 
 <div class="card">
-  <app-table apiUrl="queryTLS13030" tableKey="TLS13030" [data]="data" [columns]="columns"
-    [selectedItems]="selectedItems" (selectionChange)="selectedItems = $event" (delete)="onDelete($event)"
-    dataKey="tlt_no" [multiSortMeta]="[{ field: 'tlt_no', order: 1 }]" [totalRecords]="totalRecords" [lazy]="true"
-    [showManage]="false" [loading]="loading" [showCheckBox]="false" [showDelete]="false"
-    (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)">
+  <app-table
+    apiUrl="queryTLS13030"
+    tableKey="TLS13030"
+    [data]="data"
+    [columns]="columns"
+    [selectedItems]="selectedItems"
+    (selectionChange)="selectedItems = $event"
+    (delete)="onDelete($event)"
+    dataKey="talent_id"
+    [multiSortMeta]="sortMeta"
+    [totalRecords]="totalRecords"
+    [lazy]="true"
+    [showManage]="false"
+    [loading]="loading"
+    [showCheckBox]="false"
+    [showDelete]="false"
+    (lazyLoadData)="onLazyLoadData($event, queryForm)">
   </app-table>
 </div>

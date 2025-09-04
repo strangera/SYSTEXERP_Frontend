@@ -1,5 +1,5 @@
-/* 狀態列 */
-.status-container {
+/* 狀態列（上方狀態說明用） */
+:host ::ng-deep .status-container {
   display: flex;
   align-items: center;
   gap: 6px;
@@ -9,7 +9,6 @@
     font-weight: bold;
     margin-right: 6px;
   }
-
   .status-chip {
     display: inline-flex;
     align-items: center;
@@ -18,74 +17,75 @@
     border: 1px solid #ccc;
     border-radius: 4px;
     font-size: 13px;
+    font-weight: 100;
     background: #fff;
     white-space: nowrap;
-
-    i {
-      font-size: 14px;
-    }
-
-    &.success {
-      border-color: #28a745;
-      color: #28a745;
-    }
-
-    &.logout {
-      border-color: #dc3545;
-      color: #dc3545;
-    }
-
-    &.warning {
-      border-color: #fd7e14;
-      color: #fd7e14;
-    }
-
-    &.purple {
-      border-color: #6f42c1;
-      color: #6f42c1;
-    }
+    &.success { background: #28a745; color: #fff; }
+    &.logout { background: #dc3545; color: #fff; }
+    &.shutdown { background: #6c757d; color: #fff; }
   }
 }
 
-/* 狀態圖示定位 */
-.relative {
-  position: relative;
-
-  .status-icon {
-    position: absolute;
-    top: 8px;
-    right: 8px;
-    font-size: 18px;
-  }
+/* EDC chip 樣式（grid、list 共用） */
+:host ::ng-deep .edc-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  padding: 2px 12px;
+  min-width: 32px;
+  border-radius: 2px;
+  font-weight: 500;
+  color: #fff;
+  &.success { background-color: #28a745; }
+  &.logout { background-color: #dc3545; }
+  &.shutdown { background-color: #6c757d; }
 }
 
-/* List 模式 */
-:host ::ng-deep .p-dataview.p-dataview-list .grid.grid-nogutter {
-  display: block;
+/* grid chip 固定右上角 */
+.grid-status-fixed {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  display: flex;
+  gap: 4px;
+  z-index: 2;
 }
 
-:host ::ng-deep .p-dataview.p-dataview-list .grid.grid-nogutter > div {
-  padding: 0;
+/* list chip 靠右排列 */
+.list-status-fixed {
+  display: flex;
+  justify-content: flex-end;
+  gap: 16px;
+  z-index: 2;
 }
-/* grid 模式 */
+
+/* grid 版型 */
 :host ::ng-deep .custom-grid {
   display: grid;
   grid-template-columns: repeat(5, 1fr);
   gap: 1px;
   background-color: #ddd;
 }
-
 :host ::ng-deep .custom-grid-item {
   background: #fff !important;
   border: none !important;
 }
-
 :host ::ng-deep .custom-grid-item .surface-card {
   border: none !important;
   border-radius: 0 !important;
   box-shadow: none !important;
 }
 
+/* list 版型 */
+:host ::ng-deep .p-dataview.p-dataview-list .grid.grid-nogutter {
+  display: block;
+}
+:host ::ng-deep .p-dataview.p-dataview-list .grid.grid-nogutter > div {
+  padding: 0;
+}
+
+/* 搜尋列 */
 :host ::ng-deep .search-bar-container {
   flex: 1;
   max-width: 800px;
