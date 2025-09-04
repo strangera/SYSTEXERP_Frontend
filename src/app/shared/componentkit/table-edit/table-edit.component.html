@@ -7,7 +7,7 @@
   [dataKey]="dataKey" [rowTrackBy]="trackByRow" [resizableColumns]="true" [reorderableColumns]="true"
   (onColReorder)="onColReorder($event)" (onRowReorder)="onRowReorder($event)"
   styleClass="p-datatable-sm p-datatable-gridlines p-datatable-striped" (selectionChange)="onSelectionChange($event)"
-  [rowSelectable]="rowSelectableWrapper" [loading]="loading && data.length === 0">
+  [rowSelectable]="rowSelectableWrapper" [loading]="loading">
   <ng-template pTemplate="caption">
     <div class="grid align-items-center justify-content-between mx-0">
       <div class="caption-left button-group flex gap-2 py-2">
