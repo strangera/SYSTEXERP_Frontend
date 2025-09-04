@@ -255,4 +255,11 @@ export class TLS42020Service {
   deleteTLS42020(data: TLS42020DeleteRequest): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/deleteTLS42020`, data);
   }
+
+  // 匯入TLS42020資料
+  uploadTLS42020(file: File): Observable<any> {
+    const formData = new FormData();
+    formData.append('file', file);
+    return this.http.post<any>(`${this.apiUrl}/uploadTLS42020`, formData);
+  }
 }

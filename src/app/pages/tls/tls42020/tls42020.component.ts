@@ -17,6 +17,10 @@ import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-ra
 import { TableComponent } from '@shared/componentkit/table/table.component';
 import { AccordionModule } from 'primeng/accordion';
 import { TranslateModule } from '@ngx-translate/core';
+import { FileSelectEvent, FileUploadHandlerEvent } from 'primeng/fileupload';
+import { DialogComponent } from '@shared/componentkit/dialog/dialog.component';
+import { FileUploadComponent } from '@shared/componentkit/file-upload/file-upload.component';
+import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
 
 @Component({
   selector: 'app-tls42020',
@@ -32,27 +36,39 @@ import { TranslateModule } from '@ngx-translate/core';
     MultiSelectComponent,
     CalendarRangeComponent,
     TableComponent,
-    TranslateModule
+    TranslateModule,
+    DialogComponent,
+    FileUploadComponent,
+    RadiobuttonComponent
   ]
 })
 export class TLS42020Component extends BasicQueryPageComponent<TLS42020Data> implements OnInit {
   queryForm = this.fb.group({
     menuType: [[]],                               // 菜單類別(多選)
     tltNo: [[]],                                  // 專櫃編號(多選)
-    // SBM_BegDate_s: [null, Validators.required],  // 開始日期(起)
-    // SBM_BegDate_e: [null, Validators.required],  // 開始日期(迄)
-    // SBM_EndDate_s: [null, Validators.required],  // 結束日期(起)
-    // SBM_EndDate_e: [null, Validators.required],  // 結束日期(迄)
-    SBM_BegDate_s: [null],  // 開始日期(起)
-    SBM_BegDate_e: [null],  // 開始日期(迄)
-    SBM_EndDate_s: [null],  // 結束日期(起)
-    SBM_EndDate_e: [null],  // 結束日期(迄)
+    SBM_BegDate_s: [null, Validators.required],  // 開始日期(起)
+    SBM_BegDate_e: [null, Validators.required],  // 開始日期(迄)
+    SBM_EndDate_s: [null, Validators.required],  // 結束日期(起)
+    SBM_EndDate_e: [null, Validators.required],  // 結束日期(迄)
     ...createPaginationConfig([])
   });
 
   totalRecords = 0;
   data: TLS42020Data[] = [];
   selectedItems: TLS42020Data[] = [];
+
+  // 匯入菜單 dialog
+  queryForm2 = this.fb.group({
+    uploadType: [0, Validators.required],  // 異動方式                         
+  });
+
+  dialogVisible = false;
+
+  uploadTypeOptions = [
+    { label: '先刪除後新增', value: 0 },
+    { label: '更新', value: 1 },
+    { label: '新增', value: 2 }
+  ];
 
   // 下拉選單選項
   menuTypeOptions: { label: string; value: string }[] = [];
@@ -172,6 +188,25 @@ export class TLS42020Component extends BasicQueryPageComponent<TLS42020Data> imp
             this.messageService.errorBubble(res.Message);
           }
         });
+      }
+    });
+  }
+
+  onImport(event: FileSelectEvent) {
+    this.dialogVisible = true;
+  }
+
+  onFileSelect(event: FileSelectEvent) {
+    // TODO: 檔案檢查邏輯
+  }
+
+  onFileUpload(event: FileUploadHandlerEvent) {
+    const file = event.files[0];
+    this.tls42020Service.uploadTLS42020(file).pipe(untilDestroyed(this)).subscribe(res => {
+      if (res.Status === '0000') {
+        this.messageService.successBubble(res.Message);
+      } else {
+        this.messageService.errorBubble(res.Message);
       }
     });
   }

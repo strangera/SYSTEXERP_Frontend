@@ -1,177 +1,181 @@
-import { Component } from '@angular/core';
-import { FormBuilder, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { NavigationExtras, Router } from '@angular/router';
-// Permissions
-import { FunsrightInfo, PermissionsInfo } from '../../../shared/models/system/funsrightInfo';
-// Shared
-import { AuthService } from '../../../service/system/auth.service';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-
-import { ValidationService } from '../../../shared/service/validation.service';
+import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
+import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
+import { Column, createPaginationConfig } from '../../../shared/componentkit/table/table.model';
+import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { finalize } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { AccordionModule } from 'primeng/accordion';
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { TranslateModule } from '@ngx-translate/core';
+import { DatePipe } from '@angular/common';
+import { untilDestroyed } from '@ngneat/until-destroy';
+import { CardModule } from 'primeng/card';
+import { ScrollPanelModule } from 'primeng/scrollpanel';
+import { TLS2C010Service } from '@service/api/tls/tls2-c010.service';
+import { TabViewModule } from 'primeng/tabview';
+import { TableComponent } from '@shared/componentkit/table/table.component';
 
 @Component({
-    selector: 'app-tls2c010',
-    templateUrl: './tls2c010.component.html',
-    styleUrl: './tls2c010.component.scss',
-    standalone: true,
-    imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarComponent, ButtonComponent, TableComponent, TranslateModule]
+  selector: 'app-tls2c010',
+  templateUrl: './tls2c010.component.html',
+  styleUrl: './tls2c010.component.scss',
+  standalone: true,
+  imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarComponent, ButtonComponent, TranslateModule, CardModule, ScrollPanelModule, TabViewModule,
+    TableComponent, ButtonComponent
+  ]
 })
-export class TLS2C010Component {
-  ProgNo: string = '220058';
-  // 權限
-  funInfo?: FunsrightInfo;
-
-  // 查詢
-  // ----------------------------------------------------------------
-  loading: boolean = false;
-  submitted: boolean = false;
+export class TLS2C010Component extends BasicQueryPageComponent<any> implements OnInit {
   queryForm = this.formBuilder.group({
-    onedatedd: [, [Validators.required]], // 銷售日期
-    usagecount: [0, [Validators.required]], // 次數限制 (0 不限制)
+    TXN_Date: ['', Validators.required], // 銷售日期
+    ...createPaginationConfig([]) // 分頁和排序參數
   });
-  // 表格
-  // ----------------------------------------------------------------
-  data: any[] = [
-    // { contactPerson: 'A先生', contactDate: '2024-08-08', UID: '123' ,industryType: '停車管理', category: '專櫃。意向書',version: 1, rentNumber: 1, progress: '未審核'},
-    // { contactPerson: 'B先生', contactDate: '2024-08-09', UID: '456' ,industryType: '停車管理', category: '專櫃。意向書',version: 1, rentNumber: 2, progress: '已審核'},
-    // { contactPerson: 'C先生', contactDate: '2024-08-10', UID: '789' ,industryType: '停車管理', category: '專櫃。意向書',version: 1, rentNumber: 3, progress: '未審核'},
-    // // 其他資料
-  ];
-  filteredData: any[] = [...this.data];
-  columns: any[] = [
-    { field: 'contactPerson', header: '現金', visible: true },
-    { field: 'contactDate', header: '聯合信用卡', visible: true },
-    { field: 'UID', header: '中信信用卡', visible: true },
-    { field: 'industryType', header: '中信-停車場信用卡', visible: true },
-    { field: 'category', header: '一卡通', visible: true },
-    { field: 'version', header: '禮券', visible: true },
-    { field: 'rentNumber', header: '商品提貨單', visible: true },
-    { field: 'col1', header: '感熱紙抵用券', visible: true },
-    { field: 'col2', header: '商品抵用券', visible: true },
-    { field: 'col3', header: '貴賓提貨單(應收帳款)', visible: true },
-    { field: 'col4', header: '外來禮券(抵用券)', visible: true },
-    { field: 'col5', header: '外來提貨單(抵用券)', visible: true },
-    { field: 'col6', header: '活動券(自營)	', visible: true },
-    { field: 'col7', header: '折價券', visible: true },
-    { field: 'col8', header: '現抵', visible: true },
-    { field: 'col9', header: '禮券餘代卡', visible: true },
-    { field: 'col10', header: '提貨單餘代卡', visible: true },
-    { field: 'col11', header: '會員折抵', visible: true },
-    { field: 'col12', header: 'LINE PAY', visible: true },
-    { field: 'col13', header: 'APP抵用券', visible: true },
-    { field: 'col14', header: 'APP提貨單', visible: true },
-    { field: 'col15', header: '預收貨款(預售)', visible: true },
-    { field: 'col16', header: '專櫃欠款', visible: true },
-    { field: 'col17', header: '集中收銀欠款', visible: true },
-    { field: 'col18', header: '合計', visible: true },
-    // 其他欄位
-  ];
-  // ----------------------------------------------------------------
-  cahserTypeOptions: any[] = [];
-  areaCodeOptions: any[] = [];
-  floorOptions: any[] = [];
+
+  closeDate = ''; // 最近關帳日期
+
+  data_yy_up: any[] = [];
+  data_yy_down: any[] = [];
+  data_ny_up: any[] = [];
+  data_ny_down: any[] = [];
+  data_nn_up: any[] = [];
+  data_nn_down: any[] = [];
+
+  columns_yy_up: Column[] = [];
+  columns_yy_down: Column[] = [];
+  columns_ny_up: Column[] = [];
+  columns_ny_down: Column[] = [];
+  columns_nn_up: Column[] = [];
+  columns_nn_down: Column[] = [];
 
   constructor(
-    private router: Router,
-    private formBuilder: FormBuilder,
-    private messageService: NotificationService,
-    private authService: AuthService,
-    private validationService: ValidationService,
+    private tls2c010Service: TLS2C010Service,
+    private datePipe: DatePipe,
+    private cd: ChangeDetectorRef,
   ) {
+    super();
   }
 
   ngOnInit(): void {
-    //
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
-  }
-
-  canQuery(): boolean {
-    return true;
-  }
-
-  canAdd(): boolean {
-    return true;
-  }
-
-  canEdit(): boolean {
-    return true;
+    this.initializePage('TLS2C010', 'tls/tls2c010cru', this.queryForm, (form) => this.onSubmit(form));
+    // 取得最近關帳日期
+    this.tls2c010Service.getTLS2C010Date()
+      .pipe(untilDestroyed(this))
+      .subscribe(response => {
+        this.closeDate = response.Data.CLS_DATE || '';
+        // TXN_Date 為 closeDate + 1 天
+        const nextDate = new Date(this.closeDate);
+        nextDate.setDate(nextDate.getDate() + 1);
+        this.queryForm.patchValue({ TXN_Date: this.datePipe.transform(nextDate, 'yyyy/MM/dd') || '' });
+      });
   }
 
   onSubmit(frm: FormGroup) {
-    console.log(frm.value);
-    this.submitted = true;
-    this.loading = true;
-    this.messageService.blockUi();
+    this.handleSubmit(frm, () => {
+      this.tls2c010Service.queryTLS2C010(
+        {
+          TXN_Date: this.datePipe.transform(frm.value.TXN_Date, 'yyyy-MM-dd') || ''
+        })
+        .pipe(untilDestroyed(this), finalize(() => this.loading = false))
+        .subscribe(response => {
+          this.setColumns(response.Data);
+          this.setData(response.Data);
+          this.queryStateService.setQueryState(this.ProgNo, frm.value);
+          this.cd.detectChanges();
+        });
+    });
+  }
 
-    if (frm.valid && this.canQuery()) {
-      // 提交邏輯
-      // Service
-      // this.xxxService.queryMachine(frm.value as xxxInterface)
-      //  .subscribe((response: any) => {
-      //    this.rows = response.xxx;
-      // });
+  setColumns(responseData: any) {
+    // Set columns for YY_Detail UP_data
+    if (responseData.YY_Detail?.UP_data?.[0]) {
+      this.columns_yy_up = Object.keys(responseData.YY_Detail.UP_data[0]).map(key => ({
+        field: key,
+        header: responseData.YY_Detail.UP_data[0][key],
+        visible: true
+      }));
     }
 
-    this.loading = false;
-    this.messageService.unblockUi();
-  }
+    // Set columns for YY_Detail DOWN_data
+    if (responseData.YY_Detail?.DOWN_data?.[0]) {
+      this.columns_yy_down = Object.keys(responseData.YY_Detail.DOWN_data[0]).map(key => ({
+        field: key,
+        header: responseData.YY_Detail.DOWN_data[0][key],
+        visible: true
+      }));
+    }
 
-  onSubmitQuery(frm: FormGroup) {
-    // 查詢邏輯
-    this.onSubmit(frm);
-  }
+    // Set columns for NY_Detail UP_data
+    if (responseData.NY_Detail?.UP_data?.[0]) {
+      this.columns_ny_up = Object.keys(responseData.NY_Detail.UP_data[0]).map(key => ({
+        field: key,
+        header: responseData.NY_Detail.UP_data[0][key],
+        visible: true
+      }));
+    }
 
-  onClearForm() {
-    this.queryForm.reset();  // 重置表單
-  }
+    // Set columns for NY_Detail DOWN_data
+    if (responseData.NY_Detail?.DOWN_data?.[0]) {
+      this.columns_ny_down = Object.keys(responseData.NY_Detail.DOWN_data[0]).map(key => ({
+        field: key,
+        header: responseData.NY_Detail.DOWN_data[0][key],
+        visible: true
+      }));
+    }
 
-  onCreate() {
-    if (this.canAdd()) {
-      let extras: NavigationExtras = {
-        state: {
-          crudstatus: CRUDStatus.Create,
-          queryform: this.queryForm,
-        },
-        skipLocationChange: true
-      };
+    // Set columns for NN_Detail UP_data
+    if (responseData.NN_Detail?.UP_data?.[0]) {
+      this.columns_nn_up = Object.keys(responseData.NN_Detail.UP_data[0]).map(key => ({
+        field: key,
+        header: responseData.NN_Detail.UP_data[0][key],
+        visible: true
+      }));
+    }
 
-      //console.log("extra", extras);
-      this.router.navigate(['/TLS2000/TLS2C010CRU'], extras);
+    // Set columns for NN_Detail DOWN_data
+    if (responseData.NN_Detail?.DOWN_data?.[0]) {
+      this.columns_nn_down = Object.keys(responseData.NN_Detail.DOWN_data[0]).map(key => ({
+        field: key,
+        header: responseData.NN_Detail.DOWN_data[0][key],
+        visible: true
+      }));
     }
   }
 
-  onEdit(data: any) {
-    if (this.canEdit()) {
-      let extras: NavigationExtras = {
-        state: {
-          crudstatus: CRUDStatus.Edit,
-          rowdata: data,
-          queryform: this.queryForm,
-        },
-        skipLocationChange: true
-      };
-
-      this.router.navigate(['/TLS2000/TLS2C010CRU'], extras);
-    }
+  setData(responseData: any) {
+    // Wrap single objects in arrays for table component
+    this.data_yy_up = [responseData.YY_Detail.UP_data[1]];
+    this.data_yy_down = [responseData.YY_Detail.DOWN_data[1]];
+    this.data_ny_up = [responseData.NY_Detail.UP_data[1]];
+    this.data_ny_down = [responseData.NY_Detail.DOWN_data[1]];
+    this.data_nn_up = [responseData.NN_Detail.UP_data[1]];
+    this.data_nn_down = [responseData.NN_Detail.DOWN_data[1]];
   }
 
-  onDetail(data: any) {
-    let extras: NavigationExtras = {
-      state: {
-        crudstatus: CRUDStatus.Read,
-        rowdata: data,
-        queryform: this.queryForm,
-      },
-      skipLocationChange: true
-    };
-
-    this.router.navigate(['/TLS2000/TLS2C010CRU'], extras);
+  onExportExcel() {
+    // 檢查 TXN_Date 是否有值
+    if (!this.queryForm.value.TXN_Date) {
+      this.messageService.errorBubble('請選擇銷售日期');
+      return;
+    }
+    // 呼叫 exportTLS2C010
+    this.tls2c010Service.exportTLS2C010({
+      FileName: '專櫃日暫存傳票報表',
+      ReportTitle: '專櫃日暫存傳票報表',
+      queryTLS2C010Request: {
+        TXN_Date: this.datePipe.transform(this.queryForm.value.TXN_Date, 'yyyy-MM-dd') || ''
+      }
+    }).pipe(untilDestroyed(this))
+      .subscribe(response => {
+        // 處理檔案下載
+        this.messageService.successBubble('匯出excel成功');
+        const blob = new Blob([response.body!], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = '專櫃日暫存傳票報表.xlsx';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+      });
   }
 }

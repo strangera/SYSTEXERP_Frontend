@@ -38,6 +38,25 @@
     onSubmit(queryForm)" [multiSortMeta]="[]" [lazy]="true" [loading]="loading" [showDelete]="false"
     [expansionColumns]="expansionColumns" expansionDataKey="details" [expansionShowPaginator]="false"
     [expansionRows]="50" [expansionLoadFn]="loadDetails" [expansionMultiSortMeta]="[]" [showDelete]="true"
-    [showCheckBox]="true" (delete)="onDelete(selectedItems)" (edit)="onEdit($event)" (detail)="onDetail($event)">
+    [showCheckBox]="true" (delete)="onDelete(selectedItems)" (edit)="onEdit($event)" (detail)="onDetail($event)"
+    [showExcel]="true" [showExcelExport]="false" [showExcelImport]="false" [showCustomExcelImport]="true"
+    (importExcel)="onImport($event)">
   </app-table>
 </div>
+
+<app-dialog [visible]="dialogVisible" header="匯入菜單" (visibleChange)="dialogVisible = $event" [showFooter]="false"
+  [disable]="false" [height]="'auto'" [width]="'auto'">
+  <ul>
+    <li>下載<a href="https://docs.google.com/spreadsheets/d/1jwJeUeEFuKA7uIMQ4UGf5-OpRd72xSpErUfzmjLxcuo/edit?gid=0#gid=0"
+        target="_blank">範例檔案</a>，並新增菜單內容。</li>
+    <li>將編輯好的檔案，上傳至此。</li>
+  </ul>
+  <form [formGroup]="queryForm2">
+    <div class="col-12"><app-radiobutton label="異動方式" controlName="uploadType"
+        [control]="queryForm2.controls.uploadType" [options]="uploadTypeOptions"
+        [submitted]="submitted"></app-radiobutton>
+    </div>
+  </form>
+  <app-file-upload [accept]="'.xlsx,.xls'" [customUpload]="true" (uploadHandler)="onFileUpload($event)"
+    (select)="onFileSelect($event)"></app-file-upload>
+</app-dialog>
