@@ -622,6 +622,9 @@ export class TLS12040CRUComponent implements OnInit {
         this.vendorOptions = vendors;
         this.bankDropdownOptions = banks;
         this.loading = false;
+
+        // 在所有選項載入完成後呼叫
+        this.updateSelectorPanelOptions();
       },
       error: (error) => {
         console.error('載入選項失敗:', error);
@@ -629,6 +632,9 @@ export class TLS12040CRUComponent implements OnInit {
         this.bustypeOptions = [];
         this.negotiatorOptions = [];
         this.loading = false;
+
+        // 🎯 即使載入失敗也要呼叫（使用空陣列）
+        this.updateSelectorPanelOptions();
       }
     });
   }
@@ -1182,5 +1188,42 @@ export class TLS12040CRUComponent implements OnInit {
     });
 
     return duplicateCount > 0;
+  }
+
+  private updateSelectorPanelOptions(): void {
+    const locationColumn = this.locationColumns.find(col => col.field === 'location_no');
+    if (locationColumn?.selectorConfig?.searchFormFields) {
+      // 🏢 呼叫 API 取得館別選項
+      const buildingField = locationColumn.selectorConfig.searchFormFields.find(
+        field => field.name === 'building_code'
+      );
+      if (buildingField) {
+        this.sharedDropdownService.getBuildingOptions().subscribe(options => {
+          buildingField.options = options || [];
+          console.log('🏢 館別選項已更新:', buildingField.options.length);
+        });
+      }
+      // 🏢 呼叫 API 取得樓層選項
+      const floorField = locationColumn.selectorConfig.searchFormFields.find(
+        field => field.name === 'floor_code'
+      );
+      if (floorField) {
+        this.sharedDropdownService.getFloorOptions().subscribe(options => {
+          floorField.options = options || [];
+          console.log('🏢 樓層選項已更新:', floorField.options.length);
+        });
+      }
+      // 📍 呼叫 API 取得區域選項
+      const areaField = locationColumn.selectorConfig.searchFormFields.find(
+        field => field.name === 'area_code'
+      );
+      if (areaField) {
+        this.sharedDropdownService.getRegionOptions().subscribe(options => {
+          areaField.options = options || [];
+          console.log('📍 區域選項已更新:', areaField.options.length);
+        });
+      }
+      console.log('✅ Selector 面板選項更新開始');
+    }
   }
 }
