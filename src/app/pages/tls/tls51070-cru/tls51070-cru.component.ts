@@ -402,13 +402,16 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
     this.dataForm.get('VEN_No')?.valueChanges.subscribe(value => {
       if (value) {
         if (!this.POS2020Data.some(item => item.VEN_No === value)) {
-          //如果表單還沒對應的POS2020就跳出提示
-          this.messageService.infoBubble('POS2020表單無對應的廠商編號，已經自動新增一筆');
-          const pluMagno = this.dataForm.get('PLU_MagNo')?.value || '';
-          const plu_OrderPrc = this.dataForm.get('PLU_OrderPrc')?.value || 0;
-          this.createDefaultNew2020(pluMagno, plu_OrderPrc, value);
-          //自動新增一筆POS2020
-          this.onAddPOS2020();
+          // 廠商編號不在vendorOptions範圍內可以新增
+          if (this.vendorOptions.some(item => item.value === value)) {
+            //如果表單還沒對應的POS2020就跳出提示
+            this.messageService.infoBubble('POS2020表單無對應的廠商編號，已經自動新增一筆');
+            const pluMagno = this.dataForm.get('PLU_MagNo')?.value || '';
+            const plu_OrderPrc = this.dataForm.get('PLU_OrderPrc')?.value || 0;
+            this.createDefaultNew2020(pluMagno, plu_OrderPrc, value);
+            //自動新增一筆POS2020
+            this.onAddPOS2020();
+          }
         }
       }
     });
