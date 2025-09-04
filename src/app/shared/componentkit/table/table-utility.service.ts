@@ -210,8 +210,8 @@ export class TableUtilityService {
     const tempId = `temp-${new Date().getTime()}`;
     newRowData[dataKey] = tempId;
 
-    // 將新資料加入到資料陣列的開頭
-    const updatedData = [newRowData, ...data];
+    // 將新資料加入到資料陣列的底部
+    const updatedData = [...data, newRowData];
 
     // 回傳新資料和更新後的資料陣列
     return { newRowData, data: updatedData };

@@ -23,17 +23,19 @@
     </ng-template>
   </p-autoComplete>
 
-  <p-dropdown *ngSwitchCase="'dropdown'" styleClass="w-full" [showClear]="col.optionShowClear" appendTo="body"
-    [(ngModel)]="rowData[col.field]" [ngModelOptions]="{ standalone: true }" [filter]="col.filter"
-    [placeholder]="'請輸入' + col.header" [options]="getOptions()" [optionLabel]="col.optionLabel"
-    [optionValue]="col.optionValue" [disabled]="disabled" (onChange)="onValueChange($event.value)"
-    [virtualScroll]="true" [virtualScrollItemSize]="40">
-    <ng-template let-item pTemplate="item" *ngIf="col.templateLabel">
-      <div class="flex align-items-center gap-2">
-        <span>{{ item[col.templateLabel] }}</span>
-      </div>
-    </ng-template>
-  </p-dropdown>
+  <!-- [editable]="true" 寬度會變很短 先寫死 -->
+  <div *ngSwitchCase="'dropdown'" style="width: 222px;">
+    <p-dropdown [showClear]="col.optionShowClear" appendTo="body" [(ngModel)]="rowData[col.field]"
+      [ngModelOptions]="{ standalone: true }" [filter]="col.filter" [placeholder]="'請輸入' + col.header"
+      [options]="getOptions()" [optionLabel]="col.optionLabel" [optionValue]="col.optionValue" [disabled]="disabled"
+      (onChange)="onValueChange($event.value)" [virtualScroll]="true" [virtualScrollItemSize]="40" [editable]="true">
+      <ng-template let-item pTemplate="item" *ngIf="col.templateLabel">
+        <div class="flex align-items-center gap-2">
+          <span>{{ item[col.templateLabel] }}</span>
+        </div>
+      </ng-template>
+    </p-dropdown>
+  </div>
 
   <p-calendar *ngSwitchCase="'date'" class="w-full" styleClass="min-w-max" [showIcon]="true"
     [(ngModel)]="rowData[col.field]" [ngModelOptions]="{ standalone: true }" appendTo="body"

@@ -1,6 +1,6 @@
 import { IDropdownItem } from '@service/utility/dropDownList.service';
 import { Component, OnInit } from '@angular/core';
-import { FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { AccordionModule } from 'primeng/accordion';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
@@ -164,7 +164,7 @@ export class Tls31020cruComponent extends BasicCruPageComponent<TLS31020Response
       tlt_floor: this.dataForm.get('tlt_floor')?.value ?? '',
     } as TLS31020DetialPrintRequest;
 
-    console.log('單樓層之營業報表print請求', JSON.stringify(formValue, null, 2));
+    console.log('單樓層之營業報表print請求', formValue);
 
     this.btnLoading = true;
     this.tls31020Service.printTLS31020Detail(formValue).pipe(finalize(() => this.btnLoading = false), untilDestroyed(this))

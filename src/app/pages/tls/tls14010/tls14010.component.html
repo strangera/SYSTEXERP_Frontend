@@ -80,7 +80,7 @@
 </div>
 <div class="card">
   <div class="col-13">
-    <app-table tableKey="TLS14010" [data]="data" [columns]="columns" (edit)="onEdit($event)" (detail)="onDetail($event)"
+    <app-table tableKey="TLS14010" [data]="data" [columns]="columns"
       [selectedItems]="selectedItems" (selectionChange)="selectedItems = $event" [showCheckBox]="false" dataKey="id"
       [showManage]="false" [multiSortMeta]="[{ field: 'tlt_no', order: 1 }]" [totalRecords]="totalRecords"
       (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [lazy]="true"

@@ -49,7 +49,7 @@ export class TLS14010Component extends BasicQueryPageComponent<TLTContract>
     // TLTTALENT_專櫃主檔+ TLTTALENT_LOCATION_專櫃店位明細檔
     tlt_noList: [[], [Validators.maxLength(12)]], // 專櫃編號
     tlt_name: ['', [Validators.maxLength(100)]], // 專櫃名稱(品牌)
-    location_noList: [[], [Validators.maxLength(10)]], // 店位代碼 店位代碼-館別(1)+樓層(2)+區域(1)+流水編號(3)
+    location_noList: [[], [Validators.maxLength(10)]], // 位置編號 店位代碼-館別(1)+樓層(2)+區域(1)+流水編號(3)
     tlt_building: [''], // 館別 (SYS3800)
     tlt_floorList: [[]], // 樓層(SYS3900)
     area_noList: [[]], // 區域 (SYS3a00)
@@ -97,8 +97,8 @@ export class TLS14010Component extends BasicQueryPageComponent<TLTContract>
     { field: 'contract_subno', header: '版本', visible: true },
     { field: 'bus_type', header: '大分類', visible: true },
     { field: 'bus_type_name', header: '大分類名稱', visible: true },
-    { field: 'tlt_contract_bdate', header: '合約起始日', visible: true, format: (value: string) => value ? new Date(value).toLocaleDateString() : '' },
-    { field: 'tlt_contract_edate', header: '合約終止日', visible: true, format: (value: string) => value ? new Date(value).toLocaleDateString() : '' },
+    { field: 'tlt_contract_bdate', header: '營運起始日', visible: true, format: (value: string) => value ? new Date(value).toLocaleDateString() : '' },
+    { field: 'tlt_contract_edate', header: '營運終止日', visible: true, format: (value: string) => value ? new Date(value).toLocaleDateString() : '' },
     { field: 'tlt_bdate', header: '營運起始日', visible: true, format: (value: string) => value ? new Date(value).toLocaleDateString() : '' },
     { field: 'tlt_edate', header: '營運終止日', visible: true, format: (value: string) => value ? new Date(value).toLocaleDateString() : '' },
     { field: 'apply_status', header: '合約狀態', visible: true, format: (value: string) => this.statusOptions.find((option) => option.value === value)?.label || value },
@@ -116,7 +116,8 @@ export class TLS14010Component extends BasicQueryPageComponent<TLTContract>
 
   // ----------------------------------------------------------------
   constructor(
-    private tls14010Service: Tls14010Service) {
+    private tls14010Service: Tls14010Service,
+  ) {
     super();
   }
 
