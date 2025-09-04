@@ -314,11 +314,21 @@ export class TLS12040CRUComponent implements OnInit {
   ) { }
 
   ngOnInit() {
-    const cruData = this.flowService.getCruData();
+    const cruData = this.flowService.getCruData() as any;
     if (cruData) {
       console.log('📋 取得暫存資料:', cruData);
+
+      // 分別處理表單資料和位置資料
       this.dataForm.patchValue(cruData);
+
+      // 載入暫存的位置資料
+      if (cruData.locationData && Array.isArray(cruData.locationData)) {
+        this.locationData = cruData.locationData;
+        this.updateDisplayLocationData();
+        console.log('📍 已載入暫存位置資料:', this.locationData.length);
+      }
     }
+
     this.initializeDropdownOptions();
     this.handleRouterState();
   }
@@ -670,20 +680,24 @@ export class TLS12040CRUComponent implements OnInit {
     const extras: NavigationExtras = {
       state: { fromRoute: this.router.url },
     };
+
     if (CRUDStatus.Read) {
-      // this.contractFlowService.clearViewMode();
       this.router.navigate(['account/tls/tls12040'], extras);
       this.messageService.infoBubble('已退出檢視模式');
       return;
     }
 
-    // 編輯模式：使用父類邏輯或自訂
-    if (this.dataForm.dirty) {
+    // 編輯模式：暫存包含位置資料
+    if (this.dataForm.dirty || this.hasLocationChanges()) {
       if (confirm('是否要儲存目前的編輯內容？')) {
-        this.flowService.setCruData(this.dataForm.value);
+        const completeData = {
+          ...this.dataForm.value,
+          locationData: this.locationData  // 🎯 包含位置資料
+        };
+        this.flowService.setCruData(completeData);
       }
     }
-    this.router.navigate(['account/tls/tls13010'], extras);
+
     this.router.navigate(['account/tls/tls12040'], extras);
   }
 
@@ -695,8 +709,14 @@ export class TLS12040CRUComponent implements OnInit {
       return;
     }
 
+    // 🎯 合併表單資料和位置資料
+    const completeData = {
+      ...frm.value,
+      locationData: this.locationData  // 加入位置資料
+    };
+
     // 保存表單資料到 cru 步驟
-    const isSaved = this.flowService.setCruData(frm.value);
+    const isSaved = this.flowService.setCruData(completeData);
     if (isSaved) {
       this.messageService.successBubble('資料已暫存，可以進入下一步');
       // 導航到下一步（如果需要）
@@ -707,8 +727,13 @@ export class TLS12040CRUComponent implements OnInit {
   }
 
   onSubmitNext(): void {
-    // 直接保存並導航到下一步
-    this.flowService.setCruData(this.dataForm.value);
+    // 🎯 直接保存並導航到下一步，包含位置資料
+    const completeData = {
+      ...this.dataForm.value,
+      locationData: this.locationData  // 加入位置資料
+    };
+
+    this.flowService.setCruData(completeData);
     this.router.navigate(['account/tls/tls12040next1']);
   }
 
@@ -964,7 +989,7 @@ export class TLS12040CRUComponent implements OnInit {
     this.displayLocationData = this.getDisplayLocationData();
     this.updateTotalLocationSpace();
     // 儲存並顯示訊息
-    // this.saveToWorkflow();
+    this.autoSaveToWorkflow();
     this.messageService.successBubble(`已刪除 ${validItems.length} 個位置項目`);
 
     console.log('✅ 刪除流程完成');
@@ -1055,6 +1080,8 @@ export class TLS12040CRUComponent implements OnInit {
       總數: this.locationData.length,
       可顯示: this.getDisplayLocationData().length
     });
+
+    this.autoSaveToWorkflow();
   }
 
   private hasLocationDataChanged(oldData: LocationDetails, newData: LocationDetails): boolean {
@@ -1225,5 +1252,24 @@ export class TLS12040CRUComponent implements OnInit {
       }
       console.log('✅ Selector 面板選項更新開始');
     }
+  }
+
+  private autoSaveToWorkflow(): void {
+    if (this.dataForm.dirty || this.hasLocationChanges()) {
+      const completeData = {
+        ...this.dataForm.value,
+        locationData: this.locationData
+      };
+
+      this.flowService.setCruData(completeData);
+      console.log('🔄 已自動暫存資料');
+    }
+  }
+
+  private hasLocationChanges(): boolean {
+    // 檢查位置資料是否有異動
+    return this.locationData.some(item =>
+      item._status === 'new' || item._status === 'modified' || item._status === 'deleted'
+    );
   }
 }
