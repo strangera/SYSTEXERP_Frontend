@@ -122,6 +122,15 @@ export const OVERALL_STATUS_OPTIONS = {
 } as const;
 
 
+export const TPY_TYPE_OPTIONS = {
+  '01': '坪數',
+  '02': '收銀機台數',
+  '03': '人數',
+  '04': '度數',
+  '05': '每坪每天',
+  '06': '線數',
+} as const;
+
 // ========== 通用格式化函數 ==========
 
 // 多選格式化函數
@@ -231,5 +240,6 @@ export const SHARED_DROPDOWN_OPTIONS = {
   totalAmtVendor: convertToDropdownOptions(TOTAL_AMT_VENDOR_UNIT_OPTIONS),
   depositPayment: convertToDropdownOptions(DEPOSIT_PAYMENT_OPTIONS),
   overallStatus: convertToDropdownOptions(OVERALL_STATUS_OPTIONS),
+  tpyTypeOption: convertToDropdownOptions(TPY_TYPE_OPTIONS),
   yesNo: [{ value: 'Y', label: '是' }, { value: 'N', label: '否' }]
 } as const;
