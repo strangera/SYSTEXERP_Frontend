@@ -1,14 +1,5 @@
-import { Component } from '@angular/core';
-import { FormBuilder, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { NavigationExtras, Router } from '@angular/router';
-// Permissions
-import { FunsrightInfo, PermissionsInfo } from '../../../shared/models/system/funsrightInfo';
-// Shared
-import { AuthService } from '../../../service/system/auth.service';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-
-import { ValidationService } from '../../../shared/service/validation.service';
+import { Component, OnInit } from '@angular/core';
+import { FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { AccordionModule } from 'primeng/accordion';
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
@@ -16,166 +7,95 @@ import { InputTextComponent } from '../../../shared/componentkit/input-text/inpu
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { TranslateModule } from '@ngx-translate/core';
+import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
+import { Column, createPaginationConfig, formatDate } from '@shared/componentkit/table/table.model';
+import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-select.component';
+import { DropDownListService } from '@service/utility/dropDownList.service';
+import { untilDestroyed } from '@ngneat/until-destroy';
+import { QueryTLS45030Request, QueryTLS45030ResponseData, Tls45030Service } from '@service/api/tls/tls45030.service';
+import { take, finalize } from 'rxjs'; // 加入 finalize
+import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
+import { DatePipe } from '@angular/common';
 
 // 2.4.5.3 收銀機開關機時間表
 @Component({
-    selector: 'app-tls45030',
-    templateUrl: './tls45030.component.html',
-    styleUrl: './tls45030.component.scss',
-    standalone: true,
-    imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarComponent, InputTextComponent, ButtonComponent, TableComponent, TranslateModule]
+  selector: 'app-tls45030',
+  templateUrl: './tls45030.component.html',
+  standalone: true,
+  imports: [CalendarRangeQuickComponent, MultiSelectComponent, MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarComponent, InputTextComponent, ButtonComponent, TableComponent, TranslateModule]
 })
-export class TLS45030Component {
-  ProgNo: string = '240018';
-  // 權限
-  funInfo?: FunsrightInfo;
-
-  // 查詢
-  // ----------------------------------------------------------------
-  loading: boolean = false;
-  submitted: boolean = false;
-  queryForm = this.formBuilder.group({
-    // POS7004_非銷售資料記錄檔
-
-    // from pos1002
-    ECR_TLT_No: [, [Validators.maxLength(20)]], // 機台所屬專櫃編號，專櫃機台(自收)必須設定專櫃編號
-
-    SYS_StoreNo: [, [Validators.maxLength(10)]], // 收銀機所屬門市店號
-    TXN_Date: [], // 交易日期
-    ECR_No: [, [Validators.maxLength(6)]], // 收銀機號
-    TXN_No: [, [Validators.maxLength(6)]], // 交易序號
-    FNS_Class: [, [Validators.maxLength(2)]], // 班別
-
-    FNS_DateTime: [], // 操作日期時間
-    FNS_Op_Cod: [, [Validators.maxLength(8)]], // 收銀員編號
-    FNS_Flag: [[] as number[]], // 方式 0=登入 1=開錢櫃 2=零用金 3=繳大鈔 4=關機清帳 5=授權 6=登出 8=變更密碼 9=開機
-
-    FNS_Amount: [, [Validators.maxLength(8)]], // 金額，未輸入金額的操作則固定為零
-    FNS_Data: ['', [Validators.maxLength(50)]], // 非銷售資料
-    TLT_No: [, [Validators.maxLength(8)]], // 專櫃編號
+export class TLS45030Component extends BasicQueryPageComponent<QueryTLS45030ResponseData> implements OnInit {
+  queryForm = this.formBuilder.nonNullable.group({
+    Txn_Date_Start: [new Date()],
+    Txn_Date_End: [new Date()],
+    ECR_No_List: [[]], // 多選清單使用陣列 []
+    TLT_No_List: [[]], // 多選清單使用陣列 []
+    ...createPaginationConfig([{ field: 'TXN_Date', order: -1 }]), // 預設排序為交易日期 DESC
   });
-  // 表格
-  // ----------------------------------------------------------------
-  data: any[] = [
-    {
-      SYS_StoreNo: 'store123', TXN_Date: '2024/08/08', ECR_No: 'register123', TXN_No: 'transfer123', FNS_Class: 'class123',
-      FNS_DateTime: '2024/08/08 10:10', FNS_Op_Cod: 'casher123', FNS_Flag: 1,
-      FNS_Amount: 1000, FNS_Data: '非銷售資料', TLT_No: 'counter123',
-    },
-    // 其他資料
-  ];
-  filteredData: any[] = [...this.data];
-  columns: any[] = [
-    { field: 'SYS_StoreNo', header: '收銀機所屬門市店號', visible: true },
-    { field: 'TXN_Date', header: '交易日期', visible: true },
+  totalRecords = 0;
+  data: QueryTLS45030ResponseData[] = [];
+  columns: Column[] = [
+    { field: 'TXN_Date', header: '交易日期', visible: true, format: formatDate },
     { field: 'ECR_No', header: '收銀機號', visible: true },
-    { field: 'TXN_No', header: '交易序號', visible: true },
-    { field: 'FNS_Class', header: '班別', visible: true },
-
-    { field: 'FNS_DateTime', header: '操作日期時間', visible: true },
-    { field: 'FNS_Op_Cod', header: '收銀員編號', visible: true },
-    { field: 'FNS_Flag', header: '方式', visible: true },
-
-    { field: 'FNS_Amount', header: '金額', visible: true },
-    { field: 'FNS_Data', header: '非銷售資料', visible: true },
-    { field: 'TLT_No', header: '專櫃編號', visible: true },
-    // 其他欄位
+    { field: 'ECR_Name', header: '收銀機名稱', visible: true },
+    { field: 'USR_No', header: '收銀員編號', visible: true },
+    { field: 'user_Name', header: '收銀員姓名', visible: true },
+    { field: 'EOS_StartUpTime', header: '開機時間', visible: true, format: formatDate },
+    { field: 'EOS_CloseTime', header: '清機時間', visible: true, format: formatDate },
   ];
-  // ----------------------------------------------------------------
-  FNS_Flag_Option: any[] = [
-    { value: 0, label: '登入' },
-    { value: 1, label: '開錢櫃' },
-    { value: 2, label: '零用金' },
-    { value: 3, label: '繳大鈔' },
-    { value: 4, label: '關機清帳' },
-    { value: 5, label: '授權' },
-    { value: 6, label: '登出' },
-    { value: 8, label: '變更密碼' },
-    { value: 9, label: '開機' },
-  ];
-
+  ECR_NoOptions: { No: string, Name: string, label: string; }[] = [];
+  TLTTALENT_DropDownList: { No: string, Name: string, label: string; }[] = [];
   constructor(
-    private router: Router,
-    private formBuilder: FormBuilder,
-    private messageService: NotificationService,
-    private authService: AuthService,
-    private validationService: ValidationService,
+    private readonly dropDownList: DropDownListService,
+    private readonly tls45030Service: Tls45030Service,
+    private datePipe: DatePipe
   ) {
+    super();
   }
 
   ngOnInit(): void {
-    //
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
-    // ----------------------------------------------------------------
+    this.initializePage('TLS45030', 'tls/tls45030cru', this.queryForm, (form) => this.onSubmit(form));
+    this.dropDownList.queryPOS1002_DropDownList().pipe(untilDestroyed(this)).subscribe(options => {
+      this.ECR_NoOptions = options.Data.map(item => ({ ...item, label: `${item.No} - ${item.Name}` }));
+    });
+    this.dropDownList.queryTLTTALENT_DropDownList().pipe(untilDestroyed(this)).subscribe(res => {
+      this.TLTTALENT_DropDownList = res.Data.map(item => ({
+        ...item, label: `${item.No} - ${item.Name}`
+      }));
+    });
   }
 
-  // 權限
-  // ----------------------------------------------------------------
-  canQuery(): boolean {
-    return true;
-  }
-  canAdd(): boolean {
-    return true;
-  }
-  canEdit(): boolean {
-    return true;
-  }
-  // ----------------------------------------------------------------
   onSubmit(frm: FormGroup) {
-    console.log(frm.value);
-    this.submitted = true;
-    this.loading = true;
-    this.messageService.blockUi();
+    this.handleSubmit(frm, () => {
+      const formValue = frm.getRawValue();
+      const formattedStartDate = this.datePipe.transform(formValue.Txn_Date_Start, 'yyyy-MM-dd');
+      const formattedEndDate = this.datePipe.transform(formValue.Txn_Date_End, 'yyyy-MM-dd');
+      const request: QueryTLS45030Request = {
+        Txn_Date_Start: formattedStartDate,
+        Txn_Date_End: formattedEndDate,
+        ECR_No_List: formValue.ECR_No_List,
+        TLT_No_List: formValue.TLT_No_List,
+        PageIndex: formValue.pageIndex,
+        PageSize: formValue.pageSize,
+        SortBy: formValue.SortBy,
+      };
 
-    if (frm.valid && this.canQuery()) {
-      // 提交邏輯
-      // Service
-      // this.xxxService.queryMachine(frm.value as xxxInterface)
-      //  .subscribe((response: any) => {
-      //    this.rows = response.xxx;
-      // });
-    }
-
-    this.loading = false;
-    this.messageService.unblockUi();
-  }
-
-  onSubmitQuery(frm: FormGroup) {
-    // 查詢邏輯
-    this.onSubmit(frm);
-  }
-
-  onClearForm() {
-    this.queryForm.reset();  // 重置表單
-  }
-  // ----------------------------------------------------------------
-  onCreate() {
-    if (this.canAdd()) {
-      this.navigateWithState(CRUDStatus.Create);
-    }
-  }
-
-  onEdit(data: any) {
-    if (this.canEdit()) {
-      this.navigateWithState(CRUDStatus.Edit, data);
-    }
-  }
-
-  onDetail(data: any) {
-    console.log(data);
-    this.navigateWithState(CRUDStatus.Read, data);
-  }
-
-  navigateWithState(crudstatus: CRUDStatus, rowdata?: any) {
-    let extras: NavigationExtras = {
-      state: {
-        crudstatus: crudstatus,
-        rowdata: rowdata,
-      },
-    };
-
-    console.log(crudstatus);
-
-    this.router.navigate(['/TLS4000/TLS45030CRU'], extras);
+      this.loading = true; // 顯示載入狀態
+      this.tls45030Service.queryTLS45030(request).pipe(
+        untilDestroyed(this),
+        take(1), // 只取一次值就取消訂閱
+        finalize(() => this.loading = false) // 無論成功或失敗都關閉載入
+      ).subscribe(res => {
+        if (res.Status === '0000') {
+          this.data = res.Data;
+          this.totalRecords = res.TotalCount || 0;
+          this.messageService.successBubble(res.Message);
+        } else {
+          this.data = [];
+          this.totalRecords = 0;
+          this.messageService.errorBubble(res.Message);
+        }
+      });
+    });
   }
 }
