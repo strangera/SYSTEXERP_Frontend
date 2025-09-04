@@ -65,7 +65,8 @@
         <app-table-edit [hidden]="hiddenTable()" title="廣告資訊設定" tableKey="TLS43010Detail" [data]="data" class="col-12"
           [data]="data" [columns]="columns" (selectionChange)="selectedItems = $event" [selectedItems]="selectedItems"
           (dataChange)="data = $event" [rowValidate]="validateEntireRow" dataStatusField="status"
-          [disabled]="dataForm.controls.NOT_Status.value === '1' || isFormReadable" [tableRequired]="true">
+          [disabled]="dataForm.controls.NOT_Status.value === '1' || isFormReadable" [loading]="loading"
+          [tableRequired]="dataForm.controls.NOT_DtlLimit.value !== '0'">
         </app-table-edit>
       </div>
       <div *ngIf="dataForm.controls.NOT_Status.value !== '1' && !isFormReadable"

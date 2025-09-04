@@ -21,7 +21,7 @@ import { ButtonModule } from 'primeng/button';
 import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.component';
 import { Column } from '@shared/componentkit/table-edit/table-edit.model';
 import { GalleriaModule } from 'primeng/galleria';
-import { finalize } from 'rxjs';
+import { finalize, forkJoin, tap } from 'rxjs';
 import { ImageQueryRequest, ImageService } from '@service/utility/image.service';
 import { environment } from 'src/environments/environment';
 
@@ -76,9 +76,6 @@ export class TLS43010CRUComponent extends BasicCruPageComponent<QueryTls43010Res
     { value: '1', label: '已審核' },
     { value: '2', label: '已刪除' },
   ];
-  /*  0=不限制(預設值)*/
-  /*  1=符合明細設定的機台才播放*/
-  /*  2=不符合明細設定的機台才播放*/
   NOT_DtlLimit_Options: { value: string, label: string }[] = [
     { value: '0', label: '不限制' },
     { value: '1', label: '符合明細設定的機台才播放' },
@@ -137,24 +134,30 @@ export class TLS43010CRUComponent extends BasicCruPageComponent<QueryTls43010Res
     }
   }
   loadDropdownOptions() {
-    this.dropDownListService.queryPOS1002_DropDownList().pipe(untilDestroyed(this)).subscribe(options => {
-      this.setColumnOptions('ECR_No', options.Data.map(item => ({ ...item, label: item.No + ' - ' + item.Name })));
-    });
-    this.dropDownListService.queryTLTTALENT_DropDownList().pipe(untilDestroyed(this)).subscribe(options => {
-      this.setColumnOptions('TLT_No', options.Data.map(item => ({ ...item, label: item.No + ' - ' + item.Name })));
-    });
     this.setColumnOptions('ECR_Type', SystemOptionsService.getOptions('ECR_Type'));
-    this.dropDownListService.queryPOS1002GRM_DropDownList().pipe(untilDestroyed(this)).subscribe(options => {
-      this.setColumnOptions('ECR_GrpNo', options.Data.map(item => ({ ...item, label: item.No + ' - ' + item.Name })));
-    });
-    this.dropDownListService.querySYS3800_DropDownList().pipe(untilDestroyed(this)).subscribe(options => {
-      this.setColumnOptions('BUILDING_No', options.Data);
-    });
-    this.dropDownListService.querySYS3900_DropDownList().pipe(untilDestroyed(this)).subscribe(options => {
-      this.setColumnOptions('FLOOR_No', options.Data);
-    });
-    this.dropDownListService.querySYS3A00_DropDownList().pipe(untilDestroyed(this)).subscribe(options => {
-      this.setColumnOptions('Area_No', options.Data);
+    const dropDownRequests = [
+      this.dropDownListService.queryPOS1002_DropDownList(),
+      this.dropDownListService.queryTLTTALENT_DropDownList(),
+      this.dropDownListService.queryPOS1002GRM_DropDownList(),
+      this.dropDownListService.querySYS3800_DropDownList(),
+      this.dropDownListService.querySYS3900_DropDownList(),
+      this.dropDownListService.querySYS3A00_DropDownList()
+    ];
+    this.loading = true;
+    forkJoin(dropDownRequests).pipe(untilDestroyed(this), finalize(() => { this.loading = false; })
+    ).subscribe(results => {
+      const pos1002Options = results[0];
+      const tltTalentOptions = results[1];
+      const pos1002grmOptions = results[2];
+      const sys3800Options = results[3];
+      const sys3900Options = results[4];
+      const sys3a00Options = results[5];
+      this.setColumnOptions('ECR_No', pos1002Options.Data.map(item => ({ ...item, label: item.No + ' - ' + item.Name })));
+      this.setColumnOptions('TLT_No', tltTalentOptions.Data.map(item => ({ ...item, label: item.No + ' - ' + item.Name })));
+      this.setColumnOptions('ECR_GrpNo', pos1002grmOptions.Data.map(item => ({ ...item, label: item.No + ' - ' + item.Name })));
+      this.setColumnOptions('BUILDING_No', sys3800Options.Data.map(item => ({ ...item, label: item.No + ' - ' + item.Name })));
+      this.setColumnOptions('FLOOR_No', sys3900Options.Data.map(item => ({ ...item, label: item.No + ' - ' + item.Name })));
+      this.setColumnOptions('Area_No', sys3a00Options.Data.map(item => ({ ...item, label: item.No + ' - ' + item.Name })));
     });
   }
   queryImages() {
@@ -220,6 +223,7 @@ export class TLS43010CRUComponent extends BasicCruPageComponent<QueryTls43010Res
       // 後端 Controller 負責解析這個字串。
       const requestData = {
         ...frm.getRawValue(),
+        ID: this.rowdata?.ID || 0,
         Detail: this.dataForm.get('NOT_DtlLimit')?.value !== '0' ? this.data.filter(item => !item['_isAutoInsertCandidate']).map(item => ({
           ID: this.isFormCreateable ? 0 : item['ID'],
           ...item
@@ -234,7 +238,7 @@ export class TLS43010CRUComponent extends BasicCruPageComponent<QueryTls43010Res
       // 呼叫新的服務方法
       const $res = this.isFormCreateable
         ? this.tls43010Service.insertTLS43010(formData)
-        : this.tls43010Service.updateTLS43010(requestData); // 更新不需要上傳檔案，所以保持原樣
+        : this.tls43010Service.updateTLS43010(formData); // 更新不需要上傳檔案，所以保持原樣
 
       $res.pipe(
         finalize(() => this.loading = false)
