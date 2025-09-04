@@ -1,15 +1,12 @@
 import { Component } from '@angular/core';
 import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { RegionService } from '../../../service/basic/region-code.service';
-import { FloorService } from '../../../service/basic/floor.service';
 import { OperationStatusService } from '../../../service/basic/operation-status.service';
 import { BigCategoryCodeService } from '../../../service/basic/big-category-code.service';
 import { DeductionService } from '../../../service/basic/deduction.service';
 import { TLS13030Service } from '../../../service/api/tls/tls13030.service';
 import { createPaginationConfig, LazyLoadEvent } from '../../../shared/componentkit/table/table.model';
 import { Tls11010Service } from '../../../service/api/tls/tls11010.service';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { AccordionModule } from 'primeng/accordion';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
@@ -63,27 +60,30 @@ export class TLS13030Component extends BasicQueryPageComponent<any> {
   totalRecords = 0;
   selectedItems: any[] = [];
 
-  queryForm = this.formBuilder.group({
-    tlt_no: ['', [Validators.maxLength(10)]],
-    tlt_name: ['', [Validators.maxLength(50)]],
-    floor_noList: [[] as string[]],
-    area_noList: [[] as string[]],
-    tlt_openflagList: [[] as string[]],
-    tlt_bdate_start: [this.yesterday],
-    tlt_bdate_end: [this.yesterday],
-    tlt_edate_start: [null],
-    tlt_edate_end: [null],
-    cap_typeList: [[] as string[]],
-    cap_itemList: [[] as string[]],
-    tpy_bdate_start: [null],
-    tpy_bdate_end: [null],
-    tpy_edate_start: [null],
-    tpy_edate_end: [null],
-    bus_typeList: [[] as string[]],
-    tlt_building: ['', [Validators.maxLength(1)]],
-    // ✅ 帶入預設排序（要與 defaultSort 對齊）
-    ...createPaginationConfig([{ field: 'id', order: 1 }]),
-  });
+queryForm = this.formBuilder.group({
+  tlt_no: ['', [Validators.maxLength(10)]],
+  tlt_name: ['', [Validators.maxLength(50)]],
+  floor_noList: [[] as string[]],
+  area_noList: [[] as string[]],
+  tlt_openflagList: [[] as string[]],
+  tlt_bdate_start: [this.yesterday],
+  tlt_bdate_end: [this.yesterday],
+  tlt_edate_start: [null],
+  tlt_edate_end: [null],
+  cap_typeList: [[] as string[]],
+  cap_itemList: [[] as string[]],
+  tpy_bdate_start: [null],
+  tpy_bdate_end: [null],
+  tpy_edate_start: [null],
+  tpy_edate_end: [null],
+  bus_typeList: [[] as string[]],
+  tlt_building: ['', [Validators.maxLength(1)]],
+  SortBy: [[]],
+  // ✅ 統一用大寫分頁鍵（若你要初始為 0，就把 20/1 改成 0/0）
+  PageSize: [20],
+  PageIndex: [1],
+});
+
 
   regionOptions: any[] = [];
   floorOptions: any[] = [];
@@ -122,14 +122,13 @@ export class TLS13030Component extends BasicQueryPageComponent<any> {
   ];
 
   constructor(
-    private RegionService: RegionService,
-    private floorService: FloorService,
+
     private operationStatusService: OperationStatusService,
     private bigCategoryCodeService: BigCategoryCodeService,
     private deductionService: DeductionService,
     private tls11010Service: Tls11010Service,
     private TLS13030Service: TLS13030Service,
-    private notificationService: NotificationService
+
   ) {
     super();
   }
@@ -162,34 +161,39 @@ export class TLS13030Component extends BasicQueryPageComponent<any> {
   }
 
   // ===== lazy 事件（分頁/排序）=====
-  override onLazyLoadData(event: LazyLoadEvent, form: FormGroup): void {
-    const currSort = JSON.stringify(form.value?.SortBy ?? []);
-    const nextSort = JSON.stringify(event.SortBy ?? []);
-    const nextPageIndex = currSort !== nextSort ? 1 : (event.pageIndex ?? form.value.pageIndex ?? 1);
+override onLazyLoadData(event: LazyLoadEvent, form: FormGroup): void {
+  // 1) 讀 event 的小寫
+  const evPageIndex = Number.isFinite(event.pageIndex) ? Number(event.pageIndex) : undefined;
+  const evPageSize  = Number.isFinite(event.pageSize)  ? Number(event.pageSize)  : undefined;
 
-    // 同步回表單（不觸發 valueChanges）
-    form.patchValue({
-      pageIndex: nextPageIndex,
-      pageSize: event.pageSize ?? form.value.pageSize,
-      SortBy: event.SortBy ?? form.value.SortBy,
-    }, { emitEvent: false });
+  // 2) 排序判斷：你的 LazyLoadEvent 若有 SortBy（大寫）就保留，否則讀 form 的 SortBy
+  const currSort = JSON.stringify(form.value?.SortBy ?? []);
+  const nextSort = JSON.stringify(event.SortBy ?? form.value.SortBy ?? []);
+  const nextPageIndex = currSort !== nextSort ? 1 : (evPageIndex ?? form.value.PageIndex ?? 1);
 
-    // 更新表頭排序狀態
-    this.sortMeta = (event.SortBy ?? []).map(s => ({ ...s }));
+  // 3) 只 patch 到表單中的「大寫」分頁鍵
+  form.patchValue({
+    SortBy: event.SortBy ?? form.value.SortBy ?? [],
+    PageIndex: nextPageIndex,
+    PageSize: evPageSize ?? form.value.PageSize ?? 20,
+  }, { emitEvent: false });
 
-    // 去重簽章，避免重複查詢
-    const sig = JSON.stringify({
-      pageIndex: form.value.pageIndex,
-      pageSize: form.value.pageSize,
-      SortBy: form.value.SortBy,
-    });
-    if (sig === this.lastQuerySig) return;
-    this.lastQuerySig = sig;
+  // 4) 更新排序 UI 狀態（沿用你原本的結構）
+  this.sortMeta = (event.SortBy ?? []).map(s => ({ ...s }));
 
-    // 只呼叫一次查詢
-    if (this.lazyTimer) clearTimeout(this.lazyTimer);
-    this.lazyTimer = setTimeout(() => this.onSubmit(form), 0);
-  }
+  // 5) 去重簽章（使用大寫鍵，確保和 payload 一致）
+  const sig = JSON.stringify({
+    PageIndex: form.value.PageIndex,
+    PageSize: form.value.PageSize,
+    SortBy: form.value.SortBy,
+  });
+  if (sig === this.lastQuerySig) return;
+  this.lastQuerySig = sig;
+
+  if (this.lazyTimer) clearTimeout(this.lazyTimer);
+  this.lazyTimer = setTimeout(() => this.onSubmit(form), 0);
+}
+
 
   // ===== 查詢 =====
   onSubmit(form: FormGroup): void {
@@ -265,43 +269,39 @@ export class TLS13030Component extends BasicQueryPageComponent<any> {
   }
 
   /** 組查詢 payload（含排序＆分頁鍵） */
-  private buildPayload(val: any) {
-    const pageSize = Number.isFinite(val?.pageSize) ? Number(val.pageSize) : 10;
-    const pageIndex = Number.isFinite(val?.pageIndex) ? Number(val.pageIndex) : 1;
-    const offset = Math.max(0, (pageIndex - 1) * pageSize);
+private buildPayload(val: any) {
+  const pageSize = Number.isFinite(val?.PageSize) ? Number(val.PageSize) : 10;
+  const pageIndex = Number.isFinite(val?.PageIndex) ? Number(val.PageIndex) : 1;
 
-    // 🔑 排序：表單 → sortMeta → defaultSort
-    const sortByArr = Array.isArray(val?.SortBy) && val.SortBy.length
-      ? val.SortBy
-      : (this.sortMeta.length ? this.sortMeta : this.defaultSort);
+  const sortByArr = Array.isArray(val?.SortBy) && val.SortBy.length
+    ? val.SortBy
+    : (this.sortMeta.length ? this.sortMeta : this.defaultSort);
 
-    const orderBy = sortByArr.length
-      ? sortByArr.map((s: any) => `${s.field} ${s.order === 1 ? 'ASC' : 'DESC'}`).join(',')
-      : undefined;
+  const o: any = { ...val };
 
-    const o: any = {
-      ...val,
-    };
-
-    if (this.includePagingAndSorting) {
-      Object.assign(o, {
-        PageSize: pageSize,
-        PageIndex: pageIndex,
-        Offset: offset,
-        SortBy: sortByArr,
-        ...(orderBy ? { OrderBy: orderBy } : {}),
-      });
-    }
-
-    // 清空 undefined / 空陣列 / 空字串
-    Object.keys(o).forEach(k => {
-      const v = o[k];
-      if (v === undefined || v === '') delete o[k];
-      if (Array.isArray(v) && v.length === 0) delete o[k];
+  if (this.includePagingAndSorting) {
+    Object.assign(o, {
+      PageSize: pageSize,
+      PageIndex: pageIndex,
+      SortBy: sortByArr,
     });
-
-    return o;
   }
+
+  // 🔎 主動移除小寫分頁鍵，避免後端看到兩份
+  delete o.pageSize;
+  delete o.pageIndex;
+
+  // 一般清理
+  Object.keys(o).forEach(k => {
+    const v = o[k];
+    if (v === undefined || v === '') delete o[k];
+    if (Array.isArray(v) && v.length === 0) delete o[k];
+  });
+
+  return o;
+}
+
+
 
   // ===== 後端回傳資料格式化 =====
   processResultData(resData: any[]): any[] {

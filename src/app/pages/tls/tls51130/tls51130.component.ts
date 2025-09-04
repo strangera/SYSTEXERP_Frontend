@@ -41,17 +41,14 @@ export class TLS51130Component extends BasicQueryPageComponent<any> {
   CAT_LOptions: any[] = [];
   LOGOOptions: any[] = [];
 
-  columns: any[] = [
-    { field: 'LOGO_No', header: '品牌', visible: true },
-    { field: 'CAT_LNo', header: '大分類編號', visible: true },
-    { field: 'CAT_LName', header: '大分類名稱', visible: true },
-    { field: 'CAT_MNo', header: '中分類編號', visible: true },
-    { field: 'CAT_MName', header: '中分類名稱', visible: true },
-    { field: 'CAT_SNo', header: '小分類編號', visible: true },
-    { field: 'CAT_SName', header: '小分類名稱', visible: true },
-    { field: 'PLU_OrderPrcRate', header: '進貨折數', visible: true },
-    { field: 'DISC_Remark', header: '備註', visible: true },
-  ];
+columns: any[] = [
+  { field: 'LOGO_No', header: '品牌', visible: true },
+  { field: 'CAT_LDisplay', header: '大分類編號/名稱', visible: true },
+  { field: 'CAT_MDisplay', header: '中分類編號/名稱', visible: true },
+  { field: 'CAT_SDisplay', header: '小分類編號/名稱', visible: true },
+  { field: 'PLU_OrderPrcRate', header: '進貨折數', visible: true },
+  { field: 'DISC_Remark', header: '備註', visible: true },
+];
 
   constructor(
     private TLS51130Service: TLS51130Service,
@@ -96,16 +93,28 @@ export class TLS51130Component extends BasicQueryPageComponent<any> {
     this.messageService.blockUi();
 
     this.TLS51130Service.queryTLS51130(formValue).subscribe({
-      next: (res: any) => {
-        if (res.Status === '0000') {
-          this.data = res.Data || [];
-          this.totalRecords = res.TotalCount || this.data.length;
-          
-          this.queryStateService.setQueryState(this.ProgNo, formValue);
-        } else {
-          this.messageService.errorBubble(res.Message || '查詢失敗');
-        }
-      },
+    next: (res: any) => {
+  if (res.Status === '0000') {
+    const combine = (code?: any, name?: any) => {
+      const a = (code ?? '').toString().trim();
+      const b = (name ?? '').toString().trim();
+      return a && b ? `${a}/${b}` : (a || b || '');
+    };
+
+    const raw = res.Data || [];
+    this.data = raw.map((r: any) => ({
+      ...r,
+      CAT_LDisplay: combine(r.CAT_LNo, r.CAT_LName),
+      CAT_MDisplay: combine(r.CAT_MNo, r.CAT_MName),
+      CAT_SDisplay: combine(r.CAT_SNo, r.CAT_SName),
+    }));
+
+    this.totalRecords = res.TotalCount || this.data.length;
+    this.queryStateService.setQueryState(this.ProgNo, formValue);
+  } else {
+    
+  }
+},
       error: () => {
         
         this.loading = false;
