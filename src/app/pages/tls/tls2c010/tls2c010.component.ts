@@ -62,6 +62,10 @@ export class TLS2C010Component extends BasicQueryPageComponent<any> implements O
       .pipe(untilDestroyed(this))
       .subscribe(response => {
         this.closeDate = response.Data.CLS_DATE || '';
+        // TXN_Date 為 closeDate + 1 天
+        const nextDate = new Date(this.closeDate);
+        nextDate.setDate(nextDate.getDate() + 1);
+        this.queryForm.patchValue({ TXN_Date: this.datePipe.transform(nextDate, 'yyyy/MM/dd') || '' });
       });
   }
 
