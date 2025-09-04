@@ -50,6 +50,7 @@ export class TableCaptionComponent extends BasicPrintDataComponent implements On
   @Input() expansionColumns: Column[] = [];  // 收合展開 欄位配置(expansion必需配置)
   @Input() expression = false;                      // 收合展開 狀態 (true:展開、false:收合)
   @Input() apiUrl?: string;                         // table API URL (可選)
+  @Input() disabled = false;                        // table 是否禁用
   // Header 相關
   @Input() showCaption = true;                // 是否顯示 Caption
   // Header(左) 相關
