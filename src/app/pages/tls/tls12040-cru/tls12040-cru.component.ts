@@ -314,28 +314,25 @@ export class TLS12040CRUComponent implements OnInit {
   ) { }
 
   ngOnInit() {
-    const cruData = this.flowService.getCruData() as any;
-    if (cruData) {
-      console.log('📋 取得暫存資料:', cruData);
+    // 先保護現有資料
+    const existingData = this.flowService.getCruData() as any;
 
-      // 先不要直接 patchValue，等載入完選項後再設值
-      // this.dataForm.patchValue(cruData); // ❌ 不要在這裡直接設值
-
-      // 載入暫存的位置資料
-      if (cruData.locationData && Array.isArray(cruData.locationData)) {
-        this.locationData = cruData.locationData;
-        this.updateDisplayLocationData();
-        console.log('📍 已載入暫存位置資料:', cruData.locationData.length);
-      }
-    }
-
-    // 先初始化下拉選項
     this.initializeDropdownOptions();
     this.handleRouterState();
 
-    // 🎯 在載入選項後再處理暫存資料
-    if (cruData) {
-      this.loadCachedFormData(cruData);
+    // 如果之前有資料，確保不被覆蓋
+    if (existingData && Object.keys(existingData).length > 0) {
+      this.loadCachedFormData(existingData);
+      if (existingData.locationData) {
+        this.locationData = existingData.locationData;
+        this.updateDisplayLocationData();
+      }
+      // 重新保存，確保不被清空
+      this.flowService.setCruData({
+        ...existingData,
+        ...this.dataForm.value,
+        locationData: this.locationData
+      });
     }
   }
 
@@ -744,7 +741,7 @@ export class TLS12040CRUComponent implements OnInit {
       state: { fromRoute: this.router.url },
     };
 
-    if (CRUDStatus.Read) {
+    if (this.crudstatus === CRUDStatus.Read) {
       this.router.navigate(['account/tls/tls12040'], extras);
       this.messageService.infoBubble('已退出檢視模式');
       return;
