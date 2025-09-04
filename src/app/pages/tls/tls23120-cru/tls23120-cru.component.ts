@@ -312,28 +312,27 @@ private getHeaderInfoByGroup(firstRow: any) {
     madeAt: this.printedAt || new Date().toLocaleString('zh-TW'),
     returnQty,
     returnAmt,
+    showBusType: this.showBusType,   // ← 新增：帶出是否顯示大分類
   };
 }
-/** 畫出某群組的表頭，回傳表格應開始的 Y 位置 */
-/** 畫出某群組的表頭，回傳表格應開始的 Y 位置 */
+
+
 private drawGroupHeaderOnce(
   doc: jsPDF,
   info: any,
   pageWidth: number,
   marginLeft: number,
-  currentY: number, // ← 新增
+  currentY: number,
 ): number {
   const leftX = marginLeft;
   const midX = leftX + 240;
   const rightX = pageWidth - marginLeft;
   const lineGap = 18;
 
-  // 最小安全頂部；實際起點：取「當前 Y」與安全頂部的較大值
   const safeTop = 40;
   let y = Math.max(currentY, safeTop + 10);
 
-  // 若剩餘空間不夠容納表頭（大約 90~110pt），先換頁再畫
-  const needed = 110; // 表頭大約高度
+  const needed = 110;
   const pageHeight = doc.internal.pageSize.getHeight();
   const remaining = pageHeight - y;
   if (remaining < needed) {
@@ -351,8 +350,11 @@ private drawGroupHeaderOnce(
 
   doc.setFontSize(10);
 
-  // 第1列
-  doc.text(`業種：${info.biz || '－'}`, leftX, y);
+  // 第1列（左：大分類／中：銷售日期／右：製表日期）
+  if (info.showBusType) {
+    doc.text(`大分類：${info.biz || '－'}`, leftX, y);
+  }
+  // 中、右固定在原座標，版面不會因為左側不畫而位移
   doc.text(`銷售日期：${info.salesDate || '－'}`, midX, y);
   doc.text(`製表日期：${info.madeAt}`, rightX, y, { align: 'right' });
   y += lineGap;
@@ -367,9 +369,9 @@ private drawGroupHeaderOnce(
   doc.text(`區域：${info.area || '－'}`, leftX, y);
   doc.text(`退貨金額：${info.returnAmt}`, rightX, y, { align: 'right' });
 
-  // 表格起始 Y（表頭下方再留一點距離）
   return y + 20;
 }
+
 
 
   /** 匯出 PDF（含配色：Header/斑馬紋/小計/總計） */
