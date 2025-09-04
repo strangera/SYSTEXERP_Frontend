@@ -318,21 +318,87 @@ export class TLS12040CRUComponent implements OnInit {
     if (cruData) {
       console.log('📋 取得暫存資料:', cruData);
 
-      // 分別處理表單資料和位置資料
-      this.dataForm.patchValue(cruData);
+      // 先不要直接 patchValue，等載入完選項後再設值
+      // this.dataForm.patchValue(cruData); // ❌ 不要在這裡直接設值
 
       // 載入暫存的位置資料
       if (cruData.locationData && Array.isArray(cruData.locationData)) {
         this.locationData = cruData.locationData;
         this.updateDisplayLocationData();
-        console.log('📍 已載入暫存位置資料:', this.locationData.length);
+        console.log('📍 已載入暫存位置資料:', cruData.locationData.length);
       }
     }
 
+    // 先初始化下拉選項
     this.initializeDropdownOptions();
     this.handleRouterState();
+
+    // 🎯 在載入選項後再處理暫存資料
+    if (cruData) {
+      this.loadCachedFormData(cruData);
+    }
   }
 
+  private loadCachedFormData(cruData: any): void {
+    console.log('🔄 開始載入暫存表單資料');
+
+    // 先設定基本欄位（不包括分類）
+    const basicData = { ...cruData };
+    delete basicData.bus_type;
+    delete basicData.bus_class;
+    delete basicData.bus_sclass;
+    delete basicData.locationData;
+
+    this.dataForm.patchValue(basicData);
+
+    // 如果有分類資料，按順序載入
+    if (cruData.bus_type) {
+      this.loadCachedClassifications(cruData);
+    }
+  }
+
+  private loadCachedClassifications(cruData: any): void {
+    console.log('🏷️ 載入暫存分類資料:', {
+      bus_type: cruData.bus_type,
+      bus_class: cruData.bus_class,
+      bus_sclass: cruData.bus_sclass
+    });
+
+    // 1. 先設定大分類
+    this.dataForm.patchValue({ bus_type: cruData.bus_type });
+
+    // 2. 載入中分類選項
+    if (cruData.bus_class) {
+      this.businessClassificationService.getBusClassOptions(cruData.bus_type).subscribe({
+        next: (busClassOptions) => {
+          this.busClassOptions = busClassOptions;
+          console.log('✅ 中分類選項載入完成:', busClassOptions.length);
+
+          // 設定中分類值
+          this.dataForm.patchValue({ bus_class: cruData.bus_class });
+
+          // 3. 載入小分類選項
+          if (cruData.bus_sclass) {
+            this.businessClassificationService.getBusSClassOptions(cruData.bus_type, cruData.bus_class).subscribe({
+              next: (busSClassOptions) => {
+                this.busSClassOptions = busSClassOptions;
+                console.log('✅ 小分類選項載入完成:', busSClassOptions.length);
+
+                // 設定小分類值
+                this.dataForm.patchValue({ bus_sclass: cruData.bus_sclass });
+              },
+              error: (error) => {
+                console.error('❌ 載入暫存小分類失敗:', error);
+              }
+            });
+          }
+        },
+        error: (error) => {
+          console.error('❌ 載入暫存中分類失敗:', error);
+        }
+      });
+    }
+  }
   private handleRouterState(): void {
     const state = this.router.lastSuccessfulNavigation?.extras?.state;
     if (state) {
@@ -600,9 +666,6 @@ export class TLS12040CRUComponent implements OnInit {
     // 固定選項不需要任何處理，直接通過 getter 使用
     // API 選項需要載入
     this.loadApiOptions();
-    this.businessClassificationService.getBusTypeOptions().subscribe(options => {
-      this.bustypeOptions = options;
-    });
   }
 
   private loadApiOptions() {
