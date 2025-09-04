@@ -103,6 +103,10 @@ columns: any[] = [
 
     const raw = res.Data || [];
     this.data = raw.map((r: any) => ({
+      // ✅ 保留後端回傳的 id
+      id: r.id,
+
+      // 其餘欄位
       ...r,
       CAT_LDisplay: combine(r.CAT_LNo, r.CAT_LName),
       CAT_MDisplay: combine(r.CAT_MNo, r.CAT_MName),
@@ -111,8 +115,6 @@ columns: any[] = [
 
     this.totalRecords = res.TotalCount || this.data.length;
     this.queryStateService.setQueryState(this.ProgNo, formValue);
-  } else {
-    
   }
 },
       error: () => {
