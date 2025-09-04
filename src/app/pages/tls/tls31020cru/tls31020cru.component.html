@@ -1,4 +1,10 @@
 <div class="card">
+  <div class="flex gap-2 mb-2">
+    <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>    
+    <app-button btnType="back" (click)="onCancel()"></app-button>
+  </div>
+</div>
+<div class="card">
   <app-table [data]="data" [columns]="columns" [totalRecords]="totalRecords" 
     [showReportMode]="false" [showManage]="false" [showReportMode]="false" [showDetail]="false"
     [multiSortMeta]="[{ field: 'tlt_building', order: 1 }]" [columnGroup]="columnGroup"
