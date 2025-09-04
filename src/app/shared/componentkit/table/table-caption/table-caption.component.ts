@@ -71,6 +71,7 @@ export class TableCaptionComponent extends BasicPrintDataComponent implements On
   @Input() showExcel = false;                      // 是否顯示 匯出Excel
   @Input() showExcelExport = true;                 // 是否顯示 匯出Excel按鈕
   @Input() showExcelImport = true;                 // 是否顯示 匯入Excel按鈕
+  @Input() showCustomExcelImport = false;         // 是否顯示 自訂匯入Excel按鈕
   @Output() exportExcel = new EventEmitter<any>(); // 匯出 Excel 事件
   @Input() exportExcelLoading = false;             // 匯出 Excel loading
   @Output() importExcel = new EventEmitter<FileSelectEvent>(); // 匯入 Excel 事件
@@ -149,8 +150,10 @@ export class TableCaptionComponent extends BasicPrintDataComponent implements On
     this.queryStateService.setQueryState(this.tableKey + 'Filter', this.columns);
   }
   onExportExcel() { this.exportExcel.emit(); }                      // 匯出Excel範本 事件
-  onImportExcel(event: FileSelectEvent) {                           // 匯入Excel
+  onImportExcel(event?: FileSelectEvent) {                           // 匯入Excel
     this.importExcel.emit(event);
-    this.fileUpload.clear();
+    if (event) {
+      this.fileUpload.clear();
+    }
   }
 }

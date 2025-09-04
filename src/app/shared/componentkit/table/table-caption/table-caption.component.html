@@ -36,6 +36,8 @@
       <p-fileUpload *ngIf="showExcelImport" #fileUpload styleClass="p-button-info" mode="basic"
         chooseIcon="pi pi-file-import" accept="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
         severity="info" (onSelect)="onImportExcel($event)" [auto]="true" chooseLabel="Excel匯入" />
+      <p-button *ngIf="showCustomExcelImport" severity="info" label="Excel匯入" [icon]="'pi pi-file-import'"
+        (click)="onImportExcel()" />
     </div>
     <p-dropdown *ngIf="showPage && IsPrint && data.length > 0" [options]="pages" [ngModel]="selectedPage"
       optionValue="value" (onChange)="pageChange.emit($event.value)" appendTo="body" [virtualScroll]="true"
