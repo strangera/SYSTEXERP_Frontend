@@ -159,7 +159,7 @@ export class ASS21020CRUComponent extends BasicCruPageComponent<ASS21020Data> im
   public onSubmit(): void {
     this.handleSubmit(this.dataForm, () => {
       const payload = this.filteredData().map<ASS21020Update>(i => ({
-        ENG_Type: this.service.engTypeSignal().find(f => this.df().ENG_Type.value === f.Name)?.No!,
+        ENG_Type: this.df().ENG_Type.value!,
         ENG_MeterNo: this.df().ENG_MeterNo.value!,
         TLT_No: i.TLT_No,
         ENG_Rate: i.ENG_Rate,
@@ -168,7 +168,7 @@ export class ASS21020CRUComponent extends BasicCruPageComponent<ASS21020Data> im
       this.service.updateASS21020(payload).pipe(
         finalize(() => {
           this.loading = !1;
-          this.logger.debug(`onSubmit:`, [this.dataForm, payload]);
+          this.logger.debug(`onSubmit:`, [this.dataForm.value, payload]);
         }),
         tap(res => {
           const stat = CRUDStatus.Create === this.crudstatus ? '新增' : '更新';
