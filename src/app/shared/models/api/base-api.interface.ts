@@ -6,8 +6,8 @@ export interface SortOption {
 export interface BaseQueryRequest {
   PageSize?: number;
   PageIndex?: number;
-  OrderBy?: string,
-  Offset?: number,
+  // OrderBy?: string,
+  // Offset?: number,
   SortBy?: SortOption[];
 }
 

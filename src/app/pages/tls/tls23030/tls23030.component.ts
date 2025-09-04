@@ -1,3 +1,4 @@
+// src/app/pages/tls/tls23030/tls23030.component.ts
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Component } from '@angular/core';
 import {
@@ -44,6 +45,7 @@ import { DialogModule } from 'primeng/dialog';
 import { RadioButtonModule } from 'primeng/radiobutton';
 import { TranslateModule } from '@ngx-translate/core';
 import { TableComponent } from '@shared/componentkit/table/table.component';
+import { Table2Component } from '@shared/componentkit/table2/table2.component';
 import { DropDownListService } from '@service/utility/dropDownList.service';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { ButtonModule } from 'primeng/button';
@@ -73,27 +75,33 @@ type DisplayMode = 'Report' | 'SummaryReport';
     DialogModule,
     RadioButtonModule,
     TranslateModule,
-    TableComponent,
+    TableComponent, // 彙總表
+    Table2Component, // 明細（小計/總計）
     CommonModule,
-    ButtonModule, // ✅ 匯出按鈕會用到 p-button
+    ButtonModule,
   ],
 })
 export class TLS23030Component extends BasicQueryPageComponent<any> {
+  // === 檢視狀態 ===
   showSummary = false;
 
+  // === 明細資料 ===
   data: any[] = [];
   totalRecords = 0;
 
+  // === 彙總資料 ===
   summaryData: any[] = [];
   summaryTotals = { totalPayAmt: 0, totalTaxAlwnc: 0 };
 
-  // ✅ 匯出相關
+  // 匯出
   btnLoading = false;
   historyRequestBody: any | null = null;
 
   // 排序狀態
   sortMeta: any[] = [];
+  readonly groupByField = 'PAY_NO'; // ⬅️ 以「付款別」分組顯示小計
   readonly defaultSort: any[] = [
+    { field: this.groupByField, order: 1 }, // 分組欄位放第一順位
     { field: 'TXN_Date', order: 1 },
     { field: 'ECR_No',   order: 1 },
     { field: 'TXN_No',   order: 1 },
@@ -139,15 +147,11 @@ export class TLS23030Component extends BasicQueryPageComponent<any> {
     tlt_building: [''],
     tlt_floor: [],
 
-    // ✅ 內建預設排序（與 defaultSort 同步）
-    ...createPaginationConfig([
-      { field: 'TXN_Date', order: 1 },
-      { field: 'ECR_No',   order: 1 },
-      { field: 'TXN_No',   order: 1 },
-    ]),
+    // 內建預設排序（與 defaultSort 同步）
+    ...createPaginationConfig(this.defaultSort),
   });
 
-  // ===== 欄位 =====
+  // ===== 欄位（在金額欄位標記 isTotal/isSubTotal） =====
   columns: any[] = [
     { field: 'TXN_Date', header: '銷售日期', visible: true, format: (val: string) => this.formatDate(val) },
     { field: 'ECR_No', header: '收銀機號', visible: true },
@@ -155,9 +159,26 @@ export class TLS23030Component extends BasicQueryPageComponent<any> {
     { field: 'tlt_no', header: '專櫃編號', visible: true },
     { field: 'tlt_name', header: '櫃位名稱', visible: true, style: 'text-left' },
     { field: 'TXN_StatusName', header: '交易型態', visible: true },
+    { field: 'PAY_NO', header: '付款別代號', visible: false },
     { field: 'PAY_NAME', header: '付款別', visible: true },
-    { field: 'TXN_PayAmt', header: '金額', visible: true, style: 'text-right', format: (val: number) => this.formatNumber(val) },
-    { field: 'TXN_TaxAlwnc', header: '備抵稅額', visible: true, style: 'text-right', format: (val: number) => this.formatNumber(val) },
+    {
+      field: 'TXN_PayAmt',
+      header: '金額',
+      visible: true,
+      style: 'text-right',
+      format: (val: number) => this.money(val),
+      isTotal: true,
+      isSubTotal: true,
+    },
+    {
+      field: 'TXN_TaxAlwnc',
+      header: '備抵稅額',
+      visible: true,
+      style: 'text-right',
+      format: (val: number) => this.money(val),
+      isTotal: true,
+      isSubTotal: true,
+    },
     { field: 'TXN_GUIBegNo', header: '發票號碼', visible: true },
     { field: 'TXN_Time', header: '交易時間', visible: true, format: (val: string) => this.formatDateTime(val) },
     { field: 'CRD_Name', header: '信用卡別', visible: true },
@@ -184,8 +205,8 @@ export class TLS23030Component extends BasicQueryPageComponent<any> {
     { field: 'tlt_name',     header: '櫃位名稱',  visible: true, style: 'text-left' },
     { field: 'PAY_NO',       header: '付款別代號', visible: true },
     { field: 'PAY_NAME',     header: '付款別',    visible: true },
-    { field: 'TXN_PayAmt',   header: '金額',      visible: true, style: 'text-right', format: (n: number) => this.formatNumber(n) },
-    { field: 'TXN_TaxAlwnc', header: '備抵稅額',  visible: true, style: 'text-right', format: (n: number) => this.formatNumber(n) },
+    { field: 'TXN_PayAmt',   header: '金額',      visible: true, style: 'text-right', format: (n: number) => this.money(n) },
+    { field: 'TXN_TaxAlwnc', header: '備抵稅額',  visible: true, style: 'text-right', format: (n: number) => this.money(n) },
     { field: 'org_id',       header: '組織編號',  visible: true },
     { field: 'Org_Name',     header: '組織名稱',  visible: true },
   ];
@@ -214,6 +235,19 @@ export class TLS23030Component extends BasicQueryPageComponent<any> {
     { value: '1', label: '已開' },
     { value: '0', label: '未開' },
   ];
+
+  // ===== 小計/總計容器（對應後端鍵名） =====
+  detailTotals: Record<string, number> = {};
+  detailTotalFieldMap: Record<string, string> = {
+    TXN_PayAmt: 'Total_TXN_PayAmt',
+    TXN_TaxAlwnc: 'Total_TXN_TaxAlwnc',
+  };
+
+  detailSubtotals: Record<string, Record<string, number>> = {};
+  detailSubtotalFieldMap: Record<string, string> = {
+    TXN_PayAmt: 'SubTotal_TXN_PayAmt',
+    TXN_TaxAlwnc: 'SubTotal_TXN_TaxAlwnc',
+  };
 
   constructor(
     private whetherService: WhetherService,
@@ -250,7 +284,7 @@ export class TLS23030Component extends BasicQueryPageComponent<any> {
   ngOnInit(): void {
     this.initializePage('TLS23030', 'tls/tls23030cru', this.queryForm, (form) => this.onSubmit(form));
 
-    // ✅ 初始化排序狀態並同步到表單
+    // 初始化排序狀態並同步到表單
     this.sortMeta = this.defaultSort.map(x => ({ ...x }));
     this.queryForm.patchValue({ SortBy: this.sortMeta }, { emitEvent: false });
 
@@ -297,19 +331,19 @@ export class TLS23030Component extends BasicQueryPageComponent<any> {
 
   /** 表格 lazy 事件（分頁/排序） */
   override onLazyLoadData(event: LazyLoadEvent, form: FormGroup): void {
+    const nextSort = this.ensureGroupFirst(event.SortBy ?? []);
     const currSort = JSON.stringify(form.value?.SortBy ?? []);
-    const nextSort = JSON.stringify(event.SortBy ?? []);
-    const nextPageIndex = currSort !== nextSort ? 1 : (event.pageIndex ?? form.value.pageIndex ?? 1);
+    const nextSortStr = JSON.stringify(nextSort);
+    const nextPageIndex = currSort !== nextSortStr ? 1 : (event.pageIndex ?? form.value.pageIndex ?? 1);
 
-    // 不觸發 valueChanges
     form.patchValue({
       pageIndex: nextPageIndex,
       pageSize : event.pageSize ?? form.value.pageSize,
-      SortBy   : event.SortBy ?? form.value.SortBy,
+      SortBy   : nextSort,
     }, { emitEvent: false });
 
     // 更新表頭排序狀態
-    this.sortMeta = (event.SortBy ?? []).map(s => ({ ...s }));
+    this.sortMeta = nextSort.map(s => ({ ...s }));
 
     // 去重簽章（避免重複請求）
     const sig = JSON.stringify({
@@ -363,17 +397,14 @@ export class TLS23030Component extends BasicQueryPageComponent<any> {
     // 分頁
     const pageSize  = Number.isFinite(raw?.pageSize)  ? Number(raw.pageSize)  : 10;
     const pageIndex = Number.isFinite(raw?.pageIndex) ? Number(raw.pageIndex) : 1;
-    const offset    = Math.max(0, (pageIndex - 1) * pageSize);
 
-    // 🔑 排序：表單 → sortMeta → defaultSort
-    const sortByArr = (Array.isArray(raw?.SortBy) && raw.SortBy.length
-      ? raw.SortBy
-      : (this.sortMeta.length ? this.sortMeta : this.defaultSort)
+
+    // 排序：確保分組欄位優先
+    const sortByArr = this.ensureGroupFirst(
+      (Array.isArray(raw?.SortBy) && raw.SortBy.length ? raw.SortBy : (this.sortMeta.length ? this.sortMeta : this.defaultSort))
     ).map((s: any) => ({ ...s }));
 
-    const orderBy = sortByArr.length
-      ? sortByArr.map((s: any) => `${s.field} ${s.order === 1 ? 'ASC' : 'DESC'}`).join(',')
-      : undefined;
+
 
     // 最終 payload（去除空值/空陣列）
     const payload: any = {
@@ -404,9 +435,9 @@ export class TLS23030Component extends BasicQueryPageComponent<any> {
       Object.assign(payload, {
         pageSize,
         pageIndex,
-        Offset:  offset,
+
         SortBy:  sortByArr,
-        ...(orderBy ? { OrderBy: orderBy } : {}),
+
       });
     }
 
@@ -416,13 +447,13 @@ export class TLS23030Component extends BasicQueryPageComponent<any> {
       if (Array.isArray(v) && v.length === 0) delete payload[k];
     });
 
-    // ✅ 匯出沿用同一包參數
+    // 匯出沿用同一包參數
     this.historyRequestBody = { ...payload };
 
     const done = () => (this.loading = false);
 
     if (this.showSummary) {
-      // ✅ 彙總查詢
+      // ✅ 彙總查詢（維持原本）
       this.tls23030Service.queryTLS23030Summary(payload)
         .pipe(
           timeout(60_000),
@@ -455,26 +486,88 @@ export class TLS23030Component extends BasicQueryPageComponent<any> {
           this.totalRecords = this.summaryData.length;
         });
 
-    } else {
-      // ✅ 明細查詢
-      this.tls23030Service.queryTLS23030(payload)
-        .pipe(
-          timeout(60_000),
-          catchError(err => {
-            console.error('TLS23030 查詢失敗:', err);
-            this.data = [];
-            this.totalRecords = 0;
-            return of({ Data: [], TotalCount: 0 } as any);
-          }),
-          finalize(done)
-        )
-        .subscribe((res: any) => {
-          const details = this.extractTLS23030Details(res);
-          this.data = details;
-          this.summaryData = [];
-          this.totalRecords = typeof res?.TotalCount === 'number' ? res.TotalCount : (details?.length ?? 0);
-        });
+      return;
     }
+
+    // ✅ 明細查詢（加入小計/總計）
+    this.tls23030Service.queryTLS23030(payload)
+      .pipe(
+        timeout(60_000),
+        catchError(err => {
+          console.error('TLS23030 查詢失敗:', err);
+          this.data = [];
+          this.totalRecords = 0;
+          // 清掉加總容器
+          this.detailTotals = {};
+          this.detailSubtotals = {};
+          return of({ Data: [], TotalCount: 0 } as any);
+        }),
+        finalize(done)
+      )
+      .subscribe((res: any) => {
+        // wrappers 可能是 array or object
+        const wrappers = Array.isArray(res?.Data) ? res.Data : (res?.Data ? [res.Data] : []);
+        const pageRows: any[] = [];
+
+        // 後端總計聚合
+        const totalAgg = {
+          Total_TXN_PayAmt: 0,
+          Total_TXN_TaxAlwnc: 0,
+        };
+
+        // 小計：以付款別（PAY_NO）為 group key
+        const subMap: Record<string, Record<string, number>> = {};
+
+        for (const w of wrappers) {
+          totalAgg.Total_TXN_PayAmt += Number(w?.Total_TXN_PayAmt ?? 0);
+          totalAgg.Total_TXN_TaxAlwnc += Number(w?.Total_TXN_TaxAlwnc ?? 0);
+
+          const subTotals = w?.tLS23030_SubTotals ?? w?.TLS23030_SubTotals ?? w?.tls23030_SubTotals ?? [];
+          if (!Array.isArray(subTotals)) continue;
+
+          for (const st of subTotals) {
+            const details = st?.tLS23030_Details ?? st?.TLS23030_Details ?? st?.tls23030_Details ?? [];
+            // 以第一筆明細的 PAY_NO 當作群組鍵（和 [groupRowsBy]="PAY_NO" 對齊）
+            const groupKey = String(details?.[0]?.PAY_NO ?? 'UNKNOWN');
+
+            const curr = subMap[groupKey] ?? {
+              SubTotal_TXN_PayAmt: 0,
+              SubTotal_TXN_TaxAlwnc: 0,
+            };
+            curr['SubTotal_TXN_PayAmt']  += Number(st?.SubTotal_TXN_PayAmt ?? 0);
+            curr['SubTotal_TXN_TaxAlwnc']+= Number(st?.SubTotal_TXN_TaxAlwnc ?? 0);
+            subMap[groupKey] = curr;
+
+            // 當頁明細
+            for (let i = 0; i < details.length; i++) {
+              const item = details[i];
+              const dateKey = String(item.TXN_Date ?? '').slice(0, 19);
+              const key = `${dateKey}|${item.ECR_No ?? ''}|${item.TXN_No ?? ''}`;
+              pageRows.push({ ...item, _rowKey: key });
+            }
+          }
+        }
+
+        // 表格資料
+        this.data = pageRows;
+        this.summaryData = [];
+
+        // 總筆數（兼容多種位置）
+        const candidates = [
+          res?.TotalCount,
+          res?.Data?.TotalCount,
+          Array.isArray(res?.Data) ? res?.Data?.[0]?.TotalCount : undefined,
+          wrappers?.[0]?.TotalCount,
+        ];
+        const firstValid = candidates
+          .map((n) => Number(n))
+          .find((n) => Number.isFinite(n) && n >= 0);
+        this.totalRecords = firstValid ?? pageRows.length;
+
+        // 餵給 app-table2 的總計/小計
+        this.detailTotals = totalAgg;
+        this.detailSubtotals = subMap;
+      });
   }
 
   /** yyyy-MM-dd */
@@ -488,15 +581,6 @@ export class TLS23030Component extends BasicQueryPageComponent<any> {
           .padStart(2, '0')}`;
   }
 
-  /** 把回傳物件中的 tLS23030_Details 全部攤平 */
-  private extractTLS23030Details(res: any): any[] {
-    const data = Array.isArray(res?.Data) ? res.Data : [];
-    return data.flatMap((grp: any) =>
-      (Array.isArray(grp?.tLS23030_SubTotals) ? grp.tLS23030_SubTotals : [])
-        .flatMap((st: any) => (Array.isArray(st?.tLS23030_Details) ? st.tLS23030_Details : []))
-    );
-  }
-
   private toBoolOrNull(v: any): boolean | null {
     if (typeof v === 'boolean') return v;
     if (v == null || v === '') return null;
@@ -506,11 +590,6 @@ export class TLS23030Component extends BasicQueryPageComponent<any> {
   }
 
   // ===== 工具 =====
-  getLabelFromOptions(value: any, options: any[]): string {
-    const found = options?.find((opt) => String(opt.value) === String(value));
-    return found ? found.label : value;
-  }
-
   private formatDate(val: string): string {
     const date = new Date(val);
     if (isNaN(date.getTime())) return val;
@@ -528,8 +607,8 @@ export class TLS23030Component extends BasicQueryPageComponent<any> {
     return `${yyyy}/${MM}/${dd} ${HH}:${mm}`;
   }
 
-  private formatNumber(val: number): string {
-    return (val ?? 0).toLocaleString('en-US');
+  money(val: number): string {
+    return Number(val ?? 0).toLocaleString('en-US');
   }
 
   // 切換明細/彙總：回到第一頁並重查
@@ -538,34 +617,52 @@ export class TLS23030Component extends BasicQueryPageComponent<any> {
     this.onSubmit(this.queryForm);
   }
 
-  // ========= 匯出 =========
-  onExportPDF() {
-    if (!this.historyRequestBody) {
-      this.messageService?.warnBubble?.('請先執行查詢以產生報表。');
-      return;
-    }
-    this.btnLoading = true;
-    this.tls23030Service
-      .exportTLS23030PDF(this.historyRequestBody)
-      .pipe(untilDestroyed(this), finalize(() => (this.btnLoading = false)))
-      .subscribe({
-        next: (response: HttpResponse<Blob>) => this.handleFileExport(response, '.pdf'),
-      });
+  private ensureGroupFirst(sortBy: any[] | undefined): any[] {
+    const g = this.groupByField;
+    const list = Array.isArray(sortBy) ? [...sortBy] : [];
+    const exist = list.find((s) => s.field === g);
+    const rest = list.filter((s) => s.field !== g);
+    const order = exist?.order ?? 1; // 預設 ASC
+    return [{ field: g, order }, ...rest];
   }
 
-  onExportXLSX() {
-    if (!this.historyRequestBody) {
-      this.messageService?.warnBubble?.('請先執行查詢以產生報表。');
-      return;
-    }
-    this.btnLoading = true;
-    this.tls23030Service
-      .exportTLS23030Excel(this.historyRequestBody)
-      .pipe(untilDestroyed(this), finalize(() => (this.btnLoading = false)))
-      .subscribe({
-        next: (response: HttpResponse<Blob>) => this.handleFileExport(response, '.xlsx'),
-      });
+  // ========= 匯出 =========
+onExportPDF() {
+  if (!this.historyRequestBody) {
+    this.messageService?.warnBubble?.('請先執行查詢以產生報表。');
+    return;
   }
+  this.btnLoading = true;
+
+  const obs = this.showSummary
+    ? this.tls23030Service.exportTLS23030SummaryPDF(this.historyRequestBody)
+    : this.tls23030Service.exportTLS23030PDF(this.historyRequestBody);
+
+  obs.pipe(untilDestroyed(this), finalize(() => (this.btnLoading = false)))
+     .subscribe({
+       next: (response: HttpResponse<Blob>) =>
+         this.handleFileExport(response, '.pdf'),
+     });
+}
+
+onExportXLSX() {
+  if (!this.historyRequestBody) {
+    this.messageService?.warnBubble?.('請先執行查詢以產生報表。');
+    return;
+  }
+  this.btnLoading = true;
+
+  const obs = this.showSummary
+    ? this.tls23030Service.exportTLS23030SummaryExcel(this.historyRequestBody)
+    : this.tls23030Service.exportTLS23030Excel(this.historyRequestBody);
+
+  obs.pipe(untilDestroyed(this), finalize(() => (this.btnLoading = false)))
+     .subscribe({
+       next: (response: HttpResponse<Blob>) =>
+         this.handleFileExport(response, '.xlsx'),
+     });
+}
+
 
   private handleFileExport(response: HttpResponse<Blob>, fileExtension: string): void {
     const contentDisposition = response.headers.get('Content-Disposition');

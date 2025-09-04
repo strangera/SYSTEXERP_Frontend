@@ -25,14 +25,14 @@
         class="p-button-sm p-button-success"
       ></button>
 
-      <button
+      <!-- <button
         pButton
         type="button"
         label="列印"
         icon="pi pi-print"
         (click)="printPage()"
         class="p-button-sm p-button-secondary"
-      ></button>
+      ></button> -->
 
       <button
         pButton
@@ -79,15 +79,13 @@
           專櫃：{{ group.rows[0]?.TLT_NO }} / {{ group.rows[0]?.tlt_name }}
         </div>
         <div class="col-12 md:col-6 lg:col-4">
-          樓層：{{ group.rows[0]?.FLOOR_NO ?? "－" }}
+          樓層：{{ group.rows[0]?.floor_desc ?? "－" }}
           <span class="text-blue-600 ml-2">抽成類別：</span>
           <span class="text-red-600">{{ group.rows[0]?.TLT_ID ?? "無" }}</span>
         </div>
-        <div class="col-12 md:col-6 lg:col-4">
-          交易總件數：{{ group?.rows?.length ?? 0 }} / 退貨件數：{{
-            group.rows[0]?.return_qty ?? 0
-          }}
-        </div>
+     <div class="col-12 md:col-6 lg:col-4">
+  交易總件數：{{ group.rows[0]?.total_count ?? 0 }} / 退貨件數：{{ group.rows[0]?.return_qty ?? 0 }}
+</div>
        
         <div class="col-12 md:col-6 lg:col-4">
           區域：{{ group.rows[0]?.AREA_NO ?? "－" }}

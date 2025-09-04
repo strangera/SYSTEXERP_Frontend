@@ -149,6 +149,25 @@ exportTLS23010PDF(body: TLS23010QueryRequest): Observable<HttpResponse<Blob>> {
     responseType: 'blob' as 'json',
   }) as Observable<HttpResponse<Blob>>;
 }
+/** 匯出 Excel（彙總，不分頁） */
+exportTLS23010SummaryExcel(body: TLS23010QueryRequest): Observable<HttpResponse<Blob>> {
+  const url = `${this.apiUrl}/TLS0000/TLS2000/exportTLS23010_Summary`;
+  const payload = this.stripPaging(body);
+  return this.http.post(url, payload, {
+    observe: 'response',
+    responseType: 'blob' as 'json',
+  }) as Observable<HttpResponse<Blob>>;
+}
+
+/** 匯出 PDF（彙總，不分頁） */
+exportTLS23010SummaryPDF(body: TLS23010QueryRequest): Observable<HttpResponse<Blob>> {
+  const url = `${this.apiUrl}/TLS0000/TLS2000/exportTLS23010_SummaryPDF`;
+  const payload = this.stripPaging(body);
+  return this.http.post(url, payload, {
+    observe: 'response',
+    responseType: 'blob' as 'json',
+  }) as Observable<HttpResponse<Blob>>;
+}
 
   /**
    * 工具：移除分頁相關欄位（匯出不需要）

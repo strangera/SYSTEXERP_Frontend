@@ -89,6 +89,26 @@ export class TLS23030Service {
       responseType: 'blob' as 'json',
     }) as Observable<HttpResponse<Blob>>;
   }
+  
+/** 匯出 Excel（彙總，不分頁） */
+exportTLS23030SummaryExcel(body: any): Observable<HttpResponse<Blob>> {
+  const url = `${this.apiUrl}/TLS0000/TLS2000/exportTLS23030_Summary`;
+  const payload = this.stripPaging(body);
+  return this.http.post(url, payload, {
+    observe: 'response',
+    responseType: 'blob' as 'json',
+  }) as Observable<HttpResponse<Blob>>;
+}
+
+/** 匯出 PDF（彙總，不分頁） */
+exportTLS23030SummaryPDF(body: any): Observable<HttpResponse<Blob>> {
+  const url = `${this.apiUrl}/TLS0000/TLS2000/exportTLS23030_SummaryPDF`;
+  const payload = this.stripPaging(body);
+  return this.http.post(url, payload, {
+    observe: 'response',
+    responseType: 'blob' as 'json',
+  }) as Observable<HttpResponse<Blob>>;
+}
 
   /** 匯出不需要分頁鍵（保留 SortBy 讓後端能照前端排序） */
   private stripPaging<T extends Record<string, any>>(input: T): Omit<T, 'PageSize' | 'PageIndex' | 'OrderBy' | 'Offset'> {

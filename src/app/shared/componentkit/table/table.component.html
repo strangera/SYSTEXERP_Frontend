@@ -24,9 +24,10 @@
       [showCaption]="showCaption" [showHeader]="showHeader" [showFilter]="showFilter" [showReportMode]="showReportMode"
       [showInsert]="showInsert" [insertDisabled]="insertDisabled" [deleteData]="deleteData" [showDelete]="showDelete"
       [deleteIcon]="deleteIcon" [deletepTooltip]="deletepTooltip" [showExcel]="showExcel" [disabled]="disabled"
-      [showExcelExport]="showExcelExport" [showExcelImport]="showExcelImport" [exportExcelLoading]="exportExcelLoading"
-      [showPage]="showPage" [totalPages]="totalPages" [pages]="pages" [selectedPage]="selectedPage" [rows]="rows"
-      [first]="first" (insert)="insertRow()" (delete)="deleteRow($event)" (exportExcel)="exportExcel.emit()"
+      [showExcelExport]="showExcelExport" [showExcelImport]="showExcelImport"
+      [showCustomExcelImport]="showCustomExcelImport" [exportExcelLoading]="exportExcelLoading" [showPage]="showPage"
+      [totalPages]="totalPages" [pages]="pages" [selectedPage]="selectedPage" [rows]="rows" [first]="first"
+      (insert)="insertRow()" (delete)="deleteRow($event)" (exportExcel)="exportExcel.emit()"
       (importExcel)="importExcel.emit($event)" (pageChange)="goToPage($event)" [totalRecords]="dt.totalRecords"
       [apiUrl]="apiUrl" [customReport]="customReport" (exportEvent)="exportEvent.emit($event)"
       [showExpandCollapse]="showExpandCollapse">
