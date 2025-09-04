@@ -1363,6 +1363,16 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
 
       console.log(`複製完成: ${originalItem.cap_item} → ${newId}`, copiedItem);
 
+      console.log('複製後的項目詳細資訊：', {
+        id: copiedItem.id,
+        is_selected: copiedItem.is_selected,
+        _status: copiedItem._status,
+        _editing: (copiedItem as any)._editing,
+        _isEditing: (copiedItem as any)._isEditing,
+        editing: (copiedItem as any).editing,
+        _isNewRow: (copiedItem as any)._isNewRow
+      });
+
     } catch (error) {
       console.error('複製扣款項目時發生錯誤:', error);
       this.messageService.warnBubble('複製扣款項目失敗，請重試');

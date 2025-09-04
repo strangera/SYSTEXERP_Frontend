@@ -31,6 +31,7 @@ import { SHARED_DROPDOWN_OPTIONS } from '@shared/constants/business.constants';
 import { Tls12040FareCalculationService } from './services/tls12040-fare-calculation.service';
 import { Tls12040FareValidationService } from './services/tls12040-fare-validation.service';
 import { LocationOptionsService } from '@service/api/dropdownservice/location-options.service';
+import { Tls12040FareDataService } from './services/tls12040-fare-data.service';
 
 interface CategoryItem {
   id: number;
@@ -91,6 +92,8 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
     private fareStatusService: Tls12040FareStatusService, //狀態管理服務
     private cdr: ChangeDetectorRef,
     private fareValidationService: Tls12040FareValidationService,
+    private fareDataService: Tls12040FareDataService,
+
     private fareCalculationService: Tls12040FareCalculationService,
 
     private locationOptionsService: LocationOptionsService,
@@ -515,26 +518,22 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
   }
 
   // 過濾顯示資料
-  private filterData(): void {
-    console.log('開始過濾資料，顯示模式:', this.showMode);
+  filterData(): void {
+    console.log('【DEBUG】originalFareData:', this.originalFareData);
+    this.initializeDataStructure();
 
-    const capTypes = ['A', 'B', 'C', 'D', 'E'];
+    // 🆕 使用資料服務進行過濾
+    this.fareData = this.fareDataService.filterDataByMode(this.originalFareData, this.showMode);
 
-    capTypes.forEach(capType => {
-      if (this.showMode === 'all') {
-        // 全部模式：顯示所有資料
-        this.fareData[capType] = [...this.originalFareData[capType]];
-      } else {
-        // 常用模式：顯示已選中的 + 前幾個常用的
-        const selectedItems = this.originalFareData[capType].filter(item => item.is_selected);
-        const unselectedItems = this.originalFareData[capType]
-          .filter(item => !item.is_selected)
-          .slice(0, 5); // 只顯示前5個
-
-        this.fareData[capType] = [...selectedItems, ...unselectedItems];
-      }
-
-      console.log(`${capType} 類型過濾後：${this.fareData[capType].length} 筆`);
+    console.log('🔍 過濾後結果:', {
+      顯示模式: this.showMode,
+      各類型數量: Object.keys(this.fareData).reduce((acc, type) => {
+        acc[type] = {
+          總數: this.fareData[type].length,
+          已勾選: this.fareData[type].filter(item => item.is_selected).length
+        };
+        return acc;
+      }, {} as any)
     });
   }
 
@@ -1033,11 +1032,22 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
 
       console.log(`複製完成: ${originalItem.cap_item} → ${newId}`, copiedItem);
 
+      console.log('複製後的項目詳細資訊：', {
+        id: copiedItem.id,
+        is_selected: copiedItem.is_selected,
+        _status: copiedItem._status,
+        _editing: (copiedItem as any)._editing,
+        _isEditing: (copiedItem as any)._isEditing,
+        editing: (copiedItem as any).editing,
+        _isNewRow: (copiedItem as any)._isNewRow
+      });
+
     } catch (error) {
       console.error('複製扣款項目時發生錯誤:', error);
       this.messageService.warnBubble('複製扣款項目失敗，請重試');
     }
   }
+
 
   private isValidDateRange(date: Date): boolean {
     if (!date || isNaN(date.getTime())) {
@@ -1356,8 +1366,14 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
   }
   onFareTableEdit(rowData: any, capType: string): void {
     console.log(`開始編輯 ${capType} 類型扣款資料:`, rowData);
-    // this.ensureDefaultValues(rowData, capType);
+    this.ensureDefaultValues(rowData, capType);
   }
+
+  private ensureDefaultValues(item: any, capType: string): void {
+    // 🆕 使用資料服務套用預設值
+    this.fareDataService.applyDynamicDefaults(item, this.contractInfoData);
+  }
+
 
   onFareTableCancel(rowData: any, capType: string): void {
     console.log(`取消編輯 ${capType} 類型扣款資料:`, rowData);
