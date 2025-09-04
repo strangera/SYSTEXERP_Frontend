@@ -39,7 +39,6 @@ import { ASS21020CRUTable, ASS21020Data, ASS21020Update } from '../ass21020/ass2
 })
 export class ASS21020CRUComponent extends BasicCruPageComponent<ASS21020Data> implements OnInit {
   public readonly CRUDStatus = CRUDStatus;
-  public tableEditing = !1;
   private readonly ratePtn = /^(100|[1-9]?[0-9])(\.[0-9]{1,2})?$/;
 
   public readonly dataForm = this.formBuilder.nonNullable.group({
@@ -148,7 +147,6 @@ export class ASS21020CRUComponent extends BasicCruPageComponent<ASS21020Data> im
 
   public onRowEditInit(event: any): void {
     this.logger.debug(`onRowEditInit:`, [event]);
-    this.tableEditing = !0;
     if (!this.df().ENG_MeterNo.value) return;
   }
 
@@ -159,7 +157,7 @@ export class ASS21020CRUComponent extends BasicCruPageComponent<ASS21020Data> im
   public onSubmit(): void {
     this.handleSubmit(this.dataForm, () => {
       const payload = this.filteredData().map<ASS21020Update>(i => ({
-        ENG_Type: this.service.engTypeSignal().find(f => this.df().ENG_Type.value === f.Name)?.No!,
+        ENG_Type: this.df().ENG_Type.value!,
         ENG_MeterNo: this.df().ENG_MeterNo.value!,
         TLT_No: i.TLT_No,
         ENG_Rate: i.ENG_Rate,
@@ -168,13 +166,12 @@ export class ASS21020CRUComponent extends BasicCruPageComponent<ASS21020Data> im
       this.service.updateASS21020(payload).pipe(
         finalize(() => {
           this.loading = !1;
-          this.logger.debug(`onSubmit:`, [this.dataForm, payload]);
+          this.logger.debug(`onSubmit:`, [this.dataForm.value, payload]);
         }),
         tap(res => {
           const stat = CRUDStatus.Create === this.crudstatus ? '新增' : '更新';
           if (!res.IsUpdateSuccess) return this.messageService.errorBubble(res.ErrorMsg, `${stat}失敗`);
           this.onCancel();
-          this.tableEditing = !1;
           this.messageService.successBubble(`${stat}成功`);
           this.service.loadASS21020({ ENG_MeterNo: this.df().ENG_MeterNo.value! });
         })).subscribe();

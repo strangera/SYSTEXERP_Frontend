@@ -11,6 +11,7 @@ import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdow
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { NgIf } from '@angular/common';
 import { TranslateModule } from '@ngx-translate/core';
+import { tap } from 'rxjs';
 
 
 @Component({
@@ -37,6 +38,7 @@ export class TLS51130CRUComponent extends BasicCruPageComponent<any> implements 
   CAT_SOptions: any[] = [];
 
   dataForm = this.formBuilder.nonNullable.group({
+     id: [0],    
     LOGO_No: ['', Validators.required],
     CAT_LNo: ['', Validators.required],
     CAT_MNo: [''],
@@ -52,120 +54,166 @@ export class TLS51130CRUComponent extends BasicCruPageComponent<any> implements 
   ) {
     super();
   }
+  private loadMOptions(catLNo: string) {
+  const param = { CAT_LNo: [catLNo] };
+  return this.dropDownListService.queryPOS20031_DropDownList(param).pipe(
+    tap((res: any) => {
+      const nestedData = res?.Data || [];
+      this.CAT_MOptions = nestedData.map((item: any) => ({
+        label: `${item.No?.toString().trim()}/${item.Name?.toString().trim()}`.replace(/^\/|\/$/g, ''),
+        value: item.No,
+      }));
+    })
+  );
+}
+
+private loadSOptions(catLNo: string, catMNo: string) {
+  const param = { CAT_LNo: [catLNo], CAT_MNo: [catMNo] };
+  return this.dropDownListService.queryPOS20032_DropDownList(param).pipe(
+    tap((res: any) => {
+      const nestedData = res?.Data || [];
+      this.CAT_SOptions = nestedData.map((item: any) => ({
+        label: `${item.No?.toString().trim()}/${item.Name?.toString().trim()}`.replace(/^\/|\/$/g, ''),
+        value: item.No,
+      }));
+    })
+  );
+}
 
   ngOnInit(): void {
-    this.initializePage('TLS51130', this.dataForm);
+  this.initializePage('TLS51130', this.dataForm);
 
+  // 小工具：把 code/name 合併成 "code/name"
+  const combine = (code?: any, name?: any) => {
+    const a = (code ?? '').toString().trim();
+    const b = (name ?? '').toString().trim();
+    return a && b ? `${a}/${b}` : (a || b || '');
+  };
 
-    this.dropDownListService.queryPLULOGO_HOS_No_DropDownList().subscribe((res) => {
-      const nestedData = res?.Data || [];
-      this.LOGOOptions = nestedData.map((item) => ({
-        label: item.Name,
-        value: item.No,
-      }));
-    });
+  // 品牌（如也想合併可改成 label: combine(item.No, item.Name)）
+  this.dropDownListService.queryPLULOGO_HOS_No_DropDownList().subscribe((res) => {
+    const nestedData = res?.Data || [];
+    this.LOGOOptions = nestedData.map((item: any) => ({
+      label: item.Name,
+      value: item.No,
+    }));
+  });
 
-    // 初始化大分類
-    this.dropDownListService.queryPOS2003_DropDownList().subscribe((res) => {
-      const nestedData = res?.Data || [];
-      this.CAT_LOptions = nestedData.map((item) => ({
-        label: item.Name,
-        value: item.No,
-      }));
-    });
+  // 初始化大分類：label 顯示 "編號/名稱"
+  this.dropDownListService.queryPOS2003_DropDownList().subscribe((res) => {
+    const nestedData = res?.Data || [];
+    this.CAT_LOptions = nestedData.map((item: any) => ({
+      label: combine(item.No, item.Name),
+      value: item.No,
+    }));
+  });
 
-    // 大分類改變 → 查中分類
-    this.dataForm.controls.CAT_LNo.valueChanges.subscribe((catLNo: string) => {
-      if (catLNo) {
-        const param = { CAT_LNo: [catLNo] };
-        this.dropDownListService.queryPOS20031_DropDownList(param).subscribe((res) => {
-          const nestedData = res?.Data || [];
-          this.CAT_MOptions = nestedData.map((item) => ({
-            label: item.Name,
-            value: item.No,
-          }));
-          this.dataForm.controls.CAT_MNo.setValue(''); // reset
-          this.CAT_SOptions = []; // reset 小分類
-          this.dataForm.controls.CAT_SNo.setValue('');
-        });
-      } else {
-        this.CAT_MOptions = [];
-        this.CAT_SOptions = [];
-        this.dataForm.controls.CAT_MNo.setValue('');
+  // 大分類改變 → 查中分類（label 也合併）
+  this.dataForm.controls.CAT_LNo.valueChanges.subscribe((catLNo: string) => {
+    if (catLNo) {
+      const param = { CAT_LNo: [catLNo] };
+      this.dropDownListService.queryPOS20031_DropDownList(param).subscribe((res) => {
+        const nestedData = res?.Data || [];
+        this.CAT_MOptions = nestedData.map((item: any) => ({
+          label: combine(item.No, item.Name),
+          value: item.No,
+        }));
+        this.dataForm.controls.CAT_MNo.setValue(''); // reset
+        this.CAT_SOptions = []; // reset 小分類
         this.dataForm.controls.CAT_SNo.setValue('');
-      }
-    });
+      });
+    } else {
+      this.CAT_MOptions = [];
+      this.CAT_SOptions = [];
+      this.dataForm.controls.CAT_MNo.setValue('');
+      this.dataForm.controls.CAT_SNo.setValue('');
+    }
+  });
 
-    // 中分類改變 → 查小分類
-    this.dataForm.controls.CAT_MNo.valueChanges.subscribe((catMNo: string) => {
-      const catLNo = this.dataForm.controls.CAT_LNo.value;
-      if (catLNo && catMNo) {
-        const param = {
-          CAT_LNo: [catLNo],
-          CAT_MNo: [catMNo],
-        };
-        this.dropDownListService.queryPOS20032_DropDownList(param).subscribe((res) => {
-          const nestedData = res?.Data || [];
-          this.CAT_SOptions = nestedData.map((item) => ({
-            label: item.Name,
-            value: item.No,
-          }));
-          this.dataForm.controls.CAT_SNo.setValue(''); // reset
-        });
-      } else {
-        this.CAT_SOptions = [];
-        this.dataForm.controls.CAT_SNo.setValue('');
+  // 中分類改變 → 查小分類（label 也合併）
+  this.dataForm.controls.CAT_MNo.valueChanges.subscribe((catMNo: string) => {
+    const catLNo = this.dataForm.controls.CAT_LNo.value;
+    if (catLNo && catMNo) {
+      const param = { CAT_LNo: [catLNo], CAT_MNo: [catMNo] };
+      this.dropDownListService.queryPOS20032_DropDownList(param).subscribe((res) => {
+        const nestedData = res?.Data || [];
+        this.CAT_SOptions = nestedData.map((item: any) => ({
+          label: combine(item.No, item.Name),
+          value: item.No,
+        }));
+        this.dataForm.controls.CAT_SNo.setValue(''); // reset
+      });
+    } else {
+      this.CAT_SOptions = [];
+      this.dataForm.controls.CAT_SNo.setValue('');
+    }
+  });
+
+  // 編輯模式：載入對應中/小分類選項（label 也用合併格式）
+  // ✅ 不論 Edit 或 Read（只排除 Create），都預載中/小分類選項，讓檢視模式有 label
+ setTimeout(() => {
+    if (this.crudstatus !== CRUDStatus.Create) {
+      // 假設 BasicCruPageComponent 有把原始資料放在 this.data 或 this.detail
+      // 依你的專案實際情況替換來源
+      const incomingId =
+        this.dataForm.controls.id.value ||
+        (this as any).data?.id ||
+        (this as any).detail?.id;
+
+      if (incomingId != null) {
+        this.dataForm.controls.id.setValue(incomingId);
       }
-    });
-    // 如果是編輯模式且有值，就觸發查詢中分類與小分類
-    if (this.crudstatus === CRUDStatus.Edit) {
+
+      // 下面是你原本預載 M/S 選項的流程（保留）
       const catLNo = this.dataForm.controls.CAT_LNo.value;
       const catMNo = this.dataForm.controls.CAT_MNo.value;
-
       if (catLNo) {
-        const paramL = { CAT_LNo: [catLNo] };
-        this.dropDownListService.queryPOS20031_DropDownList(paramL).subscribe((res) => {
-          const midData = res?.Data || [];
-          this.CAT_MOptions = midData.map((item) => ({ label: item.Name, value: item.No }));
-
-          // 若原本就有中分類值，再查小分類
+        this.loadMOptions(catLNo).subscribe(() => {
           if (catMNo) {
-            const paramM = {
-              CAT_LNo: [catLNo],
-              CAT_MNo: [catMNo]
-            };
-            this.dropDownListService.queryPOS20032_DropDownList(paramM).subscribe((res2) => {
-              const subData = res2?.Data || [];
-              this.CAT_SOptions = subData.map((item) => ({ label: item.Name, value: item.No }));
-            });
+            this.loadSOptions(catLNo, catMNo).subscribe();
           }
         });
       }
     }
-  }
+  }, 0);
+}
 
-  onSubmit(form: FormGroup): void {
-    this.handleSubmit(form, () => {
-      const formValue = form.getRawValue();
+onSubmit(form: FormGroup): void {
+  this.handleSubmit(form, () => {
+    const formValue = form.getRawValue();
 
-      switch (this.crudstatus) {
-        case CRUDStatus.Create:
-          if (this.canAdd()) {
-            this.tls51130Service.insertTLS51130(formValue).subscribe(() => {
-              this.messageService.successBubble('新增成功');
-              this.dataForm.reset();
-            });
-          }
-          break;
-        case CRUDStatus.Edit:
-          if (this.canEdit()) {
-            this.tls51130Service.updateTLS51130(formValue).subscribe(() => {
-              this.messageService.successBubble('更新成功');
-              this.onCancel();
-            });
-          }
-          break;
-      }
-    });
-  }
+    switch (this.crudstatus) {
+      case CRUDStatus.Create:
+        if (this.canAdd()) {
+          // Create 不需要 id
+          const { id, ...createDto } = formValue;
+          this.tls51130Service.insertTLS51130(createDto).subscribe(() => {
+            this.messageService.successBubble('新增成功');
+            this.dataForm.reset();
+          });
+        }
+        break;
+
+      case CRUDStatus.Edit:
+        if (this.canEdit()) {
+          // ✅ Edit 必須帶 id
+          const updateDto = {
+            id: formValue.id,                        // 必填
+            LOGO_No: formValue.LOGO_No,
+            CAT_LNo: formValue.CAT_LNo,
+            CAT_MNo: formValue.CAT_MNo,
+            CAT_SNo: formValue.CAT_SNo,
+            PLU_OrderPrcRate: formValue.PLU_OrderPrcRate,
+            DISC_Remark: formValue.DISC_Remark,
+          };
+
+          this.tls51130Service.updateTLS51130(updateDto).subscribe(() => {
+            this.messageService.successBubble('更新成功');
+            this.onCancel();
+          });
+        }
+        break;
+    }
+  });
+}
 }
