@@ -317,29 +317,23 @@ export class TLS12040CRUComponent implements OnInit {
     // 先保護現有資料
     const existingData = this.flowService.getCruData() as any;
 
+    // 先初始化下拉選項
     this.initializeDropdownOptions();
+
+    // 處理路由狀態
     this.handleRouterState();
 
     // 如果之前有資料，確保不被覆蓋
     if (existingData && Object.keys(existingData).length > 0) {
-      this.loadCachedFormData(existingData);
-      if (existingData.locationData) {
-        this.locationData = existingData.locationData;
-        this.updateDisplayLocationData();
-      }
-      // 重新保存，確保不被清空
-      this.flowService.setCruData({
-        ...existingData,
-        ...this.dataForm.value,
-        locationData: this.locationData
-      });
+      // 🎯 修正：先載入基本下拉選項，然後再載入緩存資料
+      this.loadCachedDataWithClassifications(existingData);
     }
   }
 
-  private loadCachedFormData(cruData: any): void {
-    console.log('🔄 開始載入暫存表單資料');
+  private loadCachedDataWithClassifications(cruData: any): void {
+    console.log('📄 開始載入暫存表單資料（含分類處理）');
 
-    // 先設定基本欄位（不包括分類）
+    // 先載入基本資料（不包括分類）
     const basicData = { ...cruData };
     delete basicData.bus_type;
     delete basicData.bus_class;
@@ -348,13 +342,99 @@ export class TLS12040CRUComponent implements OnInit {
 
     this.dataForm.patchValue(basicData);
 
-    // 如果有分類資料，按順序載入
+    // 處理位置資料
+    if (cruData.locationData) {
+      this.locationData = cruData.locationData;
+      this.updateDisplayLocationData();
+    }
+
+    // 🎯 關鍵修正：確保分類按正確順序載入
     if (cruData.bus_type) {
-      this.loadCachedClassifications(cruData);
+      this.loadClassificationChain(cruData);
+    } else {
+      // 沒有分類資料時，直接重新保存
+      this.flowService.setCruData({
+        ...cruData,
+        ...this.dataForm.value,
+        locationData: this.locationData
+      });
     }
   }
 
-  private loadCachedClassifications(cruData: any): void {
+  // 🔥 新增方法：按順序載入分類鏈
+  private loadClassificationChain(cruData: any): void {
+    console.log('🏷️ 開始載入分類鏈:', {
+      bus_type: cruData.bus_type,
+      bus_class: cruData.bus_class,
+      bus_sclass: cruData.bus_sclass
+    });
+
+    // 1. 設定大分類
+    this.dataForm.patchValue({ bus_type: cruData.bus_type });
+
+    // 2. 載入中分類選項
+    this.businessClassificationService.getBusClassOptions(cruData.bus_type).subscribe({
+      next: (busClassOptions) => {
+        this.busClassOptions = busClassOptions;
+        console.log('✅ 中分類選項載入完成:', busClassOptions.length);
+
+        // 3. 如果有中分類值，設定並載入小分類
+        if (cruData.bus_class) {
+          this.dataForm.patchValue({ bus_class: cruData.bus_class });
+
+          // 4. 載入小分類選項
+          this.businessClassificationService.getBusSClassOptions(cruData.bus_type, cruData.bus_class).subscribe({
+            next: (busSClassOptions) => {
+              this.busSClassOptions = busSClassOptions;
+              console.log('✅ 小分類選項載入完成:', busSClassOptions.length);
+
+              // 5. 如果有小分類值，設定
+              if (cruData.bus_sclass) {
+                this.dataForm.patchValue({ bus_sclass: cruData.bus_sclass });
+              }
+
+              // 6. 所有分類載入完成後，重新保存
+              this.saveCompleteDataToFlow(cruData);
+            },
+            error: (error) => {
+              console.error('❌ 載入小分類失敗:', error);
+              // 即使失敗也要保存其他資料
+              this.saveCompleteDataToFlow(cruData);
+            }
+          });
+        } else {
+          // 沒有中分類時，直接保存
+          this.saveCompleteDataToFlow(cruData);
+        }
+      },
+      error: (error) => {
+        console.error('❌ 載入中分類失敗:', error);
+        // 即使失敗也要保存其他資料
+        this.saveCompleteDataToFlow(cruData);
+      }
+    });
+  }
+
+  // 🔥 新增方法：保存完整資料到流程
+  private saveCompleteDataToFlow(originalData: any): void {
+    const completeData = {
+      ...originalData,
+      ...this.dataForm.value,
+      locationData: this.locationData
+    };
+
+    this.flowService.setCruData(completeData);
+    console.log('✅ 完整資料已保存到流程');
+  }
+
+
+  private loadCachedFormData(cruData: any): void {
+    console.log('📄 開始載入暫存表單資料 (舊方法)');
+    // 改為調用新方法
+    this.loadCachedDataWithClassifications(cruData);
+  }
+
+  private loadCachedClassifications(cruData: any, onComplete?: () => void): void {
     console.log('🏷️ 載入暫存分類資料:', {
       bus_type: cruData.bus_type,
       bus_class: cruData.bus_class,
@@ -383,19 +463,42 @@ export class TLS12040CRUComponent implements OnInit {
 
                 // 設定小分類值
                 this.dataForm.patchValue({ bus_sclass: cruData.bus_sclass });
+
+                // 觸發完成回調
+                if (onComplete) {
+                  onComplete();
+                }
               },
               error: (error) => {
                 console.error('❌ 載入暫存小分類失敗:', error);
+                if (onComplete) {
+                  onComplete();
+                }
               }
             });
+          } else {
+            // 沒有小分類時直接完成
+            if (onComplete) {
+              onComplete();
+            }
           }
         },
         error: (error) => {
           console.error('❌ 載入暫存中分類失敗:', error);
+          if (onComplete) {
+            onComplete();
+          }
         }
       });
+    } else {
+      // 沒有中分類時直接完成
+      if (onComplete) {
+        onComplete();
+      }
     }
   }
+
+
   private handleRouterState(): void {
     const state = this.router.lastSuccessfulNavigation?.extras?.state;
     if (state) {
@@ -668,7 +771,6 @@ export class TLS12040CRUComponent implements OnInit {
   private loadApiOptions() {
     this.loading = true;
 
-    // 使用 Promise.all 或 forkJoin 同時載入多個選項
     const loadTasks = [
       this.sharedDropdownService.getBustypeOptions(),
       this.sharedDropdownService.getNegotiatorOptions(),
@@ -680,7 +782,6 @@ export class TLS12040CRUComponent implements OnInit {
       this.sharedDropdownService.getBankOptions(),
     ];
 
-    // 使用 forkJoin 等待所有載入完成
     forkJoin(loadTasks).subscribe({
       next: ([busTypes, negotiators, buildings, orgs, locations, paperTypes, vendors, banks]) => {
         this.bustypeOptions = busTypes;
@@ -691,19 +792,26 @@ export class TLS12040CRUComponent implements OnInit {
         this.paperTypeOptions = paperTypes;
         this.vendorOptions = vendors;
         this.bankDropdownOptions = banks;
-        this.loading = false;
 
-        // 在所有選項載入完成後呼叫
+        console.log('✅ 所有 API 選項載入完成');
+
+        // 在所有選項載入完成後更新 selector 面板選項
         this.updateSelectorPanelOptions();
+
+        // 🎯 關鍵：檢查是否需要處理緩存的分類資料
+        const existingData = this.flowService.getCruData() as any;
+        if (existingData && existingData.bus_type && !this.busClassOptions.length) {
+          console.log('🔄 API 載入完成後處理分類資料');
+          this.loadClassificationChain(existingData);
+        }
+
+        this.loading = false;
       },
       error: (error) => {
         console.error('載入選項失敗:', error);
-        // 確保即使失敗也有預設值
         this.bustypeOptions = [];
         this.negotiatorOptions = [];
         this.loading = false;
-
-        // 🎯 即使載入失敗也要呼叫（使用空陣列）
         this.updateSelectorPanelOptions();
       }
     });
