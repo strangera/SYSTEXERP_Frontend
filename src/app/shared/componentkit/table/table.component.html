@@ -152,14 +152,14 @@
             <ng-template pTemplate="input">
               <app-table-input [col]="col" [rowData]="rowData" [rowIndex]="rowIndex" [alwaysEdit]="false"
                 (fieldChange)="onFieldChange(rowData, $event.field, $event.value, $event.rowIndex)"
-                [disabled]=" (col.disabled && col.disabled(rowData)) || disabled"
+                [disabled]="disabled ? true: (col.disabled && col.disabled(rowData)) || false"
                 (fieldBlur)="onFieldBlur(rowData, $event.field, $event.value)" (filterChange)="filterOptions($event)">
               </app-table-input>
             </ng-template>
             <ng-template pTemplate="output">
               <app-table-input [col]="col" [rowData]="rowData" [rowIndex]="rowIndex" [alwaysEdit]="alwaysEdit"
                 (fieldChange)="onFieldChange(rowData, $event.field, $event.value, $event.rowIndex)"
-                [disabled]=" (col.disabled && col.disabled(rowData)) || disabled"
+                [disabled]="disabled ? true: (col.disabled && col.disabled(rowData)) || !alwaysEdit"
                 (fieldBlur)="onFieldBlur(rowData, $event.field, $event.value)" (filterChange)="filterOptions($event)">
               </app-table-input>
             </ng-template>
