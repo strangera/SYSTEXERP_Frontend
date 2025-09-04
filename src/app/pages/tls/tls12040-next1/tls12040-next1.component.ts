@@ -22,7 +22,7 @@ import { AccordionModule } from "primeng/accordion";
 import { ColumnDef, ExpandableEditTableComponent } from "@shared/componentkit/expandable-edit-table/expandable-edit-table.component";
 import { DialogComponent } from "@shared/componentkit/dialog/dialog.component";
 import { TLS12040DetailModel } from '../tls12040-cru/models/tls12040-cru.model';
-import { TLS12040FlowService } from '../tls12040/Workflow/contract-flow.service';
+import { TLS12040FlowService } from '../tls12040/Workflow/tls12040-contract-flow.service';
 import { CRUDStatus } from '@shared/models/system/CRUDstatus';
 import { FareDataService } from '../tls13010-next1/Services/fare-data.service';
 import { FareStatusService } from '../tls13010-next1/Services/fare-status.service';

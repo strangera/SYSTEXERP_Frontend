@@ -32,7 +32,7 @@ import { TLS12040Service } from '@service/api/tls/tls12040.service';
 import { LocationDetails, TLS12040DetailModel, TLS12040RequestModel, Tls12040SelectorTableColumn } from './models/tls12040-cru.model';
 import { TLS12040Response } from '../tls12040/tls12040.component';
 import { BusinessClassificationService } from './services/business-classification.service';
-import { TLS12040FlowService } from '../tls12040/Workflow/contract-flow.service';
+import { TLS12040FlowService } from '../tls12040/Workflow/tls12040-contract-flow.service';
 import { LocationOptionsService } from '@service/api/dropdownservice/location-options.service';
 
 // 2.1.2.4 專櫃要約書維護CRU
