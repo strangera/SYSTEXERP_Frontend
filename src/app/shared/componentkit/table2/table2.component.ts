@@ -698,18 +698,18 @@ loadDataLazy(event: TableLazyLoadEvent) {
   }
 
 getGroupSubtotal(groupValue: any, field: string): number {
-  // 1) 外部小計
+  // 1) 先吃外部小計
   if (this.externalSubtotals && this.externalSubtotalFieldMap) {
     const apiKey = this.externalSubtotalFieldMap[field];
-    const gKey = String(groupValue);
+    const gKey   = String(groupValue);
     const bucket = this.externalSubtotals[gKey];
     if (apiKey && bucket && apiKey in bucket) {
       return bucket[apiKey] ?? 0;
     }
   }
-  // 2) 退回前端加總
+  // 2) 回退前端即時加總（當頁資料）
   if (!this.groupedDataCache.has(groupValue)) {
-    const rows = this.data.filter((item) => (item as any)[this.groupRowsBy] === groupValue);
+    const rows = this.data.filter(item => (item as any)[this.groupRowsBy] === groupValue);
     this.groupedDataCache.set(groupValue, rows);
   }
   return (this.groupedDataCache.get(groupValue) as any[])

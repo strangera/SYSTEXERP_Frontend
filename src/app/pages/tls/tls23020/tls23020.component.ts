@@ -670,42 +670,40 @@ export class TLS23020Component extends BasicQueryPageComponent<any> {
   };
 
   // ========= 匯出 =========
-  onExportPDF() {
-    if (!this.historyRequestBody) {
-      this.messageService?.warnBubble?.('請先執行查詢以產生報表。');
-      return;
-    }
-    this.btnLoading = true;
-    this.tls23020Service
-      .exportTLS23020PDF(this.historyRequestBody)
-      .pipe(
-        untilDestroyed(this),
-        finalize(() => (this.btnLoading = false)),
-      )
-      .subscribe({
-        next: (response: HttpResponse<Blob>) =>
-          this.handleFileExport(response, '.pdf'),
-      });
+onExportPDF() {
+  if (!this.historyRequestBody) {
+    this.messageService?.warnBubble?.('請先執行查詢以產生報表。');
+    return;
   }
+  this.btnLoading = true;
 
-  onExportXLSX() {
-    if (!this.historyRequestBody) {
-      this.messageService?.warnBubble?.('請先執行查詢以產生報表。');
-      return;
-    }
-    this.btnLoading = true;
-    // ✅ 不需要自己刪除分頁欄位，交由 service 的 stripPaging 處理
-    this.tls23020Service
-      .exportTLS23020Excel(this.historyRequestBody)
-      .pipe(
-        untilDestroyed(this),
-        finalize(() => (this.btnLoading = false)),
-      )
-      .subscribe({
-        next: (response: HttpResponse<Blob>) =>
-          this.handleFileExport(response, '.xlsx'),
-      });
+  const obs = this.showSummary
+    ? this.tls23020Service.exportTLS23020SummaryPDF(this.historyRequestBody)
+    : this.tls23020Service.exportTLS23020PDF(this.historyRequestBody);
+
+  obs.pipe(untilDestroyed(this), finalize(() => (this.btnLoading = false)))
+     .subscribe({
+       next: (response: HttpResponse<Blob>) => this.handleFileExport(response, '.pdf'),
+     });
+}
+
+onExportXLSX() {
+  if (!this.historyRequestBody) {
+    this.messageService?.warnBubble?.('請先執行查詢以產生報表。');
+    return;
   }
+  this.btnLoading = true;
+
+  const obs = this.showSummary
+    ? this.tls23020Service.exportTLS23020SummaryExcel(this.historyRequestBody)
+    : this.tls23020Service.exportTLS23020Excel(this.historyRequestBody);
+
+  obs.pipe(untilDestroyed(this), finalize(() => (this.btnLoading = false)))
+     .subscribe({
+       next: (response: HttpResponse<Blob>) => this.handleFileExport(response, '.xlsx'),
+     });
+}
+
 
   private handleFileExport(
     response: HttpResponse<Blob>,

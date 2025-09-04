@@ -256,128 +256,136 @@ export class TLS23010Component
     this.lazyTimer = setTimeout(() => this.onSubmit(form), 0);
   }
 
-  onSubmit(frm: FormGroup) {
-    this.handleSubmit(frm, () => {
-      const val = this.queryForm.getRawValue() as any;
+onSubmit(frm: FormGroup) {
+  this.handleSubmit(frm, () => {
+    const val = this.queryForm.getRawValue() as any;
 
-      // 日期轉 ISO(yyyy-MM-ddTHH:mm:ss)
-      const toIso = (x: any, endOfDay = false) => {
-        if (!x) return undefined;
-        const d = typeof x === 'string' ? new Date(x) : (x as Date);
-        if (isNaN(d.getTime())) return undefined;
-        if (endOfDay) d.setHours(23, 59, 59, 999);
-        return new Date(d.getTime() - d.getTimezoneOffset() * 60000)
-          .toISOString()
-          .slice(0, 19);
-      };
+    // 日期轉 ISO(yyyy-MM-ddTHH:mm:ss)
+    const toIso = (x: any, endOfDay = false) => {
+      if (!x) return undefined;
+      const d = typeof x === 'string' ? new Date(x) : (x as Date);
+      if (isNaN(d.getTime())) return undefined;
+      if (endOfDay) d.setHours(23, 59, 59, 999);
+      return new Date(d.getTime() - d.getTimezoneOffset() * 60000)
+        .toISOString()
+        .slice(0, 19);
+    };
 
-      // ======== 分頁/排序（重點）========
-      const pageSize  = Number.isFinite(val?.pageSize)  ? Number(val.pageSize)  : 10;
-      const pageIndex = Number.isFinite(val?.pageIndex) ? Number(val.pageIndex) : 1;
-      const offset    = Math.max(0, (pageIndex - 1) * pageSize);
+    // ======== 分頁/排序（不再計算 Offset / OrderBy）========
+    const pageSize  = Number.isFinite(val?.pageSize)  ? Number(val.pageSize)  : 10;
+    const pageIndex = Number.isFinite(val?.pageIndex) ? Number(val.pageIndex) : 1;
 
-      const sortByArr = (Array.isArray(val?.SortBy) && val.SortBy.length
-        ? val.SortBy
-        : (this.sortMeta.length ? this.sortMeta : this.defaultSort)
-      ).map((s: any) => ({ ...s }));
+    const sortByArr = (Array.isArray(val?.SortBy) && val.SortBy.length
+      ? val.SortBy
+      : (this.sortMeta.length ? this.sortMeta : this.defaultSort)
+    ).map((s: any) => ({ ...s }));
 
-      const orderBy = sortByArr.length
-        ? sortByArr.map((s: any) => `${s.field} ${s.order === 1 ? 'ASC' : 'DESC'}`).join(',')
-        : undefined;
+    // ======== 組 payload ========
+    const payload: any = {
+      ...val,
+      TXN_DateStart: toIso(val?.TXN_DateStart, false),
+      TXN_DateEnd:   toIso(val?.TXN_DateEnd,   true),
+    };
 
-      // ======== 組 payload ========
-      const payload: any = {
-        ...val,
-        TXN_DateStart: toIso(val?.TXN_DateStart, false),
-        TXN_DateEnd:   toIso(val?.TXN_DateEnd,   true),
-      };
-
-      if (this.includePagingAndSorting) {
-        Object.assign(payload, {
-          PageSize: pageSize,
-          PageIndex: pageIndex,
-          Offset: offset,
-          SortBy: sortByArr,
-          ...(orderBy ? { OrderBy: orderBy } : {}),
-        });
-      }
-
-      // 清空空值（保留 0/false）
-      Object.keys(payload).forEach((k) => {
-        const v = payload[k];
-        if (v === null || v === undefined) delete payload[k];
-        if (Array.isArray(v) && v.length === 0) delete payload[k];
-        if (typeof v === 'string' && v.trim() === '') delete payload[k];
+    if (this.includePagingAndSorting && !this.showSummary) {
+      // 明細查詢才需要分頁（彙總通常不分頁）
+      Object.assign(payload, {
+        PageSize: pageSize,
+        PageIndex: pageIndex,
+        SortBy: sortByArr,
       });
+    } else {
+      // 彙總：僅保留 SortBy（若後端不吃也無妨）
+      Object.assign(payload, { SortBy: sortByArr });
+    }
 
-      // 匯出沿用同一包參數
-      this.historyRequestBody = { ...payload };
-
-      this.loading = true;
-
-      if (this.showSummary) {
-        this.tls23010Service
-          .queryTLS23010Summary(payload)
-          .pipe(finalize(() => (this.loading = false)))
-          .subscribe({
-            next: (resp) => {
-  const queryData = Array.isArray(resp?.Data?.QueryData)
-    ? resp.Data.QueryData
-    : Array.isArray(resp?.Data) ? resp.Data : [];
-
-  this.data = queryData.map((row: any) => ({
-    ...row,
-    id: `${row.SYS_StoreNo}_${row.TXN_Date}_${row.ECR_No}_${row.TXN_No}`,
-  }));
-
-  // 💡 關鍵：把 API 的 TotalSummary 餵給 Table2
-  this.detailTotals = resp?.Data?.TotalSummary ?? {};
-
-  this.summaryData   = [];
-  this.selectedItems = [];
-  this.totalRecords  = Number(resp?.TotalCount ?? this.data.length ?? 0);
-
-  this.queryStateService.setQueryState(this.ProgNo, this.queryForm.value);
-},
-            error: () => {
-              this.summaryData   = [];
-              this.totalRecords  = 0;
-              this.selectedItems = [];
-            },
-          });
-      } else {
-        this.tls23010Service
-          .queryTLS23010(payload)
-          .pipe(finalize(() => (this.loading = false)))
-          .subscribe({
-            next: (resp) => {
-  const queryData = Array.isArray(resp?.Data?.QueryData)
-    ? resp.Data.QueryData
-    : Array.isArray(resp?.Data) ? resp.Data : [];
-
-  this.data = queryData.map((row: any) => ({
-    ...row,
-    id: `${row.SYS_StoreNo}_${row.TXN_Date}_${row.ECR_No}_${row.TXN_No}`,
-  }));
-
-  // 💡 關鍵：把 API 總計塞給 Table2（用新物件確保變更偵測）
-  this.detailTotals = this.coerceTotals(resp?.Data?.TotalSummary);
-
-  this.summaryData   = [];
-  this.selectedItems = [];
-  this.totalRecords  = Number(resp?.TotalCount ?? this.data.length ?? 0);
-
-  this.queryStateService.setQueryState(this.ProgNo, this.queryForm.value);
-},
-            error: () => {
-              this.data          = [];
-              this.totalRecords  = 0;
-              this.selectedItems = [];
-            },
-          });
-      }
+    // 清空空值（保留 0/false）
+    Object.keys(payload).forEach((k) => {
+      const v = payload[k];
+      if (v === null || v === undefined) delete payload[k];
+      if (Array.isArray(v) && v.length === 0) delete payload[k];
+      if (typeof v === 'string' && v.trim() === '') delete payload[k];
     });
-  }
+
+    // 匯出沿用同一包參數
+    this.historyRequestBody = { ...payload };
+
+    this.loading = true;
+
+    if (this.showSummary) {
+  this.tls23010Service
+    .queryTLS23010Summary(payload)
+    .pipe(finalize(() => (this.loading = false)))
+    .subscribe({
+      next: (resp) => {
+        // 1) 安全取出 Data[0]
+        const dataArr = Array.isArray(resp?.Data) ? resp.Data : [];
+        const head = dataArr[0] ?? {};
+
+        // 2) 取出 tLS23010Summary_Details（大小寫容錯）
+        const details =
+          Array.isArray(head?.tLS23010Summary_Details) ? head.tLS23010Summary_Details :
+          Array.isArray(head?.TLS23010Summary_Details) ? head.TLS23010Summary_Details :
+          [];
+
+        // 3) 餵給彙總表
+        this.summaryData = details.map((row: any) => ({
+          ...row,
+          // 如需 id 可自行組： id: `${row.tlt_no}_${row.TXN_DateStart}_${row.TXN_DateEnd}`,
+        }));
+
+        // （可選）若你的 app-table「內建總計」，這段可省略；
+        // 若想顯示 API 額外提供的總計，可存起來（app-table 若支援 externalTotals 再綁）
+        // this.summaryTotals = {
+        //   TXN_TotGUI: Number(head?.Total_TXN_TotGUI ?? 0),
+        // };
+
+        // 清其他狀態
+        this.data = [];
+        this.selectedItems = [];
+        this.totalRecords = this.summaryData.length;
+
+        this.queryStateService.setQueryState(this.ProgNo, this.queryForm.value);
+      },
+      error: () => {
+        this.summaryData = [];
+        this.totalRecords = 0;
+        this.selectedItems = [];
+      },
+    });
+} else {
+      this.tls23010Service
+        .queryTLS23010(payload)
+        .pipe(finalize(() => (this.loading = false)))
+        .subscribe({
+          next: (resp) => {
+            const queryData = Array.isArray(resp?.Data?.QueryData)
+              ? resp.Data.QueryData
+              : Array.isArray(resp?.Data) ? resp.Data : [];
+
+            this.data = queryData.map((row: any) => ({
+              ...row,
+              id: `${row.SYS_StoreNo}_${row.TXN_Date}_${row.ECR_No}_${row.TXN_No}`,
+            }));
+
+            this.detailTotals = this.coerceTotals(resp?.Data?.TotalSummary);
+
+            this.summaryData   = [];
+            this.selectedItems = [];
+            this.totalRecords  = Number(resp?.TotalCount ?? this.data.length ?? 0);
+
+            this.queryStateService.setQueryState(this.ProgNo, this.queryForm.value);
+          },
+          error: () => {
+            this.data          = [];
+            this.totalRecords  = 0;
+            this.selectedItems = [];
+          },
+        });
+    }
+  });
+}
+
 
   isRowSelectable(_row: TLS23010Data): boolean {
     return true;
@@ -507,37 +515,41 @@ export class TLS23010Component
 
   // ========= 匯出 =========
   onExportPDF() {
-    if (!this.historyRequestBody) {
-      this.messageService?.warnBubble?.('請先執行查詢以產生報表。');
-      return;
-    }
-    this.btnLoading = true;
-    this.tls23010Service
-      .exportTLS23010PDF(this.historyRequestBody)
-      .pipe(untilDestroyed(this), finalize(() => (this.btnLoading = false)))
-      .subscribe({
-        next: (response: HttpResponse<Blob>) => this.handleFileExport(response, '.pdf'),
-      });
+  if (!this.historyRequestBody) {
+    this.messageService?.warnBubble?.('請先執行查詢以產生報表。');
+    return;
+  }
+  this.btnLoading = true;
+
+  const obs = this.showSummary
+    ? this.tls23010Service.exportTLS23010SummaryPDF(this.historyRequestBody)
+    : this.tls23010Service.exportTLS23010PDF(this.historyRequestBody);
+
+  obs.pipe(untilDestroyed(this), finalize(() => (this.btnLoading = false)))
+     .subscribe({ next: (response: HttpResponse<Blob>) => this.handleFileExport(response, '.pdf') });
+}
+
+onExportXLSX() {
+  if (!this.historyRequestBody) {
+    this.messageService?.warnBubble?.('請先執行查詢以產生報表。');
+    return;
   }
 
-  onExportXLSX() {
-    if (!this.historyRequestBody) {
-      this.messageService?.warnBubble?.('請先執行查詢以產生報表。');
-      return;
-    }
-    const exportBody = { ...this.historyRequestBody };
-    delete exportBody.pageIndex;
-    delete exportBody.pageSize;
-    delete exportBody.Offset;
+  // 匯出不帶分頁
+  const exportBody = { ...this.historyRequestBody };
+  delete exportBody.pageIndex;
+  delete exportBody.pageSize;
 
-    this.btnLoading = true;
-    this.tls23010Service
-      .exportTLS23010Excel(exportBody)
-      .pipe(untilDestroyed(this), finalize(() => (this.btnLoading = false)))
-      .subscribe({
-        next: (response: HttpResponse<Blob>) => this.handleFileExport(response, '.xlsx'),
-      });
-  }
+  this.btnLoading = true;
+
+  const obs = this.showSummary
+    ? this.tls23010Service.exportTLS23010SummaryExcel(exportBody)
+    : this.tls23010Service.exportTLS23010Excel(exportBody);
+
+  obs.pipe(untilDestroyed(this), finalize(() => (this.btnLoading = false)))
+     .subscribe({ next: (response: HttpResponse<Blob>) => this.handleFileExport(response, '.xlsx') });
+}
+
 
   private handleFileExport(response: HttpResponse<Blob>, fileExtension: string): void {
     const contentDisposition = response.headers.get('Content-Disposition');
