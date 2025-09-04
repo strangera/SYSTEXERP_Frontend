@@ -46,14 +46,10 @@ export class TLS42020Component extends BasicQueryPageComponent<TLS42020Data> imp
   queryForm = this.fb.group({
     menuType: [[]],                               // 菜單類別(多選)
     tltNo: [[]],                                  // 專櫃編號(多選)
-    // SBM_BegDate_s: [null, Validators.required],  // 開始日期(起)
-    // SBM_BegDate_e: [null, Validators.required],  // 開始日期(迄)
-    // SBM_EndDate_s: [null, Validators.required],  // 結束日期(起)
-    // SBM_EndDate_e: [null, Validators.required],  // 結束日期(迄)
-    SBM_BegDate_s: [null],  // 開始日期(起)
-    SBM_BegDate_e: [null],  // 開始日期(迄)
-    SBM_EndDate_s: [null],  // 結束日期(起)
-    SBM_EndDate_e: [null],  // 結束日期(迄)
+    SBM_BegDate_s: [null, Validators.required],  // 開始日期(起)
+    SBM_BegDate_e: [null, Validators.required],  // 開始日期(迄)
+    SBM_EndDate_s: [null, Validators.required],  // 結束日期(起)
+    SBM_EndDate_e: [null, Validators.required],  // 結束日期(迄)
     ...createPaginationConfig([])
   });
 
