@@ -30,6 +30,7 @@ import { Tls12040FareStatusService } from './services/tls12040-fare-status.servi
 import { SHARED_DROPDOWN_OPTIONS } from '@shared/constants/business.constants';
 import { Tls12040FareCalculationService } from './services/tls12040-fare-calculation.service';
 import { Tls12040FareValidationService } from './services/tls12040-fare-validation.service';
+import { LocationOptionsService } from '@service/api/dropdownservice/location-options.service';
 
 interface CategoryItem {
   id: number;
@@ -92,6 +93,7 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
     private fareValidationService: Tls12040FareValidationService,
     private fareCalculationService: Tls12040FareCalculationService,
 
+    private locationOptionsService: LocationOptionsService,
 
   ) {
     super();
@@ -107,8 +109,11 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
     this.initializeDataStructure();
     this.contractInfoColumns = TLS12040FareColumnDefinitions.getContractInfoColumns();
 
+    // 加入載入組織選項
+    this.loadOrgOptions();
+
     // 載入工作流程資料
-    this.loadWorkflowData();
+    this.loadWorkflowDataWithRetry();
   }
 
   private initializeDataStructure(): void {
@@ -123,23 +128,260 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
     });
   }
 
-  // 從工作流程載入資料
-  private loadWorkflowData(): void {
-    console.log('開始載入工作流程資料...');
+  private loadOrgOptions(): void {
+    console.log('載入組織選項...');
 
-    const currentState = this.flowService.getCurrentState();
-    console.log('當前工作流程狀態:', currentState);
+    // 你需要找到對應的服務來載入組織選項
+    // 從你的 TLS13010Next1 程式碼看來，可能是這樣：
 
-    // 取得申請編號
-    this.currentApplyNo = currentState.applyNo || '';
-    console.log('申請編號:', this.currentApplyNo);
+    const subscription = this.locationOptionsService.getOrgOptions().subscribe({
+      next: (options) => {
+        console.log('組織選項載入成功:', options);
+        this.orgOptions = options;
+      },
+      error: (error) => {
+        console.error('載入組織選項失敗:', error);
+        this.messageService.warnBubble('載入組織選項失敗');
+        this.orgOptions = [];
+      }
+    });
 
-    // 載入合約基本資料
-    this.loadContractInfo();
-
-    // 載入扣款資料
-    this.loadFareData();
+    this.subscriptions.push(subscription);
   }
+
+  private loadWorkflowDataWithRetry(retryCount: number = 0): void {
+    console.log('開始載入工作流程資料，重試次數:', retryCount);
+
+    // 直接從 SessionStorage 取得正確的 applyNo
+    const saved = sessionStorage.getItem('TLS12040_FLOW');
+    let realApplyNo = '';
+
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        console.log('SessionStorage 原始資料:', parsed);
+
+        // 從 stepData 中找到 cru 資料
+        if (parsed.stepData && Array.isArray(parsed.stepData)) {
+          const cruEntry = parsed.stepData.find(([key]: [string, any]) => key === 'cru');
+          if (cruEntry && cruEntry[1]?.data?.apply_no) {
+            realApplyNo = cruEntry[1].data.apply_no;
+            console.log('從 SessionStorage 取得真實 applyNo:', realApplyNo);
+          }
+        }
+      } catch (error) {
+        console.error('解析 SessionStorage 失敗:', error);
+      }
+    }
+
+    // 如果有真實的 applyNo，直接使用
+    if (realApplyNo) {
+      this.currentApplyNo = realApplyNo;
+      console.log('設定 applyNo:', this.currentApplyNo);
+
+      // 載入合約資訊和扣款資料
+      this.loadContractInfo();
+      this.loadFareDataWithPriority();
+      return;
+    }
+
+    // 如果沒有 applyNo，檢查工作流程服務狀態
+    const currentState = this.flowService.getCurrentState();
+    console.log('工作流程狀態:', currentState);
+
+    if (currentState.applyNo) {
+      this.currentApplyNo = currentState.applyNo;
+      this.loadContractInfo();
+      this.loadFareDataWithPriority();
+      return;
+    }
+
+    // 重試機制
+    if (retryCount < 2) {
+      console.warn('沒有取得 applyNo，等待後重試');
+      setTimeout(() => {
+        this.loadWorkflowDataWithRetry(retryCount + 1);
+      }, 300);
+      return;
+    }
+
+    // 最後手段：導航回列表頁
+    console.error('無法取得有效的 applyNo，導航回列表頁');
+    this.router.navigate(['account/tls/tls12040']);
+  }
+
+  private loadFareDataWithPriority(): void {
+    console.log('開始優先級載入扣款資料...');
+
+    // 1. 優先檢查 Next1 步驟的暫存資料
+    const savedNext1Data = this.flowService.getNext1Data<Next1Data>();
+    console.log('檢查 Next1 暫存資料:', savedNext1Data);
+
+    // 修改判斷邏輯：只要有暫存資料就用暫存，不管 applyNo 是否匹配
+    if (savedNext1Data?.fareData && this.hasValidFareData(savedNext1Data.fareData)) {
+      console.log('✅ 使用 Next1 暫存的扣款資料');
+      this.originalFareData = { ...savedNext1Data.fareData };
+      this.filterData();
+      this.verifyDataIntegrity();
+      return;
+    }
+
+    // 2. 真的沒有暫存才從 API 載入
+    console.log('沒有暫存資料，從 API 載入');
+    this.loadFareDataFromAPI();
+  }
+
+  /**
+ * 🆕 新增：更嚴格的資料有效性檢查
+ */
+  private hasValidAndCompleteData(fareData: any): boolean {
+    if (!fareData || typeof fareData !== 'object') {
+      console.log('扣款資料格式無效');
+      return false;
+    }
+
+    const capTypes = ['A', 'B', 'C', 'D', 'E'];
+    let hasAnyData = false;
+    let totalItems = 0;
+    let hasUserModifications = false; // 🎯 檢查是否有使用者修改
+
+    for (const capType of capTypes) {
+      if (fareData[capType] && Array.isArray(fareData[capType])) {
+        const items = fareData[capType];
+        totalItems += items.length;
+
+        if (items.length > 0) {
+          hasAnyData = true;
+
+          // 🎯 檢查是否有使用者修改的痕跡
+          const hasSelectedItems = items.some(item => item.is_selected);
+          const hasModifiedItems = items.some(item =>
+            item._status === 'new' ||
+            item._status === 'modified' ||
+            item._isCopiedItem
+          );
+
+          if (hasSelectedItems || hasModifiedItems) {
+            hasUserModifications = true;
+          }
+        }
+      }
+    }
+
+    const isValid = hasAnyData && (hasUserModifications || totalItems > 0);
+
+    console.log('扣款資料詳細檢查:', {
+      hasValidStructure: true,
+      hasAnyData,
+      totalItems,
+      hasUserModifications,
+      isValid,
+      dataKeys: Object.keys(fareData)
+    });
+
+    return isValid;
+  }
+
+  /**
+   * 🆕 新增：深度複製扣款資料，避免引用問題
+   */
+  private deepCloneFareData(fareData: { [key: string]: TLS12040FareItem[] }): { [key: string]: TLS12040FareItem[] } {
+    const cloned: { [key: string]: TLS12040FareItem[] } = {};
+
+    Object.keys(fareData).forEach(capType => {
+      if (fareData[capType] && Array.isArray(fareData[capType])) {
+        cloned[capType] = fareData[capType].map(item => ({
+          ...item,
+          // 確保必要屬性存在
+          is_selected: Boolean(item.is_selected),
+          cap_type: capType,
+          id: item.id || `${capType}_${item.cap_item || Date.now()}`,
+          // 保留修改狀態
+          _status: item._status || 'original',
+          _originalSelected: item._originalSelected !== undefined ? item._originalSelected : item.is_selected
+        }));
+      } else {
+        cloned[capType] = [];
+      }
+    });
+
+    return cloned;
+  }
+
+  /**
+   * 🆕 新增：還原已選擇狀態
+   */
+  private restoreSelectionStates(savedData: Next1Data): void {
+    if (!savedData.selectedItems || !Array.isArray(savedData.selectedItems)) {
+      console.log('沒有已選擇項目需要還原');
+      return;
+    }
+
+    const restoredCount = savedData.selectedItems.length;
+    console.log(`🔄 還原 ${restoredCount} 個已選擇項目的狀態`);
+
+    // 確保選擇狀態正確同步
+    savedData.selectedItems.forEach(selectedItem => {
+      const capType = selectedItem.cap_type;
+      const targetItem = this.originalFareData[capType]?.find(item => item.id === selectedItem.id);
+
+      if (targetItem) {
+        targetItem.is_selected = true;
+        console.log(`✅ 還原選擇狀態: ${capType} - ${selectedItem.cap_name || selectedItem.cap_item}`);
+      }
+    });
+  }
+
+  /**
+ * 簡化的資料有效性檢查
+ */
+  private hasValidFareData(fareData: any): boolean {
+    if (!fareData || typeof fareData !== 'object') {
+      return false;
+    }
+
+    const capTypes = ['A', 'B', 'C', 'D', 'E'];
+    let hasAnyData = false;
+
+    for (const capType of capTypes) {
+      if (fareData[capType] && Array.isArray(fareData[capType]) && fareData[capType].length > 0) {
+        hasAnyData = true;
+        break;
+      }
+    }
+
+    console.log('扣款資料有效性檢查:', {
+      hasValidStructure: true,
+      hasAnyData,
+      dataKeys: Object.keys(fareData)
+    });
+
+    return hasAnyData;
+  }
+  /**
+   * 🆕 新增：資料完整性驗證
+   */
+  private verifyDataIntegrity(): void {
+    console.log('🔍 驗證資料完整性...');
+
+    const totalOriginal = this.getTotalItemCount();
+    const totalDisplay = Object.values(this.fareData)
+      .reduce((total, items) => total + (items?.length || 0), 0);
+
+    console.log('📊 資料完整性報告:', {
+      原始資料總數: totalOriginal,
+      顯示資料總數: totalDisplay,
+      已選項目數: this.getTotalSelectedCount(),
+      申請編號: this.currentApplyNo
+    });
+
+    if (totalOriginal === 0) {
+      console.warn('⚠️ 警告：沒有任何扣款資料');
+      this.messageService.infoBubble('目前沒有可用的扣款項目');
+    }
+  }
+
+
 
   // 載入合約資訊
   private loadContractInfo(): void {
@@ -170,33 +412,23 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
     }
   }
 
-  // 載入扣款資料
-  private loadFareData(): void {
-    console.log('開始載入扣款資料...');
-
-    // 先檢查是否有暫存資料，指定型別
-    const savedNext1Data = this.flowService.getNext1Data<Next1Data>();
-    console.log('檢查 Next1 暫存資料:', savedNext1Data);
-
-    if (savedNext1Data && savedNext1Data.fareData) {
-      console.log('使用暫存的扣款資料');
-      this.originalFareData = savedNext1Data.fareData;
-      this.filterData();
-      return;
-    }
-
-    // 沒有暫存資料，從 API 載入
-    console.log('從 API 載入扣款資料，apply_no:', this.currentApplyNo);
-    this.loadFareDataFromAPI();
-  }
 
   // 從 API 載入扣款資料
   private loadFareDataFromAPI(): void {
+    console.log('從 API 載入扣款資料，apply_no:', this.currentApplyNo);
+
+    if (!this.currentApplyNo) {
+      console.error('申請編號為空，無法載入資料');
+      this.messageService.warnBubble('申請編號無效，無法載入扣款資料');
+      this.initializeEmptyData();
+      return;
+    }
+
     this.loading = true;
     this.messageService.blockUi();
 
     const queryParams = {
-      apply_no: this.currentApplyNo || '',
+      apply_no: this.currentApplyNo,
       showAll: true
     };
 
@@ -206,19 +438,30 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
       next: (response) => {
         console.log('API 回傳扣款資料:', response);
 
-        if (response?.Data?.FaresByType) {
-          this.processAPIData(response.Data.FaresByType);
-        } else {
-          console.log('API 沒有回傳扣款資料，初始化空資料');
+        try {
+          if (response?.Data?.FaresByType) {
+            this.processAPIData(response.Data.FaresByType);
+            console.log('API 資料處理完成');
+
+            // API 載入成功後，立即儲存到工作流程
+            this.saveFareDataToWorkflow();
+          } else {
+            console.log('API 沒有回傳扣款資料，初始化空資料');
+            this.initializeEmptyData();
+          }
+        } catch (error) {
+          console.error('處理 API 資料時發生錯誤:', error);
+          this.messageService.warnBubble('處理扣款資料時發生錯誤');
           this.initializeEmptyData();
         }
 
         this.loading = false;
         this.messageService.unblockUi();
+        this.verifyDataIntegrity();
       },
       error: (error) => {
         console.error('載入扣款資料失敗:', error);
-        this.messageService.warnBubble('載入扣款資料失敗');
+        this.messageService.warnBubble('載入扣款資料失敗，請稍後重試');
         this.loading = false;
         this.messageService.unblockUi();
         this.initializeEmptyData();
@@ -234,15 +477,22 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
 
     const capTypes = ['A', 'B', 'C', 'D', 'E'];
 
+    // 重置原始資料
     capTypes.forEach(capType => {
       this.originalFareData[capType] = [];
+    });
 
+    capTypes.forEach(capType => {
       if (faresByType[capType] && Array.isArray(faresByType[capType])) {
         this.originalFareData[capType] = faresByType[capType].map((item: any) => ({
           ...item,
           id: item.id || `${capType}_${item.cap_item || Date.now()}`,
-          is_selected: item.is_selected || false,
-          cap_type: capType
+          is_selected: Boolean(item.is_selected), // 確保是布林值
+          cap_type: capType,
+          // 保留原始狀態標記
+          _status: item._status || 'original',
+          _originalData: { ...item },
+          _originalSelected: Boolean(item.is_selected)
         }));
 
         console.log(`${capType} 類型載入 ${this.originalFareData[capType].length} 筆資料`);
@@ -251,8 +501,8 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
       }
     });
 
+    // 處理完成後執行過濾
     this.filterData();
-    this.saveFareDataToWorkflow();
   }
 
   // 初始化空資料
@@ -291,16 +541,35 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
   // 儲存到工作流程
   private saveFareDataToWorkflow(): void {
     try {
-      const next1Data = {
-        fareData: this.originalFareData,
+      console.log('準備儲存 Next1 資料到工作流程...');
+
+      if (!this.hasAnyData()) {
+        console.log('沒有資料需要儲存');
+        return;
+      }
+
+      const next1Data: Next1Data = {
+        fareData: { ...this.originalFareData },
         selectedItems: this.getSelectedItems(),
-        contractInfo: this.currentContractData
+        contractInfo: this.currentContractData,
+        timestamp: new Date().getTime(),
+        applyNo: this.currentApplyNo
       };
 
-      this.flowService.setNext1Data(next1Data);
-      console.log('已儲存 Next1 資料到工作流程');
+      // 儲存到工作流程服務
+      const saveResult = this.flowService.setNext1Data(next1Data);
+
+      if (saveResult) {
+        console.log('✅ Next1 資料已儲存到工作流程:', {
+          扣款項目總數: this.getTotalItemCount(),
+          已選項目數: this.getTotalSelectedCount(),
+          時間戳: new Date(next1Data.timestamp).toLocaleString()
+        });
+      }
+
     } catch (error) {
       console.error('儲存 Next1 資料失敗:', error);
+      this.messageService.warnBubble('儲存扣款資料失敗');
     }
   }
 
@@ -358,15 +627,45 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
 
   // 導航方法
   onSubmitNext(): void {
-    console.log('準備前往下一步');
-    this.saveFareDataToWorkflow();
-    this.router.navigate(['account/tls/tls13010next2']);
+    console.log('🚀 準備前往下一步');
+
+    try {
+      // 儲存當前資料
+      this.saveFareDataToWorkflow();
+
+      // 驗證是否有選中的項目
+      const selectedCount = this.getTotalSelectedCount();
+      if (selectedCount === 0) {
+        this.messageService.warnBubble('請至少選擇一個扣款項目');
+        return;
+      }
+
+      console.log(`✅ 已選擇 ${selectedCount} 個扣款項目，前往下一步`);
+      this.router.navigate(['account/tls/tls12040next2']);
+
+    } catch (error) {
+      console.error('❌ 前往下一步時發生錯誤:', error);
+      this.messageService.warnBubble('儲存資料失敗，無法前往下一步');
+    }
   }
 
   override onCancel(): void {
-    console.log('返回上一步');
-    this.saveFareDataToWorkflow();
-    this.router.navigate(['account/tls/tls12040cru']);
+    console.log('⬅️ 返回上一步');
+
+    try {
+      // 確保資料已儲存
+      this.saveFareDataToWorkflow();
+
+      // 等待一下確保儲存完成
+      setTimeout(() => {
+        this.router.navigate(['account/tls/tls12040cru']);
+      }, 100);
+
+    } catch (error) {
+      console.error('❌ 返回上一步時發生錯誤:', error);
+      // 即使儲存失敗也要導航回去
+      this.router.navigate(['account/tls/tls12040cru']);
+    }
   }
 
   onClearAndExit(): void {

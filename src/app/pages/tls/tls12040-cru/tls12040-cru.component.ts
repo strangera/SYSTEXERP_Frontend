@@ -501,6 +501,11 @@ export class TLS12040CRUComponent implements OnInit {
 
   private handleRouterState(): void {
     const state = this.router.lastSuccessfulNavigation?.extras?.state;
+
+    // 先檢查是否已經有工作流程在進行
+    const currentState = this.flowService.getCurrentState();
+    const hasExistingFlow = currentState.contractId && currentState.contractId !== '';
+
     if (state) {
       const rowdata = state['rowdata'] as TLS12040Response;
       const crudstatus = state['crudstatus'] as CRUDStatus;
@@ -509,28 +514,37 @@ export class TLS12040CRUComponent implements OnInit {
         this.crudstatus = crudstatus;
         this.formTitle = this.getFormTitle(crudstatus);
 
-        // 初始化流程
-        this.flowService.startFlow({
-          applyNo: rowdata.apply_no,
-          isNewContract: crudstatus === CRUDStatus.Create
-        }, rowdata);
+        // 關鍵修改：只在沒有現有流程時才初始化新流程
+        if (!hasExistingFlow) {
+          console.log('初始化新的工作流程');
+          this.flowService.startFlow({
+            applyNo: rowdata.apply_no,
+            isNewContract: crudstatus === CRUDStatus.Create
+          }, rowdata);
+        } else {
+          console.log('使用現有工作流程，跳過重新初始化');
+        }
 
         // 載入詳細資料
         this.loadContractDetail(rowdata);
       } else {
-        // 沒有資料時，初始化一個空的流程
+        // 沒有資料時，才初始化空流程
+        if (!hasExistingFlow) {
+          this.flowService.startFlow({
+            applyNo: '',
+            isNewContract: true
+          });
+        }
+        this.formTitle = '新增專櫃要約書';
+      }
+    } else {
+      // 預設初始化，也要檢查是否已有流程
+      if (!hasExistingFlow) {
         this.flowService.startFlow({
           applyNo: '',
           isNewContract: true
         });
-        this.formTitle = '新增專櫃要約書';
       }
-    } else {
-      // 預設初始化
-      this.flowService.startFlow({
-        applyNo: '',
-        isNewContract: true
-      });
       this.formTitle = '新增專櫃要約書';
     }
   }

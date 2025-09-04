@@ -167,7 +167,9 @@ export interface CruData {
 }
 
 export interface Next1Data {
+  applyNo: any;
   fareData: { [key: string]: TLS12040FareItem[] };
   selectedItems: any[];
   contractInfo: any;
+  timestamp: any;
 }
