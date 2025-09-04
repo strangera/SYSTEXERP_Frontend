@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
-import { ITLS52050Data, POS2008Data, Tls52050Service } from '../../../service/api/tls/tls52050.service';
+import { ITLS52050Data, Tls52050Service } from '../../../service/api/tls/tls52050.service';
 import { Column, createPaginationConfig, RowEditSaveEvent } from '../../../shared/componentkit/table/table.model';
 import { DropDownListService, IDropdownItem } from '../../../service/utility/dropDownList.service';
 import { untilDestroyed } from '@ngneat/until-destroy';
@@ -74,10 +74,14 @@ export class TLS52050CRUComponent extends BasicCruPageComponent<ITLS52050Data> i
   brandOptions: IDropdownItem[] = []; // 品牌代碼
   vendorOptions: IDropdownItem[] = []; // 廠商編號
   userOptions: { user_No: string; user_Name: string }[] = []; // 申請人員、審核人員、結案人員
-  data: POS2008Data[] = [
+  data: any[] = [
     { id: 1, MID: "0", MAM_No: "MAM202310010001", SYS_StoreNo: "10", PLU_MagNo: "PLU202310010001", PLU_Name: "商品名稱", CAT_LNo: "01", CAT_MNo: "01", CAT_SNo: "01", PLU_OrderPrcRate: 50, PLU_OrderPrc: 33, MAM_OrderPrc: 500, PLU_SalePrc: 12, MAM_UnitPrc: 600, MAD_Remark: "單項說明", }
   ];
-  selectedItems: POS2008Data[] = [];
+  //   data: POS2008Data[] = [
+  //   { id: 1, MID: "0", MAM_No: "MAM202310010001", SYS_StoreNo: "10", PLU_MagNo: "PLU202310010001", PLU_Name: "商品名稱", CAT_LNo: "01", CAT_MNo: "01", CAT_SNo: "01", PLU_OrderPrcRate: 50, PLU_OrderPrc: 33, MAM_OrderPrc: 500, PLU_SalePrc: 12, MAM_UnitPrc: 600, MAD_Remark: "單項說明", }
+  // ];
+  selectedItems: any[] = [];
+  // selectedItems: POS2008Data[] = [];
   columns: Column[] = [
     { field: 'PLU_MagNo', header: '商品管理編號', visible: true },
     { field: 'PLU_Name', header: '商品名稱', visible: true },
@@ -127,9 +131,9 @@ export class TLS52050CRUComponent extends BasicCruPageComponent<ITLS52050Data> i
       this.userOptions = [{ user_No: this.user?.user_No || '', user_Name: this.user?.user_Name || '' }];
       this.dataForm.controls.APPLY_USR_No.setValue(this.userOptions[0]?.user_No || ''); // 假設用戶對象有 userName 屬性
     } else {
-      this.sys0110Service.queryUser({ user_No: this.rowdata?.APPLY_USR_No }).pipe(untilDestroyed(this)).subscribe(response => {
-        this.userOptions = response.Data.map(user => ({ user_No: user.user_No, user_Name: user.user_Name }));
-      })
+      // this.sys0110Service.queryUser({ user_No: this.rowdata?.APPLY_USR_No }).pipe(untilDestroyed(this)).subscribe(response => {
+      //   this.userOptions = response.Data.map(user => ({ user_No: user.user_No, user_Name: user.user_Name }));
+      // })
     }
     this.setupFormListeners();// 監聽方法
     this.setupMutualExclusiveControls('costPriceDiscount', 'costPriceAmount');
@@ -239,9 +243,12 @@ export class TLS52050CRUComponent extends BasicCruPageComponent<ITLS52050Data> i
     return Math.round(value);
   }
 
-  onDelete(selectedRows: POS2008Data[]) {
+  onDelete(selectedRows: any[]) {
     this.data = this.data.filter(row => !selectedRows.includes(row));
   }
+  // onDelete(selectedRows: POS2008Data[]) {
+  //   this.data = this.data.filter(row => !selectedRows.includes(row));
+  // }
   onRowEditSave(event: RowEditSaveEvent) {
   }
   dialogVisible = false;

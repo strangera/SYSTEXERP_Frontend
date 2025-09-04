@@ -1,12 +1,11 @@
 import { ITLS52050Data, Tls52050Service } from './../../../service/api/tls/tls52050.service';
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, signal } from '@angular/core';
 import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { AddButton, Column, createPaginationConfig } from '../../../shared/componentkit/table/table.model';
-import { DropDownListService, IDropdownItem } from '../../../service/utility/dropDownList.service';
 import { untilDestroyed } from '@ngneat/until-destroy';
-import { finalize, map } from 'rxjs';
-import { MAM_StatusOptions, POS2008M_COLUMNS } from './tls52050.model';
+import { finalize, Observable, tap } from 'rxjs';
+import { MAM_StatusOptions, MAMStatus, POS2008M_COLUMNS } from './tls52050.model';
 import { FileSelectEvent, FileUploadModule } from 'primeng/fileupload';
 import { ExportLabelService, IExportLabelRequest } from '../../../service/utility/exportLabel.service';
 import { HttpResponse } from '@angular/common/http';
@@ -16,18 +15,14 @@ import { AccordionModule } from 'primeng/accordion';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
-import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
 import { CheckboxModule } from 'primeng/checkbox';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { TranslateModule } from '@ngx-translate/core';
 import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
-export const enum MAMStatus {
-  已申請 = '0',
-  已審核 = '1',
-  變價生效中 = '2',
-  變價結束 = '3',
-  作廢 = '9'
-}
+import { AsyncPipe } from '@angular/common';
+import { DropdownApiNewService } from '@service/utility/dropdown-api.service';
+import { Option } from '@service/utility/dropdown-api.model';
+
 
 @Component({
   selector: 'app-tls52050',
@@ -48,12 +43,13 @@ export const enum MAMStatus {
     CheckboxModule,
     TableComponent,
     TranslateModule,
+    AsyncPipe
   ],
 })
 export class TLS52050Component extends BasicQueryPageComponent<ITLS52050Data> implements OnInit {
-  queryForm = this.formBuilder.group({
+  queryForm = this.formBuilder.nonNullable.group({
     MAM_No: ['', [Validators.maxLength(16)]],// 變價單號
-    VEN_No: [null],              // 廠商代號
+    VEN_No: [null],              // 廠商編號
     LOGO_No: [null],             // 品牌代碼
     MAM_Status: [null, [Validators.required]],// 進價變價單狀態
     APPLY_USR_No: [null],        // 申請人
@@ -66,74 +62,48 @@ export class TLS52050Component extends BasicQueryPageComponent<ITLS52050Data> im
     ...createPaginationConfig([{ field: 'MAM_No', order: 1 }]),
   });
   totalRecords = 0;
-  MAM_StatusOptions = MAM_StatusOptions; // 進價變價單狀態選項
-  brandOptions: IDropdownItem[] = []; // 品牌代碼
-  vendorOptions: IDropdownItem[] = []; // 廠商編號
-  userOptions: { label: string, value: string }[] = []; // 申請人員、審核人員、結案人員
+  MAM_StatusOptions = MAM_StatusOptions;        // 進價變價單狀態選項
+  brandOptions?: Observable<Option[] | null>;   // 品牌
+  vendorOptions?: Observable<Option[] | null>;  // 廠商編號
+  userOptions?: Observable<Option[] | null>     // 申請人員、審核人員
   data: ITLS52050Data[] = [];
   columns: Column[] = POS2008M_COLUMNS;
   addButton: AddButton[] = [
-    { label: '審核', icon: 'pi pi-check-circle text-green-500', action: (rowData: ITLS52050Data) => { this.statusChange(rowData, MAMStatus.已審核); }, disabled: (rowData: ITLS52050Data) => rowData.MAM_Status !== MAMStatus.已申請 }, // 審核
+    { label: '審核', icon: 'pi pi-check-circle text-green-500', action: (rowData: ITLS52050Data) => { this.statusChange(rowData, MAMStatus.已審核); }, disabled: (rowData: ITLS52050Data) => rowData.MAM_Status !== MAMStatus.已申請 || (new Date(rowData.MAM_BegDate).setHours(0, 0, 0, 0)) <= (new Date().setHours(0, 0, 0, 0)) }, // 審核
     { label: '反審核', icon: 'pi pi-undo text-orange-500', action: (rowData: ITLS52050Data) => { this.statusChange(rowData, MAMStatus.已申請); }, disabled: (rowData: ITLS52050Data) => rowData.MAM_Status !== MAMStatus.已審核 }, // 反審核
     { label: '產生標籤檔', icon: 'pi pi-tags', action: (rowData: ITLS52050Data) => { this.generateLabelFile(rowData); } }, // 標籤檔
   ];
 
   constructor(
-    private dropDownListService: DropDownListService,
     private tls52050Service: Tls52050Service,
-    private exportLabelService: ExportLabelService
+    private exportLabelService: ExportLabelService,
+    public readonly dropdown: DropdownApiNewService
   ) { super(); }
 
   ngOnInit(): void {
     this.initializePage('TLS52050', 'tls/tls52050cru', this.queryForm, (frm) => this.onSubmit(frm));
-    // 品牌代碼 (LOGO_No)
-    this.dropDownListService.queryPLULOGO_DropDownList().pipe(untilDestroyed(this)).subscribe(response => {
-      this.brandOptions = response.Data.map(brand => ({
-        ...brand,
-        label: `${brand.No} - ${brand.Name}`,
-      }));
-    });
-    // 廠商編號 (VEN_No)
-    this.dropDownListService.queryPOS2013_DropDownList().pipe(untilDestroyed(this)).subscribe(response => {
-      this.vendorOptions = response.Data.map(vendor => ({
-        ...vendor,
-        label: `${vendor.VEN_No} - ${vendor.Name}`,
-      }));
-    });
-    // 申請人員、審核人員、結案人員 (共用人員下拉選單)
-    this.dropDownListService.queryTBLUSER_DropDownList().pipe(untilDestroyed(this),
-      map(response => response.Data.map(item => ({ label: item.Name, value: item.No })))
-    ).subscribe(options => {
-      this.userOptions = options;
-    });
+    this.brandOptions = this.dropdown.queryPluLogo();
+    this.vendorOptions = this.dropdown.queryPos2013({ VEN_Flag: '' });
+    this.userOptions = this.dropdown.queryTblUser();
   }
   onFileUpload(event: FileSelectEvent) {
     const file = event.files[0];
-    // this.fin11020Service.uploadFIN11020(file).pipe(untilDestroyed(this)).subscribe({
-    //   next: (res) => {
+    // this.fin11020Service.uploadFIN11020(file).pipe(untilDestroyed(this)).subscribe(res =>{
     //     if (res.Data) {
     //       this.onSubmit(this.queryForm);
     //     }
-    //   },
-    //   error: (err) => {
-    //     console.error(err);
-    //   },
     // });
   }
-  btnLoading = true;
+  btnLoading = signal(false);
   statusChange(rowData: ITLS52050Data, status: string) {
-    this.btnLoading = true;
-    const body = {
-      idList: [rowData.id],
-      PO_Status: status
-    }
-    // this.tls52010Service.updateStatusTLS52010(body).pipe(untilDestroyed(this), finalize(() => this.btnLoading = false)).subscribe(response => {
-    //   this.messageService.successBubble(response.Message);
-    //   this.onSubmit(this.queryForm);
-    // });
+    const body = { idList: [rowData.Id], PO_Status: status }
+    this.tls52050Service.updateStatusTLS52050(body).pipe(untilDestroyed(this), tap(() => this.btnLoading.set(true)), finalize(() => this.btnLoading.set(false))).subscribe(response => {
+      this.messageService.successBubble(response.Message);
+      this.onSubmit(this.queryForm);
+    });
   }
   generateLabelFile(rowData: ITLS52050Data) {
-    this.btnLoading = true;
+    this.btnLoading.set(true);
     this.tls52050Service.getLabelTLS52050({ MAM_No: rowData.MAM_No }).pipe(untilDestroyed(this)).subscribe(response => {
       const transformedData: IExportLabelRequest[] = response.Data.map((item: any) => ({
         PLU_MagNo: item.PLU_MagNO,
@@ -145,7 +115,7 @@ export class TLS52050Component extends BasicQueryPageComponent<ITLS52050Data> im
         PLU_No: item.PLU_NO
       }));
       // !這邊要開啟彈跳視窗，並且顯示Table欄位，要多一個可輸入的「標籤數量」欄位預設為1，可調整後，按下確認產生標籤檔
-      this.exportLabelService.ExportLabel(transformedData).pipe(untilDestroyed(this), finalize(() => this.btnLoading = false)).subscribe(
+      this.exportLabelService.ExportLabel(transformedData).pipe(untilDestroyed(this), finalize(() => this.btnLoading.set(false))).subscribe(
         (exportHttpResponse: HttpResponse<Blob>) => {
           if (exportHttpResponse.ok && exportHttpResponse.body) {
             const blob = exportHttpResponse.body;
