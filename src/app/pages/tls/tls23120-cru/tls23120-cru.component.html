@@ -63,10 +63,14 @@
 <div class="col-12 text-center text-xl font-bold">
   專櫃日對帳單
 </div>
-        <div class="col-12 md:col-6 lg:col-4" *ngIf="showBusType">
-          大分類：{{ group.rows[0]?.bus_type }} /
-          {{ group.rows[0]?.bus_type_name }}
-        </div>
+<ng-container *ngIf="showBusType; else busTypePlaceholder">
+  <div class="col-12 md:col-6 lg:col-4">
+    大分類：{{ group.rows[0]?.bus_type }} / {{ group.rows[0]?.bus_type_name }}
+  </div>
+</ng-container>
+<ng-template #busTypePlaceholder>
+  <div class="col-12 md:col-6 lg:col-4"></div>
+</ng-template>
         <div class="col-12 md:col-6 lg:col-4">
           銷售日期：{{ group.rows[0]?.TXN_DATE | date: "yyyy/MM/dd" }}
         </div>

@@ -57,14 +57,13 @@ const toSortMeta = (arr: Array<{ field: string; order: any }> | null | undefined
     FormsModule,
     ReactiveFormsModule,
     MultiSelectComponent,
-    DropdownComponent,
     RadiobuttonComponent,
     InputTextModule,
     ButtonComponent,
     TranslateModule,
     // TableComponent,
     CalendarComponent,
-    DropdownComponent
+    
   ],
 })
 export class TLS23120Component
