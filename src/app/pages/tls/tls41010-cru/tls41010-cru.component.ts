@@ -72,6 +72,9 @@ export class TLS41010CRUComponent extends BasicCruPageComponent<TLS41010Data> im
     ECR_USR_Name: ['', [Validators.maxLength(20)]],
     ECR_Status: ['A'],
     ECR_ActiveDate: [null],
+    ECR_Group: [''],
+    ECR_AreaNo: [''],
+    ECR_SubGroup: [''],
     ECR_CloseDate: [null],
     ECR_GUI_MinQty: [50, [Validators.min(0), Validators.max(99999999)]],
     ECR_ComName: ['', [Validators.maxLength(64)]],
@@ -176,7 +179,7 @@ export class TLS41010CRUComponent extends BasicCruPageComponent<TLS41010Data> im
   LocOptions: IDropdownItem[] = [];
   constructor(
     public override formBuilder: FormBuilder,
-    private tls46010Service: Tls46010Service,
+    private tls46110Service: Tls46010Service,
     private tls46020Service: TLS46020Service,
     private dropDownListService: DropDownListService,
     private tls41010Service: TLS41010Service,
@@ -245,29 +248,38 @@ export class TLS41010CRUComponent extends BasicCruPageComponent<TLS41010Data> im
     });
 
     //位置編號
-    this.dropDownListService.queryPOS2002_DropDownList().subscribe(res => {
+    const locationParams = {} as any; // 依後端定義填入查詢參數
+    this.dropDownListService.queryPOS2002_Location_DropDownList(locationParams).subscribe(res => {
       if (res?.Data) {
         this.LocOptions = res.Data.map(item => ({
-          No: item.No,
-          Name: item.Name,
-          label: `${item.No} - ${item.Name}`,
-          value: item.No
+          No: item.location_no,
+          Name: item.location_no,
+          value: item.location_no,
+          label: item.location_no,
+          tlt_building: item.tlt_building,
+          tlt_floor: item.tlt_floor,
+          area_no: item.area_no
         }));
       }
     });
     // 綁定位置編號選取 → 自動帶出名稱
     this.dataForm.get('ECR_LocNo')?.valueChanges.subscribe(selectedNo => {
-      const selected = this.LocOptions.find(c => c.No === selectedNo);
-      this.dataForm.patchValue({
-        ECR_TLT_Name: selected ? selected.Name : ''
-      }, { emitEvent: false });
+      const selected = this.LocOptions.find(c => c.value === selectedNo);
+      if (selected) {
+        this.dataForm.patchValue({
+          ECR_TLT_Name: selected.Name,
+          ECR_Group: selected.tlt_building,
+          ECR_SubGroup: selected.tlt_floor,
+          ECR_AreaNo: selected.area_no
+        }, { emitEvent: false });
+      }
     });
     // 監聽欄位變化
     this.dataForm.get('ECR_TmplNo')?.valueChanges.subscribe((tmplNo) => {
-      if (tmplNo) this.callTLS46020Api(tmplNo);
+      if (tmplNo) this.callTLS41010Api(tmplNo);
     });
     if (this.dataForm.get('ECR_TmplNo')?.value && !this.isFormCreateable) {
-      this.callTLS46020Api(this.dataForm.get('ECR_TmplNo')?.value as string);
+      this.callTLS41010Api(this.dataForm.get('ECR_TmplNo')?.value as string);
 
     }
     this.dataForm.get('ECR_Type')?.valueChanges.subscribe(value => {
@@ -277,12 +289,12 @@ export class TLS41010CRUComponent extends BasicCruPageComponent<TLS41010Data> im
   }
 
   /** 套用範本資料 */
-  callTLS46020Api(tmplNo: string) {
-    this.tls46020Service.queryTLS46020({ ECR_TmplNo: tmplNo }).subscribe({
+  callTLS41010Api(tmplNo: string) {
+    this.tls41010Service.queryTLS41010({ ECR_TmplNo: tmplNo }).subscribe({
       next: (res) => {
         if (res.Data?.length) {
           const patchData = res.Data[0];
-          delete patchData.ECR_TmplNo;
+          // delete patchData.ECR_TmplNo;
 
 
           if ('ECR_SettleHHNN' in patchData) {
@@ -299,12 +311,12 @@ export class TLS41010CRUComponent extends BasicCruPageComponent<TLS41010Data> im
           }
           // 這邊幫我有的值再patch
           this.dataForm.patchValue({
-            ...patchData,
+            // ...patchData,
           });
 
         }
       },
-      error: (err) => console.error('查詢 TLS46020 失敗', err),
+      error: (err) => console.error('查詢 TLS41010 失敗', err),
     });
   }
 
