@@ -1,3 +1,4 @@
+import { ValidationService } from '@shared/service/validation.service';
 import { Tls41030Service } from './../../../service/api/tls/tls41030.service';
 import { Component, OnInit, } from '@angular/core';
 import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
@@ -44,16 +45,27 @@ interface POS2001 {
   templateUrl: './tls41030-cru.component.html',
   styleUrl: './tls41030-cru.component.scss',
   standalone: true,
-  imports: [MenubarComponent, ButtonComponent, PanelModule, FormsModule, ReactiveFormsModule, InputTextComponent, DropdownComponent, CalendarComponent, NgIf, TranslateModule]
+  imports: [
+    MenubarComponent,
+    ButtonComponent,
+    PanelModule,
+    FormsModule,
+    ReactiveFormsModule,
+    InputTextComponent,
+    DropdownComponent,
+    CalendarComponent,
+    NgIf,
+    TranslateModule,
+  ]
 })
 export class TLS41030CRUComponent extends BasicCruPageComponent<POS2001>
   implements OnInit {
   // ----------------------------------------------------------------
   dataForm = this.formBuilder.nonNullable.group({
     id: [null], // decimal(19, 0)
-    USR_No: ['', [Validators.required, Validators.maxLength(8)]], // 收銀員編號
+    USR_No: ['', [Validators.required, Validators.maxLength(8), this.validationService.noChineseValidator]], // 收銀員編號
     USR_Name: ['', [Validators.required, Validators.maxLength(20)]], // 收銀員姓名
-    USR_Passwd: ['', [Validators.required, Validators.maxLength(20)]], // 密碼 (要顯示嗎，待確認)
+    USR_Passwd: ['', [Validators.required, Validators.maxLength(20), this.validationService.noChineseValidator]], // 密碼 (要顯示嗎，待確認)
     USR_Level: ['0', [Validators.required, Validators.maxLength(6)]], // 收銀鍵盤等級(編號)，預設值為0
     USR_Auth: ['0', [Validators.required, Validators.maxLength(6)]], // 收銀員授權等級，預設值為0
 
@@ -84,7 +96,10 @@ export class TLS41030CRUComponent extends BasicCruPageComponent<POS2001>
 
   TLTOption: apiOption[] = []; //專櫃下拉選單
   // ----------------------------------------------------------------
-  constructor(private tls41030Service: Tls41030Service) {
+  constructor(
+    private tls41030Service: Tls41030Service,
+    private validationService: ValidationService,
+  ) {
     super(); // 呼叫父類建構子
   }
 

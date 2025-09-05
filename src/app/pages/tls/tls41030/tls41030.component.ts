@@ -14,6 +14,7 @@ import { concatMap, finalize, from } from 'rxjs';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { ButtonModule } from 'primeng/button';
 import { NgStyle } from '@angular/common';
+import { TooltipModule } from 'primeng/tooltip';
 
 
 interface POS2001 {
@@ -57,6 +58,7 @@ interface POS2001 {
     TranslateModule,
     ButtonModule,
     NgStyle,
+    TooltipModule
   ]
 })
 export class TLS41030Component extends BasicQueryPageComponent<POS2001> implements OnInit {
@@ -91,7 +93,7 @@ export class TLS41030Component extends BasicQueryPageComponent<POS2001> implemen
     { field: 'USR_Level', header: '收銀鍵盤等級', visible: true },
     { field: 'USR_Auth', header: '收銀員授權等級', visible: true },
     {
-      field: 'USR_JobStatus', header: '收銀員(在職)狀態', visible: true,
+      field: 'USR_JobStatus', header: '收銀員在職狀態', visible: true,
       format: (value: string) => this.jobStatusOption.find((option) => option.value === value)?.label || value
     },
     {
@@ -102,10 +104,10 @@ export class TLS41030Component extends BasicQueryPageComponent<POS2001> implemen
       field: 'USR_RegType', header: '收銀員區分', visible: true,
       format: (value: string) => this.regTypeOption.find((option) => option.value === value)?.label || value
     },
-    { field: 'USR_TLT_No', header: '收銀員所屬櫃編', visible: true },
-    { field: 'USR_TLT_Name', header: '收銀員所屬專櫃名稱', visible: true },
-    { field: 'USR_OnJobDate', header: '啟用(到職)日期', visible: true, format: formatDate },
-    { field: 'USR_QuitDate', header: '停用(離職)日期', visible: true, format: formatDate },
+    { field: 'USR_TLT_No', header: '所屬專櫃編號', visible: true },
+    { field: 'USR_TLT_Name', header: '所屬專櫃名稱', visible: true },
+    { field: 'USR_OnJobDate', header: '到職日', visible: true, format: formatDate },
+    { field: 'USR_QuitDate', header: '離職日', visible: true, format: formatDate },
 
     { field: 'CRT_Date', header: '建立日期', visible: false, format: formatDate },
     { field: 'CRT_USR_No', header: '建立人員代碼', visible: false },
