@@ -35,9 +35,9 @@
 </div>
 
 <div class="card">
-  <app-table tableKey="TLS11020" [data]="data" [columns]="columns" [selectedItems]="selectedItems"
+  <app-table2 tableKey="TLS11020" [data]="data" [columns]="columns" [selectedItems]="selectedItems"
     (selectionChange)="selectedItems = $event" (delete)="onDelete($event)" [showCheckBox]="true" dataKey="id"
     [multiSortMeta]="[{ field: 'CAP_Item', order: 1 }]" [totalRecords]="totalRecords" [lazy]="true" [loading]="loading"
     (edit)="onEdit($event)" (detail)="onDetail($event)"
-    (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"></app-table>
+    (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"></app-table2>
 </div>
