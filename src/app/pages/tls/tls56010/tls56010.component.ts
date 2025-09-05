@@ -105,14 +105,16 @@ export class TLS56010Component extends BasicQueryPageComponent<any> implements O
 
   columns: Column[] = [
     { field: 'PLU_MagNo', header: '商品管理編號', visible: true },
-    { field: 'LOGO_No', header: '國際條碼', visible: true },
+    { field: 'PLU_No', header: '國際條碼', visible: true },
     { field: 'PLU_Name', header: '商品名稱', visible: true },
-    { field: 'HOS_No', header: '庫存倉別', visible: true },
+    { field: 'HOS_No', header: '倉別代碼', visible: true },
+    { field: 'HOS_NAME', header: '倉別名稱', visible: true },
     { field: 'STK_CurrentQty', header: '現有庫存量', visible: true },
     { field: 'Calc_SafeQty', header: '安全庫存量', visible: true },
     { field: 'PLU_UNITNAME', header: '單位', visible: true },
     { field: 'PLU_SalePrc', header: '售價', visible: true },
-    { field: 'LOGO_CH_NAME', header: '品牌', visible: true },
+    { field: 'LOGO_No', header: '品牌代碼', visible: true },
+    { field: 'LOGO_CH_NAME', header: '品牌名稱', visible: true },
     { field: 'SaleQty_30Days', header: '30天銷售量', visible: true },
     { field: 'SaleQty_60Days', header: '60天銷售量', visible: true },
     { field: 'SaleQty_90Days', header: '90天銷售量', visible: true },
@@ -202,7 +204,7 @@ export class TLS56010Component extends BasicQueryPageComponent<any> implements O
       next: (res) => {
         const data = res.Data as unknown as IPLULOGOItem[];
         this.brandCodeOptions = (data ?? []).map(item => ({
-          label: `${item.LOGO_EN_NAME}（${item.Name}）`,
+          label: `${item.No} ${item.LOGO_EN_NAME}（${item.Name}）`,
           value: item.No,
           No: item.No,
           Name: item.Name,
@@ -276,7 +278,7 @@ onSubmit(form: FormGroup): void {
       (val != null && val !== '' ? [val] : []);
     const nonEmpty = (s?: string | null) => !!(s && s.trim().length);
 
-    // ✅ 依你要的顯示順序建立物件，並且對空字串「不送欄位」
+    // 依你要的顯示順序建立物件，並且對空字串「不送欄位」
     const body: any = {
       PageSize:  Number(v.pageSize ?? 10),
       PageIndex: Number(v.pageIndex ?? 1),
