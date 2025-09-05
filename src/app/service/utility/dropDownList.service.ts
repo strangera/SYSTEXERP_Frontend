@@ -6,6 +6,10 @@ import { ApiResponse } from '../system/auth.service'; // 假設 ApiResponse 介�
 
 // 通用的下拉選單項目介面，用於大部分返回 { No: string, Name: string } 的 API
 export interface IDropdownItem {
+  value?: string;
+  tlt_building?: string;
+  tlt_floor?: string;
+  area_no?: string;
   No: string; // 唯一值
   Name: string; // 用於顯示的名稱
   ShortName?: string; // 用於顯示的簡稱

@@ -136,8 +136,8 @@ export class TLS2A010Component extends BasicQueryPageComponent<any> implements O
         if (res && res.Data) {
           this.systemTypeOptions = res.Data.map(item => ({
             label: `${item.No ?? ''}-${item.Name ?? ''}`,
-            value: Number(item.No),   // 確保是數字
-            No: String(item.No),      // Convert to string to match IDropdownItem type
+            value: String(item.No),
+            No: String(item.No),
             Name: item.Name
           }));
 

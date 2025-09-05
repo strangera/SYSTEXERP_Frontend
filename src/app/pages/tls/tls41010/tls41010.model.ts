@@ -144,6 +144,10 @@ export interface TLS41010Data {
 
 
 export interface TLS41010Item {
+  ECR_Group?: string;
+  ECR_SubGroup?: string;
+  ECR_AreaNo?: string;
+  ECR_LocNo?: string;
   ECR_TmplNo?: string;
   ECR_No: string;
   id: number;

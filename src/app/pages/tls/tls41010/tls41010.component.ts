@@ -61,7 +61,9 @@ export class TLS41010Component extends BasicQueryPageComponent<TLS41010Data> imp
     ECR_CloseDateStart: [null],
     ECR_CloseDateEnd: [null],
     ECR_Status: [''],
-    ECR_SubGroup: ['', [Validators.maxLength(20)]],
+    ECR_Group: [''],
+    ECR_SubGroup: [''],
+    ECR_AreaNo: [''],
     ECR_LocNo: ['', [Validators.maxLength(10)]],
     ECR_SAL_Type: [null, [Validators.maxLength(8)]],
     ECR_GUI_Type: ['', [Validators.maxLength(2)]],
@@ -253,6 +255,14 @@ export class TLS41010Component extends BasicQueryPageComponent<TLS41010Data> imp
 
     this.queryForm.get('ECR_LocNo')?.valueChanges.subscribe((locNo) => {
       if (locNo) {
+        const selected = this.LocOptions.find(opt => opt.value === locNo);
+        if (selected) {
+          this.queryForm.patchValue({
+            ECR_Group: selected.tlt_building,
+            ECR_SubGroup: selected.tlt_floor,
+            ECR_AreaNo: selected.area_no
+          }, { emitEvent: false });
+        }
         this.callTls11010Api(locNo);
       }
     });
@@ -263,13 +273,17 @@ export class TLS41010Component extends BasicQueryPageComponent<TLS41010Data> imp
       }));
     });
     //位置編號
-    this.dropDownListService.queryPOS2002_DropDownList().subscribe(res => {
+    const locationParams = {} as any; // 依後端定義填入查詢參數
+    this.dropDownListService.queryPOS2002_Location_DropDownList(locationParams).subscribe(res => {
       if (res?.Data) {
         this.LocOptions = res.Data.map(item => ({
-          No: item.No,
-          Name: item.Name,
-          label: `${item.No} - ${item.Name}`,
-          value: item.No
+          No: item.location_no,
+          Name: item.location_no,
+          value: item.location_no,
+          label: item.location_no,
+          tlt_building: item.tlt_building,
+          tlt_floor: item.tlt_floor,
+          area_no: item.area_no
         }));
       }
     });
@@ -306,8 +320,15 @@ export class TLS41010Component extends BasicQueryPageComponent<TLS41010Data> imp
       this.loading = false;
       // 來源和目標一樣，不能複製
       if (this.isValid) { return; }
-      // 組資料
-      const body: Partial<TLS41010Item> = { ...this.dialogSelectItem };
+      // 組資料，補上四個欄位
+      const formValue = frm.value;
+      const body: Partial<TLS41010Item> = {
+        ...this.dialogSelectItem,
+        ECR_Group: formValue.ECR_Group,
+        ECR_SubGroup: formValue.ECR_SubGroup,
+        ECR_AreaNo: formValue.ECR_AreaNo,
+        ECR_LocNo: formValue.ECR_LocNo
+      };
       // 判斷是否為新增或更新，假設「new」是新增
       // 更新
       this.tls41010Service.updateTLS41010(body).pipe(untilDestroyed(this)).subscribe(res => {
