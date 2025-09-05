@@ -63,6 +63,7 @@ export class TableComponent extends BasicPrintDataComponent implements OnChanges
   @Input() showExcel = false;                      // 是否顯示 匯出Excel
   @Input() showExcelExport = true;                 // 是否顯示 匯出Excel按鈕
   @Input() showExcelImport = true;                 // 是否顯示 匯入Excel按鈕
+  @Input() showCustomExcelImport = false;         // 是否顯示 自訂匯入Excel按鈕
   @Output() exportExcel = new EventEmitter<any>(); // 匯出 Excel 事件
   @Input() exportExcelLoading = false;             // 匯出 Excel loading
   @Output() importExcel = new EventEmitter<FileSelectEvent>(); // 匯入 Excel 事件

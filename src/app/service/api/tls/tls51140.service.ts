@@ -21,11 +21,17 @@ export interface QueryTLS51140Request {
  * 查詢 POS2034_ECR 資料的 Response 資料格式
  */
 export interface QueryTLS51140ResponseData {
-  ID: number;
+  id: number;
   TLT_NO: string;
   TLT_Name: string;
   ECR_No: string;
   ECR_Name: string;
+  building_no?: string;
+  building_name?: string;
+  floor_no?: string;
+  floor_name?: string;
+  area_no?: string;
+  area_name?: string;
   HOS_No: string;
   HOS_Name: string;
   Remark: string;
@@ -39,7 +45,24 @@ export interface QueryTLS51140ResponseData {
   UPD_USR_Name: string;
 }
 
+export interface InsertTLS51140Request {
+  TLT_NO: string;
+  ECR_No: string;
+  HOS_No: string;
+  Remark: string;
+}
 
+export interface UpdateTLS51140Request {
+  ID?: number;
+  TLT_NO: string;
+  ECR_No: string;
+  HOS_No: string;
+  Remark: string;
+}
+
+export interface DeleteTLS51140Request {
+  TLT_NO_List: string[];
+}
 @Injectable({
   providedIn: 'root'
 })
@@ -57,5 +80,30 @@ export class Tls51140Service {
   queryTLS51140(request: QueryTLS51140Request): Observable<ApiResponse<QueryTLS51140ResponseData[]>> {
     const url = `${this.apiUrl}/queryTLS51140`;
     return this.http.post<ApiResponse<QueryTLS51140ResponseData[]>>(url, request);
+  }
+
+  insertTLS51140(data: InsertTLS51140Request[]): Observable<ApiResponse<number>> {
+    const url = `${this.apiUrl}/insertTLS51140`;
+    return this.http.post<ApiResponse<number>>(url, data);
+  }
+
+  updateTLS51140(data: UpdateTLS51140Request[]): Observable<ApiResponse<number>> {
+    const url = `${this.apiUrl}/updateTLS51140`;
+    return this.http.post<ApiResponse<number>>(url, data);
+  }
+
+  queryTLS51140ByTltNo(TltNo: string): Observable<ApiResponse<QueryTLS51140ResponseData[]>> {
+    const url = `${this.apiUrl}/queryTLS51140ByTltNo`;
+    return this.http.post<ApiResponse<QueryTLS51140ResponseData[]>>(url, { TLT_NO: TltNo });
+  }
+
+  /**
+     * 刪除 POS2034_ECR 資料
+     * @param request 包含 TLT_NO 清單的 Request
+     * @returns 刪除結果的 Observable
+     */
+  deleteTLS51140(request: DeleteTLS51140Request): Observable<ApiResponse<boolean>> {
+    const url = `${this.apiUrl}/deleteTLS51140`;
+    return this.http.post<ApiResponse<boolean>>(url, request);
   }
 }

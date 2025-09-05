@@ -42,7 +42,7 @@ export class TLS13030Component extends BasicQueryPageComponent<any> {
   sortMeta: any[] = [];
   readonly defaultSort: any[] = [
     // 與 createPaginationConfig 一致
-    { field: 'id', order: 1 },
+    { field: 'tlt_no', order: 1 },
   ];
   private lastQuerySig: string | null = null;
   private lazyTimer: any = null;

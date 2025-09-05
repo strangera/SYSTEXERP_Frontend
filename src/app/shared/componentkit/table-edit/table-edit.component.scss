@@ -47,6 +47,10 @@
       }
     }
   }
+  .p-component-overlay {
+    // 轉圈圈的遮罩
+    background-color: rgb(217 217 217 / 40%) !important;
+  }
   .p-datatable .p-datatable-thead > tr > th {
     background: var(--table-header-bg);
   }

@@ -269,11 +269,11 @@ export class TLS31020Component extends BasicQueryPageComponent<TLS31020Response>
       const formValue = {
         ...frm.getRawValue(),
         bus_class: frm.getRawValue().bus_class.map((item: IDropdownItem) => item.No),
-        TXN_DateS: formatDate(frm.getRawValue().TXN_DateS, 'yyyy-MM-dd', 'en-US'),
-        TXN_DateE: formatDate(frm.getRawValue().TXN_DateE, 'yyyy-MM-dd', 'en-US'),
+        // TXN_DateS: formatDate(frm.getRawValue().TXN_DateS, 'yyyy-MM-dd', 'en-US'),
+        // TXN_DateE: formatDate(frm.getRawValue().TXN_DateE, 'yyyy-MM-dd', 'en-US'),
       } as TLS31020Request;
 
-      console.log('送出print請求',formValue);
+      console.log('送出query請求',formValue);
       this.tls31020Service.queryTLS31020(formValue).pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(res => {
         this.data = res.Data;
         this.totalRecords = res.TotalCount;
@@ -294,6 +294,8 @@ export class TLS31020Component extends BasicQueryPageComponent<TLS31020Response>
       bus_class: frm.getRawValue().bus_class.map((item: IDropdownItem) => item.No),
       // TXN_Date: formatDate(frm.getRawValue().TXN_Date, 'yyyy-MM-dd', 'en-US'),
     } as TLS31020PrintRequest;
+
+    console.log('送出print請求',formValue);
 
     this.btnLoading = true;
     this.tls31020Service.printTLS31020(formValue).pipe(finalize(() => this.btnLoading = false), untilDestroyed(this))

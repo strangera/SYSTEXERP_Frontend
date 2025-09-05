@@ -1,61 +1,79 @@
-<div class="grid">
-  <div class="col-12">
-    <div class="card">
-      <div class="grid align-items-center">
-        <div class="col" style="flex: 1">
-          <app-menubar [ProgNo]="ProgNo"></app-menubar>
-        </div>
-      </div>
-      <p-accordion>
-        <p-accordionTab
-          header="{{ 'query-conditions' | translate }}"
-          [selected]="true"
-          class="line-height-3 m-0"
-          [headerStyleClass]="'query-accordionTab'"
-        >
-          <form
-            [formGroup]="queryForm"
-            id="queryForm"
-            (ngSubmit)="onSubmit(queryForm)"
-          >
-            <div class="grid p-fluid">
-              <div class="col-12 md:col-6 lg:col-4">
-                <app-calendar
-                  calendarType="dateOne"
-                  label="銷售日期"
-                  [control]="queryForm.controls.onedatedd"
-                  [submitted]="submitted"
-                ></app-calendar>
-              </div>
-            </div>
-            <h6>最近關帳日期:2020/2/10</h6>
-            <h6>借方支付工具除信用卡外拋實收</h6>
-            <div>
-              <div class="grid justify-content-end">
-                <app-button
-                  btnType="clear"
-                  (onClick)="onClearForm()"
-                ></app-button>
-                <app-button
-                  btnType="query"
-                  (onClick)="onSubmitQuery(queryForm)"
-                  [loading]="loading"
-                ></app-button>
-              </div>
-            </div>
-          </form>
-        </p-accordionTab>
-      </p-accordion>
-    </div>
-    <div class="card">
-      <div class="col-13">
-        <app-table
-          [data]="data"
-          [columns]="columns"
-          (edit)="onEdit($event)"
-          (detail)="onDetail($event)"
-        ></app-table>
-      </div>
-    </div>
+<div class="card">
+  <div class="flex gap-2 mb-2">
+    <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
   </div>
+
+  <p-accordion>
+    <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'">
+      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
+        <div class="grid p-fluid">
+          <app-calendar class="col-12 md:col-6 lg:col-4" label="銷售日期" calendarType="dateOne"
+            [control]="queryForm.controls.TXN_Date" [submitted]="submitted"></app-calendar>
+        </div>
+        <div class="my-3">
+          <p>最近關帳日期：{{closeDate}}</p>
+          <p>借方支付工具除信用卡外拋實收</p>
+        </div>
+        <div class="justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3" style="display: flex;">
+          <app-button btnType="clear" [form]="queryForm"></app-button>
+          <app-button btnType="query" [loading]="loading"></app-button>
+        </div>
+      </form>
+    </p-accordionTab>
+  </p-accordion>
+</div>
+
+<div class="card">
+  <app-button class="flex justify-content-end" label="匯出excel" severity="info" [icon]="'pi pi-file-export'"
+    (click)="onExportExcel()" />
+  <p-tabView>
+    <!-- YY -->
+    <p-tabPanel header="開立業主發票(拋傳票)">
+      <div class="col-12">
+        <span>借方</span>
+        <app-table tableKey="yy_up" [data]="data_yy_up" [columns]="columns_yy_up" [loading]="loading"
+          [showDelete]="false" [showManage]="false" [showReportMode]="false" [showPaginator]="false"
+          [showCaption]="false"></app-table>
+      </div>
+      <div class="col-12">
+        <span>貸方</span>
+        <app-table tableKey="yy_down" [data]="data_yy_down" [columns]="columns_yy_down" [loading]="loading"
+          [showDelete]="false" [showManage]="false" [showReportMode]="false" [showPaginator]="false"
+          [showCaption]="false"></app-table>
+      </div>
+    </p-tabPanel>
+
+    <!-- NY -->
+    <p-tabPanel header="非開立業主發票(拋傳票)">
+      <div class="col-12">
+        <span>借方</span>
+        <app-table tableKey="ny_up" [data]="data_ny_up" [columns]="columns_ny_up" [loading]="loading"
+          [showDelete]="false" [showManage]="false" [showReportMode]="false" [showPaginator]="false"
+          [showCaption]="false"></app-table>
+      </div>
+      <div class="col-12">
+        <span>貸方</span>
+        <app-table tableKey="ny_down" [data]="data_ny_down" [columns]="columns_ny_down" [loading]="loading"
+          [showDelete]="false" [showManage]="false" [showReportMode]="false" [showPaginator]="false"
+          [showCaption]="false"></app-table>
+      </div>
+    </p-tabPanel>
+
+    <!-- NN -->
+    <p-tabPanel header="非開立業主發票及收現(不拋傳票)">
+      <div class="col-12">
+        <span>借方</span>
+        <app-table tableKey="nn_up" [data]="data_nn_up" [columns]="columns_nn_up" [loading]="loading"
+          [showDelete]="false" [showManage]="false" [showReportMode]="false" [showPaginator]="false"
+          [showCaption]="false"></app-table>
+      </div>
+      <div class="col-12">
+        <span>貸方</span>
+        <app-table tableKey="nn_down" [data]="data_nn_down" [columns]="columns_nn_down" [loading]="loading"
+          [showDelete]="false" [showManage]="false" [showReportMode]="false" [showPaginator]="false"
+          [showCaption]="false"></app-table>
+      </div>
+    </p-tabPanel>
+  </p-tabView>
 </div>

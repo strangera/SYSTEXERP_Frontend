@@ -38,6 +38,7 @@ export class TLS51130CRUComponent extends BasicCruPageComponent<any> implements 
   CAT_SOptions: any[] = [];
 
   dataForm = this.formBuilder.nonNullable.group({
+     id: [0],    
     LOGO_No: ['', Validators.required],
     CAT_LNo: ['', Validators.required],
     CAT_MNo: [''],
@@ -150,8 +151,20 @@ private loadSOptions(catLNo: string, catMNo: string) {
 
   // 編輯模式：載入對應中/小分類選項（label 也用合併格式）
   // ✅ 不論 Edit 或 Read（只排除 Create），都預載中/小分類選項，讓檢視模式有 label
-  setTimeout(() => {  // 確保 initializePage 已把值灌進表單
+ setTimeout(() => {
     if (this.crudstatus !== CRUDStatus.Create) {
+      // 假設 BasicCruPageComponent 有把原始資料放在 this.data 或 this.detail
+      // 依你的專案實際情況替換來源
+      const incomingId =
+        this.dataForm.controls.id.value ||
+        (this as any).data?.id ||
+        (this as any).detail?.id;
+
+      if (incomingId != null) {
+        this.dataForm.controls.id.setValue(incomingId);
+      }
+
+      // 下面是你原本預載 M/S 選項的流程（保留）
       const catLNo = this.dataForm.controls.CAT_LNo.value;
       const catMNo = this.dataForm.controls.CAT_MNo.value;
       if (catLNo) {
@@ -164,28 +177,43 @@ private loadSOptions(catLNo: string, catMNo: string) {
     }
   }, 0);
 }
-  onSubmit(form: FormGroup): void {
-    this.handleSubmit(form, () => {
-      const formValue = form.getRawValue();
 
-      switch (this.crudstatus) {
-        case CRUDStatus.Create:
-          if (this.canAdd()) {
-            this.tls51130Service.insertTLS51130(formValue).subscribe(() => {
-              this.messageService.successBubble('新增成功');
-              this.dataForm.reset();
-            });
-          }
-          break;
-        case CRUDStatus.Edit:
-          if (this.canEdit()) {
-            this.tls51130Service.updateTLS51130(formValue).subscribe(() => {
-              this.messageService.successBubble('更新成功');
-              this.onCancel();
-            });
-          }
-          break;
-      }
-    });
-  }
+onSubmit(form: FormGroup): void {
+  this.handleSubmit(form, () => {
+    const formValue = form.getRawValue();
+
+    switch (this.crudstatus) {
+      case CRUDStatus.Create:
+        if (this.canAdd()) {
+          // Create 不需要 id
+          const { id, ...createDto } = formValue;
+          this.tls51130Service.insertTLS51130(createDto).subscribe(() => {
+            this.messageService.successBubble('新增成功');
+            this.dataForm.reset();
+          });
+        }
+        break;
+
+      case CRUDStatus.Edit:
+        if (this.canEdit()) {
+          // ✅ Edit 必須帶 id
+          const updateDto = {
+            id: formValue.id,                        // 必填
+            LOGO_No: formValue.LOGO_No,
+            CAT_LNo: formValue.CAT_LNo,
+            CAT_MNo: formValue.CAT_MNo,
+            CAT_SNo: formValue.CAT_SNo,
+            PLU_OrderPrcRate: formValue.PLU_OrderPrcRate,
+            DISC_Remark: formValue.DISC_Remark,
+          };
+
+          this.tls51130Service.updateTLS51130(updateDto).subscribe(() => {
+            this.messageService.successBubble('更新成功');
+            this.onCancel();
+          });
+        }
+        break;
+    }
+  });
+}
 }

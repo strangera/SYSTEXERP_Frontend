@@ -112,17 +112,18 @@ export interface POS2004Item {
 }
 
 export interface POS1002Item {
-  ecr_no: string,
-  ecr_name: string,
-  tlt_no: string,
-  tlt_name: string,
-  building_no: string,
-  building_name: string,
-  floor_no: string,
-  floor_name: string,
-  area_no: string,
-  area_name: string,
-  ecr_type: string
+  ID?: number,
+  ECR_No?: string,
+  ECR_Name?: string,
+  tlt_no?: string,
+  tlt_name?: string,
+  building_no?: string,
+  building_name?: string,
+  floor_no?: string,
+  floor_name?: string,
+  area_no?: string,
+  area_name?: string,
+  Remark?: string
 }
 
 export interface TLTTALENT_CHARGEData {
@@ -274,6 +275,11 @@ export class DropDownListService {
     return this.http.post<ApiResponse<IDropdownItem[]>>(`${this.apiUrl}/queryPOS1002_DropDownList`, {});
   }
 
+  // 查詢收銀機群組(POS1002)資料表下拉選單 依照ECR_Type
+  queryPOS1002ECR_TypeDropDownList(body: { ECR_Type: string }): Observable<ApiResponse<IDropdownItem[]>> {
+    return this.http.post<ApiResponse<IDropdownItem[]>>(`${this.apiUrl}/queryPOS1002ECR_TypeDropDownList`, body);
+  }
+
   queryPOS1002Group_SubGroup_AreaNo_DropDownList(body: { building_no: string, floor_no: string, area_no: string }): Observable<ApiResponse<POS1002Item[]>> {
     return this.http.post<ApiResponse<POS1002Item[]>>(`${this.apiUrl}/queryPOS1002Group_SubGroup_AreaNo_DropDownList`, body);
   }
@@ -340,6 +346,11 @@ export class DropDownListService {
   // 查詢專櫃主檔(TLTTALENT)資料表下拉選單 依狀態
   queryTLTTALENT_Status_DropDownList(approve_status: string): Observable<ApiResponse<IDropdownItem[]>> {
     return this.http.post<ApiResponse<IDropdownItem[]>>(`${this.apiUrl}/queryTLTTALENT_Status_DropDownList`, { approve_status });
+  }
+
+  //依照 Store_way 查詢專櫃主檔(TLTTALENT)資料表下拉選單
+  queryTLTTALENT_StoreWay_DropDownList(body: { store_way: string }): Observable<ApiResponse<IDropdownItem[]>> {
+    return this.http.post<ApiResponse<IDropdownItem[]>>(`${this.apiUrl}/queryTLTTALENT_StoreWay_DropDownList`, body);
   }
 
   // 查詢專櫃主檔(TLTTALENT)資料表下拉選單(Store_way=2自營and approve_status=2 已審核 and tlt_openflag != 0 非撤櫃)

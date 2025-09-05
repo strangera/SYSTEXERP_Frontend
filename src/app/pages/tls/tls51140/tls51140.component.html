@@ -9,11 +9,13 @@
       <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
           <!-- 專櫃編號 → POS5006.TLT_No -->
-          <app-dropdown class="col-12 md:col-6" label="專櫃編號/名稱" [control]="queryForm.controls.TLT_No"
-            [submitted]="submitted" [options]="TLT_NoOptions" optionLabel="label" optionValue="No" />
+          <app-multi-select class="col-12 md:col-6" label="專櫃編號/名稱" controlName="TLT_NO"
+            [control]="queryForm.controls.TLT_NO" [submitted]="submitted" [options]="TLT_NoOptions" optionLabel="label"
+            optionValue="No" />
           <!-- 收銀機號 → POS5006.ECR_No -->
-          <app-dropdown class="col-12 md:col-6" label="收銀機號/名稱" [control]="queryForm.controls.ECR_No"
-            [submitted]="submitted" [options]="ECR_NoOptions" optionLabel="label" optionValue="No" />
+          <app-multi-select class="col-12 md:col-6" label="收銀機號/名稱" controlName="ECR_No"
+            [control]="queryForm.controls.ECR_No" [submitted]="submitted" [options]="ECR_NoOptions" optionLabel="label"
+            optionValue="No" />
         </div>
         <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
           <app-button btnType="clear" [form]="queryForm"></app-button>
@@ -24,8 +26,8 @@
   </p-accordion>
 </div>
 <div class="card">
-  <app-table tableKey="TLS45030Table" dataKey="TXN_No" [data]="data" [columns]="columns" (detail)="onDetail($event)"
+  <app-table tableKey="TLS45030Table" dataKey="TLT_NO" [data]="data" [columns]="columns" (detail)="onDetail($event)"
     (edit)="onEdit($event)" [multiSortMeta]="queryForm.controls.SortBy.value" [totalRecords]="totalRecords"
-    [lazy]="true" (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"
-    [loading]="loading"></app-table>
+    [lazy]="true" (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [loading]="loading"
+    [showCheckBox]="true" (delete)="onDelete($event)"></app-table>
 </div>

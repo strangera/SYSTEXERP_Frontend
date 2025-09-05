@@ -529,8 +529,6 @@ export const tlsRoutes: Routes = [
   { path: 'tls45010cru', loadComponent: () => import('./tls45010-cru/tls45010-cru.component').then(m => m.TLS45010CRUComponent) },
   // 收銀機主檔異動查詢 CRU
   { path: 'tls45020cru', loadComponent: () => import('./tls45020-cru/tls45020-cru.component').then(m => m.TLS45020CRUComponent) },
-  // 收銀機開關機時間表 CRU
-  { path: 'tls45030cru', loadComponent: () => import('./tls45030-cru/tls45030-cru.component').then(m => m.TLS45030CRUComponent) },
   // 網路位置設定 CRU
   { path: 'tls46010cru', loadComponent: () => import('./tls46010-cru/tls46010-cru.component').then(m => m.TLS46010CRUComponent) },
   // POS環境變數維護作業 CRU

@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import { v4 as uuidv4 } from 'uuid';
 import { AfterContentInit, ChangeDetectorRef, Component, EventEmitter, Input, OnChanges, Output, SimpleChanges, ViewChild } from '@angular/core';
 import { Table, TableColumnReorderEvent } from 'primeng/table';
 import { TableUtilityService } from './table-edit-utility.service';
@@ -19,6 +20,7 @@ import { InputIconModule } from 'primeng/inputicon';
 import { BreadcrumbModule } from "primeng/breadcrumb";
 import { validateRequired } from './validate-field.model';
 import { NotificationService } from '@shared/component/notification-message/notification.service';
+import { SkeletonModule } from 'primeng/skeleton';
 @Component({
   selector: 'app-table-edit',
   templateUrl: './table-edit.component.html',
@@ -38,7 +40,8 @@ import { NotificationService } from '@shared/component/notification-message/noti
     AutoCompleteModule,
     IconFieldModule,
     InputIconModule,
-    BreadcrumbModule
+    BreadcrumbModule,
+    SkeletonModule
   ],
 })
 export class TableEditComponent implements OnChanges, AfterContentInit {
@@ -93,9 +96,7 @@ export class TableEditComponent implements OnChanges, AfterContentInit {
       this.data = this.data.filter(item => item != null).map((item: any, index) => {
         if (item[this.dataStatusField] === undefined) {
           item[this.dataStatusField] = this.dataStatusValue.Original;
-          item[this.dataKey] = `temp-${new Date().getTime()}`;
-          console.log('🎯 一開始先將無狀態的資料設為Original', item);
-
+          item[this.dataKey] = `temp-${uuidv4()}`;
         }
         // 載入資料時也執行整行驗證
         if (this.rowValidate) {

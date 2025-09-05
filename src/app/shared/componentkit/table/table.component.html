@@ -5,7 +5,7 @@
 </p-divider>
 <p-table #dt [value]="data" [columns]="selectedColumns" [(selection)]="selectedItems" sortMode="multiple"
   [selectionMode]="showCheckBox && IsPrint ? selectionMode : null" [dataKey]="dataKey" [rowTrackBy]="trackByRow"
-  [resizableColumns]="true" [paginator]="showPaginator && IsPrint && !rowEditing && !loading" [scrollable]="scrollable"
+  [resizableColumns]="true" [paginator]="showPaginator && IsPrint && !rowEditing" [scrollable]="scrollable"
   [scrollHeight]="scrollHeight" [showCurrentPageReport]="IsPrint && showPaginator" [multiSortMeta]="multiSortMeta"
   [rowsPerPageOptions]="rowsPerPageOptions" [(rows)]="rows" [(first)]="first" (onLazyLoad)="loadDataLazy($event)"
   [lazy]="lazy || !IsPrint" [reorderableColumns]="true" (onColReorder)="onColReorder($event)" tableStyleClass="h-full"
@@ -23,10 +23,11 @@
       [selectedItems]="selectedItems" [tableKey]="tableKey" [expansionColumns]="expansionColumns"
       [showCaption]="showCaption" [showHeader]="showHeader" [showFilter]="showFilter" [showReportMode]="showReportMode"
       [showInsert]="showInsert" [insertDisabled]="insertDisabled" [deleteData]="deleteData" [showDelete]="showDelete"
-      [deleteIcon]="deleteIcon" [deletepTooltip]="deletepTooltip" [showExcel]="showExcel"
-      [showExcelExport]="showExcelExport" [showExcelImport]="showExcelImport" [exportExcelLoading]="exportExcelLoading"
-      [showPage]="showPage" [totalPages]="totalPages" [pages]="pages" [selectedPage]="selectedPage" [rows]="rows"
-      [first]="first" (insert)="insertRow()" (delete)="deleteRow($event)" (exportExcel)="exportExcel.emit()"
+      [deleteIcon]="deleteIcon" [deletepTooltip]="deletepTooltip" [showExcel]="showExcel" [disabled]="disabled"
+      [showExcelExport]="showExcelExport" [showExcelImport]="showExcelImport"
+      [showCustomExcelImport]="showCustomExcelImport" [exportExcelLoading]="exportExcelLoading" [showPage]="showPage"
+      [totalPages]="totalPages" [pages]="pages" [selectedPage]="selectedPage" [rows]="rows" [first]="first"
+      (insert)="insertRow()" (delete)="deleteRow($event)" (exportExcel)="exportExcel.emit()"
       (importExcel)="importExcel.emit($event)" (pageChange)="goToPage($event)" [totalRecords]="dt.totalRecords"
       [apiUrl]="apiUrl" [customReport]="customReport" (exportEvent)="exportEvent.emit($event)"
       [showExpandCollapse]="showExpandCollapse">
@@ -151,14 +152,14 @@
             <ng-template pTemplate="input">
               <app-table-input [col]="col" [rowData]="rowData" [rowIndex]="rowIndex" [alwaysEdit]="false"
                 (fieldChange)="onFieldChange(rowData, $event.field, $event.value, $event.rowIndex)"
-                [disabled]="col.disabled ? col.disabled(rowData) : false"
+                [disabled]="disabled ? true: (col.disabled && col.disabled(rowData)) || false"
                 (fieldBlur)="onFieldBlur(rowData, $event.field, $event.value)" (filterChange)="filterOptions($event)">
               </app-table-input>
             </ng-template>
             <ng-template pTemplate="output">
               <app-table-input [col]="col" [rowData]="rowData" [rowIndex]="rowIndex" [alwaysEdit]="alwaysEdit"
                 (fieldChange)="onFieldChange(rowData, $event.field, $event.value, $event.rowIndex)"
-                [disabled]="col.disabled ? col.disabled(rowData) : alwaysEdit ? false : true"
+                [disabled]="disabled ? true: (col.disabled && col.disabled(rowData)) || !alwaysEdit"
                 (fieldBlur)="onFieldBlur(rowData, $event.field, $event.value)" (filterChange)="filterOptions($event)">
               </app-table-input>
             </ng-template>

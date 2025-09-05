@@ -57,14 +57,13 @@ const toSortMeta = (arr: Array<{ field: string; order: any }> | null | undefined
     FormsModule,
     ReactiveFormsModule,
     MultiSelectComponent,
-    DropdownComponent,
     RadiobuttonComponent,
     InputTextModule,
     ButtonComponent,
     TranslateModule,
     // TableComponent,
     CalendarComponent,
-    DropdownComponent
+    
   ],
 })
 export class TLS23120Component
@@ -290,52 +289,44 @@ onSubmit(form: FormGroup): void {
 
     this.tls23120Service.queryTLS23120(payload).subscribe({
       next: (res: any) => {
-        // 收斂資料結構 → details[]
-        const dataArr = Array.isArray(res?.Data) ? res.Data : (res?.Data ? [res.Data] : []);
-        let details: any[] = [];
-        for (const item of dataArr) {
-          const totals = item?.Totals ?? item?.totals ?? {};
-          const subTotals = totals?.SubTotals ?? totals?.subTotals ?? totals?.subtotals ?? [];
-          if (Array.isArray(subTotals)) {
-            for (const sub of subTotals) {
-              const list =
-                sub?.tLS23120Details ??
-                sub?.TLS23120Details ??
-                sub?.tls23120Details ?? [];
-              if (Array.isArray(list)) details = details.concat(list);
-            }
-          }
-        }
+  // ✅ 用新結構取出細項
+  const details = this.extractDetails(res);
 
-        // 產生穩定 dataKey（若後端無唯一鍵）
-        this.data = details.map((r: any, i: number) => ({
-          ...r,
-          _rowKey: `${r?.TLT_NO ?? ''}|${r?.TXN_DATE ?? ''}|${i}`,
-        }));
+  // 產生穩定 dataKey 並做欄位歸一
+  this.data = details.map((r: any, i: number) => {
+    const row = this.normalizeRow(r);
+    return {
+      ...row,
+      _rowKey: `${row?.TLT_NO ?? ''}|${row?.TXN_DATE ?? ''}|${i}`,
+    };
+  });
 
-        this.totalRecords =
-          typeof res?.TotalCount === 'number' ? res.TotalCount : this.data.length;
+  // 筆數：優先用後端 TotalCount，否則用實際筆數
+  this.totalRecords =
+    (typeof res?.TotalCount === 'number' && res.TotalCount >= 0)
+      ? res.TotalCount
+      : this.data.length;
 
-        // ▶ 若是「查詢並開啟報表」流程：有資料才導到 CRU，否則提示
-        if (this.pendingNavigateAfterQuery) {
-            this.pendingNavigateAfterQuery = false;
-            if (!this.data?.length) {
-              this.messageService?.warnBubble?.('查無資料');
-              return;
-            }
-            const formRaw = this.queryForm.getRawValue() as any;
-            this.router.navigate(
-              ['/account/tls/tls23120cru'], // ✅ 直接導到你要的 URL
-              {
-                state: {
-                  data: this.data,
-                  queryFormValue: formRaw,
-                  pageSize: formRaw?.pageSize ?? 1000,
-                },
-              }
-            );
-          }
+  // 查詢後自動開報表（原本的流程保留）
+  if (this.pendingNavigateAfterQuery) {
+    this.pendingNavigateAfterQuery = false;
+    if (!this.data?.length) {
+      this.messageService?.warnBubble?.('查無資料');
+      return;
+    }
+    const formRaw = this.queryForm.getRawValue() as any;
+    this.router.navigate(
+      ['/account/tls/tls23120cru'],
+      {
+        state: {
+          data: this.data,
+          queryFormValue: formRaw,
+          pageSize: formRaw?.pageSize ?? 1000,
         },
+      }
+    );
+  }
+},
         error: () => {
           this.pendingNavigateAfterQuery = false;
                     this.loading = false;
@@ -358,6 +349,41 @@ onSubmit(form: FormGroup): void {
       target.has(col.field) ? { ...col, visible: !!show } : col
     );
   }
+  /** 將回傳格式攤平成明細列 */
+private extractDetails(res: any): any[] {
+  const out: any[] = [];
+  const dataArr = Array.isArray(res?.Data) ? res.Data : (res?.Data ? [res.Data] : []);
+
+  for (const item of dataArr) {
+    const totalsArr = item?.Totals ?? item?.totals ?? [];
+    if (!Array.isArray(totalsArr)) continue;
+
+    for (const tot of totalsArr) {
+      const subs = tot?.SubTotals ?? tot?.subTotals ?? tot?.subtotals ?? [];
+      if (!Array.isArray(subs)) continue;
+
+      for (const sub of subs) {
+        const list =
+          sub?.tLS23120Details ??
+          sub?.TLS23120Details ??
+          sub?.tls23120Details ??
+          [];
+        if (Array.isArray(list)) out.push(...list);
+      }
+    }
+  }
+  return out;
+}
+
+/** 欄位名稱歸一（讓既有 columns 不用改） */
+private normalizeRow(r: any) {
+  return {
+    ...r,
+    FLOOR_NO: r?.FLOOR_NO ?? r?.floor_desc ?? null,
+    AREA_NO : r?.AREA_NO  ?? r?.area_no    ?? null,
+  };
+}
+
 
   // 依 Radio 模式啟用/停用欄位 + 動態驗證
   private applyFilterMode(mode: FilterMode): void {

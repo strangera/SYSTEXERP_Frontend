@@ -23,6 +23,7 @@ import { QueryTls43020Response } from '@service/api/tls/tls43020.service';
 import { Tls43010Detail } from '@service/api/tls/tls43010.service';
 import { environment } from 'src/environments/environment';
 import { ImageQueryRequest, ImageService } from '@service/utility/image.service';
+import { finalize, forkJoin } from 'rxjs';
 interface MediaItem {
   url: string;
   type: 'image' | 'video';
@@ -114,23 +115,23 @@ export class TLS43020CRUComponent extends BasicCruPageComponent<QueryTls43020Res
     }
   }
   loadDropdownOptions() {
-    this.dropDownListService.queryPOS1002_DropDownList().pipe(untilDestroyed(this)).subscribe(options => {
-      this.ECR_NoOptions = options.Data.map(item => ({ ...item, label: `${item.No} - ${item.Name}` }));
-    });
-    this.dropDownListService.queryTLTTALENT_DropDownList().pipe(untilDestroyed(this)).subscribe(options => {
-      this.TLT_NoOptions = options.Data.map(item => ({ ...item, label: `${item.No} - ${item.Name}` }));
-    });
-    this.dropDownListService.queryPOS1002GRM_DropDownList().pipe(untilDestroyed(this)).subscribe(options => {
-      this.ECR_GrpNoOptions = options.Data.map(item => ({ ...item, label: `${item.No} - ${item.Name}` }));
-    });
-    this.dropDownListService.querySYS3800_DropDownList().pipe(untilDestroyed(this)).subscribe(options => {
-      this.BUILDING_NoOptions = options.Data.map(item => ({ ...item, label: item.No + ' - ' + item.Name }));
-    });
-    this.dropDownListService.querySYS3900_DropDownList().pipe(untilDestroyed(this)).subscribe(options => {
-      this.FLOOR_NoOptions = options.Data.map(item => ({ ...item, label: item.No + ' - ' + item.Name }));
-    });
-    this.dropDownListService.querySYS3A00_DropDownList().pipe(untilDestroyed(this)).subscribe(options => {
-      this.Area_NoOptions = options.Data.map(item => ({ ...item, label: item.No + ' - ' + item.Name }));
+    const dropDownRequests = [
+      this.dropDownListService.queryPOS1002_DropDownList(),
+      this.dropDownListService.queryTLTTALENT_DropDownList(),
+      this.dropDownListService.queryPOS1002GRM_DropDownList(),
+      this.dropDownListService.querySYS3800_DropDownList(),
+      this.dropDownListService.querySYS3900_DropDownList(),
+      this.dropDownListService.querySYS3A00_DropDownList()
+    ];
+    this.loading = true;
+    forkJoin(dropDownRequests).pipe(untilDestroyed(this), finalize(() => { this.loading = false; })
+    ).subscribe(results => {
+      this.ECR_NoOptions = results[0].Data.map(item => ({ ...item, label: `${item.No} - ${item.Name}` }));
+      this.TLT_NoOptions = results[1].Data.map(item => ({ ...item, label: `${item.No} - ${item.Name}` }));
+      this.ECR_GrpNoOptions = results[2].Data.map(item => ({ ...item, label: `${item.No} - ${item.Name}` }));
+      this.BUILDING_NoOptions = results[3].Data.map(item => ({ ...item, label: item.No + ' - ' + item.Name }));
+      this.FLOOR_NoOptions = results[4].Data.map(item => ({ ...item, label: item.No + ' - ' + item.Name }));
+      this.Area_NoOptions = results[5].Data.map(item => ({ ...item, label: item.No + ' - ' + item.Name }));
     });
   }
   queryImages() {

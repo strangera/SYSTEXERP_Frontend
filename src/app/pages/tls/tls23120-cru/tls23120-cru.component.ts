@@ -290,15 +290,21 @@ export class TLS23120CRUComponent extends BasicCruPageComponent<any> {
   }
 
   /** 依群組第一列準備表頭資料（每張表各自的抬頭） */
+/** 依群組第一列準備表頭資料（每張表各自的抬頭，與 HTML 對齊） */
 private getHeaderInfoByGroup(firstRow: any) {
   const salesDate = firstRow?.TXN_DATE ?? this.dateStart;
+
+  // 與 HTML 一致的欄位優先序
   const biz = `${firstRow?.bus_type ?? ''}/${firstRow?.bus_type_name ?? ''}`.replace(/^\/$/, '');
   const counter = `${firstRow?.TLT_NO ?? ''}/${firstRow?.tlt_name ?? ''}`.replace(/^\/$/, '');
-  const area = firstRow?.AREA_NO ?? '';
-  const floor = firstRow?.FLOOR_NO ?? '';
-  const cutType = firstRow?.TLT_ID ?? '0';
-  const returnQty = firstRow?.return_qty ?? 0;
-  const returnAmt = firstRow?.return_amt ?? 0;
+  const floor = firstRow?.floor_desc ?? firstRow?.FLOOR_NO ?? '－'; // ← HTML 用 floor_desc
+  const area = firstRow?.AREA_NO ?? firstRow?.area_no ?? '－';      // ← HTML 用 AREA_NO
+  const cutType = firstRow?.TLT_ID ?? '無';
+
+  // 與 HTML 一致：交易總件數/退貨件數/退貨金額
+  const totalCount = Number(firstRow?.total_count ?? this.data?.length ?? 0);
+  const returnQty  = Number(firstRow?.return_qty ?? 0);
+  const returnAmt  = Number(firstRow?.return_amt ?? 0);
 
   return {
     company: '南紡流通事業股份有限公司',
@@ -310,30 +316,33 @@ private getHeaderInfoByGroup(firstRow: any) {
     floor,
     cutType,
     madeAt: this.printedAt || new Date().toLocaleString('zh-TW'),
+    totalCount,
     returnQty,
     returnAmt,
+    showBusType: this.showBusType,
   };
 }
-/** 畫出某群組的表頭，回傳表格應開始的 Y 位置 */
-/** 畫出某群組的表頭，回傳表格應開始的 Y 位置 */
+
+
+
+/** 畫出與 HTML 相同資訊排版（1: 大分類/日期/製表；2: 專櫃/樓層+抽成/交易總件數+退貨件數；3: 區域/空白/退貨金額） */
 private drawGroupHeaderOnce(
   doc: jsPDF,
   info: any,
   pageWidth: number,
   marginLeft: number,
-  currentY: number, // ← 新增
+  currentY: number,
 ): number {
   const leftX = marginLeft;
   const midX = leftX + 240;
   const rightX = pageWidth - marginLeft;
   const lineGap = 18;
 
-  // 最小安全頂部；實際起點：取「當前 Y」與安全頂部的較大值
   const safeTop = 40;
   let y = Math.max(currentY, safeTop + 10);
 
-  // 若剩餘空間不夠容納表頭（大約 90~110pt），先換頁再畫
-  const needed = 110; // 表頭大約高度
+  // 保留足夠空間給表頭，不夠就換頁
+  const needed = 110;
   const pageHeight = doc.internal.pageSize.getHeight();
   const remaining = pageHeight - y;
   if (remaining < needed) {
@@ -341,6 +350,7 @@ private drawGroupHeaderOnce(
     y = safeTop + 10;
   }
 
+  // 公司/標題
   doc.setFontSize(16);
   doc.text(info.company || '', pageWidth / 2, y, { align: 'center' });
   y += 25;
@@ -351,25 +361,28 @@ private drawGroupHeaderOnce(
 
   doc.setFontSize(10);
 
-  // 第1列
-  doc.text(`業種：${info.biz || '－'}`, leftX, y);
+  // 第1列（左：大分類／中：銷售日期／右：製表日期）—與 HTML 一致（左欄可空）
+  if (info.showBusType) {
+    doc.text(`大分類：${info.biz || '－'}`, leftX, y);
+  }
   doc.text(`銷售日期：${info.salesDate || '－'}`, midX, y);
   doc.text(`製表日期：${info.madeAt}`, rightX, y, { align: 'right' });
   y += lineGap;
 
-  // 第2列
+  // 第2列（左：專櫃／中：樓層+抽成類別／右：交易總件數+退貨件數）
   doc.text(`專櫃：${info.counter || '－'}`, leftX, y);
-  doc.text(`樓層：${info.floor || '－'}  抽成類別：${info.cutType}`, midX, y);
-  doc.text(`退貨件數：${info.returnQty}`, rightX, y, { align: 'right' });
+  doc.text(`樓層：${info.floor || '－'}  抽成類別：${info.cutType ?? '無'}`, midX, y);
+  doc.text(`交易總件數：${info.totalCount ?? 0} / 退貨件數：${info.returnQty ?? 0}`, rightX, y, { align: 'right' });
   y += lineGap;
 
-  // 第3列
+  // 第3列（左：區域／中：留白／右：退貨金額）
   doc.text(`區域：${info.area || '－'}`, leftX, y);
-  doc.text(`退貨金額：${info.returnAmt}`, rightX, y, { align: 'right' });
+  doc.text(`退貨金額：${info.returnAmt ?? 0}`, rightX, y, { align: 'right' });
 
-  // 表格起始 Y（表頭下方再留一點距離）
   return y + 20;
 }
+
+
 
 
   /** 匯出 PDF（含配色：Header/斑馬紋/小計/總計） */
@@ -557,7 +570,7 @@ exportPDF(orientation: 'p' | 'l' = 'p'): void {
     let y = 110;
 
     // 第1列
-    doc.text(`業種：${info.biz || '－'}`, leftX, y);
+    doc.text(`大分類：${info.biz || '－'}`, leftX, y);
     doc.text(`銷售日期：${info.salesDate || '－'}`, midX, y);
     doc.text(`製表日期：${info.madeAt}`, rightX, y, { align: 'right' });
     y += lineGap;

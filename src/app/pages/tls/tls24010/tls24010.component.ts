@@ -84,8 +84,7 @@ export class TLS24010Component extends BasicQueryPageComponent<TLS24010Data> imp
     });
     const txnDate = this.queryForm.get('TXN_Date')?.value;
     if (!txnDate) {
-      // yesterday.getFullYear(), yesterday.getMonth(), yesterday.getDate(), 0, 0, 0
-      this.queryForm.get('TXN_Date')?.setValue(new Date('2024/01/31'));
+      this.queryForm.get('TXN_Date')?.setValue(new Date(yesterday.getFullYear(), yesterday.getMonth(), yesterday.getDate(), 0, 0, 0));
     }
     this.queryForm.get('TXN_Date')?.valueChanges.pipe(untilDestroyed(this)).subscribe(value => {
       const dateString = value ? formatDateToYYYY_MM_DD(value) : '';

@@ -13,10 +13,11 @@
         icon="fa-regular fa-file-lines" (click)="customReport ? exportEvent.emit('Excel') : export('Excel')"
         [disabled]="!canPerformAction('70')" />
     </div>
-    <p-button *ngIf="IsPrint && showInsert && !rowEditing" (click)="insert.emit()" pTooltip="新增" tooltipPosition="top"
-      pButton icon="pi pi-plus" severity="success" class="p-button-rounded p-button-text" [disabled]="insertDisabled" />
+    <p-button *ngIf="IsPrint && showInsert && !rowEditing && !disabled" (click)="insert.emit()" pTooltip="新增"
+      tooltipPosition="top" pButton icon="pi pi-plus" severity="success" class="p-button-rounded p-button-text"
+      [disabled]="insertDisabled" />
     <!-- || !canPerformAction('20') -->
-    <p-button *ngIf="IsPrint && showDelete && !rowEditing" (click)="delete.emit(selectedItems)"
+    <p-button *ngIf="IsPrint && showDelete && !rowEditing && !disabled" (click)="delete.emit(selectedItems)"
       [pTooltip]="deletepTooltip" tooltipPosition="top" pButton [icon]="deleteIcon" severity="danger"
       class="p-button-text" [rounded]="true" [disabled]="selectedItems?.length <= 0" />
     <!-- || !canPerformAction('40') -->
@@ -35,6 +36,8 @@
       <p-fileUpload *ngIf="showExcelImport" #fileUpload styleClass="p-button-info" mode="basic"
         chooseIcon="pi pi-file-import" accept="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
         severity="info" (onSelect)="onImportExcel($event)" [auto]="true" chooseLabel="Excel匯入" />
+      <p-button *ngIf="showCustomExcelImport" severity="info" label="Excel匯入" [icon]="'pi pi-file-import'"
+        (click)="onImportExcel()" />
     </div>
     <p-dropdown *ngIf="showPage && IsPrint && data.length > 0" [options]="pages" [ngModel]="selectedPage"
       optionValue="value" (onChange)="pageChange.emit($event.value)" appendTo="body" [virtualScroll]="true"

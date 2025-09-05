@@ -84,7 +84,7 @@ export class Tls43010Service {
     return this.http.post<ApiResponse<number>>(`${this.apiUrl}/insertTLS43010`, data);
   }
 
-  updateTLS43010(data: IUTls43010Request): Observable<ApiResponse<number>> {
+  updateTLS43010(data: FormData): Observable<ApiResponse<number>> {
     return this.http.post<ApiResponse<number>>(`${this.apiUrl}/updateTLS43010`, data);
   }
 }

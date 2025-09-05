@@ -31,7 +31,7 @@
   [lazy]="lazy || !IsPrint"
   tableStyleClass="h-full"
   [styleClass]="'p-datatable-sm p-datatable-striped' + (IsPrint ? ' p-datatable-gridlines' : '')"
-  [virtualScroll]="!IsPrint"
+  [virtualScroll]="!IsPrint && !groupRowsBy" 
   [virtualScrollItemSize]="35"
   [virtualScrollDelay]="250"
   currentPageReportTemplate="第{currentPage}頁 / 總共{totalPages}頁 (總筆數:{totalRecords})"
@@ -302,23 +302,26 @@
   </ng-template>
 
   <!-- ===== 小計（群組尾） ===== -->
- <ng-template pTemplate="rowgroupfooter" let-rowData *ngIf="showSubTotal">
-  <tr>
-    <td class="text-center font-bold">小計</td>
-    <td *ngIf="IsPrint && showCheckBox && !rowEditing && selectionMode === 'multiple'"></td>
-    <td *ngIf="expansionColumns.length && IsPrint"></td>
-    <ng-container *ngFor="let col of columns">
-      <td class="font-bold"
-          *ngIf="!col.hidden"
-          [ngClass]="col.style ? col.style : 'text-center'">
-        <ng-container *ngIf="col.isSubTotal">
-          {{ col.format ? col.format(getGroupSubtotal(rowData[groupRowsBy], col.field))
-                        : getGroupSubtotal(rowData[groupRowsBy], col.field) }}
-        </ng-container>
-      </td>
-    </ng-container>
-    <td *ngIf="!alwaysEdit || (alwaysEdit && rowEditing)" [hidden]="!IsPrint || !showManage"></td>
-  </tr>
+<ng-template pTemplate="rowgroupfooter" let-rowData let-columns="columns">
+  <ng-container *ngIf="showSubTotal">
+    <tr>
+      <td class="text-center font-bold">小計</td>
+      <td *ngIf="IsPrint && showCheckBox && !rowEditing && selectionMode === 'multiple'"></td>
+      <td *ngIf="expansionColumns.length && IsPrint"></td>
+
+      <ng-container *ngFor="let col of columns">
+        <td class="font-bold" *ngIf="!col.hidden"
+            [ngClass]="col.style ? col.style : 'text-center'">
+          <ng-container *ngIf="col.isSubTotal">
+            {{ col.format ? col.format(getGroupSubtotal(rowData[groupRowsBy], col.field))
+                          : getGroupSubtotal(rowData[groupRowsBy], col.field) }}
+          </ng-container>
+        </td>
+      </ng-container>
+
+      <td *ngIf="!alwaysEdit || (alwaysEdit && rowEditing)" [hidden]="!IsPrint || !showManage"></td>
+    </tr>
+  </ng-container>
 </ng-template>
 
   <!-- ===== 內容列 ===== -->
