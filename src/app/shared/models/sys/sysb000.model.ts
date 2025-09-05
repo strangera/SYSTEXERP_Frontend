@@ -170,7 +170,6 @@ export interface SYS1000 {
   ID: number;
   SYS_Code: string;
   SYS_Name: string;
-  SYS_Enabled: string;
   SYS_Sort: number;
   SYS_Type: string;
 

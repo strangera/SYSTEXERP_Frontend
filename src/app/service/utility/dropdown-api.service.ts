@@ -49,7 +49,7 @@ import { environment } from 'src/environments/environment';
 @Injectable({
   providedIn: 'root'
 })
-export class DropdownApiNewService {
+export class DropdownApiService {
   private readonly apiUrl = environment.ApiUrl;
 
   constructor(private http: HttpClient) { }

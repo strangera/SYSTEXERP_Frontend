@@ -12,6 +12,7 @@ import { REPORT_TITLES } from '../../componentkit/table/report-titles';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { FunsrightInfo } from '@shared/models/system/funsrightInfo';
 import { NotificationService } from '@shared/component/notification-message/notification.service';
+import { SystemOptionsService } from '@service/system/sys1000.service';
 
 @UntilDestroy()
 @Injectable({
@@ -54,10 +55,18 @@ export abstract class BasicPrintDataComponent {
     const day = today.getDate().toString().padStart(2, '0');
     const formattedToday = `${year}${month}${day}`;
     const pdfColumns = columns.map(col => {
+      const mappingList = SystemOptionsService.getOptions(col.field);
+      let exportFormat: any = [];
+      if (col.exportFormat) {
+        exportFormat = col.exportFormat;
+      } else if (mappingList.length > 0) {
+        exportFormat = transformOptionsForExport(mappingList, 'SYS_Code', 'SYS_Name');
+      }
       return {
         field: col.field,
         header: col.header,
         visible: col.visible ? col.visible : true,
+        exportFormat: exportFormat
       };
     });
 
@@ -113,10 +122,18 @@ export abstract class BasicPrintDataComponent {
     const day = today.getDate().toString().padStart(2, '0');
     const formattedToday = `${year}${month}${day}`;
     const excelColumns = columns.map(col => {
+      const mappingList = SystemOptionsService.getOptions(col.field);
+      let exportFormat: any = [];
+      if (col.exportFormat) {
+        exportFormat = col.exportFormat;
+      } else if (mappingList.length > 0) {
+        exportFormat = transformOptionsForExport(mappingList, 'SYS_Code', 'SYS_Name');
+      }
       return {
         field: col.field,
         header: col.header,
         visible: col.visible ? col.visible : true,
+        exportFormat: exportFormat
       };
     });
 
@@ -181,3 +198,17 @@ export abstract class BasicPrintDataComponent {
     return this.funInfo?.PrivilegeBehavior?.some(behavior => behavior.function_code === action) || false;
   }
 }
+export const transformOptionsForExport = <T extends Record<string, any>>(
+  options: T[],
+  valueKey: keyof T = 'value',
+  labelKey: keyof T = 'label',
+) => {
+  if (!options) {
+    return [];
+  }
+  return options.map(item => {
+    return {
+      [item[valueKey]]: item[labelKey]
+    };
+  });
+};

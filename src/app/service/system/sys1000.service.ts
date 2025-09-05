@@ -42,4 +42,31 @@ export class SystemOptionsService {
     }
     return SystemOptionsService.optionsCache[sysType] || [];
   }
+
+  /**
+   * 取得指定 sysType 的選項，並轉換為 { value, label } 格式。
+   * @param sysType 選項類別。
+   * @returns 轉換後的 { value, label } 陣列。
+   */
+  static getOptionsAsValueLabel(sysType: string): { value: string; label: string }[] {
+    // 呼叫現有的 getOptions 方法來取得原始資料
+    const originalOptions = this.getOptions(sysType);
+
+    // 使用 map 方法將每個物件轉換為新格式
+    return originalOptions.map(item => ({
+      value: item.SYS_Code,
+      label: item.SYS_Name
+    }));
+  }
+
+  /**
+   * 根據選項類別和代碼，回傳對應的名稱。
+   * @param sysType 選項類別，例如 'MAM_Status'。
+   * @param value 選項代碼，例如 '0'。
+   * @returns 對應的名稱，如果找不到則回傳原始值。
+   */
+  static getOptionName(sysType: string, value: string | number): string | number {
+    const options = this.getOptions(sysType);
+    return options.find(x => x.SYS_Code === value)?.SYS_Name || value;
+  }
 }
