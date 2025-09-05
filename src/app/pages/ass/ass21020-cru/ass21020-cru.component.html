@@ -105,6 +105,7 @@
                    [totalRecords]="totalRecords()"
                    (delete)="onDelete($event)"
                    (fieldChange)="onFieldChange($event)"
+                   [rowEditCanSave]="rowEditCanSaveSignal()"
                    (rowEditSave)="onRowEdit($event)"
                    (rowEditCancel)="onRowEdit($event)"
                    [loading]="loading"

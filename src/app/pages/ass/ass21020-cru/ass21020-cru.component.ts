@@ -17,7 +17,7 @@ import { NGXLogger } from 'ngx-logger';
 import { PanelModule } from 'primeng/panel';
 import { finalize, tap } from 'rxjs';
 import { ASS2100ENGMeterType } from '../ass21010/ass21010.model';
-import { ASS21020CRUTable, ASS21020Data, ASS21020Detail, ASS21020Update, TLTByFlag } from '../ass21020/ass21020.model';
+import { ASS21020Data, ASS21020Detail, ASS21020Update, TLTByFlag } from '../ass21020/ass21020.model';
 
 @Component({
   selector: 'app-ass21020-cru',
@@ -59,6 +59,8 @@ export class ASS21020CRUComponent extends BasicCruPageComponent<ASS21020Data> im
   private readonly engTypeSignal = toSignal(this.df().ENG_Type.valueChanges);
   private readonly meterNoSignal = toSignal(this.df().ENG_MeterNo.valueChanges);
   private readonly tableDataSignal = signal<ASS21020Detail[]>([]);
+
+  public readonly rowEditCanSaveSignal = signal(!1);
 
   private editingRow: TLTByFlag | undefined;
 
@@ -255,8 +257,10 @@ export class ASS21020CRUComponent extends BasicCruPageComponent<ASS21020Data> im
       if (total > 100) {
         this.messageService.errorBubble(`總比率不能超過 100%（目前：${total}%）`, '輸入有誤');
         this.editingRow.ENG_Rate = 0;
+        this.rowEditCanSaveSignal.set(!1);
         return;
       }
+      this.rowEditCanSaveSignal.set(!0);
     }
     this.logger.debug('onFieldChange:', [event, current, this.filteredData()]);
   }
