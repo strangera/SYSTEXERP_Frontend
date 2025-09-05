@@ -377,17 +377,31 @@ export class CustomFooterTableComponent extends BasicPrintDataComponent implemen
     this.queryState.setQueryState(this.tableKey + 'Filter', this.columns);
   }
 
-  // 判斷是否為該組最後一筆
-  isLastRowOfGroup(rowData: any, rowIndex: number): boolean {
-    if (!this.groupRowsBy || !this.data?.length) return false;
+  /**
+   * 判斷是否為該群組在當前頁的最後一筆資料
+   */
+  isLastRowOfGroupOnPage(rowData: any, rowIndex: number): boolean {
+    if (!this.groupRowsBy || !this.dt || !this.dt.value) return false;
 
-    const currentGroup = rowData[this.groupRowsBy];
-    const nextRow = this.data[rowIndex + 1];
+    const groupKey = rowData[this.groupRowsBy];
+    const pageData = this.dt.value; // 這一頁的資料
 
-    // 如果下一筆不存在，表示是最後一筆
-    if (!nextRow) return true;
+    // 找到同群組的資料
+    const groupRows = pageData.filter(r => r[this.groupRowsBy] === groupKey);
 
-    // 如果下一筆的 group 值不一樣，代表這筆就是該組最後一筆
-    return nextRow[this.groupRowsBy] !== currentGroup;
+    // 判斷 rowIndex 是否為這一頁該群組的最後一筆
+    const lastRow = groupRows[groupRows.length - 1];
+    return rowData === lastRow;
+  }
+
+  /**
+   * 計算當前頁、某群組的小計
+   */
+  getGroupSubtotalOnPage(groupKey: any, field: string): number {
+    if (!this.dt || !this.dt.value) return 0;
+
+    return this.dt.value
+      .filter(r => r[this.groupRowsBy] === groupKey)
+      .reduce((sum, row) => sum + (row[field] || 0), 0);
   }
 }
