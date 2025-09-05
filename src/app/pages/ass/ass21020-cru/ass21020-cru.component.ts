@@ -1,5 +1,5 @@
-import { Location, NgIf } from '@angular/common';
-import { Component, computed, effect, OnInit, viewChild } from '@angular/core';
+import { NgIf } from '@angular/common';
+import { Component, computed, effect, OnInit, signal, viewChild } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { FormControl, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
@@ -17,7 +17,7 @@ import { NGXLogger } from 'ngx-logger';
 import { PanelModule } from 'primeng/panel';
 import { finalize, tap } from 'rxjs';
 import { ASS2100ENGMeterType } from '../ass21010/ass21010.model';
-import { ASS21020Data, ASS21020Detail, ASS21020Update, TLTByFlag } from '../ass21020/ass21020.model';
+import { ASS21020CRUTable, ASS21020Data, ASS21020Detail, ASS21020Update, TLTByFlag } from '../ass21020/ass21020.model';
 
 @Component({
   selector: 'app-ass21020-cru',
@@ -58,6 +58,7 @@ export class ASS21020CRUComponent extends BasicCruPageComponent<ASS21020Data> im
 
   private readonly engTypeSignal = toSignal(this.df().ENG_Type.valueChanges);
   private readonly meterNoSignal = toSignal(this.df().ENG_MeterNo.valueChanges);
+  private readonly tableDataSignal = signal<ASS21020Detail[]>([]);
 
   private editingRow: TLTByFlag | undefined;
 
@@ -76,15 +77,19 @@ export class ASS21020CRUComponent extends BasicCruPageComponent<ASS21020Data> im
 
     return allMeterNo.filter(meter => engTypeMap.has(meter.ENG_Type));
   });
+
   public readonly filteredData = computed<ASS21020Detail[]>(() => {
-    return this.service.ASS21020Data()?.[0]?.Details?.map(detail => ({
-      ...detail,
-      Location_No: this.service.tltByFlagMap.get(detail.TLT_No)?.Location_No ?? '',
-      NET_SPACE: this.service.tltByFlagMap.get(detail.TLT_No)?.NET_SPACE ?? '',
-    })) || [];
+    return this.tableDataSignal().map(detail => {
+      const current = this.service.tltByFlagMap.get(detail.TLT_No);
+      return {
+        ...detail,
+        Location_No: current?.Location_No ?? '',
+        NET_SPACE: current?.NET_SPACE ?? 0,
+      };
+    }) || [];
   });
 
-  public readonly totalRecords = computed(() => this.service.tltNoSignal().length);
+  public readonly totalRecords = computed(() => this.tableDataSignal().length);
   private readonly getTltList = computed(() => this.service.tltNoListSignal());
 
   public readonly dropdownEffect = effect(() => {
@@ -123,13 +128,16 @@ export class ASS21020CRUComponent extends BasicCruPageComponent<ASS21020Data> im
   }, { allowSignalWrites: !0 });
 
   public readonly initEffect = effect(() => {
-    if (this.isFormCreateable) return void this.initEffect.destroy();
+    if (this.isFormCreateable) return void (this.initEffect.destroy());
+    const rowData = this.rowdata;
     const type = this.service.engTypeSignal();
     const mtrNo = this.service.engMeterNoSignal();
-    if (type?.length && mtrNo?.length) {
-      const fixedEngType = type.find(t => t.Name === this.rowdata!.ENG_Type)?.No as EngType;
+    const data = this.service.ASS21020Data().find(v => v.ENG_MeterNo === rowData?.ENG_MeterNo)?.Details;
+    if (type?.length && mtrNo?.length && data?.length && rowData) {
+      const fixedEngType = type.find(t => t.Name === rowData.ENG_Type)?.No as EngType;
       this.df().ENG_Type.setValue(fixedEngType);
-      this.df().ENG_MeterNo.setValue(this.rowdata!.ENG_MeterNo);
+      this.df().ENG_MeterNo.setValue(rowData.ENG_MeterNo);
+      this.tableDataSignal.set(data);
       this.initEffect.destroy();
     }
   }, { allowSignalWrites: !0 });
@@ -139,7 +147,7 @@ export class ASS21020CRUComponent extends BasicCruPageComponent<ASS21020Data> im
     this.logger.debug(`dfEffect:`, [this.dfChange(), this.tb()]);
     if ('object' !== typeof this.tb()) return;
     this.tb()!.rowEditing = !1;
-    this.tb()!.dt.cancelRowEdit(this.filteredData());
+    // this.tb()!.dt.cancelRowEdit(this.filteredData());
   });
 
   public readonly columns: Column[] = [
@@ -161,6 +169,12 @@ export class ASS21020CRUComponent extends BasicCruPageComponent<ASS21020Data> im
   public ngOnInit(): void {
     this.initializePage('ASS21020', this.dataForm);
 
+    if (this.isFormCreateable) {
+      this.service.ASS21020Data.set([]);
+      this.service.engTypeSignal.set([]);
+      this.service.engMeterNoSignal.set([]);
+    }
+
     this.service.loadEngType();
     this.service.loadEngMeterNo();
 
@@ -169,6 +183,7 @@ export class ASS21020CRUComponent extends BasicCruPageComponent<ASS21020Data> im
 
   public onSubmit(): void {
     this.handleSubmit(this.dataForm, () => {
+      this.tb()!.dt.cancelRowEdit(this.filteredData());
       const total = this.filteredData().map(v => v.ENG_Rate).reduce((a, b) => a + (b ?? 0), 0);
       if (total > 100) {
         this.messageService.errorBubble('總比率不能大於100%', '提交失敗');
@@ -202,7 +217,7 @@ export class ASS21020CRUComponent extends BasicCruPageComponent<ASS21020Data> im
   }
 
   public onRowEdit(event: RowEditSaveEvent): void {
-    this.service.tltNoSignal.set(event.data);
+    this.tableDataSignal.set(event.data);
     this.loading = !1;
     this.editingRow = void 0;
     this.logger.debug(`onRowEdit:`, [event]);
@@ -210,17 +225,17 @@ export class ASS21020CRUComponent extends BasicCruPageComponent<ASS21020Data> im
 
   public onAutoCalculate(): void {
     const data = this.filteredData();
-    // const totalSize = data.map(v => v.NET_SPACE).reduce((a, b) => a + (b ?? 0), 0);
+    const current = this.tableDataSignal();
+    const totalSize = data.map(v => v.NET_SPACE).reduce((a, b) => (a ?? 0) + (b ?? 0), 0) ?? 0;
+    if (totalSize === 0) return;
 
-    // this.service.tltNoSignal.set(data);
-    // this.service.tltNoSignal.update(list =>
-    //   list.map(data => ({
-    //     ...data,
-    //     ENG_Rate: totalSize ? Math.round((data.NET_SPACE ?? 0) / totalSize * 10000) / 100 : 0
-    //   }))
-    // );
-
-    // this.logger.debug(`onAutoCalculate:`, [data, totalSize]);
+    this.logger.debug(`onAutoCalculate:`, [data, totalSize, current]);
+    if (!current?.length) return;
+    const updatedDetails = current.map(detail => ({
+      ...detail,
+      ENG_Rate: Math.round((this.service.tltByFlagMap.get(detail.TLT_No)?.NET_SPACE ?? 0) / totalSize * 10000) / 100
+    }));
+    this.tableDataSignal.set(updatedDetails);
   }
 
   public onFieldChange(event: FieldChangeEvent): void {
@@ -248,9 +263,8 @@ export class ASS21020CRUComponent extends BasicCruPageComponent<ASS21020Data> im
 
   public onDelete(e: any): void {
     this.logger.debug('onDelete:', [e]);
-    // 由於 filteredData 現在是 computed，需要更新底層資料源
-    const updatedData = this.service.tltNoSignal().filter(item => item !== e);
-    this.service.tltNoSignal.set(updatedData);
+    const updatedData = this.service.ASS21020Data().filter(item => item !== e);
+    this.service.ASS21020Data.set(updatedData);
   };
 
   /**
