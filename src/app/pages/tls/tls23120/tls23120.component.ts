@@ -101,7 +101,7 @@ export class TLS23120Component
     filterMode: ['counter' as FilterMode],
 
     // 四組查詢條件（值可為空；僅 counter 模式才驗證 TLT_No 必填）
-    TLT_No: [[] as string[]],     // 專櫃編號（多選）
+    TLT_No: [null as string | null],   
     bus_type: [],                 // 大分類
     ShowBusType: true,
     tlt_building: [],             // 館別
@@ -261,7 +261,7 @@ onSubmit(form: FormGroup): void {
     const payload: any = {
       TXN_Date: toIsoOrNull(val?.TXN_Date),
 
-      TLT_No:       (fm === 'counter')  ? (Array.isArray(val?.TLT_No) ? val.TLT_No : null) : null,
+      TLT_No: (fm === 'counter') ? (val?.TLT_No ?? null) : null,
       tlt_building: (fm === 'location') ? (val?.tlt_building ?? null) : null,
       area_no:      (fm === 'location') ? (Array.isArray(val?.area_no) ? val.area_no : null) : null,
       tlt_floor:    (fm === 'location') ? (Array.isArray(val?.tlt_floor) ? val.tlt_floor : null) : null,
