@@ -20,6 +20,7 @@ export class ASS21020Service implements OnDestroy {
   public readonly tltNoSignal = signal<TLTByFlag[]>([]);
   public readonly tltNoListSignal = signal<DropdownOption[]>([]);
 
+  public readonly engTypeMap = new Map<string, EngType>();
   public readonly engMeterNoMap = new Map<string, ASS2100ENGMeterType>();
   public readonly tltByFlagMap = new Map<string, TLTByFlag>();
 
@@ -42,6 +43,9 @@ export class ASS21020Service implements OnDestroy {
       { No: EngType.電, Name: '電錶' },
       { No: EngType.瓦斯, Name: '瓦斯錶' },
     ]);
+    this.engTypeMap.set('水錶', EngType.水);
+    this.engTypeMap.set('電錶', EngType.電);
+    this.engTypeMap.set('瓦斯錶', EngType.瓦斯);
   };
 
   public loadEngMeterNo(): void {
