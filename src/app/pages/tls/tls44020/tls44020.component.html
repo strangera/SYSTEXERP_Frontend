@@ -93,18 +93,21 @@
                 >
                   <div class="p-3 border-1 surface-border surface-card relative">
                     <div class="status-container-grid grid-status-fixed">
-                      <ng-container *ngIf="isShutdown(row); else edcChips">
-                        <i class="pi pi-desktop shutdown-icon"></i>
-                      </ng-container>
-                      <ng-template #edcChips>
-                        <span [ngClass]="getEdcStatusClass(getBankStatus(row, '中信'))">中信</span>
-                        <span [ngClass]="getEdcStatusClass(getBankStatus(row, '聯信'))">聯信</span>
-                      </ng-template>
+                      <i
+                        [ngClass]="getStatusIcon(row.ECR_Status)"
+                        [ngStyle]="{ color: getStatusColor(row.ECR_Status) }"
+                      ></i>
                     </div>
                     <div class="grid-content">
-                      <div class="grid-title">{{ row.ECR_LocNo }}</div>
+                      <div class="grid-title">位置編號：{{ row.ECR_LocNo }}</div>
                       <div class="grid-subtitle">
-                        {{ row.TLT_No }} {{ row.TLT_Name }}
+                        <span>機台所屬專櫃編號：{{ row.TLT_No }}</span>
+                        <span>機台所屬櫃位名稱：{{ row.TLT_Name }}</span>
+                        <span>狀態：{{ row.EOS_Status }}</span>
+                        <i
+                          [ngClass]="getStatusIcon(row.EOS_Status)"
+                          [ngStyle]="{ color: getStatusColor(row.EOS_Status) }"
+                        ></i>
                       </div>
                     </div>
                   </div>
