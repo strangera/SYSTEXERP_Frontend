@@ -107,11 +107,17 @@ export class TLS22010Component extends BasicQueryPageComponent<any> implements O
 
   // --------- 生命週期 ----------
   ngOnInit(): void {
-    this.initializePage('TLS22010', '/TLS/TLS22010cru', this.queryForm, (frm) => this.onSubmit(frm));
+    this.initializePage('TLS22010', '/TLS/TLS22010cru', this.queryForm);
     // 下拉選項
     this.floorService.getFloors().subscribe((data) => (this.floorOptions = data));
     this.machineDisplayService.getMachinedisplay().subscribe((data) => (this.machinedisplayOptions = data));
     this.ECRNoService.getECRNo().subscribe((data) => (this.ECRNoOptions = data));
+    const state = this.router.lastSuccessfulNavigation?.extras.state;
+    const isFromRelatedRoute = state?.['fromRoute']?.includes(this.ProgNo.toLowerCase());
+    if (isFromRelatedRoute) {
+      // 還原資料
+      this.data = this.queryStateService.getQueryStateValue(this.ProgNo + '_data') ?? [];
+    }
   }
 
   /** 避免時區影響：以本地時間組 YYYY-MM-DD */
@@ -135,6 +141,7 @@ export class TLS22010Component extends BasicQueryPageComponent<any> implements O
 
           // 保留「表單值」到查詢狀態（initializePage 才能正確還原 Date 型別）
           this.queryStateService.setQueryState(this.ProgNo, frm.value);
+          this.queryStateService.setQueryState(this.ProgNo + '_data', this.data);
           this.loading = false;
         },
         error: (err) => {
