@@ -7,21 +7,16 @@
       header="{{ 'query-conditions' | translate }}"
       [selected]="true"
       class="line-height-3 m-0"
-      [headerStyleClass]="'query-accordionTab'"
-    >
-      <form
-        [formGroup]="queryForm"
-        id="queryForm"
-        (ngSubmit)="onSubmit(queryForm)"
-      >
+      [headerStyleClass]="'query-accordionTab'">
+      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
           <app-calendar-range-quick
             class="col-12 md:col-6 lg:col-4"
             label="銷售日期"
             [startControl]="queryForm.controls.TXN_DateStart"
             [endControl]="queryForm.controls.TXN_DateEnd"
-            [submitted]="submitted"
-          ></app-calendar-range-quick>
+            [submitted]="submitted">
+          </app-calendar-range-quick>
 
           <div class="col-12 md:col-6 lg:col-4">
             <app-multi-select
@@ -31,8 +26,8 @@
               optionLabel="label"
               optionValue="value"
               [control]="queryForm.controls.ECR_No"
-              [submitted]="submitted"
-            ></app-multi-select>
+              [submitted]="submitted">
+            </app-multi-select>
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
@@ -42,8 +37,8 @@
               controlName="TXN_No_Start"
               [startControl]="queryForm.controls.TXN_No_Start"
               [endControl]="queryForm.controls.TXN_No_End"
-              [submitted]="submitted"
-            ></app-input-number-range>
+              [submitted]="submitted">
+            </app-input-number-range>
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
@@ -54,8 +49,8 @@
               optionLabel="formLabel"
               optionValue="value"
               [control]="queryForm.controls.TLT_No"
-              [submitted]="submitted"
-            ></app-multi-select>
+              [submitted]="submitted">
+            </app-multi-select>
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
@@ -66,9 +61,10 @@
               optionLabel="label"
               optionValue="value"
               [control]="queryForm.controls.TXN_Status"
-              [submitted]="submitted"
-            ></app-multi-select>
+              [submitted]="submitted">
+            </app-multi-select>
           </div>
+
           <div class="col-12 md:col-6 lg:col-4">
             <app-multi-select
               label="狀態旗標"
@@ -77,8 +73,8 @@
               optionLabel="label"
               optionValue="value"
               [control]="queryForm.controls.TXN_FlagStatus"
-              [submitted]="submitted"
-            ></app-multi-select>
+              [submitted]="submitted">
+            </app-multi-select>
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
@@ -86,8 +82,8 @@
               label="停車卡號"
               controlName="TXN_PkngUID"
               [control]="queryForm.controls.TXN_PkngUID"
-              [submitted]="submitted"
-            ></app-input-text>
+              [submitted]="submitted">
+            </app-input-text>
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
@@ -95,8 +91,8 @@
               label="會員卡號"
               controlName="TXN_MemCard"
               [control]="queryForm.controls.TXN_MemCard"
-              [submitted]="submitted"
-            ></app-input-text>
+              [submitted]="submitted">
+            </app-input-text>
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
@@ -104,8 +100,8 @@
               label="發票號碼"
               controlName="TXN_GUIBegNo"
               [control]="queryForm.controls.TXN_GUIBegNo"
-              [submitted]="submitted"
-            ></app-input-text>
+              [submitted]="submitted">
+            </app-input-text>
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
@@ -116,8 +112,8 @@
               optionLabel="label"
               optionValue="value"
               [control]="queryForm.controls.tlt_building"
-              [submitted]="submitted"
-            ></app-dropdown>
+              [submitted]="submitted">
+            </app-dropdown>
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
@@ -127,8 +123,8 @@
               optionLabel="label"
               optionValue="value"
               [control]="queryForm.controls.tlt_floor"
-              [submitted]="submitted"
-            ></app-multi-select>
+              [submitted]="submitted">
+            </app-multi-select>
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
@@ -138,14 +134,12 @@
               optionLabel="formLabel"
               optionValue="value"
               [control]="queryForm.controls.org_id"
-              [submitted]="submitted"
-            ></app-multi-select>
+              [submitted]="submitted">
+            </app-multi-select>
           </div>
         </div>
 
-        <div
-          class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
-        >
+        <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
           <app-button btnType="clear" [form]="queryForm"></app-button>
           <app-button btnType="query" [loading]="loading"></app-button>
         </div>
@@ -153,7 +147,8 @@
     </p-accordionTab>
   </p-accordion>
 </div>
-<!-- 放在表格上一張卡片前端或條件區下方都可 -->
+
+<!-- 檢視模式切換 -->
 <div class="card mb-2">
   <div class="flex gap-4 align-items-center">
     <p-radioButton
@@ -163,8 +158,8 @@
       value="invoice"
       [(ngModel)]="viewMode"
       [ngModelOptions]="{ standalone: true }"
-      (onClick)="onViewChange()"
-    ></p-radioButton>
+      (onClick)="onViewChange()">
+    </p-radioButton>
 
     <p-radioButton
       name="viewMode"
@@ -173,8 +168,8 @@
       value="payment"
       [(ngModel)]="viewMode"
       [ngModelOptions]="{ standalone: true }"
-      (onClick)="onViewChange()"
-    ></p-radioButton>
+      (onClick)="onViewChange()">
+    </p-radioButton>
 
     <p-radioButton
       name="viewMode"
@@ -183,19 +178,25 @@
       value="discount"
       [(ngModel)]="viewMode"
       [ngModelOptions]="{ standalone: true }"
-      (onClick)="onViewChange()"
-    ></p-radioButton>
+      (onClick)="onViewChange()">
+    </p-radioButton>
   </div>
 </div>
 
-<!-- 單一張表，改成綁「動態資料/欄位」 -->
+<!-- 單一表格：動態欄位/資料/群組/小計/總計 -->
 <div class="card">
-  <app-table
+  <app-table2
     tableKey="TLS23040"
     [dataKey]="'_rowKey'"
     [data]="activeData"
     [columns]="activeColumns"
     [showTotal]="true"
+    [showSubTotal]="activeShowSubTotal"
+    [groupRowsBy]="activeGroupBy"
+    [externalTotals]="activeExternalTotals"
+    [externalTotalFieldMap]="activeExternalTotalFieldMap"
+    [externalSubtotals]="activeExternalSubtotals"
+    [externalSubtotalFieldMap]="activeExternalSubtotalFieldMap"
     [totalRecords]="totalRecords"
     [loading]="loading"
     [showManage]="false"
@@ -203,7 +204,6 @@
     [showCheckBox]="false"
     [multiSortMeta]="sortMeta"
     [lazy]="true"
-    (lazyLoadData)="onLazyLoadData($event, queryForm)"
-  ></app-table>
+    (lazyLoadData)="onLazyLoadData($event, queryForm)">
+  </app-table2>
 </div>
-

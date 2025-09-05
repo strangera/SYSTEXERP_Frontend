@@ -19,6 +19,7 @@
             [submitted]="submitted">
           </app-calendar-range-quick>
 
+          <!-- 收銀機號 -->
           <div class="col-12 md:col-6 lg:col-4">
             <app-multi-select
               label="收銀機號"
@@ -104,20 +105,27 @@
   </p-accordion>
 </div>
 
+<!-- 查詢結果表格（✅ app-table2 + 總計/小計；小計依 tlt_no 群組） -->
 <div class="card">
-  <app-table
+  <app-table2
     tableKey="TLS23100"
     [data]="data"
     [columns]="columns"
     [showCheckBox]="false"
+    dataKey="_rowKey"
     [multiSortMeta]="sortMeta"
     [totalRecords]="totalRecords"
     [lazy]="true"
     [loading]="loading"
-    (edit)="onEdit($event)"
-    (detail)="onDetail($event)"
     [showManage]="false"
     [showDelete]="false"
-    (lazyLoadData)="onLazyLoadData($event, queryForm)">
-  </app-table>
+    (lazyLoadData)="onLazyLoadData($event, queryForm)"
+    [showTotal]="true"
+    [showSubTotal]="true"
+    [groupRowsBy]="'tlt_no'"
+    [externalTotals]="detailTotals"
+    [externalTotalFieldMap]="detailTotalFieldMap"
+    [externalSubtotals]="detailSubtotals"
+    [externalSubtotalFieldMap]="detailSubtotalFieldMap">
+  </app-table2>
 </div>

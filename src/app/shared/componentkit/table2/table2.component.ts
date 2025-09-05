@@ -698,23 +698,21 @@ loadDataLazy(event: TableLazyLoadEvent) {
   }
 
 getGroupSubtotal(groupValue: any, field: string): number {
-  // 1) 先吃外部小計
   if (this.externalSubtotals && this.externalSubtotalFieldMap) {
     const apiKey = this.externalSubtotalFieldMap[field];
-    const gKey   = String(groupValue);
+    const gKey = String(groupValue ?? '').trim();   // ← 加了 trim
     const bucket = this.externalSubtotals[gKey];
-    if (apiKey && bucket && apiKey in bucket) {
-      return bucket[apiKey] ?? 0;
-    }
+    if (apiKey && bucket && apiKey in bucket) return bucket[apiKey] ?? 0;
   }
-  // 2) 回退前端即時加總（當頁資料）
+  // fallback：同頁即時小計
   if (!this.groupedDataCache.has(groupValue)) {
-    const rows = this.data.filter(item => (item as any)[this.groupRowsBy] === groupValue);
+    const key = String(groupValue ?? '').trim();    // ← 保守再 trim 一次
+    const rows = this.data.filter(r => String((r as any)[this.groupRowsBy] ?? '').trim() === key);
     this.groupedDataCache.set(groupValue, rows);
   }
-  return (this.groupedDataCache.get(groupValue) as any[])
-    .reduce((sum: number, row: any) => sum + (row[field] || 0), 0);
+  return (this.groupedDataCache.get(groupValue) as any[]).reduce((s, r) => s + (r[field] || 0), 0);
 }
+
 
 getTotal(field: string): number {
   // 1) 外部總計

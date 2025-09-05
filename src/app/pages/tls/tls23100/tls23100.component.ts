@@ -14,6 +14,7 @@ import { FloorService } from '../../../service/basic/floor.service';
 import { Tls11010Service } from '../../../service/api/tls/tls11010.service';
 import { ECRNoService } from '../../../service/basic/ECRNo.service';
 import { CounterNameService } from '../../../service/basic/counter-name.service';
+
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { AccordionModule } from 'primeng/accordion';
 import { CalendarRangeQuickComponent } from '../../../shared/componentkit/calendar-range-quick/calendar-range-quick.component';
@@ -22,7 +23,7 @@ import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdow
 import { InputTextModule } from 'primeng/inputtext';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { TranslateModule } from '@ngx-translate/core';
-import { TableComponent } from '@shared/componentkit/table/table.component';
+import { Table2Component } from '@shared/componentkit/table2/table2.component';
 
 @Component({
   selector: 'app-tls23100',
@@ -40,7 +41,7 @@ import { TableComponent } from '@shared/componentkit/table/table.component';
     InputTextModule,
     ButtonComponent,
     TranslateModule,
-    TableComponent,
+    Table2Component, // ✅ 使用 table2 才能顯示總計/小計
   ]
 })
 export class TLS23100Component extends BasicQueryPageComponent<any> {
@@ -56,20 +57,22 @@ export class TLS23100Component extends BasicQueryPageComponent<any> {
     return d;
   })();
 
-  // --- 排序狀態 ---
+  // 群組欄位（小計依此欄位）
+  readonly groupByField = 'tlt_no';
+
+  // --- 排序狀態（群組欄位一定放第一個，避免切段）---
   sortMeta: any[] = [];
-  /** 依需求：ECR_No → TXN_No → tlt_no（皆 ASC） */
   readonly defaultSort: any[] = [
+    { field: this.groupByField, order: 1 }, // ⬅️ 一定要第一個
     { field: 'ECR_No', order: 1 },
     { field: 'TXN_No', order: 1 },
-    { field: 'tlt_no', order: 1 },
   ];
 
   /** 去抖動 + 防重複查詢 */
   private lastQuerySig: string | null = null;
   private lazyTimer: any = null;
 
-  /** 後端需要分頁/排序參數 */
+  /** 後端需要分頁/排序參數（✅ 不傳 Offset / OrderBy） */
   private readonly includePagingAndSorting = true;
 
   // Request
@@ -79,16 +82,16 @@ export class TLS23100Component extends BasicQueryPageComponent<any> {
     ECR_No:        [[]],
     TLT_No:        [[]],
     Pay_No:        [[]],
-    CRD_No:        [],
+    CRD_No:        [], // 若未使用可移除
     tlt_building:  [],
     tlt_floor:     [[]],
     org_id:        [[]],
 
-    // ✅ 預設帶 ECR_No → TXN_No → tlt_no
+    // ✅ 預設排序：群組欄位優先
     ...createPaginationConfig([
+      { field: this.groupByField, order: 1 },
       { field: 'ECR_No', order: 1 },
       { field: 'TXN_No', order: 1 },
-      { field: 'tlt_no', order: 1 },
     ]),
   });
 
@@ -99,6 +102,20 @@ export class TLS23100Component extends BasicQueryPageComponent<any> {
   OrganizationCodeOptions: any[] = [];
   CounterOptions: any[] = [];
   ECRNoOptions: any[] = [];
+
+  // ====== 總計 / 小計容器與對應關係 ======
+  /** 表尾總計容器（來自 wrapper.totalPayAmt 聚合） */
+  detailTotals: Record<string, number> = {};
+  /** 欄位 -> 總計鍵對應 */
+  detailTotalFieldMap: Record<string, string> = {
+    TXN_PayAmt: 'totalPayAmt',
+  };
+  /** 群組小計容器（前端依當頁 rows 計算） */
+  detailSubtotals: Record<string, Record<string, number>> = {};
+  /** 欄位 -> 小計鍵對應 */
+  detailSubtotalFieldMap: Record<string, string> = {
+    TXN_PayAmt: 'Subtotal_TXN_PayAmt',
+  };
 
   constructor(
     private paymentTypeService: PaymentTypeService,
@@ -121,65 +138,71 @@ export class TLS23100Component extends BasicQueryPageComponent<any> {
 
     // 下拉載入
     this.ECRNoService.getECRNo().subscribe((res) => {
-      this.ECRNoOptions = res?.map((x: any) => ({
+      this.ECRNoOptions = (res ?? []).map((x: any) => ({
         label: x.label,
         formLabel: `${x.value} - ${x.label}`,
         value: x.value,
-      })) || [];
+      }));
     });
     this.counterNameService.getCounters().subscribe((res) => {
-      this.CounterOptions = res?.map((x: any) => ({
+      this.CounterOptions = (res ?? []).map((x: any) => ({
         label: x.label,
         formLabel: `${x.value} - ${x.label}`,
         value: x.value,
-      })) || [];
+      }));
     });
-    this.paymentTypeService.getPaymentTypes()
-      .subscribe((data) => (this.paymentTypeOptions = data));
-    this.tls11010Service.getBuildingOptions()
-      .subscribe((data) => (this.BUILDING_NO_Options = data));
-    this.floorService.getFloors()
-      .subscribe((data) => (this.floorOptions = data));
+    this.paymentTypeService.getPaymentTypes().subscribe((data) => (this.paymentTypeOptions = data));
+    this.tls11010Service.getBuildingOptions().subscribe((data) => (this.BUILDING_NO_Options = data));
+    this.floorService.getFloors().subscribe((data) => (this.floorOptions = data));
     this.tls11010Service.getOrgOptions().subscribe((res) => {
-      this.OrganizationCodeOptions = res?.map((x: any) => ({
+      this.OrganizationCodeOptions = (res ?? []).map((x: any) => ({
         label: x.label,
         formLabel: `${x.value} - ${x.label}`,
         value: x.value,
-      })) || [];
+      }));
     });
   }
 
-  // 欄位
+  // 欄位（把要計算總/小計的欄位加上 isTotal / isSubTotal）
   columns = [
     { field: 'ECR_No', header: '收銀機號', visible: true },
     { field: 'TXN_No', header: '交易序號', visible: true },
-    { field: 'tlt_no', header: '專櫃編號', visible: true, style: 'text-left' },
+    { field: 'tlt_no', header: '專櫃編號', visible: true },
     { field: 'tlt_name', header: '櫃位名稱', visible: true, style: 'text-left' },
     { field: 'PAY_NO', header: '付款別', visible: true },
     { field: 'PAY_NAME', header: '付款名稱', visible: true },
     { field: 'CRD_Name', header: '信用卡卡別', visible: true },
     { field: 'CRD_No', header: '信用卡卡號', visible: true },
-    { field: 'TXN_PayAmt', header: '金額', visible: true, style: 'text-right', format: (val: number) => (val ?? 0).toLocaleString('en-US') },
+    {
+      field: 'TXN_PayAmt',
+      header: '金額',
+      visible: true,
+      style: 'text-right',
+      format: (val: number) => this.money(val),
+      isTotal: true,
+      isSubTotal: true,
+    },
   ];
 
   /** 表格 lazy 事件（分頁/排序） */
   override onLazyLoadData(event: LazyLoadEvent, form: FormGroup): void {
-    // 若排序變更 → 回到第 1 頁
+    // 強制把群組欄位放第一順位
+    const nextSort = this.ensureGroupFirst(event.SortBy ?? []);
     const currSort = JSON.stringify(form.value?.SortBy ?? []);
-    const nextSort = JSON.stringify(event.SortBy ?? []);
-    const nextPageIndex = currSort !== nextSort ? 1 : (event.pageIndex ?? form.value.pageIndex ?? 1);
+    const nextSortStr = JSON.stringify(nextSort);
+    const nextPageIndex = currSort !== nextSortStr ? 1 : (event.pageIndex ?? form.value.pageIndex ?? 1);
 
     // 同步回表單（不觸發 valueChanges）
     form.patchValue({
       pageIndex: nextPageIndex,
       pageSize : event.pageSize ?? form.value.pageSize,
-      SortBy   : event.SortBy ?? form.value.SortBy,
+      SortBy   : nextSort,
     }, { emitEvent: false });
 
     // 更新表頭排序狀態
-    this.sortMeta = (event.SortBy ?? []).map(s => ({ ...s }));
+    this.sortMeta = nextSort.map(s => ({ ...s }));
 
-    // 去重簽章（viewMode 不存在，帶核心參數）
+    // 去重簽章
     const sig = JSON.stringify({
       pageIndex: form.value.pageIndex,
       pageSize : form.value.pageSize,
@@ -188,7 +211,6 @@ export class TLS23100Component extends BasicQueryPageComponent<any> {
     if (sig === this.lastQuerySig) return;
     this.lastQuerySig = sig;
 
-    // 只呼叫一次查詢
     if (this.lazyTimer) clearTimeout(this.lazyTimer);
     this.lazyTimer = setTimeout(() => this.onSubmit(form), 0);
   }
@@ -198,49 +220,31 @@ export class TLS23100Component extends BasicQueryPageComponent<any> {
     this.handleSubmit(form, () => {
       const val = this.queryForm.getRawValue() as any;
 
-      // 由 pageIndex/pageSize 推算 Offset（0-based）
+      // 分頁鍵（✅ 不再計算也不傳 Offset）
       const pageSize  = Number.isFinite(val?.pageSize)  ? Number(val.pageSize)  : 10;
       const pageIndex = Number.isFinite(val?.pageIndex) ? Number(val.pageIndex) : 1;
-      const offset    = Math.max(0, (pageIndex - 1) * pageSize);
 
-      // 🔑 排序：表單 → sortMeta → defaultSort
+      // 排序：表單 → sortMeta → defaultSort
       const sortByArr = (Array.isArray(val?.SortBy) && val.SortBy.length
         ? val.SortBy
         : (this.sortMeta.length ? this.sortMeta : this.defaultSort)
       ).map((s: any) => ({ ...s }));
 
-      const orderBy = sortByArr.length
-        ? sortByArr.map((s: any) => `${s.field} ${s.order === 1 ? 'ASC' : 'DESC'}`).join(',')
-        : undefined;
-
-      // 組 payload（保留分頁/排序）
-      const payload: any = {
+      // 組 payload（✅ 僅保留 pageIndex/pageSize/SortBy）
+      const payload: any = this.prune({
         TXN_DateStart: this.toIso(val?.TXN_DateStart),
         TXN_DateEnd  : this.toIso(val?.TXN_DateEnd),
-        ECR_No       : val?.ECR_No,        // 可為陣列或字串，後端自理
-        TLT_No       : val?.TLT_No,
-        Pay_No       : val?.Pay_No,
-        CRD_No       : val?.CRD_No,
-        tlt_building : val?.tlt_building,
-        tlt_floor    : val?.tlt_floor,
-        org_id       : val?.org_id,
-      };
+        ECR_No       : this.ensureArr(val?.ECR_No),
+        TLT_No       : this.ensureArr(val?.TLT_No),
+        Pay_No       : this.ensureArr(val?.Pay_No),
+        CRD_No       : (val?.CRD_No ?? '') || undefined,
+        tlt_building : (val?.tlt_building ?? '') || undefined,
+        tlt_floor    : this.ensureArr(val?.tlt_floor),
+        org_id       : this.ensureArr(val?.org_id),
 
-      if (this.includePagingAndSorting) {
-        Object.assign(payload, {
-          pageSize,
-          pageIndex,
-          Offset:  offset,
-          SortBy:  sortByArr,
-          ...(orderBy ? { OrderBy: orderBy } : {}),
-        });
-      }
-
-      // 移除空字串 / null / undefined / 空陣列
-      Object.keys(payload).forEach((k) => {
-        const v = payload[k];
-        if (v === '' || v === null || v === undefined) delete payload[k];
-        if (Array.isArray(v) && v.length === 0) delete payload[k];
+        pageSize,
+        pageIndex,
+        SortBy: sortByArr,
       });
 
       this.loading = true;
@@ -248,25 +252,44 @@ export class TLS23100Component extends BasicQueryPageComponent<any> {
 
       this.tls23100Service.queryTLS23100(payload).subscribe({
         next: (res: any) => {
-          // 期待：{ Data: [{ totalPayAmt, tLS23100Details: [...] }], TotalCount, ... }
-          const data = res?.Data;
-          const wrapper = Array.isArray(data) ? data[0] : data;
+          // 期待：{ Data: [{ totalPayAmt, tLS23100Details: [...] }, ...], TotalCount?, ... }
+          const wrappers = Array.isArray(res?.Data) ? res.Data : (res?.Data ? [res?.Data] : []);
 
-          const details =
-            wrapper?.tLS23100Details ??
-            wrapper?.TLS23100Details ??
-            wrapper?.tls23100Details ??
-            [];
+          // 當頁明細
+          const details = wrappers.flatMap((w: any) =>
+            Array.isArray(w?.tLS23100Details ?? w?.TLS23100Details ?? w?.tls23100Details)
+              ? (w.tLS23100Details ?? w.TLS23100Details ?? w.tls23100Details)
+              : [],
+          );
+          this.data = details.map((row: any, idx: number) => ({
+            ...row,
+            _rowKey: `row|${row?.ECR_No ?? ''}|${row?.TXN_No ?? idx}`,
+          }));
 
-          this.data = Array.isArray(details) ? details : [];
+          // 總計（聚合所有 wrapper 的 totalPayAmt；若缺少則回退為當頁加總）
+          const totalFromWrapper = wrappers
+            .map((w: any) => Number(w?.totalPayAmt ?? 0))
+            .reduce((a: number, b: number) => a + b, 0);
 
-          // 總物件數
-          this.totalRecords =
-            typeof res?.TotalCount === 'number' ? res.TotalCount : this.data.length;
+          const fallbackPageSum = this.data
+            .map((r: any) => Number(r?.TXN_PayAmt ?? 0))
+            .reduce((a: number, b: number) => a + b, 0);
+
+          this.detailTotals = { totalPayAmt: totalFromWrapper || fallbackPageSum };
+
+          // 小計（前端依當頁資料，以 tlt_no 分組）
+          this.detailSubtotals = this.buildSubtotals(this.data);
+
+          // 總筆數
+          this.totalRecords = (typeof res?.TotalCount === 'number')
+            ? res.TotalCount
+            : this.data.length;
         },
         error: () => {
           this.data = [];
           this.totalRecords = 0;
+          this.detailTotals = {};
+          this.detailSubtotals = {};
           this.loading = false;
         },
         complete: () => {
@@ -277,15 +300,48 @@ export class TLS23100Component extends BasicQueryPageComponent<any> {
     });
   }
 
-  // 工具：將日期轉成本地 ISO（去時區偏移）
+  // ====== 工具 ======
   private toIso(x: any): string | undefined {
     if (!x) return undefined;
     const d = typeof x === 'string' ? new Date(x) : (x as Date);
     if (isNaN(d.getTime())) return undefined;
-    return new Date(d.getTime() - d.getTimezoneOffset() * 60000)
-      .toISOString()
-      .slice(0, 19);
+    return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 19);
   }
 
+  private ensureArr = (v: any) => (Array.isArray(v) ? v : (v == null || v === '' ? [] : [v]));
 
+  private prune<T extends Record<string, any>>(obj: T): T {
+    const out: any = { ...obj };
+    Object.keys(out).forEach((k) => {
+      const v = out[k];
+      if (v === '' || v === null || v === undefined) delete out[k];
+      else if (Array.isArray(v) && v.length === 0) delete out[k];
+      else if (typeof v === 'object' && !Array.isArray(v) && Object.keys(v).length === 0) delete out[k];
+    });
+    return out as T;
+  }
+
+  private ensureGroupFirst(sortBy: any[] | undefined): any[] {
+    const g = this.groupByField;
+    const list = Array.isArray(sortBy) ? [...sortBy] : [];
+    const exist = list.find((s) => s.field === g);
+    const rest = list.filter((s) => s.field !== g);
+    const order = exist?.order ?? 1;
+    return [{ field: g, order }, ...rest];
+  }
+
+private buildSubtotals(rows: any[]): Record<string, Record<string, number>> {
+  const sub: Record<string, Record<string, number>> = {};
+  for (const r of rows) {
+    const key = String(r?.tlt_no ?? 'UNKNOWN');
+    const curr = sub[key] ?? {};
+    // 用中括號避免 TS4111
+    curr['Subtotal_TXN_PayAmt'] = (curr['Subtotal_TXN_PayAmt'] ?? 0) + Number(r?.TXN_PayAmt ?? 0);
+    sub[key] = curr;
+  }
+  return sub;
+}
+
+
+  money = (val: any) => Number(val || 0).toLocaleString('en-US');
 }

@@ -528,15 +528,20 @@ export class TLS23030Component extends BasicQueryPageComponent<any> {
           for (const st of subTotals) {
             const details = st?.tLS23030_Details ?? st?.TLS23030_Details ?? st?.tls23030_Details ?? [];
             // 以第一筆明細的 PAY_NO 當作群組鍵（和 [groupRowsBy]="PAY_NO" 對齊）
-            const groupKey = String(details?.[0]?.PAY_NO ?? 'UNKNOWN');
+// ✅ 這行建議也順手補 trim，避免 "10 " / "10" 對不到
+const groupKey = String(details?.[0]?.PAY_NO ?? '').trim();
 
-            const curr = subMap[groupKey] ?? {
-              SubTotal_TXN_PayAmt: 0,
-              SubTotal_TXN_TaxAlwnc: 0,
-            };
-            curr['SubTotal_TXN_PayAmt']  += Number(st?.SubTotal_TXN_PayAmt ?? 0);
-            curr['SubTotal_TXN_TaxAlwnc']+= Number(st?.SubTotal_TXN_TaxAlwnc ?? 0);
-            subMap[groupKey] = curr;
+const curr = subMap[groupKey] ?? {
+  SubTotal_TXN_PayAmt: 0,
+  SubTotal_TXN_TaxAlwnc: 0,
+};
+
+// ⬇⬇ 這兩行改成中括號
+curr['SubTotal_TXN_PayAmt']   = (curr['SubTotal_TXN_PayAmt']   ?? 0) + Number(st?.SubTotal_TXN_PayAmt ?? 0);
+curr['SubTotal_TXN_TaxAlwnc'] = (curr['SubTotal_TXN_TaxAlwnc'] ?? 0) + Number(st?.SubTotal_TXN_TaxAlwnc ?? 0);
+
+subMap[groupKey] = curr;
+
 
             // 當頁明細
             for (let i = 0; i < details.length; i++) {
