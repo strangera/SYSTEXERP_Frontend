@@ -348,3 +348,9 @@
 </app-table>
   </div>
 </div>
+<div
+  *ngIf="pdfSummary?.length"
+  class="mt-4 border-t pt-3 text-sm text-red-700 font-medium"
+>
+  <div *ngFor="let line of pdfSummary">{{ line }}</div>
+</div> 

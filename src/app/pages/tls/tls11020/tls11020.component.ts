@@ -29,7 +29,7 @@ import { Table2Component } from '@shared/componentkit/table2/table2.component';
         ReactiveFormsModule,
         InputTextComponent,
         MultiSelectComponent,
-        TableComponent,
+        // TableComponent,
         TranslateModule,
         Table2Component,
     ],
