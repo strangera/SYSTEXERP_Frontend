@@ -17,7 +17,7 @@ import { NGXLogger } from 'ngx-logger';
 import { PanelModule } from 'primeng/panel';
 import { finalize, startWith, tap } from 'rxjs';
 import { ASS2100ENGMeterType } from '../ass21010/ass21010.model';
-import { ASS21020Data, ASS21020Detail, ASS21020Update, TLTByFlag } from '../ass21020/ass21020.model';
+import { ASS21020Data, ASS21020Detail, ASS21020Query, ASS21020Update, TLTByFlag } from '../ass21020/ass21020.model';
 
 @Component({
   selector: 'app-ass21020-cru',
@@ -42,18 +42,7 @@ export class ASS21020CRUComponent extends BasicCruPageComponent<ASS21020Data> im
   public readonly CRUDStatus = CRUDStatus;
   private readonly ratePtn = /^(100|[1-9]?[0-9])(\.[0-9]{1,2})?$/;
 
-  private static setEqual<T>(a: Set<T>, b: Set<T>): boolean {
-    if (a === b) return !0;
-    if (a.size !== b.size) return !1;
-    for (const x of a) if (!b.has(x)) return !1;
-    return !0;
-  }
-  private static arrShallowEqual<T>(a: readonly T[], b: readonly T[]): boolean {
-    if (a === b) return !0;
-    if (a.length !== b.length) return !1;
-    for (let i = 0; i < a.length; i++) if (a[i] !== b[i]) return !1;
-    return !0;
-  }
+  private static readonly equalFn = (a: any, b: any) => String(a) === String(b);
 
   public readonly dataForm = this.formBuilder.nonNullable.group({
     ENG_Type: new FormControl<EngType | undefined>(void 0, [Validators.required]),
@@ -68,13 +57,24 @@ export class ASS21020CRUComponent extends BasicCruPageComponent<ASS21020Data> im
   });
   public readonly df = computed(() => this.dataForm.controls);
 
-  private readonly engTypeSignal = toSignal(this.df().ENG_Type.valueChanges.pipe(startWith(this.df().ENG_Type.value)));
-  private readonly meterNoSignal = toSignal(this.df().ENG_MeterNo.valueChanges);
-  private readonly tableDataSignal = signal<ASS21020Detail[]>([], { equal: ASS21020CRUComponent.arrShallowEqual });
+  private readonly engTypeSignal = toSignal(this.df().ENG_Type.valueChanges, { equal: ASS21020CRUComponent.equalFn });
+  private readonly meterNoSignal = toSignal(this.df().ENG_MeterNo.valueChanges, { equal: ASS21020CRUComponent.equalFn });
+  private readonly tableDataSignal = signal<ASS21020Detail[]>([], { equal: ASS21020CRUComponent.equalFn });
 
   private readonly allEngTypes = computed(() => this.service.engTypeSignal());
   private readonly allMeterNo = computed(() => this.service.engMeterNoSignal());
   private readonly tltByFlagMap = computed(() => this.service.tltByFlagMap);
+  private readonly payload = computed((): ASS21020Query => {
+    const type = this.engTypeSignal()!;
+    const mtrNo = this.meterNoSignal()!;
+    return {
+      EngTypes: this.service.engTypeMap.get(type ?? '') ?? '',
+      ENG_MeterNo: mtrNo,
+      // Location_No: mtrNoData.Floor_No,
+      Mid: Number(this.user.mid),
+      SYS_StoreNo: this.user.SYS_StoreNo,
+    };
+  }, { equal: ASS21020CRUComponent.equalFn });
 
   public readonly rowEditCanSaveSignal = signal(!0);
 
@@ -87,7 +87,7 @@ export class ASS21020CRUComponent extends BasicCruPageComponent<ASS21020Data> im
     if (!selected) return all;
     const nameSet = new Set(this.allEngTypes().filter(t => t.No === selected).map(t => t.Name));
     return all.filter(m => nameSet.has(m.ENG_Type));
-  }, { equal: ASS21020CRUComponent.arrShallowEqual });
+  });
 
   public readonly filteredData = computed<ASS21020Detail[]>(() => {
     const rows = this.tableDataSignal();
@@ -100,38 +100,12 @@ export class ASS21020CRUComponent extends BasicCruPageComponent<ASS21020Data> im
   });
 
   public readonly dropdownEffect = effect(() => {
-    const type = this.engTypeSignal();
-    const mtrNo = this.meterNoSignal();
-    const mtrNoData = this.service.engMeterNoMap.get(mtrNo || '');
-    this.logger.debug(`dropwnEffect:`, [type, mtrNo, mtrNoData]);
-    if (!type && !mtrNo) {
-      this.onClear();
-      this.tb()!.dt.clear();
-      return;
-    }
-    if (type && mtrNo && (!mtrNoData || this.service.engTypeMap.get(mtrNoData.ENG_Type) !== type)) {
-      this.dataForm.patchValue({
-        ENG_MeterNo: void 0,
-        Location_No: void 0,
-        floor_no: void 0,
-        floor_name: void 0,
-        Building_No: void 0,
-        Building_Name: void 0,
-        x_coord: void 0,
-        y_coord: void 0,
-      });
-      return;
-    }
-    if (type && mtrNo && mtrNoData) {
-      this.service.queryTltByFlag(mtrNo);
-      if (this.crudstatus !== CRUDStatus.Create) this.service.loadASS21020({
-        EngTypes: type,
-        ENG_MeterNo: mtrNo,
-        // Location_No: mtrNoData.Floor_No,
-        Mid: Number(this.user.mid),
-        SYS_StoreNo: this.user.SYS_StoreNo,
-      });
-
+    const payload = this.payload();
+    const mtrNoData = this.service.engMeterNoSignal().find(item => item.ENG_MeterNo === payload.ENG_MeterNo);
+    this.logger.debug(`dropwnEffect:`, [payload, mtrNoData]);
+    if (payload.EngTypes && payload.ENG_MeterNo && mtrNoData) {
+      this.service.queryTltByFlag(payload.ENG_MeterNo);
+      if (this.crudstatus !== CRUDStatus.Create) this.service.loadASS21020(this.payload());
       this.dataForm.patchValue({
         Location_No: mtrNoData.Location_No,
         floor_no: mtrNoData.Floor_No,

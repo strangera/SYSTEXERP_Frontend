@@ -13,12 +13,19 @@ const apiUrl: string = `${environment.ApiUrl}`;
 @Injectable({ providedIn: 'root' })
 export class ASS21020Service implements OnDestroy {
 
+  private static arrShallowEqual<T>(a: readonly T[], b: readonly T[]): boolean {
+    if (a === b) return !0;
+    if (a.length !== b.length) return !1;
+    for (let i = 0; i < a.length; i++) if (a[i] !== b[i]) return !1;
+    return !0;
+  }
+
   // 儲存資料
-  public readonly ASS21020Data = signal<ASS21020Data[]>([]);
-  public readonly engTypeSignal = signal<DropdownOption[]>([]);
-  public readonly engMeterNoSignal = signal<ASS2100ENGMeterType[]>([]);
-  public readonly tltNoSignal = signal<TLTByFlag[]>([]);
-  public readonly tltNoListSignal = signal<DropdownOption[]>([]);
+  public readonly ASS21020Data = signal<ASS21020Data[]>([], { equal: ASS21020Service.arrShallowEqual });
+  public readonly engTypeSignal = signal<DropdownOption[]>([], { equal: ASS21020Service.arrShallowEqual });
+  public readonly engMeterNoSignal = signal<ASS2100ENGMeterType[]>([], { equal: ASS21020Service.arrShallowEqual });
+  public readonly tltNoSignal = signal<TLTByFlag[]>([], { equal: ASS21020Service.arrShallowEqual });
+  public readonly tltNoListSignal = signal<DropdownOption[]>([], { equal: ASS21020Service.arrShallowEqual });
 
   public readonly engTypeMap = new Map<string, EngType>();
   public readonly engMeterNoMap = new Map<string, ASS2100ENGMeterType>();
