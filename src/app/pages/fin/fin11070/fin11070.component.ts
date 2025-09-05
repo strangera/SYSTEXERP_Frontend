@@ -32,7 +32,7 @@ import { ValidationService } from '@shared/service/validation.service';
 })
 export class FIN11070Component extends BasicQueryPageComponent<FIN11070Data> implements OnInit {
   queryForm = this.formBuilder.group({
-    GUI_YYMM: ['', this.validationService.evenMonthValidator],    // 申報年月
+    GUI_YYMM: ['', [Validators.required, this.validationService.evenMonthValidator]],    // 申報年月
     ...createPaginationConfig([])
   });
 
@@ -95,18 +95,11 @@ export class FIN11070Component extends BasicQueryPageComponent<FIN11070Data> imp
 
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
-      let yyyyMM = this.datePipe.transform(frm.value.GUI_YYMM, 'yyyyMM') ?? '';
-      let year = parseInt(yyyyMM.substring(0, 4));
-      let month = parseInt(yyyyMM.substring(4, 6)) - 1;
-      let date = new Date(year, month, 1);
-      date.setMonth(date.getMonth() - 1);
-      yyyyMM = this.datePipe.transform(date, 'yyyyMM') ?? '';
-
       const requestData = {
         ...frm.value,
         MID: 0,                    // 固定為0
         SYS_StoreNo: '10',        // 固定為 '10'
-        GUI_YYMM: yyyyMM,  // 申報年月 (YYYYmm格式)
+        GUI_YYMM: this.PreviousMonth,  // 申報年月 (YYYYmm格式)
       };
 
       this.fin11070Service.queryFIN11070(requestData)
@@ -123,7 +116,7 @@ export class FIN11070Component extends BasicQueryPageComponent<FIN11070Data> imp
     const requestData = {
       MID: 0,
       STO_No: '10',
-      GUI_YYMM: this.datePipe.transform(this.queryForm.value.GUI_YYMM, 'yyyyMM') ?? '',
+      GUI_YYMM: this.PreviousMonth,
     };
 
     this.fin11070Service.downloadFIN11070(requestData)
@@ -165,7 +158,7 @@ export class FIN11070Component extends BasicQueryPageComponent<FIN11070Data> imp
     const requestData = {
       MID: 0,
       SYS_StoreNo: '10',
-      GUI_YYMM: this.datePipe.transform(this.queryForm.value.GUI_YYMM, 'yyyyMM') ?? '',
+      GUI_YYMM: this.PreviousMonth,
     };
 
     this.fin11070Service.insertFIN11070(requestData)
@@ -175,7 +168,24 @@ export class FIN11070Component extends BasicQueryPageComponent<FIN11070Data> imp
           this.messageService.errorBubble(response.Data[0].Errormsg);
         } else {
           this.messageService.successBubble('寫入產製空白發票成功');
+          this.onSubmit(this.queryForm);
         }
       });
+  }
+
+  // 月份減少一個月
+  get PreviousMonth(): string {
+    let currentDate = this.queryForm.value.GUI_YYMM;
+    let yyyyMM = '';
+    if (currentDate) {
+      yyyyMM = this.datePipe.transform(currentDate, 'yyyyMM') ?? '';
+      let year = parseInt(yyyyMM.substring(0, 4));
+      let month = parseInt(yyyyMM.substring(4, 6)) - 1;
+      let date = new Date(year, month, 1);
+      date.setMonth(date.getMonth() - 1);
+      yyyyMM = this.datePipe.transform(date, 'yyyyMM') ?? '';
+    }
+
+    return yyyyMM;
   }
 }
