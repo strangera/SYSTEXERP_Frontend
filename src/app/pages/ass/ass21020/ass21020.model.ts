@@ -29,7 +29,7 @@ export interface ASS21020Query extends BaseQueryRequest {
   ENG_Rate?: number;
 }
 
-export interface ASS21020Update extends BaseQueryRequest {
+export interface ASS21020Update {
   ENG_Type: string;
   ENG_MeterNo: string;
   TLT_No: string;

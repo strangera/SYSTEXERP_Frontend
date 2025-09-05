@@ -19,18 +19,16 @@ export class ASS21020Service implements OnDestroy {
   public readonly engMeterNoSignal = signal<ASS2100ENGMeterType[]>([]);
   public readonly tltNoSignal = signal<TLTByFlag[]>([]);
   public readonly tltNoListSignal = signal<DropdownOption[]>([]);
-  public readonly locationSignal = signal<DropdownOption[]>([]);
 
+  public readonly engTypeMap = new Map<string, EngType>();
   public readonly engMeterNoMap = new Map<string, ASS2100ENGMeterType>();
   public readonly tltByFlagMap = new Map<string, TLTByFlag>();
 
   public engMeterNoLoading = !1;
-  public locationLoading = !1;
   public tableLoading = !1;
   public queryTltByFlagLoading = !1;
 
   private readonly engMeterNoCancel$ = new Subject<void>();
-  private readonly locationCancel$ = new Subject<void>();
   private readonly tableCancel$ = new Subject<void>();
   private readonly queryTltByFlagCancel$ = new Subject<void>();
 
@@ -45,6 +43,9 @@ export class ASS21020Service implements OnDestroy {
       { No: EngType.電, Name: '電錶' },
       { No: EngType.瓦斯, Name: '瓦斯錶' },
     ]);
+    this.engTypeMap.set('水錶', EngType.水);
+    this.engTypeMap.set('電錶', EngType.電);
+    this.engTypeMap.set('瓦斯錶', EngType.瓦斯);
   };
 
   public loadEngMeterNo(): void {
@@ -61,22 +62,6 @@ export class ASS21020Service implements OnDestroy {
       finalize(() => {
         this.engMeterNoLoading = !1;
         console.log('查詢EngMeterNo結果:', [this.engMeterNoSignal()]);
-      })
-    ).subscribe();
-  };
-
-  public loadLocationNo(ENG_MeterNo: string): void {
-    this.locationCancel$.next();
-    this.locationLoading = !0;
-    this.http.post<BaseQueryResponse<TLTByFlag>>(`${apiUrl}/Share/queryTLTTALENTByFlag_DropDownList`, { MID: 0, ENG_MeterNo }).pipe(
-      take(1),
-      takeUntil(this.locationCancel$),
-      tap(({ Data }) => {
-        this.locationSignal.set(Array
-          .from(new Set(Data.map(v => v.Location_No)))
-          .map(locationNo => ({ No: locationNo, Name: locationNo }))
-        );
-        console.log('查詢Location結果:', [this.locationSignal()]);
       })
     ).subscribe();
   };
@@ -134,7 +119,6 @@ export class ASS21020Service implements OnDestroy {
 
   ngOnDestroy(): void {
     this.engMeterNoCancel$.next();
-    this.locationCancel$.next();
     this.tableCancel$.next();
   }
 }
