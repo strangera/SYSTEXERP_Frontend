@@ -59,6 +59,7 @@ export interface Column {
   /** ✅ 凍結欄位 */
   frozen?: boolean;
   alignFrozen?: 'left' | 'right';
+   exportFormat?: any; // ← 讓它能放物件/陣列，而不是字串
 }
 
 export interface ColumnGroup {
