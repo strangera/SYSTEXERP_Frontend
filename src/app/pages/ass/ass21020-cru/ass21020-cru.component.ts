@@ -15,7 +15,7 @@ import { Column, FieldChangeEvent, RowEditSaveEvent } from '@shared/componentkit
 import { CRUDStatus } from '@shared/models/system/CRUDstatus';
 import { NGXLogger } from 'ngx-logger';
 import { PanelModule } from 'primeng/panel';
-import { finalize, startWith, tap } from 'rxjs';
+import { finalize, tap } from 'rxjs';
 import { ASS2100ENGMeterType } from '../ass21010/ass21010.model';
 import { ASS21020Data, ASS21020Detail, ASS21020Query, ASS21020Update, TLTByFlag } from '../ass21020/ass21020.model';
 
@@ -42,8 +42,6 @@ export class ASS21020CRUComponent extends BasicCruPageComponent<ASS21020Data> im
   public readonly CRUDStatus = CRUDStatus;
   private readonly ratePtn = /^(100|[1-9]?[0-9])(\.[0-9]{1,2})?$/;
 
-  private static readonly equalFn = (a: any, b: any) => String(a) === String(b);
-
   public readonly dataForm = this.formBuilder.nonNullable.group({
     ENG_Type: new FormControl<EngType | undefined>(void 0, [Validators.required]),
     ENG_MeterNo: new FormControl<string | undefined>(void 0, [Validators.required]),
@@ -57,9 +55,9 @@ export class ASS21020CRUComponent extends BasicCruPageComponent<ASS21020Data> im
   });
   public readonly df = computed(() => this.dataForm.controls);
 
-  private readonly engTypeSignal = toSignal(this.df().ENG_Type.valueChanges, { equal: ASS21020CRUComponent.equalFn });
-  private readonly meterNoSignal = toSignal(this.df().ENG_MeterNo.valueChanges, { equal: ASS21020CRUComponent.equalFn });
-  private readonly tableDataSignal = signal<ASS21020Detail[]>([], { equal: ASS21020CRUComponent.equalFn });
+  private readonly engTypeSignal = toSignal(this.df().ENG_Type.valueChanges);
+  private readonly meterNoSignal = toSignal(this.df().ENG_MeterNo.valueChanges);
+  private readonly tableDataSignal = signal<ASS21020Detail[]>([]);
 
   private readonly allEngTypes = computed(() => this.service.engTypeSignal());
   private readonly allMeterNo = computed(() => this.service.engMeterNoSignal());
@@ -74,7 +72,7 @@ export class ASS21020CRUComponent extends BasicCruPageComponent<ASS21020Data> im
       Mid: Number(this.user.mid),
       SYS_StoreNo: this.user.SYS_StoreNo,
     };
-  }, { equal: ASS21020CRUComponent.equalFn });
+  });
 
   public readonly rowEditCanSaveSignal = signal(!0);
 
@@ -219,7 +217,11 @@ export class ASS21020CRUComponent extends BasicCruPageComponent<ASS21020Data> im
   }
 
   public onRowEdit(event: RowEditSaveEvent): void {
-    this.tableDataSignal.set([...event.data]);
+    this.tableDataSignal.set([...event.data.map((d: ASS21020Detail) => ({
+      ...d,
+      Location_No: this.editingRow?.Location_No,
+      NET_SPACE: this.editingRow?.NET_SPACE,
+    }))]);
     this.loading = !1;
     this.editingRow = void 0;
     this.logger.debug(`onRowEdit:`, [event]);
