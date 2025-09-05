@@ -1284,7 +1284,7 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
         _isCopiedItem: true
       };
 
-      // 🎯 特殊處理 tpy_type 欄位
+      // 特殊處理 tpy_type 欄位
       if (originalItem.tpy_type) {
         // 確保複製的 tpy_type 值有效
         const tpyTypeOptions = TLS13010_DROPDOWN_OPTIONS.tpyTypeOption || [];
@@ -1292,39 +1292,39 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
 
         if (isValidOption) {
           copiedItem.tpy_type = originalItem.tpy_type;
-          console.log(`✅ tpy_type 複製成功: ${originalItem.tpy_type}`);
+          console.log(`tpy_type 複製成功: ${originalItem.tpy_type}`);
         } else {
           // 如果原值無效，設定為第一個可用選項或預設值
           copiedItem.tpy_type = tpyTypeOptions.length > 0 ? tpyTypeOptions[0].value : null;
-          console.warn(`⚠️ 原 tpy_type 值無效，設定為預設值: ${copiedItem.tpy_type}`);
+          console.warn(`原 tpy_type 值無效，設定為預設值: ${copiedItem.tpy_type}`);
         }
       } else {
         // 如果原項目沒有 tpy_type，設定預設值
         const tpyTypeOptions = TLS13010_DROPDOWN_OPTIONS.tpyTypeOption || [];
         copiedItem.tpy_type = tpyTypeOptions.length > 0 ? tpyTypeOptions[0].value : null;
-        console.log(`📋 設定預設 tpy_type: ${copiedItem.tpy_type}`);
+        console.log(`設定預設 tpy_type: ${copiedItem.tpy_type}`);
       }
 
-      // 🎯 日期複製：只複製合理的日期，異常日期設為 null
+      // 日期複製：只複製合理的日期，異常日期設為 null
       ['tpy_bdate', 'tpy_edate'].forEach(dateField => {
         if (originalItem[dateField]) {
           if (originalItem[dateField] instanceof Date) {
             if (this.isValidDateRange(originalItem[dateField])) {
               copiedItem[dateField] = new Date(originalItem[dateField]);
-              console.log(`✅ ${dateField} 日期複製成功`);
+              console.log(`${dateField} 日期複製成功`);
             } else {
               copiedItem[dateField] = null;
-              console.warn(`⚠️ ${dateField} 日期異常，設為 null`);
+              console.warn(`${dateField} 日期異常，設為 null`);
             }
           } else {
             // 非 Date 物件直接保持原值，讓顯示邏輯處理
             copiedItem[dateField] = originalItem[dateField];
-            console.log(`📋 ${dateField} 保持原始格式`);
+            console.log(`${dateField} 保持原始格式`);
           }
         }
       });
 
-      // 🎯 確保必要的數值欄位有預設值
+      // 確保必要的數值欄位有預設值
       const numericFields = ['tpy_unitamt', 'tpy_qty', 'tpy_amount'];
       numericFields.forEach(field => {
         if (!copiedItem[field] || copiedItem[field] === null || isNaN(parseFloat(copiedItem[field]))) {
@@ -1333,28 +1333,39 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
           } else {
             copiedItem[field] = 0; // 其他數值欄位預設為 0
           }
-          console.log(`📋 設定 ${field} 預設值: ${copiedItem[field]}`);
+          console.log(`設定 ${field} 預設值: ${copiedItem[field]}`);
         }
       });
 
-      // 🎯 確保組織欄位有預設值
+      // 確保組織欄位有預設值
       if (!copiedItem.org_id && this.orgOptions.length > 0) {
         copiedItem.org_id = this.orgOptions[0].value;
-        console.log(`📋 設定預設組織: ${copiedItem.org_id}`);
+        console.log(`設定預設組織: ${copiedItem.org_id}`);
       }
 
-      // 🎯 確保發票欄位有預設值
+      // 確保發票欄位有預設值
       if (!copiedItem.gui_flag) {
         copiedItem.gui_flag = 'Y';
-        console.log(`📋 設定預設發票狀態: Y`);
+        console.log(`設定預設發票狀態: Y`);
       }
 
       // 清理不需要的屬性
       delete copiedItem._skipAutoCalc;
       delete copiedItem._dateInitialized;
 
-      // 添加到資料中
-      this.originalFareData[capType].push(copiedItem);
+      // 找到原始項目的位置，插入到下一個位置
+      const originalIndex = this.originalFareData[capType].findIndex(item => item.id === originalItem.id);
+
+      if (originalIndex !== -1) {
+        // 插入到原始項目的下一個位置
+        this.originalFareData[capType].splice(originalIndex + 1, 0, copiedItem);
+        console.log(`已將複製項目插入到索引 ${originalIndex + 1}`);
+      } else {
+        // 如果找不到原始項目，就加到最後面（備用方案）
+        this.originalFareData[capType].push(copiedItem);
+        console.warn(`找不到原始項目，加到最後面`);
+      }
+
       this.filterData();
       this.saveFareDataToWorkflow();
 
@@ -1362,6 +1373,16 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
       this.cdr.detectChanges();
 
       console.log(`複製完成: ${originalItem.cap_item} → ${newId}`, copiedItem);
+
+      console.log('複製後的項目詳細資訊：', {
+        id: copiedItem.id,
+        is_selected: copiedItem.is_selected,
+        _status: copiedItem._status,
+        _editing: (copiedItem as any)._editing,
+        _isEditing: (copiedItem as any)._isEditing,
+        editing: (copiedItem as any).editing,
+        _isNewRow: (copiedItem as any)._isNewRow
+      });
 
     } catch (error) {
       console.error('複製扣款項目時發生錯誤:', error);

@@ -1,3 +1,4 @@
+import { EngType } from '@service/api/ass/ass21010.service';
 import { BaseQueryRequest, BaseQueryResponse } from '@shared/models/api/base-api.interface';
 
 export interface ASS21020Data {
@@ -16,6 +17,8 @@ export interface ASS21020Data {
 export interface ASS21020Detail {
   TLT_No: string;
   TLT_Name: string;
+  Location_No?: string;
+  NET_SPACE?: number;
   ENG_Rate: number;
   ENG_Remark: string;
 }
@@ -29,7 +32,7 @@ export interface ASS21020Query extends BaseQueryRequest {
   ENG_Rate?: number;
 }
 
-export interface ASS21020Update extends BaseQueryRequest {
+export interface ASS21020Update {
   ENG_Type: string;
   ENG_MeterNo: string;
   TLT_No: string;
@@ -38,7 +41,7 @@ export interface ASS21020Update extends BaseQueryRequest {
 }
 
 export interface ASS21020Delete {
-  ENG_Type: string;
+  ENG_Type: EngType;
   ENG_MeterNo: string;
 }
 

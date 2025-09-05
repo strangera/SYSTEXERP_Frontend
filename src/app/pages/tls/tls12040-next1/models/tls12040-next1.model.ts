@@ -2,7 +2,7 @@
  * TLS12040 扣款項目介面
  */
 export interface TLS12040FareItem {
-  id?: string | number;
+  id?: string;
   serialNumber?: number;
   mid?: number;
   apply_no?: string;
@@ -133,4 +133,43 @@ export interface TLS12040FareStatistics {
       common: number;
     }
   };
+}
+
+export interface SimpleContractInfo {
+  id: string;
+  apply_no: string;
+  tlt_no: string;
+  tlt_name: string;
+  ven_uniform: string;
+  VEN_Name: string;
+  contract_subno: string;
+  tlt_term_type: string;
+  tlt_bdate: string;
+  tlt_edate: string;
+  tlt_contract_bdate: string;
+  tlt_contract_edate: string;
+}
+
+// 定義 CRU 資料型別
+export interface CruData {
+  apply_no: string;
+  tlt_no: string;
+  tlt_name: string;
+  ven_uniform: string;
+  VEN_Name: string;
+  contract_subno: string;
+  tlt_term_type: string;
+  tlt_bdate: string;
+  tlt_edate: string;
+  tlt_contract_bdate: string;
+  tlt_contract_edate: string;
+  [key: string]: any; // 允許其他屬性
+}
+
+export interface Next1Data {
+  applyNo: any;
+  fareData: { [key: string]: TLS12040FareItem[] };
+  selectedItems: any[];
+  contractInfo: any;
+  timestamp: any;
 }

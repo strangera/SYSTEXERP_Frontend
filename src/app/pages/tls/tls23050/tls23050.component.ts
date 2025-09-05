@@ -1,7 +1,7 @@
 import { Component } from '@angular/core';
 import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
+import { createPaginationConfig, LazyLoadEvent } from '../../../shared/componentkit/table/table.model';
 import { TLS23050Service } from '../../../service/api/tls/tls23050.service';
 import { TypeService } from '../../../service/basic/type.service';
 import { ECRNoService } from '../../../service/basic/ECRNo.service';
@@ -16,9 +16,9 @@ import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdow
 import { InputTextModule } from 'primeng/inputtext';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { TranslateModule } from '@ngx-translate/core';
-import { TableComponent } from '@shared/componentkit/table/table.component';
 import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
 import { ButtonModule } from 'primeng/button';
+import { Table2Component } from '@shared/componentkit/table2/table2.component';
 import { HttpResponse } from '@angular/common/http';
 
 @Component({
@@ -37,19 +37,24 @@ import { HttpResponse } from '@angular/common/http';
     InputTextModule,
     ButtonComponent,
     TranslateModule,
-    TableComponent,
     CalendarComponent,
-    ButtonModule, // ✅ p-button 匯出按鈕
+    ButtonModule,
+    Table2Component, // ✅ 使用 table2 支援小計/總計
   ],
 })
 export class TLS23050Component extends BasicQueryPageComponent<any> {
-
   data: any[] = [];
   totalRecords = 0;
 
-  // ✅ 匯出用
+  // 匯出
   btnLoading = false;
   historyRequestBody: any | null = null;
+
+  // 分頁/排序（不傳 offset / OrderBy）
+  sortMeta: any[] = [];
+  readonly defaultSort: any[] = [{ field: 'ECR_No', order: 1 }];
+  private lastQuerySig: string | null = null;
+  private lazyTimer: any = null;
 
   readonly yesterday: Date = (() => {
     const d = new Date();
@@ -92,27 +97,56 @@ export class TLS23050Component extends BasicQueryPageComponent<any> {
 
   ngOnInit(): void {
     this.initializePage('TLS23050', 'tls/tls23050', this.queryForm, (form) => this.onSubmit(form));
+    this.sortMeta = this.defaultSort.map(x => ({ ...x }));
 
     this.typeService.getTypeOptions().subscribe(data => this.typeOptions = data);
     this.floorService.getFloors().subscribe(data => this.floorOptions = data);
 
     this.tls11010Service.getBuildingOptions().subscribe(data => this.BUILDING_NO_Options = data);
-
     this.tls11010Service.getOrgOptions().subscribe(data => {
       this.OrganizationCodeOptions = (data ?? []).map((x: any) => ({
-        label: x.label,
-        formLabel: `${x.value} - ${x.label}`,
-        value: x.value,
+        label: x.label, formLabel: `${x.value} - ${x.label}`, value: x.value,
       }));
     });
 
     this.ECRNoService.getECRNo().subscribe(data => {
       this.ECRNoOptions = (data ?? []).map((x: any) => ({
-        label: x.label,
-        formLabel: `${x.value} - ${x.label}`,
-        value: x.value,
+        label: x.label, formLabel: `${x.value} - ${x.label}`, value: x.value,
       }));
     });
+  }
+
+  /** 表格 lazy 事件（只同步分頁/排序，不重複打 API） */
+  override onLazyLoadData(event: LazyLoadEvent, form: FormGroup): void {
+    const currSort = JSON.stringify(form.value?.SortBy ?? []);
+    const nextSort = event.SortBy ?? this.defaultSort;
+
+    const nextPageIndex =
+      currSort !== JSON.stringify(nextSort)
+        ? 1
+        : (event.pageIndex ?? form.value.pageIndex ?? 1);
+
+    form.patchValue(
+      {
+        pageIndex: nextPageIndex,
+        pageSize: event.pageSize ?? form.value.pageSize,
+        SortBy: nextSort,
+      },
+      { emitEvent: false },
+    );
+
+    this.sortMeta = (nextSort ?? []).map(s => ({ ...s }));
+
+    const sig = JSON.stringify({
+      pageIndex: form.value.pageIndex,
+      pageSize: form.value.pageSize,
+      SortBy: form.value.SortBy,
+    });
+    if (sig === this.lastQuerySig) return;
+    this.lastQuerySig = sig;
+
+    if (this.lazyTimer) clearTimeout(this.lazyTimer);
+    this.lazyTimer = setTimeout(() => this.onSubmit(form), 0);
   }
 
   // 送出查詢
@@ -125,13 +159,18 @@ export class TLS23050Component extends BasicQueryPageComponent<any> {
       const TXN_DateEnd   = this.toIso(val?.TXN_Date, true);
 
       const payload: any = {
-        ...val,
         TXN_DateStart,
         TXN_DateEnd,
-        // 分頁/排序（沿用共用 table）
+        rece_yn: val?.rece_yn ?? undefined,
+        tlt_building: val?.tlt_building ?? undefined,
+        tlt_floor: Array.isArray(val?.tlt_floor) && val.tlt_floor.length ? val.tlt_floor : undefined,
+        org_id: Array.isArray(val?.org_id) && val.org_id.length ? val.org_id : undefined,
+        ECR_No: Array.isArray(val?.ECR_No) && val.ECR_No.length ? val.ECR_No : undefined,
+
+        // ⬇⬇ 分頁/排序（後端不需要 offset/OrderBy，我們也不傳）
         pageSize : val?.pageSize,
         pageIndex: val?.pageIndex,
-        SortBy   : val?.SortBy,
+        SortBy   : Array.isArray(val?.SortBy) ? val.SortBy : this.defaultSort,
       };
 
       // 清理空值
@@ -154,15 +193,93 @@ export class TLS23050Component extends BasicQueryPageComponent<any> {
         })
       ).subscribe({
         next: (res) => {
-          // 後端回傳結構：Data[0].tLS23050Details（依你原本程式）
+          // 取第一個包（你的回傳格式 Data[0]）
           const first = Array.isArray(res?.Data) && res.Data.length > 0 ? res.Data[0] : null;
+
+          // ① 明細
           const details = Array.isArray(first?.tLS23050Details) ? first.tLS23050Details : [];
-          this.data = details;
-          this.totalRecords = typeof res?.TotalCount === 'number' ? res.TotalCount : details.length;
+          this.data = details.map((r: any, i: number) => ({
+            ...r,
+            _rowKey: `${r?.ECR_No ?? ''}|${r?.tlt_no ?? ''}|${i}`,
+          }));
+          this.totalRecords = typeof res?.TotalCount === 'number' ? res.TotalCount : this.data.length;
+
+          // ② 總計（直接吃後端 total* 欄位）
+          this.detailTotals = {
+            totalPayAmt:   Number(first?.totalPayAmt ?? 0),
+            totalPayAmt10: Number(first?.totalPayAmt10 ?? 0),
+            totalPayAmt41: Number(first?.totalPayAmt41 ?? 0),
+            totalPayAmt42: Number(first?.totalPayAmt42 ?? 0),
+            totalPayAmt12: Number(first?.totalPayAmt12 ?? 0),
+            totalPayAmt81: Number(first?.totalPayAmt81 ?? 0),
+            totalPayAmt43: Number(first?.totalPayAmt43 ?? 0),
+            totalPayAmt44: Number(first?.totalPayAmt44 ?? 0),
+            totalPayAmt14: Number(first?.totalPayAmt14 ?? 0),
+            totalPayAmt82: Number(first?.totalPayAmt82 ?? 0),
+            totalPayAmt52: Number(first?.totalPayAmt52 ?? 0),
+            totalPayAmt20: Number(first?.totalPayAmt20 ?? 0),
+            totalPayAmt62: Number(first?.totalPayAmt62 ?? 0),
+            totalPayAmt77: Number(first?.totalPayAmt77 ?? 0),
+            totalPayAmt71: Number(first?.totalPayAmt71 ?? 0),
+            totalPayAmt30: Number(first?.totalPayAmt30 ?? 0),
+            totalPayAmt73: Number(first?.totalPayAmt73 ?? 0),
+            totalPayAmt72: Number(first?.totalPayAmt72 ?? 0),
+            totalPayAmt74: Number(first?.totalPayAmt74 ?? 0),
+            totalPayAmt75: Number(first?.totalPayAmt75 ?? 0),
+            totalPayAmt76: Number(first?.totalPayAmt76 ?? 0),
+            totalPayAmt24: Number(first?.totalPayAmt24 ?? 0),
+            totalPayAmt25: Number(first?.totalPayAmt25 ?? 0),
+            totalPayAmt07: Number(first?.totalPayAmt07 ?? 0),
+            totalPayAmt55: Number(first?.totalPayAmt55 ?? 0),
+            totalPayAmt83: Number(first?.totalPayAmt83 ?? 0),
+            totalPayAmt78: Number(first?.totalPayAmt78 ?? 0),
+            totalPayAmt79: Number(first?.totalPayAmt79 ?? 0),
+            totalPayAmt21: Number(first?.totalPayAmt21 ?? 0),
+            totalPayAmt53: Number(first?.totalPayAmt53 ?? 0),
+            totalPayAmt56: Number(first?.totalPayAmt56 ?? 0),
+            totalPayAmt57: Number(first?.totalPayAmt57 ?? 0),
+            totalPayAmt58: Number(first?.totalPayAmt58 ?? 0),
+            totalPayAmt59: Number(first?.totalPayAmt59 ?? 0),
+            totalPayAmt60: Number(first?.totalPayAmt60 ?? 0),
+            totalPayAmt22: Number(first?.totalPayAmt22 ?? 0),
+            totalPayAmt23: Number(first?.totalPayAmt23 ?? 0),
+            totalPrePayAmt: Number(first?.totalPrePayAmt ?? 0),
+            totalOverAmt:   Number(first?.totalOverAmt ?? 0),
+            totalReturnAmt: Number(first?.totalReturnAmt ?? 0),
+            totalCancelAmt: Number(first?.totalCancelAmt ?? 0),
+          };
+
+          // ③ 小計（依 ECR_No 群組）
+          const groupMap: Record<string, Record<string, number>> = {};
+          const moneyFields = [
+            'TXN_TotPayAmt',
+            'TXN_PayAmt10','TXN_PayAmt41','TXN_PayAmt42','TXN_PayAmt12','TXN_PayAmt81',
+            'TXN_PayAmt43','TXN_PayAmt44','TXN_PayAmt14','TXN_PayAmt82','TXN_PayAmt52',
+            'TXN_PayAmt20','TXN_PayAmt62','TXN_PayAmt77','TXN_PayAmt71','TXN_PayAmt30',
+            'TXN_PayAmt73','TXN_PayAmt72','TXN_PayAmt74','TXN_PayAmt75','TXN_PayAmt76',
+            'TXN_PayAmt24','TXN_PayAmt25','TXN_PayAmt07','TXN_PayAmt55','TXN_PayAmt83',
+            'TXN_PayAmt78','TXN_PayAmt79','TXN_PayAmt21','TXN_PayAmt53','TXN_PayAmt56',
+            'TXN_PayAmt57','TXN_PayAmt58','TXN_PayAmt59','TXN_PayAmt60','TXN_PayAmt22',
+            'TXN_PayAmt23',
+            'TXN_PrePayAmt','TXN_OverAmt','TXN_ReturnAmt','TXN_CancelAmt',
+          ];
+
+          for (const row of details) {
+            const g = String(row?.ECR_No ?? 'UNKNOWN');
+            const bucket = (groupMap[g] = groupMap[g] || {} as Record<string, number>);
+            for (const f of moneyFields) {
+              const key = `Subtotal_${f}`;
+              const n = Number(row?.[f] ?? 0);
+              bucket[key] = (bucket[key] || 0) + n;      // ← 中括號避免 TS4111
+            }
+          }
+          this.detailSubtotals = groupMap;
         },
         error: () => {
           this.data = [];
           this.totalRecords = 0;
+          this.detailTotals = {};
+          this.detailSubtotals = {};
         }
       });
     });
@@ -179,12 +296,10 @@ export class TLS23050Component extends BasicQueryPageComponent<any> {
       .slice(0, 19);
   }
 
-  moneyFormat(value: number): string {
-    return value != null ? value.toLocaleString('en-US') : '0';
-  }
+  moneyFormat = (value: number): string =>
+    value != null ? Number(value || 0).toLocaleString('en-US') : '0';
 
   // ===== 匯出 =====
-
   onExportPDF(): void {
     if (!this.historyRequestBody) {
       this.messageService?.warnBubble?.('請先執行查詢以產生報表。');
@@ -252,57 +367,162 @@ export class TLS23050Component extends BasicQueryPageComponent<any> {
         return filenameMatch[1];
       }
     }
-
     return `download${defaultExtension}`;
   }
 
-  // ===== 表格欄位 =====
+  // ===== 欄位定義（isTotal + isSubTotal） =====
   columns = [
     { field: 'ECR_No', header: '收銀機號', visible: true },
     { field: 'tlt_no', header: '專櫃編號', visible: true },
     { field: 'tlt_name', header: '櫃位名稱', visible: true, style: 'text-left' },
-    { field: 'TXN_TotPayAmt', header: '總金額', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true },
-    { field: 'TXN_PayAmt10', header: '現金', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true },
-    { field: 'TXN_PayAmt41', header: '聯合連線', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true },
-    { field: 'TXN_PayAmt42', header: '聯合離線', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true },
-    { field: 'TXN_PayAmt12', header: '聯合紅利', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true },
-    { field: 'TXN_PayAmt81', header: '[信用卡]中信停車場', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true },
-    { field: 'TXN_PayAmt43', header: '中信連線', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true },
-    { field: 'TXN_PayAmt44', header: '中信離線', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true },
-    { field: 'TXN_PayAmt14', header: '中信紅利', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true },
-    { field: 'TXN_PayAmt82', header: '[一卡通]停車場', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true },
-    { field: 'TXN_PayAmt52', header: '一卡通', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true },
-    { field: 'TXN_PayAmt20', header: '禮券', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true },
-    { field: 'TXN_PayAmt62', header: '商品提貨單', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true },
-    { field: 'TXN_PayAmt77', header: '感熱紙抵用券', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true },
-    { field: 'TXN_PayAmt71', header: '商品抵用券', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true },
-    { field: 'TXN_PayAmt30', header: '貴賓提貨單(應收帳款)', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true },
-    { field: 'TXN_PayAmt73', header: '外來禮券(抵用券)', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true },
-    { field: 'TXN_PayAmt72', header: '外來提貨單(抵用券)', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true },
-    { field: 'TXN_PayAmt74', header: '活動券(自營)', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true },
-    { field: 'TXN_PayAmt75', header: '折價券', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true },
-    { field: 'TXN_PayAmt76', header: '現抵', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true },
-    { field: 'TXN_PayAmt24', header: '禮券餘額代卡', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true },
-    { field: 'TXN_PayAmt25', header: '提貨單餘代卡', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true },
-    { field: 'TXN_PayAmt07', header: '會員折抵', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true },
-    { field: 'TXN_PayAmt55', header: 'LINE Pay', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true },
-    { field: 'TXN_PayAmt83', header: '[LINE Pay]停車場', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true },
-    { field: 'TXN_PayAmt78', header: 'APP抵用券', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true },
-    { field: 'TXN_PayAmt79', header: 'APP提貨單', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true },
-    { field: 'TXN_PayAmt21', header: 'APP禮券', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true },
-    { field: 'TXN_PayAmt53', header: '悠遊卡', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true },
-    { field: 'TXN_PayAmt56', header: '一卡通錢包', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true },
-    { field: 'TXN_PayAmt57', header: '台灣Pay', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true },
-    { field: 'TXN_PayAmt58', header: '南紡錢包', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true },
-    { field: 'TXN_PayAmt59', header: '即享券', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true },
-    { field: 'TXN_PayAmt60', header: '喜客券', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true },
-    { field: 'TXN_PayAmt22', header: '[外來提貨單]高夢', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true },
-    { field: 'TXN_PayAmt23', header: '[外來禮券]高夢', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true },
-    { field: 'PreSale_Received', header: '預售訂金', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true },
-    { field: 'PreSale_Checkout', header: '預售實收結帳', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true },
-    { field: 'TXN_OverAmt', header: '溢收金額', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true },
-    { field: 'TXN_ReturnAmt', header: '退貨金額', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true },
-    { field: 'TXN_ExchangeAmt', header: '換貨金額', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true },
-    { field: 'TXN_CancelAmt', header: '作廢金額', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true }
+
+    { field: 'TXN_TotPayAmt', header: '總金額', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true, isSubTotal: true },
+
+    { field: 'TXN_PayAmt10', header: '現金', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true, isSubTotal: true },
+    { field: 'TXN_PayAmt41', header: '聯合連線', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true, isSubTotal: true },
+    { field: 'TXN_PayAmt42', header: '聯合離線', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true, isSubTotal: true },
+    { field: 'TXN_PayAmt12', header: '聯合紅利', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true, isSubTotal: true },
+
+    { field: 'TXN_PayAmt81', header: '[信用卡]中信停車場', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true, isSubTotal: true },
+    { field: 'TXN_PayAmt43', header: '中信連線', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true, isSubTotal: true },
+    { field: 'TXN_PayAmt44', header: '中信離線', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true, isSubTotal: true },
+    { field: 'TXN_PayAmt14', header: '中信紅利', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true, isSubTotal: true },
+
+    { field: 'TXN_PayAmt82', header: '[一卡通]停車場', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true, isSubTotal: true },
+    { field: 'TXN_PayAmt52', header: '一卡通', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true, isSubTotal: true },
+
+    { field: 'TXN_PayAmt20', header: '禮券', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true, isSubTotal: true },
+    { field: 'TXN_PayAmt62', header: '商品提貨單', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true, isSubTotal: true },
+
+    { field: 'TXN_PayAmt77', header: '感熱紙抵用券', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true, isSubTotal: true },
+    { field: 'TXN_PayAmt71', header: '商品抵用券', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true, isSubTotal: true },
+
+    { field: 'TXN_PayAmt30', header: '貴賓提貨單(應收帳款)', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true, isSubTotal: true },
+
+    { field: 'TXN_PayAmt73', header: '外來禮券(抵用券)', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true, isSubTotal: true },
+    { field: 'TXN_PayAmt72', header: '外來提貨單(抵用券)', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true, isSubTotal: true },
+
+    { field: 'TXN_PayAmt74', header: '活動券(自營)', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true, isSubTotal: true },
+    { field: 'TXN_PayAmt75', header: '折價券', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true, isSubTotal: true },
+    { field: 'TXN_PayAmt76', header: '現抵', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true, isSubTotal: true },
+
+    { field: 'TXN_PayAmt24', header: '禮券餘額代卡', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true, isSubTotal: true },
+    { field: 'TXN_PayAmt25', header: '提貨單餘代卡', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true, isSubTotal: true },
+
+    { field: 'TXN_PayAmt07', header: '會員折抵', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true, isSubTotal: true },
+
+    { field: 'TXN_PayAmt55', header: 'LINE Pay', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true, isSubTotal: true },
+    { field: 'TXN_PayAmt83', header: '[LINE Pay]停車場', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true, isSubTotal: true },
+
+    { field: 'TXN_PayAmt78', header: 'APP抵用券', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true, isSubTotal: true },
+    { field: 'TXN_PayAmt79', header: 'APP提貨單', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true, isSubTotal: true },
+    { field: 'TXN_PayAmt21', header: 'APP禮券', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true, isSubTotal: true },
+
+    { field: 'TXN_PayAmt53', header: '悠遊卡', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true, isSubTotal: true },
+    { field: 'TXN_PayAmt56', header: '一卡通錢包', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true, isSubTotal: true },
+    { field: 'TXN_PayAmt57', header: '台灣Pay', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true, isSubTotal: true },
+    { field: 'TXN_PayAmt58', header: '南紡錢包', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true, isSubTotal: true },
+    { field: 'TXN_PayAmt59', header: '即享券', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true, isSubTotal: true },
+    { field: 'TXN_PayAmt60', header: '喜客券', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true, isSubTotal: true },
+
+    { field: 'TXN_PayAmt22', header: '[外來提貨單]高夢', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true, isSubTotal: true },
+    { field: 'TXN_PayAmt23', header: '[外來禮券]高夢', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true, isSubTotal: true },
+
+    { field: 'TXN_PrePayAmt', header: '預售訂金', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true, isSubTotal: true },
+    { field: 'TXN_OverAmt', header: '溢收金額', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true, isSubTotal: true },
+    { field: 'TXN_ReturnAmt', header: '退貨金額', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true, isSubTotal: true },
+    { field: 'TXN_CancelAmt', header: '作廢金額', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true, isSubTotal: true },
   ];
+
+  // ① 後端總計（表尾）：欄位 => 後端 total* 鍵名
+  detailTotals: Record<string, number> = {};
+  detailTotalFieldMap: Record<string, string> = {
+    TXN_TotPayAmt: 'totalPayAmt',
+    TXN_PayAmt10: 'totalPayAmt10',
+    TXN_PayAmt41: 'totalPayAmt41',
+    TXN_PayAmt42: 'totalPayAmt42',
+    TXN_PayAmt12: 'totalPayAmt12',
+    TXN_PayAmt81: 'totalPayAmt81',
+    TXN_PayAmt43: 'totalPayAmt43',
+    TXN_PayAmt44: 'totalPayAmt44',
+    TXN_PayAmt14: 'totalPayAmt14',
+    TXN_PayAmt82: 'totalPayAmt82',
+    TXN_PayAmt52: 'totalPayAmt52',
+    TXN_PayAmt20: 'totalPayAmt20',
+    TXN_PayAmt62: 'totalPayAmt62',
+    TXN_PayAmt77: 'totalPayAmt77',
+    TXN_PayAmt71: 'totalPayAmt71',
+    TXN_PayAmt30: 'totalPayAmt30',
+    TXN_PayAmt73: 'totalPayAmt73',
+    TXN_PayAmt72: 'totalPayAmt72',
+    TXN_PayAmt74: 'totalPayAmt74',
+    TXN_PayAmt75: 'totalPayAmt75',
+    TXN_PayAmt76: 'totalPayAmt76',
+    TXN_PayAmt24: 'totalPayAmt24',
+    TXN_PayAmt25: 'totalPayAmt25',
+    TXN_PayAmt07: 'totalPayAmt07',
+    TXN_PayAmt55: 'totalPayAmt55',
+    TXN_PayAmt83: 'totalPayAmt83',
+    TXN_PayAmt78: 'totalPayAmt78',
+    TXN_PayAmt79: 'totalPayAmt79',
+    TXN_PayAmt21: 'totalPayAmt21',
+    TXN_PayAmt53: 'totalPayAmt53',
+    TXN_PayAmt56: 'totalPayAmt56',
+    TXN_PayAmt57: 'totalPayAmt57',
+    TXN_PayAmt58: 'totalPayAmt58',
+    TXN_PayAmt59: 'totalPayAmt59',
+    TXN_PayAmt60: 'totalPayAmt60',
+    TXN_PayAmt22: 'totalPayAmt22',
+    TXN_PayAmt23: 'totalPayAmt23',
+    TXN_PrePayAmt: 'totalPrePayAmt',
+    TXN_OverAmt: 'totalOverAmt',
+    TXN_ReturnAmt: 'totalReturnAmt',
+    TXN_CancelAmt: 'totalCancelAmt',
+  };
+
+  // ② 後端小計（群組尾）：以 ECR_No 群組；欄位 => Subtotal_鍵名
+  detailSubtotals: Record<string, Record<string, number>> = {};
+  detailSubtotalFieldMap: Record<string, string> = {
+    TXN_TotPayAmt: 'Subtotal_TXN_TotPayAmt',
+    TXN_PayAmt10: 'Subtotal_TXN_PayAmt10',
+    TXN_PayAmt41: 'Subtotal_TXN_PayAmt41',
+    TXN_PayAmt42: 'Subtotal_TXN_PayAmt42',
+    TXN_PayAmt12: 'Subtotal_TXN_PayAmt12',
+    TXN_PayAmt81: 'Subtotal_TXN_PayAmt81',
+    TXN_PayAmt43: 'Subtotal_TXN_PayAmt43',
+    TXN_PayAmt44: 'Subtotal_TXN_PayAmt44',
+    TXN_PayAmt14: 'Subtotal_TXN_PayAmt14',
+    TXN_PayAmt82: 'Subtotal_TXN_PayAmt82',
+    TXN_PayAmt52: 'Subtotal_TXN_PayAmt52',
+    TXN_PayAmt20: 'Subtotal_TXN_PayAmt20',
+    TXN_PayAmt62: 'Subtotal_TXN_PayAmt62',
+    TXN_PayAmt77: 'Subtotal_TXN_PayAmt77',
+    TXN_PayAmt71: 'Subtotal_TXN_PayAmt71',
+    TXN_PayAmt30: 'Subtotal_TXN_PayAmt30',
+    TXN_PayAmt73: 'Subtotal_TXN_PayAmt73',
+    TXN_PayAmt72: 'Subtotal_TXN_PayAmt72',
+    TXN_PayAmt74: 'Subtotal_TXN_PayAmt74',
+    TXN_PayAmt75: 'Subtotal_TXN_PayAmt75',
+    TXN_PayAmt76: 'Subtotal_TXN_PayAmt76',
+    TXN_PayAmt24: 'Subtotal_TXN_PayAmt24',
+    TXN_PayAmt25: 'Subtotal_TXN_PayAmt25',
+    TXN_PayAmt07: 'Subtotal_TXN_PayAmt07',
+    TXN_PayAmt55: 'Subtotal_TXN_PayAmt55',
+    TXN_PayAmt83: 'Subtotal_TXN_PayAmt83',
+    TXN_PayAmt78: 'Subtotal_TXN_PayAmt78',
+    TXN_PayAmt79: 'Subtotal_TXN_PayAmt79',
+    TXN_PayAmt21: 'Subtotal_TXN_PayAmt21',
+    TXN_PayAmt53: 'Subtotal_TXN_PayAmt53',
+    TXN_PayAmt56: 'Subtotal_TXN_PayAmt56',
+    TXN_PayAmt57: 'Subtotal_TXN_PayAmt57',
+    TXN_PayAmt58: 'Subtotal_TXN_PayAmt58',
+    TXN_PayAmt59: 'Subtotal_TXN_PayAmt59',
+    TXN_PayAmt60: 'Subtotal_TXN_PayAmt60',
+    TXN_PayAmt22: 'Subtotal_TXN_PayAmt22',
+    TXN_PayAmt23: 'Subtotal_TXN_PayAmt23',
+    TXN_PrePayAmt: 'Subtotal_TXN_PrePayAmt',
+    TXN_OverAmt: 'Subtotal_TXN_OverAmt',
+    TXN_ReturnAmt: 'Subtotal_TXN_ReturnAmt',
+    TXN_CancelAmt: 'Subtotal_TXN_CancelAmt',
+  };
 }

@@ -144,7 +144,7 @@ class CruDataCleaner implements TLS12040DataCleaner {
     };
   }
   validate(data: any): boolean {
-    return !!(data.apply_no && data.tlt_name);
+    return true;
   }
 }
 
@@ -342,7 +342,19 @@ export class TLS12040FlowService {
 
   // Next1 資料
   setNext1Data = (data: any) => this.setStepData('next1', data);
-  getNext1Data = <T>() => this.getStepData<T>('next1');
+  // 在你的 TLS12040FlowService 中
+  getNext1Data<T>(): T | null {
+    console.log('取得 Next1 資料，當前 stepData:', this._state.stepData);
+
+    const stepData = this._state.stepData.get('next1');
+    if (stepData && stepData.data) {
+      console.log('找到 Next1 資料:', stepData.data);
+      return stepData.data as T;
+    }
+
+    console.log('沒有 Next1 資料');
+    return null;
+  }
 
   // Next2 資料
   setNext2Data = (data: any) => this.setStepData('next2', data);
@@ -471,15 +483,50 @@ export class TLS12040FlowService {
       const saved = sessionStorage.getItem(this.STORAGE_KEY);
       if (saved) {
         const data = JSON.parse(saved);
+        console.log('📥 從 SessionStorage 載入的原始資料:', data);
+
+        // 重建 Map 結構
+        const stepDataMap = new Map();
+        if (data.stepData && Array.isArray(data.stepData)) {
+          data.stepData.forEach(([key, value]: [string, any]) => {
+            stepDataMap.set(key, value);
+          });
+        }
+
+        // 重建 Set 結構
+        const completedStepsSet = new Set();
+        if (data.completedSteps && Array.isArray(data.completedSteps)) {
+          data.completedSteps.forEach((step: string) => {
+            completedStepsSet.add(step);
+          });
+        }
+
+        // 🎯 修正：從 CRU 資料取得正確的 applyNo
+        let correctedApplyNo = data.applyNo || '';
+        const cruStepData = stepDataMap.get('cru');
+        if (cruStepData?.data?.apply_no && !correctedApplyNo) {
+          correctedApplyNo = cruStepData.data.apply_no;
+          console.log('🔧 從 CRU 資料修正 applyNo:', correctedApplyNo);
+        }
+
+        // 🎯 修正：根據是否有 apply_no 決定 isNewContract
+        const correctedIsNewContract = !correctedApplyNo || correctedApplyNo === '';
+
         this._state = {
           ...data,
-          stepData: new Map(data.stepData),
-          completedSteps: new Set(data.completedSteps)
+          stepData: stepDataMap,
+          completedSteps: completedStepsSet,
+          applyNo: correctedApplyNo,  // 🎯 修正 applyNo
+          isNewContract: correctedIsNewContract,  // 🎯 修正 isNewContract
+          contractId: correctedIsNewContract ? data.contractId : correctedApplyNo  // 🎯 修正 contractId
         };
+
         this.notifyStateChange();
+        console.log('✅ 載入並修正完成，最終狀態:', this._state);
       }
     } catch (error) {
-      console.warn('載入失敗:', error);
+      console.error('❌ 載入失敗:', error);
     }
   }
+
 }

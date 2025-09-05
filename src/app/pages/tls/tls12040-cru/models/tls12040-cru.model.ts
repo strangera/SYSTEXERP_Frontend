@@ -26,6 +26,7 @@ export interface Tls12040SelectorTableColumn {
 
 
 export interface TLS12040DetailModel {
+  id: number | string;
   // ========== 基本資訊 ==========
   talent_id: string;
   apply_no: string;     // 專櫃招募編號

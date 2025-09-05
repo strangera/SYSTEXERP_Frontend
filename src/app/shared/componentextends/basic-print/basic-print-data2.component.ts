@@ -41,6 +41,7 @@ export class BasicPrintData2Component {
         field: col.field,
         header: col.header,
         visible: col.visible ? col.visible : true,
+        exportFormat: col.exportFormat     // ⬅️ 新增
       };
     });
 
@@ -100,6 +101,7 @@ export class BasicPrintData2Component {
         field: col.field,
         header: col.header,
         visible: col.visible ? col.visible : true,
+        exportFormat: col.exportFormat     // ⬅️ 同步帶給 Excel
       };
     });
 

@@ -14,6 +14,7 @@ import { InputTextComponent } from '../../../shared/componentkit/input-text/inpu
 import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { TranslateModule } from '@ngx-translate/core';
+import { Table2Component } from '@shared/componentkit/table2/table2.component';
 
 @Component({
     selector: 'app-tls11020',
@@ -30,6 +31,7 @@ import { TranslateModule } from '@ngx-translate/core';
         MultiSelectComponent,
         TableComponent,
         TranslateModule,
+        Table2Component,
     ],
 })
 export class TLS11020Component extends BasicQueryPageComponent<any> {
@@ -43,44 +45,7 @@ export class TLS11020Component extends BasicQueryPageComponent<any> {
 
   totalRecords = 0;
   data: any[] = [];
-  columns: any[] = [
-    { field: 'CAP_Item', header: '扣款項目編號', visible: true },
-    {
-      field: 'CAP_Type',
-      header: '扣款類別',
-      visible: true,
-      format: (value: any) => this.getLabelFromOptions(value, this.deductionCategoryOptions),
-    },
-    { field: 'CAP_Name', header: '扣款項目名稱', visible: true },
-    { field: 'AccNo', header: '會計科目代碼', visible: true },
-    {
-      field: 'AccNo',
-      header: '會計科目名稱',
-      visible: true,
-      format: (value: any) => this.getLabelFromOptions(value, this.accountOptions),
-    },
-    {
-      field: 'GUI_FLAG',
-      header: '是否開立發票',
-      visible: true,
-      format: (value: any) => this.getLabelFromOptions(value, this.guiFlagOptions),
-    },
-    {
-      field: 'CAP_TaxType',
-      header: '課稅別',
-      visible: true,
-      format: (value: any) => this.getLabelFromOptions(value, this.taxTypeOptions),
-    },
-    {
-      field: 'IsCommonlyUsed',
-      header: '是否常用',
-      visible: true,
-      format: (value: any) => this.getLabelFromOptions(value, this.isCommonlyUsedOptions),
-    },
-    { field: 'Print_Area', header: '扣款項目合約列印區分', visible: true },
-    { field: 'CAP_Remark', header: '備註', visible: true },
-  ];
-
+  
   selectedItems: any[] = [];
   deductionCategoryOptions: any[] = [];
   guiFlagOptions = [
@@ -110,17 +75,26 @@ export class TLS11020Component extends BasicQueryPageComponent<any> {
 
   ngOnInit(): void {
     this.initializePage('TLS11020', 'tls/tls11020cru', this.queryForm, (f) => this.onSubmit(f));
-    this.deductionService.getDeductionCategories().subscribe((data) => {
-      this.deductionCategoryOptions = data;
-
-    });
+   this.deductionService.getDeductionCategories().subscribe((data) => {
+  this.deductionCategoryOptions = data;
+  const map = data.map((o: any) => ({ [String(o.value)]: String(o.label) }));
+  this.columns = this.columns.map(c =>
+    c.field === 'CAP_Type' ? { ...c, exportFormat: map } : c
+  );
+});
     this.accountingaccountService.getOptions().subscribe((data) => {
-      this.accountOptions = (data || []).map(x => ({
-        label: x.Name,
-        formLabel: `${x.No} - ${x.Name}`,
-        value: x.No
-      }));
-    });
+  this.accountOptions = (data || []).map(x => ({
+    label: x.Name,
+    formLabel: `${x.No} - ${x.Name}`,
+    value: x.No
+  }));
+  const mapAcc = this.accountOptions.map(o => ({ [String(o.value)]: String(o.label) }));
+  this.columns = this.columns.map(c =>
+    c.field === 'AccNo' && c.header === '會計科目名稱'
+      ? { ...c, exportFormat: mapAcc }
+      : c
+  );
+});
   }
 
   onSubmit(form: FormGroup): void {
@@ -182,5 +156,47 @@ export class TLS11020Component extends BasicQueryPageComponent<any> {
   getLabelFromOptions(value: any, options: any[]): string {
     return options.find(opt => opt.value === value)?.label ?? value;
   }
+  columns: any[] = [
+    { field: 'CAP_Item', header: '扣款項目編號', visible: true },
+    {
+      field: 'CAP_Type',
+      header: '扣款類別',
+      visible: true,
+      format: (value: any) => this.getLabelFromOptions(value, this.deductionCategoryOptions),
+    },
+    { field: 'CAP_Name', header: '扣款項目名稱', visible: true },
+    { field: 'AccNo', header: '會計科目代碼', visible: true },
+    {
+      field: 'AccNo',
+      header: '會計科目名稱',
+      visible: true,
+      format: (value: any) => this.getLabelFromOptions(value, this.accountOptions),
+    },
+    {
+      field: 'GUI_FLAG',
+      header: '是否開立發票',
+      visible: true,
+      format: (value: any) => this.getLabelFromOptions(value, this.guiFlagOptions),
+       exportFormat: this.guiFlagOptions.map(o => ({ [o.value]: o.label })),
+    },
+    {
+      field: 'CAP_TaxType',
+      header: '課稅別',
+      visible: true,
+      format: (value: any) => this.getLabelFromOptions(value, this.taxTypeOptions),
+       exportFormat: this.taxTypeOptions.map(o => ({ [o.value]: o.label })),
+    },
+    {
+      field: 'IsCommonlyUsed',
+      header: '是否常用',
+      visible: true,
+      format: (value: any) => this.getLabelFromOptions(value, this.isCommonlyUsedOptions),
+      exportFormat: this.isCommonlyUsedOptions.map(o => ({ [o.value]: o.label })),
+    },
+    { field: 'Print_Area', header: '扣款項目合約列印區分', visible: true },
+    { field: 'CAP_Remark', header: '備註', visible: true },
+    
+  ];
+
 
 }

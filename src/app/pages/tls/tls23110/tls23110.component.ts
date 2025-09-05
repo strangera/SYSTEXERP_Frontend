@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Component } from '@angular/core';
 import {
   FormGroup,
@@ -8,7 +9,6 @@ import {
   ValidatorFn,
   AbstractControl,
 } from '@angular/forms';
-import { takeUntil } from 'rxjs';
 
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { DeductionbigCategoryService } from '../../../service/basic/deductionbig-category.service';
@@ -19,9 +19,8 @@ import { TLS23110Service } from '../../../service/api/tls/tls23110.service';
 import { FloorService } from '../../../service/basic/floor.service';
 import { Tls11010Service } from '../../../service/api/tls/tls11010.service';
 
-// ✅ 直接從 primeng 匯入 SortMeta，避免你現在的 2459 錯誤
 import { SortMeta } from 'primeng/api';
-import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
+import { createPaginationConfig, LazyLoadEvent } from '../../../shared/componentkit/table/table.model';
 
 import { CounterNameService } from '../../../service/basic/counter-name.service';
 import { CounterOpCatService } from '../../../service/basic/counter-op-cat.service';
@@ -36,7 +35,7 @@ import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/
 import { InputTextModule } from 'primeng/inputtext';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { TranslateModule } from '@ngx-translate/core';
-import { TableComponent } from '@shared/componentkit/table/table.component';
+import { Table2Component } from '@shared/componentkit/table2/table2.component';
 
 @Component({
   selector: 'app-tls23110',
@@ -55,7 +54,7 @@ import { TableComponent } from '@shared/componentkit/table/table.component';
     InputTextModule,
     ButtonComponent,
     TranslateModule,
-    TableComponent,
+    Table2Component,
   ],
 })
 export class TLS23110Component extends BasicQueryPageComponent<any> {
@@ -69,66 +68,61 @@ export class TLS23110Component extends BasicQueryPageComponent<any> {
   data: any[] = [];
   totalRecords = 0;
 
-  // 👉 你不想用強型別，這裡就保留寬鬆 any；仍可用點語法 controls.TXN_DateStart
+  // 排序（預設依 Day 升冪）
+  sortMeta: SortMeta[] = [{ field: 'Day', order: 1 }];
+
+  // 用 table2 的總計容器（沒有小計）
+  detailTotals: Record<string, number> = {};
+  detailTotalFieldMap: Record<string, string> = {
+    // 欄位 => 總計鍵名（這裡採用 Total_<欄位>）
+    OriginalPrice_TXN_SaleNoTax: 'Total_OriginalPrice_TXN_SaleNoTax',
+    OriginalPrice_TXN_Tax:       'Total_OriginalPrice_TXN_Tax',
+    OriginalPrice_Total:         'Total_OriginalPrice_Total',
+
+    Discount90_TXN_SaleNoTax: 'Total_Discount90_TXN_SaleNoTax',
+    Discount90_TXN_Tax:       'Total_Discount90_TXN_Tax',
+    Discount90_Total:         'Total_Discount90_Total',
+
+    Discount80_TXN_SaleNoTax: 'Total_Discount80_TXN_SaleNoTax',
+    Discount80_TXN_Tax:       'Total_Discount80_TXN_Tax',
+    Discount80_Total:         'Total_Discount80_Total',
+
+    SpecialPrice_TXN_SaleNoTax: 'Total_SpecialPrice_TXN_SaleNoTax',
+    SpecialPrice_TXN_Tax:       'Total_SpecialPrice_TXN_Tax',
+    SpecialPrice_Total:         'Total_SpecialPrice_Total',
+
+    Total_TXN_SaleNoTax: 'Total_Total_TXN_SaleNoTax',
+    Total_TXN_Tax:       'Total_Total_TXN_Tax',
+    Total_Total:         'Total_Total_Total',
+  };
+
+  // 表單
   queryForm: any = this.formBuilder.group(
     {
       TXN_DateStart: this.formBuilder.control(this.yesterday, { validators: [Validators.required] }),
       TXN_DateEnd:   this.formBuilder.control(this.yesterday, { validators: [Validators.required] }),
       tlt_term_type: this.formBuilder.control(null),
       rece_yn:       this.formBuilder.control('Y'),
-      IsNoPLU_No: this.formBuilder.control(null), // 預設「全部」
+      // 類別：只顯示自營櫃/不包含自營櫃（TF）
+      IsNoPLU_No:    this.formBuilder.control(null),
       TLT_No:        this.formBuilder.control(null),
       tlt_building:  this.formBuilder.control(null),
       tlt_floor:     this.formBuilder.control(null),
       org_id:        this.formBuilder.control(null),
-      // createPaginationConfig 內部若是 [ ... ] 形式就能直接合併
-      ...createPaginationConfig([{ field: 'Day', order: 1 as 1 } as SortMeta]),
+
+      ...createPaginationConfig([{ field: 'Day', order: 1 as 1 }]),
     },
     { validators: [this.sameMonthValidator('TXN_DateStart', 'TXN_DateEnd')] }
   ) as FormGroup;
 
-  // ---- 同月驗證器（FormGroup 等級） ----
-  private sameMonthValidator(startKey: string, endKey: string): ValidatorFn {
-    return (group: AbstractControl) => {
-      const fg = group as FormGroup;
-      const start = fg.get(startKey)?.value as Date | string | null | undefined;
-      const end   = fg.get(endKey)?.value   as Date | string | null | undefined;
-
-      const clearOurError = () => {
-        const ctrl = fg.get(endKey);
-        if (!ctrl) return;
-        const err = ctrl.errors || {};
-        if ('notSameMonth' in err) {
-          delete err['notSameMonth'];
-          ctrl.setErrors(Object.keys(err).length ? err : null);
-        }
-      };
-
-      if (!start || !end) { clearOurError(); return null; }
-
-      const s = new Date(start);
-      const e = new Date(end);
-      if (isNaN(s.getTime()) || isNaN(e.getTime())) { clearOurError(); return null; }
-
-      const sameMonth = (s.getFullYear() === e.getFullYear()) && (s.getMonth() === e.getMonth());
-      if (!sameMonth) {
-        const exist = fg.get(endKey)?.errors || {};
-        fg.get(endKey)?.setErrors({ ...exist, notSameMonth: true });
-        return { notSameMonth: true };
-      } else {
-        clearOurError();
-        return null;
-      }
-    };
-  }
-//類別：只顯示自營櫃/不包含自營櫃 IsNoPLU_No 傳TF
+  // 選項
   receYnOptions = [
-    { label: '使用業主發票', value: "Y" },
-    { label: '非使用業主發票', value: "N" },
+    { label: '使用業主發票', value: 'Y' },
+    { label: '非使用業主發票', value: 'N' },
   ];
   IsNoPLU_NoOptions = [
     { label: '全部', value: null },
-    { label: '不包含自營櫃', value: false }, 
+    { label: '不包含自營櫃', value: false },
     { label: '只顯示自營櫃', value: true  },
   ];
 
@@ -142,6 +136,10 @@ export class TLS23110Component extends BasicQueryPageComponent<any> {
   OrganizationCodeOptions: any[] = [];
   CounterOpCatOptions: any[] = [];
   WhetherOptions: any[] = [];
+
+  // debounce 防重
+  private lastQuerySig: string | null = null;
+  private lazyTimer: any = null;
 
   constructor(
     private tls23110Service: TLS23110Service,
@@ -161,7 +159,7 @@ export class TLS23110Component extends BasicQueryPageComponent<any> {
   ngOnInit(): void {
     this.initializePage('TLS23110', 'tls/tls23110', this.queryForm, (form) => this.onSubmit(form));
 
-    // ---- 限定日期同月（自動矯正） ----
+    // 限定日期同月（自動矯正）
     const startCtrl = this.queryForm.controls.TXN_DateStart as FormControl;
     const endCtrl   = this.queryForm.controls.TXN_DateEnd   as FormControl;
 
@@ -183,83 +181,93 @@ export class TLS23110Component extends BasicQueryPageComponent<any> {
 
     startCtrl.valueChanges.subscribe(clampEndToStartMonth);
     endCtrl.valueChanges.subscribe(clampEndToStartMonth);
-    clampEndToStartMonth(); // 進頁先跑一次
+    clampEndToStartMonth();
 
-    // ---- 載入選項 ----
+    // 載入選項
     this.whetherService.getWhetherOptions().subscribe((data) => (this.WhetherOptions = data));
     this.deductionbigCategoryService.getLocalDeductionCategories().subscribe((data) => (this.DeductionbigCategoryOptions = data));
     this.typeService.getTypeOptions().subscribe((data) => (this.TypeOptions = data));
     this.categoryService.getCategories().subscribe((data) => (this.CategoryOptions = data));
     this.counterNameService.getCounters().subscribe((res) => {
-      this.CounterOptions =
-        res?.map((x: any) => ({
-          label: x.label,
-          formLabel: `${x.value} - ${x.label}`,
-          value: x.value,
-        })) || [];
+      this.CounterOptions = (res ?? []).map((x: any) => ({
+        label: x.label,
+        formLabel: `${x.value} - ${x.label}`,
+        value: x.value,
+      }));
     });
     this.organizationNumberService.getOrganizationNumbers().subscribe((data) => (this.OrganizationNumberOptions = data));
     this.counterOpCatService.getCounterOpCat().subscribe((data) => (this.CounterOpCatOptions = data));
     this.floorService.getFloors().subscribe((data) => (this.floorOptions = data));
     this.tls11010Service.getBuildingOptions().subscribe((data) => (this.BUILDING_NO_Options = data));
     this.tls11010Service.getOrgOptions().subscribe((res) => {
-      this.OrganizationCodeOptions =
-        res?.map((x: any) => ({
-          label: x.label,
-          formLabel: `${x.value} - ${x.label}`,
-          value: x.value,
-        })) || [];
+      this.OrganizationCodeOptions = (res ?? []).map((x: any) => ({
+        label: x.label,
+        formLabel: `${x.value} - ${x.label}`,
+        value: x.value,
+      }));
     });
   }
 
-  // ---- 送出查詢 ----
+  /** 表格 lazy 事件（分頁 / 排序） */
+  override onLazyLoadData(event: LazyLoadEvent, form: FormGroup): void {
+    const currSort = JSON.stringify(form.value?.SortBy ?? []);
+    const nextSort = JSON.stringify(event.SortBy ?? []);
+    const nextPageIndex = currSort !== nextSort ? 1 : (event.pageIndex ?? form.value.pageIndex ?? 1);
+
+    form.patchValue({
+      pageIndex: nextPageIndex,
+      pageSize : event.pageSize ?? form.value.pageSize,
+      SortBy   : event.SortBy ?? form.value.SortBy,
+    }, { emitEvent: false });
+
+    this.sortMeta = (event.SortBy ?? []).map((s) => ({ ...s }));
+
+    const sig = JSON.stringify({
+      pageIndex: form.value.pageIndex,
+      pageSize : form.value.pageSize,
+      SortBy   : form.value.SortBy,
+    });
+    if (sig === this.lastQuerySig) return;
+    this.lastQuerySig = sig;
+
+    if (this.lazyTimer) clearTimeout(this.lazyTimer);
+    this.lazyTimer = setTimeout(() => this.onSubmit(form), 0);
+  }
+
+  // 送出查詢（⚠️ 不送 Offset / OrderBy）
   onSubmit(form: FormGroup): void {
     this.handleSubmit(form, () => {
       const val: any = this.queryForm.getRawValue();
 
-      // 由 pageIndex/pageSize 推 Offset (0-based)
-      const offset =
-        Number.isFinite(val?.pageIndex) && Number.isFinite(val?.pageSize)
-          ? Math.max(0, (val.pageIndex - 1) * val.pageSize)
-          : undefined;
-
-      // SortMeta[] -> "field ASC,DESC"
-      const orderBy =
-        Array.isArray(val?.SortBy) && val.SortBy.length
-          ? val.SortBy.map((s: SortMeta) => `${s.field} ${s.order === 1 ? 'ASC' : 'DESC'}`).join(',')
-          : undefined;
-
-      // 本地 ISO(yyyy-MM-ddTHH:mm:ss) — 去掉時區偏移
       const toIso = (x: any) => {
         if (!x) return undefined;
         const d = typeof x === 'string' ? new Date(x) : (x as Date);
         if (isNaN(d.getTime())) return undefined;
-        return new Date(d.getTime() - d.getTimezoneOffset() * 60000)
-          .toISOString()
-          .slice(0, 19);
+        return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 19);
       };
-
-      const toBool = (x: any) => {
-        if (x === true || x === 'true' || x === 1 || x === '1') return true;
+      const toTF = (x: any) => {
+        if (x === true  || x === 'true'  || x === 1 || x === '1') return true;
         if (x === false || x === 'false' || x === 0 || x === '0') return false;
         return undefined;
       };
+      const asArr = (x: any) => Array.isArray(x) ? x : (x == null || x === '' ? undefined : [x]);
 
       const payload: any = {
         TXN_DateStart: toIso(val?.TXN_DateStart),
-        TXN_DateEnd:   toIso(val?.TXN_DateEnd),
-        tlt_term_type: val?.tlt_term_type ?? undefined, 
-        rece_yn:       val?.rece_yn ?? undefined,
-        IsNoPLU_No:    toBool(val?.IsNoPLU_No),
-        TLT_No:        val?.TLT_No ?? undefined,
-        tlt_building:  val?.tlt_building ?? undefined,
-        tlt_floor:     val?.tlt_floor ?? undefined,
-        org_id:        val?.org_id ?? undefined,
-        pageSize:      val?.pageSize ?? undefined,
-        pageIndex:     val?.pageIndex ?? undefined,
-        ...(orderBy ? { OrderBy: orderBy } : {}),
+        TXN_DateEnd  : toIso(val?.TXN_DateEnd),
+        tlt_term_type: val?.tlt_term_type ?? undefined,
+        rece_yn      : val?.rece_yn ?? undefined,
+        IsNoPLU_No   : toTF(val?.IsNoPLU_No),
+        TLT_No       : asArr(val?.TLT_No),
+        tlt_building : val?.tlt_building ?? undefined,
+        tlt_floor    : asArr(val?.tlt_floor),
+        org_id       : asArr(val?.org_id),
+        pageIndex    : val?.pageIndex ?? 1,
+        pageSize     : val?.pageSize ?? 20,
+        SortBy       : Array.isArray(val?.SortBy) ? val.SortBy : this.sortMeta,
       };
 
+      // 清除空值
       Object.keys(payload).forEach((k) => {
         const v = payload[k];
         if (v === '' || v === null || v === undefined) delete payload[k];
@@ -271,58 +279,50 @@ export class TLS23110Component extends BasicQueryPageComponent<any> {
 
       this.tls23110Service.queryTLS23110(payload).subscribe({
         next: (res: any) => {
-          const src: any[] =
+          // 期待：Data:[{ Day, Discount_List: { OriginalPrice:{...}, Discount90:{...}, ... , Total:{...} } }]
+          const rawRows: any[] =
             Array.isArray(res?.Data?.QueryData) ? res.Data.QueryData :
             Array.isArray(res?.Data)            ? res.Data :
             Array.isArray(res?.QueryData)       ? res.QueryData : [];
 
+          // 欄位順序與指標
           const preferredOrder = [
             'OriginalPrice','Discount95','Discount90','Discount85','Discount80',
             'Discount75','Discount70','Discount60','Discount50','SpecialPrice','Total'
           ] as const;
-          const metrics = ['TXN_Net','TXN_SaleNoTax','TXN_Tax','Total'] as const;
+          const metrics = ['TXN_SaleNoTax','TXN_Tax','Total'] as const; // 介面顯示的三項
 
-          const firstList = src.find((r:any) => r?.Discount_List && typeof r.Discount_List === 'object')?.Discount_List ?? {};
-          const existingKeys = Object.keys(firstList);
-          const orderedKeys = [
-            ...preferredOrder.filter(k => existingKeys.includes(k)),
-            ...existingKeys.filter(k => !(preferredOrder as readonly string[]).includes(k))
-          ];
+          // 將資料攤平成一列一日 Day + 各 bucket_指標
+          const mapped: any[] = [];
 
-          (this as any).discountKeys = orderedKeys;
-          (this as any).discountMetrics = metrics;
-
-          const mapped = src.map((row: any) => {
+          for (const row of rawRows) {
             const flat: any = { Day: row?.Day ?? '' };
-            const d = row?.Discount_List;
-
-            let foundAnyNumber = false;
-            let foundNonZero   = false;
-
-            if (d && typeof d === 'object') {
-              for (const key of orderedKeys) {
-                const bucket = d[key];
-                if (!bucket) continue;
-                for (const m of metrics) {
-                  const raw = bucket[m as string];
-                  const num = Number(raw);
-                  if (Number.isFinite(num)) {
-                    foundAnyNumber = true;
-                    if (num !== 0) foundNonZero = true;
-                    flat[`${key}_${m}`] = num;
-                  }
-                }
+            const d = row?.Discount_List || {};
+            // 以 preferredOrder 為主，但只取有資料的
+            for (const bucket of preferredOrder) {
+              const obj = d[bucket as string];
+              if (!obj) continue;
+              for (const m of metrics) {
+                const key = `${bucket}_${m}`;
+                const num = Number(obj[m as string] ?? 0);
+                if (Number.isFinite(num)) flat[key] = num;
               }
             }
+            // _rowKey
+            flat._rowKey = String(flat.Day || '') || Math.random().toString(36).slice(2);
+            mapped.push(flat);
+          }
 
-           if (!foundAnyNumber) return null; // 👈 改這行就好
-            return flat;
-          });
+          this.data = mapped;
+          this.totalRecords = mapped.length;
 
-          this.data = mapped.filter((x: any) => x);
-          this.totalRecords = this.data.length;
+          // ⬇️ 建立總計（對目前畫面欄位求和）
+          this.detailTotals = this.buildTotalsFromRows(mapped);
         },
         error: () => {
+          this.data = [];
+          this.totalRecords = 0;
+          this.detailTotals = {};
           this.loading = false;
         },
         complete: () => {
@@ -333,32 +333,89 @@ export class TLS23110Component extends BasicQueryPageComponent<any> {
     });
   }
 
+  /** 依目前 columns 裡有標示 isTotal 的欄位進行總計 */
+  private buildTotalsFromRows(rows: any[]): Record<string, number> {
+    const totals: Record<string, number> = {};
+    // 取需要總計的欄位
+    const totalFields = this.columns
+      .filter(c => c.isTotal)
+      .map(c => c.field as string);
+
+    const toTotalKey = (f: string) => this.detailTotalFieldMap[f] ?? `Total_${f}`;
+
+    for (const r of rows) {
+      for (const f of totalFields) {
+        const v = Number(r?.[f] ?? 0);
+        if (!Number.isFinite(v)) continue;
+        const tk = toTotalKey(f);
+        totals[tk] = (totals[tk] ?? 0) + v;
+      }
+    }
+    return totals;
+  }
+
+  // ====== 工具 ======
+  private sameMonthValidator(startKey: string, endKey: string): ValidatorFn {
+    return (group: AbstractControl) => {
+      const fg = group as FormGroup;
+      const start = fg.get(startKey)?.value as Date | string | null | undefined;
+      const end   = fg.get(endKey)?.value   as Date | string | null | undefined;
+
+      const clearOurError = () => {
+        const ctrl = fg.get(endKey);
+        if (!ctrl) return;
+        const err = ctrl.errors || {};
+        if ('notSameMonth' in err) {
+          delete err['notSameMonth'];
+          ctrl.setErrors(Object.keys(err).length ? err : null);
+        }
+      };
+
+      if (!start || !end) { clearOurError(); return null; }
+      const s = new Date(start);
+      const e = new Date(end);
+      if (isNaN(s.getTime()) || isNaN(e.getTime())) { clearOurError(); return null; }
+
+      const sameMonth = (s.getFullYear() === e.getFullYear()) && (s.getMonth() === e.getMonth());
+      if (!sameMonth) {
+        const exist = fg.get(endKey)?.errors || {};
+        fg.get(endKey)?.setErrors({ ...exist, notSameMonth: true });
+        return { notSameMonth: true };
+      } else {
+        clearOurError();
+        return null;
+      }
+    };
+  }
+
   moneyFormat(value: any): string {
     if (value === null || value === undefined || value === '') return '';
     const num = Number(value);
     return Number.isFinite(num) ? num.toLocaleString('en-US') : '';
   }
 
+  // 欄位（有標註 isTotal 方便 table2 顯示總計）
   columns: any[] = [
     { field: 'Day', header: '日期', visible: true },
-    { field: 'OriginalPrice_TXN_SaleNoTax', header: '正品-未稅', visible: true, style: 'text-right', format: this.moneyFormat.bind(this) },
-    { field: 'OriginalPrice_TXN_Tax',       header: '正品-稅額', visible: true, style: 'text-right', format: this.moneyFormat.bind(this) },
-    { field: 'OriginalPrice_Total',         header: '正品-合計', visible: true, style: 'text-right', format: this.moneyFormat.bind(this) },
 
-    { field: 'Discount90_TXN_SaleNoTax', header: '9折-未稅', visible: true, style: 'text-right', format: this.moneyFormat.bind(this) },
-    { field: 'Discount90_TXN_Tax',       header: '9折-稅額', visible: true, style: 'text-right', format: this.moneyFormat.bind(this) },
-    { field: 'Discount90_Total',         header: '9折-合計', visible: true, style: 'text-right', format: this.moneyFormat.bind(this) },
+    { field: 'OriginalPrice_TXN_SaleNoTax', header: '正品-未稅', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
+    { field: 'OriginalPrice_TXN_Tax',       header: '正品-稅額', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
+    { field: 'OriginalPrice_Total',         header: '正品-合計', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
 
-    { field: 'Discount80_TXN_SaleNoTax', header: '8折-未稅', visible: true, style: 'text-right', format: this.moneyFormat.bind(this) },
-    { field: 'Discount80_TXN_Tax',       header: '8折-稅額', visible: true, style: 'text-right', format: this.moneyFormat.bind(this) },
-    { field: 'Discount80_Total',         header: '8折-合計', visible: true, style: 'text-right', format: this.moneyFormat.bind(this) },
+    { field: 'Discount90_TXN_SaleNoTax', header: '9折-未稅', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
+    { field: 'Discount90_TXN_Tax',       header: '9折-稅額', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
+    { field: 'Discount90_Total',         header: '9折-合計', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
 
-    { field: 'SpecialPrice_TXN_SaleNoTax', header: '特價-未稅', visible: true, style: 'text-right', format: this.moneyFormat.bind(this) },
-    { field: 'SpecialPrice_TXN_Tax',       header: '特價-稅額', visible: true, style: 'text-right', format: this.moneyFormat.bind(this) },
-    { field: 'SpecialPrice_Total',         header: '特價-合計', visible: true, style: 'text-right', format: this.moneyFormat.bind(this) },
+    { field: 'Discount80_TXN_SaleNoTax', header: '8折-未稅', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
+    { field: 'Discount80_TXN_Tax',       header: '8折-稅額', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
+    { field: 'Discount80_Total',         header: '8折-合計', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
 
-    { field: 'Total_TXN_SaleNoTax', header: '總計-未稅', visible: true, style: 'text-right', format: this.moneyFormat.bind(this) },
-    { field: 'Total_TXN_Tax',       header: '總計-稅額', visible: true, style: 'text-right', format: this.moneyFormat.bind(this) },
-    { field: 'Total_Total',         header: '總計-合計', visible: true, style: 'text-right', format: this.moneyFormat.bind(this) },
+    { field: 'SpecialPrice_TXN_SaleNoTax', header: '特價-未稅', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
+    { field: 'SpecialPrice_TXN_Tax',       header: '特價-稅額', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
+    { field: 'SpecialPrice_Total',         header: '特價-合計', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
+
+    { field: 'Total_TXN_SaleNoTax', header: '總計-未稅', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
+    { field: 'Total_TXN_Tax',       header: '總計-稅額', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
+    { field: 'Total_Total',         header: '總計-合計', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
   ];
 }

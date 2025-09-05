@@ -165,14 +165,25 @@ export class ASS21020Component extends BasicQueryPageComponent<ASS21020Data> imp
   }
 
   public onDelete(items: ASS21020Data[]): void {
+    Array.isArray(items) || (items = [items]);
     this.logger.debug(`Deleting:`, [items]);
     for (const item of items) {
-      this.service.deleteASS21020({ ENG_Type: item.ENG_Type, ENG_MeterNo: item.ENG_MeterNo })
+      this.service.deleteASS21020({ ENG_Type: this.service.engTypeMap.get(item.ENG_Type)!, ENG_MeterNo: item.ENG_MeterNo })
         .subscribe(res => {
           if (res.IsUpdateSuccess) this.messageService.successBubble('刪除成功');
           else this.messageService.errorBubble(res.ErrorMsg, '刪除失敗');
           this.loading = !1;
         });
     }
+
+    const formValues = this.queryForm.getRawValue();
+    this.service.loadASS21020({
+      EngTypes: formValues.ENG_Type!.join(),
+      ENG_Rate: formValues.ENG_Rate!,
+      ENG_MeterNo: formValues.ENG_MeterNo!,
+      Location_No: formValues.Location_No!,
+      Mid: Number(this.user?.mid)!,
+      SYS_StoreNo: this.user?.SYS_StoreNo!,
+    });
   }
 }

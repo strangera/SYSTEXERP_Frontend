@@ -17,6 +17,7 @@ import { CounterNameService } from '../../../service/basic/counter-name.service'
 import { WhetherService } from '../../../service/basic/whether.service';
 import { InstallmentPeriodService } from '../../../service/basic/installment-period.service';
 import { AcquiringBankService } from '../../../service/basic/acquiring-bank.service';
+
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { AccordionModule } from 'primeng/accordion';
 import { CalendarRangeQuickComponent } from '../../../shared/componentkit/calendar-range-quick/calendar-range-quick.component';
@@ -28,7 +29,7 @@ import { ButtonComponent } from '../../../shared/componentkit/button/button.comp
 import { DialogModule } from 'primeng/dialog';
 import { RadioButtonModule } from 'primeng/radiobutton';
 import { TranslateModule } from '@ngx-translate/core';
-import { TableComponent } from '@shared/componentkit/table/table.component';
+import { Table2Component } from '@shared/componentkit/table2/table2.component';
 
 @Component({
   selector: 'app-tls23090',
@@ -49,17 +50,17 @@ import { TableComponent } from '@shared/componentkit/table/table.component';
     DialogModule,
     RadioButtonModule,
     TranslateModule,
-    TableComponent,
+    Table2Component, // ✅ 使用 table2 才能顯示總計/小計
   ],
 })
 export class TLS23090Component extends BasicQueryPageComponent<any> {
   data: any[] = [];
   totalRecords = 0;
 
-  // 兩種檢視
+  // 檢視模式
   viewMode: 'credit' | 'counter' = 'credit';
 
-  // 預設排序（日期新到舊）
+  // 排序
   readonly defaultSortCredit = [
     { field: 'TXN_Date', order: 1 },
     { field: 'ECR_No',   order: 1 },
@@ -70,15 +71,11 @@ export class TLS23090Component extends BasicQueryPageComponent<any> {
     { field: 'ECR_No',   order: 1 },
     { field: 'tlt_no',   order: 1 },
   ];
-
-  // 當前表頭排序狀態（同步給 <app-table [multiSortMeta]>）
   sortMeta: any[] = [];
-
-  // 僅避免重複查詢
   private lastQuerySig: string | null = null;
   private lazyTimer: any = null;
 
-  // 若後端要接收分頁/排序，設 true（會帶 PageSize/PageIndex/Offset/SortBy/OrderBy）
+  // ✅ 不再帶 Offset / OrderBy；只保留 PageIndex / PageSize / SortBy
   private readonly includePagingAndSorting = true;
 
   readonly yesterday: Date = (() => {
@@ -88,7 +85,7 @@ export class TLS23090Component extends BasicQueryPageComponent<any> {
     return d;
   })();
 
-  // 查詢表單
+  // 表單
   queryForm = this.formBuilder.group({
     TXN_DateStart: [this.yesterday, [Validators.required]],
     TXN_DateEnd:   [this.yesterday, [Validators.required]],
@@ -104,7 +101,6 @@ export class TLS23090Component extends BasicQueryPageComponent<any> {
     Acquirer: [[]],
     ConnStatus: [],
     IsHaveTERM_No: [null],
-    // 初始帶「信用卡明細」預設排序
     ...createPaginationConfig([
       { field: 'TXN_Date', order: 1 },
       { field: 'ECR_No',   order: 1 },
@@ -112,7 +108,7 @@ export class TLS23090Component extends BasicQueryPageComponent<any> {
     ]),
   });
 
-  // 下拉選單選項
+  // 選項
   cardTypeOptions: any[] = [];
   floorOptions: any[] = [];
   BUILDING_NO_Options: any[] = [];
@@ -126,6 +122,29 @@ export class TLS23090Component extends BasicQueryPageComponent<any> {
     { value: '1', label: '連線' },
     { value: '2', label: '離線' },
   ];
+
+  // ====== 總計 / 小計 ======
+  detailTotals: Record<string, number> = {};
+  externalTotalFieldMap: Record<string, string> = {};
+  // 信用卡明細視圖：欄位 -> API 總計鍵
+  private readonly creditTotalFieldMap: Record<string, string> = {
+    TXN_PayAmt:      'TotalPayAmt',
+    TXN_Point:       'TotalPoint',
+    EDC_InstHeadAmt: 'TotalInstHeadAmt',
+    EDC_InstEachAmt: 'TotalInstEachAmt',
+  };
+  // 櫃位彙總視圖：欄位 -> 自行彙總鍵
+  private readonly counterTotalFieldMap: Record<string, string> = {
+    AE_Count: 'TOTAL_AE_Count', AE_Amount: 'TOTAL_AE_Amount',
+    DA_Count: 'TOTAL_DA_Count', DA_Amount: 'TOTAL_DA_Amount',
+    MASTER_Count: 'TOTAL_MASTER_Count', MASTER_Amount: 'TOTAL_MASTER_Amount',
+    VISA_Count: 'TOTAL_VISA_Count', VISA_Amount: 'TOTAL_VISA_Amount',
+    JCB_Count: 'TOTAL_JCB_Count', JCB_Amount: 'TOTAL_JCB_Amount',
+    UnionPay_Count: 'TOTAL_UnionPay_Count', UnionPay_Amount: 'TOTAL_UnionPay_Amount',
+    NCCC_Count: 'TOTAL_NCCC_Count', NCCC_Amount: 'TOTAL_NCCC_Amount',
+    Others_Count: 'TOTAL_Others_Count', Others_Amount: 'TOTAL_Others_Amount',
+    Total_Count: 'TOTAL_Total_Count', Total_Amount: 'TOTAL_Total_Amount',
+  };
 
   constructor(
     private cardTypeService: CardTypeService,
@@ -144,11 +163,13 @@ export class TLS23090Component extends BasicQueryPageComponent<any> {
   ngOnInit(): void {
     this.initializePage('TLS23090', 'tls/tls23090cru', this.queryForm, (form) => this.onSubmit(form));
 
-    // 初始化排序狀態（信用卡明細）
+    // 初始排序與欄位（信用卡明細）
     this.sortMeta = this.defaultSortCredit.map(x => ({ ...x }));
     this.queryForm.patchValue({ SortBy: this.sortMeta }, { emitEvent: false });
+    this.columns = this.columnsCredit;
+    this.externalTotalFieldMap = { ...this.creditTotalFieldMap };
 
-    // 取選項
+    // 選項
     this.cardTypeService.getCardType().subscribe(data => this.cardTypeOptions = data);
     this.floorService.getFloors().subscribe(data => this.floorOptions = data);
     this.whetherService.getWhetherOptions().subscribe(data => this.WhetherOptions = data);
@@ -176,9 +197,6 @@ export class TLS23090Component extends BasicQueryPageComponent<any> {
     });
     this.installmentPeriodService.getInstallmentPeriods().subscribe(data => this.installmentPeriodOptions = data);
     this.acquiringBankService.getAcquiringBanks().subscribe(data => this.acquiringBankOptions = data);
-
-    // 預設顯示明細欄位
-    this.columns = this.columnsCredit;
   }
 
   // ===== 表格 Lazy 事件（分頁 / 排序） =====
@@ -187,17 +205,14 @@ export class TLS23090Component extends BasicQueryPageComponent<any> {
     const nextSort = JSON.stringify(event.SortBy ?? []);
     const nextPageIndex = currSort !== nextSort ? 1 : (event.pageIndex ?? form.value.pageIndex ?? 1);
 
-    // 同步到表單（不觸發 valueChanges）
     form.patchValue({
       pageIndex: nextPageIndex,
       pageSize : event.pageSize ?? form.value.pageSize,
       SortBy   : event.SortBy ?? form.value.SortBy,
     }, { emitEvent: false });
 
-    // 更新表頭排序狀態
     this.sortMeta = (event.SortBy ?? []).map(s => ({ ...s }));
 
-    // 產生查詢簽章（避免重複呼叫）
     const sig = JSON.stringify({
       viewMode : this.viewMode,
       pageIndex: form.value.pageIndex,
@@ -211,27 +226,24 @@ export class TLS23090Component extends BasicQueryPageComponent<any> {
     this.lazyTimer = setTimeout(() => this.onSubmit(form), 0);
   }
 
-  // ===== 送出查詢 =====
+  // ===== 查詢 =====
   onSubmit(form: FormGroup): void {
     this.handleSubmit(form, () => {
       const val = this.queryForm.getRawValue() as any;
 
-      // 依當前檢視決定預設排序
       const defaultSort = this.viewMode === 'counter'
         ? this.defaultSortCounter
         : this.defaultSortCredit;
 
-      // 排序來源：表單 → sortMeta → defaultSort
       const sortByArr: any[] =
         (Array.isArray(val?.SortBy) && val.SortBy.length ? val.SortBy :
          (this.sortMeta.length ? this.sortMeta : defaultSort)).map((s:any) => ({ ...s }));
 
-      const orderBy = sortByArr.length
-        ? sortByArr.map(s => `${s.field} ${s.order === 1 ? 'ASC' : 'DESC'}`).join(',')
-        : undefined;
+      // 分頁（✅ 不帶 Offset / OrderBy）
+      const pageSize  = Number.isFinite(val?.pageSize) ? Number(val.pageSize) : 10;
+      const pageIndex = Number.isFinite(val?.pageIndex) ? Number(val.pageIndex) : 1;
 
-      // 共同條件
-      const common: any = {
+      const payload = this.prune({
         TXN_DateStart: this.toIso(val?.TXN_DateStart ?? this.yesterday),
         TXN_DateEnd  : this.toIso(val?.TXN_DateEnd   ?? this.yesterday),
 
@@ -245,33 +257,18 @@ export class TLS23090Component extends BasicQueryPageComponent<any> {
         tlt_building: (val?.tlt_building ?? '') || undefined,
         tlt_floor   : this.ensureArr(val?.tlt_floor),
         org_id      : this.ensureArr(val?.org_id),
-      };
 
-      // 額外條件
-      const extra = {
         IsHaveTERM_No: this.toBoolOrNull(val?.IsHaveTERM_No),
         TERM_No      : this.ensureArr(val?.TERM_No),
         Acquirer     : this.ensureArr(val?.Acquirer),
         Conn_Status  : (val?.ConnStatus ?? '') || undefined,
-      };
 
-      // 分頁/排序鍵
-      const pageSize  = Number.isFinite(val?.pageSize) ? Number(val.pageSize) : 10;
-      const pageIndex = Number.isFinite(val?.pageIndex) ? Number(val.pageIndex) : 1;
-      const offset    = Math.max(0, (pageIndex - 1) * pageSize);
-
-      const pagingSort: any = this.includePagingAndSorting ? {
+        // ✅ 僅保留這三個鍵
         PageSize: pageSize,
         PageIndex: pageIndex,
-        Offset: offset,
         SortBy: sortByArr,
-        ...(orderBy ? { OrderBy: orderBy } : {}),
-      } : {};
+      });
 
-      // 組 payload（去除空值）
-      const payload = this.prune({ ...common, ...extra, ...pagingSort });
-
-      // 呼叫 API
       this.loading = true;
       this.messageService?.blockUi();
 
@@ -282,7 +279,7 @@ export class TLS23090Component extends BasicQueryPageComponent<any> {
       call$.subscribe({
         next: (res) => {
           if (this.viewMode === 'counter') {
-            // 櫃位彙總
+            // ================= 櫃位彙總 =================
             const items: any[] =
               Array.isArray(res?.Data?.QueryData) ? res.Data.QueryData :
               Array.isArray(res?.Data)            ? res.Data :
@@ -313,24 +310,47 @@ export class TLS23090Component extends BasicQueryPageComponent<any> {
               };
             });
 
+            // 設定欄位與總計映射，並前端彙總
             this.columns = this.columnsCounter;
+            this.externalTotalFieldMap = { ...this.counterTotalFieldMap };
+            this.detailTotals = this.sumCounterTotals(this.data, this.counterTotalFieldMap);
+
             this.totalRecords = typeof res?.TotalCount === 'number' ? res.TotalCount : this.data.length;
           } else {
-            // 信用卡明細
-            const packs = Array.isArray(res?.Data) ? res.Data : [];
-            const flat  = packs.flatMap((x: any) => x?.tLS23090_CreditDetails ?? []);
+            // ================= 信用卡明細 =================
+            const wrappers = Array.isArray(res?.Data) ? res.Data : (res?.Data ? [res.Data] : []);
+            const flat  = wrappers.flatMap((x: any) => x?.tLS23090_CreditDetails ?? []);
+
             this.data = flat.map((row: any, idx: number) => ({
               ...row,
               _rowKey: `crt|${row?.TXN_Date ?? ''}|${row?.ECR_No ?? ''}|${row?.TXN_No ?? idx}`,
             }));
 
             this.columns = this.columnsCredit;
+            this.externalTotalFieldMap = { ...this.creditTotalFieldMap };
+
+            // 從所有 wrapper 聚合總計（避免多 wrapper 時遺漏）
+            const totalsAgg = {
+              TotalPayAmt: 0,
+              TotalPoint: 0,
+              TotalInstHeadAmt: 0,
+              TotalInstEachAmt: 0,
+            };
+            for (const w of wrappers) {
+              totalsAgg.TotalPayAmt      += Number(w?.TotalPayAmt ?? 0);
+              totalsAgg.TotalPoint       += Number(w?.TotalPoint ?? 0);
+              totalsAgg.TotalInstHeadAmt += Number(w?.TotalInstHeadAmt ?? 0);
+              totalsAgg.TotalInstEachAmt += Number(w?.TotalInstEachAmt ?? 0);
+            }
+            this.detailTotals = totalsAgg;
+
             this.totalRecords = typeof res?.TotalCount === 'number' ? res.TotalCount : this.data.length;
           }
         },
         error: () => {
           this.data = [];
           this.totalRecords = 0;
+          this.detailTotals = {};
           this.loading = false;
         },
         complete: () => {
@@ -341,15 +361,19 @@ export class TLS23090Component extends BasicQueryPageComponent<any> {
     });
   }
 
-  // 切換檢視模式 → 重設排序 + 回第一頁 + 重查
+  // 切換檢視模式
   onModeChange(): void {
     const nextDefault = this.viewMode === 'credit' ? this.defaultSortCredit : this.defaultSortCounter;
     this.columns = this.viewMode === 'credit' ? this.columnsCredit : this.columnsCounter;
+    this.externalTotalFieldMap = this.viewMode === 'credit'
+      ? { ...this.creditTotalFieldMap }
+      : { ...this.counterTotalFieldMap };
+    this.detailTotals = {};
 
     this.sortMeta = nextDefault.map(x => ({ ...x }));
     this.queryForm.patchValue({ pageIndex: 1, SortBy: this.sortMeta }, { emitEvent: false });
 
-    // 重設簽章，避免卡住
+    // 重設簽章並查詢
     this.lastQuerySig = null;
     this.onSubmit(this.queryForm);
   }
@@ -370,16 +394,6 @@ export class TLS23090Component extends BasicQueryPageComponent<any> {
     if (s === 'N' || s === 'FALSE' || s === '0') return false;
     return null;
   }
-  money = (val: any) => Number(val || 0).toLocaleString('en-US');
-  formatDate(val: string): string {
-    const date = new Date(val);
-    return isNaN(date.getTime())
-      ? val
-      : `${date.getFullYear()}/${(date.getMonth() + 1).toString().padStart(2, '0')}/${date
-          .getDate()
-          .toString()
-          .padStart(2, '0')}`;
-  }
   private prune<T extends Record<string, any>>(obj: T): T {
     const out: any = { ...obj };
     Object.keys(out).forEach((k) => {
@@ -391,56 +405,79 @@ export class TLS23090Component extends BasicQueryPageComponent<any> {
     return out as T;
   }
 
-  // 欄位定義
+  money = (val: any) => Number(val || 0).toLocaleString('en-US');
+  formatDate(val: string): string {
+    const date = new Date(val);
+    return isNaN(date.getTime())
+      ? val
+      : `${date.getFullYear()}/${(date.getMonth() + 1).toString().padStart(2, '0')}/${date
+          .getDate()
+          .toString()
+          .padStart(2, '0')}`;
+  }
+
+  // 前端彙總（櫃位彙總視圖）
+  private sumCounterTotals(rows: any[], map: Record<string, string>): Record<string, number> {
+    const totals: Record<string, number> = {};
+    Object.values(map).forEach(k => totals[k] = 0);
+    rows.forEach(r => {
+      Object.entries(map).forEach(([field, key]) => {
+        totals[key] += Number(r?.[field] ?? 0);
+      });
+    });
+    return totals;
+  }
+
+  // 欄位
   columns: any[] = [];
   private columnsCredit = [
-    { field: 'TXN_Date', header: '銷售日期', format: this.formatDate },
-    { field: 'ECR_No', header: '收銀機號' },
-    { field: 'TXN_No', header: '交易序號' },
-    { field: 'tlt_no', header: '專櫃編號' },
-    { field: 'tlt_name', header: '櫃位名稱' },
-    { field: 'CRD_Name', header: '信用卡卡別' },
-    { field: 'CRD_No', header: '信用卡卡號' },
-    { field: 'TXN_PayAmt', header: '金額', style: 'text-right', format: (v: number) => this.money(v) },
-    { field: 'TXN_Point', header: '紅利', style: 'text-right', format: (v: number) => this.money(v) },
-    { field: 'TERM_No', header: '分期' },
-    { field: 'TERM_Name', header: '分期期數' },
-    { field: 'EDC_InstHeadAmt', header: '頭期款分期金額', style: 'text-right', format: (v: number) => this.money(v) },
-    { field: 'EDC_InstEachAmt', header: '每期分期金額', style: 'text-right', format: (v: number) => this.money(v) },
+    { field: 'TXN_Date', header: '銷售日期', format: (v: any) => this.formatDate(v), visible: true },
+    { field: 'ECR_No', header: '收銀機號', visible: true },
+    { field: 'TXN_No', header: '交易序號', visible: true },
+    { field: 'tlt_no', header: '專櫃編號', visible: true },
+    { field: 'tlt_name', header: '櫃位名稱', visible: true, style: 'text-left' },
+    { field: 'CRD_Name', header: '信用卡卡別', visible: true },
+    { field: 'CRD_No', header: '信用卡卡號', visible: true },
+
+    { field: 'TXN_PayAmt', header: '金額', style: 'text-right', format: (v: number) => this.money(v), isTotal: true, visible: true },
+    { field: 'TXN_Point', header: '紅利', style: 'text-right', format: (v: number) => this.money(v), isTotal: true, visible: true },
+    { field: 'TERM_No', header: '分期', visible: true },
+    { field: 'TERM_Name', header: '分期期數', visible: true },
+    { field: 'EDC_InstHeadAmt', header: '頭期款分期金額', style: 'text-right', format: (v: number) => this.money(v), isTotal: true, visible: true },
+    { field: 'EDC_InstEachAmt', header: '每期分期金額', style: 'text-right', format: (v: number) => this.money(v), isTotal: true, visible: true },
   ];
+
   private columnsCounter = [
-    { field: 'TXN_Date', header: '銷售日期', format: this.formatDate },
-    { field: 'ECR_No', header: '收銀機號' },
-    { field: 'tlt_no', header: '專櫃編號' },
-    { field: 'tlt_name', header: '櫃位名稱', style: 'text-left' },
+    { field: 'TXN_Date', header: '銷售日期', format: (v: any) => this.formatDate(v), visible: true },
+    { field: 'ECR_No', header: '收銀機號', visible: true },
+    { field: 'tlt_no', header: '專櫃編號', visible: true },
+    { field: 'tlt_name', header: '櫃位名稱', visible: true, style: 'text-left' },
 
-    { field: 'AE_Count', header: 'AE 筆數', style: 'text-right' },
-    { field: 'AE_Amount', header: 'AE 金額', style: 'text-right', format: (v: number) => this.money(v) },
+    { field: 'AE_Count', header: 'AE 筆數', style: 'text-right', isTotal: true, visible: true },
+    { field: 'AE_Amount', header: 'AE 金額', style: 'text-right', format: (v: number) => this.money(v), isTotal: true, visible: true },
 
-    { field: 'DA_Count', header: 'DA 筆數', style: 'text-right' },
-    { field: 'DA_Amount', header: 'DA 金額', style: 'text-right', format: (v: number) => this.money(v) },
+    { field: 'DA_Count', header: 'DA 筆數', style: 'text-right', isTotal: true, visible: true },
+    { field: 'DA_Amount', header: 'DA 金額', style: 'text-right', format: (v: number) => this.money(v), isTotal: true, visible: true },
 
-    { field: 'MASTER_Count', header: 'MASTER 筆數', style: 'text-right' },
-    { field: 'MASTER_Amount', header: 'MASTER 金額', style: 'text-right', format: (v: number) => this.money(v) },
+    { field: 'MASTER_Count', header: 'MASTER 筆數', style: 'text-right', isTotal: true, visible: true },
+    { field: 'MASTER_Amount', header: 'MASTER 金額', style: 'text-right', format: (v: number) => this.money(v), isTotal: true, visible: true },
 
-    { field: 'VISA_Count', header: 'VISA 筆數', style: 'text-right' },
-    { field: 'VISA_Amount', header: 'VISA 金額', style: 'text-right', format: (v: number) => this.money(v) },
+    { field: 'VISA_Count', header: 'VISA 筆數', style: 'text-right', isTotal: true, visible: true },
+    { field: 'VISA_Amount', header: 'VISA 金額', style: 'text-right', format: (v: number) => this.money(v), isTotal: true, visible: true },
 
-    { field: 'JCB_Count', header: 'JCB 筆數', style: 'text-right' },
-    { field: 'JCB_Amount', header: 'JCB 金額', style: 'text-right', format: (v: number) => this.money(v) },
+    { field: 'JCB_Count', header: 'JCB 筆數', style: 'text-right', isTotal: true, visible: true },
+    { field: 'JCB_Amount', header: 'JCB 金額', style: 'text-right', format: (v: number) => this.money(v), isTotal: true, visible: true },
 
-    { field: 'UnionPay_Count', header: '銀聯 筆數', style: 'text-right' },
-    { field: 'UnionPay_Amount', header: '銀聯 金額', style: 'text-right', format: (v: number) => this.money(v) },
+    { field: 'UnionPay_Count', header: '銀聯 筆數', style: 'text-right', isTotal: true, visible: true },
+    { field: 'UnionPay_Amount', header: '銀聯 金額', style: 'text-right', format: (v: number) => this.money(v), isTotal: true, visible: true },
 
-    { field: 'NCCC_Count', header: 'NCCC 筆數', style: 'text-right' },
-    { field: 'NCCC_Amount', header: 'NCCC 金額', style: 'text-right', format: (v: number) => this.money(v) },
+    { field: 'NCCC_Count', header: 'NCCC 筆數', style: 'text-right', isTotal: true, visible: true },
+    { field: 'NCCC_Amount', header: 'NCCC 金額', style: 'text-right', format: (v: number) => this.money(v), isTotal: true, visible: true },
 
-    { field: 'Others_Count', header: '其它 筆數', style: 'text-right' },
-    { field: 'Others_Amount', header: '其它 金額', style: 'text-right', format: (v: number) => this.money(v) },
+    { field: 'Others_Count', header: '其它 筆數', style: 'text-right', isTotal: true, visible: true },
+    { field: 'Others_Amount', header: '其它 金額', style: 'text-right', format: (v: number) => this.money(v), isTotal: true, visible: true },
 
-    { field: 'Total_Count', header: '總筆數', style: 'text-right' },
-    { field: 'Total_Amount', header: '總金額', style: 'text-right', format: (v: number) => this.money(v) },
+    { field: 'Total_Count', header: '總筆數', style: 'text-right', isTotal: true, visible: true },
+    { field: 'Total_Amount', header: '總金額', style: 'text-right', format: (v: number) => this.money(v), isTotal: true, visible: true },
   ];
-
-
 }

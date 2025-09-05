@@ -82,6 +82,8 @@ export class TableComponent extends BasicPrintDataComponent implements OnChanges
   // rowEdit 相關
   @Input() showRowEdit = false;                                                 // 是否顯示 Row編輯按鈕
   @Input() rowEditing = false;                                                  // 是否正在編輯Row
+  @Input() rowEditCanSave = false;                                            // Row編輯 是否可以儲存 給欄位驗證用
+  @Output() rowEditingChange = new EventEmitter<boolean>(); // Row編輯 改變(雙向綁定用)
   clonedProducts: Record<string, any> = {};                                     // 儲存編輯前資料
   @Output() rowEditInit = new EventEmitter<any>();                              // Row 編輯初始化事件
   @Output() rowEditSave = new EventEmitter<RowEditSaveEvent>();                 // Row 編輯保存事件
@@ -215,6 +217,7 @@ export class TableComponent extends BasicPrintDataComponent implements OnChanges
     this.rowEditing = true;         // 开启编辑模式
     this.rowEditInit.emit(rowData); // 發射事件
     this.selectedItems = [];
+    this.rowEditingChange.emit(this.rowEditing);
     this.selectionChange.emit(this.selectedItems);
     this.selectedItemsChange.emit(this.selectedItems);
   }
@@ -251,6 +254,7 @@ export class TableComponent extends BasicPrintDataComponent implements OnChanges
 
     this.rowEditing = false;
     this.dt.saveRowEdit(rowData, htmlTableRowElement ?? null);
+    this.rowEditingChange.emit(this.rowEditing);
     this.rowEditSave.emit({ oldData, newData: rowData, ri, data: this.data });
     this.dataChange.emit(this.data);
   }
@@ -273,6 +277,7 @@ export class TableComponent extends BasicPrintDataComponent implements OnChanges
     delete this.clonedProducts[rowId];// 無論是哪種情況，都刪除備份的原始數據
     this.rowEditing = false;
     this.dt.cancelRowEdit(rowData);
+    this.rowEditingChange.emit(this.rowEditing);
     this.rowEditCancel.emit({ data: this.data, rowData, ri });
     this.cdr.detectChanges();
   }
@@ -309,6 +314,7 @@ export class TableComponent extends BasicPrintDataComponent implements OnChanges
       this.multiSortMeta = [{ field: this.dataKey, order: 0 }];
       this.data = data;
       this.clonedProducts[newRowData[this.dataKey]] = { ...newRowData }; // 儲存備份
+      this.rowEditingChange.emit(this.rowEditing);
       this.dataChange.emit(this.data);
       this.onRowEditInit(newRowData);
     } else {
