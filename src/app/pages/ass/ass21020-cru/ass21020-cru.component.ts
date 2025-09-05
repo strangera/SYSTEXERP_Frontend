@@ -76,7 +76,7 @@ export class ASS21020CRUComponent extends BasicCruPageComponent<ASS21020Data> im
   private readonly allMeterNo = computed(() => this.service.engMeterNoSignal());
   private readonly tltByFlagMap = computed(() => this.service.tltByFlagMap);
 
-  public readonly rowEditCanSaveSignal = signal(!1);
+  public readonly rowEditCanSaveSignal = signal(!0);
 
   private editingRow: TLTByFlag | undefined;
 
