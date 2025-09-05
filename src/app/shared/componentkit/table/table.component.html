@@ -185,7 +185,7 @@
             class="flex align-items-center justify-content-center gap-2">
             <p-button *ngIf="!editing" pTooltip="編輯" tooltipPosition="top" icon="pi pi-pen-to-square"
               (click)="onRowEditInit(rowData)" [text]="true" [disabled]="rowEditing || rowEditDisabled(rowData)" />
-            <p-button *ngIf="editing" icon="pi pi-check text-green-500"
+            <p-button *ngIf="editing" icon="pi pi-check text-green-500" [disabled]="!rowEditCanSave"
               (click)="onRowEditSave(rowData, ri, htmlTableRowElement)" />
             <p-button *ngIf="editing" icon="pi pi-times text-red-500" (click)="onRowEditCancel(rowData, ri)" />
           </div>
