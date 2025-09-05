@@ -194,9 +194,9 @@
   </p-accordion>
 </div>
 
-<!-- 查詢結果表格 -->
+<!-- 查詢結果表格（✅ app-table2 + 總計；沒有小計就不帶 externalSubtotals） -->
 <div class="card">
-  <app-table
+  <app-table2
     tableKey="TLS23090"
     [data]="data"
     [columns]="columns"
@@ -208,6 +208,9 @@
     [loading]="loading"
     [showManage]="false"
     [showDelete]="false"
-    (lazyLoadData)="onLazyLoadData($event, queryForm)">
-  </app-table>
+    (lazyLoadData)="onLazyLoadData($event, queryForm)"
+    [showTotal]="true"
+    [externalTotals]="detailTotals"
+    [externalTotalFieldMap]="externalTotalFieldMap">
+  </app-table2>
 </div>

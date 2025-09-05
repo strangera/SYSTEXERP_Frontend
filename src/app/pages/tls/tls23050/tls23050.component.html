@@ -20,7 +20,7 @@
             [submitted]="submitted">
           </app-calendar>
 
-          <!-- 是否收銀（是否開立業主發票） -->
+          <!-- 類型（是否開立業主發票） -->
           <div class="col-12 md:col-6 lg:col-4">
             <app-radiobutton
               class="col-12"
@@ -93,21 +93,28 @@
 </div>
 
 <div class="card">
-  <app-table
+  <!-- ✅ 明細＋群組小計＋總計 -->
+  <app-table2
     tableKey="TLS23050"
     [data]="data"
     [columns]="columns"
     [showCheckBox]="false"
-    dataKey="TXN_No"
-    [multiSortMeta]="[{ field: 'ECR_No', order: 1 }]"
+    dataKey="_rowKey"
+    [multiSortMeta]="sortMeta"
     [totalRecords]="totalRecords"
     [lazy]="true"
     [loading]="loading"
-    [showDetail]="false"
     [showManage]="false"
     [showDelete]="false"
+    [showDetail]="false"
+    [showSubTotal]="true"
     [showTotal]="true"
-    (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)">
+    [groupRowsBy]="'ECR_No'"
+    [externalTotals]="detailTotals"
+    [externalTotalFieldMap]="detailTotalFieldMap"
+    [externalSubtotals]="detailSubtotals"
+    [externalSubtotalFieldMap]="detailSubtotalFieldMap"
+    (lazyLoadData)="onLazyLoadData($event, queryForm)">
 
     <!-- ✅ 匯出按鈕 -->
     <header>
@@ -131,5 +138,5 @@
         </p-button>
       </div>
     </header>
-  </app-table>
+  </app-table2>
 </div>

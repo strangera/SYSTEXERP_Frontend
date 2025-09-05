@@ -3,7 +3,10 @@
     <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
   </div>
   <p-accordion>
-    <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
+    <p-accordionTab
+      header="{{ 'query-conditions' | translate }}"
+      [selected]="true"
+      class="line-height-3 m-0"
       [headerStyleClass]="'query-accordionTab'">
       <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
@@ -79,18 +82,26 @@
 </div>
 
 <div class="card">
-  <app-table
+  <!-- ✅ 改用 table2；加總 &（有就）小計 -->
+  <app-table2
     tableKey="TLS23130"
     [data]="data"
     [columns]="columns"
     [showCheckBox]="false"
-    dataKey="BNK_No"
+    dataKey="_rowKey"
     [multiSortMeta]="sortMeta"
     [totalRecords]="totalRecords"
     [lazy]="true"
     [loading]="loading"
     [showManage]="false"
     [showDelete]="false"
-    (lazyLoadData)="onLazyLoadData($event, queryForm)">
-  </app-table>
+    (lazyLoadData)="onLazyLoadData($event, queryForm)"
+    [showTotal]="true"
+    [showSubTotal]="hasSubtotals"
+    [groupRowsBy]="'tlt_no'"
+    [externalTotals]="detailTotals"
+    [externalTotalFieldMap]="detailTotalFieldMap"
+    [externalSubtotals]="detailSubtotals"
+    [externalSubtotalFieldMap]="detailSubtotalFieldMap">
+  </app-table2>
 </div>
