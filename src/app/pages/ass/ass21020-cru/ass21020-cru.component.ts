@@ -15,7 +15,7 @@ import { Column, FieldChangeEvent, RowEditSaveEvent } from '@shared/componentkit
 import { CRUDStatus } from '@shared/models/system/CRUDstatus';
 import { NGXLogger } from 'ngx-logger';
 import { PanelModule } from 'primeng/panel';
-import { finalize, tap } from 'rxjs';
+import { finalize, startWith, tap } from 'rxjs';
 import { ASS2100ENGMeterType } from '../ass21010/ass21010.model';
 import { ASS21020Data, ASS21020Detail, ASS21020Update, TLTByFlag } from '../ass21020/ass21020.model';
 
@@ -42,6 +42,19 @@ export class ASS21020CRUComponent extends BasicCruPageComponent<ASS21020Data> im
   public readonly CRUDStatus = CRUDStatus;
   private readonly ratePtn = /^(100|[1-9]?[0-9])(\.[0-9]{1,2})?$/;
 
+  private static setEqual<T>(a: Set<T>, b: Set<T>): boolean {
+    if (a === b) return !0;
+    if (a.size !== b.size) return !1;
+    for (const x of a) if (!b.has(x)) return !1;
+    return !0;
+  }
+  private static arrShallowEqual<T>(a: readonly T[], b: readonly T[]): boolean {
+    if (a === b) return !0;
+    if (a.length !== b.length) return !1;
+    for (let i = 0; i < a.length; i++) if (a[i] !== b[i]) return !1;
+    return !0;
+  }
+
   public readonly dataForm = this.formBuilder.nonNullable.group({
     ENG_Type: new FormControl<EngType | undefined>(void 0, [Validators.required]),
     ENG_MeterNo: new FormControl<string | undefined>(void 0, [Validators.required]),
@@ -54,11 +67,14 @@ export class ASS21020CRUComponent extends BasicCruPageComponent<ASS21020Data> im
     y_coord: new FormControl<string | undefined>(void 0),
   });
   public readonly df = computed(() => this.dataForm.controls);
-  private readonly dfChange = toSignal(this.dataForm.valueChanges);
 
-  private readonly engTypeSignal = toSignal(this.df().ENG_Type.valueChanges);
+  private readonly engTypeSignal = toSignal(this.df().ENG_Type.valueChanges.pipe(startWith(this.df().ENG_Type.value)));
   private readonly meterNoSignal = toSignal(this.df().ENG_MeterNo.valueChanges);
-  private readonly tableDataSignal = signal<ASS21020Detail[]>([]);
+  private readonly tableDataSignal = signal<ASS21020Detail[]>([], { equal: ASS21020CRUComponent.arrShallowEqual });
+
+  private readonly allEngTypes = computed(() => this.service.engTypeSignal());
+  private readonly allMeterNo = computed(() => this.service.engMeterNoSignal());
+  private readonly tltByFlagMap = computed(() => this.service.tltByFlagMap);
 
   public readonly rowEditCanSaveSignal = signal(!1);
 
@@ -66,33 +82,22 @@ export class ASS21020CRUComponent extends BasicCruPageComponent<ASS21020Data> im
 
   /** 根據工程類型篩選的電錶編號清單 */
   public readonly filteredMeterNo = computed<ASS2100ENGMeterType[]>(() => {
-    const engType = this.engTypeSignal();
-    const allMeterNo = this.service.engMeterNoSignal();
-
-    if (!engType) return allMeterNo;
-
-    const engTypeMap = new Map<string, boolean>();
-
-    for (const type of this.service.engTypeSignal()) {
-      if (engType === type.No) engTypeMap.set(type.Name, true);
-    }
-
-    return allMeterNo.filter(meter => engTypeMap.has(meter.ENG_Type));
-  });
+    const selected = this.engTypeSignal();
+    const all = this.allMeterNo();
+    if (!selected) return all;
+    const nameSet = new Set(this.allEngTypes().filter(t => t.No === selected).map(t => t.Name));
+    return all.filter(m => nameSet.has(m.ENG_Type));
+  }, { equal: ASS21020CRUComponent.arrShallowEqual });
 
   public readonly filteredData = computed<ASS21020Detail[]>(() => {
-    return this.tableDataSignal().map(detail => {
-      const current = this.service.tltByFlagMap.get(detail.TLT_No);
-      return {
-        ...detail,
-        Location_No: current?.Location_No ?? '',
-        NET_SPACE: current?.NET_SPACE ?? 0,
-      };
-    }) || [];
+    const rows = this.tableDataSignal();
+    const map = this.tltByFlagMap();
+    return rows.map(d => ({
+      ...d,
+      Location_No: map.get(d.TLT_No)?.Location_No ?? '',
+      NET_SPACE: map.get(d.TLT_No)?.NET_SPACE ?? 0,
+    }));
   });
-
-  public readonly totalRecords = computed(() => this.tableDataSignal().length);
-  private readonly getTltList = computed(() => this.service.tltNoListSignal());
 
   public readonly dropdownEffect = effect(() => {
     const type = this.engTypeSignal();
@@ -122,41 +127,53 @@ export class ASS21020CRUComponent extends BasicCruPageComponent<ASS21020Data> im
       if (this.crudstatus !== CRUDStatus.Create) this.service.loadASS21020({
         EngTypes: type,
         ENG_MeterNo: mtrNo,
-        Location_No: this.dataForm.controls.Location_No.value!,
+        // Location_No: mtrNoData.Floor_No,
         Mid: Number(this.user.mid),
         SYS_StoreNo: this.user.SYS_StoreNo,
+      });
+
+      this.dataForm.patchValue({
+        Location_No: mtrNoData.Location_No,
+        floor_no: mtrNoData.Floor_No,
+        floor_name: mtrNoData.Location_Name,
+        Building_No: mtrNoData.building_No,
+        Building_Name: mtrNoData.building_DESC,
+        x_coord: mtrNoData.Draw_X,
+        y_coord: mtrNoData.Draw_Y,
       });
     }
   }, { allowSignalWrites: !0 });
 
-  public readonly initEffect = effect(() => {
-    if (this.isFormCreateable) return void (this.initEffect.destroy());
+  public readonly bootstrapEffect = effect(() => {
+    if (this.isFormCreateable) return void (this.bootstrapEffect.destroy());
     const rowData = this.rowdata;
     const type = this.service.engTypeSignal();
     const mtrNo = this.service.engMeterNoSignal();
-    const data = this.service.ASS21020Data().find(v => v.ENG_MeterNo === rowData?.ENG_MeterNo)?.Details;
-    if (type?.length && mtrNo?.length && data?.length && rowData) {
+    this.logger.debug(`bootstrap startup:`, [rowData, type, mtrNo, this.service.ASS21020Data()]);
+    if (type?.length && mtrNo?.length && rowData) {
       const fixedEngType = type.find(t => t.Name === rowData.ENG_Type)?.No as EngType;
+      this.service.loadASS21020({ EngTypes: fixedEngType, ENG_MeterNo: rowData.ENG_MeterNo });
       this.df().ENG_Type.setValue(fixedEngType);
       this.df().ENG_MeterNo.setValue(rowData.ENG_MeterNo);
-      this.tableDataSignal.set(data);
-      this.initEffect.destroy();
+      this.logger.debug(`bootstrap:`, [this.df(), this.tableDataSignal()]);
+      this.bootstrapEffect.destroy();
     }
   }, { allowSignalWrites: !0 });
 
-  public readonly dfEffect = effect(() => {
-    // 處理編輯狀態bug
-    this.logger.debug(`dfEffect:`, [this.dfChange(), this.tb()]);
-    if ('object' !== typeof this.tb()) return;
-    this.tb()!.rowEditing = !1;
-    // this.tb()!.dt.cancelRowEdit(this.filteredData());
-  });
+  public readonly bootstrapTableEffect = effect(() => {
+    if (this.isFormCreateable) this.bootstrapTableEffect.destroy();
+    this.tableDataSignal.set(this.service.ASS21020Data().find(v => v.ENG_MeterNo === this.rowdata?.ENG_MeterNo)?.Details ?? []);
+    this.tableDataSignal()?.length && this.bootstrapTableEffect.destroy();
+  }, { allowSignalWrites: !0 });
+
+  public readonly totalRecords = computed(() => this.tableDataSignal().length);
+  private readonly getTltList = computed(() => this.service.tltNoListSignal());
 
   public readonly columns: Column[] = [
     { field: 'TLT_No', header: '專櫃編號/名稱', type: 'dropdown', options: () => this.getTltList(), optionLabel: 'Name', optionValue: 'No', required: !0 },
     { field: 'Location_No', header: '位置編號', format: v => v ?? this.editingRow?.Location_No },
     { field: 'NET_SPACE', header: '營業面積', format: v => v ?? this.editingRow?.NET_SPACE },
-    { field: 'ENG_Rate', header: '比率', type: 'inputNumber', format: v => (v ?? this.editingRow?.ENG_Rate) + '%', validate: [(v) => ({ isValid: !v || this.ratePtn.test(v), errorMessage: ['比率格式不正確'] })] },
+    { field: 'ENG_Rate', header: '比率', type: 'inputNumber', format: v => (v ?? this.editingRow?.ENG_Rate ?? 0) + '%', validate: [(v) => ({ isValid: !v || this.ratePtn.test(v), errorMessage: ['比率格式不正確'] })] },
     { field: 'ENG_Remark', header: '備註', type: 'input' },
   ];
 
@@ -185,7 +202,8 @@ export class ASS21020CRUComponent extends BasicCruPageComponent<ASS21020Data> im
 
   public onSubmit(): void {
     this.handleSubmit(this.dataForm, () => {
-      this.tb()!.dt.cancelRowEdit(this.filteredData());
+      this.tb()!.dt.value = this.tb()!.dt.value.filter(i => !i.Apply_No?.startsWith('temp'));
+
       const total = this.filteredData().map(v => v.ENG_Rate).reduce((a, b) => a + (b ?? 0), 0);
       if (total > 100) {
         this.messageService.errorBubble('總比率不能大於100%', '提交失敗');
@@ -216,10 +234,18 @@ export class ASS21020CRUComponent extends BasicCruPageComponent<ASS21020Data> im
 
   public onClear(): void {
     this.dataForm.reset();
+    this.tableDataSignal.set([]);
+    if (this.tb()) this.tb()!.rowEditing = !1;
+  }
+
+  public onKancel(): void {
+    this.logger.debug(`onKancel:`, [this.editingRow, this.tb()!.dt.value]);
+    this.tb()!.dt.value = this.tb()!.dt.value.filter(i => !i.Apply_No?.startsWith('temp'));
+    this.tableDataSignal.set(this.tb()!.dt.value);
   }
 
   public onRowEdit(event: RowEditSaveEvent): void {
-    this.tableDataSignal.set(event.data);
+    this.tableDataSignal.set([...event.data]);
     this.loading = !1;
     this.editingRow = void 0;
     this.logger.debug(`onRowEdit:`, [event]);
@@ -228,29 +254,29 @@ export class ASS21020CRUComponent extends BasicCruPageComponent<ASS21020Data> im
   public onAutoCalculate(): void {
     const data = this.filteredData();
     const current = this.tableDataSignal();
-    const totalSize = data.map(v => v.NET_SPACE).reduce((a, b) => (a ?? 0) + (b ?? 0), 0) ?? 0;
-    if (totalSize === 0) return;
+    const totalSize = data.reduce((a, b) => (a ?? 0) + (b.NET_SPACE ?? 0), 0) ?? 0;
+    if (!totalSize || !current?.length) return;
 
-    this.logger.debug(`onAutoCalculate:`, [data, totalSize, current]);
-    if (!current?.length) return;
-    const updatedDetails = current.map(detail => ({
-      ...detail,
-      ENG_Rate: Math.round((this.service.tltByFlagMap.get(detail.TLT_No)?.NET_SPACE ?? 0) / totalSize * 10000) / 100
+    const map = this.tltByFlagMap();
+    const updated = current.map(d => ({
+      ...d,
+      ENG_Rate: Math.round(((map.get(d.TLT_No)?.NET_SPACE ?? 0) / totalSize) * 10000) / 100
     }));
-    this.tableDataSignal.set(updatedDetails);
+    this.tableDataSignal.set(updated);
+    this.logger.debug('onAutoCalculate:', [data, totalSize, current]);
   }
 
   public onFieldChange(event: FieldChangeEvent): void {
-    const current = this.service.tltByFlagMap.get(event.rowData.TLT_No);
+    const current = this.tltByFlagMap().get(event.rowData.TLT_No);
     this.logger.debug(`onFieldChange:`, [event, current]);
     if (!current) return;
     this.editingRow = current;
 
     // 檢查總比率是否超過 100%
-    if ('ENG_Rate' === event.field) {
+    if (event.field === 'ENG_Rate') {
       const currentData = this.filteredData();
-      const total: number = currentData.reduce((sum, item) => {
-        const rate: number = item.TLT_No === event.rowData.TLT_No ? (event.value ?? 0) : (item.ENG_Rate ?? 0);
+      const total = currentData.reduce((sum, item) => {
+        const rate = item.TLT_No === event.rowData.TLT_No ? (event.value ?? 0) : (item.ENG_Rate ?? 0);
         return sum + rate;
       }, 0);
 
@@ -265,47 +291,10 @@ export class ASS21020CRUComponent extends BasicCruPageComponent<ASS21020Data> im
     this.logger.debug('onFieldChange:', [event, current, this.filteredData()]);
   }
 
-  public onDelete(e: any): void {
-    this.logger.debug('onDelete:', [e]);
-    const updatedData = this.service.ASS21020Data().filter(item => item !== e);
-    this.service.ASS21020Data.set(updatedData);
-  };
-
-  /**
-   * 可能可以解決create 時的bug
-   * - 當前一頁有選項時，會被錯誤帶進來，導致選項被verified
-   */
-  private customInit(): void {
-    this.ProgNo = 'ASS21020';
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
-    this.formLabelService.clearLabels();
-    this.currentPageService.setCurrentProgNo(this.ProgNo);
-
-    const state = this.router.lastSuccessfulNavigation?.extras.state;
-    const { crudstatus, rowdata } = state?.['crudstatus'] || {};
-    this.previousRoute = state?.['fromRoute'] || this.activatedRoute.snapshot.queryParams['fromRoute'] || document.referrer || '/account/dashboard';
-    this.rowdata = CRUDStatus.Create ? void 0 : state?.['rowdata'];
-    this.crudstatus = crudstatus || CRUDStatus.Create;
-
-    const statusMap = {
-      [CRUDStatus.Create]: () => {
-        this.formTitle = '新增資訊';
-        // 跟原本的差異是這邊 拿掉dataForm binding
-      },
-      [CRUDStatus.Edit]: () => {
-        this.formTitle = '編輯資料';
-        this.dataForm?.patchValue(rowdata);
-      },
-      [CRUDStatus.Read]: () => {
-        this.formTitle = '顯示資料';
-        this.dataForm?.patchValue(rowdata);
-        this.dataForm?.disable();
-      },
-      [CRUDStatus.Delete]: () => {
-        return;
-      }
-    };
-
-    statusMap[this.crudstatus]();
+  public onDelete(event: ASS21020Detail | ASS21020Detail[]): void {
+    event = Array.isArray(event) ? event : [event];
+    this.tb()!.dt.value = this.tb()!.dt.value.filter(i => !event.includes(i));
+    this.tableDataSignal.set(this.tb()!.dt.value);
+    this.logger.debug('onDelete:', [event, this.tableDataSignal()]);
   }
 }
