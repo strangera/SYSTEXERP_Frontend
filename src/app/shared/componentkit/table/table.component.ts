@@ -82,7 +82,7 @@ export class TableComponent extends BasicPrintDataComponent implements OnChanges
   // rowEdit 相關
   @Input() showRowEdit = false;                                                 // 是否顯示 Row編輯按鈕
   @Input() rowEditing = false;                                                  // 是否正在編輯Row
-  @Input() rowEditCanSave = false;                                            // Row編輯 是否可以儲存 給欄位驗證用
+  @Input() rowEditCanSave = true;                                            // Row編輯 是否可以儲存 給欄位驗證用
   @Output() rowEditingChange = new EventEmitter<boolean>(); // Row編輯 改變(雙向綁定用)
   clonedProducts: Record<string, any> = {};                                     // 儲存編輯前資料
   @Output() rowEditInit = new EventEmitter<any>();                              // Row 編輯初始化事件
