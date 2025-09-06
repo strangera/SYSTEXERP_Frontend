@@ -1,3 +1,4 @@
+import { ValidationService } from '@shared/service/validation.service';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
@@ -5,8 +6,7 @@ import { ITLS52050Data, Tls52050Service } from '../../../service/api/tls/tls5205
 import { Column, createPaginationConfig, RowEditSaveEvent } from '../../../shared/componentkit/table/table.model';
 import { DropDownListService, IDropdownItem } from '../../../service/utility/dropDownList.service';
 import { untilDestroyed } from '@ngneat/until-destroy';
-import { debounceTime, finalize, map } from 'rxjs';
-import { Sys0110Service } from '../../../service/api/sys/sys0110.service';
+import { debounceTime, distinctUntilChanged, finalize, merge, Observable, of, switchMap } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { PanelModule } from 'primeng/panel';
@@ -18,10 +18,16 @@ import { CheckboxModule } from 'primeng/checkbox';
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
 import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
-import { NgIf } from '@angular/common';
+import { AsyncPipe, NgIf } from '@angular/common';
 import { DialogComponent } from '../../../shared/componentkit/dialog/dialog.component';
 import { DropdownTableComponent } from '../../../shared/componentkit/dropdown-table/dropdown-table.component';
 import { TranslateModule } from '@ngx-translate/core';
+import { tomorrow } from '@shared/models/system/query-form.model';
+import { Option } from '@service/utility/dropdown-api.model';
+import { DropdownApiService } from '@service/utility/dropdown-api.service';
+import { columnGroup, columns } from './tls52050-cru.model';
+import { Tls52010Service } from '@service/api/tls/tls52010.service';
+import { Tls52020Service } from '@service/api/tls/tls52020.service';
 
 @Component({
   selector: 'app-tls52050-cru',
@@ -45,195 +51,149 @@ import { TranslateModule } from '@ngx-translate/core';
     DialogComponent,
     DropdownTableComponent,
     TranslateModule,
+    AsyncPipe
   ],
 })
 export class TLS52050CRUComponent extends BasicCruPageComponent<ITLS52050Data> implements OnInit {
   dataForm = this.formBuilder.nonNullable.group({
     MAM_No: [{ value: '系統自動產生', disabled: true }],  // 變價單號
-    VEN_No: ['', Validators.required], // 廠商代號
-    LOGO_No: ['', Validators.required], // 品牌代碼
-    MAM_InvDesc: ['', Validators.required], // 進價變價單說明
+    VEN_No: [null, [Validators.required]], // 廠商代號
+    LOGO_No: [null, [Validators.required]], // 品牌代碼
     MAM_Method: ['H'], // 是否為永久變價
-    MAM_BegDate: [(() => {
-      const tomorrow = new Date();
-      tomorrow.setDate(tomorrow.getDate() + 1);
-      return tomorrow;
-    })(), Validators.required],
-    MAM_EndDate: [null, Validators.required], // 生效結束日期
-    APPLY_USR_No: [{ value: null as string | null, disabled: true }], // 申請人
+    MAM_BegDate: [tomorrow, [Validators.required, this.validationService.timeGreaterThanValidator(new Date())]], // 生效起始日期
+    MAM_EndDate: [null, [Validators.required, this.validationService.timeGreaterThanValidator(new Date())]], // 生效結束日期
+    MAM_Remark: ['', [Validators.required]], // 進價變價單說明
+    MAM_Status: ['0'],
+    MAM_Type: ['3'],
+    MAM_Source: ['1'],
+    MAM_DateType: ['1'],
+    MAM_Week1: ['N'],
+    MAM_Week2: ['N'],
+    MAM_Week3: ['N'],
+    MAM_Week4: ['N'],
+    MAM_Week5: ['N'],
+    MAM_Week6: ['N'],
+    MAM_Week7: ['N'],
+    MAM_Day: [0],
     APPLY_Date: [{ value: new Date(), disabled: true }], // 申請日期
-    MAM_Status: [{ value: '0', disabled: true }],
-    MAM_Type: [{ value: '3', disabled: true }],
-
+    APPLY_USR_No: [{ value: this.authService.currentUserValue?.user_No, disabled: true }], // 申請人
     // 進價折扣、進價金額調整、售價折扣、售價金額調整
     costPriceDiscount: [0, [Validators.min(0), Validators.max(99)]], // 進價折扣%
     costPriceAmount: [0], // 進價金額調整
     salePriceDiscount: [0, [Validators.min(0), Validators.max(99)]], // 售價折扣%
     salePriceAmount: [0], // 售價金額調整
-  });
-  brandOptions: IDropdownItem[] = []; // 品牌代碼
-  vendorOptions: IDropdownItem[] = []; // 廠商編號
-  userOptions: { user_No: string; user_Name: string }[] = []; // 申請人員、審核人員、結案人員
+  },);
+  brandOptions?: Observable<Option[] | null>;   // 品牌
+  vendorOptions?: Observable<Option[] | null>;  // 廠商編號
   data: any[] = [
-    { id: 1, MID: "0", MAM_No: "MAM202310010001", SYS_StoreNo: "10", PLU_MagNo: "PLU202310010001", PLU_Name: "商品名稱", CAT_LNo: "01", CAT_MNo: "01", CAT_SNo: "01", PLU_OrderPrcRate: 50, PLU_OrderPrc: 33, MAM_OrderPrc: 500, PLU_SalePrc: 12, MAM_UnitPrc: 600, MAD_Remark: "單項說明", }
+    { id: 1, MID: "0", MAM_No: "MAM202310010001", SYS_StoreNo: "10", PLU_MagNo: "PLU202310010001", PLU_Name: "商品名稱", CAT_LNo: "01", CAT_MNo: "01", CAT_SNo: "01", PLU_OrderPrcRate: 50, PLU_OrderPrc: 500, MAM_OrderPrc: 0, PLU_SalePrc: 450, MAM_UnitPrc: 0, MAD_Remark: "單項說明", }
   ];
-  //   data: POS2008Data[] = [
-  //   { id: 1, MID: "0", MAM_No: "MAM202310010001", SYS_StoreNo: "10", PLU_MagNo: "PLU202310010001", PLU_Name: "商品名稱", CAT_LNo: "01", CAT_MNo: "01", CAT_SNo: "01", PLU_OrderPrcRate: 50, PLU_OrderPrc: 33, MAM_OrderPrc: 500, PLU_SalePrc: 12, MAM_UnitPrc: 600, MAD_Remark: "單項說明", }
-  // ];
   selectedItems: any[] = [];
-  // selectedItems: POS2008Data[] = [];
-  columns: Column[] = [
-    { field: 'PLU_MagNo', header: '商品管理編號', visible: true },
-    { field: 'PLU_Name', header: '商品名稱', visible: true },
-    { field: 'CAT_LNo', header: '大類代號', visible: true },
-    { field: 'CAT_MNo', header: '中類代號', visible: true },
-    { field: 'CAT_SNo', header: '小類代號', visible: true },
-    { field: 'PLU_OrderPrcRate', header: '進價折數', visible: true },
-    { field: 'PLU_OrderPrc', header: '調整前進價', visible: true },
-    { field: 'MAM_OrderPrc', header: '調整後進價', visible: true, type: 'inputNumber' },
-    { field: 'PLU_SalePrc', header: '調整前售價', visible: true },
-    { field: 'MAM_UnitPrc', header: '調整後售價', visible: true, type: 'inputNumber' },
-    { field: 'MAD_Remark', header: '營運終止日', visible: true, type: 'input' }
-  ];
+  columns = columns;
+  columnGroup = columnGroup;
   constructor(
     private readonly dropDownListService: DropDownListService,
     private readonly tls52050Service: Tls52050Service,
-    private readonly sys0110Service: Sys0110Service,
+    private readonly tls52010Service: Tls52010Service,
+    private readonly tls52020Service: Tls52020Service,
+    public readonly dropdown: DropdownApiService,
+    private readonly validationService: ValidationService
   ) {
     super();
   }
 
   ngOnInit(): void {
     this.initializePage('TLS52050', this.dataForm);
-    this.formLabelService.registerLabel('MAM_Method', '僅顯示回價變價單');
-    // 品牌代碼 (LOGO_No)
-    this.dropDownListService.queryPLULOGO_DropDownList().pipe(untilDestroyed(this)).subscribe(response => {
-      this.brandOptions = response.Data.map(brand => ({
-        ...brand,
-        label: `${brand.No} - ${brand.Name}`,
-      }));
-    });
-    // 廠商編號 (VEN_No)
-    this.dropDownListService.queryPOS2013_DropDownList().pipe(untilDestroyed(this)).subscribe(response => {
-      this.vendorOptions = response.Data.map(vendor => ({
-        ...vendor,
-        label: `${vendor.VEN_No} - ${vendor.Name}`,
-      }));
-    });
-    // 申請人員、審核人員、結案人員 (共用人員下拉選單)
-    this.dropDownListService.queryTBLUSER_DropDownList().pipe(untilDestroyed(this),
-      map(response => response.Data.map(item => ({ user_Name: item.Name, user_No: item.No })))
-    ).subscribe(options => {
-      this.userOptions = options;
-    });
-    if (this.isFormCreateable) {
-      this.dataForm.controls.APPLY_Date.setValue(new Date());
-      this.userOptions = [{ user_No: this.user?.user_No || '', user_Name: this.user?.user_Name || '' }];
-      this.dataForm.controls.APPLY_USR_No.setValue(this.userOptions[0]?.user_No || ''); // 假設用戶對象有 userName 屬性
-    } else {
-      // this.sys0110Service.queryUser({ user_No: this.rowdata?.APPLY_USR_No }).pipe(untilDestroyed(this)).subscribe(response => {
-      //   this.userOptions = response.Data.map(user => ({ user_No: user.user_No, user_Name: user.user_Name }));
-      // })
-    }
-    this.setupFormListeners();// 監聽方法
-    this.setupMutualExclusiveControls('costPriceDiscount', 'costPriceAmount');
-    this.setupMutualExclusiveControls('salePriceDiscount', 'salePriceAmount');
-    this.setupPriceAdjustmentCalculation();
-  }
-  setupFormListeners() {
+    this.brandOptions = this.dropdown.queryPluLogo();// 品牌代碼 (LOGO_No)
+    this.vendorOptions = this.dropdown.queryPos2013({ VEN_Flag: '' });// 廠商編號 (VEN_No)
     // 監聽 MAM_Method 是否為永久變價
     this.dataForm.controls.MAM_Method.valueChanges.pipe(untilDestroyed(this)).subscribe(value => {
-      this.dataForm.controls.MAM_EndDate.setValue(null);
+      const MAM_EndDate = this.dataForm.controls.MAM_EndDate;
+      MAM_EndDate.setValue(null);
       if (value === '1') {
-        this.dataForm.controls.MAM_EndDate.disable();
+        MAM_EndDate.disable();
       } else {
-        this.dataForm.controls.MAM_EndDate.enable();
+        MAM_EndDate.enable();
       }
     });
+    this.setupFormLogic();
+    this.setupDialogLogic();
   }
-  private setupMutualExclusiveControls(controlA: string, controlB: string): void {
-    const controls: any = this.dataForm.controls;
-
-    controls[controlA].valueChanges.pipe(untilDestroyed(this)).subscribe((value: number) => {
-      const ctrlB = controls[controlB];
-      if (value > 0) {
-        if (!ctrlB.disabled) ctrlB.disable({ emitEvent: false });
-      } else {
-        if (ctrlB.disabled) ctrlB.enable({ emitEvent: false });
-      }
-    });
-
-    controls[controlB].valueChanges.pipe(untilDestroyed(this)).subscribe((value: number) => {
-      const ctrlA = controls[controlA];
-      if (value > 0) {
-        if (!ctrlA.disabled) ctrlA.disable({ emitEvent: false });
-      } else {
-        if (ctrlA.disabled) ctrlA.enable({ emitEvent: false });
-      }
-    });
-  }
-  private setupPriceAdjustmentCalculation(): void {
+  private setupFormLogic(): void {
     const controls = this.dataForm.controls;
-
-    // 監聽進價折扣%
-    controls.costPriceDiscount.valueChanges
-      .pipe(untilDestroyed(this))
-      .subscribe((discount: number) => {
-        if (discount > 0) {
-          controls.costPriceAmount.setValue(0);
-          controls.costPriceAmount.disable({ emitEvent: false });
-          this.data.forEach(row => {
-            row.MAM_OrderPrc = this.roundToTwo(row.PLU_OrderPrc * discount / 100);
-          });
-        } else {
-          controls.costPriceAmount.enable({ emitEvent: false });
+    controls.MAM_Method.valueChanges.pipe(untilDestroyed(this), distinctUntilChanged()).subscribe(value => {
+      const isPermanent = value === '1';
+      controls.MAM_EndDate.setValue(null);
+      if (isPermanent) {
+        controls.MAM_EndDate.disable()
+      } else {
+        controls.MAM_EndDate.enable();
+      }
+    });
+    this.setupPriceFields('costPriceDiscount', 'costPriceAmount', this.roundToTwo);
+    this.setupPriceFields('salePriceDiscount', 'salePriceAmount', this.roundToInt);
+  }
+  private setupPriceFields(discountControl: string, amountControl: string, roundingFn: (value: number) => number): void {
+    const controls: any = this.dataForm.controls;
+    const discountCtrl = controls[discountControl];
+    const amountCtrl = controls[amountControl];
+    merge(discountCtrl.valueChanges, amountCtrl.valueChanges).pipe(untilDestroyed(this), distinctUntilChanged((prev, curr) => JSON.stringify(prev) === JSON.stringify(curr))).subscribe(() => {
+      const hasDiscountValue = discountCtrl.value;
+      const hasAmountValue = amountCtrl.value;
+      if (hasDiscountValue) {
+        amountCtrl.disable({ emitEvent: false });
+      } else {
+        amountCtrl.enable({ emitEvent: false });
+      }
+      if (hasAmountValue) {
+        discountCtrl.disable({ emitEvent: false });
+      } else {
+        discountCtrl.enable({ emitEvent: false });
+      }
+      this.data.forEach(row => {
+        if (hasDiscountValue) {
+          const originalPrice = discountControl === 'costPriceDiscount' ? row.PLU_OrderPrc : row.PLU_SalePrc;
+          row[discountControl === 'costPriceDiscount' ? 'MAM_OrderPrc' : 'MAM_UnitPrc'] = roundingFn(originalPrice * discountCtrl.value / 100);
+        } else if (hasAmountValue) {
+          const originalPrice = amountControl === 'costPriceAmount' ? row.PLU_OrderPrc : row.PLU_SalePrc;
+          row[amountControl === 'costPriceAmount' ? 'MAM_OrderPrc' : 'MAM_UnitPrc'] = roundingFn(originalPrice + amountCtrl.value);
+        } else { // 還原成0
+          row[discountControl === 'costPriceDiscount' ? 'MAM_OrderPrc' : 'MAM_UnitPrc'] = 0;
         }
       });
+    });
+  }
+  private setupDialogLogic(): void {
+    this.dropDownListService.queryPOS2003_DropDownList().pipe(untilDestroyed(this)).subscribe(response => {
+      this.CAT_LNoOptions = response.Data.map(item => ({ ...item, label: `${item.No} - ${item.Name}` }));
+    });
+    this.dialogQueryForm.controls.CAT_LNo.valueChanges.pipe(debounceTime(300), distinctUntilChanged(), untilDestroyed(this), switchMap(lNo => {
+      if (lNo) {
+        this.dialogQueryForm.controls.CAT_MNo.enable();
+        this.dialogQueryForm.controls.CAT_MNo.setValue(null);
+        this.dialogQueryForm.controls.CAT_SNo.setValue(null);
+        return this.dropDownListService.queryPOS20031_DropDownList({ CAT_LNo: [lNo] });
+      } else {
+        this.dialogQueryForm.controls.CAT_MNo.disable();
+        this.dialogQueryForm.controls.CAT_SNo.disable();
+        return of(null);
+      }
+    })
+    ).subscribe(response => {
+      this.CAT_MNoOptions = response ? response.Data.map(item => ({ ...item, label: `${item.No} - ${item.Name}` })) : [];
+    });
 
-    // 監聽進價金額調整
-    controls.costPriceAmount.valueChanges
-      .pipe(untilDestroyed(this))
-      .subscribe((adjustAmt: number) => {
-        if (adjustAmt !== 0) {
-          controls.costPriceDiscount.setValue(0);
-          controls.costPriceDiscount.disable({ emitEvent: false });
-          this.data.forEach(row => {
-            row.MAM_OrderPrc = this.roundToTwo(row.PLU_OrderPrc + adjustAmt);
-          });
-        } else {
-          controls.costPriceDiscount.enable({ emitEvent: false });
-        }
-      });
-
-    // 監聽售價折扣%
-    controls.salePriceDiscount.valueChanges
-      .pipe(untilDestroyed(this))
-      .subscribe((discount: number) => {
-        if (discount > 0) {
-          controls.salePriceAmount.setValue(0);
-          controls.salePriceAmount.disable({ emitEvent: false });
-          this.data.forEach(row => {
-            row.MAM_UnitPrc = this.roundToInt(row.PLU_SalePrc * discount / 100);
-          });
-        } else {
-          controls.salePriceAmount.enable({ emitEvent: false });
-        }
-      });
-
-    // 監聽售價金額調整
-    controls.salePriceAmount.valueChanges
-      .pipe(untilDestroyed(this))
-      .subscribe((adjustAmt: number) => {
-        if (adjustAmt !== 0) {
-          controls.salePriceDiscount.setValue(0);
-          controls.salePriceDiscount.disable({ emitEvent: false });
-          this.data.forEach(row => {
-            row.MAM_UnitPrc = this.roundToInt(row.PLU_SalePrc + adjustAmt);
-          });
-        } else {
-          controls.salePriceDiscount.enable({ emitEvent: false });
-        }
-      });
+    this.dialogQueryForm.controls.CAT_MNo.valueChanges.pipe(debounceTime(300), distinctUntilChanged(), untilDestroyed(this), switchMap(mNo => {
+      if (mNo) {
+        this.dialogQueryForm.controls.CAT_SNo.enable();
+        return this.dropDownListService.queryPOS20032_DropDownList({ CAT_LNo: [this.dialogQueryForm.controls.CAT_LNo.value || ''], CAT_MNo: [mNo] });
+      } else {
+        this.dialogQueryForm.controls.CAT_SNo.disable();
+        return of(null);
+      }
+    })).subscribe(response => {
+      this.CAT_SNoOptions = response ? response.Data.map(item => ({ ...item, label: `${item.No} - ${item.Name}` })) : [];
+    });
   }
   private roundToTwo(value: number): number {
     return Math.round(value * 100) / 100;
@@ -242,13 +202,6 @@ export class TLS52050CRUComponent extends BasicCruPageComponent<ITLS52050Data> i
   private roundToInt(value: number): number {
     return Math.round(value);
   }
-
-  onDelete(selectedRows: any[]) {
-    this.data = this.data.filter(row => !selectedRows.includes(row));
-  }
-  // onDelete(selectedRows: POS2008Data[]) {
-  //   this.data = this.data.filter(row => !selectedRows.includes(row));
-  // }
   onRowEditSave(event: RowEditSaveEvent) {
   }
   dialogVisible = false;
@@ -284,6 +237,8 @@ export class TLS52050CRUComponent extends BasicCruPageComponent<ITLS52050Data> i
     });
     // 監聽大分類變化
     this.dialogQueryForm.controls.CAT_LNo.valueChanges.pipe(debounceTime(300), untilDestroyed(this)).subscribe((value) => {
+      this.dialogQueryForm.controls.CAT_MNo.setValue(null); // 清空中分類選擇
+      this.dialogQueryForm.controls.CAT_SNo.setValue(null); // 清空中分類選擇
       if (value) {
         this.dropDownListService.queryPOS20031_DropDownList({ CAT_LNo: [value] }).pipe(untilDestroyed(this)).subscribe(response => {
           this.CAT_MNoOptions = response.Data.map(item => ({ ...item, label: `${item.No} - ${item.Name}`, }));
@@ -292,11 +247,10 @@ export class TLS52050CRUComponent extends BasicCruPageComponent<ITLS52050Data> i
       } else {
         this.dialogQueryForm.controls.CAT_MNo.disable();
       }
-      this.dialogQueryForm.controls.CAT_MNo.setValue(null); // 清空中分類選擇
-      this.dialogQueryForm.controls.CAT_SNo.setValue(null); // 清空中分類選擇
     });
     // 監聽中分類變化
     this.dialogQueryForm.controls.CAT_MNo.valueChanges.pipe(debounceTime(300), untilDestroyed(this)).subscribe((value) => {
+      this.dialogQueryForm.controls.CAT_SNo.setValue(null); // 清空中分類選擇
       if (value) {
         this.dropDownListService.queryPOS20032_DropDownList({ CAT_LNo: [this.dialogQueryForm.controls.CAT_LNo.value || ''], CAT_MNo: [value] }).pipe(untilDestroyed(this)).subscribe(response => {
           this.CAT_SNoOptions = response.Data.map(item => ({ ...item, label: `${item.No} - ${item.Name}`, }));
@@ -305,7 +259,6 @@ export class TLS52050CRUComponent extends BasicCruPageComponent<ITLS52050Data> i
       } else {
         this.dialogQueryForm.controls.CAT_SNo.disable();
       }
-      this.dialogQueryForm.controls.CAT_SNo.setValue(null); // 清空中分類選擇
     });
   }
   onQuery(frm: FormGroup) {
@@ -315,10 +268,10 @@ export class TLS52050CRUComponent extends BasicCruPageComponent<ITLS52050Data> i
       VEN_No: this.dataForm.controls.VEN_No.value,
       LOGO_No: this.dataForm.controls.LOGO_No.value,
     }
-    // this.tls52020Service.queryPOS2004DetailVENNoTLS52020(body).pipe(finalize(() => this.dialogLoading = false), untilDestroyed(this)).subscribe(response => {
-    //   this.dialogData = response.Data;
-    //   this.totalRecords = response.TotalCount;
-    // })
+    this.tls52020Service.queryPOS2004DetailVENNoTLS52020(body).pipe(finalize(() => this.dialogLoading = false), untilDestroyed(this)).subscribe(response => {
+      this.dialogData = response.Data;
+      this.totalRecords = response.TotalCount;
+    })
   }
   saveDialog() {
     this.dialogVisible = false;
@@ -343,8 +296,7 @@ export class TLS52050CRUComponent extends BasicCruPageComponent<ITLS52050Data> i
   });
   suggestions: any[] = [];
   fieldsConfig: any[] = [
-    { field: 'PLU_MagNo', header: '商品管理編號/國際條碼/廠商貨號', mainDataField: true },
-    { field: 'PLU_Name', header: '商品名稱' },
+    { field: 'PLU_MagNo', header: '商品管理編號/國際條碼/廠商貨號 - 商品名稱', mainDataField: true },
   ];
   opData: any[] = [];// overlayPanel 裡面的table
   opColumns: Column[] = [
@@ -364,9 +316,13 @@ export class TLS52050CRUComponent extends BasicCruPageComponent<ITLS52050Data> i
       pageIndex: 1,
       SortBy: [{ field: 'PLU_MagNo', order: 1 }],
     }
-    // this.tls52010Service.queryPOS2004Detail(body).pipe(untilDestroyed(this)).subscribe((results) => {
-    //   this.suggestions = [...results.Data];
-    // });
+    this.tls52010Service.queryPOS2004Detail(body).pipe(untilDestroyed(this)).subscribe((results) => {
+      this.dialogData = [...results.Data.map(item => ({
+        ...item,
+        label: item.PLU_MagNo + '/' + item.PLU_No + '/' + item.PLU_OrgPLUNo + ' - ' + item.PLU_Name
+      }))];
+      this.suggestions = [...this.dialogData];
+    });
   }
   onformValueChanged(event: any) {
     this.opLoading = true;
@@ -375,16 +331,29 @@ export class TLS52050CRUComponent extends BasicCruPageComponent<ITLS52050Data> i
       VEN_No: this.dataForm.controls.VEN_No.value,
       LOGO_No: this.dataForm.controls.LOGO_No.value,
     };
-    // this.tls52010Service.queryPOS2004Detail(body).pipe(untilDestroyed(this)).subscribe((results) => {
-    //   this.opData = [...results.Data]; // 更新data資料
-    //   this.opTotalRecords = results.TotalCount;
-    //   this.opLoading = false;
-    // });
+    this.tls52010Service.queryPOS2004Detail(body).pipe(untilDestroyed(this)).subscribe((results) => {
+      this.opData = [...results.Data]; // 更新data資料
+      this.opTotalRecords = results.TotalCount;
+      this.opLoading = false;
+    });
   }
   // onShowDialog
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
       console.log('query condition', frm.value);
+      console.log('this.data', this.data);
+      const body = {
+        ...frm.value,
+        details: this.data.map(item => ({
+          PLU_MagNo: item.PLU_MagNo,
+          PLU_OrderPrcRate: item.PLU_OrderPrcRate,
+          PLU_OrderPrc: item.PLU_OrderPrc,
+          MAM_OrderPrc: item.MAM_OrderPrc,
+          PLU_SalePrc: item.PLU_SalePrc,
+          MAM_UnitPrc: item.MAM_UnitPrc
+        }))
+      }
+      console.log('body', body);
     });
   }
 }

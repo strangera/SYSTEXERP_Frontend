@@ -5,7 +5,7 @@ import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-
 import { AddButton, Column, createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { finalize, Observable, tap } from 'rxjs';
-import { MAM_StatusOptions, MAMStatus, POS2008M_COLUMNS } from './tls52050.model';
+import { MAMStatus, POS2008M_COLUMNS } from './tls52050.model';
 import { FileSelectEvent, FileUploadModule } from 'primeng/fileupload';
 import { ExportLabelService, IExportLabelRequest } from '../../../service/utility/exportLabel.service';
 import { HttpResponse } from '@angular/common/http';
@@ -20,8 +20,10 @@ import { TableComponent } from '../../../shared/componentkit/table/table.compone
 import { TranslateModule } from '@ngx-translate/core';
 import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
 import { AsyncPipe } from '@angular/common';
-import { DropdownApiNewService } from '@service/utility/dropdown-api.service';
 import { Option } from '@service/utility/dropdown-api.model';
+import { DropdownApiService } from '@service/utility/dropdown-api.service';
+import { getSYS1000Options } from '@service/system/sys1000.service';
+import { ExcelColumn, ExcelExportService } from '@shared/service/excel-export.service';
 
 
 @Component({
@@ -62,7 +64,7 @@ export class TLS52050Component extends BasicQueryPageComponent<ITLS52050Data> im
     ...createPaginationConfig([{ field: 'MAM_No', order: 1 }]),
   });
   totalRecords = 0;
-  MAM_StatusOptions = MAM_StatusOptions;        // 進價變價單狀態選項
+  MAM_StatusOptions = getSYS1000Options('MAM_Status');        // 進價變價單狀態選項
   brandOptions?: Observable<Option[] | null>;   // 品牌
   vendorOptions?: Observable<Option[] | null>;  // 廠商編號
   userOptions?: Observable<Option[] | null>     // 申請人員、審核人員
@@ -77,7 +79,8 @@ export class TLS52050Component extends BasicQueryPageComponent<ITLS52050Data> im
   constructor(
     private tls52050Service: Tls52050Service,
     private exportLabelService: ExportLabelService,
-    public readonly dropdown: DropdownApiNewService
+    public readonly dropdown: DropdownApiService,
+    private readonly excelExportService: ExcelExportService
   ) { super(); }
 
   ngOnInit(): void {
@@ -85,14 +88,6 @@ export class TLS52050Component extends BasicQueryPageComponent<ITLS52050Data> im
     this.brandOptions = this.dropdown.queryPluLogo();
     this.vendorOptions = this.dropdown.queryPos2013({ VEN_Flag: '' });
     this.userOptions = this.dropdown.queryTblUser();
-  }
-  onFileUpload(event: FileSelectEvent) {
-    const file = event.files[0];
-    // this.fin11020Service.uploadFIN11020(file).pipe(untilDestroyed(this)).subscribe(res =>{
-    //     if (res.Data) {
-    //       this.onSubmit(this.queryForm);
-    //     }
-    // });
   }
   btnLoading = signal(false);
   statusChange(rowData: ITLS52050Data, status: string) {
@@ -146,6 +141,27 @@ export class TLS52050Component extends BasicQueryPageComponent<ITLS52050Data> im
         }
       );
     });
+  }
+  excelColumns: ExcelColumn[] = [
+    { field: 'VEN_No', header: '廠商編號' },
+    { field: 'LOGO_No', header: '品牌編號' },
+    { field: 'MAM_BegDate', header: '啟用日期(起)' },
+    { field: 'MAM_EndDate', header: '啟用日期(迄)' },
+    { field: 'PLU_No', header: '國際條碼' },
+    { field: 'PLU_OrderPrc', header: '調整前進價' },
+    { field: 'costPriceDiscount', header: '折扣%調整' },
+    { field: 'costPriceAmount', header: '金額調整' },
+    { field: 'MAM_OrderPrc', header: '調整後進價' },
+    { field: 'PLU_SalePrc', header: '調整前售價' },
+    { field: 'salePriceDiscount', header: '折扣%調整' },
+    { field: 'salePriceAmount', header: '金額調整' },
+    { field: 'MAM_UnitPrc', header: '調整後售價' },
+  ]
+  exportExcel() {
+    this.excelExportService.exportTemplate(this.excelColumns, '進價/售價變價作業Excel範本');
+  }
+  importExcel(event: FileSelectEvent) {
+    //TODO: 檔案直接打API
   }
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {

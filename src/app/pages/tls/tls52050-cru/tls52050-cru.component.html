@@ -8,48 +8,50 @@
       <div class="grid p-fluid">
         <app-input-text class="col-12 md:col-6 lg:col-4" label="變價單號" controlName="MAM_No"
           [control]="dataForm.controls.MAM_No" [submitted]="submitted"></app-input-text>
-        <app-dropdown class="col-12 md:col-6 lg:col-4" label="品牌代碼" controlName="LOGO_No" [options]="brandOptions"
-          optionLabel="Name" optionValue="No" [control]="dataForm.controls.LOGO_No"
+        <app-dropdown class="col-12 md:col-6 lg:col-4" label="品牌代碼" controlName="LOGO_No"
+          [options]="brandOptions | async" optionLabel="Name" optionValue="No" [control]="dataForm.controls.LOGO_No"
           [submitted]="submitted"></app-dropdown>
-        <app-dropdown class="col-12 md:col-6 lg:col-4" label="廠商代碼" controlName="VEN_No" [options]="vendorOptions"
-          optionLabel="label" optionValue="VEN_No" [control]="dataForm.controls.VEN_No"
-          [submitted]="submitted"></app-dropdown>
-        <app-input-textarea class="col-12 md:col-6 lg:col-4" label="進價售價變價單說明" controlName="MAM_InvDesc"
-          [control]="dataForm.controls.MAM_InvDesc" [submitted]="submitted"></app-input-textarea>
+        <app-dropdown class="col-12 md:col-6 lg:col-4" label="廠商代碼" controlName="VEN_No"
+          [options]="vendorOptions | async" optionLabel="label" optionValue="VEN_No"
+          [control]="dataForm.controls.VEN_No" [submitted]="submitted"></app-dropdown>
+        <app-input-textarea class="col-12 md:col-6 lg:col-4" label="進價售價變價單說明" controlName="MAM_Remark"
+          [control]="dataForm.controls.MAM_Remark" [submitted]="submitted"></app-input-textarea>
         <app-calendar-range class="col-12 lg:col-8" startLabel="生效日期(起)" endLabel="生效日期(迄)"
           startControlName="MAM_BegDate" endControlName="MAM_EndDate" [startControl]="dataForm.controls.MAM_BegDate"
-          [endControl]="dataForm.controls.MAM_EndDate" [submitted]="submitted">
+          [endControl]="dataForm.controls.MAM_EndDate" [submitted]="submitted"
+          [endMinDate]="dataForm.value.MAM_BegDate">
           <footer>
             <div class="flex align-items-center pt-2">
               <p-checkbox [binary]="true" formControlName="MAM_Method" inputId="MAM_Method"
-                [formControl]="dataForm.controls.MAM_Method" [trueValue]="'1'" [falseValue]="'H'" label="僅顯示回價變價單">
+                [formControl]="dataForm.controls.MAM_Method" [trueValue]="'1'" [falseValue]="'H'" label="是否為永久變價">
               </p-checkbox>
             </div>
           </footer>
         </app-calendar-range>
-        <app-dropdown class="col-12 md:col-6 lg:col-4" label="申請人" controlName="RJM_USR_No" [options]="userOptions"
-          optionLabel="user_Name" optionValue="user_No" [control]="dataForm.controls.APPLY_USR_No"
-          [submitted]="submitted" />
+        <app-input-text class="col-12 md:col-6 lg:col-4" label="申請人" controlName="RJM_USR_No"
+          [control]="dataForm.controls.APPLY_USR_No" [submitted]="submitted" />
         <app-calendar class="col-12 md:col-6 lg:col-4" calendarType="dateTimeOne" label="申請日期" controlName="RJM_Date"
           [control]="dataForm.controls.APPLY_Date" [submitted]="submitted" />
       </div>
       <hr />
       <div class="grid p-fluid">
         <app-input-number class="col-12 md:col-6 lg:col-3" label="進價折扣%" controlName="costPriceDiscount"
-          [control]="dataForm.controls.costPriceDiscount" [submitted]="submitted" [max]="99"></app-input-number>
+          [control]="dataForm.controls.costPriceDiscount" [submitted]="submitted" suffix="%"></app-input-number>
         <app-input-number class="col-12 md:col-6 lg:col-3" label="進價金額調整" controlName="costPriceAmount"
-          [control]="dataForm.controls.costPriceAmount" [submitted]="submitted" [min]="null"></app-input-number>
+          [control]="dataForm.controls.costPriceAmount" [submitted]="submitted" [min]="null" [minFractionDigits]="2"
+          [maxFractionDigits]="2"></app-input-number>
         <app-input-number class="col-12 md:col-6 lg:col-3" label="售價折扣%" controlName="salePriceDiscount"
-          [control]="dataForm.controls.salePriceDiscount" [submitted]="submitted" [max]="99"></app-input-number>
+          [control]="dataForm.controls.salePriceDiscount" [submitted]="submitted" suffix="%"></app-input-number>
         <app-input-number class="col-12 md:col-6 lg:col-3" label="售價金額調整" controlName="salePriceAmount"
           [control]="dataForm.controls.salePriceAmount" [submitted]="submitted" [min]="null"></app-input-number>
       </div>
       <hr />
-      <app-table dataKey="id" [columns]="columns" [data]="data" [selectedItems]="selectedItems"
-        (selectionChange)="selectedItems = $event" [showEdit]="false" [showDetail]="false" [showInsert]="true"
-        [showRowEdit]="true" (delete)="onDelete($event)" (rowEditSave)="onRowEditSave($event)"
+      <app-table dataKey="id" [columns]="columns" [columnGroup]="columnGroup" [data]="data"
+        [selectedItems]="selectedItems" (selectionChange)="selectedItems = $event" [showEdit]="false"
+        [showDetail]="false" [showInsert]="true" [showRowEdit]="true" (rowEditSave)="onRowEditSave($event)"
         [showCaption]="isFormCreateable" [showReportMode]="false" [showManage]="!isFormReadable"
         [multiSortMeta]="[{ field: 'PO_No', order: 1 }]" (insert)="dialogVisible = true" [showCheckBox]="true"
+        [deleteData]="true" (dataChange)="data = $event" dataStatusField="DATA_STATUS"
         [insertDisabled]="dataForm.controls.VEN_No.value && dataForm.controls.LOGO_No.value ? false : true" />
       <div *ngIf="!isFormReadable" class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
         <app-button btnType="cancel" [form]="dataForm" />
@@ -63,15 +65,16 @@
   <form [formGroup]="dialogQueryForm" (ngSubmit)="onQuery(dialogQueryForm)">
     <div class="grid p-fluid">
       <app-dropdown-table class="col-12" [control]="dialogQueryForm.controls.PLU_MagNo" [submitted]="submitted"
-        optionLabel="PLU_MagNo" optionValue="PLU_MagNo" [suggestions]="suggestions" [fieldsConfig]="fieldsConfig"
+        optionLabel="label" optionValue="PLU_MagNo" [suggestions]="suggestions" [fieldsConfig]="fieldsConfig"
         (inputValueChanged)="onAutoCompleteInputChange($event)" (formValueChanged)="onformValueChanged($event)"
         [formGroup]="opForm" [dialogData]="opData" [dialogColumns]="opColumns" [loading]="opLoading"
         [totalRecords]="opTotalRecords">
         <app-input-text class="col-12 md:col-6" label="商品管理編號/國際條碼/廠商貨號" controlName="queryNo"
           [control]="opForm.controls.queryNo" />
-        <app-input-text class="col-12" label="商品名稱" controlName="PLU_Name" [control]="opForm.controls.PLU_Name" />
+        <app-input-text class="col-12 md:col-6" label="商品名稱" controlName="PLU_Name"
+          [control]="opForm.controls.PLU_Name" />
       </app-dropdown-table>
-      <app-input-text class="col-12 md:col-6" label="商品名稱" controlName="PLU_Name"
+      <app-input-text class="col-12" label="商品名稱" controlName="PLU_Name"
         [control]="dialogQueryForm.controls.PLU_Name" />
       <app-dropdown class="col-12 col-6 lg:col-4" label="大分類代碼" controlName="CAT_LNo"
         [control]="dialogQueryForm.controls.CAT_LNo" [options]="CAT_LNoOptions" optionLabel="label" optionValue="No" />
