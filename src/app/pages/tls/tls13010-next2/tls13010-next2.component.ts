@@ -342,19 +342,9 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
     this.commissionDataLoaded = true;
     this.dataLoaded = true;
 
-    // 關鍵修改：確保所有項目都正確設定 currentTab 為 discount
-    this.commissionData.forEach(item => {
-      // 強制設定為 discount，無論之前是什麼狀態
-      item.currentTab = 'discount';
+    // 簡單粗暴的重置方案：強制所有項目回到 discount 狀態
+    this.resetAllItemsToDiscountTab();
 
-      // 確保有 detailItems 陣列
-      if (!item.detailItems) {
-        item.detailItems = [];
-      }
-    });
-
-    // 立即更新顯示
-    this.updateDetailItemsForDisplay();
     this.saveCommissionDataToWorkflow();
 
     if (result.warnings?.length > 0) {
@@ -365,6 +355,55 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
 
     if (result.data.length > 0) {
       this.notificationService.infoBubble(`已載入 ${result.data.length} 個抽成項目`);
+    }
+  }
+
+  private resetAllItemsToDiscountTab(): void {
+    console.log('強制重置所有項目到 discount 標籤...');
+
+    this.commissionData.forEach((item, index) => {
+      // 1. 強制設定為 discount 標籤
+      item.currentTab = 'discount';
+
+      // 2. 確保有 discount 資料
+      if (!item.discountSettingItems || item.discountSettingItems.length === 0) {
+        // 如果沒有 discount 資料，初始化空的
+        item.discountSettingItems = [];
+      }
+
+      // 3. 修復 discount 項目的日期（如果有缺失）
+      this.fixDiscountItemDates(item);
+
+      // 4. 直接設定 detailItems 為 discount 的內容
+      item.detailItems = item.discountSettingItems
+        .filter(discount => discount._status !== 'deleted')
+        .map(discount => ({ ...discount, _originalType: 'discount' }));
+
+      console.log(`項目 ${index + 1} 重置完成，discount 項目數: ${item.detailItems.length}`);
+    });
+
+    // 強制觸發 UI 更新
+    this.cdr.detectChanges();
+  }
+
+  private fixDiscountItemDates(commissionItem: any): void {
+    const contractStartDate = this.getContractStartDate();
+    const contractEndDate = this.getContractEndDate();
+
+    if (commissionItem.discountSettingItems) {
+      commissionItem.discountSettingItems.forEach((discount: any, index: number) => {
+        // 檢查並修復起始日期
+        if (!discount.tlt_bdate || isNaN(new Date(discount.tlt_bdate).getTime())) {
+          discount.tlt_bdate = new Date(contractStartDate);
+          console.log(`修復 discount ${index + 1} 起始日期: ${contractStartDate}`);
+        }
+
+        // 檢查並修復結束日期
+        if (!discount.tlt_edate || isNaN(new Date(discount.tlt_edate).getTime())) {
+          discount.tlt_edate = new Date(contractEndDate);
+          console.log(`修復 discount ${index + 1} 結束日期: ${contractEndDate}`);
+        }
+      });
     }
   }
 
@@ -623,7 +662,7 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
     }
   }
 
-  // 新增方法 - 只刷新單一項目的顯示，不影響其他項目
+  // 只刷新單一項目的顯示，不影響其他項目
   private refreshSingleItemDetailDisplay(commissionItem: CommissionItem): void {
     const currentTab = commissionItem.currentTab || 'discount';
 
@@ -641,26 +680,15 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
         break;
     }
 
-    console.log(`來源陣列 (${currentTab}):`, sourceArray);
+    // 修正：不管來源陣列是否為空，都要更新 detailItems
+    const newDetailItems = sourceArray
+      .filter(item => item._status !== 'deleted')
+      .map(item => ({
+        ...item,
+        _originalType: currentTab
+      }));
 
-    // 關鍵修改：確保來源陣列有資料時才更新
-    if (sourceArray.length > 0) {
-      const newDetailItems = sourceArray
-        .filter(item => item._status !== 'deleted')
-        .map(item => ({
-          ...item,
-          _originalType: currentTab
-        }));
-
-      console.log(`過濾後的項目:`, newDetailItems);
-      commissionItem.detailItems = newDetailItems;
-    } else {
-      // 如果來源陣列是空的，但 detailItems 有資料，保持不變
-      console.log(`來源陣列為空，保持現有 detailItems`);
-      if (!commissionItem.detailItems) {
-        commissionItem.detailItems = [];
-      }
-    }
+    commissionItem.detailItems = newDetailItems; // 直接設定，不保持舊值
   }
 
   removeDetailItem(rowData: CommissionItem, index: number): void {
