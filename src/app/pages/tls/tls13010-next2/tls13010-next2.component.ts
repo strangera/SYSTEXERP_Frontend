@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewChild, TemplateRef, OnDestroy } from '@angular/core';
+import { Component, OnInit, ViewChild, TemplateRef, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { FormGroup } from '@angular/forms';
 import { debounceTime, distinctUntilChanged, Subscription } from 'rxjs';
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
@@ -117,7 +117,8 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
     private commissionDataService: CommissionDataService,
     private itemOperationsService: CommissionItemOperationsService,
     private validationService: TLS13010Next2ValidationService,
-    private eventHandlersService: TLS13010Next2EventHandlersService
+    private eventHandlersService: TLS13010Next2EventHandlersService,
+    private cdr: ChangeDetectorRef,
   ) {
     super();
     this.dataForm = this.formBuilder.group({});
@@ -340,6 +341,19 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
     this.commissionData = result.data;
     this.commissionDataLoaded = true;
     this.dataLoaded = true;
+
+    // 關鍵修改：確保所有項目都正確設定 currentTab 為 discount
+    this.commissionData.forEach(item => {
+      // 強制設定為 discount，無論之前是什麼狀態
+      item.currentTab = 'discount';
+
+      // 確保有 detailItems 陣列
+      if (!item.detailItems) {
+        item.detailItems = [];
+      }
+    });
+
+    // 立即更新顯示
     this.updateDetailItemsForDisplay();
     this.saveCommissionDataToWorkflow();
 
@@ -612,44 +626,41 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
   // 新增方法 - 只刷新單一項目的顯示，不影響其他項目
   private refreshSingleItemDetailDisplay(commissionItem: CommissionItem): void {
     const currentTab = commissionItem.currentTab || 'discount';
-    console.log('🔄 刷新單一項目顯示，項目ID:', commissionItem.id, '標籤:', currentTab);
 
-    // 🎯 重要：直接更新對應的 detailItems，不要重建整個陣列
-    let newDetailItems: any[] = [];
+    let sourceArray: any[] = [];
 
     switch (currentTab) {
       case 'discount':
-        newDetailItems = commissionItem.discountSettingItems
-          .filter(item => item._status !== 'deleted')
-          .map(item => ({
-            ...item,
-            _originalType: 'discount'
-          }));
+        sourceArray = commissionItem.discountSettingItems || [];
         break;
-
       case 'annual':
-        newDetailItems = commissionItem.annualPerformanceItems
-          .filter(item => item._status !== 'deleted')
-          .map(item => ({
-            ...item,
-            _originalType: 'annual'
-          }));
+        sourceArray = commissionItem.annualPerformanceItems || [];
         break;
-
       case 'level':
-        newDetailItems = commissionItem.discountLevelItems
-          .filter(item => item._status !== 'deleted')
-          .map(item => ({
-            ...item,
-            _originalType: 'level'
-          }));
+        sourceArray = commissionItem.discountLevelItems || [];
         break;
     }
 
-    // 🎯 只更新這個項目的 detailItems
-    commissionItem.detailItems = newDetailItems;
+    console.log(`來源陣列 (${currentTab}):`, sourceArray);
 
-    console.log(`✅ 項目 ${commissionItem.id} 的明細資料已刷新，共 ${newDetailItems.length} 筆`);
+    // 關鍵修改：確保來源陣列有資料時才更新
+    if (sourceArray.length > 0) {
+      const newDetailItems = sourceArray
+        .filter(item => item._status !== 'deleted')
+        .map(item => ({
+          ...item,
+          _originalType: currentTab
+        }));
+
+      console.log(`過濾後的項目:`, newDetailItems);
+      commissionItem.detailItems = newDetailItems;
+    } else {
+      // 如果來源陣列是空的，但 detailItems 有資料，保持不變
+      console.log(`來源陣列為空，保持現有 detailItems`);
+      if (!commissionItem.detailItems) {
+        commissionItem.detailItems = [];
+      }
+    }
   }
 
   removeDetailItem(rowData: CommissionItem, index: number): void {
@@ -685,27 +696,23 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
   }
 
   updateDetailItemsForDisplay(): void {
-    console.log('🔄 更新顯示資料，當前全域標籤:', this.selectedSettingTab);
+    console.log('更新顯示資料，當前全域標籤:', this.selectedSettingTab);
 
     this.commissionData.forEach((item, index) => {
+      // 確保每個項目都有 currentTab
       if (!item.currentTab) {
         item.currentTab = 'discount';
       }
 
-      // 🎯 只有在長度不匹配時才更新（表示有新增或刪除）
-      const shouldUpdate = this.shouldUpdateDetailItemsFromSource(item);
-
-      if (shouldUpdate) {
-        console.log(`🔄 項目 ${index} 需要從來源更新 detailItems`);
-        this.refreshSingleItemDetailDisplay(item);
-      } else {
-        console.log(`⚪ 項目 ${index} 的 detailItems 保持不變`);
-      }
+      // 關鍵修改：每次都強制更新 detailItems，不要依賴 shouldUpdate 判斷
+      console.log(`強制更新項目 ${index} 的 detailItems`);
+      this.refreshSingleItemDetailDisplay(item);
     });
 
-    // 🎯 不要重新賦值整個陣列，避免觸發不必要的重新渲染
-    // this.commissionData = [...this.commissionData];
+    // 強制觸發變更檢測
+    this.cdr.detectChanges();
   }
+
 
 
   private shouldUpdateDetailItemsFromSource(commissionItem: CommissionItem): boolean {
