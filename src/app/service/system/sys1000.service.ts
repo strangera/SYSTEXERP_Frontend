@@ -1,6 +1,25 @@
 import { Injectable } from '@angular/core';
 import { Sys1000Children, SystemOption } from '../../shared/models/sys/sys1000.model';
 
+/**
+ * 根據選項類別和代碼，回傳對應的名稱。
+ * @param sysType 選項類別，例如 'MAM_Status'。
+ * @param value 選項代碼，例如 '0'。
+ * @returns 對應的名稱，如果找不到則回傳原始值。
+ */
+export function getSYS1000(sysType: string, value: string | number): string | number {
+  return SystemOptionsService.getOptionName(sysType, value);
+}
+
+/**
+ * 取得指定 sysType 的選項，並轉換為 { value, label } 格式。
+ * @param sysType 選項類別。
+ * @returns 轉換後的 { value, label } 陣列。
+ */
+export function getSYS1000Options(sysType: string): { value: string; label: string }[] {
+  return SystemOptionsService.getOptionsAsValueLabel(sysType);
+}
+
 @Injectable({
   providedIn: 'root'
 })
