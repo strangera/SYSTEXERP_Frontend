@@ -1,7 +1,7 @@
 import { Component, OnInit, } from '@angular/core';
 import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
-import { guiStatusOptions, guiTypeOptions, MainInvoiceData } from '../fin11020/fin11020.model';
+import { MainInvoiceData } from '../fin11020/fin11020.model';
 import { ValidationService } from '../../../shared/service/validation.service';
 import { Fin11020Service } from '../../../service/api/fin/fin11020.service';
 import { untilDestroyed } from '@ngneat/until-destroy';
@@ -17,6 +17,7 @@ import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdow
 import { TranslateModule } from '@ngx-translate/core';
 import { convertDateToYYYYMM } from '@shared/componentkit/table/table.model';
 import { finalize } from 'rxjs';
+import { getSYS1000Options } from '@service/system/sys1000.service';
 
 //1.1.1.2 發票基本資料維護 CRU
 @Component({
@@ -63,8 +64,8 @@ export class FIN11020CRUComponent extends BasicCruPageComponent<MainInvoiceData>
     UPD_USR_No: [{ value: '', disabled: true }],       // 變更人員
     UPD_USR_Name: [{ value: '', disabled: true }],     // 變更人員姓名
   }, { validators: this.validationService.guiNumberRangeValidator('GUI_BegNo', 'GUI_EndNo') });
-  guiTypeOptions = guiTypeOptions     // 發票類別選項
-  guiStatusOptions = guiStatusOptions;// 發票狀態選項
+  guiTypeOptions = getSYS1000Options('GUI_Type');     // 發票類別選項
+  guiStatusOptions = getSYS1000Options('GUI_Status');// 發票狀態選項
   minDate?: Date;
   constructor(
     private validationService: ValidationService,

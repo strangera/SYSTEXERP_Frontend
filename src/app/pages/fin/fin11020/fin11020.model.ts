@@ -1,4 +1,7 @@
+import { getSYS1000, getSYS1000Options } from "@service/system/sys1000.service";
 import { Column, formatDateTime, formatYYYYMM } from "../../../shared/componentkit/table/table.model";
+import { formatYN } from "@shared/componentkit/table2/table2.model";
+import { transformOptionsForExport } from "@shared/componentextends/basic-print/basic-print-data.component";
 
 export interface MainInvoiceData {
   ID: number;
@@ -47,25 +50,6 @@ interface SubInvoiceData {
   UPD_USR_Name?: string | null;
 }
 
-// GUI_Status 的選項
-export const guiStatusOptions = [
-  { label: '未使用', value: '00' },
-  { label: '使用中', value: '01' },
-  { label: '已用完', value: '02' },
-  { label: '停用', value: '03' },
-];
-
-// GUI_Type 的選項
-export const guiTypeOptions = [
-  { label: '三聯式', value: '01' },
-  { label: '二聯式', value: '02' },
-  { label: '二聯式收銀機發票', value: '03' },
-  { label: '特種稅額', value: '04' },
-  { label: '電子計算機發票', value: '05' },
-  { label: '三聯式收銀機發票', value: '06' },
-  { label: '電子發票', value: '07' },
-];
-
 export const columns: Column[] = [
   { field: 'GUI_YYMM', header: '發票年月', visible: true, format: formatYYYYMM }, // 發票年月YYYYMM (西元年單數月)
   { field: 'GUI_SerNo', header: '序號', visible: true }, // 序號
@@ -74,14 +58,8 @@ export const columns: Column[] = [
   { field: 'GUI_EndNo', header: '發票結束號碼', visible: true }, // 發票結束號碼
   { field: 'GUI_TotQty', header: '發票張數', visible: true }, // 發票張數
   { field: 'GUI_AssignQty', header: '發票號碼已分配張數', visible: true }, // 發票號碼已分配張數
-  {
-    field: 'GUI_Status', header: '發票號碼狀態', visible: true,
-    format: (value: string) => guiStatusOptions.find(x => x.value === value)?.label || value
-  }, // 發票號碼狀態，00=未使用、01=使用中、02=己用完、03=停用
-  {
-    field: 'GUI_Type', header: '發票類別', visible: true,
-    format: (value: string) => guiTypeOptions.find(x => x.value === value)?.label || value
-  }, // 發票類別 01=三聯式 02=二聯式 03=二聯式收銀機發票 04=特種稅額 05=電子計算機發票 06=三聯式收銀機發票 07=電子發票
+  { field: 'GUI_Status', header: '發票號碼狀態', visible: true, format: (value: string) => getSYS1000('GUI_Status', value) },
+  { field: 'GUI_Type', header: '發票類別', visible: true, format: (value: string) => getSYS1000('GUI_Type', value) },
   { field: 'GUI_File', header: '匯入檔案名稱', visible: true }, // 匯入檔案名稱
   { field: 'CRT_Date', header: '建立日期', visible: false, format: formatDateTime }, // 建立日期
   { field: 'CRT_USR_No', header: '建立人員', visible: false }, // 建立人員
@@ -99,19 +77,10 @@ export const subColumns: Column[] = [
   { field: 'GUI_EndNo', header: '發票結束號碼', visible: true }, // 發票結束號碼
   { field: 'GUI_TotQty', header: '發票張數', visible: true }, // 發票張數
   { field: 'GUI_AssignQty', header: '發票號碼已分配張數', visible: true }, // 發票號碼已分配張數
-  {
-    field: 'GUI_Status', header: '發票號碼狀態', visible: true,
-    format: (value: string) => guiStatusOptions.find(x => x.value === value)?.label || value
-  }, // 發票號碼狀態 00=未使用 01=使用中 02=己用完 03=停用
-  {
-    field: 'GUI_ProcStatus', header: '是否完成上傳', visible: true,
-    format: (value: string) => (value === 'Y' ? '是' : '否')
-  }, // 是否完成上傳
+  { field: 'GUI_Status', header: '發票號碼狀態', visible: true, format: (value: string) => getSYS1000('GUI_Status', value) },
+  { field: 'GUI_ProcStatus', header: '是否完成上傳', visible: true, format: formatYN, exportFormat: transformOptionsForExport(getSYS1000Options('YES_NO')) }, // 是否完成上傳
   { field: 'GUI_ProcDate', header: '上傳日期', visible: true, format: formatDateTime }, // 上傳日期
-  {
-    field: 'GUI_Type', header: '發票類別', visible: true,
-    format: (value: string) => guiTypeOptions.find(x => x.value === value)?.label || value
-  }, // 發票類別 01=三聯式 02=二聯式 03=二聯式收銀機發票 04=特種稅額 05=電子計算機發票 06=三聯式收銀機發票 07=電子發票
+  { field: 'GUI_Type', header: '發票類別', visible: true, format: (value: string) => getSYS1000('GUI_Type', value) },
   { field: 'STO_Uniform', header: '門市統一編號', visible: true }, // 門市統一編號(賣方統編)
   { field: 'CRT_Date', header: '建立日期', visible: true, format: formatDateTime }, // 建立日期
   { field: 'CRT_USR_No', header: '建立人員', visible: true }, // 建立人員

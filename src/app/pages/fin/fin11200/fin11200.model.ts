@@ -1,3 +1,4 @@
+import { getSYS1000 } from '@service/system/sys1000.service';
 import { Column, formatDateTime, formatYYYYMM } from '../../../shared/componentkit/table/table.model';
 
 export interface Pos1018 {
@@ -32,7 +33,7 @@ export const columns: Column[] = [
   { field: 'GUI_YYMM', header: '發票年月', visible: true, format: formatYYYYMM },
   { field: 'ECR_No', header: '收銀機號', visible: true },
   { field: 'SER_NOS', header: '發票號碼序號', visible: true },
-  { field: 'GUI_Status', header: '使用狀態', visible: true, format: (value: string) => statusOptions.find(item => item.value === value)?.label || value },
+  { field: 'GUI_Status', header: '使用狀態', visible: true, format: (value: string) => getSYS1000('GUI_Status', value) },
   { field: 'GUI_TRACK', header: '發票字軌', visible: true },
   { field: 'GUI_SNOS', header: '發票起始號碼', visible: true },
   { field: 'GUI_ENOS', header: '發票結束號碼', visible: true },
@@ -42,7 +43,7 @@ export const columns: Column[] = [
   { field: 'FREE_NOS', header: '未用張數', visible: true },
   { field: 'REMARK', header: '備註', visible: true },
   { field: 'STO_Uniform', header: '門市統一編號(賣方統編)', visible: true },
-  { field: 'GUI_Type', header: '發票類別', visible: true, format: (value: string) => value === '02' ? '二聯式' : '電子發票' },
+  { field: 'GUI_Type', header: '發票類別', visible: true, format: (value: string) => getSYS1000('GUI_Type', value) },
   { field: 'GUI_DownDate', header: '發票下傳日期時間', visible: true, format: formatDateTime },
   { field: 'GUI_DownUsrNo', header: '發票下傳人員', visible: true },
   { field: 'GUI_Down_UsrName', header: '發票下傳人員姓名', visible: true },
@@ -52,13 +53,6 @@ export const columns: Column[] = [
   { field: 'UPD_Date', header: '變更日期', visible: true, format: formatDateTime },
   { field: 'UPD_USR_No', header: '變更人員', visible: true },
   { field: 'UPD_USR_Name', header: '變更人員姓名', visible: true },
-];
-
-export const statusOptions = [
-  { value: '00', label: '未使用' },
-  { value: '01', label: '使用中' },
-  { value: '02', label: '己用完' },
-  { value: '03', label: '停用' },
 ];
 
 export const monthOptions = [
