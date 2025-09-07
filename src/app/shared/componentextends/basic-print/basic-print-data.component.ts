@@ -61,6 +61,8 @@ export abstract class BasicPrintDataComponent {
         exportFormat = col.exportFormat;
       } else if (mappingList.length > 0) {
         exportFormat = transformOptionsForExport(mappingList, 'SYS_Code', 'SYS_Name');
+      } else if (isYNField(col.field)) {
+        exportFormat = [{ 'Y': '是' }, { 'N': '否' }]; // 如果是 YN 欄位，設定固定的格式
       }
       return {
         field: col.field,
@@ -128,6 +130,8 @@ export abstract class BasicPrintDataComponent {
         exportFormat = col.exportFormat;
       } else if (mappingList.length > 0) {
         exportFormat = transformOptionsForExport(mappingList, 'SYS_Code', 'SYS_Name');
+      } else if (isYNField(col.field)) {
+        exportFormat = [{ 'Y': '是' }, { 'N': '否' }]; // 如果是 YN 欄位，設定固定的格式
       }
       return {
         field: col.field,
@@ -211,4 +215,112 @@ export const transformOptionsForExport = <T extends Record<string, any>>(
       [item[valueKey]]: item[labelKey]
     };
   });
+};
+
+
+// 這邊先寫死，看後續怎麼調整
+export const isYNField = (field: string) => {
+  // 定義一個欄位合擊
+  const list: string[] = [
+    'STO_Direct',
+    'Instms_Flag',
+    'water_flag',
+    'electric_flag',
+    'gas_flag',
+    'edc_yn',
+    'rent_ahead',
+    'pos_yn',
+    'cash_yn',
+    'comm_yn',
+    'vip_yn',
+    'cap_saletype3',
+    'cap_saletype4',
+    'day_account',
+    'rece_yn',
+    'use_flag',
+    'calc_date_type',
+    'cap_saletype1',
+    'cap_saletype2',
+    'Group_Mark',
+    'Donate_Mark',
+    'STO_Direct',
+    'INV_Cancel',
+    'Invoice_Cancel',
+    'PLU_Disc',
+    'PLU_OpenOrderPrc',
+    'PLU_StopSale',
+    'PLU_IsStock',
+    'VEN_DiscYN',
+    'VEN_CTRLYN',
+    'COL_Success',
+    'COL_Runtime',
+    'PLU_OpenPrc',
+    'MAM_Week1',
+    'MAM_Week2',
+    'MAM_Week3',
+    'MAM_Week4',
+    'MAM_Week5',
+    'MAM_Week6',
+    'MAM_Week7',
+    'MasterFlag',
+    'VouPrintFlag',
+    'ABAT_YN',
+    'Budget_YN',
+    'Org_YN',
+    'Input_YN',
+    'AutoShare',
+    'ObjectNo',
+    'AUS_ENABLED',
+    'VIP_YN',
+    'TXN_UseSalePrc',
+    'PLU_Health',
+    'PLU_Disc',
+    'TBL_FullDnPos',
+    'TBL_FullDnSto',
+    'FLD_EnCode',
+    'KEY_PRI',
+    'TXN_ProcStatus',
+    'PKG_will_issue_receipt',
+    'TXN_VIP',
+    'TXN_PreOrder',
+    'ECR_ForceInput',
+    'ECR_CustTypeEntry',
+    'TBL_DnPos',
+    'ECR_BoxReqCode',
+    'ECR_SaleRpt8',
+    'ECR_SaleRpt9',
+    'ECR_SaleRpt10',
+    'ECR_PcashValid',
+    'ECR_PickUpValid',
+    'ECR_ReprintGUI',
+    'ECR_PrnLogo',
+    'ECR_VoidTxn',
+    'ECR_CreditNote',
+    'ECR_RestoreVoid',
+    'ECR_EdcSettle',
+    'ECR_CustCntEntry',
+    'ECR_CustTypeEntry',
+    'ECR_ClerkEntry',
+    'ECR_ForceMember',
+    'ECR_VoidTxn',
+    'ECR_CreditNote',
+    'ECR_SelfReport',
+    'ECR_SaleRpt1',
+    'ECR_SaleRpt2',
+    'ECR_SaleRpt3',
+    'ECR_SaleRpt4',
+    'ECR_SaleRpt5',
+    'ECR_SaleRpt6',
+    'ECR_SaleRpt7',
+    'PAY_Ref',
+    'PAY_OpenBox',
+    'NOT_DispRt',
+    'NOT_DispSpd',
+    'NOT_DispBtn',
+    'NOT_DispCd',
+    'NOT_Prn',
+    'PAY_DefActPay',
+    'TSB_Enable',
+  ];
+  return list.includes(field);
 };
