@@ -11,6 +11,7 @@ import { CalendarComponent } from '@shared/componentkit/calendar/calendar.compon
 import { ASS21040Service } from '@service/api/ass/ass21040.service';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { finalize } from 'rxjs';
+import { environment } from 'src/environments/environment';
 
 @Component({
   selector: 'app-ass21040',
@@ -82,6 +83,7 @@ export class ASS21040Component extends BasicQueryPageComponent<unknown> implemen
         this.aSS21040Service.printASS21040(body).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(response => {
           if (response.Data.Print_URL) {
             this.messageService.successBubble('列印成功');
+            window.open(environment.ApiUrl + response.Data.Print_URL);
           } else {
             this.messageService.errorBubble(response.Message);
           }
