@@ -6,7 +6,7 @@ import { ValidationService } from '../../../shared/service/validation.service';
 import { TranslateService, TranslateModule } from '@ngx-translate/core';
 import { Tls51110Service } from '../../../service/api/tls/tls51110.service';
 import { Subscription } from 'rxjs';
-import { ExcelImportService } from '../../../shared/service/excel-import.service';
+import { ExcelImportService, ImportExcelColumn } from '../../../shared/service/excel-import.service';
 import { UserInfo } from '../../../shared/models/system/userInfo';
 import { Tls51070Service } from '../../../service/api/tls/tls51070.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
@@ -178,8 +178,15 @@ export class TLS51110CRUComponent
   }
   onFileChange(event: any) {
     const file = event.target.files[0];
-    const columns = ['品牌代碼', '品牌名稱', '年月(YYYYMM)', '預算', '成本', '備註(100字元)'];
-    this.excelImportService.importExcel(file, columns).then((data) => {
+    const importExcelColumn: ImportExcelColumn[] = [
+      { field: 'LOGO_No', header: '品牌代碼', type: 'string' },
+      { field: 'LOGO_Name', header: '品牌名稱', type: 'string' },
+      { field: 'YYYYMM', header: '年月(YYYYMM)', type: 'string' },
+      { field: 'BUDGET', header: '預算', type: 'number' },
+      { field: 'BUDGET_Cost', header: '成本', type: 'number' },
+      { field: 'BUD_Remark', header: '備註(100字元)', type: 'string' },
+    ]
+    this.excelImportService.importExcel(file, importExcelColumn).then((data) => {
       console.log('匯入資料', data);
     });
   }

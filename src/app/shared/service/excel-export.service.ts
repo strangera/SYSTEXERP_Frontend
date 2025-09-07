@@ -7,6 +7,7 @@ export interface ExcelColumn {
   header: string;
   visible?: boolean;
   format?: (value: any, rowData?: any) => string | number | null;
+  width?: number; // 新增：可自訂欄位寬度
 }
 
 @Injectable({
@@ -20,70 +21,141 @@ export class ExcelExportService {
    * @param columns 列的定義陣列。
    * @param fileName 匯出檔案的名稱（不含副檔名）。
    */
-  public exportTemplate(columns: ExcelColumn[], fileName = 'template'): void {
-    if (!columns || columns.length === 0) {
-      console.error('匯出失敗：未提供欄位定義。');
-      return;
-    }
+  public exportTemplate(columns: ExcelColumn[], fileName = 'template'): Promise<void> {
+    return new Promise((resolve, reject) => {
+      try {
+        if (!columns || columns.length === 0) {
+          console.error('匯出失敗：未提供欄位定義。');
+          return reject(new Error('未提供欄位定義。'));
+        }
 
-    // 過濾掉 visible: false 的欄位，只匯出可見的標頭
-    const visibleColumns = columns.filter(col => col.visible !== false);
-    const titles = visibleColumns.map(col => col.header);
+        const visibleColumns = columns.filter(col => col.visible !== false);
+        const titles = visibleColumns.map(col => col.header);
+        const ws: XLSX.WorkSheet = XLSX.utils.aoa_to_sheet([titles]);
 
-    const ws: XLSX.WorkSheet = XLSX.utils.aoa_to_sheet([titles]);
+        const wscols: any[] = [];
+        const charWidthMultiplier = 1.5;
 
-    const wb: XLSX.WorkBook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, '範本');
+        visibleColumns.forEach(col => {
+          if (col.width) {
+            wscols.push({ wch: col.width });
+            return;
+          }
 
-    XLSX.writeFile(wb, `${fileName}.xlsx`);
+          let maxLen = 0;
+          const text = col.header;
+          if (text) {
+            let len = 0;
+            for (let i = 0; i < text.length; i++) {
+              const charCode = text.charCodeAt(i);
+              if (charCode >= 0x4E00 && charCode <= 0x9FFF) {
+                len += charWidthMultiplier;
+              } else {
+                len += 1;
+              }
+            }
+            maxLen = len;
+          }
+          wscols.push({ wch: Math.ceil(maxLen) + 5 });
+        });
+
+        ws['!cols'] = wscols;
+
+        const wb: XLSX.WorkBook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, '範本');
+        XLSX.writeFile(wb, `${fileName}.xlsx`);
+        resolve(); // 成功時解析 Promise
+      } catch (error: any) {
+        console.error('匯出範本時發生錯誤：', error);
+        reject(error); // 失敗時拒絕 Promise
+      }
+    });
   }
 
   /**
    * 匯出資料為 Excel 檔案
-   * 可選地提供 columns 陣列來格式化標頭和資料。
    * @param data 要匯出的 JSON 陣列。
    * @param fileName 匯出檔案的名稱（不含副檔名）。
    * @param columns 可選，用於定義匯出欄位、標頭和格式的陣列。
    */
-  public exportData(data: any[], fileName = 'export', columns?: ExcelColumn[]): void {
-    if (!data || data.length === 0) {
-      console.error('匯出失敗：提供的資料為空。');
-      return;
-    }
+  public exportData(data: any[], fileName = 'export', columns?: ExcelColumn[]): Promise<void> {
+    return new Promise((resolve, reject) => {
+      try {
+        if (!data || data.length === 0) {
+          console.error('匯出失敗：提供的資料為空。');
+          return reject(new Error('提供的資料為空。'));
+        }
 
-    let ws: XLSX.WorkSheet;
+        let ws: XLSX.WorkSheet;
+        let finalColumns: ExcelColumn[];
 
-    if (columns && columns.length > 0) {
-      // 過濾掉 visible: false 的欄位
-      const visibleColumns = columns.filter(col => col.visible !== false);
+        if (columns && columns.length > 0) {
+          finalColumns = columns.filter(col => col.visible !== false);
+          const exportData = data.map(item => {
+            const transformedItem: any = {};
+            finalColumns.forEach(col => {
+              let value = item[col.field];
+              if (col.format) {
+                value = col.format(value, item);
+              }
+              transformedItem[col.header] = value;
+            });
+            return transformedItem;
+          });
+          ws = XLSX.utils.json_to_sheet(exportData);
+        } else {
+          finalColumns = Object.keys(data[0] || {}).map(key => ({ field: key, header: key }));
+          ws = XLSX.utils.json_to_sheet(data);
+        }
 
-      // 轉換資料，將欄位名稱 (field) 轉換為標題 (header)
-      const exportData = data.map(item => {
-        const transformedItem: any = {};
-        visibleColumns.forEach(col => {
-          let value = item[col.field];
+        const wscols: any[] = [];
+        const charWidthMultiplier = 1.5;
 
-          // 如果有提供格式化函式，就呼叫它來處理值
-          if (col.format) {
-            value = col.format(value, item);
+        finalColumns.forEach((col, index) => {
+          if (col.width) {
+            wscols.push({ wch: col.width });
+            return;
           }
 
-          // 將格式化或原始值存入新物件，key 為標頭
-          transformedItem[col.header] = value;
+          const lengths = [col.header].concat(
+            data.map(item => {
+              const value = item[col.field];
+              if (col.format) {
+                return col.format(value, item) ? String(col.format(value, item)) : '';
+              }
+              return value ? String(value) : '';
+            })
+          );
+
+          let maxLen = 0;
+          lengths.forEach(text => {
+            if (!text) return;
+            let len = 0;
+            for (let i = 0; i < text.length; i++) {
+              const charCode = text.charCodeAt(i);
+              if (charCode >= 0x4E00 && charCode <= 0x9FFF) {
+                len += charWidthMultiplier;
+              } else {
+                len += 1;
+              }
+            }
+            if (len > maxLen) {
+              maxLen = len;
+            }
+          });
+          wscols.push({ wch: Math.ceil(maxLen) + 5 });
         });
-        return transformedItem;
-      });
 
-      // 使用 json_to_sheet 匯出，會自動使用轉換後的中文標頭
-      ws = XLSX.utils.json_to_sheet(exportData);
-    } else {
-      // 沒有提供 columns，直接匯出原始資料
-      ws = XLSX.utils.json_to_sheet(data);
-    }
+        ws['!cols'] = wscols;
 
-    const wb: XLSX.WorkBook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, '資料');
-
-    XLSX.writeFile(wb, `${fileName}.xlsx`);
+        const wb: XLSX.WorkBook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, '資料');
+        XLSX.writeFile(wb, `${fileName}.xlsx`);
+        resolve(); // 成功時解析 Promise
+      } catch (error: any) {
+        console.error('匯出資料時發生錯誤：', error);
+        reject(error); // 失敗時拒絕 Promise
+      }
+    });
   }
 }
