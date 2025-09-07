@@ -1,3 +1,4 @@
+import { ExcelColumn, ExcelExportService } from './../../../shared/service/excel-export.service';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
@@ -8,8 +9,8 @@ import { InputNumberRangeComponent } from '../../../shared/componentkit/input-nu
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { TranslateModule } from '@ngx-translate/core';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
-import { Column, createPaginationConfig, formatAmount } from '@shared/componentkit/table/table.model';
-import { Fin21020Service, IFin21020Data, IQueryFin21020Request } from '@service/api/fin/fin21020.service';
+import { AddButton, Column, createPaginationConfig, formatAmount } from '@shared/componentkit/table/table.model';
+import { Fin21020Service, IFin21020Data } from '@service/api/fin/fin21020.service';
 import { finalize } from 'rxjs';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { DropDownListService, IDropdownItem } from '@service/utility/dropDownList.service';
@@ -31,10 +32,11 @@ export class FIN21020Component extends BasicQueryPageComponent<IFin21020Data> im
     Remit_Fee: [null as number | null, [Validators.max(999999)]], // 廠商負擔電匯手續費
     Comp_Remit_Fee: [null as number | null, [Validators.max(999999)]], // 公司負擔電匯手續費
     Cash_Back_Amt: [null as number | null, [Validators.max(999999)]], // 廠商負擔電匯手續費回饋收入
-    ...createPaginationConfig([{ field: 'BNK_No', order: 1 }, { field: 'id', order: 1 }]), // 分頁和排序參數
+    ...createPaginationConfig([{ field: 'BNK_No', order: 1 }, { field: 'Remit_BAmount', order: 1 }]), // 分頁和排序參數
   });
   totalRecords = 0;
   data: IFin21020Data[] = [];
+  selectedItems: IFin21020Data[] = [];
   columns: Column[] = [
     { field: 'BNK_No', header: '公司銀行科目代號' },
     { field: 'Remit_BAmount', header: '金額下限', format: formatAmount },
@@ -44,16 +46,20 @@ export class FIN21020Component extends BasicQueryPageComponent<IFin21020Data> im
     { field: 'Cash_Back_Amt', header: '廠商負擔電匯手續費回饋收入', format: formatAmount },
   ];
   bankCodeOptions: IDropdownItem[] = [];
+  addButton: AddButton[] = [
+    { label: '匯出單筆銀行科目', icon: 'pi pi-file-export', action: (rowData: IFin21020Data) => this.onExport(rowData) },
+  ]
 
   constructor(
     private readonly dropDownListService: DropDownListService,
     private readonly fin21020Service: Fin21020Service, // 注入新的 service
+    private readonly excelExportService: ExcelExportService
   ) {
     super();
   }
 
   ngOnInit(): void {
-    this.initializePage('FIN21020', 'fin/fin21020cru', this.queryForm, (form) => this.fin21020Service.queryFIN21020(form as IQueryFin21020Request));
+    this.initializePage('FIN21020', 'fin/fin21020cru', this.queryForm, (form) => this.onSubmit(form));
     this.dropDownListService.queryGLS1005For1103_DropDownList().pipe(untilDestroyed(this)).subscribe(data => {
       this.bankCodeOptions = data.Data.map(item => ({ ...item, label: `${item.No} - ${item.Name}` }));
     });
@@ -67,6 +73,44 @@ export class FIN21020Component extends BasicQueryPageComponent<IFin21020Data> im
         this.totalRecords = res.TotalCount;
         this.queryStateService.setQueryState(this.ProgNo, frm.value);
       })
+    });
+  }
+
+  onDelete(selectedRows: IFin21020Data[]) {
+    // 使用 Set 物件來獲取不重複的 BNK_No 列表
+    const uniqueBnkNos = [...new Set(selectedRows.map(row => row.BNK_No))];
+    // 將不重複的 BNK_No 列表用逗號串接成字串
+    const bnkNosDisplay = uniqueBnkNos.join('<br>');
+    this.confirmationService.confirm({
+      // 在訊息中顯示不重複的 BNK_No 列表，並加上總筆數
+      message: `<div class="flex flex-column justify-content-center align-items-center">
+      是否確定要刪除<br><b>公司銀行科目代號為：</b> ${bnkNosDisplay}<br>
+      </div>`,
+      accept: () => {
+        this.loading = true;
+        // 呼叫刪除服務，傳入不重複的 BnkNos
+        this.fin21020Service.deleteFIN21020(uniqueBnkNos).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(res => {
+          this.messageService.successBubble(res.Message);
+          this.selectedItems = [];
+          this.onSubmit(this.queryForm);
+        });
+      }
+    });
+  }
+  excelColumns: ExcelColumn[] = [
+    { field: 'BNK_No', header: '公司銀行科目代號', width: 20 },
+    { field: 'Remit_BAmount', header: '金額下限', width: 15 },
+    { field: 'Remit_UAmount', header: '金額上限', width: 15 },
+    { field: 'Remit_Fee', header: '廠商負擔電匯手續費', width: 25 },
+    { field: 'Comp_Remit_Fee', header: '公司負擔電匯手續費', width: 25 },
+    { field: 'Cash_Back_Amt', header: '廠商負擔電匯手續費回饋收入', width: 30 },
+  ];
+  onExport(rowData: IFin21020Data) {
+    this.loading = true;
+    const bnkNo = rowData.BNK_No || '';
+    this.fin21020Service.queryByBnkNo(bnkNo).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(res => {
+      console.log('API 回應:', res);
+      this.excelExportService.exportData(res.Data, `費率對照維護${bnkNo}`, this.excelColumns);
     });
   }
 }

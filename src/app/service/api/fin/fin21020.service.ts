@@ -71,6 +71,20 @@ export interface InsertFIN21020Request {
   }[],
 }
 
+// 新增介面：用於更新操作的請求主體
+export interface UpdateFIN21020Request {
+  id?: number
+  BNK_No: string,
+  Details: {
+    id?: number
+    Remit_BAmount: number,
+    Remit_UAmount: number,
+    Remit_Fee: number,
+    Comp_Remit_Fee: number,
+    Cash_Back_Amt: number,
+  }[],
+}
+
 @Injectable({
   providedIn: 'root',
 })
@@ -100,5 +114,23 @@ export class Fin21020Service {
   queryByBnkNo(bnkNo: string): Observable<ApiResponse<IFin21020Detail[]>> {
     // 依照後端 API 的格式，將 bnkNo 封裝成 JSON 物件傳送
     return this.http.post<ApiResponse<IFin21020Detail[]>>(`${this.apiUrl}/queryByBnkNo`, { BNK_No: bnkNo });
+  }
+
+  /**
+   * 新增 API 方法：更新 BankServiceRate 資料表
+   * @param params 包含要新增、更新和刪除的資料
+   * @returns 包含更新是否成功的 API 響應
+   */
+  updateFIN21020(params: UpdateFIN21020Request): Observable<ApiResponse<boolean>> {
+    return this.http.post<ApiResponse<boolean>>(`${this.apiUrl}/updateFIN21020`, params);
+  }
+
+  /**
+   * 刪除 API 方法：根據 BNK_No 刪除資料
+   * @param bnkNos 銀行科目代號
+   * @returns 包含刪除是否成功的 API 響應
+   */
+  deleteFIN21020(bnkNos: string[]): Observable<ApiResponse<boolean>> {
+    return this.http.post<ApiResponse<boolean>>(`${this.apiUrl}/deleteFIN21020`, { BnkNos: bnkNos });
   }
 }
