@@ -1,5 +1,5 @@
 import { ExcelColumn, ExcelExportService } from './../../../shared/service/excel-export.service';
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, signal } from '@angular/core';
 import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
@@ -14,13 +14,14 @@ import { Fin21020Service, IFin21020Data } from '@service/api/fin/fin21020.servic
 import { finalize } from 'rxjs';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { DropDownListService, IDropdownItem } from '@service/utility/dropDownList.service';
+import { DialogComponent } from '@shared/componentkit/dialog/dialog.component';
 
 // 1.2.1.2 費率對照維護
 @Component({
   selector: 'app-fin21020',
   templateUrl: './fin21020.component.html',
   standalone: true,
-  imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, DropdownComponent, InputNumberRangeComponent, TableComponent, TranslateModule]
+  imports: [DialogComponent, MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, DropdownComponent, InputNumberRangeComponent, TableComponent, TranslateModule]
 })
 export class FIN21020Component extends BasicQueryPageComponent<IFin21020Data> implements OnInit {
   queryForm = this.formBuilder.nonNullable.group({
@@ -62,6 +63,14 @@ export class FIN21020Component extends BasicQueryPageComponent<IFin21020Data> im
     this.initializePage('FIN21020', 'fin/fin21020cru', this.queryForm, (form) => this.onSubmit(form));
     this.dropDownListService.queryGLS1005For1103_DropDownList().pipe(untilDestroyed(this)).subscribe(data => {
       this.bankCodeOptions = data.Data.map(item => ({ ...item, label: `${item.No} - ${item.Name}` }));
+    });
+    // 監聽，當 BNK_No 變化時，並且變化的值是下拉選單中的值，延遲並打API
+    this.dialogForm.get('BNK_No')?.valueChanges.pipe(untilDestroyed(this)).subscribe(bnkNo => {
+      if (bnkNo && this.bankCodeOptions.some(item => item.No === bnkNo)) {
+        this.dataDialog = this.bankCodeOptions.filter(item => item.No !== bnkNo);
+      } else {
+        this.dataDialog = [];
+      }
     });
   }
 
@@ -109,8 +118,45 @@ export class FIN21020Component extends BasicQueryPageComponent<IFin21020Data> im
     this.loading = true;
     const bnkNo = rowData.BNK_No || '';
     this.fin21020Service.queryByBnkNo(bnkNo).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(res => {
-      console.log('API 回應:', res);
       this.excelExportService.exportData(res.Data, `費率對照維護${bnkNo}`, this.excelColumns);
+    });
+  }
+  dialogVisible = signal(false);
+  dataDialog: IDropdownItem[] = [];
+  selectedItemsDialog: IDropdownItem[] = [];
+  columnsDialog: Column[] = [
+    { field: 'No', header: '公司銀行科目代號' },
+    { field: 'Name', header: '公司銀行科目名稱' },
+  ]
+  dialogForm = this.formBuilder.nonNullable.group({
+    BNK_No: [null, [Validators.required]], // 公司銀行科目代號
+  });
+  dialogSubmitted = signal(false);
+  onCopyRate() {
+    this.dialogVisible.set(true);
+    this.dialogForm.reset();
+    this.selectedItemsDialog = [];
+    this.dialogSubmitted.set(false);
+    this.dataDialog = [];
+  }
+  saveDialog() {
+    this.confirmationService.confirm({
+      message: '是否將被選擇的公司銀行科目代號資料全數刪除，並且將來源公司銀行科目代號的資料複製寫入?',
+      accept: () => {
+        this.loading = true;
+        const body = {
+          sourceBnkNo: this.dialogForm.getRawValue().BNK_No || '',
+          targetBnkNos: this.selectedItemsDialog.map(item => item.No)
+        }
+        // 呼叫刪除服務，傳入不重複的 BnkNos
+        this.fin21020Service.copyFIN21020(body).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(res => {
+          this.messageService.successBubble(res.Message);
+          this.selectedItemsDialog = [];
+          this.dataDialog = [];
+          this.dialogVisible.set(false);
+          this.onSubmit(this.queryForm);
+        });
+      }
     });
   }
 }

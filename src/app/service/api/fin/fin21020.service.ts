@@ -85,6 +85,11 @@ export interface UpdateFIN21020Request {
   }[],
 }
 
+export interface ICopyFin21020Request {
+  sourceBnkNo: string;
+  targetBnkNos: string[];
+}
+
 @Injectable({
   providedIn: 'root',
 })
@@ -132,5 +137,14 @@ export class Fin21020Service {
    */
   deleteFIN21020(bnkNos: string[]): Observable<ApiResponse<boolean>> {
     return this.http.post<ApiResponse<boolean>>(`${this.apiUrl}/deleteFIN21020`, { BnkNos: bnkNos });
+  }
+
+  /**
+    * 複製費率資料
+    * @param request 包含來源和目標BNK_No的請求物件
+    * @returns 包含操作是否成功的 API 響應
+    */
+  copyFIN21020(request: ICopyFin21020Request): Observable<ApiResponse<boolean>> {
+    return this.http.post<ApiResponse<boolean>>(`${this.apiUrl}/copyFIN21020`, request);
   }
 }
