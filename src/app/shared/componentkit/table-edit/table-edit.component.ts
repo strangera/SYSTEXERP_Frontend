@@ -21,6 +21,7 @@ import { BreadcrumbModule } from "primeng/breadcrumb";
 import { validateRequired } from './validate-field.model';
 import { NotificationService } from '@shared/component/notification-message/notification.service';
 import { SkeletonModule } from 'primeng/skeleton';
+import { FileSelectEvent, FileUpload, FileUploadModule } from 'primeng/fileupload';
 @Component({
   selector: 'app-table-edit',
   templateUrl: './table-edit.component.html',
@@ -41,11 +42,13 @@ import { SkeletonModule } from 'primeng/skeleton';
     IconFieldModule,
     InputIconModule,
     BreadcrumbModule,
-    SkeletonModule
+    SkeletonModule,
+    FileUploadModule
   ],
 })
 export class TableEditComponent implements OnChanges, AfterContentInit {
   @ViewChild('dt', { static: false }) dt!: Table;         // table 元件
+  @ViewChild('fileUpload') fileUpload!: FileUpload; // 檔案上傳 元件
   // 基本設置
   dataKey = '_TABLE_KEY';                                 // table 資料key
   @Input() tableKey: string | undefined = undefined;      // table 唯一標識 (必填)
@@ -59,14 +62,23 @@ export class TableEditComponent implements OnChanges, AfterContentInit {
   @Input() disabled = false;                              // 是否禁用 table
   // select 選擇Row相關
   @Input() selectedItems: any = [];                                             // table 已勾選資料
-  @Input() isRowSelectable: (rowData: any) => boolean | undefined = () => true; // 可選擇(條件)
+  @Input() isRowSelectable: (rowData: any, rowIndex: number, data: any) => boolean | undefined = () => true; // 可選擇(條件)
   @Output() selectionChange = new EventEmitter<any>();                          // 資料變更(事件)
   // Header(左) 相關
-  @Output() insert = new EventEmitter<any>(); // 新增事件
+  @Output() insert = new EventEmitter<any>(); // 新增事件                     // 資料變更(事件)
+  // Header(右) 相關
+  @Input() showExcel = false;                      // 是否顯示 匯出Excel
+  @Input() showExcelExport = true;                 // 是否顯示 匯出Excel按鈕
+  @Input() showExcelImport = true;                 // 是否顯示 匯入Excel按鈕
+  @Input() showCustomExcelImport = false;         // 是否顯示 自訂匯入Excel按鈕
+  @Output() exportExcel = new EventEmitter<any>(); // 匯出 Excel 事件
+  @Input() exportExcelLoading = false;             // 匯出 Excel loading
+  @Output() importExcel = new EventEmitter<FileSelectEvent>(); // 匯入 Excel 事件
   // 禁止新增
   @Input() canInsert = true;
   @Output() delete = new EventEmitter<any>(); // 刪除事件
   // rowEdit 相關
+  @Input() showReorder = true;                     // 是否顯示順序調整
   @Input() rowEditDisabled: (rowData: any) => boolean | undefined = () => false;// Row禁止編輯條件
   @Input() defaultInsertData: any = {};             // 預設新增資料 (可選，預設為所有資料為null)
   @Input() dataStatusField = '_dataStatus';          // 資料狀態 (如果有值增加狀態欄位；如果沒有值不增加狀態欄位)
@@ -108,7 +120,6 @@ export class TableEditComponent implements OnChanges, AfterContentInit {
       if (!this.data.some(item => item['_isAutoInsertCandidate']) && this.canInsert) {
         this.insertRow();
       }
-      this.dataChange.emit(this.data);
     }
   }
   ngAfterContentInit(): void {
@@ -346,12 +357,19 @@ export class TableEditComponent implements OnChanges, AfterContentInit {
   // 行是否可選，還有第一筆也不能被點選
   rowSelectableWrapper = ({ data, index }: { data: any, index: number; }): boolean | undefined => {
     // 不允許選擇新增中的列
-    return this.isRowSelectable(data) && !data._isAutoInsertCandidate;
+    return this.isRowSelectable(data, index, this.data) && !data._isAutoInsertCandidate;
   };
   // (欄位是Dropdown使用): 獲取Dropdown的選項，支持function加入或直接給List
   getOptions(rowData: any, col: Column) { return typeof col.options === 'function' ? (col.options(rowData) || undefined) : col.options || undefined; }
   // 最後一筆
   lastRow() {
     return this.data.length > 0 ? this.data.length - 1 : -1;
+  }
+  onExportExcel() { this.exportExcel.emit(); }                      // 匯出Excel範本 事件
+  onImportExcel(event?: FileSelectEvent) {                           // 匯入Excel
+    this.importExcel.emit(event);
+    if (event) {
+      this.fileUpload.clear();
+    }
   }
 }

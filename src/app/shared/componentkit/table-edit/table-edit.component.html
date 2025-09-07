@@ -18,12 +18,22 @@
       <div class="flex-grow-1 p-2">
         <ng-content select="header"></ng-content>
       </div>
+      <div class="flex gap-2 py-2">
+        <div *ngIf="showExcel" class="flex gap-2 align-items-center">
+          <p-button *ngIf="showExcelExport" label="匯出excel範本" severity="success" [icon]="
+              exportExcelLoading ? 'pi pi-spin pi-spinner' : 'pi pi-file-export'" (click)="onExportExcel()" />
+          <p-fileUpload *ngIf="showExcelImport" #fileUpload styleClass="p-button-info" mode="basic"
+            [chooseIcon]=" exportExcelLoading ? 'pi pi-spin pi-spinner' : 'pi pi-file-import'"
+            accept="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" severity="info"
+            (onSelect)="onImportExcel($event)" [auto]="true" chooseLabel="Excel匯入" />
+        </div>
+      </div>
     </div>
   </ng-template>
   <ng-template pTemplate="header" let-columns>
     <tr>
-      <th *ngIf="data.length" class="w-1rem text-center"></th>
-      <th [attr.colspan]="data.length === 1 && canInsert ? 2 : 1" class="w-1rem text-center">序號
+      <th *ngIf="data.length && showReorder" class="w-1rem text-center"></th>
+      <th [attr.colspan]="data.length === 1 && canInsert ? disabled ? 1: 2 : 1" class="w-1rem text-center">序號
       </th>
       <th *ngIf="!disabled && data.length && !data[0]._isAutoInsertCandidate" class="w-1rem text-center">
         <p-tableHeaderCheckbox [disabled]="disabled" />
@@ -36,12 +46,12 @@
   </ng-template>
   <ng-template pTemplate="body" let-rowIndex="rowIndex" let-rowData let-columns="columns" let-index="rowIndex">
     <tr [attr.data-key]="rowData[dataKey]" [pSelectableRowIndex]="rowIndex"
-      [pSelectableRowDisabled]="!isRowSelectable(rowData) || disabled" [pSelectableRow]="rowData"
+      [pSelectableRowDisabled]="!isRowSelectable(rowData,rowIndex,data) || disabled" [pSelectableRow]="rowData"
       [pReorderableRow]="!rowData._isAutoInsertCandidate ? rowIndex : -1" [ngClass]="{
         'invalid-row': rowData._rowValidationError?.isValid === false && !rowData._isAutoInsertCandidate,
         'insert-row': rowData._isAutoInsertCandidate ,
       }">
-      <td>
+      <td *ngIf="data.length && showReorder">
         <span *ngIf="!rowData._isAutoInsertCandidate && data.length > 1" class="pi pi-bars"
           pReorderableRowHandle></span>
         <span *ngIf="rowData._isAutoInsertCandidate && !disabled" class="pi pi-plus" [ngClass]="{
@@ -61,7 +71,7 @@
       </td>
       <td *ngIf="!disabled && !rowData._isAutoInsertCandidate">
         <p-tableCheckbox class="flex justify-content-center pointer-events-none" [pSelectableRow]="rowData"
-          [value]="rowData" [disabled]="!isRowSelectable(rowData) || disabled" />
+          [value]="rowData" [disabled]="!isRowSelectable(rowData,rowIndex,data) || disabled" />
       </td>
       <td *ngFor="let col of columns" class="text-center" (click)="col.type ? $event.stopPropagation() : null"
         (keydown)="$event.stopPropagation()">
