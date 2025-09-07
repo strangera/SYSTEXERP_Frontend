@@ -1,80 +1,40 @@
-<div class="grid">
-  <div class="col-12">
-    <div class="card">
-      <div class="grid align-items-center">
-        <div class="col" style="flex: 1">
-          <app-menubar [ProgNo]="ProgNo"></app-menubar>
-        </div>
-      </div>
-      <p-accordion>
-        <p-accordionTab
-          header="{{ 'query-conditions' | translate }}"
-          [selected]="true"
-          class="line-height-3 m-0"
-          [headerStyleClass]="'query-accordionTab'"
-        >
-          <form
-            [formGroup]="queryForm"
-            id="queryForm"
-            (ngSubmit)="onSubmit(queryForm)"
-          >
-            <div class="grid p-fluid">
-              <div class="col-12 md:col-6 lg:col-4">
-                <app-calendar
-                  calendarType="dateOne"
-                  label="日期"
-                  [control]="queryForm.controls.onedatedd"
-                  [submitted]="submitted"
-                ></app-calendar>
-              </div>
-              <div class="col-12 md:col-6 lg:col-4">
-                <app-input-text
-                  label="收銀機代碼"
-                  controlName="casherID"
-                  [control]="queryForm.controls.casherID"
-                  [submitted]="submitted"
-                >
-                  >
-                </app-input-text>
-              </div>
-            </div>
-            <hr />
-            <div class="grid p-fluid">
-              <div class="col-12 md:col-4 lg:col-4">
-                <p-checkbox
-                  label="是否檢核發票重複"
-                  controlName="duplicateCheck"
-                ></p-checkbox>
-              </div>
-            </div>
-            <hr />
-            <h6>最近關帳日期:2020/2/9</h6>
-            <div>
-              <div class="grid justify-content-end">
-                <app-button
-                  btnType="clear"
-                  (onClick)="onClearForm()"
-                ></app-button>
-                <app-button
-                  btnType="query"
-                  (onClick)="onSubmitQuery(queryForm)"
-                  [loading]="loading"
-                ></app-button>
-              </div>
-            </div>
-          </form>
-        </p-accordionTab>
-      </p-accordion>
-    </div>
-    <div class="card">
-      <div class="col-13">
-        <app-table
-          [data]="data"
-          [columns]="columns"
-          (edit)="onEdit($event)"
-          (detail)="onDetail($event)"
-        ></app-table>
-      </div>
-    </div>
+<div class="card">
+  <div class="flex gap-2 mb-2">
+    <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
   </div>
+
+  <p-accordion>
+    <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'">
+      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
+        <div class="grid p-fluid">
+          <app-calendar class="col-12 md:col-6 lg:col-4" label="日期" calendarType="dateOne"
+            [control]="queryForm.controls.cls_date" [submitted]="submitted"></app-calendar>
+          <app-dropdown class="col-12 md:col-6 lg:col-4" label="收銀機代碼" [options]="ECR_NoOptions" optionLabel="label"
+            optionValue="value"></app-dropdown>
+        </div>
+        <div class="grid p-fluid mt-2">
+          <div class="col-12 md:col-6 lg:col-4">
+            <p-checkbox formControlName="checkDuplicateInvoice" [binary]="true" inputId="checkDuplicateInvoice" />
+            <label for="checkDuplicateInvoice"> 是否檢核發票重複</label>
+          </div>
+        </div>
+
+        <div class="my-3">
+          <p>最近關帳日期：{{closeDate}}</p>
+        </div>
+        <div class="justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3" style="display: flex;">
+          <app-button btnType="clear" [form]="queryForm"></app-button>
+          <app-button btnType="query" [loading]="loading"></app-button>
+        </div>
+      </form>
+    </p-accordionTab>
+  </p-accordion>
+</div>
+
+<div class="card">
+  <app-table tableKey="tls2c020" [dataKey]="'checkOrder'" [data]="data" [columns]="columns" [loading]="loading"
+    [showDelete]="false" [showManage]="false" [showReportMode]="false" [showPaginator]="false" [showFilter]="false"
+    [showCaption]="false" [expansionColumns]="expansionColumns" [expansionDataKey]="'details'">
+  </app-table>
 </div>

@@ -6,6 +6,9 @@ import {
   FormsModule,
   ReactiveFormsModule,
 } from '@angular/forms';
+import { HttpResponse } from '@angular/common/http';
+import { finalize } from 'rxjs/operators';
+
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { TLS23040Service } from '../../../service/api/tls/tls23040.service';
 import { StatusFlagService } from '../../../service/basic/status-flag.service';
@@ -33,6 +36,7 @@ import { DialogModule } from 'primeng/dialog';
 import { RadioButtonModule } from 'primeng/radiobutton';
 import { TranslateModule } from '@ngx-translate/core';
 import { Table2Component } from '@shared/componentkit/table2/table2.component';
+import { ButtonModule } from 'primeng/button';
 import { CommonModule } from '@angular/common';
 
 @Component({
@@ -57,6 +61,7 @@ import { CommonModule } from '@angular/common';
     RadioButtonModule,
     TranslateModule,
     Table2Component,
+    ButtonModule, // ✅ p-button
   ],
 })
 export class TLS23040Component extends BasicQueryPageComponent<any> {
@@ -106,6 +111,10 @@ export class TLS23040Component extends BasicQueryPageComponent<any> {
     { field: 'ECR_No', order: 1 },
     { field: 'TXN_No', order: 1 },
   ];
+
+  // 匯出控制
+  btnLoading = false;
+  historyRequestBody: any | null = null; // ✅ 記錄最後查詢 payload（匯出沿用）
 
   // 控制項
   readonly yesterday: Date = (() => {
@@ -275,12 +284,16 @@ export class TLS23040Component extends BasicQueryPageComponent<any> {
         SortBy: sortByArr,
       };
 
+      // ✅ 匯出沿用同一包參數
+      this.historyRequestBody = { ...payload };
+
       this.loading = true;
       this.messageService?.blockUi();
 
       this.tls23040Service.queryTLS23040(payload).subscribe({
         next: (res) => {
           const packs = Array.isArray(res?.Data) ? res.Data : [];
+
           // ===== Flatten 三種明細 =====
           const invoiceDetails = packs.flatMap((p: any) =>
             Array.isArray(p?.invoice?.InvoiceDetail) ? p.invoice.InvoiceDetail : [],
@@ -379,14 +392,15 @@ export class TLS23040Component extends BasicQueryPageComponent<any> {
       this.activeExternalTotalFieldMap = { TXN_PayAmt: 'Total_TXN_PayAmt' };
 
       // 小計（以 PAY_NO 聚合）
- const sub: Record<string, Record<string, number>> = {};
-for (const row of this.paymentRows) {
-  const g = String(row?.PAY_NO ?? 'UNKNOWN');
-  sub[g] = sub[g] || { SubTotal_TXN_PayAmt: 0 };
-  sub[g]['SubTotal_TXN_PayAmt'] = (sub[g]['SubTotal_TXN_PayAmt'] || 0) + Number(row?.TXN_PayAmt ?? 0);
-}
-this.activeExternalSubtotals = sub;
-this.activeExternalSubtotalFieldMap = { TXN_PayAmt: 'SubTotal_TXN_PayAmt' };
+      const sub: Record<string, Record<string, number>> = {};
+      for (const row of this.paymentRows) {
+        const g = String(row?.PAY_NO ?? 'UNKNOWN');
+        sub[g] = sub[g] || { SubTotal_TXN_PayAmt: 0 };
+        sub[g]['SubTotal_TXN_PayAmt'] =
+          (sub[g]['SubTotal_TXN_PayAmt'] || 0) + Number(row?.TXN_PayAmt ?? 0);
+      }
+      this.activeExternalSubtotals = sub;
+      this.activeExternalSubtotalFieldMap = { TXN_PayAmt: 'SubTotal_TXN_PayAmt' };
       return;
     }
 
@@ -409,24 +423,25 @@ this.activeExternalSubtotalFieldMap = { TXN_PayAmt: 'SubTotal_TXN_PayAmt' };
       TXN_Tax: 'Total_TXN_Tax',
     };
 
-   const sub: Record<string, Record<string, number>> = {};
-for (const row of this.discountRows) {
-  const g = String(row?.TXN_DiscCode ?? 'UNKNOWN');
-  const bucket = (sub[g] = sub[g] || {
-    SubTotal_SalePrc: 0,
-    SubTotal_Net: 0,
-    SubTotal_Tax: 0,
-  } as Record<string, number>);
-  bucket['SubTotal_SalePrc'] = (bucket['SubTotal_SalePrc'] || 0) + Number(row?.PLU_SalePrc ?? 0);
-  bucket['SubTotal_Net']     = (bucket['SubTotal_Net']     || 0) + Number(row?.TXN_Net ?? 0);
-  bucket['SubTotal_Tax']     = (bucket['SubTotal_Tax']     || 0) + Number(row?.TXN_Tax ?? 0);
-}
-this.activeExternalSubtotals = sub;
-this.activeExternalSubtotalFieldMap = {
-  PLU_SalePrc: 'SubTotal_SalePrc',
-  TXN_Net:     'SubTotal_Net',
-  TXN_Tax:     'SubTotal_Tax',
-};
+    const sub: Record<string, Record<string, number>> = {};
+    for (const row of this.discountRows) {
+      const g = String(row?.TXN_DiscCode ?? 'UNKNOWN');
+      const bucket = (sub[g] = sub[g] || {
+        SubTotal_SalePrc: 0,
+        SubTotal_Net: 0,
+        SubTotal_Tax: 0,
+      } as Record<string, number>);
+      bucket['SubTotal_SalePrc'] =
+        (bucket['SubTotal_SalePrc'] || 0) + Number(row?.PLU_SalePrc ?? 0);
+      bucket['SubTotal_Net'] = (bucket['SubTotal_Net'] || 0) + Number(row?.TXN_Net ?? 0);
+      bucket['SubTotal_Tax'] = (bucket['SubTotal_Tax'] || 0) + Number(row?.TXN_Tax ?? 0);
+    }
+    this.activeExternalSubtotals = sub;
+    this.activeExternalSubtotalFieldMap = {
+      PLU_SalePrc: 'SubTotal_SalePrc',
+      TXN_Net: 'SubTotal_Net',
+      TXN_Tax: 'SubTotal_Tax',
+    };
   }
 
   /** 群組欄位優先排序（invoice 無群組會原樣返回） */
@@ -438,6 +453,88 @@ this.activeExternalSubtotalFieldMap = {
     const rest = list.filter((s) => s.field !== g);
     const order = exist?.order ?? 1;
     return [{ field: g, order }, ...rest];
+  }
+
+  // ===== 匯出：產出「發票報表」 =====
+  onExportPDF() {
+    if (!this.historyRequestBody) {
+      this.messageService?.warnBubble?.('請先執行查詢以產生報表。');
+      return;
+    }
+    if (this.invoiceRows.length === 0) {
+      this.messageService?.warnBubble?.('目前沒有發票明細可匯出。');
+      return;
+    }
+    this.btnLoading = true;
+    this.tls23040Service
+      .exportTLS23040PDF(this.historyRequestBody)
+      .pipe(finalize(() => (this.btnLoading = false)))
+      .subscribe({
+        next: (response: HttpResponse<Blob>) => this.handleFileExport(response, '.pdf'),
+      });
+  }
+
+  onExportXLSX() {
+    if (!this.historyRequestBody) {
+      this.messageService?.warnBubble?.('請先執行查詢以產生報表。');
+      return;
+    }
+    if (this.invoiceRows.length === 0) {
+      this.messageService?.warnBubble?.('目前沒有發票明細可匯出。');
+      return;
+    }
+    this.btnLoading = true;
+    this.tls23040Service
+      .exportTLS23040Excel(this.historyRequestBody)
+      .pipe(finalize(() => (this.btnLoading = false)))
+      .subscribe({
+        next: (response: HttpResponse<Blob>) => this.handleFileExport(response, '.xlsx'),
+      });
+  }
+
+  private handleFileExport(response: HttpResponse<Blob>, fileExtension: string): void {
+    const contentDisposition = response.headers.get('Content-Disposition');
+    const filename = this.getFilenameFromHeader(contentDisposition, fileExtension);
+    const blob = response.body;
+
+    if (blob && blob.size > 0) {
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } else {
+      this.messageService?.warnBubble?.('沒有找到符合條件的資料，無法生成報表。');
+    }
+  }
+
+  private getFilenameFromHeader(contentDisposition: string | null, defaultExtension: string): string {
+    if (!contentDisposition) return `download${defaultExtension}`;
+
+    const filenameStarMatch = /filename\*=([^;]+)/.exec(contentDisposition);
+    if (filenameStarMatch && filenameStarMatch.length > 1) {
+      const encodedFilename = filenameStarMatch[1];
+      try {
+        const decoded = decodeURIComponent(encodedFilename.replace(/^UTF-8''/, ''));
+        return decoded;
+      } catch {
+        return encodedFilename;
+      }
+    }
+
+    const filenameMatch = /filename="([^"]+)"/.exec(contentDisposition);
+    if (filenameMatch && filenameMatch.length > 1) {
+      try {
+        return decodeURIComponent(filenameMatch[1].replace(/\+/g, ' '));
+      } catch {
+        return filenameMatch[1];
+      }
+    }
+
+    return `download${defaultExtension}`;
   }
 
   // ===== 欄位 =====

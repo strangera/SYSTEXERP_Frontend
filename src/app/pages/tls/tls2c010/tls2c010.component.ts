@@ -15,6 +15,9 @@ import { ScrollPanelModule } from 'primeng/scrollpanel';
 import { TLS2C010Service } from '@service/api/tls/tls2-c010.service';
 import { TabViewModule } from 'primeng/tabview';
 import { TableComponent } from '@shared/componentkit/table/table.component';
+import { ButtonModule } from 'primeng/button';
+import { saveAs } from 'file-saver';
+import { HttpResponse } from '@angular/common/http';
 
 @Component({
   selector: 'app-tls2c010',
@@ -22,7 +25,7 @@ import { TableComponent } from '@shared/componentkit/table/table.component';
   styleUrl: './tls2c010.component.scss',
   standalone: true,
   imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarComponent, ButtonComponent, TranslateModule, CardModule, ScrollPanelModule, TabViewModule,
-    TableComponent, ButtonComponent
+    TableComponent, ButtonComponent, ButtonModule
   ]
 })
 export class TLS2C010Component extends BasicQueryPageComponent<any> implements OnInit {
@@ -151,12 +154,16 @@ export class TLS2C010Component extends BasicQueryPageComponent<any> implements O
     this.data_nn_down = [responseData.NN_Detail.DOWN_data[1]];
   }
 
+  exportBtnLoding = false;
+  pdfBtnLoding = false;
+
   onExportExcel() {
     // 檢查 TXN_Date 是否有值
     if (!this.queryForm.value.TXN_Date) {
       this.messageService.errorBubble('請選擇銷售日期');
       return;
     }
+    this.exportBtnLoding = true;
     // 呼叫 exportTLS2C010
     this.tls2c010Service.exportTLS2C010({
       FileName: '專櫃日暫存傳票報表',
@@ -165,17 +172,75 @@ export class TLS2C010Component extends BasicQueryPageComponent<any> implements O
         TXN_Date: this.datePipe.transform(this.queryForm.value.TXN_Date, 'yyyy-MM-dd') || ''
       }
     }).pipe(untilDestroyed(this))
-      .subscribe(response => {
-        // 處理檔案下載
-        this.messageService.successBubble('匯出excel成功');
-        const blob = new Blob([response.body!], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = '專櫃日暫存傳票報表.xlsx';
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
+      .subscribe({
+        next: (response: HttpResponse<Blob>) => {
+          if (response.body) {
+            const contentDisposition = response.headers.get('content-disposition');
+            let filename = '專櫃日暫存傳票報表.xlsx';
+            if (contentDisposition) {
+              const filenameRegex = /filename\*=UTF-8''(.+?)(?:\.xlsx)?$|filename="(.+?)(?:\.xlsx)?"$/;
+              const matches = contentDisposition.match(filenameRegex);
+              if (matches) {
+                filename = matches[1] || matches[2] || filename;
+                filename = decodeURIComponent(filename);
+              }
+              filename = filename.replace(/["']/g, '');
+            }
+            const blob = new Blob([response.body], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+            saveAs(blob, filename);
+            this.messageService.successBubble('匯出Excel成功');
+            this.exportBtnLoding = false;
+          } else {
+            this.messageService.errorBubble('匯出Excel失敗：檔案內容為空');
+          }
+        },
+        error: (err: any) => {
+          this.messageService.errorBubble('匯出Excel失敗');
+        }
+      });
+  }
+
+  onExportPdf() {
+    // 檢查 TXN_Date 是否有值
+    if (!this.queryForm.value.TXN_Date) {
+      this.messageService.errorBubble('請選擇銷售日期');
+      return;
+    }
+    this.pdfBtnLoding = true;
+    // 呼叫 exportTLS2C010PDF
+    this.tls2c010Service.exportTLS2C010PDF({
+      FileName: '專櫃日暫存傳票報表',
+      ReportTitle: '專櫃日暫存傳票報表',
+      queryTLS2C010Request: {
+        TXN_Date: this.datePipe.transform(this.queryForm.value.TXN_Date, 'yyyy-MM-dd') || ''
+      }
+    }).pipe(untilDestroyed(this))
+      .subscribe({
+        next: (response: HttpResponse<Blob>) => {
+          if (response.body) {
+            // 從 response header 取得檔案名稱
+            const contentDisposition = response.headers.get('content-disposition');
+            let filename = '專櫃日暫存傳票報表.pdf';
+            if (contentDisposition) {
+              const filenameRegex = /filename\*=UTF-8''(.+?)(?:\.pdf)?$|filename="(.+?)(?:\.pdf)?"$/;
+              const matches = contentDisposition.match(filenameRegex);
+              if (matches) {
+                filename = matches[1] || matches[2] || filename;
+                filename = decodeURIComponent(filename);
+              }
+              filename = filename.replace(/["']/g, '');
+            }
+            const blob = new Blob([response.body], { type: 'application/pdf' });
+            saveAs(blob, filename);
+            this.messageService.successBubble('匯出PDF成功');
+            this.pdfBtnLoding = false;
+          } else {
+            this.messageService.errorBubble('匯出PDF失敗：檔案內容為空');
+          }
+        },
+        error: (err: any) => {
+          this.messageService.errorBubble('匯出PDF失敗');
+        }
       });
   }
 }

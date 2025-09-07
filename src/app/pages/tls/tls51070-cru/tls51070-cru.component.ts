@@ -90,6 +90,11 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
   // 標籤檔 新增 預覽 (規格書藍色字) > 然後再確認 --ok
   // 變價表單拆成 主資料 變價前後 組合
 
+  // ---0905 SA 需求更新-------------------------------------------------------------
+
+  // 查詢(單選) 新增 編輯 新增 專櫃編號(主檔: TLT_NO)
+  // 國際條碼 比照廠商編號自動帶下來 (等SA確認如何調整)
+  // 廠商編號第二家以後就不開放上方的下拉選擇
   // ----------------------------------------------------------------
   dataForm = this.formBuilder.nonNullable.group({
     id: [{ value: 0, disabled: true }], // 主鍵ID;
@@ -103,7 +108,7 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
     PLU_EngName: ['', [Validators.maxLength(100)]], // 商品英文名稱
     PLU_OrgPLUNo: ['', [Validators.maxLength(30)]], // 廠商貨號 --廠商自編碼 廠商貨號
     // PLU_No: ['', [Validators.maxLength(20)]], // 國際條碼 可選擇帶入PLU_MagNo，新增模式以外加上 必填
-    PLU_No: [{ value: '由多筆國際條碼的第一筆自動新增', disabled: true }], // 國際條碼 由輸入的POS2005內容帶入
+    PLU_No: [{ value: '由多筆國際條碼的第一筆自動新增', disabled: true }], // 國際條碼 由輸入的POS2005內容帶入 (等SA確認如何調整)
     PLU_MinOrder: [1, [Validators.maxLength(8), Validators.max(99999999)]], // 最小訂購量 ---預設1，採購時，輸入的採購量必需為最小訂購量的倍數。
     PLU_Lable: ['', [Validators.maxLength(50)]], // 標籤名稱
 
@@ -572,7 +577,7 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
             console.log('新增取號:', newSeqNo);
 
             // 進行圖片檔更新
-            await this.createImage(newSeqNo); // ✅ 傳入圖片
+            await this.createImage(newSeqNo); // 傳入圖片
             this.onCancel();
           });
         }

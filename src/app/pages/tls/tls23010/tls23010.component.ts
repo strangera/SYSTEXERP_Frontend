@@ -77,6 +77,7 @@ export class TLS23010Component
   extends BasicQueryPageComponent<any>
   implements OnInit
 {
+  pdfSummary: string[] = [];
   data: any[] = [];
   totalRecords = 0;
   selectedItems: any[] = [];
@@ -373,13 +374,14 @@ onSubmit(frm: FormGroup) {
             this.summaryData   = [];
             this.selectedItems = [];
             this.totalRecords  = Number(resp?.TotalCount ?? this.data.length ?? 0);
-
+this.updatePdfSummary();
             this.queryStateService.setQueryState(this.ProgNo, this.queryForm.value);
           },
           error: () => {
             this.data          = [];
             this.totalRecords  = 0;
             this.selectedItems = [];
+            this.pdfSummary = [];
           },
         });
     }
@@ -684,4 +686,62 @@ detailTotalFieldMap: Record<string, string> = {
   TXN_TotDisc:    'Total_TXN_TotDisc',
   TXN_PayAmt:     'Total_TXN_PayAmt',
 };
+private getSum(field: string): number {
+  // 明細模式：優先用 API 總計，其次用 this.data 加總
+  if (!this.showSummary) {
+    const mapped = this.detailTotalFieldMap?.[field];
+    if (mapped != null && typeof this.detailTotals?.[mapped] === 'number') {
+      return this.detailTotals[mapped] ?? 0;
+    }
+    return (this.data ?? []).reduce((s, r) => s + (Number(r?.[field]) || 0), 0);
+  }
+
+  // 彙總模式：用 this.summaryData 加總
+  return (this.summaryData ?? []).reduce((s, r) => s + (Number(r?.[field]) || 0), 0);
+}
+private updatePdfSummary(): void {
+  // 明細模式（!showSummary）
+  if (!this.showSummary) {
+    // A：發票金額 -> 依你的欄位命名應該是 TXN_TotGUI（你原本寫 TXN_TotSaleAmt，名稱與欄位對不上）
+    const A = this.getSum('TXN_TotGUI');          // 發票金額
+    const B = this.getSum('TXN_TotPayAmt');       // 已開發票的支付工具（若無此欄，會是 0）
+    const C = this.getSum('TXN_TotOver');         // 已開發票的支付工具溢收
+    const D = this.getSum('TXN_Deposit');         // 訂金
+    const E = this.getSum('TXN_DepositSettle');   // 訂金結帳金額
+    const F = this.getSum('TXN_DepositUsed');     // 訂金結帳的訂金
+    const G = this.getSum('TXN_TotDisc');         // 預售（你原註解：使用折扣金額欄位）
+    const H = this.getSum('TXN_PresaleSettle') || this.getSum('TXN_TaxFreeCertNo'); // 預售結帳金額（若實際欄位不同，請換成正確名稱）
+
+    const discountValue = A + B - C + E - G + H;
+    const paymentValue  = A + B + D - F;
+
+    this.pdfSummary = [
+      `(A)發票金額 =\t${A.toLocaleString()}`,
+      `(B)已開發票的支付工具 =\t${B.toLocaleString()}`,
+      `(C)已開發票的支付工具溢收 =\t${C.toLocaleString()}`,
+      `(D)訂金 =\t${D.toLocaleString()}`,
+      `(E)訂金結帳全額 =\t${E.toLocaleString()}`,
+      `(F)訂金結帳的訂金 =\t${F.toLocaleString()}`,
+      `(G)預售 =\t${G.toLocaleString()}`,
+      `(H)預售結帳金額 =\t${H.toLocaleString()}`,
+      '====================================================',
+      `折扣別(專櫃業績) = (A)+(B)-(C)+(E)-(G)+(H) =\t${discountValue.toLocaleString()}`,
+      `付款別(支付工具) = (A)+(B)+(D)-(F) =\t${paymentValue.toLocaleString()}`,
+    ];
+    return;
+  }
+
+  // 彙總模式（showSummary）
+  const totalAmt = this.getSum('TXN_TotSaleAmt'); // 若彙總實際欄位是 TXN_TotGUI 就改成 TXN_TotGUI
+  const totalTxn = this.getSum('TotalTxn');
+
+  this.pdfSummary = [
+    `總金額合計 = ${totalAmt.toLocaleString()}`,
+    `總交易筆數合計 = ${totalTxn.toLocaleString()}`,
+    '=============================',
+    `平均每筆金額 = ${totalTxn > 0 ? (totalAmt / totalTxn).toFixed(2) : '0.00'}`,
+  ];
+}
+
+  
 }
