@@ -37,13 +37,13 @@ import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/
   ],
 })
 export class TLS21030Component extends BasicQueryPageComponent<TLS21030Data> implements OnInit {
-  queryForm = this.formBuilder.group({
+  queryForm = this.formBuilder.nonNullable.group({
     money_type: [null],     // 結帳方式 10=十日結、15=半月結、30=月結
     term_no: [1],           // 帳次 Default: 1
     rece_yn: [null],        // 是否使用業主發票 (Y=是、N=否)
     bill_remark: [''],     // 說明 存為html格式
     tlt_noList: [null],        // 專櫃編號 (table: TALTALENT_BILL_NOTES_DETALL)
-    ...createPaginationConfig([{ field: 'id', order: 1 }]), // 分頁和排序參數
+    ...createPaginationConfig([{ field: 'money_type', order: 1 }]), // 分頁和排序參數
   });
   totalRecords = 0;
   data: TLS21030Data[] = [];

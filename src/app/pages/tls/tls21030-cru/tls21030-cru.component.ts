@@ -36,14 +36,14 @@ import { TableRowUnSelectEvent } from 'primeng/table';
   ],
 })
 export class TLS21030CRUComponent extends BasicCruPageComponent<TLS21030Data> implements OnInit {
-  dataForm = this.formBuilder.group({
+  dataForm = this.formBuilder.nonNullable.group({
     money_type: [null, Validators.required],       // 結帳方式
     term_no: [1, Validators.required],       // 帳次
     rece_yn: ['Y', Validators.required],        // 是否使用業主發票
     bill_remark1: [''],           // 說明1
     bill_remark2: [''],           // 說明2
     bill_remark3: [''],           // 說明3
-    ...createPaginationConfig([{ field: 'talent_id', order: 1 }]), // 分頁和排序參數
+    ...createPaginationConfig([{ field: 'tlt_no', order: 1 }]), // 分頁和排序參數
   });
   totalRecords = 0;
   settlementMethodOptions = [
