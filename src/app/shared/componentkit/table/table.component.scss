@@ -178,4 +178,7 @@
       color: var(--icon-button-span);
     }
   }
+  .wrap-header {
+    white-space: normal; /* 讓文字可以正常換行 */
+  }
 }

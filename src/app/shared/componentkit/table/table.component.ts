@@ -121,13 +121,14 @@ export class TableComponent extends BasicPrintDataComponent implements OnChanges
   @Input() addButton: AddButton[] = [];      // 自定義 管理按鈕
   @Input() buttonsLoading = false;           // 按鈕們 loading
   // body
+  @Input() showReorder = false;              // 是否顯示 排序欄位
   @Output() fieldChange = new EventEmitter<FieldChangeEvent>(); // input 變更事件
   @Output() selectButton = new EventEmitter<any>();             // 選擇 按鈕事件
   @Output() filterChange = new EventEmitter<{ rowData: any, value: string; }>(); // autoComplete 過濾事件
   // Footer
   @Input() showFooter = false;                      // 是否顯示 Footer
   // 分頁器
-  @Input() scrollHeight = '450px';                  // table 高度
+  @Input() scrollHeight = '867px';                  // table 高度
   @Input() scrollable = true;                        // 是否要滾輪
   @Input() showPaginator = true;                    // 是否顯示 分頁器
   @Input() totalRecords = 0;                        // 記錄總數
@@ -153,7 +154,6 @@ export class TableComponent extends BasicPrintDataComponent implements OnChanges
         this.dt.totalRecords = this.totalRecords !== 0 ? this.totalRecords : this.data.length;
         this.selectedItems = [];
         this.selectionChange.emit(this.selectedItems);
-        this.selectedItemsChange.emit(this.selectedItems);
       });
     }
     // 僅在 columns 首次被設定時執行初始化邏輯// 這樣就不會在每次 data 變動時都重置 filter 狀態

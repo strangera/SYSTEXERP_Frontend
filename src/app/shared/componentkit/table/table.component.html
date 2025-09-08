@@ -37,7 +37,9 @@
   <ng-template pTemplate="header" let-columns>
     <ng-container *ngIf="columnGroup && columnGroup.length > 0">
       <tr>
-        <th *ngIf="!showSubTotal && !showTotal && data.length" class="w-1rem" rowspan="2"></th>
+        <th *ngIf="!showSubTotal && !showTotal && data.length && (showReorder || showRowEdit)" class="w-1rem"
+          rowspan="2">
+        </th>
         <th class="w-1rem" rowspan="2">序號</th>
         <th class="w-1rem group-header" rowspan="2"
           *ngIf="IsPrint && showCheckBox && !rowEditing && selectionMode === 'multiple'">
@@ -86,7 +88,7 @@
     <!-- 非群組表頭 -->
     <ng-container *ngIf="!columnGroup?.length">
       <tr>
-        <th *ngIf="!showSubTotal && !showTotal && data.length" class="w-1rem"></th>
+        <th *ngIf="!showSubTotal && !showTotal && data.length && (showReorder || showRowEdit)" class="w-1rem"></th>
         <th class="w-1rem">序號</th>
         <th class="w-1rem" *ngIf="IsPrint && showCheckBox && !rowEditing && selectionMode === 'multiple'">
           <p-tableHeaderCheckbox [disabled]="disabled" />
@@ -94,9 +96,9 @@
         <th class="w-1rem" *ngIf="expansionColumns.length && IsPrint">收合/展開</th>
         <th *ngFor="let col of columns" pReorderableColumn pResizableColumn
           [pSortableColumn]="showSort && !rowEditing ? col.sortField ?? col.field : undefined"
-          [pSortableColumnDisabled]="!showSort || rowEditing || col.showSort === false" class="text-center"
+          [pSortableColumnDisabled]="!showSort || rowEditing || col.showSort === false" class="text-center wrap-header"
           pFrozenColumn [frozen]="IsPrint && col.frozen" [alignFrozen]="col.alignFrozen || 'right'">
-          {{ col.header }}
+          {{col.header}}
           <span *ngIf="col.required" class="required">*</span>
           <p-sortIcon *ngIf="showSort && !rowEditing && col.showSort !== false && data.length"
             [field]="col.sortField ?? col.field" />
@@ -126,12 +128,13 @@
   </ng-template>
   <ng-template pTemplate="body" let-rowIndex="rowIndex" let-rowData let-columns="columns" let-expanded="expanded"
     let-editing="editing" let-ri="rowIndex" let-index="rowIndex">
-    <tr #htmlTableRowElement [attr.data-key]="rowData[dataKey]" [pSelectableRow]="rowData" style="height: 58px"
+    <tr #htmlTableRowElement [attr.data-key]="rowData[dataKey]" [pSelectableRow]="rowData" style="height: 40.8px"
       [pSelectableRowDisabled]="!isRowSelectable(rowData) || disabled" [pReorderableRow]="index"
       [ngClass]="{ 'p-disabled-row': !isRowSelectable(rowData) }" [pEditableRow]="rowData" [pSelectableRow]="rowData"
       [pSelectableRowIndex]="rowIndex" (click)="itemClick.emit(rowData)">
       <ng-container *ngIf="!loading; else loadingTemplate">
-        <td *ngIf="!showSubTotal && !showTotal && data.length"><span class="pi pi-bars" pReorderableRowHandle></span>
+        <td *ngIf="!showSubTotal && !showTotal && data.length && (showReorder || showRowEdit)"><span class="pi pi-bars"
+            pReorderableRowHandle></span>
         </td>
         <td class="text-center">{{ rowIndex + 1 }}</td>
         <td *ngIf="IsPrint &&showCheckBox &&!rowEditing &&selectionMode === 'multiple'">
@@ -145,7 +148,7 @@
             pButton (click)="toggleRowExpansion(rowData)"
             [disabled]="rowData.expansionLoading || (!expansionLoadFn && !rowData[expansionDataKey]?.length)" />
         </td>
-        <td *ngFor="let col of columns" class="text-center" style="text-overflow: ellipsis"
+        <td *ngFor="let col of columns" class="text-center" style="text-overflow: ellipsis" style="min-width: 55px"
           (click)="editing ? $event.stopPropagation() : null" (dblclick)="detailRow(rowData)" [ngClass]="col.style"
           [alignFrozen]="col.alignFrozen ? col.alignFrozen : 'right'" pFrozenColumn [frozen]="IsPrint && col.frozen">
           <p-cellEditor *ngIf="showRowEdit">
