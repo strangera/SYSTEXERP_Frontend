@@ -23,6 +23,7 @@ import { yesterday } from '@shared/models/system/query-form.model';
 
 @Component({
   templateUrl: './tls22010.component.html',
+  styleUrls: ['./tls22010.component.scss'],
   standalone: true,
   imports: [
     MenubarComponent,
@@ -55,6 +56,12 @@ export class TLS22010Component extends BasicQueryPageComponent<any> implements O
   totalRecords = 0;
   data: any[] = [];
   filteredData: any[] = [];
+
+  statusSummary = {
+    LDataButZZero: 0,
+    ZNotMatchL: 0,
+    NoTxnMachine: 0
+  };
 
   // ------ 欄位定義 ------
   columns7: Column[] = [

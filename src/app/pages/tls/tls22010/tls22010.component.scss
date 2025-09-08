@@ -1,0 +1,21 @@
+:host ::ng-deep .legend-box {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100px;
+  border-radius: 1px;
+  color: #000;
+  font-weight: 100;
+}
+
+:host ::ng-deep .legend-box.pink {
+  background-color: #f4acb7;
+}
+
+:host ::ng-deep .legend-box.brown {
+  background-color: #e8ddb5;
+}
+
+:host ::ng-deep .legend-box.green {
+  background-color: #acd8aa;
+}
