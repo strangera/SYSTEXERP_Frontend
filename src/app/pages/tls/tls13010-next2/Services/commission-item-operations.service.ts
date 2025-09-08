@@ -85,18 +85,25 @@ export class CommissionItemOperationsService {
     contractEndDate: string
   ): ItemOperationResult {
 
+    // 確保 parentItem 有 mainStartDate 和 mainEndDate
+    if (!parentItem.mainStartDate) {
+      parentItem.mainStartDate = contractStartDate;
+    }
+    if (!parentItem.mainEndDate) {
+      parentItem.mainEndDate = contractEndDate;
+    }
+
     switch (type) {
       case 'discount':
         return this.addDiscountSettingItem(parentItem, contractStartDate, contractEndDate);
       case 'annual':
-        return this.addAnnualPerformanceItem(parentItem);
+        return this.addAnnualPerformanceItem(parentItem); // 不再需要傳遞日期參數
       case 'level':
         return this.addDiscountLevelItem(parentItem, contractStartDate, contractEndDate);
       default:
         return { success: false, message: '未知的項目類型' };
     }
   }
-
   /**
    * 新增折扣設定項目
    */
@@ -148,11 +155,14 @@ export class CommissionItemOperationsService {
       parentItem.annualPerformanceItems = [];
     }
 
+    // 計算新項目的日期區間
+    const dateRange = this.calculateNextAnnualDateRange(parentItem);
+
     const newItem: AnnualPerformanceItem = {
       id: this.generateTempId(),
       selected: false,
-      tlt_bdate: new Date(),
-      tlt_edate: new Date(),
+      tlt_bdate: dateRange.startDate,
+      tlt_edate: dateRange.endDate,
       year_amount: 0,
       extra_rate: 0,
       _status: 'new'
@@ -174,6 +184,71 @@ export class CommissionItemOperationsService {
       updatedParent: parentItem
     };
   }
+
+  private calculateNextAnnualDateRange(parentItem: CommissionItem): { startDate: Date, endDate: Date } {
+    // 獲取合約的總體日期範圍
+    const contractStartDate = this.parseDate(parentItem.mainStartDate);
+    const contractEndDate = this.parseDate(parentItem.mainEndDate);
+
+    // 如果沒有現有的年度業績項目，使用合約起始日期
+    const existingItems = parentItem.annualPerformanceItems?.filter(item => item._status !== 'deleted') || [];
+
+    if (existingItems.length === 0) {
+      return {
+        startDate: contractStartDate,
+        endDate: contractEndDate
+      };
+    }
+
+    // 找出最後一個項目的結束日期
+    const latestEndDate = existingItems.reduce((latest, item) => {
+      const itemEndDate = this.parseDate(item.tlt_edate);
+      return itemEndDate > latest ? itemEndDate : latest;
+    }, new Date('1900-01-01'));
+
+    // 計算下一個區間的起始日期（最後結束日期的隔天）
+    const nextStartDate = new Date(latestEndDate);
+    nextStartDate.setDate(nextStartDate.getDate() + 1);
+
+    // 檢查是否還有可用的日期範圍
+    if (nextStartDate > contractEndDate) {
+      // 如果超出合約範圍，返回一個提示性的範圍
+      return {
+        startDate: contractEndDate,
+        endDate: contractEndDate
+      };
+    }
+
+    // 嘗試分配一年的區間，但不能超過合約結束日期
+    const nextEndDate = new Date(nextStartDate);
+    nextEndDate.setFullYear(nextEndDate.getFullYear() + 1);
+    nextEndDate.setDate(nextEndDate.getDate() - 1); // 設為12/31
+
+    // 確保不超過合約結束日期
+    const finalEndDate = nextEndDate > contractEndDate ? contractEndDate : nextEndDate;
+
+    return {
+      startDate: nextStartDate,
+      endDate: finalEndDate
+    };
+  }
+
+  private parseDate(dateInput: any): Date {
+    if (!dateInput) {
+      return new Date();
+    }
+
+    if (dateInput instanceof Date) {
+      return new Date(dateInput);
+    }
+
+    if (typeof dateInput === 'string') {
+      return new Date(dateInput);
+    }
+
+    return new Date();
+  }
+
 
   /**
    * 新增折扣層級項目

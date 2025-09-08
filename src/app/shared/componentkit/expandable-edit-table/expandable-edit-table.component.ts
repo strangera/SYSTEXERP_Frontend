@@ -1049,10 +1049,36 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
   }
 
   onDetailEditSave(detailData: any, rowData: any) {
-    const oldDetail = this.clonedDetails[detailData.id];
-    delete this.clonedDetails[detailData.id];
-    this.editingDetail = null;
-    this.detailSave.emit({ oldDetail, newDetail: detailData, parentData: rowData });
+    try {
+      // 只做通用的驗證框架，不包含具體業務邏輯
+      let canSave = true;
+      const preventSave = () => { canSave = false; };
+
+      // 發出 beforeSave 事件，讓父組件處理業務驗證
+      this.beforeSave.emit({
+        data: detailData,
+        preventDefault: preventSave
+      });
+
+      if (!canSave) {
+        return; // 父組件阻止儲存
+      }
+
+      // 原有的儲存邏輯
+      const oldDetail = this.clonedDetails[detailData.id];
+      delete this.clonedDetails[detailData.id];
+      this.editingDetail = null;
+
+      this.detailSave.emit({
+        oldDetail,
+        newDetail: detailData,
+        parentData: rowData
+      });
+
+    } catch (error) {
+      console.error('儲存詳細資料時發生錯誤:', error);
+      this.messageService.warnBubble('儲存失敗，請檢查輸入內容');
+    }
   }
 
   onDetailEditCancel(detailData: any, rowData: any, rowIndex: number, detailIndex: number) {

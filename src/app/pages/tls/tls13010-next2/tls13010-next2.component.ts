@@ -1364,8 +1364,77 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
   }
 
   onDetailSave(event: { oldDetail: any, newDetail: any, parentData: any }): void {
+    const { newDetail, parentData } = event;
+
+    // 🎯 統一的日期驗證邏輯（所有詳細資料類型都檢查）
+    if (newDetail.tlt_bdate && newDetail.tlt_edate) {
+      const startDate = new Date(newDetail.tlt_bdate);
+      const endDate = new Date(newDetail.tlt_edate);
+
+      // 基本日期有效性檢查
+      if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
+        this.notificationService.errorBubble('日期格式錯誤，請重新輸入');
+        return; // 阻止儲存，保持編輯狀態
+      }
+
+      // 起始日期必須早於或等於結束日期
+      if (startDate > endDate) {
+        this.notificationService.errorBubble('起始日期必須早於或等於結束日期');
+        return; // 阻止儲存，保持編輯狀態
+      }
+    }
+
+    // 🎯 年度業績項目的特殊驗證（檢查與其他項目的日期重疊）
+    if (newDetail._originalType === 'annual') {
+      // 檢查與其他年度業績項目的日期重疊
+      const otherAnnualItems = parentData.annualPerformanceItems.filter((item: any) =>
+        item.id !== newDetail.id && item._status !== 'deleted'
+      );
+
+      const startDate = new Date(newDetail.tlt_bdate);
+      const endDate = new Date(newDetail.tlt_edate);
+
+      for (const otherItem of otherAnnualItems) {
+        const otherStart = new Date(otherItem.tlt_bdate);
+        const otherEnd = new Date(otherItem.tlt_edate);
+
+        // 檢查日期區間是否重疊
+        if (startDate < otherEnd && otherStart < endDate) {
+          this.notificationService.errorBubble('日期區間與其他年度業績項目重疊');
+          return; // 阻止儲存
+        }
+      }
+    }
+
+    // 折扣設定項目的特殊驗證（如果需要）
+    if (newDetail._originalType === 'discount') {
+      // 可以在這裡加入折扣設定特有的日期驗證邏輯
+      // 例如：折扣期間不能超過合約期間等
+    }
+
+    // 層級抽成項目的特殊驗證（如果需要）
+    if (newDetail._originalType === 'level') {
+      // 可以在這裡加入層級抽成特有的驗證邏輯
+    }
+
+    // 如果所有驗證都通過，繼續原有的儲存邏輯
     this.eventHandlersService.handleDetailSave(event, this.commissionData);
     this.saveToWorkflow();
+  }
+
+  onBeforeDetailSave(event: { data: any, preventDefault: () => void }): void {
+    const { data } = event;
+
+    if (data.tlt_bdate && data.tlt_edate) {
+      const startDate = new Date(data.tlt_bdate);
+      const endDate = new Date(data.tlt_edate);
+
+      if (startDate > endDate) {
+        this.notificationService.errorBubble('起始日期必須早於結束日期');
+        event.preventDefault(); // 阻止儲存
+        return;
+      }
+    }
   }
 
   onDropdownChange(event: { rowData: any, field: string, newValue: any, oldValue: any }): void {
