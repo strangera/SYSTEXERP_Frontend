@@ -150,9 +150,15 @@
       <ng-container *ngIf="buttonID === 4">
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown label="專櫃編號" controlName="TLT_NO" [options]="TLT_NO_Option" optionLabel="Label"
+              optionValue="No" [control]="dataForm.controls.TLT_NO" [submitted]="submitted"></app-dropdown>  
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown label="品牌代碼" controlName="LOGO_No" [options]="pluLogoOption" optionLabel="Label"
               optionValue="No" [control]="dataForm.controls.LOGO_No" [submitted]="submitted"></app-dropdown>
           </div>
+        </div>
+        <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-number label="商品售價" controlName="PLU_SalePrc" [control]="dataForm.controls.PLU_SalePrc"
               [maxFractionDigits]="2" [submitted]="submitted"></app-input-number>
@@ -207,7 +213,7 @@
           (addMainItem)="onAddPOS2005()"></app-expandable-edit-table>
         <h6>不可刪除與上方表單相同的廠商編號</h6>
         <!-- 輸入廠商編號才能填寫   -->
-        <ng-container *ngIf="dataForm.get('VEN_No')?.value !== null">
+        <!-- <ng-container *ngIf="dataForm.get('VEN_No')?.value !== null"> -->
           <!-- 商品採購廠商 POS2020 -->
           <app-expandable-edit-table #pos2020Table title="商品採購廠商" [mainColumns]="POS2020DataColumn" [data]="POS2020Data"
             [loading]="expand2020Loading" detailKey="" dataKey="id" [showCheckBox]="true" [showPaginator]="false"
@@ -215,7 +221,7 @@
             [readonly]="crudstatus === 'Read'" [defaultNewItem]="defaultNew2020" (save)="onRowSavePOS2020($event)"
             (cancel)="onRowCancelPOS2020($event)" (batchDelete)="onBatchDelete2020($event)"
             (addMainItem)="onAddPOS2020()"></app-expandable-edit-table>
-        </ng-container>
+        <!-- </ng-container> -->
       </ng-container>
       <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3" *ngIf="!isFormReadable">
         <app-button btnType="cancel" [form]="dataForm"></app-button>

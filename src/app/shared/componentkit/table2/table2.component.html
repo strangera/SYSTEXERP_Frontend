@@ -31,11 +31,10 @@
   [lazy]="lazy || !IsPrint"
   tableStyleClass="h-full"
   [styleClass]="'p-datatable-sm p-datatable-striped' + (IsPrint ? ' p-datatable-gridlines' : '')"
-  [virtualScroll]="!IsPrint && !groupRowsBy" 
+  [virtualScroll]="!IsPrint && groupRowsByArray.length === 0"
   [virtualScrollItemSize]="35"
   [virtualScrollDelay]="250"
   currentPageReportTemplate="第{currentPage}頁 / 總共{totalPages}頁 (總筆數:{totalRecords})"
-  
   (selectionChange)="onSelectionChange($event)"
   (onRowSelect)="select.emit($event)"
   (onRowUnselect)="unSelect.emit($event)"
@@ -44,284 +43,129 @@
   [expandedRowKeys]="IsPrint ? expandedRows : {}"
   paginatorDropdownAppendTo="body"
   editMode="row"
-  [groupRowsBy]="groupRowsBy"
+  [groupRowsBy]="groupRowsByArray"
   rowGroupMode="subheader"
 >
+
   <!-- ===== Caption / 工具列 ===== -->
-  <ng-template pTemplate="caption">
-    <div class="grid align-items-center justify-content-between mx-0" *ngIf="showCaption && !rowEditing">
-      <!-- 左側：欄位、報表、CRUD、Excel -->
-      <div class="caption-left button-group flex gap-2 py-2">
-        <p-multiSelect
-          [options]="columns"
-          [(ngModel)]="selectedColumns"
-          optionLabel="header"
-          dropdownIcon="pi pi-cog"
-          pTooltip="過濾欄位"
-          tooltipPosition="top"
-          (onChange)="onFilterChange($event)"
-        />
-        <!-- 自訂報表 -->
-        <p-button
-          *ngIf="customReport && IsPrint && data.length > 0"
-          icon="pi pi-file"
-          [rounded]="true"
-          [outlined]="true"
-          [pTooltip]="'自訂報表'"
-          tooltipPosition="top"
-          (click)="exportEvent.emit('custom')"
-        ></p-button>
+<ng-template pTemplate="caption">
+  <app-table-caption
+    [data]="data"
+    [columns]="columns"
+    (columnsEvent)="columns = $event"
+    [dataKey]="dataKey"
+    [expansionDataKey]="expansionDataKey"
+    [expansionLoadFn]="expansionLoadFn"
+    [expandedRows]="expandedRows"
+    [rowEditing]="rowEditing"
+    [selectedColumns]="selectedColumns"
+    (selectedColumnsEvent)="selectedColumns = $event"
+    [selectedItems]="selectedItems"
+    [tableKey]="tableKey"
+    [expansionColumns]="expansionColumns"
+    [showCaption]="showCaption"
+    [showHeader]="showHeader"
+    [showFilter]="showFilter"
+    [showReportMode]="showReportMode"
+    [showInsert]="showInsert"
+    [insertDisabled]="insertDisabled"
+    [deleteData]="deleteData"
+    [showDelete]="showDelete"
+    [deleteIcon]="deleteIcon"
+    [deletepTooltip]="deletepTooltip"
+    [showExcel]="showExcel"
+    [disabled]="disabled"
+    [showExcelExport]="showExcelExport"
+    [showExcelImport]="showExcelImport"
+    [exportExcelLoading]="exportExcelLoading"
+    [showPage]="showPage"
 
-        <p-button
-          [icon]="IsPrint ? 'pi pi-file' : 'pi pi-times'"
-          [rounded]="true"
-          *ngIf="showReportMode && data.length > 0"
-          (click)="toggleVisibility()"
-          [pTooltip]="IsPrint ? '報表模式' : '關閉報表模式'"
-          tooltipPosition="top"
-          [outlined]="!IsPrint"
-          [disabled]="!canPerformAction('50')"
-        />
+    [totalPages]="totalPages"
+    [pages]="pages"
+    [selectedPage]="selectedPage"
+    [rows]="rows"
+    [first]="first"
+    [totalRecords]="dt.totalRecords"
 
-        <div [@toggleButtons]="!IsPrint ? 'visible' : 'hidden'" [ngClass]="IsPrint ? 'hidden' : 'flex'" class="gap-2">
-          <p-button
-            pButton
-            tooltipPosition="top"
-            pTooltip="列印PDF"
-            class="p-button-rounded p-button-text p-button-info"
-            icon="fa-regular fa-file-pdf"
-            (click)="exportStatus = 'PDF'; exportDialog = true"
-            [disabled]="!canPerformAction('60')"
-          />
-          <p-button
-            pButton
-            tooltipPosition="top"
-            pTooltip="匯出Excel"
-            class="p-button-rounded p-button-text p-button-info"
-            icon="fa-regular fa-file-lines"
-            (click)="exportStatus = 'Excel'; exportDialog = true"
-            [disabled]="!canPerformAction('70')"
-          />
-        </div>
+    [apiUrl]="apiUrl"
+    [showExpandCollapse]="showExpandCollapse"
+    (insert)="insertRow()"
+    (delete)="deleteRow($event)"
+    (exportExcel)="exportExcel.emit()"
+    (importExcel)="importExcel.emit($event)"
+    (pageChange)="goToPage($event)"
+    (exportEvent)="exportEvent.emit($event)"
+  >
+    <header><ng-content select="header"></ng-content></header>
+  </app-table-caption>
+</ng-template>
 
-        <p-button
-          *ngIf="IsPrint && showInsert && !rowEditing"
-          (click)="insertRow()"
-          pTooltip="新增"
-          tooltipPosition="top"
-          pButton
-          icon="pi pi-plus"
-          severity="success"
-          class="p-button-rounded p-button-text"
-          [disabled]="insertDisabled || !canPerformAction('20')"
-        />
-        <p-button
-          *ngIf="IsPrint && showDelete && !rowEditing"
-          (click)="deleteRow(selectedItems)"
-          [pTooltip]="deletepTooltip"
-          tooltipPosition="top"
-          pButton
-          [icon]="deleteIcon"
-          severity="danger"
-          class="p-button-text"
-          [rounded]="true"
-          [disabled]="selectedItems?.length <= 0 || !canPerformAction('40')"
-        />
-      </div>
+  <!-- ===== 表頭 ===== -->
+  <ng-template pTemplate="header" let-columns>
+    <tr>
+      <th class="w-1rem">序號</th>
+      <th
+        class="w-1rem"
+        *ngIf="IsPrint && showCheckBox && !rowEditing && selectionMode === 'multiple'">
+        <p-tableHeaderCheckbox [disabled]="disabled" />
+      </th>
+      <th class="w-1rem" *ngIf="expansionColumns.length && IsPrint">收合/展開</th>
 
-      <!-- 中段：投影 header 插槽 -->
-      <div *ngIf="IsPrint" class="flex-grow-1 p-2">
-        <ng-content select="header"></ng-content>
-      </div>
+      <th
+        *ngFor="let col of columns"
+        pReorderableColumn
+        pResizableColumn
+        [pSortableColumn]="showSort && !rowEditing ? col.sortField ?? col.field : undefined"
+        [pSortableColumnDisabled]="!showSort || rowEditing || col.showSort === false"
+        class="text-center"
+        pFrozenColumn
+        [frozen]="IsPrint && col.frozen"
+        [alignFrozen]="col.alignFrozen || 'right'">
+        {{ col.header }}
+        <span *ngIf="col.required" class="required">*</span>
+        <p-sortIcon
+          *ngIf="showSort && !rowEditing && col.showSort !== false && data.length"
+          [field]="col.sortField ?? col.field" />
+      </th>
 
-      <!-- 右側：展開、Excel、頁碼 -->
-      <div *ngIf="IsPrint" class="flex gap-2 py-2">
-        <div *ngIf="expansionDataKey && IsPrint" class="flex align-items-center">
-          <p-button
-            [icon]="expression ? 'pi pi-angle-up' : 'pi pi-angle-down'"
-            (onClick)="toggleExpandCollapse()"
-            [label]="expression ? '收合' : '展開'"
-            text
-          />
-        </div>
-        <div *ngIf="showExcel" class="flex gap-2 align-items-center">
-          <p-button
-            *ngIf="showExcelExport"
-            label="匯出excel範本"
-            severity="success"
-            [icon]="exportExcelLoading ? 'pi pi-spin pi-spinner' : 'pi pi-file-export'"
-            (click)="onExportExcel()"
-          />
-          <p-fileUpload
-            *ngIf="showExcelImport"
-            #fileUpload
-            styleClass="p-button-info"
-            mode="basic"
-            chooseIcon="pi pi-file-import"
-            accept="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-            severity="info"
-            (onSelect)="onImportExcel($event)"
-            [auto]="true"
-            chooseLabel="Excel匯入"
-          />
-        </div>
-        <p-dropdown
-          *ngIf="showPage && showPaginator && IsPrint && data.length > 0"
-          [options]="pages"
-          [ngModel]="selectedPage"
-          optionValue="value"
-          (onChange)="goToPage($event.value)"
-          appendTo="body"
-        />
-      </div>
-    </div>
+      <th
+        *ngIf="!alwaysEdit || (alwaysEdit && rowEditing)"
+        [hidden]="!IsPrint || !showManage"
+        class="w-1rem text-center"
+        alignFrozen="right"
+        pFrozenColumn
+        [frozen]="IsPrint">
+        管理
+      </th>
+    </tr>
   </ng-template>
 
-  <!-- ===== 表頭（支援群組與非群組） ===== -->
-  <ng-template pTemplate="header" let-columns>
-    <!-- 群組表頭 -->
-    <ng-container *ngIf="columnGroup && columnGroup.length > 0; else nonGroupHeader">
-      <tr>
-        <th *ngIf="!showSubTotal && !showTotal && data.length" class="w-1rem" rowspan="2"></th>
-        <th class="w-1rem" rowspan="2">序號</th>
-        <th
-          class="w-1rem group-header"
-          rowspan="2"
-          *ngIf="IsPrint && showCheckBox && !rowEditing && selectionMode === 'multiple'">
-          <p-tableHeaderCheckbox [disabled]="disabled" />
-        </th>
-        <th class="w-1rem group-header" rowspan="2" *ngIf="expansionColumns.length && IsPrint">收合/展開</th>
+  <!-- ===== 群組表頭（占位，避免 footer 不渲染） ===== -->
+  <ng-template pTemplate="rowgroupheader" let-rowData let-columns="columns">
+    <tr class="p-rowgroup-header">
+      <td [attr.colspan]="getVisibleHeaderCount"></td>
+    </tr>
+  </ng-template>
 
-        <ng-container *ngFor="let col of columns; let i = index">
-          <!-- 第一次出現該群組 -->
-          <ng-container *ngIf="shouldRenderGroupHeader(col, i, columns)">
-            <th
-              [attr.colspan]="getColumnSpan(columns, col.groupField!)"
-              [ngClass]="getGroupAlignClass(col.groupField!)"
-              class="group-header"
-              pReorderableColumn
-              pResizableColumn>
-              {{ getGroupHeader(col.groupField!) }}
-            </th>
-          </ng-container>
-          <!-- 沒群組的欄位 -->
-          <ng-container *ngIf="!col.groupField">
-            <th
-              *ngIf="!col.hidden"
-              rowspan="2"
-              class="text-center"
-              pReorderableColumn
-              pResizableColumn
-              [pSortableColumn]="showSort && !rowEditing ? col.sortField ?? col.field : undefined"
-              [pSortableColumnDisabled]="!showSort || rowEditing || col.showSort === false"
-              pFrozenColumn
-              [frozen]="IsPrint && !!col.frozen"
-              [alignFrozen]="col.alignFrozen || 'right'">
-              {{ col.header }}
-              <p-sortIcon
-                *ngIf="showSort && !rowEditing && col.showSort !== false && data.length"
-                [field]="col.sortField ?? col.field" />
-            </th>
-          </ng-container>
-        </ng-container>
+  <!-- ===== ✅ 群組尾：小計列（就在表格裡） ===== -->
+<ng-template pTemplate="rowgroupfooter" let-rowData>
+   <tr class="bg-primary-50"
+      *ngIf="tmplPing('SUBTOTAL#2.1 template hit', { key: getGroupKeyFromRow(rowData) }) 
+             && shouldRenderGroupFooter(rowData)">
+    <td class="font-bold text-right pr-2" [attr.colspan]="getSubtotalLabelColspan()">
+      小計
+    </td>
 
-        <th
-          *ngIf="!alwaysEdit || (alwaysEdit && rowEditing)"
-          [hidden]="!IsPrint || !showManage"
-          rowspan="2"
-          class="w-1rem text-center group-header"
-          alignFrozen="right"
-          pFrozenColumn
-          [frozen]="IsPrint">
-          管理
-        </th>
-      </tr>
-
-      <!-- 第二層：群組內實際欄位 -->
-      <tr>
-        <ng-container *ngFor="let col of columns">
-          <th
-            *ngIf="!col.hidden && col.groupField"
-            class="text-center"
-            pReorderableColumn
-            pResizableColumn
-            [pSortableColumn]="showSort && !rowEditing ? col.sortField ?? col.field : undefined"
-            [pSortableColumnDisabled]="!showSort || rowEditing || col.showSort === false"
-            pFrozenColumn
-            [frozen]="IsPrint && !!col.frozen"
-            [alignFrozen]="col.alignFrozen || 'right'">
-            {{ col.header }}
-            <p-sortIcon
-              *ngIf="showSort && !rowEditing && col.showSort !== false && data.length"
-              [field]="col.sortField ?? col.field" />
-          </th>
-        </ng-container>
-      </tr>
+    <ng-container *ngFor="let col of getSubtotalColumns()">
+      <td class="font-bold" [ngClass]="col.style ? col.style : 'text-right'">
+        {{ col.format ? col.format(getGroupSubtotal(rowData, col.field))
+                      : getGroupSubtotal(rowData, col.field) }}
+      </td>
     </ng-container>
 
-    <!-- 非群組表頭 -->
-    <ng-template #nonGroupHeader>
-      <tr>
-        <th *ngIf="!showSubTotal && !showTotal && data.length" class="w-1rem"></th>
-        <th class="w-1rem">序號</th>
-        <th
-          class="w-1rem"
-          *ngIf="IsPrint && showCheckBox && !rowEditing && selectionMode === 'multiple'">
-          <p-tableHeaderCheckbox [disabled]="disabled" />
-        </th>
-        <th class="w-1rem" *ngIf="expansionColumns.length && IsPrint">收合/展開</th>
-
-        <th
-          *ngFor="let col of columns"
-          pReorderableColumn
-          pResizableColumn
-          [pSortableColumn]="showSort && !rowEditing ? col.sortField ?? col.field : undefined"
-          [pSortableColumnDisabled]="!showSort || rowEditing || col.showSort === false"
-          class="text-center"
-          pFrozenColumn
-          [frozen]="IsPrint && col.frozen"
-          [alignFrozen]="col.alignFrozen || 'right'">
-          {{ col.header }}
-          <span *ngIf="col.required" class="required">*</span>
-          <p-sortIcon
-            *ngIf="showSort && !rowEditing && col.showSort !== false && data.length"
-            [field]="col.sortField ?? col.field" />
-        </th>
-
-        <th
-          *ngIf="!alwaysEdit || (alwaysEdit && rowEditing)"
-          [hidden]="!IsPrint || !showManage"
-          class="w-1rem text-center"
-          alignFrozen="right"
-          pFrozenColumn
-          [frozen]="IsPrint">
-          管理
-        </th>
-      </tr>
-    </ng-template>
-  </ng-template>
-
-  <!-- ===== 小計（群組尾） ===== -->
-<ng-template pTemplate="rowgroupfooter" let-rowData let-columns="columns">
-  <ng-container *ngIf="showSubTotal">
-    <tr>
-      <td class="text-center font-bold">小計</td>
-      <td *ngIf="IsPrint && showCheckBox && !rowEditing && selectionMode === 'multiple'"></td>
-      <td *ngIf="expansionColumns.length && IsPrint"></td>
-
-      <ng-container *ngFor="let col of columns">
-        <td class="font-bold" *ngIf="!col.hidden"
-            [ngClass]="col.style ? col.style : 'text-center'">
-          <ng-container *ngIf="col.isSubTotal">
-            {{ col.format ? col.format(getGroupSubtotal(rowData[groupRowsBy], col.field))
-                          : getGroupSubtotal(rowData[groupRowsBy], col.field) }}
-          </ng-container>
-        </td>
-      </ng-container>
-
-      <td *ngIf="!alwaysEdit || (alwaysEdit && rowEditing)" [hidden]="!IsPrint || !showManage"></td>
-    </tr>
-  </ng-container>
+    <td *ngIf="!alwaysEdit || (alwaysEdit && rowEditing)"
+        [hidden]="!IsPrint || !showManage"></td>
+  </tr>
 </ng-template>
 
   <!-- ===== 內容列 ===== -->
@@ -348,11 +192,6 @@
       (click)="itemClick.emit(rowData)"
     >
       <ng-container *ngIf="!loading; else loadingTemplate">
-        <!-- 行拖拉把手 -->
-        <td *ngIf="!showSubTotal && !showTotal && data.length">
-          <span class="pi pi-bars" pReorderableRowHandle></span>
-        </td>
-
         <td class="text-center">{{ rowIndex + 1 }}</td>
 
         <!-- 勾選 -->
@@ -393,7 +232,6 @@
           pFrozenColumn
           [frozen]="IsPrint && col.frozen"
         >
-          <!-- 編輯/輸出 -->
           <p-cellEditor *ngIf="showRowEdit">
             <ng-template pTemplate="input">
               <input
@@ -610,13 +448,13 @@
       <td class="text-center font-bold">總計</td>
       <td *ngIf="IsPrint && showCheckBox && !rowEditing && selectionMode === 'multiple'"></td>
       <td *ngIf="expansionColumns.length && IsPrint"></td>
-    <td *ngFor="let col of columns"
-    class="font-bold pr-2"
-    [ngClass]="col.style ? col.style : 'text-center'">
-  <ng-container *ngIf="col.isTotal">
-    {{ col.format ? col.format(getTotal(col.field)) : getTotal(col.field) }}
-  </ng-container>
-</td>
+      <td *ngFor="let col of columns"
+          class="font-bold pr-2"
+          [ngClass]="col.style ? col.style : 'text-center'">
+        <ng-container *ngIf="col.isTotal">
+          {{ col.format ? col.format(getTotal(col.field)) : getTotal(col.field) }}
+        </ng-container>
+      </td>
       <td *ngIf="!alwaysEdit || (alwaysEdit && rowEditing)" [hidden]="!IsPrint || !showManage"></td>
     </tr>
   </ng-template>

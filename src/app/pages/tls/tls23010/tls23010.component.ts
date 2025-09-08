@@ -126,7 +126,7 @@ export class TLS23010Component
     TXN_Uniform: [''],
     TXN_GUILoveCode: [''],
     TXN_GUI_CarrType: [[]],
-    TXN_GUI_CarrId: [''],
+    TXN_GUIVehicle: [''],
     rece_yn: [''],
     cash_yn: [''],
     tlt_building: [''],
@@ -644,8 +644,8 @@ onExportXLSX() {
     { field: 'TXN_GUIRemark',  header: '防偽隨機碼',     visible: true },
 
     { field: 'TXN_GUI_CarrType', header: '載具種類',     visible: true, format: (v: any) => this.getLabelFromOptions(v, this.carrierTypeOptions) },
-    { field: 'DonateType',     header: '捐贈類別',      visible: true },
-    { field: 'TXN_GUI_CarrId', header: '共通性載具號碼', visible: true },
+    // { field: 'DonateType',     header: '捐贈類別',      visible: true },
+    { field: 'TXN_GUIVehicle', header: '共通性載具號碼', visible: true },
 
     { field: 'TXN_PrintTimes', header: '發票列印次數',    visible: true, style: 'text-right' },
     { field: 'TXN_PrintGUI',   header: '電子發票是否列印', visible: true, format: this.getYesNoLabel },

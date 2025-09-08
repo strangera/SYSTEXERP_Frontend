@@ -399,6 +399,12 @@ export class TLS23060Component extends BasicQueryPageComponent<any> {
       .toISOString()
       .slice(0, 19);
   }
+    private formatDateTime(val: string): string {
+    const d = new Date(val); if (isNaN(d.getTime())) return val;
+    const yyyy=d.getFullYear(), MM=(d.getMonth()+1).toString().padStart(2,'0'), dd=d.getDate().toString().padStart(2,'0');
+    const HH=d.getHours().toString().padStart(2,'0'), mm=d.getMinutes().toString().padStart(2,'0');
+    return `${yyyy}/${MM}/${dd} ${HH}:${mm}`;
+  }
 
   // 金額格式
   moneyFormat = (value: number): string =>
@@ -406,6 +412,7 @@ export class TLS23060Component extends BasicQueryPageComponent<any> {
 
   // 欄位
   columns = [
+    { field: 'TXN_Time', header: '交易時間', visible: true, format: (v: string) => this.formatDateTime(v)  },
     { field: 'ECR_No', header: '收銀機號', visible: true },
     { field: 'tlt_no', header: '專櫃編號', visible: true },
     { field: 'tlt_name', header: '櫃位名稱', visible: true, style: 'text-left' },

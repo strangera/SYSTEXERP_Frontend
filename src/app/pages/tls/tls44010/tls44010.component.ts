@@ -93,9 +93,9 @@ export class TLS44010Component extends BasicQueryPageComponent<any> implements O
     if (item.label?.includes('全部')) {
       this.filteredData = [...this.data];
     } else if (item.label?.includes('連線')) {
-      this.filteredData = this.data.filter(d => d.EOS_Online === '1'); // 線上
+      this.filteredData = this.data.filter(d => d.EOS_Online === 'Y'); // 線上
     } else if (item.label?.includes('離線')) {
-      this.filteredData = this.data.filter(d => d.EOS_Online === '0'); // 離線
+      this.filteredData = this.data.filter(d => d.EOS_Online === 'N'); // 離線
     }
     this.first = 0;
     this.updatePagedData();

@@ -17,7 +17,6 @@ import { MenubarComponent } from '@shared/component/menubar/menubar.component';
 import { ButtonComponent } from '@shared/componentkit/button/button.component';
 import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
-import { TableComponent } from '@shared/componentkit/table/table.component';
 import { ValidationService } from '@shared/service/validation.service';
 import { CustomFooterTableComponent } from '@shared/componentkit/custom-footer-table/customFooterTable.component';
 
@@ -37,7 +36,6 @@ yesterday.setDate(yesterday.getDate() - 1);
     ReactiveFormsModule,
     DropdownComponent,
     CalendarComponent,
-    TableComponent,
     Button,
     NgStyle,
     NgIf,
@@ -231,60 +229,37 @@ export class TLS2A010Component extends BasicQueryPageComponent<any> implements O
       ECR_No_End: raw.ECR_No_End ?? '',
       PAY_NO: raw.PAY_NO ?? '',
       Building_No: raw.Building_No ?? ''
-    }
+    };
 
     this.tls2a010Service.queryTLS2A010(payload).pipe(untilDestroyed(this)).subscribe({
       next: (response) => {
-        interface TLS2A010Item {
-          System_Amt?: number;
-          Real_Amt?: number;
-          TXN_Date?: string;
-          Check_Status?: string;
-          [key: string]: any; // Add additional properties as needed
-        }
-
-        this.data = (response?.Data.mainData ?? []).map((item: TLS2A010Item) => {
-          const systemAmt = Number(item.System_Amt ?? 0);
-          const realAmt = Number(item.Real_Amt ?? 0);
-          const diff = systemAmt - realAmt;
+        this.data = (response?.Data.mainData ?? []).map((item: any) => {
+          const diff = Number(item.OVER_PayAmt ?? 0);
 
           let status = '';
-          if (diff < 0) {
-            status = '欠';   // 欠收
-          } else if (diff === 0) {
-            status = '平';   // 平帳
-          } else {
-            status = '溢';   // 多收
-          }
+          if (diff < 0) status = '欠';
+          else if (diff === 0) status = '平';
+          else status = '溢';
 
           return {
             ...item,
-            OVER_PayAmt: diff,   // 差異數
-            OVER_Status: status  // 欠 / 平 / 溢
+            // 總差異
+            OVER_PayAmt: diff,
+
+            // 各支付別差異
+            OVER_PayAmt1: item.OVER_PayAmt1,
+            OVER_PayAmt2: item.OVER_PayAmt2,
+            OVER_PayAmt3: item.OVER_PayAmt3,
+
+            // 額外欄位
+            OVER_Status: status,
+            check_status: item.check_status,
+            check_usr_name: item.check_usr_name
           };
         });
+
         this.footerData = [...response.Data.totalData]; // table總計那列的資料
-        // this.data = (response?.Data ?? [])
-        // .map((item: TLS2A010Item) => {
-        //   // 先取原始日期字串
-        //   const rawDate = item.TXN_Date;
-        //   let formattedDate = item.TXN_Date;
 
-        //   if (rawDate) {
-        //     const dateObj = new Date(rawDate);
-        //     if (!isNaN(dateObj.getTime())) {
-        //       const yyyy = dateObj.getFullYear();
-        //       const dd = String(dateObj.getDate() + 1).padStart(2, '0');
-        //       const mm = String(dateObj.getMonth() + 1).padStart(2, '0'); // 月份從0開始
-        //       formattedDate = `${yyyy}-${mm}-${dd}`;
-        //     }
-        //   }
-
-        //   return {
-        //     ...item,
-        //     TXN_Date: formattedDate,
-        //   };
-        // });
         const first = this.data[0];
         this.PAY_NO = this.queryForm.value.PAY_NO || '';
         this.TXN_Date = first?.TXN_Date || '';
@@ -298,76 +273,76 @@ export class TLS2A010Component extends BasicQueryPageComponent<any> implements O
         this.loading = false;
       }
     });
-
-  }
-  onReview(selectedItems: any[]): void {
-    if (!selectedItems || selectedItems.length === 0) {
-      this.messageService.warnBubble('請先勾選要審核的項目');
-      return;
-    }
-
-    // 依照 API 格式，包成 selectList
-    const payload = {
-      PAY_Type: this.PAY_Type,
-      selectList: selectedItems.map(item => ({
-        ID: item.ID,
-        PAY_NO: item.PAY_NO,
-      }))
-    };
-
-    console.log('送出審核資料:', payload);
-
-    this.loading = true;
-
-    this.tls2a010Service.updateTLS2A010(payload).subscribe({
-      next: () => {
-        this.messageService.successBubble('審核完成');
-        this.onSubmit(this.queryForm);
-        this.loading = false;
-      },
-      error: (err) => {
-        console.error('更新審核狀態失敗:', err);
-        this.messageService.errorBubble('更新失敗，請稍後再試');
-        this.loading = false;
-      }
-    });
   }
 
+onReview(selectedItems: any[]): void {
+  if(!selectedItems || selectedItems.length === 0) {
+  this.messageService.warnBubble('請先勾選要審核的項目');
+  return;
+}
+
+// 依照 API 格式，包成 selectList
+const payload = {
+  PAY_Type: this.PAY_Type,
+  selectList: selectedItems.map(item => ({
+    ID: item.ID,
+    PAY_NO: item.PAY_NO,
+  }))
+};
+
+console.log('送出審核資料:', payload);
+
+this.loading = true;
+
+this.tls2a010Service.updateTLS2A010(payload).subscribe({
+  next: () => {
+    this.messageService.successBubble('審核完成');
+    this.onSubmit(this.queryForm);
+    this.loading = false;
+  },
+  error: (err) => {
+    console.error('更新審核狀態失敗:', err);
+    this.messageService.errorBubble('更新失敗，請稍後再試');
+    this.loading = false;
+  }
+});
+  }
 
 
 
-  onPayNoChange(payNo: string): void {
-    console.log(payNo);
-    this.PAY_Type = this.paymentToolOptions.find(opt => opt.No === payNo)?.PAY_Type ?? '';
-    this.PAY_NO = payNo;
 
-    if (this.PAY_Type === '0') {
-      this.selectedColumns = this.creditCardColumns;
-      this.columnGroup = this.creditCardGroup;
-    } else {
-      this.selectedColumns = this.defaultColumns;
-      this.columnGroup = [];
-    }
+onPayNoChange(payNo: string): void {
+  console.log(payNo);
+  this.PAY_Type = this.paymentToolOptions.find(opt => opt.No === payNo)?.PAY_Type ?? '';
+  this.PAY_NO = payNo;
+
+  if(this.PAY_Type === '0') {
+  this.selectedColumns = this.creditCardColumns;
+  this.columnGroup = this.creditCardGroup;
+} else {
+  this.selectedColumns = this.defaultColumns;
+  this.columnGroup = [];
+}
   }
   override onDetail(row: any): void {
-    console.log('缺單審核被點擊:', row);
+  console.log('缺單審核被點擊:', row);
 
-    this.tls2a010Service.queryDetailTLS2A010(row).subscribe({
-      next: (res) => {
-        const detailData = res?.Data ?? [];
-        const rowdataWithDetail = {
-          ...row,
-          details: detailData
-        };
+  this.tls2a010Service.queryDetailTLS2A010(row).subscribe({
+    next: (res) => {
+      const detailData = res?.Data ?? [];
+      const rowdataWithDetail = {
+        ...row,
+        details: detailData
+      };
 
-        // 呼叫共通的 navigateWithState (不會覆蓋底層)
-        this.navigateWithState(CRUDStatus.Edit, rowdataWithDetail);
-      },
-      error: (err) => {
-        console.error('查詢明細失敗:', err);
-      }
-    });
-  }
+      // 呼叫共通的 navigateWithState (不會覆蓋底層)
+      this.navigateWithState(CRUDStatus.Edit, rowdataWithDetail);
+    },
+    error: (err) => {
+      console.error('查詢明細失敗:', err);
+    }
+  });
+}
 
 
 }

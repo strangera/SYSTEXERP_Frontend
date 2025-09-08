@@ -1,3 +1,4 @@
+import { ValidationService } from '@shared/service/validation.service';
 import { CRUDStatus } from './../../../shared/models/system/CRUDstatus';
 import { v4 as uuidv4 } from 'uuid'; // 引入 uuidv4
 import { UntilDestroy } from '@ngneat/until-destroy';
@@ -96,14 +97,14 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
   // 國際條碼 比照廠商編號自動帶下來 (等SA確認如何調整)
   // 廠商編號第二家以後就不開放上方的下拉選擇
   // ----------------------------------------------------------------
-  dataForm = this.formBuilder.nonNullable.group({
+  dataForm = this.formBuilder.group({
     id: [{ value: 0, disabled: true }], // 主鍵ID;
     // POS2004 商品主檔
     // 基本資料 顯示畫面
     PLU_MagNo: ['', [Validators.required, Validators.maxLength(20)]], // 商品管理編號 自動取號
     PLU_Name: ['', [Validators.required, Validators.maxLength(60)]], // 商品中文名稱
     PLU_PrnName: ['', [Validators.maxLength(40)]], // 列印名稱 預設商品中文名稱 一樣
-    VEN_No: [null, [Validators.required, Validators.maxLength(16)]], // 廠商編號 --0711新增 (填寫才能輸入POS2020表單) 必填
+    VEN_No: ['', [Validators.required, Validators.maxLength(16)]], // 廠商編號 --0711新增 (填寫才能輸入POS2020表單) 必填
 
     PLU_EngName: ['', [Validators.maxLength(100)]], // 商品英文名稱
     PLU_OrgPLUNo: ['', [Validators.maxLength(30)]], // 廠商貨號 --廠商自編碼 廠商貨號
@@ -137,6 +138,7 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
     PLU_Reserve3: ['', [Validators.maxLength(400)]], // 系列
 
     // 商品資訊 顯示畫面
+    TLT_NO: ['', [Validators.required, Validators.maxLength(12), this.validationService.noChineseValidator]], // 專櫃編號
     LOGO_No: ['', [Validators.required, Validators.maxLength(4)]], // 品牌代碼 ---PLULOGO
     PLU_SalePrc: [0, [Validators.required, Validators.maxLength(10)]], // 商品售價
     STK_CurrentQty: [{ value: 0, disabled: true }], // 庫存量 讀POS2099 新增固定0 ---後端直接提供(不允許編輯)---
@@ -179,7 +181,7 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
   pluLogoOption: any[] = [];  // 品牌代碼
   unitOptions: apiOption[] = [];  //商品單位
   statusOptions: option[] = this.dropDown51070.statusOptions;//商品狀態
-  counterOptions: apiOption[] = []; //專櫃編號：資料讀 TLTTALENT
+  TLT_NO_Option: apiOption[] = []; //專櫃編號：資料讀 TLTTALENT
   vendorOptions: option[] = [];  //廠商編號: 資料讀 POS2013
   // ---商品規格dropdown---
   attributeOptions: option[] = this.dropDown51070.attributeOptions;  // 商品型態
@@ -277,6 +279,7 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
     private dropDown51070: dropDown51070, //下拉選單 (選項固定)
     private detail2005Handler: detail2005HandlerService,// POS2005 table明細處理
     private detail2020Handler: detail2020HandlerService, // POS2020 table明細處理
+    private validationService: ValidationService,
   ) {
     super(); // 呼叫父類建構子
   }
@@ -284,8 +287,6 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
   ngOnInit(): void {
     this.initializePage('TLS51070', this.dataForm);
     console.log('大大大表單', this.dataForm.value);
-    // console.log('大大大token', this.authService.getUserInfo());
-
 
     // 進價類的都不可編輯
     if (this.crudstatus == CRUDStatus.Create) {
@@ -407,8 +408,8 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
     this.dataForm.get('VEN_No')?.valueChanges.subscribe(value => {
       if (value) {
         if (!this.POS2020Data.some(item => item.VEN_No === value)) {
-          // 廠商編號不在vendorOptions範圍內可以新增
-          if (this.vendorOptions.some(item => item.value === value)) {
+          // [POS2020不存在] && [廠商編號在vendorOptions] 時才將POS2004 [廠商編號]自動寫入 POS2020Data
+          if(this.POS2020Data.length === 0 && this.vendorOptions.some(item => item.value === value)){
             //如果表單還沒對應的POS2020就跳出提示
             this.messageService.infoBubble('POS2020表單無對應的廠商編號，已經自動新增一筆');
             const pluMagno = this.dataForm.get('PLU_MagNo')?.value || '';
@@ -416,6 +417,8 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
             this.createDefaultNew2020(pluMagno, plu_OrderPrc, value);
             //自動新增一筆POS2020
             this.onAddPOS2020();
+            //鎖定 廠商編號(VEN_No)
+            this.dataForm.get('VEN_No')?.disable();
           }
         }
       }
@@ -663,6 +666,15 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
       console.log('品牌詳細代碼:', this.pluLogoOption);
     });
 
+    // 查詢 專櫃編號
+    this.tls51070Service.queryTLTTALENT_DropDownList({}).subscribe((response) => {
+      this.TLT_NO_Option = response.Data.map((item: any) => ({
+        No: item.No, // 專櫃編號代碼
+        Label: item.No + '-' + item.Name, // 組合成顯示用的Label
+      }));
+      console.log('專櫃編號代碼:', response.Data);
+    });
+
     // 查詢 廠商代碼 (不確定怎麼帶 VEN_Flag)
     this.tls51070Service
       .queryPOS2013_DropDownList({ "VEN_Flag": '1' })
@@ -858,24 +870,82 @@ export class TLS51070CRUComponent extends BasicCruPageComponent<POS2004> impleme
 
     // ✅ 無重複 → 正常儲存
     this.detail2020Handler.handleRowSave(event);
-  }
-  onRowCancelPOS2020(event: any) {
-    this.detail2020Handler.handleRowCancel(event);
-  }
-  // 新增 POS2020
-  onAddPOS2020() {
-    this.detail2020Handler.addPOS2020(this.POS2020Data, this.defaultNew2020, this.pos2020Table);
-  }
+
+    // ===== 這裡加入主檔 VEN_No 重設流程 =====
+    const mainVenNo = this.dataForm.get('VEN_No')?.value;
+    
+    // 如果主檔 VEN_No 在 POS2020Data 中不存在了，就解除卡控
+    const hasMatchingVenNo = mainVenNo && this.POS2020Data.some(item => item.VEN_No === mainVenNo);
+
+    if (!hasMatchingVenNo) {
+      // 清除主檔 VEN_No
+      this.dataForm.get('VEN_No')?.setValue(null);
+
+      // 解除 disable
+      this.dataForm.get('VEN_No')?.enable();
+
+      // 自動設置第一筆 POS2020 的 VEN_No（如果有）
+      const first2020VenNo = this.POS2020Data[0]?.VEN_No;
+      if (first2020VenNo) {
+        this.dataForm.get('VEN_No')?.setValue(first2020VenNo);
+        this.dataForm.get('VEN_No')?.disable();
+        this.messageService.infoBubble('主檔廠商編號已自動設置');
+      }
+    }
+
+      //卡控設置
+      this.lock_VEN_No_Control();
+
+      console.log('卡控檢查後資料', this.POS2020Data);
+    }
+    onRowCancelPOS2020(event: any) {
+      this.detail2020Handler.handleRowCancel(event);
+    }
+    // 新增 POS2020
+    onAddPOS2020() {
+      this.detail2020Handler.addPOS2020(this.POS2020Data, this.defaultNew2020, this.pos2020Table);
+    }
 
   // 批次刪除 POS2020
   onBatchDelete2020(selectedItems: any[]): void {
     //如果刪除項目包含POS2004的廠商編號就不允許刪除
+    //2025/09/08: 規則改為刪除後會檢查主檔POS2004是否有相同廠商編號(如果有就清除為null，需重新滿足必填條件，才能送出)
     const POS2004venNo = this.dataForm.get('VEN_No')?.value
-    if (POS2004venNo && selectedItems.some(item => item.VEN_No === POS2004venNo)) {
-      this.messageService.errorBubble('刪除項目包含POS2004的廠商編號，不可刪除');
+    console.log('批次刪除 POS2004venNo',POS2004venNo);
+    console.log('批次刪除 selectedItems',selectedItems);
+    if (selectedItems.some(item => item.VEN_No === POS2004venNo)) { // 刪除的2020與主檔VEN_No存在相同項目
+      if(POS2004venNo){ //如果主檔廠商有同編號有值才跳出提示
+        // 如果POS2020有其他的廠商編號，就將POS2020第一筆自動帶入給POS2004
+        if(this.POS2020Data){
+         this.dataForm.get('VEN_No')?.setValue(null); //清除主檔廠商編號
+        }
+      }
+      //卡控設置
+      this.lock_VEN_No_Control();
+      this.detail2020Handler.deletePOS2020(selectedItems, this.POS2020Data);
+
+      console.log('卡控檢查後資料', this.POS2020Data);
+
+    const firstValue2020 = this.POS2020Data[0].VEN_No
+      if(firstValue2020){
+        this.dataForm.get('VEN_No')?.setValue(firstValue2020); //主檔內容進行重設
+        this.dataForm.get('VEN_No')?.disable();
+        this.messageService.infoBubble('將主檔廠商編已自動設置');
+      }
+
       return;
-    } else {
-      this.detail2020Handler.deletePOS2020(selectedItems, this.POS2020Data, this.pos2020Table);
+    }else{
+      this.detail2020Handler.deletePOS2020(selectedItems, this.POS2020Data);
+    }
+  }
+
+  // 觀察 POS2020Data 變化，POS2020Data都不同VEN_No或 POS2020長度為0 就解除卡控
+  lock_VEN_No_Control(): void {
+    const pos2004VenNo = this.dataForm.get('VEN_No')?.value;
+    console.log('觀察 POS2020Data 變化，檢查是否要解除卡控', pos2004VenNo);
+    const hasMatchingVenNo = typeof pos2004VenNo === 'string' && this.POS2020Data.some(item => item.VEN_No === pos2004VenNo);
+    if (!hasMatchingVenNo) {
+      this.dataForm.get('VEN_No')?.enable();
     }
   }
 

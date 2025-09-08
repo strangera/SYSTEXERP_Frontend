@@ -80,18 +80,14 @@ export class ASS21020Component extends BasicQueryPageComponent<ASS21020Data> imp
     if (!meterNo) return;
     this.service.queryTltByFlag(meterNo);
     if (this.qf().ENG_Type.value?.length) return;
-    const type = this.service.engMeterNoMap.get(meterNo)?.ENG_Type;
-    const current = this.service.engTypeSignal().find(t => t.Name === type);
-    current && this.qf().ENG_Type.patchValue([current.No as EngType]);
+    const metro = this.service.engMeterNoMap.get(meterNo);
+    if (!metro) return;
+    const current = this.service.engTypeSignal().find(t => t.Name === metro.ENG_Type);
+    if (!current) return;
+    this.qf().ENG_Type.patchValue([current.No as EngType]);
+    this.qf().Location_No.patchValue(metro.Location_No || '');
     this.logger.debug(`meterNo changes:`, [meterNo, current]);
   }, { allowSignalWrites: !0 });
-
-  public readonly locNoEffect = effect(() => {
-    const locNo = this.service.tltNoSignal().find(t => t.TLT_No === this.tltNoSignal());
-    if (!locNo?.Location_No) return;
-    this.qf().Location_No.patchValue(locNo!.Location_No);
-    this.logger.debug(`locNo changes:`, [locNo]);
-  });
 
   public readonly tltNoEffect = effect(() => {
     const tltNo = this.tltNoSignal();
@@ -167,23 +163,33 @@ export class ASS21020Component extends BasicQueryPageComponent<ASS21020Data> imp
   public onDelete(items: ASS21020Data[]): void {
     Array.isArray(items) || (items = [items]);
     this.logger.debug(`Deleting:`, [items]);
+
+    let deletedCount = 0;
+    const totalItems = items.length;
+
     for (const item of items) {
       this.service.deleteASS21020({ ENG_Type: this.service.engTypeMap.get(item.ENG_Type)!, ENG_MeterNo: item.ENG_MeterNo })
         .subscribe(res => {
-          if (res.IsUpdateSuccess) this.messageService.successBubble('刪除成功');
-          else this.messageService.errorBubble(res.ErrorMsg, '刪除失敗');
-          this.loading = !1;
+          deletedCount++;
+
+          if (res.IsUpdateSuccess) {
+            this.messageService.successBubble('刪除成功');
+          } else {
+            this.messageService.errorBubble(res.ErrorMsg, '刪除失敗');
+          }
+          if (deletedCount === totalItems) {
+            const formValues = this.queryForm.getRawValue();
+            this.service.loadASS21020({
+              EngTypes: formValues.ENG_Type!.join(),
+              ENG_Rate: formValues.ENG_Rate!,
+              ENG_MeterNo: formValues.ENG_MeterNo!,
+              Location_No: formValues.Location_No!,
+              Mid: Number(this.user?.mid)!,
+              SYS_StoreNo: this.user?.SYS_StoreNo!,
+            });
+            this.loading = !1;
+          }
         });
     }
-
-    const formValues = this.queryForm.getRawValue();
-    this.service.loadASS21020({
-      EngTypes: formValues.ENG_Type!.join(),
-      ENG_Rate: formValues.ENG_Rate!,
-      ENG_MeterNo: formValues.ENG_MeterNo!,
-      Location_No: formValues.Location_No!,
-      Mid: Number(this.user?.mid)!,
-      SYS_StoreNo: this.user?.SYS_StoreNo!,
-    });
   }
 }
