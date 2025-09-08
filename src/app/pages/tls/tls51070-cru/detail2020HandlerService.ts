@@ -45,7 +45,8 @@ export class detail2020HandlerService {
         }, 0);
     }
 
-    deletePOS2020(selectedItems: any[], data: any[], messageService: any): void {
+    deletePOS2020(selectedItems: any[], data: any[]): void {
+        console.log('刪除物件',selectedItems);
         if (confirm(`確定要刪除 ${selectedItems.length} 個採購廠商項目嗎？`)) {
             selectedItems.forEach(item => {
                 const index = data.findIndex(d => d.id === item.id);
@@ -53,7 +54,6 @@ export class detail2020HandlerService {
                     data.splice(index, 1);
                 }
             });
-            messageService.successBubble(`已刪除 ${selectedItems.length} 個位置項目`);
         }
     }
 }
