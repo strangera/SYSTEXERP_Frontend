@@ -336,7 +336,10 @@ export class CommissionDataService {
     const contractStartDate = options.contractStartDate ? new Date(options.contractStartDate) : new Date();
     const contractEndDate = options.contractEndDate ? new Date(options.contractEndDate) : new Date();
 
-    options.discountOptions?.forEach(option => {
+    // 🎯 新增：檢查是否為新合約且沒有既有資料
+    const isNewContractWithoutData = existingDetails.length === 0;
+
+    options.discountOptions?.forEach((option, index) => {
       const existingItem = existingDetails.find(detail => detail.cag_barcode === option.value);
 
       if (existingItem) {
@@ -353,23 +356,28 @@ export class CommissionDataService {
           is_enabled: true
         });
       } else {
-        // 未設定的項目
+        // 🎯 關鍵修改：未設定的項目，如果是新合約且是第一個選項（000-正品），預設勾選
+        const isFirstOption = index === 0;
+        const shouldSelectByDefault = isNewContractWithoutData && isFirstOption &&
+          (option.value === '000' || option.label?.includes('正品'));
+
         result.push({
           id: this.generateTempId(),
-          selected: false,
+          selected: shouldSelectByDefault, // 🎯 根據條件決定是否預設勾選
           cag_barcode: option.value,
           tlt_bdate: contractStartDate,
           tlt_edate: contractEndDate,
-          cag_charge_rate: 0,
-          _status: 'new',
-          is_configured: false,
-          is_enabled: false
+          cag_charge_rate: shouldSelectByDefault ? 0 : 0, // 可以設定預設抽成率
+          _status: shouldSelectByDefault ? 'new' : 'new',
+          is_configured: shouldSelectByDefault,
+          is_enabled: shouldSelectByDefault
         });
       }
     });
 
     return result;
   }
+
 
   /**
    * 轉換年度業績項目
@@ -386,60 +394,71 @@ export class CommissionDataService {
     }));
   }
 
-  /**
-   * 轉換層級抽成項目
-   */
-  private convertLevelItems(levelDetails: any[], options: CommissionDataLoadOptions): DiscountLevelItem[] {
+  private buildCompleteLevelItems(existingDetails: any[], options: CommissionDataLoadOptions): DiscountLevelItem[] {
     const result: DiscountLevelItem[] = [];
 
-    if (options.discountOptions?.length > 0) {
-      options.discountOptions.forEach(option => {
-        const existingItem = levelDetails.find(detail => detail.cag_barcode === option.value);
+    // 🎯 新增：檢查是否為新合約且沒有既有資料
+    const isNewContractWithoutData = existingDetails.length === 0;
 
-        if (existingItem) {
-          result.push({
-            id: existingItem.id || this.generateTempId(),
-            selected: true,
-            cag_barcode: existingItem.cag_barcode,
-            level_bmount: existingItem.level_bmount || 0,
-            level_eamount: existingItem.level_eamount || 0,
-            level_charge_rate: existingItem.level_charge_rate || 0,
-            _status: 'original',
-            is_configured: true,
-            is_enabled: true
-          });
-        } else {
-          result.push({
-            id: this.generateTempId(),
-            selected: false,
-            cag_barcode: option.value,
-            level_bmount: 0,
-            level_eamount: 0,
-            level_charge_rate: 0,
-            _status: 'new',
-            is_configured: false,
-            is_enabled: false
-          });
-        }
-      });
-    } else {
-      // 只轉換現有資料
-      levelDetails.forEach(detail => {
+    options.discountOptions?.forEach((option, index) => {
+      const existingItem = existingDetails.find(detail => detail.cag_barcode === option.value);
+
+      if (existingItem) {
         result.push({
-          id: detail.id || this.generateTempId(),
+          id: existingItem.id || this.generateTempId(),
           selected: true,
-          cag_barcode: detail.cag_barcode || '',
-          level_bmount: detail.level_bmount || 0,
-          level_eamount: detail.level_eamount || 0,
-          level_charge_rate: detail.level_charge_rate || 0,
+          cag_barcode: existingItem.cag_barcode,
+          level_bmount: existingItem.level_bmount || 0,
+          level_eamount: existingItem.level_eamount || 0,
+          level_charge_rate: existingItem.level_charge_rate || 0,
           _status: 'original',
           is_configured: true,
           is_enabled: true
         });
-      });
-    }
+      } else {
+        // 🎯 關鍵修改：對於 level 項目也套用相同邏輯
+        const isFirstOption = index === 0;
+        const shouldSelectByDefault = isNewContractWithoutData && isFirstOption &&
+          (option.value === '000' || option.label?.includes('正品'));
+
+        result.push({
+          id: this.generateTempId(),
+          selected: shouldSelectByDefault, // 🎯 根據條件決定是否預設勾選
+          cag_barcode: option.value,
+          level_bmount: 0,
+          level_eamount: 0,
+          level_charge_rate: shouldSelectByDefault ? 0 : 0, // 可以設定預設抽成率
+          _status: shouldSelectByDefault ? 'new' : 'new',
+          is_configured: shouldSelectByDefault,
+          is_enabled: shouldSelectByDefault
+        });
+      }
+    });
 
     return result;
+  }
+
+  /**
+   * 轉換層級抽成項目
+   */
+  private convertLevelItems(levelDetails: any[], options: CommissionDataLoadOptions): DiscountLevelItem[] {
+    // 🎯 如果有折扣選項，使用新的建立方法
+    if (options.discountOptions?.length > 0) {
+      return this.buildCompleteLevelItems(levelDetails, options);
+    } else {
+      // 只轉換現有資料（保持原有邏輯）
+      return levelDetails.map(detail => ({
+        id: detail.id || this.generateTempId(),
+        selected: true,
+        cag_barcode: detail.cag_barcode || '',
+        level_bmount: detail.level_bmount || 0,
+        level_eamount: detail.level_eamount || 0,
+        level_charge_rate: detail.level_charge_rate || 0,
+        _status: 'original',
+        is_configured: true,
+        is_enabled: true
+      }));
+    }
   }
 
   // ============ 工具方法 ============

@@ -336,18 +336,26 @@ export class CommissionItemOperationsService {
       return [];
     }
 
-    return discountOptions.map((option, index) => ({
-      id: `temp_discount_${Date.now()}_${index}`,
-      selected: false,
-      cag_barcode: option.value,
-      tlt_bdate: new Date(contractStartDate),
-      tlt_edate: new Date(contractEndDate),
-      cag_charge_rate: 0,
-      _status: 'new',
-      is_configured: false,
-      is_enabled: false
-    }));
+    return discountOptions.map((option, index) => {
+      // 🎯 關鍵修改：預設勾選第一個選項且是 "000-正品"
+      const isFirstOption = index === 0;
+      const is000Option = option.value === '000' || option.label?.includes('正品');
+      const shouldSelectByDefault = isFirstOption && is000Option;
+
+      return {
+        id: `temp_discount_${Date.now()}_${index}`,
+        selected: shouldSelectByDefault, // 第一個且是 000-正品 時預設勾選
+        cag_barcode: option.value,
+        tlt_bdate: new Date(contractStartDate),
+        tlt_edate: new Date(contractEndDate),
+        cag_charge_rate: 0, // 可以設定預設抽成率，例如 0
+        _status: shouldSelectByDefault ? 'new' : 'new',
+        is_configured: shouldSelectByDefault,
+        is_enabled: shouldSelectByDefault
+      };
+    });
   }
+
 
   private initializeLevelItems(
     contractStartDate: string,
@@ -359,17 +367,24 @@ export class CommissionItemOperationsService {
       return [];
     }
 
-    return discountOptions.map((option, index) => ({
-      id: `temp_level_${Date.now()}_${index}`,
-      selected: false,
-      cag_barcode: option.value,
-      level_bmount: 0,
-      level_eamount: 0,
-      level_charge_rate: 0,
-      _status: 'new',
-      is_configured: false,
-      is_enabled: false
-    }));
+    return discountOptions.map((option, index) => {
+      // 🎯 關鍵修改：預設勾選第一個選項且是 "000-正品"
+      const isFirstOption = index === 0;
+      const is000Option = option.value === '000' || option.label?.includes('正品');
+      const shouldSelectByDefault = isFirstOption && is000Option;
+
+      return {
+        id: `temp_level_${Date.now()}_${index}`,
+        selected: shouldSelectByDefault, // 第一個且是 000-正品 時預設勾選
+        cag_barcode: option.value,
+        level_bmount: 0,
+        level_eamount: 0,
+        level_charge_rate: 0, // 可以設定預設抽成率
+        _status: shouldSelectByDefault ? 'new' : 'new',
+        is_configured: shouldSelectByDefault,
+        is_enabled: shouldSelectByDefault
+      };
+    });
   }
 
   private markParentAsModified(parentItem: CommissionItem): void {
