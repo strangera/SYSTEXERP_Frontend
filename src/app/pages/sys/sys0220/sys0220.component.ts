@@ -85,7 +85,7 @@ export class SYS0220Component extends BasicQueryPageComponent<UserData> implemen
         this.userTypeOptions.find((option) => option.value === value)?.label ||
         value
     },
-    { field: 'user_email', header: '使用者email帳號', visible: true },
+    { field: 'user_email', header: '電子信箱', visible: true },
     { field: 'TLT_No', header: '所屬專櫃編號', visible: true },
     { field: 'remarks', header: '備註', visible: true },
     { field: 'user_priority', header: '使用者等級', visible: true },
