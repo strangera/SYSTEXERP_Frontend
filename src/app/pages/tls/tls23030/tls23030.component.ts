@@ -91,12 +91,12 @@ export class TLS23030Component extends BasicQueryPageComponent<any> {
   readonly groupByField = '_grp';
 
   /** 預設排序（_grp 置前） */
-  readonly defaultSort: any[] = [
-    { field: this.groupByField, order: 1 },
-    { field: 'TXN_Date', order: 1 },
-    { field: 'ECR_No',   order: 1 },
-    { field: 'TXN_No',   order: 1 },
-  ];
+ readonly defaultSort: any[] = [
+  { field: this.groupByField, order: 1 },
+  { field: 'TXN_Date', order: 1 },
+  { field: 'ECR_No',   order: 1 },
+  { field: 'TXN_No',   order: 1 },
+];
 
   // 視圖狀態
   showSummary = false;
@@ -411,13 +411,14 @@ detailSubtotalFieldMap: SubtotalFieldMap = SUBTOTAL_FIELD_MAP;
         // 1) 展平 rows + 加上 _grp/_rowKey
         const wrappers: any[] = Array.isArray(res?.Data) ? res.Data : (res?.Data ? [res.Data] : []);
         const rows: any[] = this.extractRows(wrappers);
-        const pageRows = rows.map((item: any, i: number) => {
-          const ymd = this.toYMD(item?.TXN_Date) ?? '';
-          const ecr = String(item?.ECR_No ?? '').trim();
-          const grp = `${ymd}|${ecr}`;
-          const rowKey = `${ymd}|${ecr}|${item?.TXN_No ?? i}`;
-          return { ...item, _rowKey: rowKey, [this.groupByField]: grp };
-        });
+   const pageRows = rows.map((item: any, i: number) => {
+  const ymd = this.toYMD(item?.TXN_Date) ?? '';
+  const ecr = String(item?.ECR_No ?? '').trim();
+  const txn = String(item?.TXN_No ?? '').trim();
+  const grp = `${ymd}|${ecr}|${txn}`;
+  const rowKey = `${grp}|${i}`;
+  return { ...item, _rowKey: rowKey, [this.groupByField]: grp };
+});
         this.data = pageRows;
 
         // 2) 總筆數、總頁數
@@ -473,20 +474,21 @@ detailSubtotalFieldMap: SubtotalFieldMap = SUBTOTAL_FIELD_MAP;
   }
 
   // ===== 偷看下一頁第一筆的 groupKey =====
-  private peekNextPageFirstGroupKey(basePayload: any, pageIndex: number, pageSize: number): Observable<string | null> {
-    const peekPayload = { ...basePayload, pageIndex, pageSize };
-    return this.tls23030Service.queryTLS23030(peekPayload).pipe(
-      map((res: any) => {
-        const wrappers: any[] = Array.isArray(res?.Data) ? res.Data : (res?.Data ? [res.Data] : []);
-        const rows = this.extractRows(wrappers);
-        if (!rows.length) return null;
-        const ymd = this.toYMD(rows[0]?.TXN_Date) ?? '';
-        const ecr = String(rows[0]?.ECR_No ?? '').trim();
-        return `${ymd}|${ecr}`;
-      }),
-      catchError(() => of(null))
-    );
-  }
+private peekNextPageFirstGroupKey(basePayload: any, pageIndex: number, pageSize: number): Observable<string | null> {
+  const peekPayload = { ...basePayload, pageIndex, pageSize };
+  return this.tls23030Service.queryTLS23030(peekPayload).pipe(
+    map((res: any) => {
+      const wrappers: any[] = Array.isArray(res?.Data) ? res.Data : (res?.Data ? [res.Data] : []);
+      const rows = this.extractRows(wrappers);
+      if (!rows.length) return null;
+      const ymd = this.toYMD(rows[0]?.TXN_Date) ?? '';
+      const ecr = String(rows[0]?.ECR_No ?? '').trim();
+      const txn = String(rows[0]?.TXN_No ?? '').trim();
+      return `${ymd}|${ecr}|${txn}`;
+    }),
+    catchError(() => of(null))
+  );
+}
 
   // 展平 wrapper -> rows
   private extractRows(wrappers: any[]): any[] {
@@ -513,34 +515,29 @@ detailSubtotalFieldMap: SubtotalFieldMap = SUBTOTAL_FIELD_MAP;
   }
 
   // 後端小計 -> Map<groupKey, {SubTotal_*...}>
-  private buildSubtotalsMapFromResponse(wrappers: any[]): Record<string, Record<string, number>> {
-    const out: Record<string, Record<string, number>> = {};
-    for (const w of (wrappers || [])) {
-      const list = w?.tLS23030_SubTotals
-                ?? w?.TLS23030_SubTotals
-                ?? w?.tls23030_SubTotals
-                ?? [];
-      if (!Array.isArray(list)) continue;
+private buildSubtotalsMapFromResponse(wrappers: any[]): Record<string, Record<string, number>> {
+  const out: Record<string, Record<string, number>> = {};
+  for (const w of (wrappers || [])) {
+    const list = w?.tLS23030_SubTotals ?? w?.TLS23030_SubTotals ?? w?.tls23030_SubTotals ?? [];
+    if (!Array.isArray(list)) continue;
 
-      for (const st of list) {
-        const details = st?.tLS23030_Details
-                      ?? st?.TLS23030_Details
-                      ?? st?.tls23030_Details
-                      ?? [];
-        if (!Array.isArray(details) || details.length === 0) continue;
+    for (const st of list) {
+      const details = st?.tLS23030_Details ?? st?.TLS23030_Details ?? st?.tls23030_Details ?? [];
+      if (!Array.isArray(details) || details.length === 0) continue;
 
-        const ymd = this.toYMD(details[0]?.TXN_Date) ?? '';
-        const ecr = String(details[0]?.ECR_No ?? '').trim();
-        const key = `${ymd}|${ecr}`;
+      const ymd = this.toYMD(details[0]?.TXN_Date) ?? '';
+      const ecr = String(details[0]?.ECR_No ?? '').trim();
+      const txn = String(details[0]?.TXN_No ?? '').trim();
+      const key = `${ymd}|${ecr}|${txn}`;
 
-        out[key] = {
-          [this.detailSubtotalFieldMap.TXN_PayAmt]  : Number(st?.SubTotal_TXN_PayAmt ?? st?.subTotal_TXN_PayAmt ?? 0),
-          [this.detailSubtotalFieldMap.TXN_TaxAlwnc]: Number(st?.SubTotal_TXN_TaxAlwnc ?? st?.subTotal_TXN_TaxAlwnc ?? 0),
-        };
-      }
+      out[key] = {
+        [this.detailSubtotalFieldMap.TXN_PayAmt]  : Number(st?.SubTotal_TXN_PayAmt ?? st?.subTotal_TXN_PayAmt ?? 0),
+        [this.detailSubtotalFieldMap.TXN_TaxAlwnc]: Number(st?.SubTotal_TXN_TaxAlwnc ?? st?.subTotal_TXN_TaxAlwnc ?? 0),
+      };
     }
-    return out;
   }
+  return out;
+}
 
   // ===== 工具 =====
   private toYMD(d: any): string | null {
@@ -618,17 +615,20 @@ detailSubtotalFieldMap: SubtotalFieldMap = SUBTOTAL_FIELD_MAP;
     return `download${def}`;
   }
 
-  private toApiSort(uiSort: Array<{field: string; order: 1 | -1}>): Array<{field: string; order: 1 | -1}> {
-    const out: Array<{field: string; order: 1 | -1}> = [];
-    for (const s of (uiSort ?? [])) {
-      if (s.field === this.groupByField) {
-        out.push({ field: 'TXN_Date', order: s.order });
-        out.push({ field: 'ECR_No',   order: s.order });
-      } else out.push(s);
+private toApiSort(uiSort: Array<{field: string; order: 1 | -1}>): Array<{field: string; order: 1 | -1}> {
+  const out: Array<{field: string; order: 1 | -1}> = [];
+  for (const s of (uiSort ?? [])) {
+    if (s.field === this.groupByField) {
+      out.push({ field: 'TXN_Date', order: s.order });
+      out.push({ field: 'ECR_No',   order: s.order });
+      out.push({ field: 'TXN_No',   order: s.order });
+    } else {
+      out.push(s);
     }
-    const seen = new Set<string>();
-    return out.filter(s => (seen.has(s.field) ? false : (seen.add(s.field), true)));
   }
+  const seen = new Set<string>();
+  return out.filter(s => (seen.has(s.field) ? false : (seen.add(s.field), true)));
+}
   paymentSummary: any[] = [];
     
 paymentSummaryColumns = [

@@ -102,6 +102,17 @@ export class Table2Component
   extends BasicPrintData2Component
   implements OnInit, OnChanges, OnDestroy
 {
+
+  private t2log(label: string, payload?: any) {
+  // 用 console.groupCollapsed 比較好讀；要展開就點一下
+  if (payload !== undefined) {
+    console.groupCollapsed(`[Table2] ${label}`);
+    console.log(payload);
+    console.groupEnd();
+  } else {
+    console.log(`[Table2] ${label}`);
+  }
+}
   /* ======================= 基本與依賴 ======================= */
   @ViewChild('dt', { static: false }) dt!: Table;
   @ViewChild('fileUpload') fileUpload!: FileUpload;
@@ -263,6 +274,26 @@ export class Table2Component
   // ===== 內部旗標 =====
   private _skipFirstLazy = true;
   private _skipFirstCalc = true;
+  private ensureInitialGroupingSort() {
+  const gs = this.groupRowsByArray;
+  if (!gs.length) return;
+  const rest = (this.multiSortMeta || []).filter(s => !gs.includes(s.field));
+  const lead = gs.map(field => ({ field, order: 1 as 1 | -1 }));
+  this.multiSortMeta = [...lead, ...rest];
+  if (!this.lazy) this.data = [...this.data];
+}
+
+private ensureGroupFirst(sort: SortMeta[] | undefined): SortMeta[] {
+  const gs = this.groupRowsByArray;
+  if (!gs.length) return sort ?? [];
+  const list = Array.isArray(sort) ? [...sort] : [];
+  const rest = list.filter(s => !gs.includes(s.field));
+  const lead = gs.map(field => {
+    const exist = list.find(s => s.field === field);
+    return { field, order: (exist?.order ?? 1) as 1 | -1 };
+  });
+  return [...lead, ...rest];
+}
 
   /* ======================= 生命週期 ======================= */
   ngOnInit(): void {
@@ -295,6 +326,19 @@ export class Table2Component
     // 初始 selectedColumns（若有歷史紀錄就還原）
     const saved = this.queryStateService.getQueryState(this.tableKey + 'Filter')?.value as Column[] | undefined;
     this.selectedColumns = (saved?.length ? saved : this.columns || []).filter(c => c.visible !== false && c.hidden !== true);
+     this.t2log('ngOnInit.done', { multiSortMeta: this.multiSortMeta });
+
+     this.t2log('SUBTOTAL#1 init checkpoint', {
+  groupRowsByArray: this.groupRowsByArray,                                  // 有沒有真的在分組
+  subtotalCols: (this.selectedColumns || [])
+                  .filter(c => c.isSubTotal && c.hidden !== true && c.visible !== false)
+                  .map(c => c.field),                                        // 有沒有標 isSubTotal 的可見欄位
+  externalSubtotalsCount: this.externalSubtotals ? Object.keys(this.externalSubtotals).length : 0,
+  hasExternalSubtotalMap: !!this.externalSubtotals,                          // 你是不是有塞外部小計物件
+  showSubTotalInput: this.showSubTotal,                                      // 你有沒有打算顯示小計（目前模板不檢查，但先看旗標）
+  columnsTotal: this.columns?.length ?? 0,
+  selectedColumnsTotal: this.selectedColumns?.length ?? 0
+});
   }
 
   ngOnChanges(changes: SimpleChanges): void {
@@ -736,19 +780,7 @@ loadDataLazy(event: TableLazyLoadEvent) {
     return align ? 'text-' + align : 'text-center';
   }
 
-  getGroupSubtotal(groupValue: any, field: string): number {
-    if (this.externalSubtotals && this.externalSubtotalFieldMap) {
-      const apiKey = this.externalSubtotalFieldMap[field];
-      const gKey = String(groupValue ?? '').trim();
-      const bucket = this.externalSubtotals[gKey];
-      if (apiKey && bucket && apiKey in bucket) return Number(bucket[apiKey] ?? 0);
-    }
-    // fallback：同頁即時小計
-    const g = this.groupRowsByArray[0];
-    const key = String(groupValue ?? '').trim();
-    const rows = this.data.filter(r => String((r as any)[g] ?? '').trim() === key);
-    return rows.reduce((s, r) => s + Number((r as any)[field] ?? 0), 0);
-  }
+
 
   getTotal(field: string): number {
     // 1) 外部總計
@@ -763,27 +795,7 @@ loadDataLazy(event: TableLazyLoadEvent) {
   }
 
   // ====== 讓群組欄位排序優先 ======
-  private ensureInitialGroupingSort() {
-    const g = this.groupRowsByArray[0];
-    if (!g) return;
 
-    const rest = (this.multiSortMeta || []).filter(s => s.field !== g);
-    this.multiSortMeta = [{ field: g, order: 1 }, ...rest];
-
-    if (!this.lazy) {
-      this.data = [...this.data];
-    }
-  }
-
-  private ensureGroupFirst(sort: SortMeta[] | undefined): SortMeta[] {
-    const g = this.groupRowsByArray[0];
-    if (!g) return sort ?? [];
-    const list = Array.isArray(sort) ? [...sort] : [];
-    const exist = list.find(s => s.field === g);
-    const rest  = list.filter(s => s.field !== g);
-    const order = exist?.order ?? 1; // 預設 ASC
-    return [{ field: g, order }, ...rest];
-  }
 
   /** 小計要顯示的欄位（selectedColumns 中標了 isSubTotal 的、且可見的） */
   getSubtotalColumns() {
@@ -824,4 +836,40 @@ loadDataLazy(event: TableLazyLoadEvent) {
     const g = this.groupRowsBy as any;
     return Array.isArray(g) ? g : (g ? [g] : []);
   }
+
+  // 新增：把目前群組列的 key（多鍵）組成同一字串
+private getGroupKeyFromRow(row: any): string {
+  const fields = this.groupRowsByArray;
+  if (!fields.length) return '';
+  return fields.map(f => String((row ?? {})[f] ?? '')).join('|');
+}
+// 取小計：先找外部小計（externalSubtotals），找不到就用同頁加總
+getGroupSubtotal(rowData: any, field: string): number {
+  const groupKey = this.getGroupKeyFromRow(rowData);
+
+  // 1) 外部小計（例如父層只塞「群組真正結束」的那幾組）
+  if (this.externalSubtotals && this.externalSubtotalFieldMap) {
+    const apiKey = this.externalSubtotalFieldMap[field];
+    const bucket = groupKey ? this.externalSubtotals[groupKey] : undefined;
+    if (apiKey && bucket && apiKey in bucket) return Number(bucket[apiKey] ?? 0);
+  }
+
+  // 2) fallback：同頁即時計算（多鍵完全比對）
+  const rows = this.data.filter(r =>
+    this.groupRowsByArray.every(f => String((r as any)[f] ?? '') === String((rowData as any)[f] ?? ''))
+  );
+  return rows.reduce((s, r) => s + Number((r as any)[field] ?? 0), 0);
+}
+// 只有在「外部小計有給到這組 key」時才渲染小計列（用來達成跨頁只在群組真正結束時顯示）
+shouldRenderGroupFooter(rowData: any): boolean {
+  if (this.externalSubtotals && Object.keys(this.externalSubtotals).length > 0) {
+    const key = this.getGroupKeyFromRow(rowData);
+    return !!this.externalSubtotals[key];
+  }
+  // 沒有外部小計時，預設照 p-table 每組都顯示
+  return true;
+}
+// 原本只處理第一個群組欄位，改成全部群組欄位都置前
+
+
 }
