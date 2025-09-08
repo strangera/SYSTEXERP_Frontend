@@ -62,11 +62,7 @@ export class ContractFlowService {
     this.restoreViewMode(); // 初始化時恢復檢視模式狀態
   }
 
-  // ========== 🎯 新增：清理後的資料生成方法 ==========
-
-  /**
-   * 🆕 生成清理後的提交資料
-   */
+  // ========== 清理後的資料生成方法 ==========
   generateCleanSubmitData(): CleanSubmitData {
     console.log('🔄 開始生成清理後的提交資料...');
 
@@ -82,12 +78,35 @@ export class ContractFlowService {
       throw new Error('缺少合約基本資料 (Step 1)');
     }
 
+    // 🎯 從 Step1 CRU 頁面取得合約日期
+    const contractStartDate = this.formatDateForBackend(step1Data.tlt_bdate);
+    const contractEndDate = this.formatDateForBackend(step1Data.tlt_edate);
+
+    console.log('📅 從 CRU 頁面取得的合約日期:', {
+      tlt_bdate: step1Data.tlt_bdate,
+      tlt_edate: step1Data.tlt_edate,
+      格式化後_起始日: contractStartDate,
+      格式化後_結束日: contractEndDate
+    });
+
+    // 🎯 驗證合約日期
+    if (!contractStartDate || !contractEndDate) {
+      console.error('❌ CRU 頁面的合約日期無效:', {
+        原始tlt_bdate: step1Data.tlt_bdate,
+        原始tlt_edate: step1Data.tlt_edate,
+        格式化後起始日: contractStartDate,
+        格式化後結束日: contractEndDate
+      });
+      throw new Error('合約起始日期或結束日期無效，請檢查 CRU 頁面的日期設定');
+    }
+
     console.log('📋 準備清理的原始資料:', {
       step1Items: step1Data ? 1 : 0,
       step2Items: step2Data?.length || 0,
       step3Items: step3Data?.length || 0,
       step4Items: step4Data?.length || 0,
-      mode: modeInfo.modeName
+      mode: modeInfo.modeName,
+      合約日期範圍: `${contractStartDate} ~ ${contractEndDate}`
     });
 
     try {
@@ -100,7 +119,12 @@ export class ContractFlowService {
 
         deductions: DataCleaner.cleanDeductionItems(step2Data || []),
 
-        commissions: DataCleaner.cleanCommissionData(step3Data || []),
+        // 🎯 關鍵修正：傳遞合約日期給 DataCleaner
+        commissions: DataCleaner.cleanCommissionData(
+          step3Data || [],
+          contractStartDate,
+          contractEndDate
+        ),
 
         conditions: DataCleaner.cleanConditionData(step4Data || [], this.getCurrentCommissionType()),
 
@@ -114,6 +138,12 @@ export class ContractFlowService {
         }
       };
 
+      // 🎯 檢測抽成別變更
+      const commissionTypeChange = this.detectCommissionTypeChange();
+      if (commissionTypeChange) {
+        cleanData.commissionTypeChange = commissionTypeChange;
+      }
+
       console.log('✅ 清理後的提交資料生成完成');
       console.log('📊 清理後資料統計:', {
         contractOperation: cleanData.contractInfo.operation,
@@ -125,6 +155,20 @@ export class ContractFlowService {
         totalOperations: cleanData.metadata.totalOperations
       });
 
+      // 🎯 驗證 Commission Master 的日期是否正確設定
+      if (cleanData.commissions.masters.toInsert.length > 0) {
+        const firstMaster = cleanData.commissions.masters.toInsert[0];
+        console.log('🔍 驗證第一個 Commission Master 的日期:', {
+          tlt_id: firstMaster.tlt_id,
+          cag_bdate: firstMaster.cag_bdate,
+          cag_edate: firstMaster.cag_edate,
+          是否等於合約日期: {
+            起始日相符: firstMaster.cag_bdate === contractStartDate,
+            結束日相符: firstMaster.cag_edate === contractEndDate
+          }
+        });
+      }
+
       console.log('🚀 最終要送出的完整 JSON:');
       console.log(JSON.stringify(cleanData, null, 2));
       return cleanData;
@@ -132,6 +176,41 @@ export class ContractFlowService {
     } catch (error) {
       console.error('❌ 生成清理後資料時發生錯誤:', error);
       throw new Error(`生成提交資料失敗: ${error}`);
+    }
+  }
+
+  /**
+   * 🎯 新增：格式化日期給後端使用
+   */
+  private formatDateForBackend(date: any): string {
+    if (!date) return '';
+
+    try {
+      let dateObj: Date;
+
+      if (date instanceof Date) {
+        dateObj = date;
+      } else if (typeof date === 'string') {
+        dateObj = new Date(date);
+      } else {
+        dateObj = new Date(date);
+      }
+
+      if (isNaN(dateObj.getTime())) {
+        console.warn('⚠️ 無效的日期值:', date);
+        return '';
+      }
+
+      // 格式化為 YYYY-MM-DD
+      const year = dateObj.getFullYear();
+      const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+      const day = String(dateObj.getDate()).padStart(2, '0');
+
+      return `${year}-${month}-${day}`;
+
+    } catch (error) {
+      console.error('❌ 日期格式化錯誤:', error, date);
+      return '';
     }
   }
   /**

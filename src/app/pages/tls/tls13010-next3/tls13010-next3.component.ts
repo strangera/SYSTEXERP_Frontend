@@ -107,7 +107,7 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionItem>
     { field: 'cag_bdate', header: '帳務起', type: 'date', editable: true, autoWidth: true },
     { field: 'cag_edate', header: '帳務迄', type: 'date', editable: true, autoWidth: true },
     { field: 'cag_barcode', header: '折扣別', type: 'dropdown', editable: true, autoWidth: true, options: [] },
-    { field: 'cag_charge_rate', header: '抽成率(%)', type: 'number', editable: true, autoWidth: true }
+    { field: 'cag_charge_rate', header: '抽成率', type: 'number', editable: true, autoWidth: true, allowDecimal: true, decimalPlaces: 4 }
   ];
 
   baseCommissionColumns: ColumnDef[] = [
@@ -115,7 +115,7 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionItem>
     { field: 'cag_bdate', header: '帳務起', type: 'date', editable: true, autoWidth: true },
     { field: 'cag_edate', header: '帳務迄', type: 'date', editable: true, autoWidth: true },
     { field: 'limit_amt', header: '包底金額', type: 'number', editable: true, autoWidth: true },
-    { field: 'limit_charge_rate', header: '抽成率(%)', type: 'number', editable: true, autoWidth: true }
+    { field: 'limit_charge_rate', header: '抽成率', type: 'number', editable: true, autoWidth: true, allowDecimal: true, decimalPlaces: 4 }
   ];
 
   graduatedColumns: ColumnDef[] = [
@@ -124,7 +124,7 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionItem>
     { field: 'cag_edate', header: '帳務迄', type: 'date', editable: true, autoWidth: true },
     { field: 'start_number', header: '階梯金額(起值)', type: 'number', editable: true, autoWidth: true },
     { field: 'end_number', header: '階梯金額(迄值)', type: 'number', editable: true, autoWidth: true },
-    { field: 'charge_rate', header: '抽成率(%)', type: 'number', editable: true, autoWidth: true }
+    { field: 'charge_rate', header: '抽成率', type: 'number', editable: true, autoWidth: true, allowDecimal: true, decimalPlaces: 4 }
   ];
 
   baseTierColumns: ColumnDef[] = [
@@ -135,7 +135,7 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionItem>
     { field: 'limit_amt', header: '包底金額', type: 'number', editable: true, autoWidth: true },
     { field: 'start_number', header: '階梯金額(起值)', type: 'number', editable: true, autoWidth: true },
     { field: 'end_number', header: '階梯金額(迄值)', type: 'number', editable: true, autoWidth: true },
-    { field: 'charge_rate', header: '抽成率(%)', type: 'number', editable: true, autoWidth: true }
+    { field: 'charge_rate', header: '抽成率', type: 'number', editable: true, autoWidth: true, allowDecimal: true, decimalPlaces: 4 }
   ];
 
   constructor(
@@ -170,7 +170,7 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionItem>
       console.log('🔍 檢視模式：跳過資料儲存');
     }
 
-    // 🎯 ⭐ 重要：組件銷毀前暫存
+    //⭐ 重要：組件銷毀前暫存
     this.saveConditionDataToWorkflow();
 
     // 清理訂閱
@@ -241,7 +241,7 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionItem>
     console.log('📊 準備顯示的合約資訊:', contractInfo);
 
     this.contractInfoData = [{
-      id: contractInfo.talent_id || 'new', // 🎯 新增模式顯示 'new'
+      id: contractInfo.talent_id || 'new',
       ...contractInfo
     }];
 
@@ -452,7 +452,7 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionItem>
     }
   }
 
-  // 🎯 對應後端資料到前端模型
+  // 對應後端資料到前端模型
   private mapBackendDataToFrontend(existingData: any, commissionType: string): void {
     console.log('🗺️ 對應後端資料到前端模型:', { existingData, commissionType });
     this.initializeEmptyConditionData();
@@ -558,7 +558,7 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionItem>
     }
   }
 
-  // 🎯 建立條件項目的工廠方法
+  // 建立條件項目的工廠方法
   private createFixedRentItem(): FixedRentCondition {
     return {
       talent_id: this.currentTalentId,
@@ -629,25 +629,12 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionItem>
     };
   }
 
-  // 🎯 判斷是否顯示特定抽成類型的條件設定
+  // 判斷是否顯示特定抽成類型的條件設定
   shouldShowCommissionType(commissionTypeCode: string): boolean {
     const currentCommissionType = this.contractInfoData[0]?.tlt_term_type;
     return currentCommissionType === commissionTypeCode;
   }
 
-  // 🎯 檢查是否有來自 Next2 的資料
-  hasNext2IntegrationData(): boolean {
-    return false; // 直接返回 false
-  }
-
-  getNext2IntegrationMessage(): string {
-    return ''; // 直接返回空字串
-  }
-
-  // 🎯 取得來自 Next2 的項目數量
-  getNext2ItemCount(): number {
-    return 0; // 直接返回 0
-  }
   // 🎯 取得新增的項目數量
   getNewItemCount(): number {
     const commissionType = this.contractInfoData[0]?.tlt_term_type;
@@ -928,37 +915,6 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionItem>
       this.notificationService.errorBubble('儲存條件設定資料失敗');
     }
   }
-
-  private verifyStoredConditionData(): void {
-    const savedData = this.contractFlowService.getStepData(WorkflowStep.CONDITION);
-    const currentItemCount = this.getConditionItemCount();
-
-    console.log('🔍 驗證 Next3 儲存結果:', {
-      savedDataType: Array.isArray(savedData) ? '陣列' : typeof savedData,
-      savedDataLength: Array.isArray(savedData) ? savedData.length : 0,
-      currentItemCount: currentItemCount
-    });
-
-    if (Array.isArray(savedData) && savedData.length !== currentItemCount) {
-      console.warn('⚠️ 儲存後的條件項目數量不匹配:', {
-        saved: savedData.length,
-        current: currentItemCount
-      });
-    }
-
-    // 🎯 統計各類型項目數量
-    const commissionType = this.contractInfoData[0]?.tlt_term_type;
-    console.log('📊 條件設定統計:', {
-      commissionType: commissionType,
-      fixedRent: this.fixedRentItems.filter(item => item._status !== 'deleted').length,
-      baseRentHigher: this.baseRentHigherItems.filter(item => item._status !== 'deleted').length,
-      generalCommission: this.generalCommissionItems.filter(item => item._status !== 'deleted').length,
-      baseCommission: this.baseCommissionItems.filter(item => item._status !== 'deleted').length,
-      graduated: this.graduatedItems.filter(item => item._status !== 'deleted').length,
-      baseTier: this.baseTierItems.filter(item => item._status !== 'deleted').length
-    });
-  }
-
 
   // 🎯 提交相關方法
   onSubmitNext(): void {
@@ -1268,12 +1224,22 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionItem>
   private formatDate(date: any): string {
     if (!date) return '';
     try {
-      if (date instanceof Date) {
-        return date.toISOString().split('T')[0];
+      if (typeof date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(date)) {
+        return date; // 已經是正確格式
       }
-      return new Date(date).toISOString().split('T')[0];
-    } catch {
+
+      if (date instanceof Date || typeof date === 'string') {
+        const d = new Date(date);
+        // 使用本地時間而非 UTC
+        const year = d.getFullYear();
+        const month = String(d.getMonth() + 1).padStart(2, '0');
+        const day = String(d.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+      }
+
       return String(date).split('T')[0] || '';
+    } catch {
+      return '';
     }
   }
 
@@ -1286,42 +1252,34 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionItem>
   }
 
   // 🎯 取得欄位值的輔助方法
-  getFieldValue(rowData: any, field: string): string {
-    if (!rowData || !field) return '';
+  // getFieldValue(rowData: any, field: string): string {
+  //   if (!rowData || !field) return '';
 
-    const value = rowData[field];
-    if (value === null || value === undefined) return '';
+  //   const value = rowData[field];
+  //   if (value === null || value === undefined) return '';
 
-    if (field.includes('date') && value instanceof Date) {
-      return value.toISOString().split('T')[0];
-    }
+  //   if (field.includes('date') && value) {
+  //     // 如果已經是 YYYY-MM-DD 格式，直接返回
+  //     if (typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value)) {
+  //       return value;
+  //     }
 
-    return value.toString();
-  }
+  //     // 如果是 ISO 格式字串，取日期部分
+  //     if (typeof value === 'string' && value.includes('T')) {
+  //       return value.split('T')[0]; // "2025-08-01T00:00:00" → "2025-08-01"
+  //     }
 
-  // 🎯 檢查欄位是否為唯讀
-  isFieldReadonly(rowData: any, field: string): boolean {
-    if (!rowData._fromNext2) return false;
+  //     // 如果是 Date 物件，使用本地時間
+  //     if (value instanceof Date) {
+  //       const year = value.getFullYear();
+  //       const month = String(value.getMonth() + 1).padStart(2, '0');
+  //       const day = String(value.getDate()).padStart(2, '0');
+  //       return `${year}-${month}-${day}`;
+  //     }
+  //   }
 
-    // 🎯 來自 Next2 的資料，三個欄位設為唯讀
-    const readonlyFields = ['tlt_id', 'tlt_id_desc', 'cag_taxtype'];
-    return readonlyFields.includes(field);
-  }
-
-  // 🎯 取得欄位樣式
-  getFieldClass(rowData: any, field: string): string {
-    let classes = '';
-
-    if (rowData._fromNext2) {
-      classes += 'from-next2 ';
-    }
-
-    if (this.isFieldReadonly(rowData, field)) {
-      classes += 'readonly-field ';
-    }
-
-    return classes.trim();
-  }
+  //   return value.toString();
+  // }
 
   private loadDiscountOptions(): Promise<void> {
     return new Promise((resolve) => {
@@ -1355,306 +1313,6 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionItem>
     });
 
     console.log('✅ Next3 一般抽成欄位選項已更新');
-  }
-
-  //測試用
-  showDataSummary(): void {
-    try {
-      console.group('📊 完整暫存資料摘要');
-      const cleanData = this.contractFlowService.generateCleanSubmitData();
-      // 🎯 特別檢查 conditions 資料
-      console.group('🔍 CONDITIONS 資料檢查');
-      console.log('完整 conditions 物件:', cleanData.conditions);
-      console.log('baseRentHigher 資料:', cleanData.conditions.baseRentHigher);
-      console.log('baseRentHigher 新增項目數:', cleanData.conditions.baseRentHigher.toInsert.length);
-      console.log('baseRentHigher 更新項目數:', cleanData.conditions.baseRentHigher.toUpdate.length);
-
-      // 🎯 1. 取得工作流程的完整暫存資料
-      const fullWorkflowData = this.contractFlowService.getCurrentData();
-      console.log('📦 工作流程完整暫存:', fullWorkflowData);
-
-      // 🎯 2. 取得各步驟的暫存資料
-      const step1Data = this.contractFlowService.getStep1Data();
-      const step2Data = this.contractFlowService.getStep2Data();
-      const step3Data = this.contractFlowService.getStep3Data();
-      const step4Data = this.contractFlowService.getStep4Data();
-
-      console.log('📋 Step1 暫存 (合約基本資料):', step1Data);
-      console.log('📋 Step2 暫存 (代扣款設定):', step2Data);
-      console.log('📋 Step3 暫存 (抽成設定):', step3Data);
-      console.log('📋 Step4 暫存 (條件設定):', step4Data);
-
-      // 🎯 4. 取得資料驗證結果
-      const validation = this.contractFlowService.validateCleanSubmitData(cleanData);
-      console.log('✅ 資料驗證結果:', validation);
-
-      // 🎯 5. 取得工作流程狀態
-      const workflowStatus = this.contractFlowService.getCurrentStatus();
-      console.log('🔄 工作流程狀態:', workflowStatus);
-
-      console.groupEnd();
-
-      // 🎯 6. 準備顯示摘要
-      const summary = this.generateDisplaySummary(fullWorkflowData, cleanData, validation);
-
-      // 🎯 7. 提供多種查看方式
-      const viewOptions = [
-        '1️⃣ 顯示簡要摘要',
-        '2️⃣ 複製完整 JSON 到剪貼簿',
-        '3️⃣ 在 Console 查看詳細資料',
-        '4️⃣ 下載 JSON 檔案',
-        '5️⃣ 顯示格式化的 JSON'
-      ].join('\n');
-
-      const choice = prompt(`📊 資料摘要查看選項：\n\n${viewOptions}\n\n請輸入數字 (1-5):`);
-
-      switch (choice) {
-        case '1':
-          alert(summary);
-          break;
-        case '2':
-          this.copyToClipboard(fullWorkflowData);
-          break;
-        case '3':
-          this.showDetailedConsoleData();
-          break;
-        case '4':
-          this.downloadJsonFile(fullWorkflowData);
-          break;
-        case '5':
-          this.showFormattedJson();
-          break;
-        default:
-          alert(summary);
-          break;
-      }
-
-    } catch (error) {
-      console.error('❌ 產生資料摘要失敗:', error);
-      this.notificationService.errorBubble(`產生資料摘要失敗: ${error}`);
-    }
-  }
-
-  // 🎯 生成顯示摘要
-  private generateDisplaySummary(fullData: any, cleanData: any, validation: any): string {
-    const modeInfo = this.contractFlowService.getWorkflowModeInfo();
-
-    return [
-      '📊 暫存資料摘要',
-      '='.repeat(40),
-      '',
-      `🏢 模式: ${modeInfo.modeName}`,
-      `🏷️ 專櫃編號: ${modeInfo.talentId || '新增中'}`,
-      `🆔 工作流程 ID: ${fullData.contractId}`,
-      '',
-      '📦 暫存資料統計:',
-      `• Step1 (合約基本): ${fullData.step1 ? '✅ 有資料' : '❌ 無資料'}`,
-      `• Step2 (代扣款): ${fullData.step2?.length || 0} 項`,
-      `• Step3 (抽成設定): ${fullData.step3?.length || 0} 項`,
-      `• Step4 (條件設定): ${fullData.step4?.length || 0} 項`,
-      '',
-      '🧹 提交資料統計:',
-      `• 合約操作: ${cleanData.contractInfo.operation}`,
-      `• 代扣款操作: ${cleanData.deductions.toInsert.length + cleanData.deductions.toUpdate.length + cleanData.deductions.toDelete.length} 項`,
-      `• 抽成操作: ${cleanData.commissions.masters.toInsert.length + cleanData.commissions.masters.toUpdate.length} 項`,
-      `• 條件操作: ${Object.values(cleanData.conditions).reduce((total: number, c: any) => total + c.toInsert.length + c.toUpdate.length + c.toDelete.length, 0)} 項`,
-      `• 總操作數: ${cleanData.metadata.totalOperations}`,
-      '',
-      `✅ 資料驗證: ${validation.isValid ? '通過' : '失敗'}`,
-      validation.errors.length > 0 ? `❌ 錯誤: ${validation.errors.join(', ')}` : '',
-      validation.warnings.length > 0 ? `⚠️ 警告: ${validation.warnings.join(', ')}` : '',
-      '',
-      '💾 JSON 資料大小:',
-      `• 完整暫存: ${JSON.stringify(fullData).length} 字元`,
-      `• 清理後資料: ${JSON.stringify(cleanData).length} 字元`,
-      '',
-      '💡 完整 JSON 資料已記錄在 Console 中',
-      '   按 F12 → Console 查看詳細內容'
-    ].filter(line => line !== '').join('\n');
-  }
-
-  // 🎯 複製到剪貼簿
-  private copyToClipboard(data: any): void {
-    try {
-      const jsonString = JSON.stringify(data, null, 2);
-      navigator.clipboard.writeText(jsonString).then(() => {
-        this.notificationService.successBubble('✅ 完整 JSON 已複製到剪貼簿');
-        console.log('📋 已複製到剪貼簿的 JSON:', data);
-      }).catch(err => {
-        console.error('❌ 複製失敗:', err);
-        this.fallbackCopyToClipboard(jsonString);
-      });
-    } catch (error) {
-      console.error('❌ 複製到剪貼簿失敗:', error);
-      this.notificationService.errorBubble('複製失敗，請在 Console 中手動複製');
-    }
-  }
-
-  // 🎯 備援複製方法
-  private fallbackCopyToClipboard(text: string): void {
-    const textArea = document.createElement('textarea');
-    textArea.value = text;
-    document.body.appendChild(textArea);
-    textArea.select();
-
-    try {
-      document.execCommand('copy');
-      this.notificationService.successBubble('✅ JSON 已複製到剪貼簿 (備援方法)');
-    } catch (err) {
-      console.error('❌ 備援複製也失敗:', err);
-      this.notificationService.errorBubble('複製失敗，請手動從 Console 複製');
-    }
-
-    document.body.removeChild(textArea);
-  }
-
-  // 🎯 顯示詳細 Console 資料
-  private showDetailedConsoleData(): void {
-    console.group('📊 詳細暫存資料分析');
-
-    const fullData = this.contractFlowService.getCurrentData();
-    const cleanData = this.contractFlowService.generateCleanSubmitData();
-
-    console.group('📦 完整工作流程暫存');
-    console.log('🔗 可複製的 JSON:', JSON.stringify(fullData, null, 2));
-    console.log('📋 物件形式:', fullData);
-    console.groupEnd();
-
-    console.group('🧹 清理後提交資料');
-    console.log('🔗 可複製的 JSON:', JSON.stringify(cleanData, null, 2));
-    console.log('📋 物件形式:', cleanData);
-    console.groupEnd();
-
-    console.group('📊 各步驟詳細資料');
-    console.log('Step1:', this.contractFlowService.getStep1Data());
-    console.log('Step2:', this.contractFlowService.getStep2Data());
-    console.log('Step3:', this.contractFlowService.getStep3Data());
-    console.log('Step4:', this.contractFlowService.getStep4Data());
-    console.groupEnd();
-
-    console.groupEnd();
-
-    this.notificationService.infoBubble('📊 詳細資料已顯示在 Console 中\n\n可以直接複製 JSON 字串使用');
-  }
-
-  // 🎯 下載 JSON 檔案
-  private downloadJsonFile(data: any): void {
-    try {
-      const jsonString = JSON.stringify(data, null, 2);
-      const blob = new Blob([jsonString], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `TLS13010_暫存資料_${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}.json`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-
-      URL.revokeObjectURL(url);
-
-      this.notificationService.successBubble('✅ JSON 檔案已下載');
-      console.log('📁 已下載的 JSON 資料:', data);
-    } catch (error) {
-      console.error('❌ 下載檔案失敗:', error);
-      this.notificationService.errorBubble('下載失敗，請使用複製功能');
-    }
-  }
-
-  // 🎯 顯示格式化的 JSON（在新視窗）
-  private showFormattedJson(): void {
-    try {
-      const fullData = this.contractFlowService.getCurrentData();
-      const cleanData = this.contractFlowService.generateCleanSubmitData();
-
-      const htmlContent = `
-    <!DOCTYPE html>
-    <html>
-    <head>
-        <title>TLS13010 暫存資料</title>
-        <style>
-            body { font-family: 'Courier New', monospace; margin: 20px; background: #f5f5f5; }
-            .container { max-width: 1200px; margin: 0 auto; }
-            .section { background: white; margin: 20px 0; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-            .section h2 { color: #2c3e50; border-bottom: 2px solid #3498db; padding-bottom: 10px; }
-            pre { background: #2c3e50; color: #ecf0f1; padding: 15px; border-radius: 5px; overflow-x: auto; font-size: 12px; line-height: 1.4; }
-            .copy-btn { background: #3498db; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; margin: 10px 0; }
-            .copy-btn:hover { background: #2980b9; }
-            .stats { background: #ecf0f1; padding: 10px; border-radius: 4px; margin: 10px 0; }
-        </style>
-    </head>
-    <body>
-        <div class="container">
-            <h1>🎯 TLS13010 暫存資料分析</h1>
-            <div class="stats">
-                <strong>生成時間:</strong> ${new Date().toLocaleString()}<br>
-                <strong>完整資料大小:</strong> ${JSON.stringify(fullData).length} 字元<br>
-                <strong>清理後資料大小:</strong> ${JSON.stringify(cleanData).length} 字元
-            </div>
-
-            <div class="section">
-                <h2>📦 完整工作流程暫存資料</h2>
-                <button class="copy-btn" onclick="copyToClipboard('fullData')">複製 JSON</button>
-                <pre id="fullData">${JSON.stringify(fullData, null, 2)}</pre>
-            </div>
-
-            <div class="section">
-                <h2>🧹 清理後提交資料</h2>
-                <button class="copy-btn" onclick="copyToClipboard('cleanData')">複製 JSON</button>
-                <pre id="cleanData">${JSON.stringify(cleanData, null, 2)}</pre>
-            </div>
-        </div>
-
-        <script>
-            function copyToClipboard(elementId) {
-                const element = document.getElementById(elementId);
-                const text = element.textContent;
-                navigator.clipboard.writeText(text).then(() => {
-                    alert('✅ JSON 已複製到剪貼簿');
-                }).catch(err => {
-                    console.error('複製失敗:', err);
-                    // 備援方法
-                    const textArea = document.createElement('textarea');
-                    textArea.value = text;
-                    document.body.appendChild(textArea);
-                    textArea.select();
-                    document.execCommand('copy');
-                    document.body.removeChild(textArea);
-                    alert('✅ JSON 已複製到剪貼簿 (備援方法)');
-                });
-            }
-        </script>
-    </body>
-    </html>`;
-
-      const newWindow = window.open('', '_blank', 'width=1200,height=800,scrollbars=yes');
-      if (newWindow) {
-        newWindow.document.write(htmlContent);
-        newWindow.document.close();
-        this.notificationService.successBubble('✅ 格式化 JSON 已在新視窗開啟');
-      } else {
-        this.notificationService.errorBubble('❌ 無法開啟新視窗，請檢查瀏覽器設定');
-      }
-    } catch (error) {
-      console.error('❌ 顯示格式化 JSON 失敗:', error);
-      this.notificationService.errorBubble('顯示失敗，請使用其他查看方式');
-    }
-  }
-
-  // 🎯 快速取得暫存 JSON (可在 Console 中調用)
-  getTempDataJson(): string {
-    const fullData = this.contractFlowService.getCurrentData();
-    const jsonString = JSON.stringify(fullData, null, 2);
-    console.log('📋 完整暫存 JSON:', jsonString);
-    return jsonString;
-  }
-
-  // 🎯 快速取得清理後 JSON (可在 Console 中調用)
-  getCleanDataJson(): string {
-    const cleanData = this.contractFlowService.generateCleanSubmitData();
-    const jsonString = JSON.stringify(cleanData, null, 2);
-    console.log('🧹 清理後 JSON:', jsonString);
-    return jsonString;
   }
 
   private getTermTypeName(termType: string): string {
@@ -1726,26 +1384,6 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionItem>
 
   get displayBaseTierItems(): BaseTierCondition[] {
     return this.baseTierItems.filter(item => item._status !== 'deleted');
-  }
-
-  /**
- * 🎯 新增：從 URL 檢查是否為檢視模式
- */
-  private checkViewModeFromURL(): void {
-    const queryParams = this.route.snapshot.queryParams;
-    const mode = queryParams['mode'];
-
-    console.log('🔍 Next3 檢查 URL 參數:', { mode });
-
-    if (mode === 'view') {
-      console.log('🔒 Next3 URL 檢測到檢視模式');
-      this.isViewMode = true;
-      this.contractFlowService.setViewMode(true);
-    } else {
-      console.log('📝 Next3 URL 未檢測到檢視模式');
-      this.isViewMode = false;
-      this.contractFlowService.setViewMode(false);
-    }
   }
 
   /**

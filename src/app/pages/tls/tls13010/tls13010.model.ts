@@ -242,9 +242,9 @@ export interface CleanCommissionMaster {
  * 🎯 修正：配合後端 CleanConditions
  */
 export interface CleanConditions {
-  rents: CleanConditionOperations;
-  limits: CleanConditionOperations;
-  levels: CleanConditionOperations;
+  // rents: CleanConditionOperations;
+  // limits: CleanConditionOperations;
+  // levels: CleanConditionOperations;
   fixedRents: CleanConditionOperations;
   baseRentHigher: CleanConditionOperations;
   baseCommissions: CleanConditionOperations;
@@ -870,11 +870,23 @@ export class DataCleaner {
   /**
    * 🎯 修正：清理抽成設定資料以配合後端
    */
-  static cleanCommissionData(rawCommissions: any[]): CleanCommissions {
+  static cleanCommissionData(
+    rawCommissions: any[],
+    contractStartDate?: string,
+    contractEndDate?: string
+  ): CleanCommissions {
     const masters: CleanCommissionMasters = { toInsert: [], toUpdate: [], toDelete: [] };
     const discountSettings: CleanCommissionDetails = { toInsert: [], toUpdate: [], toDelete: [] };
     const annualSettings: CleanCommissionDetails = { toInsert: [], toUpdate: [], toDelete: [] };
     const levelSettings: CleanCommissionDetails = { toInsert: [], toUpdate: [], toDelete: [] };
+
+    // 🎯 設定預設日期（如果沒有提供合約日期）
+    const defaultStartDate = contractStartDate || new Date().toISOString().split('T')[0];
+    const defaultEndDate = contractEndDate || (() => {
+      const nextYear = new Date();
+      nextYear.setFullYear(nextYear.getFullYear() + 1);
+      return nextYear.toISOString().split('T')[0];
+    })();
 
     rawCommissions.forEach(commission => {
       if (commission._status === 'deleted') {
@@ -882,6 +894,27 @@ export class DataCleaner {
           masters.toDelete.push({ id: Number(commission.id) } as CleanCommissionMaster);
         }
         return;
+      }
+
+      // 🎯 關鍵修正：使用合約日期作為 Commission Master 的日期
+      const masterStartDate = commission.mainStartDate || commission.cag_bdate || defaultStartDate;
+      const masterEndDate = commission.mainEndDate || commission.cag_edate || defaultEndDate;
+
+      // 🎯 驗證和格式化日期
+      const validStartDate = this.formatDate(masterStartDate);
+      const validEndDate = this.formatDate(masterEndDate);
+
+      if (!validStartDate || !validEndDate) {
+        console.error('❌ Commission Master 日期無效:', {
+          tlt_id: commission.tlt_id,
+          masterStartDate,
+          masterEndDate,
+          contractStartDate,
+          contractEndDate
+        });
+
+        // 使用合約日期作為備援
+        console.log('🔧 使用合約日期作為備援');
       }
 
       // 處理主檔
@@ -894,9 +927,17 @@ export class DataCleaner {
         sst_rate: this.parseNumber(commission.sst_rate),
         cap_saletype1: commission.cap_saletype1 ? 'Y' : 'N',
         cap_saletype2: commission.cap_saletype2 ? 'Y' : 'N',
-        cag_bdate: this.formatDate(commission.cag_bdate),
-        cag_edate: this.formatDate(commission.cag_edate)
+
+        // 🎯 關鍵修正：確保使用有效的合約日期
+        cag_bdate: validStartDate || defaultStartDate,
+        cag_edate: validEndDate || defaultEndDate
       };
+
+      console.log(`✅ Commission Master ${cleanMaster.tlt_id} 日期設定:`, {
+        cag_bdate: cleanMaster.cag_bdate,
+        cag_edate: cleanMaster.cag_edate,
+        來源: validStartDate ? '原始資料' : '合約日期'
+      });
 
       switch (commission._status) {
         case 'new':
@@ -913,6 +954,7 @@ export class DataCleaner {
 
     return { masters, discountSettings, annualSettings, levelSettings };
   }
+
 
   private static processCommissionDetails(
     commission: any,
@@ -1013,9 +1055,9 @@ export class DataCleaner {
    */
   static cleanConditionData(rawConditions: any[], commissionType: string): CleanConditions {
     const result: CleanConditions = {
-      rents: { toInsert: [], toUpdate: [], toDelete: [] },
-      limits: { toInsert: [], toUpdate: [], toDelete: [] },
-      levels: { toInsert: [], toUpdate: [], toDelete: [] },
+      // rents: { toInsert: [], toUpdate: [], toDelete: [] },
+      // limits: { toInsert: [], toUpdate: [], toDelete: [] },
+      // levels: { toInsert: [], toUpdate: [], toDelete: [] },
       fixedRents: { toInsert: [], toUpdate: [], toDelete: [] },
       baseRentHigher: { toInsert: [], toUpdate: [], toDelete: [] },
       baseCommissions: { toInsert: [], toUpdate: [], toDelete: [] },
