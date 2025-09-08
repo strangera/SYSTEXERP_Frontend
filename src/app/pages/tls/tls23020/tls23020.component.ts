@@ -645,6 +645,12 @@ this.queryForm.controls.TXN_DateEnd.valueChanges
   ];
 
   summaryColumns = [
+     {
+      field: 'TXN_Date',
+      header: '銷售日期',
+      visible: true,
+      format: this.formatYMD,
+    },
     { field: 'tlt_no', header: '專櫃編號', visible: true },
     {
       field: 'tlt_name',
@@ -672,6 +678,7 @@ this.queryForm.controls.TXN_DateEnd.valueChanges
       visible: true,
       style: 'text-right',
       format: this.money,
+      isTotal: true,
     },
   ];
 
