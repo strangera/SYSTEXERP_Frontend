@@ -1,6 +1,6 @@
 import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { Column, createPaginationConfig } from '../../../shared/componentkit/table/table.model';
+import { Column, createPaginationConfig, formatAmount } from '../../../shared/componentkit/table/table.model';
 import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { finalize } from 'rxjs';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
@@ -94,7 +94,8 @@ export class TLS2C010Component extends BasicQueryPageComponent<any> implements O
       this.columns_yy_up = Object.keys(responseData.YY_Detail.UP_data[0]).map(key => ({
         field: key,
         header: responseData.YY_Detail.UP_data[0][key],
-        visible: true
+        visible: true,
+        format: formatAmount
       }));
     }
 
@@ -103,7 +104,8 @@ export class TLS2C010Component extends BasicQueryPageComponent<any> implements O
       this.columns_yy_down = Object.keys(responseData.YY_Detail.DOWN_data[0]).map(key => ({
         field: key,
         header: responseData.YY_Detail.DOWN_data[0][key],
-        visible: true
+        visible: true,
+        format: formatAmount
       }));
     }
 
@@ -112,7 +114,8 @@ export class TLS2C010Component extends BasicQueryPageComponent<any> implements O
       this.columns_ny_up = Object.keys(responseData.NY_Detail.UP_data[0]).map(key => ({
         field: key,
         header: responseData.NY_Detail.UP_data[0][key],
-        visible: true
+        visible: true,
+        format: formatAmount
       }));
     }
 
@@ -121,7 +124,8 @@ export class TLS2C010Component extends BasicQueryPageComponent<any> implements O
       this.columns_ny_down = Object.keys(responseData.NY_Detail.DOWN_data[0]).map(key => ({
         field: key,
         header: responseData.NY_Detail.DOWN_data[0][key],
-        visible: true
+        visible: true,
+        format: formatAmount
       }));
     }
 
@@ -130,7 +134,8 @@ export class TLS2C010Component extends BasicQueryPageComponent<any> implements O
       this.columns_nn_up = Object.keys(responseData.NN_Detail.UP_data[0]).map(key => ({
         field: key,
         header: responseData.NN_Detail.UP_data[0][key],
-        visible: true
+        visible: true,
+        format: formatAmount
       }));
     }
 
@@ -139,7 +144,8 @@ export class TLS2C010Component extends BasicQueryPageComponent<any> implements O
       this.columns_nn_down = Object.keys(responseData.NN_Detail.DOWN_data[0]).map(key => ({
         field: key,
         header: responseData.NN_Detail.DOWN_data[0][key],
-        visible: true
+        visible: true,
+        format: formatAmount
       }));
     }
   }

@@ -112,8 +112,7 @@ export class TLS2C020Component extends BasicQueryPageComponent<any> implements O
         // cls_date 為 closeDate + 1 天
         const nextDate = new Date(this.closeDate);
         nextDate.setDate(nextDate.getDate() + 1);
-        // FIXME: 先註解，先用預設值查詢
-        // this.queryForm.patchValue({ cls_date: this.datePipe.transform(nextDate, 'yyyy/MM/dd') || '' });
+        this.queryForm.patchValue({ cls_date: this.datePipe.transform(nextDate, 'yyyy/MM/dd') || '' });
       });
     // 載入下拉選單選項
     this.loadOptions();
