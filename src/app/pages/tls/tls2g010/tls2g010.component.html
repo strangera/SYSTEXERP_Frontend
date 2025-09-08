@@ -1,54 +1,54 @@
-<div class="grid">
-  <div class="col-12">
-    <div class="card">
-      <div class="grid align-items-center">
-        <div class="col" style="flex: 1">
-          <app-menubar [ProgNo]="ProgNo"></app-menubar>
-        </div>
-        <div >
-          <app-button btnType="create" label="資料轉入" class="col"></app-button>
-        </div>
-      </div>
-      <p-accordion>
-        <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
-          [headerStyleClass]="'query-accordionTab'">
-          <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
-            <h6>檔案名稱</h6>
-            <div class="grid p-fluid">
-              <div class="col-12 md:col-6 lg:col-4">
-                <app-file-upload></app-file-upload>
-              </div>
-            </div>
-            <div class="grid p-fluid">
-              <div class="col-12 md:col-6 lg:col-4">
-                <app-input-text label="工作表名稱" controlName="worksheetName" [control]="queryForm.controls.worksheetName"
-                  [submitted]="submitted">
-                  >
-                </app-input-text>
-              </div>
-            </div>
-            <ul>
-              請注意 :
-              <li>1、Excel檔案名稱及工作表名稱須全部都為英文或數字 !!</li>
-              <li>2、Excel工作表名稱須為轉入的年月(YYYYMM)為命名格式 !!</li>
-              <li>3、Excel工作表只可轉入第一頁 !!</li>
-              <li>4、Excel範本檔下載 !</li>
-            </ul>
-            <div>
-              <div class="grid justify-content-end">
-                <app-button btnType="clear" (onClick)="onClearForm()"></app-button>
-                <app-button btnType="query" (onClick)="onSubmitQuery(queryForm)" [loading]="loading"></app-button>
-              </div>
-            </div>
-          </form>
-        </p-accordionTab>
-      </p-accordion>
-    </div>
-    <!-- <div class="card">
-            <div class="col-13">
-                <app-table [data]="data" [columns]="columns" (edit)="onEdit($event)" (detail)="onDetail($event)">
-                </app-table>
-            </div>
-        </div> -->
+<div class="card">
+  <div class="flex gap-2 mb-2">
+    <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
   </div>
+  <p-accordion>
+    <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'">
+      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
+        <div class="flex flex-column md:flex-row">
+          <div class="w-full grid flex-column gap-3 py-5">
+            <div class="flex flex-wrap justify-content-center align-items-center gap-2">
+              <app-file-upload #fileUpload class="col-12" name="myFile" accept=".xlsx,.xls" [multiple]="true"
+                chooseLabel="選擇 XLS 或 XLSX 檔案" uploadLabel="上傳" cancelLabel="清除" [auto]="false" [customUpload]="true"
+                mode="advanced" (select)="files = $event.files" [loading]="loading"
+                emptyMessage="拖曳檔案到此處或點擊「選擇 XLS 或 XLSX 檔案」按鈕。"
+                (uploadHandler)="handleCustomUpload($event)"></app-file-upload>
+            </div>
+            <app-input-text class="col-12" label="工作表名稱" controlName="worksheetName"
+              [control]="queryForm.controls.worksheetName" [submitted]="submitted" />
+            <ul class="flex flex-row flex-wrap gap-3 list-none">
+              <span class="font-bold">請注意：</span>
+              <li class="w-full">1、Excel檔案名稱及工作表名稱須全部都為英文或數字 !!</li>
+              <li class="w-full">2、Excel工作表名稱須為轉入的年月(YYYYMM)為命名格式 !!</li>
+              <li class="w-full">3、Excel工作表只可轉入第一頁 !!</li>
+              <li class="w-full">4、Excel範本檔下載 !</li>
+            </ul>
+          </div>
+          <div class="w-full md:w-auto">
+            <p-divider layout="vertical" styleClass="hidden md:flex" />
+            <p-divider layout="horizontal" styleClass="flex md:hidden" [align]="'center'" />
+          </div>
+          <div class="w-full grid p-fluid align-content-start py-5">
+            <app-calendar class="col-12" label="預算年月" controlName="budget_yymm"
+              [control]="queryForm.controls.budget_yymm" [submitted]="submitted" />
+            <app-dropdown class="col-12 md:col-6" label="館別" controlName="building_no"
+              [control]="queryForm.controls.building_no" [options]="buildingOptions | async" optionLabel="Name"
+              optionValue="No" [submitted]="submitted" />
+            <app-dropdown class="col-12 md:col-6" label="樓層" controlName="FLOOR_NO"
+              [control]="queryForm.controls.FLOOR_NO" [options]="floorOptions | async" optionLabel="Name"
+              optionValue="No" [submitted]="submitted" />
+            <app-dropdown class="col-12" label="組織代碼/名稱" controlName="section_no"
+              [control]="queryForm.controls.section_no" [options]="sectionOptions | async" optionLabel="label"
+              optionValue="value" [submitted]="submitted" />
+            <div class="col-12 grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+              <app-button label="組織範本下載" [loading]="loading" />
+              <app-button label="空白範本下載" [loading]="loading" />
+              <app-button label="產生匯出檔" [loading]="loading" />
+            </div>
+          </div>
+        </div>
+      </form>
+    </p-accordionTab>
+  </p-accordion>
 </div>
