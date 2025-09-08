@@ -15,6 +15,14 @@
         (ngSubmit)="onSubmit(queryForm)"
       >
         <div class="grid p-fluid">
+          <div class="col-12 md:col-6 lg:col-4">
+     <app-calendar
+  label="銷售月份"
+  calendarType="dateMonthOne"
+  [control]="queryForm.controls.TXN_Month"
+  [submitted]="submitted">
+</app-calendar>
+          </div>
           <app-calendar-range-quick
             class="col-12 md:col-6 lg:col-4"
             label="銷售日期"
@@ -86,6 +94,17 @@
               [control]="queryForm.controls.TXN_TaxType"
               [submitted]="submitted"
             ></app-dropdown>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-multi-select
+              label="原折扣別"
+              controlName="TXN_DiscCode"
+              [options]="discountOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.TXN_DiscCode"
+              [submitted]="submitted"
+            ></app-multi-select>
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
