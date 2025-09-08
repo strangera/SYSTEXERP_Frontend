@@ -118,6 +118,7 @@ export class TLS23020Component extends BasicQueryPageComponent<any> {
     PLU_SalePrc_Start: [null],
     PLU_SalePrc_End: [null],
     TXN_TaxType: [],
+    PRM_TXN_DiscCode: [],
     TXN_DiscCode: [],
     tlt_id: [],
     PLU_MagNo: [],
@@ -492,6 +493,7 @@ this.queryForm.controls.TXN_DateEnd.valueChanges
           ? undefined
           : String(val.TXN_TaxType),
       TXN_DiscCode: asStrArr(val?.TXN_DiscCode),
+      PRM_TXN_DiscCode: asStrArr(val?.PRM_TXN_DiscCode),
       tlt_id: asStrArr(val?.tlt_id),
       PLU_MagNo: (val?.PLU_MagNo ?? '').toString().trim() || undefined,
       IsNoPLU_No: !!val?.IsNoPLU_No,

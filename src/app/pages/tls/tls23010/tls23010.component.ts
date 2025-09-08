@@ -644,7 +644,7 @@ onExportXLSX() {
     { field: 'TXN_GUIRemark',  header: '防偽隨機碼',     visible: true },
 
     { field: 'TXN_GUI_CarrType', header: '載具種類',     visible: true, format: (v: any) => this.getLabelFromOptions(v, this.carrierTypeOptions) },
-    { field: 'DonateType',     header: '捐贈類別',      visible: true },
+    // { field: 'DonateType',     header: '捐贈類別',      visible: true },
     { field: 'TXN_GUIVehicle', header: '共通性載具號碼', visible: true },
 
     { field: 'TXN_PrintTimes', header: '發票列印次數',    visible: true, style: 'text-right' },

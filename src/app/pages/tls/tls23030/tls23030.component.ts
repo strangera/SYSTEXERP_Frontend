@@ -288,6 +288,7 @@ detailSubtotalFieldMap: SubtotalFieldMap = SUBTOTAL_FIELD_MAP;
     this.counterNameService.getCounters().subscribe(v =>
       this.CounterOptions = (v || []).map(x => ({ label: x.label, formLabel: `${x.value} - ${x.label}`, value: x.value }))
     );
+    
   }
 
   // ====== 分頁/排序(Lazy) ======
@@ -628,4 +629,18 @@ detailSubtotalFieldMap: SubtotalFieldMap = SUBTOTAL_FIELD_MAP;
     const seen = new Set<string>();
     return out.filter(s => (seen.has(s.field) ? false : (seen.add(s.field), true)));
   }
+  paymentSummary: any[] = [];
+    
+paymentSummaryColumns = [
+  { header: '支付別', field: 'PAY_NAME', style: 'text-left' },
+  { header: '卡別',   field: 'CRD_Type', style: 'text-center' },
+  {
+    header: '合計金額',
+    field: 'TXN_PayAmt',
+    style: 'text-right',
+    format: (val: number) => (Number(val ?? 0)).toLocaleString(),
+    isTotal: true,
+  },
+];
+
 }
