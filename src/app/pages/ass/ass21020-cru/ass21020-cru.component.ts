@@ -121,7 +121,7 @@ export class ASS21020CRUComponent extends BasicCruPageComponent<ASS21020Data> im
     const rowData = this.rowdata;
     const type = this.service.engTypeSignal();
     const mtrNo = this.service.engMeterNoSignal();
-    this.logger.debug(`bootstrap startup:`, [rowData, type, mtrNo, this.service.ASS21020Data()]);
+    this.logger.debug(`bootstrap startup:`, [rowData, type, mtrNo]);
     if (type?.length && mtrNo?.length && rowData) {
       const fixedEngType = type.find(t => t.Name === rowData.ENG_Type)?.No as EngType;
       this.service.loadASS21020({ EngTypes: fixedEngType, ENG_MeterNo: rowData.ENG_MeterNo });
