@@ -2834,4 +2834,99 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
     this.messageService.infoBubble('已清空暫存資料並離開');
   }
 
+  /**
+ * 格式化 email 欄位（當使用者離開輸入框時觸發）
+ */
+  formatEmailField(fieldName: string, value: string): void {
+    console.log(`格式化 ${fieldName} 欄位:`, value);
+
+    if (!value || value.trim() === '') {
+      return;
+    }
+
+    // 檢查是否包含分隔符號，如果沒有就不需要格式化
+    if (!value.includes(',') && !value.includes(';')) {
+      // 單一 email，只需要驗證格式
+      this.validateSingleEmail(fieldName, value.trim());
+      return;
+    }
+
+    // 格式化多個 email
+    const formattedValue = this.formatMultipleEmails(value);
+
+    // 如果格式有改變，更新表單值
+    if (formattedValue !== value) {
+      const control = this.dataForm.get(fieldName);
+      control?.setValue(formattedValue);
+
+      this.messageService.infoBubble(`已自動格式化 ${this.getFieldDisplayName(fieldName)}`);
+
+      // 自動儲存
+      this.saveToWorkflow();
+    }
+
+    // 驗證格式化後的 email
+    this.validateMultipleEmails(fieldName, formattedValue);
+  }
+
+  /**
+   * 格式化多個 email 字串
+   */
+  private formatMultipleEmails(emailString: string): string {
+    return emailString
+      .split(/[;,]/) // 支援分號和逗號分隔
+      .map(email => email.trim()) // 去除前後空格
+      .filter(email => email !== '') // 過濾空字串
+      .join(';'); // 統一用分號連接
+  }
+
+  /**
+   * 驗證單一 email
+   */
+  private validateSingleEmail(fieldName: string, email: string): void {
+    if (email && !this.isValidEmailFormat(email)) {
+      this.messageService.warnBubble(`${this.getFieldDisplayName(fieldName)} 格式不正確`);
+    }
+  }
+
+  /**
+   * 驗證多個 email
+   */
+  private validateMultipleEmails(fieldName: string, emailString: string): void {
+    if (!emailString) return;
+
+    const emails = emailString.split(';');
+    const invalidEmails: string[] = [];
+
+    emails.forEach(email => {
+      if (email && !this.isValidEmailFormat(email)) {
+        invalidEmails.push(email);
+      }
+    });
+
+    if (invalidEmails.length > 0) {
+      this.messageService.warnBubble(
+        `${this.getFieldDisplayName(fieldName)} 中有無效格式：${invalidEmails.join(', ')}`
+      );
+    }
+  }
+
+  /**
+   * 驗證 email 格式
+   */
+  private isValidEmailFormat(email: string): boolean {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email.trim());
+  }
+
+  /**
+   * 取得欄位顯示名稱
+   */
+  private getFieldDisplayName(fieldName: string): string {
+    const fieldNames: { [key: string]: string } = {
+      'email': '聯絡信箱',
+      'invoice_email': '發票信箱'
+    };
+    return fieldNames[fieldName] || fieldName;
+  }
 }

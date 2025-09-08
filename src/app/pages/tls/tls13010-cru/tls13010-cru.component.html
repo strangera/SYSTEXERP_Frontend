@@ -365,8 +365,8 @@
           <div class="grid p-fluid">
             <!-- 聯絡資訊區塊中的 email 欄位 -->
             <div class="col-12 md:col-6 lg:col-4">
-              <app-input-text label="電子信箱" controlName="email" [control]="dataForm.controls.email"
-                [submitted]="submitted">
+              <app-input-text label="電子信箱" controlName="email" (blurEvent)="formatEmailField('email', $event)"
+                [control]="dataForm.controls.email" [submitted]="submitted">
               </app-input-text>
               <small class="block mt-1 text-blue-600 text-base">
                 💡 多個信箱請用分號(；)分隔
@@ -374,7 +374,7 @@
             </div>
             <div class="col-12 md:col-6 lg:col-4">
               <app-input-text label="發票電子郵件" controlName="invoice_email" [control]="dataForm.controls.invoice_email"
-                [submitted]="submitted">
+                (blurEvent)="formatEmailField('invoice_email', $event)" [submitted]="submitted">
               </app-input-text>
               <small class="block mt-1 text-blue-600 text-base">
                 💡 多個信箱請用分號(；)分隔
