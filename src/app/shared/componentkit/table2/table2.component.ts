@@ -60,6 +60,7 @@ import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { Table2UtilityService } from './table2-utility.service';
 import { AutoCompleteCompleteEvent } from 'primeng/autocomplete';
 import { ImageModule } from 'primeng/image';
+import { TableCaptionComponent } from '../table/table-caption/table-caption.component';
 
 @Component({
   selector: 'app-table2',
@@ -90,8 +91,10 @@ import { ImageModule } from 'primeng/image';
     // 自家元件
     TableExpansion2Component,
     TableExport2Component,
+    TableCaptionComponent,
     // Angular
     FormsModule,
+
     ImageModule
   ],
 })
@@ -330,36 +333,58 @@ export class Table2Component
   }
 
   /* ======================= 分頁 / 排序 ======================= */
-  calculateTotalPages() {
-    this.dt.totalRecords = this.totalRecords !== 0 ? this.totalRecords : this.data.length;
-    this.totalPages = Math.ceil(this.dt.totalRecords / this.rows);
-    this.pages = Array.from({ length: this.totalPages }, (_, index) => ({
-      label: `第 ${index + 1} 頁`,
-      value: index + 1,
-    }));
+// table2.component.ts
+calculateTotalPages() {
+  this.dt.totalRecords = this.totalRecords !== 0 ? this.totalRecords : this.data.length;
+  this.totalPages = Math.ceil(this.dt.totalRecords / this.rows);
+  this.pages = Array.from({ length: this.totalPages }, (_, index) => ({
+    label: `第 ${index + 1} 頁`,
+    value: index + 1,
+  }));
 
-    if (this._skipFirstCalc) {
-      this._skipFirstCalc = false;
-      this.cdr.detectChanges?.();
-      return;
-    }
-
-    if (this.totalPages > 0 && this.selectedPage && this.selectedPage > this.totalPages) {
-      this.goToPage(this.totalPages);
-    }
-
+  if (this._skipFirstCalc) {
+    this._skipFirstCalc = false;
     this.cdr.detectChanges?.();
+    return;
   }
 
-  goToPage(pageNumber: number) {
-    this.first = (pageNumber - 1) * this.rows;
-    this.selectedPage = pageNumber;
-    this.lazyLoadData.emit({
-      pageIndex: this.selectedPage,
-      pageSize : this.rows,
-      SortBy   : this.multiSortMeta,
-    });
+  // ✅ 直接夾住頁碼並改 first，讓 p-table 自己觸發 onLazyLoad；不要呼叫 goToPage()
+  if (this.totalPages > 0 && this.selectedPage && this.selectedPage > this.totalPages) {
+    this.selectedPage = this.totalPages;
+    this.first = (this.totalPages - 1) * this.rows;
+    this.cdr.detectChanges?.();
+    return;
   }
+
+  this.cdr.detectChanges?.();
+}
+// 新增一個旗標
+private _suppressNextLazy = false;
+
+
+
+// ✅ 用下拉切頁
+goToPage(pageNumber: number) {
+  const newFirst = (pageNumber - 1) * this.rows;
+  if (this.first === newFirst && this.selectedPage === pageNumber) return;
+
+  // 先標記：下一個由 p-table 觸發的 onLazyLoad 要忽略
+  this._suppressNextLazy = true;
+
+  // 換頁位移
+  this.first = newFirst;
+  this.selectedPage = pageNumber;
+
+  // 只手動送一次給父層，避免跟 p-table 的 onLazyLoad 重複
+  const sort = this.ensureGroupFirst(this.multiSortMeta);
+  this.lazyLoadData.emit({
+    pageIndex: this.selectedPage ?? 1,
+    pageSize : this.rows,
+    SortBy   : sort,
+  });
+}
+
+
 // 供 template 呼叫：點「匯出excel範本」按鈕
 onExportExcel(): void {
   this.exportExcel.emit();
@@ -390,19 +415,31 @@ onImportExcel(event: FileSelectEvent): void {
     });
   }
 
-  loadDataLazy(event: TableLazyLoadEvent) {
-    if (this._skipFirstLazy) { this._skipFirstLazy = false; return; }
+loadDataLazy(event: TableLazyLoadEvent) {
+  if (this._skipFirstLazy) { this._skipFirstLazy = false; return; }
 
-    const pageSize  = event.rows && event.rows > 0 ? event.rows : this.rows;
-    const pageIndex = (event.first ?? 0) / pageSize + 1;
-
-    const sortRaw = event.multiSortMeta
-      ?? (event as any).multisortmeta
-      ?? (event.sortField ? [{ field: event.sortField, order: event.sortOrder }] : []);
-    const sort = this.ensureGroupFirst(sortRaw);
-
-    this.lazyLoadData.emit({ pageIndex, pageSize, SortBy: sort });
+  // 若是剛剛程式改 first 造成的 echo，直接吞掉一次
+  if (this._suppressNextLazy) {
+    this._suppressNextLazy = false;
+    return;
   }
+
+  const pageSize  = event.rows && event.rows > 0 ? event.rows : this.rows;
+  const pageIndex = (event.first ?? 0) / pageSize + 1;
+
+  const sortRaw = event.multiSortMeta
+    ?? (event as any).multisortmeta
+    ?? (event.sortField ? [{ field: event.sortField, order: event.sortOrder }] : []);
+  const sort = this.ensureGroupFirst(sortRaw);
+
+  this.selectedPage = pageIndex;
+  this.queryStateService.setQueryState(this.tableKey + 'Sort', sort);
+  this.dt.totalRecords = this.totalRecords !== 0 ? this.totalRecords : this.data.length;
+
+  // 這裡才真正打 API（交給父層）
+  this.lazyLoadData.emit({ pageIndex, pageSize, SortBy: sort });
+}
+
 
   /* ======================= Column 重新排序（for onColReorder 綁定） ======================= */
   onColReorder(event: any) {

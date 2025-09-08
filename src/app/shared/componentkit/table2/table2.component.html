@@ -48,117 +48,57 @@
 >
 
   <!-- ===== Caption / 工具列 ===== -->
-  <ng-template pTemplate="caption">
-    <div class="grid align-items-center justify-content-between mx-0" *ngIf="showCaption && !rowEditing">
-      <!-- 左側：欄位、報表、CRUD、Excel -->
-      <div class="caption-left button-group flex gap-2 py-2">
-        <p-multiSelect
-          [options]="columns"
-          [(ngModel)]="selectedColumns"
-          optionLabel="header"
-          dropdownIcon="pi pi-cog"
-          pTooltip="過濾欄位"
-          tooltipPosition="top"
-          (onChange)="onFilterChange($event)"
-        />
+<ng-template pTemplate="caption">
+  <app-table-caption
+    [data]="data"
+    [columns]="columns"
+    (columnsEvent)="columns = $event"
+    [dataKey]="dataKey"
+    [expansionDataKey]="expansionDataKey"
+    [expansionLoadFn]="expansionLoadFn"
+    [expandedRows]="expandedRows"
+    [rowEditing]="rowEditing"
+    [selectedColumns]="selectedColumns"
+    (selectedColumnsEvent)="selectedColumns = $event"
+    [selectedItems]="selectedItems"
+    [tableKey]="tableKey"
+    [expansionColumns]="expansionColumns"
+    [showCaption]="showCaption"
+    [showHeader]="showHeader"
+    [showFilter]="showFilter"
+    [showReportMode]="showReportMode"
+    [showInsert]="showInsert"
+    [insertDisabled]="insertDisabled"
+    [deleteData]="deleteData"
+    [showDelete]="showDelete"
+    [deleteIcon]="deleteIcon"
+    [deletepTooltip]="deletepTooltip"
+    [showExcel]="showExcel"
+    [disabled]="disabled"
+    [showExcelExport]="showExcelExport"
+    [showExcelImport]="showExcelImport"
+    [exportExcelLoading]="exportExcelLoading"
+    [showPage]="showPage"
 
-        <!-- 自訂報表 -->
-        <p-button
-          *ngIf="customReport && IsPrint && data.length > 0"
-          icon="pi pi-file"
-          [rounded]="true"
-          [outlined]="true"
-          [pTooltip]="'自訂報表'"
-          tooltipPosition="top"
-          (click)="exportEvent.emit('custom')"
-        ></p-button>
+    [totalPages]="totalPages"
+    [pages]="pages"
+    [selectedPage]="selectedPage"
+    [rows]="rows"
+    [first]="first"
+    [totalRecords]="dt.totalRecords"
 
-        <!-- 報表模式 -->
-        <p-button
-          [icon]="IsPrint ? 'pi pi-file' : 'pi pi-times'"
-          [rounded]="true"
-          *ngIf="showReportMode && data.length > 0"
-          (click)="toggleVisibility()"
-          [pTooltip]="IsPrint ? '報表模式' : '關閉報表模式'"
-          tooltipPosition="top"
-          [outlined]="!IsPrint"
-          [disabled]="!canPerformAction('50')"
-        />
-
-        <!-- 新增/刪除 -->
-        <p-button
-          *ngIf="IsPrint && showInsert && !rowEditing"
-          (click)="insertRow()
-          "
-          pTooltip="新增"
-          tooltipPosition="top"
-          pButton
-          icon="pi pi-plus"
-          severity="success"
-          class="p-button-rounded p-button-text"
-          [disabled]="insertDisabled || !canPerformAction('20')"
-        />
-        <p-button
-          *ngIf="IsPrint && showDelete && !rowEditing"
-          (click)="deleteRow(selectedItems)"
-          [pTooltip]="deletepTooltip"
-          tooltipPosition="top"
-          pButton
-          [icon]="deleteIcon"
-          severity="danger"
-          class="p-button-text"
-          [rounded]="true"
-          [disabled]="selectedItems?.length <= 0 || !canPerformAction('40')"
-        />
-      </div>
-
-      <!-- 中段：投影 header 插槽 -->
-      <div *ngIf="IsPrint" class="flex-grow-1 p-2">
-        <ng-content select="header"></ng-content>
-      </div>
-
-      <!-- 右側：展開、Excel、頁碼 -->
-      <div *ngIf="IsPrint" class="flex gap-2 py-2">
-        <div *ngIf="expansionDataKey && IsPrint" class="flex align-items-center">
-          <p-button
-            [icon]="expression ? 'pi pi-angle-up' : 'pi pi-angle-down'"
-            (onClick)="toggleExpandCollapse()"
-            [label]="expression ? '收合' : '展開'"
-            text
-          />
-        </div>
-        <div *ngIf="showExcel" class="flex gap-2 align-items-center">
-          <p-button
-            *ngIf="showExcelExport"
-            label="匯出excel範本"
-            severity="success"
-            [icon]="exportExcelLoading ? 'pi pi-spin pi-spinner' : 'pi pi-file-export'"
-            (click)="onExportExcel()"
-          />
-          <p-fileUpload
-            *ngIf="showExcelImport"
-            #fileUpload
-            styleClass="p-button-info"
-            mode="basic"
-            chooseIcon="pi pi-file-import"
-            accept="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-            severity="info"
-            (onSelect)="onImportExcel($event)"
-            [auto]="true"
-            chooseLabel="Excel匯入"
-          />
-        </div>
-        <p-dropdown
-          *ngIf="showPage && showPaginator && IsPrint && data.length > 0"
-          [options]="pages"
-          [ngModel]="selectedPage"
-          optionValue="value"
-          (onChange)="goToPage($event.value)"
-          appendTo="body"
-        />
-      </div>
-    </div>
-  </ng-template>
+    [apiUrl]="apiUrl"
+    [showExpandCollapse]="showExpandCollapse"
+    (insert)="insertRow()"
+    (delete)="deleteRow($event)"
+    (exportExcel)="exportExcel.emit()"
+    (importExcel)="importExcel.emit($event)"
+    (pageChange)="goToPage($event)"
+    (exportEvent)="exportEvent.emit($event)"
+  >
+    <header><ng-content select="header"></ng-content></header>
+  </app-table-caption>
+</ng-template>
 
   <!-- ===== 表頭 ===== -->
   <ng-template pTemplate="header" let-columns>
