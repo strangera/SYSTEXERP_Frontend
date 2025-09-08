@@ -1,0 +1,62 @@
+<div class="card">
+  <div class="flex gap-2 mb-2">
+    <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
+    <app-button btnType="back" (click)="onCancel()"></app-button>
+  </div>
+  <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
+    <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
+      <div class="grid p-fluid">
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text
+            label="退回/折讓單號"
+            controlName="No"
+            [control]="dataForm.controls.No"
+            [submitted]="submitted"
+          ></app-input-text>
+        </div>
+
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-calendar
+            label="申報年月"
+            calendarType="dateMonthOne"
+            [control]="dataForm.controls.INV_DeclareYM"
+            [submitted]="submitted"
+          ></app-calendar>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-calendar
+            label="退出/折讓日期"
+            controlName="Date"
+            calendarType="dateOne"
+            [control]="dataForm.controls.Date"
+            [submitted]="submitted"
+          ></app-calendar>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-number
+            label="發票號碼(起)"
+            controlName="Invoice_No_Start"
+            [control]="dataForm.controls.Invoice_No_Start"
+            [submitted]="submitted"
+            [useGrouping]="false"
+          ></app-input-number>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-number
+            label="發票號碼(迄)"
+            controlName="Invoice_No_End"
+            [control]="dataForm.controls.Invoice_No_End"
+            [submitted]="submitted"
+          ></app-input-number>
+        </div>
+      </div>
+    </form>
+
+    <div
+      class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
+    >
+      <app-button btnType="cancel" [form]="dataForm"></app-button>
+      <app-button btnType="submit" [loading]="loading" />
+    </div>
+  </p-panel>
+</div>

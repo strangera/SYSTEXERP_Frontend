@@ -23,20 +23,21 @@
               [submitted]="submitted"
             ></app-input-text>
           </div>
+
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-calendar
+              label="申報年月"
+              calendarType="dateMonthOne"
+              [control]="queryForm.controls.INV_DeclareYM"
+              [submitted]="submitted"
+            ></app-calendar>
+          </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-calendar
               label="退出/折讓日期"
               controlName="Date"
               calendarType="dateOne"
               [control]="queryForm.controls.Date"
-              [submitted]="submitted"
-            ></app-calendar>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar
-              label="申報年月"
-              calendarType="dateMonthOne"
-              [control]="queryForm.controls.INV_DeclareYM"
               [submitted]="submitted"
             ></app-calendar>
           </div>
@@ -74,13 +75,17 @@
       [data]="data"
       [columns]="columns"
       [selectedItems]="selectedItems"
+      [showRowEdit]="true"
       [showEdit]="false"
       [showManage]="true"
       [loading]="loading"
       [showDelete]="true"
-
+      (edit)="onEdit($event)"
+      (detail)="onDetail($event)"
       [showDelete]="false"
+      [showCheckBox]="true"
       [multiSortMeta]="[{ field: 'tlt_no', order: 1 }]"
+      [loading]="loading"
       [totalRecords]="totalRecords"
       (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"
       [lazy]="true"

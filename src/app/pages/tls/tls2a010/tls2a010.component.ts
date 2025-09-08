@@ -234,9 +234,7 @@ export class TLS2A010Component extends BasicQueryPageComponent<any> implements O
     this.tls2a010Service.queryTLS2A010(payload).pipe(untilDestroyed(this)).subscribe({
       next: (response) => {
         this.data = (response?.Data.mainData ?? []).map((item: any) => {
-          const systemAmt = Number(item.BOOK_PayAmt ?? 0);
-          const realAmt = Number(item.ACT_PayAmt ?? 0);
-          const diff = systemAmt - realAmt;
+          const diff = Number(item.OVER_PayAmt ?? 0);
 
           let status = '';
           if (diff < 0) status = '欠';
