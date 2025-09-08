@@ -838,7 +838,7 @@ loadDataLazy(event: TableLazyLoadEvent) {
   }
 
   // 新增：把目前群組列的 key（多鍵）組成同一字串
-private getGroupKeyFromRow(row: any): string {
+getGroupKeyFromRow(row: any): string {
   const fields = this.groupRowsByArray;
   if (!fields.length) return '';
   return fields.map(f => String((row ?? {})[f] ?? '')).join('|');
@@ -862,14 +862,26 @@ getGroupSubtotal(rowData: any, field: string): number {
 }
 // 只有在「外部小計有給到這組 key」時才渲染小計列（用來達成跨頁只在群組真正結束時顯示）
 shouldRenderGroupFooter(rowData: any): boolean {
-  if (this.externalSubtotals && Object.keys(this.externalSubtotals).length > 0) {
-    const key = this.getGroupKeyFromRow(rowData);
-    return !!this.externalSubtotals[key];
-  }
-  // 沒有外部小計時，預設照 p-table 每組都顯示
+  const key = this.getGroupKeyFromRow(rowData);
+  const usingExternal = !!this.externalSubtotals && Object.keys(this.externalSubtotals).length > 0;
+  const hasBucket = usingExternal ? !!this.externalSubtotals?.[key] : true;
+
+  this.t2log('SUBTOTAL#2 footer gate', {
+    key,
+    usingExternal,
+    hasBucket,
+    rowGroupValues: this.groupRowsByArray.map(f => `${f}=${(rowData ?? {})[f]}`)
+  });
+
+  if (usingExternal) return !!this.externalSubtotals?.[key];
   return true;
 }
 // 原本只處理第一個群組欄位，改成全部群組欄位都置前
+// 放在 class 內
+tmplPing(tag: string, extra?: any) {
+  this.t2log(tag, extra);
+  return true; // 讓它可用在 *ngIf 的邏輯鏈
+}
 
 
 }

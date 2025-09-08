@@ -149,7 +149,9 @@
 
   <!-- ===== ✅ 群組尾：小計列（就在表格裡） ===== -->
 <ng-template pTemplate="rowgroupfooter" let-rowData>
-  <tr class="bg-primary-50" *ngIf="shouldRenderGroupFooter(rowData)">
+   <tr class="bg-primary-50"
+      *ngIf="tmplPing('SUBTOTAL#2.1 template hit', { key: getGroupKeyFromRow(rowData) }) 
+             && shouldRenderGroupFooter(rowData)">
     <td class="font-bold text-right pr-2" [attr.colspan]="getSubtotalLabelColspan()">
       小計
     </td>

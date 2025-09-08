@@ -639,9 +639,9 @@ this.queryForm.controls.TXN_DateEnd.valueChanges
     },
 
     { field: 'tlt_id_desc', header: '商品抽成類別', visible: true },
-    { field: 'TXN_DiscCode', header: '歸屬折扣代號', visible: true },
+   
     { field: 'TXN_DiscName', header: '歸屬折扣名稱', visible: true },
-    { field: 'PLU_TaxType', header: '稅別代號', visible: true },
+    
     { field: 'PLU_TaxTypeName', header: '稅別名稱', visible: true },
     { field: 'PLU_MagNo', header: '單品編號', visible: true },
     { field: 'TXN_StatusName', header: '狀態', visible: true },
