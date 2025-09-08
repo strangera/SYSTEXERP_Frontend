@@ -25,7 +25,7 @@ export const defaultColumns = [
   { header: '系統/實收帳差異', field: 'OVER_PayAmt', isTotal: true },
 
   {
-    header: '審核狀態',
+    header: '狀況',
     field: 'OVER_PayAmt',
     format: (v: number) => {
       if (v < 0) return '欠';
@@ -70,7 +70,7 @@ export const creditCardColumns: Column[] = [
     }
   },
 
-  { header: '欠/平/溢', field: 'OVER_Status' },
+  { header: '狀況', field: 'OVER_Status' },
   { header: '審核人員', field: 'check_usr_name' },
   {
     header: '是否有缺單',
