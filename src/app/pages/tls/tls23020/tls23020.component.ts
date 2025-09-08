@@ -117,7 +117,7 @@ export class TLS23020Component extends BasicQueryPageComponent<any> {
     TXN_GUINo: [''],
     PLU_SalePrc_Start: [null],
     PLU_SalePrc_End: [null],
-    TXN_TaxType: [],
+    PLU_TaxType: [],
     PRM_TXN_DiscCode: [],
     TXN_DiscCode: [],
     tlt_id: [],
@@ -137,7 +137,12 @@ export class TLS23020Component extends BasicQueryPageComponent<any> {
   });
 
   // 下拉選單選項
-  taxableOptions: any[] = [];
+  taxableOptions: any[] = [
+    { value: '0', label: '免稅' },
+    { value: '1', label: '應稅' },
+    
+  ];
+
   discountOptions: any[] = [];
   deductionbigCategoryOptions: any[] = [];
   floorOptions: any[] = [];
@@ -196,9 +201,7 @@ this.queryForm.controls.TXN_DateEnd.valueChanges
     this.tls11010Service
       .getBuildingOptions()
       .subscribe((res) => (this.BUILDING_NO_Options = res));
-    this.taxableService
-      .getSystemTypes()
-      .subscribe((data) => (this.taxableOptions = data));
+    
     this.discountService
       .getLocalDiscountOptions()
       .subscribe((data) => (this.discountOptions = data));
@@ -488,10 +491,10 @@ this.queryForm.controls.TXN_DateEnd.valueChanges
       TXN_GUINo: (val?.TXN_GUINo ?? '').toString().trim() || undefined,
       PLU_SalePrc_Start: asNum(val?.PLU_SalePrc_Start),
       PLU_SalePrc_End: asNum(val?.PLU_SalePrc_End),
-      TXN_TaxType:
-        val?.TXN_TaxType == null || val?.TXN_TaxType === ''
+      PLU_TaxType:
+        val?.PLU_TaxType == null || val?.PLU_TaxType === ''
           ? undefined
-          : String(val.TXN_TaxType),
+          : String(val.PLU_TaxType),
       TXN_DiscCode: asStrArr(val?.TXN_DiscCode),
       PRM_TXN_DiscCode: asStrArr(val?.PRM_TXN_DiscCode),
       tlt_id: asStrArr(val?.tlt_id),

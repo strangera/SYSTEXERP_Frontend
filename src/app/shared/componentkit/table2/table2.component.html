@@ -148,25 +148,23 @@
   </ng-template>
 
   <!-- ===== ✅ 群組尾：小計列（就在表格裡） ===== -->
-  <ng-template pTemplate="rowgroupfooter" let-rowData>
-    <tr class="bg-primary-50">
-      <td class="font-bold text-right pr-2" [attr.colspan]="getSubtotalLabelColspan()">
-        小計
+<ng-template pTemplate="rowgroupfooter" let-rowData>
+  <tr class="bg-primary-50" *ngIf="shouldRenderGroupFooter(rowData)">
+    <td class="font-bold text-right pr-2" [attr.colspan]="getSubtotalLabelColspan()">
+      小計
+    </td>
+
+    <ng-container *ngFor="let col of getSubtotalColumns()">
+      <td class="font-bold" [ngClass]="col.style ? col.style : 'text-right'">
+        {{ col.format ? col.format(getGroupSubtotal(rowData, col.field))
+                      : getGroupSubtotal(rowData, col.field) }}
       </td>
+    </ng-container>
 
-      <ng-container *ngFor="let col of getSubtotalColumns()">
-        <td class="font-bold" [ngClass]="col.style ? col.style : 'text-right'">
-          {{ col.format
-              ? col.format(getGroupSubtotal(rowData[groupRowsByArray[0]], col.field))
-              : getGroupSubtotal(rowData[groupRowsByArray[0]], col.field) }}
-        </td>
-      </ng-container>
-
-      <!-- 管理欄位占位 -->
-      <td *ngIf="!alwaysEdit || (alwaysEdit && rowEditing)"
-          [hidden]="!IsPrint || !showManage"></td>
-    </tr>
-  </ng-template>
+    <td *ngIf="!alwaysEdit || (alwaysEdit && rowEditing)"
+        [hidden]="!IsPrint || !showManage"></td>
+  </tr>
+</ng-template>
 
   <!-- ===== 內容列 ===== -->
   <ng-template
