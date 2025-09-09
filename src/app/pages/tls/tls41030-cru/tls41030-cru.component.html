@@ -36,13 +36,13 @@
                 [control]="dataForm.controls.USR_Level"
                 [submitted]="submitted"
               ></app-input-text>
-              <app-input-text
+              <app-input-number
                 class="col-12 md:col-6 lg:col-4"
                 label="收銀員授權等級"
                 controlName="USR_Auth"
                 [control]="dataForm.controls.USR_Auth"
                 [submitted]="submitted"
-              ></app-input-text>
+              ></app-input-number>
               <app-dropdown class="col-12 md:col-6 lg:col-4" label="收銀員在職狀態" controlName="USR_JobStatus" [options]="jobStatusOption" optionLabel="label"
                     optionValue="value" [control]="dataForm.controls.USR_JobStatus" [submitted]="submitted"></app-dropdown>
             </div>
