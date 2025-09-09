@@ -1,46 +1,25 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import {
-  Component,
-  EventEmitter,
-  Input,
-  SimpleChanges,
-  OnChanges,
-  Output,
-  ViewChild,
-  OnDestroy,
-  OnInit,
+  Component, EventEmitter, Input, SimpleChanges, OnChanges, Output,
+  ViewChild, OnDestroy, OnInit, inject,
 } from '@angular/core';
 import {
-  Table,
-  TableLazyLoadEvent,
-  TablePageEvent,
-  TableRowSelectEvent,
-  TableRowUnSelectEvent,
-  TableModule,
+  Table, TableLazyLoadEvent, TablePageEvent, TableRowSelectEvent,
+  TableRowUnSelectEvent, TableModule,
 } from 'primeng/table';
 import { SortMeta } from 'primeng/api';
 import {
-  AddButton,
-  Column,
-  ColumnGroup,
-  FieldChangeEvent,
-  LazyLoadEvent,
-  RowEditSaveEvent,
-  toggleButtons,
-  validateRowData,
+  AddButton, Column, ColumnGroup, FieldChangeEvent, LazyLoadEvent,
+  RowEditSaveEvent, toggleButtons, validateRowData,
 } from './table2.model';
-import {
-  FileSelectEvent,
-  FileUpload,
-  FileUploadModule,
-} from 'primeng/fileupload';
+import { FileSelectEvent, FileUpload, FileUploadModule } from 'primeng/fileupload';
 import { NotificationService } from '../../component/notification-message/notification.service';
 import { QueryStateService } from '../../service/query-state.service';
 import { BasicPrintData2Component } from '../../componentextends/basic-print/basic-print-data2.component';
 import { CurrentPageService } from '../../../layout/app.menulist/current-page.service';
 import { Observable, Subject, takeUntil } from 'rxjs';
 import { FunsrightInfo } from '../../models/system/funsrightInfo';
-import { NgIf, NgClass, NgFor, NgStyle } from '@angular/common';
+import { NgIf, NgClass, NgFor } from '@angular/common';
 import { DividerModule } from 'primeng/divider';
 import { MultiSelectModule } from 'primeng/multiselect';
 import { TooltipModule } from 'primeng/tooltip';
@@ -60,7 +39,6 @@ import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { Table2UtilityService } from './table2-utility.service';
 import { AutoCompleteCompleteEvent } from 'primeng/autocomplete';
 import { ImageModule } from 'primeng/image';
-import { TableCaptionComponent } from '../table/table-caption/table-caption.component';
 
 @Component({
   selector: 'app-table2',
@@ -69,53 +47,25 @@ import { TableCaptionComponent } from '../table/table-caption/table-caption.comp
   animations: [toggleButtons],
   standalone: true,
   imports: [
-    NgIf,
-    NgClass,
-    NgFor,
-    NgStyle,
+    NgIf, NgClass, NgFor,
     // PrimeNG
-    DividerModule,
-    TableModule,
-    MultiSelectModule,
-    TooltipModule,
-    ButtonModule,
-    FileUploadModule,
-    DropdownModule,
-    RippleModule,
-    InputTextModule,
-    InputNumberModule,
-    CalendarModule,
-    CheckboxModule,
-    SkeletonModule,
-    BlockUIModule,
+    DividerModule, TableModule, MultiSelectModule, TooltipModule, ButtonModule,
+    FileUploadModule, DropdownModule, RippleModule, InputTextModule, InputNumberModule,
+    CalendarModule, CheckboxModule, SkeletonModule, BlockUIModule,
     // 自家元件
-    TableExpansion2Component,
-    TableExport2Component,
-    TableCaptionComponent,
+    TableExpansion2Component, TableExport2Component,
     // Angular
-    FormsModule,
-
-    ImageModule
+    FormsModule, ImageModule,
   ],
 })
 export class Table2Component
   extends BasicPrintData2Component
-  implements OnInit, OnChanges, OnDestroy
-{
+  implements OnInit, OnChanges, OnDestroy {
 
-  private t2log(label: string, payload?: any) {
-  // 用 console.groupCollapsed 比較好讀；要展開就點一下
-  if (payload !== undefined) {
-    console.groupCollapsed(`[Table2] ${label}`);
-    console.log(payload);
-    console.groupEnd();
-  } else {
-    console.log(`[Table2] ${label}`);
-  }
-}
-  /* ======================= 基本與依賴 ======================= */
+  /* ====== 基本與依賴 ====== */
   @ViewChild('dt', { static: false }) dt!: Table;
   @ViewChild('fileUpload') fileUpload!: FileUpload;
+
   private ngUnsubscribe = new Subject<void>();
   public funInfo: FunsrightInfo | undefined;
 
@@ -125,16 +75,16 @@ export class Table2Component
     private readonly table2UtilityService: Table2UtilityService,
     private readonly sanitizer: DomSanitizer,
     private readonly messageService: NotificationService,
-  ) {
-    super();
-  }
+  ) { super(); }
 
   /* ======================= Inputs/Outputs ======================= */
-  // 基本設置
+  // 基本
   @Input() dataKey = 'ID';
-  @Input() tableKey: string | undefined = undefined;
+  @Input() tableKey?: string;
   @Input() apiUrl?: string;
-  @Input() title: string | undefined = undefined;
+  @Input() title?: string;
+
+  // 欄位 / 資料
   @Input() columns!: Column[];
   originalColumns!: Column[];
   selectedColumns!: Column[];
@@ -221,6 +171,7 @@ export class Table2Component
   @Input() exportExcelLoading = false;
   @Output() importExcel = new EventEmitter<FileSelectEvent>();
   @Input() showPage = true;
+  @Input() showCustomExcelImport = false;
 
   // 管理欄
   @Input() showManage = true;
@@ -254,10 +205,21 @@ export class Table2Component
   pages: { label: string; value: number }[] = [];
   selectedPage: number | null = 1;
   @Input() lazy = false;
+
+  /** 父層不用再寫 onLazyLoadData；若提供此函式，Table2 會自己打 API 並把資料落地 */
+  @Input() serverFetch?: (payload: LazyLoadEvent) => Observable<{
+    rows: any[];
+    totalRecords: number;
+    externalTotals?: Record<string, number>;
+    externalSubtotals?: Record<string, Record<string, number>>;
+  }>;
+  @Output() serverError = new EventEmitter<any>();
+
+  /** 若未提供 serverFetch，仍可沿用舊的 (lazyLoadData) 事件 */
   @Output() lazyLoadData = new EventEmitter<LazyLoadEvent>();
 
   // 資料狀態欄位
-  @Input() dataStatusField: string | undefined;
+  @Input() dataStatusField?: string;
   @Input() dataStatusValue = {
     Original: 'original',
     New: 'new',
@@ -265,84 +227,44 @@ export class Table2Component
     Deleted: 'deleted',
   };
 
-  // ======= 由父層注入的總計 / 小計資料與欄位對應 =======
+  // 父層注入的總計 / 小計
   @Input() externalTotals?: Record<string, number>;
   @Input() externalTotalFieldMap?: Record<string, string>;
   @Input() externalSubtotals?: Record<string | number, Record<string, number>>;
   @Input() externalSubtotalFieldMap?: Record<string, string>;
 
-  // ===== 內部旗標 =====
-  private _skipFirstLazy = true;
-  private _skipFirstCalc = true;
-  private ensureInitialGroupingSort() {
-  const gs = this.groupRowsByArray;
-  if (!gs.length) return;
-  const rest = (this.multiSortMeta || []).filter(s => !gs.includes(s.field));
-  const lead = gs.map(field => ({ field, order: 1 as 1 | -1 }));
-  this.multiSortMeta = [...lead, ...rest];
-  if (!this.lazy) this.data = [...this.data];
-}
-
-private ensureGroupFirst(sort: SortMeta[] | undefined): SortMeta[] {
-  const gs = this.groupRowsByArray;
-  if (!gs.length) return sort ?? [];
-  const list = Array.isArray(sort) ? [...sort] : [];
-  const rest = list.filter(s => !gs.includes(s.field));
-  const lead = gs.map(field => {
-    const exist = list.find(s => s.field === field);
-    return { field, order: (exist?.order ?? 1) as 1 | -1 };
-  });
-  return [...lead, ...rest];
-}
+  /* ===== 內部旗標（穩定機制） ===== */
+  private _skipFirstLazy = true;      // PrimeNG 初始 onLazyLoad
+  private _skipFirstCalc = true;      // 初算頁資訊
+  private _suppressNextLazy = false;  // 程式性改 first/rows 的 echo
+  private lastEmitKey: string | null = null; // 去重鍵：pageIndex|pageSize|sortJson
+  private lastSortSig = '';                  // 排序簽章（偵測排序變更→回第1頁）
 
   /* ======================= 生命週期 ======================= */
   ngOnInit(): void {
     this.ensureInitialGroupingSort();
 
-    this.columns = (this.columns || []).map((col) => ({
-      ...col,
-      headerRow: col.headerRow ?? 1,
-    }));
+    this.columns = (this.columns || []).map(col => ({ ...col, headerRow: col.headerRow ?? 1 }));
 
     this.currentPageService.currentPageProgNo$
       .pipe(takeUntil(this.ngUnsubscribe))
-      .subscribe((progNo) => {
-        this.funInfo = progNo
-          ? this.authService.getUserPermissions(progNo)
-          : undefined;
+      .subscribe(progNo => {
+        this.funInfo = progNo ? this.authService.getUserPermissions(progNo) : undefined;
       });
 
-    this.rows =
-      this.queryStateService.getQueryState(this.tableKey + 'rows')?.value ?? this.rows;
+    this.rows = this.queryStateService.getQueryState(this.tableKey + 'rows')?.value ?? this.rows;
 
-    this.showSubTotal = this.showSubTotal
-      ? this.showSubTotal
-      : this.columns?.some((c) => c.isSubTotal) ?? false;
+    this.showSubTotal = this.showSubTotal ? this.showSubTotal : (this.columns?.some(c => c.isSubTotal) ?? false);
+    this.showTotal    = this.showTotal    ? this.showTotal    : (this.columns?.some(c => c.isTotal) ?? false);
 
-    this.showTotal = this.showTotal
-      ? this.showTotal
-      : this.columns?.some((c) => c.isTotal) ?? false;
-
-    // 初始 selectedColumns（若有歷史紀錄就還原）
     const saved = this.queryStateService.getQueryState(this.tableKey + 'Filter')?.value as Column[] | undefined;
-    this.selectedColumns = (saved?.length ? saved : this.columns || []).filter(c => c.visible !== false && c.hidden !== true);
-     this.t2log('ngOnInit.done', { multiSortMeta: this.multiSortMeta });
-
-     this.t2log('SUBTOTAL#1 init checkpoint', {
-  groupRowsByArray: this.groupRowsByArray,                                  // 有沒有真的在分組
-  subtotalCols: (this.selectedColumns || [])
-                  .filter(c => c.isSubTotal && c.hidden !== true && c.visible !== false)
-                  .map(c => c.field),                                        // 有沒有標 isSubTotal 的可見欄位
-  externalSubtotalsCount: this.externalSubtotals ? Object.keys(this.externalSubtotals).length : 0,
-  hasExternalSubtotalMap: !!this.externalSubtotals,                          // 你是不是有塞外部小計物件
-  showSubTotalInput: this.showSubTotal,                                      // 你有沒有打算顯示小計（目前模板不檢查，但先看旗標）
-  columnsTotal: this.columns?.length ?? 0,
-  selectedColumnsTotal: this.selectedColumns?.length ?? 0
-});
+    this.selectedColumns = (saved?.length ? saved : this.columns || [])
+      .filter(c => c.visible !== false && c.hidden !== true);
   }
 
   ngOnChanges(changes: SimpleChanges): void {
     this.groupedDataCache.clear();
+
     if (changes['data']) {
       setTimeout(() => {
         this.dt.totalRecords = this.totalRecords !== 0 ? this.totalRecords : this.data.length;
@@ -355,12 +277,12 @@ private ensureGroupFirst(sort: SortMeta[] | undefined): SortMeta[] {
 
     if (changes['columns'] && this.columns?.length > 0) {
       this.originalColumns = this.columns;
-
       this.showSubTotal = this.showSubTotal ? this.showSubTotal : this.columns.some(c => c.isSubTotal);
-      this.showTotal   = this.showTotal   ? this.showTotal   : this.columns.some(c => c.isTotal);
+      this.showTotal    = this.showTotal    ? this.showTotal    : this.columns.some(c => c.isTotal);
 
       const saved = this.queryStateService.getQueryState(this.tableKey + 'Filter')?.value as Column[] | undefined;
-      this.selectedColumns = (saved?.length ? saved : this.columns).filter(c => c.visible !== false && c.hidden !== true);
+      this.selectedColumns = (saved?.length ? saved : this.columns)
+        .filter(c => c.visible !== false && c.hidden !== true);
 
       if (changes['columns'].firstChange) {
         setTimeout(() => {
@@ -377,113 +299,176 @@ private ensureGroupFirst(sort: SortMeta[] | undefined): SortMeta[] {
   }
 
   /* ======================= 分頁 / 排序 ======================= */
-// table2.component.ts
-calculateTotalPages() {
-  this.dt.totalRecords = this.totalRecords !== 0 ? this.totalRecords : this.data.length;
-  this.totalPages = Math.ceil(this.dt.totalRecords / this.rows);
-  this.pages = Array.from({ length: this.totalPages }, (_, index) => ({
-    label: `第 ${index + 1} 頁`,
-    value: index + 1,
-  }));
 
-  if (this._skipFirstCalc) {
-    this._skipFirstCalc = false;
-    this.cdr.detectChanges?.();
-    return;
+  calculateTotalPages() {
+    this.dt.totalRecords = this.totalRecords !== 0 ? this.totalRecords : this.data.length;
+    this.totalPages = Math.ceil(this.dt.totalRecords / this.rows);
+    this.pages = Array.from({ length: this.totalPages }, (_, i) => ({
+      label: `第 ${i + 1} 頁`,
+      value: i + 1,
+    }));
+
+    if (this._skipFirstCalc) {
+      this._skipFirstCalc = false;
+      this.cdr.detectChanges?.();
+      return;
+    }
+
+    if (this.lazy) {
+      const maxFirst = Math.max(0, (this.totalPages - 1) * this.rows);
+      if (this.first > maxFirst) {
+        // 夾回最後一頁，並吞掉下一次 onLazyLoad
+        this._suppressNextLazy = true;
+        this.first = maxFirst;
+      }
+      this.cdr.detectChanges?.();
+      return;
+    }
+
+    // 非 lazy：必要時把 first 換到最後一頁
+    if (this.totalPages > 0 && this.selectedPage && this.selectedPage > this.totalPages) {
+      this.selectedPage = this.totalPages;
+      this._suppressNextLazy = true;
+      this.first = (this.totalPages - 1) * this.rows;
+      this.cdr.detectChanges?.();
+    }
   }
 
-  // ✅ 直接夾住頁碼並改 first，讓 p-table 自己觸發 onLazyLoad；不要呼叫 goToPage()
-  if (this.totalPages > 0 && this.selectedPage && this.selectedPage > this.totalPages) {
-    this.selectedPage = this.totalPages;
-    this.first = (this.totalPages - 1) * this.rows;
-    this.cdr.detectChanges?.();
-    return;
-  }
-
-  this.cdr.detectChanges?.();
-}
-// 新增一個旗標
-private _suppressNextLazy = false;
-
-
-
-// ✅ 用下拉切頁
+  /** 右上下拉切頁（同步 paginator） */
 goToPage(pageNumber: number) {
   const newFirst = (pageNumber - 1) * this.rows;
   if (this.first === newFirst && this.selectedPage === pageNumber) return;
 
-  // 先標記：下一個由 p-table 觸發的 onLazyLoad 要忽略
+  // 防 echo（若 p-table 真的回頭觸發 onLazyLoad，就被抑制掉）
   this._suppressNextLazy = true;
 
-  // 換頁位移
   this.first = newFirst;
   this.selectedPage = pageNumber;
 
-  // 只手動送一次給父層，避免跟 p-table 的 onLazyLoad 重複
-  const sort = this.ensureGroupFirst(this.multiSortMeta);
-  this.lazyLoadData.emit({
-    pageIndex: this.selectedPage ?? 1,
-    pageSize : this.rows,
-    SortBy   : sort,
-  });
+  if (this.lazy) {
+    this.loadDataLazy({
+      first: this.first,
+      rows: this.rows,
+      multiSortMeta: this.multiSortMeta
+    } as TableLazyLoadEvent);
+  }
 }
 
-
-// 供 template 呼叫：點「匯出excel範本」按鈕
-onExportExcel(): void {
-  this.exportExcel.emit();
-}
-
-// 供 template 呼叫：選取 Excel 檔案時
-onImportExcel(event: FileSelectEvent): void {
-  this.importExcel.emit(event);
-  this.fileUpload?.clear(); // 清掉上次選取，避免同檔案無法再次觸發
-}
-
+  /** paginator 點擊（同步下拉） */
   onPageChange(event: TablePageEvent) {
     this.first = event.first;
     this.rows = event.rows;
     this.queryStateService.setQueryState(this.tableKey + 'rows', this.rows);
     this.selectedPage = Math.ceil(event.first / event.rows + 1);
-    this.calculateTotalPages();
+    if (!this.lazy) this.calculateTotalPages();
   }
 
+  // 排序：只記錄，不 emit；讓 onLazyLoad 帶正確 sort
   onSort(event: any) {
     const raw = event.multisortmeta ?? event.multiSortMeta ?? [];
-    const next = this.ensureGroupFirst(raw);  // 群組欄位優先
-
-    this.lazyLoadData.emit({
-      pageIndex: this.selectedPage ?? 1,
-      pageSize : this.rows,
-      SortBy   : next,
-    });
+    const next = this.ensureGroupFirst(raw);
+    this.multiSortMeta = next;
+    this.queryStateService.setQueryState(this.tableKey + 'Sort', next);
+    // PrimeNG 會自行觸發 onLazyLoad
   }
 
-loadDataLazy(event: TableLazyLoadEvent) {
-  if (this._skipFirstLazy) { this._skipFirstLazy = false; return; }
+  /** ✅ 唯一 API 觸發點（統一做去重／抑制 echo／排序變更回第1頁） */
+  loadDataLazy(event: TableLazyLoadEvent) {
+    if (this._skipFirstLazy) { this._skipFirstLazy = false; return; }
+    if (this._suppressNextLazy) { this._suppressNextLazy = false; return; }
 
-  // 若是剛剛程式改 first 造成的 echo，直接吞掉一次
-  if (this._suppressNextLazy) {
-    this._suppressNextLazy = false;
-    return;
+    const pageSize  = event.rows && event.rows > 0 ? event.rows : this.rows;
+    let pageIndex   = (event.first ?? 0) / pageSize + 1;
+
+    const sortRaw = event.multiSortMeta
+      ?? (event as any).multisortmeta
+      ?? (event.sortField ? [{ field: event.sortField, order: event.sortOrder }] : []);
+    const sort = this.ensureGroupFirst(sortRaw);
+    const sortSig = JSON.stringify(sort);
+
+    // 排序變更 → 回第 1 頁
+    if (sortSig !== this.lastSortSig) {
+      this.lastSortSig = sortSig;
+      if (pageIndex !== 1) {
+        pageIndex = 1;
+        this._suppressNextLazy = true;
+        this.first = 0;
+      }
+    }
+
+    this.selectedPage = pageIndex;
+    this.queryStateService.setQueryState(this.tableKey + 'Sort', sort);
+    this.dt.totalRecords = this.totalRecords !== 0 ? this.totalRecords : this.data.length;
+
+    const payload: LazyLoadEvent = { pageIndex, pageSize, SortBy: sort };
+    const key = `${pageIndex}|${pageSize}|${sortSig}`;
+    if (key === this.lastEmitKey) return;
+    this.lastEmitKey = key;
+
+    if (this.serverFetch) {
+      this.loading = true; // 交由 Table2 控制 loading（搭配 [loading]="loading && data.length===0"）
+      this.serverFetch(payload).subscribe({
+        next: (res) => {
+          const rows = Array.isArray(res?.rows) ? res.rows : [];
+          this.data = rows;
+          this.dataChange.emit(this.data);
+
+          this.totalRecords = Number(res?.totalRecords ?? rows.length) || 0;
+
+          if (res?.externalTotals) this.externalTotals = { ...res.externalTotals };
+          if (res?.externalSubtotals) this.externalSubtotals = { ...res.externalSubtotals };
+
+          this.calculateTotalPages();
+          this.loading = false;
+
+          // 清 selection
+          this.selectedItems = [];
+          this.selectionChange.emit(this.selectedItems);
+          this.selectedItemsChange.emit(this.selectedItems);
+        },
+        error: (err) => {
+          this.loading = false;
+          this.serverError.emit(err);
+        }
+      });
+      return;
+    }
+
+    // 沒提供 serverFetch：沿用事件給父層
+    this.lazyLoadData.emit(payload);
   }
 
-  const pageSize  = event.rows && event.rows > 0 ? event.rows : this.rows;
-  const pageIndex = (event.first ?? 0) / pageSize + 1;
+  /* ======================= Header（原 TableCaption）相關 ======================= */
 
-  const sortRaw = event.multiSortMeta
-    ?? (event as any).multisortmeta
-    ?? (event.sortField ? [{ field: event.sortField, order: event.sortOrder }] : []);
-  const sort = this.ensureGroupFirst(sortRaw);
+  /** 欄位過濾 MultiSelect 變更 */
+  onHeaderFilterChange(event: any) {
+    this.columns = this.columns.map((col) => ({
+      ...col,
+      visible: event.value.some((ev: any) => ev.field === col.field),
+    }));
+    this.selectedColumns = this.columns.filter((col) => col.visible !== false);
+    this.queryStateService.setQueryState(this.tableKey + 'Filter', this.columns);
+  }
 
-  this.selectedPage = pageIndex;
-  this.queryStateService.setQueryState(this.tableKey + 'Sort', sort);
-  this.dt.totalRecords = this.totalRecords !== 0 ? this.totalRecords : this.data.length;
+  /** 報表模式開關（繼承自 BasicPrintData2Component.toggleVisibility）已存在 */
 
-  // 這裡才真正打 API（交給父層）
-  this.lazyLoadData.emit({ pageIndex, pageSize, SortBy: sort });
-}
+  /** 匯出 Excel 範本（維持原有對外事件） */
+  onExportExcel() { this.exportExcel.emit(); }
 
+  /** 匯入 Excel */
+  onImportExcel(event?: FileSelectEvent) {
+    this.importExcel.emit(event);
+    if (event) this.fileUpload?.clear();
+  }
+
+  /** 全展開/收合 */
+  toggleExpandCollapse() {
+    this.expression = !this.expression;
+    this.table2UtilityService.toggleExpandCollapseLogic(
+      this.data, this.expression, this.dataKey, this.expansionDataKey,
+      this.expansionLoadFn, this.expandedRows, this
+    );
+  }
 
   /* ======================= Column 重新排序（for onColReorder 綁定） ======================= */
   onColReorder(event: any) {
@@ -513,20 +498,8 @@ loadDataLazy(event: TableLazyLoadEvent) {
     );
   }
 
-  toggleExpandCollapse() {
-    this.expandedRows = this.expression
-      ? {}
-      : Object.fromEntries(
-          this.data
-            .filter((p) => (p as any)[this.expansionDataKey]?.length)
-            .map((p) => [(p as any)[this.dataKey], true]),
-        );
-    this.expression = !this.expression;
-  }
-
-  /* ======================= 行/欄位邏輯 ======================= */
-  trackByRow = (index: number, item: any) =>
-    (item as any)?.[this.dataKey] || index;
+  /* ======================= 行/欄位邏輯（原本就有） ======================= */
+  trackByRow = (index: number, item: any) => (item as any)?.[this.dataKey] || index;
 
   get getVisibleHeaderCount(): number {
     const visibleCount = (this.selectedColumns?.length ?? 0);
@@ -558,22 +531,8 @@ loadDataLazy(event: TableLazyLoadEvent) {
     this.selectionChange.emit(this.selectedItems);
   }
 
-  onRowEditSave(
-    rowData: any,
-    ri: number,
-    htmlTableRowElement: HTMLTableRowElement,
-  ) {
-    if (
-      !validateRowData(
-        rowData,
-        this.columns,
-        this.data,
-        this.messageService,
-        this.dataKey,
-      )
-    ) {
-      return;
-    }
+  onRowEditSave(rowData: any, ri: number, htmlTableRowElement: HTMLTableRowElement) {
+    if (!validateRowData(rowData, this.columns, this.data, this.messageService, this.dataKey)) return;
 
     const rowId = (rowData as any)[this.dataKey];
     const oldData = this.clonedProducts[rowId];
@@ -582,14 +541,10 @@ loadDataLazy(event: TableLazyLoadEvent) {
       const savedId = `saved-${Date.now()}`;
       (rowData as any)[this.dataKey] = savedId;
       this.clonedProducts[savedId] = { ...oldData };
-      if (this.dataStatusField) {
-        (rowData as any)[this.dataStatusField] = this.dataStatusValue.New;
-      }
+      if (this.dataStatusField) (rowData as any)[this.dataStatusField] = this.dataStatusValue.New;
       delete this.clonedProducts[rowId];
     } else {
-      if (this.dataStatusField) {
-        (rowData as any)[this.dataStatusField] = this.dataStatusValue.Modified;
-      }
+      if (this.dataStatusField) (rowData as any)[this.dataStatusField] = this.dataStatusValue.Modified;
       delete this.clonedProducts[rowId];
     }
 
@@ -624,9 +579,7 @@ loadDataLazy(event: TableLazyLoadEvent) {
 
   onSelectionChange(event: any) {
     const selected = Array.isArray(event) ? event : event ? [event] : [];
-    this.selectedItems = selected.filter((item: any) =>
-      this.isRowSelectable(item),
-    );
+    this.selectedItems = selected.filter((item: any) => this.isRowSelectable(item));
     this.selectionChange.emit(this.selectedItems);
     this.selectedItemsChange.emit(this.selectedItems);
   }
@@ -672,9 +625,7 @@ loadDataLazy(event: TableLazyLoadEvent) {
       const tempId = `temp-${Date.now()}`;
       newRowData[this.dataKey] = tempId;
 
-      if (this.dataStatusField) {
-        newRowData[this.dataStatusField] = this.dataStatusValue.New;
-      }
+      if (this.dataStatusField) newRowData[this.dataStatusField] = this.dataStatusValue.New;
 
       this.data = [newRowData, ...this.data];
       this.clonedProducts[tempId] = { ...newRowData };
@@ -729,6 +680,7 @@ loadDataLazy(event: TableLazyLoadEvent) {
   }
 
   /* ======================= 欄位群組 / 小計 / 總計 ======================= */
+
   getColumnSpan(columns: Column[], groupField: string): number {
     return columns.filter(
       (col) =>
@@ -753,8 +705,7 @@ loadDataLazy(event: TableLazyLoadEvent) {
     index: number,
     columns: Column[],
   ): boolean {
-    if (!col.groupField || col.hidden === true || col.visible === false)
-      return false;
+    if (!col.groupField || col.hidden === true || col.visible === false) return false;
     const currentGroup = col.groupField;
     for (let i = 0; i < index; i++) {
       const prev = columns[i];
@@ -770,17 +721,13 @@ loadDataLazy(event: TableLazyLoadEvent) {
   }
 
   getGroupHeader(groupField: string): string {
-    return (
-      this.columnGroup?.find((g) => g.field === groupField)?.header ?? groupField
-    );
+    return this.columnGroup?.find((g) => g.field === groupField)?.header ?? groupField;
   }
 
   getGroupAlignClass(groupField: string): string {
     const align = this.columnGroup?.find((g) => g.field === groupField)?.align;
     return align ? 'text-' + align : 'text-center';
   }
-
-
 
   getTotal(field: string): number {
     // 1) 外部總計
@@ -793,9 +740,6 @@ loadDataLazy(event: TableLazyLoadEvent) {
     // 2) 退回前端加總
     return this.data.reduce((sum, row) => sum + Number((row as any)[field] ?? 0), 0);
   }
-
-  // ====== 讓群組欄位排序優先 ======
-
 
   /** 小計要顯示的欄位（selectedColumns 中標了 isSubTotal 的、且可見的） */
   getSubtotalColumns() {
@@ -810,25 +754,11 @@ loadDataLazy(event: TableLazyLoadEvent) {
       (this.selectedColumns || []).filter(c => !c.isSubTotal && c.hidden !== true && c.visible !== false).length;
 
     let colspan = 0;
-
-    // 序號
-    colspan += 1;
-
-    // 勾選
-    if (this.IsPrint && this.showCheckBox && !this.rowEditing && this.selectionMode === 'multiple') {
-      colspan += 1;
-    }
-
-    // 展開鍵
-    if (this.expansionColumns.length && this.IsPrint) {
-      colspan += 1;
-    }
-
-    // 非小計欄
+    colspan += 1; // 序號
+    if (this.IsPrint && this.showCheckBox && !this.rowEditing && this.selectionMode === 'multiple') colspan += 1;
+    if (this.expansionColumns.length && this.IsPrint) colspan += 1;
     colspan += nonSubtotalCols;
-
-    // 管理欄位不包含在這個 colspan（在 footer 最後會多補一格）
-    return colspan;
+    return colspan; // 管理欄位不包含在這個 colspan
   }
 
   /** 將 `groupRowsBy` 正規化為陣列供 p-table 使用 */
@@ -837,51 +767,64 @@ loadDataLazy(event: TableLazyLoadEvent) {
     return Array.isArray(g) ? g : (g ? [g] : []);
   }
 
-  // 新增：把目前群組列的 key（多鍵）組成同一字串
-getGroupKeyFromRow(row: any): string {
-  const fields = this.groupRowsByArray;
-  if (!fields.length) return '';
-  return fields.map(f => String((row ?? {})[f] ?? '')).join('|');
-}
-// 取小計：先找外部小計（externalSubtotals），找不到就用同頁加總
-getGroupSubtotal(rowData: any, field: string): number {
-  const groupKey = this.getGroupKeyFromRow(rowData);
-
-  // 1) 外部小計（例如父層只塞「群組真正結束」的那幾組）
-  if (this.externalSubtotals && this.externalSubtotalFieldMap) {
-    const apiKey = this.externalSubtotalFieldMap[field];
-    const bucket = groupKey ? this.externalSubtotals[groupKey] : undefined;
-    if (apiKey && bucket && apiKey in bucket) return Number(bucket[apiKey] ?? 0);
+  // 讓群組欄位排序優先（初始化）
+  private ensureInitialGroupingSort() {
+    const gs = this.groupRowsByArray;
+    if (!gs.length) return;
+    const rest = (this.multiSortMeta || []).filter(s => !gs.includes(s.field));
+    const lead = gs.map(field => ({ field, order: 1 as 1 | -1 }));
+    this.multiSortMeta = [...lead, ...rest];
+    if (!this.lazy) this.data = [...this.data];
   }
 
-  // 2) fallback：同頁即時計算（多鍵完全比對）
-  const rows = this.data.filter(r =>
-    this.groupRowsByArray.every(f => String((r as any)[f] ?? '') === String((rowData as any)[f] ?? ''))
-  );
-  return rows.reduce((s, r) => s + Number((r as any)[field] ?? 0), 0);
+  // 讓群組欄位排序優先（動態）
+  private ensureGroupFirst(sort: SortMeta[] | undefined): SortMeta[] {
+    const gs = this.groupRowsByArray;
+    if (!gs.length) return sort ?? [];
+    const list = Array.isArray(sort) ? [...sort] : [];
+    const rest = list.filter(s => !gs.includes(s.field));
+    const lead = gs.map(field => {
+      const exist = list.find(s => s.field === field);
+      return { field, order: (exist?.order ?? 1) as 1 | -1 };
+    });
+    return [...lead, ...rest];
+  }
+
+  // === 分組 key（公開，避免 NG private 錯誤） ===
+  getGroupKeyFromRow(row: any): string {
+    const fields = this.groupRowsByArray;
+    if (!fields.length) return '';
+    return fields.map(f => String((row ?? {})[f] ?? '')).join('|');
+  }
+
+  // 取小計：先找外部小計（externalSubtotals），找不到就用同頁加總
+  getGroupSubtotal(rowData: any, field: string): number {
+    const groupKey = this.getGroupKeyFromRow(rowData);
+
+    if (this.externalSubtotals && this.externalSubtotalFieldMap) {
+      const apiKey = this.externalSubtotalFieldMap[field];
+      const bucket = groupKey ? this.externalSubtotals[groupKey] : undefined;
+      if (apiKey && bucket && apiKey in bucket) return Number(bucket[apiKey] ?? 0);
+    }
+
+    // fallback：同頁即時計算（多鍵完全比對）
+    const rows = this.data.filter(r =>
+      this.groupRowsByArray.every(f => String((r as any)[f] ?? '') === String((rowData as any)[f] ?? ''))
+    );
+    return rows.reduce((s, r) => s + Number((r as any)[field] ?? 0), 0);
+  }
+
+  // 決定是否渲染群組尾（小計列）
+  shouldRenderGroupFooter(_rowData: any): boolean {
+    const usingExternal = !!this.externalSubtotals && Object.keys(this.externalSubtotals).length > 0;
+    return usingExternal ? true : true;
+  }
+  // ========= Export（補上讓 template 可呼叫） =========
+
+
+/** 開啟匯出對話框：type = 'PDF' | 'Excel' */
+export(type: 'PDF' | 'Excel') {
+  this.exportStatus = type;
+  this.exportDialog = true;
 }
-// 只有在「外部小計有給到這組 key」時才渲染小計列（用來達成跨頁只在群組真正結束時顯示）
-shouldRenderGroupFooter(rowData: any): boolean {
-  const key = this.getGroupKeyFromRow(rowData);
-  const usingExternal = !!this.externalSubtotals && Object.keys(this.externalSubtotals).length > 0;
-  const hasBucket = usingExternal ? !!this.externalSubtotals?.[key] : true;
-
-  this.t2log('SUBTOTAL#2 footer gate', {
-    key,
-    usingExternal,
-    hasBucket,
-    rowGroupValues: this.groupRowsByArray.map(f => `${f}=${(rowData ?? {})[f]}`)
-  });
-
-  if (usingExternal) return !!this.externalSubtotals?.[key];
-  return true;
-}
-// 原本只處理第一個群組欄位，改成全部群組欄位都置前
-// 放在 class 內
-tmplPing(tag: string, extra?: any) {
-  this.t2log(tag, extra);
-  return true; // 讓它可用在 *ngIf 的邏輯鏈
-}
-
-
 }
