@@ -96,27 +96,53 @@
     </p-accordionTab>
   </p-accordion>
 </div>
-
 <div class="card">
-  <div class="col-12">
-    <app-table
-      tableKey="TLS22010"
-      [data]="data"
-      [multiSortMeta]="[{ field: 'ECR_No', order: 1 }]"
-      [totalRecords]="totalRecords"
-      (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"
-      [lazy]="true"
-      [showReportMode]="false"
-      [showDelete]="false"
-      [loading]="loading"
-      [columns]="columns7"
-      (detail)="onDetail($event)"
-      [selectedItems]="selectedItems"
-      (selectionChange)="selectedItems = $event"
-      [showRowEdit]="false"
-      [showEdit]="false"
-    ></app-table>
-  </div>
+  <app-table
+    tableKey="TLS22010"
+    [data]="data"
+    [multiSortMeta]="[{ field: 'ECR_No', order: 1 }]"
+    [totalRecords]="totalRecords"
+    (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"
+    [lazy]="true"
+    [showReportMode]="false"
+    [showDelete]="false"
+    [loading]="loading"
+    [columns]="columns7"
+    (detail)="onDetail($event)"
+    [selectedItems]="selectedItems"
+    (selectionChange)="selectedItems = $event"
+    [showRowEdit]="false"
+    [showEdit]="false"
+  >
+    <header>
+      <div class="flex justify-content-between align-items-center mb-2">
+        <div>
+          <span>銷售日期：</span>
+          <span class="text-red-600 font-bold" *ngIf="TXN_Date">
+            {{ TXN_Date }}
+          </span>
+        </div>
+      </div>
+
+      <!-- 第二行：公式說明 -->
+      <div class="text-sm line-height-3 mb-2">
+        <div>
+          ＊ 發票總金額(F) = 發票未稅金額(M) + 發票稅額(N) + 發票免稅金額(O)
+        </div>
+        <div>
+          ＊ 付款金額(H) = 發票總金額(F) + 溢收(G) + 已開發票金額(E) +
+          訂金結帳訂金(C3) + 代收/付金額(L)
+        </div>
+        <div>＊ 已開發票溢付(I) = 溢收(G)</div>
+      </div>
+
+      <!-- 第三行：總台數 -->
+      <div class="font-bold mt-1">
+        <span class="text-red-600">共 {{ totalRecords }}</span>
+        <span class="text-blue-600">台收銀機</span>
+      </div>
+    </header>
+  </app-table>
 </div>
 
 <div class="card mt-3 surface-border pt-3 border-bottom-1">
