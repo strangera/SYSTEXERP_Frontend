@@ -201,4 +201,14 @@ input[disabled],
     height: 2.5rem;
     padding: 0;
   }
+  .p-inputtext {
+    padding: 0.5rem;
+  }
+}
+
+.p-button.p-fileupload-choose {
+  border: 1px solid var(--surface-border);
+  padding: 1rem;
+  height: 100%;
+  width: max-content;
 }
