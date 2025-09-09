@@ -1,3 +1,4 @@
+import { finalize } from 'rxjs';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
@@ -29,7 +30,7 @@ import { ValidationService } from '@shared/service/validation.service';
 })
 //1.1.1.4 銷項品項資料設定
 export class FIN11040Component extends BasicQueryPageComponent<TDS1008Data> implements OnInit {
-  queryForm = this.formBuilder.group({
+  queryForm = this.formBuilder.nonNullable.group({
     INV_ItemNo: ['', [Validators.maxLength(2), this.validationService.alphanumericValidator]], // 品項代號
     INV_ItemName: ['', [Validators.maxLength(30)]], // 品項名稱
     ...createPaginationConfig([{ field: 'INV_ItemNo', order: 1 }]), // 分頁和排序參數
@@ -51,14 +52,10 @@ export class FIN11040Component extends BasicQueryPageComponent<TDS1008Data> impl
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
       this.loading = true;
-      this.fin11040Service.queryFIN11040(frm.value).pipe(untilDestroyed(this)).subscribe({
-        next: (response) => {
-          this.data = response.Data
-          this.totalRecords = response.TotalCount;
-          this.queryStateService.setQueryState(this.ProgNo, frm.value);
-          this.loading = false;
-        },
-        error: () => { this.loading = false; },
+      this.fin11040Service.queryFIN11040(frm.value).pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(res => {
+        this.data = res.Data
+        this.totalRecords = res.TotalCount;
+        this.queryStateService.setQueryState(this.ProgNo, frm.value);
       });
     });
   }
@@ -66,13 +63,9 @@ export class FIN11040Component extends BasicQueryPageComponent<TDS1008Data> impl
   onDelete(selectedRows: TDS1008Data[]) {
     const idList = selectedRows.map(row => row.ID);
     this.fin11040Service.deleteFIN11040({ idList }).pipe(untilDestroyed(this)).subscribe(res => {
-      if (res.Status === '0000') {
-        this.onSubmit(this.queryForm);
-        this.selectedRows = [];
-        this.messageService.successBubble(res.Message);
-      } else {
-        this.messageService.errorBubble(res.Message);
-      }
+      this.onSubmit(this.queryForm);
+      this.selectedRows = [];
+      this.messageService.successBubble(res.Message);
     });
   }
 }
