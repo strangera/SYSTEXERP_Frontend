@@ -318,18 +318,49 @@
         </td>
 
         <!-- 管理欄 -->
-        <td
-          *ngIf="!alwaysEdit || (alwaysEdit && rowEditing)"
-          [hidden]="!IsPrint || !showManage"
-          [ngClass]="{'flex justify-content-center gap-2': IsPrint && showManage}"
-          class="no-wrap icon-button"
-          alignFrozen="right"
-          pFrozenColumn
-          [frozen]="IsPrint"
-          [style.text-align]="'center'"
-        >
-          <!-- 放你的管理按鈕群（如需要） -->
-        </td>
+     <td
+  *ngIf="!alwaysEdit || (alwaysEdit && rowEditing)"
+  [hidden]="!IsPrint || !showManage"
+  [ngClass]="{'flex justify-content-center gap-2': IsPrint && showManage}"
+  class="no-wrap icon-button"
+  alignFrozen="right"
+  pFrozenColumn
+  [frozen]="IsPrint"
+  [style.text-align]="'center'">
+
+  <!-- 檢視 -->
+  <p-button
+    *ngIf="showDetail"
+    icon="pi pi-search"
+    text
+    pTooltip="檢視"
+    tooltipPosition="top"
+    (click)="detailRow(rowData)"
+  ></p-button>
+
+  <!-- 編輯（你這次不要，父層會關掉 showEdit） -->
+  <p-button
+    *ngIf="showEdit"
+    icon="pi pi-pencil"
+    text
+    severity="warning"
+    pTooltip="編輯"
+    tooltipPosition="top"
+    [disabled]="editDisabled(rowData)"
+    (click)="editRow(rowData)"
+  ></p-button>
+
+  <!-- 如有自訂按鈕（可選） -->
+  <ng-container *ngFor="let b of addButton">
+    <p-button
+      [icon]="b.icon"
+      [label]="b.label"
+      [severity]="b.severity"
+      [text]="b.text !== false"
+      (click)="onSelectButton({ rowData, button: b })"
+    ></p-button>
+  </ng-container>
+</td>
       </ng-container>
 
       <ng-template #loadingTemplate>

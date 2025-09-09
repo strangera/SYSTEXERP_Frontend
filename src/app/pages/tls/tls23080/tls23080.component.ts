@@ -476,4 +476,20 @@ fetchTLS23080 = (evt: LazyLoadEvent) => {
 
     { field: 'TXN_TotPayAmt', header: '總金額', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
   ];
+
+private toIso(dateLike: any): string {
+  if (!dateLike) return '';
+  const d = new Date(dateLike);
+  if (isNaN(d.getTime())) return '';
+  // 砍掉時區影響，輸出 yyyy-MM-ddTHH:mm:ss
+  return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 19);
+}
+
+onViewTLS23080(row: any) {
+  // 你的表格把 TXN_Date 轉成 "yyyy/MM/dd" 了，所以這裡還原成 ISO
+  const iso = this.toIso(row?.TXN_Date); // e.g. 2025-09-09T00:00:00
+  this.router.navigate(['/account/tls/tls23080cru'], {
+    state: { criteria: { TXN_Date: iso } }
+  });
+}
 }

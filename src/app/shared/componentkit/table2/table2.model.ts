@@ -107,12 +107,6 @@ export const expandAnimation = trigger('expandAnimation', [
 ]);
 
 
-export interface AddButton {
-  label: string;
-  icon: string;
-  action: (rowData: any, event?: Event) => void;
-  disabled?: (rowData: any) => boolean;
-}
 
 export interface RowEditSaveEvent {
   oldData: any;
@@ -270,16 +264,34 @@ export const createPaginationConfig = (defaultSortBy?: SortMeta[]) => {
   };
 };
 
-export interface AddButton {
-  label: string;
-  icon: string;
-  action: (rowData: any, event?: Event) => void;
-  disabled?: (rowData: any) => boolean;
-}
+
 
 export interface RowEditSaveEvent {
   oldData: any;
   newData: any;
   ri: number;
   data: any[]; // ← 修正為陣列型別，與上方一致
+}
+// table2.model.ts
+export type ButtonSeverity =
+  | 'primary' | 'secondary' | 'success' | 'info'
+  | 'warning' | 'help' | 'danger' | 'contrast';
+
+export interface AddButton {
+  icon?: string;
+  label?: string;
+
+  severity?: ButtonSeverity;  // <p-button> [severity]
+  text?: boolean;             // <p-button> [text]
+  outlined?: boolean;
+  rounded?: boolean;
+
+  tooltip?: string;
+  show?: boolean | ((row: any) => boolean);
+  disabled?: boolean | ((rowData: any) => boolean);
+
+  // 舊寫法（相容）
+  action?: (rowData: any, event?: Event) => void;
+  // 新寫法（建議）
+  onClick?: (ctx: { rowData: any; button: AddButton; event?: MouseEvent }) => void;
 }
