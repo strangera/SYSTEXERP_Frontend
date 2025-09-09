@@ -62,7 +62,7 @@ export class TLS52050CRUComponent extends BasicCruPageComponent<ITLS52050Data> i
     MAM_Method: ['H'], // 是否為永久變價
     MAM_BegDate: [tomorrow, [Validators.required, this.validationService.timeGreaterThanValidator(new Date())]], // 生效起始日期
     MAM_EndDate: [null, [Validators.required, this.validationService.timeGreaterThanValidator(new Date())]], // 生效結束日期
-    MAM_Remark: ['', [Validators.required]], // 進價變價單說明
+    MAM_Remark: [''], // 進價變價單說明
     MAM_Status: ['0'],
     MAM_Type: ['3'],
     MAM_Source: ['1'],
@@ -86,7 +86,7 @@ export class TLS52050CRUComponent extends BasicCruPageComponent<ITLS52050Data> i
   brandOptions?: Observable<Option[] | null>;   // 品牌
   vendorOptions?: Observable<Option[] | null>;  // 廠商編號
   data: any[] = [
-    { id: 1, MID: "0", MAM_No: "MAM202310010001", SYS_StoreNo: "10", PLU_MagNo: "PLU202310010001", PLU_Name: "商品名稱", CAT_LNo: "01", CAT_MNo: "01", CAT_SNo: "01", PLU_OrderPrcRate: 50, PLU_OrderPrc: 500, MAM_OrderPrc: 0, PLU_SalePrc: 450, MAM_UnitPrc: 0, MAD_Remark: "單項說明", }
+    { id: 1, MID: "0", MAM_No: "MAM202310010001", SYS_StoreNo: "10", PLU_MagNo: "PLU202310010001", PLU_Name: "商品名稱", CAT_LNo: "01", CAT_LName: "大分類", CAT_MNo: "01", CAT_MName: "中分類", CAT_SNo: "01", CAT_SName: "小分類", PLU_OrderPrcRate: 50, PLU_OrderPrc: 500, MAM_OrderPrc: 0, PLU_SalePrc: 450, MAM_UnitPrc: 0, MAD_Remark: "單項說明", }
   ];
   selectedItems: any[] = [];
   columns = columns;
@@ -104,6 +104,9 @@ export class TLS52050CRUComponent extends BasicCruPageComponent<ITLS52050Data> i
 
   ngOnInit(): void {
     this.initializePage('TLS52050', this.dataForm);
+    if (this.isFormEditable) {
+      ['MAM_BegDate', 'MAM_EndDate', 'VEN_No', 'LOGO_No', 'MAM_Method'].forEach(k => this.dataForm.get(k)?.disable());
+    }
     this.brandOptions = this.dropdown.queryPluLogo();// 品牌代碼 (LOGO_No)
     this.vendorOptions = this.dropdown.queryPos2013({ VEN_Flag: '' });// 廠商編號 (VEN_No)
     // 監聽 MAM_Method 是否為永久變價
@@ -224,9 +227,8 @@ export class TLS52050CRUComponent extends BasicCruPageComponent<ITLS52050Data> i
     { field: 'PLU_Name', header: '商品名稱' },
     { field: 'PLU_No', header: '國際條碼' },
     { field: 'UNIT_NAME', header: '單位' },
+    { field: 'PLU_SalePrc_UNI', header: '進價' },
     { field: 'PLU_BoxQty', header: '包裝入數' },
-    { field: 'PLU_StockTaxType', header: '稅別', format: (value) => value === '0' ? '免稅' : '應稅' },
-    { field: 'PLU_SalePrc_UNI', header: '單價', showSort: false },
     { field: 'PLU_SalePrc', header: '售價' },
   ]
   dialogLoading = false;
@@ -296,7 +298,7 @@ export class TLS52050CRUComponent extends BasicCruPageComponent<ITLS52050Data> i
   });
   suggestions: any[] = [];
   fieldsConfig: any[] = [
-    { field: 'PLU_MagNo', header: '商品管理編號/國際條碼/廠商貨號 - 商品名稱', mainDataField: true },
+    { field: 'PLU_MagNo', header: '商品管理編號/國際條碼/廠商貨號', mainDataField: true },
   ];
   opData: any[] = [];// overlayPanel 裡面的table
   opColumns: Column[] = [

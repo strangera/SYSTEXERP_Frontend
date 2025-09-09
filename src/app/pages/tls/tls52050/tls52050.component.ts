@@ -45,7 +45,8 @@ import { ExcelColumn, ExcelExportService } from '@shared/service/excel-export.se
     CheckboxModule,
     TableComponent,
     TranslateModule,
-    AsyncPipe
+    AsyncPipe,
+    FileUploadModule
   ],
 })
 export class TLS52050Component extends BasicQueryPageComponent<ITLS52050Data> implements OnInit {
@@ -71,9 +72,23 @@ export class TLS52050Component extends BasicQueryPageComponent<ITLS52050Data> im
   data: ITLS52050Data[] = [];
   columns: Column[] = POS2008M_COLUMNS;
   addButton: AddButton[] = [
-    { label: '審核', icon: 'pi pi-check-circle text-green-500', action: (rowData: ITLS52050Data) => { this.statusChange(rowData, MAMStatus.已審核); }, disabled: (rowData: ITLS52050Data) => rowData.MAM_Status !== MAMStatus.已申請 || (new Date(rowData.MAM_BegDate).setHours(0, 0, 0, 0)) <= (new Date().setHours(0, 0, 0, 0)) }, // 審核
-    { label: '反審核', icon: 'pi pi-undo text-orange-500', action: (rowData: ITLS52050Data) => { this.statusChange(rowData, MAMStatus.已申請); }, disabled: (rowData: ITLS52050Data) => rowData.MAM_Status !== MAMStatus.已審核 }, // 反審核
-    { label: '產生標籤檔', icon: 'pi pi-tags', action: (rowData: ITLS52050Data) => { this.generateLabelFile(rowData); } }, // 標籤檔
+    { // 審核
+      label: '審核',
+      icon: 'pi pi-check-circle text-green-500',
+      action: (rowData: ITLS52050Data) => { this.statusChange(rowData, MAMStatus.已審核); },
+      disabled: (rowData: ITLS52050Data) => rowData.MAM_Status !== MAMStatus.已申請 || (new Date(rowData.MAM_BegDate).setHours(0, 0, 0, 0)) <= (new Date().setHours(0, 0, 0, 0))
+    },
+    { // 反審核，日期必須為生效前
+      label: '反審核',
+      icon: 'pi pi-undo text-orange-500',
+      action: (rowData: ITLS52050Data) => { this.statusChange(rowData, MAMStatus.已申請); },
+      disabled: (rowData: ITLS52050Data) => rowData.MAM_Status !== MAMStatus.已審核 || (new Date(rowData.MAM_BegDate).setHours(0, 0, 0, 0)) <= (new Date().setHours(0, 0, 0, 0))
+    },
+    { // 標籤檔
+      label: '產生標籤檔',
+      icon: 'pi pi-tags',
+      action: (rowData: ITLS52050Data) => { this.generateLabelFile(rowData); }
+    },
   ];
 
   constructor(

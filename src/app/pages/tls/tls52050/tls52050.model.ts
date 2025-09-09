@@ -12,8 +12,8 @@ export const enum MAMStatus {
 export const POS2008M_COLUMNS: Column[] = [
   { field: 'MAM_No', header: '變價單號', visible: true },
   { field: 'LOGO_No', header: '品牌代碼', visible: true },
-  { field: 'MAM_BegDate', header: '啟用日期', visible: true, format: formatDate },
-  { field: 'MAM_EndDate', header: '結束日期', visible: false, format: formatDate },
+  { field: 'MAM_BegDate', header: '生效日期(起)', visible: true, format: formatDate },
+  { field: 'MAM_EndDate', header: '生效日期(起)', visible: false, format: formatDate },
   { field: 'VEN_No', header: '廠商編號', visible: true },
   { field: 'MAM_Status', header: '單據狀態', visible: true, format: (value: string) => getSYS1000('MAM_Status', value) },
   { field: 'MAM_Method', header: '促銷方式', visible: true, format: (value: string) => getSYS1000('MAM_Method', value) },
