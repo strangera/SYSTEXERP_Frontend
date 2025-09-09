@@ -41,6 +41,7 @@ export class TLS51070Component extends BasicQueryPageComponent<POS2004> implemen
     PLU_ECStatus: ['1', [Validators.maxLength(1)]], // EC商品狀態: 1.正常2.停用3.停進4,下架 For EC (備註: 原來的 商品狀態(PLU_Status) 改為 EC商品狀態(PLU_ECStatus))
     PLU_Reserve1: ['', [Validators.maxLength(400)]], // 說明
     PLU_Reserve3: ['', [Validators.maxLength(400)]], // 系列
+    TLT_NO: ['', [Validators.maxLength(12)]], // 專櫃編號
 
     //分頁查詢
     ...createPaginationConfig([{ field: 'PLU_MagNo', order: 1 }]), // 分頁和排序參數
@@ -53,6 +54,7 @@ export class TLS51070Component extends BasicQueryPageComponent<POS2004> implemen
   middleOption: apiOption[] = [];
   smallOption: apiOption[] = [];
   brandOption: apiOption[] = [];  // 品牌代碼
+  TLT_NO_Option: apiOption[] = []; // 專櫃編號
   attributeOptions: option[] = [ // 商品型態
     { value: '1', label: '一般' },
     { value: '2', label: '進口' },
@@ -317,6 +319,15 @@ export class TLS51070Component extends BasicQueryPageComponent<POS2004> implemen
 
         console.log('品牌代碼:', this.brandOption);
       });
+
+    // 查詢 專櫃編號
+    this.tls51070Service.queryTLTTALENT_DropDownList({}).subscribe((response) => {
+      this.TLT_NO_Option = response.Data.map((item: any) => ({
+        No: item.No, // 專櫃編號代碼
+        Label: item.No + '-' + item.Name, // 組合成顯示用的Label
+      }));
+      console.log('專櫃編號代碼:', response.Data);
+    });  
   }
 
   //讀取大、中、小 分類整份表單 (該情況禁止 中小下拉選擇)

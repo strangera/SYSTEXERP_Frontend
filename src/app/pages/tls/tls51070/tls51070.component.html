@@ -35,11 +35,15 @@
               optionValue="No" [control]="queryForm.controls.LOGO_No" [submitted]="submitted"></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="大分類代碼/名稱" controlName="CAT_LNo" [options]="largeOption" optionLabel="Label"
-              optionValue="No" [control]="queryForm.controls.CAT_LNo" [submitted]="submitted"></app-dropdown>
+            <app-dropdown label="專櫃編號/名稱" controlName="TLT_NO" [options]="TLT_NO_Option" optionLabel="Label"
+              optionValue="No" [control]="queryForm.controls.TLT_NO" [submitted]="submitted"></app-dropdown>
           </div>
         </div>
         <div class="grid p-fluid">
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown label="大分類代碼/名稱" controlName="CAT_LNo" [options]="largeOption" optionLabel="Label"
+              optionValue="No" [control]="queryForm.controls.CAT_LNo" [submitted]="submitted"></app-dropdown>
+          </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown label="中分類代碼/名稱" controlName="CAT_MNo" [options]="middleOption" optionLabel="Label"
               optionValue="No" [control]="queryForm.controls.CAT_MNo" [submitted]="submitted"></app-dropdown>
@@ -48,12 +52,12 @@
             <app-dropdown label="小分類代碼/名稱" controlName="CAT_SNo" [options]="smallOption" optionLabel="Label"
               optionValue="No" [control]="queryForm.controls.CAT_SNo" [submitted]="submitted"></app-dropdown>
           </div>
+        </div>
+        <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown label="商品型態" controlName="PLU_Attribute" [options]="attributeOptions" optionLabel="label"
               optionValue="value" [control]="queryForm.controls.PLU_Attribute" [submitted]="submitted"></app-dropdown>
           </div>
-        </div>
-        <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown label="商品單位" controlName="PLU_Unit" [options]="unitOptions" optionLabel="Label"
               optionValue="No" [control]="queryForm.controls.PLU_Unit" [submitted]="submitted"></app-dropdown>
