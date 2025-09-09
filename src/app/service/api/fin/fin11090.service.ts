@@ -7,8 +7,8 @@ import { environment } from '../../../../environments/environment';
 // --- FIN11090 查詢參數 Model 定義 ---
 export interface FIN11090QueryRequest extends BaseQueryRequest {
   TXN_Date?: string;         // 銷售日期
-  ECR_No?: string;           // 收銀機號
-  TXN_No?: number;           // 交易序號 FIXME: 型別為string
+  ECR_No?: string[];           // 收銀機號
+  TXN_No?: string;           // 交易序號
   TXN_GUITrack?: string;     // 字軌
   TXN_GUINo?: string;        // 發票號碼
 }
