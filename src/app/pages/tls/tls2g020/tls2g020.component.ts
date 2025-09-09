@@ -36,9 +36,9 @@ export class TLS2G020Component extends BasicQueryPageComponent<any> implements O
       tlt_no: 'A001',
       tlt_name: '威秀影城',
       details: [
-        { budget_yymm: '01', M_budget: '500000', M_bud: '30000' },
-        { budget_yymm: '02', M_budget: '480000', M_bud: '28000' },
-        { budget_yymm: '03', M_budget: '510000', M_bud: '32000' },
+        { budget_yymm: '01', M_budget: '500000', cag_charge_rate: '20000', M_bud: '30000' },
+        { budget_yymm: '02', M_budget: '480000', cag_charge_rate: '19000', M_bud: '28000' },
+        { budget_yymm: '03', M_budget: '510000', cag_charge_rate: '21000', M_bud: '32000' },
       ]
     },
     {
@@ -46,8 +46,8 @@ export class TLS2G020Component extends BasicQueryPageComponent<any> implements O
       tlt_no: 'B002',
       tlt_name: 'Lucky Girl',
       details: [
-        { budget_yymm: '01', M_budget: '400000', M_bud: '25000' },
-        { budget_yymm: '02', M_budget: '420000', M_bud: '26000' },
+        { budget_yymm: '01', M_budget: '400000', cag_charge_rate: '20000', M_bud: '25000' },
+        { budget_yymm: '02', M_budget: '420000', cag_charge_rate: '21000', M_bud: '26000' },
       ]
     },
     {
@@ -61,10 +61,10 @@ export class TLS2G020Component extends BasicQueryPageComponent<any> implements O
       tlt_no: 'D004',
       tlt_name: 'POLLY GRACE',
       details: [
-        { budget_yymm: '01', M_budget: '300000', M_bud: '20000' },
-        { budget_yymm: '02', M_budget: '310000', M_bud: '21000' },
-        { budget_yymm: '03', M_budget: '290000', M_bud: '19000' },
-        { budget_yymm: '04', M_budget: '320000', M_bud: '22000' },
+        { budget_yymm: '01', M_budget: '300000', cag_charge_rate: '20000' ,M_bud:'15000'},
+        { budget_yymm: '02', M_budget: '310000', cag_charge_rate: '21000' ,M_bud:'16000'},
+        { budget_yymm: '03', M_budget: '290000', cag_charge_rate: '19000' ,M_bud:'14000'},
+        { budget_yymm: '04', M_budget: '320000', cag_charge_rate: '22000' ,M_bud:'17000'},
       ]
     },
   ];
@@ -78,6 +78,7 @@ export class TLS2G020Component extends BasicQueryPageComponent<any> implements O
   expansionColumns7: Column[] = [
     { field: 'budget_yymm', header: '月' },
     { field: 'M_budget', header: '月預算', visible: true },
+    { field: 'cag_charge_rate', header: '抽成額' },
     { field: 'M_bud', header: '抽成額' },
 
   ];
