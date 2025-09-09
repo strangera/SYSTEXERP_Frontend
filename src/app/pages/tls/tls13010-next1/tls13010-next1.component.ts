@@ -1072,18 +1072,21 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
 
   // ========== 模式切換 ==========
   toggleCommonMode(): void {
-    if (this.showMode === 'common') {
-      this.showMode = 'all';
-      console.log('📄 切換到全部模式（包含已勾選項目）');
-    } else {
-      this.showMode = 'common';
-      console.log('📄 切換到常用模式（包含已勾選項目）');
-    }
-    this.filterData();
-  }
+    // 顯示載入提示
+    this.loading = true;
 
-  getDisplayModeText(): string {
-    return this.showMode === 'common' ? '顯示全部項目' : '顯示常用項目';
+    // 延遲執行，讓載入提示先顯示
+    setTimeout(() => {
+      if (this.showMode === 'common') {
+        this.showMode = 'all';
+      } else {
+        this.showMode = 'common';
+      }
+
+      this.filterData();
+      this.loading = false;
+      this.messageService.unblockUi();
+    }, 500); // 稍微加長延遲時間
   }
 
   getCurrentDisplayMode(): string {
@@ -1281,28 +1284,43 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
         _isCopiedItem: true
       };
 
-      // 特殊處理 tpy_type 欄位
+      // 🎯 清空大部分數值欄位，讓使用者自行填寫
+      const fieldsToReset = [
+        'tpy_unitamt',   // 單價
+        'tpy_qty',       // 數量
+        'tpy_amount',    // 金額
+        'tpy_totalamt',  // 總金額
+        'down_payment',  // 首期款
+        'period_nos',    // 期數
+        'tpy_rate'       // 比率
+      ];
+
+      fieldsToReset.forEach(field => {
+        if (field === 'tpy_qty') {
+          // 數量保持預設值 1，避免計算錯誤
+          copiedItem[field] = 1;
+        } else {
+          // 其他數值欄位設為空或0
+          copiedItem[field] = null;
+        }
+      });
+
+      // 🎯 處理 tpy_type，保持原值或設預設值
       if (originalItem.tpy_type) {
-        // 確保複製的 tpy_type 值有效
         const tpyTypeOptions = TLS13010_DROPDOWN_OPTIONS.tpyTypeOption || [];
         const isValidOption = tpyTypeOptions.some(option => option.value === originalItem.tpy_type);
 
         if (isValidOption) {
           copiedItem.tpy_type = originalItem.tpy_type;
-          console.log(`tpy_type 複製成功: ${originalItem.tpy_type}`);
         } else {
-          // 如果原值無效，設定為第一個可用選項或預設值
           copiedItem.tpy_type = tpyTypeOptions.length > 0 ? tpyTypeOptions[0].value : null;
-          console.warn(`原 tpy_type 值無效，設定為預設值: ${copiedItem.tpy_type}`);
         }
       } else {
-        // 如果原項目沒有 tpy_type，設定預設值
         const tpyTypeOptions = TLS13010_DROPDOWN_OPTIONS.tpyTypeOption || [];
         copiedItem.tpy_type = tpyTypeOptions.length > 0 ? tpyTypeOptions[0].value : null;
-        console.log(`設定預設 tpy_type: ${copiedItem.tpy_type}`);
       }
 
-      // 日期複製：只複製合理的日期，異常日期設為 null
+      // 🎯 日期處理：保留合理的日期，異常則設為null
       ['tpy_bdate', 'tpy_edate'].forEach(dateField => {
         if (originalItem[dateField]) {
           if (originalItem[dateField] instanceof Date) {
@@ -1314,51 +1332,38 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
               console.warn(`${dateField} 日期異常，設為 null`);
             }
           } else {
-            // 非 Date 物件直接保持原值，讓顯示邏輯處理
+            // 非 Date 物件保持原值
             copiedItem[dateField] = originalItem[dateField];
-            console.log(`${dateField} 保持原始格式`);
           }
+        } else {
+          copiedItem[dateField] = null;
         }
       });
 
-      // 確保必要的數值欄位有預設值
-      const numericFields = ['tpy_unitamt', 'tpy_qty', 'tpy_amount'];
-      numericFields.forEach(field => {
-        if (!copiedItem[field] || copiedItem[field] === null || isNaN(parseFloat(copiedItem[field]))) {
-          if (field === 'tpy_qty') {
-            copiedItem[field] = 1; // 數量預設為 1
-          } else {
-            copiedItem[field] = 0; // 其他數值欄位預設為 0
-          }
-          console.log(`設定 ${field} 預設值: ${copiedItem[field]}`);
-        }
-      });
-
-      // 確保組織欄位有預設值
+      // 🎯 必要的預設值設定
+      // 組織欄位
       if (!copiedItem.org_id && this.orgOptions.length > 0) {
         copiedItem.org_id = this.orgOptions[0].value;
         console.log(`設定預設組織: ${copiedItem.org_id}`);
       }
 
-      // 確保發票欄位有預設值
+      // 發票狀態
       if (!copiedItem.gui_flag) {
         copiedItem.gui_flag = 'Y';
         console.log(`設定預設發票狀態: Y`);
       }
 
-      // 清理不需要的屬性
+      // 🎯 清理不需要的屬性
       delete copiedItem._skipAutoCalc;
       delete copiedItem._dateInitialized;
 
-      // 找到原始項目的位置，插入到下一個位置
+      // 插入到原始項目的下一個位置
       const originalIndex = this.originalFareData[capType].findIndex(item => item.id === originalItem.id);
 
       if (originalIndex !== -1) {
-        // 插入到原始項目的下一個位置
         this.originalFareData[capType].splice(originalIndex + 1, 0, copiedItem);
         console.log(`已將複製項目插入到索引 ${originalIndex + 1}`);
       } else {
-        // 如果找不到原始項目，就加到最後面（備用方案）
         this.originalFareData[capType].push(copiedItem);
         console.warn(`找不到原始項目，加到最後面`);
       }
@@ -1366,19 +1371,13 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
       this.filterData();
       this.saveFareDataToWorkflow();
 
-      this.messageService.successBubble(`已成功複製扣款項目「${originalItem.cap_name}」`);
+      this.messageService.successBubble(`已成功複製扣款項目「${originalItem.cap_name}」（所有欄位已清空，請重新填寫）`);
       this.cdr.detectChanges();
 
-      console.log(`複製完成: ${originalItem.cap_item} → ${newId}`, copiedItem);
-
-      console.log('複製後的項目詳細資訊：', {
-        id: copiedItem.id,
-        is_selected: copiedItem.is_selected,
-        _status: copiedItem._status,
-        _editing: (copiedItem as any)._editing,
-        _isEditing: (copiedItem as any)._isEditing,
-        editing: (copiedItem as any).editing,
-        _isNewRow: (copiedItem as any)._isNewRow
+      console.log(`複製完成: ${originalItem.cap_item} → ${newId}`, {
+        '保留的欄位': ['cap_item', 'cap_name', '基本項目資訊'],
+        '清空的欄位': ['所有數值欄位', '日期欄位', '類型選項', '組織選項', '發票選項'],
+        '複製策略': '完全清空，提供乾淨模板'
       });
 
     } catch (error) {
