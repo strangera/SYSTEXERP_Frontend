@@ -25,7 +25,6 @@ export class ASS21020Service implements OnDestroy {
   public readonly engTypeSignal = signal<DropdownOption[]>([], { equal: ASS21020Service.arrShallowEqual });
   public readonly engMeterNoSignal = signal<ASS2100ENGMeterType[]>([], { equal: ASS21020Service.arrShallowEqual });
   public readonly tltNoSignal = signal<TLTByFlag[]>([], { equal: ASS21020Service.arrShallowEqual });
-  public readonly tltNoListSignal = signal<DropdownOption[]>([], { equal: ASS21020Service.arrShallowEqual });
 
   public readonly engTypeMap = new Map<string, EngType>();
   public readonly engMeterNoMap = new Map<string, ASS2100ENGMeterType>();
@@ -96,7 +95,6 @@ export class ASS21020Service implements OnDestroy {
       take(1),
       takeUntil(this.queryTltByFlagCancel$),
       tap(({ Data }) => {
-        this.tltNoListSignal.set(Data.map(item => ({ No: item.TLT_No, Name: `${item.TLT_No}-${item.TLT_Name}` })));
         this.tltNoSignal.set(Data);
         for (const item of Data) this.tltByFlagMap.set(item.TLT_No, item);
       }),

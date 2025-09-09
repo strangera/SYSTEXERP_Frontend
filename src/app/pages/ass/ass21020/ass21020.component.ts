@@ -51,7 +51,7 @@ export class ASS21020Component extends BasicQueryPageComponent<ASS21020Data> imp
     TLT_Name: new FormControl<string>(''),
     NET_SPACE: new FormControl<number | undefined>(void 0),
     ENG_Rate: new FormControl<number | undefined>(void 0),
-    ...createPaginationConfig([{ field: '', order: 1 }]),
+    ...createPaginationConfig([{ field: 'ENG_Type', order: 1 }, { field: 'ENG_MeterNo', order: 1 }]),
   });
   public readonly qf = computed(() => this.queryForm.controls);
   public readonly totalRecord = computed(() => this.service.ASS21020Data().length);

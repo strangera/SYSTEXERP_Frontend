@@ -107,6 +107,7 @@
                    (delete)="onDelete($event)"
                    (fieldChange)="onFieldChange($event)"
                    [rowEditCanSave]="rowEditCanSaveSignal()"
+                   (rowEditInit)="onRowInit($event)"
                    (rowEditSave)="onRowEdit($event)"
                    (rowEditCancel)="onRowEdit($event)"
                    [loading]="loading"

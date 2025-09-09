@@ -113,7 +113,9 @@ export class ASS21020CRUComponent extends BasicCruPageComponent<ASS21020Data> im
     const payload = this.payload();
     const types = this.service.engTypeSignal();
     const meters = this.service.engMeterNoSignal();
-    this.logger.debug(`dataForm:`, [payload, types, meters]);
+    this.logger.debug(`dataForm:`, [payload, types, meters, this.tb()?.dt.value]);
+    this.tb()!.rowEditing = !1;
+    this.tableDataSignal.set(this.tb()!.dt.value.filter((i: any) => !i.Apply_No?.startsWith('temp')));
 
     if (!payload?.EngTypes) this.df().ENG_Type.patchValue(types.find(t =>
       meters.find(m => m.ENG_Type === t.Name))?.No as EngType);
@@ -152,8 +154,8 @@ export class ASS21020CRUComponent extends BasicCruPageComponent<ASS21020Data> im
     this.df().ENG_Type.setValue(fixedEngType as EngType);
     this.df().ENG_MeterNo.setValue(meterData ? rowData.ENG_MeterNo : void 0);
 
-    const tableData = this.service.ASS21020Data().find(v => v.ENG_MeterNo === rowData.ENG_MeterNo)?.Details ?? [];
-    this.tableDataSignal.set(tableData);
+    this.tableDataSignal.set(this.service.ASS21020Data()
+      .find(v => v.ENG_MeterNo === rowData.ENG_MeterNo)?.Details ?? []);
 
     this.initEffect.destroy();
   }, { allowSignalWrites: !0 });
@@ -163,7 +165,7 @@ export class ASS21020CRUComponent extends BasicCruPageComponent<ASS21020Data> im
       field: 'TLT_No',
       header: '專櫃編號/名稱',
       type: 'dropdown',
-      options: () => this.service.tltNoListSignal(),
+      options: () => this.service.tltNoSignal().map(({ TLT_No, TLT_Name }) => ({ No: TLT_No, Name: `${TLT_No}-${TLT_Name}` })),
       optionLabel: 'Name',
       optionValue: 'No',
       required: !0
@@ -250,6 +252,11 @@ export class ASS21020CRUComponent extends BasicCruPageComponent<ASS21020Data> im
     this.tableDataSignal.set(this.tb()!.dt.value);
   }
 
+  public onRowInit(event: any): void {
+    this.editingRow = void 0;
+    this.logger.debug(`onRowInit:`, [event, this.tableDataSignal(), this.filteredData(), this.tb()!.dt.value]);
+  }
+
   public onRowEdit(event: RowEditSaveEvent): void {
     this.tableDataSignal.set([...event.data.map((d: ASS21020Detail) => ({
       ...d,
@@ -257,6 +264,7 @@ export class ASS21020CRUComponent extends BasicCruPageComponent<ASS21020Data> im
       NET_SPACE: this.editingRow?.NET_SPACE,
     }))]);
     [this.loading, this.editingRow] = [!1, void 0];
+    this.logger.debug(`onRowEdit:`, [event, this.tableDataSignal()]);
   };
 
   public onAutoCalculate(): void {
