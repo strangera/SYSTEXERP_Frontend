@@ -89,65 +89,24 @@ export class TLS2C010Component extends BasicQueryPageComponent<any> implements O
   }
 
   setColumns(responseData: any) {
-    // Set columns for YY_Detail UP_data
-    if (responseData.YY_Detail?.UP_data?.[0]) {
-      this.columns_yy_up = Object.keys(responseData.YY_Detail.UP_data[0]).map(key => ({
+    // Helper function to create columns from data
+    const createColumns = (data: any[]): Column[] => {
+      if (!data?.[0]) return [];
+      return Object.keys(data[0]).map(key => ({
         field: key,
-        header: responseData.YY_Detail.UP_data[0][key],
+        header: data[0][key],
         visible: true,
         format: formatAmount
       }));
-    }
+    };
 
-    // Set columns for YY_Detail DOWN_data
-    if (responseData.YY_Detail?.DOWN_data?.[0]) {
-      this.columns_yy_down = Object.keys(responseData.YY_Detail.DOWN_data[0]).map(key => ({
-        field: key,
-        header: responseData.YY_Detail.DOWN_data[0][key],
-        visible: true,
-        format: formatAmount
-      }));
-    }
-
-    // Set columns for NY_Detail UP_data
-    if (responseData.NY_Detail?.UP_data?.[0]) {
-      this.columns_ny_up = Object.keys(responseData.NY_Detail.UP_data[0]).map(key => ({
-        field: key,
-        header: responseData.NY_Detail.UP_data[0][key],
-        visible: true,
-        format: formatAmount
-      }));
-    }
-
-    // Set columns for NY_Detail DOWN_data
-    if (responseData.NY_Detail?.DOWN_data?.[0]) {
-      this.columns_ny_down = Object.keys(responseData.NY_Detail.DOWN_data[0]).map(key => ({
-        field: key,
-        header: responseData.NY_Detail.DOWN_data[0][key],
-        visible: true,
-        format: formatAmount
-      }));
-    }
-
-    // Set columns for NN_Detail UP_data
-    if (responseData.NN_Detail?.UP_data?.[0]) {
-      this.columns_nn_up = Object.keys(responseData.NN_Detail.UP_data[0]).map(key => ({
-        field: key,
-        header: responseData.NN_Detail.UP_data[0][key],
-        visible: true,
-        format: formatAmount
-      }));
-    }
-
-    // Set columns for NN_Detail DOWN_data
-    if (responseData.NN_Detail?.DOWN_data?.[0]) {
-      this.columns_nn_down = Object.keys(responseData.NN_Detail.DOWN_data[0]).map(key => ({
-        field: key,
-        header: responseData.NN_Detail.DOWN_data[0][key],
-        visible: true,
-        format: formatAmount
-      }));
-    }
+    // Set all columns using the helper function
+    this.columns_yy_up = createColumns(responseData.YY_Detail?.UP_data);
+    this.columns_yy_down = createColumns(responseData.YY_Detail?.DOWN_data);
+    this.columns_ny_up = createColumns(responseData.NY_Detail?.UP_data);
+    this.columns_ny_down = createColumns(responseData.NY_Detail?.DOWN_data);
+    this.columns_nn_up = createColumns(responseData.NN_Detail?.UP_data);
+    this.columns_nn_down = createColumns(responseData.NN_Detail?.DOWN_data);
   }
 
   setData(responseData: any) {
