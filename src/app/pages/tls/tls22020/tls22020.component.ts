@@ -50,7 +50,7 @@ export class TLS22020Component extends BasicQueryPageComponent<any> implements O
     TXN_Date: [yesterday, [Validators.required]],
     ECR_No_Start: [null],
     ECR_No_End: [null],
-    status1: [null],
+    IsZeroShow: [null],
     TXN_DateStart: [null as Date | null],
     TXN_DateEnd: [null as Date | null],
     ...createPaginationConfig([{ field: 'ECR_No', order: 1 }]),

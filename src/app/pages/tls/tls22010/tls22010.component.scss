@@ -1,21 +1,44 @@
-:host ::ng-deep .legend-box {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 100px;
-  border-radius: 1px;
-  color: #000;
-  font-weight: 100;
-}
+.legend-summary {
+  margin-left: 24px; // 整體往右移
 
-:host ::ng-deep .legend-box.pink {
-  background-color: #f4acb7;
-}
+  .legend-list,
+  .summary-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
 
-:host ::ng-deep .legend-box.brown {
-  background-color: #e8ddb5;
-}
+    li {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 8px;
+      font-size: 1.1rem;
 
-:host ::ng-deep .legend-box.green {
-  background-color: #acd8aa;
+      b {
+        color: #d9534f;
+      }
+    }
+
+    .legend-box {
+      display: inline-block;
+      width: 40px;
+      height: 16px;
+      border-radius: 1px;
+
+      &.pink {
+        background-color: #f8b4d9;
+      }
+      &.brown {
+        background-color: #b5651d;
+      }
+      &.green {
+        background-color: #28a745;
+      }
+    }
+
+  }
+   .short-line {
+      width: 10%;
+      margin-left: 24px;
+    }
 }

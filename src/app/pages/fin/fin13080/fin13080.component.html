@@ -74,23 +74,18 @@
       tableKey="FIN13080"
       [data]="data"
       [columns]="columns"
-      [selectedItems]="selectedItems"
-      [showRowEdit]="true"
+      [(selectedItems)]="selectedItems"
+      [showRowEdit]="false"
       [showEdit]="false"
-      [showManage]="true"
+      [showManage]="false"
       [loading]="loading"
       [showDelete]="true"
-      (edit)="onEdit($event)"
-      (detail)="onDetail($event)"
-      [showDelete]="false"
       [showCheckBox]="true"
-      [multiSortMeta]="[{ field: 'tlt_no', order: 1 }]"
-      [loading]="loading"
+      [multiSortMeta]="[{ field: 'No', order: 1 }]"
       [totalRecords]="totalRecords"
       (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"
       [lazy]="true"
+      (delete)="onDelete(selectedItems)"
     ></app-table>
   </div>
 </div>
-
-<!-- 待加刪除(delete)="onDelete(selectedItems)" -->

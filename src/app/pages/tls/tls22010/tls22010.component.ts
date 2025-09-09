@@ -18,6 +18,7 @@ import { createPaginationConfig, Column, formatAmount } from 'src/app/shared/com
 import { ButtonModule } from 'primeng/button';
 import { Router } from '@angular/router';
 import { yesterday } from '@shared/models/system/query-form.model';
+import { NgIf, DatePipe } from '@angular/common';
 
 
 
@@ -38,6 +39,8 @@ import { yesterday } from '@shared/models/system/query-form.model';
     TableComponent,
     TranslateModule,
     ButtonModule,
+    DatePipe,
+    NgIf
   ],
 })
 export class TLS22010Component extends BasicQueryPageComponent<any> implements OnInit {
@@ -62,11 +65,10 @@ export class TLS22010Component extends BasicQueryPageComponent<any> implements O
     ZNotMatchL: 0,
     NoTxnMachine: 0
   };
-
+  TXN_Date = '';
   // ------ 欄位定義 ------
   columns7: Column[] = [
     { field: 'ECR_No', header: '收銀機號', visible: true },
-    { field: 'TXN_DATE', header: '交易日期', visible: true },
     { field: 'AREA_NO', header: '區域', visible: true },
     { field: 'FLOOR_NO', header: '樓層', visible: true },
     { field: 'TXN_TotSaleAmt', header: '銷售金額 (A)', visible: true, format: formatAmount },
@@ -75,8 +77,8 @@ export class TLS22010Component extends BasicQueryPageComponent<any> implements O
     { field: 'TXN_TotSaleAmt_Sum', header: '銷售小計(D) = (A)', visible: true, format: formatAmount },
     { field: 'TXN_TotExtraAmt', header: '代收/付金額 (L)', visible: true, format: formatAmount },
     { field: 'TXN_TotHaveTax', header: '已開發票金額 (E)', visible: true, format: formatAmount },
-    { field: 'TXN_ChangeHaveTax', header: '已開溢付 (K)', visible: true, format: formatAmount },
-    { field: 'TXN_TotOver', header: '已匯送付 (I)', visible: true, format: formatAmount },
+    { field: 'TXN_TotOver', header: '已開找零 (K)', visible: true, format: formatAmount },
+    { field: 'TXN_ChangeHaveTax', header: '已開溢付 (I)', visible: true, format: formatAmount },
     { field: 'TXN_TotGUI', header: '發票總金額 (F)', visible: true, format: formatAmount },
     { field: 'GUI_NET', header: '發票未稅金額 (M)', visible: true, format: formatAmount },
     { field: 'TXN_TotTax', header: '發票稅額 (N)', visible: true, format: formatAmount },
@@ -145,6 +147,12 @@ export class TLS22010Component extends BasicQueryPageComponent<any> implements O
           }));
           this.filteredData = [...this.data];
           this.totalRecords = res?.TotalCount ?? this.data.length;
+
+          if (res?.Data?.length > 0 && res.Data[0].TXN_DATE) {
+            this.TXN_Date = res.Data[0].TXN_DATE; // "2025/08/01"
+          } else {
+            this.TXN_Date = '';
+          }
 
           // 保留「表單值」到查詢狀態（initializePage 才能正確還原 Date 型別）
           this.queryStateService.setQueryState(this.ProgNo, frm.value);
