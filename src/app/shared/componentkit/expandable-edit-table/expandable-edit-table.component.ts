@@ -192,6 +192,7 @@ export interface ColumnDef {
 })
 export class ExpandableEditTableComponent implements OnInit, OnChanges {
   @ViewChild('dt') dt!: Table;
+  @Input() showActionColumn = true;  // 新增控制操作欄的屬性
   @Input() title: string = '';
   @Input() mainColumns: ColumnDef[] = [];
   @Input() detailColumns: ColumnDef[] = [];
@@ -298,7 +299,6 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
   ngOnInit() {
     this.totalRecords = this.data.length;
     this.initializeDetailArrays();
-    // 🎯 不再自動初始化日期欄位，保持原始資料格式
   }
 
   ngOnChanges() {

@@ -40,7 +40,7 @@
           style="text-align: center">
           {{ col.header }}
         </th>
-        <th *ngIf="!readonly" [ngStyle]="getActionHeaderStyle()">操作</th>
+        <th *ngIf="!readonly && showActionColumn" [ngStyle]="getActionHeaderStyle()">操作</th>
       </tr>
     </ng-template>
 
@@ -181,7 +181,7 @@
         </td>
 
         <!-- 操作按鈕 -->
-        <td *ngIf="!readonly" [ngStyle]="getActionBodyStyle()">
+        <td *ngIf="!readonly && showActionColumn" [ngStyle]="getActionBodyStyle()">
           <div class="edit-buttons flex justify-content-center gap-2">
             <!-- 編輯按鈕 -->
             <button *ngIf="!isRowEditing(ri)" pButton pRipple type="button" icon="pi pi-pencil" pTooltip="編輯"

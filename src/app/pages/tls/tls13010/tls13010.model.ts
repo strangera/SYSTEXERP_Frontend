@@ -55,8 +55,8 @@ export interface CleanContractData {
   tlt_name: string;
   ven_uniform: string;
   ven_no: string;
-
   VEN_Name: string;
+  VEN_Address?: string;
   contract_subno?: string;
 
   // 日期欄位
@@ -302,6 +302,7 @@ export interface ContractInfo {
   apply_no: string;
   tlt_name: string;
   VEN_Name: string;
+  VEN_Address?: string;
   contract_subno?: string;
   cap_name?: string;
   cap_item?: string;
@@ -671,6 +672,7 @@ export class DataCleaner {
       contact_tel: rawData.contact_tel,
       contact_fax: rawData.contact_fax,
       contact_addr: rawData.contact_addr,
+      VEN_Address: rawData.VEN_Address,
       company_addr: rawData.company_addr,
       tlt_remark: rawData.tlt_remark,
       ticket_remarks: rawData.ticket_remarks,

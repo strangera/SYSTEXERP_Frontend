@@ -110,22 +110,24 @@ export class FareColumnDefinitions {
         editable: true,
         autoWidth: true,
         directEdit: true,
-        autoEditOnSelect: true,      // ✅ 勾選扣款項目 → 進入編輯模式設定單價、數量
-        autoSaveOnUnselect: true,     // ✅ 取消勾選 → 自動儲存並退出編輯
+        autoEditOnSelect: true,
+        autoSaveOnUnselect: true,
       },
       {
         field: 'cap_item',
         header: '扣款代號',
         type: 'text',
         editable: false,
-        width: '20px'
+        width: '20px',
+        directEdit: true,
       },
       {
         field: 'cap_name',
         header: '扣款名稱',
         type: 'text',
         editable: false,
-        autoWidth: true
+        autoWidth: true,
+        directEdit: true,
       },
       {
         field: 'tpy_bdate',
@@ -135,10 +137,23 @@ export class FareColumnDefinitions {
         width: '130px',
         dateFormat: 'year-month',
         required: true,
+        directEdit: true,
         defaultValueFunction: () => {
-          const contractInfo = contractInfoData[0];
-          if (contractInfo?.tlt_contract_bdate) {
-            return new Date(contractInfo.tlt_contract_bdate);
+          try {
+            const contractInfo = contractInfoData[0];
+            if (contractInfo?.tlt_contract_bdate) {
+              const sourceDate = new Date(contractInfo.tlt_contract_bdate);
+              if (isNaN(sourceDate.getTime())) {
+                return null;
+              }
+
+              // 直接返回年月的第一天，不做額外檢查
+              const year = sourceDate.getFullYear();
+              const month = sourceDate.getMonth();
+              return new Date(year, month, 1);
+            }
+          } catch {
+            // 靜默處理錯誤
           }
           return null;
         }
@@ -151,6 +166,7 @@ export class FareColumnDefinitions {
         width: '20px',
         options: TLS13010_DROPDOWN_OPTIONS.tpyTypeOption,
         required: true,
+        directEdit: true,
       },
       {
         field: 'tpy_unitamt',
@@ -159,6 +175,7 @@ export class FareColumnDefinitions {
         editable: true,
         width: '90px',
         required: true,
+        directEdit: true,
         validators: [TableValidators.positive('單價必須大於0')]
       },
       {
@@ -170,6 +187,7 @@ export class FareColumnDefinitions {
         required: true,
         validators: [TableValidators.positive('數量必須大於0')],
         defaultValue: 1,
+        directEdit: true,
         allowDecimal: true, // 是否允許小數點
         decimalPlaces: 3  // 小數位數，預設2位
       },
@@ -180,6 +198,7 @@ export class FareColumnDefinitions {
         editable: false,
         autoWidth: true,
         required: true,
+        directEdit: true,
       },
       {
         field: 'org_id',
@@ -189,6 +208,7 @@ export class FareColumnDefinitions {
         width: '90px',
         options: [], // 需要動態設定
         required: true,
+        directEdit: true,
       },
       {
         field: 'gui_flag',
@@ -201,7 +221,8 @@ export class FareColumnDefinitions {
           { label: '未開立', value: 'N' }
         ],
         required: true,
-        defaultValue: 'Y'
+        defaultValue: 'Y',
+        directEdit: true,
       }
     ];
   }
