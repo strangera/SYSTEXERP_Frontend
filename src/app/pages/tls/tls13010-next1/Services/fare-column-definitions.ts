@@ -426,7 +426,8 @@ export class FareColumnDefinitions {
         header: '扣款代號',
         type: 'text',
         editable: false,
-        width: '20px'
+        width: '20px',
+        directEdit: true,
       },
       {
         field: 'cap_name',
@@ -434,7 +435,8 @@ export class FareColumnDefinitions {
         type: 'text',
         editable: false,
         autoWidth: true,
-        flex: 2
+        flex: 2,
+        directEdit: true,
       },
       {
         field: 'tpy_bdate',
@@ -444,6 +446,7 @@ export class FareColumnDefinitions {
         width: '130px',
         dateFormat: 'year-month',
         required: true,
+        directEdit: true,
         defaultValueFunction: () => {
           const contractInfo = contractInfoData[0];
           if (contractInfo?.tlt_contract_bdate) {
@@ -460,6 +463,7 @@ export class FareColumnDefinitions {
         width: '130px',
         dateFormat: 'year-month',
         required: true,
+        directEdit: true,
         defaultValueFunction: () => {
           const contractInfo = contractInfoData[0];
           if (contractInfo?.tlt_contract_edate) {
@@ -475,6 +479,7 @@ export class FareColumnDefinitions {
         editable: true,
         autoWidth: true,
         required: true,
+        directEdit: true,
       },
       {
         field: 'period_nos',
@@ -534,6 +539,7 @@ export class FareColumnDefinitions {
         editable: true,
         autoWidth: true,
         required: true,
+        directEdit: true,
       },
       {
         field: 'down_payment',
@@ -551,6 +557,7 @@ export class FareColumnDefinitions {
         width: '90px',
         options: [], // 需要動態設定
         required: true,
+        directEdit: true,
       },
       {
         field: 'gui_flag',
@@ -563,7 +570,8 @@ export class FareColumnDefinitions {
           { label: '未開立', value: 'N' }
         ],
         required: true,
-        defaultValue: 'Y'
+        defaultValue: 'Y',
+        directEdit: true,
       }
     ];
   }
@@ -607,7 +615,8 @@ export class FareColumnDefinitions {
         type: 'text',
         editable: false,
         autoWidth: true,
-        flex: 2
+        flex: 2,
+        directEdit: true,
       },
       {
         field: 'tpy_bdate',
@@ -618,6 +627,7 @@ export class FareColumnDefinitions {
         width: '120px',
         dateFormat: 'year-month',
         required: true,
+        directEdit: true,
         defaultValueFunction: () => {
           const contractInfo = contractInfoData[0];
           if (contractInfo?.tlt_contract_bdate) {
@@ -634,6 +644,7 @@ export class FareColumnDefinitions {
         width: '120px',
         dateFormat: 'year-month',
         required: true,
+        directEdit: true,
         defaultValueFunction: () => {
           const contractInfo = contractInfoData[0];
           if (contractInfo?.tlt_contract_edate) {
@@ -651,6 +662,7 @@ export class FareColumnDefinitions {
         options: TLS13010_DROPDOWN_OPTIONS.tpyTypeOption,
         autoWidth: true,
         required: true,
+        directEdit: true,
       },
       {
         field: 'tpy_rate',
@@ -660,7 +672,8 @@ export class FareColumnDefinitions {
         width: '100px',
         required: true,
         allowDecimal: true,  // 是否允許小數點
-        decimalPlaces: 3  // 小數位數，預設2位
+        decimalPlaces: 3,
+        directEdit: true,
 
       },
       {
@@ -671,6 +684,7 @@ export class FareColumnDefinitions {
         width: '90px',
         options: [], // 需要動態設定
         required: true,
+        directEdit: true,
       },
       {
         field: 'gui_flag',
@@ -683,7 +697,8 @@ export class FareColumnDefinitions {
           { label: '未開立', value: 'N' }
         ],
         required: true,
-        defaultValue: 'Y'
+        defaultValue: 'Y',
+        directEdit: true,
       }
     ];
   }
@@ -737,6 +752,7 @@ export class FareColumnDefinitions {
         width: '110px',
         dateFormat: 'year-month',
         required: true,
+        directEdit: true,
         defaultValueFunction: () => {
           const contractInfo = contractInfoData[0];
           if (contractInfo?.tlt_contract_bdate) {
@@ -753,6 +769,7 @@ export class FareColumnDefinitions {
         width: '110px',
         dateFormat: 'year-month',
         required: true,
+        directEdit: true,
         defaultValueFunction: () => {
           const contractInfo = contractInfoData[0];
           if (contractInfo?.tlt_contract_edate) {
@@ -770,6 +787,7 @@ export class FareColumnDefinitions {
         options: TLS13010_DROPDOWN_OPTIONS.tpyTypeOption,
         autoWidth: true,
         required: true,
+        directEdit: true,
       },
       {
         field: 'tpy_rate',
@@ -778,8 +796,9 @@ export class FareColumnDefinitions {
         editable: true,
         width: '100px',
         required: true,
-        allowDecimal: true,  // 是否允許小數點
-        decimalPlaces: 3  // 小數位數，預設2位
+        allowDecimal: true,
+        decimalPlaces: 3,
+        directEdit: true,
       },
       {
         field: 'org_id',
@@ -789,6 +808,7 @@ export class FareColumnDefinitions {
         width: '90px',
         options: [], // 需要動態設定
         required: true,
+        directEdit: true,
       },
       {
         field: 'gui_flag',
@@ -801,7 +821,8 @@ export class FareColumnDefinitions {
           { label: '未開立', value: 'N' }
         ],
         required: true,
-        defaultValue: 'Y'
+        defaultValue: 'Y',
+        directEdit: true,
       }
     ];
   }
