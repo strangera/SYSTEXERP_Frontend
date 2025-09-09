@@ -17,16 +17,16 @@
       </div>
       <div class="grid p-fluid">
         <div class="col-12 md:col-6 lg:col-4">
-          <app-editor-text label="說明1" controlName="bill_remark1" [control]="dataForm.controls.bill_remark1"
-            [submitted]="submitted" />
+          <app-input-textarea label="說明1" controlName="bill_remark1" [control]="dataForm.controls.bill_remark1"
+            [submitted]="submitted" styleClass="h-10rem" />
         </div>
         <div class="col-12 md:col-6 lg:col-4">
-          <app-editor-text label="說明2" controlName="bill_remark2" [control]="dataForm.controls.bill_remark2"
-            [submitted]="submitted" />
+          <app-input-textarea label="說明2" controlName="bill_remark2" [control]="dataForm.controls.bill_remark2"
+            [submitted]="submitted" styleClass="h-10rem" />
         </div>
         <div class="col-12 md:col-6 lg:col-4">
-          <app-editor-text label="說明3" controlName="bill_remark3" [control]="dataForm.controls.bill_remark3"
-            [submitted]="submitted" />
+          <app-input-textarea label="說明3" controlName="bill_remark3" [control]="dataForm.controls.bill_remark3"
+            [submitted]="submitted" styleClass="h-10rem" />
         </div>
       </div>
       <div class="grid justify-content-end gap-2 m-0 mt-2 pt-3" *ngIf="!isFormReadable">
