@@ -30,9 +30,9 @@ export interface TLS31060DetailRequest {
   TXN_DateS: string | Date;
   TXN_DateE: string | Date;
   tlt_building: string[]
-  tlt_floor: string[]
+  tlt_floor: string // 這裡只有一個樓層(應該會是組織，等待調整)
   area_no: string[]
-  bus_type: string // 這裡只有一個大分類
+  bus_type: string[]
   bus_class: string[]
   bus_sclass: string[]
   tlt_kind: string
@@ -60,6 +60,7 @@ export interface TLS31060Response {
   AvgTicket: number;
   tlt_space: number;
   MonthlyPSM: number;
+  MonthlyPayment: number;
   TempCounterSaleAmt: number;
   TempCounterSalesRate: number;
   TempCounterAmtRate: number;
@@ -85,6 +86,7 @@ export interface TLS31060DetailResponse {
   AvgTicket: number;
   tlt_space: number;
   MonthlyPSM: number;
+  MonthlyPayment: number;
   MonthlyBudgetTotal: number;
   MonthlySalesTotal: number;
   CompletionRate: number;

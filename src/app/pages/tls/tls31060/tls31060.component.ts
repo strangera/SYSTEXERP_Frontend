@@ -19,6 +19,7 @@ import { environment } from 'src/environments/environment';
 import { RadiobuttonComponent } from '@shared/componentkit/radiobutton/radiobutton.component';
 import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
 import { TLS31060PrintRequest, TLS31060Request, TLS31060Response, Tls31060Service } from '@service/api/tls/tls31060.service';
+import { TLS31070PrintRequest, TLS31070Request } from '@service/api/tls/tls31070.service';
 
 @Component({
   selector: 'app-tls31060',
@@ -251,7 +252,7 @@ export class TLS31060Component extends BasicQueryPageComponent<TLS31060Response>
         ...frm.getRawValue(),
         bus_class: frm.getRawValue().bus_class.map((item: IDropdownItem) => item.No),
         bus_sclass: frm.getRawValue().bus_sclass.map((item: IDropdownItem) => item.No),
-      } as TLS31060Request;
+      } as TLS31070Request;
 
       console.log('送出request請求', formValue);
       this.tls31060Service.queryTLS31060(formValue).pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(res => {
@@ -275,7 +276,7 @@ export class TLS31060Component extends BasicQueryPageComponent<TLS31060Response>
       bus_class: frm.getRawValue().bus_class.map((item: IDropdownItem) => item.No),
       bus_sclass: frm.getRawValue().bus_class.map((item: IDropdownItem) => item.No),
       // TXN_Date: formatDate(frm.getRawValue().TXN_Date, 'yyyy-MM-dd', 'en-US'),
-    } as TLS31060PrintRequest;
+    } as TLS31070PrintRequest;
 
     console.log('各大分類之營業報表print請求', JSON.stringify(formValue));
 
