@@ -299,6 +299,8 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
   ngOnInit() {
     this.totalRecords = this.data.length;
     this.initializeDetailArrays();
+    // 初始化預設值
+    this.initializeDefaultValues();
   }
 
   ngOnChanges() {
@@ -494,26 +496,17 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
   getDateInputValue(rowData: any, column: ColumnDef, isDetail: boolean = false, detailIndex?: number): string {
     const fieldKey = this.getFieldKey(rowData, column.field, isDetail, detailIndex);
 
-    // 優先顯示用戶正在輸入的值
+    // 🎯 優先顯示用戶正在輸入的值
     const userInput = this.userInputValues.get(fieldKey);
     if (userInput !== undefined) {
+      console.log(`📝 顯示用戶輸入: "${userInput}"`);
       return userInput;
     }
 
-    // 如果沒有值但有預設值函數，應用預設值
-    if (!rowData[column.field] && column.defaultValueFunction) {
-      try {
-        const defaultValue = column.defaultValueFunction();
-        if (defaultValue) {
-          rowData[column.field] = defaultValue; // 設定預設值到資料中
-        }
-      } catch (error) {
-        console.error('預設值函數執行失敗:', error);
-      }
-    }
-
-    // 否則顯示格式化的值
-    return this.getDateDisplayValue(rowData, column);
+    // 🎯 否則顯示格式化的值
+    const displayValue = this.getDateDisplayValue(rowData, column);
+    // console.log(`📅 顯示格式化值: "${displayValue}"`);
+    return displayValue;
   }
   /**
   * 觸發儲存事件（如果需要）
@@ -2400,5 +2393,23 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
     const target = event.target as HTMLInputElement;
     const inputValue = target?.value || '';
     this.onDateInputChange(rowData, column, inputValue);
+  }
+  //初始化顯示Table預設
+  private initializeDefaultValues(): void {
+    this.data.forEach(rowData => {
+      this.mainColumns.forEach(column => {
+        // 如果欄位沒有值但有預設值函數，應用預設值
+        if (!rowData[column.field] && column.defaultValueFunction) {
+          try {
+            const defaultValue = column.defaultValueFunction();
+            if (defaultValue !== null && defaultValue !== undefined) {
+              rowData[column.field] = defaultValue;
+            }
+          } catch (error) {
+            console.error(`預設值函數執行失敗 ${column.field}:`, error);
+          }
+        }
+      });
+    });
   }
 }

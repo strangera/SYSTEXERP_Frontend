@@ -105,7 +105,7 @@ export class FareColumnDefinitions {
     return [
       {
         field: 'is_selected',
-        header: '新增',
+        header: '是否新增',
         type: 'checkbox',
         editable: true,
         autoWidth: true,
@@ -139,21 +139,12 @@ export class FareColumnDefinitions {
         required: true,
         directEdit: true,
         defaultValueFunction: () => {
-          try {
-            const contractInfo = contractInfoData[0];
-            if (contractInfo?.tlt_contract_bdate) {
-              const sourceDate = new Date(contractInfo.tlt_contract_bdate);
-              if (isNaN(sourceDate.getTime())) {
-                return null;
-              }
-
-              // 直接返回年月的第一天，不做額外檢查
-              const year = sourceDate.getFullYear();
-              const month = sourceDate.getMonth();
-              return new Date(year, month, 1);
-            }
-          } catch {
-            // 靜默處理錯誤
+          if ((this as any)?._isCopiedItem) {
+            return null; // 保持現有值
+          }
+          const contractInfo = contractInfoData[0];
+          if (contractInfo?.tlt_contract_bdate) {
+            return new Date(contractInfo.tlt_contract_bdate);
           }
           return null;
         }
@@ -234,7 +225,7 @@ export class FareColumnDefinitions {
     return [
       {
         field: 'is_selected',
-        header: '新增',
+        header: '是否新增',
         type: 'checkbox',
         editable: true,
         width: '5px',
@@ -400,13 +391,13 @@ export class FareColumnDefinitions {
     return [
       {
         field: 'is_selected',
-        header: '新增',
+        header: '是否新增',
         type: 'checkbox',
         editable: true,
         width: '5px',
         directEdit: true,
-        autoEditOnSelect: true,      // ✅ 勾選扣款項目 → 進入編輯模式設定單價、數量
-        autoSaveOnUnselect: true,     // ✅ 取消勾選 → 自動儲存並退出編輯
+        autoEditOnSelect: true,
+        autoSaveOnUnselect: true,
       },
       {
         field: 'copy_button',
@@ -584,13 +575,13 @@ export class FareColumnDefinitions {
     return [
       {
         field: 'is_selected',
-        header: '新增',
+        header: '是否新增',
         type: 'checkbox',
         editable: true,
         width: '5px',
         directEdit: true,
-        autoEditOnSelect: true,      // ✅ 勾選扣款項目 → 進入編輯模式設定單價、數量
-        autoSaveOnUnselect: true,     // ✅ 取消勾選 → 自動儲存並退出編輯
+        autoEditOnSelect: true,
+        autoSaveOnUnselect: true,
       },
       {
         field: 'copy_button',
@@ -704,13 +695,13 @@ export class FareColumnDefinitions {
     return [
       {
         field: 'is_selected',
-        header: '新增',
+        header: '是否新增',
         type: 'checkbox',
         editable: true,
         width: '5px',
         directEdit: true,
-        autoEditOnSelect: true,      // ✅ 勾選扣款項目 → 進入編輯模式設定單價、數量
-        autoSaveOnUnselect: true,     // ✅ 取消勾選 → 自動儲存並退出編輯
+        autoEditOnSelect: true,
+        autoSaveOnUnselect: true,
       },
       {
         field: 'copy_button',
