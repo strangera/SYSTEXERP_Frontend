@@ -7,7 +7,7 @@ import {
   ReactiveFormsModule,
 } from '@angular/forms';
 import { HttpResponse } from '@angular/common/http';
-import { finalize } from 'rxjs/operators';
+import { finalize, map } from 'rxjs/operators';
 
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { TLS23040Service } from '../../../service/api/tls/tls23040.service';
@@ -209,39 +209,196 @@ export class TLS23040Component extends BasicQueryPageComponent<any> {
     });
   }
 
-  /** 子表格 lazy 事件（回填排序/分頁；不發送 Offset/OrderBy） */
-  override onLazyLoadData(event: LazyLoadEvent, queryForm: FormGroup): void {
-    const currentSort = JSON.stringify(queryForm.value?.SortBy ?? []);
-    const rawNextSort = event.SortBy ?? [];
-    const nextSort = this.ensureGroupFirst(rawNextSort); // 若有群組欄位，放到第一順位
+  // 提供給 Table2 的 lazy 載入
+fetchTLS23040 = (evt: LazyLoadEvent) => {
+  const raw = this.queryForm.getRawValue() as any;
 
-    const nextPageIdx =
-      currentSort !== JSON.stringify(nextSort)
-        ? 1
-        : event.pageIndex ?? queryForm.value.pageIndex ?? 1;
+  // ---- 小工具 ----
+  const toIso = (x: any) => {
+    if (!x) return undefined;
+    const d = typeof x === 'string' ? new Date(x) : (x as Date);
+    if (isNaN(d.getTime())) return undefined;
+    return new Date(d.getTime() - d.getTimezoneOffset() * 60000)
+      .toISOString()
+      .slice(0, 19);
+  };
+  const ensureArr = (v: any) =>
+    Array.isArray(v) ? v : v == null || v === '' ? [] : [v];
+  const toNumOrUndef = (v: any) =>
+    v == null || v === '' || isNaN(Number(v)) ? undefined : Number(v);
 
-    queryForm.patchValue(
-      {
-        pageIndex: nextPageIdx,
-        pageSize: event.pageSize ?? queryForm.value.pageSize,
-        SortBy: nextSort,
-      },
-      { emitEvent: false },
-    );
+  // ---- 分頁/排序（事件優先，其次表單/預設） ----
+  const pageIndex = Number.isFinite(evt?.pageIndex) ? Number(evt!.pageIndex) : Number(raw?.pageIndex ?? 1);
+  const pageSize  = Number.isFinite(evt?.pageSize)  ? Number(evt!.pageSize)  : Number(raw?.pageSize  ?? 20);
 
-    this.sortMeta = nextSort.map((s) => ({ ...s }));
+  const uiSortBy = this.ensureGroupFirst(
+    Array.isArray((evt as any)?.SortBy) && (evt as any).SortBy.length
+      ? (evt as any).SortBy
+      : (Array.isArray(raw?.SortBy) && raw.SortBy.length ? raw.SortBy : this.defaultSort)
+  );
+  const sortBy = uiSortBy; // 此頁 API 就吃同一組排序規則
 
-    const sig = JSON.stringify({
-      pageIndex: queryForm.value.pageIndex,
-      pageSize: queryForm.value.pageSize,
-      SortBy: queryForm.value.SortBy,
-    });
-    if (sig === this.lastQuerySig) return;
-    this.lastQuerySig = sig;
+  // ---- 組 payload（與 onSubmit 對齊） ----
+  const payload: any = {
+    TXN_DateStart: toIso(raw?.TXN_DateStart ?? this.yesterday),
+    TXN_DateEnd:   toIso(raw?.TXN_DateEnd   ?? this.yesterday),
 
-    if (this.lazyTimer) clearTimeout(this.lazyTimer);
-    this.lazyTimer = setTimeout(() => this.onSubmit(queryForm), 0);
-  }
+    ...(ensureArr(raw?.ECR_No    ).length ? { ECR_No: ensureArr(raw?.ECR_No) } : {}),
+    ...(ensureArr(raw?.TLT_No    ).length ? { TLT_No: ensureArr(raw?.TLT_No) } : {}),
+    ...(ensureArr(raw?.TXN_Status).length ? { TXN_Status: ensureArr(raw?.TXN_Status) } : {}),
+    ...(ensureArr(raw?.TXN_FlagStatus).length ? { TXN_FlagStatus: ensureArr(raw?.TXN_FlagStatus) } : {}),
+    ...(ensureArr(raw?.tlt_floor ).length ? { tlt_floor: ensureArr(raw?.tlt_floor) } : {}),
+    ...(ensureArr(raw?.org_id    ).length ? { org_id: ensureArr(raw?.org_id) } : {}),
+
+    ...(raw?.tlt_building ? { tlt_building: raw.tlt_building } : {}),
+    ...(raw?.TXN_PkngUID  ? { TXN_PkngUID:  raw.TXN_PkngUID  } : {}),
+    ...(raw?.TXN_MemCard  ? { TXN_MemCard:  raw.TXN_MemCard  } : {}),
+    ...(raw?.TXN_GUIBegNo ? { TXN_GUIBegNo: raw.TXN_GUIBegNo } : {}),
+
+    ...(toNumOrUndef(raw?.TXN_No_Start) != null ? { TXN_No_Start: toNumOrUndef(raw?.TXN_No_Start) } : {}),
+    ...(toNumOrUndef(raw?.TXN_No_End)   != null ? { TXN_No_End:   toNumOrUndef(raw?.TXN_No_End)   } : {}),
+
+    pageIndex,
+    pageSize,
+    SortBy: sortBy,
+  };
+
+  // ---- 呼叫 API ----
+  return this.tls23040Service.queryTLS23040(payload).pipe(
+    map((res: any) => {
+      const packs: any[] = Array.isArray(res?.Data) ? res.Data : [];
+
+      // ========= 依回傳包裝展平三類明細 =========
+      const inv = packs.flatMap(p =>
+        Array.isArray(p?.invoice?.InvoiceDetail) ? p.invoice.InvoiceDetail : []
+      ).map((r: any, i: number) => {
+        const isNormal = String(r?.TXN_StatusName ?? '') === '正常交易';
+        return {
+          ...r,
+          ORG_TXN_Date: isNormal ? '' : (r?.ORG_TXN_Date ?? ''),
+          ORG_ECR_No : isNormal ? '' : (r?.ORG_ECR_No  ?? ''),
+          ORG_TXN_No : isNormal ? '' : (r?.ORG_TXN_No  ?? ''),
+          _rowKey: `inv|${r.TXN_Date ?? ''}|${r.ECR_No ?? ''}|${r.TXN_No ?? ''}|${i}`,
+        };
+      });
+
+      const pay = packs.flatMap(p =>
+        Array.isArray(p?.payment?.PaymentDetail) ? p.payment.PaymentDetail : []
+      ).map((r: any, i: number) => ({
+        ...r,
+        _rowKey: `pay|${r.TXN_Date ?? ''}|${r.ECR_No ?? ''}|${r.TXN_No ?? ''}|${i}`,
+      }));
+
+      const disc = packs.flatMap(p =>
+        Array.isArray(p?.discount?.DiscountDetail) ? p.discount.DiscountDetail : []
+      ).map((r: any, i: number) => ({
+        ...r,
+        _rowKey: `disc|${r.TXN_Date ?? ''}|${r.ECR_No ?? ''}|${r.TXN_No ?? ''}|${i}`,
+      }));
+
+      // ========= 依視圖決定 rows / 群組 / 總計&小計 =========
+      let rows: any[] = [];
+      let externalTotals: Record<string, number> = {};
+      let externalSubtotals: Record<string, Record<string, number>> = {};
+
+      if (this.viewMode === 'invoice') {
+        this.activeGroupBy = '';
+        this.activeShowSubTotal = false;
+
+        rows = inv;
+
+        const guiSum  = inv.reduce((s, r) => s + (Number(r?.TXN_TotGUI    ?? 0)), 0);
+        const saleSum = inv.reduce((s, r) => s + (Number(r?.TXN_TotSaleAmt ?? 0)), 0);
+
+        externalTotals = {
+          Total_TXN_TotGUI: guiSum,
+          Total_TXN_TotSaleAmt: saleSum,
+        };
+
+        this.activeExternalTotalFieldMap = {
+          TXN_TotGUI: 'Total_TXN_TotGUI',
+          TXN_TotSaleAmt: 'Total_TXN_TotSaleAmt',
+        };
+        this.activeExternalSubtotalFieldMap = {};
+      }
+      else if (this.viewMode === 'payment') {
+        this.activeGroupBy = 'PAY_NO';
+        this.activeShowSubTotal = true;
+
+        rows = pay;
+
+        const totalAmt = pay.reduce((s, r) => s + (Number(r?.TXN_PayAmt ?? 0)), 0);
+        externalTotals = { Total_TXN_PayAmt: totalAmt };
+
+        // 依 PAY_NO 聚合小計
+        const sub: Record<string, Record<string, number>> = {};
+for (const r of pay) {
+  const g = String(r?.PAY_NO ?? 'UNKNOWN');
+  const bucket = (sub[g] = sub[g] || { ['SubTotal_TXN_PayAmt']: 0 } as Record<string, number>);
+  bucket['SubTotal_TXN_PayAmt'] = (bucket['SubTotal_TXN_PayAmt'] || 0) + Number(r?.TXN_PayAmt ?? 0);
+}
+externalSubtotals = sub;
+
+
+        this.activeExternalTotalFieldMap    = { TXN_PayAmt: 'Total_TXN_PayAmt' };
+        this.activeExternalSubtotalFieldMap = { TXN_PayAmt: 'SubTotal_TXN_PayAmt' };
+      }
+      else { // discount
+        this.activeGroupBy = 'TXN_DiscCode';
+        this.activeShowSubTotal = true;
+
+        rows = disc;
+
+        const salePrc = disc.reduce((s, r) => s + (Number(r?.PLU_SalePrc ?? 0)), 0);
+        const net     = disc.reduce((s, r) => s + (Number(r?.TXN_Net     ?? 0)), 0);
+        const tax     = disc.reduce((s, r) => s + (Number(r?.TXN_Tax     ?? 0)), 0);
+
+        externalTotals = {
+          Total_PLU_SalePrc: salePrc,
+          Total_TXN_Net:     net,
+          Total_TXN_Tax:     tax,
+        };
+
+        const sub: Record<string, Record<string, number>> = {};
+        for (const r of disc) {
+          const g = String(r?.TXN_DiscCode ?? 'UNKNOWN');
+          const bucket = (sub[g] = sub[g] || { SubTotal_SalePrc: 0, SubTotal_Net: 0, SubTotal_Tax: 0 });
+ bucket['SubTotal_SalePrc'] = (bucket['SubTotal_SalePrc'] || 0) + Number(r?.PLU_SalePrc ?? 0);
+  bucket['SubTotal_Net']     = (bucket['SubTotal_Net']     || 0) + Number(r?.TXN_Net     ?? 0);
+  bucket['SubTotal_Tax']     = (bucket['SubTotal_Tax']     || 0) + Number(r?.TXN_Tax     ?? 0);
+        }
+        externalSubtotals = sub;
+
+        this.activeExternalTotalFieldMap = {
+          PLU_SalePrc: 'Total_PLU_SalePrc',
+          TXN_Net:     'Total_TXN_Net',
+          TXN_Tax:     'Total_TXN_Tax',
+        };
+        this.activeExternalSubtotalFieldMap = {
+          PLU_SalePrc: 'SubTotal_SalePrc',
+          TXN_Net:     'SubTotal_Net',
+          TXN_Tax:     'SubTotal_Tax',
+        };
+      }
+
+      // 將狀態同步給畫面（若你的 template 有綁定這些 map / groupBy）
+      this.activeExternalTotals       = externalTotals;
+      this.activeExternalSubtotals    = externalSubtotals;
+
+      // 回傳給 Table2
+      const totalRecords =
+        Number(res?.TotalCount ?? rows.length ?? 0);
+
+      return {
+        rows,
+        totalRecords,
+        externalTotals,
+        externalSubtotals,
+      };
+    })
+  );
+};
+
 
   /** 送出查詢（不包含 Offset/OrderBy） */
   onSubmit(form: FormGroup): void {

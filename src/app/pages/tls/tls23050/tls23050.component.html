@@ -114,8 +114,10 @@
     [externalTotalFieldMap]="detailTotalFieldMap"
     [externalSubtotals]="detailSubtotals"
     [externalSubtotalFieldMap]="detailSubtotalFieldMap"
-    (lazyLoadData)="onLazyLoadData($event, queryForm)">
-
+    (lazyLoadData)="onLazyLoadData($event, queryForm)"
+    [serverFetch]="fetchTLS23050"  
+    >
+    
     <!-- ✅ 匯出按鈕 -->
     <header>
       <div class="flex justify-content-end gap-2">

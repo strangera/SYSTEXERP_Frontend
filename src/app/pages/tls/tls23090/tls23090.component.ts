@@ -30,6 +30,7 @@ import { DialogModule } from 'primeng/dialog';
 import { RadioButtonModule } from 'primeng/radiobutton';
 import { TranslateModule } from '@ngx-translate/core';
 import { Table2Component } from '@shared/componentkit/table2/table2.component';
+import {  map } from 'rxjs/operators';
 
 @Component({
   selector: 'app-tls23090',
@@ -199,32 +200,131 @@ export class TLS23090Component extends BasicQueryPageComponent<any> {
     this.acquiringBankService.getAcquiringBanks().subscribe(data => this.acquiringBankOptions = data);
   }
 
-  // ===== 表格 Lazy 事件（分頁 / 排序） =====
-  override onLazyLoadData(event: LazyLoadEvent, form: FormGroup): void {
-    const currSort = JSON.stringify(form.value?.SortBy ?? []);
-    const nextSort = JSON.stringify(event.SortBy ?? []);
-    const nextPageIndex = currSort !== nextSort ? 1 : (event.pageIndex ?? form.value.pageIndex ?? 1);
+  // 提供給 Table2 的 lazy 載入函式（HTML 綁 [fetchData]="fetchTLS23090"）
+fetchTLS23090 = (evt: LazyLoadEvent) => {
+  const val = this.queryForm.getRawValue() as any;
 
-    form.patchValue({
-      pageIndex: nextPageIndex,
-      pageSize : event.pageSize ?? form.value.pageSize,
-      SortBy   : event.SortBy ?? form.value.SortBy,
-    }, { emitEvent: false });
+  // 依檢視模式給預設排序
+  const defaultSort =
+    this.viewMode === 'counter' ? this.defaultSortCounter : this.defaultSortCredit;
 
-    this.sortMeta = (event.SortBy ?? []).map(s => ({ ...s }));
+  // 事件優先，其次沿用表單/預設
+  const sortBy =
+    Array.isArray(evt?.SortBy) && evt.SortBy.length
+      ? evt.SortBy
+      : (Array.isArray(val?.SortBy) && val.SortBy.length ? val.SortBy : defaultSort);
 
-    const sig = JSON.stringify({
-      viewMode : this.viewMode,
-      pageIndex: form.value.pageIndex,
-      pageSize : form.value.pageSize,
-      SortBy   : form.value.SortBy,
-    });
-    if (sig === this.lastQuerySig) return;
-    this.lastQuerySig = sig;
+  const pageIndex =
+    Number.isFinite(evt?.pageIndex) ? Number(evt!.pageIndex) : Number(val?.pageIndex ?? 1);
 
-    if (this.lazyTimer) clearTimeout(this.lazyTimer);
-    this.lazyTimer = setTimeout(() => this.onSubmit(form), 0);
-  }
+  const pageSize =
+    Number.isFinite(evt?.pageSize) ? Number(evt!.pageSize) : Number(val?.pageSize ?? 20);
+
+  // 與 onSubmit 相同的參數規則（不帶 Offset/OrderBy）
+  const payload = this.prune({
+    TXN_DateStart: this.toIso(val?.TXN_DateStart ?? this.yesterday),
+    TXN_DateEnd  : this.toIso(val?.TXN_DateEnd   ?? this.yesterday),
+
+    ECR_No     : this.ensureArr(val?.ECR_No),
+    TLT_No     : this.ensureArr(val?.tlt_no), // 表單 tlt_no → API TLT_No
+    CRD_Type   : this.ensureArr(val?.CRD_Type),
+    CRD_No     : (val?.CRD_No ?? '') || undefined,
+    TXN_PayAmt : (val?.TXN_PayAmt === '' || val?.TXN_PayAmt == null)
+                  ? undefined : Number(val.TXN_PayAmt),
+
+    tlt_building: (val?.tlt_building ?? '') || undefined,
+    tlt_floor   : this.ensureArr(val?.tlt_floor),
+    org_id      : this.ensureArr(val?.org_id),
+
+    IsHaveTERM_No: this.toBoolOrNull(val?.IsHaveTERM_No),
+    TERM_No      : this.ensureArr(val?.TERM_No),
+    Acquirer     : this.ensureArr(val?.Acquirer),
+    Conn_Status  : (val?.ConnStatus ?? '') || undefined,
+
+    // ✅ 僅保留這三個鍵
+    PageSize : pageSize,
+    PageIndex: pageIndex,
+    SortBy   : sortBy,
+  });
+
+  const call$ =
+    this.viewMode === 'counter'
+      ? this.tls23090Service.queryTLS23090CounterCard(payload)
+      : this.tls23090Service.queryTLS23090(payload);
+
+  return call$.pipe(
+    map((res: any) => {
+      if (this.viewMode === 'counter') {
+        // ========= 櫃位彙總 =========
+        const items: any[] =
+          Array.isArray(res?.Data?.QueryData) ? res.Data.QueryData :
+          Array.isArray(res?.Data)            ? res.Data :
+          [];
+
+        const pick = (obj: any, brand: string, field: 'Count' | 'Amount') =>
+          Number(obj?.[brand]?.[field] ?? 0);
+
+        const rows = items.map((r: any) => {
+          const list = r?.CRD_Type_List || {};
+          return {
+            TXN_Date: r?.TXN_Date,
+            ECR_No  : r?.ECR_No,
+            tlt_no  : r?.tlt_no,
+            tlt_name: r?.tlt_name,
+
+            AE_Count:       pick(list, 'AE', 'Count'),       AE_Amount:       pick(list, 'AE', 'Amount'),
+            DA_Count:       pick(list, 'DA', 'Count'),       DA_Amount:       pick(list, 'DA', 'Amount'),
+            MASTER_Count:   pick(list, 'MASTER', 'Count'),   MASTER_Amount:   pick(list, 'MASTER', 'Amount'),
+            VISA_Count:     pick(list, 'VISA', 'Count'),     VISA_Amount:     pick(list, 'VISA', 'Amount'),
+            JCB_Count:      pick(list, 'JCB', 'Count'),      JCB_Amount:      pick(list, 'JCB', 'Amount'),
+            UnionPay_Count: pick(list, 'UnionPay', 'Count'), UnionPay_Amount: pick(list, 'UnionPay', 'Amount'),
+            NCCC_Count:     pick(list, 'NCCC', 'Count'),     NCCC_Amount:     pick(list, 'NCCC', 'Amount'),
+            Others_Count:   pick(list, 'Others', 'Count'),   Others_Amount:   pick(list, 'Others', 'Amount'),
+            Total_Count:    pick(list, 'Total', 'Count'),    Total_Amount:    pick(list, 'Total', 'Amount'),
+
+            _rowKey: `cnt|${r?.TXN_Date ?? ''}|${r?.ECR_No ?? ''}|${r?.tlt_no ?? ''}`,
+          };
+        });
+
+        const totalRecords =
+          typeof res?.TotalCount === 'number' ? res.TotalCount : rows.length;
+
+        // 表尾總計：用欄位對應表前端彙總出 TOTAL_* 鍵
+        const externalTotals = this.sumCounterTotals(rows, this.counterTotalFieldMap);
+
+        return { rows, totalRecords, externalTotals, externalSubtotals: {} };
+      }
+
+      // ========= 信用卡明細 =========
+      const wrappers = Array.isArray(res?.Data) ? res.Data : (res?.Data ? [res.Data] : []);
+      const rows = wrappers
+        .flatMap((x: any) => x?.tLS23090_CreditDetails ?? [])
+        .map((row: any, idx: number) => ({
+          ...row,
+          _rowKey: `crt|${row?.TXN_Date ?? ''}|${row?.ECR_No ?? ''}|${row?.TXN_No ?? idx}`,
+        }));
+
+      const totalRecords =
+        typeof res?.TotalCount === 'number' ? res.TotalCount : rows.length;
+
+      // 表尾總計：聚合所有 wrapper 的 Total 欄位
+      const externalTotals = {
+        TotalPayAmt: 0,
+        TotalPoint: 0,
+        TotalInstHeadAmt: 0,
+        TotalInstEachAmt: 0,
+      };
+      for (const w of wrappers) {
+        externalTotals.TotalPayAmt      += Number(w?.TotalPayAmt ?? 0);
+        externalTotals.TotalPoint       += Number(w?.TotalPoint ?? 0);
+        externalTotals.TotalInstHeadAmt += Number(w?.TotalInstHeadAmt ?? 0);
+        externalTotals.TotalInstEachAmt += Number(w?.TotalInstEachAmt ?? 0);
+      }
+
+      return { rows, totalRecords, externalTotals, externalSubtotals: {} };
+    })
+  );
+};
 
   // ===== 查詢 =====
   onSubmit(form: FormGroup): void {

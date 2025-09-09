@@ -3,7 +3,7 @@
 import { Component } from '@angular/core';
 import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { CommonModule, DecimalPipe } from '@angular/common';
-import { finalize, timeout, catchError, map, take } from 'rxjs/operators';
+import { finalize, timeout, catchError, map, take, switchMap } from 'rxjs/operators';
 import { Observable, of } from 'rxjs';
 
 import { TLS23030Service } from '../../../service/api/tls/tls23030.service';
@@ -291,28 +291,154 @@ detailSubtotalFieldMap: SubtotalFieldMap = SUBTOTAL_FIELD_MAP;
     
   }
 
-  // ====== 分頁/排序(Lazy) ======
-  override onLazyLoadData(event: LazyLoadEvent, form: FormGroup): void {
-    const nextSort = this.ensureGroupFirst(event.SortBy ?? []);
-    const currSort = JSON.stringify(form.value?.SortBy ?? []);
-    const nextSortStr = JSON.stringify(nextSort);
-    const nextPageIndex = currSort !== nextSortStr ? 1 : (event.pageIndex ?? form.value.pageIndex ?? 1);
+// === 提供給 Table2 的 lazy 取數 ===
+fetchTLS23030 = (evt: LazyLoadEvent) => {
+  // 讀目前條件
+  const raw: any = this.queryForm.getRawValue();
 
-    form.patchValue({
-      pageIndex: nextPageIndex,
-      pageSize : event.pageSize ?? form.value.pageSize,
-      SortBy   : nextSort,
-    }, { emitEvent: false });
+  // 小工具
+  const ensureArr   = (v: any) => (Array.isArray(v) ? v : (v == null || v === '' ? [] : [v]));
+  const toNumOrNull = (v: any) => (v === '' || v == null ? null : Number(v));
+  const emptyToNull = (v: any) => (v === '' ? null : v);
 
-    this.sortMeta = nextSort.map(s => ({ ...s }));
+  // 分頁/排序（evt 優先，其次沿用表單/預設）
+  const pageSize  = Number.isFinite(evt?.pageSize)  ? Number(evt.pageSize)  : (Number(raw?.pageSize)  || 20);
+  const pageIndex = Number.isFinite(evt?.pageIndex) ? Number(evt.pageIndex) : (Number(raw?.pageIndex) || 1);
 
-    const sig = JSON.stringify({ pageIndex: form.value.pageIndex, pageSize: form.value.pageSize, SortBy: form.value.SortBy });
-    if (sig === this.lastQuerySig) return;
-    this.lastQuerySig = sig;
+  const uiSort = this.ensureGroupFirst(
+    Array.isArray((evt as any)?.SortBy) && (evt as any).SortBy.length
+      ? (evt as any).SortBy
+      : (Array.isArray(raw?.SortBy) && raw.SortBy.length ? raw.SortBy : this.defaultSort)
+  );
+  const apiSort = this.toApiSort(uiSort);
 
-    if (this.lazyTimer) clearTimeout(this.lazyTimer);
-    this.lazyTimer = setTimeout(() => this.onSubmit(form), 0);
-  }
+  // 組 payload（與 onSubmit 對齊，用 yyyy-MM-dd）
+  const payload: any = {
+    TXN_DateStart: this.toYMD(raw['TXN_DateStart']),
+    TXN_DateEnd:   this.toYMD(raw['TXN_DateEnd']),
+
+    ECR_No:            ensureArr(raw['ECR_No']),
+    TLT_No:            ensureArr(raw['TLT_No']),
+    PAY_NO:            ensureArr(raw['PAY_NO']),
+    TXN_Status:        ensureArr(raw['TXN_Status']),
+    CRD_Type:          ensureArr(raw['CRD_Type']),
+    org_id:            ensureArr(raw['org_id']),
+    tlt_floor:         ensureArr(raw['tlt_floor']),
+
+    TXN_No_Start:      toNumOrNull(raw['TXN_No_Start']),
+    TXN_No_End:        toNumOrNull(raw['TXN_No_End']),
+    TXN_PayAmt_Start:  toNumOrNull(raw['TXN_PayAmt_Start']),
+    TXN_PayAmt_End:    toNumOrNull(raw['TXN_PayAmt_End']),
+
+    TXN_MemCard:       emptyToNull(raw['TXN_MemCard']),
+    CRD_No:            emptyToNull(raw['CRD_No']),
+    pay_taxtype:       emptyToNull(raw['pay_taxtype']),
+    rece_yn:           emptyToNull(raw['rece_yn']),
+    cash_yn:           emptyToNull(raw['cash_yn']),
+    tlt_building:      emptyToNull(raw['tlt_building']),
+
+    VOU_Check:         this.toBoolOrNull(raw['VOU_Check']),
+    IsHaveTERM_No:     this.toBoolOrNull(raw['IsHaveTERM_No']),
+
+    // 分頁/排序（API 使用 pageIndex/pageSize）
+    pageIndex,
+    pageSize,
+    SortBy: apiSort,
+  };
+
+  // 清空空值（保留 0/false）
+  Object.keys(payload).forEach(k => {
+    const v = payload[k];
+    if (v === '' || v === null || v === undefined) delete payload[k];
+    if (Array.isArray(v) && v.length === 0) delete payload[k];
+  });
+
+  // 主查詢 →（可能）偷看下一頁第一筆，決定最後一組是否在本頁結束
+  return this.tls23030Service.queryTLS23030(payload).pipe(
+    switchMap((res: any) => {
+      // 1) 展平 rows
+      const wrappers: any[] = Array.isArray(res?.Data) ? res.Data : (res?.Data ? [res.Data] : []);
+      const rawRows = this.extractRows(wrappers);
+
+      // 2) 本頁 rows 加上 _grp 與 _rowKey
+      const pageRows = rawRows.map((item: any, i: number) => {
+        const ymd = this.toYMD(item?.TXN_Date) ?? '';
+        const ecr = String(item?.ECR_No ?? '').trim();
+        const txn = String(item?.TXN_No ?? '').trim();
+        const grp = `${ymd}|${ecr}|${txn}`;                 // 與 onSubmit 保持一致
+        const rowKey = `${grp}|${i}`;
+        return { ...item, _rowKey: rowKey, [this.groupByField]: grp };
+      });
+
+      // 3) 總筆數/總頁數
+      const totalCount = Number(res?.TotalCount ?? 0);
+      const totalPage  = Number(res?.TotalPage ?? Math.ceil((totalCount || 0) / (pageSize || 1))) || 0;
+      const totalRecords = Number.isFinite(totalCount) ? totalCount : pageRows.length;
+
+      // 4) 後端小計（所有群組）
+      const allSubtotals = this.buildSubtotalsMapFromResponse(wrappers);
+
+      // 5) 後端總計（多包合併）→ externalTotals（用具名鍵避免 TS4111）
+      const externalTotals = wrappers.reduce((agg, w) => {
+        const a = Number(w?.Total_TXN_PayAmt   ?? 0);
+        const b = Number(w?.Total_TXN_TaxAlwnc ?? 0);
+        const keyA = this.detailTotalFieldMap.TXN_PayAmt;
+        const keyB = this.detailTotalFieldMap.TXN_TaxAlwnc;
+        agg[keyA] = Number(agg[keyA] ?? 0) + a;
+        agg[keyB] = Number(agg[keyB] ?? 0) + b;
+        return agg;
+      }, {} as Record<string, number>);
+
+      // 6) 本頁哪些群組在本頁結束？
+      const ended = new Set<string>();
+      for (let i = 0; i < pageRows.length - 1; i++) {
+        const g1 = pageRows[i][this.groupByField];
+        const g2 = pageRows[i + 1][this.groupByField];
+        if (g1 !== g2) ended.add(g1);
+      }
+      const lastRow = pageRows[pageRows.length - 1];
+      const lastKey = lastRow?.[this.groupByField] as string | undefined;
+
+      const hasNext = totalPage
+        ? pageIndex < totalPage
+        : (pageIndex * pageSize < totalRecords);
+
+      // 組裝回傳物件的工廠
+      const finalizeReturn = (endedSet: Set<string>) => {
+        const externalSubtotals: Record<string, Record<string, number>> = {};
+        endedSet.forEach(k => {
+          if (allSubtotals[k]) externalSubtotals[k] = allSubtotals[k];
+        });
+
+        return {
+          rows: pageRows,
+          totalRecords,
+          externalTotals,
+          externalSubtotals, // 只帶「本頁真正結束」的群組小計
+        };
+      };
+
+      // 不需偷看下一頁（沒 lastKey 或本頁已是最後一頁）
+      if (!lastKey) {
+        return of(finalizeReturn(ended));
+      }
+      if (!hasNext) {
+        ended.add(lastKey);
+        return of(finalizeReturn(ended));
+      }
+
+      // 需要偷看下一頁第一筆的 groupKey
+      return this.peekNextPageFirstGroupKey(payload, pageIndex + 1, 1).pipe(
+        map((nextKey: string | null) => {
+          if (!nextKey || nextKey !== lastKey) ended.add(lastKey);
+          return finalizeReturn(ended);
+        }),
+        catchError(() => of(finalizeReturn(ended)))
+      );
+    })
+  );
+};
+
 
   // ====== 查詢 ======
   onSubmit(form: FormGroup): void {

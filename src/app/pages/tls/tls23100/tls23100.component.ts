@@ -24,6 +24,7 @@ import { InputTextModule } from 'primeng/inputtext';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { TranslateModule } from '@ngx-translate/core';
 import { Table2Component } from '@shared/componentkit/table2/table2.component';
+import {  map } from 'rxjs/operators';
 
 @Component({
   selector: 'app-tls23100',
@@ -184,36 +185,77 @@ export class TLS23100Component extends BasicQueryPageComponent<any> {
     },
   ];
 
-  /** 表格 lazy 事件（分頁/排序） */
-  override onLazyLoadData(event: LazyLoadEvent, form: FormGroup): void {
-    // 強制把群組欄位放第一順位
-    const nextSort = this.ensureGroupFirst(event.SortBy ?? []);
-    const currSort = JSON.stringify(form.value?.SortBy ?? []);
-    const nextSortStr = JSON.stringify(nextSort);
-    const nextPageIndex = currSort !== nextSortStr ? 1 : (event.pageIndex ?? form.value.pageIndex ?? 1);
+// 提供給 Table2 的 lazy 載入函式（HTML 綁 [fetchData]="fetchTLS23100"）
+fetchTLS23100 = (evt: LazyLoadEvent) => {
+  const val = this.queryForm.getRawValue() as any;
 
-    // 同步回表單（不觸發 valueChanges）
-    form.patchValue({
-      pageIndex: nextPageIndex,
-      pageSize : event.pageSize ?? form.value.pageSize,
-      SortBy   : nextSort,
-    }, { emitEvent: false });
+  // 排序：事件優先 → 表單 → 預設；並強制把群組欄位放第一順位
+  const eventSort = Array.isArray(evt?.SortBy) ? evt.SortBy : [];
+  const baseSort =
+    Array.isArray(val?.SortBy) && val.SortBy.length ? val.SortBy : this.defaultSort;
+  const sortBy = this.ensureGroupFirst(eventSort.length ? eventSort : baseSort);
 
-    // 更新表頭排序狀態
-    this.sortMeta = nextSort.map(s => ({ ...s }));
+  // 分頁：事件優先 → 表單 → 預設
+  const pageIndex = Number.isFinite(evt?.pageIndex)
+    ? Number(evt!.pageIndex)
+    : Number(val?.pageIndex ?? 1);
+  const pageSize = Number.isFinite(evt?.pageSize)
+    ? Number(evt!.pageSize)
+    : Number(val?.pageSize ?? 10);
 
-    // 去重簽章
-    const sig = JSON.stringify({
-      pageIndex: form.value.pageIndex,
-      pageSize : form.value.pageSize,
-      SortBy   : form.value.SortBy,
-    });
-    if (sig === this.lastQuerySig) return;
-    this.lastQuerySig = sig;
+  // 與 onSubmit 相同規則（✅ 不帶 Offset / OrderBy）
+  const payload = this.prune({
+    TXN_DateStart: this.toIso(val?.TXN_DateStart),
+    TXN_DateEnd  : this.toIso(val?.TXN_DateEnd),
+    ECR_No       : this.ensureArr(val?.ECR_No),
+    TLT_No       : this.ensureArr(val?.TLT_No),
+    Pay_No       : this.ensureArr(val?.Pay_No),
+    CRD_No       : (val?.CRD_No ?? '') || undefined,
+    tlt_building : (val?.tlt_building ?? '') || undefined,
+    tlt_floor    : this.ensureArr(val?.tlt_floor),
+    org_id       : this.ensureArr(val?.org_id),
 
-    if (this.lazyTimer) clearTimeout(this.lazyTimer);
-    this.lazyTimer = setTimeout(() => this.onSubmit(form), 0);
-  }
+    pageSize,
+    pageIndex,
+    SortBy: sortBy,
+  });
+
+  return this.tls23100Service.queryTLS23100(payload).pipe(
+    map((res: any) => {
+      // 兼容 Data 為物件或陣列
+      const wrappers = Array.isArray(res?.Data) ? res.Data : (res?.Data ? [res.Data] : []);
+
+      // 明細列
+      const rows = wrappers
+        .flatMap((w: any) => w?.tLS23100Details ?? w?.TLS23100Details ?? w?.tls23100Details ?? [])
+        .map((row: any, idx: number) => ({
+          ...row,
+          _rowKey: `row|${row?.ECR_No ?? ''}|${row?.TXN_No ?? idx}`,
+        }));
+
+      // 總筆數
+      const totalRecords =
+        typeof res?.TotalCount === 'number' ? res.TotalCount : rows.length;
+
+      // 表尾總計：wrapper.totalPayAmt 聚合；若後端沒給就用當頁合計
+      const totalFromWrapper = wrappers.reduce(
+        (s: number, w: any) => s + Number(w?.totalPayAmt ?? 0),
+        0,
+      );
+      const fallbackPageSum = rows.reduce(
+        (s: number, r: any) => s + Number(r?.TXN_PayAmt ?? 0),
+        0,
+      );
+      const externalTotals = { totalPayAmt: totalFromWrapper || fallbackPageSum };
+
+      // 群組小計（以 tlt_no 分組；鍵名對應 detailSubtotalFieldMap）
+      const externalSubtotals = this.buildSubtotals(rows);
+
+      return { rows, totalRecords, externalTotals, externalSubtotals };
+    })
+  );
+};
+
 
   // 送出查詢
   onSubmit(form: FormGroup): void {
