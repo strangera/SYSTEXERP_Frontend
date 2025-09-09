@@ -79,7 +79,8 @@
                     [form]="dataForm"
                     (click)="onKancel()"></app-button>
         <app-button btnType="submit"
-                    [loading]="loading"></app-button>
+                    [loading]="loading"
+                    [disabled]="!rowEditValidSignal()"></app-button>
       </div>
     </form>
   </p-panel>
@@ -106,7 +107,8 @@
                    [totalRecords]="totalRecords()"
                    (delete)="onDelete($event)"
                    (fieldChange)="onFieldChange($event)"
-                   [rowEditCanSave]="rowEditCanSaveSignal()"
+                   [rowEditCanSave]="rowEditValidSignal()"
+                   (rowEditInit)="onRowInit($event)"
                    (rowEditSave)="onRowEdit($event)"
                    (rowEditCancel)="onRowEdit($event)"
                    [loading]="loading"

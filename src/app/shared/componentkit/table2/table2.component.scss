@@ -227,3 +227,23 @@
     cursor: move !important;
   }
 }
+/* 設定這張表的基準字級 */
+:host ::ng-deep .p-datatable.table-font-md {
+  font-size: 1rem !important;  /* 想要多大改這裡 */
+  line-height: 1.25rem !important;
+}
+
+/* th/td/tfoot 跟著繼承 */
+:host ::ng-deep .p-datatable.table-font-md .p-datatable-thead > tr > th,
+:host ::ng-deep .p-datatable.table-font-md .p-datatable-tbody > tr > td,
+:host ::ng-deep .p-datatable.table-font-md .p-datatable-tfoot > tr > td {
+  font-size: inherit !important;
+  line-height: inherit !important;
+}
+
+/* 表頭裡的文字與排序圖示也放大，避免看起來比 body 小 */
+:host ::ng-deep .p-datatable.table-font-md .p-datatable-thead > tr > th .p-column-title,
+:host ::ng-deep .p-datatable.table-font-md .p-datatable-thead > tr > th .p-sortable-column-icon {
+  font-size: inherit !important;
+  line-height: inherit !important;
+}

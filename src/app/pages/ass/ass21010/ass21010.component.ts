@@ -41,7 +41,7 @@ export class ASS21010Component extends BasicQueryPageComponent<unknown> implemen
     ENG_MeterNo: new FormControl<string | undefined>(void 0),
     Location_No: new FormControl<string | undefined>(void 0),
     ENG_Remark: new FormControl<string | undefined>(void 0),
-    ...createPaginationConfig([{ field: 'ID', order: 1 }]),
+    ...createPaginationConfig([{ field: 'ENG_Type', order: 1 }, { field: 'ENG_MeterNo', order: 1 }]),
   });
   public readonly qf = computed(() => this.queryForm.controls);
 

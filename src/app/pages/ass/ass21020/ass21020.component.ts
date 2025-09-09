@@ -51,7 +51,7 @@ export class ASS21020Component extends BasicQueryPageComponent<ASS21020Data> imp
     TLT_Name: new FormControl<string>(''),
     NET_SPACE: new FormControl<number | undefined>(void 0),
     ENG_Rate: new FormControl<number | undefined>(void 0),
-    ...createPaginationConfig([{ field: '', order: 1 }]),
+    ...createPaginationConfig([{ field: 'ENG_Type', order: 1 }, { field: 'ENG_MeterNo', order: 1 }]),
   });
   public readonly qf = computed(() => this.queryForm.controls);
   public readonly totalRecord = computed(() => this.service.ASS21020Data().length);
@@ -77,15 +77,24 @@ export class ASS21020Component extends BasicQueryPageComponent<ASS21020Data> imp
 
   public readonly meterNoEffect = effect(() => {
     const meterNo = this.meterNoSignal();
-    if (!meterNo) return;
+    this.service.tltNoSignal.set([]);
+    this.logger.debug(`meterNoEffect:`, [meterNo, this.queryForm.value]);
+    if (!meterNo) return void this.queryForm.patchValue({
+      TLT_No: void 0,
+      TLT_Name: '',
+      Location_No: '',
+      NET_SPACE: void 0,
+      ENG_Rate: void 0,
+    }, { emitEvent: !1 });
     this.service.queryTltByFlag(meterNo);
-    if (this.qf().ENG_Type.value?.length) return;
     const metro = this.service.engMeterNoMap.get(meterNo);
+    this.logger.debug(`metroNo metro:`, [metro]);
     if (!metro) return;
     const current = this.service.engTypeSignal().find(t => t.Name === metro.ENG_Type);
+    this.logger.debug(`metroNo current:`, [current]);
     if (!current) return;
-    this.qf().ENG_Type.patchValue([current.No as EngType]);
-    this.qf().Location_No.patchValue(metro.Location_No || '');
+    !this.qf().ENG_Type.value?.length && this.qf().ENG_Type.patchValue([current.No as EngType]);
+    !this.qf().Location_No.value?.length && this.qf().Location_No.patchValue(metro.Location_No || '');
     this.logger.debug(`meterNo changes:`, [meterNo, current]);
   }, { allowSignalWrites: !0 });
 
@@ -137,6 +146,8 @@ export class ASS21020Component extends BasicQueryPageComponent<ASS21020Data> imp
   public ngOnInit(): void {
     this.initializePage('ASS21020', '/ASS/ASS21020CRU', this.queryForm, this.onSubmit.bind(this));
 
+    this.service.tltNoSignal.set([]);
+
     this.service.loadEngType();
     this.service.loadEngMeterNo();
 
@@ -150,7 +161,7 @@ export class ASS21020Component extends BasicQueryPageComponent<ASS21020Data> imp
         EngTypes: this.qf().ENG_Type.value!.join(),
         ENG_Rate: this.qf().ENG_Rate.value!,
         ENG_MeterNo: this.qf().ENG_MeterNo.value!,
-        Location_No: this.qf().Location_No.value!,
+        // Location_No: this.qf().Location_No.value!,
         SYS_StoreNo: this.user?.SYS_StoreNo!,
         Mid: Number(this.user?.mid)!,
       });
