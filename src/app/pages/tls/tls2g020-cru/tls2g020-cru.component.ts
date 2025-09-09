@@ -39,6 +39,7 @@ export class TLS2G020CRUComponent extends BasicCruPageComponent<any> implements 
   editMode: 'month' | 'day' = 'month';
   currentMonthData: any = null;
   daysInMonth: number[] = [];
+  weeks: (number | null)[][] = [];
   dataForm = this.formBuilder.nonNullable.group({
     budget_yymm: [{ value: null, disabled: true }],
     tlt_no_tlt_name: [{ value: null, disabled: true }],
@@ -66,6 +67,29 @@ export class TLS2G020CRUComponent extends BasicCruPageComponent<any> implements 
 
   ngOnInit(): void {
     this.initializePage('TLS2G020', this.dataForm);
+ const year = 2024;
+  const month = 9; // 9月 (注意：JS 月份 0=1月, 所以這裡放 9 表示 10 月)
+
+  const totalDays = new Date(year, month, 0).getDate(); // 當月天數
+  const firstDayOfWeek = new Date(year, month - 1, 1).getDay(); // 1號星期幾
+
+  this.weeks = [];
+  let week: (number | null)[] = new Array(firstDayOfWeek).fill(null);
+
+  for (let d = 1; d <= totalDays; d++) {
+    week.push(d);
+    if (week.length === 7) {
+      this.weeks.push(week);
+      week = [];
+    }
+  }
+
+  if (week.length > 0) {
+    while (week.length < 7) {
+      week.push(null); // 補滿 7 格
+    }
+    this.weeks.push(week);
+  }
 
     this.dropDownListService.queryTLTTALENT_DropDownList()
       .pipe(untilDestroyed(this))

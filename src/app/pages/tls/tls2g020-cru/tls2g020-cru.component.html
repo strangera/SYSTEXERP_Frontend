@@ -40,20 +40,30 @@
         [showCaption]="false"
       ></app-table>
     </ng-container>
-    <ng-container *ngIf="editMode === 'day'">
-      <div class="grid p-fluid">
-        <div class="col-3">
-          <h3>{{ currentMonthData?.budget_yymm }}日期編輯</h3>
-        </div>
-        <div class="col-3" *ngFor="let day of daysInMonth">
+   <ng-container *ngIf="editMode === 'day'">
+  <div class="calendar-table">
+    <!-- 星期標題 -->
+    <div class="grid">
+      <div class="col" *ngFor="let w of ['日','一','二','三','四','五','六']">
+        <strong>{{ w }}</strong>
+      </div>
+    </div>
+
+    <!-- 日期輸入區 -->
+    <div class="grid" *ngFor="let week of weeks">
+      <div class="col" *ngFor="let day of week">
+        <ng-container *ngIf="day">
           <span>{{ day }}日</span>
           <input
             type="number"
             [(ngModel)]="currentMonthData.days[day]"
-            class="p-inputtext"
+            class="p-inputtext w-full"
           />
-        </div>
+        </ng-container>
       </div>
-    </ng-container>
+    </div>
+  </div>
+</ng-container>
+
   </p-panel>
 </div>
