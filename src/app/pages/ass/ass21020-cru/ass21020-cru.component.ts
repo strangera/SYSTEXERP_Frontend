@@ -137,27 +137,30 @@ export class ASS21020CRUComponent extends BasicCruPageComponent<ASS21020Data> im
         y_coord: meterData.Draw_Y,
       }, { emitEvent: !1 });
     });
+    if (this.isFormReadable) return void this.dataFormEffect.destroy();
   }, { allowSignalWrites: !0 });
 
   public readonly initEffect = effect(() => {
     if (this.isFormCreateable) return void this.initEffect.destroy();
-
     const rowData = this.rowdata;
     const engTypes = this.service.engTypeSignal();
     const meterNos = this.service.engMeterNoSignal();
-
+    this.logger.debug(`initEffect 1:`, [engTypes, meterNos, rowData]);
     if (!engTypes?.length || !meterNos?.length || !rowData) return;
 
-    const fixedEngType = engTypes.find(t => t.Name === rowData.ENG_Type)?.No;
+    const fixedType = engTypes.find(t => t.Name === rowData.ENG_Type);
     const meterData = meterNos.find(item => item.ENG_MeterNo === rowData.ENG_MeterNo);
-    this.service.loadASS21020({ EngTypes: fixedEngType, ENG_MeterNo: rowData.ENG_MeterNo });
-    this.df().ENG_Type.setValue(fixedEngType as EngType);
+    this.service.loadASS21020({ EngTypes: fixedType?.No as EngType, ENG_MeterNo: rowData.ENG_MeterNo });
+
+    this.df().ENG_Type.setValue(fixedType ? fixedType.No as EngType : void 0);
     this.df().ENG_MeterNo.setValue(meterData ? rowData.ENG_MeterNo : void 0);
 
     this.tableDataSignal.set(this.service.ASS21020Data()
       .find(v => v.ENG_MeterNo === rowData.ENG_MeterNo)?.Details ?? []);
 
+    if (this.isFormReadable && !this.service.ASS21020Data().length) return;
     this.initEffect.destroy();
+    this.logger.debug(`initEffect 2:`, [meterData, this.service.ASS21020Data()]);
   }, { allowSignalWrites: !0 });
 
   public readonly columns: Column[] = [
