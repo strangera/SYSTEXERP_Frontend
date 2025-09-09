@@ -135,7 +135,7 @@ export class Tls31040CRUComponent extends BasicCruPageComponent<TLS31040Response
   }
 
   ngOnInit(): void {
-    this.initializePage('TLS31030', this.dataForm);
+    this.initializePage('TLS31040', this.dataForm);
     const state = this.router.lastSuccessfulNavigation?.extras.state;
     this.queryConditions = state?.['queryConditions'];
     console.log('這是前面的查詢條件', this.rowdata);
@@ -164,14 +164,14 @@ export class Tls31040CRUComponent extends BasicCruPageComponent<TLS31040Response
     console.log('單櫃別之營業報表print請求', JSON.stringify(formValue, null, 2));
 
     this.btnLoading = true;
-    this.tls31040Service.printTLS31040Detail(formValue).pipe(finalize(() => this.btnLoading = false), untilDestroyed(this))
-      .subscribe(res => {
-        this.messageService.successBubble(res.Message);
-        if (res.Data && res.Data.Print_URL) {
-          const downloadUrl = environment.ApiUrl + res.Data.Print_URL;
-          window.open(downloadUrl, '_blank');
-        }
-      });
+    // this.tls31040Service.printTLS31040Detail(formValue).pipe(finalize(() => this.btnLoading = false), untilDestroyed(this))
+    //   .subscribe(res => {
+    //     this.messageService.successBubble(res.Message);
+    //     if (res.Data && res.Data.Print_URL) {
+    //       const downloadUrl = environment.ApiUrl + res.Data.Print_URL;
+    //       window.open(downloadUrl, '_blank');
+    //     }
+    //   });
   }
 
   queryTLS31030Detail() {
@@ -184,10 +184,10 @@ export class Tls31040CRUComponent extends BasicCruPageComponent<TLS31040Response
     //用Json顯示request
     console.log('單櫃別之營業報表request', JSON.stringify(request));
 
-    this.tls31040Service.queryTLS31040Detail(request).pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(res => {
-      console.log('單櫃別之營業報表response', res.Data);
-      this.data = res.Data;
-      // this.totalRecords = res.TotalCount;
-    })
+    // this.tls31040Service.queryTLS31040Detail(request).pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(res => {
+    //   console.log('單櫃別之營業報表response', res.Data);
+    //   this.data = res.Data;
+    //   // this.totalRecords = res.TotalCount;
+    // })
   }
 }

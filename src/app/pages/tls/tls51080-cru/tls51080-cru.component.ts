@@ -12,6 +12,7 @@ import { InputTextComponent } from '../../../shared/componentkit/input-text/inpu
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { NgIf } from '@angular/common';
 import { TranslateModule } from '@ngx-translate/core';
+import { ValidationService } from '@shared/service/validation.service';
 
 // 2.5.1.6 品牌設定作業  CRU
 @Component({
@@ -28,7 +29,7 @@ export class TLS51080CRUComponent extends BasicCruPageComponent<POS2034>
     id: [null], // 主鍵ID，新增時為null，編輯時為存在的ID
     // POS2034 倉庫設定檔
     STO_No: [{ value: null, disabled: true }], // 公司編號/店號
-    HOS_No: ['', [Validators.required, Validators.maxLength(10)]], // 倉庫代碼 STO_NO+HOS_NO唯一值
+    HOS_No: ['', [Validators.required, Validators.maxLength(10), this.validationService.numberValidator]], // 倉庫代碼 STO_NO+HOS_NO唯一值
     HOS_NAME: ['', [Validators.required, Validators.maxLength(50)]], // 倉庫名稱
     org_id: ['', [Validators.required, Validators.maxLength(20)]], // 部門編號/分店
     building_no: ['', [Validators.maxLength(1), Validators.required]], // 館別
@@ -39,7 +40,10 @@ export class TLS51080CRUComponent extends BasicCruPageComponent<POS2034>
   building_noOptions: apiOption[] = [];
   STO_NoOptions: apiOption[] = [];
   // ----------------------------------------------------------------
-  constructor(private tls51080Service: Tls51080Service) {
+  constructor(
+    private tls51080Service: Tls51080Service,
+    private validationService: ValidationService
+  ) {
     super(); // 呼叫父類建構子
   }
 

@@ -435,12 +435,16 @@ export const tlsRoutes: Routes = [
   { path: 'tls31030cru', loadComponent: () => import('./tls31030-cru/tls31030-cru.component').then(m => m.Tls31030CruComponent) },
   // 各櫃別之營業報表
   { path: 'tls31040', loadComponent: () => import('./tls31040/tls31040.component').then(m => m.TLS31040Component) },
+  // 各櫃別之營業報表 CRU
+  { path: 'tls31040cru', loadComponent: () => import('./tls31040-cru/tls31040-cru.component').then(m => m.Tls31040CRUComponent) },
   // 各抽成別之營業報表
   { path: 'tls31050', loadComponent: () => import('./tls31050/tls31050.component').then(m => m.TLS31050Component) },
   // 各組織之營業報表
   { path: 'tls31060', loadComponent: () => import('./tls31060/tls31060.component').then(m => m.TLS31060Component) },
   // 各營業型態之營業報表
   { path: 'tls31070', loadComponent: () => import('./tls31070/tls31070.component').then(m => m.TLS31070Component) },
+  // 各營業型態之營業報表 CRU
+  { path: 'tls31070cru', loadComponent: () => import('./tls31070-cru/tls31070-cru.component').then(m => m.Tls31070CRUComponent) },
   // 各時段之樓層營業報表
   { path: 'tls31080', loadComponent: () => import('./tls31080/tls31080.component').then(m => m.TLS31080Component) },
   // 各時段之大分類營業報表

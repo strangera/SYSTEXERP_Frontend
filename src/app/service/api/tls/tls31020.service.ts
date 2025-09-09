@@ -58,6 +58,7 @@ export interface TLS31020Response {
   AvgTicket: number,
   tlt_space: number,
   MonthlyPSM: number,
+  MonthlyPayment: number,
   TempCounterSaleAmt: number,
   TempCounterSalesRate: number,
   TempCounterAmtRate: number,
@@ -82,6 +83,7 @@ export interface TLS31020DetailResponse {
   AvgTicket: number;
   tlt_space: number;
   MonthlyPSM: number;
+  MonthlyPayment: number;
   MonthlyBudgetTotal: number;
   MonthlySalesTotal: number;
   CompletionRate: number;
