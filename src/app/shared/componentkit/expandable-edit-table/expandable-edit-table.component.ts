@@ -503,7 +503,7 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
 
     // 🎯 否則顯示格式化的值
     const displayValue = this.getDateDisplayValue(rowData, column);
-    console.log(`📅 顯示格式化值: "${displayValue}"`);
+    // console.log(`📅 顯示格式化值: "${displayValue}"`);
     return displayValue;
   }
   /**
@@ -630,14 +630,8 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
     if (!date || isNaN(date.getTime())) {
       return false;
     }
-
     const year = date.getFullYear();
     const isReasonable = year >= 1900 && year <= 2100;
-
-    if (!isReasonable) {
-      console.warn(`⚠️ 日期年份超出合理範圍: ${year}`);
-    }
-
     return isReasonable;
   }
 
@@ -1138,13 +1132,15 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
   openDatePicker(data: any, field: string, isDetail: boolean = false, rowIndex?: number, detailIndex?: number) {
     this.currentDateField = { data, field, isDetail, rowIndex, detailIndex };
 
-    // 嘗試從現有值創建日期
-    let initialDate = new Date();
-    if (data[field]) {
-      const existingDate = new Date(data[field]);
-      if (!isNaN(existingDate.getTime())) {
-        initialDate = existingDate;
-      }
+    // 修復：如果有現有值就用現有值，沒有就用今天的日期
+    let initialDate: Date;
+
+    if (data[field] && data[field] instanceof Date && !isNaN(data[field].getTime())) {
+      // 使用現有的有效日期
+      initialDate = new Date(data[field]);
+    } else {
+      // 使用今天的日期
+      initialDate = new Date();
     }
 
     this.temporaryDate = initialDate;
@@ -1155,33 +1151,52 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
     if (this.currentDateField && this.temporaryDate) {
       const column = this.getCurrentEditingColumn();
       const oldValue = this.currentDateField.data[this.currentDateField.field];
+      let finalDate: Date;
 
-      if (column && column.dateFormat && column.dateFormat.includes('year-month')) {
-        // 🎯 年月格式：將日期設為該月的第一天
+      // 根據格式處理日期
+      if (column?.dateFormat?.includes('year-month')) {
         const year = this.temporaryDate.getFullYear();
         const month = this.temporaryDate.getMonth();
-        const adjustedDate = new Date(year, month, 1);
-
-        this.currentDateField.data[this.currentDateField.field] = adjustedDate;
-        console.log(`✅ 年月選擇完成: ${year}/${month + 1}`);
-
-        // 🔥 觸發欄位變更事件
-        this.triggerFieldChangeEvent(this.currentDateField.field, adjustedDate, this.currentDateField.data, oldValue);
-
+        finalDate = new Date(year, month, 1);
       } else {
-        // 🎯 完整日期格式：直接使用選擇的日期
-        this.currentDateField.data[this.currentDateField.field] = this.temporaryDate;
-        console.log(`✅ 日期選擇完成: ${this.temporaryDate}`);
-
-        // 🔥 觸發欄位變更事件
-        this.triggerFieldChangeEvent(this.currentDateField.field, this.temporaryDate, this.currentDateField.data, oldValue);
+        finalDate = new Date(this.temporaryDate);
       }
 
-      if (this.currentDateField.isDetail) {
-        this.cdr.detectChanges();
+      // 更新資料
+      this.currentDateField.data[this.currentDateField.field] = finalDate;
+
+      // 關鍵：清理用戶輸入狀態
+      const fieldKey = this.getFieldKey(
+        this.currentDateField.data,
+        this.currentDateField.field,
+        this.currentDateField.isDetail,
+        this.currentDateField.detailIndex
+      );
+      this.userInputValues.delete(fieldKey);
+
+      // 觸發 fieldChange 事件讓業務層處理
+      this.triggerFieldChangeEvent(
+        this.currentDateField.field,
+        finalDate,
+        this.currentDateField.data,
+        oldValue
+      );
+
+      // 如果是直接編輯模式，觸發保存
+      if (column?.directEdit) {
+        this.triggerSaveIfNeeded(
+          this.currentDateField.data,
+          column,
+          finalDate,
+          this.currentDateField.isDetail,
+          this.currentDateField.detailIndex
+        );
       }
+
+      this.cdr.detectChanges();
     }
 
+    // 關閉對話框
     this.datePickerVisible = false;
     this.currentDateField = null;
     this.temporaryDate = null;

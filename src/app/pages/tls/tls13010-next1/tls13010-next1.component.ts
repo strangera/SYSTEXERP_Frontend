@@ -591,9 +591,6 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
   onFieldChange(fieldName: string, newValue: any, rowData: any, capType?: string): void {
     console.log(`欄位變更: ${capType}.${fieldName} = ${newValue}`);
 
-    // 🎯 關鍵：移除重複設值，expandable-edit-table 已經處理了
-    // rowData[fieldName] = newValue;  // 刪除這行
-
     // 根據 capType 進行對應的計算處理
     switch (capType) {
       case 'A':
