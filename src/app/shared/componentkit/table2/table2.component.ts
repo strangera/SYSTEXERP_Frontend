@@ -339,20 +339,19 @@ goToPage(pageNumber: number) {
   const newFirst = (pageNumber - 1) * this.rows;
   if (this.first === newFirst && this.selectedPage === pageNumber) return;
 
-  // 防 echo（若 p-table 真的回頭觸發 onLazyLoad，就被抑制掉）
-  this._suppressNextLazy = true;
-
   this.first = newFirst;
   this.selectedPage = pageNumber;
 
   if (this.lazy) {
+    this._suppressNextLazy = true; // 吞掉 p-table 的 echo
     this.loadDataLazy({
       first: this.first,
       rows: this.rows,
       multiSortMeta: this.multiSortMeta
-    } as TableLazyLoadEvent);
+    } as TableLazyLoadEvent, true);   // 強制打 API
   }
 }
+
 
   /** paginator 點擊（同步下拉） */
   onPageChange(event: TablePageEvent) {
@@ -373,70 +372,86 @@ goToPage(pageNumber: number) {
   }
 
   /** ✅ 唯一 API 觸發點（統一做去重／抑制 echo／排序變更回第1頁） */
-  loadDataLazy(event: TableLazyLoadEvent) {
-    if (this._skipFirstLazy) { this._skipFirstLazy = false; return; }
-    if (this._suppressNextLazy) { this._suppressNextLazy = false; return; }
+loadDataLazy(event: TableLazyLoadEvent, force = false) {
+  // 1) 跳過首發 / 抑制 echo：force=true 時一律執行
+  if (this._skipFirstLazy && !force) { this._skipFirstLazy = false; return; }
+  if (this._suppressNextLazy && !force) { this._suppressNextLazy = false; return; }
 
-    const pageSize  = event.rows && event.rows > 0 ? event.rows : this.rows;
-    let pageIndex   = (event.first ?? 0) / pageSize + 1;
-
-    const sortRaw = event.multiSortMeta
-      ?? (event as any).multisortmeta
-      ?? (event.sortField ? [{ field: event.sortField, order: event.sortOrder }] : []);
-    const sort = this.ensureGroupFirst(sortRaw);
-    const sortSig = JSON.stringify(sort);
-
-    // 排序變更 → 回第 1 頁
-    if (sortSig !== this.lastSortSig) {
-      this.lastSortSig = sortSig;
-      if (pageIndex !== 1) {
-        pageIndex = 1;
-        this._suppressNextLazy = true;
-        this.first = 0;
-      }
-    }
-
-    this.selectedPage = pageIndex;
-    this.queryStateService.setQueryState(this.tableKey + 'Sort', sort);
-    this.dt.totalRecords = this.totalRecords !== 0 ? this.totalRecords : this.data.length;
-
-    const payload: LazyLoadEvent = { pageIndex, pageSize, SortBy: sort };
-    const key = `${pageIndex}|${pageSize}|${sortSig}`;
-    if (key === this.lastEmitKey) return;
-    this.lastEmitKey = key;
-
-    if (this.serverFetch) {
-      this.loading = true; // 交由 Table2 控制 loading（搭配 [loading]="loading && data.length===0"）
-      this.serverFetch(payload).subscribe({
-        next: (res) => {
-          const rows = Array.isArray(res?.rows) ? res.rows : [];
-          this.data = rows;
-          this.dataChange.emit(this.data);
-
-          this.totalRecords = Number(res?.totalRecords ?? rows.length) || 0;
-
-          if (res?.externalTotals) this.externalTotals = { ...res.externalTotals };
-          if (res?.externalSubtotals) this.externalSubtotals = { ...res.externalSubtotals };
-
-          this.calculateTotalPages();
-          this.loading = false;
-
-          // 清 selection
-          this.selectedItems = [];
-          this.selectionChange.emit(this.selectedItems);
-          this.selectedItemsChange.emit(this.selectedItems);
-        },
-        error: (err) => {
-          this.loading = false;
-          this.serverError.emit(err);
-        }
-      });
-      return;
-    }
-
-    // 沒提供 serverFetch：沿用事件給父層
-    this.lazyLoadData.emit(payload);
+  // 強制呼叫時，直接清旗標避免後續早退
+  if (force) {
+    this._skipFirstLazy = false;
+    this._suppressNextLazy = false;
   }
+
+  // 2) 解析分頁與排序
+  const pageSize = event.rows && event.rows > 0 ? event.rows : this.rows;
+  let pageIndex  = (event.first ?? 0) / pageSize + 1;
+
+  const sortRaw =
+    event.multiSortMeta ??
+    (event as any).multisortmeta ??
+    (event.sortField ? [{ field: event.sortField, order: event.sortOrder }] : []);
+
+  const sort    = this.ensureGroupFirst(sortRaw);
+  const sortSig = JSON.stringify(sort);
+
+  // 排序變更 → 回第 1 頁（並讓下一次由我們程式性改 first 的 echo 被吞掉）
+  if (sortSig !== this.lastSortSig) {
+    this.lastSortSig = sortSig;
+    if (pageIndex !== 1) {
+      pageIndex = 1;
+      this._suppressNextLazy = true;
+      this.first = 0; // 讓 p-table UI 回到第一頁
+    }
+  }
+
+  // 同步頁碼&排序狀態（供右上 dropdown 與 paginator 顯示）
+  this.selectedPage = pageIndex;
+  this.queryStateService.setQueryState(this.tableKey + 'Sort', sort);
+  this.dt.totalRecords = this.totalRecords !== 0 ? this.totalRecords : this.data.length;
+
+  // 3) 去重：同一個 pageIndex|pageSize|sortSig 就不重打
+  const payload: LazyLoadEvent = { pageIndex, pageSize, SortBy: sort };
+  const key = `${pageIndex}|${pageSize}|${sortSig}`;
+  if (!force && key === this.lastEmitKey) return;
+  this.lastEmitKey = key;
+
+  // 4) 打 API：優先用 serverFetch，否則對外 emit 事件
+  if (this.serverFetch) {
+    this.loading = true; // [loading]="loading && data.length === 0"
+    this.serverFetch(payload).subscribe({
+      next: (res) => {
+        const rows = Array.isArray(res?.rows) ? res.rows : [];
+        this.data = rows;
+        this.dataChange.emit(this.data);
+
+        this.totalRecords = Number(res?.totalRecords ?? rows.length) || 0;
+
+        // 後端若回傳總計/小計，落地至對應 input
+        if (res?.externalTotals)    this.externalTotals = { ...res.externalTotals };
+        if (res?.externalSubtotals) this.externalSubtotals = { ...res.externalSubtotals };
+
+        // 依新 totalRecords 重算總頁/頁碼清單
+        this.calculateTotalPages();
+        this.loading = false;
+
+        // 清選取
+        this.selectedItems = [];
+        this.selectionChange.emit(this.selectedItems);
+        this.selectedItemsChange.emit(this.selectedItems);
+      },
+      error: (err) => {
+        this.loading = false;
+        this.serverError.emit(err);
+      }
+    });
+    return;
+  }
+
+  // 無 serverFetch：維持舊行為交給父層
+  this.lazyLoadData.emit(payload);
+}
+
 
   /* ======================= Header（原 TableCaption）相關 ======================= */
 

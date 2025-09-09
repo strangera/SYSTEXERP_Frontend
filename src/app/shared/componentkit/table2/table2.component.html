@@ -31,7 +31,7 @@
   [lazy]="lazy"
 
   tableStyleClass="h-full"
-  [styleClass]="'p-datatable-sm p-datatable-striped' + (IsPrint ? ' p-datatable-gridlines' : '')"
+ 
 
   [virtualScroll]="!IsPrint && groupRowsByArray.length === 0 && !showPaginator"
   [virtualScrollItemSize]="35"
@@ -48,6 +48,7 @@
   editMode="row"
   [groupRowsBy]="groupRowsByArray"
   rowGroupMode="subheader"
+  [styleClass]="'table-font-md p-datatable-striped' + (IsPrint ? ' p-datatable-gridlines' : '')"
 >
   <!-- ===== Caption / 工具列（原 TableCaption 內嵌） ===== -->
   <ng-template pTemplate="caption">
