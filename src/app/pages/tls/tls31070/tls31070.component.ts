@@ -256,7 +256,7 @@ export class TLS31070Component extends BasicQueryPageComponent<TLS31070Response>
   
         console.log('送出request請求', formValue);
         this.tls31070Service.queryTLS31070(formValue).pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(res => {
-          console.log('各櫃別之型態報表response', res.Data);
+          console.log('各型態別之型態報表response', res.Data);
           // this.data = res.Data;
           // this.totalRecords = res.TotalCount;
           // this.queryStateService.setQueryState(this.ProgNo, formValue);
