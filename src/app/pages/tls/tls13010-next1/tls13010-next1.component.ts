@@ -41,6 +41,8 @@ interface CategoryItem {
   imports: [MenubarComponent, ButtonComponent, NgIf, ProgressSpinnerModule, AccordionModule, ExpandableEditTableComponent, NgFor, DialogComponent]
 })
 export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> implements OnInit, OnDestroy {
+  forceEditMode: boolean = true;
+
   // 🆕 對話框相關屬性
   showCalculationDialog: boolean = false;
   calculationResult: any = null;
@@ -98,6 +100,11 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
   ) {
     super();
   }
+
+  get shouldForceEdit(): boolean {
+    return !this.isViewMode; // 檢視模式時關閉常駐編輯
+  }
+
 
   // ========== 🆕 欄位定義 getter (取代原有的屬性) ==========
   get contractInfoColumns(): ColumnDef[] {
@@ -1072,21 +1079,19 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
 
   // ========== 模式切換 ==========
   toggleCommonMode(): void {
-    // 顯示載入提示
-    this.loading = true;
+    // 直接切換模式
+    if (this.showMode === 'common') {
+      this.showMode = 'all';
+    } else {
+      this.showMode = 'common';
+    }
 
-    // 延遲執行，讓載入提示先顯示
-    setTimeout(() => {
-      if (this.showMode === 'common') {
-        this.showMode = 'all';
-      } else {
-        this.showMode = 'common';
-      }
+    // 只需要過濾資料，不需要載入提示
+    this.filterData();
 
-      this.filterData();
-      this.loading = false;
-      this.messageService.unblockUi();
-    }, 500); // 稍微加長延遲時間
+    // 可選：給用戶簡單的回饋
+    const modeText = this.showMode === 'common' ? '常用項目模式' : '全部項目模式';
+    this.messageService.infoBubble(`已切換至${modeText}`);
   }
 
   getCurrentDisplayMode(): string {

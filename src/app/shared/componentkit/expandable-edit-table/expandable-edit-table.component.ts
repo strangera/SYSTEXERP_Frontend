@@ -192,6 +192,7 @@ export interface ColumnDef {
 })
 export class ExpandableEditTableComponent implements OnInit, OnChanges {
   @ViewChild('dt') dt!: Table;
+  @Input() forceEditMode = false; // 強制編輯模式
   @Input() showActionColumn = true;  // 新增控制操作欄的屬性
   @Input() title: string = '';
   @Input() mainColumns: ColumnDef[] = [];
@@ -1563,7 +1564,7 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
     return colspan;
   }
 
-  // 🎯 新增：檢查欄位是否可編輯的方法
+  // 檢查欄位是否可編輯的方法
   isFieldEditable(column: ColumnDef, isEditing: boolean): boolean {
     // 如果欄位設為不可編輯，則永遠不可編輯
     if (column.editable === false) {
@@ -1574,21 +1575,38 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
     return isEditing && (column.editable === true || column.editable === undefined);
   }
 
-  // 🎯 新增：檢查欄位是否應該顯示為輸入控件
-  shouldShowInputControl(column: ColumnDef, isEditing: boolean): boolean {
+  // 檢查欄位是否應該顯示為輸入控件
+  shouldShowInputControl(column: ColumnDef, isEditing: boolean, rowData?: any): boolean {
+    // 如果開啟強制編輯模式，且欄位沒有明確禁止編輯
+    if (this.forceEditMode && column.editable !== false) {
+      return true;
+    }
+
+    // 直接編輯模式
     if (column.directEdit === true && column.editable !== false) {
       return true;
     }
+
+    // 原有邏輯：正在編輯且可編輯
     return this.isFieldEditable(column, isEditing);
   }
 
-  // 🎯 新增：檢查欄位是否應該顯示為純文字
-  shouldShowDisplayOnly(column: ColumnDef, isEditing: boolean): boolean {
+  // 檢查欄位是否應該顯示為純文字
+  shouldShowDisplayOnly(column: ColumnDef, isEditing: boolean, rowData?: any): boolean {
+    // 如果開啟強制編輯模式，且欄位沒有明確禁止編輯
+    if (this.forceEditMode && column.editable !== false) {
+      return false;
+    }
+
+    // 直接編輯模式
     if (column.directEdit === true && column.editable !== false) {
       return false;
     }
+
+    // 原有邏輯
     return !this.isFieldEditable(column, isEditing);
   }
+
 
   private cleanupInvalidSelections(): void {
     // 清理主表格的無效選取

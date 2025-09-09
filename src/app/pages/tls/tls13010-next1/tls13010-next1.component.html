@@ -60,8 +60,9 @@
 
             <!-- 使用 expandable-edit-table 組件 -->
             <div *ngIf="hasDataForType(capType)" class="col-12">
-              <app-expandable-edit-table [data]="fareData[capType]" [mainColumns]="getColumnsForType(capType)"
-                (buttonClick)="onButtonClick($event, capType)" [showCheckBox]="false"
+              <app-expandable-edit-table [data]="fareData[capType]" [forceEditMode]="shouldForceEdit"
+                [mainColumns]="getColumnsForType(capType)" (buttonClick)="onButtonClick($event, capType)"
+                [showCheckBox]="false"
                 (fieldChange)="onFieldChange($event.fieldName, $event.newValue, $event.rowData, capType)"
                 [showPaginator]="false" [showAddButton]="false" [showBatchDelete]="false" [loading]="loading"
                 [showActionColumn]="false" [dataKey]="'id'" [readonly]="isViewMode" [detailKey]="''"
