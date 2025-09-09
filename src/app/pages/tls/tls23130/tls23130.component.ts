@@ -31,6 +31,7 @@ import { of } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
 import { Table2Component } from '@shared/componentkit/table2/table2.component';
 
+
 @Component({
   selector: 'app-tls23130',
   templateUrl: './tls23130.component.html',
@@ -186,35 +187,111 @@ export class TLS23130Component extends BasicQueryPageComponent<any> {
       });
   }
 
-  /** 表格 lazy 事件（分頁/排序） */
-  override onLazyLoadData(event: LazyLoadEvent, form: FormGroup): void {
-    const currSort = JSON.stringify(form.value?.SortBy ?? []);
-    const nextSortRaw = event.SortBy ?? [];
-    const nextSort = this.ensureGroupFirst(nextSortRaw);
+// 提供給 Table2 的 lazy 載入函式（HTML 綁 [fetchData]="fetchTLS23130"）
+fetchTLS23130 = (evt: LazyLoadEvent) => {
+  const val = this.queryForm.getRawValue() as any;
 
-    const nextPageIndex = currSort !== JSON.stringify(nextSort)
-      ? 1
-      : (event.pageIndex ?? form.value.pageIndex ?? 1);
+  // 小工具
+  const toIso = (x: any) => {
+    if (!x) return undefined;
+    const d = typeof x === 'string' ? new Date(x) : (x as Date);
+    if (isNaN(d.getTime())) return undefined;
+    return new Date(d.getTime() - d.getTimezoneOffset() * 60000)
+      .toISOString()
+      .slice(0, 19);
+  };
+  const asArr = (x: any) => Array.isArray(x) ? x : (x == null || x === '' ? undefined : [x]);
 
-    form.patchValue({
-      pageIndex: nextPageIndex,
-      pageSize : event.pageSize ?? form.value.pageSize,
-      SortBy   : nextSort,
-    }, { emitEvent: false });
+  // 排序（事件優先），確保群組欄位在第一順位
+  const sortByRaw =
+    (Array.isArray(evt?.SortBy) && evt!.SortBy!.length) ? evt!.SortBy! :
+    (Array.isArray(val?.SortBy) && val!.SortBy!.length) ? val!.SortBy! :
+    this.defaultSort;
+  const sortBy = this.ensureGroupFirst(sortByRaw);
 
-    this.sortMeta = nextSort.map((s) => ({ ...s }));
+  // 分頁（事件優先）
+  const pageIndex = Number.isFinite(evt?.pageIndex) ? Number(evt!.pageIndex) : Number(val?.pageIndex ?? 1);
+  const pageSize  = Number.isFinite(evt?.pageSize)  ? Number(evt!.pageSize)  : Number(val?.pageSize  ?? 20);
 
-    const sig = JSON.stringify({
-      pageIndex: form.value.pageIndex,
-      pageSize : form.value.pageSize,
-      SortBy   : form.value.SortBy,
-    });
-    if (sig === this.lastQuerySig) return;
-    this.lastQuerySig = sig;
+  // 與 onSubmit 相同的 payload（✅ 不送 Offset / OrderBy）
+  const payload: any = {
+    TXN_DateStart: toIso(val?.TXN_DateStart),
+    TXN_DateEnd:   toIso(val?.TXN_DateEnd),
+    BNK_No:        (typeof val?.BNK_No === 'string' && val.BNK_No !== '') ? val.BNK_No : undefined,
+    tlt_building:  val?.tlt_building ?? undefined,
+    tlt_floor:     asArr(val?.tlt_floor),
+    org_id:        asArr(val?.org_id),
+    pageSize,
+    pageIndex,
+    SortBy: sortBy,
+  };
 
-    if (this.lazyTimer) clearTimeout(this.lazyTimer);
-    this.lazyTimer = setTimeout(() => this.onSubmit(form), 0);
-  }
+  return this.tls23130Service.queryTLS23130(payload).pipe(
+    map((res: any) => {
+      // 包裝層
+      const wrappers: any[] = Array.isArray(res?.Data)
+        ? res.Data
+        : (res?.Data ? [res.Data] : []);
+
+      const rows: any[] = [];
+      const subMap: Record<string, Record<string, number>> = {};
+      let wrapTotalPay = 0;
+      let sumPay = 0, sumHead = 0, sumEach = 0;
+
+      for (const w of wrappers) {
+        wrapTotalPay += Number(w?.TotalPayAmt ?? 0);
+
+        const details = Array.isArray(w?.tLS23130_Details) ? w.tLS23130_Details : [];
+        for (const it of details) {
+          const rec = { ...it } as any;
+
+          // 穩定 rowKey
+          const dateKey = String(rec.TXN_Date ?? '').slice(0, 19);
+          rec._rowKey = `${dateKey}|${rec.TXN_No ?? ''}|${rec.CRD_No ?? ''}`;
+
+          // 累加總計
+          const pay  = Number(rec.TXN_PayAmt ?? 0);
+          const head = Number(rec.EDC_InstHeadAmt ?? 0);
+          const each = Number(rec.EDC_InstEachAmt ?? 0);
+          sumPay  += Number.isFinite(pay)  ? pay  : 0;
+          sumHead += Number.isFinite(head) ? head : 0;
+          sumEach += Number.isFinite(each) ? each : 0;
+
+          // 小計（by tlt_no）
+          const gk = String(rec.tlt_no ?? 'UNKNOWN');
+          const g  = subMap[gk] ?? {
+            Subtotal_TXN_PayAmt: 0,
+            Subtotal_EDC_InstHeadAmt: 0,
+            Subtotal_EDC_InstEachAmt: 0,
+          };
+          g['Subtotal_TXN_PayAmt']      += Number.isFinite(pay)  ? pay  : 0;
+          g['Subtotal_EDC_InstHeadAmt'] += Number.isFinite(head) ? head : 0;
+          g['Subtotal_EDC_InstEachAmt'] += Number.isFinite(each) ? each : 0;
+          subMap[gk] = g;
+
+          rows.push(rec);
+        }
+      }
+
+      const totalRecords =
+        typeof res?.TotalCount === 'number' ? res.TotalCount : rows.length;
+
+      // 外部總計（優先採用後端 TotalPayAmt，沒有就用加總）
+      const externalTotals = {
+        Total_TXN_PayAmt: (wrapTotalPay > 0 ? wrapTotalPay : sumPay),
+        Total_EDC_InstHeadAmt: sumHead,
+        Total_EDC_InstEachAmt: sumEach,
+      };
+
+      // 外部小計
+      const externalSubtotals = subMap;
+      this.hasSubtotals = Object.keys(subMap).length > 0;
+
+      return { rows, totalRecords, externalTotals, externalSubtotals };
+    })
+  );
+};
+
 
   // 送出查詢（⚠️ 不送 Offset / OrderBy）
   onSubmit(form: FormGroup): void {

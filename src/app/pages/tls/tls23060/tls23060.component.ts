@@ -19,7 +19,7 @@ import { InputTextModule } from 'primeng/inputtext';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { TranslateModule } from '@ngx-translate/core';
 import { Table2Component } from '@shared/componentkit/table2/table2.component';
-import { finalize } from 'rxjs/operators';
+import { finalize, map } from 'rxjs/operators';
 import { ButtonModule } from 'primeng/button';
 import { HttpResponse } from '@angular/common/http';
 
@@ -253,6 +253,87 @@ export class TLS23060Component extends BasicQueryPageComponent<any> {
     if (this.lazyTimer) clearTimeout(this.lazyTimer);
     this.lazyTimer = setTimeout(() => this.onSubmit(form), 0);
   }
+  // 提供給 Table2 的 lazy 載入
+fetchTLS23060 = (evt: LazyLoadEvent) => {
+  const val = this.queryForm.getRawValue() as any;
+
+  // ---- 分頁/排序：事件優先，其次表單/預設 ----
+  const pageIndex = Number.isFinite(evt?.pageIndex) ? Number(evt!.pageIndex) : Number(val?.pageIndex ?? 1);
+  const pageSize  = Number.isFinite(evt?.pageSize)  ? Number(evt!.pageSize)  : Number(val?.pageSize  ?? 20);
+  const sortBy    = Array.isArray((evt as any)?.SortBy) && (evt as any).SortBy.length
+    ? (evt as any).SortBy
+    : (Array.isArray(val?.SortBy) && val.SortBy.length ? val.SortBy : this.defaultSort);
+
+  // ---- 組 payload（與 onSubmit 對齊）----
+  const payload: any = {
+    TXN_DateStart: this.toIso(val?.TXN_DateStart, false),
+    TXN_DateEnd:   this.toIso(val?.TXN_DateEnd, true),
+    rece_yn      : val?.rece_yn ?? undefined,
+    ECR_No       : (Array.isArray(val?.ECR_No) && val.ECR_No.length) ? val.ECR_No : undefined,
+    tlt_no       : (Array.isArray(val?.tlt_no) && val.tlt_no.length) ? val.tlt_no : undefined,
+    tlt_building : val?.tlt_building ?? undefined,
+    tlt_floor    : (Array.isArray(val?.tlt_floor) && val.tlt_floor.length) ? val.tlt_floor : undefined,
+    org_id       : (Array.isArray(val?.org_id) && val.org_id.length) ? val.org_id : undefined,
+    pageIndex,
+    pageSize,
+    SortBy: sortBy,
+  };
+
+  // 清理空值
+  Object.keys(payload).forEach((k) => {
+    const v = payload[k];
+    if (v === '' || v === null || v === undefined) delete payload[k];
+    if (Array.isArray(v) && v.length === 0) delete payload[k];
+  });
+
+  // 匯出沿用
+  this.historyRequestBody = { ...payload };
+
+  return this.tls23060Service.queryTLS23060(payload).pipe(
+    map((res: any) => {
+      const data = res?.Data;
+      const wrapper = Array.isArray(data) ? (data[0] ?? {}) : (data ?? {});
+
+      // ① rows（明細）
+      const details =
+        wrapper?.tLS23060Details ??
+        wrapper?.TLS23060Details ??
+        wrapper?.tls23060Details ??
+        [];
+
+      const rows = (Array.isArray(details) ? details : []).map((r: any, i: number) => ({
+        ...r,
+        _rowKey: `${r?.TXN_Date ?? ''}|${r?.ECR_No ?? ''}|${r?.tlt_no ?? ''}|${i}`,
+      }));
+
+      // ② externalTotals（表尾總計：依既有對應表從 wrapper 取值）
+      const externalTotals: Record<string, number> = {};
+      for (const [, totalKey] of Object.entries(this.detailTotalFieldMap)) {
+        externalTotals[totalKey] = Number(wrapper?.[totalKey] ?? 0);
+      }
+
+      // ③ externalSubtotals（群組小計：以 ECR_No 聚合）
+      const externalSubtotals: Record<string, Record<string, number>> = {};
+      const moneyFields = Object.keys(this.detailSubtotalFieldMap); // 直接用欄位對應的 key
+
+      for (const row of (Array.isArray(details) ? details : [])) {
+        const g = String(row?.ECR_No ?? 'UNKNOWN');
+        const bucket = (externalSubtotals[g] = externalSubtotals[g] || {} as Record<string, number>);
+        for (const f of moneyFields) {
+          const subKey = this.detailSubtotalFieldMap[f];   // 例如 'Subtotal_TXN_PayAmt10'
+          const n = Number(row?.[f] ?? 0);
+          bucket[subKey] = (bucket[subKey] || 0) + n;      // 中括號避免 TS4111
+        }
+      }
+
+      const totalRecords =
+        typeof res?.TotalCount === 'number' ? res.TotalCount : rows.length;
+
+      return { rows, totalRecords, externalTotals, externalSubtotals };
+    })
+  );
+};
+
 
   // 送出查詢
   onSubmit(form: FormGroup): void {
