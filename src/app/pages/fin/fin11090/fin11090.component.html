@@ -8,26 +8,26 @@
       <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
           <div class="col-12 md:col-4">
-            <app-calendar label="發票日期" controlName="invoice_date" [control]="queryForm.controls.invoice_date"
+            <app-calendar label="銷售日期" controlName="TXN_Date" [control]="queryForm.controls.TXN_Date"
               [submitted]="submitted">
             </app-calendar>
           </div>
           <div class="col-12 md:col-4">
-            <app-multi-select label="收銀機號" controlName="cashier_no" [options]="POS_NOSOptions" optionLabel="label"
-              optionValue="value" [control]="queryForm.controls.cashier_no" [submitted]="submitted" />
+            <app-multi-select label="收銀機號" controlName="ECR_No" [options]="POS_NOSOptions" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.ECR_No" [submitted]="submitted" />
           </div>
           <div class="col-12 md:col-4">
-            <app-input-text label="交易序號" controlName="txn_seq" [control]="queryForm.controls.txn_seq"
+            <app-input-text label="交易序號" controlName="TXN_No" [control]="queryForm.controls.TXN_No"
               [submitted]="submitted">
             </app-input-text>
           </div>
           <div class="col-12 md:col-4">
-            <app-input-text label="字軌" controlName="prefix" [control]="queryForm.controls.prefix"
+            <app-input-text label="字軌" controlName="TXN_GUITrack" [control]="queryForm.controls.TXN_GUITrack"
               [submitted]="submitted">
             </app-input-text>
           </div>
           <div class="col-12 md:col-4">
-            <app-input-text label="發票號碼" controlName="invoice_no" [control]="queryForm.controls.invoice_no"
+            <app-input-text label="發票號碼" controlName="TXN_GUINo" [control]="queryForm.controls.TXN_GUINo"
               [submitted]="submitted">
             </app-input-text>
           </div>
@@ -43,14 +43,14 @@
 <div class="card">
   <div class="col-12">
     <app-table tableKey="FIN11090" [data]="data" [columns]="columns" [selectedItems]="selectedItems"
-      (selectionChange)="selectedItems = $event" [showDelete]="false" dataKey="invoice_date"
-      [multiSortMeta]="[{ field: 'invoice_date', order: -1 }]" [totalRecords]="totalRecords"
+      (selectionChange)="selectedItems = $event" [showDelete]="false" dataKey="id"
+      [multiSortMeta]="[{ field: 'TXN_Date', order: -1 }]" [totalRecords]="totalRecords"
       (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [lazy]="true" [loading]="loading"
       [isRowSelectable]="isRowSelectable" [showManage]="false" [showCheckBox]="true" [showPaginator]="false">
     </app-table>
     <div class="grid justify-content-end gap-2 m-0 mt-2">
-      <app-button btnType="submit" (click)="onConfirm(selectedItems)"
-        [disabled]="selectedItems.length === 0">確認</app-button>
+      <app-button btnType="submit" (click)="onConfirm(selectedItems)" [disabled]="selectedItems.length === 0"
+        [loading]="confirmBtnLoading">確認</app-button>
     </div>
   </div>
 </div>

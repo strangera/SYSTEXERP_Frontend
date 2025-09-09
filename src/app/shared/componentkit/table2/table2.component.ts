@@ -243,7 +243,7 @@ export class Table2Component
   /* ======================= 生命週期 ======================= */
   ngOnInit(): void {
     this.ensureInitialGroupingSort();
-
+    this.lastSortSig = JSON.stringify(this.ensureGroupFirst(this.multiSortMeta));
     this.columns = (this.columns || []).map(col => ({ ...col, headerRow: col.headerRow ?? 1 }));
 
     this.currentPageService.currentPageProgNo$
@@ -286,9 +286,11 @@ export class Table2Component
 
       if (changes['columns'].firstChange) {
         setTimeout(() => {
-          this.rows = this.queryStateService.getQueryState(this.tableKey + 'rows')?.value ?? this.rows;
-          this.multiSortMeta = this.queryStateService.getQueryState(this.tableKey + 'Sort')?.value ?? this.multiSortMeta;
-        }, 300);
+  this.rows = this.queryStateService.getQueryState(this.tableKey + 'rows')?.value ?? this.rows;
+  this.multiSortMeta = this.queryStateService.getQueryState(this.tableKey + 'Sort')?.value ?? this.multiSortMeta;
+  // ✅ 同步簽章
+  this.lastSortSig = JSON.stringify(this.ensureGroupFirst(this.multiSortMeta));
+}, 300);
       }
     }
   }
@@ -384,26 +386,27 @@ loadDataLazy(event: TableLazyLoadEvent, force = false) {
   }
 
   // 2) 解析分頁與排序
-  const pageSize = event.rows && event.rows > 0 ? event.rows : this.rows;
-  let pageIndex  = (event.first ?? 0) / pageSize + 1;
+const pageSize = event.rows && event.rows > 0 ? event.rows : this.rows;
+let pageIndex  = (event.first ?? 0) / pageSize + 1;
 
-  const sortRaw =
-    event.multiSortMeta ??
-    (event as any).multisortmeta ??
-    (event.sortField ? [{ field: event.sortField, order: event.sortOrder }] : []);
+const sortRaw = event.multiSortMeta ?? (event as any).multisortmeta ??
+  (event.sortField ? [{ field: event.sortField, order: event.sortOrder }] : []);
 
-  const sort    = this.ensureGroupFirst(sortRaw);
-  const sortSig = JSON.stringify(sort);
+const sort    = this.ensureGroupFirst(sortRaw);
+const sortSig = JSON.stringify(sort);
 
-  // 排序變更 → 回第 1 頁（並讓下一次由我們程式性改 first 的 echo 被吞掉）
-  if (sortSig !== this.lastSortSig) {
-    this.lastSortSig = sortSig;
-    if (pageIndex !== 1) {
-      pageIndex = 1;
-      this._suppressNextLazy = true;
-      this.first = 0; // 讓 p-table UI 回到第一頁
-    }
+// ✅ 第一次先「建簽章、不回第一页」
+if (!this.lastSortSig) {
+  this.lastSortSig = sortSig;
+} else if (sortSig !== this.lastSortSig) {
+  // ✅ 之後才把「排序變更」視為要回第 1 頁
+  this.lastSortSig = sortSig;
+  if (pageIndex !== 1) {
+    pageIndex = 1;
+    this._suppressNextLazy = true;
+    this.first = 0;
   }
+}
 
   // 同步頁碼&排序狀態（供右上 dropdown 與 paginator 顯示）
   this.selectedPage = pageIndex;
@@ -842,4 +845,5 @@ export(type: 'PDF' | 'Excel') {
   this.exportStatus = type;
   this.exportDialog = true;
 }
+
 }

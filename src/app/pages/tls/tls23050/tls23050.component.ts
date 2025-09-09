@@ -7,7 +7,7 @@ import { TypeService } from '../../../service/basic/type.service';
 import { ECRNoService } from '../../../service/basic/ECRNo.service';
 import { FloorService } from '../../../service/basic/floor.service';
 import { Tls11010Service } from '../../../service/api/tls/tls11010.service';
-import { finalize } from 'rxjs/operators';
+import { finalize, map } from 'rxjs/operators';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { AccordionModule } from 'primeng/accordion';
 import { RadiobuttonComponent } from '../../../shared/componentkit/radiobutton/radiobutton.component';
@@ -116,38 +116,136 @@ export class TLS23050Component extends BasicQueryPageComponent<any> {
     });
   }
 
-  /** 表格 lazy 事件（只同步分頁/排序，不重複打 API） */
-  override onLazyLoadData(event: LazyLoadEvent, form: FormGroup): void {
-    const currSort = JSON.stringify(form.value?.SortBy ?? []);
-    const nextSort = event.SortBy ?? this.defaultSort;
+// 提供給 Table2 的 lazy 載入
+fetchTLS23050 = (evt: LazyLoadEvent) => {
+  const val = this.queryForm.getRawValue() as any;
 
-    const nextPageIndex =
-      currSort !== JSON.stringify(nextSort)
-        ? 1
-        : (event.pageIndex ?? form.value.pageIndex ?? 1);
+  // ---- 分頁/排序：事件優先，其次表單/預設 ----
+  const pageIndex = Number.isFinite(evt?.pageIndex) ? Number(evt!.pageIndex) : Number(val?.pageIndex ?? 1);
+  const pageSize  = Number.isFinite(evt?.pageSize)  ? Number(evt!.pageSize)  : Number(val?.pageSize  ?? 20);
+  const sortBy    = Array.isArray((evt as any)?.SortBy) && (evt as any).SortBy.length
+    ? (evt as any).SortBy
+    : (Array.isArray(val?.SortBy) && val.SortBy.length ? val.SortBy : this.defaultSort);
 
-    form.patchValue(
-      {
-        pageIndex: nextPageIndex,
-        pageSize: event.pageSize ?? form.value.pageSize,
-        SortBy: nextSort,
-      },
-      { emitEvent: false },
-    );
+  // ---- 單日 → 起迄（起 00:00:00；迄 23:59:59）----
+  const TXN_DateStart = this.toIso(val?.TXN_Date, false);
+  const TXN_DateEnd   = this.toIso(val?.TXN_Date, true);
 
-    this.sortMeta = (nextSort ?? []).map(s => ({ ...s }));
+  // ---- 組 payload（與 onSubmit 對齊）----
+  const payload: any = {
+    TXN_DateStart,
+    TXN_DateEnd,
+    rece_yn      : val?.rece_yn ?? undefined,
+    tlt_building : val?.tlt_building ?? undefined,
+    tlt_floor    : (Array.isArray(val?.tlt_floor) && val.tlt_floor.length) ? val.tlt_floor : undefined,
+    org_id       : (Array.isArray(val?.org_id) && val.org_id.length) ? val.org_id : undefined,
+    ECR_No       : (Array.isArray(val?.ECR_No) && val.ECR_No.length) ? val.ECR_No : undefined,
 
-    const sig = JSON.stringify({
-      pageIndex: form.value.pageIndex,
-      pageSize: form.value.pageSize,
-      SortBy: form.value.SortBy,
-    });
-    if (sig === this.lastQuerySig) return;
-    this.lastQuerySig = sig;
+    pageIndex,
+    pageSize,
+    SortBy: sortBy,
+  };
 
-    if (this.lazyTimer) clearTimeout(this.lazyTimer);
-    this.lazyTimer = setTimeout(() => this.onSubmit(form), 0);
-  }
+  // 清空空值
+  Object.keys(payload).forEach((k) => {
+    const v = payload[k];
+    if (v === '' || v === null || v === undefined) delete payload[k];
+    if (Array.isArray(v) && v.length === 0) delete payload[k];
+  });
+
+  // ---- 呼叫 API 並轉成 Table2 需要的結構 ----
+  return this.tls23050Service.queryTLS23050(payload).pipe(
+    map((res: any) => {
+      const first =
+        Array.isArray(res?.Data) && res.Data.length > 0
+          ? res.Data[0]
+          : (res?.Data ?? null);
+
+      // ① rows（明細）
+      const details = Array.isArray(first?.tLS23050Details) ? first.tLS23050Details : [];
+      const rows = details.map((r: any, i: number) => ({
+        ...r,
+        _rowKey: `${r?.ECR_No ?? ''}|${r?.tlt_no ?? ''}|${i}`,
+      }));
+
+      // ② externalTotals（總計：直接吃後端 total* 欄位）
+      const externalTotals: Record<string, number> = {
+        totalPayAmt   : Number(first?.totalPayAmt   ?? 0),
+        totalPayAmt10 : Number(first?.totalPayAmt10 ?? 0),
+        totalPayAmt41 : Number(first?.totalPayAmt41 ?? 0),
+        totalPayAmt42 : Number(first?.totalPayAmt42 ?? 0),
+        totalPayAmt12 : Number(first?.totalPayAmt12 ?? 0),
+        totalPayAmt81 : Number(first?.totalPayAmt81 ?? 0),
+        totalPayAmt43 : Number(first?.totalPayAmt43 ?? 0),
+        totalPayAmt44 : Number(first?.totalPayAmt44 ?? 0),
+        totalPayAmt14 : Number(first?.totalPayAmt14 ?? 0),
+        totalPayAmt82 : Number(first?.totalPayAmt82 ?? 0),
+        totalPayAmt52 : Number(first?.totalPayAmt52 ?? 0),
+        totalPayAmt20 : Number(first?.totalPayAmt20 ?? 0),
+        totalPayAmt62 : Number(first?.totalPayAmt62 ?? 0),
+        totalPayAmt77 : Number(first?.totalPayAmt77 ?? 0),
+        totalPayAmt71 : Number(first?.totalPayAmt71 ?? 0),
+        totalPayAmt30 : Number(first?.totalPayAmt30 ?? 0),
+        totalPayAmt73 : Number(first?.totalPayAmt73 ?? 0),
+        totalPayAmt72 : Number(first?.totalPayAmt72 ?? 0),
+        totalPayAmt74 : Number(first?.totalPayAmt74 ?? 0),
+        totalPayAmt75 : Number(first?.totalPayAmt75 ?? 0),
+        totalPayAmt76 : Number(first?.totalPayAmt76 ?? 0),
+        totalPayAmt24 : Number(first?.totalPayAmt24 ?? 0),
+        totalPayAmt25 : Number(first?.totalPayAmt25 ?? 0),
+        totalPayAmt07 : Number(first?.totalPayAmt07 ?? 0),
+        totalPayAmt55 : Number(first?.totalPayAmt55 ?? 0),
+        totalPayAmt83 : Number(first?.totalPayAmt83 ?? 0),
+        totalPayAmt78 : Number(first?.totalPayAmt78 ?? 0),
+        totalPayAmt79 : Number(first?.totalPayAmt79 ?? 0),
+        totalPayAmt21 : Number(first?.totalPayAmt21 ?? 0),
+        totalPayAmt53 : Number(first?.totalPayAmt53 ?? 0),
+        totalPayAmt56 : Number(first?.totalPayAmt56 ?? 0),
+        totalPayAmt57 : Number(first?.totalPayAmt57 ?? 0),
+        totalPayAmt58 : Number(first?.totalPayAmt58 ?? 0),
+        totalPayAmt59 : Number(first?.totalPayAmt59 ?? 0),
+        totalPayAmt60 : Number(first?.totalPayAmt60 ?? 0),
+        totalPayAmt22 : Number(first?.totalPayAmt22 ?? 0),
+        totalPayAmt23 : Number(first?.totalPayAmt23 ?? 0),
+        totalPrePayAmt: Number(first?.totalPrePayAmt ?? 0),
+        totalOverAmt  : Number(first?.totalOverAmt   ?? 0),
+        totalReturnAmt: Number(first?.totalReturnAmt ?? 0),
+        totalCancelAmt: Number(first?.totalCancelAmt ?? 0),
+      };
+
+      // ③ externalSubtotals（以 ECR_No 群組的小計）
+      const moneyFields = [
+        'TXN_TotPayAmt',
+        'TXN_PayAmt10','TXN_PayAmt41','TXN_PayAmt42','TXN_PayAmt12','TXN_PayAmt81',
+        'TXN_PayAmt43','TXN_PayAmt44','TXN_PayAmt14','TXN_PayAmt82','TXN_PayAmt52',
+        'TXN_PayAmt20','TXN_PayAmt62','TXN_PayAmt77','TXN_PayAmt71','TXN_PayAmt30',
+        'TXN_PayAmt73','TXN_PayAmt72','TXN_PayAmt74','TXN_PayAmt75','TXN_PayAmt76',
+        'TXN_PayAmt24','TXN_PayAmt25','TXN_PayAmt07','TXN_PayAmt55','TXN_PayAmt83',
+        'TXN_PayAmt78','TXN_PayAmt79','TXN_PayAmt21','TXN_PayAmt53','TXN_PayAmt56',
+        'TXN_PayAmt57','TXN_PayAmt58','TXN_PayAmt59','TXN_PayAmt60','TXN_PayAmt22',
+        'TXN_PayAmt23',
+        'TXN_PrePayAmt','TXN_OverAmt','TXN_ReturnAmt','TXN_CancelAmt',
+      ];
+
+      const externalSubtotals: Record<string, Record<string, number>> = {};
+      for (const row of details) {
+        const g = String(row?.ECR_No ?? 'UNKNOWN');
+        const bucket = (externalSubtotals[g] = externalSubtotals[g] || {} as Record<string, number>);
+        for (const f of moneyFields) {
+          const key = `Subtotal_${f}`;
+          const n = Number(row?.[f] ?? 0);
+          bucket[key] = (bucket[key] || 0) + n; // 中括號避免 TS4111
+        }
+      }
+
+      const totalRecords =
+        typeof res?.TotalCount === 'number' ? res.TotalCount : rows.length;
+
+      return { rows, totalRecords, externalTotals, externalSubtotals };
+    })
+  );
+};
+
 
   // 送出查詢
   onSubmit(form: FormGroup): void {

@@ -4,30 +4,56 @@
   </div>
 
   <p-accordion>
-    <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
-      [headerStyleClass]="'query-accordionTab'">
-      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
+    <p-accordionTab
+      header="{{ 'query-conditions' | translate }}"
+      [selected]="true"
+      class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'"
+    >
+      <form
+        [formGroup]="queryForm"
+        id="queryForm"
+        (ngSubmit)="onSubmit(queryForm)"
+      >
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-calendar label="銷售日期" controlName="TXN_Date" calendarType="dateOne"
-              [control]="queryForm.controls.TXN_Date" [submitted]="submitted"></app-calendar>
+            <app-calendar
+              label="銷售日期"
+              controlName="TXN_Date"
+              calendarType="dateOne"
+              [control]="queryForm.controls.TXN_Date"
+              [submitted]="submitted"
+            ></app-calendar>
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown-range label="收銀機號" controlName="dropdownRange"
-              [startControl]="queryForm.controls.ECR_No_Start" [endControl]="queryForm.controls.ECR_No_End"
-              [submitted]="submitted" [options]="ECRNoOptions" optionLabel="label"
-              optionValue="value"></app-dropdown-range>
+            <app-dropdown-range
+              label="收銀機號"
+              controlName="dropdownRange"
+              [startControl]="queryForm.controls.ECR_No_Start"
+              [endControl]="queryForm.controls.ECR_No_End"
+              [submitted]="submitted"
+              [options]="ECRNoOptions"
+              optionLabel="label"
+              optionValue="value"
+            ></app-dropdown-range>
           </div>
 
           <div class="col-12 md:col-6 lg:col-4">
-            <label for="status1">差異為0是否列出</label>
-            <p-dropdown [options]="statusOptions" optionLabel="label" optionValue="value" controlName="IsZeroShow"
-              [formControl]="queryForm.controls.status1" placeholder="請選擇"></p-dropdown>
+            <label for="IsZeroShow">差異為0是否列出</label>
+            <p-dropdown
+              [options]="statusOptions"
+              optionLabel="label"
+              optionValue="value"
+              formControlName="IsZeroShow"
+              placeholder="請選擇"
+            ></p-dropdown>
           </div>
         </div>
 
-        <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+        <div
+          class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
+        >
           <app-button btnType="clear" [form]="queryForm"></app-button>
           <app-button btnType="query" [loading]="loading"></app-button>
         </div>
@@ -37,14 +63,32 @@
 </div>
 <div class="card">
   <div class="col-12">
-    <app-table tableKey="TLS22010" [data]="data" [columns]="selectedColumns" [columnGroup]="columnGroup"
-      [multiSortMeta]="[{ field: 'ECR_No', order: 1 }]" [totalRecords]="totalRecords"
-      (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [lazy]="true" [loading]="loading"
-      [showManage]="false" [showDelete]="false" [showReportMode]="false">
+    <app-table
+      tableKey="TLS22010"
+      [data]="data"
+      [columns]="selectedColumns"
+      [columnGroup]="columnGroup"
+      [multiSortMeta]="[{ field: 'ECR_No', order: 1 }]"
+      [totalRecords]="totalRecords"
+      (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"
+      [lazy]="true"
+      [loading]="loading"
+      [showManage]="false"
+      [showDelete]="false"
+      [showReportMode]="false"
+    >
       <header>
-        <p-button pButton tooltipPosition="top" pTooltip="匯出Excel" [style.width]="'35px'" [style.height]="'35px'"
-          class="p-button-rounded p-button-text p-button-info" icon="fa-regular fa-file-lines"
-          [disabled]="!canPerformAction('70')" (click)="exportReport()" />
+        <p-button
+          pButton
+          tooltipPosition="top"
+          pTooltip="匯出Excel"
+          [style.width]="'35px'"
+          [style.height]="'35px'"
+          class="p-button-rounded p-button-text p-button-info"
+          icon="fa-regular fa-file-lines"
+          [disabled]="!canPerformAction('70')"
+          (click)="exportReport()"
+        />
       </header>
     </app-table>
   </div>

@@ -1,1 +1,59 @@
-<p>tls2g020-cru works!</p>
+<div class="card">
+  <div class="flex gap-2 mb-2">
+    <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
+    <app-button btnType="back" (click)="onCancel()"></app-button>
+  </div>
+  <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
+    <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
+      <div class="grid p-fluid">
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text
+            label="年度"
+            controlName="budget_yymm"
+            [control]="dataForm.controls.budget_yymm"
+            [submitted]="submitted"
+          ></app-input-text>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-dropdown
+            label="專櫃編號"
+            controlName="TLT_NoList"
+            [control]="dataForm.controls.tlt_no_tlt_name"
+            [submitted]="submitted"
+            [options]="tltNoOptions"
+            optionLabel="label"
+            optionValue="value"
+          />
+        </div>
+      </div>
+    </form>
+    <hr>
+    <ng-container *ngIf="editMode === 'month'">
+      <app-table
+        tableKey="id"
+        [data]="data"
+        (edit)="onMonthEdit($event)"
+        [columns]="columns"
+        [loading]="loading"
+        [showCheckBox]="false"
+        [showDetail]="false"
+        [showCaption]="false"
+      ></app-table>
+    </ng-container>
+    <ng-container *ngIf="editMode === 'day'">
+      <div class="grid p-fluid">
+        <div class="col-3">
+          <h3>{{ currentMonthData?.budget_yymm }}日期編輯</h3>
+        </div>
+        <div class="col-3" *ngFor="let day of daysInMonth">
+          <span>{{ day }}日</span>
+          <input
+            type="number"
+            [(ngModel)]="currentMonthData.days[day]"
+            class="p-inputtext"
+          />
+        </div>
+      </div>
+    </ng-container>
+  </p-panel>
+</div>

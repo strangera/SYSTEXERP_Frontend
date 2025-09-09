@@ -1,7 +1,7 @@
 import { Component } from '@angular/core';
 import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { HttpResponse } from '@angular/common/http';
-import { finalize } from 'rxjs/operators';
+import { finalize, map } from 'rxjs/operators';
 
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { createPaginationConfig, LazyLoadEvent, formatDateToYYYY_MM_DD } from '../../../shared/componentkit/table/table.model';
@@ -187,31 +187,60 @@ export class TLS23080Component extends BasicQueryPageComponent<any> {
     });
   }
 
-  /** 表格 lazy 事件（分頁/排序） */
-  override onLazyLoadData(event: LazyLoadEvent, form: FormGroup): void {
-    const currSort = JSON.stringify(form.value?.SortBy ?? []);
-    const nextSort = JSON.stringify(event.SortBy ?? []);
-    const nextPageIndex = currSort !== nextSort ? 1 : (event.pageIndex ?? form.value.pageIndex ?? 1);
+  // 提供給 Table2 的 lazy 載入函式（HTML 綁 [fetchData]="fetchTLS23080"）
+fetchTLS23080 = (evt: LazyLoadEvent) => {
+  const formVal = this.queryForm.getRawValue() as any;
 
-    form.patchValue({
-      pageIndex: nextPageIndex,
-      pageSize : event.pageSize ?? form.value.pageSize,
-      SortBy   : event.SortBy ?? form.value.SortBy,
-    }, { emitEvent: false });
+  // 事件優先，其次沿用表單/預設
+  const pageIndex =
+    Number.isFinite(evt?.pageIndex) ? Number(evt!.pageIndex) : Number(formVal?.pageIndex ?? 1);
+  const pageSize =
+    Number.isFinite(evt?.pageSize) ? Number(evt!.pageSize) : Number(formVal?.pageSize ?? 20);
+  const sortBy =
+    Array.isArray((evt as any)?.SortBy) && (evt as any).SortBy.length
+      ? (evt as any).SortBy
+      : (Array.isArray(formVal?.SortBy) && formVal.SortBy.length ? formVal.SortBy : this.defaultSort);
 
-    this.sortMeta = (event.SortBy ?? []).map(s => ({ ...s }));
+  // 用既有 buildPayload 組參數（不帶 Offset/OrderBy），但覆寫分頁/排序
+  const payload = this.buildPayload({
+    ...formVal,
+    pageIndex,
+    pageSize,
+    SortBy: sortBy,
+  });
 
-    const sig = JSON.stringify({
-      pageIndex: form.value.pageIndex,
-      pageSize : form.value.pageSize,
-      SortBy   : form.value.SortBy,
-    });
-    if (sig === this.lastQuerySig) return;
-    this.lastQuerySig = sig;
+  return this.tls23080Service.queryTLS23080(payload).pipe(
+    map((res: any) => {
+      // Data 可能是陣列或單一物件
+      const wrappers = Array.isArray(res?.Data) ? res.Data : (res?.Data ? [res.Data] : []);
 
-    if (this.lazyTimer) clearTimeout(this.lazyTimer);
-    this.lazyTimer = setTimeout(() => this.onSubmit(form), 0);
-  }
+      // ===== 明細 rows =====
+      const rows = wrappers
+        .flatMap((g: any) => (Array.isArray(g?.tLS23080_Details) ? g.tLS23080_Details : []))
+        .map((d: any, i: number) => ({
+          ...d,
+          TXN_Date: d?.TXN_Date ? formatDateToYYYY_MM_DD(d.TXN_Date) : d?.TXN_Date,
+          _rowKey: `${d?.TXN_Date ?? ''}|${i}`,
+        }));
+
+      const totalRecords =
+        typeof res?.TotalCount === 'number' ? res.TotalCount : rows.length;
+
+      // ===== 表尾總計（取第一包的 Total* 欄位）=====
+      const first = wrappers[0] ?? {};
+      const externalTotals: Record<string, number> = {};
+      Object.values(this.detailTotalFieldMap).forEach((apiKey) => {
+        externalTotals[apiKey] = Number(first?.[apiKey] ?? 0);
+      });
+
+      // 本頁不需要小計
+      const externalSubtotals: Record<string, Record<string, number>> = {};
+
+      return { rows, totalRecords, externalTotals, externalSubtotals };
+    })
+  );
+};
+
 
   onSubmit(form: FormGroup): void {
     this.handleSubmit(form, () => {
@@ -447,4 +476,20 @@ export class TLS23080Component extends BasicQueryPageComponent<any> {
 
     { field: 'TXN_TotPayAmt', header: '總金額', visible: true, style: 'text-right', format: this.moneyFormat.bind(this), isTotal: true },
   ];
+
+private toIso(dateLike: any): string {
+  if (!dateLike) return '';
+  const d = new Date(dateLike);
+  if (isNaN(d.getTime())) return '';
+  // 砍掉時區影響，輸出 yyyy-MM-ddTHH:mm:ss
+  return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 19);
+}
+
+onViewTLS23080(row: any) {
+  // 你的表格把 TXN_Date 轉成 "yyyy/MM/dd" 了，所以這裡還原成 ISO
+  const iso = this.toIso(row?.TXN_Date); // e.g. 2025-09-09T00:00:00
+  this.router.navigate(['/account/tls/tls23080cru'], {
+    state: { criteria: { TXN_Date: iso } }
+  });
+}
 }

@@ -111,22 +111,39 @@ export class FIN13080Component extends BasicQueryPageComponent<any> implements O
     });
   }
 
-  // 刪除（或更新）
-  // onDelete(rowData: any[]) {
-  //   this.messageService.confirm({
-  //     header: '是否確認刪除',
-  //     accept: () => {
-  //       this.fin13080Service.updateFIN13080({
-  //         idList: rowData.map(item => item.id)
-  //       }).subscribe((res) => {
-  //         if (res.Status === '0000') {
-  //           this.messageService.successBubble('刪除成功');
-  //           this.onSubmit(this.queryForm);
-  //         } else {
-  //           this.messageService.errorBubble(res.Message);
-  //         }
-  //       });
-  //     }
-  //   });
-  // }
+
+  onDelete(rowData: any[]) {
+    if (!rowData || rowData.length === 0) {
+      this.messageService.warnBubble('請先選擇要刪除的資料');
+      return;
+    }
+
+    this.messageService.confirm({
+      header: '是否確認刪除',
+      accept: () => {
+        const payload = {
+          IDs: rowData.map(item => ({
+            ID: item.ID,
+            DataType: item.DataType,
+            InvoiceType: item.InvoiceType
+          }))
+        };
+
+        console.log('FIN13080 刪除 payload:', payload);
+
+        this.fin13080Service.updateFIN13080(payload).subscribe((res) => {
+          if (res.Status === '0000') {
+            this.messageService.successBubble('刪除成功');
+            this.onSubmit(this.queryForm);
+          } else {
+            this.messageService.errorBubble(res.Message);
+          }
+        });
+      }
+    });
+  }
+
+
+
+
 }

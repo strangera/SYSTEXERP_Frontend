@@ -1,0 +1,22 @@
+.table-with-label {
+  display: flex;
+
+  .table-label {
+    background-color: var(--table-header-bg-group) !important;
+    padding: 0.2rem;
+    font-size: 12px;
+    color: #374151;
+    border: 2px solid var(--surface-d);
+    border-right: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    white-space: nowrap;
+    align-self: stretch; // 讓標籤自動撐滿高度
+  }
+
+  app-table {
+    flex: 1;
+    overflow: hidden; // 確保內容不會溢出
+  }
+}
