@@ -12,14 +12,14 @@ export interface IQueryFin21020Request {
   PageSize?: number;
   PageIndex?: number;
   SortBy?: SortMeta[];
-  BNK_No?: string;
-  Remit_BAmount_Start?: number;
-  Remit_BAmount_End?: number;
-  Remit_UAmount_Start?: number;
-  Remit_UAmount_End?: number;
-  Remit_Fee?: number;
-  Comp_Remit_Fee?: number;
-  Cash_Back_Amt?: number;
+  BNK_No?: string | null;
+  Remit_BAmount_Start?: number | null;
+  Remit_BAmount_End?: number | null;
+  Remit_UAmount_Start?: number | null;
+  Remit_UAmount_End?: number | null;
+  Remit_Fee?: number | null;
+  Comp_Remit_Fee?: number | null;
+  Cash_Back_Amt?: number | null;
 }
 
 /** BankServiceRate 資料表的單筆資料介面 */

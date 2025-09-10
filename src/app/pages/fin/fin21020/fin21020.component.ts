@@ -1,5 +1,5 @@
 import { ExcelColumn, ExcelExportService } from './../../../shared/service/excel-export.service';
-import { Component, OnInit, signal } from '@angular/core';
+import { Component, OnInit, signal, ViewChild } from '@angular/core';
 import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
@@ -15,17 +15,21 @@ import { finalize } from 'rxjs';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { DropDownListService, IDropdownItem } from '@service/utility/dropDownList.service';
 import { DialogComponent } from '@shared/componentkit/dialog/dialog.component';
-
+import { Table, TableLazyLoadEvent, TableModule } from 'primeng/table';
+import { CarService } from './carservice';
+import { SkeletonModule } from 'primeng/skeleton';
+import { NgFor } from '@angular/common';
 // 1.2.1.2 費率對照維護
 @Component({
   selector: 'app-fin21020',
   templateUrl: './fin21020.component.html',
   standalone: true,
-  imports: [DialogComponent, MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, DropdownComponent, InputNumberRangeComponent, TableComponent, TranslateModule]
+  providers: [CarService],
+  imports: [NgFor, SkeletonModule, TableModule, DialogComponent, MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, DropdownComponent, InputNumberRangeComponent, TableComponent, TranslateModule]
 })
 export class FIN21020Component extends BasicQueryPageComponent<IFin21020Data> implements OnInit {
   queryForm = this.formBuilder.nonNullable.group({
-    BNK_No: [null], // 公司銀行科目代號
+    BNK_No: [null as string | null], // 公司銀行科目代號
     Remit_BAmount_Start: [null as number | null, [Validators.max(9999999999)]], // 金額下限 - 轉帳最低金額(起)
     Remit_BAmount_End: [null as number | null, [Validators.max(9999999999)]], // 金額下限 - 轉帳最低金額(迄)
     Remit_UAmount_Start: [null as number | null, [Validators.max(9999999999)]], // 金額上限 - 轉帳最高金額(起)
@@ -37,6 +41,7 @@ export class FIN21020Component extends BasicQueryPageComponent<IFin21020Data> im
   });
   totalRecords = 0;
   data: IFin21020Data[] = [];
+  virtualData: IFin21020Data[] = [];
   selectedItems: IFin21020Data[] = [];
   columns: Column[] = [
     { field: 'BNK_No', header: '公司銀行科目代號' },
@@ -54,7 +59,7 @@ export class FIN21020Component extends BasicQueryPageComponent<IFin21020Data> im
   constructor(
     private readonly dropDownListService: DropDownListService,
     private readonly fin21020Service: Fin21020Service, // 注入新的 service
-    private readonly excelExportService: ExcelExportService
+    private readonly excelExportService: ExcelExportService,
   ) {
     super();
   }
@@ -66,25 +71,66 @@ export class FIN21020Component extends BasicQueryPageComponent<IFin21020Data> im
     });
     // 監聽，當 BNK_No 變化時，並且變化的值是下拉選單中的值，延遲並打API
     this.dialogForm.get('BNK_No')?.valueChanges.pipe(untilDestroyed(this)).subscribe(bnkNo => {
-      if (bnkNo && this.bankCodeOptions.some(item => item.No === bnkNo)) {
-        this.dataDialog = this.bankCodeOptions.filter(item => item.No !== bnkNo);
-      } else {
-        this.dataDialog = [];
-      }
+      this.dataDialog = this.bankCodeOptions.filter(item => item.No !== bnkNo) ?? [];
     });
   }
 
   // ----------------------------------------------------------------
+  @ViewChild('pTable') pTable!: Table;
+  private lastQueryBody: any;
+  private firstLoad = true;
+  loadDataLazy(event: TableLazyLoadEvent) {// 一開始我根本沒做onSubmit 就會觸發loadDataLazy，應該要提交後才可以觸發，所以一開始應該table甚麼資料都不能有
+    console.log('📄 loadDataLazy 收到分頁事件:', event);
+    if (this.firstLoad && this.totalRecords === 0) {
+      this.firstLoad = false;
+      return;
+    }
+    // 如果沒有查詢條件，不執行後續邏輯
+    if (!this.lastQueryBody) {
+      return;
+    }
+    // --- 快取邏輯 ---
+    const pageSize = event.rows;
+    if (this.virtualData.length > 0) {
+      const requestedDataSlice = this.virtualData.slice(event.first, (event.first ?? 0) + (pageSize ?? 20));
+      if (requestedDataSlice.every(item => item !== null)) {
+        return;
+      }
+    }
+    // --- 快取邏輯結束 ---
+    const body = {
+      ...this.lastQueryBody, // 使用最後一次查詢的條件
+      pageIndex: Math.ceil((event.first ?? 0) / (pageSize ?? 20) + 1),
+      pageSize: pageSize,
+      multiSortMeta: event.multiSortMeta
+    };
+    this.loading = true;
+    this.fin21020Service.queryFIN21020(body).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(res => {
+      this.totalRecords = res.TotalCount;
+      // 確保 virtualData 陣列的長度與總筆數一致
+      if (this.virtualData.length !== this.totalRecords) {
+        this.virtualData = Array(this.totalRecords).fill(null);
+      }
+      this.virtualData.splice((event.first ?? 0), (event.rows ?? 0), ...res.Data);
+      if (event.forceUpdate) { event.forceUpdate(); }
+    })
+  }
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
+      this.lastQueryBody = frm.value; // 保存查詢條件
       this.fin21020Service.queryFIN21020(frm.value).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(res => {
-        this.data = res.Data;
-        this.totalRecords = res.TotalCount;
+        this.totalRecords = res.TotalCount; // 1. 先設定總筆數
+        // this.virtualData.splice(0, res.Data.length, ...res.Data); // 3. 將第一頁資料填入這個虛擬陣列
+        this.virtualData = Array.from({ length: this.totalRecords }); // 2. 根據總筆數初始化虛擬陣列
+        // 這行可以移除，因為 data 已經被 virtualData 替代了
+        // this.data = res.Data;
         this.queryStateService.setQueryState(this.ProgNo, frm.value);
-      })
+        // 手動觸發一次表格載入事件
+        this.pTable.reset();
+      });
     });
   }
-
+  // ----------------------------------------------------------------
   onDelete(selectedRows: IFin21020Data[]) {
     // 使用 Set 物件來獲取不重複的 BNK_No 列表
     const uniqueBnkNos = [...new Set(selectedRows.map(row => row.BNK_No))];

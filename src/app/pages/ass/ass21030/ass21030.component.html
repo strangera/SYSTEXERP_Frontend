@@ -60,18 +60,19 @@
 <div class="card">
   <div class="col-12">
     <app-table [showCheckBox]="true"
-               [data]="data"
-               [dataKey]="'ID'"
-               [tableKey]="'ASS21030'"
-               [columns]="columns"
-               [totalRecords]="totalRecords"
-               [showManage]="false"
-               [showCheckBox]="false"
-               (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"
-               [lazy]="true"
-               [loading]="loading"
-               (edit)="onEdit($event)"
-               (delete)="onDelete($event)"
-               (detail)="onDetail($event)"></app-table>
+      [data]="data"
+      [dataKey]="'ID'"
+      [tableKey]="'ASS21030'"
+      [columns]="columns"
+      [totalRecords]="totalRecords"
+      [showManage]="false"
+      [showCheckBox]="false"
+      (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"
+      [lazy]="true"
+      [loading]="loading"
+      [multiSortMeta]="[{ field: 'ENG_Type', order: 1 },{ field: 'ENG_MeterNo', order: 2 }]"
+      (edit)="onEdit($event)"
+      (delete)="onDelete($event)"
+      (detail)="onDetail($event)"></app-table>
   </div>
 </div>

@@ -43,6 +43,28 @@
   </p-accordion>
 </div>
 <div class="card">
+  <p-table #pTable [columns]="columns" [value]="virtualData" [scrollable]="true" scrollHeight="400px" [rows]="20"
+    [totalRecords]="totalRecords" [virtualScroll]="true" [virtualScrollItemSize]="46" [lazy]="true"
+    (onLazyLoad)="loadDataLazy($event)" [virtualScrollDelay]="0">
+    <ng-template pTemplate="header" let-columns>
+      <tr>
+        <th>序號</th>
+        <th *ngFor="let col of columns">
+          {{col.header}}
+        </th>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="body" let-rowData let-columns="columns" let-rowIndex="rowIndex">
+      <tr style="height:46px">
+        <td>{{ rowIndex + 1 }}</td>
+        <td *ngFor="let col of columns">
+          {{rowData[col.field]}}
+        </td>
+      </tr>
+    </ng-template>
+  </p-table>
+</div>
+<div class="card">
   <app-table apiUrl="queryFIN21020" tableKey="FIN21020query" dataKey="id" [data]="data" [columns]="columns"
     (edit)="onEdit($event)" (detail)="onDetail($event)" [showCheckBox]="true" [addButton]="addButton"
     [multiSortMeta]="queryForm.controls.SortBy.value" [totalRecords]="totalRecords"
