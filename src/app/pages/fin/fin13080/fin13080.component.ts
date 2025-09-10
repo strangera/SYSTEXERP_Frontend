@@ -111,7 +111,6 @@ export class FIN13080Component extends BasicQueryPageComponent<any> implements O
     });
   }
 
-
   onDelete(rowData: any[]) {
     if (!rowData || rowData.length === 0) {
       this.messageService.warnBubble('請先選擇要刪除的資料');
@@ -124,12 +123,12 @@ export class FIN13080Component extends BasicQueryPageComponent<any> implements O
         const payload = {
           IDs: rowData.map(item => ({
             ID: item.ID,
-            DataType: item.DataType,
-            InvoiceType: item.InvoiceType
+            DataType: item.DataType ?? "",
+            InvoiceType: item.InvoiceType ?? ""
           }))
         };
 
-        console.log('FIN13080 刪除 payload:', payload);
+        console.log('FIN13080 刪除 payload:', JSON.stringify(payload));
 
         this.fin13080Service.updateFIN13080(payload).subscribe((res) => {
           if (res.Status === '0000') {
