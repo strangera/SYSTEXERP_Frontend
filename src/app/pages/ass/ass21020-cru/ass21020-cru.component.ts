@@ -199,7 +199,7 @@ export class ASS21020CRUComponent extends BasicCruPageComponent<ASS21020Data> im
       this.dataForm.patchValue({
         Location_No: meterData.Location_No,
         floor_no: meterData.Floor_No,
-        floor_name: meterData.Location_Name,
+        floor_name: meterData.Floor_Desc,
         Building_No: meterData.building_No,
         Building_Name: meterData.building_DESC,
         x_coord: meterData.Draw_X,
