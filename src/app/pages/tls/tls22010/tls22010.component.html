@@ -97,22 +97,27 @@
   </p-accordion>
 </div>
 <div class="card">
-  <app-table
+  <app-customFooter-table
     tableKey="TLS22010"
+    dataKey="ID"
     [data]="data"
+    (detail)="onDetail($event)"
+    [showRowEdit]="false"
+    (selectionChange)="selectedItems = $event"
+    [selectedItems]="selectedItems"
     [multiSortMeta]="[{ field: 'ECR_No', order: 1 }]"
     [totalRecords]="totalRecords"
     (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"
     [lazy]="true"
-    [showReportMode]="false"
-    [showDelete]="false"
     [loading]="loading"
-    [columns]="columns7"
-    (detail)="onDetail($event)"
-    [selectedItems]="selectedItems"
-    (selectionChange)="selectedItems = $event"
-    [showRowEdit]="false"
+    [showDelete]="false"
+    [showDetail]="true"
     [showEdit]="false"
+    [showTotal]="true"
+    [showReportMode]="false"
+    [showReportMode]="false"
+    [footerData]="footerData"
+    [columns]="columns7"
   >
     <header>
       <div class="flex justify-content-between align-items-center mb-2">
@@ -142,7 +147,7 @@
         <span class="text-blue-600">台收銀機</span>
       </div>
     </header>
-  </app-table>
+  </app-customFooter-table>
 </div>
 <div class="legend-summary">
   <p class="mb-3 h3 flex align-items-center gap-2">
