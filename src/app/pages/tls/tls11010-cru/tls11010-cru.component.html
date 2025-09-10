@@ -1,6 +1,6 @@
 <div class="card">
   <div class="grid align-items-center">
-    <div class="col" style="flex: 1;">
+    <div class="col" style="flex: 1">
       <app-menubar [ProgNo]="ProgNo"></app-menubar>
     </div>
     <div>
@@ -9,77 +9,126 @@
   </div>
 
   <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
-    <form [formGroup]="inputForm">
+    <form [formGroup]="dataForm">
       <div class="grid p-fluid">
         <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text label="店位代碼" [control]="inputForm.controls.LOCATION_No" [submitted]="submitted">
-          </app-input-text>
+          <app-input-text
+            label="店位代碼"
+            [control]="dataForm.controls.LOCATION_No"
+            [submitted]="submitted"
+          ></app-input-text>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text label="店位說明" [control]="inputForm.controls.LOCATION_Name" [submitted]="submitted">
-          </app-input-text>
+          <app-input-text
+            label="店位說明"
+            [control]="dataForm.controls.LOCATION_Name"
+            [submitted]="submitted"
+          ></app-input-text>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
-          <app-dropdown label="組織代碼/名稱" [options]="OrganizationCodeOptions" optionLabel="formLabel" optionValue="value"
-            [control]="inputForm.controls.org_id" [submitted]="submitted">
-          </app-dropdown>
+          <app-dropdown
+            label="組織代碼/名稱"
+            [options]="OrganizationCodeOptions"
+            optionLabel="formLabel"
+            optionValue="value"
+            [control]="dataForm.controls.org_id"
+            [submitted]="submitted"
+          ></app-dropdown>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
-          <app-dropdown label="館別" [options]="BUILDING_NO_Options" optionLabel="label" optionValue="value"
-            [control]="inputForm.controls.building_no" [submitted]="submitted">
-          </app-dropdown>
+          <app-dropdown
+            label="館別"
+            [options]="BUILDING_NO_Options"
+            optionLabel="label"
+            optionValue="value"
+            [control]="dataForm.controls.building_no"
+            [submitted]="submitted"
+          ></app-dropdown>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
-          <app-dropdown label="樓層" [options]="floorOptions" optionLabel="label" optionValue="value"
-            [control]="inputForm.controls.FLOOR_NO" [submitted]="submitted">
-          </app-dropdown>
+          <app-dropdown
+            label="樓層"
+            [options]="floorOptions"
+            optionLabel="label"
+            optionValue="value"
+            [control]="dataForm.controls.FLOOR_NO"
+            [submitted]="submitted"
+          ></app-dropdown>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
-          <app-dropdown label="區域" [options]="RegionCodeOptions" optionLabel="label" optionValue="value"
-            [control]="inputForm.controls.AREA_NO" [submitted]="submitted">
-          </app-dropdown>
+          <app-dropdown
+            label="區域"
+            [options]="RegionCodeOptions"
+            optionLabel="label"
+            optionValue="value"
+            [control]="dataForm.controls.AREA_NO"
+            [submitted]="submitted"
+          ></app-dropdown>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text label="簽約坪數" [control]="inputForm.controls.GROSS_SPACE" [submitted]="submitted">
-          </app-input-text>
+          <app-input-text
+            label="簽約坪數"
+            [control]="dataForm.controls.GROSS_SPACE"
+            [submitted]="submitted"
+          ></app-input-text>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text label="營業坪數" [control]="inputForm.controls.NET_SPACE" [submitted]="submitted">
-          </app-input-text>
+          <app-input-text
+            label="營業坪數"
+            [control]="dataForm.controls.NET_SPACE"
+            [submitted]="submitted"
+          ></app-input-text>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
-          <app-dropdown label="使用狀態" [options]="LOCATION_Status_Options" optionLabel="label" optionValue="value"
-            [control]="inputForm.controls.LOCATION_Status" [submitted]="submitted">
-          </app-dropdown>
+          <app-dropdown
+            label="使用狀態"
+            [options]="LOCATION_Status_Options"
+            optionLabel="label"
+            optionValue="value"
+            [control]="dataForm.controls.LOCATION_Status"
+            [submitted]="submitted"
+          ></app-dropdown>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
-          <app-dropdown label="用途代碼/名稱" [options]="usageOptions" optionLabel="formLabel" optionValue="value"
-            [control]="inputForm.controls.Purpose_no" [submitted]="submitted">
-          </app-dropdown>
+          <app-dropdown
+            label="用途代碼/名稱"
+            [options]="usageOptions"
+            optionLabel="formLabel"
+            optionValue="value"
+            [control]="dataForm.controls.Purpose_no"
+            [submitted]="submitted"
+          ></app-dropdown>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text label="平面圖X座標" [control]="inputForm.controls.Draw_X" [submitted]="submitted"[weightedMax]="255">
-          </app-input-text>
+          <app-input-text
+            label="平面圖X座標"
+            [control]="dataForm.controls.Draw_X"
+            [submitted]="submitted"
+            [weightedMax]="255"
+          ></app-input-text>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text label="平面圖Y座標" [control]="inputForm.controls.Draw_Y" [submitted]="submitted" [weightedMax]="255">
-          </app-input-text>
+          <app-input-text
+            label="平面圖Y座標"
+            [control]="dataForm.controls.Draw_Y"
+            [submitted]="submitted"
+            [weightedMax]="255"
+          ></app-input-text>
         </div>
       </div>
       <div class="col pt-4">
-        <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3" *ngIf="!isFormReadable">
-<p-button
-  id="clearButton"
-  (click)="onClear()"
-  [label]="clearBtnConfig.label"
-  [class]="clearBtnConfig.class"
-  [text]="clearBtnConfig.text">
-</p-button>
-
-
-
-
-
+        <div
+          class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
+          *ngIf="!isFormReadable"
+        >
+          <!-- <p-button
+            id="clearButton"
+            (click)="onClear()"
+            [label]="clearBtnConfig.label"
+            [class]="clearBtnConfig.class"
+            [text]="clearBtnConfig.text"
+          ></p-button> -->
+          <app-button btnType="cancel" [form]="dataForm"></app-button>
           <app-button btnType="submit" (click)="onSubmit()"></app-button>
         </div>
       </div>
