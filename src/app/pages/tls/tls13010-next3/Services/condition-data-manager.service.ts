@@ -6,7 +6,8 @@ import {
   GraduatedCommissionCondition,
   BaseTierCondition,
   GeneralCommissionCondition,
-  RentSettingApiData
+  RentSettingApiData,
+  BottomTierDetailApiItem
 } from './../../tls13010/tls13010.model';
 // condition-data-manager.service.ts - 條件數據管理服務
 import { Injectable } from '@angular/core';
@@ -307,8 +308,28 @@ export class ConditionDataManager {
   }
 
   private mapBaseTierData(data: RentSettingApiData): BaseTierCondition[] {
+    // 優先使用 BottomTierDetails，如果沒有才使用舊的組合邏輯
+    if (data.BottomTierDetails?.length) {
+      console.log('🎯 使用新的 BottomTierDetails 資料');
+      return data.BottomTierDetails.map((item: BottomTierDetailApiItem) => ({
+        id: item.id,
+        talent_id: item.talent_id.toString(),
+        seq_no: item.seq_no || 0,
+        tlt_id: '', // BottomTierDetails 中沒有 tlt_id
+        cag_bdate: this.formatDate(item.cag_bdate),
+        cag_edate: this.formatDate(item.cag_edate),
+        limit_amt: item.limit_amt || 0,
+        start_number: item.start_number || 0,
+        end_number: item.end_number || 0,
+        charge_rate: item.charge_rate || 0,
+        _status: 'original'
+      }));
+    }
+
+    // 保留原本的邏輯作為備用
     if (!data.LimitDetails?.length || !data.LevelDetails?.length) return [];
 
+    console.log('🎯 使用舊的 LimitDetails + LevelDetails 組合邏輯');
     return data.LevelDetails.map((levelItem: any) => ({
       id: levelItem.id,
       talent_id: levelItem.talent_id.toString(),

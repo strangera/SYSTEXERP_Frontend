@@ -1190,7 +1190,8 @@ export class DataCleaner {
       ...(this.hasValidId(condition.id) ? { id: Number(condition.id) } : {}),
       talent_id: condition.talent_id || '',
       seq_no: condition.seq_no || 0,
-      tlt_id: condition.tlt_id || '',
+      // tlt_id 不一定有值，因為 BottomTierDetails 沒有這個欄位
+      ...(condition.tlt_id ? { tlt_id: condition.tlt_id } : {}),
       cag_bdate: this.formatDate(condition.cag_bdate),
       cag_edate: this.formatDate(condition.cag_edate),
       limit_amt: this.parseNumber(condition.limit_amt) || 0,
@@ -1379,6 +1380,7 @@ export interface RentSettingApiData {
   RentDetails?: RentDetailApiItem[];
   LimitDetails?: LimitDetailApiItem[];
   LevelDetails?: LevelDetailApiItem[];
+  BottomTierDetails?: BottomTierDetailApiItem[];
 }
 
 export interface CommissionMasterApiItem {
@@ -1422,6 +1424,18 @@ export interface LevelDetailApiItem {
   cag_bdate: string;
   cag_edate: string;
   limit_amt?: number;
+  start_number: number;
+  end_number: number;
+  charge_rate: number;
+}
+
+export interface BottomTierDetailApiItem {
+  id: number;
+  talent_id: number;
+  seq_no: number;
+  cag_bdate: string;
+  cag_edate: string;
+  limit_amt: number;
   start_number: number;
   end_number: number;
   charge_rate: number;

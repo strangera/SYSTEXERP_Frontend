@@ -109,9 +109,8 @@ export class FareColumnDefinitions {
         type: 'checkbox',
         editable: true,
         autoWidth: true,
-
-        autoEditOnSelect: true,
-        autoSaveOnUnselect: true,
+        // autoEditOnSelect: true,
+        // autoSaveOnUnselect: true,
       },
       {
         field: 'cap_item',
@@ -230,8 +229,8 @@ export class FareColumnDefinitions {
         editable: true,
         width: '5px',
 
-        autoEditOnSelect: true,
-        autoSaveOnUnselect: true,
+        // autoEditOnSelect: true,
+        // autoSaveOnUnselect: true,
       },
       {
         field: 'copy_button',
@@ -396,8 +395,8 @@ export class FareColumnDefinitions {
         editable: true,
         width: '5px',
 
-        autoEditOnSelect: true,
-        autoSaveOnUnselect: true,
+        // autoEditOnSelect: true,
+        // autoSaveOnUnselect: true,
       },
       {
         field: 'copy_button',
@@ -588,8 +587,8 @@ export class FareColumnDefinitions {
         editable: true,
         width: '5px',
 
-        autoEditOnSelect: true,
-        autoSaveOnUnselect: true,
+        // autoEditOnSelect: true,
+        // autoSaveOnUnselect: true,
       },
       {
         field: 'copy_button',
@@ -715,8 +714,8 @@ export class FareColumnDefinitions {
         editable: true,
         width: '5px',
 
-        autoEditOnSelect: true,
-        autoSaveOnUnselect: true,
+        // autoEditOnSelect: true,
+        // autoSaveOnUnselect: true,
       },
       {
         field: 'copy_button',

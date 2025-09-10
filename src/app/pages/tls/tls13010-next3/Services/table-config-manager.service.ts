@@ -51,7 +51,7 @@ export class TableConfigManager {
    */
   getFixedRentColumns(): ColumnDef[] {
     return [
-      { field: 'tlt_id', header: '帳務期別', type: 'text', editable: true, autoWidth: true },
+      { field: 'seq_no', header: '帳務期別', type: 'text', editable: true, autoWidth: true },
       { field: 'cag_bdate', header: '帳務起', type: 'date', editable: true, autoWidth: true },
       { field: 'cag_edate', header: '帳務迄', type: 'date', editable: true, autoWidth: true },
       { field: 'base_rent', header: '租金金額', type: 'number', editable: true, autoWidth: true }
@@ -63,7 +63,7 @@ export class TableConfigManager {
    */
   getBaseRentHigherColumns(): ColumnDef[] {
     return [
-      { field: 'tlt_id', header: '帳務期別', type: 'text', editable: true, autoWidth: true },
+      { field: 'seq_no', header: '帳務期別', type: 'text', editable: true, autoWidth: true },
       { field: 'cag_bdate', header: '帳務起', type: 'date', editable: true, autoWidth: true },
       { field: 'cag_edate', header: '帳務迄', type: 'date', editable: true, autoWidth: true },
       { field: 'base_rent', header: '租金金額', type: 'number', editable: true, autoWidth: true },
@@ -126,7 +126,7 @@ export class TableConfigManager {
    */
   getBaseCommissionColumns(): ColumnDef[] {
     return [
-      { field: 'tlt_id', header: '帳務期別', type: 'text', editable: true, autoWidth: true },
+      { field: 'seq_no', header: '帳務期別', type: 'text', editable: true, autoWidth: true },
       { field: 'cag_bdate', header: '帳務起', type: 'date', editable: true, autoWidth: true },
       { field: 'cag_edate', header: '帳務迄', type: 'date', editable: true, autoWidth: true },
       { field: 'limit_amt', header: '包底金額', type: 'number', editable: true, autoWidth: true },
@@ -169,8 +169,7 @@ export class TableConfigManager {
    */
   getBaseTierColumns(): ColumnDef[] {
     return [
-      { field: 'seq_no', header: '序號', type: 'number', editable: true, autoWidth: true },
-      { field: 'tlt_id', header: '帳務期別', type: 'text', editable: true, autoWidth: true },
+      { field: 'seq_no', header: '帳務期別', type: 'text', editable: true, autoWidth: true },
       { field: 'cag_bdate', header: '帳務起', type: 'date', editable: true, autoWidth: true },
       { field: 'cag_edate', header: '帳務迄', type: 'date', editable: true, autoWidth: true },
       { field: 'limit_amt', header: '包底金額', type: 'number', editable: true, autoWidth: true },

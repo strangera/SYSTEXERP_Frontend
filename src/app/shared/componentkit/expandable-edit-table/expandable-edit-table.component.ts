@@ -2267,6 +2267,12 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
     if (newValue === true) {
       rowData[field] = newValue;
 
+      this.fieldChange.emit({
+        fieldName: field,
+        newValue: newValue,
+        rowData: rowData
+      });
+
       // 檢查是否啟用自動編輯
       if (column.autoEditOnSelect && !this.isRowEditing(rowIndex)) {
         console.log(`勾選，自動進入編輯模式`);
@@ -2286,6 +2292,12 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
       } else {
         // 如果沒有啟用自動保存退出，只更新值
         rowData[field] = newValue;
+
+        this.fieldChange.emit({
+          fieldName: field,
+          newValue: newValue,
+          rowData: rowData
+        });
       }
     }
 

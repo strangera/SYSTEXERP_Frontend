@@ -597,7 +597,13 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
   // ========== 表格事件處理 (使用服務) ==========
   onFieldChange(fieldName: string, newValue: any, rowData: any, capType?: string): void {
     console.log(`欄位變更: ${capType}.${fieldName} = ${newValue}`);
-
+    if (fieldName === 'is_selected') {
+      console.log(`🔥 勾選狀態變更: ${rowData.cap_name} = ${newValue}`);
+      this.updateOriginalData(capType || 'A');
+      this.filterData();
+      this.saveFareDataToWorkflow();
+      return;
+    }
     // 根據 capType 進行對應的計算處理
     switch (capType) {
       case 'A':
@@ -972,48 +978,41 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
   }
 
   onItemSelectionChange(capType: string): void {
-    console.log(`🔄 ${capType} 類型項目選擇狀態改變`);
+    console.log(`🔥 勾選事件被觸發: ${capType}`);
 
-    // 原有的狀態更新
+    // 直接處理選擇變更
     this.fareData[capType].forEach(item => {
       this.fareStatusService.updateItemSelectionStatus(item);
     });
 
     this.updateOriginalData(capType);
-
-    // 🆕 新增：對所有已選項目進行驗證
-    const selectedItems = this.fareData[capType].filter(item => item.is_selected);
-    if (selectedItems.length > 0) {
-      const validationResult = this.fareValidationService.validateFareTypeData(
-        this.originalFareData[capType],
-        capType
-      );
-
-      if (!validationResult.isValid) {
-        console.warn(`⚠️ ${capType} 類型選擇項目驗證失敗:`, validationResult.errors);
-        // 可以選擇是否立即顯示警告，或只在提交時檢查
-        // this.messageService.warnBubble(validationResult.errors.join('\n'));
-      }
-    }
-
+    this.filterData();
     this.saveFareDataToWorkflow();
   }
 
   selectAllByType(capType: string): void {
-    console.log(`📄 ${capType} 類型全部選擇`);
+    console.log(`🔄 ${capType} 類型全部選擇`);
 
     // 🆕 使用狀態服務
     this.fareStatusService.selectAllItems(this.fareData[capType]);
     this.updateOriginalData(capType);
+
+    // 🔧 修正：重新過濾數據
+    this.filterData();
+
     this.saveFareDataToWorkflow();
   }
 
   deselectAllByType(capType: string): void {
-    console.log(`📄 ${capType} 類型取消全部選擇`);
+    console.log(`🔄 ${capType} 類型取消全部選擇`);
 
     // 🆕 使用狀態服務
     this.fareStatusService.deselectAllItems(this.fareData[capType]);
     this.updateOriginalData(capType);
+
+    // 🔧 修正：重新過濾數據
+    this.filterData();
+
     this.saveFareDataToWorkflow();
   }
 
@@ -1079,19 +1078,21 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
 
   // ========== 模式切換 ==========
   toggleCommonMode(): void {
-    // 直接切換模式
-    if (this.showMode === 'common') {
-      this.showMode = 'all';
-    } else {
-      this.showMode = 'common';
-    }
+    // 顯示載入提示
+    this.loading = true;
 
-    // 只需要過濾資料，不需要載入提示
-    this.filterData();
+    // 延遲執行，讓載入提示先顯示
+    setTimeout(() => {
+      if (this.showMode === 'common') {
+        this.showMode = 'all';
+      } else {
+        this.showMode = 'common';
+      }
 
-    // 可選：給用戶簡單的回饋
-    const modeText = this.showMode === 'common' ? '常用項目模式' : '全部項目模式';
-    this.messageService.infoBubble(`已切換至${modeText}`);
+      this.filterData();
+      this.loading = false;
+      this.messageService.unblockUi();
+    }, 500); // 稍微加長延遲時間
   }
 
   getCurrentDisplayMode(): string {
@@ -1289,101 +1290,56 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
         _isCopiedItem: true
       };
 
-      // 🎯 清空大部分數值欄位，讓使用者自行填寫
+      // 清空大部分數值欄位
       const fieldsToReset = [
-        'tpy_unitamt',   // 單價
-        'tpy_qty',       // 數量
-        'tpy_amount',    // 金額
-        'tpy_totalamt',  // 總金額
-        'down_payment',  // 首期款
-        'period_nos',    // 期數
-        'tpy_rate'       // 比率
+        'tpy_unitamt', 'tpy_qty', 'tpy_amount', 'tpy_totalamt',
+        'down_payment', 'period_nos', 'tpy_rate'
       ];
 
       fieldsToReset.forEach(field => {
         if (field === 'tpy_qty') {
-          // 數量保持預設值 1，避免計算錯誤
           copiedItem[field] = 1;
         } else {
-          // 其他數值欄位設為空或0
           copiedItem[field] = null;
         }
       });
 
-      // 🎯 處理 tpy_type，保持原值或設預設值
+      // 🎯 新的日期處理邏輯
+      this.handleCopiedItemDates(copiedItem, originalItem);
+
+      // 其他欄位處理...
       if (originalItem.tpy_type) {
         const tpyTypeOptions = TLS13010_DROPDOWN_OPTIONS.tpyTypeOption || [];
         const isValidOption = tpyTypeOptions.some(option => option.value === originalItem.tpy_type);
-
-        if (isValidOption) {
-          copiedItem.tpy_type = originalItem.tpy_type;
-        } else {
-          copiedItem.tpy_type = tpyTypeOptions.length > 0 ? tpyTypeOptions[0].value : null;
-        }
-      } else {
-        const tpyTypeOptions = TLS13010_DROPDOWN_OPTIONS.tpyTypeOption || [];
-        copiedItem.tpy_type = tpyTypeOptions.length > 0 ? tpyTypeOptions[0].value : null;
+        copiedItem.tpy_type = isValidOption ? originalItem.tpy_type :
+          (tpyTypeOptions.length > 0 ? tpyTypeOptions[0].value : null);
       }
 
-      // 🎯 日期處理：保留合理的日期，異常則設為null
-      ['tpy_bdate', 'tpy_edate'].forEach(dateField => {
-        if (originalItem[dateField]) {
-          if (originalItem[dateField] instanceof Date) {
-            if (this.isValidDateRange(originalItem[dateField])) {
-              copiedItem[dateField] = new Date(originalItem[dateField]);
-              console.log(`${dateField} 日期複製成功`);
-            } else {
-              copiedItem[dateField] = null;
-              console.warn(`${dateField} 日期異常，設為 null`);
-            }
-          } else {
-            // 非 Date 物件保持原值
-            copiedItem[dateField] = originalItem[dateField];
-          }
-        } else {
-          copiedItem[dateField] = null;
-        }
-      });
-
-      // 🎯 必要的預設值設定
-      // 組織欄位
+      // 組織和發票狀態預設值
       if (!copiedItem.org_id && this.orgOptions.length > 0) {
         copiedItem.org_id = this.orgOptions[0].value;
-        console.log(`設定預設組織: ${copiedItem.org_id}`);
       }
-
-      // 發票狀態
       if (!copiedItem.gui_flag) {
         copiedItem.gui_flag = 'Y';
-        console.log(`設定預設發票狀態: Y`);
       }
 
-      // 🎯 清理不需要的屬性
+      // 清理不需要的屬性
       delete copiedItem._skipAutoCalc;
       delete copiedItem._dateInitialized;
 
       // 插入到原始項目的下一個位置
       const originalIndex = this.originalFareData[capType].findIndex(item => item.id === originalItem.id);
-
       if (originalIndex !== -1) {
         this.originalFareData[capType].splice(originalIndex + 1, 0, copiedItem);
-        console.log(`已將複製項目插入到索引 ${originalIndex + 1}`);
       } else {
         this.originalFareData[capType].push(copiedItem);
-        console.warn(`找不到原始項目，加到最後面`);
       }
 
       this.filterData();
       this.saveFareDataToWorkflow();
 
-      this.messageService.successBubble(`已成功複製扣款項目「${originalItem.cap_name}」（所有欄位已清空，請重新填寫）`);
+      this.messageService.successBubble(`已成功複製扣款項目「${originalItem.cap_name}」`);
       this.cdr.detectChanges();
-
-      console.log(`複製完成: ${originalItem.cap_item} → ${newId}`, {
-        '保留的欄位': ['cap_item', 'cap_name', '基本項目資訊'],
-        '清空的欄位': ['所有數值欄位', '日期欄位', '類型選項', '組織選項', '發票選項'],
-        '複製策略': '完全清空，提供乾淨模板'
-      });
 
     } catch (error) {
       console.error('複製扣款項目時發生錯誤:', error);
@@ -1391,19 +1347,76 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
     }
   }
 
-  private isValidDateRange(date: Date): boolean {
+  // 🎯 新增專門處理複製項目日期的方法
+  // 修正後的處理複製項目日期方法
+  private handleCopiedItemDates(copiedItem: any, originalItem: any): void {
+    try {
+      // 取得合約資訊
+      const contractInfo = this.contractInfoData[0];
+
+      // 結束日期：永遠設定為合約終止日
+      if (contractInfo?.tlt_edate) {
+        const contractEndDate = new Date(contractInfo.tlt_edate);
+
+        if (!isNaN(contractEndDate.getTime())) {
+          copiedItem.tpy_edate = contractEndDate;
+          console.log(`複製項目結束日期：合約終止日 ${this.formatDateForLog(contractEndDate)}`);
+        } else {
+          copiedItem.tpy_edate = null;
+          console.warn('合約終止日期無效');
+        }
+      } else {
+        copiedItem.tpy_edate = null;
+        console.warn('沒有合約終止日期');
+      }
+
+      // 處理起始日期：原項目結束日期的下個月，但要檢查是否超過合約終止日
+      if (originalItem.tpy_edate && copiedItem.tpy_edate) {
+        const originalEndDate = new Date(originalItem.tpy_edate);
+        const contractEndDate = new Date(copiedItem.tpy_edate);
+
+        if (!isNaN(originalEndDate.getTime())) {
+          // 計算下個月
+          const nextMonth = new Date(originalEndDate);
+          nextMonth.setMonth(nextMonth.getMonth() + 1);
+
+          // 檢查起始日期是否超過合約終止日
+          if (nextMonth > contractEndDate) {
+            console.warn(`複製項目起始日期 ${this.formatDateForLog(nextMonth)} 已超過合約終止日 ${this.formatDateForLog(contractEndDate)}，清空起始日期`);
+
+            copiedItem.tpy_bdate = null;
+
+            // 給用戶提示
+            this.messageService.warnBubble('複製項目的起始日期會超過合約終止日，已清空起始日期，請手動設定');
+          } else {
+            copiedItem.tpy_bdate = nextMonth;
+            console.log(`複製項目起始日期：${this.formatDateForLog(originalEndDate)} -> ${this.formatDateForLog(nextMonth)}`);
+          }
+        } else {
+          copiedItem.tpy_bdate = null;
+          console.warn('原項目結束日期無效，複製項目起始日期設為 null');
+        }
+      } else {
+        copiedItem.tpy_bdate = null;
+        console.warn('原項目沒有結束日期或合約終止日期，複製項目起始日期設為 null');
+      }
+
+    } catch (error) {
+      console.error('處理複製項目日期時發生錯誤:', error);
+      copiedItem.tpy_bdate = null;
+      // tpy_edate 保持已設定的合約終止日，不清空
+    }
+  }
+
+  // 輔助方法：格式化日期用於 log
+  private formatDateForLog(date: Date): string {
     if (!date || isNaN(date.getTime())) {
-      return false;
+      return 'Invalid Date';
     }
 
     const year = date.getFullYear();
-    const isReasonable = year >= 1900 && year <= 2100;
-
-    if (!isReasonable) {
-      console.warn(`⚠️ 日期年份超出合理範圍: ${year}`);
-    }
-
-    return isReasonable;
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    return `${year}/${month}`;
   }
 
   /**
