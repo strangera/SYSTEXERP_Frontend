@@ -1,1 +1,20 @@
-<p>table-report works!</p>
+<p-table [columns]="columns" [value]="virtualData" [scrollable]="true" scrollHeight="500px" [rows]="30"
+  [virtualScroll]="true" [virtualScrollItemSize]="46" [virtualScrollDelay]="0" [lazy]="true"
+  (onLazyLoad)="loadDataLazy($event)">
+  <ng-template pTemplate="header" let-columns>
+    <tr>
+      <th>序號</th>
+      <th *ngFor="let col of columns">
+        {{col.header}}
+      </th>
+    </tr>
+  </ng-template>
+  <ng-template pTemplate="body" let-rowData let-columns="columns" let-rowIndex="rowIndex">
+    <tr style="height:46px">
+      <td>{{ rowIndex + 1 }}</td>
+      <td *ngFor="let col of columns">
+        {{rowData[col.field]}}
+      </td>
+    </tr>
+  </ng-template>
+</p-table>

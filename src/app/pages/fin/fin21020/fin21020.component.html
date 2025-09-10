@@ -43,9 +43,9 @@
   </p-accordion>
 </div>
 <div class="card">
-  <p-table #pTable [columns]="columns" [value]="virtualData" [scrollable]="true" scrollHeight="400px" [rows]="20"
-    [totalRecords]="totalRecords" [virtualScroll]="true" [virtualScrollItemSize]="46" [lazy]="true"
-    (onLazyLoad)="loadDataLazy($event)" [virtualScrollDelay]="0">
+  <p-table [columns]="columns" [value]="virtualData" [scrollable]="true" scrollHeight="500px" [rows]="20"
+    [virtualScroll]="true" [virtualScrollItemSize]="46" [virtualScrollDelay]="0" [lazy]="true"
+    (onLazyLoad)="loadDataLazy($event)">
     <ng-template pTemplate="header" let-columns>
       <tr>
         <th>序號</th>
@@ -65,11 +65,11 @@
   </p-table>
 </div>
 <div class="card">
-  <app-table apiUrl="queryFIN21020" tableKey="FIN21020query" dataKey="id" [data]="data" [columns]="columns"
+  <!-- <app-table apiUrl="queryFIN21020" tableKey="FIN21020query" dataKey="id" [data]="data" [columns]="columns"
     (edit)="onEdit($event)" (detail)="onDetail($event)" [showCheckBox]="true" [addButton]="addButton"
     [multiSortMeta]="queryForm.controls.SortBy.value" [totalRecords]="totalRecords"
     (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [lazy]="true" [loading]="loading"
-    (delete)="onDelete($event)" [selectedItems]="selectedItems" (selectionChange)="selectedItems = $event"></app-table>
+    (delete)="onDelete($event)" [selectedItems]="selectedItems" (selectionChange)="selectedItems = $event"></app-table> -->
 </div>
 
 
