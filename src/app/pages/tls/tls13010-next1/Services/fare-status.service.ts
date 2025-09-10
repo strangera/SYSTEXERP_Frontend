@@ -95,7 +95,7 @@ export class FareStatusService {
    * 處理表格資料更新後的狀態
    */
   handleTableDataUpdate(newData: any, capType: string): void {
-    console.log(`📋 處理 ${capType} 類型表格資料更新:`, newData.cap_item);
+    // console.log(`📋 處理 ${capType} 類型表格資料更新:`, newData.cap_item);
 
     // 🔥 強制檢查是否有變更
     const hasChanges = this.fareDataService.hasDataChanges(newData);
@@ -109,32 +109,32 @@ export class FareStatusService {
         if (newData._status === 'deleted') {
           // 從刪除狀態恢復
           newData._status = hasChanges ? 'modified' : 'original';
-          console.log(`✅ 項目 ${newData.cap_item} 恢復勾選，狀態: deleted → ${newData._status}`);
+          // console.log(`✅ 項目 ${newData.cap_item} 恢復勾選，狀態: deleted → ${newData._status}`);
         } else {
           // 檢查資料是否有變更
           if (hasChanges) {
             newData._status = 'modified';
-            console.log(`🔍 項目 ${newData.cap_item} 資料已變更，狀態: → modified`);
+            // console.log(`🔍 項目 ${newData.cap_item} 資料已變更，狀態: → modified`);
           } else {
             newData._status = 'original';
-            console.log(`✅ 項目 ${newData.cap_item} 無變更，狀態: → original`);
+            // console.log(`✅ 項目 ${newData.cap_item} 無變更，狀態: → original`);
           }
         }
       } else {
         // 原本不存在於合約的項目 → 新增
         newData._status = 'new';
-        console.log(`✅ 項目 ${newData.cap_item} 勾選，狀態: 無 → new`);
+        // console.log(`✅ 項目 ${newData.cap_item} 勾選，狀態: 無 → new`);
       }
     } else {
       // ❌ 取消勾選
       if (isContractExisting) {
         // 原本存在於合約的項目 → 刪除
         newData._status = 'deleted';
-        console.log(`❌ 項目 ${newData.cap_item} 取消勾選，狀態: → deleted`);
+        // console.log(`❌ 項目 ${newData.cap_item} 取消勾選，狀態: → deleted`);
       } else {
         // 原本不存在於合約的項目 → 回到無狀態
         delete newData._status;
-        console.log(`❌ 項目 ${newData.cap_item} 取消勾選，狀態: new → 無狀態`);
+        // console.log(`❌ 項目 ${newData.cap_item} 取消勾選，狀態: new → 無狀態`);
       }
     }
   }
