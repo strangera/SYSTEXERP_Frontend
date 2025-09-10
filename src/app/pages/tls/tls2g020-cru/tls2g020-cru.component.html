@@ -1,7 +1,12 @@
 <div class="card">
   <div class="flex gap-2 mb-2">
     <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
-    <app-button btnType="back" (click)="onCancel()"></app-button>
+    <ng-container *ngIf="editMode === 'day'; else monthBack">
+      <app-button btnType="back" (click)="onBackToMonthTable()"></app-button>
+    </ng-container>
+    <ng-template #monthBack>
+      <app-button btnType="back" (click)="onCancel()"></app-button>
+    </ng-template>
   </div>
   <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
     <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit(dataForm)">
@@ -25,9 +30,17 @@
             optionValue="value"
           />
         </div>
+        <div class="col-12 md:col-6 lg:col-4" *ngIf="editMode === 'day'">
+          <app-input-text
+            label="月份"
+            controlName="budget_mm"
+            [control]="dataForm.controls.budget_yymm"
+            [submitted]="submitted"
+          ></app-input-text>
+        </div>
       </div>
     </form>
-    <hr>
+    <hr />
     <ng-container *ngIf="editMode === 'month'">
       <app-table
         tableKey="id"
@@ -40,30 +53,66 @@
         [showCaption]="false"
       ></app-table>
     </ng-container>
-   <ng-container *ngIf="editMode === 'day'">
-  <div class="calendar-table">
-    <!-- 星期標題 -->
-    <div class="grid">
-      <div class="col" *ngFor="let w of ['日','一','二','三','四','五','六']">
-        <strong>{{ w }}</strong>
-      </div>
-    </div>
 
-    <!-- 日期輸入區 -->
-    <div class="grid" *ngFor="let week of weeks">
-      <div class="col" *ngFor="let day of week">
-        <ng-container *ngIf="day">
-          <span>{{ day }}日</span>
-          <input
-            type="number"
-            [(ngModel)]="currentMonthData.days[day]"
-            class="p-inputtext w-full"
-          />
-        </ng-container>
-      </div>
-    </div>
-  </div>
-</ng-container>
-
+    <ng-container *ngIf="editMode === 'day'">
+      <table class="calendar-table">
+        <thead>
+          <tr>
+            <th class="sticky-col sticky-header">項目</th>
+            <th
+              class="sticky-header"
+              *ngFor="let w of ['日', '一', '二', '三', '四', '五', '六']"
+            >
+              {{ w }}
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- 每週 -->
+          <ng-container *ngFor="let week of weeks">
+            <!-- 日期 -->
+            <tr>
+              <td class="sticky-col">日期</td>
+              <td *ngFor="let day of week">
+                <span *ngIf="day">{{ day }}</span>
+              </td>
+            </tr>
+            <!-- 實際預算（可編輯） -->
+            <tr>
+              <td class="sticky-col">實際預算</td>
+              <td *ngFor="let day of week">
+                <p-inputNumber
+                  *ngIf="day"
+                  type="number"
+                  class="num-input w-full"
+                  inputStyleClass="w-full p-1"
+                  [(ngModel)]="currentMonthData.days[day].budget"
+                  (ngModelChange)="onBudgetChange(day)"
+                  [disabled]="false"
+                />
+              </td>
+            </tr>
+            <!-- 抽成率（只顯示，不可編輯） -->
+            <tr>
+              <td class="sticky-col">抽成率</td>
+              <td *ngFor="let day of week">
+                <span *ngIf="day" class="text-center">
+                  {{ currentMonthData.days[day].rate }}
+                </span>
+              </td>
+            </tr>
+            <!-- 抽成額（只顯示，不可編輯） -->
+            <tr>
+              <td class="sticky-col">抽成額</td>
+              <td *ngFor="let day of week">
+                <span *ngIf="day" class="text-center">
+                  {{ currentMonthData.days[day].commission }}
+                </span>
+              </td>
+            </tr>
+          </ng-container>
+        </tbody>
+      </table>
+    </ng-container>
   </p-panel>
 </div>
