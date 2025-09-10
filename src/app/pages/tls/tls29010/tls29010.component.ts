@@ -131,8 +131,8 @@ export class TLS29010Component extends BasicQueryPageComponent<TALPORDERM> imple
 
   data: TALPORDERM[] = [];
   columns: Column[] = [
-    { field: 'id', header: '流水號', visible: false },
-    { field: 'mid', header: 'MID', visible: false },
+    // { field: 'id', header: '流水號', visible: false },
+    // { field: 'mid', header: 'MID', visible: false },
     { field: 'str_no', header: '店部編號', visible: true },
     { field: 'pod_no', header: '活動申請編號', visible: true },
     {

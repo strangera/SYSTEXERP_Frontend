@@ -186,9 +186,7 @@ export class TLS51080Component extends BasicQueryPageComponent<POS2034> implemen
             Name: item.Name,
             Label: item.No + '-' + item.Name,
           }));
-
-          // this.org_idOptions = [{ No: '102120', Name: '測試', Label: '102120-測試' }];
-
+          
           console.log('org_idOptions:', this.org_idOptions);
         });
 

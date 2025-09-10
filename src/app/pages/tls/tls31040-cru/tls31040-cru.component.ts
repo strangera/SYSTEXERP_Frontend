@@ -158,36 +158,36 @@ export class Tls31040CRUComponent extends BasicCruPageComponent<TLS31040Response
     const formValue = {
       ...this.queryConditions,
       IsExcel: isExcel,
-      bus_type: this.dataForm.get('bus_type')?.value ?? '',
+      tlt_kind: this.dataForm.get('tlt_kind')?.value ?? '',
     } as TLS31040PrintDetailRequest;
 
     console.log('單櫃別之營業報表print請求', JSON.stringify(formValue, null, 2));
 
     this.btnLoading = true;
-    // this.tls31040Service.printTLS31040Detail(formValue).pipe(finalize(() => this.btnLoading = false), untilDestroyed(this))
-    //   .subscribe(res => {
-    //     this.messageService.successBubble(res.Message);
-    //     if (res.Data && res.Data.Print_URL) {
-    //       const downloadUrl = environment.ApiUrl + res.Data.Print_URL;
-    //       window.open(downloadUrl, '_blank');
-    //     }
-    //   });
+    this.tls31040Service.printTLS31040Detail(formValue).pipe(finalize(() => this.btnLoading = false), untilDestroyed(this))
+      .subscribe(res => {
+        this.messageService.successBubble(res.Message);
+        if (res.Data && res.Data.Print_URL) {
+          const downloadUrl = environment.ApiUrl + res.Data.Print_URL;
+          window.open(downloadUrl, '_blank');
+        }
+      });
   }
 
   queryTLS31030Detail() {
     // 把 bus_type 從 string[] 轉成 string
     const request: TLS31040DetailRequest = {
       ...this.queryConditions,
-      bus_type: this.dataForm.get('bus_type')?.value ?? '',
+      tlt_kind: this.dataForm.get('tlt_kind')?.value ?? '',
     };
 
     //用Json顯示request
     console.log('單櫃別之營業報表request', JSON.stringify(request));
 
-    // this.tls31040Service.queryTLS31040Detail(request).pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(res => {
-    //   console.log('單櫃別之營業報表response', res.Data);
-    //   this.data = res.Data;
-    //   // this.totalRecords = res.TotalCount;
-    // })
+    this.tls31040Service.queryTLS31040Detail(request).pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(res => {
+      console.log('單櫃別之營業報表response', res.Data);
+      this.data = res.Data;
+      // this.totalRecords = res.TotalCount;
+    })
   }
 }
