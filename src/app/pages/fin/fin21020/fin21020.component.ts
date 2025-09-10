@@ -16,7 +16,6 @@ import { untilDestroyed } from '@ngneat/until-destroy';
 import { DropDownListService, IDropdownItem } from '@service/utility/dropDownList.service';
 import { DialogComponent } from '@shared/componentkit/dialog/dialog.component';
 import { TableLazyLoadEvent, TableModule } from 'primeng/table';
-import { CarService } from './carservice';
 import { SkeletonModule } from 'primeng/skeleton';
 import { NgFor } from '@angular/common';
 // 1.2.1.2 費率對照維護
@@ -24,7 +23,6 @@ import { NgFor } from '@angular/common';
   selector: 'app-fin21020',
   templateUrl: './fin21020.component.html',
   standalone: true,
-  providers: [CarService],
   imports: [NgFor, SkeletonModule, TableModule, DialogComponent, MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, DropdownComponent, InputNumberRangeComponent, TableComponent, TranslateModule]
 })
 export class FIN21020Component extends BasicQueryPageComponent<IFin21020Data> implements OnInit {
@@ -37,7 +35,6 @@ export class FIN21020Component extends BasicQueryPageComponent<IFin21020Data> im
     Remit_Fee: [null as number | null, [Validators.max(999999)]], // 廠商負擔電匯手續費
     Comp_Remit_Fee: [null as number | null, [Validators.max(999999)]], // 公司負擔電匯手續費
     Cash_Back_Amt: [null as number | null, [Validators.max(999999)]], // 廠商負擔電匯手續費回饋收入
-    ...createPaginationConfig([{ field: 'BNK_No', order: 1 }, { field: 'Remit_BAmount', order: 1 }]), // 分頁和排序參數
   });
   selectedItems: IFin21020Data[] = [];
   columns: Column[] = [
@@ -73,26 +70,36 @@ export class FIN21020Component extends BasicQueryPageComponent<IFin21020Data> im
   }
 
   // ----------------------------------------------------------------
-  private lastQueryBody: any;
-  private isFirstLoadAfterSubmit = true;
-  totalRecords = 0;
-  data: IFin21020Data[] = [];
-  virtualData: IFin21020Data[] = [];
+  private lastQueryBody: any; // ! 用來儲存上一次的查詢條件
+  private isFirstLoadAfterSubmit = true; // ! 用來判斷是否為第一次載入
+  totalRecords = 0; // ! 總筆數
+  data: IFin21020Data[] = []; // ! 快取資料
+  virtualData: IFin21020Data[] = []; // ! 虛擬資料
+  private pendingRequests = new Map<number, any>(); // ! 用來儲存未完成的請求
   // ---
   loadDataLazy(event: TableLazyLoadEvent) {
-    if (this.isFirstLoadAfterSubmit || !this.lastQueryBody || this.totalRecords === 0) {
+    if (!this.lastQueryBody || this.totalRecords === 0) {
+      return; // ! 如果沒有上一次的查詢條件 或 是沒有總筆數，就不用載入
+    }
+    // ! 如果是第一次載入，就不用載入
+    if (this.isFirstLoadAfterSubmit) {
       this.isFirstLoadAfterSubmit = false;
       return;
     }
-    const last = (event.first ?? 0) + (event.rows ?? 20);
-    const pageSize = (last === this.totalRecords) ? this.totalRecords % (event.rows ?? 20) : (event.rows ?? 20);
-    const start = (last === this.totalRecords) ? this.totalRecords - pageSize : (event.first ?? 0);
+    const pageSize = (event.rows ?? 100);
+    const start = (event.last === this.totalRecords) ? this.totalRecords - (this.totalRecords % (event.rows ?? 100)) : (event.first ?? 0);
     const end = start + pageSize;
-    const cachedDataSlice = this.data.slice(start, Math.min(end, this.data.length));
+    const cachedDataSlice = this.data.slice(start, Math.min(end, this.data.length)); // ! 取得快取的資料
+    // ! 如果快取的資料長度大於 0 且都不為 null 或 undefined
     if (cachedDataSlice.length > 0 && cachedDataSlice.every(item => item !== null && item !== undefined)) {
       const newVirtualData = [...this.virtualData];
       newVirtualData.splice(start, cachedDataSlice.length, ...cachedDataSlice);
       this.virtualData = newVirtualData;
+      return;
+    }
+    // 檢查這個區段的請求是否已在進行中
+    if (this.pendingRequests.has(start)) {
+      // 已經有請求了，不重複發送
       return;
     }
     const pageIndex = Math.ceil(start / pageSize + 1);
@@ -102,30 +109,53 @@ export class FIN21020Component extends BasicQueryPageComponent<IFin21020Data> im
       pageSize: pageSize,
     };
     this.loading = true;
-    this.fin21020Service.queryFIN21020(body).pipe(finalize(() => this.loading = false)).subscribe(res => {
-      if (this.totalRecords !== res.TotalCount) {
-        this.totalRecords = res.TotalCount;
-        this.data = [];
-        this.virtualData = Array(this.totalRecords).fill(null);
+    // 將 observable 存入 Map
+    const request$ = this.fin21020Service.queryFIN21020(body).pipe(
+      finalize(() => {
+        this.loading = false;
+        // 請求完成後從 Map 中移除
+        this.pendingRequests.delete(start);
+      })
+    );
+    this.pendingRequests.set(start, request$);
+
+    request$.subscribe(res => {
+      // 再次確認，確保資料沒有被另一個更早的請求覆蓋
+      // 這一步是額外的保護，但可以讓邏輯更嚴謹
+      if (this.pendingRequests.has(start)) {
+        if (this.totalRecords !== res.TotalCount) {
+          this.totalRecords = res.TotalCount;
+          this.data = [];
+          this.virtualData = Array(this.totalRecords).fill(null);
+        }
+
+        this.data.splice(start, res.Data.length, ...res.Data);
+
+        const newVirtualData = [...this.virtualData];
+        newVirtualData.splice(start, res.Data.length, ...res.Data);
+        this.virtualData = newVirtualData;
+
+        console.log('查詢成功', this.data);
       }
-      this.data.splice(start, res.Data.length, ...res.Data);
-      const newVirtualData = [...this.virtualData];
-      newVirtualData.splice(start, res.Data.length, ...res.Data);
-      this.virtualData = newVirtualData;
     });
   }
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
-      this.loading = true;
-      this.fin21020Service.queryFIN21020(frm.value).pipe(finalize(() => this.loading = false)).subscribe(res => {
-        this.lastQueryBody = frm.value;
-        this.totalRecords = res.TotalCount;
-        this.data = res.Data; // 快取第一頁資料
-        this.virtualData = Array(this.totalRecords).fill(null);
+      const body = {
+        ...frm.value,
+        pageSize: 100,
+        pageIndex: 1, // 你將初始頁碼改為 1
+        SortBy: [{ field: 'BNK_No', order: 1 }, { field: 'Remit_BAmount', order: 1 }],
+      }
+      this.fin21020Service.queryFIN21020(body).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(res => {
+        this.lastQueryBody = body; // ! 快取查詢條件
+        this.totalRecords = res.TotalCount; // ! 設定總筆數
+        this.data = res.Data; // ! 快取第一頁資料
+        this.virtualData = Array(this.totalRecords).fill(null); // ! 清空虛擬資料
         setTimeout(() => {
-          this.virtualData.splice(0, res.Data.length, ...res.Data);
+          this.virtualData.splice(0, res.Data.length, ...res.Data); // ! 將快取的資料放入虛擬資料
         })
-        this.isFirstLoadAfterSubmit = false;
+        this.isFirstLoadAfterSubmit = false; // ! 設定為非第一次載入
         this.queryStateService.setQueryState(this.ProgNo, frm.value);
       });
     });
