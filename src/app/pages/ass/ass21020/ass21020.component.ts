@@ -26,19 +26,19 @@ import { ASS21020Data } from './ass21020.model';
   styleUrl: './ass21020.component.scss',
   standalone: !0,
   imports: [
-    PanelModule,
     AccordionModule,
-    TranslateModule,
     FormsModule,
     KeyFilterModule,
+    PanelModule,
+    ReactiveFormsModule,
+    TranslateModule,
     ButtonComponent,
     DropdownComponent,
+    InputNumberComponent,
     InputTextComponent,
     MenubarComponent,
     MultiSelectComponent,
-    ReactiveFormsModule,
     TableComponent,
-    InputNumberComponent,
   ],
 })
 export class ASS21020Component extends BasicQueryPageComponent<ASS21020Data> implements OnInit {
@@ -49,36 +49,38 @@ export class ASS21020Component extends BasicQueryPageComponent<ASS21020Data> imp
     TLT_No: new FormControl<string | undefined>(void 0),
     Location_No: new FormControl<string>(''),
     TLT_Name: new FormControl<string>(''),
-    NET_SPACE: new FormControl<number | undefined>(void 0),
+    NET_SPACE: new FormControl<string | undefined>(void 0),
     ENG_Rate: new FormControl<number | undefined>(void 0),
     ...createPaginationConfig([{ field: 'ENG_Type', order: 1 }, { field: 'ENG_MeterNo', order: 1 }]),
   });
   public readonly qf = computed(() => this.queryForm.controls);
-  public readonly totalRecord = computed(() => this.service.ASS21020Data().length);
+  public readonly totalRecords = computed(() => this.service.ASS21020Data().length);
 
-  private readonly engTypeSignal = toSignal(this.qf().ENG_Type.valueChanges);
-  private readonly meterNoSignal = toSignal(this.qf().ENG_MeterNo.valueChanges);
-  private readonly tltNoSignal = toSignal(this.qf().TLT_No.valueChanges);
+  private readonly engTypeSignal = toSignal(this.qf().ENG_Type.valueChanges, { equal: (a, b) => a === b });
+  private readonly meterNoSignal = toSignal(this.qf().ENG_MeterNo.valueChanges, { equal: (a, b) => a === b });
+  private readonly tltNoSignal = toSignal(this.qf().TLT_No.valueChanges, { equal: (a, b) => a === b });
 
   public readonly ratePtn = /^(100(?:\.0{1,2})?|0*(?:\d{1,2}))$/;
 
   public filteredMeterNo: ASS2100ENGMeterType[] = [];
 
-  public readonly totalRecords = computed(() => this.service.ASS21020Data().length);
-
+  /** ENG_Type 改變時，帶出可用的meterNo */
   public readonly engTypeEffect = effect(() => {
+    const engType = this.engTypeSignal();
+    this.logger.debug(`engTypeEffect:`, [engType, this.queryForm.getRawValue()]);
     this.filteredMeterNo = this.service.engMeterNoSignal().filter(i => {
-      if (!this.engTypeSignal()?.length) return !0;
+      if (!engType?.length) return !0;
       return this.service.engTypeSignal()!.some(t => t.Name === i.ENG_Type
         && this.qf().ENG_Type.value?.some(v => v === t.No));
     });
-    this.logger.debug(`engTypeEffect:`, [this.filteredMeterNo]);
-  });
+    this.logger.debug(`engType Effect:`, [this.filteredMeterNo]);
+  }, { allowSignalWrites: !0 });
 
+  /* meterNo改變時，帶出Location_No、ENG_Type */
   public readonly meterNoEffect = effect(() => {
     const meterNo = this.meterNoSignal();
     this.service.tltNoSignal.set([]);
-    this.logger.debug(`meterNoEffect:`, [meterNo, this.queryForm.value]);
+    this.logger.debug(`meterNoEffect:`, [meterNo, this.queryForm.getRawValue()]);
     if (!meterNo) return void this.queryForm.patchValue({
       TLT_No: void 0,
       TLT_Name: '',
@@ -93,19 +95,27 @@ export class ASS21020Component extends BasicQueryPageComponent<ASS21020Data> imp
     const current = this.service.engTypeSignal().find(t => t.Name === metro.ENG_Type);
     this.logger.debug(`metroNo current:`, [current]);
     if (!current) return;
-    !this.qf().ENG_Type.value?.length && this.qf().ENG_Type.patchValue([current.No as EngType]);
-    !this.qf().Location_No.value?.length && this.qf().Location_No.patchValue(metro.Location_No || '');
+    this.queryForm.patchValue({
+      ENG_Type: this.qf().ENG_Type.value?.length ? this.qf().ENG_Type.value : [current.No as EngType],
+      Location_No: metro.Location_No,
+    }, { emitEvent: !1 });
     this.logger.debug(`meterNo changes:`, [meterNo, current]);
   }, { allowSignalWrites: !0 });
 
+  /** TLT_No 改變時，帶出TLT_Name、NET_SPACE */
   public readonly tltNoEffect = effect(() => {
     const tltNo = this.tltNoSignal();
+    this.logger.debug(`tltNoEffect:`, [tltNo, this.queryForm.getRawValue()]);
     if (!tltNo?.length) return;
     const selected = this.service.tltByFlagMap.get(tltNo);
+    this.logger.debug(`tltNo selected:`, [selected]);
     if (!selected) return;
-    this.qf().TLT_Name.patchValue(selected.TLT_Name);
-    this.qf().NET_SPACE.patchValue(selected.NET_SPACE);
-  });
+    this.queryForm.patchValue({
+      TLT_Name: selected.TLT_Name,
+      NET_SPACE: String(selected.NET_SPACE),
+    }, { emitEvent: !1 });
+    this.logger.debug(`tltNo changes:`, [tltNo, selected]);
+  }, { allowSignalWrites: !0 });
 
   public readonly columns: Column[] = [
     { field: 'ENG_Type', header: '能源類型' },
