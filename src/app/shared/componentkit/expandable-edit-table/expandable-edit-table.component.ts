@@ -259,6 +259,12 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
     field: string;  // 欄位名稱，您可以用這個判斷是哪個按鈕
   }>();
 
+  @Output() detailButtonClick = new EventEmitter<{
+    detailData: any;
+    field: string;  // 欄位名稱，您可以用這個判斷是哪個按鈕
+    parentData: any;
+  }>();
+
   @Output() beforeSave = new EventEmitter<{
     data: any,
     preventDefault: () => void
@@ -2352,6 +2358,13 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
     this.buttonClick.emit({ rowData, field });
   }
 
+  onDetailButtonClick(detailData: any, field: string, parentData: any): void {
+    this.detailButtonClick.emit({
+      detailData,
+      field,
+      parentData
+    });
+  }
 
   // 新增方法來檢查當前 tab 是否允許操作
   canAddDetailForCurrentTab(rowData: any): boolean {

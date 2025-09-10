@@ -53,7 +53,8 @@
               (beforeSave)="onBeforeDetailSave($event)" (detailCancel)="onDetailCancel($event)"
               (batchDelete)="onBatchDelete($event)" (detailBatchDelete)="onDetailBatchDelete($event)"
               (addMainItem)="onAddCommissionItem()" (addDetailItem)="onAddDetailItem($event)"
-              (dropdownChange)="onDropdownChange($event)"></app-expandable-edit-table>
+              (dropdownChange)="onDropdownChange($event)"
+              (detailButtonClick)="onDetailButtonClick($event)"></app-expandable-edit-table>
           </div>
 
           <!-- 🎯 保留：資料載入中的提示 -->

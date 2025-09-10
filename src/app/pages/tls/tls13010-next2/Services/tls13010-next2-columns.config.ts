@@ -37,6 +37,18 @@ export class TLS13010Next2ColumnsConfig {
         autoEditOnSelect: true,
         autoSaveOnUnselect: true,
       },
+      {
+        field: 'copy_button',
+        header: '複製',
+        type: 'button',
+        width: '60px',
+        buttonLabel: '複製',
+        buttonIcon: 'pi pi-copy',
+        buttonClass: 'p-button-sm p-button-secondary',
+        buttonTooltip: '複製此折扣設定',
+        editable: false
+
+      },
       { field: 'cag_barcode', header: '折扣別', type: 'dropdown', editable: false, options: discountOptions },
       { field: 'tlt_bdate', header: '合約起始日', type: 'date', editable: true },
       { field: 'tlt_edate', header: '合約終止日', type: 'date', editable: true },
@@ -64,6 +76,17 @@ export class TLS13010Next2ColumnsConfig {
         width: '60px',
         autoEditOnSelect: true,
         autoSaveOnUnselect: true,
+      },
+      {
+        field: 'copy_button',
+        header: '複製',
+        type: 'button',
+        width: '60px',
+        buttonLabel: '複製',
+        buttonIcon: 'pi pi-copy',
+        buttonClass: 'p-button-sm p-button-secondary',
+        buttonTooltip: '複製此扣款項目',
+        editable: false
       },
       { field: 'cag_barcode', header: '折扣別', type: 'dropdown', editable: false, options: discountOptions },
       { field: 'level_bmount', header: '業績計算金額(起)', type: 'number', editable: true },

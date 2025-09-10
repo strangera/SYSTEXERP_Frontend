@@ -83,18 +83,18 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
       showCheckbox: false
     },
     {
-      id: 'annual',
-      label: '年度總業績抽成設定',
-      allowAdd: true,
-      allowBatchDelete: true,
-      showCheckbox: true
-    },
-    {
       id: 'level',
       label: '折扣別層級抽成設定',
       allowAdd: false,
       allowBatchDelete: false,
       showCheckbox: false
+    },
+    {
+      id: 'annual',
+      label: '年度總業績抽成設定',
+      allowAdd: true,
+      allowBatchDelete: true,
+      showCheckbox: true
     }
   ]
   // 數據
@@ -1453,5 +1453,118 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
       this.itemOperationsService.updateItemDetailItems(event.parentData);
       this.saveToWorkflow();
     }
+  }
+
+  onDetailButtonClick(event: {
+    detailData: any;
+    field: string;
+    parentData: any;
+  }): void {
+    console.log('🔘 詳細按鈕點擊事件:', event);
+
+    // 判斷是否為複製按鈕
+    if (event.field === 'copy_button') {
+      this.copyDetailItem(event.detailData, event.parentData);
+    }
+  }
+
+  /**
+   * 複製詳細項目（插入到下一行）
+   */
+  private copyDetailItem(sourceItem: any, parentData: any): void {
+    if (this.isViewMode) {
+      this.notificationService.infoBubble('檢視模式下無法複製項目');
+      return;
+    }
+
+    console.log('📋 開始複製項目:', sourceItem);
+
+    // 取得當前標籤
+    const currentTab = parentData.currentTab || 'discount';
+
+    // 只處理 discount 和 level
+    if (currentTab !== 'discount' && currentTab !== 'level') {
+      console.log('⚠️ 此標籤類型不支援複製功能');
+      return;
+    }
+
+    // 建立複製的項目
+    const copiedItem = this.createCopiedItem(sourceItem, currentTab);
+
+    // 找出原項目的索引位置
+    let targetArray: any[] = [];
+    let sourceIndex = -1;
+
+    switch (currentTab) {
+      case 'discount':
+        targetArray = parentData.discountSettingItems || [];
+        sourceIndex = targetArray.findIndex(item => item.id === sourceItem.id);
+        break;
+
+      case 'level':
+        targetArray = parentData.discountLevelItems || [];
+        sourceIndex = targetArray.findIndex(item => item.id === sourceItem.id);
+        break;
+    }
+
+    // 插入到原項目的下一個位置
+    if (sourceIndex !== -1) {
+      targetArray.splice(sourceIndex + 1, 0, copiedItem);
+      console.log(`✅ 已在索引 ${sourceIndex + 1} 位置插入複製項目`);
+    } else {
+      // 如果找不到原項目位置，就加到最後
+      targetArray.push(copiedItem);
+      console.log('⚠️ 找不到原項目位置，將複製項目加到最後');
+    }
+
+    // 更新顯示
+    this.refreshSingleItemDetailDisplay(parentData);
+
+    // 強制觸發變更檢測
+    this.cdr.detectChanges();
+
+    // 儲存到工作流程
+    this.saveToWorkflow();
+
+    // 顯示成功訊息
+    this.notificationService.successBubble('項目複製成功');
+  }
+
+  /**
+   * 建立複製的項目（只處理 discount 和 level）
+   */
+  private createCopiedItem(sourceItem: any, itemType: string): any {
+    const tempId = this.generateTempId();
+
+    // 基礎複製物件
+    const copiedItem: any = {
+      id: tempId,
+      _status: 'new',
+      selected: true,  // 預設不勾選
+      is_configured: false,
+      is_enabled: false
+    };
+
+    // 根據類型處理特定欄位
+    switch (itemType) {
+      case 'discount':
+        // 折扣設定複製
+        copiedItem.cag_barcode = sourceItem.cag_barcode || '';
+        copiedItem.cag_charge_rate = sourceItem.cag_charge_rate || 0;
+        copiedItem.tlt_bdate = sourceItem.tlt_bdate ? new Date(sourceItem.tlt_bdate) : new Date();
+        copiedItem.tlt_edate = sourceItem.tlt_edate ? new Date(sourceItem.tlt_edate) : new Date();
+        break;
+
+      case 'level':
+        // 層級抽成複製
+        copiedItem.cag_barcode = sourceItem.cag_barcode || '';
+        copiedItem.level_bmount = sourceItem.level_bmount || 0;
+        copiedItem.level_eamount = sourceItem.level_eamount || 0;
+        copiedItem.level_charge_rate = sourceItem.level_charge_rate || 0;
+        break;
+    }
+
+    console.log('📋 複製完成的項目:', copiedItem);
+    return copiedItem;
   }
 }

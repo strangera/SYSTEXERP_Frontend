@@ -1,3 +1,4 @@
+<!-- eslint-disable @angular-eslint/template/elements-content -->
 <!-- expandable-edit-table.component.html -->
 <div class="expandable-edit-table-container">
   <h3 *ngIf="title" class="expandable-table-title">{{ title }}</h3>
@@ -173,7 +174,13 @@
                   </div>
                 </div>
               </span>
-
+              <!-- 按鈕在非編輯狀態下也要顯示 -->
+              <ng-container *ngSwitchCase="'button'">
+                <button pButton pRipple type="button" [label]="col.buttonLabel || '按鈕'" [icon]="col.buttonIcon || ''"
+                  [ngClass]="col.buttonClass || 'p-button-sm p-button-info'" [pTooltip]="col.buttonTooltip || ''"
+                  (click)="onButtonClick(rowData, col.field)">
+                </button>
+              </ng-container>
               <!-- 預設顯示 -->
               <span *ngSwitchDefault>{{ rowData[col.field] }}</span>
             </ng-container>
@@ -346,7 +353,13 @@
                   </div>
                 </div>
               </span>
-
+              <!-- 按鈕在非編輯狀態下也要顯示 -->
+              <ng-container *ngSwitchCase="'button'">
+                <button pButton pRipple type="button" [label]="col.buttonLabel || '按鈕'" [icon]="col.buttonIcon || ''"
+                  [ngClass]="col.buttonClass || 'p-button-sm p-button-info'" [pTooltip]="col.buttonTooltip || ''"
+                  (click)="onDetailButtonClick(detailData, col.field,rowData)">
+                </button>
+              </ng-container>
               <!-- 下拉選單顯示 -->
               <span *ngSwitchCase="'dropdown'">
                 {{ getDropdownDisplayText(detailData, col) }}
@@ -364,6 +377,7 @@
         <td *ngIf="!readonly" [ngStyle]="getDetailActionBodyStyle()">
           <div class="detail-edit-buttons flex justify-content-center gap-2">
             <!-- 編輯按鈕 -->
+
             <button *ngIf="!isDetailEditing(ri, di)" pButton pRipple type="button" icon="pi pi-pencil" pTooltip="編輯"
               class="p-button-rounded p-button-text" (click)="onDetailEditInit(detailData, rowData, ri, di)"></button>
 
