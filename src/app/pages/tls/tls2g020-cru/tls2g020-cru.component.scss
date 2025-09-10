@@ -1,41 +1,70 @@
+:host ::ng-deep .calendar-table {
+  font-size: 14px;
 
-.calendar-table {
-  border-collapse: collapse;
-  width: 100%;
-}
+  th, td {
+    border: 1px solid #ddd;
+    text-align: center;
+    vertical-align: middle;
+    padding: 6px;
+    background: var(--surface-a);
+  }
 
-.calendar-table th,
-.calendar-table td {
-  border: 1px solid #ccc;
-  text-align: center;
-  width: 100px;
-  height: 40px;
-  background: #fff;
-  padding: 4px;
-}
+  /* 星期表頭 */
+  .calendar-header-row th {
+    background: var(--indigo-900) !important;
+    color: var(--surface-a) !important;
+    font-weight: bold;
+    position: sticky;
+    top: 0;
+    z-index: 2;
+  }
 
-.sticky-header {
-  position: sticky;
-  top: 0;
-  background: #f5f5f5;
-  z-index: 2;
-}
+  /* 左側固定欄 */
+  .sticky-col {
+    background: inherit !important;
+    color:  rgba(0, 0, 0, 0.9)!important;
+    font-weight: bold;
+    text-align: left;
+    position: sticky;
+    left: 0;
+    z-index: 3;
+    min-width: 80px;
+  }
 
-.sticky-col {
-  position: sticky;
-  left: 0;
-  background: #f9f9f9;
-  z-index: 1;
-  font-weight: bold;
-  min-width: 80px;
-}
+  /* 日期列 */
+  .row-date td {
+    background-color: var(--blue-100) !important;
+    font-weight: 500;
+  }
 
-.sticky-col.sticky-header {
-  z-index: 3;
-}
+  /* 實際預算列 */
+  .row-budget td {
+    background-color: var(--sidebar-item-bg-active)!important; // 白色
+  }
 
-.num-input {
-  width: 90%;
-  padding: 2px;
-  text-align: right;
+  /* 其他列 (抽成率 / 抽成額) */
+  .row-rate td,
+  .row-commission td {
+    background-color: var(--blue-50) !important; // 統一淺灰色
+  }
+
+  /* hover 整行高亮 */
+  .p-datatable-tbody > tr:hover > td {
+    background-color: #e6f2ff !important; // 淺藍色高亮
+  }
+
+  /* 每週區塊分隔線 */
+  .week-separator {
+    border-bottom: 1px solid #bbb !important;
+  }
+
+  .num-input {
+    text-align: right;
+  }
+
+  .text-center {
+    display: block;
+    text-align: center;
+    color: var(--primary-color);
+  }
 }

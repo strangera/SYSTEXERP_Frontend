@@ -49,6 +49,9 @@ export class TLS2G020CRUComponent extends BasicCruPageComponent<any> implements 
   dataForm = this.formBuilder.nonNullable.group({
     budget_yymm: [{ value: null, disabled: true }],
     tlt_no_tlt_name: [{ value: null, disabled: true }],
+    BUDGET_Mbudget: [{ value: null, disabled: true }],
+    cag_charge_rate: [{ value: null, disabled: true }],
+    charge_amt: [{ value: null, disabled: true }],
   });
 
   tltNoOptions: IDropdownItem[] = [];
