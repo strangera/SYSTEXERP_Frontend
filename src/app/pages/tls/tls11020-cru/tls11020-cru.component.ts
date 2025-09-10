@@ -31,14 +31,14 @@ import { Button } from 'primeng/button';
         InputTextComponent,
         DropdownComponent,
         NgIf,
-        Button,
+   
         TranslateModule,
     ],
 })
 export class TLS11020CRUComponent extends BasicCruPageComponent<any> {
   deductionCategoryOptions: any[] = [];
 
-  inputForm = this.formBuilder.group({
+  dataForm = this.formBuilder.group({
     CAP_Item: [
       { value: '由系統帶入', disabled: true },
       [
@@ -68,11 +68,11 @@ export class TLS11020CRUComponent extends BasicCruPageComponent<any> {
   }
 
   ngOnInit(): void {
-    this.initializePage('TLS11020', this.inputForm);
+    this.initializePage('TLS11020', this.dataForm);
 
     // 編輯狀態時禁用 CAP_Type
     if (this.crudstatus === CRUDStatus.Edit) {
-      this.inputForm.get('CAP_Type')?.disable();
+      this.dataForm.get('CAP_Type')?.disable();
     }
 
     this.deductionService.getDeductionCategories().subscribe((data) => {
@@ -90,8 +90,8 @@ export class TLS11020CRUComponent extends BasicCruPageComponent<any> {
 
 
   onSubmit(): void {
-    this.handleSubmit(this.inputForm, () => {
-      const raw = this.inputForm.getRawValue();
+    this.handleSubmit(this.dataForm, () => {
+      const raw = this.dataForm.getRawValue();
       const capType = raw.CAP_Type;
 
       // ✅ CAP_Type 長度檢查
@@ -110,9 +110,9 @@ export class TLS11020CRUComponent extends BasicCruPageComponent<any> {
 
 
             // ✅ 清空表單（保留 CAP_Item 為預設值）
-            this.inputForm.reset();
-            this.inputForm.get('CAP_Item')?.disable(); // 再次禁用
-            this.inputForm.patchValue({
+            this.dataForm.reset();
+            this.dataForm.get('CAP_Item')?.disable(); // 再次禁用
+            this.dataForm.patchValue({
               CAP_Item: '由系統帶入',
               GUI_FLAG: 'Y',
               CAP_TaxType: '1',
@@ -137,9 +137,9 @@ export class TLS11020CRUComponent extends BasicCruPageComponent<any> {
             this.messageService.successBubble(this.translate.instant('updated-successfully'));
             this.onCancel() // ✅ 導回查詢頁
             // ✅ 清空表單並保留預設值（同新增時處理）
-            this.inputForm.reset();
-            this.inputForm.get('CAP_Item')?.disable();
-            this.inputForm.patchValue({
+            this.dataForm.reset();
+            this.dataForm.get('CAP_Item')?.disable();
+            this.dataForm.patchValue({
               CAP_Item: '由系統帶入',
               GUI_FLAG: 'Y',
               CAP_TaxType: '1',
@@ -155,15 +155,15 @@ export class TLS11020CRUComponent extends BasicCruPageComponent<any> {
   }
   onClear(): void {
     const keepValues = {
-      CAP_Item: this.inputForm.get('CAP_Item')?.value,
-      CAP_Type: this.inputForm.get('CAP_Type')?.value,
+      CAP_Item: this.dataForm.get('CAP_Item')?.value,
+      CAP_Type: this.dataForm.get('CAP_Type')?.value,
 
     };
     // 重設表單
-    this.inputForm.reset();
+    this.dataForm.reset();
     // 設回保留欄位的值
-    this.inputForm.patchValue(keepValues);
-    this.inputForm.markAsPristine();
+    this.dataForm.patchValue(keepValues);
+    this.dataForm.markAsPristine();
   }
   clearBtnConfig = {
     label: '清除',

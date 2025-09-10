@@ -12,6 +12,7 @@ import { InputTextComponent } from '../../../shared/componentkit/input-text/inpu
 import { NgIf } from '@angular/common';
 import { TranslateModule } from '@ngx-translate/core';
 import { tap } from 'rxjs';
+import { InputNumberComponent } from '@shared/componentkit/input-number/input-number.component';
 
 
 @Component({
@@ -29,6 +30,7 @@ import { tap } from 'rxjs';
         InputTextComponent,
         NgIf,
         TranslateModule,
+        InputNumberComponent
     ],
 })
 export class TLS51130CRUComponent extends BasicCruPageComponent<any> implements OnInit {
@@ -43,7 +45,7 @@ export class TLS51130CRUComponent extends BasicCruPageComponent<any> implements 
     CAT_LNo: ['', Validators.required],
     CAT_MNo: [''],
     CAT_SNo: [''],
-    PLU_OrderPrcRate: [''],
+    PLU_OrderPrcRate: [null, [Validators.min(0), Validators.max(99.99)]],
     DISC_Remark: [''],
   });
 
