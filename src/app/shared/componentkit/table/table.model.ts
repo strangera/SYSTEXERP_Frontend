@@ -70,17 +70,17 @@ export interface AddButton {
   disabled?: (rowData: any) => boolean;
 }
 
-export interface RowEditSaveEvent {
-  oldData: any;
-  newData: any;
+export interface RowEditSaveEvent<T = any> {
+  oldData: T;
+  newData: T;
   ri: number;
-  data: any;
+  data: T | T[];
 }
 // 欄位變更事件
-export interface FieldChangeEvent {
-  rowData: any;
+export interface FieldChangeEvent<T = any> {
+  rowData: T;
   field: string;
-  value: any;
+  value: T[keyof T];
   index?: number;
 }
 //formatDate：會輸出 2024/05/27 格式
