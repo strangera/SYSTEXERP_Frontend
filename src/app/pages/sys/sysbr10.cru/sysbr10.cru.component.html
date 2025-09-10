@@ -60,11 +60,11 @@
     [showDelete]="!isRead && showDelete"
     [showCheckBox]="!isRead && showCheckBox"
 
-    [showEdit]="false"
+    [showEdit]="!isRead && showEdit"
     [showDetail]="false"
     [showReportMode]="false"
     [deleteData]="!isRead && showDelete"
-    [showManage]="false"
+    [showManage]="!isRead && showManage"
 
     [disabled]="isRead">
   </app-table>

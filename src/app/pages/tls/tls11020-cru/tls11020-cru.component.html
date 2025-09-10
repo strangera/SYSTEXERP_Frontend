@@ -9,69 +9,70 @@
   </div>
 
   <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
-    <form [formGroup]="inputForm">
+    <form [formGroup]="dataForm">
       <div class="grid p-fluid">
         <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text label="扣款項目編號" [control]="inputForm.controls.CAP_Item" [submitted]="submitted">
+          <app-input-text label="扣款項目編號" [control]="dataForm.controls.CAP_Item" [submitted]="submitted">
           </app-input-text>
         </div>
 
         <div class="col-12 md:col-6 lg:col-4">
           <app-dropdown label="扣款類別" [options]="deductionCategoryOptions" optionLabel="label" optionValue="value"
-            [control]="inputForm.controls.CAP_Type" [submitted]="submitted" [style.width.%]="100">
+            [control]="dataForm.controls.CAP_Type" [submitted]="submitted" [style.width.%]="100">
           </app-dropdown>
         </div>
 
         <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text label="扣款項目名稱" [control]="inputForm.controls.CAP_Name" [submitted]="submitted">
+          <app-input-text label="扣款項目名稱" [control]="dataForm.controls.CAP_Name" [submitted]="submitted">
           </app-input-text>
         </div>
 
         <div class="col-12 md:col-6 lg:col-4">
           <app-dropdown label="會計科目" [options]="accountOptions" optionLabel="formLabel" optionValue="value"
-            [control]="inputForm.controls.AccNo" [submitted]="submitted" [style.width.%]="100">
+            [control]="dataForm.controls.AccNo" [submitted]="submitted" [style.width.%]="100">
           </app-dropdown>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
           <app-dropdown label="是否開立發票" [options]="[{ label: '開立', value: 'Y' }, { label: '不開立', value: 'N' }]"
-            optionLabel="label" optionValue="value" [control]="inputForm.controls.GUI_FLAG" [submitted]="submitted"
+            optionLabel="label" optionValue="value" [control]="dataForm.controls.GUI_FLAG" [submitted]="submitted"
             [style.width.%]="100">
           </app-dropdown>
         </div>
 
         <div class="col-12 md:col-6 lg:col-4">
           <app-dropdown label="課稅別" [options]="[{ label: '免稅', value: '0' }, { label: '應稅', value: '1' }]"
-            optionLabel="label" optionValue="value" [control]="inputForm.controls.CAP_TaxType" [submitted]="submitted"
+            optionLabel="label" optionValue="value" [control]="dataForm.controls.CAP_TaxType" [submitted]="submitted"
             [style.width.%]="100">
           </app-dropdown>
         </div>
 
         <div class="col-12 md:col-6 lg:col-4">
           <app-dropdown label="是否為常用" [options]="[{ label: '常用', value: 'Y' }, { label: '不常用', value: 'N' }]"
-            optionLabel="label" optionValue="value" [control]="inputForm.controls.IsCommonlyUsed"
+            optionLabel="label" optionValue="value" [control]="dataForm.controls.IsCommonlyUsed"
             [submitted]="submitted" [style.width.%]="100">
           </app-dropdown>
         </div>
 
         <!-- <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text label="扣款項目合約列印區分" [control]="inputForm.controls.Print_Area" [submitted]="submitted">
+          <app-input-text label="扣款項目合約列印區分" [control]="dataForm.controls.Print_Area" [submitted]="submitted">
           </app-input-text>
         </div> -->
 
         <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text label="備註" [control]="inputForm.controls.CAP_Remark" [submitted]="submitted">
+          <app-input-text label="備註" [control]="dataForm.controls.CAP_Remark" [submitted]="submitted">
           </app-input-text>
         </div>
       </div>
       <div class="col pt-4">
         <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3" *ngIf="!isFormReadable">
-          <p-button
+          <!-- <p-button
   id="clearButton"
   (click)="onClear()"
   [label]="clearBtnConfig.label"
   [class]="clearBtnConfig.class"
   [text]="clearBtnConfig.text">
-</p-button>
+</p-button> -->
+<app-button btnType="cancel" [form]="dataForm"></app-button>
           <app-button btnType="submit" (click)="onSubmit()"></app-button>
         </div>
       </div>
