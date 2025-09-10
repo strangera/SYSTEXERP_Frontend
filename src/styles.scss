@@ -184,3 +184,31 @@ input[disabled],
     top;
 }
 
+//!! 客戶要求，先全域
+.p-datatable {
+  .p-datatable-thead > tr > th,
+  .p-datatable-tbody > tr > td {
+    font-size: 12px !important;
+  }
+  &.p-datatable-sm {
+    .p-datatable-thead > tr > th,
+    .p-datatable-tbody > tr > td {
+      padding: 0.2rem;
+    }
+  }
+  .p-button.p-button-icon-only {
+    width: 2.5rem;
+    height: 2.5rem;
+    padding: 0;
+  }
+  .p-inputtext {
+    padding: 0.5rem;
+  }
+}
+
+.p-button.p-fileupload-choose {
+  border: 1px solid var(--surface-border);
+  padding: 1rem;
+  height: 100%;
+  width: max-content;
+}

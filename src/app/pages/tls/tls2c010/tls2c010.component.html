@@ -25,55 +25,67 @@
 </div>
 
 <div class="card">
-  <app-button class="flex justify-content-end" label="匯出excel" severity="info" [icon]="'pi pi-file-export'"
-    (click)="onExportExcel()" />
-  <p-tabView>
-    <!-- YY -->
-    <p-tabPanel header="開立業主發票(拋傳票)">
-      <div class="col-12">
-        <span>借方</span>
-        <app-table tableKey="yy_up" [data]="data_yy_up" [columns]="columns_yy_up" [loading]="loading"
-          [showDelete]="false" [showManage]="false" [showReportMode]="false" [showPaginator]="false"
-          [showCaption]="false"></app-table>
-      </div>
-      <div class="col-12">
-        <span>貸方</span>
-        <app-table tableKey="yy_down" [data]="data_yy_down" [columns]="columns_yy_down" [loading]="loading"
-          [showDelete]="false" [showManage]="false" [showReportMode]="false" [showPaginator]="false"
-          [showCaption]="false"></app-table>
-      </div>
-    </p-tabPanel>
+  <div class="flex justify-content-end gap-2">
+    <p-button label="匯出excel" severity="success" [icon]="'fa-regular fa-file-lines'" (click)="onExportExcel()"
+      [disabled]="!canPerformAction('70')" [loading]="exportBtnLoding" />
+    <p-button label="列印PDF" severity="info" [icon]="'fa-regular fa-file-pdf'" (click)="onExportPdf()"
+      [disabled]="!canPerformAction('60')" [loading]="pdfBtnLoding" />
+  </div>
 
-    <!-- NY -->
-    <p-tabPanel header="非開立業主發票(拋傳票)">
-      <div class="col-12">
-        <span>借方</span>
-        <app-table tableKey="ny_up" [data]="data_ny_up" [columns]="columns_ny_up" [loading]="loading"
-          [showDelete]="false" [showManage]="false" [showReportMode]="false" [showPaginator]="false"
-          [showCaption]="false"></app-table>
-      </div>
-      <div class="col-12">
-        <span>貸方</span>
-        <app-table tableKey="ny_down" [data]="data_ny_down" [columns]="columns_ny_down" [loading]="loading"
-          [showDelete]="false" [showManage]="false" [showReportMode]="false" [showPaginator]="false"
-          [showCaption]="false"></app-table>
-      </div>
-    </p-tabPanel>
+  <!-- YY -->
+  <div class="col-12 pb-0">
+    <span>開立業主發票(拋傳票)</span>
+    <div class="table-with-label">
+      <div class="table-label">借方</div>
+      <app-table tableKey="yy_up" [data]="data_yy_up" [columns]="columns_yy_up" [loading]="loading" [showDelete]="false"
+        [showManage]="false" [showReportMode]="false" [showPaginator]="false" [showCaption]="false"
+        [showSort]="false"></app-table>
+    </div>
+  </div>
+  <div class="col-12 pt-0">
+    <div class="table-with-label">
+      <div class="table-label">貸方</div>
+      <app-table tableKey="yy_down" [data]="data_yy_down" [columns]="columns_yy_down" [loading]="loading"
+        [showDelete]="false" [showManage]="false" [showReportMode]="false" [showPaginator]="false" [showCaption]="false"
+        [showSort]="false"></app-table>
+    </div>
+  </div>
 
-    <!-- NN -->
-    <p-tabPanel header="非開立業主發票及收現(不拋傳票)">
-      <div class="col-12">
-        <span>借方</span>
-        <app-table tableKey="nn_up" [data]="data_nn_up" [columns]="columns_nn_up" [loading]="loading"
-          [showDelete]="false" [showManage]="false" [showReportMode]="false" [showPaginator]="false"
-          [showCaption]="false"></app-table>
-      </div>
-      <div class="col-12">
-        <span>貸方</span>
-        <app-table tableKey="nn_down" [data]="data_nn_down" [columns]="columns_nn_down" [loading]="loading"
-          [showDelete]="false" [showManage]="false" [showReportMode]="false" [showPaginator]="false"
-          [showCaption]="false"></app-table>
-      </div>
-    </p-tabPanel>
-  </p-tabView>
+  <!-- NY -->
+  <div class="col-12 pb-0 mt-4">
+    <span>非開立業主發票(拋傳票)</span>
+    <div class="table-with-label">
+      <div class="table-label">借方</div>
+      <app-table tableKey="ny_up" [data]="data_ny_up" [columns]="columns_ny_up" [loading]="loading" [showDelete]="false"
+        [showManage]="false" [showReportMode]="false" [showPaginator]="false" [showCaption]="false"
+        [showSort]="false"></app-table>
+    </div>
+  </div>
+  <div class="col-12 pt-0">
+    <div class="table-with-label">
+      <div class="table-label">貸方</div>
+      <app-table tableKey="ny_down" [data]="data_ny_down" [columns]="columns_ny_down" [loading]="loading"
+        [showDelete]="false" [showManage]="false" [showReportMode]="false" [showPaginator]="false" [showCaption]="false"
+        [showSort]="false"></app-table>
+    </div>
+  </div>
+
+  <!-- NN -->
+  <div class="col-12 pb-0 mt-4">
+    <span>非開立業主發票及收現(不拋傳票)</span>
+    <div class="table-with-label">
+      <div class="table-label">借方</div>
+      <app-table tableKey="nn_up" [data]="data_nn_up" [columns]="columns_nn_up" [loading]="loading" [showDelete]="false"
+        [showManage]="false" [showReportMode]="false" [showPaginator]="false" [showCaption]="false"
+        [showSort]="false"></app-table>
+    </div>
+  </div>
+  <div class="col-12 pt-0">
+    <div class="table-with-label">
+      <div class="table-label">貸方</div>
+      <app-table tableKey="nn_down" [data]="data_nn_down" [columns]="columns_nn_down" [loading]="loading"
+        [showDelete]="false" [showManage]="false" [showReportMode]="false" [showPaginator]="false" [showCaption]="false"
+        [showSort]="false"></app-table>
+    </div>
+  </div>
 </div>

@@ -83,6 +83,7 @@ export interface TLS31030DetailResponse {
   AvgTicket: number;
   tlt_space: number;
   MonthlyPSM: number;
+  MonthlyPayment: number;
   MonthlyBudgetTotal: number;
   MonthlySalesTotal: number;
   CompletionRate: number;

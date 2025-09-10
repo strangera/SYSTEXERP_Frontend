@@ -70,48 +70,17 @@ drop table POS2008;
 create table POS2008
 (
      id                   NUMERIC(19,0) IDENTITY(1,1) NOT NULL,
-     MID                 numeric(19,0)        DEFAULT 0 not null, /*商戶編號*/
      MAM_No                 varchar(16)         not null ,     /*促銷編號(變價單號)=POS2004.MAM_No PR+YYYYMMDD+SSSS*/
-     SYS_StoreNo            VARCHAR(10)         not null,      /*公司編號/店號*/
      PLU_MagNo              varchar(20)         not null ,     /*貨號*/
+
      PLU_SalePrc            numeric (10, 2)         null ,     /*原售價*/
      MAM_UnitPrc            numeric (10,2)          null ,     /*促銷單價-POS售價*/
      PLU_OrderPrc           numeric (10, 2)         null ,     /*原進價*/
      MAM_OrderPrc           numeric (10, 2)         null,      /*促銷進價*/
 
-     PLU_SalePrcRateOrg     numeric (10, 2)         null ,     /*原售價折數(調整前)*/
-     PLU_OrderPrcRateOrg    numeric (10, 2)         null ,     /*原進價折數(調整前)*/
-     PLU_MemPrcRateOrg      numeric (10, 2)         null ,     /*原會員價折數(調整前)*/
-     MAM_MemUnitPrc2RateOrg numeric (10, 2)         null ,     /*原員購價折數(調整前)*/
-     MAM_MemUnitPrc3RateOrg numeric (10, 2)         null ,     /*原聯名卡價折數(調整前)*/
-
      PLU_OrderPrcRate       numeric (10, 2)         null ,     /*新進價折數*/
-     PLU_SalePrcRate        numeric (10, 2)         null ,     /*新售價折數*/
-     PLU_MemPrcRate         numeric (10, 2)         null ,     /*新會員價折數*/
-     MAM_MemUnitPrc2Rate    numeric (10, 2)         null ,     /*新員購價折數*/
-     MAM_MemUnitPrc3Rate    numeric (10, 2)         null ,     /*新聯名卡價折數*/
 
-	 PLU_MemPrc             numeric (10, 2)         null ,     /*會員價*/
-     PLU_MemPrc2            numeric (10, 2)         null ,     /*員工價*/
-     PLU_MemPrc3            numeric (10, 2)         null ,     /*聯名卡價*/
-
-	 MAM_MemUnitPrc         numeric (10, 2)         null ,     /*會員價*/
-     MAM_MemUnitPrc2        numeric (10, 2)         null ,     /*員工價*/
-	 MAM_MemUnitPrc3        numeric (10, 2)         null ,     /*聯名卡價*/
      MAD_Remark             nvarchar(200)           null ,     /*明細備註*/
-
-     MAM_Condition          numeric(8)              null ,     /*組合最少購買數量/購買數量/Group購買量/N數量*/
-     MAM_AddPrc             numeric(10,2)           null ,     /*群組總數*/
-     MAM_AddQty             numeric(8)              null ,     /*商品群組/M數量*/
-     MAM_AddPLU_No          varchar(13)             null ,     /*贈品貨號/A,B區分群組*/
-     MAM_DiscAmt            numeric(10,2)           null ,     /*優惠價/印花價*/
-     CRT_Date               datetime                null ,     /*建立日期*/
-     CRT_USR_No             varchar (16)            null ,     /*建立人員*/
-     CRT_USR_Name           nvarchar (20)           null ,     /*建立人員姓名*/
-     UPD_Date               datetime                null ,     /*變更日期*/
-     UPD_USR_No             varchar (16)            null ,     /*變更人員*/
-     UPD_USR_Name           nvarchar (20)           null ,     /*變更人員姓名*/
-
 	 CONSTRAINT PK_POS2008 PRIMARY KEY CLUSTERED (id)
 );
 

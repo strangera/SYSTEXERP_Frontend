@@ -2,7 +2,6 @@ interface Sys1000Base {
   ID: number;
   SYS_Type: string;
   SYS_TypeName: string;
-  SYS_Enabled: string | null;
   SYS_Sort: number;
   CRT_Date: string;
   CRT_USR_No: number;

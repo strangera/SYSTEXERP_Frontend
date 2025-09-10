@@ -11,6 +11,8 @@ import { CalendarComponent } from '@shared/componentkit/calendar/calendar.compon
 import { ASS21040Service } from '@service/api/ass/ass21040.service';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { finalize } from 'rxjs';
+import { environment } from 'src/environments/environment';
+import { getSYS1000Options } from '@service/system/sys1000.service';
 
 @Component({
   selector: 'app-ass21040',
@@ -33,11 +35,7 @@ export class ASS21040Component extends BasicQueryPageComponent<unknown> implemen
     ENG_Type: [null, [Validators.required]],
   });
   totalRecords = 0;
-  ENG_TypeOptions: { value: string; label: string }[] = [
-    { value: 'G01', label: '水錶' },
-    { value: 'G02', label: '電錶' },
-    { value: 'G03', label: '瓦斯' },
-  ];
+  ENG_TypeOptions = getSYS1000Options('ENG_Type');
   constructor(
     private aSS21040Service: ASS21040Service
   ) {
@@ -82,6 +80,7 @@ export class ASS21040Component extends BasicQueryPageComponent<unknown> implemen
         this.aSS21040Service.printASS21040(body).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(response => {
           if (response.Data.Print_URL) {
             this.messageService.successBubble('列印成功');
+            window.open(environment.ApiUrl + response.Data.Print_URL);
           } else {
             this.messageService.errorBubble(response.Message);
           }

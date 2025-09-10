@@ -1,170 +1,63 @@
-import { Component } from '@angular/core';
-import { FormBuilder, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { NavigationExtras, Router } from '@angular/router';
-// Permissions
-import { FunsrightInfo, PermissionsInfo } from '../../../shared/models/system/funsrightInfo';
-// Shared
-import { AuthService } from '../../../service/system/auth.service';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-
-import { ValidationService } from '../../../shared/service/validation.service';
-//File
+import { DropdownApiService } from '@service/utility/dropdown-api.service';
+import { Component, OnInit } from '@angular/core';
+import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { FileUploadComponent } from '../../../shared/componentkit/file-upload/file-upload.component';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { AccordionModule } from 'primeng/accordion';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { TranslateModule } from '@ngx-translate/core';
+import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
+import { FileUploadHandlerEvent } from 'primeng/fileupload';
+import { DividerModule } from 'primeng/divider';
+import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
+import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
+import { Observable } from 'rxjs';
+import { AsyncPipe } from '@angular/common';
+import { Option } from '@service/utility/dropdown-api.model';
+import { IDropdownItem } from '@service/utility/dropDownList.service';
 
 // 2.2.16.1 專櫃預估業績轉入作業
 @Component({
   selector: 'app-tls2g010',
   templateUrl: './tls2g010.component.html',
-  styleUrl: './tls2g010.component.scss',
   standalone: true,
-  imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, FileUploadComponent, InputTextComponent, TranslateModule]
+  imports: [AsyncPipe, CalendarComponent, DropdownComponent, DividerModule, MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, FileUploadComponent, InputTextComponent, TranslateModule]
 })
-export class TLS2G010Component {
-  ProgNo: string = '220083';
-  // 權限
-  funInfo?: FunsrightInfo;
-
-  // 查詢
-  // ----------------------------------------------------------------
-  loading: boolean = false;
-  submitted: boolean = false;
+export class TLS2G010Component extends BasicQueryPageComponent<any> implements OnInit {
   queryForm = this.formBuilder.group({
-    worksheetName: ['', [Validators.required, Validators.maxLength(30)]], // 工作表名稱
-    usagecount: [0, [Validators.required]], // 次數限制 (0 不限制)
+    worksheetName: [{ value: '系統帶入(excel檔名)', disabled: true }], // 工作表名稱
+    budget_yymm: [null, [Validators.required]],
+    building_no: [null],
+    FLOOR_NO: [null],
+    section_no: [null],
   });
-  // Upload files
-  fileType: string = '';
-  uploadUrl: string = 'https://www.primefaces.org/cdn/api/upload.php';
-  // 表格
-  // ----------------------------------------------------------------
-  data: any[] = [
-    //{ contactPerson: 'A先生', contactDate: '2024-08-08', UID: '123' ,industryType: '停車管理', category: '專櫃。意向書',version: 1, rentNumber: 1, progress: '未審核'},
-    //{ contactPerson: 'B先生', contactDate: '2024-08-09', UID: '456' ,industryType: '停車管理', category: '專櫃。意向書',version: 1, rentNumber: 2, progress: '已審核'},
-    //{ contactPerson: 'C先生', contactDate: '2024-08-10', UID: '789' ,industryType: '停車管理', category: '專櫃。意向書',version: 1, rentNumber: 3, progress: '未審核'},
-    // 其他資料
-  ];
-  filteredData: any[] = [...this.data];
-  columns: any[] = [
-    { field: 'contactPerson', header: '洽談者', visible: true },
-    { field: 'contactDate', header: '洽談日', visible: true },
-    { field: 'UID', header: '統編/廠商', visible: true },
-    { field: 'industryType', header: '大分類', visible: true },
-    { field: 'category', header: '類型', visible: true },
-    { field: 'version', header: '版本', visible: true },
-    { field: 'rentNumber', header: '位置租賃數', visible: true },
-    { field: 'progress', header: '進度', visible: true },
-    // 其他欄位
-  ];
-  // ----------------------------------------------------------------
+  // 館別 樓層 組織代碼 下拉
+  buildingOptions?: Observable<IDropdownItem[] | null>;
+  floorOptions?: Observable<IDropdownItem[] | null>;
+  sectionOptions?: Observable<Option[] | null>;
+
+  files: File[] = [];
 
   constructor(
-    private router: Router,
-    private formBuilder: FormBuilder,
-    private messageService: NotificationService,
-    private authService: AuthService,
-    private validationService: ValidationService,
+    private readonly dropdownApiService: DropdownApiService
   ) {
+    super();
   }
 
   ngOnInit(): void {
-    //
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
+    this.initializePage('TLS2G010', '/TLS/TLS2G010cru', this.queryForm, (form) => this.onSubmit(form));
+    this.buildingOptions = this.dropdownApiService.querySys3800();
+    this.floorOptions = this.dropdownApiService.querySys3900();
+    this.sectionOptions = this.dropdownApiService.querySys3100();
   }
-
-  onFileSelected(event: any) {
-    const file = event.target.files[0];
-    if (file) {
-      // 處理檔案上傳邏輯
-      console.log('Selected file:', file);
-    }
-  }
-
-  canQuery(): boolean {
-    return true;
-  }
-
-  canAdd(): boolean {
-    return true;
-  }
-
-  canEdit(): boolean {
-    return true;
-  }
-
   onSubmit(frm: FormGroup) {
-    console.log(frm.value);
-    this.submitted = true;
-    this.loading = true;
-    this.messageService.blockUi();
+    this.handleSubmit(frm, () => {
 
-    if (frm.valid && this.canQuery()) {
-      // 提交邏輯
-      // Service
-      // this.xxxService.queryMachine(frm.value as xxxInterface)
-      //  .subscribe((response: any) => {
-      //    this.rows = response.xxx;
-      // });
+    })
+  }
+  handleCustomUpload(event: FileUploadHandlerEvent) {
+    if (event.files && event.files.length > 0) {
     }
-
-    this.loading = false;
-    this.messageService.unblockUi();
-  }
-
-  onSubmitQuery(frm: FormGroup) {
-    // 查詢邏輯
-    this.onSubmit(frm);
-  }
-
-  onClearForm() {
-    this.queryForm.reset();  // 重置表單
-  }
-
-  onCreate() {
-    if (this.canAdd()) {
-      let extras: NavigationExtras = {
-        state: {
-          crudstatus: CRUDStatus.Create,
-          queryform: this.queryForm,
-        },
-        skipLocationChange: true
-      };
-
-      //console.log("extra", extras);
-      this.router.navigate(['/TLS2000/TLS2G010CRU'], extras);
-    }
-  }
-
-  onEdit(data: any) {
-    if (this.canEdit()) {
-      let extras: NavigationExtras = {
-        state: {
-          crudstatus: CRUDStatus.Edit,
-          rowdata: data,
-          queryform: this.queryForm,
-        },
-        skipLocationChange: true
-      };
-
-      this.router.navigate(['/TLS2000/TLS2G010CRU'], extras);
-    }
-  }
-
-  onDetail(data: any) {
-    let extras: NavigationExtras = {
-      state: {
-        crudstatus: CRUDStatus.Read,
-        rowdata: data,
-        queryform: this.queryForm,
-      },
-      skipLocationChange: true
-    };
-
-    this.router.navigate(['/TLS2000/TLS2G010CRU'], extras);
   }
 }

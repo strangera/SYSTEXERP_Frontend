@@ -15,7 +15,7 @@ import { TableComponent } from '@shared/componentkit/table/table.component';
 import { Column } from '@shared/componentkit/table/table.model';
 import { CRUDStatus, ItemOperationStatus } from '@shared/models/system/CRUDstatus';
 import { ApprovalStatus } from '@shared/models/tls/approval-status.model';
-import { ExcelImportService } from '@shared/service/excel-import.service';
+import { ExcelImportService, ImportExcelColumn } from '@shared/service/excel-import.service';
 import { NGXLogger } from 'ngx-logger';
 import { FileSelectEvent, FileUploadModule } from 'primeng/fileupload';
 import { PanelModule } from 'primeng/panel';
@@ -290,9 +290,12 @@ export class TLS26010CRUComponent extends BasicCruPageComponent<TLS26010Data> im
     try {
       const file = event.files?.[0];
       if (!file) return;
-
+      const importExcelColumn: ImportExcelColumn[] = [
+        { field: 'tlt_no', header: '專櫃編號', type: 'string' },
+        { field: 'tlt_name', header: '專櫃名稱', type: 'string' },
+      ]
       // 使用中文欄位名稱匯入，然後手動對應到資料欄位
-      const rawData = await this.excelImport.importExcel(file, ['專櫃編號', '專櫃名稱']);
+      const rawData = await this.excelImport.importExcel(file, importExcelColumn);
 
       // 將中文欄位對應到資料欄位
       const data: TltItem[] = rawData.map((item: any) => ({

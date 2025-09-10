@@ -17,25 +17,25 @@
       </div>
       <div class="grid p-fluid">
         <div class="col-12 md:col-6 lg:col-4">
-          <app-editor-text label="說明1" controlName="bill_remark1" [control]="dataForm.controls.bill_remark1"
-            [submitted]="submitted" />
+          <app-input-textarea label="說明1" controlName="bill_remark1" [control]="dataForm.controls.bill_remark1"
+            [submitted]="submitted" styleClass="h-10rem" />
         </div>
         <div class="col-12 md:col-6 lg:col-4">
-          <app-editor-text label="說明2" controlName="bill_remark2" [control]="dataForm.controls.bill_remark2"
-            [submitted]="submitted" />
+          <app-input-textarea label="說明2" controlName="bill_remark2" [control]="dataForm.controls.bill_remark2"
+            [submitted]="submitted" styleClass="h-10rem" />
         </div>
         <div class="col-12 md:col-6 lg:col-4">
-          <app-editor-text label="說明3" controlName="bill_remark3" [control]="dataForm.controls.bill_remark3"
-            [submitted]="submitted" />
+          <app-input-textarea label="說明3" controlName="bill_remark3" [control]="dataForm.controls.bill_remark3"
+            [submitted]="submitted" styleClass="h-10rem" />
         </div>
       </div>
       <div class="grid justify-content-end gap-2 m-0 mt-2 pt-3" *ngIf="!isFormReadable">
         <app-button label="查詢專櫃" (click)="onQuery(dataForm)" [loading]="loading" icon='pi pi-search'></app-button>
       </div>
-      <app-table title="專櫃清單" dataKey="talent_id" [data]="data" [columns]="columns"
+      <app-table tableKey="TLS21030CRU" title="專櫃清單" dataKey="talent_id" [data]="data" [columns]="columns"
         (selectionChange)="selectedRows = $event" (unSelect)="onUnSelect($event)" [selectedItems]="selectedRows"
         [showManage]="false" [disabled]="isFormReadable" [loading]="loading" [showCheckBox]="true"
-        [multiSortMeta]="[{ field: 'talent_id', order: 1 }]" [totalRecords]="totalRecords"
+        [multiSortMeta]="dataForm.controls.SortBy.value" [totalRecords]="totalRecords"
         (lazyLoadData)="onLazyLoadData($event, dataForm); onQuery(dataForm)" [lazy]="true" [showCaption]="false" />
       <div *ngIf="!isFormReadable" class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
         <app-button btnType="cancel" [form]="dataForm" (clickEvent)="resetTable()"></app-button>

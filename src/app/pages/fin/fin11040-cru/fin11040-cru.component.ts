@@ -14,7 +14,7 @@ import { NgIf } from '@angular/common';
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
 import { TranslateModule } from '@ngx-translate/core';
 import { ValidationService } from '@shared/service/validation.service';
-import { SystemOptionsService } from '@service/system/sys1000.service';
+import { getSYS1000Options } from '@service/system/sys1000.service';
 //1.1.1.4 發票格式代號維護 CRU
 @Component({
   selector: 'app-fin11040-cru',
@@ -46,7 +46,7 @@ export class FIN11040CRUComponent extends BasicCruPageComponent<TDS1008Data> imp
     UPD_USR_No: [{ value: '', disabled: true }],       // 變更人員
     UPD_USR_Name: [{ value: '', disabled: true }],     // 變更人員姓名
   });
-  INV_UsageTypeOptions = SystemOptionsService.getOptions('T205');
+  INV_UsageTypeOptions = getSYS1000Options('T205');
   constructor(
     private fin11040Service: Fin11040Service,
     private validationService: ValidationService

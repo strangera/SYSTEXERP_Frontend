@@ -19,7 +19,9 @@ import { InputTextModule } from 'primeng/inputtext';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { TranslateModule } from '@ngx-translate/core';
 import { Table2Component } from '@shared/componentkit/table2/table2.component';
-import { finalize } from 'rxjs/operators';
+import { finalize, map } from 'rxjs/operators';
+import { ButtonModule } from 'primeng/button';
+import { HttpResponse } from '@angular/common/http';
 
 @Component({
   selector: 'app-tls23060',
@@ -39,11 +41,15 @@ import { finalize } from 'rxjs/operators';
     ButtonComponent,
     TranslateModule,
     Table2Component,
+    ButtonComponent,
+    ButtonModule
   ],
 })
 export class TLS23060Component extends BasicQueryPageComponent<any> {
   data: any[] = [];
   totalRecords = 0;
+  btnLoading = false;
+  historyRequestBody: any | null = null;
 
   // 表尾總計 / 群組小計（由後端 totals + 前端彙整）
   detailTotals: Record<string, number> = {};
@@ -247,6 +253,87 @@ export class TLS23060Component extends BasicQueryPageComponent<any> {
     if (this.lazyTimer) clearTimeout(this.lazyTimer);
     this.lazyTimer = setTimeout(() => this.onSubmit(form), 0);
   }
+  // 提供給 Table2 的 lazy 載入
+fetchTLS23060 = (evt: LazyLoadEvent) => {
+  const val = this.queryForm.getRawValue() as any;
+
+  // ---- 分頁/排序：事件優先，其次表單/預設 ----
+  const pageIndex = Number.isFinite(evt?.pageIndex) ? Number(evt!.pageIndex) : Number(val?.pageIndex ?? 1);
+  const pageSize  = Number.isFinite(evt?.pageSize)  ? Number(evt!.pageSize)  : Number(val?.pageSize  ?? 20);
+  const sortBy    = Array.isArray((evt as any)?.SortBy) && (evt as any).SortBy.length
+    ? (evt as any).SortBy
+    : (Array.isArray(val?.SortBy) && val.SortBy.length ? val.SortBy : this.defaultSort);
+
+  // ---- 組 payload（與 onSubmit 對齊）----
+  const payload: any = {
+    TXN_DateStart: this.toIso(val?.TXN_DateStart, false),
+    TXN_DateEnd:   this.toIso(val?.TXN_DateEnd, true),
+    rece_yn      : val?.rece_yn ?? undefined,
+    ECR_No       : (Array.isArray(val?.ECR_No) && val.ECR_No.length) ? val.ECR_No : undefined,
+    tlt_no       : (Array.isArray(val?.tlt_no) && val.tlt_no.length) ? val.tlt_no : undefined,
+    tlt_building : val?.tlt_building ?? undefined,
+    tlt_floor    : (Array.isArray(val?.tlt_floor) && val.tlt_floor.length) ? val.tlt_floor : undefined,
+    org_id       : (Array.isArray(val?.org_id) && val.org_id.length) ? val.org_id : undefined,
+    pageIndex,
+    pageSize,
+    SortBy: sortBy,
+  };
+
+  // 清理空值
+  Object.keys(payload).forEach((k) => {
+    const v = payload[k];
+    if (v === '' || v === null || v === undefined) delete payload[k];
+    if (Array.isArray(v) && v.length === 0) delete payload[k];
+  });
+
+  // 匯出沿用
+  this.historyRequestBody = { ...payload };
+
+  return this.tls23060Service.queryTLS23060(payload).pipe(
+    map((res: any) => {
+      const data = res?.Data;
+      const wrapper = Array.isArray(data) ? (data[0] ?? {}) : (data ?? {});
+
+      // ① rows（明細）
+      const details =
+        wrapper?.tLS23060Details ??
+        wrapper?.TLS23060Details ??
+        wrapper?.tls23060Details ??
+        [];
+
+      const rows = (Array.isArray(details) ? details : []).map((r: any, i: number) => ({
+        ...r,
+        _rowKey: `${r?.TXN_Date ?? ''}|${r?.ECR_No ?? ''}|${r?.tlt_no ?? ''}|${i}`,
+      }));
+
+      // ② externalTotals（表尾總計：依既有對應表從 wrapper 取值）
+      const externalTotals: Record<string, number> = {};
+      for (const [, totalKey] of Object.entries(this.detailTotalFieldMap)) {
+        externalTotals[totalKey] = Number(wrapper?.[totalKey] ?? 0);
+      }
+
+      // ③ externalSubtotals（群組小計：以 ECR_No 聚合）
+      const externalSubtotals: Record<string, Record<string, number>> = {};
+      const moneyFields = Object.keys(this.detailSubtotalFieldMap); // 直接用欄位對應的 key
+
+      for (const row of (Array.isArray(details) ? details : [])) {
+        const g = String(row?.ECR_No ?? 'UNKNOWN');
+        const bucket = (externalSubtotals[g] = externalSubtotals[g] || {} as Record<string, number>);
+        for (const f of moneyFields) {
+          const subKey = this.detailSubtotalFieldMap[f];   // 例如 'Subtotal_TXN_PayAmt10'
+          const n = Number(row?.[f] ?? 0);
+          bucket[subKey] = (bucket[subKey] || 0) + n;      // 中括號避免 TS4111
+        }
+      }
+
+      const totalRecords =
+        typeof res?.TotalCount === 'number' ? res.TotalCount : rows.length;
+
+      return { rows, totalRecords, externalTotals, externalSubtotals };
+    })
+  );
+};
+
 
   // 送出查詢
   onSubmit(form: FormGroup): void {
@@ -275,7 +362,7 @@ export class TLS23060Component extends BasicQueryPageComponent<any> {
         if (v === '' || v === null || v === undefined) delete payload[k];
         if (Array.isArray(v) && v.length === 0) delete payload[k];
       });
-
+      this.historyRequestBody = { ...payload };
       this.loading = true;
       this.messageService?.blockUi();
 
@@ -399,6 +486,12 @@ export class TLS23060Component extends BasicQueryPageComponent<any> {
       .toISOString()
       .slice(0, 19);
   }
+    private formatDateTime(val: string): string {
+    const d = new Date(val); if (isNaN(d.getTime())) return val;
+    const yyyy=d.getFullYear(), MM=(d.getMonth()+1).toString().padStart(2,'0'), dd=d.getDate().toString().padStart(2,'0');
+    const HH=d.getHours().toString().padStart(2,'0'), mm=d.getMinutes().toString().padStart(2,'0');
+    return `${yyyy}/${MM}/${dd} ${HH}:${mm}`;
+  }
 
   // 金額格式
   moneyFormat = (value: number): string =>
@@ -406,6 +499,7 @@ export class TLS23060Component extends BasicQueryPageComponent<any> {
 
   // 欄位
   columns = [
+    { field: 'TXN_Date', header: '交易時間', visible: true, format: (v: string) => this.formatDateTime(v)  },
     { field: 'ECR_No', header: '收銀機號', visible: true },
     { field: 'tlt_no', header: '專櫃編號', visible: true },
     { field: 'tlt_name', header: '櫃位名稱', visible: true, style: 'text-left' },
@@ -455,4 +549,74 @@ export class TLS23060Component extends BasicQueryPageComponent<any> {
     { field: 'TXN_ReturnAmt', header: '退貨', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true, isSubTotal: true },
     { field: 'TXN_CancelAmt', header: '作廢', visible: true, style: 'text-right', format: this.moneyFormat, isTotal: true, isSubTotal: true },
   ];
+
+    private handleFileExport(response: HttpResponse<Blob>, fileExtension: string): void {
+    const contentDisposition = response.headers.get('Content-Disposition');
+    const filename = this.getFilenameFromHeader(contentDisposition, fileExtension);
+    const blob = response.body;
+
+    if (blob && blob.size > 0) {
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } else {
+      this.messageService?.warnBubble?.('沒有找到符合條件的資料，無法生成報表。');
+    }
+  }
+
+  private getFilenameFromHeader(contentDisposition: string | null, defaultExtension: string): string {
+    if (!contentDisposition) return `download${defaultExtension}`;
+
+    const filenameStarMatch = /filename\*=([^;]+)/.exec(contentDisposition);
+    if (filenameStarMatch && filenameStarMatch.length > 1) {
+      const encodedFilename = filenameStarMatch[1];
+      try {
+        const decoded = decodeURIComponent(encodedFilename.replace(/^UTF-8''/, ''));
+        return decoded;
+      } catch {
+        return encodedFilename;
+      }
+    }
+
+    const filenameMatch = /filename="([^"]+)"/.exec(contentDisposition);
+    if (filenameMatch && filenameMatch.length > 1) {
+      try {
+        return decodeURIComponent(filenameMatch[1].replace(/\+/g, ' '));
+      } catch {
+        return filenameMatch[1];
+      }
+    }
+    return `download${defaultExtension}`;
+  }
+  // ===== 匯出 =====
+    onExportPDF(): void {
+      if (!this.historyRequestBody) {
+        this.messageService?.warnBubble?.('請先執行查詢以產生報表。');
+        return;
+      }
+      this.btnLoading = true;
+      this.tls23060Service.exporttls23060PDF(this.historyRequestBody).pipe(
+        finalize(() => this.btnLoading = false)
+      ).subscribe({
+        next: (resp: HttpResponse<Blob>) => this.handleFileExport(resp, '.pdf')
+      });
+    }
+  
+    onExportXLSX(): void {
+      if (!this.historyRequestBody) {
+        this.messageService?.warnBubble?.('請先執行查詢以產生報表。');
+        return;
+      }
+      this.btnLoading = true;
+      this.tls23060Service.exporttls23060Excel(this.historyRequestBody).pipe(
+        finalize(() => this.btnLoading = false)
+      ).subscribe({
+        next: (resp: HttpResponse<Blob>) => this.handleFileExport(resp, '.xlsx')
+      });
+    }
 }

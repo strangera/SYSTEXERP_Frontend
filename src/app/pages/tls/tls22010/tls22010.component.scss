@@ -1,0 +1,44 @@
+.legend-summary {
+  margin-left: 24px; // 整體往右移
+
+  .legend-list,
+  .summary-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+
+    li {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 8px;
+      font-size: 1.1rem;
+
+      b {
+        color: #d9534f;
+      }
+    }
+
+    .legend-box {
+      display: inline-block;
+      width: 40px;
+      height: 16px;
+      border-radius: 1px;
+
+      &.pink {
+        background-color: #f8b4d9;
+      }
+      &.brown {
+        background-color: #b5651d;
+      }
+      &.green {
+        background-color: #28a745;
+      }
+    }
+
+  }
+   .short-line {
+      width: 10%;
+      margin-left: 24px;
+    }
+}

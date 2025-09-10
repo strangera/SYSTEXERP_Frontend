@@ -209,21 +209,17 @@
       </ng-template>
     </tr>
     <!-- 判斷是否要插入小計列 -->
-    <tr *ngIf="groupRowsBy && isLastRowOfGroup(rowData, rowIndex)">
+    <tr *ngIf="groupRowsBy && isLastRowOfGroupOnPage(rowData, rowIndex)">
       <td class="text-center font-bold">小計</td>
       <td *ngIf="IsPrint && showCheckBox && !rowEditing && selectionMode === 'multiple'"></td>
       <td *ngIf="expansionColumns.length && IsPrint"></td>
-      <ng-container *ngFor="let col of columns">
-        <td class="text-center font-bold" *ngIf="!col.hidden">
-          <ng-container *ngIf="col.isSubTotal">
-            {{
-            col.format ?
-            col.format(getGroupSubtotal(rowData[groupRowsBy], col.field)) :
-            getGroupSubtotal(rowData[groupRowsBy], col.field)
-            }}
-          </ng-container>
-        </td>
-      </ng-container>
+      <td *ngFor="let col of columns" class="text-center font-bold pr-2">
+        <ng-container *ngIf="col.isSubTotal">
+          {{ col.format ? col.format(getGroupSubtotalOnPage(rowData[groupRowsBy], col.field)) :
+          getGroupSubtotalOnPage(rowData[groupRowsBy], col.field) }}
+        </ng-container>
+      </td>
+      <td *ngIf="!alwaysEdit || (alwaysEdit && rowEditing)" [hidden]="!IsPrint || !showManage"></td>
     </tr>
   </ng-template>
   <ng-template pTemplate="footer" let-columns *ngIf="showTotal">

@@ -2,7 +2,7 @@ import { Component, OnInit, } from '@angular/core';
 import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { Fin11030Service } from '../../../service/api/fin/fin11030.service';
-import { APS2001Data, SAL_GUIPaperOptions, SAL_GUIPaperOptions2 } from '../fin11030/fin11030.model';
+import { APS2001Data } from '../fin11030/fin11030.model';
 import { ValidationService } from '../../../shared/service/validation.service';
 import { finalize } from 'rxjs';
 import { untilDestroyed } from '@ngneat/until-destroy';
@@ -17,6 +17,7 @@ import { InputNumberComponent } from '../../../shared/componentkit/input-number/
 import { NgIf } from '@angular/common';
 import { TranslateModule } from '@ngx-translate/core';
 import { convertDateToYYYYMM } from '@shared/componentkit/table/table.model';
+import { getSYS1000Options } from '@service/system/sys1000.service';
 // 1.1.3 銷項品項資料設定 CRU
 @Component({
   selector: 'app-fin11030-cru',
@@ -48,8 +49,8 @@ export class FIN11030CRUComponent extends BasicCruPageComponent<APS2001Data> imp
     GUI_Qty: [null as null | number], // 券數
   }, { validators: this.validationService.guiNumberRangeValidator('SAL_GUIBegNo', 'SAL_GUIEndNo') });
 
-  SAL_GUIPaperOptions = SAL_GUIPaperOptions
-  SAL_GUIPaperOptions2 = SAL_GUIPaperOptions2
+  SAL_GUIPaperOptions = getSYS1000Options('SAL_GUIPaper')
+  SAL_GUIPaperOptions2 = getSYS1000Options('SAL_GUIPaper').filter(item => item.value === '32' || item.value === '31');
   minDate?: Date;
 
   constructor(

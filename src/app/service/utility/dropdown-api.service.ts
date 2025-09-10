@@ -49,7 +49,7 @@ import { environment } from 'src/environments/environment';
 @Injectable({
   providedIn: 'root'
 })
-export class DropdownApiNewService {
+export class DropdownApiService {
   private readonly apiUrl = environment.ApiUrl;
 
   constructor(private http: HttpClient) { }
@@ -182,10 +182,9 @@ export class DropdownApiNewService {
   }
 
   /** 查詢組織代碼(SYS3100)資料表下拉選單 */
-  querySys3100(): Observable<IDropdownItem[] | null> {
-    return this.queryDropdown<IDropdownItem>('/querySYS3100_DropDownList');
+  querySys3100(): Observable<Option[] | null> {
+    return this.queryAndMapDropdown<IDropdownItem>('/querySYS3100_DropDownList', 'No', 'Name');
   }
-
   /** 查詢組織階層樹狀圖(SYS3100)下拉選單 */
   querySys3100Tree(body: OrgTreeQuery): Observable<OrgTreeItem[] | null> {
     return this.queryDropdownWithParams<OrgTreeItem, OrgTreeQuery>('/querySYS3100_tree_DropDownList', body);

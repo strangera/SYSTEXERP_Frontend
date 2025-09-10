@@ -24,7 +24,11 @@ import {
   formatDateToYYYY_MM_DD,
   LazyLoadEvent,
 } from '../../../shared/componentkit/table/table.model';
+import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
+import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
+import { finalize, map } from 'rxjs/operators';
 
+@UntilDestroy()
 @Component({
   selector: 'app-tls23070',
   templateUrl: './tls23070.component.html',
@@ -42,6 +46,8 @@ import {
     ButtonComponent,
     TranslateModule,
     Table2Component,
+
+    CalendarComponent
   ],
 })
 export class TLS23070Component extends BasicQueryPageComponent<any> {
@@ -158,6 +164,7 @@ export class TLS23070Component extends BasicQueryPageComponent<any> {
   })();
 
   queryForm = this.formBuilder.group({
+    TXN_Month: [null],
     TXN_DateStart: [this.yesterday, [Validators.required]],
     TXN_DateEnd:   [this.yesterday, [Validators.required]],
     tlt_no:        [],
@@ -187,6 +194,25 @@ export class TLS23070Component extends BasicQueryPageComponent<any> {
   ngOnInit(): void {
     this.initializePage('TLS23070', 'tls/tls23070', this.queryForm, (form) => this.onSubmit(form));
     this.sortMeta = this.defaultSort.map(x => ({ ...x }));
+     this.queryForm.controls.TXN_Month.valueChanges
+      .pipe(untilDestroyed(this))
+      .subscribe((d: Date | null) => {
+        if (!d || isNaN(new Date(d).getTime())) return;
+    
+        const { start, end } = this.getMonthRange(d);
+        // 同步到「銷售日期」的起訖（避免觸發二次查詢所以不 emit）
+        this.queryForm.patchValue(
+          { TXN_DateStart: start, TXN_DateEnd: end, pageIndex: 1 },
+          { emitEvent: false }
+        );
+      });
+      this.queryForm.controls.TXN_DateStart.valueChanges
+      .pipe(untilDestroyed(this))
+      .subscribe(() => this.clearMonthIfNotExactRange());
+    
+    this.queryForm.controls.TXN_DateEnd.valueChanges
+      .pipe(untilDestroyed(this))
+      .subscribe(() => this.clearMonthIfNotExactRange());
 
     this.counterNameService.getCounters().subscribe((res) => {
       this.CounterOptions = (res ?? []).map((x: any) => ({
@@ -207,35 +233,79 @@ export class TLS23070Component extends BasicQueryPageComponent<any> {
     });
   }
 
-  /** lazy load：同步分頁/排序（不帶 Offset/OrderBy） */
-  override onLazyLoadData(event: LazyLoadEvent, form: FormGroup): void {
-    const currSort = JSON.stringify(form.value?.SortBy ?? []);
-    const nextSort = JSON.stringify(event.SortBy ?? []);
-    const nextPageIndex =
-      currSort !== nextSort ? 1 : (event.pageIndex ?? form.value.pageIndex ?? 1);
+// 提供給 Table2 的 lazy 載入函式（在 HTML 綁 [fetchData]="fetchTLS23070"）
+fetchTLS23070 = (evt: LazyLoadEvent) => {
+  const val = this.queryForm.getRawValue() as any;
 
-    form.patchValue(
-      {
-        pageIndex: nextPageIndex,
-        pageSize : event.pageSize ?? form.value.pageSize,
-        SortBy   : event.SortBy ?? form.value.SortBy,
-      },
-      { emitEvent: false },
-    );
+  // 分頁/排序（事件優先，其次表單/預設）
+  const pageIndex = Number.isFinite(evt?.pageIndex) ? Number(evt!.pageIndex) : Number(val?.pageIndex ?? 1);
+  const pageSize  = Number.isFinite(evt?.pageSize)  ? Number(evt!.pageSize)  : Number(val?.pageSize  ?? 20);
+  const sortBy    = Array.isArray((evt as any)?.SortBy) && (evt as any).SortBy.length
+    ? (evt as any).SortBy
+    : (Array.isArray(val?.SortBy) && val.SortBy.length ? val.SortBy : this.defaultSort);
 
-    this.sortMeta = (event.SortBy ?? []).map(s => ({ ...s }));
+  // 與 onSubmit 對齊的 payload（不傳 Offset/OrderBy）
+  const payload: any = {
+    TXN_DateStart: formatDateToYYYY_MM_DD(val?.TXN_DateStart),
+    TXN_DateEnd:   formatDateToYYYY_MM_DD(val?.TXN_DateEnd),
+    tlt_no:        Array.isArray(val?.tlt_no) && val.tlt_no.length ? val.tlt_no : undefined,
+    tlt_building:  val?.tlt_building ?? undefined,
+    tlt_floor:     Array.isArray(val?.tlt_floor) && val.tlt_floor.length ? val.tlt_floor : undefined,
+    org_id:        Array.isArray(val?.org_id) && val?.org_id.length ? val.org_id : undefined,
+    pageIndex,
+    pageSize,
+    SortBy: sortBy,
+  };
 
-    const sig = JSON.stringify({
-      pageIndex: form.value.pageIndex,
-      pageSize : form.value.pageSize,
-      SortBy   : form.value.SortBy,
-    });
-    if (sig === this.lastQuerySig) return;
-    this.lastQuerySig = sig;
+  // 清理空值
+  Object.keys(payload).forEach((k) => {
+    const v = payload[k];
+    if (v === '' || v === null || v === undefined) delete payload[k];
+    if (Array.isArray(v) && v.length === 0) delete payload[k];
+  });
 
-    if (this.lazyTimer) clearTimeout(this.lazyTimer);
-    this.lazyTimer = setTimeout(() => this.onSubmit(form), 0);
-  }
+  return this.tls23070Service.queryTLS23070(payload).pipe(
+    map((res: any) => {
+      const data = res?.Data;
+      const wrapper = Array.isArray(data) ? (data[0] ?? {}) : (data ?? {});
+
+      // ① 表尾總計（totalSummary）
+      const totalSummary = wrapper?.totalSummary ?? {};
+      const externalTotals: Record<string, number> = {};
+      Object.values(this.detailTotalFieldMap).forEach((apiKey) => {
+        externalTotals[apiKey] = Number(totalSummary?.[apiKey] ?? 0);
+      });
+
+      // ② 群組小計（tltNoSubTotals）
+      const groups = Array.isArray(wrapper?.tltNoSubTotals) ? wrapper.tltNoSubTotals : [];
+      const externalSubtotals: Record<string, Record<string, number>> = {};
+      for (const g of groups) {
+        const groupKey = String(g?.tlt_no ?? 'UNKNOWN');
+        const one: Record<string, number> = {};
+        Object.values(this.detailSubtotalFieldMap).forEach((apiKey) => {
+          one[apiKey] = Number(g?.[apiKey] ?? 0); // 中括號避免 TS4111
+        });
+        externalSubtotals[groupKey] = one;
+      }
+
+      // ③ 明細 rows（從各群組的 subsTotals -> *Details 展開）
+      const allSubs = groups.flatMap((g: any) => Array.isArray(g?.subsTotals) ? g.subsTotals : []);
+      const details = allSubs.flatMap((s: any) =>
+        s?.tLS23070Details ?? s?.TLS23070Details ?? s?.tls23070Details ?? []
+      );
+
+      const rows = (Array.isArray(details) ? details : []).map((r: any, i: number) => ({
+        ...r,
+        _rowKey: `${r?.tlt_no ?? ''}|${r?.TXN_Date ?? ''}|${r?.ECR_No ?? ''}|${i}`,
+      }));
+
+      const totalRecords = typeof res?.TotalCount === 'number' ? res.TotalCount : rows.length;
+
+      return { rows, totalRecords, externalTotals, externalSubtotals };
+    })
+  );
+};
+
 
   onSubmit(form: FormGroup): void {
     this.handleSubmit(form, () => {
@@ -318,6 +388,30 @@ export class TLS23070Component extends BasicQueryPageComponent<any> {
       });
     });
   }
+   /** 取得某日期所在月份的起訖（start: 1號 00:00:00, end: 當月最後一天 23:59:59） */
+private getMonthRange(d: Date) {
+  const year = d.getFullYear();
+  const month = d.getMonth(); // 0-based
+  const start = new Date(year, month, 1, 0, 0, 0);              // 1號 00:00:00
+  const end   = new Date(year, month + 1, 0, 23, 59, 59);       // 當月最後一天 23:59:59
+  return { start, end };
+}
+
+/** 若目前銷售日期不是「完整整月」，就把 TXN_Month 清空（避免顯示誤會） */
+private clearMonthIfNotExactRange() {
+  const start: Date | null = this.queryForm.value.TXN_DateStart ?? null;
+  const end: Date | null   = this.queryForm.value.TXN_DateEnd ?? null;
+  if (!start || !end) {
+    this.queryForm.patchValue({ TXN_Month: null }, { emitEvent: false });
+    return;
+  }
+  const { start: mStart, end: mEnd } = this.getMonthRange(start);
+  const sameStart = new Date(start).getTime() === mStart.getTime();
+  const sameEnd   = new Date(end).getTime()   === mEnd.getTime();
+  if (!sameStart || !sameEnd) {
+    this.queryForm.patchValue({ TXN_Month: null }, { emitEvent: false });
+  }
+}
 
   // ===== 小工具 =====
   formatYMD = (val: unknown): string => {

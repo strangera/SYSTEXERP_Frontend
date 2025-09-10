@@ -77,6 +77,7 @@ export class TLS23010Component
   extends BasicQueryPageComponent<any>
   implements OnInit
 {
+  pdfSummary: string[] = [];
   data: any[] = [];
   totalRecords = 0;
   selectedItems: any[] = [];
@@ -125,7 +126,7 @@ export class TLS23010Component
     TXN_Uniform: [''],
     TXN_GUILoveCode: [''],
     TXN_GUI_CarrType: [[]],
-    TXN_GUI_CarrId: [''],
+    TXN_GUIVehicle: [''],
     rece_yn: [''],
     cash_yn: [''],
     tlt_building: [''],
@@ -225,36 +226,111 @@ export class TLS23010Component
     });
   }
 
-  /** 表格 lazy 事件（分頁/排序） */
-  override onLazyLoadData(event: LazyLoadEvent, form: FormGroup): void {
-    // 若排序變更 → 回到第 1 頁
-    const currSort = JSON.stringify(form.value?.SortBy ?? []);
-    const nextSort = JSON.stringify(event.SortBy ?? []);
-    const nextPageIndex = currSort !== nextSort ? 1 : (event.pageIndex ?? form.value.pageIndex ?? 1);
+// lazy 取數：交給 Table2 的資料載入函式
+fetchTLS23010 = (evt: LazyLoadEvent) => {
+  const val = this.queryForm.getRawValue() as any;
 
-    // 同步回表單（不觸發 valueChanges）
-    form.patchValue({
-      pageIndex: nextPageIndex,
-      pageSize : event.pageSize ?? form.value.pageSize,
-      SortBy   : event.SortBy ?? form.value.SortBy,
-    }, { emitEvent: false });
+  // 本地時間轉 yyyy-MM-ddTHH:mm:ss（去時區偏移）
+  const toIso = (x: any, endOfDay = false) => {
+    if (!x) return undefined;
+    const d = typeof x === 'string' ? new Date(x) : (x as Date);
+    if (isNaN(d.getTime())) return undefined;
+    if (endOfDay) d.setHours(23, 59, 59, 999);
+    return new Date(d.getTime() - d.getTimezoneOffset() * 60000)
+      .toISOString()
+      .slice(0, 19);
+  };
 
-    // 更新表頭排序狀態（提供給表格顯示用）
-    this.sortMeta = (event.SortBy ?? []).map(s => ({ ...s }));
+  const asStrArr = (x: any) =>
+    Array.isArray(x) ? x.map(String) : x == null || x === '' ? undefined : [String(x)];
 
-    // 去重簽章（pageIndex/pageSize/SortBy）
-    const sig = JSON.stringify({
-      pageIndex: form.value.pageIndex,
-      pageSize : form.value.pageSize,
-      SortBy   : form.value.SortBy,
-    });
-    if (sig === this.lastQuerySig) return;
-    this.lastQuerySig = sig;
+  const asTrim = (x: any) => {
+    const s = (x ?? '').toString().trim();
+    return s ? s : undefined;
+  };
 
-    // 只呼叫一次查詢
-    if (this.lazyTimer) clearTimeout(this.lazyTimer);
-    this.lazyTimer = setTimeout(() => this.onSubmit(form), 0);
-  }
+  // 僅帶必要條件 + 分頁/排序（與 onSubmit 一致：PageIndex/PageSize 大寫）
+  const payload: any = {
+    TXN_DateStart: toIso(val?.TXN_DateStart, false),
+    TXN_DateEnd:   toIso(val?.TXN_DateEnd,   true),
+
+    ECR_No: asStrArr(val?.ECR_No),
+    TXN_No_Start: val?.TXN_No_Start ?? undefined,
+    TXN_No_End:   val?.TXN_No_End   ?? undefined,
+    TLT_No: asStrArr(val?.TLT_No),
+
+    TXN_GUIBegNo: asTrim(val?.TXN_GUIBegNo),
+    TXN_GUIEndNo: asTrim(val?.TXN_GUIEndNo),
+
+    TXN_Status:     asStrArr(val?.TXN_Status),
+    TXN_FlagStatus: asStrArr(val?.TXN_FlagStatus),
+
+    USR_No:          asTrim(val?.USR_No),
+    TXN_PreOrderNo:  asTrim(val?.TXN_PreOrderNo),
+    TXN_PkngUID:     asTrim(val?.TXN_PkngUID),
+    TXN_MemCard:     asTrim(val?.TXN_MemCard),
+    TXN_Uniform:     asTrim(val?.TXN_Uniform),
+    TXN_GUILoveCode: asTrim(val?.TXN_GUILoveCode),
+
+    TXN_GUI_CarrType: asStrArr(val?.TXN_GUI_CarrType),
+    TXN_GUIVehicle:   asTrim(val?.TXN_GUIVehicle),
+
+    rece_yn:       val?.rece_yn ? String(val.rece_yn) : undefined,
+    cash_yn:       val?.cash_yn ? String(val.cash_yn) : undefined,
+    tlt_building:  val?.tlt_building ? String(val.tlt_building) : undefined,
+    tlt_floor:     asStrArr(val?.tlt_floor),
+    org_id:        asStrArr(val?.org_id),
+    TXN_Subtype:   val?.TXN_Subtype ? String(val.TXN_Subtype) : undefined,
+
+    // 分頁/排序（從 Table2 的事件帶入）
+    PageIndex: evt.pageIndex ?? 1,
+    PageSize:  evt.pageSize  ?? 20,
+    SortBy:    Array.isArray((evt as any)?.SortBy)
+                 ? (evt as any).SortBy
+                 : (Array.isArray(val?.SortBy) && val.SortBy.length ? val.SortBy : this.defaultSort),
+  };
+
+  // 清空空陣列/空字串/undefined（保留 0/false）
+  Object.keys(payload).forEach((k) => {
+    const v = payload[k];
+    if (v === undefined || v === '') delete payload[k];
+    if (Array.isArray(v) && v.length === 0) delete payload[k];
+  });
+
+  return this.tls23010Service.queryTLS23010(payload).pipe(
+    map((res: any) => {
+      const list = Array.isArray(res?.Data?.QueryData)
+        ? res.Data.QueryData
+        : Array.isArray(res?.Data)
+          ? res.Data
+          : [];
+
+      const rows = list.map((item: any) => ({
+        ...item,
+        _rowKey: `${item.SYS_StoreNo ?? ''}|${String(item.TXN_Date ?? '').slice(0, 19)}|${item.ECR_No ?? ''}|${item.TXN_No ?? ''}`,
+      }));
+
+      // 總筆數多種可能位置
+      const candidates = [
+        res?.TotalCount,
+        res?.Data?.TotalCount,
+      ];
+      const totalRecords =
+        candidates.map((n) => Number(n)).find((n) => Number.isFinite(n) && n >= 0) ?? rows.length;
+
+      // 後端總計（對應 this.detailTotalFieldMap）
+      const externalTotals = this.coerceTotals(res?.Data?.TotalSummary);
+
+      return {
+        rows,
+        totalRecords,
+        externalTotals,     // 讓 Table2 footer 可以吃到 API 總計
+        // externalSubtotals: {} // TLS23010 沒有群組小計就不帶
+      };
+    })
+  );
+};
+
 
 onSubmit(frm: FormGroup) {
   this.handleSubmit(frm, () => {
@@ -373,13 +449,14 @@ onSubmit(frm: FormGroup) {
             this.summaryData   = [];
             this.selectedItems = [];
             this.totalRecords  = Number(resp?.TotalCount ?? this.data.length ?? 0);
-
+this.updatePdfSummary();
             this.queryStateService.setQueryState(this.ProgNo, this.queryForm.value);
           },
           error: () => {
             this.data          = [];
             this.totalRecords  = 0;
             this.selectedItems = [];
+            this.pdfSummary = [];
           },
         });
     }
@@ -642,8 +719,8 @@ onExportXLSX() {
     { field: 'TXN_GUIRemark',  header: '防偽隨機碼',     visible: true },
 
     { field: 'TXN_GUI_CarrType', header: '載具種類',     visible: true, format: (v: any) => this.getLabelFromOptions(v, this.carrierTypeOptions) },
-    { field: 'DonateType',     header: '捐贈類別',      visible: true },
-    { field: 'TXN_GUI_CarrId', header: '共通性載具號碼', visible: true },
+    // { field: 'DonateType',     header: '捐贈類別',      visible: true },
+    { field: 'TXN_GUIVehicle', header: '共通性載具號碼', visible: true },
 
     { field: 'TXN_PrintTimes', header: '發票列印次數',    visible: true, style: 'text-right' },
     { field: 'TXN_PrintGUI',   header: '電子發票是否列印', visible: true, format: this.getYesNoLabel },
@@ -684,4 +761,62 @@ detailTotalFieldMap: Record<string, string> = {
   TXN_TotDisc:    'Total_TXN_TotDisc',
   TXN_PayAmt:     'Total_TXN_PayAmt',
 };
+private getSum(field: string): number {
+  // 明細模式：優先用 API 總計，其次用 this.data 加總
+  if (!this.showSummary) {
+    const mapped = this.detailTotalFieldMap?.[field];
+    if (mapped != null && typeof this.detailTotals?.[mapped] === 'number') {
+      return this.detailTotals[mapped] ?? 0;
+    }
+    return (this.data ?? []).reduce((s, r) => s + (Number(r?.[field]) || 0), 0);
+  }
+
+  // 彙總模式：用 this.summaryData 加總
+  return (this.summaryData ?? []).reduce((s, r) => s + (Number(r?.[field]) || 0), 0);
+}
+private updatePdfSummary(): void {
+  // 明細模式（!showSummary）
+  if (!this.showSummary) {
+    // A：發票金額 -> 依你的欄位命名應該是 TXN_TotGUI（你原本寫 TXN_TotSaleAmt，名稱與欄位對不上）
+    const A = this.getSum('TXN_TotGUI');          // 發票金額
+    const B = this.getSum('TXN_TotPayAmt');       // 已開發票的支付工具（若無此欄，會是 0）
+    const C = this.getSum('TXN_TotOver');         // 已開發票的支付工具溢收
+    const D = this.getSum('TXN_Deposit');         // 訂金
+    const E = this.getSum('TXN_DepositSettle');   // 訂金結帳金額
+    const F = this.getSum('TXN_DepositUsed');     // 訂金結帳的訂金
+    const G = this.getSum('TXN_TotDisc');         // 預售（你原註解：使用折扣金額欄位）
+    const H = this.getSum('TXN_PresaleSettle') || this.getSum('TXN_TaxFreeCertNo'); // 預售結帳金額（若實際欄位不同，請換成正確名稱）
+
+    const discountValue = A + B - C + E - G + H;
+    const paymentValue  = A + B + D - F;
+
+    this.pdfSummary = [
+      `(A)發票金額 =\t${A.toLocaleString()}`,
+      `(B)已開發票的支付工具 =\t${B.toLocaleString()}`,
+      `(C)已開發票的支付工具溢收 =\t${C.toLocaleString()}`,
+      `(D)訂金 =\t${D.toLocaleString()}`,
+      `(E)訂金結帳全額 =\t${E.toLocaleString()}`,
+      `(F)訂金結帳的訂金 =\t${F.toLocaleString()}`,
+      `(G)預售 =\t${G.toLocaleString()}`,
+      `(H)預售結帳金額 =\t${H.toLocaleString()}`,
+      '====================================================',
+      `折扣別(專櫃業績) = (A)+(B)-(C)+(E)-(G)+(H) =\t${discountValue.toLocaleString()}`,
+      `付款別(支付工具) = (A)+(B)+(D)-(F) =\t${paymentValue.toLocaleString()}`,
+    ];
+    return;
+  }
+
+  // 彙總模式（showSummary）
+  const totalAmt = this.getSum('TXN_TotSaleAmt'); // 若彙總實際欄位是 TXN_TotGUI 就改成 TXN_TotGUI
+  const totalTxn = this.getSum('TotalTxn');
+
+  this.pdfSummary = [
+    `總金額合計 = ${totalAmt.toLocaleString()}`,
+    `總交易筆數合計 = ${totalTxn.toLocaleString()}`,
+    '=============================',
+    `平均每筆金額 = ${totalTxn > 0 ? (totalAmt / totalTxn).toFixed(2) : '0.00'}`,
+  ];
+}
+
+  
 }

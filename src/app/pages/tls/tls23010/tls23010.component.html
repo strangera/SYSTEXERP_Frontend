@@ -172,8 +172,8 @@
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-text
               label="載具號碼"
-              controlName="TXN_GUI_CarrId"
-              [control]="queryForm.controls.TXN_GUI_CarrId"
+              controlName="TXN_GUIVehicle"
+              [control]="queryForm.controls.TXN_GUIVehicle"
               [submitted]="submitted"
             ></app-input-text>
           </div>
@@ -283,7 +283,7 @@
   [expansionDataKey]="'details'"
   [expansionLoadFn]="loadDetails"
   [isRowSelectable]="isRowSelectable"
-
+ [serverFetch]="fetchTLS23010"
 
   [externalTotals]="detailTotals"
   [externalTotalFieldMap]="detailTotalFieldMap"
@@ -348,3 +348,9 @@
 </app-table>
   </div>
 </div>
+<div
+  *ngIf="pdfSummary?.length"
+  class="mt-4 border-t pt-3 text-sm text-red-700 font-medium"
+>
+  <div *ngFor="let line of pdfSummary">{{ line }}</div>
+</div> 

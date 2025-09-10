@@ -44,7 +44,7 @@ export class TLS11010Component extends BasicQueryPageComponent<any> {
   totalRecords = 0;
 
   queryForm = this.formBuilder.group({
-    LOCATION_No: [''],
+    LOCATION_No: ['',Validators.maxLength(10)],
     org_id: [[]],
     building_no: [''],
     FLOOR_NO: [[] as string[]],
@@ -63,11 +63,10 @@ export class TLS11010Component extends BasicQueryPageComponent<any> {
     { field: 'LOCATION_Name', header: '店位說明', visible: true },
     { field: 'org_id', header: '組織代碼', visible: true },
     {
-      field: 'org_id',
+      field: 'org_name',
       header: '組織名稱',
       visible: true,
-      format: (value: any) =>
-        this.getLabelFromOptions(value, this.OrganizationCodeOptions),
+     
     },
     {
       field: 'building_no',
@@ -124,7 +123,9 @@ export class TLS11010Component extends BasicQueryPageComponent<any> {
   }
 
   ngOnInit(): void {
-    this.initializePage('TLS11010', 'tls/tls11010cru', this.queryForm,(f) => this.onSubmit(f));
+    this.initializePage('TLS11010', 'tls/tls11010cru', this.queryForm, (f) =>
+      this.onSubmit(f),
+    );
     this.tls11010Service
       .getFloorOptions()
       .subscribe((res) => (this.floorOptions = res));
@@ -190,7 +191,6 @@ export class TLS11010Component extends BasicQueryPageComponent<any> {
           this.messageService.unblockUi();
         },
         error: () => {
-          
           this.loading = false;
           this.messageService.unblockUi();
         },

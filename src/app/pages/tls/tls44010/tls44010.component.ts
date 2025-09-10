@@ -12,6 +12,7 @@ import { InputTextModule } from 'primeng/inputtext';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { PaginatorModule } from 'primeng/paginator';
+import { TLS44010Service } from '../../../service/api/tls/tls44010.service';
 
 @Component({
   selector: 'app-tls44010',
@@ -38,112 +39,68 @@ export class TLS44010Component extends BasicQueryPageComponent<any> implements O
   items: MenuItem[] = [];
   activeItem: MenuItem | undefined;
 
-  data: any[] = [
-    { ECR_LocNo: 'B1A01', TLT_No: '000001', TLT_Name: '小騎士', EOS_Status: '開機' },
-    { ECR_LocNo: 'B1A02', TLT_No: '000002', TLT_Name: '彌豆子', EOS_Status: '登出' },
-    { ECR_LocNo: 'B1A03', TLT_No: '000003', TLT_Name: '我妻善逸', EOS_Status: '交易中' },
-    { ECR_LocNo: 'B1A04', TLT_No: '000004', TLT_Name: '小騎士', EOS_Status: '離線' },
-    { ECR_LocNo: 'B1A05', TLT_No: '000005', TLT_Name: '艾連葉卡', EOS_Status: '開機' },
-    { ECR_LocNo: 'B1A06', TLT_No: '000006', TLT_Name: '咪吉葉卡', EOS_Status: '登出' },
-    { ECR_LocNo: 'B1A07', TLT_No: '000007', TLT_Name: '炭治郎', EOS_Status: '交易中' },
-    { ECR_LocNo: 'B1A11', TLT_No: '000008', TLT_Name: '伊之助', EOS_Status: '登出' },
-    { ECR_LocNo: 'B1A12', TLT_No: '000009', TLT_Name: '小騎士', EOS_Status: '交易中' },
-    { ECR_LocNo: 'B1A13', TLT_No: '000010', TLT_Name: '彌豆子', EOS_Status: '離線' },
-    { ECR_LocNo: 'B1A14', TLT_No: '000002', TLT_Name: '伊之助', EOS_Status: '登出' },
-    { ECR_LocNo: 'B1A15', TLT_No: '000003', TLT_Name: '我妻善逸', EOS_Status: '交易中' },
-    { ECR_LocNo: 'B1A16', TLT_No: '000004', TLT_Name: '彌豆子', EOS_Status: '離線' },
-    { ECR_LocNo: 'B1A17', TLT_No: '000004', TLT_Name: '小騎士', EOS_Status: '離線', },
-    { ECR_LocNo: 'B1A18', TLT_No: '000002', TLT_Name: '伊之助', EOS_Status: '登出', },
-    { ECR_LocNo: 'B1A19', TLT_No: '000003', TLT_Name: '我妻善逸', EOS_Status: '交易中', },
-    { ECR_LocNo: 'B1A20', TLT_No: '000005', TLT_Name: '艾連葉卡', EOS_Status: '開機', },
-    { ECR_LocNo: 'B1A21', TLT_No: '000006', TLT_Name: '咪吉葉卡', EOS_Status: '登出', },
-    { ECR_LocNo: 'B1A22', TLT_No: '000007', TLT_Name: '炭治郎', EOS_Status: '交易中', },
-    { ECR_LocNo: 'B1A19', TLT_No: '000003', TLT_Name: '我妻善逸', EOS_Status: '交易中', },
-    { ECR_LocNo: 'B1A06', TLT_No: '000006', TLT_Name: '咪吉葉卡', EOS_Status: '登出' },
-    { ECR_LocNo: 'B1A07', TLT_No: '000007', TLT_Name: '炭治郎', EOS_Status: '交易中' },
-    { ECR_LocNo: 'B1A11', TLT_No: '000008', TLT_Name: '伊之助', EOS_Status: '登出' },
-    { ECR_LocNo: 'B1A12', TLT_No: '000009', TLT_Name: '小騎士', EOS_Status: '交易中' },
-    { ECR_LocNo: 'B1A13', TLT_No: '000010', TLT_Name: '彌豆子', EOS_Status: '離線' },
-    { ECR_LocNo: 'B1A14', TLT_No: '000002', TLT_Name: '伊之助', EOS_Status: '登出' },
-    { ECR_LocNo: 'B1A15', TLT_No: '000003', TLT_Name: '我妻善逸', EOS_Status: '交易中' },
-    { ECR_LocNo: 'B1A16', TLT_No: '000004', TLT_Name: '彌豆子', EOS_Status: '離線' },
-    { ECR_LocNo: 'B1A17', TLT_No: '000004', TLT_Name: '小騎士', EOS_Status: '離線', },
-    { ECR_LocNo: 'B1A18', TLT_No: '000002', TLT_Name: '伊之助', EOS_Status: '登出', },
-    { ECR_LocNo: 'B1A19', TLT_No: '000003', TLT_Name: '我妻善逸', EOS_Status: '交易中', },
-    { ECR_LocNo: 'B1A20', TLT_No: '000005', TLT_Name: '艾連葉卡', EOS_Status: '開機', },
-  ];
+  data: any[] = [];
+  filteredData: any[] = [];
+  pagedData: any[] = [];
 
   globalFilter = '';
-  filteredData: any[] = [];
-
-  // DataView layout 切換用
   layout: 'list' | 'grid' = 'grid';
 
-  // 分頁用
-  rows = 15;   // 每頁筆數
-  first = 0;   // 起始 index
-  pagedData: any[] = []; // 當前頁顯示的資料
+  rows = 15;
+  first = 0;
+  // loading = false;
 
-  constructor(private fb: FormBuilder) {
+  constructor(
+    private fb: FormBuilder,
+    private tls44010Service: TLS44010Service
+  ) {
     super();
-  }
-
-  getStatusIcon(status: string): string {
-    switch (status) {
-      case '開機': return 'pi pi-desktop';
-      case '登出': return 'pi pi-sign-out';
-      case '交易中': return 'pi pi-sync';
-      case '完成交班': return 'pi pi-users';
-      case '暫停交易': return 'pi pi-pause';
-      case '完成清帳': return 'pi pi-wallet';
-      default: return 'pi pi-question-circle';
-    }
-  }
-
-  getStatusColor(status: string): string {
-    switch (status) {
-      case '開機': return '#6c757d';
-      case '登出': return '#dc3545';
-      case '交易中': return '#28a745';
-      case '完成交班': return '#0d6efd';
-      case '暫停交易': return '#fd7e14';
-      case '完成清帳': return '#6f42c1';
-      default: return '#6c757d';
-    }
   }
 
   ngOnInit() {
     this.initializePage('TLS44010', '/TLS/TLS44010cru', this.queryForm, (form) => this.onSubmit(form));
+
     this.items = [
       { label: '全部' },
       { label: '連線機台' },
       { label: '離線機台' }
     ];
     this.activeItem = this.items[0];
-    this.filteredData = this.data;
-    this.updatePagedData();
+
+    this.onSubmit(this.queryForm);
   }
 
   onSubmit(form: FormGroup) {
-    console.log('查詢條件', form.value);
+    this.loading = true;
+    this.tls44010Service.queryTLS44010(form.value).subscribe({
+      next: (res) => {
+        this.data = res?.Data || [];
+        this.filteredData = [...this.data];
+        this.first = 0;
+        this.updatePagedData();
+      },
+      error: (err) => {
+        console.error('查詢失敗', err);
+      },
+      complete: () => {
+        this.loading = false;
+      }
+    });
   }
 
   onTabChange(item: MenuItem) {
     this.activeItem = item;
-
     if (item.label?.includes('全部')) {
       this.filteredData = [...this.data];
     } else if (item.label?.includes('連線')) {
-      this.filteredData = this.data.filter(d => d.EOS_Status === '開機' || d.EOS_Status === '交易中');
+      this.filteredData = this.data.filter(d => d.EOS_Online === 'Y'); // 線上
     } else if (item.label?.includes('離線')) {
-      this.filteredData = this.data.filter(d => d.EOS_Status === '離線' || d.EOS_Status === '登出');
+      this.filteredData = this.data.filter(d => d.EOS_Online === 'N'); // 離線
     }
-
     this.first = 0;
     this.updatePagedData();
   }
 
-  /** 搜尋框篩選 */
   applyFilter() {
     const keyword = this.globalFilter?.toLowerCase().trim();
     if (!keyword) {
@@ -151,33 +108,54 @@ export class TLS44010Component extends BasicQueryPageComponent<any> implements O
     } else {
       this.filteredData = this.data.filter(row =>
         (row.ECR_LocNo?.toLowerCase().includes(keyword)) ||
+        (row.ECR_No?.toLowerCase().includes(keyword)) ||
         (row.TLT_No?.toLowerCase().includes(keyword)) ||
         (row.TLT_Name?.toLowerCase().includes(keyword)) ||
-        (row.EOS_Status?.toLowerCase().includes(keyword)) ||
-        (row.Store?.toLowerCase().includes(keyword)) ||
-        (row.Floor?.toLowerCase().includes(keyword)) ||
-        (row.Area?.toLowerCase().includes(keyword)) ||
-        (row.ECR_IP?.toLowerCase().includes(keyword))
+        (row.ECR_Status?.toLowerCase().includes(keyword)) ||
+        (row.EOS_Online?.toLowerCase().includes(keyword))
       );
     }
-    this.first = 0; // 搜尋後回到第一頁
+    this.first = 0;
     this.updatePagedData();
   }
 
-  // DataView layout 切換
   onLayoutChange(event: any) {
     this.layout = event as 'list' | 'grid';
   }
 
-  // 分頁事件
   onPageChange(event: any) {
     this.first = event.first;
     this.rows = event.rows;
     this.updatePagedData();
   }
 
-  // 更新顯示用的分頁資料
   updatePagedData() {
     this.pagedData = this.filteredData.slice(this.first, this.first + this.rows);
+  }
+
+  // 根據 ECR_Status (0~5) 顯示 icon
+  getStatusIcon(status: string | null): string {
+    switch (status) {
+      case '0': return 'pi pi-pause';        // 暫停交易
+      case '1': return 'pi pi-sign-out';     // 登出
+      case '2': return 'pi pi-wallet';       // 完成清帳
+      case '3': return 'pi pi-sync';         // 交易中
+      case '4': return 'pi pi-users';        // 完成交班
+      case '5': return 'pi pi-power-off';    // 關機
+      default:  return 'pi pi-question-circle';
+    }
+  }
+
+  // 根據 ECR_Status (0~5) 顯示顏色
+  getStatusColor(status: string | null): string {
+    switch (status) {
+      case '0': return '#fd7e14'; // 暫停交易 = 橘
+      case '1': return '#dc3545'; // 登出 = 紅
+      case '2': return '#6f42c1'; // 完成清帳 = 紫
+      case '3': return '#28a745'; // 交易中 = 綠
+      case '4': return '#0d6efd'; // 完成交班 = 藍
+      case '5': return '#6c757d'; // 關機 = 灰
+      default:  return '#6c757d';
+    }
   }
 }

@@ -60,6 +60,7 @@ export interface TLS31040Response {
   AvgTicket: number;
   tlt_space: number;
   MonthlyPSM: number;
+  MonthlyPayment: number;
   TempCounterSaleAmt: number;
   TempCounterSalesRate: number;
   TempCounterAmtRate: number;
@@ -85,6 +86,7 @@ export interface TLS31040DetailResponse {
   AvgTicket: number;
   tlt_space: number;
   MonthlyPSM: number;
+  MonthlyPayment: number;
   MonthlyBudgetTotal: number;
   MonthlySalesTotal: number;
   CompletionRate: number;
@@ -101,7 +103,7 @@ export class Tls31040Service {
     queryTLS31040(body: TLS31040Request): Observable<ApiResponse<TLS31040Response[]>> {
       return this.http.post<ApiResponse<TLS31040Response[]>>(`${this.apiUrl}/queryTLS31040`, body);
     }
-  
+
     // 查詢單櫃別展開之營業報表
     queryTLS31040Detail(body: TLS31040DetailRequest): Observable<ApiResponse<TLS31040DetailResponse[]>> {
       return this.http.post<ApiResponse<TLS31040DetailResponse[]>>(`${this.apiUrl}/queryTLS31040Detail`, body);

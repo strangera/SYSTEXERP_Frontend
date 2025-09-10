@@ -22,7 +22,7 @@ import { Tls11010Service } from '../../../service/api/tls/tls11010.service';
 import { TxnStatusService } from '../../../service/basic/txn-status.service';
 import { ECRNoService } from '../../../service/basic/ECRNo.service';
 import { CounterNameService } from '../../../service/basic/counter-name.service';
-import { finalize } from 'rxjs/operators';
+import { finalize, map } from 'rxjs/operators';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { AccordionModule } from 'primeng/accordion';
 import { CalendarRangeQuickComponent } from '../../../shared/componentkit/calendar-range-quick/calendar-range-quick.component';
@@ -42,6 +42,7 @@ import { ButtonModule } from 'primeng/button';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { HttpResponse } from '@angular/common/http';
 import { Table2Component } from '@shared/componentkit/table2/table2.component';
+import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
 
 @UntilDestroy()
 @Component({
@@ -69,6 +70,7 @@ import { Table2Component } from '@shared/componentkit/table2/table2.component';
     TableComponent,
     Table2Component,
     ButtonModule,
+    
   ],
 })
 export class TLS23020Component extends BasicQueryPageComponent<any> {
@@ -105,6 +107,7 @@ export class TLS23020Component extends BasicQueryPageComponent<any> {
 
   // Request
   queryForm = this.formBuilder.group({
+    TXN_Month: [null],
     TXN_DateStart: [this.yesterday, [Validators.required]],
     TXN_DateEnd: [this.yesterday, [Validators.required]],
     ECR_No: [],
@@ -114,7 +117,8 @@ export class TLS23020Component extends BasicQueryPageComponent<any> {
     TXN_GUINo: [''],
     PLU_SalePrc_Start: [null],
     PLU_SalePrc_End: [null],
-    TXN_TaxType: [],
+    PLU_TaxType: [],
+    PRM_TXN_DiscCode: [],
     TXN_DiscCode: [],
     tlt_id: [],
     PLU_MagNo: [],
@@ -133,7 +137,12 @@ export class TLS23020Component extends BasicQueryPageComponent<any> {
   });
 
   // 下拉選單選項
-  taxableOptions: any[] = [];
+  taxableOptions: any[] = [
+    { value: '0', label: '免稅' },
+    { value: '1', label: '應稅' },
+    
+  ];
+
   discountOptions: any[] = [];
   deductionbigCategoryOptions: any[] = [];
   floorOptions: any[] = [];
@@ -166,6 +175,25 @@ export class TLS23020Component extends BasicQueryPageComponent<any> {
     this.initializePage('TLS23020', 'tls/tls23020cru', this.queryForm, (form) =>
       this.onSubmit(form),
     );
+    this.queryForm.controls.TXN_Month.valueChanges
+  .pipe(untilDestroyed(this))
+  .subscribe((d: Date | null) => {
+    if (!d || isNaN(new Date(d).getTime())) return;
+
+    const { start, end } = this.getMonthRange(d);
+    // 同步到「銷售日期」的起訖（避免觸發二次查詢所以不 emit）
+    this.queryForm.patchValue(
+      { TXN_DateStart: start, TXN_DateEnd: end, pageIndex: 1 },
+      { emitEvent: false }
+    );
+  });
+  this.queryForm.controls.TXN_DateStart.valueChanges
+  .pipe(untilDestroyed(this))
+  .subscribe(() => this.clearMonthIfNotExactRange());
+
+this.queryForm.controls.TXN_DateEnd.valueChanges
+  .pipe(untilDestroyed(this))
+  .subscribe(() => this.clearMonthIfNotExactRange());
 
     // 初始化 sortMeta
     this.sortMeta = this.defaultSort.map((x) => ({ ...x }));
@@ -173,9 +201,7 @@ export class TLS23020Component extends BasicQueryPageComponent<any> {
     this.tls11010Service
       .getBuildingOptions()
       .subscribe((res) => (this.BUILDING_NO_Options = res));
-    this.taxableService
-      .getSystemTypes()
-      .subscribe((data) => (this.taxableOptions = data));
+    
     this.discountService
       .getLocalDiscountOptions()
       .subscribe((data) => (this.discountOptions = data));
@@ -224,41 +250,80 @@ export class TLS23020Component extends BasicQueryPageComponent<any> {
       }));
     });
   }
+fetchTLS23020 = (evt: LazyLoadEvent) => {
+  // 把畫面上的查詢條件組 payload（你原本的 buildPayload）
+  const condPayload = this.buildPayload(this.queryForm.getRawValue());
 
-  /** 表格 lazy 事件（分頁/排序） */
-  override onLazyLoadData(event: LazyLoadEvent, form: FormGroup): void {
-    const currSort = JSON.stringify(form.value?.SortBy ?? []);
-    const nextSortRaw = event.SortBy ?? [];
-    const nextSort = this.ensureGroupFirst(nextSortRaw); // ⬅️ 關鍵
+  // 只交付 pageIndex / pageSize / SortBy（你要求的三鍵）
+  const payload = {
+    ...condPayload,
+    pageIndex: evt.pageIndex ?? 1,
+    pageSize : evt.pageSize  ?? 20,
+    SortBy   : Array.isArray(evt.SortBy) ? evt.SortBy : [],
+  };
 
-    const nextPageIndex =
-      currSort !== JSON.stringify(nextSort)
-        ? 1
-        : event.pageIndex ?? form.value.pageIndex ?? 1;
+  // 呼叫原本的 service
+  return this.tls23020Service.queryTLS23020(payload).pipe(
+    // 轉成 Table2 能直接吃的資料結構
+    map((res: any) => {
+      // === 下面完全沿用你原本 onSubmit 裡的解析邏輯（精簡版） ===
+      const wrappers = Array.isArray(res?.Data) ? res.Data : res?.Data ? [res.Data] : [];
 
-    form.patchValue(
-      {
-        pageIndex: nextPageIndex,
-        pageSize: event.pageSize ?? form.value.pageSize,
-        SortBy: nextSort, // ⬅️ 用強化後的排序
-      },
-      { emitEvent: false },
-    );
+      const rows: any[] = [];
+      const totalAgg = { Total_PLU_SalePrc: 0, Total_TXN_Net: 0, Total_TXN_Tax: 0, Total_TXN_Disc: 0 };
+      const subMap: Record<string, Record<string, number>> = {};
 
-    this.sortMeta = nextSort.map((s) => ({ ...s })); // ⬅️ 同步表頭排序圖示
+      for (const w of wrappers) {
+        totalAgg.Total_PLU_SalePrc += Number(w?.Total_PLU_SalePrc ?? 0);
+        totalAgg.Total_TXN_Net     += Number(w?.Total_TXN_Net ?? 0);
+        totalAgg.Total_TXN_Tax     += Number(w?.Total_TXN_Tax ?? 0);
+        totalAgg.Total_TXN_Disc    += Number(w?.Total_TXN_Disc ?? 0);
 
-    const sig = JSON.stringify({
-      pageIndex: form.value.pageIndex,
-      pageSize: form.value.pageSize,
-      SortBy: form.value.SortBy,
-    });
-    if (sig === this.lastQuerySig) return;
-    this.lastQuerySig = sig;
+        const subTotals = w?.tLS23020_SubTotals ?? w?.TLS23020_SubTotals ?? w?.tls23020_SubTotals ?? [];
+        if (!Array.isArray(subTotals)) continue;
 
-    if (this.lazyTimer) clearTimeout(this.lazyTimer);
-    this.lazyTimer = setTimeout(() => this.onSubmit(form), 0);
-  }
+        for (const st of subTotals) {
+          const details = st?.tLS23020_Details ?? st?.TLS23020_Details ?? st?.tls23020_Details ?? [];
+          const groupKey = String(details?.[0]?.tlt_no ?? 'UNKNOWN');
 
+          const curr = subMap[groupKey] ?? {
+            Subtotal_PLU_SalePrc: 0, Subtotal_TXN_Net: 0, Subtotal_TXN_Tax: 0, Subtotal_TXN_Disc: 0
+          };
+
+       curr['Subtotal_PLU_SalePrc'] += Number(st?.Subtotal_PLU_SalePrc ?? 0);
+curr['Subtotal_TXN_Net']     += Number(st?.Subtotal_TXN_Net ?? 0);
+curr['Subtotal_TXN_Tax']     += Number(st?.Subtotal_TXN_Tax ?? 0);
+curr['Subtotal_TXN_Disc']    += Number(st?.Subtotal_TXN_Disc ?? 0);
+          subMap[groupKey] = curr;
+
+          for (const item of details) {
+            const dateKey = String(item.TXN_Date ?? '').slice(0, 19);
+            const key = `${dateKey}|${item.ECR_No ?? ''}|${item.TXN_No ?? ''}`;
+            rows.push({ ...item, _rowKey: key });
+          }
+        }
+      }
+
+      const candidates = [
+        res?.TotalCount,
+        res?.Data?.TotalCount,
+        Array.isArray(res?.Data) ? res?.Data?.[0]?.TotalCount : undefined,
+        wrappers?.[0]?.TotalCount,
+      ];
+      const totalRecords =
+        candidates.map((n) => Number(n)).find((n) => Number.isFinite(n) && n >= 0) ?? rows.length;
+
+      // 回傳給 Table2
+      return {
+        rows,
+        totalRecords,
+        externalTotals: totalAgg,
+        externalSubtotals: subMap,
+      };
+    })
+  );
+};
+ 
   onSubmit(form: FormGroup): void {
     this.handleSubmit(form, () => {
       // ① 組 payload（條件 + 分頁/排序）
@@ -465,11 +530,12 @@ export class TLS23020Component extends BasicQueryPageComponent<any> {
       TXN_GUINo: (val?.TXN_GUINo ?? '').toString().trim() || undefined,
       PLU_SalePrc_Start: asNum(val?.PLU_SalePrc_Start),
       PLU_SalePrc_End: asNum(val?.PLU_SalePrc_End),
-      TXN_TaxType:
-        val?.TXN_TaxType == null || val?.TXN_TaxType === ''
+      PLU_TaxType:
+        val?.PLU_TaxType == null || val?.PLU_TaxType === ''
           ? undefined
-          : String(val.TXN_TaxType),
+          : String(val.PLU_TaxType),
       TXN_DiscCode: asStrArr(val?.TXN_DiscCode),
+      PRM_TXN_DiscCode: asStrArr(val?.PRM_TXN_DiscCode),
       tlt_id: asStrArr(val?.tlt_id),
       PLU_MagNo: (val?.PLU_MagNo ?? '').toString().trim() || undefined,
       IsNoPLU_No: !!val?.IsNoPLU_No,
@@ -612,15 +678,21 @@ export class TLS23020Component extends BasicQueryPageComponent<any> {
     },
 
     { field: 'tlt_id_desc', header: '商品抽成類別', visible: true },
-    { field: 'TXN_DiscCode', header: '歸屬折扣代號', visible: true },
+   
     { field: 'TXN_DiscName', header: '歸屬折扣名稱', visible: true },
-    { field: 'PLU_TaxType', header: '稅別代號', visible: true },
+    
     { field: 'PLU_TaxTypeName', header: '稅別名稱', visible: true },
     { field: 'PLU_MagNo', header: '單品編號', visible: true },
     { field: 'TXN_StatusName', header: '狀態', visible: true },
   ];
 
   summaryColumns = [
+     {
+      field: 'TXN_Date',
+      header: '銷售日期',
+      visible: true,
+      format: this.formatYMD,
+    },
     { field: 'tlt_no', header: '專櫃編號', visible: true },
     {
       field: 'tlt_name',
@@ -648,6 +720,7 @@ export class TLS23020Component extends BasicQueryPageComponent<any> {
       visible: true,
       style: 'text-right',
       format: this.money,
+      isTotal: true,
     },
   ];
 
@@ -771,4 +844,29 @@ onExportXLSX() {
     const order = exist?.order ?? 1;
     return [{ field: g, order }, ...rest];
   }
+  /** 取得某日期所在月份的起訖（start: 1號 00:00:00, end: 當月最後一天 23:59:59） */
+private getMonthRange(d: Date) {
+  const year = d.getFullYear();
+  const month = d.getMonth(); // 0-based
+  const start = new Date(year, month, 1, 0, 0, 0);              // 1號 00:00:00
+  const end   = new Date(year, month + 1, 0, 23, 59, 59);       // 當月最後一天 23:59:59
+  return { start, end };
+}
+
+/** 若目前銷售日期不是「完整整月」，就把 TXN_Month 清空（避免顯示誤會） */
+private clearMonthIfNotExactRange() {
+  const start: Date | null = this.queryForm.value.TXN_DateStart ?? null;
+  const end: Date | null   = this.queryForm.value.TXN_DateEnd ?? null;
+  if (!start || !end) {
+    this.queryForm.patchValue({ TXN_Month: null }, { emitEvent: false });
+    return;
+  }
+  const { start: mStart, end: mEnd } = this.getMonthRange(start);
+  const sameStart = new Date(start).getTime() === mStart.getTime();
+  const sameEnd   = new Date(end).getTime()   === mEnd.getTime();
+  if (!sameStart || !sameEnd) {
+    this.queryForm.patchValue({ TXN_Month: null }, { emitEvent: false });
+  }
+}
+
 }

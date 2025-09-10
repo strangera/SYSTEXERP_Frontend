@@ -2,12 +2,10 @@ import { Component, OnInit } from '@angular/core';
 import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { Column, createPaginationConfig, formatAmount, formatDateTime, formatYN, formatYYYYMM } from '../../../shared/componentkit/table/table.model';
-import { SystemOptionsService } from '../../../service/system/sys1000.service';
-import { SystemOption } from '../../../shared/models/sys/sys1000.model';
+import { getSYS1000, getSYS1000Options } from '../../../service/system/sys1000.service';
 import { Fin12010Service, IFin12010Data } from '../../../service/api/fin/fin12010.service';
 import { finalize } from 'rxjs';
 import { formatDate as dateFnsFormatDate } from '@angular/common';
-import { SAL_GUIPaperOptions } from '../fin11030/fin11030.model';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
@@ -20,6 +18,7 @@ import { TableComponent } from '../../../shared/componentkit/table/table.compone
 import { TranslateModule } from '@ngx-translate/core';
 import { ValidationService } from '@shared/service/validation.service';
 import { firstDayOfCurrentPeriod, lastDayOfCurrentPeriod } from '@shared/models/system/query-form.model';
+import { transformOptionsForExport } from '@shared/componentextends/basic-print/basic-print-data.component';
 
 @Component({
   selector: 'app-fin12010',
@@ -59,11 +58,11 @@ export class FIN12010Component extends BasicQueryPageComponent<IFin12010Data> im
     { field: 'SAL_GUIBegNo', header: '發票起始號碼', visible: true },
     { field: 'SAL_GUIEndNo', header: '發票結束號碼', visible: true },
     { field: 'SAL_LastUsedGUINo', header: '已使用的發票號', visible: true },
-    { field: 'SAL_Type', header: '使用別', visible: true, format: value => this.usageTypeOptions.find(x => x.SYS_Code === value)?.SYS_Name || value }, // 修正為 '發票用途'
+    { field: 'SAL_Type', header: '使用別', visible: true, format: value => getSYS1000('T205', value), exportFormat: transformOptionsForExport(getSYS1000Options('T205')) }, // 修正為 '發票用途'
     { field: 'GUI_DingType', header: '是否為丁種發票', visible: true, format: formatYN },
     { field: 'SAL_GUIBegMM', header: '起始月份', visible: false },
     { field: 'SAL_GUIEndMM', header: '終止月份', visible: false },
-    { field: 'SAL_GUIPaper', header: '發票類別', visible: false, format: value => this.SAL_GUIPaperOptions.find(x => x.value === value)?.label || value }, // 修正為 '發票類別'
+    { field: 'SAL_GUIPaper', header: '發票類別', visible: false, format: value => getSYS1000('SAL_GUIPaper', value), exportFormat: transformOptionsForExport(getSYS1000Options('SAL_GUIPaper')) }, // 修正為 '發票類別'
     { field: 'SAL_VoidGUICnt', header: '作廢發票張數', visible: false, format: formatAmount },
     { field: 'SAL_BlankCnt', header: '發票張數', visible: false, format: formatAmount },
     { field: 'SAL_SAmt', header: '應稅金額', visible: false, format: formatAmount },
@@ -79,8 +78,8 @@ export class FIN12010Component extends BasicQueryPageComponent<IFin12010Data> im
     { field: 'UPD_USR_No', header: '變更人員', visible: false }, // 修正為 '變更人員'
     { field: 'UPD_USR_Name', header: '變更人員姓名', visible: false },
   ];
-  usageTypeOptions: SystemOption[] = SystemOptionsService.getOptions('T205');
-  SAL_GUIPaperOptions = SAL_GUIPaperOptions
+  usageTypeOptions = getSYS1000Options('T205');
+  SAL_GUIPaperOptions = getSYS1000Options('SAL_GUIPaper');
   constructor(
     private fin12010Service: Fin12010Service,
     private validationService: ValidationService

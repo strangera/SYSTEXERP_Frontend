@@ -36,6 +36,7 @@ import { InputTextModule } from 'primeng/inputtext';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { TranslateModule } from '@ngx-translate/core';
 import { Table2Component } from '@shared/componentkit/table2/table2.component';
+import {  map } from 'rxjs/operators';
 
 @Component({
   selector: 'app-tls23110',
@@ -208,31 +209,93 @@ export class TLS23110Component extends BasicQueryPageComponent<any> {
     });
   }
 
-  /** 表格 lazy 事件（分頁 / 排序） */
-  override onLazyLoadData(event: LazyLoadEvent, form: FormGroup): void {
-    const currSort = JSON.stringify(form.value?.SortBy ?? []);
-    const nextSort = JSON.stringify(event.SortBy ?? []);
-    const nextPageIndex = currSort !== nextSort ? 1 : (event.pageIndex ?? form.value.pageIndex ?? 1);
+// 提供給 Table2 的 lazy 載入函式（HTML 綁 [fetchData]="fetchTLS23110"）
+fetchTLS23110 = (evt: LazyLoadEvent) => {
+  const val = this.queryForm.getRawValue() as any;
 
-    form.patchValue({
-      pageIndex: nextPageIndex,
-      pageSize : event.pageSize ?? form.value.pageSize,
-      SortBy   : event.SortBy ?? form.value.SortBy,
-    }, { emitEvent: false });
+  // 小工具：與 onSubmit 內一致
+  const toIso = (x: any) => {
+    if (!x) return undefined;
+    const d = typeof x === 'string' ? new Date(x) : (x as Date);
+    if (isNaN(d.getTime())) return undefined;
+    return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0, 19);
+  };
+  const toTF = (x: any) => {
+    if (x === true  || x === 'true'  || x === 1 || x === '1') return true;
+    if (x === false || x === 'false' || x === 0 || x === '0') return false;
+    return undefined;
+  };
+  const asArr = (x: any) => Array.isArray(x) ? x : (x == null || x === '' ? undefined : [x]);
 
-    this.sortMeta = (event.SortBy ?? []).map((s) => ({ ...s }));
+  // 排序（事件優先 → 表單 → 目前 sortMeta）
+  const sortBy =
+    (Array.isArray(evt?.SortBy) && evt!.SortBy!.length) ? evt!.SortBy! :
+    (Array.isArray(val?.SortBy) && val!.SortBy!.length) ? val!.SortBy! :
+    this.sortMeta;
 
-    const sig = JSON.stringify({
-      pageIndex: form.value.pageIndex,
-      pageSize : form.value.pageSize,
-      SortBy   : form.value.SortBy,
-    });
-    if (sig === this.lastQuerySig) return;
-    this.lastQuerySig = sig;
+  // 分頁（事件優先 → 表單 → 預設）
+  const pageIndex = Number.isFinite(evt?.pageIndex) ? Number(evt!.pageIndex) : Number(val?.pageIndex ?? 1);
+  const pageSize  = Number.isFinite(evt?.pageSize)  ? Number(evt!.pageSize)  : Number(val?.pageSize  ?? 20);
 
-    if (this.lazyTimer) clearTimeout(this.lazyTimer);
-    this.lazyTimer = setTimeout(() => this.onSubmit(form), 0);
-  }
+  // 與 onSubmit 相同規則（✅ 不帶 Offset / OrderBy）
+  const payload: any = {
+    TXN_DateStart: toIso(val?.TXN_DateStart),
+    TXN_DateEnd  : toIso(val?.TXN_DateEnd),
+    tlt_term_type: val?.tlt_term_type ?? undefined,
+    rece_yn      : val?.rece_yn ?? undefined,
+    IsNoPLU_No   : toTF(val?.IsNoPLU_No),
+    TLT_No       : asArr(val?.TLT_No),
+    tlt_building : val?.tlt_building ?? undefined,
+    tlt_floor    : asArr(val?.tlt_floor),
+    org_id       : asArr(val?.org_id),
+    pageIndex,
+    pageSize,
+    SortBy: sortBy,
+  };
+
+  return this.tls23110Service.queryTLS23110(payload).pipe(
+    map((res: any) => {
+      // 兼容多種包法
+      const rawRows: any[] =
+        Array.isArray(res?.Data?.QueryData) ? res.Data.QueryData :
+        Array.isArray(res?.Data)            ? res.Data :
+        Array.isArray(res?.QueryData)       ? res.QueryData : [];
+
+      // 依需求攤平欄位
+      const preferredOrder = [
+        'OriginalPrice','Discount95','Discount90','Discount85','Discount80',
+        'Discount75','Discount70','Discount60','Discount50','SpecialPrice','Total'
+      ] as const;
+      const metrics = ['TXN_SaleNoTax','TXN_Tax','Total'] as const;
+
+      const rows = rawRows.map((row: any) => {
+        const flat: any = { Day: row?.Day ?? '' };
+        const d = row?.Discount_List || {};
+        for (const bucket of preferredOrder) {
+          const obj = d[bucket as string];
+          if (!obj) continue;
+          for (const m of metrics) {
+            const key = `${bucket}_${m}`;
+            const num = Number(obj[m as string] ?? 0);
+            if (Number.isFinite(num)) flat[key] = num;
+          }
+        }
+        flat._rowKey = String(flat.Day || '') || Math.random().toString(36).slice(2);
+        return flat;
+      });
+
+      const totalRecords =
+        typeof res?.TotalCount === 'number' ? res.TotalCount : rows.length;
+
+      // 表尾總計（用目前畫面 rows + columns 中 isTotal 欄位計）
+      const externalTotals = this.buildTotalsFromRows(rows);
+
+      // 本頁沒有群組小計，故不回傳 externalSubtotals
+      return { rows, totalRecords, externalTotals };
+    })
+  );
+};
+
 
   // 送出查詢（⚠️ 不送 Offset / OrderBy）
   onSubmit(form: FormGroup): void {

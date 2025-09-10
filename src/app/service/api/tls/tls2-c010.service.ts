@@ -35,16 +35,26 @@ export class TLS2C010Service {
     return this.http.post<any>(`${this.apiUrl}/GetTLS2C010Date`, {});
   }
 
-  /**
-   * 匯出專櫃日暫存傳票報表的 API 呼叫
-   * @param body 匯出請求物件 (TLS2C010ExportRequest)
-   * @returns 包含檔案的 Blob 物件
-   */
+  // 匯出專櫃日暫存傳票報表
   exportTLS2C010(
     body: TLS2C010ExportRequest
   ): Observable<HttpResponse<Blob>> {
     return this.http.post(
       `${this.apiUrl}/exportTLS2C010`,
+      body,
+      {
+        observe: 'response',
+        responseType: 'blob'
+      }
+    );
+  }
+
+  // 匯出專櫃日暫存傳票報表PDF
+  exportTLS2C010PDF(
+    body: TLS2C010ExportRequest
+  ): Observable<HttpResponse<Blob>> {
+    return this.http.post(
+      `${this.apiUrl}/exportTLS2C010PDF`,
       body,
       {
         observe: 'response',

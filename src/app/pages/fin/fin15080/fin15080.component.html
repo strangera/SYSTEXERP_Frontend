@@ -10,157 +10,37 @@
       class="line-height-3 m-0"
       [headerStyleClass]="'query-accordionTab'"
     >
-      <form
-        [formGroup]="queryForm"
-        id="queryForm"
-        (ngSubmit)="onSubmit()"
-      >
+      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit()">
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-query-year-month
+            <app-calendar
+              controlName="DeclareYM"
+              calendarType="dateMonthOne"
               label="申報年月"
               [control]="queryForm.controls.DeclareYM"
               [submitted]="submitted"
-              [onlyOddMonths]="true"
-            ></app-query-year-month>
+            ></app-calendar>
           </div>
-                    <div class="col-12 md:col-6 lg:col-4">
+       
+        <div class="col-12 md:col-6 lg:col-4">
             <app-multi-select
               label="稅籍編號"
+              [options]="stoTaxNoOptions"
+              [optionLabel]="'label'"
+              [optionValue]="'value'"
               [control]="queryForm.controls.Business_ID"
               [submitted]="submitted"
             ></app-multi-select>
           </div>
-
         </div>
 
         <div
           class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
         >
-          <app-button btnType="clear" ></app-button>
-          <app-button btnType="query" [loading]="loading"></app-button>
+          <app-button btnType="clear" [form]="queryForm"></app-button>
+          <app-button btnType="query" [loading]="loading" label="列印"></app-button>
         </div>
       </form>
     </p-accordionTab>
   </p-accordion>
-</div>
-
-<div class="card">
-  <app-table
-    tableKey="FIN15080"
-    [data]="data"
-    [columns]="columns"
-    [columnGroup]="columnGroup"
-    dataKey="DeclareMonth"
-    [multiSortMeta]="[{ field: 'DeclareMonth', order: 1 }]"
-    [totalRecords]="totalRecords"
-    [lazy]="true"
-    [loading]="loading"
-    (edit)="onEdit($event)"
-    (detail)="onDetail($event)"
-    [showManage]="true"
-    [showDelete]="true"
-    [showCheckBox]="true"
-    (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit()"
-  ></app-table>
-</div>
-<!-- vat-media-report.component.html -->
-
-<div class="toolbar" style="display:flex; gap:8px; margin-bottom:12px;">
-  <button pButton type="button" label="下載 PDF" icon="pi pi-download" (click)="downloadPDF()"></button>
-  <button pButton type="button" label="預覽 PDF" icon="pi pi-external-link" (click)="previewPDF()"></button>
-  <button pButton type="button" label="列印 PDF" icon="pi pi-print" (click)="printPDF()"></button>
-</div>
-<div class="report">
-  <h2 class="title">營業人媒體檔案申報表</h2>
-
-  <div class="meta grid">
-    <div><span class="label">統一編號</span>{{ meta.uniformNo }}</div>
-    <div><span class="label">營業人名稱</span>{{ meta.name }}</div>
-    <div><span class="label">稅籍編號</span>{{ meta.taxId }}</div>
-    <div class="col-span-2"><span class="label">營業地址</span>{{ meta.address }}</div>
-    <div><span class="label">所屬月份</span>{{ meta.period }}</div>
-    <div><span class="label">金額單位</span>{{ meta.unit }}</div>
-    <div><span class="label">使用發票份數</span>{{ format(meta.invoiceCount) }}</div>
-  </div>
-
-  <!-- 銷項 -->
-  <h3 class="section">銷項</h3>
-  <p-table
-    [value]="sales"
-    styleClass="p-datatable-sm p-datatable-gridlines"
-    [tableStyle]="{ 'min-width': '980px' }"
-  >
-    <ng-template pTemplate="header">
-      <tr>
-        <th rowspan="2" class="w-14 text-center">項次</th>
-        <th rowspan="2">項目</th>
-        <th colspan="2" class="text-center">應稅</th>
-        <th rowspan="2" class="text-right">零稅率銷售額</th>
-        <th rowspan="2" class="text-right">免稅銷售額</th>
-      </tr>
-      <tr>
-        <th class="text-right">銷售額</th>
-        <th class="text-right">稅額</th>
-      </tr>
-    </ng-template>
-
-    <ng-template pTemplate="body" let-r>
-      <tr>
-        <td class="text-center">{{ r.code }}</td>
-        <td class="text-left">{{ r.item }}</td>
-        <td class="text-right">{{ format(r.taxable) }}</td>
-        <td class="text-right">{{ format(r.tax) }}</td>
-        <td class="text-right">{{ format(r.zeroRate) }}</td>
-        <td class="text-right">{{ format(r.exempt) }}</td>
-      </tr>
-    </ng-template>
-
-    <ng-template pTemplate="footer">
-      <tr class="font-bold">
-        <td colspan="2">合計</td>
-        <td class="text-right">{{ format(salesTotals.taxable) }}</td>
-        <td class="text-right">{{ format(salesTotals.tax) }}</td>
-        <td class="text-right">{{ format(salesTotals.zeroRate) }}</td>
-        <td class="text-right">{{ format(salesTotals.exempt) }}</td>
-      </tr>
-    </ng-template>
-  </p-table>
-
-  <!-- 進項 -->
-  <h3 class="section">進項</h3>
-  <p-table
-    [value]="purchases"
-    styleClass="p-datatable-sm p-datatable-gridlines"
-    [tableStyle]="{ 'min-width': '780px' }"
-  >
-    <ng-template pTemplate="header">
-      <tr>
-        <th rowspan="2" class="w-14 text-center">項次</th>
-        <th rowspan="2">項目</th>
-        <th colspan="2" class="text-center">(得扣抵)進項稅額</th>
-      </tr>
-      <tr>
-        <th class="text-right">金額</th>
-        <th class="text-right">稅額</th>
-      </tr>
-    </ng-template>
-
-    <ng-template pTemplate="body" let-r>
-      <tr [class.muted]="r.amount === null && r.tax === null">
-        <td class="text-center">{{ r.code }}</td>
-        <td class="text-left">{{ r.item }}</td>
-        <td class="text-right">{{ format(r.amount) }}</td>
-        <td class="text-right">{{ format(r.tax) }}</td>
-      </tr>
-    </ng-template>
-
-    <ng-template pTemplate="footer">
-      <tr class="font-bold">
-        <td colspan="2">合計</td>
-        <td class="text-right">{{ format(purchaseTotals.amount) }}</td>
-        <td class="text-right">{{ format(purchaseTotals.tax) }}</td>
-      </tr>
-    </ng-template>
-  </p-table>
 </div>

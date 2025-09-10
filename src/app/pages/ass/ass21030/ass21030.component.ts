@@ -110,10 +110,11 @@ export class ASS21030Component extends BasicQueryPageComponent<ENG2001> implemen
       { field: 'ENG_YYMM', header: '結算年月', visible: true, format: formatYYYYMM },
       { field: 'ENG_CurrentReading_Last', header: '上期抄錶度', visible: true },
       { field: 'ENG_CurrentReading', header: '本期抄錶度', visible: true },
+      { field: 'UsageAmount', header: '使用度數', visible: true }, // 090: 後端新增欄位
       { field: 'ENG_Date', header: '抄表日期', visible: true, format: formatDate },
       { field: 'ENG_ImpFileName', header: '匯入檔案名稱', visible: true },
-      { field: 'ENG_Remarks', header: '備註', visible: true },
-
+      { field: 'ENG_Remarks', header: '備註', visible: false },
+      
       { field: 'CRT_Date', header: '建立日期', visible: true, format: formatDate },
       { field: 'CRT_USR_No', header: '建立人員代碼', visible: false },
       { field: 'CRT_USR_Name', header: '建立人員姓名', visible: false },

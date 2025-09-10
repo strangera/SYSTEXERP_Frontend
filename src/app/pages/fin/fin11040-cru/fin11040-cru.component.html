@@ -11,8 +11,8 @@
         <app-input-text class="col-12 md:col-6 lg:col-4" label="品項名稱" controlName="INV_ItemName"
           [control]="dataForm.controls.INV_ItemName" [submitted]="submitted"></app-input-text>
         <app-dropdown class="col-12 md:col-6 lg:col-4" label="使用別" controlName="INV_UsageType"
-          [control]="dataForm.controls.INV_UsageType" [options]="INV_UsageTypeOptions" optionLabel="SYS_Name"
-          optionValue="SYS_Code" [submitted]="submitted"></app-dropdown>
+          [control]="dataForm.controls.INV_UsageType" [options]="INV_UsageTypeOptions" optionLabel="label"
+          optionValue="value" [submitted]="submitted"></app-dropdown>
       </div>
       <hr *ngIf="!isFormCreateable">
       <div *ngIf="!isFormCreateable" class="grid p-fluid">

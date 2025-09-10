@@ -1,9 +1,17 @@
 //!!! 參考Hannah的做法，很好用
+// 昨天
 export const yesterday = (() => {
   const d = new Date();
   d.setDate(d.getDate() - 1);
   return d;
 })();
+// 明天
+export const tomorrow = (() => {
+  const d = new Date();
+  d.setDate(d.getDate() + 1);
+  return d;
+})();
+
 // 計算當前月份所在「期」的第一天
 export const firstDayOfCurrentPeriod = (() => {
   const now = new Date();

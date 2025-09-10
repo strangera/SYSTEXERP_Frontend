@@ -1,0 +1,41 @@
+
+.calendar-table {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+.calendar-table th,
+.calendar-table td {
+  border: 1px solid #ccc;
+  text-align: center;
+  width: 100px;
+  height: 40px;
+  background: #fff;
+  padding: 4px;
+}
+
+.sticky-header {
+  position: sticky;
+  top: 0;
+  background: #f5f5f5;
+  z-index: 2;
+}
+
+.sticky-col {
+  position: sticky;
+  left: 0;
+  background: #f9f9f9;
+  z-index: 1;
+  font-weight: bold;
+  min-width: 80px;
+}
+
+.sticky-col.sticky-header {
+  z-index: 3;
+}
+
+.num-input {
+  width: 90%;
+  padding: 2px;
+  text-align: right;
+}

@@ -36,13 +36,13 @@
                 [control]="dataForm.controls.USR_Level"
                 [submitted]="submitted"
               ></app-input-text>
-              <app-input-text
+              <app-input-number
                 class="col-12 md:col-6 lg:col-4"
                 label="收銀員授權等級"
                 controlName="USR_Auth"
                 [control]="dataForm.controls.USR_Auth"
                 [submitted]="submitted"
-              ></app-input-text>
+              ></app-input-number>
               <app-dropdown class="col-12 md:col-6 lg:col-4" label="收銀員在職狀態" controlName="USR_JobStatus" [options]="jobStatusOption" optionLabel="label"
                     optionValue="value" [control]="dataForm.controls.USR_JobStatus" [submitted]="submitted"></app-dropdown>
             </div>
@@ -51,7 +51,7 @@
                     optionValue="value" [control]="dataForm.controls.USR_Class" [submitted]="submitted"></app-dropdown>
               <app-dropdown class="col-12 md:col-6 lg:col-4" label="收銀員區分" controlName="USR_RegType" [options]="regTypeOption" optionLabel="label"
                     optionValue="value" [control]="dataForm.controls.USR_RegType" [submitted]="submitted"></app-dropdown>
-              <app-dropdown class="col-12 md:col-6 lg:col-4" label="所屬櫃編代碼/名稱" controlName="USR_TLT_No" [options]="TLTOption" optionLabel="Label"
+              <app-dropdown class="col-12 md:col-6 lg:col-4" label="所屬專櫃編號/名稱" controlName="USR_TLT_No" [options]="TLTOption" optionLabel="Label"
                     optionValue="No" [control]="dataForm.controls.USR_TLT_No" [submitted]="submitted"></app-dropdown>
             </div>
             <div class="grid p-fluid">

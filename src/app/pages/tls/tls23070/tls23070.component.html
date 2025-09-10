@@ -10,6 +10,14 @@
       [headerStyleClass]="'query-accordionTab'">
       <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
+                    <div class="col-12 md:col-6 lg:col-4">
+     <app-calendar
+  label="銷售月份"
+  calendarType="dateMonthOne"
+  [control]="queryForm.controls.TXN_Month"
+  [submitted]="submitted">
+</app-calendar>
+          </div>
           <app-calendar-range-quick
             class="col-12 md:col-6 lg:col-4"
             label="銷售日期"
@@ -96,6 +104,7 @@
     [externalTotals]="detailTotals"
     [externalTotalFieldMap]="detailTotalFieldMap"
     [externalSubtotals]="detailSubtotals"
-    [externalSubtotalFieldMap]="detailSubtotalFieldMap">
+    [externalSubtotalFieldMap]="detailSubtotalFieldMap"
+    [serverFetch]="fetchTLS23070"  >
   </app-table2>
 </div>

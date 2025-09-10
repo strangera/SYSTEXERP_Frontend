@@ -7,7 +7,7 @@ import { ButtonComponent } from '../../../shared/componentkit/button/button.comp
 import { TableModule } from 'primeng/table';
 import { TranslateModule } from '@ngx-translate/core';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
-import { Column, ColumnGroup, createPaginationConfig, formatAmount, formatPercentage } from '@shared/componentkit/table/table.model';
+import { Column, ColumnGroup, formatAmount, formatPercentage } from '@shared/componentkit/table/table.model';
 import { TableComponent } from '@shared/componentkit/table/table.component';
 import { RadiobuttonYNComponent } from '@shared/componentkit/radiobutton-yn/radiobutton-yn.component';
 import { yesterday } from '@shared/models/system/query-form.model';
@@ -61,7 +61,7 @@ export class TLS31040Component extends BasicQueryPageComponent<TLS31040Response>
     IsRece_Yn: [null],  // 是否開立業主發票(是否開立業主發票(Y:是 N:否 預設全部))
 
 
-    ...createPaginationConfig([{ field: 'bus_type', order: 1 }])
+    // ...createPaginationConfig([{ field: 'tlt_kind', order: 1 }])
   });
   totalRecords = 0;
   data: TLS31040Response[] = [];
@@ -261,7 +261,7 @@ export class TLS31040Component extends BasicQueryPageComponent<TLS31040Response>
         bus_sclass: frm.getRawValue().bus_sclass.map((item: IDropdownItem) => item.No),
       } as TLS31040Request;
 
-      console.log('送出請求', formValue);
+      console.log('送出request請求', formValue);
       this.tls31040Service.queryTLS31040(formValue).pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(res => {
         console.log('各櫃別之營業報表response', res.Data);
         this.data = res.Data;

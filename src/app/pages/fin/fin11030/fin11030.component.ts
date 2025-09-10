@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
 import { Column, convertDateToYYYYMM, convertYYYYMMToDate, createPaginationConfig } from '../../../shared/componentkit/table/table.model';
-import { APS2001Data, columns, SAL_GUIPaperOptions } from './fin11030.model';
+import { APS2001Data, columns } from './fin11030.model';
 import { Fin11030Service } from '../../../service/api/fin/fin11030.service';
 import { finalize } from 'rxjs';
 import { untilDestroyed } from '@ngneat/until-destroy';
@@ -16,6 +16,7 @@ import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { TranslateModule } from '@ngx-translate/core';
 import { ValidationService } from '@shared/service/validation.service';
+import { getSYS1000Options } from '@service/system/sys1000.service';
 
 @Component({
   selector: 'app-fin11030',
@@ -47,7 +48,7 @@ export class FIN11030Component extends BasicQueryPageComponent<APS2001Data> impl
     ...createPaginationConfig([{ field: 'id', order: 1 }]), // 分頁和排序參數
   }, { validators: this.validationService.guiNumberRangeValidator('SAL_GUINo_start', 'SAL_GUINo_end') });
   totalRecords = 0;// 分頁和排序參數 // 排序需要
-  SAL_GUIPaperOptions = SAL_GUIPaperOptions;     // 發票類別選項
+  SAL_GUIPaperOptions = getSYS1000Options('SAL_GUIPaper');     // 發票類別選項
   data: APS2001Data[] = [];
   selectedRows: APS2001Data[] = [];
   columns: Column[] = columns;

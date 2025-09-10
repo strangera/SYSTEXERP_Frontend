@@ -68,7 +68,7 @@ export class TLS56010Component extends BasicQueryPageComponent<any> implements O
     tltCode: [null],
     PLU_MagNo: [null as string | null],
     PLU_Name: [null],
-    isSafetyStock: [true],
+    isSafetyStock: [false],
     // 預設排序：PLU_MagNo asc
     ...createPaginationConfig([{ field: 'PLU_MagNo', order: 1 }]),
   });
@@ -82,7 +82,7 @@ export class TLS56010Component extends BasicQueryPageComponent<any> implements O
   });
   suggestions: IQueryPOS2004DetailResponse[] = [];
   fieldsConfig: FieldsConfig[] = [
-    { field: 'PLU_MagNo', header: '管理編號', mainDataField: true },
+    { field: 'PLU_MagNo', header: '商品管理編號', mainDataField: true },
   ];
   opData: IQueryPOS2004DetailResponse[] = [];
   opColumns: Column[] = [

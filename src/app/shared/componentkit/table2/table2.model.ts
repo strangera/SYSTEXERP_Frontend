@@ -2,11 +2,16 @@ import { animate, state, style, transition, trigger } from "@angular/animations"
 import { NotificationService } from "../../component/notification-message/notification.service";
 import { SortMeta } from "primeng/api";
 export interface Column {
-  field: string;
-  header: string;
-  visible?: boolean;
-  hidden?: boolean;
-  format?: (value: any) => string | number | null;
+  field: string;     // 欄位名稱
+  header: string;    // 欄位標題
+
+  // 顯示/隱藏
+  visible?: boolean; // 是否顯示（可被 MultiSelect 篩掉）
+  hidden?: boolean;  // 是否隱藏（不可被 MultiSelect 控制）
+
+  // 顯示格式
+  format?: (value: any, index?: number, rowData?: any) => string | number | null;
+  exportFormat?: Record<string, string>[] | any; // 讓它能放物件/陣列
 
   // 群組/小計/總計
   groupField?: string;
@@ -17,17 +22,17 @@ export interface Column {
   showSort?: boolean;
   sortField?: string;
 
-  /** ✅ 表頭兩列控制；不用給預設（在 component 會用 ?? 1 補） */
+  /** 表頭兩列控制 */
   rowspan?: boolean;
   headerRow?: 1 | 2;
 
-  /** ✅ 樣式在 template 有用到 [ngClass]="col.style" */
+  /** 樣式（template 有用到 [ngClass]="col.style"） */
   style?: string | string[] | Set<string> | { [klass: string]: any };
 
-  /** ✅ 是否顯示「*」必填標記（template 有 col.required） */
+  /** 必填星號（template 有 col.required） */
   required?: boolean;
 
-  /** ✅ 編輯/輸入相關 */
+  /** 編輯/輸入相關 */
   disabled?: (value: any) => boolean;
   validate?: ((
     value: string,
@@ -37,29 +42,35 @@ export interface Column {
     header: string
   ) => { isValid: boolean; errorMessage: string[] })[];
 
-  /** ✅ 列型別：template 用到 'image'、'html'、'date'... */
-  type?: 'input' | 'inputNumber' | 'dropdown' | 'button' | 'html' | 'date' | 'image' | 'default';
+  /** 欄位型別（補上 autoComplete） */
+  type?: 'input' | 'inputNumber' | 'dropdown' | 'button' | 'html' | 'date' | 'autoComplete' | 'image' | 'default';
   prefix?: string;
+  suffix?: string; // ← 新增
   fractionDigits?: number;
   useGrouping?: boolean;
 
-  /** ✅ dropdown 用 */
+  /** dropdown 用（補上 optionShowClear / templateLabel / filter） */
   options?: any | ((rowData: any) => any);
   optionLabel?: string;
   optionValue?: string;
+  optionShowClear?: boolean; // ← 新增
+  templateLabel?: string;    // ← 新增
+  filter?: boolean;          // ← 新增
 
-  /** ✅ button / checkbox / date 額外屬性（template 有使用） */
+  /** button / checkbox / date 額外屬性 */
   buttonLabel?: string;
   checkboxTrueLabel?: string;
   checkboxFalseLabel?: string;
   dateFormat?: string;
-  minDate?: Date;   // ← p-calendar 用
-  maxDate?: Date;   // ← p-calendar 用
+  minDate?: Date;
+  maxDate?: Date;
 
-  /** ✅ 凍結欄位 */
+  /** 凍結欄位 */
   frozen?: boolean;
-  alignFrozen?: 'left' | 'right';
-   exportFormat?: any; // ← 讓它能放物件/陣列，而不是字串
+  alignFrozen?: string; // 放寬，接受 table.model 的 string
+
+  /** 其他 */
+  dataKey?: string; // ← 新增，部份情境需要用欄位自己的 key
 }
 
 export interface ColumnGroup {
@@ -71,21 +82,18 @@ export interface ColumnGroup {
 export interface ColumnGroupRow {
   columns: ColumnGroup[];
 }
-
 export interface LazyLoadEvent {
   pageIndex: number; // 當前頁碼
   pageSize: number; // 每頁顯示的數量
   SortBy: SortMeta[]; // 排序欄位
 }
 
-export const createPaginationConfig = (defaultSortBy?: SortMeta[]) => {
-  return {
-    pageSize: [10],
-    pageIndex: [1], // 你將初始頁碼改為 1
-    SortBy: [defaultSortBy],
-  };
-};
 
+export interface LazyLoadEvent {
+  pageIndex: number; // 當前頁碼
+  pageSize: number;  // 每頁顯示的數量
+  SortBy: SortMeta[]; // 排序欄位
+}
 export const toggleButtons = trigger('toggleButtons', [
   state('hidden', style({ transform: 'translateX(-10px)', width: '0px', opacity: 0 })),
   state('visible', style({ transform: 'translateX(0px)', width: 'auto', opacity: 1 })),
@@ -99,12 +107,6 @@ export const expandAnimation = trigger('expandAnimation', [
 ]);
 
 
-export interface AddButton {
-  label: string;
-  icon: string;
-  action: (rowData: any, event?: Event) => void;
-  disabled?: (rowData: any) => boolean;
-}
 
 export interface RowEditSaveEvent {
   oldData: any;
@@ -252,4 +254,44 @@ export function convertDateToYYYYMM(date: Date): string {
   const year = date.getFullYear();
   const month = (date.getMonth() + 1).toString().padStart(2, '0'); // 月份從 1 開始
   return `${year}${month}`;
+}
+
+export const createPaginationConfig = (defaultSortBy?: SortMeta[]) => {
+  return {
+    pageSize: [20],
+    pageIndex: [1],
+    SortBy: [defaultSortBy ?? []],
+  };
+};
+
+
+
+export interface RowEditSaveEvent {
+  oldData: any;
+  newData: any;
+  ri: number;
+  data: any[]; // ← 修正為陣列型別，與上方一致
+}
+// table2.model.ts
+export type ButtonSeverity =
+  | 'primary' | 'secondary' | 'success' | 'info'
+  | 'warning' | 'help' | 'danger' | 'contrast';
+
+export interface AddButton {
+  icon?: string;
+  label?: string;
+
+  severity?: ButtonSeverity;  // <p-button> [severity]
+  text?: boolean;             // <p-button> [text]
+  outlined?: boolean;
+  rounded?: boolean;
+
+  tooltip?: string;
+  show?: boolean | ((row: any) => boolean);
+  disabled?: boolean | ((rowData: any) => boolean);
+
+  // 舊寫法（相容）
+  action?: (rowData: any, event?: Event) => void;
+  // 新寫法（建議）
+  onClick?: (ctx: { rowData: any; button: AddButton; event?: MouseEvent }) => void;
 }

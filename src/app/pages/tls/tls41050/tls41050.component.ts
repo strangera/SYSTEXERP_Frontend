@@ -17,6 +17,7 @@ import { concatMap, finalize, from } from 'rxjs';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { ButtonModule } from 'primeng/button';
 import { NgStyle } from '@angular/common';
+import { TooltipModule } from 'primeng/tooltip';
 
 export interface POS1002 {
   ID: number; // decimal(19,0)
@@ -70,6 +71,7 @@ export interface POS1002 {
     TranslateModule,
     ButtonModule,
     NgStyle,
+    TooltipModule
   ]
 })
 export class TLS41050Component extends BasicQueryPageComponent<POS1002> implements OnInit {
@@ -147,8 +149,8 @@ export class TLS41050Component extends BasicQueryPageComponent<POS1002> implemen
         this.ECR_GUI_Type_Option.find((option) => option.value === value)?.label ||
         value,
     },
-    { field: 'ECR_GUI_PeriodQty', header: '機台每期電子發票預設配號數量', visible: true },
-    { field: 'ECR_GUI_MinQty', header: '機台電子發票最小安全存量', visible: true },
+    { field: 'ECR_GUI_PeriodQty', header: '每期電子發票預設配號數量', visible: true },
+    { field: 'ECR_GUI_MinQty', header: '電子發票最小安全存量', visible: true },
   ];
 
   selectedItems: POS1002[] = [];// 多選項目

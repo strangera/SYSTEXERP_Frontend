@@ -29,7 +29,7 @@ import { Table2Component } from '@shared/componentkit/table2/table2.component';
         ReactiveFormsModule,
         InputTextComponent,
         MultiSelectComponent,
-        TableComponent,
+        // TableComponent,
         TranslateModule,
         Table2Component,
     ],
@@ -167,10 +167,10 @@ export class TLS11020Component extends BasicQueryPageComponent<any> {
     { field: 'CAP_Name', header: '扣款項目名稱', visible: true },
     { field: 'AccNo', header: '會計科目代碼', visible: true },
     {
-      field: 'AccNo',
+      field: 'AccCName',
       header: '會計科目名稱',
       visible: true,
-      format: (value: any) => this.getLabelFromOptions(value, this.accountOptions),
+      
     },
     {
       field: 'GUI_FLAG',

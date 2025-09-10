@@ -12,7 +12,10 @@
         </div>
         <app-table-edit class="col-12" title="費率對照明細" tableKey="FIN21020Detail" [columns]="columns" [data]="data"
           (selectionChange)="selectedItems = $event" [selectedItems]="selectedItems" (dataChange)="data = $event"
-          [rowValidate]="validateEntireRow" [tableRequired]="true" />
+          [rowValidate]="validateEntireRow" [tableRequired]="true" [showReorder]="false"
+          [isRowSelectable]="isRowSelectable" [disabled]="isFormReadable" [showExcel]="true"
+          (exportExcel)="onExportExcel()" (importExcel)="onImportExcel($event)" [showExcelImport]="!isFormReadable"
+          [exportExcelLoading]="excelBtnLoading()" />
       </div>
       <div *ngIf="!isFormReadable" class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
         <app-button btnType="cancel" [form]="dataForm"></app-button>
