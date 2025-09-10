@@ -1,25 +1,35 @@
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { NavigationExtras, Router } from '@angular/router';
-// Services
-import { IfdisplayService } from './../../../service/basic/ifdisplay.service';
-import { AnalysisdateCService } from './../../../service/basic/analysisdate-c.service';
-import { FlippingstateService } from './../../../service/basic/flippingstate.service';
-// Shared
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-import { AuthService } from '../../../service/system/auth.service';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
-import { VendorService } from '../../../service/basic/vendor.service';
-
-import { OrganizationNumberService } from '../../../service/basic/organization-number.service';
-import { AccountingaccountService } from '../../../service/basic/accountingaccount.service';
+import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
+import { Column, convertDateToYYYYMM, createPaginationConfig, formatDateTime, formatYYYYMM } from '../../../shared/componentkit/table/table.model';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { AccordionModule } from 'primeng/accordion';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { InputTextRangeComponent } from '../../../shared/componentkit/input-text-range/input-text-range.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { TranslateModule } from '@ngx-translate/core';
+import { ValidationService } from '@shared/service/validation.service';
+import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
+import { FIN15090Service } from '@service/api/fin/fin15090.service';
+import { untilDestroyed } from '@ngneat/until-destroy';
+import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
+
+/** GLS1016 對象別設定檔 */
+export interface GLS1016 {
+  CompNo: string, // VARCHAR(06)      Not null, /*公司代號*/
+  RefCode: string, // VARCHAR(20)     not null, /*對象別代碼*/
+  RefName: string, // VARCHAR(30)     not null, /*對象別名稱*/
+  SubRefName: string, // VARCHAR(30)      null, /*代送商名稱*/
+
+  //---可能也會需要下面這些---
+  CRT_Date?: Date,
+  CRT_USR_No?: string,
+  CRT_USR_Name?: string,
+  UPD_Date?: Date,
+  UPD_USR_No?: string,
+  UPD_USR_Name?: string,
+}
 
 @Component({
   selector: 'app-fin52040',
@@ -32,221 +42,100 @@ import { TranslateModule } from '@ngx-translate/core';
     AccordionModule,
     FormsModule,
     ReactiveFormsModule,
+    CalendarComponent,
+    DropdownComponent,
     InputTextComponent,
+    InputTextRangeComponent,
     TableComponent,
-    TranslateModule,
-  ],
+    TranslateModule
+  ]
 })
-export class FIN52040Component extends BasicQpageComponent implements OnInit {
-  // Upload files
-  fileType: string = '';
-  uploadUrl: string = 'https://www.primefaces.org/cdn/api/upload.php';
+// 對象及對帳維護作業
+export class FIN52040Component extends BasicQueryPageComponent<GLS1016> implements OnInit {
   queryForm = this.formBuilder.group({
-    systemYear: [], // 系統年結年度
-    accountingStartMonth: [], // 系統開帳年月
-    accountingEndMonth: [], // 系統關帳年月
-    defaultVoucherDate: [], // 傳票日期預設
-    defaultOrganization: [, Validators.required], // 預設組織
-    accumulatedProfitLossAccount: [], // 累積盈虧科目
-    currentProfitLossAccount: [], // 本期損益科目
-    cashAccount: [], // 現金科目
-    accountsReceivableAccount: [], // 應收帳款科目
-    accountsPayableAccount: [], // 應付帳款科目
-    inputTaxAccount: [], // 進項稅額科目
-    outputTaxAccount: [], // 銷項稅額科目
-    postAndTelecomFeeAccount: [], // 郵電費科目
-    discountRate: [], // 貼現日利率
-    discountFeeRevenueAccount: [], // 貼現手續費收入科目
-    discountOutputTaxAccount: [], // 貼現銷項稅額科目
-    startdate: [], // 貼現銷項稅額科目起始日
-    enddate: [], // 貼現銷項稅額科目結束日
-    bankTransferFeeAccount: [], // 銀行匯款手續費科目
-    advanceExpenseAccount: [], // 預支費用科目
-    billTransferCondition: [], // 應付票據是否需領用才拋轉傳票
-    typecode: [],
-    typename: [],
-    Subpoenatype: [],
-    Unifiednumber: [],
-    Objectnumber: [],
-    objectalias: [],
+    CompNo: ['', [Validators.maxLength(6)]], //  公司代號
+    RefCode: ['', [ Validators.maxLength(20)]], // 對象別代碼
+    RefName: ['', [Validators.maxLength(30)]], // 對象別名稱
+
+    CRT_USR_Name: ['', [Validators.maxLength(20)]], //  建立人員姓名
+    UPD_USR_Name: ['', [Validators.maxLength(20)]], //  變更人員姓名
+            
+    ...createPaginationConfig([{ field: 'CompNo', order: 1 }]), // 分頁和排序參數
   });
-
-
-  // Dropdown options
-
-  departmentOptions: any[] = [
-
+      
+  totalRecords = 0;// 分頁和排序參數 // 排序需要
+  data: GLS1016[] = [];
+  selectedRows: GLS1016[] = [];
+              
+  columns: Column[] = [ //先放可視範圍內的
+    { field: 'CompNo', header: '公司代號', visible: true }, // 公司代號
+    { field: 'RefCode', header: '對象別代碼', visible: true }, // 對象別代碼
+    { field: 'RefName', header: '對象別名稱', visible: true }, // 對象別名稱
+    { field: 'SubRefName', header: '代送商名稱', visible: true }, // 代送商名稱
+      
+    { field: 'CRT_Date', header: '建立日期', visible: false, format: formatDateTime }, // 建立日期
+    { field: 'CRT_USR_No', header: '建立人員', visible: false }, // 建立人員
+    { field: 'CRT_USR_Name', header: '建立人員姓名', visible: false }, // 建立人員姓名
+    { field: 'CRT_Date', header: '變更日期', visible: false, format: formatDateTime }, // 變更日期
+    { field: 'CRT_USR_No', header: '變更人員', visible: false }, // 變更人員
+    { field: 'CRT_USR_Name', header: '變更人員姓名', visible: false }, // 變更人員姓名
   ];
-
-  accountOptions: any[] = [
-    { value: '1101', label: '1101_累積盈虧科目1' },
-    { value: '1102', label: '1102_累積盈虧科目2' },
-    { value: '1103', label: '1103_累積盈虧科目3' }
-  ];
-
-  accountingaccountOptions: any[] = [
-    { value: 1, label: '是' },
-    { value: 2, label: '否' }
-  ];
-
-  statusOptions: any[] = [
-    { value: 1, label: '未拋轉' },
-    { value: 2, label: '已拋轉' },
-    { value: 3, label: '已退回' }
-  ];
-
-  unitOptions: any[] = [
-    { value: 1, label: '元' },
-    { value: 2, label: '千' },
-    { value: 3, label: '萬' }
-  ];
-
-  typeOptions: any[] = [
-    { value: 1, label: '統制' },
-    { value: 2, label: '明細' }
-  ];
-
-  SubpoenatypeOptions: any[] = [
-    { value: 1, label: '現金收入傳票' },
-    { value: 2, label: '現金支出傳票' },
-    { value: 3, label: '轉帳傳票' },
-  ];
-
-  SubpoenastatusOptions: any[] = [
-    { value: 1, label: '作廢' },
-    { value: 2, label: '建立' },
-    { value: 3, label: '確認' },
-    { value: 4, label: '過帳' },
-    { value: 5, label: '刪除' }
-  ];
-
-  codeOptions: any[] = [
-    { value: 1, label: '68919301_臺南紡織股份有限公司' },
-    { value: 2, label: '73251209_統一企業股份有限公司' },
-    { value: 3, label: '96978370_統正開發股份有限公司' }
-  ];
-
-  // Table data
-  data: any[] = [
-
-    // Other data
-  ];
-  filteredData: any[] = [...this.data];
-  columns: any[] = [
-    { field: 'isDeleted', header: '是否刪除', visible: true },
-    { field: 'unifiedCode', header: '統一編號', visible: true },
-    { field: 'objectCode', header: '對象別編號', visible: true },
-    { field: 'objectName', header: '對象別名稱', visible: true }
-  ];
-
-  // TypeScript Options
-
-
-
-
-
+      
   constructor(
-    private router: Router,
-    private formBuilder: FormBuilder,
-    private notificationService: NotificationService,
-    private authService: AuthService,
-    private IfdisplayService: IfdisplayService,
-    private AnalysisdateCService: AnalysisdateCService,
-    private vendorService: VendorService,
-    private flippingstateService: FlippingstateService,
-    private organizationNumberService: OrganizationNumberService,
-    private accountingaccountService: AccountingaccountService
+    private fin15090Service: FIN15090Service,
+    private validationService: ValidationService
   ) {
     super(); // 呼叫父類建構子
   }
-  vendorOptions: any[] = [];
-  displayOptions2: any[] = [];
-  AnalysisdateCOptions: any[] = [];
-  FlippingstateOptions: any[] = [];
+        
   ngOnInit(): void {
-    this.ProgNo = '150010';
-    // Initialize dropdown options
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
+    this.initializePage('FIN52040', '/FIN/FIN52040cru', this.queryForm, (form) => this.onSubmit(form));
+  }
+        
+  onSubmit(frm: FormGroup) {
+    this.handleSubmit(frm, () => {
+      const body = {
+        ...frm.value,
+      }
+      
+      console.log('對象及對帳維護作業 request', body);
 
-    this.IfdisplayService.getOptions().subscribe(
-      (data) => (this.displayOptions2 = data)
-    );
-    this.AnalysisdateCService.getOptions().subscribe(
-      (data) => (this.AnalysisdateCOptions = data)
-    );
-    this.vendorService.getVendors().subscribe((data) => {
-      this.vendorOptions = data;
+      this.data = [
+        { 
+          "CompNo": "公司代號1",
+          "RefCode": "對象別代碼1",
+          "RefName": "對象別名稱1",
+          "SubRefName": "代送商名稱1"
+        }
+      ];
+
+      this.loading = false;
+      
+      // this.fin15090Service.PrintFIN15090(body).pipe(untilDestroyed(this)).subscribe({
+      //   next: (response) => {
+      //     this.data = response.Data;
+      //     console.log('對象及對帳維護作業 response', response);
+      //     this.totalRecords = response.TotalCount;
+      //     this.queryStateService.setQueryState(this.ProgNo, frm.value);
+      //     this.loading = false;
+      //   },
+      //   error: () => { this.loading = false; },
+      // });
     });
-    this.flippingstateService.getOptions().subscribe((data) => {
-      this.FlippingstateOptions = data;
-    });
-    this.organizationNumberService
-      .getOrganizationNumbers()
-      .subscribe((data) => {
-        this.departmentOptions = data;
-      });
-    // this.accountingaccountService.getOptions().subscribe((data) => {
-    //   this.accountingaccountOptions = data;
+  }
+  onDelete(selectedRows: GLS1016[]) {
+    // const ids = selectedRows.map(row => row.id);
+    // this.fin14010Service.deleteFIN11020(ids).pipe(untilDestroyed(this)).subscribe({
+    //   next: () => {
+    //     this.onSubmit(this.queryForm);
+    //     this.selectedRows = [];
+    //   },
+    //   error: () => { this.loading = false; },
     // });
   }
-
-  onSubmit(frm: FormGroup) {
-    console.log(frm.value);
-    this.submitted = true;
-    this.loading = true;
-    this.notificationService.blockUi();
-
-    if (frm.valid && this.canQuery()) {
-      // Submit logic here
-    }
-
-    this.loading = false;
-    this.notificationService.unblockUi();
-  }
-
-  onSubmitQuery(frm: FormGroup) {
-    this.onSubmit(frm);
-  }
-
-  onCreate() {
-    if (this.canAdd()) {
-      let extras: NavigationExtras = {
-        state: {
-          crudstatus: CRUDStatus.Create,
-          queryform: this.queryForm,
-        },
-        skipLocationChange: true,
-      };
-      this.router.navigate(['FIN5000/FIN52040CRU'], extras);
-    }
-  }
-
-  onEdit(data: any) {
-    if (this.canEdit()) {
-      let extras: NavigationExtras = {
-        state: {
-          crudstatus: CRUDStatus.Edit,
-          rowdata: data,
-          queryform: this.queryForm,
-        },
-        skipLocationChange: true,
-      };
-      this.router.navigate(['/demoCRU'], extras);
-    }
-  }
-
-  onDetail(data: any) {
-    let extras: NavigationExtras = {
-      state: {
-        crudstatus: CRUDStatus.Read,
-        rowdata: data,
-        queryform: this.queryForm,
-      },
-      skipLocationChange: true,
-    };
-    this.router.navigate(['/demoCRU'], extras);
-  }
-  onClearForm() {
-    this.queryForm.reset(); // 重置表單
+        
+  isRowSelectable(row: GLS1016) {
+    // return row.CanDel;
+    return true
   }
 }

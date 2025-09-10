@@ -1,13 +1,28 @@
-// tls13010-next3.component.ts - 修正版：解決 Next2/Next3 資料同步問題
+// tls13010-next3.component.ts - 重構版本：清晰的結構和職責分離
 import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { FormGroup } from '@angular/forms';
 import { Subscription } from 'rxjs';
+import { ActivatedRoute, NavigationExtras } from '@angular/router';
+
+// 基礎組件和服務
 import { BasicCruPageComponent } from '../../../shared/componentextends/basic-crupage/basic-cru-page.component';
 import { ContractFlowService } from '../tls13010/services/contract-flow.service';
 import { TLS13010Service } from '../../../service/api/tls/tls13010.service';
 import { NotificationService } from '../../../shared/component/notification-message/notification.service';
+import { LocationOptionsService } from '../../../service/api/dropdownservice/location-options.service';
+
+// UI 組件
 import { ColumnDef, ExpandableEditTableComponent } from '../../../shared/componentkit/expandable-edit-table/expandable-edit-table.component';
-import { TLS13010_DROPDOWN_OPTIONS } from '../tls13010/tls13010.dropdown';
+import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { NgIf } from '@angular/common';
+import { ProgressSpinnerModule } from 'primeng/progressspinner';
+import { AccordionModule } from 'primeng/accordion';
+import { DialogModule } from 'primeng/dialog';
+import { PrimeTemplate } from 'primeng/api';
+import { Button } from 'primeng/button';
+
+// 模型定義
 import {
   ContractInfo,
   FixedRentCondition,
@@ -18,45 +33,49 @@ import {
   GeneralCommissionCondition,
   ConditionItem,
   WorkflowStep,
-  RentSettingApiData,
   CleanSubmitData
 } from '../tls13010/tls13010.model';
-import { LocationOptionsService } from '../../../service/api/dropdownservice/location-options.service';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { NgIf } from '@angular/common';
-import { ProgressSpinnerModule } from 'primeng/progressspinner';
-import { AccordionModule } from 'primeng/accordion';
-import { DialogModule } from 'primeng/dialog';
-import { PrimeTemplate } from 'primeng/api';
-import { Button } from 'primeng/button';
-import { ActivatedRoute, NavigationExtras } from '@angular/router';
+import { ConditionDataManager } from './Services/condition-data-manager.service';
+import { TableConfigManager } from './Services/table-config-manager.service';
+import { EventHandlerManager } from './Services/event-handler-manager.service';
 
 @Component({
   selector: 'app-tls13010-next3',
   templateUrl: './tls13010-next3.component.html',
   styleUrls: ['./tls13010-next3.component.scss'],
   standalone: true,
-  imports: [MenubarComponent, ButtonComponent, NgIf, ProgressSpinnerModule, AccordionModule, ExpandableEditTableComponent, DialogModule, PrimeTemplate, Button]
+  imports: [
+    MenubarComponent,
+    ButtonComponent,
+    NgIf,
+    ProgressSpinnerModule,
+    AccordionModule,
+    ExpandableEditTableComponent,
+    DialogModule,
+    PrimeTemplate,
+    Button
+  ]
 })
 export class Tls13010Next3Component extends BasicCruPageComponent<ConditionItem> implements OnInit, OnDestroy {
 
+  // ===== 狀態管理 =====
   isViewMode = false;
-  private viewModeSubscription?: Subscription;
-
-  private discountOptions: any[] = [];
-  private subscriptions: Subscription[] = [];
-  dataForm: FormGroup;
-  showConfirmDialog = false;
   dataLoaded = false;
   conditionDataLoaded = false;
+  showConfirmDialog = false;
 
-  // 當前合約資料
-  currentTalentId: string = '';
+  // ===== 訂閱管理 =====
+  private viewModeSubscription?: Subscription;
+  private subscriptions: Subscription[] = [];
+
+  // ===== 表單數據 =====
+  dataForm: FormGroup;
+  currentTalentId = '';
   currentContractData: any = null;
   contractInfoData: ContractInfo[] = [];
 
-  // 條件設定資料
+  // ===== 條件數據 =====
+  private allConditionItems: ConditionItem[] = [];
   fixedRentItems: FixedRentCondition[] = [];
   baseRentHigherItems: BaseRentHigherCondition[] = [];
   generalCommissionItems: GeneralCommissionCondition[] = [];
@@ -64,79 +83,14 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionItem>
   graduatedItems: GraduatedCommissionCondition[] = [];
   baseTierItems: BaseTierCondition[] = [];
 
-  // 契約資訊欄位定義
-  contractInfoColumns: ColumnDef[] = [
-    { field: 'apply_no', header: '專櫃招募編號', type: 'text', editable: false, autoWidth: true },
-    { field: 'tlt_no', header: '專櫃編號', type: 'text', editable: false, autoWidth: true },
-    { field: 'tlt_name', header: '品牌(專櫃)名稱', type: 'text', editable: false, autoWidth: true },
-    { field: 'ven_uniform', header: '廠商統編', type: 'text', editable: false, autoWidth: true },
-    { field: 'VEN_Name', header: '廠商名稱', type: 'text', editable: false, autoWidth: true },
-    { field: 'contract_subno', header: '版本編號', type: 'text', editable: false, autoWidth: true },
-    { field: 'tlt_term_type', header: '抽成別', type: 'dropdown', editable: false, options: TLS13010_DROPDOWN_OPTIONS.tltTermType, autoWidth: true },
-    { field: 'tlt_bdate', header: '合約起始日', type: 'date', editable: false, autoWidth: true, dateFormat: 'full-date' },
-    { field: 'tlt_edate', header: '合約終止日', type: 'date', editable: false, autoWidth: true, dateFormat: 'full-date' },
-    { field: 'tlt_contract_bdate', header: '營運起始日', type: 'date', editable: false, autoWidth: true, dateFormat: 'full-date' },
-    { field: 'tlt_contract_edate', header: '營運終止日', type: 'date', editable: false, autoWidth: true, dateFormat: 'full-date' }
-  ];
-
-  // 各類型的欄位定義
-  fixedRentColumns: ColumnDef[] = [
-    { field: 'tlt_id', header: '帳務期別', type: 'text', editable: true, autoWidth: true },
-    { field: 'cag_bdate', header: '帳務起', type: 'date', editable: true, autoWidth: true },
-    { field: 'cag_edate', header: '帳務迄', type: 'date', editable: true, autoWidth: true },
-    { field: 'base_rent', header: '租金金額', type: 'number', editable: true, autoWidth: true }
-  ];
-
-  baseRentHigherColumns: ColumnDef[] = [
-    { field: 'tlt_id', header: '帳務期別', type: 'text', editable: true, autoWidth: true },
-    { field: 'cag_bdate', header: '帳務起', type: 'date', editable: true, autoWidth: true },
-    { field: 'cag_edate', header: '帳務迄', type: 'date', editable: true, autoWidth: true },
-    { field: 'base_rent', header: '租金金額', type: 'number', editable: true, autoWidth: true },
-  ];
-
-  generalCommissionColumns: ColumnDef[] = [
-    { field: 'tlt_id', header: '抽成類別', type: 'text', editable: false, autoWidth: true, readonly: true },
-    { field: 'tlt_id_desc', header: '抽成類別名稱', type: 'text', editable: false, autoWidth: true, readonly: true },
-    {
-      field: 'cag_taxtype', header: '稅別', type: 'dropdown', editable: false, autoWidth: true, readonly: true, options: [
-        { label: '應稅', value: '1' },
-        { label: '免稅', value: '2' },
-        { label: '零稅率', value: '3' }
-      ]
-    },
-    { field: 'cag_bdate', header: '帳務起', type: 'date', editable: true, autoWidth: true },
-    { field: 'cag_edate', header: '帳務迄', type: 'date', editable: true, autoWidth: true },
-    { field: 'cag_barcode', header: '折扣別', type: 'dropdown', editable: true, autoWidth: true, options: [] },
-    { field: 'cag_charge_rate', header: '抽成率(%)', type: 'number', editable: true, autoWidth: true }
-  ];
-
-  baseCommissionColumns: ColumnDef[] = [
-    { field: 'tlt_id', header: '帳務期別', type: 'text', editable: true, autoWidth: true },
-    { field: 'cag_bdate', header: '帳務起', type: 'date', editable: true, autoWidth: true },
-    { field: 'cag_edate', header: '帳務迄', type: 'date', editable: true, autoWidth: true },
-    { field: 'limit_amt', header: '包底金額', type: 'number', editable: true, autoWidth: true },
-    { field: 'limit_charge_rate', header: '抽成率(%)', type: 'number', editable: true, autoWidth: true }
-  ];
-
-  graduatedColumns: ColumnDef[] = [
-    { field: 'seq_no', header: '序號', type: 'number', editable: true, autoWidth: true },
-    { field: 'cag_bdate', header: '帳務起', type: 'date', editable: true, autoWidth: true },
-    { field: 'cag_edate', header: '帳務迄', type: 'date', editable: true, autoWidth: true },
-    { field: 'start_number', header: '階梯金額(起值)', type: 'number', editable: true, autoWidth: true },
-    { field: 'end_number', header: '階梯金額(迄值)', type: 'number', editable: true, autoWidth: true },
-    { field: 'charge_rate', header: '抽成率(%)', type: 'number', editable: true, autoWidth: true }
-  ];
-
-  baseTierColumns: ColumnDef[] = [
-    { field: 'seq_no', header: '序號', type: 'number', editable: true, autoWidth: true },
-    { field: 'tlt_id', header: '帳務期別', type: 'text', editable: true, autoWidth: true },
-    { field: 'cag_bdate', header: '帳務起', type: 'date', editable: true, autoWidth: true },
-    { field: 'cag_edate', header: '帳務迄', type: 'date', editable: true, autoWidth: true },
-    { field: 'limit_amt', header: '包底金額', type: 'number', editable: true, autoWidth: true },
-    { field: 'start_number', header: '階梯金額(起值)', type: 'number', editable: true, autoWidth: true },
-    { field: 'end_number', header: '階梯金額(迄值)', type: 'number', editable: true, autoWidth: true },
-    { field: 'charge_rate', header: '抽成率(%)', type: 'number', editable: true, autoWidth: true }
-  ];
+  // ===== 表格配置 =====
+  contractInfoColumns: ColumnDef[] = [];
+  fixedRentColumns: ColumnDef[] = [];
+  baseRentHigherColumns: ColumnDef[] = [];
+  generalCommissionColumns: ColumnDef[] = [];
+  baseCommissionColumns: ColumnDef[] = [];
+  graduatedColumns: ColumnDef[] = [];
+  baseTierColumns: ColumnDef[] = [];
 
   constructor(
     private contractFlowService: ContractFlowService,
@@ -144,84 +98,109 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionItem>
     private notificationService: NotificationService,
     private cdr: ChangeDetectorRef,
     private paperTypeService: LocationOptionsService,
-    private route: ActivatedRoute
+    private route: ActivatedRoute,
+    // 新增的管理服務
+    private conditionDataManager: ConditionDataManager,
+    private tableConfigManager: TableConfigManager,
+    private eventHandlerManager: EventHandlerManager
   ) {
     super();
     this.dataForm = this.formBuilder.group({});
   }
 
+  // ===== 生命週期方法 =====
+
   ngOnInit(): void {
+    console.log('Next3 組件初始化開始');
+
     this.setupViewModeUI();
     this.initializePage('TLS13010', this.dataForm);
+    this.initializeTableConfigs();
 
     this.loadDiscountOptions().then(() => {
       this.loadWorkflowData();
     });
-
   }
 
   ngOnDestroy(): void {
-    console.log('🔄 Next3 組件銷毀前暫存資料');
+    console.log('Next3 組件銷毀前暫存資料');
 
     if (!this.isViewMode) {
-      console.log('📝 編輯模式：儲存條件設定資料');
       this.saveConditionDataToWorkflow();
-    } else {
-      console.log('🔍 檢視模式：跳過資料儲存');
     }
-
-    // 🎯 ⭐ 重要：組件銷毀前暫存
-    this.saveConditionDataToWorkflow();
 
     // 清理訂閱
     this.subscriptions.forEach(sub => sub.unsubscribe());
-
-    // 🎯 新增：清理檢視模式訂閱
     if (this.viewModeSubscription) {
       this.viewModeSubscription.unsubscribe();
     }
   }
 
+  // ===== 初始化方法 =====
+
+  private initializeTableConfigs(): void {
+    console.log('初始化表格配置');
+
+    this.contractInfoColumns = this.tableConfigManager.getContractInfoColumns();
+    this.fixedRentColumns = this.tableConfigManager.getFixedRentColumns();
+    this.baseRentHigherColumns = this.tableConfigManager.getBaseRentHigherColumns();
+    this.generalCommissionColumns = this.tableConfigManager.getGeneralCommissionColumns();
+    this.baseCommissionColumns = this.tableConfigManager.getBaseCommissionColumns();
+    this.graduatedColumns = this.tableConfigManager.getGraduatedColumns();
+    this.baseTierColumns = this.tableConfigManager.getBaseTierColumns();
+  }
+
+  private setupViewModeUI(): void {
+    console.log('設定檢視模式 UI 監聽');
+
+    const currentViewMode = this.contractFlowService.isViewMode();
+    if (currentViewMode) {
+      this.isViewMode = true;
+      this.applyViewModeSettings(true);
+    }
+
+    this.viewModeSubscription = this.contractFlowService.isViewMode$.subscribe(isViewMode => {
+      this.isViewMode = isViewMode;
+      this.applyViewModeSettings(isViewMode);
+    });
+  }
+
+  private applyViewModeSettings(isViewMode: boolean): void {
+    console.log('套用檢視模式設定:', isViewMode);
+    // 表格的 readonly 屬性會根據 isViewMode 自動處理
+  }
+
+  // ===== 數據載入方法 =====
+
   private loadWorkflowData(): void {
-    console.log('🚀 Next3 開始載入工作流程資料...');
+    console.log('開始載入工作流程資料');
 
     const workflowData = this.contractFlowService.getCurrentData();
-    console.log('📋 工作流程資料:', workflowData);
 
-    // 🎯 統一使用 ContractFlowService 的模式判定
     if (workflowData.contractId || this.contractFlowService.isNewContractMode()) {
-      // 🎯 統一獲取模式資訊和 talent_id
       const modeInfo = this.contractFlowService.getWorkflowModeInfo();
       this.currentTalentId = modeInfo.talentId;
       this.currentContractData = workflowData?.queryRowData;
 
-      console.log('✅ 工作流程狀態確認:', {
+      console.log('工作流程狀態確認:', {
         mode: modeInfo.modeName,
         currentTalentId: this.currentTalentId,
         contractId: modeInfo.contractId
       });
 
-      // 🎯 準備合約資訊顯示
       this.prepareContractInfoDisplay();
-
-      // 🎯 載入資料的優先順序
       this.loadDataWithPriority();
-
     } else {
-      console.warn('❌ 沒有有效的工作流程資料，重導向到前一步');
-      console.warn('   - 缺少 contractId 或新增模式標記');
+      console.warn('沒有有效的工作流程資料，重導向到前一步');
       this.router.navigate(['account/tls/tls13010cru']);
     }
   }
 
   private prepareContractInfoDisplay(): void {
-    console.log('📊 準備合約資訊顯示...');
+    console.log('準備合約資訊顯示');
 
-    // 🎯 優先使用 CRU 頁面編輯後的資料
     const step1Data = this.contractFlowService.getStep1Data();
-    console.log('📝 Step1 編輯資料:', step1Data);
 
-    // 🎯 準備合約資訊
     const contractInfo = {
       talent_id: step1Data?.talent_id || this.currentContractData?.talent_id || '',
       tlt_no: step1Data?.tlt_no || this.currentContractData?.tlt_no || '',
@@ -238,655 +217,373 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionItem>
       tlt_term_type: (step1Data?.tlt_term_type || this.currentContractData?.tlt_term_type || '3').toString().trim(),
     };
 
-    console.log('📊 準備顯示的合約資訊:', contractInfo);
-
     this.contractInfoData = [{
-      id: contractInfo.talent_id || 'new', // 🎯 新增模式顯示 'new'
+      id: contractInfo.talent_id || 'new',
       ...contractInfo
     }];
 
-    console.log('📊 最終合約資訊陣列:', this.contractInfoData);
-    console.log('📊 合約資訊設定完成');
+    console.log('合約資訊設定完成');
   }
 
-  // 🎯 新增：按優先順序載入資料
   private loadDataWithPriority(): void {
     const commissionType = this.contractInfoData[0]?.tlt_term_type;
 
-    console.log('🔍 載入資料優先順序判定:', {
-      commissionType: commissionType,
+    console.log('載入資料優先順序判定:', {
+      commissionType,
       isNewContract: this.contractFlowService.isNewContractMode(),
       currentTalentId: this.currentTalentId,
-      isViewMode: this.isViewMode // 🎯 新增：檢視模式記錄
+      isViewMode: this.isViewMode
     });
 
     // 第一優先：檢查是否有 Next3 暫存資料
     const savedNext3Data = this.contractFlowService.getStepData(WorkflowStep.CONDITION);
 
     if (savedNext3Data && Array.isArray(savedNext3Data) && savedNext3Data.length > 0) {
-      console.log('📦 使用 Next3 暫存資料，項目數量:', savedNext3Data.length);
+      console.log('使用 Next3 暫存資料，項目數量:', savedNext3Data.length);
       this.loadConditionDataFromCache(savedNext3Data);
-      this.conditionDataLoaded = true;
-      this.dataLoaded = true;
-      return;
-    }
-
-    // 第二優先：根據模式載入
-    if (this.contractFlowService.isNewContractMode()) {
-      console.log('🆕 新增模式：初始化空的條件設定');
+    } else if (this.contractFlowService.isNewContractMode()) {
+      console.log('新增模式：初始化空的條件設定');
       this.initializeNewContractConditionData(commissionType || '3');
     } else {
-      console.log('📝 編輯模式：載入條件設定');
-      this.loadOtherConditionData();
+      console.log('編輯模式：載入條件設定');
+      this.loadExistingConditionData();
     }
-  }
-  private initializeNewContractConditionData(commissionType: string): void {
-    console.log('🆕 新增模式：初始化條件設定，抽成類型:', commissionType);
-    // 🎯 新增模式：根據抽成類型初始化空的條件設定
-    this.initializeConditionDataByCommissionType(commissionType);
 
     this.conditionDataLoaded = true;
     this.dataLoaded = true;
-
-    console.log('✅ 新增模式條件設定初始化完成');
   }
 
+  private initializeNewContractConditionData(commissionType: string): void {
+    console.log('新增模式：初始化條件設定，抽成類型:', commissionType);
 
-  // 🎯 載入其他條件設定資料
-  private loadOtherConditionData(): void {
+    this.allConditionItems = this.conditionDataManager.initializeEmptyConditions(
+      commissionType,
+      this.currentTalentId
+    );
+
+    this.categorizeConditionItems();
+    console.log('新增模式條件設定初始化完成');
+  }
+
+  private loadExistingConditionData(): void {
     const commissionType = this.contractInfoData[0]?.tlt_term_type || '3';
-    console.log('🔍 載入其他條件設定資料，抽成類型:', commissionType);
 
-    // 🎯 檢查是否為新增模式
-    if (this.contractFlowService.isNewContractMode()) {
-      console.log('🆕 新增模式：跳過 API 載入，使用空的條件設定');
-      this.initializeConditionDataByCommissionType(commissionType);
-      this.conditionDataLoaded = true;
-      this.dataLoaded = true;
-      return;
-    }
-
-    // 🎯 編輯模式：使用統一 API 資料
+    // 使用統一 API 資料
     const unifiedCommissionData = this.contractFlowService.getUnifiedCommissionData();
     if (unifiedCommissionData?.RentSettingData) {
-      console.log('📋 使用統一 API 條件設定資料');
-      this.loadConditionDataFromUnifiedAPI(unifiedCommissionData.RentSettingData);
+      console.log('使用統一 API 條件設定資料');
+      this.allConditionItems = this.conditionDataManager.mapBackendDataToFrontend(
+        unifiedCommissionData.RentSettingData,
+        commissionType
+      );
     } else {
-      console.log('📭 根據抽成類型初始化條件設定');
-      this.initializeConditionDataByCommissionType(commissionType);
+      console.log('根據抽成類型初始化條件設定');
+      this.allConditionItems = this.conditionDataManager.initializeEmptyConditions(
+        commissionType,
+        this.currentTalentId
+      );
     }
 
-    this.conditionDataLoaded = true;
-    this.dataLoaded = true;
+    this.categorizeConditionItems();
   }
 
-  // 🎯 從 Step4 暫存載入條件資料
   private loadConditionDataFromCache(savedData: ConditionItem[]): void {
     try {
-      console.log('🔄 從暫存載入條件資料:', savedData);
-      this.categorizeConditionItems(savedData);
-      console.log('✅ 暫存條件資料載入完成');
+      console.log('從暫存載入條件資料:', savedData);
+      this.allConditionItems = savedData;
+      this.categorizeConditionItems();
+      console.log('暫存條件資料載入完成');
     } catch (error) {
-      console.error('❌ 暫存條件資料載入失敗:', error);
+      console.error('暫存條件資料載入失敗:', error);
       this.initializeEmptyConditionData();
     }
   }
 
-  // 🎯 從統一 API 載入條件資料
-  private loadConditionDataFromUnifiedAPI(rentSettingData: RentSettingApiData): void {
-    try {
-      console.log('🔄 從統一 API 載入條件設定:', rentSettingData);
-      const commissionType = this.contractInfoData[0]?.tlt_term_type || '3';
+  private categorizeConditionItems(): void {
+    const categorized = this.conditionDataManager.categorizeConditionItems(this.allConditionItems);
 
-      const convertedData = {
-        CommissionMasters: (rentSettingData.CommissionMasters || []).map((item: any) => ({
-          ...item,
-          sst_amount: item.sst_amount ?? 0
-        })),
-        ChargedDetails: rentSettingData.ChargedDetails || [],
-        RentDetails: rentSettingData.RentDetails || [],
-        LimitDetails: rentSettingData.LimitDetails || [],
-        LevelDetails: rentSettingData.LevelDetails || []
-      };
+    this.fixedRentItems = categorized.fixedRent;
+    this.baseRentHigherItems = categorized.baseRentHigher;
+    this.generalCommissionItems = categorized.generalCommission;
+    this.baseCommissionItems = categorized.baseCommission;
+    this.graduatedItems = categorized.graduated;
+    this.baseTierItems = categorized.baseTier;
 
-      this.mapBackendDataToFrontend(convertedData, commissionType);
-      console.log('✅ 統一 API 條件資料載入完成');
-    } catch (error) {
-      console.error('❌ 處理統一 API 條件資料時發生錯誤:', error);
-      const safeCommissionType = this.contractInfoData[0]?.tlt_term_type || '3';
-      this.initializeConditionDataByCommissionType(safeCommissionType);
-    }
-  }
-
-  // 🎯 分類條件項目
-  private categorizeConditionItems(conditionItems: ConditionItem[]): void {
-    console.log('🏷️ 分類條件項目:', conditionItems);
-    this.initializeEmptyConditionData();
-
-    conditionItems.forEach(item => {
-      console.log('🔍 分類項目:', {
-        id: item.id,
-        _fromNext2: (item as any)._fromNext2,
-        _status: (item as any)._status,
-        hasBaseRent: 'base_rent' in item,
-        hasChargeRate: 'cag_charge_rate' in item
-      });
-
-      if ('base_rent' in item && 'cag_charge_rate' in item) {
-        // 🎯 ⭐ 重要：完整保留所有屬性
-        this.baseRentHigherItems.push({
-          ...item,
-          _fromNext2: (item as any)._fromNext2 || false,
-          _status: (item as any)._status || 'original',
-          _readonly: (item as any)._readonly || false
-        } as BaseRentHigherCondition);
-
-        console.log('✅ 已分類為底租抽成取高者，保留屬性:', {
-          id: item.id,
-          _fromNext2: (item as any)._fromNext2,
-          _status: (item as any)._status
-        });
-      } else if ('base_rent' in item) {
-        this.fixedRentItems.push({
-          ...item,
-          _status: (item as any)._status || 'original'
-        } as FixedRentCondition);
-      } else if ('limit_amt' in item && 'seq_no' in item) {
-        this.baseTierItems.push({
-          ...item,
-          _status: (item as any)._status || 'original'
-        } as BaseTierCondition);
-      } else if ('limit_amt' in item) {
-        this.baseCommissionItems.push({
-          ...item,
-          _status: (item as any)._status || 'original'
-        } as BaseCommissionCondition);
-      } else if ('seq_no' in item) {
-        this.graduatedItems.push({
-          ...item,
-          _status: (item as any)._status || 'original'
-        } as GraduatedCommissionCondition);
-      }
-    });
-
-    console.log('📊 分類結果統計:', {
-      底租抽成取高者: this.baseRentHigherItems.length,
-      來自Next2的項目: this.baseRentHigherItems.filter(item => item._fromNext2).length,
-      已修改的項目: this.baseRentHigherItems.filter(item => item._status === 'modified').length
+    console.log('條件項目分類完成:', {
+      fixedRent: this.fixedRentItems.length,
+      baseRentHigher: this.baseRentHigherItems.length,
+      generalCommission: this.generalCommissionItems.length,
+      baseCommission: this.baseCommissionItems.length,
+      graduated: this.graduatedItems.length,
+      baseTier: this.baseTierItems.length
     });
   }
 
-  // 🎯 初始化空的條件資料
   private initializeEmptyConditionData(): void {
     this.fixedRentItems = [];
     this.baseRentHigherItems = [];
+    this.generalCommissionItems = [];
     this.baseCommissionItems = [];
     this.graduatedItems = [];
     this.baseTierItems = [];
+    this.allConditionItems = [];
   }
 
-  // 🎯 根據抽成類型初始化條件資料
-  private initializeConditionDataByCommissionType(commissionType: string): void {
-    console.log('📝 根據抽成類型初始化條件資料:', commissionType);
-
-    this.initializeEmptyConditionData();
-
-    const safeCommissionType = commissionType || '3';
-
-    switch (safeCommissionType) {
-      case '1':
-        this.fixedRentItems = [this.createFixedRentItem()];
-        break;
-      case '2':
-        this.baseRentHigherItems = [this.createBaseRentHigherItem()];
-        break;
-      case '4':
-        this.baseCommissionItems = [this.createBaseCommissionItem()];
-        break;
-      case '5':
-        this.graduatedItems = [this.createGraduatedItem()];
-        break;
-      case '6':
-        this.baseTierItems = [this.createBaseTierItem()];
-        break;
-    }
+  private async loadDiscountOptions(): Promise<void> {
+    return new Promise((resolve) => {
+      console.log('開始載入折數選項...');
+      this.paperTypeService.getPaperTypeOptions('T102').subscribe({
+        next: (options: any[]) => {
+          console.log('折扣選項載入成功:', options);
+          this.tableConfigManager.setDiscountOptions(options);
+          this.updateGeneralCommissionColumns();
+          resolve();
+        },
+        error: (error: any) => {
+          console.error('載入折數選項失敗:', error);
+          this.tableConfigManager.setDiscountOptions([]);
+          resolve();
+        }
+      });
+    });
   }
 
-  // 🎯 對應後端資料到前端模型
-  private mapBackendDataToFrontend(existingData: any, commissionType: string): void {
-    console.log('🗺️ 對應後端資料到前端模型:', { existingData, commissionType });
-    this.initializeEmptyConditionData();
-
-    switch (commissionType) {
-      case '1':
-        this.mapRentData(existingData);
-        break;
-      case '2':
-        this.mapBaseRentHigherData(existingData);
-        break;
-
-      case '4':
-        this.mapBaseCommissionData(existingData);
-        break;
-      case '5':
-        this.mapGraduatedCommissionData(existingData);
-        break;
-      case '6':
-        this.mapBaseTierData(existingData);
-        break;
-    }
+  private updateGeneralCommissionColumns(): void {
+    this.generalCommissionColumns = this.tableConfigManager.getGeneralCommissionColumns();
   }
 
-  // 各種對應方法的實現
-  private mapRentData(data: any): void {
-    if (data.RentDetails && data.RentDetails.length > 0) {
-      this.fixedRentItems = data.RentDetails.map((item: any) => ({
-        id: item.id,
-        talent_id: item.talent_id.toString(),
-        tlt_id: item.tlt_id || '',
-        cag_bdate: this.formatDate(item.cag_bdate),
-        cag_edate: this.formatDate(item.cag_edate),
-        base_rent: item.base_rent || 0,
-        _status: 'original'
-      }));
-    }
+  // ===== 顯示數據方法 =====
+
+  get displayFixedRentItems(): FixedRentCondition[] {
+    return this.conditionDataManager.filterDisplayItems(this.fixedRentItems);
   }
 
-  private mapBaseRentHigherData(data: any): void {
-    if (data.RentDetails && data.ChargedDetails) {
-      this.baseRentHigherItems = data.RentDetails.map((rentItem: any, index: number) => ({
-        id: rentItem.id,
-        talent_id: rentItem.talent_id.toString(),
-        tlt_id: rentItem.tlt_id || '',
-        cag_bdate: this.formatDate(rentItem.cag_bdate),
-        cag_edate: this.formatDate(rentItem.cag_edate),
-        base_rent: rentItem.base_rent || 0,
-        cag_charge_rate: data.ChargedDetails?.[index]?.cag_charge_rate || 0,
-        _status: 'original'
-      }));
-    }
+  get displayBaseRentHigherItems(): BaseRentHigherCondition[] {
+    return this.conditionDataManager.filterDisplayItems(this.baseRentHigherItems);
   }
 
-
-
-  private mapBaseCommissionData(data: any): void {
-    if (data.LimitDetails && data.LimitDetails.length > 0) {
-      this.baseCommissionItems = data.LimitDetails.map((item: any) => ({
-        id: item.id,
-        talent_id: item.talent_id.toString(),
-        tlt_id: item.tlt_id || '',
-        cag_bdate: this.formatDate(item.cag_bdate),
-        cag_edate: this.formatDate(item.cag_edate),
-        limit_amt: item.limit_amt || 0,
-        limit_charge_rate: item.limit_charge_rate || 0,
-        _status: 'original'
-      }));
-    }
+  get displayGeneralCommissionItems(): GeneralCommissionCondition[] {
+    return this.conditionDataManager.filterDisplayItems(this.generalCommissionItems);
   }
 
-  private mapGraduatedCommissionData(data: any): void {
-    if (data.LevelDetails && data.LevelDetails.length > 0) {
-      this.graduatedItems = data.LevelDetails.map((item: any) => ({
-        id: item.id,
-        talent_id: item.talent_id.toString(),
-        seq_no: item.seq_no || 0,
-        cag_bdate: this.formatDate(item.cag_bdate),
-        cag_edate: this.formatDate(item.cag_edate),
-        start_number: item.start_number || 0,
-        end_number: item.end_number || 0,
-        charge_rate: item.charge_rate || 0,
-        _status: 'original'
-      }));
-    }
+  get displayBaseCommissionItems(): BaseCommissionCondition[] {
+    return this.conditionDataManager.filterDisplayItems(this.baseCommissionItems);
   }
 
-  private mapBaseTierData(data: any): void {
-    if (data.LimitDetails && data.LevelDetails) {
-      this.baseTierItems = data.LevelDetails.map((levelItem: any) => ({
-        id: levelItem.id,
-        talent_id: levelItem.talent_id.toString(),
-        seq_no: levelItem.seq_no || 0,
-        tlt_id: '',
-        cag_bdate: this.formatDate(levelItem.cag_bdate),
-        cag_edate: this.formatDate(levelItem.cag_edate),
-        limit_amt: levelItem.limit_amt || data.LimitDetails?.[0]?.limit_amt || 0,
-        start_number: levelItem.start_number || 0,
-        end_number: levelItem.end_number || 0,
-        charge_rate: levelItem.charge_rate || 0,
-        _status: 'original'
-      }));
-    }
+  get displayGraduatedItems(): GraduatedCommissionCondition[] {
+    return this.conditionDataManager.filterDisplayItems(this.graduatedItems);
   }
 
-  // 🎯 建立條件項目的工廠方法
-  private createFixedRentItem(): FixedRentCondition {
-    return {
-      talent_id: this.currentTalentId,
-      tlt_id: '',
-      cag_bdate: this.getDefaultStartDate(),
-      cag_edate: this.getDefaultEndDate(),
-      base_rent: 0,
-      _status: 'new',
-      _isNew: true
-    };
+  get displayBaseTierItems(): BaseTierCondition[] {
+    return this.conditionDataManager.filterDisplayItems(this.baseTierItems);
   }
 
-  private createBaseRentHigherItem(): BaseRentHigherCondition {
-    return {
-      talent_id: this.currentTalentId,
-      tlt_id: '',
-      cag_bdate: this.getDefaultStartDate(),
-      cag_edate: this.getDefaultEndDate(),
-      base_rent: 0,
-      cag_charge_rate: 0,
-      _status: 'new',
-      _isNew: true
-    };
-  }
+  // ===== 業務邏輯方法 =====
 
-
-
-  private createBaseCommissionItem(): BaseCommissionCondition {
-    return {
-      talent_id: this.currentTalentId,
-      tlt_id: '',
-      cag_bdate: this.getDefaultStartDate(),
-      cag_edate: this.getDefaultEndDate(),
-      limit_amt: 0,
-      limit_charge_rate: 0,
-      _status: 'new',
-      _isNew: true
-    };
-  }
-
-  private createGraduatedItem(): GraduatedCommissionCondition {
-    return {
-      talent_id: this.currentTalentId,
-      seq_no: this.graduatedItems.length + 1,
-      cag_bdate: this.getDefaultStartDate(),
-      cag_edate: this.getDefaultEndDate(),
-      start_number: 0,
-      end_number: 0,
-      charge_rate: 0,
-      _status: 'new',
-      _isNew: true
-    };
-  }
-
-  private createBaseTierItem(): BaseTierCondition {
-    return {
-      talent_id: this.currentTalentId,
-      seq_no: this.baseTierItems.length + 1,
-      tlt_id: '',
-      cag_bdate: this.getDefaultStartDate(),
-      cag_edate: this.getDefaultEndDate(),
-      limit_amt: 0,
-      start_number: 0,
-      end_number: 0,
-      charge_rate: 0,
-      _status: 'new',
-      _isNew: true
-    };
-  }
-
-  // 🎯 判斷是否顯示特定抽成類型的條件設定
   shouldShowCommissionType(commissionTypeCode: string): boolean {
     const currentCommissionType = this.contractInfoData[0]?.tlt_term_type;
     return currentCommissionType === commissionTypeCode;
   }
 
-  // 🎯 檢查是否有來自 Next2 的資料
-  hasNext2IntegrationData(): boolean {
-    return false; // 直接返回 false
+  getCurrentCommissionTypeName(): string {
+    const code = this.contractInfoData[0]?.tlt_term_type;
+    return this.tableConfigManager.getCommissionTypeName(code || '');
   }
 
-  getNext2IntegrationMessage(): string {
-    return ''; // 直接返回空字串
-  }
-
-  // 🎯 取得來自 Next2 的項目數量
-  getNext2ItemCount(): number {
-    return 0; // 直接返回 0
-  }
-  // 🎯 取得新增的項目數量
-  getNewItemCount(): number {
-    const commissionType = this.contractInfoData[0]?.tlt_term_type;
-
-    switch (commissionType) {
-      case '1':
-        return this.displayFixedRentItems.filter(item => item._status === 'new').length;
-      case '2':
-        return this.displayBaseRentHigherItems.filter(item => item._status === 'new').length;
-      case '3':
-        return this.displayGeneralCommissionItems.filter(item => item._status === 'new').length;
-      case '4':
-        return this.displayBaseCommissionItems.filter(item => item._status === 'new').length;
-      case '5':
-        return this.displayGraduatedItems.filter(item => item._status === 'new').length;
-      case '6':
-        return this.displayBaseTierItems.filter(item => item._status === 'new').length;
-      default:
-        return 0;
-    }
-  }
-
-  // 🎯 取得總項目數量
-  getConditionItemCount(): number {
-    const commissionType = this.contractInfoData[0]?.tlt_term_type;
-
-    switch (commissionType) {
-      case '1':
-        return this.displayFixedRentItems.length;
-      case '2':
-        return this.displayBaseRentHigherItems.length;
-      case '3':
-        return this.displayGeneralCommissionItems.length;
-      case '4':
-        return this.displayBaseCommissionItems.length;
-      case '5':
-        return this.displayGraduatedItems.length;
-      case '6':
-        return this.displayBaseTierItems.length;
-      default:
-        return 0;
-    }
-  }
-
-  // 🎯 檢查是否有條件資料
   hasConditionData(): boolean {
     return this.getConditionItemCount() > 0;
   }
 
-  // 🎯 取得當前抽成類型名稱
-  getCurrentCommissionTypeName(): string {
-    const code = this.contractInfoData[0]?.tlt_term_type;
-    const option = TLS13010_DROPDOWN_OPTIONS.tltTermType.find(opt => opt.value === code);
-    return option ? option.label : code || '未載入';
-  }
+  getConditionItemCount(): number {
+    const commissionType = this.contractInfoData[0]?.tlt_term_type;
 
-  // 🎯 新增項目的方法
-  onAddFixedRentItem(): void {
-
-    if (this.isViewMode) {
-      this.notificationService.infoBubble('檢視模式下無法新增項目');
-      return;
+    switch (commissionType) {
+      case '1': return this.displayFixedRentItems.length;
+      case '2': return this.displayBaseRentHigherItems.length;
+      case '3': return this.displayGeneralCommissionItems.length;
+      case '4': return this.displayBaseCommissionItems.length;
+      case '5': return this.displayGraduatedItems.length;
+      case '6': return this.displayBaseTierItems.length;
+      default: return 0;
     }
-    const newItem = this.createFixedRentItem();
-    this.fixedRentItems.push(newItem);
-    this.saveConditionDataToWorkflow();
-    this.notificationService.successBubble('已新增固定租金項目');
   }
 
-  onAddBaseRentHigherItem(): void {
-    if (this.isViewMode) {
-      this.notificationService.infoBubble('檢視模式下無法新增項目');
-      return;
+  getNewItemCount(): number {
+    const commissionType = this.contractInfoData[0]?.tlt_term_type;
+
+    switch (commissionType) {
+      case '1': return this.fixedRentItems.filter(item => item._status === 'new').length;
+      case '2': return this.baseRentHigherItems.filter(item => item._status === 'new').length;
+      case '3': return this.generalCommissionItems.filter(item => item._status === 'new').length;
+      case '4': return this.baseCommissionItems.filter(item => item._status === 'new').length;
+      case '5': return this.graduatedItems.filter(item => item._status === 'new').length;
+      case '6': return this.baseTierItems.filter(item => item._status === 'new').length;
+      default: return 0;
     }
-    const newItem = this.createBaseRentHigherItem();
-    this.baseRentHigherItems.push(newItem);
-    this.saveConditionDataToWorkflow();
-    this.notificationService.successBubble('已新增底租抽成取高者項目');
   }
 
-  // onAddGeneralCommissionItem(): void {
-  //   const newItem = this.createGeneralCommissionItem();
-  //   this.generalCommissionItems.push(newItem);
-  //   this.saveConditionDataToWorkflow();
-  //   this.notificationService.successBubble('已新增一般抽成項目');
-  // }
+  getDeletedItemCount(): number {
+    const commissionType = this.contractInfoData[0]?.tlt_term_type;
 
-  onAddBaseCommissionItem(): void {
-    if (this.isViewMode) {
-      this.notificationService.infoBubble('檢視模式下無法新增項目');
-      return;
+    switch (commissionType) {
+      case '1': return this.fixedRentItems.filter(item => item._status === 'deleted').length;
+      case '2': return this.baseRentHigherItems.filter(item => item._status === 'deleted').length;
+      case '3': return this.generalCommissionItems.filter(item => item._status === 'deleted').length;
+      case '4': return this.baseCommissionItems.filter(item => item._status === 'deleted').length;
+      case '5': return this.graduatedItems.filter(item => item._status === 'deleted').length;
+      case '6': return this.baseTierItems.filter(item => item._status === 'deleted').length;
+      default: return 0;
     }
-
-    const newItem = this.createBaseCommissionItem();
-    this.baseCommissionItems.push(newItem);
-    this.saveConditionDataToWorkflow();
-    this.notificationService.successBubble('已新增包底抽成項目');
   }
 
-  onAddGraduatedItem(): void {
-    if (this.isViewMode) {
-      this.notificationService.infoBubble('檢視模式下無法新增項目');
-      return;
-    }
+  // ===== 事件處理方法 =====
 
-    const newItem = this.createGraduatedItem();
-    this.graduatedItems.push(newItem);
-    this.saveConditionDataToWorkflow();
-    this.notificationService.successBubble('已新增階梯式抽成項目');
-  }
-
-  onAddBaseTierItem(): void {
-    if (this.isViewMode) {
-      this.notificationService.infoBubble('檢視模式下無法新增項目');
-      return;
-    }
-
-    const newItem = this.createBaseTierItem();
-    this.baseTierItems.push(newItem);
-    this.saveConditionDataToWorkflow();
-    this.notificationService.successBubble('已新增包底加階梯項目');
-  }
-
-  // 🎯 表格事件處理
   onTableSave(event: any, type: string): void {
-    console.log(`${type} 表格儲存:`, event);
+    const result = this.eventHandlerManager.handleTableSave(event, type, this.isViewMode);
 
-    if (event.newData) {
-      // 🎯 檢查是否為來自 Next2 的資料
-      if (event.newData._fromNext2) {
-        if (type === 'baseRentHigher') {
-          console.log('💡 底租抽成取高者資料，租金可編輯，抽成率來自 Next2');
-
-          // 🎯 檢查是否有人試圖修改抽成率
-          if (event.oldData.cag_charge_rate !== event.newData.cag_charge_rate) {
-            this.notificationService.warnBubble('抽成率來自抽成設定，無法編輯');
-            event.newData.cag_charge_rate = event.oldData.cag_charge_rate;
-          }
-        }
-      }
-
-      // 🎯 ⭐ 重要：標記為已修改，避免被同步覆蓋
-      if (event.newData._status !== 'new') {
-        event.newData._status = 'modified';
-        console.log(`🏷️ 項目 ${event.newData.id} 標記為 modified`);
-      }
+    if (result.shouldSave && result.modifiedData) {
+      // 更新數據
+      event.newData = result.modifiedData;
+      this.saveConditionDataToWorkflow();
+      this.notificationService.successBubble(
+        this.eventHandlerManager.formatSuccessMessage('save', 1, type)
+      );
     }
-
-    this.saveConditionDataToWorkflow();
-    this.notificationService.successBubble('條件設定已儲存');
   }
 
   onTableEdit(event: any, type: string): boolean {
-    console.log(`${type} 表格編輯:`, event);
-
-    // 🎯 檢查是否為來自 Next2 的唯讀資料
-    if (event._fromNext2 && event._readonly) {
-      this.notificationService.warnBubble('來自抽成設定的資料不可編輯');
-      return false;
-    }
-
-    return true;
+    return this.eventHandlerManager.handleTableEdit(event, type, this.isViewMode);
   }
 
   onTableCancel(event: any, type: string): void {
-    console.log(`${type} 表格取消:`, event);
+    this.eventHandlerManager.handleTableCancel(event, type);
   }
 
-  // 🎯 批次刪除處理
   onBatchDelete(selectedItems: any[], type: string): void {
-    if (this.isViewMode) {
-      this.notificationService.infoBubble('檢視模式下無法刪除項目');
-      return;
-    }
-    if (!selectedItems || selectedItems.length === 0) {
-      this.notificationService.warnBubble('請選擇要刪除的項目');
-      return;
-    }
+    const result = this.eventHandlerManager.handleBatchDelete(selectedItems, type, this.isViewMode);
 
-    // 檢查是否包含來自 Next2 的唯讀資料
-    const hasReadonlyItems = selectedItems.some(item => item._fromNext2 && item._readonly);
-    if (hasReadonlyItems) {
-      this.notificationService.warnBubble('無法刪除來自抽成設定的資料');
-      return;
-    }
+    if (result.shouldDelete) {
+      // 直接移除新增項目
+      result.itemsToRemove.forEach(item => {
+        this.removeItemFromArray(item, type);
+      });
 
-    if (confirm(`確定要刪除選取的 ${selectedItems.length} 個項目嗎？`)) {
-      selectedItems.forEach(item => {
-        if (item._status === 'new') {
-          // 新增項目：直接從陣列移除（不需要傳給後端）
-          this.removeItemFromArray(item, type);
-          console.log(`🗑️ 移除新增項目 ${item.id || 'temp'} 從陣列`);
-        } else {
-          // 🎯 關鍵修正：現有項目只標記刪除，保留在陣列中！
-          item._status = 'deleted';
-          console.log(`🗑️ 標記項目 ${item.id} 為刪除狀態，保留在陣列中傳給後端`);
-          // ❌ 重要：不要調用 removeItemFromArray(item, type);
-        }
+      // 標記刪除現有項目
+      result.itemsToMarkDeleted.forEach(item => {
+        item._status = 'deleted';
       });
 
       this.saveConditionDataToWorkflow();
-      this.notificationService.successBubble(`已刪除 ${selectedItems.length} 個項目`);
+      this.notificationService.successBubble(
+        this.eventHandlerManager.formatSuccessMessage('delete', selectedItems.length, type)
+      );
 
-      // 🎯 強制更新畫面
       this.cdr.detectChanges();
     }
   }
 
+  // ===== 新增項目方法 =====
+
+  onAddFixedRentItem(): void {
+    const result = this.eventHandlerManager.handleAddItem('fixedRent', this.isViewMode, () =>
+      this.conditionDataManager.initializeEmptyConditions('1', this.currentTalentId)[0]
+    );
+
+    if (result.shouldAdd && result.newItem) {
+      this.fixedRentItems.push(result.newItem);
+      this.saveConditionDataToWorkflow();
+    }
+  }
+
+  onAddBaseRentHigherItem(): void {
+    const result = this.eventHandlerManager.handleAddItem('baseRentHigher', this.isViewMode, () =>
+      this.conditionDataManager.initializeEmptyConditions('2', this.currentTalentId)[0]
+    );
+
+    if (result.shouldAdd && result.newItem) {
+      this.baseRentHigherItems.push(result.newItem);
+      this.saveConditionDataToWorkflow();
+    }
+  }
+
+  onAddBaseCommissionItem(): void {
+    const result = this.eventHandlerManager.handleAddItem('baseCommission', this.isViewMode, () =>
+      this.conditionDataManager.initializeEmptyConditions('4', this.currentTalentId)[0]
+    );
+
+    if (result.shouldAdd && result.newItem) {
+      this.baseCommissionItems.push(result.newItem);
+      this.saveConditionDataToWorkflow();
+    }
+  }
+
+  onAddGraduatedItem(): void {
+    const result = this.eventHandlerManager.handleAddItem('graduated', this.isViewMode, () => {
+      const newItem = this.conditionDataManager.initializeEmptyConditions('5', this.currentTalentId)[0] as GraduatedCommissionCondition;
+      newItem.seq_no = this.graduatedItems.length + 1;
+      return newItem;
+    });
+
+    if (result.shouldAdd && result.newItem) {
+      this.graduatedItems.push(result.newItem);
+      this.saveConditionDataToWorkflow();
+    }
+  }
+
+  onAddBaseTierItem(): void {
+    const result = this.eventHandlerManager.handleAddItem('baseTier', this.isViewMode, () => {
+      const newItem = this.conditionDataManager.initializeEmptyConditions('6', this.currentTalentId)[0] as BaseTierCondition;
+      newItem.seq_no = this.baseTierItems.length + 1;
+      return newItem;
+    });
+
+    if (result.shouldAdd && result.newItem) {
+      this.baseTierItems.push(result.newItem);
+      this.saveConditionDataToWorkflow();
+    }
+  }
 
   private removeItemFromArray(item: any, type: string): void {
     switch (type) {
       case 'fixedRent':
-        const fixedIndex = this.fixedRentItems.findIndex(x => x.id === item.id);
-        if (fixedIndex > -1) this.fixedRentItems.splice(fixedIndex, 1);
-        break;
+        {
+          const fixedIndex = this.fixedRentItems.findIndex(x => x.id === item.id);
+          if (fixedIndex > -1) this.fixedRentItems.splice(fixedIndex, 1);
+          break;
+        }
       case 'baseRentHigher':
-        const baseRentIndex = this.baseRentHigherItems.findIndex(x => x.id === item.id);
-        if (baseRentIndex > -1) this.baseRentHigherItems.splice(baseRentIndex, 1);
-        break;
+        {
+          const baseRentIndex = this.baseRentHigherItems.findIndex(x => x.id === item.id);
+          if (baseRentIndex > -1) this.baseRentHigherItems.splice(baseRentIndex, 1);
+          break;
+        }
       case 'baseCommission':
-        const baseCommIndex = this.baseCommissionItems.findIndex(x => x.id === item.id);
-        if (baseCommIndex > -1) this.baseCommissionItems.splice(baseCommIndex, 1);
-        break;
+        {
+          const baseCommIndex = this.baseCommissionItems.findIndex(x => x.id === item.id);
+          if (baseCommIndex > -1) this.baseCommissionItems.splice(baseCommIndex, 1);
+          break;
+        }
       case 'graduated':
-        const gradIndex = this.graduatedItems.findIndex(x => x.id === item.id);
-        if (gradIndex > -1) this.graduatedItems.splice(gradIndex, 1);
-        break;
+        {
+          const gradIndex = this.graduatedItems.findIndex(x => x.id === item.id);
+          if (gradIndex > -1) this.graduatedItems.splice(gradIndex, 1);
+          break;
+        }
       case 'baseTier':
-        const tierIndex = this.baseTierItems.findIndex(x => x.id === item.id);
-        if (tierIndex > -1) this.baseTierItems.splice(tierIndex, 1);
-        break;
+        {
+          const tierIndex = this.baseTierItems.findIndex(x => x.id === item.id);
+          if (tierIndex > -1) this.baseTierItems.splice(tierIndex, 1);
+          break;
+        }
     }
   }
 
-  // 🎯 儲存條件設定到工作流程
+  // ===== 數據保存方法 =====
+
   private saveConditionDataToWorkflow(): void {
-    // 🎯 重要：包含所有項目（包括標記為刪除的）
-    const allConditionItems: ConditionItem[] = [
-      ...this.fixedRentItems,        // 包含 _status: 'deleted' 的項目
+    // 重新組合所有條件項目（包括標記為刪除的項目）
+    this.allConditionItems = [
+      ...this.fixedRentItems,
       ...this.baseRentHigherItems.map(item => ({
         ...item,
         _fromNext2: item._fromNext2 || false,
@@ -899,77 +596,50 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionItem>
       ...this.baseTierItems
     ];
 
-    console.log('💾 Next3 儲存條件設定資料到工作流程');
-    console.log('📊 儲存資料統計:', {
-      總項目數: allConditionItems.length,
-      顯示項目數: this.getConditionItemCount(),
-      刪除項目數: this.getDeletedItemCount(),
-      底租抽成取高者總數: this.baseRentHigherItems.length,
-      底租抽成取高者顯示數: this.displayBaseRentHigherItems.length,
-      來自Next2的項目: this.baseRentHigherItems.filter(item => item._fromNext2).length,
-      已修改的項目: this.baseRentHigherItems.filter(item => item._status === 'modified').length,
-      新增的項目: this.baseRentHigherItems.filter(item => item._status === 'new').length,
-      刪除的項目: this.baseRentHigherItems.filter(item => item._status === 'deleted').length
-    });
+    console.log('Next3 儲存條件設定資料到工作流程');
+    console.log('儲存資料統計:', this.conditionDataManager.getItemCounts(this.allConditionItems));
 
     try {
-      this.contractFlowService.saveStep4Data(allConditionItems);
+      this.contractFlowService.saveStep4Data(this.allConditionItems);
 
-      // 🎯 驗證儲存結果
+      // 驗證儲存結果
       const savedData = this.contractFlowService.getStepData(WorkflowStep.CONDITION);
       if (Array.isArray(savedData)) {
-        console.log('✅ 儲存驗證 - 暫存資料項目數:', savedData.length);
-        console.log('✅ 其中刪除項目數:', savedData.filter(item => (item as any)._status === 'deleted').length);
+        console.log('儲存驗證 - 暫存資料項目數:', savedData.length);
       }
 
-      console.log('✅ 已儲存條件設定資料到工作流程（包含刪除項目）');
+      console.log('已儲存條件設定資料到工作流程');
     } catch (error) {
-      console.error('❌ Next3 儲存條件設定資料失敗:', error);
+      console.error('Next3 儲存條件設定資料失敗:', error);
       this.notificationService.errorBubble('儲存條件設定資料失敗');
     }
   }
 
-  private verifyStoredConditionData(): void {
-    const savedData = this.contractFlowService.getStepData(WorkflowStep.CONDITION);
-    const currentItemCount = this.getConditionItemCount();
+  // ===== 提交相關方法 =====
 
-    console.log('🔍 驗證 Next3 儲存結果:', {
-      savedDataType: Array.isArray(savedData) ? '陣列' : typeof savedData,
-      savedDataLength: Array.isArray(savedData) ? savedData.length : 0,
-      currentItemCount: currentItemCount
-    });
-
-    if (Array.isArray(savedData) && savedData.length !== currentItemCount) {
-      console.warn('⚠️ 儲存後的條件項目數量不匹配:', {
-        saved: savedData.length,
-        current: currentItemCount
-      });
-    }
-
-    // 🎯 統計各類型項目數量
-    const commissionType = this.contractInfoData[0]?.tlt_term_type;
-    console.log('📊 條件設定統計:', {
-      commissionType: commissionType,
-      fixedRent: this.fixedRentItems.filter(item => item._status !== 'deleted').length,
-      baseRentHigher: this.baseRentHigherItems.filter(item => item._status !== 'deleted').length,
-      generalCommission: this.generalCommissionItems.filter(item => item._status !== 'deleted').length,
-      baseCommission: this.baseCommissionItems.filter(item => item._status !== 'deleted').length,
-      graduated: this.graduatedItems.filter(item => item._status !== 'deleted').length,
-      baseTier: this.baseTierItems.filter(item => item._status !== 'deleted').length
-    });
-  }
-
-
-  // 🎯 提交相關方法
   onSubmitNext(): void {
     if (this.isViewMode) {
-      // 🎯 檢視模式：直接返回列表，不執行提交
       this.router.navigate(['account/tls/tls13010']);
       this.notificationService.infoBubble('已結束檢視');
       return;
     }
 
-    // 編輯模式：原有的提交邏輯
+    // 驗證數據
+    const commissionType = this.contractInfoData[0]?.tlt_term_type ?? '3';
+    const currentItems = this.getCurrentConditionItems();
+    const validation = this.conditionDataManager.validateConditions(currentItems, commissionType);
+
+    if (!validation.isValid) {
+      this.notificationService.errorBubble(`資料驗證失敗: ${validation.errors[0]}`);
+      return;
+    }
+
+    if (validation.warnings.length > 0) {
+      validation.warnings.forEach(warning => {
+        this.notificationService.warnBubble(warning);
+      });
+    }
+
     this.saveConditionDataToWorkflow();
     this.showConfirmDialog = true;
   }
@@ -981,10 +651,24 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionItem>
     }
   }
 
-  private submitContractData(): void {
-    console.log('📤 Next3: 開始送出合約資料（使用清理後資料）...');
+  private getCurrentConditionItems(): ConditionItem[] {
+    const commissionType = this.contractInfoData[0]?.tlt_term_type;
 
-    // 🆕 檢查與 Next2 的數量一致性（簡化版）
+    switch (commissionType) {
+      case '1': return this.displayFixedRentItems;
+      case '2': return this.displayBaseRentHigherItems;
+      case '3': return this.displayGeneralCommissionItems;
+      case '4': return this.displayBaseCommissionItems;
+      case '5': return this.displayGraduatedItems;
+      case '6': return this.displayBaseTierItems;
+      default: return [];
+    }
+  }
+
+  private submitContractData(): void {
+    console.log('Next3: 開始送出合約資料');
+
+    // 檢查與 Next2 的數量一致性
     if (!this.validateNext2DataConsistency()) {
       return;
     }
@@ -993,22 +677,23 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionItem>
     this.notificationService.blockUi();
 
     try {
-      // 🎯 最後一次暫存條件設定資料
+      // 最後一次暫存條件設定資料
       this.saveConditionDataToWorkflow();
 
-      // 🎯 使用新的清理資料方法
+      // 使用清理資料方法
       const cleanSubmitData = this.contractFlowService.generateCleanSubmitData();
 
-      console.log('🚀 Next3: 最終送出的完整 JSON:');
+      console.log('Next3: 最終送出的完整 JSON:');
       console.log(JSON.stringify(cleanSubmitData, null, 2));
 
+      // 檢查抽成類型變更警告
       if (cleanSubmitData.commissionTypeChange?.HasChanged) {
         const changeInfo = cleanSubmitData.commissionTypeChange;
-        const originalName = this.getTermTypeName(changeInfo.OriginalTermType);
-        const newName = this.getTermTypeName(changeInfo.NewTermType);
+        const originalName = this.tableConfigManager.getCommissionTypeName(changeInfo.OriginalTermType);
+        const newName = this.tableConfigManager.getCommissionTypeName(changeInfo.NewTermType);
 
         const warningDetails = this.generateClearWarningDetails(changeInfo.ClearOperations);
-        const warningMessage = `⚠️ 抽成別已變更：${originalName} → ${newName}\n\n將清除以下資料：\n${warningDetails}\n\n確定要繼續送出嗎？`;
+        const warningMessage = `抽成別已變更：${originalName} → ${newName}\n\n將清除以下資料：\n${warningDetails}\n\n確定要繼續送出嗎？`;
 
         if (!confirm(warningMessage)) {
           this.loading = false;
@@ -1017,32 +702,30 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionItem>
         }
       }
 
-      // 🎯 驗證資料
+      // 驗證資料
       const validation = this.contractFlowService.validateCleanSubmitData(cleanSubmitData);
-      console.log(validation);
-
 
       if (!validation.isValid) {
-        console.error('❌ Next3: 資料驗證失敗:', validation.errors);
+        console.error('Next3: 資料驗證失敗:', validation.errors);
         this.loading = false;
         this.notificationService.unblockUi();
         this.notificationService.errorBubble(`資料驗證失敗: ${validation.errors[0]}`);
         return;
       }
 
-      // 🎯 顯示警告（如果有）
+      // 顯示警告（如果有）
       if (validation.warnings.length > 0) {
-        console.warn('⚠️ Next3: 提交警告:', validation.warnings);
+        console.warn('Next3: 提交警告:', validation.warnings);
         validation.warnings.forEach(warning => {
           this.notificationService.warnBubble(warning);
         });
       }
 
-      // 🎯 調用真實的 API
+      // 調用真實的 API
       this.callCleanSubmitAPI(cleanSubmitData);
 
     } catch (error) {
-      console.error('❌ Next3: 準備提交資料時發生錯誤:', error);
+      console.error('Next3: 準備提交資料時發生錯誤:', error);
       this.loading = false;
       this.notificationService.unblockUi();
       this.notificationService.errorBubble(`準備提交資料時發生錯誤: ${error}`);
@@ -1050,16 +733,15 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionItem>
   }
 
   private callCleanSubmitAPI(cleanData: CleanSubmitData): void {
-    console.log('📤 Next3: 調用真實 API 提交契約資料...');
+    console.log('Next3: 調用真實 API 提交契約資料...');
 
-    // 🎯 調用真實的 API
     this.tls13010Service.submitFinalTLS13010(cleanData).subscribe({
       next: (response) => {
-        console.log('✅ Next3: 契約提交成功:', response);
+        console.log('Next3: 契約提交成功:', response);
         this.handleSubmitSuccess(response);
       },
       error: (error) => {
-        console.error('❌ Next3: 契約提交失敗:', error);
+        console.error('Next3: 契約提交失敗:', error);
         this.handleSubmitError(error);
       }
     });
@@ -1069,24 +751,14 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionItem>
     this.loading = false;
     this.notificationService.unblockUi();
 
-    console.log('🎉 Next3: 處理提交成功回應:', response);
+    console.log('Next3: 處理提交成功回應:', response);
 
-    // 🎯 準備成功訊息
     let successMessage = '契約資料提交成功！';
     const details: string[] = [];
 
-    if (response.talentId) {
-      details.push(`專櫃編號: ${response.talentId}`);
-    }
-    if (response.contractNo) {
-      details.push(`合約編號: ${response.contractNo}`);
-    }
-    if (response.totalProcessed) {
-      details.push(`處理項目數: ${response.totalProcessed}`);
-    }
-    if (response.processingTime) {
-      details.push(`處理時間: ${response.processingTime}`);
-    }
+    if (response.talentId) details.push(`專櫃編號: ${response.talentId}`);
+    if (response.contractNo) details.push(`合約編號: ${response.contractNo}`);
+    if (response.totalProcessed) details.push(`處理項目數: ${response.totalProcessed}`);
 
     if (details.length > 0) {
       successMessage += '\n\n' + details.join('\n');
@@ -1094,36 +766,29 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionItem>
 
     this.notificationService.successBubble(successMessage);
 
-    // 🎯 顯示警告（如果有）
-    if (response.warnings && response.warnings.length > 0) {
-      console.warn('⚠️ Next3: 收到警告訊息:', response.warnings);
+    // 顯示警告（如果有）
+    if (response.warnings?.length > 0) {
       response.warnings.forEach((warning: string) => {
         this.notificationService.warnBubble(warning);
       });
     }
 
-    // 🎯 額外的成功後處理
-    this.onContractSubmitSuccess(response);
-
-    // 🎯 提交成功後清理暫存並導航
+    // 提交成功後清理暫存並導航
     this.contractFlowService.onSubmitSuccess();
 
-    // 🎯 延遲導航，讓使用者看到成功訊息
     setTimeout(() => {
       this.router.navigate(['account/tls/tls13010']);
-    }, 3000); // Next3 給更多時間讓使用者閱讀詳細資訊
+    }, 3000);
   }
 
   private handleSubmitError(error: any): void {
     this.loading = false;
     this.notificationService.unblockUi();
 
-    console.error('💥 Next3: 處理提交錯誤:', error);
+    console.error('Next3: 處理提交錯誤:', error);
 
     let errorMessage = '契約資料提交失敗';
-    let additionalInfo: string[] = [];
 
-    // 🎯 解析錯誤訊息
     if (error?.error?.Message) {
       errorMessage += `: ${error.error.Message}`;
     } else if (error?.message) {
@@ -1132,73 +797,24 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionItem>
       errorMessage += `: ${error}`;
     }
 
-    // 🎯 特殊錯誤處理和建議
+    // 特殊錯誤處理
     if (error?.status === 400) {
       errorMessage = '資料格式錯誤，請檢查輸入內容';
-      additionalInfo.push('請檢查所有必填欄位是否已正確填寫');
-      additionalInfo.push('確認日期格式和數值範圍是否正確');
     } else if (error?.status === 500) {
       errorMessage = '伺服器內部錯誤，請稍後重試或聯繫管理員';
-      additionalInfo.push('您的資料已暫存，可稍後重新提交');
     } else if (error?.status === 0) {
       errorMessage = '網路連線錯誤，請檢查網路狀態';
-      additionalInfo.push('請確認網路連線正常後重試');
-    } else if (error?.status === 409) {
-      errorMessage = '資料衝突，可能有其他使用者正在編輯相同資料';
-      additionalInfo.push('請重新載入最新資料後再試');
     }
 
-    // 🎯 顯示主要錯誤訊息
     this.notificationService.errorBubble(errorMessage);
 
-    // 🎯 顯示額外建議（如果有）
-    if (additionalInfo.length > 0) {
-      setTimeout(() => {
-        additionalInfo.forEach(info => {
-          this.notificationService.infoBubble(info);
-        });
-      }, 1000);
-    }
-
-    // 🎯 記錄詳細錯誤資訊供除錯
-    console.group('❌ Next3: 詳細錯誤資訊');
+    console.group('Next3: 詳細錯誤資訊');
     console.log('Status:', error?.status);
     console.log('StatusText:', error?.statusText);
     console.log('URL:', error?.url);
     console.log('Error Object:', error?.error);
     console.log('Full Error:', error);
     console.groupEnd();
-
-    // 🎯 額外的錯誤後處理
-    this.onContractSubmitError(error);
-  }
-
-  // 🎯 新增：提交成功後的額外處理
-  private onContractSubmitSuccess(response: any): void {
-    console.log('🎊 Next3: 執行提交成功後的額外處理');
-
-    // 可以在這裡加入額外的成功後邏輯，例如：
-    // - 發送統計資料
-    // - 更新本地暫存
-    // - 記錄操作日誌
-
-    // 🎯 如果有處理摘要，可以記錄
-    if (response.data?.Summary) {
-      console.log('📊 處理摘要:', response.data.Summary);
-    }
-  }
-
-  // 🎯 新增：提交錯誤後的額外處理
-  private onContractSubmitError(error: any): void {
-    console.log('🔧 Next3: 執行提交錯誤後的額外處理');
-
-    // 可以在這裡加入額外的錯誤後邏輯，例如：
-    // - 自動儲存錯誤報告
-    // - 發送錯誤統計
-    // - 提供復原建議
-
-    // 🎯 保持資料暫存狀態，方便使用者重試
-    console.log('💾 錯誤後保持資料暫存狀態，使用者可重新提交');
   }
 
   private validateNext2DataConsistency(): boolean {
@@ -1209,16 +825,14 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionItem>
     }
 
     try {
-      // 🎯 簡化檢查：使用清理後的資料
       const cleanData = this.contractFlowService.generateCleanSubmitData();
 
       const next2MasterCount = cleanData.commissions.masters.toInsert.length +
         cleanData.commissions.masters.toUpdate.length;
-
       const next3RentCount = cleanData.conditions.baseRentHigher.toInsert.length +
         cleanData.conditions.baseRentHigher.toUpdate.length;
 
-      console.log('🔍 Next3: 數量一致性檢查:', {
+      console.log('Next3: 數量一致性檢查:', {
         next2MasterCount,
         next3RentCount,
         isConsistent: next2MasterCount === next3RentCount
@@ -1235,22 +849,21 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionItem>
       return true;
 
     } catch (error) {
-      console.error('❌ Next3: 一致性檢查失敗:', error);
+      console.error('Next3: 一致性檢查失敗:', error);
       this.notificationService.warnBubble('無法驗證資料一致性，請檢查資料完整性');
       return true; // 允許繼續，但給出警告
     }
   }
 
-  // 🎯 導航方法
+  // ===== 導航方法 =====
+
   override onCancel(): void {
     if (this.isViewMode) {
-      // 🎯 檢視模式：返回 Next2，不帶參數
       this.router.navigate(['account/tls/tls13010next2']);
       return;
     }
 
-    // 編輯模式：原有邏輯
-    console.log('🔄 Next3 返回前一頁，先暫存資料');
+    console.log('Next3 返回前一頁，先暫存資料');
     this.saveConditionDataToWorkflow();
     this.router.navigate(['account/tls/tls13010next2']);
   }
@@ -1261,415 +874,11 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionItem>
       state: { fromRoute: this.router.url },
     };
     this.router.navigate(['account/tls/tls13010'], extras);
-    this.messageService.infoBubble('已清空暫存資料並離開');
+    this.notificationService.infoBubble('已清空暫存資料並離開');
   }
 
-  // 🎯 工具方法
-  private formatDate(date: any): string {
-    if (!date) return '';
-    try {
-      if (date instanceof Date) {
-        return date.toISOString().split('T')[0];
-      }
-      return new Date(date).toISOString().split('T')[0];
-    } catch {
-      return String(date).split('T')[0] || '';
-    }
-  }
+  // ===== 工具方法 =====
 
-  private getDefaultStartDate(): string {
-    return this.contractInfoData[0]?.tlt_bdate || new Date().toISOString().split('T')[0];
-  }
-
-  private getDefaultEndDate(): string {
-    return this.contractInfoData[0]?.tlt_edate || new Date().toISOString().split('T')[0];
-  }
-
-  // 🎯 取得欄位值的輔助方法
-  getFieldValue(rowData: any, field: string): string {
-    if (!rowData || !field) return '';
-
-    const value = rowData[field];
-    if (value === null || value === undefined) return '';
-
-    if (field.includes('date') && value instanceof Date) {
-      return value.toISOString().split('T')[0];
-    }
-
-    return value.toString();
-  }
-
-  // 🎯 檢查欄位是否為唯讀
-  isFieldReadonly(rowData: any, field: string): boolean {
-    if (!rowData._fromNext2) return false;
-
-    // 🎯 來自 Next2 的資料，三個欄位設為唯讀
-    const readonlyFields = ['tlt_id', 'tlt_id_desc', 'cag_taxtype'];
-    return readonlyFields.includes(field);
-  }
-
-  // 🎯 取得欄位樣式
-  getFieldClass(rowData: any, field: string): string {
-    let classes = '';
-
-    if (rowData._fromNext2) {
-      classes += 'from-next2 ';
-    }
-
-    if (this.isFieldReadonly(rowData, field)) {
-      classes += 'readonly-field ';
-    }
-
-    return classes.trim();
-  }
-
-  private loadDiscountOptions(): Promise<void> {
-    return new Promise((resolve) => {
-      console.log('🔽 Next3 開始載入折數選項...');
-      this.paperTypeService.getPaperTypeOptions('T102').subscribe({
-        next: (options: any[]) => {
-          console.log('📥 Next3 API 回傳的折扣選項:', options);
-          this.discountOptions = options;
-          console.log('🔄 Next3 設定折扣選項:', this.discountOptions);
-          this.updateGeneralCommissionColumnOptions();
-          resolve();
-        },
-        error: (error: any) => {
-          console.error('❌ Next3 載入折數選項失敗:', error);
-          this.discountOptions = [];
-          this.updateGeneralCommissionColumnOptions();
-          resolve();
-        }
-      });
-    });
-  }
-
-  private updateGeneralCommissionColumnOptions(): void {
-    console.log('🟢 Next3 更新折扣選項:', this.discountOptions);
-
-    this.generalCommissionColumns = this.generalCommissionColumns.map(col => {
-      if (col.field === 'cag_barcode') {
-        return { ...col, options: [...this.discountOptions] };
-      }
-      return col;
-    });
-
-    console.log('✅ Next3 一般抽成欄位選項已更新');
-  }
-
-  //測試用
-  showDataSummary(): void {
-    try {
-      console.group('📊 完整暫存資料摘要');
-      const cleanData = this.contractFlowService.generateCleanSubmitData();
-      // 🎯 特別檢查 conditions 資料
-      console.group('🔍 CONDITIONS 資料檢查');
-      console.log('完整 conditions 物件:', cleanData.conditions);
-      console.log('baseRentHigher 資料:', cleanData.conditions.baseRentHigher);
-      console.log('baseRentHigher 新增項目數:', cleanData.conditions.baseRentHigher.toInsert.length);
-      console.log('baseRentHigher 更新項目數:', cleanData.conditions.baseRentHigher.toUpdate.length);
-
-      // 🎯 1. 取得工作流程的完整暫存資料
-      const fullWorkflowData = this.contractFlowService.getCurrentData();
-      console.log('📦 工作流程完整暫存:', fullWorkflowData);
-
-      // 🎯 2. 取得各步驟的暫存資料
-      const step1Data = this.contractFlowService.getStep1Data();
-      const step2Data = this.contractFlowService.getStep2Data();
-      const step3Data = this.contractFlowService.getStep3Data();
-      const step4Data = this.contractFlowService.getStep4Data();
-
-      console.log('📋 Step1 暫存 (合約基本資料):', step1Data);
-      console.log('📋 Step2 暫存 (代扣款設定):', step2Data);
-      console.log('📋 Step3 暫存 (抽成設定):', step3Data);
-      console.log('📋 Step4 暫存 (條件設定):', step4Data);
-
-      // 🎯 4. 取得資料驗證結果
-      const validation = this.contractFlowService.validateCleanSubmitData(cleanData);
-      console.log('✅ 資料驗證結果:', validation);
-
-      // 🎯 5. 取得工作流程狀態
-      const workflowStatus = this.contractFlowService.getCurrentStatus();
-      console.log('🔄 工作流程狀態:', workflowStatus);
-
-      console.groupEnd();
-
-      // 🎯 6. 準備顯示摘要
-      const summary = this.generateDisplaySummary(fullWorkflowData, cleanData, validation);
-
-      // 🎯 7. 提供多種查看方式
-      const viewOptions = [
-        '1️⃣ 顯示簡要摘要',
-        '2️⃣ 複製完整 JSON 到剪貼簿',
-        '3️⃣ 在 Console 查看詳細資料',
-        '4️⃣ 下載 JSON 檔案',
-        '5️⃣ 顯示格式化的 JSON'
-      ].join('\n');
-
-      const choice = prompt(`📊 資料摘要查看選項：\n\n${viewOptions}\n\n請輸入數字 (1-5):`);
-
-      switch (choice) {
-        case '1':
-          alert(summary);
-          break;
-        case '2':
-          this.copyToClipboard(fullWorkflowData);
-          break;
-        case '3':
-          this.showDetailedConsoleData();
-          break;
-        case '4':
-          this.downloadJsonFile(fullWorkflowData);
-          break;
-        case '5':
-          this.showFormattedJson();
-          break;
-        default:
-          alert(summary);
-          break;
-      }
-
-    } catch (error) {
-      console.error('❌ 產生資料摘要失敗:', error);
-      this.notificationService.errorBubble(`產生資料摘要失敗: ${error}`);
-    }
-  }
-
-  // 🎯 生成顯示摘要
-  private generateDisplaySummary(fullData: any, cleanData: any, validation: any): string {
-    const modeInfo = this.contractFlowService.getWorkflowModeInfo();
-
-    return [
-      '📊 暫存資料摘要',
-      '='.repeat(40),
-      '',
-      `🏢 模式: ${modeInfo.modeName}`,
-      `🏷️ 專櫃編號: ${modeInfo.talentId || '新增中'}`,
-      `🆔 工作流程 ID: ${fullData.contractId}`,
-      '',
-      '📦 暫存資料統計:',
-      `• Step1 (合約基本): ${fullData.step1 ? '✅ 有資料' : '❌ 無資料'}`,
-      `• Step2 (代扣款): ${fullData.step2?.length || 0} 項`,
-      `• Step3 (抽成設定): ${fullData.step3?.length || 0} 項`,
-      `• Step4 (條件設定): ${fullData.step4?.length || 0} 項`,
-      '',
-      '🧹 提交資料統計:',
-      `• 合約操作: ${cleanData.contractInfo.operation}`,
-      `• 代扣款操作: ${cleanData.deductions.toInsert.length + cleanData.deductions.toUpdate.length + cleanData.deductions.toDelete.length} 項`,
-      `• 抽成操作: ${cleanData.commissions.masters.toInsert.length + cleanData.commissions.masters.toUpdate.length} 項`,
-      `• 條件操作: ${Object.values(cleanData.conditions).reduce((total: number, c: any) => total + c.toInsert.length + c.toUpdate.length + c.toDelete.length, 0)} 項`,
-      `• 總操作數: ${cleanData.metadata.totalOperations}`,
-      '',
-      `✅ 資料驗證: ${validation.isValid ? '通過' : '失敗'}`,
-      validation.errors.length > 0 ? `❌ 錯誤: ${validation.errors.join(', ')}` : '',
-      validation.warnings.length > 0 ? `⚠️ 警告: ${validation.warnings.join(', ')}` : '',
-      '',
-      '💾 JSON 資料大小:',
-      `• 完整暫存: ${JSON.stringify(fullData).length} 字元`,
-      `• 清理後資料: ${JSON.stringify(cleanData).length} 字元`,
-      '',
-      '💡 完整 JSON 資料已記錄在 Console 中',
-      '   按 F12 → Console 查看詳細內容'
-    ].filter(line => line !== '').join('\n');
-  }
-
-  // 🎯 複製到剪貼簿
-  private copyToClipboard(data: any): void {
-    try {
-      const jsonString = JSON.stringify(data, null, 2);
-      navigator.clipboard.writeText(jsonString).then(() => {
-        this.notificationService.successBubble('✅ 完整 JSON 已複製到剪貼簿');
-        console.log('📋 已複製到剪貼簿的 JSON:', data);
-      }).catch(err => {
-        console.error('❌ 複製失敗:', err);
-        this.fallbackCopyToClipboard(jsonString);
-      });
-    } catch (error) {
-      console.error('❌ 複製到剪貼簿失敗:', error);
-      this.notificationService.errorBubble('複製失敗，請在 Console 中手動複製');
-    }
-  }
-
-  // 🎯 備援複製方法
-  private fallbackCopyToClipboard(text: string): void {
-    const textArea = document.createElement('textarea');
-    textArea.value = text;
-    document.body.appendChild(textArea);
-    textArea.select();
-
-    try {
-      document.execCommand('copy');
-      this.notificationService.successBubble('✅ JSON 已複製到剪貼簿 (備援方法)');
-    } catch (err) {
-      console.error('❌ 備援複製也失敗:', err);
-      this.notificationService.errorBubble('複製失敗，請手動從 Console 複製');
-    }
-
-    document.body.removeChild(textArea);
-  }
-
-  // 🎯 顯示詳細 Console 資料
-  private showDetailedConsoleData(): void {
-    console.group('📊 詳細暫存資料分析');
-
-    const fullData = this.contractFlowService.getCurrentData();
-    const cleanData = this.contractFlowService.generateCleanSubmitData();
-
-    console.group('📦 完整工作流程暫存');
-    console.log('🔗 可複製的 JSON:', JSON.stringify(fullData, null, 2));
-    console.log('📋 物件形式:', fullData);
-    console.groupEnd();
-
-    console.group('🧹 清理後提交資料');
-    console.log('🔗 可複製的 JSON:', JSON.stringify(cleanData, null, 2));
-    console.log('📋 物件形式:', cleanData);
-    console.groupEnd();
-
-    console.group('📊 各步驟詳細資料');
-    console.log('Step1:', this.contractFlowService.getStep1Data());
-    console.log('Step2:', this.contractFlowService.getStep2Data());
-    console.log('Step3:', this.contractFlowService.getStep3Data());
-    console.log('Step4:', this.contractFlowService.getStep4Data());
-    console.groupEnd();
-
-    console.groupEnd();
-
-    this.notificationService.infoBubble('📊 詳細資料已顯示在 Console 中\n\n可以直接複製 JSON 字串使用');
-  }
-
-  // 🎯 下載 JSON 檔案
-  private downloadJsonFile(data: any): void {
-    try {
-      const jsonString = JSON.stringify(data, null, 2);
-      const blob = new Blob([jsonString], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `TLS13010_暫存資料_${new Date().toISOString().slice(0, 19).replace(/:/g, '-')}.json`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-
-      URL.revokeObjectURL(url);
-
-      this.notificationService.successBubble('✅ JSON 檔案已下載');
-      console.log('📁 已下載的 JSON 資料:', data);
-    } catch (error) {
-      console.error('❌ 下載檔案失敗:', error);
-      this.notificationService.errorBubble('下載失敗，請使用複製功能');
-    }
-  }
-
-  // 🎯 顯示格式化的 JSON（在新視窗）
-  private showFormattedJson(): void {
-    try {
-      const fullData = this.contractFlowService.getCurrentData();
-      const cleanData = this.contractFlowService.generateCleanSubmitData();
-
-      const htmlContent = `
-    <!DOCTYPE html>
-    <html>
-    <head>
-        <title>TLS13010 暫存資料</title>
-        <style>
-            body { font-family: 'Courier New', monospace; margin: 20px; background: #f5f5f5; }
-            .container { max-width: 1200px; margin: 0 auto; }
-            .section { background: white; margin: 20px 0; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-            .section h2 { color: #2c3e50; border-bottom: 2px solid #3498db; padding-bottom: 10px; }
-            pre { background: #2c3e50; color: #ecf0f1; padding: 15px; border-radius: 5px; overflow-x: auto; font-size: 12px; line-height: 1.4; }
-            .copy-btn { background: #3498db; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; margin: 10px 0; }
-            .copy-btn:hover { background: #2980b9; }
-            .stats { background: #ecf0f1; padding: 10px; border-radius: 4px; margin: 10px 0; }
-        </style>
-    </head>
-    <body>
-        <div class="container">
-            <h1>🎯 TLS13010 暫存資料分析</h1>
-            <div class="stats">
-                <strong>生成時間:</strong> ${new Date().toLocaleString()}<br>
-                <strong>完整資料大小:</strong> ${JSON.stringify(fullData).length} 字元<br>
-                <strong>清理後資料大小:</strong> ${JSON.stringify(cleanData).length} 字元
-            </div>
-
-            <div class="section">
-                <h2>📦 完整工作流程暫存資料</h2>
-                <button class="copy-btn" onclick="copyToClipboard('fullData')">複製 JSON</button>
-                <pre id="fullData">${JSON.stringify(fullData, null, 2)}</pre>
-            </div>
-
-            <div class="section">
-                <h2>🧹 清理後提交資料</h2>
-                <button class="copy-btn" onclick="copyToClipboard('cleanData')">複製 JSON</button>
-                <pre id="cleanData">${JSON.stringify(cleanData, null, 2)}</pre>
-            </div>
-        </div>
-
-        <script>
-            function copyToClipboard(elementId) {
-                const element = document.getElementById(elementId);
-                const text = element.textContent;
-                navigator.clipboard.writeText(text).then(() => {
-                    alert('✅ JSON 已複製到剪貼簿');
-                }).catch(err => {
-                    console.error('複製失敗:', err);
-                    // 備援方法
-                    const textArea = document.createElement('textarea');
-                    textArea.value = text;
-                    document.body.appendChild(textArea);
-                    textArea.select();
-                    document.execCommand('copy');
-                    document.body.removeChild(textArea);
-                    alert('✅ JSON 已複製到剪貼簿 (備援方法)');
-                });
-            }
-        </script>
-    </body>
-    </html>`;
-
-      const newWindow = window.open('', '_blank', 'width=1200,height=800,scrollbars=yes');
-      if (newWindow) {
-        newWindow.document.write(htmlContent);
-        newWindow.document.close();
-        this.notificationService.successBubble('✅ 格式化 JSON 已在新視窗開啟');
-      } else {
-        this.notificationService.errorBubble('❌ 無法開啟新視窗，請檢查瀏覽器設定');
-      }
-    } catch (error) {
-      console.error('❌ 顯示格式化 JSON 失敗:', error);
-      this.notificationService.errorBubble('顯示失敗，請使用其他查看方式');
-    }
-  }
-
-  // 🎯 快速取得暫存 JSON (可在 Console 中調用)
-  getTempDataJson(): string {
-    const fullData = this.contractFlowService.getCurrentData();
-    const jsonString = JSON.stringify(fullData, null, 2);
-    console.log('📋 完整暫存 JSON:', jsonString);
-    return jsonString;
-  }
-
-  // 🎯 快速取得清理後 JSON (可在 Console 中調用)
-  getCleanDataJson(): string {
-    const cleanData = this.contractFlowService.generateCleanSubmitData();
-    const jsonString = JSON.stringify(cleanData, null, 2);
-    console.log('🧹 清理後 JSON:', jsonString);
-    return jsonString;
-  }
-
-  private getTermTypeName(termType: string): string {
-    switch (termType) {
-      case '1': return '固定租金';
-      case '2': return '底租抽成取高者';
-      case '3': return '一般抽成';
-      case '4': return '包底抽成';
-      case '5': return '階梯式抽成';
-      case '6': return '包底加階梯';
-      default: return `未知類型(${termType})`;
-    }
-  }
-
-  // 🎯 新增：生成清除警告詳細資訊
   private generateClearWarningDetails(clearOps: any): string {
     const details: string[] = [];
 
@@ -1680,109 +889,5 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionItem>
     if (clearOps.clearLevelDetails) details.push('• 階梯設定');
 
     return details.length > 0 ? details.join('\n') : '• 無需清除資料';
-  }
-
-  getDeletedItemCount(): number {
-    const commissionType = this.contractInfoData[0]?.tlt_term_type;
-
-    switch (commissionType) {
-      case '1':
-        return this.fixedRentItems.filter(item => item._status === 'deleted').length;
-      case '2':
-        return this.baseRentHigherItems.filter(item => item._status === 'deleted').length;
-      case '3':
-        return this.generalCommissionItems.filter(item => item._status === 'deleted').length;
-      case '4':
-        return this.baseCommissionItems.filter(item => item._status === 'deleted').length;
-      case '5':
-        return this.graduatedItems.filter(item => item._status === 'deleted').length;
-      case '6':
-        return this.baseTierItems.filter(item => item._status === 'deleted').length;
-      default:
-        return 0;
-    }
-  }
-
-  // 🎯 2. 新增：取得顯示用的資料（過濾掉已刪除的項目）
-  get displayFixedRentItems(): FixedRentCondition[] {
-    return this.fixedRentItems.filter(item => item._status !== 'deleted');
-  }
-
-  get displayBaseRentHigherItems(): BaseRentHigherCondition[] {
-    return this.baseRentHigherItems.filter(item => item._status !== 'deleted');
-  }
-
-  get displayGeneralCommissionItems(): GeneralCommissionCondition[] {
-    return this.generalCommissionItems.filter(item => item._status !== 'deleted');
-  }
-
-  get displayBaseCommissionItems(): BaseCommissionCondition[] {
-    return this.baseCommissionItems.filter(item => item._status !== 'deleted');
-  }
-
-  get displayGraduatedItems(): GraduatedCommissionCondition[] {
-    return this.graduatedItems.filter(item => item._status !== 'deleted');
-  }
-
-  get displayBaseTierItems(): BaseTierCondition[] {
-    return this.baseTierItems.filter(item => item._status !== 'deleted');
-  }
-
-  /**
- * 🎯 新增：從 URL 檢查是否為檢視模式
- */
-  private checkViewModeFromURL(): void {
-    const queryParams = this.route.snapshot.queryParams;
-    const mode = queryParams['mode'];
-
-    console.log('🔍 Next3 檢查 URL 參數:', { mode });
-
-    if (mode === 'view') {
-      console.log('🔒 Next3 URL 檢測到檢視模式');
-      this.isViewMode = true;
-      this.contractFlowService.setViewMode(true);
-    } else {
-      console.log('📝 Next3 URL 未檢測到檢視模式');
-      this.isViewMode = false;
-      this.contractFlowService.setViewMode(false);
-    }
-  }
-
-  /**
-   * 🎯 新增：設定檢視模式 UI
-   */
-  private setupViewModeUI(): void {
-    console.log('🔧 Next3 設定檢視模式 UI 監聽');
-
-    // 🎯 先檢查當前狀態
-    const currentViewMode = this.contractFlowService.isViewMode();
-    console.log('📋 Next3 當前檢視模式狀態:', currentViewMode);
-
-    // 🎯 如果已經是檢視模式，立即設定
-    if (currentViewMode) {
-      this.isViewMode = true;
-      this.applyViewModeSettings(true);
-    }
-
-    // 🎯 訂閱後續變更
-    this.viewModeSubscription = this.contractFlowService.isViewMode$.subscribe(isViewMode => {
-      console.log('🔍 Next3 檢視模式變更:', isViewMode);
-      this.isViewMode = isViewMode;
-      this.applyViewModeSettings(isViewMode);
-    });
-  }
-  /**
-   * 🎯 新增：套用檢視模式設定
-   */
-  private applyViewModeSettings(isViewMode: boolean): void {
-    console.log('⚙️ Next3 套用檢視模式設定:', isViewMode);
-
-    if (isViewMode) {
-      console.log('🔒 Next3 啟用檢視模式 - 表格將自動變為唯讀');
-    } else {
-      console.log('🔓 Next3 停用檢視模式 - 表格將恢復可編輯');
-    }
-
-    // 🎯 表格的 readonly 屬性會根據 isViewMode 自動處理
   }
 }

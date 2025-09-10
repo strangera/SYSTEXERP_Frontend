@@ -1,3 +1,4 @@
+<!-- eslint-disable @angular-eslint/template/elements-content -->
 <!-- expandable-edit-table.component.html -->
 <div class="expandable-edit-table-container">
   <h3 *ngIf="title" class="expandable-table-title">{{ title }}</h3>
@@ -40,7 +41,7 @@
           style="text-align: center">
           {{ col.header }}
         </th>
-        <th *ngIf="!readonly" [ngStyle]="getActionHeaderStyle()">操作</th>
+        <th *ngIf="!readonly && showActionColumn" [ngStyle]="getActionHeaderStyle()">操作</th>
       </tr>
     </ng-template>
 
@@ -63,7 +64,7 @@
         <td *ngFor="let col of mainColumns" [hidden]="col.hidden" [ngStyle]="getColumnStyle(col)"
           style="text-align: center">
           <!-- 可編輯欄位 -->
-          <ng-container *ngIf="shouldShowInputControl(col, isRowEditing(ri))">
+          <ng-container *ngIf="shouldShowInputControl(col, isRowEditing(ri),rowData)">
             <ng-container [ngSwitch]="col.type">
               <app-selector-panel *ngSwitchCase="'selector-panel'"
                 [valueControl]="getSelectorControl(rowData, col.field)"
@@ -148,7 +149,7 @@
             </ng-container> </ng-container>
 
           <!-- 非編輯狀態 -->
-          <ng-container *ngIf="shouldShowDisplayOnly(col, isRowEditing(ri))">
+          <ng-container *ngIf="shouldShowDisplayOnly(col, isRowEditing(ri),rowData)">
             <ng-container [ngSwitch]="col.type">
               <!-- 🎯 日期顯示 - 使用新的方法 -->
               <span *ngSwitchCase="'date'">
@@ -173,7 +174,13 @@
                   </div>
                 </div>
               </span>
-
+              <!-- 按鈕在非編輯狀態下也要顯示 -->
+              <ng-container *ngSwitchCase="'button'">
+                <button pButton pRipple type="button" [label]="col.buttonLabel || '按鈕'" [icon]="col.buttonIcon || ''"
+                  [ngClass]="col.buttonClass || 'p-button-sm p-button-info'" [pTooltip]="col.buttonTooltip || ''"
+                  (click)="onButtonClick(rowData, col.field)">
+                </button>
+              </ng-container>
               <!-- 預設顯示 -->
               <span *ngSwitchDefault>{{ rowData[col.field] }}</span>
             </ng-container>
@@ -181,7 +188,7 @@
         </td>
 
         <!-- 操作按鈕 -->
-        <td *ngIf="!readonly" [ngStyle]="getActionBodyStyle()">
+        <td *ngIf="!readonly && showActionColumn" [ngStyle]="getActionBodyStyle()">
           <div class="edit-buttons flex justify-content-center gap-2">
             <!-- 編輯按鈕 -->
             <button *ngIf="!isRowEditing(ri)" pButton pRipple type="button" icon="pi pi-pencil" pTooltip="編輯"
@@ -276,7 +283,7 @@
         <td *ngFor="let col of getDetailColumnsForTab(rowData)" [hidden]="col.hidden" [ngStyle]="getColumnStyle(col)"
           style="text-align: center">
           <!-- 可編輯欄位 -->
-          <ng-container *ngIf="shouldShowInputControl(col, isDetailEditing(ri, di))">
+          <ng-container *ngIf="shouldShowInputControl(col, isDetailEditing(ri, di),detailData)">
             <ng-container [ngSwitch]="col.type">
               <!-- 基本文字輸入 -->
               <input *ngSwitchCase="'text'" pInputText type="text" [ngModel]="getFieldDefaultValue(col, rowData)"
@@ -324,7 +331,7 @@
           </ng-container>
 
           <!-- 不可編輯或非編輯狀態 -->
-          <ng-container *ngIf="shouldShowDisplayOnly(col, isDetailEditing(ri, di))">
+          <ng-container *ngIf="shouldShowDisplayOnly(col, isDetailEditing(ri, di),detailData)">
             <ng-container [ngSwitch]="col.type">
               <!-- 🎯 日期顯示 - 使用新的方法 -->
               <span *ngSwitchCase="'date'">
@@ -346,7 +353,13 @@
                   </div>
                 </div>
               </span>
-
+              <!-- 按鈕在非編輯狀態下也要顯示 -->
+              <ng-container *ngSwitchCase="'button'">
+                <button pButton pRipple type="button" [label]="col.buttonLabel || '按鈕'" [icon]="col.buttonIcon || ''"
+                  [ngClass]="col.buttonClass || 'p-button-sm p-button-info'" [pTooltip]="col.buttonTooltip || ''"
+                  (click)="onDetailButtonClick(detailData, col.field,rowData)">
+                </button>
+              </ng-container>
               <!-- 下拉選單顯示 -->
               <span *ngSwitchCase="'dropdown'">
                 {{ getDropdownDisplayText(detailData, col) }}
@@ -364,6 +377,7 @@
         <td *ngIf="!readonly" [ngStyle]="getDetailActionBodyStyle()">
           <div class="detail-edit-buttons flex justify-content-center gap-2">
             <!-- 編輯按鈕 -->
+
             <button *ngIf="!isDetailEditing(ri, di)" pButton pRipple type="button" icon="pi pi-pencil" pTooltip="編輯"
               class="p-button-rounded p-button-text" (click)="onDetailEditInit(detailData, rowData, ri, di)"></button>
 

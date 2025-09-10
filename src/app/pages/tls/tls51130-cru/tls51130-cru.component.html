@@ -52,12 +52,16 @@
         </div>
 
         <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text
-            label="品牌進貨折數"
+          <app-input-number
+            label="進貨折數"
+            
+              [minFractionDigits]="0"
+  [maxFractionDigits]="2"
+  [step]="0.01"
             controlName="PLU_OrderPrcRate"
             [control]="dataForm.controls.PLU_OrderPrcRate"
             [submitted]="submitted">
-          </app-input-text>
+          </app-input-number>
         </div>
 
         <div class="col-12 md:col-6 lg:col-4">

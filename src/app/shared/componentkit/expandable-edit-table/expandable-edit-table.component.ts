@@ -192,6 +192,8 @@ export interface ColumnDef {
 })
 export class ExpandableEditTableComponent implements OnInit, OnChanges {
   @ViewChild('dt') dt!: Table;
+  @Input() forceEditMode = false; // 強制編輯模式
+  @Input() showActionColumn = true;  // 新增控制操作欄的屬性
   @Input() title: string = '';
   @Input() mainColumns: ColumnDef[] = [];
   @Input() detailColumns: ColumnDef[] = [];
@@ -257,6 +259,12 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
     field: string;  // 欄位名稱，您可以用這個判斷是哪個按鈕
   }>();
 
+  @Output() detailButtonClick = new EventEmitter<{
+    detailData: any;
+    field: string;  // 欄位名稱，您可以用這個判斷是哪個按鈕
+    parentData: any;
+  }>();
+
   @Output() beforeSave = new EventEmitter<{
     data: any,
     preventDefault: () => void
@@ -298,7 +306,8 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
   ngOnInit() {
     this.totalRecords = this.data.length;
     this.initializeDetailArrays();
-    // 🎯 不再自動初始化日期欄位，保持原始資料格式
+    // 初始化預設值
+    this.initializeDefaultValues();
   }
 
   ngOnChanges() {
@@ -503,7 +512,7 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
 
     // 🎯 否則顯示格式化的值
     const displayValue = this.getDateDisplayValue(rowData, column);
-    console.log(`📅 顯示格式化值: "${displayValue}"`);
+    // console.log(`📅 顯示格式化值: "${displayValue}"`);
     return displayValue;
   }
   /**
@@ -630,14 +639,8 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
     if (!date || isNaN(date.getTime())) {
       return false;
     }
-
     const year = date.getFullYear();
     const isReasonable = year >= 1900 && year <= 2100;
-
-    if (!isReasonable) {
-      console.warn(`⚠️ 日期年份超出合理範圍: ${year}`);
-    }
-
     return isReasonable;
   }
 
@@ -1049,10 +1052,36 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
   }
 
   onDetailEditSave(detailData: any, rowData: any) {
-    const oldDetail = this.clonedDetails[detailData.id];
-    delete this.clonedDetails[detailData.id];
-    this.editingDetail = null;
-    this.detailSave.emit({ oldDetail, newDetail: detailData, parentData: rowData });
+    try {
+      // 只做通用的驗證框架，不包含具體業務邏輯
+      let canSave = true;
+      const preventSave = () => { canSave = false; };
+
+      // 發出 beforeSave 事件，讓父組件處理業務驗證
+      this.beforeSave.emit({
+        data: detailData,
+        preventDefault: preventSave
+      });
+
+      if (!canSave) {
+        return; // 父組件阻止儲存
+      }
+
+      // 原有的儲存邏輯
+      const oldDetail = this.clonedDetails[detailData.id];
+      delete this.clonedDetails[detailData.id];
+      this.editingDetail = null;
+
+      this.detailSave.emit({
+        oldDetail,
+        newDetail: detailData,
+        parentData: rowData
+      });
+
+    } catch (error) {
+      console.error('儲存詳細資料時發生錯誤:', error);
+      this.messageService.warnBubble('儲存失敗，請檢查輸入內容');
+    }
   }
 
   onDetailEditCancel(detailData: any, rowData: any, rowIndex: number, detailIndex: number) {
@@ -1112,13 +1141,15 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
   openDatePicker(data: any, field: string, isDetail: boolean = false, rowIndex?: number, detailIndex?: number) {
     this.currentDateField = { data, field, isDetail, rowIndex, detailIndex };
 
-    // 嘗試從現有值創建日期
-    let initialDate = new Date();
-    if (data[field]) {
-      const existingDate = new Date(data[field]);
-      if (!isNaN(existingDate.getTime())) {
-        initialDate = existingDate;
-      }
+    // 修復：如果有現有值就用現有值，沒有就用今天的日期
+    let initialDate: Date;
+
+    if (data[field] && data[field] instanceof Date && !isNaN(data[field].getTime())) {
+      // 使用現有的有效日期
+      initialDate = new Date(data[field]);
+    } else {
+      // 使用今天的日期
+      initialDate = new Date();
     }
 
     this.temporaryDate = initialDate;
@@ -1129,33 +1160,52 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
     if (this.currentDateField && this.temporaryDate) {
       const column = this.getCurrentEditingColumn();
       const oldValue = this.currentDateField.data[this.currentDateField.field];
+      let finalDate: Date;
 
-      if (column && column.dateFormat && column.dateFormat.includes('year-month')) {
-        // 🎯 年月格式：將日期設為該月的第一天
+      // 根據格式處理日期
+      if (column?.dateFormat?.includes('year-month')) {
         const year = this.temporaryDate.getFullYear();
         const month = this.temporaryDate.getMonth();
-        const adjustedDate = new Date(year, month, 1);
-
-        this.currentDateField.data[this.currentDateField.field] = adjustedDate;
-        console.log(`✅ 年月選擇完成: ${year}/${month + 1}`);
-
-        // 🔥 觸發欄位變更事件
-        this.triggerFieldChangeEvent(this.currentDateField.field, adjustedDate, this.currentDateField.data, oldValue);
-
+        finalDate = new Date(year, month, 1);
       } else {
-        // 🎯 完整日期格式：直接使用選擇的日期
-        this.currentDateField.data[this.currentDateField.field] = this.temporaryDate;
-        console.log(`✅ 日期選擇完成: ${this.temporaryDate}`);
-
-        // 🔥 觸發欄位變更事件
-        this.triggerFieldChangeEvent(this.currentDateField.field, this.temporaryDate, this.currentDateField.data, oldValue);
+        finalDate = new Date(this.temporaryDate);
       }
 
-      if (this.currentDateField.isDetail) {
-        this.cdr.detectChanges();
+      // 更新資料
+      this.currentDateField.data[this.currentDateField.field] = finalDate;
+
+      // 關鍵：清理用戶輸入狀態
+      const fieldKey = this.getFieldKey(
+        this.currentDateField.data,
+        this.currentDateField.field,
+        this.currentDateField.isDetail,
+        this.currentDateField.detailIndex
+      );
+      this.userInputValues.delete(fieldKey);
+
+      // 觸發 fieldChange 事件讓業務層處理
+      this.triggerFieldChangeEvent(
+        this.currentDateField.field,
+        finalDate,
+        this.currentDateField.data,
+        oldValue
+      );
+
+      // 如果是直接編輯模式，觸發保存
+      if (column?.directEdit) {
+        this.triggerSaveIfNeeded(
+          this.currentDateField.data,
+          column,
+          finalDate,
+          this.currentDateField.isDetail,
+          this.currentDateField.detailIndex
+        );
       }
+
+      this.cdr.detectChanges();
     }
 
+    // 關閉對話框
     this.datePickerVisible = false;
     this.currentDateField = null;
     this.temporaryDate = null;
@@ -1520,7 +1570,7 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
     return colspan;
   }
 
-  // 🎯 新增：檢查欄位是否可編輯的方法
+  // 檢查欄位是否可編輯的方法
   isFieldEditable(column: ColumnDef, isEditing: boolean): boolean {
     // 如果欄位設為不可編輯，則永遠不可編輯
     if (column.editable === false) {
@@ -1531,21 +1581,38 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
     return isEditing && (column.editable === true || column.editable === undefined);
   }
 
-  // 🎯 新增：檢查欄位是否應該顯示為輸入控件
-  shouldShowInputControl(column: ColumnDef, isEditing: boolean): boolean {
+  // 檢查欄位是否應該顯示為輸入控件
+  shouldShowInputControl(column: ColumnDef, isEditing: boolean, rowData?: any): boolean {
+    // 如果開啟強制編輯模式，且欄位沒有明確禁止編輯
+    if (this.forceEditMode && column.editable !== false) {
+      return true;
+    }
+
+    // 直接編輯模式
     if (column.directEdit === true && column.editable !== false) {
       return true;
     }
+
+    // 原有邏輯：正在編輯且可編輯
     return this.isFieldEditable(column, isEditing);
   }
 
-  // 🎯 新增：檢查欄位是否應該顯示為純文字
-  shouldShowDisplayOnly(column: ColumnDef, isEditing: boolean): boolean {
+  // 檢查欄位是否應該顯示為純文字
+  shouldShowDisplayOnly(column: ColumnDef, isEditing: boolean, rowData?: any): boolean {
+    // 如果開啟強制編輯模式，且欄位沒有明確禁止編輯
+    if (this.forceEditMode && column.editable !== false) {
+      return false;
+    }
+
+    // 直接編輯模式
     if (column.directEdit === true && column.editable !== false) {
       return false;
     }
+
+    // 原有邏輯
     return !this.isFieldEditable(column, isEditing);
   }
+
 
   private cleanupInvalidSelections(): void {
     // 清理主表格的無效選取
@@ -2206,6 +2273,12 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
     if (newValue === true) {
       rowData[field] = newValue;
 
+      this.fieldChange.emit({
+        fieldName: field,
+        newValue: newValue,
+        rowData: rowData
+      });
+
       // 檢查是否啟用自動編輯
       if (column.autoEditOnSelect && !this.isRowEditing(rowIndex)) {
         console.log(`勾選，自動進入編輯模式`);
@@ -2225,6 +2298,12 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
       } else {
         // 如果沒有啟用自動保存退出，只更新值
         rowData[field] = newValue;
+
+        this.fieldChange.emit({
+          fieldName: field,
+          newValue: newValue,
+          rowData: rowData
+        });
       }
     }
 
@@ -2279,6 +2358,13 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
     this.buttonClick.emit({ rowData, field });
   }
 
+  onDetailButtonClick(detailData: any, field: string, parentData: any): void {
+    this.detailButtonClick.emit({
+      detailData,
+      field,
+      parentData
+    });
+  }
 
   // 新增方法來檢查當前 tab 是否允許操作
   canAddDetailForCurrentTab(rowData: any): boolean {
@@ -2350,5 +2436,23 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
     const target = event.target as HTMLInputElement;
     const inputValue = target?.value || '';
     this.onDateInputChange(rowData, column, inputValue);
+  }
+  //初始化顯示Table預設
+  private initializeDefaultValues(): void {
+    this.data.forEach(rowData => {
+      this.mainColumns.forEach(column => {
+        // 如果欄位沒有值但有預設值函數，應用預設值
+        if (!rowData[column.field] && column.defaultValueFunction) {
+          try {
+            const defaultValue = column.defaultValueFunction();
+            if (defaultValue !== null && defaultValue !== undefined) {
+              rowData[column.field] = defaultValue;
+            }
+          } catch (error) {
+            console.error(`預設值函數執行失敗 ${column.field}:`, error);
+          }
+        }
+      });
+    });
   }
 }

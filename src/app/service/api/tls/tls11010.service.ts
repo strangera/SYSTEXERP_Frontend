@@ -41,15 +41,24 @@ export class Tls11010Service {
         catchError(this.errorHandler.handleError)
       );
   }
+getUsageOptions(): Observable<any[]> {
+  return this.http
+    .post<any>(`${this.apiUrl}/querySYS3F00_DropDownList`, {})
+    .pipe(
+      map((res) => {
+        const options =
+          res?.Data?.map((x: any) => ({
+            label: x.Name,
+            value: Number(x.No), // 轉 number
+          })) ?? [];
 
-  getUsageOptions(): Observable<any[]> {
-    return this.http
-      .post<any>(`${this.apiUrl}/querySYS3F00_DropDownList`, {})
-      .pipe(
-        map((res) => res?.Data?.map((x: any) => ({ label: x.Name, value: x.No })) ?? []),
-        catchError(this.errorHandler.handleError)
-      );
-  }
+        // 排序 (依 value 由小到大)
+        return options.sort((a:any, b:any) => a.value - b.value);
+      }),
+      catchError(this.errorHandler.handleError)
+    );
+}
+
 
   getBuildingOptions(): Observable<any[]> {
     return this.http

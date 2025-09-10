@@ -1,75 +1,47 @@
-<div class="card">
-  <div class="grid align-items-center">
-    <div class="col" style="flex: 1">
-      <app-menubar [ProgNo]="ProgNo"></app-menubar>
-    </div>
-    <div >
-      <app-button
-        btnType="create"
-        (click)="onCreate()"
-        class="col"
-      ></app-button>
-    </div>
+<div class="card fin11020">
+  <div class="flex gap-2 mb-2">
+    <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
+    <!-- <app-button btnType="create" (click)="onCreate()"></app-button> -->
   </div>
   <p-accordion>
-    <p-accordionTab
-      header="{{ 'query-conditions' | translate }}"
-      [selected]="true"
-      class="line-height-3 m-0"
-      [headerStyleClass]="'query-accordionTab'"
-    >
-      <form
-        [formGroup]="queryForm"
-        id="queryForm"
-        (ngSubmit)="onSubmit(queryForm)"
-      >
+    <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'">
+      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
         <div class="grid p-fluid">
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
-              label="統一編號"
-              controlName="Unifiednumber"
-              [control]="queryForm.controls.Unifiednumber"
-              [submitted]="submitted"
-            ></app-input-text>
+            <app-input-text label="公司代號" controlName="CompNo" [control]="queryForm.controls.CompNo"
+              [submitted]="submitted"></app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
-              label="對象別編號"
-              controlName="Objectnumber"
-              [control]="queryForm.controls.Objectnumber"
-              [submitted]="submitted"
-            ></app-input-text>
+            <app-input-text label="對象別代碼" controlName="RefCode" [control]="queryForm.controls.RefCode"
+              [submitted]="submitted"></app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-text
-              label="對象別名稱"
-              controlName="objectalias"
-              [control]="queryForm.controls.objectalias"
-              [submitted]="submitted"
-            ></app-input-text>
+            <app-input-text label="對象別名稱" controlName="RefName" [control]="queryForm.controls.RefName"
+              [submitted]="submitted"></app-input-text>
           </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-text label="建立者" controlName="CRT_USR_Name" [control]="queryForm.controls.CRT_USR_Name"
+              [submitted]="submitted"></app-input-text>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-text label="修改者" controlName="UPD_USR_Name" [control]="queryForm.controls.UPD_USR_Name"
+              [submitted]="submitted"></app-input-text>
+          </div>
+        </div>
+
+        <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+          <app-button btnType="clear" [form]="queryForm"></app-button>
+          <app-button btnType="query" [loading]="loading"></app-button>
         </div>
       </form>
-      <div>
-        <div class="grid justify-content-end">
-          <app-button btnType="clear" (onClick)="onClearForm()"></app-button>
-          <app-button
-            btnType="query"
-            (onClick)="onSubmitQuery(queryForm)"
-            [loading]="loading"
-          ></app-button>
-        </div>
-      </div>
     </p-accordionTab>
   </p-accordion>
 </div>
 <div class="card">
-  <div class="col-12">
-    <app-table
-      [data]="data"
-      [columns]="columns"
-      (edit)="onEdit($event)"
-      (detail)="onDetail($event)"
-    ></app-table>
-  </div>
+    <app-table tableKey="FIN52040" dataKey="field" [data]="data" [columns]="columns" (edit)="onEdit($event)"
+        (detail)="onDetail($event)" [showCheckBox]="false" [multiSortMeta]="[{ field: 'REP_GUIYM', order: 1 }]"
+        [totalRecords]="totalRecords" (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"
+        [lazy]="true" [loading]="loading">
+    </app-table>
 </div>

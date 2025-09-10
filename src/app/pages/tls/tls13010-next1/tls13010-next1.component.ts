@@ -41,6 +41,8 @@ interface CategoryItem {
   imports: [MenubarComponent, ButtonComponent, NgIf, ProgressSpinnerModule, AccordionModule, ExpandableEditTableComponent, NgFor, DialogComponent]
 })
 export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> implements OnInit, OnDestroy {
+  forceEditMode: boolean = true;
+
   // 🆕 對話框相關屬性
   showCalculationDialog: boolean = false;
   calculationResult: any = null;
@@ -99,10 +101,15 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
     super();
   }
 
+  get shouldForceEdit(): boolean {
+    return !this.isViewMode; // 檢視模式時關閉常駐編輯
+  }
+
+
   // ========== 🆕 欄位定義 getter (取代原有的屬性) ==========
   get contractInfoColumns(): ColumnDef[] {
     if (!this._cachedContractInfoColumns || this._lastContractInfoLength !== this.contractInfoData.length) {
-      console.log('🔄 重新生成 contractInfoColumns');
+      // console.log('🔄 重新生成 contractInfoColumns');
       this._cachedContractInfoColumns = FareColumnDefinitions.getContractInfoColumns();
       this._lastContractInfoLength = this.contractInfoData.length;
     }
@@ -115,7 +122,7 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
       this._lastViewMode !== this.isViewMode ||
       this._lastContractInfoLength !== this.contractInfoData.length) {
 
-      console.log('🔄 重新生成 deductionAColumns');
+      // console.log('🔄 重新生成 deductionAColumns');
       let columns = FareColumnDefinitions.getDeductionAColumns(this.contractInfoData);
       columns = FareColumnDefinitions.updateOrgOptionsInColumns(columns, this.orgOptions);
       if (this.isViewMode) {
@@ -132,7 +139,7 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
       this._lastViewMode !== this.isViewMode ||
       this._lastContractInfoLength !== this.contractInfoData.length) {
 
-      console.log('🔄 重新生成 deductionBColumns');
+      // console.log('🔄 重新生成 deductionBColumns');
       let columns = FareColumnDefinitions.getDeductionBColumns(this.contractInfoData);
       if (this.isViewMode) {
         columns = FareColumnDefinitions.setColumnsReadonly(columns, true);
@@ -149,7 +156,7 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
       this._lastViewMode !== this.isViewMode ||
       this._lastContractInfoLength !== this.contractInfoData.length) {
 
-      console.log('🔄 重新生成 deductionCColumns');
+      // console.log('🔄 重新生成 deductionCColumns');
       let columns = FareColumnDefinitions.getDeductionCColumns(this.contractInfoData);
       columns = FareColumnDefinitions.updateOrgOptionsInColumns(columns, this.orgOptions);
       if (this.isViewMode) {
@@ -167,7 +174,7 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
       this._lastViewMode !== this.isViewMode ||
       this._lastContractInfoLength !== this.contractInfoData.length) {
 
-      console.log('🔄 重新生成 deductionDColumns');
+      // console.log('🔄 重新生成 deductionDColumns');
       let columns = FareColumnDefinitions.getDeductionDColumns(this.contractInfoData);
       columns = FareColumnDefinitions.updateOrgOptionsInColumns(columns, this.orgOptions);
       if (this.isViewMode) {
@@ -185,7 +192,7 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
       this._lastViewMode !== this.isViewMode ||
       this._lastContractInfoLength !== this.contractInfoData.length) {
 
-      console.log('🔄 重新生成 deductionEColumns');
+      // console.log('🔄 重新生成 deductionEColumns');
       let columns = FareColumnDefinitions.getDeductionEColumns(this.contractInfoData);
       columns = FareColumnDefinitions.updateOrgOptionsInColumns(columns, this.orgOptions);
       if (this.isViewMode) {
@@ -233,7 +240,7 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
   }
 
   ngOnDestroy(): void {
-    console.log('📄 NEXT1 組件銷毀，確保資料儲存');
+    // console.log('📄 NEXT1 組件銷毀，確保資料儲存');
     this.saveFareDataToWorkflow();
 
     if (this.routerSubscription) {
@@ -242,50 +249,23 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
     this.subscriptions.forEach(sub => sub.unsubscribe());
   }
 
-  // ========== 資料載入相關 ==========
-  // private loadWorkflowData(): void {
-  //   console.log('🚀 Next1 開始載入工作流程資料...');
-
-  //   const workflowData = this.contractFlowService.getCurrentData();
-  //   console.log('📋 工作流程資料:', workflowData);
-
-  //   if (workflowData.contractId || this.contractFlowService.isNewContractMode()) {
-  //     const modeInfo = this.contractFlowService.getWorkflowModeInfo();
-  //     this.currentTalentId = modeInfo.talentId;
-  //     this.currentContractData = workflowData?.queryRowData;
-
-  //     console.log('✅ 工作流程狀態確認:', {
-  //       mode: modeInfo.modeName,
-  //       currentTalentId: this.currentTalentId,
-  //       contractId: modeInfo.contractId
-  //     });
-
-  //     this.prepareContractInfoDisplay();
-  //     this.initializeDataStructure();
-  //     this.loadFareDataWithPriority();
-  //   } else {
-  //     console.warn('❌ 沒有工作流程資料，重導向到前一步');
-  //     this.router.navigate(['account/tls/tls13010cru']);
-  //   }
-  // }
-
   private loadWorkflowData(): void {
     try {
       if (!this.contractFlowService) {
         console.error('❌ contractFlowService 未注入');
         return;
       }
-      console.log('✅ contractFlowService 存在');
+      // console.log('✅ contractFlowService 存在');
 
-      console.log('📋 步驟 2: 取得工作流程資料...');
+      // console.log('📋 步驟 2: 取得工作流程資料...');
       const workflowData = this.contractFlowService.getCurrentData();
-      console.log('📋 工作流程資料:', workflowData);
+      // console.log('📋 工作流程資料:', workflowData);
 
-      console.log('📋 步驟 3: 檢查是否有有效資料...');
+      // console.log('📋 步驟 3: 檢查是否有有效資料...');
       const hasContractId = workflowData.contractId;
       const isNewMode = this.contractFlowService.isNewContractMode();
-      console.log('📋 hasContractId:', hasContractId);
-      console.log('📋 isNewMode:', isNewMode);
+      // console.log('📋 hasContractId:', hasContractId);
+      // console.log('📋 isNewMode:', isNewMode);
 
       if (hasContractId || isNewMode) {
 
@@ -307,11 +287,11 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
   }
 
   private loadOrgOptions(): void {
-    console.log('📄 開始載入組織選項...');
+    // console.log('📄 開始載入組織選項...');
 
     const subscription = this.locationOptionsService.getOrgOptions().subscribe({
       next: (options) => {
-        console.log('✅ 組織選項載入成功:', options);
+        // console.log('✅ 組織選項載入成功:', options);
         this.orgOptions = options;
         // 🆕 載入完成後清除快取
         this._clearColumnCache();
@@ -329,7 +309,7 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
   private initializeViewModeFromService(): void {
     const viewModeSub = this.contractFlowService.isViewMode$.subscribe(isViewMode => {
       this.isViewMode = isViewMode;
-      console.log('🔍 Next1 檢視模式狀態更新:', isViewMode);
+      // console.log('🔍 Next1 檢視模式狀態更新:', isViewMode);
     });
 
     this.subscriptions.push(viewModeSub);
@@ -340,15 +320,15 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
     const step1Data = this.contractFlowService.getStep1Data();
     const totalSpace = step1Data?.totalLocationSpace || 0;
 
-    console.log('🏢 從 Step1 取得總坪數:', totalSpace);
+    // console.log('🏢 從 Step1 取得總坪數:', totalSpace);
     this.fareCalculationService.setTotalLocationSpace(totalSpace);
   }
 
   private prepareContractInfoDisplay(): void {
-    console.log('📊 準備合約資訊顯示...');
+    // console.log('📊 準備合約資訊顯示...');
 
     const step1Data = this.contractFlowService.getStep1Data();
-    console.log('🔍 Step1 編輯資料:', step1Data);
+    // console.log('🔍 Step1 編輯資料:', step1Data);
 
     const contractInfo = {
       talent_id: step1Data?.talent_id || this.currentContractData?.talent_id || '',
@@ -371,39 +351,39 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
       ...contractInfo
     }];
 
-    console.log('📊 合約資訊顯示準備完成:', this.contractInfoData);
+    // console.log('📊 合約資訊顯示準備完成:', this.contractInfoData);
   }
 
   private loadFareDataWithPriority(): void {
-    console.log('🔍 載入扣款資料優先順序判定...');
+    // console.log('🔍 載入扣款資料優先順序判定...');
 
     const savedFareData = this.contractFlowService.getStepData(WorkflowStep.DEDUCTION);
-    console.log('📦 檢查 Step2 暫存資料:', savedFareData);
+    // console.log('📦 檢查 Step2 暫存資料:', savedFareData);
 
     if (savedFareData && Array.isArray(savedFareData) && savedFareData.length > 0) {
-      console.log('📦 使用暫存扣款資料');
+      // console.log('📦 使用暫存扣款資料');
       this.loadSavedFareData(savedFareData);
       return;
     }
 
     if (this.contractFlowService.isNewContractMode()) {
-      console.log('🆕 新增模式：載入可用扣款項目');
+      // console.log('🆕 新增模式：載入可用扣款項目');
       this.loadAvailableFareData();
     } else {
-      console.log('🔍 編輯模式：從 API 載入');
+      // console.log('🔍 編輯模式：從 API 載入');
       this.loadFareDataFromAPI();
     }
   }
 
   private loadSavedFareData(savedData: FareItem[]): void {
-    console.log('📦 載入暫存扣款資料:', savedData);
+    // console.log('📦 載入暫存扣款資料:', savedData);
 
     try {
       // 🆕 使用服務驗證和修復資料
       this.originalFareData = this.fareDataService.validateAndFixData(savedData);
       this.filterData();
 
-      console.log('✅ 暫存扣款資料載入完成');
+      // console.log('✅ 暫存扣款資料載入完成');
       this.verifyStoredData();
     } catch (error) {
       console.error('❌ 暫存扣款資料處理失敗，重新載入:', error);
@@ -417,7 +397,7 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
   }
 
   private loadAvailableFareData(): void {
-    console.log('📄 新增模式：載入可用扣款項目...');
+    // console.log('📄 新增模式：載入可用扣款項目...');
 
     this.loading = true;
     this.messageService.blockUi();
@@ -427,7 +407,7 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
       showAll: true
     }).subscribe({
       next: (response) => {
-        console.log('🆕 新增模式 API 回傳資料:', response);
+        // console.log('🆕 新增模式 API 回傳資料:', response);
 
         if (response && response.Data && response.Data.FaresByType) {
           // 🆕 使用服務處理新增模式資料
@@ -435,9 +415,9 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
           this.filterData();
           this.saveFareDataToWorkflow();
 
-          console.log('🆕 新增模式：載入可用扣款項目成功');
+          // console.log('🆕 新增模式：載入可用扣款項目成功');
         } else {
-          console.log('🆕 新增模式：API 沒有回傳可用扣款項目');
+          // console.log('🆕 新增模式：API 沒有回傳可用扣款項目');
           this.messageService.infoBubble('目前沒有可用的扣款項目');
           this.initializeEmptyData();
         }
@@ -458,7 +438,7 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
   }
 
   private loadFareDataFromAPI(): void {
-    console.log('📄 載入扣款資料，talent_id:', this.currentTalentId);
+    // console.log('📄 載入扣款資料，talent_id:', this.currentTalentId);
 
     this.loading = true;
     this.messageService.blockUi();
@@ -468,7 +448,7 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
       showAll: true
     }).subscribe({
       next: (response) => {
-        console.log('API 回傳的扣款資料:', response);
+        // console.log('API 回傳的扣款資料:', response);
 
         if (response && response.Data && response.Data.FaresByType) {
           // 🆕 使用服務處理 API 資料
@@ -527,27 +507,27 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
 
   // ========== 資料過濾和儲存 ==========
   filterData(): void {
-    console.log('【DEBUG】originalFareData:', this.originalFareData);
+    // console.log('【DEBUG】originalFareData:', this.originalFareData);
     this.initializeDataStructure();
 
     // 🆕 使用資料服務進行過濾
     this.fareData = this.fareDataService.filterDataByMode(this.originalFareData, this.showMode);
 
-    console.log('🔍 過濾後結果:', {
-      顯示模式: this.showMode,
-      各類型數量: Object.keys(this.fareData).reduce((acc, type) => {
-        acc[type] = {
-          總數: this.fareData[type].length,
-          已勾選: this.fareData[type].filter(item => item.is_selected).length
-        };
-        return acc;
-      }, {} as any)
-    });
+    // console.log('🔍 過濾後結果:', {
+    //   顯示模式: this.showMode,
+    //   各類型數量: Object.keys(this.fareData).reduce((acc, type) => {
+    //     acc[type] = {
+    //       總數: this.fareData[type].length,
+    //       已勾選: this.fareData[type].filter(item => item.is_selected).length
+    //     };
+    //     return acc;
+    //   }, {} as any)
+    // });
   }
 
   private saveFareDataToWorkflow(): void {
     try {
-      console.log('💾 準備儲存暫存資料...');
+      // console.log('💾 準備儲存暫存資料...');
 
       // 🆕 使用資料服務準備儲存資料
       const mergedFareItems = this.fareDataService.prepareSaveData(this.originalFareData);
@@ -555,10 +535,10 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
       const totalItems = mergedFareItems.length;
       const selectedItems = mergedFareItems.filter(item => item.is_selected).length;
 
-      console.log(`💾 總共要儲存 ${totalItems} 筆資料，其中 ${selectedItems} 筆已選中`);
+      // console.log(`💾 總共要儲存 ${totalItems} 筆資料，其中 ${selectedItems} 筆已選中`);
 
       this.contractFlowService.saveStep2Data(mergedFareItems);
-      console.log('✅ 已成功暫存扣款資料到工作流程');
+      // console.log('✅ 已成功暫存扣款資料到工作流程');
 
       this.verifyStoredData();
     } catch (error) {
@@ -569,11 +549,11 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
 
   private verifyStoredData(): void {
     const savedData = this.contractFlowService.getStepData(WorkflowStep.DEDUCTION);
-    console.log('🔍 驗證儲存結果:', {
-      savedDataType: Array.isArray(savedData) ? '陣列' : typeof savedData,
-      savedDataLength: Array.isArray(savedData) ? savedData.length : 0,
-      originalDataLength: this.getTotalItemCount()
-    });
+    // console.log('🔍 驗證儲存結果:', {
+    //   savedDataType: Array.isArray(savedData) ? '陣列' : typeof savedData,
+    //   savedDataLength: Array.isArray(savedData) ? savedData.length : 0,
+    //   originalDataLength: this.getTotalItemCount()
+    // });
 
     if (Array.isArray(savedData)) {
       const selectedInSaved = savedData.filter(item => item.is_selected).length;
@@ -589,10 +569,13 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
   }
   // ========== 表格事件處理 (使用服務) ==========
   onFieldChange(fieldName: string, newValue: any, rowData: any, capType?: string): void {
-    console.log(`欄位變更: ${capType}.${fieldName} = ${newValue}`);
-
-    // 🎯 關鍵：移除重複設值，expandable-edit-table 已經處理了
-    // rowData[fieldName] = newValue;  // 刪除這行
+    // 🔧 專門處理 checkbox 勾選
+    if (fieldName === 'is_selected') {
+      this.updateOriginalData(capType || 'A');
+      this.filterData();
+      this.saveFareDataToWorkflow();
+      return;
+    }
 
     // 根據 capType 進行對應的計算處理
     switch (capType) {
@@ -615,11 +598,22 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
         console.warn(`未知的扣款類型: ${capType}`);
     }
 
+    // 🔧 只對關鍵欄位進行即時驗證
     if (rowData.is_selected && capType) {
       this.performRealTimeValidation(rowData, capType);
     }
-    // 統一的後續處理
-    this.updateRowDataState(rowData, capType || 'A');
+
+    // 🔧 關鍵修改：只在重要欄位變更時才觸發完整狀態更新
+    const criticalFields = ['tpy_unitamt', 'tpy_qty', 'tpy_amount', 'tpy_totalamt', 'tpy_rate'];
+
+    if (criticalFields.includes(fieldName)) {
+      // 重要欄位變更才觸發完整更新
+      this.updateRowDataState(rowData, capType || 'A');
+    } else {
+      // 一般欄位變更只做簡單更新
+      this.updateOriginalDataItem(rowData, capType || 'A');
+      this.saveFareDataToWorkflow();
+    }
   }
 
   /**
@@ -654,7 +648,7 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
       const totalSpace = this.getTotalLocationSpace();
       if (totalSpace > 0) {
         rowData.tpy_qty = totalSpace;
-        console.log(`坪數單位選擇，自動設定數量: ${totalSpace}`);
+        // console.log(`坪數單位選擇，自動設定數量: ${totalSpace}`);
       }
     }
 
@@ -665,7 +659,7 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
 
       if (unitPrice > 0 && quantity > 0) {
         rowData.tpy_amount = unitPrice * quantity;
-        console.log(`A類型即時計算: ${unitPrice} × ${quantity} = ${rowData.tpy_amount}`);
+        // console.log(`A類型即時計算: ${unitPrice} × ${quantity} = ${rowData.tpy_amount}`);
       } else {
         rowData.tpy_amount = 0;
       }
@@ -702,11 +696,11 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
 
   // 🎯 C類型計算優化 - 最重要的優化
   private handleTypeCCalculation(fieldName: string, newValue: any, rowData: any): void {
-    console.log(`🆂 C類型平均分攤計算: ${fieldName} = ${newValue}`);
+    // console.log(`🆂 C類型平均分攤計算: ${fieldName} = ${newValue}`);
 
     // 🎯 日期變更時重新計算期數
     if (['tpy_bdate', 'tpy_edate'].includes(fieldName)) {
-      console.log('📅 日期欄位變更，重新計算期數');
+      // console.log('📅 日期欄位變更，重新計算期數');
 
       // 使用 setTimeout 確保日期值已經更新
       setTimeout(() => {
@@ -719,7 +713,7 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
         );
 
         if (hasCalculationValue) {
-          console.log('🔄 期數變更後重新計算金額分攤');
+          // console.log('🔄 期數變更後重新計算金額分攤');
           this.fareCalculationService.autoCalculateAmount(rowData, 'C', 'period_nos');
         }
       }, 10);
@@ -733,7 +727,7 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
       // 驗證計算結果
       const isValid = this.fareCalculationService.isCalculationValid(rowData, 'C');
       if (isValid) {
-        console.log(`✅ C類型計算成功: 總額=${rowData.tpy_totalamt}, 期數=${rowData.period_nos}, 月額=${rowData.tpy_amount}, 首期=${rowData.down_payment}`);
+        // console.log(`✅ C類型計算成功: 總額=${rowData.tpy_totalamt}, 期數=${rowData.period_nos}, 月額=${rowData.tpy_amount}, 首期=${rowData.down_payment}`);
       } else {
         console.warn(`⚠️ C類型計算結果可能有誤`);
       }
@@ -755,10 +749,10 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
 
   // 🆕 計算期數的輔助方法
   private updatePeriodNumbers(rowData: any): void {
-    console.log('📊 開始更新期數...', {
-      開始日期: rowData.tpy_bdate,
-      結束日期: rowData.tpy_edate
-    });
+    // console.log('📊 開始更新期數...', {
+    //   開始日期: rowData.tpy_bdate,
+    //   結束日期: rowData.tpy_edate
+    // });
 
     if (rowData.tpy_bdate && rowData.tpy_edate) {
       let startDate: Date;
@@ -791,7 +785,7 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
 
           rowData.period_nos = calculatedPeriods;
 
-          console.log(`✅ 期數更新: ${oldPeriods} → ${calculatedPeriods}`);
+          // console.log(`✅ 期數更新: ${oldPeriods} → ${calculatedPeriods}`);
 
           // 🎯 如果期數變化，觸發C類型重新計算
           if (oldPeriods !== calculatedPeriods) {
@@ -859,7 +853,7 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
     // 儲存到工作流
     this.saveFareDataToWorkflow();
 
-    console.log(`✅ ${capType}類型資料狀態更新完成`);
+    // console.log(`✅ ${capType}類型資料狀態更新完成`);
   }
 
   /**
@@ -872,7 +866,7 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
         ...this.originalFareData[capType][originalIndex],
         ...updatedItem
       };
-      console.log(`🔄 已更新原始資料: ${capType}[${originalIndex}]`);
+      // console.log(`🔄 已更新原始資料: ${capType}[${originalIndex}]`);
     }
   }
 
@@ -880,7 +874,7 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
    * 🆕 增強的表格儲存處理
    */
   onFareTableSave(event: { oldData: any, newData: any }, capType: string): void {
-    console.log(`💾 ${capType}類型表格儲存:`, event.newData);
+    // console.log(`💾 ${capType}類型表格儲存:`, event.newData);
 
     const { newData } = event;
 
@@ -959,7 +953,7 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
   }
 
   onFareTableEdit(rowData: any, capType: string): void {
-    console.log(`開始編輯 ${capType} 類型扣款資料:`, rowData);
+    // console.log(`開始編輯 ${capType} 類型扣款資料:`, rowData);
     this.ensureDefaultValues(rowData, capType);
   }
 
@@ -968,48 +962,41 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
   }
 
   onItemSelectionChange(capType: string): void {
-    console.log(`🔄 ${capType} 類型項目選擇狀態改變`);
+    console.log(`🔥 勾選事件被觸發: ${capType}`);
 
-    // 原有的狀態更新
+    // 直接處理選擇變更
     this.fareData[capType].forEach(item => {
       this.fareStatusService.updateItemSelectionStatus(item);
     });
 
     this.updateOriginalData(capType);
-
-    // 🆕 新增：對所有已選項目進行驗證
-    const selectedItems = this.fareData[capType].filter(item => item.is_selected);
-    if (selectedItems.length > 0) {
-      const validationResult = this.fareValidationService.validateFareTypeData(
-        this.originalFareData[capType],
-        capType
-      );
-
-      if (!validationResult.isValid) {
-        console.warn(`⚠️ ${capType} 類型選擇項目驗證失敗:`, validationResult.errors);
-        // 可以選擇是否立即顯示警告，或只在提交時檢查
-        // this.messageService.warnBubble(validationResult.errors.join('\n'));
-      }
-    }
-
+    this.filterData();
     this.saveFareDataToWorkflow();
   }
 
   selectAllByType(capType: string): void {
-    console.log(`📄 ${capType} 類型全部選擇`);
+    console.log(`🔄 ${capType} 類型全部選擇`);
 
     // 🆕 使用狀態服務
     this.fareStatusService.selectAllItems(this.fareData[capType]);
     this.updateOriginalData(capType);
+
+    // 🔧 修正：重新過濾數據
+    this.filterData();
+
     this.saveFareDataToWorkflow();
   }
 
   deselectAllByType(capType: string): void {
-    console.log(`📄 ${capType} 類型取消全部選擇`);
+    console.log(`🔄 ${capType} 類型取消全部選擇`);
 
     // 🆕 使用狀態服務
     this.fareStatusService.deselectAllItems(this.fareData[capType]);
     this.updateOriginalData(capType);
+
+    // 🔧 修正：重新過濾數據
+    this.filterData();
+
     this.saveFareDataToWorkflow();
   }
 
@@ -1075,18 +1062,21 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
 
   // ========== 模式切換 ==========
   toggleCommonMode(): void {
-    if (this.showMode === 'common') {
-      this.showMode = 'all';
-      console.log('📄 切換到全部模式（包含已勾選項目）');
-    } else {
-      this.showMode = 'common';
-      console.log('📄 切換到常用模式（包含已勾選項目）');
-    }
-    this.filterData();
-  }
+    // 顯示載入提示
+    this.loading = true;
 
-  getDisplayModeText(): string {
-    return this.showMode === 'common' ? '顯示全部項目' : '顯示常用項目';
+    // 延遲執行，讓載入提示先顯示
+    setTimeout(() => {
+      if (this.showMode === 'common') {
+        this.showMode = 'all';
+      } else {
+        this.showMode = 'common';
+      }
+
+      this.filterData();
+      this.loading = false;
+      this.messageService.unblockUi();
+    }, 500); // 稍微加長延遲時間
   }
 
   getCurrentDisplayMode(): string {
@@ -1284,86 +1274,49 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
         _isCopiedItem: true
       };
 
-      // 特殊處理 tpy_type 欄位
+      // 清空大部分數值欄位
+      const fieldsToReset = [
+        'tpy_unitamt', 'tpy_qty', 'tpy_amount', 'tpy_totalamt',
+        'down_payment', 'period_nos', 'tpy_rate'
+      ];
+
+      fieldsToReset.forEach(field => {
+        if (field === 'tpy_qty') {
+          copiedItem[field] = 1;
+        } else {
+          copiedItem[field] = null;
+        }
+      });
+
+      // 🎯 新的日期處理邏輯
+      this.handleCopiedItemDates(copiedItem, originalItem);
+
+      // 其他欄位處理...
       if (originalItem.tpy_type) {
-        // 確保複製的 tpy_type 值有效
         const tpyTypeOptions = TLS13010_DROPDOWN_OPTIONS.tpyTypeOption || [];
         const isValidOption = tpyTypeOptions.some(option => option.value === originalItem.tpy_type);
-
-        if (isValidOption) {
-          copiedItem.tpy_type = originalItem.tpy_type;
-          console.log(`tpy_type 複製成功: ${originalItem.tpy_type}`);
-        } else {
-          // 如果原值無效，設定為第一個可用選項或預設值
-          copiedItem.tpy_type = tpyTypeOptions.length > 0 ? tpyTypeOptions[0].value : null;
-          console.warn(`原 tpy_type 值無效，設定為預設值: ${copiedItem.tpy_type}`);
-        }
-      } else {
-        // 如果原項目沒有 tpy_type，設定預設值
-        const tpyTypeOptions = TLS13010_DROPDOWN_OPTIONS.tpyTypeOption || [];
-        copiedItem.tpy_type = tpyTypeOptions.length > 0 ? tpyTypeOptions[0].value : null;
-        console.log(`設定預設 tpy_type: ${copiedItem.tpy_type}`);
+        copiedItem.tpy_type = isValidOption ? originalItem.tpy_type :
+          (tpyTypeOptions.length > 0 ? tpyTypeOptions[0].value : null);
       }
 
-      // 日期複製：只複製合理的日期，異常日期設為 null
-      ['tpy_bdate', 'tpy_edate'].forEach(dateField => {
-        if (originalItem[dateField]) {
-          if (originalItem[dateField] instanceof Date) {
-            if (this.isValidDateRange(originalItem[dateField])) {
-              copiedItem[dateField] = new Date(originalItem[dateField]);
-              console.log(`${dateField} 日期複製成功`);
-            } else {
-              copiedItem[dateField] = null;
-              console.warn(`${dateField} 日期異常，設為 null`);
-            }
-          } else {
-            // 非 Date 物件直接保持原值，讓顯示邏輯處理
-            copiedItem[dateField] = originalItem[dateField];
-            console.log(`${dateField} 保持原始格式`);
-          }
-        }
-      });
-
-      // 確保必要的數值欄位有預設值
-      const numericFields = ['tpy_unitamt', 'tpy_qty', 'tpy_amount'];
-      numericFields.forEach(field => {
-        if (!copiedItem[field] || copiedItem[field] === null || isNaN(parseFloat(copiedItem[field]))) {
-          if (field === 'tpy_qty') {
-            copiedItem[field] = 1; // 數量預設為 1
-          } else {
-            copiedItem[field] = 0; // 其他數值欄位預設為 0
-          }
-          console.log(`設定 ${field} 預設值: ${copiedItem[field]}`);
-        }
-      });
-
-      // 確保組織欄位有預設值
+      // 組織和發票狀態預設值
       if (!copiedItem.org_id && this.orgOptions.length > 0) {
         copiedItem.org_id = this.orgOptions[0].value;
-        console.log(`設定預設組織: ${copiedItem.org_id}`);
       }
-
-      // 確保發票欄位有預設值
       if (!copiedItem.gui_flag) {
         copiedItem.gui_flag = 'Y';
-        console.log(`設定預設發票狀態: Y`);
       }
 
       // 清理不需要的屬性
       delete copiedItem._skipAutoCalc;
       delete copiedItem._dateInitialized;
 
-      // 找到原始項目的位置，插入到下一個位置
+      // 插入到原始項目的下一個位置
       const originalIndex = this.originalFareData[capType].findIndex(item => item.id === originalItem.id);
-
       if (originalIndex !== -1) {
-        // 插入到原始項目的下一個位置
         this.originalFareData[capType].splice(originalIndex + 1, 0, copiedItem);
-        console.log(`已將複製項目插入到索引 ${originalIndex + 1}`);
       } else {
-        // 如果找不到原始項目，就加到最後面（備用方案）
         this.originalFareData[capType].push(copiedItem);
-        console.warn(`找不到原始項目，加到最後面`);
       }
 
       this.filterData();
@@ -1372,37 +1325,82 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
       this.messageService.successBubble(`已成功複製扣款項目「${originalItem.cap_name}」`);
       this.cdr.detectChanges();
 
-      console.log(`複製完成: ${originalItem.cap_item} → ${newId}`, copiedItem);
-
-      console.log('複製後的項目詳細資訊：', {
-        id: copiedItem.id,
-        is_selected: copiedItem.is_selected,
-        _status: copiedItem._status,
-        _editing: (copiedItem as any)._editing,
-        _isEditing: (copiedItem as any)._isEditing,
-        editing: (copiedItem as any).editing,
-        _isNewRow: (copiedItem as any)._isNewRow
-      });
-
     } catch (error) {
       console.error('複製扣款項目時發生錯誤:', error);
       this.messageService.warnBubble('複製扣款項目失敗，請重試');
     }
   }
 
-  private isValidDateRange(date: Date): boolean {
+  // 🎯 新增專門處理複製項目日期的方法
+  // 修正後的處理複製項目日期方法
+  private handleCopiedItemDates(copiedItem: any, originalItem: any): void {
+    try {
+      // 取得合約資訊
+      const contractInfo = this.contractInfoData[0];
+
+      // 結束日期：永遠設定為合約終止日
+      if (contractInfo?.tlt_edate) {
+        const contractEndDate = new Date(contractInfo.tlt_edate);
+
+        if (!isNaN(contractEndDate.getTime())) {
+          copiedItem.tpy_edate = contractEndDate;
+          console.log(`複製項目結束日期：合約終止日 ${this.formatDateForLog(contractEndDate)}`);
+        } else {
+          copiedItem.tpy_edate = null;
+          console.warn('合約終止日期無效');
+        }
+      } else {
+        copiedItem.tpy_edate = null;
+        console.warn('沒有合約終止日期');
+      }
+
+      // 處理起始日期：原項目結束日期的下個月，但要檢查是否超過合約終止日
+      if (originalItem.tpy_edate && copiedItem.tpy_edate) {
+        const originalEndDate = new Date(originalItem.tpy_edate);
+        const contractEndDate = new Date(copiedItem.tpy_edate);
+
+        if (!isNaN(originalEndDate.getTime())) {
+          // 計算下個月
+          const nextMonth = new Date(originalEndDate);
+          nextMonth.setMonth(nextMonth.getMonth() + 1);
+
+          // 檢查起始日期是否超過合約終止日
+          if (nextMonth > contractEndDate) {
+            console.warn(`複製項目起始日期 ${this.formatDateForLog(nextMonth)} 已超過合約終止日 ${this.formatDateForLog(contractEndDate)}，清空起始日期`);
+
+            copiedItem.tpy_bdate = null;
+
+            // 給用戶提示
+            this.messageService.warnBubble('複製項目的起始日期會超過合約終止日，已清空起始日期，請手動設定');
+          } else {
+            copiedItem.tpy_bdate = nextMonth;
+            console.log(`複製項目起始日期：${this.formatDateForLog(originalEndDate)} -> ${this.formatDateForLog(nextMonth)}`);
+          }
+        } else {
+          copiedItem.tpy_bdate = null;
+          console.warn('原項目結束日期無效，複製項目起始日期設為 null');
+        }
+      } else {
+        copiedItem.tpy_bdate = null;
+        console.warn('原項目沒有結束日期或合約終止日期，複製項目起始日期設為 null');
+      }
+
+    } catch (error) {
+      console.error('處理複製項目日期時發生錯誤:', error);
+      copiedItem.tpy_bdate = null;
+      // tpy_edate 保持已設定的合約終止日，不清空
+    }
+  }
+
+  // 輔助方法：格式化日期用於 log
+  private formatDateForLog(date: Date): string {
     if (!date || isNaN(date.getTime())) {
-      return false;
+      return 'Invalid Date';
     }
 
     const year = date.getFullYear();
-    const isReasonable = year >= 1900 && year <= 2100;
-
-    if (!isReasonable) {
-      console.warn(`⚠️ 日期年份超出合理範圍: ${year}`);
-    }
-
-    return isReasonable;
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    return `${year}/${month}`;
   }
 
   /**

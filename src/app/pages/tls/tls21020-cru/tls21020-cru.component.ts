@@ -1,19 +1,20 @@
-import { Component, OnInit } from '@angular/core';
-import { FormArray, FormBuilder, FormControl, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-import { AuthService } from '../../../service/system/auth.service';
-import { TranslateService, TranslateModule } from '@ngx-translate/core';
-import { BasicCrupageComponent } from '../../../shared/componentextends/basic-crupage/basic-crupage.component';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { PanelModule } from 'primeng/panel';
 import { NgFor, NgIf } from '@angular/common';
-import { ButtonDynamicallydeleteComponent } from '../../../shared/componentkit/button-dynamicallydelete/button-dynamicallydelete.component';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { ButtonDynamicallyaddComponent } from '../../../shared/componentkit/button-dynamicallyadd/button-dynamicallyadd.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { Component, OnInit } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { FormArray, FormControl, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { TranslateModule, TranslateService } from '@ngx-translate/core';
+import { TLS21020Service } from '@service/api/tls/tls21020.service';
+import { MenubarComponent } from '@shared/component/menubar/menubar.component';
+import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
+import { ButtonDynamicallyaddComponent } from '@shared/componentkit/button-dynamicallyadd/button-dynamicallyadd.component';
+import { ButtonDynamicallydeleteComponent } from '@shared/componentkit/button-dynamicallydelete/button-dynamicallydelete.component';
+import { ButtonComponent } from '@shared/componentkit/button/button.component';
+import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
+import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
+import { Column } from '@shared/componentkit/table/table.model';
+import { CRUDStatus } from '@shared/models/system/CRUDstatus';
+import { NGXLogger } from 'ngx-logger';
+import { PanelModule } from 'primeng/panel';
 
 @Component({
   selector: 'app-tls21020-cru',
@@ -21,92 +22,73 @@ import { ButtonComponent } from '../../../shared/componentkit/button/button.comp
   styleUrls: ['./tls21020-cru.component.scss'],
   standalone: true,
   imports: [
-    MenubarComponent,
-    PanelModule,
-    FormsModule,
-    ReactiveFormsModule,
     NgFor,
-    ButtonDynamicallydeleteComponent,
-    InputTextComponent,
-    DropdownComponent,
-    ButtonDynamicallyaddComponent,
-    ButtonComponent,
     NgIf,
+    FormsModule,
+    PanelModule,
+    ReactiveFormsModule,
     TranslateModule,
+    ButtonComponent,
+    ButtonDynamicallyaddComponent,
+    ButtonDynamicallydeleteComponent,
+    DropdownComponent,
+    InputTextComponent,
+    MenubarComponent,
   ],
 })
-export class TLS21020CRUComponent extends BasicCrupageComponent implements OnInit {
-  CashRegisterTypeItems: any[] = [
-    { label: '業主', value: '1' },
-    { label: '非業主', value: '2' },
-  ];
-
-  receivableVendorItems: any[] = [
-    { label: '南紡流通服務台', value: 'A' },
-    { label: '南紡流通-特殊交易', value: 'B' },
-  ];
-
-  organizationCodeItems: any[] = [
-    { label: '全公司', value: '1' },
-    { label: '稽核室', value: '2' },
-  ];
-
-  accountingSubjectItems: any[] = [
-    { label: '應收帳款-現金', value: '1' },
-    { label: '應收帳款-一卡通', value: '2' },
-  ];
-
-  // Form Initialization
-  dataForm = this.formBuilder.nonNullable.group({
-    name: ['', [Validators.required, Validators.minLength(5), Validators.maxLength(10)]],
-    age: [],
-    email: ['', [Validators.maxLength(50), Validators.required]],
-    items: this.formBuilder.array([this.createItem()]), // Initialize with one item
+export class TLS21020CRUComponent extends BasicCruPageComponent<unknown> implements OnInit {
+  public dataForm = this.formBuilder.nonNullable.group({
+    items: this.formBuilder.array([this.createItem()]),
   });
+  public readonly df = toSignal(this.dataForm.valueChanges);
+
+  public SDcolumn: Column[] = [
+    { field: 'AccDC', header: '借/貸' },
+    { field: 'ItemDesc', header: '項目名稱' },
+    { field: 'AccNo_Name', header: '會計科目' },
+    { field: 'Org_ID', header: '組織代碼' },
+    { field: 'AccNotes', header: '傳票備註' },
+    { field: 'ObjectNo', header: '是否依合約拆立組織' },
+    { field: 'RelatedPartyAccNo_Name', header: '區分關係人會科' },
+    { field: 'VEN_No', header: '應收廠商' },
+    { field: 'PAY_days', header: '付款天數' },
+  ];
+
+  // CashRegisterTypeItems: any[] = [
+  //   { label: '業主', value: '1' },
+  //   { label: '非業主', value: '2' },
+  // ];
+
+  // receivableVendorItems: any[] = [
+  //   { label: '南紡流通服務台', value: 'A' },
+  //   { label: '南紡流通-特殊交易', value: 'B' },
+  // ];
+
+  // organizationCodeItems: any[] = [
+  //   { label: '全公司', value: '1' },
+  //   { label: '稽核室', value: '2' },
+  // ];
+
+  // accountingSubjectItems: any[] = [
+  //   { label: '應收帳款-現金', value: '1' },
+  //   { label: '應收帳款-一卡通', value: '2' },
+  // ];
 
   constructor(
-    private router: Router,
-    private formBuilder: FormBuilder,
-    private messageService: NotificationService,
-    private authService: AuthService,
-    private translate: TranslateService,
+    public readonly service: TLS21020Service,
+    private readonly logger: NGXLogger,
   ) {
-    super(); // Call the parent constructor
+    super();
   }
 
   ngOnInit(): void {
-    // Initialize
-    this.ProgNo = '220002';
+    this.initializePage('TLS21020', this.dataForm);
 
-    // Set user permissions
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
+    this.service.queryTLS21020_GLS1005({ AccDC: 'D' });
+    this.service.getOrgIDs();
+    this.service.getGLS1005s();
 
-    const state = this.router.lastSuccessfulNavigation?.extras.state as {
-      crudstatus: CRUDStatus;
-      rowdata: any;
-    };
-
-    // Determine the CRUD status and set form title and CSS class accordingly
-    switch (state.crudstatus) {
-      case CRUDStatus.Create:
-        this.formTitle = 'create-conditions';
-        this.accordionTabCss = 'create-accordionTab';
-        this.crudstatus = CRUDStatus.Create;
-        this.showConfirm = this.canAdd();
-        break;
-      case CRUDStatus.Edit:
-        this.formTitle = 'edit-conditions';
-        this.accordionTabCss = 'edit-accordionTab';
-        this.crudstatus = CRUDStatus.Edit;
-        this.showConfirm = this.canEdit();
-        this.Edit(state.rowdata);
-        break;
-      case CRUDStatus.Read:
-        this.formTitle = 'display-conditions';
-        this.crudstatus = CRUDStatus.Read;
-        this.Read(state.rowdata);
-        break;
-    }
+    this.logger.debug(`init:`, [this.rowdata]);
   }
 
   // Get FormArray for items
@@ -122,14 +104,24 @@ export class TLS21020CRUComponent extends BasicCrupageComponent implements OnIni
   // Create new form group for item
   createItem(): FormGroup {
     return this.formBuilder.group({
-      itemName: [], // 項目名稱
-      accountingSubject: [], // 會計科目
-      organizationCode: [], // 組織代碼
-      voucherRemarks: ['', Validators.maxLength(100)], // 傳票備註
-      contractOrganizationSplit: [], // 是否依合約拆立組織
-      relatedPartyAccounting: [], // 區分關係人會科
-      receivableVendor: [], // 應收廠商
-      paymentDays: ['', [Validators.pattern('^[0-9]*$')]], // 付款天數
+      AccDC: new FormControl<string | undefined>(void 0, [Validators.required]),
+      ItemDesc: new FormControl<string | undefined>(void 0),
+      AccNo_Name: new FormControl<string | undefined>(void 0),
+      Org_ID: new FormControl<string | undefined>(void 0),
+      AccNotes: new FormControl<string | undefined>(void 0),
+      ObjectNo: new FormControl<string | undefined>(void 0),
+      RelatedPartyAccNo_Name: new FormControl<string | undefined>(void 0),
+      VEN_No: new FormControl<string | undefined>(void 0),
+      PAY_days: new FormControl<string | undefined>(void 0, [Validators.pattern('^[0-9]*$')]),
+
+      // itemName: [], // 項目名稱
+      // accountingSubject: [], // 會計科目
+      // organizationCode: [], // 組織代碼
+      // voucherRemarks: ['', Validators.maxLength(100)], // 傳票備註
+      // contractOrganizationSplit: [], // 是否依合約拆立組織
+      // relatedPartyAccounting: [], // 區分關係人會科
+      // receivableVendor: [], // 應收廠商
+      // paymentDays: ['', [Validators.pattern('^[0-9]*$')]], // 付款天數
     });
   }
 
@@ -155,42 +147,43 @@ export class TLS21020CRUComponent extends BasicCrupageComponent implements OnIni
   }
 
   // Submit the form
-  onSubmit(frm: FormGroup): void {
-    this.messageService.blockUi();
-    this.submitted = true;
+  onSubmit(): void {
+    this.handleSubmit(this.dataForm, () => {
 
-    if (this.dataForm.invalid) {
-      this.messageService.errorBubble(this.translate.instant('form_error_message'));
-      this.messageService.unblockUi();
-      return;
-    }
+      // this.messageService.blockUi();
+      // this.submitted = true;
 
-    switch (this.crudstatus) {
-      case CRUDStatus.Create:
-        if (this.canAdd()) {
-          // Implement add logic here
-          this.messageService.successBubble(this.translate.instant('success_message'));
-        }
-        break;
-      case CRUDStatus.Edit:
-        if (this.canEdit()) {
-          // Implement update logic here
-          this.messageService.successBubble(this.translate.instant('updated-successfully'));
-        }
-        break;
-    }
+      // if (this.dataForm.invalid) {
+      //   this.messageService.errorBubble(this.translate.instant('form_invalid'));
+      //   this.messageService.unblockUi();
+      //   return;
+      // }
 
-    this.messageService.unblockUi();
-    this.submitted = false;
+      // switch (this.crudstatus) {
+      //   case CRUDStatus.Create:
+      //     if (this.canAdd()) {
+      //       // Implement add logic here
+      //       this.messageService.successBubble(this.translate.instant('success_message'));
+      //     }
+      //     break;
+      //   case CRUDStatus.Edit:
+      //     if (this.canEdit()) {
+      //       // Implement update logic here
+      //       this.messageService.successBubble(this.translate.instant('updated-successfully'));
+      //     }
+      //     break;
+      // }
+
+      // this.messageService.unblockUi();
+      // this.submitted = false;
+
+      this.submitted = !1;
+      this.loading = !1;
+    });
   }
 
   // Submit the form on button click
-  submitForm(frm: FormGroup): void {
-    this.onSubmit(frm);
-  }
-
-  // Cancel and navigate back to listing
-  onCancel(): void {
-    this.router.navigate(['TLS2000/TLS21020']);
+  submitForm(): void {
+    this.onSubmit();
   }
 }

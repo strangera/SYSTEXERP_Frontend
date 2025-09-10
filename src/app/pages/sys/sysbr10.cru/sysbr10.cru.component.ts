@@ -59,6 +59,8 @@ export class SYSBR10CRUComponent
   showRowEdit = true;
   showDelete = true;
   showCheckBox = true;
+  showEdit= true;
+  showManage= true;
 
   // —— 其他 UI 與選項 —— 
   minDateToday: Date = new Date();
@@ -221,11 +223,17 @@ export class SYSBR10CRUComponent
       this.showRowEdit = false;
       this.showDelete = false;
       this.showCheckBox = false;
+      this.showEdit = false;
+      this.showManage = false;
+       
+      
     } else {
       this.showInsert = true;
       this.showRowEdit = true;
       this.showDelete = true;
       this.showCheckBox = true;
+      this.showEdit = true;
+      this.showManage = true;
     }
   }
 
@@ -233,6 +241,7 @@ export class SYSBR10CRUComponent
   onSubmit(form: FormGroup): void {
     this.handleSubmit(form, () => {
       const value = form.getRawValue();
+   
 
       const masterId =
         this.crudstatus === CRUDStatus.Edit ? this.rowdata?.id ?? 0 : 0;
@@ -262,60 +271,65 @@ export class SYSBR10CRUComponent
       };
 
       // —— 編輯流程：主檔更新（不含 pub_enable），再呼叫 Eable API —— 
-      if (this.crudstatus === CRUDStatus.Edit && this.canEdit()) {
-        const updatePayload = { id: masterId, ...basePayload };
+// —— 編輯流程：主檔更新（不含 pub_enable），再呼叫 Enable API —— 
+if (this.crudstatus === CRUDStatus.Edit && this.canEdit()) {
+  const updatePayload = { id: masterId, ...basePayload };
 
-        this.loading = true;
-        this.messageService?.blockUi?.();
+  this.loading = true;
+  this.messageService?.blockUi?.();
 
-        this.sysbr10Service.updateSYSBR10(updatePayload).subscribe({
+  this.sysbr10Service.updateSYSBR10(updatePayload).subscribe({
+    next: () => {
+      this.sysbr10Service
+        .updateSYSBR10_PubEable({ id: masterId, pub_enable: desiredEnable })
+        .subscribe({
           next: () => {
-            this.sysbr10Service
-              .updateSYSBR10_PubEable({ id: masterId, pub_enable: desiredEnable })
-              .subscribe({
-                next: () => {
-                  this.loading = false;
-                  this.messageService?.unblockUi?.();
-                  this.messageService?.successBubble?.('更新成功（含啟用狀態）');
-                  this.onCancel();
-                },
-                error: () => {
-                  this.loading = false;
-                  this.messageService?.unblockUi?.();
+            this.loading = false;
+            this.messageService?.unblockUi?.();
+            this.messageService?.successBubble?.('更新成功（含啟用狀態）');
 
-                },
-              });
+            // ★ 清空 table
+            this.detailList = [];
+
+            this.onCancel();
           },
           error: () => {
             this.loading = false;
             this.messageService?.unblockUi?.();
-            
           },
         });
-        return;
-      }
+    },
+    error: () => {
+      this.loading = false;
+      this.messageService?.unblockUi?.();
+    },
+  });
+  return;
+}
 
-      // —— 新增流程：payload 需 **包含 pub_enable** —— 
-      if (this.crudstatus === CRUDStatus.Create && this.canAdd()) {
-        const insertPayload = { ...basePayload, pub_enable: desiredEnable };
+// —— 新增流程：payload 需 **包含 pub_enable** —— 
+if (this.crudstatus === CRUDStatus.Create && this.canAdd()) {
+  const insertPayload = { ...basePayload, pub_enable: desiredEnable };
 
-        this.loading = true;
-        this.messageService?.blockUi?.();
+  this.loading = true;
+  this.messageService?.blockUi?.();
 
-        this.sysbr10Service.insertSYSBR10(insertPayload).subscribe({
-          next: () => {
-            this.loading = false;
-            this.messageService?.unblockUi?.();
-            this.messageService?.successBubble?.('新增成功');
-            this.dataForm.reset();
-          },
-          error: () => {
-            this.loading = false;
-            this.messageService?.unblockUi?.();
-            
-          },
-        });
-      }
+  this.sysbr10Service.insertSYSBR10(insertPayload).subscribe({
+    next: () => {
+      this.loading = false;
+      this.messageService?.unblockUi?.();
+      this.messageService?.successBubble?.('新增成功');
+
+      // ★ 清空表單與 table
+      this.dataForm.reset();
+      this.detailList = [];
+    },
+    error: () => {
+      this.loading = false;
+      this.messageService?.unblockUi?.();
+    },
+  });
+}
     });
   }
 

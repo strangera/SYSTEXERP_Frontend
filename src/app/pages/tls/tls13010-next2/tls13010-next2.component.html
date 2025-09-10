@@ -50,10 +50,11 @@
               }" [emptyMessage]="'尚未設定抽成項目，請點擊新增按鈕開始設定'" (detailTabChange)="onDetailTabChange($event)"
               (edit)="onItemEdit($event)" (save)="onItemSave($event)" (cancel)="onItemCancel($event)"
               (detailEdit)="onDetailEdit($event)" (detailSave)="onDetailSave($event)"
-              (detailCancel)="onDetailCancel($event)" (batchDelete)="onBatchDelete($event)"
-              (detailBatchDelete)="onDetailBatchDelete($event)" (addMainItem)="onAddCommissionItem()"
-              (addDetailItem)="onAddDetailItem($event)"
-              (dropdownChange)="onDropdownChange($event)"></app-expandable-edit-table>
+              (beforeSave)="onBeforeDetailSave($event)" (detailCancel)="onDetailCancel($event)"
+              (batchDelete)="onBatchDelete($event)" (detailBatchDelete)="onDetailBatchDelete($event)"
+              (addMainItem)="onAddCommissionItem()" (addDetailItem)="onAddDetailItem($event)"
+              (dropdownChange)="onDropdownChange($event)"
+              (detailButtonClick)="onDetailButtonClick($event)"></app-expandable-edit-table>
           </div>
 
           <!-- 🎯 保留：資料載入中的提示 -->

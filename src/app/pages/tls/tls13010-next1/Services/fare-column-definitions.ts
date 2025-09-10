@@ -105,27 +105,28 @@ export class FareColumnDefinitions {
     return [
       {
         field: 'is_selected',
-        header: '新增',
+        header: '是否新增',
         type: 'checkbox',
         editable: true,
         autoWidth: true,
-        directEdit: true,
-        autoEditOnSelect: true,      // ✅ 勾選扣款項目 → 進入編輯模式設定單價、數量
-        autoSaveOnUnselect: true,     // ✅ 取消勾選 → 自動儲存並退出編輯
+        // autoEditOnSelect: true,
+        // autoSaveOnUnselect: true,
       },
       {
         field: 'cap_item',
         header: '扣款代號',
         type: 'text',
         editable: false,
-        width: '20px'
+        width: '20px',
+
       },
       {
         field: 'cap_name',
         header: '扣款名稱',
         type: 'text',
         editable: false,
-        autoWidth: true
+        autoWidth: true,
+
       },
       {
         field: 'tpy_bdate',
@@ -135,7 +136,11 @@ export class FareColumnDefinitions {
         width: '130px',
         dateFormat: 'year-month',
         required: true,
+
         defaultValueFunction: () => {
+          if ((this as any)?._isCopiedItem) {
+            return null; // 保持現有值
+          }
           const contractInfo = contractInfoData[0];
           if (contractInfo?.tlt_contract_bdate) {
             return new Date(contractInfo.tlt_contract_bdate);
@@ -151,6 +156,7 @@ export class FareColumnDefinitions {
         width: '20px',
         options: TLS13010_DROPDOWN_OPTIONS.tpyTypeOption,
         required: true,
+
       },
       {
         field: 'tpy_unitamt',
@@ -159,6 +165,7 @@ export class FareColumnDefinitions {
         editable: true,
         width: '90px',
         required: true,
+
         validators: [TableValidators.positive('單價必須大於0')]
       },
       {
@@ -170,6 +177,7 @@ export class FareColumnDefinitions {
         required: true,
         validators: [TableValidators.positive('數量必須大於0')],
         defaultValue: 1,
+
         allowDecimal: true, // 是否允許小數點
         decimalPlaces: 3  // 小數位數，預設2位
       },
@@ -180,6 +188,7 @@ export class FareColumnDefinitions {
         editable: false,
         autoWidth: true,
         required: true,
+
       },
       {
         field: 'org_id',
@@ -189,6 +198,7 @@ export class FareColumnDefinitions {
         width: '90px',
         options: [], // 需要動態設定
         required: true,
+
       },
       {
         field: 'gui_flag',
@@ -201,7 +211,8 @@ export class FareColumnDefinitions {
           { label: '未開立', value: 'N' }
         ],
         required: true,
-        defaultValue: 'Y'
+        defaultValue: 'Y',
+
       }
     ];
   }
@@ -213,13 +224,13 @@ export class FareColumnDefinitions {
     return [
       {
         field: 'is_selected',
-        header: '新增',
+        header: '是否新增',
         type: 'checkbox',
         editable: true,
         width: '5px',
-        directEdit: true,
-        autoEditOnSelect: true,      // ✅ 勾選扣款項目 → 進入編輯模式設定單價、數量
-        autoSaveOnUnselect: true,     // ✅ 取消勾選 → 自動儲存並退出編輯
+
+        // autoEditOnSelect: true,
+        // autoSaveOnUnselect: true,
       },
       {
         field: 'copy_button',
@@ -230,14 +241,14 @@ export class FareColumnDefinitions {
         buttonIcon: 'pi pi-copy',
         buttonClass: 'p-button-sm p-button-secondary',
         buttonTooltip: '複製此扣款項目',
-        directEdit: true,
+
       },
       {
         field: 'cap_item',
         header: '扣款代號',
         type: 'text',
         editable: false,
-        width: '20px'
+        width: '20px',
       },
       {
         field: 'cap_name',
@@ -256,6 +267,7 @@ export class FareColumnDefinitions {
         dateFormat: 'year-month',
         width: '130px',
         required: true,
+
         defaultValueFunction: () => {
           if ((this as any)?._isCopiedItem) {
             return null; // 保持現有值
@@ -275,6 +287,7 @@ export class FareColumnDefinitions {
         width: '130px',
         dateFormat: 'year-month',
         required: true,
+
         defaultValueFunction: () => {
           if ((this as any)?._isCopiedItem) {
             return null; // 保持現有值
@@ -294,7 +307,8 @@ export class FareColumnDefinitions {
         width: '20px',
         options: TLS13010_DROPDOWN_OPTIONS.tpyTypeOption,
         autoWidth: true,
-        required: true
+        required: true,
+
       },
       {
         field: 'tpy_unitamt',
@@ -304,7 +318,8 @@ export class FareColumnDefinitions {
         width: '90px',
         required: true,
         validators: [TableValidators.positive('單價必須大於0')],
-        defaultValue: 0
+        defaultValue: 0,
+
       },
       {
         field: 'tpy_qty',
@@ -315,7 +330,8 @@ export class FareColumnDefinitions {
         width: '70px',
         required: true,
         validators: [TableValidators.positive('數量必須大於0')],
-        defaultValue: 1
+        defaultValue: 1,
+
       },
       {
         field: 'tpy_amount',
@@ -323,7 +339,8 @@ export class FareColumnDefinitions {
         type: 'number',
         editable: false,
         width: '20px',
-        defaultValue: 0
+        defaultValue: 0,
+
       },
       {
         field: 'gui_flag',
@@ -336,7 +353,8 @@ export class FareColumnDefinitions {
           { label: '未開立', value: 'N' }
         ],
         required: true,
-        defaultValue: 'Y'
+        defaultValue: 'Y',
+
       },
       {
         field: 'day_account',
@@ -349,7 +367,8 @@ export class FareColumnDefinitions {
           { label: '否', value: 'N' }
         ],
         required: true,
-        defaultValue: 'Y'
+        defaultValue: 'Y',
+
       },
       {
         field: 'interval',
@@ -358,7 +377,8 @@ export class FareColumnDefinitions {
         editable: true,
         width: '30px',
         required: true,
-        defaultValue: 1
+        defaultValue: 1,
+
       }
     ];
   }
@@ -370,13 +390,13 @@ export class FareColumnDefinitions {
     return [
       {
         field: 'is_selected',
-        header: '新增',
+        header: '是否新增',
         type: 'checkbox',
         editable: true,
         width: '5px',
-        directEdit: true,
-        autoEditOnSelect: true,      // ✅ 勾選扣款項目 → 進入編輯模式設定單價、數量
-        autoSaveOnUnselect: true,     // ✅ 取消勾選 → 自動儲存並退出編輯
+
+        // autoEditOnSelect: true,
+        // autoSaveOnUnselect: true,
       },
       {
         field: 'copy_button',
@@ -387,7 +407,7 @@ export class FareColumnDefinitions {
         buttonIcon: 'pi pi-copy',
         buttonClass: 'p-button-sm p-button-secondary',
         buttonTooltip: '複製此扣款項目',
-        directEdit: true,
+
       },
       {
         field: 'auto_calc',
@@ -398,14 +418,15 @@ export class FareColumnDefinitions {
         buttonIcon: 'pi pi-calculator',
         buttonClass: 'p-button-sm p-button-info',
         buttonTooltip: '根據總金額自動計算',
-        directEdit: true,
+
       },
       {
         field: 'cap_item',
         header: '扣款代號',
         type: 'text',
         editable: false,
-        width: '20px'
+        width: '20px',
+
       },
       {
         field: 'cap_name',
@@ -413,7 +434,8 @@ export class FareColumnDefinitions {
         type: 'text',
         editable: false,
         autoWidth: true,
-        flex: 2
+        flex: 2,
+
       },
       {
         field: 'tpy_bdate',
@@ -423,6 +445,7 @@ export class FareColumnDefinitions {
         width: '130px',
         dateFormat: 'year-month',
         required: true,
+
         defaultValueFunction: () => {
           const contractInfo = contractInfoData[0];
           if (contractInfo?.tlt_contract_bdate) {
@@ -439,6 +462,7 @@ export class FareColumnDefinitions {
         width: '130px',
         dateFormat: 'year-month',
         required: true,
+
         defaultValueFunction: () => {
           const contractInfo = contractInfoData[0];
           if (contractInfo?.tlt_contract_edate) {
@@ -454,6 +478,7 @@ export class FareColumnDefinitions {
         editable: true,
         autoWidth: true,
         required: true,
+
       },
       {
         field: 'period_nos',
@@ -513,6 +538,7 @@ export class FareColumnDefinitions {
         editable: true,
         autoWidth: true,
         required: true,
+
       },
       {
         field: 'down_payment',
@@ -530,6 +556,7 @@ export class FareColumnDefinitions {
         width: '90px',
         options: [], // 需要動態設定
         required: true,
+
       },
       {
         field: 'gui_flag',
@@ -542,7 +569,8 @@ export class FareColumnDefinitions {
           { label: '未開立', value: 'N' }
         ],
         required: true,
-        defaultValue: 'Y'
+        defaultValue: 'Y',
+
       }
     ];
   }
@@ -554,13 +582,13 @@ export class FareColumnDefinitions {
     return [
       {
         field: 'is_selected',
-        header: '新增',
+        header: '是否新增',
         type: 'checkbox',
         editable: true,
         width: '5px',
-        directEdit: true,
-        autoEditOnSelect: true,      // ✅ 勾選扣款項目 → 進入編輯模式設定單價、數量
-        autoSaveOnUnselect: true,     // ✅ 取消勾選 → 自動儲存並退出編輯
+
+        // autoEditOnSelect: true,
+        // autoSaveOnUnselect: true,
       },
       {
         field: 'copy_button',
@@ -571,7 +599,7 @@ export class FareColumnDefinitions {
         buttonIcon: 'pi pi-copy',
         buttonClass: 'p-button-sm p-button-secondary',
         buttonTooltip: '複製此扣款項目',
-        directEdit: true,
+
       },
       {
         field: 'cap_item',
@@ -586,7 +614,8 @@ export class FareColumnDefinitions {
         type: 'text',
         editable: false,
         autoWidth: true,
-        flex: 2
+        flex: 2,
+
       },
       {
         field: 'tpy_bdate',
@@ -597,6 +626,7 @@ export class FareColumnDefinitions {
         width: '120px',
         dateFormat: 'year-month',
         required: true,
+
         defaultValueFunction: () => {
           const contractInfo = contractInfoData[0];
           if (contractInfo?.tlt_contract_bdate) {
@@ -613,6 +643,7 @@ export class FareColumnDefinitions {
         width: '120px',
         dateFormat: 'year-month',
         required: true,
+
         defaultValueFunction: () => {
           const contractInfo = contractInfoData[0];
           if (contractInfo?.tlt_contract_edate) {
@@ -630,6 +661,7 @@ export class FareColumnDefinitions {
         options: TLS13010_DROPDOWN_OPTIONS.tpyTypeOption,
         autoWidth: true,
         required: true,
+
       },
       {
         field: 'tpy_rate',
@@ -639,7 +671,8 @@ export class FareColumnDefinitions {
         width: '100px',
         required: true,
         allowDecimal: true,  // 是否允許小數點
-        decimalPlaces: 3  // 小數位數，預設2位
+        decimalPlaces: 3,
+
 
       },
       {
@@ -650,6 +683,7 @@ export class FareColumnDefinitions {
         width: '90px',
         options: [], // 需要動態設定
         required: true,
+
       },
       {
         field: 'gui_flag',
@@ -662,7 +696,8 @@ export class FareColumnDefinitions {
           { label: '未開立', value: 'N' }
         ],
         required: true,
-        defaultValue: 'Y'
+        defaultValue: 'Y',
+
       }
     ];
   }
@@ -674,13 +709,13 @@ export class FareColumnDefinitions {
     return [
       {
         field: 'is_selected',
-        header: '新增',
+        header: '是否新增',
         type: 'checkbox',
         editable: true,
         width: '5px',
-        directEdit: true,
-        autoEditOnSelect: true,      // ✅ 勾選扣款項目 → 進入編輯模式設定單價、數量
-        autoSaveOnUnselect: true,     // ✅ 取消勾選 → 自動儲存並退出編輯
+
+        // autoEditOnSelect: true,
+        // autoSaveOnUnselect: true,
       },
       {
         field: 'copy_button',
@@ -691,7 +726,7 @@ export class FareColumnDefinitions {
         buttonIcon: 'pi pi-copy',
         buttonClass: 'p-button-sm p-button-secondary',
         buttonTooltip: '複製此扣款項目',
-        directEdit: true,
+
       },
       {
         field: 'cap_item',
@@ -716,6 +751,7 @@ export class FareColumnDefinitions {
         width: '110px',
         dateFormat: 'year-month',
         required: true,
+
         defaultValueFunction: () => {
           const contractInfo = contractInfoData[0];
           if (contractInfo?.tlt_contract_bdate) {
@@ -732,6 +768,7 @@ export class FareColumnDefinitions {
         width: '110px',
         dateFormat: 'year-month',
         required: true,
+
         defaultValueFunction: () => {
           const contractInfo = contractInfoData[0];
           if (contractInfo?.tlt_contract_edate) {
@@ -749,6 +786,7 @@ export class FareColumnDefinitions {
         options: TLS13010_DROPDOWN_OPTIONS.tpyTypeOption,
         autoWidth: true,
         required: true,
+
       },
       {
         field: 'tpy_rate',
@@ -757,8 +795,9 @@ export class FareColumnDefinitions {
         editable: true,
         width: '100px',
         required: true,
-        allowDecimal: true,  // 是否允許小數點
-        decimalPlaces: 3  // 小數位數，預設2位
+        allowDecimal: true,
+        decimalPlaces: 3,
+
       },
       {
         field: 'org_id',
@@ -768,6 +807,7 @@ export class FareColumnDefinitions {
         width: '90px',
         options: [], // 需要動態設定
         required: true,
+
       },
       {
         field: 'gui_flag',
@@ -780,7 +820,8 @@ export class FareColumnDefinitions {
           { label: '未開立', value: 'N' }
         ],
         required: true,
-        defaultValue: 'Y'
+        defaultValue: 'Y',
+
       }
     ];
   }

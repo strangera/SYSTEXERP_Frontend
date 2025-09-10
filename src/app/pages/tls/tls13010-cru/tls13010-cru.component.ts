@@ -193,7 +193,8 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
     tlt_no: [''], // 必填但系統自動給號
     ven_no: ['', [Validators.required, Validators.maxLength(16)]],
     ven_uniform: ['', [Validators.required, Validators.maxLength(10)]], // 必填
-    VEN_Name: [''], // 必填但自動帶入
+    VEN_Name: ['', [Validators.maxLength(100)]], // 必填但自動帶入
+    VEN_Address: [''],
     paper_type: ['', [Validators.maxLength(2)]],
     bus_type: ['', [Validators.required, Validators.maxLength(2)]], // 必填
     bus_class: ['', [Validators.required, Validators.maxLength(2)]], // 必填
@@ -495,8 +496,8 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
 
           // 🎯 更新廠商名稱和公司地址
           this.dataForm.patchValue({
-            VEN_Name: matchedVendor.Name || '',              // 使用API返回的Name
-            company_register_address: matchedVendor.VEN_Address || '',  // 使用API返回的VEN_Address
+            VEN_Name: matchedVendor.Name || '',
+            VEN_Address: matchedVendor.VEN_Address || '',
             ven_no: matchedVendor.ven_no || matchedVendor.ven_no || ''
           });
 
@@ -510,7 +511,7 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
           // 🎯 清空相關欄位
           this.dataForm.patchValue({
             VEN_Name: '',
-            company_register_address: '',
+            VEN_Address: '',
             ven_no: ''
           });
         }
@@ -522,7 +523,7 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
         // 🎯 發生錯誤時清空相關欄位
         this.dataForm.patchValue({
           VEN_Name: '',
-          company_register_address: ''
+          VEN_Address: ''
         });
       }
     });
@@ -736,7 +737,6 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
       'tlt_no',                      // 專櫃編號
       'VEN_Name',                    // 廠商名稱
       'contract_subno',              // 版次
-      'company_register_address',     // 公司登記地址
       'approve_status',
       'ven_no'                       // 廠商編號
     ];
@@ -788,26 +788,26 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
       bus_sclass: '',
       contract_subno: '1',             // 預設版次為 1
 
-      // 🎯 預設值
-      tlt_term_type: '3',              // 🎯 抽成別：一般抽成
+      // 預設值
+      tlt_term_type: '3',              // 抽成別：一般抽成
       comm_comp_type: '2',             // 除稅
       tlt_openflag: '9',               // 合約未生效
 
-      // 🎯 其他預設值
+      // 其他預設值
       org_id: '',
-      tlt_kind: '1',                   // 🎯 專櫃種類：正櫃
-      deco_type: '1',                  // 🎯 裝潢方式：統設統裝(A統)
-      edc_yn: 'Y',                     // 🎯 是否使用業主商店代號：是
+      tlt_kind: '1',                   // 專櫃種類：正櫃
+      deco_type: '1',                  // 裝潢方式：統設統裝(A統)
+      edc_yn: 'Y',                     // 是否使用業主商店代號：是
       tlt_ctype_mtotal: '',
       overall_status: '1',
       deposit: 0,
-      rece_yn: 'Y',                    // 🎯 是否使用業主收銀機：是
-      pos_yn: 'Y',                     // 🎯 是否使用業主商店代號：是
+      rece_yn: 'Y',                    // 是否使用業主收銀機：是
+      pos_yn: 'Y',                     // 是否使用業主商店代號：是
       cash_yn: 'N',
-      comm_yn: 'Y',                    // 🎯 是否為抽成：是
+      comm_yn: 'Y',                    // 是否為抽成：是
       rent_ahead: 'N',                 // 預收租金
-
-      // 🎯 Y/N 欄位預設值
+      VEN_Address: '',
+      // Y/N 欄位預設值
       invoice_type: '0',               // 請款單據別：發票
       vip_yn: 'Y',
       credit_card: '',
@@ -815,8 +815,8 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
       total_amt_vendor_unit: 'M',      // 預設為月
       paytype: '1',                    // 付款方式：匯款
       money_type: '30',                // 結帳方式：月結
-      store_way: '1',                  // 🎯 配合方式：專櫃
-      check_typeList: ['1', '2', '3'],      // 🎯 對帳方式：郵寄 + 網路（複選）
+      store_way: '1',                  // 配合方式：專櫃
+      check_typeList: ['1', '2', '3'],      // 對帳方式：郵寄 + 網路（複選）
       water_flag: 'N',
       electric_flag: 'N',
       gas_flag: 'N',
@@ -887,7 +887,7 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
       contact_tel: queryData['contact_tel'] as string,
       contact_fax: queryData['contact_fax'] as string,
       contact_addr: queryData['contact_addr'] as string,
-      company_register_address: queryData['company_register_address'] as string,
+      VEN_Address: queryData['VEN_Address'] as string,
       tlt_remark: queryData['tlt_remark'] as string,
       // 其他欄位
       comm_yn: queryData['comm_yn'] as string,
@@ -1174,7 +1174,7 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
       contact_tel: formData.contact_tel || '',
       contact_fax: formData.contact_fax || '',
       contact_addr: formData.contact_addr || '',
-      company_register_address: formData.company_register_address || '',
+      VEN_Address: formData.VEN_Address || '',
       tlt_remark: formData.tlt_remark || '',
       ticket_remarks: formData.ticket_remarks || '',
       tlt_kind: formData.tlt_kind || '',
@@ -2153,22 +2153,16 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
   }
 
   /**
- * 🎯 新增：取得公司登記地址
+ * 取得公司登記地址
  */
   getCompanyAddress(): string {
-    const address = this.dataForm.get('company_register_address')?.value;
+    const address = this.dataForm.get('VEN_Address')?.value;
     const trimmedAddress = address?.trim() || '';
-
-    // console.log('📍 取得公司地址:', {
-    //   raw: address,
-    //   trimmed: trimmedAddress
-    // });
-
     return trimmedAddress;
   }
 
   /**
-   * 🎯 新增：複製公司登記地址到郵寄地址
+   * 複製公司登記地址到郵寄地址
    */
   copyCompanyAddressToContact(): void {
     const companyAddress = this.getCompanyAddress();
@@ -2183,14 +2177,6 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
       this.messageService.warnBubble('檢視模式下無法修改資料');
       return;
     }
-
-    // // 檢查郵寄地址是否已有值
-    // const currentContactAddr = this.dataForm.get('contact_addr')?.value?.trim();
-    // if (currentContactAddr) {
-    //   if (!confirm('郵寄地址已有內容，確定要覆蓋嗎？')) {
-    //     return;
-    //   }
-    // }
 
     // 複製地址
     this.dataForm.patchValue({
@@ -2213,7 +2199,7 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * 🎯 新增：檢查按鈕是否可用
+   * 檢查按鈕是否可用
    */
   canCopyAddress(): boolean {
     // 🎯 只要有公司登記地址且不是檢視模式就可以複製
@@ -2834,4 +2820,99 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
     this.messageService.infoBubble('已清空暫存資料並離開');
   }
 
+  /**
+ * 格式化 email 欄位（當使用者離開輸入框時觸發）
+ */
+  formatEmailField(fieldName: string, value: string): void {
+    console.log(`格式化 ${fieldName} 欄位:`, value);
+
+    if (!value || value.trim() === '') {
+      return;
+    }
+
+    // 檢查是否包含分隔符號，如果沒有就不需要格式化
+    if (!value.includes(',') && !value.includes(';')) {
+      // 單一 email，只需要驗證格式
+      this.validateSingleEmail(fieldName, value.trim());
+      return;
+    }
+
+    // 格式化多個 email
+    const formattedValue = this.formatMultipleEmails(value);
+
+    // 如果格式有改變，更新表單值
+    if (formattedValue !== value) {
+      const control = this.dataForm.get(fieldName);
+      control?.setValue(formattedValue);
+
+      this.messageService.infoBubble(`已自動格式化 ${this.getFieldDisplayName(fieldName)}`);
+
+      // 自動儲存
+      this.saveToWorkflow();
+    }
+
+    // 驗證格式化後的 email
+    this.validateMultipleEmails(fieldName, formattedValue);
+  }
+
+  /**
+   * 格式化多個 email 字串
+   */
+  private formatMultipleEmails(emailString: string): string {
+    return emailString
+      .split(/[;,]/) // 支援分號和逗號分隔
+      .map(email => email.trim()) // 去除前後空格
+      .filter(email => email !== '') // 過濾空字串
+      .join(';'); // 統一用分號連接
+  }
+
+  /**
+   * 驗證單一 email
+   */
+  private validateSingleEmail(fieldName: string, email: string): void {
+    if (email && !this.isValidEmailFormat(email)) {
+      this.messageService.warnBubble(`${this.getFieldDisplayName(fieldName)} 格式不正確`);
+    }
+  }
+
+  /**
+   * 驗證多個 email
+   */
+  private validateMultipleEmails(fieldName: string, emailString: string): void {
+    if (!emailString) return;
+
+    const emails = emailString.split(';');
+    const invalidEmails: string[] = [];
+
+    emails.forEach(email => {
+      if (email && !this.isValidEmailFormat(email)) {
+        invalidEmails.push(email);
+      }
+    });
+
+    if (invalidEmails.length > 0) {
+      this.messageService.warnBubble(
+        `${this.getFieldDisplayName(fieldName)} 中有無效格式：${invalidEmails.join(', ')}`
+      );
+    }
+  }
+
+  /**
+   * 驗證 email 格式
+   */
+  private isValidEmailFormat(email: string): boolean {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email.trim());
+  }
+
+  /**
+   * 取得欄位顯示名稱
+   */
+  private getFieldDisplayName(fieldName: string): string {
+    const fieldNames: { [key: string]: string } = {
+      'email': '聯絡信箱',
+      'invoice_email': '發票信箱'
+    };
+    return fieldNames[fieldName] || fieldName;
+  }
 }
