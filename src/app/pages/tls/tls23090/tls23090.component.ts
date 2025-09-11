@@ -215,29 +215,29 @@ export class TLS23090Component extends BasicQueryPageComponent<any> {
     { field: 'tlt_no',   header: '專櫃編號', visible: true },
     { field: 'tlt_name', header: '專櫃編號/名稱', visible: true, style: 'text-left' },
 
-    { field: 'AE_Count',   header: 'AE_筆數', groupField: 'AE',       style: 'text-right', isTotal: true, visible: true },
-    { field: 'AE_Amount',  header: 'AE_金額', groupField: 'AE',       style: 'text-right', format: (v: number) => this.money(v), isTotal: true, visible: true },
+    { field: 'AE_Count',   header: '筆數', groupField: 'AE',       style: 'text-right', isTotal: true, visible: true },
+    { field: 'AE_Amount',  header: '金額', groupField: 'AE',       style: 'text-right', format: (v: number) => this.money(v), isTotal: true, visible: true },
 
-    { field: 'DA_Count',   header: 'DA_筆數', groupField: 'DA',       style: 'text-right', isTotal: true, visible: true },
-    { field: 'DA_Amount',  header: 'DA_金額', groupField: 'DA',       style: 'text-right', format: (v: number) => this.money(v), isTotal: true, visible: true },
+    { field: 'DA_Count',   header: '筆數', groupField: 'DA',       style: 'text-right', isTotal: true, visible: true },
+    { field: 'DA_Amount',  header: '金額', groupField: 'DA',       style: 'text-right', format: (v: number) => this.money(v), isTotal: true, visible: true },
 
-    { field: 'MASTER_Count',  header: 'MASTER_筆數', groupField: 'MASTER', style: 'text-right', isTotal: true, visible: true },
-    { field: 'MASTER_Amount', header: 'MASTER_金額', groupField: 'MASTER', style: 'text-right', format: (v: number) => this.money(v), isTotal: true, visible: true },
+    { field: 'MASTER_Count',  header: '筆數', groupField: 'MASTER', style: 'text-right', isTotal: true, visible: true },
+    { field: 'MASTER_Amount', header: '金額', groupField: 'MASTER', style: 'text-right', format: (v: number) => this.money(v), isTotal: true, visible: true },
 
-    { field: 'VISA_Count',  header: 'VISA_筆數', groupField: 'VISA',  style: 'text-right', isTotal: true, visible: true },
-    { field: 'VISA_Amount', header: 'VISA_金額', groupField: 'VISA',  style: 'text-right', format: (v: number) => this.money(v), isTotal: true, visible: true },
+    { field: 'VISA_Count',  header: '筆數', groupField: 'VISA',  style: 'text-right', isTotal: true, visible: true },
+    { field: 'VISA_Amount', header: '金額', groupField: 'VISA',  style: 'text-right', format: (v: number) => this.money(v), isTotal: true, visible: true },
 
-    { field: 'JCB_Count',  header: 'JCB_筆數', groupField: 'JCB',  style: 'text-right', isTotal: true, visible: true },
-    { field: 'JCB_Amount', header: 'JCB_金額', groupField: 'JCB',  style: 'text-right', format: (v: number) => this.money(v), isTotal: true, visible: true },
+    { field: 'JCB_Count',  header: '筆數', groupField: 'JCB',  style: 'text-right', isTotal: true, visible: true },
+    { field: 'JCB_Amount', header: '金額', groupField: 'JCB',  style: 'text-right', format: (v: number) => this.money(v), isTotal: true, visible: true },
 
-    { field: 'UnionPay_Count',  header: '銀聯卡_筆數', groupField: 'UnionPay',  style: 'text-right', isTotal: true, visible: true },
-    { field: 'UnionPay_Amount', header: '銀聯卡_金額', groupField: 'UnionPay',  style: 'text-right', format: (v: number) => this.money(v), isTotal: true, visible: true },
+    { field: 'UnionPay_Count',  header: '筆數', groupField: 'UnionPay',  style: 'text-right', isTotal: true, visible: true },
+    { field: 'UnionPay_Amount', header: '金額', groupField: 'UnionPay',  style: 'text-right', format: (v: number) => this.money(v), isTotal: true, visible: true },
 
-    { field: 'Others_Count',  header: '其他_筆數', groupField: 'Others',  style: 'text-right', isTotal: true, visible: true },
-    { field: 'Others_Amount', header: '其他_金額', groupField: 'Others',  style: 'text-right', format: (v: number) => this.money(v), isTotal: true, visible: true },
+    { field: 'Others_Count',  header: '筆數', groupField: 'Others',  style: 'text-right', isTotal: true, visible: true },
+    { field: 'Others_Amount', header: '金額', groupField: 'Others',  style: 'text-right', format: (v: number) => this.money(v), isTotal: true, visible: true },
 
-    { field: 'Total_Count',  header: '合計_筆數', groupField: 'Total',  style: 'text-right', isTotal: true, visible: true },
-    { field: 'Total_Amount', header: '合計_金額', groupField: 'Total',  style: 'text-right', format: (v: number) => this.money(v), isTotal: true, visible: true },
+    { field: 'Total_Count',  header: '筆數', groupField: 'Total',  style: 'text-right', isTotal: true, visible: true },
+    { field: 'Total_Amount', header: '金額', groupField: 'Total',  style: 'text-right', format: (v: number) => this.money(v), isTotal: true, visible: true },
   ];
 
   /* ----------------- 生命週期 ----------------- */
