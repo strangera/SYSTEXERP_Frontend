@@ -13,6 +13,15 @@ import { MenubarComponent } from '../../../shared/component/menubar/menubar.comp
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { PaginatorModule } from 'primeng/paginator';
 import { TLS44010Service } from '../../../service/api/tls/tls44010.service';
+import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { ECRNoService } from '@service/basic/ECRNo.service';
+import { CounterNameService } from '../../../service/basic/counter-name.service';
+import { DropDownListService, IDropdownItem } from '../../../service/utility/dropDownList.service';
+import { untilDestroyed } from '@ngneat/until-destroy';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 
 @Component({
   selector: 'app-tls44010',
@@ -20,6 +29,7 @@ import { TLS44010Service } from '../../../service/api/tls/tls44010.service';
   styleUrls: ['./tls44010.component.scss'],
   standalone: true,
   imports: [
+    ButtonComponent,
     FormsModule,
     ReactiveFormsModule,
     TabMenuModule,
@@ -31,11 +41,22 @@ import { TLS44010Service } from '../../../service/api/tls/tls44010.service';
     MenubarComponent,
     InputTextModule,
     DataViewModule,
+    DropdownComponent,
+    MultiSelectComponent,
+    InputTextComponent,
     PaginatorModule
   ]
 })
 export class TLS44010Component extends BasicQueryPageComponent<any> implements OnInit {
-  queryForm: FormGroup = this.fb.group({});
+  queryForm = this.formBuilder.group({
+    ECR_No: [], // 收銀機編號
+    TLT_No:[], // 機台編號
+    tlt_building: [], // 館別
+    tlt_floor: [], // 樓層
+    EOS_IP: [], // 收銀機ip
+    ...createPaginationConfig([{ field: 'ECR_No', order: 1 }]),
+
+  });
   items: MenuItem[] = [];
   activeItem: MenuItem | undefined;
 
@@ -49,9 +70,15 @@ export class TLS44010Component extends BasicQueryPageComponent<any> implements O
   rows = 15;
   first = 0;
   // loading = false;
-
+  ECRNoOptions: any[] = [];
+  CounterOptions: any[] = [];
+  buildingNoOptions: IDropdownItem[] = [];
+  floorOptions: IDropdownItem[] = [];
   constructor(
     private fb: FormBuilder,
+    private ECRNoService: ECRNoService,
+    private dropDownListService: DropDownListService,
+    private counterNameService: CounterNameService,
     private tls44010Service: TLS44010Service
   ) {
     super();
@@ -59,6 +86,24 @@ export class TLS44010Component extends BasicQueryPageComponent<any> implements O
 
   ngOnInit() {
     this.initializePage('TLS44010', '/TLS/TLS44010cru', this.queryForm, (form) => this.onSubmit(form));
+    this.loadDropdownOptions();
+    this.ECRNoService.getECRNo().subscribe((data) => {
+      this.ECRNoOptions = data;
+    });
+    this.counterNameService.getCounters().subscribe((res) => {
+      this.CounterOptions =
+        res?.map((x: any) => ({
+          No: x.value,              // 編號
+          Name: x.label,            // 名稱
+          formLabel: `${x.value} - ${x.label}`, // 下拉顯示
+          value: x.value            // 存值
+        })) || [];
+    });
+    //館別
+    this.dropDownListService.querySYS3800_DropDownList().pipe(untilDestroyed(this)).subscribe(res => {
+      this.buildingNoOptions = res.Data.map(x => ({ label: x.Name, value: x.No, Name: x.Name, No: x.No }));
+    });
+
 
     this.items = [
       { label: '全部' },
@@ -68,6 +113,16 @@ export class TLS44010Component extends BasicQueryPageComponent<any> implements O
     this.activeItem = this.items[0];
 
     this.onSubmit(this.queryForm);
+  }
+  loadDropdownOptions() {
+
+    this.dropDownListService.querySYS3900_DropDownList().pipe(untilDestroyed(this)).subscribe(res => {
+      this.floorOptions = res.Data.map(item => ({
+        ...item,
+        label: item.Name,
+        value: item.No
+      }));
+    });
   }
 
   onSubmit(form: FormGroup) {
@@ -142,7 +197,7 @@ export class TLS44010Component extends BasicQueryPageComponent<any> implements O
       case '3': return 'pi pi-sync';         // 交易中
       case '4': return 'pi pi-users';        // 完成交班
       case '5': return 'pi pi-power-off';    // 關機
-      default:  return 'pi pi-question-circle';
+      default: return 'pi pi-question-circle';
     }
   }
 
@@ -155,7 +210,7 @@ export class TLS44010Component extends BasicQueryPageComponent<any> implements O
       case '3': return '#28a745'; // 交易中 = 綠
       case '4': return '#0d6efd'; // 完成交班 = 藍
       case '5': return '#6c757d'; // 關機 = 灰
-      default:  return '#6c757d';
+      default: return '#6c757d';
     }
   }
 }
