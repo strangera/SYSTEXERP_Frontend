@@ -32,7 +32,6 @@ export class TLS21020Component extends BasicQueryPageComponent<TLS21020Data> imp
 
   public readonly queryForm = this.formBuilder.group({
     ENTRY_TYPE: new FormControl<string | void>(void 0),
-    radioYN: new FormControl<string>('N'),
     ...createPaginationConfig([{ field: 'SEQNO', order: 1 }]),
   });
   public readonly qf = signal(this.queryForm.controls);
@@ -148,6 +147,7 @@ export class TLS21020Component extends BasicQueryPageComponent<TLS21020Data> imp
       optionLabel: 'ShortName',
       optionValue: 'VEN_No',
       disabled: v => v?.ABAT_YN === 'N',
+      templateLabel: 'Name',
     },
     {
       field: 'PAY_days',
@@ -164,7 +164,7 @@ export class TLS21020Component extends BasicQueryPageComponent<TLS21020Data> imp
   ];
 
   public readonly tableGroup: ColumnGroup[] = [
-    { field: 'AccNo', header: '會計科目' },
+    { field: 'Acc', header: '會計科目' },
     { field: 'Vendor', header: '應收廠商' },
     { field: 'RelatedPartyAcc', header: '區分關係人會科' },
   ];
@@ -180,7 +180,7 @@ export class TLS21020Component extends BasicQueryPageComponent<TLS21020Data> imp
     this.initializePage('TLS21020', 'TLS/TLS21020', this.queryForm, this.onSubmit.bind(this));
 
     this.service.getGLS1005s();
-    this.service.getPOS2013s();
+    this.service.getPOS2013s('1');
     this.service.getOrgIDs();
     this.queryStateService.getQueryState('TLS21020');
     this.logger.debug(`init:`, []);
@@ -192,6 +192,8 @@ export class TLS21020Component extends BasicQueryPageComponent<TLS21020Data> imp
     this.selectedStatus.set(event);
 
     if (!event.ObjectNo || event.ObjectNo === '') event.ObjectNo = 'N';
+    this.rowEditValidSignal.set(!1);
+
     if (event) {
       const isValid = this.validateRequiredFields(event);
       this.rowEditValidSignal.set(isValid);
@@ -225,18 +227,19 @@ export class TLS21020Component extends BasicQueryPageComponent<TLS21020Data> imp
   }
 
   public onFieldChange(event: FieldChangeEvent<TLS21020Data>): void {
-    this.logger.debug(`onFieldChange:`, [event]);
+    this.logger.debug(`onFieldChange:`, [event?.rowData]);
 
     if (event.rowData) {
       const isValid = this.validateRequiredFields(event.rowData);
       this.rowEditValidSignal.set(isValid);
-      this.logger.debug(`Field validation result:`, [{ isValid, data: event.rowData }]);
+      this.logger.debug(`validate ${isValid ? 'success' : 'fail'}`);
     }
   }
 
   private validateRequiredFields(data: TLS21020Data): boolean {
     const baseRequiredFields: (keyof TLS21020Data)[] = ['Org_ID', 'ObjectNo'];
 
+    const objectNoFormatValid = data.ObjectNo === 'Y' || data.ObjectNo === 'N';
     const baseFieldsValid = baseRequiredFields.every(field => {
       const value = data[field];
       return value !== void 0 && value !== null && String(value).trim() !== '';
@@ -248,7 +251,43 @@ export class TLS21020Component extends BasicQueryPageComponent<TLS21020Data> imp
       venNoValid = venNoValue !== void 0 && venNoValue !== null && String(venNoValue).trim() !== '';
     }
 
-    return baseFieldsValid && venNoValid;
+    let optionalFieldsValid = !0;
+    if (data.PAY_days !== void 0 && data.PAY_days !== null) {
+      const payDaysValid = Number.isInteger(data.PAY_days) && data.PAY_days >= 0;
+      if (!payDaysValid) optionalFieldsValid = !1;
+    }
+
+    if (data.PAY_No !== void 0 && data.PAY_No !== null && data.PAY_No !== '') {
+      const payNoValid = String(data.PAY_No).trim().length > 0;
+      if (!payNoValid) optionalFieldsValid = !1;
+    }
+
+    if (data.AccNotes !== void 0 && data.AccNotes !== null && data.AccNotes !== '') {
+      const accNotesValid = String(data.AccNotes).trim().length > 0;
+      if (!accNotesValid) optionalFieldsValid = !1;
+    }
+
+    if (data.AccNo !== void 0 && data.AccNo !== null && data.AccNo !== '') {
+      const accNoValid = String(data.AccNo).trim().length > 0;
+      if (!accNoValid) optionalFieldsValid = !1;
+    }
+
+    if (data.RelatedPartyAccNo !== void 0 && data.RelatedPartyAccNo !== null && data.RelatedPartyAccNo !== '') {
+      const relatedPartyAccNoValid = String(data.RelatedPartyAccNo).trim().length > 0;
+      if (!relatedPartyAccNoValid) optionalFieldsValid = !1;
+    }
+
+    const finalValid = baseFieldsValid && objectNoFormatValid && venNoValid && optionalFieldsValid;
+    if (!finalValid) this.logger.debug(`Validation fail:`, [{
+      baseFieldsValid,
+      objectNoFormatValid,
+      venNoValid,
+      optionalFieldsValid,
+      finalValid,
+      data,
+    }]);
+
+    return finalValid;
   }
 
   public onSubmit(): void {
