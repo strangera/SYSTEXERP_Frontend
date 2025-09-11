@@ -612,7 +612,7 @@ externalSubtotals = sub;
     return [{ field: g, order }, ...rest];
   }
 
-  // ===== 匯出：產出「發票報表」 =====
+  // ===== 匯出：匯出「發票報表」 =====
   onExportPDF() {
     if (!this.historyRequestBody) {
       this.messageService?.warnBubble?.('請先執行查詢以產生報表。');

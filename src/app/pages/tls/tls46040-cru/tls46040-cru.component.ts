@@ -1,63 +1,195 @@
 import { Component, OnInit } from '@angular/core';
-import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { CommonModule } from '@angular/common';
+import { FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslateService, TranslateModule } from '@ngx-translate/core';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { PanelModule } from 'primeng/panel';
-import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
-import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { NgIf } from '@angular/common';
 import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
-// 2.4.6.4 收銀機異動排程維護 CRU
+import { ECRNoService } from '@service/basic/ECRNo.service';
+import { DropDownListService, IDropdownItem } from './../../../service/utility/dropDownList.service';
+import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
+import { CounterNameService } from '../../../service/basic/counter-name.service';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { Tls11010Service } from '../../../service/api/tls/tls11010.service';
+import { finalize } from 'rxjs';
 @Component({
   selector: 'app-tls46040-cru',
   templateUrl: './tls46040-cru.component.html',
   standalone: true,
-  imports: [MenubarComponent, PanelModule, FormsModule, ReactiveFormsModule, InputNumberComponent, CalendarComponent, DropdownComponent, ButtonComponent, NgIf, TranslateModule]
+  imports: [
+    CommonModule,
+    MenubarComponent,
+    PanelModule,
+    DropdownComponent,
+    CalendarComponent,
+    FormsModule,
+    MultiSelectComponent,
+    ReactiveFormsModule,
+    ButtonComponent,
+    TranslateModule,
+    InputTextComponent
+  ]
 })
 export class TLS46040CRUComponent extends BasicCruPageComponent<any> implements OnInit {
+  selectedType: 'calendar' | 'dropdown' | 'input' = 'dropdown';
+  orgValDropdownOptions: { label: string; value: string }[] = [];
+  ECR_FLD_IDOptions: any[] = [];
+
   dataForm = this.formBuilder.nonNullable.group({
-    ECR_SchNo: [, [Validators.required, Validators.maxLength(20)]], // 排程編號
-    ECR_SchDate: [, [Validators.required]], // 設定啟用日期
-    ECR_SchStatus: [, [Validators.required, Validators.maxLength(2)]], // 排程狀態
-    SYS_StoreNo: [, [Validators.required, Validators.maxLength(10)]], // 收銀機所屬門市店號
-    ECR_No: [, [Validators.required, Validators.maxLength(6)]], // 收銀機號
-    ORG_ECR_TLT_No: [, [Validators.maxLength(20)]], // 原機台所屬專櫃編號
-    ECR_TLT_No: [, [Validators.maxLength(20)]], // 新機台所屬專櫃編號，若為空白則代表不修改
-    ORG_ECR_USR_No: [, [Validators.maxLength(8)]], // 原機台所屬收銀員
-    ECR_USR_No: [, [Validators.maxLength(8)]], // 新機台所屬收銀員，若為空白則代表不修改
-    ORG_ECR_TmplNo: [, [Validators.maxLength(20)]], // 原環境變數編號
-    ECR_TmplNo: [, [Validators.maxLength(20)]], // 新環境變數編號，若為空白則代表不修改
-    ORG_ECR_Status: [, [Validators.maxLength(2)]], // 原收銀機狀態
-    ECR_Status: [, [Validators.maxLength(2)]], // 新收銀機狀態，若為空白則代表不修改
-    ECR_SchFinTime: [], // 異動作業完成時間
-    CRT_Date: [], // 建立日期
-    CRT_USR_No: [, [Validators.maxLength(8)]], // 建立人員
-    CRT_USR_Name: ['', [Validators.maxLength(20)]], // 建立人員姓名
-    UPD_Date: [], // 變更日期
-    UPD_USR_No: [, [Validators.maxLength(8)]], // 變更人員
-    UPD_USR_Name: ['', [Validators.maxLength(20)]], // 變更人員姓名
+    ECR_SchNo: ['', Validators.required],          // 排程編號
+    ECR_SchDate: ['', Validators.required],        // 設定啟用日期(起)
+    ECR_SchStatus: [[], Validators.required],      // 排程狀態
+    ECR_No: [[], Validators.required],             // 收銀機編號
+    ECR_SchFinTime: [{ value: null, disabled: true }], // 排程作業完成時間
+    ECR_FLD_ID: ['', Validators.required],
+    ECR_FLD_NewVal: [{ value: null, disabled: true }], // 原機台內容
+    ECR_FLD_OrgVal: ['']                           // 新機台內容
   });
+
   // ----------------------------------------------------------------
+  ECRNoOptions: any[] = [];
   ECR_SchStatus_Options: any[] = [
     { value: 'A', label: '啟用' }, // 預設值為A
     { value: 'C', label: '取消' },
   ];
+  LocOptions: IDropdownItem[] = [];
+  ECR_TmplNo_Option: IDropdownItem[] = [];
 
   constructor(
+    private ECRNoService: ECRNoService,
     private translate: TranslateService,
-    //
+    private dropDownListService: DropDownListService,
+    private counterNameService: CounterNameService,
+    private tls11010Service: Tls11010Service,
   ) {
-    super();  // 呼叫父類建構子
+    super();
   }
 
   ngOnInit(): void {
     this.initializePage('TLS46040', this.dataForm);
-  }
-  onSubmit(frm: FormGroup) {
-    this.handleSubmit(frm, () => {
-
+    // 收銀機號下拉
+    this.ECRNoService.getECRNo().subscribe((data) => {
+      this.ECRNoOptions = data;
     });
+
+    // 串 SYS1000 下拉選單 (異動類型)
+    const params = { SYS_Type: 'ECR_FLD_ID' };
+    this.dropDownListService.querySYS1000_DropDownList(params).subscribe(res => {
+      if (res && res.Data) {
+        this.ECR_FLD_IDOptions = res.Data.map(item => ({
+          label: item.Name,
+          value: item.No
+        }));
+      }
+    });
+
+    this.dataForm.controls.ECR_FLD_ID.valueChanges.subscribe(val => {
+      console.log('選擇的異動類型:', val);
+
+      if (val === 'ECR_CloseDate') {
+        this.selectedType = 'calendar';
+        this.orgValDropdownOptions = [];
+      } else if (val === 'ECR_IP') {
+        this.selectedType = 'input';
+        this.orgValDropdownOptions = [];
+      } else {
+        this.selectedType = 'dropdown';
+        this.loadOrgValOptions(val);
+      }
+    });
+
+  }
+
+  // 動態載入「新機台內容」下拉選項
+  private loadOrgValOptions(field: string) {
+    switch (field) {
+      case 'ECR_Type':
+        this.orgValDropdownOptions = [
+          { label: '集中機台(統收)', value: '1' },
+          { label: '專櫃機台(自收)', value: '2' },
+          { label: '離線機台', value: '5' },
+          { label: '它社機台', value: '7' },
+        ];
+        break;
+      case 'ECR_TLT_No':
+
+        this.counterNameService.getCounters().subscribe((res) => {
+          this.orgValDropdownOptions =
+            res?.map((x: any) => ({
+              label: `${x.value} - ${x.label}`, // 下拉顯示
+              value: x.value,                   // 存值
+            })) || [];
+        });
+        break;
+      case 'ECR_LocNo': {
+        const payload = {
+          ECR_LocNo: '',   // 這裡如果需要查全部，可以先給空字串
+          PageSize: 50,    // 一次抓 50 筆，可依需求調整
+          PageIndex: 1
+        };
+
+        this.loading = true;
+        this.tls11010Service.queryData(payload)
+          .pipe(finalize(() => this.loading = false))
+          .subscribe({
+            next: (res) => {
+              console.log('查詢 TLS11010 成功', res.Data);
+
+              // 對應到下拉要顯示 LOCATION_No
+              this.orgValDropdownOptions = res?.Data?.map((x: any) => ({
+                label: x.LOCATION_No,   // 顯示
+                value: x.LOCATION_No    // 存值
+              })) || [];
+            },
+            error: (err) => {
+              console.error('查詢 TLS11010 失敗', err);
+              this.orgValDropdownOptions = [];
+            }
+          });
+        break;
+      }
+      case 'ECR_SAL_Type':
+        this.orgValDropdownOptions = [
+          { label: '商場收銀機台', value: '' },
+          { label: '停車場機台', value: 'PKNG' },
+          { label: '會員APP', value: 'APP' },
+          { label: '環友票券系統', value: 'CPN' },
+        ];
+        break;
+
+      case 'ECR_IP':
+        this.selectedType = 'input';
+        this.orgValDropdownOptions = [];
+        break;
+
+      case 'SYS_SrvNo':
+        this.orgValDropdownOptions = [
+          { label: '主機A', value: 'A' },
+          { label: '主機B', value: 'B' }
+        ];
+        break;
+      case 'ECR_TmplNo':
+        this.dropDownListService.queryPOS1002TML_DropDownList().subscribe(res => {
+          if (res?.Data) {
+            this.orgValDropdownOptions = res.Data.map((item: any) => ({
+              label: `${item.No} - ${item.Name}`,
+              value: item.No
+            }));
+          } else {
+            this.orgValDropdownOptions = [];
+          }
+        });
+        break;
+
+      default:
+        this.orgValDropdownOptions = [];
+    }
+  }
+
+  onSubmit(frm: FormGroup) {
+    this.handleSubmit(frm, () => { });
   }
 }

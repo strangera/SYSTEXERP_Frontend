@@ -1,0 +1,119 @@
+<div class="card">
+  <div class="flex gap-2 mb-2">
+    <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
+    <app-button btnType="back" (click)="onCancel()" />
+  </div>
+
+  <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
+    <form [formGroup]="dataForm" (ngSubmit)="onSubmit(dataForm)">
+      <div class="grid p-fluid">
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text
+            label="排程編號"
+            controlName="ECR_SchNo"
+            [control]="dataForm.controls.ECR_SchNo"
+            [submitted]="submitted"
+          ></app-input-text>
+        </div>
+
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-multi-select
+            label="收銀機號"
+            controlName="ECR_No"
+            [options]="ECRNoOptions"
+            optionLabel="label"
+            optionValue="value"
+            [control]="dataForm.controls.ECR_No"
+            [submitted]="submitted"
+          ></app-multi-select>
+        </div>
+      </div>
+      <div class="grid p-fluid">
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-multi-select
+            label="排程狀態"
+            controlName="ECR_SchStatus"
+            [options]="ECR_SchStatus_Options"
+            optionLabel="label"
+            optionValue="value"
+            [control]="dataForm.controls.ECR_SchStatus"
+            [submitted]="submitted"
+          ></app-multi-select>
+        </div>
+
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-calendar
+              label="設定啟用日期"
+              calendarType="dateMonthOne"
+              [control]="dataForm.controls.ECR_SchDate"
+              [submitted]="submitted"
+            ></app-calendar>
+          </div>
+
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text
+            label="異動作業完成時間"
+            controlName="ECR_SchFinTime"
+            [control]="dataForm.controls.ECR_SchFinTime"
+            [submitted]="submitted"
+          ></app-input-text>
+        </div>
+      </div>
+      <div class="grid p-fluid">
+        <app-dropdown
+          class="col-12 md:col-6 lg:col-4"
+          label="異動類型"
+          controlName="ECR_FLD_ID"
+          [options]="ECR_FLD_IDOptions"
+          optionLabel="label"
+          optionValue="value"
+          [control]="dataForm.controls.ECR_FLD_ID"
+          [submitted]="submitted"
+        ></app-dropdown>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text
+            label="原機台內容"
+            controlName="ECR_FLD_NewVal"
+            [control]="dataForm.controls.ECR_FLD_NewVal"
+            [submitted]="submitted"
+          ></app-input-text>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <ng-container [ngSwitch]="selectedType">
+            <app-calendar
+              *ngSwitchCase="'calendar'"
+              label="新機台內容"
+              calendarType="dateMonthOne"
+              [control]="dataForm.controls.ECR_FLD_OrgVal"
+              [submitted]="submitted"
+            ></app-calendar>
+            <app-dropdown
+              *ngSwitchCase="'dropdown'"
+              label="新機台內容"
+              controlName="ECR_FLD_OrgVal"
+              [options]="orgValDropdownOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="dataForm.controls.ECR_FLD_OrgVal"
+              [submitted]="submitted"
+            ></app-dropdown>
+              <app-input-text
+              *ngSwitchCase="'input'"
+              label="新機台內容"
+               controlName="ECR_FLD_OrgVal"
+              [control]="dataForm.controls.ECR_FLD_OrgVal"
+              [submitted]="submitted"
+            ></app-input-text>
+          </ng-container>
+        </div>
+      </div>
+
+      <div
+        class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
+      >
+        <app-button btnType="cancel" [form]="dataForm"></app-button>
+        <app-button btnType="submit" [loading]="loading" />
+      </div>
+    </form>
+  </p-panel>
+</div>
