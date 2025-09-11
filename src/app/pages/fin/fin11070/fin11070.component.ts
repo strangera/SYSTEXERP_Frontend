@@ -113,6 +113,12 @@ export class FIN11070Component extends BasicQueryPageComponent<FIN11070Data> imp
   }
 
   downloadFIN11070() {
+    // 檢查必填欄位
+    if (this.queryForm.controls['GUI_YYMM'].invalid) {
+      this.queryForm.controls['GUI_YYMM'].markAsDirty();
+      this.submitted = true;
+      return;
+    }
     const requestData = {
       MID: 0,
       STO_No: '10',
@@ -155,6 +161,12 @@ export class FIN11070Component extends BasicQueryPageComponent<FIN11070Data> imp
   }
 
   insertFIN11070() {
+    // 檢查必填欄位
+    if (this.queryForm.controls['GUI_YYMM'].invalid) {
+      this.queryForm.controls['GUI_YYMM'].markAsDirty();
+      this.submitted = true;
+      return;
+    }
     const requestData = {
       MID: 0,
       SYS_StoreNo: '10',
