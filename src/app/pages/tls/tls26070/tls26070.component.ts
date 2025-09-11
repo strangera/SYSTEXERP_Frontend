@@ -29,13 +29,19 @@ import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-se
 import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range-quick/calendar-range-quick.component';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { CustomFooterTableComponent } from '@shared/componentkit/custom-footer-table/customFooterTable.component';
+import { CounterNameService } from '@service/basic/counter-name.service';
+import { SharedDropdownService } from '@shared/services/shared-dropdown.service';
+import { BusinessClassificationService } from '../tls12040-cru/services/business-classification.service';
+import { DropdownOption } from '../tls13010/tls13010.dropdown';
 
 @Component({
   selector: 'app-tls26070',
   templateUrl: './tls26070.component.html',
   styleUrl: './tls26070.component.scss',
   standalone: true,
-  imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputTextComponent, CalendarRangeComponent, TableComponent, TranslateModule, RadiobuttonComponent, CalendarComponent, InputNumberComponent, DropdownComponent, NgIf, MultiSelectComponent, CalendarRangeQuickComponent, CustomFooterTableComponent]
+  imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, InputTextComponent, CalendarRangeComponent, TableComponent, TranslateModule, RadiobuttonComponent, CalendarComponent, InputNumberComponent, DropdownComponent, NgIf, MultiSelectComponent, CalendarRangeQuickComponent, CustomFooterTableComponent,
+    DropdownComponent
+  ]
 })
 export class TLS26070Component extends BasicQueryPageComponent<TLS26070Data> implements OnInit {
   readonly today: Date = (() => {
@@ -56,7 +62,8 @@ export class TLS26070Component extends BasicQueryPageComponent<TLS26070Data> imp
     reportType: ['1'], // 報表類型
     floor: [null], // 樓層
     region: [null], // 區域
-    bus_type: [null], // 大分類/中分類
+    bus_type: [null], // 大分類
+    bus_class: [null], // 中分類
     tlt_kind: [null], // 櫃別
     org_id: [null], // 組織代號
     tlt_term_type: [null], // 抽成別
@@ -100,19 +107,29 @@ export class TLS26070Component extends BasicQueryPageComponent<TLS26070Data> imp
 
   columns: Column[] = [];
 
-  //#region 選項
+  //#region 下拉選項定義
+  // 組織選項（從服務載入）
   organizationOptions: any[] = [];
+  // 區域選項（從服務載入）
   regionOptions: any[] = [];
+  // 樓層選項（從服務載入）
   floorOptions: any[] = [];
+  // 大分類選項（從服務載入）
   businessTypeCodeOptions: any[] = [];
-  commissionTypeOptions: any[] = [];
-  typeOptions: any[] = [];
+  // 中分類選項（依大分類變更而變更）
+  busClassOptions: DropdownOption[] = [];
+  // 抽成別選項（從共享下拉服務取得）
+  commissionTypeOptions: DropdownOption[] = this.sharedDropdownService.tltTermTypeOptions;
+  // 專櫃編號選項（從服務載入）
   counterCodeOptions: any[] = [];
+  // 稅別選項（含稅/未稅）
   taxOptions: any[] = [
     { value: true, label: '含稅' },
     { value: false, label: '未稅' }
   ];
-  operationsOptions: any[] = [];
+  // 櫃別選項（從共享下拉服務取得）
+  operationsOptions: DropdownOption[] = this.sharedDropdownService.tltKindOptions;
+  // 報表類型選項（日/週/月/半年/年/區間/活動區間營業報表）
   reportTypeOptions: any[] = [
     { value: '1', label: '日營業報表' },
     { value: '2', label: '週營業報表' },
@@ -122,10 +139,12 @@ export class TLS26070Component extends BasicQueryPageComponent<TLS26070Data> imp
     { value: '6', label: '區間營業報表' },
     { value: '7', label: '活動區間營業報表' },
   ];
+  // 活動ID選項（硬編碼的測試資料）TODO: 無來源
   EventIDOptions: any[] = [
     { value: '1', label: '活動1' },
     { value: '2', label: '活動2' },
   ];
+  // 半年別選項（上半年/下半年）TODO: value待確認
   halfyearOptions: any[] = [
     { value: '1', label: '上半年' },
     { value: '2', label: '下半年' },
@@ -144,6 +163,9 @@ export class TLS26070Component extends BasicQueryPageComponent<TLS26070Data> imp
     private floorService: FloorService,
     private regionService: RegionService,
     private counterCodeService: CounterCodeService,
+    private sharedDropdownService: SharedDropdownService,
+    private counterNameService: CounterNameService,
+    private businessClassificationService: BusinessClassificationService,
   ) {
     super();
   }
@@ -182,45 +204,24 @@ export class TLS26070Component extends BasicQueryPageComponent<TLS26070Data> imp
         value: typeof item.value === 'number' ? item.value.toString() : item.value
       }));
     });
-    // 大分類/中分類下拉選項
-    // TODO: service是寫死的
-    this.businessTypeCodeService.getBusinessTypeCodes().subscribe((data) => {
-      this.businessTypeCodeOptions = data.map(item => ({
-        ...item,
-        value: typeof item.value === 'number' ? item.value.toString() : item.value
-      }));
-    });
-    // 櫃別下拉選項
-    // TODO: service是寫死的
-    this.cooperationMethodService.getCooperationMethods().subscribe(data => {
-      this.operationsOptions = data.map(item => ({
-        ...item,
-        value: typeof item.value === 'number' ? item.value.toString() : item.value
-      }));
-    });
-    // 抽成別下拉選項
-    // TODO: service是寫死的
-    this.commissionTypeService.getCommissionTypes().subscribe((data) => {
-      this.commissionTypeOptions = data.map(item => ({
-        ...item,
-        value: typeof item.value === 'number' ? item.value.toString() : item.value
-      }));
+    // 大分類下拉選項
+    this.businessClassificationService.getBusTypeOptions().subscribe(data => {
+      this.businessTypeCodeOptions = data;
     });
     // 組織代號下拉選項
-    // TODO: service是寫死的
-    this.organizationNumberService.getOrganizationNumbers().subscribe((data) => {
+    this.sharedDropdownService.getOrgOptions().subscribe(data => {
       this.organizationOptions = data.map(item => ({
         ...item,
         value: typeof item.value === 'number' ? item.value.toString() : item.value
       }));
     });
     // 專櫃編號下拉選項
-    // TODO: service是寫死的
-    this.counterCodeService.getCounterCodes().subscribe((data) => {
-      this.counterCodeOptions = data.map(item => ({
-        ...item,
-        value: typeof item.value === 'number' ? item.value.toString() : item.value
-      }));
+    this.counterNameService.getCounters().subscribe((res) => {
+      this.counterCodeOptions =
+        res?.map((x: any) => ({
+          label: `${x.value} - ${x.label}`,
+          value: x.value,
+        })) || [];
     });
   }
 
@@ -341,6 +342,19 @@ export class TLS26070Component extends BasicQueryPageComponent<TLS26070Data> imp
     // 更新所有欄位驗證狀態
     Object.keys(this.queryForm.controls).forEach(key => {
       this.queryForm.get(key)?.updateValueAndValidity();
+    });
+  }
+
+  setReadOnlyFields() {
+    this.queryForm.controls['startdate'].disable();
+    this.queryForm.controls['enddate'].disable();
+    this.queryForm.controls['startdate_c'].disable();
+    this.queryForm.controls['enddate_c'].disable();
+  }
+
+  onBusinessTypeChange(event: any) {
+    this.businessClassificationService.getBusClassOptions(event).subscribe(data => {
+      this.busClassOptions = data;
     });
   }
 }
