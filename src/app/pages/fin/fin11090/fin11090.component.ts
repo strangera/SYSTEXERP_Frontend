@@ -53,8 +53,8 @@ export class FIN11090Component extends BasicQueryPageComponent<FIN11090Data> imp
       Validators.maxLength(6),
       this.validationService.numberValidator
     ]],
-    TXN_GUITrack: ['', [Validators.maxLength(2)]],
-    TXN_GUINo: ['', [Validators.maxLength(8)]],
+    TXN_GUITrack: ['', [Validators.required,Validators.maxLength(2),this.validationService.guiTrackValidator]],
+    TXN_GUINo: ['', [Validators.required,Validators.maxLength(8)]],
     ...createPaginationConfig([{ field: 'TXN_Date', order: -1 }]),
   });
 
