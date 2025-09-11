@@ -16,24 +16,6 @@ import { ValidationService } from '@shared/service/validation.service';
 import { Column, createPaginationConfig } from '@shared/componentkit/table/table.model';
 import { TableComponent } from '@shared/componentkit/table/table.component';
 
-/** GLS1001*/
-export interface GLS1001 {
-  // { field: 'id', header: '序號' },
-  //   { field: 'RefCode', header: '廠商編號' },
-  //   { field: 'brand', header: '品牌' },
-  //   { field: 'RefName', header: '廠商名稱' },
-  //   { field: 'uni', header: '統一標號' },
-  //   { field: 'shortName', header: '簡稱' },
-
-  id: string,
-  RefCode: string,
-  brand: string,
-  RefName: string,
-  uni: string,
-  shortName: string
-
-}
-
 /** GLS1016 對象別設定檔 */
 export interface GLS1016 {
   CompNo: string, // VARCHAR(06)      Not null, /*公司代號*/
@@ -84,7 +66,7 @@ export class FIN52040CRUComponent extends BasicCruPageComponent<GLS1016> impleme
     UPD_USR_Name: ['', [Validators.maxLength(20)]], //  變更人員姓名
   });
   //
-  GLS1001_Options: GLS1001Option[] = [
+  GLS1001_Options: apiOption[] = [
     {No: 'Comp1', Name: '公司代號1'},
     {No: 'Comp2', Name: '公司代號2'},
     {No: 'Comp3', Name: '公司代號3'}
@@ -174,9 +156,9 @@ export class FIN52040CRUComponent extends BasicCruPageComponent<GLS1016> impleme
     this.dialogLoading = true;
     // 模擬 API
     const mockData = [
-      { RefCode: 'C001', RefName: '對象一' },
-      { RefCode: 'C002', RefName: '對象二' },
-      { RefCode: 'C003', RefName: '對象三' },
+      { id:'1', RefCode: 'C001', brand: '品牌1', RefName: '對象一', uni: '統一標號1', shortName: '簡稱1' },
+      { id:'2', RefCode: 'C002', brand: '品牌2', RefName: '對象二', uni: '統一標號2', shortName: '簡稱2' },
+      { id:'3', RefCode: 'C003', brand: '品牌3', RefName: '對象三', uni: '統一標號3', shortName: '簡稱3' },
     ];
     this.dialogData = mockData;
     this.totalRecords = mockData.length;
