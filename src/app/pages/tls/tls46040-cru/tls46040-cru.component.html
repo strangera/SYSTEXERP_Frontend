@@ -79,12 +79,32 @@
           ></app-input-text>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text
-            label="新機台內容"
-            controlName="ECR_FLD_OrgVal"
-            [control]="dataForm.controls.ECR_FLD_OrgVal"
-            [submitted]="submitted"
-          ></app-input-text>
+          <ng-container [ngSwitch]="selectedType">
+            <app-calendar
+              *ngSwitchCase="'calendar'"
+              label="新機台內容"
+              calendarType="dateMonthOne"
+              [control]="dataForm.controls.ECR_FLD_OrgVal"
+              [submitted]="submitted"
+            ></app-calendar>
+            <app-dropdown
+              *ngSwitchCase="'dropdown'"
+              label="新機台內容"
+              controlName="ECR_FLD_OrgVal"
+              [options]="orgValDropdownOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="dataForm.controls.ECR_FLD_OrgVal"
+              [submitted]="submitted"
+            ></app-dropdown>
+              <app-input-text
+              *ngSwitchCase="'input'"
+              label="新機台內容"
+               controlName="ECR_FLD_OrgVal"
+              [control]="dataForm.controls.ECR_FLD_OrgVal"
+              [submitted]="submitted"
+            ></app-input-text>
+          </ng-container>
         </div>
       </div>
 

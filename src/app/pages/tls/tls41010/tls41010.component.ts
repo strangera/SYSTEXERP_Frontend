@@ -27,7 +27,7 @@ import { DialogComponent } from '../../../shared/componentkit/dialog/dialog.comp
 import { QueryTLS41010Request } from '../../../service/api/tls/tls41010.service';
 import { NgIf } from '@angular/common';
 import { CounterNameService } from '../../../service/basic/counter-name.service';
-
+import { Tls46010Service } from '@service/api/tls/tls46010.service';
 @Component({
   selector: 'app-tls41010',
   templateUrl: './tls41010.component.html',
@@ -116,6 +116,7 @@ export class TLS41010Component extends BasicQueryPageComponent<TLS41010Data> imp
     private tls41010Service: TLS41010Service,
     private locationOptionsService: LocationOptionsService,
     private tls46020Service: TLS46020Service,
+    private tls46010Service: Tls46010Service,
     private tls11010Service: Tls11010Service,
     private dropDownListService: DropDownListService,
     private counterNameService: CounterNameService,
@@ -125,22 +126,24 @@ export class TLS41010Component extends BasicQueryPageComponent<TLS41010Data> imp
     super();
   }
 
-  callOtherApi(ip: string) {
-    const apiUrl = `http://${ip}/TLS0000/TLS4000/queryTLS46010`;
-    const requestData = {
-      queryKey: 'value'
-    };
+callOtherApi() {
+  const requestData = {
+    queryKey: 'value'
+  };
 
-    this.loading = true;
-    this.http.post(apiUrl, requestData).pipe(finalize(() => this.loading = false)).subscribe({
+  this.loading = true;
+  this.tls46010Service.queryTLS0000(requestData)
+    .pipe(finalize(() => this.loading = false))
+    .subscribe({
       next: (res) => {
-        console.log('呼叫後台主機 API 成功', res);
+        console.log('呼叫 TLS0000 成功', res.Data);
       },
       error: (err) => {
-        console.error('呼叫後台主機 API 失敗', err);
+        console.error('呼叫 TLS46010 失敗', err);
       }
     });
-  }
+}
+
   callTLS46020Api(tmplNo: string) {
     const params = {
       ECR_TmplNo: tmplNo,
@@ -209,9 +212,9 @@ export class TLS41010Component extends BasicQueryPageComponent<TLS41010Data> imp
         }));
       }
     });
-    this.queryForm.get('ECR_SrvIP')?.valueChanges.subscribe((ip) => {
-      if (ip) {
-        this.callOtherApi(ip);
+    this.queryForm.get('ECR_SrvIP')?.valueChanges.subscribe((ECR_SrvIP) => {
+      if (ECR_SrvIP) {
+        this.callOtherApi();
       }
     });
     // 環境變數下拉選單
