@@ -1445,21 +1445,28 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
     const { data } = event;
     console.log('🔍 onBeforeDetailSave 被觸發:', data);
 
+    // 基本日期驗證
     if (data.tlt_bdate && data.tlt_edate) {
       const startDate = new Date(data.tlt_bdate);
       const endDate = new Date(data.tlt_edate);
 
+      if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
+        console.log('❌ 日期格式錯誤，阻止儲存');
+        this.notificationService.errorBubble('日期格式錯誤，請重新輸入');
+        event.preventDefault();
+        return; // 🎯 確保這裡真的停止執行
+      }
+
       if (startDate > endDate) {
-        console.log('❌ onBeforeDetailSave: 日期錯誤，阻止儲存');
+        console.log('❌ 起始日期不能晚於結束日期');
         this.notificationService.errorBubble('起始日期必須早於結束日期');
-        event.preventDefault(); // ⚠️ 這是關鍵，必須呼叫 preventDefault
-        return;
+        event.preventDefault();
+        return; // 🎯 確保這裡真的停止執行
       }
     }
 
-    // 🎯 如果是年度業績項目，也要在這裡檢查重疊
+    // 年度業績重疊檢查
     if (data._originalType === 'annual') {
-      // 找到父項目
       const parentData = this.commissionData.find(item =>
         item.annualPerformanceItems.some(annual => annual.id === data.id)
       );
@@ -1472,13 +1479,15 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
         );
 
         if (!validation.isValid) {
-          console.log('❌ onBeforeDetailSave: 年度業績重疊，阻止儲存');
+          console.log('❌ 年度業績重疊，阻止儲存');
           this.notificationService.errorBubble(validation.errors[0]);
-          event.preventDefault(); // ⚠️ 這是關鍵，必須呼叫 preventDefault
-          return;
+          event.preventDefault();
+          return; // 🎯 確保這裡真的停止執行
         }
       }
     }
+
+    console.log('✅ 所有驗證通過');
   }
 
   onDropdownChange(event: { rowData: any, field: string, newValue: any, oldValue: any }): void {
