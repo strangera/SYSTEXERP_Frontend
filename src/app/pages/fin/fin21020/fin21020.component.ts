@@ -1,5 +1,5 @@
 import { ExcelColumn, ExcelExportService } from './../../../shared/service/excel-export.service';
-import { Component, OnInit, signal } from '@angular/core';
+import { Component, OnInit, signal, ViewChild } from '@angular/core';
 import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
@@ -9,13 +9,13 @@ import { InputNumberRangeComponent } from '../../../shared/componentkit/input-nu
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { TranslateModule } from '@ngx-translate/core';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
-import { AddButton, Column, createPaginationConfig, formatAmount } from '@shared/componentkit/table/table.model';
+import { AddButton, Column, formatAmount } from '@shared/componentkit/table/table.model';
 import { Fin21020Service, IFin21020Data } from '@service/api/fin/fin21020.service';
 import { finalize } from 'rxjs';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { DropDownListService, IDropdownItem } from '@service/utility/dropDownList.service';
 import { DialogComponent } from '@shared/componentkit/dialog/dialog.component';
-import { TableLazyLoadEvent, TableModule } from 'primeng/table';
+import { Table, TableLazyLoadEvent, TableModule } from 'primeng/table';
 import { SkeletonModule } from 'primeng/skeleton';
 import { NgFor } from '@angular/common';
 // 1.2.1.2 費率對照維護
@@ -76,18 +76,17 @@ export class FIN21020Component extends BasicQueryPageComponent<IFin21020Data> im
   data: IFin21020Data[] = []; // ! 快取資料
   virtualData: IFin21020Data[] = []; // ! 虛擬資料
   private pendingRequests = new Map<number, any>(); // ! 用來儲存未完成的請求
-  // ---
+  @ViewChild('dt') private dt!: Table;
   loadDataLazy(event: TableLazyLoadEvent) {
     if (!this.lastQueryBody || this.totalRecords === 0) {
       return; // ! 如果沒有上一次的查詢條件 或 是沒有總筆數，就不用載入
     }
-    // ! 如果是第一次載入，就不用載入
-    if (this.isFirstLoadAfterSubmit) {
+    if (this.isFirstLoadAfterSubmit) {// ! 如果是第一次載入，就不用載入
       this.isFirstLoadAfterSubmit = false;
       return;
     }
-    const pageSize = (event.rows ?? 100);
-    const start = (event.last === this.totalRecords) ? this.totalRecords - (this.totalRecords % (event.rows ?? 100)) : (event.first ?? 0);
+    const pageSize = (event.rows ?? 30);
+    const start = (event.last === this.totalRecords) ? this.totalRecords - (this.totalRecords % (event.rows ?? 30)) : (event.first ?? 0);
     const end = start + pageSize;
     const cachedDataSlice = this.data.slice(start, Math.min(end, this.data.length)); // ! 取得快取的資料
     // ! 如果快取的資料長度大於 0 且都不為 null 或 undefined
@@ -99,8 +98,7 @@ export class FIN21020Component extends BasicQueryPageComponent<IFin21020Data> im
     }
     // 檢查這個區段的請求是否已在進行中
     if (this.pendingRequests.has(start)) {
-      // 已經有請求了，不重複發送
-      return;
+      return; // 已經有請求了，不重複發送
     }
     const pageIndex = Math.ceil(start / pageSize + 1);
     const body = {
@@ -108,34 +106,34 @@ export class FIN21020Component extends BasicQueryPageComponent<IFin21020Data> im
       pageIndex: pageIndex,
       pageSize: pageSize,
     };
-    this.loading = true;
-    // 將 observable 存入 Map
-    const request$ = this.fin21020Service.queryFIN21020(body).pipe(
-      finalize(() => {
-        this.loading = false;
-        // 請求完成後從 Map 中移除
-        this.pendingRequests.delete(start);
-      })
-    );
+    const request$ = this.fin21020Service.queryFIN21020(body).pipe(finalize(() => { this.loading = false; this.pendingRequests.delete(start); }));
     this.pendingRequests.set(start, request$);
-
     request$.subscribe(res => {
-      // 再次確認，確保資料沒有被另一個更早的請求覆蓋
-      // 這一步是額外的保護，但可以讓邏輯更嚴謹
       if (this.pendingRequests.has(start)) {
         if (this.totalRecords !== res.TotalCount) {
           this.totalRecords = res.TotalCount;
           this.data = [];
           this.virtualData = Array(this.totalRecords).fill(null);
         }
-
         this.data.splice(start, res.Data.length, ...res.Data);
-
-        const newVirtualData = [...this.virtualData];
-        newVirtualData.splice(start, res.Data.length, ...res.Data);
-        this.virtualData = newVirtualData;
-
-        console.log('查詢成功', this.data);
+        if (res.TotalCount !== this.data.length) {
+          if (this.virtualData.length + 30 < this.totalRecords) {
+            this.virtualData = Array(this.data.length + 30).fill(null);
+            setTimeout(() => {
+              this.virtualData.splice(0, this.data.length, ...this.data); // ! 將快取的資料放入虛擬資料
+            })
+          } else {
+            this.virtualData = Array(this.totalRecords).fill(null);
+            setTimeout(() => {
+              this.virtualData.splice(0, this.data.length, ...this.data); // ! 將快取的資料放入虛擬資料
+            })
+          }
+        } else {
+          this.virtualData = Array(this.totalRecords).fill(null);
+          setTimeout(() => {
+            this.virtualData.splice(0, this.data.length, ...this.data); // ! 將快取的資料放入虛擬資料
+          })
+        }
       }
     });
   }
@@ -143,7 +141,7 @@ export class FIN21020Component extends BasicQueryPageComponent<IFin21020Data> im
     this.handleSubmit(frm, () => {
       const body = {
         ...frm.value,
-        pageSize: 100,
+        pageSize: 30,
         pageIndex: 1, // 你將初始頁碼改為 1
         SortBy: [{ field: 'BNK_No', order: 1 }, { field: 'Remit_BAmount', order: 1 }],
       }
@@ -151,7 +149,7 @@ export class FIN21020Component extends BasicQueryPageComponent<IFin21020Data> im
         this.lastQueryBody = body; // ! 快取查詢條件
         this.totalRecords = res.TotalCount; // ! 設定總筆數
         this.data = res.Data; // ! 快取第一頁資料
-        this.virtualData = Array(this.totalRecords).fill(null); // ! 清空虛擬資料
+        this.virtualData = Array(res.Data.length + 30).fill(null); // ! 清空虛擬資料
         setTimeout(() => {
           this.virtualData.splice(0, res.Data.length, ...res.Data); // ! 將快取的資料放入虛擬資料
         })
@@ -159,6 +157,13 @@ export class FIN21020Component extends BasicQueryPageComponent<IFin21020Data> im
         this.queryStateService.setQueryState(this.ProgNo, frm.value);
       });
     });
+  }
+  onScroll(event: any) {
+    console.log(event);
+
+  }
+  trackByFn(index: number, item: IFin21020Data) {
+    return item.id;
   }
   // ----------------------------------------------------------------
   onDelete(selectedRows: IFin21020Data[]) {

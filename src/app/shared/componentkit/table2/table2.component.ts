@@ -61,6 +61,8 @@ import { ImageModule } from 'primeng/image';
 export class Table2Component
   extends BasicPrintData2Component
   implements OnInit, OnChanges, OnDestroy {
+    trackByCol = (index: number, col: any) => col.key ?? col.__uid ?? col.field ?? index;
+
 
   /* ====== 基本與依賴 ====== */
   @ViewChild('dt', { static: false }) dt!: Table;

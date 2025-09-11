@@ -43,8 +43,16 @@
   </p-accordion>
 </div>
 <div class="card">
-  <p-table [columns]="columns" [value]="virtualData" [scrollable]="true" scrollHeight="500px" [rows]="100"
-    [virtualScroll]="true" [virtualScrollItemSize]="46" [lazy]="true" (onLazyLoad)="loadDataLazy($event)">
+  <p-table #dt [columns]="columns" [value]="virtualData" [scrollable]="true" scrollHeight="500px" [rows]="30"
+    [virtualScroll]="true" (onLazyLoad)="loadDataLazy($event)" [virtualScrollOptions]="{
+      delay: 0,
+      itemSize: 46,
+      inline: true,
+      lazy: true,
+      autoSize: true,
+      appendOnly:false,
+      onScroll: onScroll,
+      }">
     <ng-template pTemplate="header" let-columns>
       <tr>
         <th>序號</th>

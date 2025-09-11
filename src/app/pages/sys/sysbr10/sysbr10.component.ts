@@ -77,13 +77,13 @@ export class SYSBR10Component extends BasicQueryPageComponent<any> {
   columns: any[] = [
     {
       field: 'Pub_StartDate',
-      header: '公告起始日期時間',
+      header: '起始時間',
       visible: true,
       format: this.formatDateTime,
     },
     {
       field: 'Pub_EndDate',
-      header: '公告結束日期時間',
+      header: '結束時間',
       visible: true,
       format: this.formatDateTime,
     },

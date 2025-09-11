@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpResponse } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import { ErrorHandlerService } from '../../system/error-handler.service';
@@ -35,4 +35,31 @@ export class TLS23130Service {
       
     );
   }
+ /** 匯出 PDF（不分頁） */
+    exporttls23130PDF(body: any): Observable<HttpResponse<Blob>> {
+      const url = `${this.apiUrl}/TLS0000/TLS2000/exporttls23130PDF`;
+      const payload = this.stripPaging(body);
+      return this.http.post(url, payload, {
+        observe: 'response',
+        responseType: 'blob' as 'json',
+      }) as Observable<HttpResponse<Blob>>;
+    }
+  
+    /**
+     * 匯出用：移除分頁相關欄位（大小寫都處理），保留 SortBy（若後端會依排序輸出）
+     */
+    private stripPaging<T extends Record<string, any>>(
+      input: T
+    ): Omit<T,
+      'PageSize' | 'PageIndex' | 'OrderBy' | 'Offset' |
+      'pageSize' | 'pageIndex' | 'orderBy' | 'offset'
+    > {
+      if (!input) return input as any;
+      const {
+        PageSize, PageIndex, OrderBy, Offset,
+        pageSize, pageIndex, orderBy, offset,
+        ...rest
+      } = input as any;
+      return rest as any;
+    }
 }

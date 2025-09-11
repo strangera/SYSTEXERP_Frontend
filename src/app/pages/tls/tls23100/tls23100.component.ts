@@ -24,7 +24,9 @@ import { InputTextModule } from 'primeng/inputtext';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { TranslateModule } from '@ngx-translate/core';
 import { Table2Component } from '@shared/componentkit/table2/table2.component';
-import {  map } from 'rxjs/operators';
+import {  finalize, map } from 'rxjs/operators';
+import { ButtonModule } from 'primeng/button';
+import { HttpResponse } from '@angular/common/http';
 
 @Component({
   selector: 'app-tls23100',
@@ -43,6 +45,7 @@ import {  map } from 'rxjs/operators';
     ButtonComponent,
     TranslateModule,
     Table2Component, // ✅ 使用 table2 才能顯示總計/小計
+    ButtonModule,
   ]
 })
 export class TLS23100Component extends BasicQueryPageComponent<any> {
@@ -60,6 +63,8 @@ export class TLS23100Component extends BasicQueryPageComponent<any> {
 
   // 群組欄位（小計依此欄位）
   readonly groupByField = 'tlt_no';
+    btnLoading = false;
+  historyRequestBody: any | null = null;
 
   // --- 排序狀態（群組欄位一定放第一個，避免切段）---
   sortMeta: any[] = [];
@@ -219,7 +224,7 @@ fetchTLS23100 = (evt: LazyLoadEvent) => {
     pageIndex,
     SortBy: sortBy,
   });
-
+ this.historyRequestBody = { ...payload };
   return this.tls23100Service.queryTLS23100(payload).pipe(
     map((res: any) => {
       // 兼容 Data 為物件或陣列
@@ -288,7 +293,7 @@ fetchTLS23100 = (evt: LazyLoadEvent) => {
         pageIndex,
         SortBy: sortByArr,
       });
-
+ this.historyRequestBody = { ...payload };
       this.loading = true;
       this.messageService?.blockUi();
 
@@ -386,4 +391,65 @@ private buildSubtotals(rows: any[]): Record<string, Record<string, number>> {
 
 
   money = (val: any) => Number(val || 0).toLocaleString('en-US');
+// ===== 匯出：PDF =====
+  onExportPDF(): void {
+    if (!this.historyRequestBody) {
+      this.messageService?.warnBubble?.('請先執行查詢以產生報表。');
+      return;
+    }
+    this.btnLoading = true;
+    this.tls23100Service.exporttls23100PDF(this.historyRequestBody).pipe(
+      finalize(() => (this.btnLoading = false))
+    ).subscribe({
+      next: (resp: HttpResponse<Blob>) => this.handleFileExport(resp, '.pdf'),
+      error: () => this.messageService?.warnBubble?.('PDF 匯出失敗。'),
+    });
+  }
+
+  // ===== 通用下載處理 =====
+  private handleFileExport(response: HttpResponse<Blob>, fileExtension: string): void {
+    const contentDisposition = response.headers.get('Content-Disposition');
+    const filename = this.getFilenameFromHeader(contentDisposition, fileExtension);
+    const blob = response.body;
+
+    if (blob && blob.size > 0) {
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } else {
+      this.messageService?.warnBubble?.('沒有找到符合條件的資料，無法生成報表。');
+    }
+  }
+
+  private getFilenameFromHeader(contentDisposition: string | null, defaultExtension: string): string {
+    if (!contentDisposition) return `download${defaultExtension}`;
+
+    // RFC 5987: filename*
+    const filenameStarMatch = /filename\*=([^;]+)/i.exec(contentDisposition);
+    if (filenameStarMatch && filenameStarMatch[1]) {
+      const encoded = filenameStarMatch[1].trim();
+      try {
+        return decodeURIComponent(encoded.replace(/^UTF-8''/, ''));
+      } catch {
+        return encoded;
+      }
+    }
+
+    // filename="xxx"
+    const filenameMatch = /filename="([^"]+)"/i.exec(contentDisposition);
+    if (filenameMatch && filenameMatch[1]) {
+      try {
+        return decodeURIComponent(filenameMatch[1].replace(/\+/g, ' '));
+      } catch {
+        return filenameMatch[1];
+      }
+    }
+
+    return `download${defaultExtension}`;
+  }
 }

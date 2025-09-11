@@ -28,8 +28,10 @@ import { InputTextModule } from 'primeng/inputtext';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { TranslateModule } from '@ngx-translate/core';
 import { of } from 'rxjs';
-import { catchError, map } from 'rxjs/operators';
+import {finalize, catchError, map } from 'rxjs/operators';
 import { Table2Component } from '@shared/componentkit/table2/table2.component';
+import { HttpResponse } from '@angular/common/http';
+import { ButtonModule } from 'primeng/button';
 
 
 @Component({
@@ -49,6 +51,7 @@ import { Table2Component } from '@shared/componentkit/table2/table2.component';
     ButtonComponent,
     TranslateModule,
     Table2Component,
+    ButtonModule,
   ],
 })
 export class TLS23130Component extends BasicQueryPageComponent<any> {
@@ -61,6 +64,9 @@ export class TLS23130Component extends BasicQueryPageComponent<any> {
 
   data: any[] = [];
   totalRecords = 0;
+      btnLoading = false;
+  historyRequestBody: any | null = null;
+
 
   // ---- 排序狀態（先按群組欄位 tlt_no，再日期/序號）----
   sortMeta: any[] = [];
@@ -68,7 +74,7 @@ export class TLS23130Component extends BasicQueryPageComponent<any> {
   readonly defaultSort: any[] = [
     { field: this.groupByField, order: 1 },
     { field: 'TXN_Date', order: 1 },
-    { field: 'TXN_No', order: 1 },
+    { field: 'CRD_No', order: 1 },
   ];
   private lastQuerySig: string | null = null;
   private lazyTimer: any = null;
@@ -107,7 +113,7 @@ export class TLS23130Component extends BasicQueryPageComponent<any> {
     ...createPaginationConfig([
       { field: this.groupByField, order: 1 },
       { field: 'TXN_Date', order: 1 },
-      { field: 'TXN_No', order: 1 },
+      { field: 'CRD_No', order: 1 },
     ]),
   });
 
@@ -225,7 +231,7 @@ fetchTLS23130 = (evt: LazyLoadEvent) => {
     pageIndex,
     SortBy: sortBy,
   };
-
+this.historyRequestBody = { ...payload };
   return this.tls23130Service.queryTLS23130(payload).pipe(
     map((res: any) => {
       // 包裝層
@@ -247,7 +253,7 @@ fetchTLS23130 = (evt: LazyLoadEvent) => {
 
           // 穩定 rowKey
           const dateKey = String(rec.TXN_Date ?? '').slice(0, 19);
-          rec._rowKey = `${dateKey}|${rec.TXN_No ?? ''}|${rec.CRD_No ?? ''}`;
+          rec._rowKey = `${dateKey}|${rec.TXN_Date ?? ''}|${rec.CRD_No ?? ''}`;
 
           // 累加總計
           const pay  = Number(rec.TXN_PayAmt ?? 0);
@@ -318,7 +324,7 @@ fetchTLS23130 = (evt: LazyLoadEvent) => {
         pageIndex:     val?.pageIndex ?? 1,
         SortBy:        Array.isArray(val?.SortBy) ? val.SortBy : this.defaultSort,
       };
-
+this.historyRequestBody = { ...payload };
       // 清除空值
       Object.keys(payload).forEach((k) => {
         const v = payload[k];
@@ -355,7 +361,7 @@ fetchTLS23130 = (evt: LazyLoadEvent) => {
 
               // 產生穩定的 dataKey
               const dateKey = String(rec.TXN_Date ?? '').slice(0, 19);
-              rec._rowKey = `${dateKey}|${rec.TXN_No ?? ''}|${rec.CRD_No ?? ''}`;
+              rec._rowKey = `${dateKey}|${rec.TXN_Date ?? ''}|${rec.CRD_No ?? ''}`;
 
               // 聚合總計
               const pay  = Number(rec.TXN_PayAmt ?? 0);
@@ -460,7 +466,7 @@ fetchTLS23130 = (evt: LazyLoadEvent) => {
   // ===== 表格欄位（標記 isTotal / isSubTotal）=====
   columns = [
     { field: 'CRD_No', header: '卡號', visible: true },
-    { field: 'TXN_No', header: '交易序號', visible: true },
+    // { field: 'TXN_No', header: '交易序號', visible: true },
     { field: 'tlt_no', header: '專櫃編號', visible: true },
     { field: 'tlt_name', header: '櫃位名稱', visible: true, style: 'text-left' },
 
@@ -473,4 +479,65 @@ fetchTLS23130 = (evt: LazyLoadEvent) => {
     { field: 'TXN_Time', header: '銷售時間', visible: true, format: this.formatISOToHHMMSS },
     { field: 'TERM_No', header: '分期數', visible: true },
   ];
+// ===== 匯出：PDF =====
+  onExportPDF(): void {
+    if (!this.historyRequestBody) {
+      this.messageService?.warnBubble?.('請先執行查詢以產生報表。');
+      return;
+    }
+    this.btnLoading = true;
+    this.tls23130Service.exporttls23130PDF(this.historyRequestBody).pipe(
+      finalize(() => (this.btnLoading = false))
+    ).subscribe({
+      next: (resp: HttpResponse<Blob>) => this.handleFileExport(resp, '.pdf'),
+      error: () => this.messageService?.warnBubble?.('PDF 匯出失敗。'),
+    });
+  }
+
+  // ===== 通用下載處理 =====
+  private handleFileExport(response: HttpResponse<Blob>, fileExtension: string): void {
+    const contentDisposition = response.headers.get('Content-Disposition');
+    const filename = this.getFilenameFromHeader(contentDisposition, fileExtension);
+    const blob = response.body;
+
+    if (blob && blob.size > 0) {
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+    } else {
+      this.messageService?.warnBubble?.('沒有找到符合條件的資料，無法生成報表。');
+    }
+  }
+
+  private getFilenameFromHeader(contentDisposition: string | null, defaultExtension: string): string {
+    if (!contentDisposition) return `download${defaultExtension}`;
+
+    // RFC 5987: filename*
+    const filenameStarMatch = /filename\*=([^;]+)/i.exec(contentDisposition);
+    if (filenameStarMatch && filenameStarMatch[1]) {
+      const encoded = filenameStarMatch[1].trim();
+      try {
+        return decodeURIComponent(encoded.replace(/^UTF-8''/, ''));
+      } catch {
+        return encoded;
+      }
+    }
+
+    // filename="xxx"
+    const filenameMatch = /filename="([^"]+)"/i.exec(contentDisposition);
+    if (filenameMatch && filenameMatch[1]) {
+      try {
+        return decodeURIComponent(filenameMatch[1].replace(/\+/g, ' '));
+      } catch {
+        return filenameMatch[1];
+      }
+    }
+
+    return `download${defaultExtension}`;
+  }
 }
