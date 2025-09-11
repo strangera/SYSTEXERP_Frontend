@@ -9,9 +9,30 @@ import { ButtonComponent } from '../../../shared/componentkit/button/button.comp
 import { PanelModule } from 'primeng/panel';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { DialogComponent } from '@shared/componentkit/dialog/dialog.component';
 import { NgIf } from '@angular/common';
 import { TranslateModule } from '@ngx-translate/core';
 import { ValidationService } from '@shared/service/validation.service';
+import { Column, createPaginationConfig } from '@shared/componentkit/table/table.model';
+import { TableComponent } from '@shared/componentkit/table/table.component';
+
+/** GLS1001*/
+export interface GLS1001 {
+  // { field: 'id', header: '序號' },
+  //   { field: 'RefCode', header: '廠商編號' },
+  //   { field: 'brand', header: '品牌' },
+  //   { field: 'RefName', header: '廠商名稱' },
+  //   { field: 'uni', header: '統一標號' },
+  //   { field: 'shortName', header: '簡稱' },
+
+  id: string,
+  RefCode: string,
+  brand: string,
+  RefName: string,
+  uni: string,
+  shortName: string
+
+}
 
 /** GLS1016 對象別設定檔 */
 export interface GLS1016 {
@@ -43,8 +64,10 @@ export interface GLS1016 {
       ReactiveFormsModule,
       InputTextComponent,
       DropdownComponent,
+      DialogComponent,
       NgIf, 
-      TranslateModule
+      TranslateModule,
+      TableComponent
     ]
 })
 // 對象及對帳維護作業 CRU
@@ -53,7 +76,7 @@ export class FIN52040CRUComponent extends BasicCruPageComponent<GLS1016> impleme
   dataForm = this.formBuilder.nonNullable.group({
     CompNo: ['', [Validators.required, Validators.maxLength(6)]], //  公司代號
     // RefCode: ['', [Validators.required, Validators.maxLength(20)]], // 對象別代碼
-    RefCode: [{ value: '自動帶入', disabled: true }], // 對象別代碼
+    RefCode: [{ value: '自動帶入', disabled: true }], // 對象別代碼 (不可重複)
     RefName: ['', [Validators.required, Validators.maxLength(30)]], // 對象別名稱 (可編輯)
     SubRefName: ['', [Validators.maxLength(30)]], // 代送商名稱
 
@@ -61,13 +84,31 @@ export class FIN52040CRUComponent extends BasicCruPageComponent<GLS1016> impleme
     UPD_USR_Name: ['', [Validators.maxLength(20)]], //  變更人員姓名
   });
   //
-  GLS1001_Options: apiOption[] = [
-    {No: 'CompNo1', Name: '公司代號1'},
-    {No: 'CompNo2', Name: '公司代號2'},
-    {No: 'CompNo3', Name: '公司代號3'}
+  GLS1001_Options: GLS1001Option[] = [
+    {No: 'Comp1', Name: '公司代號1'},
+    {No: 'Comp2', Name: '公司代號2'},
+    {No: 'Comp3', Name: '公司代號3'}
   ];
-  building_noOptions: apiOption[] = [];
-  STO_NoOptions: apiOption[] = [];
+
+  // ---------------------- Dialog ----------------------
+  dialogVisible = false;
+  dialogQueryForm = this.formBuilder.group({
+    RefCode: ['', [Validators.maxLength(20)]],
+    RefName: ['', [Validators.maxLength(30)]],
+    ...createPaginationConfig([{ field: 'RefCode', order: 1 }]),
+  });
+  totalRecords = 0;
+  dialogData: any[] = [];
+  selectedItemsDialog: any[] = [];
+  dialogColumns: Column[] = [
+    { field: 'id', header: '序號' },
+    { field: 'RefCode', header: '廠商編號' },
+    { field: 'brand', header: '品牌' },
+    { field: 'RefName', header: '廠商名稱' },
+    { field: 'uni', header: '統一標號' },
+    { field: 'shortName', header: '簡稱' },
+  ];
+  dialogLoading = false;
   // ----------------------------------------------------------------
   constructor(
     private tls51080Service: Tls51080Service,
@@ -122,5 +163,35 @@ export class FIN52040CRUComponent extends BasicCruPageComponent<GLS1016> impleme
 
   onClearForm() {
     this.dataForm.reset(); // 重置表單
+  }
+
+  // 廠商表格
+  openDialog(): void {
+  this.dialogVisible = true;
+}
+
+  onQuery(frm: FormGroup) {
+    this.dialogLoading = true;
+    // 模擬 API
+    const mockData = [
+      { RefCode: 'C001', RefName: '對象一' },
+      { RefCode: 'C002', RefName: '對象二' },
+      { RefCode: 'C003', RefName: '對象三' },
+    ];
+    this.dialogData = mockData;
+    this.totalRecords = mockData.length;
+    this.dialogLoading = false;
+  }
+
+  saveDialog() {
+    this.dialogVisible = false;
+    if (this.selectedItemsDialog.length > 0) {
+      const selected = this.selectedItemsDialog[0]; // 單選
+      this.dataForm.patchValue({
+        RefCode: selected.RefCode,
+        RefName: selected.RefName
+      });
+    }
+    this.selectedItemsDialog = [];
   }
 }

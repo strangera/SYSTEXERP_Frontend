@@ -101,7 +101,7 @@ export class FIN52040Component extends BasicQueryPageComponent<GLS1016> implemen
 
       this.data = [
         { 
-          "CompNo": "CompNo1",
+          "CompNo": "Comp1",
           "RefCode": "對象別代碼1",
           "RefName": "對象別名稱1",
           "SubRefName": "代送商名稱1"
