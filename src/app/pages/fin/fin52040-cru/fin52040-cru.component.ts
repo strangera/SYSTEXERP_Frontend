@@ -52,15 +52,20 @@ export class FIN52040CRUComponent extends BasicCruPageComponent<GLS1016> impleme
   // ----------------------------------------------------------------
   dataForm = this.formBuilder.nonNullable.group({
     CompNo: ['', [Validators.required, Validators.maxLength(6)]], //  公司代號
-    RefCode: ['', [Validators.required, Validators.maxLength(20)]], // 對象別代碼
-    RefName: ['', [Validators.required, Validators.maxLength(30)]], // 對象別名稱
+    // RefCode: ['', [Validators.required, Validators.maxLength(20)]], // 對象別代碼
+    RefCode: [{ value: '自動帶入', disabled: true }], // 對象別代碼
+    RefName: ['', [Validators.required, Validators.maxLength(30)]], // 對象別名稱 (可編輯)
     SubRefName: ['', [Validators.maxLength(30)]], // 代送商名稱
 
     CRT_USR_Name: ['', [Validators.maxLength(20)]], //  建立人員姓名
     UPD_USR_Name: ['', [Validators.maxLength(20)]], //  變更人員姓名
   });
   //
-  org_idOptions: apiOption[] = [];
+  GLS1001_Options: apiOption[] = [
+    {No: 'CompNo1', Name: '公司代號1'},
+    {No: 'CompNo2', Name: '公司代號2'},
+    {No: 'CompNo3', Name: '公司代號3'}
+  ];
   building_noOptions: apiOption[] = [];
   STO_NoOptions: apiOption[] = [];
   // ----------------------------------------------------------------
