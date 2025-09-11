@@ -115,7 +115,7 @@
                    [dataKey]="'Apply_No'"
                    [tableKey]="'ASS21020_detail'"
                    [columns]="columns">
-          <header>
+          <header *ngIf="!isFormReadable">
             <div class="flex align-items-center justify-content-between w-full border-1 surface-border p-2">
               <div></div>
               <app-button label="自動依面積計算比率"
