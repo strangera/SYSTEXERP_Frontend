@@ -14,7 +14,69 @@
         id="queryForm"
         (ngSubmit)="onSubmit(queryForm)"
       >
-        <div class="card">
+        <div class="grid p-fluid">
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-multi-select
+              label="收銀機號"
+              controlName="ECR_No"
+              [options]="ECRNoOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.ECR_No"
+              [submitted]="submitted"
+            ></app-multi-select>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown
+              label="專櫃編號"
+              controlName="TLT_No"
+              [control]="queryForm.controls.TLT_No"
+              [options]="CounterOptions"
+              optionLabel="formLabel"
+              optionValue="value"
+              [submitted]="submitted"
+            ></app-dropdown>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown
+              label="館別"
+              controlName="tlt_building"
+              [options]="buildingNoOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.tlt_building"
+              [submitted]="submitted"
+            ></app-dropdown>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown
+              label="樓層"
+              controlName="tlt_floor"
+              [options]="floorOptions"
+              optionLabel="label"
+              optionValue="value"
+              [control]="queryForm.controls.tlt_floor"
+              [submitted]="submitted"
+            ></app-dropdown>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-input-text
+              label="收銀機IP"
+              controlName="EOS_IP"
+              [control]="queryForm.controls.EOS_IP"
+              [submitted]="submitted"
+            ></app-input-text>
+          </div>
+        </div>
+        <div
+          class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
+        >
+          <app-button btnType="clear"></app-button>
+          <app-button btnType="submit"></app-button>
+        </div>
+      </form>
+
+       <div class="card mt-5">
           <!-- TabMenu 移到這裡 -->
           <p-tabMenu
             [model]="items"
@@ -164,7 +226,6 @@
             (onPageChange)="onPageChange($event)"
           ></p-paginator>
         </div>
-      </form>
     </p-accordionTab>
   </p-accordion>
 </div>
