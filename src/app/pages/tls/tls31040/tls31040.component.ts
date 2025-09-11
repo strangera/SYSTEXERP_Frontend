@@ -66,12 +66,6 @@ export class TLS31040Component extends BasicQueryPageComponent<TLS31040Response>
   totalRecords = 0;
   data: TLS31040Response[] = [];
   columns: Column[] = [
-    // { field: 'building_desc', header: '館別', visible: true },
-    // { field: 'org_name', header: '組織名稱', visible: true },
-    // { field: 'tlt_kind', header: '櫃別', visible: true },
-    // { field: 'tlt_no', header: '專櫃編號', visible: true },
-    // { field: 'location_no', header: '位置編號', visible: true },
-    // { field: 'tlt_name', header: '專櫃名稱', visible: true },
     { field: 'bus_type', header: '櫃別', visible: true }, 
     { field: 'bus_type_name', header: '櫃別名稱', visible: true }, 
 

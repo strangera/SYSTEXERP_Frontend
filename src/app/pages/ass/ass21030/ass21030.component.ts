@@ -84,7 +84,7 @@ export class ASS21030Component extends BasicQueryPageComponent<ENG2001> implemen
       ENG_Status: [null, [Validators.maxLength(1)]], // 結算狀態：0=未抄錶、1=已抄錶、2=已結算
 
       //分頁查詢
-      ...createPaginationConfig([{ field: 'EngTypes', order: 1 },{ field: 'ENG_MeterNo', order: 2 }]), // 分頁和排序參數
+      ...createPaginationConfig([{ field: 'EngTypes', order: 1 },{ field: 'ENG_MeterNo', order: 1 }]), // 分頁和排序參數
     });
     // 表格
     // ----------------------------------------------------------------
