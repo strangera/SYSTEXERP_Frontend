@@ -96,6 +96,21 @@ export class ASS21020CRUComponent extends BasicCruPageComponent<ASS21020Data> im
       errorMessages.push('比率格式不正確（須為0-100之間的數字）');
     }
 
+    // 驗證所有 ENG_Rate 欄位都必須填入數字（包含0）
+    const hasEmptyRates = currentData.some(item => {
+      let rate;
+      if (item === event.rowData) {
+        rate = event.field === 'ENG_Rate' ? event.value : item.ENG_Rate;
+      } else {
+        rate = item.ENG_Rate;
+      }
+      return rate === null || rate === void 0 || rate === '';
+    });
+
+    if (hasEmptyRates) {
+      errorMessages.push('所有比率欄位都必須填入數字（包含0）');
+    }
+
     // 驗證總比率不超過100%
     const total = currentData.reduce((sum, item) => {
       let rate = 0;
