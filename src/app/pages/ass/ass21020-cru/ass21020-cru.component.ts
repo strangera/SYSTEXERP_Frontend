@@ -90,14 +90,18 @@ export class ASS21020CRUComponent extends BasicCruPageComponent<ASS21020Data> im
   });
 
   public readonly filteredData = computed<ASS21020Detail[]>(() => {
-    this.logger.debug(`filteredData:`, [this.tableDataSignal(), this.rowdata]);
-    const rows = this.tableDataSignal() || this.rowdata?.Details || [];
-    return !rows.length ? [] : rows.map(d => {
+    const rows = this.tableDataSignal().length > 0
+      ? this.tableDataSignal()
+      : this.rowdata?.Details || [];
+    if (!rows.length) return [];
+
+    this.logger.debug(`filteredData:`, [rows, this.tltByFlagMap()]);
+    return rows.map(d => {
       const mapData = this.tltByFlagMap().get(d.TLT_No);
       return {
         ...d,
-        Location_No: mapData?.Location_No ?? '',
-        NET_SPACE: mapData?.NET_SPACE ?? 0,
+        Location_No: mapData?.Location_No ?? d.Location_No ?? '',
+        NET_SPACE: mapData?.NET_SPACE ?? d.NET_SPACE ?? 0,
       };
     });
   });
@@ -195,7 +199,6 @@ export class ASS21020CRUComponent extends BasicCruPageComponent<ASS21020Data> im
     const data = this.service.ASS21020Data();
     const engTypes = this.service.engTypeSignal();
     const meterNos = this.service.engMeterNoSignal();
-    const payload = this.payload();
     if (!engTypes?.length || !meterNos?.length || !rowData) return;
 
     const fixedType = engTypes.find(t => t.Name === rowData.ENG_Type);
@@ -214,8 +217,12 @@ export class ASS21020CRUComponent extends BasicCruPageComponent<ASS21020Data> im
       y_coord: meterData.Draw_Y ?? void 0,
     }, { emitEvent: !1 });
 
-    this.logger.debug(`initEffect 1:`, [rowData, data, engTypes, meterNos, payload, fixedType, meterData, target]);
-    // payload && this.service.loadASS21020(payload);
+    if (rowData.ENG_MeterNo && this.lastQueriedMeterNo !== rowData.ENG_MeterNo) {
+      this.lastQueriedMeterNo = rowData.ENG_MeterNo;
+      this.service.queryTltByFlag(rowData.ENG_MeterNo);
+    }
+
+    this.logger.debug(`initEffect 1:`, [rowData, data, engTypes, meterNos, fixedType, meterData, target]);
     if (!target) return;
     this.tableDataSignal.set(target.Details ?? []);
     this.logger.debug(`initEffect 2:`, [meterData, target]);
@@ -230,7 +237,7 @@ export class ASS21020CRUComponent extends BasicCruPageComponent<ASS21020Data> im
       options: () => this.service.tltNoSignal().map(({ TLT_No, TLT_Name }) => ({ No: TLT_No, Name: `${TLT_No}-${TLT_Name}` })),
       optionLabel: 'Name',
       optionValue: 'No',
-      disabled: () => this.crudstatus === CRUDStatus.Read,
+      disabled: () => this.isFormReadable,
       required: !0
     },
     {
@@ -242,17 +249,18 @@ export class ASS21020CRUComponent extends BasicCruPageComponent<ASS21020Data> im
       field: 'NET_SPACE',
       header: '營業面積',
       format: (v: number) => v ?? this.editingRow?.NET_SPACE ?? 0,
+      disabled: () => this.isFormReadable,
     },
     {
       field: 'ENG_Rate',
       header: '比率',
       type: 'inputNumber',
       format: (v: number) => (v ?? this.editingRow?.ENG_Rate ?? 0) + '%',
+      disabled: () => this.isFormReadable,
       validate: [this.validateEngRate.bind(this)],
-      disabled: () => this.crudstatus === CRUDStatus.Read,
       required: !0
     },
-    { field: 'ENG_Remark', header: '備註', type: 'input' },
+    { field: 'ENG_Remark', header: '備註', type: 'input', disabled: () => this.isFormReadable, },
   ];
 
   constructor(
