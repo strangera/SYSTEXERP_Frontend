@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpResponse } from '@angular/common/http';
 import { catchError, Observable, tap } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import { ErrorHandlerService } from '../../system/error-handler.service';
@@ -20,12 +20,43 @@ export class TLS23090Service {
       tap(response => console.log('查詢結果:', response)),
        // ✅ 正確
     );}
-      // ✅ 新增：櫃位彙總
+    // 查詢（專櫃卡別分析）
   queryTLS23090CounterCard(body: any): Observable<any> {
-    const url = `${this.apiUrl}/TLS0000/TLS2000/queryTLS23090_CounterCard`;
-    return this.http.post<any>(url, body).pipe(
-      tap(res => console.log('🎯 TLS23090_CounterCard:', res)),
-     
-    );
+    return this.http.post<any>(`${this.apiUrl}/TLS0000/TLS2000/queryTLS23090_CounterCard`, body);
   }
+
+  // 匯出 PDF（信用卡明細）
+  exporttls23090CreditPDF(body: any): Observable<HttpResponse<Blob>> {
+    return this.http.post(`${this.apiUrl}/TLS0000/TLS2000/exportTLS23090_CreditCardPDF`, body, {
+      observe: 'response',
+      responseType: 'blob',
+    });
+  }
+
+  // 匯出 PDF（專櫃卡別分析）
+  exporttls23090CounterPDF(body: any): Observable<HttpResponse<Blob>> {
+    return this.http.post(`${this.apiUrl}/TLS0000/TLS2000/exportTLS23090_CounterCardPDF`, body, {
+      observe: 'response',
+      responseType: 'blob',
+    });
+  }
+  
+    /**
+     * 匯出用：移除分頁相關欄位（大小寫都處理），保留 SortBy（若後端會依排序輸出）
+     */
+    private stripPaging<T extends Record<string, any>>(
+      input: T
+    ): Omit<T,
+      'PageSize' | 'PageIndex' | 'OrderBy' | 'Offset' |
+      'pageSize' | 'pageIndex' | 'orderBy' | 'offset'
+    > {
+      if (!input) return input as any;
+      const {
+        PageSize, PageIndex, OrderBy, Offset,
+        pageSize, pageIndex, orderBy, offset,
+        ...rest
+      } = input as any;
+      return rest as any;
+    }
 }
+
