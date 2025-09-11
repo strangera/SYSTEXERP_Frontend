@@ -26,6 +26,14 @@ export interface FIN11090Data {
   TXN_VoidDT?: string;       // 作廢日期
 }
 
+// --- FIN11090 作廢還原並上傳請求 Model 定義 ---
+export interface FIN11090RestoreAndUploadRequest {
+  TXN_Date: string;          // 銷售日期
+  ECR_No: string;            // 收銀機號
+  TXN_No: string;            // 交易序號
+  SaleReturn_Status: string; // 折讓狀態
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -36,7 +44,7 @@ export class Fin11090Service {
 
   // 查詢
   queryFIN11090(payload: FIN11090QueryRequest): Observable<BaseQueryResponse<FIN11090Data>> {
-    // return this.http.post<BaseQueryResponse<FIN11090Data>>(`${this.apiUrl}/queryFIN11090`, payload);
+    return this.http.post<BaseQueryResponse<FIN11090Data>>(`${this.apiUrl}/queryFIN11090`, payload);
 
     // 回傳模擬資料
     return of({
@@ -80,5 +88,10 @@ export class Fin11090Service {
       Message: '查詢成功',
       TotalPage: 1
     });
+  }
+
+  // 作廢還原並上傳紀錄
+  restoreAndUploadFIN11090(payload: FIN11090RestoreAndUploadRequest[]): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/RestoreAndUploadFIN11090`, payload);
   }
 }
