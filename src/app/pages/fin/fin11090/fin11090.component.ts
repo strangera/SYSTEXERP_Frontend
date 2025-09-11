@@ -103,7 +103,10 @@ export class FIN11090Component extends BasicQueryPageComponent<FIN11090Data> imp
       field: 'SaleReturn_Status',
       header: '折讓狀態',
       visible: true,
-      format: (value: string) => value === 'Y' ? '作廢' : '正常(已銷退)'
+      format : (value: string) =>
+        value === 'Y' ? '作廢' :
+        value === 'N' ? '開立' :
+        value === 'X' ? '未開折讓' : ''
     },
     {
       field: 'TXN_VoidDT',
