@@ -7,7 +7,7 @@ import { InputTextComponent } from '../../../shared/componentkit/input-text/inpu
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { TranslateModule } from '@ngx-translate/core';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
-import { AddButton, Column, createPaginationConfig, formatDateTime } from '@shared/componentkit/table/table.model';
+import { Column, createPaginationConfig, formatDateTime } from '@shared/componentkit/table/table.model';
 import { TableComponent } from '@shared/componentkit/table/table.component';
 import { CommonModule } from '@angular/common';
 import { MultiSelectComponent } from "@shared/componentkit/multi-select/multi-select.component";
@@ -18,6 +18,7 @@ import { IQueryTLS56080Response, Tls56080Service } from '@service/api/tls/tls560
 import { finalize } from 'rxjs';
 import { IQueryPOS2004DetailRequest, IQueryPOS2004DetailResponse, Tls52010Service } from '@service/api/tls/tls52010.service';
 import { DropdownTableComponent, FieldsConfig } from '@shared/componentkit/dropdown-table/dropdown-table.component';
+import { ButtonModule } from 'primeng/button';
 
 export const enum TRDStatus {
   申請中 = '1',
@@ -44,6 +45,7 @@ export const enum TRDStatus {
     CommonModule,
     MultiSelectComponent,
     CalendarRangeQuickComponent,
+    ButtonModule,
     DropdownTableComponent
   ],
 })
@@ -65,6 +67,7 @@ export class TLS56080Component extends BasicQueryPageComponent<IQueryTLS56080Res
   });
   totalRecords = 0;
   data: IQueryTLS56080Response[] = [];
+  selectedItems: IQueryTLS56080Response[] = [];
   columns: Column[] = [
     { field: 'TRD_No', header: '調撥單編號', visible: true },
     { field: 'APPLY_Date', header: '申請日期', visible: true, format: formatDateTime },
@@ -79,24 +82,6 @@ export class TLS56080Component extends BasicQueryPageComponent<IQueryTLS56080Res
     { field: 'Confim_Date', header: '確認日期', visible: true, format: formatDateTime },
     { field: 'TRD_Remark', header: '說明', visible: true },
     { field: 'TRD_Status', header: '單據狀態', visible: true, format: (value) => this.transferStatusOptions.find((item) => item.value === value)?.label || value },
-  ];
-
-  addButton: AddButton[] = [
-    {
-      label: '確認', icon: 'pi pi-check-circle text-green-500', action: (selectedItems: IQueryTLS56080Response) => {
-        this.batchUpdateStatus(selectedItems, TRDStatus.已確認);
-      }, disabled: (item: IQueryTLS56080Response) => item.TRD_Status !== TRDStatus.申請中
-    },
-    {
-      label: '審核', icon: 'pi pi-check text-orange-500', action: (selectedItems: IQueryTLS56080Response) => {
-        this.batchUpdateStatus(selectedItems, TRDStatus.已審核);
-      }, disabled: (item: IQueryTLS56080Response) => item.TRD_Status !== TRDStatus.已確認
-    },
-    {
-      label: '作廢', icon: 'pi pi-trash text-red-500', action: (selectedItems: IQueryTLS56080Response) => {
-        this.batchUpdateStatus(selectedItems, TRDStatus.作廢);
-      }, disabled: (item: IQueryTLS56080Response) => item.TRD_Status !== TRDStatus.申請中
-    },
   ];
 
   transferStatusOptions = [
@@ -158,20 +143,21 @@ export class TLS56080Component extends BasicQueryPageComponent<IQueryTLS56080Res
 
   btnLoading = false;
 
-  batchUpdateStatus(selectedItems: IQueryTLS56080Response, status: string): void {
-    this.btnLoading = true;
+  batchUpdateStatus(status: string): void {
     const body = {
-      DetailList: [
-        {
-          TRD_No: selectedItems.TRD_No,
-          TRD_Status: status
-        }
-      ]
+      DetailList: this.selectedItems.map(item => ({
+        TRD_No: item.TRD_No,
+        TRD_Status: status
+      }))
     };
+    this.btnLoading = true;
     this.tls56080Service.updateStatusTLS56080(body).pipe(untilDestroyed(this), finalize(() => this.btnLoading = false)).subscribe(response => {
       this.messageService.successBubble(response.Message);
       this.onSubmit(this.queryForm);
     });
+  }
+  checkStatus(status: string): boolean {
+    return this.selectedItems.some(item => item.TRD_Status !== status);
   }
   // 管理編號
   opLoading = false;

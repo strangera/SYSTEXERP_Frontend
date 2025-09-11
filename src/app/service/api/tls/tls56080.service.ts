@@ -111,7 +111,7 @@ export interface IQueryPOS2004DetailResponse {
  */
 export interface IQuerySTORETRADEDRequest {
   TRD_No: string; // 交易單號
-  OUT_HOS_No: string; // 查詢編號 (商品管理編號/國際條碼/廠商貨號)
+  OUT_HOS_No?: string; // 查詢編號 (商品管理編號/國際條碼/廠商貨號)
 }
 
 /**

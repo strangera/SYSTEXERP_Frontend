@@ -42,7 +42,7 @@ import { getSYS1000Options } from '@service/system/sys1000.service';
     InputTextareaComponent,
     TableComponent,
     DialogComponent,
-    DropdownTableComponent
+    DropdownTableComponent,
   ]
 })
 export class TLS56080CRUComponent extends BasicCruPageComponent<IQueryTLS56080Response> implements OnInit {
@@ -62,6 +62,7 @@ export class TLS56080CRUComponent extends BasicCruPageComponent<IQueryTLS56080Re
     TRD_Remark: [null, [Validators.maxLength(200)]], // 備註
   });
   data: ITLS56080Detail[] = [];
+  originalData: ITLS56080Detail[] = [];
   selectedItems: ITLS56080Detail[] = [];
   columns: Column[] = [
     { field: 'PLU_MagNo', header: '商品管理編號', visible: true },
@@ -70,8 +71,8 @@ export class TLS56080CRUComponent extends BasicCruPageComponent<IQueryTLS56080Re
     { field: 'PLU_BoxQty', header: '包裝入數', visible: true },
     { field: 'TRD_Type', header: '調出/調入', visible: true, type: 'dropdown', options: [{ label: '調出', value: '0' }, { label: '調入', value: '1' }], validate: [validateRequired], required: true },
     { field: 'TRD_Qty', header: '數量', visible: true, type: 'inputNumber', validate: [validateRequired, validateMinNumber(1)], required: true },
-    { field: 'PLU_SalePrc', header: '單價', visible: true },
-    { field: 'TRD_Amt', header: '小計', visible: true },
+    { field: 'PLU_SalePrc', header: '單價', visible: true, format: formatAmount },
+    { field: 'TRD_Amt', header: '小計', visible: true, format: formatAmount },
     { field: 'TRD_Remark', header: '單項備註', visible: true, type: 'input' },
   ];
 
@@ -92,10 +93,21 @@ export class TLS56080CRUComponent extends BasicCruPageComponent<IQueryTLS56080Re
   ngOnInit(): void {
     this.initializePage('TLS56080', this.dataForm);
     this.loadDropdownOptions();
+    if (!this.isFormCreateable && this.rowdata && this.rowdata.TRD_No) {
+      this.dataForm.get('HOS_No')?.disable();
+      this.dataForm.get('VEN_No')?.disable();
+      this.dataForm.get('LOGO_No')?.disable();
+      this.tls56080Service.querySTORETRADED({
+        TRD_No: this.rowdata?.TRD_No,
+        OUT_HOS_No: this.rowdata?.HOS_No
+      }).pipe(untilDestroyed(this)).subscribe(response => {
+        this.data = response.Data
+        this.originalData = response.Data;
+      });
+    }
     // 監聽品牌、倉別、廠商變動，清空明細資料
     this.dataForm.controls['LOGO_No'].valueChanges.pipe(untilDestroyed(this)).subscribe(() => { this.data = []; this.calculateTotals(); });
     this.dataForm.controls['HOS_No'].valueChanges.pipe(untilDestroyed(this)).subscribe(() => { this.data = []; this.calculateTotals(); });
-    this.dataForm.controls['VEN_No'].valueChanges.pipe(untilDestroyed(this)).subscribe(() => { this.data = []; this.calculateTotals(); });
   }
 
   loadDropdownOptions(): void {
@@ -155,7 +167,7 @@ export class TLS56080CRUComponent extends BasicCruPageComponent<IQueryTLS56080Re
         PLU_No: item.PLU_No,
         PLU_Unit: item.PLU_Unit,
         UNIT_NAME: item.UNIT_NAME,
-        PLU_BoxQty: item.PLU_BoxQty,
+        PLU_BoxQty: item.PLU_BoxQty === null ? 0 : item.PLU_BoxQty,
         PLU_Name: item.PLU_Name,
         TRD_Type: '',
         PLU_SalePrc: item.PLU_SalePrc_UNI,
@@ -210,6 +222,9 @@ export class TLS56080CRUComponent extends BasicCruPageComponent<IQueryTLS56080Re
       ...event,
       HOS_No: this.dataForm.controls.HOS_No.value || '',
       LOGO_No: this.dataForm.controls.LOGO_No.value || '',
+      pageSize: this.opForm.controls.pageSize.value || 20,
+      pageIndex: this.opForm.controls.pageIndex.value || 1,
+      SortBy: this.opForm.controls.SortBy.value || [{ field: 'PLU_MagNo', order: 1 }],
     };
     this.tls56080Service.queryPOS2004Detail(body).pipe(untilDestroyed(this)).subscribe((results) => {
       this.opData = [...results.Data]; // 更新data資料
@@ -238,13 +253,7 @@ export class TLS56080CRUComponent extends BasicCruPageComponent<IQueryTLS56080Re
         inTotal += item.TRD_Amt || 0;
       }
     });
-    console.log('inTotal', inTotal, 'outTotal', outTotal);
-    console.log(this.data);
-
-
-
     const diffTotal = Math.abs(inTotal - outTotal);
-
     this.dataForm.patchValue({
       IN_TotBuyAmt: inTotal,
       OUT_TotBuyAmt: outTotal,
@@ -252,16 +261,30 @@ export class TLS56080CRUComponent extends BasicCruPageComponent<IQueryTLS56080Re
     });
   }
 
+  onDelete(selectedRows: ITLS56080Detail[]): void {
+    this.data = this.data.filter(row => !selectedRows.includes(row));
+    this.calculateTotals();
+  }
+
   onSubmit(frm: FormGroup): void {
     // 檢查差異金額是否為0
     if (frm.get('DIFF_TotBuyAmt')?.value !== 0) {
-      alert('調出金額與調入金額不一致，無法新增！');
+      this.messageService.errorBubble('調出金額與調入金額不一致', '無法新增！');
       return;
     }
-
+    // 如果有一筆Type為空就錯
+    if (this.data.some(item => item.TRD_Type === '' || item.TRD_Type === null || item.TRD_Type === undefined)) {
+      this.messageService.errorBubble('請選擇調出或調入', '無法新增');
+      return;
+    }
+    // 每一筆資料的數量都必須大於0
+    if (this.data.some(item => item.TRD_Qty <= 0)) {
+      this.messageService.errorBubble('數量必須大於0', '無法新增');
+      return;
+    }
     // 檢查明細是否為空
     if (this.data.length === 0) {
-      alert('請至少新增一筆商品明細！');
+      this.messageService.errorBubble('請至少新增一筆商品明細！', '無法新增！');
       return;
     }
 
@@ -281,9 +304,27 @@ export class TLS56080CRUComponent extends BasicCruPageComponent<IQueryTLS56080Re
         APPLY_Date: frm.getRawValue().APPLY_Date,
         APPLY_USR_No: frm.getRawValue().APPLY_USR_No,
         TRD_Remark: frm.getRawValue().TRD_Remark,
-        Details: this.data
+        Details: this.data.map((item: ITLS56080Detail) => ({
+          SYS_StoreNo: item.SYS_StoreNo,
+          HOS_No: item.HOS_No,
+          PLU_MagNo: item.PLU_MagNo,
+          PLU_No: item.PLU_No,
+          PLU_Unit: item.PLU_Unit,
+          PLU_BoxQty: item.PLU_BoxQty,
+          PLU_Name: item.PLU_Name,
+          TRD_Type: item.TRD_Type,
+          PLU_SalePrc: item.PLU_SalePrc,
+          TRD_Qty: item.TRD_Qty,
+          TRD_Amt: item.TRD_Amt,
+          TRD_Remark: item.TRD_Remark,
+          id: this.isFormCreateable ? undefined : item.id,
+          TRD_No: this.isFormCreateable ? undefined : item.TRD_No,
+        })),
       }
-      this.tls56080Service.insertTLS56080(body).pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(response => {
+      const request$ = this.isFormCreateable
+        ? this.tls56080Service.insertTLS56080(body)
+        : this.tls56080Service.updateTLS56080(body);
+      request$.pipe(finalize(() => this.loading = false), untilDestroyed(this)).subscribe(response => {
         this.messageService.successBubble(response.Message);
         this.onCancel();
       });
