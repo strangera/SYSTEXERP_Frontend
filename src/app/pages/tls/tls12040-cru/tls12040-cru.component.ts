@@ -292,7 +292,7 @@ export class TLS12040CRUComponent implements OnInit {
     expiration_fees: [0], //契約屆滿保證金金額
     total_amt_unit: [''],
     total_amt_vendor_unit: [''],
-    company_register_address: [''],
+    VEN_Address: [''],
   });
   // ----------------------------------------------------------------
   constructor(
@@ -735,7 +735,7 @@ export class TLS12040CRUComponent implements OnInit {
       ticket_remarks: data.ticket_remarks,
       total_amt_unit: data.total_amt_unit,
       total_amt_vendor_unit: data.total_amt_vendor_unit,
-      company_register_address: data.company_register_address,
+      VEN_Address: data.VEN_Address,
 
       // 狀態欄位
       cap_saletype1: data.cap_saletype1,
@@ -995,7 +995,7 @@ export class TLS12040CRUComponent implements OnInit {
   }
 
   getCompanyAddress(): string {
-    const address = this.dataForm.get('company_register_address')?.value;
+    const address = this.dataForm.get('VEN_Address')?.value;
     const trimmedAddress = address?.trim() || '';
 
     return trimmedAddress;

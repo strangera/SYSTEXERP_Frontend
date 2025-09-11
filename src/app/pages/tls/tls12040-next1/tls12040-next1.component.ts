@@ -134,13 +134,16 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
   private loadOrgOptions(): void {
     console.log('載入組織選項...');
 
-    // 你需要找到對應的服務來載入組織選項
-    // 從你的 TLS13010Next1 程式碼看來，可能是這樣：
-
     const subscription = this.locationOptionsService.getOrgOptions().subscribe({
       next: (options) => {
         console.log('組織選項載入成功:', options);
         this.orgOptions = options;
+
+        // 🔥 強制清除所有快取，確保重新生成欄位定義
+        this.clearColumnCache();
+
+        // 🔥 觸發變更檢測
+        this.cdr.detectChanges();
       },
       error: (error) => {
         console.error('載入組織選項失敗:', error);
@@ -150,6 +153,18 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
     });
 
     this.subscriptions.push(subscription);
+  }
+
+  private clearColumnCache(): void {
+    console.log('🗑️ 清除欄位定義快取');
+    this._cachedDeductionAColumns = null;
+    this._cachedDeductionBColumns = null;
+    this._cachedDeductionCColumns = null;
+    this._cachedDeductionDColumns = null;
+    this._cachedDeductionEColumns = null;
+
+    // 重置快取標記
+    this._lastOrgOptionsLength = -1;
   }
 
   private loadWorkflowDataWithRetry(retryCount: number = 0): void {

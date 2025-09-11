@@ -116,7 +116,7 @@ class CruDataCleaner implements TLS12040DataCleaner {
       total_amt_unit: data.total_amt_unit || '',
       total_amt_vendor_unit: data.total_amt_vendor_unit || '',
       approve_status: data.approve_status || '',
-      company_register_address: data.company_register_address || '',
+      VEN_Address: data.VEN_Address || '',
       locationData: Array.isArray(data.locationData) ?
         data.locationData
           .filter((item: any) => {

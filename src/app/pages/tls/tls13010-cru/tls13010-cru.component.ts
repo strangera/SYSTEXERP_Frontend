@@ -281,7 +281,6 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
     expiration_fees: [0], //契約屆滿保證金金額
     total_amt_unit: [''],
     total_amt_vendor_unit: [''],
-    company_register_address: [''],
     selectedBankInfo: [null]
   });
 
@@ -392,7 +391,7 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
  */
   isFieldReadonly(fieldName: string): boolean {
     // 永遠 readonly 的欄位
-    const alwaysReadonlyFields = ['apply_no', 'tlt_no', 'approve_status', 'VEN_Name', 'contract_subno', 'company_register_address', 'ven_no'];
+    const alwaysReadonlyFields = ['apply_no', 'tlt_no', 'approve_status', 'VEN_Name', 'contract_subno', 'ven_no'];
 
     if (alwaysReadonlyFields.includes(fieldName)) {
       return true;
@@ -471,7 +470,6 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
         // 🎯 清空相關欄位
         this.dataForm.patchValue({
           VEN_Name: '',
-          company_register_address: '',
           ven_no: ''
         });
       }
