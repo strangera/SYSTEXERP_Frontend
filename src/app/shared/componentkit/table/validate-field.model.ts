@@ -70,7 +70,7 @@ export function validateRequired(
   header: string
 ): { isValid: boolean; errorMessage: string[] } {
   return {
-    isValid: value !== null && value !== '',
+    isValid: value !== null && value !== '' && value !== undefined,
     errorMessage: [`「${header}」為必填項目，欄位不能為空`, '資料錯誤'],
   };
 }
