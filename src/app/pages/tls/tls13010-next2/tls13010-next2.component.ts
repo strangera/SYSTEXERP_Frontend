@@ -1278,48 +1278,36 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
   }
 
   private getContractStartDate(): string {
-    // 🎯 第一優先：從合約資訊表格取得（你上方顯示的 tlt_bdate）
-    if (this.contractInfoData && this.contractInfoData.length > 0) {
-      const tlt_bdate = this.contractInfoData[0].tlt_bdate;
-      if (tlt_bdate) {
-        console.log('📅 從合約資訊表格取得起始日:', tlt_bdate);
-        return typeof tlt_bdate === 'string' ? tlt_bdate : this.formatDateToString(tlt_bdate);
-      }
-    }
-
-    // 🎯 第二優先：從 Step1 暫存資料取得
+    // 第二優先：從 Step1 暫存資料取得
     const step1Data = this.contractFlowService.getStep1Data();
     if (step1Data?.tlt_bdate) {
       console.log('📅 從 Step1 取得起始日:', step1Data.tlt_bdate);
-      return typeof step1Data.tlt_bdate === 'string' ?
-        step1Data.tlt_bdate : this.formatDateToString(step1Data.tlt_bdate);
+
+      // 🎯 關鍵修正：統一處理日期格式，避免時區問題
+      const dateStr = this.extractDateStringFromInput(step1Data.tlt_bdate);
+      console.log('📅 處理後的起始日:', dateStr);
+      return dateStr;
     }
 
-    // 🎯 最後備援：今天日期
+    // 最後備援：今天日期
     const today = new Date().toISOString().split('T')[0];
     console.log('📅 使用預設起始日:', today);
     return today;
   }
 
   private getContractEndDate(): string {
-    // 🎯 第一優先：從合約資訊表格取得（你上方顯示的 tlt_edate）
-    if (this.contractInfoData && this.contractInfoData.length > 0) {
-      const tlt_edate = this.contractInfoData[0].tlt_edate;
-      if (tlt_edate) {
-        console.log('📅 從合約資訊表格取得結束日:', tlt_edate);
-        return typeof tlt_edate === 'string' ? tlt_edate : this.formatDateToString(tlt_edate);
-      }
-    }
-
-    // 🎯 第二優先：從 Step1 暫存資料取得
+    // 第二優先：從 Step1 暫存資料取得
     const step1Data = this.contractFlowService.getStep1Data();
     if (step1Data?.tlt_edate) {
       console.log('📅 從 Step1 取得結束日:', step1Data.tlt_edate);
-      return typeof step1Data.tlt_edate === 'string' ?
-        step1Data.tlt_edate : this.formatDateToString(step1Data.tlt_edate);
+
+      // 🎯 關鍵修正：統一處理日期格式，避免時區問題
+      const dateStr = this.extractDateStringFromInput(step1Data.tlt_edate);
+      console.log('📅 處理後的結束日:', dateStr);
+      return dateStr;
     }
 
-    // 🎯 最後備援：今天 + 1年
+    // 最後備援：今天 + 1年
     const nextYear = new Date();
     nextYear.setFullYear(nextYear.getFullYear() + 1);
     const nextYearStr = nextYear.toISOString().split('T')[0];
@@ -1327,21 +1315,65 @@ export class TLS13010Next2Component extends BasicCruPageComponent<ContractInfo> 
     return nextYearStr;
   }
 
-  private formatDateToString(date: any): string {
-    if (!date) return '';
-    try {
-      const dateObj = date instanceof Date ? date : new Date(date);
-      if (isNaN(dateObj.getTime())) return '';
-
-      const year = dateObj.getFullYear();
-      const month = String(dateObj.getMonth() + 1).padStart(2, '0');
-      const day = String(dateObj.getDate()).padStart(2, '0');
-      return `${year}-${month}-${day}`;
-    } catch (error) {
-      console.error('日期格式化失敗:', error, '原始日期:', date);
-      return new Date().toISOString().split('T')[0];  // 備援
+  private extractDateStringFromInput(dateInput: any): string {
+    if (!dateInput) {
+      return new Date().toISOString().split('T')[0];
     }
+
+    // 如果已經是 YYYY-MM-DD 格式的字符串，直接使用
+    if (typeof dateInput === 'string') {
+      // 檢查是否為 ISO 字符串格式 (包含 T 和時間部分)
+      if (dateInput.includes('T')) {
+        // 🎯 關鍵：從 ISO 字符串中提取日期部分，忽略時間和時區
+        return dateInput.split('T')[0];
+      }
+      // 如果是純日期字符串，直接使用
+      if (dateInput.match(/^\d{4}-\d{2}-\d{2}$/)) {
+        return dateInput;
+      }
+    }
+
+    // 如果是 Date 對象，使用本地時間的日期部分
+    if (dateInput instanceof Date) {
+      const year = dateInput.getFullYear();
+      const month = String(dateInput.getMonth() + 1).padStart(2, '0');
+      const day = String(dateInput.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    }
+
+    // 其他情況，嘗試解析後提取日期部分
+    try {
+      const parsedDate = new Date(dateInput);
+      if (!isNaN(parsedDate.getTime())) {
+        // 🎯 重要：使用 UTC 方法避免時區轉換
+        const year = parsedDate.getUTCFullYear();
+        const month = String(parsedDate.getUTCMonth() + 1).padStart(2, '0');
+        const day = String(parsedDate.getUTCDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+      }
+    } catch (error) {
+      console.error('日期解析失敗:', error, '原始日期:', dateInput);
+    }
+
+    // 備援：返回今天日期
+    return new Date().toISOString().split('T')[0];
   }
+
+  // private formatDateToString(date: any): string {
+  //   if (!date) return '';
+  //   try {
+  //     const dateObj = date instanceof Date ? date : new Date(date);
+  //     if (isNaN(dateObj.getTime())) return '';
+
+  //     const year = dateObj.getFullYear();
+  //     const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+  //     const day = String(dateObj.getDate()).padStart(2, '0');
+  //     return `${year}-${month}-${day}`;
+  //   } catch (error) {
+  //     console.error('日期格式化失敗:', error, '原始日期:', date);
+  //     return new Date().toISOString().split('T')[0];  // 備援
+  //   }
+  // }
 
   shouldShowSubmitButton(): boolean {
     if (this.isViewMode) {
