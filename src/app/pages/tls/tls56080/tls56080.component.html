@@ -12,34 +12,53 @@
             <app-input-text label="調撥單編號" controlName="TRD_No" [control]="queryForm.controls.TRD_No"
               [submitted]="submitted"></app-input-text>
           </div>
+          <!-- 管理碼 -->
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="品牌代碼/名稱" controlName="LOGO_No" [options]="brandOptions" optionLabel="label"
-              optionValue="value" [control]="queryForm.controls.LOGO_No" [submitted]="submitted"></app-dropdown>
+            <app-dropdown-table [control]="queryForm.controls.queryNo" [submitted]="submitted" optionLabel="PLU_MagNo"
+              optionValue="PLU_MagNo" [suggestions]="suggestions" [fieldsConfig]="fieldsConfig"
+              (inputValueChanged)="onAutoCompleteInputChange($event)" (formValueChanged)="onformValueChanged($event)"
+              [formGroup]="opForm" [dialogData]="opData" [dialogColumns]="opColumns" [loading]="opLoading"
+              [totalRecords]="opTotalRecords">
+              <app-input-text class="col-12 md:col-6" label="管理編號" controlName="queryNo"
+                [control]="opForm.controls.queryNo" />
+              <app-input-text class="col-12 md:col-6" label="商品名稱" controlName="PLU_Name"
+                [control]="opForm.controls.PLU_Name" />
+            </app-dropdown-table>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select label="倉別" controlName="HOS_No" [options]="warehouseOptions" optionLabel="label"
-              optionValue="value" [control]="queryForm.controls.HOS_No" [submitted]="submitted"></app-multi-select>
+            <app-multi-select label="品牌代碼/名稱" controlName="LOGO_NoList" [options]="brandOptions" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.LOGO_NoList" [submitted]="submitted"></app-multi-select>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="廠商編號/名稱" controlName="VEN_No" [options]="vendorOptions" optionLabel="label"
-              optionValue="value" [control]="queryForm.controls.VEN_No" [submitted]="submitted"></app-dropdown>
+            <app-multi-select label="倉別" controlName="HOS_NoList" [options]="warehouseOptions" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.HOS_NoList" [submitted]="submitted"></app-multi-select>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select label="調撥原因" controlName="TRD_Reason" [options]="reasonOptions" optionLabel="label"
-              optionValue="value" [control]="queryForm.controls.TRD_Reason" [submitted]="submitted"></app-multi-select>
-          </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-multi-select label="單據狀態" controlName="TRD_Status" [options]="transferStatusOptions"
-              optionLabel="label" optionValue="value" [control]="queryForm.controls.TRD_Status"
+            <app-multi-select label="調撥原因" controlName="TRD_ReasonList" [options]="reasonOptions" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.TRD_ReasonList"
               [submitted]="submitted"></app-multi-select>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-dropdown label="申請人編號/名稱" controlName="APPLY_USR_No" [options]="userOptions" optionLabel="label"
-              optionValue="value" [control]="queryForm.controls.APPLY_USR_No" [submitted]="submitted"></app-dropdown>
+            <app-multi-select label="單據狀態" controlName="TRD_StatusList" [options]="transferStatusOptions"
+              optionLabel="label" optionValue="value" [control]="queryForm.controls.TRD_StatusList"
+              [submitted]="submitted"></app-multi-select>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown label="申請人編號/名稱" controlName="APPLY_USR" [options]="userOptions" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.APPLY_USR" [submitted]="submitted"></app-dropdown>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-dropdown label="審核人編號/名稱" controlName="APRV_USR" [options]="userOptions" optionLabel="label"
+              optionValue="value" [control]="queryForm.controls.APRV_USR" [submitted]="submitted"></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-calendar-range-quick calendarType="dateRange" label="申請日期"
               [startControl]="queryForm.controls.APPLY_Date_Start" [endControl]="queryForm.controls.APPLY_Date_End"
+              [submitted]="submitted"></app-calendar-range-quick>
+          </div>
+          <div class="col-12 md:col-6 lg:col-4">
+            <app-calendar-range-quick calendarType="dateRange" label="審核日期"
+              [startControl]="queryForm.controls.APRV_Date_Start" [endControl]="queryForm.controls.APRV_Date_End"
               [submitted]="submitted"></app-calendar-range-quick>
           </div>
         </div>

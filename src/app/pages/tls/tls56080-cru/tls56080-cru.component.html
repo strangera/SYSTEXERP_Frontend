@@ -23,11 +23,11 @@
             optionValue="value" [control]="dataForm.controls.VEN_No" [submitted]="submitted"></app-dropdown>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text label="調入金額" controlName="IN_TotBuyAmt" [control]="dataForm.controls.IN_TotBuyAmt"
+          <app-input-text label="調撥(入)金額" controlName="IN_TotBuyAmt" [control]="dataForm.controls.IN_TotBuyAmt"
             [submitted]="submitted"></app-input-text>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
-          <app-input-text label="調出金額" controlName="OUT_TotBuyAmt" [control]="dataForm.controls.OUT_TotBuyAmt"
+          <app-input-text label="調撥(出)金額" controlName="OUT_TotBuyAmt" [control]="dataForm.controls.OUT_TotBuyAmt"
             [submitted]="submitted"></app-input-text>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
@@ -35,12 +35,12 @@
             [submitted]="submitted"></app-input-text>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
-          <app-dropdown label="調撥原因" controlName="TRD_Reason" [options]="reasonOptions" optionLabel="label"
-            optionValue="value" [control]="dataForm.controls.TRD_Reason" [submitted]="submitted"></app-dropdown>
-        </div>
-        <div class="col-12 md:col-6 lg:col-4">
           <app-input-textarea label="調撥單說明" controlName="TRD_Remark" [control]="dataForm.controls.TRD_Remark"
             [style]="{ height: '100px' }" [submitted]="submitted"></app-input-textarea>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-dropdown label="調撥原因" controlName="TRD_Reason" [options]="reasonOptions" optionLabel="label"
+            optionValue="value" [control]="dataForm.controls.TRD_Reason" [submitted]="submitted"></app-dropdown>
         </div>
         <div class="col-12 md:col-6 lg:col-4">
           <app-dropdown label="申請人" controlName="APPLY_USR_No" [control]="dataForm.controls.APPLY_USR_No"
@@ -54,7 +54,8 @@
       <hr />
       <app-table dataKey="PLU_MagNo" [columns]="columns" [data]="data" [selectedItems]="selectedItems"
         [showCheckBox]="isFormCreateable" (selectionChange)="selectedItems = $event" [showEdit]="false"
-        [showDetail]="false" [showInsert]="true" (insert)="dialogVisible = true" [showRowEdit]="true"
+        [showDetail]="false" [showInsert]="true"
+        (insert)="dialogVisible = true;selectedItemsDialog = [];dialogData = []" [showRowEdit]="true"
         (delete)="calculateTotals()" [deleteData]="true" [showManage]="!isFormReadable" [showReportMode]="false"
         [insertDisabled]="dataForm.controls.HOS_No.value && dataForm.controls.LOGO_No.value ? false : true"
         (rowEditSave)="onRowEditSave($event)" [showCaption]="isFormCreateable" (dataChange)="data = $event"></app-table>
@@ -69,11 +70,18 @@
   [disable]="selectedItemsDialog.length === 0">
   <form [formGroup]="dialogQueryForm" (ngSubmit)="onQuery(dialogQueryForm)">
     <div class="grid p-fluid">
-      <div class="col-12">
-        <app-input-number-range startControlName="PLU_SalePrc_min" endControlName="PLU_SalePrc_max" startLabel="最低售價"
-          endLabel="最高售價" [startControl]="dialogQueryForm.controls.PLU_SalePrc_min"
-          [endControl]="dialogQueryForm.controls.PLU_SalePrc_max"></app-input-number-range>
-      </div>
+      <app-dropdown-table class="col-12" [control]="dialogQueryForm.controls.queryNo" [submitted]="submitted"
+        templateLabel="label" optionLabel="label" optionValue="PLU_MagNo" [suggestions]="suggestions"
+        [fieldsConfig]="fieldsConfig" (inputValueChanged)="onAutoCompleteInputChange($event)"
+        (formValueChanged)="onformValueChanged($event)" [formGroup]="opForm" [dialogData]="opData"
+        [dialogColumns]="opColumns" [loading]="opLoading" [totalRecords]="opTotalRecords">
+        <app-input-text class="col-12 md:col-6" label="商品管理編號/國際條碼/廠商貨號" controlName="queryNo"
+          [control]="opForm.controls.queryNo" />
+        <app-input-text class="col-12 md:col-6" label="商品名稱" controlName="PLU_Name"
+          [control]="opForm.controls.PLU_Name" />
+      </app-dropdown-table>
+      <app-input-text class="col-12" label="商品名稱" controlName="PLU_Name"
+        [control]="dialogQueryForm.controls.PLU_Name" />
     </div>
     <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
       <app-button btnType="clear" (click)="dialogQueryForm.reset()"></app-button>
@@ -86,6 +94,6 @@
     (selectionChange)="selectedItemsDialog = $event" [showHeader]="false" [showManage]="false" [showCheckBox]="true"
     [multiSortMeta]="[{ field: 'PLU_MagNo', order: 1 }]" [totalRecords]="totalRecords"
     (lazyLoadData)="onLazyLoadData($event, dialogQueryForm); onQuery(dialogQueryForm)" [lazy]="true"
-    [loading]="dialogLoading">
+    [loading]="dialogLoading" [isRowSelectable]="isRowSelectable.bind(this)">
   </app-table>
 </app-dialog>
