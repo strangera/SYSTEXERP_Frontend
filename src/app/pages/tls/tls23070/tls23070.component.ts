@@ -62,7 +62,6 @@ export class TLS23070Component extends BasicQueryPageComponent<any> {
   totalRecords = 0;
    
   btnLoading = false;
-  // 匯出沿用最後一次查詢的 payload
   historyRequestBody: any | null = null;
   // ====== 表尾總計 / 群組小計容器 ======
   detailTotals: Record<string, number> = {};
