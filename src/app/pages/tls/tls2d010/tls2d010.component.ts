@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { ActivatedRoute } from '@angular/router';
 import { RadiobuttonComponent } from '../../../shared/componentkit/radiobutton/radiobutton.component';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
@@ -11,6 +12,7 @@ import { TableComponent } from '../../../shared/componentkit/table/table.compone
 import { TranslateModule } from '@ngx-translate/core';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-tls2d010',
@@ -20,11 +22,11 @@ import { createPaginationConfig } from '../../../shared/componentkit/table/table
   imports: [MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, RadiobuttonComponent, MultiSelectComponent, CalendarComponent, DropdownComponent, TableComponent, TranslateModule]
 })
 export class TLS2D010Component extends BasicQueryPageComponent<any> implements OnInit {
-
+  currentCreateType: 'normal' | 'counter' = 'counter'
   queryForm = this.formBuilder.group({
     tlt_no: [[]], // 專櫃編號
     CAP_Item: [[]],
-    AccNo: [, [Validators.maxLength(8)]], // 會計科目代號
+    AccNo: [[Validators.maxLength(8)]], // 會計科目代號
     org_id: [[] as number[], [Validators.required]], // 組織
     tpy_date: [], // 扣款年月
     CRT_USR_No: [], // 扣款日期
@@ -60,14 +62,12 @@ export class TLS2D010Component extends BasicQueryPageComponent<any> implements O
   get f() {
     return this.queryForm.controls;
   }
-
   constructor(
-
+    router: Router,
+    private route: ActivatedRoute
   ) {
     super();
   }
-
-
   ngOnInit(): void {
     this.initializePage('TLS2D010', '/TLS/TLS2D010CRU', this.queryForm, (form) => this.onSubmit(form));
 
