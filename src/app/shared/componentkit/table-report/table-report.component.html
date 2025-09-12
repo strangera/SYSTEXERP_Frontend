@@ -1,19 +1,118 @@
-<p-table [columns]="columns" [value]="virtualData" [scrollable]="true" scrollHeight="500px" [rows]="20"
-  [virtualScroll]="true" [virtualScrollItemSize]="46" [virtualScrollDelay]="0" [lazy]="true"
-  (onLazyLoad)="loadDataLazy($event)">
+<p-table #dt [columns]="columns" [value]="virtualData" [scrollable]="true" scrollHeight="500px" [rows]="30"
+  [(selection)]="selectedItems" sortMode="multiple" selectionMode="multiple" [rowTrackBy]="trackByFn"
+  [resizableColumns]="true" [reorderableColumns]="true"
+  [multiSortMeta]="lastQueryBody ? lastQueryBody.SortBy : undefined" (onColReorder)="onColReorder($event)"
+  tableStyleClass="h-full" styleClass="
+    p-datatable-sm p-datatable-gridlines p-datatable-striped" (selectionChange)="onSelectionChange($event)"
+  [rowSelectable]="rowSelectableWrapper" [virtualScroll]="true" (onLazyLoad)="loadDataLazy($event)"
+  [virtualScrollOptions]="{
+      delay: 0,
+      itemSize: 46,
+      inline: true,
+      lazy: true,
+      autoSize: true,
+      appendOnly:false,
+      trackBy: trackByFn
+      }">
   <ng-template pTemplate="header" let-columns>
-    <tr>
-      <th>序號</th>
-      <th *ngFor="let col of columns">
-        {{col.header}}
-      </th>
-    </tr>
+    <ng-container *ngIf="columnGroup && columnGroup.length > 0">
+      <tr>
+        <th class="w-1rem" rowspan="2">序號</th>
+        <th class="w-1rem group-header" rowspan="2" *ngIf="showCheckBox">
+          <p-tableHeaderCheckbox />
+        </th>
+        <ng-container *ngFor="let col of columns; let i = index">
+          <!-- 如果是第一次出現這個群組 -->
+          <ng-container *ngIf="shouldRenderGroupHeader(col, i, columns)">
+            <th [attr.colspan]="getColumnSpan(columns, col.groupField!)" [ngClass]="getGroupAlignClass(col.groupField!)"
+              class="group-header" pReorderableColumn pResizableColumn>
+              {{ getGroupHeader(col.groupField!) }}
+            </th>
+          </ng-container>
+          <!-- 如果是沒群組的欄位 -->
+          <ng-container *ngIf="!col.groupField">
+            <th *ngIf="!col.hidden" rowspan="2" class="text-center" pResizableColumn [pSortableColumn]="col.field"
+              [pSortableColumnDisabled]="col.showSort === false" pFrozenColumn [frozen]=" !!col.frozen"
+              [alignFrozen]="col.alignFrozen || 'right'">
+              {{ col.header }}
+              <p-sortIcon *ngIf="col.showSort !== false &&data.length" [field]="col.sortField ?? col.field" />
+            </th>
+          </ng-container>
+        </ng-container>
+        <th [hidden]="!showManage" rowspan="2" class="w-1rem text-center group-header" alignFrozen="right" pFrozenColumn
+          [frozen]="true">
+          管理
+        </th>
+      </tr>
+      <!-- 第二層：實際欄位標題 -->
+      <tr>
+        <ng-container *ngFor="let col of columns">
+          <th *ngIf="!col.hidden && col.groupField" class="text-center" pReorderableColumn pResizableColumn
+            [pSortableColumn]="col.field" [pSortableColumnDisabled]="col.showSort === false" pFrozenColumn
+            [frozen]="!!col.frozen" [alignFrozen]="col.alignFrozen || 'right'">
+            {{ col.header }}
+            <p-sortIcon *ngIf="col.showSort !== false && data.length" [field]="col.field" />
+          </th>
+        </ng-container>
+      </tr>
+    </ng-container>
+    <!-- 非群組表頭 -->
+    <ng-container *ngIf="!columnGroup?.length">
+      <tr>
+        <th class="w-1rem">序號</th>
+        <th class="w-1rem" *ngIf="showCheckBox">
+          <p-tableHeaderCheckbox [disabled]="disabled" />
+        </th>
+        <th *ngFor="let col of columns" pReorderableColumn pResizableColumn [pSortableColumn]="col.field"
+          [pSortableColumnDisabled]="col.showSort === false" class="text-center wrap-header" pFrozenColumn
+          [frozen]="col.frozen" [alignFrozen]="col.alignFrozen || 'right'">
+          {{col.header}}
+          <p-sortIcon *ngIf="col.showSort !== false && data.length" [field]="col.field" />
+        </th>
+        <th [hidden]="!showManage" class="w-1rem text-center" alignFrozen="right" pFrozenColumn [frozen]="true">
+          管理
+        </th>
+      </tr>
+    </ng-container>
   </ng-template>
-  <ng-template pTemplate="body" let-rowData let-columns="columns" let-rowIndex="rowIndex">
-    <tr style="height:46px">
-      <td>{{ rowIndex + 1 }}</td>
-      <td *ngFor="let col of columns">
-        {{rowData[col.field]}}
+  <ng-template pTemplate="body" let-rowIndex="rowIndex" let-rowData let-columns="columns" let-index="rowIndex">
+    <tr [attr.data-key]="rowData[dataKey]" [pSelectableRow]="rowData" style="height:46px"
+      [pSelectableRowDisabled]="!rowSelectableWrapper(rowData) || disabled" [pReorderableRow]="index"
+      [pSelectableRow]="rowData" [pSelectableRowIndex]="rowIndex">
+      <td class="text-center">{{ rowIndex + 1 }}</td>
+      <td *ngIf="showCheckBox">
+        <p-tableCheckbox class="flex justify-content-center pointer-events-none" [pSelectableRow]="rowData"
+          [value]="rowData" [disabled]="!rowSelectableWrapper(rowData) || disabled" />
+      </td>
+      <td *ngFor="let col of columns" class="text-center" style="text-overflow: ellipsis" style="min-width: 55px"
+        (dblclick)="detailRow(rowData)" [ngClass]="col.style"
+        [alignFrozen]="col.alignFrozen ? col.alignFrozen : 'right'" pFrozenColumn [frozen]="col.frozen">
+        <ng-container *ngIf="col.type === 'image'">
+          <p-image [src]="getImage(rowData[col.field])" alt="Image" width="50" [preview]="true" />
+        </ng-container>
+        <ng-container *ngIf="col.type === 'button'">
+          <p-button [label]="col.buttonLabel" severity="info" (click)="onSelectButton(rowData)"
+            [disabled]="col.disabled ? col.disabled(rowData) : false"></p-button>
+        </ng-container>
+        <ng-container *ngIf="col.type === 'html'">
+          <div [innerHTML]="sanitizeHtml(rowData[col.field])" class="html-cell"></div>
+        </ng-container>
+        <span *ngIf="!col.type">
+          {{ col.format ? col.format(rowData[col.field], rowIndex, rowData) : rowData[col.field]}}
+        </span>
+      </td>
+      <td [hidden]="!showManage" [ngClass]="{'flex justify-content-center gap-2': showManage,}"
+        class="no-wrap icon-button" alignFrozen="right" pFrozenColumn [frozen]="true" [style.text-align]="'center'">
+        <p-button [text]="true" [outlined]="true" pTooltip="編輯" tooltipPosition="top" icon="pi pi-pencil"
+          (click)="editRow(rowData)" *ngIf="showEdit" [disabled]="editDisabled(rowData)" [loading]="buttonsLoading" />
+        <p-button pTooltip="查看" tooltipPosition="top" icon="pi pi-eye" (click)="detailRow(rowData)" *ngIf="showDetail"
+          [loading]="buttonsLoading" />
+        <ng-container *ngIf="addButton.length">
+          <div [ngStyle]="{border: '1px solid var(--surface-border)','border-left': '0',}"></div>
+          <p-button *ngFor="let btn of addButton" [pTooltip]="btn.label" tooltipPosition="top" [icon]="btn.icon"
+            (click)="btn.action(rowData, $event)" [disabled]="btn.disabled ? btn.disabled(rowData) : false"
+            [loading]="buttonsLoading" />
+        </ng-container>
       </td>
     </tr>
   </ng-template>

@@ -42,44 +42,20 @@
     </p-accordionTab>
   </p-accordion>
 </div>
+<!-- <div class="card">
+  <app-table-report apiUrl="queryFIN21020" tableKey="FIN21020query" dataKey="id" [lastQueryBody]="lastQueryBody"
+    [totalRecords]="totalRecords" [data]="data" [showCheckBox]="true" (edit)="onEdit($event)"
+    [selectedItems]="selectedItems" (selectionChange)="selectedItems = $event" (detail)="onDetail($event)"
+    [columns]="columns" [addButton]="addButton" [buttonsLoading]="btnLoading"
+    [queryFunction]="fin21020Service.queryFIN21020.bind(fin21020Service)"></app-table-report>
+</div> -->
 <div class="card">
-  <p-table #dt [columns]="columns" [value]="virtualData" [scrollable]="true" scrollHeight="500px" [rows]="30"
-    [virtualScroll]="true" (onLazyLoad)="loadDataLazy($event)" [virtualScrollOptions]="{
-      delay: 0,
-      itemSize: 46,
-      inline: true,
-      lazy: true,
-      autoSize: true,
-      appendOnly:false,
-      onScroll: onScroll,
-      }">
-    <ng-template pTemplate="header" let-columns>
-      <tr>
-        <th>序號</th>
-        <th *ngFor="let col of columns">
-          {{col.header}}
-        </th>
-      </tr>
-    </ng-template>
-    <ng-template pTemplate="body" let-rowData let-columns="columns" let-rowIndex="rowIndex">
-      <tr style="height:46px">
-        <td>{{ rowIndex + 1 }}</td>
-        <td *ngFor="let col of columns">
-          {{rowData[col.field]}}
-        </td>
-      </tr>
-    </ng-template>
-  </p-table>
-</div>
-<div class="card">
-  <!-- <app-table apiUrl="queryFIN21020" tableKey="FIN21020query" dataKey="id" [data]="data" [columns]="columns"
+  <app-table apiUrl="queryFIN21020" tableKey="FIN21020query" dataKey="id" [data]="data" [columns]="columns"
     (edit)="onEdit($event)" (detail)="onDetail($event)" [showCheckBox]="true" [addButton]="addButton"
-    [multiSortMeta]="queryForm.controls.SortBy.value" [totalRecords]="totalRecords"
+    [multiSortMeta]="queryForm.controls.SortBy.value" [totalRecords]="totalRecords" [buttonsLoading]="btnLoading"
     (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [lazy]="true" [loading]="loading"
-    (delete)="onDelete($event)" [selectedItems]="selectedItems" (selectionChange)="selectedItems = $event"></app-table> -->
+    (delete)="onDelete($event)" [selectedItems]="selectedItems" (selectionChange)="selectedItems = $event"></app-table>
 </div>
-
-
 <app-dialog [visible]="dialogVisible()" header="複製費率" (visibleChange)="dialogVisible.set($event)" (save)="saveDialog()"
   [disable]="selectedItemsDialog.length === 0">
   <form [formGroup]="dialogForm" id="DialogForm">
