@@ -28,7 +28,7 @@
 <div class="card">
   <app-table tableKey="tls2c030" dataKey="id" [data]="data" [columns]="columns" [selectedItems]="selectedItems"
     (selectionChange)="selectedItems = $event" [totalRecords]="totalRecords"
-    (lazyLoadData)="onLazyLoadData($event, queryForm);onSubmit(queryForm)" [lazy]="true" [loading]="loading"
-    [showManage]="false" [showDelete]="false">
+    (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [lazy]="true" [loading]="loading"
+    [showManage]="false" [showDelete]="false" [multiSortMeta]="[{ field: 'cls_date', order: -1 }]">
   </app-table>
 </div>
