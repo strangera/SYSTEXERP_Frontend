@@ -1,4 +1,4 @@
-import { Component, effect, OnInit, signal } from '@angular/core';
+import { Component, computed, effect, OnInit, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { FormControl, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { TranslateModule } from '@ngx-translate/core';
@@ -43,6 +43,8 @@ export class TLS21020Component extends BasicQueryPageComponent<TLS21020Data> imp
   public readonly rowEditValidSignal = signal<boolean>(!1);
 
   public readonly totalRecord = signal(this.service.TLS21020Data().length);
+
+  public readonly canSave = !this.qf().ENTRY_TYPE.value?.length;
 
   /** entryType 改變時，取得table 資料 */
   public readonly entryTypeEffect = effect(() => {
@@ -203,26 +205,24 @@ export class TLS21020Component extends BasicQueryPageComponent<TLS21020Data> imp
   public onRowEditSave(event: RowEditSaveEvent<TLS21020Data>): void {
     this.logger.debug(`onRowEditSave:`, [event]);
     if (!event.newData) return;
-    const payload = {
-      ABAT_YN: event.newData.ABAT_YN,
-      AccNo: event.newData.AccNo,
-      AccNotes: event.newData.AccNotes,
-      ObjectNo: event.newData.ObjectNo || 'N',
-      Org_ID: event.newData.Org_ID,
-      PAY_No: event.newData.PAY_No,
-      PAY_days: event.newData.PAY_days,
-      RelatedPartyAccNo: event.newData.RelatedPartyAccNo,
-      VEN_No: event.newData.VEN_No,
-      id: event.newData.id,
-    };
-    this.service.updateTLS21020([payload]);
-    this.messageService.successBubble('更新成功');
+    // const payload = {
+    //   ABAT_YN: event.newData.ABAT_YN,
+    //   AccNo: event.newData.AccNo,
+    //   AccNotes: event.newData.AccNotes,
+    //   ObjectNo: event.newData.ObjectNo || 'N',
+    //   Org_ID: event.newData.Org_ID,
+    //   PAY_No: event.newData.PAY_No,
+    //   PAY_days: event.newData.PAY_days,
+    //   RelatedPartyAccNo: event.newData.RelatedPartyAccNo,
+    //   VEN_No: event.newData.VEN_No,
+    //   id: event.newData.id,
+    // };
+    // this.service.updateTLS21020([payload]);
     this.selectedStatus.set(void 0);
   }
 
   public onRowEditCancel(event: RowEditSaveEvent<TLS21020Data>): void {
     this.logger.debug(`onRowEditCancel:`, [event]);
-
     this.selectedStatus.set(void 0);
   }
 

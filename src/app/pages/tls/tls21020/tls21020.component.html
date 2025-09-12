@@ -26,7 +26,7 @@
                     [form]="queryForm"></app-button>
         <app-button btnType="submit"
                     [label]="'存檔'"
-                    [disabled]="!qf().ENTRY_TYPE.value?.length"
+                    [disabled]="canSave"
                     [loading]="service.dataLoading"></app-button>
       </div>
     </form>
