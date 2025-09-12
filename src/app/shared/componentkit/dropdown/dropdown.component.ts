@@ -38,8 +38,8 @@ export class DropdownComponent extends BasicKitComponent implements OnInit {
   };
   get options(): any[] { return this._options; }
   private _options: any[] = [];
-  @Input() optionLabel = ''; // 資料的 Label
-  @Input() optionValue = ''; // 資料的 Value
+  @Input() optionLabel = 'label'; // 資料的 Label
+  @Input() optionValue = 'value'; // 資料的 Value
   @Input() customPlaceholder = '請選擇';
   @Input() submitted = false; // 檢查欄位是否標準
   // PrimeNG 下拉選單屬性
