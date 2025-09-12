@@ -45,7 +45,8 @@ import { TLS44020Service } from '../../../service/api/tls/tls44020.service';
     MultiSelectComponent,
     DropdownComponent,
     InputTextComponent,
-    ButtonComponent
+    ButtonComponent,
+
   ]
 })
 export class TLS44020Component extends BasicQueryPageComponent<any> implements OnInit {
@@ -85,7 +86,7 @@ export class TLS44020Component extends BasicQueryPageComponent<any> implements O
     private ECRNoService: ECRNoService,
     private dropDownListService: DropDownListService,
     private counterNameService: CounterNameService,
-     private tls44020Service: TLS44020Service
+    private tls44020Service: TLS44020Service
   ) {
     super();
   }
@@ -175,13 +176,56 @@ export class TLS44020Component extends BasicQueryPageComponent<any> implements O
     });
   }
 
-   onSubmit(form: FormGroup) {
+  onSubmit(form: FormGroup) {
     this.loading = true;
-    console.log('查詢條件', form.value);
 
-    this.tls44020Service.queryTLS44020(form.value).pipe(untilDestroyed(this)).subscribe({
+    // 取出表單值
+    const rawValue = form.value;
+
+    // 組成正確 payload
+    const payload = {
+      PageSize: rawValue.PageSize ?? 20,
+      PageIndex: rawValue.PageIndex ?? 1,
+      OrderBy: rawValue.OrderBy ?? '',
+      Offset: rawValue.Offset ?? 0,
+      SortBy: rawValue.SortBy ?? [{ field: 'ECR_No', order: 1 }],
+      Day: rawValue.Day ?? 0,
+
+      // 確保是陣列格式
+      ECR_No: Array.isArray(rawValue.ECR_No)
+        ? rawValue.ECR_No
+        : rawValue.ECR_No
+          ? [rawValue.ECR_No]
+          : [],
+      TLT_No: Array.isArray(rawValue.TLT_No)
+        ? rawValue.TLT_No
+        : rawValue.TLT_No
+          ? [rawValue.TLT_No]
+          : [],
+      tlt_building: Array.isArray(rawValue.tlt_building)
+        ? rawValue.tlt_building
+        : rawValue.tlt_building
+          ? [rawValue.tlt_building]
+          : [],
+      tlt_floor: Array.isArray(rawValue.tlt_floor)
+        ? rawValue.tlt_floor
+        : rawValue.tlt_floor
+          ? [rawValue.tlt_floor]
+          : [],
+      area_no: Array.isArray(rawValue.area_no)
+        ? rawValue.area_no
+        : rawValue.area_no
+          ? [rawValue.area_no]
+          : [],
+
+      // 字串欄位
+      EDC_IP: rawValue.EDC_IP ?? '',
+      EDC_Online: rawValue.EDC_Online ?? '',
+      EDC_TmID: rawValue.EDC_TmID ?? ''
+    };
+
+    this.tls44020Service.queryTLS44020(payload).subscribe({
       next: (res) => {
-        console.log('API 回應', res);
         this.data = res?.Data || [];
         this.filteredData = [...this.data];
         this.first = 0;
@@ -195,6 +239,7 @@ export class TLS44020Component extends BasicQueryPageComponent<any> implements O
       }
     });
   }
+
 
 
   onTabChange(item: MenuItem) {
