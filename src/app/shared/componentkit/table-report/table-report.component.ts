@@ -95,7 +95,7 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
   ngOnChanges(changes: SimpleChanges) {
     // 第一次獲取data
     if (changes['data'] && this.data.length > 0) {
-      if (this.data.length > 10) {
+      if (this.data.length >= 30) {
         this.virtualData = Array(this.data.length).fill(null); // ! 清空虛擬資料
         setTimeout(() => {
           this.virtualData.splice(0, this.data.length, ...this.data); // ! 將快取的資料放入虛擬資料

@@ -1,11 +1,11 @@
-<p-table #dt [columns]="selectedColumns" [value]="data.length > 15 ? virtualData : data" [scrollable]="true"
+<p-table #dt [columns]="selectedColumns" [value]="data.length > 20 ? virtualData : data" [scrollable]="true"
   scrollHeight="400px" [rows]="30" [(selection)]="selectedItems" sortMode="multiple" selectionMode="multiple"
   [rowTrackBy]="trackByFn" [resizableColumns]="true" [reorderableColumns]="true" [loading]="isLoading"
   [multiSortMeta]="lastQueryBody ? lastQueryBody.SortBy : undefined" (onColReorder)="onColReorder($event)"
   tableStyleClass="h-full" styleClass="
     p-datatable-sm p-datatable-gridlines p-datatable-striped" (selectionChange)="selectionChange.emit($event)"
-  [rowSelectable]="rowSelectableWrapper" [virtualScroll]="data.length <= 15 ? false : true" [virtualScrollItemSize]="46"
-  [lazy]="data.length <= 15 ? false : true" [virtualScrollOptions]="{
+  [rowSelectable]="rowSelectableWrapper" [virtualScroll]="data.length <= 20 ? false : true" [virtualScrollItemSize]="46"
+  [lazy]="data.length <= 20 ? false : true" [virtualScrollOptions]="{
       delay: 50,
       itemSize: 46,
       inline: true,
