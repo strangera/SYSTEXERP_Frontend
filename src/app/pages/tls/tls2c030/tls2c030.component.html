@@ -1,77 +1,34 @@
-<div class="grid">
-  <div class="col-12">
-    <div class="card">
-      <div class="grid align-items-center">
-        <div class="col" style="flex: 1">
-          <app-menubar [ProgNo]="ProgNo"></app-menubar>
-        </div>
-        <div >
-          <app-button
-            btnType="create"
-            label="確定日結"
-            class="col"
-          ></app-button>
-        </div>
-        <div >
-          <app-button
-            btnType="create"
-            label="日關後檢核"
-            class="col"
-          ></app-button>
-        </div>
-        <div >
-          <app-button btnType="create" label="反日結" class="col"></app-button>
-        </div>
-      </div>
-      <p-accordion>
-        <p-accordionTab
-          header="{{ 'query-conditions' | translate }}"
-          [selected]="true"
-          class="line-height-3 m-0"
-          [headerStyleClass]="'query-accordionTab'"
-        >
-          <form
-            [formGroup]="queryForm"
-            id="queryForm"
-            (ngSubmit)="onSubmit(queryForm)"
-          >
-            <div class="grid p-fluid">
-              <div class="col-12 md:col-6 lg:col-4">
-                <app-calendar
-                  calendarType="dateOne"
-                  label="結帳日期"
-                  [control]="queryForm.controls.onedatedd"
-                  [submitted]="submitted"
-                ></app-calendar>
-              </div>
-            </div>
-            <h6>最近關帳日期:2020/2/9</h6>
-            <div>
-              <div class="grid justify-content-end">
-                <app-button
-                  btnType="clear"
-                  (onClick)="onClearForm()"
-                ></app-button>
-                <app-button
-                  btnType="query"
-                  (onClick)="onSubmitQuery(queryForm)"
-                  [loading]="loading"
-                ></app-button>
-              </div>
-            </div>
-          </form>
-        </p-accordionTab>
-      </p-accordion>
-    </div>
-    <div class="card">
-      <div class="col-13">
-        <app-table
-          [data]="data"
-          [columns]="columns"
-          (edit)="onEdit($event)"
-          (detail)="onDetail($event)"
-        ></app-table>
-      </div>
-    </div>
+<div class="card">
+  <div class="flex gap-2 mb-2">
+    <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
+    <app-button label="確定日結" icon="pi pi-check" (click)="defineDateCheckout()"></app-button>
+    <app-button label="反日結" icon="pi pi-undo" (click)="undefineDateCheckout()"></app-button>
   </div>
+
+  <p-accordion>
+    <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'">
+      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
+        <div class="grid p-fluid">
+          <app-calendar class="col-12 md:col-6 lg:col-4" label="結帳日期" calendarType="dateOne"
+            [control]="queryForm.controls.onedatedd" [submitted]="submitted"></app-calendar>
+        </div>
+        <div class="my-3">
+          <p>最近關帳日期：{{closeDate}}</p>
+        </div>
+        <div class="justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3" style="display: flex;">
+          <app-button btnType="clear" [form]="queryForm"></app-button>
+          <app-button btnType="query" [loading]="loading"></app-button>
+        </div>
+      </form>
+    </p-accordionTab>
+  </p-accordion>
+</div>
+
+<div class="card">
+  <app-table tableKey="tls2c030" dataKey="id" [data]="data" [columns]="columns" [selectedItems]="selectedItems"
+    (selectionChange)="selectedItems = $event" [totalRecords]="totalRecords"
+    (lazyLoadData)="onLazyLoadData($event, queryForm);onSubmit(queryForm)" [lazy]="true" [loading]="loading"
+    [showManage]="false" [showDelete]="false">
+  </app-table>
 </div>
