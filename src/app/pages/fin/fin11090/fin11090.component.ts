@@ -53,8 +53,8 @@ export class FIN11090Component extends BasicQueryPageComponent<FIN11090Data> imp
       Validators.maxLength(6),
       this.validationService.numberValidator
     ]],
-    TXN_GUITrack: ['', [Validators.maxLength(2)]],
-    TXN_GUINo: ['', [Validators.maxLength(8)]],
+    TXN_GUITrack: ['', [Validators.required,Validators.maxLength(2),this.validationService.guiTrackValidator]],
+    TXN_GUINo: ['', [Validators.required,Validators.maxLength(8)]],
     ...createPaginationConfig([{ field: 'TXN_Date', order: -1 }]),
   });
 
@@ -103,7 +103,10 @@ export class FIN11090Component extends BasicQueryPageComponent<FIN11090Data> imp
       field: 'SaleReturn_Status',
       header: '折讓狀態',
       visible: true,
-      format: (value: string) => value === 'Y' ? '作廢' : '正常(已銷退)'
+      format : (value: string) =>
+        value === 'Y' ? '作廢' :
+        value === 'N' ? '開立' :
+        value === 'X' ? '未開折讓' : ''
     },
     {
       field: 'TXN_VoidDT',

@@ -1,4 +1,5 @@
-import { BaseQueryRequest } from "@shared/models/api/base-api.interface";
+import { BaseQueryRequest } from '@shared/models/api/base-api.interface';
+import { Option } from 'src/app/service/utility/dropdown-api.model';
 
 export interface TLS21020Data {
   ABAT_YN: string;
@@ -78,11 +79,11 @@ export interface GLS1005 {
   Voucher_Type: string;
 }
 
-export interface POS2013 {
-  Name: string;
-  No: string;
-  ShortName: string;
-  VEN_Address: string;
+export interface POS2013 extends Option {
+  Name?: string;
+  No?: string;
+  ShortName?: string;
+  VEN_Address?: string;
   VEN_EngName?: string;
-  VEN_No: string;
+  VEN_No?: string;
 }

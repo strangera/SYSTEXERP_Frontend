@@ -253,13 +253,13 @@ this.queryForm.controls.TXN_DateEnd.valueChanges
 fetchTLS23020 = (evt: LazyLoadEvent) => {
   // 把畫面上的查詢條件組 payload（你原本的 buildPayload）
   const condPayload = this.buildPayload(this.queryForm.getRawValue());
-
+ const normSort = this.normalizeSortBy(evt?.SortBy, this.groupByField);
   // 只交付 pageIndex / pageSize / SortBy（你要求的三鍵）
   const payload = {
     ...condPayload,
     pageIndex: evt.pageIndex ?? 1,
     pageSize : evt.pageSize  ?? 20,
-    SortBy   : Array.isArray(evt.SortBy) ? evt.SortBy : [],
+    SortBy   : normSort,   // ← 這裡一定是乾淨的
   };
 
   // 呼叫原本的 service
@@ -868,5 +868,37 @@ private clearMonthIfNotExactRange() {
     this.queryForm.patchValue({ TXN_Month: null }, { emitEvent: false });
   }
 }
+private normalizeSortBy(input: any, groupField: string): Array<{field: string; order: 1 | -1}> {
+  const list: any[] = Array.isArray(input) ? input : [];
+  const cleaned: Array<{field: string; order: 1 | -1}> = [];
 
+  for (const s of list) {
+    // 1) 取出欄位名稱：若是陣列就拿第一個，最後強制轉字串
+    let f: any = s?.field;
+    if (Array.isArray(f)) f = f[0];
+    const field = (f ?? '').toString().trim();
+    if (!field) continue;
+
+    // 2) 正規化排序方向：只接受 1/-1
+    const ord: number = Number(s?.order);
+    const order: 1 | -1 = ord === -1 ? -1 : 1;
+
+    cleaned.push({ field, order });
+  }
+
+  // 3) 去除重複 field（保留第一次出現的）
+  const seen = new Set<string>();
+  const dedup: Array<{field: string; order: 1 | -1}> = [];
+  for (const s of cleaned) {
+    if (seen.has(s.field)) continue;
+    seen.add(s.field);
+    dedup.push(s);
+  }
+
+  // 4) 確保群組欄位在第一個（沿用原本若已有的排序方向，否則預設 ASC）
+  const exist = dedup.find(x => x.field === groupField);
+  const order = exist?.order ?? 1;
+  const rest = dedup.filter(x => x.field !== groupField);
+  return [{ field: groupField, order }, ...rest];
+}
 }

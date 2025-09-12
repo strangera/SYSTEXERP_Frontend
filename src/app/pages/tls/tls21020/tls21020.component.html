@@ -25,7 +25,9 @@
         <app-button btnType="clear"
                     [form]="queryForm"></app-button>
         <app-button btnType="submit"
-                    [loading]="loading"></app-button>
+                    [label]="'存檔'"
+                    [disabled]="canSave"
+                    [loading]="service.dataLoading"></app-button>
       </div>
     </form>
   </p-accordionTab>
@@ -44,14 +46,12 @@
              (rowEditCancel)="onRowEditCancel($event)"
              (fieldChange)="onFieldChange($event)"
              [columnGroup]="tableGroup"
-             [showCheckBox]="true"
-             [showInsert]="true"
-             [showDelete]="true"
              [showRowEdit]="true"
+             [showDetail]="false"
              [rowEditCanSave]="rowEditValidSignal()"
              [totalRecords]="service.totalRecords()"
              (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit()"
              [lazy]="true"
-             [loading]="loading">
+             [loading]="service.dataLoading">
   </app-table>
 </div>

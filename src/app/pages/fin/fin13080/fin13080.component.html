@@ -42,21 +42,20 @@
             ></app-calendar>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-number
+            <app-input-text
               label="發票號碼(起)"
               controlName="Invoice_No_Start"
               [control]="queryForm.controls.Invoice_No_Start"
               [submitted]="submitted"
-              [useGrouping]="false"
-            ></app-input-number>
+            ></app-input-text>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-input-number
+            <app-input-text
               label="發票號碼(迄)"
               controlName="Invoice_No_End"
               [control]="queryForm.controls.Invoice_No_End"
               [submitted]="submitted"
-            ></app-input-number>
+            ></app-input-text>
           </div>
 
           <div class="grid justify-content-end gap-2 m-0 mt-2 pt-3">
