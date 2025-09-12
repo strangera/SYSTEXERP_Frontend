@@ -1,6 +1,7 @@
 // 開發環境的 API 路徑
 export const environment = {
   production: false,
+  version: '2025/01/15_V1 09:30', // 手動設定的預設值
   // AWSApiUrl: 'http://10.60.8.66/TSRD_WEBAPI',
   // AWSBaseUrl: 'http://10.60.8.66/TSRD_WEBAPI',
   // BaseUrl: 'https://localhost:7271',
