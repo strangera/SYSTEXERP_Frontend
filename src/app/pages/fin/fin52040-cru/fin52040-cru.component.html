@@ -11,12 +11,17 @@
                         optionValue="No" [control]="dataForm.controls.CompNo" [submitted]="submitted">
                     </app-dropdown>
                 </div>
-                <!-- 觸發 Dialog 的按鈕 -->
-                <app-button 
-                    icon="pi pi-search" 
-                    type="button"
-                    (click)="openDialog()">
-                </app-button>
+            </div>
+            <div class="grid p-fluid">
+                <div class="col-12 md:col-6 lg:col-4">
+                    <!-- 觸發 Dialog 的按鈕 -->
+                    <app-button 
+                        icon="pi pi-search" 
+                        type="button"
+                        label="選擇對象別"
+                        (click)="openDialog()">
+                    </app-button>
+                </div>
             </div>
             <div class="grid p-fluid">
                 <div class="col-12 md:col-6 lg:col-4">
@@ -54,7 +59,7 @@
 <!-- 對象別選擇 Dialog -->
 <app-dialog 
   [visible]="dialogVisible" 
-  header="選擇對象別" 
+  header="選擇廠商" 
   (visibleChange)="dialogVisible = $event" 
   (save)="saveDialog()"
   [disable]="selectedItemsDialog.length === 0">
@@ -63,12 +68,12 @@
     <div class="grid p-fluid">
       <app-input-text 
         class="col-12 md:col-6" 
-        label="對象別代碼" 
+        label="廠商編號" 
         controlName="RefCode"
         [control]="dialogQueryForm.controls.RefCode" />
       <app-input-text 
         class="col-12 md:col-6" 
-        label="對象別名稱" 
+        label="廠商名稱" 
         controlName="RefName"
         [control]="dialogQueryForm.controls.RefName" />
     </div>
@@ -89,6 +94,7 @@
     [showHeader]="false"
     [showManage]="false"
     [showCheckBox]="true"
+    [selectionMode]="'single'"
     (selectionChange)="selectedItemsDialog = $event"
     [multiSortMeta]="[{ field: 'RefCode', order: 1 }]" 
     [totalRecords]="totalRecords"
