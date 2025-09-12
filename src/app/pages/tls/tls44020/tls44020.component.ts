@@ -8,12 +8,21 @@ import { MenuItem } from 'primeng/api';
 import { TranslateModule } from '@ngx-translate/core';
 import { DataViewModule } from 'primeng/dataview';
 import { CommonModule } from '@angular/common';
-import { InputTextModule } from 'primeng/inputtext';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { PaginatorModule } from 'primeng/paginator';
 import { TooltipModule } from 'primeng/tooltip';
-
+import { MultiSelectComponent } from '../../../shared/componentkit/multi-select/multi-select.component';
+import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { InputTextModule } from 'primeng/inputtext';
+import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { DropDownListService, IDropdownItem } from '../../../service/utility/dropDownList.service';
+import { ECRNoService } from '@service/basic/ECRNo.service';
+import { CounterNameService } from '../../../service/basic/counter-name.service';
+import { untilDestroyed } from '@ngneat/until-destroy';
+import { TLS44020Service } from '../../../service/api/tls/tls44020.service';
 @Component({
   selector: 'app-tls44020',
   templateUrl: './tls44020.component.html',
@@ -32,53 +41,35 @@ import { TooltipModule } from 'primeng/tooltip';
     InputTextModule,
     DataViewModule,
     TooltipModule,
-    PaginatorModule
+    PaginatorModule,
+    MultiSelectComponent,
+    DropdownComponent,
+    InputTextComponent,
+    ButtonComponent
   ]
 })
 export class TLS44020Component extends BasicQueryPageComponent<any> implements OnInit {
-  queryForm: FormGroup = this.fb.group({});
+  queryForm = this.formBuilder.group({
+    ECR_No: this.formBuilder.control<string[]>([]),
+    TLT_No: this.formBuilder.control<string[]>([]),
+    tlt_building: this.formBuilder.control<string[]>([]),
+    tlt_floor: this.formBuilder.control<string[]>([]),
+    area_no: this.formBuilder.control<string[]>([]),
+    EDC_IP: this.formBuilder.control<string>(''),
+    EDC_Online: this.formBuilder.control<string>(''),
+    Day: this.formBuilder.control<number>(0),
+    ...createPaginationConfig([{ field: 'ECR_No', order: 1 }]),
+  });
   items: MenuItem[] = [];
   activeItem: MenuItem | undefined;
-  data: any[] = [
-    // ===== 關機 =====
-    { ECR_LocNo: 'B1A01', TLT_No: '000001', TLT_Name: '米卡莎', EOS_Status: 5, EOS_Online: 'N', EDC_Online1: 'N', EDC_Online2: 'N' },
 
-    // ===== 全部離線 =====
-    { ECR_LocNo: 'B1A02', TLT_No: '000002', TLT_Name: '艾爾文', EOS_Status: 1, EOS_Online: 'N', EDC_Online1: 'N', EDC_Online2: 'N' },
-
-    // ===== 中信離線 / 聯信交易中 =====
-    { ECR_LocNo: 'B1A03', TLT_No: '000003', TLT_Name: '萊納', EOS_Status: 1, EOS_Online: 'Y', EDC_Online1: 'N', EDC_Online2: 'Y' },
-
-    // ===== 中信交易中 / 聯信離線 =====
-    { ECR_LocNo: 'B1A04', TLT_No: '000004', TLT_Name: '吉克', EOS_Status: 1, EOS_Online: 'Y', EDC_Online1: 'Y', EDC_Online2: 'N' },
-
-    // ===== 中信交易中 / 聯信交易中 =====
-    { ECR_LocNo: 'B1A05', TLT_No: '000005', TLT_Name: '漢吉', EOS_Status: 1, EOS_Online: 'Y', EDC_Online1: 'Y', EDC_Online2: 'Y' },
-
-    // ===== 中信離線 / 聯信離線 (算關機) =====
-    { ECR_LocNo: 'B1A06', TLT_No: '000006', TLT_Name: '里維', EOS_Status: 1, EOS_Online: 'N', EDC_Online1: 'N', EDC_Online2: 'N' },
-
-    // ===== 中信關機 / 聯信交易中 =====
-    { ECR_LocNo: 'B1A07', TLT_No: '000007', TLT_Name: '阿爾敏', EOS_Status: 5, EOS_Online: 'N', EDC_Online1: 'N', EDC_Online2: 'Y' },
-
-    // ===== 中信交易中 / 聯信關機 =====
-    { ECR_LocNo: 'B1A08', TLT_No: '000008', TLT_Name: '亞妮', EOS_Status: 5, EOS_Online: 'N', EDC_Online1: 'Y', EDC_Online2: 'N' },
-
-    // ===== POS 離線，但刷卡機在線 =====
-    { ECR_LocNo: 'B1A09', TLT_No: '000009', TLT_Name: '柯尼', EOS_Status: 1, EOS_Online: 'N', EDC_Online1: 'Y', EDC_Online2: 'Y' },
-
-    // ===== POS 在線，但刷卡機都離線 (算離線) =====
-    { ECR_LocNo: 'B1A10', TLT_No: '000010', TLT_Name: '莎夏', EOS_Status: 1, EOS_Online: 'Y', EDC_Online1: 'N', EDC_Online2: 'N' },
-
-    // ===== POS 在線，中信在線，聯信離線 =====
-    { ECR_LocNo: 'B1A11', TLT_No: '000011', TLT_Name: '貝爾托特', EOS_Status: 1, EOS_Online: 'Y', EDC_Online1: 'Y', EDC_Online2: 'N' },
-
-    // ===== POS 在線，中信離線，聯信在線 =====
-    { ECR_LocNo: 'B1A12', TLT_No: '000012', TLT_Name: '皮克', EOS_Status: 1, EOS_Online: 'Y', EDC_Online1: 'N', EDC_Online2: 'Y' },
-  ];
-
+  ECRNoOptions: any[] = [];
+  CounterOptions: any[] = [];
+  buildingNoOptions: IDropdownItem[] = [];
+  floorOptions: IDropdownItem[] = [];
 
   globalFilter = '';
+  data: any[] = []; // Add this property to hold the data
   filteredData: any[] = [];
 
   // DataView layout 切換用
@@ -89,10 +80,15 @@ export class TLS44020Component extends BasicQueryPageComponent<any> implements O
   first = 0;   // 起始 index
   pagedData: any[] = []; // 當前頁顯示的資料
 
-  constructor(private fb: FormBuilder) {
+  constructor(
+    private fb: FormBuilder,
+    private ECRNoService: ECRNoService,
+    private dropDownListService: DropDownListService,
+    private counterNameService: CounterNameService,
+     private tls44020Service: TLS44020Service
+  ) {
     super();
   }
-
   getBankStatus(row: any, bank: '中信' | '聯信'): '關機' | '離線' | '交易中' {
     const edcKey = bank === '中信' ? 'EDC_Online1' : 'EDC_Online2';
 
@@ -150,11 +146,56 @@ export class TLS44020Component extends BasicQueryPageComponent<any> implements O
     this.activeItem = this.items[0];
     this.filteredData = this.data;
     this.updatePagedData();
+    this.loadDropdownOptions();
+    this.ECRNoService.getECRNo().subscribe((data) => {
+      this.ECRNoOptions = data;
+    });
+    this.counterNameService.getCounters().subscribe((res) => {
+      this.CounterOptions =
+        res?.map((x: any) => ({
+          No: x.value,              // 編號
+          Name: x.label,            // 名稱
+          formLabel: `${x.value} - ${x.label}`, // 下拉顯示
+          value: x.value            // 存值
+        })) || [];
+    });
+    //館別
+    this.dropDownListService.querySYS3800_DropDownList().pipe(untilDestroyed(this)).subscribe(res => {
+      this.buildingNoOptions = res.Data.map(x => ({ label: x.Name, value: x.No, Name: x.Name, No: x.No }));
+    });
+  }
+  loadDropdownOptions() {
+
+    this.dropDownListService.querySYS3900_DropDownList().pipe(untilDestroyed(this)).subscribe(res => {
+      this.floorOptions = res.Data.map(item => ({
+        ...item,
+        label: item.Name,
+        value: item.No
+      }));
+    });
   }
 
-  onSubmit(form: FormGroup) {
+   onSubmit(form: FormGroup) {
+    this.loading = true;
     console.log('查詢條件', form.value);
+
+    this.tls44020Service.queryTLS44020(form.value).pipe(untilDestroyed(this)).subscribe({
+      next: (res) => {
+        console.log('API 回應', res);
+        this.data = res?.Data || [];
+        this.filteredData = [...this.data];
+        this.first = 0;
+        this.updatePagedData();
+      },
+      error: (err) => {
+        console.error('查詢失敗', err);
+      },
+      complete: () => {
+        this.loading = false;
+      }
+    });
   }
+
 
   onTabChange(item: MenuItem) {
     this.activeItem = item;
