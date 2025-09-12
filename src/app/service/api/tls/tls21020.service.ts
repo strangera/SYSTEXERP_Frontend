@@ -1,12 +1,14 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, signal } from '@angular/core';
 import { POS2013, TLS21020Data, TLS21020GLS1005Data, TLS21020GLS1005Query, TLS21020Query, TLS21020UpdateQuery } from '@pages/tls/tls21020/tls21020.model';
+import { DropdownApiService } from '@service/utility/dropdown-api.service';
 import { BaseQueryResponse, DropdownOption } from '@shared/models/api/base-api.interface';
 import { NGXLogger } from 'ngx-logger';
-import { finalize, map, Subject, take, takeUntil, tap } from 'rxjs';
+import { finalize, map, take, tap } from 'rxjs';
 import { environment } from 'src/environments/environment';
+import { Sysb400Service } from '../sys/sysb400.service';
 
-const apiUrl: string = environment.ApiUrl;
+const apiUrl: string = environment.ApiUrl + '/TLS0000/TLS2000/';
 
 @Injectable({ providedIn: 'root' })
 export class TLS21020Service {
@@ -24,8 +26,10 @@ export class TLS21020Service {
   public readonly totalRecords = signal<number>(0);
 
   constructor(
-    private http: HttpClient,
+    private readonly http: HttpClient,
     private readonly logger: NGXLogger,
+    private readonly sysb400: Sysb400Service,
+    private readonly dropdownApi: DropdownApiService,
   ) { }
 
   public getEntryTypes(): DropdownOption[] {
@@ -43,7 +47,7 @@ export class TLS21020Service {
   public queryTLS21020(query: TLS21020Query): void {
     if (this.dataLoading) return void (this.dataLoading = !1);
     this.dataLoading = !0;
-    this.http.post<BaseQueryResponse<TLS21020Data>>(apiUrl + '/TLS0000/TLS2000/queryTLS21020', query)
+    this.http.post<BaseQueryResponse<TLS21020Data>>(apiUrl + 'queryTLS21020', query)
       .pipe(
         take(1),
         map(res => {
@@ -64,9 +68,9 @@ export class TLS21020Service {
     const lastQuery = this.GLS1005QuerySignal();
     if (lastQuery && lastQuery.AccDC === query.AccDC) return;
 
-    this.GLS1005QuerySignal.set({ ...query });
+    this.GLS1005QuerySignal.set(query);
 
-    this.http.post<BaseQueryResponse<TLS21020GLS1005Data>>(apiUrl + '/TLS0000/TLS2000/queryTLS21020_GLS1005', query)
+    this.http.post<BaseQueryResponse<TLS21020GLS1005Data>>(apiUrl + 'queryTLS21020_GLS1005', query)
       .pipe(
         take(1),
         tap(res => this.TLS21020GLS1005Data.set(res.Data ?? [])),
@@ -75,7 +79,7 @@ export class TLS21020Service {
   }
 
   public updateTLS21020(query: TLS21020UpdateQuery[]): void {
-    this.http.post<BaseQueryResponse<unknown>>(apiUrl + '/TLS0000/TLS2000/updateTLS21020', { GLS1020Datas: query })
+    this.http.post<BaseQueryResponse<unknown>>(apiUrl + 'updateTLS21020', { GLS1020Datas: query })
       .pipe(
         take(1),
         tap(res => { }),
@@ -84,7 +88,7 @@ export class TLS21020Service {
   }
 
   public getOrgIDs(): void {
-    this.http.post<BaseQueryResponse<DropdownOption>>(apiUrl + '/querySYS3100_DropDownList', {})
+    this.sysb400.querySYS3100_DropDownList()
       .pipe(
         take(1),
         tap(res => this.SYS3100Data.set(res.Data ?? [])),
@@ -93,19 +97,20 @@ export class TLS21020Service {
   }
 
   public getGLS1005s(): void {
-    this.http.post<BaseQueryResponse<DropdownOption>>(apiUrl + '/queryGLS1005_DropDownList', {})
+    this.dropdownApi.queryGls1005()
       .pipe(
         take(1),
-        tap(res => this.GLS1005Data.set(res.Data ?? [])),
+        tap(res => res && this.GLS1005Data.set(res ?? [])),
         finalize(() => this.logger.debug(`GLS1005 Data:`, [this.GLS1005Data()])),
       ).subscribe();
   }
 
-  public getPOS2013s(): void {
-    this.http.post<BaseQueryResponse<POS2013>>(apiUrl + '/queryPOS2013_DropDownList', {})
+  // VEN_Flag = 廠商別：1 廠商統一編號 2 身分證字號 3 自編編號
+  public getPOS2013s(VEN_Flag: '1' | '2' | '3'): void {
+    this.dropdownApi.queryPos2013({ VEN_Flag })
       .pipe(
         take(1),
-        tap(res => this.POS2013Data.set(res.Data ?? [])),
+        tap(res => res && this.POS2013Data.set(res)),
         finalize(() => this.logger.debug(`POS2013 Data:`, [this.POS2013Data()])),
       ).subscribe();
   }
