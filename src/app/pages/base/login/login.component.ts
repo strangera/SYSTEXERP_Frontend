@@ -8,6 +8,7 @@ import { NotificationService } from '../../../shared/component/notification-mess
 import { PasswordModule } from 'primeng/password';
 import { Button, ButtonDirective } from 'primeng/button';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
+import { environment } from 'src/environments/environment';
 
 @UntilDestroy()
 @Component({
@@ -35,6 +36,7 @@ export class LoginComponent implements OnInit {
   loading = false;
 
   private readonly URL_KEY = 'preLoginUrlOnce'; // 只存一次
+  version = environment.version;
 
   constructor(
     private authService: AuthService,
