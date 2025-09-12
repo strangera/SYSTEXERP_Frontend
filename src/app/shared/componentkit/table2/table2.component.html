@@ -27,8 +27,11 @@
   (onPage)="onPageChange($event)"
   (onLazyLoad)="loadDataLazy($event)"
   [lazy]="lazy || !IsPrint"
+   
   tableStyleClass="h-full"
-  [styleClass]="'p-datatable-sm p-datatable-striped' + (IsPrint ? ' p-datatable-gridlines' : '')"
+    [styleClass]="'p-datatable-sm p-datatable-striped' 
+                + (IsPrint ? ' p-datatable-gridlines' : '') 
+                + ' table-font-md'"
 
  
   [virtualScroll]="!IsPrint && groupRowsByArray.length === 0 && !expansionDataKey"
@@ -296,7 +299,11 @@
         class="text-center wrap-header"
         pFrozenColumn
         [frozen]="IsPrint && col.frozen"
-        [alignFrozen]="col.alignFrozen || 'right'">
+        [alignFrozen]="col.alignFrozen || 'right'"
+        [style.minWidth]="getColMinWidth(col)"
+        [style.width]="null">
+          
+    
         {{ col.header }}
         <span *ngIf="col.required" class="required">*</span>
         <p-sortIcon
@@ -402,6 +409,7 @@
           [alignFrozen]="col.alignFrozen ? col.alignFrozen : 'right'"
           pFrozenColumn
           [frozen]="IsPrint && col.frozen"
+           [style.minWidth]="getColMinWidth(col)"
          
         >
           <span *ngIf="!col.type">

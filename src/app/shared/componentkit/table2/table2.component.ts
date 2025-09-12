@@ -879,4 +879,13 @@ onRowExpandHandler(event: any) {
     });
   }
 }
+getColMinWidth(col: any): string {
+  const text = (col?.header ?? '').toString();
+  // 用展開運算子避免代理對（emoji/CJK 擴充等）計數錯誤
+  const len = [...text].length;
+
+  // 基準：每字 1ch，保留 sortIcon/必填星號/邊距空間；下限/上限做個夾取
+  const ch = Math.max(6, Math.min(40, len + 2)); // 6ch~40ch
+  return `calc(${ch}ch + 1.25rem)`; // 多 1.25rem 做左右 padding / icon 空間
+}
 }
