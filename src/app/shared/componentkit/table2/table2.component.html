@@ -16,39 +16,42 @@
   [resizableColumns]="true"
   [reorderableColumns]="true"
   (onColReorder)="onColReorder($event)"
-
   [paginator]="showPaginator && IsPrint && !rowEditing && !loading"
   [scrollable]="scrollable"
   [showCurrentPageReport]="IsPrint && showPaginator"
   [multiSortMeta]="multiSortMeta"
   [rowsPerPageOptions]="rowsPerPageOptions"
   [scrollHeight]="scrollHeight"
-  [(rows)]="rows"
-  [(first)]="first"
+  [rows]="rows"
+  [first]="first"
   (onPage)="onPageChange($event)"
-
   (onLazyLoad)="loadDataLazy($event)"
-  [lazy]="lazy"
-
+  [lazy]="lazy || !IsPrint"
   tableStyleClass="h-full"
- 
+  [styleClass]="'p-datatable-sm p-datatable-striped' + (IsPrint ? ' p-datatable-gridlines' : '')"
 
-  [virtualScroll]="!IsPrint && groupRowsByArray.length === 0 && !showPaginator"
+ 
+  [virtualScroll]="!IsPrint && groupRowsByArray.length === 0 && !expansionDataKey"
   [virtualScrollItemSize]="35"
   [virtualScrollDelay]="250"
 
-  [currentPageReportTemplate]="'第{currentPage}頁 / 總共{totalPages}頁 (總筆數:{totalRecords})'"
+  currentPageReportTemplate="第{currentPage}頁 / 總共{totalPages}頁 (總筆數:{totalRecords})"
   (selectionChange)="onSelectionChange($event)"
   (onRowSelect)="select.emit($event)"
   (onRowUnselect)="unSelect.emit($event)"
   [rowSelectable]="rowSelectableWrapper"
   [loading]="loading && data.length === 0"
-  [expandedRowKeys]="IsPrint ? expandedRows : {}"
+
+
+  [expandedRowKeys]="expandedRows"
+
   paginatorDropdownAppendTo="body"
   editMode="row"
-  [groupRowsBy]="groupRowsByArray"
-  rowGroupMode="subheader"
-  [styleClass]="'table-font-md p-datatable-striped' + (IsPrint ? ' p-datatable-gridlines' : '')"
+  [groupRowsBy]="groupRowsByArray.length ? groupRowsByArray : undefined"
+  [rowGroupMode]="groupRowsByArray.length ? 'subheader' : undefined"
+
+ 
+  (onRowExpand)="onRowExpandHandler($event)"
 >
   <!-- ===== Caption / 工具列（原 TableCaption 內嵌） ===== -->
   <ng-template pTemplate="caption">
@@ -132,14 +135,14 @@
       <div *ngIf="IsPrint" class="flex gap-2 py-2">
 
         <!-- 展開/收合 -->
-        <div *ngIf="showExpandCollapse && expansionColumns.length > 0 && IsPrint" class="flex align-items-center">
-          <p-button
-            [icon]="expression ? 'pi pi-angle-up' : 'pi pi-angle-down'"
-            (onClick)="toggleExpandCollapse()"
-            [label]="expression ? '收合' : '展開'"
-            text
-          />
-        </div>
+   <div *ngIf="expansionDataKey" class="flex align-items-center">
+  <p-button
+    [icon]="expression ? 'pi pi-angle-up' : 'pi pi-angle-down'"
+    (onClick)="toggleExpandCollapse()"
+    [label]="expression ? '收合' : '展開'"
+    text
+  />
+</div>
 
         <!-- 匯出 / 匯入 Excel -->
         <div *ngIf="showExcel" class="flex gap-2 align-items-center">
@@ -281,8 +284,8 @@
       <th class="w-1rem" *ngIf="IsPrint && showCheckBox && !rowEditing && selectionMode === 'multiple'">
         <p-tableHeaderCheckbox [disabled]="disabled" />
       </th>
-
-      <th class="w-1rem" *ngIf="expansionColumns.length && IsPrint">收合/展開</th>
+<th class="w-1rem" *ngIf="expansionColumns.length && IsPrint">收合/展開</th>
+      
 
       <th
         *ngFor="let col of columns"
@@ -465,7 +468,8 @@
     <tr>
       <td class="text-center font-bold">總計</td>
       <td *ngIf="IsPrint && showCheckBox && !rowEditing && selectionMode === 'multiple'"></td>
-      <td *ngIf="expansionColumns.length && IsPrint"></td>
+     <td *ngIf="expansionColumns.length && IsPrint"></td>
+
       <td *ngFor="let col of columns" class="font-bold pr-2" [ngClass]="col.style ? col.style : 'text-center'">
         <ng-container *ngIf="col.isTotal">
           {{ col.format ? col.format(getTotal(col.field)) : getTotal(col.field) }}
@@ -478,16 +482,16 @@
   <!-- ===== 載入中骨架 ===== -->
   <ng-template pTemplate="loadingbody" let-columns="columns">
     <tr *ngIf="columns" style="height: 35px">
-      <td *ngFor="let _ of [].constructor(columns.length + 1)">
+    <td *ngFor="let _ of [].constructor(getVisibleHeaderCount)">
         <p-skeleton />
       </td>
     </tr>
   </ng-template>
 
   <!-- ===== Row Expansion ===== -->
-  <ng-template *ngIf="expansionDataKey" pTemplate="rowexpansion" let-rowData>
-    <tr id="expansion-row">
-      <td [attr.colspan]="getVisibleHeaderCount + 1" class="p-0">
+<ng-template *ngIf="expansionDataKey && IsPrint" pTemplate="rowexpansion" let-rowData>
+  <tr id="expansion-row">
+    <td [attr.colspan]="getVisibleHeaderCount" class="p-0">
         <div class="expansion-container overflow-x-auto">
           <app-table-expansion2
             [rowData]="rowData"

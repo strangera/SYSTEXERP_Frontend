@@ -521,15 +521,22 @@ if (!this.lastSortSig) {
   /* ======================= 行/欄位邏輯（原本就有） ======================= */
   trackByRow = (index: number, item: any) => (item as any)?.[this.dataKey] || index;
 
-  get getVisibleHeaderCount(): number {
-    const visibleCount = (this.selectedColumns?.length ?? 0);
-    return 1
-      + Number(this.showCheckBox)
-      + visibleCount
-      + Number(this.showManage)
-      + (this.expansionDataKey ? 1 : 0)
-      + (this.showSubTotal || this.showTotal ? 0 : 1);
-  }
+get getVisibleHeaderCount(): number {
+  const visibleCount =
+    this.selectedColumns?.filter(c => c.hidden !== true && c.visible !== false).length ?? 0;
+
+  // 1 = 序號
+  // + 勾選欄（僅在 IsPrint 且 multiple 且非編輯）
+  // + 展開欄（僅在有 expansion 且 IsPrint）
+  // + 可見資料欄
+  // + 管理欄（與表頭條件一致）
+  return 1
+    + (this.IsPrint && this.showCheckBox && !this.rowEditing && this.selectionMode === 'multiple' ? 1 : 0)
+    + (this.expansionDataKey && this.IsPrint ? 1 : 0)
+    + visibleCount
+    + (this.IsPrint && this.showManage && (!this.alwaysEdit || (this.alwaysEdit && this.rowEditing)) ? 1 : 0);
+}
+
 
   rowSelectableWrapper = ({ data }: { data: any; index: number }) =>
     this.isRowSelectable(data) && !this.rowEditing;
@@ -847,5 +854,29 @@ export(type: 'PDF' | 'Excel') {
   this.exportStatus = type;
   this.exportDialog = true;
 }
+// 點展開按鈕時先阻止冒泡，再走原有邏輯
+onToggleRow(ev: MouseEvent, rowData: any) {
+  ev?.stopPropagation();
+  this.toggleRowExpansion(rowData);
+}
 
+//（可選）若要在「使用 pRowToggler / 外部展開事件」時自動載入明細，可用這一個。
+//有用 (onRowExpand)="onRowExpandHandler($event)" 才會觸發；你現在是手動按鈕就可以不加。
+onRowExpandHandler(event: any) {
+  const rowData = event?.data ?? event; // PrimeNG 版本差異
+  if (!rowData) return;
+
+  if (this.expansionLoadFn && !rowData[this.expansionDataKey]?.length && !rowData.expansionLoading) {
+    rowData.expansionLoading = true;
+    this.expansionLoadFn(rowData).subscribe({
+      next: (resp: any) => {
+        // 允許回傳 { Data: [...] } 或直接 [...]
+        const list = Array.isArray(resp?.Data) ? resp.Data : (Array.isArray(resp) ? resp : []);
+        rowData[this.expansionDataKey] = list;
+        rowData.expansionLoading = false;
+      },
+      error: () => { rowData.expansionLoading = false; }
+    });
+  }
+}
 }

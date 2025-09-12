@@ -89,6 +89,7 @@ type SubtotalFieldMap = typeof SUBTOTAL_FIELD_MAP;
 export class TLS23030Component extends BasicQueryPageComponent<any> {
   /** 以「日期 + 收銀機」分組 */
   readonly groupByField = '_grp';
+  enableCrossPageSubtotalPeek = false; // 關掉跨頁偷看
 
   /** 預設排序（_grp 置前） */
  readonly defaultSort: any[] = [
@@ -428,13 +429,17 @@ fetchTLS23030 = (evt: LazyLoadEvent) => {
       }
 
       // 需要偷看下一頁第一筆的 groupKey
-      return this.peekNextPageFirstGroupKey(payload, pageIndex + 1, 1).pipe(
-        map((nextKey: string | null) => {
-          if (!nextKey || nextKey !== lastKey) ended.add(lastKey);
-          return finalizeReturn(ended);
-        }),
-        catchError(() => of(finalizeReturn(ended)))
-      );
+ if (!this.enableCrossPageSubtotalPeek) {
+  // 不偷看：不加 lastKey，避免再打一槍
+  return of(finalizeReturn(ended));
+}
+return this.peekNextPageFirstGroupKey(payload, pageIndex + 1, 1).pipe(
+  map((nextKey: string | null) => {
+    if (!nextKey || nextKey !== lastKey) ended.add(lastKey);
+    return finalizeReturn(ended);
+  }),
+  catchError(() => of(finalizeReturn(ended)))
+);
     })
   );
 };
@@ -590,12 +595,16 @@ fetchTLS23030 = (evt: LazyLoadEvent) => {
         if (!hasNext) { ended.add(lastKey); finalizeVisible(ended); return; }
 
         // 偷看下一頁第一筆
-        this.peekNextPageFirstGroupKey(payload, pageIndex + 1, 1)
-          .pipe(take(1))
-          .subscribe(nextKey => {
-            if (!nextKey || nextKey !== lastKey) ended.add(lastKey);
-            finalizeVisible(ended);
-          });
+     if (!this.enableCrossPageSubtotalPeek) {
+  finalizeVisible(ended); // 不偷看
+} else {
+  this.peekNextPageFirstGroupKey(payload, pageIndex + 1, 1)
+    .pipe(take(1))
+    .subscribe(nextKey => {
+      if (!nextKey || nextKey !== lastKey) ended.add(lastKey);
+      finalizeVisible(ended);
+    });
+}
       });
   }
 
