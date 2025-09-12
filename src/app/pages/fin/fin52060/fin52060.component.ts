@@ -1,26 +1,34 @@
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { NavigationExtras, Router } from '@angular/router';
-// Services
-import { IfdisplayService } from './../../../service/basic/ifdisplay.service';
-import { AnalysisdateCService } from './../../../service/basic/analysisdate-c.service';
-import { FlippingstateService } from './../../../service/basic/flippingstate.service';
-// Shared
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-import { AuthService } from '../../../service/system/auth.service';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
-import { VendorService } from '../../../service/basic/vendor.service';
-
-import { OrganizationNumberService } from '../../../service/basic/organization-number.service';
-import { AccountingaccountService } from '../../../service/basic/accountingaccount.service';
+import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
+import { Column, createPaginationConfig, formatDateTime } from '../../../shared/componentkit/table/table.model';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { AccordionModule } from 'primeng/accordion';
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
+import { InputTextRangeComponent } from '../../../shared/componentkit/input-text-range/input-text-range.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { TranslateModule } from '@ngx-translate/core';
+import { ValidationService } from '@shared/service/validation.service';
+import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
+import { FIN15090Service } from '@service/api/fin/fin15090.service';
+import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
+import { apiOption } from '@shared/models/sys/sysb000.model';
+
+export interface testDorm {
+  ClassNo: string, // 中類代碼
+  ClassCname: string, // 中類名稱
+  ClassEname: string, // 中類英文名稱
+  ClassAttr: string, // 大類代碼
+
+  //---可能也會需要下面這些---
+  CRT_Date?: Date,
+  CRT_USR_No?: string,
+  CRT_USR_Name?: string,
+  UPD_Date?: Date,
+  UPD_USR_No?: string,
+  UPD_USR_Name?: string,
+}
 
 @Component({
   selector: 'app-fin52060',
@@ -33,230 +41,106 @@ import { TranslateModule } from '@ngx-translate/core';
     AccordionModule,
     FormsModule,
     ReactiveFormsModule,
-    InputTextComponent,
+    CalendarComponent,
     DropdownComponent,
+    InputTextComponent,
+    InputTextRangeComponent,
     TableComponent,
-    TranslateModule,
-  ],
+    TranslateModule
+  ]
 })
-export class FIN52060Component extends BasicQpageComponent implements OnInit {
-  // Upload files
-  fileType: string = '';
-  uploadUrl: string = 'https://www.primefaces.org/cdn/api/upload.php';
+export class FIN52060Component extends BasicQueryPageComponent<testDorm> implements OnInit {
   queryForm = this.formBuilder.group({
-    systemYear: [], // 系統年結年度
-    accountingStartMonth: [], // 系統開帳年月
-    accountingEndMonth: [], // 系統關帳年月
-    defaultVoucherDate: [], // 傳票日期預設
-    defaultOrganization: [, Validators.required], // 預設組織
-    accumulatedProfitLossAccount: [], // 累積盈虧科目
-    currentProfitLossAccount: [], // 本期損益科目
-    cashAccount: [], // 現金科目
-    accountsReceivableAccount: [], // 應收帳款科目
-    accountsPayableAccount: [], // 應付帳款科目
-    inputTaxAccount: [], // 進項稅額科目
-    outputTaxAccount: [], // 銷項稅額科目
-    postAndTelecomFeeAccount: [], // 郵電費科目
-    discountRate: [], // 貼現日利率
-    discountFeeRevenueAccount: [], // 貼現手續費收入科目
-    discountOutputTaxAccount: [], // 貼現銷項稅額科目
-    startdate: [], // 貼現銷項稅額科目起始日
-    enddate: [], // 貼現銷項稅額科目結束日
-    bankTransferFeeAccount: [], // 銀行匯款手續費科目
-    advanceExpenseAccount: [], // 預支費用科目
-    billTransferCondition: [], // 應付票據是否需領用才拋轉傳票
-    typecode: [],
-    typename: [],
-    Subpoenatype: [],
-    mediumcategoryEname: [],
-    mediumcategoryname: [],
-    mediumcategorycode: [],
-    Largecategorycode: [],
-  });
-
-
-  // Dropdown options
-
-  departmentOptions: any[] = [
-
-  ];
-  LargecategorycodeOptions: any[] = [{ value: 1, label: '資產' },
-  { value: 2, label: '負債' },
-  { value: 3, label: '股東權益' },
-  { value: 4, label: '營業收入' },
-  { value: 5, label: '營業成本' },
-  { value: 6, label: '營業費用' },
-  { value: 7, label: '營業外收入及支出' },
-  { value: 8, label: '所得稅費用' },
-  { value: 9, label: '非經常營業損失' }];
-  accountOptions: any[] = [
-    { value: '1101', label: '1101_累積盈虧科目1' },
-    { value: '1102', label: '1102_累積盈虧科目2' },
-    { value: '1103', label: '1103_累積盈虧科目3' }
-  ];
-
-  accountingaccountOptions: any[] = [
-    { value: 1, label: '是' },
-    { value: 2, label: '否' }
-  ];
-
-  statusOptions: any[] = [
-    { value: 1, label: '未拋轉' },
-    { value: 2, label: '已拋轉' },
-    { value: 3, label: '已退回' }
-  ];
-
-  unitOptions: any[] = [
-    { value: 1, label: '元' },
-    { value: 2, label: '千' },
-    { value: 3, label: '萬' }
-  ];
-
-  typeOptions: any[] = [
-    { value: 1, label: '統制' },
-    { value: 2, label: '明細' }
-  ];
-
-  SubpoenatypeOptions: any[] = [
-    { value: 1, label: '現金收入傳票' },
-    { value: 2, label: '現金支出傳票' },
-    { value: 3, label: '轉帳傳票' },
-  ];
-
-  SubpoenastatusOptions: any[] = [
-    { value: 1, label: '作廢' },
-    { value: 2, label: '建立' },
-    { value: 3, label: '確認' },
-    { value: 4, label: '過帳' },
-    { value: 5, label: '刪除' }
-  ];
-
-  codeOptions: any[] = [
-    { value: 1, label: '68919301_臺南紡織股份有限公司' },
-    { value: 2, label: '73251209_統一企業股份有限公司' },
-    { value: 3, label: '96978370_統正開發股份有限公司' }
-  ];
-
-  // Table data
-  data: any[] = [
-
-  ];
-  filteredData: any[] = [...this.data];
-  columns: any[] = [
-    { field: 'midCategoryCode', header: '中類代碼', visible: true },
-    { field: 'midCategoryName', header: '中類名稱', visible: true },
-    { field: 'midCategoryEnglishName', header: '中類英文名稱', visible: true },
-    { field: 'majorCategoryCode', header: '大類代碼', visible: true }
-  ];
-
-  // TypeScript Options
-
-
-
-
-
-  constructor(
-    private router: Router,
-    private formBuilder: FormBuilder,
-    private notificationService: NotificationService,
-    private authService: AuthService,
-    private IfdisplayService: IfdisplayService,
-    private AnalysisdateCService: AnalysisdateCService,
-    private vendorService: VendorService,
-    private flippingstateService: FlippingstateService,
-    private organizationNumberService: OrganizationNumberService,
-    private accountingaccountService: AccountingaccountService
-  ) {
-    super(); // 呼叫父類建構子
-  }
-  vendorOptions: any[] = [];
-  displayOptions2: any[] = [];
-  AnalysisdateCOptions: any[] = [];
-  FlippingstateOptions: any[] = [];
-  ngOnInit(): void {
-    this.ProgNo = '150012';
-    // Initialize dropdown options
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
-
-    this.IfdisplayService.getOptions().subscribe(
-      (data) => (this.displayOptions2 = data)
-    );
-    this.AnalysisdateCService.getOptions().subscribe(
-      (data) => (this.AnalysisdateCOptions = data)
-    );
-    this.vendorService.getVendors().subscribe((data) => {
-      this.vendorOptions = data;
-    });
-    this.flippingstateService.getOptions().subscribe((data) => {
-      this.FlippingstateOptions = data;
-    });
-    this.organizationNumberService
-      .getOrganizationNumbers()
-      .subscribe((data) => {
-        this.departmentOptions = data;
+        // 大+中分類不可重複
+        ClassNo: ['', [Validators.maxLength(2)]], //  中類代碼
+        ClassCname: ['', [ Validators.maxLength(20)]], // 中類名稱
+        ClassEname: ['', [Validators.maxLength(100)]], // 中類英文名稱 (非必填)
+        ClassAttr: ['', [Validators.maxLength(1)]], //  大類代碼
+                
+        ...createPaginationConfig([{ field: 'CompNo', order: 1 }]), // 分頁和排序參數
       });
-    // this.accountingaccountService.getOptions().subscribe((data) => {
-    //   this.accountingaccountOptions = data;
-    // });
-  }
 
-  onSubmit(frm: FormGroup) {
-    console.log(frm.value);
-    this.submitted = true;
-    this.loading = true;
-    this.notificationService.blockUi();
-
-    if (frm.valid && this.canQuery()) {
-      // Submit logic here
-    }
-
-    this.loading = false;
-    this.notificationService.unblockUi();
-  }
-
-  onSubmitQuery(frm: FormGroup) {
-    this.onSubmit(frm);
-  }
-
-  onCreate() {
-    if (this.canAdd()) {
-      let extras: NavigationExtras = {
-        state: {
-          crudstatus: CRUDStatus.Create,
-          queryform: this.queryForm,
-        },
-        skipLocationChange: true,
-      };
-      this.router.navigate(['FIN5000/FIN52060CRU'], extras);
-    }
-  }
-
-  onEdit(data: any) {
-    if (this.canEdit()) {
-      let extras: NavigationExtras = {
-        state: {
-          crudstatus: CRUDStatus.Edit,
-          rowdata: data,
-          queryform: this.queryForm,
-        },
-        skipLocationChange: true,
-      };
-      this.router.navigate(['/demoCRU'], extras);
-    }
-  }
-
-  onDetail(data: any) {
-    let extras: NavigationExtras = {
-      state: {
-        crudstatus: CRUDStatus.Read,
-        rowdata: data,
-        queryform: this.queryForm,
-      },
-      skipLocationChange: true,
-    };
-    this.router.navigate(['/demoCRU'], extras);
-  }
-  onClearForm() {
-    this.queryForm.reset(); // 重置表單
-  }
+      ClassAttr_Option: apiOption[] = [ //大分類選單
+        {No: '1', Name: '大分類1'},
+        {No: '2', Name: '大分類2'},
+        {No: '3', Name: '大分類3'}
+      ]
+          
+      totalRecords = 0;// 分頁和排序參數 // 排序需要
+      data: testDorm[] = [];
+      selectedRows: testDorm[] = [];
+                  
+      columns: Column[] = [ //先放可視範圍內的
+        { field: 'ClassNo', header: '中類代碼', visible: true }, // 中類代碼
+        { field: 'ClassCname', header: '中類名稱', visible: true }, // 中類名稱
+        { field: 'ClassEname', header: '中類英文名稱', visible: true }, // 中類英文名稱
+        { field: 'ClassAttr', header: '大類代碼', visible: true }, // 大類代碼
+          
+        { field: 'CRT_Date', header: '建立日期', visible: false, format: formatDateTime }, // 建立日期
+        { field: 'CRT_USR_No', header: '建立人員', visible: false }, // 建立人員
+        { field: 'CRT_USR_Name', header: '建立人員姓名', visible: false }, // 建立人員姓名
+        { field: 'CRT_Date', header: '變更日期', visible: false, format: formatDateTime }, // 變更日期
+        { field: 'CRT_USR_No', header: '變更人員', visible: false }, // 變更人員
+        { field: 'CRT_USR_Name', header: '變更人員姓名', visible: false }, // 變更人員姓名
+      ];
+          
+      constructor(
+        private fin15090Service: FIN15090Service,
+        private validationService: ValidationService
+      ) {
+        super(); // 呼叫父類建構子
+      }
+            
+      ngOnInit(): void {
+        this.initializePage('FIN52060', '/FIN/FIN52060cru', this.queryForm, (form) => this.onSubmit(form));
+      }
+            
+      onSubmit(frm: FormGroup) {
+        this.handleSubmit(frm, () => {
+          const body = {
+            ...frm.value,
+          }
+          
+          console.log('對象及對帳維護作業 request', body);
+    
+          this.data = [
+            { 
+              "ClassNo": "中類代碼1",
+              "ClassCname": "中類名稱1",
+              "ClassEname": "中類英文名稱1",
+              "ClassAttr": "1",
+            }
+          ];
+    
+          this.loading = false;
+          
+          // this.fin15090Service.PrintFIN15090(body).pipe(untilDestroyed(this)).subscribe({
+          //   next: (response) => {
+          //     this.data = response.Data;
+          //     console.log('對象及對帳維護作業 response', response);
+          //     this.totalRecords = response.TotalCount;
+          //     this.queryStateService.setQueryState(this.ProgNo, frm.value);
+          //     this.loading = false;
+          //   },
+          //   error: () => { this.loading = false; },
+          // });
+        });
+      }
+      // 刪除控制_Grace 9/9: 
+      // GLS6002 GLS3002若有對象別編號不可刪除
+      onDelete(selectedRows: testDorm[]) {
+        // const ids = selectedRows.map(row => row.id);
+        // this.fin14010Service.deleteFIN11020(ids).pipe(untilDestroyed(this)).subscribe({
+        //   next: () => {
+        //     this.onSubmit(this.queryForm);
+        //     this.selectedRows = [];
+        //   },
+        //   error: () => { this.loading = false; },
+        // });
+      }
+            
+      isRowSelectable(row: testDorm) {
+        // return row.CanDel;
+        return true
+      }
 }
