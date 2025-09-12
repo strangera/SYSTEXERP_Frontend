@@ -75,7 +75,7 @@ export class TLS26020Component extends BasicQueryPageComponent<TLS26020Data> imp
 
   // 展開詳細資料的欄位定義
   expansionColumns: Column[] = [
-    { field: 'TXN_DATE', header: '交易日期', visible: true, format: (value: any) => value ? this.datePipe.transform(value, 'yyyy/MM/dd') : '' },
+    { field: 'TXN_DATE', header: '銷售日期', visible: true, format: (value: any) => value ? this.datePipe.transform(value, 'yyyy/MM/dd') : '' },
     { field: 'ECR_NO', header: '機號', visible: true },
     { field: 'TXN_NO', header: '交易序號', visible: true },
     { field: 'TXN_GUIBegNo_Pre', header: '字軌', visible: true },
