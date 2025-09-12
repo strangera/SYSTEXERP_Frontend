@@ -43,8 +43,8 @@ export class FIN13080Component extends BasicQueryPageComponent<any> implements O
     No: [null, Validators.maxLength(16)],
     Date: [yesterday],
     INV_DeclareYM: [new Date()],
-    Invoice_No_Start: [null, Validators.maxLength(8)],
-    Invoice_No_End: [null, Validators.maxLength(8)],
+    Invoice_No_Start: [null, Validators.maxLength(10)],
+    Invoice_No_End: [null, Validators.maxLength(10)],
     ...createPaginationConfig([{ field: 'No', order: 1 }]),
   });
 
@@ -68,7 +68,12 @@ export class FIN13080Component extends BasicQueryPageComponent<any> implements O
 
   ngOnInit(): void {
     this.initializePage('FIN13080', '/FIN/FIN13080cru', this.queryForm, (form) => this.onSubmit(form));
-
+    this.queryForm.get('Invoice_No_Start')?.valueChanges.subscribe(start => {
+      const endControl = this.queryForm.get('Invoice_No_End');
+      if (!endControl?.value && start) {
+        endControl?.setValue(start);
+      }
+    });
   }
 
 

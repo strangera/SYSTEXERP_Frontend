@@ -1,196 +1,118 @@
 import { Component, OnInit, } from '@angular/core';
-import { FormArray, FormBuilder, FormControl, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-import { AuthService } from '../../../service/system/auth.service';
-import { TranslateService, TranslateModule } from '@ngx-translate/core';
-import { BasicCrupageComponent } from '../../../shared/componentextends/basic-crupage/basic-crupage.component';
-//
-import { ValidationService } from '../../../shared/service/validation.service';
-import { OrganizationNumberService } from './../../../service/basic/organization-number.service';
-import { DeductionCodeNameService } from './../../../service/basic/deduction-code-name.service';
-import { ReleaseInvoiceService } from './../../../service/basic/release-invoice.service';
-import { EventCodeService } from '../../../service/basic/event-code.service';
+import { Validators, ReactiveFormsModule } from '@angular/forms';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { PanelModule } from 'primeng/panel';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
-import { NgFor, NgIf } from '@angular/common';
-import { ButtonDynamicallydeleteComponent } from '../../../shared/componentkit/button-dynamicallydelete/button-dynamicallydelete.component';
-import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { ButtonDynamicallyaddComponent } from '../../../shared/componentkit/button-dynamicallyadd/button-dynamicallyadd.component';
+import { NgIf } from '@angular/common';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { TableComponent } from '@shared/componentkit/table/table.component';
+import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
+import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
+import { DropDownListService } from './../../../service/utility/dropDownList.service';
+import { TranslateModule } from '@ngx-translate/core';
 
 @Component({
-    selector: 'app-tls2d010-cru',
-    templateUrl: './tls2d010-cru.component.html',
-    styleUrl: './tls2d010-cru.component.scss',
-    standalone: true,
-    imports: [MenubarComponent, PanelModule, FormsModule, ReactiveFormsModule, DropdownComponent, InputNumberComponent, NgFor, ButtonDynamicallydeleteComponent, CalendarComponent, InputTextComponent, ButtonDynamicallyaddComponent, ButtonComponent, NgIf, TranslateModule]
+  selector: 'app-tls2d010-cru',
+  templateUrl: './tls2d010-cru.component.html',
+  styleUrl: './tls2d010-cru.component.scss',
+  standalone: true,
+  imports: [TableComponent, InputTextComponent, MenubarComponent, PanelModule, ReactiveFormsModule, DropdownComponent, InputNumberComponent, ButtonComponent, NgIf, TranslateModule]
 })
-export class TLS2D010CRUComponent extends BasicCrupageComponent implements OnInit {
-  deductionItemsOptions: any[] = [];
-  organizationOptions: any[] = [];
-  eventCodeOptions: any[] = [];
-  establishOptions: any[] = [];
+export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements OnInit {
+  tlt_noOptions: any[] = [];
+  pod_noOptions: any[] = [];
   // ----------------------------------------------------------------
-  dataForm = this.formBuilder.nonNullable.group({
-    counterInfo: [], // 專櫃編號/名稱 招募編號/營運起始日/營運截止日
-    totalCash: [, [this.validationService.numberValidator, Validators.maxLength(15)]], // 總金額
-    eventCode: [], // 活動代碼/名稱
-    // ----------------------------------------------------------------
-    items: this.formBuilder.array([
-      this.createItem()
-    ]),
+  dataForm = this.formBuilder.group({
+    tlt_no: [], // 專櫃編號/名稱 招募編號/營運起始日/營運截止日
+    totalCash: [{ value: null as string | null, disabled: true }, [Validators.required]],
+    pod_no: [], // 活動代碼/名稱
+    contract_no: [{ value: null as string | null, disabled: true }, [Validators.required]],
+    contract_subno: [{ value: null as string | null, disabled: true }, [Validators.required]],
+    tlt_contract_bdate: [{ value: null as string | null, disabled: true }, [Validators.required]],
+    tlt_contract_edate: [{ value: null as string | null, disabled: true }, [Validators.required]],
   });
-  // ----------------------------------------------------------------
+  // 下拉選項
+  CAP_Type_Options: { value: string; label: string }[] = [];
+  CAP_Item_Options: { value: string; label: string }[] = [];
+  AccNo_Options: { value: string; label: string }[] = [];
+  org_id_Options: { value: string; label: string }[] = [];
+  GUI_FLAG_OPTIONS: { value: string; label: string }[] = [];
+  cap_taxtypeOptions: { value: string; label: string }[] = [];
+
+
   constructor(
-    private router: Router,
-    private formBuilder: FormBuilder,
-    private messageService: NotificationService,
-    private authService: AuthService,
-    private translate: TranslateService,
-    private validationService: ValidationService,
-    //
-    private deductionCodeNameService: DeductionCodeNameService,
-    private organizationNumberService: OrganizationNumberService,
-    private eventCodeService: EventCodeService,
-    private releaseInvoiceService: ReleaseInvoiceService,
+    private dropDownListService: DropDownListService,
+
   ) {
     super();  // 呼叫父類建構子
   }
 
   ngOnInit(): void {
-    // 初始化
-    this.ProgNo = '220063';
-    //
-    // ----------------------------------------------------------------
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
-    //
-    this.eventCodeService.getSystemTypes().subscribe(data => {
-      this.eventCodeOptions = data;
-    });
-    //
-    this.deductionCodeNameService.getDeductionCodeNames().subscribe(data => {
-      this.deductionItemsOptions = data;
-    });
-    //
-    this.organizationNumberService.getOrganizationNumbers().subscribe(data => {
-      this.organizationOptions = data;
-    });
-    //
-    this.releaseInvoiceService.getSystemTypes().subscribe(data => {
-      this.establishOptions = data;
-    });
-    // ----------------------------------------------------------------
-    const state = this.router.lastSuccessfulNavigation?.extras.state as {
-      crudstatus: CRUDStatus,
-      rowdata: any,
-    };
+    this.initializePage('tls2d010', this.dataForm);
+    //  this.loadAndSetupColumns();
+  }
+  // // ===== 載入選項並設定 Table 欄位 =====
+  //   private loadAndSetupColumns() {
+  //     const ECR_GrpNo$ = this.dropDownListService.queryPOS1002GRM_DropDownList()
+  //       .pipe(map(res => (res?.Data ?? []).map((it: any) => ({
+  //         value: it.No,
+  //         label: `${it.No}-${it.Name}`
+  //       }))));
 
-    switch (state.crudstatus) {
-      // 創建
-      case CRUDStatus.Create:
-        this.formTitle = 'create-conditions';
-        this.crudstatus = CRUDStatus.Create;
-        this.showConfirm = this.canAdd();
-        break;
-      // 修改
-      case CRUDStatus.Edit:
-        this.formTitle = 'edit-conditions';
-        this.crudstatus = CRUDStatus.Edit;
-        this.showConfirm = this.canEdit();
-        this.Edit(state.rowdata);
-        break;
-      // 讀檔
-      case CRUDStatus.Read:
-        this.formTitle = 'display-conditions';
-        this.crudstatus = CRUDStatus.Read;
-        this.Read(state.rowdata);
-        break;
-    }
-  }
+  //     const ECR_Type$ = this.dropDownListService
+  //       .querySYS1000_DropDownList({ SYS_Type: 'ECR_Type', SYS_Status: 'A' } as any)
+  //       .pipe(map(res => (res?.Data ?? []).map((it: any) => ({
+  //         value: it.No ?? it.SYS_Code,
+  //         label: it.Name ?? it.SYS_Name ?? ''
+  //       }))));
 
-  // ----------------------------------------------------------------
-  get items(): FormArray {
-    return this.dataForm.get('items') as FormArray;
-  }
+  //     const TLTTALENT_OPTIONS$ = this.dropDownListService.queryTLTTALENT_DropDownList()
+  //       .pipe(map(res => res.Data.map((item: any) => ({
+  //         value: item.No,
+  //         label: `${item.No}-${item.Name}`
+  //       }))));
 
-  getFormControl(index: number, controlName: string): FormControl {
-    return this.items.at(index).get(controlName) as FormControl;
-  }
-  // ----------------------------------------------------------------
-  createItem(): FormGroup {
-    return this.formBuilder.group({
-      deductionItems: [, [Validators.required]], // 扣款項目
-      accountingCode: ['', [Validators.maxLength(8)]], // 會計科目
-      organization: [], // 組織代號
-      debitDay: [, [Validators.required]], // 扣款日期
-      establish: [, [Validators.required]], // 是否開立發票
-      noTaxPrice: [, [Validators.required, this.validationService.numberValidator, Validators.maxLength(8)]], // 金額(未稅)
-      remark: ['', [Validators.maxLength(30)]], // 備註
-    });
-  }
-  onRemoveItem(index: number) {
-    this.items.removeAt(index);
-  }
-  // ----------------------------------------------------------------
-  Edit(rowdata: any) {
-    this.dataForm.patchValue(rowdata);
-  }
+  //     const Building_No$ = this.locationOptionsService.getBuildingOptions().pipe(
+  //       map((res: any[]) => res.map(x => ({ value: x.No ?? x.value, label: x.Name ?? x.label })))
+  //     );
 
-  Read(rowdata: any) {
-    this.dataForm.patchValue(rowdata);
-    this.dataForm.disable();
-  }
+  //     const Floor_No$ = this.locationOptionsService.getFloorOptions().pipe(
+  //       map((res: any[]) => res.map(x => ({ value: x.No ?? x.value, label: x.Name ?? x.label })))
+  //     );
 
-  onAddItem(): void {
-    this.items.push(this.createItem());
-  }
+  //     const Area_No$ = this.locationOptionsService.getRegionOptions().pipe(
+  //       map((res: any[]) => res.map(x => ({ value: x.No ?? x.value, label: x.Name ?? x.label })))
+  //     );
 
-  onSubmit(frm: FormGroup) {
-    this.messageService.blockUi();
+  //     forkJoin({
+  //       TLT_No: TLTTALENT_OPTIONS$,
+  //       ECR_Type: ECR_Type$,
+  //       ECR_GrpNo: ECR_GrpNo$,
+  //       Building_No: Building_No$,
+  //       Floor_No: Floor_No$,
+  //       Area_No: Area_No$,
+  //     }).subscribe(({ TLT_No, ECR_Type, ECR_GrpNo, Building_No, Floor_No, Area_No }) => {
+  //       this.TLTTALENT_OPTIONS = TLT_No ?? [];
+  //       this.ECR_Type_Options = ECR_Type ?? [];
+  //       this.ECR_GrpNoOptions = ECR_GrpNo ?? [];
+  //       this.SYS3700_Options = Building_No ?? [];
+  //       this.SYS3800_Options = Floor_No ?? [];
+  //       this.SYS3A00_Options = Area_No ?? [];
+
+  //       this.columns = [
+  //         { field: 'NOT_SeqNo', header: '通告序號', format: (value) => this.isFormCreateable ? '自動給號' : value },
+  //         { field: 'TLT_No', header: '專櫃編號', type: 'dropdown', options: this.TLTTALENT_OPTIONS, optionLabel: 'label', optionValue: 'value', disabled: (rowData) => this.isOtherGroupSelected(rowData) },
+  //         { field: 'ECR_Type', header: '機台類型', type: 'dropdown', options: this.ECR_Type_Options, optionLabel: 'label', optionValue: 'value', disabled: (rowData) => this.isOtherGroupSelected(rowData) },
+  //         { field: 'ECR_GrpNo', header: '機檯群組編號', type: 'dropdown', options: this.ECR_GrpNoOptions, optionLabel: 'label', optionValue: 'value', disabled: (rowData) => this.isEcrGrpNoSelected(rowData) },
+  //         { field: 'BUILDING_No', header: '館別代碼', type: 'dropdown', options: this.SYS3700_Options, optionLabel: 'label', optionValue: 'value', disabled: (rowData) => this.isOtherGroupSelected(rowData) },
+  //         { field: 'FLOOR_No', header: '樓層代碼', type: 'dropdown', options: this.SYS3800_Options, optionLabel: 'label', optionValue: 'value', disabled: (rowData) => this.isOtherGroupSelected(rowData) },
+  //         { field: 'Area_No', header: '區域代碼', type: 'dropdown', options: this.SYS3A00_Options, optionLabel: 'label', optionValue: 'value', disabled: (rowData) => this.isOtherGroupSelected(rowData) },
+  //       ];
+  //     });
+  // }
+  onSubmit(): void {
     this.submitted = true;
 
-    if (this.dataForm.invalid) {
-      this.messageService.errorBubble(this.translate.instant('form_error_message'));
-      this.messageService.unblockUi();
-      return;
-    }
-
-    switch (this.crudstatus) {
-      case CRUDStatus.Create:
-        if (this.canAdd()) {
-          // this.storeService.addMachine(frm.value as MachineForm).subscribe((response: any) => {
-          this.messageService.successBubble(this.translate.instant('success_message'));
-        }
-        break;
-      case CRUDStatus.Edit:
-        if (this.canEdit()) {
-          // this.storeService.updateMachine(frm.value as MachineForm).subscribe((response: any) => {
-          this.messageService.successBubble(this.translate.instant('updated-successfully'));
-        }
-        break;
-    }
-
-    this.messageService.unblockUi();
-    this.submitted = false;
   }
-
-  submitForm(frm: FormGroup) {
-    // 查詢邏輯
-    this.onSubmit(frm);
-  }
-
-  onClearForm() {
-    this.dataForm.reset();  // 重置表單
-  }
-
-  onCancel() {
-    this.router.navigate(['/TLS2000/TLS2D010']);
-  }
-  //-------------------------------------------------------------------------------------------------------------
 }
-
