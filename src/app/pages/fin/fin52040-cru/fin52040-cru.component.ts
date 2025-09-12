@@ -58,12 +58,12 @@ export class FIN52040CRUComponent extends BasicCruPageComponent<GLS1016> impleme
   dataForm = this.formBuilder.nonNullable.group({
     CompNo: ['', [Validators.required, Validators.maxLength(6)]], //  公司代號
     // RefCode: ['', [Validators.required, Validators.maxLength(20)]], // 對象別代碼
-    RefCode: [{ value: '自動帶入', disabled: true }, [Validators.required]], // 對象別代碼 (不可重複)
+    RefCode: [{ value: null, disabled: true }, [Validators.required]], // 對象別代碼 (不可重複)
     RefName: ['', [Validators.required, Validators.maxLength(30)]], // 對象別名稱 (可編輯)
     SubRefName: ['', [Validators.maxLength(30)]], // 代送商名稱
 
-    CRT_USR_Name: [{ value: '自動帶入', disabled: true }], //  建立人員姓名
-    UPD_USR_Name: [{ value: '自動帶入', disabled: true }], //  變更人員姓名
+    CRT_USR_Name: [{ value: null, disabled: true }], //  建立人員姓名
+    UPD_USR_Name: [{ value: null, disabled: true }], //  變更人員姓名
   });
   //
   GLS1001_Options: apiOption[] = [
@@ -107,11 +107,17 @@ export class FIN52040CRUComponent extends BasicCruPageComponent<GLS1016> impleme
     this.messageService.blockUi();
     this.submitted = true;
 
+    if (!this.dataForm.getRawValue().RefCode) {
+      this.messageService.errorBubble('對象別代碼不可為空');
+      return;
+    }
+
     if (this.dataForm.invalid) {
       this.messageService.unblockUi();
       return;
     }
-
+    
+    // 送出前檢查 RefCode(對象別代碼) 不可重複
     const formValue = frm.getRawValue();
     switch (this.crudstatus) {
       case CRUDStatus.Create:

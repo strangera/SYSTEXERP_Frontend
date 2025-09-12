@@ -52,7 +52,7 @@ export interface GLS1016 {
 // 對象及對帳維護作業
 export class FIN52040Component extends BasicQueryPageComponent<GLS1016> implements OnInit {
   queryForm = this.formBuilder.group({
-    CompNo: ['', [Validators.maxLength(6)]], //  公司代號
+    CompNo: ['', [Validators.maxLength(6)]], //  公司代號 
     RefCode: ['', [ Validators.maxLength(20)]], // 對象別代碼
     RefName: ['', [Validators.maxLength(30)]], // 對象別名稱
 
