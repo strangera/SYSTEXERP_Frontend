@@ -4,7 +4,12 @@
     <app-button btnType="back" (click)="onCancel()"></app-button>
   </div>
   <p-panel [header]="formTitle | translate" class="line-height-3 m-0">
-    <form [formGroup]="dataForm" id="dataForm" (ngSubmit)="onSubmit()">
+    <form
+      *ngIf="currentCreateType === 'counter'"
+      [formGroup]="dataFormCounter"
+      id="dataForm"
+      (ngSubmit)="onSubmit()"
+    >
       <div class="grid p-fluid">
         <div class="col-12 md:col-6 lg:col-4">
           <app-dropdown
@@ -13,7 +18,7 @@
             [options]="tlt_noOptions"
             optionLabel="label"
             optionValue="value"
-            [control]="dataForm.controls.tlt_no"
+            [control]="dataFormCounter.controls.tlt_no"
             [submitted]="submitted"
           ></app-dropdown>
         </div>
@@ -21,7 +26,7 @@
           <app-input-number
             label="總金額"
             controlName="totalCash"
-            [control]="dataForm.controls.totalCash"
+            [control]="dataFormCounter.controls.totalCash"
             [submitted]="submitted"
           ></app-input-number>
         </div>
@@ -32,7 +37,7 @@
             [options]="pod_noOptions"
             optionLabel="label"
             optionValue="value"
-            [control]="dataForm.controls.pod_no"
+            [control]="dataFormCounter.controls.pod_no"
             [submitted]="submitted"
           ></app-dropdown>
         </div>
@@ -40,7 +45,7 @@
           <app-input-text
             label="契約編號"
             controlName="contract_no"
-            [control]="dataForm.controls.contract_no"
+            [control]="dataFormCounter.controls.contract_no"
             [submitted]="submitted"
           ></app-input-text>
         </div>
@@ -48,7 +53,7 @@
           <app-input-text
             label="版次"
             controlName="contract_subno"
-            [control]="dataForm.controls.contract_subno"
+            [control]="dataFormCounter.controls.contract_subno"
             [submitted]="submitted"
           ></app-input-text>
         </div>
@@ -56,7 +61,7 @@
           <app-input-text
             label="營運起始日"
             controlName="tlt_contract_bdate"
-            [control]="dataForm.controls.tlt_contract_bdate"
+            [control]="dataFormCounter.controls.tlt_contract_bdate"
             [submitted]="submitted"
           ></app-input-text>
         </div>
@@ -64,32 +69,176 @@
           <app-input-text
             label="營運起始日"
             controlName="tlt_contract_edate"
-            [control]="dataForm.controls.tlt_contract_edate"
+            [control]="dataFormCounter.controls.tlt_contract_edate"
             [submitted]="submitted"
           ></app-input-text>
         </div>
       </div>
-      <!-- <app-table
-        dataKey="id"
-        [data]="data6"
-        [columns]="columns6"
-        [showRowEdit]="true"
-        [showInsert]="true"
-        [rowEditDisabled]="rowEditDisabled"
-        [showEdit]="false"
-        [showDetail]="false"
-        [insertRowData]="true"
-        [showCheckBox]="true"
-        [selectedItems]="selectedItems6"
-        (selectionChange)="selectedItems6 = $event"
-        [deleteData]="true"
-        (dataChange)="data6 = $event"
-        [defaultInsertData]="defaultInsertData"
-      ></app-table> -->
-     <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
-        <app-button btnType="cancel" [form]="dataForm" />
+      <app-table-edit
+        *ngIf="currentCreateType === 'counter'"
+        title="新增專櫃扣款"
+        tableKey="TLSD010Detail"
+        [data]="data"
+        class="col-12"
+        [data]="data"
+        [columns]="columnsCounter"
+        (selectionChange)="selectedItems = $event"
+        [selectedItems]="selectedItems"
+        (dataChange)="data = $event"
+        dataStatusField="status"
+        [loading]="loading"
+        [tableRequired]="true"
+      ></app-table-edit>
+      <div
+        class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
+      >
+        <app-button btnType="cancel" [form]="dataFormCounter" />
+        <app-button btnType="submit" [loading]="loading" />
+      </div>
+    </form>
+    <form
+      *ngIf="currentCreateType === 'normal'"
+      [formGroup]="dataFormNormal"
+      id="dataForm"
+      (ngSubmit)="onSubmit()"
+    >
+      <div class="grid p-fluid">
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-dropdown
+            label="扣款類型"
+            controlName="CAP_Type"
+            [options]="CAP_TypeOptions"
+            optionLabel="label"
+            optionValue="value"
+            [control]="dataFormNormal.controls.CAP_Type"
+            [submitted]="submitted"
+          ></app-dropdown>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text
+            label="扣款項目"
+            controlName="CAP_Item"
+            [control]="dataFormNormal.controls.CAP_Item"
+            [submitted]="submitted"
+          ></app-input-text>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-calendar
+            label="扣款日期"
+            controlName="tpy_date"
+            calendarType="dateOne"
+            [control]="dataFormNormal.controls.tpy_date"
+            [submitted]="submitted"
+          ></app-calendar>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text
+            label="扣款金額"
+            controlName="tpy_net"
+            [control]="dataFormNormal.controls.tpy_net"
+            [submitted]="submitted"
+          ></app-input-text>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-dropdown
+            label="課稅別"
+            controlName="cap_taxtype"
+            [options]="cap_taxtypeOptions"
+            optionLabel="label"
+            optionValue="value"
+            [control]="dataFormNormal.controls.cap_taxtype"
+            [submitted]="submitted"
+          ></app-dropdown>
+        </div>
+
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-radiobutton
+            label="是否開立發票"
+            groupname="GUI_FLAGOption"
+            [control]="dataFormNormal.controls.GUI_FLAG"
+            [submitted]="submitted"
+            [options]="[
+              { value: 'Y', label: '是' },
+              { value: 'N', label: '否' },
+            ]"
+          ></app-radiobutton>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text
+            label="會計科目"
+            controlName="AccNo"
+            [control]="dataFormNormal.controls.AccNo"
+            [submitted]="submitted"
+          ></app-input-text>
+        </div>
+        <div class="col-12 md:col-6 lg:col-4">
+          <app-input-text
+            label="組織代號/名稱"
+            controlName="org_id"
+            [control]="dataFormNormal.controls.org_id"
+            [submitted]="submitted"
+          ></app-input-text>
+        </div>
+      </div>
+      <app-table-edit
+        *ngIf="currentCreateType === 'normal'"
+        title="新增扣款"
+        tableKey="TLSD010Detail"
+        [data]="data"
+        class="col-12"
+        [data]="data"
+        [columns]="columnsNormal"
+        (selectionChange)="selectedItems = $event"
+        [selectedItems]="selectedItems"
+        (dataChange)="data = $event"
+        dataStatusField="status"
+        [loading]="loading"
+        [tableRequired]="true"
+      ></app-table-edit>
+      <div
+        class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
+      >
+        <app-button btnType="cancel" [form]="dataFormNormal" />
         <app-button btnType="submit" [loading]="loading" />
       </div>
     </form>
   </p-panel>
 </div>
+<!-- <app-dialog [visible]="dialogVisible" header="整批新增專櫃" (visibleChange)="dialogVisible = $event" (save)="saveDialog()"
+  [disable]="selectedItemsDialog.length === 0">
+
+  <form [formGroup]="dialogQueryForm" (ngSubmit)="onQuery(dialogQueryForm)">
+    <div class="grid p-fluid">
+      <app-dropdown-table class="col-12" [control]="dialogQueryForm.controls.PLU_MagNo" [submitted]="submitted"
+        templateLabel="label" optionLabel="label" optionValue="PLU_MagNo" [suggestions]="suggestions"
+      (inputValueChanged)="onAutoCompleteInputChange($event)"
+        (formValueChanged)="onformValueChanged($event)" [formGroup]="opForm" [dialogData]="opData"
+        [dialogColumns]="opColumns" [loading]="opLoading" [totalRecords]="opTotalRecords">
+        <app-input-text class="col-12 md:col-6" label="商品管理編號/國際條碼/廠商貨號" controlName="queryNo"
+          [control]="opForm.controls.queryNo" />
+        <app-input-text class="col-12 md:col-6" label="商品名稱" controlName="PLU_Name"
+          [control]="opForm.controls.PLU_Name" />
+      </app-dropdown-table>
+      <app-input-text class="col-12" label="商品名稱" controlName="PLU_Name"
+        [control]="dialogQueryForm.controls.PLU_Name" />
+      <app-dropdown class="col-12 col-6 lg:col-4" label="大分類代碼" controlName="CAT_LNo"
+        [control]="dialogQueryForm.controls.CAT_LNo" [options]="CAT_LNoOptions" optionLabel="label" optionValue="No" />
+      <app-dropdown class="col-12 col-6 lg:col-4" label="中分類代碼" controlName="CAT_MNo"
+        [control]="dialogQueryForm.controls.CAT_MNo" [options]="CAT_MNoOptions" optionLabel="label" optionValue="No" />
+      <app-dropdown class="col-12 col-6 lg:col-4" label="小分類代碼" controlName="CAT_SNo"
+        [control]="dialogQueryForm.controls.CAT_SNo" [options]="CAT_SNoOptions" optionLabel="label" optionValue="No" />
+    </div>
+    <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+      <app-button btnType="clear" [form]="dialogQueryForm"></app-button>
+      <app-button btnType="query" [loading]="dialogLoading"></app-button>
+    </div>
+  </form>
+  <hr />
+  <app-table tableKey="tls52010CruDialogTable" dataKey="PLU_MagNo" [showReportMode]="false" [data]="dialogData"
+    [columns]="dialogColumns" [showDelete]="false" [selectedItems]="selectedItemsDialog" [showCaption]="false"
+    (selectionChange)="selectedItemsDialog = $event" [showHeader]="false" [showManage]="false" [showCheckBox]="true"
+    [isRowSelectable]="isRowSelectable.bind(this)" [multiSortMeta]="[{ field: 'PLU_MagNo', order: 1 }]"
+    [totalRecords]="totalRecords" (lazyLoadData)="onLazyLoadData($event, dialogQueryForm); onQuery(dialogQueryForm)"
+    [lazy]="true" [loading]="dialogLoading">
+  </app-table>
+</app-dialog> -->
