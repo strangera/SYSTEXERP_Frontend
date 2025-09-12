@@ -29,11 +29,11 @@
           [control]="dataForm.controls.GoodsQty" [submitted]="submitted"></app-input-number>
         <!-- 通關方式註記 INV_PassType -->
         <app-dropdown class="col-12 md:col-6 lg:col-6" label="通關方式註記" controlName="INV_PassType"
-          [options]="invPassTypeOptions" [control]="dataForm.controls.INV_PassType" [submitted]="submitted"
-          optionLabel="Name" optionValue="No"></app-dropdown>
+          [options]="invPassTypeOptions" [control]="dataForm.controls.INV_PassType"
+          [submitted]="submitted"></app-dropdown>
         <!-- 外銷方式 ExportMethod -->
         <app-dropdown class="col-12 md:col-12 lg:col-12" label="外銷方式" controlName="ExportMethod"
-          [options]="exportMethodOptions" optionLabel="Name" optionValue="No" [control]="dataForm.controls.ExportMethod"
+          [options]="exportMethodOptions" [control]="dataForm.controls.ExportMethod"
           [submitted]="submitted"></app-dropdown>
         <!-- 證明文件名稱 INV_DocName -->
         <app-input-text class="col-12 md:col-6 lg:col-6" label="證明文件名稱" controlName="INV_DocName"
@@ -46,7 +46,7 @@
           [control]="dataForm.controls.NonCustomsExportAmt" [submitted]="submitted"></app-input-number>
         <!-- 出口報單類別 INV_ExportType -->
         <app-dropdown class="col-12 md:col-6 lg:col-6" label="出口報單類別" controlName="INV_ExportType"
-          [options]="exportTypeOptions" optionLabel="Name" optionValue="No" [control]="dataForm.controls.INV_ExportType"
+          [options]="exportTypeOptions" [control]="dataForm.controls.INV_ExportType"
           [submitted]="submitted"></app-dropdown>
         <!-- 出口報單號碼 INV_ExportNo -->
         <app-input-text class="col-12 md:col-6 lg:col-6" label="出口報單號碼" controlName="INV_ExportNo"

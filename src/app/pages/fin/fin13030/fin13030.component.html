@@ -44,8 +44,8 @@
 
           <!-- 外銷方式 -->
           <app-multi-select class="col-12 md:col-6 lg:col-4" label="外銷方式" controlName="ExportMethod"
-            [options]="exportMethodOptions" optionLabel="Name" optionValue="No"
-            [control]="queryForm.controls.ExportMethod" [submitted]="submitted"></app-multi-select>
+            [options]="exportMethodOptions" [control]="queryForm.controls.ExportMethod"
+            [submitted]="submitted"></app-multi-select>
 
           <!-- 證明文件名稱 -->
           <app-input-text class="col-12 md:col-6 lg:col-4" label="證明文件名稱" controlName="INV_DocName"
@@ -62,8 +62,8 @@
 
           <!-- 出口報單類別 -->
           <app-multi-select class="col-12 md:col-6 lg:col-4" label="出口報單類別" controlName="INV_ExportType"
-            [options]="exportTypeOptions" optionLabel="Name" optionValue="No"
-            [control]="queryForm.controls.INV_ExportType" [submitted]="submitted"></app-multi-select>
+            [options]="exportTypeOptions" [control]="queryForm.controls.INV_ExportType"
+            [submitted]="submitted"></app-multi-select>
 
           <!-- 出口報單號碼 -->
           <app-input-text class="col-12 md:col-6 lg:col-4" label="出口報單號碼" controlName="INV_ExportNo"
