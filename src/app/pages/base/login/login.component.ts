@@ -28,8 +28,8 @@ import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 export class LoginComponent implements OnInit {
   logoPath = 'assets/layout/images/login_logo.webp';
   loginForm = this.formBuilder.group({
-    code: ['admin' as string, Validators.required],
-    password: ['1' as string, Validators.required],
+    code: ['' as string, Validators.required],
+    password: ['' as string, Validators.required],
   });
   submitted = false;
   loading = false;
@@ -40,9 +40,9 @@ export class LoginComponent implements OnInit {
     private authService: AuthService,
     private formBuilder: FormBuilder,
     private notemessage: NotificationService,
-  ) {}
+  ) { }
 
-  ngOnInit(): void {}
+  ngOnInit(): void { }
 
   // ✅ 只存一次，目前頁面實際的完整 URL（例如 http://localhost:4200/login%20123）
   private saveCurrentUrlOnce(): void {

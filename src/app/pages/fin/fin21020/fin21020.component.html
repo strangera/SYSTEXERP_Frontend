@@ -42,17 +42,17 @@
     </p-accordionTab>
   </p-accordion>
 </div>
-<div class="card">
+<!-- <div class="card">
   <app-table-report apiUrl="queryFIN21020" tableKey="FIN21020query" dataKey="id" [lastQueryBody]="lastQueryBody"
     [totalRecords]="totalRecords" [data]="data" [showCheckBox]="true" (edit)="onEdit($event)"
     [selectedItems]="selectedItems" (selectionChange)="selectedItems = $event" (detail)="onDetail($event)"
-    [columns]="columns" [addButton]="addButton" (delete)="onDelete($event)" [buttonsLoading]="btnLoading"
+    [columns]="columns" [addButton]="addButton" [buttonsLoading]="btnLoading"
     [queryFunction]="fin21020Service.queryFIN21020.bind(fin21020Service)"></app-table-report>
-</div>
+</div> -->
 <div class="card">
   <app-table apiUrl="queryFIN21020" tableKey="FIN21020query" dataKey="id" [data]="data" [columns]="columns"
     (edit)="onEdit($event)" (detail)="onDetail($event)" [showCheckBox]="true" [addButton]="addButton"
-    [multiSortMeta]="queryForm.controls.SortBy.value" [totalRecords]="totalRecords"
+    [multiSortMeta]="queryForm.controls.SortBy.value" [totalRecords]="totalRecords" [buttonsLoading]="btnLoading"
     (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [lazy]="true" [loading]="loading"
     (delete)="onDelete($event)" [selectedItems]="selectedItems" (selectionChange)="selectedItems = $event"></app-table>
 </div>
