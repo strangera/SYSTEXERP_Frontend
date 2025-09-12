@@ -1,5 +1,5 @@
 import { ExcelColumn, ExcelExportService } from './../../../shared/service/excel-export.service';
-import { Component, OnInit, signal, ViewChild } from '@angular/core';
+import { Component, OnInit, signal } from '@angular/core';
 import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
@@ -9,21 +9,19 @@ import { InputNumberRangeComponent } from '../../../shared/componentkit/input-nu
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { TranslateModule } from '@ngx-translate/core';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
-import { AddButton, Column, formatAmount } from '@shared/componentkit/table/table.model';
-import { Fin21020Service, IFin21020Data } from '@service/api/fin/fin21020.service';
+import { AddButton, Column, createPaginationConfig, formatAmount } from '@shared/componentkit/table/table.model';
+import { Fin21020Service, IFin21020Data, IQueryFin21020Request } from '@service/api/fin/fin21020.service';
 import { finalize } from 'rxjs';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { DropDownListService, IDropdownItem } from '@service/utility/dropDownList.service';
 import { DialogComponent } from '@shared/componentkit/dialog/dialog.component';
-import { Table, TableLazyLoadEvent, TableModule } from 'primeng/table';
-import { SkeletonModule } from 'primeng/skeleton';
-import { NgFor } from '@angular/common';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 // 1.2.1.2 費率對照維護
 @Component({
   selector: 'app-fin21020',
   templateUrl: './fin21020.component.html',
   standalone: true,
-  imports: [NgFor, SkeletonModule, TableModule, DialogComponent, MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, DropdownComponent, InputNumberRangeComponent, TableComponent, TranslateModule]
+  imports: [TableReportComponent, DialogComponent, MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, DropdownComponent, InputNumberRangeComponent, TableComponent, TranslateModule]
 })
 export class FIN21020Component extends BasicQueryPageComponent<IFin21020Data> implements OnInit {
   queryForm = this.formBuilder.nonNullable.group({
@@ -35,6 +33,7 @@ export class FIN21020Component extends BasicQueryPageComponent<IFin21020Data> im
     Remit_Fee: [null as number | null, [Validators.max(999999)]], // 廠商負擔電匯手續費
     Comp_Remit_Fee: [null as number | null, [Validators.max(999999)]], // 公司負擔電匯手續費
     Cash_Back_Amt: [null as number | null, [Validators.max(999999)]], // 廠商負擔電匯手續費回饋收入
+    ...createPaginationConfig([{ field: 'BNK_No', order: 1 }, { field: 'Remit_BAmount', order: 1 }])
   });
   selectedItems: IFin21020Data[] = [];
   columns: Column[] = [
@@ -49,10 +48,13 @@ export class FIN21020Component extends BasicQueryPageComponent<IFin21020Data> im
   addButton: AddButton[] = [
     { label: '匯出單筆銀行科目', icon: 'pi pi-file-export', action: (rowData: IFin21020Data) => this.onExport(rowData) },
   ]
-
+  btnLoading = false;
+  lastQueryBody?: IQueryFin21020Request;
+  totalRecords = 0;
+  data: IFin21020Data[] = [];
   constructor(
     private readonly dropDownListService: DropDownListService,
-    private readonly fin21020Service: Fin21020Service, // 注入新的 service
+    public readonly fin21020Service: Fin21020Service, // 注入新的 service
     private readonly excelExportService: ExcelExportService,
   ) {
     super();
@@ -68,75 +70,6 @@ export class FIN21020Component extends BasicQueryPageComponent<IFin21020Data> im
       this.dataDialog = this.bankCodeOptions.filter(item => item.No !== bnkNo) ?? [];
     });
   }
-
-  // ----------------------------------------------------------------
-  private lastQueryBody: any; // ! 用來儲存上一次的查詢條件
-  private isFirstLoadAfterSubmit = true; // ! 用來判斷是否為第一次載入
-  totalRecords = 0; // ! 總筆數
-  data: IFin21020Data[] = []; // ! 快取資料
-  virtualData: IFin21020Data[] = []; // ! 虛擬資料
-  private pendingRequests = new Map<number, any>(); // ! 用來儲存未完成的請求
-  @ViewChild('dt') private dt!: Table;
-  loadDataLazy(event: TableLazyLoadEvent) {
-    if (!this.lastQueryBody || this.totalRecords === 0) {
-      return; // ! 如果沒有上一次的查詢條件 或 是沒有總筆數，就不用載入
-    }
-    if (this.isFirstLoadAfterSubmit) {// ! 如果是第一次載入，就不用載入
-      this.isFirstLoadAfterSubmit = false;
-      return;
-    }
-    const pageSize = (event.rows ?? 30);
-    const start = (event.last === this.totalRecords) ? this.totalRecords - (this.totalRecords % (event.rows ?? 30)) : (event.first ?? 0);
-    const end = start + pageSize;
-    const cachedDataSlice = this.data.slice(start, Math.min(end, this.data.length)); // ! 取得快取的資料
-    // ! 如果快取的資料長度大於 0 且都不為 null 或 undefined
-    if (cachedDataSlice.length > 0 && cachedDataSlice.every(item => item !== null && item !== undefined)) {
-      const newVirtualData = [...this.virtualData];
-      newVirtualData.splice(start, cachedDataSlice.length, ...cachedDataSlice);
-      this.virtualData = newVirtualData;
-      return;
-    }
-    // 檢查這個區段的請求是否已在進行中
-    if (this.pendingRequests.has(start)) {
-      return; // 已經有請求了，不重複發送
-    }
-    const pageIndex = Math.ceil(start / pageSize + 1);
-    const body = {
-      ...this.lastQueryBody,
-      pageIndex: pageIndex,
-      pageSize: pageSize,
-    };
-    const request$ = this.fin21020Service.queryFIN21020(body).pipe(finalize(() => { this.loading = false; this.pendingRequests.delete(start); }));
-    this.pendingRequests.set(start, request$);
-    request$.subscribe(res => {
-      if (this.pendingRequests.has(start)) {
-        if (this.totalRecords !== res.TotalCount) {
-          this.totalRecords = res.TotalCount;
-          this.data = [];
-          this.virtualData = Array(this.totalRecords).fill(null);
-        }
-        this.data.splice(start, res.Data.length, ...res.Data);
-        if (res.TotalCount !== this.data.length) {
-          if (this.virtualData.length + 30 < this.totalRecords) {
-            this.virtualData = Array(this.data.length + 30).fill(null);
-            setTimeout(() => {
-              this.virtualData.splice(0, this.data.length, ...this.data); // ! 將快取的資料放入虛擬資料
-            })
-          } else {
-            this.virtualData = Array(this.totalRecords).fill(null);
-            setTimeout(() => {
-              this.virtualData.splice(0, this.data.length, ...this.data); // ! 將快取的資料放入虛擬資料
-            })
-          }
-        } else {
-          this.virtualData = Array(this.totalRecords).fill(null);
-          setTimeout(() => {
-            this.virtualData.splice(0, this.data.length, ...this.data); // ! 將快取的資料放入虛擬資料
-          })
-        }
-      }
-    });
-  }
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
       const body = {
@@ -146,24 +79,12 @@ export class FIN21020Component extends BasicQueryPageComponent<IFin21020Data> im
         SortBy: [{ field: 'BNK_No', order: 1 }, { field: 'Remit_BAmount', order: 1 }],
       }
       this.fin21020Service.queryFIN21020(body).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(res => {
-        this.lastQueryBody = body; // ! 快取查詢條件
-        this.totalRecords = res.TotalCount; // ! 設定總筆數
-        this.data = res.Data; // ! 快取第一頁資料
-        this.virtualData = Array(res.Data.length + 30).fill(null); // ! 清空虛擬資料
-        setTimeout(() => {
-          this.virtualData.splice(0, res.Data.length, ...res.Data); // ! 將快取的資料放入虛擬資料
-        })
-        this.isFirstLoadAfterSubmit = false; // ! 設定為非第一次載入
+        this.lastQueryBody = body;
+        this.totalRecords = res.TotalCount;
+        this.data = res.Data;
         this.queryStateService.setQueryState(this.ProgNo, frm.value);
       });
     });
-  }
-  onScroll(event: any) {
-    console.log(event);
-
-  }
-  trackByFn(index: number, item: IFin21020Data) {
-    return item.id;
   }
   // ----------------------------------------------------------------
   onDelete(selectedRows: IFin21020Data[]) {
@@ -196,9 +117,9 @@ export class FIN21020Component extends BasicQueryPageComponent<IFin21020Data> im
     { field: 'Cash_Back_Amt', header: '廠商負擔電匯手續費回饋收入', width: 30 },
   ];
   onExport(rowData: IFin21020Data) {
-    this.loading = true;
+    this.btnLoading = true;
     const bnkNo = rowData.BNK_No || '';
-    this.fin21020Service.queryByBnkNo(bnkNo).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(res => {
+    this.fin21020Service.queryByBnkNo(bnkNo).pipe(untilDestroyed(this), finalize(() => this.btnLoading = false)).subscribe(res => {
       this.excelExportService.exportData(res.Data, `費率對照維護${bnkNo}`, this.excelColumns);
     });
   }
