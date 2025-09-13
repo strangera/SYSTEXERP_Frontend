@@ -181,6 +181,7 @@ export class ASS21020Component extends BasicQueryPageComponent<ASS21020Data> imp
       });
 
       this.queryStateService.setQueryState(this.ProgNo, this.queryForm.getRawValue());
+      this.submitted = !0;
       this.loading = !1;
     });
   }
