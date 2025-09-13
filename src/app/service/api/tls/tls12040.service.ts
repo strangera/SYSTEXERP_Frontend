@@ -19,7 +19,7 @@ export class TLS12040Service {
 
   constructor(private http: HttpClient, private errorHandler: ErrorHandlerService) { }
 
-  /** 查詢契約書維護資料 */
+  /** 查詢資料 */
   queryTLS12040(payload: any) {
     return this.http.post<any>(`${this.apiUrl}/TLS0000/TLS1000/queryTLS12040`, payload).pipe(
       tap((res) => console.log('查詢結果:', res)),
@@ -36,7 +36,7 @@ export class TLS12040Service {
     );
   }
 
-  /** 查詢契約書維護地點資料 */
+  /** 查詢維護地點資料 */
   // 在 TLS12040Service 中添加
   queryTLS12040Detail(request: TLS12040RequestModel): Observable<any> {
     return this.http.post(`${this.apiUrl}/TLS0000/TLS1000/queryTLS12040Detail`, request).pipe(
@@ -44,35 +44,28 @@ export class TLS12040Service {
       catchError(this.errorHandler.handleError)
     );
   }
-  /** 查詢契約書維護地點資料 */
+  /** 查詢維護地點資料 */
   // Service 方法
   queryTLS12040Fare(request: TLS12040FareRequest) {
     return this.http.post<any>(`${this.apiUrl}/TLS0000/TLS1000/queryTLS12040Fare`, request).pipe(
       tap((res) => console.log('查詢扣款資料結果:', res)),
     );
   }
-  /** 刪除扣款項目資料 */
-  deleteTLS11020(idList: number[]) {
-    return this.http.post<any>(`${this.apiUrl}/TLS0000/TLS1000/deleteTLS11020`, { idList }).pipe(
-      tap((res) => console.log('刪除結果:', res)),
-      catchError(this.errorHandler.handleError)
-    );
-  }
 
-  /** 查詢契約書抽成設定資料 */
-  queryTLS13010Charge(talentId: string) {
-    const payload = { TalentId: talentId };
-    return this.http.post<any>(`${this.apiUrl}/TLS0000/TLS1000/queryTLS13010Charge`, payload).pipe(
+  /** 查詢抽成設定資料 */
+  queryTLS12040Charge(apply_no: string) {
+    const payload = { apply_no: apply_no };
+    return this.http.post<any>(`${this.apiUrl}/TLS0000/TLS1000/queryTLS12040Charge`, payload).pipe(
       tap((res) => console.log('查詢抽成設定資料結果:', res)),
       catchError(this.errorHandler.handleError)
     );
   }
-  queryTLS13010ChargeUnified(request: { TalentId: string; CurrentTltTermType: string }) {
-    return this.http.post<any>(`${this.apiUrl}/TLS0000/TLS1000/queryTLS13010ChargeUnified`, request).pipe(
-      tap((res) => console.log('統一抽成設定查詢結果:', res)),
-      catchError(this.errorHandler.handleError)
-    );
-  }
+  // queryTLS13010ChargeUnified(request: { TalentId: string; CurrentTltTermType: string }) {
+  //   return this.http.post<any>(`${this.apiUrl}/TLS0000/TLS1000/queryTLS13010ChargeUnified`, request).pipe(
+  //     tap((res) => console.log('統一抽成設定查詢結果:', res)),
+  //     catchError(this.errorHandler.handleError)
+  //   );
+  // }
 
   // 🎯 提交最終契約資料（清理後格式）
   /**

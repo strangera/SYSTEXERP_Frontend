@@ -48,7 +48,7 @@ export class TLS12040CRUComponent implements OnInit {
   formTitle = '';
   submitted = false;
   loading = false;
-  crudstatus = CRUDStatus.Edit; // 固定為 Edit，避免表單被 disable
+  crudstatus: CRUDStatus = CRUDStatus.Read;// 固定為 Edit，避免表單被 disable
 
   // 用戶和權限
   user: any;
@@ -314,14 +314,20 @@ export class TLS12040CRUComponent implements OnInit {
   ) { }
 
   ngOnInit() {
+    // 先處理路由狀態
+    this.handleRouterState();
+
+    // 🔍 調試當前狀態
+    console.log('=== CRU 狀態調試 ===');
+    console.log('當前 CRUD 狀態:', this.crudstatus);
+    console.log('表單標題:', this.formTitle);
+    console.log('表單是否禁用:', this.dataForm.disabled);
+
     // 先保護現有資料
     const existingData = this.flowService.getCruData() as any;
 
     // 先初始化下拉選項
     this.initializeDropdownOptions();
-
-    // 處理路由狀態
-    this.handleRouterState();
 
     // 如果之前有資料，確保不被覆蓋
     if (existingData && Object.keys(existingData).length > 0) {
@@ -506,15 +512,35 @@ export class TLS12040CRUComponent implements OnInit {
     const currentState = this.flowService.getCurrentState();
     const hasExistingFlow = currentState.contractId && currentState.contractId !== '';
 
+    console.log('=== 路由狀態處理開始 ===');
+    console.log('路由狀態:', state);
+    console.log('是否有現有流程:', hasExistingFlow);
+
     if (state) {
       const rowdata = state['rowdata'] as TLS12040Response;
       const crudstatus = state['crudstatus'] as CRUDStatus;
 
+      console.log('接收到的狀態:', { crudstatus, rowdata });
+
       if (rowdata && (rowdata.id || rowdata.apply_no)) {
+        // 設定 CRUD 狀態和標題
         this.crudstatus = crudstatus;
         this.formTitle = this.getFormTitle(crudstatus);
 
-        // 關鍵修改：只在沒有現有流程時才初始化新流程
+        console.log('設定 CRUD 狀態:', this.crudstatus);
+        console.log('表單標題:', this.formTitle);
+
+        // 根據狀態決定表單是否可編輯
+        if (this.crudstatus === CRUDStatus.Read) {
+          console.log('檢視模式：將禁用表單');
+          // 延遲禁用表單，確保初始化完成
+          setTimeout(() => {
+            this.dataForm.disable();
+            console.log('表單已禁用');
+          }, 100);
+        }
+
+        // 工作流程處理：只在沒有現有流程時才初始化新流程
         if (!hasExistingFlow) {
           console.log('初始化新的工作流程');
           this.flowService.startFlow({
@@ -528,25 +554,37 @@ export class TLS12040CRUComponent implements OnInit {
         // 載入詳細資料
         this.loadContractDetail(rowdata);
       } else {
-        // 沒有資料時，才初始化空流程
+        // 沒有 rowdata，但有路由狀態 - 通常是新增模式
+        this.crudstatus = CRUDStatus.Create;
+        this.formTitle = '新增專櫃要約書';
+        console.log('無 rowdata，設定為新增模式');
+
         if (!hasExistingFlow) {
           this.flowService.startFlow({
             applyNo: '',
             isNewContract: true
           });
+          console.log('初始化空流程（新增模式）');
         }
-        this.formTitle = '新增專櫃要約書';
       }
     } else {
-      // 預設初始化，也要檢查是否已有流程
+      // 沒有路由狀態 - 直接訪問頁面，預設為新增模式
+      this.crudstatus = CRUDStatus.Create;
+      this.formTitle = '新增專櫃要約書';
+      console.log('無路由狀態，預設新增模式');
+
       if (!hasExistingFlow) {
         this.flowService.startFlow({
           applyNo: '',
           isNewContract: true
         });
+        console.log('預設初始化空流程');
       }
-      this.formTitle = '新增專櫃要約書';
     }
+
+    console.log('=== 路由狀態處理完成 ===');
+    console.log('最終 CRUD 狀態:', this.crudstatus);
+    console.log('最終表單標題:', this.formTitle);
   }
 
   private getFormTitle(crudstatus: CRUDStatus): string {
@@ -915,8 +953,18 @@ export class TLS12040CRUComponent implements OnInit {
       locationData: this.locationData  // 加入位置資料
     };
 
+    // 先保存數據
     this.flowService.setCruData(completeData);
-    this.router.navigate(['account/tls/tls12040next1']);
+
+    // 然後導航並傳遞狀態
+    const navigationExtras: NavigationExtras = {
+      state: {
+        crudstatus: this.crudstatus, // 確保這裡有設定現有狀態
+        fromRoute: this.router.url
+      }
+    };
+
+    this.router.navigate(['account/tls/tls12040next1'], navigationExtras);
   }
 
   private markFormGroupTouched(formGroup: FormGroup): void {
@@ -930,11 +978,11 @@ export class TLS12040CRUComponent implements OnInit {
   }
 
   hasCommissionTypeChanged(): boolean {
-    // if (this.contractFlowService.isNewContractMode()) {
-    //   return false;
-    // }
+    if (this.crudstatus === CRUDStatus.Create) {
+      return false;
+    }
 
-    // const originalData = this.contractFlowService.getCurrentData()?.queryRowData;
+    // const originalData = this.flowService.getCurrentData()?.queryRowData;
     // const originalCommissionType = originalData?.tlt_term_type?.toString().trim();
     // const currentCommissionType = this.dataForm.get('tlt_term_type')?.value?.toString().trim();
 

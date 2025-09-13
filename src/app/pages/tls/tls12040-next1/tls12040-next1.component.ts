@@ -83,7 +83,20 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
   private _lastViewMode: boolean | null = null;
   private _lastContractInfoLength = 0;
   // 檢視模式用 要換方式
-  isViewMode = false;
+  // isViewMode = false;
+
+  // 使用 CRUDStatus 判斷模式
+  get isReadOnlyMode(): boolean {
+    return this.crudstatus === CRUDStatus.Read;
+  }
+
+  get isEditMode(): boolean {
+    return this.crudstatus === CRUDStatus.Edit;
+  }
+
+  get isCreateMode(): boolean {
+    return this.crudstatus === CRUDStatus.Create;
+  }
 
   constructor(
     private route: ActivatedRoute,
@@ -109,6 +122,14 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
   ngOnInit(): void {
     window.scrollTo(0, 0);
     this.initializePage('TLS12040', this.dataForm);
+
+    console.log('=== CRUD 狀態調試 ===');
+    console.log('當前 CRUD 狀態:', this.crudstatus);
+    console.log('路由狀態:', this.router.lastSuccessfulNavigation?.extras?.state);
+    console.log('isReadOnlyMode:', this.isReadOnlyMode);
+    console.log('isEditMode:', this.isEditMode);
+    console.log('isCreateMode:', this.isCreateMode);
+
     this.initializeDataStructure();
     this.contractInfoColumns = TLS12040FareColumnDefinitions.getContractInfoColumns();
 
@@ -737,13 +758,13 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
   get deductionAColumns(): ColumnDef[] {
     if (!this._cachedDeductionAColumns ||
       this._lastOrgOptionsLength !== this.orgOptions.length ||
-      this._lastViewMode !== this.isViewMode ||
+      this._lastViewMode !== this.isReadOnlyMode ||
       this._lastContractInfoLength !== this.contractInfoData.length) {
 
       console.log('🔄 重新生成 deductionAColumns');
       let columns = TLS12040FareColumnDefinitions.getDeductionAColumns(this.contractInfoData);
       columns = TLS12040FareColumnDefinitions.updateOrgOptionsInColumns(columns, this.orgOptions);
-      if (this.isViewMode) {
+      if (this.isReadOnlyMode) {
         columns = TLS12040FareColumnDefinitions.setColumnsReadonly(columns, true);
       }
       this._cachedDeductionAColumns = columns;
@@ -754,12 +775,12 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
 
   get deductionBColumns(): ColumnDef[] {
     if (!this._cachedDeductionBColumns ||
-      this._lastViewMode !== this.isViewMode ||
+      this._lastViewMode !== this.isReadOnlyMode ||
       this._lastContractInfoLength !== this.contractInfoData.length) {
 
       console.log('🔄 重新生成 deductionBColumns');
       let columns = TLS12040FareColumnDefinitions.getDeductionBColumns(this.contractInfoData);
-      if (this.isViewMode) {
+      if (this.isReadOnlyMode) {
         columns = TLS12040FareColumnDefinitions.setColumnsReadonly(columns, true);
       }
       this._cachedDeductionBColumns = columns;
@@ -771,13 +792,13 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
   get deductionCColumns(): ColumnDef[] {
     if (!this._cachedDeductionCColumns ||
       this._lastOrgOptionsLength !== this.orgOptions.length ||
-      this._lastViewMode !== this.isViewMode ||
+      this._lastViewMode !== this.isReadOnlyMode ||
       this._lastContractInfoLength !== this.contractInfoData.length) {
 
       console.log('🔄 重新生成 deductionCColumns');
       let columns = TLS12040FareColumnDefinitions.getDeductionCColumns(this.contractInfoData);
       columns = TLS12040FareColumnDefinitions.updateOrgOptionsInColumns(columns, this.orgOptions);
-      if (this.isViewMode) {
+      if (this.isReadOnlyMode) {
         columns = TLS12040FareColumnDefinitions.setColumnsReadonly(columns, true);
       }
       this._cachedDeductionCColumns = columns;
@@ -789,13 +810,13 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
   get deductionDColumns(): ColumnDef[] {
     if (!this._cachedDeductionDColumns ||
       this._lastOrgOptionsLength !== this.orgOptions.length ||
-      this._lastViewMode !== this.isViewMode ||
+      this._lastViewMode !== this.isReadOnlyMode ||
       this._lastContractInfoLength !== this.contractInfoData.length) {
 
       console.log('🔄 重新生成 deductionDColumns');
       let columns = TLS12040FareColumnDefinitions.getDeductionDColumns(this.contractInfoData);
       columns = TLS12040FareColumnDefinitions.updateOrgOptionsInColumns(columns, this.orgOptions);
-      if (this.isViewMode) {
+      if (this.isReadOnlyMode) {
         columns = TLS12040FareColumnDefinitions.setColumnsReadonly(columns, true);
       }
       this._cachedDeductionDColumns = columns;
@@ -807,13 +828,13 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
   get deductionEColumns(): ColumnDef[] {
     if (!this._cachedDeductionEColumns ||
       this._lastOrgOptionsLength !== this.orgOptions.length ||
-      this._lastViewMode !== this.isViewMode ||
+      this._lastViewMode !== this.isReadOnlyMode ||
       this._lastContractInfoLength !== this.contractInfoData.length) {
 
       console.log('🔄 重新生成 deductionEColumns');
       let columns = TLS12040FareColumnDefinitions.getDeductionEColumns(this.contractInfoData);
       columns = TLS12040FareColumnDefinitions.updateOrgOptionsInColumns(columns, this.orgOptions);
-      if (this.isViewMode) {
+      if (this.isReadOnlyMode) {
         columns = TLS12040FareColumnDefinitions.setColumnsReadonly(columns, true);
       }
       this._cachedDeductionEColumns = columns;
@@ -824,7 +845,7 @@ export class TLS12040Next1Component extends BasicCruPageComponent<CategoryItem> 
 
   private _updateCacheFlags(): void {
     this._lastOrgOptionsLength = this.orgOptions.length;
-    this._lastViewMode = this.isViewMode;
+    this._lastViewMode = this.isReadOnlyMode;
     this._lastContractInfoLength = this.contractInfoData.length;
   }
 
