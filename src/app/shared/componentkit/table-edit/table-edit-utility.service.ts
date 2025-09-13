@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { Column } from './table-edit.model';
+import { EditColumn } from './table-edit.model';
 
 @Injectable({
   providedIn: 'root'
@@ -12,7 +12,7 @@ export class TableUtilityService {
    * @param data 完整的表格資料 (用於跨行驗證)
    * @returns {isValid: boolean, errors: { [field: string]: string[] }} 驗證結果
    */
-  validateRowData(rowData: any, columns: Column[], data: any): { isValid: boolean, errors: Record<string, string[]> } {
+  validateRowData(rowData: any, columns: EditColumn[], data: any): { isValid: boolean, errors: Record<string, string[]> } {
     const allFieldErrors: Record<string, string[]> = {};
     let isRowValid = true;
 
@@ -35,7 +35,7 @@ export class TableUtilityService {
   }
   insertNewRow(
     data: any[],
-    originalColumns: Column[],
+    originalColumns: EditColumn[],
     dataKey: string,
     defaultInsertData: any,
     dataStatusField: string, // 新增參數
