@@ -12,7 +12,7 @@ import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/ba
 import { DropDownListService } from './../../../service/utility/dropDownList.service';
 import { TranslateModule } from '@ngx-translate/core';
 import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.component';
-import { Column } from '@shared/componentkit/table-edit/table-edit.model';
+import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
 import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
 import { RadiobuttonComponent } from '../../../shared/componentkit/radiobutton/radiobutton.component';
 import { DialogComponent } from '../../../shared/componentkit/dialog/dialog.component';
@@ -61,7 +61,7 @@ export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements 
     AccNo: [],
     org_id: [],
   });
-  columnsCounter: Column[] = [
+  columnsCounter: EditColumn[] = [
     { field: 'tpy_date', header: '扣款日期', type: 'input', width: '12rem' },
     { field: 'CAP_Type', header: '扣款類型', type: 'dropdown', width: '12rem', optionLabel: 'label', optionValue: 'No' },
     { field: 'CAP_Item', header: '扣款項目', type: 'dropdown', width: '12rem', optionLabel: 'label', optionValue: 'No' },
@@ -73,7 +73,7 @@ export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements 
     { field: 'tpy_net', header: '金額', type: 'inputNumber', width: '12rem' },
     { field: 'remarks', header: '備註', type: 'inputNumber', width: '12rem' },
   ];
-  columnsNormal: Column[] = [
+  columnsNormal: EditColumn[] = [
     { field: 'tlt_no', header: '專櫃編號/名稱', type: 'dropdown', width: '12rem', optionLabel: 'label', optionValue: 'No' },
     { field: 'contract_no', header: '契約編號', type: 'inputNumber', width: '12rem', disabled: () => true },
     { field: 'contract_subno', header: '版次', type: 'inputNumber', width: '15rem', disabled: () => true },
@@ -109,7 +109,7 @@ export class TLS2D010CRUComponent extends BasicCruPageComponent<any> implements 
     CAT_SNo: [{ value: null, disabled: true }], // 小分類代碼
     ...createPaginationConfig([{ field: 'PLU_MagNo', order: 1 }]), // 分頁和排序參數
   });
-  dialogColumns: Column[] = [
+  dialogColumns: EditColumn[] = [
     { field: 'PLU_MagNo', header: '商品管理編號' },
     { field: 'PLU_Name', header: '商品名稱' },
     { field: 'PLU_No', header: '國際條碼' },

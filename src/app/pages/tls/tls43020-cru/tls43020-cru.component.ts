@@ -17,7 +17,7 @@ import { SystemOptionsService } from '@service/system/sys1000.service';
 import { FileUploadModule } from 'primeng/fileupload';
 import { ButtonModule } from 'primeng/button';
 import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.component';
-import { Column } from '@shared/componentkit/table-edit/table-edit.model';
+import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
 import { GalleriaModule } from 'primeng/galleria';
 import { QueryTls43020Response } from '@service/api/tls/tls43020.service';
 import { Tls43010Detail } from '@service/api/tls/tls43010.service';
@@ -77,7 +77,7 @@ export class TLS43020CRUComponent extends BasicCruPageComponent<QueryTls43020Res
   ];
   data: Tls43010Detail[] = [];
   // 如果機台群組編號有值那其他要disable，反之亦然
-  columns: Column[] = [
+  columns: EditColumn[] = [
     { field: 'NOT_SeqNo', header: '通告序號' },
     { field: 'ECR_No', header: '收銀機號', format: (value) => this.ECR_NoOptions.find(item => item.No === value)?.label || value },
     { field: 'TLT_No', header: '專櫃編號', format: (value) => this.TLT_NoOptions.find(item => item.No === value)?.label || value },

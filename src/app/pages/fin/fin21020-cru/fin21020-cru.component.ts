@@ -12,7 +12,7 @@ import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/ba
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { DropDownListService, IDropdownItem } from '@service/utility/dropDownList.service';
 import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.component';
-import { Column } from '@shared/componentkit/table-edit/table-edit.model';
+import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
 import { IFin21020Data, IFin21020Detail, Fin21020Service } from '@service/api/fin/fin21020.service';
 import { finalize } from 'rxjs';
 // 引入驗證函式
@@ -44,7 +44,7 @@ export class FIN21020CRUComponent extends BasicCruPageComponent<IFin21020Data> i
   bankCodeOptions: IDropdownItem[] = [];
   data: IFin21020Detail[] = [];
   selectedItems: IFin21020Detail[] = [];
-  columns: Column[] = [
+  columns: EditColumn[] = [
     { field: 'Remit_BAmount', header: '金額下限', type: 'inputNumber', width: '9rem', maxLength: 10, min: 0, validate: [validateRequired], onFocus: (rowData) => { this.autoFillNextRow(rowData); } },
     { field: 'Remit_UAmount', header: '金額上限', type: 'inputNumber', width: '9rem', maxLength: 10, min: 0, validate: [validateRequired] },
     { field: 'Remit_Fee', header: '廠商負擔電匯手續費', type: 'inputNumber', width: '12rem', maxLength: 6, min: 0, validate: [validateRequired], onBlur: (rowData) => { this.autoFillCashBackAmt(rowData); } },
