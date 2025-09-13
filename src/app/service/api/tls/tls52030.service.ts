@@ -116,9 +116,9 @@ export interface ITLS52030Request {
 
 /** 取得採購單資料 (GetPOS2016) 的請求介面 */
 export interface IGetPOS2016Request {
-  LOGO_No?: string; // 品牌代碼
+  LOGO_No?: string | null; // 品牌代碼
   HOS_No?: string | null; // 倉庫代碼
-  VEN_No?: string; // 廠商代號
+  VEN_No?: string | null; // 廠商代號
 }
 
 /** 取得採購單明細及驗收資料 (GetPOS2017AndPOS2019) 的請求介面 */

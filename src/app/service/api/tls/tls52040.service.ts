@@ -117,9 +117,9 @@ export interface TLS52040Request {
 
 /** 取得退貨單資料 (GetPOS2031P) 的請求介面 */
 export interface IGetPOS2031PRequest {
-  LOGO_No?: string; // 品牌代碼
+  LOGO_No?: string | null; // 品牌代碼
   HOS_No?: string | null; // 倉庫代碼
-  VEN_No?: string; // 廠商代號
+  VEN_No?: string | null; // 廠商代號
 }
 
 /** 取得退貨單明細及驗收資料 (GetPOS2032PAndPOS2032) 的請求介面 */
