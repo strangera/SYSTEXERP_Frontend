@@ -1,17 +1,15 @@
-<p-table #dt [columns]="selectedColumns" [value]="data.length > 20 ? virtualData : data" [scrollable]="true"
-  scrollHeight="400px" [rows]="30" [(selection)]="selectedItems" sortMode="multiple" selectionMode="multiple"
-  [rowTrackBy]="trackByFn" [resizableColumns]="true" [reorderableColumns]="true" [loading]="isLoading"
-  [multiSortMeta]="lastQueryBody ? lastQueryBody.SortBy : undefined" (onColReorder)="onColReorder($event)"
-  tableStyleClass="h-full" styleClass="
+<p-table #dt [columns]="selectedColumns" [value]="totalRecords < 30 ? data : virtualData" [scrollable]="true"
+  scrollHeight="700px" [rows]="30" [(selection)]="selectedItems" sortMode="multiple" (onSort)="onSort($event)"
+  [selectionMode]="showCheckBox ? 'multiple' : null" [rowTrackBy]="trackByFn" [resizableColumns]="true"
+  [reorderableColumns]="true" [loading]="isLoading" (onColReorder)="onColReorder($event)" [totalRecords]="totalRecords"
+  styleClass="
     p-datatable-sm p-datatable-gridlines p-datatable-striped" (selectionChange)="selectionChange.emit($event)"
-  [rowSelectable]="rowSelectableWrapper" [virtualScroll]="data.length <= 20 ? false : true" [virtualScrollItemSize]="46"
-  [lazy]="data.length <= 20 ? false : true" [virtualScrollOptions]="{
+  [rowSelectable]="rowSelectableWrapper" [virtualScroll]="totalRecords < 30 ? false : true"
+  [virtualScrollItemSize]="showManage ? 40.6 : 24" [lazy]="totalRecords < 30 ? false : true" [virtualScrollOptions]="{
       delay: 50,
-      itemSize: 46,
       inline: true,
       trackBy: trackByFn,
       onScroll: onScroll,
-      numToleratedItems : 10,
   }">
   <ng-template pTemplate="caption">
     <app-table-caption [data]="data" [columns]="columns" (columnsEvent)="columns = $event" [dataKey]="dataKey"
@@ -90,7 +88,8 @@
     </ng-container>
   </ng-template>
   <ng-template pTemplate="body" let-rowIndex="rowIndex" let-rowData let-columns="columns" let-index="rowIndex">
-    <tr [attr.data-key]="rowData[dataKey]" [pSelectableRow]="rowData" style="height:46px"
+    <tr [attr.data-key]="rowData[dataKey]" [pSelectableRow]="rowData"
+      [style]="{'height': showManage ? '40.6px' : '24px'}"
       [pSelectableRowDisabled]="!rowSelectableWrapper(rowData) || disabled" [pReorderableRow]="index"
       [pSelectableRow]="rowData" [pSelectableRowIndex]="rowIndex">
       <td class="text-center">{{ rowIndex + 1 }}</td>
@@ -115,8 +114,9 @@
           {{ col.format ? col.format(rowData[col.field], rowIndex, rowData) : rowData[col.field]}}
         </span>
       </td>
-      <td [hidden]="!showManage" [ngClass]="{'flex justify-content-center gap-2': showManage}" style="height:46px"
-        class="no-wrap icon-button" alignFrozen="right" pFrozenColumn [frozen]="true" [style.text-align]="'center'">
+      <td [hidden]="!showManage" [ngClass]="{'flex justify-content-center gap-2': showManage}"
+        [style]="{'height': showManage ? '40.6px' : '24px'}" class="no-wrap icon-button" alignFrozen="right"
+        pFrozenColumn [frozen]="true" [style.text-align]="'center'">
         <p-button [text]="true" [outlined]="true" pTooltip="編輯" tooltipPosition="top" icon="pi pi-pencil"
           (click)="edit.emit(rowData)" *ngIf="showEdit" [disabled]="editDisabled(rowData)" [loading]="buttonsLoading" />
         <p-button pTooltip="查看" tooltipPosition="top" icon="pi pi-eye" (click)="detail.emit(rowData)" *ngIf="showDetail"

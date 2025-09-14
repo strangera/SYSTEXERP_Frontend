@@ -7,7 +7,6 @@ import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdow
 import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { CalendarRangeComponent } from '../../../shared/componentkit/calendar-range/calendar-range.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { TranslateModule } from '@ngx-translate/core';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { Column, createPaginationConfig, formatAmount } from '@shared/componentkit/table/table.model';
@@ -21,6 +20,7 @@ import { DatePipe } from '@angular/common';
 import { ButtonModule } from 'primeng/button';
 import { HttpResponse } from '@angular/common/http';
 import { InputNumberComponent } from '@shared/componentkit/input-number/input-number.component';
+import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
 
 @Component({
   selector: 'app-tls57050',
@@ -35,11 +35,11 @@ import { InputNumberComponent } from '@shared/componentkit/input-number/input-nu
     InputTextComponent,
     CalendarRangeComponent,
     ButtonComponent,
-    TableComponent,
     TranslateModule,
     DropdownTableComponent,
     ButtonModule,
-    InputNumberComponent
+    InputNumberComponent,
+    TableReportComponent
   ],
 })
 export class TLS57050Component extends BasicQueryPageComponent<DetailData | SummaryData> implements OnInit {
@@ -55,7 +55,6 @@ export class TLS57050Component extends BasicQueryPageComponent<DetailData | Summ
     PLU_MagNo: ['', [Validators.maxLength(20)]],
     PLU_No: [null, [Validators.maxLength(20)]],
     PLU_OrgPLUNo: [null],
-    ...createPaginationConfig([{ field: 'TXN_SaleNoteNo', order: 1 }]),
   });
   totalRecords = 0;
   displayModeOptions = [
@@ -91,7 +90,7 @@ export class TLS57050Component extends BasicQueryPageComponent<DetailData | Summ
 
   constructor(
     private readonly dropDownListService: DropDownListService,
-    private readonly tls57050Service: Tls57050Service,
+    public readonly tls57050Service: Tls57050Service,
     private readonly tls57040Service: Tls57040Service,
     private datePipe: DatePipe
   ) { super(); }
@@ -158,7 +157,6 @@ export class TLS57050Component extends BasicQueryPageComponent<DetailData | Summ
   }
   onSubmit(frm: FormGroup) {
     this.handleSubmit(frm, () => {
-
       const formValue = frm.value;
       const displayMode = formValue.ReportType;
       const requestBody: QueryTLS57050Request = {
@@ -173,23 +171,16 @@ export class TLS57050Component extends BasicQueryPageComponent<DetailData | Summ
         PLU_MagNo: formValue.PLU_MagNo,
         PLU_No: formValue.PLU_No,
         PLU_OrgPLUNo: formValue.PLU_OrgPLUNo,
-        pageIndex: frm.value.pageIndex,
-        pageSize: frm.value.pageSize,
-        SortBy: frm.value.SortBy,
+        pageIndex: 1,
+        pageSize: 30,
+        SortBy: [{ field: 'TXN_SaleNoteNo', order: 1 }],
       };
 
-      this.tls57050Service.queryTLS57050(requestBody).pipe(
-        untilDestroyed(this),
-        finalize(() => this.loading = false)
-      ).subscribe(response => {
+      this.tls57050Service.queryTLS57050(requestBody).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(response => {
         if (response.Data) {
-          this.totalRecords = response.TotalCount || 0;
           this.historyRequestBody = requestBody;
-          if (requestBody.ReportType === '明細') {
-            this.data = response.Data.DetailData || [];
-          } else {
-            this.data = response.Data.SummaryData || [];
-          }
+          this.totalRecords = response.TotalCount || 0;
+          this.data = response.Data;
           this.queryStateService.setQueryState(this.ProgNo, frm.value);
         } else {
           this.data = [];

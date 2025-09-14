@@ -1,6 +1,6 @@
 import { HttpClient, HttpResponse } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { Observable } from 'rxjs';
+import { map, Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import { ApiResponse } from '../../system/auth.service';
 import { SortMeta } from 'primeng/api';
@@ -72,8 +72,17 @@ export class Tls57050Service {
    * @param request 查詢參數
    * @returns 包含明細或彙總資料的 API Response
    */
-  queryTLS57050(request: QueryTLS57050Request): Observable<ApiResponse<QueryTLS57050ApiResponse>> {
-    return this.http.post<ApiResponse<QueryTLS57050ApiResponse>>(`${this.apiUrl}/queryTLS57050`, request);
+  queryTLS57050(request: QueryTLS57050Request): Observable<any> {
+    return this.http.post<ApiResponse<QueryTLS57050ApiResponse>>(`${this.apiUrl}/queryTLS57050`, request).pipe(
+      map(res => {
+        const data = request.ReportType === '明細' ? res.Data.DetailData : res.Data.SummaryData;
+        return {
+          Data: data,
+          TotalCount: res.TotalCount,
+          Message: res.Message
+        };
+      })
+    );
   }
 
   /**

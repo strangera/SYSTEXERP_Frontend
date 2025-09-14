@@ -15,6 +15,14 @@
   &::-webkit-scrollbar-thumb:hover {
     background: #949494;
   }
+  .p-datatable-header {
+    .p-button.p-fileupload-choose {
+      border: 1px solid var(--surface-border);
+      padding: 0.75rem 1.25rem;
+      height: 100%;
+      width: max-content;
+    }
+  }
   .p-datatable {
     .p-datatable-header {
       background: transparent;

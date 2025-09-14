@@ -104,6 +104,9 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
         this.virtualData = [...this.data];
       }
     }
+    if (changes['lastQueryBody'] && this.lastQueryBody) {
+      this.dt.multiSortMeta = this.lastQueryBody?.SortBy;
+    }
   }
 
   trackByFn(index: number, item: any) {
@@ -119,7 +122,7 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
     return this.columnGroup?.find(g => g.field === groupField)?.header ?? groupField;
   }
   onScroll(event: any) {
-    if (this.isLoading || this.data.length >= this.totalRecords) {
+    if (this.isLoading || this.data.length >= this.totalRecords || this.data.length < 30) {
       return;
     }
     if (event && event.originalEvent && event.originalEvent.target) {
@@ -127,7 +130,7 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
       const scrollTop = target.scrollTop;
       const scrollHeight = target.scrollHeight;
       const clientHeight = target.clientHeight;
-      const threshold = 10; // 容錯值可自行調整，通常 1-2 像素就足夠
+      const threshold = 2; // 容錯值可自行調整，通常 1-2 像素就足夠
       if (scrollHeight - scrollTop - clientHeight <= threshold) {
         this.loadMoreData();
       }
@@ -148,7 +151,44 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
         this.virtualData = Array(this.data.length).fill(null);
         setTimeout(() => {
           this.virtualData.splice(0, this.data.length, ...this.data); // ! 將快取的資料放入虛擬資料
+          this.dt.scrollHeight = '700px';
         })
+      }
+    });
+  }
+  // 新增 onSort 方法
+  onSort(event: any) {
+    // 檢查是否有 queryFunction
+    if (!this.queryFunction || !this.lastQueryBody || this.data.length < 30) {
+      return;
+    }
+    // 3. 準備查詢參數
+    const body = {
+      ...this.lastQueryBody,
+      pageSize: 30,
+      pageIndex: 1, // 重新排序時，總是從第一頁開始
+      SortBy: event.multisortmeta, // 使用內部狀態
+    };
+
+    // 4. 呼叫 API 重新取得資料
+    this.queryFunction(body).pipe(finalize(() => this.isLoading = false)).subscribe(res => {
+      if (res && res.Data) {
+        // 5. API 成功後，更新資料和狀態
+        this.data = res.Data;
+        this.totalRecords = res.TotalCount;
+        this.lastQueryBody = body; // 更新最後一次的查詢條件
+
+        // 重新處理虛擬滾動資料
+        if (this.data.length > 0) {
+          if (this.data.length >= 30) {
+            this.virtualData = Array(this.data.length).fill(null);
+            setTimeout(() => {
+              this.virtualData.splice(0, this.data.length, ...this.data);
+            });
+          } else {
+            this.virtualData = [...this.data];
+          }
+        }
       }
     });
   }

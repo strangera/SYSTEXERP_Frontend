@@ -109,22 +109,24 @@ export class TableEditComponent implements OnChanges, AfterContentInit {
     private readonly messageService: NotificationService
   ) { }
   ngOnChanges(changes: SimpleChanges): void {
-    if (changes['data'] && this.data.length > 0) {
-      // 一開始先將無狀態的資料設為Original
-      this.data = this.data.filter(item => item != null).map((item: any, index) => {
-        if (item[this.dataStatusField] === undefined) {
-          item[this.dataStatusField] = this.dataStatusValue.Original;
-          item[this.dataKey] = `temp-${uuidv4()}`;
-        }
-        // 載入資料時，確保所有計算欄位都是最新的
-        // 新增的邏輯：呼叫計算方法
-        this.calculateRow(item);
-        // 載入資料時也執行整行驗證
-        if (this.rowValidate) {
-          item._rowValidationError = this.rowValidate(item, index);
-        }
-        return item;
-      });
+    if (changes['data']) {
+      if (this.data.length > 0) {
+        // 一開始先將無狀態的資料設為Original
+        this.data = this.data.filter(item => item != null).map((item: any, index) => {
+          if (item[this.dataStatusField] === undefined) {
+            item[this.dataStatusField] = this.dataStatusValue.Original;
+            item[this.dataKey] = `temp-${uuidv4()}`;
+          }
+          // 載入資料時，確保所有計算欄位都是最新的
+          // 新增的邏輯：呼叫計算方法
+          this.calculateRow(item);
+          // 載入資料時也執行整行驗證
+          if (this.rowValidate) {
+            item._rowValidationError = this.rowValidate(item, index);
+          }
+          return item;
+        });
+      }
       // 如果資料中沒有 _isAutoInsertCandidate 欄位則新增
       if (!this.data.some(item => item['_isAutoInsertCandidate']) && this.canInsert) {
         this.insertRow();
@@ -151,12 +153,12 @@ export class TableEditComponent implements OnChanges, AfterContentInit {
     this.dataChange.emit(this.data);
   }
   ngAfterContentInit(): void {
-    setTimeout(() => {
-      if (!this.disabled && this.canInsert) {
-        this.insertRow();
-        this.cdr.detectChanges();
-      }
-    }, 0);
+    // setTimeout(() => {
+    //   if (!this.disabled && this.canInsert) {
+    //     this.insertRow();
+    //     this.cdr.detectChanges();
+    //   }
+    // }, 0);
   }
   onSelectionChange(event: any) {
     if (this.disabled) { return; }

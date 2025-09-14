@@ -45,11 +45,11 @@ export class FIN21020CRUComponent extends BasicCruPageComponent<IFin21020Data> i
   data: IFin21020Detail[] = [];
   selectedItems: IFin21020Detail[] = [];
   columns: EditColumn[] = [
-    { field: 'Remit_BAmount', header: '金額下限', type: 'inputNumber', width: '9rem', maxLength: 10, min: 0, validate: [validateRequired], onFocus: (rowData) => { this.autoFillNextRow(rowData); } },
-    { field: 'Remit_UAmount', header: '金額上限', type: 'inputNumber', width: '9rem', maxLength: 10, min: 0, validate: [validateRequired] },
-    { field: 'Remit_Fee', header: '廠商負擔電匯手續費', type: 'inputNumber', width: '12rem', maxLength: 6, min: 0, validate: [validateRequired], onBlur: (rowData) => { this.autoFillCashBackAmt(rowData); } },
-    { field: 'Comp_Remit_Fee', header: '公司負擔電匯手續費', type: 'inputNumber', width: '12rem', maxLength: 6, min: 0, validate: [validateRequired] },
-    { field: 'Cash_Back_Amt', header: '廠商負擔電匯手續費回饋收入', type: 'inputNumber', width: '12rem', maxLength: 6, min: 0 },
+    { field: 'Remit_BAmount', header: '金額下限', type: 'inputNumber', maxLength: 10, min: 0, validate: [validateRequired], onFocus: (rowData) => { this.autoFillNextRow(rowData); } },
+    { field: 'Remit_UAmount', header: '金額上限', type: 'inputNumber', maxLength: 10, min: 0, validate: [validateRequired] },
+    { field: 'Remit_Fee', header: '廠商負擔電匯手續費', type: 'inputNumber', maxLength: 6, min: 0, validate: [validateRequired], onBlur: (rowData) => { this.autoFillCashBackAmt(rowData); } },
+    { field: 'Comp_Remit_Fee', header: '公司負擔電匯手續費', type: 'inputNumber', maxLength: 6, min: 0, validate: [validateRequired] },
+    { field: 'Cash_Back_Amt', header: '廠商負擔電匯手續費回饋收入', type: 'inputNumber', maxLength: 6, min: 0 },
   ];
   excelBtnLoading = signal(false);
   constructor(
