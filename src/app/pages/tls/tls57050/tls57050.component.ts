@@ -178,8 +178,8 @@ export class TLS57050Component extends BasicQueryPageComponent<DetailData | Summ
 
       this.tls57050Service.queryTLS57050(requestBody).pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(response => {
         if (response.Data) {
+          this.totalRecords = response.TotalCount;
           this.historyRequestBody = requestBody;
-          this.totalRecords = response.TotalCount || 0;
           this.data = response.Data;
           this.queryStateService.setQueryState(this.ProgNo, frm.value);
         } else {
