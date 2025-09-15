@@ -59,8 +59,8 @@ export class TLS14010Component extends BasicQueryPageComponent<TLTContract>
     contract_subno_start: ['', [Validators.maxLength(100)]], // 版本編號_start
     contract_subno_end: ['', [Validators.maxLength(100)]], // 版本編號_end
     apply_statusList: [[], [Validators.maxLength(100)]], // 合約狀態 1=未審核 2=已審核 fix
-    tlt_bdate: [yesterday], // 營運起始日
-    tlt_edate: [yesterday], // 營運終止日
+    tlt_bdate: [null], // 營運起始日
+    tlt_edate: [null], // 營運終止日
 
     //分頁查詢
     ...createPaginationConfig([{ field: 'tlt_no', order: 0 }]), // 分頁和排序參數
