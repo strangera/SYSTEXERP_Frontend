@@ -101,7 +101,6 @@ export class TableComponent extends BasicPrintDataComponent implements OnChanges
     Deleted: 'deleted'
   };
   // expansion 收合展開
-  @Input() showExpandCollapse = true;               // 是否顯示收合展開
   @Input() expansionColumns: Column[] = [];  // 收合展開 欄位配置(expansion必需配置)
   @Input() expansionDataKey = 'details';            // 收合展開 資料key(expansion必需配置)
   @Input() expansionMultiSortMeta = [{ field: this.expansionDataKey, order: 1 }];// 收合展開 排序欄位(單一排序)

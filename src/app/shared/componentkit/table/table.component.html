@@ -32,8 +32,7 @@
       [totalPages]="totalPages" [pages]="pages" [selectedPage]="selectedPage" [rows]="rows" [first]="first"
       (insert)="insertRow()" (delete)="deleteRow($event)" (exportExcel)="exportExcel.emit()"
       (importExcel)="importExcel.emit($event)" (pageChange)="goToPage($event)" [totalRecords]="dt.totalRecords"
-      [apiUrl]="apiUrl" [customReport]="customReport" (exportEvent)="exportEvent.emit($event)"
-      [showExpandCollapse]="showExpandCollapse">
+      [apiUrl]="apiUrl" [customReport]="customReport" (exportEvent)="exportEvent.emit($event)">
       <header><ng-content select="header"></ng-content></header>
     </app-table-caption>
   </ng-template>

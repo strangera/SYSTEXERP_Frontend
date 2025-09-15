@@ -34,7 +34,6 @@ import { Observable } from 'rxjs';
 export class TableCaptionComponent extends BasicPrintDataComponent implements OnChanges {
   @ViewChild('fileUpload') fileUpload!: FileUpload; // 檔案上傳 元件
   @Input() dataKey = 'ID';                                                      // table 資料key
-  @Input() showExpandCollapse = true;         // 是否顯示 全展開/收合 按鈕
   @Input() expansionDataKey = 'id';            // 收合展開 資料key(expansion必需配置)
   @Input() expansionLoadFn?: (rowData: any) => Observable<any>; // 屬性來接收父層傳來的載入函數
   @Input() expandedRows: Record<string, boolean> = {};// 收合展開 已展開資料
@@ -48,7 +47,6 @@ export class TableCaptionComponent extends BasicPrintDataComponent implements On
   @Input() selectedItems: any = [];                 // table 已勾選資料
   @Input() tableKey: string | undefined = undefined;// table 唯一標識 (必填)
   @Input() expansionColumns: Column[] = [];  // 收合展開 欄位配置(expansion必需配置)
-  @Input() expression = false;                      // 收合展開 狀態 (true:展開、false:收合)
   @Input() apiUrl?: string;                         // table API URL (可選)
   @Input() disabled = false;                        // table 是否禁用
   // Header 相關
@@ -91,9 +89,6 @@ export class TableCaptionComponent extends BasicPrintDataComponent implements On
 
   // 當 data 發生變化時，重置分頁與頁碼
   ngOnChanges(changes: SimpleChanges): void {
-    if (changes['data']) {
-      this.expression = false;
-    }
     if (changes['totalRecords']) {
       setTimeout(() => {
         this.calculateTotalPages(); // 計算總頁數
@@ -127,11 +122,6 @@ export class TableCaptionComponent extends BasicPrintDataComponent implements On
         }
       }, 300);
     }
-  }
-  // 全展開/收合的邏輯
-  toggleExpandCollapse() {
-    this.expression = !this.expression;
-    this.tableUtilityService.toggleExpandCollapseLogic(this.data, this.expression, this.dataKey, this.expansionDataKey, this.expansionLoadFn, this.expandedRows, this);
   }
   // 計算總頁數並生成頁面選項
   calculateTotalPages() {

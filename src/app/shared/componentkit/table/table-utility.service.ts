@@ -119,37 +119,6 @@ export class TableUtilityService {
     }
   }
 
-  /**
-   * 處理全部展開/收合的邏輯。
-   * @param data 所有資料
-   * @param expression 展開狀態
-   * @param dataKey 唯一識別鍵
-   * @param expansionDataKey 展開資料的鍵名
-   * @param expansionLoadFn 載入展開資料的函數
-   * @param expandedRows 已展開行的映射表
-   * @param hostComponent 用來處理 `untilDestroyed` 的元件
-   */
-  toggleExpandCollapseLogic(
-    data: any[],
-    expression: boolean,
-    dataKey: string,
-    expansionDataKey: string,
-    expansionLoadFn: ((data: any) => Observable<any>) | undefined,
-    expandedRows: Record<string, boolean>,
-    hostComponent: any
-  ): void {
-    if (expression) {
-      data.forEach(rowData => {
-        const rowKey = rowData[dataKey];
-        if (!expandedRows[rowKey]) {
-          this.toggleRowExpansionLogic(rowData, dataKey, expansionDataKey, expansionLoadFn, expandedRows, hostComponent);
-        }
-      });
-    } else {
-      // 收合所有行
-      Object.keys(expandedRows).forEach(key => delete expandedRows[key]);
-    }
-  }
   // 新增一個方法來驗證行數據
   // 驗證整行資料
   validateRowData(rowData: any, columns: Column[], data: any, messageService: any): boolean {
