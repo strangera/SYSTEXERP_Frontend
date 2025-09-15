@@ -15,6 +15,8 @@ import { untilDestroyed } from '@ngneat/until-destroy';
 import { ButtonModule } from 'primeng/button';
 import { NgStyle } from '@angular/common';
 import { TooltipModule } from 'primeng/tooltip';
+import { apiOption } from '@shared/models/tls/tls000.model';
+import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 
 
 interface POS2001 {
@@ -57,6 +59,7 @@ interface POS2001 {
     TableComponent,
     TranslateModule,
     ButtonModule,
+    DropdownComponent,
     NgStyle,
     TooltipModule
   ]
@@ -67,14 +70,14 @@ export class TLS41030Component extends BasicQueryPageComponent<POS2001> implemen
     // id: [null, [Validators.required]], // decimal(19, 0)
     USR_No: ['', [Validators.maxLength(8)]], // 收銀員編號
     USR_Name: ['', [Validators.maxLength(20)]], // 收銀員姓名
-    USR_Passwd: ['', [Validators.maxLength(20)]], // 密碼
+    // USR_Passwd: ['', [Validators.maxLength(20)]], // 密碼
     USR_Level: ['', [Validators.maxLength(6)]], // 收銀鍵盤等級(編號)
     USR_Auth: [''], // 收銀員授權等級，預設值為0
 
     // USR_JobStatus: ['J', [Validators.required, Validators.maxLength(2)]], // 在職狀態
     // USR_Class: ['R', [Validators.required, Validators.maxLength(2)]], // 收銀員等級
     // USR_RegType: ['2', [Validators.required, Validators.maxLength(2)]], // 區分
-    // USR_TLT_No: ['', [Validators.maxLength(20)]], // 所屬櫃編（可選）
+    USR_TLT_No: ['', [Validators.maxLength(20)]], // 所屬櫃編（可選）
     // USR_TLT_Name: ['', [Validators.maxLength(60)]], // 所屬專櫃名稱（可選）
     // USR_OnJobDate: [''], // 到職日（可選）
     // USR_QuitDate: [''], // 離職日（可選
@@ -138,6 +141,8 @@ export class TLS41030Component extends BasicQueryPageComponent<POS2001> implemen
     { value: '1', label: '集中收銀' },
   ];
 
+  TLTOption: apiOption[]= [];
+
   constructor(
     private tls41030Service: Tls41030Service,
   ) {
@@ -146,6 +151,7 @@ export class TLS41030Component extends BasicQueryPageComponent<POS2001> implemen
 
   ngOnInit(): void {
     this.initializePage('TLS41030', '/TLS/TLS41030cru', this.queryForm, (form) => this.onSubmit(form));
+    this.loadOptions();
   }
   onSubmit(frm: FormGroup): void {
     this.handleSubmit(frm, () => {
@@ -252,4 +258,19 @@ export class TLS41030Component extends BasicQueryPageComponent<POS2001> implemen
       }
     });
   }
+
+  loadOptions() {
+      //查詢 專櫃主檔 下拉選單
+      this.tls41030Service
+        .queryTLTTALENT_DropDownList({})
+        .subscribe((response) => {
+          this.TLTOption = response.Data.map((item: apiOption) => ({
+            No: item.No,
+            Name: item.Name,
+            Label: item.No + '-' + item.Name,
+          }));
+  
+          console.log('專櫃主檔:', this.TLTOption);
+        });
+    }
 }
