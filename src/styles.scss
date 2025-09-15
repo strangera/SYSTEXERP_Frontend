@@ -175,11 +175,13 @@ input[disabled],
   }
 }
 .p-colorpicker-panel .p-colorpicker-color {
+  // 修正PrimeNG v17的問題
   background: transparent url("assets/layout/images/color2.png") no-repeat left
     top;
 }
 
 .p-colorpicker-panel .p-colorpicker-hue {
+  // 修正PrimeNG v17的問題
   background: transparent url("assets/layout/images/hue2.png") no-repeat left
     top;
 }

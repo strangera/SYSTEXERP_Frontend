@@ -167,6 +167,12 @@ export class FIN21020CRUComponent extends BasicCruPageComponent<IFin21020Data> i
       const api = this.isFormCreateable ? this.fin21020Service.insertFIN21020(body) : this.fin21020Service.updateFIN21020(body);
       api.pipe(untilDestroyed(this), finalize(() => this.loading = false)).subscribe(res => {
         this.messageService.successBubble(res.Message);
+        if (this.isFormCreateable) {
+          this.dataForm.reset();
+          this.data = [];
+        } else {
+          this.onCancel();
+        }
       })
     });
   }

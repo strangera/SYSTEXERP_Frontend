@@ -33,6 +33,7 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
   @Input() columns: Column[] = [];                              // 用來儲存查詢結果
   selectedColumns: Column[] = [];                  // 用來儲存查詢結果
   @Input() queryFunction?: (body: any) => Observable<any>; // 用來儲存查詢函數
+  @Input() loading = false;
   // tableKey預設給路由名稱
   @Input() tableKey = this.route.snapshot.url[this.route.snapshot.url.length - 1].path;
   //

@@ -33,7 +33,7 @@ import { CalendarComponent } from '@shared/componentkit/calendar/calendar.compon
 import { ButtonModule } from 'primeng/button';
 
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
-
+ type SortItem = { field: string; order: 1 | -1 };
 @UntilDestroy()
 @Component({
   selector: 'app-tls23070',
@@ -160,11 +160,11 @@ export class TLS23070Component extends BasicQueryPageComponent<any> {
   };
 
   // ===== 排序（只保留 SortBy，與 Table2 對齊）=====
-  sortMeta: any[] = [];
-  readonly defaultSort: any[] = [
-    { field: 'TXN_Date', order: 1 }, // 近到遠
-    { field: 'ECR_No',   order: 1 },
-  ];
+sortMeta: SortItem[] = [];
+readonly defaultSort: SortItem[] = [
+  { field: 'TXN_Date', order: 1 }, // 近到遠
+  { field: 'ECR_No',   order: 1 },
+];
 
   readonly yesterday: Date = (() => {
     const d = new Date();
@@ -179,14 +179,50 @@ export class TLS23070Component extends BasicQueryPageComponent<any> {
     TXN_DateStart: [this.yesterday, [Validators.required]],
     TXN_DateEnd:   [this.yesterday, [Validators.required]],
     tlt_no:        [],
-    tlt_building:  [],
+    tlt_building:  [null],
     tlt_floor:     [],
     org_id:        [],
-    ...createPaginationConfig([
-      { field: 'TXN_Date', order: 1 },
-      { field: 'ECR_No',   order: 1 },
-    ]),
+   ...createPaginationConfig(this.defaultSort),
   });
+ 
+private normalizeSort(input: any, fallback: SortItem[]): SortItem[] {
+  const asArr = Array.isArray(input) ? input : [];
+  const cleaned = asArr
+    .filter((x) => x && typeof x.field === 'string' && (x.order === 1 || x.order === -1))
+    .map((x) => ({ field: String(x.field), order: x.order as 1 | -1 }));
+  return cleaned.length ? cleaned : fallback;
+}
+private buildPayload(base: {
+  TXN_DateStart: any;
+  TXN_DateEnd: any;
+  tlt_no?: string[] | null;
+  tlt_building?: string | null;
+  tlt_floor?: string[] | null;
+  org_id?: string[] | null;
+  pageIndex?: number;
+  pageSize?: number;
+  SortBy?: SortItem[];
+}): any {
+  const payload: any = {
+    TXN_DateStart: formatDateToYYYY_MM_DD(base?.TXN_DateStart),
+    TXN_DateEnd:   formatDateToYYYY_MM_DD(base?.TXN_DateEnd),
+    tlt_no:        Array.isArray(base?.tlt_no) && base!.tlt_no!.length ? base!.tlt_no : undefined,
+    tlt_building:  base?.tlt_building ?? undefined,
+    tlt_floor:     Array.isArray(base?.tlt_floor) && base!.tlt_floor!.length ? base!.tlt_floor : undefined,
+    org_id:        Array.isArray(base?.org_id) && base!.org_id!.length ? base!.org_id : undefined,
+    pageIndex:     Number.isFinite(base?.pageIndex) && (base!.pageIndex as number) >= 1 ? base!.pageIndex : 1,
+    pageSize:      Number.isFinite(base?.pageSize)  && (base!.pageSize  as number) >  0 ? base!.pageSize  : 20,
+    SortBy:        this.normalizeSort(base?.SortBy, this.defaultSort as SortItem[]),
+  };
+
+  // 刪空字串/空陣列/null/undefined
+  Object.keys(payload).forEach((k) => {
+    const v = payload[k];
+    if (v === '' || v == null) delete payload[k];
+    if (Array.isArray(v) && v.length === 0) delete payload[k];
+  });
+  return payload;
+}
 
   // ===== 下拉選項 =====
   CounterOptions: any[] = [];
@@ -247,168 +283,153 @@ export class TLS23070Component extends BasicQueryPageComponent<any> {
     });
   }
 
-  /** Table2 專用 lazy/fetch callback（與 onSubmit 的 payload 結構一致） */
-  fetchTLS23070 = (evt: LazyLoadEvent) => {
+
+fetchTLS23070 = (evt: LazyLoadEvent) => {
+  const formVal = this.queryForm.getRawValue() as any;
+
+  // 事件優先，其次表單，最後預設
+  const pageIndex = Number.isFinite((evt as any)?.pageIndex) ? Number((evt as any).pageIndex) : Number(formVal?.pageIndex ?? 1);
+  const pageSize  = Number.isFinite((evt as any)?.pageSize)  ? Number((evt as any).pageSize)  : Number(formVal?.pageSize  ?? 20);
+  const sortByEvt = (evt as any)?.SortBy;
+  const sortBy    = this.normalizeSort(sortByEvt ?? formVal?.SortBy, this.defaultSort as SortItem[]);
+
+  const payload = this.buildPayload({
+    TXN_DateStart: formVal?.TXN_DateStart,
+    TXN_DateEnd:   formVal?.TXN_DateEnd,
+    tlt_no:        formVal?.tlt_no,
+    tlt_building:  formVal?.tlt_building,
+    tlt_floor:     formVal?.tlt_floor,
+    org_id:        formVal?.org_id,
+    pageIndex,
+    pageSize,
+    SortBy: sortBy,
+  });
+
+  // 匯出沿用
+  this.historyRequestBody = { ...payload };
+
+  return this.tls23070Service.queryTLS23070(payload).pipe(
+    map((res: any) => {
+      const data = res?.Data;
+      const wrapper = Array.isArray(data) ? (data[0] ?? {}) : (data ?? {});
+
+      // ① 表尾總計
+      const totalSummary = wrapper?.totalSummary ?? {};
+      const externalTotals: Record<string, number> = {};
+      Object.values(this.detailTotalFieldMap).forEach((apiKey) => {
+        externalTotals[apiKey] = Number(totalSummary?.[apiKey] ?? 0);
+      });
+
+      // ② 群組小計
+      const groups = Array.isArray(wrapper?.tltNoSubTotals) ? wrapper.tltNoSubTotals : [];
+      const externalSubtotals: Record<string, Record<string, number>> = {};
+      for (const g of groups) {
+        const groupKey = String(g?.tlt_no ?? 'UNKNOWN');
+        const one: Record<string, number> = {};
+        Object.values(this.detailSubtotalFieldMap).forEach((apiKey) => {
+          one[apiKey] = Number(g?.[apiKey] ?? 0);
+        });
+        externalSubtotals[groupKey] = one;
+      }
+
+      // ③ 明細 rows
+      const allSubs = groups.flatMap((g: any) => Array.isArray(g?.subsTotals) ? g.subsTotals : []);
+      const details = allSubs.flatMap((s: any) =>
+        s?.tLS23070Details ?? s?.TLS23070Details ?? s?.tls23070Details ?? []
+      );
+
+      const rows = (Array.isArray(details) ? details : []).map((r: any, i: number) => ({
+        ...r,
+        _rowKey: `${r?.tlt_no ?? ''}|${r?.TXN_Date ?? ''}|${r?.ECR_No ?? ''}|${i}`,
+      }));
+
+      const totalRecords = typeof res?.TotalCount === 'number' ? res.TotalCount : rows.length;
+
+      return { rows, totalRecords, externalTotals, externalSubtotals };
+    })
+  );
+};
+
+
+/** 送出查詢（按鈕 Click） */
+onSubmit(form: FormGroup): void {
+  this.handleSubmit(form, () => {
     const val = this.queryForm.getRawValue() as any;
 
-    // 分頁/排序（事件優先，其次表單/預設）
-    const pageIndex = Number.isFinite(evt?.pageIndex) ? Number(evt!.pageIndex) : Number(val?.pageIndex ?? 1);
-    const pageSize  = Number.isFinite(evt?.pageSize)  ? Number(evt!.pageSize)  : Number(val?.pageSize  ?? 20);
-    const sortBy    = Array.isArray((evt as any)?.SortBy) && (evt as any).SortBy.length
-      ? (evt as any).SortBy
-      : (Array.isArray(val?.SortBy) && val.SortBy.length ? val.SortBy : this.defaultSort);
-
-    // 與 onSubmit 對齊的 payload（不傳 Offset/OrderBy）
-    const payload: any = {
-      TXN_DateStart: formatDateToYYYY_MM_DD(val?.TXN_DateStart),
-      TXN_DateEnd:   formatDateToYYYY_MM_DD(val?.TXN_DateEnd),
-      tlt_no:        Array.isArray(val?.tlt_no) && val.tlt_no.length ? val.tlt_no : undefined,
-      tlt_building:  val?.tlt_building ?? undefined,
-      tlt_floor:     Array.isArray(val?.tlt_floor) && val.tlt_floor.length ? val.tlt_floor : undefined,
-      org_id:        Array.isArray(val?.org_id) && val?.org_id.length ? val.org_id : undefined,
-      pageIndex,
-      pageSize,
-      SortBy: sortBy,
-    };
-
-    // 清理空值
-    Object.keys(payload).forEach((k) => {
-      const v = payload[k];
-      if (v === '' || v === null || v === undefined) delete payload[k];
-      if (Array.isArray(v) && v.length === 0) delete payload[k];
+    const payload = this.buildPayload({
+      TXN_DateStart: val?.TXN_DateStart,
+      TXN_DateEnd:   val?.TXN_DateEnd,
+      tlt_no:        val?.tlt_no,
+      tlt_building:  val?.tlt_building,
+      tlt_floor:     val?.tlt_floor,
+      org_id:        val?.org_id,
+      pageSize:      val?.pageSize,
+      pageIndex:     val?.pageIndex,
+      SortBy:        val?.SortBy ?? (this.sortMeta as SortItem[]),
     });
 
     // 匯出沿用
     this.historyRequestBody = { ...payload };
 
-    return this.tls23070Service.queryTLS23070(payload).pipe(
-      map((res: any) => {
+    this.loading = true;
+    this.messageService?.blockUi();
+
+    this.tls23070Service.queryTLS23070(payload).pipe(
+      finalize(() => {
+        this.loading = false;
+        this.messageService?.unblockUi();
+      })
+    ).subscribe({
+      next: (res: any) => {
         const data = res?.Data;
-        const wrapper = Array.isArray(data) ? (data[0] ?? {}) : (data ?? {});
+        const wrapper = Array.isArray(data) ? data[0] : data;
 
-        // ① 表尾總計
+        // ====== 表尾總計 ======
         const totalSummary = wrapper?.totalSummary ?? {};
-        const externalTotals: Record<string, number> = {};
+        const totals: Record<string, number> = {};
         Object.values(this.detailTotalFieldMap).forEach((apiKey) => {
-          externalTotals[apiKey] = Number(totalSummary?.[apiKey] ?? 0);
+          totals[apiKey] = Number(totalSummary?.[apiKey] ?? 0);
         });
+        this.detailTotals = totals;
 
-        // ② 群組小計
+        // ====== 群組小計 ======
         const groups = Array.isArray(wrapper?.tltNoSubTotals) ? wrapper.tltNoSubTotals : [];
-        const externalSubtotals: Record<string, Record<string, number>> = {};
+        const subMap: Record<string, Record<string, number>> = {};
         for (const g of groups) {
-          const groupKey = String(g?.tlt_no ?? 'UNKNOWN');
+          const key = String(g?.tlt_no ?? 'UNKNOWN');
           const one: Record<string, number> = {};
-          Object.values(this.detailSubtotalFieldMap).forEach((apiKey) => {
+          Object.values(this.detailSubtotalFieldMap).forEach((apiKey: string) => {
             one[apiKey] = Number(g?.[apiKey] ?? 0);
           });
-          externalSubtotals[groupKey] = one;
+          subMap[key] = one;
         }
+        this.detailSubtotals = subMap;
 
-        // ③ 明細 rows（從各群組 subsTotals -> *Details 展開）
-        const allSubs = groups.flatMap((g: any) => Array.isArray(g?.subsTotals) ? g.subsTotals : []);
+        // ====== 明細資料（從 subsTotals 取 details）======
+        const allSubs = groups.flatMap((gg: any) => Array.isArray(gg?.subsTotals) ? gg.subsTotals : []);
         const details = allSubs.flatMap((s: any) =>
-          s?.tLS23070Details ?? s?.TLS23070Details ?? s?.tls23070Details ?? []
+          (s?.tLS23070Details ?? s?.TLS23070Details ?? s?.tls23070Details ?? []) as any[],
         );
 
-        const rows = (Array.isArray(details) ? details : []).map((r: any, i: number) => ({
+        this.data = (details ?? []).map((r: any, i: number) => ({
           ...r,
           _rowKey: `${r?.tlt_no ?? ''}|${r?.TXN_Date ?? ''}|${r?.ECR_No ?? ''}|${i}`,
         }));
 
-        const totalRecords = typeof res?.TotalCount === 'number' ? res.TotalCount : rows.length;
-
-        return { rows, totalRecords, externalTotals, externalSubtotals };
-      })
-    );
-  };
-
-  /** 送出查詢（按鈕 Click） */
-  onSubmit(form: FormGroup): void {
-    this.handleSubmit(form, () => {
-      const val = this.queryForm.getRawValue() as any;
-
-      // ✅ 僅保留 pageIndex/pageSize/SortBy；不傳 Offset / OrderBy
-      const payload: any = {
-        TXN_DateStart: formatDateToYYYY_MM_DD(val?.TXN_DateStart),
-        TXN_DateEnd:   formatDateToYYYY_MM_DD(val?.TXN_DateEnd),
-        tlt_no:        val?.tlt_no,
-        tlt_building:  val?.tlt_building,
-        tlt_floor:     val?.tlt_floor,
-        org_id:        val?.org_id,
-        pageSize:      Number.isFinite(val?.pageSize)  ? val.pageSize  : 10,
-        pageIndex:     Number.isFinite(val?.pageIndex) ? val.pageIndex : 1,
-        SortBy:        Array.isArray(val?.SortBy) ? val.SortBy : this.sortMeta,
-      };
-
-      // 清掉空值/空陣列
-      Object.keys(payload).forEach((k) => {
-        const v = payload[k];
-        if (v === '' || v === null || v === undefined) delete payload[k];
-        if (Array.isArray(v) && v.length === 0) delete payload[k];
-      });
-
-      // 匯出沿用
-      this.historyRequestBody = { ...payload };
-
-      this.loading = true;
-      this.messageService?.blockUi();
-
-      this.tls23070Service.queryTLS23070(payload).pipe(
-        finalize(() => {
-          this.loading = false;
-          this.messageService?.unblockUi();
-        })
-      ).subscribe({
-        next: (res: any) => {
-          const data = res?.Data;
-          const wrapper = Array.isArray(data) ? data[0] : data;
-
-          // ====== 表尾總計 ======
-          const totalSummary = wrapper?.totalSummary ?? {};
-          const totals: Record<string, number> = {};
-          Object.values(this.detailTotalFieldMap).forEach((apiKey) => {
-            totals[apiKey] = Number(totalSummary?.[apiKey] ?? 0);
-          });
-          this.detailTotals = totals;
-
-          // ====== 群組小計 ======
-          const groups = Array.isArray(wrapper?.tltNoSubTotals) ? wrapper.tltNoSubTotals : [];
-          const subMap: Record<string, Record<string, number>> = {};
-          for (const g of groups) {
-            const key = String(g?.tlt_no ?? 'UNKNOWN');
-            const one: Record<string, number> = {};
-            Object.values(this.detailSubtotalFieldMap).forEach((apiKey: string) => {
-              one[apiKey] = Number(g?.[apiKey] ?? 0);
-            });
-            subMap[key] = one;
-          }
-          this.detailSubtotals = subMap;
-
-          // ====== 明細資料（從 subsTotals 取 details）======
-          const allSubs = groups.flatMap((g: any) => Array.isArray(g?.subsTotals) ? g.subsTotals : []);
-          const details = allSubs.flatMap((s: any) =>
-            (s?.tLS23070Details ?? s?.TLS23070Details ?? s?.tls23070Details ?? []) as any[],
-          );
-
-          this.data = (details ?? []).map((r: any, i: number) => ({
-            ...r,
-            _rowKey: `${r?.tlt_no ?? ''}|${r?.TXN_Date ?? ''}|${r?.ECR_No ?? ''}|${i}`,
-          }));
-
-          this.totalRecords =
-            typeof res?.TotalCount === 'number' ? res.TotalCount : this.data.length;
-        },
-        error: (err) => {
-          console.error('TLS23070 查詢失敗', err);
-          this.data = [];
-          this.totalRecords = 0;
-          this.detailTotals = {};
-          this.detailSubtotals = {};
-        },
-      });
+        this.totalRecords =
+          typeof res?.TotalCount === 'number' ? res.TotalCount : this.data.length;
+      },
+      error: (err) => {
+        console.error('TLS23070 查詢失敗', err);
+        this.data = [];
+        this.totalRecords = 0;
+        this.detailTotals = {};
+        this.detailSubtotals = {};
+      },
     });
-  }
+  });
+}
+
 
   /** 取得某日期所在月份的起訖（start: 1號 00:00:00, end: 當月最後一天 23:59:59） */
   private getMonthRange(d: Date) {
@@ -460,6 +481,9 @@ export class TLS23070Component extends BasicQueryPageComponent<any> {
   moneyFormat(value: number): string {
     return value != null ? Number(value || 0).toLocaleString('en-US') : '0';
   }
+  
+  
+
 
   // ===== 欄位（含總計/小計標記）=====
   columns = [

@@ -241,6 +241,19 @@ export class ValidationService {
         return { invalidOddMonth: true };
       }
 
+    } else {
+      // 如果不是有效的 Date 物件
+      return { invalidDate2: true };
+    }
+
+    return null;
+  }
+
+  // 輸入日期不能小於前一個月
+  minMonthValidator(control: { value: Date | null }): ValidationErrors | null {
+    const value = control.value;
+
+    if (value !== null && value instanceof Date && !isNaN(value.getTime())) {
       const now = new Date();
       const prevMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1); // 當前月的前一個月 1 號
       const inputDate = new Date(value.getFullYear(), value.getMonth(), 1);
@@ -257,6 +270,28 @@ export class ValidationService {
     return null;
   }
 
+  // 輸入日期不能大於當前月份
+  maxMonthValidator(control: { value: Date | null }): ValidationErrors | null {
+    const value = control.value;
+
+    if (value !== null && value instanceof Date && !isNaN(value.getTime())) {
+      const now = new Date();
+      const currentMonth = new Date(now.getFullYear(), now.getMonth(), 1); // 當前月 1 號
+      const inputDate = new Date(value.getFullYear(), value.getMonth(), 1);
+
+      // 輸入日期不能大於當前月份
+      if (inputDate > currentMonth) {
+        return { invalidMaxMonthDate: true };
+      }
+    } else {
+      // 如果不是有效的 Date 物件
+      return { invalidDate2: true };
+    }
+
+    return null;
+  }
+
+
   // GUI_YYMM 驗證：只能為雙數月，且不能大於當前月份
   evenMonthValidator(control: { value: Date | null }): ValidationErrors | null {
     const value = control.value;
@@ -266,15 +301,6 @@ export class ValidationService {
       // 檢查是否為雙數月
       if (month % 2 !== 0) {
         return { invalidEvenMonth: true };
-      }
-
-      const now = new Date();
-      const currentMonth = new Date(now.getFullYear(), now.getMonth(), 1); // 當前月 1 號
-      const inputDate = new Date(value.getFullYear(), value.getMonth(), 1);
-
-      // 輸入日期不能大於當前月份
-      if (inputDate > currentMonth) {
-        return { invalidMaxMonthDate: true };
       }
     } else {
       // 如果不是有效的 Date 物件

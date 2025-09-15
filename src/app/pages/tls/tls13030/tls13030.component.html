@@ -11,6 +11,15 @@
       <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
 
         <div class="grid p-fluid">
+                    <div class="col-12 md:col-6 lg:col-4">
+            <app-multi-select
+              label="組織代碼/名稱"
+              [options]="organizationOptions"
+              [control]="queryForm.controls.org_idList"
+              optionLabel="label"
+              optionValue="value"
+              [submitted]="submitted"></app-multi-select>
+          </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-text
               label="專櫃編號"
