@@ -4,7 +4,6 @@ import { MenubarComponent } from '../../../shared/component/menubar/menubar.comp
 import { AccordionModule } from 'primeng/accordion';
 import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { TranslateModule } from '@ngx-translate/core';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { Column, formatAmount, formatDate } from '@shared/componentkit/table/table.model';
@@ -13,7 +12,7 @@ import { CalendarRangeQuickComponent } from '@shared/componentkit/calendar-range
 import { DropDownListService, IDropdownItem } from '@service/utility/dropDownList.service';
 import { untilDestroyed } from '@ngneat/until-destroy';
 import { finalize } from 'rxjs';
-import { DatePipe } from '@angular/common';
+import { DatePipe, NgIf } from '@angular/common';
 import { ButtonModule } from 'primeng/button';
 import { HttpResponse } from '@angular/common/http';
 import { QueryTLS57100DetailResponse, QueryTLS57100Request, QueryTLS57100SummaryResponse, Tls57100Service } from '@service/api/tls/tls57100.service';
@@ -33,11 +32,11 @@ import { TableReportComponent } from '@shared/componentkit/table-report/table-re
     MultiSelectComponent,
     CalendarRangeQuickComponent,
     ButtonComponent,
-    TableComponent,
     TranslateModule,
     ButtonModule,
     InputTextComponent,
-    TableReportComponent
+    TableReportComponent,
+    NgIf
   ],
   providers: [DatePipe]
 })
@@ -57,8 +56,8 @@ export class TLS57100Component extends BasicQueryPageComponent<QueryTLS57100Deta
   });
   totalRecords = 0;
   documentTypeOptions = [
-    { value: 1, label: '驗收單' },
-    { value: 2, label: '驗退單' }
+    { value: 1, label: '進貨單' },
+    { value: 2, label: '退貨單' }
   ];
   documentStatusOptions = [
     { value: '1', label: '已申請' },
@@ -85,7 +84,7 @@ export class TLS57100Component extends BasicQueryPageComponent<QueryTLS57100Deta
   ) { super(); }
 
   ngOnInit(): void {
-    this.initializePage('TLS57100', 'tls/tls57100cru', this.queryForm, (form) => this.onSubmit(form));
+    this.initializePage('TLS57100', 'tls/tls57100cru');
 
     this.queryForm.controls.DisplayMode.valueChanges.pipe(untilDestroyed(this)).subscribe(mode => {
       this.updateTableColumns(mode);

@@ -18,7 +18,7 @@ import {
   Tls57090Service
 } from '@service/api/tls/tls57090.service';
 import { finalize } from 'rxjs';
-import { DatePipe } from '@angular/common';
+import { DatePipe, NgIf } from '@angular/common';
 import { ButtonModule } from 'primeng/button';
 import { HttpResponse } from '@angular/common/http';
 import { TableReportComponent } from '@shared/componentkit/table-report/table-report.component';
@@ -38,7 +38,8 @@ import { TableReportComponent } from '@shared/componentkit/table-report/table-re
     ButtonComponent,
     TranslateModule,
     ButtonModule,
-    TableReportComponent
+    TableReportComponent,
+    NgIf
   ],
   providers: [DatePipe]
 })
@@ -85,7 +86,7 @@ export class TLS57090Component extends BasicQueryPageComponent<QueryTLS57090Deta
   ) { super(); }
 
   ngOnInit(): void {
-    this.initializePage('TLS57090', 'tls/tls57090cru', this.queryForm, (form) => this.onSubmit(form));
+    this.initializePage('TLS57090', 'tls/tls57090cru');
 
     this.queryForm.controls.DisplayMode.valueChanges.pipe(untilDestroyed(this)).subscribe(mode => {
       this.updateTableColumns(mode);
