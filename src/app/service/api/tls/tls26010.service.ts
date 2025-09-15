@@ -2,12 +2,11 @@ import { HttpClient } from '@angular/common/http';
 import { computed, Injectable, OnDestroy, signal } from '@angular/core';
 import { DependentDataQuery, EcrItem, PodRequest, TLS26010Data, TLS26010Detail, TLS26010DetailResponse, TLS26010Query, TltItem } from '@pages/tls/tls26010/tls26010.model';
 import { AuthService } from '@service/system/auth.service';
-import { ErrorHandlerService } from '@service/system/error-handler.service';
 import { NotificationService } from '@shared/component/notification-message/notification.service';
 import { BaseQueryResponse, DropdownOption } from '@shared/models/api/base-api.interface';
 import { ApprovalStatus } from '@shared/models/tls/approval-status.model';
-import { ConfirmationService } from 'primeng/api';
-import { catchError, finalize, Observable, of, Subject, take, takeUntil, tap } from 'rxjs';
+import { NGXLogger } from 'ngx-logger';
+import { finalize, Observable, of, Subject, take, takeUntil, tap } from 'rxjs';
 import { environment } from 'src/environments/environment';
 
 const apiUrl: string = environment.ApiUrl;
@@ -77,11 +76,10 @@ export class TLS26010Service implements OnDestroy {
   }
 
   constructor(
-    private http: HttpClient,
-    private auth: AuthService,
-    private errorHandler: ErrorHandlerService,
-    private messageService: NotificationService,
-    private confirmationService: ConfirmationService,
+    private readonly http: HttpClient,
+    private readonly auth: AuthService,
+    private readonly messageService: NotificationService,
+    private readonly logger: NGXLogger,
   ) { }
 
   /** 取得館別 */
@@ -92,10 +90,9 @@ export class TLS26010Service implements OnDestroy {
       take(1),
       takeUntil(this.sys3800Cancel$),
       tap(response => this.sys3800Data.set(response.Data)),
-      catchError(error => this.errorHandler.handleError(error)),
       finalize(() => {
         this.sys3800Loading = !1;
-        console.log('館別查詢結果:', this.sys3800Data());
+        this.logger.debug('館別查詢結果:', this.sys3800Data());
       })
     ).subscribe();
   }
@@ -108,10 +105,9 @@ export class TLS26010Service implements OnDestroy {
       take(1),
       takeUntil(this.sys3900Cancel$),
       tap(response => this.sys3900Data.set(response.Data)),
-      catchError(error => this.errorHandler.handleError(error)),
       finalize(() => {
         this.sys3900Loading = !1;
-        console.log('樓層查詢結果:', this.sys3900Data());
+        this.logger.debug('樓層查詢結果:', this.sys3900Data());
       })
     ).subscribe();
   }
@@ -124,10 +120,9 @@ export class TLS26010Service implements OnDestroy {
       take(1),
       takeUntil(this.sys3A00Cancel$),
       tap(response => this.sys3A00Data.set(response.Data)),
-      catchError(error => this.errorHandler.handleError(error)),
       finalize(() => {
         this.sys3A00Loading = !1;
-        console.log('區域代碼查詢結果:', this.sys3A00Data());
+        this.logger.debug('區域代碼查詢結果:', this.sys3A00Data());
       })
     ).subscribe();
   }
@@ -141,10 +136,9 @@ export class TLS26010Service implements OnDestroy {
       take(1),
       takeUntil(this.ecrCancel$),
       tap(response => this.ecrData.set(response.Data)),
-      catchError(error => this.errorHandler.handleError(error)),
       finalize(() => {
         this.ecrLoading = !1;
-        console.log('收銀機號查詢結果:', this.ecrData());
+        this.logger.debug('收銀機號查詢結果:', this.ecrData());
       }),
     ).subscribe();
   }
@@ -158,10 +152,9 @@ export class TLS26010Service implements OnDestroy {
       take(1),
       takeUntil(this.tltCancel$),
       tap(response => this.tltData.set(response.Data)),
-      catchError(error => this.errorHandler.handleError(error)),
       finalize(() => {
         this.tltLoading = !1;
-        console.log('專櫃編號查詢結果:', this.tltData());
+        this.logger.debug('專櫃編號查詢結果:', this.tltData());
       })
     ).subscribe();
   }
@@ -174,10 +167,9 @@ export class TLS26010Service implements OnDestroy {
       take(1),
       takeUntil(this.queryCancel$),
       tap(response => this.TLS26010Data.set(response.Data)),
-      catchError(error => this.errorHandler.handleError(error)),
       finalize(() => {
         this.tableLoading = !1;
-        console.log('預購活動檔期查詢結果:', this.TLS26010Data());
+        this.logger.debug('預購活動檔期查詢結果:', this.TLS26010Data());
       })
     ).subscribe();
   }
@@ -190,10 +182,9 @@ export class TLS26010Service implements OnDestroy {
       take(1),
       takeUntil(this.detailCancel$),
       tap(response => this.TLS26010Detail.set(response.Data)),
-      catchError(error => this.errorHandler.handleError(error)),
       finalize(() => {
         this.tableLoading = !1;
-        console.log('預購活動檔期細節查詢結果:', this.TLS26010Detail());
+        this.logger.debug('預購活動檔期細節查詢結果:', this.TLS26010Detail());
       })
     ).subscribe();
   }
@@ -205,10 +196,9 @@ export class TLS26010Service implements OnDestroy {
     return this.http.post<BaseQueryResponse<any>>(`${apiUrl}/TLS0000/TLS2000/insertTLS26010`, payload).pipe(
       take(1),
       tap(() => { }),
-      catchError(error => this.errorHandler.handleError(error)),
       finalize(() => {
         this.tableLoading = !1;
-        console.log('新增結果:', this.TLS26010Data());
+        this.logger.debug('新增結果:', this.TLS26010Data());
       })
     );
   }
@@ -225,7 +215,7 @@ export class TLS26010Service implements OnDestroy {
           this.TLS26010Data.update(currentData => {
             const info = data.pod_info;
             const index = currentData.findIndex(item => item.pod_no === info.pod_no);
-            console.log(`update data:`, [currentData, data, info, index]);
+            this.logger.debug(`update data:`, [currentData, data, info, index]);
             if (index !== -1 && currentData[index]) {
               const updatedData: TLS26010Data = {
                 ...currentData[index],
@@ -247,13 +237,9 @@ export class TLS26010Service implements OnDestroy {
           this.messageService.errorBox('更新失敗: ' + response.Message);
         }
       }),
-      catchError(error => {
-        this.messageService.errorBox('更新失敗，請稍後再試');
-        return this.errorHandler.handleError(error);
-      }),
       finalize(() => {
         this.tableLoading = !1;
-        console.log('更新結果:', this.TLS26010Data());
+        this.logger.debug('更新結果:', this.TLS26010Data());
       })
     );
   }
@@ -263,7 +249,6 @@ export class TLS26010Service implements OnDestroy {
     return this.http.post<BaseQueryResponse<any>>(`${apiUrl}/TLS0000/TLS2000/deleteTLS26010`, { id }).pipe(
       take(1),
       tap(() => this.TLS26010Data.set(this.TLS26010Data())),
-      catchError(error => this.errorHandler.handleError(error)),
       finalize(() => this.tableLoading = !1)
     );
   }
@@ -287,10 +272,9 @@ export class TLS26010Service implements OnDestroy {
           }
           return currentData;
         })),
-        catchError(error => this.errorHandler.handleError(error)),
         finalize(() => {
           this.approvalStatusLoading = !1;
-          console.log('核准結果:',);
+          this.logger.debug('核准結果:',);
         })
       ).subscribe();
     this.messageService.successBubble(`${this.approvalCheck(data).confirm}成功`);
