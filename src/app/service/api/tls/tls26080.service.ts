@@ -80,7 +80,6 @@ export class TLS26080Service {
     this.http.post<BaseQueryResponse<DropdownOption>>(`${apiUrl}/queryAPS1003_DropDownList`, { cap_typeList }).pipe(
       take(1),
       tap(response => this.capItems.set(response.Data || [])),
-      catchError(error => this.errorHandler.handleError(error)),
       finalize(() => {
         this.capItemsLoading = !1;
         console.log('APS1003查詢結果:', [this.capItems()]);
@@ -95,7 +94,6 @@ export class TLS26080Service {
     this.http.post<BaseQueryResponse<TLS26080Data>>(`${apiUrl}/TLS0000/TLS2000/queryTLS26080`, query).pipe(
       take(1),
       tap(response => this.TLS26080Data.set(response.Data)),
-      catchError(error => this.errorHandler.handleError(error)),
       finalize(() => {
         this.tableLoading = !1;
         console.log('查詢結果:', [this.TLS26080Data()]);
@@ -122,7 +120,6 @@ export class TLS26080Service {
     this.http.post<BaseQueryResponse<TLS26080Detail>>(`${apiUrl}/TLS0000/TLS2000/queryTLS26080_Detail`, { pod_no: query }).pipe(
       take(1),
       tap(response => this.TLS26080Detail.set(response.Data)),
-      catchError(error => this.errorHandler.handleError(error)),
       finalize(() => {
         this.tableLoading = !1;
         console.log('專櫃活動細節查詢結果:', [this.TLS26080Detail()]);
@@ -133,7 +130,6 @@ export class TLS26080Service {
   public insertTLS26080(data: TLS2608InsertPayload): Observable<BaseQueryResponse<any>> {
     return this.http.post<BaseQueryResponse<any>>(`${apiUrl}/TLS0000/TLS2000/insertTLS26080`, data).pipe(
       take(1),
-      catchError(error => this.errorHandler.handleError(error)),
     );
   }
 
@@ -152,7 +148,6 @@ export class TLS26080Service {
             : ApprovalStatus.未核准;
           return currentData;
         })),
-        catchError(error => this.errorHandler.handleError(error)),
         finalize(() => {
           this.approvalStatusLoading = !1;
           console.log('核准結果:', [this.approvalCheck(data).confirm]);
@@ -201,7 +196,6 @@ export class TLS26080Service {
         }
         this.dealErrorFilePath(data);
       }),
-      catchError(error => this.errorHandler.handleError(error)),
       finalize(() => {
         console.log('上傳檔案結果:', [file]);
       })
@@ -211,7 +205,6 @@ export class TLS26080Service {
   public deleteTLS26080(idList: string[]): Observable<BaseQueryResponse<unknown>> {
     return this.http.post<BaseQueryResponse<unknown>>(`${apiUrl}/TLS0000/TLS2000/deleteTLS26080`, { idList }).pipe(
       take(1),
-      catchError(error => this.errorHandler.handleError(error)),
     );
   }
 
@@ -253,7 +246,6 @@ export class TLS26080Service {
         document.body.removeChild(link);
         window.URL.revokeObjectURL(url);
       }),
-      catchError(error => this.errorHandler.handleError(error)),
       finalize(() => {
         this.exampleDownloading = !1;
         console.log('範例下載');
@@ -281,7 +273,6 @@ export class TLS26080Service {
           console.log(`keyInTLS26080 success:`, [response, this.TLS26080Detail()]);
         }
       }),
-      catchError(error => this.errorHandler.handleError(error)),
       finalize(() => {
         console.log(`單筆鍵入檢查:`, [data]);
       })

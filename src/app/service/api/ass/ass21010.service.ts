@@ -1,11 +1,10 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, OnDestroy, signal } from '@angular/core';
 import { ASS2100ENGMeterType, ASS21010Data, ASS21010Delete, ASS21010Payload, ASS21010UpdateStatus } from '@pages/ass/ass21010/ass21010.model';
-import { ErrorHandlerService } from '@service/system/error-handler.service';
-import { NotificationService } from '@shared/component/notification-message/notification.service';
 import { BaseQueryResponse, DropdownOption } from '@shared/models/api/base-api.interface';
 import saveAs from 'file-saver';
-import { Observable, Subject, catchError, finalize, map, of, take, takeUntil, tap } from 'rxjs';
+import { NGXLogger } from 'ngx-logger';
+import { Observable, Subject, finalize, map, of, take, takeUntil, tap } from 'rxjs';
 import { environment } from 'src/environments/environment';
 
 const apiUrl: string = `${environment.ApiUrl}`;
@@ -34,8 +33,8 @@ export class ASS21010Service implements OnDestroy {
 
   constructor(
     private readonly http: HttpClient,
-    private readonly errorHandler: ErrorHandlerService,
-    private readonly messageService: NotificationService,
+    // private readonly messageService: NotificationService,
+    private readonly logger: NGXLogger,
   ) { }
 
   public loadEngType(): void {
@@ -54,10 +53,9 @@ export class ASS21010Service implements OnDestroy {
       take(1),
       takeUntil(this.engMeterNoCancel$),
       tap(response => this.engMeterNoSignal.set(response.Data)),
-      // catchError(error => this.errorHandler.handleError(error)),
       finalize(() => {
         this.engMeterNoLoading = !1;
-        console.log('查詢EngMeterNo結果:', [this.engMeterNoSignal()]);
+        this.logger.debug('查詢EngMeterNo結果:', [this.engMeterNoSignal()]);
       })
     ).subscribe();
   };
@@ -69,10 +67,9 @@ export class ASS21010Service implements OnDestroy {
       take(1),
       takeUntil(this.locationCancel$),
       tap(response => this.locationSignal.set(response.Data)),
-      // catchError(error => this.errorHandler.handleError(error)),
       finalize(() => {
         this.locationLoading = !1;
-        console.log('查詢Location結果:', [this.locationSignal()]);
+        this.logger.debug('查詢Location結果:', [this.locationSignal()]);
       })
     ).subscribe();
   };
@@ -83,7 +80,6 @@ export class ASS21010Service implements OnDestroy {
     this.http.post<Omit<BaseQueryResponse<unknown>, 'Data'> & { Data: { Data: ASS21010Data[]; TotalCount: number; }; }>(`${apiUrl}/ASS0000/ASS2000/QueryASS21010`, payload).pipe(
       take(1),
       tap(response => this.ASS21010Data.set(response.Data.Data)),
-      // catchError(error => this.errorHandler.handleError(error)),
       finalize(() => this.tableLoading = !1),
     ).subscribe();
   }
@@ -92,7 +88,6 @@ export class ASS21010Service implements OnDestroy {
     return this.http.post<ASS21010UpdateStatus>(`${apiUrl}/ASS0000/ASS2000/updateASS21010`, payload).pipe(
       take(1),
       map(res => res.Data),
-      // catchError(error => this.errorHandler.handleError(error))
     );
   }
 
@@ -100,7 +95,6 @@ export class ASS21010Service implements OnDestroy {
     return this.http.post<ASS21010UpdateStatus>(`${apiUrl}/ASS0000/ASS2000/deleteASS21010`, payload).pipe(
       take(1),
       map(res => res.Data),
-      // catchError(error => this.errorHandler.handleError(error))
     );
   }
 
@@ -119,7 +113,7 @@ export class ASS21010Service implements OnDestroy {
     this.http.post(`${apiUrl}/${endpoint}`, payload, httpOptions).pipe(
       take(1),
       tap(response => {
-        console.log(`onExport ${type} response:`, [response]);
+        this.logger.debug(`onExport ${type} response:`, [response]);
         if (response.body && response.body.size > 0) {
           const contentDisposition = response.headers.get('content-disposition');
           let filename = `${payload.file_name}.${fileExtension}`;
@@ -138,12 +132,11 @@ export class ASS21010Service implements OnDestroy {
 
           const blob = new Blob([response.body], { type: contentType });
           saveAs(blob, filename);
-          this.messageService.successBubble(`${type} Export successful`);
+          // this.messageService.successBubble(`${type} Export successful`);
         } else {
-          this.messageService.errorBubble(`Response body is empty!`, `${type} Export Fail`);
+          // this.messageService.errorBubble(`Response body is empty!`, `${type} Export Fail`);
         }
       }),
-      // catchError(err => this.errorHandler.handleError(err)),
       finalize(() => this.exportLoading = !1)
     ).subscribe();
   }
