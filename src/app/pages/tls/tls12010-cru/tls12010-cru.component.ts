@@ -118,7 +118,7 @@ export class TLS12010CRUComponent extends BasicCruPageComponent<Potential_Custom
     VEN_EngName: ['', [Validators.maxLength(100)]], // 廠商英文名稱
     /*若廠商類型為2=身份證字號, 由使用者自行輸入 */
     /*若廠商類型為3=員工id, 由使用者自行輸入 */
-    bus_type: ['', [Validators.required, Validators.maxLength(2)]], // 業種-大分類代碼(tltbustype)
+    bus_type: ['', [Validators.maxLength(2)]], // 業種-大分類代碼(tltbustype)
     tlt_name: ['', [Validators.maxLength(100)]],  // 品牌(專櫃名稱)
     tlt_EngName: ['', [Validators.maxLength(100)]], // 品牌英文(專櫃名稱)
     VEN_Boss: ['', [Validators.required, Validators.maxLength(20)]], // 廠商聯絡人
@@ -129,7 +129,7 @@ export class TLS12010CRUComponent extends BasicCruPageComponent<Potential_Custom
     VEN_BossEmail: ['', [Validators.maxLength(60)]], // 廠商聯絡人電子郵件
     VEN_Addr: ['', [Validators.maxLength(100)]], // 公司通訊地址
     VEN_PersonInCharge: ['', [Validators.maxLength(20)]], // 公司負責人
-    business_type: ['', [Validators.required, Validators.maxLength(1)]], // 經營方式(SYS1000.T117)（長度1，1=生產者、2=代理商、3=經銷商、4=其它）
+    business_type: ['', [Validators.maxLength(1)]], // 經營方式(SYS1000.T117)（長度1，1=生產者、2=代理商、3=經銷商、4=其它）
 
     demanded_area: [0, [Validators.maxLength(7), Validators.min(0), Validators.max(9999999)]], // 需求面積（數字，小數點後3位）
     country_of_origin: ['', [Validators.maxLength(20)]], // 商品出產地
