@@ -18,32 +18,31 @@ import { TranslateModule } from '@ngx-translate/core';
 import { ValidationService } from '@shared/service/validation.service';
 
 @Component({
-    selector: 'app-fin13020-cru',
-    templateUrl: './fin13020-cru.component.html',
-    styleUrls: ['./fin13020-cru.component.scss'],
-    standalone: true,
-    imports: [
-        MenubarComponent,
-        ButtonComponent,
-        PanelModule,
-        FormsModule,
-        ReactiveFormsModule,
-        InputTextComponent,
-        DropdownComponent,
-        CalendarComponent,
-        
-        InputNumberComponent,
-        NgIf,
-        TableComponent,
-        TranslateModule,
-       
-    ],
+  selector: 'app-fin13020-cru',
+  templateUrl: './fin13020-cru.component.html',
+  styleUrls: ['./fin13020-cru.component.scss'],
+  standalone: true,
+  imports: [
+    MenubarComponent,
+    ButtonComponent,
+    PanelModule,
+    FormsModule,
+    ReactiveFormsModule,
+    InputTextComponent,
+    DropdownComponent,
+    CalendarComponent,
+
+    InputNumberComponent,
+    NgIf,
+    TableComponent,
+    TranslateModule,
+
+  ],
 })
 export class FIN13020CRUComponent
   extends BasicCruPageComponent<any>
-  implements OnInit
-{
-    readonly CRUD = CRUDStatus; // ← 這行很關鍵
+  implements OnInit {
+  readonly CRUD = CRUDStatus; // ← 這行很關鍵
   guiNumberOptions: { label: string; value: string }[] = [];
   voucherTypeOptions = [
     { label: '23 - 三聯式/電子計算機/三聯收銀', value: '23' },
@@ -67,7 +66,7 @@ export class FIN13020CRUComponent
     InvoiceNumber_Correspond: [''], // 發票號碼
     PUR_GUIDate: ['', Validators.required], // 領用日期
     PUR_VoucherType: [''], // 發票格式
-    PUR_RepYYYYMM: ['', Validators.required,this.validationService.oddMonthValidator], // 發票年月
+    PUR_RepYYYYMM: ['', Validators.required, this.validationService.oddMonthValidator, this.validationService.minMonthValidator], // 發票年月
     Credit_Type: ['', Validators.required], // 區別（折讓/退出）
     PUR_TaxType: ['', Validators.required], // 稅別
     PUR_Net: [undefined as any],
@@ -86,7 +85,7 @@ export class FIN13020CRUComponent
   constructor(
     private apiService: FIN13010Service,
     private fin13020Service: FIN13020Service,
-     private validationService: ValidationService,
+    private validationService: ValidationService,
   ) {
     super();
   }
@@ -132,75 +131,75 @@ export class FIN13020CRUComponent
     }
   }
   private setupGuiNoAndCorrespondWatcher(): void {
-  const trackControl = this.dataForm.get('GUI_Track');
-  const noControl = this.dataForm.get('PUR_GUINo');
+    const trackControl = this.dataForm.get('GUI_Track');
+    const noControl = this.dataForm.get('PUR_GUINo');
 
-  if (trackControl && noControl) {
-    const trigger = () => {
-      const track = trackControl.value?.trim();
-      const guiNo = noControl.value?.trim();
+    if (trackControl && noControl) {
+      const trigger = () => {
+        const track = trackControl.value?.trim();
+        const guiNo = noControl.value?.trim();
 
-      if (track && guiNo) {
-        const full = `${track}${guiNo}`;
+        if (track && guiNo) {
+          const full = `${track}${guiNo}`;
 
-        this.dataForm.patchValue(
-          { InvoiceNumber_Correspond: full },
-          { emitEvent: false },
-        );
+          this.dataForm.patchValue(
+            { InvoiceNumber_Correspond: full },
+            { emitEvent: false },
+          );
 
-        this.fin13020Service
-          .queryCorrespondByGUINoCorrespond({ InvoiceNumber_Correspond: full })
-          .subscribe((res) => {
-            const detail = res?.Data?.[0];
-            if (detail) {
-              let voucherType: number | string = '';
-              if (detail.PUR_VoucherType === '31' || detail.PUR_VoucherType === '35') {
-                voucherType = 33;
-              } else if (detail.PUR_VoucherType === '32') {
-                voucherType = 34;
+          this.fin13020Service
+            .queryCorrespondByGUINoCorrespond({ InvoiceNumber_Correspond: full })
+            .subscribe((res) => {
+              const detail = res?.Data?.[0];
+              if (detail) {
+                let voucherType: number | string = '';
+                if (detail.PUR_VoucherType === '31' || detail.PUR_VoucherType === '35') {
+                  voucherType = 33;
+                } else if (detail.PUR_VoucherType === '32') {
+                  voucherType = 34;
+                } else {
+                  voucherType = 'OK'; // 👉 若無符合，就填 OK（測試用）
+                }
+
+                this.dataForm.get('PUR_VoucherType')?.enable(); // 👈先打開
+
+                this.dataForm.patchValue(
+                  {
+                    Inv_Date: detail.PUR_GUIDate,
+                    PUR_VoucherType: voucherType ? String(voucherType) : '',
+                    PUR_TaxType: detail.PUR_TaxType,
+                    Inv_Net: detail.PUR_Net,
+                    Inv_Tax: detail.PUR_Tax,
+                    Total_hitory_PUR_Amt: detail.Total_hitory_PUR_Amt,
+                    Total_Amt: detail.Total_Amt,
+                  },
+                  { emitEvent: false },
+                );
+
+                this.dataForm.get('PUR_VoucherType')?.disable(); // 👈再關掉
               } else {
-                voucherType = 'OK'; // 👉 若無符合，就填 OK（測試用）
+                this.dataForm.patchValue(
+                  {
+                    Inv_Date: null,
+                    PUR_VoucherType: '',
+                    PUR_TaxType: '',
+                    Inv_Net: null,
+                    Inv_Tax: null,
+                    PUR_Amt: null,
+                    Total_hitory_PUR_Amt: null,
+                    Total_Amt: null,
+                  },
+                  { emitEvent: false },
+                );
               }
+            });
+        }
+      };
 
-              this.dataForm.get('PUR_VoucherType')?.enable(); // 👈先打開
-
-              this.dataForm.patchValue(
-                {
-                  Inv_Date: detail.PUR_GUIDate,
-                  PUR_VoucherType: voucherType ? String(voucherType) : '',
-                  PUR_TaxType: detail.PUR_TaxType,
-                  Inv_Net: detail.PUR_Net,
-                  Inv_Tax: detail.PUR_Tax,
-                  Total_hitory_PUR_Amt: detail.Total_hitory_PUR_Amt,
-                  Total_Amt: detail.Total_Amt,
-                },
-                { emitEvent: false },
-              );
-
-              this.dataForm.get('PUR_VoucherType')?.disable(); // 👈再關掉
-            } else {
-              this.dataForm.patchValue(
-                {
-                  Inv_Date: null,
-                  PUR_VoucherType: '',
-                  PUR_TaxType: '',
-                  Inv_Net: null,
-                  Inv_Tax: null,
-                  PUR_Amt: null,
-                  Total_hitory_PUR_Amt: null,
-                  Total_Amt: null,
-                },
-                { emitEvent: false },
-              );
-            }
-          });
-      }
-    };
-
-    trackControl.valueChanges.subscribe(trigger);
-    noControl.valueChanges.subscribe(trigger);
+      trackControl.valueChanges.subscribe(trigger);
+      noControl.valueChanges.subscribe(trigger);
+    }
   }
-}
 
 
   // ✅ 僅允許特定欄位可編輯
@@ -230,15 +229,15 @@ export class FIN13020CRUComponent
       this.dataForm.enable(); // Create 模式
     }
   }
-detailRows: any[] = [];
+  detailRows: any[] = [];
   onSubmit(form: FormGroup): void {
-    
-  this.handleSubmit(form, () => {
-    const formValue = form.getRawValue();
 
-    const payload =
-      this.crudstatus === CRUDStatus.Edit
-        ? {
+    this.handleSubmit(form, () => {
+      const formValue = form.getRawValue();
+
+      const payload =
+        this.crudstatus === CRUDStatus.Edit
+          ? {
             id: formValue.id,
             TXN_Ret_No: formValue.TXN_Ret_No,
             GUI_Track: formValue.GUI_Track,
@@ -257,7 +256,7 @@ detailRows: any[] = [];
               TXN_SaleAmt: row.TXN_SaleAmt,
             })),
           }
-        : {
+          : {
             GUI_Track: formValue.GUI_Track,
             PUR_GUINo: formValue.PUR_GUINo,
             PUR_GUIDate: formValue.PUR_GUIDate,
@@ -277,28 +276,28 @@ detailRows: any[] = [];
               TXN_SaleAmt: row.TXN_SaleAmt,
             })),
           };
-payload.PUR_RepYYYYMM = this.toYYYYMM(payload.PUR_RepYYYYMM);
-    switch (this.crudstatus) {
-      case CRUDStatus.Create:
-        if (this.canAdd()) {
-          this.fin13020Service.insertFIN13020(payload).subscribe(() => {
-            this.messageService.successBubble('新增成功');
-            this.dataForm.reset();
-          });
-        }
-        break;
+      payload.PUR_RepYYYYMM = this.toYYYYMM(payload.PUR_RepYYYYMM);
+      switch (this.crudstatus) {
+        case CRUDStatus.Create:
+          if (this.canAdd()) {
+            this.fin13020Service.insertFIN13020(payload).subscribe(() => {
+              this.messageService.successBubble('新增成功');
+              this.dataForm.reset();
+            });
+          }
+          break;
 
-      case CRUDStatus.Edit:
-        if (this.canEdit()) {
-          this.fin13020Service.updateFIN13020(payload).subscribe(() => {
-            this.messageService.successBubble('更新成功');
-            this.onCancel();
-          });
-        }
-        break;
-    }
-  });
-}
+        case CRUDStatus.Edit:
+          if (this.canEdit()) {
+            this.fin13020Service.updateFIN13020(payload).subscribe(() => {
+              this.messageService.successBubble('更新成功');
+              this.onCancel();
+            });
+          }
+          break;
+      }
+    });
+  }
   private setupAutoAmountCalculation(): void {
     const netControl = this.dataForm.get('PUR_Net');
     const taxControl = this.dataForm.get('PUR_Tax');
@@ -344,38 +343,59 @@ payload.PUR_RepYYYYMM = this.toYYYYMM(payload.PUR_RepYYYYMM);
     this.dataForm.patchValue(patch); // 再補回保留的值
     this.updateDisabledState(); // 最後重新套用 disabled 狀態 ✅
   }
-@Output() fieldChange = new EventEmitter<any>();
+  @Output() fieldChange = new EventEmitter<any>();
 
-columns: any[] = [
-  { field: 'PLU_Name', header: '品名', type: 'input', editable: true },
-  { field: 'TXN_Qty', header: '數量', type: 'inputNumber', editable: true },
-  { field: 'PLU_SalePrc', header: '單價', type: 'inputNumber', editable: true,
-      format: (value: any) => this.moneyFormat(value),style: 'text-right' },
-  { field: 'TXN_SaleAmt', header: '金額',
-      format: (value: any) => this.moneyFormat(value),style: 'text-right'},
-];
-onFieldChange(event: { rowData: any; field: string; value: any }) {
-  const { rowData, field, value } = event;
-  rowData[field] = value;
+  columns: any[] = [
+    { field: 'PLU_Name', header: '品名', type: 'input', editable: true },
+    { field: 'TXN_Qty', header: '數量', type: 'inputNumber', editable: true },
+    {
+      field: 'PLU_SalePrc', header: '單價', type: 'inputNumber', editable: true,
+      format: (value: any) => this.moneyFormat(value), style: 'text-right'
+    },
+    {
+      field: 'TXN_SaleAmt', header: '金額',
+      format: (value: any) => this.moneyFormat(value), style: 'text-right'
+    },
+  ];
+  onFieldChange(event: { rowData: any; field: string; value: any }) {
+    const { rowData, field, value } = event;
+    rowData[field] = value;
 
-  // 自動計算金額
-  if (field === 'TXN_Qty' || field === 'PLU_SalePrc') {
-    const TXN_Qty = parseFloat(rowData.TXN_Qty) || 0;
-    const PLU_SalePrc = parseFloat(rowData.PLU_SalePrc) || 0;
-    rowData.TXN_SaleAmt = TXN_Qty * PLU_SalePrc;
+    // 自動計算金額
+    if (field === 'TXN_Qty' || field === 'PLU_SalePrc') {
+      const TXN_Qty = parseFloat(rowData.TXN_Qty) || 0;
+      const PLU_SalePrc = parseFloat(rowData.PLU_SalePrc) || 0;
+      rowData.TXN_SaleAmt = TXN_Qty * PLU_SalePrc;
+    }
   }
-}
 
   moneyFormat(value: number): string {
     return value != null ? value.toLocaleString('en-US') : '0';
   }
-private toYYYYMM(input: any): string | null {
-  if (!input) return null;
+  private toYYYYMM(input: any): string | null {
+    if (!input) return null;
 
-  // 先處理常見字串：'2025/05'、'2025-05-01T00:00:00'
-  if (typeof input === 'string') {
-    const onlyDigits = input.replace(/\D/g, ''); // 拿掉所有非數字
-    if (onlyDigits.length >= 6) return onlyDigits.slice(0, 6); // '202505'
+    // 先處理常見字串：'2025/05'、'2025-05-01T00:00:00'
+    if (typeof input === 'string') {
+      const onlyDigits = input.replace(/\D/g, ''); // 拿掉所有非數字
+      if (onlyDigits.length >= 6) return onlyDigits.slice(0, 6); // '202505'
+      const d = new Date(input);
+      if (!isNaN(d.getTime())) {
+        const y = d.getFullYear();
+        const m = String(d.getMonth() + 1).padStart(2, '0');
+        return `${y}${m}`;
+      }
+      return null;
+    }
+
+    // Date 物件
+    if (input instanceof Date) {
+      const y = input.getFullYear();
+      const m = String(input.getMonth() + 1).padStart(2, '0');
+      return `${y}${m}`;
+    }
+
+    // 其他型別就試著 new Date 看看
     const d = new Date(input);
     if (!isNaN(d.getTime())) {
       const y = d.getFullYear();
@@ -384,31 +404,14 @@ private toYYYYMM(input: any): string | null {
     }
     return null;
   }
-
-  // Date 物件
-  if (input instanceof Date) {
-    const y = input.getFullYear();
-    const m = String(input.getMonth() + 1).padStart(2, '0');
-    return `${y}${m}`;
-  }
-
-  // 其他型別就試著 new Date 看看
-  const d = new Date(input);
-  if (!isNaN(d.getTime())) {
-    const y = d.getFullYear();
-    const m = String(d.getMonth() + 1).padStart(2, '0');
-    return `${y}${m}`;
-  }
-  return null;
-}
   get isRead(): boolean {
     return this.crudstatus === CRUDStatus.Read;
   }
-    private optionLabelOf(opts: Array<{label:string; value:any}>, value: any): string {
+  private optionLabelOf(opts: Array<{ label: string; value: any }>, value: any): string {
     const hit = opts?.find(o => String(o.value) === String(value));
     return hit?.label ?? (value ?? '');
   }
-   // 3) 常用格式化（日期 / 年月）
+  // 3) 常用格式化（日期 / 年月）
   formatDate(d: any): string {
     if (!d) return '';
     const dt = new Date(d);
@@ -423,19 +426,19 @@ private toYYYYMM(input: any): string | null {
     if (!v) return '';
     if (typeof v === 'string') {
       const only = v.replace(/\D/g, '');
-      if (only.length >= 6) return `${only.slice(0,4)}/${only.slice(4,6)}`;
+      if (only.length >= 6) return `${only.slice(0, 4)}/${only.slice(4, 6)}`;
     }
     const d = new Date(v);
     if (!isNaN(d.getTime())) {
-      return `${d.getFullYear()}/${String(d.getMonth()+1).padStart(2,'0')}`;
+      return `${d.getFullYear()}/${String(d.getMonth() + 1).padStart(2, '0')}`;
     }
     return String(v);
   }
   readonly columnsRead = [
-    { field: 'PLU_Name',    header: '品名' },
-    { field: 'TXN_Qty',     header: '數量',      format: (v: any) => v },
-    { field: 'PLU_SalePrc', header: '單價',      format: (v: any) => this.moneyFormat(v), style: 'text-right' },
-    { field: 'TXN_SaleAmt', header: '金額',      format: (v: any) => this.moneyFormat(v), style: 'text-right' },
+    { field: 'PLU_Name', header: '品名' },
+    { field: 'TXN_Qty', header: '數量', format: (v: any) => v },
+    { field: 'PLU_SalePrc', header: '單價', format: (v: any) => this.moneyFormat(v), style: 'text-right' },
+    { field: 'TXN_SaleAmt', header: '金額', format: (v: any) => this.moneyFormat(v), style: 'text-right' },
   ];
   get columnsForView() { return this.isRead ? this.columnsRead : this.columns; }
 

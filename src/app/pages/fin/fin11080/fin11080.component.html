@@ -26,6 +26,7 @@
   <app-table tableKey="fin11080" dataKey="TXN_Date" [data]="data" [columns]="columns" [selectedItems]="selectedItems"
     (selectionChange)="selectedItems = $event" (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"
     [lazy]="false" [loading]="loading" [showManage]="false" [showDelete]="false"
-    [multiSortMeta]="[{ field: 'TXN_Date', order: -1 }]">
+    [multiSortMeta]="[{ field: 'TXN_Date', order: -1 }]" [expansionColumns]="expansionColumns"
+    [expansionDataKey]="'TXN_GUINo'" [expansionLoadFn]="loadExpansionData">
   </app-table>
 </div>

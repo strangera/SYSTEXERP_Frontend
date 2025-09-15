@@ -186,7 +186,7 @@ export class FIN15030Component extends BasicQueryPageComponent<FIN15030Data> imp
 
   private openDownloadWindow(printUrl: string): void {
     const downloadUrl = `${environment.ApiUrl}${printUrl}`;
-    window.open(downloadUrl, '_blank');
+    window.open(downloadUrl, '_blank', 'width=1024,height=768,scrollbars=yes,resizable=yes');
   }
 
   private loadDropdownOptions(): void {
