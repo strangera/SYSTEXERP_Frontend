@@ -147,8 +147,8 @@ export class DropdownApiService {
   }
 
   /** 查詢專櫃大分類(業種)設定檔(TLTBUSTYPE)資料表 */
-  queryTltBusType(): Observable<IDropdownItem[] | null> {
-    return this.queryDropdown<IDropdownItem>('/queryTLTBUSTYPE_DropDownList');
+  queryTltBusType(): Observable<Option[] | null> {
+    return this.queryAndMapDropdown<IDropdownItem>('/queryTLTBUSTYPE_DropDownList', 'No', 'Name');
   }
 
   /** 查詢館別代碼(SYS3800)資料表下拉選單 */

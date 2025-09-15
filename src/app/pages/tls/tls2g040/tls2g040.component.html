@@ -1,136 +1,47 @@
-<div class="grid">
-  <div class="col-12">
-    <div class="card">
-      <div class="grid align-items-center">
-        <div class="col" style="flex: 1">
-          <app-menubar [ProgNo]="ProgNo"></app-menubar>
-        </div>
-        <div >
-          <app-button btnType="create" label="大分類" class="col"></app-button>
-        </div>
-        <div >
-          <app-button btnType="create" label="中分類" class="col"></app-button>
-        </div>
-        <div >
-          <app-button btnType="create" label="小分類" class="col"></app-button>
-        </div>
-        <div >
-          <app-button btnType="create" label="組織" class="col"></app-button>
-        </div>
-        <div >
-          <app-button btnType="create" label="專櫃" class="col"></app-button>
-        </div>
-        <div>
-          <app-button
-            btnType="create"
-            label="DEMO"
-            (onClick)="demo()"
-          ></app-button>
-        </div>
-      </div>
-      <p-accordion>
-        <p-accordionTab
-          header="{{ 'query-conditions' | translate }}"
-          [selected]="true"
-          class="line-height-3 m-0"
-          [headerStyleClass]="'query-accordionTab'"
-        >
-          <form
-            [formGroup]="queryForm"
-            id="queryForm"
-            (ngSubmit)="onSubmit(queryForm)"
-          >
-            <div class="grid p-fluid">
-              <div class="col-12 md:col-6 lg:col-4">
-                <app-calendar
-                  calendarType="dateMonthOne"
-                  label="年月"
-                  [control]="queryForm.controls.onedatemm"
-                  [submitted]="submitted"
-                ></app-calendar>
-              </div>
-              <div class="col-12 md:col-6 lg:col-4">
-                <app-dropdown
-                  label="大分類"
-                  controlName="industryCode"
-                  [options]="industryCodeOptions"
-                  optionLabel="label"
-                  optionValue="value"
-                  [control]="queryForm.controls.industryCode"
-                  [submitted]="submitted"
-                ></app-dropdown>
-              </div>
-              <div class="col-12 md:col-6 lg:col-4">
-                <app-dropdown
-                  label="中分類"
-                  controlName="productCategory"
-                  [options]="industryCodeOptions"
-                  optionLabel="label"
-                  optionValue="value"
-                  [control]="queryForm.controls.productCategory"
-                  [submitted]="submitted"
-                ></app-dropdown>
-              </div>
-            </div>
-            <div class="grid p-fluid">
-              <div class="col-12 md:col-6 lg:col-4">
-                <app-dropdown
-                  label="小分類"
-                  controlName="smallCategory"
-                  [options]="industryCodeOptions"
-                  optionLabel="label"
-                  optionValue="value"
-                  [control]="queryForm.controls.smallCategory"
-                  [submitted]="submitted"
-                ></app-dropdown>
-              </div>
-              <div class="col-12 md:col-6 lg:col-4">
-                <app-dropdown
-                  label="組織"
-                  controlName="OrganizationType"
-                  [options]="OrganizationTypeOptions"
-                  optionLabel="label"
-                  optionValue="value"
-                  [control]="queryForm.controls.OrganizationType"
-                  [submitted]="submitted"
-                ></app-dropdown>
-              </div>
-              <div class="col-12 md:col-6 lg:col-4">
-                <app-input-number
-                  [useGrouping]="false"
-                  label="專櫃編號"
-                  controlName="money"
-                  [control]="queryForm.controls.serialnumber"
-                  [submitted]="submitted"
-                ></app-input-number>
-              </div>
-            </div>
-            <div>
-              <div class="grid justify-content-end">
-                <app-button
-                  btnType="clear"
-                  (onClick)="onClearForm()"
-                ></app-button>
-                <app-button
-                  btnType="query"
-                  (onClick)="onSubmitQuery(queryForm)"
-                  [loading]="loading"
-                ></app-button>
-              </div>
-            </div>
-          </form>
-        </p-accordionTab>
-      </p-accordion>
-    </div>
-    <div class="card">
-      <div class="col-13">
-        <app-table
-          [data]="data"
-          [columns]="columns"
-          (edit)="onEdit($event)"
-          (detail)="onDetail($event)"
-        ></app-table>
-      </div>
-    </div>
+<div class="card">
+  <div class="flex gap-2 mb-2">
+    <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
+    <!-- <app-button btnType="create" label="大分類"></app-button>
+    <app-button btnType="create" label="中分類"></app-button>
+    <app-button btnType="create" label="小分類"></app-button>
+    <app-button btnType="create" label="組織"></app-button>
+    <app-button btnType="create" label="專櫃"></app-button> -->
   </div>
+  <p-accordion>
+    <p-accordionTab header="{{ 'query-conditions' | translate }}" [selected]="true" class="line-height-3 m-0"
+      [headerStyleClass]="'query-accordionTab'">
+      <form [formGroup]="queryForm" id="queryForm" (ngSubmit)="onSubmit(queryForm)">
+        <div class="grid p-fluid">
+          <app-calendar class="col-12 md:col-6 lg:col-4" calendarType="dateMonthOne" label="年月"
+            controlName="budget_date" [control]="queryForm.controls.budget_date" [submitted]="submitted"></app-calendar>
+          <app-multi-select class="col-12 md:col-6 lg:col-4" label="大分類代碼/名稱" controlName="bus_type"
+            [options]="bus_typeOptions | async" optionLabel="label" optionValue="value"
+            [control]="queryForm.controls.bus_type" [submitted]="submitted"></app-multi-select>
+          <app-multi-select class="col-12 md:col-6 lg:col-4" label="中分類代碼/名稱" controlName="bus_class"
+            [options]="bus_classOptions" optionLabel="label" optionValue="value"
+            [control]="queryForm.controls.bus_class" [submitted]="submitted"></app-multi-select>
+          <app-multi-select class="col-12 md:col-6 lg:col-4" label="小分類代碼/名稱" controlName="bus_sclass"
+            [options]="bus_sclassOptions" optionLabel="label" optionValue="value"
+            [control]="queryForm.controls.bus_sclass" [submitted]="submitted"></app-multi-select>
+          <app-multi-select class="col-12 md:col-6 lg:col-4" label="組織代號/名稱" controlName="org_id"
+            [options]="org_idOptions | async" optionLabel="label" optionValue="value"
+            [control]="queryForm.controls.org_id" [submitted]="submitted"></app-multi-select>
+          <app-multi-select class="col-12 md:col-6 lg:col-4" label="專櫃編號/名稱" controlName="tlt_no"
+            [options]="tlt_noOptions | async" optionLabel="label" optionValue="value"
+            [control]="queryForm.controls.tlt_no" [submitted]="submitted"></app-multi-select>
+          <app-radiobutton class="col-12" label="報表格式" controlName="report_type"
+            [control]="queryForm.controls.report_type" [options]="report_typeOptions"
+            [submitted]="submitted"></app-radiobutton>
+        </div>
+        <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+          <app-button btnType="clear" [form]="queryForm"></app-button>
+          <app-button btnType="query" [loading]="loading"></app-button>
+        </div>
+      </form>
+    </p-accordionTab>
+  </p-accordion>
+</div>
+<div class="card">
+  <app-table-report tableKey="TLS2G040" dataKey="tlt_no" [data]="data" [columns]="columns" [totalRecords]="totalRecords"
+    [loading]="loading" [showManage]="false" [showDelete]="false" [showReportMode]="false"></app-table-report>
 </div>
