@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ViewChild } from '@angular/core';
 import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { finalize, Observable } from 'rxjs';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
@@ -60,6 +60,7 @@ export class TLS26020Component extends BasicQueryPageComponent<TLS26020Data> imp
     ...createPaginationConfig([{ field: 'tlt_no', order: 1 }]) // 修正排序欄位
   });
 
+  @ViewChild('tableComponent') tableComponent!: TableComponent;
   totalRecords = 0;
   data: TLS26020Data[] = [];
   selectedItems: TLS26020Data[] = [];
@@ -74,7 +75,7 @@ export class TLS26020Component extends BasicQueryPageComponent<TLS26020Data> imp
 
   // 展開詳細資料的欄位定義
   expansionColumns: Column[] = [
-    { field: 'TXN_DATE', header: '交易日期', visible: true, format: (value: any) => value ? this.datePipe.transform(value, 'yyyy/MM/dd') : '' },
+    { field: 'TXN_DATE', header: '銷售日期', visible: true, format: (value: any) => value ? this.datePipe.transform(value, 'yyyy/MM/dd') : '' },
     { field: 'ECR_NO', header: '機號', visible: true },
     { field: 'TXN_NO', header: '交易序號', visible: true },
     { field: 'TXN_GUIBegNo_Pre', header: '字軌', visible: true },
@@ -112,6 +113,8 @@ export class TLS26020Component extends BasicQueryPageComponent<TLS26020Data> imp
           this.data = response.Data;
           this.totalRecords = response.TotalCount;
           this.queryStateService.setQueryState(this.ProgNo, frm.getRawValue());
+          // 重置展開狀態
+          this.tableComponent.expandedRows = {};
         });
     });
   }

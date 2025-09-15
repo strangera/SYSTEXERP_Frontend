@@ -1,132 +1,82 @@
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
-// Shared
-import { AuthService } from '../../../service/system/auth.service';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-import { ValidationService } from '../../../shared/service/validation.service';
-import { BasicQpageComponent } from '../../../shared/componentextends/basic-qpage/basic-qpage.component';
+import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { finalize } from 'rxjs';
+import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
+import { createPaginationConfig, Column, formatDate } from '../../../shared/componentkit/table/table.model';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
-import { AccordionModule } from 'primeng/accordion';
-import { CalendarComponent } from '../../../shared/componentkit/calendar/calendar.component';
-import { DropdownComponent } from '../../../shared/componentkit/dropdown/dropdown.component';
-import { InputNumberComponent } from '../../../shared/componentkit/input-number/input-number.component';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { AccordionModule } from 'primeng/accordion';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { TranslateModule } from '@ngx-translate/core';
-//
+import { CalendarRangeComponent } from '@shared/componentkit/calendar-range/calendar-range.component';
+import { FIN11080Data, FIN11080Service } from '@service/api/fin/fin11080.service';
+import { DatePipe } from '@angular/common';
+import { untilDestroyed } from '@ngneat/until-destroy';
 
 @Component({
-    selector: 'app-fin11080',
-    templateUrl: './fin11080.component.html',
-    styleUrl: './fin11080.component.scss',
-    standalone: true,
-    imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarComponent, DropdownComponent, InputNumberComponent, InputTextComponent, ButtonComponent, TableComponent, TranslateModule]
+  selector: 'app-fin11080',
+  templateUrl: './fin11080.component.html',
+  styleUrl: './fin11080.component.scss',
+  standalone: true,
+  imports: [
+    MenubarComponent,
+    ButtonComponent,
+    AccordionModule,
+    FormsModule,
+    ReactiveFormsModule,
+    CalendarRangeComponent,
+    TableComponent,
+    TranslateModule,
+  ]
 })
-
-//1.1.1.8 二電退貨發票號碼清空重新上送作業
-export class FIN11080Component extends BasicQpageComponent implements OnInit {
-  //
+export class FIN11080Component extends BasicQueryPageComponent<FIN11080Data> implements OnInit {
   queryForm = this.formBuilder.group({
-    salesDate: [, [Validators.required]], // 銷售日期
-    regidterCode: [, [Validators.required]], // 收銀機號
-    transactionSerialnumber: [, [Validators.required, Validators.maxLength(6)]], // 交易序號
-    wordTrack: ['', [Validators.required, Validators.maxLength(2)]], // 字軌
-    invoiceSerialnumber: [, [Validators.required, Validators.maxLength(8)]], // 發票號碼
+    TXN_Date_Start: ['', Validators.required], // 銷售日期_起
+    TXN_Date_End: ['', Validators.required], // 銷售日期_訖
+    ...createPaginationConfig([{ field: 'TXN_Date', order: -1 }])
   });
-  // 下拉資料多個呈現
-  // ----------------------------------------------------------------
-  roles: any[] = [
-    { id: 1, roleCode: 'ADMIN', roleName: 'Administrator' },
-    { id: 2, roleCode: 'USER', roleName: 'User' },
-    { id: 3, roleCode: 'GUEST', roleName: 'Guest' },
-  ];
-  // 表格
-  // ----------------------------------------------------------------
-  data: any[] = [
-    // 其他資料
-  ];
-  columns: any[] = [
-    { field: 'col1', header: '銷售日期', visible: true },
-    { field: 'col2', header: '收銀機號', visible: true },
-    { field: 'col3', header: '交易序號', visible: true },
-    { field: 'col4', header: '字軌', visible: true },
-    { field: 'col5', header: '發票號碼', visible: true },
-    // 其他欄位
-  ];
-  // ----------------------------------------------------------------
-  regidterCodeOptions: any[] = [
-    { value: 1, label: '000011/000001' },
-    { value: 2, label: '000012/000001' },
-    { value: 3, label: '000022/000002' },
-    { value: 4, label: '000031/000003' },
+
+  totalRecords = 0;
+  data: FIN11080Data[] = [];
+  selectedItems: FIN11080Data[] = [];
+
+  columns: Column[] = [
+    { field: 'TXN_Date', header: '交易日期', visible: true, format: formatDate },
+    { field: 'TxnCount_Normal_A', header: '一般交易(A)', visible: true },
+    { field: 'TxnCount_VoidOrReturn_B', header: '作廢退貨(B)', visible: true },
+    { field: 'TxnCount_Cancelled_C', header: '註銷(C)', visible: true },
+    { field: 'ActualInv_Normal_AD', header: '當日正負(A-D)', visible: true },
+    { field: 'ActualInv_CrossPeriodReturn_B', header: '跨期作廢退貨(B-D-E)', visible: true },
+    { field: 'ActualInv_Cancelled', header: '註銷', visible: true },
+    { field: 'CNT', header: '發票是否重號', visible: true }
   ];
 
   constructor(
-    private router: Router,
-    private formBuilder: FormBuilder,
-    private messageService: NotificationService,
-    private authService: AuthService,
-    private validationService: ValidationService,
-    //
+    private fin11080Service: FIN11080Service,
+    private datePipe: DatePipe
   ) {
-    super(); // 呼叫父類建構子
+    super();
   }
 
   ngOnInit(): void {
-    // 初始化
-    this.ProgNo = '110008';
-    this.cruPage = '/FIN1000/FIN11080CRU';
-    //
-    // ----------------------------------------------------------------
-    // ----------------------------------------------------------------
-
-    // ----------------------------------------------------------------
+    this.initializePage('FIN11080', 'fin/fin11080cru', this.queryForm, (form) => this.onSubmit(form));
   }
 
-  // ----------------------------------------------------------------
   onSubmit(frm: FormGroup) {
-    console.log(frm.value);
-    this.submitted = true;
-    this.loading = true;
-    this.messageService.blockUi();
+    this.handleSubmit(frm, () => {
+      const requestData = {
+        MID: 0, // 固定為0
+        SYS_StoreNo: '10', // 固定為'10'
+        ...frm.getRawValue(),
+      };
 
-    if (frm.valid && this.canQuery()) {
-      // 提交邏輯
-      // Service
-      // this.xxxService.queryMachine(frm.value as xxxInterface)
-      //  .subscribe((response: any) => {
-      //    this.rows = response.xxx;
-      // });
-    }
-
-    this.loading = false;
-    this.messageService.unblockUi();
-  }
-
-  onSubmitQuery(frm: FormGroup) {
-    // 查詢邏輯
-    this.onSubmit(frm);
-  }
-  // ----------------------------------------------------------------
-  onCreate() {
-    if (this.canAdd()) {
-      this.navigateWithState(this.router, CRUDStatus.Create, null, this.cruPage);
-    }
-  }
-
-  onEdit(data: any) {
-    if (this.canEdit()) {
-      this.navigateWithState(this.router, CRUDStatus.Edit, data, this.cruPage);
-    }
-  }
-
-  onDetail(data: any) {
-    this.navigateWithState(this.router, CRUDStatus.Read, data, this.cruPage);
-  }
-  onClearForm() {
-    this.queryForm.reset();  // 重置表單
+      this.fin11080Service.queryFIN11080(requestData)
+        .pipe(untilDestroyed(this), finalize(() => this.loading = false))
+        .subscribe(response => {
+          this.data = response.Data;
+          this.totalRecords = response.TotalCount;
+          this.queryStateService.setQueryState(this.ProgNo, frm.getRawValue());
+        });
+    });
   }
 }

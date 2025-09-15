@@ -172,7 +172,6 @@ export class FIN11010CRUComponent extends BasicCruPageComponent<FIN11010Data> im
               .pipe(untilDestroyed(this), finalize(() => this.loading = false))
               .subscribe(() => {
                 this.messageService.successBubble('新增成功');
-                this.dataForm.reset();
               });
           }
           break;
