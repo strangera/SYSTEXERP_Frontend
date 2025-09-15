@@ -6,7 +6,7 @@ import {
   ReactiveFormsModule,
 } from '@angular/forms';
 import { CommonModule } from '@angular/common';
-import { Subject, takeUntil } from 'rxjs';
+import { debounceTime, distinctUntilChanged, map, Subject, takeUntil } from 'rxjs';
 
 import { RegionService } from '../../../service/basic/region-code.service';
 import { FloorService } from '../../../service/basic/floor.service';
@@ -71,6 +71,33 @@ export class TLS23120Component
   extends BasicQueryPageComponent<any>
   implements OnDestroy
 {
+  private readonly QUERY_KEY = this.ProgNo || 'TLS23120'
+  private reviveDate(x: any) {
+  // 專門處理 TXN_Date 這種單日欄位
+  if (!x) return x;
+  const d = new Date(x);
+  return isNaN(d.getTime()) ? x : d;
+}
+private restoreQueryForm(): void {
+  try {
+    const saved = this.queryStateService.getQueryStateValue(this.QUERY_KEY);
+    if (saved) {
+      // 還原 Date 類型
+      if (saved.TXN_Date) saved.TXN_Date = this.reviveDate(saved.TXN_Date);
+      this.queryForm.patchValue(saved, { emitEvent: false });
+    }
+  } catch { /* 忽略 */ }
+}
+
+private saveQueryForm(): void {
+  try {
+    // 這裡直接存 rawValue，含 pageIndex/pageSize/SortBy 都一起記住
+    const v = this.queryForm.getRawValue();
+    this.queryStateService.setQueryState(this.QUERY_KEY, v);
+  } catch { /* 忽略 */ }
+}
+
+
   private destroy$ = new Subject<void>();
 
   // ---- 排序狀態 ----
@@ -143,6 +170,7 @@ export class TLS23120Component
   }
 
   ngOnInit(): void {
+      this.restoreQueryForm();
     this.initializePage('TLS23120', 'tls/tls23120cru', this.queryForm, (form) => this.onSubmit(form));
 
     // 初始化 sortMeta
@@ -174,7 +202,12 @@ export class TLS23120Component
     // 顯示大分類 → 控制欄位顯示
     this.syncBusTypeColumns(!!this.queryForm.controls.ShowBusType.value);
     this.queryForm.controls.ShowBusType.valueChanges
-      .pipe(takeUntil(this.destroy$))
+      .pipe(takeUntil(this.destroy$),
+     
+      debounceTime(250),
+      map(v => JSON.stringify(v)),               // 粗略判斷是否真的有變化
+      distinctUntilChanged()
+    )
       .subscribe(v => this.syncBusTypeColumns(!!v));
 
     // Radio 切換：僅在 counter 模式套 required；其他模式移除驗證與錯誤
@@ -186,6 +219,7 @@ export class TLS23120Component
   }
 
   ngOnDestroy(): void {
+    this.saveQueryForm(); // ← 新增：離開時再存一份
     this.destroy$.next();
     this.destroy$.complete();
   }
@@ -229,6 +263,8 @@ export class TLS23120Component
   // ===== 提交 =====
  // ===== 提交 =====
 onSubmit(form: FormGroup): void {
+  this.saveQueryForm();
+
   this.handleSubmit(form, () => {
     const val = this.queryForm.getRawValue() as any;
 
