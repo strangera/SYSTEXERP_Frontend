@@ -98,7 +98,7 @@ export class TableCaptionComponent extends BasicPrintDataComponent implements On
     }
     // 僅在 columns 首次被設定時執行初始化邏輯
     // 這樣就不會在每次 data 變動時都重置 filter 狀態
-    if (changes['columns'] && this.columns?.length > 0) {
+    if (changes['columns'] && this.columns && this.columns.length) {
       // 恢復歷史紀錄，如果沒有就使用預設值
       setTimeout(() => {
         if (!this.isColumnsInitialized) {

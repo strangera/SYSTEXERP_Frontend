@@ -3,7 +3,6 @@ import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-
 import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 import { LocationOptionsService } from '../../../service/api/dropdownservice/location-options.service';
 import { Tls13050Service } from '../../../service/api/tls/tls13050.service';
-import { QueryTLS13050Request } from '../../../shared/models/tls/queryTLS13050-request.model';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { AccordionModule } from 'primeng/accordion';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
@@ -13,31 +12,35 @@ import { InputNumberRangeComponent } from '../../../shared/componentkit/input-nu
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { TranslateModule } from '@ngx-translate/core';
+import { DropDownListService, IDropdownItem } from '@service/utility/dropDownList.service';
+import { untilDestroyed } from '@ngneat/until-destroy';
 
 @Component({
-    selector: 'app-tls13050',
-    templateUrl: './tls13050.component.html',
-    standalone: true,
-    imports: [
-        MenubarComponent,
-        AccordionModule,
-        FormsModule,
-        ReactiveFormsModule,
-        CalendarRangeComponent,
-        MultiSelectComponent,
-        InputNumberRangeComponent,
-        ButtonComponent,
-        TableComponent,
-        TranslateModule,
-    ],
+  selector: 'app-tls13050',
+  templateUrl: './tls13050.component.html',
+  standalone: true,
+  imports: [
+    MenubarComponent,
+    AccordionModule,
+    FormsModule,
+    ReactiveFormsModule,
+    CalendarRangeComponent,
+    MultiSelectComponent,
+    InputNumberRangeComponent,
+    ButtonComponent,
+    TableComponent,
+    TranslateModule,
+  ],
 })
 export class TLS13050Component extends BasicQueryPageComponent<any> implements OnInit {
   queryForm = this.formBuilder.group({
     tlt_floorList: [[]],
     date_start: [''],
     date_end: [''],
-    check_day_start: [0],
-    check_day_end: [0],
+    check_day_start: [''],
+    check_day_end: [[]],
+    Building_No:  [[]],
+    org_idList: [[]],
     ...createPaginationConfig([{ field: 'apply_no', order: 1 }])
   });
 
@@ -47,7 +50,7 @@ export class TLS13050Component extends BasicQueryPageComponent<any> implements O
   selectedItems: any[] = [];
   totalRecords = 0;
   BUILDING_NO_Options: any[] = [];
-
+  organizationCodeOptions: any[] = [];
   columns: any[] = [
     { field: 'apply_no', header: '專櫃招募編號', visible: true },
     { field: 'tlt_no', header: '專櫃編號', visible: true },
@@ -61,13 +64,18 @@ export class TLS13050Component extends BasicQueryPageComponent<any> implements O
     { field: 'sad_sale_amt_sum', header: '(A)累積營業實績', visible: true },
     { field: 'limit_amt', header: '(B)年度包底金額', visible: true },
     { field: 'finishedrate', header: '(A-B)累積差額', visible: true },
+    { field: 'commissionRate', header: '抽成率', visible: true },
+    { field: 'underLimitCommission', header: '包底不足抽成額(含稅)', visible: true },
     { field: 'completionRate', header: '年度包底營業額完成率', visible: true },
     { field: 'check_day', header: '月結天數', visible: true },
   ];
+  buildingNoOptions: IDropdownItem[] = [];
+
 
   constructor(
     private locationOptionsService: LocationOptionsService,
     private tls13050Service: Tls13050Service,
+    private dropDownListService: DropDownListService
   ) {
     super();
   }
@@ -77,12 +85,31 @@ export class TLS13050Component extends BasicQueryPageComponent<any> implements O
 
     this.locationOptionsService.getBuildingOptions().subscribe({
       next: (res) => this.BUILDING_NO_Options = res,
-      error: () => this.messageService.errorBubble('載入館別選單失敗')
     });
     this.locationOptionsService.getFloorOptions().subscribe({
       next: (res) => this.floorOptions = res,
-      error: () => this.messageService.errorBubble('載入樓層選單失敗')
     });
+     // 館別
+        this.dropDownListService.querySYS3800_DropDownList()
+          .pipe(untilDestroyed(this))
+          .subscribe(res => {
+            this.buildingNoOptions = res.Data.map(x => ({
+              label: x.Name,
+              value: x.No,
+              Name: x.Name,
+              No: x.No
+            }));
+          });
+    // 組織代碼/名稱
+    this.dropDownListService.querySYS3100_DropDownList()
+      .pipe(untilDestroyed(this))
+      .subscribe(res => {
+        this.organizationCodeOptions = (res.Data || []).map(item => ({
+          ...item,
+          formLabel: item.No + ' ' + item.Name,
+          value: item.No
+        }));
+      });
   }
 
   onSubmit(form: any): void {
@@ -101,14 +128,14 @@ export class TLS13050Component extends BasicQueryPageComponent<any> implements O
 
 
       const body = {
-          tlt_floorList: formValue.tlt_floorList || [],
-          date_start: formatYYYYMM(formValue.date_start),
-          date_end: formatYYYYMM(formValue.date_end),
-          check_day_start: formValue.check_day_start ?? 0,
-          check_day_end: formValue.check_day_end ?? 0,
-          SortBy: [
-            { field: 'apply_no', order: 1 }
-          ]
+        tlt_floorList: formValue.tlt_floorList || [],
+        date_start: formatYYYYMM(formValue.date_start),
+        date_end: formatYYYYMM(formValue.date_end),
+        check_day_start: formValue.check_day_start ?? 0,
+        check_day_end: formValue.check_day_end ?? 0,
+        SortBy: [
+          { field: 'apply_no', order: 1 }
+        ]
       };
 
       console.log('送出的查詢 body', body);

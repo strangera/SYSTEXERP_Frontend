@@ -11,6 +11,7 @@ export interface Column {
   isTotal?: boolean; // 是否為總計欄位
   showSort?: boolean;
   sortField?: string; // 排序欄位(預設為 field)
+  htmlFormat?: boolean; // 是否為 HTML 格式 (適用於顯示特殊符號或樣式)
 
   disabled?: (value: any) => boolean;  // 是否禁用 (是否為禁用欄位)
 
