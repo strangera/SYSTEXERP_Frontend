@@ -91,6 +91,9 @@ export class TableCaptionComponent extends BasicPrintDataComponent implements On
 
   // 當 data 發生變化時，重置分頁與頁碼
   ngOnChanges(changes: SimpleChanges): void {
+    if (changes['data']) {
+      this.expression = false;
+    }
     if (changes['totalRecords']) {
       setTimeout(() => {
         this.calculateTotalPages(); // 計算總頁數

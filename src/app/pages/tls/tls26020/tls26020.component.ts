@@ -60,7 +60,6 @@ export class TLS26020Component extends BasicQueryPageComponent<TLS26020Data> imp
     ...createPaginationConfig([{ field: 'tlt_no', order: 1 }]) // 修正排序欄位
   });
 
-  @ViewChild('tableComponent') tableComponent!: TableComponent;
   totalRecords = 0;
   data: TLS26020Data[] = [];
   selectedItems: TLS26020Data[] = [];
@@ -113,8 +112,6 @@ export class TLS26020Component extends BasicQueryPageComponent<TLS26020Data> imp
           this.data = response.Data;
           this.totalRecords = response.TotalCount;
           this.queryStateService.setQueryState(this.ProgNo, frm.getRawValue());
-          // 重置展開狀態
-          this.tableComponent.expandedRows = {};
         });
     });
   }
