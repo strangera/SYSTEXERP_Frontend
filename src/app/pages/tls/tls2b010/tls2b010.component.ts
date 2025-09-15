@@ -265,6 +265,7 @@ export class TLS2B010Component extends BasicQueryPageComponent<any> {
         finalize(() => {
           this.loading = false;
           this.messageService.unblockUi();
+           this.refreshCloseDate(); 
         }),
       )
       .subscribe({
@@ -296,18 +297,18 @@ export class TLS2B010Component extends BasicQueryPageComponent<any> {
               // ✅ 支付別溢欠明細表
               const responseData = res.Data || {};
               this.data = responseData.QueryData || [];
-              this.closeDate = responseData.LastCloseDate || '-';
+            
               this.totalRecords = res.TotalCount || 0;
             }
           } else {
-            this.messageService.errorBubble(res?.Message || '查詢失敗');
+            
           }
         },
         error: () => {
-          this.messageService.errorBubble('查詢失敗，請稍後再試');
+          
         },
       });
-      this.refreshCloseDate(); // ← 改成統一呼叫 API 取得
+     
   }
 
 
