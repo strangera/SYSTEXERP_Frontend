@@ -63,7 +63,7 @@ export class FIN12010CRUComponent extends BasicCruPageComponent<IFin12010Data> i
     this.initializePage('FIN12010', this.dataForm);
     if (this.isFormCreateable) {
       this.minDate = this.setMinDate();
-      this.dataForm.get('SAL_GUIYYYYMM')?.setValidators([Validators.required, this.validationService.oddMonthValidator]);
+      this.dataForm.get('SAL_GUIYYYYMM')?.setValidators([Validators.required, this.validationService.oddMonthValidator, this.validationService.minMonthValidator]);
     } else {
       this.fetchGUITrackOptions();
       const totQtyValue = this.dataForm.get('SAL_BlankCnt')?.value;

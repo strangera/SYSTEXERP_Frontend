@@ -38,7 +38,7 @@ import { TranslateModule } from '@ngx-translate/core';
 })
 export class FIN11200CRUComponent extends BasicCruPageComponent<Pos1018> implements OnInit {
   dataForm = this.formBuilder.group({
-    GUI_YYMM: [null, [Validators.required, this.validationService.oddMonthValidator]], // 發票年月
+    GUI_YYMM: [null, [Validators.required, this.validationService.oddMonthValidator, this.validationService.minMonthValidator]], // 發票年月
   });
   monthOptions = monthOptions;
   minDate?: Date;

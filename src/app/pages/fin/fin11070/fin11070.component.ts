@@ -32,7 +32,7 @@ import { ValidationService } from '@shared/service/validation.service';
 })
 export class FIN11070Component extends BasicQueryPageComponent<FIN11070Data> implements OnInit {
   queryForm = this.formBuilder.group({
-    GUI_YYMM: ['', [Validators.required, this.validationService.evenMonthValidator]],    // 申報年月
+    GUI_YYMM: ['', [Validators.required, this.validationService.evenMonthValidator, this.validationService.maxMonthValidator]],    // 申報年月
     ...createPaginationConfig([])
   });
 
