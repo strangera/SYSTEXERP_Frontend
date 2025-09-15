@@ -10,7 +10,6 @@ import { TranslateModule } from '@ngx-translate/core';
 import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/basic-query-page.component';
 import { FileSelectEvent, FileUploadHandlerEvent } from 'primeng/fileupload';
 import { DividerModule } from 'primeng/divider';
-import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { CalendarComponent } from '@shared/componentkit/calendar/calendar.component';
 import { Observable } from 'rxjs';
 import { AsyncPipe } from '@angular/common';
@@ -23,7 +22,7 @@ import { MultiSelectComponent } from '@shared/componentkit/multi-select/multi-se
   selector: 'app-tls2g010',
   templateUrl: './tls2g010.component.html',
   standalone: true,
-  imports: [MultiSelectComponent, AsyncPipe, CalendarComponent, DropdownComponent, DividerModule, MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, FileUploadComponent, InputTextComponent, TranslateModule]
+  imports: [MultiSelectComponent, AsyncPipe, CalendarComponent, DividerModule, MenubarComponent, ButtonComponent, AccordionModule, FormsModule, ReactiveFormsModule, FileUploadComponent, InputTextComponent, TranslateModule]
 })
 export class TLS2G010Component extends BasicQueryPageComponent<any> implements OnInit {
   queryForm = this.formBuilder.group({

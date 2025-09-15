@@ -160,7 +160,6 @@ export class DropdownApiService {
   querySys3900(): Observable<IDropdownItem[] | null> {
     return this.queryDropdown<IDropdownItem>('/querySYS3900_DropDownList');
   }
-
   /** 查詢區域代碼(SYS3A00)資料表下拉選單 */
   querySys3A00(): Observable<IDropdownItem[] | null> {
     return this.queryDropdown<IDropdownItem>('/querySYS3A00_DropDownList');
@@ -346,8 +345,8 @@ export class DropdownApiService {
   // --- 專櫃相關 (新增) ---
 
   /** 查詢專櫃主檔(TLTTALENT) (取得最新合約資料) */
-  queryTltTalent(): Observable<IDropdownItem[] | null> {
-    return this.queryDropdown<IDropdownItem>('/queryTLTTALENT_DropDownList');
+  queryTltTalent(): Observable<Option[] | null> {
+    return this.queryAndMapDropdown<IDropdownItem>('/queryTLTTALENT_DropDownList', 'No', 'Name');
   }
 
   /** 查詢專櫃主檔(TLTTALENT) (依照審核狀態查詢) */

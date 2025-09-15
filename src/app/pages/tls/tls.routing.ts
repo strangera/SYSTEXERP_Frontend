@@ -377,8 +377,6 @@ export const tlsRoutes: Routes = [
   { path: 'tls2e060cru', loadComponent: () => import('./tls2e060-cru/tls2e060-cru.component').then(m => m.TLS2E060CRUComponent) },
   // 專櫃帳款結算作業 CRU
   { path: 'tls2e070cru', loadComponent: () => import('./tls2e070-cru/tls2e070-cru.component').then(m => m.TLS2E070CRUComponent) },
-  // 專櫃對帳單 CRU
-  { path: 'tls2e080cru', loadComponent: () => import('./tls2e080-cru/tls2e080-cru.component').then(m => m.TLS2E080CRUComponent) },
   // 專櫃帳款結算彙總表 CRU
   { path: 'tls2e090cru', loadComponent: () => import('./tls2e090-cru/tls2e090-cru.component').then(m => m.TLS2E090CRUComponent) },
   // 年度對帳單 CRU
