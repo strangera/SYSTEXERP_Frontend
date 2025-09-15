@@ -32,9 +32,14 @@ export class TLS2B010Service {
   }
 
   // ✅ 取得最近關帳日期（如果你後端真的有這個 API）
-  getCloseDate(payload: any): Observable<any> {
-    return this.http.post<any>(`${this.apiUrl}/TLS0000/TLS2000/getCloseDate`, payload).pipe(
-      
+// tls2-b010.service.ts
+// tls2-b010.service.ts
+getCloseDate(): Observable<any> {
+ return this.http.post<any>(`${this.apiUrl}/TLS0000/TLS2000/GetTLS2C010Date`, {})
+    .pipe(
+      tap(res => console.log('關帳日期:', res)),
+      catchError(this.errorHandler.handleError)
     );
-  }
+}
+
 }

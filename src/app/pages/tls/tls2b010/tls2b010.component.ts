@@ -177,6 +177,7 @@ export class TLS2B010Component extends BasicQueryPageComponent<any> {
 
     this.printedAt =
       this.datePipe.transform(new Date(), 'yyyy/MM/dd HH:mm') || '';
+      this.refreshCloseDate();
   }
 
   updateColumnVisibility(selectedValues: number[]) {
@@ -306,6 +307,7 @@ export class TLS2B010Component extends BasicQueryPageComponent<any> {
           this.messageService.errorBubble('查詢失敗，請稍後再試');
         },
       });
+      this.refreshCloseDate(); // ← 改成統一呼叫 API 取得
   }
 
 
@@ -324,12 +326,12 @@ export class TLS2B010Component extends BasicQueryPageComponent<any> {
 
   columns: any[] = [
     {
-      field: 'tlt_building',
+      field: 'building_desc',
       header: '館別',
       visible: true,
     },
     {
-      field: 'tlt_floor',
+      field: 'floor_desc',
       header: '樓層',
       visible: true,
     },
@@ -459,4 +461,28 @@ export class TLS2B010Component extends BasicQueryPageComponent<any> {
       visible: false,
     },
   ];
+ refreshCloseDate(): void {
+  this.closeDate = '查詢中...';
+  this.tls2B010Service.getCloseDate().subscribe({
+    next: (res) => {
+      // 後端回傳範例：
+      // {
+      //   "Status": "0000",
+      //   "Data": { "CLS_DATE": "2025/08/31" },
+      //   ...
+      // }
+      const d = res?.Data ?? res;
+      const close =
+        d?.CLS_DATE ??            // ✅ 你要的欄位
+        d?.LastCloseDate ??       // 兼容舊欄位
+        d?.CloseDate ??
+        d?.closeDate ??
+        (typeof d === 'string' ? d : null);
+
+      this.closeDate = close || '-';
+    },
+    error: () => (this.closeDate = '-'),
+  });
+}
+
 }
