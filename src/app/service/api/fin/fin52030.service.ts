@@ -10,11 +10,17 @@ const apiUrl = environment.ApiUrl;
 @Injectable({ providedIn: 'root' })
 export class FIN52030Service {
 
-  public readonly FIN52030Data = signal<unknown[]>([]);
-  public readonly FIN52030DetailData = signal<unknown[]>([]);
+  public readonly test = !0;
+
+  public readonly FIN52030Data = signal<Record<string, any>[]>([]);
+  public readonly FIN52030DetailData = signal<Record<string, any>[]>([]);
   public readonly subpoenaTypes = signal<DropdownOption[]>([]);
   public readonly creators = signal<DropdownOption[]>([]);
   public readonly modifiers = signal<DropdownOption[]>([]);
+
+
+  /** 預留給科目api */
+  public readonly FIN52030xxxxData = signal<Record<string, any>[]>([]);
 
   private readonly tableCancel$ = new Subject<void>();
   private readonly creatorCancel$ = new Subject<void>();
@@ -40,7 +46,7 @@ export class FIN52030Service {
   public loadFIN52030(payload: unknown): void {
     this.tableCancel$.next();
     this.tableLoading = !0;
-    this.http.post<BaseQueryResponse<unknown>>(`${apiUrl}/FIN0000/FIN2000/queryFIN52030`, payload).pipe(
+    this.http.post<BaseQueryResponse<Record<string, any>>>(`${apiUrl}/FIN0000/FIN2000/queryFIN52030`, payload).pipe(
       take(1),
       takeUntil(this.tableCancel$),
       tap(res => this.FIN52030Data.set(res.Data)),
@@ -54,7 +60,22 @@ export class FIN52030Service {
   public loadFIN52030Detail(payload: unknown): void {
     this.tableCancel$.next();
     this.tableLoading = !0;
-    this.http.post<BaseQueryResponse<unknown>>(`${apiUrl}/FIN0000/FIN2000/queryFIN52030_detail`, payload).pipe(
+    this.http.post<BaseQueryResponse<Record<string, any>>>(`${apiUrl}/FIN0000/FIN2000/queryFIN52030_detail`, payload).pipe(
+      take(1),
+      takeUntil(this.tableCancel$),
+      tap(res => this.FIN52030DetailData.set(res.Data)),
+      finalize(() => {
+        this.tableLoading = !1;
+        this.logger.debug('查詢FIN52030 Detail結果:', [this.FIN52030DetailData()]);
+      })
+    ).subscribe();
+  };
+
+  /** 預留給科目api */
+  public loadxxxx(payload?: unknown): void {
+    this.tableCancel$.next();
+    this.tableLoading = !0;
+    this.http.post<BaseQueryResponse<Record<string, any>>>(`${apiUrl}/FIN0000/FIN2000/xxxx`, payload).pipe(
       take(1),
       takeUntil(this.tableCancel$),
       tap(res => this.FIN52030DetailData.set(res.Data)),

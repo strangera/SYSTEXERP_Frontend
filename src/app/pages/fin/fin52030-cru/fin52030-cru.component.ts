@@ -1,4 +1,3 @@
-
 import { NgIf } from '@angular/common';
 import { Component, computed, OnInit, signal } from '@angular/core';
 import { FormControl, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
@@ -11,7 +10,7 @@ import { CalendarComponent } from '@shared/componentkit/calendar/calendar.compon
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
 import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
 import { TableComponent } from '@shared/componentkit/table/table.component';
-import { Column, formatAmount } from '@shared/componentkit/table/table.model';
+import { Column, FieldChangeEvent, formatAmount, RowEditSaveEvent } from '@shared/componentkit/table/table.model';
 import { NGXLogger } from 'ngx-logger';
 import { CheckboxModule } from 'primeng/checkbox';
 import { PanelModule } from 'primeng/panel';
@@ -49,22 +48,32 @@ export class FIN52030CRUComponent extends BasicCruPageComponent<unknown> impleme
   });
   public readonly df = signal(this.dataForm.controls);
 
+  private tableData = signal<Record<string, any>[]>([]);
+
   public readonly filteredData = computed(() => {
-    return this.service.FIN52030DetailData().filter(item => item).map(item => item);
+    const data = !this.isFormCreateable
+      ? this.service.test ? this.tableData() : this.service.FIN52030DetailData()
+      : [];
+
+    return data.filter(item => ({
+      ...(this.df().typeCode.value ? { typeCode: this.df().typeCode.value } : {}),
+      ...(this.df().subpoenaName.value ? { subpoenaName: this.df().subpoenaName.value } : {}),
+      ...(this.df().subpoenaType.value ? { subpoenaType: this.df().subpoenaType.value } : {}),
+    }));
   });
 
   public readonly totalRecords = computed(() => this.filteredData().length);
 
   public readonly columns: Column[] = [
-    { field: '', header: '科目代號' },
-    { field: '', header: '廠商/員工代號' },
-    { field: '', header: '廠商/員工名稱' },
-    { field: '', header: '摘要' },
-    { field: '', header: '借方金額', format: formatAmount, isTotal: true },
-    { field: '', header: '貸方金額', format: formatAmount, isTotal: true },
-    { field: '', header: '組織代號' },
-    { field: '', header: '對象別編號' },
-    { field: '', header: '對帳KEY值' },
+    { field: 'subjectCode', header: '科目代號', type: 'dropdown', options: this.service.FIN52030xxxxData(), optionLabel: 'xxxxName', optionValue: 'xxxxId' },
+    { field: 'vendorEmployeeCode', header: '廠商/員工代號', type: 'input' },
+    { field: 'vendorEmployeeName', header: '廠商/員工名稱', type: 'input' },
+    { field: 'summary', header: '摘要', type: 'input' },
+    { field: 'debitAmount', header: '借方金額', type: 'inputNumber', format: formatAmount, isTotal: true },
+    { field: 'creditAmount', header: '貸方金額', type: 'inputNumber', format: formatAmount, isTotal: true },
+    { field: 'organizationCode', header: '組織代號', type: 'input' },
+    { field: 'objectCode', header: '對象別編號', type: 'input' },
+    { field: 'reconciliationKey', header: '對帳KEY值', type: 'input' },
   ];
 
   constructor(
@@ -78,11 +87,17 @@ export class FIN52030CRUComponent extends BasicCruPageComponent<unknown> impleme
   ngOnInit(): void {
     this.initializePage('FIN52030', this.dataForm);
 
-    this.service.getSubpoenaTypes();
-    this.df().creator.setValue(this.user.user_Name);
-    this.df().createDate.setValue(new Date());
+    if (this.isFormCreateable) {
+      this.df().creator.setValue(this.user.user_Name);
+      this.df().createDate.setValue(new Date());
+    }
+    else {
+      this.service.getSubpoenaTypes();
 
-    this.logger.debug(`init:`, [new Date().toString()]);
+      this.tableData.set(dummyData);
+    }
+
+    this.logger.debug(`init:`, [this.rowdata, dummyData]);
   }
 
   public onSubmit(): void {
@@ -92,4 +107,43 @@ export class FIN52030CRUComponent extends BasicCruPageComponent<unknown> impleme
       this.loading = !1;
     });
   }
+
+  public onFieldChange(event: FieldChangeEvent<unknown>): void {
+    this.logger.debug(`onFieldChange:`, [event]);
+  }
+
+  public onRowEditInit(event: RowEditSaveEvent): void {
+    this.logger.debug(`onRowEditInit:`, [event]);
+  }
+
+  public onRowEditSave(event: RowEditSaveEvent): void {
+    this.logger.debug(`onRowEditSave:`, [event]);
+  }
+
+  public onRowEditCancel(event: RowEditSaveEvent): void {
+    this.logger.debug(`onRowEditCancel:`, [event]);
+  }
+
+  public onDelete(event: any): void {
+    this.logger.debug(`onDelete:`, [event]);
+  }
+
+  public onInsert(event: any): void {
+    this.logger.debug(`onInsert:`, [event]);
+  }
 }
+
+
+
+const dummyData = Array.from({ length: 100 }, (_, i) => ({
+  id: (i + 1) * 10,
+  subjectCode: `00${i + 3}`,
+  vendorEmployeeCode: `V00${i + 3}`,
+  vendorEmployeeName: `Vendor ${Math.random().toString(36).substring(2, 10).toUpperCase()}`,
+  summary: `Generated summary ${i + 3}`,
+  debitAmount: Math.floor(Math.random() * 1e6) + 1e4,
+  creditAmount: Math.floor(Math.random() * 1e6) + 1e4,
+  organizationCode: `ORG00${i + 3}`,
+  objectCode: `OBJ00${i + 3}`,
+  reconciliationKey: `KEY00${i + 3}`,
+}));
