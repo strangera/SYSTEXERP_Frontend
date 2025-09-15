@@ -1,233 +1,90 @@
-import { Component, OnInit, ViewEncapsulation } from '@angular/core';
-import { FormArray, FormBuilder, FormControl, FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
-import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
-import { NotificationService } from '../../../shared/component/notification-message/notification.service';
-import { AuthService } from '../../../service/system/auth.service';
-import { BasicCrupageComponent } from '../../../shared/componentextends/basic-crupage/basic-crupage.component';
-import { VendorService } from '../../../service/basic/vendor.service';
-import { MargintypeService } from '../../../service/basic/margintype.service';
-import { IfdisplayService } from './../../../service/basic/ifdisplay.service';
-import { AnalysisdateCService } from './../../../service/basic/analysisdate-c.service';
-import { FlippingstateService } from './../../../service/basic/flippingstate.service';
-import { TranslateService, TranslateModule } from '@ngx-translate/core';
-import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
+import { Component, OnInit } from '@angular/core';
+import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { BasicCruPageComponent } from '@shared/componentextends/basic-crupage/basic-cru-page.component';
+import { TDS52020Data } from '../fin52020/fin52020.model';
+import { Fin52020Service } from '../../../service/api/fin/fin52020.service';
+import { finalize } from 'rxjs';
+import { untilDestroyed } from '@ngneat/until-destroy';
+import { MenubarComponent } from '@shared/component/menubar/menubar.component';
+import { ButtonComponent } from '@shared/componentkit/button/button.component';
 import { PanelModule } from 'primeng/panel';
-import { InputTextComponent } from '../../../shared/componentkit/input-text/input-text.component';
-import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
+import { InputTextComponent } from '@shared/componentkit/input-text/input-text.component';
 import { NgIf } from '@angular/common';
+import { TranslateModule } from '@ngx-translate/core';
+import { ValidationService } from '@shared/service/validation.service';
 
 @Component({
-    selector: 'app-fin52020-cru',
-    templateUrl: './fin52020-cru.component.html',
-    styleUrl: './fin52020-cru.component.scss',
-    standalone: true,
-    imports: [MenubarComponent, PanelModule, FormsModule, ReactiveFormsModule, InputTextComponent, ButtonComponent, NgIf, TranslateModule]
+  selector: 'app-fin52020-cru',
+  templateUrl: './fin52020-cru.component.html',
+  standalone: true,
+  imports: [
+    MenubarComponent,
+    ButtonComponent,
+    PanelModule,
+    FormsModule,
+    ReactiveFormsModule,
+    InputTextComponent,
+    NgIf,
+    TranslateModule,
+  ],
 })
-export class FIN52020CRUComponent
-  extends BasicCrupageComponent
-  implements OnInit {
-  ngOnInit(): void {
-    // 初始化
-    this.ProgNo = '150008';
-    //
-    // ----------------------------------------------------------------
-    this.funInfo = this.authService.getUserPermissions(this.ProgNo);
-    this.IfdisplayService.getOptions().subscribe(
-      (data) => (this.displayOptions2 = data)
-    );
-    this.AnalysisdateCService.getOptions().subscribe(
-      (data) => (this.AnalysisdateCOptions = data)
-    );
-    this.vendorService.getVendors().subscribe((data) => {
-      this.vendorOptions = data;
-    });
-    this.flippingstateService.getOptions().subscribe((data) => {
-      this.FlippingstateOptions = data;
-    });
-    this.margintypeService.getOptions().subscribe((data) => {
-      this.margintypeOptions = data;
-    });
-    //
-    // ----------------------------------------------------------------
-    const state = this.router.lastSuccessfulNavigation?.extras.state as {
-      crudstatus: CRUDStatus;
-      rowdata: any;
-    };
-
-    switch (state.crudstatus) {
-      // 創建
-      case CRUDStatus.Create:
-        this.formTitle = 'create-conditions';
-        this.accordionTabCss = 'create-accordionTab';
-        this.crudstatus = CRUDStatus.Create;
-        this.showConfirm = this.canAdd();
-        break;
-      // 修改
-      case CRUDStatus.Edit:
-        this.formTitle = 'edit-conditions';
-        this.accordionTabCss = 'edit-accordionTab';
-        this.crudstatus = CRUDStatus.Edit;
-        this.showConfirm = this.canEdit();
-        this.Edit(state.rowdata);
-        break;
-      // 讀檔
-      case CRUDStatus.Read:
-        this.formTitle = 'display-conditions';
-        this.crudstatus = CRUDStatus.Read;
-        this.Read(state.rowdata);
-        break;
-    }
-
-    console.log(this.accordionTabCss);
-  }
-  createItem(): FormGroup {
-    return this.formBuilder.group({
-      remark: [], // Input Text
-      startdate: [],
-      enddate: [],
-      SMarginserialnumber: [],
-      EMarginserialnumber: [],
-      vendorCode: [],
-      Flippingstate: [1, Validators.required],
-      Checknumber: [],
-      margintype: [],
-      borrowloan: [],
-      type: [],
-    });
-  }
-  CashRegisterTypeItems: any[] = [
-    { label: '業主', value: '1' },
-    { label: '非業主', value: '2' },
-  ];
-  // ----------------------------------------------------------------
+export class FIN52020CRUComponent extends BasicCruPageComponent<TDS52020Data> implements OnInit {
   dataForm = this.formBuilder.nonNullable.group({
-    systemYear: [], // 系統年結年度
-    accountingStartMonth: [], // 系統開帳年月
-    accountingEndMonth: [], // 系統關帳年月
-    defaultVoucherDate: [], // 傳票日期預設
-    defaultOrganization: [, Validators.required], // 預設組織
-    accumulatedProfitLossAccount: [], // 累積盈虧科目
-    currentProfitLossAccount: [], // 本期損益科目
-    cashAccount: [], // 現金科目
-    accountsReceivableAccount: [], // 應收帳款科目
-    accountsPayableAccount: [], // 應付帳款科目
-    inputTaxAccount: [], // 進項稅額科目
-    outputTaxAccount: [], // 銷項稅額科目
-    postAndTelecomFeeAccount: [], // 郵電費科目
-    discountRate: [], // 貼現日利率
-    discountFeeRevenueAccount: [], // 貼現手續費收入科目
-    discountOutputTaxAccount: [], // 貼現銷項稅額科目
-    startdate: [], // 貼現銷項稅額科目起始日
-    enddate: [], // 貼現銷項稅額科目結束日
-    bankTransferFeeAccount: [], // 銀行匯款手續費科目
-    advanceExpenseAccount: [], // 預支費用科目
-    billTransferCondition: [], // 應付票據是否需領用才拋轉傳票
-    typecode: [],
-    typename: [],
-    // ----------------------------------------------------------------
-    items: this.formBuilder.array([this.createItem()]),
+    Id: [0],
+    VoucherKind: ['', [Validators.required, Validators.maxLength(10), this.validationService.alphanumericValidator]],
+    VoucherName: ['', [Validators.required, Validators.maxLength(50)]],
   });
-  // Dropdown options
 
-  FNCCodeOptions: any[] = [];
-  AccountcodeOptions: any[] = [];
-  displayOptions: any[] = [];
-  displayOptions2: any[] = [];
-  AnalysisdateCOptions: any[] = [];
-  vendorOptions: any[] = [];
-  FlippingstateOptions: any[] = [];
-  margintypeOptions: any[] = [];
-  borrowloanOptions: any[] = [{ value: 1, label: '借' },
-  { value: 2, label: '貸' },];
-  typeOptions: any[] = [{ value: 1, label: '存入保證金' },
-  { value: 2, label: '存出保證金' },];
-  // ----------------------------------------------------------------
   constructor(
-    private router: Router,
-    private formBuilder: FormBuilder,
-    private messageService: NotificationService,
-    private authService: AuthService,
-    private IfdisplayService: IfdisplayService,
-    private AnalysisdateCService: AnalysisdateCService,
-    private vendorService: VendorService,
-    private flippingstateService: FlippingstateService,
-    private margintypeService: MargintypeService,
-    private translate: TranslateService
+    private fin52020Service: Fin52020Service,
+    private validationService: ValidationService
   ) {
-    super(); // 呼叫父類建構子
+    super();
   }
 
-
-
-  // ----------------------------------------------------------------
-  get items(): FormArray {
-    return this.dataForm.get('items') as FormArray;
-  }
-
-  getFormControl(index: number, controlName: string): FormControl {
-    return this.items.at(index).get(controlName) as FormControl;
-  }
-  // ----------------------------------------------------------------
-
-  onRemoveItem(index: number) {
-    this.items.removeAt(index);
-  }
-  // ----------------------------------------------------------------
-  Edit(rowdata: any) {
-    this.dataForm.patchValue(rowdata);
-  }
-
-  Read(rowdata: any) {
-    this.dataForm.patchValue(rowdata);
-    this.dataForm.disable();
-  }
-
-  onAddItem(): void {
-    this.items.push(this.createItem());
-  }
-
-  onSubmit(frm: FormGroup) {
-    this.messageService.blockUi();
-    this.submitted = true;
-
-    if (this.dataForm.invalid) {
-      this.messageService.errorBubble(
-        this.translate.instant('form_error_message')
-      );
-      this.messageService.unblockUi();
-      return;
+  ngOnInit(): void {
+    this.initializePage('FIN52020', this.dataForm);
+    if (!this.isFormCreateable) {
+      this.dataForm.get('VoucherKind')?.disable(); // Detail/Update 時 disable typecode
     }
-
-    switch (this.crudstatus) {
-      case CRUDStatus.Create:
-        if (this.canAdd()) {
-          // this.storeService.addMachine(frm.value as MachineForm).subscribe((response: any) => {
-          this.messageService.successBubble(
-            this.translate.instant('success_message')
-          );
-        }
-        break;
-      case CRUDStatus.Edit:
-        if (this.canEdit()) {
-          // this.storeService.updateMachine(frm.value as MachineForm).subscribe((response: any) => {
-          this.messageService.successBubble(
-            this.translate.instant('updated-successfully')
-          );
-        }
-        break;
-    }
-
-    this.messageService.unblockUi();
-    this.submitted = false;
   }
 
-  submitForm(frm: FormGroup) {
-    // 查詢邏輯
-    this.onSubmit(frm);
-  } //CRU
+  onSubmit(form: FormGroup) {
+    this.handleSubmit(form, () => {
+      if (this.isFormCreateable) {
+        const payload = this.buildInsertBody(form);
+        this.fin52020Service.insertFIN52020(payload)
+          .pipe(untilDestroyed(this), finalize(() => this.loading = false))
+          .subscribe(res => {
+            this.dataForm.reset();
+            this.messageService.successBubble(res.Message);
+          });
+      } else if (this.isFormEditable) {
+        const payload = this.buildUpdateBody(form);
+        this.fin52020Service.updateFIN52020(payload)
+          .pipe(untilDestroyed(this), finalize(() => this.loading = false))
+          .subscribe(res => {
+            this.onCancel();
+            this.messageService.successBubble(res.Message);
+          });
+      }
+    });
+  }
 
-  onCancel() {
-    this.router.navigate(['FIN5000/FIN52020']);
+buildInsertBody(frm: FormGroup): any {
+  return {
+    voucherKind: frm.get('VoucherKind')?.value,
+    voucherName: frm.get('VoucherName')?.value
+  };
+}
+  buildUpdateBody(frm: FormGroup): {
+      Id: number;
+      VoucherName: string;
+  } {
+    return {
+      Id: frm.get('Id')?.value,
+      VoucherName: frm.get('VoucherName')?.value
+    };
   }
 }
+

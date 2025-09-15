@@ -1,6 +1,6 @@
 import { HttpClient, HttpResponse } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { Observable } from 'rxjs';
+import { map, Observable } from 'rxjs';
 import { environment } from '../../../../environments/environment';
 import { ApiResponse } from '../../system/auth.service';
 import { LazyLoadEvent } from '@shared/componentkit/table/table.model';
@@ -68,12 +68,16 @@ export class Tls57100Service {
 
   constructor(private http: HttpClient) { }
 
-  queryTLS57100(
-    body: QueryTLS57100Request
-  ): Observable<ApiResponse<QueryTLS57100ApiResponse>> {
-    return this.http.post<ApiResponse<QueryTLS57100ApiResponse>>(
-      `${this.apiUrl}/queryTLS57100`,
-      body
+  queryTLS57100(request: QueryTLS57100Request): Observable<any> {
+    return this.http.post<ApiResponse<QueryTLS57100ApiResponse>>(`${this.apiUrl}/queryTLS57100`, request).pipe(
+      map(res => {
+        const data = request.ReportType === '明細' ? res.Data.DetailData : res.Data.SummaryData;
+        return {
+          Data: data,
+          TotalCount: res.TotalCount,
+          Message: res.Message
+        };
+      })
     );
   }
 

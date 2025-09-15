@@ -61,10 +61,6 @@
               <label for="ShowImage" class="ml-2">顯示圖片</label>
             </div>
           </div>
-          <div class="col-12 md:col-6 lg:col-4">
-            <app-input-number label="顯示行數" controlName="pageSize" [control]="queryForm.controls.pageSize"
-              [submitted]="submitted" [useGrouping]="false"></app-input-number>
-          </div>
         </div>
         <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
           <app-button btnType="clear" [form]="queryForm"></app-button>
@@ -76,9 +72,13 @@
 </div>
 
 <div class="card">
-  <app-table [data]="data" [columns]="columns" [totalRecords]="totalRecords"
+  <app-table-report tableKey="tls57040" [lastQueryBody]="historyRequestBody" [data]="data" [columns]="columns"
+    [totalRecords]="totalRecords" [showDelete]="false" [showManage]="false" [showReportMode]="false"
+    [queryFunction]="tls57040Service.queryTLS57040.bind(tls57040Service)">
+  </app-table-report>
+  <!-- <app-table [data]="data" [columns]="columns" [totalRecords]="totalRecords"
     [multiSortMeta]="[{ field: 'LOGO_No', order: 1 },{ field: 'PLU_MagNo', order: 1 }]"
     (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [lazy]="true" [loading]="loading"
     [showManage]="false" [rowsPerPageOptions]="rowsPerPageOptions" [rows]="rows">
-  </app-table>
+  </app-table> -->
 </div>
