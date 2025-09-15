@@ -31,8 +31,8 @@ import { ValidationService } from '@shared/service/validation.service';
 })
 export class FIN52020Component extends BasicQueryPageComponent<TDS52020Data> implements OnInit {
   queryForm = this.formBuilder.nonNullable.group({
-    VoucherKind: ['', [Validators.maxLength(10), this.validationService.alphanumericValidator]],
-    VoucherName: ['', [Validators.maxLength(50)]],
+    VoucherKind: ['', [Validators.maxLength(3), this.validationService.alphanumericValidator]],
+    VoucherName: ['', [Validators.maxLength(30)]],
     ...createPaginationConfig([{ field: 'VoucherName', order: 1 }]),
   });
 
