@@ -879,25 +879,101 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionItem>
   private submitContractData(): void {
     console.log('Next3: 開始送出合約資料');
 
-    // 檢查與 Next2 的數量一致性
+    // 第一步：強制最後一次完整同步 - 確保所有資料都正確儲存
+    console.log('强制同步 Next3 所有資料...');
+
+    try {
+      // 重新組合所有條件項目，確保沒有遺漏
+      this.allConditionItems = [
+        ...this.fixedRentItems,
+        ...this.baseRentHigherItems,
+        ...this.generalCommissionItems,
+        ...this.baseCommissionItems,
+        ...this.graduatedItems,
+        ...this.baseTierItems
+      ];
+
+      console.log('條件項目統計:', {
+        fixedRent: this.fixedRentItems.length,
+        baseRentHigher: this.baseRentHigherItems.length,
+        generalCommission: this.generalCommissionItems.length,
+        baseCommission: this.baseCommissionItems.length,
+        graduated: this.graduatedItems.length,
+        baseTier: this.baseTierItems.length,
+        總計: this.allConditionItems.length
+      });
+
+      // 立即強制儲存到工作流程
+      this.contractFlowService.saveStep4Data(this.allConditionItems);
+
+      // 驗證資料是否正確儲存
+      const verifyStep4 = this.contractFlowService.getStep4Data();
+      console.log('驗證 Step4 資料儲存結果:', {
+        原始項目數: this.allConditionItems.length,
+        暫存項目數: verifyStep4?.length || 0,
+        資料一致: (verifyStep4?.length || 0) === this.allConditionItems.length
+      });
+
+      // 如果資料不一致，重試一次
+      if (!verifyStep4 || verifyStep4.length !== this.allConditionItems.length) {
+        console.warn('資料不一致，重試儲存...');
+        // 等待一下再重試
+        setTimeout(() => {
+          this.contractFlowService.saveStep4Data(this.allConditionItems);
+        }, 100);
+
+        // 再次驗證
+        const retryVerify = this.contractFlowService.getStep4Data();
+        console.log('重試後驗證結果:', {
+          項目數: retryVerify?.length || 0
+        });
+      }
+
+    } catch (syncError) {
+      console.error('強制同步資料時發生錯誤:', syncError);
+      this.notificationService.errorBubble('資料同步失敗，請重試');
+      return;
+    }
+
+    // 第二步：檢查與 Next2 的數量一致性
     if (!this.validateNext2DataConsistency()) {
       return;
     }
 
+    // 第三步：開始提交流程
     this.loading = true;
     this.notificationService.blockUi();
 
     try {
-      // 最後一次暫存條件設定資料
-      this.saveConditionDataToWorkflow();
+      // 最終確認所有步驟的資料都正確
+      const finalVerification = {
+        step1: !!this.contractFlowService.getStep1Data(),
+        step2Count: this.contractFlowService.getStep2Data()?.length || 0,
+        step3Count: this.contractFlowService.getStep3Data()?.length || 0,
+        step4Count: this.contractFlowService.getStep4Data()?.length || 0
+      };
 
-      // 使用清理資料方法
+      console.log('最終資料驗證:', finalVerification);
+
+      // 生成清理後的提交資料
       const cleanSubmitData = this.contractFlowService.generateCleanSubmitData();
 
       console.log('Next3: 最終送出的完整 JSON:');
       console.log(JSON.stringify(cleanSubmitData, null, 2));
 
-      // 檢查抽成類型變更警告
+      // 特別檢查條件資料是否正確包含
+      console.log('條件資料檢查:', {
+        hasConditions: !!cleanSubmitData.conditions,
+        conditionKeys: Object.keys(cleanSubmitData.conditions || {}),
+        conditionCounts: Object.entries(cleanSubmitData.conditions || {}).map(([key, value]: [string, any]) => ({
+          type: key,
+          insertCount: value?.toInsert?.length || 0,
+          updateCount: value?.toUpdate?.length || 0,
+          deleteCount: value?.toDelete?.length || 0
+        }))
+      });
+
+      // 檢查抽成別變更警告
       if (cleanSubmitData.commissionTypeChange?.HasChanged) {
         const changeInfo = cleanSubmitData.commissionTypeChange;
         const originalName = this.tableConfigManager.getCommissionTypeName(changeInfo.OriginalTermType);
@@ -931,6 +1007,17 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionItem>
           this.notificationService.warnBubble(warning);
         });
       }
+
+      // 最終檢查：確保至少有基本的合約資料
+      if (!cleanSubmitData.contractInfo?.data?.tlt_name) {
+        console.error('Next3: 缺少基本合約資料');
+        this.loading = false;
+        this.notificationService.unblockUi();
+        this.notificationService.errorBubble('缺少基本合約資料，請檢查第一步的資料填寫');
+        return;
+      }
+
+      console.log('資料驗證通過，開始調用 API...');
 
       // 調用真實的 API
       this.callCleanSubmitAPI(cleanSubmitData);
@@ -1105,18 +1192,21 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionItem>
     console.log('🔥 Next3 收到欄位變更事件:', {
       fieldName: event.fieldName,
       newValue: event.newValue,
-      oldValue: event.oldValue, // 如果有的話
+      oldValue: event.oldValue,
       rowId: event.rowData?.id,
       commissionType,
       timestamp: new Date().toISOString()
     });
 
-    // 檢查數據是否正確
+    // 檢查資料是否正確
     console.log('📋 當前 rowData:', event.rowData);
 
     try {
-      // 立即更新到對應的數據陣列
-      this.updateLocalDataArray(commissionType, event.rowData);
+      // 🎯 關鍵修正：確保正確更新狀態
+      const modifiedData = this.updateDataStatus(event.rowData);
+
+      // 立即更新到對應的資料陣列
+      this.updateLocalDataArray(commissionType, modifiedData);
 
       // 立即保存到工作流程
       this.saveConditionDataToWorkflow();
@@ -1127,12 +1217,31 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionItem>
       const savedData = this.contractFlowService.getStepData(WorkflowStep.CONDITION);
       console.log('🔍 驗證暫存結果:', {
         savedItemCount: Array.isArray(savedData) ? savedData.length : 0,
-        savedData: savedData
+        modifiedItemId: modifiedData.id,
+        modifiedItemStatus: modifiedData._status
       });
 
     } catch (error) {
       console.error('❌ 保存欄位變更時發生錯誤:', error);
     }
+  }
+
+  private updateDataStatus(data: any): any {
+    const modifiedData = { ...data };
+
+    // 如果是新增的資料，保持 new 狀態
+    if (modifiedData._status === 'new') {
+      console.log('🆕 保持新增狀態:', modifiedData.id);
+      return modifiedData;
+    }
+
+    // 如果是原始資料，標記為已修改
+    if (modifiedData._status === 'original' || !modifiedData._status) {
+      modifiedData._status = 'modified';
+      console.log('📝 標記為已修改:', modifiedData.id);
+    }
+
+    return modifiedData;
   }
 
   /**
@@ -1166,9 +1275,17 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionItem>
   private updateItemInArray(array: any[], itemId: string, newData: any): void {
     const index = array.findIndex(item => item.id === itemId);
     if (index > -1) {
-      // 直接更新引用，保持數據一致性
-      Object.assign(array[index], newData);
-      console.log(`✅ 已更新 ${itemId}:`, newData);
+      // 🔑 關鍵修正：完全替換而不是合併，確保狀態正確更新
+      array[index] = { ...newData };
+      console.log(`✅ 已更新 ${itemId}:`, {
+        id: newData.id,
+        _status: newData._status,
+        主要欄位: {
+          base_rent: newData.base_rent,
+          charge_rate: newData.charge_rate || newData.cag_charge_rate,
+          limit_amt: newData.limit_amt
+        }
+      });
     } else {
       console.warn(`⚠️ 找不到 ID: ${itemId} 的項目`);
     }

@@ -35,6 +35,9 @@ export class EventHandlerManager {
 
     let modifiedData = { ...event.newData };
 
+    //確保狀態正確更新
+    modifiedData = this.ensureCorrectStatus(modifiedData, event.oldData);
+
     // 處理來自 Next2 的資料特殊邏輯
     if (event.newData._fromNext2) {
       if (type === 'baseRentHigher') {
@@ -48,17 +51,58 @@ export class EventHandlerManager {
       }
     }
 
-    // 標記為已修改，避免被同步覆蓋
-    if (modifiedData._status !== 'new') {
-      modifiedData._status = 'modified';
-      console.log(`項目 ${modifiedData.id} 標記為 modified`);
-    }
-
     return {
       shouldSave: true,
       modifiedData
     };
   }
+
+  private ensureCorrectStatus(newData: any, oldData?: any): any {
+    const result = { ...newData };
+
+    // 如果沒有狀態，根據情況設定
+    if (!result._status) {
+      result._status = 'original';
+    }
+
+    // 如果是新增的項目，保持 new 狀態
+    if (result._status === 'new') {
+      console.log('🆕 保持新增狀態:', result.id);
+      return result;
+    }
+
+    // 如果有舊資料且內容有變更，標記為 modified
+    if (oldData && this.hasDataChanged(newData, oldData)) {
+      result._status = 'modified';
+      console.log('📝 資料有變更，標記為已修改:', result.id);
+    }
+
+    return result;
+  }
+
+  /**
+   * 檢查資料是否有變更
+   */
+  private hasDataChanged(newData: any, oldData: any): boolean {
+    // 比較關鍵欄位
+    const keyFields = [
+      'base_rent', 'cag_charge_rate', 'limit_amt', 'limit_charge_rate',
+      'start_number', 'end_number', 'charge_rate', 'cag_bdate', 'cag_edate'
+    ];
+
+    for (const field of keyFields) {
+      if (newData[field] !== oldData[field]) {
+        console.log(`📝 欄位 ${field} 有變更:`, {
+          old: oldData[field],
+          new: newData[field]
+        });
+        return true;
+      }
+    }
+
+    return false;
+  }
+
 
   /**
    * 處理表格編輯事件
@@ -175,6 +219,11 @@ export class EventHandlerManager {
     }
 
     const newItem = createItemFn();
+
+    // 🎯 確保新增項目有正確的狀態
+    newItem._status = 'new';
+    newItem._isNew = true;
+
     const typeNames = {
       'fixedRent': '固定租金',
       'baseRentHigher': '底租抽成取高者',
@@ -185,6 +234,13 @@ export class EventHandlerManager {
 
     const typeName = typeNames[type as keyof typeof typeNames] || type;
     this.notificationService.successBubble(`已新增${typeName}項目`);
+
+    console.log('🆕 新增項目:', {
+      id: newItem.id,
+      type: type,
+      _status: newItem._status,
+      _isNew: newItem._isNew
+    });
 
     return {
       shouldAdd: true,

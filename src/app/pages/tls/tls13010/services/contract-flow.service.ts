@@ -64,7 +64,7 @@ export class ContractFlowService {
 
   // ========== 清理後的資料生成方法 ==========
   generateCleanSubmitData(): CleanSubmitData {
-    console.log('🔄 開始生成清理後的提交資料...');
+    console.log('開始生成清理後的提交資料...');
 
     const step1Data = this.getStep1Data();
     const step2Data = this.getStep2Data();
@@ -73,25 +73,25 @@ export class ContractFlowService {
 
     const modeInfo = this.getWorkflowModeInfo();
 
-    // 🎯 驗證必要資料
+    // 驗證必要資料
     if (!step1Data) {
       throw new Error('缺少合約基本資料 (Step 1)');
     }
 
-    // 🎯 從 Step1 CRU 頁面取得合約日期
+    // 從 Step1 CRU 頁面取得合約日期
     const contractStartDate = this.formatDateForBackend(step1Data.tlt_bdate);
     const contractEndDate = this.formatDateForBackend(step1Data.tlt_edate);
 
-    console.log('📅 從 CRU 頁面取得的合約日期:', {
+    console.log('從 CRU 頁面取得的合約日期:', {
       tlt_bdate: step1Data.tlt_bdate,
       tlt_edate: step1Data.tlt_edate,
       格式化後_起始日: contractStartDate,
       格式化後_結束日: contractEndDate
     });
 
-    // 🎯 驗證合約日期
+    // 驗證合約日期
     if (!contractStartDate || !contractEndDate) {
-      console.error('❌ CRU 頁面的合約日期無效:', {
+      console.error('CRU 頁面的合約日期無效:', {
         原始tlt_bdate: step1Data.tlt_bdate,
         原始tlt_edate: step1Data.tlt_edate,
         格式化後起始日: contractStartDate,
@@ -100,17 +100,88 @@ export class ContractFlowService {
       throw new Error('合約起始日期或結束日期無效，請檢查 CRU 頁面的日期設定');
     }
 
-    console.log('📋 準備清理的原始資料:', {
+    // 確保 step4Data 不會是 undefined 或 null
+    const safeStep4Data = step4Data || [];
+    const currentCommissionType = this.getCurrentCommissionType();
+
+    console.log('Step4 條件資料除錯:', {
+      原始step4Data長度: step4Data?.length || 0,
+      安全step4Data長度: safeStep4Data.length,
+      抽成類型: currentCommissionType,
+      step4Data類型: typeof step4Data,
+      step4Data是否為陣列: Array.isArray(step4Data)
+    });
+
+    // 檢查每個項目的詳細內容
+    if (safeStep4Data.length > 0) {
+      console.log('Step4 項目詳細檢查:');
+      safeStep4Data.forEach((item, index) => {
+        console.log(`項目 ${index}:`, {
+          id: item.id,
+          屬性列表: Object.keys(item),
+          _status: item._status,
+          有seq_no: 'seq_no' in item,
+          有charge_rate: 'charge_rate' in item,
+          有start_number: 'start_number' in item,
+          有end_number: 'end_number' in item,
+          項目內容預覽: {
+            seq_no: (item as any).seq_no,
+            charge_rate: (item as any).charge_rate,
+            start_number: (item as any).start_number,
+            end_number: (item as any).end_number
+          }
+        });
+      });
+    } else {
+      console.warn('Step4 資料為空，可能的原因:', {
+        原始step4Data: step4Data,
+        工作流程資料: this.contractData?.step4
+      });
+    }
+
+    console.log('準備清理的原始資料:', {
       step1Items: step1Data ? 1 : 0,
       step2Items: step2Data?.length || 0,
       step3Items: step3Data?.length || 0,
-      step4Items: step4Data?.length || 0,
+      step4Items: safeStep4Data.length,
       mode: modeInfo.modeName,
       合約日期範圍: `${contractStartDate} ~ ${contractEndDate}`
     });
 
     try {
-      // 🎯 使用 DataCleaner 清理各步驟資料
+      // 調用 DataCleaner 前的最後檢查
+      console.log('準備調用 DataCleaner.cleanConditionData:', {
+        輸入資料數量: safeStep4Data.length,
+        抽成類型: currentCommissionType
+      });
+
+      // 調用 DataCleaner
+      const cleanedConditions = DataCleaner.cleanConditionData(safeStep4Data, currentCommissionType);
+
+      // 檢查 DataCleaner 的處理結果
+      console.log('DataCleaner 處理結果:', {
+        條件類型: Object.keys(cleanedConditions),
+        各類型統計: Object.entries(cleanedConditions).map(([key, value]: [string, any]) => ({
+          類型: key,
+          toInsert: value?.toInsert?.length || 0,
+          toUpdate: value?.toUpdate?.length || 0,
+          toDelete: value?.toDelete?.length || 0
+        }))
+      });
+
+      // 特別檢查 graduated 的結果
+      if (cleanedConditions.graduated) {
+        console.log('graduated 詳細結果:', {
+          toInsert數量: cleanedConditions.graduated.toInsert.length,
+          toUpdate數量: cleanedConditions.graduated.toUpdate.length,
+          toDelete數量: cleanedConditions.graduated.toDelete.length,
+          toInsert內容: cleanedConditions.graduated.toInsert,
+          toUpdate內容: cleanedConditions.graduated.toUpdate,
+          toDelete內容: cleanedConditions.graduated.toDelete
+        });
+      }
+
+      // 使用 DataCleaner 清理各步驟資料
       const cleanData: CleanSubmitData = {
         contractInfo: {
           operation: modeInfo.isNewMode ? 'INSERT' : 'UPDATE',
@@ -119,46 +190,52 @@ export class ContractFlowService {
 
         deductions: DataCleaner.cleanDeductionItems(step2Data || []),
 
-        // 🎯 關鍵修正：傳遞合約日期給 DataCleaner
+        // 關鍵修正：傳遞合約日期給 DataCleaner
         commissions: DataCleaner.cleanCommissionData(
           step3Data || [],
           contractStartDate,
           contractEndDate
         ),
 
-        conditions: DataCleaner.cleanConditionData(step4Data || [], this.getCurrentCommissionType()),
+        conditions: cleanedConditions, // 使用已經處理過的結果
 
         metadata: {
           talentId: modeInfo.talentId,
           contractId: modeInfo.contractId,
-          commissionType: this.getCurrentCommissionType(),
+          commissionType: currentCommissionType,
           isNewContract: modeInfo.isNewMode,
           submittedAt: new Date().toISOString(),
-          totalOperations: this.calculateTotalOperations(step2Data, step3Data, step4Data)
+          totalOperations: this.calculateTotalOperations(step2Data, step3Data, safeStep4Data)
         }
       };
 
-      // 🎯 檢測抽成別變更
+      // 檢測抽成別變更
       const commissionTypeChange = this.detectCommissionTypeChange();
       if (commissionTypeChange) {
         cleanData.commissionTypeChange = commissionTypeChange;
       }
 
-      console.log('✅ 清理後的提交資料生成完成');
-      console.log('📊 清理後資料統計:', {
+      console.log('清理後的提交資料生成完成');
+      console.log('清理後資料統計:', {
         contractOperation: cleanData.contractInfo.operation,
         deductionInserts: cleanData.deductions.toInsert.length,
         deductionUpdates: cleanData.deductions.toUpdate.length,
         deductionDeletes: cleanData.deductions.toDelete.length,
         commissionMasterInserts: cleanData.commissions.masters.toInsert.length,
         commissionMasterUpdates: cleanData.commissions.masters.toUpdate.length,
+        conditionOperations: Object.entries(cleanData.conditions).map(([key, value]: [string, any]) => ({
+          type: key,
+          inserts: value?.toInsert?.length || 0,
+          updates: value?.toUpdate?.length || 0,
+          deletes: value?.toDelete?.length || 0
+        })),
         totalOperations: cleanData.metadata.totalOperations
       });
 
-      // 🎯 驗證 Commission Master 的日期是否正確設定
+      // 驗證 Commission Master 的日期是否正確設定
       if (cleanData.commissions.masters.toInsert.length > 0) {
         const firstMaster = cleanData.commissions.masters.toInsert[0];
-        console.log('🔍 驗證第一個 Commission Master 的日期:', {
+        console.log('驗證第一個 Commission Master 的日期:', {
           tlt_id: firstMaster.tlt_id,
           cag_bdate: firstMaster.cag_bdate,
           cag_edate: firstMaster.cag_edate,
@@ -169,12 +246,26 @@ export class ContractFlowService {
         });
       }
 
-      console.log('🚀 最終要送出的完整 JSON:');
+      // 特別檢查條件資料的處理結果
+      console.log('條件資料處理結果:', {
+        原始step4長度: safeStep4Data.length,
+        處理後條件: Object.keys(cleanData.conditions),
+        各條件統計: Object.entries(cleanData.conditions).reduce((acc, [key, value]: [string, any]) => {
+          acc[key] = {
+            toInsert: value?.toInsert?.length || 0,
+            toUpdate: value?.toUpdate?.length || 0,
+            toDelete: value?.toDelete?.length || 0
+          };
+          return acc;
+        }, {} as any)
+      });
+
+      console.log('最終要送出的完整 JSON:');
       console.log(JSON.stringify(cleanData, null, 2));
       return cleanData;
 
     } catch (error) {
-      console.error('❌ 生成清理後資料時發生錯誤:', error);
+      console.error('生成清理後資料時發生錯誤:', error);
       throw new Error(`生成提交資料失敗: ${error}`);
     }
   }
@@ -708,19 +799,41 @@ export class ContractFlowService {
   }
 
   /**
-   * 🎯 修正：儲存第4步資料（條件設定）
+   * 儲存第4步資料（條件設定）
    */
   saveStep4Data(data: ConditionItem[]): void {
     if (this.isViewMode()) {
-      console.log('🔍 檢視模式，跳過 Step4 資料儲存');
+      console.log('🔒 檢視模式，跳過 Step4 資料儲存');
       return;
     }
+
+    console.log('💾 準備儲存 Step4 資料:', data);
+    console.log('資料類型:', typeof data, '是否為陣列:', Array.isArray(data));
+    console.log('資料長度:', data?.length);
+
     if (this.contractData.contractId) {
+      // 確保資料格式正確
       this.contractData.step4 = Array.isArray(data) ? data : [data];
       this.contractData.metadata.lastModified = new Date();
       this.contractData.metadata.version += 1;
       this.updateWorkflowStatus(WorkflowStep.CONDITION);
+
+      // 立即儲存到 storage
       this.saveToStorage();
+
+      console.log('✅ Step4 資料儲存完成，項目數:', this.contractData.step4.length);
+
+      // 驗證儲存結果
+      const verification = this.getStep4Data();
+      console.log('🔍 儲存驗證:', {
+        storageItemCount: verification?.length || 0,
+        originalItemCount: data?.length || 0,
+        isConsistent: (verification?.length || 0) === (data?.length || 0)
+      });
+
+    } else {
+      console.error('❌ 無 contractId，無法儲存 Step4 資料');
+      throw new Error('無法儲存 Step4 資料：缺少 contractId');
     }
   }
 
@@ -1190,8 +1303,20 @@ export class ContractFlowService {
   /**
    * 取得第4步資料（條件設定） - 新增別名方法
    */
+  // 在 contract-flow.service.ts 中
   getStep4Data(): ConditionItem[] {
-    return this.contractData.step4;
+    console.log('📖 讀取 Step4 資料...');
+    console.log('contractData.step4:', this.contractData.step4);
+    console.log('資料類型:', typeof this.contractData.step4);
+    console.log('是否為陣列:', Array.isArray(this.contractData.step4));
+
+    if (this.contractData.step4) {
+      console.log('✅ 找到 Step4 資料，項目數量:', this.contractData.step4.length);
+      return this.contractData.step4;
+    } else {
+      console.warn('⚠️ 沒有找到 Step4 資料，返回空陣列');
+      return [];
+    }
   }
 
   /**
