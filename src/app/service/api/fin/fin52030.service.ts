@@ -1,8 +1,8 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable, signal } from '@angular/core';
-import { ErrorHandlerService } from '@service/system/error-handler.service';
 import { BaseQueryResponse, DropdownOption } from '@shared/models/api/base-api.interface';
-import { catchError, finalize, Subject, take, takeUntil, tap } from 'rxjs';
+import { NGXLogger } from 'ngx-logger';
+import { finalize, Subject, take, takeUntil, tap } from 'rxjs';
 import { environment } from 'src/environments/environment';
 
 const apiUrl = environment.ApiUrl;
@@ -11,6 +11,7 @@ const apiUrl = environment.ApiUrl;
 export class FIN52030Service {
 
   public readonly FIN52030Data = signal<unknown[]>([]);
+  public readonly FIN52030DetailData = signal<unknown[]>([]);
   public readonly subpoenaTypes = signal<DropdownOption[]>([]);
   public readonly creators = signal<DropdownOption[]>([]);
   public readonly modifiers = signal<DropdownOption[]>([]);
@@ -24,8 +25,8 @@ export class FIN52030Service {
   public modifierLoading = !1;
 
   constructor(
-    public http: HttpClient,
-    private errorHandler: ErrorHandlerService,
+    private readonly http: HttpClient,
+    private readonly logger: NGXLogger,
   ) { }
 
   public getSubpoenaTypes(): void {
@@ -43,10 +44,23 @@ export class FIN52030Service {
       take(1),
       takeUntil(this.tableCancel$),
       tap(res => this.FIN52030Data.set(res.Data)),
-      catchError(error => this.errorHandler.handleError(error)),
       finalize(() => {
         this.tableLoading = !1;
-        console.log('查詢FIN52030結果:', [this.FIN52030Data()]);
+        this.logger.debug('查詢FIN52030結果:', [this.FIN52030Data()]);
+      })
+    ).subscribe();
+  };
+
+  public loadFIN52030Detail(payload: unknown): void {
+    this.tableCancel$.next();
+    this.tableLoading = !0;
+    this.http.post<BaseQueryResponse<unknown>>(`${apiUrl}/FIN0000/FIN2000/queryFIN52030_detail`, payload).pipe(
+      take(1),
+      takeUntil(this.tableCancel$),
+      tap(res => this.FIN52030DetailData.set(res.Data)),
+      finalize(() => {
+        this.tableLoading = !1;
+        this.logger.debug('查詢FIN52030 Detail結果:', [this.FIN52030DetailData()]);
       })
     ).subscribe();
   };
@@ -58,10 +72,9 @@ export class FIN52030Service {
       take(1),
       takeUntil(this.creatorCancel$),
       tap(res => this.creators.set(res.Data)),
-      catchError(error => this.errorHandler.handleError(error)),
       finalize(() => {
         this.creatorLoading = !1;
-        console.log('查詢Creaters結果:', [this.creators()]);
+        this.logger.debug('查詢Creaters結果:', [this.creators()]);
       })
     ).subscribe();
   };
@@ -73,12 +86,10 @@ export class FIN52030Service {
       take(1),
       takeUntil(this.modifierCancel$),
       tap(res => this.modifiers.set(res.Data)),
-      catchError(error => this.errorHandler.handleError(error)),
       finalize(() => {
         this.modifierLoading = !1;
-        console.log('查詢Modifiers結果:', [this.modifiers()]);
+        this.logger.debug('查詢Modifiers結果:', [this.modifiers()]);
       })
     ).subscribe();
   };
-
 }

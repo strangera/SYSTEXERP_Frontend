@@ -41,9 +41,11 @@ export class FIN52030Component extends BasicQueryPageComponent<unknown> implemen
   });
   public readonly qf = signal(this.queryForm.controls);
 
-  public readonly totalRecords = computed(() => this.service.FIN52030Data().length);
+  public filteredData = computed(() => {
+    return this.service.FIN52030Data();
+  });
 
-  public filteredData = signal<unknown[]>([]);
+  public readonly totalRecords = computed(() => this.filteredData().length);
 
   public columns: Column[] = [
     { field: 'isDeleted', header: '是否刪除' },
