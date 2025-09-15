@@ -111,7 +111,7 @@
                    (rowEditInit)="onRowInit($event)"
                    (rowEditSave)="onRowEdit($event)"
                    (rowEditCancel)="onRowEdit($event)"
-                   [loading]="loading"
+                   [loading]="service.tableLoading"
                    [dataKey]="'Apply_No'"
                    [tableKey]="'ASS21020_detail'"
                    [columns]="columns">
