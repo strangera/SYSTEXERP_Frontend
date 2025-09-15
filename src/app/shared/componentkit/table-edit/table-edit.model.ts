@@ -1,4 +1,4 @@
-export interface Column {
+export interface EditColumn {
   field: string;     // 欄位名稱 (資料的欄位名稱)
   header: string;    // 欄位標題 (顯示在表格上的標題)
   format?: (value: any, index?: number, rowData?: any) => string | number | null; // 格式化(日期、時間...)
@@ -18,9 +18,10 @@ export interface Column {
   optionValue?: string; // 下拉選單 optionValue
   templateLabel?: string; // 模板欄位 label
   showClear?: boolean; // 是否顯示清除按鈕
-
-  onFocus?: (rowData: any, value: any, col: Column, index: number) => void;
-  onBlur?: (rowData: any, value: any, col: Column, index: number) => void;
+  // 事件
+  calculate?: (rowData: any, value: any) => Record<string, any>;
+  onFocus?: (rowData: any, value: any, col: EditColumn, index: number) => void;
+  onBlur?: (rowData: any, value: any, col: EditColumn, index: number) => void;
 }
 // 欄位變更事件
 export interface FieldChangeEvent {

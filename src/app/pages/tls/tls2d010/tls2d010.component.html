@@ -1,8 +1,16 @@
 <div class="card">
   <div class="flex gap-2 mb-2">
     <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
-    <app-button btnType="create" (click)="onCreate()" label="新增扣款"></app-button>
-    <app-button btnType="create" label="新增專櫃扣款"></app-button>
+    <app-button
+      btnType="create"
+      (clickEvent)="onCreate({type: 'normal'})"
+      label="新增扣款"
+    ></app-button>
+    <app-button
+      btnType="create"
+      (clickEvent)="onCreate({type: 'counter'})"
+      label="新增專櫃扣款"
+    ></app-button>
   </div>
   <p-accordion>
     <p-accordionTab
@@ -41,8 +49,7 @@
               controlName="AccNo"
               [control]="queryForm.controls.AccNo"
               [submitted]="submitted"
-            >
-            </app-multi-select>
+            ></app-multi-select>
           </div>
         </div>
         <div class="grid p-fluid">
@@ -55,7 +62,7 @@
               [submitted]="submitted"
             ></app-multi-select>
           </div>
-        <div class="col-12 md:col-6 lg:col-4">
+          <div class="col-12 md:col-6 lg:col-4">
             <app-calendar
               label="扣款年月"
               calendarType="dateYearOne"
@@ -98,15 +105,22 @@
             ></app-dropdown>
           </div>
           <div class="col-12 md:col-6 lg:col-4">
-            <app-radiobutton label="是否開立發票" groupname="GUI_FLAGOption" [control]="queryForm.controls.GUI_FLAG"
-              [submitted]="submitted" [options]="[
+            <app-radiobutton
+              label="是否開立發票"
+              groupname="GUI_FLAGOption"
+              [control]="queryForm.controls.GUI_FLAG"
+              [submitted]="submitted"
+              [options]="[
                 { value: 'Y', label: '是' },
                 { value: 'N', label: '否' },
-              ]"></app-radiobutton>
+              ]"
+            ></app-radiobutton>
           </div>
         </div>
 
-       <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
+        <div
+          class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3"
+        >
           <app-button btnType="clear" [form]="queryForm"></app-button>
           <app-button btnType="query" [loading]="loading"></app-button>
         </div>

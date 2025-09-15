@@ -277,7 +277,7 @@ export class TLS52050CRUComponent extends BasicCruPageComponent<ITLS52050Data> i
     this.dialogVisible = false;
     this.data = [...this.data, ...this.selectedItemsDialog.map(item => ({
       ...item,
-      CRN_SubQty: 0,
+      CRN_SubQty: 1,
       CRN_BuyPrc: item.PLU_SalePrc_UNI,
       CRN_SalePrc: item.PLU_SalePrc,
       CRN_Remark: ''

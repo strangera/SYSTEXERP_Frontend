@@ -121,8 +121,6 @@ export const formatYYYYMM = (value: string | Date | null): string => {
   if (value instanceof Date) {
     const year = value.getFullYear().toString();
     const month = String(value.getMonth() + 1).padStart(2, '0');
-    console.log(year, month);
-
     return `${year}/${month}`;
   }
 

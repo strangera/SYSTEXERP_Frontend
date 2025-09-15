@@ -49,14 +49,17 @@ import { createPaginationConfig } from '../../../shared/componentkit/table/table
 })
 export class TLS44010Component extends BasicQueryPageComponent<any> implements OnInit {
   queryForm = this.formBuilder.group({
-    ECR_No: [], // 收銀機編號
-    TLT_No:[], // 機台編號
-    tlt_building: [], // 館別
-    tlt_floor: [], // 樓層
-    EOS_IP: [], // 收銀機ip
+    ECR_No: this.formBuilder.control<string[]>([]),
+    TLT_No: this.formBuilder.control<string[]>([]),
+    tlt_building: this.formBuilder.control<string[]>([]),
+    tlt_floor: this.formBuilder.control<string[]>([]),
+    area_no: this.formBuilder.control<string[]>([]),
+    EOS_IP: this.formBuilder.control<string>(''),
+    EOS_Online: this.formBuilder.control<string>(''),
+    Day: this.formBuilder.control<number>(0),
     ...createPaginationConfig([{ field: 'ECR_No', order: 1 }]),
-
   });
+
   items: MenuItem[] = [];
   activeItem: MenuItem | undefined;
 
@@ -127,7 +130,47 @@ export class TLS44010Component extends BasicQueryPageComponent<any> implements O
 
   onSubmit(form: FormGroup) {
     this.loading = true;
-    this.tls44010Service.queryTLS44010(form.value).subscribe({
+
+    // 取出表單值
+    const rawValue = form.value;
+
+    // 轉換需要陣列的欄位
+    const payload = {
+      ...rawValue,
+      PageSize: rawValue.PageSize ?? 20,
+      PageIndex: rawValue.PageIndex ?? 1,
+      OrderBy: rawValue.OrderBy ?? '',
+      Offset: rawValue.Offset ?? 0,
+
+      // 確保是陣列
+      ECR_No: Array.isArray(rawValue.ECR_No)
+        ? rawValue.ECR_No
+        : rawValue.ECR_No
+          ? [rawValue.ECR_No]
+          : [],
+      TLT_No: Array.isArray(rawValue.TLT_No)
+        ? rawValue.TLT_No
+        : rawValue.TLT_No
+          ? [rawValue.TLT_No]
+          : [],
+      tlt_building: Array.isArray(rawValue.tlt_building)
+        ? rawValue.tlt_building
+        : rawValue.tlt_building
+          ? [rawValue.tlt_building]
+          : [],
+      tlt_floor: Array.isArray(rawValue.tlt_floor)
+        ? rawValue.tlt_floor
+        : rawValue.tlt_floor
+          ? [rawValue.tlt_floor]
+          : [],
+      area_no: Array.isArray(rawValue.area_no)
+        ? rawValue.area_no
+        : rawValue.area_no
+          ? [rawValue.area_no]
+          : []
+    };
+
+    this.tls44010Service.queryTLS44010(payload).subscribe({
       next: (res) => {
         this.data = res?.Data || [];
         this.filteredData = [...this.data];
@@ -142,6 +185,7 @@ export class TLS44010Component extends BasicQueryPageComponent<any> implements O
       }
     });
   }
+
 
   onTabChange(item: MenuItem) {
     this.activeItem = item;

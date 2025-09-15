@@ -120,21 +120,17 @@ export class TLS23050Component extends BasicQueryPageComponent<any> {
 fetchTLS23050 = (evt: LazyLoadEvent) => {
   const val = this.queryForm.getRawValue() as any;
 
-  // ---- 分頁/排序：事件優先，其次表單/預設 ----
   const pageIndex = Number.isFinite(evt?.pageIndex) ? Number(evt!.pageIndex) : Number(val?.pageIndex ?? 1);
   const pageSize  = Number.isFinite(evt?.pageSize)  ? Number(evt!.pageSize)  : Number(val?.pageSize  ?? 20);
   const sortBy    = Array.isArray((evt as any)?.SortBy) && (evt as any).SortBy.length
     ? (evt as any).SortBy
     : (Array.isArray(val?.SortBy) && val.SortBy.length ? val.SortBy : this.defaultSort);
 
-  // ---- 單日 → 起迄（起 00:00:00；迄 23:59:59）----
-  const TXN_DateStart = this.toIso(val?.TXN_Date, false);
-  const TXN_DateEnd   = this.toIso(val?.TXN_Date, true);
+  // ⭐ 只取單日
+  const TXN_Date = this.toDateOnly(val?.TXN_Date);
 
-  // ---- 組 payload（與 onSubmit 對齊）----
   const payload: any = {
-    TXN_DateStart,
-    TXN_DateEnd,
+    TXN_Date,                                 // ⭐ 改這裡
     rece_yn      : val?.rece_yn ?? undefined,
     tlt_building : val?.tlt_building ?? undefined,
     tlt_floor    : (Array.isArray(val?.tlt_floor) && val.tlt_floor.length) ? val.tlt_floor : undefined,
@@ -146,14 +142,12 @@ fetchTLS23050 = (evt: LazyLoadEvent) => {
     SortBy: sortBy,
   };
 
-  // 清空空值
   Object.keys(payload).forEach((k) => {
     const v = payload[k];
     if (v === '' || v === null || v === undefined) delete payload[k];
     if (Array.isArray(v) && v.length === 0) delete payload[k];
   });
 
-  // ---- 呼叫 API 並轉成 Table2 需要的結構 ----
   return this.tls23050Service.queryTLS23050(payload).pipe(
     map((res: any) => {
       const first =
@@ -248,49 +242,45 @@ fetchTLS23050 = (evt: LazyLoadEvent) => {
 
 
   // 送出查詢
-  onSubmit(form: FormGroup): void {
-    this.handleSubmit(form, () => {
-      const val = this.queryForm.value as any;
+ onSubmit(form: FormGroup): void {
+  this.handleSubmit(form, () => {
+    const val = this.queryForm.value as any;
 
-      // ✅ 單日轉起迄（起=00:00:00；迄=23:59:59）
-      const TXN_DateStart = this.toIso(val?.TXN_Date, false);
-      const TXN_DateEnd   = this.toIso(val?.TXN_Date, true);
+    // ⭐ 只取單日
+    const TXN_Date = this.toDateOnly(val?.TXN_Date);
 
-      const payload: any = {
-        TXN_DateStart,
-        TXN_DateEnd,
-        rece_yn: val?.rece_yn ?? undefined,
-        tlt_building: val?.tlt_building ?? undefined,
-        tlt_floor: Array.isArray(val?.tlt_floor) && val.tlt_floor.length ? val.tlt_floor : undefined,
-        org_id: Array.isArray(val?.org_id) && val.org_id.length ? val.org_id : undefined,
-        ECR_No: Array.isArray(val?.ECR_No) && val.ECR_No.length ? val.ECR_No : undefined,
+    const payload: any = {
+      TXN_Date,                               // ⭐ 改這裡
+      rece_yn: val?.rece_yn ?? undefined,
+      tlt_building: val?.tlt_building ?? undefined,
+      tlt_floor: Array.isArray(val?.tlt_floor) && val?.tlt_floor.length ? val.tlt_floor : undefined,
+      org_id: Array.isArray(val?.org_id) && val?.org_id.length ? val.org_id : undefined,
+      ECR_No: Array.isArray(val?.ECR_No) && val?.ECR_No.length ? val.ECR_No : undefined,
 
-        // ⬇⬇ 分頁/排序（後端不需要 offset/OrderBy，我們也不傳）
-        pageSize : val?.pageSize,
-        pageIndex: val?.pageIndex,
-        SortBy   : Array.isArray(val?.SortBy) ? val.SortBy : this.defaultSort,
-      };
+      pageSize : val?.pageSize,
+      pageIndex: val?.pageIndex,
+      SortBy   : Array.isArray(val?.SortBy) ? val.SortBy : this.defaultSort,
+    };
 
-      // 清理空值
-      Object.keys(payload).forEach((k) => {
-        const v = payload[k];
-        if (v === '' || v === null || v === undefined) delete payload[k];
-        if (Array.isArray(v) && v.length === 0) delete payload[k];
-      });
+    Object.keys(payload).forEach((k) => {
+      const v = payload[k];
+      if (v === '' || v === null || v === undefined) delete payload[k];
+      if (Array.isArray(v) && v.length === 0) delete payload[k];
+    });
 
-      // ✅ 匯出沿用同一份參數
-      this.historyRequestBody = { ...payload };
+    // ⭐ 匯出用參數一起更新
+    this.historyRequestBody = { ...payload };
 
-      this.loading = true;
-      this.messageService?.blockUi();
+    this.loading = true;
+    this.messageService?.blockUi();
 
-      this.tls23050Service.queryTLS23050(payload).pipe(
-        finalize(() => {
-          this.loading = false;
-          this.messageService?.unblockUi();
-        })
-      ).subscribe({
-        next: (res) => {
+    this.tls23050Service.queryTLS23050(payload).pipe(
+      finalize(() => {
+        this.loading = false;
+        this.messageService?.unblockUi();
+      })
+    ).subscribe({
+      next: (res) => {
           // 取第一個包（你的回傳格式 Data[0]）
           const first = Array.isArray(res?.Data) && res.Data.length > 0 ? res.Data[0] : null;
 
@@ -623,4 +613,14 @@ fetchTLS23050 = (evt: LazyLoadEvent) => {
     TXN_ReturnAmt: 'Subtotal_TXN_ReturnAmt',
     TXN_CancelAmt: 'Subtotal_TXN_CancelAmt',
   };
+  /** 只回 YYYY-MM-DD（本地時區） */
+private toDateOnly(val: any): string | undefined {
+  if (!val) return undefined;
+  const d = typeof val === 'string' ? new Date(val) : (val as Date);
+  if (isNaN(d.getTime())) return undefined;
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
 }

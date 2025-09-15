@@ -16,7 +16,7 @@ import { ButtonComponent } from '../../../shared/componentkit/button/button.comp
 import { InputTextareaComponent } from '@shared/componentkit/input-textarea/input-textarea.component';
 import { Tls41040Service } from '../../../service/api/tls/tls41040.service';
 import { TableEditComponent } from '@shared/componentkit/table-edit/table-edit.component';
-import { Column } from '@shared/componentkit/table-edit/table-edit.model';
+import { EditColumn } from '@shared/componentkit/table-edit/table-edit.model';
 
 // ===== 定義 TLS41040 明細型別 =====
 export interface TLS41040Detail {
@@ -77,7 +77,7 @@ export class TLS41040CRUComponent extends BasicCruPageComponent<any> implements 
   ];
 
   // Table 欄位
-  columns: Column[] = [];
+  columns: EditColumn[] = [];
 
   // 下拉選項
   SYS3700_Options: { value: string; label: string }[] = [];

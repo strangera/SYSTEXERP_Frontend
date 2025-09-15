@@ -41,7 +41,7 @@ export function validateMinNumber(min: number): (value: string | number, rowData
 
     return {
       isValid,
-      errorMessage: isValid ? [] : [`「${header}」不能小於 ${min}`, '格式錯誤'],
+      errorMessage: isValid ? [] : [`「不能小於 ${min}`, '格式錯誤'],
     };
   };
 }
@@ -57,7 +57,7 @@ export function validateDuplicate(
   const duplicate = data.some(item => item[field] === value && item !== rowData);
   return {
     isValid: !duplicate,
-    errorMessage: [`「${header}」已重複`, '資料錯誤'],
+    errorMessage: [`已重複`, '資料錯誤'],
   };
 }
 
@@ -71,7 +71,7 @@ export function validateRequired(
 ): { isValid: boolean; errorMessage: string[] } {
   return {
     isValid: value !== null && value !== '' && value !== undefined,
-    errorMessage: [`「${header}」為必填項目，欄位不能為空`, '資料錯誤'],
+    errorMessage: [`為必填項目，欄位不能為空`, '資料錯誤'],
   };
 }
 
@@ -80,7 +80,7 @@ export function validateMaxLength(maxLength: number): (value: string, rowData: a
   return (value: string, rowData: any, data: any[], field: string, header: string): { isValid: boolean; errorMessage: string[] } => {
     return {
       isValid: value.length <= maxLength,
-      errorMessage: [`「${header}」長度不能超過 ${maxLength} 個字`, '格式錯誤'],
+      errorMessage: [`長度不能超過 ${maxLength} 個字`, '格式錯誤'],
     };
   };
 }
@@ -95,7 +95,7 @@ export function validateMaxNumber(max: number): (value: string, rowData: any, da
 
     return {
       isValid,
-      errorMessage: isValid ? [] : [`「${header}」不能超過 ${max}`, '格式錯誤'],
+      errorMessage: isValid ? [] : [`不能超過 ${max}`, '格式錯誤'],
     };
   };
 }
