@@ -77,7 +77,7 @@ export class FIN11020CRUComponent extends BasicCruPageComponent<MainInvoiceData>
     this.initializePage('FIN11020', this.dataForm);
     if (this.isFormCreateable) {
       this.minDate = this.setMinDate();
-      this.dataForm.get('GUI_YYMM')?.setValidators([Validators.required, this.validationService.oddMonthValidator]);
+      this.dataForm.get('GUI_YYMM')?.setValidators([Validators.required, this.validationService.oddMonthValidator, this.validationService.minMonthValidator]);
     }
     const totQtyValue = this.dataForm.get('GUI_TotQty')?.value;
     if (totQtyValue && totQtyValue !== 0) {
