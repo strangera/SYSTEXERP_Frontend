@@ -72,7 +72,7 @@
 </div>
 <div class="card">
   <app-table [data]="data" [columns]="columns" [totalRecords]="totalRecords" [showReportMode]="true"
-    [multiSortMeta]="[{ field: 'tlt_building', order: 1 }]" [columnGroup]="columnGroup" (detail)="onDetail1($event)"
+    [multiSortMeta]="[{ field: 'tlt_kind', order: 1 }]" [columnGroup]="columnGroup" (detail)="onDetail1($event)"
     (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)" [lazy]="true" [loading]="loading"
     [showManage]="true" [showEdit]="false" [showDelete]="false" [showExcel]="false">
     <header>
