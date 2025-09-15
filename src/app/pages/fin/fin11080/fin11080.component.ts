@@ -51,6 +51,13 @@ export class FIN11080Component extends BasicQueryPageComponent<FIN11080Data> imp
     { field: 'CNT', header: '發票是否重號', visible: true }
   ];
 
+  expansionColumns: Column[] = [
+    { field: 'TXN_Date', header: '交易日期', hidden: true, format: formatDate },
+    { field: 'ECR_No', header: '收銀機號', visible: true },
+    { field: 'TXN_No', header: '交易序號', visible: true },
+    { field: 'TXN_GUINo', header: '發票號碼', visible: true }
+  ]
+
   constructor(
     private fin11080Service: FIN11080Service,
     private datePipe: DatePipe
@@ -77,6 +84,14 @@ export class FIN11080Component extends BasicQueryPageComponent<FIN11080Data> imp
           this.totalRecords = response.TotalCount;
           this.queryStateService.setQueryState(this.ProgNo, frm.getRawValue());
         });
+    });
+  }
+
+  loadExpansionData = (rowData: FIN11080Data) => {
+    return this.fin11080Service.queryFIN11080_Detail({
+      MID: 0,
+      SYS_StoreNo: '10',
+      TXN_Date: rowData.TXN_Date,
     });
   }
 }
