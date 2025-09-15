@@ -27,6 +27,7 @@ import { Column, createPaginationConfig } from '../../../shared/componentkit/tab
 import { DropdownOption } from '../../../shared/models/api/base-api.interface';
 import { CRUDStatus } from '../../../shared/models/system/CRUDstatus';
 import { untilDestroyed } from '@ngneat/until-destroy';
+import { getSYS1000Options } from '@service/system/sys1000.service';
 
 
 @Component({
@@ -100,8 +101,10 @@ export class FIN13030Component extends BasicQueryPageComponent<FIN13030Data> imp
   ];
 
 
-  exportMethodOptions: DropdownOption[] = [];
-  exportTypeOptions: DropdownOption[] = [];
+  // 外銷方式選項
+  exportMethodOptions = getSYS1000Options('ExportMethod');
+  // 出口報單類別選項
+  exportTypeOptions = getSYS1000Options('INV_ExportType');
 
   constructor(
     private fin13030Service: FIN13030Service,
@@ -113,7 +116,6 @@ export class FIN13030Component extends BasicQueryPageComponent<FIN13030Data> imp
 
   ngOnInit(): void {
     this.initializePage('FIN13030', 'fin/fin13030cru', this.queryForm, (form) => this.onSubmit(form));
-    this.loadOptions();
   }
 
   onSubmit(frm: FormGroup) {
@@ -135,13 +137,6 @@ export class FIN13030Component extends BasicQueryPageComponent<FIN13030Data> imp
           this.queryStateService.setQueryState(this.ProgNo, frm.getRawValue());
         });
     });
-  }
-
-  loadOptions() {
-    // 取得外銷方式選項
-    this.exportMethodOptions = this.fin13030Service.getExportMethodOptions();
-    // 取得出口報單類別選項
-    this.exportTypeOptions = this.fin13030Service.getINV_ExportTypeOptions();
   }
 
   deleteRow(rowData: FIN13030Data[]) {

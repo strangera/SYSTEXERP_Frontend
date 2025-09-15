@@ -54,7 +54,7 @@ export class ASS21010Service implements OnDestroy {
       take(1),
       takeUntil(this.engMeterNoCancel$),
       tap(response => this.engMeterNoSignal.set(response.Data)),
-      catchError(error => this.errorHandler.handleError(error)),
+      // catchError(error => this.errorHandler.handleError(error)),
       finalize(() => {
         this.engMeterNoLoading = !1;
         console.log('查詢EngMeterNo結果:', [this.engMeterNoSignal()]);
@@ -69,7 +69,7 @@ export class ASS21010Service implements OnDestroy {
       take(1),
       takeUntil(this.locationCancel$),
       tap(response => this.locationSignal.set(response.Data)),
-      catchError(error => this.errorHandler.handleError(error)),
+      // catchError(error => this.errorHandler.handleError(error)),
       finalize(() => {
         this.locationLoading = !1;
         console.log('查詢Location結果:', [this.locationSignal()]);
@@ -83,7 +83,7 @@ export class ASS21010Service implements OnDestroy {
     this.http.post<Omit<BaseQueryResponse<unknown>, 'Data'> & { Data: { Data: ASS21010Data[]; TotalCount: number; }; }>(`${apiUrl}/ASS0000/ASS2000/QueryASS21010`, payload).pipe(
       take(1),
       tap(response => this.ASS21010Data.set(response.Data.Data)),
-      catchError(error => this.errorHandler.handleError(error)),
+      // catchError(error => this.errorHandler.handleError(error)),
       finalize(() => this.tableLoading = !1),
     ).subscribe();
   }
@@ -92,7 +92,7 @@ export class ASS21010Service implements OnDestroy {
     return this.http.post<ASS21010UpdateStatus>(`${apiUrl}/ASS0000/ASS2000/updateASS21010`, payload).pipe(
       take(1),
       map(res => res.Data),
-      catchError(error => this.errorHandler.handleError(error))
+      // catchError(error => this.errorHandler.handleError(error))
     );
   }
 
@@ -100,7 +100,7 @@ export class ASS21010Service implements OnDestroy {
     return this.http.post<ASS21010UpdateStatus>(`${apiUrl}/ASS0000/ASS2000/deleteASS21010`, payload).pipe(
       take(1),
       map(res => res.Data),
-      catchError(error => this.errorHandler.handleError(error))
+      // catchError(error => this.errorHandler.handleError(error))
     );
   }
 
@@ -143,7 +143,7 @@ export class ASS21010Service implements OnDestroy {
           this.messageService.errorBubble(`Response body is empty!`, `${type} Export Fail`);
         }
       }),
-      catchError(err => this.errorHandler.handleError(err)),
+      // catchError(err => this.errorHandler.handleError(err)),
       finalize(() => this.exportLoading = !1)
     ).subscribe();
   }
