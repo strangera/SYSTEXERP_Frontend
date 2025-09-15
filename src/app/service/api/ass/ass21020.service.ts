@@ -65,7 +65,7 @@ export class ASS21020Service implements OnDestroy {
         this.engMeterNoSignal.set(Data);
         for (const item of Data) this.engMeterNoMap.set(item.ENG_MeterNo, item);
       }),
-      catchError(error => this.errorHandler.handleError(error)),
+      // catchError(error => this.errorHandler.handleError(error)),
       finalize(() => {
         this.engMeterNoLoading = !1;
         console.log('查詢EngMeterNo結果:', [this.engMeterNoSignal()]);
@@ -81,7 +81,7 @@ export class ASS21020Service implements OnDestroy {
       take(1),
       takeUntil(this.tableCancel$),
       tap(({ Data }) => this.ASS21020Data.set(Data.map((item, index) => ({ ...item, Id: index + 1 })))),
-      catchError(error => this.errorHandler.handleError(error)),
+      // catchError(error => this.errorHandler.handleError(error)),
       finalize(() => {
         this.tableLoading = !1;
         console.log('查詢ASS21020結果:', [this.ASS21020Data()]);
@@ -99,7 +99,7 @@ export class ASS21020Service implements OnDestroy {
         this.tltNoSignal.set(Data);
         for (const item of Data) this.tltByFlagMap.set(item.TLT_No, item);
       }),
-      catchError(error => this.errorHandler.handleError(error)),
+      // catchError(error => this.errorHandler.handleError(error)),
       finalize(() => {
         this.queryTltByFlagLoading = !1;
         console.log('查詢queryTltByFlag結果:', [this.tltByFlagMap, this.tltNoSignal()]);
@@ -111,7 +111,7 @@ export class ASS21020Service implements OnDestroy {
     return this.http.post<ASS21020UpdateStatus>(`${apiUrl}/ASS0000/ASS2000/updateASS21020`, { UpdateASS21020Datas: payload }).pipe(
       take(1),
       map(({ Data }) => Data),
-      catchError(error => this.errorHandler.handleError(error)),
+      // catchError(error => this.errorHandler.handleError(error)),
     );
   }
 
@@ -119,7 +119,7 @@ export class ASS21020Service implements OnDestroy {
     return this.http.post<ASS21020UpdateStatus>(`${apiUrl}/ASS0000/ASS2000/deleteASS21020`, payload).pipe(
       take(1),
       map(({ Data }) => Data),
-      catchError(error => this.errorHandler.handleError(error)),
+      // catchError(error => this.errorHandler.handleError(error)),
     );
   }
 
