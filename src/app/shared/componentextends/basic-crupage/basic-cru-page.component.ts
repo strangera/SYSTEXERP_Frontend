@@ -71,6 +71,7 @@ export abstract class BasicCruPageComponent<T> {
     const state = this.router.lastSuccessfulNavigation?.extras.state;
     this.previousRoute = state?.['fromRoute'] || this.activatedRoute.snapshot.queryParams['fromRoute'] || document.referrer || '/account/dashboard';
     this.rowdata = state?.['rowdata'];
+    console.log(state?.['rowdata'])
     switch (state?.['crudstatus']) {
       case CRUDStatus.Create:
         this.formTitle = '新增資訊';
