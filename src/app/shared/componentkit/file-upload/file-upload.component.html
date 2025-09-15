@@ -34,7 +34,7 @@
             <i [class]="uploadIcon || 'pi pi-upload'" class="mr-2"></i>
             {{ uploadLabel || '上傳' }}
           </button>
-          <button *ngIf="showCancelButton" type="button" (click)="clearCallback()"
+          <button *ngIf="showCancelButton" type="button" (click)="clearCallback(); remove.emit()"
             [disabled]="!files || files.length === 0"
             class="p-button p-component p-button-danger p-button-sm max-w-max">
             <i [class]="cancelIcon || 'pi pi-times'" class="mr-2"></i>

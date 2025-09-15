@@ -9,9 +9,9 @@
         <div class="flex flex-column md:flex-row">
           <div class="w-full grid flex-column gap-3 py-5">
             <div class="flex flex-wrap justify-content-center align-items-center gap-2">
-              <app-file-upload #fileUpload class="col-12" name="myFile" accept=".xlsx,.xls" [multiple]="true"
+              <app-file-upload #fileUpload class="col-12" name="myFile" accept=".xlsx,.xls" [multiple]="false"
                 chooseLabel="選擇 XLS 或 XLSX 檔案" uploadLabel="上傳" cancelLabel="清除" [auto]="false" [customUpload]="true"
-                mode="advanced" (select)="files = $event.files" [loading]="loading"
+                mode="advanced" (select)="onFileSelect($event)" [loading]="loading" (remove)="onFileRemove()"
                 emptyMessage="拖曳檔案到此處或點擊「選擇 XLS 或 XLSX 檔案」按鈕。"
                 (uploadHandler)="handleCustomUpload($event)"></app-file-upload>
             </div>
@@ -30,15 +30,15 @@
             <p-divider layout="horizontal" styleClass="flex md:hidden" [align]="'center'" />
           </div>
           <div class="w-full grid p-fluid align-content-start py-5">
-            <app-calendar class="col-12" label="預算年月" controlName="budget_yymm"
+            <app-calendar class="col-12" label="預算年月" controlName="budget_yymm" calendarType="dateMonthOne"
               [control]="queryForm.controls.budget_yymm" [submitted]="submitted" />
-            <app-dropdown class="col-12 md:col-6" label="館別" controlName="building_no"
+            <app-multi-select class="col-12 md:col-6" label="館別" controlName="building_no"
               [control]="queryForm.controls.building_no" [options]="buildingOptions | async" optionLabel="Name"
               optionValue="No" [submitted]="submitted" />
-            <app-dropdown class="col-12 md:col-6" label="樓層" controlName="FLOOR_NO"
+            <app-multi-select class="col-12 md:col-6" label="樓層" controlName="FLOOR_NO"
               [control]="queryForm.controls.FLOOR_NO" [options]="floorOptions | async" optionLabel="Name"
               optionValue="No" [submitted]="submitted" />
-            <app-dropdown class="col-12" label="組織代碼/名稱" controlName="section_no"
+            <app-multi-select class="col-12" label="組織代碼/名稱" controlName="section_no"
               [control]="queryForm.controls.section_no" [options]="sectionOptions | async" optionLabel="label"
               optionValue="value" [submitted]="submitted" />
             <div class="col-12 grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">

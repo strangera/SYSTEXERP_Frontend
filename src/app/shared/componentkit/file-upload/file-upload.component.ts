@@ -113,40 +113,49 @@ export class FileUploadComponent {
   progress = 0;
 
   handleUpload(event: FileUploadEvent) {
+    console.log(event);
     this.progress = 0;
     this.upload.emit(event);
   }
 
   handleRemove(event: FileRemoveEvent) {
+    console.log(event);
     this.remove.emit(event);
   }
 
   handleSelect(event: FileSelectEvent) {
+    console.log(event);
     this.select.emit(event);
   }
 
   handleProgress(event: FileProgressEvent) {
+    console.log(event);
     this.progress = event.progress;
     this.progressFile.emit(event);
   }
 
   handleCustomUpload(event: FileUploadHandlerEvent) {
+    console.log(event);
     this.uploadHandler.emit(event);
   }
 
   handleError(event: FileUploadErrorEvent) {
+    console.log(event);
     this.errorFile.emit(event);
   }
 
   handleRemoveUploadedFile(event: RemoveUploadedFileEvent) {
+    console.log(event);
     this.removeUploadedFile.emit(event);
   }
 
   handleBeforeUpload(event: FileBeforeUploadEvent) {
+    console.log(event);
     this.beforeUpload.emit(event);
   }
 
   handleSend(event: FileSendEvent) {
+    console.log(event);
     this.send.emit(event);
   }
 }
