@@ -68,8 +68,8 @@ private lazyTimer: any = null;
     area_noList: [[] as string[]],
     bus_typeList: [[] as string[]],
     tlt_openflagList: [[] as string[]],
-    tlt_bdate_start: [this.yesterday],
-    tlt_bdate_end: [this.yesterday],
+    tlt_bdate_start: [],
+    tlt_bdate_end: [],
     tlt_edate_start: [null],
     tlt_edate_end: [null],
     tlt_term_typeList: [[] as string[]],
@@ -96,9 +96,7 @@ private lazyTimer: any = null;
   OrganizationCodeOptions: any[] = [];
 
   columns: any[] = [
-    { field: 'tlt_no', header: '專櫃編號', visible: true },
-    { field: 'tlt_name', header: '櫃位名稱', visible: true },
-    {
+        {
       field: 'tlt_building',
       header: '館別',
       visible: true,
@@ -106,6 +104,11 @@ private lazyTimer: any = null;
     },
     { field: 'floor_desc', header: '樓層', visible: true },
     { field: 'area_no', header: '區域', visible: true },
+     { field: 'org_name', header: '組織名稱', visible: true },
+    { field: 'tlt_no', header: '專櫃編號', visible: true },
+    { field: 'location_no', header: '位置編號', visible: true },
+    { field: 'tlt_name', header: '櫃位名稱', visible: true },
+
     { field: 'bus_type', header: '大分類編號', visible: true },
     { field: 'bus_type_name', header: '大分類名稱', visible: true },
     { field: 'bus_class_name', header: '商品類別', visible: true },

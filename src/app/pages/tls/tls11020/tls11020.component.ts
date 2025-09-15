@@ -120,11 +120,11 @@ export class TLS11020Component extends BasicQueryPageComponent<any> {
             this.queryStateService.setQueryState(this.ProgNo, formValue);
             
           } else {
-            this.messageService.errorBubble('查詢失敗');
+            
           }
         },
         error: () => {
-          
+          this.loading = false;
         },
         complete: () => {
           this.loading = false;

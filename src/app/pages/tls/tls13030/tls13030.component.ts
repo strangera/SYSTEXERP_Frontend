@@ -16,7 +16,7 @@ import { CalendarRangeQuickComponent } from '../../../shared/componentkit/calend
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
 import { TableComponent } from '../../../shared/componentkit/table/table.component';
 import { TranslateModule } from '@ngx-translate/core';
-import { finalize } from 'rxjs/operators';
+import { finalize, map } from 'rxjs/operators';
 
 @Component({
   selector: 'app-tls13030',
@@ -66,8 +66,8 @@ queryForm = this.formBuilder.group({
   floor_noList: [[] as string[]],
   area_noList: [[] as string[]],
   tlt_openflagList: [[] as string[]],
-  tlt_bdate_start: [this.yesterday],
-  tlt_bdate_end: [this.yesterday],
+  tlt_bdate_start: [],
+  tlt_bdate_end: [],
   tlt_edate_start: [null],
   tlt_edate_end: [null],
   cap_typeList: [[] as string[]],
@@ -79,6 +79,7 @@ queryForm = this.formBuilder.group({
   bus_typeList: [[] as string[]],
   tlt_building: ['', [Validators.maxLength(1)]],
   SortBy: [[]],
+  org_idList: [[]],
   // ✅ 統一用大寫分頁鍵（若你要初始為 0，就把 20/1 改成 0/0）
   PageSize: [20],
   PageIndex: [1],
@@ -92,11 +93,10 @@ queryForm = this.formBuilder.group({
   deductionCategoryOptions: any[] = [];
   deductionCodeNameServOptions: any[] = [];
   BUILDING_NO_Options: any[] = [];
+  organizationOptions: any[] = [];
 
   columns: any[] = [
-    { field: 'tlt_no', header: '專櫃編號', visible: true },
-    { field: 'tlt_name', header: '櫃位名稱', visible: true, style: 'text-left' },
-    {
+     {
       field: 'tlt_building',
       header: '館別',
       visible: true,
@@ -104,6 +104,13 @@ queryForm = this.formBuilder.group({
     },
     { field: 'floor_desc', header: '樓層', visible: true },
     { field: 'area_desc', header: '區域', visible: true, style: 'text-left' },
+     { field: 'org_name', header: '組織名稱', visible: true },
+    { field: 'tlt_no', header: '專櫃編號', visible: true },
+     { field: 'location_no', header: '位置編號', visible: true },
+    { field: 'tlt_name', header: '櫃位名稱', visible: true, style: 'text-left' },
+   
+    
+    
     { field: 'bus_type', header: '大分類代碼', visible: true },
     { field: 'bus_type_name', header: '大分類名稱', visible: true },
     { field: 'tlt_bdate', header: '合約起始日', visible: true },
@@ -127,7 +134,7 @@ queryForm = this.formBuilder.group({
     private bigCategoryCodeService: BigCategoryCodeService,
     private deductionService: DeductionService,
     private tls11010Service: Tls11010Service,
-    private TLS13030Service: TLS13030Service,
+    private tls13030Service: TLS13030Service,
 
   ) {
     super();
@@ -158,6 +165,17 @@ queryForm = this.formBuilder.group({
         this.queryForm.controls.cap_itemList.setValue([]);
       }
     });
+this.tls13030Service.getSYS3100DropDownList()
+  .pipe(
+    // 轉成 value-label 顯示
+    map(opts => opts.map(o => ({
+      value: o.value,
+      label: [o.value, o.label].filter(Boolean).join('-')  // 代碼-名稱
+    })))
+  )
+  .subscribe(opts => {
+    this.organizationOptions = opts;
+  });
   }
 
   // ===== lazy 事件（分頁/排序）=====
@@ -243,7 +261,7 @@ override onLazyLoadData(event: LazyLoadEvent, form: FormGroup): void {
     this.loading = true;
     this.messageService.blockUi();
 
-    this.TLS13030Service.queryTLS13030(payload).pipe(
+    this.tls13030Service.queryTLS13030(payload).pipe(
       finalize(() => {
         this.loading = false;
         this.messageService.unblockUi();
@@ -333,7 +351,7 @@ private buildPayload(val: any) {
     if (!confirmDel) return;
 
     const idList = selectedItems.map((item) => item.id);
-    this.TLS13030Service.deleteTLS13030(idList).subscribe({
+    this.tls13030Service.deleteTLS13030(idList).subscribe({
       next: () => {
         this.messageService.successBubble('刪除成功');
         this.onSubmit(this.queryForm);
