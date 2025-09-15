@@ -16,7 +16,7 @@ import { LocationOptionsService } from '../../../service/api/dropdownservice/loc
 import { ColumnDef, ExpandableEditTableComponent } from '../../../shared/componentkit/expandable-edit-table/expandable-edit-table.component';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
 import { ButtonComponent } from '../../../shared/componentkit/button/button.component';
-import { NgIf } from '@angular/common';
+import { NgClass, NgFor, NgIf } from '@angular/common';
 import { ProgressSpinnerModule } from 'primeng/progressspinner';
 import { AccordionModule } from 'primeng/accordion';
 import { DialogModule } from 'primeng/dialog';
@@ -39,6 +39,7 @@ import {
 import { ConditionDataManager } from './Services/condition-data-manager.service';
 import { TableConfigManager } from './Services/table-config-manager.service';
 import { EventHandlerManager } from './Services/event-handler-manager.service';
+import { TABLE_CONFIGURATIONS, TableConfiguration } from './models/tls13010-next3.model';
 
 @Component({
   selector: 'app-tls13010-next3',
@@ -48,7 +49,7 @@ import { EventHandlerManager } from './Services/event-handler-manager.service';
   imports: [
     MenubarComponent,
     ButtonComponent,
-    NgIf,
+    NgIf, NgFor, NgClass,
     ProgressSpinnerModule,
     AccordionModule,
     ExpandableEditTableComponent,
@@ -58,6 +59,15 @@ import { EventHandlerManager } from './Services/event-handler-manager.service';
   ]
 })
 export class Tls13010Next3Component extends BasicCruPageComponent<ConditionItem> implements OnInit, OnDestroy {
+  tableConfigurations: TableConfiguration[] = TABLE_CONFIGURATIONS;
+  globalTableSettings = {
+    forceEditMode: true,        //全域控制 forceEditMode
+    showActionColumn: false,
+    showAddButton: true,
+    showBatchDelete: true,
+    showCheckBox: true,
+    readonly: false,
+  };
 
   // ===== 狀態管理 =====
   isViewMode = false;
@@ -108,6 +118,55 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionItem>
     super();
     this.dataForm = this.formBuilder.group({});
   }
+
+  /**
+     * 獲取可見的表格配置
+     */
+  getVisibleTableConfigurations(): TableConfiguration[] {
+    const currentCommissionType = this.contractInfoData[0]?.tlt_term_type;
+
+    return this.tableConfigurations.filter(config => {
+      // 只顯示符合當前抽成類型的表格
+      return config.commissionType === currentCommissionType && config.visible;
+    });
+  }
+
+  /**
+   * 獲取表格數據
+   */
+  getTableData(tableConfig: TableConfiguration): any[] {
+    return this[tableConfig.displayDataProperty as keyof this] as any[];
+  }
+
+  /**
+   * 獲取表格欄位配置
+   */
+  getTableColumns(tableConfig: TableConfiguration): ColumnDef[] {
+    return this[tableConfig.columnsProperty as keyof this] as ColumnDef[];
+  }
+
+  /**
+   * 獲取表格設定 (支援全域設定覆蓋)
+   */
+  getTableSetting(tableConfig: TableConfiguration, settingName: keyof TableConfiguration): any {
+    // 優先使用全域設定，其次使用表格個別設定，最後使用預設值
+    const globalValue = this.globalTableSettings[settingName as keyof typeof this.globalTableSettings];
+    const tableValue = tableConfig[settingName];
+
+    return globalValue !== undefined ? globalValue : tableValue;
+  }
+
+  /**
+   * 動態調用表格相關方法
+   */
+  callTableMethod(methodName: string): void {
+    if (typeof this[methodName as keyof this] === 'function') {
+      (this[methodName as keyof this] as Function)();
+    } else {
+      console.warn(`方法 ${methodName} 不存在`);
+    }
+  }
+
 
   // ===== 生命週期方法 =====
 
@@ -490,11 +549,21 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionItem>
 
   // ===== 事件處理方法 =====
 
-  onTableSave(event: any, type: string): void {
+  onTableSave(event: any, commissionType: string): void {
+    // 根據 commissionType 轉換為對應的類型標識
+    const typeMap: { [key: string]: string } = {
+      '1': 'fixedRent',
+      '2': 'baseRentHigher',
+      '4': 'baseCommission',
+      '5': 'graduated',
+      '6': 'baseTier'
+    };
+
+    const type = typeMap[commissionType] || commissionType;
+
     const result = this.eventHandlerManager.handleTableSave(event, type, this.isViewMode);
 
     if (result.shouldSave && result.modifiedData) {
-      // 更新數據
       event.newData = result.modifiedData;
       this.saveConditionDataToWorkflow();
       this.notificationService.successBubble(
@@ -503,15 +572,43 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionItem>
     }
   }
 
-  onTableEdit(event: any, type: string): boolean {
+  onTableEdit(event: any, commissionType: string): boolean {
+    const typeMap: { [key: string]: string } = {
+      '1': 'fixedRent',
+      '2': 'baseRentHigher',
+      '4': 'baseCommission',
+      '5': 'graduated',
+      '6': 'baseTier'
+    };
+
+    const type = typeMap[commissionType] || commissionType;
     return this.eventHandlerManager.handleTableEdit(event, type, this.isViewMode);
   }
 
-  onTableCancel(event: any, type: string): void {
+  onTableCancel(event: any, commissionType: string): void {
+    const typeMap: { [key: string]: string } = {
+      '1': 'fixedRent',
+      '2': 'baseRentHigher',
+      '4': 'baseCommission',
+      '5': 'graduated',
+      '6': 'baseTier'
+    };
+
+    const type = typeMap[commissionType] || commissionType;
     this.eventHandlerManager.handleTableCancel(event, type);
   }
 
-  onBatchDelete(selectedItems: any[], type: string): void {
+  onBatchDelete(selectedItems: any[], commissionType: string): void {
+    const typeMap: { [key: string]: string } = {
+      '1': 'fixedRent',
+      '2': 'baseRentHigher',
+      '4': 'baseCommission',
+      '5': 'graduated',
+      '6': 'baseTier'
+    };
+
+    const type = typeMap[commissionType] || commissionType;
+
     const result = this.eventHandlerManager.handleBatchDelete(selectedItems, type, this.isViewMode);
 
     if (result.shouldDelete) {
@@ -531,6 +628,49 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionItem>
       );
 
       this.cdr.detectChanges();
+    }
+  }
+
+  /**
+ * 檢查是否應該顯示不支援類型的訊息
+ */
+  shouldShowUnsupportedTypeMessage(): boolean {
+    if (!this.contractInfoData.length) {
+      return false;
+    }
+
+    const currentCommissionType = this.contractInfoData[0]?.tlt_term_type;
+    const visibleConfigs = this.getVisibleTableConfigurations();
+
+    return visibleConfigs.length === 0 && !!currentCommissionType;
+  }
+
+  // ===== 工具方法：全域表格設定控制 =====
+
+  /**
+   * 切換全域 forceEditMode
+   */
+  toggleGlobalForceEditMode(): void {
+    this.globalTableSettings.forceEditMode = !this.globalTableSettings.forceEditMode;
+    console.log('全域 forceEditMode 切換為:', this.globalTableSettings.forceEditMode);
+  }
+
+  /**
+   * 批量更新表格設定
+   */
+  updateGlobalTableSettings(settings: Partial<typeof this.globalTableSettings>): void {
+    Object.assign(this.globalTableSettings, settings);
+    console.log('全域表格設定已更新:', this.globalTableSettings);
+  }
+
+  /**
+   * 動態更新特定表格的設定
+   */
+  updateTableConfiguration(commissionType: string, updates: Partial<TableConfiguration>): void {
+    const config = this.tableConfigurations.find(c => c.commissionType === commissionType);
+    if (config) {
+      Object.assign(config, updates);
+      console.log(`表格配置已更新 (${commissionType}):`, updates);
     }
   }
 
@@ -688,23 +828,30 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionItem>
       return;
     }
 
+    // 🎯 提交前最後一次強制保存
+    this.forceSyncAllData();
+
     // 驗證數據
     const commissionType = this.contractInfoData[0]?.tlt_term_type ?? '3';
     const currentItems = this.getCurrentConditionItems();
+
+    // console.log('🔍 最終驗證數據:', {
+    //   commissionType,
+    //   itemCount: currentItems.length,
+    //   detailItems: currentItems.map(item => ({
+    //     id: item.id,
+    //     charge_rate: item.charge_rate || item.cag_charge_rate || 'N/A'
+    //   }))
+    // });
+
     const validation = this.conditionDataManager.validateConditions(currentItems, commissionType);
 
     if (!validation.isValid) {
+      console.error('❌ 驗證失敗:', validation.errors);
       this.notificationService.errorBubble(`資料驗證失敗: ${validation.errors[0]}`);
       return;
     }
 
-    if (validation.warnings.length > 0) {
-      validation.warnings.forEach(warning => {
-        this.notificationService.warnBubble(warning);
-      });
-    }
-
-    this.saveConditionDataToWorkflow();
     this.showConfirmDialog = true;
   }
 
@@ -953,5 +1100,96 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionItem>
     if (clearOps.clearLevelDetails) details.push('• 階梯設定');
 
     return details.length > 0 ? details.join('\n') : '• 無需清除資料';
+  }
+  onTableFieldChange(event: any, commissionType: string): void {
+    console.log('🔥 Next3 收到欄位變更事件:', {
+      fieldName: event.fieldName,
+      newValue: event.newValue,
+      oldValue: event.oldValue, // 如果有的話
+      rowId: event.rowData?.id,
+      commissionType,
+      timestamp: new Date().toISOString()
+    });
+
+    // 檢查數據是否正確
+    console.log('📋 當前 rowData:', event.rowData);
+
+    try {
+      // 立即更新到對應的數據陣列
+      this.updateLocalDataArray(commissionType, event.rowData);
+
+      // 立即保存到工作流程
+      this.saveConditionDataToWorkflow();
+
+      console.log('✅ 欄位變更已立即保存到暫存');
+
+      // 驗證暫存是否成功
+      const savedData = this.contractFlowService.getStepData(WorkflowStep.CONDITION);
+      console.log('🔍 驗證暫存結果:', {
+        savedItemCount: Array.isArray(savedData) ? savedData.length : 0,
+        savedData: savedData
+      });
+
+    } catch (error) {
+      console.error('❌ 保存欄位變更時發生錯誤:', error);
+    }
+  }
+
+  /**
+   * 更新本地數據陣列
+   */
+  private updateLocalDataArray(commissionType: string, modifiedData: any): void {
+    const dataId = modifiedData.id;
+
+    switch (commissionType) {
+      case '1':
+        this.updateItemInArray(this.fixedRentItems, dataId, modifiedData);
+        break;
+      case '2':
+        this.updateItemInArray(this.baseRentHigherItems, dataId, modifiedData);
+        break;
+      case '4':
+        this.updateItemInArray(this.baseCommissionItems, dataId, modifiedData);
+        break;
+      case '5':
+        this.updateItemInArray(this.graduatedItems, dataId, modifiedData);
+        break;
+      case '6':
+        this.updateItemInArray(this.baseTierItems, dataId, modifiedData);
+        break;
+    }
+  }
+
+  /**
+   * 更新陣列中的指定項目
+   */
+  private updateItemInArray(array: any[], itemId: string, newData: any): void {
+    const index = array.findIndex(item => item.id === itemId);
+    if (index > -1) {
+      // 直接更新引用，保持數據一致性
+      Object.assign(array[index], newData);
+      console.log(`✅ 已更新 ${itemId}:`, newData);
+    } else {
+      console.warn(`⚠️ 找不到 ID: ${itemId} 的項目`);
+    }
+  }
+
+  private forceSyncAllData(): void {
+    console.log('🔄 強制同步所有數據...');
+
+    // 重新組合所有條件項目
+    this.allConditionItems = [
+      ...this.fixedRentItems,
+      ...this.baseRentHigherItems,
+      ...this.generalCommissionItems,
+      ...this.baseCommissionItems,
+      ...this.graduatedItems,
+      ...this.baseTierItems
+    ];
+
+    // 立即保存
+    this.contractFlowService.saveStep4Data(this.allConditionItems);
+
+    console.log('✅ 所有數據已強制同步，總項目:', this.allConditionItems.length);
   }
 }

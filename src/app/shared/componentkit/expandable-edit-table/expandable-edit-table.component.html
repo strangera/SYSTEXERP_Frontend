@@ -228,7 +228,6 @@
                 (ngModelChange)="
                   onNumberModelChange($event, col.field, rowData, false)
                 "
-                (onInput)="onNumberInput($event, col.field, rowData, false)"
                 [minFractionDigits]="
                   getNumberInputConfig(col).minFractionDigits
                 "

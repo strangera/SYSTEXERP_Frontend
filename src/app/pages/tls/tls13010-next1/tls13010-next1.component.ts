@@ -648,18 +648,23 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
       const totalSpace = this.getTotalLocationSpace();
       if (totalSpace > 0) {
         rowData.tpy_qty = totalSpace;
-        // console.log(`坪數單位選擇，自動設定數量: ${totalSpace}`);
       }
     }
 
     // A類型金額計算 - 任何相關欄位變更都觸發
     if (['tpy_unitamt', 'tpy_qty', 'tpy_type'].includes(fieldName)) {
+      // 🔥 關鍵：確保預設值存在
+      if (!rowData.tpy_qty || rowData.tpy_qty === 0) {
+        rowData.tpy_qty = 1;
+        console.log('🔧 A類型計算：自動設定數量預設值為 1');
+      }
+
       const unitPrice = parseFloat(rowData.tpy_unitamt) || 0;
-      const quantity = parseFloat(rowData.tpy_qty) || 0;
+      const quantity = parseFloat(rowData.tpy_qty) || 1; // 確保數量至少為 1
 
       if (unitPrice > 0 && quantity > 0) {
         rowData.tpy_amount = unitPrice * quantity;
-        // console.log(`A類型即時計算: ${unitPrice} × ${quantity} = ${rowData.tpy_amount}`);
+        console.log(`A類型即時計算: ${unitPrice} × ${quantity} = ${rowData.tpy_amount}`);
       } else {
         rowData.tpy_amount = 0;
       }
@@ -684,7 +689,7 @@ export class TLS13010Next1Component extends BasicCruPageComponent<CategoryItem> 
 
     if (['tpy_unitamt', 'tpy_qty', 'tpy_type'].includes(fieldName)) {
       const unitPrice = parseFloat(rowData.tpy_unitamt) || 0;
-      const quantity = parseFloat(rowData.tpy_qty) || 0;
+      const quantity = parseFloat(rowData.tpy_qty) || 1;
 
       if (unitPrice > 0 && quantity > 0) {
         rowData.tpy_amount = unitPrice * quantity;

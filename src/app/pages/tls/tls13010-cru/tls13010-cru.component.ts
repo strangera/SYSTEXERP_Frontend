@@ -1823,24 +1823,10 @@ export class TLS13010CRUComponent implements OnInit, OnDestroy {
     return this.contractFlowService.getCurrentStatus();
   }
 
-  getProgressPercentage(): number {
-    return this.contractFlowService.getProgressPercentage();
-  }
-
   hasFieldError(fieldName: string): boolean {
     const field = this.dataForm.get(fieldName);
     return !!(field && field.invalid && (field.dirty || field.touched || this.submitted));
   }
-
-  // getFieldErrorMessage(fieldName: string): string {
-  //   const field = this.dataForm.get(fieldName);
-  //   if (field && field.errors) {
-  //     if (field.errors['required']) return '此欄位為必填';
-  //     if (field.errors['email']) return '請輸入正確的 Email 格式';
-  //     if (field.errors['maxlength']) return `最多可輸入 ${field.errors['maxlength'].requiredLength} 個字元`;
-  //   }
-  //   return '';
-  // }
 
   onRefreshBusClass(): void {
     const busType = this.dataForm.get('bus_type')?.value;

@@ -2138,9 +2138,8 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
       rowId: rowData[this.dataKey] || 'unknown'
     });
 
-    // 數值處理
+    // 數值處理（保持原有邏輯）
     let numericValue: number;
-
     if (newValue === null || newValue === undefined || newValue === '') {
       numericValue = 0;
     } else if (typeof newValue === 'number') {
@@ -2149,37 +2148,36 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
       const cleanValue = newValue.replace(/,/g, '');
       numericValue = parseFloat(cleanValue) || 0;
     } else {
-      console.warn(`未預期的數值類型: ${typeof newValue}`, newValue);
       numericValue = 0;
     }
 
-    // 取得欄位設定
+    // 自動限制到最大值和最小值（保持原有邏輯）
     const column = this.findColumnByField(fieldName);
-
-    // 自動鉗制到最大值和最小值
     if (column) {
-      let wasModified = false;
-
-      // 檢查最大值限制
       if (column.maxValue !== undefined && numericValue > column.maxValue) {
-        console.log(`數值超過最大值 ${column.maxValue}，自動設為最大值: ${numericValue} → ${column.maxValue}`);
         numericValue = column.maxValue;
-        wasModified = true;
       }
-
-      // 檢查最小值限制（如果有設定的話）
       if (column.minValue !== undefined && numericValue < column.minValue) {
-        console.log(`數值低於最小值 ${column.minValue}，自動設為最小值: ${numericValue} → ${column.minValue}`);
         numericValue = column.minValue;
-        wasModified = true;
-      }
-
-      // 如果數值被修改，可以選擇性顯示提示
-      if (wasModified) {
-        // 可選：顯示提示訊息
-        // this.messageService.infoBubble(`數值已自動調整為 ${numericValue}`);
       }
     }
+
+    // 🔥 關鍵修復：更新數據並觸發 fieldChange 事件
+    const oldValue = rowData[fieldName];
+    rowData[fieldName] = numericValue;
+
+    // 🔥 添加這行：觸發 fieldChange 事件
+    this.fieldChange.emit({
+      fieldName,
+      newValue: numericValue,
+      rowData
+    });
+
+    // 🔥 強制變更檢測
+    this.cdr.detectChanges();
+
+    // 處理直接編輯
+    this.handleDirectEditForNumber(fieldName, numericValue, rowData, isDetail);
   }
 
   onNumberInput(
