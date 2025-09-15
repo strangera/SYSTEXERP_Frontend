@@ -81,6 +81,7 @@ export class AppTopbarComponent implements OnInit, OnDestroy {
     {
       label: '個人資料',
       items: [
+        { label: '切換系統', icon: 'pi pi-reply', command: () => this.router.navigate(['/sso/dashboard']) },
         { label: '修改使用者密碼', icon: 'pi pi-pen-to-square', command: () => this.router.navigate(['/account/changepsw']) },
         { label: '登出', icon: 'pi pi-sign-out', command: () => this.authService.logout() }
       ]
