@@ -39,7 +39,7 @@ import { TranslateModule } from '@ngx-translate/core';
     TranslateModule,
   ],
 })
-export class FIN52080Component extends BasicCruPageComponent<testDorm> implements OnInit {
+export class FIN52080Component extends BasicQpageComponent implements OnInit {
   // Upload files
   fileType: string = '';
   uploadUrl: string = 'https://www.primefaces.org/cdn/api/upload.php';

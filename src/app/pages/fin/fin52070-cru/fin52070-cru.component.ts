@@ -49,6 +49,7 @@ export interface testDorm {
       TableComponent
     ]
 })
+// 科目三碼代號維護
 export class FIN52070CRUComponent extends BasicCruPageComponent<testDorm> implements OnInit {
   // ----------------------------------------------------------------
   dataForm = this.formBuilder.nonNullable.group({
@@ -85,7 +86,7 @@ export class FIN52070CRUComponent extends BasicCruPageComponent<testDorm> implem
       return;
     }
     
-    // 送出前檢查 RefCode(對象別代碼) 不可重複
+    // 送出前檢查 大+中+三碼 不可重複
     const formValue = frm.getRawValue();
     switch (this.crudstatus) {
       case CRUDStatus.Create:
