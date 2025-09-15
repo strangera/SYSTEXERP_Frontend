@@ -22,6 +22,12 @@ interface VOID_TLS13010Request {
   talentId: string;
 }
 
+interface TLS13010CommissionRequest {
+  TalentId: string;
+  CurrentTltTermType: string;
+}
+
+
 @Injectable({
   providedIn: 'root',
 })
@@ -62,14 +68,6 @@ export class TLS13010Service {
       tap((res) => console.log('查詢扣款資料結果:', res)),
     );
   }
-  /** 刪除扣款項目資料 */
-  deleteTLS11020(idList: number[]) {
-    return this.http.post<any>(`${this.apiUrl}/TLS0000/TLS1000/deleteTLS11020`, { idList }).pipe(
-      tap((res) => console.log('刪除結果:', res)),
-      catchError(this.errorHandler.handleError)
-    );
-  }
-
   /** 查詢契約書抽成設定資料 */
   queryTLS13010Charge(talentId: string) {
     const payload = { TalentId: talentId };
@@ -78,6 +76,15 @@ export class TLS13010Service {
       catchError(this.errorHandler.handleError)
     );
   }
+
+  /** 查詢契約書租金設定資料 - Next3 使用 */
+  queryTLS13010Commission(request: TLS13010CommissionRequest) {
+    return this.http.post<any>(`${this.apiUrl}/TLS0000/TLS1000/queryTLS13010Commission`, request).pipe(
+      tap((res) => console.log('查詢租金設定資料結果:', res)),
+      catchError(this.errorHandler.handleError)
+    );
+  }
+
   queryTLS13010ChargeUnified(request: { TalentId: string; CurrentTltTermType: string }) {
     return this.http.post<any>(`${this.apiUrl}/TLS0000/TLS1000/queryTLS13010ChargeUnified`, request).pipe(
       tap((res) => console.log('統一抽成設定查詢結果:', res)),

@@ -63,19 +63,19 @@ export class TableConfigManager {
    */
   getBaseRentHigherColumns(): ColumnDef[] {
     return [
-      { field: 'seq_no', header: '帳務期別', type: 'text', editable: true, autoWidth: true },
+      // { field: 'seq_no', header: '帳務期別', type: 'text', editable: true, autoWidth: true },
       { field: 'cag_bdate', header: '帳務起', type: 'date', editable: true, autoWidth: true },
       { field: 'cag_edate', header: '帳務迄', type: 'date', editable: true, autoWidth: true },
       { field: 'base_rent', header: '租金金額', type: 'number', editable: true, autoWidth: true },
-      {
-        field: 'cag_charge_rate',
-        header: '抽成率',
-        type: 'number',
-        editable: true,
-        autoWidth: true,
-        allowDecimal: true,
-        decimalPlaces: 4
-      }
+      // {
+      //   field: 'cag_charge_rate',
+      //   header: '抽成率',
+      //   type: 'number',
+      //   editable: true,
+      //   autoWidth: true,
+      //   allowDecimal: true,
+      //   decimalPlaces: 4
+      // }
     ];
   }
 
@@ -147,11 +147,11 @@ export class TableConfigManager {
    */
   getGraduatedColumns(): ColumnDef[] {
     return [
-      { field: 'seq_no', header: '序號', type: 'number', editable: true, autoWidth: true },
+      { field: 'seq_no', header: '帳務期別', type: 'number', editable: false, autoWidth: true },
       { field: 'cag_bdate', header: '帳務起', type: 'date', editable: true, autoWidth: true },
       { field: 'cag_edate', header: '帳務迄', type: 'date', editable: true, autoWidth: true },
       { field: 'start_number', header: '階梯金額(起值)', type: 'number', editable: true, autoWidth: true },
-      { field: 'end_number', header: '階梯金額(迄值)', type: 'number', editable: true, autoWidth: true },
+      { field: 'end_number', header: '階梯金額(迄值)', type: 'number', editable: true, autoWidth: true, maxValue: 9999999999999, minValue: 0 },
       {
         field: 'charge_rate',
         header: '抽成率',
@@ -169,12 +169,12 @@ export class TableConfigManager {
    */
   getBaseTierColumns(): ColumnDef[] {
     return [
-      { field: 'seq_no', header: '帳務期別', type: 'text', editable: true, autoWidth: true },
+      { field: 'seq_no', header: '帳務期別', type: 'text', editable: false, autoWidth: true },
       { field: 'cag_bdate', header: '帳務起', type: 'date', editable: true, autoWidth: true },
       { field: 'cag_edate', header: '帳務迄', type: 'date', editable: true, autoWidth: true },
       { field: 'limit_amt', header: '包底金額', type: 'number', editable: true, autoWidth: true },
       { field: 'start_number', header: '階梯金額(起值)', type: 'number', editable: true, autoWidth: true },
-      { field: 'end_number', header: '階梯金額(迄值)', type: 'number', editable: true, autoWidth: true },
+      { field: 'end_number', header: '階梯金額(迄值)', type: 'number', editable: true, autoWidth: true, maxValue: 9999999999999, minValue: 0 },
       {
         field: 'charge_rate',
         header: '抽成率',

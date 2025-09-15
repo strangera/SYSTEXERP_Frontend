@@ -439,51 +439,51 @@ export class TLS13010Component extends BasicQueryPageComponent<ContractItem> imp
    * 刪除功能
    */
   onDelete(data: ContractItem | ContractItem[]): void {
-    const items = Array.isArray(data) ? data : [data];
-    if (items.length === 0) {
-      this.messageService.warnBubble('沒有選中的項目');
-      return;
-    }
+    // const items = Array.isArray(data) ? data : [data];
+    // if (items.length === 0) {
+    //   this.messageService.warnBubble('沒有選中的項目');
+    //   return;
+    // }
 
-    const currentStatus = this.contractFlowService.getCurrentStatus();
-    const editingItems = items.filter(item =>
-      item.talent_id === currentStatus.contractId ||
-      item.apply_no === currentStatus.contractId
-    );
+    // const currentStatus = this.contractFlowService.getCurrentStatus();
+    // const editingItems = items.filter(item =>
+    //   item.talent_id === currentStatus.contractId ||
+    //   item.apply_no === currentStatus.contractId
+    // );
 
-    if (editingItems.length > 0) {
-      this.messageService.warnBubble('有項目正在編輯中，請先完成或取消編輯');
-      return;
-    }
+    // if (editingItems.length > 0) {
+    //   this.messageService.warnBubble('有項目正在編輯中，請先完成或取消編輯');
+    //   return;
+    // }
 
-    const idList = items
-      .filter(item => item && item.talent_id != null && item.talent_id !== undefined)
-      .map(item => item.talent_id);
+    // const idList = items
+    //   .filter(item => item && item.talent_id != null && item.talent_id !== undefined)
+    //   .map(item => item.talent_id);
 
-    if (idList.length === 0) {
-      this.messageService.warnBubble('選中的項目缺少有效 ID');
-      return;
-    }
+    // if (idList.length === 0) {
+    //   this.messageService.warnBubble('選中的項目缺少有效 ID');
+    //   return;
+    // }
 
-    if (confirm(`確定要刪除 ${idList.length} 個項目嗎？`)) {
-      this.apiService.deleteTLS11020(idList as any[]).subscribe({
-        next: (response: any) => {
-          if (response.Status === '0000') {
-            this.messageService.successBubble(`成功刪除 ${idList.length} 個項目`);
-            this.onSubmit(this.queryForm);
-          } else {
-            this.messageService.errorBubble(`刪除失敗: ${response.Message || '未知錯誤'}`);
-          }
-        },
-        error: (err: any) => {
-          console.error('API error:', err);
-          this.messageService.errorBubble('刪除失敗，請檢查網路連線或聯繫管理員');
-        },
-        complete: () => {
-          this.selectedItems = [];
-        }
-      });
-    }
+    // if (confirm(`確定要刪除 ${idList.length} 個項目嗎？`)) {
+    //   this.apiService.deleteTLS11020(idList as any[]).subscribe({
+    //     next: (response: any) => {
+    //       if (response.Status === '0000') {
+    //         this.messageService.successBubble(`成功刪除 ${idList.length} 個項目`);
+    //         this.onSubmit(this.queryForm);
+    //       } else {
+    //         this.messageService.errorBubble(`刪除失敗: ${response.Message || '未知錯誤'}`);
+    //       }
+    //     },
+    //     error: (err: any) => {
+    //       console.error('API error:', err);
+    //       this.messageService.errorBubble('刪除失敗，請檢查網路連線或聯繫管理員');
+    //     },
+    //     complete: () => {
+    //       this.selectedItems = [];
+    //     }
+    //   });
+    // }
   }
 
   /**

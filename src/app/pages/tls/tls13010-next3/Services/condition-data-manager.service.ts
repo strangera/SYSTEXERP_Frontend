@@ -21,9 +21,30 @@ import { Injectable } from '@angular/core';
 export class ConditionDataManager {
 
   /**
+ * 生成暫時唯一 ID
+ */
+  private generateTempId(): string {
+    return `temp_${Date.now()}_${Math.random().toString(36).slice(2, 11)}`;
+  }
+
+  /**
+ * 獲取下一個序號
+ */
+  private getNextSeqNo(existingItems: any[]): number {
+    if (!existingItems || existingItems.length === 0) {
+      return 1;
+    }
+
+    // 找出目前最大的序號（包括已刪除的項目）
+    const maxSeqNo = Math.max(...existingItems.map(item => item.seq_no || 0));
+    return maxSeqNo + 1;
+  }
+
+
+  /**
    * 根據抽成類型初始化空的條件數據
    */
-  initializeEmptyConditions(commissionType: string, talentId: string): ConditionItem[] {
+  initializeEmptyConditions(commissionType: string, talentId: string, existingItems?: any[]): ConditionItem[] {
     switch (commissionType) {
       case '1':
         return [this.createFixedRentItem(talentId)];
@@ -32,9 +53,9 @@ export class ConditionDataManager {
       case '4':
         return [this.createBaseCommissionItem(talentId)];
       case '5':
-        return [this.createGraduatedItem(talentId)];
+        return [this.createGraduatedItem(talentId, existingItems as GraduatedCommissionCondition[])];
       case '6':
-        return [this.createBaseTierItem(talentId)];
+        return [this.createBaseTierItem(talentId, existingItems as BaseTierCondition[])];
       default:
         return [];
     }
@@ -181,6 +202,7 @@ export class ConditionDataManager {
 
   private createFixedRentItem(talentId: string): FixedRentCondition {
     return {
+      id: this.generateTempId(), // 新增唯一 ID
       talent_id: talentId,
       tlt_id: '',
       cag_bdate: this.getDefaultStartDate(),
@@ -193,6 +215,7 @@ export class ConditionDataManager {
 
   private createBaseRentHigherItem(talentId: string): BaseRentHigherCondition {
     return {
+      id: this.generateTempId(), // 新增唯一 ID
       talent_id: talentId,
       tlt_id: '',
       cag_bdate: this.getDefaultStartDate(),
@@ -206,6 +229,7 @@ export class ConditionDataManager {
 
   private createBaseCommissionItem(talentId: string): BaseCommissionCondition {
     return {
+      id: this.generateTempId(), // 新增唯一 ID
       talent_id: talentId,
       tlt_id: '',
       cag_bdate: this.getDefaultStartDate(),
@@ -216,11 +240,11 @@ export class ConditionDataManager {
       _isNew: true
     };
   }
-
-  private createGraduatedItem(talentId: string): GraduatedCommissionCondition {
+  private createGraduatedItem(talentId: string, existingItems: GraduatedCommissionCondition[] = []): GraduatedCommissionCondition {
     return {
+      id: this.generateTempId(), // 新增唯一 ID
       talent_id: talentId,
-      seq_no: 1,
+      seq_no: this.getNextSeqNo(existingItems), // 使用正確的序號
       cag_bdate: this.getDefaultStartDate(),
       cag_edate: this.getDefaultEndDate(),
       start_number: 0,
@@ -231,10 +255,11 @@ export class ConditionDataManager {
     };
   }
 
-  private createBaseTierItem(talentId: string): BaseTierCondition {
+  private createBaseTierItem(talentId: string, existingItems: BaseTierCondition[] = []): BaseTierCondition {
     return {
+      id: this.generateTempId(), // 新增唯一 ID
       talent_id: talentId,
-      seq_no: 1,
+      seq_no: this.getNextSeqNo(existingItems), // 使用正確的序號
       tlt_id: '',
       cag_bdate: this.getDefaultStartDate(),
       cag_edate: this.getDefaultEndDate(),

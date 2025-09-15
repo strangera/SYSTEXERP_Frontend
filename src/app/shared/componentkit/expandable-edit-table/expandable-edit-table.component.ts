@@ -153,11 +153,11 @@ export interface ColumnDef {
   allowDecimal?: boolean;  // 是否允許小數點
   decimalPlaces?: number;  // 小數位數，預設2位
 
-  // 🎯 使用語義化的日期格式類型
+  // 使用語義化的日期格式類型
   dateFormat?: DateFormatType;
   placeholder?: string;
 
-  // 🎯 輸入長度限制
+  // 輸入長度限制
   maxLength?: number;
   minLength?: number;
 
@@ -173,6 +173,8 @@ export interface ColumnDef {
   };
   autoWidth?: boolean;
   readonly?: boolean;
+  maxValue?: number;  // 最大數值（自動鉗制）
+  minValue?: number;  // 最小數值（自動鉗制）
 
   customCheckboxHandler?: (event: {
     rowData: any,
@@ -2122,15 +2124,13 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
     return null;
   }
 
-  // 在 expandable-edit-table.component.ts 中修改以下方法：
-
   onNumberModelChange(
     newValue: any,
     fieldName: string,
     rowData: any,
     isDetail: boolean = false
   ): void {
-    console.log('📄 ngModelChange 觸發:', {
+    console.log('數字輸入變更:', {
       fieldName,
       newValue,
       valueType: typeof newValue,
@@ -2138,7 +2138,7 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
       rowId: rowData[this.dataKey] || 'unknown'
     });
 
-    // 🎯 數值處理
+    // 數值處理
     let numericValue: number;
 
     if (newValue === null || newValue === undefined || newValue === '') {
@@ -2149,35 +2149,37 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
       const cleanValue = newValue.replace(/,/g, '');
       numericValue = parseFloat(cleanValue) || 0;
     } else {
-      console.warn(`⚠️ ModelChange 未預期的數值類型: ${typeof newValue}`, newValue);
+      console.warn(`未預期的數值類型: ${typeof newValue}`, newValue);
       numericValue = 0;
     }
 
-    console.log(`💰 ModelChange 數值轉換: ${newValue} → ${numericValue}`);
+    // 取得欄位設定
+    const column = this.findColumnByField(fieldName);
 
-    // 🎯 檢查值是否真的有變化（避免重複計算）
-    const currentValue = rowData[fieldName] || 0;
-    if (Math.abs(currentValue - numericValue) < 0.001) {
-      console.log(`⏭️ ModelChange 值沒有變化，跳過: ${currentValue} ≈ ${numericValue}`);
-      return;
+    // 自動鉗制到最大值和最小值
+    if (column) {
+      let wasModified = false;
+
+      // 檢查最大值限制
+      if (column.maxValue !== undefined && numericValue > column.maxValue) {
+        console.log(`數值超過最大值 ${column.maxValue}，自動設為最大值: ${numericValue} → ${column.maxValue}`);
+        numericValue = column.maxValue;
+        wasModified = true;
+      }
+
+      // 檢查最小值限制（如果有設定的話）
+      if (column.minValue !== undefined && numericValue < column.minValue) {
+        console.log(`數值低於最小值 ${column.minValue}，自動設為最小值: ${numericValue} → ${column.minValue}`);
+        numericValue = column.minValue;
+        wasModified = true;
+      }
+
+      // 如果數值被修改，可以選擇性顯示提示
+      if (wasModified) {
+        // 可選：顯示提示訊息
+        // this.messageService.infoBubble(`數值已自動調整為 ${numericValue}`);
+      }
     }
-
-    // 🚨 更新 rowData
-    const oldValue = rowData[fieldName];
-    rowData[fieldName] = numericValue;
-
-    console.log(`📝 ModelChange 更新 ${fieldName}: ${oldValue} → ${numericValue}`);
-
-    // 🎯 立即觸發計算
-    console.log(`⚡ ModelChange 立即觸發計算: ${fieldName} = ${numericValue}`);
-
-    this.fieldChange.emit({
-      fieldName,
-      newValue: numericValue,
-      rowData
-    });
-
-    this.handleDirectEditForNumber(fieldName, numericValue, rowData, isDetail);
   }
 
   onNumberInput(
@@ -2186,7 +2188,7 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
     rowData: any,
     isDetail: boolean = false
   ): void {
-    console.log('⚡ onInput 即時觸發:', {
+    console.log('數字輸入事件:', {
       fieldName,
       eventValue: event.value,
       eventTarget: event.target?.value,
@@ -2194,15 +2196,14 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
       rowId: rowData[this.dataKey] || 'unknown'
     });
 
-    // 🎯 從 PrimeNG InputNumber 的 onInput 事件取值
+    // 從 PrimeNG InputNumber 的 onInput 事件取值
     let inputValue = event.value;
 
-    // 🎯 如果 event.value 不存在，嘗試從其他來源取值
     if (inputValue === undefined || inputValue === null) {
       inputValue = event.target?.value || event.originalEvent?.target?.value;
     }
 
-    console.log(`📝 Input 事件取得的值: "${inputValue}" (類型: ${typeof inputValue})`);
+    console.log(`Input 事件取得的值: "${inputValue}" (類型: ${typeof inputValue})`);
 
     // 數值處理
     let numericValue: number;
@@ -2212,24 +2213,36 @@ export class ExpandableEditTableComponent implements OnInit, OnChanges {
     } else if (typeof inputValue === 'number') {
       numericValue = inputValue;
     } else if (typeof inputValue === 'string') {
-      // 移除可能的千分位逗號
       const cleanValue = inputValue.replace(/,/g, '');
       numericValue = parseFloat(cleanValue) || 0;
     } else {
-      console.warn(`⚠️ Input 事件未預期的數值類型: ${typeof inputValue}`, inputValue);
+      console.warn(`Input 事件未預期的數值類型: ${typeof inputValue}`, inputValue);
       numericValue = 0;
     }
 
-    console.log(`💰 Input 事件數值轉換: ${inputValue} → ${numericValue}`);
+    // 取得欄位設定並進行鉗制
+    const column = this.findColumnByField(fieldName);
 
-    // 🚨 立即更新 rowData
+    if (column) {
+      // 自動鉗制到最大值和最小值
+      if (column.maxValue !== undefined && numericValue > column.maxValue) {
+        console.log(`Input: 數值超過最大值，自動設為最大值: ${numericValue} → ${column.maxValue}`);
+        numericValue = column.maxValue;
+      }
+
+      if (column.minValue !== undefined && numericValue < column.minValue) {
+        console.log(`Input: 數值低於最小值，自動設為最小值: ${numericValue} → ${column.minValue}`);
+        numericValue = column.minValue;
+      }
+    }
+
+    console.log(`Input 事件最終數值: ${inputValue} → ${numericValue}`);
+
+    // 立即更新 rowData
     const oldValue = rowData[fieldName];
     rowData[fieldName] = numericValue;
 
-    console.log(`📝 Input 事件更新 ${fieldName}: ${oldValue} → ${numericValue}`);
-
-    // 🎯 立即觸發計算（無延遲）
-    console.log(`⚡ Input 事件立即觸發計算: ${fieldName} = ${numericValue}`);
+    console.log(`Input 事件更新 ${fieldName}: ${oldValue} → ${numericValue}`);
 
     // 立即觸發欄位變更事件
     this.fieldChange.emit({

@@ -2,12 +2,24 @@
   <div class="flex gap-2 mb-2">
     <app-menubar [ProgNo]="ProgNo" class="flex-1"></app-menubar>
     <app-button btnType="back" label="上一步" (click)="onCancel()"></app-button>
-    <app-button *ngIf="!isViewMode" btnType="submit" label="確認" (click)="onSubmitNext()"></app-button>
-    <app-button btnType="cancel" label="離開" (click)="onClearAndExit()"></app-button>
+    <app-button
+      *ngIf="!isViewMode"
+      btnType="submit"
+      label="確認"
+      (click)="onSubmitNext()"
+    ></app-button>
+    <app-button
+      btnType="cancel"
+      label="離開"
+      (click)="onClearAndExit()"
+    ></app-button>
   </div>
 
   <!-- 載入中指示器 -->
-  <div *ngIf="loading" class="flex justify-content-center align-items-center p-4">
+  <div
+    *ngIf="loading"
+    class="flex justify-content-center align-items-center p-4"
+  >
     <p-progressSpinner></p-progressSpinner>
     <span class="ml-2">載入條件設定資料中...</span>
   </div>
@@ -16,12 +28,26 @@
   <div *ngIf="!loading">
     <!-- 🎯 專櫃契約書資訊 -->
     <p-accordion *ngIf="currentContractData">
-      <p-accordionTab header="專櫃契約書資訊" [selected]="true" class="line-height-3 m-0">
+      <p-accordionTab
+        header="專櫃契約書資訊"
+        [selected]="true"
+        class="line-height-3 m-0"
+      >
         <div class="col-12">
-          <app-expandable-edit-table class="custom-table-red" [data]="contractInfoData"
-            [mainColumns]="contractInfoColumns" [showCheckBox]="false" [showPaginator]="false" [showAddButton]="false"
-            [showBatchDelete]="false" [loading]="loading" [dataKey]="'id'" [readonly]="true" [detailKey]="''"
-            [emptyMessage]="'沒有合約資訊'"></app-expandable-edit-table>
+          <app-expandable-edit-table
+            class="custom-table-red"
+            [data]="contractInfoData"
+            [mainColumns]="contractInfoColumns"
+            [showCheckBox]="false"
+            [showPaginator]="false"
+            [showAddButton]="false"
+            [showBatchDelete]="false"
+            [loading]="loading"
+            [dataKey]="'id'"
+            [readonly]="true"
+            [detailKey]="''"
+            [emptyMessage]="'沒有合約資訊'"
+          ></app-expandable-edit-table>
         </div>
       </p-accordionTab>
     </p-accordion>
@@ -30,77 +56,157 @@
 
     <!-- 固定租金 (抽成別 = 1) -->
     <p-accordion *ngIf="shouldShowCommissionType('1')">
-      <p-accordionTab header="固定租金" [selected]="true" class="line-height-3 m-0">
+      <p-accordionTab
+        header="固定租金"
+        [selected]="true"
+        class="line-height-3 m-0"
+      >
         <div>
-          <app-expandable-edit-table [data]="displayFixedRentItems" [mainColumns]="fixedRentColumns"
-            [showCheckBox]="true" [showPaginator]="false" [showAddButton]="true" [showBatchDelete]="true"
-            [loading]="loading" [dataKey]="'id'" [readonly]="isViewMode" [detailKey]="''" [emptyMessage]="'尚未設定固定租金項目'"
-            (addMainItem)="onAddFixedRentItem()" (save)="onTableSave($event, 'fixedRent')"
-            (edit)="onTableEdit($event, 'fixedRent')" (cancel)="onTableCancel($event, 'fixedRent')"
-            (batchDelete)="onBatchDelete($event, 'fixedRent')"></app-expandable-edit-table>
+          <app-expandable-edit-table
+            [data]="displayFixedRentItems"
+            [mainColumns]="fixedRentColumns"
+            [showCheckBox]="true"
+            [showPaginator]="false"
+            [showAddButton]="true"
+            [showBatchDelete]="true"
+            [loading]="loading"
+            [dataKey]="'id'"
+            [readonly]="isViewMode"
+            [detailKey]="''"
+            [emptyMessage]="'尚未設定固定租金項目'"
+            (addMainItem)="onAddFixedRentItem()"
+            (save)="onTableSave($event, 'fixedRent')"
+            (edit)="onTableEdit($event, 'fixedRent')"
+            (cancel)="onTableCancel($event, 'fixedRent')"
+            (batchDelete)="onBatchDelete($event, 'fixedRent')"
+          ></app-expandable-edit-table>
         </div>
       </p-accordionTab>
     </p-accordion>
 
     <!-- 底租抽成取高者 (抽成別 = 2) -->
     <p-accordion *ngIf="shouldShowCommissionType('2')">
-      <p-accordionTab header="底租抽成取高者" [selected]="true" class="line-height-3 m-0">
+      <p-accordionTab
+        header="底租抽成取高者"
+        [selected]="true"
+        class="line-height-3 m-0"
+      >
         <div>
-          <app-expandable-edit-table [data]="displayBaseRentHigherItems" [mainColumns]="baseRentHigherColumns"
-            [showCheckBox]="true" [showPaginator]="false" [showAddButton]="true" [showBatchDelete]="true"
-            [loading]="loading" [dataKey]="'id'" [readonly]="isViewMode" [detailKey]="''"
-            [emptyMessage]="'尚未設定底租抽成取高者項目'" (addMainItem)="onAddBaseRentHigherItem()"
-            (save)="onTableSave($event, 'baseRentHigher')" (edit)="onTableEdit($event, 'baseRentHigher')"
+          <app-expandable-edit-table
+            [data]="displayBaseRentHigherItems"
+            [mainColumns]="baseRentHigherColumns"
+            [showCheckBox]="true"
+            [showPaginator]="false"
+            [showAddButton]="true"
+            [showBatchDelete]="true"
+            [loading]="loading"
+            [dataKey]="'id'"
+            [readonly]="isViewMode"
+            [detailKey]="''"
+            [emptyMessage]="'尚未設定底租抽成取高者項目'"
+            (addMainItem)="onAddBaseRentHigherItem()"
+            (save)="onTableSave($event, 'baseRentHigher')"
+            (edit)="onTableEdit($event, 'baseRentHigher')"
             (cancel)="onTableCancel($event, 'baseRentHigher')"
-            (batchDelete)="onBatchDelete($event, 'baseRentHigher')"></app-expandable-edit-table>
+            (batchDelete)="onBatchDelete($event, 'baseRentHigher')"
+          ></app-expandable-edit-table>
         </div>
       </p-accordionTab>
     </p-accordion>
 
     <!-- 包底抽成 (抽成別 = 4) -->
     <p-accordion *ngIf="shouldShowCommissionType('4')">
-      <p-accordionTab header="包底抽成" [selected]="true" class="line-height-3 m-0">
+      <p-accordionTab
+        header="包底抽成"
+        [selected]="true"
+        class="line-height-3 m-0"
+      >
         <div>
-          <app-expandable-edit-table [data]="displayBaseCommissionItems" [mainColumns]="baseCommissionColumns"
-            [showCheckBox]="true" [showPaginator]="false" [showAddButton]="true" [showBatchDelete]="true"
-            [loading]="loading" [dataKey]="'id'" [readonly]="isViewMode" [detailKey]="''" [emptyMessage]="'尚未設定包底抽成項目'"
-            (addMainItem)="onAddBaseCommissionItem()" (save)="onTableSave($event, 'baseCommission')"
-            (edit)="onTableEdit($event, 'baseCommission')" (cancel)="onTableCancel($event, 'baseCommission')"
-            (batchDelete)="onBatchDelete($event, 'baseCommission')"></app-expandable-edit-table>
+          <app-expandable-edit-table
+            [data]="displayBaseCommissionItems"
+            [mainColumns]="baseCommissionColumns"
+            [showCheckBox]="true"
+            [showPaginator]="false"
+            [showAddButton]="true"
+            [showBatchDelete]="true"
+            [loading]="loading"
+            [dataKey]="'id'"
+            [readonly]="isViewMode"
+            [detailKey]="''"
+            [emptyMessage]="'尚未設定包底抽成項目'"
+            (addMainItem)="onAddBaseCommissionItem()"
+            (save)="onTableSave($event, 'baseCommission')"
+            (edit)="onTableEdit($event, 'baseCommission')"
+            (cancel)="onTableCancel($event, 'baseCommission')"
+            (batchDelete)="onBatchDelete($event, 'baseCommission')"
+          ></app-expandable-edit-table>
         </div>
       </p-accordionTab>
     </p-accordion>
 
     <!-- 階梯式抽成 (抽成別 = 5) -->
     <p-accordion *ngIf="shouldShowCommissionType('5')">
-      <p-accordionTab header="階梯式抽成" [selected]="true" class="line-height-3 m-0">
+      <p-accordionTab
+        header="階梯式抽成"
+        [selected]="true"
+        class="line-height-3 m-0"
+      >
         <div>
-          <app-expandable-edit-table [data]="displayGraduatedItems" [mainColumns]="graduatedColumns"
-            [showCheckBox]="true" [showPaginator]="false" [showAddButton]="true" [showBatchDelete]="true"
-            [loading]="loading" [dataKey]="'id'" [readonly]="isViewMode" [detailKey]="''" [emptyMessage]="'尚未設定階梯式抽成項目'"
-            (addMainItem)="onAddGraduatedItem()" (save)="onTableSave($event, 'graduated')"
-            (edit)="onTableEdit($event, 'graduated')" (cancel)="onTableCancel($event, 'graduated')"
-            (batchDelete)="onBatchDelete($event, 'graduated')"></app-expandable-edit-table>
+          <app-expandable-edit-table
+            [data]="displayGraduatedItems"
+            [mainColumns]="graduatedColumns"
+            [showCheckBox]="true"
+            [showPaginator]="false"
+            [showAddButton]="true"
+            [showBatchDelete]="true"
+            [loading]="loading"
+            [dataKey]="'id'"
+            [readonly]="isViewMode"
+            [detailKey]="''"
+            [emptyMessage]="'尚未設定階梯式抽成項目'"
+            (addMainItem)="onAddGraduatedItem()"
+            (save)="onTableSave($event, 'graduated')"
+            (edit)="onTableEdit($event, 'graduated')"
+            (cancel)="onTableCancel($event, 'graduated')"
+            (batchDelete)="onBatchDelete($event, 'graduated')"
+          ></app-expandable-edit-table>
         </div>
       </p-accordionTab>
     </p-accordion>
 
     <!-- 包底加階梯 (抽成別 = 6) -->
     <p-accordion *ngIf="shouldShowCommissionType('6')">
-      <p-accordionTab header="包底加階梯" [selected]="true" class="line-height-3 m-0">
+      <p-accordionTab
+        header="包底加階梯"
+        [selected]="true"
+        class="line-height-3 m-0"
+      >
         <div>
-          <app-expandable-edit-table [data]="displayBaseTierItems" [mainColumns]="baseTierColumns" [showCheckBox]="true"
-            [showPaginator]="false" [showAddButton]="true" [showBatchDelete]="true" [loading]="loading" [dataKey]="'id'"
-            [readonly]="isViewMode" [detailKey]="''" [emptyMessage]="'尚未設定包底加階梯項目'" (addMainItem)="onAddBaseTierItem()"
-            (save)="onTableSave($event, 'baseTier')" (edit)="onTableEdit($event, 'baseTier')"
+          <app-expandable-edit-table
+            [data]="displayBaseTierItems"
+            [mainColumns]="baseTierColumns"
+            [showCheckBox]="true"
+            [showPaginator]="false"
+            [showAddButton]="true"
+            [showBatchDelete]="true"
+            [loading]="loading"
+            [dataKey]="'id'"
+            [readonly]="isViewMode"
+            [detailKey]="''"
+            [emptyMessage]="'尚未設定包底加階梯項目'"
+            (addMainItem)="onAddBaseTierItem()"
+            (save)="onTableSave($event, 'baseTier')"
+            (edit)="onTableEdit($event, 'baseTier')"
             (cancel)="onTableCancel($event, 'baseTier')"
-            (batchDelete)="onBatchDelete($event, 'baseTier')"></app-expandable-edit-table>
+            (batchDelete)="onBatchDelete($event, 'baseTier')"
+          ></app-expandable-edit-table>
         </div>
       </p-accordionTab>
     </p-accordion>
 
     <!-- 🎯 如果抽成別不在已知類型中，顯示提示 -->
-    <div *ngIf="
+    <div
+      *ngIf="
         contractInfoData.length > 0 &&
         !shouldShowCommissionType('1') &&
         !shouldShowCommissionType('2') &&
@@ -108,7 +214,9 @@
         !shouldShowCommissionType('4') &&
         !shouldShowCommissionType('5') &&
         !shouldShowCommissionType('6')
-      " class="text-center p-5">
+      "
+      class="text-center p-5"
+    >
       <i class="pi pi-info-circle text-4xl text-gray-400 mb-3"></i>
       <h5 class="text-gray-600 mb-2">此抽成類型暫不支援條件設定</h5>
       <p class="text-gray-500 mb-3">
@@ -123,8 +231,16 @@
 </div>
 
 <!-- 🎯 確認對話框 -->
-<p-dialog [(visible)]="showConfirmDialog" [modal]="true" [closable]="false" [draggable]="false" [resizable]="false"
-  styleClass="p-fluid" header="最終確認" [style]="{ width: '450px' }">
+<p-dialog
+  [(visible)]="showConfirmDialog"
+  [modal]="true"
+  [closable]="false"
+  [draggable]="false"
+  [resizable]="false"
+  styleClass="p-fluid"
+  header="最終確認"
+  [style]="{ width: '450px' }"
+>
   <div class="flex align-items-center justify-content-center mb-4">
     <i class="pi pi-exclamation-triangle text-4xl text-orange-500 mr-3"></i>
     <span class="text-lg">確定要提交契約資料嗎？</span>
@@ -141,9 +257,19 @@
 
   <ng-template pTemplate="footer">
     <div class="flex justify-content-end gap-2">
-      <p-button label="取消" icon="pi pi-times" [text]="true" severity="secondary"
-        (click)="onConfirmDialogResult(false)"></p-button>
-      <p-button label="確定提交" icon="pi pi-check" severity="success" (click)="onConfirmDialogResult(true)"></p-button>
+      <p-button
+        label="取消"
+        icon="pi pi-times"
+        [text]="true"
+        severity="secondary"
+        (click)="onConfirmDialogResult(false)"
+      ></p-button>
+      <p-button
+        label="確定提交"
+        icon="pi pi-check"
+        severity="success"
+        (click)="onConfirmDialogResult(true)"
+      ></p-button>
     </div>
   </ng-template>
 </p-dialog>

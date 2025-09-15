@@ -1,5 +1,6 @@
 // tls13010-next3.component.ts - 重構版本：清晰的結構和職責分離
 import { Component, OnInit, OnDestroy, ChangeDetectorRef } from '@angular/core';
+import { catchError, firstValueFrom } from 'rxjs';
 import { FormGroup } from '@angular/forms';
 import { Subscription } from 'rxjs';
 import { ActivatedRoute, NavigationExtras } from '@angular/router';
@@ -253,6 +254,7 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionItem>
     this.dataLoaded = true;
   }
 
+
   private initializeNewContractConditionData(commissionType: string): void {
     console.log('新增模式：初始化條件設定，抽成類型:', commissionType);
 
@@ -265,26 +267,76 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionItem>
     console.log('新增模式條件設定初始化完成');
   }
 
-  private loadExistingConditionData(): void {
+  private async loadExistingConditionData(): Promise<void> {
     const commissionType = this.contractInfoData[0]?.tlt_term_type || '3';
 
-    // 使用統一 API 資料
-    const unifiedCommissionData = this.contractFlowService.getUnifiedCommissionData();
-    if (unifiedCommissionData?.RentSettingData) {
-      console.log('使用統一 API 條件設定資料');
-      this.allConditionItems = this.conditionDataManager.mapBackendDataToFrontend(
-        unifiedCommissionData.RentSettingData,
-        commissionType
+    console.log('🔗 開始載入現有條件資料，抽成類型:', commissionType);
+
+    try {
+      // 🎯 使用新的 Commission API
+      const request = {
+        TalentId: this.currentTalentId,
+        CurrentTltTermType: commissionType
+      };
+
+      console.log('📤 呼叫 queryTLS13010Commission API:', request);
+
+      const response = await firstValueFrom(
+        this.tls13010Service.queryTLS13010Commission(request).pipe(
+          catchError(error => {
+            console.error('Commission API 呼叫失敗:', error);
+            throw error;
+          })
+        )
       );
-    } else {
-      console.log('根據抽成類型初始化條件設定');
+
+      if (response?.Status === '0000' && response?.Data?.ExistingData) {
+        console.log('✅ Commission API 回應成功:', response.Data);
+
+        // 🎯 修正：使用正確的資料路徑 ExistingData 而不是 RentSettingData
+        this.allConditionItems = this.conditionDataManager.mapBackendDataToFrontend(
+          response.Data.ExistingData,
+          commissionType
+        );
+
+        console.log('📋 轉換後的條件項目數量:', this.allConditionItems.length);
+      } else {
+        console.log('⚠️ Commission API 無資料或回應異常，使用空條件');
+        this.allConditionItems = this.conditionDataManager.initializeEmptyConditions(
+          commissionType,
+          this.currentTalentId
+        );
+      }
+
+    } catch (error) {
+      console.error('❌ Commission API 呼叫失敗:', error);
+
+      // API 失敗時初始化為空條件
       this.allConditionItems = this.conditionDataManager.initializeEmptyConditions(
         commissionType,
         this.currentTalentId
       );
+
+      // 根據錯誤類型顯示適當訊息
+      if (this.isNotFoundError(error)) {
+        console.log('📭 查無條件資料，初始化空條件設定');
+      } else {
+        this.notificationService.warnBubble('載入條件設定時發生錯誤，已初始化為空設定');
+      }
     }
 
+    // 分類條件項目
     this.categorizeConditionItems();
+  }
+
+  /**
+ * 檢查是否為找不到資料的錯誤
+ */
+  private isNotFoundError(error: any): boolean {
+    return error?.status === 404 ||
+      error?.error?.Message?.includes('查無資料') ||
+      error?.message?.includes('not found') ||
+      error?.error?.Status === '1001'; // 根據你們的錯誤碼調整
   }
 
   private loadConditionDataFromCache(savedData: ConditionItem[]): void {
@@ -519,8 +571,14 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionItem>
 
   onAddGraduatedItem(): void {
     const result = this.eventHandlerManager.handleAddItem('graduated', this.isViewMode, () => {
-      const newItem = this.conditionDataManager.initializeEmptyConditions('5', this.currentTalentId)[0] as GraduatedCommissionCondition;
-      newItem.seq_no = this.graduatedItems.length + 1;
+      // 傳入現有項目以計算正確序號
+      const newItem = this.conditionDataManager.initializeEmptyConditions(
+        '5',
+        this.currentTalentId,
+        this.graduatedItems
+      )[0] as GraduatedCommissionCondition;
+
+      // 不需要再次設定 seq_no，因為已在 createGraduatedItem 中正確設定
       return newItem;
     });
 
@@ -532,8 +590,14 @@ export class Tls13010Next3Component extends BasicCruPageComponent<ConditionItem>
 
   onAddBaseTierItem(): void {
     const result = this.eventHandlerManager.handleAddItem('baseTier', this.isViewMode, () => {
-      const newItem = this.conditionDataManager.initializeEmptyConditions('6', this.currentTalentId)[0] as BaseTierCondition;
-      newItem.seq_no = this.baseTierItems.length + 1;
+      // 傳入現有項目以計算正確序號
+      const newItem = this.conditionDataManager.initializeEmptyConditions(
+        '6',
+        this.currentTalentId,
+        this.baseTierItems
+      )[0] as BaseTierCondition;
+
+      // 不需要再次設定 seq_no，因為已在 createBaseTierItem 中正確設定
       return newItem;
     });
 
