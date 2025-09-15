@@ -1,7 +1,8 @@
+import { formatAmount } from 'src/app/shared/componentkit/table/table.model';
 import { Component, OnInit } from '@angular/core';
 import { FormGroup, Validators, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { BasicQueryPageComponent } from '../../../shared/componentextends/basic-qpage/basic-query-page.component';
-import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
+import { Column, createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 import { LocationOptionsService } from '../../../service/api/dropdownservice/location-options.service';
 import { ECRNoService } from '../../../service/basic/ECRNo.service';
 import { MenubarComponent } from '../../../shared/component/menubar/menubar.component';
@@ -30,6 +31,7 @@ interface SalesRecord {
 @Component({
   selector: 'app-tls2a030',
   templateUrl: './tls2a030.component.html',
+  styleUrls: ['./tls2a030.component.scss'],
   standalone: true,
   imports: [MenubarComponent, AccordionModule, FormsModule, ReactiveFormsModule, CalendarRangeQuickComponent, DropdownRangeComponent,
     ButtonComponent, TableComponent, TranslateModule]
@@ -49,25 +51,36 @@ export class TLS2A030Component extends BasicQueryPageComponent<any> implements O
   selectedItems: SalesRecord[] = [];
   ECRNoOptions: any[] = [];
   // 表格欄位
-  columns = [
-    { field: 'PAY_NAME', header: '支付工具', visible: true },
-    { field: 'OVER_PayAmt', header: '實際淨欠總額 (A)', visible: true },
-    { field: 'PreAudit_OVER_PayAmt', header: '審核前淨欠總額 (B)', visible: true },
-    { field: 'Actual_ReceivedAmt', header: '實收總額 (C)', visible: true },
-    { field: 'BOOK_PayAmt', header: '系統帳 (D)', visible: true },
+  columns: Column[] = [
+    { field: 'PAY_NAME', header: '支付工具', visible: true, },
+    { field: 'OVER_PayAmt', header: '實際溢欠總額 (A)', visible: true, format: formatAmount },
+    { field: 'PreAudit_OVER_PayAmt', header: '審核前溢欠總額 (B)', visible: true, format: formatAmount },
+    { field: 'Actual_ReceivedAmt', header: '實收總額 (C)', visible: true, format: formatAmount },
+    { field: 'BOOK_PayAmt', header: '系統帳 (D)', visible: true, format: formatAmount },
     {
       field: 'Compare_CD',
       header: '(C) 與 (D) 比較',
-      format: (v: boolean) => v ? 'Y' : 'N',
-      visible: true
+      htmlFormat: true,
+      format: (v: any) =>
+        v === true || v === 'Y'|| v === 'O'
+          ? '<span class="circle">〇</span>'
+          : '<span class="cross">✖</span>',
+      visible: true,
     },
     {
       field: 'Compare_AB',
       header: '(A) 與 (B) 比較',
-      format: (v: boolean) => v ? 'Y' : 'N',
-      visible: true
+      htmlFormat: true,
+      format: (v: any) =>
+        v === true || v === 'Y'|| v === 'O'
+          ? '<span class="circle">〇</span>'
+          : '<span class="cross">✖</span>',
+      visible: true,
     }
+
+
   ];
+
 
 
   constructor(
@@ -148,30 +161,27 @@ export class TLS2A030Component extends BasicQueryPageComponent<any> implements O
     });
   }
 
-onSubmit(form: FormGroup): void {
-  this.handleSubmit(form, () => {
+  onSubmit(form: FormGroup): void {
+    this.handleSubmit(form, () => {
 
-    this.tls2a030Service.queryTLS2A030(form.value).subscribe({
-      next: (res) => {
-        const list = res?.Data ?? [];
-
-
-        this.data = list.map((it: any) => ({
-          ...it,
-          Compare_CD: it?.Compare_CD === true || it?.Compare_CD === 'Y',
-          Compare_AB: it?.Compare_AB === true || it?.Compare_AB === 'Y',
-        }));
-
-        this.totalRecords = res?.TotalCount ?? this.data.length;
-        this.loading = false;
-      },
-      error: (err) => {
-        console.error('TLS2A030 查詢失敗', err);
-        this.loading = false;
-      }
+      this.tls2a030Service.queryTLS2A030(form.value).subscribe({
+        next: (res) => {
+          const list = res?.Data ?? [];
+          this.data = list.map((it: any) => ({
+            ...it,
+            Compare_CD: it?.Compare_CD,
+            Compare_AB: it?.Compare_AB
+          }));
+          this.totalRecords = res?.TotalCount ?? this.data.length;
+          this.loading = false;
+        },
+        error: (err) => {
+          console.error('TLS2A030 查詢失敗', err);
+          this.loading = false;
+        }
+      });
     });
-  });
-}
+  }
 
 
 }

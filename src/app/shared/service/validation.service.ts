@@ -309,7 +309,19 @@ export class ValidationService {
 
     return null;
   }
-
+  // 只允許雙數月，不限制大於當前月份
+  evenMonthOnlyValidator(control: { value: Date | null }): ValidationErrors | null {
+    const value = control.value;
+    if (value !== null && value instanceof Date && !isNaN(value.getTime())) {
+      const month = value.getMonth() + 1;
+      if (month % 2 !== 0) {
+        return { invalidEvenMonth: true };
+      }
+    } else {
+      return { invalidDate2: true };
+    }
+    return null;
+  }
 
   // optionalMultipleOfFiftyValidator：非必填，但若有填值，必須是 50 的倍數
   optionalMultipleOfFiftyValidator(): ValidatorFn {

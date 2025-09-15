@@ -17,7 +17,7 @@
         </div>
 
         <div class="col-12 md:col-6 lg:col-4">
-          <app-multi-select
+          <app-dropdown
             label="收銀機號"
             controlName="ECR_No"
             [options]="ECRNoOptions"
@@ -25,7 +25,7 @@
             optionValue="value"
             [control]="dataForm.controls.ECR_No"
             [submitted]="submitted"
-          ></app-multi-select>
+          ></app-dropdown>
         </div>
       </div>
       <div class="grid p-fluid">

@@ -35,7 +35,7 @@
       <p-button *ngIf="showCustomExcelImport" severity="info" label="Excel匯入" [icon]="'pi pi-file-import'"
         (click)="onImportExcel()" />
     </div>
-    <p-dropdown *ngIf="showPage && IsPrint && data.length > 0" [options]="pages" [ngModel]="selectedPage"
+    <p-dropdown *ngIf="showPage && IsPrint && data && data.length" [options]="pages" [ngModel]="selectedPage"
       optionValue="value" (onChange)="pageChange.emit($event.value)" appendTo="body" [virtualScroll]="true"
       [virtualScrollItemSize]="40" [filter]="true" />
   </div>

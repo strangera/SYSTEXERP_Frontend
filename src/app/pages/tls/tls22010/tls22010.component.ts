@@ -15,7 +15,6 @@ import { TranslateModule } from '@ngx-translate/core';
 import { Tls22010Service } from '../../../service/api/tls/tls22010.service';
 import { createPaginationConfig, Column, formatAmount } from 'src/app/shared/componentkit/table/table.model';
 import { ButtonModule } from 'primeng/button';
-import { Router } from '@angular/router';
 import { yesterday } from '@shared/models/system/query-form.model';
 import { NgIf } from '@angular/common';
 import { CustomFooterTableComponent } from '@shared/componentkit/custom-footer-table/customFooterTable.component';
@@ -43,7 +42,7 @@ import { CustomFooterTableComponent } from '@shared/componentkit/custom-footer-t
   ],
 })
 export class TLS22010Component extends BasicQueryPageComponent<any> implements OnInit {
-
+  first = 0;
   queryForm = this.formBuilder.group({
     TXN_DATE: [yesterday, { validators: [Validators.required], updateOn: 'change' }],
     floor_noList: [[]],
@@ -51,14 +50,12 @@ export class TLS22010Component extends BasicQueryPageComponent<any> implements O
     ShowStatus: ['1'],
     status1: [''],
     status2: [''],
-    ...createPaginationConfig([{ field: 'TXN_Date', order: 1 }]),
+    ...createPaginationConfig([{ field: 'ECR_No', order: 1 }]),
   });
 
   selectedItems: any[] = [];
   totalRecords = 0;
   data: any[] = [];
-  filteredData: any[] = [];
-
   statusSummary = {
     LDataButZZero: 0,
     ZNotMatchL: 0,
@@ -109,7 +106,6 @@ export class TLS22010Component extends BasicQueryPageComponent<any> implements O
     private machineDisplayService: MachinedisplayService,
     private ECRNoService: ECRNoService,
     private tls22010Service: Tls22010Service,
-    public override router: Router
   ) {
     super();
   }
@@ -124,8 +120,30 @@ export class TLS22010Component extends BasicQueryPageComponent<any> implements O
     const state = this.router.lastSuccessfulNavigation?.extras.state;
     const isFromRelatedRoute = state?.['fromRoute']?.includes(this.ProgNo.toLowerCase());
     if (isFromRelatedRoute) {
+      this.skipAutoQueryOnce = true;
+      // // 還原查詢條件（含分頁、機號等）
+      // const savedForm = this.queryStateService.getQueryStateValue(this.ProgNo);
+      // if (savedForm) {
+      //   this.queryForm.patchValue(savedForm);
+      //   // 還原分頁資訊
+      //   if (savedForm.pageIndex) this.queryForm.get('pageIndex')?.setValue(savedForm.pageIndex);
+      //   if (savedForm.pageSize) this.queryForm.get('pageSize')?.setValue(savedForm.pageSize);
+      // }
       // 還原資料
-      this.data = this.queryStateService.getQueryStateValue(this.ProgNo + '_data') ?? [];
+      const savedData = this.queryStateService.getQueryStateValue(this.ProgNo + '_data') ?? [];
+      if (savedData.length === 0) {
+        return;
+      }
+      this.data = savedData.Data.queryTLS22010_DataList;
+      // 統一提供 TXN_Date 為 YYYY-MM-DD
+      this.totalRecords = savedData.TotalCount ?? this.data.length;
+
+      if (savedData?.Data?.queryTLS22010_DataList?.length > 0 && savedData.Data.queryTLS22010_DataList[0].TXN_DATE) {
+        this.TXN_Date = savedData.Data.queryTLS22010_DataList[0].TXN_DATE;
+      } else {
+        this.TXN_Date = '';
+      }
+      this.footerData = [{ group_name: '總計', ...savedData.Data.queryTLS22010_Sum }];
     }
   }
 
@@ -136,13 +154,16 @@ export class TLS22010Component extends BasicQueryPageComponent<any> implements O
 
   // --------- 事件 ----------
   onSubmit(frm: FormGroup) {
+    if (this.skipAutoQueryOnce) {
+      this.skipAutoQueryOnce = false;
+      return;
+    }
     this.handleSubmit(frm, () => {
 
       this.tls22010Service.queryTLS22010(frm.value).subscribe({
         next: (res) => {
           this.data = res.Data.queryTLS22010_DataList;
           // 統一提供 TXN_Date 為 YYYY-MM-DD
-          this.filteredData = [...this.data];
           this.totalRecords = res?.TotalCount ?? this.data.length;
 
           if (res?.Data?.queryTLS22010_DataList?.length > 0 && res.Data.queryTLS22010_DataList[0].TXN_DATE) {
@@ -153,7 +174,7 @@ export class TLS22010Component extends BasicQueryPageComponent<any> implements O
 
           // 保留「表單值」到查詢狀態（initializePage 才能正確還原 Date 型別）
           this.queryStateService.setQueryState(this.ProgNo, frm.value);
-          this.queryStateService.setQueryState(this.ProgNo + '_data', this.data);
+          this.queryStateService.setQueryState(this.ProgNo + '_data', res);
           this.loading = false;
           this.footerData = [{ group_name: '總計', ...res.Data.queryTLS22010_Sum }];
         },

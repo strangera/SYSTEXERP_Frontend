@@ -58,7 +58,7 @@
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-dropdown
-              label="大分類"
+              label="業種"
               controlName="bus_type"
               [options]="industryCodeOptions"
               optionLabel="Name"
@@ -69,7 +69,7 @@
           </div>
           <div class="col-12 md:col-6 lg:col-4">
             <app-input-text
-              label="廠商聯絡人"
+              label="聯絡人"
               controlName="VEN_Boss"
               [control]="dataForm.controls.VEN_Boss"
               [submitted]="submitted"
@@ -95,6 +95,16 @@
               label="聯絡人頭銜"
               controlName="VEN_BossTitle"
               [control]="dataForm.controls.VEN_BossTitle"
+              [submitted]="submitted"
+            >
+              >
+            </app-input-text>
+          </div>
+            <div class="col-12 md:col-6 lg:col-4">
+            <app-input-text
+              label="聯絡人電話(F)"
+              controlName="VEN_BossTel"
+              [control]="dataForm.controls.VEN_BossTel"
               [submitted]="submitted"
             >
               >

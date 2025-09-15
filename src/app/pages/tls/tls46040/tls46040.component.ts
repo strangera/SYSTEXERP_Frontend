@@ -30,7 +30,7 @@ export class TLS46040Component extends BasicQueryPageComponent<any> implements O
     ECR_SchDateStart: [''], // 設定啟用日期(起)
     ECR_SchDateEnd: [''], // 設定啟用日期(訖)
     ECR_SchStatus: [[]], // 排程狀態
-    ECR_No: [[]], // 收銀機編號
+    ECR_No: [''], // 收銀機編號
     ECR_SchFinTimeStart: [''], // 排程作業完成時間(起)
     ECR_SchFinTimeEnd: [''], // 排程作業完成時間(訖)
     ECR_FLD_ID: [[]], // 異動類型
