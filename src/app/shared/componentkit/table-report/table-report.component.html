@@ -1,9 +1,10 @@
 <p-table #dt [columns]="selectedColumns" [value]="totalRecords < 30 ? data : virtualData" [scrollable]="true"
-  scrollHeight="700px" [rows]="30" [(selection)]="selectedItems" sortMode="multiple" (onSort)="onSort($event)"
-  [selectionMode]="showCheckBox ? 'multiple' : null" [rowTrackBy]="trackByFn" [resizableColumns]="true"
-  [reorderableColumns]="true" [loading]="isLoading" (onColReorder)="onColReorder($event)" [totalRecords]="totalRecords"
-  styleClass="p-datatable-sm p-datatable-gridlines p-datatable-striped" (selectionChange)="selectionChange.emit($event)"
-  [rowSelectable]="rowSelectableWrapper" [virtualScroll]="totalRecords < 30 ? false : true" [loading]="loading"
+  [dataKey]="dataKey" scrollHeight="700px" [rows]="30" [(selection)]="selectedItems" sortMode="multiple"
+  (onSort)="onSort($event)" [selectionMode]="showCheckBox ? 'multiple' : null" [rowTrackBy]="trackByFn"
+  [resizableColumns]="true" [reorderableColumns]="true" [loading]="isLoading" (onColReorder)="onColReorder($event)"
+  [totalRecords]="totalRecords" styleClass="p-datatable-sm p-datatable-gridlines p-datatable-striped"
+  (selectionChange)="selectionChange.emit($event)" [rowSelectable]="rowSelectableWrapper"
+  [virtualScroll]="totalRecords < 30 ? false : true" [loading]="loading"
   [virtualScrollItemSize]="showManage ? 40.6 : 24" [lazy]="totalRecords < 30 ? false : true" [virtualScrollOptions]="{
       delay: 50,
       inline: true,
@@ -87,7 +88,7 @@
     </ng-container>
   </ng-template>
   <ng-template pTemplate="body" let-rowIndex="rowIndex" let-rowData let-columns="columns" let-index="rowIndex">
-    <tr [attr.data-key]="rowData[dataKey]" [pSelectableRow]="rowData"
+    <tr [attr.data-key]="dataKey ? rowData[dataKey] : undefined" [pSelectableRow]="rowData"
       [style]="{'height': showManage ? '40.6px' : '24px'}"
       [pSelectableRowDisabled]="!rowSelectableWrapper(rowData) || disabled" [pReorderableRow]="index"
       [pSelectableRow]="rowData" [pSelectableRowIndex]="rowIndex">

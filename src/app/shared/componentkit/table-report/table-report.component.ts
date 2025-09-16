@@ -29,7 +29,7 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
   @Input() lastQueryBody?: any;                            // 用來儲存上一次的查詢條件
   @Input() totalRecords = 0;                               // 用來儲存總筆數
   @Input() data: any[] = [];                               // 用來儲存查詢結果
-  @Input() dataKey = 'ID';                                 // 用來儲存查詢結果
+  @Input() dataKey: string | undefined;                                 // 用來儲存查詢結果
   @Input() columns: Column[] = [];                              // 用來儲存查詢結果
   selectedColumns: Column[] = [];                  // 用來儲存查詢結果
   @Input() queryFunction?: (body: any) => Observable<any>; // 用來儲存查詢函數
@@ -111,7 +111,7 @@ export class TableReportComponent extends BasicPrintDataComponent implements OnC
   }
 
   trackByFn(index: number, item: any) {
-    return item?.[this.dataKey];
+    return this.dataKey && item?.[this.dataKey] || index;
   }
   // 分組欄位對齊
   getGroupAlignClass(groupField: string): string {
