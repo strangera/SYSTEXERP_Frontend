@@ -1,13 +1,14 @@
 import { Column, ColumnGroup, formatAmount } from "@shared/componentkit/table/table.model";
 export interface TLS22020Data {
   ECR_No: string;
-  TLT_NO: string;
+  tlt_no: string;
   tlt_name: string;
-  check_status?: string;
-  check_usr_name?: string;
-  isMissing?: string;
-  [key: string]: any;
+  TXN_Total: number;
+  SLE_Total: number;
+  Diff_Total: number;
+  [key: string]: any; //動態付款別欄位
 }
+
 // 群組的付款別清單
 export const payNoDataList = [
   { Pay_No: "10", Pay_Name: "現金" },
@@ -18,6 +19,9 @@ export const payNoDataList = [
   { Pay_No: "23", Pay_Name: "外來禮券-高夢" },
   { Pay_No: "24", Pay_Name: "禮券餘代卡" },
   { Pay_No: "25", Pay_Name: "提貨單餘代卡" },
+  { Pay_No: "26", Pay_Name: "品牌已開票券" },
+  { Pay_No: "27", Pay_Name: "品牌未開票券" },
+  { Pay_No: "28", Pay_Name: "折價券-高夢" },
   { Pay_No: "30", Pay_Name: "貴賓提貨單(應收帳款)" },
   { Pay_No: "41", Pay_Name: "聯信連線" },
   { Pay_No: "42", Pay_Name: "聯信離線" },
@@ -62,31 +66,17 @@ const baseColumns: Column[] = [
 
 // 每個付款別的「三個子欄位」
 const paymentColumns: Column[] = payNoDataList.flatMap((item) => [
-  { header: '明細', field: `TXN_PayAmt_${item.Pay_No}`, groupField: item.Pay_No, isTotal: true , format: formatAmount,},
-  { header: '帳單', field: `SLE_PayAmt_${item.Pay_No}`, groupField: item.Pay_No, isTotal: true , format: formatAmount,},
+  { header: '明細', field: `TXN_PayAmt_${item.Pay_No}`, groupField: item.Pay_No, isTotal: true, format: formatAmount, },
+  { header: '帳單', field: `SLE_PayAmt_${item.Pay_No}`, groupField: item.Pay_No, isTotal: true, format: formatAmount, },
   { header: '差異', field: `Diff_PayAmt_${item.Pay_No}`, groupField: item.Pay_No, isTotal: true, },
 ]);
 
 // 固定欄位
 const tailColumns: Column[] = [
-  {
-    header: '明細總金額',
-    field: 'TXN_Total',
-    format: formatAmount,
-    isTotal: true
-  },
-  {
-    header: '帳單總金額',
-    field: 'SLE_Total',
-    format: formatAmount,
-    isTotal: true
-  },
-  {
-    header: '總差額',
-    field: 'Diff_Total',
-    format: formatAmount,
-    isTotal: true
-  },
+  { header: '明細總金額', field: 'Total_Txn_PayAmt', isTotal: true },
+  { header: '帳單總金額', field: 'Total_SLE_PayAmt', isTotal: true },
+  { header: '總差額', field: 'Total_Diff_PayAmt', isTotal: true },
+
 ];
 
 export const creditCardColumns: Column[] = [

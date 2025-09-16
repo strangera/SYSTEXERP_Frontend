@@ -13,9 +13,9 @@ import { BasicQueryPageComponent } from '@shared/componentextends/basic-qpage/ba
 import { createPaginationConfig } from '../../../shared/componentkit/table/table.model';
 import { DropDownListService } from '@service/utility/dropDownList.service';
 import { ECRNoService } from '@service/basic/ECRNo.service';
-import { Column, formatDate} from '@shared/componentkit/table/table.model';
+import { Column, formatDate } from '@shared/componentkit/table/table.model';
 import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.component';
-
+import { Tls46030Service } from '@service/api/tls/tls46030.service';
 // 2.4.6.4  收銀機異動排程維護
 @Component({
   selector: 'app-tls46030',
@@ -24,18 +24,20 @@ import { DropdownComponent } from '@shared/componentkit/dropdown/dropdown.compon
   imports: [MenubarComponent, ButtonComponent, DropdownComponent, AccordionModule, FormsModule, ReactiveFormsModule, MultiSelectComponent, TableComponent, CalendarRangeComponent, TranslateModule, InputTextComponent]
 })
 export class TLS46030Component extends BasicQueryPageComponent<any> implements OnInit {
+
   ECR_FLD_IDOptions: any[] = [];
   queryForm = this.formBuilder.group({
     ECR_SchNo: [''], // 排程編號
-    ECR_SchDateStart: [''], // 設定啟用日期(起)
-    ECR_SchDateEnd: [''], // 設定啟用日期(訖)
-    ECR_SchStatus: [[]], // 排程狀態
+    ECR_SchDate_Start: [''], // 設定啟用日期(起)
+    ECR_SchDate_End: [''], // 設定啟用日期(訖)
+     ECR_SchStatus: [''], // 排程狀態
     ECR_No: [''], // 收銀機編號
-    ECR_SchFinTimeStart: [''], // 排程作業完成時間(起)
-    ECR_SchFinTimeEnd: [''], // 排程作業完成時間(訖)
-    ECR_FLD_ID: [[]], // 異動類型
+    ECR_SchFinTime_Start: [''], // 排程作業完成時間(起)
+    ECR_SchFinTime_End: [''], // 排程作業完成時間(訖)
+    ECR_FLD_ID: [''], // 異動類型
     ...createPaginationConfig([{ field: 'ECR_SchNo', order: 1 }]),
   });
+
   data: any[] = [];
   totalRecords = 0;
   ECRNoOptions: any[] = [];
@@ -52,13 +54,14 @@ export class TLS46030Component extends BasicQueryPageComponent<any> implements O
     { field: 'ECR_FLD_ID', header: '異動類型' },
     { field: 'ECR_FLD_OrgVal', header: '新機台內容' },
     { field: 'ECR_FLD_NewVal', header: '原機台內容' },
-    { field: 'ECR_FLD_CompleteTime', header: '異動作業完成時間', format: formatDate },
+    { field: 'ECR_SchFinTime', header: '異動作業完成時間', format: formatDate },
   ];
 
   constructor(
     private ECRNoService: ECRNoService,
     private validationService: ValidationService,
     private dropDownListService: DropDownListService,
+    private tls46030Service: Tls46030Service
 
   ) {
     super();
@@ -85,8 +88,16 @@ export class TLS46030Component extends BasicQueryPageComponent<any> implements O
   }
 
   onSubmit(frm: FormGroup) {
-    console.log(frm.value);
-
+    this.tls46030Service.queryTLS46040(frm.value).subscribe({
+      next: (res) => {
+        this.data = res?.Data || [];
+        this.totalRecords = res?.TotalCount ?? this.data.length;
+      },
+      error: (err) => {
+        console.error('查詢 TLS46030 失敗:', err);
+      }
+    });
   }
+
 
 }
