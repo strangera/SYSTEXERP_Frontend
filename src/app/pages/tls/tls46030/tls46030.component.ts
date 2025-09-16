@@ -37,7 +37,7 @@ export class TLS46030Component extends BasicQueryPageComponent<any> implements O
     ECR_FLD_ID: [''], // 異動類型
     ...createPaginationConfig([{ field: 'ECR_SchNo', order: 1 }]),
   });
-
+selectedItems: any[] = [];
   data: any[] = [];
   totalRecords = 0;
   ECRNoOptions: any[] = [];
@@ -105,7 +105,7 @@ export class TLS46030Component extends BasicQueryPageComponent<any> implements O
   }
 
   onSubmit(frm: FormGroup) {
-    this.tls46030Service.queryTLS46040(frm.value).subscribe({
+    this.tls46030Service.queryTLS46030(frm.value).subscribe({
       next: (res) => {
         this.data = res?.Data || [];
         this.totalRecords = res?.TotalCount ?? this.data.length;

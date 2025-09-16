@@ -92,10 +92,4 @@ getUsageOptions(): Observable<any[]> {
       .post<any>(`${this.apiUrl}/TLS0000/TLS1000/queryTLS11010`, payload)
       .pipe(catchError(this.errorHandler.handleError));
   }
-
-
-
-
-
-
 }

@@ -66,7 +66,7 @@ export class TLS22010Component extends BasicQueryPageComponent<any> implements O
   // ------ 欄位定義 ------
   columns7: Column[] = [
     { header: '總計', field: 'group_name', hidden: true },
-    { field: 'ECR_No_Display', header: '收銀機號', visible: true, type: 'html' },
+    { field: 'ECR_No_Display', header: '收銀機號', visible: true, type: 'html',sortField: 'ECR_No' },
     { field: 'AREA_NO', header: '區域', visible: true },
     { field: 'FLOOR_Name', header: '樓層', visible: true },
     { field: 'TXN_TotSaleAmt', header: '銷售金額 (A)', visible: true, format: formatAmount, isTotal: true },
@@ -85,7 +85,7 @@ export class TLS22010Component extends BasicQueryPageComponent<any> implements O
     { field: 'GUI_REFUND', header: '折讓 (J)', visible: true, format: formatAmount, isTotal: true },
     { field: 'TXN_TotPayAmt', header: '付款金額(H)=(D)+(G)-(C2)-(K)', visible: true, format: formatAmount, isTotal: true },
     { field: 'SLE_SaleAmt', header: 'Z 報表總金額', visible: true, format: formatAmount, isTotal: true },
-    { field: 'TXN_Mode_P', header: '後台(作廢/補登)', visible: true, isTotal: true },
+    { field: 'TXN_Mode_P', header: '後台(作廢/補登)', visible: true, isTotal: true, format: formatAmount },
     { field: 'Status_Code', header: '狀態', visible: true },
   ];
 
