@@ -52,10 +52,10 @@ export interface testDorm {
 export class FIN52060CRUComponent extends BasicCruPageComponent<testDorm> implements OnInit {
   // ----------------------------------------------------------------
   dataForm = this.formBuilder.nonNullable.group({
-    ClassNo: ['', [Validators.maxLength(2)]], //  中類代碼
-    ClassCname: ['', [ Validators.maxLength(20)]], // 中類名稱
-    ClassEname: ['', [Validators.maxLength(100)]], // 中類英文名稱 (非必填)
-    ClassAttr: ['', [Validators.maxLength(1)]], //  大類代碼
+    ClassNo: ['', [Validators.required, Validators.maxLength(2), this.validationService.numberValidator]], //  中類代碼
+    ClassCname: ['', [Validators.required, Validators.maxLength(20)]], // 中類名稱
+    ClassEname: ['', [Validators.maxLength(100), this.validationService.noChineseValidator]], // 中類英文名稱 (非必填)
+    ClassAttr: ['', [Validators.maxLength(1), this.validationService.numberValidator]], //  大類代碼
   });
 
   ClassAttr_Option: apiOption[] = [ //大分類選單
