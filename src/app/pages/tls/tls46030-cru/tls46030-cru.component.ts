@@ -41,7 +41,7 @@ export class TLS46030CRUComponent extends BasicCruPageComponent<any> implements 
 
   dataForm = this.formBuilder.nonNullable.group({
     ECR_SchNo: [{ value: '自動編號', disabled: true }],          // 排程編號
-    ECR_SchDate: ['', Validators.required],        // 設定啟用日期(起)
+    ECR_SchDate: [null, Validators.required],        // 設定啟用日期(起)
     ECR_SchStatus: [[], Validators.required],      // 排程狀態
     ECR_No: ['', Validators.required],             // 收銀機編號
     ECR_SchFinTime: [{ value: null, disabled: true }], // 排程作業完成時間
