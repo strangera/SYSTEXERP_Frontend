@@ -28,12 +28,12 @@ export class TLS46030Component extends BasicQueryPageComponent<any> implements O
   ECR_FLD_IDOptions: any[] = [];
   queryForm = this.formBuilder.group({
     ECR_SchNo: [''], // 排程編號
-    ECR_SchDate_Start: [''], // 設定啟用日期(起)
-    ECR_SchDate_End: [''], // 設定啟用日期(訖)
-     ECR_SchStatus: [''], // 排程狀態
+    ECR_SchDate_Start: [null], // 設定啟用日期(起)
+    ECR_SchDate_End: [null], // 設定啟用日期(訖)
+    ECR_SchStatus: [''], // 排程狀態
     ECR_No: [''], // 收銀機編號
-    ECR_SchFinTime_Start: [''], // 排程作業完成時間(起)
-    ECR_SchFinTime_End: [''], // 排程作業完成時間(訖)
+    ECR_SchFinTime_Start: [null], // 排程作業完成時間(起)
+    ECR_SchFinTime_End: [null], // 排程作業完成時間(訖)
     ECR_FLD_ID: [''], // 異動類型
     ...createPaginationConfig([{ field: 'ECR_SchNo', order: 1 }]),
   });
@@ -52,8 +52,8 @@ export class TLS46030Component extends BasicQueryPageComponent<any> implements O
     { field: 'ECR_SchStatus', header: '排程狀態' },
     { field: 'ECR_No', header: '收銀機號' },
     { field: 'ECR_FLD_ID', header: '異動類型' },
-    { field: 'ECR_FLD_OrgVal', header: '新機台內容' },
-    { field: 'ECR_FLD_NewVal', header: '原機台內容' },
+    { field: 'ECR_FLD_NewVal', header: '新機台內容' },
+    { field: 'ECR_FLD_OrgVal', header: '原機台內容' },
     { field: 'ECR_SchFinTime', header: '異動作業完成時間', format: formatDate },
   ];
 

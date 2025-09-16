@@ -12,7 +12,7 @@
         [columns]="columnscru"
         [showCheckBox]="false"
         dataKey="TXN_No"
-        [multiSortMeta]="[{ field: 'TXN_No', order: 1 }]"
+        [multiSortMeta]="queryForm.controls.SortBy.value"
         [totalRecords]="totalRecords"
         (lazyLoadData)="onLazyLoadData($event, queryForm); onSubmit(queryForm)"
         [lazy]="true"
