@@ -209,23 +209,14 @@
 
   <form [formGroup]="dialogQueryForm" (ngSubmit)="onQuery(dialogQueryForm)">
     <div class="grid p-fluid">
-      <app-dropdown-table class="col-12" [control]="dialogQueryForm.controls.PLU_MagNo" [submitted]="submitted"
-        templateLabel="label" optionLabel="label" optionValue="PLU_MagNo" [suggestions]="suggestions"
-      (inputValueChanged)="onAutoCompleteInputChange($event)"
-        (formValueChanged)="onformValueChanged($event)" [formGroup]="opForm" [dialogData]="opData"
-        [dialogColumns]="opColumns" [loading]="opLoading" [totalRecords]="opTotalRecords">
-        <app-input-text class="col-12 md:col-6" label="商品管理編號/國際條碼/廠商貨號" controlName="queryNo"
-          [control]="opForm.controls.queryNo" />
-        <app-input-text class="col-12 md:col-6" label="商品名稱" controlName="PLU_Name"
-          [control]="opForm.controls.PLU_Name" />
-      </app-dropdown-table>
-      <app-input-text class="col-12" label="商品名稱" controlName="PLU_Name"
-        [control]="dialogQueryForm.controls.PLU_Name" />
-      <app-dropdown class="col-12 col-6 lg:col-4" label="大分類代碼" controlName="CAT_LNo"
+
+      <app-dropdown class="col-12 col-6 lg:col-4" label="館別" controlName="CAT_LNo"
         [control]="dialogQueryForm.controls.CAT_LNo" [options]="CAT_LNoOptions" optionLabel="label" optionValue="No" />
-      <app-dropdown class="col-12 col-6 lg:col-4" label="中分類代碼" controlName="CAT_MNo"
+      <app-dropdown class="col-12 col-6 lg:col-4" label="樓層" controlName="CAT_MNo"
         [control]="dialogQueryForm.controls.CAT_MNo" [options]="CAT_MNoOptions" optionLabel="label" optionValue="No" />
-      <app-dropdown class="col-12 col-6 lg:col-4" label="小分類代碼" controlName="CAT_SNo"
+      <app-dropdown class="col-12 col-6 lg:col-4" label="區域" controlName="CAT_SNo"
+        [control]="dialogQueryForm.controls.CAT_SNo" [options]="CAT_SNoOptions" optionLabel="label" optionValue="No" />
+        <app-dropdown class="col-12 col-6 lg:col-4" label="專櫃編號" controlName="CAT_SNo"
         [control]="dialogQueryForm.controls.CAT_SNo" [options]="CAT_SNoOptions" optionLabel="label" optionValue="No" />
     </div>
     <div class="grid justify-content-end gap-2 m-0 mt-2 border-top-1 surface-border pt-3">
